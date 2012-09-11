@@ -566,6 +566,8 @@ protected:
     */
   static uint8_t (*sPremultiplyTable)[256];
 
+  static mozilla::gfx::DrawTarget* sErrorTarget;
+
   // Some helpers.  Doesn't modify a color on failure.
   void SetStyleFromJSValue(JSContext* cx, JS::Value& value, Style whichStyle);
   void SetStyleFromString(const nsAString& str, Style whichStyle);
@@ -598,6 +600,11 @@ protected:
     */
   void EnsurePremultiplyTable();
 
+  /**
+   * Creates the error target, if it doesn't exist
+   */
+  static void EnsureErrorTarget();
+
   /* This function ensures there is a writable pathbuilder available, this
    * pathbuilder may be working in user space or in device space or
    * device space.
@@ -610,10 +617,32 @@ protected:
   // used for the path.
   void EnsureUserSpacePath(bool aCommitTransform = true);
 
+  /**
+   * Needs to be called before updating the transform. This makes a call to
+   * EnsureTarget() so you don't have to.
+   */
   void TransformWillUpdate();
 
   // Report the fillRule has changed.
   void FillRuleChanged();
+
+   /**
+   * Create the backing surfacing, if it doesn't exist. If there is an error
+   * in creating the target then it will put sErrorTarget in place. If there
+   * is in turn an error in creating the sErrorTarget then they would both
+   * be null so IsTargetValid() would still return null.
+   */
+  void EnsureTarget();
+
+  /*
+   * Disposes an old target and prepares to lazily create a new target.
+   */
+  void ClearTarget();
+
+  /**
+   * Check if the target is valid after calling EnsureTarget.
+   */
+  bool IsTargetValid() { return mTarget != sErrorTarget; }
 
   /**
     * Returns the surface format this canvas should be allocated using. Takes
@@ -663,10 +692,6 @@ protected:
   // Member vars
   int32_t mWidth, mHeight;
 
-  // This is true when the canvas is valid, false otherwise, this occurs when
-  // for some reason initialization of the drawtarget fails. If the canvas
-  // is invalid certain behavior is expected.
-  bool mValid;
   // This is true when the canvas is valid, but of zero size, this requires
   // specific behavior on some operations.
   bool mZero;
@@ -684,7 +709,9 @@ protected:
   // If mCanvasElement is not provided, then a docshell is
   nsCOMPtr<nsIDocShell> mDocShell;
 
-  // our drawing surfaces, contexts, and layers
+  // This is created lazily so it is necessary to call EnsureTarget before
+  // accessing it. In the event of an error it will be equal to
+  // sErrorTarget.
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mTarget;
 
   /**

@@ -1200,9 +1200,6 @@ JSContext::JSContext(JSRuntime *rt)
     localeCallbacks(NULL),
     resolvingList(NULL),
     generatingError(false),
-#ifdef DEBUG
-    rootingUnnecessary(false),
-#endif
     compartment(NULL),
     enterCompartmentDepth_(0),
     savedFrameChains_(),
@@ -1238,7 +1235,7 @@ JSContext::JSContext(JSRuntime *rt)
     PodZero(&link);
 #ifdef JSGC_ROOT_ANALYSIS
     PodArrayZero(thingGCRooters);
-#ifdef DEBUG
+#if defined(JS_GC_ZEAL) && defined(DEBUG) && !defined(JS_THREADSAFE)
     skipGCRooters = NULL;
 #endif
 #endif
@@ -1263,30 +1260,6 @@ JSContext::~JSContext()
 
     JS_ASSERT(!resolvingList);
 }
-
-#ifdef DEBUG
-namespace JS {
-
-JS_FRIEND_API(void)
-SetRootingUnnecessaryForContext(JSContext *cx, bool value)
-{
-    cx->rootingUnnecessary = value;
-}
-
-JS_FRIEND_API(bool)
-IsRootingUnnecessaryForContext(JSContext *cx)
-{
-    return cx->rootingUnnecessary;
-}
-
-JS_FRIEND_API(bool)
-RelaxRootChecksForContext(JSContext *cx)
-{
-    return cx->runtime->relaxRootChecks;
-}
-
-} /* namespace JS */
-#endif
 
 /*
  * Since this function is only called in the context of a pending exception,

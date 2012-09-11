@@ -128,7 +128,7 @@
                 <ImageButton android:id="@+id/reader"
                              style="@style/AddressBar.ImageButton.Icon"
                              android:src="@drawable/reader"
-                             android:contentDescription="@string/reader_mode"
+                             android:contentDescription="@string/reader"
                              android:visibility="gone"/>
 
                 <ImageButton android:id="@+id/stop"

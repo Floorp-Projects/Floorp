@@ -1,46 +1,11 @@
 
+Components.utils.import("resource://gre/modules/KeyValueParser.jsm");
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 var success = false;
 var observerFired = false;
-
-function parseKeyValuePairs(text) {
-  var lines = text.split('\n');
-  var data = {};
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i] == '')
-      continue;
-
-    // can't just .split() because the value might contain = characters
-    let eq = lines[i].indexOf('=');
-    if (eq != -1) {
-      let [key, value] = [lines[i].substring(0, eq),
-                          lines[i].substring(eq + 1)];
-      if (key && value)
-        data[key] = value.replace(/\\n/g, "\n").replace(/\\\\/g, "\\");
-    }
-  }
-  return data;
-}
-
-function parseKeyValuePairsFromFile(file) {
-  var fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
-  fstream.init(file, -1, 0, 0);
-  var is = Cc["@mozilla.org/intl/converter-input-stream;1"].
-           createInstance(Ci.nsIConverterInputStream);
-  is.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-  var str = {};
-  var contents = '';
-  while (is.readString(4096, str) != 0) {
-    contents += str.value;
-  }
-  is.close();
-  fstream.close();
-  return parseKeyValuePairs(contents);
-}
-
 
 var testObserver = {
   idleHang: true,
@@ -55,10 +20,8 @@ var testObserver = {
 
     var pluginId = subject.getPropertyAsAString("pluginDumpID");
     isnot(pluginId, "", "got a non-empty plugin crash id");
-    var browserId = subject.getPropertyAsAString("browserDumpID");
-    isnot(browserId, "", "got a non-empty browser crash id");
-    
-    // check dump and extra files
+
+    // check plugin dump and extra files
     let directoryService =
       Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     let profD = directoryService.get("ProfD", Ci.nsIFile);
@@ -66,18 +29,31 @@ var testObserver = {
     let pluginDumpFile = profD.clone();
     pluginDumpFile.append(pluginId + ".dmp");
     ok(pluginDumpFile.exists(), "plugin minidump exists");
-    let browserDumpFile = profD.clone();
-    browserDumpFile.append(browserId + ".dmp");
-    ok(browserDumpFile.exists(), "browser minidump exists");
+
     let pluginExtraFile = profD.clone();
     pluginExtraFile.append(pluginId + ".extra");
     ok(pluginExtraFile.exists(), "plugin extra file exists");
-    let browserExtraFile = profD.clone();
-    browserExtraFile.append(browserId + ".extra");
-    ok(pluginExtraFile.exists(), "browser extra file exists");
-     
-    // check cpu usage field
+
     let extraData = parseKeyValuePairsFromFile(pluginExtraFile);
+
+    // check additional dumps
+
+    ok("additional_minidumps" in extraData, "got field for additional minidumps");
+    let additionalDumps = extraData.additional_minidumps.split(',');
+    ok(additionalDumps.indexOf('browser') >= 0, "browser in additional_minidumps");
+
+    let additionalDumpFiles = [];
+    for (let name of additionalDumps) {
+      let file = profD.clone();
+      file.append(pluginId + "-" + name + ".dmp");
+      ok(file.exists(), "additional dump '"+name+"' exists");
+      if (file.exists()) {
+        additionalDumpFiles.push(file);
+      }
+    }
+
+    // check cpu usage field
+
     ok("PluginCpuUsage" in extraData, "got extra field for plugin cpu usage");
     let cpuUsage = parseFloat(extraData["PluginCpuUsage"]);
     if (this.idleHang) {
@@ -85,16 +61,17 @@ var testObserver = {
     } else {
       ok(cpuUsage > 0, "plugin cpu usage is >0%");
     }
-    
+
     // check processor count field
     ok("NumberOfProcessors" in extraData, "got extra field for processor count");
     ok(parseInt(extraData["NumberOfProcessors"]) > 0, "number of processors is >0");
 
     // cleanup, to be nice
     pluginDumpFile.remove(false);
-    browserDumpFile.remove(false);
     pluginExtraFile.remove(false);
-    browserExtraFile.remove(false);
+    for (let file of additionalDumpFiles) {
+      file.remove(false);
+    }
   },
 
   QueryInterface: function(iid) {

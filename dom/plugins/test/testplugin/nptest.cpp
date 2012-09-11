@@ -1081,8 +1081,10 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 
   if (instanceData->asyncDrawing == AD_BITMAP) {
     if (instanceData->frontBuffer &&
-        instanceData->frontBuffer->size.width == window->width &&
-        instanceData->frontBuffer->size.height == window->height) {
+	instanceData->frontBuffer->size.width >= 0 &&
+       (uint32_t)instanceData->frontBuffer->size.width == window->width &&
+       instanceData ->frontBuffer->size.height >= 0 &&
+       (uint32_t)instanceData->frontBuffer->size.height == window->height) {
           return NPERR_NO_ERROR;
     }
     if (instanceData->frontBuffer) {

@@ -509,10 +509,36 @@ static int ensure_remove_recursive(const NS_tchar *path)
   return rv;
 }
 
+static bool is_read_only(const NS_tchar *flags)
+{
+  size_t length = NS_tstrlen(flags);
+  if (length == 0)
+    return false;
+
+  // Make sure the string begins with "r"
+  if (flags[0] != NS_T('r'))
+    return false;
+
+  // Look for "r+" or "r+b"
+  if (length > 1 && flags[1] == NS_T('+'))
+    return false;
+
+  // Look for "rb+"
+  if (NS_tstrcmp(flags, NS_T("rb+")) == 0)
+    return false;
+
+  return true;
+}
+
 static FILE* ensure_open(const NS_tchar *path, const NS_tchar *flags, unsigned int options)
 {
   ensure_write_permissions(path);
   FILE* f = NS_tfopen(path, flags);
+  if (is_read_only(flags)) {
+    // Don't attempt to modify the file permissions if the file is being opened
+    // in read-only mode.
+    return f;
+  }
   if (NS_tchmod(path, options) != 0) {
     if (f != NULL) {
       fclose(f);

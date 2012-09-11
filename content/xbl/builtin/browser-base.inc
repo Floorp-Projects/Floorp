@@ -12,6 +12,3 @@
       <handler event="keypress" key="z" command="cmd_undo" modifiers="accel"/>
       <handler event="keypress" key="z" command="cmd_redo" modifiers="accel,shift" />
       <handler event="keypress" key="a" command="cmd_selectAll" modifiers="accel"/>
-
-      <handler event="keypress" key="/" command="cmd_findTypeText" modifiers="shift any"/>
-      <handler event="keypress" key="'" command="cmd_findTypeLinks" modifiers="shift any"/>

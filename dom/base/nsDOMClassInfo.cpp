@@ -171,7 +171,6 @@
 #include "nsIDOMParser.h"
 #include "nsIDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
-#include "nsWebSocket.h"
 #include "nsEventSource.h"
 #include "nsIDOMSettingsManager.h"
 #include "nsIDOMContactManager.h"
@@ -1618,9 +1617,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(DesktopNotificationCenter, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(WebSocket, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(IDBFactory, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(IDBFileHandle, FileHandle, nsEventTargetSH,
@@ -1745,7 +1741,6 @@ NS_DEFINE_CONTRACT_CTOR(FileReader, NS_FILEREADER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(ArchiveReader, NS_ARCHIVEREADER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(FormData, NS_FORMDATA_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XMLSerializer, NS_XMLSERIALIZER_CONTRACTID)
-NS_DEFINE_CONTRACT_CTOR(WebSocket, NS_WEBSOCKET_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XPathEvaluator, NS_XPATH_EVALUATOR_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XSLTProcessor,
                         "@mozilla.org/document-transformer;1?type=xslt")
@@ -1823,7 +1818,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ArchiveReader, ArchiveReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(FormData, FormDataCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XMLSerializer, XMLSerializerCtor)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebSocket, WebSocketCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XPathEvaluator, XPathEvaluatorCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XSLTProcessor, XSLTProcessorCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(EventSource, EventSourceCtor)
@@ -2176,7 +2170,7 @@ bool
 nsDOMClassInfo::ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
 {
   return xpc::WrapperFactory::IsXrayWrapper(obj) &&
-         !xpc::WrapperFactory::IsPartiallyTransparent(obj);
+         xpc::AccessCheck::wrapperSubsumes(obj);
 }
 
 nsDOMClassInfo::nsDOMClassInfo(nsDOMClassInfoData* aData) : mData(aData)
@@ -4356,11 +4350,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DesktopNotificationCenter, nsIDOMDesktopNotificationCenter)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDesktopNotificationCenter)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebSocket, nsIWebSocket)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebSocket)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(IDBFactory, nsIIDBFactory)
@@ -6711,13 +6700,6 @@ ConstructorEnabled(const nsGlobalNameStruct *aStruct, nsGlobalWindow *aWin)
   if (aStruct->mChromeOnly &&
       !nsContentUtils::IsSystemPrincipal(aWin->GetPrincipal())) {
     return false;
-  }
-
-  // For now don't expose web sockets unless user has explicitly enabled them
-  if (aStruct->mDOMClassInfoID == eDOMClassInfo_WebSocket_id) {
-    if (!nsWebSocket::PrefEnabled()) {
-      return false;
-    }
   }
 
   // For now don't expose server events unless user has explicitly enabled them

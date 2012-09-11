@@ -168,14 +168,17 @@ class Bindings
      * storage is release, switchToScriptStorage must be called, providing a
      * pointer into the Binding array stored in script->data.
      */
-    bool initWithTemporaryStorage(JSContext *cx, unsigned numArgs, unsigned numVars, Binding *bindingArray);
+    static bool initWithTemporaryStorage(JSContext *cx, InternalHandle<Bindings*> self,
+                                         unsigned numArgs, unsigned numVars,
+                                         Binding *bindingArray);
+
     uint8_t *switchToScriptStorage(Binding *newStorage);
 
     /*
      * Clone srcScript's bindings (as part of js::CloneScript). dstScriptData
      * is the pointer to what will eventually be dstScript->data.
      */
-    bool clone(JSContext *cx, uint8_t *dstScriptData, HandleScript srcScript);
+    static bool clone(JSContext *cx, InternalHandle<Bindings*> self, uint8_t *dstScriptData, HandleScript srcScript);
 
     unsigned numArgs() const { return numArgs_; }
     unsigned numVars() const { return numVars_; }
@@ -194,26 +197,6 @@ class Bindings
     bool hasAnyAliasedBindings() const { return !callObjShape_->isEmptyShape(); }
 
     void trace(JSTracer *trc);
-    class AutoRooter;
-};
-
-class Bindings::AutoRooter : private AutoGCRooter
-{
-  public:
-    explicit AutoRooter(JSContext *cx, Bindings *bindings_
-                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, BINDINGS), bindings(bindings_), skip(cx, bindings_)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-    void trace(JSTracer *trc);
-
-  private:
-    Bindings *bindings;
-    SkipRoot skip;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class ScriptCounts

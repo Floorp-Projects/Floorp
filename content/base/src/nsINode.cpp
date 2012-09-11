@@ -2071,7 +2071,12 @@ nsNodeSelectorTearoff::QuerySelector(const nsAString& aSelector,
 {
   nsresult rv;
   nsIContent* result = mNode->QuerySelector(aSelector, &rv);
-  return result ? CallQueryInterface(result, aReturn) : rv;
+  if (!result) {
+    *aReturn = nullptr;
+    return rv;
+  }
+
+  return CallQueryInterface(result, aReturn);
 }
 
 NS_IMETHODIMP

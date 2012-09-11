@@ -75,6 +75,9 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
   // For media, we want to sniff only if the Content-Type is unknown, or if it
   // is application/octet-stream.
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  if (!channel) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   nsAutoCString contentType;
   nsresult rv = channel->GetContentType(contentType);
   NS_ENSURE_SUCCESS(rv, rv);
