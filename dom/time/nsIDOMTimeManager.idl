@@ -16,5 +16,5 @@ interface nsIDOMMozTimeManager : nsISupports
    * - If |time| is a Date object, |set(time)| is equivalent to 
    *   |set(time.getTime())|.
    */
-  void set(in jsval time);
+  [implicit_jscontext] void set(in jsval time);
 };
