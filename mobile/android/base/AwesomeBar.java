@@ -529,7 +529,7 @@ public class AwesomeBar extends GeckoActivity {
                     break;
                 }
 
-                openUrlAndFinish(getReaderForUrl(url));
+                openUrlAndFinish(ReaderModeUtils.getAboutReaderForUrl(url, true));
                 break;
             }
             case R.id.edit_bookmark: {

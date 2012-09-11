@@ -439,9 +439,7 @@ public final class Tab {
         if (!mReaderEnabled)
             return;
 
-        GeckoApp.mAppContext.loadUrl("about:reader?tabId=" + mId +
-                                     "&url=" + Uri.encode(getURL()) +
-                                     "&readingList=" + (mReadingListItem ? 1 : 0));
+        GeckoApp.mAppContext.loadUrl(ReaderModeUtils.getAboutReaderForUrl(getURL(), mId, mReadingListItem));
     }
 
     public void doReload() {
