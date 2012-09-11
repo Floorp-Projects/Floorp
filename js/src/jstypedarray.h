@@ -1,5 +1,5 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
-/* vim: set ts=40 sw=4 et tw=99: */
+/* -*- Mode: C++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil -*- */
+/* vim: set ts=4 sw=4 et tw=99: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -138,9 +138,6 @@ class ArrayBufferObject : public JSObject
     static JSBool
     obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                   MutableHandleValue statep, MutableHandleId idp);
-
-    static JSType
-    obj_typeOf(JSContext *cx, HandleObject obj);
 
     static bool
     stealContents(JSContext *cx, JSObject *obj, void **contents);

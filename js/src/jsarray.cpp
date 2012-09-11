@@ -804,12 +804,6 @@ slowarray_addProperty(JSContext *cx, HandleObject obj, HandleId id,
     return JS_TRUE;
 }
 
-static JSType
-array_typeOf(JSContext *cx, HandleObject obj)
-{
-    return JSTYPE_OBJECT;
-}
-
 static JSBool
 array_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
                  MutableHandleValue vp, JSBool strict)
@@ -1192,7 +1186,7 @@ Class js::ArrayClass = {
         array_deleteElement,
         array_deleteSpecial,
         NULL,       /* enumerate      */
-        array_typeOf,
+        NULL,       /* typeOf         */
         NULL,       /* thisObject     */
     }
 };
@@ -2361,11 +2355,9 @@ js::array_pop(JSContext *cx, unsigned argc, Value *vp)
     return array_pop_slowly(cx, obj, args);
 }
 
-#ifdef JS_METHODJIT
-void JS_FASTCALL
-mjit::stubs::ArrayShift(VMFrame &f)
+void
+js::ArrayShiftMoveElements(JSObject *obj)
 {
-    JSObject *obj = &f.regs.sp[-1].toObject();
     JS_ASSERT(obj->isDenseArray());
 
     /*
@@ -2375,6 +2367,14 @@ mjit::stubs::ArrayShift(VMFrame &f)
      */
     uint32_t initlen = obj->getDenseArrayInitializedLength();
     obj->moveDenseArrayElementsUnbarriered(0, 1, initlen);
+}
+
+#ifdef JS_METHODJIT
+void JS_FASTCALL
+mjit::stubs::ArrayShift(VMFrame &f)
+{
+    JSObject *obj = &f.regs.sp[-1].toObject();
+    ArrayShiftMoveElements(obj);
 }
 #endif /* JS_METHODJIT */
 

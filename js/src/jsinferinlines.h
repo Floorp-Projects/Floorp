@@ -1,5 +1,5 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
-/* vim: set ts=40 sw=4 et tw=99: */
+/* -*- Mode: C++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil -*- */
+/* vim: set ts=4 sw=4 et tw=99: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,6 +14,7 @@
 
 #include "gc/Root.h"
 #include "vm/GlobalObject.h"
+#include "ion/IonFrames.h"
 
 #include "vm/Stack-inl.h"
 
@@ -30,6 +31,7 @@ namespace types {
 inline
 CompilerOutput::CompilerOutput()
   : script(NULL),
+    isIonFlag(false),
     constructing(false),
     barriers(false),
     chunkIndex(false)
@@ -45,6 +47,13 @@ CompilerOutput::mjit() const
 #else
     return NULL;
 #endif
+}
+
+inline ion::IonScript *
+CompilerOutput::ion() const
+{
+    JS_ASSERT(isIon() && isValid());
+    return script->ionScript();
 }
 
 inline bool
@@ -69,6 +78,16 @@ CompilerOutput::isValid() const
         return true;
     }
 #endif
+
+    if (isIon()) {
+        if (script->hasIonScript()) {
+            JS_ASSERT(this == script->ion->recompileInfo().compilerOutput(types));
+            return true;
+        }
+        if (script->isIonCompilingOffThread())
+            return true;
+        return false;
+    }
     return false;
 }
 
@@ -81,7 +100,7 @@ RecompileInfo::compilerOutput(TypeCompartment &types) const
 inline CompilerOutput*
 RecompileInfo::compilerOutput(JSContext *cx) const
 {
-    return &(*cx->compartment->types.constrainedOutputs)[outputIndex];
+    return compilerOutput(cx->compartment->types);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -219,6 +238,25 @@ TypeIdString(jsid id)
 #endif
 }
 
+/* Assert code to know which PCs are reasonable to be considering inlining on. */
+inline bool
+IsInlinableCall(jsbytecode *pc)
+{
+    JSOp op = JSOp(*pc);
+
+    // CALL, FUNCALL, FUNAPPLY (Standard callsites)
+    // NEW (IonMonkey-only callsite)
+    // GETPROP, CALLPROP, and LENGTH. (Inlined Getters)
+    // SETPROP, SETNAME, SETGNAME (Inlined Setters)
+    return op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY ||
+#ifdef JS_ION
+           op == JSOP_NEW ||
+#endif
+           op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH ||
+           op == JSOP_SETPROP || op == JSOP_SETGNAME || op == JSOP_SETNAME;
+
+}
+
 /*
  * Structure for type inference entry point functions. All functions which can
  * change type information must use this, and functions which depend on
@@ -287,9 +325,16 @@ struct AutoEnterCompilation
     JSContext *cx;
     RecompileInfo &info;
 
-    AutoEnterCompilation(JSContext *cx)
+    enum Compiler {
+        JM,
+        Ion
+    };
+    Compiler mode;
+
+    AutoEnterCompilation(JSContext *cx, Compiler mode)
       : cx(cx),
-        info(cx->compartment->types.compiledInfo)
+        info(cx->compartment->types.compiledInfo),
+        mode(mode)
     {
         JS_ASSERT(cx->compartment->activeAnalysis);
         JS_ASSERT(info.outputIndex == RecompileInfo::NoCompilerRunning);
@@ -299,6 +344,7 @@ struct AutoEnterCompilation
     {
         CompilerOutput co;
         co.script = script;
+        co.isIonFlag = (mode == Ion);
         co.constructing = constructing;
         co.barriers = cx->compartment->compileBarriers();
         co.chunkIndex = chunkIndex;
@@ -321,12 +367,20 @@ struct AutoEnterCompilation
         }
 
         info.outputIndex = cx->compartment->types.constrainedOutputs->length();
+        // I hope we GC before we reach 64k of compilation attempts.
         if (info.outputIndex >= RecompileInfo::NoCompilerRunning)
             return false;
 
         if (!cx->compartment->types.constrainedOutputs->append(co))
             return false;
         return true;
+    }
+
+    void initExisting(RecompileInfo oldInfo)
+    {
+        // Initialize the active compilation index from that produced during a
+        // previous compilation, for finishing an off thread compilation.
+        info = oldInfo;
     }
 
     ~AutoEnterCompilation()
@@ -692,13 +746,13 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
     key.kind = kind;
 
     if (!cx->compartment->types.allocationSiteTable)
-        return cx->compartment->types.newAllocationSiteTypeObject(cx, key);
+        return cx->compartment->types.addAllocationSiteTypeObject(cx, key);
 
     AllocationSiteTable::Ptr p = cx->compartment->types.allocationSiteTable->lookup(key);
 
     if (p)
         return p->value;
-    return cx->compartment->types.newAllocationSiteTypeObject(cx, key);
+    return cx->compartment->types.addAllocationSiteTypeObject(cx, key);
 }
 
 /* Set the type to use for obj according to the site it was allocated at. */
@@ -762,6 +816,12 @@ TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
 /* static */ inline void
 TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
 {
+#ifdef JS_ION
+    if (cx->fp()->beginsIonActivation()) {
+        ion::GetPcScript(cx, script, pc);
+        return;
+    }
+#endif
     *script = cx->fp()->script();
     *pc = cx->regs().pc;
 }

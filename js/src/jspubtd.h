@@ -162,6 +162,7 @@ typedef enum {
      * Trace kinds internal to the engine. The embedding can only them if it
      * implements JSTraceCallback.
      */
+    JSTRACE_IONCODE,
 #if JS_HAS_XML_SUPPORT
     JSTRACE_XML,
 #endif

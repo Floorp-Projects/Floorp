@@ -1272,7 +1272,7 @@ js_NumberToStringWithBase(JSContext *cx, double d, int base)
     return s;
 }
 
-JSString * JS_FASTCALL
+JSString *
 js_NumberToString(JSContext *cx, double d)
 {
     return js_NumberToStringWithBase(cx, d, 10);

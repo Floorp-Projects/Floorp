@@ -32,6 +32,12 @@
 #include "jstypedarrayinlines.h"
 #include "vm/RegExpObject-inl.h"
 
+#include "ion/Ion.h"
+
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
 using namespace js;
 using namespace js::mjit;
 #if defined(JS_POLYIC) || defined(JS_MONOIC)
@@ -45,11 +51,20 @@ using namespace js::analyze;
             return retval;                                      \
     JS_END_MACRO
 
+static inline bool IsIonEnabled(JSContext *cx)
+{
+#ifdef JS_ION
+    return ion::IsEnabled(cx);
+#else
+    return false;
+#endif
+}
+
 /*
  * Number of times a script must be called or had a backedge before we try to
- * inline its calls.
+ * inline its calls. This is only used if IonMonkey is disabled.
  */
-static const size_t USES_BEFORE_INLINING = 10000;
+static const size_t USES_BEFORE_INLINING = 10240;
 
 mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
                          unsigned chunkIndex, bool isConstructing)
@@ -61,8 +76,8 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
     ssa(cx, outerScript),
     globalObj(cx, outerScript->compileAndGo ? &outerScript->global() : NULL),
     globalSlots(globalObj ? globalObj->getRawSlots() : NULL),
-    sps(&cx->runtime->spsProfiler, &script, &PC),
-    masm(&sps),
+    sps(&cx->runtime->spsProfiler),
+    masm(&sps, &PC),
     frame(cx, *thisFromCtor(), masm, stubcc),
     a(NULL), outer(NULL), script(NULL), PC(NULL), loop(NULL),
     inlineFrames(CompilerAllocPolicy(cx, *thisFromCtor())),
@@ -100,11 +115,13 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
     gcNumber(cx->runtime->gcNumber),
     pcLengths(NULL)
 {
-    /* Once a script starts getting really hot we will inline calls in it. */
-    if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
-        (outerScript->getUseCount() >= USES_BEFORE_INLINING ||
-         cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
-        inlining_ = true;
+    if (!IsIonEnabled(cx)) {
+        /* Once a script starts getting really hot we will inline calls in it. */
+        if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
+            (outerScript->getUseCount() >= USES_BEFORE_INLINING ||
+             cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
+            inlining_ = true;
+        }
     }
 }
 
@@ -112,6 +129,13 @@ CompileStatus
 mjit::Compiler::compile()
 {
     JS_ASSERT(!outerChunkRef().chunk);
+
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::JM_COMPILE_START,
+                        TraceLogging::JM_COMPILE_STOP,
+                        outerScript);
+#endif
 
     CompileStatus status = performCompilation();
     if (status != Compile_Okay && status != Compile_Retry) {
@@ -451,7 +475,7 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32_t argc)
             return status;
     }
 
-    if (!sps.enterInlineFrame())
+    if (script != outerScript && !sps.enterInlineFrame())
         return Compile_Error;
 
     this->script = script;
@@ -491,8 +515,8 @@ CompileStatus
 mjit::Compiler::performCompilation()
 {
     JaegerSpew(JSpew_Scripts,
-               "compiling script (file \"%s\") (line \"%d\") (length \"%d\") (chunk \"%d\")\n",
-               outerScript->filename, outerScript->lineno, outerScript->length, chunkIndex);
+               "compiling script (file \"%s\") (line \"%d\") (length \"%d\") (chunk \"%d\") (usecount \"%d\")\n",
+               outerScript->filename, outerScript->lineno, outerScript->length, chunkIndex, (int) outerScript->getUseCount());
 
     if (inlining()) {
         JaegerSpew(JSpew_Inlining,
@@ -512,7 +536,7 @@ mjit::Compiler::performCompilation()
     JS_ASSERT(cx->compartment->activeInference);
 
     {
-        types::AutoEnterCompilation enter(cx);
+        types::AutoEnterCompilation enter(cx, types::AutoEnterCompilation::JM);
         if (!enter.init(outerScript, isConstructing, chunkIndex)) {
             js_ReportOutOfMemory(cx);
             return Compile_Error;
@@ -533,7 +557,7 @@ mjit::Compiler::performCompilation()
         if (chunkIndex == 0)
             CHECK_STATUS(generatePrologue());
         else
-            sps.setPushed();
+            sps.setPushed(script);
         CHECK_STATUS(generateMethod());
         if (outerJIT() && chunkIndex == outerJIT()->nchunks - 1)
             CHECK_STATUS(generateEpilogue());
@@ -631,7 +655,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
  * allow more gathering of type information and less recompilation.
  */
 static const size_t USES_BEFORE_COMPILE       = 16;
-static const size_t INFER_USES_BEFORE_COMPILE = 40;
+static const size_t INFER_USES_BEFORE_COMPILE = 43;
 
 /* Target maximum size, in bytecode length, for a compiled chunk of a script. */
 static uint32_t CHUNK_LIMIT = 1500;
@@ -893,9 +917,9 @@ MakeJITScript(JSContext *cx, JSScript *script)
 
     /* Generate a pool with all cross chunk shims, and set shimLabel for each edge. */
     jsbytecode *pc;
-    SPSInstrumentation sps(&cx->runtime->spsProfiler, &script, &pc);
-    Assembler masm(&sps);
-    sps.setPushed();
+    MJITInstrumentation sps(&cx->runtime->spsProfiler);
+    Assembler masm(&sps, &pc);
+    sps.setPushed(script);
     for (unsigned i = 0; i < jit->nedges; i++) {
         pc = script->code + jitEdges[i].target;
         jitEdges[i].shimLabel = (void *) masm.distanceOf(masm.label());
@@ -925,6 +949,40 @@ MakeJITScript(JSContext *cx, JSScript *script)
     return jit;
 }
 
+static inline bool
+IonGetsFirstChance(JSContext *cx, JSScript *script, CompileRequest request)
+{
+#ifdef JS_ION
+    if (!ion::IsEnabled(cx))
+        return false;
+
+    // If the script is not hot, use JM. recompileCheckHelper will insert a check
+    // to trigger a recompile when the script becomes hot.
+    if (script->getUseCount() < ion::js_IonOptions.usesBeforeCompile)
+        return false;
+
+    // If we're called from JM, use JM to avoid slow JM -> Ion calls.
+    if (request == CompileRequest_JIT)
+        return false;
+
+    // If there's no way this script is going to be Ion compiled, let JM take over.
+    if (!script->canIonCompile())
+        return false;
+
+    // If we cannot enter Ion because bailouts are expected, let JM take over.
+    if (script->hasIonScript() && script->ion->bailoutExpected())
+        return false;
+
+    // If ion compilation is pending or in progress on another thread, continue
+    // using JM until that compilation finishes.
+    if (script->ion == ION_COMPILING_SCRIPT)
+        return false;
+
+    return true;
+#endif
+    return false;
+}
+
 CompileStatus
 mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
                    bool construct, CompileRequest request, StackFrame *frame)
@@ -934,12 +992,25 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
         return Compile_Abort;
 
     /*
-     * If an SPS frame has already been pushed and profiling has since been
-     * turned off, then we can't enter the jit because the epilogue of a pop
-     * will not be emitted. Otherwise, we're safe with respect to balancing the
-     * push/pops to the SPS sampling stack.
+     * If SPS (profiling) is enabled, then the emitted instrumentation has to be
+     * careful to not wildly write to random locations. This is relevant
+     * whenever the status of profiling (on/off) is changed while JS is running.
+     * All pushed frames still need to be popped, but newly emitted code may
+     * have slightly different behavior.
+     *
+     * For a new function, this doesn't matter at all, but if we're compiling
+     * the current function, then the writes start to matter. If an SPS frame
+     * has been pushed and SPS is still enabled, then we're good to go. If an
+     * SPS frame has not been pushed, and SPS is not enabled, then we're still
+     * good to go. If, however, the two are different, then we cannot emit JIT
+     * code because the instrumentation will be wrong one way or another.
      */
-    if (frame->hasPushedSPSFrame() && !cx->runtime->spsProfiler.enabled())
+    if (frame->script() == script && pc != script->code) {
+        if (frame->hasPushedSPSFrame() != cx->runtime->spsProfiler.enabled())
+            return Compile_Skipped;
+    }
+		
+    if (IonGetsFirstChance(cx, script, request))
         return Compile_Skipped;
 
     if (script->hasMJITInfo()) {
@@ -991,6 +1062,19 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
 
     unsigned chunkIndex = jit->chunkIndex(pc);
     ChunkDescriptor &desc = jit->chunkDescriptor(chunkIndex);
+
+    if (jit->mustDestroyEntryChunk) {
+        // We kept this chunk around so that Ion can get info from its caches.
+        // If we end up here, we decided not to use Ion so we can destroy the
+        // chunk now.
+        JS_ASSERT(jit->nchunks == 1);
+        jit->mustDestroyEntryChunk = false;
+
+        if (desc.chunk) {
+            jit->destroyChunk(cx->runtime->defaultFreeOp(), chunkIndex, /* resetUses = */ false);
+            return Compile_Skipped;
+        }
+    }
 
     if (desc.chunk)
         return Compile_Okay;
@@ -1179,8 +1263,12 @@ mjit::Compiler::generatePrologue()
     }
 
     CompileStatus status = methodEntryHelper();
-    if (status == Compile_Okay)
-        recompileCheckHelper();
+    if (status == Compile_Okay) {
+        if (IsIonEnabled(cx))
+            ionCompileHelper();
+        else
+            inliningCompileHelper();
+    }
 
     return status;
 }
@@ -1574,6 +1662,11 @@ mjit::Compiler::finishThisUp()
                  fullCode.locationOf(callICs[i].funGuard);
         jitCallICs[i].joinPointOffset = offset;
         JS_ASSERT(jitCallICs[i].joinPointOffset == offset);
+
+        offset = fullCode.locationOf(callICs[i].ionJoinPoint) -
+                 fullCode.locationOf(callICs[i].funGuard);
+        jitCallICs[i].ionJoinOffset = offset;
+        JS_ASSERT(jitCallICs[i].ionJoinOffset == offset);
 
         /* Compute the OOL call offset. */
         offset = stubCode.locationOf(callICs[i].oolCall) -
@@ -2210,6 +2303,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_NOP)
           END_CASE(JSOP_NOP)
 
+          BEGIN_CASE(JSOP_NOTEARG)
+          END_CASE(JSOP_NOTEARG)
+          
           BEGIN_CASE(JSOP_UNDEFINED)
             frame.push(UndefinedValue());
           END_CASE(JSOP_UNDEFINED)
@@ -3217,15 +3313,20 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_HOLE)
 
           BEGIN_CASE(JSOP_LOOPHEAD)
-          {
-            if (analysis->jumpTarget(PC)) {
+            if (analysis->jumpTarget(PC))
                 interruptCheckHelper();
-                recompileCheckHelper();
-            }
-          }
           END_CASE(JSOP_LOOPHEAD)
 
           BEGIN_CASE(JSOP_LOOPENTRY)
+            // Unlike JM, IonMonkey OSR enters loops at the LOOPENTRY op.
+            // Insert the recompile check here so that we can immediately
+            // enter Ion.
+            if (loop) {
+                if (IsIonEnabled(cx))
+                    ionCompileHelper();
+                else
+                    inliningCompileHelper();
+            }
           END_CASE(JSOP_LOOPENTRY)
 
           BEGIN_CASE(JSOP_DEBUGGER)
@@ -3905,9 +4006,104 @@ mjit::Compiler::interruptCheckHelper()
     stubcc.rejoin(Changes(0));
 }
 
-void
-mjit::Compiler::recompileCheckHelper()
+static inline bool
+MaybeIonCompileable(JSContext *cx, JSScript *script, bool *recompileCheckForIon)
 {
+#ifdef JS_ION
+    *recompileCheckForIon = true;
+
+    if (!ion::IsEnabled(cx))
+        return false;
+    if (!script->canIonCompile())
+        return false;
+
+    // If this script is small, doesn't have any function calls, and doesn't have
+    // any big loops, then throwing in a recompile check and causing an invalidation
+    // when we otherwise wouldn't have would be wasteful.
+    if (script->isShortRunning())
+        *recompileCheckForIon = false;
+
+    return true;
+#endif
+    return false;
+}
+
+void
+mjit::Compiler::ionCompileHelper()
+{
+    JS_ASSERT(IsIonEnabled(cx));
+    JS_ASSERT(!inlining());
+
+#ifdef JS_ION
+    if (debugMode() || !globalObj || !cx->typeInferenceEnabled() || outerScript->hasIonScript())
+        return;
+
+    bool recompileCheckForIon = false;
+    if (!MaybeIonCompileable(cx, outerScript, &recompileCheckForIon))
+        return;
+
+    uint32_t minUses = ion::UsesBeforeIonRecompile(outerScript, PC);
+
+    uint32_t *useCountAddress = script->addressOfUseCount();
+    masm.add32(Imm32(1), AbsoluteAddress(useCountAddress));
+
+    // If we don't want to do a recompileCheck for Ion, then this just needs to
+    // increment the useCount so that we know when to recompile this function
+    // from an Ion call.  No need to call out to recompiler stub.
+    if (!recompileCheckForIon)
+        return;
+
+    void *ionScriptAddress = &script->ion;
+
+    // Trigger ion compilation if (a) the script has been used enough times for
+    // this opcode, and (b) the script does not already have ion information
+    // (whether successful, failed, or in progress off thread compilation)
+    // *OR* off thread compilation is not being used.
+    //
+    // (b) prevents repetitive stub calls while off thread compilation is in
+    // progress, but is otherwise unnecessary and negatively affects tuning
+    // on some benchmarks (see bug 774253).
+    Jump last;
+
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
+    if (ion::js_IonOptions.parallelCompilation) {
+        Jump first = masm.branch32(Assembler::LessThan, AbsoluteAddress(useCountAddress),
+                                   Imm32(minUses));
+        last = masm.branch32(Assembler::Equal, AbsoluteAddress(ionScriptAddress),
+                             Imm32(0));
+        first.linkTo(masm.label(), &masm);
+    } else {
+        last = masm.branch32(Assembler::GreaterThanOrEqual, AbsoluteAddress(useCountAddress),
+                             Imm32(minUses));
+    }
+#else
+    /* Handle processors that can't load from absolute addresses. */
+    RegisterID reg = frame.allocReg();
+    masm.move(ImmPtr(useCountAddress), reg);
+    if (ion::js_IonOptions.parallelCompilation) {
+        Jump first = masm.branch32(Assembler::LessThan, Address(reg), Imm32(minUses));
+        masm.move(ImmPtr(ionScriptAddress), reg);
+        last = masm.branchPtr(Assembler::Equal, Address(reg), ImmPtr(NULL));
+        first.linkTo(masm.label(), &masm);
+    } else {
+        last = masm.branch32(Assembler::GreaterThanOrEqual, Address(reg), Imm32(minUses));
+    }
+    frame.freeReg(reg);
+#endif
+
+    stubcc.linkExit(last, Uses(0));
+    stubcc.leave();
+
+    OOL_STUBCALL(stubs::TriggerIonCompile, REJOIN_RESUME);
+    stubcc.rejoin(Changes(0));
+#endif /* JS_ION */
+}
+
+void
+mjit::Compiler::inliningCompileHelper()
+{
+    JS_ASSERT(!IsIonEnabled(cx));
+
     if (inlining() || debugMode() || !globalObj ||
         !analysis->hasFunctionCalls() || !cx->typeInferenceEnabled()) {
         return;
@@ -3955,7 +4151,7 @@ mjit::Compiler::methodEntryHelper()
     /* Ensure that we've flagged that the push has happened */
     if (sps.enabled()) {
         RegisterID reg = frame.allocReg();
-        sps.pushManual(masm, reg);
+        sps.pushManual(script, masm, reg);
         frame.freeReg(reg);
     }
     return Compile_Okay;
@@ -3967,7 +4163,7 @@ mjit::Compiler::profilingPushHelper()
     if (!sps.enabled())
         return Compile_Okay;
     RegisterID reg = frame.allocReg();
-    if (!sps.push(cx, masm, reg))
+    if (!sps.push(cx, script, masm, reg))
         return Compile_Error;
 
     /* Set the flags that we've pushed information onto the SPS stack */
@@ -3986,8 +4182,10 @@ mjit::Compiler::profilingPopHelper()
         sps.skipNextReenter();
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::ScriptProbeOnlyEpilogue, REJOIN_RESUME);
-    } else {
-        sps.pop(masm);
+    } else if (cx->runtime->spsProfiler.enabled()) {
+        RegisterID reg = frame.allocReg();
+        sps.pop(masm, reg);
+        frame.freeReg(reg);
     }
 }
 
@@ -4116,7 +4314,7 @@ mjit::Compiler::inlineCallHelper(uint32_t argc, bool callingNew, FrameSize &call
     interruptCheckHelper();
     if (sps.enabled()) {
         RegisterID reg = frame.allocReg();
-        sps.leave(masm, reg);
+        sps.leave(PC, masm, reg);
         frame.freeReg(reg);
     }
 
@@ -4398,6 +4596,7 @@ mjit::Compiler::inlineCallHelper(uint32_t argc, bool callingNew, FrameSize &call
     callIC.joinPoint = callPatch.joinPoint = masm.label();
     callIC.callIndex = callSites.length();
     addReturnSite();
+    callIC.ionJoinPoint = masm.label();
     if (lowerFunCallOrApply)
         uncachedCallPatch.joinPoint = callIC.joinPoint;
 
@@ -4485,7 +4684,7 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
 
     if (sps.enabled()) {
         RegisterID reg = frame.allocReg();
-        sps.leave(masm, reg);
+        sps.leave(PC, masm, reg);
         frame.freeReg(reg);
     }
 

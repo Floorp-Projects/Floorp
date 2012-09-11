@@ -336,6 +336,10 @@ class PunboxAssembler : public JSC::MacroAssembler
         return testBoolean(cond, Registers::ValueReg);
     }
 
+    Jump testMagic(Condition cond, RegisterID reg) {
+        return branchPtr(cond, reg, ImmTag(JSVAL_SHIFTED_TAG_MAGIC));
+    }
+
     Jump testString(Condition cond, RegisterID reg) {
         return branchPtr(cond, reg, ImmTag(JSVAL_SHIFTED_TAG_STRING));
     }

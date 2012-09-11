@@ -98,14 +98,14 @@ JSScript::getCallerFunction()
     return getFunction(0);
 }
 
-inline JSObject *
+inline js::RegExpObject *
 JSScript::getRegExp(size_t index)
 {
     js::ObjectArray *arr = regexps();
     JS_ASSERT(uint32_t(index) < arr->length);
     JSObject *obj = arr->vector[index];
     JS_ASSERT(obj->isRegExp());
-    return obj;
+    return (js::RegExpObject *) obj;
 }
 
 inline bool

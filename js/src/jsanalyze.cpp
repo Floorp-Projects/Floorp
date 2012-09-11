@@ -1,5 +1,5 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
-/* vim: set ts=40 sw=4 et tw=99: */
+/* -*- Mode: C++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil -*- */
+/* vim: set ts=4 sw=4 et tw=99: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,6 +34,18 @@ PrintBytecode(JSContext *cx, JSScript *scriptArg, jsbytecode *pc)
 }
 #endif
 
+inline bool
+IsJumpOpcode(JSOp op)
+{
+    uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
+
+    /*
+     * LABEL opcodes have type JOF_JUMP but are no-ops, don't treat them as
+     * jumps to avoid degrading precision.
+     */
+    return type == JOF_JUMP && op != JSOP_LABEL;
+}
+
 /////////////////////////////////////////////////////////////////////
 // Bytecode Analysis
 /////////////////////////////////////////////////////////////////////
@@ -61,6 +73,7 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
     if (offset < *currentOffset) {
         /* Scripts containing loops are never inlined. */
         isInlineable = false;
+        hasLoops_ = true;
 
         if (code->analyzed) {
             /*
@@ -302,6 +315,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_GETALIASEDVAR:
           case JSOP_CALLALIASEDVAR:
           case JSOP_SETALIASEDVAR:
+          case JSOP_LAMBDA:
             usesScopeChain_ = true;
             isInlineable = false;
             break;
@@ -310,6 +324,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_DEFVAR:
           case JSOP_DEFCONST:
           case JSOP_SETCONST:
+            usesScopeChain_ = true; // Requires access to VarObj via ScopeChain.
             isInlineable = canTrackVars = false;
             break;
 
@@ -472,7 +487,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_ARGUMENTS:
           case JSOP_THROW:
           case JSOP_EXCEPTION:
-          case JSOP_LAMBDA:
           case JSOP_DEBUGGER:
           case JSOP_FUNCALL:
           case JSOP_FUNAPPLY:
@@ -569,6 +583,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_LOOPHEAD:
           case JSOP_LOOPENTRY:
           case JSOP_ACTUALSFILLED:
+          case JSOP_NOTEARG:
             break;
 
           default:
@@ -577,10 +592,10 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
         }
 
-        uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
+        bool jump = IsJumpOpcode(op);
 
         /* Check basic jump opcodes, which may or may not have a fallthrough. */
-        if (type == JOF_JUMP) {
+        if (jump) {
             /* Some opcodes behave differently on their branching path. */
             unsigned newStackDepth = stackDepth;
 
@@ -614,11 +629,11 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             }
             JS_ASSERT(nextcode->stackDepth == stackDepth);
 
-            if (type == JOF_JUMP)
+            if (jump)
                 nextcode->jumpFallthrough = true;
 
             /* Treat the fallthrough of a branch instruction as a jump target. */
-            if (type == JOF_JUMP)
+            if (jump)
                 nextcode->jumpTarget = true;
             else
                 nextcode->fallthrough = true;
@@ -828,11 +843,14 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                 loop->hasCallsLoops = true;
             break;
 
+          case JSOP_LOOPENTRY:
+            getCode(offset).loop = loop;
+            break;
+
           default:;
         }
 
-        uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
-        if (type == JOF_JUMP) {
+        if (IsJumpOpcode(op)) {
             /*
              * Forward jumps need to pull in all variables which are live at
              * their target offset --- the variables live before the jump are
@@ -871,8 +889,10 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                 }
                 PodZero(nloop);
 
-                if (loop)
+                if (loop) {
                     loop->hasCallsLoops = true;
+                    nloop->depth = loop->depth + 1;
+                }
 
                 nloop->parent = loop;
                 loop = nloop;
@@ -1562,8 +1582,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
           default:;
         }
 
-        uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
-        if (type == JOF_JUMP) {
+        if (IsJumpOpcode(op)) {
             unsigned targetOffset = FollowBranch(cx, script, offset);
             checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
 

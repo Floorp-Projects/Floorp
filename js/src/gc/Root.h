@@ -17,6 +17,12 @@
 
 #include "jspubtd.h"
 
+namespace js {
+namespace gc {
+struct Cell;
+} /* namespace gc */
+} /* namespace js */
+
 namespace JS {
 
 /*
@@ -559,6 +565,24 @@ inline void MaybeCheckStackRoots(JSContext *cx, bool relax = true)
 # endif
 #endif
 }
+
+/* Base class for automatic read-only object rooting during compilation. */
+class CompilerRootNode
+{
+  protected:
+    CompilerRootNode(js::gc::Cell *ptr)
+      : next(NULL), ptr(ptr)
+    { }
+
+  public:
+    void **address() { return (void **)&ptr; }
+
+  public:
+    CompilerRootNode *next;
+
+  protected:
+    js::gc::Cell *ptr;
+};
 
 }  /* namespace JS */
 

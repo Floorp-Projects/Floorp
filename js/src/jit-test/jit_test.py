@@ -111,6 +111,8 @@ class Test:
                         test.jitflags.append('-d')
                     elif name == 'mjit':
                         test.jitflags.append('-m')
+                    elif name == 'ion-eager':
+                        test.jitflags.append('--ion-eager')
                     elif name == 'dump-bytecode':
                         test.jitflags.append('-D')
                     else:
@@ -434,6 +436,10 @@ def main(argv):
                   help='Use js-shell file indirection instead of piping stdio.')
     op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',
                   help='With --write-failures=FILE, additionally write the output of failed tests to [FILE]')
+    op.add_option('--ion', dest='ion', action='store_true',
+                  help='Run tests with --ion flag (ignores --jitflags)')
+    op.add_option('--tbpl', dest='tbpl', action='store_true',
+                  help='Run tests with all IonMonkey option combinations (ignores --jitflags)')
     (OPTIONS, args) = op.parse_args(argv)
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
@@ -498,13 +504,40 @@ def main(argv):
 
     # The full test list is ready. Now create copies for each JIT configuration.
     job_list = []
-    jitflags_list = parse_jitflags()
-    for test in test_list:
-        for jitflags in jitflags_list:
-            new_test = test.copy()
-            new_test.jitflags.extend(jitflags)
-            job_list.append(new_test)
-    
+    if OPTIONS.tbpl:
+        # Running all bits would take forever. Instead, we test a few interesting combinations.
+        flags = [
+                      ['--no-jm'],
+                      ['--ion-eager'],
+                      # Below, equivalents the old shell flags: ,m,am,amd,n,mn,amn,amdn,mdn
+                      ['--no-ion', '--no-jm', '--no-ti'],
+                      ['--no-ion', '--no-ti'],
+                      ['--no-ion', '--no-ti', '-a', '-d'],
+                      ['--no-ion', '--no-jm'],
+                      ['--no-ion'],
+                      ['--no-ion', '-a'],
+                      ['--no-ion', '-a', '-d'],
+                      ['--no-ion', '-d']
+                    ]
+        for test in test_list:
+            for variant in flags:
+                new_test = test.copy()
+                new_test.jitflags.extend(variant)
+                job_list.append(new_test)
+    elif OPTIONS.ion:
+        flags = [['--no-jm'], ['--ion-eager']]
+        for test in test_list:
+            for variant in flags:
+                new_test = test.copy()
+                new_test.jitflags.extend(variant)
+                job_list.append(new_test)
+    else:
+        jitflags_list = parse_jitflags()
+        for test in test_list:
+            for jitflags in jitflags_list:
+                new_test = test.copy()
+                new_test.jitflags.extend(jitflags)
+                job_list.append(new_test)
 
     shell_args = shlex.split(OPTIONS.shell_args)
 

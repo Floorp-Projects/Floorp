@@ -43,6 +43,10 @@
 #define YARR_CALL
 #endif
 
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
 namespace JSC {
 
 class JSGlobalData;
@@ -69,6 +73,12 @@ public:
 
     int execute(const UChar* input, unsigned start, unsigned length, int* output)
     {
+#if JS_TRACE_LOGGING
+        js::AutoTraceLog logger(js::TraceLogging::defaultLogger(),
+                                js::TraceLogging::YARR_YIT_START,
+                                js::TraceLogging::YARR_YIT_STOP);
+#endif
+
         return JS_EXTENSION((reinterpret_cast<YarrJITCode>(m_ref.m_code.executableAddress()))(input, start, length, output));
     }
 

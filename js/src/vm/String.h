@@ -273,6 +273,10 @@ class JSString : public js::gc::Cell
     inline JSFlatString *ensureFlat(JSContext *cx);
     inline JSFixedString *ensureFixed(JSContext *cx);
 
+    static bool ensureLinear(JSContext *cx, JSString *str) {
+        return str->ensureLinear(cx) != NULL;
+    }
+
     /* Type query and debug-checked casts */
 
     JS_ALWAYS_INLINE
