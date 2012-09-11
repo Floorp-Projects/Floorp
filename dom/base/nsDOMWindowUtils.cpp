@@ -2883,3 +2883,63 @@ nsDOMWindowUtils::SelectAtPoint(float aX, float aY, PRUint32 aSelectBehavior,
   *_retval = !NS_FAILED(rv);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, PRUint32 aSheetType)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  NS_ENSURE_ARG_POINTER(aSheetURI);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
+  
+  nsCOMPtr<nsIDOMDocument> ddoc;
+  nsresult rv = window->GetDocument(getter_AddRefs(ddoc));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(ddoc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc);
+  NS_ENSURE_TRUE(doc, NS_ERROR_INVALID_ARG);
+
+  nsIDocument::additionalSheetType type = 
+    aSheetType == AGENT_SHEET ? nsIDocument::eAgentSheet :
+                                nsIDocument::eUserSheet;
+
+  rv = doc->LoadAdditionalStyleSheet(type, aSheetURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, PRUint32 aSheetType)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  NS_ENSURE_ARG_POINTER(aSheetURI);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIDOMDocument> ddoc;
+  nsresult rv = window->GetDocument(getter_AddRefs(ddoc));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(ddoc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc);
+  NS_ENSURE_TRUE(doc, NS_ERROR_INVALID_ARG);
+
+  nsIDocument::additionalSheetType type = 
+    aSheetType == AGENT_SHEET ? nsIDocument::eAgentSheet :
+                                nsIDocument::eUserSheet;
+
+  doc->RemoveAdditionalStyleSheet(type, aSheetURI);
+  return NS_OK;
+}
