@@ -472,7 +472,8 @@ interface WebGLRenderingContext {
     const unsigned long UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
     const unsigned long BROWSER_DEFAULT_WEBGL          = 0x9244;
 
-    readonly attribute HTMLCanvasElement canvas;
+    // The canvas might actually be null in some cases, apparently.
+    readonly attribute HTMLCanvasElement? canvas;
 
     readonly attribute long drawingBufferWidth;
 

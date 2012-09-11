@@ -45,10 +45,10 @@ nsPerformanceTiming::~nsPerformanceTiming()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::GetDomainLookupStart() const
+nsPerformanceTiming::DomainLookupStart() const
 {
   if (!mChannel) {
-    return GetFetchStart();
+    return FetchStart();
   }
   mozilla::TimeStamp stamp;
   mChannel->GetDomainLookupStart(&stamp);
@@ -56,10 +56,10 @@ nsPerformanceTiming::GetDomainLookupStart() const
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::GetDomainLookupEnd() const
+nsPerformanceTiming::DomainLookupEnd() const
 {
   if (!mChannel) {
-    return GetFetchStart();
+    return FetchStart();
   }
   mozilla::TimeStamp stamp;
   mChannel->GetDomainLookupEnd(&stamp);
@@ -67,10 +67,10 @@ nsPerformanceTiming::GetDomainLookupEnd() const
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::GetConnectStart() const
+nsPerformanceTiming::ConnectStart() const
 {
   if (!mChannel) {
-    return GetFetchStart();
+    return FetchStart();
   }
   mozilla::TimeStamp stamp;
   mChannel->GetConnectStart(&stamp);
@@ -78,10 +78,10 @@ nsPerformanceTiming::GetConnectStart() const
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::GetConnectEnd() const
+nsPerformanceTiming::ConnectEnd() const
 {
   if (!mChannel) {
-    return GetFetchStart();
+    return FetchStart();
   }
   mozilla::TimeStamp stamp;
   mChannel->GetConnectEnd(&stamp);
@@ -89,10 +89,10 @@ nsPerformanceTiming::GetConnectEnd() const
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::GetRequestStart() const
+nsPerformanceTiming::RequestStart() const
 {
   if (!mChannel) {
-    return GetFetchStart();
+    return FetchStart();
   }
   mozilla::TimeStamp stamp;
   mChannel->GetRequestStart(&stamp);
@@ -100,10 +100,10 @@ nsPerformanceTiming::GetRequestStart() const
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::GetResponseStart() const
+nsPerformanceTiming::ResponseStart() const
 {
   if (!mChannel) {
-    return GetFetchStart();
+    return FetchStart();
   }
   mozilla::TimeStamp stamp;
   mChannel->GetResponseStart(&stamp);
@@ -116,10 +116,10 @@ nsPerformanceTiming::GetResponseStart() const
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::GetResponseEnd() const
+nsPerformanceTiming::ResponseEnd() const
 {
   if (!mChannel) {
-    return GetFetchStart();
+    return FetchStart();
   }
   mozilla::TimeStamp stamp;
   mChannel->GetResponseEnd(&stamp);
@@ -204,7 +204,7 @@ NS_INTERFACE_MAP_END
 
 
 nsPerformanceTiming*
-nsPerformance::GetTiming()
+nsPerformance::Timing()
 {
   if (!mTiming) {
     mTiming = new nsPerformanceTiming(this, mChannel);
@@ -213,7 +213,7 @@ nsPerformance::GetTiming()
 }
 
 nsPerformanceNavigation*
-nsPerformance::GetNavigation()
+nsPerformance::Navigation()
 {
   if (!mNavigation) {
     mNavigation = new nsPerformanceNavigation(this);

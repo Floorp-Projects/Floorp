@@ -133,10 +133,10 @@ public: // WebIDL interface:
   void GetUrl(nsAString& aResult);
 
   // webIDL: readonly attribute unsigned short readyState;
-  uint16_t GetReadyState() { return (uint16_t)mReadyState; }
+  uint16_t ReadyState() const { return mReadyState; }
 
   // webIDL: readonly attribute unsigned long bufferedAmount;
-  uint32_t GetBufferedAmount() { return (uint32_t) mOutgoingBufferedAmount; }
+  uint32_t BufferedAmount() const { return mOutgoingBufferedAmount; }
 
   // webIDL: attribute Function? onopen;
   IMPL_EVENT_HANDLER(open)
@@ -162,8 +162,8 @@ public: // WebIDL interface:
   IMPL_EVENT_HANDLER(message)
 
   // webIDL: attribute DOMString binaryType;
-  BinaryType GetBinaryType() { return mBinaryType; }
-  void SetBinaryType(BinaryType aData) { mBinaryType = aData; }
+  dom::BinaryType BinaryType() const { return mBinaryType; }
+  void SetBinaryType(dom::BinaryType aData) { mBinaryType = aData; }
 
   // webIDL: void send(DOMString|Blob|ArrayBufferView data);
   void Send(const nsAString& aData,
@@ -279,7 +279,7 @@ protected: //data
 
   uint32_t mOutgoingBufferedAmount;
 
-  BinaryType mBinaryType;
+  dom::BinaryType mBinaryType;
 
   // Web Socket owner information:
   // - the script file name, UTF8 encoded.
