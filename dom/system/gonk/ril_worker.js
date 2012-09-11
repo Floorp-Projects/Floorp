@@ -2144,8 +2144,6 @@ let RIL = {
    * @param [optional] itemIdentifier
    * @param [optional] input
    * @param [optional] isYesNo
-   * @param [optional] isUCS2
-   * @param [optional] isPacked
    * @param [optional] hasConfirmed
    */
   sendStkTerminalResponse: function sendStkTerminalResponse(response) {
@@ -2156,13 +2154,14 @@ let RIL = {
 
     let token = Buf.newParcel(REQUEST_STK_SEND_TERMINAL_RESPONSE);
     let textLen = 0;
+    let command = response.command;
     if (response.resultCode != STK_RESULT_HELP_INFO_REQUIRED) {
       if (response.isYesNo) {
         textLen = 1;
       } else if (response.input) {
-        if (response.isUCS2) {
+        if (command.options.isUCS2) {
           textLen = response.input.length * 2;
-        } else if (response.isPacked) {
+        } else if (command.options.isPacked) {
           let bits = response.input.length * 7;
           textLen = bits * 7 / 8 + (bits % 8 ? 1 : 0);
         } else {
@@ -2184,9 +2183,9 @@ let RIL = {
                                COMPREHENSIONTLV_FLAG_CR);
     GsmPDUHelper.writeHexOctet(3);
     if (response.command) {
-      GsmPDUHelper.writeHexOctet(response.command.commandNumber);
-      GsmPDUHelper.writeHexOctet(response.command.typeOfCommand);
-      GsmPDUHelper.writeHexOctet(response.command.commandQualifier);
+      GsmPDUHelper.writeHexOctet(command.commandNumber);
+      GsmPDUHelper.writeHexOctet(command.typeOfCommand);
+      GsmPDUHelper.writeHexOctet(command.commandQualifier);
     } else {
       GsmPDUHelper.writeHexOctet(0x00);
       GsmPDUHelper.writeHexOctet(0x00);
@@ -2237,8 +2236,10 @@ let RIL = {
         GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TEXT_STRING |
                                    COMPREHENSIONTLV_FLAG_CR);
         GsmPDUHelper.writeHexOctet(textLen + 1); // +1 for coding
-        let coding = response.isUCS2 ? STK_TEXT_CODING_UCS2 :
-                       (response.isPacked ? STK_TEXT_CODING_GSM_7BIT_PACKED :
+        let coding = command.options.isUCS2 ?
+                       STK_TEXT_CODING_UCS2 :
+                       (command.options.isPacked ?
+                          STK_TEXT_CODING_GSM_7BIT_PACKED :
                           STK_TEXT_CODING_GSM_8BIT);
         GsmPDUHelper.writeHexOctet(coding);
 
