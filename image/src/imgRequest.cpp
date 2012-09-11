@@ -1105,7 +1105,10 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       // instantiates a decoder behind the scenes, so if we don't have a decoder
       // for this mimetype we'll find out about it here.
       rv = mImage->Init(this, mContentType.get(), uriString.get(), imageFlags);
-      if (NS_FAILED(rv)) { // Probably bad mimetype
+
+      // We allow multipart images to fail to initialize without cancelling the
+      // load because subsequent images might be fine.
+      if (NS_FAILED(rv) && !mIsMultiPartChannel) { // Probably bad mimetype
 
         this->Cancel(rv);
         return NS_BINDING_ABORTED;
