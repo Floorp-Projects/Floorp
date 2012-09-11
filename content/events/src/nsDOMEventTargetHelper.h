@@ -110,7 +110,7 @@ public:
   void BindToOwner(nsPIDOMWindow* aOwner);
   void BindToOwner(nsDOMEventTargetHelper* aOther);
   virtual void DisconnectFromOwner();                   
-  nsPIDOMWindow* GetOwner() { return mOwner; }
+  nsPIDOMWindow* GetOwner() const { return mOwner; }
   bool HasOrHasHadOwner() { return mHasOrHasHadOwner; }
 protected:
   nsRefPtr<nsEventListenerManager> mListenerManager;
