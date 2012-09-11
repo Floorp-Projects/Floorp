@@ -73,7 +73,7 @@ nsScreen::Reset()
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
     if (target) {
       target->RemoveSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
-                                        mEventListener, true);
+                                        mEventListener, /* usecapture */ true);
     }
 
     mEventListener = nullptr;
@@ -328,6 +328,39 @@ nsScreen::GetMozOrientation(nsAString& aOrientation)
   return NS_OK;
 }
 
+nsScreen::LockPermission
+nsScreen::GetLockOrientationPermission() const
+{
+  nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
+  if (!owner) {
+    return LOCK_DENIED;
+  }
+
+  // Chrome can always lock the screen orientation.
+  if (IsChromeType(owner->GetDocShell())) {
+    return LOCK_ALLOWED;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  owner->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (!doc) {
+    return LOCK_DENIED;
+  }
+
+  // Apps can always lock the screen orientation.
+  if (doc->NodePrincipal()->GetAppStatus() >=
+        nsIPrincipal::APP_STATUS_INSTALLED) {
+    return LOCK_ALLOWED;
+  }
+
+  // Other content must be full-screen in order to lock orientation.
+  bool fullscreen;
+  domDoc->GetMozFullScreen(&fullscreen);
+
+  return fullscreen ? FULLSCREEN_LOCK_ALLOWED : LOCK_DENIED;
+}
+
 NS_IMETHODIMP
 nsScreen::MozLockOrientation(const jsval& aOrientation, JSContext* aCx, bool* aReturn)
 {
@@ -391,61 +424,37 @@ nsScreen::MozLockOrientation(const jsval& aOrientation, JSContext* aCx, bool* aR
     }
   }
 
-  // Determine whether we can lock the screen orientation.
-  bool canLockOrientation = false;
-  do {
-    nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
-    if (!owner) {
-      break;
-    }
+  switch (GetLockOrientationPermission()) {
+    case LOCK_DENIED:
+      return NS_OK;
+    case LOCK_ALLOWED:
+      *aReturn = hal::LockScreenOrientation(orientation);
+      return NS_OK;
+    case FULLSCREEN_LOCK_ALLOWED:
+      *aReturn = hal::LockScreenOrientation(orientation);
+      if (!*aReturn) {
+        return NS_OK;
+      }
 
-    // Chrome can always lock the screen orientation.
-    if (IsChromeType(owner->GetDocShell())) {
-      canLockOrientation = true;
-      break;
-    }
+      // We are fullscreen and lock has been accepted.
+      // Now, we need to register a listener so we learn when we leave
+      // full-screen and when we will have to unlock the screen.
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+      if (!target) {
+        return NS_OK;
+      }
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    owner->GetDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-    if (!doc) {
-      break;
-    }
+      if (!mEventListener) {
+        mEventListener = new FullScreenEventListener();
+      }
 
-    // Apps can always lock the screen orientation.
-    if (doc->NodePrincipal()->GetAppStatus() >=
-          nsIPrincipal::APP_STATUS_INSTALLED) {
-      canLockOrientation = true;
-      break;
-    }
-
-    // Other content must be full-screen in order to lock orientation.
-    bool fullscreen;
-    domDoc->GetMozFullScreen(&fullscreen);
-    if (!fullscreen) {
-      break;
-    }
-
-    // If we're full-screen, register a listener so we learn when we leave
-    // full-screen.
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(owner);
-    if (!target) {
-      break;
-    }
-
-    if (!mEventListener) {
-      mEventListener = new FullScreenEventListener();
-    }
-
-    target->AddSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
-                                   mEventListener, /* useCapture = */ true);
-    canLockOrientation = true;
-  } while(0);
-
-  if (canLockOrientation) {
-    *aReturn = hal::LockScreenOrientation(orientation);
+      return target->AddSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
+                                            mEventListener, /* useCapture = */ true);
   }
 
+  // This is only for compilers that don't understand that the previous switch
+  // will always return.
+  MOZ_NOT_REACHED();
   return NS_OK;
 }
 
