@@ -12,9 +12,12 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_CHROME_FILES	= \
+		memory-reports-good.json \
+		memory-reports-bad.json \
 		test_aboutcompartments.xul \
 		test_aboutmemory.xul \
 		test_aboutmemory2.xul \
+		test_aboutmemory3.xul \
 		test_memoryReporters.xul \
 		test_sqliteMultiReporter.xul \
 		$(NULL)

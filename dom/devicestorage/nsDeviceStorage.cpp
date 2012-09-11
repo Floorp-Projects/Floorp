@@ -337,7 +337,7 @@ DeviceStorageFile::Remove()
 
 void
 DeviceStorageFile::CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles,
-                                uint64_t aSince)
+                                PRTime aSince)
 {
   nsString rootPath;
   nsresult rv = mFile->GetPath(rootPath);
@@ -350,7 +350,7 @@ DeviceStorageFile::CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles,
 
 void
 DeviceStorageFile::collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles,
-                                        uint64_t aSince,
+                                        PRTime aSince,
                                         nsAString& aRootPath)
 {
   nsCOMPtr<nsISimpleEnumerator> e;
@@ -847,7 +847,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorageCursor, DOMRequest)
 nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
                                                    nsIPrincipal* aPrincipal,
                                                    DeviceStorageFile* aFile,
-                                                   uint64_t aSince)
+                                                   PRTime aSince)
   : DOMRequest(aWindow)
   , mOkToCallContinue(false)
   , mSince(aSince)

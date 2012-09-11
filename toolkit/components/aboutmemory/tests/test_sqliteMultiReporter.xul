@@ -48,7 +48,7 @@
 
   // If we haven't crashed, we've passed, but the test harness requires that
   // we explicitly check something.
-  ok(true);
+  ok(true, "didn't crash");
 
   ]]>
   </script>

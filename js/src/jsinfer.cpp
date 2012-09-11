@@ -5644,7 +5644,7 @@ JSObject::makeLazyType(JSContext *cx)
     RootedObject self(cx, this);
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
     TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, key, getProto());
-    AssertRootingUnnecessary safe(cx);
+    AutoAssertNoGC nogc;
     if (!type) {
         if (cx->typeInferenceEnabled())
             cx->compartment->types.setPendingNukeTypes(cx);

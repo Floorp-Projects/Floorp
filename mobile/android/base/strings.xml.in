@@ -135,9 +135,10 @@
   <string name="reading_list_added">&reading_list_added;</string>
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_failed">&reading_list_failed;</string>
-  <string name="reader_mode">&reader_mode;</string>
+  <string name="reader">&reader;</string>
 
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
+  <string name="contextmenu_open_in_reader">&contextmenu_open_in_reader;</string>
   <string name="contextmenu_remove_history">&contextmenu_remove_history;</string>
   <string name="contextmenu_remove_bookmark">&contextmenu_remove_bookmark;</string>
   <string name="contextmenu_add_to_launcher">&contextmenu_add_to_launcher;</string>
@@ -226,13 +227,5 @@
   <string name="updater_apply_title">&updater_apply_title;</string>
   <string name="updater_apply_ticker">&updater_apply_ticker;</string>
   <string name="updater_apply_select">&updater_apply_select;</string>
-
-  <string name="updater_installing_title">&updater_installing_title;</string>
-  <string name="updater_installing_ticker">&updater_installing_ticker;</string>
-  <string name="updater_installing_ticker_success">&updater_installing_ticker_success;</string>
-  <string name="updater_installing_ticker_fail">&updater_installing_ticker_fail;</string>
-  <string name="updater_installing_text">&updater_installing_text;</string>
-  <string name="updater_installing_text_success">&updater_installing_text_success;</string>
-  <string name="updater_installing_text_fail">&updater_installing_text_fail;</string>
 
 </resources>

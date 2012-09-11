@@ -745,7 +745,40 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
  */
 namespace JS {
 mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
+
+#ifdef DEBUG
+JS_FRIEND_API(void)
+EnterAssertNoGCScope()
+{
+    ++TlsRuntime.get()->gcAssertNoGCDepth;
 }
+
+JS_FRIEND_API(void)
+LeaveAssertNoGCScope()
+{
+    --TlsRuntime.get()->gcAssertNoGCDepth;
+    JS_ASSERT(TlsRuntime.get()->gcAssertNoGCDepth >= 0);
+}
+
+JS_FRIEND_API(bool)
+InNoGCScope()
+{
+    return TlsRuntime.get()->gcAssertNoGCDepth > 0;
+}
+
+JS_FRIEND_API(bool)
+NeedRelaxedRootChecks()
+{
+    return TlsRuntime.get()->gcRelaxRootChecks;
+}
+#else
+JS_FRIEND_API(void) EnterAssertNoGCScope() {}
+JS_FRIEND_API(void) LeaveAssertNoGCScope() {}
+JS_FRIEND_API(bool) InNoGCScope() { return false; }
+JS_FRIEND_API(bool) NeedRelaxedRootChecks() { return false; }
+#endif
+
+} /* namespace JS */
 
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
 
@@ -822,6 +855,10 @@ JSRuntime::JSRuntime()
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
     gcExactScanningEnabled(true),
+#ifdef DEBUG
+    gcRelaxRootChecks(false),
+    gcAssertNoGCDepth(0),
+#endif
     gcPoke(false),
     heapState(Idle),
 #ifdef JS_GC_ZEAL
@@ -3480,7 +3517,7 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, JSObject *pare
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
-    AssertRootingUnnecessary safe(cx);
+    AutoAssertNoGC nogc;
     if (obj) {
         if (clasp->ext.equality)
             MarkTypeObjectFlags(cx, obj, OBJECT_FLAG_SPECIAL_EQUALITY);
@@ -3508,7 +3545,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, 
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewObjectWithGivenProto(cx, clasp, proto, parent);
-    AssertRootingUnnecessary safe(cx);
+    AutoAssertNoGC nogc;
     if (obj)
         MarkTypeObjectUnknownProperties(cx, obj->type());
     return obj;
@@ -4708,7 +4745,7 @@ JS_PUBLIC_API(JSBool)
 JS_NextProperty(JSContext *cx, JSObject *iterobjArg, jsid *idp)
 {
     RootedObject iterobj(cx, iterobjArg);
-    AssertRootingUnnecessary safe(cx);
+    AutoAssertNoGC nogc;
     int32_t i;
     Shape *shape;
     JSIdArray *ida;

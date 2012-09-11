@@ -1923,10 +1923,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
 }
 
-#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
-  min-height: 16px; /* corresponds to the max. height of non-textual tab contents, i.e. the favicon */
-}
-
 .tab-throbber[pinned],
 .tab-icon-image[pinned] {
   -moz-margin-start: 5px;
