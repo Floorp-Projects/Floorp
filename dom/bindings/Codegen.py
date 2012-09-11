@@ -3481,7 +3481,16 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
 
     def definition_body(self):
         name = self.attr.identifier.name
-        nativeName = "Get" + MakeNativeName(self.descriptor.binaryNames.get(name, name))
+        nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
+        # resultOutParam does not depend on whether resultAlreadyAddRefed is set
+        (_, resultOutParam) = getRetvalDeclarationForType(self.attr.type,
+                                                          self.descriptor,
+                                                          False)
+        infallible = ('infallible' in
+                      self.descriptor.getExtendedAttributes(self.attr,
+                                                            getter=True))
+        if resultOutParam or self.attr.type.nullable() or not infallible:
+            nativeName = "Get" + nativeName
         return CGIndenter(CGGetterCall(self.attr.type, nativeName,
                                        self.descriptor, self.attr)).define()
 
@@ -4722,7 +4731,7 @@ class CGDOMJSProxyHandler_getOwnPropertyNames(ClassMethod):
     def getBody(self):
         indexedGetter = self.descriptor.operations['IndexedGetter']
         if indexedGetter:
-            addIndices = """uint32_t length = UnwrapProxy(proxy)->GetLength();
+            addIndices = """uint32_t length = UnwrapProxy(proxy)->Length();
 MOZ_ASSERT(int32_t(length) >= 0);
 for (int32_t i = 0; i < int32_t(length); ++i) {
   if (!props.append(INT_TO_JSID(i))) {
