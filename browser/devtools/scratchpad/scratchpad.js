@@ -268,6 +268,7 @@ var Scratchpad = {
       this._contentSandbox = new Cu.Sandbox(contentWindow,
         { sandboxPrototype: contentWindow, wantXrays: false, 
           sandboxName: 'scratchpad-content'});
+      this._contentSandbox.__SCRATCHPAD__ = this;
 
       this._previousBrowserWindow = this.browserWindow;
       this._previousBrowser = this.gBrowser.selectedBrowser;
@@ -302,6 +303,7 @@ var Scratchpad = {
       this._chromeSandbox = new Cu.Sandbox(this.browserWindow,
         { sandboxPrototype: this.browserWindow, wantXrays: false, 
           sandboxName: 'scratchpad-chrome'});
+      this._chromeSandbox.__SCRATCHPAD__ = this;
       addDebuggerToGlobal(this._chromeSandbox);
 
       this._previousBrowserWindow = this.browserWindow;
