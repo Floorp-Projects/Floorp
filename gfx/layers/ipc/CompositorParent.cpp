@@ -43,6 +43,9 @@ namespace layers {
 // affects CrossProcessCompositorParent below.
 static CompositorParent* sCurrentCompositor;
 static Thread* sCompositorThread = nullptr;
+// manual reference count of the compositor thread.
+static int sCompositorThreadRefCount = 0;
+static MessageLoop* sMainLoop = nullptr;
 // When ContentParent::StartUp() is called, we use the Thread global.
 // When StartUpWithExistingThread() is used, we have to use the two
 // duplicated globals, because there's no API to make a Thread from an
@@ -74,6 +77,30 @@ struct PanZoomUserData : public LayerUserData {
  */
 static const LayerTreeState* GetIndirectShadowTree(uint64_t aId);
 
+static void DeferredDeleteCompositorParent(CompositorParent* aNowReadyToDie)
+{
+  aNowReadyToDie->Release();
+}
+
+static void DeleteCompositorThread()
+{
+  if (NS_IsMainThread()){
+    delete sCompositorThread;  
+    sCompositorThread = nullptr;
+    sCompositorLoop = nullptr;
+    sCompositorThreadID = 0;
+  } else {
+    sMainLoop->PostTask(FROM_HERE, NewRunnableFunction(&DeleteCompositorThread));
+  }
+}
+
+static void ReleaseCompositorThread()
+{
+  if(--sCompositorThreadRefCount == 0) {
+    DeleteCompositorThread();
+  }
+}
+
 void
 CompositorParent::StartUpWithExistingThread(MessageLoop* aMsgLoop,
                                             PlatformThreadId aThreadID)
@@ -82,6 +109,8 @@ CompositorParent::StartUpWithExistingThread(MessageLoop* aMsgLoop,
   CreateCompositorMap();
   sCompositorLoop = aMsgLoop;
   sCompositorThreadID = aThreadID;
+  sMainLoop = MessageLoop::current();
+  sCompositorThreadRefCount = 1;
 }
 
 void CompositorParent::StartUp()
@@ -89,6 +118,7 @@ void CompositorParent::StartUp()
   MOZ_ASSERT(!sCompositorLoop);
   CreateCompositorMap();
   CreateThread();
+  sMainLoop = MessageLoop::current();
 }
 
 void CompositorParent::ShutDown()
@@ -103,6 +133,7 @@ bool CompositorParent::CreateThread()
   if (sCompositorThread || sCompositorLoop) {
     return true;
   }
+  sCompositorThreadRefCount = 1;
   sCompositorThread = new Thread("Compositor");
   if (!sCompositorThread->Start()) {
     delete sCompositorThread;
@@ -115,12 +146,7 @@ bool CompositorParent::CreateThread()
 void CompositorParent::DestroyThread()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
-  if (sCompositorThread) {
-    delete sCompositorThread;
-    sCompositorThread = nullptr;
-  }
-  sCompositorLoop = nullptr;
-  sCompositorThreadID = 0;
+  ReleaseCompositorThread();
 }
 
 MessageLoop* CompositorParent::CompositorLoop()
@@ -156,6 +182,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   if (!sCurrentCompositor) {
     sCurrentCompositor = this;
   }
+  ++sCompositorThreadRefCount;
 }
 
 PlatformThreadId
@@ -171,6 +198,7 @@ CompositorParent::~CompositorParent()
   if (this == sCurrentCompositor) {
     sCurrentCompositor = NULL;
   }
+  ReleaseCompositorThread();
 }
 
 void
@@ -199,6 +227,15 @@ bool
 CompositorParent::RecvStop()
 {
   Destroy();
+  // There are chances that the ref count reaches zero on the main thread shortly
+  // after this function returns while some ipdl code still needs to run on 
+  // this thread.
+  // We must keep the compositor parent alive untill the code handling message 
+  // reception is finished on this thread.
+  this->AddRef(); // Corresponds to DeferredDeleteCompositorParent's Release
+  CompositorLoop()->PostTask(FROM_HERE, 
+                           NewRunnableFunction(&DeferredDeleteCompositorParent,
+                                               this));
   return true;
 }
 
