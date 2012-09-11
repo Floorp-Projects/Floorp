@@ -155,6 +155,19 @@ protected:
   bool     Create(nsWindow*, IMEState::Enabled);
   bool     Destroy(void);
 
+  bool     IsReadLock(DWORD aLock) const
+  {
+    return (TS_LF_READ == (aLock & TS_LF_READ));
+  }
+  bool     IsReadWriteLock(DWORD aLock) const
+  {
+    return (TS_LF_READWRITE == (aLock & TS_LF_READWRITE));
+  }
+  bool     IsReadLocked() const { return IsReadLock(mLock); }
+  bool     IsReadWriteLocked() const { return IsReadWriteLock(mLock); }
+
+  bool     GetScreenExtInternal(RECT &aScreenExt);
+  bool     GetSelectionInternal(TS_SELECTION_ACP &aSelectionACP);
   // If aDispatchTextEvent is true, this method will dispatch text event if
   // this is called during IME composing.  aDispatchTextEvent should be true
   // only when this is called from SetSelection.  Because otherwise, the text
