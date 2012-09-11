@@ -103,7 +103,7 @@
 #endif
     </toolbar>
     <vbox id="dbg-content" flex="1">
-      <vbox id="globalsearch" hidden="true" flex="1"/>
+      <vbox id="globalsearch" hidden="true"/>
       <splitter id="globalsearch-splitter"
                 class="devtools-horizontal-splitter" hidden="true"/>
       <hbox flex="1">

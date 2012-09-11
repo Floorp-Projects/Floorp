@@ -4,6 +4,11 @@
 
 const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
 
+/**
+ * Tests if the global search results switch back and forth, and wrap around
+ * when switching between them.
+ */
+
 var gPane = null;
 var gTab = null;
 var gDebuggee = null;

@@ -11,6 +11,10 @@ var gScripts = null;
 var gSearchBox = null;
 var gMenulist = null;
 
+/**
+ * Tests basic functionality of scripts filtering (token search and line jump).
+ */
+
 function test()
 {
   let scriptShown = false;
