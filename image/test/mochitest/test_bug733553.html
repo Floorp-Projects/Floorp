@@ -28,7 +28,19 @@ var testParts = [
   [1, "red.png"],
   [80, "damon.jpg"],
   [80, "damon.jpg"],
-  [80, "damon.jpg"]
+  [80, "damon.jpg"],
+  // An invalid image (from bug 787899) that is further delivered with a
+  // "special" bad MIME type that indicates that the necko
+  // multipart/x-mixed-replace parser wasn't able to parse it.
+  [0, "rillybad.jpg"],
+  // Bad.jpg is bad such that it sniffs as a JPEG, and therefore doesn't change
+  // what's been decoded (since the RasterImage isn't deleted), so its width
+  // needs to be the same as the previous image.
+  [80, "damon.jpg"],
+  [80, "bad.jpg"],
+  [1, "red.png"],
+  [0, "invalid.jpg"],
+  [40, "animated-gif2.gif"]
 ];
 
 // We'll append the part number to this, and tell the informant
@@ -51,17 +63,14 @@ function readyForNext() {
 }
 
 function imageLoad(aEvent) {
-  if (testParts.length > testIndex) {
-    var [width, fileName] = testParts[testIndex];
-    is(aEvent.target.width, width,
-       "Test " + testIndex + " " + fileName + " width correct");
-    readyForNext();
-  } else {
-    aEvent.target.removeEventListener("load", imageLoad, false);
-    aEvent.target.removeEventListener("error", imageLoad, false);
-    var loader = document.getElementById("loader");
-    readyForNext();
+  var [width, fileName] = testParts[testIndex];
+  is(aEvent.target.width, width,
+     "Test " + testIndex + " " + fileName + " width correct");
+
+  if ((testParts.length - 1) == testIndex) {
     SimpleTest.finish();
+  } else {
+    readyForNext();
   }
 }
 

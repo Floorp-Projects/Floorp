@@ -58,6 +58,9 @@ MOCHITEST_FILES =   imgutils.js \
                 bug733553.sjs \
                 bug733553-informant.sjs \
                 animated-gif2.gif \
+                invalid.jpg \
+                bad.jpg \
+                rillybad.jpg \
                 test_bug767779.html \
                 bug767779.sjs \
                 animated-gif_trailing-garbage.gif \
