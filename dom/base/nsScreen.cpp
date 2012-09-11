@@ -13,6 +13,7 @@
 #include "nsLayoutUtils.h"
 #include "nsDOMEvent.h"
 #include "nsGlobalWindow.h"
+#include "nsJSUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -276,7 +277,6 @@ nsScreen::Notify(const hal::ScreenConfiguration& aConfiguration)
   mOrientation = aConfiguration.orientation();
 
   NS_ASSERTION(mOrientation != eScreenOrientation_None &&
-               mOrientation != eScreenOrientation_EndGuard &&
                mOrientation != eScreenOrientation_Portrait &&
                mOrientation != eScreenOrientation_Landscape,
                "Invalid orientation value passed to notify method!");
@@ -307,7 +307,6 @@ nsScreen::GetMozOrientation(nsAString& aOrientation)
 {
   switch (mOrientation) {
     case eScreenOrientation_None:
-    case eScreenOrientation_EndGuard:
     case eScreenOrientation_Portrait:
     case eScreenOrientation_Landscape:
       NS_ASSERTION(false, "Shouldn't be used when getting value!");
@@ -330,25 +329,66 @@ nsScreen::GetMozOrientation(nsAString& aOrientation)
 }
 
 NS_IMETHODIMP
-nsScreen::MozLockOrientation(const nsAString& aOrientation, bool* aReturn)
+nsScreen::MozLockOrientation(const jsval& aOrientation, JSContext* aCx, bool* aReturn)
 {
-  ScreenOrientation orientation;
   *aReturn = false;
 
-  if (aOrientation.EqualsLiteral("portrait")) {
-    orientation = eScreenOrientation_Portrait;
-  } else if (aOrientation.EqualsLiteral("portrait-primary")) {
-    orientation = eScreenOrientation_PortraitPrimary;
-  } else if (aOrientation.EqualsLiteral("portrait-secondary")) {
-    orientation = eScreenOrientation_PortraitSecondary;
-  } else if (aOrientation.EqualsLiteral("landscape")) {
-    orientation = eScreenOrientation_Landscape;
-  } else if (aOrientation.EqualsLiteral("landscape-primary")) {
-    orientation = eScreenOrientation_LandscapePrimary;
-  } else if (aOrientation.EqualsLiteral("landscape-secondary")) {
-    orientation = eScreenOrientation_LandscapeSecondary;
+  nsAutoTArray<nsString, 8> orientations;
+  // Preallocating 8 elements to make it faster.
+
+  if (aOrientation.isString()) {
+    nsDependentJSString item;
+    item.init(aCx, aOrientation.toString());
+    orientations.AppendElement(item);
   } else {
-    return NS_OK;
+    // If we don't have a string, we must have an Array.
+    if (!aOrientation.isObject()) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    JSObject& obj = aOrientation.toObject();
+    uint32_t length;
+    if (!JS_GetArrayLength(aCx, &obj, &length) || length <= 0) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    orientations.SetCapacity(length);
+
+    for (uint32_t i = 0; i < length; ++i) {
+      jsval value;
+      NS_ENSURE_TRUE(JS_GetElement(aCx, &obj, i, &value), NS_ERROR_UNEXPECTED);
+      if (!value.isString()) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      nsDependentJSString item;
+      item.init(aCx, value);
+      orientations.AppendElement(item);
+    }
+  }
+
+  ScreenOrientation orientation = eScreenOrientation_None;
+
+  for (uint32_t i=0; i<orientations.Length(); ++i) {
+    nsString& item = orientations[i];
+
+    if (item.EqualsLiteral("portrait")) {
+      orientation |= eScreenOrientation_Portrait;
+    } else if (item.EqualsLiteral("portrait-primary")) {
+      orientation |= eScreenOrientation_PortraitPrimary;
+    } else if (item.EqualsLiteral("portrait-secondary")) {
+      orientation |= eScreenOrientation_PortraitSecondary;
+    } else if (item.EqualsLiteral("landscape")) {
+      orientation |= eScreenOrientation_Landscape;
+    } else if (item.EqualsLiteral("landscape-primary")) {
+      orientation |= eScreenOrientation_LandscapePrimary;
+    } else if (item.EqualsLiteral("landscape-secondary")) {
+      orientation |= eScreenOrientation_LandscapeSecondary;
+    } else {
+      // If we don't recognize that the token, we should just return 'false'
+      // without throwing.
+      return NS_OK;
+    }
   }
 
   // Determine whether we can lock the screen orientation.
