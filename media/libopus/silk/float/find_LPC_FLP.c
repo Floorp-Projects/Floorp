@@ -1,5 +1,9 @@
 /***********************************************************************
-Copyright (c) 2006-2011, Skype Limited. All rights reserved.
+Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
+
+This file is extracted from RFC6716. Please see that RFC for additional
+information.
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -8,7 +12,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -99,6 +103,6 @@ void silk_find_LPC_FLP(
         silk_A2NLSF_FLP( NLSF_Q15, a, psEncC->predictLPCOrder );
     }
 
-    silk_assert( psEncC->indices.NLSFInterpCoef_Q2 == 4 || 
+    silk_assert( psEncC->indices.NLSFInterpCoef_Q2 == 4 ||
         ( psEncC->useInterpolatedNLSFs && !psEncC->first_frame_after_reset && psEncC->nb_subfr == MAX_NB_SUBFR ) );
 }
