@@ -849,7 +849,7 @@ LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
     if (skipAnalysis)
         return NULL;
 
-    if (id == NameToId(cx->runtime->atomState.lengthAtom))
+    if (id == NameToId(cx->names().length))
         return NULL;
 
     uint32_t objSlot;

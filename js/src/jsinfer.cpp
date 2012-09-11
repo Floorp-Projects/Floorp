@@ -54,44 +54,44 @@ using namespace js::analyze;
 
 static inline jsid
 id_prototype(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.classPrototypeAtom);
+    return NameToId(cx->names().classPrototype);
 }
 
 static inline jsid
 id_arguments(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.argumentsAtom);
+    return NameToId(cx->names().arguments);
 }
 
 static inline jsid
 id_length(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.lengthAtom);
+    return NameToId(cx->names().length);
 }
 
 static inline jsid
 id___proto__(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.protoAtom);
+    return NameToId(cx->names().proto);
 }
 
 static inline jsid
 id_constructor(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.constructorAtom);
+    return NameToId(cx->names().constructor);
 }
 
 static inline jsid
 id_caller(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.callerAtom);
+    return NameToId(cx->names().caller);
 }
 
 static inline jsid
 id_toString(JSContext *cx)
 {
-    return NameToId(cx->runtime->atomState.toStringAtom);
+    return NameToId(cx->names().toString);
 }
 
 static inline jsid
 id_toSource(JSContext *cx)
 {
-    return NameToId(cx->runtime->atomState.toSourceAtom);
+    return NameToId(cx->names().toSource);
 }
 
 #ifdef DEBUG
@@ -3738,11 +3738,11 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
          * the method JIT will bypass this, and we need to add the types
          * directly.
          */
-        if (id == NameToId(cx->runtime->atomState.undefinedAtom))
+        if (id == NameToId(cx->names().undefined))
             seen->addType(cx, Type::UndefinedType());
-        if (id == NameToId(cx->runtime->atomState.NaNAtom))
+        if (id == NameToId(cx->names().NaN))
             seen->addType(cx, Type::DoubleType());
-        if (id == NameToId(cx->runtime->atomState.InfinityAtom))
+        if (id == NameToId(cx->names().Infinity))
             seen->addType(cx, Type::DoubleType());
 
         TypeObject *global = script->global().getType(cx);

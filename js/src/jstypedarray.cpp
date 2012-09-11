@@ -1596,16 +1596,16 @@ class TypedArrayTemplate
     static
     bool defineGetters(JSContext *cx, HandleObject proto)
     {
-        if (!DefineGetter<lengthValue>(cx, cx->runtime->atomState.lengthAtom, proto))
+        if (!DefineGetter<lengthValue>(cx, cx->names().length, proto))
             return false;
 
-        if (!DefineGetter<bufferValue>(cx, cx->runtime->atomState.bufferAtom, proto))
+        if (!DefineGetter<bufferValue>(cx, cx->names().buffer, proto))
             return false;
 
-        if (!DefineGetter<byteLengthValue>(cx, cx->runtime->atomState.byteLengthAtom, proto))
+        if (!DefineGetter<byteLengthValue>(cx, cx->names().byteLength, proto))
             return false;
 
-        if (!DefineGetter<byteOffsetValue>(cx, cx->runtime->atomState.byteOffsetAtom, proto))
+        if (!DefineGetter<byteOffsetValue>(cx, cx->names().byteOffset, proto))
             return false;
 
         return true;
@@ -3215,11 +3215,11 @@ InitTypedArrayClass(JSContext *cx)
     RootedValue bytesValue(cx, Int32Value(ArrayType::BYTES_PER_ELEMENT));
 
     if (!JSObject::defineProperty(cx, ctor,
-                                  cx->runtime->atomState.BYTES_PER_ELEMENTAtom, bytesValue,
+                                  cx->names().BYTES_PER_ELEMENT, bytesValue,
                                   JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT | JSPROP_READONLY) ||
         !JSObject::defineProperty(cx, proto,
-                                  cx->runtime->atomState.BYTES_PER_ELEMENTAtom, bytesValue,
+                                  cx->names().BYTES_PER_ELEMENT, bytesValue,
                                   JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT | JSPROP_READONLY))
     {
@@ -3291,14 +3291,14 @@ InitArrayBufferClass(JSContext *cx)
         return NULL;
 
     RootedFunction ctor(cx, global->createConstructor(cx, ArrayBufferObject::class_constructor,
-                                                      cx->runtime->atomState.ArrayBufferAtom, 1));
+                                                      cx->names().ArrayBuffer, 1));
     if (!ctor)
         return NULL;
 
     if (!LinkConstructorAndPrototype(cx, ctor, arrayBufferProto))
         return NULL;
 
-    RootedId byteLengthId(cx, NameToId(cx->runtime->atomState.byteLengthAtom));
+    RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
     unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
     JSObject *getter = js_NewFunction(cx, NULL, ArrayBufferObject::byteLengthGetter, 0, 0, global, NULL);
     if (!getter)
@@ -3420,20 +3420,20 @@ DataViewObject::initClass(JSContext *cx)
         return NULL;
 
     RootedFunction ctor(cx, global->createConstructor(cx, DataViewObject::class_constructor,
-                                                      cx->runtime->atomState.DataViewAtom, 3));
+                                                      cx->names().DataView, 3));
     if (!ctor)
         return NULL;
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return NULL;
 
-    if (!defineGetter<bufferValue>(cx, cx->runtime->atomState.bufferAtom, proto))
+    if (!defineGetter<bufferValue>(cx, cx->names().buffer, proto))
         return NULL;
 
-    if (!defineGetter<byteLengthValue>(cx, cx->runtime->atomState.byteLengthAtom, proto))
+    if (!defineGetter<byteLengthValue>(cx, cx->names().byteLength, proto))
         return NULL;
 
-    if (!defineGetter<byteOffsetValue>(cx, cx->runtime->atomState.byteOffsetAtom, proto))
+    if (!defineGetter<byteOffsetValue>(cx, cx->names().byteOffset, proto))
         return NULL;
 
     if (!JS_DefineFunctions(cx, proto, DataViewObject::jsfuncs))
