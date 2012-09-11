@@ -885,7 +885,7 @@ class AutoDestroyAllocator
     }
 };
 
-/* static */ bool
+bool
 TestCompiler(IonBuilder *builder, MIRGraph *graph, AutoDestroyAllocator &autoDestroy)
 {
     JS_ASSERT(!builder->script->ion);
