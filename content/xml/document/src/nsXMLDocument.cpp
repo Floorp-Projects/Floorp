@@ -262,7 +262,7 @@ nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   if (mChannelIsPending) {
     StopDocumentLoad();
     mChannel->Cancel(NS_BINDING_ABORTED);
-    mChannelIsPending = nullptr;
+    mChannelIsPending = false;
   }
 
   nsDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
