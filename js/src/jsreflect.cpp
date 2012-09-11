@@ -1696,7 +1696,7 @@ class ASTSerializer
     DebugOnly<uint32_t> lineno;
 
     RawValue unrootedAtomContents(RawAtom atom) {
-        return StringValue(atom ? atom : cx->runtime->atomState.emptyAtom);
+        return StringValue(atom ? atom : cx->names().empty);
     }
 
     BinaryOperator binop(ParseNodeKind kind, JSOp op);
@@ -3418,7 +3418,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         RootedValue prop(cx);
 
         /* config.loc */
-        RootedId locId(cx, NameToId(cx->runtime->atomState.locAtom));
+        RootedId locId(cx, NameToId(cx->names().loc));
         RootedValue trueVal(cx, BooleanValue(true));
         if (!baseops::GetPropertyDefault(cx, config, locId, trueVal, &prop))
             return JS_FALSE;
@@ -3427,7 +3427,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 
         if (loc) {
             /* config.source */
-            RootedId sourceId(cx, NameToId(cx->runtime->atomState.sourceAtom));
+            RootedId sourceId(cx, NameToId(cx->names().source));
             RootedValue nullVal(cx, NullValue());
             if (!baseops::GetPropertyDefault(cx, config, sourceId, nullVal, &prop))
                 return JS_FALSE;
@@ -3449,7 +3449,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
             }
 
             /* config.line */
-            RootedId lineId(cx, NameToId(cx->runtime->atomState.lineAtom));
+            RootedId lineId(cx, NameToId(cx->names().line));
             RootedValue oneValue(cx, Int32Value(1));
             if (!baseops::GetPropertyDefault(cx, config, lineId, oneValue, &prop) ||
                 !ToUint32(cx, prop, &lineno)) {
@@ -3458,7 +3458,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         }
 
         /* config.builder */
-        RootedId builderId(cx, NameToId(cx->runtime->atomState.builderAtom));
+        RootedId builderId(cx, NameToId(cx->names().builder));
         RootedValue nullVal(cx, NullValue());
         if (!baseops::GetPropertyDefault(cx, config, builderId, nullVal, &prop))
             return JS_FALSE;

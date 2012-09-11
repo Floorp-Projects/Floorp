@@ -17,12 +17,12 @@ static inline PropertyName *
 GetNameFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op)
 {
     if (op == JSOP_LENGTH)
-        return cx->runtime->atomState.lengthAtom;
+        return cx->names().length;
 
     // The method JIT's implementation of instanceof contains an internal lookup
     // of the prototype property.
     if (op == JSOP_INSTANCEOF)
-        return cx->runtime->atomState.classPrototypeAtom;
+        return cx->names().classPrototype;
 
     PropertyName *name;
     GET_NAME_FROM_BYTECODE(script, pc, 0, name);

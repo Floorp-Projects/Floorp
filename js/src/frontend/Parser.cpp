@@ -174,7 +174,7 @@ ParseContext::define(JSContext *cx, PropertyName *name, ParseNode *pn, Definitio
             return false;
         if (!args_.append(dn))
             return false;
-        if (name == cx->runtime->atomState.emptyAtom)
+        if (name == cx->names().empty)
             break;
         if (!decls_.addUnique(name, dn))
             return false;
@@ -696,8 +696,7 @@ CheckStrictAssignment(JSContext *cx, Parser *parser, ParseNode *lhs)
 {
     if (parser->pc->sc->needStrictChecks() && lhs->isKind(PNK_NAME)) {
         JSAtom *atom = lhs->pn_atom;
-        JSAtomState *atomState = &cx->runtime->atomState;
-        if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
+        if (atom == cx->names().eval || atom == cx->names().arguments) {
             JSAutoByteString name;
             if (!js_AtomToPrintableString(cx, atom, &name) ||
                 !parser->reportStrictModeError(lhs, JSMSG_DEPRECATED_ASSIGN, name.ptr()))
@@ -721,9 +720,8 @@ CheckStrictBinding(JSContext *cx, Parser *parser, HandlePropertyName name, Parse
     if (!parser->pc->sc->needStrictChecks())
         return true;
 
-    JSAtomState *atomState = &cx->runtime->atomState;
-    if (name == atomState->evalAtom ||
-        name == atomState->argumentsAtom ||
+    if (name == cx->names().eval ||
+        name == cx->names().arguments ||
         FindKeyword(name->charsZ(), name->length()))
     {
         JSAutoByteString bytes;
@@ -790,7 +788,7 @@ Parser::functionBody(FunctionBodyType type)
     }
 
     /* Time to implement the odd semantics of 'arguments'. */
-    Rooted<PropertyName*> arguments(context, context->runtime->atomState.argumentsAtom);
+    Handle<PropertyName*> arguments = context->names().arguments;
 
     /*
      * Non-top-level functions use JSOP_DEFFUN which is a dynamic scope
@@ -1425,7 +1423,7 @@ Parser::functionArguments(ParseNode **listp, ParseNode* funcpn, bool &hasRest)
                  * anonymous positional parameter into the destructuring
                  * left-hand-side expression and accumulate it in list.
                  */
-                PropertyName *name = context->runtime->atomState.emptyAtom;
+                HandlePropertyName name = context->names().empty;
                 ParseNode *rhs = NameNode::create(PNK_NAME, name, this, this->pc);
                 if (!rhs)
                     return false;
@@ -1912,7 +1910,7 @@ Parser::processDirectives(ParseNode *stmts)
         tokenStream.matchToken(TOK_SEMI);
         if (isDirective) {
             // It's a directive. Is it one we know?
-            if (atom == context->runtime->atomState.useStrictAtom && !gotStrictMode) {
+            if (atom == context->names().useStrict && !gotStrictMode) {
                 pc->sc->setExplicitUseStrict();
                 if (!setStrictMode(true))
                     return false;
@@ -2953,7 +2951,7 @@ Parser::matchInOrOf(bool *isForOfp)
         return true;
     }
     if (tokenStream.matchToken(TOK_NAME)) {
-        if (tokenStream.currentToken().name() == context->runtime->atomState.ofAtom) {
+        if (tokenStream.currentToken().name() == context->names().of) {
             *isForOfp = true;
             return true;
         }
@@ -2978,7 +2976,7 @@ Parser::forStatement()
     pn->setOp(JSOP_ITER);
     pn->pn_iflags = 0;
     if (tokenStream.matchToken(TOK_NAME)) {
-        if (tokenStream.currentToken().name() == context->runtime->atomState.eachAtom)
+        if (tokenStream.currentToken().name() == context->names().each)
             pn->pn_iflags = JSITER_FOREACH;
         else
             tokenStream.ungetToken();
@@ -5161,7 +5159,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
         pn2->setOp(JSOP_ITER);
         pn2->pn_iflags = JSITER_ENUMERATE;
         if (tokenStream.matchToken(TOK_NAME)) {
-            if (tokenStream.currentToken().name() == context->runtime->atomState.eachAtom)
+            if (tokenStream.currentToken().name() == context->names().each)
                 pn2->pn_iflags |= JSITER_FOREACH;
             else
                 tokenStream.ungetToken();
@@ -5392,8 +5390,7 @@ Parser::generatorExpr(ParseNode *kid)
         genfn->pn_pos.begin = body->pn_pos.begin = kid->pn_pos.begin;
         genfn->pn_pos.end = body->pn_pos.end = tokenStream.currentToken().pos.end;
 
-        JSAtom *arguments = context->runtime->atomState.argumentsAtom;
-        if (AtomDefnPtr p = genpc.lexdeps->lookup(arguments)) {
+        if (AtomDefnPtr p = genpc.lexdeps->lookup(context->names().arguments)) {
             Definition *dn = p.value();
             ParseNode *errorNode = dn->dn_uses ? dn->dn_uses : body;
             reportError(errorNode, JSMSG_BAD_GENEXP_BODY, js_arguments_str);
@@ -5695,7 +5692,7 @@ Parser::memberExpr(bool allowCallSyntax)
             nextMember->setOp(JSOP_CALL);
 
             if (lhs->isOp(JSOP_NAME)) {
-                if (lhs->pn_atom == context->runtime->atomState.evalAtom) {
+                if (lhs->pn_atom == context->names().eval) {
                     /* Select JSOP_EVAL and flag pc as heavyweight. */
                     nextMember->setOp(JSOP_EVAL);
                     pc->sc->setBindingsAccessedDynamically();
@@ -5709,9 +5706,9 @@ Parser::memberExpr(bool allowCallSyntax)
                 }
             } else if (lhs->isOp(JSOP_GETPROP)) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
-                if (lhs->pn_atom == context->runtime->atomState.applyAtom)
+                if (lhs->pn_atom == context->names().apply)
                     nextMember->setOp(JSOP_FUNAPPLY);
-                else if (lhs->pn_atom == context->runtime->atomState.callAtom)
+                else if (lhs->pn_atom == context->names().call)
                     nextMember->setOp(JSOP_FUNCALL);
             }
 
@@ -5830,7 +5827,7 @@ Parser::propertySelector()
         if (!selector)
             return NULL;
         selector->setOp(JSOP_ANYNAME);
-        selector->pn_atom = context->runtime->atomState.starAtom;
+        selector->pn_atom = context->names().star;
     } else {
         JS_ASSERT(tokenStream.isCurrentTokenType(TOK_NAME));
         selector = NullaryNode::create(PNK_NAME, this);
@@ -5866,7 +5863,7 @@ Parser::qualifiedSuffix(ParseNode *pn)
         pn2->setOp(JSOP_QNAMECONST);
         pn2->pn_pos.begin = pn->pn_pos.begin;
         pn2->pn_atom = (tt == TOK_STAR)
-                       ? context->runtime->atomState.starAtom
+                       ? context->names().star
                        : tokenStream.currentToken().name();
         pn2->pn_expr = pn;
         pn2->pn_cookie.makeFree();
@@ -6465,7 +6462,7 @@ Parser::intrinsicName()
     }
 
     PropertyName *name = tokenStream.currentToken().name();
-    if (!(name == context->runtime->atomState._CallFunctionAtom ||
+    if (!(name == context->names()._CallFunction ||
           context->global()->hasIntrinsicFunction(context, name)))
     {
         reportError(NULL, JSMSG_INTRINSIC_NOT_DEFINED, JS_EncodeString(context, name));
@@ -6720,9 +6717,9 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
               case TOK_NAME:
                 {
                     atom = tokenStream.currentToken().name();
-                    if (atom == context->runtime->atomState.getAtom) {
+                    if (atom == context->names().get) {
                         op = JSOP_GETTER;
-                    } else if (atom == context->runtime->atomState.setAtom) {
+                    } else if (atom == context->names().set) {
                         op = JSOP_SETTER;
                     } else {
                         pn3 = NullaryNode::create(PNK_NAME, this);
@@ -6821,7 +6818,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                  * so that we can later assume singleton objects delegate to
                  * the default Object.prototype.
                  */
-                if (!pnval->isConstant() || atom == context->runtime->atomState.protoAtom)
+                if (!pnval->isConstant() || atom == context->names().proto)
                     pn->pn_xflags |= PNX_NONCONST;
             }
 #if JS_HAS_DESTRUCTURING_SHORTHAND
