@@ -372,6 +372,8 @@ struct JSObject : public js::ObjectImpl
                                     size_t *slotsSize, size_t *elementsSize,
                                     size_t *miscSize) const;
 
+    bool hasIdempotentProtoChain() const;
+
     static const uint32_t MAX_FIXED_SLOTS = 16;
 
   public:

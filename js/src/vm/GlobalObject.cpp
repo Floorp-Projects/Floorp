@@ -489,6 +489,8 @@ GlobalObject::create(JSContext *cx, Class *clasp)
 
     if (!JSObject::setSingletonType(cx, global) || !global->setVarObj(cx))
         return NULL;
+    if (!global->setDelegate(cx))
+        return NULL;
 
     /* Construct a regexp statics object for this global object. */
     JSObject *res = RegExpStatics::create(cx, global);

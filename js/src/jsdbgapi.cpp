@@ -34,6 +34,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "vm/Debugger.h"
+#include "ion/Ion.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -477,11 +478,8 @@ JS_GetScriptOriginPrincipals(JSScript *script)
 
 /************************************************************************/
 
-/*
- *  Stack Frame Iterator
- */
 JS_PUBLIC_API(JSStackFrame *)
-JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp)
+JS_BrokenFrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 {
     StackFrame *fp = Valueify(*iteratorp);
     *iteratorp = Jsvalify((fp == NULL) ? js_GetTopStackFrame(cx, FRAME_EXPAND_ALL) : fp->prev());
@@ -523,9 +521,25 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fpArg)
 }
 
 JS_PUBLIC_API(void)
-JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation)
+JS_SetTopFrameAnnotation(JSContext *cx, void *annotation)
 {
-    Valueify(fp)->setAnnotation(annotation);
+    StackFrame *fp = cx->fp();
+    JS_ASSERT_IF(fp->beginsIonActivation(), !fp->annotation());
+
+    // Note that if this frame is running in Ion, the actual calling frame
+    // could be inlined or a callee and thus we won't have a correct |fp|.
+    // To account for this, ion::InvalidationBailout will transfer an
+    // annotation from the old cx->fp() to the new top frame. This works
+    // because we will never EnterIon on a frame with an annotation.
+    fp->setAnnotation(annotation);
+
+    JSScript *script = fp->script();
+
+    ReleaseAllJITCode(cx->runtime->defaultFreeOp());
+
+    // Ensure that we'll never try to compile this again.
+    JS_ASSERT(!script->hasIonScript());
+    script->ion = ION_DISABLED_SCRIPT;
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1086,7 +1100,7 @@ JS_StartProfiling(const char *profileName)
         ok = JS_FALSE;
     }
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
     if (!js_StartVtune(profileName))
         ok = JS_FALSE;
 #endif
@@ -1104,7 +1118,7 @@ JS_StopProfiling(const char *profileName)
 #if defined(MOZ_SHARK) && defined(__APPLE__)
     Shark::Stop();
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
     if (!js_StopVtune())
         ok = JS_FALSE;
 #endif
@@ -1137,7 +1151,7 @@ ControlProfilers(bool toState)
             ok = JS_FALSE;
         }
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
         if (! js_ResumeVtune())
             ok = JS_FALSE;
 #endif
@@ -1151,7 +1165,7 @@ ControlProfilers(bool toState)
             ok = JS_FALSE;
         }
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
         if (! js_PauseVtune())
             ok = JS_FALSE;
 #endif
@@ -1398,7 +1412,7 @@ static JSFunctionSpec profiling_functions[] = {
     JS_FN("stopCallgrind",  StopCallgrind,        0,0),
     JS_FN("dumpCallgrind",  DumpCallgrind,        1,0),
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //ef MOZ_VTUNE
     JS_FN("startVtune",     js_StartVtune,        1,0),
     JS_FN("stopVtune",      js_StopVtune,         0,0),
     JS_FN("pauseVtune",     js_PauseVtune,        0,0),
@@ -1455,7 +1469,7 @@ js_DumpCallgrind(const char *outfile)
 
 #endif /* MOZ_CALLGRIND */
 
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
 #include <VTuneApi.h>
 
 static const char *vtuneErrorMessages[] = {
@@ -1799,5 +1813,267 @@ js_CallContextDebugHandler(JSContext *cx)
       default:
         return JS_TRUE;
     }
+}
+
+JS_PUBLIC_API(StackDescription *)
+JS::DescribeStack(JSContext *cx, unsigned maxFrames)
+{
+    Vector<FrameDescription> frames(cx);
+
+    for (ScriptFrameIter i(cx); !i.done(); ++i) {
+        FrameDescription desc;
+        desc.script = i.script();
+        desc.lineno = PCToLineNumber(i.script(), i.pc());
+        desc.fun = i.fp()->maybeFun();
+        if (!frames.append(desc))
+            return NULL;
+        if (frames.length() == maxFrames)
+            break;
+    }
+
+    StackDescription *desc = js_new<StackDescription>();
+    if (!desc)
+        return NULL;
+
+    desc->nframes = frames.length();
+    desc->frames = frames.extractRawBuffer();
+    return desc;
+}
+
+JS_PUBLIC_API(void)
+JS::FreeStackDescription(JSContext *cx, StackDescription *desc)
+{
+    js_delete(desc->frames);
+    js_delete(desc);
+}
+
+class AutoPropertyDescArray
+{
+    JSContext *cx_;
+    JSPropertyDescArray descArray_;
+
+  public:
+    AutoPropertyDescArray(JSContext *cx)
+      : cx_(cx)
+    {
+        PodZero(&descArray_);
+    }
+    ~AutoPropertyDescArray()
+    {
+        if (descArray_.array)
+            JS_PutPropertyDescArray(cx_, &descArray_);
+    }
+
+    void fetch(JSObject *obj) {
+        JS_ASSERT(!descArray_.array);
+        if (!JS_GetPropertyDescArray(cx_, obj, &descArray_))
+            descArray_.array = NULL;
+    }
+
+    JSPropertyDescArray * operator ->() {
+        return &descArray_;
+    }
+};
+
+static const char *
+FormatValue(JSContext *cx, const Value &v, JSAutoByteString &bytes)
+{
+    JSString *str = ToString(cx, v);
+    if (!str)
+        return NULL;
+    const char *buf = bytes.encode(cx, str);
+    if (!buf)
+        return NULL;
+    const char *found = strstr(buf, "function ");
+    if (found && (found - buf <= 2))
+        return "[function]";
+    return buf;
+}
+
+static char *
+FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
+            JSBool showArgs, JSBool showLocals, JSBool showThisProps)
+{
+    JSScript* script = iter.script();
+    jsbytecode* pc = iter.pc();
+
+    JSAutoCompartment ac(cx, iter.fp()->scopeChain());
+
+    const char *filename = script->filename;
+    unsigned lineno = PCToLineNumber(script, pc);
+    JSFunction *fun = iter.fp()->maybeFun();
+    JSString *funname = NULL;
+    if (fun)
+        funname = fun->atom();
+
+    JSObject *callObj = NULL;
+    AutoPropertyDescArray callProps(cx);
+
+    if (showArgs || showLocals) {
+        callObj = JS_GetFrameCallObject(cx, Jsvalify(iter.fp()));
+        if (callObj)
+            callProps.fetch(callObj);
+    }
+
+    Value thisVal = UndefinedValue();
+    AutoPropertyDescArray thisProps(cx);
+    if (ComputeThis(cx, iter.fp())) {
+        thisVal = iter.fp()->thisValue();
+        if (showThisProps && !thisVal.isPrimitive())
+            thisProps.fetch(&thisVal.toObject());
+    }
+
+    // print the frame number and function name
+    if (funname) {
+        JSAutoByteString funbytes;
+        buf = JS_sprintf_append(buf, "%d %s(", num, funbytes.encode(cx, funname));
+    } else if (fun) {
+        buf = JS_sprintf_append(buf, "%d anonymous(", num);
+    } else {
+        buf = JS_sprintf_append(buf, "%d <TOP LEVEL>", num);
+    }
+    if (!buf)
+        return buf;
+
+    // print the function arguments
+    if (showArgs && callObj) {
+        uint32_t namedArgCount = 0;
+        for (uint32_t i = 0; i < callProps->length; i++) {
+            JSPropertyDesc* desc = &callProps->array[i];
+            JSAutoByteString nameBytes;
+            const char *name = NULL;
+            if (JSVAL_IS_STRING(desc->id))
+                name = FormatValue(cx, desc->id, nameBytes);
+
+            JSAutoByteString valueBytes;
+            const char *value = FormatValue(cx, desc->value, valueBytes);
+
+            buf = JS_sprintf_append(buf, "%s%s%s%s%s%s",
+                                    namedArgCount ? ", " : "",
+                                    name ? name :"",
+                                    name ? " = " : "",
+                                    desc->value.isString() ? "\"" : "",
+                                    value ? value : "?unknown?",
+                                    desc->value.isString() ? "\"" : "");
+            if (!buf)
+                return buf;
+            namedArgCount++;
+        }
+
+        // print any unnamed trailing args (found in 'arguments' object)
+        Value val;
+        if (JS_GetProperty(cx, callObj, "arguments", &val) && val.isObject()) {
+            uint32_t argCount;
+            JSObject* argsObj = &val.toObject();
+            if (JS_GetProperty(cx, argsObj, "length", &val) &&
+                ToUint32(cx, val, &argCount) &&
+                argCount > namedArgCount)
+            {
+                for (uint32_t k = namedArgCount; k < argCount; k++) {
+                    char number[8];
+                    JS_snprintf(number, 8, "%d", (int) k);
+
+                    if (JS_GetProperty(cx, argsObj, number, &val)) {
+                        JSAutoByteString valueBytes;
+                        const char *value = FormatValue(cx, val, valueBytes);
+                        buf = JS_sprintf_append(buf, "%s%s%s%s",
+                                                k ? ", " : "",
+                                                val.isString() ? "\"" : "",
+                                                value ? value : "?unknown?",
+                                                val.isString() ? "\"" : "");
+                        if (!buf)
+                            return buf;
+                    }
+                }
+            }
+        }
+    }
+
+    // print filename and line number
+    buf = JS_sprintf_append(buf, "%s [\"%s\":%d]\n",
+                            fun ? ")" : "",
+                            filename ? filename : "<unknown>",
+                            lineno);
+    if (!buf)
+        return buf;
+
+    // print local variables
+    if (showLocals && callProps->array) {
+        for (uint32_t i = 0; i < callProps->length; i++) {
+            JSPropertyDesc* desc = &callProps->array[i];
+            JSAutoByteString nameBytes;
+            JSAutoByteString valueBytes;
+            const char *name = FormatValue(cx, desc->id, nameBytes);
+            const char *value = FormatValue(cx, desc->value, valueBytes);
+
+            if (name && value) {
+                buf = JS_sprintf_append(buf, "    %s = %s%s%s\n",
+                                        name,
+                                        desc->value.isString() ? "\"" : "",
+                                        value,
+                                        desc->value.isString() ? "\"" : "");
+                if (!buf)
+                    return buf;
+            }
+        }
+    }
+
+    // print the value of 'this'
+    if (showLocals) {
+        if (!thisVal.isUndefined()) {
+            JSAutoByteString thisValBytes;
+            if (JSString* thisValStr = ToString(cx, thisVal)) {
+                if (const char *str = thisValBytes.encode(cx, thisValStr)) {
+                    buf = JS_sprintf_append(buf, "    this = %s\n", str);
+                    if (!buf)
+                        return buf;
+                }
+            }
+        } else {
+            buf = JS_sprintf_append(buf, "    <failed to get 'this' value>\n");
+        }
+    }
+
+    // print the properties of 'this', if it is an object
+    if (showThisProps && thisProps->array) {
+        for (uint32_t i = 0; i < thisProps->length; i++) {
+            JSPropertyDesc* desc = &thisProps->array[i];
+            if (desc->flags & JSPD_ENUMERATE) {
+                JSAutoByteString nameBytes;
+                JSAutoByteString valueBytes;
+                const char *name = FormatValue(cx, desc->id, nameBytes);
+                const char *value = FormatValue(cx, desc->value, valueBytes);
+                if (name && value) {
+                    buf = JS_sprintf_append(buf, "    this.%s = %s%s%s\n",
+                                            name,
+                                            desc->value.isString() ? "\"" : "",
+                                            value,
+                                            desc->value.isString() ? "\"" : "");
+                    if (!buf)
+                        return buf;
+                }
+            }
+        }
+    }
+
+    return buf;
+}
+
+JS_PUBLIC_API(char *)
+JS::FormatStackDump(JSContext *cx, char *buf,
+                      JSBool showArgs, JSBool showLocals,
+                      JSBool showThisProps)
+{
+    int num = 0;
+
+    for (ScriptFrameIter i(cx); !i.done(); ++i) {
+        buf = FormatFrame(cx, i, buf, num, showArgs, showLocals, showThisProps);
+        num++;
+    }
+
+    if (!num)
+        buf = JS_sprintf_append(buf, "JavaScript stack is empty\n");
+
+    return buf;
 }
 

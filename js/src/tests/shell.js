@@ -615,6 +615,7 @@ function optionsClear() {
     if (optionName &&
         optionName != "methodjit" &&
         optionName != "methodjit_always" &&
+        optionName != "ion" &&
         optionName != "allow_xml")
     {
       options(optionName);

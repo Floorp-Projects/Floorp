@@ -108,6 +108,7 @@ CPPSRCS		= \
 		jsutil.cpp \
 		jswatchpoint.cpp \
 		jsweakmap.cpp \
+		jsworkers.cpp \
 		jswrapper.cpp \
 		jsxml.cpp \
 		prmjtime.cpp \
@@ -224,6 +225,16 @@ MFBT_ROOT = $(srcdir)/../../mfbt
 VPATH += $(MFBT_ROOT)
 include $(MFBT_ROOT)/exported_headers.mk
 
+
+ifdef ENABLE_TRACE_LOGGING
+
+###############################################
+# BEGIN include sources for trace logging
+#
+CPPSRCS += 	TraceLogging.cpp
+
+endif
+
 ifdef ENABLE_METHODJIT
 
 ###############################################
@@ -248,7 +259,52 @@ CPPSRCS += 	MethodJIT.cpp \
 		TrampolineCompiler.cpp \
 		$(NULL)
 
+# Ion
+ifdef ENABLE_ION
+VPATH +=	$(srcdir)/ion
+VPATH +=	$(srcdir)/ion/shared
+
+CPPSRCS +=	MIR.cpp \
+		Bailouts.cpp \
+		BitSet.cpp \
+		C1Spewer.cpp \
+		CodeGenerator.cpp \
+		CodeGenerator-shared.cpp \
+		Ion.cpp \
+		IonAnalysis.cpp \
+		IonBuilder.cpp \
+		IonCaches.cpp \
+		IonFrames.cpp \
+		IonMacroAssembler.cpp \
+		IonSpewer.cpp \
+		JSONSpewer.cpp \
+		LICM.cpp \
+		LinearScan.cpp \
+		LIR.cpp \
+		Lowering.cpp \
+		Lowering-shared.cpp \
+		MCallOptimize.cpp \
+		MIRGraph.cpp \
+		MoveResolver.cpp \
+		EdgeCaseAnalysis.cpp \
+		Snapshots.cpp \
+		Safepoints.cpp \
+		TypeOracle.cpp \
+		TypePolicy.cpp \
+		ValueNumbering.cpp \
+		RangeAnalysis.cpp \
+		VMFunctions.cpp \
+		AliasAnalysis.cpp \
+		$(NULL)
+endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
+ifdef ENABLE_ION
+CPPSRCS +=	CodeGenerator-x86-shared.cpp
+CPPSRCS +=	IonFrames-x86-shared.cpp
+CPPSRCS +=	MoveEmitter-x86-shared.cpp
+CPPSRCS +=	Assembler-x86-shared.cpp
+CPPSRCS +=	Lowering-x86-shared.cpp
+endif #ENABLE_ION
 ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
 ASFILES +=	TrampolineMasmX64.asm
@@ -261,17 +317,49 @@ endif
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX64.s
 endif
-#CPPSRCS		+= only_on_x86_64.cpp
+ifdef ENABLE_ION
+VPATH +=	$(srcdir)/ion/x64
+CPPSRCS += 	Lowering-x64.cpp \
+		CodeGenerator-x64.cpp \
+		Trampoline-x64.cpp \
+		Assembler-x64.cpp \
+		Bailouts-x64.cpp \
+		MacroAssembler-x64.cpp \
+		$(NULL)
+endif #ENABLE_ION
 else
-#CPPSRCS		+= only_on_x86.cpp
+ifdef ENABLE_ION
+VPATH +=	$(srcdir)/ion/x86
+CPPSRCS +=	Lowering-x86.cpp \
+		CodeGenerator-x86.cpp \
+		Trampoline-x86.cpp \
+		Assembler-x86.cpp \
+		Bailouts-x86.cpp \
+		MacroAssembler-x86.cpp \
+		$(NULL)
+endif #ENABLE_ION
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX86.s
 endif
 endif
 endif
-ifeq (arm, $(TARGET_CPU))
-#CPPSRCS		+= only_on_arm.cpp
+ifdef ENABLE_ION
+ifeq (arm, $(findstring arm, $(TARGET_CPU)))
+ifdef ENABLE_ION
+VPATH +=	$(srcdir)/ion/arm
+CPPSRCS +=	Lowering-arm.cpp \
+		CodeGenerator-arm.cpp \
+		Trampoline-arm.cpp \
+		Assembler-arm.cpp \
+		Bailouts-arm.cpp \
+		IonFrames-arm.cpp \
+		MoveEmitter-arm.cpp \
+		Architecture-arm.cpp \
+		MacroAssembler-arm.cpp \
+		$(NULL)
+endif #ENABLE_ION
 endif
+endif #ENABLE_ION
 ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
 ASFILES +=	TrampolineSparc.s
 endif
@@ -342,7 +430,7 @@ else
 #CPPSRCS		+= only_on_x86.cpp
 endif
 endif
-ifeq (arm, $(TARGET_CPU))
+ifeq (arm, $(findstring arm, $(TARGET_CPU)))
 #CPPSRCS		+= only_on_arm.cpp
 endif
 
@@ -516,10 +604,9 @@ JITTEST_VALGRIND_FLAG = --valgrind
 endif
 endif
 
-JITFLAGS = ,m,am,amd,n,mn,amn,amdn,mdn
 check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(JITTEST_VALGRIND_FLAG) \
+	        --no-slow --no-progress --tinderbox --tbpl $(JITTEST_VALGRIND_FLAG) \
 	        $(DIST)/bin/js$(BIN_SUFFIX)
 
 check:: check-jit-test
@@ -597,9 +684,9 @@ NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
 ifdef MOZ_VTUNE
-CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
-EXTRA_DSO_LDOPTS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
-LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
+#CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
+#EXTRA_DSO_LDOPTS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
+#LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
 
 ifdef MOZ_ETW

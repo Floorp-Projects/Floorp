@@ -178,14 +178,22 @@ enum InterpMode
 {
     JSINTERP_NORMAL    = 0, /* interpreter is running normally */
     JSINTERP_REJOIN    = 1, /* as normal, but the frame has already started */
-    JSINTERP_SKIP_TRAP = 2  /* as REJOIN, but skip trap at first opcode */
+    JSINTERP_SKIP_TRAP = 2, /* as REJOIN, but skip trap at first opcode */
+    JSINTERP_BAILOUT   = 3  /* interpreter is running from an Ion bailout */
+};
+
+enum InterpretStatus
+{
+    Interpret_Error    = 0, /* interpreter had an error */
+    Interpret_Ok       = 1, /* interpreter executed successfully */
+    Interpret_OSR      = 2  /* when mode=BAILOUT and we should OSR into Ion */
 };
 
 /*
  * Execute the caller-initialized frame for a user-defined script or function
  * pointed to by cx->fp until completion or error.
  */
-extern JS_NEVER_INLINE bool
+extern JS_NEVER_INLINE InterpretStatus
 Interpret(JSContext *cx, StackFrame *stopFp, InterpMode mode = JSINTERP_NORMAL);
 
 extern bool
@@ -204,8 +212,8 @@ SameValue(JSContext *cx, const Value &v1, const Value &v2, bool *same);
 extern JSType
 TypeOfValue(JSContext *cx, const Value &v);
 
-extern JSBool
-HasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, JSBool *bp);
+extern bool
+HasInstance(JSContext *cx, HandleObject obj, HandleValue v, JSBool *bp);
 
 /*
  * A linked list of the |FrameRegs regs;| variables belonging to all
@@ -315,6 +323,67 @@ Debug_SetValueRangeToCrashOnTouch(HeapValue *vec, size_t len)
     Debug_SetValueRangeToCrashOnTouch((Value *) vec, len);
 #endif
 }
+
+bool
+Throw(JSContext *cx, HandleValue v);
+
+bool
+GetProperty(JSContext *cx, HandleValue value, PropertyName *name, MutableHandleValue vp);
+
+bool
+GetScopeName(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue vp);
+
+bool
+GetScopeNameForTypeOf(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                      MutableHandleValue vp);
+
+JSObject *
+Lambda(JSContext *cx, HandleFunction fun, HandleObject parent);
+
+bool
+GetElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
+
+bool
+GetElementMonitored(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
+
+bool
+CallElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
+
+bool
+SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
+                 JSBool strict);
+
+bool
+AddValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+          Value *res);
+
+bool
+SubValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+          Value *res);
+
+bool
+MulValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+          Value *res);
+
+bool
+DivValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+          Value *res);
+
+bool
+ModValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+          Value *res);
+
+bool
+UrshValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+          Value *res);
+
+template <bool strict>
+bool
+SetProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value);
+
+template <bool strict>
+bool
+DeleteProperty(JSContext *ctx, HandleValue val, HandlePropertyName name, JSBool *bv);
 
 }  /* namespace js */
 

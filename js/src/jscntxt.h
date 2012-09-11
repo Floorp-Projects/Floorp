@@ -87,9 +87,15 @@ class JaegerRuntime;
 }
 
 class MathCache;
+
+namespace ion {
+class IonActivation;
+}
+
 class WeakMapBase;
 class InterpreterFrames;
 class DebugScopes;
+class WorkerThreadState;
 
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -807,6 +813,10 @@ struct JSRuntime : js::RuntimeFriendFields
     js::GCHelperThread  gcHelperThread;
 
 #ifdef JS_THREADSAFE
+# ifdef JS_ION
+    js::WorkerThreadState *workerThreadState;
+# endif
+
     js::SourceCompressorThread sourceCompressorThread;
 #endif
 
@@ -899,6 +909,48 @@ struct JSRuntime : js::RuntimeFriendFields
     int32_t             inOOMReport;
 
     bool                jitHardening;
+
+    // If Ion code is on the stack, and has called into C++, this will be
+    // aligned to an Ion exit frame.
+    uint8_t             *ionTop;
+    JSContext           *ionJSContext;
+    uintptr_t            ionStackLimit;
+
+    void resetIonStackLimit() {
+        ionStackLimit = nativeStackLimit;
+    }
+
+    // This points to the most recent Ion activation running on the thread.
+    js::ion::IonActivation  *ionActivation;
+
+  private:
+    // In certain cases, we want to optimize certain opcodes to typed instructions,
+    // to avoid carrying an extra register to feed into an unbox. Unfortunately,
+    // that's not always possible. For example, a GetPropertyCacheT could return a
+    // typed double, but if it takes its out-of-line path, it could return an
+    // object, and trigger invalidation. The invalidation bailout will consider the
+    // return value to be a double, and create a garbage Value.
+    //
+    // To allow the GetPropertyCacheT optimization, we allow the ability for
+    // GetPropertyCache to override the return value at the top of the stack - the
+    // value that will be temporarily corrupt. This special override value is set
+    // only in callVM() targets that are about to return *and* have invalidated
+    // their callee.
+    js::Value            ionReturnOverride_;
+
+  public:
+    bool hasIonReturnOverride() const {
+        return !ionReturnOverride_.isMagic();
+    }
+    js::Value takeIonReturnOverride() {
+        js::Value v = ionReturnOverride_;
+        ionReturnOverride_ = js::MagicValue(JS_ARG_POISON);
+        return v;
+    }
+    void setIonReturnOverride(const js::Value &v) {
+        JS_ASSERT(!hasIonReturnOverride());
+        ionReturnOverride_ = v;
+    }
 
     JSRuntime();
     ~JSRuntime();

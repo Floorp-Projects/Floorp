@@ -107,13 +107,13 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
         /* Make sure the stack resets and we have an entry for each stack */
         CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.address()));
         CHECK(psize == 0);
-        CHECK(max_stack == 9);
+        CHECK(max_stack >= 8);
         CHECK(cx->runtime->spsProfiler.stringsCount() == 8);
         /* Make sure the stack resets and we added no new entries */
         max_stack = 0;
         CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.address()));
         CHECK(psize == 0);
-        CHECK(max_stack == 9);
+        CHECK(max_stack >= 8);
         CHECK(cx->runtime->spsProfiler.stringsCount() == 8);
     }
     reset(cx);
@@ -121,7 +121,7 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
         JS::RootedValue rval(cx);
         CHECK(JS_CallFunctionName(cx, global, "check2", 0, NULL, rval.address()));
         CHECK(cx->runtime->spsProfiler.stringsCount() == 5);
-        CHECK(max_stack == 7);
+        CHECK(max_stack >= 6);
         CHECK(psize == 0);
     }
     js::EnableRuntimeProfilingStack(cx->runtime, false);
@@ -132,7 +132,7 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
         pstack[3].setLabel((char*) 1234);
         CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.address()));
         CHECK((size_t) pstack[3].label() == 1234);
-        CHECK(max_stack == 9);
+        CHECK(max_stack >= 8);
         CHECK(psize == 0);
     }
     return true;
@@ -161,7 +161,7 @@ BEGIN_TEST(testProfileStrings_isCalledWithJIT)
         /* Make sure the stack resets and we have an entry for each stack */
         CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.address()));
         CHECK(psize == 0);
-        CHECK(max_stack == 9);
+        CHECK(max_stack >= 8);
 
         /* Make sure the stack resets and we added no new entries */
         uint32_t cnt = cx->runtime->spsProfiler.stringsCount();
@@ -169,7 +169,7 @@ BEGIN_TEST(testProfileStrings_isCalledWithJIT)
         CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.address()));
         CHECK(psize == 0);
         CHECK(cx->runtime->spsProfiler.stringsCount() == cnt);
-        CHECK(max_stack == 9);
+        CHECK(max_stack >= 8);
     }
 
     js::EnableRuntimeProfilingStack(cx->runtime, false);
@@ -181,7 +181,7 @@ BEGIN_TEST(testProfileStrings_isCalledWithJIT)
         pstack[3].setLabel((char*) 1234);
         CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.address()));
         CHECK(psize == 0);
-        CHECK(max_stack == 9);
+        CHECK(max_stack >= 8);
         CHECK((size_t) pstack[3].label() == 1234);
     }
     return true;
@@ -221,7 +221,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
         JS::RootedValue rval(cx);
         JS_CallFunctionName(cx, global, "a", 0, NULL, rval.address());
         CHECK(psize == 0);
-        CHECK(max_stack == 1);
+        CHECK(max_stack >= 1);
         CHECK(cx->runtime->spsProfiler.stringsCount() == 1);
     }
 
@@ -242,7 +242,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
         JS::RootedValue rval(cx);
         JS_CallFunctionName(cx, global, "e", 0, NULL, rval.address());
         CHECK(psize == 0);
-        CHECK(max_stack == 3);
+        CHECK(max_stack >= 3);
     }
 
     EXEC("function h() { }");
