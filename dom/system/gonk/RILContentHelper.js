@@ -453,6 +453,15 @@ RILContentHelper.prototype = {
                                                        helpRequested: helpRequested});
   },
 
+  sendStkEventDownload: function sendStkEventDownload(window,
+                                                      event) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    cpmm.sendAsyncMessage("RIL:SendStkEventDownload", {event: event});
+  },
+
   _telephonyCallbacks: null,
   _voicemailCallbacks: null,
   _enumerateTelephonyCallbacks: null,

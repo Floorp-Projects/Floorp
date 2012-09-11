@@ -51,6 +51,16 @@ const PARCEL_SIZE_SIZE = UINT32_SIZE;
 
 const PDU_HEX_OCTET_SIZE = 4;
 
+const TLV_COMMAND_DETAILS_SIZE = 5;
+const TLV_DEVICE_ID_SIZE = 4;
+const TLV_RESULT_SIZE = 3;
+const TLV_ITEM_ID_SIZE = 3;
+const TLV_HELP_REQUESTED_SIZE = 2;
+const TLV_EVENT_LIST_SIZE = 3;
+const TLV_LOCATION_STATUS_SIZE = 3;
+const TLV_LOCATION_INFO_GSM_SIZE = 9;
+const TLV_LOCATION_INFO_UMTS_SIZE = 11;
+
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
 let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = libcutils.property_get("ro.moz.ril.callstate_extra_int");
@@ -2257,10 +2267,10 @@ let RIL = {
     }
 
     // 1 octets = 2 chars.
-    let size = (5 + /* Size of Command Details TLV */
-                4 + /* Size of Device Identifier TLV */
-                3 + /* Size of Result */
-                (response.itemIdentifier ? 3 : 0) +
+    let size = (TLV_COMMAND_DETAILS_SIZE +
+                TLV_DEVICE_ID_SIZE +
+                TLV_RESULT_SIZE +
+                (response.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
                 (textLen ? textLen + 3 : 0)) * 2;
     Buf.writeUint32(size);
 
@@ -2366,18 +2376,54 @@ let RIL = {
   },
 
   /**
+   * Send STK Envelope(Event Download) command.
+   * @param event
+   */
+  sendStkEventDownload: function sendStkEventDownload(command) {
+    command.tag = BER_EVENT_DOWNLOAD_TAG;
+    command.eventList = command.event.eventType;
+    switch (command.eventList) {
+      case STK_EVENT_TYPE_LOCATION_STATUS:
+        command.deviceId = {
+          sourceId :STK_DEVICE_ID_ME,
+          destinationId: STK_DEVICE_ID_SIM
+        };
+        command.locationStatus = command.event.locationStatus;
+        // Location info should only be provided when locationStatus is normal.
+        if (command.locationStatus == STK_SERVICE_STATE_NORMAL) {
+          command.locationInfo = command.event.locationInfo;
+        }
+        break;
+    }
+    this.sendICCEnvelopeCommand(command);
+  },
+
+  /**
    * Send REQUEST_STK_SEND_ENVELOPE_COMMAND to ICC.
    *
    * @param tag
    * @patam deviceId
    * @param [optioanl] itemIdentifier
    * @param [optional] helpRequested
+   * @param [optional] eventList
+   * @param [optional] locationStatus
+   * @param [optional] locationInfo
    */
   sendICCEnvelopeCommand: function sendICCEnvelopeCommand(options) {
+    if (DEBUG) {
+      debug("Stk Envelope " + JSON.stringify(options));
+    }
     let token = Buf.newParcel(REQUEST_STK_SEND_ENVELOPE_COMMAND);
-    let berLen = 4 + /* Size of Device Identifier TLV */
-                 (options.itemIdentifier ? 3 : 0) +
-                 (options.helpRequested ? 2 : 0);
+    let berLen = TLV_DEVICE_ID_SIZE + /* Size of Device Identifier TLV */
+                 (options.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
+                 (options.helpRequested ? TLV_HELP_REQUESTED_SIZE : 0) +
+                 (options.eventList ? TLV_EVENT_LIST_SIZE : 0) +
+                 (options.locationStatus ? TLV_LOCATION_STATUS_SIZE : 0) +
+                 (options.locationInfo ?
+                    (options.locationInfo.gsmCellId > 0xffff ?
+                      TLV_LOCATION_INFO_UMTS_SIZE :
+                      TLV_LOCATION_INFO_GSM_SIZE) :
+                    0);
     let size = (2 + berLen) * 2;
 
     Buf.writeUint32(size);
@@ -2407,6 +2453,28 @@ let RIL = {
                                  COMPREHENSIONTLV_FLAG_CR);
       GsmPDUHelper.writeHexOctet(0);
       // Help Request doesn't have value
+    }
+
+    // Event List
+    if (options.eventList) {
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_EVENT_LIST |
+                                 COMPREHENSIONTLV_FLAG_CR);
+      GsmPDUHelper.writeHexOctet(1);
+      GsmPDUHelper.writeHexOctet(options.eventList);
+    }
+
+    // Location Status
+    if (options.locationStatus) {
+      let len = options.locationStatus.length;
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_LOCATION_STATUS |
+                                 COMPREHENSIONTLV_FLAG_CR);
+      GsmPDUHelper.writeHexOctet(1);
+      GsmPDUHelper.writeHexOctet(options.locationStatus);
+    }
+
+    // Location Info
+    if (options.locationInfo) {
+      ComprehensionTlvHelper.writeLocationInfoTlv(options.locationInfo);
     }
 
     Buf.writeUint32(0);
@@ -6669,7 +6737,68 @@ let ComprehensionTlvHelper = {
       index += tlv.hlen;
     }
     return chunks;
-  }
+  },
+
+  /**
+   * Write Location Info Comprehension TLV.
+   *
+   * @param loc location Information.
+   */
+  writeLocationInfoTlv: function writeLocationInfoTlv(loc) {
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_LOCATION_INFO |
+                               COMPREHENSIONTLV_FLAG_CR);
+    GsmPDUHelper.writeHexOctet(loc.gsmCellId > 0xffff ? 9 : 7);
+    // From TS 11.14, clause 12.19
+    // "The mobile country code (MCC), the mobile network code (MNC),
+    // the location area code (LAC) and the cell ID are
+    // coded as in TS 04.08."
+    // And from TS 04.08 and TS 24.008,
+    // the format is as follows:
+    //
+    // MCC = MCC_digit_1 + MCC_digit_2 + MCC_digit_3
+    //
+    //   8  7  6  5    4  3  2  1
+    // +-------------+-------------+
+    // | MCC digit 2 | MCC digit 1 | octet 2
+    // | MNC digit 3 | MCC digit 3 | octet 3
+    // | MNC digit 2 | MNC digit 1 | octet 4
+    // +-------------+-------------+
+    //
+    // Also in TS 24.008
+    // "However a network operator may decide to
+    // use only two digits in the MNC in the LAI over the
+    // radio interface. In this case, bits 5 to 8 of octet 3
+    // shall be coded as '1111'".
+
+    // MCC & MNC, 3 octets
+    let mcc = loc.mcc.toString();
+    let mnc = loc.mnc.toString();
+    if (mnc.length == 1) {
+      mnc = "F0" + mnc;
+    } else if (mnc.length == 2) {
+      mnc = "F" + mnc;
+    } else {
+      mnc = mnc[2] + mnc[0] + mnc[1];
+    }
+    GsmPDUHelper.writeSwappedNibbleBCD(mcc + mnc);
+
+    // LAC, 2 octets
+    GsmPDUHelper.writeHexOctet((loc.gsmLocationAreaCode >> 8) & 0xff);
+    GsmPDUHelper.writeHexOctet(loc.gsmLocationAreaCode & 0xff);
+
+    // Cell Id
+    if (loc.gsmCellId > 0xffff) {
+      // UMTS/WCDMA, gsmCellId is 28 bits.
+      GsmPDUHelper.writeHexOctet((loc.gsmCellId >> 24) & 0xff);
+      GsmPDUHelper.writeHexOctet((loc.gsmCellId >> 16) & 0xff);
+      GsmPDUHelper.writeHexOctet((loc.gsmCellId >> 8) & 0xff);
+      GsmPDUHelper.writeHexOctet(loc.gsmCellId & 0xff);
+    } else {
+      // GSM, gsmCellId is 16 bits.
+      GsmPDUHelper.writeHexOctet((loc.gsmCellId >> 8) & 0xff);
+      GsmPDUHelper.writeHexOctet(loc.gsmCellId & 0xff);
+    }
+  },
 };
 
 let BerTlvHelper = {
