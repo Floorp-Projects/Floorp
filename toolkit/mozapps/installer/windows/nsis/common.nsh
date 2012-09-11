@@ -6954,3 +6954,100 @@
     !verbose pop
   !endif
 !macroend
+
+; Removes the CEH registration if it's set to our installation directory.
+; If it's set to some other installation directory, then it should be removed
+; by that installation. 
+!macro RemoveDEHRegistrationIfMatchingCall un
+  Function ${un}RemoveDEHRegistrationIfMatchingCall
+    ; Move the old $R0 on the stack and set it to DEH ID
+    Exch $R0
+    ; Backup the old values of R8 and R7 on the stack
+    Push $R8
+    Push $R7
+
+    ReadRegStr $R8 HKCU "Software\Classes\CLSID\$R0\LocalServer32" ""
+    ${${un}GetLongPath} "$INSTDIR" $R7
+    StrCmp "$R8" "" next +1
+    ${${un}GetParent} "$R8" $R8
+    ${${un}GetLongPath} "$R8" $R8
+    StrCmp "$R7" "$R8" +1 next
+    DeleteRegKey HKCU "Software\Classes\CLSID\$R0"
+    DeleteRegValue HKCU \
+                   "Software\Classes\$AppUserModelID\.exe\shell\open\command" \
+                   "DelegateExecute"
+    next:
+
+    ReadRegStr $R8 HKLM "Software\Classes\CLSID\$R0\LocalServer32" ""
+    ${${un}GetLongPath} "$INSTDIR" $R7
+    StrCmp "$R8" "" done +1
+    ${${un}GetParent} "$R8" $R8
+    ${${un}GetLongPath} "$R8" $R8
+    StrCmp "$R7" "$R8" +1 done 
+    DeleteRegKey HKLM "Software\Classes\CLSID\$R0"
+    DeleteRegValue HKLM \
+                   "Software\Classes\$AppUserModelID\.exe\shell\open\command" \
+                   "DelegateExecute"
+    done:
+
+    ; Restore the stack back to its original state
+    Pop $R7
+    Pop $R8
+    Pop $R0
+  FunctionEnd
+!macroend
+
+!macro RemoveDEHRegistrationIfMatching
+  !insertmacro RemoveDEHRegistrationIfMatchingCall ""
+!macroend
+
+!macro un.RemoveDEHRegistrationIfMatching
+  !insertmacro RemoveDEHRegistrationIfMatchingCall "un."
+!macroend
+
+!macro CleanupMetroBrowserHandlerValues un DELEGATE_EXECUTE_HANDLER_ID
+  Push ${DELEGATE_EXECUTE_HANDLER_ID}
+  Call ${un}RemoveDEHRegistrationIfMatchingCall
+!macroend
+!define CleanupMetroBrowserHandlerValues '!insertmacro CleanupMetroBrowserHandlerValues ""'
+!define un.CleanupMetroBrowserHandlerValues '!insertmacro CleanupMetroBrowserHandlerValues "un."'
+
+!macro AddMetroBrowserHandlerValues DELEGATE_EXECUTE_HANDLER_ID \
+                                    DELEGATE_EXECUTE_HANDLER_PATH \
+                                    APP_USER_MODEL_ID \
+                                    PROTOCOL_ACTIVATION_ID \
+                                    FILE_ACTIVATION_ID
+  ; Win8 doesn't use conventional progid command data to launch anymore.
+  ; Instead it uses a delegate execute handler which is a light weight COM
+  ; server for choosing the metro or desktop browser to launch depending
+  ; on the current environment (metro/desktop) it was activated in.
+  WriteRegStr SHCTX "Software\Classes\${APP_USER_MODEL_ID}" "" ""
+  WriteRegStr SHCTX "Software\Classes\${APP_USER_MODEL_ID}\.exe" "" ""
+  WriteRegStr SHCTX "Software\Classes\${APP_USER_MODEL_ID}\.exe\shell" "" "open"
+  WriteRegStr SHCTX "Software\Classes\${APP_USER_MODEL_ID}\.exe\shell\open" "CommandId" "open"
+  WriteRegStr SHCTX "Software\Classes\${APP_USER_MODEL_ID}\.exe\shell\open\command" "" "$2"
+  WriteRegStr SHCTX "Software\Classes\${APP_USER_MODEL_ID}\.exe\shell\open\command" "DelegateExecute" "${DELEGATE_EXECUTE_HANDLER_ID}"
+
+  ; Augment the url handler registrations with additional data needed for Metro
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_ACTIVATION_ID}" "AppUserModelID" "${APP_USER_MODEL_ID}"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_ACTIVATION_ID}\Application" "AppUserModelID" "${APP_USER_MODEL_ID}"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_ACTIVATION_ID}\Application" "ApplicationName" "$BrandShortName"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_ACTIVATION_ID}\Application" "ApplicationIcon" "$INSTDIR\${FileMainEXE},0"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_ACTIVATION_ID}\Application" "ApplicationCompany" "${CompanyName}"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_ACTIVATION_ID}\Application" "ApplicationDescription" "$(REG_APP_DESC)"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell" "" "open"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open" "CommandId" "open"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open\command" "DelegateExecute" "${DELEGATE_EXECUTE_HANDLER_ID}"
+
+  ; Augment the file handler registrations with additional data needed for Metro
+  WriteRegStr SHCTX "Software\Classes\${FILE_ACTIVATION_ID}" "AppUserModelID" "${APP_USER_MODEL_ID}"
+  WriteRegStr SHCTX "Software\Classes\${FILE_ACTIVATION_ID}\shell" "" "open"
+  WriteRegStr SHCTX "Software\Classes\${FILE_ACTIVATION_ID}\shell\open" "CommandId" "open"
+  WriteRegStr SHCTX "Software\Classes\${FILE_ACTIVATION_ID}\shell\open\command" "DelegateExecute" "${DELEGATE_EXECUTE_HANDLER_ID}"
+
+  ; Win8 Metro delegate execute handler registration
+  WriteRegStr SHCTX "Software\Classes\CLSID\${DELEGATE_EXECUTE_HANDLER_ID}" "" "$BrandShortName CommandExecuteHandler"
+  WriteRegStr SHCTX "Software\Classes\CLSID\${DELEGATE_EXECUTE_HANDLER_ID}" "AppId" "${DELEGATE_EXECUTE_HANDLER_ID}"
+  WriteRegStr SHCTX "Software\Classes\CLSID\${DELEGATE_EXECUTE_HANDLER_ID}\LocalServer32" "" "${DELEGATE_EXECUTE_HANDLER_PATH}"
+!macroend
+!define AddMetroBrowserHandlerValues "!insertmacro AddMetroBrowserHandlerValues"
