@@ -14,7 +14,12 @@ var bodyParts = [
   ["damon.jpg", "image/jpeg"],
   ["damon.jpg", "application/octet-stream"],
   ["damon.jpg", "image/jpeg"],
-  ["lime100x100.svg", "image/svg+xml"]
+  ["rillybad.jpg", "application/x-unknown-content-type"],
+  ["damon.jpg", "image/jpeg"],
+  ["bad.jpg", "image/jpeg"],
+  ["red.png", "image/png"],
+  ["invalid.jpg", "image/jpeg"],
+  ["animated-gif2.gif", "image/gif"]
 ];
 var timer = Components.classes["@mozilla.org/timer;1"];
 var partTimer = timer.createInstance(Components.interfaces.nsITimer);
