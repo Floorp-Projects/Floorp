@@ -38,7 +38,7 @@
   <keyset id="sourceEditorKeys"/>
   <keyset id="scriptSearchKeys">
     <key key="P" modifiers="access shift"
-         oncommand="DebuggerView.Scripts._onSearch()"/>
+         oncommand="DebuggerView.Scripts._onFileSearch()"/>
     <key key="G" modifiers="access shift"
          oncommand="DebuggerView.Scripts._onLineSearch()"/>
     <key key="T" modifiers="access shift"
@@ -102,6 +102,29 @@
                      class="devtools-closebutton"/>
 #endif
     </toolbar>
+    <panel id="scripts-search-panel"
+           type="arrow"
+           noautofocus="true"
+           position="before_start">
+      <vbox>
+        <label class="description" value="&debuggerUI.searchPanelTitle;"/>
+        <hbox align="center">
+          <button class="operator" label="!"
+                  onclick="DebuggerView.Scripts._onGlobalSearch()"/>
+          <label class="plain operator" value="&debuggerUI.searchPanelGlobal;"/>
+        </hbox>
+        <hbox align="center">
+          <button class="operator" label="#"
+                  onclick="DebuggerView.Scripts._onTokenSearch()"/>
+          <label class="plain operator" value="&debuggerUI.searchPanelToken;"/>
+        </hbox>
+        <hbox align="center">
+          <button class="operator" label=":"
+                  onclick="DebuggerView.Scripts._onLineSearch()"/>
+          <label class="plain operator" value="&debuggerUI.searchPanelLine;"/>
+        </hbox>
+      </vbox>
+    </panel>
     <vbox id="dbg-content" flex="1">
       <vbox id="globalsearch" hidden="true"/>
       <splitter id="globalsearch-splitter"

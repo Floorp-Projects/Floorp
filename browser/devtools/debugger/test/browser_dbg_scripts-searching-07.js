@@ -249,5 +249,6 @@ registerCleanupFunction(function() {
   gDebugger = null;
   gEditor = null;
   gScripts = null;
+  gSearchView = null;
   gSearchBox = null;
 });
