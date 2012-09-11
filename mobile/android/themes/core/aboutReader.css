@@ -25,6 +25,14 @@ body {
   color: #eeeeee;
 }
 
+.message {
+  margin-top: 40px;
+  display: none;
+  text-align: center;
+  width: 100%;
+  font-size: 16px;
+}
+
 .header {
   text-align: left;
   display: none;
