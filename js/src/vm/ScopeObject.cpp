@@ -127,7 +127,7 @@ js::ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc)
 
     /* Beware nameless destructuring formal. */
     if (!JSID_IS_ATOM(id))
-        return rt->atomState.emptyAtom;
+        return rt->atomState.empty;
     return JSID_TO_ATOM(id)->asPropertyName();
 }
 
@@ -1226,7 +1226,7 @@ class DebugScopeProxy : public BaseProxyHandler
 
     static bool isArguments(JSContext *cx, jsid id)
     {
-        return id == NameToId(cx->runtime->atomState.argumentsAtom);
+        return id == NameToId(cx->names().arguments);
     }
 
     static bool isFunctionScope(ScopeObject &scope)
@@ -1381,10 +1381,9 @@ class DebugScopeProxy : public BaseProxyHandler
     {
         ScopeObject &scope = proxy->asDebugScope().scope();
 
-        if (isMissingArgumentsBinding(scope) &&
-            !props.append(NameToId(cx->runtime->atomState.argumentsAtom)))
-        {
-            return false;
+        if (isMissingArgumentsBinding(scope)) {
+            if (!props.append(NameToId(cx->names().arguments)))
+                return false;
         }
 
         RootedObject rootedScope(cx, &scope);

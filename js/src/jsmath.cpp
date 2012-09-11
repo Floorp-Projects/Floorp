@@ -656,7 +656,7 @@ js::math_tan(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 math_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
-    vp->setString(cx->runtime->atomState.MathAtom);
+    vp->setString(cx->names().Math);
     return JS_TRUE;
 }
 #endif

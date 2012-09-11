@@ -688,7 +688,7 @@ StackSpace::markAndClobberFrame(JSTracer *trc, StackFrame *fp, Value *slotsEnd, 
                 else if (type == JSVAL_TYPE_BOOLEAN)
                     *vp = BooleanValue(false);
                 else if (type == JSVAL_TYPE_STRING)
-                    *vp = StringValue(rt->atomState.nullAtom);
+                    *vp = StringValue(rt->atomState.null);
                 else if (type == JSVAL_TYPE_NULL)
                     *vp = NullValue();
                 else if (type == JSVAL_TYPE_OBJECT)

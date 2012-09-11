@@ -66,7 +66,7 @@ static JSLinearString *
 ArgToRootedString(JSContext *cx, CallArgs &args, unsigned argno)
 {
     if (argno >= args.length())
-        return cx->runtime->atomState.undefinedAtom;
+        return cx->names().undefined;
 
     Value &arg = args[argno];
     JSString *str = ToString(cx, arg);
@@ -439,7 +439,7 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
     if (call.thisv().isObject()) {
         RootedObject obj(cx, &call.thisv().toObject());
         if (obj->isString()) {
-            Rooted<jsid> id(cx, NameToId(cx->runtime->atomState.toStringAtom));
+            Rooted<jsid> id(cx, NameToId(cx->names().toString));
             if (ClassMethodIsNative(cx, obj, &StringClass, id, js_str_toString)) {
                 JSString *str = obj->asString().unbox();
                 call.setThis(StringValue(str));
@@ -1727,8 +1727,8 @@ BuildFlatMatchArray(JSContext *cx, HandleString textstr, const FlatMatch &fm, Ca
     RootedValue textVal(cx, StringValue(textstr));
 
     if (!JSObject::defineElement(cx, obj, 0, patternVal) ||
-        !JSObject::defineProperty(cx, obj, cx->runtime->atomState.indexAtom, matchVal) ||
-        !JSObject::defineProperty(cx, obj, cx->runtime->atomState.inputAtom, textVal))
+        !JSObject::defineProperty(cx, obj, cx->names().index, matchVal) ||
+        !JSObject::defineProperty(cx, obj, cx->names().input, textVal))
     {
         return false;
     }
@@ -3220,7 +3220,7 @@ StringObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(nativeEmpty());
 
-    return addDataProperty(cx, NameToId(cx->runtime->atomState.lengthAtom),
+    return addDataProperty(cx, NameToId(cx->names().length),
                            LENGTH_SLOT, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
@@ -3238,7 +3238,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 
     /* Now create the String function. */
     RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, js_String, cx->runtime->atomState.StringAtom, 1);
+    ctor = global->createConstructor(cx, js_String, cx->names().String, 1);
     if (!ctor)
         return NULL;
 
@@ -3423,9 +3423,9 @@ js::ToStringSlow(JSContext *cx, const Value &arg)
     } else if (v.isBoolean()) {
         str = js_BooleanToString(cx, v.toBoolean());
     } else if (v.isNull()) {
-        str = cx->runtime->atomState.nullAtom;
+        str = cx->names().null;
     } else {
-        str = cx->runtime->atomState.undefinedAtom;
+        str = cx->names().undefined;
     }
     return str;
 }
@@ -3436,7 +3436,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
     JS_CHECK_RECURSION(cx, return NULL);
 
     if (v.isUndefined())
-        return cx->runtime->atomState.void0Atom;
+        return cx->names().void0;
     if (v.isString())
         return js_QuoteString(cx, v.toString(), '"');
     if (v.isPrimitive()) {
@@ -3452,7 +3452,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
 
     Value rval = NullValue();
     RootedValue fval(cx);
-    RootedId id(cx, NameToId(cx->runtime->atomState.toSourceAtom));
+    RootedId id(cx, NameToId(cx->names().toSource));
     Rooted<JSObject*> obj(cx, &v.toObject());
     if (!GetMethod(cx, obj, id, 0, &fval))
         return NULL;
