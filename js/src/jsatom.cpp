@@ -159,16 +159,16 @@ js::InitCommonNames(JSContext *cx)
 #undef COMMON_NAME_INFO
     };
 
-    PropertyName **names = &cx->runtime->firstCachedName;
+    FixedHeapPtr<PropertyName> *names = &cx->runtime->firstCachedName;
     for (size_t i = 0; i < ArrayLength(cachedNames); i++, names++) {
         JSAtom *atom = Atomize(cx, cachedNames[i].str, cachedNames[i].length, InternAtom);
         if (!atom)
             return false;
-        *names = atom->asPropertyName();
+        names->init(atom->asPropertyName());
     }
     JS_ASSERT(uintptr_t(names) == uintptr_t(&cx->runtime->atomState + 1));
 
-    cx->runtime->emptyString = cx->runtime->atomState.emptyAtom;
+    cx->runtime->emptyString = cx->names().empty;
     return true;
 }
 
