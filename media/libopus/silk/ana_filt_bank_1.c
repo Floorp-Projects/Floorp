@@ -1,5 +1,9 @@
 /***********************************************************************
-Copyright (c) 2006-2011, Skype Limited. All rights reserved.
+Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
+
+This file is extracted from RFC6716. Please see that RFC for additional
+information.
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -8,7 +12,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -37,7 +41,7 @@ static opus_int16 A_fb1_21 = -24290; /* (opus_int16)(20623 << 1) */
 
 /* Split signal into two decimated bands using first-order allpass filters */
 void silk_ana_filt_bank_1(
-    const opus_int16            *in,                /* I    Input signal [N]                                            */ 
+    const opus_int16            *in,                /* I    Input signal [N]                                            */
     opus_int32                  *S,                 /* I/O  State vector [2]                                            */
     opus_int16                  *outL,              /* O    Low band [N/2]                                              */
     opus_int16                  *outH,              /* O    High band [N/2]                                             */
