@@ -1656,6 +1656,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     }
     script->nslots = script->nfixed + bce->maxStackDepth;
 
+    FunctionBox *funbox = bce->sc->isFunction ? bce->sc->asFunbox() : NULL;
+
     if (!FinishTakingSrcNotes(cx, bce, script->notes()))
         return false;
     if (bce->tryNoteList.length() != 0)
@@ -1669,16 +1671,14 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->strictModeCode = bce->sc->inStrictMode();
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
-    script->funHasExtensibleScope =
-        bce->sc->isFunction ? bce->sc->funbox()->hasExtensibleScope() : false;
+    script->funHasExtensibleScope = funbox ? funbox->hasExtensibleScope() : false;
     script->hasSingletons = bce->hasSingletons;
 #ifdef JS_METHODJIT
     if (cx->compartment->debugMode())
         script->debugMode = true;
 #endif
 
-    if (bce->sc->isFunction) {
-        FunctionBox *funbox = bce->sc->funbox();
+    if (funbox) {
         if (funbox->argumentsHasLocalBinding()) {
             // This must precede the script->bindings.transfer() call below
             script->setArgumentsHasVarBinding();
@@ -1690,12 +1690,11 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     }
 
     RootedFunction fun(cx, NULL);
-    if (bce->sc->isFunction) {
+    if (funbox) {
         JS_ASSERT(!bce->script->noScriptRval);
-        FunctionBox *funbox = bce->sc->funbox();
         script->isGenerator = funbox->isGenerator();
         script->isGeneratorExp = funbox->inGenexpLambda;
-        script->setFunction(bce->sc->funbox()->fun());
+        script->setFunction(funbox->fun());
     }
 
     /*

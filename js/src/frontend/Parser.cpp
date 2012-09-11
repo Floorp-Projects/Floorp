@@ -316,8 +316,9 @@ ParseContext::generateFunctionBindings(JSContext *cx, InternalHandle<Bindings*> 
         return false;
     }
 
-    if (bindings->hasAnyAliasedBindings() || sc->funbox()->hasExtensibleScope())
-        sc->funbox()->fun()->flags |= JSFUN_HEAVYWEIGHT;
+    FunctionBox *funbox = sc->asFunbox();
+    if (bindings->hasAnyAliasedBindings() || funbox->hasExtensibleScope())
+        funbox->fun()->flags |= JSFUN_HEAVYWEIGHT;
 
     return true;
 }
@@ -398,20 +399,19 @@ Parser::newObjectBox(JSObject *obj)
     return objbox;
 }
 
-FunctionBox::FunctionBox(ObjectBox *traceListHead, JSFunction *fun, ParseContext *outerpc,
-                         StrictMode sms)
-  : objbox(traceListHead, fun, this),
+FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fun,
+                         ParseContext *outerpc, StrictMode sms)
+  : SharedContext(cx, /* isFunction = */ true, sms),
+    objbox(traceListHead, fun, this),
     siblings(outerpc ? outerpc->functionList : NULL),
     kids(NULL),
     bindings(),
     bufStart(0),
     bufEnd(0),
     ndefaults(0),
-    strictModeState(sms),
     inWith(false),                  // initialized below
     inGenexpLambda(false),
-    anyCxFlags(),
-    funCxFlags()                    // the funCxFlags are set in LeaveFunction
+    funCxFlags()
 {
     if (!outerpc) {
         inWith = false;
@@ -436,7 +436,7 @@ FunctionBox::FunctionBox(ObjectBox *traceListHead, JSFunction *fun, ParseContext
         // ParseContext chain, and |parent| is NULL (again because of the
         // eval(), so we have to look at |outerpc|'s scopeChain.
         //
-        JSObject *scope = outerpc->sc->scopeChain();
+        JSObject *scope = outerpc->sc->asGlobal()->scopeChain();
         while (scope) {
             if (scope->isWith())
                 inWith = true;
@@ -450,7 +450,7 @@ FunctionBox::FunctionBox(ObjectBox *traceListHead, JSFunction *fun, ParseContext
         //
         // In this case, the inner anonymous function needs to inherit the
         // setting of |inWith| from the outer one.
-        FunctionBox *parent = outerpc->sc->funbox();
+        FunctionBox *parent = outerpc->sc->asFunbox();
         if (parent && parent->inWith)
             inWith = true;
     }
@@ -469,7 +469,7 @@ Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, StrictMode sms)
      * function.
      */
     FunctionBox *funbox =
-        context->tempLifoAlloc().new_<FunctionBox>(traceListHead, fun, outerpc, sms);
+        context->tempLifoAlloc().new_<FunctionBox>(context, traceListHead, fun, outerpc, sms);
     if (!funbox) {
         js_ReportOutOfMemory(context);
         return NULL;
@@ -520,7 +520,7 @@ Parser::parse(JSObject *chain)
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
-    SharedContext globalsc(context, chain, /* funbox = */ NULL, StrictModeFromContext(context));
+    GlobalSharedContext globalsc(context, chain, StrictModeFromContext(context));
     ParseContext globalpc(this, &globalsc, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!globalpc.init())
         return NULL;
@@ -668,7 +668,7 @@ ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, Parser::Reporter r
                 unsigned errnum, unsigned anonerrnum)
 {
     JSAutoByteString name;
-    JSAtom *atom = parser->pc->sc->funbox()->fun()->atom();
+    JSAtom *atom = parser->pc->sc->asFunbox()->fun()->atom();
     if (atom) {
         if (!js_AtomToPrintableString(cx, atom, &name))
             return false;
@@ -763,7 +763,7 @@ Parser::functionBody(FunctionBodyType type)
             if (!pn->pn_kid) {
                 pn = NULL;
             } else {
-                if (pc->sc->funbox()->isGenerator()) {
+                if (pc->sc->asFunbox()->isGenerator()) {
                     ReportBadReturn(context, this, pn, &Parser::reportError,
                                     JSMSG_BAD_GENERATOR_RETURN,
                                     JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -833,7 +833,7 @@ Parser::functionBody(FunctionBodyType type)
     Definition *maybeArgDef = pc->decls().lookupFirst(arguments);
     bool argumentsHasBinding = !!maybeArgDef;
     bool argumentsHasLocalBinding = maybeArgDef && maybeArgDef->kind() != Definition::ARG;
-    bool hasRest = pc->sc->funbox()->fun()->hasRest();
+    bool hasRest = pc->sc->asFunbox()->fun()->hasRest();
     if (hasRest && argumentsHasLocalBinding) {
         reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
         return NULL;
@@ -860,7 +860,7 @@ Parser::functionBody(FunctionBodyType type)
      * arguments object. (Also see the flags' comments in ContextFlags.)
      */
     if (argumentsHasLocalBinding) {
-        FunctionBox *funbox = pc->sc->funbox();
+        FunctionBox *funbox = pc->sc->asFunbox();
         funbox->setArgumentsHasLocalBinding();
 
         /* Dynamic scope access destroys all hope of optimization. */
@@ -1080,15 +1080,15 @@ Parser::newFunction(ParseContext *pc, JSAtom *atom, FunctionSyntaxKind kind)
 
     /*
      * Find the global compilation context in order to pre-set the newborn
-     * function's parent slot to pc->sc->scopeChain. If the global context is a
-     * compile-and-go one, we leave the pre-set parent intact; otherwise we
-     * clear parent and proto.
+     * function's parent slot to pc->sc->asGlobal()->scopeChain. If the global
+     * context is a compile-and-go one, we leave the pre-set parent intact;
+     * otherwise we clear parent and proto.
      */
     while (pc->parent)
         pc = pc->parent;
 
     RootedObject parent(context);
-    parent = pc->sc->isFunction ? NULL : pc->sc->scopeChain();
+    parent = pc->sc->isFunction ? NULL : pc->sc->asGlobal()->scopeChain();
 
     RootedFunction fun(context);
     uint32_t flags = JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0);
@@ -1154,7 +1154,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
     pc->blockidGen = funpc->blockidGen;
 
     FunctionBox *funbox = fn->pn_funbox;
-    funbox->anyCxFlags = funpc->sc->anyCxFlags;   // copy the non-func flags
+    JS_ASSERT(funbox == funpc->sc->asFunbox());
     funbox->kids = funpc->functionList;
 
     if (!pc->topStmt || pc->topStmt->type == STMT_BLOCK)
@@ -1187,7 +1187,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
                  * produce an error (in strict mode).
                  */
                 if (dn->isClosed() || dn->isAssigned())
-                    funpc->sc->funbox()->fun()->flags |= JSFUN_HEAVYWEIGHT;
+                    funbox->fun()->flags |= JSFUN_HEAVYWEIGHT;
                 continue;
             }
 
@@ -1198,7 +1198,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
              * by eval and function statements (which both flag the function as
              * having an extensible scope) or any enclosing 'with'.
              */
-            if (funpc->sc->funbox()->hasExtensibleScope() || pc->parsingWith)
+            if (funbox->hasExtensibleScope() || pc->parsingWith)
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
 
             if (!outer_dn) {
@@ -1364,7 +1364,7 @@ Parser::functionArguments(ParseNode **listp, ParseNode* funcpn, bool &hasRest)
         return false;
     }
 
-    FunctionBox *funbox = pc->sc->funbox();
+    FunctionBox *funbox = pc->sc->asFunbox();
     funbox->bufStart = tokenStream.offsetOfToken(tokenStream.currentToken());
 
     hasRest = false;
@@ -1600,7 +1600,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
             JS_ASSERT(pc->sc->strictModeState != StrictMode::STRICT);
             JS_ASSERT(pn->pn_cookie.isFree());
             if (pc->sc->isFunction) {
-                FunctionBox *funbox = pc->sc->funbox();
+                FunctionBox *funbox = pc->sc->asFunbox();
                 funbox->setMightAliasLocals();
                 funbox->setHasExtensibleScope();
             }
@@ -1644,8 +1644,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         return NULL;
 
     /* Initialize early for possible flags mutation via destructuringExpr. */
-    SharedContext funsc(context, /* scopeChain = */ NULL, funbox, sms);
-    ParseContext funpc(this, &funsc, outerpc->staticLevel + 1, outerpc->blockidGen);
+    ParseContext funpc(this, funbox, outerpc->staticLevel + 1, outerpc->blockidGen);
     if (!funpc.init())
         return NULL;
 
@@ -1711,7 +1710,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
      * that the deoptimizing effects of dynamic name access apply equally to
      * parents: any local can be read at runtime.
      */
-    if (funsc.bindingsAccessedDynamically())
+    if (funbox->bindingsAccessedDynamically())
         outerpc->sc->setBindingsAccessedDynamically();
 
 #if JS_HAS_DESTRUCTURING
@@ -1753,7 +1752,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
      * If any nested function scope does a dynamic scope access, all enclosing
      * scopes may be accessed dynamically.
      */
-    if (funsc.bindingsAccessedDynamically())
+    if (funbox->bindingsAccessedDynamically())
         outerpc->sc->setBindingsAccessedDynamically();
 
 
@@ -1822,7 +1821,6 @@ Parser::setStrictMode(bool strictMode)
         // Strict mode was inherited.
         JS_ASSERT(pc->sc->strictModeState == StrictMode::STRICT);
         if (pc->sc->isFunction) {
-            JS_ASSERT(pc->sc->funbox()->strictModeState == pc->sc->strictModeState);
             JS_ASSERT(pc->parent->sc->strictModeState == StrictMode::STRICT);
         } else {
             JS_ASSERT(StrictModeFromContext(context) == StrictMode::STRICT || pc->staticLevel);
@@ -1853,7 +1851,7 @@ Parser::setStrictMode(bool strictMode)
         // We changed the strict mode state. Retroactively recursively set
         // strict mode status on all the function children we've seen so far
         // children (That is, functions in default expressions).
-        pc->sc->funbox()->strictModeState = pc->sc->strictModeState;
+        pc->sc->asFunbox()->strictModeState = pc->sc->strictModeState;
         for (FunctionBox *kid = pc->functionList; kid; kid = kid->siblings)
             kid->recursivelySetStrictMode(pc->sc->strictModeState);
     }
@@ -1997,7 +1995,7 @@ Parser::statements(bool *hasFunctionStmt)
                  * General deoptimization was done in functionDef, here we just
                  * need to tell TOK_LC in Parser::statement to add braces.
                  */
-                JS_ASSERT_IF(pc->sc->isFunction, pc->sc->funbox()->hasExtensibleScope());
+                JS_ASSERT_IF(pc->sc->isFunction, pc->sc->asFunbox()->hasExtensibleScope());
                 if (hasFunctionStmt)
                     *hasFunctionStmt = true;
             }
@@ -2198,7 +2196,7 @@ BindVarOrConst(JSContext *cx, BindData *data, HandlePropertyName name, Parser *p
     if (stmt && stmt->type == STMT_WITH) {
         pn->pn_dflags |= PND_DEOPTIMIZED;
         if (pc->sc->isFunction)
-            pc->sc->funbox()->setMightAliasLocals();
+            pc->sc->asFunbox()->setMightAliasLocals();
         return true;
     }
 
@@ -2585,7 +2583,7 @@ Parser::returnOrYield(bool useAssignExpr)
          * a |for| token, so we have to delay flagging the current function.
          */
         if (pc->parenDepth == 0) {
-            pc->sc->funbox()->setIsGenerator();
+            pc->sc->asFunbox()->setIsGenerator();
         } else {
             pc->yieldCount++;
             pc->yieldNode = pn;
@@ -2622,7 +2620,7 @@ Parser::returnOrYield(bool useAssignExpr)
             pc->funHasReturnVoid = true;
     }
 
-    if (pc->funHasReturnExpr && pc->sc->funbox()->isGenerator()) {
+    if (pc->funHasReturnExpr && pc->sc->asFunbox()->isGenerator()) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
         ReportBadReturn(context, this, pn, &Parser::reportError, JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -4862,7 +4860,7 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
             parser->reportError(NULL, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
             return false;
         }
-        pc->sc->funbox()->setIsGenerator();
+        pc->sc->asFunbox()->setIsGenerator();
         if (pc->funHasReturnExpr) {
             /* At the time we saw the yield, we might not have set isGenerator yet. */
             ReportBadReturn(pc->sc->context, parser, pn, &Parser::reportError,
@@ -4956,7 +4954,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
         FunctionBox *funbox = pn->pn_funbox;
 
         if (++funcLevel == 1 && genexp) {
-            FunctionBox *parent = pc->sc->funbox();
+            FunctionBox *parent = pc->sc->asFunbox();
 
             FunctionBox **funboxp = &pc->parent->functionList;
             while (*funboxp != funbox)
@@ -5366,12 +5364,11 @@ Parser::generatorExpr(ParseNode *kid)
             return NULL;
 
         /* Create box for fun->object early to protect against last-ditch GC. */
-        FunctionBox *funbox = newFunctionBox(fun, outerpc, outerpc->sc->strictModeState);
-        if (!funbox)
+        FunctionBox *genFunbox = newFunctionBox(fun, outerpc, outerpc->sc->strictModeState);
+        if (!genFunbox)
             return NULL;
 
-        SharedContext gensc(context, /* scopeChain = */ NULL, funbox, outerpc->sc->strictModeState);
-        ParseContext genpc(this, &gensc, outerpc->staticLevel + 1, outerpc->blockidGen);
+        ParseContext genpc(this, genFunbox, outerpc->staticLevel + 1, outerpc->blockidGen);
         if (!genpc.init())
             return NULL;
 
@@ -5381,13 +5378,13 @@ Parser::generatorExpr(ParseNode *kid)
          * simplicity we also do not detect if the flags were only set in the
          * kid and could be removed from pc->sc.
          */
-        gensc.anyCxFlags = outerpc->sc->anyCxFlags;
+        genFunbox->anyCxFlags = outerpc->sc->anyCxFlags;
         if (outerpc->sc->isFunction)
-            funbox->funCxFlags = outerpc->sc->funbox()->funCxFlags;
+            genFunbox->funCxFlags = outerpc->sc->asFunbox()->funCxFlags;
 
-        funbox->setIsGenerator();
-        funbox->inGenexpLambda = true;
-        genfn->pn_funbox = funbox;
+        genFunbox->setIsGenerator();
+        genFunbox->inGenexpLambda = true;
+        genfn->pn_funbox = genFunbox;
         genfn->pn_blockid = genpc.bodyid;
 
         ParseNode *body = comprehensionTail(pn, outerpc->blockid(), true);
@@ -5398,7 +5395,7 @@ Parser::generatorExpr(ParseNode *kid)
         genfn->pn_pos.begin = body->pn_pos.begin = kid->pn_pos.begin;
         genfn->pn_pos.end = body->pn_pos.end = tokenStream.currentToken().pos.end;
 
-        JSAtom *arguments = gensc.context->runtime->atomState.argumentsAtom;
+        JSAtom *arguments = context->runtime->atomState.argumentsAtom;
         if (AtomDefnPtr p = genpc.lexdeps->lookup(arguments)) {
             Definition *dn = p.value();
             ParseNode *errorNode = dn->dn_uses ? dn->dn_uses : body;
@@ -5709,7 +5706,7 @@ Parser::memberExpr(bool allowCallSyntax)
                      * variables to the call object.
                      */
                     if (pc->sc->isFunction && pc->sc->strictModeState != StrictMode::STRICT)
-                        pc->sc->funbox()->setHasExtensibleScope();
+                        pc->sc->asFunbox()->setHasExtensibleScope();
                 }
             } else if (lhs->isOp(JSOP_GETPROP)) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
@@ -6350,7 +6347,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * lightweight function activation, or if its scope chain doesn't match
      * the one passed to us.
      */
-    SharedContext xmlsc(context, chain, /* funbox = */ NULL, StrictMode::NOTSTRICT);
+    GlobalSharedContext xmlsc(context, chain, StrictMode::NOTSTRICT);
     ParseContext xmlpc(this, &xmlsc, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!xmlpc.init())
         return NULL;
