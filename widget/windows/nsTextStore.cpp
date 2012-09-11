@@ -247,6 +247,88 @@ GetTextRunTypeName(TsRunType aRunType)
   }
 }
 
+static nsCString
+GetColorName(const TF_DA_COLOR &aColor)
+{
+  switch (aColor.type) {
+    case TF_CT_NONE:
+      return NS_LITERAL_CSTRING("TF_CT_NONE");
+    case TF_CT_SYSCOLOR:
+      return nsPrintfCString("TF_CT_SYSCOLOR, nIndex:0x%08X",
+                             static_cast<int32_t>(aColor.nIndex));
+    case TF_CT_COLORREF:
+      return nsPrintfCString("TF_CT_COLORREF, cr:0x%08X",
+                             static_cast<int32_t>(aColor.cr));
+      break;
+    default:
+      return nsPrintfCString("Unknown(%08X)",
+                             static_cast<int32_t>(aColor.type));
+  }
+}
+
+static nsCString
+GetLineStyleName(TF_DA_LINESTYLE aLineStyle)
+{
+  switch (aLineStyle) {
+    case TF_LS_NONE:
+      return NS_LITERAL_CSTRING("TF_LS_NONE");
+    case TF_LS_SOLID:
+      return NS_LITERAL_CSTRING("TF_LS_SOLID");
+    case TF_LS_DOT:
+      return NS_LITERAL_CSTRING("TF_LS_DOT");
+    case TF_LS_DASH:
+      return NS_LITERAL_CSTRING("TF_LS_DASH");
+    case TF_LS_SQUIGGLE:
+      return NS_LITERAL_CSTRING("TF_LS_SQUIGGLE");
+    default: {
+      return nsPrintfCString("Unknown(%08X)", static_cast<int32_t>(aLineStyle));
+    }
+  }
+}
+
+static nsCString
+GetClauseAttrName(TF_DA_ATTR_INFO aAttr)
+{
+  switch (aAttr) {
+    case TF_ATTR_INPUT:
+      return NS_LITERAL_CSTRING("TF_ATTR_INPUT");
+    case TF_ATTR_TARGET_CONVERTED:
+      return NS_LITERAL_CSTRING("TF_ATTR_TARGET_CONVERTED");
+    case TF_ATTR_CONVERTED:
+      return NS_LITERAL_CSTRING("TF_ATTR_CONVERTED");
+    case TF_ATTR_TARGET_NOTCONVERTED:
+      return NS_LITERAL_CSTRING("TF_ATTR_TARGET_NOTCONVERTED");
+    case TF_ATTR_INPUT_ERROR:
+      return NS_LITERAL_CSTRING("TF_ATTR_INPUT_ERROR");
+    case TF_ATTR_FIXEDCONVERTED:
+      return NS_LITERAL_CSTRING("TF_ATTR_FIXEDCONVERTED");
+    case TF_ATTR_OTHER:
+      return NS_LITERAL_CSTRING("TF_ATTR_OTHER");
+    default: {
+      return nsPrintfCString("Unknown(%08X)", static_cast<int32_t>(aAttr));
+    }
+  }
+}
+
+static nsCString
+GetDisplayAttrStr(const TF_DISPLAYATTRIBUTE &aDispAttr)
+{
+  nsAutoCString str;
+  str = "crText:{ ";
+  str += GetColorName(aDispAttr.crText);
+  str += " }, crBk:{ ";
+  str += GetColorName(aDispAttr.crBk);
+  str += " }, lsStyle: ";
+  str += GetLineStyleName(aDispAttr.lsStyle);
+  str += ", fBoldLine: ";
+  str += GetBoolName(aDispAttr.fBoldLine);
+  str += ", crLine:{ ";
+  str += GetColorName(aDispAttr.crLine);
+  str += " }, bAttr: ";
+  str += GetClauseAttrName(aDispAttr.bAttr);
+  return str;
+}
+
 #endif // #ifdef PR_LOGGING
 
 nsTextStore::nsTextStore()
@@ -737,119 +819,6 @@ GetGeckoSelectionValue(TF_DISPLAYATTRIBUTE &aDisplayAttr)
   return result;
 }
 
-#ifdef PR_LOGGING
-static void
-GetLogTextFor(const TF_DA_COLOR &aColor, nsACString &aText)
-{
-  aText = "type: ";
-  switch (aColor.type) {
-    case TF_CT_NONE:
-      aText += "TF_CT_NONE";
-      break;
-    case TF_CT_SYSCOLOR: {
-      nsPrintfCString tmp("TF_CT_SYSCOLOR, nIndex:0x%08X",
-                          int32_t(aColor.nIndex));
-      aText += tmp;
-      break;
-    }
-    case TF_CT_COLORREF: {
-      nsPrintfCString tmp("TF_CT_COLORREF, cr:0x%08X", int32_t(aColor.cr));
-      aText += tmp;
-      break;
-    }
-    default: {
-      nsPrintfCString tmp("Unknown(%08X)", int32_t(aColor.type));
-      aText += tmp;
-      break;
-    }
-  }
-}
-
-static void
-GetLogTextFor(TF_DA_LINESTYLE aLineStyle, nsACString &aText)
-{
-  switch (aLineStyle) {
-    case TF_LS_NONE:
-      aText = "TF_LS_NONE";
-      break;
-    case TF_LS_SOLID:
-      aText = "TF_LS_SOLID";
-      break;
-    case TF_LS_DOT:
-      aText = "TF_LS_DOT";
-      break;
-    case TF_LS_DASH:
-      aText = "TF_LS_DASH";
-      break;
-    case TF_LS_SQUIGGLE:
-      aText = "TF_LS_SQUIGGLE";
-      break;
-    default: {
-      nsPrintfCString tmp("Unknown(%08X)", int32_t(aLineStyle));
-      aText = tmp;
-      break;
-    }
-  }
-}
-
-static void
-GetLogTextFor(TF_DA_ATTR_INFO aAttr, nsACString &aText)
-{
-  switch (aAttr) {
-    case TF_ATTR_INPUT:
-      aText = "TF_ATTR_INPUT";
-      break;
-    case TF_ATTR_TARGET_CONVERTED:
-      aText = "TF_ATTR_TARGET_CONVERTED";
-      break;
-    case TF_ATTR_CONVERTED:
-      aText = "TF_ATTR_CONVERTED";
-      break;
-    case TF_ATTR_TARGET_NOTCONVERTED:
-      aText = "TF_ATTR_TARGET_NOTCONVERTED";
-      break;
-    case TF_ATTR_INPUT_ERROR:
-      aText = "TF_ATTR_INPUT_ERROR";
-      break;
-    case TF_ATTR_FIXEDCONVERTED:
-      aText = "TF_ATTR_FIXEDCONVERTED";
-      break;
-    case TF_ATTR_OTHER:
-      aText = "TF_ATTR_OTHER";
-      break;
-    default: {
-      nsPrintfCString tmp("Unknown(%08X)", int32_t(aAttr));
-      aText = tmp;
-      break;
-    }
-  }
-}
-
-static nsCString
-GetLogTextFor(const TF_DISPLAYATTRIBUTE &aDispAttr)
-{
-  nsAutoCString str, tmp;
-  str = "crText:{ ";
-  GetLogTextFor(aDispAttr.crText, tmp);
-  str += tmp;
-  str += " }, crBk:{ ";
-  GetLogTextFor(aDispAttr.crBk, tmp);
-  str += tmp;
-  str += " }, lsStyle: ";
-  GetLogTextFor(aDispAttr.lsStyle, tmp);
-  str += tmp;
-  str += ", fBoldLine: ";
-  str += aDispAttr.fBoldLine ? "TRUE" : "FALSE";
-  str += ", crLine:{ ";
-  GetLogTextFor(aDispAttr.crLine, tmp);
-  str += tmp;
-  str += " }, bAttr: ";
-  GetLogTextFor(aDispAttr.bAttr, tmp);
-  str += tmp;
-  return str;
-}
-#endif // PR_LOGGING
-
 HRESULT
 nsTextStore::GetDisplayAttribute(ITfProperty* aAttrProperty,
                                  ITfRange* aRange,
@@ -922,7 +891,7 @@ nsTextStore::GetDisplayAttribute(ITfProperty* aAttrProperty,
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::GetDisplayAttribute() succeeded: "
-          "Result={ %s }", this, GetLogTextFor(*aResult).get()));
+          "Result={ %s }", this, GetDisplayAttrStr(*aResult).get()));
   return S_OK;
 }
 
