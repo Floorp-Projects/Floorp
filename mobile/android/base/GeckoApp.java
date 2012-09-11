@@ -598,6 +598,9 @@ abstract public class GeckoApp
       if (url == null)
           return;
 
+      if (ReaderModeUtils.isAboutReader(url))
+          url = ReaderModeUtils.getUrlFromAboutReader(url);
+
       GeckoAppShell.openUriExternal(url, "text/plain", "", "",
                                     Intent.ACTION_SEND, tab.getDisplayTitle());
     }
