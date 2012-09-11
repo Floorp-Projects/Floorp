@@ -27,8 +27,6 @@ def check_numeric_limits(dmin, dmax, n_buckets):
 
 def linear_buckets(dmin, dmax, n_buckets):
     check_numeric_limits(dmin, dmax, n_buckets)
-    if n_buckets == 2:
-        return [0, 1, 2]
     ret_array = [0] * n_buckets
     dmin = float(dmin)
     dmax = float(dmax)
@@ -176,7 +174,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
     @staticmethod
     def boolean_flag_bucket_parameters(definition):
-        return (0, 1, 2)
+        return (1, 2, 3)
 
     @staticmethod
     def linear_bucket_parameters(definition):
