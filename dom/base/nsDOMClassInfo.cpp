@@ -2087,11 +2087,8 @@ SetParentToWindow(nsGlobalWindow *win, JSObject **parent)
   *parent = win->FastGetGlobalJSObject();
 
   if (MOZ_UNLIKELY(!*parent)) {
-    // The only known case where this can happen is when the inner window has
-    // been torn down. See bug 691178 comment 11. Should be a fatal MOZ_ASSERT,
-    // but we've found a way to hit it too often in mochitests. See bugs 777875
-    // 778424, 781078.
-    NS_ASSERTION(win->IsClosedOrClosing(), "win should be closed or closing");
+    // The inner window has been torn down. The scope is dying, so don't create
+    // any new wrappers.
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
