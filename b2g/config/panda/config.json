@@ -1,0 +1,5 @@
+{
+    "tooltool_manifest": "releng-pandaboard.tt",
+    "mock_target": "mozilla-centos6-i386",
+    "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "java-1.6.0-openjdk-devel"]
+}
