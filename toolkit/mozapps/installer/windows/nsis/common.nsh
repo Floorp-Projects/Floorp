@@ -79,20 +79,6 @@
   !include /NONFATAL WinVer.nsh
 !endif
 
-; Add Windows 7 / 2008 support for versions of WinVer.nsh that don't support
-; them. This can be removed after bug 571381 is fixed.
-!ifndef WINVER_7
-  !define WINVER_7 0x601
-
-  !macro __MOZ__WinVer_DefineOSTests Test
-    !insertmacro __WinVer_DefineOSTest ${Test} 7
-  !macroend
-
-  !insertmacro __MOZ__WinVer_DefineOSTests AtLeast
-  !insertmacro __MOZ__WinVer_DefineOSTests Is
-  !insertmacro __MOZ__WinVer_DefineOSTests AtMost
-!endif
-
 !include x64.nsh
 
 ; NSIS provided macros that we have overridden.
