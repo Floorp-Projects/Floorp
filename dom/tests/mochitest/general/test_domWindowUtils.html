@@ -25,10 +25,7 @@
 
 <script type="application/javascript;version=1.8">
 
-// Enable privileges so we can use nsIDOMWindowUtils interface
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindowUtils);
+var domWindowUtils = SpecialPowers.getDOMWindowUtils(window);
 
 /*
   nsIDOMElement elementFromPoint(in long aX,

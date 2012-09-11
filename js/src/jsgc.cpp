@@ -112,6 +112,8 @@ using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
+void * const JS::InternalHandleBase::zeroPointer = NULL;
+
 namespace js {
 namespace gc {
 
@@ -2448,12 +2450,6 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
-      case BINDINGS: {
-        Bindings::AutoRooter *rooter = static_cast<Bindings::AutoRooter *>(this);
-        rooter->trace(trc);
-        return;
-      }
-
       case GETTERSETTER: {
         AutoRooterGetterSetter::Inner *rooter = static_cast<AutoRooterGetterSetter::Inner *>(this);
         if ((rooter->attrs & JSPROP_GETTER) && *rooter->pgetter)
@@ -2511,12 +2507,6 @@ Shape::Range::AutoRooter::trace(JSTracer *trc)
 {
     if (r->cursor)
         MarkShapeRoot(trc, const_cast<Shape**>(&r->cursor), "Shape::Range::AutoRooter");
-}
-
-void
-Bindings::AutoRooter::trace(JSTracer *trc)
-{
-    bindings->trace(trc);
 }
 
 void
@@ -4968,16 +4958,16 @@ JS::CheckStackRoots(JSContext *cx)
     if (rt->gcZeal_ == ZealStackRootingSafeValue && !rt->gcExactScanningEnabled)
         return;
 
-    // If this assertion fails, it means that an AssertRootingUnnecessary was
-    // placed around code that could trigger GC, and is therefore wrong. The
-    // AssertRootingUnnecessary should be removed and the code it was guarding
-    // should be modified to properly root any gcthings, and very possibly any
-    // code calling that function should also be modified if it was improperly
+    // If this assertion fails, it means that an AutoAssertNoGC was placed
+    // around code that could trigger GC, and is therefore wrong. The
+    // AutoAssertNoGC should be removed and the code it was guarding should be
+    // modified to properly root any gcthings, and very possibly any code
+    // calling that function should also be modified if it was improperly
     // assuming that GC could not happen at all within the called function.
-    // (The latter may not apply if the AssertRootingUnnecessary only protected
-    // a portion of a function, so the callers were already assuming that GC
-    // could happen.)
-    JS_ASSERT(!cx->rootingUnnecessary);
+    // (The latter may not apply if the AutoAssertNoGC only protected a portion
+    // of a function, so the callers were already assuming that GC could
+    // happen.)
+    JS_ASSERT(!InNoGCScope());
 
     // GCs can't happen when analysis/inference/compilation are active.
     if (cx->compartment->activeAnalysis)

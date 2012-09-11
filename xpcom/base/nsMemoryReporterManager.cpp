@@ -6,12 +6,24 @@
 #include "nsAtomTable.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemoryReporterManager.h"
 #include "nsArrayEnumerator.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIFile.h"
+#include "nsIFileStreams.h"
+#include "nsPrintfCString.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Attributes.h"
+
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h>
+#endif
 
 using namespace mozilla;
 
@@ -296,7 +308,7 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(PageFaultsSoft,
     KIND_OTHER,
     UNITS_COUNT_CUMULATIVE,
     GetSoftPageFaults,
-    "The number of soft page faults (also known as \"minor page faults\") that "
+    "The number of soft page faults (also known as 'minor page faults') that "
     "have occurred since the process started.  A soft page fault occurs when the "
     "process tries to access a page which is present in physical memory but is "
     "not mapped into the process's address space.  For instance, a process might "
@@ -311,7 +323,7 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(PageFaultsHard,
     KIND_OTHER,
     UNITS_COUNT_CUMULATIVE,
     GetHardPageFaults,
-    "The number of hard page faults (also known as \"major page faults\") that "
+    "The number of hard page faults (also known as 'major page faults') that "
     "have occurred since the process started.  A hard page fault occurs when a "
     "process tries to access a page which is not present in physical memory. "
     "The operating system must access the disk in order to fulfill a hard page "
@@ -688,13 +700,13 @@ struct MemoryReport {
 #ifdef DEBUG
 // This is just a wrapper for int64_t that implements nsISupports, so it can be
 // passed to nsIMemoryMultiReporter::CollectReports.
-class PRInt64Wrapper MOZ_FINAL : public nsISupports {
+class Int64Wrapper MOZ_FINAL : public nsISupports {
 public:
     NS_DECL_ISUPPORTS
-    PRInt64Wrapper() : mValue(0) { }
+    Int64Wrapper() : mValue(0) { }
     int64_t mValue;
 };
-NS_IMPL_ISUPPORTS0(PRInt64Wrapper)
+NS_IMPL_ISUPPORTS0(Int64Wrapper)
 
 class ExplicitNonHeapCountingCallback MOZ_FINAL : public nsIMemoryMultiReporterCallback
 {
@@ -710,8 +722,8 @@ public:
             PromiseFlatCString(aPath).Find("explicit") == 0 &&
             aAmount != int64_t(-1))
         {
-            PRInt64Wrapper *wrappedPRInt64 =
-                static_cast<PRInt64Wrapper *>(aWrappedExplicitNonHeap);
+            Int64Wrapper *wrappedPRInt64 =
+                static_cast<Int64Wrapper *>(aWrappedExplicitNonHeap);
             wrappedPRInt64->mValue += aAmount;
         }
         return NS_OK;
@@ -797,8 +809,8 @@ nsMemoryReporterManager::GetExplicit(int64_t *aExplicit)
 #ifdef DEBUG
     nsRefPtr<ExplicitNonHeapCountingCallback> cb =
       new ExplicitNonHeapCountingCallback();
-    nsRefPtr<PRInt64Wrapper> wrappedExplicitNonHeapMultiSize2 =
-      new PRInt64Wrapper();
+    nsRefPtr<Int64Wrapper> wrappedExplicitNonHeapMultiSize2 =
+      new Int64Wrapper();
     nsCOMPtr<nsISimpleEnumerator> e3;
     EnumerateMultiReporters(getter_AddRefs(e3));
     while (NS_SUCCEEDED(e3->HasMoreElements(&more)) && more) {
@@ -838,6 +850,182 @@ nsMemoryReporterManager::GetHasMozMallocUsableSize(bool *aHas)
     *aHas = !!(usable > 0);
     return NS_OK;
 }
+
+#define DUMP(o, s) \
+    do { \
+        const char* s2 = (s); \
+        uint32_t dummy; \
+        nsresult rv = (o)->Write((s2), strlen(s2), &dummy); \
+        NS_ENSURE_SUCCESS(rv, rv); \
+    } while (0)
+
+static nsresult
+DumpReport(nsIFileOutputStream *aOStream, bool isFirst,
+           const nsACString &aProcess, const nsACString &aPath, int32_t aKind,
+           int32_t aUnits, int64_t aAmount, const nsACString &aDescription)
+{
+    DUMP(aOStream, isFirst ? "[" : ",");
+
+    // We only want to dump reports for this process.  If |aProcess| is
+    // non-NULL that means we've received it from another process in response
+    // to a "child-memory-reporter-request" event;  ignore such reports.
+    if (!aProcess.IsEmpty()) {
+        return NS_OK;    
+    }
+
+    unsigned pid = getpid();
+    nsPrintfCString pidStr("Process %u", pid);
+    DUMP(aOStream, "\n    {\"process\": \"");
+    DUMP(aOStream, pidStr.get());
+
+    DUMP(aOStream, "\", \"path\": \"");
+    nsCString path(aPath);
+    path.ReplaceSubstring("\\", "\\\\");    // escape backslashes for JSON
+    DUMP(aOStream, path.get());
+
+    DUMP(aOStream, "\", \"kind\": ");
+    DUMP(aOStream, nsPrintfCString("%d", aKind).get());
+
+    DUMP(aOStream, ", \"units\": ");
+    DUMP(aOStream, nsPrintfCString("%d", aUnits).get());
+
+    DUMP(aOStream, ", \"amount\": ");
+    DUMP(aOStream, nsPrintfCString("%lld", aAmount).get());
+
+    nsCString description(aDescription);
+    description.ReplaceSubstring("\\", "\\\\");    /* <backslash> --> \\ */
+    description.ReplaceSubstring("\"", "\\\"");    // " --> \"
+    description.ReplaceSubstring("\n", "\\n");     // <newline> --> \n
+    DUMP(aOStream, ", \"description\": \"");
+    DUMP(aOStream, description.get());
+    DUMP(aOStream, "\"}");
+
+    return NS_OK;
+}
+
+class DumpMultiReporterCallback : public nsIMemoryMultiReporterCallback
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
+                        int32_t aKind, int32_t aUnits, int64_t aAmount,
+                        const nsACString &aDescription,
+                        nsISupports *aData)
+    {
+        nsCOMPtr<nsIFileOutputStream> ostream = do_QueryInterface(aData);
+        if (!ostream)
+            return NS_ERROR_FAILURE;
+
+        // The |isFirst = false| assumes that at least one single reporter is
+        // present and so will have been processed in DumpReports() below.
+        return DumpReport(ostream, /* isFirst = */ false, aProcess, aPath,
+                          aKind, aUnits, aAmount, aDescription);
+    }
+};
+
+NS_IMPL_ISUPPORTS1(
+  DumpMultiReporterCallback
+, nsIMemoryMultiReporterCallback
+)
+
+NS_IMETHODIMP
+nsMemoryReporterManager::DumpReports()
+{
+    // Open a file in NS_OS_TEMP_DIR for writing.
+
+    nsCOMPtr<nsIFile> tmpFile;
+    nsresult rv =
+        NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+   
+    // Basic filename form: "memory-reports-<pid>.json".
+    nsCString filename("memory-reports-");
+    filename.AppendInt(getpid());
+    filename.AppendLiteral(".json");
+    rv = tmpFile->AppendNative(filename);
+    NS_ENSURE_SUCCESS(rv, rv);
+   
+    rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600); 
+    NS_ENSURE_SUCCESS(rv, rv);
+   
+    nsCOMPtr<nsIFileOutputStream> ostream =
+        do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+    rv = ostream->Init(tmpFile, -1, -1, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Dump the memory reports to the file.
+
+    // Increment this number if the format changes.
+    DUMP(ostream, "{\n  \"version\": 1,\n");
+
+    DUMP(ostream, "  \"hasMozMallocUsableSize\": ");
+
+    bool hasMozMallocUsableSize;
+    GetHasMozMallocUsableSize(&hasMozMallocUsableSize);
+    DUMP(ostream, hasMozMallocUsableSize ? "true" : "false");
+    DUMP(ostream, ",\n");
+    DUMP(ostream, "  \"reports\": ");
+
+    // Process single reporters.
+    bool isFirst = true;
+    bool more;
+    nsCOMPtr<nsISimpleEnumerator> e;
+    EnumerateReporters(getter_AddRefs(e));
+    while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsIMemoryReporter> r;
+        e->GetNext(getter_AddRefs(r));
+
+        nsCString process;
+        rv = r->GetProcess(process);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCString path;
+        rv = r->GetPath(path);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        int32_t kind;
+        rv = r->GetKind(&kind);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        int32_t units;
+        rv = r->GetUnits(&units);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        int64_t amount;
+        rv = r->GetAmount(&amount);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCString description;
+        rv = r->GetDescription(description);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = DumpReport(ostream, isFirst, process, path, kind, units, amount,
+                        description);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        isFirst = false;
+    }
+
+    // Process multi-reporters.
+    nsCOMPtr<nsISimpleEnumerator> e2;
+    EnumerateMultiReporters(getter_AddRefs(e2));
+    nsRefPtr<DumpMultiReporterCallback> cb = new DumpMultiReporterCallback();
+    while (NS_SUCCEEDED(e2->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsIMemoryMultiReporter> r;
+      e2->GetNext(getter_AddRefs(r));
+      r->CollectReports(cb, ostream);
+    }
+
+    DUMP(ostream, "\n  ]\n}");
+
+    rv = ostream->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
+#undef DUMP
 
 NS_IMPL_ISUPPORTS1(nsMemoryReporter, nsIMemoryReporter)
 

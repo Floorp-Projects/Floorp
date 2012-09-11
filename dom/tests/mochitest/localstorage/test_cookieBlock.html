@@ -9,12 +9,10 @@
 
 function startTest()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var io = Components.classes["@mozilla.org/network/io-service;1"]
+  var io = SpecialPowers.wrap(Components).classes["@mozilla.org/network/io-service;1"]
     .getService(Components.interfaces.nsIIOService);
   var uri = io.newURI(window.location, "", null);
-  var cp = Components.classes["@mozilla.org/cookie/permission;1"]
+  var cp = SpecialPowers.wrap(Components).classes["@mozilla.org/cookie/permission;1"]
     .getService(Components.interfaces.nsICookiePermission);
 
   cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DENY);

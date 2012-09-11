@@ -34,13 +34,6 @@ public:
   bool
   GeneratePairedMinidump(Toplevel* t);
 
-  /* Attempt to create a bare-bones crash report for a hang, along with extra
-     process-specific annotations present in the given AnnotationTable. Returns
-     true if successful, false otherwise.
-  */
-  bool
-  GenerateHangCrashReport(const AnnotationTable* processNotes);
-
   /* Attempt to create a bare-bones crash report, along with extra process-
      specific annotations present in the given AnnotationTable. Returns true if
      successful, false otherwise.
@@ -48,6 +41,12 @@ public:
   template<class Toplevel>
   bool
   GenerateCrashReport(Toplevel* t, const AnnotationTable* processNotes);
+
+  /**
+   * Add the .extra data for an existing crash report.
+   */
+  bool
+  GenerateChildData(const AnnotationTable* processNotes);
 
   bool
   GenerateCrashReportForMinidump(nsIFile* minidump,
@@ -63,18 +62,6 @@ public:
   void
     SetChildData(const NativeThreadId& id, const uint32_t& processType);
 
-  /* Returns the shared hang ID of a parent/child paired minidump.
-     GeneratePairedMinidump must be called first.
-  */
-  const nsString& HangID() {
-    return mHangID;
-  }
-  /* Returns the ID of the parent minidump.
-     GeneratePairedMinidump must be called first.
-  */
-  const nsString& ParentDumpID() {
-    return mParentDumpID;
-  }
   /* Returns the ID of the child minidump.
      GeneratePairedMinidump or GenerateCrashReport must be called first.
   */
@@ -82,26 +69,27 @@ public:
     return mChildDumpID;
   }
 
+  void
+  AnnotateCrashReport(const nsCString& key, const nsCString& data);
+
  protected:
   virtual void ActorDestroy(ActorDestroyReason why);
 
   virtual bool
     RecvAddLibraryMappings(const InfallibleTArray<Mapping>& m);
   virtual bool
-    RecvAnnotateCrashReport(const nsCString& key, const nsCString& data);
+    RecvAnnotateCrashReport(const nsCString& key, const nsCString& data) {
+    AnnotateCrashReport(key, data);
+    return true;
+  }
   virtual bool
     RecvAppendAppNotes(const nsCString& data);
 
 #ifdef MOZ_CRASHREPORTER
-  bool
-  GenerateChildData(const AnnotationTable* processNotes);
-
   AnnotationTable mNotes;
 #endif
   nsCString mAppNotes;
-  nsString mHangID;
   nsString mChildDumpID;
-  nsString mParentDumpID;
   NativeThreadId mMainThread;
   time_t mStartTime;
   uint32_t mProcessType;
@@ -120,14 +108,10 @@ CrashReporterParent::GeneratePairedMinidump(Toplevel* t)
   child = t->OtherProcess();
 #endif
   nsCOMPtr<nsIFile> childDump;
-  nsCOMPtr<nsIFile> parentDump;
   if (CrashReporter::CreatePairedMinidumps(child,
                                            mMainThread,
-                                           &mHangID,
-                                           getter_AddRefs(childDump),
-                                           getter_AddRefs(parentDump)) &&
-      CrashReporter::GetIDFromMinidump(childDump, mChildDumpID) &&
-      CrashReporter::GetIDFromMinidump(parentDump, mParentDumpID)) {
+                                           getter_AddRefs(childDump)) &&
+      CrashReporter::GetIDFromMinidump(childDump, mChildDumpID)) {
     return true;
   }
   return false;
