@@ -58,6 +58,9 @@ jclass anp_system_loadJavaClass(NPP instance, const char* className)
   jstring jclassName = env->NewStringUTF(className);
   jstring jlibName = env->NewStringUTF(libName.get());
   jobject obj = env->CallStaticObjectMethod(cls, method, jclassName, jlibName);
+  env->DeleteLocalRef(jlibName);
+  env->DeleteLocalRef(jclassName);
+  env->DeleteLocalRef(cls);
   return reinterpret_cast<jclass>(obj);
 }
 
