@@ -3181,13 +3181,23 @@ Tab.prototype = {
       aMetadata.allowZoom = true;
       aMetadata.minZoom = aMetadata.maxZoom = NaN;
     }
+
+    let scaleRatio = aMetadata.scaleRatio = ViewportHandler.getScaleRatio();
+
+    if ("defaultZoom" in aMetadata && aMetadata.defaultZoom > 0)
+      aMetadata.defaultZoom *= scaleRatio;
+    if ("minZoom" in aMetadata && aMetadata.minZoom > 0)
+      aMetadata.minZoom *= scaleRatio;
+    if ("maxZoom" in aMetadata && aMetadata.maxZoom > 0)
+      aMetadata.maxZoom *= scaleRatio;
+
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
-    this._updateViewportSize();
+    this.updateViewportSize(gScreenWidth);
     this.sendViewportMetadata();
   },
 
   /** Update viewport when the metadata or the window size changes. */
-  _updateViewportSize: function _updateViewportSize() {
+  updateViewportSize: function updateViewportSize(aOldScreenWidth) {
     // When this function gets called on window resize, we must execute
     // this.sendViewportUpdate() so that refreshDisplayPort is called.
     // Ensure that when making changes to this function that code path
@@ -3200,10 +3210,34 @@ Tab.prototype = {
 
     let screenW = gScreenWidth;
     let screenH = gScreenHeight;
+    let viewportW, viewportH;
 
     let metadata = this.metadata;
-    let viewportW = metadata.width;
-    let viewportH = metadata.height;
+    if (metadata.autoSize) {
+      if ("scaleRatio" in metadata) {
+        viewportW = screenW / metadata.scaleRatio;
+        viewportH = screenH / metadata.scaleRatio;
+      } else {
+        viewportW = screenW;
+        viewportH = screenH;
+      }
+    } else {
+      viewportW = metadata.width;
+      viewportH = metadata.height;
+
+      // If (scale * width) < device-width, increase the width (bug 561413).
+      let maxInitialZoom = metadata.defaultZoom || metadata.maxZoom;
+      if (maxInitialZoom && viewportW)
+        viewportW = Math.max(viewportW, screenW / maxInitialZoom);
+
+      let validW = viewportW > 0;
+      let validH = viewportH > 0;
+
+      if (!validW)
+        viewportW = validH ? (viewportH * (screenW / screenH)) : BrowserApp.defaultBrowserWidth;
+      if (!validH)
+        viewportH = viewportW * (screenH / screenW);
+    }
 
     // Make sure the viewport height is not shorter than the window when
     // the page is zoomed out to show its full width. Note that before
@@ -3254,8 +3288,7 @@ Tab.prototype = {
     // In all of these cases, we maintain how much actual content is visible
     // within the screen width. Note that "actual content" may be different
     // with respect to CSS pixels because of the CSS viewport size changing.
-    let oldScreenWidth = ViewportHandler.oldScreenWidth || gScreenWidth;
-    let zoomScale = (screenW * oldBrowserWidth) / (oldScreenWidth * viewportW);
+    let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
     let zoom = this.clampZoom(this._zoom * zoomScale);
     this.setResolution(zoom, false);
     this.setScrollClampingSize(zoom);
@@ -4557,6 +4590,10 @@ var XPInstallObserver = {
 // Blindly copied from Safari documentation for now.
 const kViewportMinScale  = 0;
 const kViewportMaxScale  = 10;
+const kViewportMinWidth  = 200;
+const kViewportMaxWidth  = 10000;
+const kViewportMinHeight = 223;
+const kViewportMaxHeight = 10000;
 
 var ViewportHandler = {
   // The cached viewport metadata for each document. We tie viewport metadata to each document
@@ -4597,13 +4634,12 @@ var ViewportHandler = {
         if (window.outerWidth == 0 || window.outerHeight == 0)
           break;
 
-        this.oldScreenWidth = gScreenWidth;
+        let oldScreenWidth = gScreenWidth;
         gScreenWidth = window.outerWidth;
         gScreenHeight = window.outerHeight;
         let tabs = BrowserApp.tabs;
         for (let i = 0; i < tabs.length; i++)
-          this.updateMetadata(tabs[i]);
-        this.oldScreenWidth = null;
+          tabs[i].updateViewportSize(oldScreenWidth);
         break;
     }
   },
@@ -4625,23 +4661,74 @@ var ViewportHandler = {
    */
   getViewportMetadata: function getViewportMetadata(aWindow) {
     let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let defaultZoom = {}, allowZoom = {}, minZoom = {}, maxZoom = {},
-        width = {}, height = {}, autoSize = {};
-    windowUtils.getViewportInfo(gScreenWidth, gScreenHeight, defaultZoom, allowZoom,
-                                minZoom, maxZoom, width, height, autoSize);
+
+    // viewport details found here
+    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
+    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html
+
+    // Note: These values will be NaN if parseFloat or parseInt doesn't find a number.
+    // Remember that NaN is contagious: Math.max(1, NaN) == Math.min(1, NaN) == NaN.
+    let scale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
+    let minScale = parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale"));
+    let maxScale = parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale"));
+
+    let widthStr = windowUtils.getDocumentMetadata("viewport-width");
+    let heightStr = windowUtils.getDocumentMetadata("viewport-height");
+    let width = this.clamp(parseInt(widthStr), kViewportMinWidth, kViewportMaxWidth);
+    let height = this.clamp(parseInt(heightStr), kViewportMinHeight, kViewportMaxHeight);
+
+    let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
+    let allowZoom = !/^(0|no|false)$/.test(allowZoomStr); // WebKit allows 0, "no", or "false"
+
+    if (isNaN(scale) && isNaN(minScale) && isNaN(maxScale) && allowZoomStr == "" && widthStr == "" && heightStr == "") {
+      // Only check for HandheldFriendly if we don't have a viewport meta tag
+      let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+      if (handheldFriendly == "true")
+        return { defaultZoom: 1, autoSize: true, allowZoom: true };
+
+      let doctype = aWindow.document.doctype;
+      if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
+        return { defaultZoom: 1, autoSize: true, allowZoom: true };
+    }
+
+    scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
+    minScale = this.clamp(minScale, kViewportMinScale, kViewportMaxScale);
+    maxScale = this.clamp(maxScale, minScale, kViewportMaxScale);
+
+    // If initial scale is 1.0 and width is not set, assume width=device-width
+    let autoSize = (widthStr == "device-width" ||
+                    (!widthStr && (heightStr == "device-height" || scale == 1.0)));
+
     return {
-      defaultZoom: defaultZoom.value,
-      minZoom: minZoom.value,
-      maxZoom: maxZoom.value,
-      width: width.value,
-      height: height.value,
-      autoSize: autoSize.value,
-      allowZoom: allowZoom.value
+      defaultZoom: scale,
+      minZoom: minScale,
+      maxZoom: maxScale,
+      width: width,
+      height: height,
+      autoSize: autoSize,
+      allowZoom: allowZoom
     };
   },
 
   clamp: function(num, min, max) {
     return Math.max(min, Math.min(max, num));
+  },
+
+  // The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
+  // This is higher on higher-dpi displays, so pages stay about the same physical size.
+  getScaleRatio: function getScaleRatio() {
+    let prefValue = Services.prefs.getIntPref("browser.viewport.scaleRatio");
+    if (prefValue > 0)
+      return prefValue / 100;
+
+    let dpi = this.displayDPI;
+    if (dpi < 200) // Includes desktop displays, and LDPI and MDPI Android devices
+      return 1;
+    else if (dpi < 300) // Includes Nokia N900, and HDPI Android devices
+      return 1.5;
+
+    // For very high-density displays like the iPhone 4, calculate an integer ratio.
+    return Math.floor(dpi / 150);
   },
 
   get displayDPI() {
@@ -4671,7 +4758,8 @@ var ViewportHandler = {
   getDefaultMetadata: function getDefaultMetadata() {
     return {
       autoSize: false,
-      allowZoom: true
+      allowZoom: true,
+      scaleRatio: ViewportHandler.getScaleRatio()
     };
   }
 };

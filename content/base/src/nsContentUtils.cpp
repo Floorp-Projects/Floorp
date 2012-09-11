@@ -12,8 +12,6 @@
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 
-#include "math.h"
-
 #include "Layers.h"
 #include "nsJSUtils.h"
 #include "nsCOMPtr.h"
@@ -5085,7 +5083,7 @@ static void ProcessViewportToken(nsIDocument *aDocument,
 
 /* static */
 ViewportInfo
-nsContentUtils::GetViewportInfo(nsIDocument *aDocument, uint32_t aDisplayWidth, uint32_t aDisplayHeight)
+nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
 {
   ViewportInfo ret;
   ret.defaultZoom = 1.0;
@@ -5174,38 +5172,37 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument, uint32_t aDisplayWidth, 
     autoSize = true;
   }
 
-  // Now convert the scale into device pixels per CSS pixel.
-  nsIWidget *widget = WidgetForDocument(aDocument);
-  double pixelRatio = widget ? GetDevicePixelsPerMetaViewportPixel(widget) : 1.0;
-  scaleFloat *= pixelRatio;
-  scaleMinFloat *= pixelRatio;
-  scaleMaxFloat *= pixelRatio;
+  // XXXjwir3:
+  // See bug 706918, comment 23 for more information on this particular section
+  // of the code. We're using "screen size" in place of the size of the content
+  // area, because on mobile, these are close or equal. This will work for our
+  // purposes (bug 706198), but it will need to be changed in the future to be
+  // more correct when we bring the rest of the viewport code into platform.
+  // We actually want the size of the content area, in the event that we don't
+  // have any metadata about the width and/or height. On mobile, the screen size
+  // and the size of the content area are very close, or the same value.
+  // In XUL fennec, the content area is the size of the <browser> widget, but
+  // in native fennec, the content area is the size of the Gecko LayerView
+  // object.
 
-  uint32_t width, height;
-  if (autoSize) {
-    // aDisplayWidth and aDisplayHeight are in device pixels; convert them to
-    // CSS pixels for the viewport size.
-    width = aDisplayWidth / pixelRatio;
-    height = aDisplayHeight / pixelRatio;
-  } else {
-    nsresult widthErrorCode, heightErrorCode;
-    width = widthStr.ToInteger(&widthErrorCode);
-    height = heightStr.ToInteger(&heightErrorCode);
+  // TODO:
+  // Once bug 716575 has been resolved, this code should be changed so that it
+  // does the right thing on all platforms.
+  nsresult result;
+  int32_t screenLeft, screenTop, screenWidth, screenHeight;
+  nsCOMPtr<nsIScreenManager> screenMgr =
+    do_GetService("@mozilla.org/gfx/screenmanager;1", &result);
 
-    // If width or height has not been set to a valid number by this point,
-    // fall back to a default value.
-    bool validWidth = (!widthStr.IsEmpty() && NS_SUCCEEDED(widthErrorCode) && width > 0);
-    bool validHeight = (!heightStr.IsEmpty() && NS_SUCCEEDED(heightErrorCode) && height > 0);
-    if (!validWidth) {
-      if (validHeight) {
-        width = (uint32_t) ((height * aDisplayWidth) / aDisplayHeight);
-      } else {
-        width = Preferences::GetInt("browser.viewport.desktopWidth",
-            kViewportDefaultScreenWidth);
-      }
-    }
-    if (!validHeight) {
-      height = (uint32_t) ((width * aDisplayHeight) / aDisplayWidth);
+  nsCOMPtr<nsIScreen> screen;
+  screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
+  screen->GetRect(&screenLeft, &screenTop, &screenWidth, &screenHeight);
+
+  uint32_t width = widthStr.ToInteger(&errorCode);
+  if (NS_FAILED(errorCode)) {
+    if (autoSize) {
+      width = screenWidth;
+    } else {
+      width = Preferences::GetInt("browser.viewport.desktopWidth", 0);
     }
   }
 
@@ -5215,7 +5212,19 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument, uint32_t aDisplayWidth, 
   // Also recalculate the default zoom, if it wasn't specified in the metadata,
   // and the width is specified.
   if (scaleStr.IsEmpty() && !widthStr.IsEmpty()) {
-    scaleFloat = NS_MAX(scaleFloat, ((float)aDisplayWidth) / (float)width);
+    scaleFloat = NS_MAX(scaleFloat, (float)(screenWidth/width));
+  }
+
+  uint32_t height = heightStr.ToInteger(&errorCode);
+
+  if (NS_FAILED(errorCode)) {
+    height = width * ((float)screenHeight / screenWidth);
+  }
+
+  // If height was provided by the user, but width wasn't, then we should
+  // calculate the width.
+  if (widthStr.IsEmpty() && !heightStr.IsEmpty()) {
+    width = (uint32_t) ((height * screenWidth) / screenHeight);
   }
 
   height = NS_MIN(height, kViewportMaxHeight);
@@ -5224,11 +5233,11 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument, uint32_t aDisplayWidth, 
   // We need to perform a conversion, but only if the initial or maximum
   // scale were set explicitly by the user.
   if (!scaleStr.IsEmpty() && NS_SUCCEEDED(scaleErrorCode)) {
-    width = NS_MAX(width, (uint32_t)(aDisplayWidth / scaleFloat));
-    height = NS_MAX(height, (uint32_t)(aDisplayHeight / scaleFloat));
+    width = NS_MAX(width, (uint32_t)(screenWidth / scaleFloat));
+    height = NS_MAX(height, (uint32_t)(screenHeight / scaleFloat));
   } else if (!maxScaleStr.IsEmpty() && NS_SUCCEEDED(scaleMaxErrorCode)) {
-    width = NS_MAX(width, (uint32_t)(aDisplayWidth / scaleMaxFloat));
-    height = NS_MAX(height, (uint32_t)(aDisplayHeight / scaleMaxFloat));
+    width = NS_MAX(width, (uint32_t)(screenWidth / scaleMaxFloat));
+    height = NS_MAX(height, (uint32_t)(screenHeight / scaleMaxFloat));
   }
 
   bool allowZoom = true;
@@ -5249,24 +5258,6 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument, uint32_t aDisplayWidth, 
   ret.maxZoom = scaleMaxFloat;
   ret.autoSize = autoSize;
   return ret;
-}
-
-/* static */
-double
-nsContentUtils::GetDevicePixelsPerMetaViewportPixel(nsIWidget* aWidget)
-{
-  int prefValue = Preferences::GetInt("browser.viewport.scaleRatio", 0);
-  if (prefValue > 0)
-    return double(prefValue) / 100.0;
-
-  float dpi = aWidget->GetDPI();
-  if (dpi < 200.0) // Includes desktop displays, and LDPI and MDPI Android devices
-    return 1.0;
-  else if (dpi < 300.0) // Includes Nokia N900, and HDPI Android devices
-    return 1.5;
-
-  // For very high-density displays like the iPhone 4, calculate an integer ratio.
-  return floor(dpi / 150.0);
 }
 
 /* static */
