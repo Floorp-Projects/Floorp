@@ -3501,7 +3501,6 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
  
   // If we see .purgecaches, that means someone did a make. 
   // Re-register components to catch potential changes.
-  // We only offer this in debug builds, though.
   nsCOMPtr<nsIFile> flagFile;
 
   rv = NS_ERROR_FILE_NOT_FOUND;
