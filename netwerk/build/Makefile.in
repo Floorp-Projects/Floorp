@@ -70,6 +70,7 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../mime \
   -I$(srcdir)/../cache \
   -I$(srcdir)/../protocol/about \
+  -I../dns \
   $(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
     -I$(srcdir)/../protocol/$(d)) \
   $(NULL)
