@@ -500,10 +500,10 @@ gfxWindowsPlatform::UpdateRenderMode()
                 DWRITE_FACTORY_TYPE_SHARED,
                 __uuidof(IDWriteFactory),
                 reinterpret_cast<IUnknown**>(&factory));
-            mDWriteFactory = factory;
-            factory->Release();
 
-            if (SUCCEEDED(hr)) {
+            if (SUCCEEDED(hr) && factory) {
+                mDWriteFactory = factory;
+                factory->Release();
                 hr = mDWriteFactory->CreateTextAnalyzer(
                     getter_AddRefs(mDWriteAnalyzer));
             }
