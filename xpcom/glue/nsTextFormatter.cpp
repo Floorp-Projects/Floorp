@@ -819,7 +819,6 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	int *ip;
     } u;
     PRUnichar space = ' ';
-    const PRUnichar *fmt0;
 
     nsAutoString hex;
     hex.AssignLiteral("0123456789abcdef");
@@ -831,8 +830,6 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
     int rv, i;
     struct NumArgState* nas = NULL;
     struct NumArgState  nasArray[NAS_DEFAULT_NUM];
-    /* in "%4$.2f" dolPt will point to . */
-    const PRUnichar* dolPt = NULL;
 
 
     /*
@@ -854,7 +851,6 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    }
 	    continue;
 	}
-	fmt0 = fmt - 1;
 
 	/*
 	** Gobble up the % format string. Hopefully we have handled all
@@ -888,7 +884,6 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    }
 
 	    VARARGS_ASSIGN(ap, nas[i-1].ap);
-	    dolPt = fmt;
 	    c = *fmt++;
 	}
 
