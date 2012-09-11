@@ -1089,8 +1089,9 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
 
   mozilla_sampler_stop();
 
-  TableTicker *t = new TableTicker(aInterval, aProfileEntries, stack,
-                                   aFeatures, aFeatureCount);
+  TableTicker *t = new TableTicker(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
+                                   aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
+                                   stack, aFeatures, aFeatureCount);
   tlsTicker.set(t);
   t->Start();
   if (t->ProfileJS())
