@@ -52,6 +52,16 @@ AccessCheck::subsumes(JSCompartment *a, JSCompartment *b)
     return subsumes;
 }
 
+// Does the compartment of the wrapper subsumes the compartment of the wrappee?
+bool
+AccessCheck::wrapperSubsumes(JSObject *wrapper)
+{
+    MOZ_ASSERT(js::IsWrapper(wrapper));
+    JSObject *wrapped = js::UnwrapObject(wrapper);
+    return AccessCheck::subsumes(js::GetObjectCompartment(wrapper),
+                                 js::GetObjectCompartment(wrapped));
+}
+
 bool
 AccessCheck::isLocationObjectSameOrigin(JSContext *cx, JSObject *wrapper)
 {
@@ -89,6 +99,12 @@ AccessCheck::isChrome(JSCompartment *compartment)
     bool privileged;
     nsIPrincipal *principal = GetCompartmentPrincipal(compartment);
     return NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &privileged)) && privileged;
+}
+
+bool
+AccessCheck::isChrome(JSObject *obj)
+{
+    return isChrome(js::GetObjectCompartment(obj));
 }
 
 bool
