@@ -132,9 +132,9 @@ struct JSFunction : public JSObject
     static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
     static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
-    JSScript *script() const {
+    JS::HandleScript script() const {
         JS_ASSERT(isInterpreted());
-        return *(js::HeapPtrScript *)&u.i.script_;
+        return JS::HandleScript::fromMarkedLocation(&u.i.script_);
     }
 
     js::HeapPtrScript &mutableScript() {
@@ -145,8 +145,8 @@ struct JSFunction : public JSObject
     inline void setScript(JSScript *script_);
     inline void initScript(JSScript *script_);
 
-    JSScript *maybeScript() const {
-        return isInterpreted() ? script() : NULL;
+    JS::HandleScript maybeScript() const {
+        return isInterpreted() ? script() : JS::NullPtr();
     }
 
     JSNative native() const {

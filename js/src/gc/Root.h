@@ -380,21 +380,6 @@ class Rooted : public RootedBase<T>
     }
 
   public:
-    Rooted(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
-      : ptr(RootMethods<T>::initial())
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(JS::TlsRuntime);
-    }
-
-    Rooted(const T &initial
-           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(initial)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(JS::TlsRuntime);
-    }
-
     Rooted(JSRuntime *rt
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : ptr(RootMethods<T>::initial())
