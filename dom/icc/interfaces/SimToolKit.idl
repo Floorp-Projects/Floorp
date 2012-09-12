@@ -255,6 +255,54 @@ dictionary MozStkSetUpEventList
    jsval eventList; // unsigned short []
 };
 
+dictionary MozStkLocationInfo
+{
+  /**
+   * Mobile Country Code (MCC) of the current serving operator.
+   */
+  unsigned short mcc;
+
+  /**
+   * Mobile Network Code (MNC) of the current serving operator.
+   */
+  unsigned short mnc;
+
+  /**
+   * Mobile Location Area Code (LAC) for the current serving operator.
+   */
+  unsigned short gsmLocationAreaCode;
+
+  /**
+   * Mobile Cell ID for the current serving operator.
+   */
+  unsigned long gsmCellId;
+};
+
+dictionary MozStkLocationEvent
+{
+  /**
+   * The type of this event.
+   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_LOCATION_STATUS;
+   */
+  unsigned short eventType;
+
+  /**
+   * Indicate current service state of the MS with one of the values listed
+   * below:
+   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_NORMAL
+   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_LIMITED
+   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_UNAVAILABLE
+   */
+  unsigned short locationStatus;
+
+  /**
+   * See MozStkLocationInfo.
+   * This value shall only be provided if the locationStatus indicates
+   * 'STK_SERVICE_STATE_NORMAL'.
+   */
+  jsval locationInfo;
+};
+
 dictionary MozStkCommand
 {
   /**

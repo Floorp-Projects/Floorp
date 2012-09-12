@@ -7,7 +7,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, builtinclass, uuid(2eace3f9-6aa4-491b-820e-7d69ce7b3f02)]
+[scriptable, builtinclass, uuid(b45c3873-88bd-4ae9-9c9b-10ee58ca5389)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -162,6 +162,13 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    const unsigned short STK_EVENT_TYPE_BROWSING_STATUS                  = 0x0f;
    const unsigned short STK_EVENT_TYPE_FRAMES_INFORMATION_CHANGED       = 0x10;
 
+   /**
+    * The service state of STK Location Status.
+    */
+   const unsigned short STK_SERVICE_STATE_NORMAL      = 0x00;
+   const unsigned short STK_SERVICE_STATE_LIMITED     = 0x01;
+   const unsigned short STK_SERVICE_STATE_UNAVAILABLE = 0x02;
+
   /**
    * Send the response back to ICC after an attempt to execute STK Proactive
    * Command.
@@ -184,6 +191,16 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    */
   void sendStkMenuSelection(in unsigned short itemIdentifier,
                             in boolean        helpRequested);
+
+  /**
+   * Send "Event Download" Envelope command to ICC.
+   * ICC will not respond with any data for this command.
+   *
+   * @param event
+   *        one of events below:
+   *        - MozStkLocationEvent
+   */
+  void sendStkEventDownload(in jsval event);
 
   /**
    * The 'stkcommand' event is notified whenever STK Proactive Command is
