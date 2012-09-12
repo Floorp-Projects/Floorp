@@ -126,9 +126,6 @@ public class GeckoLayerClient
         mRootLayer = new VirtualLayer(new IntSize(mView.getWidth(), mView.getHeight()));
         mLayerRenderer = new LayerRenderer(mView);
 
-        registerEventListener("Viewport:Update");
-        registerEventListener("Viewport:PageSize");
-        registerEventListener("Viewport:CalculateDisplayPort");
         registerEventListener("Checkerboard:Toggle");
 
         mView.setListener(this);
@@ -142,9 +139,6 @@ public class GeckoLayerClient
 
     public void destroy() {
         mPanZoomController.destroy();
-        unregisterEventListener("Viewport:Update");
-        unregisterEventListener("Viewport:PageSize");
-        unregisterEventListener("Viewport:CalculateDisplayPort");
         unregisterEventListener("Checkerboard:Toggle");
     }
 
@@ -311,8 +305,7 @@ public class GeckoLayerClient
     }
 
     /** Viewport message handler. */
-    private void handleViewportMessage(JSONObject message, ViewportMessageType type) throws JSONException {
-        ViewportMetrics messageMetrics = new ViewportMetrics(message);
+    private DisplayPortMetrics handleViewportMessage(ViewportMetrics messageMetrics, ViewportMessageType type) {
         synchronized (this) {
             final ViewportMetrics newMetrics;
             ImmutableViewportMetrics oldMetrics = getViewportMetrics();
@@ -343,20 +336,30 @@ public class GeckoLayerClient
             setViewportMetrics(newMetrics, type == ViewportMessageType.UPDATE);
             mDisplayPort = DisplayPortCalculator.calculate(getViewportMetrics(), null);
         }
-        mReturnDisplayPort = mDisplayPort;
+        return mDisplayPort;
+    }
+
+    public DisplayPortMetrics getDisplayPort(boolean pageSizeUpdate, boolean isBrowserContentDisplayed, int tabId, ViewportMetrics metrics) {
+        Tabs tabs = Tabs.getInstance();
+        if (tabs.isSelectedTab(tabs.getTab(tabId)) && isBrowserContentDisplayed) {
+            // for foreground tabs, send the viewport update unless the document
+            // displayed is different from the content document. In that case, just
+            // calculate the display port.
+            return handleViewportMessage(metrics, pageSizeUpdate ? ViewportMessageType.UPDATE : ViewportMessageType.PAGE_SIZE);
+        } else {
+            // for background tabs, request a new display port calculation, so that
+            // when we do switch to that tab, we have the correct display port and
+            // don't need to draw twice (once to allow the first-paint viewport to
+            // get to java, and again once java figures out the display port).
+            ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(metrics);
+            return DisplayPortCalculator.calculate(newMetrics, null);
+        }
     }
 
     /** Implementation of GeckoEventResponder/GeckoEventListener. */
     public void handleMessage(String event, JSONObject message) {
         try {
-            if ("Viewport:Update".equals(event)) {
-                handleViewportMessage(message, ViewportMessageType.UPDATE);
-            } else if ("Viewport:PageSize".equals(event)) {
-                handleViewportMessage(message, ViewportMessageType.PAGE_SIZE);
-            } else if ("Viewport:CalculateDisplayPort".equals(event)) {
-                ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(new ViewportMetrics(message));
-                mReturnDisplayPort = DisplayPortCalculator.calculate(newMetrics, null);
-            } else if ("Checkerboard:Toggle".equals(event)) {
+            if ("Checkerboard:Toggle".equals(event)) {
                 mView.setCheckerboardShouldShowChecks(message.getBoolean("value"));
             }
         } catch (JSONException e) {

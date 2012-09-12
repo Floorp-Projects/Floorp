@@ -77,6 +77,16 @@ public class ViewportMetrics {
         mZoomFactor = zoom;
     }
 
+    public ViewportMetrics(float x, float y, float width, float height,
+                           float pageLeft, float pageTop, float pageRight, float pageBottom,
+                           float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom,
+                           float zoom) {
+        mPageRect = new RectF(pageLeft, pageTop, pageRight, pageBottom);
+        mCssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
+        mViewportRect = new RectF(x, y, x + width, y + height);
+        mZoomFactor = zoom;
+    }
+
     public PointF getOrigin() {
         return new PointF(mViewportRect.left, mViewportRect.top);
     }
