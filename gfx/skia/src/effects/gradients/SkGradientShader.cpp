@@ -426,15 +426,15 @@ static void complete_32bit_cache(SkPMColor* cache, int stride) {
 
 const SkPMColor* SkGradientShaderBase::getCache32() const {
     if (fCache32 == NULL) {
-        // double the count for dither entries
-        const int entryCount = kCache32Count * 2;
+        // double the count for dither entries, and have an extra two entries for clamp values
+        const int entryCount = kCache32Count * 2 + 2;
         const size_t allocSize = sizeof(SkPMColor) * entryCount;
 
         if (NULL == fCache32PixelRef) {
             fCache32PixelRef = SkNEW_ARGS(SkMallocPixelRef,
                                           (NULL, allocSize, NULL));
         }
-        fCache32 = (SkPMColor*)fCache32PixelRef->getAddr();
+        fCache32 = (SkPMColor*)fCache32PixelRef->getAddr() + 1;
         if (fColorCount == 2) {
             Build32bitCache(fCache32, fOrigColors[0], fOrigColors[1],
                             kGradient32Length, fCacheAlpha);
@@ -458,7 +458,7 @@ const SkPMColor* SkGradientShaderBase::getCache32() const {
             SkMallocPixelRef* newPR = SkNEW_ARGS(SkMallocPixelRef,
                                                  (NULL, allocSize, NULL));
             SkPMColor* linear = fCache32;           // just computed linear data
-            SkPMColor* mapped = (SkPMColor*)newPR->getAddr();    // storage for mapped data
+            SkPMColor* mapped = (SkPMColor*)newPR->getAddr() + 1;    // storage for mapped data
             SkUnitMapper* map = fMapper;
             for (int i = 0; i < kGradient32Length; i++) {
                 int index = map->mapUnit16((i << 8) | i) >> 8;
@@ -467,10 +467,22 @@ const SkPMColor* SkGradientShaderBase::getCache32() const {
             }
             fCache32PixelRef->unref();
             fCache32PixelRef = newPR;
-            fCache32 = (SkPMColor*)newPR->getAddr();
+            fCache32 = (SkPMColor*)newPR->getAddr() + 1;
         }
         complete_32bit_cache(fCache32, kCache32Count);
     }
+
+    // Write the clamp colours into the first and last entries of fCache32
+    fCache32[kCache32ClampLower] = SkPackARGB32(fCacheAlpha,
+                                                SkColorGetR(fOrigColors[0]),
+                                                SkColorGetG(fOrigColors[0]),
+                                                SkColorGetB(fOrigColors[0]));
+
+    fCache32[kCache32ClampUpper] = SkPackARGB32(fCacheAlpha,
+                                                SkColorGetR(fOrigColors[fColorCount - 1]),
+                                                SkColorGetG(fOrigColors[fColorCount - 1]),
+                                                SkColorGetB(fOrigColors[fColorCount - 1]));
+
     return fCache32;
 }
 

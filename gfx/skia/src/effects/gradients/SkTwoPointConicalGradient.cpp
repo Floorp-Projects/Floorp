@@ -123,9 +123,14 @@ static void twopoint_clamp(TwoPtRadial* rec, SkPMColor* SK_RESTRICT dstC,
         if (TwoPtRadial::DontDrawT(t)) {
             *dstC++ = 0;
         } else {
-            SkFixed index = SkClampMax(t, 0xFFFF);
-            SkASSERT(index <= 0xFFFF);
-            *dstC++ = cache[index >> SkGradientShaderBase::kCache32Shift];
+            if (t < 0) {
+                *dstC++ = cache[SkGradientShaderBase::kCache32ClampLower];
+            } else if (t > 0xFFFF) {
+                *dstC++ = cache[SkGradientShaderBase::kCache32ClampUpper];
+            } else {
+                SkASSERT(t <= 0xFFFF);
+                *dstC++ = cache[t >> SkGradientShaderBase::kCache32Shift];
+            }
         }
     }
 }
