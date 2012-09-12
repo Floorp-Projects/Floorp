@@ -1043,7 +1043,7 @@ struct DumpOp {
 #ifdef DEBUG
         js_DumpValue(v);
 #else
-        fputc('?\n', stderr);
+        fprintf(stderr, "?\n");
 #endif
         i_++;
     }
@@ -1064,7 +1064,7 @@ InlineFrameIterator::dump() const
 #ifdef DEBUG
         js_DumpObject(callee());
 #else
-        fputc('?\n', stderr);
+        fprintf(stderr, "?\n");
 #endif
     } else {
         fprintf(stderr, "  global frame, no callee\n");
@@ -1103,7 +1103,7 @@ InlineFrameIterator::dump() const
 #ifdef DEBUG
         js_DumpValue(si.maybeRead());
 #else
-        fputc('?\n', stderr);
+        fprintf(stderr, "?\n");
 #endif
     }
 
