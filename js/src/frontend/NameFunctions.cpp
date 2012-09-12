@@ -173,9 +173,9 @@ class NameResolver
      * listed, then it is skipped. Otherwise an intelligent name is guessed to
      * assign to the function's displayAtom field
      */
-    JSAtom *resolveFun(ParseNode *pn, JSAtom *prefix) {
+    JSAtom *resolveFun(ParseNode *pn, HandleAtom prefix) {
         JS_ASSERT(pn != NULL && pn->isKind(PNK_FUNCTION));
-        JSFunction *fun = pn->pn_funbox->fun();
+        RootedFunction fun(cx, pn->pn_funbox->fun());
         if (nparents == 0)
             return NULL;
 
@@ -268,12 +268,13 @@ class NameResolver
      * ParseNode instance given. The prefix is for each subsequent name, and
      * should initially be NULL.
      */
-    void resolve(ParseNode *cur, JSAtom *prefix = NULL) {
+    void resolve(ParseNode *cur, HandleAtom prefixArg = NullPtr()) {
+        RootedAtom prefix(cx, prefixArg);
         if (cur == NULL)
             return;
 
         if (cur->isKind(PNK_FUNCTION) && cur->isArity(PN_FUNC)) {
-            JSAtom *prefix2 = resolveFun(cur, prefix);
+            RootedAtom prefix2(cx, resolveFun(cur, prefix));
             /*
              * If a function looks like (function(){})() where the parent node
              * of the definition of the function is a call, then it shouldn't
