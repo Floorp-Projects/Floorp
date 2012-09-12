@@ -82,7 +82,7 @@ CPPSRCS += \
   $(NULL)
 else ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
-  CocoaBattery.cpp \
+  FallbackBattery.cpp \
   FallbackVibration.cpp \
   FallbackPower.cpp \
   FallbackScreenConfiguration.cpp \
