@@ -8,10 +8,15 @@
  * Creates a ProfilerActor. ProfilerActor provides remote access to the
  * built-in profiler module.
  */
-function ProfilerActor()
+function ProfilerActor(aConnection)
 {
+  this._conn = aConnection;
   this._profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
   this._started = false;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+  Services.obs.addObserver(this, "profiler-started", false);
+  Services.obs.addObserver(this, "profiler-stopped", false);
 }
 
 ProfilerActor.prototype = {
@@ -58,7 +63,14 @@ ProfilerActor.prototype = {
   onGetSharedLibraryInformation: function(aRequest) {
     var sharedLibraries = this._profiler.getSharedLibraryInformation();
     return { "sharedLibraryInformation": sharedLibraries }
-  }
+  },
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "profiler-started") {
+      this.conn.send({ from: this.actorID, type: "profilerStateChanged", isActive: true });
+    } else if (aTopic == "profiler-stopped") {
+      this.conn.send({ from: this.actorID, type: "profilerStateChanged", isActive: false });
+    }
+  },
 };
 
 /**
