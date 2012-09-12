@@ -245,7 +245,7 @@ var shell = {
       case 'keypress':
         return;
     }
-  
+
     // On my device, the physical hardware buttons (sleep and volume)
     // send multiple events (press press release release), but the
     // soft home button just sends one.  This hack is to manually
@@ -420,6 +420,10 @@ Services.obs.addObserver(function(aSubject, aTopic, aData) {
   shell.sendChromeEvent({ type: "fullscreenoriginchange",
                           fullscreenorigin: aData });
 }, "fullscreen-origin-change", false);
+
+Services.obs.addObserver(function onWebappsReady(subject, topic, data) {
+  shell.sendChromeEvent({ type: 'webapps-registry-ready' });
+}, 'webapps-registry-ready', false);
 
 (function Repl() {
   if (!Services.prefs.getBoolPref('b2g.remote-js.enabled')) {
