@@ -117,9 +117,10 @@ RESTRequest.prototype = {
   response: null,
 
   /**
-   * nsIRequest load flags. Don't do any caching by default.
+   * nsIRequest load flags. Don't do any caching by default. Don't send user
+   * cookies and such over the wire (Bug 644734).
    */
-  loadFlags: Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING,
+  loadFlags: Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING | Ci.nsIRequest.LOAD_ANONYMOUS,
 
   /**
    * nsIHttpChannel
