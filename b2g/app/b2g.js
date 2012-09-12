@@ -444,8 +444,8 @@ pref("b2g.update.apply-wait-timeout", 1800000); // milliseconds
 pref("b2g.update.self-destruct-timeout", 5000); // milliseconds
 
 pref("app.update.enabled", true);
-pref("app.update.auto", true);
-pref("app.update.silent", true);
+pref("app.update.auto", false);
+pref("app.update.silent", false);
 pref("app.update.mode", 0);
 pref("app.update.incompatible.mode", 0);
 pref("app.update.staging.enabled", true);
