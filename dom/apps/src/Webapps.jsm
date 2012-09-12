@@ -77,6 +77,8 @@ let DOMApplicationRegistry = {
     dirList.push("coreAppsDir");
 #endif
     let currentId = 1;
+    this.dirsToLoad = dirList.length;
+    this.dirsLoaded = 0;
     dirList.forEach((function(dir) {
       let curFile;
       try {
@@ -91,13 +93,16 @@ let DOMApplicationRegistry = {
           if (!aData) {
             return;
           }
+#ifdef MOZ_SYS_MSG
+          let ids = [];
+#endif
           // Add new apps to the merged list.
           for (let id in aData) {
             this.webapps[id] = aData[id];
             this.webapps[id].basePath = appDir.path;
             this.webapps[id].removable = (dir == DIRECTORY_NAME);
 #ifdef MOZ_SYS_MSG
-            this._processManifestForId(id);
+            ids.push({ id: id });
 #endif
             // local ids must be stable between restarts.
             // We partition the ids in two buckets:
@@ -114,7 +119,13 @@ let DOMApplicationRegistry = {
               this.webapps[id].appStatus = Ci.nsIPrincipal.APP_STATUS_INSTALLED;
             }
           };
+#ifdef MOZ_SYS_MSG
+          this._processManifestForIds(ids);
+#endif
         }).bind(this));
+      } else {
+        // The directory we're trying to load from doesn't exist.
+        this.dirsToLoad--;
       }
     }).bind(this));
   },
@@ -175,13 +186,19 @@ let DOMApplicationRegistry = {
     }
   },
 
-  _processManifestForId: function(aId) {
-    let app = this.webapps[aId];
-    this._readManifests([{ id: aId }], (function registerManifest(aResult) {
-      let manifest = aResult[0].manifest;
-      app.name = manifest.name;
-      this._registerSystemMessages(manifest, app);
-      this._registerActivities(manifest, app);
+  _processManifestForIds: function(aIds) {
+    this._readManifests(aIds, (function registerManifests(aResults) {
+      aResults.forEach(function registerManifest(aResult) {
+        let app = this.webapps[aResult.id];
+        let manifest = aResult.manifest;
+        app.name = manifest.name;
+        this._registerSystemMessages(manifest, app);
+        this._registerActivities(manifest, app);
+      }, this);
+      this.dirsLoaded++;
+      if (this.dirsLoaded == this.dirsToLoad) {
+        Services.obs.notifyObservers(this, "webapps-registry-ready", null);
+      }
     }).bind(this));
   },
 #endif
