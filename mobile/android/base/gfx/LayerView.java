@@ -382,4 +382,18 @@ public class LayerView extends FrameLayout {
 
         }
     }
+
+    @Override
+    public void setOverScrollMode(int overscrollMode) {
+        super.setOverScrollMode(overscrollMode);
+        if (mLayerClient != null)
+            mLayerClient.getPanZoomController().setOverScrollMode(overscrollMode);
+    }
+
+    @Override
+    public int getOverScrollMode() {
+        if (mLayerClient != null)
+            return mLayerClient.getPanZoomController().getOverScrollMode();
+        return super.getOverScrollMode();
+    }
 }
