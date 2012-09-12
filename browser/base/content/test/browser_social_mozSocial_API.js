@@ -35,7 +35,7 @@ var tests = {
       EventUtils.synthesizeMouseAtCenter(statusIcons.firstChild, {});
     }
 
-    let port = Social.provider.port;
+    let port = Social.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -52,6 +52,7 @@ var tests = {
             panel.hidePopup();
           } else if (e.data.result == "hidden") {
             ok(true, "panel hidden");
+            port.close();
             next();
           }
           break;

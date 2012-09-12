@@ -28,13 +28,14 @@ let tests = {
     ok(provider.workerAPI, "provider has a workerAPI");
     is(provider.workerAPI.initialized, false, "workerAPI is not yet initialized");
   
-    let port = provider.port;
+    let port = provider.getWorkerPort();
     ok(port, "should be able to get a port from the provider");
-  
+
     port.onmessage = function onMessage(event) {
       let topic = event.data.topic;
       if (topic == "test-initialization-complete") {
         is(provider.workerAPI.initialized, true, "workerAPI is now initialized");
+        port.close();
         next();
       }
     }
@@ -60,7 +61,9 @@ let tests = {
       next();
     }
     Services.obs.addObserver(ob, "social:profile-changed", false);
-    provider.port.postMessage({topic: "test-profile", data: expect});
+    let port = provider.getWorkerPort();
+    port.postMessage({topic: "test-profile", data: expect});
+    port.close();
   },
 
   testAmbientNotification: function(next) {
@@ -76,7 +79,9 @@ let tests = {
       next();
     }
     Services.obs.addObserver(ob, "social:ambient-notification-changed", false);
-    provider.port.postMessage({topic: "test-ambient", data: expect});
+    let port = provider.getWorkerPort();
+    port.postMessage({topic: "test-ambient", data: expect});
+    port.close();
   },
 
   testProfileCleared: function(next) {
@@ -96,19 +101,22 @@ let tests = {
   },
 
   testCookies: function(next) {
-    provider.port.onmessage = function onMessage(event) {
+    let port = provider.getWorkerPort();
+    port.onmessage = function onMessage(event) {
       let {topic, data} = event.data;
       if (topic == "test.cookies-get-response") {
         is(data.length, 1, "got one cookie");
         is(data[0].name, "cheez", "cookie has the correct name");
         is(data[0].value, "burger", "cookie has the correct value");
         Services.cookies.remove('.example.com', '/', 'cheez', false);
+        port.close();
         next();
       }
     }
     var MAX_EXPIRY = Math.pow(2, 62);
     Services.cookies.add('.example.com', '/', 'cheez', 'burger', false, false, true, MAX_EXPIRY);
-    provider.port.postMessage({topic: "test.cookies-get"});
+    port.postMessage({topic: "test-initialization"});
+    port.postMessage({topic: "test.cookies-get"});
   }
 
 };
