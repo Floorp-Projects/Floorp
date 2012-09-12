@@ -15,17 +15,64 @@ registerCleanupFunction(function() {
 let gTests = [
 
 {
-  desc: "Check that clearing cookies does not clear storage",
+  desc: "Check that rejecting cookies does not prevent page from working",
   setup: function ()
   {
-    Cc["@mozilla.org/dom/storagemanager;1"]
-      .getService(Ci.nsIObserver)
-      .observe(null, "cookie-changed", "cleared");
+    Services.prefs.setIntPref("network.cookies.cookieBehavior", 2);
   },
   run: function ()
   {
     let storage = getStorage();
-    isnot(storage.getItem("snippets-last-update"), null);
+    isnot(storage.getItem("search-engine"), null);
+    try {
+      Services.prefs.clearUserPref("network.cookies.cookieBehavior");
+    } catch (ex) {}
+    executeSoon(runNextTest);
+  }
+},
+
+{
+  desc: "Check that asking for cookies does not prevent page from working",
+  setup: function ()
+  {
+    Services.prefs.setIntPref("network.cookie.lifetimePolicy", 1);
+  },
+  run: function ()
+  {
+    let storage = getStorage();
+    isnot(storage.getItem("search-engine"), null);
+    try {
+      Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
+    } catch (ex) {}
+    executeSoon(runNextTest);
+  }
+},
+
+{
+  desc: "Check that clearing cookies does not prevent page from working",
+  setup: function ()
+  {
+    Components.classes["@mozilla.org/dom/storagemanager;1"].
+    getService(Components.interfaces.nsIObserver).
+    observe(null, "cookie-changed", "cleared");
+  },
+  run: function ()
+  {
+    let storage = getStorage();
+    isnot(storage.getItem("search-engine"), null);
+    executeSoon(runNextTest);
+  }
+},
+
+{
+  desc: "Check normal status is working",
+  setup: function ()
+  {
+  },
+  run: function ()
+  {
+    let storage = getStorage();
+    isnot(storage.getItem("search-engine"), null);
     executeSoon(runNextTest);
   }
 },
@@ -73,6 +120,14 @@ function test()
 {
   waitForExplicitFinish();
 
+  // browser-chrome test harness inits browser specifying an hardcoded page
+  // and this causes nsIBrowserHandler.defaultArgs to not be evaluated since
+  // there is a predefined argument.
+  // About:home localStorage is populated with overridden homepage, that is
+  // setup in the defaultArgs getter.
+  // Thus to populate about:home we need to get defaultArgs manually.
+  Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler).defaultArgs;
+
   // Ensure that by default we don't try to check for remote snippets since that
   // could be tricky due to network bustages or slowness.
   let storage = getStorage();
@@ -93,20 +148,10 @@ function runNextTest()
     info(test.desc);
     test.setup();
     let tab = gBrowser.selectedTab = gBrowser.addTab("about:home");
-    tab.linkedBrowser.addEventListener("load", function load(event) {
-      tab.linkedBrowser.removeEventListener("load", load, true);
-
-      let observer = new MutationObserver(function (mutations) {
-        for (let mutation of mutations) {
-          if (mutation.attributeName == "searchEngineURL") {
-            observer.disconnect();
-            executeSoon(test.run);
-            return;
-          }
-        }
-      });
-      let docElt = tab.linkedBrowser.contentDocument.documentElement;
-      observer.observe(docElt, { attributes: true });
+    tab.linkedBrowser.addEventListener("load", function (event) {
+      tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+      // Some part of the page is populated on load, so enqueue on it.
+      executeSoon(test.run);
     }, true);
   }
   else {

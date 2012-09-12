@@ -577,6 +577,10 @@ nsBrowserContentHandler.prototype = {
       } catch (ex) {}
       let override = needHomepageOverride(prefb);
       if (override != OVERRIDE_NONE) {
+        // Setup the default search engine to about:home page.
+        AboutHomeUtils.loadDefaultSearchEngine();
+        AboutHomeUtils.loadSnippetsURL();
+
         switch (override) {
           case OVERRIDE_NEW_PROFILE:
             // New profile.
@@ -597,6 +601,13 @@ nsBrowserContentHandler.prototype = {
 
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
             break;
+        }
+      }
+      else {
+        // No need to override homepage, but update snippets url if the pref has
+        // been manually changed.
+        if (Services.prefs.prefHasUserValue(AboutHomeUtils.SNIPPETS_URL_PREF)) {
+          AboutHomeUtils.loadSnippetsURL();
         }
       }
     } catch (ex) {}
@@ -822,6 +833,42 @@ nsDefaultCommandLineHandler.prototype = {
   },
 
   helpInfo : "",
+};
+
+let AboutHomeUtils = {
+  SNIPPETS_URL_PREF: "browser.aboutHomeSnippets.updateUrl",
+  get _storage() {
+    let aboutHomeURI = Services.io.newURI("moz-safe-about:home", null, null);
+    let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
+                    getService(Components.interfaces.nsIScriptSecurityManager).
+                    getNoAppCodebasePrincipal(aboutHomeURI);
+    let dsm = Components.classes["@mozilla.org/dom/storagemanager;1"].
+              getService(Components.interfaces.nsIDOMStorageManager);
+    return dsm.getLocalStorageForPrincipal(principal, "");
+  },
+
+  loadDefaultSearchEngine: function AHU_loadDefaultSearchEngine()
+  {
+    let defaultEngine = Services.search.originalDefaultEngine;
+    let submission = defaultEngine.getSubmission("_searchTerms_");
+    if (submission.postData)
+      throw new Error("Home page does not support POST search engines.");
+    let engine = {
+      name: defaultEngine.name
+    , searchUrl: submission.uri.spec
+    }
+    this._storage.setItem("search-engine", JSON.stringify(engine));
+  },
+
+  loadSnippetsURL: function AHU_loadSnippetsURL()
+  {
+    const STARTPAGE_VERSION = 3;
+    let updateURL = Services.prefs
+                            .getCharPref(this.SNIPPETS_URL_PREF)
+                            .replace("%STARTPAGE_VERSION%", STARTPAGE_VERSION);
+    updateURL = Services.urlFormatter.formatURL(updateURL);
+    this._storage.setItem("snippets-update-url", updateURL);
+  },
 };
 
 var components = [nsBrowserContentHandler, nsDefaultCommandLineHandler];

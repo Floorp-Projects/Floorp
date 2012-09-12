@@ -112,38 +112,28 @@ const DEFAULT_SNIPPETS_URLS = [
 
 const SNIPPETS_UPDATE_INTERVAL_MS = 86400000; // 1 Day.
 
-let gObserver = new MutationObserver(function (mutations) {
-  for (let mutation of mutations) {
-    if (mutation.attributeName == "searchEngineURL") {
-      gObserver.disconnect();
-      setupSearchEngine();
-      loadSnippets();
-      return;
-    }
-  }
-});
+let gSearchEngine;
 
-window.addEventListener("load", function () {
-  // Delay search engine setup, cause browser.js::BrowserOnAboutPageLoad runs
-  // later and may use asynchronous getters.
-  window.gObserver.observe(document.documentElement, { attributes: true });
-  fitToWidth();
+document.addEventListener("DOMContentLoaded", function init() {
+  setupSearchEngine();
+  loadSnippets();
 });
+window.addEventListener("load", fitToWidth);
 window.addEventListener("resize", fitToWidth);
 
 
 function onSearchSubmit(aEvent)
 {
   let searchTerms = document.getElementById("searchText").value;
-  let searchURL = document.documentElement.getAttribute("searchEngineURL");
-  if (searchURL && searchTerms.length > 0) {
+  if (gSearchEngine && searchTerms.length > 0) {
     const SEARCH_TOKENS = {
       "_searchTerms_": encodeURIComponent(searchTerms)
     }
+    let url = gSearchEngine.searchUrl;
     for (let key in SEARCH_TOKENS) {
-      searchURL = searchURL.replace(key, SEARCH_TOKENS[key]);
+      url = url.replace(key, SEARCH_TOKENS[key]);
     }
-    window.location.href = searchURL;
+    window.location.href = url;
   }
 
   aEvent.preventDefault();
@@ -152,24 +142,27 @@ function onSearchSubmit(aEvent)
 
 function setupSearchEngine()
 {
-  let searchEngineName = document.documentElement.getAttribute("searchEngineName");
-  let searchEngineInfo = SEARCH_ENGINES[searchEngineName];
-  if (!searchEngineInfo) {
+  gSearchEngine = JSON.parse(localStorage["search-engine"]);
+
+  if (!gSearchEngine)
     return;
+
+  // Look for extended information, like logo and links.
+  let searchEngineInfo = SEARCH_ENGINES[gSearchEngine.name];
+  if (searchEngineInfo) {
+    for (let prop in searchEngineInfo)
+      gSearchEngine[prop] = searchEngineInfo[prop];
   }
 
   // Enqueue additional params if required by the engine definition.
-  if (searchEngineInfo.params) {
-    let searchEngineURL = document.documentElement.getAttribute("searchEngineURL");
-    searchEngineURL += "&" + searchEngineInfo.params;
-    document.documentElement.setAttribute("searchEngineURL", searchEngineURL);
-  }
+  if (gSearchEngine.params)
+    gSearchEngine.searchUrl += "&" + gSearchEngine.params;
 
   // Add search engine logo.
-  if (searchEngineInfo.image) {
+  if (gSearchEngine.image) {
     let logoElt = document.getElementById("searchEngineLogo");
-    logoElt.src = searchEngineInfo.image;
-    logoElt.alt = searchEngineInfo.name;
+    logoElt.src = gSearchEngine.image;
+    logoElt.alt = gSearchEngine.name;
   }
 
   // The "autofocus" attribute doesn't focus the form element
@@ -187,7 +180,7 @@ function loadSnippets()
 {
   // Check last snippets update.
   let lastUpdate = localStorage["snippets-last-update"];
-  let updateURL = document.documentElement.getAttribute("snippetsURL");
+  let updateURL = localStorage["snippets-update-url"];
   if (updateURL && (!lastUpdate ||
                     Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS)) {
     // Try to update from network.
