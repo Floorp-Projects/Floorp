@@ -461,7 +461,7 @@ GlobalSearchView.prototype = {
 
     for (let [url, text] of this._scriptSources) {
       // Check if the search token is not found anywhere in the script source.
-      if (text.toLowerCase().indexOf(lowerCaseToken) === -1) {
+      if (!text.toLowerCase().contains(lowerCaseToken)) {
         continue;
       }
       let lines = text.split("\n");
@@ -475,7 +475,7 @@ GlobalSearchView.prototype = {
         let lowerCaseLine = line.toLowerCase();
 
         // Search is not case sensitive, and is tied to each line in the source.
-        if (lowerCaseLine.indexOf(lowerCaseToken) === -1) {
+        if (!lowerCaseLine.contains(lowerCaseToken)) {
           continue;
         }
 
