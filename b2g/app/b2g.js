@@ -440,7 +440,7 @@ pref("app.update.auto", true);
 pref("app.update.silent", true);
 pref("app.update.mode", 0);
 pref("app.update.incompatible.mode", 0);
-pref("app.update.stage.enabled", true);
+pref("app.update.staging.enabled", true);
 pref("app.update.service.enabled", true);
 
 // The URL hosting the update manifest.
