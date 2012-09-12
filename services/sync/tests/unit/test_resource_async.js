@@ -700,6 +700,27 @@ add_test(function test_uri_construction() {
   run_next_test();
 });
 
+add_test(function test_not_sending_cookie() {
+  function handler(metadata, response) {
+    let body = "COOKIE!";
+    response.setStatusLine(metadata.httpVersion, 200, "OK");
+    response.bodyOutputStream.write(body, body.length);
+    do_check_false(metadata.hasHeader("Cookie"));
+  }
+  let cookieSer = Cc["@mozilla.org/cookieService;1"]
+                    .getService(Ci.nsICookieService);
+  let uri = CommonUtils.makeURI("http://localhost:8080");
+  cookieSer.setCookieString(uri, null, "test=test; path=/;", null);
+
+  let res = new AsyncResource("http://localhost:8080/test");
+  res.get(function (error) {
+    do_check_null(error);
+    do_check_true(this.response.success);
+    do_check_eq("COOKIE!", this.response.body);
+    server.stop(run_next_test);
+  });
+});
+
 /**
  * End of tests that rely on a single HTTP server.
  * All tests after this point must begin and end their own.
