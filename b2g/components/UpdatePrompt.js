@@ -25,6 +25,10 @@ const APPLY_WAIT_TIMEOUT =
 const SELF_DESTRUCT_TIMEOUT =
       Services.prefs.getIntPref("b2g.update.self-destruct-timeout");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "aus",
+                                   "@mozilla.org/updates/update-service;1",
+                                   "nsIApplicationUpdateService");
+
 function UpdatePrompt() { }
 
 UpdatePrompt.prototype = {
@@ -42,7 +46,15 @@ UpdatePrompt.prototype = {
   // updates when on a billed pipe.  Initially, opt-in for 3g, but
   // that doesn't cover all cases.
   checkForUpdates: function UP_checkForUpdates() { },
-  showUpdateAvailable: function UP_showUpdateAvailable(aUpdate) { },
+
+  showUpdateAvailable: function UP_showUpdateAvailable(aUpdate) {
+    if (!this.sendUpdateEvent("update-available", aUpdate,
+                             this.handleAvailableResult)) {
+
+      log("Unable to prompt for available update, forcing download");
+      this.downloadUpdate(aUpdate);
+    }
+  },
 
   showUpdateDownloaded: function UP_showUpdateDownloaded(aUpdate, aBackground) {
     if (!this.sendUpdateEvent("update-downloaded", aUpdate,
@@ -119,6 +131,16 @@ UpdatePrompt.prototype = {
     return true;
   },
 
+  handleAvailableResult: function UP_handleAvailableResult(aDetail) {
+    // If the user doesn't choose "download", the updater will implicitly call
+    // showUpdateAvailable again after a certain period of time
+    switch (aDetail.result) {
+      case "download":
+        this.downloadUpdate(this._update);
+        break;
+    }
+  },
+
   handleDownloadedResult: function UP_handleDownloadedResult(aDetail) {
     if (this._applyPromptTimer) {
       this._applyPromptTimer.cancel();
@@ -135,6 +157,10 @@ UpdatePrompt.prototype = {
         this.restartProcess();
         break;
     }
+  },
+
+  downloadUpdate: function UP_downloadUpdate(aUpdate) {
+    Services.aus.downloadUpdate(aUpdate, true);
   },
 
   restartProcess: function UP_restartProcess() {
