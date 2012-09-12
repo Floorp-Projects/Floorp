@@ -249,6 +249,7 @@ ServerBSO.prototype = {
     }
 
     this.modified = request.timestamp;
+    this.deleted = false;
     response.setHeader("X-Last-Modified", "" + this.modified, false);
 
     response.setStatusLine(request.httpVersion, code, status);
@@ -550,6 +551,7 @@ StorageServerCollection.prototype = {
         if (bso) {
           bso.payload = record.payload;
           bso.modified = timestamp;
+          bso.deleted = false;
           success.push(record.id);
 
           if (record.sortindex) {
