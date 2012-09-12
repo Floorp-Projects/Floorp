@@ -32,7 +32,7 @@ function importScripts() {
     xhr.onreadystatechange = function(aEvt) {
       if (xhr.readyState == 4) {
         if (xhr.status == 200 || xhr.status == 0) {
-          _evalInSandbox(xhr.responseText);
+          eval(xhr.responseText);
         }
         else {
           throw new Error("Unable to importScripts ["+scriptURL+"], status " + xhr.status)

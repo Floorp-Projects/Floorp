@@ -130,13 +130,6 @@ FrameWorker.prototype = {
     };
     sandbox.navigator = navigator;
 
-    // Our importScripts function needs to 'eval' the script code from inside
-    // a function, but using eval() directly means functions in the script
-    // don't end up in the global scope.
-    sandbox._evalInSandbox = function(s) {
-      Cu.evalInSandbox(s, sandbox);
-    };
-
     // and we delegate ononline and onoffline events to the worker.
     // See http://www.whatwg.org/specs/web-apps/current-work/multipage/workers.html#workerglobalscope
     this.frame.addEventListener('offline', function fw_onoffline(event) {
