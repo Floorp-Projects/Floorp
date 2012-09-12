@@ -33,7 +33,9 @@ function UpdatePrompt() { }
 
 UpdatePrompt.prototype = {
   classID: Components.ID("{88b3eb21-d072-4e3b-886d-f89d8c49fe59}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdatePrompt]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdatePrompt,
+                                         Ci.nsIRequestObserver,
+                                         Ci.nsIProgressEventSink]),
 
   _update: null,
   _applyPromptTimer: null,
@@ -69,8 +71,40 @@ UpdatePrompt.prototype = {
     this._applyPromptTimer = this.createTimer(APPLY_PROMPT_TIMEOUT);
   },
 
-  sendUpdateEvent: function UP_sendUpdateEvent(aType, aUpdate, aCallback,
-                                               aDetail) {
+  showUpdateError: function UP_showUpdateError(aUpdate) {
+    if (aUpdate.state == "failed") {
+      log("Failed to download update, errorCode: " + aUpdate.errorCode);
+    }
+  },
+
+  showUpdateHistory: function UP_showUpdateHistory(aParent) { },
+  showUpdateInstalled: function UP_showUpdateInstalled() { },
+
+  sendUpdateEvent: function UP_sendUpdateEvent(aType, aUpdate, aCallback) {
+    let detail = {
+      displayVersion: aUpdate.displayVersion,
+      detailsURL: aUpdate.detailsURL
+    };
+
+    let patch = aUpdate.selectedPatch;
+    if (!patch) {
+      // For now we just check the first patch to get size information if a
+      // patch hasn't been selected yet.
+      if (aUpdate.patchCount == 0) {
+        log("Warning: no patches available in update");
+        return false;
+      }
+      patch = aUpdate.getPatchAt(0);
+    }
+
+    detail.size = patch.size;
+    detail.updateType = patch.type;
+
+    this._update = aUpdate;
+    return this.sendChromeEvent(aType, detail, aCallback);
+  },
+
+  sendChromeEvent: function UP_sendChromeEvent(aType, aDetail, aCallback) {
     let browser = Services.wm.getMostRecentWindow("navigator:browser");
     if (!browser) {
       log("Warning: Couldn't send update event " + aType +
@@ -87,32 +121,13 @@ UpdatePrompt.prototype = {
 
     let detail = aDetail || {};
     detail.type = aType;
-    detail.displayVersion = aUpdate.displayVersion;
-    detail.detailsURL = aUpdate.detailsURL;
-
-    let patch = aUpdate.selectedPatch;
-    if (!patch) {
-      // For now we just check the first patch to get size information if a
-      // patch hasn't been selected yet.
-      if (aUpdate.patchCount == 0) {
-        log("Warning: no patches available in update");
-        return false;
-      }
-
-      patch = aUpdate.getPatchAt(0);
-    }
-
-    detail.size = patch.size;
-    detail.updateType = patch.type;
 
     if (!aCallback) {
       browser.shell.sendChromeEvent(detail);
       return true;
     }
 
-    this._update = aUpdate;
     let resultType = aType + "-result";
-
     let handleContentEvent = (function(e) {
       if (!e.detail) {
         return;
@@ -161,6 +176,7 @@ UpdatePrompt.prototype = {
 
   downloadUpdate: function UP_downloadUpdate(aUpdate) {
     Services.aus.downloadUpdate(aUpdate, true);
+    Services.aus.addDownloadListener(this);
   },
 
   restartProcess: function UP_restartProcess() {
@@ -216,15 +232,27 @@ UpdatePrompt.prototype = {
     return timer;
   },
 
-  showUpdateInstalled: function UP_showUpdateInstalled() { },
+  // nsIRequestObserver
 
-  showUpdateError: function UP_showUpdateError(aUpdate) {
-    if (aUpdate.state == "failed") {
-      log("Failed to download update, errorCode: " + aUpdate.errorCode);
-    }
+  onStartRequest: function UP_onStartRequest(aRequest, aContext) {
+    this.sendChromeEvent("update-downloading");
   },
 
-  showUpdateHistory: function UP_showUpdateHistory(aParent) { },
+  onStopRequest: function UP_onStopRequest(aRequest, aContext, aStatusCode) {
+    Services.aus.removeDownloadListener(this);
+  },
+
+  // nsIProgressEventSink
+
+  onProgress: function UP_onProgress(aRequest, aContext, aProgress,
+                                     aProgressMax) {
+    this.sendChromeEvent("update-progress", {
+      progress: aProgress,
+      total: aProgressMax
+    });
+  },
+
+  onStatus: function UP_onStatus(aRequest, aUpdate, aStatus, aStatusArg) { }
 };
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([UpdatePrompt]);
