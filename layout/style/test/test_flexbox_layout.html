@@ -37,6 +37,21 @@ function getComputedStyleWrapper(elem, prop)
   return window.getComputedStyle(elem, null).getPropertyValue(prop);
 }
 
+function setPossiblyAliasedProperty(aElem, aPropertyName, aPropertyValue,
+                                    aPropertyMapping)
+{
+  let actualPropertyName = (aPropertyName in aPropertyMapping ?
+                            aPropertyMapping[aPropertyName] : aPropertyName);
+
+  if (!gCSSProperties[actualPropertyName]) {
+    ok(false, "Bug in test: property '" + actualPropertyName +
+              "' doesn't exist in gCSSProperties");
+  } else {
+    let domPropertyName = gCSSProperties[actualPropertyName].domProp;
+    aElem.style[domPropertyName] = aPropertyValue;
+  }
+}
+
 // The main test function.
 // aFlexboxTestcase is an entry from the list in flexbox_layout_testcases.js
 function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
@@ -46,10 +61,17 @@ function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
   // Create flex container
   let flexContainer = document.createElement("div");
   flexContainer.style.display = "-moz-flex";
-
-  flexContainer.style[aPropertyMapping["_main-size"]] = gDefaultFlexContainerSize;
-
   flexContainer.style.MozFlexDirection = aFlexDirection;
+  setPossiblyAliasedProperty(flexContainer, "_main-size", gDefaultFlexContainerSize, aPropertyMapping);
+
+  // Apply testcase's customizations for flex container (if any).
+  if (aFlexboxTestcase.container_properties) {
+    for (let propName in aFlexboxTestcase.container_properties) {
+      let propValue = aFlexboxTestcase.container_properties[propName];
+      setPossiblyAliasedProperty(flexContainer, propName, propValue,
+                                 aPropertyMapping);
+    }
+  }
 
   // Create & append flex items
   aFlexboxTestcase.items.forEach(function(aChildSpec) {
@@ -70,14 +92,9 @@ function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
            "unexpected number of elements in array within child spec");
       }
 
-      let actualPropName = (propName in aPropertyMapping ?
-                            aPropertyMapping[propName] : propName);
-      if (!gCSSProperties[actualPropName]) {
-        ok(false, "Bug in test: property '" + actualPropName +
-                  "' doesn't exist in gCSSProperties");
-      } else if (specifiedValue !== null) {
-        let domPropName = gCSSProperties[actualPropName].domProp;
-        child.style[domPropName] = specifiedValue;
+      if (specifiedValue !== null) {
+        setPossiblyAliasedProperty(child, propName, specifiedValue,
+                                   aPropertyMapping);
       }
     }
 
