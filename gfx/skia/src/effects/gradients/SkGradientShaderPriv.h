@@ -133,7 +133,10 @@ public:
         kDitherStride32 = 0,
 #endif
         kDitherStride16 = kCache16Count,
-        kLerpRemainderMask32 = (1 << (16 - kCache32Bits)) - 1
+        kLerpRemainderMask32 = (1 << (16 - kCache32Bits)) - 1,
+
+        kCache32ClampLower = -1,
+        kCache32ClampUpper = kCache32Count * 2
     };
 
 
