@@ -25,6 +25,10 @@
 #endif
 #endif
 
+class nsIAndroidDisplayport;
+class nsIAndroidViewport;
+
+
 namespace mozilla {
 
 class AndroidGeckoLayerClient;
@@ -144,6 +148,38 @@ protected:
     static jfieldID jTopField;
 };
 
+class AndroidRectF : public WrappedJavaObject
+{
+public:
+    static void InitRectFClass(JNIEnv *jEnv);
+
+    AndroidRectF() { }
+    AndroidRectF(JNIEnv *jenv, jobject jobj) {
+        Init(jenv, jobj);
+    }
+
+    void Init(JNIEnv *jenv, jobject jobj);
+
+    float Bottom() { return mBottom; }
+    float Left() { return mLeft; }
+    float Right() { return mRight; }
+    float Top() { return mTop; }
+    float Width() { return mRight - mLeft; }
+    float Height() { return mBottom - mTop; }
+
+protected:
+    float mBottom;
+    float mLeft;
+    float mRight;
+    float mTop;
+
+    static jclass jRectClass;
+    static jfieldID jBottomField;
+    static jfieldID jLeftField;
+    static jfieldID jRightField;
+    static jfieldID jTopField;
+};
+
 class AndroidViewTransform : public WrappedJavaObject {
 public:
     static void InitViewTransformClass(JNIEnv *jEnv);
@@ -200,6 +236,7 @@ public:
     bool CreateFrame(AutoLocalJNIFrame *jniFrame, AndroidLayerRendererFrame& aFrame);
     bool ActivateProgram(AutoLocalJNIFrame *jniFrame);
     bool DeactivateProgram(AutoLocalJNIFrame *jniFrame);
+    void GetDisplayPort(AutoLocalJNIFrame *jniFrame, bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort);
 
 protected:
     static jclass jGeckoLayerClientClass;
@@ -209,6 +246,14 @@ protected:
     static jmethodID jCreateFrameMethod;
     static jmethodID jActivateProgramMethod;
     static jmethodID jDeactivateProgramMethod;
+    static jmethodID jGetDisplayPort;
+
+public:
+    static jclass jViewportClass;
+    static jclass jDisplayportClass;
+    static jmethodID jViewportCtor;
+    static jfieldID jDisplayportPosition;
+    static jfieldID jDisplayportResolution;
 };
 
 class AndroidGeckoSurfaceView : public WrappedJavaObject
