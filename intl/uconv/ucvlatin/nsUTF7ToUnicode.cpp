@@ -166,10 +166,8 @@ NS_IMETHODIMP nsBasicUTF7Decoder::ConvertNoBuff(const char * aSrc,
   PRUnichar * dest = aDest;
   int32_t bcr,bcw;
   nsresult res = NS_OK;
-  char ch;
 
   while (src < srcEnd) {
-    ch = *src;
 
     // fist, attept to decode in the current mode
     bcr = srcEnd - src;
