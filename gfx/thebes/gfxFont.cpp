@@ -1536,10 +1536,8 @@ struct GlyphBuffer {
             if (aDrawMode & gfxFont::GLYPH_FILL) {
                 SAMPLE_LABEL("GlyphBuffer", "cairo_show_glyphs");
                 nsRefPtr<gfxPattern> pattern;
-                if (aObjectPaint && !!(pattern = aObjectPaint->GetFillPattern())) {
-                    gfxMatrix matrix = pattern->GetMatrix().PreMultiply(aGlobalMatrix);
-                    pattern->SetMatrix(matrix);
-
+                if (aObjectPaint &&
+                    !!(pattern = aObjectPaint->GetFillPattern(aGlobalMatrix))) {
                     cairo_save(aCR);
                     cairo_set_source(aCR, pattern->CairoPattern());
                 }
@@ -1553,10 +1551,8 @@ struct GlyphBuffer {
 
             if (aDrawMode & gfxFont::GLYPH_STROKE) {
                 nsRefPtr<gfxPattern> pattern;
-                if (aObjectPaint && !!(pattern = aObjectPaint->GetStrokePattern())) {
-                    gfxMatrix matrix = pattern->GetMatrix().PreMultiply(aGlobalMatrix);
-                    pattern->SetMatrix(matrix);
-
+                if (aObjectPaint &&
+                    !!(pattern = aObjectPaint->GetStrokePattern(aGlobalMatrix))) {
                     cairo_save(aCR);
                     cairo_set_source(aCR, pattern->CairoPattern());
                 }
@@ -1590,7 +1586,7 @@ struct GlyphBufferAzure {
 
     void Flush(DrawTarget *aDT, gfxTextObjectPaint *aObjectPaint, ScaledFont *aFont,
                gfxFont::DrawMode aDrawMode, bool aReverse, const GlyphRenderingOptions *aOptions,
-               gfxContext *aThebesContext, const Matrix *invFontMatrix, bool aFinish = false)
+               gfxContext *aThebesContext, const Matrix *aInvFontMatrix, bool aFinish = false)
     {
         // Ensure there's enough room for a glyph to be added to the buffer
         if (!aFinish && mNumGlyphs < GLYPH_BUFFER_SIZE || !mNumGlyphs) {
@@ -1613,20 +1609,22 @@ struct GlyphBufferAzure {
                 Pattern *pat;
 
                 nsRefPtr<gfxPattern> fillPattern;
-                if (!aObjectPaint || !(fillPattern = aObjectPaint->GetFillPattern())) {
+                if (!aObjectPaint ||
+                    !(fillPattern = aObjectPaint->GetFillPattern(aThebesContext->CurrentMatrix()))) {
                     pat = state.pattern->GetPattern(aDT, state.patternTransformChanged ? &state.patternTransform : nullptr);
                 } else {
-                    pat = fillPattern->GetPattern(aDT, state.patternTransformChanged ? &state.patternTransform : nullptr);
+                    pat = fillPattern->GetPattern(aDT);
                 }
 
-                if (invFontMatrix) {
+                Matrix saved;
+                Matrix *mat = nullptr;
+                if (aInvFontMatrix) {
                     // The brush matrix needs to be multiplied with the inverted matrix
                     // as well, to move the brush into the space of the glyphs. Before
                     // the render target transformation
 
                     // This relies on the returned Pattern not to be reused by
                     // others, but regenerated on GetPattern calls. This is true!
-                    Matrix *mat = nullptr;
                     if (pat->GetType() == PATTERN_LINEAR_GRADIENT) {
                         mat = &static_cast<LinearGradientPattern*>(pat)->mMatrix;
                     } else if (pat->GetType() == PATTERN_RADIAL_GRADIENT) {
@@ -1636,12 +1634,17 @@ struct GlyphBufferAzure {
                     }
 
                     if (mat) {
-                        *mat = (*mat) * (*invFontMatrix);
+                        saved = *mat;
+                        *mat = (*mat) * (*aInvFontMatrix);
                     }
                 }
 
                 aDT->FillGlyphs(aFont, buf, *pat,
                                 DrawOptions(), aOptions);
+
+                if (mat) {
+                    *mat = saved;
+                }
             } else if (state.sourceSurface) {
                 aDT->FillGlyphs(aFont, buf, SurfacePattern(state.sourceSurface,
                                                            EXTEND_CLAMP,
@@ -1659,7 +1662,8 @@ struct GlyphBufferAzure {
         if (aDrawMode & gfxFont::GLYPH_STROKE) {
             RefPtr<Path> path = aFont->GetPathForGlyphs(buf, aDT);
             if (aObjectPaint) {
-                nsRefPtr<gfxPattern> strokePattern = aObjectPaint->GetStrokePattern();
+                nsRefPtr<gfxPattern> strokePattern =
+                  aObjectPaint->GetStrokePattern(aThebesContext->CurrentMatrix());
                 if (strokePattern) {
                     aDT->Stroke(path, *strokePattern->GetPattern(aDT), state.strokeOptions);
                 }
@@ -1713,6 +1717,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     const double devUnitsPerAppUnit = 1.0/double(appUnitsPerDevUnit);
     bool isRTL = aTextRun->IsRightToLeft();
     double direction = aTextRun->GetDirection();
+    gfxMatrix globalMatrix = aContext->CurrentMatrix();
 
     bool haveSVGGlyphs = GetFontEntry()->TryGetSVGData();
     nsAutoPtr<gfxTextObjectPaint> objectPaint;
@@ -1720,7 +1725,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         // If no pattern is specified for fill, use the current pattern
         NS_ASSERTION((aDrawMode & GLYPH_STROKE) == 0, "no pattern supplied for stroking text");
         nsRefPtr<gfxPattern> fillPattern = aContext->GetPattern();
-        objectPaint = new SimpleTextObjectPaint(fillPattern, nullptr);
+        objectPaint = new SimpleTextObjectPaint(fillPattern, nullptr,
+                                                aContext->CurrentMatrix());
         aObjectPaint = objectPaint;
     }
 
@@ -1741,7 +1747,6 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     double y = aPt->y;
 
     cairo_t *cr = aContext->GetCairo();
-    gfxMatrix globalMatrix = aContext->CurrentMatrix();
     RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
 
     if (aContext->IsCairo()) {
