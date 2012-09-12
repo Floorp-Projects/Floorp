@@ -23,8 +23,6 @@ function WorkerAPI(provider, port) {
   this._port = port;
   this._port.onmessage = this._handleMessage.bind(this);
 
-  this.initialized = false;
-
   // Send an "intro" message so the worker knows this is the port
   // used for the api.
   // later we might even include an API version - version 0 for now!
@@ -54,9 +52,6 @@ WorkerAPI.prototype = {
   },
 
   handlers: {
-    "social.initialize-response": function (data) {
-      this.initialized = true;
-    },
     "social.user-profile": function (data) {
       this._provider.updateUserProfile(data);
     },
