@@ -23,9 +23,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource:///modules/PropertyPanel.jsm");
 Cu.import("resource:///modules/source-editor.jsm");
+Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
 Cu.import("resource://gre/modules/jsdebugger.jsm");
-
 
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
 const SCRATCHPAD_CONTEXT_BROWSER = 2;
@@ -36,47 +36,6 @@ const BUTTON_POSITION_SAVE = 0;
 const BUTTON_POSITION_CANCEL = 1;
 const BUTTON_POSITION_DONT_SAVE = 2;
 const BUTTON_POSITION_REVERT=0;
-
-let keysbundle = Services.strings.createBundle("chrome://global-platform/locale/platformKeys.properties");
-
-
-function SP_Pretty_Key(aElemKey) {
-
-  let elemString = "";
-  let elemMod = aElemKey.getAttribute("modifiers");
-
-  if (elemMod.match("accel")) {
-    if (navigator.platform.indexOf("Mac") !== -1) {
-      // XXX bug 779642 Use "Cmd-" literal vs cloverleaf meta-key until
-      // Orion adds variable height lines
-      // elemString += keysbundle.GetStringFromName("VK_META_CMD") +
-      //               keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
-      elemString += "Cmd-";
-    } else {
-      elemString += keysbundle.GetStringFromName("VK_CONTROL") +
-                    keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
-    }
-  }
-
-  if (elemMod.match("shift")) {
-    elemString += keysbundle.GetStringFromName("VK_SHIFT") +
-                  keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
-  }
-  if (elemMod.match("alt")) {
-    elemString += keysbundle.GetStringFromName("VK_ALT") +
-                  keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
-  }
-  if (elemMod.match("ctrl")) {
-    elemString += keysbundle.GetStringFromName("VK_CONTROL") +
-                  keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
-  }
-  if (elemMod.match("meta")) {
-    elemString += keysbundle.GetStringFromName("VK_META") +
-                  keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
-  }
-
-  return elemString + aElemKey.getAttribute("key").toUpperCase();
-}
 
 /**
  * The scratchpad object handles the Scratchpad window functionality.
@@ -481,9 +440,9 @@ var Scratchpad = {
     let insertionPoint = selection.start != selection.end ?
                          selection.end : // after selected text
                          this.editor.getCharCount(); // after text end
-                         
+
     let newComment = "\n/*\n" + aValue + "\n*/";
-    
+
     this.setText(newComment, insertionPoint, insertionPoint);
 
     // Select the new comment.
@@ -512,7 +471,7 @@ var Scratchpad = {
     else if (aError.lineNumber) {
       stack = "@" + aError.lineNumber;
     }
-    
+
     let newComment = "Exception: " + ( aError.message || aError) + ( stack == "" ? stack : "\n" + stack.replace(/\n$/, "") );
 
     this.writeAsComment(newComment);
@@ -933,7 +892,6 @@ var Scratchpad = {
    */
   revertFile: function SP_revertFile(aCallback)
   {
-    
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
     file.initWithPath(this.filename);
 
@@ -1099,9 +1057,9 @@ var Scratchpad = {
 
     let initialText = this.strings.formatStringFromName(
       "scratchpadIntro1",
-      [SP_Pretty_Key(document.getElementById("sp-key-run")),
-       SP_Pretty_Key(document.getElementById("sp-key-inspect")),
-       SP_Pretty_Key(document.getElementById("sp-key-display"))],
+      [LayoutHelpers.prettyKey(document.getElementById("sp-key-run")),
+       LayoutHelpers.prettyKey(document.getElementById("sp-key-inspect")),
+       LayoutHelpers.prettyKey(document.getElementById("sp-key-display"))],
       3);
 
     if ("arguments" in window &&
