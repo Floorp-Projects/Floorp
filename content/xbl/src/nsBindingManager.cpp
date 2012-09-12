@@ -1219,17 +1219,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
 
       nsIXPConnect *xpConnect = nsContentUtils::XPConnect();
 
-      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-      xpConnect->GetWrappedNativeOfNativeObject(jscontext,
-                                                global->GetGlobalJSObject(),
-                                                aContent,
-                                                NS_GET_IID(nsISupports),
-                                                getter_AddRefs(wrapper));
-      NS_ENSURE_TRUE(wrapper, NS_NOINTERFACE);
-
-      JSObject* jsobj = nullptr;
-
-      wrapper->GetJSObject(&jsobj);
+      JSObject* jsobj = aContent->GetWrapper();
       NS_ENSURE_TRUE(jsobj, NS_NOINTERFACE);
 
       nsresult rv = xpConnect->WrapJSAggregatedToNative(aContent, jscontext,

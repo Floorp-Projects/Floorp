@@ -136,6 +136,19 @@ public:
     return (mWrapperPtrBits & WRAPPER_IS_DOM_BINDING) != 0;
   }
 
+  void SetHasSystemOnlyWrapper()
+  {
+    MOZ_ASSERT(GetWrapperPreserveColor(),
+               "This flag should be set after wrapper creation.");
+    MOZ_ASSERT(IsDOMBinding(),
+               "This flag should only be set for DOM bindings.");
+    mWrapperPtrBits |= WRAPPER_HAS_SOW;
+  }
+
+  bool HasSystemOnlyWrapper() const
+  {
+    return (mWrapperPtrBits & WRAPPER_HAS_SOW) != 0;
+  }
 
   /**
    * Wrap the object corresponding to this wrapper cache. If non-null is
@@ -204,7 +217,15 @@ private:
    */
   enum { WRAPPER_IS_DOM_BINDING = 1 << 1 };
 
-  enum { kWrapperBitMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_DOM_BINDING) };
+  /**
+   * If this bit is set then the wrapper for the native object is a DOM binding
+   * (regular JS object or proxy) that has a system only wrapper for same-origin
+   * access.
+   */
+  enum { WRAPPER_HAS_SOW = 1 << 2 };
+
+  enum { kWrapperBitMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_DOM_BINDING |
+                            WRAPPER_HAS_SOW) };
 
   uintptr_t mWrapperPtrBits;
 };
