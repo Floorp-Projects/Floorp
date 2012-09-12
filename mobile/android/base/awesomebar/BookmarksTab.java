@@ -203,7 +203,7 @@ public class BookmarksTab extends AwesomeBarTab {
         String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
         long parentId = cursor.getLong(cursor.getColumnIndexOrThrow(Bookmarks.PARENT));
         if (parentId == Bookmarks.FIXED_READING_LIST_ID) {
-            url = getReaderForUrl(url);
+            url = AwesomeBar.getReaderForUrl(url);
         }
         listener.onUrlOpen(url);
     }
@@ -446,6 +446,7 @@ public class BookmarksTab extends AwesomeBarTab {
         inflater.inflate(R.menu.awesomebar_contextmenu, menu);
         
         menu.findItem(R.id.remove_history).setVisible(false);
+        menu.findItem(R.id.open_in_reader).setVisible(false);
         menu.setHeaderTitle(subject.title);
 
         return subject;

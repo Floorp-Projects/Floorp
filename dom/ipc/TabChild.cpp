@@ -23,11 +23,13 @@
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
+#include "mozIApplication.h"
 #include "nsComponentManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsEmbedCID.h"
 #include "nsEventListenerManager.h"
+#include "nsIAppsService.h"
 #include "nsIBaseWindow.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMClassInfo.h"
@@ -677,6 +679,39 @@ TabChild::~TabChild()
     }
 }
 
+void
+TabChild::SetProcessNameToAppName()
+{
+  if (mIsBrowserElement || (mAppId == nsIScriptSecurityManager::NO_APP_ID)) {
+    return;
+  }
+  nsCOMPtr<nsIAppsService> appsService =
+    do_GetService(APPS_SERVICE_CONTRACTID);
+  if (!appsService) {
+    NS_WARNING("No AppsService");
+    return;
+  }
+  nsresult rv;
+  nsCOMPtr<mozIDOMApplication> domApp;
+  rv = appsService->GetAppByLocalId(mAppId, getter_AddRefs(domApp));
+  if (NS_FAILED(rv) || !domApp) {
+    NS_WARNING("GetAppByLocalId failed");
+    return;
+  }
+  nsCOMPtr<mozIApplication> app = do_QueryInterface(domApp);
+  if (!app) {
+    NS_WARNING("app isn't a mozIApplication");
+    return;
+  }
+  nsAutoString appName;
+  rv = app->GetName(appName);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to retrieve app name");
+    return;
+  }
+  SetThisProcessName(NS_LossyConvertUTF16toASCII(appName).get());
+}
+
 bool
 TabChild::IsRootContentDocument()
 {
@@ -698,6 +733,7 @@ bool
 TabChild::RecvLoadURL(const nsCString& uri)
 {
     printf("loading %s, %d\n", uri.get(), NS_IsMainThread());
+    SetProcessNameToAppName();
 
     nsresult rv = mWebNav->LoadURI(NS_ConvertUTF8toUTF16(uri).get(),
                                    nsIWebNavigation::LOAD_FLAGS_NONE,

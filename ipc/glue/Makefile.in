@@ -105,6 +105,12 @@ ifeq ($(OS_TARGET),Android)
 CPPSRCS += SharedMemoryBasic_android.cpp
 endif #}
 
+ifeq ($(OS_ARCH),Linux)
+CPPSRCS += ProcessUtils_linux.cpp
+else
+CPPSRCS += ProcessUtils_none.cpp
+endif
+
 include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=\"$(MOZ_CHILD_PROCESS_NAME)\"
 DEFINES += -DMOZ_CHILD_PROCESS_BUNDLE=\"$(MOZ_CHILD_PROCESS_BUNDLE)\"

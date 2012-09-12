@@ -57,6 +57,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
+#include "ion/Ion.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -70,6 +71,10 @@
 
 #ifdef XP_WIN
 #include "jswin.h"
+#endif
+
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
 #endif
 
 using namespace mozilla;
@@ -111,9 +116,10 @@ static double MAX_TIMEOUT_INTERVAL = 1800.0;
 static double gTimeoutInterval = -1.0;
 static volatile bool gCanceled = false;
 
-static bool enableMethodJit = false;
-static bool enableTypeInference = false;
+static bool enableMethodJit = true;
+static bool enableTypeInference = true;
 static bool enableDisassemblyDumps = false;
+static bool enableIon = true;
 
 static bool printTiming = false;
 
@@ -1185,6 +1191,9 @@ PrintInternal(JSContext *cx, unsigned argc, jsval *vp, FILE *file)
         if (!bytes)
             return false;
         fprintf(file, "%s%s", i ? " " : "", bytes);
+#if JS_TRACE_LOGGING
+        TraceLog(TraceLogging::defaultLogger(), bytes);
+#endif
         JS_free(cx, bytes);
     }
 
@@ -3534,7 +3543,7 @@ RelaxRootChecks(JSContext *cx, unsigned argc, jsval *vp)
     }
 
 #ifdef DEBUG
-    cx->runtime->relaxRootChecks = true;
+    cx->runtime->gcRelaxRootChecks = true;
 #endif
 
     return true;
@@ -4583,6 +4592,8 @@ NewContext(JSRuntime *rt)
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     if (enableTypeInference)
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
+    if (enableIon)
+        JS_ToggleOptions(cx, JSOPTION_ION);
     return cx;
 }
 
@@ -4678,6 +4689,13 @@ BindScriptArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 }
 
 static int
+OptionFailure(const char *option, const char *str)
+{
+    fprintf(stderr, "Unrecognized option for %s: %s\n", option, str);
+    return EXIT_FAILURE;
+}
+
+static int
 ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 {
     RootedObject obj(cx, obj_);
@@ -4688,8 +4706,8 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (op->getBoolOption('c'))
         compileOnly = true;
 
-    if (op->getBoolOption('m')) {
-        enableMethodJit = true;
+    if (op->getBoolOption("no-jm")) {
+        enableMethodJit = false;
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     }
 
@@ -4703,6 +4721,105 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
     if (op->getBoolOption('D'))
         enableDisassemblyDumps = true;
+
+#if defined(JS_ION)
+    if (op->getBoolOption("no-ion")) {
+        enableIon = false;
+        JS_ToggleOptions(cx, JSOPTION_ION);
+    }
+
+    if (const char *str = op->getStringOption("ion-gvn")) {
+        if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.gvn = false;
+        else if (strcmp(str, "pessimistic") == 0)
+            ion::js_IonOptions.gvnIsOptimistic = false;
+        else if (strcmp(str, "optimistic") == 0)
+            ion::js_IonOptions.gvnIsOptimistic = true;
+        else
+            return OptionFailure("ion-gvn", str);
+    }
+
+    if (const char *str = op->getStringOption("ion-licm")) {
+        if (strcmp(str, "on") == 0)
+            ion::js_IonOptions.licm = true;
+        else if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.licm = false;
+        else
+            return OptionFailure("ion-licm", str);
+    }
+
+    if (const char *str = op->getStringOption("ion-edgecase-analysis")) {
+        if (strcmp(str, "on") == 0)
+            ion::js_IonOptions.edgeCaseAnalysis = true;
+        else if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.edgeCaseAnalysis = false;
+        else
+            return OptionFailure("ion-edgecase-analysis", str);
+    }
+
+     if (const char *str = op->getStringOption("ion-range-analysis")) {
+         if (strcmp(str, "on") == 0)
+             ion::js_IonOptions.rangeAnalysis = true;
+         else if (strcmp(str, "off") == 0)
+             ion::js_IonOptions.rangeAnalysis = false;
+         else
+             return OptionFailure("ion-range-analysis", str);
+     }
+
+    if (const char *str = op->getStringOption("ion-inlining")) {
+        if (strcmp(str, "on") == 0)
+            ion::js_IonOptions.inlining = true;
+        else if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.inlining = false;
+        else
+            return OptionFailure("ion-inlining", str);
+    }
+
+    if (const char *str = op->getStringOption("ion-osr")) {
+        if (strcmp(str, "on") == 0)
+            ion::js_IonOptions.osr = true;
+        else if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.osr = false;
+        else
+            return OptionFailure("ion-osr", str);
+    }
+
+    if (const char *str = op->getStringOption("ion-limit-script-size")) {
+        if (strcmp(str, "on") == 0)
+            ion::js_IonOptions.limitScriptSize = true;
+        else if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.limitScriptSize = false;
+        else
+            return OptionFailure("ion-limit-script-size", str);
+    }
+
+    if (const char *str = op->getStringOption("ion-regalloc")) {
+        if (strcmp(str, "lsra") == 0)
+            ion::js_IonOptions.lsra = true;
+        else
+            return OptionFailure("ion-regalloc", str);
+    }
+
+    if (op->getBoolOption("ion-eager"))
+        ion::js_IonOptions.setEagerCompilation();
+
+#ifdef JS_THREADSAFE
+    if (const char *str = op->getStringOption("ion-parallel-compile")) {
+        if (strcmp(str, "on") == 0) {
+            if (GetCPUCount() <= 1) {
+                fprintf(stderr, "Parallel compilation not available on single core machines");
+                return EXIT_FAILURE;
+            }
+            ion::js_IonOptions.parallelCompilation = true;
+        } else if (strcmp(str, "off") == 0) {
+            ion::js_IonOptions.parallelCompilation = false;
+        } else {
+            return OptionFailure("ion-parallel-compile", str);
+        }
+    }
+#endif /* JS_THREADSAFE */
+
+#endif /* JS_ION */
 
     /* |scriptArgs| gets bound on the global before any code is run. */
     if (!BindScriptArgs(cx, obj, op))
@@ -4756,8 +4873,8 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
      * First check to see if type inference is enabled. This flag must be set
      * on the compartment when it is constructed.
      */
-    if (op->getBoolOption('n')) {
-        enableTypeInference = !enableTypeInference;
+    if (op->getBoolOption("no-ti")) {
+        enableTypeInference = false;
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     }
 
@@ -4861,8 +4978,10 @@ main(int argc, char **argv, char **envp)
     if (!op.addMultiStringOption('f', "file", "PATH", "File path to run")
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
-        || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
-        || !op.addBoolOption('n', "typeinfer", "Enable type inference")
+        || !op.addBoolOption('m', "jm", "Enable the JaegerMonkey method JIT (default)")
+        || !op.addBoolOption('\0', "no-jm", "Disable the JaegerMonkey method JIT")
+        || !op.addBoolOption('n', "ti", "Enable type inference (default)")
+        || !op.addBoolOption('\0', "no-ti", "Disable type inference")
         || !op.addBoolOption('c', "compileonly", "Only compile, don't run (syntax checking mode)")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
         || !op.addBoolOption('a', "always-mjit",
@@ -4877,7 +4996,36 @@ main(int argc, char **argv, char **envp)
         || !op.addOptionalStringArg("script", "A script to execute (after all options)")
         || !op.addOptionalMultiStringArg("scriptArgs",
                                          "String arguments to bind as |arguments| in the "
-                                         "shell's global")) {
+                                         "shell's global")
+        || !op.addBoolOption('\0', "ion", "Enable IonMonkey (default)")
+        || !op.addBoolOption('\0', "no-ion", "Disable IonMonkey")
+        || !op.addStringOption('\0', "ion-gvn", "[mode]",
+                               "Specify Ion global value numbering:\n"
+                               "  off: disable GVN\n"
+                               "  pessimistic: (default) use pessimistic GVN\n"
+                               "  optimistic: use optimistic GVN")
+        || !op.addStringOption('\0', "ion-licm", "on/off",
+                               "Loop invariant code motion (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-edgecase-analysis", "on/off",
+                               "Find edge cases where Ion can avoid bailouts (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-range-analysis", "on/off",
+                               "Range analysis (default: off, on to enable)")
+        || !op.addStringOption('\0', "ion-inlining", "on/off",
+                               "Inline methods where possible (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-osr", "on/off",
+                               "On-Stack Replacement (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-limit-script-size", "on/off",
+                               "Don't compile very large scripts (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-regalloc", "[mode]",
+                               "Specify Ion register allocation:\n"
+                               "  lsra: Linear Scan register allocation (default)")
+        || !op.addBoolOption('\0', "ion-eager", "Always ion-compile methods")
+#ifdef JS_THREADSAFE
+        || !op.addStringOption('\0', "ion-parallel-compile", "on/off",
+                               "Compile scripts off thread (default: off)")
+#endif
+    )
+    {
         return EXIT_FAILURE;
     }
 

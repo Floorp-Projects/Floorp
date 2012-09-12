@@ -1072,6 +1072,19 @@ struct JSPrinter
     }
 };
 
+static bool
+SetPrinterLocalNames(JSContext *cx, JSScript *script, JSPrinter *jp)
+{
+    BindingVector *localNames = NULL;
+    if (script->bindings.count() > 0) {
+        localNames = cx->new_<BindingVector>(cx);
+        if (!localNames || !FillBindingVector(script->bindings, localNames))
+            return false;
+    }
+    jp->localNames = localNames;
+    return true;
+}
+
 JSPrinter *
 js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
               unsigned indent, JSBool pretty, JSBool grouped, JSBool strict)
@@ -1093,9 +1106,8 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->fun = fun;
     jp->localNames = NULL;
     jp->decompiledOpcodes = NULL;
-    if (fun && fun->isInterpreted() && fun->script()->bindings.count() > 0) {
-        jp->localNames = cx->new_<BindingVector>(cx);
-        if (!jp->localNames || !FillBindingVector(fun->script()->bindings, jp->localNames)) {
+    if (fun && fun->isInterpreted()) {
+        if (!SetPrinterLocalNames(cx, fun->script(), jp)) {
             js_DestroyPrinter(jp);
             return NULL;
         }
@@ -1751,7 +1763,8 @@ static JSAtom *
 GetArgOrVarAtom(JSPrinter *jp, unsigned slot)
 {
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(slot < jp->fun->script()->bindings.count(), NULL);
+    LOCAL_ASSERT_RV(slot < jp->script->bindings.count(), NULL);
+    LOCAL_ASSERT_RV(jp->script == jp->fun->script(), NULL);
     JSAtom *name = (*jp->localNames)[slot].name();
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -4676,7 +4689,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 #if JS_HAS_GENERATOR_EXPRS
                 sn = js_GetSrcNote(jp->script, pc);
                 if (sn && SN_TYPE(sn) == SRC_GENEXP) {
-                    BindingVector *innerLocalNames;
                     BindingVector *outerLocalNames;
                     JSScript *inner, *outer;
                     Vector<DecompiledOpcode> *decompiledOpcodes;
@@ -4692,19 +4704,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * to mark before returning.
                      */
                     LifoAllocScope las(&cx->tempLifoAlloc());
-                    if (fun->script()->bindings.count() > 0) {
-                        innerLocalNames = cx->new_<BindingVector>(cx);
-                        if (!innerLocalNames ||
-                            !FillBindingVector(fun->script()->bindings, innerLocalNames))
-                        {
-                            return NULL;
-                        }
-                    } else {
-                        innerLocalNames = NULL;
-                    }
-                    inner = fun->script();
-                    if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner)))
+                    outerLocalNames = jp->localNames;
+                    if (!SetPrinterLocalNames(cx, fun->script(), jp))
                         return NULL;
+
+                    inner = fun->script();
+                    if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
+                        js_delete(jp->localNames);
+                        jp->localNames = outerLocalNames;
+                        return NULL;
+                    }
                     ss2.inGenExp = JS_TRUE;
 
                     /*
@@ -4716,12 +4725,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      */
                     outer = jp->script;
                     outerfun = jp->fun;
-                    outerLocalNames = jp->localNames;
                     decompiledOpcodes = jp->decompiledOpcodes;
                     LOCAL_ASSERT(UnsignedPtrDiff(pc, outer->code) <= outer->length);
                     jp->script = inner;
                     jp->fun = fun;
-                    jp->localNames = innerLocalNames;
                     jp->decompiledOpcodes = NULL;
 
                     /*
@@ -4732,6 +4739,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                          != NULL;
                     jp->script = outer;
                     jp->fun = outerfun;
+                    js_delete(jp->localNames);
                     jp->localNames = outerLocalNames;
                     jp->decompiledOpcodes = decompiledOpcodes;
                     if (!ok)
@@ -4744,6 +4752,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     pc += len;
                     LOCAL_ASSERT(*pc == JSOP_UNDEFINED);
                     pc += JSOP_UNDEFINED_LENGTH;
+                    LOCAL_ASSERT(*pc == JSOP_NOTEARG);
+                    pc += JSOP_NOTEARG_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);
                     len = JSOP_CALL_LENGTH;
@@ -4766,7 +4776,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      */
                     pc2 = pc + len;
                     op = JSOp(*pc2);
-                    if (op == JSOP_LOOPHEAD || op == JSOP_NOP)
+                    if (op == JSOP_LOOPHEAD || op == JSOP_NOP || op == JSOP_NOTEARG)
                         pc2 += JSOP_NOP_LENGTH;
                     LOCAL_ASSERT(pc2 < endpc ||
                                  endpc < outer->code + outer->length);
@@ -5486,9 +5496,17 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, unsigned len,
 
     /* Call recursive subroutine to do the hard work. */
     JSScript *oldscript = jp->script;
+    BindingVector *oldLocalNames = jp->localNames;
+    if (!SetPrinterLocalNames(cx, script, jp))
+        return false;
     jp->script = script;
+
+    /* Call recursive subroutine to do the hard work. */
     bool ok = Decompile(&ss, pc, len) != NULL;
+
     jp->script = oldscript;
+    js_delete(jp->localNames);
+    jp->localNames = oldLocalNames;
 
     /* If the given code didn't empty the stack, do it now. */
     if (ok && ss.top - initialStackDepth) {
@@ -6119,8 +6137,8 @@ ExpressionDecompiler::getOutput(char **res)
 }
 
 static bool
-FindStartPC(JSContext *cx, JSScript *script, int spindex, int skipStackHits,
-            Value v, jsbytecode **valuepc)
+FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits, Value v,
+            jsbytecode **valuepc)
 {
     jsbytecode *current = *valuepc;
 
@@ -6130,22 +6148,24 @@ FindStartPC(JSContext *cx, JSScript *script, int spindex, int skipStackHits,
     *valuepc = NULL;
 
     PCStack pcstack;
-    if (!pcstack.init(cx, script, current))
+    if (!pcstack.init(cx, iter.script(), current))
         return false;
 
     if (spindex == JSDVG_SEARCH_STACK) {
+        size_t index = iter.numFrameSlots();
+        Value s;
+
         // We search from fp->sp to base to find the most recently calculated
         // value matching v under assumption that it is it that caused
         // exception.
-        Value *stackBase = cx->regs().spForStackDepth(0);
-        Value *sp = cx->regs().sp;
         int stackHits = 0;
         do {
-            if (sp == stackBase)
+            if (!index)
                 return true;
-        } while (*--sp != v || stackHits++ != skipStackHits);
-        if (sp < stackBase + pcstack.depth())
-            *valuepc = pcstack[sp - stackBase];
+            s = iter.frameSlotValue(--index);
+        } while (s != v || stackHits++ != skipStackHits);
+        if (index < size_t(pcstack.depth()))
+            *valuepc = pcstack[index];
     } else {
         *valuepc = pcstack[spindex];
     }
@@ -6161,21 +6181,24 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, Valu
 
     *res = NULL;
 
-    ScriptFrameIter iter(cx);
-    if (iter.done())
+    ScriptFrameIter frameIter(cx);
+
+    if (frameIter.done())
         return true;
 
-    StackFrame *fp = iter.fp();
-    JSScript *script = fp->script();
-    jsbytecode *valuepc = cx->regs().pc;
-    JSFunction *fun = fp->maybeFun();
+    JSScript *script = frameIter.script();
+    jsbytecode *valuepc = frameIter.pc();
+    JSFunction *fun = frameIter.isFunctionFrame()
+                      ? frameIter.callee()
+                      : NULL;
+
     JS_ASSERT(script->code <= valuepc && valuepc < script->code + script->length);
 
     // Give up if in prologue.
     if (valuepc < script->main())
         return true;
 
-    if (!FindStartPC(cx, script, spindex, skipStackHits, v, &valuepc))
+    if (!FindStartPC(cx, frameIter, spindex, skipStackHits, v, &valuepc))
         return false;
     if (!valuepc)
         return true;
@@ -6395,14 +6418,31 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
     LOCAL_ASSERT(script->code <= target && target < script->code + script->length);
     jsbytecode *pc = script->code;
     unsigned pcdepth = 0;
+    unsigned hpcdepth = unsigned(-1);
     ptrdiff_t oplen;
     for (; pc < target; pc += oplen) {
+        JS_ASSERT_IF(script->hasAnalysis() && script->analysis()->maybeCode(pc),
+                     script->analysis()->getCode(pc).stackDepth ==
+                     ((hpcdepth == unsigned(-1)) ? pcdepth : hpcdepth));
         JSOp op = JSOp(*pc);
         const JSCodeSpec *cs = &js_CodeSpec[op];
         oplen = GetBytecodeLength(pc);
 
         if (cs->format & JOF_DECOMPOSE)
             continue;
+
+        if (op == JSOP_GOTO) {
+            ptrdiff_t jmpoff = GET_JUMP_OFFSET(pc);
+            if (0 < jmpoff && pc + jmpoff <= target) {
+                pc += jmpoff;
+                oplen = 0;
+                if (hpcdepth != unsigned(-1)) {
+                    pcdepth = hpcdepth;
+                    hpcdepth = unsigned(-1);
+                }
+                continue;
+            }
+        }
 
         /*
          * A (C ? T : E) expression requires skipping either T (if target is in
@@ -6436,15 +6476,26 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             }
         }
 
-        /* Ignore early-exit code, which is annotated SRC_HIDDEN. */
-        if (sn && SN_TYPE(sn) == SRC_HIDDEN)
-            continue;
-
-        if (SimulateOp(cx, script, op, cs, pc, pcstack, pcdepth) < 0)
-            return -1;
+        /*
+         * SRC_HIDDEN instructions annotate early-exit paths and do not affect
+         * the stack depth when not taken. However, when pc points into an
+         * early-exit path, hidden instructions need to be taken into account.
+         */
+        if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
+            if (hpcdepth == unsigned(-1))
+                hpcdepth = pcdepth;
+            if (SimulateOp(cx, script, op, cs, pc, pcstack, hpcdepth) < 0)
+                return -1;
+        } else {
+            hpcdepth = unsigned(-1);
+            if (SimulateOp(cx, script, op, cs, pc, pcstack, pcdepth) < 0)
+                return -1;
+        }
 
     }
     LOCAL_ASSERT(pc == target);
+    if (hpcdepth != unsigned(-1))
+        return hpcdepth;
     return pcdepth;
 }
 

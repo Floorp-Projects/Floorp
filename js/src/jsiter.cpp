@@ -729,7 +729,16 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue 
     return true;
 }
 
+JSObject *
+GetIteratorObject(JSContext *cx, HandleObject obj, uint32_t flags)
+{
+    RootedValue value(cx);
+    if (!GetIterator(cx, obj, flags, &value))
+        return NULL;
+    return &value.toObject();
 }
+
+} /* namespace js */
 
 JSBool
 js_ThrowStopIteration(JSContext *cx)
@@ -1196,7 +1205,7 @@ js_SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uint
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
 
-JSBool
+bool
 js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
     /* Fast path for native iterators */
@@ -1255,7 +1264,7 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     return true;
 }
 
-JSBool
+bool
 js_IteratorNext(JSContext *cx, JSObject *iterobj, MutableHandleValue rval)
 {
     /* Fast path for native iterators */

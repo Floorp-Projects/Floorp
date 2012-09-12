@@ -241,6 +241,9 @@ struct VMFrame
 #if defined(JS_CPU_ARM) || defined(JS_CPU_SPARC) || defined(JS_CPU_MIPS)
 // WARNING: Do not call this function directly from C(++) code because it is not ABI-compliant.
 extern "C" void JaegerStubVeneer(void);
+# if defined(JS_CPU_ARM)
+extern "C" void IonVeneer(void);
+# endif
 #endif
 
 namespace mjit {
@@ -810,6 +813,19 @@ struct JITScript
      */
     analyze::ScriptLiveness *liveness;
 
+    /*
+     * Number of calls made to IonMonkey functions, used to avoid slow
+     * JM -> Ion calls.
+     */
+    uint32_t        ionCalls;
+
+    /*
+     * If set, we decided to keep the JITChunk so that Ion can access its caches.
+     * The chunk has to be destroyed the next time the script runs in JM.
+     * Note that this flag implies nchunks == 1.
+     */
+    bool mustDestroyEntryChunk;
+
 #ifdef JS_MONOIC
     /* Inline cache at function entry for checking this/argument types. */
     JSC::CodeLocationLabel argsCheckStub;
@@ -860,6 +876,8 @@ struct JITScript
 
     void trace(JSTracer *trc);
     void purgeCaches();
+
+    void disableScriptEntry();
 };
 
 /*
@@ -914,6 +932,10 @@ ReleaseScriptCode(FreeOp *fop, JSScript *script)
 
     script->destroyMJITInfo(fop);
 }
+
+/* Can be called at any time. */
+void
+ReleaseScriptCodeFromVM(JSContext *cx, JSScript *script);
 
 // Expand all stack frames inlined by the JIT within a compartment.
 void
@@ -990,6 +1012,9 @@ IsLowerableFunCallOrApply(jsbytecode *pc)
     return false;
 #endif
 }
+
+Shape *
+GetPICSingleShape(JSContext *cx, JSScript *script, jsbytecode *pc, bool constructing);
 
 } /* namespace mjit */
 

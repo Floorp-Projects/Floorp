@@ -36,6 +36,8 @@
 
 #include "jsautooplen.h"
 
+#include "ion/Ion.h"
+
 using namespace js;
 using namespace js::mjit;
 using namespace JSC;
@@ -241,6 +243,33 @@ stubs::CompileFunction(VMFrame &f, uint32_t argc)
         return UncachedCall(f, argc);
 }
 
+// Heuristics to decide whether a JM function call should invoke JM or Ion. Calling
+// into Ion may be faster, especially if the function contains loops, but JM -> Ion
+// calls are slower than JM -> JM calls.
+static inline bool
+ShouldJaegerCompileCallee(JSContext *cx, JSScript *caller, JSScript *callee, JITScript *callerJit)
+{
+#ifdef JS_ION
+    if (!ion::IsEnabled(cx))
+        return true;
+
+    // If we know Ion cannot compile either the caller or callee, use JM.
+    if (!callee->canIonCompile())
+        return true;
+
+    // Use JM if the callee has no loops. In this case calling into Ion
+    // is likely not worth the overhead.
+    if (!callee->hasAnalysis())
+        return true;
+
+    if (callee->isShortRunning())
+        return true;
+
+    return false;
+#endif
+    return true;
+}
+
 static inline bool
 UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
                    void **pret, bool *unjittable, uint32_t argc)
@@ -259,14 +288,16 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
         return false;
 
     /* Try to compile if not already compiled. */
-    CompileStatus status = CanMethodJIT(cx, newscript, newscript->code, construct,
-                                        CompileRequest_Interpreter, f.fp());
-    if (status == Compile_Error) {
-        /* A runtime exception was thrown, get out. */
-        return false;
+    if (ShouldJaegerCompileCallee(cx, f.script(), newscript, f.jit())) {
+        CompileStatus status = CanMethodJIT(cx, newscript, newscript->code, construct,
+                                            CompileRequest_JIT, f.fp());
+        if (status == Compile_Error) {
+            /* A runtime exception was thrown, get out. */
+            return false;
+        }
+        if (status == Compile_Abort)
+            *unjittable = true;
     }
-    if (status == Compile_Abort)
-        *unjittable = true;
 
     /*
      * Make sure we are not calling from an inline frame if we need to make a
@@ -324,7 +355,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
 
     JS_CHECK_RECURSION(cx, return false);
 
-    bool ok = Interpret(cx, cx->fp());
+    bool ok = RunScript(cx, newscript, cx->fp());
     f.cx->stack.popInlineFrame(regs);
 
     if (ok)

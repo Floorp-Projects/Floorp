@@ -38,9 +38,7 @@ addLoadEvent(function test() {
 
     var
         CI = Components.interfaces,
-        WinUtils = window
-                   .QueryInterface(CI.nsIInterfaceRequestor)
-                   .getInterface(CI.nsIDOMWindowUtils),
+        WinUtils = SpecialPowers.getDOMWindowUtils(window),
         sec = netscape.security,
         eSelect = $("eSelect"),
         IDOMEvent = CI.nsIDOMEvent,
@@ -48,7 +46,6 @@ addLoadEvent(function test() {
         timeout = 0 // Choose a larger value like 500 ms if you want to see what's happening.
 
     function keypressOnSelect(key, modifiers) {
-        sec.PrivilegeManager.enablePrivilege("UniversalXPConnect")
         WinUtils.focus(eSelect)
         WinUtils.sendKeyEvent("keyup", key, 0, modifiers, WinUtils.KEY_FLAG_PREVENT_DEFAULT)
         WinUtils.sendKeyEvent("keypress", key, 0, modifiers, WinUtils.KEY_FLAG_PREVENT_DEFAULT)
@@ -66,7 +63,6 @@ addLoadEvent(function test() {
         // This timeout and the following are necessary to let the sent events take effect.
         setTimeout(cont1, timeout)
         function cont1() {
-            sec.PrivilegeManager.enablePrivilege("UniversalXPConnect")
             // Move the mouse over option 3 (90 = 3 (rows) * 24 (row height) + 18).
             WinUtils.sendMouseEvent("mousemove", 355, 90, 0, 0, 0, true)
             setTimeout(cont2, timeout)
@@ -77,7 +73,6 @@ addLoadEvent(function test() {
             setTimeout(cont3, timeout)
         }
         function cont3() {
-            sec.PrivilegeManager.enablePrivilege("UniversalXPConnect")
             is(eSelect.value, "3", "Select's value should be 3 after hovering over option 3 and pressing " + keyString + ".")
             is(eSelect.onchangeCount, 1, "Onchange should have fired once.")
 

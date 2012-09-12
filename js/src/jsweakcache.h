@@ -1,0 +1,75 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99:
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef jsweakcache_h___
+#define jsweakcache_h___
+
+#include "jsapi.h"
+#include "jscntxt.h"
+#include "jsobj.h"
+#include "gc/Marking.h"
+
+namespace js {
+
+// A WeakCache is used to map a key to a value similar to an HashMap except
+// that its entries are garbage collected.  An entry is kept as long as
+// both the key and value are marked.
+//
+// No mark function is provided with this weak container.  However, this weak
+// container should take part in the sweep phase.
+template <class Key, class Value,
+          class HashPolicy = DefaultHasher<Key>,
+          class AllocPolicy = RuntimeAllocPolicy>
+class WeakCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
+  private:
+    typedef HashMap<Key, Value, HashPolicy, AllocPolicy> Base;
+    typedef typename Base::Range Range;
+    typedef typename Base::Enum Enum;
+
+  public:
+    explicit WeakCache(JSRuntime *rt) : Base(rt) { }
+    explicit WeakCache(JSContext *cx) : Base(cx) { }
+
+  public:
+    // Sweep all entries which have unmarked key or value.
+    void sweep(FreeOp *fop) {
+        // Remove all entries whose keys/values remain unmarked.
+        for (Enum e(*this); !e.empty(); e.popFront()) {
+            // Checking IsMarked() may update the location of the Key (or Value).
+            // Pass in a stack local, then manually update the backing heap store.
+            Key k(e.front().key);
+            bool isKeyMarked = gc::IsMarked(&k);
+
+            if (!isKeyMarked || !gc::IsMarked(e.front().value)) {
+                e.removeFront();
+            } else {
+                // Potentially update the location of the Key.
+                // The Value had its heap addresses correctly passed to IsMarked(),
+                // and therefore has already been updated if necessary.
+                // e.rekeyFront(k);
+            }
+        }
+
+#if DEBUG
+        // Once we've swept, all remaining edges should stay within the
+        // known-live part of the graph.
+        for (Range r = Base::all(); !r.empty(); r.popFront()) {
+            Key k(r.front().key);
+
+            JS_ASSERT(gc::IsMarked(&k));
+            JS_ASSERT(gc::IsMarked(r.front().value));
+
+            // Assert that IsMarked() did not perform relocation.
+            JS_ASSERT(k == r.front().key);
+        }
+#endif
+    }
+};
+
+} // namespace js
+
+#endif // jsweakcache_h___

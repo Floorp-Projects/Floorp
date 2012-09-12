@@ -174,6 +174,14 @@ struct CallICInfo {
     /* Inline to OOL jump, redirected by stubs. */
     JSC::CodeLocationJump funJump;
 
+    /*
+     * If an Ion stub has been generated, its guard may be linked to another
+     * stub. The guard location is stored in this label.
+     */
+    bool hasIonStub_;
+    JSC::JITCode lastOolCode_;
+    JSC::CodeLocationJump lastOolJump_;
+
     /* Offset to inline scripted call, from funGuard. */
     uint32_t hotJumpOffset   : 16;
     uint32_t joinPointOffset : 16;
@@ -192,6 +200,9 @@ struct CallICInfo {
 
     /* Join point for all slow call paths. */
     uint32_t slowJoinOffset  : 16;
+
+    /* Join point for Ion calls. */
+    uint32_t ionJoinOffset : 16;
 
     RegisterID funObjReg : 5;
     bool hit : 1;
@@ -213,6 +224,41 @@ struct CallICInfo {
         JS_REMOVE_LINK(&links);
     }
 
+    bool hasJMStub() const {
+        return !!pools[Pool_ScriptStub];
+    }
+    bool hasIonStub() const {
+        return hasIonStub_;
+    }
+    bool hasStubOolJump() const {
+        return hasIonStub();
+    }
+    JSC::CodeLocationLabel icCall() {
+        return slowPathStart.labelAtOffset(icCallOffset);
+    }
+    JSC::CodeLocationJump oolJump() {
+        return slowPathStart.jumpAtOffset(oolJumpOffset);
+    }
+    JSC::CodeLocationJump lastOolJump() {
+        if (hasStubOolJump())
+            return lastOolJump_;
+        return oolJump();
+    }
+    JSC::JITCode lastOolCode() {
+        JS_ASSERT(hasStubOolJump());
+        return lastOolCode_;
+    }
+    void updateLastOolJump(JSC::CodeLocationJump jump, JSC::JITCode code) {
+        lastOolJump_ = jump;
+        lastOolCode_ = code;
+    }
+    JSC::CodeLocationLabel nativeRejoin() {
+        return slowPathStart.labelAtOffset(slowJoinOffset);
+    }
+    JSC::CodeLocationLabel ionJoinPoint() {
+        return funGuard.labelAtOffset(ionJoinOffset);
+    }
+
     inline void reset(Repatcher &repatcher) {
         if (fastGuardedObject) {
             repatcher.repatch(funGuard, NULL);
@@ -223,13 +269,12 @@ struct CallICInfo {
             repatcher.relink(funJump, slowPathStart);
             fastGuardedNative = NULL;
         }
-        if (pools[Pool_ScriptStub]) {
-            JSC::CodeLocationJump oolJump = slowPathStart.jumpAtOffset(oolJumpOffset);
-            JSC::CodeLocationLabel icCall = slowPathStart.labelAtOffset(icCallOffset);
-            repatcher.relink(oolJump, icCall);
+        if (pools[Pool_ScriptStub] || hasIonStub()) {
+            repatcher.relink(oolJump(), icCall());
             releasePool(Pool_ScriptStub);
         }
         hit = false;
+        hasIonStub_ = false;
     }
 };
 

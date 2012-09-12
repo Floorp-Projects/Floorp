@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
+ * vim: set ts=4 sw=4 et tw=99:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1784,6 +1784,8 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callContext)
             if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
                 return false;
         }
+        if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
+            return false;
     }
 
     return true;
@@ -1820,8 +1822,13 @@ EmitElemOpBase(JSContext *cx, BytecodeEmitter *bce, JSOp op)
     if (Emit1(cx, bce, op) < 0)
         return false;
     CheckTypeSet(cx, bce, op);
-    if (op == JSOP_CALLELEM)
-        return Emit1(cx, bce, JSOP_SWAP) >= 0;
+
+    if (op == JSOP_CALLELEM) {
+        if (Emit1(cx, bce, JSOP_SWAP) < 0)
+            return false;
+        if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
+            return false;
+    }
     return true;
 }
 
@@ -1898,6 +1905,9 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, bool cal
         return false;
 
     if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_SWAP) < 0)
+        return false;
+
+    if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_NOTEARG) < 0)
         return false;
 
     return true;
@@ -5400,8 +5410,12 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         callop = false;             /* trigger JSOP_UNDEFINED after */
         break;
     }
-    if (!callop && Emit1(cx, bce, JSOP_UNDEFINED) < 0)
-        return false;
+    if (!callop) {
+        if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+            return false;
+        if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
+            return false;
+    }
 
     if (emitArgs) {
         /*
@@ -5413,6 +5427,8 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         bce->emittingForInit = false;
         for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
             if (!EmitTree(cx, bce, pn3))
+                return false;
+            if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
                 return false;
         }
         bce->emittingForInit = oldEmittingForInit;

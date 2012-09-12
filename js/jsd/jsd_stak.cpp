@@ -87,7 +87,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
     jsdthreadstate->stackDepth = 0;
 
     JS_BeginRequest(jsdthreadstate->context);
-    while( NULL != (fp = JS_FrameIterator(cx, &iter)) )
+    while( NULL != (fp = JS_BrokenFrameIterator(cx, &iter)) )
     {
         JSScript* script = JS_GetFrameScript(cx, fp);
         uintptr_t  pc = (uintptr_t) JS_GetFramePC(cx, fp);

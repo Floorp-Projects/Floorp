@@ -289,7 +289,7 @@ jsd_FindOrCreateJSDScript(JSDContext    *jsdc,
 
     /* Fallback for unknown scripts: create a new script. */
     if (!fp)
-        JS_FrameIterator(cx, &fp);
+        JS_BrokenFrameIterator(cx, &fp);
     if (fp)
         jsdscript = _newJSDScript(jsdc, cx, script);
 

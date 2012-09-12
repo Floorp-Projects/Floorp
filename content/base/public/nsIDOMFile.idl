@@ -83,9 +83,3 @@ interface nsIDOMMozBlobBuilder : nsISupports
   [implicit_jscontext] void append(in jsval data,
                                    [optional] in DOMString endings);
 };
-
-dictionary BlobPropertyBag
-{
-  DOMString type;
-  DOMString endings = "transparent";
-};

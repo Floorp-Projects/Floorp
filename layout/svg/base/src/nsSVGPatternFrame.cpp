@@ -146,7 +146,7 @@ nsSVGPatternFrame::GetCanvasTM(uint32_t aFor)
 // -------------------------------------------------------------------------
 
 // The SVG specification says that the 'patternContentUnits' attribute "has no effect if
-// attribute ‘viewBox’ is specified". We still need to include a bbox scale
+// attribute â€˜viewBoxâ€™ is specified". We still need to include a bbox scale
 // if the viewBox is specified and _patternUnits_ is set to or defaults to
 // objectBoundingBox though, since in that case the viewBox is relative to the bbox
 static bool

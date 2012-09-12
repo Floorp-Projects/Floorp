@@ -51,9 +51,7 @@ function registerMockPromptService()
       // leave the modal state -- this is done to trigger the necessary
       // accounting for triggering the "stop showing more prompts" code for
       // abusive pages.
-      var winUtils = this.domWindow
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+      var winUtils = SpecialPowers.getDOMWindowUtils(this.domWindow);
       var w = winUtils.enterModalStateWithWindow();
       winUtils.leaveModalStateWithWindow(w);
     },

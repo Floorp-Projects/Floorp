@@ -144,42 +144,6 @@ function do_content_crash(setup, callback)
   );
 }
 
-// Utility functions for parsing .extra files
-function parseKeyValuePairs(text) {
-  var lines = text.split('\n');
-  var data = {};
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i] == '')
-      continue;
-
-    // can't just .split() because the value might contain = characters
-    let eq = lines[i].indexOf('=');
-    if (eq != -1) {
-      let [key, value] = [lines[i].substring(0, eq),
-                          lines[i].substring(eq + 1)];
-      if (key && value)
-        data[key] = value.replace("\\n", "\n", "g").replace("\\\\", "\\", "g");
-    }
-  }
-  return data;
-}
-
-function parseKeyValuePairsFromFile(file) {
-  var fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Components.interfaces.nsIFileInputStream);
-  fstream.init(file, -1, 0, 0);
-  var is = Components.classes["@mozilla.org/intl/converter-input-stream;1"].
-           createInstance(Components.interfaces.nsIConverterInputStream);
-  is.init(fstream, "UTF-8", 1024, Components.interfaces.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-  var str = {};
-  var contents = '';
-  while (is.readString(4096, str) != 0) {
-    contents += str.value;
-  }
-  is.close();
-  fstream.close();
-  return parseKeyValuePairs(contents);
-}
-
 // Import binary APIs via js-ctypes.
 Components.utils.import("resource://test/CrashTestUtils.jsm");
+Components.utils.import("resource://gre/modules/KeyValueParser.jsm");
