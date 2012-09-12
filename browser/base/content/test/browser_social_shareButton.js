@@ -40,9 +40,7 @@ function tabLoaded() {
 function testInitial(finishcb) {
   ok(Social.provider, "Social provider is active");
   ok(Social.provider.enabled, "Social provider is enabled");
-  let port = Social.provider.getWorkerPort();
-  ok(port, "Social provider has a port to its FrameWorker");
-  port.close();
+  ok(Social.provider.port, "Social provider has a port to its FrameWorker");
 
   let {shareButton, sharePopup} = SocialShareButton;
   ok(shareButton, "share button exists");
