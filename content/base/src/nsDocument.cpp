@@ -8699,7 +8699,7 @@ HasCrossProcessParent(nsIDocument* aDocument)
   if (!docShell) {
     return false;
   }
-  return docShell->GetIsBrowserElement();
+  return docShell->GetIsContentBoundary();
 }
 
 static bool
