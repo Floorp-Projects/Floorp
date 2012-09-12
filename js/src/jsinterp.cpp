@@ -262,7 +262,7 @@ js::ValueToCallable(JSContext *cx, const Value *vp, MaybeConstruct construct)
 }
 
 bool
-js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
+js::RunScript(JSContext *cx, HandleScript script, StackFrame *fp)
 {
     JS_ASSERT(script);
     JS_ASSERT(fp == cx->fp());
