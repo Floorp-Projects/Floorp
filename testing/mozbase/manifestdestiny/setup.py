@@ -14,7 +14,7 @@ except:
     description = ''
 
 PACKAGE_NAME = "ManifestDestiny"
-PACKAGE_VERSION = '0.5.5'
+PACKAGE_VERSION = '0.5.6'
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,

@@ -84,12 +84,12 @@ struct ParseContext                 /* tree context for semantic checks */
     }
 
     uint32_t numArgs() const {
-        JS_ASSERT(sc->inFunction());
+        JS_ASSERT(sc->isFunction);
         return args_.length();
     }
 
     uint32_t numVars() const {
-        JS_ASSERT(sc->inFunction());
+        JS_ASSERT(sc->isFunction);
         return vars_.length();
     }
 
@@ -303,7 +303,7 @@ struct Parser : private AutoGCRooter
      */
     ObjectBox *newObjectBox(JSObject *obj);
 
-    FunctionBox *newFunctionBox(JSObject *obj, ParseContext *pc, StrictMode sms);
+    FunctionBox *newFunctionBox(JSFunction *fun, ParseContext *pc, StrictMode sms);
 
     /*
      * Create a new function object given parse context (pc) and a name (which

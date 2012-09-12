@@ -328,6 +328,7 @@ else
 	#building tests.jar (bug 543800) fails on unify, so we build tests.jar after unify is run
 	$(MAKE) -C $(DEPTH)/testing/mochitest stage-chromejar PKG_STAGE=$(DIST)/universal
 endif
+	find $(PKG_STAGE) -name "*.pyc" -exec rm {} \;
 	cd $(PKG_STAGE) && \
 	  zip -rq9D "$(call core_abspath,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE))" \
 	  * -x \*/.mkdir.done
