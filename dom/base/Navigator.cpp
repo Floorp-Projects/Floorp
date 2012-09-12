@@ -43,6 +43,7 @@
 #include "nsIPermissionManager.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
+#include "TimeManager.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
@@ -126,6 +127,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
 #endif
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorCamera)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorSystemMessages)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorTime)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -210,6 +212,9 @@ Navigator::Invalidate()
   }
   mDeviceStorageStores.Clear();
 
+  if (mTimeManager) {
+    mTimeManager = nullptr;
+  }
 }
 
 nsPIDOMWindow *
@@ -1312,6 +1317,38 @@ Navigator::MozSetMessageHandler(const nsAString& aType,
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+}
+
+//*****************************************************************************
+//    Navigator::nsIDOMNavigatorTime
+//*****************************************************************************
+NS_IMETHODIMP
+Navigator::GetMozTime(nsIDOMMozTimeManager** aTime)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_OK);
+
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDocument());
+  NS_ENSURE_TRUE(document, NS_OK);
+  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
+  nsCOMPtr<nsIPermissionManager> permMgr =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(permMgr, NS_OK);
+  
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
+  permMgr->TestPermissionFromPrincipal(principal, "time", &permission);
+
+  if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  if (!mTimeManager) {
+    *aTime = nullptr;
+    mTimeManager = new time::TimeManager();
+  }
+
+  NS_ADDREF(*aTime = mTimeManager);
+  return NS_OK;
 }
 
 //*****************************************************************************

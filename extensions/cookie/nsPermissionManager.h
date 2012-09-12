@@ -23,7 +23,7 @@
 class nsIPermission;
 class nsIIDNService;
 class mozIStorageConnection;
-class mozIStorageStatement;
+class mozIStorageAsyncStatement;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -235,16 +235,16 @@ private:
   nsresult RemoveAllInternal(bool aNotifyObservers);
   nsresult RemoveAllFromMemory();
   nsresult NormalizeToACE(nsCString &aHost);
-  static void UpdateDB(OperationType         aOp,
-                       mozIStorageStatement* aStmt,
-                       int64_t               aID,
-                       const nsACString     &aHost,
-                       const nsACString     &aType,
-                       uint32_t              aPermission,
-                       uint32_t              aExpireType,
-                       int64_t               aExpireTime,
-                       uint32_t              aAppId,
-                       bool                  aIsInBrowserElement);
+  static void UpdateDB(OperationType aOp,
+                       mozIStorageAsyncStatement* aStmt,
+                       int64_t aID,
+                       const nsACString& aHost,
+                       const nsACString& aType,
+                       uint32_t aPermission,
+                       uint32_t aExpireType,
+                       int64_t aExpireTime,
+                       uint32_t aAppId,
+                       bool aIsInBrowserElement);
 
   /**
    * This struct has to be passed as an argument to GetPermissionsForApp.
@@ -272,9 +272,9 @@ private:
   nsCOMPtr<nsIIDNService>      mIDNService;
 
   nsCOMPtr<mozIStorageConnection> mDBConn;
-  nsCOMPtr<mozIStorageStatement> mStmtInsert;
-  nsCOMPtr<mozIStorageStatement> mStmtDelete;
-  nsCOMPtr<mozIStorageStatement> mStmtUpdate;
+  nsCOMPtr<mozIStorageAsyncStatement> mStmtInsert;
+  nsCOMPtr<mozIStorageAsyncStatement> mStmtDelete;
+  nsCOMPtr<mozIStorageAsyncStatement> mStmtUpdate;
 
   nsTHashtable<PermissionHashKey> mPermissionTable;
   // a unique, monotonically increasing id used to identify each database entry

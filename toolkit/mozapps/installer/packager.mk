@@ -464,21 +464,9 @@ PRECOMPILE_RESOURCE=gre
 PRECOMPILE_GRE=$$PWD
 endif
 
-ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
-# FIXME: not tested on OS/2. Is it using the correct libxul?
-RUN_FROM_PWD = $(_ABS_RUN_TEST_PROGRAM)
-else
-# For non-Windows, just set the library path so we load the libs from the right place.
-ifeq ($(OS_ARCH),Darwin)
-RUN_FROM_PWD = DYLD_LIBRARY_PATH=$(PRECOMPILE_GRE)
-else
-RUN_FROM_PWD = "$$PWD/run-mozilla.sh"
-endif
-endif
-
 # Silence the unzip step so we don't print any binary data from the comment field.
 GENERATE_CACHE = \
-  $(RUN_FROM_PWD) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('$(PRECOMPILE_DIR)', '$(OMNIJAR_NAME)', 'startupCache.zip');" && \
+  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('$(PRECOMPILE_DIR)', '$(OMNIJAR_NAME)', 'startupCache.zip');" && \
   rm -rf jsloader jssubloader && \
   $(UNZIP) -q startupCache.zip && \
   rm startupCache.zip && \
@@ -578,19 +566,20 @@ MOZ_SIGN_PACKAGE_CMD=$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),
 endif
 
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
-ifeq (Darwin, $(OS_ARCH))
-MAKE_PACKAGE    = cd ./$(PKG_DMG_SOURCE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(MOZ_MACBUNDLE_NAME) \
+ifeq (Darwin, $(OS_ARCH)) 
+MAKE_PACKAGE    = $(PREPARE_PACKAGE) \
+                  && cd ./$(PKG_DMG_SOURCE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(MOZ_MACBUNDLE_NAME) \
                   && rm $(MOZ_MACBUNDLE_NAME)/Contents/CodeResources \
                   && cp $(MOZ_MACBUNDLE_NAME)/Contents/_CodeSignature/CodeResources $(MOZ_MACBUNDLE_NAME)/Contents \
                   && cd $(PACKAGE_BASE_DIR) \
                   && $(INNER_MAKE_PACKAGE)
 else
-MAKE_PACKAGE    = $(MOZ_SIGN_PREPARED_PACKAGE_CMD) \
+MAKE_PACKAGE    = $(PREPARE_PACKAGE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) \
 		  $(MOZ_PKG_DIR) && $(INNER_MAKE_PACKAGE)
 endif #Darwin
 
 else
-MAKE_PACKAGE    = $(INNER_MAKE_PACKAGE)
+MAKE_PACKAGE    = $(PREPARE_PACKAGE) && $(INNER_MAKE_PACKAGE)
 endif
 
 ifdef MOZ_SIGN_PACKAGE_CMD
@@ -731,13 +720,19 @@ $(PERL) -I$(MOZILLA_DIR)/toolkit/mozapps/installer -e 'use Packager; \
        Packager::Copy($1,$2,$3,$4,$5,$(MOZ_PKG_FATAL_WARNINGS),$6,$7);'
 endef
 
-installer-stage: prepare-package
+installer-stage: stage-package
 ifndef MOZ_PKG_MANIFEST
 	$(error MOZ_PKG_MANIFEST unspecified!)
 endif
 	@rm -rf $(DEPTH)/installer-stage $(DIST)/xpt
 	@echo "Staging installer files..."
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/core
+ifdef MOZ_OMNIJAR
+	@(cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR))
+ifdef MOZ_WEBAPP_RUNTIME
+	@(cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/webapprt && $(PACK_OMNIJAR_WEBAPP_RUNTIME))
+endif
+endif
 	@cp -av $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/. $(DEPTH)/installer-stage/core
 	@(cd $(DEPTH)/installer-stage/core && $(CREATE_PRECOMPLETE_CMD))
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
@@ -864,10 +859,7 @@ ifdef MOZ_PACKAGE_JSSHELL
 endif # MOZ_PACKAGE_JSSHELL
 endif # LIBXUL_SDK
 
-prepare-package: stage-package
-	cd $(DIST) && $(PREPARE_PACKAGE)
-
-make-package-internal: prepare-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
+make-package-internal: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
 	@echo "Compressing..."
 	cd $(DIST) && $(MAKE_PACKAGE)
 
@@ -895,12 +887,18 @@ make-sourcestamp-file::
 # dist/idl -> prefix/share/idl/appname-version
 # dist/sdk/lib -> prefix/lib/appname-devel-version/lib
 # prefix/lib/appname-devel-version/* symlinks to the above directories
-install:: prepare-package
+install:: stage-package
 ifeq ($(OS_ARCH),WINNT)
 	$(error "make install" is not supported on this platform. Use "make package" instead.)
 endif
 ifeq (bundle,$(MOZ_FS_LAYOUT))
 	$(error "make install" is not supported on this platform. Use "make package" instead.)
+endif
+ifdef MOZ_OMNIJAR
+	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR)
+ifdef MOZ_WEBAPP_RUNTIME
+	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/webapprt && $(PACK_OMNIJAR_WEBAPP_RUNTIME)
+endif
 endif
 	$(NSINSTALL) -D $(DESTDIR)$(installdir)
 	(cd $(DIST)/$(MOZ_PKG_DIR) && tar $(TAR_CREATE_FLAGS) - .) | \

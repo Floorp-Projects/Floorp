@@ -534,6 +534,9 @@ public:
   virtual void EnableDeviceSensor(uint32_t aType);
   virtual void DisableDeviceSensor(uint32_t aType);
 
+  virtual void EnableTimeChangeNotifications();
+  virtual void DisableTimeChangeNotifications();
+
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
 
   static bool DOMWindowDumpEnabled();

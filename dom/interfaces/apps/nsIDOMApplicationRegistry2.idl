@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMApplicationRegistry.idl"
+
+interface nsIDOMDOMRequest;
+
+[scriptable, uuid(34498a66-3aee-4b80-8b8b-a9c5d5ba32b6)]
+interface mozIDOMApplicationRegistry2 : mozIDOMApplicationRegistry
+{
+  /**
+   * Install a packaged web app.
+   *
+   * @param packageUrl : the URL of the webapps manifest.
+   * @param parameters : A structure with optional information.
+   *                      {
+   *                       receipts: ...    Will be used to specify the payment receipts for this installation.
+   *                       categories: ...  Will be used to specify the categories of the webapp.
+   *                      }
+   * @returns          : A DOMRequest object, returning the app object in |result| if install succeeds.
+   */
+  nsIDOMDOMRequest installPackage(in DOMString packageUrl, [optional] in jsval parameters);
+};

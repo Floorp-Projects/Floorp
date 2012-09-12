@@ -526,6 +526,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "nsIDOMNavigatorSystemMessages.h"
 
 #include "mozilla/dom/Activity.h"
+#include "TimeManager.h"
 
 #include "DOMCameraManager.h"
 #include "DOMCameraControl.h"
@@ -1717,6 +1718,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozActivity, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(MozTimeManager, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 // Objects that should be constructable through |new Name();|
@@ -2083,11 +2087,8 @@ SetParentToWindow(nsGlobalWindow *win, JSObject **parent)
   *parent = win->FastGetGlobalJSObject();
 
   if (MOZ_UNLIKELY(!*parent)) {
-    // The only known case where this can happen is when the inner window has
-    // been torn down. See bug 691178 comment 11. Should be a fatal MOZ_ASSERT,
-    // but we've found a way to hit it too often in mochitests. See bugs 777875
-    // 778424, 781078.
-    NS_ASSERTION(win->IsClosedOrClosing(), "win should be closed or closing");
+    // The inner window has been torn down. The scope is dying, so don't create
+    // any new wrappers.
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -2497,6 +2498,7 @@ nsDOMClassInfo::Init()
 #endif
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorCamera)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorSystemMessages)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozNavigatorTime)
 
   DOM_CLASSINFO_MAP_END
 
@@ -4554,6 +4556,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozActivity)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozTimeManager, nsIDOMMozTimeManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozTimeManager)
   DOM_CLASSINFO_MAP_END
 
 #ifdef DEBUG

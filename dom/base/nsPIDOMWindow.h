@@ -571,6 +571,9 @@ public:
    */
   virtual void DisableDeviceSensor(uint32_t aType) = 0;
 
+  virtual void EnableTimeChangeNotifications() = 0;
+  virtual void DisableTimeChangeNotifications() = 0;
+
   /**
    * Set a arguments for this window. This will be set on the window
    * right away (if there's an existing document) and it will also be

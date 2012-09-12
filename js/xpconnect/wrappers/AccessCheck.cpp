@@ -52,6 +52,23 @@ AccessCheck::subsumes(JSCompartment *a, JSCompartment *b)
     return subsumes;
 }
 
+// Same as above, but ignoring document.domain.
+bool
+AccessCheck::subsumesIgnoringDomain(JSCompartment *a, JSCompartment *b)
+{
+    nsIPrincipal *aprin = GetCompartmentPrincipal(a);
+    nsIPrincipal *bprin = GetCompartmentPrincipal(b);
+
+    if (!aprin || !bprin)
+        return false;
+
+    bool subsumes;
+    nsresult rv = aprin->SubsumesIgnoringDomain(bprin, &subsumes);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    return subsumes;
+}
+
 // Does the compartment of the wrapper subsumes the compartment of the wrappee?
 bool
 AccessCheck::wrapperSubsumes(JSObject *wrapper)

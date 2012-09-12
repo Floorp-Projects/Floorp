@@ -137,11 +137,11 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   attribute boolean mozBackgroundRequest;
 
   [ChromeOnly]
-  readonly attribute MozChannel channel;
+  readonly attribute MozChannel? channel;
 
   [Throws]
   void sendAsBinary(DOMString body);
-  [Throws]
+  [Throws, ChromeOnly]
   any getInterface(IID iid);
 
   readonly attribute boolean mozAnon;

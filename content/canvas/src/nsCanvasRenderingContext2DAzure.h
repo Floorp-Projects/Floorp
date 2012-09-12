@@ -156,7 +156,7 @@ public:
   void SetTransform(double m11, double m12, double m21, double m22, double dx,
                     double dy, mozilla::ErrorResult& error);
 
-  double GetGlobalAlpha()
+  double GlobalAlpha()
   {
     return CurrentState().globalAlpha;
   }
@@ -196,7 +196,7 @@ public:
     CreatePattern(const HTMLImageOrCanvasOrVideoElement& element,
                   const nsAString& repeat, mozilla::ErrorResult& error);
 
-  double GetShadowOffsetX()
+  double ShadowOffsetX()
   {
     return CurrentState().shadowOffset.x;
   }
@@ -208,7 +208,7 @@ public:
     }
   }
 
-  double GetShadowOffsetY()
+  double ShadowOffsetY()
   {
     return CurrentState().shadowOffset.y;
   }
@@ -220,7 +220,7 @@ public:
     }
   }
 
-  double GetShadowBlur()
+  double ShadowBlur()
   {
     return CurrentState().shadowBlur;
   }
@@ -301,7 +301,7 @@ public:
                     double dirtyWidth, double dirtyHeight,
                     mozilla::ErrorResult& error);
 
-  double GetLineWidth()
+  double LineWidth()
   {
     return CurrentState().lineWidth;
   }
@@ -317,7 +317,7 @@ public:
   void GetLineJoin(nsAString& linejoin, mozilla::ErrorResult& error);
   void SetLineJoin(const nsAString& linejoin);
 
-  double GetMiterLimit()
+  double MiterLimit()
   {
     return CurrentState().miterLimit;
   }
@@ -423,7 +423,7 @@ public:
   void SetMozDash(JSContext* cx, const JS::Value& mozDash,
                   mozilla::ErrorResult& error);
 
-  double GetMozDashOffset()
+  double MozDashOffset()
   {
     return CurrentState().dashOffset;
   }
@@ -441,7 +441,7 @@ public:
     SetFont(mozTextStyle, error);
   }
 
-  bool GetImageSmoothingEnabled()
+  bool ImageSmoothingEnabled()
   {
     return CurrentState().imageSmoothingEnabled;
   }
