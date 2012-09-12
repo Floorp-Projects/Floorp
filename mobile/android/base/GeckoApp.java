@@ -598,6 +598,9 @@ abstract public class GeckoApp
       if (url == null)
           return;
 
+      if (ReaderModeUtils.isAboutReader(url))
+          url = ReaderModeUtils.getUrlFromAboutReader(url);
+
       GeckoAppShell.openUriExternal(url, "text/plain", "", "",
                                     Intent.ACTION_SEND, tab.getDisplayTitle());
     }
@@ -1086,7 +1089,7 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        tab.setState("about:home".equals(uri) ? Tab.STATE_SUCCESS : Tab.STATE_LOADING);
+        tab.setState(shouldShowProgress(uri) ? Tab.STATE_SUCCESS : Tab.STATE_LOADING);
         tab.updateIdentityData(null);
         tab.setReaderEnabled(false);
         if (Tabs.getInstance().isSelectedTab(tab))
@@ -2670,6 +2673,10 @@ abstract public class GeckoApp
             }
         }
         return false;
+    }
+
+    public static boolean shouldShowProgress(String url) {
+        return "about:home".equals(url) || ReaderModeUtils.isAboutReader(url);
     }
 
     public static void assertOnUiThread() {

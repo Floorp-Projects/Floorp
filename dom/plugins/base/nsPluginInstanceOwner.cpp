@@ -1806,6 +1806,9 @@ already_AddRefed<ImageContainer> nsPluginInstanceOwner::GetImageContainerForVide
 
 nsIntRect nsPluginInstanceOwner::GetVisibleRect()
 {
+  if (!mObjectFrame || !mPluginWindow)
+    return nsIntRect(0, 0, 0, 0);
+  
   gfxRect r = nsIntRect(0, 0, mPluginWindow->width, mPluginWindow->height);
 
   float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();

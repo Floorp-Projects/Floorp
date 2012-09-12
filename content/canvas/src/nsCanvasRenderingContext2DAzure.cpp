@@ -1454,7 +1454,7 @@ nsCanvasRenderingContext2DAzure::SetGlobalAlpha(float aGlobalAlpha)
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetGlobalAlpha(float *aGlobalAlpha)
 {
-  *aGlobalAlpha = GetGlobalAlpha();
+  *aGlobalAlpha = GlobalAlpha();
   return NS_OK;
 }
 
@@ -1901,7 +1901,7 @@ nsCanvasRenderingContext2DAzure::SetShadowOffsetX(float x)
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetShadowOffsetX(float *x)
 {
-  *x = static_cast<float>(GetShadowOffsetX());
+  *x = static_cast<float>(ShadowOffsetX());
   return NS_OK;
 }
 
@@ -1915,7 +1915,7 @@ nsCanvasRenderingContext2DAzure::SetShadowOffsetY(float y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetShadowOffsetY(float *y)
 {
-  *y = static_cast<float>(GetShadowOffsetY());
+  *y = static_cast<float>(ShadowOffsetY());
   return NS_OK;
 }
 
@@ -1929,7 +1929,7 @@ nsCanvasRenderingContext2DAzure::SetShadowBlur(float blur)
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetShadowBlur(float *blur)
 {
-  *blur = GetShadowBlur();
+  *blur = ShadowBlur();
   return NS_OK;
 }
 
@@ -3409,7 +3409,7 @@ nsCanvasRenderingContext2DAzure::SetLineWidth(float width)
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetLineWidth(float *width)
 {
-  *width = GetLineWidth();
+  *width = LineWidth();
   return NS_OK;
 }
 
@@ -3528,7 +3528,7 @@ nsCanvasRenderingContext2DAzure::SetMiterLimit(float miter)
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetMiterLimit(float *miter)
 {
-  *miter = GetMiterLimit();
+  *miter = MiterLimit();
   return NS_OK;
 }
 
@@ -3588,7 +3588,7 @@ nsCanvasRenderingContext2DAzure::SetMozDashOffset(float offset)
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetMozDashOffset(float* offset)
 {
-  *offset = GetMozDashOffset();
+  *offset = MozDashOffset();
   return NS_OK;
 }
 
@@ -4606,7 +4606,7 @@ nsCanvasRenderingContext2DAzure::CreateImageData(const JS::Value &arg1,
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetMozImageSmoothingEnabled(bool *retVal)
 {
-  *retVal = GetImageSmoothingEnabled();
+  *retVal = ImageSmoothingEnabled();
   return NS_OK;
 }
 

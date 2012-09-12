@@ -603,6 +603,15 @@ public:
   virtual void AddCatalogStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual void EnsureCatalogStyleSheet(const char *aStyleSheetURI) = 0;
 
+  enum additionalSheetType {
+    eAgentSheet,
+    eUserSheet,
+    SheetTypeCount
+  };
+
+  virtual nsresult LoadAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetURI) = 0;
+  virtual void RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* sheetURI) = 0;
+
   /**
    * Get this document's CSSLoader.  This is guaranteed to not return null.
    */

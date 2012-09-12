@@ -83,6 +83,11 @@ WebGLContext::ValidateBuffers(int32_t *maxAllowedCount, const char *info)
         return false;
 #endif
 
+    if (mMinInUseAttribArrayLength != -1) {
+        *maxAllowedCount = mMinInUseAttribArrayLength;
+        return true;
+    }
+
     *maxAllowedCount = -1;
 
     uint32_t attribs = mAttribBuffers.Length();
@@ -132,7 +137,7 @@ WebGLContext::ValidateBuffers(int32_t *maxAllowedCount, const char *info)
               *maxAllowedCount = checked_maxAllowedCount.value();
         }
     }
-
+    mMinInUseAttribArrayLength = *maxAllowedCount;
     return true;
 }
 

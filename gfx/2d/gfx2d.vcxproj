@@ -35,6 +35,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <ExecutablePath>$(DXSDK_DIR)\Utilities\bin\x86;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -54,6 +55,10 @@
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
+    <PreBuildEvent>
+      <Command>xcopy $(ProjectDir)..\..\mfbt\*.h mozilla\ /Y</Command>
+      <Message>Copying MFBT files</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -86,6 +91,7 @@
     <ClInclude Include="PathD2D.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="Rect.h" />
+    <ClInclude Include="ScaledFontBase.h" />
     <ClInclude Include="ScaledFontDWrite.h" />
     <ClInclude Include="SourceSurfaceD2D.h" />
     <ClInclude Include="SourceSurfaceD2DTarget.h" />
@@ -102,6 +108,7 @@
     <ClCompile Include="ImageScalingSSE2.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="PathD2D.cpp" />
+    <ClCompile Include="ScaledFontBase.cpp" />
     <ClCompile Include="ScaledFontDWrite.cpp" />
     <ClCompile Include="SourceSurfaceD2D.cpp" />
     <ClCompile Include="SourceSurfaceD2DTarget.cpp" />

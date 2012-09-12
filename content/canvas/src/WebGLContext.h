@@ -605,12 +605,12 @@ public:
     nsHTMLCanvasElement* GetCanvas() const {
         return mCanvasElement;
     }
-    WebGLsizei GetDrawingBufferWidth() const {
+    WebGLsizei DrawingBufferWidth() const {
         if (!IsContextStable())
             return 0;
         return mWidth;
     }
-    WebGLsizei GetDrawingBufferHeight() const {
+    WebGLsizei DrawingBufferHeight() const {
         if (!IsContextStable())
             return 0;
         return mHeight;
@@ -1124,6 +1124,15 @@ protected:
     int32_t mGLMaxVaryingVectors;
     int32_t mGLMaxFragmentUniformVectors;
     int32_t mGLMaxVertexUniformVectors;
+
+    // Cache the max number of elements that can be read from bound VBOs
+    // (result of ValidateBuffers).
+    int32_t mMinInUseAttribArrayLength;
+
+    inline void InvalidateCachedMinInUseAttribArrayLength()
+    {
+        mMinInUseAttribArrayLength = -1;
+    }
 
     // Represents current status, or state, of the context. That is, is it lost
     // or stable and what part of the context lost process are we currently at.

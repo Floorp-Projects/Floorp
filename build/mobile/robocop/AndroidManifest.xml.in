@@ -8,7 +8,7 @@
     <uses-sdk android:minSdkVersion="8" />
 
     <instrumentation
-        android:name="android.test.InstrumentationTestRunner"
+        android:name="@ANDROID_PACKAGE_NAME@.FennecInstrumentationTestRunner"
         android:targetPackage="@ANDROID_PACKAGE_NAME@" />
 
     <application

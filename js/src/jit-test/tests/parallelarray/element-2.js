@@ -11,7 +11,9 @@ function testElement() {
   assertEq(p[42], undefined);
   // Test getting element from 0-lengthed higher dimension
   var pp = new ParallelArray([0,0], function() { return 0; });
-  assertEq(p[2], undefined);
+  assertEq(pp[2], undefined);
+  var pp2 = new ParallelArray([2,0], function() { return 0; });
+  assertEqParallelArray(pp2[0], new ParallelArray());
 }
 
 testElement();

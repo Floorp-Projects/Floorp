@@ -30,5 +30,5 @@ interface CSSStyleDeclaration {
   [Throws]
   DOMString removeProperty(DOMString property);
 
-  readonly attribute CSSRule parentRule;
+  readonly attribute CSSRule? parentRule;
 };

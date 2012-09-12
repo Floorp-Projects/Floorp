@@ -13,6 +13,7 @@
 #include "nsLayoutUtils.h"
 #include "nsDOMEvent.h"
 #include "nsGlobalWindow.h"
+#include "nsJSUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -72,7 +73,7 @@ nsScreen::Reset()
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
     if (target) {
       target->RemoveSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
-                                        mEventListener, true);
+                                        mEventListener, /* usecapture */ true);
     }
 
     mEventListener = nullptr;
@@ -276,7 +277,6 @@ nsScreen::Notify(const hal::ScreenConfiguration& aConfiguration)
   mOrientation = aConfiguration.orientation();
 
   NS_ASSERTION(mOrientation != eScreenOrientation_None &&
-               mOrientation != eScreenOrientation_EndGuard &&
                mOrientation != eScreenOrientation_Portrait &&
                mOrientation != eScreenOrientation_Landscape,
                "Invalid orientation value passed to notify method!");
@@ -307,7 +307,6 @@ nsScreen::GetMozOrientation(nsAString& aOrientation)
 {
   switch (mOrientation) {
     case eScreenOrientation_None:
-    case eScreenOrientation_EndGuard:
     case eScreenOrientation_Portrait:
     case eScreenOrientation_Landscape:
       NS_ASSERTION(false, "Shouldn't be used when getting value!");
@@ -329,83 +328,133 @@ nsScreen::GetMozOrientation(nsAString& aOrientation)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsScreen::MozLockOrientation(const nsAString& aOrientation, bool* aReturn)
+nsScreen::LockPermission
+nsScreen::GetLockOrientationPermission() const
 {
-  ScreenOrientation orientation;
+  nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
+  if (!owner) {
+    return LOCK_DENIED;
+  }
+
+  // Chrome can always lock the screen orientation.
+  if (IsChromeType(owner->GetDocShell())) {
+    return LOCK_ALLOWED;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  owner->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (!doc) {
+    return LOCK_DENIED;
+  }
+
+  // Apps can always lock the screen orientation.
+  if (doc->NodePrincipal()->GetAppStatus() >=
+        nsIPrincipal::APP_STATUS_INSTALLED) {
+    return LOCK_ALLOWED;
+  }
+
+  // Other content must be full-screen in order to lock orientation.
+  bool fullscreen;
+  domDoc->GetMozFullScreen(&fullscreen);
+
+  return fullscreen ? FULLSCREEN_LOCK_ALLOWED : LOCK_DENIED;
+}
+
+NS_IMETHODIMP
+nsScreen::MozLockOrientation(const jsval& aOrientation, JSContext* aCx, bool* aReturn)
+{
   *aReturn = false;
 
-  if (aOrientation.EqualsLiteral("portrait")) {
-    orientation = eScreenOrientation_Portrait;
-  } else if (aOrientation.EqualsLiteral("portrait-primary")) {
-    orientation = eScreenOrientation_PortraitPrimary;
-  } else if (aOrientation.EqualsLiteral("portrait-secondary")) {
-    orientation = eScreenOrientation_PortraitSecondary;
-  } else if (aOrientation.EqualsLiteral("landscape")) {
-    orientation = eScreenOrientation_Landscape;
-  } else if (aOrientation.EqualsLiteral("landscape-primary")) {
-    orientation = eScreenOrientation_LandscapePrimary;
-  } else if (aOrientation.EqualsLiteral("landscape-secondary")) {
-    orientation = eScreenOrientation_LandscapeSecondary;
+  nsAutoTArray<nsString, 8> orientations;
+  // Preallocating 8 elements to make it faster.
+
+  if (aOrientation.isString()) {
+    nsDependentJSString item;
+    item.init(aCx, aOrientation.toString());
+    orientations.AppendElement(item);
   } else {
-    return NS_OK;
+    // If we don't have a string, we must have an Array.
+    if (!aOrientation.isObject()) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    JSObject& obj = aOrientation.toObject();
+    uint32_t length;
+    if (!JS_GetArrayLength(aCx, &obj, &length) || length <= 0) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    orientations.SetCapacity(length);
+
+    for (uint32_t i = 0; i < length; ++i) {
+      jsval value;
+      NS_ENSURE_TRUE(JS_GetElement(aCx, &obj, i, &value), NS_ERROR_UNEXPECTED);
+      if (!value.isString()) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      nsDependentJSString item;
+      item.init(aCx, value);
+      orientations.AppendElement(item);
+    }
   }
 
-  // Determine whether we can lock the screen orientation.
-  bool canLockOrientation = false;
-  do {
-    nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
-    if (!owner) {
-      break;
+  ScreenOrientation orientation = eScreenOrientation_None;
+
+  for (uint32_t i=0; i<orientations.Length(); ++i) {
+    nsString& item = orientations[i];
+
+    if (item.EqualsLiteral("portrait")) {
+      orientation |= eScreenOrientation_Portrait;
+    } else if (item.EqualsLiteral("portrait-primary")) {
+      orientation |= eScreenOrientation_PortraitPrimary;
+    } else if (item.EqualsLiteral("portrait-secondary")) {
+      orientation |= eScreenOrientation_PortraitSecondary;
+    } else if (item.EqualsLiteral("landscape")) {
+      orientation |= eScreenOrientation_Landscape;
+    } else if (item.EqualsLiteral("landscape-primary")) {
+      orientation |= eScreenOrientation_LandscapePrimary;
+    } else if (item.EqualsLiteral("landscape-secondary")) {
+      orientation |= eScreenOrientation_LandscapeSecondary;
+    } else {
+      // If we don't recognize that the token, we should just return 'false'
+      // without throwing.
+      return NS_OK;
     }
-
-    // Chrome can always lock the screen orientation.
-    if (IsChromeType(owner->GetDocShell())) {
-      canLockOrientation = true;
-      break;
-    }
-
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    owner->GetDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-    if (!doc) {
-      break;
-    }
-
-    // Apps can always lock the screen orientation.
-    if (doc->NodePrincipal()->GetAppStatus() >=
-          nsIPrincipal::APP_STATUS_INSTALLED) {
-      canLockOrientation = true;
-      break;
-    }
-
-    // Other content must be full-screen in order to lock orientation.
-    bool fullscreen;
-    domDoc->GetMozFullScreen(&fullscreen);
-    if (!fullscreen) {
-      break;
-    }
-
-    // If we're full-screen, register a listener so we learn when we leave
-    // full-screen.
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(owner);
-    if (!target) {
-      break;
-    }
-
-    if (!mEventListener) {
-      mEventListener = new FullScreenEventListener();
-    }
-
-    target->AddSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
-                                   mEventListener, /* useCapture = */ true);
-    canLockOrientation = true;
-  } while(0);
-
-  if (canLockOrientation) {
-    *aReturn = hal::LockScreenOrientation(orientation);
   }
 
+  switch (GetLockOrientationPermission()) {
+    case LOCK_DENIED:
+      return NS_OK;
+    case LOCK_ALLOWED:
+      *aReturn = hal::LockScreenOrientation(orientation);
+      return NS_OK;
+    case FULLSCREEN_LOCK_ALLOWED:
+      *aReturn = hal::LockScreenOrientation(orientation);
+      if (!*aReturn) {
+        return NS_OK;
+      }
+
+      // We are fullscreen and lock has been accepted.
+      // Now, we need to register a listener so we learn when we leave
+      // full-screen and when we will have to unlock the screen.
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+      if (!target) {
+        return NS_OK;
+      }
+
+      if (!mEventListener) {
+        mEventListener = new FullScreenEventListener();
+      }
+
+      return target->AddSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
+                                            mEventListener, /* useCapture = */ true);
+  }
+
+  // This is only for compilers that don't understand that the previous switch
+  // will always return.
+  MOZ_NOT_REACHED();
   return NS_OK;
 }
 

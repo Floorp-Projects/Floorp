@@ -606,7 +606,7 @@ public:
 
     xhr->GetStatusText(mStatusText);
 
-    mReadyState = xhr->GetReadyState();
+    mReadyState = xhr->ReadyState();
 
     return true;
   }
