@@ -414,11 +414,19 @@ gfxPattern::AdjustTransformForPattern(Matrix &aPatternTransform,
 {
   aPatternTransform.Invert();
   if (!aOriginalTransform) {
+    // User space is unchanged, so to get from pattern space to user space,
+    // just invert the cairo matrix.
     return;
   }
+  // aPatternTransform now maps from pattern space to the user space defined
+  // by *aOriginalTransform.
 
   Matrix mat = aCurrentTransform;
   mat.Invert();
+  // mat maps from device space to current user space
 
+  // First, transform from pattern space to original user space. Then transform
+  // from original user space to device space. Then transform from
+  // device space to current user space.
   aPatternTransform = aPatternTransform * *aOriginalTransform * mat;
 }
