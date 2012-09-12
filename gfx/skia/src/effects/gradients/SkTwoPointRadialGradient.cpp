@@ -120,9 +120,14 @@ void shadeSpan_twopoint_clamp(SkScalar fx, SkScalar dx,
     for (; count > 0; --count) {
         SkFixed t = two_point_radial(b, fx, fy, fSr2D2, foura,
                                      fOneOverTwoA, posRoot);
-        SkFixed index = SkClampMax(t, 0xFFFF);
-        SkASSERT(index <= 0xFFFF);
-        *dstC++ = cache[index >> SkGradientShaderBase::kCache32Shift];
+        if (t < 0) {
+            *dstC++ = cache[SkGradientShaderBase::kCache32ClampLower];
+        } else if (t > 0xFFFF) {
+            *dstC++ = cache[SkGradientShaderBase::kCache32ClampUpper];
+        } else {
+            SkASSERT(t <= 0xFFFF);
+            *dstC++ = cache[t >> SkGradientShaderBase::kCache32Shift];
+        }
         fx += dx;
         fy += dy;
         b += db;

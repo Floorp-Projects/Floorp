@@ -126,6 +126,17 @@ void shadeSpan_linear_vertical(TileProc proc, SkFixed dx, SkFixed fx,
                                SkPMColor* SK_RESTRICT dstC,
                                const SkPMColor* SK_RESTRICT cache,
                                int toggle, int count) {
+    if (proc == clamp_tileproc) {
+        // No need to lerp or dither for clamp values
+        if (fx < 0) {
+            sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampLower], count);
+            return;
+        } else if (fx > 0xffff) {
+            sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampUpper], count);
+            return;
+        }
+    }
+
     // We're a vertical gradient, so no change in a span.
     // If colors change sharply across the gradient, dithering is
     // insufficient (it subsamples the color space) and we need to lerp.
@@ -144,6 +155,17 @@ void shadeSpan_linear_vertical_lerp(TileProc proc, SkFixed dx, SkFixed fx,
                                     SkPMColor* SK_RESTRICT dstC,
                                     const SkPMColor* SK_RESTRICT cache,
                                     int toggle, int count) {
+    if (proc == clamp_tileproc) {
+        // No need to lerp or dither for clamp values
+        if (fx < 0) {
+            sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampLower], count);
+            return;
+        } else if (fx > 0xffff) {
+            sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampUpper], count);
+            return;
+        }
+    }
+
     // We're a vertical gradient, so no change in a span.
     // If colors change sharply across the gradient, dithering is
     // insufficient (it subsamples the color space) and we need to lerp.
@@ -169,10 +191,7 @@ void shadeSpan_linear_clamp(TileProc proc, SkFixed dx, SkFixed fx,
     range.init(fx, dx, count, 0, SkGradientShaderBase::kGradient32Length);
 
     if ((count = range.fCount0) > 0) {
-        sk_memset32_dither(dstC,
-            cache[toggle + range.fV0],
-            cache[(toggle ^ SkGradientShaderBase::kDitherStride32) + range.fV0],
-            count);
+        sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampLower], count);
         dstC += count;
     }
     if ((count = range.fCount1) > 0) {
@@ -191,10 +210,7 @@ void shadeSpan_linear_clamp(TileProc proc, SkFixed dx, SkFixed fx,
         }
     }
     if ((count = range.fCount2) > 0) {
-        sk_memset32_dither(dstC,
-            cache[toggle + range.fV1],
-            cache[(toggle ^ SkGradientShaderBase::kDitherStride32) + range.fV1],
-            count);
+        sk_memset32(dstC, cache[SkGradientShaderBase::kCache32ClampUpper], count);
     }
 }
 
