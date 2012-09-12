@@ -16,12 +16,17 @@ void
 AlarmHalService::Init()
 {
   mAlarmEnabled = RegisterTheOneAlarmObserver(this);
+  if (!mAlarmEnabled) {
+    return;
+  }
+  RegisterSystemTimeChangeObserver(this);
 }
 
 /* virtual */ AlarmHalService::~AlarmHalService() 
 {
   if (mAlarmEnabled) {
     UnregisterTheOneAlarmObserver();
+    UnregisterSystemTimeChangeObserver(this);
   }
 }
 
@@ -48,7 +53,6 @@ AlarmHalService::SetAlarm(int32_t aSeconds, int32_t aNanoseconds, bool* aStatus)
   }
 
   bool status = hal::SetAlarm(aSeconds, aNanoseconds);
-
   if (status) {
     *aStatus = status;
     return NS_OK;
@@ -74,9 +78,19 @@ AlarmHalService::SetTimezoneChangedCb(nsITimezoneChangedCb* aTimeZoneChangedCb)
 void
 AlarmHalService::Notify(const mozilla::void_t& aVoid)
 {
-  if (mAlarmFiredCb) {
-    mAlarmFiredCb->OnAlarmFired();
+  if (!mAlarmFiredCb) {
+    return;
   }
+  mAlarmFiredCb->OnAlarmFired();
+}
+
+void
+AlarmHalService::Notify(const SystemTimeChange& aReason)
+{
+  if (aReason != SYS_TIME_CHANGE_TZ || !mTimezoneChangedCb) {
+    return;
+  }
+  mTimezoneChangedCb->OnTimezoneChanged(GetTimezoneOffset(false));
 }
 
 int32_t
