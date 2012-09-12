@@ -156,7 +156,7 @@ class CGDOMJSClass(CGThing):
         return """
 DOMJSClass Class = {
   { "%s",
-    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
+    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(3),
     %s, /* addProperty */
     JS_PropertyStub,       /* delProperty */
     JS_PropertyStub,       /* getProperty */

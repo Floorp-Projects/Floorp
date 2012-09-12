@@ -23,6 +23,12 @@ class nsCycleCollectionParticipant;
 // bindings.
 #define DOM_XRAY_EXPANDO_SLOT 1
 
+// We use slot 2 for holding either a JS::ObjectValue which points to the cached
+// SOW or JS::UndefinedValue if this class doesn't need SOWs. This is not safe
+// for globals until bug 760095 is fixed, so that bug blocks converting Window
+// to new bindings.
+#define DOM_OBJECT_SLOT_SOW 2
+
 // All DOM globals must have a slot at DOM_PROTOTYPE_SLOT.
 #define DOM_PROTOTYPE_SLOT JSCLASS_GLOBAL_SLOT_COUNT
 

@@ -20,6 +20,7 @@
 #include "FilteringWrapper.h"
 
 #include "jsfriendapi.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 using namespace js;
@@ -237,6 +238,10 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
 bool
 AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
 {
+    JSObject* wrapper = obj;
+    if (dom::GetSameCompartmentWrapperForDOMBinding(wrapper))
+        return wrapper != obj;
+
     if (!IS_WN_WRAPPER(obj))
         return false;
 
