@@ -33,12 +33,58 @@ let DebuggerView = {
   cacheView: function DV_cacheView() {
     this._onTogglePanesButtonPressed = this._onTogglePanesButtonPressed.bind(this);
 
+    // Panes and view containers
     this._togglePanesButton = document.getElementById("toggle-panes");
     this._stackframesAndBreakpoints = document.getElementById("stackframes+breakpoints");
     this._stackframes = document.getElementById("stackframes");
     this._breakpoints = document.getElementById("breakpoints");
     this._variables = document.getElementById("variables");
+    this._scripts = document.getElementById("scripts");
     this._globalSearch = document.getElementById("globalsearch");
+    this._globalSearchSplitter = document.getElementById("globalsearch-splitter");
+
+    // Keys
+    this._fileSearchKey = document.getElementById("fileSearchKey");
+    this._lineSearchKey = document.getElementById("lineSearchKey");
+    this._tokenSearchKey = document.getElementById("tokenSearchKey");
+    this._globalSearchKey = document.getElementById("globalSearchKey");
+    this._resumeKey = document.getElementById("resumeKey");
+    this._stepOverKey = document.getElementById("stepOverKey");
+    this._stepInKey = document.getElementById("stepInKey");
+    this._stepOutKey = document.getElementById("stepOutKey");
+
+    // Buttons, textboxes etc.
+    this._resumeButton = document.getElementById("resume");
+    this._stepOverButton = document.getElementById("step-over");
+    this._stepInButton = document.getElementById("step-in");
+    this._stepOutButton = document.getElementById("step-out");
+    this._scriptsSearchbox = document.getElementById("scripts-search");
+    this._globalOperatorButton = document.getElementById("global-operator");
+    this._tokenOperatorButton = document.getElementById("token-operator");
+    this._lineOperatorButton = document.getElementById("line-operator");
+  },
+
+  /**
+   * Applies the correct key labels and tooltips across global view elements.
+   */
+  initializeKeys: function DV_initializeKeys() {
+    this._resumeButton.setAttribute("tooltiptext",
+      L10N.getFormatStr("pauseButtonTooltip", [LayoutHelpers.prettyKey(this._resumeKey)]));
+    this._stepOverButton.setAttribute("tooltiptext",
+      L10N.getFormatStr("stepOverTooltip", [LayoutHelpers.prettyKey(this._stepOverKey)]));
+    this._stepInButton.setAttribute("tooltiptext",
+      L10N.getFormatStr("stepInTooltip", [LayoutHelpers.prettyKey(this._stepInKey)]));
+    this._stepOutButton.setAttribute("tooltiptext",
+      L10N.getFormatStr("stepOutTooltip", [LayoutHelpers.prettyKey(this._stepOutKey)]));
+
+    this._scriptsSearchbox.setAttribute("placeholder",
+      L10N.getFormatStr("emptyFilterText", [LayoutHelpers.prettyKey(this._fileSearchKey)]));
+    this._globalOperatorButton.setAttribute("value",
+      L10N.getFormatStr("searchPanelGlobal", [LayoutHelpers.prettyKey(this._globalSearchKey)]));
+    this._tokenOperatorButton.setAttribute("value",
+      L10N.getFormatStr("searchPanelToken", [LayoutHelpers.prettyKey(this._tokenSearchKey)]));
+    this._lineOperatorButton.setAttribute("value",
+      L10N.getFormatStr("searchPanelLine", [LayoutHelpers.prettyKey(this._lineSearchKey)]));
   },
 
   /**
@@ -92,6 +138,11 @@ let DebuggerView = {
     this._stackframesAndBreakpoints.parentNode.removeChild(this._stackframesAndBreakpoints);
     this._variables.parentNode.removeChild(this._variables);
     this._globalSearch.parentNode.removeChild(this._globalSearch);
+
+    // Delete all the cached global view elements.
+    for (let i in this) {
+      if (!(this[i] instanceof Function)) delete this[i];
+    }
   },
 
   /**
@@ -145,10 +196,12 @@ let DebuggerView = {
     if (aVisibleFlag) {
       this._stackframesAndBreakpoints.style.marginLeft = "0";
       this._togglePanesButton.removeAttribute("stackframesAndBreakpointsHidden");
+      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
     } else {
       let margin = parseInt(this._stackframesAndBreakpoints.getAttribute("width")) + 1;
       this._stackframesAndBreakpoints.style.marginLeft = -margin + "px";
       this._togglePanesButton.setAttribute("stackframesAndBreakpointsHidden", "true");
+      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
     }
     Prefs.stackframesPaneVisible = aVisibleFlag;
   },
@@ -168,10 +221,12 @@ let DebuggerView = {
     if (aVisibleFlag) {
       this._variables.style.marginRight = "0";
       this._togglePanesButton.removeAttribute("variablesHidden");
+      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
     } else {
       let margin = parseInt(this._variables.getAttribute("width")) + 1;
       this._variables.style.marginRight = -margin + "px";
       this._togglePanesButton.setAttribute("variablesHidden", "true");
+      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
     }
     Prefs.variablesPaneVisible = aVisibleFlag;
   },
@@ -184,7 +239,25 @@ let DebuggerView = {
   _stackframes: null,
   _breakpoints: null,
   _variables: null,
-  _globalSearch: null
+  _scripts: null,
+  _globalSearch: null,
+  _globalSearchSplitter: null,
+  _fileSearchKey: null,
+  _lineSearchKey: null,
+  _tokenSearchKey: null,
+  _globalSearchKey: null,
+  _resumeKey: null,
+  _stepOverKey: null,
+  _stepInKey: null,
+  _stepOutKey: null,
+  _resumeButton: null,
+  _stepOverButton: null,
+  _stepInButton: null,
+  _stepOutButton: null,
+  _scriptsSearchbox: null,
+  _globalOperatorButton: null,
+  _tokenOperatorButton: null,
+  _lineOperatorButton: null
 };
 
 /**
@@ -823,10 +896,10 @@ GlobalSearchView.prototype = {
   /**
    * Initialization function, called when the debugger is initialized.
    */
-  initialize: function DVS_initialize() {
-    this._pane = document.getElementById("globalsearch");
-    this._splitter = document.getElementById("globalsearch-splitter");
-    this._searchbox = document.getElementById("scripts-search");
+  initialize: function DVGS_initialize() {
+    this._pane = DebuggerView._globalSearch;
+    this._splitter = DebuggerView._globalSearchSplitter;
+    this._searchbox = DebuggerView._scriptsSearchbox;
 
     this._pane.addEventListener("scroll", this._onResultsScroll, false);
     this._searchbox.addEventListener("blur", this._onFocusLost, false);
@@ -1203,6 +1276,10 @@ ScriptsView.prototype = {
     DebuggerController.SourceScripts.showScript(selectedItem.getUserData("sourceScript"));
   },
 
+  _prevSearchedFile: "",
+  _prevSearchedLine: 0,
+  _prevSearchedToken: "",
+
   /**
    * Performs a file search if necessary.
    *
@@ -1425,7 +1502,7 @@ ScriptsView.prototype = {
    * Initialization function, called when the debugger is initialized.
    */
   initialize: function DVS_initialize() {
-    this._scripts = document.getElementById("scripts");
+    this._scripts = DebuggerView._scripts;
     this._searchbox = document.getElementById("scripts-search");
     this._searchboxPanel = document.getElementById("scripts-search-panel");
 
@@ -1471,26 +1548,27 @@ function StackFramesView() {
 
 StackFramesView.prototype = {
 
-  /**
-   * Sets the current frames state based on the debugger active thread state.
-   *
-   * @param string aState
-   *        Either "paused" or "attached".
-   */
-   updateState: function DVF_updateState(aState) {
-     let resume = document.getElementById("resume");
+ /**
+  * Sets the current frames state based on the debugger active thread state.
+  *
+  * @param string aState
+  *        Either "paused" or "attached".
+  */
+  updateState: function DVF_updateState(aState) {
+    let resume = DebuggerView._resumeButton;
+    let resumeKey = LayoutHelpers.prettyKey(DebuggerView._resumeKey);
 
-     // If we're paused, show a pause label and a resume label on the button.
-     if (aState == "paused") {
-       resume.setAttribute("tooltiptext", L10N.getStr("resumeTooltip"));
-       resume.setAttribute("checked", true);
-     }
-     // If we're attached, do the opposite.
-     else if (aState == "attached") {
-       resume.setAttribute("tooltiptext", L10N.getStr("pauseTooltip"));
-       resume.removeAttribute("checked");
-     }
-   },
+    // If we're paused, show a pause label and a resume label on the button.
+    if (aState == "paused") {
+      resume.setAttribute("tooltiptext", L10N.getFormatStr("resumeButtonTooltip", [resumeKey]));
+      resume.setAttribute("checked", true);
+    }
+    // If we're attached, do the opposite.
+    else if (aState == "attached") {
+      resume.setAttribute("tooltiptext", L10N.getFormatStr("pauseButtonTooltip", [resumeKey]));
+      resume.removeAttribute("checked");
+    }
+  },
 
   /**
    * Removes all elements from the stackframes container, leaving it empty.
@@ -1725,11 +1803,11 @@ StackFramesView.prototype = {
   initialize: function DVF_initialize() {
     let close = document.getElementById("close");
     let pauseOnExceptions = document.getElementById("pause-exceptions");
-    let resume = document.getElementById("resume");
-    let stepOver = document.getElementById("step-over");
-    let stepIn = document.getElementById("step-in");
-    let stepOut = document.getElementById("step-out");
-    let frames = document.getElementById("stackframes");
+    let resume = DebuggerView._resumeButton;
+    let stepOver = DebuggerView._stepOverButton;
+    let stepIn = DebuggerView._stepInButton;
+    let stepOut = DebuggerView._stepOutButton;
+    let frames = DebuggerView._stackframes;
 
     close.addEventListener("click", this._onCloseButtonClick, false);
     pauseOnExceptions.checked = DebuggerController.StackFrames.pauseOnExceptions;
@@ -1752,11 +1830,11 @@ StackFramesView.prototype = {
   destroy: function DVF_destroy() {
     let close = document.getElementById("close");
     let pauseOnExceptions = document.getElementById("pause-exceptions");
-    let resume = document.getElementById("resume");
-    let stepOver = document.getElementById("step-over");
-    let stepIn = document.getElementById("step-in");
-    let stepOut = document.getElementById("step-out");
-    let frames = this._frames;
+    let resume = DebuggerView._resumeButton;
+    let stepOver = DebuggerView._stepOverButton;
+    let stepIn = DebuggerView._stepInButton;
+    let stepOut = DebuggerView._stepOutButton;
+    let frames = DebuggerView._stackframes;
 
     close.removeEventListener("click", this._onCloseButtonClick, false);
     pauseOnExceptions.removeEventListener("click", this._onPauseExceptionsClick, false);
@@ -2295,7 +2373,7 @@ BreakpointsView.prototype = {
    * Initialization function, called when the debugger is initialized.
    */
   initialize: function DVB_initialize() {
-    let breakpoints = document.getElementById("breakpoints");
+    let breakpoints = DebuggerView._breakpoints;
     breakpoints.addEventListener("click", this._onBreakpointClick, false);
 
     this._breakpoints = breakpoints;
@@ -3401,7 +3479,7 @@ PropertiesView.prototype = {
    * Initialization function, called when the debugger is initialized.
    */
   initialize: function DVP_initialize() {
-    this._vars = document.getElementById("variables");
+    this._vars = DebuggerView._variables;
 
     this.emptyText();
     this.createHierarchyStore();

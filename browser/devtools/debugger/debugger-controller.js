@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
+Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 
 /**
  * Controls the debugger view by handling the source scripts, the current
@@ -51,6 +52,7 @@ let DebuggerController = {
     window.removeEventListener("DOMContentLoaded", this._startupDebugger, true);
 
     DebuggerView.cacheView();
+    DebuggerView.initializeKeys();
     DebuggerView.initializePanes();
     DebuggerView.initializeEditor(function() {
       DebuggerView.GlobalSearch.initialize();
