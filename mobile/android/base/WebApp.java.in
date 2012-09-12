@@ -146,5 +146,10 @@ public class WebApp extends GeckoApp {
         }
         super.onTabChanged(tab, msg, data);
     }
+
+    protected void connectGeckoLayerClient() {
+        super.connectGeckoLayerClient();
+        getLayerView().setOverScrollMode(View.OVER_SCROLL_NEVER);
+    }
 };
 
