@@ -237,8 +237,9 @@ IteratorMore(JSContext *cx, HandleObject obj, JSBool *res)
 }
 
 JSObject*
-NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
+NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *typeArg)
 {
+    RootedTypeObject type(cx, typeArg);
     RootedObject obj(cx, NewDenseAllocatedArray(cx, count));
     if (!obj)
         return NULL;
