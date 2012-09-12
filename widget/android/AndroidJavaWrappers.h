@@ -584,6 +584,7 @@ public:
     nsAString& CharactersExtra() { return mCharactersExtra; }
     int KeyCode() { return mKeyCode; }
     int MetaState() { return mMetaState; }
+    int DomKeyLocation() { return mDomKeyLocation; }
     bool IsAltPressed() const { return (mMetaState & AndroidKeyEvent::META_ALT_MASK) != 0; }
     bool IsShiftPressed() const { return (mMetaState & AndroidKeyEvent::META_SHIFT_MASK) != 0; }
     int Flags() { return mFlags; }
@@ -613,6 +614,7 @@ protected:
     nsTArray<float> mPressures;
     nsIntRect mRect;
     int mFlags, mMetaState;
+    int mDomKeyLocation;
     int mKeyCode, mUnicodeChar;
     int mRepeatCount;
     int mOffset, mCount;
@@ -663,6 +665,7 @@ protected:
     static jfieldID jCharactersExtraField;
     static jfieldID jKeyCodeField;
     static jfieldID jMetaStateField;
+    static jfieldID jDomKeyLocationField;
     static jfieldID jFlagsField;
     static jfieldID jOffsetField;
     static jfieldID jCountField;
