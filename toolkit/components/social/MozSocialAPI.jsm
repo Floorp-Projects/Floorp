@@ -75,7 +75,7 @@ function attachToWindow(provider, targetWindow) {
     throw new Error("MozSocialAPI: cannot attach " + origin + " to " + targetDocURI.spec);
   }
 
-  var port = provider.getWorkerPort(targetWindow);
+  var port = provider._getWorkerPort(targetWindow);
 
   let mozSocialObj = {
     // Use a method for backwards compat with existing providers, but we

@@ -132,19 +132,17 @@ let tests = {
       }
       Services.obs.addObserver(observer, "social-test:notification-alert", false);
 
-      let port = provider.getWorkerPort();
-      port.onmessage = function(e) {
+      provider.port.onmessage = function(e) {
         if (e.data.topic == "test.done") {
           ok(e.data.data, "check the test worked");
           ok(observer.observedData, "test observer fired");
           is(observer.observedData.text, "test notification", "check the alert text is correct");
           is(observer.observedData.title, "Example Provider", "check the alert title is correct");
           is(observer.observedData.textClickable, true, "check the alert is clickable");
-          port.close();
           cbnext();
         }
       }
-      port.postMessage({topic: "test.initialize"});
+      provider.port.postMessage({topic: "test.initialize"});
     });
   }
 };
