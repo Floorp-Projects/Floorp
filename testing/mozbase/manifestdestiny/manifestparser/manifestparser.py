@@ -8,9 +8,6 @@
 Mozilla universal manifest parser
 """
 
-# this file lives at
-# http://hg.mozilla.org/automation/ManifestDestiny/raw-file/tip/manifestparser.py
-
 __all__ = ['read_ini', # .ini reader
            'ManifestParser', 'TestManifest', 'convert', # manifest handling
            'parse', 'ParseError', 'ExpressionParser'] # conditional expression parser
@@ -436,15 +433,15 @@ class ManifestParser(object):
 
             # determine the path
             path = test.get('path', section)
-            relpath = path
+            _relpath = path
             if '://' not in path: # don't futz with URLs
                 path = normalize_path(path)
                 if not os.path.isabs(path):
                     path = os.path.join(here, path)
-                relpath = os.path.relpath(path, self.rootdir)
+                _relpath = relpath(path, self.rootdir)
 
             test['path'] = path
-            test['relpath'] = relpath
+            test['relpath'] = _relpath
 
             # append the item
             self.tests.append(test)
