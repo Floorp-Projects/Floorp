@@ -3966,7 +3966,7 @@ nsCanvasRenderingContext2DAzure::DrawWindow(nsIDOMWindow* window, double x,
   // save and restore it
   Matrix matrix = mTarget->GetTransform();
   nsRefPtr<gfxContext> thebes;
-  if (gfxPlatform::UseAzureContentDrawing()) {
+  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
     thebes = new gfxContext(mTarget);
   } else {
     nsRefPtr<gfxASurface> drawSurf;
