@@ -249,10 +249,12 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
     {
       return new ScaledFontDWrite(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aSize);
     }
+#if defined(USE_SKIA)
   case NATIVE_FONT_GDI_FONT_FACE:
     {
       return new ScaledFontWin(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
     }
+#endif
 #endif
 #ifdef XP_MACOSX
   case NATIVE_FONT_MAC_FONT_FACE:

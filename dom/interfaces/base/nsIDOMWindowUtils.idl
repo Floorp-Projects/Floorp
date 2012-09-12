@@ -38,8 +38,9 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 interface nsIDOMClientRect;
+interface nsIURI;
 
-[scriptable, uuid(8A7DA5AF-26FD-4449-8887-9BEADC938B0A)]
+[scriptable, uuid(37cf79ee-fe7a-4d5a-9e41-e2186553969f)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1236,4 +1237,26 @@ interface nsIDOMWindowUtils : nsISupports {
    * dialogs (e.g. window.alert()).
    */
   void preventFurtherDialogs();
+
+  const unsigned long AGENT_SHEET = 0;
+  const unsigned long USER_SHEET = 1;
+  /**
+   * Synchronously loads a style sheet from |sheetURI| and adds it to the list
+   * of additional style sheets of the document.
+   *
+   * These additional style sheets are very much like user/agent sheets loaded 
+   * with loadAndRegisterSheet. The only difference is that they are applied only
+   * on the document owned by this window.
+   *
+   * Sheets added via this API take effect immediately on the document.
+   */
+  void loadSheet(in nsIURI sheetURI,
+                           in unsigned long type);
+
+  /**
+   * Remove the document style sheet at |sheetURI| from the list of additional 
+   * style sheets of the document.  The removal takes effect immediately.
+   */
+  void removeSheet(in nsIURI sheetURI,
+                                in unsigned long type);
 };

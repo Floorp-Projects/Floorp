@@ -32,7 +32,7 @@ typedef ParallelArrayObject::IndexVector IndexVector;
 typedef ParallelArrayObject::IndexInfo IndexInfo;
 
 bool
-ParallelArrayObject::IndexInfo::isInitialized()
+ParallelArrayObject::IndexInfo::isInitialized() const
 {
     return (dimensions.length() > 0 &&
             indices.capacity() >= dimensions.length() &&
@@ -448,15 +448,15 @@ ParallelArrayObject::SequentialMode::scatter(JSContext *cx, HandleParallelArrayO
 
     // The length of the scatter vector.
     uint32_t targetsLength;
-
     if (!MaybeGetParallelArrayObjectAndLength(cx, targets, &targetsPA, &tiv, &targetsLength))
         return ExecutionFailed;
 
-    // Iterate over the scatter vector.
+    // Iterate over the scatter vector, but not more than the length of the
+    // source array.
     RootedValue elem(cx);
     RootedValue telem(cx);
     RootedValue targetElem(cx);
-    for (uint32_t i = 0; i < targetsLength; i++) {
+    for (uint32_t i = 0; i < Min(targetsLength, source->outermostDimension()); i++) {
         uint32_t targetIndex;
 
         if (!GetElementFromArrayLikeObject(cx, targets, targetsPA, tiv, i, &telem) ||
@@ -912,12 +912,10 @@ ParallelArrayObject::getParallelArrayElement(JSContext *cx, IndexInfo &iv, Mutab
     // ParallelArray of lesser dimensionality. Here we create a new 'view' on
     // the underlying buffer, though whether a ParallelArray is a view or a
     // copy is not observable by the user.
-    uint32_t rowLength = iv.partialProducts[d - 1];
-    uint32_t offset = base + iv.toScalar();
-
-    // Make sure both the start of the extent and the end of the extent are
-    // within bounds, in case one or both are 0.
-    if (offset >= end || offset + rowLength > end) {
+    //
+    // It is not enough to compute the scalar index and check bounds that way,
+    // since the row length can be 0.
+    if (!iv.inBounds()) {
         vp.setUndefined();
         return true;
     }
@@ -925,7 +923,7 @@ ParallelArrayObject::getParallelArrayElement(JSContext *cx, IndexInfo &iv, Mutab
     RootedObject buf(cx, buffer());
     IndexVector newDims(cx);
     return (newDims.append(iv.dimensions.begin() + d, iv.dimensions.end()) &&
-            create(cx, buf, offset, newDims, vp));
+            create(cx, buf, base + iv.toScalar(), newDims, vp));
 }
 
 bool
@@ -1261,13 +1259,6 @@ ParallelArrayObject::scatter(JSContext *cx, CallArgs args)
 
     // Get the scatter vector.
     RootedObject targets(cx, &args[0].toObject());
-    uint32_t targetsLength;
-    if (!GetLengthProperty(cx, targets, &targetsLength))
-        return false;
-
-    // Don't iterate more than the length of the source array.
-    if (targetsLength > outer)
-        targetsLength = outer;
 
     // The default value is optional and defaults to undefined.
     Value defaultValue;

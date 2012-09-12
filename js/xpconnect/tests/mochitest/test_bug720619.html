@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=720619
+-->
+<head>
+  <title>Test for Bug 629227</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=720619">Mozilla Bug 720619</a>
+<p id="display">
+  <iframe id="testTarget"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 720619 **/
+SimpleTest.waitForExplicitFinish();
+
+function checkThrows(f, exception) {
+    try {
+        f();
+        ok(false, "should have thrown: " + f);
+    } catch (e) {
+        ok(exception.test(e.toString()), "correctly threw");
+    }
+}
+
+function go() {
+    var loc = $('ifr').contentWindow.location;
+    checkThrows(function() {loc + '';}, /Permission denied/);
+    checkThrows(function() {'' + loc;}, /Permission denied/);
+    checkThrows(function() {String(loc);}, /Permission denied/);
+
+    var win = $('ifr').contentWindow;
+    checkThrows(function() {win + '';}, /Permission denied/);
+    checkThrows(function() {'' + win;}, /Permission denied/);
+    checkThrows(function() {String(win);}, /Permission denied/);
+
+    SimpleTest.finish();
+}
+
+</script>
+
+<iframe id="ifr" onload="go()"
+        src="http://example.org/tests/js/xpconnect/tests/mochitest/file_bug720619.html">
+</iframe>
+</pre>
+</body>
+</html>

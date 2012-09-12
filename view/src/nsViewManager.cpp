@@ -342,7 +342,7 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
     return;
   }
 
-  if (aView->ForcedRepaint()) {
+  if (aView->ForcedRepaint() && IsRefreshDriverPaintingEnabled()) {
     ProcessPendingUpdates();
     aView->SetForcedRepaint(false);
   }
@@ -1232,8 +1232,13 @@ nsViewManager::UpdateWidgetGeometry()
   }
 
   if (mHasPendingWidgetGeometryChanges) {
-    mHasPendingWidgetGeometryChanges = false;
+    if (IsRefreshDriverPaintingEnabled()) {
+      mHasPendingWidgetGeometryChanges = false;
+    }
     ProcessPendingUpdatesForView(mRootView, false);
+    if (!IsRefreshDriverPaintingEnabled()) {
+      mHasPendingWidgetGeometryChanges = false;
+    }
   }
 }
 

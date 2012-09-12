@@ -223,6 +223,7 @@
 #include "nsIAppsService.h"
 #include "prrng.h"
 #include "nsSandboxFlags.h"
+#include "TimeChangeObserver.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -1052,6 +1053,7 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
     mIdleTimer = nullptr;
   }
 
+  DisableTimeChangeNotifications();
 #ifdef DEBUG
   nsCycleCollector_DEBUG_shouldBeFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
@@ -10647,6 +10649,18 @@ nsGlobalWindow::GetURL(nsIDOMMozURLProperty** aURL)
   NS_ADDREF(*aURL = mURLProperty);
 
   return NS_OK;
+}
+
+void
+nsGlobalWindow::EnableTimeChangeNotifications()
+{
+  nsSystemTimeChangeObserver::AddWindowListener(this);
+}
+
+void
+nsGlobalWindow::DisableTimeChangeNotifications()
+{
+  nsSystemTimeChangeObserver::RemoveWindowListener(this);
 }
 
 // static

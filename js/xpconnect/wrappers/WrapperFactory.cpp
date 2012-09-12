@@ -227,9 +227,19 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
 
             // Nasty hack for late-breaking bug 781476. This will confuse identity checks,
             // but it's probably better than any of our alternatives.
+            //
+            // Note: We have to ignore domain here. The JS engine assumes that, given a
+            // compartment c, if c->wrap(x) returns a cross-compartment wrapper at time t0,
+            // it will also return a cross-compartment wrapper for any time t1 > t0 unless
+            // an explicit transplant is performed. In particular, wrapper recomputation
+            // assumes that recomputing a wrapper will always result in a wrapper.
+            //
+            // This doesn't actually pose a security issue, because we'll still compute
+            // the correct (opaque) wrapper for the object below given the security
+            // characteristics of the two compartments.
             if (!AccessCheck::isChrome(js::GetObjectCompartment(scope)) &&
-                 AccessCheck::subsumes(js::GetObjectCompartment(scope),
-                                       js::GetObjectCompartment(obj)))
+                 AccessCheck::subsumesIgnoringDomain(js::GetObjectCompartment(scope),
+                                                     js::GetObjectCompartment(obj)))
             {
                 return DoubleWrap(cx, obj, flags);
             }

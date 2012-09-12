@@ -24,6 +24,7 @@ using mozilla::hal::SwitchDevice;
 using mozilla::hal::ProcessPriority;
 using nsIntRect;
 using PRTime;
+using mozilla::hal::SystemTimeChange;
 
 namespace mozilla {
 
@@ -86,6 +87,7 @@ child:
     NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
     NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
     NotifySwitchChange(SwitchEvent aEvent);
+    NotifySystemTimeChange(SystemTimeChange aReason); 
 
 parent:
     Vibrate(uint32_t[] pattern, uint64_t[] id, PBrowser browser);

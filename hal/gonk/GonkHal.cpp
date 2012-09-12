@@ -581,6 +581,10 @@ sys_clock_settime(clockid_t clk_id, const struct timespec *tp)
 void 
 AdjustSystemClock(int32_t aDeltaMilliseconds)
 {
+  if (aDeltaMilliseconds == 0) {
+    return;
+  }
+  
   struct timespec now;
   
   // Preventing context switch before setting system clock 
@@ -600,16 +604,26 @@ AdjustSystemClock(int32_t aDeltaMilliseconds)
     now.tv_sec -= 1;  
   }
   // we need to have root privilege. 
-  sys_clock_settime(CLOCK_REALTIME, &now);   
+  if (sys_clock_settime(CLOCK_REALTIME, &now) != 0) {
+    NS_ERROR("sys_clock_settime failed");
+    return;
+  }
+  
+  hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_CLOCK);
 }
 
 void 
 SetTimezone(const nsCString& aTimezoneSpec)
-{ 
+{
+  if (aTimezoneSpec.Equals(GetTimezone())) {
+    return;
+  }
+
   property_set("persist.sys.timezone", aTimezoneSpec.get());
   // this function is automatically called by the other time conversion 
   // functions that depend on the timezone. To be safe, we call it manually.  
   tzset();
+  hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_TZ);
 }
 
 nsCString 

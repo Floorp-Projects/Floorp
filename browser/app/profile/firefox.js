@@ -850,6 +850,10 @@ pref("browser.zoom.updateBackgroundTabs", true);
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 
+// Override submission of plugin hang reports to a different processing server
+pref("toolkit.crashreporter.pluginHangSubmitURL",
+     "https://hang-reports.mozilla.org/submit");
+
 // base URL for web-based support pages
 pref("app.support.baseURL", "http://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
 

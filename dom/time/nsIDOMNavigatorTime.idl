@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMMozTimeManager;
+
+[scriptable, uuid(befc186d-c249-4acb-8e70-8080f7b45e5c)]
+interface nsIDOMMozNavigatorTime : nsISupports
+{
+  readonly attribute nsIDOMMozTimeManager mozTime;
+};
