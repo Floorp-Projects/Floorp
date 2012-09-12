@@ -15,10 +15,36 @@ interface nsIBrowserTab : nsISupports {
 interface nsIAndroidBrowserApp : nsISupports {
   nsIBrowserTab getBrowserTab(in int32_t tabId);
 };
+[scriptable, uuid(59cfcb35-69b7-47b2-8155-32b193272666)]
+interface nsIAndroidViewport : nsISupports {
+  readonly attribute float x;
+  readonly attribute float y;
+  readonly attribute float width;
+  readonly attribute float height;
+  readonly attribute float pageLeft;
+  readonly attribute float pageTop;
+  readonly attribute float pageRight;
+  readonly attribute float pageBottom;
+  readonly attribute float cssPageLeft;
+  readonly attribute float cssPageTop;
+  readonly attribute float cssPageRight;
+  readonly attribute float cssPageBottom;
+  readonly attribute float zoom;
+};
+
+[scriptable, uuid(e1bfbc07-dbae-409d-a5b5-ef57522c1f15)]
+interface nsIAndroidDisplayport : nsISupports {
+  attribute float left;
+  attribute float top;
+  attribute float right;
+  attribute float bottom;
+  attribute float resolution;
+};
 
 [scriptable, uuid(bbb8e0d7-5cca-4ad0-88be-538ce6d04f63)]
 interface nsIAndroidBridge : nsISupports
 {
   AString handleGeckoMessage(in AString message);
   attribute nsIAndroidBrowserApp browserApp;
+  nsIAndroidDisplayport getDisplayPort(in boolean aPageSizeUpdate, in boolean isBrowserContentDisplayed, in int32_t tabId, in nsIAndroidViewport metrics);
 };

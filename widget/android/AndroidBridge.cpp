@@ -2519,6 +2519,24 @@ nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, int32_t srcX, int32
     return NS_OK;
 }
 
+nsresult
+nsAndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
+{
+    return AndroidBridge::Bridge()->GetDisplayPort(aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
+}
+
+nsresult
+AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env || !mLayerClient)
+        return NS_OK;
+    AutoLocalJNIFrame jniFrame(env, 0);
+    mLayerClient->GetDisplayPort(&jniFrame, aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
+
+    return NS_OK;
+}
+
 void
 AndroidBridge::NotifyPaintedRect(float top, float left, float bottom, float right)
 {
