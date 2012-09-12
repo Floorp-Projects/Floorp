@@ -219,17 +219,14 @@ XPCOMUtils.defineLazyGetter(this, "PageMenu", function() {
 * one listener that calls all real handlers.
 */
 function pageShowEventHandlers(event) {
-  // Filter out events that are not about the document load we are interested in
-  if (event.target == content.document) {
-    charsetLoadListener();
-    XULBrowserWindow.asyncUpdateUI();
+  charsetLoadListener();
+  XULBrowserWindow.asyncUpdateUI();
 
-    // The PluginClickToPlay events are not fired when navigating using the
-    // BF cache. |event.persisted| is true when the page is loaded from the
-    // BF cache, so this code reshows the notification if necessary.
-    if (event.persisted)
-      gPluginHandler.reshowClickToPlayNotification();
-  }
+  // The PluginClickToPlay events are not fired when navigating using the
+  // BF cache. |event.persisted| is true when the page is loaded from the
+  // BF cache, so this code reshows the notification if necessary.
+  if (event.persisted)
+    gPluginHandler.reshowClickToPlayNotification();
 }
 
 function UpdateBackForwardCommands(aWebNavigation) {
@@ -1273,7 +1270,11 @@ var gBrowserInit = {
     SocialUI.init();
     AddonManager.addAddonListener(AddonsMgrListener);
 
-    gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
+    gBrowser.addEventListener("pageshow", function(event) {
+      // Filter out events that are not about the document load we are interested in
+      if (event.target == content.document)
+        setTimeout(pageShowEventHandlers, 0, event);
+    }, true);
 
     // Ensure login manager is up and running.
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);

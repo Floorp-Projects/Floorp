@@ -50,17 +50,40 @@
 #include <sys/syscall.h>
 #endif
 
-#ifdef XP_MACOSX
-#include <sys/sysctl.h>
-#endif
-
-#ifdef __OpenBSD__
+#if defined(XP_MACOSX) || defined(__DragonFly__) || defined(__FreeBSD__) \
+  || defined(__NetBSD__) || defined(__OpenBSD__)
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #endif
 
+#if defined(__DragonFly__) || defined(__FreeBSD__)
+#include <sys/user.h>
+#endif
+
 #include "mozilla/Telemetry.h"
 #include "mozilla/StartupTimeline.h"
+
+#if defined(__NetBSD__)
+#undef KERN_PROC
+#define KERN_PROC KERN_PROC2
+#define KINFO_PROC struct kinfo_proc2
+#else
+#define KINFO_PROC struct kinfo_proc
+#endif
+
+#if defined(XP_MACOSX)
+#define KP_START_SEC kp_proc.p_un.__p_starttime.tv_sec
+#define KP_START_USEC kp_proc.p_un.__p_starttime.tv_usec
+#elif defined(__DragonFly__)
+#define KP_START_SEC kp_start.tv_sec
+#define KP_START_USEC kp_start.tv_usec
+#elif defined(__FreeBSD__)
+#define KP_START_SEC ki_start.tv_sec
+#define KP_START_USEC ki_start.tv_usec
+#else
+#define KP_START_SEC p_ustart_sec
+#define KP_START_USEC p_ustart_usec
+#endif
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -836,42 +859,30 @@ CalculateProcessCreationTimestamp()
 #endif
   return timestamp;
 }
-#elif defined(XP_MACOSX)
+#elif defined(XP_MACOSX) || defined(__DragonFly__) || defined(__FreeBSD__) \
+  || defined(__NetBSD__) || defined(__OpenBSD__)
 static PRTime
 CalculateProcessCreationTimestamp()
 {
-  int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid() };
-  size_t buffer_size;
-  if (sysctl(mib, 4, NULL, &buffer_size, NULL, 0))
+  int mib[] = {
+    CTL_KERN,
+    KERN_PROC,
+    KERN_PROC_PID,
+    getpid(),
+#if defined(__NetBSD__) || defined(__OpenBSD__)
+    sizeof(KINFO_PROC),
+    1,
+#endif
+  };
+  u_int miblen = sizeof(mib) / sizeof(mib[0]);
+
+  KINFO_PROC proc;
+  size_t buffer_size = sizeof(proc);
+  if (sysctl(mib, miblen, &proc, &buffer_size, NULL, 0))
     return 0;
 
-  struct kinfo_proc *proc = (kinfo_proc*) malloc(buffer_size);  
-  if (sysctl(mib, 4, proc, &buffer_size, NULL, 0)) {
-    free(proc);
-    return 0;
-  }
-  PRTime starttime = static_cast<PRTime>(proc->kp_proc.p_un.__p_starttime.tv_sec) * PR_USEC_PER_SEC;
-  starttime += proc->kp_proc.p_un.__p_starttime.tv_usec;
-  free(proc);
-  return starttime;
-}
-#elif defined(__OpenBSD__)
-static PRTime
-CalculateProcessCreationTimestamp()
-{
-  int mib[6] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid(), sizeof(struct kinfo_proc), 1 };
-  size_t buffer_size;
-  if (sysctl(mib, 6, NULL, &buffer_size, NULL, 0))
-    return 0;
-
-  struct kinfo_proc *proc = (struct kinfo_proc*) malloc(buffer_size);
-  if (sysctl(mib, 6, proc, &buffer_size, NULL, 0)) {
-    free(proc);
-    return 0;
-  }
-  PRTime starttime = static_cast<PRTime>(proc->p_ustart_sec) * PR_USEC_PER_SEC;
-  starttime += proc->p_ustart_usec;
-  free(proc);
+  PRTime starttime = static_cast<PRTime>(proc.KP_START_SEC) * PR_USEC_PER_SEC;
+  starttime += proc.KP_START_USEC;
   return starttime;
 }
 #else
