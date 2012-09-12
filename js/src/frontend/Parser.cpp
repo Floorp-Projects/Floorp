@@ -5664,22 +5664,24 @@ Parser::memberExpr(bool allowCallSyntax)
              */
             uint32_t index;
             PropertyName *name = NULL;
-            if (propExpr->isKind(PNK_STRING)) {
-                JSAtom *atom = propExpr->pn_atom;
-                if (atom->isIndex(&index)) {
-                    propExpr->setKind(PNK_NUMBER);
-                    propExpr->setOp(JSOP_DOUBLE);
-                    propExpr->pn_dval = index;
-                } else {
-                    name = atom->asPropertyName();
-                }
-            } else if (propExpr->isKind(PNK_NUMBER)) {
-                double number = propExpr->pn_dval;
-                if (number != ToUint32(number)) {
-                    JSAtom *atom = ToAtom(context, DoubleValue(number));
-                    if (!atom)
-                        return NULL;
-                    name = atom->asPropertyName();
+            if (foldConstants) {
+                if (propExpr->isKind(PNK_STRING)) {
+                    JSAtom *atom = propExpr->pn_atom;
+                    if (atom->isIndex(&index)) {
+                        propExpr->setKind(PNK_NUMBER);
+                        propExpr->setOp(JSOP_DOUBLE);
+                        propExpr->pn_dval = index;
+                    } else {
+                        name = atom->asPropertyName();
+                    }
+                } else if (propExpr->isKind(PNK_NUMBER)) {
+                    double number = propExpr->pn_dval;
+                    if (number != ToUint32(number)) {
+                        JSAtom *atom = ToAtom(context, DoubleValue(number));
+                        if (!atom)
+                            return NULL;
+                        name = atom->asPropertyName();
+                    }
                 }
             }
 
