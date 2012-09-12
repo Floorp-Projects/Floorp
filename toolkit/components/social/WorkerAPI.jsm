@@ -35,6 +35,10 @@ function WorkerAPI(provider, port) {
 }
 
 WorkerAPI.prototype = {
+  terminate: function terminate() {
+    this._port.close();
+  },
+
   _handleMessage: function _handleMessage(event) {
     let {topic, data} = event.data;
     let handler = this.handlers[topic];
