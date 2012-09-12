@@ -3143,6 +3143,23 @@ js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_,
     return NewProxyObject(cx, handler, priv_, TaggedProto(proto_), parent_, call_, construct_);
 }
 
+JSObject *
+js::RenewProxyObject(JSContext *cx, JSObject *obj,
+                     BaseProxyHandler *handler, Value priv)
+{
+    JS_ASSERT(obj->getParent() == cx->global());
+    JS_ASSERT(obj->getClass() == &ObjectProxyClass);
+    JS_ASSERT(obj->getTaggedProto().isLazy());
+    JS_ASSERT(!handler->isOuterWindow());
+
+    obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
+    obj->setCrossCompartmentSlot(JSSLOT_PROXY_PRIVATE, priv);
+    obj->setSlot(JSSLOT_PROXY_EXTRA + 0, UndefinedValue());
+    obj->setSlot(JSSLOT_PROXY_EXTRA + 1, UndefinedValue());
+
+    return obj;
+}
+
 static JSBool
 proxy(JSContext *cx, unsigned argc, jsval *vp)
 {

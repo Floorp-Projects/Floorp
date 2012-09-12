@@ -56,6 +56,21 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
                           obj->isCallable() ? obj : NULL, NULL);
 }
 
+JSObject *
+Wrapper::Renew(JSContext *cx, JSObject *existing, JSObject *obj, Wrapper *handler)
+{
+#if JS_HAS_XML_SUPPORT
+    if (obj->isXML()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_CANT_WRAP_XML_OBJECT);
+        return NULL;
+    }
+#endif
+
+    JS_ASSERT(!obj->isCallable());
+    return RenewProxyObject(cx, existing, handler, ObjectValue(*obj));
+}
+
 Wrapper *
 Wrapper::wrapperHandler(RawObject wrapper)
 {
@@ -357,7 +372,8 @@ Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
 /* Compartments. */
 
 extern JSObject *
-js::TransparentObjectWrapper(JSContext *cx, JSObject *objArg, JSObject *wrappedProtoArg, JSObject *parentArg,
+js::TransparentObjectWrapper(JSContext *cx, JSObject *existing, JSObject *objArg,
+                             JSObject *wrappedProtoArg, JSObject *parentArg,
                              unsigned flags)
 {
     RootedObject obj(cx, objArg);
@@ -967,6 +983,12 @@ js::NewDeadProxyObject(JSContext *cx, JSObject *parent)
                           NULL, parent, NULL, NULL);
 }
 
+bool
+js::IsDeadProxyObject(RawObject obj)
+{
+    return IsProxy(obj) && GetProxyHandler(obj) == &DeadObjectProxy::singleton;
+}
+
 void
 js::NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper)
 {
@@ -1063,25 +1085,32 @@ js::RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget)
     // immediately cease to be a cross-compartment wrapper. Neuter it.
     NukeCrossCompartmentWrapper(cx, wobj);
 
-    // First, we wrap it in the new compartment. This will return
-    // a new wrapper.
+    // First, we wrap it in the new compartment. We try to use the existing
+    // wrapper, |wobj|, since it's been nuked anyway. The wrap() function has
+    // the choice to reuse |wobj| or not.
     JSObject *tobj = newTarget;
     AutoCompartment ac(cx, wobj);
-    if (!wcompartment->wrap(cx, &tobj))
+    if (!wcompartment->wrap(cx, &tobj, wobj))
         return false;
 
-    // Now, because we need to maintain object identity, we do a
-    // brain transplant on the old object. At the same time, we
-    // update the entry in the compartment's wrapper map to point
-    // to the old wrapper.
-    JS_ASSERT(tobj != wobj);
-    if (!wobj->swap(cx, tobj))
-        return false;
+    // If wrap() reused |wobj|, it will have overwritten it and returned with
+    // |tobj == wobj|. Otherwise, |tobj| will point to a new wrapper and |wobj|
+    // will still be nuked. In the latter case, we replace |wobj| with the
+    // contents of the new wrapper in |tobj|.
+    if (tobj != wobj) {
+        // Now, because we need to maintain object identity, we do a brain
+        // transplant on the old object so that it contains the contents of the
+        // new one.
+        if (!wobj->swap(cx, tobj))
+            return false;
+    }
 
     // Before swapping, this wrapper came out of wrap(), which enforces the
     // invariant that the wrapper in the map points directly to the key.
     JS_ASSERT(Wrapper::wrappedObject(wobj) == newTarget);
 
+    // Update the entry in the compartment's wrapper map to point to the old
+    // wrapper, which has now been updated (via reuse or swap).
     pmap.put(ObjectValue(*newTarget), ObjectValue(*wobj));
     return true;
 }
