@@ -56,8 +56,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
     @Override
     protected void setUp() throws Exception {
-        // Load config file from sdcard (setup by python script)
-        String configFile = FennecNativeDriver.getFile("/mnt/sdcard/robotium.config");
+        // Load config file from root path (setup by python script)
+        String rootPath = FennecInstrumentationTestRunner.getArguments().getString("deviceroot");
+        String configFile = FennecNativeDriver.getFile(rootPath + "/robotium.config");
         HashMap config = FennecNativeDriver.convertTextToTable(configFile);
 
         // Create the intent to be used with all the important arguments.
@@ -84,7 +85,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
         // Set up Robotium.solo and Driver objects
         mSolo = new Solo(getInstrumentation(), mActivity);
-        mDriver = new FennecNativeDriver(mActivity, mSolo);
+        mDriver = new FennecNativeDriver(mActivity, mSolo, rootPath);
         mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
     }
 
