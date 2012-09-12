@@ -4,7 +4,12 @@ onconnect = function(e) {
   let req;
   try {
     importScripts("relative_import.js");
-    port.postMessage({topic: "done", result: "ok"});
+    // the import should have exposed "testVar" and "testFunc" from the module.
+    if (testVar == "oh hai" && testFunc() == "oh hai") {
+      port.postMessage({topic: "done", result: "ok"});
+    } else {
+      port.postMessage({topic: "done", result: "import worked but global is not available"});
+    }
   } catch(e) {
     port.postMessage({topic: "done", result: "FAILED to importScripts, " + e.toString() });
     return;
