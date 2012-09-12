@@ -683,6 +683,20 @@ GlobalSearchView.prototype = {
   },
 
   /**
+   * Focuses the previously found match in the source editor.
+   */
+  focusPrevMatch: function DVGS_focusPrevMatch() {
+    let matches = this._pane.querySelectorAll(".string[match=true]");
+    if (!matches.length) {
+      return;
+    }
+    if (--this._currentlyFocusedMatch < 0) {
+      this._currentlyFocusedMatch = matches.length - 1;
+    }
+    this._onMatchClick({ target: matches[this._currentlyFocusedMatch] });
+  },
+
+  /**
    * Called when a line in the search results container is clicked.
    */
   _onLineClick: function DVGS__onLineClick(e) {
@@ -839,8 +853,9 @@ GlobalSearchView.prototype = {
 function ScriptsView() {
   this._onScriptsChange = this._onScriptsChange.bind(this);
   this._onScriptsSearchClick = this._onScriptsSearchClick.bind(this);
+  this._onScriptsSearchBlur = this._onScriptsSearchBlur.bind(this);
   this._onScriptsSearch = this._onScriptsSearch.bind(this);
-  this._onScriptsKeyUp = this._onScriptsKeyUp.bind(this);
+  this._onScriptsKeyPress = this._onScriptsKeyPress.bind(this);
 }
 
 ScriptsView.prototype = {
@@ -1282,6 +1297,13 @@ ScriptsView.prototype = {
   },
 
   /**
+   * The blur listener for the scripts search box.
+   */
+  _onScriptsSearchBlur: function DVS__onScriptsSearchBlur() {
+    this._searchboxPanel.hidePopup();
+  },
+
+  /**
    * The search listener for the scripts search box.
    */
   _onScriptsSearch: function DVS__onScriptsSearch() {
@@ -1306,32 +1328,45 @@ ScriptsView.prototype = {
   },
 
   /**
-   * The keyup listener for the scripts search box.
+   * The keypress listener for the scripts search box.
    */
-  _onScriptsKeyUp: function DVS__onScriptsKeyUp(e) {
+  _onScriptsKeyPress: function DVS__onScriptsKeyPress(e) {
     if (e.keyCode === e.DOM_VK_ESCAPE) {
       DebuggerView.editor.focus();
       return;
     }
+    var action;
 
-    if (e.keyCode === e.DOM_VK_RETURN || e.keyCode === e.DOM_VK_ENTER) {
-      let token = this.searchboxInfo[2];
-      let isGlobal = this.searchboxInfo[3];
+    if (e.keyCode === e.DOM_VK_DOWN ||
+        e.keyCode === e.DOM_VK_RETURN ||
+        e.keyCode === e.DOM_VK_ENTER) {
+      action = 1;
+    } else if (e.keyCode === e.DOM_VK_UP) {
+      action = 2;
+    }
 
-      if (!token.length) {
+    if (action) {
+      let [file, line, token, isGlobal] = this.searchboxInfo;
+
+      if (token.length) {
+        e.preventDefault();
+        e.stopPropagation();
+      } else {
         return;
       }
       if (isGlobal) {
         if (DebuggerView.GlobalSearch.hidden) {
           DebuggerView.GlobalSearch.scheduleSearch();
         } else {
-          DebuggerView.GlobalSearch.focusNextMatch();
+          DebuggerView.GlobalSearch[action === 1
+            ? "focusNextMatch"
+            : "focusPrevMatch"]();
         }
         return;
       }
 
       let editor = DebuggerView.editor;
-      let offset = editor.findNext(true);
+      let offset = editor[action === 1 ? "findNext" : "findPrevious"](true);
       if (offset > -1) {
         editor.setSelection(offset, offset + token.length)
       }
@@ -1396,9 +1431,10 @@ ScriptsView.prototype = {
 
     this._scripts.addEventListener("select", this._onScriptsChange, false);
     this._searchbox.addEventListener("click", this._onScriptsSearchClick, false);
+    this._searchbox.addEventListener("blur", this._onScriptsSearchBlur, false);
     this._searchbox.addEventListener("select", this._onScriptsSearch, false);
     this._searchbox.addEventListener("input", this._onScriptsSearch, false);
-    this._searchbox.addEventListener("keyup", this._onScriptsKeyUp, false);
+    this._searchbox.addEventListener("keypress", this._onScriptsKeyPress, false);
     this.commitScripts();
   },
 
@@ -1408,9 +1444,10 @@ ScriptsView.prototype = {
   destroy: function DVS_destroy() {
     this._scripts.removeEventListener("select", this._onScriptsChange, false);
     this._searchbox.removeEventListener("click", this._onScriptsSearchClick, false);
+    this._searchbox.removeEventListener("blur", this._onScriptsSearchBlur, false);
     this._searchbox.removeEventListener("select", this._onScriptsSearch, false);
     this._searchbox.removeEventListener("input", this._onScriptsSearch, false);
-    this._searchbox.removeEventListener("keyup", this._onScriptsKeyUp, false);
+    this._searchbox.removeEventListener("keypress", this._onScriptsKeyPress, false);
 
     this.empty();
     this._scripts = null;
