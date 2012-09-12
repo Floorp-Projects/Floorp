@@ -22,6 +22,7 @@ _JAVA_HARNESS = \
   Assert.java \
   Driver.java \
   Element.java \
+  FennecInstrumentationTestRunner.java \
   FennecNativeActions.java \
   FennecMochitestAssert.java \
   FennecTalosAssert.java \
