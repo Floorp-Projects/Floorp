@@ -676,6 +676,12 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
 void
 DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat)
 {
+  if (aFormat == FORMAT_B8G8R8X8) {
+    // We have to manually set the A channel to be 255 as Skia doesn't understand BGRX
+    ConvertBGRXToBGRA(aData, aSize, aStride);
+    mBitmap.setIsOpaque(true);
+  }
+
   mBitmap.setConfig(GfxFormatToSkiaConfig(aFormat), aSize.width, aSize.height, aStride);
   mBitmap.setPixels(aData);
   
