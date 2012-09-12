@@ -130,14 +130,8 @@ ssize_t wrap_pwrite_temp(int fd, const void *buf, size_t nbyte, off_t offset) {
 }
 
 // Define a FuncData for a pwrite-like functions.
-// FIXME: clang accepts usinging wrap_pwrite_temp<X ## _data> in the struct
-// initialization. Is this a gcc 4.2 bug?
 #define DEFINE_PWRITE_DATA(X, NAME)                                        \
-ssize_t wrap_ ## X (int fd, const void *buf, size_t nbyte, off_t offset);  \
-FuncData X ## _data = { NAME, (void*) wrap_ ## X };                        \
-ssize_t wrap_ ## X (int fd, const void *buf, size_t nbyte, off_t offset) { \
-    return wrap_pwrite_temp<X ## _data>(fd, buf, nbyte, offset);           \
-}
+FuncData X ## _data = { NAME, (void*) wrap_pwrite_temp<X ## _data> };      \
 
 // This exists everywhere.
 DEFINE_PWRITE_DATA(pwrite, "pwrite")
@@ -158,12 +152,8 @@ ssize_t wrap_writev_temp(int fd, const struct iovec *iov, int iovcnt) {
 }
 
 // Define a FuncData for a writev-like functions.
-#define DEFINE_WRITEV_DATA(X, NAME)                                  \
-ssize_t wrap_ ## X (int fd, const struct iovec *iov, int iovcnt);    \
-FuncData X ## _data = { NAME, (void*) wrap_ ## X };                  \
-ssize_t wrap_ ## X (int fd, const struct iovec *iov, int iovcnt) {   \
-    return wrap_writev_temp<X ## _data>(fd, iov, iovcnt);            \
-}
+#define DEFINE_WRITEV_DATA(X, NAME)                                   \
+FuncData X ## _data = { NAME, (void*) wrap_writev_temp<X ## _data> }; \
 
 // This exists everywhere.
 DEFINE_WRITEV_DATA(writev, "writev");
@@ -183,11 +173,7 @@ ssize_t wrap_write_temp(int fd, const void *buf, size_t count) {
 
 // Define a FuncData for a write-like functions.
 #define DEFINE_WRITE_DATA(X, NAME)                                   \
-ssize_t wrap_ ## X (int fd, const void *buf, size_t count);          \
-FuncData X ## _data = { NAME, (void*) wrap_ ## X };                  \
-ssize_t wrap_ ## X (int fd, const void *buf, size_t count) {         \
-    return wrap_write_temp<X ## _data>(fd, buf, count);              \
-}
+FuncData X ## _data = { NAME, (void*) wrap_write_temp<X ## _data> }; \
 
 // This exists everywhere.
 DEFINE_WRITE_DATA(write, "write");

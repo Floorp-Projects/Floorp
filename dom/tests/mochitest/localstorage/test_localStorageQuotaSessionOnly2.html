@@ -8,27 +8,27 @@
 
 <script type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+const Cc = SpecialPowers.wrap(Components).classes;
 
 var currentTest = 1;
-var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+var prefs = Cc["@mozilla.org/preferences-service;1"]
             .getService(Components.interfaces.nsIPrefBranch);
-var io = Components.classes["@mozilla.org/network/io-service;1"]
+var io = Cc["@mozilla.org/network/io-service;1"]
   .getService(Components.interfaces.nsIIOService);
 var uri = io.newURI(window.location, "", null);
-var cp = Components.classes["@mozilla.org/cookie/permission;1"]
+var cp = Cc["@mozilla.org/cookie/permission;1"]
   .getService(Components.interfaces.nsICookiePermission);
 
 var quota, quotaOffline;
 
 function addOfflineApp(url)
 {
-  var permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
+  var permissionManager = Cc["@mozilla.org/permissionmanager;1"]
     .getService(Components.interfaces.nsIPermissionManager);
-  var uri = Components.classes["@mozilla.org/network/io-service;1"]
+  var uri = Cc["@mozilla.org/network/io-service;1"]
     .getService(Components.interfaces.nsIIOService)
     .newURI(url, null, null);
-  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+  var principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
                     .getService(Components.interfaces.nsIScriptSecurityManager)
                     .getNoAppCodebasePrincipal(uri);
 
@@ -38,12 +38,12 @@ function addOfflineApp(url)
 
 function removeOfflineApp(url)
 {
-  var permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
+  var permissionManager = Cc["@mozilla.org/permissionmanager;1"]
     .getService(Components.interfaces.nsIPermissionManager);
-  var uri = Components.classes["@mozilla.org/network/io-service;1"]
+  var uri = Cc["@mozilla.org/network/io-service;1"]
     .getService(Components.interfaces.nsIIOService)
     .newURI(url, null, null);
-  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+  var principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
                     .getService(Components.interfaces.nsIScriptSecurityManager)
                     .getNoAppCodebasePrincipal(uri);
 
@@ -53,8 +53,6 @@ function removeOfflineApp(url)
 function doNextTest()
 {
   slave = frame;
-
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   switch (currentTest)
   {

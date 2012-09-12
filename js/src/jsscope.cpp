@@ -1304,7 +1304,7 @@ JSCompartment::sweepInitialShapeTable()
                 e.removeFront();
             } else {
 #ifdef DEBUG
-                JSObject *parent = shape->getObjectParent();
+                DebugOnly<JSObject *> parent = shape->getObjectParent();
                 JS_ASSERT(!parent || IsObjectMarked(&parent));
                 JS_ASSERT(parent == shape->getObjectParent());
 #endif

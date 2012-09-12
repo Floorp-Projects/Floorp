@@ -13,6 +13,8 @@ from tempfile import mkdtemp, gettempdir
 import manifestparser
 import mozinfo
 import random
+import socket
+import time
 
 from automationutils import *
 
@@ -22,11 +24,11 @@ def parse_json(j):
     Awful hack to parse a restricted subset of JSON strings into Python dicts.
     """
     return eval(j, {'true':True,'false':False,'null':None})
-  
+
 """ Control-C handling """
 gotSIGINT = False
 def markGotSIGINT(signum, stackFrame):
-  global gotSIGINT 
+  global gotSIGINT
   gotSIGINT = True
 
 class XPCShellTests(object):
@@ -43,7 +45,7 @@ class XPCShellTests(object):
 
   def buildTestList(self):
     """
-      read the xpcshell.ini manifest and set self.alltests to be 
+      read the xpcshell.ini manifest and set self.alltests to be
       an array of test objects.
 
       if we are chunking tests, it will be done here as well
@@ -82,7 +84,7 @@ class XPCShellTests(object):
       dirCount = len(self.alltests[dir])
       endPosition = dirCount
       if currentCount < start and currentCount + dirCount >= start:
-        startPosition = int(start - currentCount)        
+        startPosition = int(start - currentCount)
       if currentCount + dirCount > end:
         endPosition = int(end - currentCount)
       if end - currentCount < 0 or (currentCount + dirCount < start):
@@ -304,7 +306,7 @@ class XPCShellTests(object):
       On a remote system, this is more complex and we need to overload this function.
     """
     cmd = wrapCommand(cmd)
-    proc = Popen(cmd, stdout=stdout, stderr=stderr, 
+    proc = Popen(cmd, stdout=stdout, stderr=stderr,
                 env=env, cwd=cwd)
     return proc
 
@@ -314,7 +316,7 @@ class XPCShellTests(object):
       On a remote system, this is overloaded to handle remote process communication.
     """
     return proc.communicate()
-        
+
   def removeDir(self, dirname):
     """
       Simple wrapper to remove (recursively) a given directory.
@@ -328,7 +330,7 @@ class XPCShellTests(object):
       On a remote system, we need to overload this to work on the remote filesystem.
     """
     return os.path.abspath(dirname)
-        
+
   def getReturnCode(self, proc):
     """
       Simple wrapper to get the return code for a given process.
@@ -345,7 +347,7 @@ class XPCShellTests(object):
       f = open(test + ".log", "w")
       f.write(stdout)
 
-      for leakLog in leakLogs: 
+      for leakLog in leakLogs:
         if os.path.exists(leakLog):
           leaks = open(leakLog, "r")
           f.write(leaks.read())
@@ -530,6 +532,48 @@ class XPCShellTests(object):
 
     doc.writexml(fh, addindent="  ", newl="\n", encoding="utf-8")
 
+  def post_to_autolog(self, results, name):
+    from moztest.results import TestContext, TestResult, TestResultCollection
+    from moztest.output.autolog import AutologOutput
+
+    context = TestContext(
+        testgroup='b2g xpcshell testsuite',
+        operating_system='android',
+        arch='emulator',
+        harness='xpcshell',
+        hostname=socket.gethostname(),
+        tree='b2g',
+        buildtype='opt',
+        )
+
+    collection = TestResultCollection('b2g emulator testsuite')
+
+    for result in results:
+      duration = result.get('time', 0)
+
+      if 'skipped' in result:
+        outcome = 'SKIPPED'
+      elif 'todo' in result:
+        outcome = 'KNOWN-FAIL'
+      elif result['passed']:
+        outcome = 'PASS'
+      else:
+        outcome = 'UNEXPECTED-FAIL'
+
+      output = None
+      if 'failure' in result:
+        output = result['failure']['text']
+
+      t = TestResult(name=result['name'], test_class=name,
+                     time_start=0, context=context)
+      t.finish(result=outcome, time_end=duration, output=output)
+
+      collection.append(t)
+      collection.time_taken += duration
+
+    out = AutologOutput()
+    out.post(out.make_testgroups(collection))
+
   def runTests(self, xpcshell, xrePath=None, appPath=None, symbolsPath=None,
                manifest=None, testdirs=None, testPath=None,
                interactive=False, verbose=False, keepGoing=False, logfiles=True,
@@ -537,7 +581,7 @@ class XPCShellTests(object):
                debuggerArgs=None, debuggerInteractive=False,
                profileName=None, mozInfo=None, shuffle=False,
                testsRootDir=None, xunitFilename=None, xunitName=None,
-               testingModulesDir=None, **otherOptions):
+               testingModulesDir=None, autolog=False, **otherOptions):
     """Run xpcshell tests.
 
     |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -661,7 +705,7 @@ class XPCShellTests(object):
     # We have to do this before we build the test list so we know whether or
     # not to run tests that depend on having the node spdy server
     self.trySetupNode()
-    
+
     pStdout, pStderr = self.getPipes()
 
     self.buildTestList()
@@ -768,8 +812,8 @@ class XPCShellTests(object):
                       (stdout and re.search(": SyntaxError:", stdout,
                                             re.MULTILINE)) or
                       # if e10s test started but never finished (child process crash)
-                      (stdout and re.search("^child: CHILD-TEST-STARTED", 
-                                            stdout, re.MULTILINE) 
+                      (stdout and re.search("^child: CHILD-TEST-STARTED",
+                                            stdout, re.MULTILINE)
                               and not re.search("^child: CHILD-TEST-COMPLETED",
                                                 stdout, re.MULTILINE)))
 
@@ -801,6 +845,7 @@ class XPCShellTests(object):
             self.passCount += 1
           else:
             self.todoCount += 1
+            xunitResult["todo"] = True
 
         checkForCrashes(testdir, self.symbolsPath, testName=name)
         # Find child process(es) leak log(s), if any: See InitLog() in
@@ -848,6 +893,9 @@ INFO | Passed: %d
 INFO | Failed: %d
 INFO | Todo: %d""" % (self.passCount, self.failCount, self.todoCount))
 
+    if autolog:
+      self.post_to_autolog(xunitResults, xunitName)
+
     if xunitFilename is not None:
         self.writeXunitResults(filename=xunitFilename, results=xunitResults,
                                name=xunitName)
@@ -868,6 +916,9 @@ class XPCShellOptions(OptionParser):
     self.add_option("--app-path",
                     type="string", dest="appPath", default=None,
                     help="application directory (as opposed to XRE directory)")
+    self.add_option("--autolog",
+                    action="store_true", dest="autolog", default=False,
+                    help="post to autolog")
     self.add_option("--interactive",
                     action="store_true", dest="interactive", default=False,
                     help="don't automatically run tests, drop to an xpcshell prompt")

@@ -44,7 +44,7 @@ SPSProfiler::~SPSProfiler()
 void
 SPSProfiler::setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max)
 {
-    JS_ASSERT(!enabled());
+    JS_ASSERT_IF(size_ && *size_ != 0, !enabled());
     if (!strings.initialized())
         strings.init(max);
     stack_ = stack;
@@ -126,6 +126,7 @@ SPSProfiler::exit(JSContext *cx, JSScript *script, JSFunction *maybeFun)
         /* Can't fail lookup because we should already be in the set */
         JS_ASSERT(str != NULL);
         JS_ASSERT(stack_[*size_].js());
+        JS_ASSERT(stack_[*size_].script() == script);
         JS_ASSERT(strcmp((const char*) stack_[*size_].label(), str) == 0);
         stack_[*size_].setLabel(NULL);
         stack_[*size_].setPC(NULL);
@@ -392,21 +393,27 @@ SPSEntryMarker::SPSEntryMarker(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_I
         profiler = NULL;
         return;
     }
+    size_before = *profiler->size_;
     profiler->push("js::RunScript", this, NULL, NULL);
 }
 
 SPSEntryMarker::~SPSEntryMarker()
 {
-    if (profiler != NULL)
+    if (profiler != NULL) {
         profiler->pop();
+        JS_ASSERT(size_before == *profiler->size_);
+    }
 }
 
 JS_FRIEND_API(jsbytecode*)
 ProfileEntry::pc() volatile {
+    JS_ASSERT_IF(idx != NullPCIndex, idx >= 0 && idx < script()->length);
     return idx == NullPCIndex ? NULL : script()->code + idx;
 }
 
 JS_FRIEND_API(void)
 ProfileEntry::setPC(jsbytecode *pc) volatile {
+    JS_ASSERT_IF(pc != NULL, script()->code <= pc &&
+                             pc < script()->code + script()->length);
     idx = pc == NULL ? NullPCIndex : pc - script()->code;
 }

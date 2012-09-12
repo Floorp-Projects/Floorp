@@ -133,6 +133,7 @@ size. -->
 <!ENTITY find_close "Close">
 
 <!ENTITY contextmenu_open_new_tab "Open in New Tab">
+<!ENTITY contextmenu_open_in_reader "Open in Reader">
 <!ENTITY contextmenu_remove_history "Remove">
 <!ENTITY contextmenu_remove_bookmark "Remove">
 <!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
@@ -160,7 +161,7 @@ size. -->
 <!ENTITY reading_list_added "Page added to your Reading List">
 <!ENTITY reading_list_removed "Page removed from your Reading List">
 <!ENTITY reading_list_failed "Failed to add page to your Reading List">
-<!ENTITY reader_mode "Reader Mode">
+<!ENTITY reader "Reader">
 
 <!ENTITY masterpassword_create_title "Create Master Password">
 <!ENTITY masterpassword_remove_title "Remove Master Password">
@@ -240,11 +241,3 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY updater_apply_title "&brandShortName;">
 <!ENTITY updater_apply_ticker "&brandShortName; update available&#8230;">
 <!ENTITY updater_apply_select "Select to apply downloaded update.">
-
-<!ENTITY updater_installing_title "&brandShortName;">
-<!ENTITY updater_installing_ticker "Updating &brandShortName;&#8230;">
-<!ENTITY updater_installing_ticker_success "Successfully updated &brandShortName;">
-<!ENTITY updater_installing_ticker_fail "Failed to update &brandShortName;">
-<!ENTITY updater_installing_text "Installing update&#8230;">
-<!ENTITY updater_installing_text_success "Succesfully updated.">
-<!ENTITY updater_installing_text_fail "Failed to install update.">

@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(454b5cbb-fd18-4f34-a616-4d543f68717d)]
+[scriptable, uuid(39823a45-dd9e-4f8b-9b0a-0ad144eb0db6)]
 
 interface nsISecurityUITelemetry : nsISupports {
 
@@ -82,5 +82,24 @@ const uint32_t WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED = 1;
 const uint32_t WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN = 2;
 const uint32_t WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_TIME = 4;
 // This uses up buckets till 45
+
+/*
+ * Geolocation Popup Telemetry
+ */
+
+const uint32_t WARNING_GEOLOCATION_REQUEST = 46;
+const uint32_t WARNING_GEOLOCATION_REQUEST_SHARE_LOCATION = 47;
+const uint32_t WARNING_GEOLOCATION_REQUEST_ALWAYS_SHARE = 48;
+const uint32_t WARNING_GEOLOCATION_REQUEST_NEVER_SHARE = 49;
+// It would be nice to measure the two cases of user clicking
+// "not now", and user closing the popup. This is currently not implemented.
+
+/*
+ * Firefox Update Errors: UI is only thrown after 
+ * repeated errors. We only measure when the UI is shown.
+ */
+const uint32_t WARNING_INSECURE_UPDATE = 50;
+const uint32_t WARNING_NO_SECURE_UPDATE = 51;
+
 
 };
