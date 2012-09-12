@@ -229,14 +229,14 @@ void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mCenter1.x), SkFloatToScalar(pat.mCenter1.y));
         points[1] = SkPoint::Make(SkFloatToScalar(pat.mCenter2.x), SkFloatToScalar(pat.mCenter2.y));
 
-        SkShader* shader = SkGradientShader::CreateTwoPointRadial(points[0], 
-                                                                  SkFloatToScalar(pat.mRadius1),
-                                                                  points[1], 
-                                                                  SkFloatToScalar(pat.mRadius2),
-                                                                  &stops->mColors.front(), 
-                                                                  &stops->mPositions.front(), 
-                                                                  stops->mCount, 
-                                                                  mode);
+        SkShader* shader = SkGradientShader::CreateTwoPointConical(points[0], 
+                                                                   SkFloatToScalar(pat.mRadius1),
+                                                                   points[1], 
+                                                                   SkFloatToScalar(pat.mRadius2),
+                                                                   &stops->mColors.front(), 
+                                                                   &stops->mPositions.front(), 
+                                                                   stops->mCount, 
+                                                                   mode);
         if (shader) {
             SkMatrix mat;
             GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
