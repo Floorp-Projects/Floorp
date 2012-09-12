@@ -90,6 +90,9 @@ __defineSetter__("PluralForm", function (val) {
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
                                   "resource://gre/modules/TelemetryStopwatch.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
+                                  "resource:///modules/AboutHomeUtils.jsm");
+
 #ifdef MOZ_SERVICES_SYNC
 XPCOMUtils.defineLazyGetter(this, "Weave", function() {
   let tmp = {};
@@ -2495,10 +2498,19 @@ function BrowserOnAboutPageLoad(document) {
     // the hidden attribute set on the apps button in aboutHome.xhtml
     if (getBoolPref("browser.aboutHome.apps", false))
       document.getElementById("apps").removeAttribute("hidden");
+
     let ss = Components.classes["@mozilla.org/browser/sessionstore;1"].
              getService(Components.interfaces.nsISessionStore);
     if (!ss.canRestoreLastSession)
       document.getElementById("launcher").removeAttribute("session");
+
+    // Inject search engine and snippets URL.
+    let docElt = document.documentElement;
+    docElt.setAttribute("snippetsURL", AboutHomeUtils.snippetsURL);
+    docElt.setAttribute("searchEngineName",
+                        AboutHomeUtils.defaultSearchEngine.name);
+    docElt.setAttribute("searchEngineURL",
+                        AboutHomeUtils.defaultSearchEngine.searchURL);
   }
 }
 
