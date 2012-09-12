@@ -56,7 +56,8 @@ PreWrap(JSContext *cx, JSObject *scopeArg, JSObject *objArg, unsigned flags)
 }
 
 static JSObject *
-Wrap(JSContext *cx, JSObject *objArg, JSObject *protoArg, JSObject *parentArg, unsigned flags)
+Wrap(JSContext *cx, JSObject *existing, JSObject *objArg,
+     JSObject *protoArg, JSObject *parentArg, unsigned flags)
 {
     js::RootedObject obj(cx, objArg);
     js::RootedObject proto(cx, protoArg);

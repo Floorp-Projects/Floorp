@@ -349,10 +349,10 @@ struct JSCompartment
     /* Mark cross-compartment wrappers. */
     void markCrossCompartmentWrappers(JSTracer *trc);
 
-    bool wrap(JSContext *cx, js::Value *vp);
+    bool wrap(JSContext *cx, js::Value *vp, JSObject *existing = NULL);
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, js::HeapPtrString *strp);
-    bool wrap(JSContext *cx, JSObject **objp);
+    bool wrap(JSContext *cx, JSObject **objp, JSObject *existing = NULL);
     bool wrapId(JSContext *cx, jsid *idp);
     bool wrap(JSContext *cx, js::PropertyOp *op);
     bool wrap(JSContext *cx, js::StrictPropertyOp *op);
