@@ -2238,10 +2238,11 @@ struct nsStyleSVG {
   uint8_t          mTextAnchor;       // [inherited] see nsStyleConsts.h
   uint8_t          mTextRendering;    // [inherited] see nsStyleConsts.h
 
-  //  In SVG glyphs, whether we inherit fill or stroke opacity from the outer
-  // text object
-  nsStyleSVGOpacitySource mFillOpacitySource    : 2;
-  nsStyleSVGOpacitySource mStrokeOpacitySource  : 2;
+  // In SVG glyphs, whether we inherit fill or stroke opacity from the outer
+  // text object.
+  // Use 3 bits to avoid signedness problems in MSVC.
+  nsStyleSVGOpacitySource mFillOpacitySource    : 3;
+  nsStyleSVGOpacitySource mStrokeOpacitySource  : 3;
 
   // SVG glyph outer object inheritance for other properties
   bool mStrokeDasharrayFromObject   : 1;
