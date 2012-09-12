@@ -52,6 +52,8 @@ struct Rect :
         Super(float(rect.x), float(rect.y),
               float(rect.width), float(rect.height)) {}
 
+    GFX2D_API void NudgeToIntegers();
+
     bool ToIntRect(IntRect *aOut)
     {
       *aOut = IntRect(int32_t(X()), int32_t(Y()),
