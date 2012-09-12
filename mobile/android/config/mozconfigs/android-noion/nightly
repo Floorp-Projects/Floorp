@@ -1,0 +1,34 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+# Global options
+mk_add_options MOZ_MAKE_FLAGS="-j4"
+
+# Build Fennec
+ac_add_options --enable-application=mobile/android
+
+# Android
+ac_add_options --target=arm-linux-androideabi
+ac_add_options --with-android-ndk="/tools/android-ndk-r5c"
+ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"
+ac_add_options --with-android-version=5
+ac_add_options --with-system-zlib
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+
+# IonMonkey disabled in bug 789373
+ac_add_options --disable-ion
+
+export JAVA_HOME=/tools/jdk6
+export MOZILLA_OFFICIAL=1
+export MOZ_TELEMETRY_REPORTING=1
+
+ac_add_options --with-branding=mobile/android/branding/nightly
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors
+
+# Use ccache
+ac_add_options --with-ccache=/usr/bin/ccache
+
+# This will overwrite the default of stripping everything and keep the symbol table.
+# This is useful for profiling with eideticker. See bug 788680
+STRIP_FLAGS="--strip-debug"
