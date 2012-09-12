@@ -234,9 +234,12 @@ class MutableHandle : public MutableHandleBase<T>
     void operator =(S v) MOZ_DELETE;
 };
 
-typedef MutableHandle<JSObject*>    MutableHandleObject;
-typedef MutableHandle<Value>        MutableHandleValue;
-typedef MutableHandle<jsid>         MutableHandleId;
+typedef MutableHandle<JSObject*>   MutableHandleObject;
+typedef MutableHandle<JSFunction*> MutableHandleFunction;
+typedef MutableHandle<JSScript*>   MutableHandleScript;
+typedef MutableHandle<JSString*>   MutableHandleString;
+typedef MutableHandle<jsid>        MutableHandleId;
+typedef MutableHandle<Value>       MutableHandleValue;
 
 /*
  * Raw pointer used as documentation that a parameter does not need to be

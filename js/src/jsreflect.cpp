@@ -147,9 +147,7 @@ class NodeBuilder
         : cx(c), saveLoc(l), src(s) {
     }
 
-    bool init(JSObject *userobj_ = NULL) {
-        RootedObject userobj(cx, userobj_);
-
+    bool init(HandleObject userobj = NullPtr()) {
         if (src) {
             if (!atomValue(src, &srcval))
                 return false;
@@ -292,27 +290,27 @@ class NodeBuilder
         return true;
     }
 
-    bool newObject(JSObject **dst) {
-        JSObject *nobj = NewBuiltinClassInstance(cx, &ObjectClass);
+    bool newObject(MutableHandleObject dst) {
+        RootedObject nobj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
         if (!nobj)
             return false;
 
-        *dst = nobj;
+        dst.set(nobj);
         return true;
     }
 
     bool newArray(NodeVector &elts, Value *dst);
 
-    bool newNode(ASTType type, TokenPos *pos, JSObject **dst);
+    bool newNode(ASTType type, TokenPos *pos, MutableHandleObject dst);
 
     bool newNode(ASTType type, TokenPos *pos, Value *dst) {
-        JSObject *node;
+        RootedObject node(cx);
         return newNode(type, pos, &node) &&
                setResult(node, dst);
     }
 
     bool newNode(ASTType type, TokenPos *pos, const char *childName, Value child, Value *dst) {
-        JSObject *node;
+        RootedObject node(cx);
         return newNode(type, pos, &node) &&
                setProperty(node, childName, child) &&
                setResult(node, dst);
@@ -322,7 +320,7 @@ class NodeBuilder
                  const char *childName1, Value child1,
                  const char *childName2, Value child2,
                  Value *dst) {
-        JSObject *node;
+        RootedObject node(cx);
         return newNode(type, pos, &node) &&
                setProperty(node, childName1, child1) &&
                setProperty(node, childName2, child2) &&
@@ -334,7 +332,7 @@ class NodeBuilder
                  const char *childName2, Value child2,
                  const char *childName3, Value child3,
                  Value *dst) {
-        JSObject *node;
+        RootedObject node(cx);
         return newNode(type, pos, &node) &&
                setProperty(node, childName1, child1) &&
                setProperty(node, childName2, child2) &&
@@ -348,7 +346,7 @@ class NodeBuilder
                  const char *childName3, Value child3,
                  const char *childName4, Value child4,
                  Value *dst) {
-        JSObject *node;
+        RootedObject node(cx);
         return newNode(type, pos, &node) &&
                setProperty(node, childName1, child1) &&
                setProperty(node, childName2, child2) &&
@@ -364,7 +362,7 @@ class NodeBuilder
                  const char *childName4, Value child4,
                  const char *childName5, Value child5,
                  Value *dst) {
-        JSObject *node;
+        RootedObject node(cx);
         return newNode(type, pos, &node) &&
                setProperty(node, childName1, child1) &&
                setProperty(node, childName2, child2) &&
@@ -383,7 +381,7 @@ class NodeBuilder
                  const char *childName6, Value child6,
                  const char *childName7, Value child7,
                  Value *dst) {
-        JSObject *node;
+        RootedObject node(cx);
         return newNode(type, pos, &node) &&
                setProperty(node, childName1, child1) &&
                setProperty(node, childName2, child2) &&
@@ -407,8 +405,7 @@ class NodeBuilder
         return newNode(type, pos, propName, array, dst);
     }
 
-    bool setProperty(JSObject *objArg, const char *name, Value valArg) {
-        RootedObject obj(cx, objArg);
+    bool setProperty(HandleObject obj, const char *name, Value valArg) {
         RootedValue val(cx, valArg);
         JS_ASSERT_IF(val.isMagic(), val.whyMagic() == JS_SERIALIZE_NO_NODE);
 
@@ -428,9 +425,9 @@ class NodeBuilder
 
     bool newNodeLoc(TokenPos *pos, Value *dst);
 
-    bool setNodeLoc(JSObject *obj, TokenPos *pos);
+    bool setNodeLoc(HandleObject node, TokenPos *pos);
 
-    bool setResult(JSObject *obj, Value *dst) {
+    bool setResult(HandleObject obj, Value *dst) {
         JS_ASSERT(obj);
         dst->setObject(*obj);
         return true;
@@ -620,13 +617,13 @@ class NodeBuilder
 };
 
 bool
-NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
+NodeBuilder::newNode(ASTType type, TokenPos *pos, MutableHandleObject dst)
 {
     JS_ASSERT(type > AST_ERROR && type < AST_LIMIT);
 
     Value tv;
 
-    JSObject *node = NewBuiltinClassInstance(cx, &ObjectClass);
+    RootedObject node(cx, NewBuiltinClassInstance(cx, &ObjectClass));
     if (!node ||
         !setNodeLoc(node, pos) ||
         !atomValue(nodeTypeNames[type], &tv) ||
@@ -634,7 +631,7 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
         return false;
     }
 
-    *dst = node;
+    dst.set(node);
     return true;
 }
 
@@ -646,7 +643,7 @@ NodeBuilder::newArray(NodeVector &elts, Value *dst)
         js_ReportAllocationOverflow(cx);
         return false;
     }
-    Rooted<JSObject*> array(cx, NewDenseAllocatedArray(cx, uint32_t(len)));
+    RootedObject array(cx, NewDenseAllocatedArray(cx, uint32_t(len)));
     if (!array)
         return false;
 
@@ -675,7 +672,8 @@ NodeBuilder::newNodeLoc(TokenPos *pos, Value *dst)
         return true;
     }
 
-    JSObject *loc, *to;
+    RootedObject loc(cx);
+    RootedObject to(cx);
     Value tv;
 
     if (!newObject(&loc))
@@ -701,7 +699,7 @@ NodeBuilder::newNodeLoc(TokenPos *pos, Value *dst)
 }
 
 bool
-NodeBuilder::setNodeLoc(JSObject *node, TokenPos *pos)
+NodeBuilder::setNodeLoc(HandleObject node, TokenPos *pos)
 {
     if (!saveLoc) {
         setProperty(node, "loc", NullValue());
@@ -1686,7 +1684,7 @@ class ASTSerializer
 #endif
     {}
 
-    bool init(JSObject *userobj) {
+    bool init(HandleObject userobj) {
         return builder.init(userobj);
     }
 
@@ -2972,14 +2970,14 @@ ASTSerializer::literal(ParseNode *pn, Value *dst)
 
       case PNK_REGEXP:
       {
-        JSObject *re1 = pn->pn_objbox ? pn->pn_objbox->object : NULL;
+        RootedObject re1(cx, pn->pn_objbox ? pn->pn_objbox->object : NULL);
         LOCAL_ASSERT(re1 && re1->isRegExp());
 
         RootedObject proto(cx);
         if (!js_GetClassPrototype(cx, JSProto_RegExp, &proto))
             return false;
 
-        JSObject *re2 = CloneRegExpObject(cx, re1, proto);
+        RootedObject re2(cx, CloneRegExpObject(cx, re1, proto));
         if (!re2)
             return false;
 
@@ -3100,7 +3098,7 @@ ASTSerializer::identifier(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::function(ParseNode *pn, ASTType type, Value *dst)
 {
-    JSFunction *func = pn->pn_funbox->fun();
+    RootedFunction func(cx, pn->pn_funbox->fun());
 
     bool isGenerator =
 #if JS_HAS_GENERATORS
@@ -3291,7 +3289,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     uint32_t lineno = 1;
     bool loc = true;
 
-    JSObject *builder = NULL;
+    RootedObject builder(cx);
 
     RootedValue arg(cx, argc > 1 ? JS_ARGV(cx, vp)[1] : UndefinedValue());
 
