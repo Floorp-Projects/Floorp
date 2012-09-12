@@ -24,24 +24,6 @@ function test() {
 }
 
 let tests = {
-  testInitializeWorker: function(next) {
-    ok(provider.workerAPI, "provider has a workerAPI");
-    is(provider.workerAPI.initialized, false, "workerAPI is not yet initialized");
-  
-    let port = provider.getWorkerPort();
-    ok(port, "should be able to get a port from the provider");
-
-    port.onmessage = function onMessage(event) {
-      let topic = event.data.topic;
-      if (topic == "test-initialization-complete") {
-        is(provider.workerAPI.initialized, true, "workerAPI is now initialized");
-        port.close();
-        next();
-      }
-    }
-    port.postMessage({topic: "test-initialization"});
-  },
-
   testProfile: function(next) {
     let expect = {
       portrait: "https://example.com/portrait.jpg",
@@ -58,12 +40,15 @@ let tests = {
       is(profile.displayName, expect.displayName, "displayName is set");
       is(profile.profileURL, expect.profileURL, "profileURL is set");
 
+      // see below - if not for bug 788368 we could close this earlier.
+      port.close();
       next();
     }
     Services.obs.addObserver(ob, "social:profile-changed", false);
     let port = provider.getWorkerPort();
     port.postMessage({topic: "test-profile", data: expect});
-    port.close();
+    // theoretically we should be able to close the port here, but bug 788368
+    // means that if we do, the worker never sees the test-profile message.
   },
 
   testAmbientNotification: function(next) {
