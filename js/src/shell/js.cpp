@@ -1701,7 +1701,7 @@ Notes(JSContext *cx, unsigned argc, jsval *vp)
     for (unsigned i = 0; i < argc; i++) {
         JSScript *script = ValueToScript(cx, argv[i]);
         if (!script)
-            continue;
+            return false;
 
         SrcNotes(cx, script, &sprinter);
     }
