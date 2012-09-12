@@ -116,6 +116,9 @@ VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap);
 bool
 GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue vp);
 
+JSObject *
+GetIteratorObject(JSContext *cx, HandleObject obj, unsigned flags);
+
 bool
 VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
                     MutableHandleValue vp);
@@ -166,10 +169,10 @@ js_SuppressDeletedElements(JSContext *cx, js::HandleObject obj, uint32_t begin, 
  * internally call iterobj.next() and then cache the value until its
  * picked up by IteratorNext(). The value is cached in the current context.
  */
-extern JSBool
+extern bool
 js_IteratorMore(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue rval);
 
-extern JSBool
+extern bool
 js_IteratorNext(JSContext *cx, JSObject *iterobj, js::MutableHandleValue rval);
 
 extern JSBool

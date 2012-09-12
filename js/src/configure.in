@@ -2155,6 +2155,7 @@ dnl Configure JIT support
 case "$target" in
 i?86-*)
     ENABLE_METHODJIT=1
+    ENABLE_ION=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
     ENABLE_METHODJIT_TYPED_ARRAY=1
@@ -2163,6 +2164,7 @@ i?86-*)
     ;;
 x86_64*-*)
     ENABLE_METHODJIT=1
+    ENABLE_ION=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
     ENABLE_METHODJIT_TYPED_ARRAY=1
@@ -2171,6 +2173,7 @@ x86_64*-*)
     ;;
 arm*-*)
     ENABLE_METHODJIT=1
+    ENABLE_ION=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
     ENABLE_POLYIC_TYPED_ARRAY=1
@@ -2183,6 +2186,7 @@ sparc*-*)
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
     ENABLE_METHODJIT_TYPED_ARRAY=1
+dnl ENABLE_ION=0
     AC_DEFINE(JS_CPU_SPARC)
     AC_DEFINE(JS_NUNBOX32)
     fi
@@ -2218,11 +2222,23 @@ MOZ_ARG_ENABLE_BOOL(methodjit-spew,
   ENABLE_METHODJIT_SPEW=1,
   ENABLE_METHODJIT_SPEW= )
 
+MOZ_ARG_DISABLE_BOOL(ion,
+[  --disable-ion      Disable use of IONMonkey compiler],
+  ENABLE_ION=,
+  ENABLE_ION=1 )
+
 AC_SUBST(ENABLE_METHODJIT)
 AC_SUBST(ENABLE_METHODJIT_SPEW)
 
 if test "$ENABLE_METHODJIT"; then
     AC_DEFINE(JS_METHODJIT)
+else
+    ENABLE_ION=
+fi
+
+# Disable IonMonkey for B2G, for now.
+if test "$MOZ_APP_NAME" = b2g; then
+    ENABLE_ION=
 fi
 
 if test "$ENABLE_MONOIC"; then
@@ -2235,6 +2251,12 @@ fi
 
 if test "$ENABLE_METHODJIT_TYPED_ARRAY"; then
     AC_DEFINE(JS_METHODJIT_TYPED_ARRAY)
+fi
+
+AC_SUBST(ENABLE_ION)
+
+if test "$ENABLE_ION"; then
+    AC_DEFINE(JS_ION)
 fi
 
 MOZ_COMPILER_OPTS
@@ -3457,6 +3479,20 @@ MOZ_ARG_ENABLE_STRING(debug-symbols,
 if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
     AC_DEFINE(MOZ_DEBUG_SYMBOLS)
     export MOZ_DEBUG_SYMBOLS
+fi
+
+dnl ========================================================
+dnl = Enable trace logging
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(trace-logging,
+[  --enable-trace-logging   Enable trace logging],
+    ENABLE_TRACE_LOGGING=1,
+    ENABLE_TRACE_LOGGING= )
+
+AC_SUBST(ENABLE_TRACE_LOGGING)
+
+if test "$ENABLE_TRACE_LOGGING"; then
+    AC_DEFINE(JS_TRACE_LOGGING)
 fi
 
 dnl ========================================================

@@ -122,7 +122,7 @@ CPPSRCS		= \
 		nsTraversal.cpp \
 		nsTreeSanitizer.cpp \
 		nsTreeWalker.cpp \
-		nsWebSocket.cpp \
+		WebSocket.cpp \
 		nsXHTMLContentSerializer.cpp \
 		nsXMLContentSerializer.cpp \
 		nsXMLHttpRequest.cpp \

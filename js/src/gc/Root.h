@@ -11,9 +11,17 @@
 #ifdef __cplusplus
 
 #include "mozilla/TypeTraits.h"
+#include "mozilla/GuardObjects.h"
 
 #include "js/TemplateLib.h"
-#include "js/Utility.h"
+
+#include "jspubtd.h"
+
+namespace js {
+namespace gc {
+struct Cell;
+} /* namespace gc */
+} /* namespace js */
 
 namespace JS {
 
@@ -238,6 +246,73 @@ typedef JSObject *                  RawObject;
 typedef JSString *                  RawString;
 typedef Value                       RawValue;
 
+/*
+ * InternalHandle is a handle to an internal pointer into a gcthing. Use
+ * InternalHandle when you have a pointer to a direct field of a gcthing, or
+ * when you need a parameter type for something that *may* be a pointer to a
+ * direct field of a gcthing.
+ */
+class InternalHandleBase
+{
+  protected:
+    static void * const zeroPointer;
+};
+
+template <typename T>
+class InternalHandle { };
+
+template <typename T>
+class InternalHandle<T*> : public InternalHandleBase
+{
+    void * const *holder;
+    size_t offset;
+
+  public:
+    /*
+     * Create an InternalHandle using a Handle to the gcthing containing the
+     * field in question, and a pointer to the field.
+     */
+    template<typename H>
+    InternalHandle(const Handle<H> &handle, T *field)
+      : holder((void**)handle.address()), offset(uintptr_t(field) - uintptr_t(handle.get()))
+    {
+    }
+
+    /*
+     * Create an InternalHandle to a field within a Rooted<>.
+     */
+    template<typename R>
+    InternalHandle(const Rooted<R> &root, T *field)
+      : holder((void**)root.address()), offset(uintptr_t(field) - uintptr_t(root.get()))
+    {
+    }
+
+    T *get() const { return reinterpret_cast<T*>(uintptr_t(*holder) + offset); }
+
+    const T& operator *() const { return *get(); }
+    T* operator ->() const { return get(); }
+
+    static InternalHandle<T*> fromMarkedLocation(T *fieldPtr) {
+        return InternalHandle(fieldPtr);
+    }
+
+  private:
+    /*
+     * Create an InternalHandle to something that is not a pointer to a
+     * gcthing, and so does not need to be rooted in the first place. Use these
+     * InternalHandles to pass pointers into functions that also need to accept
+     * regular InternalHandles to gcthing fields.
+     *
+     * Make this private to prevent accidental misuse; this is only for
+     * fromMarkedLocation().
+     */
+    InternalHandle(T *field)
+      : holder(reinterpret_cast<void * const *>(&zeroPointer)),
+        offset(uintptr_t(field))
+    {
+    }
+};
+
 extern mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
 
 /*
@@ -388,7 +463,7 @@ typedef Rooted<Value>        RootedValue;
  */
 class SkipRoot
 {
-#if defined(DEBUG) && defined(JSGC_ROOT_ANALYSIS)
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 
     SkipRoot **stack, *prev;
     const uint8_t *start;
@@ -440,38 +515,30 @@ class SkipRoot
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+JS_FRIEND_API(void) EnterAssertNoGCScope();
+JS_FRIEND_API(void) LeaveAssertNoGCScope();
+JS_FRIEND_API(bool) InNoGCScope();
+
 /*
- * This typedef is to annotate parameters that we have manually verified do not
- * need rooting, as opposed to parameters that have not yet been considered.
+ * The scoped guard object AutoAssertNoGC forces the GC to assert if a GC is
+ * attempted while the guard object is live.  If you have a GC-unsafe operation
+ * to perform, use this guard object to protect your opertion.
  */
-typedef JSObject *RawObject;
+class AutoAssertNoGC
+{
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-#ifdef DEBUG
-JS_FRIEND_API(bool) IsRootingUnnecessaryForContext(JSContext *cx);
-JS_FRIEND_API(void) SetRootingUnnecessaryForContext(JSContext *cx, bool value);
-JS_FRIEND_API(bool) RelaxRootChecksForContext(JSContext *cx);
-#endif
-
-class AssertRootingUnnecessary {
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-#ifdef DEBUG
-    JSContext *cx;
-    bool prev;
-#endif
 public:
-    AssertRootingUnnecessary(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    AutoAssertNoGC(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 #ifdef DEBUG
-        this->cx = cx;
-        prev = IsRootingUnnecessaryForContext(cx);
-        SetRootingUnnecessaryForContext(cx, true);
+        EnterAssertNoGCScope();
 #endif
     }
 
-    ~AssertRootingUnnecessary() {
+    ~AutoAssertNoGC() {
 #ifdef DEBUG
-        SetRootingUnnecessaryForContext(cx, prev);
+        LeaveAssertNoGCScope();
 #endif
     }
 };
@@ -481,6 +548,8 @@ extern void
 CheckStackRoots(JSContext *cx);
 #endif
 
+JS_FRIEND_API(bool) NeedRelaxedRootChecks();
+
 /*
  * Hook for dynamic root analysis. Checks the native stack and poisons
  * references to GC things which have not been rooted.
@@ -488,14 +557,32 @@ CheckStackRoots(JSContext *cx);
 inline void MaybeCheckStackRoots(JSContext *cx, bool relax = true)
 {
 #ifdef DEBUG
-    JS_ASSERT(!IsRootingUnnecessaryForContext(cx));
+    JS_ASSERT(!InNoGCScope());
 # if defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
-    if (relax && RelaxRootChecksForContext(cx))
+    if (relax && NeedRelaxedRootChecks())
         return;
     CheckStackRoots(cx);
 # endif
 #endif
 }
+
+/* Base class for automatic read-only object rooting during compilation. */
+class CompilerRootNode
+{
+  protected:
+    CompilerRootNode(js::gc::Cell *ptr)
+      : next(NULL), ptr(ptr)
+    { }
+
+  public:
+    void **address() { return (void **)&ptr; }
+
+  public:
+    CompilerRootNode *next;
+
+  protected:
+    js::gc::Cell *ptr;
+};
 
 }  /* namespace JS */
 

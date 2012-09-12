@@ -1061,11 +1061,12 @@ class JS_PUBLIC_API(AutoGCRooter) {
         SHAPERANGE =  -20, /* js::Shape::Range::AutoRooter */
         STACKSHAPE =  -21, /* js::StackShape::AutoRooter */
         STACKBASESHAPE=-22,/* js::StackBaseShape::AutoRooter */
-        BINDINGS =    -23, /* js::Bindings::AutoRooter */
         GETTERSETTER =-24, /* js::AutoRooterGetterSetter */
         REGEXPSTATICS=-25, /* js::RegExpStatics::AutoRooter */
         NAMEVECTOR =  -26, /* js::AutoNameVector */
-        HASHABLEVALUE=-27
+        HASHABLEVALUE=-27,
+        IONMASM =     -28, /* js::ion::MacroAssembler */
+        IONALLOC =    -29  /* js::ion::AutoTempAllocatorRooter */
     };
 
   private:
@@ -3219,10 +3220,12 @@ JS_StringToVersion(const char *string);
                                                    without requiring
                                                    "use strict" annotations. */
 
+#define JSOPTION_ION            JS_BIT(20)      /* IonMonkey */
+
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(20) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(21) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32_t)

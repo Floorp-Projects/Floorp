@@ -70,6 +70,13 @@ NumberDiv(double a, double b)
     return a / b;
 }
 
+inline double
+NumberMod(double a, double b) {
+    if (b == 0) 
+        return js_NaN;
+    return js_fmod(a, b);
+}
+
 }
 
 #endif /* _LIBMATH_H */

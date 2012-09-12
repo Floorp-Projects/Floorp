@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.util.GeckoAsyncTask;
 
 import android.app.Activity;
@@ -17,6 +18,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -475,13 +477,19 @@ public class AwesomeBar extends GeckoActivity {
         public byte[] favicon;
         public String title;
         public String keyword;
+        public int display;
 
         public ContextMenuSubject(int id, String url, byte[] favicon, String title, String keyword) {
+            this(id, url, favicon, title, keyword, Combined.DISPLAY_NORMAL);
+        }
+
+        public ContextMenuSubject(int id, String url, byte[] favicon, String title, String keyword, int display) {
             this.id = id;
             this.url = url;
             this.favicon = favicon;
             this.title = title;
             this.keyword = keyword;
+            this.display = display;
         }
     };
 
@@ -513,6 +521,15 @@ public class AwesomeBar extends GeckoActivity {
 
                 GeckoApp.mAppContext.loadUrl(url, AwesomeBar.Target.NEW_TAB);
                 Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case R.id.open_in_reader: {
+                if (url == null) {
+                    Log.e(LOGTAG, "Can't open in reader mode because URL is null");
+                    break;
+                }
+
+                openUrlAndFinish(getReaderForUrl(url));
                 break;
             }
             case R.id.edit_bookmark: {
@@ -649,6 +666,12 @@ public class AwesomeBar extends GeckoActivity {
             }
         }
         return true;
+    }
+
+    public static String getReaderForUrl(String url) {
+        // FIXME: still need to define the final way to open items from
+        // reading list. For now, we're using an about:reader page.
+        return "about:reader?url=" + Uri.encode(url) + "&readingList=1";
     }
 
     private static boolean hasCompositionString(Editable content) {

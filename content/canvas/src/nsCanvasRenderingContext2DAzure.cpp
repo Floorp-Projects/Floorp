@@ -546,6 +546,7 @@ NS_INTERFACE_MAP_END
 uint32_t nsCanvasRenderingContext2DAzure::sNumLivingContexts = 0;
 uint8_t (*nsCanvasRenderingContext2DAzure::sUnpremultiplyTable)[256] = nullptr;
 uint8_t (*nsCanvasRenderingContext2DAzure::sPremultiplyTable)[256] = nullptr;
+DrawTarget* nsCanvasRenderingContext2DAzure::sErrorTarget = nullptr;
 
 namespace mozilla {
 namespace dom {
@@ -577,7 +578,7 @@ NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult)
 }
 
 nsCanvasRenderingContext2DAzure::nsCanvasRenderingContext2DAzure()
-  : mValid(false), mZero(false), mOpaque(false), mResetLayer(true)
+  : mZero(false), mOpaque(false), mResetLayer(true)
   , mIPC(false)
   , mIsEntireFrameInvalid(false)
   , mPredictManyRedrawCalls(false), mPathTransformWillUpdate(false)
@@ -600,6 +601,7 @@ nsCanvasRenderingContext2DAzure::~nsCanvasRenderingContext2DAzure()
     delete[] sPremultiplyTable;
     sUnpremultiplyTable = nullptr;
     sPremultiplyTable = nullptr;
+    NS_IF_RELEASE(sErrorTarget);
   }
 }
 
@@ -649,7 +651,7 @@ nsCanvasRenderingContext2DAzure::Reset()
 
   // only do this for non-docshell created contexts,
   // since those are the ones that we created a surface for
-  if (mValid && !mDocShell) {
+  if (mTarget && IsTargetValid() && !mDocShell) {
     gCanvasAzureMemoryUsed -= mWidth * mHeight * 4;
   }
 
@@ -658,7 +660,6 @@ nsCanvasRenderingContext2DAzure::Reset()
   // Since the target changes the backing texture will change, and this will
   // no longer be valid.
   mThebesSurface = nullptr;
-  mValid = false;
   mIsEntireFrameInvalid = false;
   mPredictManyRedrawCalls = false;
 
@@ -835,22 +836,15 @@ nsCanvasRenderingContext2DAzure::RedrawUser(const gfxRect& r)
   Redraw(newr);
 }
 
-NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::SetDimensions(int32_t width, int32_t height)
+void
+nsCanvasRenderingContext2DAzure::EnsureTarget()
 {
-  RefPtr<DrawTarget> target;
-
-  // Zero sized surfaces cause issues, so just go with 1x1.
-  if (height == 0 || width == 0) {
-    mZero = true;
-    height = 1;
-    width = 1;
-  } else {
-    mZero = false;
+  if (mTarget) {
+    return;
   }
 
-  // Check that the dimensions are sane
-  IntSize size(width, height);
+   // Check that the dimensions are sane
+  IntSize size(mWidth, mHeight);
   if (size.width <= 0xFFFF && size.height <= 0xFFFF &&
       size.width >= 0 && size.height >= 0) {
     SurfaceFormat format = GetSurfaceFormat();
@@ -866,41 +860,58 @@ nsCanvasRenderingContext2DAzure::SetDimensions(int32_t width, int32_t height)
         nsContentUtils::PersistentLayerManagerForDocument(ownerDoc);
     }
 
-    if (layerManager) {
-      target = layerManager->CreateDrawTarget(size, format);
-    } else {
-      target = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(size, format);
-    }
+     if (layerManager) {
+       mTarget = layerManager->CreateDrawTarget(size, format);
+     } else {
+       mTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(size, format);
+     }
   }
 
-  if (target) {
+  if (mTarget) {
     if (gCanvasAzureMemoryReporter == nullptr) {
         gCanvasAzureMemoryReporter = new NS_MEMORY_REPORTER_NAME(CanvasAzureMemory);
       NS_RegisterMemoryReporter(gCanvasAzureMemoryReporter);
     }
 
-    gCanvasAzureMemoryUsed += width * height * 4;
+    gCanvasAzureMemoryUsed += mWidth * mHeight * 4;
     JSContext* context = nsContentUtils::GetCurrentJSContext();
     if (context) {
-      JS_updateMallocCounter(context, width * height * 4);
+      JS_updateMallocCounter(context, mWidth * mHeight * 4);
     }
-  }
 
-  return InitializeWithTarget(target, width, height);
+    mTarget->ClearRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+    // always force a redraw, because if the surface dimensions were reset
+    // then the surface became cleared, and we need to redraw everything.
+    Redraw();
+  } else {
+    EnsureErrorTarget();
+    mTarget = sErrorTarget;
+  }
 }
 
-nsresult
-nsCanvasRenderingContext2DAzure::Initialize(int32_t width, int32_t height)
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::SetDimensions(int32_t width, int32_t height)
 {
-  mWidth = width;
-  mHeight = height;
+  ClearTarget();
 
-  if (!mValid) {
-    // Create a dummy target in the hopes that it will help us deal with users
-    // calling into us after having changed the size where the size resulted
-    // in an inability to create a correct DrawTarget.
-    mTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(IntSize(1, 1), FORMAT_B8G8R8A8);
+  // Zero sized surfaces cause issues, so just go with 1x1.
+  if (height == 0 || width == 0) {
+    mZero = true;
+    mWidth = 1;
+    mHeight = 1;
+  } else {
+    mZero = false;
+    mWidth = width;
+    mHeight = height;
   }
+
+  return NS_OK;
+}
+
+void
+nsCanvasRenderingContext2DAzure::ClearTarget()
+{
+  Reset();
 
   mResetLayer = true;
 
@@ -916,42 +927,6 @@ nsCanvasRenderingContext2DAzure::Initialize(int32_t width, int32_t height)
   state->colorStyles[STYLE_FILL] = NS_RGB(0,0,0);
   state->colorStyles[STYLE_STROKE] = NS_RGB(0,0,0);
   state->shadowColor = NS_RGBA(0,0,0,0);
-
-  if (mTarget) {
-    mTarget->ClearRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
-    // always force a redraw, because if the surface dimensions were reset
-    // then the surface became cleared, and we need to redraw everything.
-    Redraw();
-  }
-
-  return mValid ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-nsresult
-nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, int32_t width, int32_t height)
-{
-  Reset();
-
-  NS_ASSERTION(mCanvasElement, "Must have a canvas element!");
-  mDocShell = nullptr;
-
-  // This first time this is called on this object is via
-  // nsHTMLCanvasElement::GetContext. If target was non-null then mTarget is
-  // non-null, otherwise we'll return an error here and GetContext won't
-  // return this context object and we'll never enter this code again.
-  // All other times this method is called, if target is null then
-  // mTarget won't be changed, i.e. it will remain non-null, or else it
-  // will be set to non-null.
-  // In all cases, any usable canvas context will have non-null mTarget.
-
-  if (target) {
-    mValid = true;
-    mTarget = target;
-  } else {
-    mValid = false;
-  }
-
-  return Initialize(width, height);
 }
 
 NS_IMETHODIMP
@@ -960,25 +935,22 @@ nsCanvasRenderingContext2DAzure::InitializeWithSurface(nsIDocShell *shell, gfxAS
   mDocShell = shell;
   mThebesSurface = surface;
 
+  SetDimensions(width, height);
   mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surface, IntSize(width, height));
-  mValid = mTarget != nullptr;
+  if (!mTarget) {
+    EnsureErrorTarget();
+    mTarget = sErrorTarget;
+  }
 
-  return Initialize(width, height);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::SetIsOpaque(bool isOpaque)
 {
-  if (isOpaque == mOpaque)
-    return NS_OK;
-
-  mOpaque = isOpaque;
-
-  if (mValid) {
-    /* If we've already been created, let SetDimensions take care of
-      * recreating our surface
-      */
-    return SetDimensions(mWidth, mHeight);
+  if (isOpaque != mOpaque) {
+    mOpaque = isOpaque;
+    ClearTarget();
   }
 
   return NS_OK;
@@ -987,16 +959,9 @@ nsCanvasRenderingContext2DAzure::SetIsOpaque(bool isOpaque)
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::SetIsIPC(bool isIPC)
 {
-  if (isIPC == mIPC)
-      return NS_OK;
-
-  mIPC = isIPC;
-
-  if (mValid) {
-    /* If we've already been created, let SetDimensions take care of
-      * recreating our surface
-      */
-    return SetDimensions(mWidth, mHeight);
+  if (isIPC != mIPC) {
+    mIPC = isIPC;
+    ClearTarget();
   }
 
   return NS_OK;
@@ -1007,7 +972,8 @@ nsCanvasRenderingContext2DAzure::Render(gfxContext *ctx, gfxPattern::GraphicsFil
 {
   nsresult rv = NS_OK;
 
-  if (!mValid || !mTarget) {
+  EnsureTarget();
+  if (!IsTargetValid()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1051,7 +1017,8 @@ nsCanvasRenderingContext2DAzure::GetInputStream(const char *aMimeType,
                                                 const PRUnichar *aEncoderOptions,
                                                 nsIInputStream **aStream)
 {
-  if (!mValid || !mTarget) {
+  EnsureTarget();
+  if (!IsTargetValid()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1138,6 +1105,7 @@ nsCanvasRenderingContext2DAzure::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 void
 nsCanvasRenderingContext2DAzure::Save()
 {
+  EnsureTarget();
   mStyleStack[mStyleStack.Length() - 1].transform = mTarget->GetTransform();
   mStyleStack.SetCapacity(mStyleStack.Length() + 1);
   mStyleStack.AppendElement(CurrentState());
@@ -1156,13 +1124,13 @@ nsCanvasRenderingContext2DAzure::Restore()
   if (mStyleStack.Length() - 1 == 0)
     return;
 
+  TransformWillUpdate();
+
   for (uint32_t i = 0; i < CurrentState().clipsPushed.size(); i++) {
     mTarget->PopClip();
   }
 
   mStyleStack.RemoveElementAt(mStyleStack.Length() - 1);
-
-  TransformWillUpdate();
 
   mTarget->SetTransform(CurrentState().transform);
 }
@@ -1181,16 +1149,15 @@ nsCanvasRenderingContext2DAzure::MozRestore()
 void
 nsCanvasRenderingContext2DAzure::Scale(double x, double y, ErrorResult& error)
 {
-  if (!mTarget) {
-    error.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
   if (!FloatValidate(x,y)) {
     return;
   }
 
   TransformWillUpdate();
+  if (!IsTargetValid()) {
+    error.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   Matrix newMatrix = mTarget->GetTransform();
   mTarget->SetTransform(newMatrix.Scale(x, y));
@@ -1207,16 +1174,16 @@ nsCanvasRenderingContext2DAzure::Scale(float x, float y)
 void
 nsCanvasRenderingContext2DAzure::Rotate(double angle, ErrorResult& error)
 {
-  if (!mTarget) {
-    error.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
   if (!FloatValidate(angle)) {
     return;
   }
 
   TransformWillUpdate();
+  if (!IsTargetValid()) {
+    error.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
 
   Matrix rotation = Matrix::Rotation(angle);
   mTarget->SetTransform(rotation * mTarget->GetTransform());
@@ -1233,16 +1200,15 @@ nsCanvasRenderingContext2DAzure::Rotate(float angle)
 void
 nsCanvasRenderingContext2DAzure::Translate(double x, double y, ErrorResult& error)
 {
-  if (!mTarget) {
-    error.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
   if (!FloatValidate(x,y)) {
     return;
   }
 
   TransformWillUpdate();
+  if (!IsTargetValid()) {
+    error.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   Matrix newMatrix = mTarget->GetTransform();
   mTarget->SetTransform(newMatrix.Translate(x, y));
@@ -1261,16 +1227,15 @@ nsCanvasRenderingContext2DAzure::Transform(double m11, double m12, double m21,
                                            double m22, double dx, double dy,
                                            ErrorResult& error)
 {
-  if (!mTarget) {
-    error.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
   if (!FloatValidate(m11,m12,m21,m22,dx,dy)) {
     return;
   }
 
   TransformWillUpdate();
+  if (!IsTargetValid()) {
+    error.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   Matrix matrix(m11, m12, m21, m22, dx, dy);
   mTarget->SetTransform(matrix * mTarget->GetTransform());
@@ -1291,16 +1256,15 @@ nsCanvasRenderingContext2DAzure::SetTransform(double m11, double m12,
                                               double dx, double dy,
                                               ErrorResult& error)
 {
-  if (!mTarget) {
-    error.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
   if (!FloatValidate(m11,m12,m21,m22,dx,dy)) {
     return;
   }
 
   TransformWillUpdate();
+  if (!IsTargetValid()) {
+    error.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   Matrix matrix(m11, m12, m21, m22, dx, dy);
   mTarget->SetTransform(matrix);
@@ -1369,7 +1333,8 @@ nsCanvasRenderingContext2DAzure::SetMozCurrentTransform(JSContext* cx,
                                                         JSObject& currentTransform,
                                                         ErrorResult& error)
 {
-  if (!mTarget) {
+  EnsureTarget();
+  if (!IsTargetValid()) {
     error.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -1397,12 +1362,7 @@ JSObject*
 nsCanvasRenderingContext2DAzure::GetMozCurrentTransform(JSContext* cx,
                                                         ErrorResult& error) const
 {
-  if (!mTarget) {
-    error.Throw(NS_ERROR_FAILURE);
-    return NULL;
-  }
-
-  return MatrixToJSObject(cx, mTarget->GetTransform(), error);
+  return MatrixToJSObject(cx, mTarget ? mTarget->GetTransform() : Matrix(), error);
 }
 
 NS_IMETHODIMP
@@ -1422,7 +1382,8 @@ nsCanvasRenderingContext2DAzure::SetMozCurrentTransformInverse(JSContext* cx,
                                                                JSObject& currentTransform,
                                                                ErrorResult& error)
 {
-  if (!mTarget) {
+  EnsureTarget();
+  if (!IsTargetValid()) {
     error.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -1454,8 +1415,7 @@ nsCanvasRenderingContext2DAzure::GetMozCurrentTransformInverse(JSContext* cx,
                                                                ErrorResult& error) const
 {
   if (!mTarget) {
-    error.Throw(NS_ERROR_FAILURE);
-    return NULL;
+    return MatrixToJSObject(cx, Matrix(), error);
   }
 
   Matrix ctm = mTarget->GetTransform();
@@ -1902,6 +1862,7 @@ nsCanvasRenderingContext2DAzure::CreatePattern(const HTMLImageOrCanvasOrVideoEle
     return NULL;
   }
 
+  EnsureTarget();
   RefPtr<SourceSurface> srcSurf =
     gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mTarget, res.mSurface);
 
@@ -2005,7 +1966,7 @@ void
 nsCanvasRenderingContext2DAzure::ClearRect(double x, double y, double w,
                                            double h)
 {
-  if (!FloatValidate(x,y,w,h)) {
+  if (!FloatValidate(x,y,w,h) || !mTarget) {
     return;
   }
  
@@ -2079,6 +2040,7 @@ nsCanvasRenderingContext2DAzure::FillRect(double x, double y, double w,
 
   mgfx::Rect bounds;
   
+  EnsureTarget();
   if (NeedToDrawShadow()) {
     bounds = mgfx::Rect(x, y, w, h);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
@@ -2110,15 +2072,20 @@ nsCanvasRenderingContext2DAzure::StrokeRect(double x, double y, double w,
   const ContextState &state = CurrentState();
 
   mgfx::Rect bounds;
-  
+
+  if (!w && !h) {
+    return;
+  }
+
+  EnsureTarget();
+  if (!IsTargetValid()) {
+    return;
+  }
+
   if (NeedToDrawShadow()) {
     bounds = mgfx::Rect(x - state.lineWidth / 2.0f, y - state.lineWidth / 2.0f,
                         w + state.lineWidth, h + state.lineWidth);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
-  }
-
-  if (!w && !h) {
-    return;
   }
 
   if (!h) {
@@ -2491,6 +2458,7 @@ nsCanvasRenderingContext2DAzure::EnsureWritablePath()
     return;
   }
 
+  EnsureTarget();
   if (!mPath) {
     NS_ASSERTION(!mPathTransformWillUpdate, "mPathTransformWillUpdate should be false, if all paths are null");
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
@@ -2509,6 +2477,7 @@ nsCanvasRenderingContext2DAzure::EnsureUserSpacePath(bool aCommitTransform /* = 
   FillRule fillRule = CurrentState().fillRule;
 
   if (!mPath && !mPathBuilder && !mDSPathBuilder) {
+    EnsureTarget();
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
   }
 
@@ -2554,6 +2523,8 @@ nsCanvasRenderingContext2DAzure::EnsureUserSpacePath(bool aCommitTransform /* = 
 void
 nsCanvasRenderingContext2DAzure::TransformWillUpdate()
 {
+  EnsureTarget();
+
   // Store the matrix that would transform the current path to device
   // space.
   if (mPath || mPathBuilder) {
@@ -3037,6 +3008,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
 
     float advanceSum = 0;
 
+    mCtx->EnsureTarget();
     for (uint32_t c = 0; c < numRuns; c++) {
       gfxFont *font = runs[c].mFont;
       uint32_t endRun = 0;
@@ -3237,8 +3209,14 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
   processor.mPt = gfxPoint(aX, aY);
   processor.mThebes =
     new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
-  Matrix matrix = mTarget->GetTransform();
-  processor.mThebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21, matrix._22, matrix._31, matrix._32));
+
+  // If we don't have a target then we don't have a transform. A target won't
+  // be needed in the case where we're measuring the text size. This allows
+  // to avoid creating a target if it's only being used to measure text sizes.
+  if (mTarget) {
+    Matrix matrix = mTarget->GetTransform();
+    processor.mThebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21, matrix._22, matrix._31, matrix._32));
+  }
   processor.mCtx = this;
   processor.mOp = aOp;
   processor.mBoundingBox = gfxRect(0, 0, 0, 0);
@@ -3328,6 +3306,7 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
   processor.mPt.x *= processor.mAppUnitsPerDevPixel;
   processor.mPt.y *= processor.mAppUnitsPerDevPixel;
 
+  EnsureTarget();
   Matrix oldTransform = mTarget->GetTransform();
   // if text is over aMaxWidth, then scale the text horizontally such that its
   // width is precisely aMaxWidth
@@ -3667,6 +3646,8 @@ nsCanvasRenderingContext2DAzure::DrawImage(const HTMLImageOrCanvasOrVideoElement
   gfxIntSize imgSize;
 
   Element* element;
+
+  EnsureTarget();
   if (image.IsHTMLCanvasElement()) {
     nsHTMLCanvasElement* canvas = image.GetAsHTMLCanvasElement();
     element = canvas;
@@ -3928,6 +3909,7 @@ nsCanvasRenderingContext2DAzure::DrawWindow(nsIDOMWindow* window, double x,
 
   nsRefPtr<gfxContext> thebes = new gfxContext(drawSurf);
 
+  EnsureTarget();
   Matrix matrix = mTarget->GetTransform();
   thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                               matrix._22, matrix._31, matrix._32));
@@ -4146,7 +4128,8 @@ nsCanvasRenderingContext2DAzure::GetImageData(JSContext* aCx, double aSx,
                                               double aSy, double aSw,
                                               double aSh, ErrorResult& error)
 {
-  if (!mValid) {
+  EnsureTarget();
+  if (!IsTargetValid()) {
     error.Throw(NS_ERROR_FAILURE);
     return NULL;
   }
@@ -4340,6 +4323,20 @@ nsCanvasRenderingContext2DAzure::EnsurePremultiplyTable() {
 }
 
 void
+nsCanvasRenderingContext2DAzure::EnsureErrorTarget()
+{
+  if (sErrorTarget) {
+    return;
+  }
+
+  RefPtr<DrawTarget> errorTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(IntSize(1, 1), FORMAT_B8G8R8A8);
+  NS_ABORT_IF_FALSE(errorTarget, "Failed to allocate the error target!");
+
+  sErrorTarget = errorTarget;
+  NS_ADDREF(sErrorTarget);
+}
+
+void
 nsCanvasRenderingContext2DAzure::FillRuleChanged()
 {
   if (mPath) {
@@ -4407,10 +4404,6 @@ nsCanvasRenderingContext2DAzure::PutImageData_explicit(int32_t x, int32_t y, uin
                                                        bool hasDirtyRect, int32_t dirtyX, int32_t dirtyY,
                                                        int32_t dirtyWidth, int32_t dirtyHeight)
 {
-  if (!mValid) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (w == 0 || h == 0) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
@@ -4499,6 +4492,11 @@ nsCanvasRenderingContext2DAzure::PutImageData_explicit(int32_t x, int32_t y, uin
     }
   }
 
+  EnsureTarget();
+  if (!IsTargetValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
   RefPtr<SourceSurface> sourceSurface =
     mTarget->CreateSourceSurfaceFromData(imgsurf->Data(), IntSize(w, h), imgsurf->Stride(), FORMAT_B8G8R8A8);
 
@@ -4516,13 +4514,7 @@ nsCanvasRenderingContext2DAzure::PutImageData_explicit(int32_t x, int32_t y, uin
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetThebesSurface(gfxASurface **surface)
 {
-  if (!mTarget) {
-    nsRefPtr<gfxASurface> tmpSurf =
-      gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(1, 1), gfxASurface::CONTENT_COLOR_ALPHA);
-    *surface = tmpSurf.forget().get();
-    return NS_OK;
-  }
-
+  EnsureTarget();
   if (!mThebesSurface) {
     mThebesSurface =
       gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);    
@@ -4632,16 +4624,15 @@ nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                                 CanvasLayer *aOldLayer,
                                                 LayerManager *aManager)
 {
-  if (!mValid) {
+  EnsureTarget();
+  if (!IsTargetValid()) {
     // No DidTransactionCallback will be received, so mark the context clean
     // now so future invalidations will be dispatched.
     MarkContextClean();
     return nullptr;
   }
 
-  if (mTarget) {
-    mTarget->Flush();
-  }
+  mTarget->Flush();
 
   if (!mResetLayer && aOldLayer) {
       CanvasRenderingContext2DUserDataAzure* userData =
@@ -4707,5 +4698,5 @@ nsCanvasRenderingContext2DAzure::MarkContextClean()
 bool
 nsCanvasRenderingContext2DAzure::ShouldForceInactiveLayer(LayerManager *aManager)
 {
-    return !aManager->CanUseCanvasLayerForSize(gfxIntSize(mWidth, mHeight));
+  return !aManager->CanUseCanvasLayerForSize(gfxIntSize(mWidth, mHeight));
 }

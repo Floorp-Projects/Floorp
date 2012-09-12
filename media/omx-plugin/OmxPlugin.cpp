@@ -230,6 +230,33 @@ static sp<IOMX> GetOMX() {
 }
 #endif
 
+static uint32_t GetVideoCreationFlags(PluginHost* pluginHost)
+{
+#ifdef MOZ_WIDGET_GONK
+  // Flag value of zero means return a hardware or software decoder
+  // depending on what the device supports.
+  return 0;
+#else
+  // Check whether the user has set a pref to override our default OMXCodec
+  // CreationFlags flags. This is useful for A/B testing hardware and software
+  // decoders for performance and bugs. The interesting flag values are:
+  //  0 = Let Stagefright choose hardware or software decoding (default)
+  //  8 = Force software decoding
+  // 16 = Force hardware decoding
+  int32_t flags = 0;
+  pluginHost->GetIntPref("media.stagefright.omxcodec.flags", &flags);
+  if (flags != 0) {
+    LOG("media.stagefright.omxcodec.flags=%d", flags);
+    if ((flags & OMXCodec::kHardwareCodecsOnly) != 0) {
+      LOG("FORCE HARDWARE DECODING");
+    } else if ((flags & OMXCodec::kSoftwareCodecsOnly) != 0) {
+      LOG("FORCE SOFTWARE DECODING");
+    }
+  }
+  return static_cast<uint32_t>(flags);
+#endif
+}
+
 bool OmxDecoder::Init() {
   //register sniffers, if they are not registered in this process.
   DataSource::RegisterDefaultSniffers();
@@ -291,13 +318,11 @@ bool OmxDecoder::Init() {
   }
   sp<IOMX> omx = mClient.interface();
 #endif
-  // Flag value of zero means return a hardware or software decoder
-  // depending on what the device supports.
-  uint32_t flags = 0;
 
   sp<MediaSource> videoTrack;
   sp<MediaSource> videoSource;
   if (videoTrackIndex != -1 && (videoTrack = extractor->getTrack(videoTrackIndex)) != NULL) {
+    uint32_t flags = GetVideoCreationFlags(mPluginHost);
     videoSource = OMXCodec::Create(omx,
                                    videoTrack->getFormat(),
                                    false, // decoder
@@ -406,7 +431,7 @@ bool OmxDecoder::SetVideoFormat() {
     LOG("rotation not available, assuming 0");
   }
 
-  LOG("width: %d height: %d component: %s format: %d stride: %d sliceHeight: %d rotation: %d",
+  LOG("width: %d height: %d component: %s format: %#x stride: %d sliceHeight: %d rotation: %d",
       mVideoWidth, mVideoHeight, componentName, mVideoColorFormat,
       mVideoStride, mVideoSliceHeight, mVideoRotation);
 

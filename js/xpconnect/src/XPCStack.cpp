@@ -14,10 +14,9 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTACKFRAME
 
-    static nsresult CreateStack(JSContext* cx, JSStackFrame* fp,
-                                XPCJSStackFrame** stack);
+    static nsresult CreateStack(JSContext* cx, XPCJSStackFrame** stack);
 
-    static nsresult CreateStackFrameLocation(uint32_t aLanguage,
+    static nsresult CreateStackFrameLocation(PRUint32 aLanguage,
                                              const char* aFilename,
                                              const char* aFunctionName,
                                              int32_t aLineNumber,
@@ -49,10 +48,7 @@ XPCJSStack::CreateStack(JSContext* cx, nsIStackFrame** stack)
     if (!cx)
         return NS_ERROR_FAILURE;
 
-    JSStackFrame *fp = NULL;
-    if (!JS_FrameIterator(cx, &fp))
-        return NS_ERROR_FAILURE;
-    return XPCJSStackFrame::CreateStack(cx, fp, (XPCJSStackFrame**) stack);
+    return XPCJSStackFrame::CreateStack(cx, (XPCJSStackFrame**) stack);
 }
 
 // static
@@ -94,55 +90,52 @@ XPCJSStackFrame::~XPCJSStackFrame()
 NS_IMPL_THREADSAFE_ISUPPORTS1(XPCJSStackFrame, nsIStackFrame)
 
 nsresult
-XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
-                             XPCJSStackFrame** stack)
+XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStackFrame** stack)
 {
     static const unsigned MAX_FRAMES = 100;
     unsigned numFrames = 0;
 
     nsRefPtr<XPCJSStackFrame> first = new XPCJSStackFrame();
     nsRefPtr<XPCJSStackFrame> self = first;
-    while (fp && self) {
+
+    JS::StackDescription* desc = JS::DescribeStack(cx, MAX_FRAMES);
+    if (!desc)
+        return NS_ERROR_FAILURE;
+
+    for (size_t i = 0; i < desc->nframes && self; i++) {
         self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
-        JSScript* script = JS_GetFrameScript(cx, fp);
-        jsbytecode* pc = JS_GetFramePC(cx, fp);
-        if (script && pc) {
-            JSAutoCompartment ac(cx, fp);
-            const char* filename = JS_GetScriptFilename(cx, script);
-            if (filename) {
-                self->mFilename = (char*)
-                    nsMemory::Clone(filename,
-                                    sizeof(char)*(strlen(filename)+1));
-            }
 
-            self->mLineno = (int32_t) JS_PCToLineNumber(cx, script, pc);
+	JSAutoCompartment ac(cx, desc->frames[i].script);
+        const char* filename = JS_GetScriptFilename(cx, desc->frames[i].script);
+        if (filename) {
+            self->mFilename = (char*)
+                nsMemory::Clone(filename,
+                                sizeof(char)*(strlen(filename)+1));
+        }
 
-            JSFunction* fun = JS_GetFrameFunction(cx, fp);
-            if (fun) {
-                JSString *funid = JS_GetFunctionId(fun);
-                if (funid) {
-                    size_t length = JS_GetStringEncodingLength(cx, funid);
-                    if (length != size_t(-1)) {
-                        self->mFunname = static_cast<char *>(nsMemory::Alloc(length + 1));
-                        if (self->mFunname) {
-                            JS_EncodeStringToBuffer(funid, self->mFunname, length);
-                            self->mFunname[length] = '\0';
-                        }
+        self->mLineno = desc->frames[i].lineno;
+
+        JSFunction* fun = desc->frames[i].fun;
+        if (fun) {
+            JSString *funid = JS_GetFunctionId(fun);
+            if (funid) {
+                size_t length = JS_GetStringEncodingLength(cx, funid);
+                if (length != size_t(-1)) {
+                    self->mFunname = static_cast<char *>(nsMemory::Alloc(length + 1));
+                    if (self->mFunname) {
+                        JS_EncodeStringToBuffer(funid, self->mFunname, length);
+                        self->mFunname[length] = '\0';
                     }
                 }
             }
-        } else {
-            self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
         }
 
-        if (++numFrames > MAX_FRAMES) {
-            fp = NULL;
-        } else if (JS_FrameIterator(cx, &fp)) {
-            XPCJSStackFrame* frame = new XPCJSStackFrame();
-            self->mCaller = frame;
-            self = frame;
-        }
+        XPCJSStackFrame* frame = new XPCJSStackFrame();
+        self->mCaller = frame;
+        self = frame;
     }
+
+    JS::FreeStackDescription(cx, desc);
 
     *stack = first.forget().get();
     return NS_OK;
