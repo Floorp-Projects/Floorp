@@ -587,7 +587,7 @@ let DOMApplicationRegistry = {
         let msg = {
           from: aData.from,
           oid: aData.oid,
-          requestId: aData.requestId,
+          requestID: aData.requestID,
           app: {
             packageId: id,
             installOrigin: aData.installOrigin,
