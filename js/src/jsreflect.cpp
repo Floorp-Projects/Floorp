@@ -1895,13 +1895,13 @@ ASTSerializer::sourceElement(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::declaration(ParseNode *pn, Value *dst)
 {
-    JS_ASSERT(pn->isKind(PNK_FUNCTIONDECL) ||
+    JS_ASSERT(pn->isKind(PNK_FUNCTION) ||
               pn->isKind(PNK_VAR) ||
               pn->isKind(PNK_LET) ||
               pn->isKind(PNK_CONST));
 
     switch (pn->getKind()) {
-      case PNK_FUNCTIONDECL:
+      case PNK_FUNCTION:
         return function(pn, AST_FUNC_DECL, dst);
 
       case PNK_VAR:
@@ -2149,7 +2149,7 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
-      case PNK_FUNCTIONDECL:
+      case PNK_FUNCTION:
       case PNK_VAR:
       case PNK_CONST:
         return declaration(pn, dst);
@@ -2469,7 +2469,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
-      case PNK_FUNCTIONEXPR:
+      case PNK_FUNCTION:
         return function(pn, AST_FUNC_EXPR, dst);
 
       case PNK_COMMA:
