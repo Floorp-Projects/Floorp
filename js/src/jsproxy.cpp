@@ -2509,7 +2509,6 @@ Proxy::fun_toString(JSContext *cx, JSObject *proxy_, unsigned indent)
 {
     JS_CHECK_RECURSION(cx, return NULL);
     RootedObject proxy(cx, proxy_);
-    return GetProxyHandler(proxy)->obj_toString(cx, proxy);
     return GetProxyHandler(proxy)->fun_toString(cx, proxy, indent);
 }
 

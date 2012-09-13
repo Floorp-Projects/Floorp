@@ -838,9 +838,7 @@ public class GeckoAppShell
             Log.e(LOGTAG, "createShortcut with no unique URI should not be used for aType = webapp!");
         }
 
-        byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-        createShortcut(aTitle, aURI, aURI, bitmap, aType);
+        createShortcut(aTitle, aURI, aURI, aIconData, aType);
     }
 
     // internal, for non-webapps
@@ -957,31 +955,34 @@ public class GeckoAppShell
         });
     }
 
+    static public int getPreferredIconSize() {
+        if (android.os.Build.VERSION.SDK_INT >= 11) {
+            ActivityManager am = (ActivityManager)GeckoApp.mAppContext.getSystemService(Context.ACTIVITY_SERVICE);
+            return am.getLauncherLargeIconSize();
+        } else {
+            switch (getDpi()) {
+                case DisplayMetrics.DENSITY_MEDIUM:
+                    return 48;
+                case DisplayMetrics.DENSITY_XHIGH:
+                    return 96;
+                case DisplayMetrics.DENSITY_HIGH:
+                default:
+                    return 72;
+            }
+        }
+    }
+
     static private Bitmap getLauncherIcon(Bitmap aSource, String aType) {
         final int kOffset = 6;
         final int kRadius = 5;
-        int kIconSize;
-        int kOverlaySize;
-        switch (getDpi()) {
-            case DisplayMetrics.DENSITY_MEDIUM:
-                kIconSize = 48;
-                kOverlaySize = 32;
-                break;
-            case DisplayMetrics.DENSITY_XHIGH:
-                kIconSize = 96;
-                kOverlaySize = 48;
-                break;
-            case DisplayMetrics.DENSITY_HIGH:
-            default:
-                kIconSize = 72;
-                kOverlaySize = 32;
-        }
+        int size = getPreferredIconSize();
+        int insetSize = aSource != null ? size*2/3 : size;
 
-        Bitmap bitmap = Bitmap.createBitmap(kIconSize, kIconSize, Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
         if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-            Rect iconBounds = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+            Rect iconBounds = new Rect(0, 0, size, size);
             canvas.drawBitmap(aSource, null, iconBounds, null);
             return bitmap;
         }
@@ -989,45 +990,49 @@ public class GeckoAppShell
         // draw a base color
         Paint paint = new Paint();
         if (aSource == null) {
+            // if we aren't drawing a favicon, just use an orange color
             float[] hsv = new float[3];
             hsv[0] = 32.0f;
             hsv[1] = 1.0f;
             hsv[2] = 1.0f;
             paint.setColor(Color.HSVToColor(hsv));
-            canvas.drawRoundRect(new RectF(kOffset, kOffset, kIconSize - kOffset, kIconSize - kOffset), kRadius, kRadius, paint);
+            canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
         } else {
+            // otherwise use the dominant color from the icon + a layer of transparent white to lighten it somewhat
             int color = BitmapUtils.getDominantColor(aSource);
             paint.setColor(color);
-            canvas.drawRoundRect(new RectF(kOffset, kOffset, kIconSize - kOffset, kIconSize - kOffset), kRadius, kRadius, paint);
+            canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
             paint.setColor(Color.argb(100, 255, 255, 255));
-            canvas.drawRoundRect(new RectF(kOffset, kOffset, kIconSize - kOffset, kIconSize - kOffset), kRadius, kRadius, paint);
+            canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
         }
 
         // draw the overlay
         Bitmap overlay = BitmapFactory.decodeResource(GeckoApp.mAppContext.getResources(), R.drawable.home_bg);
-        canvas.drawBitmap(overlay, null, new Rect(0, 0, kIconSize, kIconSize), null);
+        canvas.drawBitmap(overlay, null, new Rect(0, 0, size, size), null);
 
-        // draw the bitmap
+        // draw the favicon
         if (aSource == null)
             aSource = BitmapFactory.decodeResource(GeckoApp.mAppContext.getResources(), R.drawable.home_star);
 
-        if (aSource.getWidth() < kOverlaySize || aSource.getHeight() < kOverlaySize) {
-            canvas.drawBitmap(aSource,
-                              null,
-                              new Rect(kIconSize/2 - kOverlaySize/2,
-                                       kIconSize/2 - kOverlaySize/2,
-                                       kIconSize/2 + kOverlaySize/2,
-                                       kIconSize/2 + kOverlaySize/2),
-                              null);
-        } else {
-            canvas.drawBitmap(aSource,
-                              null,
-                              new Rect(kIconSize/2 - aSource.getWidth()/2,
-                                       kIconSize/2 - aSource.getHeight()/2,
-                                       kIconSize/2 + aSource.getWidth()/2,
-                                       kIconSize/2 + aSource.getHeight()/2),
-                              null);
+        // by default, we scale the icon to this size
+        int sWidth = insetSize/2;
+        int sHeight = sWidth;
+
+        if (aSource.getWidth() > insetSize || aSource.getHeight() > insetSize) {
+            // however, if the icon is larger than our minimum, we allow it to be drawn slightly larger
+            // (but not necessarily at its full resolution)
+            sWidth = Math.min(size/3, aSource.getWidth()/2);
+            sHeight = Math.min(size/3, aSource.getHeight()/2);
         }
+
+        int halfSize = size/2;
+        canvas.drawBitmap(aSource,
+                          null,
+                          new Rect(halfSize - sWidth,
+                                   halfSize - sHeight,
+                                   halfSize + sWidth,
+                                   halfSize + sHeight),
+                          null);
 
         return bitmap;
     }

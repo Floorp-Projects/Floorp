@@ -13,6 +13,7 @@
 namespace mozilla {
 namespace layers {
 
+class AutoOpenSurface;
 class ThebesLayer;
 
 /**
@@ -50,7 +51,8 @@ public:
   };
 
   ThebesLayerBuffer(BufferSizePolicy aBufferSizePolicy)
-    : mBufferRotation(0,0)
+    : mBufferProvider(nullptr)
+    , mBufferRotation(0,0)
     , mBufferSizePolicy(aBufferSizePolicy)
   {
     MOZ_COUNT_CTOR(ThebesLayerBuffer);
@@ -67,6 +69,7 @@ public:
   void Clear()
   {
     mBuffer = nullptr;
+    mBufferProvider = nullptr;
     mBufferRect.SetEmpty();
   }
 
@@ -172,13 +175,22 @@ protected:
   }
 
   /**
-   * Set the buffer only.  This is intended to be used with the
-   * shadow-layer Open/CloseDescriptor interface, to ensure we don't
-   * accidentally touch a buffer when it's not mapped.
+   * Set the buffer provider only.  This is used with surfaces that
+   * require explicit map/unmap, which |aProvider| is used to do on
+   * demand in this code.
+   *
+   * It's the caller's responsibility to ensure |aProvider| is valid
+   * for the duration of operations it requests of this
+   * ThebesLayerBuffer.  It's also the caller's responsibility to
+   * unset the provider when inactive, by calling
+   * SetBufferProvider(nullptr).
    */
-  void SetBuffer(gfxASurface* aBuffer)
+  void SetBufferProvider(AutoOpenSurface* aProvider)
   {
-    mBuffer = aBuffer;
+    mBufferProvider = aProvider;
+    if (!mBufferProvider) {
+      mBuffer = nullptr;
+    }
   }
 
   /**
@@ -189,14 +201,31 @@ protected:
   GetContextForQuadrantUpdate(const nsIntRect& aBounds);
 
 private:
-  bool BufferSizeOkFor(const nsIntSize& aSize)
-  {
-    return (aSize == mBufferRect.Size() ||
-            (SizedToVisibleBounds != mBufferSizePolicy &&
-             aSize < mBufferRect.Size()));
-  }
+  // Buffer helpers.  Don't use mBuffer directly; instead use one of
+  // these helpers.
+
+  /**
+   * Return the buffer's content type.  Requires a valid buffer or
+   * buffer provider.
+   */
+  gfxASurface::gfxContentType BufferContentType();
+  bool BufferSizeOkFor(const nsIntSize& aSize);
+  /**
+   * If the buffer hasn't been mapped, map it and return it.
+   */
+  gfxASurface* EnsureBuffer();
+  /**
+   * True if we have a buffer where we can get it (but not necessarily
+   * mapped currently).
+   */
+  bool HaveBuffer();
 
   nsRefPtr<gfxASurface> mBuffer;
+  /**
+   * This member is only set transiently.  It's used to map mBuffer
+   * when we're using surfaces that require explicit map/unmap.
+   */
+  AutoOpenSurface* mBufferProvider;
   /** The area of the ThebesLayer that is covered by the buffer as a whole */
   nsIntRect             mBufferRect;
   /**

@@ -1,9 +1,9 @@
-/*Copyright (c) 2003-2004, Mark Borgerding
-  Lots of modifications by Jean-Marc Valin
-  Copyright (c) 2005-2007, Xiph.Org Foundation
-  Copyright (c) 2008,      Xiph.Org Foundation, CSIRO
+/*Copyright (c) 2003-2012 IETF Trust, Mark Borgerding, Jean-Marc Valin
+                          Xiph.Org Foundation, CSIRO. All rights reserved.
 
-  All rights reserved.
+
+  This file is extracted from RFC6716. Please see that RFC for additional
+  information.
 
   Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are met:
