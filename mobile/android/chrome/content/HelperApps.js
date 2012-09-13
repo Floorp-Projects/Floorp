@@ -64,8 +64,8 @@ var HelperApps =  {
       if (permValue == Services.perms.ALLOW_ACTION) {
         if (aCallback)
           aCallback(aUri);
-
-        this.openUriInApp(aUri);
+        else
+          this.openUriInApp(aUri);
       } else if (permValue == Services.perms.DENY_ACTION) {
         // do nothing
       }
