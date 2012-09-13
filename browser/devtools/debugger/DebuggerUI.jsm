@@ -46,8 +46,8 @@ DebuggerUI.prototype = {
     tabs.addEventListener("TabSelect", bound_refreshCommand, true);
 
     win.addEventListener("unload", function onClose(aEvent) {
-      tabs.removeEventListener("TabSelect", bound_refreshCommand, true);
       win.removeEventListener("unload", onClose, false);
+      tabs.removeEventListener("TabSelect", bound_refreshCommand, true);
     }, false);
   },
 

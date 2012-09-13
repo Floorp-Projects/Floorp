@@ -647,8 +647,8 @@ function JSTermHelper(aJSTerm)
   {
     aJSTerm.helperEvaluated = true;
     aJSTerm.window.open(
-        "https://developer.mozilla.org/AppLinks/WebConsoleHelp?locale=" +
-        aJSTerm.window.navigator.language, "help", "");
+        "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers",
+        "help", "");
   };
 
   /**

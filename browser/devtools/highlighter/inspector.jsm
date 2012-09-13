@@ -18,6 +18,7 @@ Cu.import("resource:///modules/devtools/MarkupView.jsm");
 Cu.import("resource:///modules/highlighter.jsm");
 Cu.import("resource:///modules/devtools/LayoutView.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
+Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 
 // Inspector notifications dispatched through the nsIObserverService.
 const INSPECTOR_NOTIFICATIONS = {
@@ -67,7 +68,7 @@ function Inspector(aIUI)
   this._IUI = aIUI;
   this._winID = aIUI.winID;
   this._browser = aIUI.browser;
-  this._listeners = {};
+  this._eventEmitter = new EventEmitter();
 
   this._browser.addEventListener("resize", this, true);
 
@@ -147,7 +148,7 @@ Inspector.prototype = {
     this._destroyMarkup();
     this._browser.removeEventListener("resize", this, true);
     delete this._IUI;
-    delete this._listeners;
+    delete this._eventEmitter;
   },
 
   /**
@@ -284,7 +285,7 @@ Inspector.prototype = {
     this._markupBox.removeAttribute("hidden");
 
     this.markup = new MarkupView(this, this._markupFrame);
-    this._emit("markuploaded");
+    this.emit("markuploaded");
   },
 
   _destroyMarkup: function Inspector__destroyMarkup()
@@ -348,8 +349,7 @@ Inspector.prototype = {
     delete this._frozen;
   },
 
-  /// Event stuff.  Would like to refactor this eventually.
-  /// Emulates the jetpack event source, which has a nice API.
+  /// Forward the events related calls to the event emitter.
 
   /**
    * Connect a listener to this object.
@@ -361,10 +361,7 @@ Inspector.prototype = {
    */
   on: function Inspector_on(aEvent, aListener)
   {
-    if (!(aEvent in this._listeners)) {
-      this._listeners[aEvent] = [];
-    }
-    this._listeners[aEvent].push(aListener);
+    this._eventEmitter.on(aEvent, aListener);
   },
 
   /**
@@ -377,11 +374,7 @@ Inspector.prototype = {
    */
   once: function Inspector_once(aEvent, aListener)
   {
-    let handler = function() {
-      this.removeListener(aEvent, handler);
-      aListener();
-    }.bind(this);
-    this.on(aEvent, handler);
+    this._eventEmitter.once(aEvent, aListener);
   },
 
   /**
@@ -393,35 +386,18 @@ Inspector.prototype = {
    * @param function aListener
    *        The listener to remove.
    */
-  removeListener: function Inspector_removeListener(aEvent, aListener)
+  off: function Inspector_removeListener(aEvent, aListener)
   {
-    this._listeners[aEvent] = this._listeners[aEvent].filter(function(l) aListener != l);
+    this._eventEmitter.off(aEvent, aListener);
   },
 
   /**
    * Emit an event on the inspector.  All arguments to this method will
    * be sent to listner functions.
    */
-  _emit: function Inspector__emit(aEvent)
+  emit: function Inspector_emit()
   {
-    if (!(aEvent in this._listeners))
-      return;
-
-    let originalListeners = this._listeners[aEvent];
-    for (let listener of this._listeners[aEvent]) {
-      // If the inspector was destroyed during event emission, stop
-      // emitting.
-      if (!this._listeners) {
-        break;
-      }
-
-      // If listeners were removed during emission, make sure the
-      // event handler we're going to fire wasn't removed.
-      if (originalListeners === this._listeners[aEvent] ||
-          this._listeners[aEvent].some(function(l) l === listener)) {
-        listener.apply(null, arguments);
-      }
-    }
+    this._eventEmitter.emit.apply(this._eventEmitter, arguments);
   }
 }
 
@@ -872,13 +848,13 @@ InspectorUI.prototype = {
     this.inspecting = true;
     this.highlighter.unlock();
     this._notifySelected();
-    this._currentInspector._emit("unlocked");
+    this._currentInspector.emit("unlocked");
   },
 
   _notifySelected: function IUI__notifySelected(aFrom)
   {
     this._currentInspector._cancelLayoutChange();
-    this._currentInspector._emit("select", aFrom);
+    this._currentInspector.emit("select", aFrom);
   },
 
   /**
@@ -908,7 +884,7 @@ InspectorUI.prototype = {
 
     this.highlighter.lock();
     this._notifySelected();
-    this._currentInspector._emit("locked");
+    this._currentInspector.emit("locked");
   },
 
   /**
@@ -993,7 +969,7 @@ InspectorUI.prototype = {
     this.highlighter.updateInfobar();
     this.highlighter.invalidateSize();
     this.breadcrumbs.updateSelectors();
-    this._currentInspector._emit("change", aUpdater);
+    this._currentInspector.emit("change", aUpdater);
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -1821,8 +1797,8 @@ InspectorStyleSidebar.prototype = {
     // If the current tool is already loaded, notify that we're
     // showing this sidebar.
     if (aTool.loaded) {
-      this._inspector._emit("sidebaractivated", aTool.id);
-      this._inspector._emit("sidebaractivated-" + aTool.id);
+      this._inspector.emit("sidebaractivated", aTool.id);
+      this._inspector.emit("sidebaractivated-" + aTool.id);
       return;
     }
 
@@ -1841,14 +1817,14 @@ InspectorStyleSidebar.prototype = {
       aTool.loaded = true;
       aTool.context = aTool.registration.load(this._inspector, aTool.frame);
 
-      this._inspector._emit("sidebaractivated", aTool.id);
+      this._inspector.emit("sidebaractivated", aTool.id);
 
       // Send an event specific to the activation of this panel.  For
       // this initial event, include a "createpanel" argument
       // to let panels watch sidebaractivated to refresh themselves
       // but ignore the one immediately after their load.
       // I don't really like this, we should find a better solution.
-      this._inspector._emit("sidebaractivated-" + aTool.id, "createpanel");
+      this._inspector.emit("sidebaractivated-" + aTool.id, "createpanel");
     }.bind(this);
     aTool.frame.addEventListener("load", aTool.onLoad, true);
     aTool.frame.setAttribute("src", aTool.registration.contentURL);
