@@ -68,6 +68,13 @@ union SurfaceDescriptor {
   SharedTextureDescriptor;
 };
 
+struct YCbCrImage {
+  Shmem data;
+  size_t offset;
+  nsIntRect picture;
+};
+
+// Will be removed in the near future
 struct YUVImage {
   Shmem Ydata;
   Shmem Udata;
@@ -77,6 +84,7 @@ struct YUVImage {
 
 union SharedImage {
   SurfaceDescriptor;
+  YCbCrImage;
   YUVImage;
   SharedImageID;
   null_t;
