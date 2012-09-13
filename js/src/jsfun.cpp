@@ -287,18 +287,18 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
         /*
-         * Native or "built-in" functions do not have a .prototype property per
-         * ECMA-262, or (Object.prototype, Function.prototype, etc.) have that
-         * property created eagerly.
+         * Built-in functions do not have a .prototype property per ECMA-262,
+         * or (Object.prototype, Function.prototype, etc.) have that property
+         * created eagerly.
          *
          * ES5 15.3.4: the non-native function object named Function.prototype
          * does not have a .prototype property.
          *
          * ES5 15.3.4.5: bound functions don't have a prototype property. The
-         * isNative() test covers this case because bound functions are native
-         * functions by definition/construction.
+         * isBuiltin() test covers this case because bound functions are native
+         * (and thus built-in) functions by definition/construction.
          */
-        if (fun->isNative() || fun->isFunctionPrototype())
+        if (fun->isBuiltin() || fun->isFunctionPrototype())
             return true;
 
         if (!ResolveInterpretedFunctionPrototype(cx, fun))
