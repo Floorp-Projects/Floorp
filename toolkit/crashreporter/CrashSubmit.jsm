@@ -274,7 +274,7 @@ Submitter.prototype = {
     let reportData = parseKeyValuePairsFromFile(extra);
     let additionalDumps = [];
     if ("additional_minidumps" in reportData) {
-      let names = extraData.additional_minidumps.split(',');
+      let names = reportData.additional_minidumps.split(',');
       for (let name in names) {
         let [dump, extra] = getPendingMiniDump(this.id + "-" + name);
         if (!dump.exists()) {
