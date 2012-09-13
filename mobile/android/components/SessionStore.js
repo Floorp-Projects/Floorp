@@ -931,7 +931,8 @@ SessionStore.prototype = {
           Cu.reportError("SessionStore: Could not parse JSON: " + ex);
         }
 
-        if (!data || data.windows.length == 0) {
+        // To do a restore, we must have at least one window with one tab
+        if (!data || data.windows.length == 0 || !data.windows[0].tabs || data.windows[0].tabs.length == 0) {
           notifyObservers("fail");
           return;
         }
