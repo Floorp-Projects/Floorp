@@ -61,6 +61,7 @@
 
 #include "nsFrameManager.h"
 #include "nsRuleProcessorData.h"
+#include "sampler.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -1646,6 +1647,8 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
                                       RestyleTracker&    aRestyleTracker,
                                       bool               aRestyleDescendants)
 {
+  SAMPLE_LABEL("CSS", "ComputeStyleChangeFor");
+
   nsIContent *content = aFrame->GetContent();
   if (aMinChange) {
     aChangeList->AppendChange(aFrame, content, aMinChange);

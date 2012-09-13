@@ -675,22 +675,14 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
 
   if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
     computedSize.height = prefSize.height;
-    // prefSize is border-box, so we need to figure out the right
-    // length to apply our min/max constraints to.
-    nscoord outsideBoxSizing = 0;
-    switch (GetStylePosition()->mBoxSizing) {
-      case NS_STYLE_BOX_SIZING_CONTENT:
-        outsideBoxSizing = aReflowState.mComputedBorderPadding.TopBottom();
-        // fall through
-      case NS_STYLE_BOX_SIZING_PADDING:
-        outsideBoxSizing -= aReflowState.mComputedPadding.TopBottom();
-        break;
-    }
-    computedSize.height -= outsideBoxSizing;
-    // Note: might be negative now, but that's OK because min-width is
-    // never negative.
-    computedSize.height = aReflowState.ApplyMinMaxHeight(computedSize.height);
-    computedSize.height += outsideBoxSizing;
+    // prefSize is border-box but min/max constraints are content-box.
+    nscoord verticalBorderPadding =
+      aReflowState.mComputedBorderPadding.TopBottom();
+    nscoord contentHeight = computedSize.height - verticalBorderPadding;
+    // Note: contentHeight might be negative, but that's OK because min-height
+    // is never negative.
+    computedSize.height = aReflowState.ApplyMinMaxHeight(contentHeight) +
+                          verticalBorderPadding;
   } else {
     computedSize.height += m.top + m.bottom;
   }

@@ -28,7 +28,7 @@ function startTest(test, token) {
     var m = a.mozGetMetadata();
   } catch (e) {
     is(e.name, 'InvalidStateError',
-       "early mozGetMetadata() threw incorrect exception");
+       "early mozGetMetadata() should throw InvalidStateError");
     exception_fired = true;
   }
   ok(exception_fired,
@@ -38,7 +38,7 @@ function startTest(test, token) {
   a.addEventListener('loadedmetadata', function() {
     // read decoded tags
     tags = a.mozGetMetadata();
-    ok(tags, "mozGetMetadata() failed");
+    ok(tags, "mozGetMetadata() should return a truthy value");
     // Dump them out.
     var d = document.getElementById('output');
     var html = '<table>\n';
@@ -61,11 +61,11 @@ function startTest(test, token) {
     d.appendChild(div);
     // Verify decoded tag values.
     for (tag in tags) {
-      is(tags[tag], test.tags[tag], "Tag '"+tag+"' doesn't match");
+      is(tags[tag], test.tags[tag], "Tag '"+tag+"' should match");
     }
     // Verify expected tag values
     for (tag in test.tags) {
-      is(tags[tag], test.tags[tag], "Tag '"+tag+"' doesn't match");
+      is(tags[tag], test.tags[tag], "Tag '"+tag+"' should match");
     }
     manager.finished(token);
   }, false);

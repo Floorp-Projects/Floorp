@@ -18,6 +18,7 @@
 
 #include "base/basictypes.h"
 #include "BluetoothDBusService.h"
+#include "BluetoothServiceUuid.h"
 #include "BluetoothTypes.h"
 #include "BluetoothReplyRunnable.h"
 
@@ -140,6 +141,8 @@ static const char* sBluetoothDBusSignals[] =
 static nsAutoPtr<RawDBusConnection> gThreadConnection;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sPairingReqTable;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sAuthorizeReqTable;
+static nsString sDefaultAdapterPath;
+static nsTArray<uint32_t> sServiceHandles;
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 
@@ -554,6 +557,28 @@ RegisterAgent(const nsAString& aAdapterPath)
   return true;
 }
 
+
+
+static void
+AddReservedServices(const nsAString& aAdapterPath)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsTArray<uint32_t> uuids;
+
+  uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HandsfreeAG >> 32));
+  uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HeadsetAG >> 32));
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return ;
+  }
+
+  sServiceHandles.Clear();
+  bs->AddReservedServicesInternal(aAdapterPath, uuids, sServiceHandles);
+}
+
 void
 RunDBusCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable,
                 UnpackFunc aFunc)
@@ -942,7 +967,8 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
       LOG_AND_FREE_DBUS_ERROR_WITH_MSG(&err, aMsg);
       errorStr.AssignLiteral("Cannot parse manager path!");
     } else {
-      v = NS_ConvertUTF8toUTF16(str);
+      sDefaultAdapterPath = NS_ConvertUTF8toUTF16(str);
+      v = sDefaultAdapterPath;
     }
   } else if (dbus_message_is_signal(aMsg, DBUS_MANAGER_IFACE, "PropertyChanged")) {
     ParsePropertyChange(aMsg,
@@ -1052,6 +1078,8 @@ BluetoothDBusService::StopInternal()
     return NS_OK;
   }
 
+  RemoveReservedServicesInternal(sDefaultAdapterPath, sServiceHandles);
+
   DBusError err;
   dbus_error_init(&err);
   for (uint32_t i = 0; i < ArrayLength(sBluetoothDBusSignals); ++i) {
@@ -1148,6 +1176,7 @@ public:
                                                                          path));
 
     RegisterAgent(path);
+    AddReservedServices(path);
 
     DispatchBluetoothReply(mRunnable, v, replyError);
    

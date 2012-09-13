@@ -1638,7 +1638,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->mainOffset = prologLength;
     PodCopy<jsbytecode>(script->code, bce->prologBase(), prologLength);
     PodCopy<jsbytecode>(script->main(), bce->base(), mainLength);
-    uint32_t nfixed = bce->sc->inFunction() ? script->bindings.numVars() : 0;
+    uint32_t nfixed = bce->sc->isFunction ? script->bindings.numVars() : 0;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = uint16_t(nfixed);
     InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
@@ -1656,6 +1656,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     }
     script->nslots = script->nfixed + bce->maxStackDepth;
 
+    FunctionBox *funbox = bce->sc->isFunction ? bce->sc->asFunbox() : NULL;
+
     if (!FinishTakingSrcNotes(cx, bce, script->notes()))
         return false;
     if (bce->tryNoteList.length() != 0)
@@ -1669,31 +1671,30 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->strictModeCode = bce->sc->inStrictMode();
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
-    script->funHasExtensibleScope =
-        bce->sc->inFunction() ? bce->sc->funHasExtensibleScope() : false;
+    script->funHasExtensibleScope = funbox ? funbox->hasExtensibleScope() : false;
     script->hasSingletons = bce->hasSingletons;
 #ifdef JS_METHODJIT
     if (cx->compartment->debugMode())
         script->debugMode = true;
 #endif
 
-    if (bce->sc->inFunction()) {
-        if (bce->sc->funArgumentsHasLocalBinding()) {
+    if (funbox) {
+        if (funbox->argumentsHasLocalBinding()) {
             // This must precede the script->bindings.transfer() call below
             script->setArgumentsHasVarBinding();
-            if (bce->sc->funDefinitelyNeedsArgsObj())
+            if (funbox->definitelyNeedsArgsObj())
                 script->setNeedsArgsObj(true);
         } else {
-            JS_ASSERT(!bce->sc->funDefinitelyNeedsArgsObj());
+            JS_ASSERT(!funbox->definitelyNeedsArgsObj());
         }
     }
 
     RootedFunction fun(cx, NULL);
-    if (bce->sc->inFunction()) {
+    if (funbox) {
         JS_ASSERT(!bce->script->noScriptRval);
-        script->isGenerator = bce->sc->funIsGenerator();
-        script->isGeneratorExp = bce->sc->funbox()->inGenexpLambda;
-        script->setFunction(bce->sc->funbox()->fun());
+        script->isGenerator = funbox->isGenerator();
+        script->isGeneratorExp = funbox->inGenexpLambda;
+        script->setFunction(funbox->fun());
     }
 
     /*
