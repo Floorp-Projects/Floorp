@@ -128,6 +128,8 @@
         './src/softphonewrapper/CC_SIPCCLineInfo.h',
         './src/softphonewrapper/CC_SIPCCService.h',
         # PeerConnection
+        './src/peerconnection/MediaStreamList.cpp',
+        './src/peerconnection/MediaStreamList.h',
         './src/peerconnection/PeerConnectionCtx.cpp',
         './src/peerconnection/PeerConnectionCtx.h',
         './src/peerconnection/PeerConnectionImpl.cpp',
