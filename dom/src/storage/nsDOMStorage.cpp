@@ -30,7 +30,6 @@ using mozilla::dom::ContentChild;
 #include "nsIPermissionManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIJSContextStack.h"
-#include "nsIPrivateBrowsingService.h"
 #include "nsDOMString.h"
 #include "nsNetCID.h"
 #include "mozilla/Preferences.h"
