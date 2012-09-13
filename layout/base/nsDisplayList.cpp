@@ -485,19 +485,37 @@ static bool IsFixedFrame(nsIFrame* aFrame)
   return aFrame && aFrame->GetParent() && !aFrame->GetParent()->GetParent();
 }
 
-static bool IsFixedItem(nsDisplayItem *aItem, nsDisplayListBuilder* aBuilder)
+bool
+nsDisplayListBuilder::IsFixedItem(nsDisplayItem *aItem,
+                                  nsIFrame** aActiveScrolledRoot,
+                                  nsIFrame* aOverrideActiveScrolledRoot)
 {
-  nsIFrame* activeScrolledRoot =
-    nsLayoutUtils::GetActiveScrolledRootFor(aItem, aBuilder);
+  nsIFrame* activeScrolledRoot = aOverrideActiveScrolledRoot;
+  if (!activeScrolledRoot) {
+    if (aItem->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER) {
+      nsDisplayScrollLayer* scrollLayerItem =
+        static_cast<nsDisplayScrollLayer*>(aItem);
+      activeScrolledRoot =
+        nsLayoutUtils::GetActiveScrolledRootFor(scrollLayerItem->GetScrolledFrame(),
+                                                ReferenceFrame());
+    } else {
+      activeScrolledRoot = nsLayoutUtils::GetActiveScrolledRootFor(aItem, this);
+    }
+  }
+
+  if (aActiveScrolledRoot) {
+    *aActiveScrolledRoot = activeScrolledRoot;
+  }
+
   return activeScrolledRoot &&
-    !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(activeScrolledRoot, aBuilder);
+    !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(activeScrolledRoot, this);
 }
 
 static bool ForceVisiblityForFixedItem(nsDisplayListBuilder* aBuilder,
                                        nsDisplayItem* aItem)
 {
   return aBuilder->GetDisplayPort() && aBuilder->GetHasFixedItems() &&
-         IsFixedItem(aItem, aBuilder);
+         aBuilder->IsFixedItem(aItem);
 }
 
 void nsDisplayListBuilder::SetDisplayPort(const nsRect& aDisplayPort)
@@ -1363,8 +1381,10 @@ RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 
 nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame,
-                                         uint32_t aLayer)
+                                         uint32_t aLayer,
+                                         bool aSkipFixedItemBoundsCheck)
   : nsDisplayItem(aBuilder, aFrame)
+  , mIsFixed(false)
   , mIsBottommostLayer(true)
   , mLayer(aLayer)
 {
@@ -1396,6 +1416,35 @@ nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
       if (!bg->mLayers[mLayer].mImage.IsEmpty() &&
           bg->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED) {
         aBuilder->SetHasFixedItems();
+
+        // Check whether we should fix to viewport scrolling
+        if (bg->mLayers[mLayer].mClip == NS_STYLE_BG_CLIP_BORDER &&
+            !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius)) {
+          if (aSkipFixedItemBoundsCheck) {
+            mIsFixed = true;
+          } else {
+            nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
+            if (rootScrollFrame) {
+              bool snap;
+              nsRect bounds = GetBounds(aBuilder, &snap);
+
+              // This bounds check prevents an item fixing to the viewport unless it
+              // it encompasses the scroll-port. If a fixed background doesn't
+              // encompass the scroll-port, it usually means that scrolling will
+              // expose a new area of the fixed background and cause a lot of
+              // invalidation. This performs badly, and looks especially bad when
+              // async scrolling is being used.
+              // XXX A better check would be to see if the underlying frame is fixed to
+              //     the viewport/is the viewport.
+              nsIScrollableFrame* scrollable = do_QueryFrame(rootScrollFrame);
+              nsRect scrollport(scrollable->GetScrollPortRect().TopLeft() +
+                                aBuilder->ToReferenceFrame(rootScrollFrame),
+                                scrollable->GetScrollPositionClampingScrollPortSize());
+
+              mIsFixed = bounds.Contains(scrollport);
+            }
+          }
+        }
       }
     }
   }
@@ -1911,40 +1960,7 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
 bool
 nsDisplayBackground::ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
 {
-  if (mIsThemed)
-    return false;
-
-  nsPresContext* presContext = mFrame->PresContext();
-  nsStyleContext* bgSC;
-  bool hasBG =
-    nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
-  if (!hasBG)
-    return false;
-
-  const nsStyleBackground* bg = bgSC->GetStyleBackground();
-  if (!bg->HasFixedBackground())
-    return false;
-
-  const nsStyleBackground::Layer& layer = bg->mLayers[mLayer];
-  if (layer.mAttachment != NS_STYLE_BG_ATTACHMENT_FIXED &&
-      !layer.mImage.IsEmpty()) {
-    return false;
-  }
-  if (layer.mClip != NS_STYLE_BG_CLIP_BORDER)
-    return false;
-
-  if (nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius))
-    return false;
-
-  bool snap;
-  nsRect bounds = GetBounds(aBuilder, &snap);
-  nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
-  if (!rootScrollFrame)
-    return false;
-  nsIScrollableFrame* scrollable = do_QueryFrame(rootScrollFrame);
-  nsRect scrollport = scrollable->GetScrollPortRect() +
-    aBuilder->ToReferenceFrame(rootScrollFrame);
-  return bounds.Contains(scrollport);
+  return mIsFixed;
 }
 
 void
