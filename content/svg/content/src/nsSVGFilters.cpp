@@ -149,7 +149,13 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
   r.RoundOut();
   if (!gfxUtils::GfxRectToIntRect(r, &result.mDataRect))
     return result;
-  
+
+  // Rounding in the code above can mean that result.mDataRect is not contained
+  // within the bounds of the surfaces that we're about to create. We must
+  // clamp to these bounds to prevent out-of-bounds reads and writes:
+  result.mDataRect.IntersectRect(result.mDataRect,
+                                 nsIntRect(nsIntPoint(), scaledSize));
+
   result.mSource = new gfxImageSurface(scaledSize,
                                        gfxASurface::ImageFormatARGB32);
   result.mTarget = new gfxImageSurface(scaledSize,
