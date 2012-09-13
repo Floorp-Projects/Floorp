@@ -226,11 +226,11 @@ nsDOMStorageDBWrapper::GetUsage(const nsACString& aDomain,
 }
 
 nsresult
-nsDOMStorageDBWrapper::CreateOriginScopeDBKey(nsIURI* aUri, nsACString& aKey)
+nsDOMStorageDBWrapper::CreateScopeDBKey(nsIURI* aUri, nsACString& aKey)
 {
   nsresult rv;
 
-  rv = CreateDomainScopeDBKey(aUri, aKey);
+  rv = CreateReversedDomain(aUri, aKey);
   if (NS_FAILED(rv))
     return rv;
 
@@ -251,7 +251,7 @@ nsDOMStorageDBWrapper::CreateOriginScopeDBKey(nsIURI* aUri, nsACString& aKey)
 }
 
 nsresult
-nsDOMStorageDBWrapper::CreateDomainScopeDBKey(nsIURI* aUri, nsACString& aKey)
+nsDOMStorageDBWrapper::CreateReversedDomain(nsIURI* aUri, nsACString& aKey)
 {
   nsresult rv;
 
@@ -280,15 +280,15 @@ nsDOMStorageDBWrapper::CreateDomainScopeDBKey(nsIURI* aUri, nsACString& aKey)
     }
   }
 
-  rv = CreateDomainScopeDBKey(domainScope, aKey);
+  rv = CreateReversedDomain(domainScope, aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
 nsresult
-nsDOMStorageDBWrapper::CreateDomainScopeDBKey(const nsACString& aAsciiDomain,
-                                              nsACString& aKey)
+nsDOMStorageDBWrapper::CreateReversedDomain(const nsACString& aAsciiDomain,
+                                            nsACString& aKey)
 {
   if (aAsciiDomain.IsEmpty())
     return NS_ERROR_NOT_AVAILABLE;
@@ -300,8 +300,8 @@ nsDOMStorageDBWrapper::CreateDomainScopeDBKey(const nsACString& aAsciiDomain,
 }
 
 nsresult
-nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(const nsACString& aAsciiDomain,
-                                              nsACString& aKey)
+nsDOMStorageDBWrapper::CreateQuotaDBKey(const nsACString& aAsciiDomain,
+                                        nsACString& aKey)
 {
   nsresult rv;
 
@@ -323,7 +323,7 @@ nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(const nsACString& aAsciiDomain,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CreateDomainScopeDBKey(eTLDplusOne, subdomainsDBKey);
+  CreateReversedDomain(eTLDplusOne, subdomainsDBKey);
 
   aKey.Assign(subdomainsDBKey);
   return NS_OK;
