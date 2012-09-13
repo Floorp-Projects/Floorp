@@ -25,7 +25,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 /**
  * BluetoothService functions are used to dispatch messages to Bluetooth DOM
- * objects on the main thread, as well as provide platform indenpendent access
+ * objects on the main thread, as well as provide platform independent access
  * to BT functionality. Tasks for polling for outside messages will usually
  * happen on the IO Thread (see ipc/dbus for instance), and these messages will
  * be encased in runnables that will then be distributed via observers managed
@@ -52,11 +52,6 @@ public:
    * otherwise
    */
   virtual nsresult StopInternal();
-
-  /**
-   * @return true if bluetooth daemon is enabled, false otherwise
-   */
-  virtual int IsEnabledInternal();
 };
 
 END_BLUETOOTH_NAMESPACE
