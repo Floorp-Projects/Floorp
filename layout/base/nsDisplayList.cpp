@@ -487,10 +487,10 @@ static bool IsFixedFrame(nsIFrame* aFrame)
 
 bool
 nsDisplayListBuilder::IsFixedItem(nsDisplayItem *aItem,
-                                  nsIFrame** aActiveScrolledRoot,
-                                  nsIFrame* aOverrideActiveScrolledRoot)
+                                  const nsIFrame** aActiveScrolledRoot,
+                                  const nsIFrame* aOverrideActiveScrolledRoot)
 {
-  nsIFrame* activeScrolledRoot = aOverrideActiveScrolledRoot;
+  const nsIFrame* activeScrolledRoot = aOverrideActiveScrolledRoot;
   if (!activeScrolledRoot) {
     if (aItem->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER) {
       nsDisplayScrollLayer* scrollLayerItem =
