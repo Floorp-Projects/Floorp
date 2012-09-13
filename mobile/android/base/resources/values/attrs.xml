@@ -50,11 +50,7 @@
     </declare-styleable>
 
     <declare-styleable name="TextSelectionHandle">
-        <attr name="handleType">
-            <flag name="start" value="0x01" />
-            <flag name="middle" value="0x02" />
-            <flag name="end" value="0x03" />
-        </attr>
+        <attr name="handleType" format="string"/>
     </declare-styleable>
 
 </resources>
