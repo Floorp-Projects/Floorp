@@ -37,7 +37,7 @@ parent:
 
   Init(bool useDB, bool sessionOnly, bool isPrivate,
        nsCString domain, nsCString scopeDBKey,
-       nsCString quotaETLDplus1DomainDBKey, uint32_t storageType);
+       nsCString quotaDBKey, uint32_t storageType);
   
   sync GetKeys(bool callerSecure)
       returns (nsString[] keys);

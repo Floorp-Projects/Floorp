@@ -441,7 +441,7 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t usage = 0;
-  if (!aStorage->GetQuotaDomainDBKey().IsEmpty()) {
+  if (!aStorage->GetQuotaDBKey().IsEmpty()) {
     rv = GetUsage(aStorage, &usage);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -487,7 +487,7 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aStorage->GetQuotaDomainDBKey().IsEmpty()) {
+  if (!aStorage->GetQuotaDBKey().IsEmpty()) {
     // No need to set mCachedOwner since it was set by GetUsage()
     mCachedUsage = usage;
   }
@@ -555,7 +555,7 @@ nsDOMStoragePersistentDB::RemoveKey(DOMStorageImpl* aStorage,
   mozStorageStatementScoper scope(stmt);
 
   if (DomainMaybeCached(
-      aStorage->GetQuotaDomainDBKey())) {
+      aStorage->GetQuotaDBKey())) {
     mCachedUsage = 0;
     mCachedOwner.Truncate();
   }
@@ -621,7 +621,7 @@ nsDOMStoragePersistentDB::RemoveOwner(const nsACString& aOwner)
   mozStorageStatementScoper scope(stmt);
 
   nsAutoCString subdomainsDBKey;
-  nsDOMStorageDBWrapper::CreateDomainScopeDBKey(aOwner, subdomainsDBKey);
+  nsDOMStorageDBWrapper::CreateReversedDomain(aOwner, subdomainsDBKey);
 
   if (DomainMaybeCached(subdomainsDBKey)) {
     mCachedUsage = 0;
@@ -668,7 +668,7 @@ nsresult
 nsDOMStoragePersistentDB::GetUsage(DOMStorageImpl* aStorage,
                                    int32_t *aUsage)
 {
-  return GetUsageInternal(aStorage->GetQuotaDomainDBKey(), aUsage);
+  return GetUsageInternal(aStorage->GetQuotaDBKey(), aUsage);
 }
 
 nsresult
@@ -677,19 +677,18 @@ nsDOMStoragePersistentDB::GetUsage(const nsACString& aDomain,
 {
   nsresult rv;
 
-  nsAutoCString quotadomainDBKey;
-  rv = nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomain,
-                                                     quotadomainDBKey);
+  nsAutoCString quotaDBKey;
+  rv = nsDOMStorageDBWrapper::CreateQuotaDBKey(aDomain, quotaDBKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetUsageInternal(quotadomainDBKey, aUsage);
+  return GetUsageInternal(quotaDBKey, aUsage);
 }
 
 nsresult
-nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
+nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDBKey,
                                            int32_t *aUsage)
 {
-  if (aQuotaDomainDBKey == mCachedOwner) {
+  if (aQuotaDBKey == mCachedOwner) {
     *aUsage = mCachedUsage;
     return NS_OK;
   }
@@ -719,7 +718,7 @@ nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scope(stmt);
 
-  nsAutoCString scopeValue(aQuotaDomainDBKey);
+  nsAutoCString scopeValue(aQuotaDBKey);
   scopeValue += NS_LITERAL_CSTRING("*");
 
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), scopeValue);
@@ -737,8 +736,8 @@ nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
   rv = stmt->GetInt32(0, aUsage);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aQuotaDomainDBKey.IsEmpty()) {
-    mCachedOwner = aQuotaDomainDBKey;
+  if (!aQuotaDBKey.IsEmpty()) {
+    mCachedOwner = aQuotaDBKey;
     mCachedUsage = *aUsage;
   }
 

@@ -303,7 +303,7 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     }
 
     nsAutoCString key;
-    rv = nsDOMStorageDBWrapper::CreateDomainScopeDBKey(aceDomain, key);
+    rv = nsDOMStorageDBWrapper::CreateReversedDomain(aceDomain, key);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Clear the storage entries for matching domains
@@ -462,7 +462,7 @@ DOMStorageBase::DOMStorageBase(DOMStorageBase& aThat)
   , mSessionOnly(true)
   , mDomain(aThat.mDomain)
   , mScopeDBKey(aThat.mScopeDBKey)
-  , mQuotaETLDplus1DomainDBKey(aThat.mQuotaETLDplus1DomainDBKey)
+  , mQuotaDBKey(aThat.mQuotaDBKey)
   , mInPrivateBrowsing(aThat.mInPrivateBrowsing)
 {
 }
@@ -495,7 +495,7 @@ DOMStorageBase::InitAsLocalStorage(nsIURI* aDomainURI,
   // mPrincipal in bug 455070. It is not even used for localStorage.
   aDomainURI->GetAsciiHost(mDomain);
 
-  nsDOMStorageDBWrapper::CreateOriginScopeDBKey(aDomainURI, mScopeDBKey);
+  nsDOMStorageDBWrapper::CreateScopeDBKey(aDomainURI, mScopeDBKey);
 
   // XXX Bug 357323, we have to solve the issue how to define
   // origin for file URLs. In that case CreateOriginScopeDBKey
@@ -503,8 +503,7 @@ DOMStorageBase::InitAsLocalStorage(nsIURI* aDomainURI,
   // in that case because it produces broken entries w/o owner.
   mUseDB = !mScopeDBKey.IsEmpty();
 
-  nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(mDomain,
-                                                mQuotaETLDplus1DomainDBKey);
+  nsDOMStorageDBWrapper::CreateQuotaDBKey(mDomain, mQuotaDBKey);
   mStorageType = nsPIDOMStorage::LocalStorage;
   mInPrivateBrowsing = aPrivate;
 }
@@ -593,7 +592,7 @@ DOMStorageImpl::InitFromChild(bool aUseDB,
                               bool aSessionOnly, bool aPrivate,
                               const nsACString& aDomain,
                               const nsACString& aScopeDBKey,
-                              const nsACString& aQuotaETLDplus1DomainDBKey,
+                              const nsACString& aQuotaDBKey,
                               uint32_t aStorageType)
 {
   mUseDB = aUseDB;
@@ -601,7 +600,7 @@ DOMStorageImpl::InitFromChild(bool aUseDB,
   mInPrivateBrowsing = aPrivate;
   mDomain = aDomain;
   mScopeDBKey = aScopeDBKey;
-  mQuotaETLDplus1DomainDBKey = aQuotaETLDplus1DomainDBKey;
+  mQuotaDBKey = aQuotaDBKey;
   mStorageType = static_cast<nsPIDOMStorage::nsDOMStorageType>(aStorageType);
 }
 
