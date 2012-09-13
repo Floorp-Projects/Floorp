@@ -63,47 +63,10 @@ nsReverseStringSQLFunction::OnFunctionCall(
   return NS_OK;
 }
 
-class nsIsOfflineSQLFunction MOZ_FINAL : public mozIStorageFunction
-{
-  NS_DECL_ISUPPORTS
-  NS_DECL_MOZISTORAGEFUNCTION
-};
-
-NS_IMPL_ISUPPORTS1(nsIsOfflineSQLFunction, mozIStorageFunction)
-
 nsDOMStoragePersistentDB::nsDOMStoragePersistentDB()
 : mStatements(mConnection)
 {
   mTempTableLoads.Init(16);
-}
-
-NS_IMETHODIMP
-nsIsOfflineSQLFunction::OnFunctionCall(
-    mozIStorageValueArray *aFunctionArguments, nsIVariant **aResult)
-{
-  nsresult rv;
-
-  nsAutoCString scope;
-  rv = aFunctionArguments->GetUTF8String(0, scope);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString domain;
-  rv = nsDOMStorageDBWrapper::GetDomainFromScopeKey(scope, domain);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasOfflinePermission = IsOfflineAllowed(domain);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIWritableVariant> outVar(do_CreateInstance(
-      NS_VARIANT_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = outVar->SetAsBool(hasOfflinePermission);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aResult = outVar.get();
-  outVar.forget();
-  return NS_OK;
 }
 
 nsresult
@@ -194,12 +157,6 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
   NS_ENSURE_TRUE(function1, NS_ERROR_OUT_OF_MEMORY);
 
   rv = mConnection->CreateFunction(NS_LITERAL_CSTRING("REVERSESTRING"), 1, function1);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageFunction> function2(new nsIsOfflineSQLFunction());
-  NS_ENSURE_TRUE(function2, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = mConnection->CreateFunction(NS_LITERAL_CSTRING("ISOFFLINE"), 1, function2);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
@@ -476,10 +433,7 @@ nsresult
 nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
                                  const nsAString& aKey,
                                  const nsAString& aValue,
-                                 bool aSecure,
-                                 int32_t aQuota,
-                                 bool aExcludeOfflineFromUsage,
-                                 int32_t *aNewUsage)
+                                 bool aSecure)
 {
   nsresult rv;
 
@@ -487,8 +441,8 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t usage = 0;
-  if (!aStorage->GetQuotaDomainDBKey(!aExcludeOfflineFromUsage).IsEmpty()) {
-    rv = GetUsage(aStorage, aExcludeOfflineFromUsage, &usage);
+  if (!aStorage->GetQuotaDomainDBKey().IsEmpty()) {
+    rv = GetUsage(aStorage, &usage);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -503,7 +457,7 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
     usage -= aKey.Length() + previousValue.Length();
   }
 
-  if (usage > aQuota) {
+  if (usage > GetQuota()) {
     return NS_ERROR_DOM_QUOTA_REACHED;
   }
 
@@ -533,12 +487,10 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aStorage->GetQuotaDomainDBKey(!aExcludeOfflineFromUsage).IsEmpty()) {
+  if (!aStorage->GetQuotaDomainDBKey().IsEmpty()) {
     // No need to set mCachedOwner since it was set by GetUsage()
     mCachedUsage = usage;
   }
-
-  *aNewUsage = usage;
 
   MarkScopeDirty(aStorage);
 
@@ -587,9 +539,7 @@ nsDOMStoragePersistentDB::SetSecure(DOMStorageImpl* aStorage,
 
 nsresult
 nsDOMStoragePersistentDB::RemoveKey(DOMStorageImpl* aStorage,
-                                    const nsAString& aKey,
-                                    bool aExcludeOfflineFromUsage,
-                                    int32_t aKeyUsage)
+                                    const nsAString& aKey)
 {
   nsresult rv;
 
@@ -605,7 +555,7 @@ nsDOMStoragePersistentDB::RemoveKey(DOMStorageImpl* aStorage,
   mozStorageStatementScoper scope(stmt);
 
   if (DomainMaybeCached(
-      aStorage->GetQuotaDomainDBKey(!aExcludeOfflineFromUsage))) {
+      aStorage->GetQuotaDomainDBKey())) {
     mCachedUsage = 0;
     mCachedOwner.Truncate();
   }
@@ -656,8 +606,7 @@ nsDOMStoragePersistentDB::ClearStorage(DOMStorageImpl* aStorage)
 }
 
 nsresult
-nsDOMStoragePersistentDB::RemoveOwner(const nsACString& aOwner,
-                                      bool aIncludeSubDomains)
+nsDOMStoragePersistentDB::RemoveOwner(const nsACString& aOwner)
 {
   nsresult rv;
 
@@ -679,8 +628,6 @@ nsDOMStoragePersistentDB::RemoveOwner(const nsACString& aOwner,
     mCachedOwner.Truncate();
   }
 
-  if (!aIncludeSubDomains)
-    subdomainsDBKey.AppendLiteral(":");
   subdomainsDBKey.AppendLiteral("*");
 
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
@@ -688,84 +635,6 @@ nsDOMStoragePersistentDB::RemoveOwner(const nsACString& aOwner,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  MarkAllScopesDirty();
-
-  return NS_OK;
-}
-
-
-nsresult
-nsDOMStoragePersistentDB::RemoveOwners(const nsTArray<nsString> &aOwners,
-                                       bool aIncludeSubDomains,
-                                       bool aMatch)
-{
-  if (aOwners.Length() == 0) {
-    if (aMatch) {
-      return NS_OK;
-    }
-
-    return RemoveAll();
-  }
-
-  // Using nsString here because it is going to be very long
-  nsCString expression;
-
-  if (aMatch) {
-    expression.AppendLiteral("DELETE FROM webappsstore2_view WHERE scope IN (");
-  } else {
-    expression.AppendLiteral("DELETE FROM webappsstore2_view WHERE scope NOT IN (");
-  }
-
-  for (uint32_t i = 0; i < aOwners.Length(); i++) {
-    if (i)
-      expression.AppendLiteral(" UNION ");
-
-    expression.AppendLiteral(
-      "SELECT DISTINCT scope FROM webappsstore2_temp WHERE scope GLOB :scope");
-    expression.AppendInt(i);
-    expression.AppendLiteral(" UNION ");
-    expression.AppendLiteral(
-      "SELECT DISTINCT scope FROM webappsstore2 WHERE scope GLOB :scope");
-    expression.AppendInt(i);
-  }
-  expression.AppendLiteral(");");
-
-  nsCOMPtr<mozIStorageStatement> statement;
-
-  nsresult rv;
-
-  rv = MaybeCommitInsertTransaction();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mConnection->CreateStatement(expression,
-                                    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  for (uint32_t i = 0; i < aOwners.Length(); i++) {
-    nsAutoCString quotaKey;
-    rv = nsDOMStorageDBWrapper::CreateDomainScopeDBKey(
-      NS_ConvertUTF16toUTF8(aOwners[i]), quotaKey);
-
-    if (DomainMaybeCached(quotaKey)) {
-      mCachedUsage = 0;
-      mCachedOwner.Truncate();
-    }
-
-    if (!aIncludeSubDomains)
-      quotaKey.AppendLiteral(":");
-    quotaKey.AppendLiteral("*");
-
-    nsAutoCString paramName;
-    paramName.Assign("scope");
-    paramName.AppendInt(i);
-
-    rv = statement->BindUTF8StringByName(paramName, quotaKey);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   MarkAllScopesDirty();
@@ -797,34 +666,27 @@ nsDOMStoragePersistentDB::RemoveAll()
 
 nsresult
 nsDOMStoragePersistentDB::GetUsage(DOMStorageImpl* aStorage,
-                                   bool aExcludeOfflineFromUsage,
                                    int32_t *aUsage)
 {
-  return GetUsageInternal(aStorage->GetQuotaDomainDBKey(!aExcludeOfflineFromUsage),
-                                                        aExcludeOfflineFromUsage,
-                                                        aUsage);
+  return GetUsageInternal(aStorage->GetQuotaDomainDBKey(), aUsage);
 }
 
 nsresult
 nsDOMStoragePersistentDB::GetUsage(const nsACString& aDomain,
-                                   bool aIncludeSubDomains,
                                    int32_t *aUsage)
 {
   nsresult rv;
 
   nsAutoCString quotadomainDBKey;
   rv = nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomain,
-                                                     aIncludeSubDomains,
-                                                     false,
                                                      quotadomainDBKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetUsageInternal(quotadomainDBKey, false, aUsage);
+  return GetUsageInternal(quotadomainDBKey, aUsage);
 }
 
 nsresult
 nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
-                                           bool aExcludeOfflineFromUsage,
                                            int32_t *aUsage)
 {
   if (aQuotaDomainDBKey == mCachedOwner) {
@@ -838,43 +700,22 @@ nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  if (aExcludeOfflineFromUsage) {
-    stmt = mStatements.GetCachedStatement(
-      "SELECT SUM(LENGTH(key) + LENGTH(value)) "
-      "FROM ( "
-        "SELECT key, value FROM webappsstore2_temp "
-        "WHERE scope GLOB :scope "
-          "AND NOT ISOFFLINE(scope) "
-        "UNION ALL "
-        "SELECT key, value FROM webappsstore2 "
-        "WHERE scope GLOB :scope "
-          "AND NOT ISOFFLINE(scope) "
-          "AND NOT EXISTS ( "
-            "SELECT scope, key "
-            "FROM webappsstore2_temp "
-            "WHERE scope = webappsstore2.scope "
-              "AND key = webappsstore2.key "
-          ") "
-      ") "
-    );
-  } else {
-    stmt = mStatements.GetCachedStatement(
-      "SELECT SUM(LENGTH(key) + LENGTH(value)) "
-      "FROM ( "
-        "SELECT key,value FROM webappsstore2_temp "
-        "WHERE scope GLOB :scope "
-        "UNION ALL "
-        "SELECT key,value FROM webappsstore2 "
-        "WHERE scope GLOB :scope "
-          "AND NOT EXISTS ( "
-            "SELECT scope, key "
-            "FROM webappsstore2_temp "
-            "WHERE scope = webappsstore2.scope "
-              "AND key = webappsstore2.key "
-          ") "
-      ") "
-    );
-  }
+  stmt = mStatements.GetCachedStatement(
+    "SELECT SUM(LENGTH(key) + LENGTH(value)) "
+    "FROM ( "
+      "SELECT key,value FROM webappsstore2_temp "
+      "WHERE scope GLOB :scope "
+      "UNION ALL "
+      "SELECT key,value FROM webappsstore2 "
+      "WHERE scope GLOB :scope "
+        "AND NOT EXISTS ( "
+          "SELECT scope, key "
+          "FROM webappsstore2_temp "
+          "WHERE scope = webappsstore2.scope "
+            "AND key = webappsstore2.key "
+        ") "
+    ") "
+  );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scope(stmt);
 

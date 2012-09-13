@@ -30,10 +30,6 @@
 
 #include "nsDOMStorageDBWrapper.h"
 
-#define IS_PERMISSION_ALLOWED(perm) \
-      ((perm) != nsIPermissionManager::UNKNOWN_ACTION && \
-      (perm) != nsIPermissionManager::DENY_ACTION)
-
 class nsDOMStorage;
 class nsIDOMStorage;
 class nsDOMStorageItem;
@@ -114,7 +110,7 @@ public:
   DOMStorageBase(DOMStorageBase&);
 
   virtual void InitAsSessionStorage(nsIURI* aDomainURI, bool aPrivate);
-  virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist, bool aPrivate);
+  virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aPrivate);
 
   virtual nsTArray<nsString>* GetKeys(bool aCallerSecure) = 0;
   virtual nsresult GetLength(bool aCallerSecure, uint32_t* aLength) = 0;
@@ -170,11 +166,10 @@ public:
   // an origin (localStorage).
   nsCString& GetScopeDBKey() {return mScopeDBKey;}
 
-  // e.g. "moc.rab.%" - reversed eTLD+1 subpart of the domain or
-  // reversed offline application allowed domain.
-  nsCString& GetQuotaDomainDBKey(bool aOfflineAllowed)
+  // e.g. "moc.rab.%" - reversed eTLD+1 subpart of the domain.
+  nsCString& GetQuotaDomainDBKey()
   {
-    return aOfflineAllowed ? mQuotaDomainDBKey : mQuotaETLDplus1DomainDBKey;
+    return mQuotaETLDplus1DomainDBKey;
   }
 
   virtual bool CacheStoragePermissions() = 0;
@@ -202,9 +197,7 @@ protected:
   // see comments of the getters bellow.
   nsCString mScopeDBKey;
   nsCString mQuotaETLDplus1DomainDBKey;
-  nsCString mQuotaDomainDBKey;
 
-  bool mCanUseChromePersist;
   bool mInPrivateBrowsing;
 };
 
@@ -221,7 +214,7 @@ public:
   ~DOMStorageImpl();
 
   virtual void InitAsSessionStorage(nsIURI* aDomainURI, bool aPrivate);
-  virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist, bool aPrivate);
+  virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aPrivate);
 
   bool SessionOnly() {
     return mSessionOnly;
@@ -244,10 +237,6 @@ public:
   uint64_t CachedVersion() { return mItemsCachedVersion; }
   void SetCachedVersion(uint64_t version) { mItemsCachedVersion = version; }
   
-  // Some privileged internal pages can use a persistent storage even in
-  // session-only or private-browsing modes.
-  bool CanUseChromePersist();
-
   // retrieve the value and secure state corresponding to a key out of storage
   // that has been cached in mItems hash table.
   nsresult
@@ -291,10 +280,9 @@ private:
 
   // Cross-process storage implementations never have InitAs(Session|Local|Global)Storage
   // called, so the appropriate initialization needs to happen from the child.
-  void InitFromChild(bool aUseDB, bool aCanUseChromePersist, bool aSessionOnly,
+  void InitFromChild(bool aUseDB, bool aSessionOnly,
                      bool aPrivate, const nsACString& aDomain,
                      const nsACString& aScopeDBKey,
-                     const nsACString& aQuotaDomainDBKey,
                      const nsACString& aQuotaETLDplus1DomainDBKey,
                      uint32_t aStorageType);
   void SetSessionOnly(bool aSessionOnly);
@@ -351,12 +339,6 @@ public:
   static bool
   CanUseStorage(DOMStorageBase* aStorage = nullptr);
 
-  // Check whether this URI can use chrome persist storage.  This kind of
-  // storage can bypass cookies limits, private browsing and uses the offline
-  // apps quota.
-  static bool
-  URICanUseChromePersist(nsIURI* aURI);
-  
   // Check whether storage may be used.  Updates mSessionOnly based on
   // the result of CanUseStorage.
   bool
@@ -502,11 +484,5 @@ protected:
 
 nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-uint32_t
-GetOfflinePermission(const nsACString &aDomain);
-
-bool
-IsOfflineAllowed(const nsACString &aDomain);
 
 #endif /* nsDOMStorage_h___ */
