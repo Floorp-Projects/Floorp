@@ -246,7 +246,10 @@ typedef MutableHandle<Value>       MutableHandleValue;
  * rooted.
  */
 typedef JSObject *                  RawObject;
+typedef JSFunction *                RawFunction;
+typedef JSScript *                  RawScript;
 typedef JSString *                  RawString;
+typedef jsid                        RawId;
 typedef Value                       RawValue;
 
 /*
