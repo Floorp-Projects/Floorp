@@ -404,6 +404,13 @@ PeerConnection.prototype = {
     });
   },
 
+  get localStreams() {
+    return this._pc.localStreams;
+  },
+  get remoteStreams() {
+    return this._pc.remoteStreams;
+  },
+
   createDataChannel: function(label, dict) {
     if (dict &&
         dict.maxRetransmitTime != undefined &&
