@@ -482,20 +482,6 @@ nsDNSService::Shutdown()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDNSService::GetPrefetchEnabled(bool *outVal)
-{
-    *outVal = !mDisablePrefetch;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDNSService::SetPrefetchEnabled(bool inVal)
-{
-    mDisablePrefetch = !inVal;
-    return NS_OK;
-}
-
 namespace {
 
 class DNSListenerProxy MOZ_FINAL : public nsIDNSListener

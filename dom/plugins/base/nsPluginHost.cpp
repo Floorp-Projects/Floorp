@@ -31,7 +31,7 @@
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIProtocolProxyService2.h"
+#include "nsIProtocolProxyService.h"
 #include "nsIStreamConverterService.h"
 #include "nsIFile.h"
 #if defined(XP_MACOSX)
@@ -743,14 +743,9 @@ nsresult nsPluginHost::FindProxyForURL(const char* url, char* *result)
 
   nsCOMPtr<nsIURI> uriIn;
   nsCOMPtr<nsIProtocolProxyService> proxyService;
-  nsCOMPtr<nsIProtocolProxyService2> proxyService2;
   nsCOMPtr<nsIIOService> ioService;
 
   proxyService = do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &res);
-  if (NS_FAILED(res) || !proxyService)
-    return res;
-
-  proxyService2 = do_QueryInterface(proxyService, &res);
   if (NS_FAILED(res) || !proxyService)
     return res;
 
@@ -765,8 +760,7 @@ nsresult nsPluginHost::FindProxyForURL(const char* url, char* *result)
 
   nsCOMPtr<nsIProxyInfo> pi;
 
-  // Remove this with bug 778201
-  res = proxyService2->DeprecatedBlockingResolve(uriIn, 0, getter_AddRefs(pi));
+  res = proxyService->Resolve(uriIn, 0, getter_AddRefs(pi));
   if (NS_FAILED(res))
     return res;
 

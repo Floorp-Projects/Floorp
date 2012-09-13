@@ -17,10 +17,24 @@ interface nsIURI;
  * nsIProtocolProxyService provides methods to access information about
  * various network proxies.
  */
-[scriptable, uuid(e77c642b-026f-41ce-9b23-f829a6e3f300)]
+[scriptable, uuid(d7ec6237-162e-40f5-a2b4-46ccd5fa83c9)]
 interface nsIProtocolProxyService : nsISupports
 {
-    /** Flag 1 << 0 is unused **/
+    /**
+     * This flag may be passed to the resolve method to request that it fail
+     * instead of block the calling thread.  Proxy Auto Config (PAC) may
+     * perform a synchronous DNS query, which may not return immediately.  So,
+     * calling resolve without this flag may result in locking up the calling
+     * thread for a lengthy period of time.
+     *
+     * By passing this flag to resolve, one can failover to asyncResolve to
+     * avoid locking up the calling thread if a PAC query is required.
+     *
+     * When this flag is passed to resolve, resolve may throw the exception
+     * NS_BASE_STREAM_WOULD_BLOCK to indicate that it failed due to this flag
+     * being present.
+     */
+    const unsigned long RESOLVE_NON_BLOCKING = 1 << 0;
 
     /**
      * When the proxy configuration is manual this flag may be passed to the
@@ -63,9 +77,9 @@ interface nsIProtocolProxyService : nsISupports
     const unsigned long RESOLVE_ALWAYS_TUNNEL = (1 << 4);
 
     /**
-     * This method returns via callback a nsIProxyInfo instance that identifies
-     * a proxy to be used for loading the given URI.  Otherwise, this method returns
-     * null indicating that a direct connection should be used.
+     * This method returns a nsIProxyInfo instance that identifies a proxy to
+     * be used for loading the given URI.  Otherwise, this method returns null
+     * indicating that a direct connection should be used.
      *
      * @param aURI
      *        The URI to test.
@@ -73,12 +87,6 @@ interface nsIProtocolProxyService : nsISupports
      *        A bit-wise combination of the RESOLVE_ flags defined above.  Pass
      *        0 to specify the default behavior.  Any additional bits that do
      *        not correspond to a RESOLVE_ flag are reserved for future use.
-     * @param aCallback
-     *        The object to be notified when the result is available.
-     *
-     * @return An object that can be used to cancel the asychronous operation.
-     *         If canceled, the cancelation status (aReason) will be forwarded
-     *         to the callback's onProxyAvailable method via the aStatus param.
      *
      * NOTE: If this proxy is unavailable, getFailoverForProxy may be called
      * to determine the correct secondary proxy to be used.
@@ -92,7 +100,34 @@ interface nsIProtocolProxyService : nsISupports
      * the given URI should be loaded using the HTTP protocol handler, which
      * also supports nsIProxiedProtocolHandler.
      *
+     * NOTE: If PAC is configured, and the PAC file has not yet been loaded,
+     * then this method will return a nsIProxyInfo instance with a type of
+     * "unknown" to indicate to the consumer that asyncResolve should be used
+     * to wait for the PAC file to finish loading.  Otherwise, the consumer
+     * may choose to treat the result as type "direct" if desired.
+     *
      * @see nsIProxiedProtocolHandler::newProxiedChannel 
+     */
+    nsIProxyInfo resolve(in nsIURI aURI, in unsigned long aFlags);
+
+    /**
+     * This method is an asychronous version of the resolve method.  Unlike
+     * resolve, this method is guaranteed not to block the calling thread
+     * waiting for DNS queries to complete.  This method is intended as a
+     * substitute for resolve when the result is not needed immediately.
+     *
+     * @param aURI
+     *        The URI to test.
+     * @param aFlags
+     *        A bit-wise combination of the RESOLVE_ flags defined above.  Pass
+     *        0 to specify the default behavior.  Any additional bits that do
+     *        not correspond to a RESOLVE_ flag are reserved for future use.
+     * @param aCallback
+     *        The object to be notified when the result is available.
+     *
+     * @return An object that can be used to cancel the asychronous operation.
+     *         If canceled, the cancelation status (aReason) will be forwarded
+     *         to the callback's onProxyAvailable method via the aStatus param.
      */
     nsICancelable asyncResolve(in nsIURI aURI, in unsigned long aFlags,
                                in nsIProtocolProxyCallback aCallback);
