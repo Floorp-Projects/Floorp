@@ -59,13 +59,6 @@ let gWifiFailChain = [stopSoftAP,
                       stopTethering];
 
 function wifiTetheringFail(params) {
-  let unload = false;
-
-  // Unload wifi driver when failing to enable tethering.
-  if (params.enable) {
-    unload = true;
-  }
-  params.unload = unload;
   // Notify the main thread.
   postMessage(params);
 
@@ -78,14 +71,6 @@ function wifiTetheringFail(params) {
 }
 
 function wifiTetheringSuccess(params) {
-  let unload = false;
-
-  // Unload wifi driver after switch wifi to station mode.
-  if (!params.enable) {
-    unload = true;
-  }
-
-  params.unload = unload;
   // Notify the main thread.
   postMessage(params);
   return true;
