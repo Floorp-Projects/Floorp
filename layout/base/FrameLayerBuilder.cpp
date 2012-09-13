@@ -1813,21 +1813,19 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
     LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
 
+    bool isFixed;
+    bool forceInactive;
     nsIFrame* activeScrolledRoot;
-    bool forceInactive = false;
     if (aFlags & NO_COMPONENT_ALPHA) {
-      activeScrolledRoot =
-        nsLayoutUtils::GetActiveScrolledRootFor(mContainerFrame,
-                                                mBuilder->ReferenceFrame());
+      // When NO_COMPONENT_ALPHA is set, items will be flattened onto the
+      // reference frame. In this case, force the active scrolled root to
+      // that frame.
       forceInactive = true;
-    } else if (item->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER) {
-      nsDisplayScrollLayer* scrollLayerItem =
-        static_cast<nsDisplayScrollLayer*>(item);
-      activeScrolledRoot =
-        nsLayoutUtils::GetActiveScrolledRootFor(scrollLayerItem->GetScrolledFrame(),
-                                                mBuilder->ReferenceFrame());
+      activeScrolledRoot = mBuilder->ReferenceFrame();
+      isFixed = mBuilder->IsFixedItem(item, nullptr, activeScrolledRoot);
     } else {
-      activeScrolledRoot = nsLayoutUtils::GetActiveScrolledRootFor(item, mBuilder);
+      forceInactive = false;
+      isFixed = mBuilder->IsFixedItem(item, &activeScrolledRoot);
     }
 
     // Assign the item to a layer
@@ -1865,9 +1863,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                mParameters.mYScale);
       }
 
-      ownLayer->SetIsFixedPosition(
-        !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(
-                                      activeScrolledRoot, mBuilder));
+      ownLayer->SetIsFixedPosition(isFixed);
 
       // Update that layer's clip and visible rects.
       NS_ASSERTION(ownLayer->Manager() == mManager, "Wrong manager");
@@ -1916,9 +1912,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, aClip,
                            activeScrolledRoot);
 
-      data->mLayer->SetIsFixedPosition(
-        !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(
-                                       activeScrolledRoot, mBuilder));
+      data->mLayer->SetIsFixedPosition(isFixed);
 
       InvalidateForLayerChange(item, data->mLayer);
 

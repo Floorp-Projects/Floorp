@@ -5385,12 +5385,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 break;
 #endif /* JS_HAS_XML_SUPPORT */
 
-              case JSOP_ACTUALSFILLED:
-                JS_ASSERT(!defaultsSwitch);
-                defaultsSwitch = true;
-                todo = -2;
-                break;
-
               case JSOP_REST:
                 // Ignore bytecode related to handling rest.
                 pc += GetBytecodeLength(pc);
@@ -5644,11 +5638,12 @@ js_DecompileFunction(JSPrinter *jp)
         unsigned nformal = fun->nargs - fun->hasRest();
 
         if (fun->hasDefaults()) {
+            // Since bug 781422, this code is completely wrong. If you ever have
+            // the unfortunate task of reenabling the decompiler, you'll have to
+            // completely rewrite defaults decompiling.
+            MOZ_CRASH();
+
             jsbytecode *defpc;
-            for (defpc = pc; defpc < endpc; defpc += GetBytecodeLength(defpc)) {
-                if (*defpc == JSOP_ACTUALSFILLED)
-                    break;
-            }
             LOCAL_ASSERT_RV(defpc < endpc, JS_FALSE);
             defpc += GetBytecodeLength(defpc);
             LOCAL_ASSERT_RV(*defpc == JSOP_TABLESWITCH, JS_FALSE);

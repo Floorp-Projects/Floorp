@@ -715,17 +715,18 @@ TabChild::SetProcessNameToAppName()
 bool
 TabChild::IsRootContentDocument()
 {
-    if (!mIsBrowserElement && mAppId == nsIScriptSecurityManager::NO_APP_ID) {
-        // We're the child side of a <xul:browser remote=true>.  This
-        // is always a root content document.
+    if (mIsBrowserElement || mAppId == nsIScriptSecurityManager::NO_APP_ID) {
+        // We're the child side of a browser element.  This always
+        // behaves like a root content document.
         return true;
     }
 
-    // Otherwise, we're the child side of an <html:browser
-    // remote=true> or <html:app remote=true>.  Because of bug 761935,
-    // these can't be nested within another <html:app remote=true>, so
-    // we assume that we can't be a root content document.  When that
-    // bug is fixed, we need to revisit that assumption.
+    // Otherwise, we're the child side of an <html:app remote=true>
+    // embedded in an outer <html:app>.  These don't behave like root
+    // content documents in nested contexts.  Because of bug 761935,
+    // <html:browser remote> and <html:app remote> can't nest, so we
+    // assume this isn't the root.  When that bug is fixed, we need to
+    // revisit that assumption.
     return false;
 }
 

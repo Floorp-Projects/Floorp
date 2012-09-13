@@ -1,0 +1,89 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* This file is used for both about:memory and about:compartments. */
+
+body.verbose {
+  /* override setting in about.css */
+  max-width: 100% !important;
+}
+
+body.non-verbose pre.entries {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+h2 {
+  background: #ddd;
+  padding-left: .1em;
+}
+
+/* buttons are different sizes and overlapping without this */
+button {
+  margin: 1%;
+  padding: 2%;
+}
+
+.accuracyWarning {
+  color: #f00;
+}
+
+.badInputWarning {
+  color: #f00;
+}
+
+.treeline {
+  color: #888;
+}
+
+.mrValue {
+  font-weight: bold;
+  color: #400;
+}
+
+.mrPerc {
+}
+
+.mrSep {
+}
+
+.mrName {
+  color: #004;
+}
+
+.mrNote {
+  color: #604;
+}
+
+.hasKids {
+  cursor: pointer;
+}
+
+.option {
+  font-size: 80%;
+  -moz-user-select: none;  /* no need to include this when cutting+pasting */
+}
+
+.legend {
+  font-size: 80%;
+  -moz-user-select: none;  /* no need to include this when cutting+pasting */
+}
+
+.hiddenOnMobile {
+  display: none;
+}
+
+.debug {
+  font-size: 80%;
+}
+
+.hidden {
+  display: none;
+}
+
+.invalid {
+  color: #fff;
+  background-color: #f00;
+}
+

@@ -143,6 +143,8 @@ AsyncResource.prototype = {
     // Always validate the cache:
     channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+    // Don't send user cookies & such over the wire (Bug 644734)
+    channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
 
     // Setup a callback to handle channel notifications.
     channel.notificationCallbacks = new ChannelNotificationListener();

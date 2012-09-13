@@ -936,7 +936,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
         sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
         sc.slot = AliasedNameToSlot(bceOfDef->script, pn->name());
     } else {
-        JS_ASSERT(IsLocalOp(pn->getOp()) || pn->isKind(PNK_FUNCTIONDECL));
+        JS_ASSERT(IsLocalOp(pn->getOp()) || pn->isKind(PNK_FUNCTION));
         unsigned local = pn->pn_cookie.slot();
         if (local < bceOfDef->script->bindings.numVars()) {
             sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
@@ -960,7 +960,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
 static bool
 EmitVarOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
-    JS_ASSERT(pn->isKind(PNK_FUNCTIONDECL) || pn->isKind(PNK_NAME));
+    JS_ASSERT(pn->isKind(PNK_FUNCTION) || pn->isKind(PNK_NAME));
     JS_ASSERT_IF(pn->isKind(PNK_NAME), IsArgOp(op) || IsLocalOp(op));
     JS_ASSERT(!pn->pn_cookie.isFree());
 
@@ -1222,7 +1222,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_NAME) || pn->isKind(PNK_INTRINSICNAME));
 
-    JS_ASSERT_IF(pn->isKind(PNK_FUNCTIONDECL), pn->isBound());
+    JS_ASSERT_IF(pn->isKind(PNK_FUNCTION), pn->isBound());
 
     /* Don't attempt if 'pn' is already bound or deoptimized or a function. */
     if (pn->isBound() || pn->isDeoptimized())
@@ -5961,71 +5961,31 @@ static bool
 EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_ARGSBODY));
-    uint16_t ndefaults = bce->sc->asFunbox()->ndefaults;
-    JSFunction *fun = bce->sc->asFunbox()->fun();
-    unsigned nformal = fun->nargs - fun->hasRest();
-    EMIT_UINT16_IMM_OP(JSOP_ACTUALSFILLED, nformal - ndefaults);
-    ptrdiff_t top = bce->offset();
-    size_t tableSize = (size_t)(JUMP_OFFSET_LEN * (3 + ndefaults));
-    if (EmitN(cx, bce, JSOP_TABLESWITCH, tableSize) < 0)
-        return false;
-    ptrdiff_t jumpoff = top + JUMP_OFFSET_LEN;
-    JS_ASSERT(nformal >= ndefaults);
-    uint16_t defstart = nformal - ndefaults;
-    SET_JUMP_OFFSET(bce->code(jumpoff), defstart);
-    jumpoff += JUMP_OFFSET_LEN;
-    SET_JUMP_OFFSET(bce->code(jumpoff), nformal - 1);
-    jumpoff += JUMP_OFFSET_LEN;
 
-    // Fill body of switch, which sets defaults where needed.
-    unsigned i;
     ParseNode *arg, *pnlast = pn->last();
-    for (arg = pn->pn_head, i = 0; arg != pnlast; arg = arg->pn_next, i++) {
-        if (!(arg->pn_dflags & PND_DEFAULT))
+    for (arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
+        if (!(arg->pn_dflags & PND_DEFAULT) || !arg->isKind(PNK_NAME))
             continue;
-        SET_JUMP_OFFSET(bce->code(jumpoff), bce->offset() - top);
-        jumpoff += JUMP_OFFSET_LEN;
-        ParseNode *expr;
-        if (arg->isKind(PNK_NAME)) {
-            expr = arg->expr();
-        } else {
-            // The argument name is bound to a function. We still have to
-            // evaluate the default in case it has side effects.
-            JS_ASSERT(!arg->isDefn());
-            JS_ASSERT(arg->isKind(PNK_ASSIGN));
-            expr = arg->pn_right;
-        }
-        if (!EmitTree(cx, bce, expr))
+        if (!BindNameToSlot(cx, bce, arg))
             return false;
-        if (arg->isKind(PNK_NAME)) {
-            if (!BindNameToSlot(cx, bce, arg))
-                return false;
-            if (!EmitVarOp(cx, arg, JSOP_SETARG, bce))
-                return false;
-        } else {
-            // Create a dummy JSOP_SETLOCAL for the decompiler. Jump over it
-            // with a JSOP_GOTO in real code.
-            if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-                return false;
-            ptrdiff_t hop = bce->offset();
-            if (EmitJump(cx, bce, JSOP_GOTO, 0) < 0)
-                return false;
-
-            // It doesn't matter if this is correct with respect to aliasing or
-            // not. Only the decompiler is going to see it.
-            PropertyName *name = arg->pn_left->name();
-            BindingIter bi(bce->script->bindings);
-            while (bi->name() != name)
-                bi++;
-            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bi.frameIndex(), bce))
-                return false;
-            SET_JUMP_OFFSET(bce->code(hop), bce->offset() - hop);
-        }
+        if (!EmitVarOp(cx, arg, JSOP_GETARG, bce))
+            return false;
+        if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+            return false;
+        if (Emit1(cx, bce, JSOP_STRICTEQ) < 0)
+            return false;
+        ptrdiff_t jump = EmitJump(cx, bce, JSOP_IFEQ, 0);
+        if (jump < 0)
+            return false;
+        if (!EmitTree(cx, bce, arg->expr()))
+            return false;
+        if (!EmitVarOp(cx, arg, JSOP_SETARG, bce))
+            return false;
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
+        SET_JUMP_OFFSET(bce->code(jump), bce->offset() - jump);
     }
-    JS_ASSERT(jumpoff == top + ptrdiff_t(tableSize));
-    SET_JUMP_OFFSET(bce->code(top), bce->offset() - top);
+
     return true;
 }
 
@@ -6045,8 +6005,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     switch (pn->getKind()) {
-      case PNK_FUNCTIONDECL:
-      case PNK_FUNCTIONEXPR:
+      case PNK_FUNCTION:
         ok = EmitFunc(cx, bce, pn);
         break;
 
@@ -6076,11 +6035,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // main pass later the emitter will add JSOP_NOP with source notes
             // for the function to preserve the original functions position
             // when decompiling.
-
+             
             // Currently this is used only for functions, as compile-as-we go
             // mode for scripts does not allow separate emitter passes.
             for (ParseNode *pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
-                if (pn2->isKind(PNK_FUNCTIONDECL) && pn2->functionIsHoisted()) {
+                if (pn2->isKind(PNK_FUNCTION) && pn2->functionIsHoisted()) {
                     if (!EmitTree(cx, bce, pn2))
                         return false;
                 }
