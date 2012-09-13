@@ -1482,7 +1482,8 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                                 const nsRect& aDirtyRect,
                                 const nsRect& aBorderArea,
                                 uint32_t aFlags,
-                                nsRect* aBGClipRect)
+                                nsRect* aBGClipRect,
+                                int32_t aLayer)
 {
   SAMPLE_LABEL("nsCSSRendering", "PaintBackground");
   NS_PRECONDITION(aForFrame,
@@ -1510,7 +1511,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                         aDirtyRect, aBorderArea, sc,
                         *aForFrame->GetStyleBorder(), aFlags,
-                        aBGClipRect);
+                        aBGClipRect, aLayer);
 }
 
 static bool
@@ -2328,7 +2329,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                       nsStyleContext* aBackgroundSC,
                                       const nsStyleBorder& aBorder,
                                       uint32_t aFlags,
-                                      nsRect* aBGClipRect)
+                                      nsRect* aBGClipRect,
+                                      int32_t aLayer)
 {
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
@@ -2372,6 +2374,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                              drawBackgroundImage,
                                              drawBackgroundColor);
 
+  // If we're not drawing the back-most layer, we don't want to draw the
+  // background color.
+  const nsStyleBackground *bg = aBackgroundSC->GetStyleBackground();
+  if (drawBackgroundColor && aLayer >= 0 && aLayer != bg->mImageCount - 1) {
+    drawBackgroundColor = false;
+  }
+
   // At this point, drawBackgroundImage and drawBackgroundColor are
   // true if and only if we are actually supposed to paint an image or
   // color into aDirtyRect, respectively.
@@ -2406,7 +2415,6 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // SetupCurrentBackgroundClip.  (Arguably it should be the
   // intersection, but that breaks the table painter -- in particular,
   // taking the intersection breaks reftests/bugs/403249-1[ab].)
-  const nsStyleBackground *bg = aBackgroundSC->GetStyleBackground();
   BackgroundClipState clipState;
   uint8_t currentBackgroundClip;
   bool isSolidBorder;
@@ -2456,13 +2464,27 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     return;
   }
 
+  if (bg->mImageCount < 1) {
+    // Return if there are no background layers, all work from this point
+    // onwards happens iteratively on these.
+    return;
+  }
+
+  // Validate the layer range before we start iterating.
+  int32_t startLayer = aLayer;
+  int32_t nLayers = 1;
+  if (startLayer < 0) {
+    startLayer = (int32_t)bg->mImageCount - 1;
+    nLayers = bg->mImageCount;
+  }
+
   // Ensure we get invalidated for loads of the image.  We need to do
   // this here because this might be the only code that knows about the
   // association of the style data with the frame.
   if (aBackgroundSC != aForFrame->GetStyleContext()) {
     ImageLoader* loader = aPresContext->Document()->StyleImageLoader();
-    
-    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, bg, startLayer, nLayers) {
       if (bg->mLayers[i].mImage.GetType() == eStyleImageType_Image) {
         imgIRequest *image = bg->mLayers[i].mImage.GetImageData();
 
@@ -2479,7 +2501,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
   if (drawBackgroundImage) {
     bool clipSet = false;
-    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, bg, startLayer, nLayers) {
       const nsStyleBackground::Layer &layer = bg->mLayers[i];
       if (!aBGClipRect) {
         uint8_t newBackgroundClip = layer.mClip;

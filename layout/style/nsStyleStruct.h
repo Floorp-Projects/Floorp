@@ -487,7 +487,11 @@ struct nsStyleBackground {
   const Layer& BottomLayer() const { return mLayers[mImageCount - 1]; }
 
   #define NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(var_, stylebg_) \
-    for (uint32_t var_ = (stylebg_)->mImageCount; var_-- != 0; )
+    for (uint32_t var_ = (stylebg_) ? (stylebg_)->mImageCount : 1; var_-- != 0; )
+  #define NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT_WITH_RANGE(var_, stylebg_, start_, count_) \
+    NS_ASSERTION((start_) >= 0 && (uint32_t)(start_) < ((stylebg_) ? (stylebg_)->mImageCount : 1), "Invalid layer start!"); \
+    NS_ASSERTION((count_) > 0 && (count_) <= (start_) + 1, "Invalid layer range!"); \
+    for (uint32_t var_ = (start_) + 1; var_-- != (uint32_t)((start_) + 1 - (count_)); )
 
   nscolor mBackgroundColor;       // [reset]
 

@@ -1362,8 +1362,11 @@ RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 }
 
 nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame)
+                                         nsIFrame* aFrame,
+                                         uint32_t aLayer)
   : nsDisplayItem(aBuilder, aFrame)
+  , mIsBottommostLayer(true)
+  , mLayer(aLayer)
 {
   MOZ_COUNT_CTOR(nsDisplayBackground);
   const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
@@ -1383,8 +1386,17 @@ nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
     nsPresContext* presContext = mFrame->PresContext();
     nsStyleContext* bgSC;
     bool hasBG = nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
-    if (hasBG && bgSC->GetStyleBackground()->HasFixedBackground()) {
-      aBuilder->SetHasFixedItems();
+    if (hasBG) {
+      const nsStyleBackground* bg = bgSC->GetStyleBackground();
+      if (mLayer != bg->mImageCount - 1) {
+        mIsBottommostLayer = false;
+      }
+
+      // Check if this background layer is attachment-fixed
+      if (!bg->mLayers[mLayer].mImage.IsEmpty() &&
+          bg->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED) {
+        aBuilder->SetHasFixedItems();
+      }
     }
   }
 }
@@ -1394,6 +1406,39 @@ nsDisplayBackground::~nsDisplayBackground()
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_DTOR(nsDisplayBackground);
 #endif
+}
+
+/*static*/ nsresult
+nsDisplayBackground::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
+                                                nsIFrame* aFrame,
+                                                nsDisplayList* aList,
+                                                nsDisplayBackground** aBackground)
+{
+  nsStyleContext* bgSC;
+  const nsStyleBackground* bg = nullptr;
+  nsPresContext* presContext = aFrame->PresContext();
+  if (!aFrame->IsThemed() &&
+      nsCSSRendering::FindBackground(presContext, aFrame, &bgSC)) {
+    bg = bgSC->GetStyleBackground();
+  }
+
+  // Passing bg == nullptr in this macro will result in one iteration with
+  // i = 0.
+  bool backgroundSet = !aBackground;
+  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+    nsDisplayBackground* bgItem =
+      new (aBuilder) nsDisplayBackground(aBuilder, aFrame, i);
+    nsresult rv = aList->AppendNewToTop(bgItem);
+    if (rv != NS_OK) {
+      return rv;
+    }
+    if (!backgroundSet) {
+      *aBackground = bgItem;
+      backgroundSet = true;
+    }
+  }
+
+  return NS_OK;
 }
 
 // Helper for RoundedRectIntersectsRect.
@@ -1574,16 +1619,11 @@ nsDisplayBackground::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder)
 
   const nsStyleBackground *bg = bgSC->GetStyleBackground();
 
-  // We could pretty easily support multiple image layers, but for now we
-  // just punt here.
-  if (bg->mLayers.Length() != 1)
-    return false;
-
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   nsPoint offset = ToReferenceFrame();
   nsRect borderArea = nsRect(offset, mFrame->GetSize());
 
-  const nsStyleBackground::Layer &layer = bg->mLayers[0];
+  const nsStyleBackground::Layer &layer = bg->mLayers[mLayer];
 
   nsBackgroundLayerState state =
     nsCSSRendering::PrepareBackgroundLayer(presContext,
@@ -1784,7 +1824,7 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   *aSnap = true;
 
   nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  if (NS_GET_A(bg->mBackgroundColor) == 255 &&
+  if (mIsBottommostLayer && NS_GET_A(bg->mBackgroundColor) == 255 &&
       !nsCSSRendering::IsCanvasFrame(mFrame)) {
     result = GetInsideClipRegion(presContext, bottomLayer.mClip, borderBox, aSnap);
   }
@@ -1796,13 +1836,11 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   // Of course, if there's only one frame in the flow, it doesn't matter.
   if (bg->mBackgroundInlinePolicy == NS_STYLE_BG_INLINE_POLICY_EACH_BOX ||
       (!mFrame->GetPrevContinuation() && !mFrame->GetNextContinuation())) {
-    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
-      const nsStyleBackground::Layer& layer = bg->mLayers[i];
-      if (layer.mImage.IsOpaque()) {
-        nsRect r = nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
-            borderBox, *bg, layer);
-        result.Or(result, GetInsideClipRegion(presContext, layer.mClip, r, aSnap));
-      }
+    const nsStyleBackground::Layer& layer = bg->mLayers[mLayer];
+    if (layer.mImage.IsOpaque()) {
+      nsRect r = nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
+          borderBox, *bg, layer);
+      result.Or(result, GetInsideClipRegion(presContext, layer.mClip, r, aSnap));
     }
   }
 
@@ -1887,15 +1925,13 @@ nsDisplayBackground::ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
   if (!bg->HasFixedBackground())
     return false;
 
-  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
-    const nsStyleBackground::Layer& layer = bg->mLayers[i];
-    if (layer.mAttachment != NS_STYLE_BG_ATTACHMENT_FIXED &&
-        !layer.mImage.IsEmpty()) {
-      return false;
-    }
-    if (layer.mClip != NS_STYLE_BG_CLIP_BORDER)
-      return false;
+  const nsStyleBackground::Layer& layer = bg->mLayers[mLayer];
+  if (layer.mAttachment != NS_STYLE_BG_ATTACHMENT_FIXED &&
+      !layer.mImage.IsEmpty()) {
+    return false;
   }
+  if (layer.mClip != NS_STYLE_BG_CLIP_BORDER)
+    return false;
 
   if (nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius))
     return false;
@@ -1925,7 +1961,7 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                   mVisibleRect,
                                   nsRect(offset, mFrame->GetSize()),
-                                  flags);
+                                  flags, nullptr, mLayer);
 }
 
 nsRect
@@ -1941,6 +1977,13 @@ nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
 
   *aSnap = true;
   return r + ToReferenceFrame();
+}
+
+uint32_t
+nsDisplayBackground::GetPerFrameKey()
+{
+  return (mLayer << nsDisplayItem::TYPE_BITS) |
+    nsDisplayItem::GetPerFrameKey();
 }
 
 nsRect

@@ -1457,16 +1457,18 @@ nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                         bool                    aForceBackground,
                                         nsDisplayBackground**   aBackground)
 {
+  *aBackground = nullptr;
+
   // Here we don't try to detect background propagation. Frames that might
   // receive a propagated background should just set aForceBackground to
   // true.
   if (aBuilder->IsForEventDelivery() || aForceBackground ||
       !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
-    nsDisplayBackground* bg = new (aBuilder) nsDisplayBackground(aBuilder, this);
-    *aBackground = bg;
-    return aLists.BorderBackground()->AppendNewToTop(bg);
+    return nsDisplayBackground::AppendBackgroundItemsToTop(aBuilder, this,
+                                                           aLists.BorderBackground(),
+                                                           aBackground);
   }
-  *aBackground = nullptr;
+
   return NS_OK;
 }
 
