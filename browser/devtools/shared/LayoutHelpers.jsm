@@ -8,6 +8,16 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "PlatformKeys", function() {
+  return Services.strings.createBundle(
+    "chrome://global-platform/locale/platformKeys.properties");
+});
+
 var EXPORTED_SYMBOLS = ["LayoutHelpers"];
 
 LayoutHelpers = {
@@ -310,4 +320,60 @@ LayoutHelpers = {
       return false;
     }
   },
+
+  /**
+   * Prettifies the modifier keys for an element.
+   *
+   * @param Node aElemKey
+   *        The key element to get the modifiers from.
+   * @return string
+   *         A prettified and properly separated modifier keys string.
+   */
+  prettyKey: function LH_prettyKey(aElemKey)
+  {
+    let elemString = "";
+    let elemMod = aElemKey.getAttribute("modifiers");
+
+    if (elemMod.match("accel")) {
+      if (Services.appinfo.OS == "Darwin") {
+        // XXX bug 779642 Use "Cmd-" literal vs. cloverleaf meta-key until
+        // Orion adds variable height lines.
+        // elemString += PlatformKeys.GetStringFromName("VK_META") +
+        //               PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+        elemString += "Cmd-";
+      } else {
+        elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
+                      PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+      }
+    }
+    if (elemMod.match("access")) {
+      if (Services.appinfo.OS == "Darwin") {
+        elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
+                      PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+      } else {
+        elemString += PlatformKeys.GetStringFromName("VK_ALT") +
+                      PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+      }
+    }
+    if (elemMod.match("shift")) {
+      elemString += PlatformKeys.GetStringFromName("VK_SHIFT") +
+                    PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+    if (elemMod.match("alt")) {
+      elemString += PlatformKeys.GetStringFromName("VK_ALT") +
+                    PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+    if (elemMod.match("ctrl")) {
+      elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
+                    PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+    if (elemMod.match("meta")) {
+      elemString += PlatformKeys.GetStringFromName("VK_META") +
+                    PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+
+    return elemString +
+      (aElemKey.getAttribute("keycode").replace(/^.*VK_/, "") ||
+       aElemKey.getAttribute("key")).toUpperCase();
+  }
 };

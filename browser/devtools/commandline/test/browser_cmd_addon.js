@@ -3,6 +3,9 @@
 
 // Tests that the addon commands works as they should
 
+let imported = {};
+Components.utils.import("resource:///modules/devtools/CmdAddon.jsm", imported);
+
 function test() {
   DeveloperToolbarTest.test("about:blank", [ GAT_test ]);
 }
@@ -10,6 +13,7 @@ function test() {
 function GAT_test() {
   var GAT_ready = DeveloperToolbarTest.checkCalled(function() {
     Services.obs.removeObserver(GAT_ready, "gcli_addon_commands_ready", false);
+    info("gcli_addon_commands_ready notification received, running tests");
 
     helpers.setInput('addon list dictionary');
     helpers.check({
@@ -91,4 +95,14 @@ function GAT_test() {
   });
 
   Services.obs.addObserver(GAT_ready, "gcli_addon_commands_ready", false);
+
+  if (imported.Flags.addonsLoaded) {
+    info("The getAllAddons command has already completed and we have missed ");
+    info("the notification. Let's send the gcli_addon_commands_ready ");
+    info("notification ourselves.");
+
+    Services.obs.notifyObservers(null, "gcli_addon_commands_ready", null);
+  } else {
+    info("gcli_addon_commands_ready notification has not yet been received.");
+  }
 }
