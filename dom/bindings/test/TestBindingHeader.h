@@ -401,6 +401,10 @@ public:
   already_AddRefed<TestInterface> ExerciseTypedefInterfaces2(TestInterface*);
   void ExerciseTypedefInterfaces3(TestInterface&);
 
+  // Miscellania
+  int32_t AttrWithLenientThis();
+  void SetAttrWithLenientThis(int32_t);
+
   // Methods and properties imported via "implements"
   bool ImplementedProperty();
   void SetImplementedProperty(bool);

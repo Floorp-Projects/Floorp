@@ -1,7 +1,10 @@
-Copyright 2001-2011 Xiph.Org, Skype Limited, Octasic,
+Copyright 1994-2011 IETF Trust, Xiph.Org, Skype Limited, Octasic,
                     Jean-Marc Valin, Timothy B. Terriberry,
-                    CSIRO, Gregory Maxwell, Mark Borgerding, 
-                    Erik de Castro Lopo
+                    CSIRO, Gregory Maxwell, Mark Borgerding,
+                    Erik de Castro Lopo. All rights reserved.
+
+This file is extracted from RFC6716. Please see that RFC for additional
+information.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
@@ -14,7 +17,7 @@ notice, this list of conditions and the following disclaimer.
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
 
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.

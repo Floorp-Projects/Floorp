@@ -6129,9 +6129,8 @@ void
 TypeCompartment::sweepCompilerOutputs(FreeOp *fop, bool discardConstraints)
 {
     if (constrainedOutputs) {
-        bool isCompiling = compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning;
         if (discardConstraints) {
-            JS_ASSERT(!isCompiling);
+            JS_ASSERT(compiledInfo.outputIndex == RecompileInfo::NoCompilerRunning);
 #if DEBUG
             for (unsigned i = 0; i < constrainedOutputs->length(); i++) {
                 CompilerOutput &co = (*constrainedOutputs)[i];
