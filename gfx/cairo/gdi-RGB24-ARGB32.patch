@@ -1,0 +1,141 @@
+changeset:   106848:28db6dbdd9ea
+tag:         gdi-patch
+tag:         qbase
+tag:         qtip
+tag:         tip
+user:        Jeff Muizelaar <jmuizelaar@mozilla.com>
+date:        Wed Sep 12 22:52:06 2012 -0400
+summary:     Bug 788794. Use BitBlt to do SOURCE and OVER from RGB24 to ARGB32. r=nical
+
+diff --git a/gfx/cairo/cairo/src/cairo-win32-surface.c b/gfx/cairo/cairo/src/cairo-win32-surface.c
+--- a/gfx/cairo/cairo/src/cairo-win32-surface.c
++++ b/gfx/cairo/cairo/src/cairo-win32-surface.c
+@@ -884,16 +884,28 @@ static cairo_int_status_t
+ 		      src_x, src_y,
+ 		      src_w, src_h,
+ 		      blend_function))
+ 	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(AlphaBlend)");
+ 
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
++/* makes the alpha channel in a RGB24 surface 0xff */
++static void
++make_opaque (cairo_image_surface_t *image, cairo_rectangle_int_t src_r)
++{
++    int x; int y;
++    for (y = src_r.y; y < src_r.height; y++) {
++        for (x = src_r.x; x < src_r.width; x++) {
++            image->data[y * image->stride + x*4 + 3] = 0xff;
++        }
++    }
++}
++
+ static cairo_int_status_t
+ _cairo_win32_surface_composite_inner (cairo_win32_surface_t *src,
+ 				      cairo_image_surface_t *src_image,
+ 				      cairo_win32_surface_t *dst,
+ 				      cairo_rectangle_int_t src_extents,
+ 				      cairo_rectangle_int_t src_r,
+ 				      cairo_rectangle_int_t dst_r,
+ 				      int alpha,
+@@ -935,16 +947,24 @@ static cairo_int_status_t
+ 				src_r.width, - (int) src_r.height,
+ 				src_image->data,
+ 				&bi,
+ 				DIB_RGB_COLORS,
+ 				SRCCOPY))
+ 		return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(StretchDIBits)");
+ 	}
+     } else if (!needs_alpha) {
++	if (src->format == CAIRO_FORMAT_RGB24 && dst->format == CAIRO_FORMAT_ARGB32) {
++	    /* Because we store RGB24 & ARGB32 in the same way GDI has no way
++	     * to ignore the alpha channel from a RGB24 source. Therefore, we set
++	     * the alpha channel in our RGB24 source to opaque so that we can treat
++	     * it like ARGB32. */
++	    GdiFlush();
++	    make_opaque(src->image, src_r);
++	}
+ 	/* BitBlt or StretchBlt? */
+ 	if (!needs_scale && (dst->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT)) {
+             if (!BitBlt (dst->dc,
+ 			 dst_r.x, dst_r.y,
+ 			 dst_r.width, dst_r.height,
+ 			 src->dc,
+ 			 src_r.x, src_r.y,
+ 			 SRCCOPY))
+@@ -1184,28 +1204,36 @@ static cairo_int_status_t
+ 	}
+     } else {
+ 	needs_repeat = TRUE;
+     }
+ 
+     /*
+      * Operations that we can do:
+      *
++     * AlphaBlend uses the following formula for alpha when not use the per-pixel alpha (AlphaFormat = 0)
++     *   Dst.Alpha = Src.Alpha * (SCA/255.0) + Dst.Alpha * (1.0 - (SCA/255.0))
++     * This turns into Dst.Alpha = Src.Alpha when SCA = 255.
++     * (http://msdn.microsoft.com/en-us/library/aa921335.aspx)
++     *
+      *  RGB OVER  RGB -> BitBlt (same as SOURCE)
+-     *  RGB OVER ARGB -> UNSUPPORTED (AlphaBlend treats this as a BitBlt, even with SCA 255 and no AC_SRC_ALPHA)
++     *  RGB OVER ARGB -> Partially supported, We convert this operation into a ARGB SOURCE ARGB
++     *                   by setting the alpha values of the source to 255.
+      * ARGB OVER ARGB -> AlphaBlend, with AC_SRC_ALPHA
+      * ARGB OVER  RGB -> AlphaBlend, with AC_SRC_ALPHA; we'll have junk in the dst A byte
+      * 
+      *  RGB OVER  RGB + mask -> AlphaBlend, no AC_SRC_ALPHA
+-     *  RGB OVER ARGB + mask -> UNSUPPORTED
++     *  RGB OVER ARGB + mask -> Partially supported, We convert this operation into a ARGB OVER ARGB + mask
++     *                          by setting the alpha values of the source to 255.
+      * ARGB OVER ARGB + mask -> AlphaBlend, with AC_SRC_ALPHA
+      * ARGB OVER  RGB + mask -> AlphaBlend, with AC_SRC_ALPHA; junk in the dst A byte
+      * 
+      *  RGB SOURCE  RGB -> BitBlt
+-     *  RGB SOURCE ARGB -> UNSUPPORTED (AlphaBlend treats this as a BitBlt, even with SCA 255 and no AC_SRC_ALPHA)
++     *  RGB SOURCE ARGB -> Partially supported, We convert this operation into a ARGB SOURCE ARGB
++     *                     by setting the alpha values of the source to 255.
+      * ARGB SOURCE ARGB -> BitBlt
+      * ARGB SOURCE  RGB -> BitBlt
+      * 
+      *  RGB SOURCE  RGB + mask -> unsupported
+      *  RGB SOURCE ARGB + mask -> unsupported
+      * ARGB SOURCE ARGB + mask -> unsupported
+      * ARGB SOURCE  RGB + mask -> unsupported
+      */
+@@ -1222,22 +1250,32 @@ static cairo_int_status_t
+ 		needs_alpha = FALSE;
+ 	    } else {
+ 		needs_alpha = TRUE;
+ 	    }
+ 	} else if (src_format == CAIRO_FORMAT_ARGB32 &&
+ 		   dst->format == CAIRO_FORMAT_RGB24)
+ 	{
+ 	    needs_alpha = TRUE;
++	} else if (src_format == CAIRO_FORMAT_RGB24 &&
++		   dst->format == CAIRO_FORMAT_ARGB32 &&
++		   src->image)
++	{
++	    if (alpha == 255) {
++		needs_alpha = FALSE;
++	    } else {
++		needs_alpha = TRUE;
++	    }
+ 	} else {
+ 	    goto UNSUPPORTED;
+ 	}
+     } else if (alpha == 255 && op == CAIRO_OPERATOR_SOURCE) {
+ 	if ((src_format == dst->format) ||
+-	    (src_format == CAIRO_FORMAT_ARGB32 && dst->format == CAIRO_FORMAT_RGB24))
++	    (src_format == CAIRO_FORMAT_ARGB32 && dst->format == CAIRO_FORMAT_RGB24) ||
++	    (src_format == CAIRO_FORMAT_RGB24  && dst->format == CAIRO_FORMAT_ARGB32 && src->image))
+ 	{
+ 	    needs_alpha = FALSE;
+ 	} else {
+ 	    goto UNSUPPORTED;
+ 	}
+     } else {
+ 	goto UNSUPPORTED;
+     }
+
