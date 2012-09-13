@@ -326,7 +326,7 @@ let SocialShareButton = {
     // whenever we notice the provider has changed - but the concept of
     // "provider changed" will only exist once bug 774520 lands. 
     // get the recommend-prompt info.
-    let port = Social.provider._getWorkerPort();
+    let port = Social.provider.getWorkerPort();
     if (port) {
       port.onmessage = function(evt) {
         if (evt.data.topic == "social.user-recommend-prompt-response") {

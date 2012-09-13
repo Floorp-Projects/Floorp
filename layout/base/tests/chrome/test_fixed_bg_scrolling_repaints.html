@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that we don't get unnecessary repaints with fixed backgrounds</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<!-- Need a timeout here to allow paint unsuppression before we start the test -->
+<body onload="setTimeout(startTest,0)" style="background: url(blue-32x32.png) fixed">
+<div style="height: 2048px"></div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+               getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+function startTest() {
+  // Do a scroll to ensure we trigger activity heuristics.
+  waitForAllPaintsFlushed(function () {
+    // Clear paint state and scroll down
+    utils.checkAndClearPaintedState(document.body);
+    document.documentElement.scrollTop = 100;
+    waitForAllPaintsFlushed(function () {
+      // Make sure the body didn't paint
+      var painted = utils.checkAndClearPaintedState(document.body);
+      is(painted, false, "Fixed background should not have been painted when scrolled");
+      SimpleTest.finish();
+    });
+  });
+}
+</script>
+</pre>
+</body>
+</html>

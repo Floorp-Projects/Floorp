@@ -40,9 +40,7 @@ JS_KEYWORD(with,        TOK_WITH,       JSOP_NOP,       JSVERSION_DEFAULT)
 /* ES5 reserved keywords reserved in all code. */
 JS_KEYWORD(class,       TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
 JS_KEYWORD(enum,        TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
-JS_KEYWORD(export,      TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
 JS_KEYWORD(extends,     TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
-JS_KEYWORD(import,      TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
 JS_KEYWORD(super,       TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
 
 /*
@@ -64,6 +62,8 @@ JS_KEYWORD(yield,       TOK_YIELD,           JSOP_NOP,  JSVERSION_1_7)
 #else
 JS_KEYWORD(yield,       TOK_STRICT_RESERVED, JSOP_NOP,  JSVERSION_1_7)
 #endif
+JS_KEYWORD(export,      TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
+JS_KEYWORD(import,      TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
 
 /* ES5 future reserved keywords in strict mode. */
 JS_KEYWORD(implements,  TOK_STRICT_RESERVED, JSOP_NOP,  JSVERSION_DEFAULT)

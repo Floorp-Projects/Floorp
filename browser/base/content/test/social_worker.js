@@ -11,6 +11,7 @@ onconnect = function(e) {
     switch (topic) {
       case "test-init":
         testPort = port;
+        port.postMessage({topic: "test-init-done"});
         break;
       case "sidebar-message":
         sidebarPort = port;
@@ -69,7 +70,6 @@ onconnect = function(e) {
       case "social.initialize":
         // This is the workerAPI port, respond and set up a notification icon.
         apiPort = port;
-        port.postMessage({topic: "social.initialize-response"});
         let profile = {
           portrait: "https://example.com/portrait.jpg",
           userName: "trickster",
