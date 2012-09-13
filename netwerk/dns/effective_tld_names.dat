@@ -6258,8 +6258,14 @@ pvt.k12.ma.us
 chtr.k12.ma.us
 paroch.k12.ma.us
 
-// uy : http://www.antel.com.uy/
-*.uy
+// uy : http://www.nic.org.uy/
+uy
+com.uy
+edu.uy
+gub.uy
+mil.uy
+net.uy
+org.uy
 
 // uz : http://www.reg.uz/
 uz
