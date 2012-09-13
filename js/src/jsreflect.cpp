@@ -140,12 +140,15 @@ class NodeBuilder
     char const  *src;                  /* source filename or null               */
     RootedValue srcval;                /* source filename JS value or null      */
     Value       callbacks[AST_LIMIT];  /* user-specified callbacks              */
-    Value       userv;                 /* user-specified builder object or null */
+    AutoValueArray callbacksRoots;     /* for rooting |callbacks|               */
+    RootedValue userv;                 /* user-specified builder object or null */
+    RootedValue undefinedVal;          /* a rooted undefined val, used by opt() */
 
   public:
     NodeBuilder(JSContext *c, bool l, char const *s)
-        : cx(c), saveLoc(l), src(s), srcval(c) {
-    }
+        : cx(c), saveLoc(l), src(s), srcval(c), callbacks(),
+          callbacksRoots(c, callbacks, AST_LIMIT), userv(c), undefinedVal(c, UndefinedValue())
+    { }
 
     bool init(HandleObject userobj = NullPtr()) {
         if (src) {
@@ -200,84 +203,101 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { loc };
+            AutoValueArray ava(cx, argv, 1);
             return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
         }
 
         Value argv[] = { NullValue() }; /* no zero-length arrays allowed! */
+        AutoValueArray ava(cx, argv, 1);
         return Invoke(cx, userv, fun, 0, argv, dst.address());
     }
 
-    bool callback(HandleValue fun, Value v1, TokenPos *pos, MutableHandleValue dst) {
+    bool callback(HandleValue fun, HandleValue v1, TokenPos *pos, MutableHandleValue dst) {
         if (saveLoc) {
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, loc };
+            AutoValueArray ava(cx, argv, 2);
             return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
         }
 
         Value argv[] = { v1 };
+        AutoValueArray ava(cx, argv, 1);
         return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
     }
 
-    bool callback(HandleValue fun, Value v1, Value v2, TokenPos *pos, MutableHandleValue dst) {
+    bool callback(HandleValue fun, HandleValue v1, HandleValue v2, TokenPos *pos,
+                  MutableHandleValue dst) {
         if (saveLoc) {
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, loc };
+            AutoValueArray ava(cx, argv, 3);
             return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
         }
 
         Value argv[] = { v1, v2 };
+        AutoValueArray ava(cx, argv, 2);
         return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
     }
 
-    bool callback(HandleValue fun, Value v1, Value v2, Value v3, TokenPos *pos,
+    bool callback(HandleValue fun, HandleValue v1, HandleValue v2, HandleValue v3, TokenPos *pos,
                   MutableHandleValue dst) {
         if (saveLoc) {
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, v3, loc };
+            AutoValueArray ava(cx, argv, 4);
             return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
         }
 
         Value argv[] = { v1, v2, v3 };
+        AutoValueArray ava(cx, argv, 3);
         return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
     }
 
-    bool callback(HandleValue fun, Value v1, Value v2, Value v3, Value v4, TokenPos *pos,
-                  MutableHandleValue dst) {
-        if (saveLoc) {
-            RootedValue loc(cx);
-            if (!newNodeLoc(pos, &loc))
-                return false;
-            Value argv[] = { v1, v2, v3, v4, loc };
-            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
-        }
-
-        Value argv[] = { v1, v2, v3, v4 };
-        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
-    }
-
-    bool callback(HandleValue fun, Value v1, Value v2, Value v3, Value v4, Value v5,
+    bool callback(HandleValue fun, HandleValue v1, HandleValue v2, HandleValue v3, HandleValue v4,
                   TokenPos *pos, MutableHandleValue dst) {
         if (saveLoc) {
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
+            Value argv[] = { v1, v2, v3, v4, loc };
+            AutoValueArray ava(cx, argv, 5);
+            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
+        }
+
+        Value argv[] = { v1, v2, v3, v4 };
+        AutoValueArray ava(cx, argv, 4);
+        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
+    }
+
+    bool callback(HandleValue fun, HandleValue v1, HandleValue v2, HandleValue v3, HandleValue v4,
+                  HandleValue v5, TokenPos *pos, MutableHandleValue dst) {
+        if (saveLoc) {
+            RootedValue loc(cx);
+            if (!newNodeLoc(pos, &loc))
+                return false;
             Value argv[] = { v1, v2, v3, v4, v5, loc };
+            AutoValueArray ava(cx, argv, 6);
             return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
         }
 
         Value argv[] = { v1, v2, v3, v4, v5 };
+        AutoValueArray ava(cx, argv, 5);
         return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst.address());
     }
 
-    Value opt(Value v) {
+    // WARNING: Returning a Handle is non-standard, but it works in this case
+    // because both |v| and |undefinedVal| are definitely rooted on a previous
+    // stack frame (i.e. we're just choosing between two already-rooted
+    // values).
+    HandleValue opt(HandleValue v) {
         JS_ASSERT_IF(v.isMagic(), v.whyMagic() == JS_SERIALIZE_NO_NODE);
-        return v.isMagic(JS_SERIALIZE_NO_NODE) ? UndefinedValue() : v;
+        return v.isMagic(JS_SERIALIZE_NO_NODE) ? undefinedVal : v;
     }
 
     bool atomValue(const char *s, MutableHandleValue dst) {
@@ -441,8 +461,8 @@ class NodeBuilder
      * arguments a nullable token position and a non-nullable, rooted
      * outparam.
      *
-     * All Value arguments are rooted. Any Value arguments representing
-     * optional subnodes may be a JS_SERIALIZE_NO_NODE magic value.
+     * Any Value arguments representing optional subnodes may be a
+     * JS_SERIALIZE_NO_NODE magic value.
      */
 
     /*
@@ -3364,15 +3384,13 @@ ASTSerializer::functionBody(ParseNode *pn, TokenPos *pos, MutableHandleValue dst
 static JSBool
 reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 {
-    cx->runtime->gcExactScanningEnabled = false;
-
     if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "Reflect.parse", "0", "s");
         return JS_FALSE;
     }
 
-    JSString *src = ToString(cx, JS_ARGV(cx, vp)[0]);
+    RootedString src(cx, ToString(cx, JS_ARGV(cx, vp)[0]));
     if (!src)
         return JS_FALSE;
 
@@ -3412,7 +3430,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
                 return JS_FALSE;
 
             if (!prop.isNullOrUndefined()) {
-                JSString *str = ToString(cx, prop);
+                RootedString str(cx, ToString(cx, prop));
                 if (!str)
                     return JS_FALSE;
 
