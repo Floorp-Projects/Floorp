@@ -3505,8 +3505,24 @@ var BrowserEventHandler = {
     if (!closest)
       closest = aEvent.target;
 
-    if (closest)
+    if (closest) {
+      let uri = this._getLinkURI(closest);
+      if (uri) {
+        Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null, null);
+      }
       this._doTapHighlight(closest);
+    }
+  },
+
+  _getLinkURI: function(aElement) {
+    if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
+        ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
+        (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href))) {
+      try {
+        return Services.io.newURI(aElement.href, null, null);
+      } catch (e) {}
+    }
+    return null;
   },
 
   observe: function(aSubject, aTopic, aData) {
