@@ -43,12 +43,10 @@ private:
   bool RecvSetSecure(const nsString& aKey, const bool& aSecure, nsresult* rv);
 
   bool RecvInit(const bool& aUseDB,
-                const bool& aCanUseChromePersist,
                 const bool& aSessionOnly,
                 const bool& aPrivate,
                 const nsCString& aDomain,
                 const nsCString& aScopeDBKey,
-                const nsCString& aQuotaDomainDBKey,
                 const nsCString& aQuotaETLDplus1DomainDBKey,
                 const uint32_t& aStorageType);
 
