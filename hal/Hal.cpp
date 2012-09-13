@@ -406,7 +406,7 @@ bool GetLight(LightType light, hal::LightConfiguration* aConfig)
   RETURN_PROXY_IF_SANDBOXED(GetLight(light, aConfig));
 }
 
-static StaticAutoPtr<ObserverList<SystemTimeChange>> sSystemTimeObserver;
+static StaticAutoPtr<ObserverList<SystemTimeChange> > sSystemTimeObserver;
 
 static void
 InitializeSystemTimeChangeObserver()
