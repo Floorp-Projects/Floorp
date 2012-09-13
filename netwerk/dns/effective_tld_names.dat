@@ -5899,60 +5899,87 @@ ne.tz
 or.tz
 sc.tz
 
-// ua : http://www.nic.net.ua/
+// ua : https://hostmaster.ua/policy/?ua
+// Submitted by registry <dk@cctld.ua> 2012-04-27
 ua
+// ua 2LD
 com.ua
 edu.ua
 gov.ua
 in.ua
 net.ua
 org.ua
-// ua geo-names
+// ua geographic names
+// https://hostmaster.ua/2ld/
 cherkassy.ua
+cherkasy.ua
 chernigov.ua
+chernihiv.ua
+chernivtsi.ua
 chernovtsy.ua
 ck.ua
 cn.ua
+cr.ua
 crimea.ua
 cv.ua
 dn.ua
 dnepropetrovsk.ua
+dnipropetrovsk.ua
+dominic.ua
 donetsk.ua
 dp.ua
 if.ua
 ivano-frankivsk.ua
 kh.ua
+kharkiv.ua
 kharkov.ua
 kherson.ua
 khmelnitskiy.ua
+khmelnytskyi.ua
 kiev.ua
 kirovograd.ua
 km.ua
 kr.ua
+krym.ua
 ks.ua
 kv.ua
+kyiv.ua
 lg.ua
+lt.ua
 lugansk.ua
 lutsk.ua
+lv.ua
 lviv.ua
 mk.ua
+mykolaiv.ua
 nikolaev.ua
 od.ua
+odesa.ua
 odessa.ua
 pl.ua
 poltava.ua
+rivne.ua
 rovno.ua
 rv.ua
+sb.ua
 sebastopol.ua
+sevastopol.ua
+sm.ua
 sumy.ua
 te.ua
 ternopil.ua
+uz.ua
 uzhgorod.ua
 vinnica.ua
+vinnytsia.ua
 vn.ua
+volyn.ua
+yalta.ua
 zaporizhzhe.ua
-zp.ua
+zaporizhzhia.ua
 zhitomir.ua
+zhytomyr.ua
+zp.ua
 zt.ua
 
 // Private registries in .ua
