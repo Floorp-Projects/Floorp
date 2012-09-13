@@ -504,6 +504,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/bookmarkdefaults_favicon_support.png \
   res/drawable/bookmarkdefaults_favicon_addons.png \
   res/drawable/handle_end.png \
+  res/drawable/handle_middle.png \
   res/drawable/handle_start.png \
   $(addprefix res/drawable-mdpi/,$(notdir $(SYNC_RES_DRAWABLE_MDPI))) \
   $(NULL)
@@ -572,6 +573,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/validation_arrow_inverted.png \
   res/drawable-hdpi/validation_bg.9.png \
   res/drawable-hdpi/handle_end.png \
+  res/drawable-hdpi/handle_middle.png \
   res/drawable-hdpi/handle_start.png \
   $(addprefix res/drawable-hdpi/,$(notdir $(SYNC_RES_DRAWABLE_HDPI))) \
   $(NULL)
@@ -634,6 +636,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/validation_arrow_inverted.png \
   res/drawable-xhdpi/validation_bg.9.png \
   res/drawable-xhdpi/handle_end.png \
+  res/drawable-xhdpi/handle_middle.png \
   res/drawable-xhdpi/handle_start.png \
   $(NULL)
 
