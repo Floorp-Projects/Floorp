@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* This file is used for both about:memory and about:compartments. A
- * version used for mobile is located at 
- * mobile/android/themes/core/aboutMemory.css. */
+/* This file is used for both about:memory and about:compartments. */
 
 body.verbose {
   /* override setting in about.css */
@@ -21,8 +19,14 @@ h2 {
   padding-left: .1em;
 }
 
+/* buttons are different sizes and overlapping without this */
+button {
+  margin: 1%;
+  padding: 2%;
+}
+
 .accuracyWarning {
-  color: #d22;
+  color: #f00;
 }
 
 .badInputWarning {
@@ -56,10 +60,6 @@ h2 {
   cursor: pointer;
 }
 
-.hasKids:hover {
-  text-decoration: underline;
-}
-
 .option {
   font-size: 80%;
   -moz-user-select: none;  /* no need to include this when cutting+pasting */
@@ -68,6 +68,10 @@ h2 {
 .legend {
   font-size: 80%;
   -moz-user-select: none;  /* no need to include this when cutting+pasting */
+}
+
+.hiddenOnMobile {
+  display: none;
 }
 
 .debug {
