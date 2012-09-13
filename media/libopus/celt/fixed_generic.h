@@ -1,11 +1,14 @@
-/* Copyright (C) 2007-2009 Xiph.Org Foundation
-   Copyright (C) 2003-2008 Jean-Marc Valin
-   Copyright (C) 2007-2008 CSIRO */
+/* Copyright (C) 2002-2012 IETF Trust, Xiph.Org Foundation,
+                           Jean-Marc Valin, CSIRO. All rights reserved.*/
 /**
    @file fixed_generic.h
    @brief Generic fixed-point operations
 */
 /*
+
+   This file is extracted from RFC6716. Please see that RFC for additional
+   information.
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:

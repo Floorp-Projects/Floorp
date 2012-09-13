@@ -435,9 +435,17 @@ pref("marionette.defaultPrefs.port", 2828);
 #endif
 
 #ifdef MOZ_UPDATER
+// Timeout before the update prompt automatically installs the update
+pref("b2g.update.apply-prompt-timeout", 60000); // milliseconds
+// Optional timeout the user can wait before getting another update prompt
+pref("b2g.update.apply-wait-timeout", 1800000); // milliseconds
+// Amount of time the updater waits for the process to exit cleanly before
+// forcefully exiting the process
+pref("b2g.update.self-destruct-timeout", 5000); // milliseconds
+
 pref("app.update.enabled", true);
-pref("app.update.auto", true);
-pref("app.update.silent", true);
+pref("app.update.auto", false);
+pref("app.update.silent", false);
 pref("app.update.mode", 0);
 pref("app.update.incompatible.mode", 0);
 pref("app.update.staging.enabled", true);

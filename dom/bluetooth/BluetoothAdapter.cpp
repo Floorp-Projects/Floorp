@@ -17,10 +17,8 @@
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
-#include "nsIDOMBluetoothAuthorizeEvent.h"
 #include "nsIDOMBluetoothDeviceEvent.h"
 #include "nsIDOMBluetoothDeviceAddressEvent.h"
-#include "nsIDOMBluetoothPairingEvent.h"
 #include "nsIDOMDOMRequest.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
@@ -263,11 +261,6 @@ BluetoothAdapter::Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue)
     return nullptr;
   }
 
-  if (NS_FAILED(bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(LOCAL_AGENT_PATH), adapter))) {
-    NS_WARNING("Failed to register local agent object with observer!");
-    return nullptr;
-  }
-
   if (NS_FAILED(bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(REMOTE_AGENT_PATH), adapter))) {
     NS_WARNING("Failed to register remote agent object with observer!");
     return nullptr;
@@ -316,91 +309,6 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     SetPropertyByValue(v);
     nsRefPtr<BluetoothPropertyEvent> e = BluetoothPropertyEvent::Create(v.name());
     e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("propertychanged"));
-  } else if (aData.name().EqualsLiteral("RequestConfirmation")) {
-    arr = aData.value().get_ArrayOfBluetoothNamedValue();
-
-    NS_ASSERTION(arr.Length() == 2, "RequestConfirmation: Wrong length of parameters");
-    NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString,
-                 "RequestConfirmation: Invalid value type");
-    NS_ASSERTION(arr[1].value().type() == BluetoothValue::Tuint32_t,
-                 "RequestConfirmation: Invalid value type");
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMBluetoothPairingEvent(getter_AddRefs(event), nullptr, nullptr);
-
-    nsCOMPtr<nsIDOMBluetoothPairingEvent> e = do_QueryInterface(event);
-    e->InitBluetoothPairingEvent(NS_LITERAL_STRING("requestconfirmation"),
-                                 false,
-                                 false,
-                                 arr[0].value().get_nsString(),
-                                 arr[1].value().get_uint32_t());
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
-  } else if (aData.name().EqualsLiteral("RequestPinCode")) {
-    arr = aData.value().get_ArrayOfBluetoothNamedValue();
-
-    NS_ASSERTION(arr.Length() == 1, "RequestPinCode: Wrong length of parameters");
-    NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString,
-                 "RequestPinCode: Invalid value type");
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMBluetoothDeviceAddressEvent(getter_AddRefs(event), nullptr, nullptr);
-
-    nsCOMPtr<nsIDOMBluetoothDeviceAddressEvent> e = do_QueryInterface(event);
-    e->InitBluetoothDeviceAddressEvent(NS_LITERAL_STRING("requestpincode"),
-                                       false, false, arr[0].value().get_nsString());
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
-  } else if (aData.name().EqualsLiteral("RequestPasskey")) {
-    arr = aData.value().get_ArrayOfBluetoothNamedValue();
-
-    NS_ASSERTION(arr.Length() == 1, "RequestPasskey: Wrong length of parameters");
-    NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString,
-                 "RequestPasskey: Invalid value type");
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMBluetoothDeviceAddressEvent(getter_AddRefs(event), nullptr, nullptr);
-
-    nsCOMPtr<nsIDOMBluetoothDeviceAddressEvent> e = do_QueryInterface(event);
-    e->InitBluetoothDeviceAddressEvent(NS_LITERAL_STRING("requestpasskey"),
-                                       false, false, arr[0].value().get_nsString());
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
-  } else if (aData.name().EqualsLiteral("Authorize")) {
-    arr = aData.value().get_ArrayOfBluetoothNamedValue();
-
-    NS_ASSERTION(arr.Length() == 2, "Authorize: Wrong length of parameters");
-    NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString,
-                 "Authorize: Invalid value type");
-    NS_ASSERTION(arr[1].value().type() == BluetoothValue::TnsString,
-                 "Authorize: Invalid value type");
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMBluetoothAuthorizeEvent(getter_AddRefs(event), nullptr, nullptr);
-
-    nsCOMPtr<nsIDOMBluetoothAuthorizeEvent> e = do_QueryInterface(event);
-    e->InitBluetoothAuthorizeEvent(NS_LITERAL_STRING("authorize"),
-                                   false,
-                                   false,
-                                   arr[0].value().get_nsString(),
-                                   arr[1].value().get_nsString());
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
-  } else if (aData.name().EqualsLiteral("Cancel")) {
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMBluetoothDeviceAddressEvent(getter_AddRefs(event), nullptr, nullptr);
-
-    nsCOMPtr<nsIDOMBluetoothDeviceAddressEvent> e = do_QueryInterface(event);
-    // Just send a null nsString, won't be used
-    e->InitBluetoothDeviceAddressEvent(NS_LITERAL_STRING("cancel"),
-                                       false, false, EmptyString());
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
   } else {
 #ifdef DEBUG
     nsCString warningMsg;

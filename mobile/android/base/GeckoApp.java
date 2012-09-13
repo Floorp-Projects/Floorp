@@ -2494,7 +2494,7 @@ abstract public class GeckoApp
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result ? "true" : "false"));
     }
 
-    private void connectGeckoLayerClient() {
+    protected void connectGeckoLayerClient() {
         mLayerView.getLayerClient().notifyGeckoReady();
 
         mLayerView.getTouchEventHandler().setOnTouchListener(new ContentTouchListener() {

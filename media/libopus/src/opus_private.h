@@ -1,6 +1,10 @@
-/* Copyright (c) 2011 Xiph.Org Foundation
+/* Copyright (c) 2011-2012 IETF Trust, Xiph.Org Foundation. All rights reserved.
    Written by Jean-Marc Valin */
 /*
+
+   This file is extracted from RFC6716. Please see that RFC for additional
+   information.
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -79,11 +83,10 @@ int encode_size(int size, unsigned char *data);
 int opus_decode_native(OpusDecoder *st, const unsigned char *data, int len,
       opus_val16 *pcm, int frame_size, int decode_fec, int self_delimited, int *packet_offset);
 
-/* Make sure everything's aligned to 4 bytes (this may need to be increased
-   on really weird architectures) */
+/* Make sure everything's aligned to sizeof(void *) bytes */
 static inline int align(int i)
 {
-    return (i+3)&-4;
+    return (i+sizeof(void *)-1)&-sizeof(void *);
 }
 
 int opus_repacketizer_out_range_impl(OpusRepacketizer *rp, int begin, int end, unsigned char *data, int maxlen, int self_delimited);

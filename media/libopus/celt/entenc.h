@@ -1,6 +1,10 @@
-/* Copyright (c) 2001-2011 Timothy B. Terriberry
-   Copyright (c) 2008-2009 Xiph.Org Foundation */
+/* Copyright (c) 2001-2012 IETF Trust, Timothy B. Terriberry,
+                           Xiph.Org Foundation. All rights reserved.*/
 /*
+
+   This file is extracted from RFC6716. Please see that RFC for additional
+   information.
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:

@@ -525,9 +525,12 @@ nsHttpChannel::SpeculativeConnect()
     // Before we take the latency hit of dealing with the cache, try and
     // get the TCP (and SSL) handshakes going so they can overlap.
 
-    // don't speculate on uses of the offline application cache or if
-    // we are actually offline
-    if (mApplicationCache || gIOService->IsOffline())
+    // don't speculate on uses of the offline application cache,
+    // if we are offline, when doing http upgrade (i.e. websockets bootstrap),
+    // or if we can't do keep-alive (because then we couldn't reuse
+    // the speculative connection anyhow).
+    if (mApplicationCache || gIOService->IsOffline() || 
+        mUpgradeProtocolCallback || !(mCaps & NS_HTTP_ALLOW_KEEPALIVE))
         return;
 
     // LOAD_ONLY_FROM_CACHE and LOAD_NO_NETWORK_IO must not hit network.

@@ -177,7 +177,7 @@ IsDOMObject(JSObject* obj)
            IsNewProxyBinding(js::GetProxyHandler(obj))));
 }
 
-// Some callers don't want to set an exception when unwrappin fails
+// Some callers don't want to set an exception when unwrapping fails
 // (for example, overload resolution uses unwrapping to tell what sort
 // of thing it's looking at).
 // U must be something that a T* can be assigned to (e.g. T* or an nsRefPtr<T>).

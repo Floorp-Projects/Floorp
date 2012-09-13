@@ -1701,7 +1701,7 @@ Notes(JSContext *cx, unsigned argc, jsval *vp)
     for (unsigned i = 0; i < argc; i++) {
         JSScript *script = ValueToScript(cx, argv[i]);
         if (!script)
-            continue;
+            return false;
 
         SrcNotes(cx, script, &sprinter);
     }
@@ -1813,38 +1813,45 @@ struct DisassembleOptionParser {
 
 } /* anonymous namespace */
 
-static JSBool
-DisassembleToString(JSContext *cx, unsigned argc, jsval *vp)
+static bool
+DisassembleToSprinter(JSContext *cx, unsigned argc, jsval *vp, Sprinter *sprinter)
 {
     DisassembleOptionParser p(argc, JS_ARGV(cx, vp));
     if (!p.parse(cx))
         return false;
 
-    Sprinter sprinter(cx);
-    if (!sprinter.init())
-        return false;
-
-    bool ok = true;
     if (p.argc == 0) {
         /* Without arguments, disassemble the current script. */
         RootedScript script(cx, GetTopScript(cx));
         if (script) {
-            if (js_Disassemble(cx, script, p.lines, &sprinter)) {
-                SrcNotes(cx, script, &sprinter);
-                TryNotes(cx, script, &sprinter);
-            } else {
-                ok = false;
-            }
+            if (!js_Disassemble(cx, script, p.lines, sprinter))
+                return false;
+            SrcNotes(cx, script, sprinter);
+            TryNotes(cx, script, sprinter);
         }
     } else {
         for (unsigned i = 0; i < p.argc; i++) {
             JSFunction *fun;
             JSScript *script = ValueToScript(cx, p.argv[i], &fun);
-            ok = ok && script && DisassembleScript(cx, script, fun, p.lines, p.recursive, &sprinter);
+            if (!script)
+                return false;
+            if (!DisassembleScript(cx, script, fun, p.lines, p.recursive, sprinter))
+                return false;
         }
     }
+    return true;
+}
 
-    JSString *str = ok ? JS_NewStringCopyZ(cx, sprinter.string()) : NULL;
+static JSBool
+DisassembleToString(JSContext *cx, unsigned argc, jsval *vp)
+{
+    Sprinter sprinter(cx);
+    if (!sprinter.init())
+        return false;
+    if (!DisassembleToSprinter(cx, argc, vp, &sprinter))
+        return false;
+
+    JSString *str = JS_NewStringCopyZ(cx, sprinter.string());
     if (!str)
         return false;
     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
@@ -1854,38 +1861,15 @@ DisassembleToString(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 Disassemble(JSContext *cx, unsigned argc, jsval *vp)
 {
-    DisassembleOptionParser p(argc, JS_ARGV(cx, vp));
-    if (!p.parse(cx))
-        return false;
-
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return false;
+    if (!DisassembleToSprinter(cx, argc, vp, &sprinter))
+        return false;
 
-    bool ok = true;
-    if (p.argc == 0) {
-        /* Without arguments, disassemble the current script. */
-        RootedScript script(cx, GetTopScript(cx));
-        if (script) {
-            if (js_Disassemble(cx, script, p.lines, &sprinter)) {
-                SrcNotes(cx, script, &sprinter);
-                TryNotes(cx, script, &sprinter);
-            } else {
-                ok = false;
-            }
-        }
-    } else {
-        for (unsigned i = 0; i < p.argc; i++) {
-            JSFunction *fun;
-            JSScript *script = ValueToScript(cx, p.argv[i], &fun);
-            ok = ok && script && DisassembleScript(cx, script, fun, p.lines, p.recursive, &sprinter);
-        }
-    }
-
-    if (ok)
-        fprintf(stdout, "%s\n", sprinter.string());
+    fprintf(stdout, "%s\n", sprinter.string());
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return ok;
+    return true;
 }
 
 static JSBool

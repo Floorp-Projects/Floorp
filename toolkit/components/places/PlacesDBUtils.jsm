@@ -35,8 +35,7 @@ XPCOMUtils.defineLazyGetter(this, "DBConn", function() {
 let PlacesDBUtils = {
   /**
    * Executes a list of maintenance tasks.
-   * Once finished it will pass a array log to the callback attached to tasks,
-   * or print out to the error console if no callback is defined.
+   * Once finished it will pass a array log to the callback attached to tasks.
    * FINISHED_MAINTENANCE_TOPIC is notified through observer service on finish.
    *
    * @param aTasks
@@ -65,14 +64,6 @@ let PlacesDBUtils = {
       if (aTasks.callback) {
         let scope = aTasks.scope || Cu.getGlobalForObject(aTasks.callback);
         aTasks.callback.call(scope, aTasks.messages);
-      }
-      else {
-        // Output to the error console.
-        let messages = aTasks.messages;
-        messages.unshift("[ Places Maintenance ]");
-        try {
-          Services.console.logStringMessage(messages.join("\n"));
-        } catch(ex) {}
       }
 
       // Notify observers that maintenance finished.
@@ -1007,8 +998,7 @@ let PlacesDBUtils = {
    *        this module.
    * @param [optional] aCallback
    *        Callback to be invoked when done.  It will receive an array of
-   *        log messages.  If not specified the log will be printed to the
-   *        Error Console.
+   *        log messages.
    */
   runTasks: function PDBU_runTasks(aTasks, aCallback) {
     let tasks = new Tasks(aTasks);

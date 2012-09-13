@@ -261,6 +261,8 @@ assertExpr("this", thisExpr);
 assertExpr("foo", ident("foo"));
 assertExpr("foo.bar", dotExpr(ident("foo"), ident("bar")));
 assertExpr("foo[bar]", memExpr(ident("foo"), ident("bar")));
+assertExpr("foo['bar']", memExpr(ident("foo"), lit("bar")));
+assertExpr("foo[42]", memExpr(ident("foo"), lit(42)));
 assertExpr("(function(){})", funExpr(null, [], blockStmt([])));
 assertExpr("(function f() {})", funExpr(ident("f"), [], blockStmt([])));
 assertExpr("(function f(x,y,z) {})", funExpr(ident("f"), [ident("x"),ident("y"),ident("z")], blockStmt([])));
