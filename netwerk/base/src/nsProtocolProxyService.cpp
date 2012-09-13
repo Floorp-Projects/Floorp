@@ -18,6 +18,7 @@
 #include "nsIProtocolProxyCallback.h"
 #include "nsICancelable.h"
 #include "nsIDNSService.h"
+#include "nsPIDNSService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsReadableUtils.h"
@@ -200,6 +201,8 @@ private:
                 mProxyInfo = nullptr;
 
             LOG(("pac thread callback %s\n", mPACString.get()));
+            if (NS_SUCCEEDED(mStatus))
+                mPPS->MaybeDisableDNSPrefetch(mProxyInfo);
             mCallback->OnProxyAvailable(this, mURI, mProxyInfo, mStatus);
         }
         else if (NS_SUCCEEDED(mStatus) && !mPACURL.IsEmpty()) {
@@ -222,6 +225,8 @@ private:
         }
         else {
             LOG(("pac thread callback did not provide information %X\n", mStatus));
+            if (NS_SUCCEEDED(mStatus))
+                mPPS->MaybeDisableDNSPrefetch(mProxyInfo);
             mCallback->OnProxyAvailable(this, mURI, mProxyInfo, mStatus);
         }
 
@@ -1602,6 +1607,30 @@ nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
     }
 
     return NS_OK;
+}
+
+void
+nsProtocolProxyService::MaybeDisableDNSPrefetch(nsIProxyInfo *aProxy)
+{
+    // Disable Prefetch in the DNS service if a proxy is in use.
+    if (!aProxy)
+        return;
+
+    nsCOMPtr<nsProxyInfo> pi = do_QueryInterface(aProxy);
+    if (!pi ||
+        !pi->mType ||
+        pi->mType == kProxyType_DIRECT)
+        return;
+
+    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+    if (!dns)
+        return;
+    nsCOMPtr<nsPIDNSService> pdns = do_QueryInterface(dns);
+    if (!pdns)
+        return;
+
+    // We lose the prefetch optimization for the life of the dns service.
+    pdns->SetPrefetchEnabled(false);
 }
 
 void

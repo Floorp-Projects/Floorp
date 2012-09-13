@@ -271,6 +271,14 @@ protected:
      */
     NS_HIDDEN_(bool) CanUseProxy(nsIURI *uri, int32_t defaultPort);
 
+    /**
+     * Disable Prefetch in the DNS service if a proxy is in use.
+     *
+     * @param aProxy
+     *        The proxy information
+     */
+    NS_HIDDEN_(void) MaybeDisableDNSPrefetch(nsIProxyInfo *aProxy);
+
 private:
     nsresult SetupPACThread();
     nsresult ResetPACThread();
