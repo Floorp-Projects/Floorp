@@ -194,8 +194,6 @@ class FunctionBox : public SharedContext
 {
   public:
     ObjectBox       objbox;
-    FunctionBox     *siblings;
-    FunctionBox     *kids;
     Bindings        bindings;               /* bindings for this function */
     size_t          bufStart;
     size_t          bufEnd;
