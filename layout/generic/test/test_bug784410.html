@@ -27,16 +27,28 @@ function innerScrollOffset() {
 }
 var innerStartScrollOffset = innerScrollOffset();
 
-var done = false;
+var step = 0;
 function doneScroll() {
-  if (done) {
-    return;
+  ++step;
+  switch (step) {
+  case 1:
+    is(innerScrollOffset(), innerStartScrollOffset, "Inner element should not have scrolled down");
+    ok(outer.scrollTop > 0, "Outer element should have scrolled down");
+
+    outer.scrollTop = 0;
+    break;
+  case 2:
+    synthesizeWheel(inner, 4, 4,
+      { deltaMode: WheelEvent.DOM_DELTA_LINE, deltaY: 1 });
+    break;
+  case 3:
+    is(innerScrollOffset(), innerStartScrollOffset, "Inner element should not have scrolled down");
+    ok(outer.scrollTop > 0, "Outer element should have scrolled down");
+    
+    SpecialPowers.clearUserPref(smoothScrollPref);
+    SimpleTest.finish();
+    break;
   }
-  done = true;
-  is(innerScrollOffset(), innerStartScrollOffset, "Inner element should not have scrolled down");
-  ok(outer.scrollTop > 0, "Outer element should have scrolled down");
-  SpecialPowers.clearUserPref(smoothScrollPref);
-  SimpleTest.finish();
 }
 
 function test() {
