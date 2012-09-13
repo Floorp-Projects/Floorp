@@ -14,6 +14,7 @@
 // run_pac_test();
 // run_pac_cancel_test();
 // run_proxy_host_filters_test();
+// run_myipaddress_test();
 
 var ios = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
@@ -557,6 +558,45 @@ function host_filters_4()
   prefs.setCharPref("network.proxy.no_proxies_on", "");
   do_check_eq(prefs.getCharPref("network.proxy.no_proxies_on"), "");  
 
+  run_myipaddress_test();
+}
+
+function run_myipaddress_test()
+{
+  // This test makes sure myIpAddress() comes up with some valid
+  // IP address other than localhost. The DUT must be configured with
+  // an Internet route for this to work - though no Internet traffic
+  // should be created.
+
+  var pac = 'data:text/plain,' +
+            'function FindProxyForURL(url, host) {' +
+            ' return "PROXY " + myIpAddress() + ":1234";' +
+            '}';
+
+  // no traffic to this IP is ever sent, it is just a public IP that
+  // does not require DNS to determine a route.
+  var uri = ios.newURI("http://192.0.43.10/", null, null);
+
+  prefs.setIntPref("network.proxy.type", 2);
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+
+  var cb = new resolveCallback();
+  cb.nextFunction = myipaddress_callback;
+  var req = pps.asyncResolve(uri, 0, cb);
+}
+
+function myipaddress_callback(pi)
+{
+  do_check_neq(pi, null);
+  do_check_eq(pi.type, "http");
+  do_check_eq(pi.port, 1234);
+
+  // make sure we didn't return localhost
+  do_check_neq(pi.host, null);
+  do_check_neq(pi.host, "127.0.0.1");
+  do_check_neq(pi.host, "::1");
+
+  prefs.setIntPref("network.proxy.type", 0);
   do_test_finished();
 }
 
