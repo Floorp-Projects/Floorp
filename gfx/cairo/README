@@ -186,6 +186,8 @@ d2d-repeating-gradients.patch: Minimize number of gradient stops added to handle
 
 xlib-glyph-clip-region.patch: bug 709477, addressed upstream by be1ff2f45fdbc69537e513834fcffa0435e63073
 
+gdi-RGB24-ARGB32.patch: bug 788794
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
