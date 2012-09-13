@@ -168,6 +168,7 @@ MOCHITEST_FILES += \
 		448636.ogv \
 		audio-overhang.ogg \
 		audio-gaps.ogg \
+		badtags.ogg \
 		beta-phrasebook.ogg \
 		bogus.ogv \
 		bug495129.ogv \
