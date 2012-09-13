@@ -18,6 +18,7 @@
 #include "nsIGSettingsService.h"
 #include "nsInterfaceHashtable.h"
 #include "mozilla/Attributes.h"
+#include "nsIURI.h"
 
 class nsUnixSystemProxySettings MOZ_FINAL : public nsISystemProxySettings {
 public:
@@ -42,6 +43,14 @@ private:
 };
 
 NS_IMPL_ISUPPORTS1(nsUnixSystemProxySettings, nsISystemProxySettings)
+
+NS_IMETHODIMP
+nsUnixSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)
+{
+  // dbus prevents us from being threadsafe, but this routine should not block anyhow
+  *aMainThreadOnly = true;
+  return NS_OK;
+}
 
 nsresult
 nsUnixSystemProxySettings::Init()
@@ -151,8 +160,10 @@ static void SetProxyResult(const char* aType, const nsACString& aHost,
   aResult.AppendASCII(aType);
   aResult.Append(' ');
   aResult.Append(aHost);
-  aResult.Append(':');
-  aResult.Append(nsPrintfCString("%d", aPort));
+  if (aPort > 0) {
+    aResult.Append(':');
+    aResult.Append(nsPrintfCString("%d", aPort));
+  }
 }
 
 static nsresult
@@ -481,29 +492,21 @@ nsUnixSystemProxySettings::GetProxyFromGSettings(const nsACString& aScheme,
 }
 
 nsresult
-nsUnixSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
+nsUnixSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
+                                          const nsACString & aScheme,
+                                          const nsACString & aHost,
+                                          const int32_t      aPort,
+                                          nsACString & aResult)
 {
-  nsAutoCString scheme;
-  nsresult rv = aURI->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString host;
-  rv = aURI->GetHost(host);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  int32_t port;
-  rv = aURI->GetPort(&port);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (mProxySettings) {
-    rv = GetProxyFromGSettings(scheme, host, port, aResult);
-    if (rv == NS_OK)
+    nsresult rv = GetProxyFromGSettings(aScheme, aHost, aPort, aResult);
+    if (NS_SUCCEEDED(rv))
       return rv;
   }
   if (mGConf)
-    return GetProxyFromGConf(scheme, host, port, aResult);
+    return GetProxyFromGConf(aScheme, aHost, aPort, aResult);
 
-  return GetProxyFromEnvironment(scheme, host, port, aResult);
+  return GetProxyFromEnvironment(aScheme, aHost, aPort, aResult);
 }
 
 #define NS_UNIXSYSTEMPROXYSERVICE_CID  /* 0fa3158c-d5a7-43de-9181-a285e74cf1d4 */\
