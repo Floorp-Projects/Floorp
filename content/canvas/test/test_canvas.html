@@ -5977,12 +5977,7 @@ g.addColorStop(1, '#f00');
 ctx.fillStyle = g;
 ctx.fillRect(0, 0, 100, 50);
 
-if (IsAzureEnabled() && IsAzureSkia()) {
-  isPixel(ctx, 40,20, 0,255,0,255, 2);
-} else {
-  todo_isPixel(ctx, 40,20, 0,255,0,255, 2);
-}
-
+todo_isPixel(ctx, 40,20, 0,255,0,255, 2);
 
 }
 </script>
