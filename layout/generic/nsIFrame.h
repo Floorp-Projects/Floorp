@@ -2009,7 +2009,7 @@ public:
    * @return A gfxMatrix that converts points in this frame's coordinate space
    *   into points in aOutAncestor's coordinate space.
    */
-  gfx3DMatrix GetTransformMatrix(nsIFrame* aStopAtAncestor,
+  gfx3DMatrix GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                                  nsIFrame **aOutAncestor);
 
   /**

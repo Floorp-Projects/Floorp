@@ -309,8 +309,8 @@ public:
    * scrolled root.
    */
   bool IsFixedItem(nsDisplayItem* aItem,
-                   nsIFrame** aActiveScrolledRoot = nullptr,
-                   nsIFrame* aOverrideActiveScrolledRoot = nullptr);
+                   const nsIFrame** aActiveScrolledRoot = nullptr,
+                   const nsIFrame* aOverrideActiveScrolledRoot = nullptr);
 
   /**
    * @return true if images have been set to decode synchronously.
