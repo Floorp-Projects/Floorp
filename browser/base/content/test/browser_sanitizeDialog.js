@@ -435,7 +435,7 @@ var gAllTests = [
     wh.open();
   },
   function () {
-    // Test for offline apps data and cache deletion
+    // Test for offline cache deletion
 
     // Prepare stuff, we will work with www.example.com
     var URL = "http://www.example.com";
@@ -454,12 +454,6 @@ var gAllTests = [
     pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
     pm.addFromPrincipal(principal, "offline-app", Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
 
-    // Store some user data to localStorage
-    var dsm = Cc["@mozilla.org/dom/storagemanager;1"]
-             .getService(Ci.nsIDOMStorageManager);
-    var localStorage = dsm.getLocalStorageForPrincipal(principal, URL);
-    localStorage.setItem("test", "value");
-
     // Store something to the offline cache
     const nsICache = Components.interfaces.nsICache;
     var cs = Components.classes["@mozilla.org/network/cache-service;1"]
@@ -477,9 +471,7 @@ var gAllTests = [
       this.checkPrefCheckbox("offlineApps", true);
       this.acceptDialog();
 
-      // Check all has been deleted (data, cache)
-      is(localStorage.length, 0, "DOM storage cleared");
-
+      // Check if the cache has been deleted
       var size = -1;
       var visitor = {
         visitDevice: function (deviceID, deviceInfo)
