@@ -16,8 +16,6 @@
 #include "chrome/common/process_watcher.h"
 
 #include "AppProcessPermissions.h"
-#include "BluetoothParent.h"
-#include "BluetoothService.h"
 #include "CrashReporterParent.h"
 #include "History.h"
 #include "IDBFactory.h"
@@ -111,7 +109,6 @@ static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
 using base::KillProcess;
-using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
 using namespace mozilla::dom::indexedDB;
@@ -1459,31 +1456,6 @@ ContentParent::DeallocPStorage(PStorageParent* aActor)
 {
     delete aActor;
     return true;
-}
-
-PBluetoothParent*
-ContentParent::AllocPBluetooth()
-{
-    if (!AppProcessHasPermission(this, "bluetooth")) {
-        return nullptr;
-    }
-    return new mozilla::dom::bluetooth::BluetoothParent();
-}
-
-bool
-ContentParent::DeallocPBluetooth(PBluetoothParent* aActor)
-{
-    delete aActor;
-    return true;
-}
-
-bool
-ContentParent::RecvPBluetoothConstructor(PBluetoothParent* aActor)
-{
-    nsRefPtr<BluetoothService> btService = BluetoothService::Get();
-    NS_ENSURE_TRUE(btService, false);
-
-    return static_cast<BluetoothParent*>(aActor)->InitWithService(btService);
 }
 
 void

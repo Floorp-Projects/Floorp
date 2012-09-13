@@ -135,9 +135,6 @@ public:
     virtual PStorageChild* AllocPStorage(const StorageConstructData& aData);
     virtual bool DeallocPStorage(PStorageChild* aActor);
 
-    virtual PBluetoothChild* AllocPBluetooth();
-    virtual bool DeallocPBluetooth(PBluetoothChild* aActor);
-
     virtual bool RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
                                     const InfallibleTArray<ResourceMapping>& resources,
                                     const InfallibleTArray<OverrideMapping>& overrides,

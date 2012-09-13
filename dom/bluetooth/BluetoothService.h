@@ -21,8 +21,6 @@ class BluetoothNamedValue;
 class BluetoothReplyRunnable;
 class BluetoothSignal;
 
-typedef mozilla::ObserverList<BluetoothSignal> BluetoothSignalObserverList;
-
 class BluetoothService : public nsIObserver
                        , public BluetoothSignalObserver
 {
@@ -45,10 +43,12 @@ public:
    *
    * @param aNodeName Node name of the object
    * @param aMsgHandler Weak pointer to the object
+   *
+   * @return NS_OK on successful addition to observer, NS_ERROR_FAILED
+   * otherwise
    */
-  virtual void
-  RegisterBluetoothSignalHandler(const nsAString& aNodeName,
-                                 BluetoothSignalObserver* aMsgHandler);
+  nsresult RegisterBluetoothSignalHandler(const nsAString& aNodeName,
+                                          BluetoothSignalObserver* aMsgHandler);
 
   /** 
    * Remove a message handler object from message distribution observer.
@@ -56,19 +56,12 @@ public:
    *
    * @param aNodeName Node name of the object
    * @param aMsgHandler Weak pointer to the object
-   */
-  virtual void
-  UnregisterBluetoothSignalHandler(const nsAString& aNodeName,
-                                   BluetoothSignalObserver* aMsgHandler);
-
-  /** 
-   * Remove a message handlers for the given observer.
-   * Must be called from the main thread.
    *
-   * @param aMsgHandler Weak pointer to the object
+   * @return NS_OK on successful removal from observer service,
+   * NS_ERROR_FAILED otherwise
    */
-  void
-  UnregisterAllSignalHandlers(BluetoothSignalObserver* aMsgHandler);
+  nsresult UnregisterBluetoothSignalHandler(const nsAString& aNodeName,
+                                            BluetoothSignalObserver* aMsgHandler);
 
   /** 
    * Distribute a signal to the observer list
@@ -77,27 +70,59 @@ public:
    *
    * @return NS_OK if signal distributed, NS_ERROR_FAILURE on error
    */
-  void
-  DistributeSignal(const BluetoothSignal& aEvent);
+  nsresult DistributeSignal(const BluetoothSignal& aEvent);
+
+  /** 
+   * Start bluetooth services. Starts up any threads and connections that
+   * bluetooth needs to operate on the current platform. Assumed to be run on
+   * the main thread with delayed return for blocking startup functions via
+   * runnable.
+   * @return NS_OK on initialization starting correctly, NS_ERROR_FAILURE
+   * otherwise
+   */
+  nsresult Start();
+
+  /** 
+   * Stop bluetooth services. Starts up any threads and connections that
+   * bluetooth needs to operate on the current platform. Assumed to be run on
+   * the main thread with delayed return for blocking startup functions via
+   * runnable.
+   *
+   * @return NS_OK on initialization starting correctly, NS_ERROR_FAILURE
+   * otherwise
+   */
+  nsresult Stop();
+
+  /**
+   * Called when XPCOM first creates this service.
+   */
+  nsresult HandleStartup();
+
+  /**
+   * Called when "mozsettings-changed" observer topic fires.
+   */
+  nsresult HandleSettingsChanged(const nsAString& aData);
+
+  /**
+   * Called when XPCOM is shutting down.
+   */
+  nsresult HandleShutdown();
 
   /**
    * Called when a BluetoothManager is created.
    */
-  void
-  RegisterManager(BluetoothManager* aManager);
+  void RegisterManager(BluetoothManager* aManager);
 
   /**
    * Called when a BluetoothManager is destroyed.
    */
-  void
-  UnregisterManager(BluetoothManager* aManager);
+  void UnregisterManager(BluetoothManager* aManager);
 
   /**
    * Called when get a Bluetooth Signal from BluetoothDBusService
    *
    */
-  void
-  Notify(const BluetoothSignal& aParam);
+  void Notify(const BluetoothSignal& aParam);
 
   /**
    * Returns the BluetoothService singleton. Only to be called from main thread.
@@ -107,11 +132,9 @@ public:
    * @return NS_OK on proper assignment, NS_ERROR_FAILURE otherwise (if service
    * has not yet been started, for instance)
    */
-  static BluetoothService*
-  Get();
+  static BluetoothService* Get();
 
-  static already_AddRefed<BluetoothService>
-  FactoryCreate()
+  static already_AddRefed<BluetoothService> FactoryCreate()
   {
     nsRefPtr<BluetoothService> service = Get();
     return service.forget();
@@ -123,8 +146,7 @@ public:
    *
    * @return Default adapter path/name on success, NULL otherwise
    */
-  virtual nsresult
-  GetDefaultAdapterPathInternal(BluetoothReplyRunnable* aRunnable) = 0;
+  virtual nsresult GetDefaultAdapterPathInternal(BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
    * Returns the properties of paired devices, implemented via a platform
@@ -132,9 +154,8 @@ public:
    *
    * @return NS_OK on success, NS_ERROR_FAILURE otherwise
    */
-  virtual nsresult
-  GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
-                                    BluetoothReplyRunnable* aRunnable) = 0;
+  virtual nsresult GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
+                                                     BluetoothReplyRunnable* aRunnable) = 0;
 
   /** 
    * Stop device discovery (platform specific implementation)
@@ -143,9 +164,8 @@ public:
    *
    * @return NS_OK if discovery stopped correctly, false otherwise
    */
-  virtual nsresult
-  StopDiscoveryInternal(const nsAString& aAdapterPath,
-                        BluetoothReplyRunnable* aRunnable) = 0;
+  virtual nsresult StopDiscoveryInternal(const nsAString& aAdapterPath,
+                                         BluetoothReplyRunnable* aRunnable) = 0;
 
   /** 
    * Start device discovery (platform specific implementation)
@@ -154,9 +174,24 @@ public:
    *
    * @return NS_OK if discovery stopped correctly, false otherwise
    */
-  virtual nsresult
-  StartDiscoveryInternal(const nsAString& aAdapterPath,
-                         BluetoothReplyRunnable* aRunnable) = 0;
+  virtual nsresult StartDiscoveryInternal(const nsAString& aAdapterPath,
+                                          BluetoothReplyRunnable* aRunnable) = 0;
+
+  /** 
+   * Platform specific startup functions go here. Usually deals with member
+   * variables, so not static. Guaranteed to be called outside of main thread.
+   *
+   * @return NS_OK on correct startup, NS_ERROR_FAILURE otherwise
+   */
+  virtual nsresult StartInternal() = 0;
+
+  /** 
+   * Platform specific startup functions go here. Usually deals with member
+   * variables, so not static. Guaranteed to be called outside of main thread.
+   *
+   * @return NS_OK on correct startup, NS_ERROR_FAILURE otherwise
+   */
+  virtual nsresult StopInternal() = 0;
 
   /** 
    * Fetches the propertes for the specified object
@@ -233,28 +268,19 @@ public:
   virtual bool
   CloseSocket(int aFd, BluetoothReplyRunnable* aRunnable) = 0;
 
-  virtual bool
-  SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode) = 0;
+  virtual bool SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode) = 0;
+  virtual bool SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey) = 0;
+  virtual bool SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm) = 0;
+  virtual bool SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow) = 0;
 
-  virtual bool
-  SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey) = 0;
-
-  virtual bool
-  SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm) = 0;
-
-  virtual bool
-  SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow) = 0;
-
-  bool
-  IsEnabled() const
+  virtual bool IsEnabled()
   {
     return mEnabled;
   }
 
 protected:
   BluetoothService()
-  : mEnabled(false), mSettingsCheckInProgress(false),
-    mRegisteredForLocalAgent(false)
+  : mEnabled(false)
 #ifdef DEBUG
     , mLastRequestedEnable(false)
 #endif
@@ -262,66 +288,16 @@ protected:
     mBluetoothSignalObserverTable.Init();
   }
 
-  virtual ~BluetoothService();
+  ~BluetoothService();
 
-  bool
-  Init();
-
-  void
-  Cleanup();
-
-  nsresult
-  StartStopBluetooth(bool aStart);
-
-  /** 
-   * Platform specific startup functions go here. Usually deals with member
-   * variables, so not static. Guaranteed to be called outside of main thread.
-   *
-   * @return NS_OK on correct startup, NS_ERROR_FAILURE otherwise
-   */
-  virtual nsresult
-  StartInternal() = 0;
-
-  /** 
-   * Platform specific startup functions go here. Usually deals with member
-   * variables, so not static. Guaranteed to be called outside of main thread.
-   *
-   * @return NS_OK on correct startup, NS_ERROR_FAILURE otherwise
-   */
-  virtual nsresult
-  StopInternal() = 0;
-
-  /**
-   * Called when XPCOM first creates this service.
-   */
-  virtual nsresult
-  HandleStartup();
-
-  /**
-   * Called when the startup settings check has completed.
-   */
-  nsresult
-  HandleStartupSettingsCheck(bool aEnable);
-
-  /**
-   * Called when "mozsettings-changed" observer topic fires.
-   */
-  nsresult
-  HandleSettingsChanged(const nsAString& aData);
-
-  /**
-   * Called when XPCOM is shutting down.
-   */
-  virtual nsresult
-  HandleShutdown();
+  nsresult StartStopBluetooth(bool aStart);
 
   // Called by ToggleBtAck.
-  void
-  SetEnabled(bool aEnabled);
+  void SetEnabled(bool aEnabled);
 
-  // Called by Get().
-  static BluetoothService*
-  Create();
+  // This function is implemented in platform-specific BluetoothServiceFactory
+  // files
+  static BluetoothService* Create();
 
   /**
    * Due to the fact that some operations require multiple calls, a
@@ -337,6 +313,7 @@ protected:
    */
   nsCOMPtr<nsIThread> mBluetoothCommandThread;
 
+  typedef mozilla::ObserverList<BluetoothSignal> BluetoothSignalObserverList;
   typedef nsClassHashtable<nsStringHashKey, BluetoothSignalObserverList >
   BluetoothSignalObserverTable;
 
@@ -346,9 +323,6 @@ protected:
   BluetoothManagerList mLiveManagers;
 
   bool mEnabled;
-  bool mSettingsCheckInProgress;
-  bool mRegisteredForLocalAgent;
-
 #ifdef DEBUG
   bool mLastRequestedEnable;
 #endif
