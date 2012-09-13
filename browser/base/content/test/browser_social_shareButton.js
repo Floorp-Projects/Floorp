@@ -186,9 +186,72 @@ function testCloseBySpace() {
   sharePopup.addEventListener("popuphidden", function listener() {
     sharePopup.removeEventListener("popuphidden", listener);
     ok(true, "space closed the share popup");
-    executeSoon(testDisable);
+    executeSoon(testStillSharedIn2Tabs);
   });
   EventUtils.synthesizeKey("VK_SPACE", {});
+}
+
+function testStillSharedIn2Tabs() {
+  let toShare = "http://example.com";
+  let {shareButton} = SocialShareButton;
+  let initialTab = gBrowser.selectedTab;
+  if (shareButton.hasAttribute("shared")) {
+    SocialShareButton.unsharePage();
+  }
+  is(shareButton.hasAttribute("shared"), false, "Share button should not have 'shared' for the initial tab");
+  let tab1 = gBrowser.selectedTab = gBrowser.addTab(toShare);
+  let tab1b = gBrowser.getBrowserForTab(tab1);
+
+  tab1b.addEventListener("load", function tabLoad(event) {
+    tab1b.removeEventListener("load", tabLoad, true);
+    let tab2 = gBrowser.selectedTab = gBrowser.addTab(toShare);
+    let tab2b = gBrowser.getBrowserForTab(tab2);
+    tab2b.addEventListener("load", function tabLoad(event) {
+      tab2b.removeEventListener("load", tabLoad, true);
+      // should start without either page being shared.
+      is(shareButton.hasAttribute("shared"), false, "Share button should not have 'shared' before we've done anything");
+      EventUtils.synthesizeMouseAtCenter(shareButton, {});
+      is(shareButton.hasAttribute("shared"), true, "Share button should reflect the share");
+      // and switching to the first tab (with the same URL) should still reflect shared.
+      gBrowser.selectedTab = tab1;
+      is(shareButton.hasAttribute("shared"), true, "Share button should reflect the share");
+      // but switching back the initial one should reflect not shared.
+      gBrowser.selectedTab = initialTab;
+      is(shareButton.hasAttribute("shared"), false, "Initial tab should not reflect shared");
+
+      gBrowser.selectedTab = tab1;
+      SocialShareButton.unsharePage();
+      gBrowser.removeTab(tab1);
+      gBrowser.removeTab(tab2);
+      executeSoon(testStillSharedAfterReopen);
+    }, true);
+  }, true);
+}
+
+function testStillSharedAfterReopen() {
+  let toShare = "http://example.com";
+  let {shareButton} = SocialShareButton;
+
+  is(shareButton.hasAttribute("shared"), false, "Reopen: Share button should not have 'shared' for the initial tab");
+  let tab = gBrowser.selectedTab = gBrowser.addTab(toShare);
+  let tabb = gBrowser.getBrowserForTab(tab);
+  tabb.addEventListener("load", function tabLoad(event) {
+    tabb.removeEventListener("load", tabLoad, true);
+    SocialShareButton.sharePage();
+    is(shareButton.hasAttribute("shared"), true, "Share button should reflect the share");
+    gBrowser.removeTab(tab);
+    // should be on the initial unshared tab now.
+    is(shareButton.hasAttribute("shared"), false, "Initial tab should be selected and be unshared.");
+    // now open the same URL - should be back to shared.
+    tab = gBrowser.selectedTab = gBrowser.addTab(toShare, {skipAnimation: true});
+    tab.linkedBrowser.addEventListener("load", function tabLoad(event) {
+      tab.linkedBrowser.removeEventListener("load", tabLoad, true);
+      is(shareButton.hasAttribute("shared"), true, "New tab to previously shared URL should reflect shared");
+      SocialShareButton.unsharePage();
+      gBrowser.removeTab(tab);
+      executeSoon(testDisable);
+    }, true);
+  }, true);
 }
 
 function testDisable() {
