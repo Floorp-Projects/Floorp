@@ -7,33 +7,107 @@
 #include "base/basictypes.h"
 
 #include "BluetoothService.h"
+
 #include "BluetoothManager.h"
-#include "BluetoothTypes.h"
+#include "BluetoothParent.h"
 #include "BluetoothReplyRunnable.h"
+#include "BluetoothServiceChildProcess.h"
 
 #include "jsapi.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/unused.h"
 #include "mozilla/Util.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "nsContentUtils.h"
 #include "nsIDOMDOMRequest.h"
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"
+#include "nsISystemMessagesInternal.h"
+#include "nsITimer.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMCIDInternal.h"
-#include "nsISystemMessagesInternal.h"
+#include "nsXULAppAPI.h"
+
+#if defined(MOZ_B2G_BT)
+# if defined(MOZ_BLUETOOTH_GONK)
+#  include "BluetoothGonkService.h"
+# elif defined(MOZ_BLUETOOTH_DBUS)
+#  include "BluetoothDBusService.h"
+# else
+#  error No_suitable_backend_for_bluetooth!
+# endif
+#endif
 
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
 #define BLUETOOTH_ENABLED_SETTING "bluetooth.enabled"
 
-using namespace mozilla;
+#define DEFAULT_SHUTDOWN_TIMER_MS 5000
 
+using namespace mozilla;
+using namespace mozilla::dom;
 USING_BLUETOOTH_NAMESPACE
 
-static nsRefPtr<BluetoothService> gBluetoothService;
-static bool gInShutdown = false;
+namespace {
 
-NS_IMPL_ISUPPORTS1(BluetoothService, nsIObserver)
+StaticRefPtr<BluetoothService> gBluetoothService;
+
+bool gInShutdown = false;
+
+bool
+IsMainProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Default;
+}
+
+PLDHashOperator
+RemoveAllSignalHandlers(const nsAString& aKey,
+                        nsAutoPtr<BluetoothSignalObserverList>& aData,
+                        void* aUserArg)
+{
+  aData->RemoveObserver(static_cast<BluetoothSignalObserver*>(aUserArg));
+  return aData->Length() ? PL_DHASH_NEXT : PL_DHASH_REMOVE;
+}
+
+void
+ShutdownTimeExceeded(nsITimer* aTimer, void* aClosure)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  *static_cast<bool*>(aClosure) = true;
+}
+
+void
+GetAllBluetoothActors(InfallibleTArray<BluetoothParent*>& aActors)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActors.IsEmpty());
+
+  nsAutoTArray<ContentParent*, 20> contentActors;
+  ContentParent::GetAll(contentActors);
+
+  for (uint32_t contentIndex = 0;
+       contentIndex < contentActors.Length();
+       contentIndex++) {
+    MOZ_ASSERT(contentActors[contentIndex]);
+
+    AutoInfallibleTArray<PBluetoothParent*, 5> bluetoothActors;
+    contentActors[contentIndex]->ManagedPBluetoothParent(bluetoothActors);
+
+    for (uint32_t bluetoothIndex = 0;
+         bluetoothIndex < bluetoothActors.Length();
+         bluetoothIndex++) {
+      MOZ_ASSERT(bluetoothActors[bluetoothIndex]);
+
+      BluetoothParent* actor =
+        static_cast<BluetoothParent*>(bluetoothActors[bluetoothIndex]);
+      aActors.AppendElement(actor);
+    }
+  }
+}
+
+} // anonymous namespace
 
 class BluetoothService::ToggleBtAck : public nsRunnable
 {
@@ -123,14 +197,19 @@ public:
   NS_IMETHOD Handle(const nsAString& aName, const jsval& aResult, JSContext* aCx)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(gBluetoothService);
 
     if (!aResult.isBoolean()) {
       NS_WARNING("Setting for '" BLUETOOTH_ENABLED_SETTING "' is not a boolean!");
       return NS_OK;
     }
 
-    return aResult.toBoolean() ? gBluetoothService->Start() : NS_OK;
+    // It is theoretically possible to shut down before the first settings check
+    // has completed (though extremely unlikely).
+    if (gBluetoothService) {
+      return gBluetoothService->HandleStartupSettingsCheck(aResult.toBoolean());
+    }
+
+    return NS_OK;
   }
 
   NS_IMETHOD HandleError(const nsAString& aName, JSContext* aCx)
@@ -142,71 +221,137 @@ public:
 
 NS_IMPL_ISUPPORTS1(BluetoothService::StartupTask, nsISettingsServiceCallback);
 
+NS_IMPL_ISUPPORTS1(BluetoothService, nsIObserver)
+
 BluetoothService::~BluetoothService()
 {
-  if (!gBluetoothService) {
-    return;
+  Cleanup();
+}
+
+// static
+BluetoothService*
+BluetoothService::Create()
+{
+#if defined(MOZ_B2G_BT)
+  if (!IsMainProcess()) {
+    return BluetoothServiceChildProcess::Create();
+  }
+#endif
+
+#if defined(MOZ_BLUETOOTH_GONK)
+  return new BluetoothGonkService();
+#elif defined(MOZ_BLUETOOTH_DBUS)
+  return new BluetoothDBusService();
+#else
+  NS_WARNING("No platform support for bluetooth!");
+  return nullptr;
+#endif
+}
+
+bool
+BluetoothService::Init()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE(obs, false);
+
+  if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                 false))) {
+    NS_WARNING("Failed to add shutdown observer!");
+    return false;
   }
 
-  if (NS_FAILED(gBluetoothService->UnregisterBluetoothSignalHandler(
-      NS_LITERAL_STRING(LOCAL_AGENT_PATH), gBluetoothService))) {
-    NS_WARNING("Unresgister observer to register local agent failed!");
+  // Only the main process should observe bluetooth settings changes.
+  if (IsMainProcess() &&
+      NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
+    NS_WARNING("Failed to add settings change observer!");
+    return false;
+  }
+
+  RegisterBluetoothSignalHandler(NS_LITERAL_STRING(LOCAL_AGENT_PATH), this);
+  mRegisteredForLocalAgent = true;
+
+  return true;
+}
+
+void
+BluetoothService::Cleanup()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mRegisteredForLocalAgent) {
+    UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(LOCAL_AGENT_PATH), this);
+    mRegisteredForLocalAgent = false;
+  }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs &&
+      (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
+       NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)))) {
+    NS_WARNING("Can't unregister observers!");
   }
 }
 
-nsresult
+void
 BluetoothService::RegisterBluetoothSignalHandler(const nsAString& aNodeName,
                                                  BluetoothSignalObserver* aHandler)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aHandler);
+
   BluetoothSignalObserverList* ol;
   if (!mBluetoothSignalObserverTable.Get(aNodeName, &ol)) {
     ol = new BluetoothSignalObserverList();
     mBluetoothSignalObserverTable.Put(aNodeName, ol);
   }
   ol->AddObserver(aHandler);
-  return NS_OK;
 }
 
-nsresult
+void
 BluetoothService::UnregisterBluetoothSignalHandler(const nsAString& aNodeName,
                                                    BluetoothSignalObserver* aHandler)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aHandler);
+
   BluetoothSignalObserverList* ol;
-  if (!mBluetoothSignalObserverTable.Get(aNodeName, &ol)) {
-    NS_WARNING("Node does not exist to remove BluetoothSignalListener from!");
-    return NS_OK;
+  if (mBluetoothSignalObserverTable.Get(aNodeName, &ol)) {
+    ol->RemoveObserver(aHandler);
+    if (ol->Length() == 0) {
+      mBluetoothSignalObserverTable.Remove(aNodeName);
+    }
   }
-  ol->RemoveObserver(aHandler);
-  if (ol->Length() == 0) {
-    mBluetoothSignalObserverTable.Remove(aNodeName);
+  else {
+    NS_WARNING("Node was never registered!");
   }
-  return NS_OK;
 }
 
-nsresult
-BluetoothService::DistributeSignal(const BluetoothSignal& signal)
+void
+BluetoothService::UnregisterAllSignalHandlers(BluetoothSignalObserver* aHandler)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aHandler);
+
+  mBluetoothSignalObserverTable.Enumerate(RemoveAllSignalHandlers, aHandler);
+}
+
+void
+BluetoothService::DistributeSignal(const BluetoothSignal& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   // Notify observers that a message has been sent
   BluetoothSignalObserverList* ol;
-  if (!mBluetoothSignalObserverTable.Get(signal.path(), &ol)) {
+  if (!mBluetoothSignalObserverTable.Get(aSignal.path(), &ol)) {
 #if DEBUG
-    nsString msg;
-    msg.AssignLiteral("No observer registered for path");
-    msg.Append(signal.path());
-    NS_WARNING(NS_ConvertUTF16toUTF8(msg).get());
+    nsAutoCString msg("No observer registered for path ");
+    msg.Append(NS_ConvertUTF16toUTF8(aSignal.path()));
+    NS_WARNING(msg.get());
 #endif
-    return NS_OK;
+    return;
   }
-#if DEBUG
-  if (ol->Length() == 0) {
-    NS_WARNING("Distributing to observer list of 0");
-  }
-#endif
-  ol->Broadcast(signal);
-  return NS_OK;
+  MOZ_ASSERT(ol->Length());
+  ol->Broadcast(aSignal);
 }
 
 nsresult
@@ -267,32 +412,26 @@ BluetoothService::SetEnabled(bool aEnabled)
 
   mEnabled = aEnabled;
 
+  AutoInfallibleTArray<BluetoothParent*, 10> childActors;
+  GetAllBluetoothActors(childActors);
+
+  for (uint32_t index = 0; index < childActors.Length(); index++) {
+    unused << childActors[index]->SendEnabled(aEnabled);
+  }
+
   BluetoothManagerList::ForwardIterator iter(mLiveManagers);
   while (iter.HasMore()) {
-    if (NS_FAILED(iter.GetNext()->FireEnabledDisabledEvent(mEnabled))) {
+    if (NS_FAILED(iter.GetNext()->FireEnabledDisabledEvent(aEnabled))) {
       NS_WARNING("FireEnabledDisabledEvent failed!");
     }
   }
 }
 
 nsresult
-BluetoothService::Start()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return StartStopBluetooth(true);
-}
-
-nsresult
-BluetoothService::Stop()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return StartStopBluetooth(false);
-}
-
-nsresult
 BluetoothService::HandleStartup()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mSettingsCheckInProgress);
 
   nsCOMPtr<nsISettingsService> settings =
     do_GetService("@mozilla.org/settingsService;1");
@@ -305,6 +444,27 @@ BluetoothService::HandleStartup()
   nsRefPtr<StartupTask> callback = new StartupTask();
   rv = settingsLock->Get(BLUETOOTH_ENABLED_SETTING, callback);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mSettingsCheckInProgress = true;
+  return NS_OK;
+}
+
+nsresult
+BluetoothService::HandleStartupSettingsCheck(bool aEnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mSettingsCheckInProgress) {
+    // Somehow the enabled setting was changed before our first settings check
+    // completed. Don't do anything.
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(!IsEnabled());
+
+  if (aEnable) {
+    return StartStopBluetooth(true);
+  }
 
   return NS_OK;
 }
@@ -365,6 +525,13 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (mSettingsCheckInProgress) {
+    // Somehow the setting for bluetooth has been flipped before our first
+    // settings check completed. Flip this flag so that we ignore the result
+    // of that check whenever it finishes.
+    mSettingsCheckInProgress = false;
+  }
+
   if (value.toBoolean() == IsEnabled()) {
     // Nothing to do here.
     return NS_OK;
@@ -373,13 +540,13 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
   nsresult rv;
 
   if (IsEnabled()) {
-    rv = Stop();
+    rv = StartStopBluetooth(false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 
-  rv = Start();
+  rv = StartStopBluetooth(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -390,16 +557,64 @@ BluetoothService::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // This is a two phase shutdown. First we notify all child processes that
+  // bluetooth is going away, and then we wait for them to acknowledge. Then we
+  // close down all the bluetooth machinery.
+
   gInShutdown = true;
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs &&
-      (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
-       NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)))) {
-    NS_WARNING("Can't unregister observers!");
+  Cleanup();
+
+  AutoInfallibleTArray<BluetoothParent*, 10> childActors;
+  GetAllBluetoothActors(childActors);
+
+  if (!childActors.IsEmpty()) {
+    // Notify child processes that they should stop using bluetooth now.
+    for (uint32_t index = 0; index < childActors.Length(); index++) {
+      childActors[index]->BeginShutdown();
+    }
+
+    // Create a timer to ensure that we don't wait forever for a child process
+    // or the bluetooth threads to finish. If we don't get a timer or can't use
+    // it for some reason then we skip all the waiting entirely since we really
+    // can't afford to hang on shutdown.
+    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    MOZ_ASSERT(timer);
+
+    if (timer) {
+      bool timeExceeded = false;
+
+      if (NS_SUCCEEDED(timer->InitWithFuncCallback(ShutdownTimeExceeded,
+                                                   &timeExceeded,
+                                                   DEFAULT_SHUTDOWN_TIMER_MS,
+                                                   nsITimer::TYPE_ONE_SHOT))) {
+        nsIThread* currentThread = NS_GetCurrentThread();
+        MOZ_ASSERT(currentThread);
+
+        // Wait for those child processes to acknowledge.
+        while (!timeExceeded && !childActors.IsEmpty()) {
+          if (!NS_ProcessNextEvent(currentThread)) {
+            MOZ_ASSERT(false, "Something horribly wrong here!");
+            break;
+          }
+          GetAllBluetoothActors(childActors);
+        }
+
+        if (NS_FAILED(timer->Cancel())) {
+          MOZ_NOT_REACHED("Failed to cancel shutdown timer, this will crash!");
+        }
+      }
+      else {
+        MOZ_ASSERT(false, "Failed to initialize shutdown timer!");
+      }
+    }
   }
 
-  return Stop();
+  if (IsEnabled() && NS_FAILED(StartStopBluetooth(false))) {
+    MOZ_ASSERT(false, "Failed to deliver stop message!");
+  }
+
+  return NS_OK;
 }
 
 void
@@ -445,24 +660,12 @@ BluetoothService::Get()
   nsRefPtr<BluetoothService> service = BluetoothService::Create();
   NS_ENSURE_TRUE(service, nullptr);
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE(obs, nullptr);
-
-  if (NS_FAILED(obs->AddObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                 false)) ||
-      NS_FAILED(obs->AddObserver(service, MOZSETTINGS_CHANGED_ID, false))) {
-    NS_WARNING("AddObserver failed!");
+  if (!service->Init()) {
+    service->Cleanup();
     return nullptr;
   }
 
-  gBluetoothService.swap(service);
-
-  if (NS_FAILED(gBluetoothService->RegisterBluetoothSignalHandler(
-    NS_LITERAL_STRING(LOCAL_AGENT_PATH), gBluetoothService))) {
-    NS_WARNING("Resgister observer to register local agent failed!");
-    return nullptr;
-  }
-
+  gBluetoothService = service;
   return gBluetoothService;
 }
 

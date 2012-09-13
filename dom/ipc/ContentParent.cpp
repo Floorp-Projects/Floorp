@@ -26,6 +26,7 @@
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/dom/StorageParent.h"
+#include "mozilla/dom/bluetooth/PBluetoothParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/sms/SmsParent.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
@@ -105,10 +106,16 @@
 #include "nsIVolumeService.h"
 #endif
 
+#ifdef MOZ_B2G_BT
+#include "BluetoothParent.h"
+#include "BluetoothService.h"
+#endif
+
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
 using base::KillProcess;
+using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
 using namespace mozilla::dom::indexedDB;
@@ -1456,6 +1463,46 @@ ContentParent::DeallocPStorage(PStorageParent* aActor)
 {
     delete aActor;
     return true;
+}
+
+PBluetoothParent*
+ContentParent::AllocPBluetooth()
+{
+#ifdef MOZ_B2G_BT
+    if (!AppProcessHasPermission(this, "bluetooth")) {
+        return nullptr;
+    }
+    return new mozilla::dom::bluetooth::BluetoothParent();
+#else
+    MOZ_NOT_REACHED("No support for bluetooth on this platform!");
+    return nullptr;
+#endif
+}
+
+bool
+ContentParent::DeallocPBluetooth(PBluetoothParent* aActor)
+{
+#ifdef MOZ_B2G_BT
+    delete aActor;
+    return true;
+#else
+    MOZ_NOT_REACHED("No support for bluetooth on this platform!");
+    return false;
+#endif
+}
+
+bool
+ContentParent::RecvPBluetoothConstructor(PBluetoothParent* aActor)
+{
+#ifdef MOZ_B2G_BT
+    nsRefPtr<BluetoothService> btService = BluetoothService::Get();
+    NS_ENSURE_TRUE(btService, false);
+
+    return static_cast<BluetoothParent*>(aActor)->InitWithService(btService);
+#else
+    MOZ_NOT_REACHED("No support for bluetooth on this platform!");
+    return false;
+#endif
 }
 
 void
