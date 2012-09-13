@@ -28,17 +28,15 @@ StorageParent::StorageParent(const StorageConstructData& aData)
 
 bool
 StorageParent::RecvInit(const bool& aUseDB,
-                        const bool& aCanUseChromePersist,
                         const bool& aSessionOnly,
                         const bool& aPrivate,
                         const nsCString& aDomain,
                         const nsCString& aScopeDBKey,
-                        const nsCString& aQuotaDomainDBKey,
                         const nsCString& aQuotaETLDplus1DomainDBKey,
                         const uint32_t& aStorageType)
 {
-  mStorage->InitFromChild(aUseDB, aCanUseChromePersist, aSessionOnly, aPrivate, aDomain,
-                          aScopeDBKey, aQuotaDomainDBKey, aQuotaETLDplus1DomainDBKey,
+  mStorage->InitFromChild(aUseDB, aSessionOnly, aPrivate, aDomain,
+                          aScopeDBKey, aQuotaETLDplus1DomainDBKey,
                           aStorageType);
   return true;
 }

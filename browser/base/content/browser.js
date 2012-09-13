@@ -5687,13 +5687,11 @@ var OfflineApps = {
   // OfflineApps Public Methods
   init: function ()
   {
-    Services.obs.addObserver(this, "dom-storage-warn-quota-exceeded", false);
     Services.obs.addObserver(this, "offline-cache-update-completed", false);
   },
 
   uninit: function ()
   {
-    Services.obs.removeObserver(this, "dom-storage-warn-quota-exceeded");
     Services.obs.removeObserver(this, "offline-cache-update-completed");
   },
 
@@ -5935,19 +5933,7 @@ var OfflineApps = {
   // nsIObserver
   observe: function (aSubject, aTopic, aState)
   {
-    if (aTopic == "dom-storage-warn-quota-exceeded") {
-      if (aSubject) {
-        var uri = makeURI(aSubject.location.href);
-
-        if (OfflineApps._checkUsage(uri)) {
-          var browserWindow =
-            this._getBrowserWindowForContentWindow(aSubject);
-          var browser = this._getBrowserForContentWindow(browserWindow,
-                                                         aSubject);
-          OfflineApps._warnUsage(browser, uri);
-        }
-      }
-    } else if (aTopic == "offline-cache-update-completed") {
+    if (aTopic == "offline-cache-update-completed") {
       var cacheUpdate = aSubject.QueryInterface(Ci.nsIOfflineCacheUpdate);
 
       var uri = cacheUpdate.manifestURI;

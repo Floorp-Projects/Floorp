@@ -19,36 +19,7 @@ var uri = io.newURI(window.location, "", null);
 var cp = Cc["@mozilla.org/cookie/permission;1"]
   .getService(Components.interfaces.nsICookiePermission);
 
-var quota, quotaOffline;
-
-function addOfflineApp(url)
-{
-  var permissionManager = Cc["@mozilla.org/permissionmanager;1"]
-    .getService(Components.interfaces.nsIPermissionManager);
-  var uri = Cc["@mozilla.org/network/io-service;1"]
-    .getService(Components.interfaces.nsIIOService)
-    .newURI(url, null, null);
-  var principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                    .getService(Components.interfaces.nsIScriptSecurityManager)
-                    .getNoAppCodebasePrincipal(uri);
-
-  permissionManager.addFromPrincipal(principal, "offline-app",
-                                     Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
-}
-
-function removeOfflineApp(url)
-{
-  var permissionManager = Cc["@mozilla.org/permissionmanager;1"]
-    .getService(Components.interfaces.nsIPermissionManager);
-  var uri = Cc["@mozilla.org/network/io-service;1"]
-    .getService(Components.interfaces.nsIIOService)
-    .newURI(url, null, null);
-  var principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                    .getService(Components.interfaces.nsIScriptSecurityManager)
-                    .getNoAppCodebasePrincipal(uri);
-
-  permissionManager.removeFromPrincipal(principal, "offline-app");
-}
+var quota;
 
 function doNextTest()
 {
@@ -65,12 +36,6 @@ function doNextTest()
         quota = 5*1024;
       }
       prefs.setIntPref("dom.storage.default_quota", 1);
-      try {
-        quotaOffline = prefs.getIntPref("offline-apps.quota.max");
-      } catch (ex) {
-        quotaOffline = 200*1024;
-      }
-      prefs.setIntPref("offline-apps.quota.max", 2);
 
 
       slaveOrigin = "http://example.com";
@@ -126,89 +91,8 @@ function doNextTest()
       cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
       break;
 
-    case 9:
-      // test1.example.com is now using its own offline app quota
-      addOfflineApp("http://test1.example.com");
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
-      break;
-
-    case 10:
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
-      break;
-
-    case 11:
-      cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&success";
-      // Now we have 1503 bytes stored, this exceeds the default storage quota
-      break;
-
-    case 12:
-      // Now check that upper level domain that is not set as an offline app
-      // domain is allowed to store data and is using the default quota
-      slaveOrigin = "http://example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
-      break;
-
-    case 13:
-      slaveOrigin = "http://example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
-      break;
-
-    case 14:
-      slaveOrigin = "http://example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&failure";
-      break;
-
-    case 15:
-      slaveOrigin = "http://test2.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&D&failure";
-      break;
-
-    case 16:
-      // Check an offline app domain may store some more data
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&D&success";
-      break;
-
-    case 17:
-      // Check an offline app domain is using its own (larger) quota
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&E&failure";
-      break;
-
-    case 18:
-      // This test checks we correctly subtract A from the usage. A is inherited
-      // from the persistent database before we switch to session-only cookies
-      // mode
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?remove&A&success";
-      break;
-
-    case 19:
-      // now we shold have more space to store a new value
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&E&success";
-      break;
-
-    case 20:
-      // Do a clean up...
-      slaveOrigin = "http://example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
-      break;
-
-    case 21:
-      // Do a clean up...
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
-      break;
-
     default:
-      removeOfflineApp("http://test1.example.com");
       prefs.setIntPref("dom.storage.default_quota", quota);
-      prefs.setIntPref("offline-apps.quota.max", quotaOffline);
       cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
       SimpleTest.finish();
   }
