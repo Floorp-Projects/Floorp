@@ -10,7 +10,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 
-[scriptable, uuid(75a7afe3-d7c9-46fe-b305-ae686457bc7f)]
+[scriptable, uuid(51289544-fd8a-11e1-8017-5abf937d8bec)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -70,6 +70,10 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     // When using this, make sure that you actually want DISALLOW_SCRIPT, not
     // DISALLOW_INHERIT_PRINCIPAL
     const unsigned long DISALLOW_SCRIPT = 1 << 3;
+
+    // Do not report errors if we just want to check if a principal can load
+    // a URI to not unnecessarily spam the error console.
+    const unsigned long DONT_REPORT_ERRORS = 1 << 4;
 
     /**
      * Check that content with principal aPrincipal can load "uri".
