@@ -7,6 +7,7 @@
 #include "base/basictypes.h"
 #include "BluetoothDevice.h"
 #include "BluetoothPropertyEvent.h"
+#include "BluetoothTypes.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
@@ -15,7 +16,6 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsDOMClassInfo.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 USING_BLUETOOTH_NAMESPACE
 
@@ -69,7 +69,9 @@ BluetoothDevice::~BluetoothDevice()
   BluetoothService* bs = BluetoothService::Get();
   // bs can be null on shutdown, where destruction might happen.
   if (bs) {
-    bs->UnregisterBluetoothSignalHandler(mPath, this);
+    if (NS_FAILED(bs->UnregisterBluetoothSignalHandler(mPath, this))) {
+      NS_WARNING("Failed to unregister object with observer!");
+    }
   }
   Unroot();
 }
@@ -105,8 +107,8 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
     BluetoothService* bs = BluetoothService::Get();
     if (!bs) {
       NS_WARNING("BluetoothService not available!");
-    } else {
-      bs->RegisterBluetoothSignalHandler(mPath, this);
+    } else if (NS_FAILED(bs->RegisterBluetoothSignalHandler(mPath, this))) {
+      NS_WARNING("Failed to register object with observer!");
     }
   } else if (name.EqualsLiteral("Address")) {
     mAddress = value.get_nsString();
@@ -175,9 +177,10 @@ BluetoothDevice::Create(nsPIDOMWindow* aOwner,
 
   nsRefPtr<BluetoothDevice> device = new BluetoothDevice(aOwner, aAdapterPath,
                                                          aValue);
-
-  bs->RegisterBluetoothSignalHandler(device->mPath, device);
-
+  if (NS_FAILED(bs->RegisterBluetoothSignalHandler(device->mPath, device))) {
+    NS_WARNING("Failed to register object with observer!");
+    return nullptr;
+  }
   return device.forget();
 }
 

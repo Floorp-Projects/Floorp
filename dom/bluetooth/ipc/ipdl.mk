@@ -4,6 +4,4 @@
 
 IPDLSRCS = \
   BluetoothTypes.ipdlh \
-  PBluetooth.ipdl \
-  PBluetoothRequest.ipdl \
   $(NULL)
