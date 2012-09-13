@@ -616,7 +616,7 @@ let DOMApplicationRegistry = {
             throw "INVALID_SECURITY_LEVEL";
           }
 
-          msg.appStatus = getAppStatus(msg.app.manifest);
+          msg.app.appStatus = getAppStatus(msg.app.manifest);
           Services.obs.notifyObservers(this, "webapps-ask-install",
                                              JSON.stringify(msg));
         } catch (e) {
