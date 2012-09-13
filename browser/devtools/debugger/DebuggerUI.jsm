@@ -494,7 +494,7 @@ ChromeDebuggerProcess.prototype = {
     }
     if (result == 2) {
       DebuggerServer.closeListener();
-      Services.prefs.setBoolPref("devtools.debugger.chrome-enabled", false);
+      Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
     }
     return false;
   },
