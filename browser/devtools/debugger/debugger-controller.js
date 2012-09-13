@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
+Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 
 /**
  * Controls the debugger view by handling the source scripts, the current
@@ -51,6 +52,7 @@ let DebuggerController = {
     window.removeEventListener("DOMContentLoaded", this._startupDebugger, true);
 
     DebuggerView.cacheView();
+    DebuggerView.initializeKeys();
     DebuggerView.initializePanes();
     DebuggerView.initializeEditor(function() {
       DebuggerView.GlobalSearch.initialize();
@@ -1272,6 +1274,7 @@ SourceScripts.prototype = {
               return self._logError(url, aStatus);
             }
             let source = NetUtil.readInputStreamToString(aStream, aStream.available());
+            source = self._convertToUnicode(source);
             self._onLoadSourceFinished(url, source, null, options);
             aStream.close();
           });
@@ -1296,14 +1299,36 @@ SourceScripts.prototype = {
             if (!Components.isSuccessCode(aStatusCode)) {
               return self._logError(url, aStatusCode);
             }
-            self._onLoadSourceFinished(
-              url, chunks.join(""), channel.contentType, options);
+            let source = self._convertToUnicode(chunks.join(""), channel.contentCharset);
+            self._onLoadSourceFinished(url, source, channel.contentType, options);
           }
         };
 
         channel.loadFlags = channel.LOAD_FROM_CACHE;
         channel.asyncOpen(streamListener, null);
         break;
+    }
+  },
+
+  /**
+   * Convert a given string, encoded in a given character set, to unicode.
+   * @param string aString
+   *        A string.
+   * @param string aCharset
+   *        A character set.
+   * @return string
+   *         A unicode string.
+   */
+  _convertToUnicode: function SS__convertToUnicode(aString, aCharset) {
+    // Decoding primitives.
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+        .createInstance(Ci.nsIScriptableUnicodeConverter);
+
+    try {
+      converter.charset = aCharset || "UTF-8";
+      return converter.ConvertToUnicode(aString);
+    } catch(e) {
+      return aString;
     }
   },
 

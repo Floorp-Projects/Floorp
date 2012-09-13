@@ -5,8 +5,8 @@
 const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
 
 /**
- * Tests if the global search results are cleared on location changes, and
- * the expected UI behaviors are triggered.
+ * Tests if the global search results are hidden when they're supposed to
+ * (after a focus lost, or when ESCAPE is pressed).
  */
 
 var gPane = null;
@@ -66,12 +66,8 @@ function testScriptSearching() {
 }
 
 function doSearch() {
-  is(gSearchView._pane.childNodes.length, 0,
-    "The global search pane shouldn't have any child nodes yet.");
   is(gSearchView._pane.hidden, true,
     "The global search pane shouldn't be visible yet.");
-  is(gSearchView._splitter.hidden, true,
-    "The global search pane splitter shouldn't be visible yet.");
 
   window.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
     window.removeEventListener(aEvent.type, _onEvent);
@@ -81,67 +77,94 @@ function doSearch() {
     let url = gScripts.selected;
     if (url.indexOf("-02.js") != -1) {
       executeSoon(function() {
-        info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
-        ok(gEditor.getCaretPosition().line == 5 &&
-           gEditor.getCaretPosition().col == 0,
-          "The editor shouldn't have jumped to a matching line yet.");
-        is(gScripts.visibleItemsCount, 2,
-          "Not all the scripts are shown after the global search.");
-
-        isnot(gSearchView._pane.childNodes.length, 0,
-          "The global search pane should be visible now.");
-        isnot(gSearchView._pane.hidden, true,
-          "The global search pane should be visible now.");
-        isnot(gSearchView._splitter.hidden, true,
-          "The global search pane splitter should be visible now.");
-
-        testLocationChange();
+        testFocusLost();
       });
     } else {
       ok(false, "The current script shouldn't have changed after a global search.");
     }
   });
   executeSoon(function() {
-    write("!eval");
+    write("!a");
   });
 }
 
-function testLocationChange()
+function testFocusLost()
 {
-  let viewCleared = false;
-  let cacheCleared = false;
+  is(gSearchView._pane.hidden, false,
+    "The global search pane should be visible after a search.");
 
-  function _maybeFinish() {
-    if (viewCleared && cacheCleared) {
-      closeDebuggerAndFinish();
+  window.addEventListener("Debugger:GlobalSearch:ViewCleared", function _onEvent(aEvent) {
+    window.removeEventListener(aEvent.type, _onEvent);
+    info("Current script url:\n" + gScripts.selected + "\n");
+    info("Debugger editor text:\n" + gEditor.getText() + "\n");
+
+    let url = gScripts.selected;
+    if (url.indexOf("-02.js") != -1) {
+      executeSoon(function() {
+        reshowSearch();
+      });
+    } else {
+      ok(false, "The current script shouldn't have changed after the global search stopped.");
     }
-  }
-
-  window.addEventListener("Debugger:GlobalSearch:ViewCleared", function _onViewCleared(aEvent) {
-    window.removeEventListener(aEvent.type, _onViewCleared);
-
-    is(gSearchView._pane.childNodes.length, 0,
-      "The global search pane shouldn't have any child nodes after a page navigation.");
-    is(gSearchView._pane.hidden, true,
-      "The global search pane shouldn't be visible after a page navigation.");
-    is(gSearchView._splitter.hidden, true,
-      "The global search pane splitter shouldn't be visible after a page navigation.");
-
-    viewCleared = true;
-    _maybeFinish();
   });
-
-  window.addEventListener("Debugger:GlobalSearch:CacheCleared", function _onCacheCleared(aEvent) {
-    window.removeEventListener(aEvent.type, _onCacheCleared);
-
-    is(gSearchView._scriptSources.size(), 0,
-      "The scripts sources cache for global searching should be cleared after a page navigation.")
-
-    cacheCleared = true;
-    _maybeFinish();
+  executeSoon(function() {
+    gDebugger.DebuggerView.editor.focus();
   });
+}
 
-  content.location = TAB1_URL;
+function reshowSearch() {
+  is(gSearchView._pane.hidden, true,
+    "The global search pane shouldn't be visible after the search was stopped.");
+
+  window.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
+    window.removeEventListener(aEvent.type, _onEvent);
+    info("Current script url:\n" + gScripts.selected + "\n");
+    info("Debugger editor text:\n" + gEditor.getText() + "\n");
+
+    let url = gScripts.selected;
+    if (url.indexOf("-02.js") != -1) {
+      executeSoon(function() {
+        testEscape();
+      });
+    } else {
+      ok(false, "The current script shouldn't have changed after a global re-search.");
+    }
+  });
+  executeSoon(function() {
+    sendEnter();
+  });
+}
+
+function testEscape()
+{
+  is(gSearchView._pane.hidden, false,
+    "The global search pane should be visible after a re-search.");
+
+  window.addEventListener("Debugger:GlobalSearch:ViewCleared", function _onEvent(aEvent) {
+    window.removeEventListener(aEvent.type, _onEvent);
+    info("Current script url:\n" + gScripts.selected + "\n");
+    info("Debugger editor text:\n" + gEditor.getText() + "\n");
+
+    let url = gScripts.selected;
+    if (url.indexOf("-02.js") != -1) {
+      executeSoon(function() {
+        finalCheck();
+      });
+    } else {
+      ok(false, "The current script shouldn't have changed after the global search escaped.");
+    }
+  });
+  executeSoon(function() {
+    sendEscape();
+  });
+}
+
+function finalCheck()
+{
+  is(gSearchView._pane.hidden, true,
+    "The global search pane shouldn't be visible after the search was escaped.");
+
+  closeDebuggerAndFinish();
 }
 
 function clear() {
@@ -152,6 +175,16 @@ function clear() {
 function write(text) {
   clear();
   append(text);
+}
+
+function sendEnter() {
+  gSearchBox.focus();
+  EventUtils.sendKey("ENTER");
+}
+
+function sendEscape() {
+  gSearchBox.focus();
+  EventUtils.sendKey("ESCAPE");
 }
 
 function append(text) {

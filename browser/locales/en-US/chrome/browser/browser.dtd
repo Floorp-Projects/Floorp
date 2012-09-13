@@ -209,7 +209,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY webConsoleCmd.commandkey     "k">
 
 <!ENTITY inspectMenu.label            "Inspect">
-<!ENTITY inspectMenu.accesskey        "T">
+<!ENTITY inspectMenu.accesskey        "I">
 <!ENTITY inspectMenu.commandkey       "I">
 
 <!ENTITY inspectContextMenu.label     "Inspect Element">
