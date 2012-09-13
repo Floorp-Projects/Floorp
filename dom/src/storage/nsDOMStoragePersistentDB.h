@@ -63,10 +63,7 @@ public:
   SetKey(DOMStorageImpl* aStorage,
          const nsAString& aKey,
          const nsAString& aValue,
-         bool aSecure,
-         int32_t aQuota,
-         bool aExcludeOfflineFromUsage,
-         int32_t* aNewUsage);
+         bool aSecure);
 
   /**
    * Set the secure flag for a key in storage. Does nothing if the key was
@@ -82,9 +79,7 @@ public:
    */
   nsresult
   RemoveKey(DOMStorageImpl* aStorage,
-            const nsAString& aKey,
-            bool aExcludeOfflineFromUsage,
-            int32_t aKeyUsage);
+            const nsAString& aKey);
 
   /**
     * Remove all keys belonging to this storage.
@@ -95,15 +90,7 @@ public:
    * Removes all keys added by a given domain.
    */
   nsresult
-  RemoveOwner(const nsACString& aOwner, bool aIncludeSubDomains);
-
-  /**
-   * Removes keys owned by domains that either match or don't match the
-   * list.
-   */
-  nsresult
-  RemoveOwners(const nsTArray<nsString>& aOwners,
-               bool aIncludeSubDomains, bool aMatch);
+  RemoveOwner(const nsACString& aOwner);
 
   /**
    * Removes all keys from storage. Used when clearing storage.
@@ -112,16 +99,16 @@ public:
   RemoveAll();
 
   /**
-    * Returns usage for a storage using its GetQuotaDomainDBKey() as a key.
+    * Returns usage for a storage using its GetQuotaDBKey() as a key.
     */
   nsresult
-  GetUsage(DOMStorageImpl* aStorage, bool aExcludeOfflineFromUsage, int32_t *aUsage);
+  GetUsage(DOMStorageImpl* aStorage, int32_t *aUsage);
 
   /**
     * Returns usage of the domain and optionaly by any subdomain.
     */
   nsresult
-  GetUsage(const nsACString& aDomain, bool aIncludeSubDomains, int32_t *aUsage);
+  GetUsage(const nsACString& aDomain, int32_t *aUsage);
 
   /**
    * Clears all in-memory data from private browsing mode
@@ -174,7 +161,7 @@ protected:
   friend class nsDOMStorageDBWrapper;
   friend class nsDOMStorageMemoryDB;
   nsresult
-  GetUsageInternal(const nsACString& aQuotaDomainDBKey, bool aExcludeOfflineFromUsage, int32_t *aUsage);
+  GetUsageInternal(const nsACString& aQuotaDBKey, int32_t *aUsage);
 
   // Compares aDomain with the mCachedOwner and returns false if changes
   // in aDomain don't affect mCachedUsage.

@@ -5,8 +5,24 @@
 
 #include "nsDOMStorageBaseDB.h"
 #include "nsDOMStorage.h"
+#include "mozilla/Preferences.h"
+
+// Only allow relatively small amounts of data since performance of
+// the synchronous IO is very bad.
+#define DEFAULT_QUOTA_LIMIT (5 * 1024)
 
 uint64_t nsDOMStorageBaseDB::sGlobalVersion = 1;
+int32_t nsDOMStorageBaseDB::gQuotaLimit = DEFAULT_QUOTA_LIMIT * 1024;
+
+using namespace mozilla;
+
+/* static */
+void
+nsDOMStorageBaseDB::Init()
+{
+  Preferences::AddIntVarCache(&gQuotaLimit, "dom.storage.default_quota",
+                              DEFAULT_QUOTA_LIMIT);
+}
 
 nsDOMStorageBaseDB::nsDOMStorageBaseDB()
 {
