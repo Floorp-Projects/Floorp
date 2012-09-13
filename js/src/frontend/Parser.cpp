@@ -3093,6 +3093,7 @@ Parser::forStatement()
                || (versionNumber() == JSVERSION_1_7 &&
                    pn->isOp(JSOP_ITER) &&
                    !(pn->pn_iflags & JSITER_FOREACH) &&
+                   !forOf &&
                    (pn1->pn_head->isKind(PNK_OBJECT) ||
                     (pn1->pn_head->isKind(PNK_ARRAY) &&
                      pn1->pn_head->pn_count != 2) ||
@@ -3106,7 +3107,8 @@ Parser::forStatement()
 #if JS_HAS_DESTRUCTURING
                ((versionNumber() == JSVERSION_1_7 &&
                  pn->isOp(JSOP_ITER) &&
-                 !(pn->pn_iflags & JSITER_FOREACH))
+                 !(pn->pn_iflags & JSITER_FOREACH) &&
+                 !forOf)
                 ? (!pn1->isKind(PNK_ARRAY) || pn1->pn_count != 2)
                 : (!pn1->isKind(PNK_ARRAY) && !pn1->isKind(PNK_OBJECT))) &&
 #endif
@@ -3239,7 +3241,7 @@ Parser::forStatement()
                  * in JS1.7.
                  */
                 JS_ASSERT(pn->isOp(JSOP_ITER));
-                if (!(pn->pn_iflags & JSITER_FOREACH))
+                if (!(pn->pn_iflags & JSITER_FOREACH) && !forOf)
                     pn->pn_iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
             }
             break;
@@ -5240,7 +5242,10 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
             if (!CheckDestructuring(context, &data, pn3, this))
                 return NULL;
 
-            if (versionNumber() == JSVERSION_1_7) {
+            if (versionNumber() == JSVERSION_1_7 &&
+                !(pn2->pn_iflags & JSITER_FOREACH) &&
+                !forOf)
+            {
                 /* Destructuring requires [key, value] enumeration in JS1.7. */
                 if (!pn3->isKind(PNK_ARRAY) || pn3->pn_count != 2) {
                     reportError(NULL, JSMSG_BAD_FOR_LEFTSIDE);
@@ -5249,8 +5254,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
 
                 JS_ASSERT(pn2->isOp(JSOP_ITER));
                 JS_ASSERT(pn2->pn_iflags & JSITER_ENUMERATE);
-                if (!(pn2->pn_iflags & JSITER_FOREACH))
-                    pn2->pn_iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
+                pn2->pn_iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
             }
             break;
 #endif
