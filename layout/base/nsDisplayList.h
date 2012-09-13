@@ -300,6 +300,18 @@ public:
   bool GetHasFixedItems() { return mHasFixedItems; }
 
   /**
+   * Determines if this item is scrolled by content-document display-port
+   * scrolling. aActiveScrolledRoot will be set to the active scrolled root
+   * of the item. This may not necessarily correspond to the active scrolled
+   * root of the item's underlying frame.
+   * If specified, aOverrideActiveScrolledRoot will be treated as the active
+   * scrolled root.
+   */
+  bool IsFixedItem(nsDisplayItem* aItem,
+                   nsIFrame** aActiveScrolledRoot = nullptr,
+                   nsIFrame* aOverrideActiveScrolledRoot = nullptr);
+
+  /**
    * @return true if images have been set to decode synchronously.
    */
   bool ShouldSyncDecodeImages() { return mSyncDecodeImages; }
@@ -1604,9 +1616,12 @@ private:
  */
 class nsDisplayBackground : public nsDisplayItem {
 public:
-  // aLayer signifies which background layer this item represents
+  // aLayer signifies which background layer this item represents. Normally
+  // a background layer will only be marked as fixed if it covers the scroll-
+  // port of the root scroll-frame. This check can be skipped using
+  // aSkipFixedItemBoundsCheck.
   nsDisplayBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      uint32_t aLayer);
+                      uint32_t aLayer, bool aSkipFixedItemBoundsCheck = false);
   virtual ~nsDisplayBackground();
 
   // This will create and append new items for all the layers of the
@@ -1656,6 +1671,9 @@ protected:
 
   /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
   bool mIsThemed;
+  /* true if this item represents a background-attachment:fixed layer and
+   * should fix to the viewport. */
+  bool mIsFixed;
   /* true if this item represents the bottom-most background layer */
   bool mIsBottommostLayer;
   nsITheme::Transparency mThemeTransparency;
