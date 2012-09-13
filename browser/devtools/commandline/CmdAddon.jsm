@@ -4,7 +4,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-let EXPORTED_SYMBOLS = [ ];
+let EXPORTED_SYMBOLS = [ "Flags" ];
 
 Cu.import("resource:///modules/devtools/gcli.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -12,6 +12,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
+
+// We need to use an object in which to store any flags because a primitive
+// would remain undefined.
+let Flags = {
+  addonsLoaded: false
+};
 
 /**
  * 'addon' command.
@@ -286,5 +292,6 @@ AddonManager.getAllAddons(function addonAsync(aAddons) {
       return promise;
     }
   });
+  Flags.addonsLoaded = true;
   Services.obs.notifyObservers(null, "gcli_addon_commands_ready", null);
 });

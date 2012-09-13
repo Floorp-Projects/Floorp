@@ -331,7 +331,7 @@ MarkupView.prototype = {
         this._updateChildren(container);
       }
     }
-    this._inspector._emit("markupmutation");
+    this._inspector.emit("markupmutation");
   },
 
   /**
@@ -479,7 +479,7 @@ MarkupView.prototype = {
     this._frame.removeEventListener("keydown", this._boundKeyDown, true);
     delete this._boundKeyDown;
 
-    this._inspector.removeListener("select", this._boundSelect);
+    this._inspector.off("select", this._boundSelect);
     delete this._boundSelect;
 
     delete this._elt;
