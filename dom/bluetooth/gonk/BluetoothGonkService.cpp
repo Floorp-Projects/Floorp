@@ -38,7 +38,6 @@ static struct BluedroidFunctions
 
   int (* bt_enable)();
   int (* bt_disable)();
-  int (* bt_is_enabled)();
 } sBluedroidFunctions;
 
 bool
@@ -69,19 +68,8 @@ EnsureBluetoothInit()
     NS_ERROR("Failed to attach bt_disable function");
     return false;
   }
-  sBluedroidFunctions.bt_is_enabled = (int (*)())dlsym(handle, "bt_is_enabled");
-  if (!sBluedroidFunctions.bt_is_enabled) {
-    NS_ERROR("Failed to attach bt_is_enabled function");
-    return false;
-  }
   sBluedroidFunctions.initialized = true;
   return true;
-}
-
-int
-IsBluetoothEnabled()
-{
-  return sBluedroidFunctions.bt_is_enabled();
 }
 
 int
@@ -127,16 +115,6 @@ StartStopGonkBluetooth(bool aShouldEnable)
   }
   
   return NS_OK;
-}
-
-int
-BluetoothGonkService::IsEnabledInternal()
-{
-  if (!EnsureBluetoothInit()) {
-    NS_ERROR("Failed to load bluedroid library.\n");
-    return false;
-  }
-  return IsBluetoothEnabled();
 }
 
 nsresult

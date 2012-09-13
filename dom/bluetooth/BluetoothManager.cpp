@@ -9,7 +9,6 @@
 #include "BluetoothCommon.h"
 #include "BluetoothAdapter.h"
 #include "BluetoothService.h"
-#include "BluetoothTypes.h"
 #include "BluetoothReplyRunnable.h"
 
 #include "nsContentUtils.h"
@@ -20,6 +19,7 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "mozilla/Util.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 using namespace mozilla;
 

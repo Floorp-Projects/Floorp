@@ -27,6 +27,10 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
+EXPORTS_NAMESPACES = mozilla/dom/bluetooth
+
+EXPORTS_mozilla/dom/bluetooth = BluetoothCommon.h
+
 CPPSRCS += \
   BluetoothService.cpp \
   BluetoothManager.cpp \
@@ -50,42 +54,50 @@ XPIDLSRCS = \
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 VPATH += \
-	$(srcdir)/linux \
-	$(srcdir)/gonk \
-	$(NULL)
+  $(srcdir)/linux \
+  $(srcdir)/gonk \
+  (NULL)
 LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
 CPPSRCS += \
-	BluetoothDBusService.cpp \
-	BluetoothGonkService.cpp \
-	BluetoothGonkServiceFactory.cpp \
-	$(NULL)
+  BluetoothDBusService.cpp \
+  BluetoothGonkService.cpp \
+  $(NULL)
+DEFINES += -DMOZ_BLUETOOTH_GONK
+HAS_BLUETOOTH = 1
 else
 ifdef MOZ_ENABLE_DBUS
 VPATH += $(srcdir)/linux
 LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
-CPPSRCS += \
-	BluetoothDBusService.cpp \
-	BluetoothDBusServiceFactory.cpp \
-	$(NULL)
+CPPSRCS += BluetoothDBusService.cpp
 CFLAGS += $(MOZ_DBUS_GLIB_CFLAGS)
 CXXFLAGS += $(MOZ_DBUS_GLIB_CFLAGS) -DHAVE_PTHREADS
-else
-CPPSRCS += BluetoothNullServiceFactory.cpp
+DEFINES += -DMOZ_BLUETOOTH_DBUS
+HAS_BLUETOOTH = 1
 endif
 endif
 
-LOCAL_INCLUDES += -I$(DEPTH)/ipc/ipdl/_ipdlheaders/mozilla/dom/bluetooth/
+ifneq (,$(HAS_BLUETOOTH))
+# Will be building the ipc code here.
+VPATH += $(srcdir)/ipc
 
 # Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
-# subdirectory
+# subdirectory.
 LOCAL_INCLUDES += $(VPATH:%=-I%)
+
+CPPSRCS += \
+  BluetoothChild.cpp \
+  BluetoothParent.cpp \
+  BluetoothServiceChildProcess.cpp \
+  $(NULL)
+
+EXPORTS_NAMESPACES += mozilla/dom/bluetooth/ipc
+
+EXPORTS_mozilla/dom/bluetooth/ipc = BluetoothMessageUtils.h
+
+DEFINES += -DMOZ_BLUETOOTH
+
+endif # HAS_BLUETOOTH
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
-
-
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/events \
-  $(NULL)
