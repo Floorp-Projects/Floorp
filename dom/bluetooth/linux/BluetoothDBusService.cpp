@@ -19,7 +19,6 @@
 #include "base/basictypes.h"
 #include "BluetoothDBusService.h"
 #include "BluetoothServiceUuid.h"
-#include "BluetoothTypes.h"
 #include "BluetoothReplyRunnable.h"
 
 #include <cstdio>
@@ -35,6 +34,7 @@
 #include "mozilla/ipc/DBusUtils.h"
 #include "mozilla/ipc/RawDBusConnection.h"
 #include "mozilla/Util.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 /**
  * Some rules for dealing with memory in DBus:
@@ -194,7 +194,8 @@ public:
       NS_WARNING("BluetoothService not available!");
       return NS_ERROR_FAILURE;
     }
-    return bs->DistributeSignal(mSignal);
+    bs->DistributeSignal(mSignal);
+    return NS_OK;
   }
 };
 
@@ -240,6 +241,7 @@ DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
     nsString err(aErrorStr);
     reply = new BluetoothReply(BluetoothReplyError(err));
   } else {
+    MOZ_ASSERT(aValue.type() != BluetoothValue::T__None);
     reply = new BluetoothReply(BluetoothReplySuccess(aValue));
   }
   
@@ -613,6 +615,10 @@ UnpackVoidMessage(DBusMessage* aMsg, DBusError* aErr, BluetoothValue& aValue,
       aErrorStr = NS_ConvertUTF8toUTF16(err.message);
       LOG_AND_FREE_DBUS_ERROR(&err);
     }
+  }
+  // XXXbent Need to figure out something better than this here.
+  if (aErrorStr.IsEmpty()) {
+    aValue = true;
   }
 }
 
@@ -1106,14 +1112,6 @@ BluetoothDBusService::StopInternal()
   return NS_OK;
 }
 
-
-int
-BluetoothDBusService::IsEnabledInternal()
-{
-  // assume bluetooth is always enabled on desktop
-  return true;
-}
-
 class DefaultAdapterPropertiesRunnable : public nsRunnable
 {
 public:
@@ -1211,12 +1209,8 @@ BluetoothDBusService::SendDiscoveryMessage(const nsAString& aAdapterPath,
                                            const char* aMessageName,
                                            BluetoothReplyRunnable* aRunnable)
 {
-  if (!mConnection) {
-    NS_WARNING("Bluetooth service not started yet!");
-    return NS_ERROR_FAILURE;
-  }
-
   NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
+  NS_ASSERTION(mConnection, "Must have a connection here!");
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
 
@@ -1240,6 +1234,10 @@ nsresult
 BluetoothDBusService::StopDiscoveryInternal(const nsAString& aAdapterPath,
                                             BluetoothReplyRunnable* aRunnable)
 {
+  if (!mConnection) {
+    NS_WARNING("Bluetooth service not started yet, no need to stop discovery.");
+    return NS_OK;
+  }
   return SendDiscoveryMessage(aAdapterPath, "StopDiscovery", aRunnable);
 }
  
@@ -1247,6 +1245,10 @@ nsresult
 BluetoothDBusService::StartDiscoveryInternal(const nsAString& aAdapterPath,
                                              BluetoothReplyRunnable* aRunnable)
 {
+  if (!mConnection) {
+    NS_WARNING("Bluetooth service not started yet, cannot start discovery!");
+    return NS_ERROR_FAILURE;
+  }
   return SendDiscoveryMessage(aAdapterPath, "StartDiscovery", aRunnable);
 }
 

@@ -52,11 +52,6 @@ public:
    * otherwise
    */
   virtual nsresult StopInternal();
-
-  /**
-   * @return true if bluetooth daemon is enabled, false otherwise
-   */
-  virtual int IsEnabledInternal();
 };
 
 END_BLUETOOTH_NAMESPACE
