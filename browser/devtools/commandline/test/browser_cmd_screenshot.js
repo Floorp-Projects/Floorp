@@ -121,6 +121,7 @@ function testCapture() {
       fullpage: false,
       clipboard: false,
       node: null,
+      chrome: false,
     },
     outputMatch: new RegExp("^Saved to "),
   });
@@ -137,6 +138,7 @@ function testCapture() {
       fullpage: true,
       clipboard: true,
       node: null,
+      chrome: false,
     },
     outputMatch: new RegExp("^Copied to clipboard.$"),
   });
