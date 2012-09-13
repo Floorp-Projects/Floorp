@@ -245,7 +245,7 @@ DebuggerPane.prototype = {
   _initServer: function DP__initServer() {
     if (!DebuggerServer.initialized) {
       // Always allow connections from nsIPipe transports.
-      DebuggerServer.init(function () { return true; });
+      DebuggerServer.init(function() true);
       DebuggerServer.addBrowserActors();
     }
   },
@@ -494,7 +494,7 @@ ChromeDebuggerProcess.prototype = {
     }
     if (result == 2) {
       DebuggerServer.closeListener();
-      Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
+      Services.prefs.setBoolPref("devtools.debugger.chrome-enabled", false);
     }
     return false;
   },
