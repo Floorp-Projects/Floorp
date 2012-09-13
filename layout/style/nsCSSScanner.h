@@ -187,7 +187,7 @@ protected:
 
   bool ParseAndAppendEscape(nsString& aOutput, bool aInString);
   bool ParseIdent(int32_t aChar, nsCSSToken& aResult);
-  bool ParseAtKeyword(int32_t aChar, nsCSSToken& aResult);
+  bool ParseAtKeyword(nsCSSToken& aResult);
   bool ParseNumber(int32_t aChar, nsCSSToken& aResult);
   bool ParseRef(int32_t aChar, nsCSSToken& aResult);
   bool ParseString(int32_t aChar, nsCSSToken& aResult);

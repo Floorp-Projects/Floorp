@@ -20,10 +20,15 @@
  *      be explicitly specified for this property.
  *
  * To allow these testcases to be re-used in both horizontal and vertical
- * flex containers, we specify "width"/"min-width"/etc. as "_main-size",
- * "_min-main-size", etc.  The test code can map these placeholder names to
- * their corresponding property-names using the maps defined below --
- * gHorizontalPropertyMapping and gVerticalPropertyMapping.
+ * flex containers, we specify "width"/"min-width"/etc. using the aliases
+ * "_main-size", "_min-main-size", etc.  The test code can map these
+ * placeholder names to their corresponding property-names using the maps
+ * defined below -- gRowPropertyMapping, gColumnPropertyMapping, etc.
+ *
+ * If the testcase needs to customize its flex container at all (e.g. by
+ * specifying a custom container-size), it can do so by including a hash
+ * called "container_properties", with propertyName:propertyValue mappings.
+ * (This hash can use aliased property-names like "_main-size" as well.)
  */
 
 // The standard main-size we'll use for our flex container when setting up
@@ -292,6 +297,179 @@ var gFlexboxTestcases =
        {
          "-moz-flex": "99999999999999999999999999999999999",
          "_main-size": [ null,  "50px" ]
+       },
+     ]
+ },
+
+ // And now, some testcases to check that we handle float accumulation error
+ // gracefully.
+
+ // First, a testcase with just a custom-sized huge container, to be sure we'll
+ // be able to handle content on that scale, in the subsequent more-complex
+ // testcases:
+ {
+   container_properties:
+   {
+     "_main-size": "9000000px"
+   },
+   items:
+     [
+       {
+         "-moz-flex": "1",
+         "_main-size": [ null,  "9000000px" ]
+       },
+     ]
+ },
+ // ...and now with two flex items dividing up that container's huge size:
+ {
+   container_properties:
+   {
+     "_main-size": "9000000px"
+   },
+   items:
+     [
+       {
+         "-moz-flex": "2",
+         "_main-size": [ null,  "6000000px" ]
+       },
+       {
+         "-moz-flex": "1",
+         "_main-size": [ null,  "3000000px" ]
+       },
+     ]
+ },
+
+ // OK, now to actually test accumulation error. Below, we have six flex items
+ // splitting up the container's size, with huge differences between flex
+ // weights.  For simplicity, I've set up the weights so that they sum exactly
+ // to the container's size in px. So 1 unit of flex *should* get you 1px.
+ //
+ // NOTE: The expected computed "_main-size" values for the flex items below
+ // appear to add up to more than their container's size, which would suggest
+ // that they overflow their container unnecessarily. But they don't actually
+ // overflow -- this discrepancy is simply because Gecko's code for reporting
+ // computed-sizes rounds to 6 significant figures (in particular, the method
+ // (nsTSubstring_CharT::AppendFloat() does this).  Internally, in app-units,
+ // the child frames' main-sizes add up exactly to the container's main-size,
+ // as you'd hope & expect.
+ {
+   container_properties:
+   {
+     "_main-size": "9000000px"
+   },
+   items:
+     [
+       {
+         "-moz-flex": "3000000",
+         "_main-size": [ null,  "3000000px" ]
+       },
+       {
+         "-moz-flex": "1",
+         "_main-size": [ null,  "1px" ]
+       },
+       {
+         "-moz-flex": "1",
+         "_main-size": [ null,  "1px" ]
+       },
+       {
+         "-moz-flex": "2999999",
+         // NOTE: Expected value is off slightly, from float error when
+         // resolving flexible lengths & when generating computed value string:
+         "_main-size": [ null,  "3000000px" ]
+       },
+       {
+         "-moz-flex": "2999998",
+         // NOTE: Expected value is off slightly, from float error when
+         // resolving flexible lengths & when generating computed value string:
+         "_main-size": [ null,  "3000000px" ]
+       },
+       {
+         "-moz-flex": "1",
+         "_main-size": [ null,  "1px" ]
+       },
+     ]
+ },
+ // Same flex items as previous testcase, but now reordered such that the items
+ // with tiny flex weights are all listed last:
+ {
+   container_properties:
+   {
+     "_main-size": "9000000px"
+   },
+   items:
+     [
+       {
+         "-moz-flex": "3000000",
+         "_main-size": [ null,  "3000000px" ]
+       },
+       {
+         "-moz-flex": "2999999",
+         // NOTE: Expected value is off slightly, from float error when
+         // resolving flexible lengths & when generating computed value string:
+         "_main-size": [ null,  "3000000px" ]
+       },
+       {
+         "-moz-flex": "2999998",
+         // NOTE: Expected value is off slightly, from float error when
+         // resolving flexible lengths & when generating computed value string:
+         "_main-size": [ null,  "3000000px" ]
+       },
+       {
+         "-moz-flex": "1",
+         "_main-size": [ null,  "1px" ]
+       },
+       {
+         "-moz-flex": "1",
+         "_main-size": [ null,  "1px" ]
+       },
+       {
+         "-moz-flex": "1",
+         "_main-size": [ null,  "1px" ]
+       },
+     ]
+ },
+ // Same flex items as previous testcase, but now reordered such that the items
+ // with tiny flex weights are all listed first:
+ {
+   container_properties:
+   {
+     "_main-size": "9000000px"
+   },
+   items:
+     [
+       {
+         "-moz-flex": "1",
+         // NOTE: Expected value is off slightly, from float error when
+         // resolving flexible lengths:
+         "_main-size": [ null,  "0.966667px" ]
+       },
+       {
+         "-moz-flex": "1",
+         // NOTE: Expected value is off slightly, from float error when
+         // resolving flexible lengths:
+         "_main-size": [ null,  "0.983333px" ]
+       },
+       {
+         "-moz-flex": "1",
+         // NOTE: Expected value is off slightly, from float error when
+         // resolving flexible lengths:
+         "_main-size": [ null,  "0.983333px" ]
+       },
+       {
+         "-moz-flex": "3000000",
+         "_main-size": [ null,  "3000000px" ]
+       },
+       {
+         "-moz-flex": "2999999",
+         // NOTE: Expected value is off slightly, from float error when
+         // resolving flexible lengths & when generating computed value string:
+         "_main-size": [ null,  "3000000px" ]
+       },
+       {
+         "-moz-flex": "2999998",
+         // NOTE: Expected value is off slightly, from float error when
+         // resolving flexible lengths & when generating computed value string:
+         "_main-size": [ null,  "3000000px" ]
        },
      ]
  },

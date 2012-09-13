@@ -33,6 +33,24 @@
 #include "base/scoped_ptr.h"
 #include "base/string_piece.h"
 
+#if defined(OS_NETBSD)
+#undef KERN_PROC
+#define KERN_PROC KERN_PROC2
+#define KINFO_PROC struct kinfo_proc2
+#else
+#define KINFO_PROC struct kinfo_proc
+#endif
+
+#if defined(OS_MACOSX)
+#define KP_FLAGS kp_proc.p_flag
+#elif defined(OS_DRAGONFLY)
+#define KP_FLAGS kp_flags
+#elif defined(OS_FREEBSD)
+#define KP_FLAGS ki_flag
+#else
+#define KP_FLAGS p_flag
+#endif
+
 // static
 bool DebugUtil::SpawnDebuggerOnProcess(unsigned /* process_id */) {
   NOTIMPLEMENTED();
@@ -60,12 +78,16 @@ bool DebugUtil::BeingDebugged() {
     CTL_KERN,
     KERN_PROC,
     KERN_PROC_PID,
-    getpid()
+    getpid(),
+#if defined(OS_NETBSD) || defined(OS_OPENBSD)
+    sizeof(KINFO_PROC),
+    1,
+#endif
   };
 
   // Caution: struct kinfo_proc is marked __APPLE_API_UNSTABLE.  The source and
   // binary interfaces may change.
-  struct kinfo_proc info;
+  KINFO_PROC info;
   size_t info_size = sizeof(info);
 
   int sysctl_result = sysctl(mib, arraysize(mib), &info, &info_size, NULL, 0);
@@ -78,15 +100,7 @@ bool DebugUtil::BeingDebugged() {
 
   // This process is being debugged if the P_TRACED flag is set.
   is_set = true;
-#if defined(OS_DRAGONFLY)
-  being_debugged = (info.kp_flags & P_TRACED) != 0;
-#elif defined(OS_FREEBSD)
-  being_debugged = (info.ki_flag & P_TRACED) != 0;
-#elif defined(OS_OPENBSD)
-  being_debugged = (info.p_flag & P_TRACED) != 0;
-#else
-  being_debugged = (info.kp_proc.p_flag & P_TRACED) != 0;
-#endif
+  being_debugged = (info.KP_FLAGS & P_TRACED) != 0;
   return being_debugged;
 }
 

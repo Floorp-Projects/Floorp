@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 789824</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:24px; padding:0; margin:0;
+        }
+	
+div { padding:5px; }
+
+hbox {
+  display:-moz-box;
+  border-top:3px solid;
+  border-bottom:2px solid;
+  padding-bottom:4px;
+  height:auto;
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  background:lime;
+}
+
+.cb {
+  box-sizing:content-box;
+  -moz-box-sizing:content-box;
+  background:pink;
+}
+
+.pb {
+  box-sizing:padding-box;
+  -moz-box-sizing:padding-box;
+  background:cyan;
+}
+
+    </style>
+</head>
+<body>
+
+
+<div><hbox style="height:20px;">border-box 20px</hbox></div>
+<div><hbox style="min-height:50px;">border-box 50px</hbox></div>
+<div><hbox style="max-height:20px;">border-box 20px</hbox></div>
+
+<div><hbox class="cb" style="height:20px;">content-box 20px</hbox></div>
+<div><hbox class="cb" style="min-height:50px;">content-box 50px</hbox></div>
+<div><hbox class="cb" style="max-height:20px;">content-box 20px</hbox></div>
+
+
+<div><hbox class="pb" style="height:20px;">padding-box 20px</hbox></div>
+<div><hbox class="pb" style="min-height:50px;">padding-box 50px</hbox></div>
+<div><hbox class="pb" style="max-height:20px;">padding-box 20px</hbox></div>
+
+
+</body>
+</html>

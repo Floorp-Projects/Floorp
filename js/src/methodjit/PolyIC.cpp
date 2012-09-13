@@ -702,8 +702,12 @@ struct GetPropHelper {
              * object, as lookups may extend beyond the prototype chain (e.g.
              * for ListBase proxies).
              */
-            if (!obj->isNative())
-                return Lookup_Uncacheable;
+            JSObject *obj2 = obj;
+            while (obj2) {
+                if (!obj2->isNative())
+                    return Lookup_Uncacheable;
+                obj2 = obj2->getProto();
+            }
 
 #if JS_HAS_NO_SUCH_METHOD
             /*
