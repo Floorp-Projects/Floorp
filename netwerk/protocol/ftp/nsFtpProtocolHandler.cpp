@@ -211,11 +211,13 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
-    return NewProxiedChannel(url, nullptr, result);
+    return NewProxiedChannel(url, nullptr, 0, nullptr, result);
 }
 
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* proxyInfo,
+                                        uint32_t proxyResolveFlags,
+                                        nsIURI *proxyURI,
                                         nsIChannel* *result)
 {
     NS_ENSURE_ARG_POINTER(uri);
