@@ -403,8 +403,6 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
                          ParseContext *outerpc, StrictMode sms)
   : SharedContext(cx, /* isFunction = */ true, sms),
     objbox(traceListHead, fun, this),
-    siblings(outerpc ? outerpc->functionList : NULL),
-    kids(NULL),
     bindings(),
     bufStart(0),
     bufEnd(0),
@@ -475,8 +473,6 @@ Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, StrictMode sms)
         return NULL;
     }
 
-    if (outerpc)
-        outerpc->functionList = funbox;
     traceListHead = &funbox->objbox;
 
     return funbox;
@@ -1151,7 +1147,6 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 
     FunctionBox *funbox = fn->pn_funbox;
     JS_ASSERT(funbox == funpc->sc->asFunbox());
-    funbox->kids = funpc->functionList;
 
     if (!pc->topStmt || pc->topStmt->type == STMT_BLOCK)
         fn->pn_dflags |= PND_BLOCKCHILD;
@@ -4769,12 +4764,11 @@ class CompExprTransplanter {
     Parser          *parser;
     bool            genexp;
     unsigned        adjust;
-    unsigned        funcLevel;
     HashSet<Definition *> visitedImplicitArguments;
 
   public:
     CompExprTransplanter(ParseNode *pn, Parser *parser, bool ge, unsigned adj)
-      : root(pn), parser(parser), genexp(ge), adjust(adj), funcLevel(0),
+      : root(pn), parser(parser), genexp(ge), adjust(adj),
         visitedImplicitArguments(parser->context)
     {}
 
@@ -4953,33 +4947,9 @@ CompExprTransplanter::transplant(ParseNode *pn)
         break;
 
       case PN_FUNC:
-      {
-        /*
-         * Only the first level of transplant recursion through functions needs
-         * to reparent the funbox, since all descendant functions are correctly
-         * linked under the top-most funbox.
-         */
-        FunctionBox *funbox = pn->pn_funbox;
-
-        if (++funcLevel == 1 && genexp) {
-            FunctionBox *parent = pc->sc->asFunbox();
-
-            FunctionBox **funboxp = &pc->parent->functionList;
-            while (*funboxp != funbox)
-                funboxp = &(*funboxp)->siblings;
-            *funboxp = funbox->siblings;
-
-            funbox->siblings = parent->kids;
-            parent->kids = funbox;
-        }
-        /* FALL THROUGH */
-      }
-
       case PN_NAME:
         if (!transplant(pn->maybeExpr()))
             return false;
-        if (pn->isArity(PN_FUNC))
-            --funcLevel;
 
         if (pn->isDefn()) {
             if (genexp && !BumpStaticLevel(pn, pc))
