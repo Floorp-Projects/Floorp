@@ -1795,16 +1795,6 @@ Parser::functionExpr()
     return functionDef(name, Normal, Expression);
 }
 
-void
-FunctionBox::recursivelySetStrictMode(StrictMode strictness)
-{
-    if (strictModeState == StrictMode::UNKNOWN) {
-        strictModeState = strictness;
-        for (FunctionBox *kid = kids; kid; kid = kid->siblings)
-            kid->recursivelySetStrictMode(strictness);
-    }
-}
-
 /*
  * Indicate that the current scope can't switch to strict mode with a body-level
  * "use strict" directive anymore. Return false on error.
@@ -1818,10 +1808,12 @@ Parser::setStrictMode(bool strictMode)
         if (pc->sc->isFunction) {
             JS_ASSERT(pc->parent->sc->strictModeState == StrictMode::STRICT);
         } else {
-            JS_ASSERT(StrictModeFromContext(context) == StrictMode::STRICT || pc->staticLevel);
+            JS_ASSERT_IF(pc->staticLevel == 0,
+                         StrictModeFromContext(context) == StrictMode::STRICT);
         }
         return true;
     }
+
     if (strictMode) {
         if (pc->queuedStrictModeError) {
             // There was a strict mode error in this scope before we knew it was
@@ -1831,24 +1823,24 @@ Parser::setStrictMode(bool strictMode)
             return false;
         }
         pc->sc->strictModeState = StrictMode::STRICT;
-    } else if (!pc->parent || pc->parent->sc->strictModeState == StrictMode::NOTSTRICT) {
-        // This scope will not be strict.
-        pc->sc->strictModeState = StrictMode::NOTSTRICT;
-        if (pc->queuedStrictModeError && context->hasStrictOption() &&
-            pc->queuedStrictModeError->report.errorNumber != JSMSG_STRICT_CODE_WITH) {
-            // Convert queued strict mode error to a warning.
-            pc->queuedStrictModeError->report.flags |= JSREPORT_WARNING;
-            pc->queuedStrictModeError->throwError();
+    } else {
+        if (!pc->parent || pc->parent->sc->strictModeState == StrictMode::NOTSTRICT) {
+            // This scope lacks a strict directive, and its parent (if it has
+            // one) definitely isn't strict, so it definitely won't be strict.
+            pc->sc->strictModeState = StrictMode::NOTSTRICT;
+            if (pc->queuedStrictModeError && context->hasStrictOption() &&
+                pc->queuedStrictModeError->report.errorNumber != JSMSG_STRICT_CODE_WITH) {
+                // Convert queued strict mode error to a warning.
+                pc->queuedStrictModeError->report.flags |= JSREPORT_WARNING;
+                pc->queuedStrictModeError->throwError();
+            }
+        } else {
+            // This scope (which has a parent and so must be a function) lacks
+            // a strict directive, but it's not yet clear if its parent is
+            // strict.  (This can only happen for functions in default
+            // arguments.)  Leave it in the UNKNOWN state for now.
+            JS_ASSERT(pc->sc->isFunction);
         }
-    }
-    JS_ASSERT_IF(!pc->sc->isFunction, !pc->functionList);
-    if (pc->sc->strictModeState != StrictMode::UNKNOWN && pc->sc->isFunction) {
-        // We changed the strict mode state. Retroactively recursively set
-        // strict mode status on all the function children we've seen so far
-        // children (That is, functions in default expressions).
-        pc->sc->asFunbox()->strictModeState = pc->sc->strictModeState;
-        for (FunctionBox *kid = pc->functionList; kid; kid = kid->siblings)
-            kid->recursivelySetStrictMode(pc->sc->strictModeState);
     }
     return true;
 }
