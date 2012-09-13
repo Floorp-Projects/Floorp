@@ -1007,28 +1007,38 @@ var WifiManager = (function() {
     if (enabled) {
       getProperty("wifi.interface", "tiwlan0", function (ifname) {
         if (!ifname) {
-          callback(-1, null);
+          callback(enabled);
           return;
         }
         manager.ifname = ifname;
         loadDriver(function (status) {
           if (status < 0) {
-            callback(status, null);
+            callback(enabled);
             return;
           }
           WifiNetworkInterface.name = manager.ifname;
           manager.state = "WIFITETHERING";
-          callback(0, WifiNetworkInterface);
+          // Turning on wifi tethering.
+          gNetworkManager.setWifiTethering(enabled, WifiNetworkInterface, function(result) {
+            // Pop out current request.
+            callback(enabled);
+            // Should we fire a dom event if we fail to set wifi tethering  ?
+            debug("Enable Wifi tethering result: " + (result ? result : "successfully"));
+          });
         });
       });
     } else {
       manager.state = "UNINITIALIZED";
-      unloadDriver(function(status) {
-        if (status < 0) {
-          callback(status, null);
-          return;
-        }
-        callback(0, null);
+      gNetworkManager.setWifiTethering(enabled, WifiNetworkInterface, function(result) {
+        // Should we fire a dom event if we fail to set wifi tethering  ?
+        debug("Disable Wifi tethering result: " + (result ? result : "successfully"));
+        // Unload wifi driver even if we fail to control wifi tethering.
+        unloadDriver(function(status) {
+          if (status < 0) {
+            debug("Fail to unload wifi driver");
+          }
+          callback(enabled);
+        });
       });
     }
   }
@@ -2083,7 +2093,7 @@ WifiWorker.prototype = {
       let self = this;
       timer.initWithCallback(function(timer) {
         if ("callback" in self._stateRequests[0]) {
-          self._stateRequests[0].callback.call(self);
+          self._stateRequests[0].callback.call(self, self._stateRequests[0].enabled);
         } else {
           WifiManager.setWifiEnabled(self._stateRequests[0].enabled,
                                      self._setWifiEnabledCallback.bind(this));
@@ -2123,7 +2133,7 @@ WifiWorker.prototype = {
     this._stateRequests.push(msg);
     if (this._stateRequests.length === 1) {
       if ("callback" in this._stateRequests[0]) {
-        this._stateRequests[0].callback.call(this);
+        this._stateRequests[0].callback.call(this, msg.enabled);
       } else {
         WifiManager.setWifiEnabled(msg.enabled, this._setWifiEnabledCallback.bind(this));
       }
@@ -2301,44 +2311,62 @@ WifiWorker.prototype = {
     this.setWifiEnabled({enabled: false});
   },
 
-  setWifiTethering: function(enabled, callback) {
-    debug("Requesting Wifi Tethering from NetworkManager " + enabled);
-    // Wifi is disabled switch to Ap mode immediately.
-    if (!WifiManager.enabled) {
-      this.setWifiApEnabled(enabled, callback.wifiTetheringEnabledChange);
+  nextRequest: function nextRequest(state) {
+    if (this._stateRequests.length <= 0 ||
+        !("callback" in this._stateRequests[0])) {
       return;
     }
-    // Wifi is enabled, disabled it before switch to Ap mode.
+
+    do {
+      this._stateRequests.shift();
+    } while (this._stateRequests.length &&
+             this._stateRequests[0].enabled === state);
+
+    // Serve the pending requests.
+    if (this._stateRequests.length > 0) {
+      if ("callback" in this._stateRequests[0]) {
+        this._stateRequests[0].callback.call(this,
+                                             this._stateRequests[0].enabled);
+      } else {
+        WifiManager.setWifiEnabled(this._stateRequests[0].enabled,
+                                   this._setWifiEnabledCallback.bind(this));
+      }
+    }
+  },
+
+  handleWifiEnabled: function(enabled) {
+    if (WifiManager.enabled === enabled) {
+      return;
+    }
+    // Disable wifi tethering before enabling wifi.
+    if (gNetworkManager.wifiTetheringEnabled) {
+      this.setWifiEnabledInternal(false, function(data) {
+        this.setWifiApEnabled(data, this.nextRequest.bind(this));
+      }.bind(this));
+    }
+    this.setWifiEnabled({enabled: enabled});
+  },
+
+  handleWifiTetheringEnabled: function(enabled) {
+    if (gNetworkManager.wifiTetheringEnabled === enabled) {
+      return;
+    }
+
+    // Wifi is disabled
+    if (!WifiManager.enabled) {
+      this.setWifiEnabledInternal(enabled, function(data) {
+        this.setWifiApEnabled(data, this.nextRequest.bind(this));
+      }.bind(this));
+      return;
+    }
+
+    // Wifi is enabled, turn off it before switching to Ap mode.
     if (enabled) {
-      // Disabled the wifi before switch to AP mode.
-      this.setWifiEnabledInternal(false, (function () {
-        WifiManager.setWifiEnabled(false, (function (status) {
-          if (status === 0) {
-            this.setWifiApEnabled(true, (function (status, network) {
-              callback.wifiTetheringEnabledChange(status, network);
-              // We have finished everything we would like to do for tethering.
-              // Pop out this request.
-              if (this._stateRequests.length > 0 &&
-                  ("callback" in this._stateRequests[0])) {
-                // Pop out the request.
-                this._stateRequests.shift();
-                // Serve the pending requests.
-                if (this._stateRequests.length > 0) {
-                  WifiManager.setWifiEnabled(this._stateRequests[0].enabled,
-                                             this._setWifiEnabledCallback.bind(this));
-                }
-              }
-            }).bind(this));
-          } else {
-            if (callback) {
-              callback.wifiTetheringEnabledChange(status, null);
-            }
-          }
-        }).bind(this));
+      // Turn off wifi first.
+      this.setWifiEnabled({enabled: false});
+      this.setWifiEnabledInternal(enabled, (function (data) {
+        this.setWifiApEnabled(data, this.nextRequest.bind(this));
       }).bind(this));
-    } else {
-      // This should not be happened. Return error to NetworkManager.
-      callback.wifiTetheringEnabledChange(1, null);
     }
   },
 
@@ -2360,16 +2388,29 @@ WifiWorker.prototype = {
     // so we need to carefully check if we have the one we're interested in.
     // The string we're interested in will be a JSON string that looks like:
     // {"key":"wifi.enabled","value":"true"}.
-    if (topic !== kMozSettingsChangedObserverTopic)
+    if (topic !== kMozSettingsChangedObserverTopic) {
       return;
+    }
+
     let setting = JSON.parse(data);
-    if (setting.key !== "wifi.enabled")
+    if (setting.key !== "wifi.enabled" &&
+        setting.key !== "tethering.wifi.enabled") {
       return;
+    }
     // To avoid WifiWorker setting the wifi again, don't need to deal with
     // the "mozsettings-changed" event fired from internal setting.
-    if (setting.message && setting.message === "fromInternalSetting")
+    if (setting.message && setting.message === "fromInternalSetting") {
       return;
-    this.setWifiEnabled({enabled: setting.value});
+    }
+
+    switch (setting.key) {
+      case "wifi.enabled":
+        this.handleWifiEnabled(setting.value)
+        break;
+      case "tethering.wifi.enabled":
+        this.handleWifiTetheringEnabled(setting.value)
+        break;
+    }
   }
 };
 
