@@ -5,35 +5,16 @@
 #include "nsISupports.idl"
 #include "nsIDOMDOMRequest.idl"
 #include "nsIDOMEvent.idl"
-#include "nsINetworkManager.idl"
 
 interface nsIVariant;
 
-[scriptable, function, uuid(c675c7c3-5261-480a-98f3-69934c9ab7c6)]
-interface nsIWifiTetheringCallback : nsISupports
-{
-  /**
-   * Callback function used to report status to NetworkManager.
-   * result: 0: success, others: fail.
-   * networkInterface: report wifi network interface's name.
-   */
-  void wifiTetheringEnabledChange(in jsval result,
-                                  in nsINetworkInterface networkInterface);
-};
-
-[scriptable, uuid(65649c30-d312-11e1-9b23-0800200c9a66)]
+[scriptable, uuid(335ff8a0-fb18-11e1-a21f-0800200c9a66)]
 interface nsIWifi : nsISupports
 {
     /**
      * Shutdown the wifi system.
      */
     void shutdown();
-    /**
-     * Request to enable/disable Wifi Tethering.
-     * enabled: true or false.
-     * callback: report status to NetworkManager.
-     */
-    void setWifiTethering(in boolean enabled, in nsIWifiTetheringCallback callback);
 };
 
 [scriptable, uuid(e3a967e0-015e-11e2-a21f-0800200c9a66)]
