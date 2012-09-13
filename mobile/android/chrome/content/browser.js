@@ -6453,7 +6453,7 @@ var WebappsUI = {
       let jni = new JNI();
       let cls = jni.findClass("org.mozilla.gecko.GeckoAppShell");
       let method = jni.getStaticMethodID(cls, "getPreferredIconSize", "()I");
-      iconSize = jni.callStaticIntMethod(cls, method, null);
+      iconSize = jni.callStaticIntMethod(cls, method);
       jni.close();
     } catch(ex) {
       console.log(ex);
