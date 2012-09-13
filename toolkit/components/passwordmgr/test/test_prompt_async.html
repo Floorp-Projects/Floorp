@@ -69,7 +69,7 @@
 
         var pwmgr, logins = [];
 
-        function initLogins(pi) {
+        function initLogins() {
             pwmgr = SpecialPowers.wrap(Components)
                                  .classes["@mozilla.org/login-manager;1"]
                                  .getService(Ci.nsILoginManager);
@@ -83,9 +83,18 @@
                 logins.push(login);
             }
 
-            var mozproxy = "moz-proxy://" +
-                           SpecialPowers.wrap(pi).host + ":" +
-	                   SpecialPowers.wrap(pi).port;
+            //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
+            var ios = SpecialPowers.wrap(Components)
+                                   .classes["@mozilla.org/network/io-service;1"]
+                                   .getService(Components.interfaces.nsIIOService);
+
+            var pps = SpecialPowers.wrap(Components)
+                                   .classes["@mozilla.org/network/protocol-proxy-service;1"]
+                                   .getService();
+
+            var uri = ios.newURI("http://example.com", null, null);
+            var pi = pps.resolve(uri, 0);
+            var mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
 
             addLogin(mozproxy, "proxy_realm",
                      "proxy_user", "proxy_pass");
@@ -125,34 +134,6 @@
             SimpleTest.finish();
         }
 
-	var resolveCallback = {
-	QueryInterface : function (iid) {
-	const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
-
-        if (!interfaces.some( function(v) { return iid.equals(v) } ))
-	  throw Components.results.NS_ERROR_NO_INTERFACE;
-	  return this;
-	},
-
-	onProxyAvailable : function (req, uri, pi, status) {
-          initLogins(pi);
-          doTest(testNum);
-	}
-	};
-
-	function startup() {
-            //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-            var ios = SpecialPowers.wrap(Components)
-                                   .classes["@mozilla.org/network/io-service;1"]
-                                   .getService(Components.interfaces.nsIIOService);
-
-            var pps = SpecialPowers.wrap(Components)
-                                   .classes["@mozilla.org/network/protocol-proxy-service;1"]
-                                   .getService();
-
-            var uri = ios.newURI("http://example.com", null, null);
-            pps.asyncResolve(uri, 0, resolveCallback);
-	}
 
         // --------------- Test loop spin ----------------
         var testNum = 1;
@@ -167,7 +148,8 @@
             iframe2a.onload = onFrameLoad;
             iframe2b.onload = onFrameLoad;
 
-	    startup();
+            initLogins();
+            doTest(testNum);
         }
 
         var expectedLoads;
