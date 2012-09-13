@@ -41,6 +41,14 @@ function runTests()
   ok(!notificationBox.currentNotification,
      "there is no notification in content context");
 
+  let dsp = sp.contentSandbox.__SCRATCHPAD__;
+
+  ok(sp.contentSandbox.__SCRATCHPAD__,
+      "there is a variable named __SCRATCHPAD__");
+
+  ok(sp.contentSandbox.__SCRATCHPAD__.editor,
+      "scratchpad is actually an instance of Scratchpad");
+
   sp.setText("window.foobarBug636725 = 'aloha';");
 
   ok(!content.wrappedJSObject.foobarBug636725,
@@ -61,6 +69,12 @@ function runTests()
 
   isnot(contentMenu.getAttribute("checked"), "true",
      "content menuitem is not checked");
+
+  ok(sp.chromeSandbox.__SCRATCHPAD__,
+    "there is a variable named __SCRATCHPAD__");
+
+  ok(sp.chromeSandbox.__SCRATCHPAD__.editor,
+      "scratchpad is actually an instance of Scratchpad");
 
   ok(notificationBox.currentNotification,
      "there is a notification in browser context");

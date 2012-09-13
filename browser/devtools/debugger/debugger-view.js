@@ -33,12 +33,58 @@ let DebuggerView = {
   cacheView: function DV_cacheView() {
     this._onTogglePanesButtonPressed = this._onTogglePanesButtonPressed.bind(this);
 
+    // Panes and view containers
     this._togglePanesButton = document.getElementById("toggle-panes");
     this._stackframesAndBreakpoints = document.getElementById("stackframes+breakpoints");
     this._stackframes = document.getElementById("stackframes");
     this._breakpoints = document.getElementById("breakpoints");
     this._variables = document.getElementById("variables");
+    this._scripts = document.getElementById("scripts");
     this._globalSearch = document.getElementById("globalsearch");
+    this._globalSearchSplitter = document.getElementById("globalsearch-splitter");
+
+    // Keys
+    this._fileSearchKey = document.getElementById("fileSearchKey");
+    this._lineSearchKey = document.getElementById("lineSearchKey");
+    this._tokenSearchKey = document.getElementById("tokenSearchKey");
+    this._globalSearchKey = document.getElementById("globalSearchKey");
+    this._resumeKey = document.getElementById("resumeKey");
+    this._stepOverKey = document.getElementById("stepOverKey");
+    this._stepInKey = document.getElementById("stepInKey");
+    this._stepOutKey = document.getElementById("stepOutKey");
+
+    // Buttons, textboxes etc.
+    this._resumeButton = document.getElementById("resume");
+    this._stepOverButton = document.getElementById("step-over");
+    this._stepInButton = document.getElementById("step-in");
+    this._stepOutButton = document.getElementById("step-out");
+    this._scriptsSearchbox = document.getElementById("scripts-search");
+    this._globalOperatorButton = document.getElementById("global-operator");
+    this._tokenOperatorButton = document.getElementById("token-operator");
+    this._lineOperatorButton = document.getElementById("line-operator");
+  },
+
+  /**
+   * Applies the correct key labels and tooltips across global view elements.
+   */
+  initializeKeys: function DV_initializeKeys() {
+    this._resumeButton.setAttribute("tooltiptext",
+      L10N.getFormatStr("pauseButtonTooltip", [LayoutHelpers.prettyKey(this._resumeKey)]));
+    this._stepOverButton.setAttribute("tooltiptext",
+      L10N.getFormatStr("stepOverTooltip", [LayoutHelpers.prettyKey(this._stepOverKey)]));
+    this._stepInButton.setAttribute("tooltiptext",
+      L10N.getFormatStr("stepInTooltip", [LayoutHelpers.prettyKey(this._stepInKey)]));
+    this._stepOutButton.setAttribute("tooltiptext",
+      L10N.getFormatStr("stepOutTooltip", [LayoutHelpers.prettyKey(this._stepOutKey)]));
+
+    this._scriptsSearchbox.setAttribute("placeholder",
+      L10N.getFormatStr("emptyFilterText", [LayoutHelpers.prettyKey(this._fileSearchKey)]));
+    this._globalOperatorButton.setAttribute("value",
+      L10N.getFormatStr("searchPanelGlobal", [LayoutHelpers.prettyKey(this._globalSearchKey)]));
+    this._tokenOperatorButton.setAttribute("value",
+      L10N.getFormatStr("searchPanelToken", [LayoutHelpers.prettyKey(this._tokenSearchKey)]));
+    this._lineOperatorButton.setAttribute("value",
+      L10N.getFormatStr("searchPanelLine", [LayoutHelpers.prettyKey(this._lineSearchKey)]));
   },
 
   /**
@@ -92,6 +138,11 @@ let DebuggerView = {
     this._stackframesAndBreakpoints.parentNode.removeChild(this._stackframesAndBreakpoints);
     this._variables.parentNode.removeChild(this._variables);
     this._globalSearch.parentNode.removeChild(this._globalSearch);
+
+    // Delete all the cached global view elements.
+    for (let i in this) {
+      if (!(this[i] instanceof Function)) delete this[i];
+    }
   },
 
   /**
@@ -145,10 +196,12 @@ let DebuggerView = {
     if (aVisibleFlag) {
       this._stackframesAndBreakpoints.style.marginLeft = "0";
       this._togglePanesButton.removeAttribute("stackframesAndBreakpointsHidden");
+      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
     } else {
       let margin = parseInt(this._stackframesAndBreakpoints.getAttribute("width")) + 1;
       this._stackframesAndBreakpoints.style.marginLeft = -margin + "px";
       this._togglePanesButton.setAttribute("stackframesAndBreakpointsHidden", "true");
+      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
     }
     Prefs.stackframesPaneVisible = aVisibleFlag;
   },
@@ -168,10 +221,12 @@ let DebuggerView = {
     if (aVisibleFlag) {
       this._variables.style.marginRight = "0";
       this._togglePanesButton.removeAttribute("variablesHidden");
+      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
     } else {
       let margin = parseInt(this._variables.getAttribute("width")) + 1;
       this._variables.style.marginRight = -margin + "px";
       this._togglePanesButton.setAttribute("variablesHidden", "true");
+      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
     }
     Prefs.variablesPaneVisible = aVisibleFlag;
   },
@@ -184,7 +239,25 @@ let DebuggerView = {
   _stackframes: null,
   _breakpoints: null,
   _variables: null,
-  _globalSearch: null
+  _scripts: null,
+  _globalSearch: null,
+  _globalSearchSplitter: null,
+  _fileSearchKey: null,
+  _lineSearchKey: null,
+  _tokenSearchKey: null,
+  _globalSearchKey: null,
+  _resumeKey: null,
+  _stepOverKey: null,
+  _stepInKey: null,
+  _stepOutKey: null,
+  _resumeButton: null,
+  _stepOverButton: null,
+  _stepInButton: null,
+  _stepOutButton: null,
+  _scriptsSearchbox: null,
+  _globalOperatorButton: null,
+  _tokenOperatorButton: null,
+  _lineOperatorButton: null
 };
 
 /**
@@ -245,6 +318,7 @@ function GlobalSearchView() {
   this._onLineClick = this._onLineClick.bind(this);
   this._onMatchClick = this._onMatchClick.bind(this);
   this._onResultsScroll = this._onResultsScroll.bind(this);
+  this._onFocusLost = this._onFocusLost.bind(this);
   this._startSearch = this._startSearch.bind(this);
 }
 
@@ -258,6 +332,12 @@ GlobalSearchView.prototype = {
     this._pane.hidden = value;
     this._splitter.hidden = value;
   },
+
+  /**
+   * True if the search results container is hidden.
+   * @return boolean
+   */
+  get hidden() this._pane.hidden,
 
   /**
    * Removes all elements from the search results container, leaving it empty.
@@ -676,6 +756,20 @@ GlobalSearchView.prototype = {
   },
 
   /**
+   * Focuses the previously found match in the source editor.
+   */
+  focusPrevMatch: function DVGS_focusPrevMatch() {
+    let matches = this._pane.querySelectorAll(".string[match=true]");
+    if (!matches.length) {
+      return;
+    }
+    if (--this._currentlyFocusedMatch < 0) {
+      this._currentlyFocusedMatch = matches.length - 1;
+    }
+    this._onMatchClick({ target: matches[this._currentlyFocusedMatch] });
+  },
+
+  /**
    * Called when a line in the search results container is clicked.
    */
   _onLineClick: function DVGS__onLineClick(e) {
@@ -706,6 +800,13 @@ GlobalSearchView.prototype = {
     let editor = DebuggerView.editor;
     let offset = editor.getCaretOffset();
     editor.setSelection(offset + range.start, offset + range.start + range.length);
+  },
+
+  /**
+   * Listener handling the searchbox blur event.
+   */
+  _onFocusLost: function DVGS__onFocusLost(e) {
+    this.hideAndEmpty();
   },
 
   /**
@@ -790,15 +891,18 @@ GlobalSearchView.prototype = {
    */
   _pane: null,
   _splitter: null,
+  _searchbox: null,
 
   /**
    * Initialization function, called when the debugger is initialized.
    */
-  initialize: function DVS_initialize() {
-    this._pane = document.getElementById("globalsearch");
-    this._splitter = document.getElementById("globalsearch-splitter");
+  initialize: function DVGS_initialize() {
+    this._pane = DebuggerView._globalSearch;
+    this._splitter = DebuggerView._globalSearchSplitter;
+    this._searchbox = DebuggerView._scriptsSearchbox;
 
     this._pane.addEventListener("scroll", this._onResultsScroll, false);
+    this._searchbox.addEventListener("blur", this._onFocusLost, false);
   },
 
   /**
@@ -806,10 +910,12 @@ GlobalSearchView.prototype = {
    */
   destroy: function DVS_destroy() {
     this._pane.removeEventListener("scroll", this._onResultsScroll, false);
+    this._searchbox.removeEventListener("blur", this._onFocusLost, false);
 
     this.hideAndEmpty();
     this._pane = null;
     this._splitter = null;
+    this._searchbox = null;
     this._scriptSources = null;
   }
 };
@@ -819,8 +925,10 @@ GlobalSearchView.prototype = {
  */
 function ScriptsView() {
   this._onScriptsChange = this._onScriptsChange.bind(this);
+  this._onScriptsSearchClick = this._onScriptsSearchClick.bind(this);
+  this._onScriptsSearchBlur = this._onScriptsSearchBlur.bind(this);
   this._onScriptsSearch = this._onScriptsSearch.bind(this);
-  this._onScriptsKeyUp = this._onScriptsKeyUp.bind(this);
+  this._onScriptsKeyPress = this._onScriptsKeyPress.bind(this);
 }
 
 ScriptsView.prototype = {
@@ -1168,6 +1276,10 @@ ScriptsView.prototype = {
     DebuggerController.SourceScripts.showScript(selectedItem.getUserData("sourceScript"));
   },
 
+  _prevSearchedFile: "",
+  _prevSearchedLine: 0,
+  _prevSearchedToken: "",
+
   /**
    * Performs a file search if necessary.
    *
@@ -1255,6 +1367,20 @@ ScriptsView.prototype = {
   },
 
   /**
+   * The focus listener for the scripts search box.
+   */
+  _onScriptsSearchClick: function DVS__onScriptsSearchClick() {
+    this._searchboxPanel.openPopup(this._searchbox);
+  },
+
+  /**
+   * The blur listener for the scripts search box.
+   */
+  _onScriptsSearchBlur: function DVS__onScriptsSearchBlur() {
+    this._searchboxPanel.hidePopup();
+  },
+
+  /**
    * The search listener for the scripts search box.
    */
   _onScriptsSearch: function DVS__onScriptsSearch() {
@@ -1262,6 +1388,8 @@ ScriptsView.prototype = {
     if (!this._scripts.itemCount) {
       return;
     }
+    this._searchboxPanel.hidePopup();
+
     let [file, line, token, isGlobal] = this.searchboxInfo;
 
     // If this is a global script search, schedule a search in all the sources,
@@ -1277,28 +1405,45 @@ ScriptsView.prototype = {
   },
 
   /**
-   * The keyup listener for the scripts search box.
+   * The keypress listener for the scripts search box.
    */
-  _onScriptsKeyUp: function DVS__onScriptsKeyUp(e) {
+  _onScriptsKeyPress: function DVS__onScriptsKeyPress(e) {
     if (e.keyCode === e.DOM_VK_ESCAPE) {
       DebuggerView.editor.focus();
       return;
     }
+    var action;
 
-    if (e.keyCode === e.DOM_VK_RETURN || e.keyCode === e.DOM_VK_ENTER) {
-      let token = this.searchboxInfo[2];
-      let isGlobal = this.searchboxInfo[3];
+    if (e.keyCode === e.DOM_VK_DOWN ||
+        e.keyCode === e.DOM_VK_RETURN ||
+        e.keyCode === e.DOM_VK_ENTER) {
+      action = 1;
+    } else if (e.keyCode === e.DOM_VK_UP) {
+      action = 2;
+    }
 
-      if (!token.length) {
+    if (action) {
+      let [file, line, token, isGlobal] = this.searchboxInfo;
+
+      if (token.length) {
+        e.preventDefault();
+        e.stopPropagation();
+      } else {
         return;
       }
       if (isGlobal) {
-        DebuggerView.GlobalSearch.focusNextMatch();
+        if (DebuggerView.GlobalSearch.hidden) {
+          DebuggerView.GlobalSearch.scheduleSearch();
+        } else {
+          DebuggerView.GlobalSearch[action === 1
+            ? "focusNextMatch"
+            : "focusPrevMatch"]();
+        }
         return;
       }
 
       let editor = DebuggerView.editor;
-      let offset = editor.findNext(true);
+      let offset = editor[action === 1 ? "findNext" : "findPrevious"](true);
       if (offset > -1) {
         editor.setSelection(offset, offset + token.length)
       }
@@ -1315,10 +1460,19 @@ ScriptsView.prototype = {
   },
 
   /**
+   * Called when the scripts path filter key sequence was pressed.
+   */
+  _onFileSearch: function DVS__onFileSearch() {
+    this._onSearch();
+    this._searchboxPanel.openPopup(this._searchbox);
+  },
+
+  /**
    * Called when the scripts token filter key sequence was pressed.
    */
   _onLineSearch: function DVS__onLineSearch() {
     this._onSearch(SEARCH_LINE_FLAG);
+    this._searchboxPanel.hidePopup();
   },
 
   /**
@@ -1326,6 +1480,7 @@ ScriptsView.prototype = {
    */
   _onTokenSearch: function DVS__onTokenSearch() {
     this._onSearch(SEARCH_TOKEN_FLAG);
+    this._searchboxPanel.hidePopup();
   },
 
   /**
@@ -1333,6 +1488,7 @@ ScriptsView.prototype = {
    */
   _onGlobalSearch: function DVS__onGlobalSearch() {
     this._onSearch(SEARCH_GLOBAL_FLAG);
+    this._searchboxPanel.hidePopup();
   },
 
   /**
@@ -1340,17 +1496,22 @@ ScriptsView.prototype = {
    */
   _scripts: null,
   _searchbox: null,
+  _searchboxPanel: null,
 
   /**
    * Initialization function, called when the debugger is initialized.
    */
   initialize: function DVS_initialize() {
-    this._scripts = document.getElementById("scripts");
+    this._scripts = DebuggerView._scripts;
     this._searchbox = document.getElementById("scripts-search");
+    this._searchboxPanel = document.getElementById("scripts-search-panel");
+
     this._scripts.addEventListener("select", this._onScriptsChange, false);
+    this._searchbox.addEventListener("click", this._onScriptsSearchClick, false);
+    this._searchbox.addEventListener("blur", this._onScriptsSearchBlur, false);
     this._searchbox.addEventListener("select", this._onScriptsSearch, false);
     this._searchbox.addEventListener("input", this._onScriptsSearch, false);
-    this._searchbox.addEventListener("keyup", this._onScriptsKeyUp, false);
+    this._searchbox.addEventListener("keypress", this._onScriptsKeyPress, false);
     this.commitScripts();
   },
 
@@ -1359,13 +1520,16 @@ ScriptsView.prototype = {
    */
   destroy: function DVS_destroy() {
     this._scripts.removeEventListener("select", this._onScriptsChange, false);
+    this._searchbox.removeEventListener("click", this._onScriptsSearchClick, false);
+    this._searchbox.removeEventListener("blur", this._onScriptsSearchBlur, false);
     this._searchbox.removeEventListener("select", this._onScriptsSearch, false);
     this._searchbox.removeEventListener("input", this._onScriptsSearch, false);
-    this._searchbox.removeEventListener("keyup", this._onScriptsKeyUp, false);
+    this._searchbox.removeEventListener("keypress", this._onScriptsKeyPress, false);
 
     this.empty();
     this._scripts = null;
     this._searchbox = null;
+    this._searchboxPanel = null;
   }
 };
 
@@ -1384,26 +1548,27 @@ function StackFramesView() {
 
 StackFramesView.prototype = {
 
-  /**
-   * Sets the current frames state based on the debugger active thread state.
-   *
-   * @param string aState
-   *        Either "paused" or "attached".
-   */
-   updateState: function DVF_updateState(aState) {
-     let resume = document.getElementById("resume");
+ /**
+  * Sets the current frames state based on the debugger active thread state.
+  *
+  * @param string aState
+  *        Either "paused" or "attached".
+  */
+  updateState: function DVF_updateState(aState) {
+    let resume = DebuggerView._resumeButton;
+    let resumeKey = LayoutHelpers.prettyKey(DebuggerView._resumeKey);
 
-     // If we're paused, show a pause label and a resume label on the button.
-     if (aState == "paused") {
-       resume.setAttribute("tooltiptext", L10N.getStr("resumeTooltip"));
-       resume.setAttribute("checked", true);
-     }
-     // If we're attached, do the opposite.
-     else if (aState == "attached") {
-       resume.setAttribute("tooltiptext", L10N.getStr("pauseTooltip"));
-       resume.removeAttribute("checked");
-     }
-   },
+    // If we're paused, show a pause label and a resume label on the button.
+    if (aState == "paused") {
+      resume.setAttribute("tooltiptext", L10N.getFormatStr("resumeButtonTooltip", [resumeKey]));
+      resume.setAttribute("checked", true);
+    }
+    // If we're attached, do the opposite.
+    else if (aState == "attached") {
+      resume.setAttribute("tooltiptext", L10N.getFormatStr("pauseButtonTooltip", [resumeKey]));
+      resume.removeAttribute("checked");
+    }
+  },
 
   /**
    * Removes all elements from the stackframes container, leaving it empty.
@@ -1638,11 +1803,11 @@ StackFramesView.prototype = {
   initialize: function DVF_initialize() {
     let close = document.getElementById("close");
     let pauseOnExceptions = document.getElementById("pause-exceptions");
-    let resume = document.getElementById("resume");
-    let stepOver = document.getElementById("step-over");
-    let stepIn = document.getElementById("step-in");
-    let stepOut = document.getElementById("step-out");
-    let frames = document.getElementById("stackframes");
+    let resume = DebuggerView._resumeButton;
+    let stepOver = DebuggerView._stepOverButton;
+    let stepIn = DebuggerView._stepInButton;
+    let stepOut = DebuggerView._stepOutButton;
+    let frames = DebuggerView._stackframes;
 
     close.addEventListener("click", this._onCloseButtonClick, false);
     pauseOnExceptions.checked = DebuggerController.StackFrames.pauseOnExceptions;
@@ -1665,11 +1830,11 @@ StackFramesView.prototype = {
   destroy: function DVF_destroy() {
     let close = document.getElementById("close");
     let pauseOnExceptions = document.getElementById("pause-exceptions");
-    let resume = document.getElementById("resume");
-    let stepOver = document.getElementById("step-over");
-    let stepIn = document.getElementById("step-in");
-    let stepOut = document.getElementById("step-out");
-    let frames = this._frames;
+    let resume = DebuggerView._resumeButton;
+    let stepOver = DebuggerView._stepOverButton;
+    let stepIn = DebuggerView._stepInButton;
+    let stepOut = DebuggerView._stepOutButton;
+    let frames = DebuggerView._stackframes;
 
     close.removeEventListener("click", this._onCloseButtonClick, false);
     pauseOnExceptions.removeEventListener("click", this._onPauseExceptionsClick, false);
@@ -2208,7 +2373,7 @@ BreakpointsView.prototype = {
    * Initialization function, called when the debugger is initialized.
    */
   initialize: function DVB_initialize() {
-    let breakpoints = document.getElementById("breakpoints");
+    let breakpoints = DebuggerView._breakpoints;
     breakpoints.addEventListener("click", this._onBreakpointClick, false);
 
     this._breakpoints = breakpoints;
@@ -3314,7 +3479,7 @@ PropertiesView.prototype = {
    * Initialization function, called when the debugger is initialized.
    */
   initialize: function DVP_initialize() {
-    this._vars = document.getElementById("variables");
+    this._vars = DebuggerView._variables;
 
     this.emptyText();
     this.createHierarchyStore();

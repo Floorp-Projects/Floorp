@@ -37,23 +37,23 @@
   <commandset id="sourceEditorCommands"/>
   <keyset id="sourceEditorKeys"/>
   <keyset id="scriptSearchKeys">
-    <key key="P" modifiers="access shift"
-         oncommand="DebuggerView.Scripts._onSearch()"/>
-    <key key="G" modifiers="access shift"
+    <key id="fileSearchKey" key="P" modifiers="access shift"
+         oncommand="DebuggerView.Scripts._onFileSearch()"/>
+    <key id="lineSearchKey" key="G" modifiers="access shift"
          oncommand="DebuggerView.Scripts._onLineSearch()"/>
-    <key key="T" modifiers="access shift"
+    <key id="tokenSearchKey" key="T" modifiers="access shift"
          oncommand="DebuggerView.Scripts._onTokenSearch()"/>
-    <key key="F" modifiers="access shift"
+    <key id="globalSearchKey" key="F" modifiers="access shift"
          oncommand="DebuggerView.Scripts._onGlobalSearch()"/>
   </keyset>
   <keyset id="threadStateKeys">
-    <key keycode="VK_F6"
+    <key id="resumeKey" keycode="VK_F6"
          oncommand="DebuggerView.StackFrames._onResume()"/>
-    <key keycode="VK_F7"
+    <key id="stepOverKey" keycode="VK_F7"
          oncommand="DebuggerView.StackFrames._onStepOver()"/>
-    <key keycode="VK_F8"
+    <key id="stepInKey" keycode="VK_F8"
          oncommand="DebuggerView.StackFrames._onStepIn()"/>
-    <key keycode="VK_F8" modifiers="shift"
+    <key id="stepOutKey" keycode="VK_F8" modifiers="shift"
          oncommand="DebuggerView.StackFrames._onStepOut()"/>
   </keyset>
 
@@ -74,23 +74,19 @@
                        tabindex="0"/>
         <toolbarbutton id="step-over"
                        class="devtools-toolbarbutton"
-                       tooltiptext="&debuggerUI.stepOverButton.tooltip;"
                        tabindex="0"/>
         <toolbarbutton id="step-in"
                        class="devtools-toolbarbutton"
-                       tooltiptext="&debuggerUI.stepInButton.tooltip;"
                        tabindex="0"/>
         <toolbarbutton id="step-out"
                        class="devtools-toolbarbutton"
-                       tooltiptext="&debuggerUI.stepOutButton.tooltip;"
                        tabindex="0"/>
       </hbox>
       <menulist id="scripts" class="devtools-menulist"
                 sizetopopup="always"
                 label="&debuggerUI.emptyScriptText;"/>
       <textbox id="scripts-search" type="search"
-               class="devtools-searchinput"
-               emptytext="&debuggerUI.emptyFilterText;"/>
+               class="devtools-searchinput"/>
       <checkbox id="pause-exceptions"
                 type="checkbox"
                 tabindex="0"
@@ -102,8 +98,31 @@
                      class="devtools-closebutton"/>
 #endif
     </toolbar>
+    <panel id="scripts-search-panel"
+           type="arrow"
+           noautofocus="true"
+           position="before_start">
+      <vbox>
+        <label class="description" value="&debuggerUI.searchPanelTitle;"/>
+        <hbox align="center">
+          <button class="operator" label="!"
+                  onclick="DebuggerView.Scripts._onGlobalSearch()"/>
+          <label id="global-operator" class="plain operator"/>
+        </hbox>
+        <hbox align="center">
+          <button class="operator" label="#"
+                  onclick="DebuggerView.Scripts._onTokenSearch()"/>
+          <label id="token-operator" class="plain operator"/>
+        </hbox>
+        <hbox align="center">
+          <button class="operator" label=":"
+                  onclick="DebuggerView.Scripts._onLineSearch()"/>
+          <label id="line-operator" class="plain operator"/>
+        </hbox>
+      </vbox>
+    </panel>
     <vbox id="dbg-content" flex="1">
-      <vbox id="globalsearch" hidden="true" flex="1"/>
+      <vbox id="globalsearch" hidden="true"/>
       <splitter id="globalsearch-splitter"
                 class="devtools-horizontal-splitter" hidden="true"/>
       <hbox flex="1">
