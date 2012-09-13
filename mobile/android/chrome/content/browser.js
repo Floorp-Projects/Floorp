@@ -1544,12 +1544,17 @@ var NativeWindow = {
 
 var SelectionHandler = {
   HANDLE_TYPE_START: "START",
+  HANDLE_TYPE_MIDDLE: "MIDDLE",
   HANDLE_TYPE_END: "END",
+
+  TYPE_NONE: 0,
+  TYPE_CURSOR: 1,
+  TYPE_SELECTION: 2,
 
   // Keeps track of data about the dimensions of the selection. Coordinates
   // stored here are relative to the _view window.
   cache: null,
-  _active: false,
+  _activeType: this.TYPE_NONE,
 
   // The window that holds the selection (can be a sub-frame)
   get _view() {
@@ -1599,62 +1604,81 @@ var SelectionHandler = {
   },
 
   observe: function sh_observe(aSubject, aTopic, aData) {
-    if (!this._active)
-      return;
-
     switch (aTopic) {
       case "Gesture:SingleTap": {
-        let data = JSON.parse(aData);
-        this.endSelection(data.x, data.y);
+        if (this._activeType == this.TYPE_SELECTION) {
+          let data = JSON.parse(aData);
+          this.endSelection(data.x, data.y);
+        }
         break;
       }
       case "Tab:Selected":
       case "Window:Resize": {
-        // Knowing when the page is done drawing is hard, so let's just cancel
-        // the selection when the window changes. We should fix this later.
-        this.endSelection();
+        if (this._activeType == this.TYPE_SELECTION) {
+          // Knowing when the page is done drawing is hard, so let's just cancel
+          // the selection when the window changes. We should fix this later.
+          this.endSelection();
+        } else if (this._activeType == this.TYPE_CURSOR) {
+          this.hideThumb();
+        }
         break;
       }
       case "after-viewport-change": {
-        // Update the cache after the viewport changes (e.g. panning, zooming).
-        this.updateCacheForSelection();
+        if (this._activeType == this.TYPE_SELECTION) {
+          // Update the cache after the viewport changes (e.g. panning, zooming).
+          this.updateCacheForSelection();
+        } else if (this._activeType == this.TYPE_CURSOR) {
+          this.hideThumb();
+        }
         break;
       }
       case "TextSelection:Move": {
         let data = JSON.parse(aData);
-        this.moveSelection(data.handleType == this.HANDLE_TYPE_START, data.x, data.y);
+        if (this._activeType == this.TYPE_SELECTION)
+          this.moveSelection(data.handleType == this.HANDLE_TYPE_START, data.x, data.y);
+        else if (this._activeType == this.TYPE_CURSOR)
+          this._sendMouseEvents(data.x, data.y);
         break;
       }
       case "TextSelection:Position": {
-        let data = JSON.parse(aData);
+        if (this._activeType == this.TYPE_SELECTION) {
+          let data = JSON.parse(aData);
 
-        // Reverse the handles if necessary.
-        let selectionReversed = this.updateCacheForSelection(data.handleType == this.HANDLE_TYPE_START);
-        if (selectionReversed) {
-          // Re-send mouse events to update the selection corresponding to the new handles.
-          if (this._isRTL) {
-            this._sendMouseEvents(this.cache.end.x, this.cache.end.y, false);
-            this._sendMouseEvents(this.cache.start.x, this.cache.start.y, true);
-          } else {
-            this._sendMouseEvents(this.cache.start.x, this.cache.start.y, false);
-            this._sendMouseEvents(this.cache.end.x, this.cache.end.y, true);
+          // Reverse the handles if necessary.
+          let selectionReversed = this.updateCacheForSelection(data.handleType == this.HANDLE_TYPE_START);
+          if (selectionReversed) {
+            // Re-send mouse events to update the selection corresponding to the new handles.
+            if (this._isRTL) {
+              this._sendMouseEvents(this.cache.end.x, this.cache.end.y, false);
+              this._sendMouseEvents(this.cache.start.x, this.cache.start.y, true);
+            } else {
+              this._sendMouseEvents(this.cache.start.x, this.cache.start.y, false);
+              this._sendMouseEvents(this.cache.end.x, this.cache.end.y, true);
+            }
           }
-        }
 
-        // Position the handles to align with the edges of the selection.
-        this.positionHandles();
+          // Position the handles to align with the edges of the selection.
+          this.positionHandles();
+        } else if (this._activeType == this.TYPE_CURSOR) {
+          this.positionHandles();
+        }
         break;
       }
     }
   },
 
   handleEvent: function sh_handleEvent(aEvent) {
-    if (!this._active)
-      return;
-
     switch (aEvent.type) {
       case "pagehide":
-        this.endSelection();
+        if (this._activeType == this.TYPE_SELECTION)
+          this.endSelection();
+        else
+          this.hideThumb();
+        break;
+
+      case "keydown":
+        if (this._activeType == this.TYPE_CURSOR)
+          this.hideThumb();
         break;
     }
   },
@@ -1692,8 +1716,12 @@ var SelectionHandler = {
   // aX/aY are in top-level window browser coordinates
   startSelection: function sh_startSelection(aElement, aX, aY) {
     // Clear out any existing selection
-    if (this._active)
+    if (this._activeType == this.TYPE_SELECTION) {
       this.endSelection();
+    } else if (this._activeType == this.TYPE_CURSOR) {
+      // Hide the cursor handles.
+      this.hideThumb();
+    }
 
     // Get the element's view
     this._view = aElement.ownerDocument.defaultView;
@@ -1742,8 +1770,15 @@ var SelectionHandler = {
     this.cache = { start: {}, end: {}};
     this.updateCacheForSelection();
 
-    this.showHandles();
-    this._active = true;
+    this._activeType = this.TYPE_SELECTION;
+    this.positionHandles();
+
+    sendMessageToJava({
+      gecko: {
+        type: "TextSelection:ShowHandles",
+        handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
+      }
+    });
 
     if (aElement instanceof Ci.nsIDOMNSEditableElement)
       aElement.focus();
@@ -1769,7 +1804,7 @@ var SelectionHandler = {
 
   // Used by the contextmenu "matches" functions in ClipboardHelper
   shouldShowContextMenu: function sh_shouldShowContextMenu(aX, aY) {
-    return this._active && this._pointInSelection(aX, aY);
+    return (this._active != this.TYPE_NONE) && this._pointInSelection(aX, aY);
   },
 
   selectAll: function sh_selectAll(aElement, aX, aY) {
@@ -1821,11 +1856,17 @@ var SelectionHandler = {
 
   // aX/aY are in top-level window browser coordinates
   endSelection: function sh_endSelection(aX, aY) {
-    if (!this._active)
+    if (this._activeType != this.TYPE_SELECTION)
       return "";
+ 
+    this._activeType = this.TYPE_NONE;
+    sendMessageToJava({
+      gecko: {
+        type: "TextSelection:HideHandles",
+        handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
+      }
+    });
 
-    this._active = false;
-    this.hideHandles();
 
     let selectedText = "";
     let pointInSelection = false;
@@ -1915,6 +1956,40 @@ var SelectionHandler = {
     return selectionReversed;
   },
 
+  showThumb: function sh_showThumb(aElement) {
+    if (!aElement)
+      return;
+
+    // Get the element's view
+    this._view = aElement.ownerDocument.defaultView;
+    this._target = aElement;
+
+    this._view.addEventListener("pagehide", this, false);
+    this._view.addEventListener("keydown", this, false);
+
+    this._activeType = this.TYPE_CURSOR;
+    this.positionHandles();
+
+    sendMessageToJava({
+      gecko: {
+        type: "TextSelection:ShowHandles",
+        handles: [this.HANDLE_TYPE_MIDDLE]
+      }
+    });
+  },
+
+  hideThumb: function sh_hideThumb() {
+    this._activeType = this.TYPE_NONE;
+    this._cleanUp();
+
+    sendMessageToJava({
+      gecko: {
+        type: "TextSelection:HideHandles",
+        handles: [this.HANDLE_TYPE_MIDDLE]
+      }
+    });
+  },
+
   positionHandles: function sh_positionHandles() {
     // Translate coordinates to account for selections in sub-frames. We can't cache
     // this because the top-level page may have scrolled since selection started.
@@ -1922,36 +1997,29 @@ var SelectionHandler = {
     let scrollX = {}, scrollY = {};
     this._view.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).getScrollXY(false, scrollX, scrollY);
 
+    let positions = null;
+    if (this._activeType == this.TYPE_CURSOR) {
+      let cursor = this._cwu.sendQueryContentEvent(this._cwu.QUERY_CARET_RECT, this._target.selectionEnd, 0, 0, 0);
+      positions = [ { handle: this.HANDLE_TYPE_MIDDLE,
+                     left: cursor.left + offset.x + scrollX.value,
+                     top: cursor.top + cursor.height + offset.y + scrollY.value } ];
+    } else {
+      positions = [ { handle: this.HANDLE_TYPE_START,
+                     left: this.cache.start.x + offset.x + scrollX.value,
+                     top: this.cache.start.y + offset.y + scrollY.value },
+                   { handle: this.HANDLE_TYPE_END,
+                     left: this.cache.end.x + offset.x + scrollX.value,
+                     top: this.cache.end.y + offset.y + scrollY.value } ];
+    }
+
     sendMessageToJava({
       gecko: {
         type: "TextSelection:PositionHandles",
-        startLeft: this.cache.start.x + offset.x + scrollX.value,
-        startTop: this.cache.start.y + offset.y + scrollY.value,
-        endLeft: this.cache.end.x + offset.x + scrollX.value,
-        endTop: this.cache.end.y + offset.y + scrollY.value
-      }
-    });
-  },
-
-  showHandles: function sh_showHandles() {
-    this.positionHandles();
-
-    sendMessageToJava({
-      gecko: {
-        type: "TextSelection:ShowHandles"
-      }
-    });
-  },
-
-  hideHandles: function sh_hideHandles() {
-    sendMessageToJava({
-      gecko: {
-        type: "TextSelection:HideHandles"
+        positions: positions
       }
     });
   }
 };
-
 
 var UserAgent = {
   DESKTOP_UA: null,
@@ -3519,6 +3587,10 @@ var BrowserEventHandler = {
           this._sendMouseEvent("mousemove", element, data.x, data.y);
           this._sendMouseEvent("mousedown", element, data.x, data.y);
           this._sendMouseEvent("mouseup",   element, data.x, data.y);
+
+          // See if its a input element
+          if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) || (element instanceof HTMLTextAreaElement))
+             SelectionHandler.showThumb(element);
   
           if (isClickable)
             Haptic.performSimpleAction(Haptic.LongPress);
