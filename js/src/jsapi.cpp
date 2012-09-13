@@ -7101,7 +7101,7 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
                    "  3: GC when the window paints (browser only)\n"
                    "  4: Verify pre write barriers between instructions\n"
                    "  5: Verify pre write barriers between paints\n"
-                   "  6: Verify stack rooting (ignoring XML and Reflect)\n"
+                   "  6: Verify stack rooting (ignoring XML)\n"
                    "  7: Verify stack rooting (all roots)\n"
                    "  8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
                    "  9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
