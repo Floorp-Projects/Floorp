@@ -40,3 +40,7 @@ var idx = {valueOf : (function () {
 })};
 myobj.contains("elephant", idx);
 assertEq(gotPos, true);
+assertEq("xyzzy".contains("zy\0", 2), false);
+var dots = Array(10000).join('.');
+assertEq(dots.contains("\x01", 10000), false);
+assertEq(dots.contains("\0", 10000), false);
