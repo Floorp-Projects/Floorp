@@ -101,8 +101,6 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/dom/sms/src/ipc \
 	-I$(topsrcdir)/dom/devicestorage \
 	-I$(topsrcdir)/widget/xpwidgets \
-	-I$(topsrcdir)/dom/bluetooth \
-	-I$(topsrcdir)/dom/bluetooth/ipc \
 	$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'

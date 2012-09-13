@@ -119,7 +119,7 @@ LOCAL_INCLUDES	+= \
 endif
 
 ifdef MOZ_B2G_BT #{
-SHARED_LIBRARY_LIBS += $(DEPTH)/dom/bluetooth/$(LIB_PREFIX)dombluetooth_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/bluetooth/$(LIB_PREFIX)dombluetooth_s.$(LIB_SUFFIX)
 endif #}
 
 SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/camera/$(LIB_PREFIX)domcamera_s.$(LIB_SUFFIX)

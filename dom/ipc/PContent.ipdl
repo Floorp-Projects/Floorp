@@ -6,7 +6,6 @@
 
 include protocol PAudio;
 include protocol PBlob;
-include protocol PBluetooth;
 include protocol PBrowser;
 include protocol PCompositor;
 include protocol PCrashReporter;
@@ -164,7 +163,6 @@ rpc protocol PContent
 
     manages PAudio;
     manages PBlob;
-    manages PBluetooth;
     manages PBrowser;
     manages PCrashReporter;
     manages PDeviceStorageRequest;
@@ -268,8 +266,6 @@ parent:
     PSms();
     
     PStorage(StorageConstructData data);
-
-    PBluetooth();
 
     // Services remoting
 
