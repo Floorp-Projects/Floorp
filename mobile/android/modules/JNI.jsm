@@ -67,7 +67,7 @@ JNI.prototype = {
 
   get _findClass() {
     delete this._findClass;
-    return this._findClass = this.lib.declare("FindClass",
+    return this._findClass = this.lib.declare("jsjni_FindClass",
                                               ctypes.default_abi,
                                               this.types.jclass,
                                               ctypes.char.ptr);
@@ -82,7 +82,7 @@ JNI.prototype = {
 
   get _getStaticMethodID() {
     delete this._getStatisMethodID;
-    return this._getStaticMethodID = this.lib.declare("GetStaticMethodID",
+    return this._getStaticMethodID = this.lib.declare("jsjni_GetStaticMethodID",
                                                       ctypes.default_abi,
                                                       this.types.jmethodID,
                                                       this.types.jclass, // class
@@ -99,7 +99,7 @@ JNI.prototype = {
 
   get _exceptionCheck() {
     delete this._exceptionCheck;
-    return this._exceptionCheck = this.lib.declare("ExceptionCheck",
+    return this._exceptionCheck = this.lib.declare("jsjni_ExceptionCheck",
                                                    ctypes.default_abi,
                                                    ctypes.bool);
   },
@@ -110,7 +110,7 @@ JNI.prototype = {
 
   get _callStaticVoidMethod() {
     delete this._callStaticVoidMethod;
-    return this._callStaticVoidMethod = this.lib.declare("CallStaticVoidMethodA",
+    return this._callStaticVoidMethod = this.lib.declare("jsjni_CallStaticVoidMethodA",
                                                    ctypes.default_abi,
                                                    ctypes.void_t,
                                                    this.types.jclass,
@@ -127,7 +127,7 @@ JNI.prototype = {
 
   get _callStaticIntMethod() {
     delete this._callStaticIntMethod;
-    return this._callStaticIntMethod = this.lib.declare("CallStaticIntMethodA",
+    return this._callStaticIntMethod = this.lib.declare("jsjni_CallStaticIntMethodA",
                                                    ctypes.default_abi,
                                                    ctypes.int,
                                                    this.types.jclass,
