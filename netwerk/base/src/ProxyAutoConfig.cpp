@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ProxyAutoConfig.h"
-#include "jsapi.h"
 #include "nsICancelable.h"
 #include "nsIDNSListener.h"
 #include "nsIDNSRecord.h"
@@ -14,6 +13,8 @@
 #include "nsThreadUtils.h"
 #include "nsIConsoleService.h"
 #include "nsJSUtils.h"
+#include "prnetdb.h"
+#include "nsITimer.h"
 
 namespace mozilla {
 namespace net {
@@ -238,8 +239,14 @@ static const char *sPacUtils =
   "}\n"
   "";
 
+// sRunning is defined for the helper functions only while the
+// Javascript engine is running and the PAC object cannot be deleted
+// or reset.
+static ProxyAutoConfig *sRunning = nullptr;
+
 // The PACResolver is used for dnsResolve()
 class PACResolver MOZ_FINAL : public nsIDNSListener
+                            , public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -249,21 +256,37 @@ public:
   {
   }
 
+  // nsIDNSListener
   NS_IMETHODIMP OnLookupComplete(nsICancelable *request,
                                  nsIDNSRecord *record,
                                  nsresult status)
   {
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nullptr;
+    }
+
     mRequest = nullptr;
     mStatus = status;
     mResponse = record;
     return NS_OK;
   }
 
+  // nsITimerCallback
+  NS_IMETHODIMP Notify(nsITimer *timer) 
+  {
+    if (mRequest)
+      mRequest->Cancel(NS_ERROR_NET_TIMEOUT);
+    mTimer = nullptr;
+    return NS_OK;
+  }
+
   nsresult                mStatus;
   nsCOMPtr<nsICancelable> mRequest;
   nsCOMPtr<nsIDNSRecord>  mResponse;
+  nsCOMPtr<nsITimer>      mTimer;
 };
-NS_IMPL_THREADSAFE_ISUPPORTS1(PACResolver, nsIDNSListener)
+NS_IMPL_THREADSAFE_ISUPPORTS2(PACResolver, nsIDNSListener, nsITimerCallback)
 
 static
 void PACLogToConsole(nsString &aMessage)
@@ -288,15 +311,44 @@ PACErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
   PACLogToConsole(formattedMessage);
 }
 
+// timeout of 0 means the normal necko timeout strategy, otherwise the dns request
+// will be canceled after aTimeout milliseconds
 static
-JSBool PACResolve(const nsCString &aHostName, nsCString &aDottedDecimal)
+JSBool PACResolve(const nsCString &aHostName, PRNetAddr *aNetAddr,
+                  unsigned int aTimeout)
+{
+  if (!sRunning) {
+    NS_WARNING("PACResolve without a running ProxyAutoConfig object");
+    return false;
+  }
+
+  return sRunning->ResolveAddress(aHostName, aNetAddr, aTimeout);
+}
+
+bool
+ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
+                                PRNetAddr *aNetAddr,
+                                unsigned int aTimeout)
 {
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-  nsCOMPtr<PACResolver> helper = new PACResolver();
-  if (!dns || NS_FAILED(dns->AsyncResolve(aHostName, 0, helper,
-                                          NS_GetCurrentThread(),
-                                          getter_AddRefs(helper->mRequest))))
+  if (!dns)
     return false;
+
+  nsRefPtr<PACResolver> helper = new PACResolver();
+
+  if (NS_FAILED(dns->AsyncResolve(aHostName, 0, helper,
+                                  NS_GetCurrentThread(),
+                                  getter_AddRefs(helper->mRequest))))
+    return false;
+
+  if (aTimeout && helper->mRequest) {
+    if (!mTimer)
+      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    if (mTimer) {
+      mTimer->InitWithCallback(helper, aTimeout, nsITimer::TYPE_ONE_SHOT);
+      helper->mTimer = mTimer;
+    }
+  }
 
   // Spin the event loop of the pac thread until lookup is complete.
   // nsPACman is responsible for keeping a queue and only allowing
@@ -305,8 +357,25 @@ JSBool PACResolve(const nsCString &aHostName, nsCString &aDottedDecimal)
     NS_ProcessNextEvent(NS_GetCurrentThread());
 
   if (NS_FAILED(helper->mStatus) ||
-      NS_FAILED(helper->mResponse->GetNextAddrAsString(aDottedDecimal)))
+      NS_FAILED(helper->mResponse->GetNextAddr(0, aNetAddr)))
     return false;
+  return true;
+}
+
+static
+bool PACResolveToString(const nsCString &aHostName,
+                        nsCString &aDottedDecimal,
+                        unsigned int aTimeout)
+{
+  PRNetAddr netAddr;
+  if (!PACResolve(aHostName, &netAddr, aTimeout))
+    return false;
+
+  char dottedDecimal[128];
+  if (PR_NetAddrToString(&netAddr, dottedDecimal, sizeof(dottedDecimal)) != PR_SUCCESS)
+    return false;
+
+  aDottedDecimal.Assign(dottedDecimal);
   return true;
 }
 
@@ -324,11 +393,11 @@ JSBool PACDnsResolve(JSContext *cx, unsigned int argc, jsval *vp)
     return false;
 
   nsDependentJSString hostName;
-  nsCString dottedDecimal;
+  nsAutoCString dottedDecimal;
 
   if (!hostName.init(cx, arg1))
     return false;
-  if (!PACResolve(NS_ConvertUTF16toUTF8(hostName), dottedDecimal))
+  if (!PACResolveToString(NS_ConvertUTF16toUTF8(hostName), dottedDecimal, 0))
     return false;
 
   JSString *dottedDecimalString = JS_NewStringCopyZ(cx, dottedDecimal.get());
@@ -345,21 +414,12 @@ JSBool PACMyIpAddress(JSContext *cx, unsigned int argc, jsval *vp)
     return false;
   }
 
-  nsCString hostName;
-
-  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-  if (!dns || NS_FAILED(dns->GetMyHostName(hostName))) {
-    hostName.AssignLiteral("127.0.0.1");
+  if (!sRunning) {
+    NS_WARNING("PAC myIPAddress without a running ProxyAutoConfig object");
+    return JS_FALSE;
   }
 
-  nsCString dottedDecimal;
-  if (!PACResolve(hostName, dottedDecimal)) {
-    dottedDecimal.AssignLiteral("127.0.0.1");
-  }
-
-  JSString *dottedDecimalString = JS_NewStringCopyZ(cx, dottedDecimal.get());
-  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(dottedDecimalString));
-  return true;
+  return sRunning->MyIPAddress(vp);
 }
 
 // proxyAlert(msg) javascript implementation
@@ -498,7 +558,7 @@ ProxyAutoConfig::Init(const nsCString &aPACURI,
   mPACScript = sPacUtils;
   mPACScript.Append(aPACScript);
 
-  if (!mRunning)
+  if (!sRunning)
     return SetupJS();
 
   mJSNeedsSetup = true;
@@ -509,7 +569,7 @@ nsresult
 ProxyAutoConfig::SetupJS()
 {
   mJSNeedsSetup = false;
-  NS_ABORT_IF_FALSE(!mRunning, "JIT is running");
+  NS_ABORT_IF_FALSE(!sRunning, "JIT is running");
 
   delete mJSRuntime;
   mJSRuntime = nullptr;
@@ -560,9 +620,10 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
   JSContext *cx = mJSRuntime->Context();
   JSAutoRequest ar(cx);
 
-  // the mRunning flag keeps a new PAC file from being installed
+  // the sRunning flag keeps a new PAC file from being installed
   // while the event loop is spinning on a DNS function. Don't early return.
-  mRunning = true;
+  sRunning = this;
+  mRunningHost = aTestHost;
 
   nsresult rv = NS_ERROR_FAILURE;
   JS::RootedString uriString(cx, JS_NewStringCopyZ(cx, aTestURI.get()));
@@ -585,7 +646,9 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
       }
     }
   }
-  mRunning = false;
+
+  mRunningHost.Truncate();
+  sRunning = nullptr;
   return rv;
 }
 
@@ -611,12 +674,116 @@ ProxyAutoConfig::Shutdown()
 {
   NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread for shutdown");
 
-  if (mRunning || mShutdown)
+  if (sRunning || mShutdown)
     return;
 
   mShutdown = true;
   delete mJSRuntime;
   mJSRuntime = nullptr;
+}
+
+bool
+ProxyAutoConfig::SrcAddress(const PRNetAddr *remoteAddress, nsCString &localAddress)
+{
+  PRFileDesc *fd;
+  fd = PR_OpenUDPSocket(remoteAddress->raw.family);
+  if (!fd)
+    return false;
+
+  if (PR_Connect(fd, remoteAddress, 0) != PR_SUCCESS) {
+    PR_Close(fd);
+    return false;
+  }
+
+  PRNetAddr localName;
+  if (PR_GetSockName(fd, &localName) != PR_SUCCESS) {
+    PR_Close(fd);
+    return false;
+  }
+
+  PR_Close(fd);
+  
+  char dottedDecimal[128];
+  if (PR_NetAddrToString(&localName, dottedDecimal, sizeof(dottedDecimal)) != PR_SUCCESS)
+    return false;
+  
+  localAddress.Assign(dottedDecimal);
+
+  return true;
+}
+
+// hostName is run through a dns lookup and then a udp socket is connected
+// to the result. If that all works, the local IP address of the socket is
+// returned to the javascript caller and true is returned from this function.
+// otherwise false is returned.
+bool
+ProxyAutoConfig::MyIPAddressTryHost(const nsCString &hostName,
+                                    unsigned int timeout,
+                                    jsval *vp)
+{
+  PRNetAddr remoteAddress;
+  nsAutoCString localDottedDecimal;
+  JSContext *cx = mJSRuntime->Context();
+
+  if (PACResolve(hostName, &remoteAddress, timeout) &&
+      SrcAddress(&remoteAddress, localDottedDecimal)) {
+    JSString *dottedDecimalString =
+      JS_NewStringCopyZ(cx, localDottedDecimal.get());
+    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(dottedDecimalString));
+    return true;
+  }
+  return false;
+}
+
+bool
+ProxyAutoConfig::MyIPAddress(jsval *vp)
+{
+  nsAutoCString remoteDottedDecimal;
+  nsAutoCString localDottedDecimal;
+  JSContext *cx = mJSRuntime->Context();
+
+  // first, lookup the local address of a socket connected
+  // to the host of uri being resolved by the pac file. This is
+  // v6 safe.. but is the last step like that
+  if (MyIPAddressTryHost(mRunningHost, kTimeout, vp))
+    return true;
+
+  // next, look for a route to a public internet address that doesn't need DNS.
+  // This is the google anycast dns address, but it doesn't matter if it
+  // remains operable (as we don't contact it) as long as the address stays
+  // in commonly routed IP address space.
+  remoteDottedDecimal.AssignLiteral("8.8.8.8");
+  if (MyIPAddressTryHost(remoteDottedDecimal, 0, vp))
+    return true;
+  
+  // next, use the old algorithm based on the local hostname
+  nsAutoCString hostName;
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  if (dns && NS_SUCCEEDED(dns->GetMyHostName(hostName)) &&
+      PACResolveToString(hostName, localDottedDecimal, kTimeout)) {
+    JSString *dottedDecimalString =
+      JS_NewStringCopyZ(cx, localDottedDecimal.get());
+    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(dottedDecimalString));
+    return true;
+  }
+
+  // next try a couple RFC 1918 variants.. maybe there is a
+  // local route
+  remoteDottedDecimal.AssignLiteral("192.168.0.1");
+  if (MyIPAddressTryHost(remoteDottedDecimal, 0, vp))
+    return true;
+
+  // more RFC 1918
+  remoteDottedDecimal.AssignLiteral("10.0.0.1");
+  if (MyIPAddressTryHost(remoteDottedDecimal, 0, vp))
+    return true;
+
+  // who knows? let's fallback to localhost
+  localDottedDecimal.AssignLiteral("127.0.0.1");
+  JSString *dottedDecimalString =
+    JS_NewStringCopyZ(cx, localDottedDecimal.get());
+  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(dottedDecimalString));
+  return true;
 }
 
 } // namespace mozilla
