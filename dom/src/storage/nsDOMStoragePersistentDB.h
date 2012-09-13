@@ -99,7 +99,7 @@ public:
   RemoveAll();
 
   /**
-    * Returns usage for a storage using its GetQuotaDomainDBKey() as a key.
+    * Returns usage for a storage using its GetQuotaDBKey() as a key.
     */
   nsresult
   GetUsage(DOMStorageImpl* aStorage, int32_t *aUsage);
@@ -161,7 +161,7 @@ protected:
   friend class nsDOMStorageDBWrapper;
   friend class nsDOMStorageMemoryDB;
   nsresult
-  GetUsageInternal(const nsACString& aQuotaDomainDBKey, int32_t *aUsage);
+  GetUsageInternal(const nsACString& aQuotaDBKey, int32_t *aUsage);
 
   // Compares aDomain with the mCachedOwner and returns false if changes
   // in aDomain don't affect mCachedUsage.

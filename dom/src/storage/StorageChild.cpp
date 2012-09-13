@@ -84,7 +84,7 @@ StorageChild::InitRemote()
   AddIPDLReference();
   child->SendPStorageConstructor(this, null_t());
   SendInit(mUseDB, mSessionOnly, mInPrivateBrowsing, mDomain, mScopeDBKey,
-           mQuotaETLDplus1DomainDBKey, mStorageType);
+           mQuotaDBKey, mStorageType);
 }
 
 void
@@ -234,7 +234,7 @@ StorageChild::CloneFrom(bool aCallerSecure, DOMStorageBase* aThat)
   AddIPDLReference();
   child->SendPStorageConstructor(this, clone);
   SendInit(mUseDB, mSessionOnly, mInPrivateBrowsing, mDomain,
-           mScopeDBKey, mQuotaETLDplus1DomainDBKey, mStorageType);
+           mScopeDBKey, mQuotaDBKey, mStorageType);
   return NS_OK;
 }
 

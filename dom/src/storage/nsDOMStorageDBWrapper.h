@@ -138,7 +138,7 @@ public:
   RemoveAll();
 
   /**
-    * Returns usage for a storage using its GetQuotaDomainDBKey() as a key.
+    * Returns usage for a storage using its GetQuotaDBKey() as a key.
     */
   nsresult
   GetUsage(DOMStorageImpl* aStorage, int32_t *aUsage);
@@ -173,22 +173,22 @@ public:
     * i.e. reverses the host, appends a dot, appends the schema
     * and a port number.
     */
-  static nsresult CreateOriginScopeDBKey(nsIURI* aUri, nsACString& aKey);
+  static nsresult CreateScopeDBKey(nsIURI* aUri, nsACString& aKey);
 
   /**
     * Turns "http://foo.bar.com" to "moc.rab.oof.",
     * i.e. reverses the host and appends a dot.
     */
-  static nsresult CreateDomainScopeDBKey(nsIURI* aUri, nsACString& aKey);
-  static nsresult CreateDomainScopeDBKey(const nsACString& aAsciiDomain, nsACString& aKey);
+  static nsresult CreateReversedDomain(nsIURI* aUri, nsACString& aKey);
+  static nsresult CreateReversedDomain(const nsACString& aAsciiDomain, nsACString& aKey);
 
   /**
     * Turns "foo.bar.com" to "moc.rab.",
     * i.e. extracts eTLD+1 from the host, reverses the result
     * and appends a dot.
     */
-  static nsresult CreateQuotaDomainDBKey(const nsACString& aAsciiDomain,
-                                         nsACString& aKey);
+  static nsresult CreateQuotaDBKey(const nsACString& aAsciiDomain,
+                                   nsACString& aKey);
 
   static nsresult GetDomainFromScopeKey(const nsACString& aScope,
                                         nsACString& aDomain);

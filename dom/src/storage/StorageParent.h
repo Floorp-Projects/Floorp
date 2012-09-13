@@ -47,7 +47,7 @@ private:
                 const bool& aPrivate,
                 const nsCString& aDomain,
                 const nsCString& aScopeDBKey,
-                const nsCString& aQuotaETLDplus1DomainDBKey,
+                const nsCString& aQuotaDBKey,
                 const uint32_t& aStorageType);
 
   bool RecvUpdatePrivateState(const bool& aEnabled);

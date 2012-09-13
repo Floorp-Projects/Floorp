@@ -167,9 +167,9 @@ public:
   nsCString& GetScopeDBKey() {return mScopeDBKey;}
 
   // e.g. "moc.rab.%" - reversed eTLD+1 subpart of the domain.
-  nsCString& GetQuotaDomainDBKey()
+  nsCString& GetQuotaDBKey()
   {
-    return mQuotaETLDplus1DomainDBKey;
+    return mQuotaDBKey;
   }
 
   virtual bool CacheStoragePermissions() = 0;
@@ -196,7 +196,7 @@ protected:
   // keys are used for database queries.
   // see comments of the getters bellow.
   nsCString mScopeDBKey;
-  nsCString mQuotaETLDplus1DomainDBKey;
+  nsCString mQuotaDBKey;
 
   bool mInPrivateBrowsing;
 };
@@ -283,7 +283,7 @@ private:
   void InitFromChild(bool aUseDB, bool aSessionOnly,
                      bool aPrivate, const nsACString& aDomain,
                      const nsACString& aScopeDBKey,
-                     const nsACString& aQuotaETLDplus1DomainDBKey,
+                     const nsACString& aQuotaDBKey,
                      uint32_t aStorageType);
   void SetSessionOnly(bool aSessionOnly);
 

@@ -157,7 +157,7 @@ nsDOMStorageMemoryDB::SetKey(DOMStorageImpl* aStorage,
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t usage = 0;
-  if (!aStorage->GetQuotaDomainDBKey().IsEmpty()) {
+  if (!aStorage->GetQuotaDBKey().IsEmpty()) {
     rv = GetUsage(aStorage, &usage);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -300,7 +300,7 @@ nsresult
 nsDOMStorageMemoryDB::RemoveOwner(const nsACString& aOwner)
 {
   nsAutoCString subdomainsDBKey;
-  nsDOMStorageDBWrapper::CreateDomainScopeDBKey(aOwner, subdomainsDBKey);
+  nsDOMStorageDBWrapper::CreateReversedDomain(aOwner, subdomainsDBKey);
 
   RemoveOwnersStruc struc;
   struc.mSubDomain = &subdomainsDBKey;
@@ -325,7 +325,7 @@ nsDOMStorageMemoryDB::RemoveAll()
 nsresult
 nsDOMStorageMemoryDB::GetUsage(DOMStorageImpl* aStorage, int32_t *aUsage)
 {
-  return GetUsageInternal(aStorage->GetQuotaDomainDBKey(), aUsage);
+  return GetUsageInternal(aStorage->GetQuotaDBKey(), aUsage);
 }
 
 nsresult
@@ -334,12 +334,11 @@ nsDOMStorageMemoryDB::GetUsage(const nsACString& aDomain,
 {
   nsresult rv;
 
-  nsAutoCString quotadomainDBKey;
-  rv = nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomain,
-                                                     quotadomainDBKey);
+  nsAutoCString quotaDBKey;
+  rv = nsDOMStorageDBWrapper::CreateQuotaDBKey(aDomain, quotaDBKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetUsageInternal(quotadomainDBKey, aUsage);
+  return GetUsageInternal(quotaDBKey, aUsage);
 }
 
 struct GetUsageEnumStruc
@@ -363,17 +362,17 @@ GetUsageEnum(const nsACString& key,
 }
 
 nsresult
-nsDOMStorageMemoryDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
+nsDOMStorageMemoryDB::GetUsageInternal(const nsACString& aQuotaDBKey,
                                        int32_t *aUsage)
 {
   GetUsageEnumStruc struc;
   struc.mUsage = 0;
-  struc.mSubdomain = aQuotaDomainDBKey;
+  struc.mSubdomain = aQuotaDBKey;
 
   if (mPreloadDB) {
     nsresult rv;
 
-    rv = mPreloadDB->GetUsageInternal(aQuotaDomainDBKey, &struc.mUsage);
+    rv = mPreloadDB->GetUsageInternal(aQuotaDBKey, &struc.mUsage);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
