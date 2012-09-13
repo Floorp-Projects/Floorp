@@ -220,6 +220,14 @@ gcli.addCommand({
       file.reveal();
     });
     div.style.cursor = "pointer";
+    let image = document.createElement("div");
+    let previewHeight = parseInt(256*height/width);
+    image.setAttribute("style",
+                       "width:256px; height:" + previewHeight + "px;" +
+                       "background-image: url('" + data + "');" +
+                       "background-size: 256px " + previewHeight + "px;" +
+                       "margin: 4px; display: block");
+    div.appendChild(image);
     return div;
   }
 });
