@@ -580,7 +580,7 @@ function appendAboutMemoryFooter(aBody)
                     "to see a description of what it measures.";
 
   appendElementWithText(aBody, "div", "legend", legendText1);
-  appendElementWithText(aBody, "div", "legend", legendText2);
+  appendElementWithText(aBody, "div", "legend hiddenOnMobile", legendText2);
 }
 
 //---------------------------------------------------------------------------
