@@ -1,0 +1,2 @@
+component {63ac8c66-1dd2-11b2-b070-84d00d3eaece} nsProxyAutoConfig.js
+contract @mozilla.org/network/proxy-auto-config;1 {63ac8c66-1dd2-11b2-b070-84d00d3eaece}

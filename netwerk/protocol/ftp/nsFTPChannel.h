@@ -55,11 +55,6 @@ public:
         return mProxyInfo;
     }
 
-    void SetProxyInfo(nsIProxyInfo *pi)
-    {
-        mProxyInfo = pi;
-    }
-
     // Were we asked to resume a download?
     bool ResumeRequested() { return mResumeRequested; }
 

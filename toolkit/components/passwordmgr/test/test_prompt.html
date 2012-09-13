@@ -23,16 +23,19 @@ Login Manager test: username/password prompts
 var pwmgr, ioService
 var tmplogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4, proxyLogin;
 var mozproxy, proxiedHost = "http://mochi.test:8888";
-var testNum = 1;
 
-function initLogins(pi) {
+function initLogins() {
   pwmgr = Cc["@mozilla.org/login-manager;1"].
           getService(Ci.nsILoginManager);
   ioService = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
 
-  mozproxy = "moz-proxy://" + SpecialPowers.wrap(pi).host + ":" +
-              SpecialPowers.wrap(pi).port;
+  // Figure out what our proxy is set to -- can't just hardcode this, because
+  // mobile platforms don't use localhost.
+  var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+  var uri = ioService.newURI(proxiedHost, null, null);
+  var pi = pps.resolve(uri, 0);
+  mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
 
   tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
              createInstance(Ci.nsILoginInfo);
@@ -119,35 +122,6 @@ ok(true, "removing proxyLogin...");
 ok(true, "whee, done!");
 
   SimpleTest.finish();
-}
-
-var resolveCallback = {
-QueryInterface : function (iid) {
-const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
-
-    if (!interfaces.some( function(v) { return iid.equals(v) } ))
-	throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-},
-
-    onProxyAvailable : function (req, uri, pi, status) {
-        initLogins(pi);
-	doTests();
-    }
-};
-
-function startup() {
-            //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-    var ios = SpecialPowers.wrap(Components)
-	.classes["@mozilla.org/network/io-service;1"]
-	.getService(Components.interfaces.nsIIOService);
-
-    var pps = SpecialPowers.wrap(Components)
-	.classes["@mozilla.org/network/protocol-proxy-service;1"]
-	.getService();
-
-    var uri = ios.newURI("http://example.com", null, null);
-    pps.asyncResolve(uri, 0, resolveCallback);
 }
 
 function addNotificationCallback(cb)
@@ -595,9 +569,8 @@ dumpNotifications();
 
 }
 
-startup();
+initLogins();
 
-function doTests() {
 var authinfo = {
     username : "",
     password : "",
@@ -651,7 +624,7 @@ var popupNotifications = getPopupNotifications(window.top);
 ok(popupNotifications, "Got popupNotifications");
 
 // ===== test 1 ===== 
-testNum = 1;
+var testNum = 1;
 startCallbackTimer();
 isOk = prompter1.prompt(dialogTitle(), dialogText, "http://example.com",
                         Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
@@ -1163,7 +1136,6 @@ iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
 
 // ...remaining tests are driven by handleLoad()...
 SimpleTest.waitForExplicitFinish();
-}
 </script>
 </pre>
 </body>

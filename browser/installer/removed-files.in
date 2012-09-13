@@ -87,8 +87,6 @@ components/xpcom.xpt
 components/xpti.dat
 components/xptitemp.dat
 components/nsMicrosummaryService.js
-components/nsProxyAutoConfig.manifest
-components/nsProxyAutoConfig.js
 D3DCompiler_42.dll
 d3dx9_42.dll
 defaults/pref/all.js
@@ -923,7 +921,6 @@ xpicleanup@BIN_SUFFIX@
   components/nsPlacesExpiration.js
   components/nsPrivateBrowsingService.js
   components/nsPrompter.js
-  components/nsProxyAutoConfig.manifest
   components/nsProxyAutoConfig.js
   components/nsSafebrowsingApplication.js
   components/nsSearchService.js
