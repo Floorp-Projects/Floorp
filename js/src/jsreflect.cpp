@@ -125,7 +125,6 @@ typedef AutoValueVector NodeVector;
         return false;                                                                  \
     JS_END_MACRO
 
-
 /*
  * Builder class that constructs JavaScript AST node objects. See:
  *
@@ -172,7 +171,7 @@ class NodeBuilder
         RootedValue funv(cx);
         for (unsigned i = 0; i < AST_LIMIT; i++) {
             const char *name = callbackNames[i];
-            JSAtom *atom = Atomize(cx, name, strlen(name));
+            RootedAtom atom(cx, Atomize(cx, name, strlen(name)));
             if (!atom)
                 return false;
             RootedId id(cx, AtomToId(atom));
@@ -304,7 +303,7 @@ class NodeBuilder
         /*
          * Bug 575416: instead of Atomize, lookup constant atoms in tbl file
          */
-        JSAtom *atom = Atomize(cx, s, strlen(s));
+        RootedAtom atom(cx, Atomize(cx, s, strlen(s)));
         if (!atom)
             return false;
 
@@ -436,7 +435,7 @@ class NodeBuilder
         /*
          * Bug 575416: instead of Atomize, lookup constant atoms in tbl file
          */
-        JSAtom *atom = Atomize(cx, name, strlen(name));
+        RootedAtom atom(cx, Atomize(cx, name, strlen(name)));
         if (!atom)
             return false;
 
@@ -1696,7 +1695,7 @@ class ASTSerializer
     NodeBuilder         builder;
     DebugOnly<uint32_t> lineno;
 
-    Value atomContents(JSAtom *atom) {
+    RawValue unrootedAtomContents(RawAtom atom) {
         return StringValue(atom ? atom : cx->runtime->atomState.emptyAtom);
     }
 
@@ -1749,7 +1748,7 @@ class ASTSerializer
     bool propertyName(ParseNode *pn, MutableHandleValue dst);
     bool property(ParseNode *pn, MutableHandleValue dst);
 
-    bool optIdentifier(JSAtom *atom, TokenPos *pos, MutableHandleValue dst) {
+    bool optIdentifier(HandleAtom atom, TokenPos *pos, MutableHandleValue dst) {
         if (!atom) {
             dst.setMagic(JS_SERIALIZE_NO_NODE);
             return true;
@@ -1757,7 +1756,7 @@ class ASTSerializer
         return identifier(atom, pos, dst);
     }
 
-    bool identifier(JSAtom *atom, TokenPos *pos, MutableHandleValue dst);
+    bool identifier(HandleAtom atom, TokenPos *pos, MutableHandleValue dst);
     bool identifier(ParseNode *pn, MutableHandleValue dst);
     bool literal(ParseNode *pn, MutableHandleValue dst);
 
@@ -2384,8 +2383,8 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
       case PNK_CONTINUE:
       {
         RootedValue label(cx);
-
-        return optIdentifier(pn->pn_atom, NULL, &label) &&
+        RootedAtom pnAtom(cx, pn->pn_atom);
+        return optIdentifier(pnAtom, NULL, &label) &&
                (pn->isKind(PNK_BREAK)
                 ? builder.breakStatement(label, &pn->pn_pos, dst)
                 : builder.continueStatement(label, &pn->pn_pos, dst));
@@ -2396,8 +2395,8 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
         JS_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
 
         RootedValue label(cx), stmt(cx);
-
-        return identifier(pn->pn_atom, NULL, &label) &&
+        RootedAtom pnAtom(cx, pn->pn_atom);
+        return identifier(pnAtom, NULL, &label) &&
                statement(pn->pn_expr, &stmt) &&
                builder.labeledStatement(label, stmt, &pn->pn_pos, dst);
       }
@@ -2745,8 +2744,9 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
         JS_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
 
         RootedValue expr(cx), id(cx);
+        RootedAtom pnAtom(cx, pn->pn_atom);
         return expression(pn->pn_expr, &expr) &&
-               identifier(pn->pn_atom, NULL, &id) &&
+               identifier(pnAtom, NULL, &id) &&
                builder.memberExpression(false, expr, id, &pn->pn_pos, dst);
       }
 
@@ -2881,7 +2881,8 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
 
             computed = false;
             pnleft = pn->pn_expr;
-            if (!identifier(pn->pn_atom, NULL, &right))
+            RootedAtom pnAtom(cx, pn->pn_atom);
+            if (!identifier(pnAtom, NULL, &right))
                 return false;
         }
 
@@ -2984,13 +2985,13 @@ ASTSerializer::xml(ParseNode *pn, MutableHandleValue dst)
 
       case PNK_XMLTEXT:
       case PNK_XMLSPACE: {
-        RootedValue atomContentsVal(cx, atomContents(pn->pn_atom));
+        RootedValue atomContentsVal(cx, unrootedAtomContents(pn->pn_atom));
         return builder.xmlText(atomContentsVal, &pn->pn_pos, dst);
       }
 
       case PNK_XMLNAME:
         if (pn->isArity(PN_NULLARY)) {
-            RootedValue atomContentsVal(cx, atomContents(pn->pn_atom));
+            RootedValue atomContentsVal(cx, unrootedAtomContents(pn->pn_atom));
             return builder.xmlName(atomContentsVal, &pn->pn_pos, dst);
         }
 
@@ -3003,24 +3004,24 @@ ASTSerializer::xml(ParseNode *pn, MutableHandleValue dst)
         }
 
       case PNK_XMLATTR: {
-        RootedValue atomContentsVal(cx, atomContents(pn->pn_atom));
+        RootedValue atomContentsVal(cx, unrootedAtomContents(pn->pn_atom));
         return builder.xmlAttribute(atomContentsVal, &pn->pn_pos, dst);
       }
 
       case PNK_XMLCDATA: {
-        RootedValue atomContentsVal(cx, atomContents(pn->pn_atom));
+        RootedValue atomContentsVal(cx, unrootedAtomContents(pn->pn_atom));
         return builder.xmlCdata(atomContentsVal, &pn->pn_pos, dst);
       }
 
       case PNK_XMLCOMMENT: {
-        RootedValue atomContentsVal(cx, atomContents(pn->pn_atom));
+        RootedValue atomContentsVal(cx, unrootedAtomContents(pn->pn_atom));
         return builder.xmlComment(atomContentsVal, &pn->pn_pos, dst);
       }
 
       case PNK_XMLPI: {
         XMLProcessingInstruction &pi = pn->as<XMLProcessingInstruction>();
-        RootedValue targetAtomContentsVal(cx, atomContents(pi.target()));
-        RootedValue dataAtomContentsVal(cx, atomContents(pi.data()));
+        RootedValue targetAtomContentsVal(cx, unrootedAtomContents(pi.target()));
+        RootedValue dataAtomContentsVal(cx, unrootedAtomContents(pi.data()));
         return builder.xmlPI(targetAtomContentsVal,
                              dataAtomContentsVal,
                              &pi.pn_pos,
@@ -3193,9 +3194,9 @@ ASTSerializer::pattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst
 }
 
 bool
-ASTSerializer::identifier(JSAtom *atom, TokenPos *pos, MutableHandleValue dst)
+ASTSerializer::identifier(HandleAtom atom, TokenPos *pos, MutableHandleValue dst)
 {
-    RootedValue atomContentsVal(cx, atomContents(atom));
+    RootedValue atomContentsVal(cx, unrootedAtomContents(atom));
     return builder.identifier(atomContentsVal, pos, dst);
 }
 
@@ -3205,7 +3206,8 @@ ASTSerializer::identifier(ParseNode *pn, MutableHandleValue dst)
     LOCAL_ASSERT(pn->isArity(PN_NAME) || pn->isArity(PN_NULLARY));
     LOCAL_ASSERT(pn->pn_atom);
 
-    return identifier(pn->pn_atom, &pn->pn_pos, dst);
+    RootedAtom pnAtom(cx, pn->pn_atom);
+    return identifier(pnAtom, &pn->pn_pos, dst);
 }
 
 bool
@@ -3228,7 +3230,8 @@ ASTSerializer::function(ParseNode *pn, ASTType type, MutableHandleValue dst)
 #endif
 
     RootedValue id(cx);
-    if (!optIdentifier(func->atom(), NULL, &id))
+    RootedAtom funcAtom(cx, func->atom());
+    if (!optIdentifier(funcAtom, NULL, &id))
         return false;
 
     NodeVector args(cx);
