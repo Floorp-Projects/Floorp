@@ -20,7 +20,7 @@ function test() {
 var tests = {
   testOpenCloseFlyout: function(next) {
     let panel = document.getElementById("social-flyout-panel");
-    let port = Social.provider.port;
+    let port = Social.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -31,6 +31,7 @@ var tests = {
         case "got-flyout-visibility":
           if (e.data.result == "hidden") {
             ok(true, "flyout visibility is 'hidden'");
+            port.close();
             next();
           } else if (e.data.result == "shown") {
             ok(true, "flyout visibility is 'shown");

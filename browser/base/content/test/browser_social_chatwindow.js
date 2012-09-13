@@ -24,7 +24,7 @@ function test() {
 var tests = {
   testOpenCloseChat: function(next) {
     let chats = document.getElementById("pinnedchats");
-    let port = Social.provider.port;
+    let port = Social.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -43,6 +43,7 @@ var tests = {
             iframe.addEventListener("unload", function chatUnload() {
               iframe.removeEventListener("unload", chatUnload, true);
               ok(true, "got chatbox unload on close");
+              port.close();
               next();
             }, true);
             chats.selectedChat.close();
@@ -60,8 +61,9 @@ var tests = {
   testManyChats: function(next) {
     // open enough chats to overflow the window, then check
     // if the menupopup is visible
-    let port = Social.provider.port;
+    let port = Social.provider.getWorkerPort();
     ok(port, "provider has a port");
+    port.postMessage({topic: "test-init"});
     let width = document.documentElement.boxObject.width;
     let numToOpen = (width / 200) + 1;
     port.onmessage = function (e) {
@@ -81,6 +83,7 @@ var tests = {
             chats.selectedChat.close();
           }
           ok(!chats.selectedChat, "chats are all closed");
+          port.close();
           next();
           break;
       }
@@ -92,8 +95,9 @@ var tests = {
   },
   testWorkerChatWindow: function(next) {
     const chatUrl = "https://example.com/browser/browser/base/content/test/social_chat.html";
-    let port = Social.provider.port;
+    let port = Social.provider.getWorkerPort();
     ok(port, "provider has a port");
+    port.postMessage({topic: "test-init"});
     port.onmessage = function (e) {
       let topic = e.data.topic;
       switch (topic) {
@@ -104,6 +108,7 @@ var tests = {
             chats.selectedChat.close();
           }
           ok(!chats.selectedChat, "chats are all closed");
+          port.close();
           ensureSocialUrlNotRemembered(chatUrl);
           next();
           break;

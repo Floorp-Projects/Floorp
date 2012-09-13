@@ -364,6 +364,25 @@ Boolish(ParseNode *pn)
       case JSOP_STRING:
         return (pn->pn_atom->length() > 0) ? Truthy : Falsy;
 
+#if JS_HAS_GENERATOR_EXPRS
+      case JSOP_CALL:
+      {
+        /*
+         * A generator expression as an if or loop condition has no effects, it
+         * simply results in a truthy object reference. This condition folding
+         * is needed for the decompiler. See bug 442342 and bug 443074.
+         */
+        if (pn->pn_count != 1)
+            return Unknown;
+        ParseNode *pn2 = pn->pn_head;
+        if (!pn2->isKind(PNK_FUNCTION))
+            return Unknown;
+        if (!(pn2->pn_funbox->inGenexpLambda))
+            return Unknown;
+        return Truthy;
+      }
+#endif
+
       case JSOP_DEFFUN:
       case JSOP_LAMBDA:
       case JSOP_TRUE:

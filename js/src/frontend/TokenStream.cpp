@@ -2314,6 +2314,8 @@ TokenKindToString(TokenKind tt)
       case TOK_MULASSIGN:       return "TOK_MULASSIGN";
       case TOK_DIVASSIGN:       return "TOK_DIVASSIGN";
       case TOK_MODASSIGN:       return "TOK_MODASSIGN";
+      case TOK_EXPORT:          return "TOK_EXPORT";
+      case TOK_IMPORT:          return "TOK_IMPORT";
       case TOK_LIMIT:           break;
     }
 

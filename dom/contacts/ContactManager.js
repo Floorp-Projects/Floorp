@@ -166,9 +166,9 @@ function Contact() {
 
 Contact.prototype = {
   __exposedProps__: {
-                      id: 'r',
-                      updated: 'r',
-                      published:  'r',
+                      id: 'rw',
+                      updated: 'rw',
+                      published:  'rw',
                       name: 'rw',
                       honorificPrefix: 'rw',
                       givenName: 'rw',
@@ -550,13 +550,13 @@ ContactManager.prototype = {
     return request;
   },
 
-  getSimContacts: function(aType) {
+  getSimContacts: function(aContactType) {
     let request;
     request = this.createRequest();
-    let options = {type: aType};
+    let options = {contactType: aContactType};
 
     let allowCallback = function() {
-      if (DEBUG) debug("getSimContacts " + aType);
+      if (DEBUG) debug("getSimContacts " + aContactType);
       cpmm.sendAsyncMessage("Contacts:GetSimContacts",
         {requestID: this.getRequestId({request: request, reason: "getSimContacts"}),
          options: options});

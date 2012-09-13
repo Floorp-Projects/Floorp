@@ -35,7 +35,7 @@ let Social = {
   },
 
   get uiVisible() {
-    return this.provider && this.provider.enabled && this.provider.port;
+    return this.provider && this.provider.enabled;
   },
 
   set enabled(val) {
@@ -62,13 +62,6 @@ let Social = {
     Services.prefs.setBoolPref("social.sidebar.open", !prefValue);
   },
 
-  sendWorkerMessage: function Social_sendWorkerMessage(message) {
-    // Responses aren't handled yet because there is no actions to perform
-    // based on the response from the provider at this point.
-    if (this.provider && this.provider.port)
-      this.provider.port.postMessage(message);
-  },
-
   // Sharing functionality
   _getShareablePageUrl: function Social_getShareablePageUrl(aURI) {
     let uri = aURI.clone();
@@ -85,21 +78,43 @@ let Social = {
   },
 
   sharePage: function Social_sharePage(aURI) {
+    // this should not be called if this.provider or the port is null
+    if (!this.provider) {
+      Cu.reportError("Can't share a page when no provider is current");
+      return;
+    }
+    let port = this.provider.getWorkerPort();
+    if (!port) {
+      Cu.reportError("Can't share page as no provider port is available");
+      return;
+    }
     let url = this._getShareablePageUrl(aURI);
     this._sharedUrls[url] = true;
-    this.sendWorkerMessage({
+    port.postMessage({
       topic: "social.user-recommend",
       data: { url: url }
     });
+    port.close();
   },
 
   unsharePage: function Social_unsharePage(aURI) {
+    // this should not be called if this.provider or the port is null
+    if (!this.provider) {
+      Cu.reportError("Can't unshare a page when no provider is current");
+      return;
+    }
+    let port = this.provider.getWorkerPort();
+    if (!port) {
+      Cu.reportError("Can't unshare page as no provider port is available");
+      return;
+    }
     let url = this._getShareablePageUrl(aURI);
     delete this._sharedUrls[url];
-    this.sendWorkerMessage({
+    port.postMessage({
       topic: "social.user-unrecommend",
       data: { url: url }
     });
+    port.close();
   },
 
   _sharedUrls: {}
