@@ -104,6 +104,8 @@ enum TokenKind {
     TOK_YIELD,                     /* yield from generator function */
     TOK_LEXICALSCOPE,              /* block scope AST node label */
     TOK_LET,                       /* let keyword */
+    TOK_EXPORT,                    /* export keyword */
+    TOK_IMPORT,                    /* import keyword */
     TOK_RESERVED,                  /* reserved keywords */
     TOK_STRICT_RESERVED,           /* reserved keywords in strict mode */
 
