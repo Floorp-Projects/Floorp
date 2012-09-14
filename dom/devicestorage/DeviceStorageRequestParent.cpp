@@ -319,7 +319,7 @@ DeviceStorageRequestParent::StatFileEvent::CancelableRun()
   if (NS_FAILED(rv)) {
     freeSpace = 0;
   }
-  
+
   r = new PostStatResultEvent(mParent, freeSpace, diskUsage);
   NS_DispatchToMainThread(r);
   return NS_OK;
