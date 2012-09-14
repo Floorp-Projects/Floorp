@@ -20,14 +20,11 @@ function test() {
     is(DebuggerUI.getDebugger(), pane,
       "getDebugger() should return the same pane as toggleDebugger().");
 
-    let frame = pane._frame;
     let content = pane.contentWindow;
     let stackframes;
     let variables;
 
-    frame.addEventListener("Debugger:Loaded", function dbgLoaded() {
-      frame.removeEventListener("Debugger:Loaded", dbgLoaded, true);
-
+    wait_for_connect_and_resume(function() {
       ok(content.Prefs.stackframesWidth,
         "The debugger preferences should have a saved stackframesWidth value.");
       ok(content.Prefs.variablesWidth,
@@ -45,11 +42,10 @@ function test() {
       variables.setAttribute("width", someWidth2);
 
       removeTab(tab1);
+    });
 
-    }, true);
-
-    frame.addEventListener("Debugger:Unloaded", function dbgUnloaded() {
-      frame.removeEventListener("Debugger:Unloaded", dbgUnloaded, true);
+    window.addEventListener("Debugger:Shutdown", function dbgShutdown() {
+      window.removeEventListener("Debugger:Shutdown", dbgShutdown, true);
 
       is(content.Prefs.stackframesWidth, stackframes.getAttribute("width"),
         "The stackframes pane width should have been saved by now.");
