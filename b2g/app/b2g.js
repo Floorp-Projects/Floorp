@@ -452,13 +452,13 @@ pref("app.update.staging.enabled", true);
 pref("app.update.service.enabled", true);
 
 // The URL hosting the update manifest.
-pref("app.update.url", "http://update.boot2gecko.org/m2.5/updates.xml");
+pref("app.update.url", "http://update.boot2gecko.org/nightly/update.xml");
 // Interval at which update manifest is fetched.  In units of seconds.
-pref("app.update.interval", 3600); // 1 hour
+pref("app.update.interval", 86400); // 1 day
 // First interval to elapse before checking for update.  In units of
 // milliseconds.  Capped at 10 seconds.
-pref("app.update.timerFirstInterval", 30000);
-pref("app.update.timerMinimumDelay", 30); // seconds
+pref("app.update.timerFirstInterval", 3600000); // 1 hour
+pref("app.update.timerMinimumDelay", 3600); // 1 hour in seconds
 // Don't throttle background updates.
 pref("app.update.download.backgroundInterval", 0);
 
