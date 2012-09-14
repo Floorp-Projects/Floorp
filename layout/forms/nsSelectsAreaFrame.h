@@ -5,6 +5,7 @@
 #ifndef nsSelectsAreaFrame_h___
 #define nsSelectsAreaFrame_h___
 
+#include "mozilla/Attributes.h"
 #include "nsBlockFrame.h"
 
 class nsSelectsAreaFrame : public nsBlockFrame
@@ -16,7 +17,7 @@ public:
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   nsresult BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
                                     const nsRect&           aDirtyRect,
@@ -25,7 +26,7 @@ public:
   NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   nscoord HeightOfARow() const { return mHeightOfARow; }
   

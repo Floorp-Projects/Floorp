@@ -5,6 +5,7 @@
 #ifndef nsPageContentFrame_h___
 #define nsPageContentFrame_h___
 
+#include "mozilla/Attributes.h"
 #include "nsViewportFrame.h"
 class nsPageFrame;
 class nsSharedPageData;
@@ -22,7 +23,7 @@ public:
   NS_IMETHOD  Reflow(nsPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
-                     nsReflowStatus&      aStatus);
+                     nsReflowStatus&      aStatus) MOZ_OVERRIDE;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const
   {
@@ -46,11 +47,11 @@ public:
    *
    * @see nsGkAtoms::pageContentFrame
    */
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
   
 #ifdef DEBUG
   // Debugging
-  NS_IMETHOD  GetFrameName(nsAString& aResult) const;
+  NS_IMETHOD  GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
 protected:
