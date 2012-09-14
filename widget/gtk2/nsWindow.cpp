@@ -26,7 +26,7 @@
 #include "nsGtkCursors.h"
 
 #include <gtk/gtk.h>
-#if defined(MOZ_WIDGET_GTK3)
+#if (MOZ_WIDGET_GTK == 3)
 #include <gtk/gtkx.h>
 #endif
 #ifdef MOZ_X11
@@ -34,7 +34,7 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/XShm.h>
 #include <X11/extensions/shape.h>
-#if defined(MOZ_WIDGET_GTK3)
+#if (MOZ_WIDGET_GTK == 3)
 #include <gdk/gdkkeysyms-compat.h>
 #endif
 
@@ -44,7 +44,9 @@
 #include <X11/XF86keysym.h>
 #endif
 
+#if (MOZ_WIDGET_GTK == 2)
 #include "gtk2xtbin.h"
+#endif
 #endif /* MOZ_X11 */
 #include <gdk/gdkkeysyms.h>
 #if defined(MOZ_WIDGET_GTK2)
@@ -1680,17 +1682,6 @@ nsWindow::GetNativeData(uint32_t aDataType)
         return nullptr;
 #endif /* MOZ_X11 */
         break;
-
-    case NS_NATIVE_GRAPHIC: {
-#if defined(MOZ_WIDGET_GTK2)
-        nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
-        NS_ASSERTION(nullptr != toolkit, "NULL toolkit, unable to get a GC");    
-        return toolkit->GetSharedGC();
-#else
-        return nullptr;
-#endif
-        break;
-    }
 
     case NS_NATIVE_SHELLWIDGET:
         return (void *) mShell;
