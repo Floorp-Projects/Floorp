@@ -87,6 +87,8 @@ enum FlipStyle {
 //  need to find a good place to put them together.
 //  if someone changes one, please also change the other.
 
+#define CONTEXT_MENU_OFFSET_PIXELS 2
+
 nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsIViewManager;
