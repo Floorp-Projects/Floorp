@@ -47,7 +47,6 @@ typedef uint8_t     jssrcnote;
 typedef uintptr_t   jsatomid;
 
 /* Struct typedefs. */
-typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
 typedef struct JSGCThing            JSGCThing;
 typedef struct JSGenerator          JSGenerator;
 typedef struct JSNativeEnumerator   JSNativeEnumerator;
@@ -178,7 +177,7 @@ namespace frontend {
 
 struct BytecodeEmitter;
 struct Definition;
-struct FunctionBox;
+class FunctionBox;
 struct ObjectBox;
 struct Token;
 struct TokenPos;

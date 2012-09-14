@@ -113,11 +113,11 @@ public:
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                                  nsGUIEvent *    aEvent,
                                  nsEventStatus*  aEventStatus,
-                                 bool aControlHeld)  { return NS_OK; }
+                                 bool aControlHeld) { return NS_OK; }
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus)  { return NS_OK; }
+                        nsEventStatus*  aEventStatus) { return NS_OK; }
 
   NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
                            nsGUIEvent *    aEvent,

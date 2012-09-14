@@ -8,7 +8,7 @@
 interface nsIDOMStorage;
 interface nsIPrincipal;
 
-[scriptable, uuid(1541da6c-a9fb-4a8f-af9d-4493c981491d)]
+[scriptable, uuid(b16b207c-d883-43f5-a27e-548e7f2f5c20)]
 interface nsIDOMStorageManager : nsISupports
 {
   /**
@@ -20,12 +20,6 @@ interface nsIDOMStorageManager : nsISupports
    * @returns the space usage of the domain, in bytes.
    */
   long getUsage(in AString aOwnerDomain);
-
-  /**
-   * Clear keys owned by offline applications.  All data owned by a domain
-   * with the "offline-app" permission will be removed from the database.
-   */
-  void clearOfflineApps();
 
   /**
    * Returns instance of localStorage object for aURI's origin.

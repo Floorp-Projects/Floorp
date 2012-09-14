@@ -9559,7 +9559,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexItems(
                                 true);
 
     newItem->mIsAllInline = newItem->mHasInlineEnds =
-      newItem->mStyleContext->GetStyleDisplay()->IsInlineOutside();
+      newItem->mStyleContext->GetStyleDisplay()->IsInlineOutsideStyle();
     newItem->mIsBlock = !newItem->mIsAllInline;
 
     NS_ABORT_IF_FALSE(!newItem->mIsAllInline && newItem->mIsBlock,
