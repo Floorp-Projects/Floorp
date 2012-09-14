@@ -14,9 +14,5 @@ let OfflineAppCacheHelper = {
     try {
       cacheService.evictEntries(Ci.nsICache.STORE_OFFLINE);
     } catch(er) {}
-
-    var storageManagerService = Cc["@mozilla.org/dom/storagemanager;1"].
-                                getService(Ci.nsIDOMStorageManager);
-    storageManagerService.clearOfflineApps();
   }
 };
