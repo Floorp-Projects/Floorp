@@ -897,9 +897,18 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
 
   if (NS_SUCCEEDED(rv)) {
 
-    int oomAdj = oomAdjOfOomScoreAdj(oomScoreAdj);
+    int clampedOomScoreAdj = clamped<int>(oomScoreAdj, OOM_SCORE_ADJ_MIN,
+                                                       OOM_SCORE_ADJ_MAX);
+    if(clampedOomScoreAdj != oomScoreAdj) {
+      HAL_LOG(("Clamping OOM adjustment for pid %d to %d",
+               aPid, clampedOomScoreAdj));
+    } else {
+      HAL_LOG(("Setting OOM adjustment for pid %d to %d",
+               aPid, clampedOomScoreAdj));
+    }
 
-    HAL_LOG(("Setting oom_adj for pid %d to %d", aPid, oomAdj));
+    int oomAdj = oomAdjOfOomScoreAdj(clampedOomScoreAdj);
+
     WriteToFile(nsPrintfCString("/proc/%d/oom_adj", aPid).get(),
                 nsPrintfCString("%d", oomAdj).get());
   }
