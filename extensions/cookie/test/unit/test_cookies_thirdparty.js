@@ -32,7 +32,7 @@ function run_test() {
   // Force the channel URI to be used when determining the originating URI of
   // the channel.
   var httpchannel1 = channel1.QueryInterface(Ci.nsIHttpChannelInternal);
-  var httpchannel2 = channel1.QueryInterface(Ci.nsIHttpChannelInternal);
+  var httpchannel2 = channel2.QueryInterface(Ci.nsIHttpChannelInternal);
   httpchannel1.forceAllowThirdPartyCookie = true;
   httpchannel2.forceAllowThirdPartyCookie = true;
 
@@ -46,6 +46,28 @@ function run_test() {
   // test with third party cookies blocked
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 1);
   do_set_cookies(uri1, channel1, true, [0, 1, 1, 2]);
+  Services.cookies.removeAll();
+  do_set_cookies(uri1, channel2, true, [0, 0, 0, 0]);
+  Services.cookies.removeAll();
+
+  // Test per-site 3rd party cookies with cookies enabled
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+  var kPermissionType = "cookie";
+  var ALLOW_FIRST_PARTY_ONLY = 9;
+  // ALLOW_FIRST_PARTY_ONLY overrides
+  Services.permissions.add(uri1, kPermissionType, ALLOW_FIRST_PARTY_ONLY);
+  do_set_cookies(uri1, channel1, true, [0, 1, 1, 2]);
+  Services.cookies.removeAll();
+  do_set_cookies(uri1, channel2, true, [0, 0, 0, 0]);
+  Services.cookies.removeAll();
+
+  // Test per-site 3rd party cookies with 3rd party cookies disabled
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 1);
+  do_set_cookies(uri1, channel1, true, [0, 1, 1, 2]);
+  Services.cookies.removeAll();
+  // No preference has been set for uri2, but it should act as if
+  // ALLOW_FIRST_PARTY_ONLY has been set
+  do_set_cookies(uri2, channel2, true, [0, 1, 1, 2]);
   Services.cookies.removeAll();
   do_set_cookies(uri1, channel2, true, [0, 0, 0, 0]);
   Services.cookies.removeAll();
