@@ -50,6 +50,9 @@ private:
                              bool aEditable, 
                              nsIDOMDeviceStorageCursor** aRetval);
 
+  static bool IsMimeTypeCorrectForStorageType(nsAString& aType,
+					      nsIDOMBlob* aBlob);
+
   nsString mStorageType;
   nsCOMPtr<nsIFile> mRootDirectory;
 
