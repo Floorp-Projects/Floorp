@@ -16,7 +16,7 @@ public:
 
     static nsresult CreateStack(JSContext* cx, XPCJSStackFrame** stack);
 
-    static nsresult CreateStackFrameLocation(PRUint32 aLanguage,
+    static nsresult CreateStackFrameLocation(uint32_t aLanguage,
                                              const char* aFilename,
                                              const char* aFunctionName,
                                              int32_t aLineNumber,

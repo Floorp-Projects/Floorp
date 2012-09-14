@@ -53,7 +53,7 @@ JS_STATIC_ASSERT(sizeof(IonCode) % gc::Cell::CellSize == 0);
 
 #ifdef JS_THREADSAFE
 static bool IonTLSInitialized = false;
-static PRUintn IonTLSIndex;
+static unsigned IonTLSIndex;
 
 static inline IonContext *
 CurrentIonContext()
