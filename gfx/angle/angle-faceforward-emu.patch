@@ -1,0 +1,314 @@
+From: Jeff Gilbert <jgilbert@mozilla.com>
+Bug 771406 - Add emulation for GLSL faceforward() to ANGLE - r=bjacob
+
+diff --git a/gfx/angle/src/compiler/BuiltInFunctionEmulator.cpp b/gfx/angle/src/compiler/BuiltInFunctionEmulator.cpp
+--- a/gfx/angle/src/compiler/BuiltInFunctionEmulator.cpp
++++ b/gfx/angle/src/compiler/BuiltInFunctionEmulator.cpp
+@@ -26,16 +26,22 @@ const char* kFunctionEmulationVertexSour
+     "#error no emulation for distance(vec3, vec3)",
+     "#error no emulation for distance(vec4, vec4)",
+ 
+     "#define webgl_dot_emu(x, y) ((x) * (y))",
+     "#error no emulation for dot(vec2, vec2)",
+     "#error no emulation for dot(vec3, vec3)",
+     "#error no emulation for dot(vec4, vec4)",
+ 
++    // |faceforward(N, I, Nref)| is |dot(NRef, I) < 0 ? N : -N|
++    "#define webgl_faceforward_emu(N, I, Nref) (((Nref) * (I) < 0.0) ? (N) : -(N))",
++    "#error no emulation for faceforward(vec2, vec2, vec2)",
++    "#error no emulation for faceforward(vec3, vec3, vec3)",
++    "#error no emulation for faceforward(vec4, vec4, vec4)",
++
+     "#define webgl_length_emu(x) ((x) >= 0.0 ? (x) : -(x))",
+     "#error no emulation for length(vec2)",
+     "#error no emulation for length(vec3)",
+     "#error no emulation for length(vec4)",
+ 
+     "#define webgl_normalize_emu(x) ((x) == 0.0 ? 0.0 : ((x) > 0.0 ? 1.0 : -1.0))",
+     "#error no emulation for normalize(vec2)",
+     "#error no emulation for normalize(vec3)",
+@@ -58,16 +64,22 @@ const char* kFunctionEmulationFragmentSo
+     "#error no emulation for distance(vec3, vec3)",
+     "#error no emulation for distance(vec4, vec4)",
+ 
+     "#define webgl_dot_emu(x, y) ((x) * (y))",
+     "#error no emulation for dot(vec2, vec2)",
+     "#error no emulation for dot(vec3, vec3)",
+     "#error no emulation for dot(vec4, vec4)",
+ 
++    // |faceforward(N, I, Nref)| is |dot(NRef, I) < 0 ? N : -N|
++    "#define webgl_faceforward_emu(N, I, Nref) (((Nref) * (I) < 0.0) ? (N) : -(N))",
++    "#error no emulation for faceforward(vec2, vec2, vec2)",
++    "#error no emulation for faceforward(vec3, vec3, vec3)",
++    "#error no emulation for faceforward(vec4, vec4, vec4)",
++
+     "#define webgl_length_emu(x) ((x) >= 0.0 ? (x) : -(x))",
+     "#error no emulation for length(vec2)",
+     "#error no emulation for length(vec3)",
+     "#error no emulation for length(vec4)",
+ 
+     "#define webgl_normalize_emu(x) ((x) == 0.0 ? 0.0 : ((x) > 0.0 ? 1.0 : -1.0))",
+     "#error no emulation for normalize(vec2)",
+     "#error no emulation for normalize(vec3)",
+@@ -89,16 +101,20 @@ const bool kFunctionEmulationVertexMask[
+     true,  // TFunctionDistance1_1
+     false, // TFunctionDistance2_2
+     false, // TFunctionDistance3_3
+     false, // TFunctionDistance4_4
+     true,  // TFunctionDot1_1
+     false, // TFunctionDot2_2
+     false, // TFunctionDot3_3
+     false, // TFunctionDot4_4
++    true,  // TFunctionFaceForward1_1_1
++    false, // TFunctionFaceForward2_2_2
++    false, // TFunctionFaceForward3_3_3
++    false, // TFunctionFaceForward4_4_4
+     true,  // TFunctionLength1
+     false, // TFunctionLength2
+     false, // TFunctionLength3
+     false, // TFunctionLength4
+     true,  // TFunctionNormalize1
+     false, // TFunctionNormalize2
+     false, // TFunctionNormalize3
+     false, // TFunctionNormalize4
+@@ -115,16 +131,20 @@ const bool kFunctionEmulationVertexMask[
+     false, // TFunctionDistance1_1
+     false, // TFunctionDistance2_2
+     false, // TFunctionDistance3_3
+     false, // TFunctionDistance4_4
+     false, // TFunctionDot1_1
+     false, // TFunctionDot2_2
+     false, // TFunctionDot3_3
+     false, // TFunctionDot4_4
++    false, // TFunctionFaceForward1_1_1
++    false, // TFunctionFaceForward2_2_2
++    false, // TFunctionFaceForward3_3_3
++    false, // TFunctionFaceForward4_4_4
+     false, // TFunctionLength1
+     false, // TFunctionLength2
+     false, // TFunctionLength3
+     false, // TFunctionLength4
+     false, // TFunctionNormalize1
+     false, // TFunctionNormalize2
+     false, // TFunctionNormalize3
+     false, // TFunctionNormalize4
+@@ -146,16 +166,20 @@ const bool kFunctionEmulationFragmentMas
+     true,  // TFunctionDistance1_1
+     false, // TFunctionDistance2_2
+     false, // TFunctionDistance3_3
+     false, // TFunctionDistance4_4
+     true,  // TFunctionDot1_1
+     false, // TFunctionDot2_2
+     false, // TFunctionDot3_3
+     false, // TFunctionDot4_4
++    true,  // TFunctionFaceForward1_1_1
++    false, // TFunctionFaceForward2_2_2
++    false, // TFunctionFaceForward3_3_3
++    false, // TFunctionFaceForward4_4_4
+     true,  // TFunctionLength1
+     false, // TFunctionLength2
+     false, // TFunctionLength3
+     false, // TFunctionLength4
+     true,  // TFunctionNormalize1
+     false, // TFunctionNormalize2
+     false, // TFunctionNormalize3
+     false, // TFunctionNormalize4
+@@ -172,16 +196,20 @@ const bool kFunctionEmulationFragmentMas
+     false, // TFunctionDistance1_1
+     false, // TFunctionDistance2_2
+     false, // TFunctionDistance3_3
+     false, // TFunctionDistance4_4
+     false, // TFunctionDot1_1
+     false, // TFunctionDot2_2
+     false, // TFunctionDot3_3
+     false, // TFunctionDot4_4
++    false, // TFunctionFaceForward1_1_1
++    false, // TFunctionFaceForward2_2_2
++    false, // TFunctionFaceForward3_3_3
++    false, // TFunctionFaceForward4_4_4
+     false, // TFunctionLength1
+     false, // TFunctionLength2
+     false, // TFunctionLength3
+     false, // TFunctionLength4
+     false, // TFunctionNormalize1
+     false, // TFunctionNormalize2
+     false, // TFunctionNormalize3
+     false, // TFunctionNormalize4
+@@ -239,25 +267,37 @@ public:
+                 case EOpReflect:
+                 case EOpRefract:
+                 case EOpMul:
+                     break;
+                 default:
+                     return true;
+             };
+             const TIntermSequence& sequence = node->getSequence();
+-            // Right now we only handle built-in functions with two parameters.
+-            if (sequence.size() != 2)
++            bool needToEmulate = false;
++
++            if (sequence.size() == 2) {
++                TIntermTyped* param1 = sequence[0]->getAsTyped();
++                TIntermTyped* param2 = sequence[1]->getAsTyped();
++                if (!param1 || !param2)
++                    return true;
++                needToEmulate = mEmulator.SetFunctionCalled(
++                    node->getOp(), param1->getType(), param2->getType());
++            } else if (sequence.size() == 3) {
++                TIntermTyped* param1 = sequence[0]->getAsTyped();
++                TIntermTyped* param2 = sequence[1]->getAsTyped();
++                TIntermTyped* param3 = sequence[2]->getAsTyped();
++                if (!param1 || !param2 || !param3)
++                    return true;
++                needToEmulate = mEmulator.SetFunctionCalled(
++                    node->getOp(), param1->getType(), param2->getType(), param3->getType());
++            } else {
+                 return true;
+-            TIntermTyped* param1 = sequence[0]->getAsTyped();
+-            TIntermTyped* param2 = sequence[1]->getAsTyped();
+-            if (!param1 || !param2)
+-                return true;
+-            bool needToEmulate = mEmulator.SetFunctionCalled(
+-                node->getOp(), param1->getType(), param2->getType());
++            }
++
+             if (needToEmulate)
+                 node->setUseEmulatedFunction();
+         }
+         return true;
+     }
+ 
+ private:
+     BuiltInFunctionEmulator& mEmulator;
+@@ -286,16 +326,23 @@ bool BuiltInFunctionEmulator::SetFunctio
+ bool BuiltInFunctionEmulator::SetFunctionCalled(
+     TOperator op, const TType& param1, const TType& param2)
+ {
+     TBuiltInFunction function = IdentifyFunction(op, param1, param2);
+     return SetFunctionCalled(function);
+ }
+ 
+ bool BuiltInFunctionEmulator::SetFunctionCalled(
++    TOperator op, const TType& param1, const TType& param2, const TType& param3)
++{
++    TBuiltInFunction function = IdentifyFunction(op, param1, param2, param3);
++    return SetFunctionCalled(function);
++}
++
++bool BuiltInFunctionEmulator::SetFunctionCalled(
+     BuiltInFunctionEmulator::TBuiltInFunction function) {
+     if (function == TFunctionUnknown || mFunctionMask[function] == false)
+         return false;
+     for (size_t i = 0; i < mFunctions.size(); ++i) {
+         if (mFunctions[i] == function)
+             return true;
+     }
+     mFunctions.push_back(function);
+@@ -377,16 +424,44 @@ BuiltInFunctionEmulator::IdentifyFunctio
+     }
+     if (function == TFunctionUnknown)
+         return TFunctionUnknown;
+     if (param1.isVector())
+         function += param1.getNominalSize() - 1;
+     return static_cast<TBuiltInFunction>(function);
+ }
+ 
++BuiltInFunctionEmulator::TBuiltInFunction
++BuiltInFunctionEmulator::IdentifyFunction(
++    TOperator op, const TType& param1, const TType& param2, const TType& param3)
++{
++    // Check that all params have the same type, length,
++    // and that they're not too large.
++    if (param1.isVector() != param2.isVector() ||
++        param2.isVector() != param3.isVector() ||
++        param1.getNominalSize() != param2.getNominalSize() ||
++        param2.getNominalSize() != param3.getNominalSize() ||
++        param1.getNominalSize() > 4)
++        return TFunctionUnknown;
++
++    unsigned int function = TFunctionUnknown;
++    switch (op) {
++        case EOpFaceForward:
++            function = TFunctionFaceForward1_1_1;
++            break;
++        default:
++            break;
++    }
++    if (function == TFunctionUnknown)
++        return TFunctionUnknown;
++    if (param1.isVector())
++        function += param1.getNominalSize() - 1;
++    return static_cast<TBuiltInFunction>(function);
++}
++
+ void BuiltInFunctionEmulator::MarkBuiltInFunctionsForEmulation(
+     TIntermNode* root)
+ {
+     ASSERT(root);
+ 
+     BuiltInFunctionEmulationMarker marker(*this);
+     root->traverse(&marker);
+ }
+diff --git a/gfx/angle/src/compiler/BuiltInFunctionEmulator.h b/gfx/angle/src/compiler/BuiltInFunctionEmulator.h
+--- a/gfx/angle/src/compiler/BuiltInFunctionEmulator.h
++++ b/gfx/angle/src/compiler/BuiltInFunctionEmulator.h
+@@ -23,16 +23,18 @@ public:
+     // Records that a function is called by the shader and might needs to be
+     // emulated.  If the function's group is not in mFunctionGroupFilter, this
+     // becomes an no-op.
+     // Returns true if the function call needs to be replaced with an emulated
+     // one.
+     bool SetFunctionCalled(TOperator op, const TType& param);
+     bool SetFunctionCalled(
+         TOperator op, const TType& param1, const TType& param2);
++    bool SetFunctionCalled(
++        TOperator op, const TType& param1, const TType& param2, const TType& param3);
+ 
+     // Output function emulation definition.  This should be before any other
+     // shader source.
+     void OutputEmulatedFunctionDefinition(TInfoSinkBase& out, bool withPrecision) const;
+ 
+     void MarkBuiltInFunctionsForEmulation(TIntermNode* root);
+ 
+     void Cleanup();
+@@ -55,16 +57,21 @@ private:
+         TFunctionDistance3_3,  // vec3 distance(vec3, vec3);
+         TFunctionDistance4_4,  // vec4 distance(vec4, vec4);
+ 
+         TFunctionDot1_1,  // float dot(float, float);
+         TFunctionDot2_2,  // vec2 dot(vec2, vec2);
+         TFunctionDot3_3,  // vec3 dot(vec3, vec3);
+         TFunctionDot4_4,  // vec4 dot(vec4, vec4);
+ 
++        TFunctionFaceForward1_1_1,  // float faceforward(float, float, float);
++        TFunctionFaceForward2_2_2,  // vec2 faceforward(vec2, vec2, vec2);
++        TFunctionFaceForward3_3_3,  // vec3 faceforward(vec3, vec3, vec3);
++        TFunctionFaceForward4_4_4,  // vec4 faceforward(vec4, vec4, vec4);
++
+         TFunctionLength1,  // float length(float);
+         TFunctionLength2,  // float length(vec2);
+         TFunctionLength3,  // float length(vec3);
+         TFunctionLength4,  // float length(vec4);
+ 
+         TFunctionNormalize1,  // float normalize(float);
+         TFunctionNormalize2,  // vec2 normalize(vec2);
+         TFunctionNormalize3,  // vec3 normalize(vec3);
+@@ -76,16 +83,18 @@ private:
+         TFunctionReflect4_4,  // vec4 reflect(vec4, vec4);
+ 
+         TFunctionUnknown
+     };
+ 
+     TBuiltInFunction IdentifyFunction(TOperator op, const TType& param);
+     TBuiltInFunction IdentifyFunction(
+         TOperator op, const TType& param1, const TType& param2);
++    TBuiltInFunction IdentifyFunction(
++        TOperator op, const TType& param1, const TType& param2, const TType& param3);
+ 
+     bool SetFunctionCalled(TBuiltInFunction function);
+ 
+     std::vector<TBuiltInFunction> mFunctions;
+ 
+     const bool* mFunctionMask;  // a boolean flag for each function.
+     const char** mFunctionSource;
+ };
