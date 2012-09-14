@@ -5,12 +5,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <gtk/gtk.h>
+
 #include "nsIdleServiceGTK.h"
 #include "nsIServiceManager.h"
 #include "nsDebug.h"
 #include "prlink.h"
 #include "prlog.h"
-
+#if (MOZ_WIDGET_GTK == 2)
+#include "gtk2compat.h"
+#endif
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* sIdleLog = nullptr;
@@ -102,7 +106,7 @@ nsIdleServiceGTK::PollIdleTime(uint32_t *aIdleTime)
     *aIdleTime = 0;
 
     // We might not have a display (cf. in xpcshell)
-    Display *dplay = GDK_DISPLAY();
+    Display *dplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     if (!dplay) {
 #ifdef PR_LOGGING
         PR_LOG(sIdleLog, PR_LOG_WARNING, ("No display found!\n"));
