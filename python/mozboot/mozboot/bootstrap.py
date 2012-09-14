@@ -11,6 +11,7 @@ from mozboot.centos import CentOSBootstrapper
 from mozboot.fedora import FedoraBootstrapper
 from mozboot.mint import MintBootstrapper
 from mozboot.osx import OSXBootstrapper
+from mozboot.openbsd import OpenBSDBootstrapper
 from mozboot.ubuntu import UbuntuBootstrapper
 
 
@@ -59,6 +60,10 @@ class Bootstrapper(object):
             args['major'] = major
             args['minor'] = minor
             args['point'] = point
+
+        elif sys.platform.startswith('openbsd'):
+            cls = OpenBSDBootstrapper
+            args['version'] = platform.uname()[2]
 
         if cls is None:
             raise NotImplementedError('Bootstrap support is not yet available '
