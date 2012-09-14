@@ -18,6 +18,9 @@
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
+#if (MOZ_WIDGET_GTK == 3)
+#include <gdk/gdkkeysyms-compat.h>
+#endif
 #include "nsGUIEvent.h"
 #include "WidgetUtils.h"
 #include "keysym2ucs.h"

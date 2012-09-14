@@ -16,8 +16,12 @@
 #include "nsCRT.h" /* should be <limits.h>? */
 
 #include <gtk/gtk.h>
+#if (MOZ_WIDGET_GTK == 2)
 #include <gtk/gtkprinter.h>
 #include <gtk/gtkprintjob.h>
+#else
+#include <gtk/gtkunixprint.h>
+#endif
 
 #define NS_PORTRAIT  0
 #define NS_LANDSCAPE 1
