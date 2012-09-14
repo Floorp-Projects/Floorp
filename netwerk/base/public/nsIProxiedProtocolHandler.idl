@@ -9,12 +9,26 @@ interface nsIChannel;
 interface nsIURI;
 interface nsIProxyInfo;
 
-[scriptable, uuid(0a24fed4-1dd2-11b2-a75c-9f8b9a8f9ba7)]
+[scriptable, uuid(2b63fe69-b0fc-48f2-a2df-adb795a4ce5c)]
 interface nsIProxiedProtocolHandler : nsIProtocolHandler
 {
     /** Create a new channel with the given proxyInfo
      *
+     * @param uri the channel uri
+     * @param proxyInfo any proxy information that has already been determined,
+     *        or null if channel should later determine the proxy on its own using
+     *        proxyResolveFlags/proxyURI
+     * @param proxyResolveFlags used if the proxy is later determined
+     *        from nsIProtocolProxyService::asyncResolve
+     * @param proxyURI used if the proxy is later determined from
+     *        nsIProtocolProxyService::asyncResolve with this as the proxyURI name.
+     *        Generally this is the same as uri (or null which has the same
+     *        effect), except in the case of websockets which wants to bootstrap
+     *        to an http:// channel but make its proxy determination based on
+     *        a ws:// uri.
      */
-    nsIChannel newProxiedChannel(in nsIURI uri, in nsIProxyInfo proxyInfo);
+    nsIChannel newProxiedChannel(in nsIURI uri, in nsIProxyInfo proxyInfo,
+                                 in unsigned long proxyResolveFlags,
+                                 in nsIURI proxyURI);
 };
 

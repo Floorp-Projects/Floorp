@@ -33,24 +33,11 @@ function run_test()
   httpServer.registerPathHandler("/content", contentHandler);
   httpServer.start(4444);
 
+  // we want to cancel the failover proxy engage, so, do not allow
+  // redirects from now.
+
   var nc = new ChannelEventSink();
-  var on_modify_request_count = 0;
-
-  modifyrequestobserver = {observe: function() {
-    // We get 2 on-modify-request notifications:
-    // 1. when proxy service resolves the proxy settings from PAC function
-    // 2. when we try to fail over the first proxy (moving to the second one)
-    //
-    // In the second case we want to cancel the proxy engage, so, do not allow
-    // redirects from now.
-
-    if (++on_modify_request_count == 2)
-      nc._flags = ES_ABORT_REDIRECT;
-  }}
-
-  var os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.addObserver(modifyrequestobserver, "http-on-modify-request", false);
+  nc._flags = ES_ABORT_REDIRECT;
 
   var prefserv = Cc["@mozilla.org/preferences-service;1"].
                  getService(Ci.nsIPrefService);

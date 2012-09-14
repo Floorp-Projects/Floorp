@@ -66,7 +66,10 @@ CPPSRCS		= \
 		RedirectChannelRegistrar.cpp \
 		nsPreloadedStream.cpp \
 		nsStreamListenerWrapper.cpp \
+		ProxyAutoConfig.cpp \
 		$(NULL)
+
+LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/base
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsURLHelperOS2.cpp
@@ -96,11 +99,6 @@ ifdef MOZ_ENABLE_QTNETWORK
 	OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 endif
-
-EXTRA_COMPONENTS = \
-		$(srcdir)/nsProxyAutoConfig.js \
-		$(srcdir)/nsProxyAutoConfig.manifest \
-		$(NULL)
 
 EXTRA_JS_MODULES = \
 		NetUtil.jsm \
