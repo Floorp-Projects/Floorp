@@ -531,6 +531,8 @@ ContextStack::currentScript(jsbytecode **ppc) const
     if (fp->beginsIonActivation()) {
         JSScript *script = NULL;
         ion::GetPcScript(cx_, &script, ppc);
+        if (script->compartment() != cx_->compartment)
+            return NULL;
         return script;
     }
 #endif
