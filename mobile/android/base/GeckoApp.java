@@ -154,7 +154,6 @@ abstract public class GeckoApp
     private boolean mIsRestoringActivity;
     private String mCurrentResponse = "";
 
-    private GeckoConnectivityReceiver mConnectivityReceiver;
     private GeckoBatteryManager mBatteryReceiver;
     private PromptService mPromptService;
     private Favicons mFavicons;
@@ -1607,8 +1606,8 @@ abstract public class GeckoApp
         mBatteryReceiver = new GeckoBatteryManager();
         mBatteryReceiver.registerFor(mAppContext);
 
-        mConnectivityReceiver = new GeckoConnectivityReceiver();
-        mConnectivityReceiver.registerFor(mAppContext);
+        GeckoConnectivityReceiver.getInstance().init(this);
+        GeckoConnectivityReceiver.getInstance().start();
 
         mPromptService = new PromptService();
 
@@ -2140,8 +2139,7 @@ abstract public class GeckoApp
         Log.i(LOGTAG, "application paused");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
 
-        if (mConnectivityReceiver != null)
-            mConnectivityReceiver.unregisterFor(mAppContext);
+        GeckoConnectivityReceiver.getInstance().stop();
         GeckoNetworkManager.getInstance().stop();
         GeckoScreenOrientationListener.getInstance().stop();
     }
@@ -2152,8 +2150,7 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.GeckoRunning))
             GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(true));
 
-        if (mConnectivityReceiver != null)
-            mConnectivityReceiver.registerFor(mAppContext);
+        GeckoConnectivityReceiver.getInstance().start();
         GeckoNetworkManager.getInstance().start();
         GeckoScreenOrientationListener.getInstance().start();
     }
