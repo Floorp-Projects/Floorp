@@ -131,26 +131,63 @@ let DOMApplicationRegistry = {
   },
 
 #ifdef MOZ_SYS_MSG
-  _registerSystemMessages: function(aManifest, aApp) {
-    if (aManifest.messages && Array.isArray(aManifest.messages) &&
-        aManifest.messages.length > 0) {
-      let manifest = new DOMApplicationManifest(aManifest, aApp.origin);
-      let launchPath = Services.io.newURI(manifest.fullLaunchPath(), null, null);
-      let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
-      aManifest.messages.forEach(function registerPages(aMessage) {
-        msgmgr.registerPage(aMessage, launchPath, manifestURL);
-      });
-    }
-  },
 
-  _registerActivities: function(aManifest, aApp) {
-    if (!aManifest.activities) {
+  // aEntryPoint is either the entry_point name or the null, in which case we
+  // use the root of the manifest.
+  _registerSystemMessagesForEntryPoint: function(aManifest, aApp, aEntryPoint) {
+    let root = aManifest;
+    if (aEntryPoint && aManifest.entry_points[aEntryPoint]) {
+      root = aManifest.entry_points[aEntryPoint];
+    }
+
+    if (!root.messages || !Array.isArray(root.messages) ||
+        root.messages.length == 0) {
       return;
     }
 
     let manifest = new DOMApplicationManifest(aManifest, aApp.origin);
-    for (let activity in aManifest.activities) {
-      let description = aManifest.activities[activity];
+    let launchPath = Services.io.newURI(manifest.fullLaunchPath(aEntryPoint), null, null);
+    let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
+    root.messages.forEach(function registerPages(aMessage) {
+      let href = launchPath;
+      let messageName;
+      if (typeof(aMessage) === "object" && Object.keys(aMessage).length === 1) {
+        messageName = Object.keys(aMessage)[0];
+        href = Services.io.newURI(manifest.resolveFromOrigin(aMessage[messageName]), null, null);
+      } else {
+        messageName = aMessage;
+      }
+      msgmgr.registerPage(messageName, href, manifestURL);
+    });
+  },
+
+  _registerSystemMessages: function(aManifest, aApp) {
+    this._registerSystemMessagesForEntryPoint(aManifest, aApp, null);
+
+    if (!aManifest.entry_points) {
+      return;
+    }
+
+    for (let entryPoint in aManifest.entry_points) {
+      this._registerSystemMessagesForEntryPoint(aManifest, aApp, entryPoint);
+    }
+  },
+
+  // aEntryPoint is either the entry_point name or the null, in which case we
+  // use the root of the manifest.
+  _registerActivitiesForEntryPoint: function(aManifest, aApp, aEntryPoint) {
+    let root = aManifest;
+    if (aEntryPoint && aManifest.entry_points[aEntryPoint]) {
+      root = aManifest.entry_points[aEntryPoint];
+    }
+
+    if (!root.activities) {
+      return;
+    }
+
+    let manifest = new DOMApplicationManifest(aManifest, aApp.origin);
+    for (let activity in root.activities) {
+      let description = root.activities[activity];
       if (!description.href) {
         description.href = manifest.launch_path;
       }
@@ -171,18 +208,47 @@ let DOMApplicationRegistry = {
     }
   },
 
-  _unregisterActivities: function(aManifest, aApp) {
-    if (!aManifest.activities) {
+  _registerActivities: function(aManifest, aApp) {
+    this._registerActivitiesForEntryPoint(aManifest, aApp, null);
+
+    if (!aManifest.entry_points) {
       return;
     }
 
-    for (let activity in aManifest.activities) {
-      let description = aManifest.activities[activity];
+    for (let entryPoint in aManifest.entry_points) {
+      this._registerActivitiesForEntryPoint(aManifest, aApp, entryPoint);
+    }
+  },
+
+  _unregisterActivitiesForEntryPoint: function(aManifest, aApp, aEntryPoint) {
+    let root = aManifest;
+    if (aEntryPoint && aManifest.entry_points[aEntryPoint]) {
+      root = aManifest.entry_points[aEntryPoint];
+    }
+
+    if (!root.activities) {
+      return;
+    }
+
+    for (let activity in root.activities) {
+      let description = root.activities[activity];
       let json = {
         "manifest": aApp.manifestURL,
         "name": activity
       }
       cpmm.sendAsyncMessage("Activities:Unregister", json);
+    }
+  },
+
+  _unregisterActivities: function(aManifest, aApp) {
+    this._unregisterActivitiesForEntryPoint(aManifest, aApp, null);
+
+    if (!aManifest.entry_points) {
+      return;
+    }
+
+    for (let entryPoint in aManifest.entry_points) {
+      this._unregisterActivitiesForEntryPoint(aManifest, aApp, entryPoint);
     }
   },
 
@@ -400,7 +466,8 @@ let DOMApplicationRegistry = {
       }).bind(this));
 
 #ifdef MOZ_SYS_MSG
-    this._registerSystemMessages(id, app);
+    this._registerSystemMessages(app.manifest, app);
+    this._registerActivities(app.manifest, app);
 #endif
 
     // if the manifest has an appcache_path property, use it to populate the appcache

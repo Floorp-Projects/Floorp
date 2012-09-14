@@ -39,7 +39,7 @@ struct StmtInfoPC : public StmtInfoBase {
 
 typedef HashSet<JSAtom *> FuncStmtSet;
 struct Parser;
-struct SharedContext;
+class SharedContext;
 
 typedef Vector<Definition *, 16> DeclVector;
 

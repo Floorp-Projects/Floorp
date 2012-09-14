@@ -36,6 +36,8 @@
 
 #include "vm/GlobalObject-inl.h"
 
+#define ENABLE_TYPEDARRAY_MOVE
+
 using namespace mozilla;
 using namespace js;
 using namespace js::gc;
@@ -3020,7 +3022,8 @@ JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
  * TypedArray boilerplate
  */
 
-#define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                  \
+#ifdef ENABLE_TYPEDARRAY_MOVE
+# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                 \
 JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
     JS_FN("iterator", JS_ArrayIterator, 0, 0),                                 \
     JS_FN("subarray", _typedArray::fun_subarray, 2, JSFUN_GENERIC_NATIVE),     \
@@ -3028,6 +3031,15 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
     JS_FN("move", _typedArray::fun_move, 3, JSFUN_GENERIC_NATIVE),             \
     JS_FS_END                                                                  \
 }
+#else
+# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                 \
+JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
+    JS_FN("iterator", JS_ArrayIterator, 0, 0),                                 \
+    JS_FN("subarray", _typedArray::fun_subarray, 2, JSFUN_GENERIC_NATIVE),     \
+    JS_FN("set", _typedArray::fun_set, 2, JSFUN_GENERIC_NATIVE),               \
+    JS_FS_END                                                                  \
+}
+#endif
 
 #define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Name,NativeType)                                 \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## Array(JSContext *cx, uint32_t nelements)       \
