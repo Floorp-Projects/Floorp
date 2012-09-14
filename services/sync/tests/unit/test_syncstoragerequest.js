@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/rest.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/rest.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 const STORAGE_REQUEST_RESOURCE_URL = TEST_SERVER_URL + "resource";
 
@@ -59,7 +59,7 @@ add_test(function test_auth() {
 
   setBasicCredentials("johndoe", "ilovejane", "XXXXXXXXX");
 
-  let request = new SyncStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
+  let request = Service.getStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
   request.get(function (error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);

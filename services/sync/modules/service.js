@@ -482,6 +482,16 @@ WeaveSvc.prototype = {
   },
 
   /**
+   * Obtain a SyncStorageRequest instance with authentication credentials.
+   */
+  getStorageRequest: function getStorageRequest(url) {
+    let request = new SyncStorageRequest(url);
+    request.authenticator = this._identity.getRESTRequestAuthenticator();
+
+    return request;
+  },
+
+  /**
    * Perform the info fetch as part of a login or key fetch.
    */
   _fetchInfo: function _fetchInfo(url) {
@@ -1430,7 +1440,7 @@ WeaveSvc.prototype = {
     let info_type = "info/" + type;
     this._log.trace("Retrieving '" + info_type + "'...");
     let url = this.userBaseURL + info_type;
-    return new SyncStorageRequest(url).get(function onComplete(error) {
+    return this.getStorageRequest(url).get(function onComplete(error) {
       // Note: 'this' is the request.
       if (error) {
         this._log.debug("Failed to retrieve '" + info_type + "': " +
