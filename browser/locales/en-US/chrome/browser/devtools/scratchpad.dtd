@@ -105,6 +105,10 @@
 <!ENTITY resetContext2.label          "Reset Variables">
 <!ENTITY resetContext2.accesskey      "T">
 
+<!ENTITY reloadAndRun.label           "Reload And Run">
+<!ENTITY reloadAndRun.accesskey       "E">
+<!ENTITY reloadAndRun.key             "r">
+
 <!ENTITY executeMenu.label            "Execute">
 <!ENTITY executeMenu.accesskey        "X">
 
