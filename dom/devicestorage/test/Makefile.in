@@ -13,6 +13,10 @@ include $(DEPTH)/config/autoconf.mk
 #  man, our mime database sucks hard.  followup bug # 788273
 #		test_add.html \
 
+# Possible race between the time we write a file, and the
+# time it takes to be reflected by statfs().  Bug # 791287
+#                 test_diskSpace.html \
+
 MOCHITEST_FILES	= \
 		test_sanity.html \
 		test_addCorrectType.html \
@@ -20,7 +24,6 @@ MOCHITEST_FILES	= \
 		test_enumerate.html \
 		test_enumerateMultipleContinue.html \
 		test_overwrite.html \
-		test_diskSpace.html \
 		test_dotdot.html \
 		test_enumerateOptions.html \
 		test_lastModificationFilter.html \
