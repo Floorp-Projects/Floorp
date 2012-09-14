@@ -1,11 +1,6 @@
 # Scrollbars
 category agent-style-sheets browser-content-stylesheet chrome://browser/content/content.css
 
-# CameraContent.js
-component {eff4231b-abce-4f7f-a40a-d646e8fde3ce} CameraContent.js
-contract @mozilla.org/b2g-camera-content;1 {eff4231b-abce-4f7f-a40a-d646e8fde3ce}
-category JavaScript-navigator-property mozCamera @mozilla.org/b2g-camera-content;1
-
 # AlertsService.js
 component {fe33c107-82a4-41d6-8c64-5353267e04c9} AlertsService.js
 contract @mozilla.org/system-alerts-service;1 {fe33c107-82a4-41d6-8c64-5353267e04c9}
