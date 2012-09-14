@@ -35,6 +35,7 @@
 
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
+#include "nsIProtocolProxyCallback.h"
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -77,6 +78,7 @@ typedef enum _FTP_STATE {
 typedef enum _FTP_ACTION {GET, PUT} FTP_ACTION;
 
 class nsFtpChannel;
+class nsICancelable;
 
 // The nsFtpState object is the content stream for the channel.  It implements
 // nsIInputStreamCallback, so it can read data from the control connection.  It
@@ -88,13 +90,16 @@ class nsFtpState : public nsBaseContentStream,
                    public nsITransportEventSink,
                    public nsICacheListener,
                    public nsIRequestObserver,
-                   public nsFtpControlConnectionListener {
+                   public nsFtpControlConnectionListener,
+                   public nsIProtocolProxyCallback
+{
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIINPUTSTREAMCALLBACK
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSICACHELISTENER
     NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSIPROTOCOLPROXYCALLBACK
 
     // Override input stream methods:
     NS_IMETHOD CloseWithStatus(nsresult status);
@@ -263,6 +268,9 @@ private:
     bool                    mDoomCache;
     
     nsCString mSuppliedEntityID;
+
+    nsCOMPtr<nsICancelable>  mProxyRequest;
+    bool                     mDeferredCallbackPending;
 };
 
 #endif //__nsFtpState__h_
