@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// 'Weave' continues to be exported for backwards compatibility.
-const EXPORTED_SYMBOLS = ["Service", "Weave"];
+const EXPORTED_SYMBOLS = ["Service"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -27,7 +26,6 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
@@ -55,10 +53,10 @@ const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
                             INFO_QUOTA];
 
 
-function WeaveSvc() {
+function Sync11Service() {
   this._notify = Utils.notify("weave:service:");
 }
-WeaveSvc.prototype = {
+Sync11Service.prototype = {
 
   _lock: Utils.lock,
   _locked: false,
@@ -1477,5 +1475,5 @@ WeaveSvc.prototype = {
   },
 };
 
-let Service = new WeaveSvc();
+let Service = new Sync11Service();
 Service.onStartup();

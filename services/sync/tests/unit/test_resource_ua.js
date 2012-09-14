@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/service.js");
@@ -26,8 +29,8 @@ function test_resource_user_agent() {
   });
 
   setBasicCredentials("johndoe", "ilovejane");
-  Weave.Service.serverURL  = TEST_SERVER_URL;
-  Weave.Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL  = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   let expectedUA = Services.appinfo.name + "/" + Services.appinfo.version +
                    " FxSync/" + WEAVE_VERSION + "." +
@@ -35,7 +38,7 @@ function test_resource_user_agent() {
 
   function test_fetchInfo(next) {
     _("Testing _fetchInfo.");
-    Weave.Service._fetchInfo();
+    Service._fetchInfo();
     _("User-Agent: " + ua);
     do_check_eq(ua, expectedUA + ".desktop");
     ua = "";

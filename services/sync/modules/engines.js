@@ -22,8 +22,6 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
-Cu.import("resource://services-sync/main.js");
-
 /*
  * Trackers are associated with a single engine and deal with
  * listening for changes to their particular data type.
