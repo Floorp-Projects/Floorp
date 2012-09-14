@@ -5818,10 +5818,6 @@ var OfflineApps = {
       }
     }
 
-    var storageManager = Cc["@mozilla.org/dom/storagemanager;1"].
-                         getService(Ci.nsIDOMStorageManager);
-    usage += storageManager.getUsage(host);
-
     return usage;
   },
 
