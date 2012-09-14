@@ -266,6 +266,17 @@ js::ObjectImpl::setSlot(uint32_t slot, const js::Value &value)
 }
 
 inline void
+js::ObjectImpl::setCrossCompartmentSlot(uint32_t slot, const js::Value &value)
+{
+    MOZ_ASSERT(slotInRange(slot));
+    if (value.isMarkable())
+        getSlotRef(slot).setCrossCompartment(this->asObjectPtr(), slot, value,
+                                             ValueCompartment(value));
+    else
+        setSlot(slot, value);
+}
+
+inline void
 js::ObjectImpl::initSlot(uint32_t slot, const js::Value &value)
 {
     MOZ_ASSERT(getSlot(slot).isUndefined() || getSlot(slot).isMagic(JS_ARRAY_HOLE));
