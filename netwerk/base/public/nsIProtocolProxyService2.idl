@@ -9,7 +9,7 @@
 /**
  * An extension of nsIProtocolProxyService
  */
-[scriptable, uuid(dbd9565d-29b1-437a-bff5-2fc339e2c5df)]
+[scriptable, uuid(bed3702d-9374-4804-a20f-32baed8e2954)]
 interface nsIProtocolProxyService2 : nsIProtocolProxyService
 {
   /**
@@ -17,4 +17,13 @@ interface nsIProtocolProxyService2 : nsIProtocolProxyService
    * reloaded.  The PAC file is loaded asynchronously.
    */
   void reloadPAC();
+
+  /**
+   * This exists so Java(tm) can migrate to an asynchronous interface.
+   * Do not use this unless you are the plugin interface, and even then you
+   * ought to feel horribly guilty because you will create main thread jank.
+   *
+   * No documentation - it is deprecated!
+   **/
+  nsIProxyInfo deprecatedBlockingResolve(in nsIURI aURI, in unsigned long aFlags);
 };
