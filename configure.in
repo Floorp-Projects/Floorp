@@ -4019,7 +4019,11 @@ if test "$MOZ_NATIVE_JPEG" = 1; then
                      #include <jpeglib.h> ],
                    [ #if JPEG_LIB_VERSION < $MOZJPEG
                      #error "Insufficient JPEG library version ($MOZJPEG required)."
-                     #endif ],
+                     #endif
+                     #ifndef JCS_EXTENSIONS
+                     #error "libjpeg-turbo JCS_EXTENSIONS required"
+                     #endif
+                     ],
                    MOZ_NATIVE_JPEG=1,
                    AC_MSG_ERROR([Insufficient JPEG library version for --with-system-jpeg]))
 fi
