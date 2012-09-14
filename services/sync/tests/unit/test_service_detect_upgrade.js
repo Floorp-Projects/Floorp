@@ -121,7 +121,7 @@ add_test(function v4_upgrade() {
       serverKeys = serverResp = serverDecrypted = null;
 
       serverKeys = new CryptoWrapper("crypto", "keys");
-      serverResp = serverKeys.fetch(Service.cryptoKeysURL).response;
+      serverResp = serverKeys.fetch(Service.resource(Service.cryptoKeysURL)).response;
       do_check_true(serverResp.success);
 
       serverDecrypted = serverKeys.decrypt(Identity.syncKeyBundle);
@@ -149,7 +149,7 @@ add_test(function v4_upgrade() {
       serverDecrypted.default = pair;
       serverKeys.cleartext = serverDecrypted;
       serverKeys.encrypt(Identity.syncKeyBundle);
-      serverKeys.upload(Service.cryptoKeysURL);
+      serverKeys.upload(Service.resource(Service.cryptoKeysURL));
     }
 
     _("Checking we have the latest keys.");
@@ -248,7 +248,8 @@ add_test(function v5_upgrade() {
       generateNewKeys();
       serverKeys = CollectionKeys.asWBO("crypto", wboName);
       serverKeys.encrypt(syncKeyBundle);
-      do_check_true(serverKeys.upload(Service.storageURL + collWBO).success);
+      let res = Service.resource(Service.storageURL + collWBO);
+      do_check_true(serverKeys.upload(res).success);
     }
 
     _("Bumping version.");
@@ -256,7 +257,7 @@ add_test(function v5_upgrade() {
     let m = new WBORecord("meta", "global");
     m.payload = {"syncID": "foooooooooooooooooooooooooo",
                  "storageVersion": STORAGE_VERSION + 1};
-    m.upload(Service.metaURL);
+    m.upload(Service.resource(Service.metaURL));
 
     _("New meta/global: " + JSON.stringify(meta_global));
 

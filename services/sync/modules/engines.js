@@ -750,7 +750,7 @@ SyncEngine.prototype = {
 
     // Figure out how many total items to fetch this sync; do less on mobile.
     let batchSize = Infinity;
-    let newitems = new Collection(this.engineURL, this._recordObj);
+    let newitems = new Collection(this.engineURL, this._recordObj, this.service);
     let isMobile = (Svc.Prefs.get("client.type") == "mobile");
 
     if (isMobile) {
@@ -909,8 +909,8 @@ SyncEngine.prototype = {
 
     // Mobile: check if we got the maximum that we requested; get the rest if so.
     if (handled.length == newitems.limit) {
-      let guidColl = new Collection(this.engineURL);
-      
+      let guidColl = new Collection(this.engineURL, null, this.service);
+
       // Sort and limit so that on mobile we only get the last X records.
       guidColl.limit = this.downloadLimit;
       guidColl.newer = this.lastSync;
@@ -1203,7 +1203,7 @@ SyncEngine.prototype = {
                       " outgoing records");
 
       // collection we'll upload
-      let up = new Collection(this.engineURL);
+      let up = new Collection(this.engineURL, null, this.service);
       let count = 0;
 
       // Upload what we've got so far in the collection
@@ -1269,7 +1269,7 @@ SyncEngine.prototype = {
     this._tracker.resetScore();
 
     let doDelete = Utils.bind2(this, function(key, val) {
-      let coll = new Collection(this.engineURL, this._recordObj);
+      let coll = new Collection(this.engineURL, this._recordObj, this.service);
       coll[key] = val;
       coll.delete();
     });
@@ -1320,7 +1320,7 @@ SyncEngine.prototype = {
     let canDecrypt = false;
 
     // Fetch the most recently uploaded record and try to decrypt it
-    let test = new Collection(this.engineURL, this._recordObj);
+    let test = new Collection(this.engineURL, this._recordObj, this.service);
     test.limit = 1;
     test.sort = "newest";
     test.full = true;
@@ -1348,7 +1348,7 @@ SyncEngine.prototype = {
   },
 
   wipeServer: function wipeServer() {
-    let response = new Resource(this.engineURL).delete();
+    let response = this.service.resource(this.engineURL).delete();
     if (response.status != 200 && response.status != 404) {
       throw response;
     }

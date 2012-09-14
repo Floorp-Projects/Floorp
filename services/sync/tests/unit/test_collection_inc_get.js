@@ -1,9 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 _("Make sure Collection can correctly incrementally parse GET requests");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/service.js");
 
 function run_test() {
   let base = "http://fake/";
-  let coll = new Collection("http://fake/uri/", WBORecord);
+  let coll = new Collection("http://fake/uri/", WBORecord, Service);
   let stream = { _data: "" };
   let called, recCount, sum;
 

@@ -74,7 +74,7 @@ function setUp() {
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Identity.syncKeyBundle);
-  return serverKeys.upload(Service.cryptoKeysURL).success;
+  return serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
 }
 
 const PAYLOAD = 42;
@@ -256,7 +256,7 @@ add_test(function test_enabledRemotely() {
     _("Upload some keys to avoid a fresh start.");
     let wbo = CollectionKeys.generateNewKeysWBO();
     wbo.encrypt(Identity.syncKeyBundle);
-    do_check_eq(200, wbo.upload(Service.cryptoKeysURL).status);
+    do_check_eq(200, wbo.upload(Service.resource(Service.cryptoKeysURL)).status);
 
     _("Engine is disabled.");
     do_check_false(engine.enabled);

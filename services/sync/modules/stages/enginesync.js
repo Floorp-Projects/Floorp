@@ -14,7 +14,6 @@ Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/policies.js");
-Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -165,7 +164,7 @@ EngineSynchronizer.prototype = {
       // Upload meta/global if any engines changed anything
       let meta = this.service.recordManager.get(this.service.metaURL);
       if (meta.isNew || meta.changed) {
-        new Resource(this.service.metaURL).put(meta);
+        this.service.resource(this.service.metaURL).put(meta);
         delete meta.isNew;
         delete meta.changed;
       }
