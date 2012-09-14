@@ -106,6 +106,7 @@ MobileICCInfo.prototype = {
 
   // nsIDOMMozMobileICCInfo
 
+  iccid: null,
   mcc: 0,
   mnc: 0
 };
@@ -231,8 +232,9 @@ RILContentHelper.prototype = {
                                                  Ci.nsIRILContentHelper]}),
 
   updateICCInfo: function updateICCInfo(srcInfo, destInfo) {
-    destInfo.mcc = srcInfo.mcc;
-    destInfo.mnc = srcInfo.mnc;
+    for (let key in srcInfo) {
+      destInfo[key] = srcInfo[key];
+    }
   },
 
   updateConnectionInfo: function updateConnectionInfo(srcInfo, destInfo) {
