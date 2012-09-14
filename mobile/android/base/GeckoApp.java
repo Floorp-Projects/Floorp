@@ -1616,7 +1616,7 @@ abstract public class GeckoApp
                                            (TextSelectionHandle) findViewById(R.id.end_handle),
                                            GeckoAppShell.getEventDispatcher());
 
-        GeckoNetworkManager.getInstance().init();
+        GeckoNetworkManager.getInstance().init(this);
         GeckoNetworkManager.getInstance().start();
 
         UpdateServiceHelper.registerForUpdates(this);

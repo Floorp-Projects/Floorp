@@ -93,6 +93,7 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         NETWORK_UNKNOWN
     }
 
+    private Context mApplicationContext;
     private NetworkType  mNetworkType = NetworkType.NETWORK_NONE;
     private IntentFilter mNetworkFilter = new IntentFilter();
     // Whether the manager should be listening to Network Information changes.
@@ -110,7 +111,8 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         updateNetworkType();
     }
 
-    public void init() {
+    public void init(Context context) {
+        mApplicationContext = context.getApplicationContext();
         mNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         mNetworkType = getNetworkType();
     }
@@ -125,7 +127,7 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     }
 
     private void startListening() {
-        GeckoApp.mAppContext.registerReceiver(sInstance, mNetworkFilter);
+        mApplicationContext.registerReceiver(sInstance, mNetworkFilter);
     }
 
     public void stop() {
@@ -137,7 +139,7 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     }
 
     private void stopListening() {
-        GeckoApp.mAppContext.unregisterReceiver(sInstance);
+        mApplicationContext.unregisterReceiver(sInstance);
     }
 
     private void updateNetworkType() {
@@ -179,7 +181,7 @@ public class GeckoNetworkManager extends BroadcastReceiver {
 
     private static NetworkType getNetworkType() {
         ConnectivityManager cm =
-            (ConnectivityManager)GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            (ConnectivityManager)sInstance.mApplicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) {
             Log.e(LOGTAG, "Connectivity service does not exist");
             return NetworkType.NETWORK_NONE;
@@ -205,7 +207,7 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         }
 
         TelephonyManager tm =
-            (TelephonyManager)GeckoApp.mAppContext.getSystemService(Context.TELEPHONY_SERVICE);
+            (TelephonyManager)sInstance.mApplicationContext.getSystemService(Context.TELEPHONY_SERVICE);
         if (tm == null) {
             Log.e(LOGTAG, "Telephony service does not exist");
             return NetworkType.NETWORK_UNKNOWN;
