@@ -283,6 +283,7 @@ ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
     AutoDetectInvalidation adi(cx, rval.address());
 
     Value argv[] = { UndefinedValue(), ObjectValue(*obj) };
+    AutoValueArray ava(cx, argv, 2);
     if (!js::array_pop(cx, 0, argv))
         return false;
 
@@ -300,6 +301,7 @@ ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
     JS_ASSERT(obj->isDenseArray());
 
     Value argv[] = { UndefinedValue(), ObjectValue(*obj), v };
+    AutoValueArray ava(cx, argv, 3);
     if (!js::array_push(cx, 1, argv))
         return false;
 
@@ -315,6 +317,7 @@ ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
     AutoDetectInvalidation adi(cx, rval.address());
 
     Value argv[] = { UndefinedValue(), ObjectValue(*obj) };
+    AutoValueArray ava(cx, argv, 2);
     if (!js::array_shift(cx, 0, argv))
         return false;
 
