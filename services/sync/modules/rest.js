@@ -7,7 +7,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/constants.js");
 
 const EXPORTED_SYMBOLS = ["SyncStorageRequest"];
@@ -19,6 +18,8 @@ const STORAGE_REQUEST_TIMEOUT = 5 * 60; // 5 minutes
  */
 function SyncStorageRequest(uri) {
   RESTRequest.call(this, uri);
+
+  this.authenticator = null;
 }
 SyncStorageRequest.prototype = {
 
@@ -53,9 +54,8 @@ SyncStorageRequest.prototype = {
       this.setHeader("user-agent", ua);
     }
 
-    let authenticator = Identity.getRESTRequestAuthenticator();
-    if (authenticator) {
-      authenticator(this);
+    if (this.authenticator) {
+      this.authenticator(this);
     } else {
       this._log.debug("No authenticator found.");
     }
