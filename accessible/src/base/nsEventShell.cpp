@@ -18,7 +18,7 @@ nsEventShell::FireEvent(AccEvent* aEvent)
     return;
 
   Accessible* accessible = aEvent->GetAccessible();
-  NS_ENSURE_TRUE(accessible,);
+  NS_ENSURE_TRUE_VOID(accessible);
 
   nsINode* node = aEvent->GetNode();
   if (node) {
@@ -35,7 +35,7 @@ void
 nsEventShell::FireEvent(uint32_t aEventType, Accessible* aAccessible,
                         EIsFromUserInput aIsFromUserInput)
 {
-  NS_ENSURE_TRUE(aAccessible,);
+  NS_ENSURE_TRUE_VOID(aAccessible);
 
   nsRefPtr<AccEvent> event = new AccEvent(aEventType, aAccessible,
                                           aIsFromUserInput);
