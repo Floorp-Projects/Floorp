@@ -1,4 +1,8 @@
-Cu.import("resource://services-sync/main.js");
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   let debug = [];
@@ -14,15 +18,15 @@ function run_test() {
 
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
-  augmentLogger(Weave.Service._log);
+  augmentLogger(Service._log);
 
   // Avoid daily ping
-  Weave.Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));
+  Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));
 
   _("Check that sync will log appropriately if already in 'progress'.");
-  Weave.Service._locked = true;
-  Weave.Service.sync();
-  Weave.Service._locked = false;
+  Service._locked = true;
+  Service.sync();
+  Service._locked = false;
 
   do_check_eq(debug[debug.length - 2],
               "Exception: Could not acquire lock. Label: \"service.js: login\". No traceback available");
