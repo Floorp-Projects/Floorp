@@ -952,6 +952,27 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     } else {
       mContentPainterStatus = CONTENT_IDLE;
     }
+  } else {
+    // No paint was requested, but we got one anyways. One possible cause of this
+    // is that content could have fired a scrollTo(). In this case, we should take
+    // the new scroll offset. Document/viewport changes are handled elsewhere.
+    // Also note that, since NotifyLayersUpdated() is called whenever there's a
+    // layers update, we didn't necessarily get a new scroll offset, but we're
+    // updating our local copy of it anyways just in case.
+    switch (mState) {
+    case NOTHING:
+    case FLING:
+    case TOUCHING:
+    case WAITING_LISTENERS:
+      // FIXME/bug 784908: Scroll offset is stored in layer pixels in the rest
+      // of the layers code, but we want it in CSS pixels.
+      mFrameMetrics.mViewportScrollOffset =
+        aViewportFrame.mViewportScrollOffset / aViewportFrame.mResolution.width;
+      break;
+    // Don't clobber if we're in other states.
+    default:
+      break;
+    }
   }
 
   if (aIsFirstPaint || mFrameMetrics.IsDefault()) {
