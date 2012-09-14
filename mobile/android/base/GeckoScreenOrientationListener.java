@@ -172,9 +172,7 @@ public class GeckoScreenOrientationListener implements GeckoEventListener {
         return DEFAULT_ORIENTATION;
     }
 
-    // NOTE: this is public so OrientationEventListenerImpl can access it.
-    // Unfortunately, Java doesn't know about friendship.
-    public void updateScreenOrientation() {
+    private void updateScreenOrientation() {
         int rotation = GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getRotation();
         short previousOrientation = mOrientation;
 
