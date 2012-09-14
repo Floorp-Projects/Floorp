@@ -5,6 +5,7 @@
 #ifndef nsBoxObject_h_
 #define nsBoxObject_h_
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
@@ -31,8 +32,8 @@ public:
 
   // nsPIBoxObject
   virtual nsresult Init(nsIContent* aContent);
-  virtual void Clear();
-  virtual void ClearCachedValues();
+  virtual void Clear() MOZ_OVERRIDE;
+  virtual void ClearCachedValues() MOZ_OVERRIDE;
 
   nsIFrame* GetFrame(bool aFlushLayout);
   nsIPresShell* GetPresShell(bool aFlushLayout);

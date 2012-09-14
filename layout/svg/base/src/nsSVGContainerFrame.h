@@ -6,6 +6,7 @@
 #ifndef NS_SVGCONTAINERFRAME_H
 #define NS_SVGCONTAINERFRAME_H
 
+#include "mozilla/Attributes.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "nsContainerFrame.h"
@@ -111,16 +112,16 @@ public:
   // nsIFrame:
   NS_IMETHOD InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList);
+                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
   NS_IMETHOD RemoveFrame(ChildListID     aListID,
-                         nsIFrame*       aOldFrame);
+                         nsIFrame*       aOldFrame) MOZ_OVERRIDE;
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual bool IsSVGTransformed(gfxMatrix *aOwnTransform = nullptr,
                                 gfxMatrix *aFromParentTransform = nullptr) const;
@@ -128,13 +129,13 @@ public:
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext,
                       const nsIntRect *aDirtyRect);
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
-  NS_IMETHOD_(nsRect) GetCoveredRegion();
-  virtual void ReflowSVG();
-  virtual void NotifySVGChanged(uint32_t aFlags);
+  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint) MOZ_OVERRIDE;
+  NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
+  virtual void ReflowSVG() MOZ_OVERRIDE;
+  virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      uint32_t aFlags);
-  NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
+                                      uint32_t aFlags) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsDisplayContainer() MOZ_OVERRIDE { return true; }
 };
 
 #endif
