@@ -154,7 +154,6 @@ abstract public class GeckoApp
     private boolean mIsRestoringActivity;
     private String mCurrentResponse = "";
 
-    private GeckoBatteryManager mBatteryReceiver;
     private PromptService mPromptService;
     private Favicons mFavicons;
     private TextSelection mTextSelection;
@@ -1603,8 +1602,8 @@ abstract public class GeckoApp
           SmsManager.getInstance().start();
         }
 
-        mBatteryReceiver = new GeckoBatteryManager();
-        mBatteryReceiver.registerFor(mAppContext);
+        GeckoBatteryManager.getInstance().init(this);
+        GeckoBatteryManager.getInstance().start();
 
         GeckoConnectivityReceiver.getInstance().init(this);
         GeckoConnectivityReceiver.getInstance().start();
@@ -2067,8 +2066,7 @@ abstract public class GeckoApp
 
         super.onDestroy();
 
-        if (mBatteryReceiver != null)
-            mBatteryReceiver.unregisterFor(mAppContext);
+        GeckoBatteryManager.getInstance().stop();
 
         Tabs.unregisterOnTabsChangedListener(this);
 

@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,29 +30,40 @@ public class GeckoBatteryManager extends BroadcastReceiver {
     private static boolean sCharging                   = kDefaultCharging;
     private static double  sRemainingTime              = kDefaultRemainingTime;;
 
-    private static boolean isRegistered = false;
+    private static GeckoBatteryManager sInstance = new GeckoBatteryManager();
 
-    public void registerFor(Activity activity) {
-        if (!isRegistered) {
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(Intent.ACTION_BATTERY_CHANGED);
+    private IntentFilter mFilter;
+    private Context mApplicationContext;
+    private boolean mIsEnabled;
 
-            // registerReceiver can return null if registering fails
-            isRegistered = activity.registerReceiver(this, filter) != null;
-            if (!isRegistered) {
+    public static GeckoBatteryManager getInstance() {
+        return sInstance;
+    }
+
+    private GeckoBatteryManager() {
+        mFilter = new IntentFilter();
+        mFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
+    }
+
+    public void init(Context context) {
+        mApplicationContext = context.getApplicationContext();
+    }
+
+    public synchronized void start() {
+        if (!mIsEnabled) {
+            // registerReceiver will return null if registering fails
+            if (mApplicationContext.registerReceiver(this, mFilter) == null) {
                 Log.e(LOGTAG, "Registering receiver failed");
+            } else {
+                mIsEnabled = true;
             }
         }
     }
 
-    public void unregisterFor(Activity activity) {
-        if (isRegistered) {
-            try {
-                activity.unregisterReceiver(this);
-            } catch (IllegalArgumentException iae) {
-                Log.e(LOGTAG, "Unregistering receiver failed", iae);
-            }
-            isRegistered = false;
+    public synchronized void stop() {
+        if (mIsEnabled) {
+            mApplicationContext.unregisterReceiver(this);
+            mIsEnabled = false;
         }
     }
 
