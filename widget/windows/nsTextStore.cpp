@@ -352,7 +352,7 @@ nsTextStore::~nsTextStore()
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p nsTextStore instance is destroyed, "
      "mWindow=0x%p, mDocumentMgr=0x%p, mContext=0x%p",
-     this, mWindow, mDocumentMgr, mContext));
+     this, mWindow, mDocumentMgr.get(), mContext.get()));
 
   if (mCompositionTimer) {
     mCompositionTimer->Cancel();
@@ -414,7 +414,7 @@ nsTextStore::Create(nsWindow* aWindow,
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p   nsTextStore::Create() succeeded: "
      "mDocumentMgr=0x%p, mContext=0x%p, mEditCookie=0x%08X",
-     this, mDocumentMgr, mContext, mEditCookie));
+     this, mDocumentMgr.get(), mContext.get(), mEditCookie));
 
   return true;
 }
@@ -494,7 +494,7 @@ nsTextStore::AdviseSink(REFIID riid,
     ("TSF: 0x%p nsTextStore::AdviseSink(riid=%s, punk=0x%p, dwMask=%s), "
      "mSink=0x%p, mSinkMask=%s",
      this, GetRIIDNameStr(riid).get(), punk, GetSinkMaskNameStr(dwMask).get(),
-     mSink, GetSinkMaskNameStr(mSinkMask).get()));
+     mSink.get(), GetSinkMaskNameStr(mSinkMask).get()));
 
   if (!punk) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -542,7 +542,7 @@ nsTextStore::UnadviseSink(IUnknown *punk)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p nsTextStore::UnadviseSink(punk=0x%p), mSink=0x%p",
-     this, punk, mSink));
+     this, punk, mSink.get()));
 
   if (!punk) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -951,7 +951,7 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent(aRangeNew=0x%p), "
-          "mCompositionView=0x%p", this, aRangeNew, mCompositionView));
+          "mCompositionView=0x%p", this, aRangeNew, mCompositionView.get()));
 
   if (!mCompositionView) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -1058,7 +1058,7 @@ nsTextStore::SendTextEventForCompositionString()
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString(), "
           "mCompositionView=0x%p, mCompositionString=\"%s\"",
-          this, mCompositionView,
+          this, mCompositionView.get(),
           NS_ConvertUTF16toUTF8(mCompositionString).get()));
 
   if (!mCompositionView) {
@@ -2243,7 +2243,7 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
           "pComposition=0x%p, aRange=0x%p, aPreserveSelection=%s), "
           "mCompositionView=0x%p",
           this, pComposition, aRange, GetBoolName(aPreserveSelection),
-          mCompositionView));
+          mCompositionView.get()));
 
   mCompositionView = pComposition;
   HRESULT hr = GetRangeExtent(aRange, &mCompositionStart, &mCompositionLength);
@@ -2334,7 +2334,7 @@ nsTextStore::OnStartComposition(ITfCompositionView* pComposition,
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p nsTextStore::OnStartComposition(pComposition=0x%p, "
           "pfOk=0x%p), mCompositionView=0x%p",
-          this, pComposition, pfOk, mCompositionView));
+          this, pComposition, pfOk, mCompositionView.get()));
 
   *pfOk = FALSE;
 
@@ -2382,7 +2382,7 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p nsTextStore::OnUpdateComposition(pComposition=0x%p, "
           "pRangeNew=0x%p), mCompositionView=0x%p",
-          this, pComposition, pRangeNew, mCompositionView));
+          this, pComposition, pRangeNew, mCompositionView.get()));
 
   if (!mDocumentMgr || !mContext) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2446,7 +2446,7 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p nsTextStore::OnEndComposition(pComposition=0x%p), "
           "mCompositionView=0x%p, mCompositionString=\"%s\"",
-          this, pComposition, mCompositionView,
+          this, pComposition, mCompositionView.get(),
           NS_ConvertUTF16toUTF8(mCompositionString).get()));
 
   if (!mCompositionView) {
@@ -2574,8 +2574,8 @@ nsTextStore::OnTextChangeInternal(uint32_t aStart,
           "aOldEnd=%lu, aNewEnd=%lu), mLock=%s, mSink=0x%p, mSinkMask=%s, "
           "mTextChange={ acpStart=%ld, acpOldEnd=%ld, acpNewEnd=%ld }",
           this, aStart, aOldEnd, aNewEnd, GetLockFlagNameStr(mLock).get(),
-          mSink, GetSinkMaskNameStr(mSinkMask).get(), mTextChange.acpStart,
-          mTextChange.acpOldEnd, mTextChange.acpNewEnd));
+          mSink.get(), GetSinkMaskNameStr(mSinkMask).get(),
+          mTextChange.acpStart, mTextChange.acpOldEnd, mTextChange.acpNewEnd));
 
   if (!mLock && mSink && 0 != (mSinkMask & TS_AS_TEXT_CHANGE)) {
     mTextChange.acpStart = NS_MIN(mTextChange.acpStart, LONG(aStart));
@@ -2594,7 +2594,7 @@ nsTextStore::OnTextChangeMsgInternal(void)
          ("TSF: 0x%p nsTextStore::OnTextChangeMsgInternal(), mLock=%s, "
           "mSink=0x%p, mSinkMask=%s, mTextChange={ acpStart=%ld, "
           "acpOldEnd=%ld, acpNewEnd=%ld }",
-          this, GetLockFlagNameStr(mLock).get(), mSink,
+          this, GetLockFlagNameStr(mLock).get(), mSink.get(),
           GetSinkMaskNameStr(mSinkMask).get(), mTextChange.acpStart,
           mTextChange.acpOldEnd, mTextChange.acpNewEnd));
 
@@ -2617,7 +2617,7 @@ nsTextStore::OnSelectionChangeInternal(void)
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p nsTextStore::OnSelectionChangeInternal(), mLock=%s, "
           "mSink=0x%p, mSinkMask=%s",
-          this, GetLockFlagNameStr(mLock).get(), mSink,
+          this, GetLockFlagNameStr(mLock).get(), mSink.get(),
           GetSinkMaskNameStr(mSinkMask).get()));
 
   if (!mLock && mSink && 0 != (mSinkMask & TS_AS_SEL_CHANGE)) {
@@ -2655,9 +2655,9 @@ nsTextStore::CommitCompositionInternal(bool aDiscard)
          ("TSF: 0x%p nsTextStore::CommitCompositionInternal(aDiscard=%s), "
           "mLock=%s, mSink=0x%p, mContext=0x%p, mCompositionView=0x%p, "
           "mCompositionString=\"%s\"",
-          this, GetBoolName(aDiscard), GetLockFlagNameStr(mLock).get(), mSink,
-          mContext, mCompositionView,
-          NS_ConvertUTF16toUTF8(mCompositionString)));
+          this, GetBoolName(aDiscard), GetLockFlagNameStr(mLock).get(),
+          mSink.get(), mContext.get(), mCompositionView.get(),
+          NS_ConvertUTF16toUTF8(mCompositionString).get()));
 
   if (mCompositionView && aDiscard) {
     mCompositionString.Truncate(0);
@@ -2686,7 +2686,7 @@ nsTextStore::CommitCompositionInternal(bool aDiscard)
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::CommitCompositionInternal(), "
                 "requesting TerminateComposition() for the context 0x%p...",
-                this, context));
+                this, context.get()));
         services->TerminateComposition(NULL);
       }
     }
@@ -2765,7 +2765,7 @@ nsTextStore::SetInputContextInternal(IMEState::Enabled aState)
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p nsTextStore::SetInputContextInternal(aState=%s), "
           "mContext=0x%p",
-          this, GetIMEEnabledName(aState), mContext));
+          this, GetIMEEnabledName(aState), mContext.get()));
 
   VARIANT variant;
   variant.vt = VT_I4;
@@ -2781,7 +2781,7 @@ nsTextStore::SetInputContextInternal(IMEState::Enabled aState)
       PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
              ("TSF: 0x%p   nsTextStore::SetInputContextInternal(), setting "
               "0x%04X to GUID_COMPARTMENT_KEYBOARD_DISABLED of context 0x%p...",
-             this, variant.lVal, context));
+              this, variant.lVal, context.get()));
       comp->SetValue(sTsfClientId, &variant);
     }
 
