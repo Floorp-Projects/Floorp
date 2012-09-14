@@ -510,7 +510,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
   NS_ASSERTION(dirService, "Must have directory service");
 
   // Picture directory
-  if (aType.Equals(NS_LITERAL_STRING("pictures"))) {
+  if (aType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
 #ifdef MOZ_WIDGET_GONK
     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
@@ -523,7 +523,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
   }
 
   // Video directory
-  else if (aType.Equals(NS_LITERAL_STRING("videos"))) {
+  else if (aType.EqualsLiteral(DEVICESTORAGE_VIDEOS)) {
 #ifdef MOZ_WIDGET_GONK
     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
@@ -536,7 +536,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
   }
 
   // Music directory
-  else if (aType.Equals(NS_LITERAL_STRING("music"))) {
+  else if (aType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
 #ifdef MOZ_WIDGET_GONK
     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
@@ -545,6 +545,15 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
     dirService->Get(NS_UNIX_XDG_MUSIC_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #elif defined (XP_WIN)
     dirService->Get(NS_WIN_MUSIC_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
+#endif
+  }
+  
+  // Apps directory
+  else if (aType.EqualsLiteral(DEVICESTORAGE_APPS)) {
+#ifdef MOZ_WIDGET_GONK
+    NS_NewLocalFile(NS_LITERAL_STRING("/data"), false, getter_AddRefs(f));
+#else
+    // where do we store 3rd party applications on the desktop?
 #endif
   }
 
