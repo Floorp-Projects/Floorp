@@ -376,7 +376,7 @@ AndroidGeckoEvent::ReadIntArray(nsTArray<int> &aVals,
                                 int32_t count)
 {
     jintArray jIntArray = (jintArray)jenv->GetObjectField(wrapped_obj, field);
-    jint *vals = jenv->GetIntArrayElements(jIntArray, false);
+    jint *vals = jenv->GetIntArrayElements(jIntArray, NULL);
     for (int32_t i = 0; i < count; i++) {
         aVals.AppendElement(vals[i]);
     }
@@ -390,7 +390,7 @@ AndroidGeckoEvent::ReadFloatArray(nsTArray<float> &aVals,
                                   int32_t count)
 {
     jfloatArray jFloatArray = (jfloatArray)jenv->GetObjectField(wrapped_obj, field);
-    jfloat *vals = jenv->GetFloatArrayElements(jFloatArray, false);
+    jfloat *vals = jenv->GetFloatArrayElements(jFloatArray, NULL);
     for (int32_t i = 0; i < count; i++) {
         aVals.AppendElement(vals[i]);
     }
