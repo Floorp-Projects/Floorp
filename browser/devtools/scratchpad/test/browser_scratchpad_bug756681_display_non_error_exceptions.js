@@ -41,7 +41,8 @@ function runTests()
   scratchpad.setText(error1);
   scratchpad.display();
   is(scratchpad.getText(),
-      error1 + openComment + "Exception: Ouch!\n@Scratchpad:1" + closeComment,
+      error1 + openComment +
+      "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1" + closeComment,
       "error display output");
 
   // Display error2, throw "A thrown string"
@@ -75,7 +76,8 @@ function runTests()
   scratchpad.setText(error1);
   scratchpad.run();
   is(scratchpad.getText(),
-      error1 + openComment + "Exception: Ouch!\n@Scratchpad:1" + closeComment,
+      error1 + openComment +
+      "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1" + closeComment,
       "error run output");
 
   // Run error2, throw "A thrown string"

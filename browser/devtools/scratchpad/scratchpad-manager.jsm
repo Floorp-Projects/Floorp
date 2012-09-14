@@ -23,6 +23,7 @@ Cu.import("resource://gre/modules/Services.jsm");
  */
 var ScratchpadManager = {
 
+  _nextUid: 1,
   _scratchpads: [],
 
   /**
@@ -89,16 +90,20 @@ var ScratchpadManager = {
    */
   openScratchpad: function SPM_openScratchpad(aState)
   {
-    let params = null;
+    let params = Cc["@mozilla.org/embedcomp/dialogparam;1"]
+                 .createInstance(Ci.nsIDialogParamBlock);
+
+    params.SetNumberStrings(2);
+    params.SetString(0, JSON.stringify(this._nextUid++));
+
     if (aState) {
       if (typeof aState != 'object') {
         return;
       }
-      params = Cc["@mozilla.org/embedcomp/dialogparam;1"]
-               .createInstance(Ci.nsIDialogParamBlock);
-      params.SetNumberStrings(1);
-      params.SetString(0, JSON.stringify(aState));
+
+      params.SetString(1, JSON.stringify(aState));
     }
+
     let win = Services.ww.openWindow(null, SCRATCHPAD_WINDOW_URL, "_blank",
                                      SCRATCHPAD_WINDOW_FEATURES, params);
     // Only add the shutdown observer if we've opened a scratchpad window.
