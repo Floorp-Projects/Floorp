@@ -21,7 +21,6 @@ protected:
     virtual ~nsBidiKeyboard();
 
     bool mHaveBidiKeyboards;
-    nsresult SetHaveBidiKeyboards();
 };
 
 #endif // __nsBidiKeyboard
