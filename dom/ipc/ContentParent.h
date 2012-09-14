@@ -233,6 +233,10 @@ private:
     virtual PStorageParent* AllocPStorage(const StorageConstructData& aData);
     virtual bool DeallocPStorage(PStorageParent* aActor);
 
+    virtual PBluetoothParent* AllocPBluetooth();
+    virtual bool DeallocPBluetooth(PBluetoothParent* aActor);
+    virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor);
+
     virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs);
     virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue);
 
