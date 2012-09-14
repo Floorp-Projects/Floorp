@@ -6,7 +6,6 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -157,7 +156,7 @@ add_test(function test_processIncoming_error_orderChildren() {
   } finally {
     store.wipe();
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -288,7 +287,7 @@ add_test(function test_restorePromptsReupload() {
   } finally {
     store.wipe();
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -364,7 +363,7 @@ add_test(function test_mismatched_types() {
   } finally {
     store.wipe();
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });

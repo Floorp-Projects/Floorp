@@ -5,9 +5,10 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+
+Service.engineManager.clear();
 
 add_test(function test_processIncoming_mobile_history_batched() {
   _("SyncEngine._processIncoming works on history engine.");
@@ -52,8 +53,9 @@ add_test(function test_processIncoming_mobile_history_batched() {
       "/1.1/foo/storage/history": collection.handler()
   });
 
-  let engine = new HistoryEngine("history");
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let engine = Service.engineManager.get("history");
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {history: {version: engine.version,
                                            syncID: engine.syncID}};
 
@@ -128,7 +130,7 @@ add_test(function test_processIncoming_mobile_history_batched() {
     PlacesUtils.history.removeAllPages();
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
   }
 });
 

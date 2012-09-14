@@ -1,13 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-common/log4moz.js");
@@ -67,13 +65,13 @@ add_test(function v4_upgrade() {
     Status.resetSync();
 
     _("Logging in.");
-    Weave.Service.serverURL = TEST_SERVER_URL;
-    Weave.Service.clusterURL = TEST_CLUSTER_URL;
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
 
-    Weave.Service.login("johndoe", "ilovejane", passphrase);
-    do_check_true(Weave.Service.isLoggedIn);
-    Weave.Service.verifyAndFetchSymmetricKeys();
-    do_check_true(Weave.Service._remoteSetup());
+    Service.login("johndoe", "ilovejane", passphrase);
+    do_check_true(Service.isLoggedIn);
+    Service.verifyAndFetchSymmetricKeys();
+    do_check_true(Service._remoteSetup());
 
     function test_out_of_date() {
       _("Old meta/global: " + JSON.stringify(meta_global));
@@ -81,9 +79,9 @@ add_test(function v4_upgrade() {
                                             "storageVersion": STORAGE_VERSION + 1});
       collections.meta = Date.now() / 1000;
       _("New meta/global: " + JSON.stringify(meta_global));
-      Records.set(Weave.Service.metaURL, meta_global);
+      Service.recordManager.set(Service.metaURL, meta_global);
       try {
-        Weave.Service.sync();
+        Service.sync();
       }
       catch (ex) {
       }
@@ -96,23 +94,23 @@ add_test(function v4_upgrade() {
 
     // Same should happen after a wipe.
     _("Syncing after server has been upgraded and wiped.");
-    Weave.Service.wipeServer();
+    Service.wipeServer();
     test_out_of_date();
 
     // Now's a great time to test what happens when keys get replaced.
     _("Syncing afresh...");
-    Weave.Service.logout();
+    Service.logout();
     CollectionKeys.clear();
-    Weave.Service.serverURL = TEST_SERVER_URL;
-    Weave.Service.clusterURL = TEST_CLUSTER_URL;
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
     meta_global.payload = JSON.stringify({"syncID": "foooooooooooooobbbbbbbbbbbb",
                                           "storageVersion": STORAGE_VERSION});
     collections.meta = Date.now() / 1000;
-    Records.set(Weave.Service.metaURL, meta_global);
-    Weave.Service.login("johndoe", "ilovejane", passphrase);
-    do_check_true(Weave.Service.isLoggedIn);
-    Weave.Service.sync();
-    do_check_true(Weave.Service.isLoggedIn);
+    Service.recordManager.set(Service.metaURL, meta_global);
+    Service.login("johndoe", "ilovejane", passphrase);
+    do_check_true(Service.isLoggedIn);
+    Service.sync();
+    do_check_true(Service.isLoggedIn);
 
     let serverDecrypted;
     let serverKeys;
@@ -123,10 +121,10 @@ add_test(function v4_upgrade() {
       serverKeys = serverResp = serverDecrypted = null;
 
       serverKeys = new CryptoWrapper("crypto", "keys");
-      serverResp = serverKeys.fetch(Weave.Service.cryptoKeysURL).response;
+      serverResp = serverKeys.fetch(Service.cryptoKeysURL).response;
       do_check_true(serverResp.success);
 
-      serverDecrypted = serverKeys.decrypt(Weave.Identity.syncKeyBundle);
+      serverDecrypted = serverKeys.decrypt(Identity.syncKeyBundle);
       _("Retrieved WBO:       " + JSON.stringify(serverDecrypted));
       _("serverKeys:          " + JSON.stringify(serverKeys));
 
@@ -150,8 +148,8 @@ add_test(function v4_upgrade() {
     function set_server_keys(pair) {
       serverDecrypted.default = pair;
       serverKeys.cleartext = serverDecrypted;
-      serverKeys.encrypt(Weave.Identity.syncKeyBundle);
-      serverKeys.upload(Weave.Service.cryptoKeysURL);
+      serverKeys.encrypt(Identity.syncKeyBundle);
+      serverKeys.upload(Service.cryptoKeysURL);
     }
 
     _("Checking we have the latest keys.");
@@ -172,8 +170,8 @@ add_test(function v4_upgrade() {
     let oldClientsModified = collections.clients;
     let oldTabsModified = collections.tabs;
 
-    Weave.Service.login("johndoe", "ilovejane", passphrase);
-    Weave.Service.sync();
+    Service.login("johndoe", "ilovejane", passphrase);
+    Service.sync();
     _("New key should have forced upload of data.");
     _("Tabs: " + oldTabsModified + " < " + collections.tabs);
     _("Clients: " + oldClientsModified + " < " + collections.clients);
@@ -184,10 +182,10 @@ add_test(function v4_upgrade() {
     retrieve_and_compare_default(true);
 
     // Clean up.
-    Weave.Service.startOver();
+    Service.startOver();
 
   } finally {
-    Weave.Svc.Prefs.resetBranch("");
+    Svc.Prefs.resetBranch("");
     server.stop(run_next_test);
   }
 });
@@ -240,8 +238,8 @@ add_test(function v5_upgrade() {
     Status.resetSync();
 
     setBasicCredentials("johndoe", "ilovejane", passphrase);
-    Weave.Service.serverURL = TEST_SERVER_URL;
-    Weave.Service.clusterURL = TEST_CLUSTER_URL;
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
 
     // Test an upgrade where the contents of the server would cause us to error
     // -- keys decrypted with a different sync key, for example.
@@ -250,7 +248,7 @@ add_test(function v5_upgrade() {
       generateNewKeys();
       serverKeys = CollectionKeys.asWBO("crypto", wboName);
       serverKeys.encrypt(syncKeyBundle);
-      do_check_true(serverKeys.upload(Weave.Service.storageURL + collWBO).success);
+      do_check_true(serverKeys.upload(Service.storageURL + collWBO).success);
     }
 
     _("Bumping version.");
@@ -258,7 +256,7 @@ add_test(function v5_upgrade() {
     let m = new WBORecord("meta", "global");
     m.payload = {"syncID": "foooooooooooooooooooooooooo",
                  "storageVersion": STORAGE_VERSION + 1};
-    m.upload(Weave.Service.metaURL);
+    m.upload(Service.metaURL);
 
     _("New meta/global: " + JSON.stringify(meta_global));
 
@@ -275,20 +273,20 @@ add_test(function v5_upgrade() {
 
     _("Logging in.");
     try {
-      Weave.Service.login("johndoe", "ilovejane", passphrase);
+      Service.login("johndoe", "ilovejane", passphrase);
     }
     catch (e) {
       _("Exception: " + e);
     }
     _("Status: " + Status);
-    do_check_false(Weave.Service.isLoggedIn);
+    do_check_false(Service.isLoggedIn);
     do_check_eq(VERSION_OUT_OF_DATE, Status.sync);
 
     // Clean up.
-    Weave.Service.startOver();
+    Service.startOver();
 
   } finally {
-    Weave.Svc.Prefs.resetBranch("");
+    Svc.Prefs.resetBranch("");
     server.stop(run_next_test);
   }
 });

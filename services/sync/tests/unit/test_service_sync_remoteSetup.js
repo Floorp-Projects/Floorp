@@ -86,7 +86,7 @@ function run_test() {
     do_check_true(Service.isLoggedIn);
 
     _("Checking that remoteSetup returns true when credentials have changed.");
-    Records.get(Service.metaURL).payload.syncID = "foobar";
+    Service.recordManager.get(Service.metaURL).payload.syncID = "foobar";
     do_check_true(Service._remoteSetup());
 
     _("Do an initial sync.");

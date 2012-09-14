@@ -2,8 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["WBORecord", "RecordManager", "Records",
-                          "CryptoWrapper", "CollectionKeys", "Collection"];
+const EXPORTED_SYMBOLS = [
+  "WBORecord",
+  "RecordManager",
+  "CryptoWrapper",
+  "CollectionKeys",
+  "Collection",
+];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -93,11 +98,12 @@ WBORecord.prototype = {
 
 Utils.deferGetSet(WBORecord, "data", ["id", "modified", "sortindex", "payload"]);
 
-XPCOMUtils.defineLazyGetter(this, "Records", function () {
-  return new RecordManager();
-});
+/**
+ * An interface and caching layer for records.
+ */
+function RecordManager(service) {
+  this.service = service;
 
-function RecordManager() {
   this._log = Log4Moz.repository.getLogger(this._logName);
   this._records = {};
 }

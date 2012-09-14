@@ -5,7 +5,6 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/policies.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
@@ -17,7 +16,7 @@ function makeRotaryEngine() {
 function cleanAndGo(server) {
   Svc.Prefs.resetBranch("");
   Svc.Prefs.set("log.logger.engine.rotary", "Trace");
-  Records.clearCache();
+  Service.recordManager.clearCache();
   server.stop(run_next_test);
 }
 
@@ -98,7 +97,7 @@ add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 
     // Confirm initial environment
     do_check_eq(engine._tracker.changedIDs["rekolok"], undefined);
-    let metaGlobal = Records.get(engine.metaURL);
+    let metaGlobal = Service.recordManager.get(engine.metaURL);
     do_check_eq(metaGlobal.payload.engines, undefined);
     do_check_true(!!collection.payload("flying"));
     do_check_true(!!collection.payload("scotsman"));
@@ -251,7 +250,8 @@ add_test(function test_processIncoming_createFromServer() {
   });
 
   let engine = makeRotaryEngine();
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
 
@@ -345,7 +345,8 @@ add_test(function test_processIncoming_reconcile() {
   // This record has been changed 2 mins later than the one on the server
   engine._tracker.addChangedID('olderidentical', Date.now()/1000);
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
 
@@ -635,7 +636,8 @@ add_test(function test_processIncoming_mobile_batchSize() {
   });
 
   let engine = makeRotaryEngine();
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
 
@@ -705,7 +707,8 @@ add_test(function test_processIncoming_store_toFetch() {
   let engine = makeRotaryEngine();
   engine.enabled = true;
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
@@ -779,7 +782,8 @@ add_test(function test_processIncoming_resume_toFetch() {
   engine.toFetch = ["flying", "scotsman"];
   engine.previousFailed = ["failed0", "failed1", "failed2"];
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
@@ -837,7 +841,8 @@ add_test(function test_processIncoming_applyIncomingBatchSize_smaller() {
     collection.insert(id, payload);
   }
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
@@ -892,7 +897,8 @@ add_test(function test_processIncoming_applyIncomingBatchSize_multiple() {
     collection.insert(id, payload);
   }
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
@@ -944,7 +950,8 @@ add_test(function test_processIncoming_notify_count() {
     collection.insert(id, payload);
   }
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
@@ -1034,7 +1041,8 @@ add_test(function test_processIncoming_previousFailed() {
     collection.insert(id, payload);
   }
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
@@ -1139,7 +1147,8 @@ add_test(function test_processIncoming_failed_records() {
     return this._applyIncoming.apply(this, arguments);
   };
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
 
@@ -1263,7 +1272,8 @@ add_test(function test_processIncoming_decrypt_failed() {
   engine._store.items = {nojson: "Valid JSON",
                          nodecrypt: "Valid ciphertext"};
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
@@ -1329,7 +1339,8 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
   // Mark one of these records as changed
   engine._tracker.addChangedID('scotsman', 0);
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
 
@@ -1392,7 +1403,8 @@ add_test(function test_uploadOutgoing_failed() {
   engine._tracker.addChangedID('scotsman', SCOTSMAN_CHANGED);
   engine._tracker.addChangedID('peppercorn', PEPPERCORN_CHANGED);
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
 
@@ -1453,7 +1465,8 @@ add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
     collection.insert(id);
   }
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
 
@@ -1652,7 +1665,8 @@ add_test(function test_sync_partialUpload() {
     }
   }
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
 
@@ -1764,7 +1778,8 @@ add_test(function test_syncapplied_observer() {
     collection.insert(id, payload);
   }
 
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = httpd_setup({

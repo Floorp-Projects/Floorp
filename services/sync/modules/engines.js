@@ -674,7 +674,7 @@ SyncEngine.prototype = {
   _syncStartup: function SyncEngine__syncStartup() {
 
     // Determine if we need to wipe on outdated versions
-    let metaGlobal = Records.get(this.metaURL);
+    let metaGlobal = this.service.recordManager.get(this.metaURL);
     let engines = metaGlobal.payload.engines || {};
     let engineData = engines[this.name] || {};
 
