@@ -31,25 +31,6 @@ function WebappsRegistry() {
 
 WebappsRegistry.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
-  __exposedProps__: {
-                      install: 'r',
-#ifdef MOZ_PHOENIX
-# Firefox Desktop: installPackage not implemented
-#elifdef ANDROID
-#ifndef MOZ_WIDGET_GONK
-# Firefox Android (Fennec): installPackage not implemented
-#else
-# B2G Gonk: installPackage implemented
-                      installPackage: 'r',
-#endif
-#else
-# B2G Desktop and others: installPackage implementation status varies
-                      installPackage: 'r',
-#endif
-                      getSelf: 'r',
-                      getInstalled: 'r',
-                      mgmt: 'r'
-                     },
 
   /** from https://developer.mozilla.org/en/OpenWebApps/The_Manifest
    * only the name property is mandatory
@@ -274,20 +255,6 @@ function WebappsApplication() {
 
 WebappsApplication.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
-  __exposedProps__: {
-                      origin: 'r',
-                      manifest: 'r',
-                      manifestURL: 'r',
-                      installOrigin: 'r',
-                      installTime: 'r',
-                      status: 'r',
-                      progress: 'r',
-                      onprogress: 'rw',
-                      launch: 'r',
-                      receipts: 'r',
-                      removable: 'r',
-                      uninstall: 'r'
-                     },
 
   init: function(aWindow, aApp) {
     this.origin = aApp.origin;
