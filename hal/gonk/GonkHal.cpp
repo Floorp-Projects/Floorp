@@ -89,7 +89,7 @@ public:
     }
 
     os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, /* weak ref */ true);
-  } 
+  }
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
@@ -568,9 +568,9 @@ GetLight(hal::LightType light, hal::LightConfiguration* aConfig)
 }
 
 /**
- * clock_settime() is not exposed through bionic. 
+ * clock_settime() is not exposed through bionic.
  * we define the new function to set system time.
- * The result is the same as using clock_settime() system call.     
+ * The result is the same as using clock_settime() system call.
  */
 static int
 sys_clock_settime(clockid_t clk_id, const struct timespec *tp)
@@ -578,16 +578,16 @@ sys_clock_settime(clockid_t clk_id, const struct timespec *tp)
   return syscall(__NR_clock_settime, clk_id, tp);
 }
 
-void 
+void
 AdjustSystemClock(int32_t aDeltaMilliseconds)
 {
   if (aDeltaMilliseconds == 0) {
     return;
   }
-  
+
   struct timespec now;
-  
-  // Preventing context switch before setting system clock 
+
+  // Preventing context switch before setting system clock
   sched_yield();
   clock_gettime(CLOCK_REALTIME, &now);
   now.tv_sec += aDeltaMilliseconds/1000;
@@ -601,18 +601,18 @@ AdjustSystemClock(int32_t aDeltaMilliseconds)
   if (now.tv_nsec < 0)
   {
     now.tv_nsec += NsecPerSec;
-    now.tv_sec -= 1;  
+    now.tv_sec -= 1;
   }
-  // we need to have root privilege. 
+  // we need to have root privilege.
   if (sys_clock_settime(CLOCK_REALTIME, &now) != 0) {
     NS_ERROR("sys_clock_settime failed");
     return;
   }
-  
+
   hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_CLOCK);
 }
 
-void 
+void
 SetTimezone(const nsCString& aTimezoneSpec)
 {
   if (aTimezoneSpec.Equals(GetTimezone())) {
@@ -620,13 +620,13 @@ SetTimezone(const nsCString& aTimezoneSpec)
   }
 
   property_set("persist.sys.timezone", aTimezoneSpec.get());
-  // this function is automatically called by the other time conversion 
-  // functions that depend on the timezone. To be safe, we call it manually.  
+  // this function is automatically called by the other time conversion
+  // functions that depend on the timezone. To be safe, we call it manually.
   tzset();
   hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_TZ);
 }
 
-nsCString 
+nsCString
 GetTimezone()
 {
   char timezone[32];
@@ -704,7 +704,7 @@ private:
 };
 
 // Runs on alarm-watcher thread.
-static void 
+static void
 DestroyAlarmData(void* aData)
 {
   AlarmData* alarmData = static_cast<AlarmData*>(aData);
@@ -720,7 +720,7 @@ void ShutDownAlarm(int aSigno)
   return;
 }
 
-static void* 
+static void*
 WaitForAlarm(void* aData)
 {
   pthread_cleanup_push(DestroyAlarmData, aData);
@@ -738,7 +738,7 @@ WaitForAlarm(void* aData)
       alarmTypeFlags = ioctl(alarmData->mFd, ANDROID_ALARM_WAIT);
     } while (alarmTypeFlags < 0 && errno == EINTR && !alarmData->mShuttingDown);
 
-    if (!alarmData->mShuttingDown && 
+    if (!alarmData->mShuttingDown &&
         alarmTypeFlags >= 0 && (alarmTypeFlags & ANDROID_ALARM_RTC_WAKEUP_MASK)) {
       NS_DispatchToMainThread(new AlarmFiredEvent(alarmData->mGeneration));
     }
