@@ -371,19 +371,21 @@ bool ReadFromFile(const char *filename, char (&buf)[n])
   return true;
 }
 
-void WriteToFile(const char *filename, const char *toWrite)
+bool WriteToFile(const char *filename, const char *toWrite)
 {
   int fd = open(filename, O_WRONLY);
   ScopedClose autoClose(fd);
   if (fd < 0) {
     HAL_LOG(("Unable to open file %s.", filename));
-    return;
+    return false;
   }
 
   if (write(fd, toWrite, strlen(toWrite)) < 0) {
     HAL_LOG(("Unable to write to file %s.", filename));
-    return;
+    return false;
   }
+
+  return true;
 }
 
 // We can write to screenEnabledFilename to enable/disable the screen, but when
