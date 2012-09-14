@@ -473,7 +473,7 @@ function run_test() {
   Log4Moz.repository.getLogger("Sync.Store.Bookmarks").level   = Log4Moz.Level.Trace;
   Log4Moz.repository.getLogger("Sync.Tracker.Bookmarks").level = Log4Moz.Level.Trace;
 
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   run_next_test();
 }

@@ -59,8 +59,8 @@ function setUp() {
 }
 
 function generateAndUploadKeys() {
-  generateNewKeys();
-  let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+  generateNewKeys(Service.collectionKeys);
+  let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.identity.syncKeyBundle);
   let res = Service.resource("http://localhost:8080/1.1/johndoe/storage/crypto/keys");
   return serverKeys.upload(res).success;

@@ -38,8 +38,8 @@ function setUp() {
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
 
-  generateNewKeys();
-  let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+  generateNewKeys(Service.collectionKeys);
+  let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.identity.syncKeyBundle);
   return serverKeys.upload(Service.resource(Service.cryptoKeysURL));
 }

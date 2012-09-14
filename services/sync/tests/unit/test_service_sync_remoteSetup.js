@@ -133,14 +133,14 @@ function run_test() {
 
     // changePassphrase wipes our keys, and they're regenerated on next sync.
     _("Checking changed passphrase.");
-    let existingDefault = CollectionKeys.keyForCollection();
+    let existingDefault = Service.collectionKeys.keyForCollection();
     let existingKeysPayload = keysWBO.payload;
     let newPassphrase = "bbbbbabcdeabcdeabcdeabcdea";
     Service.changePassphrase(newPassphrase);
 
     _("Local key cache is full, but different.");
-    do_check_true(!!CollectionKeys._default);
-    do_check_false(CollectionKeys._default.equals(existingDefault));
+    do_check_true(!!Service.collectionKeys._default);
+    do_check_false(Service.collectionKeys._default.equals(existingDefault));
 
     _("Server has new keys.");
     do_check_true(!!keysWBO.payload);
@@ -151,7 +151,7 @@ function run_test() {
     // Re-encrypt keys with a new random keybundle, and upload them to the
     // server, just as might happen with a second client.
     _("Attempting to screw up HMAC by re-encrypting keys.");
-    let keys = CollectionKeys.asWBO();
+    let keys = Service.collectionKeys.asWBO();
     let b = new BulkKeyBundle("hmacerror");
     b.generateRandom();
     collections.crypto = keys.modified = 100 + (Date.now()/1000);  // Future modification time.

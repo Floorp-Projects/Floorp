@@ -59,7 +59,7 @@ function generateCredentialsChangedFailure() {
   // Make sync fail due to changed credentials. We simply re-encrypt
   // the keys with a different Sync Key, without changing the local one.
   let newSyncKeyBundle = new SyncKeyBundle("johndoe", "23456234562345623456234562");
-  let keys = CollectionKeys.asWBO();
+  let keys = Service.collectionKeys.asWBO();
   keys.encrypt(newSyncKeyBundle);
   keys.upload(Service.resource(Service.cryptoKeysURL));
 }
@@ -131,8 +131,8 @@ function setUp() {
 }
 
 function generateAndUploadKeys() {
-  generateNewKeys();
-  let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+  generateNewKeys(Service.collectionKeys);
+  let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.identity.syncKeyBundle);
   return serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
 }
@@ -865,7 +865,7 @@ add_test(function test_crypto_keys_login_server_maintenance_error() {
   Service.clusterURL = TEST_MAINTENANCE_URL;
 
   // Force re-download of keys
-  CollectionKeys.clear();
+  Service.collectionKeys.clear();
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -999,7 +999,7 @@ add_test(function test_download_crypto_keys_login_prolonged_server_maintenance_e
   Service.serverURL = TEST_MAINTENANCE_URL;
   Service.clusterURL = TEST_MAINTENANCE_URL;
   // Force re-download of keys
-  CollectionKeys.clear();
+  Service.collectionKeys.clear();
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1238,7 +1238,7 @@ add_test(function test_download_crypto_keys_login_syncAndReportErrors_server_mai
   Service.serverURL = TEST_MAINTENANCE_URL;
   Service.clusterURL = TEST_MAINTENANCE_URL;
   // Force re-download of keys
-  CollectionKeys.clear();
+  Service.collectionKeys.clear();
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1477,7 +1477,7 @@ add_test(function test_download_crypto_keys_login_syncAndReportErrors_prolonged_
   Service.serverURL = TEST_MAINTENANCE_URL;
   Service.clusterURL = TEST_MAINTENANCE_URL;
   // Force re-download of keys
-  CollectionKeys.clear();
+  Service.collectionKeys.clear();
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {

@@ -83,7 +83,7 @@ add_test(function hmac_error_during_404() {
     _("Syncing.");
     Service.sync();
     _("Partially resetting client, as if after a restart, and forcing redownload.");
-    CollectionKeys.clear();
+    Service.collectionKeys.clear();
     engine.lastSync = 0;        // So that we redownload records.
     key404Counter = 1;
     _("---------------------------");
@@ -213,7 +213,7 @@ add_test(function hmac_error_during_node_reassignment() {
       Utils.nextTick(function() {
         _("Now a fresh sync will get no HMAC errors.");
         _("Partially resetting client, as if after a restart, and forcing redownload.");
-        CollectionKeys.clear();
+        Service.collectionKeys.clear();
         engine.lastSync = 0;
         hmacErrorCount = 0;
 

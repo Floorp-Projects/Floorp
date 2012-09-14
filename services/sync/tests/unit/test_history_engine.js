@@ -135,7 +135,7 @@ add_test(function test_processIncoming_mobile_history_batched() {
 });
 
 function run_test() {
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   run_next_test();
 }

@@ -6,7 +6,7 @@ const EXPORTED_SYMBOLS = [
   "WBORecord",
   "RecordManager",
   "CryptoWrapper",
-  "CollectionKeys",
+  "CollectionKeyManager",
   "Collection",
 ];
 
@@ -196,9 +196,8 @@ CryptoWrapper.prototype = {
    * Optional key bundle overrides the collection key lookup.
    */
   encrypt: function encrypt(keyBundle) {
-    keyBundle = keyBundle || CollectionKeys.keyForCollection(this.collection);
     if (!keyBundle) {
-      throw new Error("Key bundle is null for " + this.uri.spec);
+      throw new Error("A key bundle must be supplied to encrypt.");
     }
 
     this.IV = Svc.Crypto.generateRandomIV();
@@ -214,9 +213,8 @@ CryptoWrapper.prototype = {
       throw "No ciphertext: nothing to decrypt?";
     }
 
-    keyBundle = keyBundle || CollectionKeys.keyForCollection(this.collection);
     if (!keyBundle) {
-      throw new Error("Key bundle is null for " + this.collection + "/" + this.id);
+      throw new Error("A key bundle must be supplied to decrypt.");
     }
 
     // Authenticate the encrypted blob with the expected HMAC
@@ -271,10 +269,6 @@ CryptoWrapper.prototype = {
 Utils.deferGetSet(CryptoWrapper, "payload", ["ciphertext", "IV", "hmac"]);
 Utils.deferGetSet(CryptoWrapper, "cleartext", "deleted");
 
-XPCOMUtils.defineLazyGetter(this, "CollectionKeys", function () {
-  return new CollectionKeyManager();
-});
-
 
 /**
  * Keeps track of mappings between collection names ('tabs') and KeyBundles.
@@ -287,7 +281,7 @@ function CollectionKeyManager() {
   this._collections = {};
   this._default = null;
 
-  this._log = Log4Moz.repository.getLogger("Sync.CollectionKeys");
+  this._log = Log4Moz.repository.getLogger("Sync.CollectionKeyManager");
 }
 
 // TODO: persist this locally as an Identity. Bug 610913.
@@ -326,7 +320,7 @@ CollectionKeyManager.prototype = {
   },
 
   clear: function clear() {
-    this._log.info("Clearing CollectionKeys...");
+    this._log.info("Clearing collection keys...");
     this.lastModified = 0;
     this._collections = {};
     this._default = null;
@@ -429,16 +423,16 @@ CollectionKeyManager.prototype = {
 
     let self = this;
 
-    this._log.info("Setting CollectionKeys contents. Our last modified: " +
+    this._log.info("Setting collection keys contents. Our last modified: " +
                    this.lastModified + ", input modified: " + modified + ".");
 
     if (!payload)
-      throw "No payload in CollectionKeys.setContents().";
+      throw "No payload in CollectionKeyManager.setContents().";
 
     if (!payload.default) {
       this._log.warn("No downloaded default key: this should not occur.");
       this._log.warn("Not clearing local keys.");
-      throw "No default key in CollectionKeys.setContents(). Cannot proceed.";
+      throw "No default key in CollectionKeyManager.setContents(). Cannot proceed.";
     }
 
     // Process the incoming default key.

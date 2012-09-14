@@ -69,10 +69,10 @@ add_test(function test_withEngineList() {
 });
 
 add_test(function test_startOver_clears_keys() {
-  generateNewKeys();
-  do_check_true(!!CollectionKeys.keyForCollection());
+  generateNewKeys(Service.collectionKeys);
+  do_check_true(!!Service.collectionKeys.keyForCollection());
   Service.startOver();
-  do_check_false(!!CollectionKeys.keyForCollection());
+  do_check_false(!!Service.collectionKeys.keyForCollection());
 
   run_next_test();
 });
