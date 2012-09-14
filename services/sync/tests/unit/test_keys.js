@@ -5,6 +5,8 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/keys.js");
 
+let collectionKeys = new CollectionKeyManager();
+
 function sha256HMAC(message, key) {
   let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
   return Utils.digestBytes(message, h);
@@ -207,17 +209,17 @@ add_test(function test_collections_manager() {
   do_check_true(null == storage_keys.cleartext);
   do_check_true(null != storage_keys.ciphertext);
 
-  log.info("Updating CollectionKeys.");
+  log.info("Updating collection keys.");
 
   // updateContents decrypts the object, releasing the payload for us to use.
   // Returns true, because the default key has changed.
-  do_check_true(CollectionKeys.updateContents(keyBundle, storage_keys));
+  do_check_true(collectionKeys.updateContents(keyBundle, storage_keys));
   let payload = storage_keys.cleartext;
 
-  _("CK: " + JSON.stringify(CollectionKeys._collections));
+  _("CK: " + JSON.stringify(collectionKeys._collections));
 
   // Test that the CollectionKeyManager returns a similar WBO.
-  let wbo = CollectionKeys.asWBO("crypto", "keys");
+  let wbo = collectionKeys.asWBO("crypto", "keys");
 
   _("WBO: " + JSON.stringify(wbo));
   _("WBO cleartext: " + JSON.stringify(wbo.cleartext));
@@ -226,17 +228,17 @@ add_test(function test_collections_manager() {
   do_check_eq(wbo.collection, "crypto");
   do_check_eq(wbo.id, "keys");
   do_check_eq(undefined, wbo.modified);
-  do_check_eq(CollectionKeys.lastModified, storage_keys.modified);
+  do_check_eq(collectionKeys.lastModified, storage_keys.modified);
   do_check_true(!!wbo.cleartext.default);
   do_check_keypair_eq(payload.default, wbo.cleartext.default);
   do_check_keypair_eq(payload.collections.bookmarks, wbo.cleartext.collections.bookmarks);
 
-  do_check_true('bookmarks' in CollectionKeys._collections);
-  do_check_false('tabs' in CollectionKeys._collections);
+  do_check_true('bookmarks' in collectionKeys._collections);
+  do_check_false('tabs' in collectionKeys._collections);
 
   _("Updating contents twice with the same data doesn't proceed.");
   storage_keys.encrypt(keyBundle);
-  do_check_false(CollectionKeys.updateContents(keyBundle, storage_keys));
+  do_check_false(collectionKeys.updateContents(keyBundle, storage_keys));
 
   /*
    * Test that we get the right keys out when we ask for
@@ -244,7 +246,7 @@ add_test(function test_collections_manager() {
    */
   let b1 = new BulkKeyBundle("bookmarks");
   b1.keyPairB64 = [bookmarks_key64, bookmarks_hmac64];
-  let b2 = CollectionKeys.keyForCollection("bookmarks");
+  let b2 = collectionKeys.keyForCollection("bookmarks");
   do_check_keypair_eq(b1.keyPair, b2.keyPair);
 
   // Check key equality.
@@ -257,21 +259,21 @@ add_test(function test_collections_manager() {
   do_check_false(b1.equals(b2));
   do_check_false(b2.equals(b1));
 
-  b2 = CollectionKeys.keyForCollection(null);
+  b2 = collectionKeys.keyForCollection(null);
   do_check_keypair_eq(b1.keyPair, b2.keyPair);
 
   /*
    * Checking for update times.
    */
   let info_collections = {};
-  do_check_true(CollectionKeys.updateNeeded(info_collections));
+  do_check_true(collectionKeys.updateNeeded(info_collections));
   info_collections["crypto"] = 5000;
-  do_check_false(CollectionKeys.updateNeeded(info_collections));
+  do_check_false(collectionKeys.updateNeeded(info_collections));
   info_collections["crypto"] = 1 + (Date.now()/1000);              // Add one in case computers are fast!
-  do_check_true(CollectionKeys.updateNeeded(info_collections));
+  do_check_true(collectionKeys.updateNeeded(info_collections));
 
-  CollectionKeys.lastModified = null;
-  do_check_true(CollectionKeys.updateNeeded({}));
+  collectionKeys.lastModified = null;
+  do_check_true(collectionKeys.updateNeeded({}));
 
   /*
    * Check _compareKeyBundleCollections.
@@ -293,14 +295,14 @@ add_test(function test_collections_manager() {
   let coll5 = {"baz": k5, "bar": k2};
   let coll6 = {};
 
-  let d1 = CollectionKeys._compareKeyBundleCollections(coll1, coll2); // []
-  let d2 = CollectionKeys._compareKeyBundleCollections(coll1, coll3); // ["bar"]
-  let d3 = CollectionKeys._compareKeyBundleCollections(coll3, coll2); // ["bar"]
-  let d4 = CollectionKeys._compareKeyBundleCollections(coll1, coll4); // ["bar", "foo"]
-  let d5 = CollectionKeys._compareKeyBundleCollections(coll5, coll2); // ["baz", "foo"]
-  let d6 = CollectionKeys._compareKeyBundleCollections(coll6, coll1); // ["bar", "foo"]
-  let d7 = CollectionKeys._compareKeyBundleCollections(coll5, coll5); // []
-  let d8 = CollectionKeys._compareKeyBundleCollections(coll6, coll6); // []
+  let d1 = collectionKeys._compareKeyBundleCollections(coll1, coll2); // []
+  let d2 = collectionKeys._compareKeyBundleCollections(coll1, coll3); // ["bar"]
+  let d3 = collectionKeys._compareKeyBundleCollections(coll3, coll2); // ["bar"]
+  let d4 = collectionKeys._compareKeyBundleCollections(coll1, coll4); // ["bar", "foo"]
+  let d5 = collectionKeys._compareKeyBundleCollections(coll5, coll2); // ["baz", "foo"]
+  let d6 = collectionKeys._compareKeyBundleCollections(coll6, coll1); // ["bar", "foo"]
+  let d7 = collectionKeys._compareKeyBundleCollections(coll5, coll5); // []
+  let d8 = collectionKeys._compareKeyBundleCollections(coll6, coll6); // []
 
   do_check_true(d1.same);
   do_check_false(d2.same);

@@ -49,8 +49,8 @@ add_test(function test_bad_hmac() {
   }
 
   function uploadNewKeys() {
-    generateNewKeys();
-    let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+    generateNewKeys(Service.collectionKeys);
+    let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Service.identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
   }
@@ -61,7 +61,7 @@ add_test(function test_bad_hmac() {
     Service.clusterURL = TEST_CLUSTER_URL;
     Service.login("foo", "ilovejane", passphrase);
 
-    generateNewKeys();
+    generateNewKeys(Service.collectionKeys);
 
     _("First sync, client record is uploaded");
     do_check_eq(engine.lastRecordUpload, 0);
@@ -78,8 +78,8 @@ add_test(function test_bad_hmac() {
     let oldLocalID  = engine.localID;     // Preserve to test for deletion!
     engine.localID = Utils.makeGUID();
     engine.resetClient();
-    generateNewKeys();
-    let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+    generateNewKeys(Service.collectionKeys);
+    let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Service.identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
 
@@ -95,7 +95,7 @@ add_test(function test_bad_hmac() {
     Service.lastHMACEvent = 0;
     engine.localID = Utils.makeGUID();
     engine.resetClient();
-    generateNewKeys();
+    generateNewKeys(Service.collectionKeys);
     deletedCollections = [];
     deletedItems       = [];
     check_clients_count(1);
@@ -131,8 +131,8 @@ add_test(function test_bad_hmac() {
     oldLocalID  = engine.localID;         // Preserve to test for deletion!
     engine.localID = Utils.makeGUID();
     engine.resetClient();
-    generateNewKeys();
-    let oldKey = CollectionKeys.keyForCollection();
+    generateNewKeys(Service.collectionKeys);
+    let oldKey = Service.collectionKeys.keyForCollection();
 
     do_check_eq(deletedCollections.length, 0);
     do_check_eq(deletedItems.length, 0);
@@ -140,7 +140,7 @@ add_test(function test_bad_hmac() {
     do_check_eq(deletedItems.length, 1);
     check_client_deleted(oldLocalID);
     check_clients_count(1);
-    let newKey = CollectionKeys.keyForCollection();
+    let newKey = Service.collectionKeys.keyForCollection();
     do_check_false(oldKey.equals(newKey));
 
   } finally {
@@ -169,7 +169,7 @@ add_test(function test_sync() {
   _("Ensure that Clients engine uploads a new client record once a week.");
 
   new SyncTestingInfrastructure();
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   let contents = {
     meta: {global: {engines: {clients: {version: engine.version,
@@ -409,7 +409,7 @@ add_test(function test_command_sync() {
   new SyncTestingInfrastructure();
 
   engine._store.wipe();
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   let contents = {
     meta: {global: {engines: {clients: {version: engine.version,

@@ -273,10 +273,10 @@ function encryptPayload(cleartext) {
           hmac: fakeSHA256HMAC(cleartext, Utils.makeHMACKey(""))};
 }
 
-function generateNewKeys(collections) {
-  let wbo = CollectionKeys.generateNewKeysWBO(collections);
+function generateNewKeys(collectionKeys, collections=null) {
+  let wbo = collectionKeys.generateNewKeysWBO(collections);
   let modified = new_timestamp();
-  CollectionKeys.setContents(wbo.cleartext, modified);
+  collectionKeys.setContents(wbo.cleartext, modified);
 }
 
 /*

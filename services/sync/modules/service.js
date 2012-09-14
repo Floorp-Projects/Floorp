@@ -237,7 +237,7 @@ WeaveSvc.prototype = {
       let cryptoResp = cryptoKeys.fetch(this.resource(this.cryptoKeysURL)).response;
 
       // Save out the ciphertext for when we reupload. If there's a bug in
-      // CollectionKeys, this will prevent us from uploading junk.
+      // CollectionKeyManager, this will prevent us from uploading junk.
       let cipherText = cryptoKeys.ciphertext;
 
       if (!cryptoResp.success) {
@@ -275,10 +275,8 @@ WeaveSvc.prototype = {
 
   handleFetchedKeys: function handleFetchedKeys(syncKey, cryptoKeys, skipReset) {
     // Don't want to wipe if we're just starting up!
-    // This is largely relevant because we don't persist
-    // CollectionKeys yet: Bug 610913.
-    let wasBlank = CollectionKeys.isClear;
-    let keysChanged = CollectionKeys.updateContents(syncKey, cryptoKeys);
+    let wasBlank = this.collectionKeys.isClear;
+    let keysChanged = this.collectionKeys.updateContents(syncKey, cryptoKeys);
 
     if (keysChanged && !wasBlank) {
       this._log.debug("Keys changed: " + JSON.stringify(keysChanged));
@@ -317,6 +315,8 @@ WeaveSvc.prototype = {
     }
 
     this.identity = Status._authManager;
+
+    this.collectionKeys = new CollectionKeyManager();
 
     this.errorHandler = new ErrorHandler(this);
 
@@ -560,8 +560,8 @@ WeaveSvc.prototype = {
 
       this._log.info("Testing info/collections: " + JSON.stringify(infoCollections));
 
-      if (CollectionKeys.updateNeeded(infoCollections)) {
-        this._log.info("CollectionKeys reports that a key update is needed.");
+      if (this.collectionKeys.updateNeeded(infoCollections)) {
+        this._log.info("collection keys reports that a key update is needed.");
 
         // Don't always set to CREDENTIALS_CHANGED -- we will probably take care of this.
 
@@ -578,7 +578,7 @@ WeaveSvc.prototype = {
               return true;
             }
             else if (cryptoResp.status == 404) {
-              // On failure, ask CollectionKeys to generate new keys and upload them.
+              // On failure, ask to generate new keys and upload them.
               // Fall through to the behavior below.
               this._log.warn("Got 404 for crypto/keys, but 'crypto' in info/collections. Regenerating.");
               cryptoKeys = null;
@@ -730,7 +730,7 @@ WeaveSvc.prototype = {
 
   generateNewSymmetricKeys: function generateNewSymmetricKeys() {
     this._log.info("Generating new keys WBO...");
-    let wbo = CollectionKeys.generateNewKeysWBO();
+    let wbo = this.collectionKeys.generateNewKeysWBO();
     this._log.info("Encrypting new key bundle.");
     wbo.encrypt(this.identity.syncKeyBundle);
 
@@ -818,7 +818,7 @@ WeaveSvc.prototype = {
 
       /* We need to re-encrypt everything, so reset. */
       this.resetClient();
-      CollectionKeys.clear();
+      this.collectionKeys.clear();
 
       /* Login and sync. This also generates new keys. */
       this.sync();
@@ -859,7 +859,7 @@ WeaveSvc.prototype = {
 
     // Reset all engines and clear keys.
     this.resetClient();
-    CollectionKeys.clear();
+    this.collectionKeys.clear();
     Status.resetBackoff();
 
     // Reset Weave prefs.
@@ -1074,7 +1074,7 @@ WeaveSvc.prototype = {
 
       this._log.info("Sync IDs differ. Local is " + this.syncID + ", remote is " + meta.payload.syncID);
       this.resetClient();
-      CollectionKeys.clear();
+      this.collectionKeys.clear();
       this.syncID = meta.payload.syncID;
       this._log.debug("Clear cached values and take syncId: " + this.syncID);
 
@@ -1236,7 +1236,7 @@ WeaveSvc.prototype = {
   _freshStart: function _freshStart() {
     this._log.info("Fresh start. Resetting client and considering key upgrade.");
     this.resetClient();
-    CollectionKeys.clear();
+    this.collectionKeys.clear();
     this.upgradeSyncKey(this.syncID);
 
     // Wipe the server.
