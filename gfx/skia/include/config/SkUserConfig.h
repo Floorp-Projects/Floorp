@@ -184,5 +184,16 @@
    directories from your include search path when you're not building the GPU
    backend. Defaults to 1 (build the GPU code).
  */
-//#define SK_SUPPORT_GPU 1
+#define SK_SUPPORT_GPU 0
+
+/*  Don't dither 32bit gradients, to match what the canvas test suite expects.
+ */
+#define SK_DISABLE_DITHER_32BIT_GRADIENT
+
+/*  Don't include stdint.h on windows as it conflicts with our build system.
+ */
+#ifdef SK_BUILD_FOR_WIN32 
+    #define SK_IGNORE_STDINT_DOT_H 
+#endif 
+
 #endif
