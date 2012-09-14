@@ -16,7 +16,7 @@
 #include "nsIAtom.h"
 #include "nsDOMString.h"
 
-typedef PRUptrdiff PtrBits;
+typedef uintptr_t PtrBits;
 
 #define NS_ATTRNAME_NODEINFO_BIT 1
 class nsAttrName

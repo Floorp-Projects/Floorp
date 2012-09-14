@@ -212,11 +212,11 @@ nsSplittableFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out
   nsFrame::DumpBaseRegressionData(aPresContext, out, aIndent);
   if (nullptr != mNextContinuation) {
     IndentBy(out, aIndent);
-    fprintf(out, "<next-continuation va=\"%ld\"/>\n", PRUptrdiff(mNextContinuation));
+    fprintf(out, "<next-continuation va=\"%p\"/>\n", (void*)mNextContinuation);
   }
   if (nullptr != mPrevContinuation) {
     IndentBy(out, aIndent);
-    fprintf(out, "<prev-continuation va=\"%ld\"/>\n", PRUptrdiff(mPrevContinuation));
+    fprintf(out, "<prev-continuation va=\"%p\"/>\n", (void*)mPrevContinuation);
   }
 
 }
