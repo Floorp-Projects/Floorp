@@ -34,11 +34,7 @@ function startTest() {
         t.scrollTop = 33;
         waitForAllPaintsFlushed(function () {
           var painted = utils.checkAndClearPaintedState(e);
-          if (navigator.platform.indexOf("Mac") >= 0) {
-            is(painted, false, "Fully-visible scrolled element should not have been painted");
-          } else {
-            todo_is(painted, false, "Fully-visible scrolled element should not have been painted");
-          }
+          is(painted, false, "Fully-visible scrolled element should not have been painted");
           SimpleTest.finish();
         });
       });
