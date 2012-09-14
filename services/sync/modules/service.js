@@ -318,6 +318,7 @@ WeaveSvc.prototype = {
     this._log.info("Loading Weave " + WEAVE_VERSION);
 
     this._clusterManager = new ClusterManager(this);
+    this.recordManager = new RecordManager(this);
 
     this.enabled = true;
 
@@ -953,7 +954,7 @@ WeaveSvc.prototype = {
     let reset = false;
 
     this._log.debug("Fetching global metadata record");
-    let meta = Records.get(this.metaURL);
+    let meta = this.recordManager.get(this.metaURL);
 
     // Checking modified time of the meta record.
     if (infoResponse &&
@@ -965,12 +966,12 @@ WeaveSvc.prototype = {
           JSON.stringify(this.metaModified) + ", setting to " +
           JSON.stringify(infoResponse.obj.meta));
 
-      Records.del(this.metaURL);
+      this.recordManager.del(this.metaURL);
 
       // ... fetch the current record from the server, and COPY THE FLAGS.
-      let newMeta = Records.get(this.metaURL);
+      let newMeta = this.recordManager.get(this.metaURL);
 
-      if (!Records.response.success || !newMeta) {
+      if (!this.recordManager.response.success || !newMeta) {
         this._log.debug("No meta/global record on the server. Creating one.");
         newMeta = new WBORecord("meta", "global");
         newMeta.payload.syncID = this.syncID;
@@ -978,7 +979,7 @@ WeaveSvc.prototype = {
 
         newMeta.isNew = true;
 
-        Records.set(this.metaURL, newMeta);
+        this.recordManager.set(this.metaURL, newMeta);
         if (!newMeta.upload(this.metaURL).success) {
           this._log.warn("Unable to upload new meta/global. Failing remote setup.");
           return false;
@@ -1008,10 +1009,10 @@ WeaveSvc.prototype = {
       this._log.info("One of: no meta, no meta storageVersion, or no meta syncID. Fresh start needed.");
 
       // abort the server wipe if the GET status was anything other than 404 or 200
-      let status = Records.response.status;
+      let status = this.recordManager.response.status;
       if (status != 200 && status != 404) {
         Status.sync = METARECORD_DOWNLOAD_FAIL;
-        this.errorHandler.checkServerError(Records.response);
+        this.errorHandler.checkServerError(this.recordManager.response);
         this._log.warn("Unknown error while downloading metadata record. " +
                        "Aborting sync.");
         return false;
@@ -1231,7 +1232,7 @@ WeaveSvc.prototype = {
       // racing is probably busy uploading stuff right now anyway.
       throw resp;
     }
-    Records.set(this.metaURL, meta);
+    this.recordManager.set(this.metaURL, meta);
 
     // Wipe everything we know about except meta because we just uploaded it
     let engines = [this.clientsEngine].concat(this.engineManager.getAll());
@@ -1367,7 +1368,7 @@ WeaveSvc.prototype = {
 
       // Pretend we've never synced to the server and drop cached data
       this.syncID = "";
-      Records.clearCache();
+      this.recordManager.clearCache();
     })();
   },
 

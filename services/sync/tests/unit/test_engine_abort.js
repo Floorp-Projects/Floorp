@@ -13,7 +13,8 @@ add_test(function test_processIncoming_abort() {
   let engine = new RotaryEngine(Service);
 
   _("Create some server data.");
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                           syncID: engine.syncID}};
 
@@ -58,7 +59,7 @@ add_test(function test_processIncoming_abort() {
 
   server.stop(run_next_test);
   Svc.Prefs.resetBranch("");
-  Records.clearCache();
+  Service.recordManager.clearCache();
 });
 
 function run_test() {
