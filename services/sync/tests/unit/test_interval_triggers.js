@@ -273,7 +273,7 @@ add_test(function test_back_triggers_sync() {
   Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
     Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
 
-    Records.clearCache();
+    Service.recordManager.clearCache();
     Svc.Prefs.resetBranch("");
     scheduler.setDefaults();
     clientsEngine.resetClient();

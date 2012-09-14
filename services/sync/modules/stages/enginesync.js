@@ -14,7 +14,6 @@ Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/policies.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
@@ -164,7 +163,7 @@ EngineSynchronizer.prototype = {
       }
 
       // Upload meta/global if any engines changed anything
-      let meta = Records.get(this.service.metaURL);
+      let meta = this.service.recordManager.get(this.service.metaURL);
       if (meta.isNew || meta.changed) {
         new Resource(this.service.metaURL).put(meta);
         delete meta.isNew;
@@ -211,7 +210,7 @@ EngineSynchronizer.prototype = {
   _updateEnabledEngines: function _updateEnabledEngines() {
     this._log.info("Updating enabled engines: " +
                    this.service.scheduler.numClients + " clients.");
-    let meta = Records.get(this.service.metaURL);
+    let meta = this.service.recordManager.get(this.service.metaURL);
     if (meta.isNew || !meta.payload.engines)
       return;
 

@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -95,7 +94,7 @@ add_test(function hmac_error_during_404() {
     do_check_eq(hmacErrorCount, 0)
   } finally {
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -226,7 +225,7 @@ add_test(function hmac_error_during_node_reassignment() {
           Svc.Obs.remove("weave:service:sync:error", obs);
 
           Svc.Prefs.resetBranch("");
-          Records.clearCache();
+          Service.recordManager.clearCache();
           server.stop(run_next_test);
         };
 

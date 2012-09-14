@@ -1,11 +1,12 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-common/log4moz.js");
-Cu.import("resource://services-sync/util.js");
-
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://services-sync/util.js");
 
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
 var IOService = Cc["@mozilla.org/network/io-service;1"]
@@ -167,7 +168,7 @@ add_test(function test_annotation_uploaded() {
     // Clean up.
     store.wipe();
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -221,7 +222,7 @@ add_test(function test_smart_bookmarks_duped() {
     store.wipe();
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
   }
 });
 

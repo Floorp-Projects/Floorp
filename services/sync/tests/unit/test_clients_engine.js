@@ -5,7 +5,6 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -147,7 +146,7 @@ add_test(function test_bad_hmac() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -216,7 +215,7 @@ add_test(function test_sync() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -460,7 +459,7 @@ add_test(function test_command_sync() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
