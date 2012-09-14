@@ -1075,20 +1075,6 @@ struct JSRuntime : js::RuntimeFriendFields
 #define JS_KEEP_ATOMS(rt)   (rt)->gcKeepAtoms++;
 #define JS_UNKEEP_ATOMS(rt) (rt)->gcKeepAtoms--;
 
-#ifdef JS_ARGUMENT_FORMATTER_DEFINED
-/*
- * Linked list mapping format strings for JS_{Convert,Push}Arguments{,VA} to
- * formatter functions.  Elements are sorted in non-increasing format string
- * length order.
- */
-struct JSArgumentFormatMap {
-    const char          *format;
-    size_t              length;
-    JSArgumentFormatter formatter;
-    JSArgumentFormatMap *next;
-};
-#endif
-
 namespace js {
 
 struct AutoResolving;
@@ -1317,9 +1303,6 @@ struct JSContext : js::ContextFriendFields
   public:
     /* State for object and array toSource conversion. */
     js::ObjectSet       cycleDetectorSet;
-
-    /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
-    JSArgumentFormatMap *argumentFormatMap;
 
     /* Last message string and log file for debugging. */
     char                *lastMessage;

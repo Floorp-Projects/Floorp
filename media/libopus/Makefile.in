@@ -20,7 +20,7 @@ DEFINES += \
   -Drestrict= \
   $(NULL)
 
-ifneq ($(filter $(OS_ARCH),Linux Darwin),)
+ifneq ($(filter $(OS_ARCH),Linux Darwin DragonFly FreeBSD NetBSD OpenBSD),)
   DEFINES += -DHAVE_LRINTF
 endif
 ifeq ($(OS_ARCH), WINNT)
