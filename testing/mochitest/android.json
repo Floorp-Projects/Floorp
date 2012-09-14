@@ -303,6 +303,7 @@
  "toolkit/components/prompts/test/test_modal_prompts.html": "TIMED_OUT",
  "toolkit/components/prompts/test/test_modal_select.html": "TIMED_OUT",
  "toolkit/components/satchel/test/test_bug_511615.html": "",
+ "toolkit/components/satchel/test/test_bug_787624.html": "",
  "toolkit/components/satchel/test/test_form_autocomplete.html": "TIMED_OUT",
  "toolkit/components/satchel/test/test_form_autocomplete_with_list.html": "",
  "toolkit/components/satchel/test/test_form_submission.html": "",
