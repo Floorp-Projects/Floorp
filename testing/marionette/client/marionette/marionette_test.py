@@ -2,11 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import imp
 import os
 import re
 import sys
 import types
 import unittest
+import weakref
 
 from errors import *
 from marionette import HTMLElement, Marionette
@@ -21,37 +23,31 @@ def skip_if_b2g(target):
 
 class CommonTestCase(unittest.TestCase):
 
+    match_re = None
+
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
         self.loglines = None
         self.perfdata = None
 
-    def kill_gaia_app(self, url):
-        self.marionette.execute_script("""
-window.wrappedJSObject.getApplicationManager().kill("%s");
-return(true);
-""" % url)
+    @classmethod
+    def match(cls, filename):
+        """
+        Determines if the specified filename should be handled by this
+        test class; this is done by looking for a match for the filename
+        using cls.match_re.
+        """
+        if not cls.match_re:
+            return False
+        m = cls.match_re.match(filename)
+        return m is not None
 
-    def kill_gaia_apps(self):
-        # shut down any running Gaia apps
-        # XXX there's no API to do this currently
-        pass
-
-    def launch_gaia_app(self, url):
-        # launch the app using Gaia's AppManager
-        self.marionette.set_script_timeout(30000)
-        frame = self.marionette.execute_async_script("""
-var frame = window.wrappedJSObject.getApplicationManager().launch("%s").element;
-window.addEventListener('message', function frameload(e) {
-    if (e.data == 'appready') {
-        window.removeEventListener('message', frameload);
-        marionetteScriptFinished(frame);
-    }
-});
-    """ % url)
-
-        self.assertTrue(isinstance(frame, HTMLElement))
-        return frame
+    @classmethod
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette):
+        """
+        Adds all the tests in the specified file to the specified suite.
+        """
+        raise NotImplementedError
 
     def set_up_test_page(self, emulator, url="test.html", permissions=None):
         emulator.set_context("content")
@@ -90,6 +86,8 @@ permissions.forEach(function (perm) {
 
 class MarionetteTestCase(CommonTestCase):
 
+    match_re = re.compile(r"test_(.*)\.py$")
+
     def __init__(self, marionette_weakref, methodName='runTest',
                  filepath='', **kwargs):
         self._marionette_weakref = marionette_weakref
@@ -98,6 +96,20 @@ class MarionetteTestCase(CommonTestCase):
         self.methodName = methodName
         self.filepath = filepath
         CommonTestCase.__init__(self, methodName, **kwargs)
+
+    @classmethod
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette):
+        test_mod = imp.load_source(mod_name, filepath)
+
+        for name in dir(test_mod):
+            obj = getattr(test_mod, name)
+            if (isinstance(obj, (type, types.ClassType)) and
+                issubclass(obj, unittest.TestCase)):
+                testnames = testloader.getTestCaseNames(obj)
+                for testname in testnames:
+                    suite.addTest(obj(weakref.ref(marionette),
+                                  methodName=testname,
+                                  filepath=filepath))
 
     def setUp(self):
         CommonTestCase.setUp(self)
@@ -129,7 +141,7 @@ class MarionetteJSTestCase(CommonTestCase):
 
     context_re = re.compile(r"MARIONETTE_CONTEXT(\s*)=(\s*)['|\"](.*?)['|\"];")
     timeout_re = re.compile(r"MARIONETTE_TIMEOUT(\s*)=(\s*)(\d+);")
-    launch_re = re.compile(r"MARIONETTE_LAUNCH_APP(\s*)=(\s*)['|\"](.*?)['|\"];")
+    match_re = re.compile(r"test_(.*)\.js$")
 
     def __init__(self, marionette_weakref, methodName='runTest', jsFile=None):
         assert(jsFile)
@@ -137,6 +149,10 @@ class MarionetteJSTestCase(CommonTestCase):
         self._marionette_weakref = marionette_weakref
         self.marionette = None
         CommonTestCase.__init__(self, methodName)
+
+    @classmethod
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette):
+        suite.addTest(cls(weakref.ref(marionette), jsFile=filepath))
 
     def runTest(self):
         if self.marionette.session is None:
@@ -173,17 +189,8 @@ class MarionetteJSTestCase(CommonTestCase):
             timeout = timeout.group(3)
             self.marionette.set_script_timeout(timeout)
 
-        launch_app = self.launch_re.search(js)
-        if launch_app:
-            launch_app = launch_app.group(3)
-            frame = self.launch_gaia_app(launch_app)
-            args.append({'__marionetteArgs': {'appframe': frame}})
-
         try:
             results = self.marionette.execute_js_script(js, args, special_powers=True)
-
-            if launch_app:
-                self.kill_gaia_app(launch_app)
 
             self.assertTrue(not 'timeout' in self.jsFile,
                             'expected timeout not triggered')
