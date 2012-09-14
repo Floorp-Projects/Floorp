@@ -3,7 +3,6 @@
 
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 function test_urls() {

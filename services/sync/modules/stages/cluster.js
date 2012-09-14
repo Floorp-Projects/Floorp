@@ -9,7 +9,6 @@ const {utils: Cu} = Components;
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/policies.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 /**
@@ -43,7 +42,7 @@ ClusterManager.prototype = {
       let node = res.get();
       switch (node.status) {
         case 400:
-          Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+          this.service.status.login = LOGIN_FAILED_LOGIN_REJECTED;
           fail = "Find cluster denied: " + this.service.errorHandler.errorStr(node);
           break;
         case 404:
@@ -63,7 +62,7 @@ ClusterManager.prototype = {
       }
     } catch (e) {
       this._log.debug("Network error on findCluster");
-      Status.login = LOGIN_FAILED_NETWORK_ERROR;
+      this.service.status.login = LOGIN_FAILED_NETWORK_ERROR;
       this.service.errorHandler.checkServerError(e);
       fail = e;
     }

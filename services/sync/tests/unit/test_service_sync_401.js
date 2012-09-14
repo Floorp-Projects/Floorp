@@ -4,7 +4,6 @@
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 function login_handling(handler) {
@@ -51,7 +50,7 @@ function run_test() {
     _("Initial state: We're successfully logged in.");
     Service.login();
     do_check_true(Service.isLoggedIn);
-    do_check_eq(Status.login, LOGIN_SUCCEEDED);
+    do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
 
     _("Simulate having changed the password somewhere else.");
     Service.identity.basicPassword = "ilovejosephine";
@@ -75,7 +74,7 @@ function run_test() {
       Service.sync();
     } catch (ex) {
     }
-    do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_LOGIN_REJECTED);
 
   } finally {
     Svc.Prefs.resetBranch("");

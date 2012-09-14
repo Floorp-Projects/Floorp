@@ -7,7 +7,6 @@ Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 Service.engineManager.register(TabEngine);
@@ -62,7 +61,7 @@ add_test(function v4_upgrade() {
       getBrowserState: function () JSON.stringify(myTabs)
     };
 
-    Status.resetSync();
+    Service.status.resetSync();
 
     _("Logging in.");
     Service.serverURL = TEST_SERVER_URL;
@@ -85,7 +84,7 @@ add_test(function v4_upgrade() {
       }
       catch (ex) {
       }
-      do_check_eq(Status.sync, VERSION_OUT_OF_DATE);
+      do_check_eq(Service.status.sync, VERSION_OUT_OF_DATE);
     }
 
     // See what happens when we bump the storage version.
@@ -235,7 +234,7 @@ add_test(function v5_upgrade() {
       getBrowserState: function () JSON.stringify(myTabs)
     };
 
-    Status.resetSync();
+    Service.status.resetSync();
 
     setBasicCredentials("johndoe", "ilovejane", passphrase);
     Service.serverURL = TEST_SERVER_URL;
@@ -279,9 +278,9 @@ add_test(function v5_upgrade() {
     catch (e) {
       _("Exception: " + e);
     }
-    _("Status: " + Status);
+    _("Status: " + Service.status);
     do_check_false(Service.isLoggedIn);
-    do_check_eq(VERSION_OUT_OF_DATE, Status.sync);
+    do_check_eq(VERSION_OUT_OF_DATE, Service.status.sync);
 
     // Clean up.
     Service.startOver();

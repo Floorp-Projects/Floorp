@@ -3,7 +3,6 @@
 
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 Svc.Prefs.set("registerEngines", "Tab,Bookmarks,Form,History");
@@ -30,9 +29,9 @@ function run_test() {
 
   _("Observers are notified of startup");
   do_test_pending();
-  do_check_false(Status.ready);
+  do_check_false(Service.status.ready);
   Observers.add("weave:service:ready", function (subject, data) {
-    do_check_true(Status.ready);
+    do_check_true(Service.status.ready);
 
     // Clean up.
     Svc.Prefs.resetBranch("");
