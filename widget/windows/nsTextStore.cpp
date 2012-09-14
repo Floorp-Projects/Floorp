@@ -1511,20 +1511,10 @@ nsTextStore::SetText(DWORD dwFlags,
     return hr;
   }
   // Replace just selected text
-  if (!InsertTextAtSelectionInternal(nsDependentString(pchText, cch),
-                                     pChange)) {
-    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::SetText() FAILED due to "
-            "InsertTextAtSelectionInternal() failure", this));
-    return E_FAIL;
-  }
-
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p   nsTextStore::SetText() succeeded: pChange={ "
-          "acpStart=%ld, acpOldEnd=%ld, acpNewEnd=%ld }",
-          this, pChange ? pChange->acpStart  : 0,
-          pChange ? pChange->acpOldEnd : 0, pChange ? pChange->acpNewEnd : 0));
-  return S_OK;
+  // XXX We should make something like InserTextAtSelectionInternal() for
+  //     making the log clearer if InsertTextAtSelection() is called internally.
+  return InsertTextAtSelection(TS_IAS_NOQUERY, pchText, cch,
+                               NULL, NULL, pChange);
 }
 
 STDMETHODIMP
@@ -2009,6 +1999,15 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
     return E_INVALIDARG;
   }
 
+  // Get selection first
+  TS_SELECTION_ACP sel;
+  if (!GetSelectionInternal(sel)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
+            "GetSelectionInternal() failure", this));
+    return E_FAIL;
+  }
+
   if (TS_IAS_QUERYONLY == dwFlags) {
     if (!IsReadLocked()) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2023,16 +2022,6 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
               "null argument", this));
       return E_INVALIDARG;
     }
-
-    // Get selection first
-    TS_SELECTION_ACP sel;
-    if (!GetSelectionInternal(sel)) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
-              "GetSelectionInternal() failure", this));
-      return E_FAIL;
-    }
-
     // Simulate text insertion
     *pacpStart = sel.acpStart;
     *pacpEnd = sel.acpEnd;
@@ -2055,7 +2044,6 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
               "null pChange", this));
       return E_INVALIDARG;
     }
-
     if (TS_IAS_NOQUERY != dwFlags && (!pacpStart || !pacpEnd)) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
@@ -2063,14 +2051,69 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
       return E_INVALIDARG;
     }
 
-    if (!InsertTextAtSelectionInternal(nsDependentString(pchText, cch),
-                                       pChange)) {
+    if (mCompositionView) {
+      // Emulate text insertion during compositions, because during a
+      // composition, editor expects the whole composition string to
+      // be sent in NS_TEXT_TEXT, not just the inserted part.
+      // The actual NS_TEXT_TEXT will be sent in SetSelection or
+      // OnUpdateComposition.
+      mCompositionString.Replace(uint32_t(sel.acpStart - mCompositionStart),
+                                 sel.acpEnd - sel.acpStart, pchText, cch);
+
+      mCompositionSelection.acpStart += cch;
+      mCompositionSelection.acpEnd = mCompositionSelection.acpStart;
+      mCompositionSelection.style.ase = TS_AE_END;
+      PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+             ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() replaced a "
+              "part of (%lu-%lu) the composition string, waiting "
+              "SetSelection() or OnUpdateComposition()...", this,
+              sel.acpStart - mCompositionStart,
+              sel.acpEnd - mCompositionStart));
+    } else {
+      // Use a temporary composition to contain the text
+      PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+             ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() dispatching "
+              "a compositionstart event...", this));
+      nsCompositionEvent compEvent(true, NS_COMPOSITION_START, mWindow);
+      mWindow->InitEvent(compEvent);
+      mWindow->DispatchWindowEvent(&compEvent);
+      if (mWindow && !mWindow->Destroyed()) {
+        PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+               ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() dispatching "
+                "a compositionupdate event...", this));
+        compEvent.message = NS_COMPOSITION_UPDATE;
+        compEvent.data.Assign(pchText, cch);
+        mWindow->DispatchWindowEvent(&compEvent);
+        if (mWindow && !mWindow->Destroyed()) {
+          PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+                 ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() "
+                  "dispatching a text event...", this));
+          nsTextEvent event(true, NS_TEXT_TEXT, mWindow);
+          mWindow->InitEvent(event);
+          event.theText.Assign(pchText, cch);
+          event.theText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                                         NS_LITERAL_STRING("\n"));
+          mWindow->DispatchWindowEvent(&event);
+          if (mWindow && !mWindow->Destroyed()) {
+            PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+                   ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() "
+                    "dispatching a compositionend event...", this));
+            compEvent.message = NS_COMPOSITION_END;
+            mWindow->DispatchWindowEvent(&compEvent);
+          }
+        }
+      }
+    }
+    pChange->acpStart = sel.acpStart;
+    pChange->acpOldEnd = sel.acpEnd;
+    // Get new selection
+    if (!GetSelectionInternal(sel)) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
-              "InsertTextAtSelectionInternal() failure", this));
+              "GetSelectionInternal() failure after inserted the text", this));
       return E_FAIL;
     }
-
+    pChange->acpNewEnd = sel.acpEnd;
     if (TS_IAS_NOQUERY != dwFlags) {
       *pacpStart = pChange->acpStart;
       *pacpEnd = pChange->acpNewEnd;
@@ -2083,138 +2126,7 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
           this, pacpStart ? *pacpStart : 0, pacpEnd ? *pacpEnd : 0,
           pChange ? pChange->acpStart: 0, pChange ? pChange->acpOldEnd : 0,
           pChange ? pChange->acpNewEnd : 0));
-}
-
-bool
-nsTextStore::InsertTextAtSelectionInternal(const nsAString &aInsertStr,
-                                           TS_TEXTCHANGE* aTextChange)
-{
-  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal("
-          "aInsertStr=\"%s\", aTextChange=0x%p), %s",
-          this, NS_ConvertUTF16toUTF8(aInsertStr).get(), aTextChange,
-          mCompositionView ? "there is composition view" :
-                             "there is no composition view"));
-
-  TS_SELECTION_ACP oldSelection;
-  oldSelection.acpStart = 0;
-  oldSelection.acpEnd = 0;
-
-  if (mCompositionView) {
-    oldSelection = mCompositionSelection;
-    // Emulate text insertion during compositions, because during a
-    // composition, editor expects the whole composition string to
-    // be sent in NS_TEXT_TEXT, not just the inserted part.
-    // The actual NS_TEXT_TEXT will be sent in SetSelection or
-    // OnUpdateComposition.
-    mCompositionString.Replace(
-      static_cast<uint32_t>(oldSelection.acpStart) - mCompositionStart,
-      static_cast<uint32_t>(oldSelection.acpEnd - oldSelection.acpStart),
-      aInsertStr);
-
-    mCompositionSelection.acpStart += aInsertStr.Length();
-    mCompositionSelection.acpEnd = mCompositionSelection.acpStart;
-    mCompositionSelection.style.ase = TS_AE_END;
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() replaced "
-            "a part of (%lu-%lu) the composition string, waiting "
-            "SetSelection() or OnUpdateComposition()...", this,
-            oldSelection.acpStart - mCompositionStart,
-            oldSelection.acpEnd - mCompositionStart));
-  } else {
-    // Use actual selection if it's not composing.
-    if (aTextChange && !GetSelectionInternal(oldSelection)) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
-              "due to GetSelectionInternal() failure", this));
-      return false;
-    }
-
-    // Use a temporary composition to contain the text
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-            "dispatching a compositionstart event...", this));
-    nsCompositionEvent compStartEvent(true, NS_COMPOSITION_START, mWindow);
-    mWindow->InitEvent(compStartEvent);
-    mWindow->DispatchWindowEvent(&compStartEvent);
-    if (!mWindow || mWindow->Destroyed()) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
-              "due to the widget destroyed by compositionstart event", this));
-      return false;
-    }
-
-    if (!aInsertStr.IsEmpty()) {
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-            "dispatching a compositionupdate event...", this));
-      nsCompositionEvent compUpdateEvent(true, NS_COMPOSITION_UPDATE, mWindow);
-      compUpdateEvent.data = aInsertStr;
-      mWindow->DispatchWindowEvent(&compUpdateEvent);
-      if (!mWindow || mWindow->Destroyed()) {
-        PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-               ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-                "FAILED due to the widget destroyed by compositionupdate event",
-                this));
-        return false;
-      }
-    }
-
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-            "dispatching a text event...", this));
-    nsTextEvent textEvent(true, NS_TEXT_TEXT, mWindow);
-    mWindow->InitEvent(textEvent);
-    textEvent.theText = aInsertStr;
-    textEvent.theText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                                       NS_LITERAL_STRING("\n"));
-    mWindow->DispatchWindowEvent(&textEvent);
-    if (!mWindow || mWindow->Destroyed()) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
-              "due to the widget destroyed by text event", this));
-      return false;
-    }
-
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-            "dispatching a compositionend event...", this));
-    nsCompositionEvent compEndEvent(true, NS_COMPOSITION_END, mWindow);
-    compEndEvent.data = aInsertStr;
-    mWindow->DispatchWindowEvent(&compEndEvent);
-    if (!mWindow || mWindow->Destroyed()) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
-              "due to the widget destroyed by compositionend event", this));
-      return false;
-    }
-  }
-
-  if (aTextChange) {
-    aTextChange->acpStart = oldSelection.acpStart;
-    aTextChange->acpOldEnd = oldSelection.acpEnd;
-
-    // Get new selection
-    TS_SELECTION_ACP newSelection;
-    if (!GetSelectionInternal(newSelection)) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
-              "due to GetSelectionInternal() failure after inserted the text",
-              this));
-      return false;
-    }
-    aTextChange->acpNewEnd = newSelection.acpEnd;
-  }
-
-  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() succeeded: "
-          "mWindow=0x%p, mWindow->Destroyed()=%s, aTextChange={ acpStart=%ld, "
-          "acpOldEnd=%ld, acpNewEnd=%ld }",
-          this, mWindow, GetBoolName(mWindow ? mWindow->Destroyed() : true),
-          aTextChange ? aTextChange->acpStart : 0,
-          aTextChange ? aTextChange->acpOldEnd : 0,
-          aTextChange ? aTextChange->acpNewEnd : 0));
-  return true;
+  return S_OK;
 }
 
 STDMETHODIMP

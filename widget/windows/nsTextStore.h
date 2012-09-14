@@ -174,8 +174,6 @@ protected:
   // event should not be sent from here.
   HRESULT  SetSelectionInternal(const TS_SELECTION_ACP*,
                                 bool aDispatchTextEvent = false);
-  bool     InsertTextAtSelectionInternal(const nsAString &aInsertStr,
-                                         TS_TEXTCHANGE* aTextChange);
   HRESULT  OnStartCompositionInternal(ITfCompositionView*, ITfRange*, bool);
   void     CommitCompositionInternal(bool);
   void     SetInputContextInternal(IMEState::Enabled aState);
