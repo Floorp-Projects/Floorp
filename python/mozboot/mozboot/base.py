@@ -6,6 +6,7 @@ from __future__ import print_function, unicode_literals
 
 import os
 import subprocess
+import sys
 
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
@@ -32,7 +33,7 @@ class BaseBootstrapper(object):
 
         print('Executing as root:', subprocess.list2cmdline(command))
 
-        subprocess.check_call(command)
+        subprocess.check_call(command, stdin=sys.stdin)
 
     def yum_install(self, *packages):
         command = ['yum', 'install']
