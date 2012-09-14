@@ -1,12 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/main.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/constants.js");
-
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   initTestLogging("Trace");
@@ -30,14 +28,14 @@ add_test(function test_change_password() {
   }
 
   try {
-    Weave.Service.serverURL = TEST_SERVER_URL;
-    Weave.Service.clusterURL = TEST_CLUSTER_URL;
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
     setBasicCredentials("johndoe", "ilovejane");
 
     _("changePassword() returns false for a network error, the password won't change.");
-    let res = Weave.Service.changePassword("ILoveJane83");
+    let res = Service.changePassword("ILoveJane83");
     do_check_false(res);
-    do_check_eq(Identity.basicPassword, "ilovejane");
+    do_check_eq(Service.identity.basicPassword, "ilovejane");
 
     _("Let's fire up the server and actually change the password.");
     server = httpd_setup({
@@ -45,9 +43,9 @@ add_test(function test_change_password() {
       "/user/1.0/janedoe/password": send(401, "Unauthorized", "Forbidden!")
     });
 
-    res = Weave.Service.changePassword("ILoveJane83");
+    res = Service.changePassword("ILoveJane83");
     do_check_true(res);
-    do_check_eq(Identity.basicPassword, "ILoveJane83");
+    do_check_eq(Service.identity.basicPassword, "ILoveJane83");
     do_check_eq(requestBody, "ILoveJane83");
 
     _("Make sure the password has been persisted in the login manager.");
@@ -58,20 +56,20 @@ add_test(function test_change_password() {
 
     _("A non-ASCII password is UTF-8 encoded.");
     const moneyPassword = "moneyislike$£¥";
-    res = Weave.Service.changePassword(moneyPassword);
+    res = Service.changePassword(moneyPassword);
     do_check_true(res);
-    do_check_eq(Identity.basicPassword, Utils.encodeUTF8(moneyPassword));
+    do_check_eq(Service.identity.basicPassword, Utils.encodeUTF8(moneyPassword));
     do_check_eq(requestBody, Utils.encodeUTF8(moneyPassword));
 
     _("changePassword() returns false for a server error, the password won't change.");
     Services.logins.removeAllLogins();
     setBasicCredentials("janedoe", "ilovejohn");
-    res = Weave.Service.changePassword("ILoveJohn86");
+    res = Service.changePassword("ILoveJohn86");
     do_check_false(res);
-    do_check_eq(Identity.basicPassword, "ilovejohn");
+    do_check_eq(Service.identity.basicPassword, "ilovejohn");
 
   } finally {
-    Weave.Svc.Prefs.resetBranch("");
+    Svc.Prefs.resetBranch("");
     Services.logins.removeAllLogins();
     server.stop(run_next_test);
   }

@@ -54,8 +54,8 @@ add_test(function test_resetLocalData() {
 
   // Verify the site was nuked from orbit.
   do_check_eq(Svc.Prefs.get("username"), undefined);
-  do_check_eq(Identity.basicPassword, null);
-  do_check_eq(Identity.syncKey, null);
+  do_check_eq(Service.identity.basicPassword, null);
+  do_check_eq(Service.identity.syncKey, null);
 
   do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
   do_check_false(Status.enforceBackoff);

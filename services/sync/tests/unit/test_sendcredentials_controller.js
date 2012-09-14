@@ -29,9 +29,9 @@ function make_sendCredentials_test(topic) {
         sendAndCompleteCalled = true;
 
         // Verify it sends the correct data.
-        do_check_eq(data.account,   Identity.account);
-        do_check_eq(data.password,  Identity.basicPassword);
-        do_check_eq(data.synckey,   Identity.syncKey);
+        do_check_eq(data.account,   Service.identity.account);
+        do_check_eq(data.password,  Service.identity.basicPassword);
+        do_check_eq(data.synckey,   Service.identity.syncKey);
         do_check_eq(data.serverURL, Service.serverURL);
 
         this.controller.onComplete();

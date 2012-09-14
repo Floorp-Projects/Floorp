@@ -50,7 +50,7 @@ let gSyncAddDevice = {
         this.wizard.getButton("back").hidden = false;
         this.wizard.getButton("next").hidden = true;
         document.getElementById("weavePassphrase").value =
-          Weave.Utils.hyphenatePassphrase(Weave.Identity.syncKey);
+          Weave.Utils.hyphenatePassphrase(Weave.Service.identity.syncKey);
         break;
       case DEVICE_CONNECTED_PAGE:
         this.wizard.canAdvance = true;
@@ -80,9 +80,9 @@ let gSyncAddDevice = {
     let self = this;
     let jpakeclient = this._jpakeclient = new Weave.JPAKEClient({
       onPaired: function onPaired() {
-        let credentials = {account:   Weave.Identity.account,
-                           password:  Weave.Identity.basicPassword,
-                           synckey:   Weave.Identity.syncKey,
+        let credentials = {account:   Weave.Service.identity.account,
+                           password:  Weave.Service.identity.basicPassword,
+                           synckey:   Weave.Service.identity.syncKey,
                            serverURL: Weave.Service.serverURL};
         jpakeclient.sendAndComplete(credentials);
       },

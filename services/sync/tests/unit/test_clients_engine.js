@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/service.js");
@@ -52,7 +51,7 @@ add_test(function test_bad_hmac() {
   function uploadNewKeys() {
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Weave.Identity.syncKeyBundle);
+    serverKeys.encrypt(Service.identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
   }
 
@@ -81,7 +80,7 @@ add_test(function test_bad_hmac() {
     engine.resetClient();
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Weave.Identity.syncKeyBundle);
+    serverKeys.encrypt(Service.identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
 
     _("Sync.");

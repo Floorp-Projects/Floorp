@@ -171,10 +171,12 @@ add_test(function test_collections_manager() {
   let log = Log4Moz.repository.getLogger("Test");
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
-  Identity.account = "john@example.com";
-  Identity.syncKey = "a-bbbbb-ccccc-ddddd-eeeee-fffff";
+  let identity = new IdentityManager();
 
-  let keyBundle = Identity.syncKeyBundle;
+  identity.account = "john@example.com";
+  identity.syncKey = "a-bbbbb-ccccc-ddddd-eeeee-fffff";
+
+  let keyBundle = identity.syncKeyBundle;
 
   /*
    * Build a test version of storage/crypto/keys.

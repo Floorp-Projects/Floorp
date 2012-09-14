@@ -52,7 +52,7 @@ function run_test() {
     do_check_eq(Weave.Status.login, Weave.LOGIN_SUCCEEDED);
 
     _("Simulate having changed the password somewhere else.");
-    Identity.basicPassword = "ilovejosephine";
+    Service.identity.basicPassword = "ilovejosephine";
 
     _("Let's try to sync.");
     Service.sync();

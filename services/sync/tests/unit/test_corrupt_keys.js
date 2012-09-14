@@ -77,7 +77,7 @@ add_test(function test_locally_changed_keys() {
     // Upload keys.
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Identity.syncKeyBundle);
+    serverKeys.encrypt(Service.identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
 
     // Check that login works.

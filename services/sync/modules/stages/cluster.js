@@ -23,7 +23,7 @@ function ClusterManager(service) {
 }
 ClusterManager.prototype = {
   get identity() {
-    return this.service._identity;
+    return this.service.identity;
   },
 
   /**

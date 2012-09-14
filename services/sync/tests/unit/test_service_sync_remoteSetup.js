@@ -76,8 +76,8 @@ function run_test() {
     Service.login("johndoe", "ilovejane", "my old secret phrase!!1!");
     _("End of login");
     do_check_true(Service.isLoggedIn);
-    do_check_true(Utils.isPassphrase(Identity.syncKey));
-    let syncKey = Identity.syncKey;
+    do_check_true(Utils.isPassphrase(Service.identity.syncKey));
+    let syncKey = Service.identity.syncKey;
     Service.startOver();
 
     Service.serverURL = TEST_SERVER_URL;
@@ -123,12 +123,12 @@ function run_test() {
     do_check_eq(metaModified, meta_global.modified);
 
     _("Checking bad passphrases.");
-    let pp = Identity.syncKey;
-    Identity.syncKey = "notvalid";
+    let pp = Service.identity.syncKey;
+    Service.identity.syncKey = "notvalid";
     do_check_false(Service.verifyAndFetchSymmetricKeys());
     do_check_eq(Status.sync, CREDENTIALS_CHANGED);
     do_check_eq(Status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
-    Identity.syncKey = pp;
+    Service.identity.syncKey = pp;
     do_check_true(Service.verifyAndFetchSymmetricKeys());
 
     // changePassphrase wipes our keys, and they're regenerated on next sync.

@@ -71,7 +71,7 @@ let Change = {
           document.getElementById("generatePassphraseButton").hidden = false;
           document.getElementById("passphraseBackupButtons").hidden = false;
           this._passphraseBox.setAttribute("readonly", "true");
-          let pp = Weave.Identity.syncKey;
+          let pp = Weave.Service.identity.syncKey;
           if (Weave.Utils.isPassphrase(pp))
              pp = Weave.Utils.hyphenatePassphrase(pp);
           this._passphraseBox.value = pp;
@@ -158,7 +158,7 @@ let Change = {
   doChangePassphrase: function Change_doChangePassphrase() {
     let pp = Weave.Utils.normalizePassphrase(this._passphraseBox.value);
     if (this._updatingPassphrase) {
-      Weave.Identity.syncKey = pp;
+      Weave.Service.identity.syncKey = pp;
       if (Weave.Service.login()) {
         this._updateStatus("change.recoverykey.success", "success");
         Weave.Service.persistLogin();
@@ -182,7 +182,7 @@ let Change = {
 
   doChangePassword: function Change_doChangePassword() {
     if (this._currentPasswordInvalid) {
-      Weave.Identity.basicPassword = this._firstBox.value;
+      Weave.Service.identity.basicPassword = this._firstBox.value;
       if (Weave.Service.login()) {
         this._updateStatus("change.password.status.success", "success");
         Weave.Service.persistLogin();

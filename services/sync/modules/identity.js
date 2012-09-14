@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["Identity", "IdentityManager"];
+const EXPORTED_SYMBOLS = ["IdentityManager"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -12,10 +12,6 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/util.js");
-
-XPCOMUtils.defineLazyGetter(this, "Identity", function() {
-  return new IdentityManager();
-});
 
 /**
  * Manages identity and authentication for Sync.
@@ -30,11 +26,6 @@ XPCOMUtils.defineLazyGetter(this, "Identity", function() {
  *     basic authentication.
  *   sync key - The main encryption key used by Sync.
  *   sync key bundle - A representation of your sync key.
- *
- * An instance of this type is lazily instantiated under Weave.Identity. It is
- * and should be treated as a global variable. The reason is that saved changes
- * are stored in preferences and the password manager. So, if you created
- * multiple instances, they would just step on each other's state.
  *
  * When changes are made to entities that are stored in the password manager
  * (basic password, sync key), those changes are merely staged. To commit them

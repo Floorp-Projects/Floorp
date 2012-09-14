@@ -69,9 +69,9 @@ var TPS = {
       }
     }
     catch(e) {}
-    Weave.Identity.account       = prefs.getCharPref('tps.account.username');
-    Weave.Identity.basicPassword = prefs.getCharPref('tps.account.password');
-    Weave.Identity.syncKey       = prefs.getCharPref('tps.account.passphrase');
+    Weave.Service.identity.account       = prefs.getCharPref('tps.account.username');
+    Weave.Service.Identity.basicPassword = prefs.getCharPref('tps.account.password');
+    Weave.Service.identity.syncKey       = prefs.getCharPref('tps.account.passphrase');
     Weave.Svc.Obs.notify("weave:service:setup-complete");
   },
 
