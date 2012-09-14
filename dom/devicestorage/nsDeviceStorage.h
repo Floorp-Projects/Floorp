@@ -55,6 +55,8 @@ public:
   bool Check(const nsAString& aType, nsIDOMBlob* aBlob);
   bool Check(const nsAString& aType, nsIFile* aFile);
 
+  static nsresult GetPermissionForType(const nsAString& aType, nsACString& aPermissionResult);
+
 private:
   nsString mPicturesExtensions;
   nsString mVideosExtensions;
