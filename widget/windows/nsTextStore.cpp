@@ -1992,13 +1992,6 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
           mCompositionView ? "there is composition view" :
                              "there is no composition view"));
 
-  if (!IsReadWriteLocked()) {
-    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
-            "not locked (read)", this));
-    return TS_E_NOLOCK;
-  }
-
   if (cch && !pchText) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
@@ -2016,6 +2009,13 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
   }
 
   if (TS_IAS_QUERYONLY == dwFlags) {
+    if (!IsReadLocked()) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
+              "not locked (read)", this));
+      return TS_E_NOLOCK;
+    }
+
     if (!pacpStart || !pacpEnd) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
@@ -2031,6 +2031,13 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
       pChange->acpNewEnd = sel.acpStart + cch;
     }
   } else {
+    if (!IsReadWriteLocked()) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
+              "not locked (read-write)", this));
+      return TS_E_NOLOCK;
+    }
+
     if (!pChange) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
