@@ -407,26 +407,27 @@ bool OmxDecoder::Init() {
 }
 
 bool OmxDecoder::SetVideoFormat() {
+  sp<MetaData> format = mVideoSource->getFormat();
   const char *componentName;
 
-  if (!mVideoSource->getFormat()->findInt32(kKeyWidth, &mVideoWidth) ||
-      !mVideoSource->getFormat()->findInt32(kKeyHeight, &mVideoHeight) ||
-      !mVideoSource->getFormat()->findCString(kKeyDecoderComponent, &componentName) ||
-      !mVideoSource->getFormat()->findInt32(kKeyColorFormat, &mVideoColorFormat) ) {
+  if (!format->findInt32(kKeyWidth, &mVideoWidth) ||
+      !format->findInt32(kKeyHeight, &mVideoHeight) ||
+      !format->findCString(kKeyDecoderComponent, &componentName) ||
+      !format->findInt32(kKeyColorFormat, &mVideoColorFormat) ) {
     return false;
   }
 
-  if (!mVideoSource->getFormat()->findInt32(kKeyStride, &mVideoStride)) {
+  if (!format->findInt32(kKeyStride, &mVideoStride)) {
     mVideoStride = mVideoWidth;
     LOG("stride not available, assuming width");
   }
 
-  if (!mVideoSource->getFormat()->findInt32(kKeySliceHeight, &mVideoSliceHeight)) {
+  if (!format->findInt32(kKeySliceHeight, &mVideoSliceHeight)) {
     mVideoSliceHeight = mVideoHeight;
     LOG("slice height not available, assuming height");
   }
 
-  if (!mVideoSource->getFormat()->findInt32(kKeyRotation, &mVideoRotation)) {
+  if (!format->findInt32(kKeyRotation, &mVideoRotation)) {
     mVideoRotation = 0;
     LOG("rotation not available, assuming 0");
   }
