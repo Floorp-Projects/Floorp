@@ -449,11 +449,11 @@ nsChromeRegistryChrome::SendRegisteredChrome(
   PL_DHashTableEnumerate(&mPackagesHash, CollectPackages, &args);
 
   nsCOMPtr<nsIIOService> io (do_GetIOService());
-  NS_ENSURE_TRUE(io, );
+  NS_ENSURE_TRUE_VOID(io);
 
   nsCOMPtr<nsIProtocolHandler> ph;
   nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
-  NS_ENSURE_SUCCESS(rv, );
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   //FIXME: Some substitutions are set up lazily and might not exist yet
   nsCOMPtr<nsIResProtocolHandler> irph (do_QueryInterface(ph));
@@ -464,7 +464,7 @@ nsChromeRegistryChrome::SendRegisteredChrome(
 
   bool success = aParent->SendRegisterChrome(packages, resources, overrides,
                                              mSelectedLocale);
-  NS_ENSURE_TRUE(success, );
+  NS_ENSURE_TRUE_VOID(success);
 }
 
 PLDHashOperator

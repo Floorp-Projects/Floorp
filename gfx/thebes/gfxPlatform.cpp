@@ -855,7 +855,7 @@ gfxPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 static void
 AppendGenericFontFromPref(nsString& aFonts, nsIAtom *aLangGroup, const char *aGenericName)
 {
-    NS_ENSURE_TRUE(Preferences::GetRootBranch(), );
+    NS_ENSURE_TRUE_VOID(Preferences::GetRootBranch());
 
     nsAutoCString prefName, langGroupString;
 
