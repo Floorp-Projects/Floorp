@@ -84,7 +84,7 @@ DeviceStorageTypeChecker::CreateOrGet()
   if (!stringService) {
     return nullptr;
   }
-  
+
   nsCOMPtr<nsIStringBundle> filterBundle;
   if (NS_FAILED(stringService->CreateBundle(DEVICESTORAGE_PROPERTIES, getter_AddRefs(filterBundle)))) {
     return nullptr;
@@ -192,8 +192,8 @@ private:
 };
 
 DeviceStorageFile::DeviceStorageFile(const nsAString& aStorageType,
-				     nsIFile* aFile,
-				     const nsAString& aPath)
+                                     nsIFile* aFile,
+                                     const nsAString& aPath)
   : mPath(aPath)
   , mStorageType(aStorageType)
   , mEditable(false)
@@ -336,8 +336,8 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
   while (bufSize) {
     uint32_t wrote;
     rv = bufferedOutputStream->WriteFrom(aInputStream,
-					 static_cast<uint32_t>(NS_MIN<uint64_t>(bufSize, PR_UINT32_MAX)),
-					 &wrote);
+                                         static_cast<uint32_t>(NS_MIN<uint64_t>(bufSize, PR_UINT32_MAX)),
+                                         &wrote);
     if (NS_FAILED(rv)) {
       break;
     }
@@ -531,13 +531,13 @@ DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const ns
     } else if (isFile) {
 
       if (!typeChecker->Check(aStorageType, f)) {
-	continue;
+        continue;
       }
 
       int64_t size;
       rv = f->GetFileSize(&size);
       if (NS_SUCCEEDED(rv)) {
-	*aSoFar += size;
+        *aSoFar += size;
       }
     }
   }
@@ -1100,8 +1100,8 @@ public:
     nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(mFreeBytes, mTotalBytes, state);
 
     jsval result = InterfaceToJsval(mRequest->GetOwner(),
-				    domstat,
-				    &NS_GET_IID(nsIDOMDeviceStorageStat));
+                                    domstat,
+                                    &NS_GET_IID(nsIDOMDeviceStorageStat));
 
     mRequest->FireSuccess(result);
     mRequest = nullptr;
@@ -1440,16 +1440,16 @@ public:
 
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
 
-	  BlobChild* actor = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlob);
-	  if (!actor) {
-	    return NS_ERROR_FAILURE;
-	  }
+          BlobChild* actor = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlob);
+          if (!actor) {
+            return NS_ERROR_FAILURE;
+          }
 
           DeviceStorageAddParams params;
-	  params.blobChild() = actor;
-	  params.type() = mFile->mStorageType;
-	  params.name() = mFile->mPath;
-	  params.fullpath() = fullpath;
+          params.blobChild() = actor;
+          params.type() = mFile->mStorageType;
+          params.name() = mFile->mPath;
+          params.fullpath() = fullpath;
 
           PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
@@ -1490,7 +1490,7 @@ public:
           PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
           DeviceStorageStatParams params(mFile->mStorageType, fullpath);
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
-	  return NS_OK;
+          return NS_OK;
         }
         r = new StatFileEvent(mFile, mRequest);
         break;
@@ -1498,8 +1498,8 @@ public:
 
       case DEVICE_STORAGE_REQUEST_WATCH:
       {
-	mDeviceStorage->mAllowedToWatchFile = true;
-	return NS_OK;
+        mDeviceStorage->mAllowedToWatchFile = true;
+        return NS_OK;
       }
     }
 
@@ -1710,7 +1710,7 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
   }
   else {
     r = new DeviceStorageRequest(DeviceStorageRequest::DEVICE_STORAGE_REQUEST_WRITE,
-				 win, mPrincipal, dsf, request, aBlob);
+                                 win, mPrincipal, dsf, request, aBlob);
   }
 
   NS_DispatchToMainThread(r);
@@ -1820,10 +1820,10 @@ nsDOMDeviceStorage::Stat(nsIDOMDOMRequest** aRetval)
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType, mRootDirectory);
   nsCOMPtr<nsIRunnable> r = new DeviceStorageRequest(DeviceStorageRequest::DEVICE_STORAGE_REQUEST_STAT,
-						     win,
-						     mPrincipal,
-						     dsf,
-						     request);
+                                                     win,
+                                                     mPrincipal,
+                                                     dsf,
+                                                     request);
   NS_DispatchToMainThread(r);
   return NS_OK;
 }
