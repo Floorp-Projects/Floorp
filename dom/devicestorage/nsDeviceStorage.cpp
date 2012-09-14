@@ -165,6 +165,21 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
   return false;
 }
 
+nsresult
+DeviceStorageTypeChecker::GetPermissionForType(const nsAString& aType, nsACString& aPermissionResult)
+{
+  if (!aType.EqualsLiteral(DEVICESTORAGE_PICTURES) &&
+      !aType.EqualsLiteral(DEVICESTORAGE_VIDEOS) &&
+      !aType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
+    // unknown type
+    return NS_ERROR_FAILURE;
+  }
+
+  aPermissionResult.AssignLiteral("device-storage:");
+  aPermissionResult.Append(NS_ConvertUTF16toUTF8(aType));
+  return NS_OK;
+}
+
 class IOEventComplete : public nsRunnable
 {
 public:
@@ -961,8 +976,7 @@ nsDOMDeviceStorageCursor::GetStorageType(nsAString & aType)
 NS_IMETHODIMP
 nsDOMDeviceStorageCursor::GetType(nsACString & aType)
 {
-  aType = "device-storage";
-  return NS_OK;
+  return DeviceStorageTypeChecker::GetPermissionForType(mFile->mStorageType, aType);
 }
 
 NS_IMETHODIMP
@@ -1368,7 +1382,11 @@ public:
       // Corresponding release occurs in DeallocPContentPermissionRequest.
       AddRef();
 
-      nsCString type = NS_LITERAL_CSTRING("device-storage");
+      nsCString type;
+      nsresult rv = DeviceStorageTypeChecker::GetPermissionForType(mFile->mStorageType, type);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
       child->SendPContentPermissionRequestConstructor(this, type, IPC::Principal(mPrincipal));
 
       Sendprompt();
@@ -1384,7 +1402,11 @@ public:
 
   NS_IMETHOD GetType(nsACString & aType)
   {
-    aType = "device-storage";
+    nsCString type;
+    nsresult rv = DeviceStorageTypeChecker::GetPermissionForType(mFile->mStorageType, aType);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     return NS_OK;
   }
 
@@ -1927,7 +1949,11 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
     // Corresponding release occurs in DeallocPContentPermissionRequest.
     r->AddRef();
 
-    nsCString type = NS_LITERAL_CSTRING("device-storage");
+    nsCString type;
+    nsresult rv = DeviceStorageTypeChecker::GetPermissionForType(mStorageType, type);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     child->SendPContentPermissionRequestConstructor(r, type, IPC::Principal(mPrincipal));
 
     r->Sendprompt();
