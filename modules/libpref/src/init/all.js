@@ -62,10 +62,6 @@ pref("browser.cache.offline.enable",           true);
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         512000);
 
-// offline apps should be limited to this much data in global storage
-// (in kilobytes)
-pref("offline-apps.quota.max",        204800);
-
 // the user should be warned if offline app disk usage exceeds this amount
 // (in kilobytes)
 pref("offline-apps.quota.warn",        51200);
