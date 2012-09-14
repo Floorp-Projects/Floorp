@@ -230,7 +230,7 @@ function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
 
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   run_next_test();
 }

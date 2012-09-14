@@ -807,9 +807,12 @@ SyncEngine.prototype = {
       }
     }
 
+    let key = this.service.collectionKeys.keyForCollection(this.name);
+
     // Not binding this method to 'this' for performance reasons. It gets
     // called for every incoming record.
     let self = this;
+
     newitems.recordHandler = function(item) {
       if (aborting) {
         return;
@@ -821,13 +824,13 @@ SyncEngine.prototype = {
 
       // Track the collection for the WBO.
       item.collection = self.name;
-      
+
       // Remember which records were processed
       handled.push(item.id);
 
       try {
         try {
-          item.decrypt();
+          item.decrypt(key);
         } catch (ex if Utils.isHMACMismatch(ex)) {
           let strategy = self.handleHMACMismatch(item, true);
           if (strategy == SyncEngine.kRecoveryStrategy.retry) {
@@ -835,13 +838,14 @@ SyncEngine.prototype = {
             try {
               // Try decrypting again, typically because we've got new keys.
               self._log.info("Trying decrypt again...");
-              item.decrypt();
+              key = self.service.collectionKeys.keyForCollection(self.name);
+              item.decrypt(key);
               strategy = null;
             } catch (ex if Utils.isHMACMismatch(ex)) {
               strategy = self.handleHMACMismatch(item, false);
             }
           }
-          
+
           switch (strategy) {
             case null:
               // Retry succeeded! No further handling.
@@ -1242,7 +1246,7 @@ SyncEngine.prototype = {
           if (this._log.level <= Log4Moz.Level.Trace)
             this._log.trace("Outgoing: " + out);
 
-          out.encrypt();
+          out.encrypt(this.service.collectionKeys.keyForCollection(this.name));
           up.pushData(out);
         }
         catch(ex) {
@@ -1324,10 +1328,12 @@ SyncEngine.prototype = {
     test.limit = 1;
     test.sort = "newest";
     test.full = true;
-    test.recordHandler = function(record) {
-      record.decrypt();
+
+    let key = this.service.collectionKeys.keyForCollection(this.name);
+    test.recordHandler = function recordHandler(record) {
+      record.decrypt(key);
       canDecrypt = true;
-    };
+    }.bind(this);
 
     // Any failure fetching/decrypting will just result in false
     try {

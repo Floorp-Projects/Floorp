@@ -17,7 +17,7 @@ function prepareBookmarkItem(collection, id) {
 function run_test() {
   Service.identity.username = "john@example.com";
   Service.identity.syncKey = "abcdeabcdeabcdeabcdeabcdea";
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
   let keyBundle = Service.identity.syncKeyBundle;
 
   let log = Log4Moz.repository.getLogger("Test");

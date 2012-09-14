@@ -54,8 +54,8 @@ function setUp() {
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
   Service.clusterURL = TEST_CLUSTER_URL;
 
-  generateNewKeys();
-  let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+  generateNewKeys(Service.collectionKeys);
+  let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.identity.syncKeyBundle);
   return serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
 }
@@ -760,7 +760,7 @@ add_test(function test_sync_X_Weave_Backoff() {
   // sufficiently low.
   clientsEngine._store.create({id: "foo", cleartext: "bar"});
   let rec = clientsEngine._store.createRecord("foo", "clients");
-  rec.encrypt();
+  rec.encrypt(Service.collectionKeys.keyForCollection("clients"));
   rec.upload(Service.resource(clientsEngine.engineURL + rec.id));
 
   // Sync once to log in and get everything set up. Let's verify our initial
@@ -817,7 +817,7 @@ add_test(function test_sync_503_Retry_After() {
   // sufficiently low.
   clientsEngine._store.create({id: "foo", cleartext: "bar"});
   let rec = clientsEngine._store.createRecord("foo", "clients");
-  rec.encrypt();
+  rec.encrypt(Service.collectionKeys.keyForCollection("clients"));
   rec.upload(Service.resource(clientsEngine.engineURL + rec.id));
 
   // Sync once to log in and get everything set up. Let's verify our initial

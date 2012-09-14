@@ -8,7 +8,7 @@ Cu.import("resource://services-sync/util.js");
 add_test(function test_processIncoming_abort() {
   _("An abort exception, raised in applyIncoming, will abort _processIncoming.");
   new SyncTestingInfrastructure();
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   let engine = new RotaryEngine(Service);
 

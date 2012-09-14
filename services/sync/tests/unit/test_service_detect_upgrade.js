@@ -100,7 +100,7 @@ add_test(function v4_upgrade() {
     // Now's a great time to test what happens when keys get replaced.
     _("Syncing afresh...");
     Service.logout();
-    CollectionKeys.clear();
+    Service.collectionKeys.clear();
     Service.serverURL = TEST_SERVER_URL;
     Service.clusterURL = TEST_CLUSTER_URL;
     meta_global.payload = JSON.stringify({"syncID": "foooooooooooooobbbbbbbbbbbb",
@@ -133,7 +133,7 @@ add_test(function v4_upgrade() {
 
     function retrieve_and_compare_default(should_succeed) {
       let serverDefault = retrieve_server_default();
-      let localDefault = CollectionKeys.keyForCollection().keyPairB64;
+      let localDefault = Service.collectionKeys.keyForCollection().keyPairB64;
 
       _("Retrieved keyBundle: " + JSON.stringify(serverDefault));
       _("Local keyBundle:     " + JSON.stringify(localDefault));
@@ -245,8 +245,8 @@ add_test(function v5_upgrade() {
     // -- keys decrypted with a different sync key, for example.
     _("Testing v4 -> v5 (or similar) upgrade.");
     function update_server_keys(syncKeyBundle, wboName, collWBO) {
-      generateNewKeys();
-      serverKeys = CollectionKeys.asWBO("crypto", wboName);
+      generateNewKeys(Service.collectionKeys);
+      serverKeys = Service.collectionKeys.asWBO("crypto", wboName);
       serverKeys.encrypt(syncKeyBundle);
       let res = Service.resource(Service.storageURL + collWBO);
       do_check_true(serverKeys.upload(res).success);
@@ -267,7 +267,7 @@ add_test(function v5_upgrade() {
     update_server_keys(badKeys, "bulk", "crypto/bulk");  // v5
 
     _("Generating new keys.");
-    generateNewKeys();
+    generateNewKeys(Service.collectionKeys);
 
     // Now sync and see what happens. It should be a version fail, not a crypto
     // fail.

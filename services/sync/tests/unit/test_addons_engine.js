@@ -158,7 +158,7 @@ add_test(function test_disabled_install_semantics() {
 
   new SyncTestingInfrastructure(USER, PASSWORD, PASSPHRASE);
 
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   let contents = {
     meta: {global: {engines: {addons: {version: engine.version,

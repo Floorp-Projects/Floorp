@@ -60,8 +60,8 @@ add_test(function test_locally_changed_keys() {
     Service.engineManager.register(HistoryEngine);
 
     function corrupt_local_keys() {
-      CollectionKeys._default.keyPair = [Svc.Crypto.generateRandomKey(),
-                                         Svc.Crypto.generateRandomKey()];
+      Service.collectionKeys._default.keyPair = [Svc.Crypto.generateRandomKey(),
+                                                 Svc.Crypto.generateRandomKey()];
     }
 
     _("Setting meta.");
@@ -75,8 +75,8 @@ add_test(function test_locally_changed_keys() {
     _("New meta/global: " + JSON.stringify(johndoe.collection("meta").wbo("global")));
 
     // Upload keys.
-    generateNewKeys();
-    let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+    generateNewKeys(Service.collectionKeys);
+    let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Service.identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
 
@@ -91,10 +91,10 @@ add_test(function test_locally_changed_keys() {
     _("Tabs modified: " + johndoe.modified("tabs"));
     do_check_true(johndoe.modified("tabs") > 0);
 
-    let coll_modified = CollectionKeys.lastModified;
+    let coll_modified = Service.collectionKeys.lastModified;
 
     // Let's create some server side history records.
-    let liveKeys = CollectionKeys.keyForCollection("history");
+    let liveKeys = Service.collectionKeys.keyForCollection("history");
     _("Keys now: " + liveKeys.keyPair);
     let visitType = Ci.nsINavHistoryService.TRANSITION_LINK;
     let history   = johndoe.createCollection("history");
@@ -110,7 +110,7 @@ add_test(function test_locally_changed_keys() {
         sortindex: i,
         visits: [{date: (modified - 5) * 1000000, type: visitType}],
         deleted: false};
-      w.encrypt();
+      w.encrypt(liveKeys);
 
       let payload = {ciphertext: w.ciphertext,
                      IV:         w.IV,
@@ -126,13 +126,13 @@ add_test(function test_locally_changed_keys() {
     let rec = new CryptoWrapper("history", "record-no--0");
     rec.fetch(Service.resource(Service.storageURL + "history/record-no--0"));
     _(JSON.stringify(rec));
-    do_check_true(!!rec.decrypt());
+    do_check_true(!!rec.decrypt(liveKeys));
 
     do_check_eq(hmacErrorCount, 0);
 
     // Fill local key cache with bad data.
     corrupt_local_keys();
-    _("Keys now: " + CollectionKeys.keyForCollection("history").keyPair);
+    _("Keys now: " + Service.collectionKeys.keyForCollection("history").keyPair);
 
     do_check_eq(hmacErrorCount, 0);
 
@@ -140,7 +140,7 @@ add_test(function test_locally_changed_keys() {
     // Now syncing should succeed, after one HMAC error.
     Service.sync();
     do_check_eq(hmacErrorCount, 1);
-    _("Keys now: " + CollectionKeys.keyForCollection("history").keyPair);
+    _("Keys now: " + Service.collectionKeys.keyForCollection("history").keyPair);
 
     // And look! We downloaded history!
     let store = Service.engineManager.get("history")._store;
@@ -165,7 +165,7 @@ add_test(function test_locally_changed_keys() {
         sortindex: i,
         visits: [{date: (modified - 5 ) * 1000000, type: visitType}],
         deleted: false};
-      w.encrypt();
+      w.encrypt(Service.collectionKeys.keyForCollection("history"));
       w.hmac = w.hmac.toUpperCase();
 
       let payload = {ciphertext: w.ciphertext,
@@ -183,7 +183,7 @@ add_test(function test_locally_changed_keys() {
 
     _("Syncing...");
     Service.sync();
-    _("Keys now: " + CollectionKeys.keyForCollection("history").keyPair);
+    _("Keys now: " + Service.collectionKeys.keyForCollection("history").keyPair);
     _("Server keys have been updated, and we skipped over 5 more HMAC errors without adjusting history.");
     do_check_true(johndoe.modified("crypto") > old_key_time);
     do_check_eq(hmacErrorCount, 6);

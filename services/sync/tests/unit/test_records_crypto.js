@@ -110,24 +110,24 @@ function run_test() {
 
     // Checking per-collection keys and default key handling.
 
-    generateNewKeys();
+    generateNewKeys(Service.collectionKeys);
     let bu = "http://localhost:8080/storage/bookmarks/foo";
     let bookmarkItem = prepareCryptoWrap("bookmarks", "foo");
-    bookmarkItem.encrypt();
+    bookmarkItem.encrypt(Service.collectionKeys.keyForCollection("bookmarks"));
     log.info("Ciphertext is " + bookmarkItem.ciphertext);
     do_check_true(bookmarkItem.ciphertext != null);
     log.info("Decrypting the record explicitly with the default key.");
-    do_check_eq(bookmarkItem.decrypt(CollectionKeys._default).stuff, "my payload here");
+    do_check_eq(bookmarkItem.decrypt(Service.collectionKeys._default).stuff, "my payload here");
 
     // Per-collection keys.
     // Generate a key for "bookmarks".
-    generateNewKeys(["bookmarks"]);
+    generateNewKeys(Service.collectionKeys, ["bookmarks"]);
     bookmarkItem = prepareCryptoWrap("bookmarks", "foo");
     do_check_eq(bookmarkItem.collection, "bookmarks");
 
     // Encrypt. This'll use the "bookmarks" encryption key, because we have a
     // special key for it. The same key will need to be used for decryption.
-    bookmarkItem.encrypt();
+    bookmarkItem.encrypt(Service.collectionKeys.keyForCollection("bookmarks"));
     do_check_true(bookmarkItem.ciphertext != null);
 
     // Attempt to use the default key, because this is a collision that could
@@ -135,7 +135,7 @@ function run_test() {
     // it's not the bookmarks key.
     let err;
     try {
-      bookmarkItem.decrypt(CollectionKeys._default);
+      bookmarkItem.decrypt(Service.collectionKeys._default);
     } catch (ex) {
       err = ex;
     }
@@ -143,7 +143,7 @@ function run_test() {
 
     // Explicitly check that it's using the bookmarks key.
     // This should succeed.
-    do_check_eq(bookmarkItem.decrypt(CollectionKeys.keyForCollection("bookmarks")).stuff,
+    do_check_eq(bookmarkItem.decrypt(Service.collectionKeys.keyForCollection("bookmarks")).stuff,
         "my payload here");
 
     log.info("Done!");
