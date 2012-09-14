@@ -907,10 +907,17 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
                aPid, clampedOomScoreAdj));
     }
 
-    int oomAdj = oomAdjOfOomScoreAdj(clampedOomScoreAdj);
+    // We try the newer interface first, and fall back to the older interface
+    // on failure.
 
-    WriteToFile(nsPrintfCString("/proc/%d/oom_adj", aPid).get(),
-                nsPrintfCString("%d", oomAdj).get());
+    if (!WriteToFile(nsPrintfCString("/proc/%d/oom_score_adj", aPid).get(),
+                     nsPrintfCString("%d", clampedOomScoreAdj).get()))
+    {
+      int oomAdj = oomAdjOfOomScoreAdj(clampedOomScoreAdj);
+
+      WriteToFile(nsPrintfCString("/proc/%d/oom_adj", aPid).get(),
+                  nsPrintfCString("%d", oomAdj).get());
+    }
   }
 
   int32_t nice = 0;
