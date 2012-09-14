@@ -224,7 +224,7 @@ let PageThumbs = {
     let sh = aWindow.innerHeight;
 
     let {width: thumbnailWidth, height: thumbnailHeight} = aCanvas;
-    let scale = Math.max(thumbnailWidth / sw, thumbnailHeight / sh);
+    let scale = Math.min(Math.max(thumbnailWidth / sw, thumbnailHeight / sh), 1);
     let scaledWidth = sw * scale;
     let scaledHeight = sh * scale;
 
