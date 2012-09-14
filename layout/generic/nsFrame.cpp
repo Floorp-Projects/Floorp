@@ -5632,13 +5632,13 @@ NS_IMETHODIMP
 nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
 {
   IndentBy(out, aIndent);
-  fprintf(out, "<frame va=\"%ld\" type=\"", PRUptrdiff(this));
+  fprintf(out, "<frame va=\"%p\" type=\"", (void*)this);
   nsAutoString name;
   GetFrameName(name);
   XMLQuote(name);
   fputs(NS_LossyConvertUTF16toASCII(name).get(), out);
-  fprintf(out, "\" state=\"%016llx\" parent=\"%ld\">\n",
-          (unsigned long long)GetDebugStateBits(), PRUptrdiff(mParent));
+  fprintf(out, "\" state=\"%016llx\" parent=\"%p\">\n",
+          (unsigned long long)GetDebugStateBits(), (void*)mParent);
 
   aIndent++;
   DumpBaseRegressionData(aPresContext, out, aIndent);
@@ -5655,12 +5655,12 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t 
 {
   if (GetNextSibling()) {
     IndentBy(out, aIndent);
-    fprintf(out, "<next-sibling va=\"%ld\"/>\n", PRUptrdiff(GetNextSibling()));
+    fprintf(out, "<next-sibling va=\"%p\"/>\n", (void*)GetNextSibling());
   }
 
   if (HasView()) {
     IndentBy(out, aIndent);
-    fprintf(out, "<view va=\"%ld\">\n", PRUptrdiff(GetView()));
+    fprintf(out, "<view va=\"%p\">\n", (void*)GetView());
     aIndent++;
     // XXX add in code to dump out view state too...
     aIndent--;

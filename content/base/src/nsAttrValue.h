@@ -20,7 +20,7 @@
 #include "nsCOMPtr.h"
 #include "SVGAttrValueWrapper.h"
 
-typedef PRUptrdiff PtrBits;
+typedef uintptr_t PtrBits;
 class nsAString;
 class nsIAtom;
 class nsIDocument;
