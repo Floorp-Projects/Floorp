@@ -2944,7 +2944,7 @@ void
 Accessible::CacheChildren()
 {
   DocAccessible* doc = Document();
-  NS_ENSURE_TRUE(doc,);
+  NS_ENSURE_TRUE_VOID(doc);
 
   nsAccTreeWalker walker(doc, mContent, CanHaveAnonChildren());
 

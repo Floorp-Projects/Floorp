@@ -1836,7 +1836,7 @@ nsEditor::NotifyEditorObservers(void)
   // overwork.  We don't need to do it for the very rare case.
 
   nsCOMPtr<nsIContent> target = GetInputEventTargetContent();
-  NS_ENSURE_TRUE(target, );
+  NS_ENSURE_TRUE_VOID(target);
 
   nsContentUtils::AddScriptRunner(
     new EditorInputEventDispatcher(this, mHandlingTrustedAction, target));
@@ -1997,7 +1997,7 @@ nsEditor::BeginIMEComposition()
 void
 nsEditor::EndIMEComposition()
 {
-  NS_ENSURE_TRUE(mInIMEMode, ); // nothing to do
+  NS_ENSURE_TRUE_VOID(mInIMEMode); // nothing to do
 
   // commit the IME transaction..we can get at it via the transaction mgr.
   // Note that this means IME won't work without an undo stack!
@@ -5185,7 +5185,7 @@ nsEditor::SwitchTextDirectionTo(uint32_t aDirection)
   // Get the current root direction from its frame
   dom::Element *rootElement = GetRoot();
   nsresult rv = DetermineCurrentDirection();
-  NS_ENSURE_SUCCESS(rv, );
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // Apply the requested direction
   if (aDirection == nsIPlaintextEditor::eEditorLeftToRight &&

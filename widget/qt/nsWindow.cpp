@@ -606,7 +606,7 @@ nsWindow::SetSizeMode(int32_t aMode)
 // set to visible if one of their ancestors is invisible)
 static void find_first_visible_parent(QGraphicsItem* aItem, QGraphicsItem*& aVisibleItem)
 {
-    NS_ENSURE_TRUE(aItem, );
+    NS_ENSURE_TRUE_VOID(aItem);
 
     aVisibleItem = nullptr;
     QGraphicsItem* parItem = nullptr;
@@ -2330,7 +2330,7 @@ nsWindow::NativeResize(int32_t aWidth, int32_t aHeight, bool    aRepaint)
 
     if (mIsTopLevel) {
         QGraphicsView *widget = qobject_cast<QGraphicsView*>(GetViewWidget());
-        NS_ENSURE_TRUE(widget,);
+        NS_ENSURE_TRUE_VOID(widget);
         // map from in-scene widget to scene, from scene to view.
         QRect r = widget->mapFromScene(mWidget->mapToScene(QRect(0, 0, aWidth, aHeight))).boundingRect();
         // going from QPolygon to QRect includes the points, adding one to width and height
@@ -2358,7 +2358,7 @@ nsWindow::NativeResize(int32_t aX, int32_t aY,
 
     if (mIsTopLevel) {
         QGraphicsView *widget = qobject_cast<QGraphicsView*>(GetViewWidget());
-        NS_ENSURE_TRUE(widget,);
+        NS_ENSURE_TRUE_VOID(widget);
         // map from in-scene widget to scene, from scene to view.
         QRect r = widget->mapFromScene(mWidget->mapToScene(QRect(aX, aY, aWidth, aHeight))).boundingRect();
         // going from QPolygon to QRect includes the points, adding one to width and height
@@ -3166,7 +3166,7 @@ NS_IMETHODIMP_(void)
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
-    NS_ENSURE_TRUE(mWidget, );
+    NS_ENSURE_TRUE_VOID(mWidget);
 
     // SetSoftwareKeyboardState uses mInputContext,
     // so, before calling that, record aContext in mInputContext.
