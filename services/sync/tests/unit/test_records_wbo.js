@@ -51,7 +51,7 @@ function test_fetch() {
   try {
     _("Fetching a WBO record");
     let rec = new WBORecord("coll", "record");
-    rec.fetch("http://localhost:8080/record");
+    rec.fetch(Service.resource("http://localhost:8080/record"));
     do_check_eq(rec.id, "asdf-1234-asdf-1234"); // NOT "record"!
 
     do_check_eq(rec.modified, 2454725.98283);

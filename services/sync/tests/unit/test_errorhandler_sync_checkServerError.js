@@ -9,7 +9,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
-initTestLogging();
+initTestLogging("Trace");
 
 let engineManager = Service.engineManager;
 engineManager.clear();
@@ -62,7 +62,8 @@ function generateAndUploadKeys() {
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Weave.Identity.syncKeyBundle);
-  return serverKeys.upload("http://localhost:8080/1.1/johndoe/storage/crypto/keys").success;
+  let res = Service.resource("http://localhost:8080/1.1/johndoe/storage/crypto/keys");
+  return serverKeys.upload(res).success;
 }
 
 

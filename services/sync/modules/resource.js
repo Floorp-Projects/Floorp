@@ -16,28 +16,27 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/preferences.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
 /*
  * AsyncResource represents a remote network resource, identified by a URI.
  * Create an instance like so:
- * 
+ *
  *   let resource = new AsyncResource("http://foobar.com/path/to/resource");
- * 
+ *
  * The 'resource' object has the following methods to issue HTTP requests
  * of the corresponding HTTP methods:
- * 
+ *
  *   get(callback)
  *   put(data, callback)
  *   post(data, callback)
  *   delete(callback)
- * 
+ *
  * 'callback' is a function with the following signature:
- * 
+ *
  *   function callback(error, result) {...}
- * 
+ *
  * 'error' will be null on successful requests. Likewise, result will not be
  * passed (=undefined) when an error occurs. Note that this is independent of
  * the status of the HTTP response.
@@ -68,11 +67,11 @@ AsyncResource.prototype = {
 
   // The string to use as the base User-Agent in Sync requests.
   // These strings will look something like
-  // 
+  //
   //   Firefox/4.0 FxSync/1.8.0.20100101.mobile
-  //   
+  //
   // or
-  // 
+  //
   //   Firefox Aurora/5.0a1 FxSync/1.9.0.20110409.desktop
   //
   _userAgent:
@@ -155,12 +154,8 @@ AsyncResource.prototype = {
 
     let headers = this.headers;
 
-    let authenticator = this.authenticator;
-    if (!authenticator) {
-      authenticator = Identity.getResourceAuthenticator();
-    }
-    if (authenticator) {
-      let result = authenticator(this, method);
+    if (this.authenticator) {
+      let result = this.authenticator(this, method);
       if (result && result.headers) {
         for (let [k, v] in Iterator(result.headers)) {
           headers[k.toLowerCase()] = v;
@@ -342,7 +337,7 @@ AsyncResource.prototype = {
 /*
  * Represent a remote network resource, identified by a URI, with a
  * synchronous API.
- * 
+ *
  * 'Resource' is not recommended for new code. Use the asynchronous API of
  * 'AsyncResource' instead.
  */
@@ -515,7 +510,7 @@ ChannelListener.prototype = {
                      " bytes from " + siStream + ".");
       throw ex;
     }
-    
+
     try {
       this._onProgress();
     } catch (ex) {
@@ -525,7 +520,7 @@ ChannelListener.prototype = {
       this._log.trace("Rethrowing; expect a failure code from the HTTP channel.");
       throw ex;
     }
-    
+
     this.delayAbort();
   },
 

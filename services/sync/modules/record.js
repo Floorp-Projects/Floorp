@@ -18,10 +18,9 @@ const Cu = Components.utils;
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -42,8 +41,12 @@ WBORecord.prototype = {
 
   // Get thyself from your URI, then deserialize.
   // Set thine 'response' field.
-  fetch: function fetch(uri) {
-    let r = new Resource(uri).get();
+  fetch: function fetch(resource) {
+    if (!resource instanceof Resource) {
+      throw new Error("First argument must be a Resource instance.");
+    }
+
+    let r = resource.get();
     if (r.success) {
       this.deserialize(r);   // Warning! Muffles exceptions!
     }
@@ -51,8 +54,12 @@ WBORecord.prototype = {
     return this;
   },
 
-  upload: function upload(uri) {
-    return new Resource(uri).put(this);
+  upload: function upload(resource) {
+    if (!resource instanceof Resource) {
+      throw new Error("First argument must be a Resource instance.");
+    }
+
+    return resource.put(this);
   },
 
   // Take a base URI string, with trailing slash, and return the URI of this
@@ -116,7 +123,7 @@ RecordManager.prototype = {
     try {
       // Clear out the last response with empty object if GET fails
       this.response = {};
-      this.response = new Resource(url).get();
+      this.response = this.service.resource(url).get();
 
       // Don't parse and save the record on failure
       if (!this.response.success)
@@ -504,9 +511,19 @@ CollectionKeyManager.prototype = {
   }
 }
 
-function Collection(uri, recordObj) {
+function Collection(uri, recordObj, service) {
+  if (!service) {
+    throw new Error("Collection constructor requires a service.");
+  }
+
   Resource.call(this, uri);
+
+  // This is a bit hacky, but gets the job done.
+  let res = service.resource(uri);
+  this.authenticator = res.authenticator;
+
   this._recordObj = recordObj;
+  this._service = service;
 
   this._full = false;
   this._ids = null;
@@ -614,5 +631,5 @@ Collection.prototype = {
         onRecord(record);
       }
     };
-  }
+  },
 };

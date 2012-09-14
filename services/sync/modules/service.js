@@ -235,7 +235,7 @@ WeaveSvc.prototype = {
     // Fetch keys.
     let cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
     try {
-      let cryptoResp = cryptoKeys.fetch(this.cryptoKeysURL).response;
+      let cryptoResp = cryptoKeys.fetch(this.resource(this.cryptoKeysURL)).response;
 
       // Save out the ciphertext for when we reupload. If there's a bug in
       // CollectionKeys, this will prevent us from uploading junk.
@@ -258,7 +258,7 @@ WeaveSvc.prototype = {
       cryptoKeys.ciphertext = cipherText;
       cryptoKeys.cleartext  = null;
 
-      let uploadResp = cryptoKeys.upload(this.cryptoKeysURL);
+      let uploadResp = cryptoKeys.upload(this.resource(this.cryptoKeysURL));
       if (uploadResp.success)
         this._log.info("Successfully re-uploaded keys. Continuing sync.");
       else
@@ -472,6 +472,16 @@ WeaveSvc.prototype = {
   },
 
   /**
+   * Obtain a Resource instance with authentication credentials.
+   */
+  resource: function resource(url) {
+    let res = new Resource(url);
+    res.authenticator = this._identity.getResourceAuthenticator();
+
+    return res;
+  },
+
+  /**
    * Perform the info fetch as part of a login or key fetch.
    */
   _fetchInfo: function _fetchInfo(url) {
@@ -480,7 +490,7 @@ WeaveSvc.prototype = {
     this._log.trace("In _fetchInfo: " + infoURL);
     let info;
     try {
-      info = new Resource(infoURL).get();
+      info = this.resource(infoURL).get();
     } catch (ex) {
       this.errorHandler.checkServerError(ex);
       throw ex;
@@ -542,7 +552,7 @@ WeaveSvc.prototype = {
         if (infoCollections && (CRYPTO_COLLECTION in infoCollections)) {
           try {
             cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
-            let cryptoResp = cryptoKeys.fetch(this.cryptoKeysURL).response;
+            let cryptoResp = cryptoKeys.fetch(this.resource(this.cryptoKeysURL)).response;
 
             if (cryptoResp.success) {
               let keysChanged = this.handleFetchedKeys(syncKeyBundle, cryptoKeys);
@@ -643,7 +653,7 @@ WeaveSvc.prototype = {
       }
 
       // Fetch collection info on every startup.
-      let test = new Resource(this.infoURL).get();
+      let test = this.resource(this.infoURL).get();
 
       switch (test.status) {
         case 200:
@@ -706,7 +716,7 @@ WeaveSvc.prototype = {
     wbo.encrypt(this._identity.syncKeyBundle);
 
     this._log.info("Uploading...");
-    let uploadRes = wbo.upload(this.cryptoKeysURL);
+    let uploadRes = wbo.upload(this.resource(this.cryptoKeysURL));
     if (uploadRes.status != 200) {
       this._log.warn("Got status " + uploadRes.status + " uploading new keys. What to do? Throw!");
       this.errorHandler.checkServerError(uploadRes);
@@ -744,7 +754,7 @@ WeaveSvc.prototype = {
     
     // Download and install them.
     let cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
-    let cryptoResp = cryptoKeys.fetch(this.cryptoKeysURL).response;
+    let cryptoResp = cryptoKeys.fetch(this.resource(this.cryptoKeysURL)).response;
     if (cryptoResp.status != 200) {
       this._log.warn("Failed to download keys.");
       throw new Error("Symmetric key download failed.");
@@ -980,7 +990,7 @@ WeaveSvc.prototype = {
         newMeta.isNew = true;
 
         this.recordManager.set(this.metaURL, newMeta);
-        if (!newMeta.upload(this.metaURL).success) {
+        if (!newMeta.upload(this.resource(this.metaURL)).success) {
           this._log.warn("Unable to upload new meta/global. Failing remote setup.");
           return false;
         }
@@ -1220,7 +1230,7 @@ WeaveSvc.prototype = {
     meta.isNew = true;
 
     this._log.debug("New metadata record: " + JSON.stringify(meta.payload));
-    let res = new Resource(this.metaURL);
+    let res = this.resource(this.metaURL);
     // It would be good to set the X-If-Unmodified-Since header to `timestamp`
     // for this PUT to ensure at least some level of transactionality.
     // Unfortunately, the servers don't support it after a wipe right now
@@ -1256,7 +1266,7 @@ WeaveSvc.prototype = {
     let response;
     if (!collections) {
       // Strip the trailing slash.
-      let res = new Resource(this.storageURL.slice(0, -1));
+      let res = this.resource(this.storageURL.slice(0, -1));
       res.setHeader("X-Confirm-Delete", "1");
       try {
         response = res.delete();
@@ -1276,7 +1286,7 @@ WeaveSvc.prototype = {
     for (let name of collections) {
       let url = this.storageURL + name;
       try {
-        response = new Resource(url).delete();
+        response = this.resource(url).delete();
       } catch (ex) {
         this._log.debug("Failed to wipe '" + name + "' collection: " +
                         Utils.exceptionStr(ex));

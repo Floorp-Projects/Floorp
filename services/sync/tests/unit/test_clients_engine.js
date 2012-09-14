@@ -53,7 +53,7 @@ add_test(function test_bad_hmac() {
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Weave.Identity.syncKeyBundle);
-    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
+    do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
   }
 
   try {
@@ -82,7 +82,7 @@ add_test(function test_bad_hmac() {
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Weave.Identity.syncKeyBundle);
-    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
+    do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
 
     _("Sync.");
     engine._sync();
