@@ -426,9 +426,9 @@ bool IteratorMore(JSContext *cx, HandleObject obj, JSBool *res);
 JSObject *NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
 JSObject *NewInitObject(JSContext *cx, HandleObject templateObject);
 
-bool ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval);
-bool ArrayPushDense(JSContext *cx, JSObject *obj, HandleValue v, uint32_t *length);
-bool ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval);
+bool ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
+bool ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length);
+bool ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 
 bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
                  bool strict, bool isSetName);
