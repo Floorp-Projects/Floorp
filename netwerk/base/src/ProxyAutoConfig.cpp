@@ -1,0 +1,623 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "ProxyAutoConfig.h"
+#include "jsapi.h"
+#include "nsICancelable.h"
+#include "nsIDNSListener.h"
+#include "nsIDNSRecord.h"
+#include "nsIDNSService.h"
+#include "nsNetUtil.h"
+#include "nsThreadUtils.h"
+#include "nsIConsoleService.h"
+#include "nsJSUtils.h"
+
+namespace mozilla {
+namespace net {
+
+// These are some global helper symbols the PAC format requires that we provide that
+// are initialized as part of the global javascript context used for PAC evaluations.
+// Additionally dnsResolve(host) and myIpAddress() are supplied in the same context
+// but are implemented as c++ helpers. proxyAlert(msg) is similarly defined, but that
+// is a gecko specific extension.
+
+static const char *sPacUtils =
+  "function dnsDomainIs(host, domain) {\n"
+  "    return (host.length >= domain.length &&\n"
+  "            host.substring(host.length - domain.length) == domain);\n"
+  "}\n"
+  ""
+  "function dnsDomainLevels(host) {\n"
+  "    return host.split('.').length - 1;\n"
+  "}\n"
+  ""
+  "function convert_addr(ipchars) {\n"
+  "    var bytes = ipchars.split('.');\n"
+  "    var result = ((bytes[0] & 0xff) << 24) |\n"
+  "                 ((bytes[1] & 0xff) << 16) |\n"
+  "                 ((bytes[2] & 0xff) <<  8) |\n"
+  "                  (bytes[3] & 0xff);\n"
+  "    return result;\n"
+  "}\n"
+  ""
+  "function isInNet(ipaddr, pattern, maskstr) {\n"
+  "    var test = /^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$/.exec(ipaddr);\n"
+  "    if (test == null) {\n"
+  "        ipaddr = dnsResolve(ipaddr);\n"
+  "        if (ipaddr == null)\n"
+  "            return false;\n"
+  "    } else if (test[1] > 255 || test[2] > 255 || \n"
+  "               test[3] > 255 || test[4] > 255) {\n"
+  "        return false;    // not an IP address\n"
+  "    }\n"
+  "    var host = convert_addr(ipaddr);\n"
+  "    var pat  = convert_addr(pattern);\n"
+  "    var mask = convert_addr(maskstr);\n"
+  "    return ((host & mask) == (pat & mask));\n"
+  "    \n"
+  "}\n"
+  ""
+  "function isPlainHostName(host) {\n"
+  "    return (host.search('\\\\.') == -1);\n"
+  "}\n"
+  ""
+  "function isResolvable(host) {\n"
+  "    var ip = dnsResolve(host);\n"
+  "    return (ip != null);\n"
+  "}\n"
+  ""
+  "function localHostOrDomainIs(host, hostdom) {\n"
+  "    return (host == hostdom) ||\n"
+  "           (hostdom.lastIndexOf(host + '.', 0) == 0);\n"
+  "}\n"
+  ""
+  "function shExpMatch(url, pattern) {\n"
+  "   pattern = pattern.replace(/\\./g, '\\\\.');\n"
+  "   pattern = pattern.replace(/\\*/g, '.*');\n"
+  "   pattern = pattern.replace(/\\?/g, '.');\n"
+  "   var newRe = new RegExp('^'+pattern+'$');\n"
+  "   return newRe.test(url);\n"
+  "}\n"
+  ""
+  "var wdays = {SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6};\n"
+  "var months = {JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11};\n"
+  ""
+  "function weekdayRange() {\n"
+  "    function getDay(weekday) {\n"
+  "        if (weekday in wdays) {\n"
+  "            return wdays[weekday];\n"
+  "        }\n"
+  "        return -1;\n"
+  "    }\n"
+  "    var date = new Date();\n"
+  "    var argc = arguments.length;\n"
+  "    var wday;\n"
+  "    if (argc < 1)\n"
+  "        return false;\n"
+  "    if (arguments[argc - 1] == 'GMT') {\n"
+  "        argc--;\n"
+  "        wday = date.getUTCDay();\n"
+  "    } else {\n"
+  "        wday = date.getDay();\n"
+  "    }\n"
+  "    var wd1 = getDay(arguments[0]);\n"
+  "    var wd2 = (argc == 2) ? getDay(arguments[1]) : wd1;\n"
+  "    return (wd1 == -1 || wd2 == -1) ? false\n"
+  "                                    : (wd1 <= wday && wday <= wd2);\n"
+  "}\n"
+  ""
+  "function dateRange() {\n"
+  "    function getMonth(name) {\n"
+  "        if (name in months) {\n"
+  "            return months[name];\n"
+  "        }\n"
+  "        return -1;\n"
+  "    }\n"
+  "    var date = new Date();\n"
+  "    var argc = arguments.length;\n"
+  "    if (argc < 1) {\n"
+  "        return false;\n"
+  "    }\n"
+  "    var isGMT = (arguments[argc - 1] == 'GMT');\n"
+  "\n"
+  "    if (isGMT) {\n"
+  "        argc--;\n"
+  "    }\n"
+  "    // function will work even without explict handling of this case\n"
+  "    if (argc == 1) {\n"
+  "        var tmp = parseInt(arguments[0]);\n"
+  "        if (isNaN(tmp)) {\n"
+  "            return ((isGMT ? date.getUTCMonth() : date.getMonth()) ==\n"
+  "                     getMonth(arguments[0]));\n"
+  "        } else if (tmp < 32) {\n"
+  "            return ((isGMT ? date.getUTCDate() : date.getDate()) == tmp);\n"
+  "        } else { \n"
+  "            return ((isGMT ? date.getUTCFullYear() : date.getFullYear()) ==\n"
+  "                     tmp);\n"
+  "        }\n"
+  "    }\n"
+  "    var year = date.getFullYear();\n"
+  "    var date1, date2;\n"
+  "    date1 = new Date(year,  0,  1,  0,  0,  0);\n"
+  "    date2 = new Date(year, 11, 31, 23, 59, 59);\n"
+  "    var adjustMonth = false;\n"
+  "    for (var i = 0; i < (argc >> 1); i++) {\n"
+  "        var tmp = parseInt(arguments[i]);\n"
+  "        if (isNaN(tmp)) {\n"
+  "            var mon = getMonth(arguments[i]);\n"
+  "            date1.setMonth(mon);\n"
+  "        } else if (tmp < 32) {\n"
+  "            adjustMonth = (argc <= 2);\n"
+  "            date1.setDate(tmp);\n"
+  "        } else {\n"
+  "            date1.setFullYear(tmp);\n"
+  "        }\n"
+  "    }\n"
+  "    for (var i = (argc >> 1); i < argc; i++) {\n"
+  "        var tmp = parseInt(arguments[i]);\n"
+  "        if (isNaN(tmp)) {\n"
+  "            var mon = getMonth(arguments[i]);\n"
+  "            date2.setMonth(mon);\n"
+  "        } else if (tmp < 32) {\n"
+  "            date2.setDate(tmp);\n"
+  "        } else {\n"
+  "            date2.setFullYear(tmp);\n"
+  "        }\n"
+  "    }\n"
+  "    if (adjustMonth) {\n"
+  "        date1.setMonth(date.getMonth());\n"
+  "        date2.setMonth(date.getMonth());\n"
+  "    }\n"
+  "    if (isGMT) {\n"
+  "    var tmp = date;\n"
+  "        tmp.setFullYear(date.getUTCFullYear());\n"
+  "        tmp.setMonth(date.getUTCMonth());\n"
+  "        tmp.setDate(date.getUTCDate());\n"
+  "        tmp.setHours(date.getUTCHours());\n"
+  "        tmp.setMinutes(date.getUTCMinutes());\n"
+  "        tmp.setSeconds(date.getUTCSeconds());\n"
+  "        date = tmp;\n"
+  "    }\n"
+  "    return ((date1 <= date) && (date <= date2));\n"
+  "}\n"
+  ""
+  "function timeRange() {\n"
+  "    var argc = arguments.length;\n"
+  "    var date = new Date();\n"
+  "    var isGMT= false;\n"
+  ""
+  "    if (argc < 1) {\n"
+  "        return false;\n"
+  "    }\n"
+  "    if (arguments[argc - 1] == 'GMT') {\n"
+  "        isGMT = true;\n"
+  "        argc--;\n"
+  "    }\n"
+  "\n"
+  "    var hour = isGMT ? date.getUTCHours() : date.getHours();\n"
+  "    var date1, date2;\n"
+  "    date1 = new Date();\n"
+  "    date2 = new Date();\n"
+  "\n"
+  "    if (argc == 1) {\n"
+  "        return (hour == arguments[0]);\n"
+  "    } else if (argc == 2) {\n"
+  "        return ((arguments[0] <= hour) && (hour <= arguments[1]));\n"
+  "    } else {\n"
+  "        switch (argc) {\n"
+  "        case 6:\n"
+  "            date1.setSeconds(arguments[2]);\n"
+  "            date2.setSeconds(arguments[5]);\n"
+  "        case 4:\n"
+  "            var middle = argc >> 1;\n"
+  "            date1.setHours(arguments[0]);\n"
+  "            date1.setMinutes(arguments[1]);\n"
+  "            date2.setHours(arguments[middle]);\n"
+  "            date2.setMinutes(arguments[middle + 1]);\n"
+  "            if (middle == 2) {\n"
+  "                date2.setSeconds(59);\n"
+  "            }\n"
+  "            break;\n"
+  "        default:\n"
+  "          throw 'timeRange: bad number of arguments'\n"
+  "        }\n"
+  "    }\n"
+  "\n"
+  "    if (isGMT) {\n"
+  "        date.setFullYear(date.getUTCFullYear());\n"
+  "        date.setMonth(date.getUTCMonth());\n"
+  "        date.setDate(date.getUTCDate());\n"
+  "        date.setHours(date.getUTCHours());\n"
+  "        date.setMinutes(date.getUTCMinutes());\n"
+  "        date.setSeconds(date.getUTCSeconds());\n"
+  "    }\n"
+  "    return ((date1 <= date) && (date <= date2));\n"
+  "}\n"
+  "";
+
+// The PACResolver is used for dnsResolve()
+class PACResolver MOZ_FINAL : public nsIDNSListener
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  PACResolver()
+    : mStatus(NS_ERROR_FAILURE)
+  {
+  }
+
+  NS_IMETHODIMP OnLookupComplete(nsICancelable *request,
+                                 nsIDNSRecord *record,
+                                 nsresult status)
+  {
+    mRequest = nullptr;
+    mStatus = status;
+    mResponse = record;
+    return NS_OK;
+  }
+
+  nsresult                mStatus;
+  nsCOMPtr<nsICancelable> mRequest;
+  nsCOMPtr<nsIDNSRecord>  mResponse;
+};
+NS_IMPL_THREADSAFE_ISUPPORTS1(PACResolver, nsIDNSListener)
+
+static
+void PACLogToConsole(nsString &aMessage)
+{
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  if (!consoleService)
+    return;
+
+  consoleService->LogStringMessage(aMessage.get());
+}
+
+// Javascript errors are logged to the main error console
+static void
+PACErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+{
+  nsString formattedMessage(NS_LITERAL_STRING("PAC Execution Error: "));
+  formattedMessage += report->ucmessage;
+  formattedMessage += NS_LITERAL_STRING(" [");
+  formattedMessage += report->uclinebuf;
+  formattedMessage += NS_LITERAL_STRING("]");
+  PACLogToConsole(formattedMessage);
+}
+
+static
+JSBool PACResolve(const nsCString &aHostName, nsCString &aDottedDecimal)
+{
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  nsCOMPtr<PACResolver> helper = new PACResolver();
+  if (!dns || NS_FAILED(dns->AsyncResolve(aHostName, 0, helper,
+                                          NS_GetCurrentThread(),
+                                          getter_AddRefs(helper->mRequest))))
+    return false;
+
+  // Spin the event loop of the pac thread until lookup is complete.
+  // nsPACman is responsible for keeping a queue and only allowing
+  // one PAC execution at a time even when it is called re-entrantly.
+  while (helper->mRequest)
+    NS_ProcessNextEvent(NS_GetCurrentThread());
+
+  if (NS_FAILED(helper->mStatus) ||
+      NS_FAILED(helper->mResponse->GetNextAddrAsString(aDottedDecimal)))
+    return false;
+  return true;
+}
+
+// dnsResolve(host) javascript implementation
+static
+JSBool PACDnsResolve(JSContext *cx, unsigned int argc, jsval *vp)
+{
+  if (NS_IsMainThread()) {
+    NS_WARNING("DNS Resolution From PAC on Main Thread. How did that happen?");
+    return false;
+  }
+
+  JSString *arg1 = nullptr;
+  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", &arg1))
+    return false;
+
+  nsDependentJSString hostName;
+  nsCString dottedDecimal;
+
+  if (!hostName.init(cx, arg1))
+    return false;
+  if (!PACResolve(NS_ConvertUTF16toUTF8(hostName), dottedDecimal))
+    return false;
+
+  JSString *dottedDecimalString = JS_NewStringCopyZ(cx, dottedDecimal.get());
+  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(dottedDecimalString));
+  return true;
+}
+
+// myIpAddress() javascript implementation
+static
+JSBool PACMyIpAddress(JSContext *cx, unsigned int argc, jsval *vp)
+{
+  if (NS_IsMainThread()) {
+    NS_WARNING("DNS Resolution From PAC on Main Thread. How did that happen?");
+    return false;
+  }
+
+  nsCString hostName;
+
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  if (!dns || NS_FAILED(dns->GetMyHostName(hostName))) {
+    hostName.AssignLiteral("127.0.0.1");
+  }
+
+  nsCString dottedDecimal;
+  if (!PACResolve(hostName, dottedDecimal)) {
+    dottedDecimal.AssignLiteral("127.0.0.1");
+  }
+
+  JSString *dottedDecimalString = JS_NewStringCopyZ(cx, dottedDecimal.get());
+  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(dottedDecimalString));
+  return true;
+}
+
+// proxyAlert(msg) javascript implementation
+static
+JSBool PACProxyAlert(JSContext *cx, unsigned int argc, jsval *vp)
+{
+  JSString *arg1 = nullptr;
+  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", &arg1))
+    return false;
+
+  nsDependentJSString message;
+  if (!message.init(cx, arg1))
+    return false;
+
+  nsString alertMessage;
+  alertMessage.SetCapacity(32 + message.Length());
+  alertMessage += NS_LITERAL_STRING("PAC-alert: ");
+  alertMessage += message;
+  PACLogToConsole(alertMessage);
+
+  JS_SET_RVAL(cx, vp, JSVAL_VOID);  /* return undefined */
+  return true;
+}
+
+static JSFunctionSpec PACGlobalFunctions[] = {
+  JS_FS("dnsResolve", PACDnsResolve, 1, 0),
+  JS_FS("myIpAddress", PACMyIpAddress, 0, 0),
+  JS_FS("proxyAlert", PACProxyAlert, 1, 0),
+  JS_FS_END
+};
+
+// JSRuntimeWrapper is a c++ object that manages the runtime and context
+// for the JS engine used on the PAC thread. It is initialized and destroyed
+// on the PAC thread.
+class JSRuntimeWrapper
+{
+ public:
+  static JSRuntimeWrapper *Create()
+  {
+    JSRuntimeWrapper *entry = new JSRuntimeWrapper();
+
+    if (NS_FAILED(entry->Init())) {
+      delete entry;
+      return nullptr;
+    }
+
+    return entry;
+  }
+
+  JSContext *Context() const
+  {
+    return mContext;
+  }
+
+  JSObject *Global() const
+  {
+    return mGlobal;
+  }
+
+  ~JSRuntimeWrapper()
+  {
+    MOZ_COUNT_DTOR(JSRuntimeWrapper);
+    if (mContext) {
+      JS_DestroyContext(mContext);
+    }
+
+    if (mRuntime) {
+      JS_DestroyRuntime(mRuntime);
+    }
+  }
+
+  void SetOK()
+  {
+    mOK = true;
+  }
+
+  bool IsOK()
+  {
+    return mOK;
+  }
+
+private:
+  static const unsigned sRuntimeHeapSize = 2 << 20;
+
+  JSRuntime *mRuntime;
+  JSContext *mContext;
+  JSObject  *mGlobal;
+  bool      mOK;
+
+  static JSClass sGlobalClass;
+
+  JSRuntimeWrapper()
+    : mRuntime(nullptr), mContext(nullptr), mGlobal(nullptr), mOK(false)
+  {
+      MOZ_COUNT_CTOR(JSRuntimeWrapper);
+  }
+
+  nsresult Init()
+  {
+    mRuntime = JS_NewRuntime(sRuntimeHeapSize);
+    NS_ENSURE_TRUE(mRuntime, NS_ERROR_OUT_OF_MEMORY);
+
+    mContext = JS_NewContext(mRuntime, 0);
+    NS_ENSURE_TRUE(mContext, NS_ERROR_OUT_OF_MEMORY);
+
+    JSAutoRequest ar(mContext);
+
+    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr);
+    NS_ENSURE_TRUE(mGlobal, NS_ERROR_OUT_OF_MEMORY);
+
+    JS_SetGlobalObject(mContext, mGlobal);
+    JS_InitStandardClasses(mContext, mGlobal);
+
+    JS_SetVersion(mContext, JSVERSION_LATEST);
+    JS_SetErrorReporter(mContext, PACErrorReporter);
+
+    if (!JS_DefineFunctions(mContext, mGlobal, PACGlobalFunctions))
+      return NS_ERROR_FAILURE;
+
+    return NS_OK;
+  }
+};
+
+JSClass JSRuntimeWrapper::sGlobalClass = {
+  "PACResolutionThreadGlobal",
+  JSCLASS_GLOBAL_FLAGS,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+};
+
+nsresult
+ProxyAutoConfig::Init(const nsCString &aPACURI,
+                      const nsCString &aPACScript)
+{
+  mPACURI = aPACURI;
+  mPACScript = sPacUtils;
+  mPACScript.Append(aPACScript);
+
+  if (!mRunning)
+    return SetupJS();
+
+  mJSNeedsSetup = true;
+  return NS_OK;
+}
+
+nsresult
+ProxyAutoConfig::SetupJS()
+{
+  mJSNeedsSetup = false;
+  NS_ABORT_IF_FALSE(!mRunning, "JIT is running");
+
+  delete mJSRuntime;
+  mJSRuntime = nullptr;
+
+  if (mPACScript.IsEmpty())
+    return NS_ERROR_FAILURE;
+
+  mJSRuntime = JSRuntimeWrapper::Create();
+  if (!mJSRuntime)
+    return NS_ERROR_FAILURE;
+
+  JSAutoRequest ar(mJSRuntime->Context());
+
+  JSScript *script = JS_CompileScript(mJSRuntime->Context(),
+                                      mJSRuntime->Global(),
+                                      mPACScript.get(), mPACScript.Length(),
+                                      mPACURI.get(), 1);
+  if (!JS_ExecuteScript(mJSRuntime->Context(), mJSRuntime->Global(), script, nullptr)) {
+    nsString alertMessage(NS_LITERAL_STRING("PAC file failed to install from "));
+    alertMessage += NS_ConvertUTF8toUTF16(mPACURI);
+    PACLogToConsole(alertMessage);
+    return NS_ERROR_FAILURE;
+  }
+
+  mJSRuntime->SetOK();
+  nsString alertMessage(NS_LITERAL_STRING("PAC file installed from "));
+  alertMessage += NS_ConvertUTF8toUTF16(mPACURI);
+  PACLogToConsole(alertMessage);
+
+  // we don't need these now
+  mPACScript.Truncate();
+  mPACURI.Truncate();
+
+  return NS_OK;
+}
+
+nsresult
+ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
+                                const nsCString &aTestHost,
+                                nsACString &result)
+{
+  if (mJSNeedsSetup)
+    SetupJS();
+
+  if (!mJSRuntime || !mJSRuntime->IsOK())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  JSContext *cx = mJSRuntime->Context();
+  JSAutoRequest ar(cx);
+
+  // the mRunning flag keeps a new PAC file from being installed
+  // while the event loop is spinning on a DNS function. Don't early return.
+  mRunning = true;
+
+  nsresult rv = NS_ERROR_FAILURE;
+  js::RootedString uriString(cx, JS_NewStringCopyZ(cx, aTestURI.get()));
+  js::RootedString hostString(cx, JS_NewStringCopyZ(cx, aTestHost.get()));
+
+  if (uriString && hostString) {
+    js::RootedValue uriValue(cx, STRING_TO_JSVAL(uriString));
+    js::RootedValue hostValue(cx, STRING_TO_JSVAL(hostString));
+
+    jsval argv[2] = { uriValue, hostValue };
+    jsval rval;
+    JSBool ok = JS_CallFunctionName(cx, mJSRuntime->Global(),
+                                    "FindProxyForURL", 2, argv, &rval);
+
+    if (ok && rval.isString()) {
+      nsDependentJSString pacString;
+      if (pacString.init(cx, rval.toString())) {
+        CopyUTF16toUTF8(pacString, result);
+        rv = NS_OK;
+      }
+    }
+  }
+  mRunning = false;
+  return rv;
+}
+
+void
+ProxyAutoConfig::GC()
+{
+  if (!mJSRuntime || !mJSRuntime->IsOK())
+    return;
+
+  JS_MaybeGC(mJSRuntime->Context());
+}
+
+ProxyAutoConfig::~ProxyAutoConfig()
+{
+  MOZ_COUNT_DTOR(ProxyAutoConfig);
+  NS_ASSERTION(!mJSRuntime,
+               "~ProxyAutoConfig leaking JS runtime that "
+               "should have been deleted on pac thread");
+}
+
+void
+ProxyAutoConfig::Shutdown()
+{
+  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread for shutdown");
+
+  if (mRunning || mShutdown)
+    return;
+
+  mShutdown = true;
+  delete mJSRuntime;
+  mJSRuntime = nullptr;
+}
+
+} // namespace mozilla
+} // namespace mozilla::net
