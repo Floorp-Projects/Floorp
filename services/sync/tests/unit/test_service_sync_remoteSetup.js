@@ -5,7 +5,6 @@ Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
@@ -69,8 +68,8 @@ function run_test() {
 
     _("Checking Status.sync with no credentials.");
     Service.verifyAndFetchSymmetricKeys();
-    do_check_eq(Status.sync, CREDENTIALS_CHANGED);
-    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
+    do_check_eq(Service.status.sync, CREDENTIALS_CHANGED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_NO_PASSPHRASE);
 
     _("Log in with an old secret phrase, is upgraded to Sync Key.");
     Service.login("johndoe", "ilovejane", "my old secret phrase!!1!");
@@ -126,8 +125,8 @@ function run_test() {
     let pp = Service.identity.syncKey;
     Service.identity.syncKey = "notvalid";
     do_check_false(Service.verifyAndFetchSymmetricKeys());
-    do_check_eq(Status.sync, CREDENTIALS_CHANGED);
-    do_check_eq(Status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
+    do_check_eq(Service.status.sync, CREDENTIALS_CHANGED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
     Service.identity.syncKey = pp;
     do_check_true(Service.verifyAndFetchSymmetricKeys());
 
@@ -159,7 +158,7 @@ function run_test() {
     keys.upload(Service.resource(Service.cryptoKeysURL));
 
     do_check_false(Service.verifyAndFetchSymmetricKeys());
-    do_check_eq(Status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
+    do_check_eq(Service.status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
 
   } finally {
     Svc.Prefs.resetBranch("");

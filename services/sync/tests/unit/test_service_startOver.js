@@ -4,7 +4,6 @@
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 function BlaEngine() {
@@ -32,13 +31,13 @@ add_test(function test_resetLocalData() {
   // Set up.
   setBasicCredentials("foobar", "blablabla", // Law Blog
                       "abcdeabcdeabcdeabcdeabcdea");
-  Status.enforceBackoff = true;
-  Status.backoffInterval = 42;
-  Status.minimumNextSync = 23;
+  Service.status.enforceBackoff = true;
+  Service.status.backoffInterval = 42;
+  Service.status.minimumNextSync = 23;
   Service.persistLogin();
 
   // Verify set up.
-  do_check_eq(Status.checkSetup(), STATUS_OK);
+  do_check_eq(Service.status.checkSetup(), STATUS_OK);
 
   // Verify state that the observer sees.
   let observerCalled = false;
@@ -46,7 +45,7 @@ add_test(function test_resetLocalData() {
     Svc.Obs.remove("weave:service:start-over", onStartOver);
     observerCalled = true;
 
-    do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
+    do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
   });
 
   Service.startOver();
@@ -57,10 +56,10 @@ add_test(function test_resetLocalData() {
   do_check_eq(Service.identity.basicPassword, null);
   do_check_eq(Service.identity.syncKey, null);
 
-  do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
-  do_check_false(Status.enforceBackoff);
-  do_check_eq(Status.backoffInterval, 0);
-  do_check_eq(Status.minimumNextSync, 0);
+  do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
+  do_check_false(Service.status.enforceBackoff);
+  do_check_eq(Service.status.backoffInterval, 0);
+  do_check_eq(Service.status.minimumNextSync, 0);
 
   run_next_test();
 });
