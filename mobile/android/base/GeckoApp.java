@@ -111,7 +111,6 @@ import java.util.regex.Pattern;
 abstract public class GeckoApp
                 extends GeckoActivity 
                 implements GeckoEventListener, SensorEventListener, LocationListener,
-                           GeckoApplication.ApplicationLifecycleCallbacks,
                            Tabs.OnTabsChangedListener, GeckoEventResponder
 {
     private static final String LOGTAG = "GeckoApp";
@@ -1441,8 +1440,6 @@ abstract public class GeckoApp
                 editor.commit();
             }
         });
-
-        ((GeckoApplication)getApplication()).addApplicationLifecycleCallbacks(this);
     }
 
     void initializeChrome(String uri, Boolean isExternalURL) {
@@ -1602,24 +1599,13 @@ abstract public class GeckoApp
           SmsManager.getInstance().start();
         }
 
-        GeckoBatteryManager.getInstance().init(this);
-        GeckoBatteryManager.getInstance().start();
-
-        GeckoConnectivityReceiver.getInstance().init(this);
-        GeckoConnectivityReceiver.getInstance().start();
-
         mPromptService = new PromptService();
 
         mTextSelection = new TextSelection((TextSelectionHandle) findViewById(R.id.start_handle),
                                            (TextSelectionHandle) findViewById(R.id.end_handle),
                                            GeckoAppShell.getEventDispatcher());
 
-        GeckoNetworkManager.getInstance().init(this);
-        GeckoNetworkManager.getInstance().start();
-
         UpdateServiceHelper.registerForUpdates(this);
-
-        GeckoScreenOrientationListener.getInstance().start();
 
         final GeckoApp self = this;
 
@@ -1899,6 +1885,8 @@ abstract public class GeckoApp
             refreshChrome();
         }
 
+        GeckoScreenOrientationListener.getInstance().start();
+
         // User may have enabled/disabled accessibility.
         GeckoAccessibility.updateAccessibilitySettings();
 
@@ -1957,6 +1945,8 @@ abstract public class GeckoApp
                 editor.commit();
             }
         });
+
+        GeckoScreenOrientationListener.getInstance().stop();
 
         super.onPause();
     }
@@ -2066,11 +2056,7 @@ abstract public class GeckoApp
 
         super.onDestroy();
 
-        GeckoBatteryManager.getInstance().stop();
-
         Tabs.unregisterOnTabsChangedListener(this);
-
-        ((GeckoApplication) getApplication()).removeApplicationLifecycleCallbacks(this);
     }
 
     protected void registerEventListener(String event) {
@@ -2130,27 +2116,6 @@ abstract public class GeckoApp
             GeckoAppShell.onLowMemory();
         super.onLowMemory();
         GeckoAppShell.geckoEventSync();
-    }
-
-    @Override
-    public void onApplicationPause() {
-        Log.i(LOGTAG, "application paused");
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
-
-        GeckoConnectivityReceiver.getInstance().stop();
-        GeckoNetworkManager.getInstance().stop();
-        GeckoScreenOrientationListener.getInstance().stop();
-    }
-
-    @Override
-    public void onApplicationResume() {
-        Log.i(LOGTAG, "application resumed");
-        if (checkLaunchState(LaunchState.GeckoRunning))
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(true));
-
-        GeckoConnectivityReceiver.getInstance().start();
-        GeckoNetworkManager.getInstance().start();
-        GeckoScreenOrientationListener.getInstance().start();
     }
 
     @Override
