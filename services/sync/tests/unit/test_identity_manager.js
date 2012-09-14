@@ -4,10 +4,11 @@
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/identity.js");
 
+let identity = new IdentityManager();
+
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Sync.Identity").level =
-    Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Identity").level = Log4Moz.Level.Trace;
 
   run_next_test();
 }
@@ -15,10 +16,10 @@ function run_test() {
 add_test(function test_username_from_account() {
   _("Ensure usernameFromAccount works properly.");
 
-  do_check_eq(Identity.usernameFromAccount(null), null);
-  do_check_eq(Identity.usernameFromAccount("user"), "user");
-  do_check_eq(Identity.usernameFromAccount("User"), "user");
-  do_check_eq(Identity.usernameFromAccount("john@doe.com"),
+  do_check_eq(identity.usernameFromAccount(null), null);
+  do_check_eq(identity.usernameFromAccount("user"), "user");
+  do_check_eq(identity.usernameFromAccount("User"), "user");
+  do_check_eq(identity.usernameFromAccount("john@doe.com"),
                                            "7wohs32cngzuqt466q3ge7indszva4of");
 
   run_next_test();
@@ -30,43 +31,43 @@ add_test(function test_account_username() {
   _("Verify initial state");
   do_check_eq(Svc.Prefs.get("account"), undefined);
   do_check_eq(Svc.Prefs.get("username"), undefined);
-  do_check_eq(Identity.account, null);
-  do_check_eq(Identity.username, null);
+  do_check_eq(identity.account, null);
+  do_check_eq(identity.username, null);
 
   _("The 'username' attribute is normalized to lower case, updates preferences and identities.");
-  Identity.username = "TarZan";
-  do_check_eq(Identity.username, "tarzan");
+  identity.username = "TarZan";
+  do_check_eq(identity.username, "tarzan");
   do_check_eq(Svc.Prefs.get("username"), "tarzan");
-  do_check_eq(Identity.username, "tarzan");
+  do_check_eq(identity.username, "tarzan");
 
   _("If not set, the 'account attribute' falls back to the username for backwards compatibility.");
-  do_check_eq(Identity.account, "tarzan");
+  do_check_eq(identity.account, "tarzan");
 
   _("Setting 'username' to a non-truthy value resets the pref.");
-  Identity.username = null;
-  do_check_eq(Identity.username, null);
-  do_check_eq(Identity.account, null);
+  identity.username = null;
+  do_check_eq(identity.username, null);
+  do_check_eq(identity.account, null);
   const default_marker = {};
   do_check_eq(Svc.Prefs.get("username", default_marker), default_marker);
-  do_check_eq(Identity.username, null);
+  do_check_eq(identity.username, null);
 
   _("The 'account' attribute will set the 'username' if it doesn't contain characters that aren't allowed in the username.");
-  Identity.account = "johndoe";
-  do_check_eq(Identity.account, "johndoe");
-  do_check_eq(Identity.username, "johndoe");
+  identity.account = "johndoe";
+  do_check_eq(identity.account, "johndoe");
+  do_check_eq(identity.username, "johndoe");
   do_check_eq(Svc.Prefs.get("username"), "johndoe");
-  do_check_eq(Identity.username, "johndoe");
+  do_check_eq(identity.username, "johndoe");
 
   _("If 'account' contains disallowed characters such as @, 'username' will the base32 encoded SHA1 hash of 'account'");
-  Identity.account = "John@Doe.com";
-  do_check_eq(Identity.account, "john@doe.com");
-  do_check_eq(Identity.username, "7wohs32cngzuqt466q3ge7indszva4of");
+  identity.account = "John@Doe.com";
+  do_check_eq(identity.account, "john@doe.com");
+  do_check_eq(identity.username, "7wohs32cngzuqt466q3ge7indszva4of");
 
   _("Setting 'account' to a non-truthy value resets the pref.");
-  Identity.account = null;
-  do_check_eq(Identity.account, null);
+  identity.account = null;
+  do_check_eq(identity.account, null);
   do_check_eq(Svc.Prefs.get("account", default_marker), default_marker);
-  do_check_eq(Identity.username, null);
+  do_check_eq(identity.username, null);
   do_check_eq(Svc.Prefs.get("username", default_marker), default_marker);
 
   Svc.Prefs.resetBranch("");
@@ -76,11 +77,11 @@ add_test(function test_account_username() {
 add_test(function test_basic_password() {
   _("Ensure basic password setting works as expected.");
 
-  Identity.account = null;
-  do_check_eq(Identity.currentAuthState, LOGIN_FAILED_NO_USERNAME);
+  identity.account = null;
+  do_check_eq(identity.currentAuthState, LOGIN_FAILED_NO_USERNAME);
   let thrown = false;
   try {
-    Identity.basicPassword = "foobar";
+    identity.basicPassword = "foobar";
   } catch (ex) {
     thrown = true;
   }
@@ -88,14 +89,14 @@ add_test(function test_basic_password() {
   do_check_true(thrown);
   thrown = false;
 
-  Identity.account = "johndoe";
-  do_check_eq(Identity.currentAuthState, LOGIN_FAILED_NO_PASSWORD);
-  Identity.basicPassword = "password";
-  do_check_eq(Identity.basicPassword, "password");
-  do_check_eq(Identity.currentAuthState, LOGIN_FAILED_NO_PASSPHRASE);
-  do_check_true(Identity.hasBasicCredentials());
+  identity.account = "johndoe";
+  do_check_eq(identity.currentAuthState, LOGIN_FAILED_NO_PASSWORD);
+  identity.basicPassword = "password";
+  do_check_eq(identity.basicPassword, "password");
+  do_check_eq(identity.currentAuthState, LOGIN_FAILED_NO_PASSPHRASE);
+  do_check_true(identity.hasBasicCredentials());
 
-  Identity.account = null;
+  identity.account = null;
 
   run_next_test();
 });
@@ -104,12 +105,12 @@ add_test(function test_basic_password_persistence() {
   _("Ensure credentials are saved and restored to the login manager properly.");
 
   // Just in case.
-  Identity.account = null;
-  Identity.deleteSyncCredentials();
+  identity.account = null;
+  identity.deleteSyncCredentials();
 
-  Identity.account = "janesmith";
-  Identity.basicPassword = "ilovejohn";
-  Identity.persistCredentials();
+  identity.account = "janesmith";
+  identity.basicPassword = "ilovejohn";
+  identity.persistCredentials();
 
   let im1 = new IdentityManager();
   do_check_eq(im1._basicPassword, null);
@@ -120,21 +121,21 @@ add_test(function test_basic_password_persistence() {
   do_check_eq(im2._basicPassword, null);
 
   _("Now remove the password and ensure it is deleted from storage.");
-  Identity.basicPassword = null;
-  Identity.persistCredentials(); // This should nuke from storage.
+  identity.basicPassword = null;
+  identity.persistCredentials(); // This should nuke from storage.
   do_check_eq(im2.basicPassword, null);
 
   _("Ensure that retrieving an unset but unpersisted removal returns null.");
-  Identity.account = "janesmith";
-  Identity.basicPassword = "myotherpassword";
-  Identity.persistCredentials();
+  identity.account = "janesmith";
+  identity.basicPassword = "myotherpassword";
+  identity.persistCredentials();
 
-  Identity.basicPassword = null;
-  do_check_eq(Identity.basicPassword, null);
+  identity.basicPassword = null;
+  do_check_eq(identity.basicPassword, null);
 
   // Reset for next test.
-  Identity.account = null;
-  Identity.persistCredentials();
+  identity.account = null;
+  identity.persistCredentials();
 
   run_next_test();
 });
@@ -145,37 +146,37 @@ add_test(function test_sync_key() {
   _("Ensure setting a Sync Key before an account throws.");
   let thrown = false;
   try {
-    Identity.syncKey = "blahblah";
+    identity.syncKey = "blahblah";
   } catch (ex) {
     thrown = true;
   }
   do_check_true(thrown);
   thrown = false;
 
-  Identity.account = "johnsmith";
-  Identity.basicPassword = "johnsmithpw";
+  identity.account = "johnsmith";
+  identity.basicPassword = "johnsmithpw";
 
-  do_check_eq(Identity.syncKey, null);
-  do_check_eq(Identity.syncKeyBundle, null);
+  do_check_eq(identity.syncKey, null);
+  do_check_eq(identity.syncKeyBundle, null);
 
   _("An invalid Sync Key is silently accepted for historical reasons.");
-  Identity.syncKey = "synckey";
-  do_check_eq(Identity.syncKey, "synckey");
+  identity.syncKey = "synckey";
+  do_check_eq(identity.syncKey, "synckey");
 
   _("But the SyncKeyBundle should not be created from bad keys.");
-  do_check_eq(Identity.syncKeyBundle, null);
+  do_check_eq(identity.syncKeyBundle, null);
 
   let syncKey = Utils.generatePassphrase();
-  Identity.syncKey = syncKey;
-  do_check_eq(Identity.syncKey, syncKey);
-  do_check_neq(Identity.syncKeyBundle, null);
+  identity.syncKey = syncKey;
+  do_check_eq(identity.syncKey, syncKey);
+  do_check_neq(identity.syncKeyBundle, null);
 
   let im = new IdentityManager();
   im.account = "pseudojohn";
   do_check_eq(im.syncKey, null);
   do_check_eq(im.syncKeyBundle, null);
 
-  Identity.account = null;
+  identity.account = null;
 
   run_next_test();
 });
@@ -239,27 +240,27 @@ add_test(function test_current_auth_state() {
 add_test(function test_sync_key_persistence() {
   _("Ensure Sync Key persistence works as expected.");
 
-  Identity.account = "pseudojohn";
-  Identity.password = "supersecret";
+  identity.account = "pseudojohn";
+  identity.password = "supersecret";
 
   let syncKey = Utils.generatePassphrase();
-  Identity.syncKey = syncKey;
+  identity.syncKey = syncKey;
 
-  Identity.persistCredentials();
+  identity.persistCredentials();
 
   let im = new IdentityManager();
   im.account = "pseudojohn";
   do_check_eq(im.syncKey, syncKey);
   do_check_neq(im.syncKeyBundle, null);
 
-  let kb1 = Identity.syncKeyBundle;
+  let kb1 = identity.syncKeyBundle;
   let kb2 = im.syncKeyBundle;
 
   do_check_eq(kb1.encryptionKeyB64, kb2.encryptionKeyB64);
   do_check_eq(kb1.hmacKeyB64, kb2.hmacKeyB64);
 
-  Identity.account = null;
-  Identity.persistCredentials();
+  identity.account = null;
+  identity.persistCredentials();
 
   let im2 = new IdentityManager();
   im2.account = "pseudojohn";
@@ -268,15 +269,15 @@ add_test(function test_sync_key_persistence() {
   im2.account = null;
 
   _("Ensure deleted but not persisted value is retrieved.");
-  Identity.account = "someoneelse";
-  Identity.syncKey = Utils.generatePassphrase();
-  Identity.persistCredentials();
-  Identity.syncKey = null;
-  do_check_eq(Identity.syncKey, null);
+  identity.account = "someoneelse";
+  identity.syncKey = Utils.generatePassphrase();
+  identity.persistCredentials();
+  identity.syncKey = null;
+  do_check_eq(identity.syncKey, null);
 
   // Clean up.
-  Identity.account = null;
-  Identity.persistCredentials();
+  identity.account = null;
+  identity.persistCredentials();
 
   run_next_test();
 });

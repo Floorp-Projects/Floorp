@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/service.js");
@@ -78,7 +81,7 @@ function run_test() {
 
     _("Can't use a password that has the same low bytes as ours.");
     server_password = Utils.encodeUTF8(JAPANESE);
-    Identity.basicPassword = APPLES;
+    Service.identity.basicPassword = APPLES;
     do_check_false(Service.verifyLogin());
     do_check_eq(server_password, Utils.encodeUTF8(JAPANESE));
 

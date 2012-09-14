@@ -1,9 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -321,7 +321,8 @@ add_test(function test_get_protected_fail() {
 
 add_test(function test_get_protected_success() {
   _("GET a password protected resource");
-  let auth = Identity.getBasicResourceAuthenticator("guest", "guest");
+  let identity = new IdentityManager();
+  let auth = identity.getBasicResourceAuthenticator("guest", "guest");
   let res3 = new AsyncResource("http://localhost:8080/protected");
   res3.authenticator = auth;
   do_check_eq(res3.authenticator, auth);

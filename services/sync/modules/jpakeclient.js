@@ -9,7 +9,6 @@ const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
 
 const REQUEST_TIMEOUT         = 60; // 1 minute
@@ -743,9 +742,9 @@ SendCredentialsController.prototype = {
 
   sendCredentials: function sendCredentials() {
     this._log.trace("Sending credentials.");
-    let credentials = {account:   Identity.account,
-                       password:  Identity.basicPassword,
-                       synckey:   Identity.syncKey,
+    let credentials = {account:   this.service.identity.account,
+                       password:  this.service.identity.basicPassword,
+                       synckey:   this.service.identity.syncKey,
                        serverURL: this.service.serverURL};
     this.jpakeclient.sendAndComplete(credentials);
   },

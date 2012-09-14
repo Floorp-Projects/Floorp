@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-common/observers.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
@@ -17,7 +16,7 @@ function run_test() {
   new SyncTestingInfrastructure();
 
   // Test fixtures
-  Identity.username = "johndoe";
+  Service.identity.username = "johndoe";
 
   Cu.import("resource://services-sync/service.js");
 
