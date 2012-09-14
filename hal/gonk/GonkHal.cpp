@@ -59,6 +59,28 @@
 #define NsecPerMsec  1000000
 #define NsecPerSec   1000000000
 
+// The header linux/oom.h is not available in bionic libc. We
+// redefine some of its constants here.
+
+#ifndef OOM_DISABLE
+#define OOM_DISABLE  (-17)
+#endif
+
+#ifndef OOM_ADJUST_MIN
+#define OOM_ADJUST_MIN  (-16)
+#endif
+
+#ifndef OOM_ADJUST_MAX
+#define OOM_ADJUST_MAX  15
+#endif
+
+#ifndef OOM_SCORE_ADJ_MIN
+#define OOM_SCORE_ADJ_MIN  (-1000)
+#endif
+
+#ifndef OOM_SCORE_ADJ_MAX
+#define OOM_SCORE_ADJ_MAX  1000
+#endif
 
 using namespace mozilla;
 using namespace mozilla::hal;
@@ -828,6 +850,23 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
   return true;
 }
 
+static int
+oomAdjOfOomScoreAdj(int aOomScoreAdj)
+{
+  // Convert OOM adjustment from the domain of /proc/<pid>/oom_score_adj
+  // to thew domain of /proc/<pid>/oom_adj.
+
+  int adj;
+
+  if (aOomScoreAdj < 0) {
+    adj = (OOM_DISABLE * aOomScoreAdj) / OOM_SCORE_ADJ_MIN;
+  } else {
+    adj = (OOM_ADJUST_MAX * aOomScoreAdj) / OOM_SCORE_ADJ_MAX;
+  }
+
+  return adj;
+}
+
 void
 SetProcessPriority(int aPid, ProcessPriority aPriority)
 {
@@ -851,10 +890,15 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
   // Notice that you can disable oom_adj and renice by deleting the prefs
   // hal.processPriorityManager{foreground,background,master}{OomAdjust,Nice}.
 
-  int32_t oomAdj = 0;
+  int32_t oomScoreAdj = 0;
   nsresult rv = Preferences::GetInt(nsPrintfCString(
-    "hal.processPriorityManager.gonk.%sOomAdjust", priorityStr).get(), &oomAdj);
+    "hal.processPriorityManager.gonk.%sOomScoreAdjust",
+    priorityStr).get(), &oomScoreAdj);
+
   if (NS_SUCCEEDED(rv)) {
+
+    int oomAdj = oomAdjOfOomScoreAdj(oomScoreAdj);
+
     HAL_LOG(("Setting oom_adj for pid %d to %d", aPid, oomAdj));
     WriteToFile(nsPrintfCString("/proc/%d/oom_adj", aPid).get(),
                 nsPrintfCString("%d", oomAdj).get());
