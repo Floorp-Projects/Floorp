@@ -63,7 +63,6 @@ WeaveSvc.prototype = {
   _lock: Utils.lock,
   _locked: false,
   _loggedIn: false,
-  _identity: Weave.Identity,
 
   userBaseURL: null,
   infoURL: null,
@@ -163,11 +162,11 @@ WeaveSvc.prototype = {
 
   _updateCachedURLs: function _updateCachedURLs() {
     // Nothing to cache yet if we don't have the building blocks
-    if (this.clusterURL == "" || this._identity.username == "")
+    if (this.clusterURL == "" || this.identity.username == "")
       return;
 
     let storageAPI = this.clusterURL + SYNC_API_VERSION + "/";
-    this.userBaseURL = storageAPI + this._identity.username + "/";
+    this.userBaseURL = storageAPI + this.identity.username + "/";
     this._log.debug("Caching URLs under storage user base: " + this.userBaseURL);
 
     // Generate and cache various URLs under the storage API for this user
@@ -246,7 +245,7 @@ WeaveSvc.prototype = {
         return false;
       }
 
-      let keysChanged = this.handleFetchedKeys(this._identity.syncKeyBundle,
+      let keysChanged = this.handleFetchedKeys(this.identity.syncKeyBundle,
                                                cryptoKeys, true);
       if (keysChanged) {
         // Did they change? If so, carry on.
@@ -308,6 +307,16 @@ WeaveSvc.prototype = {
    */
   onStartup: function onStartup() {
     this._migratePrefs();
+
+    // Status is instantiated before us and is the first to grab an instance of
+    // the IdentityManager. We use that instance because IdentityManager really
+    // needs to be a singleton. Ideally, the longer-lived object would spawn
+    // this service instance.
+    if (!Status || !Status._authManager) {
+      throw new Error("Status or Status._authManager not initialized.");
+    }
+
+    this.identity = Status._authManager;
 
     this.errorHandler = new ErrorHandler(this);
 
@@ -476,7 +485,7 @@ WeaveSvc.prototype = {
    */
   resource: function resource(url) {
     let res = new Resource(url);
-    res.authenticator = this._identity.getResourceAuthenticator();
+    res.authenticator = this.identity.getResourceAuthenticator();
 
     return res;
   },
@@ -486,7 +495,7 @@ WeaveSvc.prototype = {
    */
   getStorageRequest: function getStorageRequest(url) {
     let request = new SyncStorageRequest(url);
-    request.authenticator = this._identity.getRESTRequestAuthenticator();
+    request.authenticator = this.identity.getRESTRequestAuthenticator();
 
     return request;
   },
@@ -520,13 +529,13 @@ WeaveSvc.prototype = {
     // Furthermore, we assume that our sync key is already upgraded,
     // and fail if that assumption is invalidated.
 
-    if (!this._identity.syncKey) {
+    if (!this.identity.syncKey) {
       Status.login = LOGIN_FAILED_NO_PASSPHRASE;
       Status.sync = CREDENTIALS_CHANGED;
       return false;
     }
 
-    let syncKeyBundle = this._identity.syncKeyBundle;
+    let syncKeyBundle = this.identity.syncKeyBundle;
     if (!syncKeyBundle) {
       this._log.error("Sync Key Bundle not set. Invalid Sync Key?");
 
@@ -632,7 +641,7 @@ WeaveSvc.prototype = {
   },
 
   verifyLogin: function verifyLogin() {
-    if (!this._identity.username) {
+    if (!this.identity.username) {
       this._log.warn("No username in verifyLogin.");
       Status.login = LOGIN_FAILED_NO_USERNAME;
       return false;
@@ -644,7 +653,7 @@ WeaveSvc.prototype = {
     // exceptions!
     // Try to fetch the passphrase first, while we still have control.
     try {
-      this._identity.syncKey;
+      this.identity.syncKey;
     } catch (ex) {
       this._log.debug("Fetching passphrase threw " + ex +
                       "; assuming master password locked.");
@@ -672,7 +681,7 @@ WeaveSvc.prototype = {
           // We have no way of verifying the passphrase right now,
           // so wait until remoteSetup to do so.
           // Just make the most trivial checks.
-          if (!this._identity.syncKey) {
+          if (!this.identity.syncKey) {
             this._log.warn("No passphrase in verifyLogin.");
             Status.login = LOGIN_FAILED_NO_PASSPHRASE;
             return false;
@@ -723,7 +732,7 @@ WeaveSvc.prototype = {
     this._log.info("Generating new keys WBO...");
     let wbo = CollectionKeys.generateNewKeysWBO();
     this._log.info("Encrypting new key bundle.");
-    wbo.encrypt(this._identity.syncKeyBundle);
+    wbo.encrypt(this.identity.syncKeyBundle);
 
     this._log.info("Uploading...");
     let uploadRes = wbo.upload(this.resource(this.cryptoKeysURL));
@@ -769,7 +778,7 @@ WeaveSvc.prototype = {
       this._log.warn("Failed to download keys.");
       throw new Error("Symmetric key download failed.");
     }
-    let keysChanged = this.handleFetchedKeys(this._identity.syncKeyBundle,
+    let keysChanged = this.handleFetchedKeys(this.identity.syncKeyBundle,
                                              cryptoKeys, true);
     if (keysChanged) {
       this._log.info("Downloaded keys differed, as expected.");
@@ -779,8 +788,8 @@ WeaveSvc.prototype = {
   changePassword: function changePassword(newPassword) {
     let client = new UserAPI10Client(this.userAPIURI);
     let cb = Async.makeSpinningCallback();
-    client.changePassword(this._identity.username,
-                          this._identity.basicPassword, newPassword, cb);
+    client.changePassword(this.identity.username,
+                          this.identity.basicPassword, newPassword, cb);
 
     try {
       cb.wait();
@@ -791,7 +800,7 @@ WeaveSvc.prototype = {
     }
 
     // Save the new password for requests and login manager.
-    this._identity.basicPassword = newPassword;
+    this.identity.basicPassword = newPassword;
     this.persistLogin();
     return true;
   },
@@ -804,7 +813,7 @@ WeaveSvc.prototype = {
       this.logout();
 
       /* Set this so UI is updated on next run. */
-      this._identity.syncKey = newphrase;
+      this.identity.syncKey = newphrase;
       this.persistLogin();
 
       /* We need to re-encrypt everything, so reset. */
@@ -828,7 +837,7 @@ WeaveSvc.prototype = {
     // We want let UI consumers of the following notification know as soon as
     // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
     // by emptying the passphrase (we still need the password).
-    this._identity.syncKey = null;
+    this.identity.syncKey = null;
     Status.login = LOGIN_FAILED_NO_PASSPHRASE;
     this.logout();
     Svc.Obs.notify("weave:service:start-over");
@@ -860,12 +869,12 @@ WeaveSvc.prototype = {
 
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
 
-    this._identity.deleteSyncCredentials();
+    this.identity.deleteSyncCredentials();
   },
 
   persistLogin: function persistLogin() {
     try {
-      this._identity.persistCredentials(true);
+      this.identity.persistCredentials(true);
     } catch (ex) {
       this._log.info("Unable to persist credentials: " + ex);
     }
@@ -881,13 +890,13 @@ WeaveSvc.prototype = {
 
       let initialStatus = this._checkSetup();
       if (username) {
-        this._identity.username = username;
+        this.identity.username = username;
       }
       if (password) {
-        this._identity.basicPassword = password;
+        this.identity.basicPassword = password;
       }
       if (passphrase) {
-        this._identity.syncKey = passphrase;
+        this.identity.syncKey = passphrase;
       }
 
       if (this._checkSetup() == CLIENT_NOT_CONFIGURED) {
@@ -901,7 +910,7 @@ WeaveSvc.prototype = {
         Svc.Obs.notify("weave:service:setup-complete");
       }
 
-      this._log.info("Logging in user " + this._identity.username);
+      this._log.info("Logging in user " + this.identity.username);
       this._updateCachedURLs();
 
       if (!this.verifyLogin()) {
@@ -933,7 +942,7 @@ WeaveSvc.prototype = {
     let client = new UserAPI10Client(this.userAPIURI);
     let cb = Async.makeSpinningCallback();
 
-    let username = this._identity.usernameFromAccount(account);
+    let username = this.identity.usernameFromAccount(account);
     client.usernameExists(username, cb);
 
     try {
@@ -1193,7 +1202,7 @@ WeaveSvc.prototype = {
    * we decide to bump the server storage version.
    */
   upgradeSyncKey: function upgradeSyncKey(syncID) {
-    let p = this._identity.syncKey;
+    let p = this.identity.syncKey;
 
     if (!p) {
       return false;
@@ -1217,7 +1226,7 @@ WeaveSvc.prototype = {
     }
 
     this._log.info("Upgrading sync key...");
-    this._identity.syncKey = k;
+    this.identity.syncKey = k;
     this._log.info("Saving upgraded sync key...");
     this.persistLogin();
     this._log.info("Done saving.");

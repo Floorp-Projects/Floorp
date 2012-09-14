@@ -79,15 +79,15 @@ add_test(function test_login_logout() {
     do_check_false(Service.isLoggedIn);
 
     _("Try again with username and password set.");
-    Identity.account = "johndoe";
-    Identity.basicPassword = "ilovejane";
+    Service.identity.account = "johndoe";
+    Service.identity.basicPassword = "ilovejane";
     Service.login();
     do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
     do_check_false(Service.isLoggedIn);
 
     _("Success if passphrase is set.");
-    Identity.syncKey = "foo";
+    Service.identity.syncKey = "foo";
     Service.login();
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
@@ -197,10 +197,10 @@ add_test(function test_login_on_sync() {
 
     // Testing exception handling if master password dialog is canceled.
     // Do this by monkeypatching.
-    let oldGetter = Identity.__lookupGetter__("syncKey");
-    let oldSetter = Identity.__lookupSetter__("syncKey");
+    let oldGetter = Service.identity.__lookupGetter__("syncKey");
+    let oldSetter = Service.identity.__lookupSetter__("syncKey");
     _("Old passphrase function is " + oldGetter);
-    Identity.__defineGetter__("syncKey",
+    Service.identity.__defineGetter__("syncKey",
                            function() {
                              throw "User canceled Master Password entry";
                            });
@@ -228,8 +228,8 @@ add_test(function test_login_on_sync() {
     do_check_true(cSTCalled);
     do_check_false(lockedSyncCalled);
 
-    Identity.__defineGetter__("syncKey", oldGetter);
-    Identity.__defineSetter__("syncKey", oldSetter);
+    Service.identity.__defineGetter__("syncKey", oldGetter);
+    Service.identity.__defineSetter__("syncKey", oldSetter);
 
     // N.B., a bunch of methods are stubbed at this point. Be careful putting
     // new tests after this point!

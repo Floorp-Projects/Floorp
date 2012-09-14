@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/policies.js");
@@ -57,7 +56,7 @@ function setUp() {
 
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-  serverKeys.encrypt(Identity.syncKeyBundle);
+  serverKeys.encrypt(Service.identity.syncKeyBundle);
   return serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
 }
 
@@ -482,10 +481,10 @@ add_test(function test_autoconnect_mp_locked() {
   let origLocked = Utils.mpLocked;
   Utils.mpLocked = function() true;
 
-  let origGetter = Identity.__lookupGetter__("syncKey");
-  let origSetter = Identity.__lookupSetter__("syncKey");
-  delete Identity.syncKey;
-  Identity.__defineGetter__("syncKey", function() {
+  let origGetter = Service.identity.__lookupGetter__("syncKey");
+  let origSetter = Service.identity.__lookupSetter__("syncKey");
+  delete Service.identity.syncKey;
+  Service.identity.__defineGetter__("syncKey", function() {
     _("Faking Master Password entry cancelation.");
     throw "User canceled Master Password entry";
   });
@@ -498,9 +497,9 @@ add_test(function test_autoconnect_mp_locked() {
       do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
 
       Utils.mpLocked = origLocked;
-      delete Identity.syncKey;
-      Identity.__defineGetter__("syncKey", origGetter);
-      Identity.__defineSetter__("syncKey", origSetter);
+      delete Service.identity.syncKey;
+      Service.identity.__defineGetter__("syncKey", origGetter);
+      Service.identity.__defineSetter__("syncKey", origSetter);
 
       cleanUpAndGo(server);
     });

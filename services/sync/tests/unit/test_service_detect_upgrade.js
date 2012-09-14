@@ -1,14 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/engines/tabs.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/util.js");
 
 Service.engineManager.register(TabEngine);
 
@@ -124,7 +124,7 @@ add_test(function v4_upgrade() {
       serverResp = serverKeys.fetch(Service.resource(Service.cryptoKeysURL)).response;
       do_check_true(serverResp.success);
 
-      serverDecrypted = serverKeys.decrypt(Identity.syncKeyBundle);
+      serverDecrypted = serverKeys.decrypt(Service.identity.syncKeyBundle);
       _("Retrieved WBO:       " + JSON.stringify(serverDecrypted));
       _("serverKeys:          " + JSON.stringify(serverKeys));
 
@@ -148,7 +148,7 @@ add_test(function v4_upgrade() {
     function set_server_keys(pair) {
       serverDecrypted.default = pair;
       serverKeys.cleartext = serverDecrypted;
-      serverKeys.encrypt(Identity.syncKeyBundle);
+      serverKeys.encrypt(Service.identity.syncKeyBundle);
       serverKeys.upload(Service.resource(Service.cryptoKeysURL));
     }
 

@@ -1,12 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 let cryptoWrap;
@@ -30,9 +30,9 @@ function run_test() {
   let server;
   do_test_pending();
 
-  Identity.username = "john@example.com";
-  Identity.syncKey = "a-abcde-abcde-abcde-abcde-abcde";
-  let keyBundle = Identity.syncKeyBundle;
+  Service.identity.username = "john@example.com";
+  Service.identity.syncKey = "a-abcde-abcde-abcde-abcde-abcde";
+  let keyBundle = Service.identity.syncKeyBundle;
 
   try {
     let log = Log4Moz.repository.getLogger("Test");

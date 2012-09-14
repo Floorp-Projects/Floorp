@@ -82,12 +82,11 @@ add_test(function test_credentials_preserved() {
 
   // Required for wipeClient().
   Service.clusterURL = TEST_CLUSTER_URL;
-
-  Identity.account = "testaccount";
-  Identity.basicPassword = "testpassword";
+  Service.identity.account = "testaccount";
+  Service.identity.basicPassword = "testpassword";
   let key = Utils.generatePassphrase();
-  Identity.syncKey = key;
-  Identity.persistCredentials();
+  Service.identity.syncKey = key;
+  Service.identity.persistCredentials();
 
   // Simulate passwords engine wipe without all the overhead. To do this
   // properly would require extra test infrastructure.

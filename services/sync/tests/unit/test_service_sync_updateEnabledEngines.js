@@ -73,7 +73,7 @@ function setUp() {
   // result in a server wipe, rendering many of these tests useless.
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-  serverKeys.encrypt(Identity.syncKeyBundle);
+  serverKeys.encrypt(Service.identity.syncKeyBundle);
   return serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
 }
 
@@ -255,7 +255,7 @@ add_test(function test_enabledRemotely() {
   try {
     _("Upload some keys to avoid a fresh start.");
     let wbo = CollectionKeys.generateNewKeysWBO();
-    wbo.encrypt(Identity.syncKeyBundle);
+    wbo.encrypt(Service.identity.syncKeyBundle);
     do_check_eq(200, wbo.upload(Service.resource(Service.cryptoKeysURL)).status);
 
     _("Engine is disabled.");

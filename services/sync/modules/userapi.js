@@ -95,7 +95,7 @@ UserAPI10Client.prototype = {
 
   createAccount: function createAccount(email, password, captchaChallenge,
                                         captchaResponse, cb) {
-    let username = Identity.usernameFromAccount(email);
+    let username = IdentityManager.prototype.usernameFromAccount(email);
     let body = JSON.stringify({
       "email":             email,
       "password":          Utils.encodeUTF8(password),

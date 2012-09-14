@@ -19,7 +19,7 @@ add_test(function test_findCluster() {
   let server;
   try {
     Service.serverURL = TEST_SERVER_URL;
-    Identity.account = "johndoe";
+    Service.identity.account = "johndoe";
 
     _("_findCluster() throws on network errors (e.g. connection refused).");
     do_check_throws(function() {
@@ -39,23 +39,23 @@ add_test(function test_findCluster() {
     do_check_eq(cluster, "http://weave.user.node/");
 
     _("A 'null' response is converted to null.");
-    Identity.account = "jimdoe";
+    Service.identity.account = "jimdoe";
     cluster = Service._clusterManager._findCluster();
     do_check_eq(cluster, null);
 
     _("If a 404 is encountered, the server URL is taken as the cluster URL");
-    Identity.account = "janedoe";
+    Service.identity.account = "janedoe";
     cluster = Service._clusterManager._findCluster();
     do_check_eq(cluster, Service.serverURL);
 
     _("A 400 response will throw an error.");
-    Identity.account = "juliadoe";
+    Service.identity.account = "juliadoe";
     do_check_throws(function() {
       Service._clusterManager._findCluster();
     });
 
     _("Any other server response (e.g. 500) will throw an error.");
-    Identity.account = "joedoe";
+    Service.identity.account = "joedoe";
     do_check_throws(function() {
       Service._clusterManager._findCluster();
     });
@@ -76,7 +76,7 @@ add_test(function test_setCluster() {
   });
   try {
     Service.serverURL = TEST_SERVER_URL;
-    Identity.account = "johndoe";
+    Service.identity.account = "johndoe";
 
     _("Check initial state.");
     do_check_eq(Service.clusterURL, "");
@@ -90,7 +90,7 @@ add_test(function test_setCluster() {
     do_check_eq(Service.clusterURL, "http://weave.user.node/");
 
     _("A 'null' response won't make a difference either.");
-    Identity.account = "jimdoe";
+    Service.identity.account = "jimdoe";
     do_check_false(Service._clusterManager.setCluster());
     do_check_eq(Service.clusterURL, "http://weave.user.node/");
 

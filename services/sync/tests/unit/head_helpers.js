@@ -3,7 +3,6 @@
 
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
@@ -229,21 +228,26 @@ FakeCryptoService.prototype = {
 };
 
 function setBasicCredentials(username, password, syncKey) {
-  let auth = Identity;
+  let ns = {};
+  Cu.import("resource://services-sync/service.js", ns);
+
+  let auth = ns.Service.identity;
   auth.username = username;
   auth.basicPassword = password;
   auth.syncKey = syncKey;
 }
 
 function SyncTestingInfrastructure(username, password, syncKey) {
-  Cu.import("resource://services-sync/service.js");
+  let ns = {};
+  Cu.import("resource://services-sync/service.js", ns);
 
-  Identity.account = username || "foo";
-  Identity.basicPassword = password || "password";
-  Identity.syncKey = syncKey || "foo";
+  let auth = ns.Service.identity;
+  auth.account = username || "foo";
+  auth.basicPassword = password || "password";
+  auth.syncKey = syncKey || "foo";
 
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  ns.Service.serverURL = TEST_SERVER_URL;
+  ns.Service.clusterURL = TEST_CLUSTER_URL;
 
   this.logStats = initTestLogging();
   this.fakeFilesystem = new FakeFilesystemService({});

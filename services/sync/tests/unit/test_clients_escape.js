@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
@@ -10,14 +9,14 @@ Cu.import("resource://services-sync/util.js");
 function run_test() {
   _("Set up test fixtures.");
 
-  Identity.username = "john@example.com";
+  Service.identity.username = "john@example.com";
   Service.clusterURL = "http://fakebase/";
   let baseUri = "http://fakebase/1.1/foo/storage/";
   let pubUri = baseUri + "keys/pubkey";
   let privUri = baseUri + "keys/privkey";
 
-  Identity.syncKey = "abcdeabcdeabcdeabcdeabcdea";
-  let keyBundle = Identity.syncKeyBundle;
+  Service.identity.syncKey = "abcdeabcdeabcdeabcdeabcdea";
+  let keyBundle = Service.identity.syncKeyBundle;
 
   let engine = Service.clientsEngine;
 

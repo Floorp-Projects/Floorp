@@ -133,7 +133,7 @@ function setUp() {
 function generateAndUploadKeys() {
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-  serverKeys.encrypt(Identity.syncKeyBundle);
+  serverKeys.encrypt(Service.identity.syncKeyBundle);
   return serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
 }
 
@@ -429,7 +429,7 @@ add_test(function test_login_syncAndReportErrors_non_network_error() {
   // when calling syncAndReportErrors
   let server = sync_httpd_setup();
   setUp();
-  Identity.basicPassword = null;
+  Service.identity.basicPassword = null;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
@@ -473,7 +473,7 @@ add_test(function test_login_syncAndReportErrors_prolonged_non_network_error() {
   // reported when calling syncAndReportErrors.
   let server = sync_httpd_setup();
   setUp();
-  Identity.basicPassword = null;
+  Service.identity.basicPassword = null;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
@@ -589,7 +589,7 @@ add_test(function test_login_prolonged_non_network_error() {
   // Test prolonged, non-network errors are reported
   let server = sync_httpd_setup();
   setUp();
-  Identity.basicPassword = null;
+  Service.identity.basicPassword = null;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
@@ -666,7 +666,7 @@ add_test(function test_login_non_network_error() {
   // Test non-network errors are reported
   let server = sync_httpd_setup();
   setUp();
-  Identity.basicPassword = null;
+  Service.identity.basicPassword = null;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);

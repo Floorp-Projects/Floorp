@@ -40,7 +40,7 @@ function setUp() {
 
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-  serverKeys.encrypt(Identity.syncKeyBundle);
+  serverKeys.encrypt(Service.identity.syncKeyBundle);
   return serverKeys.upload(Service.resource(Service.cryptoKeysURL));
 }
 
