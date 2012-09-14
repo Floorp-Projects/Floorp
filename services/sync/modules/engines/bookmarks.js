@@ -12,13 +12,11 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/constants.js");
-
-Cu.import("resource://services-sync/main.js");      // For access to Service.
 
 const ALLBOOKMARKS_ANNO    = "AllBookmarks";
 const DESCRIPTION_ANNO     = "bookmarkProperties/description";
@@ -1286,7 +1284,7 @@ BookmarksTracker.prototype = {
           this._enabled = false;
         }
         break;
-        
+
       case "bookmarks-restore-begin":
         this._log.debug("Ignoring changes from importing bookmarks.");
         this.ignoreAll = true;
@@ -1294,10 +1292,10 @@ BookmarksTracker.prototype = {
       case "bookmarks-restore-success":
         this._log.debug("Tracking all items on successful import.");
         this.ignoreAll = false;
-        
+
         this._log.debug("Restore succeeded: wiping server and other clients.");
-        Weave.Service.resetClient([this.name]);
-        Weave.Service.wipeServer([this.name]);
+        this.engine.service.resetClient([this.name]);
+        this.engine.service.wipeServer([this.name]);
         this.engine.service.clientsEngine.sendCommand("wipeEngine", [this.name]);
         break;
       case "bookmarks-restore-failed":
