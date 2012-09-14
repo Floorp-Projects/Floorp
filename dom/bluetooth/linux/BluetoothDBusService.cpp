@@ -569,14 +569,9 @@ AddReservedServices(const nsAString& aAdapterPath)
   uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HandsfreeAG >> 32));
   uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HeadsetAG >> 32));
 
-  BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    NS_WARNING("BluetoothService not available!");
-    return ;
-  }
-
   sServiceHandles.Clear();
-  bs->AddReservedServicesInternal(aAdapterPath, uuids, sServiceHandles);
+  BluetoothDBusService::AddReservedServicesInternal(aAdapterPath, uuids,
+                                                    sServiceHandles);
 }
 
 void
@@ -1503,6 +1498,7 @@ ExtractHandles(DBusMessage *aReply, nsTArray<uint32_t>& aOutHandles)
   }
 }
 
+// static
 bool
 BluetoothDBusService::AddReservedServicesInternal(const nsAString& aAdapterPath,
                                                   const nsTArray<uint32_t>& aServices, 
@@ -1530,6 +1526,7 @@ BluetoothDBusService::AddReservedServicesInternal(const nsAString& aAdapterPath,
   return true;
 }
 
+// static
 bool
 BluetoothDBusService::RemoveReservedServicesInternal(const nsAString& aAdapterPath,
                                                      const nsTArray<uint32_t>& aServiceHandles)
