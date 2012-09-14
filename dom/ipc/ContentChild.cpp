@@ -92,6 +92,7 @@
 #include "mozilla/dom/indexedDB/PIndexedDBChild.h"
 #include "mozilla/dom/sms/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
+#include "mozilla/dom/bluetooth/PBluetoothChild.h"
 
 #include "nsDOMFile.h"
 #include "nsIRemoteBlob.h"
@@ -104,6 +105,7 @@
 
 using namespace base;
 using namespace mozilla::docshell;
+using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
 using namespace mozilla::dom::indexedDB;
@@ -698,6 +700,30 @@ ContentChild::DeallocPStorage(PStorageChild* aActor)
     StorageChild* child = static_cast<StorageChild*>(aActor);
     child->ReleaseIPDLReference();
     return true;
+}
+
+PBluetoothChild*
+ContentChild::AllocPBluetooth()
+{
+#ifdef MOZ_B2G_BT
+    MOZ_NOT_REACHED("No one should be allocating PBluetoothChild actors");
+    return nullptr;
+#else
+    MOZ_NOT_REACHED("No support for bluetooth on this platform!");
+    return nullptr;
+#endif
+}
+
+bool
+ContentChild::DeallocPBluetooth(PBluetoothChild* aActor)
+{
+#ifdef MOZ_B2G_BT
+    delete aActor;
+    return true;
+#else
+    MOZ_NOT_REACHED("No support for bluetooth on this platform!");
+    return false;
+#endif
 }
 
 bool

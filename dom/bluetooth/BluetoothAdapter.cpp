@@ -9,7 +9,6 @@
 #include "BluetoothDevice.h"
 #include "BluetoothPropertyEvent.h"
 #include "BluetoothService.h"
-#include "BluetoothTypes.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUtils.h"
 #include "GeneratedEvents.h"
@@ -25,6 +24,7 @@
 
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Util.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 using namespace mozilla;
 
@@ -149,9 +149,9 @@ BluetoothAdapter::~BluetoothAdapter()
   BluetoothService* bs = BluetoothService::Get();
   // We can be null on shutdown, where this might happen
   if (bs) {
-    if (NS_FAILED(bs->UnregisterBluetoothSignalHandler(mPath, this))) {
-      NS_WARNING("Failed to unregister object with observer!");
-    }
+    // XXXbent I don't see anything about LOCAL_AGENT_PATH or REMOTE_AGENT_PATH
+    //         here. Probably a bug? Maybe use UnregisterAll.
+    bs->UnregisterBluetoothSignalHandler(mPath, this);
   }
   Unroot();
 }
@@ -256,15 +256,9 @@ BluetoothAdapter::Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue)
   }
 
   nsRefPtr<BluetoothAdapter> adapter = new BluetoothAdapter(aOwner, aValue);
-  if (NS_FAILED(bs->RegisterBluetoothSignalHandler(adapter->GetPath(), adapter))) {
-    NS_WARNING("Failed to register object with observer!");
-    return nullptr;
-  }
 
-  if (NS_FAILED(bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(REMOTE_AGENT_PATH), adapter))) {
-    NS_WARNING("Failed to register remote agent object with observer!");
-    return nullptr;
-  }
+  bs->RegisterBluetoothSignalHandler(adapter->GetPath(), adapter);
+  bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(REMOTE_AGENT_PATH), adapter);
 
   return adapter.forget();
 }

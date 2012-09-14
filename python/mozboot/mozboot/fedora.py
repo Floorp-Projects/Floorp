@@ -14,5 +14,18 @@ class FedoraBootstrapper(BaseBootstrapper):
         self.dist_id = dist_id
 
     def install_system_packages(self):
-        os.system("sudo yum groupinstall 'Development Tools' 'Development Libraries' 'GNOME Software Development'")
-        os.system("sudo yum install mercurial autoconf213 glibc-static libstdc++-static yasm wireless-tools-devel mesa-libGL-devel alsa-lib-devel libXt-devel")
+        self.yum_groupinstall(
+            'Development Tools',
+            'Development Libraries',
+            'GNOME Software Development')
+
+        self.yum_install(
+            'alsa-lib-devel',
+            'autoconf213',
+            'glibc-static',
+            'libstdc++-static',
+            'libXt-devel',
+            'mercurial',
+            'mesa-libGL-devel',
+            'wireless-tools-devel',
+            'yasm')
