@@ -156,7 +156,7 @@ function run_test() {
     b.generateRandom();
     collections.crypto = keys.modified = 100 + (Date.now()/1000);  // Future modification time.
     keys.encrypt(b);
-    keys.upload(Service.cryptoKeysURL);
+    keys.upload(Service.resource(Service.cryptoKeysURL));
 
     do_check_false(Service.verifyAndFetchSymmetricKeys());
     do_check_eq(Status.login, LOGIN_FAILED_INVALID_PASSPHRASE);

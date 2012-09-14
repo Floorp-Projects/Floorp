@@ -14,7 +14,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-common/preferences.js");
@@ -75,7 +74,8 @@ TabEngine.prototype = {
   },
 
   removeClientData: function removeClientData() {
-    new Resource(this.engineURL + "/" + this.service.clientsEngine.localID).delete();
+    let url = this.engineURL + "/" + this.service.clientsEngine.localID;
+    this.service.resource(url).delete();
   },
 
   /* The intent is not to show tabs in the menu if they're already

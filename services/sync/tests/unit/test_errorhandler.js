@@ -61,7 +61,7 @@ function generateCredentialsChangedFailure() {
   let newSyncKeyBundle = new SyncKeyBundle("johndoe", "23456234562345623456234562");
   let keys = CollectionKeys.asWBO();
   keys.encrypt(newSyncKeyBundle);
-  keys.upload(Service.cryptoKeysURL);
+  keys.upload(Service.resource(Service.cryptoKeysURL));
 }
 
 function service_unavailable(request, response) {
@@ -134,7 +134,7 @@ function generateAndUploadKeys() {
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Identity.syncKeyBundle);
-  return serverKeys.upload(Service.cryptoKeysURL).success;
+  return serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
 }
 
 function clean() {

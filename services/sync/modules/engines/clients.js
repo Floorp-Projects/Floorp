@@ -13,7 +13,6 @@ Cu.import("resource://services-common/stringbundle.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
 const CLIENTS_TTL = 1814400; // 21 days
@@ -131,7 +130,7 @@ ClientEngine.prototype = {
   },
 
   removeClientData: function removeClientData() {
-    let res = new Resource(this.engineURL + "/" + this.localID);
+    let res = this.service.resource(this.engineURL + "/" + this.localID);
     res.delete();
   },
 

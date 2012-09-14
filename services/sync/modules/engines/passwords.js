@@ -46,7 +46,7 @@ PasswordEngine.prototype = {
                           .map(function(info) {
           return info.QueryInterface(Components.interfaces.nsILoginMetaInfo).guid;
         });
-        let coll = new Collection(this.engineURL);
+        let coll = new Collection(this.engineURL, null, this.service);
         coll.ids = ids;
         let ret = coll.delete();
         this._log.debug("Delete result: " + ret);
