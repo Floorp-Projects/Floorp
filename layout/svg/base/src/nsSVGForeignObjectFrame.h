@@ -6,6 +6,7 @@
 #ifndef NSSVGFOREIGNOBJECTFRAME_H__
 #define NSSVGFOREIGNOBJECTFRAME_H__
 
+#include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 #include "nsIPresShell.h"
 #include "nsISVGChildFrame.h"
@@ -83,13 +84,13 @@ public:
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsRenderingContext *aContext,
                       const nsIntRect *aDirtyRect);
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
-  NS_IMETHOD_(nsRect) GetCoveredRegion();
-  virtual void ReflowSVG();
-  virtual void NotifySVGChanged(uint32_t aFlags);
+  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint) MOZ_OVERRIDE;
+  NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
+  virtual void ReflowSVG() MOZ_OVERRIDE;
+  virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      uint32_t aFlags);
-  NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
+                                      uint32_t aFlags) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsDisplayContainer() MOZ_OVERRIDE { return true; }
 
   gfxMatrix GetCanvasTM(uint32_t aFor);
 

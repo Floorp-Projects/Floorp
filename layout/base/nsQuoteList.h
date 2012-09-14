@@ -8,6 +8,7 @@
 #ifndef nsQuoteList_h___
 #define nsQuoteList_h___
 
+#include "mozilla/Attributes.h"
 #include "nsGenConList.h"
 
 struct nsQuoteNode : public nsGenConNode {
@@ -31,7 +32,7 @@ struct nsQuoteNode : public nsGenConNode {
   }
 
   virtual bool InitTextFrame(nsGenConList* aList, 
-          nsIFrame* aPseudoFrame, nsIFrame* aTextFrame);
+          nsIFrame* aPseudoFrame, nsIFrame* aTextFrame) MOZ_OVERRIDE;
 
   // is this 'open-quote' or 'no-open-quote'?
   bool IsOpenQuote() {

@@ -7,6 +7,7 @@
 #ifndef nsGridLayout2_h___
 #define nsGridLayout2_h___
 
+#include "mozilla/Attributes.h"
 #include "nsStackLayout.h"
 #include "nsIGridPart.h"
 #include "nsCoord.h"
@@ -31,23 +32,23 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
   virtual void IntrinsicWidthsDirty(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
 
   virtual nsGridRowGroupLayout* CastToRowGroupLayout() { return nullptr; }
-  virtual nsGridLayout2* CastToGridLayout() { return this; }
-  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr);
-  virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) {
+  virtual nsGridLayout2* CastToGridLayout() MOZ_OVERRIDE { return this; }
+  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr) MOZ_OVERRIDE;
+  virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) MOZ_OVERRIDE {
     NS_NOTREACHED("Should not be called"); return nullptr;
   }
-  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) { aRowCount++; }
-  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) { }
-  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows);
-  virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal);
-  virtual Type GetType() { return eGrid; }
+  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) MOZ_OVERRIDE { aRowCount++; }
+  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) MOZ_OVERRIDE { }
+  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) MOZ_OVERRIDE;
+  virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal) MOZ_OVERRIDE;
+  virtual Type GetType() MOZ_OVERRIDE { return eGrid; }
   virtual void ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,
                                 nsIFrame* aPrevBox,
                                 const nsFrameList::Slice& aNewChildren);
