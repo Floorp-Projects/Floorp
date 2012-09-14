@@ -347,9 +347,14 @@ interface nsIDOMMozMobileCellInfo: nsISupports
   readonly attribute unsigned long gsmCellId;
 };
 
-[scriptable, uuid(109c1117-1199-47aa-aad2-ea9f456220fa)]
+[scriptable, uuid(8854ee5f-8ffa-45c1-84d6-e87d82de6ae8)]
 interface nsIDOMMozMobileICCInfo : nsISupports
 {
+   /**
+   * Integrated Circuit Card Identifier.
+   */
+  readonly attribute DOMString iccid;
+
   /**
    * Mobile Country Code (MCC) of the subscriber's home network.
    */
