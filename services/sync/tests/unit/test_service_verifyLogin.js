@@ -4,7 +4,6 @@
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 function login_handling(handler) {
@@ -50,61 +49,61 @@ function run_test() {
     Service.serverURL = TEST_SERVER_URL;
 
     _("Force the initial state.");
-    Status.service = STATUS_OK;
-    do_check_eq(Status.service, STATUS_OK);
+    Service.status.service = STATUS_OK;
+    do_check_eq(Service.status.service, STATUS_OK);
 
     _("Credentials won't check out because we're not configured yet.");
-    Status.resetSync();
+    Service.status.resetSync();
     do_check_false(Service.verifyLogin());
-    do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
-    do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);
+    do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_NO_USERNAME);
 
     _("Try again with username and password set.");
-    Status.resetSync();
+    Service.status.resetSync();
     setBasicCredentials("johndoe", "ilovejane", null);
     do_check_false(Service.verifyLogin());
-    do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
-    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
+    do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_NO_PASSPHRASE);
 
     _("verifyLogin() has found out the user's cluster URL, though.");
     do_check_eq(Service.clusterURL, "http://localhost:8080/api/");
 
     _("Success if passphrase is set.");
-    Status.resetSync();
+    Service.status.resetSync();
     Service.identity.syncKey = "foo";
     do_check_true(Service.verifyLogin());
-    do_check_eq(Status.service, STATUS_OK);
-    do_check_eq(Status.login, LOGIN_SUCCEEDED);
+    do_check_eq(Service.status.service, STATUS_OK);
+    do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
 
     _("If verifyLogin() encounters a server error, it flips on the backoff flag and notifies observers on a 503 with Retry-After.");
-    Status.resetSync();
+    Service.status.resetSync();
     Service.identity.account = "janedoe";
     Service._updateCachedURLs();
-    do_check_false(Status.enforceBackoff);
+    do_check_false(Service.status.enforceBackoff);
     let backoffInterval;
     Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
       Svc.Obs.remove("weave:service:backoff:interval", observe);
       backoffInterval = subject;
     });
     do_check_false(Service.verifyLogin());
-    do_check_true(Status.enforceBackoff);
+    do_check_true(Service.status.enforceBackoff);
     do_check_eq(backoffInterval, 42);
-    do_check_eq(Status.service, LOGIN_FAILED);
-    do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_eq(Service.status.service, LOGIN_FAILED);
+    do_check_eq(Service.status.login, SERVER_MAINTENANCE);
 
     _("Ensure a network error when finding the cluster sets the right Status bits.");
-    Status.resetSync();
+    Service.status.resetSync();
     Service.serverURL = "http://localhost:12345/";
     do_check_false(Service.verifyLogin());
-    do_check_eq(Status.service, LOGIN_FAILED);
-    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Service.status.service, LOGIN_FAILED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);
 
     _("Ensure a network error when getting the collection info sets the right Status bits.");
-    Status.resetSync();
+    Service.status.resetSync();
     Service.clusterURL = "http://localhost:12345/";
     do_check_false(Service.verifyLogin());
-    do_check_eq(Status.service, LOGIN_FAILED);
-    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Service.status.service, LOGIN_FAILED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);
 
   } finally {
     Svc.Prefs.resetBranch("");

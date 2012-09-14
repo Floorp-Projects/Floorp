@@ -14,7 +14,6 @@ Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/policies.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 /**
@@ -39,13 +38,13 @@ EngineSynchronizer.prototype = {
 
     let startTime = Date.now();
 
-    Status.resetSync();
+    this.service.status.resetSync();
 
     // Make sure we should sync or record why we shouldn't.
     let reason = this.service._checkSync();
     if (reason) {
       if (reason == kSyncNetworkOffline) {
-        Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+        this.service.status.sync = LOGIN_FAILED_NETWORK_ERROR;
       }
 
       // this is a purposeful abort rather than a failure, so don't set
@@ -57,7 +56,7 @@ EngineSynchronizer.prototype = {
 
     // If we don't have a node, get one. If that fails, retry in 10 minutes.
     if (!this.service.clusterURL && !this.service._clusterManager.setCluster()) {
-      Status.sync = NO_SYNC_NODE_FOUND;
+      this.service.status.sync = NO_SYNC_NODE_FOUND;
       this._log.info("No cluster URL found. Cannot sync.");
       this.onComplete(null);
       return;
@@ -111,7 +110,7 @@ EngineSynchronizer.prototype = {
     if (this.service.clientsEngine.localCommands) {
       try {
         if (!(this.service.clientsEngine.processIncomingCommands())) {
-          Status.sync = ABORT_SYNC_COMMAND;
+          this.service.status.sync = ABORT_SYNC_COMMAND;
           this.onComplete(new Error("Processed command aborted sync."));
           return;
         }
@@ -145,7 +144,7 @@ EngineSynchronizer.prototype = {
     try {
       for each (let engine in this.service.engineManager.getEnabled()) {
         // If there's any problems with syncing the engine, report the failure
-        if (!(this._syncEngine(engine)) || Status.enforceBackoff) {
+        if (!(this._syncEngine(engine)) || this.service.status.enforceBackoff) {
           this._log.info("Aborting sync for failure in " + engine.name);
           break;
         }
@@ -170,9 +169,9 @@ EngineSynchronizer.prototype = {
       }
 
       // If there were no sync engine failures
-      if (Status.service != SYNC_FAILED_PARTIAL) {
+      if (this.service.status.service != SYNC_FAILED_PARTIAL) {
         Svc.Prefs.set("lastSync", new Date().toString());
-        Status.sync = SYNC_SUCCEEDED;
+        this.service.status.sync = SYNC_SUCCEEDED;
       }
     } finally {
       Svc.Prefs.reset("firstSync");

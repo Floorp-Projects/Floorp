@@ -312,8 +312,8 @@ Sync11Service.prototype = {
       throw new Error("Status or Status._authManager not initialized.");
     }
 
+    this.status = Status;
     this.identity = Status._authManager;
-
     this.collectionKeys = new CollectionKeyManager();
 
     this.errorHandler = new ErrorHandler(this);
@@ -361,16 +361,16 @@ Sync11Service.prototype = {
     // synchronously so that observers can import this module before
     // registering an observer.
     Utils.nextTick(function onNextTick() {
-      Status.ready = true;
+      this.status.ready = true;
       Svc.Obs.notify("weave:service:ready");
-    });
+    }.bind(this));
   },
 
   _checkSetup: function _checkSetup() {
     if (!this.enabled) {
-      return Status.service = STATUS_DISABLED;
+      return this.status.service = STATUS_DISABLED;
     }
-    return Status.checkSetup();
+    return this.status.checkSetup();
   },
 
   _migratePrefs: function _migratePrefs() {
@@ -528,8 +528,8 @@ Sync11Service.prototype = {
     // and fail if that assumption is invalidated.
 
     if (!this.identity.syncKey) {
-      Status.login = LOGIN_FAILED_NO_PASSPHRASE;
-      Status.sync = CREDENTIALS_CHANGED;
+      this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
+      this.status.sync = CREDENTIALS_CHANGED;
       return false;
     }
 
@@ -537,8 +537,8 @@ Sync11Service.prototype = {
     if (!syncKeyBundle) {
       this._log.error("Sync Key Bundle not set. Invalid Sync Key?");
 
-      Status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
-      Status.sync = CREDENTIALS_CHANGED;
+      this.status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
+      this.status.sync = CREDENTIALS_CHANGED;
       return false;
     }
 
@@ -549,7 +549,7 @@ Sync11Service.prototype = {
       // This only applies when the server is already at version 4.
       if (infoResponse.status != 200) {
         this._log.warn("info/collections returned non-200 response. Failing key fetch.");
-        Status.login = LOGIN_FAILED_SERVER_ERROR;
+        this.status.login = LOGIN_FAILED_SERVER_ERROR;
         this.errorHandler.checkServerError(infoResponse);
         return false;
       }
@@ -583,7 +583,7 @@ Sync11Service.prototype = {
             }
             else {
               // Some other problem.
-              Status.login = LOGIN_FAILED_SERVER_ERROR;
+              this.status.login = LOGIN_FAILED_SERVER_ERROR;
               this.errorHandler.checkServerError(cryptoResp);
               this._log.warn("Got status " + cryptoResp.status + " fetching crypto keys.");
               return false;
@@ -595,13 +595,13 @@ Sync11Service.prototype = {
 
             // One kind of exception: HMAC failure.
             if (Utils.isHMACMismatch(ex)) {
-              Status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
-              Status.sync = CREDENTIALS_CHANGED;
+              this.status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
+              this.status.sync = CREDENTIALS_CHANGED;
             }
             else {
               // In the absence of further disambiguation or more precise
               // failure constants, just report failure.
-              Status.login = LOGIN_FAILED;
+              this.status.login = LOGIN_FAILED;
             }
             return false;
           }
@@ -641,7 +641,7 @@ Sync11Service.prototype = {
   verifyLogin: function verifyLogin() {
     if (!this.identity.username) {
       this._log.warn("No username in verifyLogin.");
-      Status.login = LOGIN_FAILED_NO_USERNAME;
+      this.status.login = LOGIN_FAILED_NO_USERNAME;
       return false;
     }
 
@@ -655,7 +655,7 @@ Sync11Service.prototype = {
     } catch (ex) {
       this._log.debug("Fetching passphrase threw " + ex +
                       "; assuming master password locked.");
-      Status.login = MASTER_PASSWORD_LOCKED;
+      this.status.login = MASTER_PASSWORD_LOCKED;
       return false;
     }
 
@@ -664,7 +664,7 @@ Sync11Service.prototype = {
       // This is a little weird, if we don't get a node we pretend
       // to succeed, since that probably means we just don't have storage.
       if (this.clusterURL == "" && !this._clusterManager.setCluster()) {
-        Status.sync = NO_SYNC_NODE_FOUND;
+        this.status.sync = NO_SYNC_NODE_FOUND;
         Svc.Obs.notify("weave:service:sync:delayed");
         return true;
       }
@@ -681,7 +681,7 @@ Sync11Service.prototype = {
           // Just make the most trivial checks.
           if (!this.identity.syncKey) {
             this._log.warn("No passphrase in verifyLogin.");
-            Status.login = LOGIN_FAILED_NO_PASSPHRASE;
+            this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
             return false;
           }
 
@@ -689,7 +689,7 @@ Sync11Service.prototype = {
           // conclusively that our passphrase is correct.
           if (this._remoteSetup()) {
             // Username/password verified.
-            Status.login = LOGIN_SUCCEEDED;
+            this.status.login = LOGIN_SUCCEEDED;
             return true;
           }
 
@@ -708,19 +708,19 @@ Sync11Service.prototype = {
           }
 
           // We must have the right cluster, but the server doesn't expect us
-          Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+          this.status.login = LOGIN_FAILED_LOGIN_REJECTED;
           return false;
 
         default:
           // Server didn't respond with something that we expected
-          Status.login = LOGIN_FAILED_SERVER_ERROR;
+          this.status.login = LOGIN_FAILED_SERVER_ERROR;
           this.errorHandler.checkServerError(test);
           return false;
       }
     } catch (ex) {
       // Must have failed on some network issue
       this._log.debug("verifyLogin failed: " + Utils.exceptionStr(ex));
-      Status.login = LOGIN_FAILED_NETWORK_ERROR;
+      this.status.login = LOGIN_FAILED_NETWORK_ERROR;
       this.errorHandler.checkServerError(ex);
       return false;
     }
@@ -830,13 +830,13 @@ Sync11Service.prototype = {
   startOver: function startOver() {
     this._log.trace("Invoking Service.startOver.");
     Svc.Obs.notify("weave:engine:stop-tracking");
-    Status.resetSync();
+    this.status.resetSync();
 
     // We want let UI consumers of the following notification know as soon as
     // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
     // by emptying the passphrase (we still need the password).
     this.identity.syncKey = null;
-    Status.login = LOGIN_FAILED_NO_PASSPHRASE;
+    this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
     this.logout();
     Svc.Obs.notify("weave:service:start-over");
 
@@ -858,7 +858,7 @@ Sync11Service.prototype = {
     // Reset all engines and clear keys.
     this.resetClient();
     this.collectionKeys.clear();
-    Status.resetBackoff();
+    this.status.resetBackoff();
 
     // Reset Weave prefs.
     this._ignorePrefObserver = true;
@@ -882,7 +882,7 @@ Sync11Service.prototype = {
     function onNotify() {
       this._loggedIn = false;
       if (Services.io.offline) {
-        Status.login = LOGIN_FAILED_NETWORK_ERROR;
+        this.status.login = LOGIN_FAILED_NETWORK_ERROR;
         throw "Application is offline, login should not be called";
       }
 
@@ -913,7 +913,7 @@ Sync11Service.prototype = {
 
       if (!this.verifyLogin()) {
         // verifyLogin sets the failure states here.
-        throw "Login failed: " + Status.login;
+        throw "Login failed: " + this.status.login;
       }
 
       this._loggedIn = true;
@@ -1038,7 +1038,7 @@ Sync11Service.prototype = {
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = this.recordManager.response.status;
       if (status != 200 && status != 404) {
-        Status.sync = METARECORD_DOWNLOAD_FAIL;
+        this.status.sync = METARECORD_DOWNLOAD_FAIL;
         this.errorHandler.checkServerError(this.recordManager.response);
         this._log.warn("Unknown error while downloading metadata record. " +
                        "Aborting sync.");
@@ -1064,7 +1064,7 @@ Sync11Service.prototype = {
       return true;
     }
     else if (remoteVersion > STORAGE_VERSION) {
-      Status.sync = VERSION_OUT_OF_DATE;
+      this.status.sync = VERSION_OUT_OF_DATE;
       this._log.warn("Upgrade required to access newer storage version.");
       return false;
     }
@@ -1088,7 +1088,7 @@ Sync11Service.prototype = {
 
       // bug 545725 - re-verify creds and fail sanely
       if (!this.verifyLogin()) {
-        Status.sync = CREDENTIALS_CHANGED;
+        this.status.sync = CREDENTIALS_CHANGED;
         this._log.info("Credentials have changed, aborting sync and forcing re-login.");
         return false;
       }
@@ -1137,9 +1137,9 @@ Sync11Service.prototype = {
       reason = kSyncWeaveDisabled;
     else if (Services.io.offline)
       reason = kSyncNetworkOffline;
-    else if (Status.minimumNextSync > Date.now())
+    else if (this.status.minimumNextSync > Date.now())
       reason = kSyncBackoffNotMet;
-    else if ((Status.login == MASTER_PASSWORD_LOCKED) &&
+    else if ((this.status.login == MASTER_PASSWORD_LOCKED) &&
              Utils.mpLocked())
       reason = kSyncMasterPasswordLocked;
     else if (Svc.Prefs.get("firstSync") == "notReady")

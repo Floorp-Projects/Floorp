@@ -6,7 +6,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
 initTestLogging();
@@ -221,7 +220,7 @@ add_test(function test_disabledLocally_wipe503() {
   Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
 
-    do_check_eq(Status.sync, SERVER_MAINTENANCE);
+    do_check_eq(Service.status.sync, SERVER_MAINTENANCE);
 
     Service.startOver();
     server.stop(run_next_test);
