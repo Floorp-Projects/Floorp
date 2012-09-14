@@ -2898,53 +2898,19 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     b->type_ = tmp;
 }
 
-/*
- * Use this method with extreme caution. It trades the guts of two objects and updates
- * scope ownership. This operation is not thread-safe, just as fast array to slow array
- * transitions are inherently not thread-safe. Don't perform a swap operation on objects
- * shared across threads or, or bad things will happen. You have been warned.
- */
+/* Use this method with extreme caution. It trades the guts of two objects. */
 bool
 JSObject::swap(JSContext *cx, JSObject *other)
 {
     // Ensure swap doesn't cause a finalizer to not be run.
     JS_ASSERT(IsBackgroundFinalized(getAllocKind()) ==
               IsBackgroundFinalized(other->getAllocKind()));
+    JS_ASSERT(compartment() == other->compartment());
 
-    if (this->compartment() == other->compartment()) {
-        TradeGutsReserved reserved(cx);
-        if (!ReserveForTradeGuts(cx, this, other, reserved))
-            return false;
-        TradeGuts(cx, this, other, reserved);
-        return true;
-    }
-
-    JSObject *thisClone;
-    JSObject *otherClone;
-    {
-        AutoCompartment ac(cx, other);
-        thisClone = JS_CloneObject(cx, this, other->getProto(), other->getParent());
-        if (!thisClone || !JS_CopyPropertiesFrom(cx, thisClone, this))
-            return false;
-    }
-    {
-        AutoCompartment ac(cx, this);
-        otherClone = JS_CloneObject(cx, other, other->getProto(), other->getParent());
-        if (!otherClone || !JS_CopyPropertiesFrom(cx, otherClone, other))
-            return false;
-    }
-
-    TradeGutsReserved reservedThis(cx);
-    TradeGutsReserved reservedOther(cx);
-
-    if (!ReserveForTradeGuts(cx, this, otherClone, reservedThis) ||
-        !ReserveForTradeGuts(cx, other, thisClone, reservedOther)) {
+    TradeGutsReserved reserved(cx);
+    if (!ReserveForTradeGuts(cx, this, other, reserved))
         return false;
-    }
-
-    TradeGuts(cx, this, otherClone, reservedThis);
-    TradeGuts(cx, other, thisClone, reservedOther);
-
+    TradeGuts(cx, this, other, reserved);
     return true;
 }
 
