@@ -170,25 +170,6 @@ BluetoothServiceChildProcess::GetDevicePath(const nsAString& aAdapterPath,
   return NS_OK;
 }
 
-bool
-BluetoothServiceChildProcess::AddReservedServicesInternal(
-                                   const nsAString& aAdapterPath,
-                                   const nsTArray<uint32_t>& aServices,
-                                   nsTArray<uint32_t>& aServiceHandlesContainer)
-{
-  MOZ_NOT_REACHED("This function isn't used!");
-  return false;
-}
-
-bool
-BluetoothServiceChildProcess::RemoveReservedServicesInternal(
-                                      const nsAString& aAdapterPath,
-                                      const nsTArray<uint32_t>& aServiceHandles)
-{
-  MOZ_NOT_REACHED("This function isn't used!");
-  return false;
-}
-
 nsresult
 BluetoothServiceChildProcess::CreatePairedDeviceInternal(
                                               const nsAString& aAdapterPath,

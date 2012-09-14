@@ -72,17 +72,6 @@ public:
                 const nsAString& aDeviceAddress,
                 nsAString& aDevicePath) MOZ_OVERRIDE;
 
-  virtual bool
-  AddReservedServicesInternal(const nsAString& aAdapterPath,
-                              const nsTArray<uint32_t>& aServices,
-                              nsTArray<uint32_t>& aServiceHandlesContainer)
-                              MOZ_OVERRIDE;
-
-  virtual bool
-  RemoveReservedServicesInternal(const nsAString& aAdapterPath,
-                                 const nsTArray<uint32_t>& aServiceHandles)
-                                 MOZ_OVERRIDE;
-
   virtual nsresult
   CreatePairedDeviceInternal(const nsAString& aAdapterPath,
                              const nsAString& aAddress,
