@@ -22,6 +22,8 @@
 
 using namespace MPAPI;
 
+const int OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka = 0x7FA30C01;
+
 namespace android {
 
 // MediaStreamSource is a DataSource that reads from a MPAPI media stream.
@@ -132,11 +134,11 @@ class OmxDecoder {
   void ReleaseVideoBuffer();
   void ReleaseAudioBuffer();
 
-  void PlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  void CbYCrYFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  void SemiPlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  void SemiPlanarYVU420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  void SemiPlanarYVU420Packed32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_YUV420Planar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_CbYCrY(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_YUV420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_YVU420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   bool ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   bool ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, size_t aDataOffset, size_t aSize,
                     int32_t aAudioChannels, int32_t aAudioSampleRate);
@@ -466,11 +468,10 @@ void OmxDecoder::ReleaseAudioBuffer() {
   }
 }
 
-void OmxDecoder::PlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+void OmxDecoder::ToVideoFrame_YUV420Planar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
   void *y = aData;
   void *u = static_cast<uint8_t *>(y) + mVideoStride * mVideoSliceHeight;
   void *v = static_cast<uint8_t *>(u) + mVideoStride/2 * mVideoSliceHeight/2;
-
   aFrame->Set(aTimeUs, aKeyFrame,
               aData, aSize, mVideoStride, mVideoSliceHeight, mVideoRotation,
               y, mVideoStride, mVideoWidth, mVideoHeight, 0, 0,
@@ -478,7 +479,7 @@ void OmxDecoder::PlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aD
               v, mVideoStride/2, mVideoWidth/2, mVideoHeight/2, 0, 0);
 }
 
-void OmxDecoder::CbYCrYFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+void OmxDecoder::ToVideoFrame_CbYCrY(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
   aFrame->Set(aTimeUs, aKeyFrame,
               aData, aSize, mVideoStride, mVideoSliceHeight, mVideoRotation,
               aData, mVideoStride, mVideoWidth, mVideoHeight, 1, 1,
@@ -486,10 +487,9 @@ void OmxDecoder::CbYCrYFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, s
               aData, mVideoStride, mVideoWidth/2, mVideoHeight/2, 2, 3);
 }
 
-void OmxDecoder::SemiPlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+void OmxDecoder::ToVideoFrame_YUV420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
   void *y = aData;
   void *uv = static_cast<uint8_t *>(y) + (mVideoStride * mVideoSliceHeight);
-
   aFrame->Set(aTimeUs, aKeyFrame,
               aData, aSize, mVideoStride, mVideoSliceHeight, mVideoRotation,
               y, mVideoStride, mVideoWidth, mVideoHeight, 0, 0,
@@ -497,13 +497,13 @@ void OmxDecoder::SemiPlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void
               uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 1, 1);
 }
 
-void OmxDecoder::SemiPlanarYVU420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
-  SemiPlanarYUV420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+void OmxDecoder::ToVideoFrame_YVU420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+  ToVideoFrame_YUV420SemiPlanar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
   aFrame->Cb.mOffset = 1;
   aFrame->Cr.mOffset = 0;
 }
 
-void OmxDecoder::SemiPlanarYVU420Packed32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+void OmxDecoder::ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
   size_t roundedSliceHeight = (mVideoSliceHeight + 31) & ~31;
   size_t roundedStride = (mVideoStride + 31) & ~31;
   void *y = aData;
@@ -516,24 +516,21 @@ void OmxDecoder::SemiPlanarYVU420Packed32m4ka(VideoFrame *aFrame, int64_t aTimeU
 }
 
 bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
-  const int OMX_QCOM_COLOR_FormatYVU420SemiPlanar = 0x7FA30C00;
-  const int OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka = 0x7FA30C01;
-
   switch (mVideoColorFormat) {
-  case OMX_COLOR_FormatYUV420Planar:
-    PlanarYUV420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_COLOR_FormatYUV420Planar: // e.g. Asus Transformer, Stagefright's software decoder
+    ToVideoFrame_YUV420Planar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
-  case OMX_COLOR_FormatCbYCrY:
-    CbYCrYFrame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_COLOR_FormatCbYCrY: // e.g. Droid 1
+    ToVideoFrame_CbYCrY(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
-  case OMX_COLOR_FormatYUV420SemiPlanar:
-    SemiPlanarYUV420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_COLOR_FormatYUV420SemiPlanar: // e.g. Galaxy S III
+    ToVideoFrame_YUV420SemiPlanar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
-  case OMX_QCOM_COLOR_FormatYVU420SemiPlanar:
-    SemiPlanarYVU420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_QCOM_COLOR_FormatYVU420SemiPlanar: // e.g. Nexus One
+    ToVideoFrame_YVU420SemiPlanar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
-  case OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka:
-    SemiPlanarYVU420Packed32m4ka(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka: // e.g. Otoro
+    ToVideoFrame_YVU420PackedSemiPlanar32m4ka(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
   default:
     LOG("Unknown video color format: %#x", mVideoColorFormat);
