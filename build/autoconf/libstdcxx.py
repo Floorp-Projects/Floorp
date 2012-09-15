@@ -16,7 +16,6 @@
 import os
 import subprocess
 import re
-import sys
 
 re_for_ld = re.compile('.*\((.*)\).*')
 
@@ -72,19 +71,7 @@ def find_version(e):
     return encode_ver(last_version)
 
 if __name__ == '__main__':
-    if os.uname()[0] == 'Darwin':
-        sdk_dir = os.environ['MACOS_SDK_DIR']
-        if 'MacOSX10.5.sdk' in sdk_dir:
-            target_ver = 0
-            host_ver = 0
-        else:
-            target_ver = encode_ver('3.4.9')
-            host_ver = encode_ver('3.4.9')
-    else:
-        cxx_env = os.environ['CXX']
-        target_ver = find_version(cxx_env)
-        host_cxx_env = os.environ.get('HOST_CXX', cxx_env)
-        host_ver = find_version(host_cxx_env)
-
-    print 'MOZ_LIBSTDCXX_TARGET_VERSION=%s' % target_ver
-    print 'MOZ_LIBSTDCXX_HOST_VERSION=%s' % host_ver
+    cxx_env = os.environ['CXX']
+    print 'MOZ_LIBSTDCXX_TARGET_VERSION=%s' % find_version(cxx_env)
+    host_cxx_env = os.environ.get('HOST_CXX', cxx_env)
+    print 'MOZ_LIBSTDCXX_HOST_VERSION=%s' % find_version(host_cxx_env)

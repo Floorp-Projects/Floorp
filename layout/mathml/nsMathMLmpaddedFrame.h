@@ -6,6 +6,7 @@
 #ifndef nsMathMLmpaddedFrame_h___
 #define nsMathMLmpaddedFrame_h___
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsMathMLContainerFrame.h"
 
@@ -31,12 +32,12 @@ public:
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus);
+         nsReflowStatus&          aStatus) MOZ_OVERRIDE;
   
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
         bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize);
+        nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
 
 protected:
   nsMathMLmpaddedFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}

@@ -492,7 +492,7 @@ pref("dom.experimental_forms", true);
 // Turns on gralloc-based direct texturing for Gonk
 pref("gfx.gralloc.enabled", false);
 
-// XXXX REMOVE FOR PRODUCTION. Turns on GC and CC logging 
+// XXXX REMOVE FOR PRODUCTION. Turns on GC and CC logging
 pref("javascript.options.mem.log", true);
 
 // Increase mark slice time from 10ms to 30ms
@@ -513,9 +513,9 @@ pref("ui.showHideScrollbars", 1);
 // background.
 pref("dom.ipc.processPriorityManager.enabled", true);
 pref("dom.ipc.processPriorityManager.gracePeriodMS", 1000);
-pref("hal.processPriorityManager.gonk.masterOomAdjust", 0);
-pref("hal.processPriorityManager.gonk.foregroundOomAdjust", 1);
-pref("hal.processPriorityManager.gonk.backgroundOomAdjust", 6);
+pref("hal.processPriorityManager.gonk.masterOomScoreAdjust", 0);
+pref("hal.processPriorityManager.gonk.foregroundOomScoreAdjust", 67);
+pref("hal.processPriorityManager.gonk.backgroundOomScoreAdjust", 400);
 pref("hal.processPriorityManager.gonk.masterNice", -1);
 pref("hal.processPriorityManager.gonk.foregroundNice", 0);
 pref("hal.processPriorityManager.gonk.backgroundNice", 10);

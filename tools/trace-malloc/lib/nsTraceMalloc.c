@@ -1053,7 +1053,7 @@ static void alloc_freeentry(void *pool, PLHashEntry *he, unsigned flag)
     if (flag != HT_FREE_ENTRY)
         return;
     alloc = (allocation*) he;
-    if ((PRUptrdiff)(alloc - alloc_heap) < (PRUptrdiff)ALLOC_HEAP_SIZE) {
+    if ((ptrdiff_t)(alloc - alloc_heap) < (ptrdiff_t)ALLOC_HEAP_SIZE) {
         alloc->entry.next = &alloc_freelist->entry;
         alloc_freelist = alloc;
     } else {

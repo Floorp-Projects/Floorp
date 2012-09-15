@@ -10,8 +10,7 @@ import java.util.ArrayList;
 
 public class GeckoApplication extends Application {
 
-    private boolean mInBackground = false;
-    private ArrayList<ApplicationLifecycleCallbacks> mListeners;
+    private boolean mInBackground;
 
     @Override
     public void onCreate() {
@@ -21,50 +20,26 @@ public class GeckoApplication extends Application {
         } catch (ClassNotFoundException e) {}
 
         super.onCreate();
+
+        GeckoConnectivityReceiver.getInstance().init(getApplicationContext());
+        GeckoBatteryManager.getInstance().init(getApplicationContext());
+        GeckoBatteryManager.getInstance().start();
+        GeckoNetworkManager.getInstance().init(getApplicationContext());
     }
 
-    public interface ApplicationLifecycleCallbacks {
-        public void onApplicationPause();
-        public void onApplicationResume();
-    }
-
-    public void addApplicationLifecycleCallbacks(ApplicationLifecycleCallbacks callback) {
-        if (mListeners == null)
-            mListeners = new ArrayList<ApplicationLifecycleCallbacks>();
-
-        mListeners.add(callback);
-    }
-
-    public void removeApplicationLifecycleCallbacks(ApplicationLifecycleCallbacks callback) {
-        if (mListeners == null)
-            return;
-
-        mListeners.remove(callback);
-    }
-
-    public void onActivityPause(GeckoActivity activity) {
-        if (activity.isGeckoActivityOpened())
-            return;
-
-        if (mListeners == null)
-            return;
-
+    protected void onActivityPause(GeckoActivity activity) {
         mInBackground = true;
 
-        for (ApplicationLifecycleCallbacks listener: mListeners)
-            listener.onApplicationPause();
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
+        GeckoConnectivityReceiver.getInstance().stop();
+        GeckoNetworkManager.getInstance().stop();
     }
 
-    public void onActivityResume(GeckoActivity activity) {
-        // This is a misnomer. Should have been "wasGeckoActivityOpened".
-        if (activity.isGeckoActivityOpened())
-            return;
-
-        if (mListeners == null)
-            return;
-
-        for (ApplicationLifecycleCallbacks listener: mListeners)
-            listener.onApplicationResume();
+    protected void onActivityResume(GeckoActivity activity) {
+        if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning))
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(true));
+        GeckoConnectivityReceiver.getInstance().start();
+        GeckoNetworkManager.getInstance().start();
 
         mInBackground = false;
     }

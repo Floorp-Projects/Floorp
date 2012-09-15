@@ -10,6 +10,7 @@
 #ifndef nsScrollbarFrame_h__
 #define nsScrollbarFrame_h__
 
+#include "mozilla/Attributes.h"
 #include "nsBoxFrame.h"
 
 class nsIScrollbarMediator;
@@ -33,38 +34,38 @@ public:
   // nsIFrame overrides
   NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
-                              int32_t aModType);
+                              int32_t aModType) MOZ_OVERRIDE;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus);
+                         nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                                  nsGUIEvent *    aEvent,
                                  nsEventStatus*  aEventStatus,
-                                 bool aControlHeld);
+                                 bool aControlHeld) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus);
+                        nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus*  aEventStatus);
+                           nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
+                  nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
-  virtual nsIAtom* GetType() const;  
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;  
 
   void SetScrollbarMediatorContent(nsIContent* aMediator);
   nsIScrollbarMediator* GetScrollbarMediator();
@@ -78,7 +79,7 @@ public:
    * scrollframe by setting its height or width to zero, that will
    * hide the children too.
    */
-  virtual bool DoesClipChildren() { return true; }
+  virtual bool DoesClipChildren() MOZ_OVERRIDE { return true; }
 
 private:
   nsCOMPtr<nsIContent> mScrollbarMediator;

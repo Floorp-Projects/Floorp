@@ -14,6 +14,7 @@
 #ifndef nsBoxFrame_h___
 #define nsBoxFrame_h___
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
 #include "nsBoxLayout.h"
@@ -70,13 +71,13 @@ public:
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug);
-  NS_IMETHOD GetDebug(bool& aDebug);
+  NS_IMETHOD GetDebug(bool& aDebug) MOZ_OVERRIDE;
 #endif
-  virtual Valignment GetVAlign() const { return mValign; }
-  virtual Halignment GetHAlign() const { return mHalign; }
+  virtual Valignment GetVAlign() const MOZ_OVERRIDE { return mValign; }
+  virtual Halignment GetHAlign() const MOZ_OVERRIDE { return mHalign; }
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
-  virtual bool ComputesOwnOverflowArea() { return false; }
+  virtual bool ComputesOwnOverflowArea() MOZ_OVERRIDE { return false; }
 
   // ----- child and sibling operations ---
 
@@ -84,40 +85,40 @@ public:
   
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIFrame*        asPrevInFlow);
+                   nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
 
  
   NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              int32_t         aModType);
+                              int32_t         aModType) MOZ_OVERRIDE;
 
-  virtual void MarkIntrinsicWidthsDirty();
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
+  virtual void MarkIntrinsicWidthsDirty() MOZ_OVERRIDE;
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD  AppendFrames(ChildListID     aListID,
-                           nsFrameList&    aFrameList);
+                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
   NS_IMETHOD  InsertFrames(ChildListID     aListID,
                            nsIFrame*       aPrevFrame,
-                           nsFrameList&    aFrameList);
+                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
   NS_IMETHOD  RemoveFrame(ChildListID     aListID,
-                          nsIFrame*       aOldFrame);
+                          nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual nsIFrame* GetContentInsertionFrame();
 
   NS_IMETHOD  SetInitialChildList(ChildListID     aListID,
-                                  nsFrameList&    aChildList);
+                                  nsFrameList&    aChildList) MOZ_OVERRIDE;
 
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
 
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const
   {
@@ -137,12 +138,12 @@ public:
   }
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
   NS_IMETHOD DidReflow(nsPresContext*           aPresContext,
                        const nsHTMLReflowState*  aReflowState,
-                       nsDidReflowStatus         aStatus);
+                       nsDidReflowStatus         aStatus) MOZ_OVERRIDE;
 
   virtual bool HonorPrintBackgroundSettings();
 
@@ -158,7 +159,7 @@ public:
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
   
 #ifdef DEBUG_LAYOUT
     virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIFrame* aChild, bool aDebug);
@@ -185,7 +186,7 @@ public:
 
 protected:
 #ifdef DEBUG_LAYOUT
-    virtual void GetBoxName(nsAutoString& aName);
+    virtual void GetBoxName(nsAutoString& aName) MOZ_OVERRIDE;
     void PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
                                  nsPoint aPt);
     void PaintXULDebugOverlay(nsRenderingContext& aRenderingContext,
@@ -199,7 +200,7 @@ protected:
     virtual bool GetInitialVAlignment(Valignment& aValign); 
     virtual bool GetInitialAutoStretch(bool& aStretch); 
   
-    virtual void DestroyFrom(nsIFrame* aDestructRoot);
+    virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
     nsSize mPrefSize;
     nsSize mMinSize;

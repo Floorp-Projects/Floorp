@@ -26,5 +26,7 @@ EXPORTS = \
     nsMediaSniffer.h \
     $(NULL)
 
+TEST_DIRS += test
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk

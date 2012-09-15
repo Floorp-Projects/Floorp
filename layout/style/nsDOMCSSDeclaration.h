@@ -8,6 +8,7 @@
 #ifndef nsDOMCSSDeclaration_h___
 #define nsDOMCSSDeclaration_h___
 
+#include "mozilla/Attributes.h"
 #include "nsICSSDeclaration.h"
 #include "nsIDOMCSS2Properties.h"
 #include "nsCOMPtr.h"
@@ -46,19 +47,19 @@ public:
   // Require subclasses to implement |GetParentRule|.
   //NS_DECL_NSIDOMCSSSTYLEDECLARATION
   NS_IMETHOD GetCssText(nsAString & aCssText);
-  NS_IMETHOD SetCssText(const nsAString & aCssText);
+  NS_IMETHOD SetCssText(const nsAString & aCssText) MOZ_OVERRIDE;
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName,
-                              nsAString & _retval);
+                              nsAString & _retval) MOZ_OVERRIDE;
   NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName,
-                                 nsIDOMCSSValue **_retval);
+                                 nsIDOMCSSValue **_retval) MOZ_OVERRIDE;
   NS_IMETHOD RemoveProperty(const nsAString & propertyName,
                             nsAString & _retval);
   NS_IMETHOD GetPropertyPriority(const nsAString & propertyName,
-                                 nsAString & _retval);
+                                 nsAString & _retval) MOZ_OVERRIDE;
   NS_IMETHOD SetProperty(const nsAString & propertyName,
-                         const nsAString & value, const nsAString & priority);
-  NS_IMETHOD GetLength(uint32_t *aLength);
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
+                         const nsAString & value, const nsAString & priority) MOZ_OVERRIDE;
+  NS_IMETHOD GetLength(uint32_t *aLength) MOZ_OVERRIDE;
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) MOZ_OVERRIDE = 0;
 
   // We implement this as a shim which forwards to GetPropertyValue
   // and SetPropertyValue; subclasses need not.

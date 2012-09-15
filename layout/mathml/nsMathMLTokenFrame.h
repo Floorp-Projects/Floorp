@@ -6,6 +6,7 @@
 #ifndef nsMathMLTokenFrame_h___
 #define nsMathMLTokenFrame_h___
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsMathMLContainerFrame.h"
 
@@ -36,32 +37,32 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(ChildListID     aListID,
-                      nsFrameList&    aChildList);
+                      nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   NS_IMETHOD
   AppendFrames(ChildListID            aListID,
-               nsFrameList&           aChildList);
+               nsFrameList&           aChildList) MOZ_OVERRIDE;
 
   NS_IMETHOD
   InsertFrames(ChildListID            aListID,
                nsIFrame*              aPrevFrame,
-               nsFrameList&           aChildList);
+               nsFrameList&           aChildList) MOZ_OVERRIDE;
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus);
+         nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
         bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize);
+        nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
 
   virtual void MarkIntrinsicWidthsDirty();
 
   virtual nsresult
-  ChildListChanged(int32_t aModType)
+  ChildListChanged(int32_t aModType) MOZ_OVERRIDE
   {
     ProcessTextData();
     return nsMathMLContainerFrame::ChildListChanged(aModType);

@@ -5639,7 +5639,7 @@ js_DecompileFunction(JSPrinter *jp)
 
         if (fun->hasDefaults()) {
             // Since bug 781422, this code is completely wrong. If you ever have
-            // the unfortunate task of reenabling the decompiler, you'll have to
+            // the unenviable task of reenabling the decompiler, you'll have to
             // completely rewrite defaults decompiling.
             MOZ_CRASH();
 

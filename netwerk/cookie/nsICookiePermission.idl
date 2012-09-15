@@ -24,12 +24,13 @@ interface nsICookiePermission : nsISupports
   const nsCookieAccess ACCESS_DENY    = 2;
 
   /**
-   * additional values for nsCookieAccess, which are not directly used by
-   * any methods on this interface, but are nevertheless convenient to define
-   * here. these may be relocated somewhere else if we ever consider freezing
-   * this interface.
+   * additional values for nsCookieAccess which may not match
+   * nsIPermissionManager. Keep 3-7 available to allow nsIPermissionManager to
+   * add values without colliding. ACCESS_SESSION is not directly returned by
+   * any methods on this interface.
    */
   const nsCookieAccess ACCESS_SESSION = 8;
+  const nsCookieAccess ACCESS_ALLOW_FIRST_PARTY_ONLY = 9;
 
   /**
    * setAccess
@@ -58,7 +59,8 @@ interface nsICookiePermission : nsISupports
    *        the channel corresponding to aURI
    *
    * @return one of the following nsCookieAccess values:
-   *         ACCESS_DEFAULT, ACCESS_ALLOW, or ACCESS_DENY
+   *         ACCESS_DEFAULT, ACCESS_ALLOW, ACCESS_DENY, or
+   *         ACCESS_ALLOW_FIRST_PARTY_ONLY
    */
   nsCookieAccess canAccess(in nsIURI     aURI,
                            in nsIChannel aChannel);

@@ -16,27 +16,56 @@
           src="../role.js"></script>
   <script type="application/javascript"
           src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../browser.js"></script>
 
   <script type="application/javascript">
-    function doTest()
+    function addTab(aURL)
     {
-      testStates("div", 0, 0, STATE_INVISIBLE);
+      this.eventSeq = [
+        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
+      ];
+
+      this.invoke = function addTab_invoke()
+      {
+        tabBrowser().loadOneTab(aURL, null, "", null, false);
+      }
+
+      this.finalCheck = function addTab_finalCheck()
+      {
+        var tabDoc = tabDocumentAt(0);
+        var input = getAccessible(tabDoc.getElementById("input"));
+        testStates(input, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+      }
+
+      this.getID = function addTab_getID()
+      {
+        return "add tab: " + aURL;
+      }
+    }
+
+    var gInputDocURI = "data:text/html,<html><input id='input'></html>";
+
+    function doTests()
+    {
+      testStates("div", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
       testStates("div_off", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
-      testStates("div_abschild", 0, 0, STATE_INVISIBLE);
+      testStates("div_abschild", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
 
-      // Confirm destruction of accessibles.
-      document.getElementById("div").style.visibility = "hidden";
-      document.getElementById("div_off").style.visibility="hidden";
-      document.getElementById("div_abschild").style.visibility="hidden";
-      document.body.clientWidth; // flush layout
-      testAccessibleTree("outer_div", {children:[]});
+      gQueue = new eventQueue();
 
+      // Accessibles in background tab should have offscreen state and no
+      // invisible state.
+      gQueue.push(new addTab("about:blank"));
 
-      SimpleTest.finish();
+      gQueue.onFinish = function() { closeBrowserWindow(); }
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    openBrowserWindow(doTests, gInputDocURI);
   </script>
 
 </head>

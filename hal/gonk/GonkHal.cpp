@@ -59,6 +59,28 @@
 #define NsecPerMsec  1000000
 #define NsecPerSec   1000000000
 
+// The header linux/oom.h is not available in bionic libc. We
+// redefine some of its constants here.
+
+#ifndef OOM_DISABLE
+#define OOM_DISABLE  (-17)
+#endif
+
+#ifndef OOM_ADJUST_MIN
+#define OOM_ADJUST_MIN  (-16)
+#endif
+
+#ifndef OOM_ADJUST_MAX
+#define OOM_ADJUST_MAX  15
+#endif
+
+#ifndef OOM_SCORE_ADJ_MIN
+#define OOM_SCORE_ADJ_MIN  (-1000)
+#endif
+
+#ifndef OOM_SCORE_ADJ_MAX
+#define OOM_SCORE_ADJ_MAX  1000
+#endif
 
 using namespace mozilla;
 using namespace mozilla::hal;
@@ -89,7 +111,7 @@ public:
     }
 
     os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, /* weak ref */ true);
-  } 
+  }
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
@@ -371,19 +393,21 @@ bool ReadFromFile(const char *filename, char (&buf)[n])
   return true;
 }
 
-void WriteToFile(const char *filename, const char *toWrite)
+bool WriteToFile(const char *filename, const char *toWrite)
 {
   int fd = open(filename, O_WRONLY);
   ScopedClose autoClose(fd);
   if (fd < 0) {
     HAL_LOG(("Unable to open file %s.", filename));
-    return;
+    return false;
   }
 
   if (write(fd, toWrite, strlen(toWrite)) < 0) {
     HAL_LOG(("Unable to write to file %s.", filename));
-    return;
+    return false;
   }
+
+  return true;
 }
 
 // We can write to screenEnabledFilename to enable/disable the screen, but when
@@ -568,9 +592,9 @@ GetLight(hal::LightType light, hal::LightConfiguration* aConfig)
 }
 
 /**
- * clock_settime() is not exposed through bionic. 
+ * clock_settime() is not exposed through bionic.
  * we define the new function to set system time.
- * The result is the same as using clock_settime() system call.     
+ * The result is the same as using clock_settime() system call.
  */
 static int
 sys_clock_settime(clockid_t clk_id, const struct timespec *tp)
@@ -578,16 +602,16 @@ sys_clock_settime(clockid_t clk_id, const struct timespec *tp)
   return syscall(__NR_clock_settime, clk_id, tp);
 }
 
-void 
+void
 AdjustSystemClock(int32_t aDeltaMilliseconds)
 {
   if (aDeltaMilliseconds == 0) {
     return;
   }
-  
+
   struct timespec now;
-  
-  // Preventing context switch before setting system clock 
+
+  // Preventing context switch before setting system clock
   sched_yield();
   clock_gettime(CLOCK_REALTIME, &now);
   now.tv_sec += aDeltaMilliseconds/1000;
@@ -601,18 +625,18 @@ AdjustSystemClock(int32_t aDeltaMilliseconds)
   if (now.tv_nsec < 0)
   {
     now.tv_nsec += NsecPerSec;
-    now.tv_sec -= 1;  
+    now.tv_sec -= 1;
   }
-  // we need to have root privilege. 
+  // we need to have root privilege.
   if (sys_clock_settime(CLOCK_REALTIME, &now) != 0) {
     NS_ERROR("sys_clock_settime failed");
     return;
   }
-  
+
   hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_CLOCK);
 }
 
-void 
+void
 SetTimezone(const nsCString& aTimezoneSpec)
 {
   if (aTimezoneSpec.Equals(GetTimezone())) {
@@ -620,13 +644,13 @@ SetTimezone(const nsCString& aTimezoneSpec)
   }
 
   property_set("persist.sys.timezone", aTimezoneSpec.get());
-  // this function is automatically called by the other time conversion 
-  // functions that depend on the timezone. To be safe, we call it manually.  
+  // this function is automatically called by the other time conversion
+  // functions that depend on the timezone. To be safe, we call it manually.
   tzset();
   hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_TZ);
 }
 
-nsCString 
+nsCString
 GetTimezone()
 {
   char timezone[32];
@@ -704,7 +728,7 @@ private:
 };
 
 // Runs on alarm-watcher thread.
-static void 
+static void
 DestroyAlarmData(void* aData)
 {
   AlarmData* alarmData = static_cast<AlarmData*>(aData);
@@ -720,7 +744,7 @@ void ShutDownAlarm(int aSigno)
   return;
 }
 
-static void* 
+static void*
 WaitForAlarm(void* aData)
 {
   pthread_cleanup_push(DestroyAlarmData, aData);
@@ -738,7 +762,7 @@ WaitForAlarm(void* aData)
       alarmTypeFlags = ioctl(alarmData->mFd, ANDROID_ALARM_WAIT);
     } while (alarmTypeFlags < 0 && errno == EINTR && !alarmData->mShuttingDown);
 
-    if (!alarmData->mShuttingDown && 
+    if (!alarmData->mShuttingDown &&
         alarmTypeFlags >= 0 && (alarmTypeFlags & ANDROID_ALARM_RTC_WAKEUP_MASK)) {
       NS_DispatchToMainThread(new AlarmFiredEvent(alarmData->mGeneration));
     }
@@ -826,6 +850,23 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
   return true;
 }
 
+static int
+oomAdjOfOomScoreAdj(int aOomScoreAdj)
+{
+  // Convert OOM adjustment from the domain of /proc/<pid>/oom_score_adj
+  // to thew domain of /proc/<pid>/oom_adj.
+
+  int adj;
+
+  if (aOomScoreAdj < 0) {
+    adj = (OOM_DISABLE * aOomScoreAdj) / OOM_SCORE_ADJ_MIN;
+  } else {
+    adj = (OOM_ADJUST_MAX * aOomScoreAdj) / OOM_SCORE_ADJ_MAX;
+  }
+
+  return adj;
+}
+
 void
 SetProcessPriority(int aPid, ProcessPriority aPriority)
 {
@@ -849,13 +890,34 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
   // Notice that you can disable oom_adj and renice by deleting the prefs
   // hal.processPriorityManager{foreground,background,master}{OomAdjust,Nice}.
 
-  int32_t oomAdj = 0;
+  int32_t oomScoreAdj = 0;
   nsresult rv = Preferences::GetInt(nsPrintfCString(
-    "hal.processPriorityManager.gonk.%sOomAdjust", priorityStr).get(), &oomAdj);
+    "hal.processPriorityManager.gonk.%sOomScoreAdjust",
+    priorityStr).get(), &oomScoreAdj);
+
   if (NS_SUCCEEDED(rv)) {
-    HAL_LOG(("Setting oom_adj for pid %d to %d", aPid, oomAdj));
-    WriteToFile(nsPrintfCString("/proc/%d/oom_adj", aPid).get(),
-                nsPrintfCString("%d", oomAdj).get());
+
+    int clampedOomScoreAdj = clamped<int>(oomScoreAdj, OOM_SCORE_ADJ_MIN,
+                                                       OOM_SCORE_ADJ_MAX);
+    if(clampedOomScoreAdj != oomScoreAdj) {
+      HAL_LOG(("Clamping OOM adjustment for pid %d to %d",
+               aPid, clampedOomScoreAdj));
+    } else {
+      HAL_LOG(("Setting OOM adjustment for pid %d to %d",
+               aPid, clampedOomScoreAdj));
+    }
+
+    // We try the newer interface first, and fall back to the older interface
+    // on failure.
+
+    if (!WriteToFile(nsPrintfCString("/proc/%d/oom_score_adj", aPid).get(),
+                     nsPrintfCString("%d", clampedOomScoreAdj).get()))
+    {
+      int oomAdj = oomAdjOfOomScoreAdj(clampedOomScoreAdj);
+
+      WriteToFile(nsPrintfCString("/proc/%d/oom_adj", aPid).get(),
+                  nsPrintfCString("%d", oomAdj).get());
+    }
   }
 
   int32_t nice = 0;

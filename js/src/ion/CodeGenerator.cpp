@@ -2401,7 +2401,7 @@ CodeGenerator::emitArrayPopShift(LInstruction *lir, const MArrayPopShift *mir, R
                                  Register elementsTemp, Register lengthTemp, TypedOrValueRegister out)
 {
     OutOfLineCode *ool;
-    typedef bool (*pf)(JSContext *, JSObject *, Value *);
+    typedef bool (*pf)(JSContext *, HandleObject, MutableHandleValue);
 
     if (mir->mode() == MArrayPopShift::Pop) {
         static const VMFunction Info = FunctionInfo<pf>(ion::ArrayPopDense);
@@ -2498,7 +2498,7 @@ bool
 CodeGenerator::emitArrayPush(LInstruction *lir, const MArrayPush *mir, Register obj,
                              ConstantOrRegister value, Register elementsTemp, Register length)
 {
-    typedef bool (*pf)(JSContext *, JSObject *, HandleValue, uint32_t *);
+    typedef bool (*pf)(JSContext *, HandleObject, HandleValue, uint32_t *);
     static const VMFunction Info = FunctionInfo<pf>(ion::ArrayPushDense);
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), obj, value), StoreRegisterTo(length));
     if (!ool)

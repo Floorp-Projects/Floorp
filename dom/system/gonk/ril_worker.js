@@ -1059,6 +1059,7 @@ let RIL = {
    * Fetch ICC records.
    */
   fetchICCRecords: function fetchICCRecords() {
+    this.getICCID();
     this.getIMSI();
     this.getMSISDN();
     this.getAD();
@@ -1089,6 +1090,35 @@ let RIL = {
     Buf.writeUint32(1);
     Buf.writeString(aid ? aid : this.aid);
     Buf.sendParcel();
+  },
+
+  /**
+   * Read the ICCD from the ICC card.
+   */
+  getICCID: function getICCID() {
+    function callback() {
+      let length = Buf.readUint32();
+      this.iccInfo.iccid = GsmPDUHelper.readSwappedNibbleBcdString(length / 2);
+      Buf.readStringDelimiter(length);
+
+      if (DEBUG) debug("ICCID: " + this.iccInfo.iccid);
+      if (this.iccInfo.iccid) {
+        this._handleICCInfoChange();
+      }
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_ICCID,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_ICCID),
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
+    });
   },
 
   /**
@@ -2329,10 +2359,20 @@ let RIL = {
       return null;
     }
 
+    // Here we handle only file ids that are common to RUIM, SIM, USIM
+    // and other types of ICC cards.
+    switch (fileId) {
+      case ICC_EF_ICCID:
+        return EF_PATH_MF_SIM;
+      case ICC_EF_ADN:
+        return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
+      case ICC_EF_PBR:
+        return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
+    }
+
     switch (app.app_type) {
       case CARD_APPTYPE_SIM:
         switch (fileId) {
-          case ICC_EF_ADN:
           case ICC_EF_FDN:
           case ICC_EF_MSISDN:
             return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
@@ -2341,21 +2381,16 @@ let RIL = {
           case ICC_EF_MBDN:
           case ICC_EF_UST:
             return EF_PATH_MF_SIM + EF_PATH_DF_GSM;
-          case ICC_EF_PBR:
-            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
         }
       case CARD_APPTYPE_USIM:
         switch (fileId) {
           case ICC_EF_AD:
+          case ICC_EF_FDN:
           case ICC_EF_MBDN:
           case ICC_EF_UST:
           case ICC_EF_MSISDN:
             return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
-          case ICC_EF_ADN:
-          case ICC_EF_FDN:
-            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
-          case ICC_EF_PBR:
-            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
+
           default:
             // The file ids in USIM phone book entries are decided by the
 	    // card manufacturer. So if we don't match any of the cases
