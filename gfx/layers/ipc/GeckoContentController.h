@@ -31,6 +31,13 @@ public:
    */
   virtual void HandleDoubleTap(const nsIntPoint& aPoint) = 0;
 
+  /**
+   * Requests handling a single tap. |aPoint| is in CSS pixels, relative to the
+   * current scroll offset. This should simulate and send to content a mouse
+   * button down, then mouse button up at |aPoint|.
+   */
+  virtual void HandleSingleTap(const nsIntPoint& aPoint) = 0;
+
   GeckoContentController() {}
   virtual ~GeckoContentController() {}
 };
