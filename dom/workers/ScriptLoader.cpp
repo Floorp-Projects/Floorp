@@ -496,6 +496,12 @@ public:
       }
 
       mWorkerPrivate->SetPrincipal(channelPrincipal);
+
+      // Set Eval and ContentSecurityPolicy
+      if (parent) {
+        mWorkerPrivate->SetCSP(parent->GetCSP());
+        mWorkerPrivate->SetEvalAllowed(parent->IsEvalAllowed());
+      }
     }
 
     return NS_OK;
