@@ -1642,6 +1642,12 @@
             return "passwords";
           if (type == "editBookmarkPanel")
             return "bookmarks";
+          if (type == "addon-install-complete") {
+            if (!Services.prefs.prefHasUserValue("services.sync.username"))
+              return "addons";
+            if (!Services.prefs.getBoolPref("services.sync.engine.addons"))
+              return "addons-sync-disabled";
+          }
           return null;
         ]]></getter>
       </property>
@@ -1651,6 +1657,14 @@
             "syncPromoNotification." + this._notificationType + ".description",
             [this._brandBundle.GetStringFromName("syncBrandShortName")]
           );
+        ]]></getter>
+      </property>
+      <property name="_notificationLink">
+        <getter><![CDATA[
+          if (this._notificationType == "addons-sync-disabled") {
+            return "https://support.mozilla.org/kb/how-do-i-enable-add-sync";
+          }
+          return "https://services.mozilla.com/sync/";
         ]]></getter>
       </property>
       <method name="onCloseButtonCommand">
@@ -1683,7 +1697,8 @@
 
           let viewsLeft = this._viewsLeft;
           if (viewsLeft) {
-            if (Services.prefs.prefHasUserValue("services.sync.username")) {
+            if (Services.prefs.prefHasUserValue("services.sync.username") &&
+               this._notificationType != "addons-sync-disabled") {
               // If the user has already setup Sync, don't show the notification.
               this._viewsLeft = 0;
               // Be sure to hide the panel, in case it was visible and the user
@@ -1696,7 +1711,7 @@
               this._viewsLeft = viewsLeft - 1;
             }
 
-            this._promolink.setAttribute("href", "https://services.mozilla.com/sync/");
+            this._promolink.setAttribute("href", this._notificationLink);
             this._promolink.value = gNavigatorBundle.getString("syncPromoNotification.learnMoreLinkText");
 
             this.hidden = false;
