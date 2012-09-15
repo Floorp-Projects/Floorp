@@ -459,6 +459,7 @@ MAKEFILES_xulapp="
   toolkit/components/apppicker/Makefile
   toolkit/components/Makefile
   toolkit/components/build/Makefile
+  toolkit/components/captivedetect/Makefile
   toolkit/components/commandlines/Makefile
   toolkit/components/console/Makefile
   toolkit/components/contentprefs/Makefile
