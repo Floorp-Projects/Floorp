@@ -6,6 +6,7 @@
 #ifndef NSSVGEFFECTS_H_
 #define NSSVGEFFECTS_H_
 
+#include "mozilla/Attributes.h"
 #include "FramePropertyTable.h"
 #include "mozilla/dom/Element.h"
 #include "nsHashKeys.h"
@@ -112,10 +113,10 @@ public:
   virtual ~nsSVGIDRenderingObserver();
 
 protected:
-  Element* GetTarget() { return mElement.get(); }
+  Element* GetTarget() MOZ_OVERRIDE { return mElement.get(); }
 
   // This is called when the referenced resource changes.
-  virtual void DoUpdate();
+  virtual void DoUpdate() MOZ_OVERRIDE;
 
   class SourceReference : public nsReferencedElement {
   public:
@@ -167,7 +168,7 @@ public:
 
 private:
   // nsSVGRenderingObserver
-  virtual void DoUpdate();
+  virtual void DoUpdate() MOZ_OVERRIDE;
 };
 
 class nsSVGMarkerProperty : public nsSVGIDRenderingObserver {
@@ -176,7 +177,7 @@ public:
     : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
-  virtual void DoUpdate();
+  virtual void DoUpdate() MOZ_OVERRIDE;
 };
 
 class nsSVGTextPathProperty : public nsSVGIDRenderingObserver {
@@ -185,7 +186,7 @@ public:
     : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
-  virtual void DoUpdate();
+  virtual void DoUpdate() MOZ_OVERRIDE;
 };
  
 class nsSVGPaintingProperty : public nsSVGIDRenderingObserver {
@@ -194,7 +195,7 @@ public:
     : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
-  virtual void DoUpdate();
+  virtual void DoUpdate() MOZ_OVERRIDE;
 };
 
 /**

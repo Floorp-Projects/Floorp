@@ -216,6 +216,9 @@ typedef JS::Handle<JSAtom*>            HandleAtom;
 typedef JS::Handle<PropertyName*>      HandlePropertyName;
 
 typedef JS::MutableHandle<Shape*>      MutableHandleShape;
+typedef JS::MutableHandle<JSAtom*>     MutableHandleAtom;
+
+typedef JSAtom *                       RawAtom;
 
 typedef JS::Rooted<Shape*>             RootedShape;
 typedef JS::Rooted<BaseShape*>         RootedBaseShape;

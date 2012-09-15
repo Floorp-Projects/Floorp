@@ -6,6 +6,7 @@
 #ifndef nsMathMLmrootFrame_h___
 #define nsMathMLmrootFrame_h___
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsMathMLContainerFrame.h"
 
@@ -31,20 +32,20 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  TransmitAutomaticData();
+  TransmitAutomaticData() MOZ_OVERRIDE;
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus);
+         nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nscoord
-  GetIntrinsicWidth(nsRenderingContext* aRenderingContext);
+  GetIntrinsicWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
 protected:
   nsMathMLmrootFrame(nsStyleContext* aContext);

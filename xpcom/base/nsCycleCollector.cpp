@@ -1345,8 +1345,13 @@ public:
         nsCOMPtr<nsIConsoleService> cs =
             do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
-            cs->LogStringMessage(NS_ConvertUTF8toUTF16(ccname).get());
-            cs->LogStringMessage(NS_ConvertUTF8toUTF16(gcname).get());
+            nsString msg = NS_LITERAL_STRING("Cycle Collector log dumped to ");
+            AppendUTF8toUTF16(ccname, msg);
+            cs->LogStringMessage(msg.get());
+
+            msg = NS_LITERAL_STRING("Garbage Collector log dumped to ");
+            AppendUTF8toUTF16(gcname, msg);
+            cs->LogStringMessage(msg.get());
         }
 
         return NS_OK;

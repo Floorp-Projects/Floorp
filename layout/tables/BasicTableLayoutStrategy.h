@@ -12,6 +12,7 @@
 #ifndef BasicTableLayoutStrategy_h_
 #define BasicTableLayoutStrategy_h_
 
+#include "mozilla/Attributes.h"
 #include "nsITableLayoutStrategy.h"
 
 class nsTableFrame;
@@ -23,11 +24,11 @@ public:
     virtual ~BasicTableLayoutStrategy();
 
     // nsITableLayoutStrategy implementation
-    virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext);
+    virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
     virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext,
-                                 bool aComputingSize);
-    virtual void MarkIntrinsicWidthsDirty();
-    virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState);
+                                 bool aComputingSize) MOZ_OVERRIDE;
+    virtual void MarkIntrinsicWidthsDirty() MOZ_OVERRIDE;
+    virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState) MOZ_OVERRIDE;
 
 private:
     // NOTE: Using prefix "BTLS" to avoid overlapping names with 

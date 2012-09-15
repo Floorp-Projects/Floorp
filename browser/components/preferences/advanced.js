@@ -316,10 +316,6 @@ var gAdvancedPane = {
       }
     }
 
-    var storageManager = Components.classes["@mozilla.org/dom/storagemanager;1"].
-                         getService(Components.interfaces.nsIDOMStorageManager);
-    usage += storageManager.getUsage(host);
-
     return usage;
   },
 
@@ -406,12 +402,6 @@ var gAdvancedPane = {
             cache.discard();
         }
     }
-
-    // send out an offline-app-removed signal.  The nsDOMStorage
-    // service will clear DOM storage for this host.
-    var obs = Components.classes["@mozilla.org/observer-service;1"]
-                        .getService(Components.interfaces.nsIObserverService);
-    obs.notifyObservers(null, "offline-app-removed", host);
 
     // remove the permission
     var pm = Components.classes["@mozilla.org/permissionmanager;1"]

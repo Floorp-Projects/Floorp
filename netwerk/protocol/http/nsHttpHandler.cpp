@@ -131,9 +131,9 @@ nsHttpHandler::nsHttpHandler()
     , mHttpVersion(NS_HTTP_VERSION_1_1)
     , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
-    , mProxyCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
     , mFastFallbackToIPv4(false)
+    , mProxyPipelining(true)
     , mIdleTimeout(PR_SecondsToInterval(10))
     , mSpdyTimeout(PR_SecondsToInterval(180))
     , mMaxRequestAttempts(10)
@@ -167,6 +167,7 @@ nsHttpHandler::nsHttpHandler()
     , mDoNotTrackEnabled(false)
     , mTelemetryEnabled(false)
     , mAllowExperiments(true)
+    , mHandlerActive(false)
     , mEnableSpdy(false)
     , mSpdyV2(true)
     , mSpdyV3(true)
@@ -264,6 +265,7 @@ nsHttpHandler::Init()
     }
 
     mSessionStartTime = NowInSeconds();
+    mHandlerActive = true;
 
     rv = mAuthCache.Init();
     if (NS_FAILED(rv)) return rv;
@@ -331,8 +333,7 @@ nsHttpHandler::InitConnectionMgr()
 }
 
 nsresult
-nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
-                                         uint8_t caps)
+nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request)
 {
     nsresult rv;
 
@@ -356,6 +357,20 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     rv = request->SetHeader(nsHttp::Accept_Encoding, mAcceptEncodings);
     if (NS_FAILED(rv)) return rv;
 
+    // Add the "Do-Not-Track" header
+    if (mDoNotTrackEnabled) {
+      rv = request->SetHeader(nsHttp::DoNotTrack,
+                              NS_LITERAL_CSTRING("1"));
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsHttpHandler::AddConnectionHeader(nsHttpHeaderArray *request,
+                                   uint8_t caps)
+{
     // RFC2616 section 19.6.2 states that the "Connection: keep-alive"
     // and "Keep-alive" request headers should not be sent by HTTP/1.1
     // user-agents.  But this is not a problem in practice, and the
@@ -367,13 +382,6 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     const nsACString *connectionType = &close;
     if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
         connectionType = &keepAlive;
-    }
-
-    // Add the "Do-Not-Track" header
-    if (mDoNotTrackEnabled) {
-      rv = request->SetHeader(nsHttp::DoNotTrack,
-                              NS_LITERAL_CSTRING("1"));
-      if (NS_FAILED(rv)) return rv;
     }
 
     return request->SetHeader(nsHttp::Connection, *connectionType);
@@ -943,12 +951,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(HTTP_PREF("proxy.pipelining"))) {
         rv = prefs->GetBoolPref(HTTP_PREF("proxy.pipelining"), &cVar);
-        if (NS_SUCCEEDED(rv)) {
-            if (cVar)
-                mProxyCapabilities |=  NS_HTTP_ALLOW_PIPELINING;
-            else
-                mProxyCapabilities &= ~NS_HTTP_ALLOW_PIPELINING;
-        }
+        if (NS_SUCCEEDED(rv))
+            mProxyPipelining = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("qos"))) {
@@ -1375,7 +1379,7 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result)
         }
     }
 
-    return NewProxiedChannel(uri, nullptr, result);
+    return NewProxiedChannel(uri, nullptr, 0, nullptr, result);
 }
 
 NS_IMETHODIMP
@@ -1393,6 +1397,8 @@ nsHttpHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 NS_IMETHODIMP
 nsHttpHandler::NewProxiedChannel(nsIURI *uri,
                                  nsIProxyInfo* givenProxyInfo,
+                                 uint32_t proxyResolveFlags,
+                                 nsIURI *proxyURI,
                                  nsIChannel **result)
 {
     nsRefPtr<HttpBaseChannel> httpChannel;
@@ -1417,13 +1423,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
         httpChannel = new nsHttpChannel();
     }
 
-    // select proxy caps if using a non-transparent proxy.  SSL tunneling
-    // should not use proxy settings.
-    int8_t caps;
-    if (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http") && !https)
-        caps = mProxyCapabilities;
-    else
-        caps = mCapabilities;
+    uint8_t caps = mCapabilities;
 
     if (https) {
         // enable pipelining over SSL if requested
@@ -1436,7 +1436,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
         }
     }
 
-    rv = httpChannel->Init(uri, caps, proxyInfo);
+    rv = httpChannel->Init(uri, caps, proxyInfo, proxyResolveFlags, proxyURI);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1508,6 +1508,8 @@ nsHttpHandler::Observe(nsISupports *subject,
     }
     else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
              strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {
+
+        mHandlerActive = false;
 
         // clear cache of all authentication credentials.
         mAuthCache.ClearAll();

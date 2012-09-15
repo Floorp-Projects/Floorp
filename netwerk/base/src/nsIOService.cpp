@@ -39,6 +39,9 @@
 #include "nsIConsoleService.h"
 #include "nsIUploadChannel2.h"
 #include "nsXULAppAPI.h"
+#include "nsIProxiedChannel.h"
+#include "nsIProtocolProxyCallback.h"
+#include "nsICancelable.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -576,31 +579,6 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
     return NewChannelFromURIWithProxyFlags(aURI, nullptr, 0, result);
 }
 
-void
-nsIOService::LookupProxyInfo(nsIURI *aURI,
-                             nsIURI *aProxyURI,
-                             uint32_t aProxyFlags,
-                             nsCString *aScheme,
-                             nsIProxyInfo **outPI)
-{
-    nsresult rv;
-    nsCOMPtr<nsIProxyInfo> pi;
-
-    if (!mProxyService) {
-        mProxyService = do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
-        if (!mProxyService)
-            NS_WARNING("failed to get protocol proxy service");
-    }
-    if (mProxyService) {
-        rv = mProxyService->Resolve(aProxyURI ? aProxyURI : aURI, aProxyFlags,
-                                    getter_AddRefs(pi));
-        if (NS_FAILED(rv))
-            pi = nullptr;
-    }
-    pi.forget(outPI);
-}
-
-
 NS_IMETHODIMP
 nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
                                              nsIURI *aProxyURI,
@@ -625,26 +603,11 @@ nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
     if (NS_FAILED(rv))
         return rv;
 
-    // Talk to the PPS if the protocol handler allows proxying.  Otherwise,
-    // skip this step.  This allows us to lazily load the PPS at startup.
-    if (protoFlags & nsIProtocolHandler::ALLOWS_PROXY) {
-        nsCOMPtr<nsIProxyInfo> pi;
-        LookupProxyInfo(aURI, aProxyURI, aProxyFlags, &scheme, getter_AddRefs(pi));
-        if (pi) {
-            nsAutoCString type;
-            if (NS_SUCCEEDED(pi->GetType(type)) && type.EqualsLiteral("http")) {
-                // we are going to proxy this channel using an http proxy
-                rv = GetProtocolHandler("http", getter_AddRefs(handler));
-                if (NS_FAILED(rv))
-                    return rv;
-            }
-            nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
-            if (pph)
-                return pph->NewProxiedChannel(aURI, pi, result);
-        }
-    }
-
-    rv = handler->NewChannel(aURI, result);
+    nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
+    if (pph)
+        rv = pph->NewProxiedChannel(aURI, nullptr, aProxyFlags, aProxyURI, result);
+    else
+        rv = handler->NewChannel(aURI, result);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Some extensions override the http protocol handler and provide their own
@@ -1212,35 +1175,79 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
 }
 
 // nsISpeculativeConnect
-NS_IMETHODIMP
-nsIOService::SpeculativeConnect(nsIURI *aURI,
-                                nsIInterfaceRequestor *aCallbacks,
-                                nsIEventTarget *aTarget)
+class IOServiceProxyCallback MOZ_FINAL : public nsIProtocolProxyCallback
 {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIPROTOCOLPROXYCALLBACK
+
+    IOServiceProxyCallback(nsIInterfaceRequestor *aCallbacks,
+                           nsIEventTarget *aTarget,
+                           nsIOService *aIOService)
+        : mCallbacks(aCallbacks)
+        , mTarget(aTarget)
+        , mIOService(aIOService)
+    { }
+
+private:
+    nsRefPtr<nsIInterfaceRequestor> mCallbacks;
+    nsRefPtr<nsIEventTarget>        mTarget;
+    nsRefPtr<nsIOService>           mIOService;
+};
+
+NS_IMPL_ISUPPORTS1(IOServiceProxyCallback, nsIProtocolProxyCallback)
+
+NS_IMETHODIMP
+IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request, nsIURI *aURI,
+                                         nsIProxyInfo *pi, nsresult status)
+{
+    // Checking proxy status for speculative connect
+    nsAutoCString type;
+    if (NS_SUCCEEDED(status) && pi &&
+        NS_SUCCEEDED(pi->GetType(type)) &&
+        !type.EqualsLiteral("direct")) {
+        // proxies dont do speculative connect
+        return NS_OK;
+    }
+
     nsAutoCString scheme;
     nsresult rv = aURI->GetScheme(scheme);
     if (NS_FAILED(rv))
-        return rv;
-
-    // Check for proxy information. If there is a proxy configured then a
-    // speculative connect should not be performed because the potential
-    // reward is slim with tcp peers closely located to the browser.
-    nsCOMPtr<nsIProxyInfo> pi;
-    LookupProxyInfo(aURI, nullptr, 0, &scheme, getter_AddRefs(pi));
-    if (pi) 
         return NS_OK;
 
     nsCOMPtr<nsIProtocolHandler> handler;
-    rv = GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+    rv = mIOService->GetProtocolHandler(scheme.get(),
+                                        getter_AddRefs(handler));
     if (NS_FAILED(rv))
-        return rv;
+        return NS_OK;
 
     nsCOMPtr<nsISpeculativeConnect> speculativeHandler =
         do_QueryInterface(handler);
     if (!speculativeHandler)
         return NS_OK;
 
-    return speculativeHandler->SpeculativeConnect(aURI,
-                                                  aCallbacks,
-                                                  aTarget);
+    speculativeHandler->SpeculativeConnect(aURI,
+                                           mCallbacks,
+                                           mTarget);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::SpeculativeConnect(nsIURI *aURI,
+                                nsIInterfaceRequestor *aCallbacks,
+                                nsIEventTarget *aTarget)
+{
+    // Check for proxy information. If there is a proxy configured then a
+    // speculative connect should not be performed because the potential
+    // reward is slim with tcp peers closely located to the browser.
+    nsresult rv;
+    nsCOMPtr<nsIProtocolProxyService> pps =
+            do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsICancelable> cancelable;
+    nsRefPtr<IOServiceProxyCallback> callback =
+        new IOServiceProxyCallback(aCallbacks, aTarget, this);
+    return pps->AsyncResolve(aURI, 0, callback, getter_AddRefs(cancelable));
 }

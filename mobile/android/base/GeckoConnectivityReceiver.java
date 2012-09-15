@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -25,49 +24,59 @@ public class GeckoConnectivityReceiver extends BroadcastReceiver {
 
     private static final String LOGTAG = "GeckoConnectivityReceiver";
 
+    private static GeckoConnectivityReceiver sInstance = new GeckoConnectivityReceiver();
+
     private IntentFilter mFilter;
+    private Context mApplicationContext;
+    private boolean mIsEnabled;
 
-    private static boolean isRegistered = false;
+    public static GeckoConnectivityReceiver getInstance() {
+        return sInstance;
+    }
 
-    public GeckoConnectivityReceiver() {
+    private GeckoConnectivityReceiver() {
         mFilter = new IntentFilter();
         mFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
     }
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        String status;
-        ConnectivityManager cm = (ConnectivityManager)
-            context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo info = cm.getActiveNetworkInfo();
-        if (info == null)
-            status = LINK_DATA_UNKNOWN;
-        else if (!info.isConnected())
-            status = LINK_DATA_DOWN;
-        else
-            status = LINK_DATA_UP;
-
-        if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning))
-            GeckoAppShell.onChangeNetworkLinkStatus(status);
+    public void init(Context context) {
+        mApplicationContext = context.getApplicationContext();
     }
 
-    public void registerFor(Activity activity) {
-        if (!isRegistered) {
-            // registerReciever will return null if registering fails
-            isRegistered = activity.registerReceiver(this, mFilter) != null;
-            if (!isRegistered)
+    public synchronized void start() {
+        if (!mIsEnabled) {
+            // registerReceiver will return null if registering fails
+            if (mApplicationContext.registerReceiver(this, mFilter) == null) {
                 Log.e(LOGTAG, "Registering receiver failed");
+            } else {
+                mIsEnabled = true;
+            }
         }
     }
 
-    public void unregisterFor(Activity activity) {
-        if (isRegistered) {
-            try {
-                activity.unregisterReceiver(this);
-            } catch (IllegalArgumentException iae) {
-                Log.e(LOGTAG, "Unregistering receiver failed", iae);
-            }
-            isRegistered = false;
+    public synchronized void stop() {
+        if (mIsEnabled) {
+            mApplicationContext.unregisterReceiver(this);
+            mIsEnabled = false;
+        }
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = cm.getActiveNetworkInfo();
+
+        String status;
+        if (info == null) {
+            status = LINK_DATA_UNKNOWN;
+        } else if (!info.isConnected()) {
+            status = LINK_DATA_DOWN;
+        } else {
+            status = LINK_DATA_UP;
+        }
+
+        if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
+            GeckoAppShell.onChangeNetworkLinkStatus(status);
         }
     }
 }

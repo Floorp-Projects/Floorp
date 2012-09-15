@@ -8,6 +8,7 @@
 #ifndef nsPresContext_h___
 #define nsPresContext_h___
 
+#include "mozilla/Attributes.h"
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -1259,7 +1260,7 @@ public:
    */
   void DidApplyPluginGeometryUpdates();
 
-  virtual bool IsRoot() { return true; }
+  virtual bool IsRoot() MOZ_OVERRIDE { return true; }
 
   /**
    * Call this after reflow and scrolling to ensure that the geometry

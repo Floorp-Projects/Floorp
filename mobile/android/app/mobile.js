@@ -60,7 +60,6 @@ pref("image.cache.size", 1048576); // bytes
 pref("browser.offline-apps.notify", true);
 pref("browser.cache.offline.enable", true);
 pref("browser.cache.offline.capacity", 5120); // kilobytes
-pref("offline-apps.quota.max", 2048); // kilobytes
 pref("offline-apps.quota.warn", 1024); // kilobytes
 
 // cache compression turned off for now - see bug #715198

@@ -6,6 +6,7 @@
 #ifndef nsSliderFrame_h__
 #define nsSliderFrame_h__
 
+#include "mozilla/Attributes.h"
 #include "nsRepeatService.h"
 #include "nsBoxFrame.h"
 #include "prtypes.h"
@@ -47,54 +48,54 @@ public:
   virtual ~nsSliderFrame();
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
     return MakeFrameName(NS_LITERAL_STRING("SliderFrame"), aResult);
   }
 #endif
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 
   // nsIFrame overrides
   NS_IMETHOD  AppendFrames(ChildListID     aListID,
-                           nsFrameList&    aFrameList);
+                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
   NS_IMETHOD  InsertFrames(ChildListID     aListID,
                            nsIFrame*       aPrevFrame,
-                           nsFrameList&    aFrameList);
+                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
   NS_IMETHOD  RemoveFrame(ChildListID     aListID,
-                          nsIFrame*       aOldFrame);
+                          nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
-                                         const nsDisplayListSet& aLists);
+                                         const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
  
   NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
-                              int32_t aModType);
+                              int32_t aModType) MOZ_OVERRIDE;
 
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIFrame*        asPrevInFlow);
+                   nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
 
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
+                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
-                                 nsFrameList&    aChildList);
+                                 nsFrameList&    aChildList) MOZ_OVERRIDE;
 
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
   nsresult StartDrag(nsIDOMEvent* aEvent);
 
@@ -108,20 +109,20 @@ public:
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus);
+                         nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                                  nsGUIEvent *    aEvent,
                                  nsEventStatus*  aEventStatus,
-                                 bool aControlHeld) { return NS_OK; }
+                                 bool aControlHeld) MOZ_OVERRIDE { return NS_OK; }
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus) { return NS_OK; }
+                        nsEventStatus*  aEventStatus) MOZ_OVERRIDE { return NS_OK; }
 
   NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus*  aEventStatus);
+                           nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
 
 private:
 

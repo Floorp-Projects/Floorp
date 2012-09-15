@@ -116,22 +116,22 @@ public:
 
   // nsIStyleSheet interface
   virtual nsIURI* GetSheetURI() const;
-  virtual nsIURI* GetBaseURI() const;
-  virtual void GetTitle(nsString& aTitle) const;
-  virtual void GetType(nsString& aType) const;
-  virtual bool HasRules() const;
-  virtual bool IsApplicable() const;
-  virtual void SetEnabled(bool aEnabled);
-  virtual bool IsComplete() const;
-  virtual void SetComplete();
-  virtual nsIStyleSheet* GetParentSheet() const;  // may be null
-  virtual nsIDocument* GetOwningDocument() const;  // may be null
-  virtual void SetOwningDocument(nsIDocument* aDocument);
+  virtual nsIURI* GetBaseURI() const MOZ_OVERRIDE;
+  virtual void GetTitle(nsString& aTitle) const MOZ_OVERRIDE;
+  virtual void GetType(nsString& aType) const MOZ_OVERRIDE;
+  virtual bool HasRules() const MOZ_OVERRIDE;
+  virtual bool IsApplicable() const MOZ_OVERRIDE;
+  virtual void SetEnabled(bool aEnabled) MOZ_OVERRIDE;
+  virtual bool IsComplete() const MOZ_OVERRIDE;
+  virtual void SetComplete() MOZ_OVERRIDE;
+  virtual nsIStyleSheet* GetParentSheet() const MOZ_OVERRIDE;  // may be null
+  virtual nsIDocument* GetOwningDocument() const MOZ_OVERRIDE;  // may be null
+  virtual void SetOwningDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
 
   // Find the ID of the owner inner window.
   uint64_t FindOwningWindowInnerID() const;
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
 #endif
 
   void AppendStyleSheet(nsCSSStyleSheet* aSheet);
@@ -240,7 +240,7 @@ public:
   // list after we clone a unique inner for ourselves.
   static bool RebuildChildList(mozilla::css::Rule* aRule, void* aBuilder);
 
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE;
 
   // Get this style sheet's CORS mode
   mozilla::CORSMode GetCORSMode() const { return mInner->mCORSMode; }
