@@ -859,20 +859,58 @@ class LTestDAndBranch : public LInstructionHelper<0, 1, 0>
     }
 };
 
-// Takes in a boxed value and tests it for truthiness.
-class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 1>
+// Takes an object and tests it for truthiness.  An object is falsy iff it
+// emulates |undefined|; see js::EmulatesUndefined.
+class LTestOAndBranch : public LInstructionHelper<0, 1, 1>
 {
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
+    MBasicBlock *ifTruthy_;
+    MBasicBlock *ifFalsy_;
+
+  public:
+    LIR_HEADER(TestOAndBranch)
+
+    LTestOAndBranch(const LAllocation &input, MBasicBlock *ifTruthy, MBasicBlock *ifFalsy,
+                    const LDefinition &temp)
+      : ifTruthy_(ifTruthy),
+        ifFalsy_(ifFalsy)
+    {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    Label *ifTruthy() {
+        return ifTruthy_->lir()->label();
+    }
+    Label *ifFalsy() {
+        return ifFalsy_->lir()->label();
+    }
+
+    MTest *mir() {
+        return mir_->toTest();
+    }
+};
+
+// Takes in a boxed value and tests it for truthiness.
+class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 3>
+{
+    MBasicBlock *ifTruthy_;
+    MBasicBlock *ifFalsy_;
 
   public:
     LIR_HEADER(TestVAndBranch)
 
-    LTestVAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse, const LDefinition &temp)
-      : ifTrue_(ifTrue),
-        ifFalse_(ifFalse)
+    LTestVAndBranch(MBasicBlock *ifTruthy, MBasicBlock *ifFalsy, const LDefinition &temp0,
+                    const LDefinition &temp1, const LDefinition &temp2)
+      : ifTruthy_(ifTruthy),
+        ifFalsy_(ifFalsy)
     {
-        setTemp(0, temp);
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+        setTemp(2, temp2);
     }
 
     static const size_t Input = 0;
@@ -881,8 +919,24 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 1>
         return getTemp(0)->output();
     }
 
-    Label *ifTrue();
-    Label *ifFalse();
+    const LDefinition *temp1() {
+        return getTemp(1);
+    }
+
+    const LDefinition *temp2() {
+        return getTemp(2);
+    }
+
+    Label *ifTruthy() {
+        return ifTruthy_->lir()->label();
+    }
+    Label *ifFalsy() {
+        return ifFalsy_->lir()->label();
+    }
+
+    MTest *mir() {
+        return mir_->toTest();
+    }
 };
 
 class LPolyInlineDispatch : public LInstructionHelper<0, 1, 1>
@@ -1120,29 +1174,46 @@ class LCompareBAndBranch : public LInstructionHelper<0, BOX_PIECES + 1, 0>
     }
 };
 
-class LIsNullOrUndefined : public LInstructionHelper<1, BOX_PIECES, 0>
+class LIsNullOrLikeUndefined : public LInstructionHelper<1, BOX_PIECES, 2>
 {
   public:
-    LIR_HEADER(IsNullOrUndefined)
+    LIR_HEADER(IsNullOrLikeUndefined)
+
+    LIsNullOrLikeUndefined(const LDefinition &temp0, const LDefinition &temp1)
+    {
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+    }
 
     static const size_t Value = 0;
 
     MCompare *mir() {
         return mir_->toCompare();
     }
+
+    const LDefinition *temp0() {
+        return getTemp(0);
+    }
+
+    const LDefinition *temp1() {
+        return getTemp(1);
+    }
 };
 
-class LIsNullOrUndefinedAndBranch : public LInstructionHelper<0, BOX_PIECES, 0>
+class LIsNullOrLikeUndefinedAndBranch : public LInstructionHelper<0, BOX_PIECES, 2>
 {
     MBasicBlock *ifTrue_;
     MBasicBlock *ifFalse_;
 
   public:
-    LIR_HEADER(IsNullOrUndefinedAndBranch)
+    LIR_HEADER(IsNullOrLikeUndefinedAndBranch)
 
-    LIsNullOrUndefinedAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    LIsNullOrLikeUndefinedAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse, const LDefinition &temp0, const LDefinition &temp1)
       : ifTrue_(ifTrue), ifFalse_(ifFalse)
-    { }
+    {
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+    }
 
     static const size_t Value = 0;
 
@@ -1154,6 +1225,59 @@ class LIsNullOrUndefinedAndBranch : public LInstructionHelper<0, BOX_PIECES, 0>
     }
     MCompare *mir() {
         return mir_->toCompare();
+    }
+    const LDefinition *temp0() {
+        return getTemp(0);
+    }
+    const LDefinition *temp1() {
+        return getTemp(1);
+    }
+};
+
+// Takes an object and tests whether it emulates |undefined|, as determined by
+// the JSCLASS_EMULATES_UNDEFINED class flag on unwrapped objects.  See also
+// js::EmulatesUndefined.
+class LEmulatesUndefined : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(EmulatesUndefined)
+
+    LEmulatesUndefined(const LAllocation &input)
+    {
+        setOperand(0, input);
+    }
+
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
+class LEmulatesUndefinedAndBranch : public LInstructionHelper<0, 1, 1>
+{
+    MBasicBlock *ifTrue_;
+    MBasicBlock *ifFalse_;
+
+  public:
+    LIR_HEADER(EmulatesUndefinedAndBranch)
+
+    LEmulatesUndefinedAndBranch(const LAllocation &input, MBasicBlock *ifTrue, MBasicBlock *ifFalse, const LDefinition &temp)
+      : ifTrue_(ifTrue), ifFalse_(ifFalse)
+    {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return ifTrue_;
+    }
+    MBasicBlock *ifFalse() const {
+        return ifFalse_;
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
     }
 };
 
@@ -1179,20 +1303,50 @@ class LNotD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Boolean complement operation on an object.
+class LNotO : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(NotO)
+
+    LNotO(const LAllocation &input)
+    {
+        setOperand(0, input);
+    }
+
+    MNot *mir() {
+        return mir_->toNot();
+    }
+};
+
 // Boolean complement operation on a value.
-class LNotV : public LInstructionHelper<1, BOX_PIECES, 1>
+class LNotV : public LInstructionHelper<1, BOX_PIECES, 3>
 {
   public:
     LIR_HEADER(NotV)
 
     static const size_t Input = 0;
-    LNotV(const LDefinition &temp)
+    LNotV(const LDefinition &temp0, const LDefinition &temp1, const LDefinition &temp2)
     {
-        setTemp(0, temp);
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+        setTemp(2, temp2);
     }
 
     const LAllocation *tempFloat() {
         return getTemp(0)->output();
+    }
+
+    const LDefinition *temp1() {
+        return getTemp(1);
+    }
+
+    const LDefinition *temp2() {
+        return getTemp(2);
+    }
+
+    MNot *mir() {
+        return mir_->toNot();
     }
 };
 

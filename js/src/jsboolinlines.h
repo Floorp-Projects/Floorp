@@ -7,6 +7,11 @@
 #ifndef jsboolinlines_h___
 #define jsboolinlines_h___
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Likely.h"
+
+#include "gc/Root.h"
+
 #include "jsobjinlines.h"
 
 #include "vm/BooleanObject-inl.h"
@@ -24,6 +29,16 @@ BooleanGetPrimitiveValue(JSContext *cx, JSObject &obj, Value *vp)
     }
 
     return BooleanGetPrimitiveValueSlow(cx, obj, vp);
+}
+
+inline bool
+EmulatesUndefined(RawObject obj)
+{
+    AutoAssertNoGC nogc;
+    RawObject actual = MOZ_LIKELY(!obj->isWrapper()) ? obj : UnwrapObject(obj);
+    bool emulatesUndefined = actual->getClass()->emulatesUndefined();
+    MOZ_ASSERT_IF(emulatesUndefined, obj->type()->flags & types::OBJECT_FLAG_EMULATES_UNDEFINED);
+    return emulatesUndefined;
 }
 
 } /* namespace js */

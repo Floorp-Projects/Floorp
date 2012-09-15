@@ -402,8 +402,11 @@ enum {
     /* For a global object, whether flags were set on the RegExpStatics. */
     OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00800000,
 
+    /* Whether any objects emulate undefined; see EmulatesUndefined. */
+    OBJECT_FLAG_EMULATES_UNDEFINED    = 0x01000000,
+
     /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x00ff0000,
+    OBJECT_FLAG_DYNAMIC_MASK          = 0x01ff0000,
 
     /*
      * Whether all properties of this object are considered unknown.
@@ -906,6 +909,8 @@ struct TypeObject : gc::Cell
 
     /* Flags for this object. */
     TypeObjectFlags flags;
+
+    static inline size_t offsetOfFlags() { return offsetof(TypeObject, flags); }
 
     /*
      * Estimate of the contribution of this object to the type sets it appears in.

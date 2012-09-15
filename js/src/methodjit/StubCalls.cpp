@@ -27,17 +27,18 @@
 #include "methodjit/StubCalls.h"
 #include "methodjit/Retcon.h"
 
+#include "jsatominlines.h"
+#include "jsboolinlines.h"
+#include "jscntxtinlines.h"
+#include "jsfuninlines.h"
 #include "jsinterpinlines.h"
-#include "jsscopeinlines.h"
-#include "jsscriptinlines.h"
 #include "jsnuminlines.h"
 #include "jsobjinlines.h"
-#include "jscntxtinlines.h"
-#include "jsatominlines.h"
-#include "StubCalls-inl.h"
-#include "jsfuninlines.h"
+#include "jsscopeinlines.h"
+#include "jsscriptinlines.h"
 #include "jstypedarray.h"
 
+#include "StubCalls-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/String-inl.h"
 
@@ -529,9 +530,11 @@ StubEqualityOp(VMFrame &f)
         }
     } else {
         if (lval.isNullOrUndefined()) {
-            cond = rval.isNullOrUndefined() == EQ;
+            cond = (rval.isNullOrUndefined() ||
+                    (rval.isObject() && EmulatesUndefined(&rval.toObject()))) ==
+                    EQ;
         } else if (rval.isNullOrUndefined()) {
-            cond = !EQ;
+            cond = (lval.isObject() && EmulatesUndefined(&lval.toObject())) == EQ;
         } else {
             if (!ToPrimitive(cx, &lval))
                 return false;
