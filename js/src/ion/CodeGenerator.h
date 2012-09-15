@@ -21,6 +21,7 @@
 namespace js {
 namespace ion {
 
+class OutOfLineTestObject;
 class OutOfLineNewArray;
 class OutOfLineNewObject;
 class CheckOverRecursedFailure;
@@ -60,6 +61,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitValueToInt32(LValueToInt32 *lir);
     bool visitValueToDouble(LValueToDouble *lir);
     bool visitInt32ToDouble(LInt32ToDouble *lir);
+    void emitOOLTestObject(Register objreg, Label *ifTruthy, Label *ifFalsy, Register scratch);
+    bool visitTestOAndBranch(LTestOAndBranch *lir);
     bool visitTestVAndBranch(LTestVAndBranch *lir);
     bool visitPolyInlineDispatch(LPolyInlineDispatch *lir);
     bool visitIntToString(LIntToString *lir);
@@ -106,6 +109,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);
     bool visitSetInitializedLength(LSetInitializedLength *lir);
+    bool visitNotO(LNotO *ins);
     bool visitNotV(LNotV *ins);
     bool visitBoundsCheck(LBoundsCheck *lir);
     bool visitBoundsCheckRange(LBoundsCheckRange *lir);
@@ -124,8 +128,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitBinaryV(LBinaryV *lir);
     bool visitCompareS(LCompareS *lir);
     bool visitCompareV(LCompareV *lir);
-    bool visitIsNullOrUndefined(LIsNullOrUndefined *lir);
-    bool visitIsNullOrUndefinedAndBranch(LIsNullOrUndefinedAndBranch *lir);
+    bool visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir);
+    bool visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBranch *lir);
+    bool visitEmulatesUndefined(LEmulatesUndefined *lir);
+    bool visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir);
     bool visitConcat(LConcat *lir);
     bool visitCharCodeAt(LCharCodeAt *lir);
     bool visitFromCharCode(LFromCharCode *lir);
@@ -225,10 +231,26 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);
 
     IonScriptCounts *maybeCreateScriptCounts();
+
+    // Test whether value is truthy or not and jump to the corresponding label.
+    // If the value can be an object that emulates |undefined|, |ool| must be
+    // non-null; otherwise it may be null (and the scratch definitions should
+    // be bogus), in which case an object encountered here will always be
+    // truthy.
+    void testValueTruthy(const ValueOperand &value,
+                         const LDefinition *scratch1, const LDefinition *scratch2,
+                         FloatRegister fr,
+                         Label *ifTruthy, Label *ifFalsy,
+                         OutOfLineTestObject *ool);
+
+    // Like testValueTruthy but takes an object, and |ool| must be non-null.
+    // (If it's known that an object can never emulate |undefined| it shouldn't
+    // be tested in the first place.)
+    void testObjectTruthy(Register objreg, Label *ifTruthy, Label *ifFalsy, Register scratch,
+                          OutOfLineTestObject *ool);
 };
 
 } // namespace ion
 } // namespace js
 
 #endif // jsion_codegen_h__
-

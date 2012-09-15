@@ -54,6 +54,7 @@
     _(TestIAndBranch)               \
     _(TestDAndBranch)               \
     _(TestVAndBranch)               \
+    _(TestOAndBranch)               \
     _(PolyInlineDispatch)           \
     _(Compare)                      \
     _(CompareD)                     \
@@ -63,8 +64,10 @@
     _(CompareDAndBranch)            \
     _(CompareB)                     \
     _(CompareBAndBranch)            \
-    _(IsNullOrUndefined)            \
-    _(IsNullOrUndefinedAndBranch)   \
+    _(IsNullOrLikeUndefined)        \
+    _(IsNullOrLikeUndefinedAndBranch)\
+    _(EmulatesUndefined)            \
+    _(EmulatesUndefinedAndBranch)   \
     _(MinMaxI)                      \
     _(MinMaxD)                      \
     _(NegD)                         \
@@ -77,6 +80,7 @@
     _(MathFunctionD)                \
     _(NotI)                         \
     _(NotD)                         \
+    _(NotO)                         \
     _(NotV)                         \
     _(AddI)                         \
     _(SubI)                         \
