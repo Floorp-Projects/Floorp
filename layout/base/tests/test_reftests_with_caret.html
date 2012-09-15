@@ -95,6 +95,7 @@ function endTest() {
 }
 
 var isWindows = /WINNT/.test(SpecialPowers.OS);
+var isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
 
 var tests = [
     [ 'bug389321-2.html' , 'bug389321-2-ref.html' ] ,
@@ -106,8 +107,6 @@ var tests = [
 ];
 
 if (!isWindows) {
-  tests.push([ 'bug106855-1.html' , 'bug106855-1-ref.html' ]); // bug 682837
-  tests.push([ 'bug106855-2.html' , 'bug106855-1-ref.html' ]); // bug 681138
   tests.push([ 'bug240933-1.html' , 'bug240933-1-ref.html' ]); // bug 681144
   tests.push([ 'bug240933-2.html' , 'bug240933-1-ref.html' ]); // bug 681162
   tests.push([ 'bug389321-1.html' , 'bug389321-1-ref.html' ]); // bug 683163
@@ -129,6 +128,11 @@ if (!isWindows) {
   tests.push([ 'bug634406-1.html' , 'bug634406-1-ref.html' ]); // bug 681146
   tests.push([ 'bug644428-1.html' , 'bug644428-1-ref.html' ]); // bug 689435
   tests.push([ 'bug746993-1.html' , 'bug746993-1-ref.html' ]); // bug 746993
+}
+
+if (!isWindows && !isOSXMtnLion) {
+  tests.push([ 'bug106855-1.html' , 'bug106855-1-ref.html' ]); // bug 682837
+  tests.push([ 'bug106855-2.html' , 'bug106855-1-ref.html' ]); // bug 681138
 }
 
 tests.push(function() {SpecialPowers.setBoolPref("bidi.browser.ui", true);});
