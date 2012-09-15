@@ -15,14 +15,14 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const STRING_TYPE_NAME       = "type.%ID%.name";
 
-["LOG", "WARN", "ERROR"].forEach(function(aName) {
-  this.__defineGetter__(aName, function() {
+for (let name of ["LOG", "WARN", "ERROR"]) {
+  this.__defineGetter__(name, function() {
     Components.utils.import("resource://gre/modules/AddonLogging.jsm");
 
     LogManager.getLogger("addons.plugins", this);
-    return this[aName];
+    return this[name];
   });
-}, this);
+}
 
 function getIDHashForString(aStr) {
   // return the two-digit hexadecimal code for a byte
@@ -51,12 +51,35 @@ var PluginProvider = {
   // A dictionary mapping IDs to names and descriptions
   plugins: null,
 
+  startup: function PL_startup() {
+    Services.obs.addObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, false);
+  },
+
   /**
    * Called when the application is shutting down. Only necessary for tests
    * to be able to simulate a shutdown.
    */
   shutdown: function PL_shutdown() {
     this.plugins = null;
+    Services.obs.removeObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    this.getAddonByID(aData, function(plugin) {
+      if (!plugin)
+        return;
+
+      let libLabel = aSubject.getElementById("pluginLibraries");
+      libLabel.textContent = plugin.pluginLibraries.join(", ");
+
+      let typeLabel = aSubject.getElementById("pluginMimeTypes"), types = [];
+      for (let type of plugin.pluginMimeTypes) {
+        let extras = [type.description.trim(), type.suffixes].
+                     filter(function(x) x).join(": ");
+        types.push(type.type + (extras ? " (" + extras + ")" : ""));
+      }
+      typeLabel.textContent = types.join(",\n");
+    });
   },
 
   /**
@@ -142,25 +165,25 @@ var PluginProvider = {
 
     this.plugins = {};
     let plugins = {};
-    tags.forEach(function(aTag) {
-      if (!(aTag.name in plugins))
-        plugins[aTag.name] = {};
-      if (!(aTag.description in plugins[aTag.name])) {
+    for (let tag of tags) {
+      if (!(tag.name in plugins))
+        plugins[tag.name] = {};
+      if (!(tag.description in plugins[tag.name])) {
         let plugin = {
-          name: aTag.name,
-          description: aTag.description,
-          tags: [aTag]
+          name: tag.name,
+          description: tag.description,
+          tags: [tag]
         };
 
-        let id = getIDHashForString(aTag.name + aTag.description);
+        let id = getIDHashForString(tag.name + tag.description);
 
-        plugins[aTag.name][aTag.description] = plugin;
+        plugins[tag.name][tag.description] = plugin;
         this.plugins[id] = plugin;
       }
       else {
-        plugins[aTag.name][aTag.description].tags.push(aTag);
+        plugins[tag.name][tag.description].tags.push(tag);
       }
-    }, this);
+    }
   }
 };
 
@@ -189,9 +212,8 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     if (aTags[0].disabled == aVal)
       return;
 
-    aTags.forEach(function(aTag) {
-      aTag.disabled = aVal;
-    });
+    for (let tag of aTags)
+      tag.disabled = aVal;
     AddonManagerPrivate.callAddonListeners(aVal ? "onDisabling" : "onEnabling", this, false);
     AddonManagerPrivate.callAddonListeners(aVal ? "onDisabled" : "onEnabled", this);
     return aVal;
@@ -226,23 +248,38 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
 
     let size = 0;
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    aTags.forEach(function(aTag) {
-      file.initWithPath(aTag.fullpath);
+    for (let tag of aTags) {
+      file.initWithPath(tag.fullpath);
       if (file.isDirectory())
         size += getDirectorySize(file);
       else
         size += file.fileSize;
-    });
+    }
     return size;
+  });
+
+  this.__defineGetter__("pluginLibraries", function() {
+    let libs = [];
+    for (let tag of aTags)
+      libs.push(tag.filename);
+    return libs;
+  });
+
+  this.__defineGetter__("pluginMimeTypes", function() {
+    let types = [];
+    for (let tag of aTags)
+      for (let type of tag.getMimeTypes({}))
+        types.push(type);
+    return types;
   });
 
   this.__defineGetter__("installDate", function() {
     let date = 0;
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    aTags.forEach(function(aTag) {
-      file.initWithPath(aTag.fullpath);
+    for (let tag of aTags) {
+      file.initWithPath(tag.fullpath);
       date = Math.max(date, file.lastModifiedTime);
-    });
+    }
     return new Date(date);
   });
 
@@ -288,6 +325,9 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
 }
 
 PluginWrapper.prototype = {
+  optionsType: AddonManager.OPTIONS_TYPE_INLINE,
+  optionsURL: "chrome://mozapps/content/extensions/pluginPrefs.xul",
+
   get updateDate() {
     return this.installDate;
   },
