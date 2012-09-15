@@ -293,6 +293,13 @@ child:
     HandleDoubleTap(nsIntPoint point);
 
     /**
+     * Requests handling of a single tap. |point| is in CSS pixels, relative to
+     * the scroll offset. This message is expected to send a "mousedown" and
+     * "mouseup" series of events at this point.
+     */
+    HandleSingleTap(nsIntPoint point);
+
+    /**
      * Sending an activate message moves focus to the child.
      */
     Activate();
