@@ -11,6 +11,7 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
+  test_document.all_unqualified.html \
   test_domrequest.html \
   test_gsp-standards.html \
   test_gsp-quirks.html \

@@ -5220,9 +5220,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
                                           JSMutableHandleObject objp)
 {
   if ((flags & JSRESOLVE_ASSIGNING) || !JSID_IS_STRING(id)) {
-    // Nothing to do here if we're assigning or resolving a non-string
-    // property.
-
+    // Nothing to do if we're assigning or resolving a non-string property.
     return JS_TRUE;
   }
 
@@ -9027,10 +9025,9 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           ::JS_SetPrototype(cx, tmp, proto);
         }
 
-        // If we don't already have a helper, and we're resolving
-        // document.all qualified, and "all" isn't already defined
-        // on our prototype, create a helper.
-        if (!helper && (flags & JSRESOLVE_QUALIFIED) && !hasAll) {
+        // If we don't already have a helper and "all" isn't already defined on
+        // our prototype, create a helper.
+        if (!helper && !hasAll) {
           // Print a warning so developers can stop using document.all
           PrintWarningOnConsole(cx, "DocumentAllUsed");
 
