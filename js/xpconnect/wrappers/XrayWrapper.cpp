@@ -638,7 +638,7 @@ XPCWrappedNativeXrayTraits::resolveDOMCollectionProperty(JSContext *cx, JSObject
 
     bool retval = true;
     JSObject *pobj = NULL;
-    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
+    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0);
     nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
                                                                      flags, &pobj, &retval);
     if (NS_FAILED(rv)) {
@@ -647,11 +647,8 @@ XPCWrappedNativeXrayTraits::resolveDOMCollectionProperty(JSContext *cx, JSObject
         return false;
     }
 
-    if (pobj && !JS_GetPropertyDescriptorById(cx, holder, id,
-                                              JSRESOLVE_QUALIFIED, desc))
-    {
+    if (pobj && !JS_GetPropertyDescriptorById(cx, holder, id, 0, desc))
         return false;
-    }
 
     return true;
 }
@@ -979,7 +976,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
         return true;
     }
 
-    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
+    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0);
     JSBool hasProp;
     if (!JS_HasPropertyById(cx, holder, id, &hasProp)) {
         return false;
@@ -1327,7 +1324,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         {
             JSAutoCompartment ac(cx, obj);
             if (!JS_GetPropertyDescriptorById(cx, obj, id,
-                                              (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                              (set ? JSRESOLVE_ASSIGNING : 0),
                                               desc)) {
                 return false;
             }
@@ -1368,7 +1365,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     if (desc->obj)
         return true;
 
-    if (!JS_GetPropertyDescriptorById(cx, holder, id, JSRESOLVE_QUALIFIED, desc))
+    if (!JS_GetPropertyDescriptorById(cx, holder, id, 0, desc))
         return false;
     if (desc->obj) {
         desc->obj = wrapper;
@@ -1396,7 +1393,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
 
     desc->obj = wrapper;
 
-    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
+    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0);
     return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
                                  desc->attrs) &&
            JS_GetPropertyDescriptorById(cx, holder, id, flags, desc);
@@ -1429,7 +1426,7 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
         {
             JSAutoCompartment ac(cx, obj);
             if (!JS_GetPropertyDescriptorById(cx, obj, id,
-                                              (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                              (set ? JSRESOLVE_ASSIGNING : 0),
                                               desc)) {
                 return false;
             }
@@ -1445,7 +1442,7 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
     if (desc->obj)
         return true;
 
-    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
+    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0);
     if (!JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
         return false;
 
