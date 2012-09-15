@@ -51,6 +51,7 @@
 #include "ion/Ion.h"
 
 #include "jsatominlines.h"
+#include "jsboolinlines.h"
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -638,12 +639,13 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
     }
 
     if (lval.isNullOrUndefined()) {
-        *result = rval.isNullOrUndefined();
+        *result = rval.isNullOrUndefined() ||
+                  (rval.isObject() && EmulatesUndefined(&rval.toObject()));
         return true;
     }
 
     if (rval.isNullOrUndefined()) {
-        *result = false;
+        *result = (lval.isObject() && EmulatesUndefined(&lval.toObject()));
         return true;
     }
 

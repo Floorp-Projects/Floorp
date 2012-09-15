@@ -378,16 +378,3 @@ LMoveGroup::printOperands(FILE *fp)
             fprintf(fp, ", ");
     }
 }
-
-Label *
-LTestVAndBranch::ifTrue()
-{
-    return ifTrue_->lir()->label();
-}
-
-Label *
-LTestVAndBranch::ifFalse()
-{
-    return ifFalse_->lir()->label();
-}
-
