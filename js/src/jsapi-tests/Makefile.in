@@ -40,7 +40,6 @@ CPPSRCS = \
   testFuncCallback.cpp \
   testFunctionProperties.cpp \
   testGCOutOfMemory.cpp \
-  testOOM.cpp \
   testGetPropertyDefault.cpp \
   testHashTable.cpp \
   testIndexToString.cpp \
@@ -51,6 +50,8 @@ CPPSRCS = \
   testLookup.cpp \
   testLooselyEqual.cpp \
   testNewObject.cpp \
+  testObjectEmulatingUndefined.cpp \
+  testOOM.cpp \
   testOps.cpp \
   testOriginPrincipals.cpp \
   testParseJSON.cpp \

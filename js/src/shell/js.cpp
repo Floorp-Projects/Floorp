@@ -3581,6 +3581,28 @@ GetMaxArgs(JSContext *cx, unsigned arg, jsval *vp)
 }
 
 static JSBool
+ObjectEmulatingUndefined(JSContext *cx, unsigned argc, jsval *vp)
+{
+    static JSClass cls = {
+        "ObjectEmulatingUndefined",
+        JSCLASS_EMULATES_UNDEFINED,
+        JS_PropertyStub,
+        JS_PropertyStub,
+        JS_PropertyStub,
+        JS_StrictPropertyStub,
+        JS_EnumerateStub,
+        JS_ResolveStub,
+        JS_ConvertStub
+    };
+
+    RootedObject obj(cx, JS_NewObject(cx, &cls, NULL, NULL));
+    if (!obj)
+        return false;
+    JS_SET_RVAL(cx, vp, ObjectValue(*obj));
+    return true;
+}
+
+static JSBool
 GetSelfHostedValue(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3909,6 +3931,11 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "  rooting hazards. This is helpful to reduce the time taken when interpreting\n"
 "  heavily numeric code."),
 
+    JS_FN_HELP("objectEmulatingUndefined", ObjectEmulatingUndefined, 0, 0,
+"objectEmulatingUndefined()",
+"  Return a new object obj for which typeof obj === \"undefined\", obj == null\n"
+"  and obj == undefined (and vice versa for !=), and ToBoolean(obj) === false.\n"),
+
     JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"
@@ -4167,11 +4194,10 @@ its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 {
     if (its_noisy) {
         IdStringifier idString(cx, id);
-        fprintf(gOutFile, "resolving its property %s, flags {%s,%s,%s}\n",
+        fprintf(gOutFile, "resolving its property %s, flags {%s,%s}\n",
                idString.getBytes(),
                (flags & JSRESOLVE_QUALIFIED) ? "qualified" : "",
-               (flags & JSRESOLVE_ASSIGNING) ? "assigning" : "",
-               (flags & JSRESOLVE_DETECTING) ? "detecting" : "");
+               (flags & JSRESOLVE_ASSIGNING) ? "assigning" : "");
     }
     return true;
 }
