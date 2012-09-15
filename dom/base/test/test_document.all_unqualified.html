@@ -1,0 +1,35 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 823283</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=823283">Mozilla Bug 823283</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<form id="f" onreset="window.valueOfAll = all; SimpleTest.executeSoon(finishTest); return false;">
+</form>
+</div>
+<pre id="test">
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var all = 17;
+var valueOfAll = "initial value";
+
+function finishTest()
+{
+  is(valueOfAll, document.all,
+     "wrong value for |all| in event handler attribute; note that the wrong " +
+     "value may be |document.forms.f.all| in browsers with an 'all' property " +
+     "on elements");
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", function() { document.getElementById("f").reset(); }, false);
+</script>
+</pre>
+</body>
+</html>
