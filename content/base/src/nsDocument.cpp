@@ -2394,6 +2394,9 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   mMayStartLayout = false;
 
   mHaveInputEncoding = true;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsresult rv = InitCSP(aChannel, getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aReset) {
     Reset(aChannel, aLoadGroup);
@@ -2423,29 +2426,39 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsresult rv = InitCSP();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (csp) {
+    // Copy into principal
+    nsIPrincipal* principal = GetPrincipal();
+    principal->SetCsp(csp);
+#ifdef PR_LOGGING
+    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+           ("Inserted CSP into principal %p", principal));
+#endif
+  }
 
   return NS_OK;
 }
 
 nsresult
-nsDocument::InitCSP()
+nsDocument::InitCSP(nsIChannel* aChannel, nsIContentSecurityPolicy **aCSP)
 {
+  *aCSP = nullptr;
   if (CSPService::sCSPEnabled) {
-    nsAutoString cspHeaderValue;
-    nsAutoString cspROHeaderValue;
-
-    this->GetHeaderData(nsGkAtoms::headerCSP, cspHeaderValue);
-    this->GetHeaderData(nsGkAtoms::headerCSPReportOnly, cspROHeaderValue);
-
-    bool system = false;
-    nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
-
-    if (NS_SUCCEEDED(ssm->IsSystemPrincipal(NodePrincipal(), &system)) && system) {
-      // only makes sense to register new CSP if this document is not priviliged
+    nsAutoCString tCspHeaderValue, tCspROHeaderValue;
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+    if (!httpChannel) {
+      // no CSP for non http channels
       return NS_OK;
     }
+    httpChannel->GetResponseHeader(
+        NS_LITERAL_CSTRING("x-content-security-policy"),
+        tCspHeaderValue);
+
+    httpChannel->GetResponseHeader(
+        NS_LITERAL_CSTRING("x-content-security-policy-report-only"),
+        tCspROHeaderValue);
+    NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
+    NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
 
     if (cspHeaderValue.IsEmpty() && cspROHeaderValue.IsEmpty()) {
       // no CSP header present, stop processing
@@ -2457,8 +2470,8 @@ nsDocument::InitCSP()
 #endif
 
     nsresult rv;
-    nsCOMPtr<nsIContentSecurityPolicy> mCSP;
-    mCSP = do_CreateInstance("@mozilla.org/contentsecuritypolicy;1", &rv);
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    csp = do_CreateInstance("@mozilla.org/contentsecuritypolicy;1", &rv);
 
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
@@ -2468,12 +2481,11 @@ nsDocument::InitCSP()
     }
 
     // Store the request context for violation reports
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
-    mCSP->ScanRequestData(httpChannel);
+    csp->ScanRequestData(httpChannel);
 
     // Start parsing the policy
     nsCOMPtr<nsIURI> chanURI;
-    mChannel->GetURI(getter_AddRefs(chanURI));
+    aChannel->GetURI(getter_AddRefs(chanURI));
 
 #ifdef PR_LOGGING
     PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("CSP Loaded"));
@@ -2484,7 +2496,7 @@ nsDocument::InitCSP()
     // toss a warning into the error console, proceeding with enforcing the
     // regular-strength CSP.
     if (cspHeaderValue.IsEmpty()) {
-      mCSP->SetReportOnlyMode(true);
+      csp->SetReportOnlyMode(true);
 
       // Need to tokenize the header value since multiple headers could be
       // concatenated into one comma-separated list of policies.
@@ -2492,7 +2504,7 @@ nsDocument::InitCSP()
       nsCharSeparatedTokenizer tokenizer(cspROHeaderValue, ',');
       while (tokenizer.hasMoreTokens()) {
         const nsSubstring& policy = tokenizer.nextToken();
-        mCSP->RefinePolicy(policy, chanURI);
+        csp->RefinePolicy(policy, chanURI);
 #ifdef PR_LOGGING
         {
           PR_LOG(gCspPRLog, PR_LOG_DEBUG,
@@ -2511,7 +2523,7 @@ nsDocument::InitCSP()
       nsCharSeparatedTokenizer tokenizer(cspHeaderValue, ',');
       while (tokenizer.hasMoreTokens()) {
         const nsSubstring& policy = tokenizer.nextToken();
-        mCSP->RefinePolicy(policy, chanURI);
+        csp->RefinePolicy(policy, chanURI);
 #ifdef PR_LOGGING
         {
           PR_LOG(gCspPRLog, PR_LOG_DEBUG,
@@ -2528,7 +2540,7 @@ nsDocument::InitCSP()
         bool safeAncestry = false;
 
         // PermitsAncestry sends violation reports when necessary
-        rv = mCSP->PermitsAncestry(docShell, &safeAncestry);
+        rv = csp->PermitsAncestry(docShell, &safeAncestry);
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (!safeAncestry) {
@@ -2537,24 +2549,10 @@ nsDocument::InitCSP()
                    ("CSP doesn't like frame's ancestry, not loading."));
 #endif
             // stop!  ERROR page!
-            mChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+            aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
         }
     }
-
-    //Copy into principal
-    nsIPrincipal* principal = GetPrincipal();
-
-    if (principal) {
-        principal->SetCsp(mCSP);
-#ifdef PR_LOGGING
-        PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-                ("Inserted CSP into principal %p", principal));
-    }
-    else {
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-              ("Couldn't copy CSP into absent principal %p", principal));
-#endif
-    }
+    csp.forget(aCSP);
   }
 #ifdef PR_LOGGING
   else { //CSP was not enabled!
@@ -6791,8 +6789,6 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       "content-disposition",
       "refresh",
       "x-dns-prefetch-control",
-      "x-content-security-policy",
-      "x-content-security-policy-report-only",
       "x-frame-options",
       // add more http headers if you need
       // XXXbz don't add content-location support without reading bug

@@ -928,6 +928,7 @@ JSObject::rollbackProperties(JSContext *cx, uint32_t slotSpan)
 Shape *
 JSObject::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *newShape)
 {
+    JS_ASSERT(cx->compartment == oldShape->compartment());
     JS_ASSERT_IF(oldShape != lastProperty(),
                  inDictionaryMode() &&
                  nativeLookupNoAllocation(oldShape->propidRef()) == oldShape);
@@ -1202,6 +1203,9 @@ InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
 EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent,
                             AllocKind kind, uint32_t objectFlags)
 {
+    JS_ASSERT_IF(proto, cx->compartment == proto->compartment());
+    JS_ASSERT_IF(parent, cx->compartment == parent->compartment());
+
     InitialShapeSet &table = cx->compartment->initialShapes;
 
     if (!table.initialized() && !table.init())
