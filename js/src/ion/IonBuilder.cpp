@@ -2350,7 +2350,8 @@ IonBuilder::lookupSwitch(JSOp op, jssrcnote *sn)
             current->end(MGoto::New(cond));
         } else {
             // End previous conditional block with an MTest.
-            prevCond->end(MTest::New(prevCmpIns, prevBody, cond));
+            MTest *test = MTest::New(prevCmpIns, prevBody, cond);
+            prevCond->end(test);
 
             // If the previous cond shared its body with a prior cond, then
             // add the previous cond as a predecessor to its body (since it's
@@ -2388,7 +2389,8 @@ IonBuilder::lookupSwitch(JSOp op, jssrcnote *sn)
     } else {
         // Last conditional block has body that is distinct from
         // the default block.
-        prevCond->end(MTest::New(prevCmpIns, prevBody, defaultBody));
+        MTest *test = MTest::New(prevCmpIns, prevBody, defaultBody);
+        prevCond->end(test);
 
         // Add the cond as a predecessor as a default, but only if
         // the default is shared with another block, because otherwise
@@ -2720,6 +2722,8 @@ IonBuilder::processCondSwitchBody(CFGState &state)
 bool
 IonBuilder::jsop_andor(JSOp op)
 {
+    JS_ASSERT(op == JSOP_AND || op == JSOP_OR);
+
     jsbytecode *rhsStart = pc + js_CodeSpec[op].length;
     jsbytecode *joinStart = pc + GetJumpOffset(pc);
     JS_ASSERT(joinStart > pc);
@@ -2732,12 +2736,12 @@ IonBuilder::jsop_andor(JSOp op)
     if (!evalRhs || !join)
         return false;
 
-    if (op == JSOP_AND) {
-        current->end(MTest::New(lhs, evalRhs, join));
-    } else {
-        JS_ASSERT(op == JSOP_OR);
-        current->end(MTest::New(lhs, join, evalRhs));
-    }
+    MTest *test = (op == JSOP_AND)
+                  ? MTest::New(lhs, evalRhs, join)
+                  : MTest::New(lhs, join, evalRhs);
+    TypeOracle::UnaryTypes types = oracle->unaryTypes(script(), pc);
+    test->infer(types, cx);
+    current->end(test);
 
     if (!cfgStack_.append(CFGState::AndOr(joinStart, join)))
         return false;
@@ -2787,7 +2791,8 @@ IonBuilder::jsop_ifeq(JSOp op)
     if (!ifTrue || !ifFalse)
         return false;
 
-    current->end(MTest::New(ins, ifTrue, ifFalse));
+    MTest *test = MTest::New(ins, ifTrue, ifFalse);
+    current->end(test);
 
     // The bytecode for if/ternary gets emitted either like this:
     //
@@ -2959,7 +2964,8 @@ IonBuilder::jsop_bitop(JSOp op)
     }
 
     current->add(ins);
-    ins->infer(oracle->binaryTypes(script(), pc));
+    TypeOracle::BinaryTypes types = oracle->binaryTypes(script(), pc);
+    ins->infer(types);
 
     current->push(ins);
     if (ins->isEffectful() && !resumeAfter(ins))
@@ -3012,7 +3018,7 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
 
     TypeOracle::BinaryTypes types = oracle->binaryTypes(script(), pc);
     current->add(ins);
-    ins->infer(cx, types);
+    ins->infer(types, cx);
     current->push(ins);
 
     if (ins->isEffectful())
@@ -4206,7 +4212,7 @@ IonBuilder::jsop_compare(JSOp op)
     current->push(ins);
 
     TypeOracle::BinaryTypes b = oracle->binaryTypes(script(), pc);
-    ins->infer(cx, b);
+    ins->infer(b, cx);
 
     if (ins->isEffectful() && !resumeAfter(ins))
         return false;
@@ -5730,6 +5736,8 @@ IonBuilder::jsop_not()
     MNot *ins = new MNot(value);
     current->add(ins);
     current->push(ins);
+    TypeOracle::UnaryTypes types = oracle->unaryTypes(script(), pc);
+    ins->infer(types, cx);
     return true;
 }
 
