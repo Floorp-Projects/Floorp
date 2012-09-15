@@ -4,14 +4,14 @@
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <script>
     function doTest() {
-      setTimeAndSnapshot(1, false);
+      setTimeAndSnapshot(101, false);
     }
     window.addEventListener("MozReftestInvalidate", doTest, false);
   </script>
   <defs>
     <clipPath id="clip">
       <rect x="0" y="0" width="50" height="100%"/>
-      <animateTransform attributeName="transform" type="translate" dur="1s"
+      <animateTransform attributeName="transform" type="translate" begin="100s" dur="1s"
 		        from="0 0" to="-50 0" fill="freeze"/>
     </clipPath>
   </defs>

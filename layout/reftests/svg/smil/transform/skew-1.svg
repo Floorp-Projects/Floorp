@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
      class="reftest-wait"
-     onload="setTimeAndSnapshot(1, true)">
+     onload="setTimeAndSnapshot(101, true)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <defs>
     <g id="smiley">
@@ -20,51 +20,51 @@
   <g transform="translate(50 50)">
     <use xlink:href="#smiley">
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewX" fill="freeze" from="-30" to="90" dur="2s"/>
+        type="skewX" fill="freeze" from="-30" to="90" begin="100s" dur="2s"/>
     </use>
   </g>
   <!-- from-by animation -->
   <g transform="translate(150 50)">
     <use xlink:href="#smiley">
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewX" fill="freeze" from="60" by="-60" dur="2s"/>
+        type="skewX" fill="freeze" from="60" by="-60" begin="100s" dur="2s"/>
     </use>
   </g>
   <!-- by animation -->
   <g transform="translate(250 50) skewX(-15)">
     <use xlink:href="#smiley" transform="skewX(15)">
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewX" fill="freeze" by="60" dur="2s"/>
+        type="skewX" fill="freeze" by="60" begin="100s" dur="2s"/>
     </use>
   </g>
   <!-- to animation -->
   <g transform="translate(50 150)">
     <use xlink:href="#smiley" transform="skewX(15)">
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewX" fill="freeze" to="45" dur="2s"/>
+        type="skewX" fill="freeze" to="45" begin="100s" dur="2s"/>
     </use>
   </g>
   <!-- values animation -->
   <g transform="translate(150 150)">
     <use xlink:href="#smiley">
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewX" fill="freeze" values="10; 40; 20; 60" dur="2s"/>
+        type="skewX" fill="freeze" values="10; 40; 20; 60" begin="100s" dur="2s"/>
     </use>
   </g>
   <!-- additive -->
   <g transform="translate(250 150)">
     <use xlink:href="#smiley" transform="skewY(-30)">
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewY" fill="freeze" to="30" dur="2s"/>
+        type="skewY" fill="freeze" to="30" begin="100s" dur="2s"/>
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewX" fill="freeze" from="-30" to="90" dur="2s" additive="sum"/>
+        type="skewX" fill="freeze" from="-30" to="90" begin="100s" dur="2s" additive="sum"/>
     </use>
   </g>
   <!-- accumulate: none -->
   <g transform="translate(50 250)">
     <use xlink:href="#smiley">
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewX" fill="freeze" from="20" to="50" dur="0.75s"
+        type="skewX" fill="freeze" from="20" to="50" begin="100s" dur="0.75s"
         repeatCount="3"/>
     </use>
   </g>
@@ -72,7 +72,7 @@
   <g transform="translate(150 250)">
     <use xlink:href="#smiley">
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewX" fill="freeze" from="0" to="22.5" dur="0.75"
+        type="skewX" fill="freeze" from="0" to="22.5" begin="100s" dur="0.75"
         accumulate="sum" repeatCount="3"/>
     </use>
   </g>
@@ -80,7 +80,7 @@
   <g transform="translate(250 250)">
     <use xlink:href="#smiley">
       <animateTransform attributeName="transform" attributeType="XML"
-        type="skewX" fill="freeze" from="-690" to="750" dur="2s"/>
+        type="skewX" fill="freeze" from="-690" to="750" begin="100s" dur="2s"/>
     </use>
   </g>
 </svg>
