@@ -8,6 +8,7 @@
 
 #include "RuntimeService.h"
 
+#include "nsIContentSecurityPolicy.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIObserverService.h"
@@ -19,6 +20,7 @@
 #include "nsITimer.h"
 #include "nsPIDOMWindow.h"
 
+#include "jsdbgapi.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
@@ -250,6 +252,72 @@ OperationCallback(JSContext* aCx)
   return worker->OperationCallback(aCx);
 }
 
+class LogViolationDetailsRunnable : public nsRunnable
+{
+  nsRefPtr<WorkerPrivate> mWorkerPrivate;
+  nsString mFileName;
+  uint32_t mLineNum;
+
+public:
+  LogViolationDetailsRunnable(WorkerPrivate* aWorker,
+                              const nsString& aFileName,
+                              uint32_t aLineNum)
+  : mWorkerPrivate(aWorker),
+    mFileName(aFileName),
+    mLineNum(aLineNum)
+  {
+    NS_ASSERTION(aWorker, "WorkerPrivate cannot be null");
+  }
+
+  NS_IMETHOD
+  Run()
+  {
+    AssertIsOnMainThread();
+
+    nsIContentSecurityPolicy* csp = mWorkerPrivate->GetCSP();
+    if (csp) {
+      NS_NAMED_LITERAL_STRING(scriptSample,
+         "Call to eval() or related function blocked by CSP.");
+      csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
+                                mFileName, scriptSample, mLineNum);
+    }
+
+    return NS_OK;
+  }
+};
+
+JSBool
+ContentSecurityPolicyAllows(JSContext* aCx)
+{
+  WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
+  worker->AssertIsOnWorkerThread();
+
+  if (worker->IsEvalAllowed()) {
+    return true;
+  }
+
+  nsString fileName;
+  uint32_t lineNum = 0;
+
+  JSScript* script;
+  const char* file;
+  if (JS_DescribeScriptedCaller(aCx, &script, &lineNum) &&
+      (file = JS_GetScriptFilename(aCx, script))) {
+    fileName.AssignASCII(file);
+  } else {
+    JS_ReportPendingException(aCx);
+  }
+
+  nsRefPtr<nsRunnable> runnable = new LogViolationDetailsRunnable(worker,
+                                                                  fileName,
+                                                                  lineNum);
+  if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
+    NS_WARNING("Failed to dispatch to main thread!");
+  }
+
+  return false;
+}
+
 JSContext*
 CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
 {
@@ -269,6 +337,13 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
                     aWorkerPrivate->GetJSRuntimeHeapSize());
 
   JS_SetNativeStackQuota(runtime, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
+
+  // Security policy:
+  static JSSecurityCallbacks securityCallbacks = {
+    NULL,
+    ContentSecurityPolicyAllows
+  };
+  JS_SetSecurityCallbacks(runtime, &securityCallbacks);
 
   JSContext* workerCx = JS_NewContext(runtime, 0);
   if (!workerCx) {

@@ -92,6 +92,10 @@ MOCHITEST_FILES = \
   xhr_implicit_cancel_worker.js \
   test_xhr_timeout.html \
   test_blobConstructor.html \
+  test_csp.html \
+  test_csp.js \
+  test_csp.html^headers^ \
+  csp_worker.js \
   $(NULL)
 
 _SUBDIRMOCHITEST_FILES = \
