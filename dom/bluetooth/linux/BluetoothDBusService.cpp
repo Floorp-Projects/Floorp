@@ -672,8 +672,18 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
   dbus_message_iter_recurse(&aIter, &prop_val);
   type = aPropertyTypes[*aPropIndex].type;
 
-  NS_ASSERTION(dbus_message_iter_get_arg_type(&prop_val) == type,
-               "Iterator not type we expect!");
+  if(dbus_message_iter_get_arg_type(&prop_val) != type) {
+    NS_WARNING("Iterator not type we expect!");
+    nsAutoCString str;
+    str += "Property Name: ;";
+    str += NS_ConvertUTF16toUTF8(propertyName);
+    str += " Property Type Expected: ;";
+    str += type;
+    str += " Property Type Received: ";
+    str += dbus_message_iter_get_arg_type(&prop_val);
+    NS_WARNING(str.get());
+    return false;
+  }
   
   BluetoothValue propertyValue;
   switch (type) {
