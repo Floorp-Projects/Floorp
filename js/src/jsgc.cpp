@@ -3273,10 +3273,79 @@ ShouldPreserveJITCode(JSCompartment *c, int64_t currentTime)
     return false;
 }
 
+#ifdef DEBUG
+struct CompartmentCheckTracer : public JSTracer
+{
+    Cell *src;
+    JSGCTraceKind srcKind;
+    JSCompartment *compartment;
+};
+
+static bool
+InCrossCompartmentMap(JSObject *src, Cell *dst, JSGCTraceKind dstKind)
+{
+    JSCompartment *srccomp = src->compartment();
+
+    if (dstKind == JSTRACE_OBJECT) {
+        Value key = ObjectValue(*static_cast<JSObject *>(dst));
+        WrapperMap::Ptr p = srccomp->crossCompartmentWrappers.lookup(key);
+        if (*p->value.unsafeGet() == ObjectValue(*src))
+            return true;
+    }
+
+    /*
+     * If the cross-compartment edge is caused by the debugger, then we don't
+     * know the right hashtable key, so we have to iterate.
+     */
+    for (WrapperMap::Enum e(srccomp->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        if (e.front().key.wrapped == dst && ToMarkable(e.front().value) == src)
+            return true;
+    }
+
+    return false;
+}
+
+static void
+CheckCompartmentCallback(JSTracer *trcArg, void **thingp, JSGCTraceKind kind)
+{
+    CompartmentCheckTracer *trc = static_cast<CompartmentCheckTracer *>(trcArg);
+    Cell *thing = (Cell *)*thingp;
+    JS_ASSERT(thing->compartment() == trc->compartment ||
+              thing->compartment() == trc->runtime->atomsCompartment ||
+              (trc->srcKind == JSTRACE_OBJECT &&
+               InCrossCompartmentMap((JSObject *)trc->src, thing, kind)));
+}
+
+static void
+CheckForCompartmentMismatches(JSRuntime *rt)
+{
+    if (rt->gcDisableStrictProxyCheckingCount)
+        return;
+
+    CompartmentCheckTracer trc;
+    JS_TracerInit(&trc, rt, CheckCompartmentCallback);
+
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        trc.compartment = c;
+        for (size_t thingKind = 0; thingKind < FINALIZE_LAST; thingKind++) {
+            for (CellIterUnderGC i(c, AllocKind(thingKind)); !i.done(); i.next()) {
+                trc.src = i.getCell();
+                trc.srcKind = MapAllocToTraceKind(AllocKind(thingKind));
+                JS_TraceChildren(&trc, trc.src, trc.srcKind);
+            }
+        }
+    }
+}
+#endif
+
 static void
 BeginMarkPhase(JSRuntime *rt)
 {
     int64_t currentTime = PRMJ_Now();
+
+#ifdef DEBUG
+    CheckForCompartmentMismatches(rt);
+#endif
 
     rt->gcIsFull = true;
     DebugOnly<bool> any = false;

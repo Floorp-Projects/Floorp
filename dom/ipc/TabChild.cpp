@@ -889,6 +889,19 @@ TabChild::RecvHandleDoubleTap(const nsIntPoint& aPoint)
 }
 
 bool
+TabChild::RecvHandleSingleTap(const nsIntPoint& aPoint)
+{
+  if (!mCx || !mTabChildGlobal) {
+    return true;
+  }
+
+  RecvMouseEvent(NS_LITERAL_STRING("mousedown"), aPoint.x, aPoint.y, 0, 1, 0, false);
+  RecvMouseEvent(NS_LITERAL_STRING("mouseup"), aPoint.x, aPoint.y, 0, 1, 0, false);
+
+  return true;
+}
+
+bool
 TabChild::RecvActivate()
 {
   nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(mWebNav);
@@ -936,61 +949,67 @@ TabChild::RecvMouseWheelEvent(const WheelEvent& event)
   return true;
 }
 
+void
+TabChild::DispatchSynthesizedMouseEvent(const nsTouchEvent& aEvent)
+{
+  // Synthesize a phony mouse event.
+  uint32_t msg;
+  switch (aEvent.message) {
+    case NS_TOUCH_START:
+      msg = NS_MOUSE_BUTTON_DOWN;
+      break;
+    case NS_TOUCH_MOVE:
+      msg = NS_MOUSE_MOVE;
+      break;
+    case NS_TOUCH_END:
+    case NS_TOUCH_CANCEL:
+      msg = NS_MOUSE_BUTTON_UP;
+      break;
+    default:
+      MOZ_NOT_REACHED("Unknown touch event message");
+  }
+
+  nsIntPoint refPoint(0, 0);
+  if (aEvent.touches.Length()) {
+    refPoint = aEvent.touches[0]->mRefPoint;
+  }
+
+  nsMouseEvent event(true, msg, NULL,
+      nsMouseEvent::eReal, nsMouseEvent::eNormal);
+  event.refPoint = refPoint;
+  event.time = aEvent.time;
+  event.button = nsMouseEvent::eLeftButton;
+  if (msg != NS_MOUSE_MOVE) {
+    event.clickCount = 1;
+  }
+
+  DispatchWidgetEvent(event);
+}
+
 bool
 TabChild::RecvRealTouchEvent(const nsTouchEvent& aEvent)
 {
-    nsTouchEvent localEvent(aEvent);
-    nsEventStatus status = DispatchWidgetEvent(localEvent);
+  nsTouchEvent localEvent(aEvent);
+  nsEventStatus status = DispatchWidgetEvent(localEvent);
 
+  if (IsAsyncPanZoomEnabled()) {
     nsCOMPtr<nsPIDOMWindow> outerWindow = do_GetInterface(mWebNav);
     nsCOMPtr<nsPIDOMWindow> innerWindow = outerWindow->GetCurrentInnerWindow();
+
     if (innerWindow && innerWindow->HasTouchEventListeners()) {
       SendContentReceivedTouch(nsIPresShell::gPreventMouseEvents);
     }
+  } else if (status != nsEventStatus_eConsumeNoDefault) {
+    DispatchSynthesizedMouseEvent(aEvent);
+  }
 
-    if (status == nsEventStatus_eConsumeNoDefault) {
-        return true;
-    }
-
-    // Synthesize a phony mouse event.
-    uint32_t msg;
-    switch (aEvent.message) {
-    case NS_TOUCH_START:
-        msg = NS_MOUSE_BUTTON_DOWN;
-        break;
-    case NS_TOUCH_MOVE:
-        msg = NS_MOUSE_MOVE;
-        break;
-    case NS_TOUCH_END:
-    case NS_TOUCH_CANCEL:
-        msg = NS_MOUSE_BUTTON_UP;
-        break;
-    default:
-        MOZ_NOT_REACHED("Unknown touch event message");
-    }
-
-    nsIntPoint refPoint(0, 0);
-    if (aEvent.touches.Length()) {
-        refPoint = aEvent.touches[0]->mRefPoint;
-    }
-
-    nsMouseEvent event(true, msg, NULL,
-                       nsMouseEvent::eReal, nsMouseEvent::eNormal);
-    event.refPoint = refPoint;
-    event.time = aEvent.time;
-    event.button = nsMouseEvent::eLeftButton;
-    if (msg != NS_MOUSE_MOVE) {
-        event.clickCount = 1;
-    }
-
-    DispatchWidgetEvent(event);
-    return true;
+  return true;
 }
 
 bool
 TabChild::RecvRealTouchMoveEvent(const nsTouchEvent& aEvent)
 {
-    return RecvRealTouchEvent(aEvent);
+  return RecvRealTouchEvent(aEvent);
 }
 
 bool

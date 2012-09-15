@@ -2063,6 +2063,9 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
                                JSProtoKey key, JSObject *proto_, bool unknown,
                                bool isDOM)
 {
+    JS_ASSERT_IF(script, cx->compartment == script->compartment());
+    JS_ASSERT_IF(proto_, cx->compartment == proto_->compartment());
+
     RootedObject proto(cx, proto_);
     TypeObject *object = gc::NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
@@ -5579,6 +5582,8 @@ JSObject::shouldSplicePrototype(JSContext *cx)
 bool
 JSObject::splicePrototype(JSContext *cx, JSObject *proto_)
 {
+    JS_ASSERT(cx->compartment == compartment());
+
     RootedObject proto(cx, proto_);
     RootedObject self(cx, this);
 
@@ -5639,6 +5644,7 @@ TypeObject *
 JSObject::makeLazyType(JSContext *cx)
 {
     JS_ASSERT(hasLazyType());
+    JS_ASSERT(cx->compartment == compartment());
 
     RootedObject self(cx, this);
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
@@ -5749,6 +5755,8 @@ JSObject::setNewTypeUnknown(JSContext *cx)
 TypeObject *
 JSObject::getNewType(JSContext *cx, JSFunction *fun_, bool isDOM)
 {
+    JS_ASSERT(cx->compartment == compartment());
+
     TypeObjectSet &table = cx->compartment->newTypeObjects;
 
     if (!table.initialized() && !table.init())
@@ -5837,6 +5845,9 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun_, bool isDOM)
 TypeObject *
 JSCompartment::getLazyType(JSContext *cx, JSObject *proto_)
 {
+    JS_ASSERT(cx->compartment == this);
+    JS_ASSERT_IF(proto_, cx->compartment == proto_->compartment());
+
     RootedObject proto(cx, proto_);
     MaybeCheckStackRoots(cx);
 

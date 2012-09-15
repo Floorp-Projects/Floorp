@@ -440,7 +440,10 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       return DBUS_HANDLER_RESULT_HANDLED;
     }
   } else {
+#ifdef DEBUG
     LOG("agent handler %s: Unhandled event. Ignore.", __FUNCTION__);
+#endif
+    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
   }
 
   if (!errorStr.IsEmpty()) {
@@ -669,8 +672,18 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
   dbus_message_iter_recurse(&aIter, &prop_val);
   type = aPropertyTypes[*aPropIndex].type;
 
-  NS_ASSERTION(dbus_message_iter_get_arg_type(&prop_val) == type,
-               "Iterator not type we expect!");
+  if(dbus_message_iter_get_arg_type(&prop_val) != type) {
+    NS_WARNING("Iterator not type we expect!");
+    nsAutoCString str;
+    str += "Property Name: ;";
+    str += NS_ConvertUTF16toUTF8(propertyName);
+    str += " Property Type Expected: ;";
+    str += type;
+    str += " Property Type Received: ";
+    str += dbus_message_iter_get_arg_type(&prop_val);
+    NS_WARNING(str.get());
+    return false;
+  }
   
   BluetoothValue propertyValue;
   switch (type) {
@@ -982,6 +995,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     signalStr += " Signal not handled!";
     NS_WARNING(signalStr.get());
 #endif
+    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
   }
 
   if (!errorStr.IsEmpty()) {
@@ -1077,8 +1091,6 @@ BluetoothDBusService::StopInternal()
     return NS_OK;
   }
 
-  RemoveReservedServicesInternal(sDefaultAdapterPath, sServiceHandles);
-
   DBusError err;
   dbus_error_init(&err);
   for (uint32_t i = 0; i < ArrayLength(sBluetoothDBusSignals); ++i) {
@@ -1167,7 +1179,6 @@ public:
                                                                          path));
 
     RegisterAgent(path);
-    AddReservedServices(path);
 
     DispatchBluetoothReply(mRunnable, v, replyError);
    
