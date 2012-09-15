@@ -249,23 +249,6 @@ let DebuggerController = {
   },
 
   /**
-   * Returns true if this is a remote debugger instance.
-   * @return boolean
-   */
-  get _isRemoteDebugger() {
-    return window._remoteFlag;
-  },
-
-  /**
-   * Returns true if this is a chrome debugger instance.
-   * @return boolean
-   */
-  get _isChromeDebugger() {
-    // Directly accessing window.parent.content may throw in some cases.
-    return !("content" in window.parent) && !this._isRemoteDebugger;
-  },
-
-  /**
    * Attempts to quit the current process if allowed.
    */
   _quitApp: function DC__quitApp() {
@@ -296,6 +279,26 @@ let DebuggerController = {
     document.documentElement.dispatchEvent(evt);
   }
 };
+
+/**
+ * Returns true if this is a remote debugger instance.
+ * @return boolean
+ */
+XPCOMUtils.defineLazyGetter(DebuggerController, "_isRemoteDebugger", function() {
+  // We're inside a single top level XUL window, not an iframe container.
+  return !(window.frameElement instanceof XULElement) &&
+         !!window._remoteFlag;
+});
+
+/**
+ * Returns true if this is a chrome debugger instance.
+ * @return boolean
+ */
+XPCOMUtils.defineLazyGetter(DebuggerController, "_isChromeDebugger", function() {
+  // We're inside a single top level XUL window, but not a remote debugger.
+  return !(window.frameElement instanceof XULElement) &&
+         !window._remoteFlag;
+});
 
 /**
  * ThreadState keeps the UI up to date with the state of the

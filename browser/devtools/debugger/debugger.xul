@@ -105,19 +105,19 @@
       <vbox>
         <label class="description" value="&debuggerUI.searchPanelTitle;"/>
         <hbox align="center">
-          <button class="operator" label="!"
+          <button id="global-operator-button" class="operator"
                   onclick="DebuggerView.Scripts._onGlobalSearch()"/>
-          <label id="global-operator" class="plain operator"/>
+          <label id="global-operator-label" class="plain operator"/>
         </hbox>
         <hbox align="center">
-          <button class="operator" label="#"
+          <button id="token-operator-button" class="operator"
                   onclick="DebuggerView.Scripts._onTokenSearch()"/>
-          <label id="token-operator" class="plain operator"/>
+          <label id="token-operator-label" class="plain operator"/>
         </hbox>
         <hbox align="center">
-          <button class="operator" label=":"
+          <button id="line-operator-button" class="operator"
                   onclick="DebuggerView.Scripts._onLineSearch()"/>
-          <label id="line-operator" class="plain operator"/>
+          <label id="line-operator-label" class="plain operator"/>
         </hbox>
       </vbox>
     </panel>
