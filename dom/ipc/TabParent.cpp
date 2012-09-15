@@ -252,6 +252,11 @@ void TabParent::HandleDoubleTap(const nsIntPoint& aPoint)
   unused << SendHandleDoubleTap(aPoint);
 }
 
+void TabParent::HandleSingleTap(const nsIntPoint& aPoint)
+{
+  unused << SendHandleSingleTap(aPoint);
+}
+
 void
 TabParent::Activate()
 {
