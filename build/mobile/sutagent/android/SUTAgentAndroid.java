@@ -264,10 +264,13 @@ public class SUTAgentAndroid extends Activity
                 }
             }
 
+        String hwid = getHWID(this);
+
         sLocalIPAddr = getLocalIpAddress();
         Toast.makeText(getApplication().getApplicationContext(), "SUTAgent [" + sLocalIPAddr + "] ...", Toast.LENGTH_LONG).show();
 
         String sConfig = "Unique ID: " + sUniqueID + lineSep;
+        sConfig += "HWID: " + hwid + lineSep;
         sConfig += "OS Info" + lineSep;
         sConfig += "\t" + dc.GetOSInfo() + lineSep;
         sConfig += "Screen Info" + lineSep;
@@ -738,22 +741,69 @@ public class SUTAgentAndroid extends Activity
             }
         };
 
-    public String getLocalIpAddress()
+    static String sHWID = null;
+    public static String getHWID(Context cx) {
+        if (sHWID != null)
+            return sHWID;
+
+        // If we're on SDK version >= 8, use Build.SERIAL
+        if (android.os.Build.VERSION.SDK_INT >= 8) {
+            sHWID = android.os.Build.SERIAL;
+        }
+
+        if (sHWID != null)
+            return sHWID;
+
+        // Otherwise, try from the telephony manager
+        TelephonyManager mTelephonyMgr = (TelephonyManager) cx.getSystemService(TELEPHONY_SERVICE);
+        if (mTelephonyMgr != null) {
+            sHWID = mTelephonyMgr.getDeviceId();
+        }
+
+        if (sHWID != null)
+            return sHWID;
+
+        // Otherwise, try WIFI_SERVICE and use the wifi manager
+        WifiManager wifiMan = (WifiManager) cx.getSystemService(Context.WIFI_SERVICE);
+        if (wifiMan != null) {
+            WifiInfo wifi = wifiMan.getConnectionInfo();
+            if (wifi != null) {
+                sHWID = "wifimac" + wifi.getMacAddress();
+            }
+        }
+
+        if (sHWID != null)
+            return sHWID;
+
+        sHWID = "0011223344556677";
+
+        return sHWID;
+    }
+
+    public static InetAddress getLocalInetAddress() throws SocketException
         {
-        try
+        for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();)
             {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();)
+            NetworkInterface intf = en.nextElement();
+            for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();)
                 {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();)
+                InetAddress inetAddress = enumIpAddr.nextElement();
+                if (!inetAddress.isLoopbackAddress() && InetAddressUtils.isIPv4Address(inetAddress.getHostAddress()))
                     {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress() && InetAddressUtils.isIPv4Address(inetAddress.getHostAddress()))
-                        {
-                        return inetAddress.getHostAddress().toString();
-                        }
+                        return inetAddress;
                     }
                 }
+            }
+
+        return null;
+        }
+
+    public String getLocalIpAddress()
+        {
+        try {
+            InetAddress inetAddress = getLocalInetAddress();
+            if (inetAddress != null)
+                return inetAddress.getHostAddress().toString();
             }
         catch (SocketException ex)
             {

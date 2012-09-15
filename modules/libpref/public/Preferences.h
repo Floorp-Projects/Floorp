@@ -219,7 +219,7 @@ public:
    * Adds/Removes the observer for the root pref branch.
    * The observer is referenced strongly if AddStrongObserver is used.  On the
    * other hand, it is referenced weakly, if AddWeakObserver is used.
-   * See nsIPrefBran2.idl for the detail.
+   * See nsIPrefBranch.idl for details.
    */
   static nsresult AddStrongObserver(nsIObserver* aObserver, const char* aPref);
   static nsresult AddWeakObserver(nsIObserver* aObserver, const char* aPref);

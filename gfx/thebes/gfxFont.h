@@ -1064,7 +1064,7 @@ private:
         float x, y, width, height;
     };
 
-    typedef PRUptrdiff PtrBits;
+    typedef uintptr_t PtrBits;
     enum { BLOCK_SIZE_BITS = 7, BLOCK_SIZE = 1 << BLOCK_SIZE_BITS }; // 128-glyph blocks
 
     class GlyphWidths {

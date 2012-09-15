@@ -11,6 +11,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsMemoryReporterManager.h"
 #include "nsArrayEnumerator.h"
+#include "nsIConsoleService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
@@ -1022,7 +1023,18 @@ nsMemoryReporterManager::DumpReports()
     rv = ostream->Close();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return NS_OK;
+    nsCOMPtr<nsIConsoleService> cs =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsString path;
+    tmpFile->GetPath(path);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsString msg =
+        NS_LITERAL_STRING("nsIMemoryReporterManager::dumpReports() dumped reports to ");
+    msg.Append(path);
+    return cs->LogStringMessage(msg.get());
 }
 
 #undef DUMP

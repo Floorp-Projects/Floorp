@@ -1456,7 +1456,7 @@ WebSocketChannel::ApplyMask(uint32_t mask, uint8_t *data, uint64_t len)
   // but the buffer might not be alligned. So we first deal with
   // 0 to 3 bytes of preamble individually
 
-  while (len && (reinterpret_cast<PRUptrdiff>(data) & 3)) {
+  while (len && (reinterpret_cast<uintptr_t>(data) & 3)) {
     *data ^= mask >> 24;
     mask = PR_ROTATE_LEFT32(mask, 8);
     data++;

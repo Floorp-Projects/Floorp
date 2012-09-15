@@ -81,6 +81,7 @@ struct JSFunction : public JSObject
     bool isInterpreted()     const { return flags & JSFUN_INTERPRETED; }
     bool isNative()          const { return !isInterpreted(); }
     bool isSelfHostedBuiltin() const { return flags & JSFUN_SELF_HOSTED; }
+    bool isBuiltin()         const { return isNative() || isSelfHostedBuiltin(); }
     bool isSelfHostedConstructor() const { return flags & JSFUN_SELF_HOSTED_CTOR; }
     bool isNativeConstructor() const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }

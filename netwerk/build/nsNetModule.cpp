@@ -235,10 +235,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsResURL)
 #ifdef NECKO_PROTOCOL_device
 #include "nsDeviceProtocolHandler.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceProtocolHandler)
-#ifdef MOZ_WIDGET_GONK
-#include "nsB2GProtocolHandler.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsB2GProtocolHandler)
-#endif
 #endif
 
 #ifdef NECKO_PROTOCOL_viewsource
@@ -755,9 +751,6 @@ NS_DEFINE_NAMED_CID(NS_DATAPROTOCOLHANDLER_CID);
 #endif
 #ifdef NECKO_PROTOCOL_device
 NS_DEFINE_NAMED_CID(NS_DEVICEPROTOCOLHANDLER_CID);
-#ifdef MOZ_WIDGET_GONK
-NS_DEFINE_NAMED_CID(NS_B2GPROTOCOLHANDLER_CID);
-#endif
 #endif
 #ifdef NECKO_PROTOCOL_viewsource
 NS_DEFINE_NAMED_CID(NS_VIEWSOURCEHANDLER_CID);
@@ -890,9 +883,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 #endif
 #ifdef NECKO_PROTOCOL_device
     { &kNS_DEVICEPROTOCOLHANDLER_CID, false, NULL, nsDeviceProtocolHandlerConstructor},
-#ifdef MOZ_WIDGET_GONK
-    { &kNS_B2GPROTOCOLHANDLER_CID, false, NULL, nsB2GProtocolHandlerConstructor},
-#endif
 #endif
 #ifdef NECKO_PROTOCOL_viewsource
     { &kNS_VIEWSOURCEHANDLER_CID, false, NULL, nsViewSourceHandlerConstructor },
@@ -1034,9 +1024,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
 #endif
 #ifdef NECKO_PROTOCOL_device
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-device", &kNS_DEVICEPROTOCOLHANDLER_CID },
-#ifdef MOZ_WIDGET_GONK
-    { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "b2g-camera", &kNS_B2GPROTOCOLHANDLER_CID },
-#endif
 #endif
 #ifdef NECKO_PROTOCOL_viewsource
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "view-source", &kNS_VIEWSOURCEHANDLER_CID },

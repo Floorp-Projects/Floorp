@@ -14,6 +14,7 @@
 #ifndef nsStackFrame_h___
 #define nsStackFrame_h___
 
+#include "mozilla/Attributes.h"
 #include "nsBoxFrame.h"
 
 class nsStackFrame : public nsBoxFrame
@@ -25,7 +26,7 @@ public:
                                     nsStyleContext* aContext);
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("Stack"), aResult);
   }
@@ -33,7 +34,7 @@ public:
 
   NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
-                                         const nsDisplayListSet& aLists);
+                                         const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
 protected:
   nsStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);

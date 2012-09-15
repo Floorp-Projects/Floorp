@@ -123,9 +123,6 @@ Sanitizer.prototype = {
         try {
           cacheService.evictEntries(Ci.nsICache.STORE_OFFLINE);
         } catch(er) {}
-
-        var storage = Cc["@mozilla.org/dom/storagemanager;1"].getService(Ci.nsIDOMStorageManager);
-        storage.clearOfflineApps();
       },
 
       get canClear()

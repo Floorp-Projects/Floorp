@@ -8,6 +8,7 @@
 #ifndef mozilla_layout_RenderFrameParent_h
 #define mozilla_layout_RenderFrameParent_h
 
+#include "mozilla/Attributes.h"
 #include <map>
 
 #include "mozilla/layout/PRenderFrameParent.h"
@@ -215,7 +216,7 @@ public:
     return mRect;
   }
 
-  virtual uint32_t GetPerFrameKey()
+  virtual uint32_t GetPerFrameKey() MOZ_OVERRIDE
   {
     NS_ABORT();
     return 0;
