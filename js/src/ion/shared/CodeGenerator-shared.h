@@ -209,6 +209,15 @@ class CodeGeneratorShared : public LInstructionVisitor
     }
 
   public:
+    // Save and restore all volatile registers to/from the stack, excluding the
+    // specified register(s), before a function call made using callWithABI and
+    // after storing the function call's return value to an output register.
+    // (The only registers that don't need to be saved/restored are 1) the
+    // temporary register used to store the return value of the function call,
+    // if there is one [otherwise that stored value would be overwritten]; and
+    // 2) temporary registers whose values aren't needed in the rest of the LIR
+    // instruction [this is purely an optimization].  All other volatiles must
+    // be saved and restored in case future LIR instructions need those values.)
     void saveVolatile(Register output) {
         RegisterSet regs = RegisterSet::Volatile();
         regs.maybeTake(output);

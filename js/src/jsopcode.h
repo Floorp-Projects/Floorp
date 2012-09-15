@@ -74,7 +74,7 @@ typedef enum JSOp {
 #define JOF_POST         (1U<<12) /* postorder increment or decrement */
 #define JOF_ASSIGNING     JOF_SET /* hint for Class.resolve, used for ops
                                      that do simplex assignment */
-#define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
+#define JOF_DETECTING    (1U<<14) /* object detection for warning-quelling */
 #define JOF_BACKPATCH    (1U<<15) /* backpatch placeholder during codegen */
 #define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
 /* (1U<<17) is unused */
