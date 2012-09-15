@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1346451771000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1347572992000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -94,6 +94,10 @@
                   </emItem>
       <emItem  blockID="i111" os="WINNT" id="{C3949AC2-4B17-43ee-B4F1-D26B9D42404D}">
                         <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i136" id="Adobe@flash.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i38" id="{B7082FAA-CB62-4872-9106-E42DD88EDE45}">
@@ -448,6 +452,9 @@
       <pluginItem  blockID="p129">
                   <match name="filename" exp="Silverlight\.plugin" />                      <versionRange  minVersion="0" maxVersion="5.0.99999" severity="1"></versionRange>
                   </pluginItem>
+      <pluginItem  blockID="p138">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                      <versionRange  minVersion="Java 7 Update 01" maxVersion="Java 7 Update 06" severity="0"></versionRange>
+                  </pluginItem>
     </pluginItems>
 
   <gfxItems>
@@ -460,26 +467,6 @@
                   </devices>
             <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.17.12.5896</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g37">      <os>WINNT 5.1</os>      <vendor>0x10de</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>7.0.0.0</driverVersion>      <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g81">      <os>WINNT 6.1</os>      <vendor>0x1002</vendor>              <devices>
-                      <device>0x9802</device>
-                      <device>0x9803</device>
-                      <device>0x9803</device>
-                      <device>0x9804</device>
-                      <device>0x9805</device>
-                      <device>0x9806</device>
-                      <device>0x9807</device>
-                  </devices>
-            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>      <driverVersion>1.0.0.0</driverVersion>      <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g95">      <os>WINNT 6.1</os>      <vendor>0x1002</vendor>              <devices>
-                      <device>0x9802</device>
-                      <device>0x9803</device>
-                      <device>0x9803</device>
-                      <device>0x9804</device>
-                      <device>0x9805</device>
-                      <device>0x9806</device>
-                      <device>0x9807</device>
-                  </devices>
-            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>      <driverVersion>1.0.0.0</driverVersion>      <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
 
