@@ -663,6 +663,7 @@ JSObject::setSingletonType(JSContext *cx, js::HandleObject obj)
 inline js::types::TypeObject *
 JSObject::getType(JSContext *cx)
 {
+    JS_ASSERT(cx->compartment == compartment());
     if (hasLazyType())
         return makeLazyType(cx);
     return type_;
@@ -672,6 +673,7 @@ JSObject::getType(JSContext *cx)
 JSObject::clearType(JSContext *cx, js::HandleObject obj)
 {
     JS_ASSERT(!obj->hasSingletonType());
+    JS_ASSERT(cx->compartment == obj->compartment());
 
     js::types::TypeObject *type = cx->compartment->getEmptyType(cx);
     if (!type)
@@ -692,6 +694,7 @@ JSObject::setType(js::types::TypeObject *newType)
     JS_ASSERT_IF(hasSpecialEquality(),
                  newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     JS_ASSERT(!hasSingletonType());
+    JS_ASSERT(compartment() == newType->compartment());
     type_ = newType;
 }
 
@@ -824,6 +827,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
     JS_ASSERT(shape && type);
     JS_ASSERT(!!dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == !!slots);
     JS_ASSERT(js::gc::GetGCKindSlots(kind, shape->getObjectClass()) == shape->numFixedSlots());
+    JS_ASSERT(cx->compartment == type->compartment());
 
     JSObject *obj = js_NewGCObject(cx, kind);
     if (!obj)
@@ -852,6 +856,7 @@ JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
 {
     JS_ASSERT(shape && type);
     JS_ASSERT(shape->getObjectClass() == &js::ArrayClass);
+    JS_ASSERT(cx->compartment == type->compartment());
 
     /*
      * Dense arrays are non-native, and never have properties to store.
