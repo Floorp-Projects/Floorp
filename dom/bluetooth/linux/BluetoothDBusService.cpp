@@ -440,7 +440,10 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       return DBUS_HANDLER_RESULT_HANDLED;
     }
   } else {
+#ifdef DEBUG
     LOG("agent handler %s: Unhandled event. Ignore.", __FUNCTION__);
+#endif
+    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
   }
 
   if (!errorStr.IsEmpty()) {
@@ -982,6 +985,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     signalStr += " Signal not handled!";
     NS_WARNING(signalStr.get());
 #endif
+    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
   }
 
   if (!errorStr.IsEmpty()) {
@@ -1077,8 +1081,6 @@ BluetoothDBusService::StopInternal()
     return NS_OK;
   }
 
-  RemoveReservedServicesInternal(sDefaultAdapterPath, sServiceHandles);
-
   DBusError err;
   dbus_error_init(&err);
   for (uint32_t i = 0; i < ArrayLength(sBluetoothDBusSignals); ++i) {
@@ -1167,7 +1169,6 @@ public:
                                                                          path));
 
     RegisterAgent(path);
-    AddReservedServices(path);
 
     DispatchBluetoothReply(mRunnable, v, replyError);
    
