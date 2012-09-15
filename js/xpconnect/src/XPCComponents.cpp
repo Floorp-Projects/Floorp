@@ -3150,11 +3150,8 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
     js::RootedId id(cx, id_);
 
     MOZ_ASSERT(js::GetObjectCompartment(obj) == js::GetObjectCompartment(proxy));
-    // XXXbz Not sure about the JSRESOLVE_QUALIFIED here, but we have
-    // no way to tell for sure whether to use it.
     if (!JS_GetPropertyDescriptorById(cx, obj, id,
-                                      (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
-                                      desc))
+                                      (set ? JSRESOLVE_ASSIGNING : 0), desc))
         return false;
 
     if (!desc->obj)
