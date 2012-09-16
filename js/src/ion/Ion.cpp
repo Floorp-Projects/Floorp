@@ -150,10 +150,10 @@ IonCompartment::initialize(JSContext *cx)
 void
 ion::FinishOffThreadBuilder(IonBuilder *builder)
 {
-    if (builder->script->isIonCompilingOffThread()) {
-        types::TypeCompartment &types = builder->script->compartment()->types;
+    if (builder->script()->isIonCompilingOffThread()) {
+        types::TypeCompartment &types = builder->script()->compartment()->types;
         builder->recompileInfo.compilerOutput(types)->invalidate();
-        builder->script->ion = NULL;
+        builder->script()->ion = NULL;
     }
     js_delete(builder->temp().lifoAlloc());
 }
@@ -903,17 +903,17 @@ class AutoDestroyAllocator
 bool
 TestCompiler(IonBuilder *builder, MIRGraph *graph, AutoDestroyAllocator &autoDestroy)
 {
-    JS_ASSERT(!builder->script->ion);
+    JS_ASSERT(!builder->script()->ion);
     JSContext *cx = GetIonContext()->cx;
 
-    IonSpewNewFunction(graph, builder->script);
+    IonSpewNewFunction(graph, builder->script());
 
     if (!builder->build())
         return false;
     builder->clearForBackEnd();
 
     if (js_IonOptions.parallelCompilation) {
-        builder->script->ion = ION_COMPILING_SCRIPT;
+        builder->script()->ion = ION_COMPILING_SCRIPT;
 
         if (!StartOffThreadIonCompile(cx, builder))
             return false;
@@ -955,7 +955,7 @@ AttachFinishedCompilations(JSContext *cx)
         IonBuilder *builder = compilations.popCopy();
 
         if (builder->lir) {
-            JSScript *script = builder->script;
+            JSScript *script = builder->script();
             IonContext ictx(cx, cx->compartment, &builder->temp());
 
             CodeGenerator codegen(builder, *builder->lir);

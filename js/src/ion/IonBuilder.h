@@ -415,10 +415,10 @@ class IonBuilder : public MIRGenerator
                            MBasicBlock *bottom,
                            Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
 
-  public:
     // A builder is inextricably tied to a particular script.
-    JSScript * const script;
+    HeapPtrScript script_;
 
+  public:
     // Compilation index for this attempt.
     types::RecompileInfo const recompileInfo;
 
@@ -426,6 +426,8 @@ class IonBuilder : public MIRGenerator
     LIRGraph *lir;
 
     void clearForBackEnd();
+
+    JSScript *script() const { return script_; }
 
   private:
     JSContext *cx;
