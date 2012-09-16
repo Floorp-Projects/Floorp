@@ -2378,6 +2378,8 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       tempManager->SetRoot(layer);
       layerBuilder->WillEndTransaction();
 
+      nsIntPoint offset = GetLastPaintOffset(aLayer) - GetTranslationForThebesLayer(aLayer);
+      props->MoveBy(-offset);
       nsIntRect invalid = props->ComputeDifferences(layer, nullptr);
       if (aLayerState == LAYER_SVG_EFFECTS) {
         invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->GetUnderlyingFrame(), invalid);
