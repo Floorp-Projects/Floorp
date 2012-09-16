@@ -912,9 +912,9 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsDisplayItem* aItem,
     nsIFrame* viewportFrame =
       nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
     NS_ASSERTION(viewportFrame, "no viewport???");
-    return nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, aBuilder->ReferenceFrame());
+    return nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, aBuilder->FindReferenceFrameFor(viewportFrame));
   } else {
-    return nsLayoutUtils::GetActiveScrolledRootFor(f, aBuilder->ReferenceFrame());
+    return nsLayoutUtils::GetActiveScrolledRootFor(f, aItem->ReferenceFrame());
   }
 }
 
@@ -1530,7 +1530,7 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
 {
   nsDisplayList newList;
   // The page which we're really constructing a display list for
-  nsIFrame* mainPage = aBuilder->ReferenceFrame();
+  nsIFrame* mainPage = aBuilder->RootReferenceFrame();
 
   while (true) {
     nsDisplayItem* i = aList->RemoveBottom();
