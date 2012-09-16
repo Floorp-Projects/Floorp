@@ -540,19 +540,19 @@ class StackTypeSet : public TypeSet
     /* Constraints for type inference. */
 
     void addSubset(JSContext *cx, TypeSet *target);
-    void addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
+    void addGetProperty(JSContext *cx, HandleScript script, jsbytecode *pc,
                         StackTypeSet *target, jsid id);
-    void addSetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
+    void addSetProperty(JSContext *cx, HandleScript script, jsbytecode *pc,
                         StackTypeSet *target, jsid id);
-    void addSetElement(JSContext *cx, JSScript *script, jsbytecode *pc,
+    void addSetElement(JSContext *cx, HandleScript script, jsbytecode *pc,
                        StackTypeSet *objectTypes, StackTypeSet *valueTypes);
     void addCall(JSContext *cx, TypeCallsite *site);
-    void addArith(JSContext *cx, JSScript *script, jsbytecode *pc,
+    void addArith(JSContext *cx, HandleScript script, jsbytecode *pc,
                   TypeSet *target, TypeSet *other = NULL);
-    void addTransformThis(JSContext *cx, JSScript *script, TypeSet *target);
-    void addPropagateThis(JSContext *cx, JSScript *script, jsbytecode *pc,
+    void addTransformThis(JSContext *cx, HandleScript script, TypeSet *target);
+    void addPropagateThis(JSContext *cx, HandleScript script, jsbytecode *pc,
                           Type type, StackTypeSet *types = NULL);
-    void addSubsetBarrier(JSContext *cx, JSScript *script, jsbytecode *pc, TypeSet *target);
+    void addSubsetBarrier(JSContext *cx, HandleScript script, jsbytecode *pc, TypeSet *target);
 
     /*
      * Constraints for JIT compilation.
@@ -606,17 +606,16 @@ class HeapTypeSet : public TypeSet
     /* Constraints for type inference. */
 
     void addSubset(JSContext *cx, TypeSet *target);
-    void addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
+    void addGetProperty(JSContext *cx, HandleScript script, jsbytecode *pc,
                         StackTypeSet *target, jsid id);
-    void addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, jsid id);
+    void addCallProperty(JSContext *cx, HandleScript script, jsbytecode *pc, jsid id);
     void addFilterPrimitives(JSContext *cx, TypeSet *target);
-    void addSubsetBarrier(JSContext *cx, JSScript *script, jsbytecode *pc, TypeSet *target);
+    void addSubsetBarrier(JSContext *cx, HandleScript script, jsbytecode *pc, TypeSet *target);
 
     /* Constraints for JIT compilation. */
 
     /* Completely freeze the contents of this type set. */
     void addFreeze(JSContext *cx);
-
 
     /*
      * Watch for a generic object state change on a type object. This currently
@@ -1054,18 +1053,18 @@ typedef HashSet<ReadBarriered<TypeObject>, TypeObjectEntry, SystemAllocPolicy> T
 
 /* Whether to use a new type object when calling 'new' at script/pc. */
 bool
-UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
+UseNewType(JSContext *cx, HandleScript script, jsbytecode *pc);
 
 /* Whether to use a new type object for an initializer opcode at script/pc. */
 bool
-UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey key);
+UseNewTypeForInitializer(JSContext *cx, HandleScript script, jsbytecode *pc, JSProtoKey key);
 
 /*
  * Whether Array.prototype, or an object on its proto chain, has an
  * indexed property.
  */
 bool
-ArrayPrototypeHasIndexedProperty(JSContext *cx, JSScript *script);
+ArrayPrototypeHasIndexedProperty(JSContext *cx, HandleScript script);
 
 /*
  * Type information about a callsite. this is separated from the bytecode
@@ -1116,36 +1115,38 @@ class TypeScript
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     TypeSet *typeArray() { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
 
-    static inline unsigned NumTypeSets(JSScript *script);
+    static inline unsigned NumTypeSets(RawScript script);
 
-    static inline HeapTypeSet  *ReturnTypes(JSScript *script);
-    static inline StackTypeSet *ThisTypes(JSScript *script);
-    static inline StackTypeSet *ArgTypes(JSScript *script, unsigned i);
-    static inline StackTypeSet *LocalTypes(JSScript *script, unsigned i);
+    static inline HeapTypeSet  *ReturnTypes(RawScript script);
+    static inline StackTypeSet *ThisTypes(RawScript script);
+    static inline StackTypeSet *ArgTypes(RawScript script, unsigned i);
+    static inline StackTypeSet *LocalTypes(RawScript script, unsigned i);
 
     /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
-    static inline StackTypeSet *SlotTypes(JSScript *script, unsigned slot);
+    static inline StackTypeSet *SlotTypes(RawScript script, unsigned slot);
 
 #ifdef DEBUG
     /* Check that correct types were inferred for the values pushed by this bytecode. */
-    static void CheckBytecode(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value *sp);
+    static void CheckBytecode(JSContext *cx, HandleScript script, jsbytecode *pc,
+                              const js::Value *sp);
 #endif
 
     /* Get the default 'new' object for a given standard class, per the script's global. */
-    static inline TypeObject *StandardType(JSContext *cx, JSScript *script, JSProtoKey kind);
+    static inline TypeObject *StandardType(JSContext *cx, HandleScript script, JSProtoKey kind);
 
     /* Get a type object for an allocation site in this script. */
-    static inline TypeObject *InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey kind);
+    static inline TypeObject *InitObject(JSContext *cx, HandleScript script, jsbytecode *pc,
+                                         JSProtoKey kind);
 
     /*
      * Monitor a bytecode pushing a value which is not accounted for by the
      * inference type constraints, such as integer overflow.
      */
-    static inline void MonitorOverflow(JSContext *cx, JSScript *script, jsbytecode *pc);
-    static inline void MonitorString(JSContext *cx, JSScript *script, jsbytecode *pc);
-    static inline void MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc);
+    static inline void MonitorOverflow(JSContext *cx, HandleScript script, jsbytecode *pc);
+    static inline void MonitorString(JSContext *cx, HandleScript script, jsbytecode *pc);
+    static inline void MonitorUnknown(JSContext *cx, HandleScript script, jsbytecode *pc);
 
-    static inline void GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc);
+    static inline void GetPcScript(JSContext *cx, MutableHandleScript script, jsbytecode **pc);
     static inline void MonitorOverflow(JSContext *cx);
     static inline void MonitorString(JSContext *cx);
     static inline void MonitorUnknown(JSContext *cx);
@@ -1157,7 +1158,7 @@ class TypeScript
      * always monitor JOF_TYPESET opcodes in the interpreter and stub calls,
      * and only look at barriers when generating JIT code for the script.
      */
-    static inline void Monitor(JSContext *cx, JSScript *script, jsbytecode *pc,
+    static inline void Monitor(JSContext *cx, HandleScript script, jsbytecode *pc,
                                const js::Value &val);
     static inline void Monitor(JSContext *cx, const js::Value &rval);
 
@@ -1165,17 +1166,19 @@ class TypeScript
     static inline void MonitorAssign(JSContext *cx, HandleObject obj, jsid id);
 
     /* Add a type for a variable in a script. */
-    static inline void SetThis(JSContext *cx, JSScript *script, Type type);
-    static inline void SetThis(JSContext *cx, JSScript *script, const js::Value &value);
-    static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local, Type type);
-    static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local, const js::Value &value);
-    static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type);
-    static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js::Value &value);
+    static inline void SetThis(JSContext *cx, HandleScript script, Type type);
+    static inline void SetThis(JSContext *cx, HandleScript script, const js::Value &value);
+    static inline void SetLocal(JSContext *cx, HandleScript script, unsigned local, Type type);
+    static inline void SetLocal(JSContext *cx, HandleScript script, unsigned local,
+                                const js::Value &value);
+    static inline void SetArgument(JSContext *cx, HandleScript script, unsigned arg, Type type);
+    static inline void SetArgument(JSContext *cx, HandleScript script, unsigned arg,
+                                   const js::Value &value);
 
-    static void AddFreezeConstraints(JSContext *cx, JSScript *script);
-    static void Purge(JSContext *cx, JSScript *script);
+    static void AddFreezeConstraints(JSContext *cx, HandleScript script);
+    static void Purge(JSContext *cx, HandleScript script);
 
-    static void Sweep(FreeOp *fop, JSScript *script);
+    static void Sweep(FreeOp *fop, RawScript script);
     void destroy();
 };
 
@@ -1348,10 +1351,10 @@ struct TypeCompartment
 
     /* Mark a script as needing recompilation once inference has finished. */
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
-    void addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc);
+    void addPendingRecompile(JSContext *cx, HandleScript script, jsbytecode *pc);
 
     /* Monitor future effects on a bytecode. */
-    void monitorBytecode(JSContext *cx, JSScript *script, uint32_t offset,
+    void monitorBytecode(JSContext *cx, HandleScript script, uint32_t offset,
                          bool returnOnly = false);
 
     /* Mark any type set containing obj as having a generic object type. */

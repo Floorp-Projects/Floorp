@@ -580,7 +580,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
             gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_TI);
 
             for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-                JSScript *script = i.get<JSScript>();
+                RawScript script = i.get<JSScript>();
                 if (script->types) {
                     types::TypeScript::Sweep(fop, script);
 

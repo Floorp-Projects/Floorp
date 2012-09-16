@@ -703,6 +703,7 @@ mjit::Compiler::compileArrayWithLength(uint32_t argc)
             return Compile_InlineAbort;
     }
 
+    RootedScript script(cx, script_);
     types::TypeObject *type = types::TypeScript::InitObject(cx, script, PC, JSProto_Array);
     if (!type)
         return Compile_Error;
@@ -744,6 +745,7 @@ mjit::Compiler::compileArrayWithArgs(uint32_t argc)
     if (argc > maxArraySlots)
         return Compile_InlineAbort;
 
+    RootedScript script(cx, script_);
     types::TypeObject *type = types::TypeScript::InitObject(cx, script, PC, JSProto_Array);
     if (!type)
         return Compile_Error;
