@@ -72,7 +72,7 @@ public:
                                              const ContainerParameters& aContainerParameters)
   {
     return static_cast<nsHTMLCanvasFrame*>(mFrame)->
-      BuildLayer(aBuilder, aManager, this);
+      BuildLayer(aBuilder, aManager, this, aContainerParameters);
   }
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
@@ -254,7 +254,8 @@ nsHTMLCanvasFrame::GetInnerArea() const
 already_AddRefed<Layer>
 nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
-                              nsDisplayItem* aItem)
+                              nsDisplayItem* aItem,
+                              const ContainerParameters& aContainerParameters)
 {
   nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
   nsHTMLCanvasElement* element = static_cast<nsHTMLCanvasElement*>(GetContent());
@@ -279,7 +280,7 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   // Transform the canvas into the right place
   gfxMatrix transform;
-  transform.Translate(r.TopLeft());
+  transform.Translate(r.TopLeft() + aContainerParameters.mOffset);
   transform.Scale(r.Width()/canvasSize.width, r.Height()/canvasSize.height);
   layer->SetBaseTransform(gfx3DMatrix::From2D(transform));
   layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
