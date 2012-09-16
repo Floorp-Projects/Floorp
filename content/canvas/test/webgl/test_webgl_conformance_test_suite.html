@@ -47,7 +47,6 @@ SimpleTest.waitForExplicitFinish();
 function start() {
 
   var kIsWindows = false;
-  var kIsMac = false;
   var kIsLinux = false;
   var kIsAndroid = false;
   if (navigator.platform.indexOf("Win") == 0)
@@ -56,8 +55,10 @@ function start() {
     kIsAndroid = true;
   else if (navigator.platform.indexOf("Linux") == 0) // must be checked after android, as android also has a 'Linux' platform string
     kIsLinux = true;
-  else if (navigator.platform.indexOf("Mac") == 0)
-    kIsMac = true;
+
+  // Set kMacVersion to the OS X version for Mac, and 0 otherwise.
+  var osxmatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
+  var kMacVersion = osxmatch ? parseFloat(osxmatch[1]) : 0;
 
   var kIsWindowsVistaOrHigher = false;
   if (kIsWindows) {
@@ -67,26 +68,6 @@ function start() {
                             .getService(Components.interfaces.nsIPropertyBag2)
                             .getProperty("version");
     kIsWindowsVistaOrHigher = (parseFloat(version) >= 6.0);
-  }
-
-  // we currently disable this test on version of Mac OSX older than 10.6,
-  // due to various weird failures, including one making getRenderbufferParameter tests
-  // on DEPTH_STENCIL fail
-  var kDarwinVersion = 0;
-  if (kIsMac) {
-    // code borrowed from browser/modules/test/browser_taskbar_preview.js
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    kDarwinVersion = parseFloat(Components.classes["@mozilla.org/system-info;1"]
-                                          .getService(Components.interfaces.nsIPropertyBag2)
-                                          .getProperty("version"));
-    // the next line is correct: Mac OSX 10.6 corresponds to Darwin version 10 !
-    // Mac OSX 10.5 would be Darwin version 9. the |version| string we've got here
-    // is the Darwin version.
-    if (kDarwinVersion < 10.0) {
-      todo(false, "Test disabled on Mac OSX versions older than 10.6.");
-      SimpleTest.finish();
-      return;
-    }
   }
 
   function getEnv(env) {
@@ -433,7 +414,9 @@ function start() {
     failingTestsFilename = 'failing_tests_windows.txt';
   else if (kIsLinux)
     failingTestsFilename = 'failing_tests_linux.txt';
-  else if (kIsMac)
+  else if (kMacVersion == 10.8)
+    failingTestsFilename = 'failing_tests_mac_mtnlion.txt';
+  else if (kMacVersion)
     failingTestsFilename = 'failing_tests_mac.txt';
   else if (kIsAndroid)
     failingTestsFilename = 'failing_tests_android.txt';
