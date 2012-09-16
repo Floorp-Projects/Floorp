@@ -91,6 +91,8 @@ struct LayerPropertiesBase : public LayerProperties
   virtual nsIntRect ComputeDifferences(Layer* aRoot, 
                                        NotifySubDocInvalidationFunc aCallback);
 
+  virtual void MoveBy(const nsIntPoint& aOffset);
+
   nsIntRect ComputeChange(NotifySubDocInvalidationFunc aCallback)
   {
     bool transformChanged = mTransform != mLayer->GetTransform();
@@ -327,6 +329,12 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, NotifySubDocInvalidationFu
   } else {
     return ComputeChange(aCallback);
   }
+}
+  
+void 
+LayerPropertiesBase::MoveBy(const nsIntPoint& aOffset)
+{
+  mTransform.TranslatePost(gfxPoint3D(aOffset.x, aOffset.y, 0)); 
 }
 
 } // namespace layers
