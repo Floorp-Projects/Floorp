@@ -893,7 +893,7 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   // Clip the shadow layers to subdoc bounds
-  nsPoint offset = aFrame->GetOffsetToCrossDoc(aBuilder->ReferenceFrame());
+  nsPoint offset = aBuilder->ToReferenceFrame(aFrame);
   nsRect bounds = aFrame->EnsureInnerView()->GetBounds() + offset;
 
   return aLists.Content()->AppendNewToTop(
