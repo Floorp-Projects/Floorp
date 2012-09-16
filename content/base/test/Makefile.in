@@ -557,6 +557,9 @@ MOCHITEST_FILES_B = \
 		test_XHR_system.html \
 		test_XHR_parameters.html \
 		test_ipc_messagemanager_blob.html \
+		test_mixed_content_blocker.html \
+		file_mixed_content_main.html \
+		file_mixed_content_server.sjs \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES =	\
