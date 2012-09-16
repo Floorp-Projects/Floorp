@@ -1340,10 +1340,6 @@ pref("security.dialog_enable_delay", 2000);
 pref("security.csp.enable", true);
 pref("security.csp.debug", false);
 
-// Mixed content blocking
-pref("security.mixed_content.block_active_content", false);
-pref("security.mixed_content.block_display_content", false);
-
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
 // Use 17 for Ctrl, 18 for Alt, 224 for Meta, 91 for Win, 0 for none. Mac settings in macprefs.js
