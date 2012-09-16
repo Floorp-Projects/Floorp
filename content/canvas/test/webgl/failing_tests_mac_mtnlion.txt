@@ -1,0 +1,4 @@
+conformance/glsl/functions/glsl-function-smoothstep-gentype.html
+conformance/glsl/variables/gl-pointcoord.html
+conformance/limits/gl-max-texture-dimensions.html
+conformance/textures/texture-size.html
