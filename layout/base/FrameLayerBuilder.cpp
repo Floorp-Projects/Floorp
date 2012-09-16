@@ -496,6 +496,7 @@ public:
     mMaskClipCount(0),
     mForcedBackgroundColor(NS_RGBA(0,0,0,0)),
     mXScale(1.f), mYScale(1.f),
+    mTranslation(0, 0),
     mActiveScrolledRootPosition(0, 0) {}
 
   /**
@@ -515,6 +516,14 @@ public:
    * The resolution scale used.
    */
   float mXScale, mYScale;
+
+  /**
+   * The offset from the ThebesLayer's 0,0 to the
+   * reference frame. This isn't necessarily the same as the transform
+   * set on the ThebesLayer since we might also be applying an extra
+   * offset specified by the parent ContainerLayer/
+   */
+  nsIntPoint mTranslation;
 
   /**
    * We try to make 0,0 of the ThebesLayer be the top-left of the
@@ -1078,13 +1087,12 @@ ContainerState::CreateOrRecycleMaskImageLayerFor(Layer* aLayer)
 static nsIntPoint
 GetTranslationForThebesLayer(ThebesLayer* aLayer)
 {
-  gfxMatrix transform;
-  if (!aLayer->GetTransform().Is2D(&transform) ||
-      transform.HasNonIntegerTranslation()) {
-    NS_ERROR("ThebesLayers should have integer translations only");
-    return nsIntPoint(0, 0);
-  }
-  return nsIntPoint(int32_t(transform.x0), int32_t(transform.y0));
+  ThebesDisplayItemLayerUserData* data = 
+    static_cast<ThebesDisplayItemLayerUserData*>
+      (aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+  NS_ASSERTION(data, "Must be a tracked thebes layer!");
+
+  return data->mTranslation;
 }
 
 static const double SUBPIXEL_OFFSET_EPSILON = 0.02;
@@ -1187,6 +1195,8 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot, 
   // is close to data->mActiveScrolledRootPosition if possible.
   nsIntPoint pixOffset(RoundToMatchResidual(scaledOffset.x, data->mActiveScrolledRootPosition.x),
                        RoundToMatchResidual(scaledOffset.y, data->mActiveScrolledRootPosition.y));
+  data->mTranslation = pixOffset;
+  pixOffset += mParameters.mOffset;
   gfxMatrix matrix;
   matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
   layer->SetBaseTransform(gfx3DMatrix::From2D(matrix));
@@ -1340,7 +1350,7 @@ ContainerState::PopThebesLayerData()
     if (imageContainer) {
       nsRefPtr<ImageLayer> imageLayer = CreateOrRecycleImageLayer(data->mLayer);
       imageLayer->SetContainer(imageContainer);
-      data->mImage->ConfigureLayer(imageLayer);
+      data->mImage->ConfigureLayer(imageLayer, mParameters.mOffset);
       imageLayer->SetPostScale(mParameters.mXScale,
                                mParameters.mYScale);
       if (data->mItemClip.mHaveClipRect) {
@@ -1364,6 +1374,7 @@ ContainerState::PopThebesLayerData()
       // a rectangle, it must therefore contain the visible region's GetBounds.
       // Note that the visible region is already clipped appropriately.
       nsIntRect visibleRect = data->mVisibleRegion.GetBounds();
+      visibleRect.MoveBy(mParameters.mOffset);
       colorLayer->SetClipRect(&visibleRect);
 
       layer = colorLayer;
@@ -1395,7 +1406,7 @@ ContainerState::PopThebesLayerData()
     // Convert from relative to the container to relative to the
     // ThebesLayer itself.
     nsIntRegion rgn = data->mVisibleRegion;
-    rgn.MoveBy(-nsIntPoint(int32_t(transform.x0), int32_t(transform.y0)));
+    rgn.MoveBy(-GetTranslationForThebesLayer(data->mLayer));
     layer->SetVisibleRegion(rgn);
   }
 
@@ -1874,8 +1885,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                    "If we have rounded rects, we must have a clip rect");
       // It has its own layer. Update that layer's clip and visible rects.
       if (aClip.mHaveClipRect) {
-        ownLayer->IntersectClipRect(
-          ScaleToNearestPixels(aClip.NonRoundedIntersection()));
+        nsIntRect clip = ScaleToNearestPixels(aClip.NonRoundedIntersection());
+        clip.MoveBy(mParameters.mOffset);
+        ownLayer->IntersectClipRect(clip);
       }
       ThebesLayerData* data = GetTopThebesLayerData();
       if (data) {
@@ -1888,6 +1900,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         data->mDrawAboveRegion.Or(data->mDrawAboveRegion, itemDrawRect);
         data->mDrawAboveRegion.SimplifyOutward(4);
       }
+      itemVisibleRect.MoveBy(mParameters.mOffset);
       RestrictVisibleRegionForLayer(ownLayer, itemVisibleRect);
 
       // rounded rectangle clipping using mask layers
@@ -2156,17 +2169,32 @@ ContainerState::Finish(uint32_t* aTextContentFlags)
 
 static FrameLayerBuilder::ContainerParameters
 ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
+                           nsDisplayListBuilder* aDisplayListBuilder,
                            nsIFrame* aContainerFrame,
                            const gfx3DMatrix* aTransform,
                            const FrameLayerBuilder::ContainerParameters& aIncomingScale,
-                           ContainerLayer* aLayer)
+                           ContainerLayer* aLayer,
+                           LayerState aState)
 {
+  nsIntPoint offset;
+
   gfx3DMatrix transform =
     gfx3DMatrix::ScalingMatrix(aIncomingScale.mXScale, aIncomingScale.mYScale, 1.0);
   if (aTransform) {
     // aTransform is applied first, then the scale is applied to the result
     transform = (*aTransform)*transform;
+  } 
+  if (aContainerFrame && aState == LAYER_INACTIVE) {
+    // When we have an inactive ContainerLayer, translate the container by the offset to the
+    // reference frame (and offset all child layers by the reverse) so that the coordinate
+    // space of the child layers isn't affected by scrolling.
+    nsPoint appUnitOffset = aDisplayListBuilder->ToReferenceFrame(aContainerFrame);
+    nscoord appUnitsPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
+    offset = nsIntPoint(
+        int32_t(NSAppUnitsToDoublePixels(appUnitOffset.x, appUnitsPerDevPixel)*aIncomingScale.mXScale),
+        int32_t(NSAppUnitsToDoublePixels(appUnitOffset.y, appUnitsPerDevPixel)*aIncomingScale.mYScale));
   }
+  transform = transform * gfx3DMatrix::Translation(offset.x + aIncomingScale.mOffset.x, offset.y + aIncomingScale.mOffset.y, 0);
 
   gfxMatrix transform2d;
   bool canDraw2D = transform.CanDraw2D(&transform2d);
@@ -2219,7 +2247,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
                       1.0f/float(scale.height));
 
   FrameLayerBuilder::ContainerParameters
-    result(scale.width, scale.height, aIncomingScale);
+    result(scale.width, scale.height, -offset, aIncomingScale);
   if (aTransform) {
     result.mInTransformedSubtree = true;
     if (aContainerFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer)) {
@@ -2407,8 +2435,9 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   containerLayer->SetUserData(&gLayerOwnerUserData,
                               new LayerOwnerUserData(aContainerFrame));
 
-  if (aContainerItem &&
-      aContainerItem->GetLayerState(aBuilder, aManager, aParameters) == LAYER_ACTIVE_EMPTY) {
+  LayerState state = aContainerItem ? aContainerItem->GetLayerState(aBuilder, aManager, aParameters) : LAYER_ACTIVE;
+
+  if (aContainerItem && state == LAYER_ACTIVE_EMPTY) {
     // Empty layers only have metadata and should never have display items. We
     // early exit because later, invalidation will walk up the frame tree to
     // determine which thebes layer gets invalidated. Since an empty layer
@@ -2418,8 +2447,8 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   }
 
   ContainerParameters scaleParameters =
-    ChooseScaleAndSetTransform(this, aContainerFrame, aTransform, aParameters,
-                               containerLayer);
+    ChooseScaleAndSetTransform(this, aBuilder, aContainerFrame, aTransform, aParameters,
+                               containerLayer, state);
 
   uint32_t oldGeneration = mContainerLayerGeneration;
   mContainerLayerGeneration = ++mMaxContainerLayerGeneration;
@@ -2531,6 +2560,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   }
 
   NS_ASSERTION(bounds.IsEqualInterior(aChildren.GetBounds(aBuilder)), "Wrong bounds");
+  pixBounds.MoveBy(nsIntPoint(scaleParameters.mOffset.x, scaleParameters.mOffset.y));
   containerLayer->SetVisibleRegion(pixBounds);
   // Make sure that rounding the visible region out didn't add any area
   // we won't paint
@@ -3349,7 +3379,10 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   }
 
   maskLayer->SetContainer(container);
-  maskLayer->SetBaseTransform(gfx3DMatrix::From2D(maskTransform.Invert()));
+  
+  gfx3DMatrix matrix = gfx3DMatrix::From2D(maskTransform.Invert());
+  matrix.Translate(gfxPoint3D(mParameters.mOffset.x, mParameters.mOffset.y, 0));
+  maskLayer->SetBaseTransform(matrix);
 
   // save the details of the clip in user data
   userData->mScaleX = newData.mScaleX;
