@@ -39,7 +39,7 @@ js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
 static void
 FinishOffThreadIonCompile(ion::IonBuilder *builder)
 {
-    JSCompartment *compartment = builder->script->compartment();
+    JSCompartment *compartment = builder->script()->compartment();
     JS_ASSERT(compartment->rt->workerThreadState->isLocked());
 
     compartment->ionCompartment()->finishedOffThreadCompilations().append(builder);
@@ -67,7 +67,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
     /* Cancel any pending entries for which processing hasn't started. */
     for (size_t i = 0; i < state.ionWorklist.length(); i++) {
         ion::IonBuilder *builder = state.ionWorklist[i];
-        if (CompiledScriptMatches(compartment, script, builder->script)) {
+        if (CompiledScriptMatches(compartment, script, builder->script())) {
             FinishOffThreadIonCompile(builder);
             state.ionWorklist[i--] = state.ionWorklist.back();
             state.ionWorklist.popBack();
@@ -86,7 +86,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
     /* Cancel code generation for any completed entries. */
     for (size_t i = 0; i < compilations.length(); i++) {
         ion::IonBuilder *builder = compilations[i];
-        if (CompiledScriptMatches(compartment, script, builder->script)) {
+        if (CompiledScriptMatches(compartment, script, builder->script())) {
             ion::FinishOffThreadBuilder(builder);
             compilations[i--] = compilations.back();
             compilations.popBack();
@@ -261,7 +261,7 @@ WorkerThread::threadLoop()
         }
 
         ion::IonBuilder *builder = state.ionWorklist.popCopy();
-        ionScript = builder->script;
+        ionScript = builder->script();
 
         JS_ASSERT(ionScript->ion == ION_COMPILING_SCRIPT);
 

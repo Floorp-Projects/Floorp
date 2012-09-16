@@ -136,7 +136,8 @@ stubs::SlowCall(VMFrame &f, uint32_t argc)
     if (!InvokeKernel(f.cx, args))
         THROW();
 
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
+    RootedScript fscript(f.cx, f.script());
+    types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
 }
 
 void JS_FASTCALL
@@ -146,7 +147,8 @@ stubs::SlowNew(VMFrame &f, uint32_t argc)
     if (!InvokeConstructorKernel(f.cx, args))
         THROW();
 
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
+    RootedScript fscript(f.cx, f.script());
+    types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
 }
 
 static inline bool
@@ -282,8 +284,9 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
 
     bool construct = InitialFrameFlagsAreConstructing(initial);
 
+    RootedScript fscript(cx, f.script());
     bool newType = construct && cx->typeInferenceEnabled() &&
-        types::UseNewType(cx, f.script(), f.pc());
+        types::UseNewType(cx, fscript, f.pc());
 
     if (!types::TypeMonitorCall(cx, args, construct))
         return false;
@@ -360,8 +363,10 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     bool ok = RunScript(cx, script, cx->fp());
     f.cx->stack.popInlineFrame(regs);
 
-    if (ok)
-        types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
+    if (ok) {
+        RootedScript fscript(cx, f.script());
+        types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
+    }
 
     *pret = NULL;
     return ok;
@@ -389,7 +394,8 @@ stubs::UncachedNewHelper(VMFrame &f, uint32_t argc, UncachedCallResult &ucr)
     } else {
         if (!InvokeConstructorKernel(cx, args))
             THROW();
-        types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
+        RootedScript fscript(cx, f.script());
+        types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
     }
 }
 
@@ -418,7 +424,8 @@ stubs::Eval(VMFrame &f, uint32_t argc)
         if (!InvokeKernel(f.cx, args))
             THROW();
 
-        types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
+        RootedScript fscript(f.cx, f.script());
+        types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
         return;
     }
 
@@ -426,7 +433,8 @@ stubs::Eval(VMFrame &f, uint32_t argc)
     if (!DirectEval(f.cx, args))
         THROW();
 
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
+    RootedScript fscript(f.cx, f.script());
+    types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
 }
 
 void
@@ -448,7 +456,8 @@ stubs::UncachedCallHelper(VMFrame &f, uint32_t argc, bool lowered, UncachedCallR
         if (ucr.fun->isNative()) {
             if (!CallJSNative(cx, ucr.fun->native(), args))
                 THROW();
-            types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
+            RootedScript fscript(cx, f.script());
+            types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
             return;
         }
     }
@@ -456,7 +465,8 @@ stubs::UncachedCallHelper(VMFrame &f, uint32_t argc, bool lowered, UncachedCallR
     if (!InvokeKernel(f.cx, args))
         THROW();
 
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
+    RootedScript fscript(cx, f.script());
+    types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
     return;
 }
 
@@ -730,8 +740,10 @@ FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
     if (rejoin == REJOIN_POS) {
         double d = ov.toNumber();
         double N = (cs->format & JOF_INC) ? 1 : -1;
-        if (!nv.setNumber(d + N))
-            types::TypeScript::MonitorOverflow(cx, f.script(), f.pc());
+        if (!nv.setNumber(d + N)) {
+            RootedScript fscript(cx, f.script());
+            types::TypeScript::MonitorOverflow(cx, fscript, f.pc());
+        }
     }
 
     unsigned i = GET_SLOTNO(f.pc());
@@ -762,7 +774,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
     JSContext *cx = f.cx;
     StackFrame *fp = f.regs.fp();
-    JSScript *script = fp->script();
+    RootedScript script(cx, fp->script());
 
     jsbytecode *pc = f.regs.pc;
 

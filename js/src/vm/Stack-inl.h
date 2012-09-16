@@ -524,13 +524,13 @@ ContextStack::currentScript(jsbytecode **ppc,
 
     if (!hasfp())
         return NULL;
-		
+
     FrameRegs &regs = this->regs();
     StackFrame *fp = regs.fp();
 
 #ifdef JS_ION
     if (fp->beginsIonActivation()) {
-        JSScript *script = NULL;
+        RootedScript script(cx_);
         ion::GetPcScript(cx_, &script, ppc);
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
             return NULL;

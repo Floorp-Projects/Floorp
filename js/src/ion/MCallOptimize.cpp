@@ -99,7 +99,7 @@ types::StackTypeSet *
 IonBuilder::getInlineReturnTypeSet()
 {
     types::StackTypeSet *barrier;
-    types::StackTypeSet *returnTypes = oracle->returnTypeSet(script, pc, &barrier);
+    types::StackTypeSet *returnTypes = oracle->returnTypeSet(script_, pc, &barrier);
 
     JS_ASSERT(returnTypes);
     return returnTypes;
@@ -115,7 +115,7 @@ IonBuilder::getInlineReturnType()
 types::StackTypeSet *
 IonBuilder::getInlineArgTypeSet(uint32 argc, uint32 arg)
 {
-    types::StackTypeSet *argTypes = oracle->getCallArg(script, argc, arg, pc);
+    types::StackTypeSet *argTypes = oracle->getCallArg(script_, argc, arg, pc);
     JS_ASSERT(argTypes);
     return argTypes;
 }
@@ -245,6 +245,7 @@ IonBuilder::inlineArrayPopShift(MArrayPopShift::Mode mode, uint32 argc, bool con
     types::StackTypeSet *thisTypes = getInlineArgTypeSet(argc, 0);
     if (thisTypes->hasObjectFlags(cx, unhandledFlags))
         return InliningStatus_NotInlined;
+    RootedScript script(cx, script_);
     if (types::ArrayPrototypeHasIndexedProperty(cx, script))
         return InliningStatus_NotInlined;
 
@@ -282,6 +283,7 @@ IonBuilder::inlineArrayPush(uint32 argc, bool constructing)
     types::StackTypeSet *thisTypes = getInlineArgTypeSet(argc, 0);
     if (thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY))
         return InliningStatus_NotInlined;
+    RootedScript script(cx, script_);
     if (types::ArrayPrototypeHasIndexedProperty(cx, script))
         return InliningStatus_NotInlined;
 
