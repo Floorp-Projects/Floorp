@@ -362,7 +362,7 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, StackShape &child)
             return NULL;
         //JS_ASSERT(shape->parent == parent);
         //JS_ASSERT_IF(parent != lastProperty(), parent == lastProperty()->parent);
-        if (!self->setLastProperty(cx, shape))
+        if (!JSObject::setLastProperty(cx, self, shape))
             return NULL;
     }
 
@@ -889,25 +889,25 @@ JSObject::removeProperty(JSContext *cx, jsid id_)
     return true;
 }
 
-void
-JSObject::clear(JSContext *cx)
+/* static */ void
+JSObject::clear(JSContext *cx, HandleObject obj)
 {
-    Shape *shape = lastProperty();
-    JS_ASSERT(inDictionaryMode() == shape->inDictionary());
+    Shape *shape = obj->lastProperty();
+    JS_ASSERT(obj->inDictionaryMode() == shape->inDictionary());
 
     while (shape->parent) {
         shape = shape->parent;
-        JS_ASSERT(inDictionaryMode() == shape->inDictionary());
+        JS_ASSERT(obj->inDictionaryMode() == shape->inDictionary());
     }
     JS_ASSERT(shape->isEmptyShape());
 
-    if (inDictionaryMode())
-        shape->listp = &shape_;
+    if (obj->inDictionaryMode())
+        shape->listp = &obj->shape_;
 
-    JS_ALWAYS_TRUE(setLastProperty(cx, shape));
+    JS_ALWAYS_TRUE(JSObject::setLastProperty(cx, obj, shape));
 
     JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
-    checkShapeConsistency();
+    obj->checkShapeConsistency();
 }
 
 void

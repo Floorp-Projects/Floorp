@@ -552,7 +552,7 @@ JS_FRIEND_API(bool) InNoGCScope();
 /*
  * The scoped guard object AutoAssertNoGC forces the GC to assert if a GC is
  * attempted while the guard object is live.  If you have a GC-unsafe operation
- * to perform, use this guard object to protect your opertion.
+ * to perform, use this guard object to protect your operation.
  */
 class AutoAssertNoGC
 {
