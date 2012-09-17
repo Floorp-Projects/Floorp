@@ -516,16 +516,13 @@ gfxWindowsPlatform::UpdateRenderMode()
     }
 #endif
 
-    uint32_t canvasMask = 1 << BACKEND_CAIRO;
-    uint32_t contentMask;
+    uint32_t backendMask = 1 << BACKEND_CAIRO;
     if (mRenderMode == RENDER_DIRECT2D) {
-      canvasMask |= 1 << BACKEND_DIRECT2D;
-      contentMask = BACKEND_DIRECT2D;
+      backendMask |= 1 << BACKEND_DIRECT2D;
     } else {
-      canvasMask |= 1 << BACKEND_SKIA;
-      contentMask = 0;
+      backendMask |= 1 << BACKEND_SKIA;
     }
-    InitBackendPrefs(canvasMask, contentMask);
+    InitCanvasBackend(backendMask);
 }
 
 void
