@@ -432,12 +432,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         data->ValueFor(eCSSProperty_background_size)->
         GetPairListValue();
       for (;;) {
-        if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
-            size->mYValue.GetUnit() != eCSSUnit_Auto) {
-          // Non-default background-size, so can't be serialized as shorthand.
-          aValue.Truncate();
-          return;
-        }
         image->mValue.AppendToString(eCSSProperty_background_image, aValue);
         aValue.Append(PRUnichar(' '));
         repeat->mXValue.AppendToString(eCSSProperty_background_repeat, aValue);
@@ -450,6 +444,16 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         aValue.Append(PRUnichar(' '));
         position->mValue.AppendToString(eCSSProperty_background_position,
                                         aValue);
+        
+        if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
+            size->mYValue.GetUnit() != eCSSUnit_Auto) {
+          aValue.Append(PRUnichar(' '));
+          aValue.Append(PRUnichar('/'));
+          aValue.Append(PRUnichar(' '));
+          size->mXValue.AppendToString(eCSSProperty_background_size, aValue);
+          aValue.Append(PRUnichar(' '));
+          size->mYValue.AppendToString(eCSSProperty_background_size, aValue);
+        }
 
         NS_ABORT_IF_FALSE(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
                           origin->mValue.GetUnit() == eCSSUnit_Enumerated,
