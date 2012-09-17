@@ -258,7 +258,6 @@ BluetoothAdapter::Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue)
   nsRefPtr<BluetoothAdapter> adapter = new BluetoothAdapter(aOwner, aValue);
 
   bs->RegisterBluetoothSignalHandler(adapter->GetPath(), adapter);
-  bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(REMOTE_AGENT_PATH), adapter);
 
   return adapter.forget();
 }
