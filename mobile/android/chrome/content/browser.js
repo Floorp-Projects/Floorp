@@ -450,8 +450,10 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareImage"),
       NativeWindow.contextmenus.imageSaveableContext,
       function(aTarget) {
-        let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
-        let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
+        let doc = aTarget.ownerDocument;
+        let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                                                         .getImgCacheForDocument(doc);
+        let props = imageCache.findEntryProperties(aTarget.currentURI, doc.characterSet);
         let src = aTarget.src;
         let type = "";
         try {
@@ -471,8 +473,10 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.saveImage"),
       NativeWindow.contextmenus.imageSaveableContext,
       function(aTarget) {
-        let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
-        let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
+        let doc = aTarget.ownerDocument;
+        let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                                                         .getImgCacheForDocument(doc);
+        let props = imageCache.findEntryProperties(aTarget.currentURI, doc.characterSet);
         let contentDisposition = "";
         let type = "";
         try {
