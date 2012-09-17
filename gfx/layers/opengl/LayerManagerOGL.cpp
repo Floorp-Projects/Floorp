@@ -758,6 +758,9 @@ void
 FPSState::DrawFrameCounter(GLContext* context)
 {
   SAMPLER_FRAME_NUMBER(sFrameCount);
+
+  context->fEnable(LOCAL_GL_SCISSOR_TEST);
+
   uint16_t frameNumber = sFrameCount;
   for (size_t i = 0; i < 16; i++) {
     context->fScissor(3*i, 0, 3, 3);
