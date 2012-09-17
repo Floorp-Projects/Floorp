@@ -173,7 +173,7 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
   readonly attribute DOMString voicemailDisplayName;
 };
 
-[scriptable, uuid(fd9e8b38-b839-4d56-8482-3bf1f5c8f2ee)]
+[scriptable, uuid(4efdb1d4-1e49-4f5d-a656-44e6180062a7)]
 interface nsIICCRecords : nsISupports
 {
   /**
@@ -200,11 +200,6 @@ interface nsIICCRecords : nsISupports
    * Mobile Network Code
    */
   readonly attribute unsigned short mnc;
-
-  /**
-   * USIM Service Table
-   */
-  readonly attribute jsval ust;
 
   /**
    * Abbreviated dialling numbers
