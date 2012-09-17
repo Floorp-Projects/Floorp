@@ -43,7 +43,7 @@ StringBuffer::finishString()
 {
     JSContext *cx = context();
     if (cb.empty())
-        return cx->names().empty;
+        return cx->runtime->atomState.emptyAtom;
 
     size_t length = cb.length();
     if (!JSString::validateLength(cx, length))
@@ -73,7 +73,7 @@ StringBuffer::finishAtom()
 
     size_t length = cb.length();
     if (length == 0)
-        return cx->names().empty;
+        return cx->runtime->atomState.emptyAtom;
 
     JSAtom *atom = AtomizeChars(cx, cb.begin(), length);
     cb.clear();
@@ -94,7 +94,7 @@ js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
     if (v.isBoolean())
         return BooleanToStringBuffer(cx, v.toBoolean(), sb);
     if (v.isNull())
-        return sb.append(cx->names().null);
+        return sb.append(cx->runtime->atomState.nullAtom);
     JS_ASSERT(v.isUndefined());
-    return sb.append(cx->names().undefined);
+    return sb.append(cx->runtime->atomState.undefinedAtom);
 }

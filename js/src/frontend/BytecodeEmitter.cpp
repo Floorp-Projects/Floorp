@@ -772,7 +772,7 @@ EmitAtomOp(JSContext *cx, JSAtom *atom, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
-    if (op == JSOP_GETPROP && atom == cx->names().length) {
+    if (op == JSOP_GETPROP && atom == cx->runtime->atomState.lengthAtom) {
         /* Specialize length accesses for the interpreter. */
         op = JSOP_LENGTH;
     }
@@ -2626,7 +2626,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         if (bce->script->varIsAliased(varIndex)) {
             ScopeCoordinate sc;
             sc.hops = 0;
-            sc.slot = AliasedNameToSlot(bce->script, cx->names().arguments);
+            sc.slot = AliasedNameToSlot(bce->script, cx->runtime->atomState.argumentsAtom);
             if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
                 return false;
         } else {
@@ -3553,7 +3553,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
           case PNK_DOT: {
             if (Emit1(cx, bce, JSOP_DUP) < 0)
                 return false;
-            bool isLength = (lhs->pn_atom == cx->names().length);
+            bool isLength = (lhs->pn_atom == cx->runtime->atomState.lengthAtom);
             if (!EmitIndex32(cx, isLength ? JSOP_LENGTH : JSOP_GETPROP, atomIndex, bce))
                 return false;
             break;
@@ -3776,7 +3776,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
                     return false;
             } else {
                 JS_ASSERT(pnid->isKind(PNK_NAME) || pnid->isKind(PNK_STRING));
-                JS_ASSERT(pnid->pn_atom != cx->names().proto);
+                JS_ASSERT(pnid->pn_atom != cx->runtime->atomState.protoAtom);
                 RootedId id(cx, AtomToId(pnid->pn_atom));
                 if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0)) {
@@ -4356,9 +4356,9 @@ EmitXMLTag(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         jsatomid index;
-        HandlePropertyName tagAtom = (pn->isKind(PNK_XMLETAGO))
-                                     ? cx->names().etago
-                                     : cx->names().stago;
+        JSAtom *tagAtom = (pn->isKind(PNK_XMLETAGO))
+                          ? cx->runtime->atomState.etagoAtom
+                          : cx->runtime->atomState.stagoAtom;
         if (!bce->makeAtomIndex(tagAtom, &index))
             return false;
         if (!EmitIndex32(cx, JSOP_STRING, index, bce))
@@ -4390,9 +4390,8 @@ EmitXMLTag(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         jsatomid index;
-        HandlePropertyName tmp = pn->isKind(PNK_XMLPTAGC)
-                                 ? cx->names().ptagc
-                                 : cx->names().tagc;
+        JSAtom *tmp = (pn->isKind(PNK_XMLPTAGC)) ? cx->runtime->atomState.ptagcAtom
+                                                 : cx->runtime->atomState.tagcAtom;
         if (!bce->makeAtomIndex(tmp, &index))
             return false;
         if (!EmitIndex32(cx, JSOP_STRING, index, bce))
@@ -5352,7 +5351,7 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
             return false;
         break;
       case PNK_INTRINSICNAME:
-        if (pn2->name() == cx->names()._CallFunction)
+        if (pn2->name() == cx->runtime->atomState._CallFunctionAtom)
         {
             /*
              * Special-casing of %_CallFunction to emit bytecode that directly
@@ -5801,7 +5800,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * Disable NEWOBJECT on initializers that set __proto__, which has
              * a non-standard setter on objects.
              */
-            if (pn3->pn_atom == cx->names().proto)
+            if (pn3->pn_atom == cx->runtime->atomState.protoAtom)
                 obj = NULL;
             op = JSOP_INITPROP;
 
@@ -6546,8 +6545,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (pn->pn_xflags & PNX_XMLROOT) {
             if (pn->pn_count == 0) {
                 JS_ASSERT(pn->isKind(PNK_XMLLIST));
+                JSAtom *atom = cx->runtime->atomState.emptyAtom;
                 jsatomid index;
-                if (!bce->makeAtomIndex(cx->names().empty, &index))
+                if (!bce->makeAtomIndex(atom, &index))
                     return false;
                 if (!EmitIndex32(cx, JSOP_STRING, index, bce))
                     return false;

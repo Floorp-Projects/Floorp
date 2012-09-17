@@ -172,7 +172,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
 {
     RootedValue idval(cx, idval_);
 
-    RootedId id(cx, NameToId(cx->names().noSuchMethod));
+    RootedId id(cx, NameToId(cx->runtime->atomState.noSuchMethodAtom));
     RootedValue value(cx);
     if (!GetMethod(cx, obj, id, 0, &value))
         return false;
@@ -3163,7 +3163,7 @@ BEGIN_CASE(JSOP_INITPROP)
     RootedId &id = rootId0;
     id = NameToId(name);
 
-    if (JS_UNLIKELY(name == cx->names().proto)
+    if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
         ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, script->strictModeCode)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
@@ -3981,7 +3981,7 @@ js::Throw(JSContext *cx, HandleValue v)
 bool
 js::GetProperty(JSContext *cx, HandleValue v, PropertyName *name, MutableHandleValue vp)
 {
-    if (name == cx->names().length) {
+    if (name == cx->runtime->atomState.lengthAtom) {
         // Fast path for strings, arrays and arguments.
         if (GetLengthProperty(v, vp))
             return true;

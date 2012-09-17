@@ -5026,12 +5026,13 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
      */
     RejoinState rejoin = REJOIN_GETTER;
     if (forPrototype) {
-        JS_ASSERT(top->isType(JSVAL_TYPE_OBJECT) && name == cx->names().classPrototype);
+        JS_ASSERT(top->isType(JSVAL_TYPE_OBJECT) &&
+                  name == cx->runtime->atomState.classPrototypeAtom);
         rejoin = REJOIN_THIS_PROTOTYPE;
     }
 
     /* Handle length accesses on known strings without using a PIC. */
-    if (name == cx->names().length &&
+    if (name == cx->runtime->atomState.lengthAtom &&
         top->isType(JSVAL_TYPE_STRING) &&
         (!cx->typeInferenceEnabled() || knownPushedType(0) == JSVAL_TYPE_INT32)) {
         if (top->isConstant()) {
@@ -5051,7 +5052,7 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
     }
 
     /* Handle lenth accesses of optimize 'arguments'. */
-    if (name == cx->names().length &&
+    if (name == cx->runtime->atomState.lengthAtom &&
         cx->typeInferenceEnabled() &&
         analysis->poppedTypes(PC, 0)->isMagicArguments() &&
         knownPushedType(0) == JSVAL_TYPE_INT32)
@@ -6459,15 +6460,15 @@ mjit::Compiler::jsop_getgname(uint32_t index)
 {
     /* Optimize undefined, NaN and Infinity. */
     PropertyName *name = script->getName(index);
-    if (name == cx->names().undefined) {
+    if (name == cx->runtime->atomState.undefinedAtom) {
         frame.push(UndefinedValue());
         return true;
     }
-    if (name == cx->names().NaN) {
+    if (name == cx->runtime->atomState.NaNAtom) {
         frame.push(cx->runtime->NaNValue);
         return true;
     }
-    if (name == cx->names().Infinity) {
+    if (name == cx->runtime->atomState.InfinityAtom) {
         frame.push(cx->runtime->positiveInfinityValue);
         return true;
     }
@@ -6795,7 +6796,7 @@ mjit::Compiler::jsop_instanceof()
     /* This is sadly necessary because the error case needs the object. */
     frame.dup();
 
-    if (!jsop_getprop(cx->names().classPrototype, JSVAL_TYPE_UNKNOWN))
+    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, JSVAL_TYPE_UNKNOWN))
         return false;
 
     /* Primitive prototypes are invalid. */
@@ -7377,7 +7378,7 @@ mjit::Compiler::constructThis()
             break;
         }
 
-        Rooted<jsid> id(cx, NameToId(cx->names().classPrototype));
+        jsid id = NameToId(cx->runtime->atomState.classPrototypeAtom);
         types::HeapTypeSet *protoTypes = fun->getType(cx)->getProperty(cx, id, false);
 
         JSObject *proto = protoTypes->getSingleton(cx);
@@ -7426,7 +7427,7 @@ mjit::Compiler::constructThis()
     frame.pushCallee();
 
     // Get callee.prototype.
-    if (!jsop_getprop(cx->names().classPrototype, JSVAL_TYPE_UNKNOWN, false, /* forPrototype = */ true))
+    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, JSVAL_TYPE_UNKNOWN, false, /* forPrototype = */ true))
         return false;
 
     // Reach into the proto Value and grab a register for its data.

@@ -154,7 +154,8 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
         return NULL;
     booleanProto->setFixedSlot(BooleanObject::PRIMITIVE_VALUE_SLOT, BooleanValue(false));
 
-    RootedFunction ctor(cx, global->createConstructor(cx, Boolean, cx->names().Boolean, 1));
+    RootedFunction ctor(cx);
+    ctor = global->createConstructor(cx, Boolean, cx->runtime->atomState.BooleanAtom, 1);
     if (!ctor)
         return NULL;
 
@@ -164,7 +165,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
     if (!DefinePropertiesAndBrand(cx, booleanProto, NULL, boolean_methods))
         return NULL;
 
-    Handle<PropertyName*> valueOfName = cx->names().valueOf;
+    Rooted<PropertyName*> valueOfName(cx, cx->runtime->atomState.valueOfAtom);
     Rooted<JSFunction*> valueOf(cx,
                                 js_NewFunction(cx, NULL, bool_valueOf, 0, 0, global, valueOfName));
     if (!valueOf)

@@ -53,7 +53,7 @@ using namespace js::frontend;
 unsigned
 Bindings::argumentsVarIndex(JSContext *cx) const
 {
-    HandlePropertyName arguments = cx->names().arguments;
+    PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
     BindingIter bi(*this);
     while (bi->name() != arguments)
         bi++;
