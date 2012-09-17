@@ -497,8 +497,11 @@ public:
 
       mWorkerPrivate->SetPrincipal(channelPrincipal);
 
-      // Set Eval and ContentSecurityPolicy
       if (parent) {
+        // XHR Params Allowed
+        mWorkerPrivate->SetXHRParamsAllowed(parent->XHRParamsAllowed());
+
+        // Set Eval and ContentSecurityPolicy
         mWorkerPrivate->SetCSP(parent->GetCSP());
         mWorkerPrivate->SetEvalAllowed(parent->IsEvalAllowed());
       }
