@@ -10,8 +10,6 @@
 /*
  * JS public API typedefs.
  */
-
-#include "jsprototypes.h"
 #include "jstypes.h"
 
 /*
@@ -108,8 +106,8 @@ typedef enum JSType {
 
 /* Dense index into cached prototypes and class atoms for standard objects. */
 typedef enum JSProtoKey {
-#define PROTOKEY_AND_INITIALIZER(name,code,init) JSProto_##name = code,
-    JS_FOR_EACH_PROTOTYPE(PROTOKEY_AND_INITIALIZER)
+#define JS_PROTO(name,code,init) JSProto_##name = code,
+#include "jsproto.tbl"
 #undef JS_PROTO
     JSProto_LIMIT
 } JSProtoKey;
