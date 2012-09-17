@@ -2266,6 +2266,11 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
       mResponseBlob = mDOMFile;
       mDOMFile = nullptr;
     } else {
+      // mBuilder can be null if the channel is non-file non-cacheable
+      // and if the response length is zero.
+      if (!mBuilder) {
+        mBuilder = new nsDOMBlobBuilder();
+      }
       // Smaller files may be written in cache map instead of separate files.
       // Also, no-store response cannot be written in persistent cache.
       nsAutoCString contentType;
