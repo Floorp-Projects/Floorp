@@ -15,7 +15,6 @@ import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventResponder;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -130,17 +129,14 @@ public class GeckoLayerClient
         registerEventListener("Viewport:PageSize");
         registerEventListener("Viewport:CalculateDisplayPort");
         registerEventListener("Checkerboard:Toggle");
-        registerEventListener("Preferences:Data");
 
         mView.setListener(this);
         mView.setLayerRenderer(mLayerRenderer);
 
         sendResizeEventIfNecessary(true);
 
-        JSONArray prefs = new JSONArray();
-        DisplayPortCalculator.addPrefNames(prefs);
-        PluginLayer.addPrefNames(prefs);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Preferences:Get", prefs.toString()));
+        DisplayPortCalculator.initPrefs();
+        PluginLayer.initPrefs();
     }
 
     public void destroy() {
@@ -149,7 +145,6 @@ public class GeckoLayerClient
         unregisterEventListener("Viewport:PageSize");
         unregisterEventListener("Viewport:CalculateDisplayPort");
         unregisterEventListener("Checkerboard:Toggle");
-        unregisterEventListener("Preferences:Data");
     }
 
     private void registerEventListener(String event) {
@@ -362,25 +357,6 @@ public class GeckoLayerClient
                 mReturnDisplayPort = DisplayPortCalculator.calculate(newMetrics, null);
             } else if ("Checkerboard:Toggle".equals(event)) {
                 mView.setCheckerboardShouldShowChecks(message.getBoolean("value"));
-            } else if ("Preferences:Data".equals(event)) {
-                JSONArray jsonPrefs = message.getJSONArray("preferences");
-                Map<String, Integer> prefValues = new HashMap<String, Integer>();
-                for (int i = jsonPrefs.length() - 1; i >= 0; i--) {
-                    JSONObject pref = jsonPrefs.getJSONObject(i);
-                    String name = pref.getString("name");
-                    try {
-                        prefValues.put(name, pref.getInt("value"));
-                    } catch (JSONException je) {
-                        // the pref value couldn't be parsed as an int. drop this pref
-                        // and continue with the rest
-                    }
-                }
-                // check return value from setStrategy to make sure that this is the
-                // right batch of prefs, since other java code may also have sent requests
-                // for prefs.
-                if (DisplayPortCalculator.setStrategy(prefValues) && PluginLayer.setUsePlaceholder(prefValues)) {
-                    unregisterEventListener("Preferences:Data");
-                }
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error decoding JSON in " + event + " handler", e);

@@ -11,15 +11,9 @@ import android.view.OrientationEventListener;
 import android.view.Surface;
 
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import org.mozilla.gecko.util.GeckoEventListener;
-
-public class GeckoScreenOrientationListener implements GeckoEventListener {
+public class GeckoScreenOrientationListener {
     private static final String LOGTAG = "GeckoScreenOrientationListener";
 
     static class OrientationEventListenerImpl extends OrientationEventListener {
@@ -61,12 +55,12 @@ public class GeckoScreenOrientationListener implements GeckoEventListener {
     private GeckoScreenOrientationListener() {
         mListener = new OrientationEventListenerImpl(GeckoApp.mAppContext);
 
-        ArrayList<String> prefs = new ArrayList<String>();
-        prefs.add(DEFAULT_ORIENTATION_PREF);
-        JSONArray jsonPrefs = new JSONArray(prefs);
-        GeckoAppShell.registerEventListener("Preferences:Data", this);
-        GeckoEvent event = GeckoEvent.createBroadcastEvent("Preferences:Get", jsonPrefs.toString());
-        GeckoAppShell.sendEventToGecko(event);
+        PrefsHelper.getPref(DEFAULT_ORIENTATION_PREF, new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, String value) {
+                mDefaultOrientation = orientationFromStringArray(value);
+                unlockScreenOrientation();
+            }
+        });
 
         mDefaultOrientation = DEFAULT_ORIENTATION;
     }
@@ -119,30 +113,6 @@ public class GeckoScreenOrientationListener implements GeckoEventListener {
 
     private void stopListening() {
         mListener.disable();
-    }
-
-    public void handleMessage(String event, JSONObject message) {
-        try {
-            if ("Preferences:Data".equals(event)) {
-                JSONArray jsonPrefs = message.getJSONArray("preferences");
-                final int length = jsonPrefs.length();
-                for (int i = 0; i < length; i++) {
-                    JSONObject jPref = jsonPrefs.getJSONObject(i);
-                    final String prefName = jPref.getString("name");
-
-                    if (DEFAULT_ORIENTATION_PREF.equals(prefName)) {
-                        final String value = jPref.getString("value");
-                        mDefaultOrientation = orientationFromStringArray(value);
-                        unlockScreenOrientation();
-
-                        // this is the only pref we care about. unregister after we receive it
-                        GeckoAppShell.unregisterEventListener("Preferences:Data", this);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
-        }
     }
 
     private short orientationFromStringArray(String val) {
