@@ -1,0 +1,49 @@
+# -*- Mode: makefile; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- #
+# vim: set ts=2 et sw=2 tw=80: #
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Contributor(s):
+#     Steve Workman <sworkman@mozilla.com
+
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE         = necko
+LIBRARY_NAME   = nkdashmpd_s
+LIBXUL_LIBRARY = 1
+XPIDL_MODULE   = necko_dashmpd
+GRE_MODULE     = 1
+FORCE_STATIC_LIB = 1
+
+CPPSRCS = \
+  MPD.cpp \
+  Period.cpp \
+  AdaptationSet.cpp \
+  Representation.cpp \
+  SegmentBase.cpp \
+  $(NULL)
+
+EXPORTS = \
+  $(NULL)
+
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../manager/ \
+  -I$(topsrcdir)/content/base/src \
+  -I$(topsrcdir)/content/html/content/public \
+  -I$(topsrcdir)/content/html/content/src \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DIMPL_NS_NET
+
+
