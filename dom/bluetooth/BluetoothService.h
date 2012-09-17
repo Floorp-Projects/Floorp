@@ -158,7 +158,7 @@ public:
   StartDiscoveryInternal(const nsAString& aAdapterPath,
                          BluetoothReplyRunnable* aRunnable) = 0;
 
-  /** 
+  /**
    * Fetches the propertes for the specified object
    *
    * @param aType Type of the object (see BluetoothObjectType in BluetoothCommon.h)
@@ -173,6 +173,18 @@ public:
                 BluetoothReplyRunnable* aRunnable) = 0;
 
   /** 
+   * Fetches the propertes for the specified device
+   *
+   * @param aDevicePath Path of the object
+   * @param aSignalPath Path to distrubute signal after receiving properties
+   *
+   * @return NS_OK on function run, NS_ERROR_FAILURE otherwise
+   */
+  virtual nsresult
+  GetDevicePropertiesInternal(const nsAString& aDevicePath,
+                              const nsAString& aSignalPath) = 0;
+
+  /**
    * Set a property for the specified object
    *
    * @param aPath Path to the object

@@ -912,7 +912,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters)
   {
-    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
+    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -982,7 +982,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters)
   {
-    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
+    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -1609,7 +1609,8 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
 already_AddRefed<Layer>
 nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                           LayerManager* aManager,
-                          nsDisplayItem* aItem)
+                          nsDisplayItem* aItem,
+                          const ContainerParameters& aContainerParameters)
 {
   if (!mInstanceOwner)
     return nullptr;
@@ -1630,16 +1631,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  gfxIntSize size;
-
-#ifdef XP_MACOSX
-  if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation) {
-    size = container->GetCurrentSize();
-  } else
-#endif
-  {
-    size = gfxIntSize(window->width, window->height);
-  }
+  gfxIntSize size(window->width, window->height);
 
   nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
   gfxRect r = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
@@ -1662,9 +1654,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
     UpdateImageLayer(r);
 
-#ifdef XP_WIN
     imglayer->SetScaleToSize(size, ImageLayer::SCALE_STRETCH);
-#endif
     imglayer->SetContainer(container);
     gfxPattern::GraphicsFilter filter =
       nsLayoutUtils::GetGraphicsFilterForFrame(this);
@@ -1740,7 +1730,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   // Set a transform on the layer to draw the plugin in the right place
   gfxMatrix transform;
-  transform.Translate(r.TopLeft());
+  transform.Translate(r.TopLeft() + aContainerParameters.mOffset);
 
   layer->SetBaseTransform(gfx3DMatrix::From2D(transform));
   layer->SetVisibleRegion(nsIntRect(0, 0, size.width, size.height));

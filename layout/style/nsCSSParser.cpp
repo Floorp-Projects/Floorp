@@ -6437,7 +6437,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
          haveImage = false,
          haveRepeat = false,
          haveAttach = false,
-         havePosition = false,
+         havePositionAndSize = false,
          haveOrigin = false,
          haveSomething = false;
 
@@ -6489,11 +6489,19 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
         aState.mRepeat->mYValue = scratch.mYValue;
       } else if (nsCSSProps::FindKeyword(keyword,
                    nsCSSProps::kBackgroundPositionKTable, dummy)) {
-        if (havePosition)
+        if (havePositionAndSize)
           return false;
-        havePosition = true;
+        havePositionAndSize = true;
         if (!ParseBackgroundPositionValues(aState.mPosition->mValue, false)) {
           return false;
+        }
+        if (ExpectSymbol('/', true)) {
+          nsCSSValuePair scratch;
+          if (!ParseBackgroundSizeValues(scratch)) {
+            return false;
+          }
+          aState.mSize->mXValue = scratch.mXValue;
+          aState.mSize->mYValue = scratch.mYValue;
         }
       } else if (nsCSSProps::FindKeyword(keyword,
                    nsCSSProps::kBackgroundOriginKTable, dummy)) {
@@ -6548,11 +6556,19 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
                (tt == eCSSToken_Function &&
                 (mToken.mIdent.LowerCaseEqualsLiteral("calc") ||
                  mToken.mIdent.LowerCaseEqualsLiteral("-moz-calc")))) {
-      if (havePosition)
+      if (havePositionAndSize)
         return false;
-      havePosition = true;
+      havePositionAndSize = true;
       if (!ParseBackgroundPositionValues(aState.mPosition->mValue, false)) {
         return false;
+      }
+      if (ExpectSymbol('/', true)) {
+        nsCSSValuePair scratch;
+        if (!ParseBackgroundSizeValues(scratch)) {
+          return false;
+        }
+        aState.mSize->mXValue = scratch.mXValue;
+        aState.mSize->mYValue = scratch.mYValue;
       }
     } else {
       if (haveColor)
