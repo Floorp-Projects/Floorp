@@ -1007,8 +1007,6 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   if (weakFrame.IsAlive() && !newAcc && isHTML) {  // HTML accessibles
-    bool tryTagNameOrFrame = true;
-
     nsIAtom *frameType = weakFrame.GetFrame()->GetType();
 
     bool partOfHTMLTable =
@@ -1016,6 +1014,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       frameType == nsGkAtoms::tableCellFrame ||
       frameType == nsGkAtoms::tableRowGroupFrame ||
       frameType == nsGkAtoms::tableRowFrame;
+    bool legalPartOfHTMLTable = partOfHTMLTable;
 
     if (partOfHTMLTable) {
       // Table-related frames don't get table-related roles
@@ -1057,26 +1056,26 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
           }
 
           // otherwise create ARIA based accessible.
-          tryTagNameOrFrame = false;
+          legalPartOfHTMLTable = false;
           break;
         }
 
         if (tableContent->Tag() == nsGkAtoms::table) {
           // Stop before we are fooled by any additional table ancestors
           // This table cell frameis part of a separate ancestor table.
-          tryTagNameOrFrame = false;
+          legalPartOfHTMLTable = false;
           break;
         }
       }
 
       if (!tableContent)
-        tryTagNameOrFrame = false;
+        legalPartOfHTMLTable = false;
     }
 
     if (roleMapEntry) {
-      // Create ARIA grid/treegrid accessibles if node is not of a child or
-      // valid child of HTML table and is not a HTML table.
-      if ((!partOfHTMLTable || !tryTagNameOrFrame) &&
+      // Create ARIA grid/treegrid accessibles if node is not a child or legal
+      // child of HTML table and is not a HTML table.
+      if ((!partOfHTMLTable || !legalPartOfHTMLTable) &&
           frameType != nsGkAtoms::tableOuterFrame) {
 
         if (roleMapEntry->role == roles::TABLE ||
@@ -1091,16 +1090,16 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       }
     }
 
-    if (!newAcc && tryTagNameOrFrame) {
+    if (!newAcc) {
       // Prefer to use markup (mostly tag name, perhaps attributes) to
       // decide if and what kind of accessible to create.
       // The method creates accessibles for table related content too therefore
       // we do not call it if accessibles for table related content are
       // prevented above.
       newAcc = CreateHTMLAccessibleByMarkup(weakFrame.GetFrame(), content,
-                                            docAcc);
+                                            docAcc, legalPartOfHTMLTable);
 
-      if (!newAcc) {
+      if (!newAcc && (!partOfHTMLTable || legalPartOfHTMLTable)) {
         // Do not create accessible object subtrees for non-rendered table
         // captions. This could not be done in
         // nsTableCaptionFrame::GetAccessible() because the descendants of
@@ -1553,8 +1552,20 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 already_AddRefed<Accessible>
 nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
                                                      nsIContent* aContent,
-                                                     DocAccessible* aDoc)
+                                                     DocAccessible* aDoc,
+                                                     bool aIsLegalPartOfHTMLTable)
 {
+  if (aIsLegalPartOfHTMLTable) {
+    if (nsCoreUtils::IsHTMLTableHeader(aContent)) {
+      Accessible* accessible =
+        new HTMLTableHeaderCellAccessibleWrap(aContent, aDoc);
+      NS_IF_ADDREF(accessible);
+      return accessible;
+    }
+
+    return nullptr;
+  }
+
   // This method assumes we're in an HTML namespace.
   nsIAtom* tag = aContent->Tag();
   if (tag == nsGkAtoms::figcaption) {
@@ -1631,12 +1642,6 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
       tag == nsGkAtoms::h6 ||
       tag == nsGkAtoms::q) {
     Accessible* accessible = new HyperTextAccessibleWrap(aContent, aDoc);
-    NS_IF_ADDREF(accessible);
-    return accessible;
-  }
-
-  if (nsCoreUtils::IsHTMLTableHeader(aContent)) {
-    Accessible* accessible = new HTMLTableHeaderCellAccessibleWrap(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }

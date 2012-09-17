@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Broken context hierarchy</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+  function doTest()
+  {
+    ////////////////////////////////////////////////////////////////////////////
+    // HTML table elements outside table context.
+
+    ok(!isAccessible("tr_in_presentation_table"), "tr shouldn't be accessible");
+    ok(!isAccessible("th_in_presentation_table"), "th shouldn't be accessible");
+    ok(!isAccessible("td_in_presentation_table"), "td shouldn't be accessible");
+
+    var tree =
+      { PUSHBUTTON: [ // table
+        { NOTHING: [ // tbody
+          { NOTHING: [ // tr
+            { NOTHING: [ // th
+              { TEXT_LEAF: [ ] }
+            ] },
+            { NOTHING: [ // td
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] },
+        ] },
+      ] };
+    testAccessibleTree("button_table", tree);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Styled as HTML table elements, accessible is created by tag name
+
+    tree =
+      { LINK: [ // a
+        { TEXT_LEAF: [ ] }
+      ] };
+    testAccessibleTree("a_as_td", tree);
+
+    tree =
+      { HEADING: [
+        { TEXT_LEAF: [ ] }
+      ] };
+    testAccessibleTree("h1_as_td", tree);
+    testAccessibleTree("h2_as_td", tree);
+    testAccessibleTree("h3_as_td", tree);
+    testAccessibleTree("h4_as_td", tree);
+    testAccessibleTree("h5_as_td", tree);
+    testAccessibleTree("h6_as_td", tree);
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=706849"
+     title="Create accessible by tag name as fallback if table descendant style is used out of table context">
+    Mozilla Bug 706849
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- HTML table elements out of table -->
+  <table role="presentation">
+    <tr id="tr_in_presentation_table">
+      <th id="th_in_presentation_table">not a header</th>
+      <td id="td_in_presentation_table">not a cell</td>
+    </tr>
+  </table>
+
+  <table role="button" id="button_table">
+    <tr id="tr_in_button_table">
+      <th id="th_in_button_table">not a header</th>
+      <td id="td_in_button_table">not a cell</td>
+    </tr>
+  </table>
+
+  <!-- styled as HTML table elements -->
+  <a id="a_as_td" style="display:table-cell;" href="http://www.google.com">Google</a>
+  <h1 id="h1_as_td" style="display: table-cell;">h1</h1>
+  <h2 id="h2_as_td" style="display: table-cell;">h2</h2>
+  <h3 id="h3_as_td" style="display: table-cell;">h3</h3>
+  <h4 id="h4_as_td" style="display: table-cell;">h4</h4>
+  <h5 id="h5_as_td" style="display: table-cell;">h5</h5>
+  <h6 id="h6_as_td" style="display: table-cell;">h6</h6>
+</body>
+</html>

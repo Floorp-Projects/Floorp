@@ -3659,6 +3659,12 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
 #endif
   gfxRect fill = devPixelFill;
   bool didSnap = aCtx->UserToDevicePixelSnapped(fill, ignoreScale);
+  gfxMatrix currentMatrix = aCtx->CurrentMatrix();
+  if (didSnap && currentMatrix.HasNonAxisAlignedTransform()) {
+    // currentMatrix must have some rotation by a multiple of 90 degrees.
+    didSnap = false;
+    fill = devPixelFill;
+  }
 
   gfxSize imageSize(aImageSize.width, aImageSize.height);
 
@@ -3680,11 +3686,8 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
                        gfxFloat(aAnchor.y)/aAppUnitsPerDevPixel);
   gfxPoint imageSpaceAnchorPoint =
     MapToFloatImagePixels(imageSize, devPixelDest, anchorPoint);
-  gfxMatrix currentMatrix = aCtx->CurrentMatrix();
 
   if (didSnap) {
-    NS_ASSERTION(!currentMatrix.HasNonAxisAlignedTransform(),
-                 "How did we snap, then?");
     imageSpaceAnchorPoint.Round();
     anchorPoint = imageSpaceAnchorPoint;
     anchorPoint = MapToFloatUserPixels(imageSize, devPixelDest, anchorPoint);
