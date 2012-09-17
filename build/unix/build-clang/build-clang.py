@@ -127,6 +127,7 @@ if not os.path.exists(source_dir):
     os.symlink("../../compiler-rt", llvm_source_dir + "/projects/compiler-rt")
     if not isDarwin:
         patch("old-ld-hack.patch", 1, llvm_source_dir)
+        patch("llvm-debug-frame.patch", 1, llvm_source_dir)
         patch("compiler-rt-gnu89-inline.patch", 0, compiler_rt_source_dir)
         patch("no-sse-on-linux.patch", 1, clang_source_dir)
 
