@@ -122,10 +122,7 @@ IonFrameIterator::isDOMExit() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    IonCode *code = exitFrame()->footer()->ionCode();
-    return code == ION_FRAME_DOMGETTER ||
-           code == ION_FRAME_DOMSETTER ||
-           code == ION_FRAME_DOMMETHOD;
+    return exitFrame()->isDomExit();
 }
 
 bool
