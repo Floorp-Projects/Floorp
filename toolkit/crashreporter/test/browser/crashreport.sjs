@@ -56,9 +56,16 @@ function parseMultipartForm(request)
   let body = new BinaryInputStream(request.bodyInputStream);
   let avail;
   let bytes = [];
-  while ((avail = body.available()) > 0)
-    Array.prototype.push.apply(bytes, body.readByteArray(avail));
-  let data = String.fromCharCode.apply(null, bytes);
+  while ((avail = body.available()) > 0) {
+    let readBytes = body.readByteArray(avail);
+    for (let b of readBytes) {
+      bytes.push(b);
+    }
+  }
+  let data = "";
+  for (let b of bytes) {
+    data += String.fromCharCode(b);
+  }
   let formData = {};
   let done = false;
   let start = 0;
