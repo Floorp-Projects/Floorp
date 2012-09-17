@@ -7,14 +7,12 @@
 #ifndef jsatominlines_h___
 #define jsatominlines_h___
 
-#include "mozilla/RangedPtr.h"
-
 #include "jsatom.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsstr.h"
 
-#include "gc/Barrier.h"
+#include "mozilla/RangedPtr.h"
 #include "vm/String.h"
 
 inline JSAtom *
@@ -152,29 +150,28 @@ AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
     return PodEqual(key->chars(), lookup.chars, lookup.length);
 }
 
-inline Handle<PropertyName*>
+inline PropertyName *
 TypeName(JSType type, JSRuntime *rt)
 {
     JS_ASSERT(type < JSTYPE_LIMIT);
     JS_STATIC_ASSERT(offsetof(JSAtomState, undefinedAtom) +
-                     JSTYPE_LIMIT * sizeof(FixedHeapPtr<PropertyName>) <=
+                     JSTYPE_LIMIT * sizeof(PropertyName *) <=
                      sizeof(JSAtomState));
     JS_STATIC_ASSERT(JSTYPE_VOID == 0);
     return (&rt->atomState.undefinedAtom)[type];
 }
 
-inline Handle<PropertyName*>
+inline PropertyName *
 TypeName(JSType type, JSContext *cx)
 {
     return TypeName(type, cx->runtime);
 }
 
-inline Handle<PropertyName*>
+inline PropertyName *
 ClassName(JSProtoKey key, JSContext *cx)
 {
     JS_ASSERT(key < JSProto_LIMIT);
-    JS_STATIC_ASSERT(offsetof(JSAtomState, NullAtom) +
-                     JSProto_LIMIT * sizeof(FixedHeapPtr<PropertyName>) <=
+    JS_STATIC_ASSERT(offsetof(JSAtomState, NullAtom) + JSProto_LIMIT * sizeof(PropertyName *) <=
                      sizeof(JSAtomState));
     JS_STATIC_ASSERT(JSProto_Null == 0);
     return (&cx->runtime->atomState.NullAtom)[key];
