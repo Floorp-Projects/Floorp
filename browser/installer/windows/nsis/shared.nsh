@@ -318,6 +318,7 @@
 
   ${AddDisabledDDEHandlerValues} "FirefoxURL" "$2" "$8,1" "${AppRegName} URL" \
                                  "true"
+!ifdef MOZ_METRO
   ${If} ${AtLeastWin8}
     ${CleanupMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID}
     ${AddMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
@@ -326,6 +327,7 @@
                                     "FirefoxURL" \
                                     "FirefoxHTML"
   ${EndIf}
+!endif
 
   ; An empty string is used for the 4th & 5th params because the following
   ; protocol handlers already have a display name and the additional keys
