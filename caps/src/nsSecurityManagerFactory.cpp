@@ -27,6 +27,9 @@
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 ///////////////////////
 // nsSecurityNameSet //
@@ -45,6 +48,7 @@ NS_IMPL_ISUPPORTS1(nsSecurityNameSet, nsIScriptExternalNameSet)
 static JSBool
 netscape_security_enablePrivilege(JSContext *cx, unsigned argc, jsval *vp)
 {
+    Telemetry::Accumulate(Telemetry::ENABLE_PRIVILEGE_EVER_CALLED, true);
     return xpc::EnableUniversalXPConnect(cx);
 }
 
@@ -69,7 +73,7 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
     // uses enablePrivilege. If you're not doing test automation, you _must_ not
     // flip this pref, or you will be exposing all your users to security
     // vulnerabilities.
-    if (!mozilla::Preferences::GetBool("security.enablePrivilege.enable_for_tests"))
+    if (!Preferences::GetBool("security.enablePrivilege.enable_for_tests"))
         return NS_OK;
 
     /*
