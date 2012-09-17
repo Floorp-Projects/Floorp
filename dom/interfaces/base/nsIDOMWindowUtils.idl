@@ -104,16 +104,6 @@ interface nsIDOMWindowUtils : nsISupports {
   void setCSSViewport(in float aWidthPx, in float aHeightPx);
 
   /**
-   * Information retrieved from the <meta name="viewport"> tag.
-   * See nsContentUtils::GetViewportInfo for more information.
-   */
-  void getViewportInfo(in uint32_t aDisplayWidth, in uint32_t aDisplayHeight,
-                       out double aDefaultZoom, out boolean aAllowZoom,
-                       out double aMinZoom, out double aMaxZoom,
-                       out uint32_t aWidth, out uint32_t aHeight,
-                       out boolean aAutoSize);
-
-  /**
    * For any scrollable element, this allows you to override the
    * visible region and draw more than what is visible, which is
    * useful for asynchronous drawing. The "displayport" will be
