@@ -33,8 +33,6 @@
 #include "nsIStringBundle.h"
 #include "nsAuthInformationHolder.h"
 #include "nsICharsetConverterManager.h"
-#include "nsIProtocolProxyService.h"
-#include "nsICancelable.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -52,13 +50,12 @@ removeParamsFromPath(nsCString& path)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED5(nsFtpState,
+NS_IMPL_ISUPPORTS_INHERITED4(nsFtpState,
                              nsBaseContentStream,
                              nsIInputStreamCallback, 
                              nsITransportEventSink,
                              nsICacheListener,
-                             nsIRequestObserver,
-                             nsIProtocolProxyCallback)
+                             nsIRequestObserver)
 
 nsFtpState::nsFtpState()
     : nsBaseContentStream(true)
@@ -81,7 +78,6 @@ nsFtpState::nsFtpState()
     , mAddressChecked(false)
     , mServerIsIPv6(false)
     , mControlStatus(NS_OK)
-    , mDeferredCallbackPending(false)
 {
     LOG_ALWAYS(("FTP:(%x) nsFtpState created", this));
 
@@ -92,9 +88,6 @@ nsFtpState::nsFtpState()
 nsFtpState::~nsFtpState() 
 {
     LOG_ALWAYS(("FTP:(%x) nsFtpState destroyed", this));
-
-    if (mProxyRequest)
-        mProxyRequest->Cancel(NS_ERROR_FAILURE);
 
     // release reference to handler
     nsFtpProtocolHandler *handler = gFtpHandler;
@@ -1766,19 +1759,6 @@ nsFtpState::Init(nsFtpChannel *channel)
     if (port > 0)
         mPort = port;
 
-    // Lookup Proxy information asynchronously if it isn't already set
-    // on the channel and if we aren't configured explicitly to go directly
-    uint32_t proxyConfigType;
-    nsCOMPtr<nsIProtocolProxyService> pps =
-        do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
-
-    if (pps && !mChannel->ProxyInfo() &&
-        NS_SUCCEEDED(pps->GetProxyConfigType(&proxyConfigType)) &&
-        proxyConfigType != nsIProtocolProxyService::PROXYCONFIG_DIRECT) {
-        pps->AsyncResolve(mChannel->URI(), 0, this,
-                          getter_AddRefs(mProxyRequest));
-    }
-
     return NS_OK;
 }
 
@@ -2175,67 +2155,6 @@ nsFtpState::CloseWithStatus(nsresult status)
     return nsBaseContentStream::CloseWithStatus(status);
 }
 
-static nsresult
-CreateHTTPProxiedChannel(nsIURI *uri, nsIProxyInfo *pi, nsIChannel **newChannel)
-{
-    nsresult rv;
-    nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIProtocolHandler> handler;
-    rv = ioService->GetProtocolHandler("http", getter_AddRefs(handler));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return pph->NewProxiedChannel(uri, pi, 0, nullptr, newChannel);
-}
-
-NS_IMETHODIMP
-nsFtpState::OnProxyAvailable(nsICancelable *request, nsIURI *uri,
-                             nsIProxyInfo *pi, nsresult status)
-{
-  mProxyRequest = nullptr;
-
-  // failed status code just implies DIRECT processing
-
-  if (NS_SUCCEEDED(status)) {
-    nsAutoCString type;
-    if (pi && NS_SUCCEEDED(pi->GetType(type)) && type.EqualsLiteral("http")) {
-        // Proxy the FTP url via HTTP
-        // This would have been easier to just return a HTTP channel directly
-        // from nsIIOService::NewChannelFromURI(), but the proxy type cannot
-        // be reliabliy determined synchronously without jank due to pac, etc..
-        LOG(("FTP:(%p) Configured to use a HTTP proxy channel\n", this));
-
-        nsCOMPtr<nsIChannel> newChannel;
-        if (NS_SUCCEEDED(CreateHTTPProxiedChannel(uri, pi,
-                                                  getter_AddRefs(newChannel))) &&
-            NS_SUCCEEDED(mChannel->Redirect(newChannel,
-                                            nsIChannelEventSink::REDIRECT_INTERNAL,
-                                            true))) {
-            LOG(("FTP:(%p) Redirected to use a HTTP proxy channel\n", this));
-            return NS_OK;
-        }
-    }
-    else if (pi) {
-        // Proxy using the FTP protocol routed through a socks proxy
-        LOG(("FTP:(%p) Configured to use a SOCKS proxy channel\n", this));
-        mChannel->SetProxyInfo(pi);
-    }
-  }
-
-  if (mDeferredCallbackPending) {
-      mDeferredCallbackPending = false;
-      OnCallbackPending();
-  }
-  return NS_OK;
-}
-
 void
 nsFtpState::OnCallbackPending()
 {
@@ -2244,11 +2163,6 @@ nsFtpState::OnCallbackPending()
     // connect to the server.
 
     if (mState == FTP_INIT) {
-        if (mProxyRequest) {
-            mDeferredCallbackPending = true;
-            return;
-        }
-
         if (CheckCache()) {
             mState = FTP_WAIT_CACHE;
             return;
