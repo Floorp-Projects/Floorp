@@ -98,7 +98,7 @@ public:
 
     static int32_t GetDPI();
 
-    static bool UseXRender() {
+    bool UseXRender() {
 #if defined(MOZ_X11) && defined(MOZ_PLATFORM_MAEMO)
         // XRender is not accelerated on the Maemo at the moment, and 
         // X server pixman is out of our control; it's likely to be 
@@ -111,6 +111,10 @@ public:
         // this, we'll only disable this for maemo.
         return true;
 #elif defined(MOZ_X11)
+        if (GetContentBackend() != mozilla::gfx::BACKEND_NONE &&
+            GetContentBackend() != mozilla::gfx::BACKEND_CAIRO)
+            return false;
+
         return sUseXRender;
 #else
         return false;
