@@ -621,7 +621,8 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
                               nsIFrame* aFrame,
                               LayerManager* aManager,
                               const nsIntRect& aVisibleRect,
-                              nsDisplayItem* aItem)
+                              nsDisplayItem* aItem,
+                              const ContainerParameters& aContainerParameters)
 {
   NS_ABORT_IF_FALSE(aFrame,
                     "makes no sense to have a shadow tree without a frame");
@@ -658,7 +659,8 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     layer->SetVisibleRegion(aVisibleRect);
     nsIntPoint rootFrameOffset = GetRootFrameOffset(aFrame, aBuilder);
     layer->SetBaseTransform(
-      gfx3DMatrix::Translation(rootFrameOffset.x, rootFrameOffset.y, 0.0));
+      gfx3DMatrix::Translation(rootFrameOffset.x + aContainerParameters.mOffset.x, 
+                               rootFrameOffset.y + aContainerParameters.mOffset.y, 0.0));
 
     return layer.forget();
   }
@@ -927,7 +929,8 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
 {
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
-  nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this);
+  visibleRect += aContainerParameters.mOffset;
+  nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this, aContainerParameters);
   return layer.forget();
 }
 

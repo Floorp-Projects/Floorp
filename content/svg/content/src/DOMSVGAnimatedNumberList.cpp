@@ -91,7 +91,7 @@ DOMSVGAnimatedNumberList::InternalBaseValListWillChangeTo(const SVGNumberList& a
 
   nsRefPtr<DOMSVGAnimatedNumberList> kungFuDeathGrip;
   if (mBaseVal) {
-    if (aNewValue.Length() < mBaseVal->Length()) {
+    if (aNewValue.Length() < mBaseVal->LengthNoFlush()) {
       // InternalListLengthWillChange might clear last reference to |this|.
       // Retain a temporary reference to keep from dying before returning.
       kungFuDeathGrip = this;

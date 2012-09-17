@@ -74,6 +74,20 @@ public:
     return static_cast<nsClientRectList*>(aSupports);
   }
 
+  uint32_t Length()
+  {
+    return mArray.Count();
+  }
+  nsIDOMClientRect* Item(uint32_t aIndex)
+  {
+    return mArray.SafeObjectAt(aIndex);
+  }
+  nsIDOMClientRect* IndexedGetter(uint32_t aIndex, bool& aFound)
+  {
+    aFound = aIndex < static_cast<uint32_t>(mArray.Count());
+    return aFound ? mArray.ObjectAt(aIndex) : nullptr;
+  }
+
 protected:
   virtual ~nsClientRectList() {}
 

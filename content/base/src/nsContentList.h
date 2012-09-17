@@ -273,6 +273,10 @@ public:
     return mRootNode;
   }
 
+  virtual nsIContent* GetNodeAt(uint32_t aIndex);
+  virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
+                              mozilla::ErrorResult& error);
+
   // nsContentList public methods
   NS_HIDDEN_(uint32_t) Length(bool aDoFlush);
   NS_HIDDEN_(nsIContent*) Item(uint32_t aIndex, bool aDoFlush);
@@ -477,6 +481,24 @@ typedef void* (*nsFuncStringContentListDataAllocator)(nsINode* aRootNode,
 // aDestroyFunc is allowed to be null
 class nsCacheableFuncStringContentList : public nsContentList {
 public:
+  virtual ~nsCacheableFuncStringContentList();
+
+  bool Equals(const nsFuncStringCacheKey* aKey) {
+    return mRootNode == aKey->mRootNode && mFunc == aKey->mFunc &&
+      mString == aKey->mString;
+  }
+
+  bool AllocatedData() const { return !!mData; }
+
+#ifdef DEBUG
+  enum ContentListType {
+    eNodeList,
+    eHTMLCollection
+  };
+  ContentListType mType;
+#endif
+
+protected:
   nsCacheableFuncStringContentList(nsINode* aRootNode,
                                    nsContentListMatchFunc aFunc,
                                    nsContentListDestroyFunc aDestroyFunc,
@@ -488,21 +510,62 @@ public:
     mData = (*aDataAllocator)(aRootNode, &mString);
   }
 
-  virtual ~nsCacheableFuncStringContentList();
-
-  bool Equals(const nsFuncStringCacheKey* aKey) {
-    return mRootNode == aKey->mRootNode && mFunc == aKey->mFunc &&
-      mString == aKey->mString;
-  }
-
-  bool AllocatedData() const { return !!mData; }
-protected:
   virtual void RemoveFromCaches() {
     RemoveFromFuncStringHashtable();
   }
   void RemoveFromFuncStringHashtable();
 
   nsString mString;
+};
+
+class nsCacheableFuncStringNodeList
+  : public nsCacheableFuncStringContentList
+{
+public:
+  nsCacheableFuncStringNodeList(nsINode* aRootNode,
+                                nsContentListMatchFunc aFunc,
+                                nsContentListDestroyFunc aDestroyFunc,
+                                nsFuncStringContentListDataAllocator aDataAllocator,
+                                const nsAString& aString)
+    : nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
+                                       aDataAllocator, aString)
+  {
+#ifdef DEBUG
+    mType = eNodeList;
+#endif
+  }
+
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
+                               bool *triedToWrap);
+
+#ifdef DEBUG
+  static const ContentListType sType;
+#endif
+};
+
+class nsCacheableFuncStringHTMLCollection
+  : public nsCacheableFuncStringContentList
+{
+public:
+  nsCacheableFuncStringHTMLCollection(nsINode* aRootNode,
+                                      nsContentListMatchFunc aFunc,
+                                      nsContentListDestroyFunc aDestroyFunc,
+                                      nsFuncStringContentListDataAllocator aDataAllocator,
+                                      const nsAString& aString)
+    : nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
+                                       aDataAllocator, aString)
+  {
+#ifdef DEBUG
+    mType = eHTMLCollection;
+#endif
+  }
+
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
+                               bool *triedToWrap);
+
+#ifdef DEBUG
+  static const ContentListType sType;
+#endif
 };
 
 // If aMatchNameSpaceId is kNameSpaceID_Unknown, this will return a
@@ -516,9 +579,15 @@ NS_GetContentList(nsINode* aRootNode,
                   const nsAString& aTagname);
 
 already_AddRefed<nsContentList>
-NS_GetFuncStringContentList(nsINode* aRootNode,
-                            nsContentListMatchFunc aFunc,
-                            nsContentListDestroyFunc aDestroyFunc,
-                            nsFuncStringContentListDataAllocator aDataAllocator,
-                            const nsAString& aString);
+NS_GetFuncStringNodeList(nsINode* aRootNode,
+                         nsContentListMatchFunc aFunc,
+                         nsContentListDestroyFunc aDestroyFunc,
+                         nsFuncStringContentListDataAllocator aDataAllocator,
+                         const nsAString& aString);
+already_AddRefed<nsContentList>
+NS_GetFuncStringHTMLCollection(nsINode* aRootNode,
+                               nsContentListMatchFunc aFunc,
+                               nsContentListDestroyFunc aDestroyFunc,
+                               nsFuncStringContentListDataAllocator aDataAllocator,
+                               const nsAString& aString);
 #endif // nsContentList_h___

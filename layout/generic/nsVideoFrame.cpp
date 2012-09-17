@@ -30,6 +30,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "ImageContainer.h"
 #include "ImageLayers.h"
+#include "nsContentList.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -158,7 +159,8 @@ CorrectForAspectRatio(const gfxRect& aRect, const nsIntSize& aRatio)
 already_AddRefed<Layer>
 nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                          LayerManager* aManager,
-                         nsDisplayItem* aItem)
+                         nsDisplayItem* aItem,
+                         const ContainerParameters& aContainerParameters)
 {
   nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
@@ -206,7 +208,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetContentFlags(Layer::CONTENT_OPAQUE);
   // Set a transform on the layer to draw the video in the right place
   gfxMatrix transform;
-  transform.Translate(r.TopLeft());
+  transform.Translate(r.TopLeft() + aContainerParameters.mOffset);
   transform.Scale(r.Width()/frameSize.width, r.Height()/frameSize.height);
   layer->SetBaseTransform(gfx3DMatrix::From2D(transform));
   layer->SetVisibleRegion(nsIntRect(0, 0, frameSize.width, frameSize.height));
@@ -345,7 +347,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters)
   {
-    return static_cast<nsVideoFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
+    return static_cast<nsVideoFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,

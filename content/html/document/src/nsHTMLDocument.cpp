@@ -1860,8 +1860,8 @@ NS_IMETHODIMP
 nsHTMLDocument::GetItems(const nsAString& types, nsIDOMNodeList** aReturn)
 {
   nsRefPtr<nsContentList> elements = 
-    NS_GetFuncStringContentList(this, MatchItems, DestroyTokens, 
-                                CreateTokens, types);
+    NS_GetFuncStringNodeList(this, MatchItems, DestroyTokens, CreateTokens,
+                             types);
   NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
   elements.forget(aReturn);
   return NS_OK;

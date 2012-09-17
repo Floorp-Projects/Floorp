@@ -145,13 +145,21 @@ public:
       mDisableSubpixelAntialiasingInDescendants(false)
     {}
     ContainerParameters(float aXScale, float aYScale,
+                        const nsIntPoint& aOffset,
                         const ContainerParameters& aParent) :
       mXScale(aXScale), mYScale(aYScale),
+      mOffset(aOffset),
       mInTransformedSubtree(aParent.mInTransformedSubtree),
       mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree),
       mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
     {}
     float mXScale, mYScale;
+
+    /**
+     * An offset to append to the transform set on all child layers created.
+     */
+    nsIntPoint mOffset;
+
     bool mInTransformedSubtree;
     bool mInActiveTransformedSubtree;
     bool mDisableSubpixelAntialiasingInDescendants;
