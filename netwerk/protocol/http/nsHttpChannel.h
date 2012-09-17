@@ -95,9 +95,7 @@ public:
     nsHttpChannel();
     virtual ~nsHttpChannel();
 
-    virtual nsresult Init(nsIURI *aURI, uint8_t aCaps, nsProxyInfo *aProxyInfo,
-                          uint32_t aProxyResolveFlags,
-                          nsIURI *aProxyURI);
+    virtual nsresult Init(nsIURI *aURI, uint8_t aCaps, nsProxyInfo *aProxyInfo);
 
     // Methods HttpBaseChannel didn't implement for us or that we override.
     //
@@ -152,7 +150,6 @@ private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
     bool     RequestIsConditional();
-    nsresult BeginConnect();
     nsresult Connect();
     nsresult ContinueConnect();
     void     SpeculativeConnect();
@@ -189,6 +186,8 @@ private:
     nsresult ProxyFailover();
     nsresult AsyncDoReplaceWithProxy(nsIProxyInfo *);
     nsresult ContinueDoReplaceWithProxy(nsresult);
+    void HandleAsyncReplaceWithProxy();
+    nsresult ContinueHandleAsyncReplaceWithProxy(nsresult);
     nsresult ResolveProxy();
 
     // cache specific methods
@@ -303,6 +302,9 @@ private:
 
     // auth specific data
     nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
+
+    // Proxy info to replace with
+    nsCOMPtr<nsIProxyInfo>            mTargetProxyInfo;
 
     // If the channel is associated with a cache, and the URI matched
     // a fallback namespace, this will hold the key for the fallback
