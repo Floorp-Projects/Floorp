@@ -11,6 +11,7 @@
 #include "DeleteNodeTxn.h"              // for DeleteNodeTxn
 #include "DeleteRangeTxn.h"             // for DeleteRangeTxn
 #include "DeleteTextTxn.h"              // for DeleteTextTxn
+#include "EditActionListener.h"         // for EditActionListener
 #include "EditAggregateTxn.h"           // for EditAggregateTxn
 #include "EditTxn.h"                    // for EditTxn
 #include "IMETextTxn.h"                 // for IMETextTxn
@@ -70,7 +71,6 @@
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener
 #include "nsIEditActionListener.h"      // for nsIEditActionListener
-#include "nsIEditorObserver.h"          // for nsIEditorObserver
 #include "nsIEditorSpellCheck.h"        // for nsIEditorSpellCheck
 #include "nsIEnumerator.h"              // for nsIEnumerator, etc
 #include "nsIFrame.h"                   // for nsIFrame
@@ -136,6 +136,7 @@ nsEditor::nsEditor()
 :  mPlaceHolderName(nullptr)
 ,  mSelState(nullptr)
 ,  mPhonetic(nullptr)
+,  mEditActionListener(nullptr)
 ,  mModCount(0)
 ,  mFlags(0)
 ,  mUpdateCount(0)
@@ -175,7 +176,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEditor)
  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mIMETextRangeList)
  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mIMETextNode)
  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mActionListeners)
- NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mEditorObservers)
  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mDocStateListeners)
  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEventTarget)
  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEventListener)
@@ -194,7 +194,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEditor)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mIMETextRangeList)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mIMETextNode)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mActionListeners)
- NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mEditorObservers)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mDocStateListeners)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mEventTarget)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mEventListener)
@@ -446,7 +445,7 @@ nsEditor::PreDestroy(bool aDestroyingFrames)
   // Unregister event listeners
   RemoveEventListeners();
   mActionListeners.Clear();
-  mEditorObservers.Clear();
+  mEditActionListener = nullptr;
   mDocStateListeners.Clear();
   mInlineSpellChecker = nullptr;
   mSpellcheckCheckboxState = eTriUnset;
@@ -983,7 +982,7 @@ nsEditor::EndPlaceHolderTransaction()
     }
   }
   mPlaceHolderBatch--;
-  
+
   return NS_OK;
 }
 
@@ -1762,34 +1761,21 @@ nsEditor::MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aOffset)
   return InsertNode(node, aParent, aOffset);
 }
 
-
 NS_IMETHODIMP
-nsEditor::AddEditorObserver(nsIEditorObserver *aObserver)
+nsEditor::SetEditorObserver(EditActionListener* aObserver)
 {
-  // we don't keep ownership of the observers.  They must
-  // remove themselves as observers before they are destroyed.
-  
   NS_ENSURE_TRUE(aObserver, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(!mEditActionListener);
 
-  // Make sure the listener isn't already on the list
-  if (mEditorObservers.IndexOf(aObserver) == -1) 
-  {
-    if (!mEditorObservers.AppendObject(aObserver))
-      return NS_ERROR_FAILURE;
-  }
-
+  mEditActionListener = aObserver;
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsEditor::RemoveEditorObserver(nsIEditorObserver *aObserver)
+nsEditor::RemoveEditorObserver()
 {
-  NS_ENSURE_TRUE(aObserver, NS_ERROR_FAILURE);
-
-  if (!mEditorObservers.RemoveObject(aObserver))
-    return NS_ERROR_FAILURE;
-
+  mEditActionListener = nullptr;
   return NS_OK;
 }
 
@@ -1833,10 +1819,11 @@ private:
   bool mIsTrusted;
 };
 
-void nsEditor::NotifyEditorObservers(void)
+void
+nsEditor::NotifyEditorObservers(void)
 {
-  for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
-    mEditorObservers[i]->EditAction();
+  if (mEditActionListener) {
+    mEditActionListener->EditAction();
   }
 
   if (!mDispatchInputEvent) {
@@ -1852,7 +1839,7 @@ void nsEditor::NotifyEditorObservers(void)
   NS_ENSURE_TRUE(target, );
 
   nsContentUtils::AddScriptRunner(
-     new EditorInputEventDispatcher(this, mHandlingTrustedAction, target));
+    new EditorInputEventDispatcher(this, mHandlingTrustedAction, target));
 }
 
 NS_IMETHODIMP
