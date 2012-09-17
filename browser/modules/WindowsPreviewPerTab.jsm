@@ -72,14 +72,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "faviconSvc",
                                    "nsIFaviconService");
 
 // nsIURI -> imgIContainer
-function _imageFromURI(uri, privateMode, callback) {
+function _imageFromURI(uri, callback) {
   let channel = ioSvc.newChannelFromURI(uri);
-  try {
-    channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
-    channel.setPrivate(privateMode);
-  } catch (e) {
-    // Ignore channels which do not support nsIPrivateBrowsingChannel
-  }
   NetUtil.asyncFetch(channel, function(inputStream, resultCode) {
     if (!Components.isSuccessCode(resultCode))
       return;
@@ -98,11 +92,11 @@ function _imageFromURI(uri, privateMode, callback) {
 }
 
 // string? -> imgIContainer
-function getFaviconAsImage(iconurl, privateMode, callback) {
+function getFaviconAsImage(iconurl, callback) {
   if (iconurl)
-    _imageFromURI(NetUtil.newURI(iconurl), privateMode, callback);
+    _imageFromURI(NetUtil.newURI(iconurl), callback);
   else
-    _imageFromURI(faviconSvc.defaultFavicon, privateMode, callback);
+    _imageFromURI(faviconSvc.defaultFavicon, callback);
 }
 
 // Snaps the given rectangle to be pixel-aligned at the given scale
@@ -442,7 +436,7 @@ TabWindow.prototype = {
     preview.visible = AeroPeek.enabled;
     preview.active = this.tabbrowser.selectedTab == tab;
     // Grab the default favicon
-    getFaviconAsImage(null, this.win.gPrivateBrowsingUI.privateWindow, function (img) {
+    getFaviconAsImage(null, function (img) {
       // It is possible that we've already gotten the real favicon, so make sure
       // we have not set one before setting this default one.
       if (!preview.icon)
@@ -541,7 +535,7 @@ TabWindow.prototype = {
   //// Browser progress listener
   onLinkIconAvailable: function (aBrowser, aIconURL) {
     let self = this;
-    getFaviconAsImage(aIconURL, this.win.gPrivateBrowsingUI.privateWindow, function (img) {
+    getFaviconAsImage(aIconURL, function (img) {
       let index = self.tabbrowser.browsers.indexOf(aBrowser);
       // Only add it if we've found the index.  The tab could have closed!
       if (index != -1)
