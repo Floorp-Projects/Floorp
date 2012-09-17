@@ -71,11 +71,11 @@
       <menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                 oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
       <menuseparator/>
-      <menuitem id="context_pinTab" label="&pinAppTab.label;"
-                accesskey="&pinAppTab.accesskey;"
+      <menuitem id="context_pinTab" label="&pinTab.label;"
+                accesskey="&pinTab.accesskey;"
                 oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_unpinTab" label="&unpinAppTab.label;" hidden="true"
-                accesskey="&unpinAppTab.accesskey;"
+      <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
+                accesskey="&unpinTab.accesskey;"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
       <menu id="context_tabViewMenu" label="&moveToGroup.label;"
             accesskey="&moveToGroup.accesskey;">
