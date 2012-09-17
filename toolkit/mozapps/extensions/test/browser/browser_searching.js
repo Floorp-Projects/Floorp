@@ -61,7 +61,8 @@ function test() {
     sourceURI: "http://example.com/fail-install1.xpi"
   }]);
 
-  installs.forEach(function(aInstall) { aInstall.install(); });
+  for (let install of installs )
+    install.install();
 
   open_manager("addons://list/extension", function(aWindow) {
     gManagerWindow = aWindow;
