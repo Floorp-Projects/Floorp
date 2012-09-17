@@ -6959,6 +6959,7 @@
   !endif
 !macroend
 
+!ifdef MOZ_METRO
 ; Removes the CEH registration if it's set to our installation directory.
 ; If it's set to some other installation directory, then it should be removed
 ; by that installation. 
@@ -7059,3 +7060,5 @@
   WriteRegStr SHCTX "Software\Classes\CLSID\${DELEGATE_EXECUTE_HANDLER_ID}\LocalServer32" "" "${DELEGATE_EXECUTE_HANDLER_PATH}"
 !macroend
 !define AddMetroBrowserHandlerValues "!insertmacro AddMetroBrowserHandlerValues"
+!endif ;end MOZ_METRO
+
