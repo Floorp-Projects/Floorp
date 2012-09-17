@@ -502,7 +502,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, regexp_construct, cx->runtime->atomState.RegExpAtom, 2);
+    ctor = global->createConstructor(cx, regexp_construct, CLASS_NAME(cx, RegExp), 2);
     if (!ctor)
         return NULL;
 

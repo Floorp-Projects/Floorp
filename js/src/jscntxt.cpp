@@ -119,7 +119,7 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *run
 {
     runtime->object = mallocSizeOf(this);
 
-    runtime->atomsTable = atoms.sizeOfExcludingThis(mallocSizeOf);
+    runtime->atomsTable = atomState.atoms.sizeOfExcludingThis(mallocSizeOf);
 
     runtime->contexts = 0;
     for (ContextIter acx(this); !acx.done(); acx.next())
@@ -379,7 +379,7 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
 #endif
         bool ok = rt->staticStrings.init(cx);
         if (ok)
-            ok = InitCommonNames(cx);
+            ok = InitCommonAtoms(cx);
         if (ok)
             ok = rt->initSelfHosting(cx);
 
@@ -439,8 +439,8 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         for (CompartmentsIter c(rt); !c.done(); c.next())
             CancelOffThreadIonCompile(c, NULL);
 
-        /* Unpin all common names before final GC. */
-        FinishCommonNames(rt);
+        /* Unpin all common atoms before final GC. */
+        FinishCommonAtoms(rt);
 
         /* Clear debugging state to remove GC roots. */
         for (CompartmentsIter c(rt); !c.done(); c.next())

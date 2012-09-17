@@ -403,11 +403,16 @@ NameNode::create(ParseNodeKind kind, JSAtom *atom, Parser *parser, ParseContext 
     return (NameNode *)pn;
 }
 
+const char js_argument_str[] = "argument";
+const char js_variable_str[] = "variable";
+const char js_unknown_str[]  = "unknown";
+
 const char *
 Definition::kindString(Kind kind)
 {
     static const char *table[] = {
-        js_var_str, js_const_str, js_let_str, js_function_str, "argument", "unknown"
+        js_var_str, js_const_str, js_let_str,
+        js_function_str, js_argument_str, js_unknown_str
     };
 
     JS_ASSERT(unsigned(kind) <= unsigned(ARG));

@@ -348,7 +348,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         if (!ctor)
             return NULL;
         objectCtor = js_NewFunction(cx, ctor, js_Object, 1, JSFUN_CONSTRUCTOR, self,
-                                    cx->runtime->atomState.ObjectAtom);
+                                    CLASS_NAME(cx, Object));
         if (!objectCtor)
             return NULL;
     }
@@ -367,7 +367,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         if (!ctor)
             return NULL;
         functionCtor = js_NewFunction(cx, ctor, Function, 1, JSFUN_CONSTRUCTOR, self,
-                                      cx->runtime->atomState.FunctionAtom);
+                                      CLASS_NAME(cx, Function));
         if (!functionCtor)
             return NULL;
         JS_ASSERT(ctor == functionCtor);
@@ -424,10 +424,10 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     }
 
     /* Add the global Function and Object properties now. */
-    jsid objectId = NameToId(cx->runtime->atomState.ObjectAtom);
+    jsid objectId = NameToId(CLASS_NAME(cx, Object));
     if (!self->addDataProperty(cx, objectId, JSProto_Object + JSProto_LIMIT * 2, 0))
         return NULL;
-    jsid functionId = NameToId(cx->runtime->atomState.FunctionAtom);
+    jsid functionId = NameToId(CLASS_NAME(cx, Function));
     if (!self->addDataProperty(cx, functionId, JSProto_Function + JSProto_LIMIT * 2, 0))
         return NULL;
 
@@ -508,7 +508,7 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 
     /* Define a top-level property 'undefined' with the undefined value. */
     RootedValue undefinedValue(cx, UndefinedValue());
-    if (!JSObject::defineProperty(cx, global, state.undefinedAtom, undefinedValue,
+    if (!JSObject::defineProperty(cx, global, state.typeAtoms[JSTYPE_VOID], undefinedValue,
                                   JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;

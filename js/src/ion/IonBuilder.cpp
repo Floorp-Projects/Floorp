@@ -4612,7 +4612,7 @@ bool
 IonBuilder::jsop_getgname(HandlePropertyName name)
 {
     // Optimize undefined, NaN, and Infinity.
-    if (name == cx->runtime->atomState.undefinedAtom)
+    if (name == cx->runtime->atomState.typeAtoms[JSTYPE_VOID])
         return pushConstant(UndefinedValue());
     if (name == cx->runtime->atomState.NaNAtom)
         return pushConstant(cx->runtime->NaNValue);
