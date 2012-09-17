@@ -3452,8 +3452,10 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex)
     return NS_ERROR_NULL_POINTER;
   if (!aItem->IsPositioned())
     return NS_ERROR_UNEXPECTED;
-  if (aOutIndex)
-    *aOutIndex = -1;
+
+  NS_ASSERTION(aOutIndex, "aOutIndex can't be null");
+
+  *aOutIndex = -1;
 
   // a common case is that we have no ranges yet
   if (mRanges.Length() == 0) {
@@ -3461,8 +3463,7 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex)
       return NS_ERROR_OUT_OF_MEMORY;
     aItem->SetInSelection(true);
 
-    if (aOutIndex)
-      *aOutIndex = 0;
+    *aOutIndex = 0;
     return NS_OK;
   }
 
@@ -3492,8 +3493,7 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex)
                                         aItem->GetEndParent(),
                                         aItem->EndOffset(), startIndex);
   if (sameRange) {
-    if (aOutIndex)
-      *aOutIndex = startIndex;
+    *aOutIndex = startIndex;
     return NS_OK;
   }
 
@@ -3502,8 +3502,7 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex)
     if (!mRanges.InsertElementAt(startIndex, RangeData(aItem)))
       return NS_ERROR_OUT_OF_MEMORY;
     aItem->SetInSelection(true);
-    if (aOutIndex)
-      *aOutIndex = startIndex;
+    *aOutIndex = startIndex;
     return NS_OK;
   }
 
@@ -4572,7 +4571,8 @@ Selection::Collapse(nsINode* aParentNode, int32_t aOffset)
   }
 #endif
 
-  result = AddItem(range);
+  int32_t rangeIndex = -1;
+  result = AddItem(range, &rangeIndex);
   if (NS_FAILED(result))
     return result;
   setAnchorFocusRange(0);
