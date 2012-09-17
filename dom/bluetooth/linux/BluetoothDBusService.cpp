@@ -560,8 +560,6 @@ RegisterAgent(const nsAString& aAdapterPath)
   return true;
 }
 
-
-
 static void
 AddReservedServices(const nsAString& aAdapterPath)
 {
@@ -999,6 +997,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
       errorStr.AssignLiteral("Cannot parse manager path!");
     } else {
       sDefaultAdapterPath = NS_ConvertUTF8toUTF16(str);
+      AddReservedServices(sDefaultAdapterPath);
       v = sDefaultAdapterPath;
     }
   } else if (dbus_message_is_signal(aMsg, DBUS_MANAGER_IFACE, "PropertyChanged")) {
