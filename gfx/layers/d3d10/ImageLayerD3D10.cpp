@@ -181,7 +181,7 @@ ImageLayerD3D10::RenderLayer()
     return;
   }
 
-  gfxIntSize size = mScaleMode == SCALE_NONE ? image->GetSize() : mScaleToSize;
+  gfxIntSize size = image->GetSize();
 
   SetEffectTransformAndOpacity();
 
