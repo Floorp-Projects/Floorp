@@ -19,6 +19,7 @@ nestegg_track_codec_data
 nestegg_track_codec_data_count
 nestegg_track_codec_id
 nestegg_track_count
+nestegg_get_cue_point
 nestegg_track_seek
 nestegg_track_type
 nestegg_track_video_params

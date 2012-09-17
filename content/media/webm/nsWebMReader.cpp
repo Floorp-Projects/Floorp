@@ -188,7 +188,7 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo,
   io.seek = webm_seek;
   io.tell = webm_tell;
   io.userdata = static_cast<nsBuiltinDecoder*>(mDecoder);
-  int r = nestegg_init(&mContext, io, NULL);
+  int r = nestegg_init(&mContext, io, NULL, -1);
   if (r == -1) {
     return NS_ERROR_FAILURE;
   }
