@@ -12,7 +12,6 @@
 #include "EdgeCaseAnalysis.h"
 #include "jsnum.h"
 #include "jsstr.h"
-#include "jsatominlines.h"
 #include "jstypedarrayinlines.h" // For ClampIntForUint8Array
 
 using namespace js;
@@ -1130,7 +1129,7 @@ MTypeOf::foldsTo(bool useValueNumbers)
     }
 
     JSRuntime *rt = GetIonContext()->compartment->rt;
-    return MConstant::New(StringValue(TypeName(type, rt)));
+    return MConstant::New(StringValue(rt->atomState.typeAtoms[type]));
 }
 
 MBitAnd *

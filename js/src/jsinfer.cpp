@@ -3735,10 +3735,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         /*
          * Normally we rely on lazy standard class initialization to fill in
          * the types of global properties the script can access. In a few cases
-         * the method JIT will bypass this, and we need to add the types
-         * directly.
+         * the method JIT will bypass this, and we need to add the types direclty.
          */
-        if (id == NameToId(cx->runtime->atomState.undefinedAtom))
+        if (id == NameToId(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]))
             seen->addType(cx, Type::UndefinedType());
         if (id == NameToId(cx->runtime->atomState.NaNAtom))
             seen->addType(cx, Type::DoubleType());

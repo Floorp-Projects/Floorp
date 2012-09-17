@@ -2434,7 +2434,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
          * global binding...because, really?
          */
         atom = script->getAtom(GET_UINT32_INDEX(pc));
-        if (atom == cx->runtime->atomState.undefinedAtom &&
+        if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
             (pc += js_CodeSpec[op].length) < endpc) {
             op = JSOp(*pc);
             return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
@@ -3592,7 +3592,7 @@ js_GetClassObject(JSContext *cx, RawObject obj, JSProtoKey key,
         return true;
     }
 
-    RootedId name(cx, NameToId(ClassName(key, cx)));
+    RootedId name(cx, NameToId(cx->runtime->atomState.classAtoms[key]));
     AutoResolving resolving(cx, global, name);
     if (resolving.alreadyStarted()) {
         /* Already caching id in global -- suppress recursion. */
@@ -3651,7 +3651,7 @@ js_FindClassObject(JSContext *cx, JSProtoKey protoKey, MutableHandleValue vp, Cl
             vp.set(ObjectValue(*cobj));
             return JS_TRUE;
         }
-        id = NameToId(ClassName(protoKey, cx));
+        id = NameToId(cx->runtime->atomState.classAtoms[protoKey]);
     } else {
         JSAtom *atom = Atomize(cx, clasp->name, strlen(clasp->name));
         if (!atom)
@@ -4920,7 +4920,7 @@ DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
 
     RootedValue val(cx, ObjectValue(*obj));
     js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, JSDVG_SEARCH_STACK, val, str,
-                         (hint == JSTYPE_VOID) ? "primitive type" : TypeStrings[hint]);
+                         (hint == JSTYPE_VOID) ? "primitive type" : JS_TYPE_STR(hint));
     return false;
 }
 

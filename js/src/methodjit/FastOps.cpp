@@ -692,22 +692,22 @@ mjit::Compiler::jsop_typeof()
         JSAtom *atom = NULL;
         switch (fe->getKnownType()) {
           case JSVAL_TYPE_STRING:
-            atom = rt->atomState.stringAtom;
+            atom = rt->atomState.typeAtoms[JSTYPE_STRING];
             break;
           case JSVAL_TYPE_UNDEFINED:
-            atom = rt->atomState.undefinedAtom;
+            atom = rt->atomState.typeAtoms[JSTYPE_VOID];
             break;
           case JSVAL_TYPE_NULL:
-            atom = rt->atomState.objectAtom;
+            atom = rt->atomState.typeAtoms[JSTYPE_OBJECT];
             break;
           case JSVAL_TYPE_OBJECT:
             atom = NULL;
             break;
           case JSVAL_TYPE_BOOLEAN:
-            atom = rt->atomState.booleanAtom;
+            atom = rt->atomState.typeAtoms[JSTYPE_BOOLEAN];
             break;
           default:
-            atom = rt->atomState.numberAtom;
+            atom = rt->atomState.typeAtoms[JSTYPE_NUMBER];
             break;
         }
 
@@ -730,13 +730,13 @@ mjit::Compiler::jsop_typeof()
                                         ? Assembler::Equal
                                         : Assembler::NotEqual;
 
-            if (atom == rt->atomState.undefinedAtom) {
+            if (atom == rt->atomState.typeAtoms[JSTYPE_VOID]) {
                 type = JSVAL_TYPE_UNDEFINED;
-            } else if (atom == rt->atomState.stringAtom) {
+            } else if (atom == rt->atomState.typeAtoms[JSTYPE_STRING]) {
                 type = JSVAL_TYPE_STRING;
-            } else if (atom == rt->atomState.booleanAtom) {
+            } else if (atom == rt->atomState.typeAtoms[JSTYPE_BOOLEAN]) {
                 type = JSVAL_TYPE_BOOLEAN;
-            } else if (atom == rt->atomState.numberAtom) {
+            } else if (atom == rt->atomState.typeAtoms[JSTYPE_NUMBER]) {
                 type = JSVAL_TYPE_INT32;
 
                 /* JSVAL_TYPE_DOUBLE is 0x0 and JSVAL_TYPE_INT32 is 0x1, use <= or > to match both */

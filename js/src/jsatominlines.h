@@ -150,33 +150,6 @@ AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
     return PodEqual(key->chars(), lookup.chars, lookup.length);
 }
 
-inline PropertyName *
-TypeName(JSType type, JSRuntime *rt)
-{
-    JS_ASSERT(type < JSTYPE_LIMIT);
-    JS_STATIC_ASSERT(offsetof(JSAtomState, undefinedAtom) +
-                     JSTYPE_LIMIT * sizeof(PropertyName *) <=
-                     sizeof(JSAtomState));
-    JS_STATIC_ASSERT(JSTYPE_VOID == 0);
-    return (&rt->atomState.undefinedAtom)[type];
-}
-
-inline PropertyName *
-TypeName(JSType type, JSContext *cx)
-{
-    return TypeName(type, cx->runtime);
-}
-
-inline PropertyName *
-ClassName(JSProtoKey key, JSContext *cx)
-{
-    JS_ASSERT(key < JSProto_LIMIT);
-    JS_STATIC_ASSERT(offsetof(JSAtomState, NullAtom) + JSProto_LIMIT * sizeof(PropertyName *) <=
-                     sizeof(JSAtomState));
-    JS_STATIC_ASSERT(JSProto_Null == 0);
-    return (&cx->runtime->atomState.NullAtom)[key];
-}
-
 } // namespace js
 
 #endif /* jsatominlines_h___ */
