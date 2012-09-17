@@ -6969,9 +6969,11 @@
     ReadRegStr $R8 HKCU "Software\Classes\CLSID\$R0\LocalServer32" ""
     ${${un}GetLongPath} "$INSTDIR" $R7
     StrCmp "$R8" "" next +1
+    IfFileExists "$R8" +1 clearHKCU
     ${${un}GetParent} "$R8" $R8
     ${${un}GetLongPath} "$R8" $R8
-    StrCmp "$R7" "$R8" +1 next
+    StrCmp "$R7" "$R8" clearHKCU next
+    clearHKCU:
     DeleteRegKey HKCU "Software\Classes\CLSID\$R0"
     DeleteRegValue HKCU \
                    "Software\Classes\$AppUserModelID\.exe\shell\open\command" \
@@ -6981,9 +6983,11 @@
     ReadRegStr $R8 HKLM "Software\Classes\CLSID\$R0\LocalServer32" ""
     ${${un}GetLongPath} "$INSTDIR" $R7
     StrCmp "$R8" "" done +1
+    IfFileExists "$R8" +1 clearHKLM
     ${${un}GetParent} "$R8" $R8
     ${${un}GetLongPath} "$R8" $R8
-    StrCmp "$R7" "$R8" +1 done 
+    StrCmp "$R7" "$R8" clearHKLM done
+    clearHKLM:
     DeleteRegKey HKLM "Software\Classes\CLSID\$R0"
     DeleteRegValue HKLM \
                    "Software\Classes\$AppUserModelID\.exe\shell\open\command" \
