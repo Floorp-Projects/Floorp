@@ -212,7 +212,7 @@ abstract class Axis {
      * Returns true if the page is zoomed in to some degree along this axis such that scrolling is
      * possible and this axis has not been scroll locked while panning. Otherwise, returns false.
      */
-    private boolean scrollable() {
+    boolean scrollable() {
         // If we're scrolling a subdocument, ignore the viewport length restrictions (since those
         // apply to the top-level document) and only take into account axis locking.
         if (mSubscroller.scrolling()) {
