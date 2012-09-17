@@ -597,6 +597,10 @@ nsHostResolver::ResolveHost(const char            *host,
                 // This is a lower priority request and we are swamped, so refuse it.
                 rv = NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
             }
+            else if (flags & RES_OFFLINE) {
+                rv = NS_ERROR_OFFLINE;
+            }
+
             // otherwise, hit the resolver...
             else {
                 // Add callback to the list of pending callbacks.

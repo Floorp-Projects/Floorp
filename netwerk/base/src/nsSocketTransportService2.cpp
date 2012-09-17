@@ -55,6 +55,8 @@ nsSocketTransportService::nsSocketTransportService()
     , mLock("nsSocketTransportService::mLock")
     , mInitialized(false)
     , mShuttingDown(false)
+    , mOffline(false)
+    , mGoingOffline(false)
     , mActiveListSize(SOCKET_LIMIT_MIN)
     , mIdleListSize(SOCKET_LIMIT_MIN)
     , mActiveCount(0)
@@ -427,10 +429,6 @@ nsSocketTransportService::Init()
     if (mShuttingDown)
         return NS_ERROR_UNEXPECTED;
 
-    // Don't initialize inside the offline mode
-    if (gIOService->IsOffline() && !gIOService->IsComingOnline())
-        return NS_ERROR_OFFLINE;
-
     if (!mThreadEvent) {
         mThreadEvent = PR_NewPollableEvent();
         //
@@ -517,6 +515,28 @@ nsSocketTransportService::Shutdown()
 }
 
 NS_IMETHODIMP
+nsSocketTransportService::GetOffline(bool *offline)
+{
+    *offline = mOffline;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::SetOffline(bool offline)
+{
+    if (!mOffline && offline) {
+        // signal the socket thread to go offline, so it will detach sockets
+        mGoingOffline = true;
+        mOffline = true;
+    }
+    else if (mOffline && !offline) {
+        mOffline = false;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const char **types,
                                           uint32_t typeCount,
                                           const nsACString &host,
@@ -524,7 +544,7 @@ nsSocketTransportService::CreateTransport(const char **types,
                                           nsIProxyInfo *proxyInfo,
                                           nsISocketTransport **result)
 {
-    NS_ENSURE_TRUE(mInitialized, NS_ERROR_OFFLINE);
+    NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(port >= 0 && port <= 0xFFFF, NS_ERROR_ILLEGAL_VALUE);
 
     nsSocketTransport *trans = new nsSocketTransport();
@@ -624,22 +644,26 @@ nsSocketTransportService::Run()
             }
         } while (pendingEvents);
 
+        bool goingOffline = false;
         // now that our event queue is empty, check to see if we should exit
         {
             MutexAutoLock lock(mLock);
             if (mShuttingDown)
                 break;
+            if (mGoingOffline) {
+                mGoingOffline = false;
+                goingOffline = true;
+            }
         }
+        // Avoid potential deadlock
+        if (goingOffline)
+            Reset(true);
     }
 
     SOCKET_LOG(("STS shutting down thread\n"));
 
-    // detach any sockets
-    int32_t i;
-    for (i=mActiveCount-1; i>=0; --i)
-        DetachSocket(mActiveList, &mActiveList[i]);
-    for (i=mIdleCount-1; i>=0; --i)
-        DetachSocket(mIdleList, &mIdleList[i]);
+    // detach all sockets, including locals
+    Reset(false);
 
     // Final pass over the event queue. This makes sure that events posted by
     // socket detach handlers get processed.
@@ -651,6 +675,28 @@ nsSocketTransportService::Run()
 
     SOCKET_LOG(("STS thread exit\n"));
     return NS_OK;
+}
+
+void
+nsSocketTransportService::Reset(bool aGuardLocals)
+{
+    // detach any sockets
+    int32_t i;
+    bool isGuarded;
+    for (i = mActiveCount - 1; i >= 0; --i) {
+        isGuarded = false;
+        if (aGuardLocals)
+            mActiveList[i].mHandler->IsLocal(&isGuarded);
+        if (!isGuarded)
+            DetachSocket(mActiveList, &mActiveList[i]);
+    }
+    for (i = mIdleCount - 1; i >= 0; --i) {
+        isGuarded = false;
+        if (aGuardLocals)
+            mIdleList[i].mHandler->IsLocal(&isGuarded);
+        if (!isGuarded)
+            DetachSocket(mIdleList, &mIdleList[i]);
+    }
 }
 
 nsresult

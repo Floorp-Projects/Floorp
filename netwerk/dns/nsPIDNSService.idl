@@ -10,7 +10,7 @@
  * This is a private interface used by the internals of the networking library.
  * It will never be frozen.  Do not use it in external code.
  */
-[scriptable, uuid(a26c5b45-7707-4412-bbc1-2462b890848d)]
+[scriptable, uuid(26bd9b9e-90c3-11e1-981c-001fbc092072)]
 interface nsPIDNSService : nsIDNSService
 {
     /**
@@ -26,4 +26,9 @@ interface nsPIDNSService : nsIDNSService
      * this method.
      */
     void shutdown();
+
+    /**
+     * @return whether the DNS service is offline.
+     */
+    attribute boolean offline;
 };

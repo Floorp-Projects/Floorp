@@ -40,7 +40,7 @@ function run_test_pt1() {
   }
   ioService.offline = true;
 
-  gExpectedStatus = Components.results.NS_ERROR_DOCUMENT_NOT_CACHED;
+  gExpectedStatus = Components.results.NS_ERROR_OFFLINE;
   gNextTestFunc = run_test_pt2;
   dump("Testing error returned by async XHR when the network is offline\n");
   asyncXHR.load();

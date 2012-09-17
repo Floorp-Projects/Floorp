@@ -350,6 +350,7 @@ nsDNSSyncRequest::EqualsAsyncListener(nsIDNSListener *aListener)
 nsDNSService::nsDNSService()
     : mLock("nsDNSServer.mLock")
     , mFirstTime(true)
+    , mOffline(false)
 {
 }
 
@@ -365,6 +366,8 @@ nsDNSService::Init()
 {
     NS_TIME_FUNCTION;
 
+    if (mResolver)
+        return NS_OK;
     NS_ENSURE_TRUE(!mResolver, NS_ERROR_ALREADY_INITIALIZED);
 
     // prefs
@@ -482,6 +485,20 @@ nsDNSService::Shutdown()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSService::GetOffline(bool *offline)
+{
+    *offline = mOffline;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDNSService::SetOffline(bool offline)
+{
+    mOffline = offline;
+    return NS_OK;
+}
+
 namespace {
 
 class DNSListenerProxy MOZ_FINAL : public nsIDNSListener
@@ -580,6 +597,9 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
     if (!res)
         return NS_ERROR_OFFLINE;
 
+    if (mOffline)
+        flags |= RESOLVE_OFFLINE;
+
     const nsACString *hostPtr = &hostname;
 
     if (localDomain) {
@@ -668,6 +688,9 @@ nsDNSService::Resolve(const nsACString &hostname,
         localDomain = mLocalDomains.GetEntry(hostname);
     }
     NS_ENSURE_TRUE(res, NS_ERROR_OFFLINE);
+
+    if (mOffline)
+        flags |= RESOLVE_OFFLINE;
 
     const nsACString *hostPtr = &hostname;
 
