@@ -87,13 +87,16 @@ def build_tooltool_manifest():
     tooltool = basedir + '/tooltool.py'
     setup = basedir + '/setup.sh'
     manifest = 'clang.manifest'
-    check_run(['python', tooltool, '-m', 'clang.manifest', 'add',
+    check_run(['python', tooltool, '-m', manifest, 'add',
                setup, 'clang.tar.bz2'])
-    data = simplejson.load(file('clang.manifest'))
+    data = simplejson.load(file(manifest))
     data = [{'clang_version' : 'r%s' % llvm_revision }] + data
-    out = file('clang.manifest','w')
+    out = file(manifest,'w')
     simplejson.dump(data, out, indent=0, item_sort_key=key_sort)
     out.write('\n')
+
+    assert data[2]['filename'] == 'clang.tar.bz2'
+    os.rename('clang.tar.bz2', data[2]['digest'])
 
 isDarwin = platform.system() == "Darwin"
 
