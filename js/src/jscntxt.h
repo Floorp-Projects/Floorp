@@ -382,15 +382,25 @@ struct RuntimeSizes;
 /* Various built-in or commonly-used names pinned on first context. */
 struct JSAtomState
 {
-#define PROPERTYNAME_FIELD(idpart, id, text) js::FixedHeapPtr<js::PropertyName> id;
+#define PROPERTYNAME_FIELD(idpart, id, text) \
+    union { \
+        js::FixedHeapPtr<js::PropertyName> idpart##Atom; \
+        js::FixedHeapPtr<js::PropertyName> id; \
+    };
     FOR_EACH_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD)
 #undef PROPERTYNAME_FIELD
-#define PROPERTYNAME_FIELD(name, code, init) js::FixedHeapPtr<js::PropertyName> name;
+#define PROPERTYNAME_FIELD(name, code, init) \
+    union { \
+        js::FixedHeapPtr<js::PropertyName> name##Atom; \
+        js::FixedHeapPtr<js::PropertyName> name; \
+    };
     JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD)
 #undef PROPERTYNAME_FIELD
 };
 
-#define NAME_OFFSET(name)       offsetof(JSAtomState, name)
+#define ATOM(name) (cx->names().name)
+
+#define NAME_OFFSET(name)       offsetof(JSAtomState, name##Atom)
 #define OFFSET_TO_NAME(rt,off)  (*(js::FixedHeapPtr<js::PropertyName>*)((char*)&(rt)->atomState + (off)))
 
 struct JSRuntime : js::RuntimeFriendFields

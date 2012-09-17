@@ -847,8 +847,8 @@ ParallelArrayObject::initClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     JSProtoKey key = JSProto_ParallelArray;
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, construct, cx->names().ParallelArray, 0);
+    Rooted<PropertyName*> name(cx, cx->runtime->atomState.ParallelArrayAtom);
+    RootedFunction ctor(cx, global->createConstructor(cx, construct, name, 0));
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndBrand(cx, proto, NULL, methods) ||
@@ -858,8 +858,8 @@ ParallelArrayObject::initClass(JSContext *cx, JSObject *obj)
     }
 
     // Define the length and shape properties.
-    RootedId lengthId(cx, AtomToId(cx->names().length));
-    RootedId shapeId(cx, AtomToId(cx->names().shape));
+    RootedId lengthId(cx, AtomToId(cx->runtime->atomState.lengthAtom));
+    RootedId shapeId(cx, AtomToId(cx->runtime->atomState.shapeAtom));
     unsigned flags = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_GETTER;
 
     JSObject *scriptedLength = js_NewFunction(cx, NULL, NonGenericMethod<lengthGetter>,
@@ -1533,7 +1533,7 @@ ParallelArrayObject::toStringBufferImpl(JSContext *cx, IndexInfo &iv, bool useLo
                 if (!robj)
                     return false;
 
-                id = NameToId(cx->names().toLocaleString);
+                id = NameToId(cx->runtime->atomState.toLocaleStringAtom);
                 if (!robj->callMethod(cx, id, 0, NULL, &localeElem) ||
                     !ValueToStringBuffer(cx, localeElem, sb))
                 {
@@ -1611,7 +1611,7 @@ ParallelArrayObject::lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
     if (js_IdIsIndex(id, &i))
         return lookupElement(cx, obj, i, objp, propp);
 
-    if (JSID_IS_ATOM(id, cx->names().length)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         MarkNonNativePropertyFound(obj, propp);
         objp.set(obj);
         return true;
@@ -1718,7 +1718,7 @@ JSBool
 ParallelArrayObject::getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                                  HandlePropertyName name, MutableHandleValue vp)
 {
-    if (name == cx->names().length) {
+    if (name == cx->runtime->atomState.lengthAtom) {
         vp.setNumber(as(obj)->outermostDimension());
         return true;
     }
@@ -1789,7 +1789,7 @@ JSBool
 ParallelArrayObject::getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id,
                                           unsigned *attrsp)
 {
-    if (JSID_IS_ATOM(id, cx->names().length))
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         *attrsp = JSPROP_PERMANENT | JSPROP_READONLY;
     else
         *attrsp = JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_ENUMERATE;
@@ -1801,7 +1801,7 @@ JSBool
 ParallelArrayObject::getPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                            unsigned *attrsp)
 {
-    if (name == cx->names().length)
+    if (name == cx->runtime->atomState.lengthAtom)
         *attrsp = JSPROP_PERMANENT | JSPROP_READONLY;
     return true;
 }
@@ -1892,7 +1892,7 @@ ParallelArrayObject::enumerate(JSContext *cx, HandleObject obj, unsigned flags,
 {
     RootedParallelArrayObject source(cx, as(obj));
 
-    if (flags & JSITER_HIDDEN && !props->append(NameToId(cx->names().length)))
+    if (flags & JSITER_HIDDEN && !props->append(NameToId(cx->runtime->atomState.lengthAtom)))
         return false;
 
     // ParallelArray objects have no holes.

@@ -224,7 +224,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
     // It's an error to use |arguments| in a function that has a rest parameter.
     if (callerFrame && callerFrame->isFunctionFrame() && callerFrame->fun()->hasRest()) {
-        HandlePropertyName arguments = cx->names().arguments;
+        PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
         for (AtomDefnRange r = pc.lexdeps->all(); !r.empty(); r.popFront()) {
             if (r.front().key() == arguments) {
                 parser.reportError(NULL, JSMSG_ARGUMENTS_AND_REST);

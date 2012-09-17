@@ -37,14 +37,16 @@ class RegExpMatchBuilder
     }
 
     bool setIndex(int index) {
+        Rooted<PropertyName*> name(cx, cx->runtime->atomState.indexAtom);
         RootedValue value(cx, Int32Value(index));
-        return setProperty(cx->names().index, value);
+        return setProperty(name, value);
     }
 
     bool setInput(JSString *str) {
         JS_ASSERT(str);
+        Rooted<PropertyName*> name(cx, cx->runtime->atomState.inputAtom);
         RootedValue value(cx, StringValue(str));
-        return setProperty(cx->names().input, value);
+        return setProperty(name, value);
     }
 };
 
@@ -242,7 +244,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
          * to executing RegExpObject::getSource on the unwrapped object.
          */
         RootedValue v(cx);
-        if (!JSObject::getProperty(cx, sourceObj, sourceObj, cx->names().source, &v))
+        if (!JSObject::getProperty(cx, sourceObj, sourceObj, cx->runtime->atomState.sourceAtom, &v))
             return false;
 
         Rooted<JSAtom*> sourceAtom(cx, &v.toString()->asAtom());
@@ -491,8 +493,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
     proto->setPrivate(NULL);
 
-    HandlePropertyName empty = cx->names().empty;
     RegExpObjectBuilder builder(cx, &proto->asRegExp());
+    Rooted<JSAtom*> empty(cx, cx->runtime->emptyString);
     if (!builder.build(empty, RegExpFlag(0)))
         return NULL;
 
@@ -500,7 +502,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, regexp_construct, cx->names().RegExp, 2);
+    ctor = global->createConstructor(cx, regexp_construct, cx->runtime->atomState.RegExpAtom, 2);
     if (!ctor)
         return NULL;
 
