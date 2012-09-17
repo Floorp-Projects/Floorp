@@ -31,8 +31,6 @@ def _nsinstall_internal(argv):
                help="Create directories in target")
   p.add_option('-R', action="store_true",
                help="Use relative symbolic links (ignored)")
-  p.add_option('-l', action="store_true",
-               help="Create link (ignored)")
   p.add_option('-L', action="store", metavar="linkprefix",
                help="Link prefix (ignored)")
   p.add_option('-X', action="append", metavar="file",
