@@ -493,7 +493,9 @@ public class PanZoomController
         mY.startTouch(y);
         mLastEventTime = time;
 
-        if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
+        if (!mX.scrollable() || !mY.scrollable()) {
+            setState(PanZoomState.PANNING);
+        } else if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
             mY.setScrollingDisabled(true);
             setState(PanZoomState.PANNING_LOCKED);
         } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
