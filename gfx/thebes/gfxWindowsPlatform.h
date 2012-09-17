@@ -243,6 +243,13 @@ public:
     static bool IsRunningInWindows8Metro();
 
 protected:
+    virtual mozilla::gfx::BackendType GetContentBackend()
+    {
+      return UseAzureContentDrawing() && mRenderMode == RENDER_DIRECT2D ?
+               mozilla::gfx::BACKEND_DIRECT2D :
+               mozilla::gfx::BACKEND_NONE;
+    }
+
     RenderMode mRenderMode;
 
     int8_t mUseClearTypeForDownloadableFonts;
