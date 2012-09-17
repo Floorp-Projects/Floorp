@@ -24,6 +24,7 @@
 
 #include "nsNodeInfoManager.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsContentList.h"
 
 const nscoord kSuggestedNotSet = -1;
 

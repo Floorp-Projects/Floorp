@@ -44,6 +44,7 @@ class RenderFrameParent : public PRenderFrameParent,
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::TargetConfig TargetConfig;
   typedef mozilla::layers::ShadowLayersParent ShadowLayersParent;
+  typedef mozilla::FrameLayerBuilder::ContainerParameters ContainerParameters;
   typedef FrameMetrics::ViewID ViewID;
 
 public:
@@ -84,7 +85,8 @@ public:
                                      nsIFrame* aFrame,
                                      LayerManager* aManager,
                                      const nsIntRect& aVisibleRect,
-                                     nsDisplayItem* aItem);
+                                     nsDisplayItem* aItem,
+                                     const ContainerParameters& aContainerParameters);
 
   void OwnerContentChanged(nsIContent* aContent);
 

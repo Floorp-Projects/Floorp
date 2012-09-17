@@ -21,7 +21,6 @@ EXTRA_JS_MODULES = \
 	NewTabUtils.jsm \
 	offlineAppCache.jsm \
 	SignInToWebsite.jsm \
-	TabTitleAbridger.jsm \
 	TelemetryTimestamps.jsm \
 	Social.jsm \
 	webappsUI.jsm \

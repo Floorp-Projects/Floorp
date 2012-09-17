@@ -55,6 +55,7 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsRenderingContext.h"
 #include "mozilla/Preferences.h"
+#include "nsContentList.h"
 
 using namespace mozilla;
 

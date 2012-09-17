@@ -3335,7 +3335,7 @@ CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
 {
     typedef bool (*pf)(JSContext *, HandleValue, HandlePropertyName, JSBool *);
 
-    pushArg(ImmGCPtr(lir->mir()->atom()));
+    pushArg(ImmGCPtr(lir->mir()->name()));
     pushArg(ToValue(lir, LCallDeleteProperty::Value));
 
     if (lir->mir()->block()->info().script()->strictModeCode) {
