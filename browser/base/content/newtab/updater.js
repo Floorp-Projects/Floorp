@@ -171,10 +171,10 @@ let gUpdater = {
       // Set the site's initial opacity to zero.
       site.node.style.opacity = 0;
 
-      // Without the setTimeout() the node would just appear instead of fade in.
-      setTimeout(function () {
-        gTransformation.showSite(site, function () batch.pop());
-      }, 0);
+      // Flush all style changes for the dynamically inserted site to make
+      // the fade-in transition work.
+      window.getComputedStyle(site.node).opacity;
+      gTransformation.showSite(site, function () batch.pop());
     });
 
     batch.close();
