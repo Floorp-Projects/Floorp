@@ -304,6 +304,12 @@ public:
                                            nsReflowStatus&          aStatus);
 
   /**
+   * Move any frames on our overflow list to the end of our principal list.
+   * @return true if there were any overflow frames
+   */
+  virtual bool DrainSelfOverflowList();
+
+  /**
    * Removes aChild without destroying it and without requesting reflow.
    * Continuations are not affected. Checks the primary and overflow
    * or overflow containers and excess overflow containers lists, depending

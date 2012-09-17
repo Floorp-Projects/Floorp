@@ -702,6 +702,12 @@ public:
   virtual nsIFrame* GetContentInsertionFrame() { return this; }
 
   /**
+   * Move any frames on our overflow list to the end of our principal list.
+   * @return true if there were any overflow frames
+   */
+  virtual bool DrainSelfOverflowList() { return false; }
+
+  /**
    * Get the frame that should be scrolled if the content associated
    * with this frame is targeted for scrolling. For frames implementing
    * nsIScrollableFrame this will return the frame itself. For frames
