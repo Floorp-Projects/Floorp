@@ -867,7 +867,7 @@ ScriptedIndirectProxyHandler::delete_(JSContext *cx, JSObject *proxy, jsid id_, 
     RootedObject handler(cx, GetIndirectProxyHandlerObject(cx, proxy));
     RootedId id(cx, id_);
     RootedValue fval(cx), value(cx);
-    return GetFundamentalTrap(cx, handler, ATOM(delete_), &fval) &&
+    return GetFundamentalTrap(cx, handler, ATOM(delete), &fval) &&
            Trap1(cx, handler, fval, id, value.address()) &&
            ValueToBool(cx, value, bp);
 }

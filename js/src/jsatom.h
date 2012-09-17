@@ -154,7 +154,7 @@ AtomIsInterned(JSContext *cx, JSAtom *atom);
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTO_STR)
 #undef DECLARE_PROTO_STR
 
-#define DECLARE_CONST_CHAR_STR(idpart, id, text)  extern const char js_##idpart##_str[];
+#define DECLARE_CONST_CHAR_STR(id, text)  extern const char js_##id##_str[];
 FOR_EACH_COMMON_PROPERTYNAME(DECLARE_CONST_CHAR_STR)
 #undef DECLARE_CONST_CHAR_STR
 

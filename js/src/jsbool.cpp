@@ -188,7 +188,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
 JSString *
 js_BooleanToString(JSContext *cx, JSBool b)
 {
-    return b ? cx->runtime->atomState.true_ : cx->runtime->atomState.false_;
+    return b ? cx->runtime->atomState.trueAtom : cx->runtime->atomState.falseAtom;
 }
 
 namespace js {

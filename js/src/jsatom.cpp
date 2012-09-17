@@ -61,7 +61,7 @@ const char * js::TypeStrings[] = {
 JS_FOR_EACH_PROTOTYPE(DEFINE_PROTO_STRING)
 #undef DEFINE_PROTO_STRING
 
-#define CONST_CHAR_STR(idpart, id, text) const char js_##idpart##_str[] = text;
+#define CONST_CHAR_STR(id, text)      const char js_##id##_str[] = text;
 FOR_EACH_COMMON_PROPERTYNAME(CONST_CHAR_STR)
 #undef CONST_CHAR_STR
 
@@ -151,7 +151,7 @@ bool
 js::InitCommonNames(JSContext *cx)
 {
     static const CommonNameInfo cachedNames[] = {
-#define COMMON_NAME_INFO(idpart, id, text) { js_##idpart##_str, sizeof(text) - 1 },
+#define COMMON_NAME_INFO(id, text) { js_##id##_str, sizeof(text) - 1 },
         FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
 #define COMMON_NAME_INFO(name, code, init) { js_##name##_str, sizeof(#name) - 1 },

@@ -382,17 +382,15 @@ struct RuntimeSizes;
 /* Various built-in or commonly-used names pinned on first context. */
 struct JSAtomState
 {
-#define PROPERTYNAME_FIELD(idpart, id, text) \
-    union { js::PropertyName *idpart##Atom; js::PropertyName *id; };
+#define PROPERTYNAME_FIELD(id, text)          js::PropertyName *id##Atom;
     FOR_EACH_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD)
 #undef PROPERTYNAME_FIELD
-#define PROPERTYNAME_FIELD(name, code, init) \
-    union { js::PropertyName *name##Atom; js::PropertyName *name; };
+#define PROPERTYNAME_FIELD(name, code, init)  js::PropertyName *name##Atom;
     JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD)
 #undef PROPERTYNAME_FIELD
 };
 
-#define ATOM(name) js::HandlePropertyName::fromMarkedLocation(&cx->names().name)
+#define ATOM(name) js::HandlePropertyName::fromMarkedLocation(&cx->runtime->atomState.name##Atom)
 
 #define NAME_OFFSET(name)       offsetof(JSAtomState, name##Atom)
 #define OFFSET_TO_NAME(rt,off)  (*(js::PropertyName **)((char*)&(rt)->atomState + (off)))
@@ -1540,8 +1538,6 @@ struct JSContext : js::ContextFriendFields
         throwing = false;
         exception.setUndefined();
     }
-
-    JSAtomState & names() { return runtime->atomState; }
 
 #ifdef DEBUG
     /*
