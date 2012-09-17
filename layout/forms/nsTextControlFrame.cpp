@@ -22,7 +22,6 @@
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
 #include "nsTextFragment.h"
-#include "nsIEditorObserver.h"
 #include "nsEditProperty.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
