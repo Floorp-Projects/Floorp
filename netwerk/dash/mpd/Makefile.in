@@ -23,6 +23,10 @@ GRE_MODULE     = 1
 FORCE_STATIC_LIB = 1
 
 CPPSRCS = \
+  nsDASHMPDParser.cpp \
+  IMPDManager.cpp \
+  nsDASHWebMODManager.cpp \
+  nsDASHWebMODParser.cpp \
   MPD.cpp \
   Period.cpp \
   AdaptationSet.cpp \
@@ -31,6 +35,8 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS = \
+  IMPDManager.h \
+  nsDASHMPDParser.h \
   $(NULL)
 
 LOCAL_INCLUDES = \
