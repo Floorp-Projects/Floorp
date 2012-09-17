@@ -197,9 +197,6 @@ Returns the window width that was current when the plugin last painted.
 When value is true, every time the plugin paints, it will invalidate
 itself *during the paint* using NPN_Invalidate.
 
-* setSlowPaint(value)
-When value is true, the instance will sleep briefly during paint.
-
 == Plugin geometry ==
 
 The test plugin supports the following scriptable methods:

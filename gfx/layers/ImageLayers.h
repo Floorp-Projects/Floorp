@@ -24,7 +24,7 @@ class THEBES_API ImageLayer : public Layer {
 public:
   enum ScaleMode {
     SCALE_NONE,
-    SCALE_STRETCH
+    SCALE_STRETCH // Unimplemented on GL layers and e10s
   // Unimplemented - SCALE_PRESERVE_ASPECT_RATIO_CONTAIN
   };
 
