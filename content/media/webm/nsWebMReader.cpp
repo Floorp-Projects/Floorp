@@ -183,12 +183,18 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo,
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
+  LOG(PR_LOG_DEBUG, ("Reader [%p] for Decoder [%p]: Reading WebM Metadata: "
+                     "init bytes [%d - %d] cues bytes [%d - %d]",
+                     this, mDecoder,
+                     mInitByteRange.mStart, mInitByteRange.mEnd,
+                     mCuesByteRange.mStart, mCuesByteRange.mEnd));
   nestegg_io io;
   io.read = webm_read;
   io.seek = webm_seek;
   io.tell = webm_tell;
   io.userdata = static_cast<nsBuiltinDecoder*>(mDecoder);
-  int r = nestegg_init(&mContext, io, NULL, -1);
+  int64_t maxOffset = mInitByteRange.IsNull() ? -1 : mInitByteRange.mEnd;
+  int r = nestegg_init(&mContext, io, nullptr, maxOffset);
   if (r == -1) {
     return NS_ERROR_FAILURE;
   }
@@ -337,9 +343,44 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo,
     }
   }
 
+  // Byte range for cues has been specified; load them.
+  if (!mCuesByteRange.IsNull()) {
+    maxOffset = mCuesByteRange.mEnd;
+
+    // Iterate through cluster ranges until nestegg returns the last one
+    NS_ENSURE_TRUE(mClusterByteRanges.IsEmpty(),
+                   NS_ERROR_ALREADY_INITIALIZED);
+    int clusterNum = 0;
+    bool done = false;
+    do {
+      mClusterByteRanges.AppendElement();
+      r = nestegg_get_cue_point(mContext, clusterNum, maxOffset,
+                                &(mClusterByteRanges[clusterNum].mStart),
+                                &(mClusterByteRanges[clusterNum].mEnd));
+      if (r != 0) {
+        Cleanup();
+        return NS_ERROR_FAILURE;
+      }
+      LOG(PR_LOG_DEBUG, ("Reader [%p] for Decoder [%p]: Cluster [%d]: "
+                         "start [%d] end [%d]",
+                         this, mDecoder, clusterNum,
+                         mClusterByteRanges[clusterNum].mStart,
+                         mClusterByteRanges[clusterNum].mEnd));
+      // Last cluster will have '-1' as end value
+      if (mClusterByteRanges[clusterNum].mEnd == -1) {
+        mClusterByteRanges[clusterNum].mEnd = (mCuesByteRange.mStart-1);
+        done = true;
+      } else {
+        clusterNum++;
+      }
+    } while (!done);
+  }
+
   *aInfo = mInfo;
 
   *aTags = nullptr;
+
+  mDecoder->OnReadMetadataCompleted();
 
   return NS_OK;
 }
@@ -784,4 +825,17 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
 void nsWebMReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
   mBufferedState->NotifyDataArrived(aBuffer, aLength, aOffset);
+}
+
+nsresult
+nsWebMReader::GetIndexByteRanges(nsTArray<MediaByteRange>& aByteRanges)
+{
+  NS_ENSURE_TRUE(mContext, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aByteRanges.IsEmpty(), NS_ERROR_ALREADY_INITIALIZED);
+  NS_ENSURE_FALSE(mClusterByteRanges.IsEmpty(), NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_FALSE(mCuesByteRange.IsNull(), NS_ERROR_NOT_INITIALIZED);
+
+  aByteRanges = mClusterByteRanges;
+
+  return NS_OK;
 }
