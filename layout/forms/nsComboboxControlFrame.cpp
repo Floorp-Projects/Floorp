@@ -82,10 +82,6 @@ class nsPresState;
 // The drop-down list does not explicitly set capture when it is in the drop-down mode.
 
 
-//XXX: This is temporary. It simulates pseudo states by using a attribute selector on 
-
-const int32_t kSizeNotSet = -1;
-
 /**
  * Helper class that listens to the combo boxes button. If the button is pressed the 
  * combo box is toggled to open or close. this is used by Accessibility which presses
