@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for XMLHttpRequest with system privileges</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+function message(event) {
+  if (event.data.test == 'ok')
+    ok(event.data.a, event.data.event);
+  else if(event.data.test == 'is')
+    is(event.data.a, event.data.b, event.data.event);
+  else if(event.data.test == 'finish') {
+    run();
+  }
+};
+
+function test1() {
+  var worker = new Worker("test_xhr_parameters.js");
+  worker.onmessage = message;
+
+  // Run the tests once without API privileges...
+  worker.postMessage(false);
+}
+
+function test2() {
+  // ...and once with privileges.
+  SpecialPowers.addPermission("systemXHR", true, document);
+
+  var worker = new Worker("test_xhr_parameters.js");
+  worker.onmessage = message;
+  worker.postMessage(true);
+}
+
+var tests = [ test1, test2 ];
+function run() {
+  if (!tests.length) {
+    SpecialPowers.removePermission("systemXHR", document);
+    SimpleTest.finish();
+    return;
+  }
+
+  var func = tests.shift();
+  func();
+}
+
+SimpleTest.waitForExplicitFinish();
+run();
+
+</script>
+</pre>
+</body>
+</html>
