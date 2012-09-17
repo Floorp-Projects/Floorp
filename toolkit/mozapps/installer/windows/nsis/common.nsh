@@ -5729,8 +5729,12 @@
         ${LogMsg} "OS Name    : Windows 2003"
       ${ElseIf} ${IsWinVista}
         ${LogMsg} "OS Name    : Windows Vista"
-      ${ElseIf} ${AtLeastWinVista} ; Workaround for NSIS 2.33 WinVer.nsh not knowing Win7
-        ${LogMsg} "OS Name    : Windows 7 or above"
+      ${ElseIf} ${IsWin7}
+        ${LogMsg} "OS Name    : Windows 7"
+      ${ElseIf} ${IsWin8}
+        ${LogMsg} "OS Name    : Windows 8"
+      ${ElseIf} ${AtLeastWin8}
+        ${LogMsg} "OS Name    : Above Windows 8"
       ${Else}
         ${LogMsg} "OS Name    : Unable to detect"
       ${EndIf}
