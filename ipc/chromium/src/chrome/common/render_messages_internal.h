@@ -35,7 +35,7 @@ IPC_BEGIN_MESSAGES(View)
   // Used typically when recovering from a crash.  The new rendering process
   // sets its global "next page id" counter to the given value.
   IPC_MESSAGE_CONTROL1(ViewMsg_SetNextPageID,
-                       int32 /* next_page_id */)
+                       int32_t /* next_page_id */)
 
   // Tells the renderer to create a new view.
   // This message is slightly different, the view it takes is the view to
@@ -44,7 +44,7 @@ IPC_BEGIN_MESSAGES(View)
                        gfx::NativeViewId, /* parent window */
                        ModalDialogEvent, /* model dialog box event */
                        WebPreferences,
-                       int32 /* view id */)
+                       int32_t /* view id */)
 
   // Tells the renderer to set its maximum cache size to the supplied value
   IPC_MESSAGE_CONTROL3(ViewMsg_SetCacheCapacities,
@@ -173,14 +173,14 @@ IPC_BEGIN_MESSAGES(View)
   // unknown, in that case |size| is -1.
   IPC_MESSAGE_ROUTED3(ViewMsg_Resource_DownloadProgress,
                       int /* request_id */,
-                      int64 /* position */,
-                      int64 /* size */)
+                      int64_t /* position */,
+                      int64_t /* size */)
 
   // Sent as upload progress is being made.
   IPC_MESSAGE_ROUTED3(ViewMsg_Resource_UploadProgress,
                       int /* request_id */,
-                      int64 /* position */,
-                      int64 /* size */)
+                      int64_t /* position */,
+                      int64_t /* size */)
 
   // Sent when the request has been redirected.
   IPC_MESSAGE_ROUTED2(ViewMsg_Resource_ReceivedRedirect,
@@ -423,7 +423,7 @@ IPC_BEGIN_MESSAGES(View)
 
   // Requests application info for the page. The renderer responds back with
   // ViewHostMsg_DidGetApplicationInfo.
-  IPC_MESSAGE_ROUTED1(ViewMsg_GetApplicationInfo, int32 /*page_id*/)
+  IPC_MESSAGE_ROUTED1(ViewMsg_GetApplicationInfo, int32_t /*page_id*/)
 
   // Requests the renderer to download the specified image encode it as PNG
   // and send the PNG data back ala ViewHostMsg_DidDownloadImage.
@@ -483,12 +483,12 @@ IPC_BEGIN_MESSAGES(View)
   IPC_MESSAGE_CONTROL3(AppCacheMsg_AppCacheSelected,
                        int /* context_id */,
                        int /* select_request_id */,
-                       int64 /* cache_id */)
+                       int64_t /* cache_id */)
 
   // Reply to the ViewHostMsg_QueryFormFieldAutofill message with the autofill
   // suggestions.
   IPC_MESSAGE_ROUTED4(ViewMsg_AutofillSuggestions,
-                      int64 /* id of the text input field */,
+                      int64_t /* id of the text input field */,
                       int /* id of the request message */,
                       std::vector<std::wstring> /* suggestions */,
                       int /* index of default suggestion */)
@@ -653,13 +653,13 @@ IPC_BEGIN_MESSAGES(ViewHost)
   // Notifies the browser that we have session history information.
   // page_id: unique ID that allows us to distinguish between history entries.
   IPC_MESSAGE_ROUTED2(ViewHostMsg_UpdateState,
-                      int32 /* page_id */,
+                      int32_t /* page_id */,
                       std::string /* state */)
 
   // Changes the title for the page in the UI when the page is navigated or the
   // title changes.
   // TODO(darin): use a UTF-8 string to reduce data size
-  IPC_MESSAGE_ROUTED2(ViewHostMsg_UpdateTitle, int32, std::wstring)
+  IPC_MESSAGE_ROUTED2(ViewHostMsg_UpdateTitle, int32_t, std::wstring)
 
   // Change the encoding name of the page in UI when the page has detected
   // proper encoding name.
@@ -668,7 +668,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
 
   // Notifies the browser that we want to show a destination url for a potential
   // action (e.g. when the user is hovering over a link).
-  IPC_MESSAGE_ROUTED2(ViewHostMsg_UpdateTargetURL, int32, GURL)
+  IPC_MESSAGE_ROUTED2(ViewHostMsg_UpdateTargetURL, int32_t, GURL)
 
   // Sent when the renderer starts loading the page. This corresponds to
   // WebKit's notion of the throbber starting. Note that sometimes you may get
@@ -791,14 +791,14 @@ IPC_BEGIN_MESSAGES(ViewHost)
   // data to an instance of the same plugin loaded in the browser process.
   IPC_MESSAGE_CONTROL2(ViewHostMsg_PluginMessage,
                        FilePath /* plugin_path of plugin */,
-                       std::vector<uint8> /* opaque data */)
+                       std::vector<uint8_t> /* opaque data */)
 
   // Allows a chrome plugin loaded in a renderer process to send arbitrary
   // data to an instance of the same plugin loaded in the browser process.
   IPC_SYNC_MESSAGE_CONTROL2_1(ViewHostMsg_PluginSyncMessage,
                               FilePath /* plugin_path of plugin */,
-                              std::vector<uint8> /* opaque data */,
-                              std::vector<uint8> /* opaque data */)
+                              std::vector<uint8_t> /* opaque data */,
+                              std::vector<uint8_t> /* opaque data */)
 
   // Requests spellcheck for a word.
   IPC_SYNC_MESSAGE_ROUTED1_2(ViewHostMsg_SpellCheck,
@@ -826,7 +826,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
 
   // Sets the contents for the given page (URL and page ID are the first two
   // arguments) given the contents that is the 3rd.
-  IPC_MESSAGE_CONTROL3(ViewHostMsg_PageContents, GURL, int32, std::wstring)
+  IPC_MESSAGE_CONTROL3(ViewHostMsg_PageContents, GURL, int32_t, std::wstring)
 
   // Specifies the URL as the first parameter (a wstring) and thumbnail as
   // binary data as the second parameter.
@@ -837,7 +837,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
 
   // Notification that the url for the favicon of a site has been determined.
   IPC_MESSAGE_ROUTED2(ViewHostMsg_UpdateFavIconURL,
-                      int32 /* page_id */,
+                      int32_t /* page_id */,
                       GURL /* url of the favicon */)
 
   // Request that the browser get the text from the selection clipboard and send
@@ -970,7 +970,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
   // Notification that the page has an OpenSearch description document
   // associated with it.
   IPC_MESSAGE_ROUTED3(ViewHostMsg_PageHasOSDD,
-                      int32 /* page_id */,
+                      int32_t /* page_id */,
                       GURL /* url of OS description document */,
                       bool /* autodetected */)
 
@@ -1051,7 +1051,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
   // or debugger UI.
   IPC_MESSAGE_ROUTED3(ViewHostMsg_AddMessageToConsole,
                       std::wstring, /* msg */
-                      int32, /* line number */
+                      int32_t, /* line number */
                       std::wstring /* source id */)
 
   // Response message for ViewMsg_DebugAttach.
@@ -1117,7 +1117,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
   IPC_MESSAGE_ROUTED3(ViewHostMsg_SendSerializedHtmlData,
                       GURL /* frame's url */,
                       std::string /* data buffer */,
-                      int32 /* complete status */)
+                      int32_t /* complete status */)
 
   IPC_SYNC_MESSAGE_ROUTED4_1(ViewHostMsg_ShowModalHTMLDialog,
                              GURL /* url */,
@@ -1127,7 +1127,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
                              std::string /* json_retval */)
 
   IPC_MESSAGE_ROUTED2(ViewHostMsg_DidGetApplicationInfo,
-                      int32 /* page_id */,
+                      int32_t /* page_id */,
                       webkit_glue::WebApplicationInfo)
 
   // Provides the result from running OnMsgShouldClose.  |proceed| matches the
@@ -1163,7 +1163,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
   // Get the CPBrowsingContext associated with the renderer sending this
   // message.
   IPC_SYNC_MESSAGE_CONTROL0_1(ViewHostMsg_GetCPBrowsingContext,
-                              uint32 /* context */)
+                              uint32_t /* context */)
 
   // Sent when the renderer process is done processing a DataReceived
   // message.
@@ -1232,7 +1232,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
                        int /* context_id */,
                        int /* select_request_id */,
                        GURL  /* document_url */,
-                       int64 /* cache_document_was_loaded_from */,
+                       int64_t /* cache_document_was_loaded_from */,
                        GURL  /* opt_manifest_url */)
 
   // Returns the resizer box location in the window this widget is embeded.
@@ -1245,7 +1245,7 @@ IPC_BEGIN_MESSAGES(ViewHost)
   IPC_MESSAGE_ROUTED4(ViewHostMsg_QueryFormFieldAutofill,
                       std::wstring /* field name */,
                       std::wstring /* user entered text */,
-                      int64 /* id of the text input field */,
+                      int64_t /* id of the text input field */,
                       int /* id of this message */)
 
   // Instructs the browser to remove the specified autofill-entry from the

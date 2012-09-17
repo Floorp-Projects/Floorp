@@ -22,7 +22,7 @@ namespace {
 // Verify that each thread's value in the shared memory is always correct.
 class MultipleThreadMain : public PlatformThread::Delegate {
  public:
-  explicit MultipleThreadMain(int16 id) : id_(id) {}
+  explicit MultipleThreadMain(int16_t id) : id_(id) {}
   ~MultipleThreadMain() {}
 
   static void CleanUp() {
@@ -52,7 +52,7 @@ class MultipleThreadMain : public PlatformThread::Delegate {
   }
 
  private:
-  int16 id_;
+  int16_t id_;
 
   static const wchar_t* const s_test_name_;
 
@@ -183,7 +183,7 @@ TEST(SharedMemoryTest, MultipleThreads) {
     thread_delegates.reset(new MultipleThreadMain*[numthreads]);
 
     // Spawn the threads.
-    for (int16 index = 0; index < numthreads; index++) {
+    for (int16_t index = 0; index < numthreads; index++) {
       PlatformThreadHandle pth;
       thread_delegates[index] = new MultipleThreadMain(index);
       EXPECT_TRUE(PlatformThread::Create(0, thread_delegates[index], &pth));

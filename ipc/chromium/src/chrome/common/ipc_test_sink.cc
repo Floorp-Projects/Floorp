@@ -26,7 +26,7 @@ const Message* TestSink::GetMessageAt(size_t index) const {
   return &messages_[index];
 }
 
-const Message* TestSink::GetFirstMessageMatching(uint16 id) const {
+const Message* TestSink::GetFirstMessageMatching(uint16_t id) const {
   for (size_t i = 0; i < messages_.size(); i++) {
     if (messages_[i].type() == id)
       return &messages_[i];
@@ -34,7 +34,7 @@ const Message* TestSink::GetFirstMessageMatching(uint16 id) const {
   return NULL;
 }
 
-const Message* TestSink::GetUniqueMessageMatching(uint16 id) const {
+const Message* TestSink::GetUniqueMessageMatching(uint16_t id) const {
   size_t found_index = 0;
   size_t found_count = 0;
   for (size_t i = 0; i < messages_.size(); i++) {

@@ -27,7 +27,7 @@ Message::Message()
   InitLoggingVariables();
 }
 
-Message::Message(int32 routing_id, msgid_t type, PriorityValue priority,
+Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
                  MessageCompression compression, const char* const name)
     : Pickle(sizeof(Header)) {
   header()->routing = routing_id;
@@ -38,8 +38,8 @@ Message::Message(int32 routing_id, msgid_t type, PriorityValue priority,
 #if defined(OS_POSIX)
   header()->num_fds = 0;
 #endif
-  header()->rpc_remote_stack_depth_guess = static_cast<uint32>(-1);
-  header()->rpc_local_stack_depth = static_cast<uint32>(-1);
+  header()->rpc_remote_stack_depth_guess = static_cast<uint32_t>(-1);
+  header()->rpc_local_stack_depth = static_cast<uint32_t>(-1);
   header()->seqno = 0;
   InitLoggingVariables(name);
 }
@@ -74,22 +74,22 @@ Message& Message::operator=(const Message& other) {
 }
 
 #ifdef IPC_MESSAGE_LOG_ENABLED
-void Message::set_sent_time(int64 time) {
+void Message::set_sent_time(int64_t time) {
   DCHECK((header()->flags & HAS_SENT_TIME_BIT) == 0);
   header()->flags |= HAS_SENT_TIME_BIT;
   WriteInt64(time);
 }
 
-int64 Message::sent_time() const {
+int64_t Message::sent_time() const {
   if ((header()->flags & HAS_SENT_TIME_BIT) == 0)
     return 0;
 
   const char* data = end_of_payload();
-  data -= sizeof(int64);
-  return *(reinterpret_cast<const int64*>(data));
+  data -= sizeof(int64_t);
+  return *(reinterpret_cast<const int64_t*>(data));
 }
 
-void Message::set_received_time(int64 time) const {
+void Message::set_received_time(int64_t time) const {
   received_time_ = time;
 }
 #endif

@@ -214,7 +214,7 @@ bool ChromePluginLib::CP_Initialize(const CPBrowserFuncs* bfuncs) {
     return false;
 
   if (CP_VersionNegotiate_) {
-    uint16 selected_version = 0;
+    uint16_t selected_version = 0;
     CPError rv = CP_VersionNegotiate_(CP_VERSION, CP_VERSION,
                                       &selected_version);
     if ( (rv != CPERR_SUCCESS) || (selected_version != CP_VERSION))

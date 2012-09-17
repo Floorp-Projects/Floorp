@@ -9,8 +9,8 @@ namespace {
 
 static const wchar_t kTestString1[] = L"123";
 static const wchar_t kTestString2[] = L"456789";
-uint32 test1_len = arraysize(kTestString1) - 1;
-uint32 test2_len = arraysize(kTestString2) - 1;
+uint32_t test1_len = arraysize(kTestString1) - 1;
+uint32_t test2_len = arraysize(kTestString2) - 1;
 
 void DumbBstrTests() {
   ScopedBstr b;
@@ -80,9 +80,9 @@ TEST(StackBstrTest, StackBstr) {
             VARCMP_EQ);
 
   StackBstrVar(kSourceStrEmpty, empty);
-  uint32 l1 = SysStringLen(stack_bstr);
-  uint32 l2 = SysStringLen(StackBstr(kSourceStr));
-  uint32 l3 = SysStringLen(system_bstr);
+  uint32_t l1 = SysStringLen(stack_bstr);
+  uint32_t l2 = SysStringLen(StackBstr(kSourceStr));
+  uint32_t l3 = SysStringLen(system_bstr);
   EXPECT_TRUE(l1 == l2);
   EXPECT_TRUE(l2 == l3);
   EXPECT_TRUE(SysStringLen(empty) == 0);

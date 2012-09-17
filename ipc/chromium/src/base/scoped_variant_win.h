@@ -80,14 +80,14 @@ class ScopedVariant {
   void Set(const wchar_t* str);
 
   // Setters for simple types.
-  void Set(int8 i8);
-  void Set(uint8 ui8);
-  void Set(int16 i16);
-  void Set(uint16 ui16);
-  void Set(int32 i32);
-  void Set(uint32 ui32);
-  void Set(int64 i64);
-  void Set(uint64 ui64);
+  void Set(int8_t i8);
+  void Set(uint8_t ui8);
+  void Set(int16_t i16);
+  void Set(uint16_t ui16);
+  void Set(int32_t i32);
+  void Set(uint32_t ui32);
+  void Set(int64_t i64);
+  void Set(uint64_t ui64);
   void Set(float r32);
   void Set(double r64);
   void Set(bool b);

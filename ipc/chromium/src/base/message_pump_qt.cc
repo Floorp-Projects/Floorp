@@ -76,7 +76,7 @@ MessagePumpQt::scheduleDelayedIfNeeded(const Time& delayed_work_time)
   }
 
   TimeDelta later = delayed_work_time - Time::Now();
-  // later.InMilliseconds() returns an int64, QTimer only accepts int's for start(),
+  // later.InMilliseconds() returns an int64_t, QTimer only accepts int's for start(),
   // std::min only works on exact same types.
   int laterMsecs = later.InMilliseconds() > std::numeric_limits<int>::max() ?
     std::numeric_limits<int>::max() : later.InMilliseconds();

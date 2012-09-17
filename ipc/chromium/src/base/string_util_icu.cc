@@ -25,14 +25,14 @@ namespace {
 // (as in a for loop) will take the reader to the next character.
 //
 // Returns true on success. On false, |*code_point| will be invalid.
-bool ReadUnicodeCharacter(const char* src, int32 src_len,
-                          int32* char_index, uint32* code_point_out) {
+bool ReadUnicodeCharacter(const char* src, int32_t src_len,
+                          int32_t* char_index, uint32_t* code_point_out) {
   // U8_NEXT expects to be able to use -1 to signal an error, so we must
   // use a signed type for code_point.  But this function returns false
   // on error anyway, so code_point_out is unsigned.
-  int32 code_point;
+  int32_t code_point;
   U8_NEXT(src, *char_index, src_len, code_point);
-  *code_point_out = static_cast<uint32>(code_point);
+  *code_point_out = static_cast<uint32_t>(code_point);
 
   // The ICU macro above moves to the next char, we want to point to the last
   // char consumed.
@@ -43,8 +43,8 @@ bool ReadUnicodeCharacter(const char* src, int32 src_len,
 }
 
 // Reads a UTF-16 character. The usage is the same as the 8-bit version above.
-bool ReadUnicodeCharacter(const char16* src, int32 src_len,
-                          int32* char_index, uint32* code_point) {
+bool ReadUnicodeCharacter(const char16* src, int32_t src_len,
+                          int32_t* char_index, uint32_t* code_point) {
   if (U16_IS_SURROGATE(src[*char_index])) {
     if (!U16_IS_SURROGATE_LEAD(src[*char_index]) ||
         *char_index + 1 >= src_len ||
@@ -67,8 +67,8 @@ bool ReadUnicodeCharacter(const char16* src, int32 src_len,
 
 #if defined(WCHAR_T_IS_UTF32)
 // Reads UTF-32 character. The usage is the same as the 8-bit version above.
-bool ReadUnicodeCharacter(const wchar_t* src, int32 src_len,
-                        int32* char_index, uint32* code_point) {
+bool ReadUnicodeCharacter(const wchar_t* src, int32_t src_len,
+                        int32_t* char_index, uint32_t* code_point) {
   // Conversion is easy since the source is 32-bit.
   *code_point = src[*char_index];
 
@@ -80,7 +80,7 @@ bool ReadUnicodeCharacter(const wchar_t* src, int32 src_len,
 // WriteUnicodeCharacter -------------------------------------------------------
 
 // Appends a UTF-8 character to the given 8-bit string.
-void WriteUnicodeCharacter(uint32 code_point, std::string* output) {
+void WriteUnicodeCharacter(uint32_t code_point, std::string* output) {
   if (code_point <= 0x7f) {
     // Fast path the common case of one byte.
     output->push_back(code_point);
@@ -88,7 +88,7 @@ void WriteUnicodeCharacter(uint32 code_point, std::string* output) {
   }
 
   // U8_APPEND_UNSAFE can append up to 4 bytes.
-  int32 char_offset = static_cast<int32>(output->length());
+  int32_t char_offset = static_cast<int32_t>(output->length());
   output->resize(char_offset + U8_MAX_LENGTH);
 
   U8_APPEND_UNSAFE(&(*output)[0], char_offset, code_point);
@@ -99,13 +99,13 @@ void WriteUnicodeCharacter(uint32 code_point, std::string* output) {
 }
 
 // Appends the given code point as a UTF-16 character to the STL string.
-void WriteUnicodeCharacter(uint32 code_point, string16* output) {
+void WriteUnicodeCharacter(uint32_t code_point, string16* output) {
   if (U16_LENGTH(code_point) == 1) {
     // Thie code point is in the Basic Multilingual Plane (BMP).
     output->push_back(static_cast<char16>(code_point));
   } else {
     // Non-BMP characters use a double-character encoding.
-    int32 char_offset = static_cast<int32>(output->length());
+    int32_t char_offset = static_cast<int32_t>(output->length());
     output->resize(char_offset + U16_MAX_LENGTH);
     U16_APPEND_UNSAFE(&(*output)[0], char_offset, code_point);
   }
@@ -113,7 +113,7 @@ void WriteUnicodeCharacter(uint32 code_point, string16* output) {
 
 #if defined(WCHAR_T_IS_UTF32)
 // Appends the given UTF-32 character to the given 32-bit string.
-inline void WriteUnicodeCharacter(uint32 code_point, std::wstring* output) {
+inline void WriteUnicodeCharacter(uint32_t code_point, std::wstring* output) {
   // This is the easy case, just append the character.
   output->push_back(code_point);
 }
@@ -131,9 +131,9 @@ bool ConvertUnicode(const SRC_CHAR* src, size_t src_len, DEST_STRING* output) {
 
   // ICU requires 32-bit numbers.
   bool success = true;
-  int32 src_len32 = static_cast<int32>(src_len);
-  for (int32 i = 0; i < src_len32; i++) {
-    uint32 code_point;
+  int32_t src_len32 = static_cast<int32_t>(src_len);
+  for (int32_t i = 0; i < src_len32; i++) {
+    uint32_t code_point;
     if (ReadUnicodeCharacter(src, src_len32, &i, &code_point))
       WriteUnicodeCharacter(code_point, output);
     else
@@ -501,7 +501,7 @@ struct NumberFormatSingletonTraits
 
 }  // namespace
 
-std::wstring FormatNumber(int64 number) {
+std::wstring FormatNumber(int64_t number) {
   NumberFormat* number_format =
       Singleton<NumberFormat, NumberFormatSingletonTraits>::get();
 
@@ -516,7 +516,7 @@ std::wstring FormatNumber(int64 number) {
   return std::wstring(ustr.getBuffer(),
                       static_cast<std::wstring::size_type>(ustr.length()));
 #elif defined(WCHAR_T_IS_UTF32)
-  wchar_t buffer[64];  // A int64 is less than 20 chars long,  so 64 chars
+  wchar_t buffer[64];  // A int64_t is less than 20 chars long,  so 64 chars
                        // leaves plenty of room for formating stuff.
   int length = 0;
   UErrorCode error = U_ZERO_ERROR;

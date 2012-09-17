@@ -488,7 +488,7 @@ ContentParent::MarkAsDead()
 }
 
 void
-ContentParent::OnChannelConnected(int32 pid)
+ContentParent::OnChannelConnected(int32_t pid)
 {
     ProcessHandle handle;
     if (!base::OpenPrivilegedProcessHandle(pid, &handle)) {

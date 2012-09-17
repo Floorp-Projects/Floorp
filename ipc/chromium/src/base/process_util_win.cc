@@ -617,7 +617,7 @@ bool ProcessMetrics::GetWorkingSetKBytes(WorkingSetKBytes* ws_usage) const {
   return true;
 }
 
-static uint64 FileTimeToUTC(const FILETIME& ftime) {
+static uint64_t FileTimeToUTC(const FILETIME& ftime) {
   LARGE_INTEGER li;
   li.LowPart = ftime.dwLowDateTime;
   li.HighPart = ftime.dwHighDateTime;
@@ -640,9 +640,9 @@ int ProcessMetrics::GetCPUUsage() {
     // not yet received the notification.
     return 0;
   }
-  int64 system_time = (FileTimeToUTC(kernel_time) + FileTimeToUTC(user_time)) /
+  int64_t system_time = (FileTimeToUTC(kernel_time) + FileTimeToUTC(user_time)) /
                         processor_count_;
-  int64 time = FileTimeToUTC(now);
+  int64_t time = FileTimeToUTC(now);
 
   if ((last_system_time_ == 0) || (last_time_ == 0)) {
     // First call, just set the last values.
@@ -651,8 +651,8 @@ int ProcessMetrics::GetCPUUsage() {
     return 0;
   }
 
-  int64 system_time_delta = system_time - last_system_time_;
-  int64 time_delta = time - last_time_;
+  int64_t system_time_delta = system_time - last_system_time_;
+  int64_t time_delta = time - last_time_;
   DCHECK(time_delta != 0);
   if (time_delta == 0)
     return 0;

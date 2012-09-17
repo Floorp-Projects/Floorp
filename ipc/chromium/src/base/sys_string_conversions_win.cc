@@ -29,7 +29,7 @@ std::wstring SysNativeMBToWide(const StringPiece& native_mb) {
 }
 
 // Do not assert in this function since it is used by the asssertion code!
-std::wstring SysMultiByteToWide(const StringPiece& mb, uint32 code_page) {
+std::wstring SysMultiByteToWide(const StringPiece& mb, uint32_t code_page) {
   if (mb.empty())
     return std::wstring();
 
@@ -48,7 +48,7 @@ std::wstring SysMultiByteToWide(const StringPiece& mb, uint32 code_page) {
 }
 
 // Do not assert in this function since it is used by the asssertion code!
-std::string SysWideToMultiByte(const std::wstring& wide, uint32 code_page) {
+std::string SysWideToMultiByte(const std::wstring& wide, uint32_t code_page) {
   int wide_length = static_cast<int>(wide.length());
   if (wide_length == 0)
     return std::string();

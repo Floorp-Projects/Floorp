@@ -27,7 +27,7 @@ namespace {
         nsCxPusher mStack;
         JSAutoRequest mRequest;
         JSContext* const mContext;
-        const uint32 mSavedOptions;
+        const uint32_t mSavedOptions;
         JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     public:

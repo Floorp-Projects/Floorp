@@ -24,8 +24,8 @@ class ChildThread : public IPC::Channel::Listener,
   virtual bool Send(IPC::Message* msg);
 
   // See documentation on MessageRouter for AddRoute and RemoveRoute
-  void AddRoute(int32 routing_id, IPC::Channel::Listener* listener);
-  void RemoveRoute(int32 routing_id);
+  void AddRoute(int32_t routing_id, IPC::Channel::Listener* listener);
+  void RemoveRoute(int32_t routing_id);
 
   MessageLoop* owner_loop() { return owner_loop_; }
 

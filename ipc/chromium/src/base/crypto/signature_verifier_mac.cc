@@ -23,7 +23,7 @@ void* AppRealloc(void* ptr, CSSM_SIZE size, void* alloc_ref) {
   return realloc(ptr, size);
 }
 
-void* AppCalloc(uint32 num, CSSM_SIZE size, void* alloc_ref) {
+void* AppCalloc(uint32_t num, CSSM_SIZE size, void* alloc_ref) {
   return calloc(num, size);
 }
 
@@ -58,11 +58,11 @@ SignatureVerifier::~SignatureVerifier() {
   }
 }
 
-bool SignatureVerifier::VerifyInit(const uint8* signature_algorithm,
+bool SignatureVerifier::VerifyInit(const uint8_t* signature_algorithm,
                                    int signature_algorithm_len,
-                                   const uint8* signature,
+                                   const uint8_t* signature,
                                    int signature_len,
-                                   const uint8* public_key_info,
+                                   const uint8_t* public_key_info,
                                    int public_key_info_len) {
   signature_.assign(signature, signature + signature_len);
   public_key_info_.assign(public_key_info,
@@ -71,7 +71,7 @@ bool SignatureVerifier::VerifyInit(const uint8* signature_algorithm,
   CSSM_ALGORITHMS key_alg = CSSM_ALGID_RSA;  // TODO(wtc): hardcoded.
 
   memset(&public_key_, 0, sizeof(public_key_));
-  public_key_.KeyData.Data = const_cast<uint8*>(&public_key_info_[0]);
+  public_key_.KeyData.Data = const_cast<uint8_t*>(&public_key_info_[0]);
   public_key_.KeyData.Length = public_key_info_.size();
   public_key_.KeyHeader.HeaderVersion = CSSM_KEYHEADER_VERSION;
   public_key_.KeyHeader.BlobType = CSSM_KEYBLOB_RAW;
@@ -106,10 +106,10 @@ bool SignatureVerifier::VerifyInit(const uint8* signature_algorithm,
   return true;
 }
 
-void SignatureVerifier::VerifyUpdate(const uint8* data_part,
+void SignatureVerifier::VerifyUpdate(const uint8_t* data_part,
                                      int data_part_len) {
   CSSM_DATA data;
-  data.Data = const_cast<uint8*>(data_part);
+  data.Data = const_cast<uint8_t*>(data_part);
   data.Length = data_part_len;
   CSSM_RETURN crtn = CSSM_VerifyDataUpdate(sig_handle_, &data, 1);
   DCHECK(crtn == CSSM_OK);
@@ -117,7 +117,7 @@ void SignatureVerifier::VerifyUpdate(const uint8* data_part,
 
 bool SignatureVerifier::VerifyFinal() {
   CSSM_DATA sig;
-  sig.Data = const_cast<uint8*>(&signature_[0]);
+  sig.Data = const_cast<uint8_t*>(&signature_[0]);
   sig.Length = signature_.size();
   CSSM_RETURN crtn = CSSM_VerifyDataFinal(sig_handle_, &sig);
   Reset();
