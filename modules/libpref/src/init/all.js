@@ -241,16 +241,14 @@ pref("gfx.canvas.azure.enabled", true);
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
 pref("gfx.canvas.azure.backends", "direct2d,cairo");
+pref("gfx.content.azure.backends", "direct2d");
 pref("gfx.content.azure.enabled", true);
 #else
 #ifdef XP_MACOSX
 pref("gfx.canvas.azure.backends", "cg");
 #else
-#ifdef ANDROID
 pref("gfx.canvas.azure.backends", "cairo");
-#else
-pref("gfx.canvas.azure.backends", "cairo");
-#endif
+pref("gfx.content.azure.backends", "cairo");
 #endif
 #endif
 
