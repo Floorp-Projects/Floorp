@@ -96,6 +96,81 @@ static nsresult GetResident(int64_t *n)
     return GetProcSelfStatmField(1, n);
 }
 
+#elif defined(__DragonFly__) || defined(__FreeBSD__) \
+    || defined(__NetBSD__) || defined(__OpenBSD__)
+
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#if defined(__DragonFly__) || defined(__FreeBSD__)
+#include <sys/user.h>
+#endif
+
+#include <unistd.h>
+
+#if defined(__NetBSD__)
+#undef KERN_PROC
+#define KERN_PROC KERN_PROC2
+#define KINFO_PROC struct kinfo_proc2
+#else
+#define KINFO_PROC struct kinfo_proc
+#endif
+
+#if defined(__DragonFly__)
+#define KP_SIZE(kp) (kp.kp_vm_map_size)
+#define KP_RSS(kp) (kp.kp_vm_rssize * getpagesize())
+#elif defined(__FreeBSD__)
+#define KP_SIZE(kp) (kp.ki_size)
+#define KP_RSS(kp) (kp.ki_rssize * getpagesize())
+#elif defined(__NetBSD__)
+#define KP_SIZE(kp) (kp.p_vm_msize * getpagesize())
+#define KP_RSS(kp) (kp.p_vm_rssize * getpagesize())
+#elif defined(__OpenBSD__)
+#define KP_SIZE(kp) ((kp.p_vm_dsize + kp.p_vm_ssize                     \
+                      + kp.p_vm_tsize) * getpagesize())
+#define KP_RSS(kp) (kp.p_vm_rssize * getpagesize())
+#endif
+
+static nsresult GetKinfoProcSelf(KINFO_PROC *proc)
+{
+    int mib[] = {
+        CTL_KERN,
+        KERN_PROC,
+        KERN_PROC_PID,
+        getpid(),
+#if defined(__NetBSD__) || defined(__OpenBSD__)
+        sizeof(KINFO_PROC),
+        1,
+#endif
+    };
+    u_int miblen = sizeof(mib) / sizeof(mib[0]);
+    size_t size = sizeof(KINFO_PROC);
+    if (sysctl(mib, miblen, proc, &size, NULL, 0))
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+#define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
+static nsresult GetVsize(int64_t *n)
+{
+    KINFO_PROC proc;
+    nsresult rv = GetKinfoProcSelf(&proc);
+    if (NS_SUCCEEDED(rv))
+        *n = KP_SIZE(proc);
+
+    return rv;
+}
+
+static nsresult GetResident(int64_t *n)
+{
+    KINFO_PROC proc;
+    nsresult rv = GetKinfoProcSelf(&proc);
+    if (NS_SUCCEEDED(rv))
+        *n = KP_RSS(proc);
+
+    return rv;
+}
+
 #elif defined(SOLARIS)
 
 #include <procfs.h>
