@@ -126,6 +126,7 @@ public:
     // nsASocketHandler methods:
     void OnSocketReady(PRFileDesc *, int16_t outFlags); 
     void OnSocketDetached(PRFileDesc *);
+    void IsLocal(bool *aIsLocal);
 
     // called when a socket event is handled
     void OnSocketEvent(uint32_t type, nsresult status, nsISupports *param);

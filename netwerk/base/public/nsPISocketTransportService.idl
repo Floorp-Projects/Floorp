@@ -10,7 +10,7 @@
  * This is a private interface used by the internals of the networking library.
  * It will never be frozen.  Do not use it in external code.
  */
-[scriptable, uuid(83123036-81c0-47cb-8d9c-bd85d29a1b3f)]
+[scriptable, uuid(32de7b6e-90c3-11e1-b57e-001fbc092072)]
 
 interface nsPISocketTransportService : nsISocketTransportService
 {
@@ -31,4 +31,9 @@ interface nsPISocketTransportService : nsISocketTransportService
    */
   readonly attribute long sendBufferSize;
 
+  /**
+   * Controls whether the socket transport service is offline.
+   * Setting it offline will cause non-local socket detachment.
+   */
+  attribute boolean offline;
 };
