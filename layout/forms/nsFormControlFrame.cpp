@@ -14,8 +14,6 @@ using namespace mozilla;
 
 //#define FCF_NOISY
 
-const int32_t kSizeNotSet = -1;
-
 nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext) :
   nsLeafFrame(aContext)
 {
