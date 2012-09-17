@@ -12,7 +12,7 @@
 
 class Version {
 public:
-  // The version string must be made up of 1 or more uint16's separated
+  // The version string must be made up of 1 or more uint16_t's separated
   // by '.'. Returns NULL if string is not in this format.
   // Caller is responsible for freeing the Version object once done.
   static Version* GetVersionFromString(const std::wstring& version_str);
@@ -28,13 +28,13 @@ public:
   // Return the string representation of this version.
   const std::string GetString() const;
 
-  const std::vector<uint16>& components() const { return components_; }
+  const std::vector<uint16_t>& components() const { return components_; }
 
 private:
   Version() {}
   bool InitFromString(const std::string& version_str);
 
-  std::vector<uint16> components_;
+  std::vector<uint16_t> components_;
 };
 
 #endif  // BASE_VERSION_H_

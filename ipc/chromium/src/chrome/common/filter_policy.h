@@ -28,11 +28,11 @@ class FilterPolicy {
     FILTER_ALL
   };
 
-  static bool ValidType(int32 type) {
+  static bool ValidType(int32_t type) {
     return type >= DONT_FILTER && type <= FILTER_ALL;
   }
 
-  static Type FromInt(int32 type) {
+  static Type FromInt(int32_t type) {
     return static_cast<Type>(type);
   }
 

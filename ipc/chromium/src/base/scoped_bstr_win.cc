@@ -51,16 +51,16 @@ BSTR ScopedBstr::AllocateBytes(int bytes) {
   return bstr_;
 }
 
-void ScopedBstr::SetByteLen(uint32 bytes) {
+void ScopedBstr::SetByteLen(uint32_t bytes) {
   DCHECK(bstr_ != NULL) << "attempting to modify a NULL bstr";
-  uint32* data = reinterpret_cast<uint32*>(bstr_);
+  uint32_t* data = reinterpret_cast<uint32_t*>(bstr_);
   data[-1] = bytes;
 }
 
-uint32 ScopedBstr::Length() const {
+uint32_t ScopedBstr::Length() const {
   return SysStringLen(bstr_);
 }
 
-uint32 ScopedBstr::ByteLength() const {
+uint32_t ScopedBstr::ByteLength() const {
   return SysStringByteLen(bstr_);
 }

@@ -63,14 +63,14 @@ class TestSink {
   // Returns the first message with the given ID in the queue. If there is no
   // message with the given ID, returns NULL. The returned pointer will only be
   // valid until another message is received or the list is cleared.
-  const Message* GetFirstMessageMatching(uint16 id) const;
+  const Message* GetFirstMessageMatching(uint16_t id) const;
 
   // Returns the message with the given ID in the queue. If there is no such
   // message or there is more than one of that message, this will return NULL
   // (with the expectation that you'll do an ASSERT_TRUE() on the result).
   // The returned pointer will only be valid until another message is received
   // or the list is cleared.
-  const Message* GetUniqueMessageMatching(uint16 id) const;
+  const Message* GetUniqueMessageMatching(uint16_t id) const;
 
  private:
   // The actual list of received messages.

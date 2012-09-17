@@ -24,7 +24,7 @@ private:
   typedef Shmem::id_t id_t;
 
 public:
-  ShmemCreated(int32 routingId,
+  ShmemCreated(int32_t routingId,
                const id_t& aIPDLId,
                const size_t& aSize,
                const SharedMemoryBasic::Handle& aHandle) :
@@ -32,7 +32,7 @@ public:
   {
     IPC::WriteParam(this, aIPDLId);
     IPC::WriteParam(this, aSize);
-    IPC::WriteParam(this, int32(SharedMemory::TYPE_BASIC)),
+    IPC::WriteParam(this, int32_t(SharedMemory::TYPE_BASIC)),
     IPC::WriteParam(this, aHandle);
   }
 
@@ -49,7 +49,7 @@ public:
   {
     if (!IPC::ReadParam(msg, iter, aIPDLId) ||
         !IPC::ReadParam(msg, iter, aSize) ||
-        !IPC::ReadParam(msg, iter, reinterpret_cast<int32*>(aType)))
+        !IPC::ReadParam(msg, iter, reinterpret_cast<int32_t*>(aType)))
       return false;
     return true;
   }
@@ -65,7 +65,7 @@ public:
   }
 
 #ifdef MOZ_HAVE_SHAREDMEMORYSYSV
-  ShmemCreated(int32 routingId,
+  ShmemCreated(int32_t routingId,
                const id_t& aIPDLId,
                const size_t& aSize,
                const SharedMemorySysV::Handle& aHandle) :
@@ -73,7 +73,7 @@ public:
   {
     IPC::WriteParam(this, aIPDLId);
     IPC::WriteParam(this, aSize);
-    IPC::WriteParam(this, int32(SharedMemory::TYPE_SYSV)),
+    IPC::WriteParam(this, int32_t(SharedMemory::TYPE_SYSV)),
     IPC::WriteParam(this, aHandle);
   }
 
@@ -101,7 +101,7 @@ private:
   typedef Shmem::id_t id_t;
 
 public:
-  ShmemDestroyed(int32 routingId,
+  ShmemDestroyed(int32_t routingId,
                  const id_t& aIPDLId) :
     IPC::Message(routingId, SHMEM_DESTROYED_MESSAGE_TYPE, PRIORITY_NORMAL)
   {
@@ -176,8 +176,8 @@ static const char sMagic[] =
 struct Header {
   // Don't use size_t or bool here because their size depends on the
   // architecture.
-  uint32 mSize;
-  uint32 mUnsafe;
+  uint32_t mSize;
+  uint32_t mUnsafe;
   char mMagic[sizeof(sMagic)];
 };
 
@@ -390,7 +390,7 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   NS_ABORT_IF_FALSE(sizeof(Header) <= pageSize,
                     "Shmem::Header has gotten too big");
   memcpy(header->mMagic, sMagic, sizeof(sMagic));
-  header->mSize = static_cast<uint32>(aNBytes);
+  header->mSize = static_cast<uint32_t>(aNBytes);
   header->mUnsafe = aUnsafe;
 
   if (aProtect)
@@ -493,11 +493,11 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   SharedMemory *segment = nullptr;
 
   if (aType == SharedMemory::TYPE_BASIC)
-    segment = CreateSegment(SharedMemory::PageAlignedSize(aNBytes + sizeof(uint32)),
+    segment = CreateSegment(SharedMemory::PageAlignedSize(aNBytes + sizeof(uint32_t)),
                             SharedMemoryBasic::NULLHandle());
 #ifdef MOZ_HAVE_SHAREDMEMORYSYSV
   else if (aType == SharedMemory::TYPE_SYSV)
-    segment = CreateSegment(SharedMemory::PageAlignedSize(aNBytes + sizeof(uint32)),
+    segment = CreateSegment(SharedMemory::PageAlignedSize(aNBytes + sizeof(uint32_t)),
                             SharedMemorySysV::NULLHandle());
 #endif
   else
@@ -507,7 +507,7 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   if (!segment)
     return 0;
 
-  *PtrToSize(segment) = static_cast<uint32>(aNBytes);
+  *PtrToSize(segment) = static_cast<uint32_t>(aNBytes);
 
   return segment;
 }
@@ -529,7 +529,7 @@ Shmem::OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
     return 0;
 
   SharedMemory* segment = 0;
-  size_t segmentSize = SharedMemory::PageAlignedSize(size + sizeof(uint32));
+  size_t segmentSize = SharedMemory::PageAlignedSize(size + sizeof(uint32_t));
 
   if (SharedMemory::TYPE_BASIC == type) {
     SharedMemoryBasic::Handle handle;
@@ -596,7 +596,7 @@ Shmem::GetSysVID() const
 IPC::Message*
 Shmem::ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
                base::ProcessHandle aProcess,
-               int32 routingId)
+               int32_t routingId)
 {
   AssertInvariants();
 
@@ -624,7 +624,7 @@ Shmem::ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
 IPC::Message*
 Shmem::UnshareFrom(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
                    base::ProcessHandle aProcess,
-                   int32 routingId)
+                   int32_t routingId)
 {
   AssertInvariants();
   return new ShmemDestroyed(routingId, mId);

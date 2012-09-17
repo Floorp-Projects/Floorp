@@ -167,7 +167,7 @@ void ChildProcessHost::ListenerHook::OnMessageReceived(
 #endif
 }
 
-void ChildProcessHost::ListenerHook::OnChannelConnected(int32 peer_pid) {
+void ChildProcessHost::ListenerHook::OnChannelConnected(int32_t peer_pid) {
   host_->opening_channel_ = false;
   host_->OnChannelConnected(peer_pid);
 

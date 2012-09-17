@@ -72,7 +72,7 @@ class Emf {
   bool GetData(void* buffer, size_t size) const;
 
   // Retrieves the EMF stream. It is an helper function.
-  bool GetData(std::vector<uint8>* buffer) const;
+  bool GetData(std::vector<uint8_t>* buffer) const;
 
   HENHMETAFILE emf() const {
     return emf_;

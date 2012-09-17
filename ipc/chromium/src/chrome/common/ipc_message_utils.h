@@ -100,8 +100,8 @@ struct ParamTraits<bool> {
 };
 
 template <>
-struct ParamTraits<int16> {
-  typedef int16 param_type;
+struct ParamTraits<int16_t> {
+  typedef int16_t param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteInt(p);
   }
@@ -114,8 +114,8 @@ struct ParamTraits<int16> {
 };
 
 template <>
-struct ParamTraits<uint16> {
-  typedef uint16 param_type;
+struct ParamTraits<uint16_t> {
+  typedef uint16_t param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteInt(p);
   }
@@ -238,8 +238,8 @@ struct ParamTraits<size_t> {
 // ... so we need to define traits for |unsigned int|.
 // XXX duplicating OS_MACOSX version below so as not to conflict
 template <>
-struct ParamTraits<uint32> {
-  typedef uint32 param_type;
+struct ParamTraits<uint32_t> {
+  typedef uint32_t param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteUInt32(p);
   }
@@ -254,11 +254,11 @@ struct ParamTraits<uint32> {
 #endif // if !(defined(OS_LINUX) && defined(ARCH_CPU_64_BITS))
 
 #if defined(OS_MACOSX)
-// On Linux size_t & uint32 can be the same type.
+// On Linux size_t & uint32_t can be the same type.
 // TODO(playmobil): Fix compilation if this is not the case.
 template <>
-struct ParamTraits<uint32> {
-  typedef uint32 param_type;
+struct ParamTraits<uint32_t> {
+  typedef uint32_t param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteUInt32(p);
   }
@@ -272,10 +272,10 @@ struct ParamTraits<uint32> {
 #endif  // defined(OS_MACOSX)
 
 #if !((defined(OS_BSD) || defined(OS_LINUX)) && defined(ARCH_CPU_64_BITS))
-// int64 is |long int| on 64-bit systems, uint64 is |unsigned long|
+// int64_t is |long int| on 64-bit systems, uint64_t is |unsigned long|
 template <>
-struct ParamTraits<int64> {
-  typedef int64 param_type;
+struct ParamTraits<int64_t> {
+  typedef int64_t param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteInt64(p);
   }
@@ -288,13 +288,13 @@ struct ParamTraits<int64> {
 };
 
 template <>
-struct ParamTraits<uint64> {
-  typedef uint64 param_type;
+struct ParamTraits<uint64_t> {
+  typedef uint64_t param_type;
   static void Write(Message* m, const param_type& p) {
-    m->WriteInt64(static_cast<int64>(p));
+    m->WriteInt64(static_cast<int64_t>(p));
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadInt64(iter, reinterpret_cast<int64*>(r));
+    return m->ReadInt64(iter, reinterpret_cast<int64_t*>(r));
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%" PRIu64L, p));
@@ -330,17 +330,17 @@ template <>
 struct ParamTraits<base::Time> {
   typedef base::Time param_type;
   static void Write(Message* m, const param_type& p) {
-    ParamTraits<int64>::Write(m, p.ToInternalValue());
+    ParamTraits<int64_t>::Write(m, p.ToInternalValue());
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
-    int64 value;
-    if (!ParamTraits<int64>::Read(m, iter, &value))
+    int64_t value;
+    if (!ParamTraits<int64_t>::Read(m, iter, &value))
       return false;
     *r = base::Time::FromInternalValue(value);
     return true;
   }
   static void Log(const param_type& p, std::wstring* l) {
-    ParamTraits<int64>::Log(p.ToInternalValue(), l);
+    ParamTraits<int64_t>::Log(p.ToInternalValue(), l);
   }
 };
 
@@ -768,13 +768,13 @@ struct ParamTraits<XFORM> {
 
 struct LogData {
   std::wstring channel;
-  int32 routing_id;
-  uint16 type;
+  int32_t routing_id;
+  uint16_t type;
   std::wstring flags;
-  int64 sent;  // Time that the message was sent (i.e. at Send()).
-  int64 receive;  // Time before it was dispatched (i.e. before calling
+  int64_t sent;  // Time that the message was sent (i.e. at Send()).
+  int64_t receive;  // Time before it was dispatched (i.e. before calling
                   // OnMessageReceived).
-  int64 dispatch;  // Time after it was dispatched (i.e. after calling
+  int64_t dispatch;  // Time after it was dispatched (i.e. after calling
                    // OnMessageReceived).
   std::wstring message_name;
   std::wstring params;
@@ -804,7 +804,7 @@ struct ParamTraits<LogData> {
       ReadParam(m, iter, &r->receive) &&
       ReadParam(m, iter, &r->dispatch) &&
       ReadParam(m, iter, &r->params);
-    r->type = static_cast<uint16>(type);
+    r->type = static_cast<uint16_t>(type);
     return result;
   }
   static void Log(const param_type& p, std::wstring* l) {
@@ -1022,7 +1022,7 @@ class MessageWithTuple : public Message {
  public:
   typedef ParamType Param;
 
-  MessageWithTuple(int32 routing_id, uint16 type, const Param& p)
+  MessageWithTuple(int32_t routing_id, uint16_t type, const Param& p)
       : Message(routing_id, type, PRIORITY_NORMAL) {
     WriteParam(this, p);
   }
@@ -1184,7 +1184,7 @@ class MessageWithReply : public SyncMessage {
   typedef SendParamType SendParam;
   typedef ReplyParamType ReplyParam;
 
-  MessageWithReply(int32 routing_id, uint16 type,
+  MessageWithReply(int32_t routing_id, uint16_t type,
                    const SendParam& send, const ReplyParam& reply)
       : SyncMessage(routing_id, type, PRIORITY_NORMAL,
                     new ParamDeserializer<ReplyParam>(reply)) {

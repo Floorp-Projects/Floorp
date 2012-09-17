@@ -30,7 +30,7 @@ class AppCacheDispatcherHost {
   void OnSelectAppCache(int context_id,
                         int select_request_id,
                         const GURL& document_url,
-                        int64 cache_document_was_loaded_from,
+                        int64_t cache_document_was_loaded_from,
                         const GURL& opt_manifest_url);
 
   bool Send(IPC::Message* msg) {

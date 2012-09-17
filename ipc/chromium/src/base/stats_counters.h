@@ -157,7 +157,7 @@ class StatsCounter {
   // The counter id in the table.  We initialize to -1 (an invalid value)
   // and then cache it once it has been looked up.  The counter_id is
   // valid across all threads and processes.
-  int32 counter_id_;
+  int32_t counter_id_;
 };
 
 

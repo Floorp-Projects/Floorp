@@ -41,9 +41,9 @@ TEST_F(SysInfoTest, HasEnvVar) {
 // unit test.
 #if defined(OS_WIN) || defined(OS_MACOSX)
 TEST_F(SysInfoTest, OperatingSystemVersionNumbers) {
-  int32 os_major_version = -1;
-  int32 os_minor_version = -1;
-  int32 os_bugfix_version = -1;
+  int32_t os_major_version = -1;
+  int32_t os_minor_version = -1;
+  int32_t os_bugfix_version = -1;
   base::SysInfo::OperatingSystemVersionNumbers(&os_major_version,
                                                &os_minor_version,
                                                &os_bugfix_version);

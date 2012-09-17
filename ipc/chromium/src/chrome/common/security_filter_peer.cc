@@ -100,7 +100,7 @@ SecurityFilterPeer* SecurityFilterPeer::CreateSecurityFilterPeerForFrame(
   return new ReplaceContentPeer(NULL, peer, "text/html", html);
 }
 
-void SecurityFilterPeer::OnUploadProgress(uint64 position, uint64 size) {
+void SecurityFilterPeer::OnUploadProgress(uint64_t position, uint64_t size) {
   original_peer_->OnUploadProgress(position, size);
 }
 

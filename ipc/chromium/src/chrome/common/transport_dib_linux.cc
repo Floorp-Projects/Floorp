@@ -36,7 +36,7 @@ TransportDIB::~TransportDIB() {
 }
 
 // static
-TransportDIB* TransportDIB::Create(size_t size, uint32 sequence_num) {
+TransportDIB* TransportDIB::Create(size_t size, uint32_t sequence_num) {
   // We use a mode of 0666 since the X server won't attach to memory which is
   // 0600 since it can't know if it (as a root process) is being asked to map
   // someone else's private shared memory region.
