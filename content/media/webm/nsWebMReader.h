@@ -98,6 +98,8 @@ class PacketQueue : private nsDeque {
 class nsWebMReader : public nsBuiltinDecoderReader
 {
 public:
+  typedef mozilla::MediaByteRange MediaByteRange;
+
   nsWebMReader(nsBuiltinDecoder* aDecoder);
   ~nsWebMReader();
 
@@ -133,6 +135,19 @@ public:
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime);
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
+
+  // Sets byte range for initialization (EBML); used by DASH.
+  void SetInitByteRange(MediaByteRange &aByteRange) {
+    mInitByteRange = aByteRange;
+  }
+
+  // Sets byte range for cue points, i.e. cluster offsets; used by DASH.
+  void SetIndexByteRange(MediaByteRange &aByteRange) {
+    mCuesByteRange = aByteRange;
+  }
+
+  // Returns list of ranges for cluster start and end offsets.
+  nsresult GetIndexByteRanges(nsTArray<MediaByteRange>& aByteRanges);
 
 private:
   // Value passed to NextPacket to determine if we are reading a video or an
@@ -211,6 +226,15 @@ private:
   // Booleans to indicate if we have audio and/or video data
   bool mHasVideo;
   bool mHasAudio;
+
+  // Byte range for initialisation data; e.g. specified in DASH manifest.
+  MediaByteRange mInitByteRange;
+
+  // Byte range for cues; e.g. specified in DASH manifest.
+  MediaByteRange mCuesByteRange;
+
+  // Byte ranges for clusters; set internally, derived from cues.
+  nsTArray<MediaByteRange> mClusterByteRanges;
 };
 
 #endif
