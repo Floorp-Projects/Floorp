@@ -56,7 +56,7 @@ class JSObjectBuilder
     if (!mOk)
       return;
 
-    JSString *string = JS_NewStringCopyN(mCx, value, valueLength);
+    JSString *string = JS_InternStringN(mCx, value, valueLength);
     if (!string) {
       mOk = JS_FALSE;
       return;
