@@ -1325,6 +1325,7 @@ Navigator::MozSetMessageHandler(const nsAString& aType,
 NS_IMETHODIMP
 Navigator::GetMozTime(nsIDOMMozTimeManager** aTime)
 {
+  *aTime = nullptr;
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_OK);
 
@@ -1343,7 +1344,6 @@ Navigator::GetMozTime(nsIDOMMozTimeManager** aTime)
   }
 
   if (!mTimeManager) {
-    *aTime = nullptr;
     mTimeManager = new time::TimeManager();
   }
 
