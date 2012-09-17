@@ -188,6 +188,8 @@ xlib-glyph-clip-region.patch: bug 709477, addressed upstream by be1ff2f45fdbc695
 
 gdi-RGB24-ARGB32.patch: bug 788794
 
+dwrite-font-printing.patch: bug 468568; don't substitute a GDI font for a DWrite font if the name tables aren't equal
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
