@@ -201,9 +201,9 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
     RootedString str(cx);
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
         if (kind == PNK_XMLETAGO)
-            accum = cx->names().etago;
+            accum = cx->runtime->atomState.etagoAtom;
         else if (kind == PNK_XMLSTAGO || kind == PNK_XMLPTAGC)
-            accum = cx->names().stago;
+            accum = cx->runtime->atomState.stagoAtom;
     }
 
     /*
@@ -307,9 +307,9 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
         str = NULL;
         if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
             if (kind == PNK_XMLPTAGC)
-                str = cx->names().ptagc;
+                str = cx->runtime->atomState.ptagcAtom;
             else if (kind == PNK_XMLSTAGO || kind == PNK_XMLETAGO)
-                str = cx->names().tagc;
+                str = cx->runtime->atomState.tagcAtom;
         }
         if (str) {
             accum = js_ConcatStrings(cx, accum, str);

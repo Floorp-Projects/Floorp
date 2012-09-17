@@ -1798,7 +1798,7 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
     /* Get Debugger.prototype. */
     RootedValue v(cx);
     RootedObject callee(cx, &args.callee());
-    if (!JSObject::getProperty(cx, callee, callee, cx->names().classPrototype, &v))
+    if (!JSObject::getProperty(cx, callee, callee, cx->runtime->atomState.classPrototypeAtom, &v))
         return false;
     RootedObject proto(cx, &v.toObject());
     JS_ASSERT(proto->getClass() == &Debugger::jsclass);
@@ -2000,7 +2000,7 @@ class Debugger::ScriptQuery {
          * scripts scoped to a particular global object.
          */
         RootedValue global(cx);
-        if (!JSObject::getProperty(cx, query, query, cx->names().global, &global))
+        if (!JSObject::getProperty(cx, query, query, cx->runtime->atomState.globalAtom, &global))
             return false;
         if (global.isUndefined()) {
             matchAllDebuggeeGlobals();
@@ -2021,7 +2021,7 @@ class Debugger::ScriptQuery {
         }
 
         /* Check for a 'url' property. */
-        if (!JSObject::getProperty(cx, query, query, cx->names().url, &url))
+        if (!JSObject::getProperty(cx, query, query, cx->runtime->atomState.urlAtom, &url))
             return false;
         if (!url.isUndefined() && !url.isString()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
@@ -2031,7 +2031,7 @@ class Debugger::ScriptQuery {
 
         /* Check for a 'line' property. */
         RootedValue lineProperty(cx);
-        if (!JSObject::getProperty(cx, query, query, cx->names().line, &lineProperty))
+        if (!JSObject::getProperty(cx, query, query, cx->runtime->atomState.lineAtom, &lineProperty))
             return false;
         if (lineProperty.isUndefined()) {
             hasLine = false;
@@ -2055,7 +2055,7 @@ class Debugger::ScriptQuery {
         }
 
         /* Check for an 'innermost' property. */
-        PropertyName *innermostName = cx->names().innermost;
+        PropertyName *innermostName = cx->runtime->atomState.innermostAtom;
         RootedValue innermostProperty(cx);
         if (!JSObject::getProperty(cx, query, query, innermostName, &innermostProperty))
             return false;
@@ -3065,10 +3065,10 @@ DebuggerFrame_getType(JSContext *cx, unsigned argc, Value *vp)
      * order of checks here is significant.
      */
     args.rval().setString(fp->isEvalFrame()
-                          ? cx->names().eval
+                          ? cx->runtime->atomState.evalAtom
                           : fp->isGlobalFrame()
-                          ? cx->names().global
-                          : cx->names().call);
+                          ? cx->runtime->atomState.globalAtom
+                          : cx->runtime->atomState.callAtom);
     return true;
 }
 
@@ -3234,7 +3234,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         JS_ASSERT(fp->numActualArgs() <= 0x7fffffff);
         unsigned fargc = fp->numActualArgs();
         RootedValue fargcVal(cx, Int32Value(fargc));
-        if (!DefineNativeProperty(cx, argsobj, cx->names().length,
+        if (!DefineNativeProperty(cx, argsobj, cx->runtime->atomState.lengthAtom,
                                   fargcVal, NULL, NULL,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
         {

@@ -122,9 +122,9 @@ args_delProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValu
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg))
             argsobj.markElementDeleted(arg);
-    } else if (JSID_IS_ATOM(id, cx->names().length)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         argsobj.markLengthOverridden();
-    } else if (JSID_IS_ATOM(id, cx->names().callee)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom)) {
         argsobj.asNormalArguments().clearCallee();
     }
     return true;
@@ -145,11 +145,11 @@ ArgGetter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg))
             vp.set(argsobj.element(arg));
-    } else if (JSID_IS_ATOM(id, cx->names().length)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (!argsobj.hasOverriddenLength())
             vp.setInt32(argsobj.initialLength());
     } else {
-        JS_ASSERT(JSID_IS_ATOM(id, cx->names().callee));
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom));
         if (!argsobj.callee().isMagic(JS_OVERWRITTEN_CALLEE))
             vp.set(argsobj.callee());
     }
@@ -183,7 +183,8 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHa
             return true;
         }
     } else {
-        JS_ASSERT(JSID_IS_ATOM(id, cx->names().length) || JSID_IS_ATOM(id, cx->names().callee));
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
+                  JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom));
     }
 
     /*
@@ -214,11 +215,11 @@ args_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             return true;
 
         attrs |= JSPROP_ENUMERATE;
-    } else if (JSID_IS_ATOM(id, cx->names().length)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (argsobj->hasOverriddenLength())
             return true;
     } else {
-        if (!JSID_IS_ATOM(id, cx->names().callee))
+        if (!JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom))
             return true;
 
         if (argsobj->callee().isMagic(JS_OVERWRITTEN_CALLEE))
@@ -246,9 +247,9 @@ args_enumerate(JSContext *cx, HandleObject obj)
     int argc = int(argsobj->initialLength());
     for (int i = -2; i != argc; i++) {
         id = (i == -2)
-             ? NameToId(cx->names().length)
+             ? NameToId(cx->runtime->atomState.lengthAtom)
              : (i == -1)
-             ? NameToId(cx->names().callee)
+             ? NameToId(cx->runtime->atomState.calleeAtom)
              : INT_TO_JSID(i);
 
         RootedObject pobj(cx);
@@ -276,7 +277,7 @@ StrictArgGetter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
         if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg))
             vp.set(argsobj.element(arg));
     } else {
-        JS_ASSERT(JSID_IS_ATOM(id, cx->names().length));
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom));
         if (!argsobj.hasOverriddenLength())
             vp.setInt32(argsobj.initialLength());
     }
@@ -304,7 +305,7 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
             return true;
         }
     } else {
-        JS_ASSERT(JSID_IS_ATOM(id, cx->names().length));
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom));
     }
 
     /*
@@ -336,12 +337,14 @@ strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             return true;
 
         attrs |= JSPROP_ENUMERATE;
-    } else if (JSID_IS_ATOM(id, cx->names().length)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (argsobj->hasOverriddenLength())
             return true;
     } else {
-        if (!JSID_IS_ATOM(id, cx->names().callee) && !JSID_IS_ATOM(id, cx->names().caller))
+        if (!JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom) &&
+            !JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
             return true;
+        }
 
         attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
         getter = CastAsPropertyOp(argsobj->global().getThrowTypeError());
@@ -370,17 +373,17 @@ strictargs_enumerate(JSContext *cx, HandleObject obj)
     RootedId id(cx);
 
     // length
-    id = NameToId(cx->names().length);
+    id = NameToId(cx->runtime->atomState.lengthAtom);
     if (!baseops::LookupProperty(cx, argsobj, id, &pobj, &prop))
         return false;
 
     // callee
-    id = NameToId(cx->names().callee);
+    id = NameToId(cx->runtime->atomState.calleeAtom);
     if (!baseops::LookupProperty(cx, argsobj, id, &pobj, &prop))
         return false;
 
     // caller
-    id = NameToId(cx->names().caller);
+    id = NameToId(cx->runtime->atomState.callerAtom);
     if (!baseops::LookupProperty(cx, argsobj, id, &pobj, &prop))
         return false;
 

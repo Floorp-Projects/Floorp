@@ -429,7 +429,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             while (!r.empty()) {
                 Rooted<Shape*> shape(cx, &r.front());
                 JSAtom *atom = JSID_IS_INT(shape->propid())
-                               ? cx->names().empty
+                               ? cx->runtime->atomState.emptyAtom
                                : JSID_TO_ATOM(shape->propid());
 
                 JSAutoByteString bytes;
@@ -2342,7 +2342,7 @@ GetBlockNames(JSContext *cx, StaticBlockObject &blockObj, AtomVector *atoms)
         --i;
         LOCAL_ASSERT((unsigned)shape.shortid() == i);
         (*atoms)[i] = JSID_IS_INT(shape.propid())
-                      ? cx->names().empty
+                      ? cx->runtime->atomState.emptyAtom
                       : JSID_TO_ATOM(shape.propid());
     }
 
@@ -3467,7 +3467,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                         if (ss->sprinter.put(rhs + DestructuredStringLength) < 0)
                             return NULL;
                     } else {
-                        JS_ASSERT(atoms[i] != cx->names().empty);
+                        JS_ASSERT(atoms[i] != cx->runtime->atomState.emptyAtom);
                         if (!QuoteString(&ss->sprinter, atoms[i], 0))
                             return NULL;
                         if (*rhs) {
@@ -5960,7 +5960,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_LENGTH:
       case JSOP_GETPROP:
       case JSOP_CALLPROP: {
-        JSAtom *prop = (op == JSOP_LENGTH) ? cx->names().length : loadAtom(pc);
+        JSAtom *prop = (op == JSOP_LENGTH) ? cx->runtime->atomState.lengthAtom : loadAtom(pc);
         if (!decompilePC(pcstack[-1]))
             return false;
         if (IsIdentifier(prop))

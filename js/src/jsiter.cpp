@@ -104,7 +104,7 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
      * the built-in prototypes).  So exclude __proto__ if the object where the
      * property was found has no [[Prototype]] and might be |Object.prototype|.
      */
-    if (JS_UNLIKELY(!pobj->getProto() && JSID_IS_ATOM(id, cx->names().proto)))
+    if (JS_UNLIKELY(!pobj->getProto() && JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)))
         return true;
 
     if (!(flags & JSITER_OWNONLY) || pobj->isProxy() || pobj->getOps()->enumerate) {
@@ -157,8 +157,10 @@ static bool
 EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, unsigned flags,
                               IdSet &ht, AutoIdVector *props)
 {
-    if (!Enumerate(cx, obj, pobj, NameToId(cx->names().length), false, flags, ht, props))
+    if (!Enumerate(cx, obj, pobj, NameToId(cx->runtime->atomState.lengthAtom), false,
+                   flags, ht, props)) {
         return false;
+    }
 
     if (pobj->getArrayLength() > 0) {
         size_t initlen = pobj->getDenseArrayInitializedLength();
@@ -353,7 +355,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandle
     JS_CHECK_RECURSION(cx, return false);
 
     /* Check whether we have a valid __iterator__ method. */
-    HandlePropertyName name = cx->names().iteratorIntrinsic;
+    RootedPropertyName name(cx, cx->runtime->atomState.iteratorIntrinsicAtom);
     if (!GetMethod(cx, obj, name, 0, vp))
         return false;
 
@@ -582,7 +584,7 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue 
     if (flags == JSITER_FOR_OF) {
         // for-of loop. The iterator is simply |obj.iterator()|.
         RootedValue method(cx);
-        if (!JSObject::getProperty(cx, obj, obj, cx->names().iterator, &method))
+        if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.iteratorAtom, &method))
             return false;
 
         // Throw if obj.iterator isn't callable. js::Invoke is about to check
@@ -1241,7 +1243,7 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
             return false;
     } else {
         /* Call the iterator object's .next method. */
-        if (!GetMethod(cx, iterobj, cx->names().next, 0, rval))
+        if (!GetMethod(cx, iterobj, cx->runtime->atomState.nextAtom, 0, rval))
             return false;
         if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, NULL, rval.address())) {
             /* Check for StopIteration. */
@@ -1776,7 +1778,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         iteratorProto->asPropertyIterator().setNativeIterator(ni);
 
         Rooted<JSFunction*> ctor(cx);
-        ctor = global->createConstructor(cx, IteratorConstructor, cx->names().Iterator, 2);
+        ctor = global->createConstructor(cx, IteratorConstructor, cx->runtime->atomState.IteratorAtom, 2);
         if (!ctor)
             return false;
         if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))

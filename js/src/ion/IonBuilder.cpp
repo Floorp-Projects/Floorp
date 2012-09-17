@@ -3465,7 +3465,8 @@ IonBuilder::createThisScripted(MDefinition *callee)
     // This instruction MUST be idempotent: since it does not correspond to an
     // explicit operation in the bytecode, we cannot use resumeAfter(). But
     // calling GetProperty can trigger a GC, and thus invalidation.
-    MCallGetProperty *getProto = MCallGetProperty::New(callee, cx->names().classPrototype);
+    RootedPropertyName name(cx, cx->runtime->atomState.classPrototypeAtom);
+    MCallGetProperty *getProto = MCallGetProperty::New(callee, name);
 
     // Getters may not override |prototype| fetching, so this is repeatable.
     getProto->markUneffectful();
@@ -3485,7 +3486,7 @@ IonBuilder::getSingletonPrototype(JSFunction *target)
     if (target->getType(cx)->unknownProperties())
         return NULL;
 
-    jsid protoid = NameToId(cx->names().classPrototype);
+    jsid protoid = AtomToId(cx->runtime->atomState.classPrototypeAtom);
     types::HeapTypeSet *protoTypes = target->getType(cx)->getProperty(cx, protoid, false);
     if (!protoTypes)
         return NULL;
@@ -3678,7 +3679,7 @@ GetBuiltinRegExpTest(JSContext *cx, JSScript *script, JSFunction **result)
     // to avoid calling a getter.
     RootedShape shape(cx);
     RootedObject holder(cx);
-    if (!JSObject::lookupProperty(cx, proto, cx->names().test, &holder, &shape))
+    if (!JSObject::lookupProperty(cx, proto, cx->runtime->atomState.testAtom, &holder, &shape))
         return false;
 
     if (proto != holder || !shape || !shape->hasDefaultGetter() || !shape->hasSlot())
@@ -4611,11 +4612,11 @@ bool
 IonBuilder::jsop_getgname(HandlePropertyName name)
 {
     // Optimize undefined, NaN, and Infinity.
-    if (name == cx->names().undefined)
+    if (name == cx->runtime->atomState.undefinedAtom)
         return pushConstant(UndefinedValue());
-    if (name == cx->names().NaN)
+    if (name == cx->runtime->atomState.NaNAtom)
         return pushConstant(cx->runtime->NaNValue);
-    if (name == cx->names().Infinity)
+    if (name == cx->runtime->atomState.InfinityAtom)
         return pushConstant(cx->runtime->positiveInfinityValue);
 
     RootedObject globalObj(cx, &script->global());
