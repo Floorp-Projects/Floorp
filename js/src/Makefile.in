@@ -165,7 +165,7 @@ INSTALLED_HEADERS = \
 		json.h \
 		jsproxy.h \
 		jsprf.h \
-		jsprototypes.h \
+		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \
 		jstypes.h \
