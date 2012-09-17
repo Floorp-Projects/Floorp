@@ -15,6 +15,7 @@
 #include "nsIDocShell.h"
 #include "nsIJSContextStack.h"
 #include "nsIMemoryReporter.h"
+#include "nsIPermissionManager.h"
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
@@ -2458,7 +2459,8 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx, JSObject* aObject,
                              nsCOMPtr<nsIURI>& aBaseURI,
                              nsCOMPtr<nsIPrincipal>& aPrincipal,
                              nsCOMPtr<nsIContentSecurityPolicy>& aCSP,
-                             bool aEvalAllowed)
+                             bool aEvalAllowed,
+                             bool aXHRParamsAllowed)
 : WorkerPrivateParent<WorkerPrivate>(aCx, aObject, aParent, aParentJSContext,
                                      aScriptURL, aIsChromeWorker, aDomain,
                                      aWindow, aParentScriptContext, aBaseURI,
@@ -2466,7 +2468,8 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx, JSObject* aObject,
   mJSContext(nullptr), mErrorHandlerRecursionCount(0), mNextTimeoutId(1),
   mStatus(Pending), mSuspended(false), mTimerRunning(false),
   mRunningExpiredTimeouts(false), mCloseHandlerStarted(false),
-  mCloseHandlerFinished(false), mMemoryReporterRunning(false)
+  mCloseHandlerFinished(false), mMemoryReporterRunning(false),
+  mXHRParamsAllowed(aXHRParamsAllowed)
 {
   MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivate);
 }
@@ -2492,6 +2495,8 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
   bool evalAllowed = true;
 
   JSContext* parentContext;
+
+  bool xhrParamsAllowed = false;
 
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
@@ -2615,6 +2620,8 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
           }
         }
       }
+
+      xhrParamsAllowed = CheckXHRParamsAllowed(window);
     }
     else {
       // Not a window
@@ -2632,6 +2639,8 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
           return nullptr;
         }
       }
+
+      xhrParamsAllowed = true;
     }
 
     NS_ASSERTION(principal, "Must have a principal now!");
@@ -2663,7 +2672,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
   nsRefPtr<WorkerPrivate> worker =
     new WorkerPrivate(aCx, aObj, aParent, parentContext, scriptURL,
                       aIsChromeWorker, domain, window, scriptContext, baseURI,
-                      principal, csp, evalAllowed);
+                      principal, csp, evalAllowed, xhrParamsAllowed);
 
   worker->SetIsDOMBinding();
   worker->SetWrapper(aObj);
@@ -3005,6 +3014,36 @@ WorkerPrivate::ProcessAllControlRunnables()
     NS_RELEASE(event);
   }
   return result;
+}
+
+bool
+WorkerPrivate::CheckXHRParamsAllowed(nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  NS_ASSERTION(aWindow, "Wrong cannot be null");
+
+  if (!aWindow->GetDocShell()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
+  if (!doc) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permMgr) {
+    return false;
+  }
+
+  uint32_t permission;
+  nsresult rv = permMgr->TestPermissionFromPrincipal(doc->NodePrincipal(),
+                                                     "systemXHR", &permission);
+  if (NS_FAILED(rv) || permission != nsIPermissionManager::ALLOW_ACTION) {
+    return false;
+  }
+
+  return true;
 }
 
 bool
