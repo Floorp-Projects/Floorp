@@ -62,6 +62,10 @@ public:
                 BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult
+  GetDevicePropertiesInternal(const nsAString& aDevicePath,
+                              const nsAString& aSignalPath) MOZ_OVERRIDE;
+
+  virtual nsresult
   SetProperty(BluetoothObjectType aType,
               const nsAString& aPath,
               const BluetoothNamedValue& aValue,
