@@ -1135,7 +1135,7 @@ stubs::TypeOf(VMFrame &f)
 {
     const Value &ref = f.regs.sp[-1];
     JSType type = JS_TypeOfValue(f.cx, ref);
-    return TypeName(type, f.cx);
+    return f.cx->runtime->atomState.typeAtoms[type];
 }
 
 void JS_FASTCALL

@@ -7,8 +7,6 @@
 #ifndef jsatom_h___
 #define jsatom_h___
 
-#include "mozilla/HashFunctions.h"
-
 #include <stddef.h>
 #include "jsalloc.h"
 #include "jsapi.h"
@@ -21,7 +19,7 @@
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
-#include "vm/CommonPropertyNames.h"
+#include "mozilla/HashFunctions.h"
 
 struct JSIdArray {
     int length;
@@ -146,66 +144,111 @@ class PropertyName;
 
 }  /* namespace js */
 
+struct JSAtomState
+{
+    js::AtomSet         atoms;
+
+    /*
+     * From this point until the end of struct definition the struct must
+     * contain only js::PropertyName fields. We use this to access the storage
+     * occupied by the common atoms in js_FinishCommonAtoms.
+     *
+     * js_common_atom_names defined in jsatom.cpp contains C strings for atoms
+     * in the order of atom fields here. Therefore you must update that array
+     * if you change member order here.
+     */
+
+    /* The rt->emptyString atom, see jsstr.c's js_InitRuntimeStringState. */
+    js::PropertyName    *emptyAtom;
+
+    /*
+     * Literal value and type names.
+     * NB: booleanAtoms must come right before typeAtoms!
+     */
+    js::PropertyName    *booleanAtoms[2];
+    js::PropertyName    *typeAtoms[JSTYPE_LIMIT];
+    js::PropertyName    *nullAtom;
+
+    /* Standard class constructor or prototype names. */
+    js::PropertyName    *classAtoms[JSProto_LIMIT];
+
+    /* Various built-in or commonly-used atoms, pinned on first context. */
+#define DEFINE_ATOM(id, text)          js::PropertyName *id##Atom;
+#define DEFINE_PROTOTYPE_ATOM(id)      js::PropertyName *id##Atom;
+#define DEFINE_KEYWORD_ATOM(id)        js::PropertyName *id##Atom;
+#include "jsatom.tbl"
+#undef DEFINE_ATOM
+#undef DEFINE_PROTOTYPE_ATOM
+#undef DEFINE_KEYWORD_ATOM
+
+    static const size_t commonAtomsOffset;
+
+    void junkAtoms() {
+#ifdef DEBUG
+        memset(commonAtomsStart(), JS_FREE_PATTERN, sizeof(*this) - commonAtomsOffset);
+#endif
+    }
+
+    JSAtom **commonAtomsStart() {
+        return reinterpret_cast<JSAtom **>(&emptyAtom);
+    }
+
+    void checkStaticInvariants();
+};
+
 extern bool
 AtomIsInterned(JSContext *cx, JSAtom *atom);
+
+#define ATOM(name) js::HandlePropertyName::fromMarkedLocation(&cx->runtime->atomState.name##Atom)
+
+#define COMMON_ATOM_INDEX(name)                                               \
+    ((offsetof(JSAtomState, name##Atom) - JSAtomState::commonAtomsOffset)     \
+     / sizeof(JSAtom*))
+#define COMMON_TYPE_ATOM_INDEX(type)                                          \
+    ((offsetof(JSAtomState, typeAtoms[type]) - JSAtomState::commonAtomsOffset)\
+     / sizeof(JSAtom*))
+
+#define NAME_OFFSET(name)       offsetof(JSAtomState, name##Atom)
+#define OFFSET_TO_NAME(rt,off)  (*(js::PropertyName **)((char*)&(rt)->atomState + (off)))
+#define CLASS_NAME_OFFSET(name) offsetof(JSAtomState, classAtoms[JSProto_##name])
+#define CLASS_NAME(cx,name)     ((cx)->runtime->atomState.classAtoms[JSProto_##name])
+
+extern const char *const js_common_atom_names[];
+extern const size_t      js_common_atom_count;
+
+/*
+ * Macros to access C strings for JSType and boolean literals.
+ */
+#define JS_BOOLEAN_STR(type) (js_common_atom_names[1 + (type)])
+#define JS_TYPE_STR(type)    (js_common_atom_names[1 + 2 + (type)])
+
+/* Type names. */
+extern const char   js_object_str[];
+extern const char   js_undefined_str[];
 
 /* Well-known predefined C strings. */
 #define DECLARE_PROTO_STR(name,code,init) extern const char js_##name##_str[];
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTO_STR)
 #undef DECLARE_PROTO_STR
 
-#define DECLARE_CONST_CHAR_STR(id, text)  extern const char js_##id##_str[];
-FOR_EACH_COMMON_PROPERTYNAME(DECLARE_CONST_CHAR_STR)
-#undef DECLARE_CONST_CHAR_STR
+#define DEFINE_ATOM(id, text)  extern const char js_##id##_str[];
+#define DEFINE_PROTOTYPE_ATOM(id)
+#define DEFINE_KEYWORD_ATOM(id)
+#include "jsatom.tbl"
+#undef DEFINE_ATOM
+#undef DEFINE_PROTOTYPE_ATOM
+#undef DEFINE_KEYWORD_ATOM
 
-/* Constant strings that are not atomized. */
-extern const char js_break_str[];
-extern const char js_case_str[];
-extern const char js_catch_str[];
-extern const char js_class_str[];
-extern const char js_const_str[];
-extern const char js_continue_str[];
-extern const char js_debugger_str[];
-extern const char js_default_str[];
-extern const char js_do_str[];
-extern const char js_else_str[];
-extern const char js_enum_str[];
-extern const char js_export_str[];
-extern const char js_extends_str[];
-extern const char js_finally_str[];
-extern const char js_for_str[];
-extern const char js_getter_str[];
-extern const char js_if_str[];
-extern const char js_implements_str[];
-extern const char js_import_str[];
-extern const char js_in_str[];
-extern const char js_instanceof_str[];
-extern const char js_interface_str[];
-extern const char js_let_str[];
-extern const char js_new_str[];
-extern const char js_package_str[];
-extern const char js_private_str[];
-extern const char js_protected_str[];
-extern const char js_public_str[];
-extern const char js_setter_str[];
-extern const char js_static_str[];
-extern const char js_super_str[];
-extern const char js_switch_str[];
-extern const char js_this_str[];
-extern const char js_try_str[];
-extern const char js_typeof_str[];
-extern const char js_void_str[];
-extern const char js_while_str[];
-extern const char js_with_str[];
-extern const char js_yield_str[];
 #if JS_HAS_GENERATORS
 extern const char   js_close_str[];
 extern const char   js_send_str[];
 #endif
 
-namespace js {
+/* Constant strings that are not atomized. */
+extern const char   js_getter_str[];
+extern const char   js_setter_str[];
 
-extern const char * TypeStrings[];
+namespace js {
 
 /*
  * Initialize atom state. Return true on success, false on failure to allocate
@@ -213,29 +256,29 @@ extern const char * TypeStrings[];
  * only call it after js_InitGC successfully returns.
  */
 extern JSBool
-InitAtoms(JSRuntime *rt);
+InitAtomState(JSRuntime *rt);
 
 /*
  * Free and clear atom state including any interned string atoms. This
  * function must be called before js_FinishGC.
  */
 extern void
-FinishAtoms(JSRuntime *rt);
+FinishAtomState(JSRuntime *rt);
 
 /*
  * Atom tracing and garbage collection hooks.
  */
 extern void
-MarkAtoms(JSTracer *trc);
+MarkAtomState(JSTracer *trc);
 
 extern void
-SweepAtoms(JSRuntime *rt);
+SweepAtomState(JSRuntime *rt);
 
 extern bool
-InitCommonNames(JSContext *cx);
+InitCommonAtoms(JSContext *cx);
 
 extern void
-FinishCommonNames(JSRuntime *rt);
+FinishCommonAtoms(JSRuntime *rt);
 
 /* N.B. must correspond to boolean tagging behavior. */
 enum InternBehavior

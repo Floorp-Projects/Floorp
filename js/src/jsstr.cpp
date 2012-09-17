@@ -66,7 +66,7 @@ static JSLinearString *
 ArgToRootedString(JSContext *cx, CallArgs &args, unsigned argno)
 {
     if (argno >= args.length())
-        return cx->runtime->atomState.undefinedAtom;
+        return cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
 
     Value &arg = args[argno];
     JSString *str = ToString(cx, arg);
@@ -3237,8 +3237,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Now create the String function. */
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, js_String, cx->runtime->atomState.StringAtom, 1);
+    RootedFunction ctor(cx, global->createConstructor(cx, js_String, CLASS_NAME(cx, String), 1));
     if (!ctor)
         return NULL;
 
@@ -3425,7 +3424,7 @@ js::ToStringSlow(JSContext *cx, const Value &arg)
     } else if (v.isNull()) {
         str = cx->runtime->atomState.nullAtom;
     } else {
-        str = cx->runtime->atomState.undefinedAtom;
+        str = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     }
     return str;
 }

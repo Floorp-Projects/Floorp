@@ -6460,7 +6460,7 @@ mjit::Compiler::jsop_getgname(uint32_t index)
 {
     /* Optimize undefined, NaN and Infinity. */
     PropertyName *name = script->getName(index);
-    if (name == cx->runtime->atomState.undefinedAtom) {
+    if (name == cx->runtime->atomState.typeAtoms[JSTYPE_VOID]) {
         frame.push(UndefinedValue());
         return true;
     }

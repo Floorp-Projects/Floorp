@@ -19,7 +19,6 @@
 #include "jsstr.h"
 #include "methodjit/MethodJIT.h"
 
-#include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
 #include "jsopcodeinlines.h"
@@ -828,7 +827,7 @@ static JS_ALWAYS_INLINE JSString *
 TypeOfOperation(JSContext *cx, HandleValue v)
 {
     JSType type = JS_TypeOfValue(cx, v);
-    return TypeName(type, cx);
+    return cx->runtime->atomState.typeAtoms[type];
 }
 
 #define RELATIONAL_OP(OP)                                                     \

@@ -96,5 +96,5 @@ js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
     if (v.isNull())
         return sb.append(cx->runtime->atomState.nullAtom);
     JS_ASSERT(v.isUndefined());
-    return sb.append(cx->runtime->atomState.undefinedAtom);
+    return sb.append(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
 }

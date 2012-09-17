@@ -737,7 +737,7 @@ QNameHelper(JSContext *cx, int argc, jsval *argv, jsval *rval)
     if (argc == 0) {
         name = cx->runtime->emptyString;
     } else if (argc < 0) {
-        name = cx->runtime->atomState.undefinedAtom;
+        name = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     } else {
         name = ToAtom(cx, nameval);
         if (!name)
@@ -6550,7 +6550,7 @@ xml_replace(JSContext *cx, unsigned argc, jsval *vp)
         goto done;
 
     if (argc <= 1) {
-        value = STRING_TO_JSVAL(cx->runtime->atomState.undefinedAtom);
+        value = STRING_TO_JSVAL(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     } else {
         value = vp[3];
         vxml = VALUE_IS_XML(value)
@@ -6642,7 +6642,7 @@ xml_setLocalName(JSContext *cx, unsigned argc, jsval *vp)
 
     JSAtom *namestr;
     if (argc == 0) {
-        namestr = cx->runtime->atomState.undefinedAtom;
+        namestr = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     } else {
         jsval name = vp[2];
         if (!JSVAL_IS_PRIMITIVE(name) && JSVAL_TO_OBJECT(name)->isQName()) {
@@ -6678,7 +6678,7 @@ xml_setName(JSContext *cx, unsigned argc, jsval *vp)
         return JS_TRUE;
 
     if (argc == 0) {
-        name = STRING_TO_JSVAL(cx->runtime->atomState.undefinedAtom);
+        name = STRING_TO_JSVAL(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     } else {
         name = vp[2];
         if (!JSVAL_IS_PRIMITIVE(name) &&
@@ -7339,9 +7339,8 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
     namespaceProto->setNameURI(empty);
 
     const unsigned NAMESPACE_CTOR_LENGTH = 2;
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, Namespace, cx->runtime->atomState.NamespaceAtom,
-                                     NAMESPACE_CTOR_LENGTH);
+    RootedFunction ctor(cx, global->createConstructor(cx, Namespace, CLASS_NAME(cx, Namespace),
+                                                      NAMESPACE_CTOR_LENGTH));
     if (!ctor)
         return NULL;
 
@@ -7373,7 +7372,7 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     const unsigned QNAME_CTOR_LENGTH = 2;
-    RootedFunction ctor(cx, global->createConstructor(cx, QName, cx->runtime->atomState.QNameAtom,
+    RootedFunction ctor(cx, global->createConstructor(cx, QName, CLASS_NAME(cx, QName),
                                                       QNAME_CTOR_LENGTH));
     if (!ctor)
         return NULL;
@@ -7413,8 +7412,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     }
 
     const unsigned XML_CTOR_LENGTH = 1;
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, XML, cx->runtime->atomState.XMLAtom, XML_CTOR_LENGTH);
+    RootedFunction ctor(cx, global->createConstructor(cx, XML, CLASS_NAME(cx, XML), XML_CTOR_LENGTH));
     if (!ctor)
         return NULL;
 
@@ -7470,7 +7468,7 @@ GlobalObject::getFunctionNamespace(JSContext *cx, Value *vp)
     Value v = getSlot(FUNCTION_NS);
     if (v.isUndefined()) {
         JSRuntime *rt = cx->runtime;
-        JSLinearString *prefix = rt->atomState.functionAtom;
+        JSLinearString *prefix = rt->atomState.typeAtoms[JSTYPE_FUNCTION];
         JSLinearString *uri = rt->atomState.functionNamespaceURIAtom;
         RootedObject obj(cx, NewXMLNamespace(cx, prefix, uri, JS_FALSE));
         if (!obj)
