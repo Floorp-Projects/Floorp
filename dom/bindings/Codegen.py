@@ -1366,6 +1366,25 @@ class CGIsMethod(CGAbstractMethod):
         #   js::GetObjectJSClass(obj) == &Class.mBase
         return """  return IsProxy(obj);"""
 
+def CreateBindingJSObject(descriptor, parent):
+    if descriptor.proxy:
+        create = """  JSObject *obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
+                                 JS::PrivateValue(aObject), proto, %s);
+  if (!obj) {
+    return NULL;
+  }
+
+"""
+    else:
+        create = """  JSObject* obj = JS_NewObject(aCx, &Class.mBase, proto, %s);
+  if (!obj) {
+    return NULL;
+  }
+
+  js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
+"""
+    return create % parent
+
 class CGWrapWithCacheMethod(CGAbstractMethod):
     def __init__(self, descriptor):
         assert descriptor.interface.hasInterfacePrototypeObject()
@@ -1379,23 +1398,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         if self.descriptor.workers:
             return """  *aTriedToWrap = true;
   return aObject->GetJSObject();"""
-
-        if self.descriptor.proxy:
-            create = """  JSObject *obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
-                                 JS::PrivateValue(aObject), proto, parent);
-  if (!obj) {
-    return NULL;
-  }
-
-"""
-        else:
-            create = """  JSObject* obj = JS_NewObject(aCx, &Class.mBase, proto, parent);
-  if (!obj) {
-    return NULL;
-  }
-
-  js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
-"""
 
         return """  *aTriedToWrap = true;
 
@@ -1417,7 +1419,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
   aCache->SetWrapper(obj);
 
-  return obj;""" % (CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aCache"), create)
+  return obj;""" % (CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aCache"),
+                    CreateBindingJSObject(self.descriptor, "parent"))
 
 class CGWrapMethod(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -1446,15 +1449,10 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
     return NULL;
   }
 
-  JSObject* obj = JS_NewObject(aCx, &Class.mBase, proto, global);
-  if (!obj) {
-    return NULL;
-  }
-
-  js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
+%s
   NS_ADDREF(aObject);
 
-  return obj;"""
+  return obj;""" % CreateBindingJSObject(self.descriptor, "global")
 
 builtinNames = {
     IDLType.Tags.bool: 'bool',
