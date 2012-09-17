@@ -2216,5 +2216,9 @@
   "SOCIAL_TOGGLED": {
     "kind": "boolean",
     "description": "Social has been toggled to on or off"
+  },
+  "ENABLE_PRIVILEGE_EVER_CALLED": {
+    "kind": "flag",
+    "description": "Whether enablePrivilege has ever been called during the current session"
   }
 }
