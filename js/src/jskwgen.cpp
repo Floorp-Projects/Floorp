@@ -15,12 +15,10 @@
 
 #include "jsversion.h"
 
-#include "vm/Keywords.h"
-
 const char * const keyword_list[] = {
-#define KEYWORD_STRING(keyword, name, type, op, version) #keyword,
-    FOR_EACH_JAVASCRIPT_KEYWORD(KEYWORD_STRING)
-#undef KEYWORD_STRING
+#define JS_KEYWORD(keyword, type, op, version) #keyword,
+#include "jskeyword.tbl"
+#undef JS_KEYWORD
 };
 
 struct gen_opt {
