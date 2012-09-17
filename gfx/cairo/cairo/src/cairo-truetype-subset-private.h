@@ -39,6 +39,8 @@
 
 #include "cairoint.h"
 
+CAIRO_BEGIN_DECLS
+
 #if CAIRO_HAS_FONT_SUBSET
 
 /* The structs defined here should strictly follow the TrueType
@@ -195,5 +197,7 @@ typedef struct _tt_glyph_data {
 } tt_glyph_data_t;
 
 #endif /* CAIRO_HAS_FONT_SUBSET */
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_TRUETYPE_SUBSET_PRIVATE_H */
