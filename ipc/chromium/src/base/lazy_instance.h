@@ -100,7 +100,7 @@ class LazyInstance : public LazyInstanceHelper {
   }
 
  private:
-  int8 buf_[sizeof(Type)];  // Preallocate the space for the Type instance.
+  int8_t buf_[sizeof(Type)];  // Preallocate the space for the Type instance.
 
   DISALLOW_COPY_AND_ASSIGN(LazyInstance);
 };

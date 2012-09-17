@@ -85,7 +85,7 @@ class DeathData {
   // Metrics accessors.
   int count() const { return count_; }
   base::TimeDelta life_duration() const { return life_duration_; }
-  int64 square_duration() const { return square_duration_; }
+  int64_t square_duration() const { return square_duration_; }
   int AverageMsDuration() const;
   double StandardDeviation() const;
 
@@ -100,7 +100,7 @@ class DeathData {
  private:
   int count_;                // Number of destructions.
   base::TimeDelta life_duration_;    // Sum of all lifetime durations.
-  int64 square_duration_;  // Sum of squares in milliseconds.
+  int64_t square_duration_;  // Sum of squares in milliseconds.
 };
 
 //------------------------------------------------------------------------------
@@ -129,7 +129,7 @@ class Snapshot {
 
   int count() const { return death_data_.count(); }
   base::TimeDelta life_duration() const { return death_data_.life_duration(); }
-  int64 square_duration() const { return death_data_.square_duration(); }
+  int64_t square_duration() const { return death_data_.square_duration(); }
   int AverageMsDuration() const { return death_data_.AverageMsDuration(); }
 
   void Write(std::string* output) const;

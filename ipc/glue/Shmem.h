@@ -61,7 +61,7 @@ class Shmem MOZ_FINAL
   friend struct IPC::ParamTraits<mozilla::ipc::Shmem>;
 
 public:
-  typedef int32 id_t;
+  typedef int32_t id_t;
   // Low-level wrapper around platform shmem primitives.
   typedef mozilla::ipc::SharedMemory SharedMemory;
   typedef SharedMemory::SharedMemoryType SharedMemoryType;
@@ -207,7 +207,7 @@ public:
   IPC::Message*
   ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
           base::ProcessHandle aProcess,
-          int32 routingId);
+          int32_t routingId);
 
   // Stop sharing this with |aProcess|.  Return an IPC message that
   // contains enough information for the other process to unmap this
@@ -216,7 +216,7 @@ public:
   IPC::Message*
   UnshareFrom(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
               base::ProcessHandle aProcess,
-              int32 routingId);
+              int32_t routingId);
 
   // Return a SharedMemory instance in this process using the
   // descriptor shared to us by the process that created the
@@ -244,12 +244,12 @@ private:
   void AssertInvariants() const
   { }
 
-  static uint32*
+  static uint32_t*
   PtrToSize(SharedMemory* aSegment)
   {
     char* endOfSegment =
       reinterpret_cast<char*>(aSegment->memory()) + aSegment->Size();
-    return reinterpret_cast<uint32*>(endOfSegment - sizeof(uint32));
+    return reinterpret_cast<uint32_t*>(endOfSegment - sizeof(uint32_t));
   }
 
 #else

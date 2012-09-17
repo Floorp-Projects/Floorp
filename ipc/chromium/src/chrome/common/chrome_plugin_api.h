@@ -87,7 +87,7 @@ typedef struct _CPID_t* CPID;
 // profile is active.  Note that this ID is global to all processes, so it can
 // be passed from one process to another.  The value 0 is reserved for an
 // undefined context.
-typedef uint32 CPBrowsingContext;
+typedef uint32_t CPBrowsingContext;
 
 // Types of context info to query using CPB_GetBrowsingContextInfo.
 typedef enum {
@@ -180,7 +180,7 @@ typedef CPError (STDCALL *CPB_HandleCommandFunc)(
 // requests it makes that match a given scheme.  The browser may choose not to
 // allow the plugin to intercept certain protocols.
 typedef void (STDCALL *CPB_EnableRequestInterceptFunc)(
-    CPID id, const char** schemes, uint32 num_schemes);
+    CPID id, const char** schemes, uint32_t num_schemes);
 
 // Asks the browser to create a request object for the given method/url.
 // Returns CPERR_SUCCESS and puts the new object into the 'request' field on
@@ -199,7 +199,7 @@ typedef CPError (STDCALL *CPB_GetCookiesFunc)(
 
 // Allocates memory for the given size using the browser's allocator.  Call
 // CPB_Free when done.
-typedef void* (STDCALL *CPB_AllocFunc)(uint32 size);
+typedef void* (STDCALL *CPB_AllocFunc)(uint32_t size);
 
 // Frees a pointer allocated by CPB_Alloc.
 typedef void (STDCALL *CPB_FreeFunc)(void* memory);
@@ -244,7 +244,7 @@ typedef CPBrowsingContext (STDCALL *CPB_GetBrowsingContextFromNPPFunc)(
 // Otherwise, the return value is a CPError or CPERR_SUCCESS.
 typedef int (STDCALL *CPB_GetBrowsingContextInfoFunc)(
     CPID id, CPBrowsingContext context, CPBrowsingContextInfoType type,
-    void* buf, uint32 buf_size);
+    void* buf, uint32_t buf_size);
 
 // Given an URL string, returns the string of command-line arguments that should
 // be passed to start the browser at the given URL.  'arguments' should be freed
@@ -288,7 +288,7 @@ typedef void (STDCALL *CPR_SetExtraRequestHeadersFunc)(CPRequest* request,
 // Sets the load flags for this request. 'flags' is a bitwise-OR of
 // CPRequestLoadFlags.  Must be called before CPRR_StartCompletedFunc.
 typedef void (STDCALL *CPR_SetRequestLoadFlagsFunc)(CPRequest* request,
-                                                    uint32 flags);
+                                                    uint32_t flags);
 
 // Appends binary data to the request body of a POST or PUT request.  The caller
 // should set the "Content-Type" header to the appropriate mime type using
@@ -308,7 +308,7 @@ typedef void (STDCALL *CPR_AppendDataToUploadFunc)(
 // See CPR_AppendDataToUploadFunc for additional usage information.
 // (added in v0.4)
 typedef CPError (STDCALL *CPR_AppendFileToUploadFunc)(
-    CPRequest* request, const char* filepath, uint64 offset, uint64 length);
+    CPRequest* request, const char* filepath, uint64_t offset, uint64_t length);
 
 // Queries for some response meta data.  See CPResponseInfoType for possible
 // queries.  If buf_size is too small to contain the entire data, the return
@@ -316,7 +316,7 @@ typedef CPError (STDCALL *CPR_AppendFileToUploadFunc)(
 // CPError or CPERR_SUCCESS.
 typedef int (STDCALL *CPR_GetResponseInfoFunc)(
     CPRequest* request, CPResponseInfoType type,
-    void* buf, uint32 buf_size);
+    void* buf, uint32_t buf_size);
 
 // Attempts to read a request's response data.  The number of bytes read is
 // returned; 0 indicates an EOF.  CPERR_IO_PENDING is returned if an
@@ -324,7 +324,7 @@ typedef int (STDCALL *CPR_GetResponseInfoFunc)(
 // when it completes; 'buf' must be available until the operation completes.
 // Returns an error code on failure.
 typedef int (STDCALL *CPR_ReadFunc)(
-    CPRequest* request, void* buf, uint32 buf_size);
+    CPRequest* request, void* buf, uint32_t buf_size);
 
 //
 // Functions related to serving network requests.
@@ -354,8 +354,8 @@ typedef void (STDCALL *CPRR_ReadCompletedFunc)(CPRequest* request,
 // Called as upload progress is being made for async POST requests.
 // (added in v0.5)
 typedef void (STDCALL *CPRR_UploadProgressFunc)(CPRequest* request,
-                                                uint64 position,
-                                                uint64 size);
+                                                uint64_t position,
+                                                uint64_t size);
 
 //
 // Functions to support the sending and receipt of messages between processes.
@@ -372,7 +372,7 @@ typedef CPProcessType (STDCALL *CPB_GetProcessTypeFunc)(CPID id);
 // the message.
 typedef CPError (STDCALL *CPB_SendMessageFunc)(CPID id,
                                                const void *data,
-                                               uint32 data_len);
+                                               uint32_t data_len);
 
 // Asks the browser to send raw data to the other process hosting an instance of
 // this plugin. This function only works from the plugin or renderer process.
@@ -380,9 +380,9 @@ typedef CPError (STDCALL *CPB_SendMessageFunc)(CPID id,
 // freed using CPB_Free when done.
 typedef CPError (STDCALL *CPB_SendSyncMessageFunc)(CPID id,
                                                    const void *data,
-                                                   uint32 data_len,
+                                                   uint32_t data_len,
                                                    void **retval,
-                                                   uint32 *retval_len);
+                                                   uint32_t *retval_len);
 
 // This function asynchronously calls the provided function on the plugin
 // thread.  user_data is passed as the argument to the function.
@@ -401,25 +401,25 @@ typedef CPError (STDCALL *CPB_OpenFileDialogFunc)(CPID id,
                                                   void *user_data);
 
 // Informs the plugin of raw data having been sent from another process.
-typedef void (STDCALL *CPP_OnMessageFunc)(void *data, uint32 data_len);
+typedef void (STDCALL *CPP_OnMessageFunc)(void *data, uint32_t data_len);
 
 // Informs the plugin of raw data having been sent from another process.
-typedef void (STDCALL *CPP_OnSyncMessageFunc)(void *data, uint32 data_len,
+typedef void (STDCALL *CPP_OnSyncMessageFunc)(void *data, uint32_t data_len,
                                               void **retval,
-                                              uint32 *retval_len);
+                                              uint32_t *retval_len);
 
 // Informs the plugin that the file dialog has completed, and contains the
 // results.
 typedef void (STDCALL *CPP_OnFileDialogResultFunc)(void *data,
                                                    const char **files,
-                                                   uint32 files_len);
+                                                   uint32_t files_len);
 
 // Function table for issuing requests using via the other side's network stack.
 // For the plugin, this functions deal with issuing requests through the
 // browser.  For the browser, these functions deal with allowing the plugin to
 // intercept requests.
 typedef struct _CPRequestFuncs {
-  uint16 size;
+  uint16_t size;
   CPR_SetExtraRequestHeadersFunc set_extra_request_headers;
   CPR_SetRequestLoadFlagsFunc set_request_load_flags;
   CPR_AppendDataToUploadFunc append_data_to_upload;
@@ -435,7 +435,7 @@ typedef struct _CPRequestFuncs {
 // the browser, these deal with serving requests that the plugin has issued
 // through us.
 typedef struct _CPResponseFuncs {
-  uint16 size;
+  uint16_t size;
   CPRR_ReceivedRedirectFunc received_redirect;
   CPRR_StartCompletedFunc start_completed;
   CPRR_ReadCompletedFunc read_completed;
@@ -447,8 +447,8 @@ typedef struct _CPResponseFuncs {
 // the 'size' field, which is set by the browser.  The version fields should be
 // set to those that the plugin was compiled using.
 typedef struct _CPPluginFuncs {
-  uint16 size;
-  uint16 version;
+  uint16_t size;
+  uint16_t version;
   CPRequestFuncs* request_funcs;
   CPResponseFuncs* response_funcs;
   CPP_ShutdownFunc shutdown;
@@ -465,8 +465,8 @@ typedef struct _CPPluginFuncs {
 // plugin will likely want to save a copy of this structure to make calls
 // back to the browser.
 typedef struct _CPBrowserFuncs {
-  uint16 size;
-  uint16 version;
+  uint16_t size;
+  uint16_t version;
   CPRequestFuncs* request_funcs;
   CPResponseFuncs* response_funcs;
   CPB_EnableRequestInterceptFunc enable_request_intercept;
@@ -506,7 +506,7 @@ typedef struct _CPBrowserFuncs {
 // exported by the chrome plugin module, CP_Initiailize will be called with
 // a version of the host's choosing.
 typedef CPError (STDCALL *CP_VersionNegotiateFunc)(
-  uint16 min_version, uint16 max_version, uint16 *selected_version);
+  uint16_t min_version, uint16_t max_version, uint16_t *selected_version);
 
 // 'bfuncs' are the browser functions provided to the plugin. 'id' is the
 // plugin identifier that the plugin should use when calling browser functions.

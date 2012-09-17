@@ -549,7 +549,7 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 
     case NPPVpluginDrawingModel: {
         NPError rv;
-        int drawingModel = (int16) (intptr_t) aValue;
+        int drawingModel = (int16_t) (intptr_t) aValue;
 
         if (!PluginModuleChild::current()->AsyncDrawingAllowed() &&
             IsDrawingModelAsync(drawingModel)) {
@@ -586,7 +586,7 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 #ifdef XP_MACOSX
     case NPPVpluginEventModel: {
         NPError rv;
-        int eventModel = (int16) (intptr_t) aValue;
+        int eventModel = (int16_t) (intptr_t) aValue;
 
         if (!CallNPN_SetValue_NPPVpluginEventModel(eventModel, &rv))
             return NPERR_GENERIC_ERROR;

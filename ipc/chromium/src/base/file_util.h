@@ -325,14 +325,14 @@ bool CreateDirectory(const FilePath& full_path);
 bool CreateDirectory(const std::wstring& full_path);
 
 // Returns the file size. Returns true on success.
-bool GetFileSize(const FilePath& file_path, int64* file_size);
+bool GetFileSize(const FilePath& file_path, int64_t* file_size);
 // Deprecated temporary compatibility function.
-bool GetFileSize(const std::wstring& file_path, int64* file_size);
+bool GetFileSize(const std::wstring& file_path, int64_t* file_size);
 
 // Used to hold information about a given file path.  See GetFileInfo below.
 struct FileInfo {
   // The size of the file in bytes.  Undefined when is_directory is true.
-  int64 size;
+  int64_t size;
 
   // True if the file corresponds to a directory.
   bool is_directory;
@@ -489,7 +489,7 @@ class MemoryMappedFile {
   // Later we may want to allow the user to specify access.
   bool Initialize(const FilePath& file_name);
 
-  const uint8* data() const { return data_; }
+  const uint8_t* data() const { return data_; }
   size_t length() const { return length_; }
 
   // Is file_ a valid file handle that points to an open, memory mapped file?
@@ -510,7 +510,7 @@ class MemoryMappedFile {
   // The file descriptor.
   int file_;
 #endif
-  uint8* data_;
+  uint8_t* data_;
   size_t length_;
 
   DISALLOW_COPY_AND_ASSIGN(MemoryMappedFile);

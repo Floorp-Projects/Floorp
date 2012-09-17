@@ -54,14 +54,14 @@ struct ParamTraits<mozilla::gl::TextureImage::TextureShareType>
 
   static void Write(Message* msg, const paramType& param)
   {
-    MOZ_STATIC_ASSERT(sizeof(paramType) <= sizeof(int32),
-                      "TextureShareType assumes to be int32");
-    WriteParam(msg, int32(param));
+    MOZ_STATIC_ASSERT(sizeof(paramType) <= sizeof(int32_t),
+                      "TextureShareType assumes to be int32_t");
+    WriteParam(msg, int32_t(param));
   }
 
   static bool Read(const Message* msg, void** iter, paramType* result)
   {
-    int32 type;
+    int32_t type;
     if (!ReadParam(msg, iter, &type))
       return false;
 

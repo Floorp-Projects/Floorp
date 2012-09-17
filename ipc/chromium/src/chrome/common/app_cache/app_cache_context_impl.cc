@@ -53,7 +53,7 @@ void AppCacheContextImpl::UnInitializeContext() {
 
 void AppCacheContextImpl::SelectAppCacheWithoutManifest(
                               const GURL &document_url,
-                              int64 cache_document_was_loaded_from) {
+                              int64_t cache_document_was_loaded_from) {
   DCHECK(context_id_ != kNoAppCacheContextId);
   app_cache_id_ = kUnknownAppCacheId;  // unknown until we get a response
   sender_->Send(new AppCacheMsg_SelectAppCache(
@@ -64,7 +64,7 @@ void AppCacheContextImpl::SelectAppCacheWithoutManifest(
 
 void AppCacheContextImpl::SelectAppCacheWithManifest(
                               const GURL &document_url,
-                              int64 cache_document_was_loaded_from,
+                              int64_t cache_document_was_loaded_from,
                               const GURL &manifest_url) {
   DCHECK(context_id_ != kNoAppCacheContextId);
   app_cache_id_ = kUnknownAppCacheId;  // unknown until we get a response
@@ -75,7 +75,7 @@ void AppCacheContextImpl::SelectAppCacheWithManifest(
 }
 
 void AppCacheContextImpl::OnAppCacheSelected(int select_request_id,
-                                             int64 app_cache_id) {
+                                             int64_t app_cache_id) {
   if (select_request_id == pending_select_request_id_) {
     DCHECK(app_cache_id_ == kUnknownAppCacheId);
     DCHECK(app_cache_id != kUnknownAppCacheId);

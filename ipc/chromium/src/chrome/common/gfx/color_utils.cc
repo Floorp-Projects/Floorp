@@ -32,7 +32,7 @@ static const double kCIEConversionGamma = 2.2;
 static const double kE = 0.008856;
 static const double kK = 903.3;
 
-static double CIEConvertNonLinear(uint8 color_component) {
+static double CIEConvertNonLinear(uint8_t color_component) {
   double color_component_d = static_cast<double>(color_component) / 255.0;
   if (color_component_d > 0.04045) {
     double base = (color_component_d + kCIEConversionAlpha) /
@@ -45,9 +45,9 @@ static double CIEConvertNonLinear(uint8 color_component) {
 
 // Note: this works only for sRGB.
 void SkColorToCIEXYZ(SkColor c, CIE_XYZ* xyz) {
-  uint8 r = SkColorGetR(c);
-  uint8 g = SkColorGetG(c);
-  uint8 b = SkColorGetB(c);
+  uint8_t r = SkColorGetR(c);
+  uint8_t g = SkColorGetG(c);
+  uint8_t b = SkColorGetB(c);
 
   xyz->X =
     0.4124 * CIEConvertNonLinear(r) +
@@ -82,7 +82,7 @@ void CIEXYZToLabColor(const CIE_XYZ& xyz, LabColor* lab) {
   lab->b = static_cast<int>(200 * (fy - fz));
 }
 
-static uint8 sRGBColorComponentFromLinearComponent(double component) {
+static uint8_t sRGBColorComponentFromLinearComponent(double component) {
   double result;
   if (component <= 0.0031308) {
     result = 12.92 * component;
@@ -91,16 +91,16 @@ static uint8 sRGBColorComponentFromLinearComponent(double component) {
                  pow(component, (static_cast<double>(1) / 2.4)) -
                  kCIEConversionAlpha;
   }
-  return std::min(static_cast<uint8>(255), static_cast<uint8>(result * 255));
+  return std::min(static_cast<uint8_t>(255), static_cast<uint8_t>(result * 255));
 }
 
 SkColor CIEXYZToSkColor(SkAlpha alpha, const CIE_XYZ& xyz) {
   double r_linear = 3.2410 * xyz.X - 1.5374 * xyz.Y - 0.4986 * xyz.Z;
   double g_linear = -0.9692 * xyz.X + 1.8760 * xyz.Y + 0.0416 * xyz.Z;
   double b_linear = 0.0556 * xyz.X - 0.2040 * xyz.Y + 1.0570 * xyz.Z;
-  uint8 r = sRGBColorComponentFromLinearComponent(r_linear);
-  uint8 g = sRGBColorComponentFromLinearComponent(g_linear);
-  uint8 b = sRGBColorComponentFromLinearComponent(b_linear);
+  uint8_t r = sRGBColorComponentFromLinearComponent(r_linear);
+  uint8_t g = sRGBColorComponentFromLinearComponent(g_linear);
+  uint8_t b = sRGBColorComponentFromLinearComponent(b_linear);
   return SkColorSetARGB(alpha, r, g, b);
 }
 

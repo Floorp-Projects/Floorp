@@ -38,18 +38,22 @@ namespace subtle {
 #ifndef OS_WIN
 #define __w64
 #endif
-typedef __w64 int32 Atomic32;
+typedef __w64 int32_t Atomic32;
 #ifdef ARCH_CPU_64_BITS
-typedef int64 Atomic64;
+typedef int64_t Atomic64;
 #endif
 
 // Use AtomicWord for a machine-sized pointer.  It will use the Atomic32 or
 // Atomic64 routines below, depending on your architecture.
-#if defined(OS_OPENBSD) && !defined(ARCH_CPU_64_BITS)
+#ifdef OS_OPENBSD
+#ifdef ARCH_CPU_64_BITS
+typedef Atomic64 AtomicWord;
+#else
 typedef Atomic32 AtomicWord;
+#endif // ARCH_CPU_64_BITS
 #else
 typedef intptr_t AtomicWord;
-#endif
+#endif // OS_OPENBSD
 
 // Atomically execute:
 //      result = *ptr;
