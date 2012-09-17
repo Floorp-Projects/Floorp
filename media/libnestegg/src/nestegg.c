@@ -25,7 +25,7 @@
 #define ID_VOID                 0xec
 #define ID_CRC32                0xbf
 
-/* WebMedia Elements */
+/* WebM Elements */
 #define ID_SEGMENT              0x18538067
 
 /* Seek Head Elements */
@@ -342,7 +342,7 @@ static struct ebml_element_desc ne_ebml_elements[] = {
   E_LAST
 };
 
-/* WebMedia Element Lists */
+/* WebM Element Lists */
 static struct ebml_element_desc ne_seek_elements[] = {
   E_FIELD(ID_SEEK_ID, TYPE_BINARY, struct seek, id),
   E_FIELD(ID_SEEK_POSITION, TYPE_UINT, struct seek, position),
@@ -662,7 +662,7 @@ ne_read_float(nestegg_io * io, double * val, uint64_t length)
   } value;
   int r;
 
-  /* length == 10 not implemented */
+  /* Length == 10 not implemented. */
   if (length != 4 && length != 8)
     return -1;
   r = ne_read_uint(io, &value.u, length);
@@ -932,8 +932,6 @@ ne_read_simple(nestegg * ctx, struct ebml_element_desc * desc, size_t length)
   ctx->log(ctx, NESTEGG_LOG_DEBUG, "element %llx (%s) -> %p (%u)",
            desc->id, desc->name, storage, desc->offset);
 
-  r = -1;
-
   switch (desc->type) {
   case TYPE_UINT:
     r = ne_read_uint(ctx->io, &storage->v.u, length);
@@ -963,26 +961,22 @@ ne_read_simple(nestegg * ctx, struct ebml_element_desc * desc, size_t length)
 }
 
 static int
-ne_parse(nestegg * ctx, struct ebml_element_desc * top_level)
+ne_parse(nestegg * ctx, struct ebml_element_desc * top_level, int64_t max_offset)
 {
   int r;
   int64_t * data_offset;
   uint64_t id, size;
   struct ebml_element_desc * element;
 
-  /* loop until we need to return:
-     - hit suspend point
-     - parse complete
-     - error occurred */
-
-  /* loop over elements at current level reading them if sublevel found,
-     push ctx onto stack and continue if sublevel ended, pop ctx off stack
-     and continue */
-
   if (!ctx->ancestor)
     return -1;
 
   for (;;) {
+    if (max_offset > 0 && ne_io_tell(ctx->io) >= max_offset) {
+      /* Reached end of offset allowed for parsing - return gracefully */
+      r = 1;
+      break;
+    }
     r = ne_peek_element(ctx, &id, &size);
     if (r != 1)
       break;
@@ -1108,7 +1102,7 @@ ne_read_xiph_lacing(nestegg_io * io, size_t block, size_t * read, uint64_t n, ui
   if (*read + sum > block)
     return -1;
 
-  /* last frame is the remainder of the block */
+  /* Last frame is the remainder of the block. */
   sizes[i] = block - *read - sum;
   return 1;
 }
@@ -1145,7 +1139,7 @@ ne_read_ebml_lacing(nestegg_io * io, size_t block, size_t * read, uint64_t n, ui
   if (*read + sum > block)
     return -1;
 
-  /* last frame is the remainder of the block */
+  /* Last frame is the remainder of the block. */
   sizes[i] = block - *read - sum;
   return 1;
 }
@@ -1221,8 +1215,8 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
 
   frames = 0;
 
-  /* flags are different between block and simpleblock, but lacing is
-     encoded the same way */
+  /* Flags are different between Block and SimpleBlock, but lacing is
+     encoded the same way. */
   lacing = (flags & BLOCK_FLAGS_LACING) >> 1;
 
   switch (lacing) {
@@ -1268,7 +1262,7 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
     break;
   }
 
-  /* sanity check unlaced frame sizes against total block size. */
+  /* Sanity check unlaced frame sizes against total block size. */
   total = consumed;
   for (i = 0; i < frames; ++i)
     total += frame_sizes[i];
@@ -1397,7 +1391,6 @@ ne_find_cue_point_for_tstamp(struct ebml_list_node * cue_point, uint64_t scale, 
 static int
 ne_is_suspend_element(uint64_t id)
 {
-  /* this could search the tree of elements for DESC_FLAG_SUSPEND */
   if (id == ID_SIMPLE_BLOCK || id == ID_BLOCK)
     return 1;
   return 0;
@@ -1410,8 +1403,71 @@ ne_null_log_callback(nestegg * ctx, unsigned int severity, char const * fmt, ...
     return;
 }
 
+static int
+ne_init_cue_points(nestegg * ctx, int64_t max_offset)
+{
+  int r;
+  struct ebml_list_node * node = ctx->segment.cues.cue_point.head;
+  struct seek * found;
+  uint64_t seek_pos, id;
+  struct saved_state state;
+
+  /* If there are no cues loaded, check for cues element in the seek head
+     and load it. */
+  if (!node) {
+    found = ne_find_seek_for_id(ctx->segment.seek_head.head, ID_CUES);
+    if (!found)
+      return -1;
+
+    if (ne_get_uint(found->position, &seek_pos) != 0)
+      return -1;
+
+    /* Save old parser state. */
+    r = ne_ctx_save(ctx, &state);
+    if (r != 0)
+      return -1;
+
+    /* Seek and set up parser state for segment-level element (Cues). */
+    r = ne_io_seek(ctx->io, ctx->segment_offset + seek_pos, NESTEGG_SEEK_SET);
+    if (r != 0)
+      return -1;
+    ctx->last_id = 0;
+    ctx->last_size = 0;
+
+    r = ne_read_element(ctx, &id, NULL);
+    if (r != 1)
+      return -1;
+
+    if (id != ID_CUES)
+      return -1;
+
+    ctx->ancestor = NULL;
+    ne_ctx_push(ctx, ne_top_level_elements, ctx);
+    ne_ctx_push(ctx, ne_segment_elements, &ctx->segment);
+    ne_ctx_push(ctx, ne_cues_elements, &ctx->segment.cues);
+    /* parser will run until end of cues element. */
+    ctx->log(ctx, NESTEGG_LOG_DEBUG, "seek: parsing cue elements");
+    r = ne_parse(ctx, ne_cues_elements, max_offset);
+    while (ctx->ancestor)
+      ne_ctx_pop(ctx);
+
+    /* Reset parser state to original state and seek back to old position. */
+    if (ne_ctx_restore(ctx, &state) != 0)
+      return -1;
+
+    if (r < 0)
+      return -1;
+
+    node = ctx->segment.cues.cue_point.head;
+    if (!node)
+      return -1;
+  }
+
+  return 0;
+}
+
 int
-nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback)
+nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback, int64_t max_offset)
 {
   int r;
   uint64_t id, version, docversion;
@@ -1447,7 +1503,7 @@ nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback)
 
   ne_ctx_push(ctx, ne_top_level_elements, ctx);
 
-  r = ne_parse(ctx, NULL);
+  r = ne_parse(ctx, NULL, max_offset);
 
   if (r != 1) {
     nestegg_destroy(ctx);
@@ -1533,60 +1589,83 @@ nestegg_track_count(nestegg * ctx, unsigned int * tracks)
 }
 
 int
+nestegg_get_cue_point(nestegg * ctx, unsigned int cluster_num, int64_t max_offset,
+                      int64_t * start_pos, int64_t * end_pos)
+{
+  int range_obtained = 0;
+  unsigned int cluster_count = 0;
+  struct cue_point * cue_point;
+  struct cue_track_positions * pos;
+  uint64_t seek_pos, t;
+  struct ebml_list_node * cues_node = ctx->segment.cues.cue_point.head;
+  struct ebml_list_node * cue_pos_node = NULL;
+  unsigned int track = 0, track_count = 0;
+
+  if (!start_pos || !end_pos)
+    return -1;
+
+  /* Initialise return values */
+  *start_pos = -1;
+  *end_pos   = -1;
+
+  if (!cues_node) {
+    ne_init_cue_points(ctx, max_offset);
+    cues_node = ctx->segment.cues.cue_point.head;
+    /* Verify cues have been added to context. */
+    if (!cues_node)
+      return -1;
+  }
+
+  nestegg_track_count(ctx, &track_count);
+
+  while (cues_node && !range_obtained) {
+    assert(cues_node->id == ID_CUE_POINT);
+    cue_point = cues_node->data;
+    cue_pos_node = cue_point->cue_track_positions.head;
+    while (cue_pos_node) {
+      assert(cue_pos_node->id == ID_CUE_TRACK_POSITIONS);
+      pos = cue_pos_node->data;
+      for (track = 0; track < track_count; track++) {
+        if (ne_get_uint(pos->track, &t) == 0 && t - 1 == track) {
+          if (ne_get_uint(pos->cluster_position, &seek_pos) != 0)
+            return -1;
+          if (cluster_count == cluster_num) {
+            *start_pos = ctx->segment_offset+seek_pos;
+          } else if (cluster_count == cluster_num+1) {
+            *end_pos = (ctx->segment_offset+seek_pos)-1;
+            range_obtained = 1;
+            break;
+          }
+          cluster_count++;
+        }
+      }
+      cue_pos_node = cue_pos_node->next;
+    }
+    cues_node = cues_node->next;
+  }
+
+  return 0;
+}
+
+int
 nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
 {
   int r;
   struct cue_point * cue_point;
   struct cue_track_positions * pos;
-  struct saved_state state;
-  struct seek * found;
-  uint64_t seek_pos, tc_scale, t, id;
+  uint64_t seek_pos, tc_scale, t;
   struct ebml_list_node * node = ctx->segment.cues.cue_point.head;
 
   /* If there are no cues loaded, check for cues element in the seek head
      and load it. */
   if (!node) {
-    found = ne_find_seek_for_id(ctx->segment.seek_head.head, ID_CUES);
-    if (!found)
-      return -1;
-
-    if (ne_get_uint(found->position, &seek_pos) != 0)
-      return -1;
-
-    /* Save old parser state. */
-    r = ne_ctx_save(ctx, &state);
+    r = ne_init_cue_points(ctx, -1);
     if (r != 0)
       return -1;
 
-    /* Seek and set up parser state for segment-level element (Cues). */
-    r = ne_io_seek(ctx->io, ctx->segment_offset + seek_pos, NESTEGG_SEEK_SET);
-    if (r != 0)
-      return -1;
-    ctx->last_id = 0;
-    ctx->last_size = 0;
-
-    r = ne_read_element(ctx, &id, NULL);
-    if (r != 1)
-      return -1;
-
-    if (id != ID_CUES)
-      return -1;
-
-    ctx->ancestor = NULL;
-    ne_ctx_push(ctx, ne_top_level_elements, ctx);
-    ne_ctx_push(ctx, ne_segment_elements, &ctx->segment);
-    ne_ctx_push(ctx, ne_cues_elements, &ctx->segment.cues);
-    /* parser will run until end of cues element. */
-    ctx->log(ctx, NESTEGG_LOG_DEBUG, "seek: parsing cue elements");
-    r = ne_parse(ctx, ne_cues_elements);
-    while (ctx->ancestor)
-      ne_ctx_pop(ctx);
-
-    /* Reset parser state to original state and seek back to old position. */
-    if (ne_ctx_restore(ctx, &state) != 0)
-      return -1;
-
-    if (r < 0)
+    /* Check cues were loaded. */
+    node = ctx->segment.cues.cue_point.head;
+    if (!node)
       return -1;
   }
 
@@ -1624,7 +1703,7 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
   ne_ctx_push(ctx, ne_top_level_elements, ctx);
   ne_ctx_push(ctx, ne_segment_elements, &ctx->segment);
   ctx->log(ctx, NESTEGG_LOG_DEBUG, "seek: parsing cluster elements");
-  r = ne_parse(ctx, NULL);
+  r = ne_parse(ctx, NULL, -1);
   if (r != 1)
     return -1;
 
@@ -1859,19 +1938,19 @@ nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
     if (r != 1)
       return r;
 
-    /* any suspend fields must be handled here */
+    /* Any DESC_FLAG_SUSPEND fields must be handled here. */
     if (ne_is_suspend_element(id)) {
       r = ne_read_element(ctx, &id, &size);
       if (r != 1)
         return r;
 
-      /* the only suspend fields are blocks and simple blocks, which we
+      /* The only DESC_FLAG_SUSPEND fields are Blocks and SimpleBlocks, which we
          handle directly. */
       r = ne_read_block(ctx, id, size, pkt);
       return r;
     }
 
-    r =  ne_parse(ctx, NULL);
+    r =  ne_parse(ctx, NULL, -1);
     if (r != 1)
       return r;
   }

@@ -17,10 +17,10 @@ extern "C" {
 
     @section intro Introduction
 
-    This is the documentation fot the <tt>libnestegg</tt> C API.
+    This is the documentation for the <tt>libnestegg</tt> C API.
     <tt>libnestegg</tt> is a demultiplexing library for <a
-    href="http://www.matroska.org/">Matroska</a> and <a
-    href="http://www.webmproject.org/">WebMedia</a> media files.
+    href="http://www.webmproject.org/code/specs/container/">WebM</a>
+    media files.
 
     @section example Example code
 
@@ -149,9 +149,10 @@ typedef void (* nestegg_log)(nestegg * context, unsigned int severity, char cons
     @param context  Storage for the new nestegg context.  @see nestegg_destroy
     @param io       User supplied IO context.
     @param callback Optional logging callback function pointer.  May be NULL.
+    @param max_offset Optional maximum offset to be read. Set -1 to ignore.
     @retval  0 Success.
     @retval -1 Error. */
-int nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback);
+int nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback, int64_t max_offset);
 
 /** Destroy a nestegg context and free associated memory.
     @param context #nestegg context to be freed.  @see nestegg_init */
@@ -179,6 +180,19 @@ int nestegg_tstamp_scale(nestegg * context, uint64_t * scale);
     @retval  0 Success.
     @retval -1 Error. */
 int nestegg_track_count(nestegg * context, unsigned int * tracks);
+
+/** Query the start and end offset for a particular cluster.
+    @param context     Stream context initialized by #nestegg_init.
+    @param cluster_num Zero-based cluster number; order they appear in cues.
+    @param max_offset  Optional maximum offset to be read. Set -1 to ignore.
+    @param start_pos   Starting offset of the cluster. -1 means non-existant.
+    @param end_pos     Starting offset of the cluster. -1 means non-existant or
+                       final cluster.
+    @retval  0 Success.
+    @retval -1 Error. */
+int nestegg_get_cue_point(nestegg * context, unsigned int cluster_num,
+                          int64_t max_offset, int64_t * start_pos,
+                          int64_t * end_pos);
 
 /** Seek @a track to @a tstamp.  Stream seek will terminate at the earliest
     key point in the stream at or before @a tstamp.  Other tracks in the
