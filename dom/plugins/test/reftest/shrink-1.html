@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <script>
+function doShrink()
+{
+  var plugin = document.getElementById("plugin");
+  plugin.setSlowPaint(true);
+  plugin.width = "50";
+  plugin.height = "40";
+
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", doShrink, false);
+  </script>
+</head>
+<body>
+  <embed id="plugin" type="application/x-test"
+         width="300" height="500">
+  </embed>
+</body>
+</html>
