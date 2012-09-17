@@ -9,8 +9,6 @@
 #ifndef __mozilla_widget_GfxDriverInfo_h__
 #define __mozilla_widget_GfxDriverInfo_h__
 
-#define V(a,b,c,d) GFX_DRIVER_VERSION(a,b,c,d)
-
 // Macros for adding a blocklist item to the static list.
 #define APPEND_TO_DRIVER_BLOCKLIST(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, suggestedVersion) \
     mDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, suggestedVersion))
@@ -124,15 +122,100 @@ struct GfxDriverInfo
 #define GFX_DRIVER_VERSION(a,b,c,d) \
   ((uint64_t(a)<<48) | (uint64_t(b)<<32) | (uint64_t(c)<<16) | uint64_t(d))
 
+static uint64_t
+V(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
+{
+  // We make sure every driver number is padded by 0s, this will allow us the
+  // easiest 'compare as if decimals' approach. See ParseDriverVersion for a
+  // more extensive explanation of this approach.
+  while (b > 0 && b < 1000) {
+    b *= 10;
+  }
+  while (c > 0 && c < 1000) {
+    c *= 10;
+  }
+  while (d > 0 && d < 1000) {
+    d *= 10;
+  }
+  return GFX_DRIVER_VERSION(a, b, c, d);
+}
+
+// All destination string storage needs to have at least 5 bytes available.
+static bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr, char *aCStr, char *aDStr)
+{
+  // sscanf doesn't do what we want here to we parse this manually.
+  int len = strlen(aSource);
+  char *dest[4] = { aAStr, aBStr, aCStr, aDStr };
+  int destIdx = 0;
+  int destPos = 0;
+
+  for (int i = 0; i < len; i++) {
+    if (destIdx > ArrayLength(dest)) {
+      // Invalid format found. Ensure we don't access dest beyond bounds.
+      return false;
+    }
+
+    if (aSource[i] == '.') {
+      dest[destIdx++][destPos] = 0;
+      destPos = 0;
+      continue;
+    }
+
+    if (destPos > 3) {
+      // Ignore more than 4 chars. Ensure we never access dest[destIdx]
+      // beyond its bounds.
+      continue;
+    }
+
+    dest[destIdx][destPos++] = aSource[i];
+  }
+
+  // Add last terminator.
+  dest[destIdx][destPos] = 0;
+
+  if (destIdx != ArrayLength(dest) - 1) {
+    return false;
+  }
+  return true;
+}
+
+// This allows us to pad driver versiopn 'substrings' with 0s, this
+// effectively allows us to treat the version numbers as 'decimals'. This is
+// a little strange but this method seems to do the right thing for all
+// different vendor's driver strings. i.e. .98 will become 9800, which is
+// larger than .978 which would become 9780.
+static void PadDriverDecimal(char *aString)
+{
+  for (int i = 0; i < 4; i++) {
+    if (!aString[i]) {
+      for (int c = i; c < 4; c++) {
+        aString[c] = '0';
+      }
+      break;
+    }
+  }
+  aString[4] = 0;
+}
+
 inline bool
 ParseDriverVersion(nsAString& aVersion, uint64_t *aNumericVersion)
 {
 #if defined(XP_WIN)
   int a, b, c, d;
+  char aStr[8], bStr[8], cStr[8], dStr[8];
   /* honestly, why do I even bother */
-  if (sscanf(NS_LossyConvertUTF16toASCII(aVersion).get(),
-             "%d.%d.%d.%d", &a, &b, &c, &d) != 4)
+  if (!SplitDriverVersion(NS_LossyConvertUTF16toASCII(aVersion).get(), aStr, bStr, cStr, dStr))
     return false;
+
+  PadDriverDecimal(bStr);
+  PadDriverDecimal(cStr);
+  PadDriverDecimal(dStr);
+
+  a = atoi(aStr);
+  b = atoi(bStr);
+  c = atoi(cStr);
+  d = atoi(dStr);
+
   if (a < 0 || a > 0xffff) return false;
   if (b < 0 || b > 0xffff) return false;
   if (c < 0 || c > 0xffff) return false;

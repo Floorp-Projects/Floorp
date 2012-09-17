@@ -33,9 +33,6 @@ NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 
 static const uint32_t allWindowsVersions = 0xffffffff;
 
-#define V(a,b,c,d) GFX_DRIVER_VERSION(a,b,c,d)
-
-
 GfxInfo::GfxInfo()
  :  mWindowsVersion(0),
     mHasDualGPU(false),
