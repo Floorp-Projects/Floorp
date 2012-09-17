@@ -111,10 +111,6 @@ public:
         // this, we'll only disable this for maemo.
         return true;
 #elif defined(MOZ_X11)
-        if (GetContentBackend() != BACKEND_NONE &&
-            GetContentBackend() != BACKEND_CAIRO)
-            return false;
-
         return sUseXRender;
 #else
         return false;

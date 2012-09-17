@@ -70,9 +70,8 @@ gfxPlatformMac::gfxPlatformMac()
     }
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
-    uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA) | (1 << BACKEND_COREGRAPHICS);
-    uint32_t contentMask = 0;
-    InitBackendPrefs(canvasMask, contentMask);
+    uint32_t backendMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA) | (1 << BACKEND_COREGRAPHICS);
+    InitCanvasBackend(backendMask);
 }
 
 gfxPlatformMac::~gfxPlatformMac()

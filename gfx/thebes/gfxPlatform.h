@@ -202,7 +202,7 @@ public:
     void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
       aObj.DefineProperty("AzureCanvasBackend", GetBackendName(mPreferredCanvasBackend));
       aObj.DefineProperty("AzureFallbackCanvasBackend", GetBackendName(mFallbackCanvasBackend));
-      aObj.DefineProperty("AzureContentBackend", GetBackendName(mContentBackend));
+      aObj.DefineProperty("AzureContentBackend", GetBackendName(GetContentBackend()));
     }
 
     mozilla::gfx::BackendType GetPreferredCanvasBackend() {
@@ -478,35 +478,17 @@ protected:
      * The backend used is determined by aBackendBitmask and the order specified
      * by the gfx.canvas.azure.backends pref.
      */
-    void InitBackendPrefs(uint32_t aCanvasBitmask, uint32_t aContentBitmask);
-
+    void InitCanvasBackend(uint32_t aBackendBitmask);
     /**
      * returns the first backend named in the pref gfx.canvas.azure.backends
      * which is a component of aBackendBitmask, a bitmask of backend types
      */
     static mozilla::gfx::BackendType GetCanvasBackendPref(uint32_t aBackendBitmask);
-
-    /**
-     * returns the first backend named in the pref gfx.content.azure.backend
-     * which is a component of aBackendBitmask, a bitmask of backend types
-     */
-    static mozilla::gfx::BackendType GetContentBackendPref(uint32_t aBackendBitmask);
-
-    /**
-     * Checks the aEnabledPrefName pref and returns BACKEND_NONE if the pref is
-     * not enabled. Otherwise it will return the first backend named in
-     * aBackendPrefName allowed by aBackendBitmask, a bitmask of backend types.
-     */
-    static mozilla::gfx::BackendType GetBackendPref(const char* aEnabledPrefName,
-                                                    const char* aBackendPrefName,
-                                                    uint32_t aBackendBitmask);
-    /**
-     * Decode the backend enumberation from a string.
-     */
     static mozilla::gfx::BackendType BackendTypeForName(const nsCString& aName);
 
-    mozilla::gfx::BackendType GetContentBackend() {
-      return mContentBackend;
+    virtual mozilla::gfx::BackendType GetContentBackend()
+    {
+      return mozilla::gfx::BACKEND_NONE;
     }
 
     int8_t  mAllowDownloadableFonts;
@@ -541,8 +523,6 @@ private:
     mozilla::gfx::BackendType mPreferredCanvasBackend;
     // The fallback draw target backend to use for canvas, if the preferred backend fails
     mozilla::gfx::BackendType mFallbackCanvasBackend;
-    // The backend to use for content
-    mozilla::gfx::BackendType mContentBackend;
 
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
     bool mWorkAroundDriverBugs;

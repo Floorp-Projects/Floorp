@@ -228,9 +228,8 @@ gfxPlatform::gfxPlatform()
 #endif
     mBidiNumeralOption = UNINITIALIZED_VALUE;
 
-    uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
-    uint32_t contentMask = 0;
-    InitCanvasBackend(canvasMask, contentMask);
+    uint32_t backendMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
+    InitCanvasBackend(backendMask);
 }
 
 gfxPlatform*
@@ -1185,30 +1184,25 @@ gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], uint32_t& aLen, eFontPre
 }
 
 void
-gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, uint32_t aContentBitmask)
+gfxPlatform::InitCanvasBackend(uint32_t aBackendBitmask)
 {
-    mPreferredCanvasBackend = GetCanvasBackendPref(aCanvasBitmask);
-    mFallbackCanvasBackend = GetCanvasBackendPref(aCanvasBitmask & ~(1 << mPreferredCanvasBackend));
-    mContentBackend = GetBackendPref("gfx.content.azure.enabled", "gfx.content.azure.backend", aContentBitmask);
+    if (!Preferences::GetBool("gfx.canvas.azure.enabled", false)) {
+        mPreferredCanvasBackend = BACKEND_NONE;
+        mFallbackCanvasBackend = BACKEND_NONE;
+        return;
+    }
+
+    mPreferredCanvasBackend = GetCanvasBackendPref(aBackendBitmask);
+    mFallbackCanvasBackend = GetCanvasBackendPref(aBackendBitmask & ~(1 << mPreferredCanvasBackend));
 }
 
 /* static */ BackendType
 gfxPlatform::GetCanvasBackendPref(uint32_t aBackendBitmask)
 {
-    return GetBackendPref("gfx.canvas.azure.enabled", "gfx.canvas.azure.backends", aBackendBitmask);
-}
-
-/* static */ BackendType
-gfxPlatform::GetBackendPref(const char* aEnabledPrefName, const char* aBackendPrefName, uint32_t aBackendBitmask)
-{
-    if (!Preferences::GetBool(aEnabledPref, false)) {
-        return BACKEND_NONE;
-    }
-
     if (!gBackendList) {
         gBackendList = new nsTArray<nsCString>();
         nsCString prefString;
-        if (NS_SUCCEEDED(Preferences::GetCString(aBackendPref, &prefString))) {
+        if (NS_SUCCEEDED(Preferences::GetCString("gfx.canvas.azure.backends", &prefString))) {
             ParseString(prefString, ',', *gBackendList);
         }
     }
