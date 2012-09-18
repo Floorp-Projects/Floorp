@@ -55,6 +55,7 @@
 #define DEVICESTORAGE_PICTURES   "pictures"
 #define DEVICESTORAGE_VIDEOS     "videos"
 #define DEVICESTORAGE_MUSIC      "music"
+#define DEVICESTORAGE_APPS       "apps"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::devicestorage;
@@ -129,6 +130,11 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIDOMBlob* aBlob)
     return StringBeginsWith(mimeType, NS_LITERAL_STRING("audio/"));
   }
 
+  if (aType.EqualsLiteral(DEVICESTORAGE_APPS)) {
+    // Apps have no restriction on mime types
+    return true;
+  }
+
   return false;
 }
 
@@ -136,6 +142,11 @@ bool
 DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
 {
   NS_ASSERTION(aFile, "Calling Check without a file");
+
+  if (aType.EqualsLiteral(DEVICESTORAGE_APPS)) {
+    // apps have no restrictions on what file extensions used.
+    return true;
+  }
 
   nsString path;
   aFile->GetPath(path);
@@ -170,7 +181,8 @@ DeviceStorageTypeChecker::GetPermissionForType(const nsAString& aType, nsACStrin
 {
   if (!aType.EqualsLiteral(DEVICESTORAGE_PICTURES) &&
       !aType.EqualsLiteral(DEVICESTORAGE_VIDEOS) &&
-      !aType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
+      !aType.EqualsLiteral(DEVICESTORAGE_MUSIC) &&
+      !aType.EqualsLiteral(DEVICESTORAGE_APPS)) {
     // unknown type
     return NS_ERROR_FAILURE;
   }
@@ -612,7 +624,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
   NS_ASSERTION(dirService, "Must have directory service");
 
   // Picture directory
-  if (aType.Equals(NS_LITERAL_STRING("pictures"))) {
+  if (aType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
 #ifdef MOZ_WIDGET_GONK
     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
@@ -625,7 +637,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
   }
 
   // Video directory
-  else if (aType.Equals(NS_LITERAL_STRING("videos"))) {
+  else if (aType.EqualsLiteral(DEVICESTORAGE_VIDEOS)) {
 #ifdef MOZ_WIDGET_GONK
     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
@@ -638,7 +650,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
   }
 
   // Music directory
-  else if (aType.Equals(NS_LITERAL_STRING("music"))) {
+  else if (aType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
 #ifdef MOZ_WIDGET_GONK
     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
@@ -647,6 +659,18 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
     dirService->Get(NS_UNIX_XDG_MUSIC_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #elif defined (XP_WIN)
     dirService->Get(NS_WIN_MUSIC_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
+#endif
+  }
+  
+  // Apps directory
+  else if (aType.EqualsLiteral(DEVICESTORAGE_APPS)) {
+#ifdef MOZ_WIDGET_GONK
+    NS_NewLocalFile(NS_LITERAL_STRING("/data"), false, getter_AddRefs(f));
+#else
+    dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
+    if (f) {
+      f->AppendRelativeNativePath(NS_LITERAL_CSTRING("webapps"));
+    }
 #endif
   }
 
