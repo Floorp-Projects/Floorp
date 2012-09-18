@@ -515,6 +515,36 @@ nsAString::ToInteger(nsresult *aErrorCode, uint32_t aRadix) const
 
   return result;
 }
+
+int64_t
+nsAString::ToInteger64(nsresult *aErrorCode, uint32_t aRadix) const
+{
+  NS_ConvertUTF16toUTF8 narrow(*this);
+
+  const char *fmt;
+  switch (aRadix) {
+  case 10:
+    fmt = "%lli";
+    break;
+
+  case 16:
+    fmt = "%llx";
+    break;
+
+  default:
+    NS_ERROR("Unrecognized radix!");
+    *aErrorCode = NS_ERROR_INVALID_ARG;
+    return 0;
+  }
+
+  int64_t result = 0;
+  if (PR_sscanf(narrow.get(), fmt, &result) == 1)
+    *aErrorCode = NS_OK;
+  else
+    *aErrorCode = NS_ERROR_FAILURE;
+
+  return result;
+}
 #endif // XPCOM_GLUE_AVOID_NSPR
 
 // nsACString
@@ -914,6 +944,34 @@ nsACString::ToInteger(nsresult *aErrorCode, uint32_t aRadix) const
   }
 
   int32_t result = 0;
+  if (PR_sscanf(nsCString(*this).get(), fmt, &result) == 1)
+    *aErrorCode = NS_OK;
+  else
+    *aErrorCode = NS_ERROR_FAILURE;
+
+  return result;
+}
+
+int64_t
+nsACString::ToInteger64(nsresult *aErrorCode, uint32_t aRadix) const
+{
+  const char *fmt;
+  switch (aRadix) {
+  case 10:
+    fmt = "%lli";
+    break;
+
+  case 16:
+    fmt = "%llx";
+    break;
+
+  default:
+    NS_ERROR("Unrecognized radix!");
+    *aErrorCode = NS_ERROR_INVALID_ARG;
+    return 0;
+  }
+
+  int64_t result = 0;
   if (PR_sscanf(nsCString(*this).get(), fmt, &result) == 1)
     *aErrorCode = NS_OK;
   else
