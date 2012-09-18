@@ -369,7 +369,7 @@ MarionetteDriverActor.prototype = {
     function waitForWindow() {
       let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       let win = this.getCurrentWindow();
-      if (!win || (appName != "B2G" && !win.gBrowser)) { 
+      if (!win || (appName == "Firefox" && !win.gBrowser) || (appName == "Fennec" && !win.BrowserApp)) { 
         checkTimer.initWithCallback(waitForWindow.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
       }
       else {
@@ -380,7 +380,7 @@ MarionetteDriverActor.prototype = {
     if (!Services.prefs.getBoolPref("marionette.contentListener")) {
       waitForWindow.call(this);
     }
-    else if ((appName == "B2G") && (this.curBrowser == null)) {
+    else if ((appName != "Firefox") && (this.curBrowser == null)) {
       //if there is a content listener, then we just wake it up
       this.addBrowser(this.getCurrentWindow());
       this.curBrowser.startSession(false, this.getCurrentWindow(), this.whenBrowserStarted);
@@ -1560,8 +1560,13 @@ BrowserObj.prototype = {
    *        current window reference
    */
   setBrowser: function BO_setBrowser(win) {
-    if (appName != "B2G") {
-      this.browser = win.gBrowser; 
+    switch (appName) {
+      case "Firefox":
+        this.browser = win.gBrowser;
+        break;
+      case "Fennec":
+        this.browser = win.BrowserApp;
+        break;
     }
   },
   /**
@@ -1576,7 +1581,7 @@ BrowserObj.prototype = {
    *        If true, create new tab
    */
   startSession: function BO_startSession(newTab, win, callback) {
-    if (appName == "B2G") {
+    if (appName != "Firefox") {
       callback(win, newTab);
     }
     else if (newTab) {
@@ -1645,7 +1650,7 @@ BrowserObj.prototype = {
   register: function BO_register(id, href) {
     let uid = id + ((appName == "B2G") ? '-b2g' : '');
     if (this.curFrameId == null) {
-      if ((!this.newSession) || (this.newSession && ((appName == "B2G") || href.indexOf(this.startPage) > -1))) {
+      if ((!this.newSession) || (this.newSession && ((appName != "Firefox") || href.indexOf(this.startPage) > -1))) {
         this.curFrameId = uid;
         this.mainContentId = uid;
       }
