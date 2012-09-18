@@ -574,13 +574,13 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
 
   if (!result) {
     result = NS_NewStyleContext(aParentContext, aPseudoTag, aPseudoType,
-                                aRuleNode, PresContext());
+                                aRuleNode);
     if (!result)
       return nullptr;
     if (aVisitedRuleNode) {
       nsRefPtr<nsStyleContext> resultIfVisited =
         NS_NewStyleContext(parentIfVisited, aPseudoTag, aPseudoType,
-                           aVisitedRuleNode, PresContext());
+                           aVisitedRuleNode);
       if (!resultIfVisited) {
         return nullptr;
       }
