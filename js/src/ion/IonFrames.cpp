@@ -122,10 +122,7 @@ IonFrameIterator::isDOMExit() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    IonCode *code = exitFrame()->footer()->ionCode();
-    return code == ION_FRAME_DOMGETTER ||
-           code == ION_FRAME_DOMSETTER ||
-           code == ION_FRAME_DOMMETHOD;
+    return exitFrame()->isDomExit();
 }
 
 bool
@@ -177,8 +174,6 @@ IonFrameIterator::actualArgs() const
 uint8 *
 IonFrameIterator::prevFp() const
 {
-    JS_ASSERT(type_ != IonFrame_Entry);
-
     size_t currentSize = SizeOfFramePrefix(type_);
     // This quick fix must be removed as soon as bug 717297 land.  This is
     // needed because the descriptor size of JS-to-JS frame which is just after
@@ -491,6 +486,25 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
         JS_ASSERT(v == IMPL_TO_JSVAL(layout));
     }
 #endif
+}
+
+void
+IonActivationIterator::ionStackRange(uintptr_t *&min, uintptr_t *&end)
+{
+    IonFrameIterator frames(top());
+
+    IonExitFrameLayout *exitFrame = frames.exitFrame();
+    IonExitFooterFrame *footer = exitFrame->footer();
+    const VMFunction *f = footer->function();
+    if (exitFrame->isWrapperExit() && f->outParam == Type_Handle)
+        min = reinterpret_cast<uintptr_t *>(footer->outVp());
+    else
+        min = reinterpret_cast<uintptr_t *>(footer);
+
+    while (!frames.done())
+        ++frames;
+
+    end = reinterpret_cast<uintptr_t *>(frames.prevFp());
 }
 
 static void

@@ -160,54 +160,6 @@ void nsOggReader::BuildSerialList(nsTArray<uint32_t>& aTracks)
   }
 }
 
-static bool IsValidVorbisTagName(nsCString& name)
-{
-  // Tag names must consist of ASCII 0x20 through 0x7D,
-  // excluding 0x3D '=' which is the separator.
-  uint32_t length = name.Length();
-  const char *data = name.Data();
-
-  for (uint32_t i = 0; i < length; i++) {
-    if (data[i] < 0x20 || data[i] > 0x7D || data[i] == '=') {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static
-nsHTMLMediaElement::MetadataTags* TagsFromVorbisComment(vorbis_comment *vc)
-{
-  nsHTMLMediaElement::MetadataTags* tags;
-  int i;
-
-  tags = new nsHTMLMediaElement::MetadataTags;
-  tags->Init();
-  for (i = 0; i < vc->comments; i++) {
-    char *comment = vc->user_comments[i];
-    char *div = (char*)memchr(comment, '=', vc->comment_lengths[i]);
-    if (!div) {
-      LOG(PR_LOG_DEBUG, ("Skipping vorbis comment: no separator"));
-      continue;
-    }
-    nsCString key = nsCString(comment, div-comment);
-    if (!IsValidVorbisTagName(key)) {
-      LOG(PR_LOG_DEBUG, ("Skipping vorbis comment: invalid tag name"));
-      continue;
-    }
-    uint32_t value_length = vc->comment_lengths[i] - (div-comment);
-    nsCString value = nsCString(div + 1, value_length);
-    if (!IsUTF8(value)) {
-      LOG(PR_LOG_DEBUG, ("Skipping vorbis comment: invalid UTF-8 in value"));
-      continue;
-    }
-    tags->Put(key, value);
-  }
-
-  return tags;
-}
-
 nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo,
                                    nsHTMLMediaElement::MetadataTags** aTags)
 {
@@ -344,7 +296,7 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo,
     memcpy(&mVorbisInfo, &mVorbisState->mInfo, sizeof(mVorbisInfo));
     mVorbisInfo.codec_setup = NULL;
     mVorbisSerial = mVorbisState->mSerial;
-    *aTags = TagsFromVorbisComment(&mVorbisState->mComment);
+    *aTags = mVorbisState->GetTags();
   } else {
     memset(&mVorbisInfo, 0, sizeof(mVorbisInfo));
   }
@@ -355,6 +307,8 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo,
     mInfo.mAudioChannels = mOpusState->mChannels > 2 ? 2 : mOpusState->mChannels;
     mOpusSerial = mOpusState->mSerial;
     mOpusPreSkip = mOpusState->mPreSkip;
+
+    *aTags = mOpusState->GetTags();
   }
 #endif
   if (mSkeletonState) {

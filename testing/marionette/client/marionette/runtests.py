@@ -28,7 +28,7 @@ except ImportError:
     sys.exit(1)
 
 from marionette import Marionette
-from marionette_test import MarionetteJSTestCase
+from marionette_test import MarionetteJSTestCase, MarionetteTestCase
 
 
 class MarionetteTestResult(unittest._TextTestResult):
@@ -83,6 +83,11 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
 
     resultclass = MarionetteTestResult
 
+    def __init__(self, **kwargs):
+        self.perf = kwargs['perf']
+        del kwargs['perf']
+        unittest.TextTestRunner.__init__(self, **kwargs)
+
     def _makeResult(self):
         return self.resultclass(self.stream, self.descriptions, self.verbosity)
 
@@ -107,7 +112,7 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
         timeTaken = stopTime - startTime
         result.printErrors()
         result.printLogs(test)
-        if options.perf:
+        if self.perf:
             result.getPerfData(test)
         if hasattr(result, 'separator2'):
             self.stream.writeln(result.separator2)
@@ -156,7 +161,7 @@ class MarionetteTestRunner(object):
                  bin=None, profile=None, autolog=False, revision=None,
                  es_server=None, rest_server=None, logger=None,
                  testgroup="marionette", noWindow=False, logcat_dir=None,
-                 xml_output=None):
+                 xml_output=None, repeat=0, perf=False, perfserv=None):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
@@ -178,6 +183,13 @@ class MarionetteTestRunner(object):
         self.logcat_dir = logcat_dir
         self.perfrequest = None
         self.xml_output = xml_output
+        self.repeat = repeat
+        self.perf = perf
+        self.perfserv = perfserv
+
+        # set up test handlers
+        self.test_handlers = []
+        self.register_handlers()
 
         self.reset_test_stats()
 
@@ -293,10 +305,10 @@ class MarionetteTestRunner(object):
     def run_tests(self, tests, testtype=None):
         self.reset_test_stats()
         starttime = datetime.utcnow()
-        while options.repeat >=0 :
+        while self.repeat >=0:
             for test in tests:
                 self.run_test(test, testtype)
-            options.repeat -= 1
+            self.repeat -= 1
         self.logger.info('\nSUMMARY\n-------')
         self.logger.info('passed: %d' % self.passed)
         self.logger.info('failed: %d' % self.failed)
@@ -354,9 +366,9 @@ class MarionetteTestRunner(object):
             manifest = TestManifest()
             manifest.read(filepath)
 
-            if options.perf:
-                if options.perfserv is None:
-                    options.perfserv = manifest.get("perfserv")[0]
+            if self.perf:
+                if self.perfserv is None:
+                    self.perfserv = manifest.get("perfserv")[0]
                 machine_name = socket.gethostname()
                 try:
                     manifest.has_key("machine_name")
@@ -366,7 +378,7 @@ class MarionetteTestRunner(object):
                 os_name = platform.system()
                 os_version = platform.release()
                 self.perfrequest = datazilla.DatazillaRequest(
-                             server=options.perfserv,
+                             server=self.perfserv,
                              machine_name=machine_name,
                              os=os_name,
                              os_version=os_version,
@@ -386,24 +398,13 @@ class MarionetteTestRunner(object):
 
         self.logger.info('TEST-START %s' % os.path.basename(test))
 
-        if file_ext == '.py':
-            test_mod = imp.load_source(mod_name, filepath)
-
-            for name in dir(test_mod):
-                obj = getattr(test_mod, name)
-                if (isinstance(obj, (type, types.ClassType)) and
-                    issubclass(obj, unittest.TestCase)):
-                    testnames = testloader.getTestCaseNames(obj)
-                    for testname in testnames:
-                        suite.addTest(obj(weakref.ref(self.marionette),
-                                      methodName=testname,
-                                      filepath=filepath))
-
-        elif file_ext == '.js':
-            suite.addTest(MarionetteJSTestCase(weakref.ref(self.marionette), jsFile=filepath))
+        for handler in self.test_handlers:
+            if handler.match(os.path.basename(test)):
+                handler.add_tests_to_suite(mod_name, filepath, suite, testloader, self.marionette)
+                break
 
         if suite.countTestCases():
-            results = MarionetteTextTestRunner(verbosity=3).run(suite)
+            results = MarionetteTextTestRunner(verbosity=3, perf=self.perf).run(suite)
             self.results.append(results)
 
             self.failed += len(results.failures) + len(results.errors)
@@ -418,6 +419,9 @@ class MarionetteTestRunner(object):
                 self.failed += len(results.unexpectedSuccesses)
                 for failure in results.unexpectedSuccesses:
                     self.failures.append((results.getInfo(failure[0]), failure[1], 'TEST-UNEXPECTED-PASS'))
+
+    def register_handlers(self):
+        self.test_handlers.extend([MarionetteTestCase, MarionetteJSTestCase])
 
     def cleanup(self):
         if self.httpd:
@@ -515,7 +519,7 @@ class MarionetteTestRunner(object):
         return doc.toxml(encoding='utf-8')
 
 
-if __name__ == "__main__":
+def parse_options():
     parser = OptionParser(usage='%prog [options] test_file_or_dir <test_file_or_dir> ...')
     parser.add_option("--autolog",
                       action = "store_true", dest = "autolog",
@@ -610,26 +614,41 @@ if __name__ == "__main__":
         assert len(dims) == 2
         width = str(int(dims[0]))
         height = str(int(dims[1]))
-        res = 'x'.join([width, height])
+        options.emulator_res = 'x'.join([width, height])
     except:
         raise ValueError('Invalid emulator resolution format. '
-                         'Should be like "480x800".\n')
+                         'Should be like "480x800".')
 
-    runner = MarionetteTestRunner(address=options.address,
-                                  emulator=options.emulator,
-                                  emulatorBinary=options.emulatorBinary,
-                                  emulatorImg=options.emulatorImg,
-                                  emulator_res=res,
-                                  homedir=options.homedir,
-                                  logcat_dir=options.logcat_dir,
-                                  bin=options.bin,
-                                  profile=options.profile,
-                                  noWindow=options.noWindow,
-                                  revision=options.revision,
-                                  testgroup=options.testgroup,
-                                  autolog=options.autolog,
-                                  xml_output=options.xml_output)
+    return (options, tests)
+
+def startTestRunner(runner_class, options, tests):
+    runner = runner_class(address=options.address,
+                          emulator=options.emulator,
+                          emulatorBinary=options.emulatorBinary,
+                          emulatorImg=options.emulatorImg,
+                          emulator_res=options.emulator_res,
+                          homedir=options.homedir,
+                          logcat_dir=options.logcat_dir,
+                          bin=options.bin,
+                          profile=options.profile,
+                          noWindow=options.noWindow,
+                          revision=options.revision,
+                          testgroup=options.testgroup,
+                          autolog=options.autolog,
+                          xml_output=options.xml_output,
+                          repeat=options.repeat,
+                          perf=options.perf,
+                          perfserv=options.perfserv)
     runner.run_tests(tests, testtype=options.type)
+    return runner
+
+def cli(runner_class=MarionetteTestRunner):
+    options, tests = parse_options()
+    runner = startTestRunner(runner_class, options, tests)
     if runner.failed > 0:
         sys.exit(10)
+
+if __name__ == "__main__":
+    cli()
+
 

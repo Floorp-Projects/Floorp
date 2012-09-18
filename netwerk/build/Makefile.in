@@ -61,6 +61,11 @@ ifeq (android,$(MOZ_WIDGET_TOOLKIT))
         ../system/android/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
 endif
 
+ifdef MOZ_DASH
+    SHARED_LIBRARY_LIBS += \
+        ../dash/mpd/$(LIB_PREFIX)nkdashmpd_s.$(LIB_SUFFIX)
+endif
+
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base/src \
   -I$(srcdir)/../dns \

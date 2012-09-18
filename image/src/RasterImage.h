@@ -651,6 +651,9 @@ private: // data
   // of frames, or no more owning request
   bool                       mAnimationFinished:1;
 
+  // Whether we're calling Decoder::Finish() from ShutdownDecoder.
+  bool                       mFinishing:1;
+
   // Decoding
   nsresult WantDecodedFrames();
   nsresult SyncDecode();

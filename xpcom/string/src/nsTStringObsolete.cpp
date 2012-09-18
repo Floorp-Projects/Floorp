@@ -233,6 +233,133 @@ nsTString_CharT::ToInteger( nsresult* aErrorCode, uint32_t aRadix ) const
 
 
   /**
+   * nsTString::ToInteger64
+   */
+int64_t
+nsTString_CharT::ToInteger64( nsresult* aErrorCode, uint32_t aRadix ) const
+{
+  CharT*  cp=mData;
+  int32_t theRadix=10; // base 10 unless base 16 detected, or overriden (aRadix != kAutoDetect)
+  int64_t result=0;
+  bool    negate=false;
+  CharT   theChar=0;
+
+    //initial value, override if we find an integer
+  *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
+ 
+  if(cp) {
+ 
+    //begin by skipping over leading chars that shouldn't be part of the number...
+   
+    CharT*  endcp=cp+mLength;
+    bool    done=false;
+   
+    while((cp<endcp) && (!done)){
+      switch(*cp++) {
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+          theRadix=16;
+          done=true;
+          break;
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+          done=true;
+          break;
+        case '-':
+          negate=true; //fall through...
+          break;
+        case 'X': case 'x':
+          theRadix=16;
+          break;
+        default:
+          break;
+      } //switch
+    }
+
+    if (done) {
+
+        //integer found
+      *aErrorCode = NS_OK;
+
+      if (aRadix!=kAutoDetect) theRadix = aRadix; // override
+
+        //now iterate the numeric chars and build our result
+      CharT* first=--cp;  //in case we have to back up.
+      bool haveValue = false;
+
+      while(cp<endcp){
+        int64_t oldresult = result;
+
+        theChar=*cp++;
+        if(('0'<=theChar) && (theChar<='9')){
+          result = (theRadix * result) + (theChar-'0');
+          haveValue = true;
+        }
+        else if((theChar>='A') && (theChar<='F')) {
+          if(10==theRadix) {
+            if(kAutoDetect==aRadix){
+              theRadix=16;
+              cp=first; //backup
+              result=0;
+              haveValue = false;
+            }
+            else {
+              *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
+              result=0;
+              break;
+            }
+          }
+          else {
+            result = (theRadix * result) + ((theChar-'A')+10);
+            haveValue = true;
+          }
+        }
+        else if((theChar>='a') && (theChar<='f')) {
+          if(10==theRadix) {
+            if(kAutoDetect==aRadix){
+              theRadix=16;
+              cp=first; //backup
+              result=0;
+              haveValue = false;
+            }
+            else {
+              *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
+              result=0;
+              break;
+            }
+          }
+          else {
+            result = (theRadix * result) + ((theChar-'a')+10);
+            haveValue = true;
+          }
+        }
+        else if((('X'==theChar) || ('x'==theChar)) && (!haveValue || result == 0)) {
+          continue;
+        }
+        else if((('#'==theChar) || ('+'==theChar)) && !haveValue) {
+          continue;
+        }
+        else {
+          //we've encountered a char that's not a legal number or sign
+          break;
+        }
+
+        if (result < oldresult) {
+          // overflow!
+          *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+          result = 0;
+          break;
+        }
+      } //while
+      if(negate)
+        result=-result;
+    } //if
+  }
+  return result;
+}
+
+
+/**
    * nsTString::Mid
    */
 

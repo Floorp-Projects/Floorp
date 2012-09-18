@@ -26,6 +26,7 @@ EXTRA_PP_COMPONENTS = \
         MozKeyboard.js \
         ProcessGlobal.js \
         PaymentGlue.js \
+        YoutubeProtocolHandler.js \
         $(NULL)
 
 ifdef MOZ_UPDATER

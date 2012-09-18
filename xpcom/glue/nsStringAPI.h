@@ -360,6 +360,14 @@ public:
    */
   NS_HIDDEN_(int32_t) ToInteger(nsresult* aErrorCode,
                                 uint32_t aRadix = 10) const;
+  /**
+   * Convert this string to a 64-bit integer.
+   *
+   * @param aErrorCode pointer to contain result code.
+   * @param aRadix must be 10 or 16
+   */
+  NS_HIDDEN_(int64_t) ToInteger64(nsresult* aErrorCode,
+                                  uint32_t aRadix = 10) const;
 #endif // XPCOM_GLUE_AVOID_NSPR
 
 protected:
@@ -711,6 +719,14 @@ public:
    */
   NS_HIDDEN_(int32_t) ToInteger(nsresult* aErrorCode,
                                 uint32_t aRadix = 10) const;
+  /**
+   * Convert this string to a 64-bit integer.
+   *
+   * @param aErrorCode pointer to contain result code.
+   * @param aRadix must be 10 or 16
+   */
+  NS_HIDDEN_(int64_t) ToInteger64(nsresult* aErrorCode,
+                                  uint32_t aRadix = 10) const;
 #endif // XPCOM_GLUE_AVOID_NSPR
 
 protected:

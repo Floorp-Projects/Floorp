@@ -372,7 +372,7 @@ public:
   virtual int64_t AudioQueueMemoryInUse() = 0;
 
   VideoFrameContainer* GetVideoFrameContainer() { return mVideoFrameContainer; }
-  mozilla::layers::ImageContainer* GetImageContainer()
+  virtual mozilla::layers::ImageContainer* GetImageContainer()
   {
     return mVideoFrameContainer ? mVideoFrameContainer->GetImageContainer() : nullptr;
   }

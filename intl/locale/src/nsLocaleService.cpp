@@ -109,23 +109,23 @@ nsLocaleService::nsLocaleService(void)
     // get the system LCID
     //
     LCID win_lcid = GetSystemDefaultLCID();
-    NS_ENSURE_TRUE(win_lcid, );
+    NS_ENSURE_TRUE_VOID(win_lcid);
     nsWin32Locale::GetXPLocale(win_lcid, xpLocale);
     nsresult rv = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
-    NS_ENSURE_SUCCESS(rv, );
+    NS_ENSURE_SUCCESS_VOID(rv);
 
     //
     // get the application LCID
     //
     win_lcid = GetUserDefaultLCID();
-    NS_ENSURE_TRUE(win_lcid, );
+    NS_ENSURE_TRUE_VOID(win_lcid);
     nsWin32Locale::GetXPLocale(win_lcid, xpLocale);
     rv = NewLocale(xpLocale, getter_AddRefs(mApplicationLocale));
-    NS_ENSURE_SUCCESS(rv, );
+    NS_ENSURE_SUCCESS_VOID(rv);
 #endif
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
     nsRefPtr<nsLocale> resultLocale(new nsLocale());
-    NS_ENSURE_TRUE(resultLocale, );
+    NS_ENSURE_TRUE_VOID(resultLocale);
 
 #ifdef MOZ_WIDGET_QT
     const char* lang = QLocale::system().name().toAscii();

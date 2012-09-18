@@ -17,6 +17,7 @@
 #include <opus/opus.h>
 #include "opus/opus_multistream.h"
 // For MOZ_SAMPLE_TYPE_*
+#include "nsHTMLMediaElement.h"
 #include "nsBuiltinDecoderStateMachine.h"
 #include "nsBuiltinDecoderReader.h"
 #endif
@@ -94,6 +95,11 @@ public:
   // releasing it or queuing it for later processing.
   virtual bool DecodeHeader(ogg_packet* aPacket) {
     return (mDoneReadingHeaders = true);
+  }
+
+  // Build a hash table with tag metadata parsed from the stream.
+  virtual nsHTMLMediaElement::MetadataTags* GetTags() {
+    return nullptr;
   }
 
   // Returns the end time that a granulepos represents.
@@ -187,6 +193,16 @@ protected:
   // Temporary buffer in which to store packets while we're reading packets
   // in order to capture granulepos.
   nsTArray<ogg_packet*> mUnstamped;
+
+  // Validation utility for vorbis-style tag names.
+  static bool IsValidVorbisTagName(nsCString& aName);
+
+  // Utility method to parse and add a vorbis-style comment
+  // to a metadata hash table. Most Ogg-encapsulated codecs
+  // use the vorbis comment format for metadata.
+  static bool AddVorbisComment(nsHTMLMediaElement::MetadataTags* aTags,
+                        const char* aComment,
+                        uint32_t aLength);
 };
 
 class nsVorbisState : public nsOggCodecState {
@@ -201,6 +217,9 @@ public:
   nsresult Reset();
   bool IsHeader(ogg_packet* aPacket);
   nsresult PageIn(ogg_page* aPage); 
+
+  // Return a hash table with tag metadata.
+  nsHTMLMediaElement::MetadataTags* GetTags();
 
   // Returns the end time that a granulepos represents.
   static int64_t Time(vorbis_info* aInfo, int64_t aGranulePos); 
@@ -337,7 +356,13 @@ public:
   // used to calculate the amount we should trim from the last packet.
   int64_t mPrevPacketGranulepos;
 
+  // Construct and return a table of tags from the metadata header.
+  nsHTMLMediaElement::MetadataTags* GetTags();
+
 private:
+
+  nsCString mVendorString;   // Encoder vendor string from the header.
+  nsTArray<nsCString> mTags; // Unparsed comment strings from the header.
 
   // Reconstructs the granulepos of Opus packets stored in the
   // mUnstamped array. mUnstamped must be filled with consecutive packets from

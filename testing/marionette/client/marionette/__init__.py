@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette import Marionette, HTMLElement
-from marionette_test import MarionetteTestCase
+from marionette_test import MarionetteTestCase, CommonTestCase
 from emulator import Emulator
+from runtests import MarionetteTestRunner
 
