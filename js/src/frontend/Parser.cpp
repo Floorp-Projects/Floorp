@@ -2960,6 +2960,39 @@ Parser::matchInOrOf(bool *isForOfp)
     return false;
 }
 
+static bool
+IsValidForStatementLHS(ParseNode *pn1, JSVersion version, bool forDecl, bool forEach, bool forOf)
+{
+    return !(forDecl
+             ? (pn1->pn_count > 1 || pn1->isOp(JSOP_DEFCONST)
+#if JS_HAS_DESTRUCTURING
+                || (version == JSVERSION_1_7 &&
+                    !forEach &&
+                    !forOf &&
+                    (pn1->pn_head->isKind(PNK_OBJECT) ||
+                     (pn1->pn_head->isKind(PNK_ARRAY) &&
+                      pn1->pn_head->pn_count != 2) ||
+                     (pn1->pn_head->isKind(PNK_ASSIGN) &&
+                      (!pn1->pn_head->pn_left->isKind(PNK_ARRAY) ||
+                       pn1->pn_head->pn_left->pn_count != 2))))
+#endif
+                 )
+             : (!pn1->isKind(PNK_NAME) &&
+                !pn1->isKind(PNK_DOT) &&
+#if JS_HAS_DESTRUCTURING
+                ((version == JSVERSION_1_7 &&
+                  !forEach &&
+                  !forOf)
+                 ? (!pn1->isKind(PNK_ARRAY) || pn1->pn_count != 2)
+                 : (!pn1->isKind(PNK_ARRAY) && !pn1->isKind(PNK_OBJECT))) &&
+#endif
+                !pn1->isKind(PNK_CALL) &&
+#if JS_HAS_XML_SUPPORT
+                !pn1->isKind(PNK_XMLUNARY) &&
+#endif
+                !pn1->isKind(PNK_ELEM)));
+}
+
 ParseNode *
 Parser::forStatement()
 {
@@ -3087,37 +3120,8 @@ Parser::forStatement()
         pn->pn_iflags |= (forOf ? JSITER_FOR_OF : JSITER_ENUMERATE);
 
         /* Check that the left side of the 'in' or 'of' is valid. */
-        if (forDecl
-            ? (pn1->pn_count > 1 || pn1->isOp(JSOP_DEFCONST)
-#if JS_HAS_DESTRUCTURING
-               || (versionNumber() == JSVERSION_1_7 &&
-                   pn->isOp(JSOP_ITER) &&
-                   !(pn->pn_iflags & JSITER_FOREACH) &&
-                   !forOf &&
-                   (pn1->pn_head->isKind(PNK_OBJECT) ||
-                    (pn1->pn_head->isKind(PNK_ARRAY) &&
-                     pn1->pn_head->pn_count != 2) ||
-                    (pn1->pn_head->isKind(PNK_ASSIGN) &&
-                     (!pn1->pn_head->pn_left->isKind(PNK_ARRAY) ||
-                      pn1->pn_head->pn_left->pn_count != 2))))
-#endif
-              )
-            : (!pn1->isKind(PNK_NAME) &&
-               !pn1->isKind(PNK_DOT) &&
-#if JS_HAS_DESTRUCTURING
-               ((versionNumber() == JSVERSION_1_7 &&
-                 pn->isOp(JSOP_ITER) &&
-                 !(pn->pn_iflags & JSITER_FOREACH) &&
-                 !forOf)
-                ? (!pn1->isKind(PNK_ARRAY) || pn1->pn_count != 2)
-                : (!pn1->isKind(PNK_ARRAY) && !pn1->isKind(PNK_OBJECT))) &&
-#endif
-               !pn1->isKind(PNK_CALL) &&
-#if JS_HAS_XML_SUPPORT
-               !pn1->isKind(PNK_XMLUNARY) &&
-#endif
-               !pn1->isKind(PNK_ELEM)))
-        {
+        bool forEach = bool(pn->pn_iflags & JSITER_FOREACH);
+        if (!IsValidForStatementLHS(pn1, versionNumber(), forDecl, forEach, forOf)) {
             reportError(pn1, JSMSG_BAD_FOR_LEFTSIDE);
             return NULL;
         }
