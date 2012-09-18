@@ -73,6 +73,9 @@ var gAllowsExtraUnusual = {
                  "1s bounce, 2s none": true },
 };
 
+gAllowsExtraUnusual["-moz-transition"] = gAllowsExtraUnusual["transition"];
+gAllowsExtraUnusual["-moz-animation"] = gAllowsExtraUnusual["animation"];
+
 function test_property(property)
 {
   var info = gCSSProperties[property];
