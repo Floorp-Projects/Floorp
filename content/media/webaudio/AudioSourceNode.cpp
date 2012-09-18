@@ -4,17 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#include "AudioSourceNode.h"
 
 namespace mozilla {
 namespace dom {
 
-// This is a helper class which enables Web Audio to be enabled or disabled
-// as whole.  Individual Web Audio object classes should inherit from this.
-class EnableWebAudioCheck {
-public:
-  static bool PrefEnabled();
-};
+NS_IMPL_ISUPPORTS_INHERITED0(AudioSourceNode, AudioNode)
+
+AudioSourceNode::AudioSourceNode(AudioContext* aContext)
+  : AudioNode(aContext)
+{
+}
 
 }
 }
