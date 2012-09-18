@@ -10,7 +10,6 @@
 #include "nsISupportsUtils.h"           // for NS_ADDREF
 #include "nsITransaction.h"             // for nsITransaction
 #include "nsString.h"                   // for nsAutoString
-#include "prtypes.h"                    // for uint32_t
 
 EditAggregateTxn::EditAggregateTxn()
   : EditTxn()

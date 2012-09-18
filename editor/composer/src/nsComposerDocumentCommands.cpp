@@ -27,7 +27,6 @@
 #include "nsIURI.h"                     // for nsIURI
 #include "nsPresContext.h"              // for nsPresContext
 #include "nscore.h"                     // for NS_IMETHODIMP, nsresult, etc
-#include "prtypes.h"                    // for uint32_t, int32_t
 
 class nsISupports;
 
