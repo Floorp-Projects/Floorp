@@ -101,7 +101,7 @@ def _protocolId(ptype):
     return ExprVar(_messageStartName(ptype))
 
 def _protocolIdType():
-    return Type('int32')
+    return Type.INT32
 
 def _actorName(pname, side):
     """|pname| is the protocol name. |side| is 'Parent' or 'Child'."""
@@ -110,7 +110,7 @@ def _actorName(pname, side):
     return pname + tag
 
 def _actorIdType():
-    return Type('int32')
+    return Type.INT32
 
 def _actorId(actor=None):
     if actor is not None:
@@ -1727,11 +1727,11 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
         if usesend:
             transitionfunc.addstmt(
-                StmtDecl(Decl(Type('int32', const=1), sendvar.name),
+                StmtDecl(Decl(Type('int32_t', const=1), sendvar.name),
                          init=ExprVar('mozilla::ipc::Trigger::Send')))
         if userecv:
             transitionfunc.addstmt(
-                StmtDecl(Decl(Type('int32', const=1), recvvar.name),
+                StmtDecl(Decl(Type('int32_t', const=1), recvvar.name),
                          init=ExprVar('mozilla::ipc::Trigger::Recv')))
         if usesend or userecv:
             transitionfunc.addstmt(Whitespace.NL)

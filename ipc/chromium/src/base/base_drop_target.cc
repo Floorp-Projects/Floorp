@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 IDropTargetHelper* BaseDropTarget::cached_drop_target_helper_ = NULL;
-int32 BaseDropTarget::drag_identity_ = 0;
+int32_t BaseDropTarget::drag_identity_ = 0;
 
 BaseDropTarget::BaseDropTarget(HWND hwnd)
     : hwnd_(hwnd),

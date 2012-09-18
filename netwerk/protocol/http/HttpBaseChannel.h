@@ -60,9 +60,7 @@ public:
   HttpBaseChannel();
   virtual ~HttpBaseChannel();
 
-  virtual nsresult Init(nsIURI *aURI, uint8_t aCaps, nsProxyInfo *aProxyInfo,
-                        uint32_t aProxyResolveFlags,
-                        nsIURI *aProxyURI);
+  virtual nsresult Init(nsIURI *aURI, uint8_t aCaps, nsProxyInfo *aProxyInfo);
 
   // nsIRequest
   NS_IMETHOD GetName(nsACString& aName);
@@ -226,7 +224,6 @@ protected:
   nsCOMPtr<nsIInputStream>          mUploadStream;
   nsAutoPtr<nsHttpResponseHead>     mResponseHead;
   nsRefPtr<nsHttpConnectionInfo>    mConnectionInfo;
-  nsCOMPtr<nsIProxyInfo>            mProxyInfo;
 
   nsCString                         mSpec; // ASCII encoded URL spec
   nsCString                         mContentTypeHint;
@@ -272,9 +269,6 @@ protected:
   uint32_t                          mSuspendCount;
 
   nsAutoPtr<nsTArray<nsCString> >   mRedirectedCachekeys;
-
-  uint32_t                          mProxyResolveFlags;
-  nsCOMPtr<nsIURI>                  mProxyURI;
 };
 
 // Share some code while working around C++'s absurd inability to handle casting

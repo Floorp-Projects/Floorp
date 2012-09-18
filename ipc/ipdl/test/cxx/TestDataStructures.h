@@ -20,7 +20,7 @@ class TestDataStructuresSub :
         public PTestDataStructuresSubChild
 {
 public:
-    TestDataStructuresSub(uint32 i) : mI(i)
+    TestDataStructuresSub(uint32_t i) : mI(i)
     { }
     virtual ~TestDataStructuresSub()
     { }
@@ -29,7 +29,7 @@ public:
       if (Deletion != why)
         fail("unexpected destruction!");
     }
-  uint32 mI;
+  uint32_t mI;
 };
 
 //-----------------------------------------------------------------------------

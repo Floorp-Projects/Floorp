@@ -54,7 +54,7 @@ struct ViewMsg_Navigate_Params {
   // Forward, and Reload navigations should have a valid page_id.  If the load
   // succeeds, then this page_id will be reflected in the resultant
   // ViewHostMsg_FrameNavigate message.
-  int32 page_id;
+  int32_t page_id;
 
   // The URL to load.
   GURL url;
@@ -84,7 +84,7 @@ struct ViewHostMsg_FrameNavigate_Params {
   // anytime a new session history entry is created. This means you'll get new
   // page IDs for user actions, and the old page IDs will be reloaded when
   // iframes are loaded automatically.
-  int32 page_id;
+  int32_t page_id;
 
   // URL of the page being loaded.
   GURL url;
@@ -259,11 +259,11 @@ struct ViewHostMsg_Resource_Request {
   ResourceType::Type resource_type;
 
   // Used by plugin->browser requests to get the correct URLRequestContext.
-  uint32 request_context;
+  uint32_t request_context;
 
   // Indicates which frame (or worker context) the request is being loaded into,
   // or kNoAppCacheContextId.
-  int32 app_cache_context_id;
+  int32_t app_cache_context_id;
 
   // Optional upload data (may be null).
   scoped_refptr<net::UploadData> upload_data;
@@ -1062,7 +1062,7 @@ struct ParamTraits<net::UploadData::Element> {
     } else {
       DCHECK(type == net::UploadData::TYPE_FILE);
       FilePath file_path;
-      uint64 offset, length;
+      uint64_t offset, length;
       if (!ReadParam(m, iter, &file_path))
         return false;
       if (!ReadParam(m, iter, &offset))

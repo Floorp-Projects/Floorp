@@ -74,6 +74,21 @@ public:
     return static_cast<nsPaintRequestList*>(aSupports);
   }
 
+  uint32_t Length()
+  {
+    return mArray.Count();
+  }
+
+  nsIDOMPaintRequest* Item(uint32_t aIndex)
+  {
+    return mArray.SafeObjectAt(aIndex);
+  }
+  nsIDOMPaintRequest* IndexedGetter(uint32_t aIndex, bool& aFound)
+  {
+    aFound = aIndex < static_cast<uint32_t>(mArray.Count());
+    return aFound ? mArray.ObjectAt(aIndex) : nullptr;
+  }
+
 private:
   ~nsPaintRequestList() {}
 

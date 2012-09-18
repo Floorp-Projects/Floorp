@@ -22,7 +22,7 @@ TLSSlot ThreadData::tls_index_(base::LINKER_INITIALIZED);
 void DeathData::RecordDeath(const TimeDelta& duration) {
   ++count_;
   life_duration_ += duration;
-  int64 milliseconds = duration.InMilliseconds();
+  int64_t milliseconds = duration.InMilliseconds();
   square_duration_ += milliseconds * milliseconds;
 }
 

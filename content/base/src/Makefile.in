@@ -137,6 +137,7 @@ CPPSRCS		= \
 		nsEventSource.cpp \
 		FileIOObject.cpp \
 		nsDOMMutationObserver.cpp \
+		nsMixedContentBlocker.cpp \
 		$(NULL)
 
 # Are we targeting x86-32 or x86-64?  If so, we want to include SSE2 code for

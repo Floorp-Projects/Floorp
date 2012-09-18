@@ -295,8 +295,8 @@ public:
    * Just like IsProperAncestorFrameCrossDoc, except that it returns true when
    * aFrame == aAncestorFrame.
    */
-  static bool IsAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
-                                        nsIFrame* aCommonAncestor = nullptr);
+  static bool IsAncestorFrameCrossDoc(const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
+                                        const nsIFrame* aCommonAncestor = nullptr);
 
   /**
    * Finds the nearest ancestor frame that is the root of an "actively
@@ -306,7 +306,7 @@ public:
    * scrolled together, so we'll place them in the same ThebesLayer.
    */
   static nsIFrame* GetActiveScrolledRootFor(nsIFrame* aFrame,
-                                            nsIFrame* aStopAtAncestor);
+                                            const nsIFrame* aStopAtAncestor);
 
   static nsIFrame* GetActiveScrolledRootFor(nsDisplayItem* aItem,
                                             nsDisplayListBuilder* aBuilder,
@@ -317,7 +317,7 @@ public:
    * and its topmost content document ancestor has a root scroll frame with
    * a displayport set, and aActiveScrolledRoot is scrolled by that scrollframe.
    */
-  static bool IsScrolledByRootContentDocumentDisplayportScrolling(nsIFrame* aActiveScrolledRoot,
+  static bool IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFrame* aActiveScrolledRoot,
                                                                   nsDisplayListBuilder* aBuilder);
 
   /**
@@ -519,7 +519,7 @@ public:
    */
   static nsRect TransformAncestorRectToFrame(nsIFrame* aFrame,
                                              const nsRect& aRect,
-                                             nsIFrame* aAncestor);
+                                             const nsIFrame* aAncestor);
 
   /**
    * Transform aRect relative to aFrame up to the coordinate system of
@@ -534,7 +534,7 @@ public:
    * Gets the transform for aFrame relative to aAncestor. Pass null for aAncestor
    * to go up to the root frame.
    */
-  static gfx3DMatrix GetTransformToAncestor(nsIFrame *aFrame, nsIFrame *aAncestor);
+  static gfx3DMatrix GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncestor);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed

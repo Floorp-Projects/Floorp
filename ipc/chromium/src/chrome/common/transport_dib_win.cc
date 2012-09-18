@@ -20,7 +20,7 @@ TransportDIB::TransportDIB(HANDLE handle)
 }
 
 // static
-TransportDIB* TransportDIB::Create(size_t size, uint32 sequence_num) {
+TransportDIB* TransportDIB::Create(size_t size, uint32_t sequence_num) {
   size_t allocation_granularity = base::SysInfo::VMAllocationGranularity();
   size = size / allocation_granularity + 1;
   size = size * allocation_granularity;

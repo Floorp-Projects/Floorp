@@ -90,14 +90,8 @@ DOMSVGPathSegList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 nsIDOMSVGPathSeg*
 DOMSVGPathSegList::GetItemAt(uint32_t aIndex)
 {
-  if (IsAnimValList()) {
-    Element()->FlushAnimations();
-  }
-  if (aIndex < Length()) {
-    EnsureItemAt(aIndex);
-    return ItemAt(aIndex);
-  }
-  return nullptr;
+  ErrorResult rv;
+  return GetItem(aIndex, rv);
 }
 
 void
@@ -244,21 +238,19 @@ DOMSVGPathSegList::InternalAList() const
 NS_IMETHODIMP
 DOMSVGPathSegList::GetNumberOfItems(uint32_t *aNumberOfItems)
 {
-  if (IsAnimValList()) {
-    Element()->FlushAnimations();
-  }
-  *aNumberOfItems = Length();
+  *aNumberOfItems = NumberOfItems();
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DOMSVGPathSegList::Clear()
+void
+DOMSVGPathSegList::Clear(ErrorResult& aError)
 {
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
 
-  if (Length() > 0) {
+  if (LengthNoFlush() > 0) {
     nsAttrValue emptyOrOldValue = Element()->WillChangePathSegList();
     // DOM list items that are to be removed must be removed before we change
     // the internal list, otherwise they wouldn't be able to copy their
@@ -281,16 +273,22 @@ DOMSVGPathSegList::Clear()
       Element()->AnimationNeedsResample();
     }
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMSVGPathSegList::Initialize(nsIDOMSVGPathSeg *aNewItem,
-                              nsIDOMSVGPathSeg **_retval)
+DOMSVGPathSegList::Clear()
 {
-  *_retval = nullptr;
+  ErrorResult rv;
+  Clear(rv);
+  return rv.ErrorCode();
+}
+
+already_AddRefed<nsIDOMSVGPathSeg>
+DOMSVGPathSegList::Initialize(nsIDOMSVGPathSeg *aNewItem, ErrorResult& aError)
+{
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return nullptr;
   }
 
   // If aNewItem is already in a list we should insert a clone of aNewItem,
@@ -303,52 +301,77 @@ DOMSVGPathSegList::Initialize(nsIDOMSVGPathSeg *aNewItem,
 
   nsCOMPtr<DOMSVGPathSeg> domItem = do_QueryInterface(aNewItem);
   if (!domItem) {
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+    aError.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    return nullptr;
   }
   if (domItem->HasOwner()) {
     aNewItem = domItem->Clone();
   }
 
-  Clear();
-  return InsertItemBefore(aNewItem, 0, _retval);
+  Clear(aError);
+  MOZ_ASSERT(!aError.Failed(), "How could this fail?");
+  return InsertItemBefore(aNewItem, 0, aError);
+}
+
+NS_IMETHODIMP
+DOMSVGPathSegList::Initialize(nsIDOMSVGPathSeg *newItem,
+                              nsIDOMSVGPathSeg **_retval)
+{
+  ErrorResult rv;
+  *_retval = Initialize(newItem, rv).get();
+  return rv.ErrorCode();
+}
+
+nsIDOMSVGPathSeg*
+DOMSVGPathSegList::IndexedGetter(uint32_t aIndex, bool& aFound,
+                                 ErrorResult& aError)
+{
+  if (IsAnimValList()) {
+    Element()->FlushAnimations();
+  }
+  aFound = aIndex < LengthNoFlush();
+  if (aFound) {
+    EnsureItemAt(aIndex);
+    return ItemAt(aIndex);
+  }
+  return nullptr;
 }
 
 NS_IMETHODIMP
 DOMSVGPathSegList::GetItem(uint32_t aIndex,
                            nsIDOMSVGPathSeg **_retval)
 {
-  *_retval = GetItemAt(aIndex);
-  if (!*_retval) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-  NS_ADDREF(*_retval);
-  return NS_OK;
+  ErrorResult rv;
+  NS_IF_ADDREF(*_retval = GetItem(aIndex, rv));
+  return rv.ErrorCode();
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsIDOMSVGPathSeg>
 DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
                                     uint32_t aIndex,
-                                    nsIDOMSVGPathSeg **_retval)
+                                    ErrorResult& aError)
 {
-  *_retval = nullptr;
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return nullptr;
   }
 
   uint32_t internalIndex;
-  if (aIndex < Length()) {
+  if (aIndex < LengthNoFlush()) {
     internalIndex = mItems[aIndex].mInternalDataIndex;
   } else {
-    aIndex = Length();
+    aIndex = LengthNoFlush();
     internalIndex = InternalList().mData.Length();
   }
   if (aIndex >= DOMSVGPathSeg::MaxListIndex()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
 
   nsCOMPtr<DOMSVGPathSeg> domItem = do_QueryInterface(aNewItem);
   if (!domItem) {
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+    aError.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    return nullptr;
   }
   if (domItem->HasOwner()) {
     domItem = domItem->Clone(); // must do this before changing anything!
@@ -359,7 +382,8 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
   // Ensure we have enough memory so we can avoid complex error handling below:
   if (!mItems.SetCapacity(mItems.Length() + 1) ||
       !InternalList().mData.SetCapacity(InternalList().mData.Length() + 1 + argCount)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
   }
 
   nsAttrValue emptyOrOldValue = Element()->WillChangePathSegList();
@@ -383,26 +407,37 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-  domItem.forget(_retval);
-  return NS_OK;
+  return domItem.forget();
 }
 
 NS_IMETHODIMP
+DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
+                                    uint32_t aIndex,
+                                    nsIDOMSVGPathSeg **_retval)
+{
+  ErrorResult rv;
+  *_retval = InsertItemBefore(aNewItem, aIndex, rv).get();
+  return rv.ErrorCode();
+}
+
+already_AddRefed<nsIDOMSVGPathSeg>
 DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
                                uint32_t aIndex,
-                               nsIDOMSVGPathSeg **_retval)
+                               ErrorResult& aError)
 {
-  *_retval = nullptr;
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return nullptr;
   }
 
   nsCOMPtr<DOMSVGPathSeg> domItem = do_QueryInterface(aNewItem);
   if (!domItem) {
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+    aError.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    return nullptr;
   }
-  if (aIndex >= Length()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (aIndex >= LengthNoFlush()) {
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
   if (domItem->HasOwner()) {
     domItem = domItem->Clone(); // must do this before changing anything!
@@ -429,7 +464,8 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
                   internalIndex, 1 + oldArgCount,
                   segAsRaw, 1 + newArgCount);
   if (!ok) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
   }
   ItemAt(aIndex) = domItem;
 
@@ -439,7 +475,7 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
 
   uint32_t delta = newArgCount - oldArgCount;
   if (delta != 0) {
-    for (uint32_t i = aIndex + 1; i < Length(); ++i) {
+    for (uint32_t i = aIndex + 1; i < LengthNoFlush(); ++i) {
       mItems[i].mInternalDataIndex += delta;
     }
   }
@@ -448,21 +484,31 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-  NS_ADDREF(*_retval = domItem.get());
-  return NS_OK;
+  return domItem.forget();
 }
 
 NS_IMETHODIMP
-DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
-                              nsIDOMSVGPathSeg **_retval)
+DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
+                               uint32_t aIndex,
+                               nsIDOMSVGPathSeg **_retval)
 {
-  *_retval = nullptr;
+  ErrorResult rv;
+  *_retval = ReplaceItem(aNewItem, aIndex, rv).get();
+  return rv.ErrorCode();
+}
+
+already_AddRefed<nsIDOMSVGPathSeg>
+DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
+                              ErrorResult& aError)
+{
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return nullptr;
   }
 
-  if (aIndex >= Length()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (aIndex >= LengthNoFlush()) {
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
   // We have to return the removed item, so make sure it exists:
   EnsureItemAt(aIndex);
@@ -471,7 +517,7 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
   // Notify the DOM item of removal *before* modifying the lists so that the
   // DOM item can copy its *old* value:
   ItemAt(aIndex)->RemovingFromList();
-  NS_ADDREF(*_retval = ItemAt(aIndex));
+  nsCOMPtr<nsIDOMSVGPathSeg> result = ItemAt(aIndex);
 
   uint32_t internalIndex = mItems[aIndex].mInternalDataIndex;
   uint32_t segType = SVGPathSegUtils::DecodeType(InternalList().mData[internalIndex]);
@@ -491,14 +537,25 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-  return NS_OK;
+  return result.forget();
+}
+
+NS_IMETHODIMP
+DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
+                              nsIDOMSVGPathSeg **_retval)
+{
+  ErrorResult rv;
+  *_retval = RemoveItem(aIndex, rv).get();
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 DOMSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *aNewItem,
                               nsIDOMSVGPathSeg **_retval)
 {
-  return InsertItemBefore(aNewItem, Length(), _retval);
+  ErrorResult rv;
+  *_retval = AppendItem(aNewItem, rv).get();
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP

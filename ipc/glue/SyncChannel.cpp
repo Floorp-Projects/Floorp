@@ -22,7 +22,7 @@ struct RunnableMethodTraits<mozilla::ipc::SyncChannel>
 namespace mozilla {
 namespace ipc {
 
-const int32 SyncChannel::kNoTimeout = PR_INT32_MIN;
+const int32_t SyncChannel::kNoTimeout = PR_INT32_MIN;
 
 SyncChannel::SyncChannel(SyncListener* aListener)
   : AsyncChannel(aListener)
@@ -88,7 +88,7 @@ SyncChannel::Send(Message* _msg, Message* reply)
     }
 
     mPendingReply = msg->type() + 1;
-    int32 msgSeqno = msg->seqno();
+    int32_t msgSeqno = msg->seqno();
     mLink->SendMessage(msg.forget());
 
     while (1) {

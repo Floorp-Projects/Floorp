@@ -20,7 +20,7 @@ class AppCacheDispatcher {
   // AppCacheContextImpl related messages
   void OnAppCacheSelected(int context_id,
                           int select_request_id,
-                          int64 app_cache_id);
+                          int64_t app_cache_id);
 };
 
 #endif  // CHROME_COMMON_APP_CACHE_APP_CACHE_DISPATCHER_H_

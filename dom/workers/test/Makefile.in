@@ -91,6 +91,10 @@ MOCHITEST_FILES = \
   test_xhr_implicit_cancel.html \
   xhr_implicit_cancel_worker.js \
   test_xhr_timeout.html \
+  test_xhr_parameters.html \
+  test_xhr_parameters.js \
+  test_xhr_system.html \
+  test_xhr_system.js \
   test_blobConstructor.html \
   test_csp.html \
   test_csp.js \

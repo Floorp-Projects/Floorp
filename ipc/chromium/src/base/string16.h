@@ -38,7 +38,7 @@ typedef std::wstring string16;
 
 #elif defined(WCHAR_T_IS_UTF32)
 
-typedef uint16 char16;
+typedef uint16_t char16;
 
 namespace base {
 

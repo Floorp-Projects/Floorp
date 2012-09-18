@@ -128,7 +128,7 @@ void TraceLog::Trace(const std::string& name,
   TimeTicks tick = TimeTicks::Now();
 #endif
   TimeDelta delta = tick - trace_start_time_;
-  int64 usec = delta.InMicroseconds();
+  int64_t usec = delta.InMicroseconds();
   std::string msg =
     StringPrintf("{'pid':'0x%lx', 'tid':'0x%lx', 'type':'%s', "
                  "'name':'%s', 'id':'0x%lx', 'extra':'%s', 'file':'%s', "

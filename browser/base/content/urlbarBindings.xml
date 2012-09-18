@@ -1593,42 +1593,15 @@
       <field name="_brandBundle" readonly="true">
         Services.strings.createBundle("chrome://branding/locale/brand.properties");
       </field>
-      <property name="_viewsLeftMap">
-        <getter><![CDATA[
-          let viewsLeftMap = {};
-          try {
-            viewsLeftMap = JSON.parse(Services.prefs.getCharPref("browser.syncPromoViewsLeftMap"));
-          } catch (ex) {
-            // If the old preference exists, migrate it to the new one.
-            try {
-              let oldPref = Services.prefs.getIntPref("browser.syncPromoViewsLeft");
-              Services.prefs.clearUserPref("browser.syncPromoViewsLeft");
-              viewsLeftMap.bookmarks = oldPref;
-              viewsLeftMap.passwords = oldPref;
-              Services.prefs.setCharPref("browser.syncPromoViewsLeftMap",
-                                         JSON.stringify(viewsLeftMap));
-            } catch (ex2) {}
-          }
-          return viewsLeftMap;
-        ]]></getter>
-      </property>
       <property name="_viewsLeft">
         <getter><![CDATA[
-          let views = 5;
-          if (this._viewsLeftMap[this._notificationType] !== undefined) {
-            views = this._viewsLeftMap[this._notificationType];
-          }
-          return views;
+          try {
+            return Services.prefs.getIntPref("browser.syncPromoViewsLeft");
+          } catch(ex) {}
+          return 5;
         ]]></getter>
         <setter><![CDATA[
-          if (this._viewsLeftMap !== undefined) {
-            let map = this._viewsLeftMap;
-          } else {
-            let map = {};
-          }
-          map[this._notificationType] = val;
-          Services.prefs.setCharPref("browser.syncPromoViewsLeftMap",
-                                     JSON.stringify(map));
+          Services.prefs.setIntPref("browser.syncPromoViewsLeft", val);
           return val;
         ]]></setter>
       </property>

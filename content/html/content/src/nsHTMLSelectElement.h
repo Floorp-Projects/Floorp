@@ -10,6 +10,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsISelectControlFrame.h"
@@ -22,8 +23,11 @@
 #include "nsIComponentManager.h"
 #include "nsCheapSets.h"
 #include "nsError.h"
+#include "nsHTMLOptGroupElement.h"
 #include "nsHTMLOptionElement.h"
 #include "nsHTMLFormElement.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/UnionTypes.h"
 
 class nsHTMLSelectElement;
 
@@ -31,10 +35,12 @@ class nsHTMLSelectElement;
  * The collection of options in the select (what you get back when you do
  * select.options in DOM)
  */
-class nsHTMLOptionCollection: public nsIDOMHTMLOptionsCollection,
-                              public nsIHTMLCollection,
+class nsHTMLOptionCollection: public nsIHTMLCollection,
+                              public nsIDOMHTMLOptionsCollection,
                               public nsWrapperCache
 {
+typedef mozilla::dom::HTMLOptionElementOrHTMLOptGroupElement HTMLOptionOrOptGroupElement;
+typedef mozilla::dom::HTMLElementOrLong HTMLElementOrLong;
 public:
   nsHTMLOptionCollection(nsHTMLSelectElement* aSelect);
   virtual ~nsHTMLOptionCollection();
@@ -50,7 +56,7 @@ public:
   // nsIDOMHTMLCollection interface, all its methods are defined in
   // nsIDOMHTMLOptionsCollection
 
-  virtual nsIContent* GetNodeAt(uint32_t aIndex);
+  virtual nsGenericElement* GetElementAt(uint32_t aIndex);
   virtual nsINode* GetParentObject();
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
@@ -120,6 +126,21 @@ public:
   nsresult GetOptionIndex(mozilla::dom::Element* aOption,
                           int32_t aStartIndex, bool aForward,
                           int32_t* aIndex);
+
+  virtual JSObject* NamedItem(JSContext* aCx, const nsAString& aName,
+                              mozilla::ErrorResult& error);
+
+  inline void Add(const HTMLOptionOrOptGroupElement& aElement,
+                  const Nullable<HTMLElementOrLong>& aBefore,
+                  mozilla::ErrorResult& aError);
+  void Remove(int32_t aIndex, mozilla::ErrorResult& aError);
+  int32_t GetSelectedIndex(mozilla::ErrorResult& aError);
+  void SetSelectedIndex(int32_t aSelectedIndex, mozilla::ErrorResult& aError);
+  void IndexedSetter(uint32_t aIndex, nsIDOMHTMLOptionElement *aOption,
+                     mozilla::ErrorResult& aError)
+  {
+    aError = SetOption(aIndex, aOption);
+  }
 
 private:
   /** The list of options (holds strong references).  This is infallible, so
@@ -401,6 +422,20 @@ public:
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType);
 
+  /**
+   * Insert aElement before the node given by aBefore
+   */
+  nsresult Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore = nullptr);
+  nsresult Add(nsIDOMHTMLElement* aElement, int32_t aIndex)
+  {
+    // If item index is out of range, insert to last.
+    // (since beforeElement becomes null, it is inserted to last)
+    nsCOMPtr<nsIDOMHTMLElement> beforeElement =
+      do_QueryInterface(mOptions->GetElementAt(aIndex));
+
+    return Add(aElement, beforeElement);
+  }
+
 protected:
   friend class nsSafeOptionListMutation;
 
@@ -594,11 +629,6 @@ protected:
     return mSelectionHasChanged;
   }
 
-  /**
-   * Insert aElement before the node given by aBefore
-   */
-  nsresult Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore = nullptr);
-
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;
   /** false if the parser is in the middle of adding children. */
@@ -645,5 +675,26 @@ protected:
    */
   nsCOMPtr<nsSelectState> mRestoreState;
 };
+
+void
+nsHTMLOptionCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
+                            const Nullable<HTMLElementOrLong>& aBefore,
+                            mozilla::ErrorResult& aError)
+{
+  nsIDOMHTMLElement* element;
+  if (aElement.IsHTMLOptionElement()) {
+    element = aElement.GetAsHTMLOptionElement();
+  } else {
+    element = aElement.GetAsHTMLOptGroupElement();
+  }
+
+  if (aBefore.IsNull()) {
+    aError = mSelect->Add(element, (nsIDOMHTMLElement*)nullptr);
+  } else if (aBefore.Value().IsHTMLElement()) {
+    aError = mSelect->Add(element, aBefore.Value().GetAsHTMLElement());
+  } else {
+    aError = mSelect->Add(element, aBefore.Value().GetAsLong());
+  }
+}
 
 #endif

@@ -20,13 +20,13 @@ struct SkBitmap_Data {
   SkBitmap::Config fConfig;
 
   // The width of the bitmap in pixels.
-  uint32 fWidth;
+  uint32_t fWidth;
 
   // The height of the bitmap in pixels.
-  uint32 fHeight;
+  uint32_t fHeight;
 
   // The number of bytes between subsequent rows of the bitmap.
-  uint32 fRowBytes;
+  uint32_t fRowBytes;
 
   void InitSkBitmapDataForTransfer(const SkBitmap& bitmap) {
     fConfig = bitmap.config();

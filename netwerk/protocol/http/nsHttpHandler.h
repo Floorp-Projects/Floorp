@@ -58,9 +58,8 @@ public:
     virtual ~nsHttpHandler();
 
     nsresult Init();
-    nsresult AddStandardRequestHeaders(nsHttpHeaderArray *);
-    nsresult AddConnectionHeader(nsHttpHeaderArray *,
-                                 uint8_t capabilities);
+    nsresult AddStandardRequestHeaders(nsHttpHeaderArray *,
+                                       uint8_t capabilities);
     bool     IsAcceptableEncoding(const char *encoding);
 
     const nsAFlatCString &UserAgent();
@@ -79,7 +78,6 @@ public:
     uint8_t        GetQoSBits()              { return mQoSBits; }
     uint16_t       GetIdleSynTimeout()       { return mIdleSynTimeout; }
     bool           FastFallbackToIPv4()      { return mFastFallbackToIPv4; }
-    bool           ProxyPipelining()         { return mProxyPipelining; }
     uint32_t       MaxSocketCount();
     bool           EnforceAssocReq()         { return mEnforceAssocReq; }
 
@@ -235,9 +233,6 @@ public:
 
     mozilla::net::SpdyInformation *SpdyInfo() { return &mSpdyInfo; }
 
-    // returns true in between Init and Shutdown states
-    bool Active() { return mHandlerActive; }
-
 private:
 
     //
@@ -278,10 +273,11 @@ private:
     uint8_t  mHttpVersion;
     uint8_t  mProxyHttpVersion;
     uint8_t  mCapabilities;
+    uint8_t  mProxyCapabilities;
     uint8_t  mReferrerLevel;
 
     bool mFastFallbackToIPv4;
-    bool mProxyPipelining;
+
     PRIntervalTime mIdleTimeout;
     PRIntervalTime mSpdyTimeout;
 
@@ -359,9 +355,6 @@ private:
 
     // The value of network.allow-experiments
     bool           mAllowExperiments;
-
-    // true in between init and shutdown states
-    bool           mHandlerActive;
 
     // Try to use SPDY features instead of HTTP/1.1 over SSL
     mozilla::net::SpdyInformation mSpdyInfo;

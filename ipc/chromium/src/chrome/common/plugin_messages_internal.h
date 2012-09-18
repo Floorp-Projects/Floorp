@@ -17,7 +17,7 @@ IPC_BEGIN_MESSAGES(PluginProcess)
   // Allows a chrome plugin loaded in the browser process to send arbitrary
   // data to an instance of the same plugin loaded in a plugin process.
   IPC_MESSAGE_CONTROL1(PluginProcessMsg_PluginMessage,
-                       std::vector<uint8> /* opaque data */)
+                       std::vector<uint8_t> /* opaque data */)
 
   // The following messages are used by all child processes, even though they
   // are listed under PluginProcess.  It seems overkill to define ChildProcess.
@@ -47,18 +47,18 @@ IPC_BEGIN_MESSAGES(PluginProcessHost)
   // Allows a chrome plugin loaded in a plugin process to send arbitrary
   // data to an instance of the same plugin loaded in the browser process.
   IPC_MESSAGE_CONTROL1(PluginProcessHostMsg_PluginMessage,
-                       std::vector<uint8> /* opaque data */)
+                       std::vector<uint8_t> /* opaque data */)
 
   // Allows a chrome plugin loaded in a plugin process to send arbitrary
   // data to an instance of the same plugin loaded in the browser process.
   IPC_SYNC_MESSAGE_CONTROL1_1(PluginProcessHostMsg_PluginSyncMessage,
-                              std::vector<uint8> /* opaque data */,
-                              std::vector<uint8> /* opaque data response */)
+                              std::vector<uint8_t> /* opaque data */,
+                              std::vector<uint8_t> /* opaque data response */)
 
   // Used to get cookies for the given URL.  The request_context is a
-  // CPBrowsingContext, but is passed as int32 to avoid compilation errors.
+  // CPBrowsingContext, but is passed as int32_t to avoid compilation errors.
   IPC_SYNC_MESSAGE_CONTROL2_1(PluginProcessHostMsg_GetCookies,
-                              int32 /* request_context */,
+                              int32_t /* request_context */,
                               GURL /* url */,
                               std::string /* cookies */)
 
@@ -263,7 +263,7 @@ IPC_BEGIN_MESSAGES(PluginHost)
                       int /* status */)
 
   IPC_SYNC_MESSAGE_ROUTED0_1(PluginHostMsg_GetCPBrowsingContext,
-                             uint32 /* context */)
+                             uint32_t /* context */)
 
   IPC_MESSAGE_ROUTED0(PluginHostMsg_CancelDocumentLoad)
 
