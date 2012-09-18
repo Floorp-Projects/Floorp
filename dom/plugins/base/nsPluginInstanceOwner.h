@@ -258,8 +258,6 @@ public:
   void GetVideos(nsTArray<nsNPAPIPluginInstance::VideoInfo*>& aVideos);
   already_AddRefed<ImageContainer> GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInfo* aVideoInfo);
 
-  nsIntRect GetVisibleRect();
-
   void Invalidate();
 
   void RequestFullScreen();
