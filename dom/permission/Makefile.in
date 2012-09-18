@@ -15,17 +15,9 @@ LIBRARY_NAME   = jsdompermission_s
 XPIDL_MODULE   = dom_permission
 GRE_MODULE     = 1
 
-EXTRA_COMPONENTS =        \
-  PermissionSettings.js       \
-  PermissionSettings.manifest \
-  $(NULL)
-
 EXTRA_JS_MODULES =   \
   PermissionPromptHelper.jsm \
-  PermissionSettings.jsm \
   $(NULL)
-
-TEST_DIRS += tests
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
