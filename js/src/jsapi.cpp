@@ -5001,8 +5001,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
 
             flags &= ~JSFUN_GENERIC_NATIVE;
             JSFunction *fun = js_DefineFunction(cx, ctor, id, js_generic_native_method_dispatcher,
-                                    fs->nargs + 1, flags, NullPtr(),
-                                    JSFunction::ExtendedFinalizeKind);
+                                                fs->nargs + 1, flags,
+                                                JSFunction::ExtendedFinalizeKind);
             if (!fun)
                 return JS_FALSE;
 
@@ -5023,19 +5023,36 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
         if (fs->selfHostedName && cx->runtime->isSelfHostedGlobal(cx->global()))
             return JS_TRUE;
 
-        Rooted<PropertyName*> selfHostedPropertyName(cx);
+        /*
+         * Delay cloning self-hosted functions until they are called. This is
+         * achieved by passing js_DefineFunction a NULL JSNative which
+         * produces an interpreted JSFunction where !hasScript. Interpreted
+         * call paths then call InitializeLazyFunctionScript if !hasScript.
+         */
         if (fs->selfHostedName) {
-            JSAtom *selfHostedAtom = Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName));
-            if (!selfHostedAtom)
+            RootedFunction fun(cx, js_DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
+                                                     JSFunction::ExtendedFinalizeKind));
+            if (!fun)
                 return JS_FALSE;
-            selfHostedPropertyName = selfHostedAtom->asPropertyName();
+            JSFunction::setSingletonType(cx, fun);
+            fun->setIsSelfHostedBuiltin();
+            fun->setExtendedSlot(0, PrivateValue(fs));
+            RootedAtom shAtom(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
+            if (!shAtom)
+                return JS_FALSE;
+            RootedObject holder(cx, cx->global()->intrinsicsHolder());
+            if (!JS_DefinePropertyById(cx,holder, AtomToId(shAtom),
+                                       ObjectValue(*fun), NULL, NULL, 0))
+            {
+                return JS_FALSE;
+            }
+        } else {
+            JSFunction *fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
+            if (!fun)
+                return JS_FALSE;
+            if (fs->call.info)
+                fun->setJitInfo(fs->call.info);
         }
-        JSFunction *fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags,
-                                            selfHostedPropertyName);
-        if (!fun)
-            return JS_FALSE;
-        if (fs->call.info)
-            fun->setJitInfo(fs->call.info);
     }
     return JS_TRUE;
 }

@@ -275,7 +275,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchTestValueTruthy(const ValueOperand &value, Label *ifTrue, FloatRegister fr);
 
-    void branchIfFunctionIsNative(Register fun, Label *label) {
+    void branchIfFunctionHasNoScript(Register fun, Label *label) {
         // 16-bit loads are slow and unaligned 32-bit loads may be too so
         // perform an aligned 32-bit load and adjust the bitmask accordingly.
         JS_STATIC_ASSERT(offsetof(JSFunction, nargs) % sizeof(uint32_t) == 0);

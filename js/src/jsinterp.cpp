@@ -368,6 +368,9 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
 
+    if (fun->isInterpretedLazy() && !InitializeLazyFunctionScript(cx, fun))
+        return false;
+
     if (!TypeMonitorCall(cx, args, construct))
         return false;
 
@@ -2343,6 +2346,8 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
+    if (fun->isInterpretedLazy() && !InitializeLazyFunctionScript(cx, fun))
+        goto error;
     RawScript funScript = fun->script().unsafeGet();
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))
         goto error;
