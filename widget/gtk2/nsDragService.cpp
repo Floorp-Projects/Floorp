@@ -1071,11 +1071,12 @@ nsDragService::TargetDataReceived(GtkWidget         *aWidget,
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::TargetDataReceived"));
     TargetResetData();
     mTargetDragDataReceived = true;
-    mTargetDragDataLen = gtk_selection_data_get_length(aSelectionData);
-    if (mTargetDragDataLen > 0) {
+    gint len = gtk_selection_data_get_length(aSelectionData);
+    const guchar* data = gtk_selection_data_get_data(aSelectionData);
+    if (len > 0 && data) {
+        mTargetDragDataLen = len;
         mTargetDragData = g_malloc(mTargetDragDataLen);
-        memcpy(mTargetDragData, gtk_selection_data_get_data(aSelectionData),
-               mTargetDragDataLen);
+        memcpy(mTargetDragData, data, mTargetDragDataLen);
     }
     else {
         PR_LOG(sDragLm, PR_LOG_DEBUG,

@@ -212,8 +212,6 @@ public class testHistoryTab extends PixelTest {
     }
 
     public void tearDown() throws Exception {
-        super.tearDown();
-
         ContentResolver resolver = getActivity().getContentResolver();
         Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");
         uri = uri.buildUpon().appendQueryParameter("profile", "default")
@@ -231,5 +229,7 @@ public class testHistoryTab extends PixelTest {
         resolver.delete(uri, "url = ?", new String[] {
             "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
         });
+
+        super.tearDown();
     }
 }

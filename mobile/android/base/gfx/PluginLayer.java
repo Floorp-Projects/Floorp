@@ -6,10 +6,9 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.SurfaceBits;
 import org.mozilla.gecko.util.FloatUtils;
-
-import org.json.JSONArray;
 
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -22,7 +21,6 @@ import android.view.View;
 import android.widget.AbsoluteLayout;
 
 import java.nio.FloatBuffer;
-import java.util.Map;
 
 public class PluginLayer extends TileLayer {
     private static final String LOGTAG = "PluginLayer";
@@ -68,19 +66,13 @@ public class PluginLayer extends TileLayer {
         mLayoutParams = new PluginLayoutParams(rect, maxDimension);
     }
 
-    static void addPrefNames(JSONArray prefs) {
-        prefs.put(PREF_PLUGIN_USE_PLACEHOLDER);
-    }
-
-    static boolean setUsePlaceholder(Map<String, Integer> prefs) {
-        Integer usePlaceholder = prefs.get(PREF_PLUGIN_USE_PLACEHOLDER);
-        if (usePlaceholder == null) {
-            return false;
-        }
-
-        sUsePlaceholder = (int)usePlaceholder == 1 ? true : false;
-        Log.i(LOGTAG, "Using plugin placeholder: " + sUsePlaceholder);
-        return true;
+    static void initPrefs() {
+        PrefsHelper.getPref(PREF_PLUGIN_USE_PLACEHOLDER, new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, int value) {
+                sUsePlaceholder = (value == 1);
+                Log.i(LOGTAG, "Using plugin placeholder: " + sUsePlaceholder);
+            }
+        });
     }
 
     public void setVisible(boolean newVisible) {

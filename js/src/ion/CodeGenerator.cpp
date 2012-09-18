@@ -1695,22 +1695,17 @@ bool
 CodeGenerator::visitPowI(LPowI *ins)
 {
     FloatRegister value = ToFloatRegister(ins->value());
+    Register power = ToRegister(ins->power());
     Register temp = ToRegister(ins->temp());
+
+    JS_ASSERT(power != temp);
 
     // In all implementations, setupUnalignedABICall() relinquishes use of
     // its scratch register. We can therefore save an input register by
     // reusing the scratch register to pass constants to callWithABI.
     masm.setupUnalignedABICall(2, temp);
     masm.passABIArg(value);
-
-    const LAllocation *power = ins->power();
-    if (power->isRegister()) {
-        JS_ASSERT(ToRegister(power) != temp);
-        masm.passABIArg(ToRegister(power));
-    } else {
-        masm.move32(Imm32(ToInt32(power)), temp);
-        masm.passABIArg(temp);
-    }
+    masm.passABIArg(power);
 
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::powi), MacroAssembler::DOUBLE);
     JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
@@ -3168,7 +3163,7 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
     switch (ins->op()) {
       case LInstruction::LOp_InstanceOfO:
       case LInstruction::LOp_InstanceOfV:
-        name = gen->compartment->rt->atomState.classPrototypeAtom;
+        name = gen->compartment->rt->atomState.classPrototype;
         objReg = ToRegister(ins->getTemp(1));
         output = TypedOrValueRegister(MIRType_Object, ToAnyRegister(ins->getDef(0)));
         break;
@@ -3465,7 +3460,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    PropertyName **typeAtoms = gen->compartment->rt->atomState.typeAtoms;
+    JSRuntime *rt = gen->compartment->rt;
 
     // Jump to the OOL path if the value is an object. Objects are complicated
     // since they may have a typeof hook.
@@ -3475,29 +3470,29 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
 
     Label notNumber;
     masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_NUMBER]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.number), output);
     masm.jump(&done);
     masm.bind(&notNumber);
 
     Label notUndefined;
     masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_VOID]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.undefined), output);
     masm.jump(&done);
     masm.bind(&notUndefined);
 
     Label notNull;
     masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_OBJECT]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.object), output);
     masm.jump(&done);
     masm.bind(&notNull);
 
     Label notBoolean;
     masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_BOOLEAN]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.boolean), output);
     masm.jump(&done);
     masm.bind(&notBoolean);
 
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_STRING]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.string), output);
 
     masm.bind(&done);
     masm.bind(ool->rejoin());

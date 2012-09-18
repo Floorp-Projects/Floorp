@@ -916,8 +916,7 @@ InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey 
         return NULL;
     proto->setPrivate(NULL);
 
-    JSAtom *atom = cx->runtime->atomState.classAtoms[key];
-    Rooted<JSFunction*> ctor(cx, global->createConstructor(cx, construct, atom, 1));
+    Rooted<JSFunction*> ctor(cx, global->createConstructor(cx, construct, ClassName(key, cx), 1));
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndBrand(cx, proto, NULL, methods) ||

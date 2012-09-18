@@ -307,7 +307,7 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(int64_t& aOutStartTime)
   return videoData;
 }
 
-template<class Data>
+/*template<class Data>
 Data* nsBuiltinDecoderReader::DecodeToFirstData(DecodeFn aDecodeFn,
                                                 MediaQueue<Data>& aQueue)
 {
@@ -323,7 +323,7 @@ Data* nsBuiltinDecoderReader::DecodeToFirstData(DecodeFn aDecodeFn,
   }
   Data* d = nullptr;
   return (d = aQueue.PeekFront()) ? d : nullptr;
-}
+}*/
 
 nsresult nsBuiltinDecoderReader::DecodeToTarget(int64_t aTarget)
 {

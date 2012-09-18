@@ -389,12 +389,12 @@ AlphaBoxBlur::AlphaBoxBlur(uint8_t* aData,
                            const Rect& aRect,
                            int32_t aStride,
                            float aSigma)
-  : mSpreadRadius(),
+  : mRect(aRect.x, aRect.y, aRect.width, aRect.height),
+    mSpreadRadius(),
     mBlurRadius(CalculateBlurRadius(Point(aSigma, aSigma))),
     mData(aData),
     mFreeData(false),
-    mStride(aStride),
-    mRect(aRect.x, aRect.y, aRect.width, aRect.height)
+    mStride(aStride)
 {
 }
 

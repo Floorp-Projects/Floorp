@@ -1289,6 +1289,12 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHEMAP_REVALIDATION"
   },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSASYNCDOOMEVENT_RUN": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSASYNCDOOMEVENT_RUN"
+  },
   "DNS_LOOKUP_METHOD2": {
     "kind": "enumerated",
     "n_values": 16,
@@ -2216,5 +2222,9 @@
   "SOCIAL_TOGGLED": {
     "kind": "boolean",
     "description": "Social has been toggled to on or off"
+  },
+  "ENABLE_PRIVILEGE_EVER_CALLED": {
+    "kind": "flag",
+    "description": "Whether enablePrivilege has ever been called during the current session"
   }
 }

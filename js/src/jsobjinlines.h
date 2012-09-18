@@ -374,7 +374,7 @@ JSObject::setArrayLength(JSContext *cx, uint32_t length)
         js::types::MarkTypeObjectFlags(cx, this,
                                        js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
                                        js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
-        jsid lengthId = js::NameToId(cx->runtime->atomState.lengthAtom);
+        jsid lengthId = js::NameToId(cx->names().length);
         js::types::AddTypePropertyId(cx, this, lengthId,
                                      js::types::Type::DoubleType());
     }
@@ -1549,7 +1549,7 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
     JS_ASSERT(ctor);
     JS_ASSERT(proto);
 
-    jsid id = NameToId(cx->runtime->atomState.classAtoms[key]);
+    jsid id = NameToId(ClassName(key, cx));
     JS_ASSERT(!global->nativeLookupNoAllocation(id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */

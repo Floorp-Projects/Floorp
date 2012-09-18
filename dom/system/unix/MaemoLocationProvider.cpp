@@ -67,7 +67,7 @@ void MaemoLocationProvider::LocationChanged(LocationGPSDevice* device, void* sel
     return;
 
   MaemoLocationProvider* provider = static_cast<MaemoLocationProvider*>(self);
-  NS_ENSURE_TRUE(provider, );
+  NS_ENSURE_TRUE_VOID(provider);
   provider->LocationUpdate(device);
 }
 

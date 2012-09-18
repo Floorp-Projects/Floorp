@@ -310,7 +310,7 @@ MouseScrollHandler::InitEvent(nsWindow* aWindow,
                               nsGUIEvent& aEvent,
                               nsIntPoint* aPoint)
 {
-  NS_ENSURE_TRUE(aWindow, );
+  NS_ENSURE_TRUE_VOID(aWindow);
   nsIntPoint point;
   if (aPoint) {
     point = *aPoint;

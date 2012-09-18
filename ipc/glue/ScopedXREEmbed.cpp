@@ -51,7 +51,7 @@ ScopedXREEmbed::Start()
     return;
 
   localFile = do_QueryInterface(parent);
-  NS_ENSURE_TRUE(localFile,);
+  NS_ENSURE_TRUE_VOID(localFile);
 
 #ifdef OS_MACOSX
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
@@ -62,21 +62,21 @@ ScopedXREEmbed::Start()
       return;
 
     localFile = do_QueryInterface(parent);
-    NS_ENSURE_TRUE(localFile,);
+    NS_ENSURE_TRUE_VOID(localFile);
 
     rv = localFile->GetParent(getter_AddRefs(parent));
     if (NS_FAILED(rv))
       return;
 
     localFile = do_QueryInterface(parent);
-    NS_ENSURE_TRUE(localFile,);
+    NS_ENSURE_TRUE_VOID(localFile);
 
     rv = localFile->GetParent(getter_AddRefs(parent));
     if (NS_FAILED(rv))
       return;
 
     localFile = do_QueryInterface(parent);
-    NS_ENSURE_TRUE(localFile,);
+    NS_ENSURE_TRUE_VOID(localFile);
   }
 #endif
 

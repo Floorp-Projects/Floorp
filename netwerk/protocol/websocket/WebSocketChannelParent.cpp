@@ -67,6 +67,11 @@ WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
 
   if (loadContext.IsNotNull())
     mLoadContext = new LoadContext(loadContext);
+#ifdef DEBUG
+  else
+    // websocket channels cannot have a private bit override
+    MOZ_ASSERT(!loadContext.IsPrivateBitValid());
+#endif
 
   rv = mChannel->SetNotificationCallbacks(this);
   if (NS_FAILED(rv))

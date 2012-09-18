@@ -670,7 +670,7 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
   dbus_message_iter_recurse(&aIter, &prop_val);
   type = aPropertyTypes[*aPropIndex].type;
 
-  if(dbus_message_iter_get_arg_type(&prop_val) != type) {
+  if (dbus_message_iter_get_arg_type(&prop_val) != type) {
     NS_WARNING("Iterator not type we expect!");
     nsAutoCString str;
     str += "Property Name: ;";
@@ -867,6 +867,82 @@ ParsePropertyChange(DBusMessage* aMsg, BluetoothValue& aValue,
   aValue = props;
 }
 
+bool
+GetPropertiesInternal(const nsAString& aPath, const char* aIface, BluetoothValue& aValue)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsString replyError;
+  DBusError err;
+
+  dbus_error_init(&err);
+
+  DBusMessage* msg = dbus_func_args_timeout(gThreadConnection->GetConnection(),
+                                            1000,
+                                            &err,
+                                            NS_ConvertUTF16toUTF8(aPath).get(),
+                                            aIface,
+                                            "GetProperties",
+                                            DBUS_TYPE_INVALID);
+
+  if (!strcmp(aIface, DBUS_DEVICE_IFACE)) {
+    UnpackDevicePropertiesMessage(msg, &err, aValue, replyError);
+  } else if (!strcmp(aIface, DBUS_ADAPTER_IFACE)) {
+    UnpackAdapterPropertiesMessage(msg, &err, aValue, replyError);
+  } else if (!strcmp(aIface, DBUS_MANAGER_IFACE)) {
+    UnpackManagerPropertiesMessage(msg, &err, aValue, replyError);
+  } else {
+    NS_WARNING("Unknown interface for GetProperties!");
+    return false;
+  }
+
+  if (!replyError.IsEmpty()) {
+    NS_WARNING("Failed to get device properties");
+    return false;
+  }
+  if (msg) {
+    dbus_message_unref(msg);
+  }
+  return true;
+}
+
+class DevicePropertiesSignalHandler : public nsRunnable
+{
+public:
+  DevicePropertiesSignalHandler(const BluetoothValue& aValue,
+                                const nsAString& aPath) :
+    mValue(aValue),
+    mPath(aPath)
+  {
+  }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Get device properties and then send to BluetoothAdapter
+    BluetoothService* bs = BluetoothService::Get();
+    if (!bs) {
+      NS_WARNING("BluetoothService not available!");
+      return NS_ERROR_FAILURE;
+    }
+
+    // Due to the fact that we need to queue the dbus call to the command thread
+    // inside the bluetoothservice, we have to route the call down to the main
+    // thread and then back out to the command thread. There has to be a better
+    // way to do this.
+    if (NS_FAILED(bs->GetDevicePropertiesInternal(mValue, mPath))) {
+      NS_WARNING("get properties failed");
+      return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+  }
+private:
+  BluetoothValue mValue;
+  nsString mPath;
+};
+
 // Called by dbus during WaitForAndDispatchEventNative()
 // This function is called on the IOThread
 static
@@ -947,17 +1023,13 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     } else {
       v = NS_ConvertUTF8toUTF16(str);
     }
-
-    // Get device properties and then send to BluetoothAdapter
-    BluetoothService* bs = BluetoothService::Get();
-    if (!bs) {
-      NS_WARNING("BluetoothService not available!");
+    // Fire a Device properties fetcher at the main thread
+    nsRefPtr<DevicePropertiesSignalHandler> b =
+      new DevicePropertiesSignalHandler(v, signalPath);
+    if (NS_FAILED(NS_DispatchToMainThread(b))) {
+      NS_WARNING("Failed to dispatch to main thread!");
     }
-
-    if (NS_FAILED(bs->GetDevicePropertiesInternal(v, signalPath))) {
-      NS_WARNING("get properties failed");
-    }
-
+    // Since we're handling this in other threads, just fall out here
     return DBUS_HANDLER_RESULT_HANDLED;
   } else if (dbus_message_is_signal(aMsg, DBUS_ADAPTER_IFACE, "DeviceRemoved")) {
     const char* str;
@@ -1294,34 +1366,16 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(!NS_IsMainThread());
-
-    DBusError err;
-    dbus_error_init(&err);
-
-    BluetoothValue v = InfallibleTArray<BluetoothNamedValue>();
-    nsString replyError;
-
-    DBusMessage* msg = dbus_func_args_timeout(gThreadConnection->GetConnection(),
-                                              1000,
-                                              &err,
-                                              NS_ConvertUTF16toUTF8(mDevicePath).get(),
-                                              DBUS_DEVICE_IFACE,
-                                              "GetProperties",
-                                              DBUS_TYPE_INVALID);
-    UnpackDevicePropertiesMessage(msg, &err, v, replyError);
-
-    if (!replyError.IsEmpty()) {
-      NS_WARNING("Failed to get device properties");
+    BluetoothValue v;
+    if (!GetPropertiesInternal(mDevicePath, DBUS_DEVICE_IFACE, v)) {
+      NS_WARNING("Getting properties failed!");
       return NS_ERROR_FAILURE;
     }
-    if (msg) {
-      dbus_message_unref(msg);
-    }
-
     BluetoothSignal signal(NS_LITERAL_STRING("DeviceCreated"),
                            mSignalPath, v);
 
-    nsRefPtr<DistributeBluetoothSignalTask> t = new DistributeBluetoothSignalTask(signal);
+    nsRefPtr<DistributeBluetoothSignalTask> t =
+      new DistributeBluetoothSignalTask(signal);
 
     if (NS_FAILED(NS_DispatchToMainThread(t))) {
        NS_WARNING("Failed to dispatch to main thread!");
@@ -1353,33 +1407,28 @@ public:
     DBusError err;
     dbus_error_init(&err);
 
-    nsString replyError;
-    DBusMessage* msg;
     BluetoothValue values = InfallibleTArray<BluetoothNamedValue>();
 
     for (int i = 0; i < mDeviceAddresses.Length(); i++) {
-      BluetoothValue v = InfallibleTArray<BluetoothNamedValue>();
-      msg = dbus_func_args_timeout(gThreadConnection->GetConnection(),
-                                   1000,
-                                   &err,
-                                   NS_ConvertUTF16toUTF8(mDeviceAddresses[i]).get(),
-                                   DBUS_DEVICE_IFACE,
-                                   "GetProperties",
-                                   DBUS_TYPE_INVALID);
-      UnpackDevicePropertiesMessage(msg, &err, v, replyError);
-      if (!replyError.IsEmpty()) {
-        DispatchBluetoothReply(mRunnable, v, replyError);
-        return NS_ERROR_FAILURE;
-      }
-      if (msg) {
-        dbus_message_unref(msg);
+      BluetoothValue v;
+      if (!GetPropertiesInternal(mDeviceAddresses[i], DBUS_DEVICE_IFACE, v)) {
+        nsAutoString errorStr;
+        errorStr.AssignLiteral("Getting properties failed!");
+        NS_WARNING(NS_ConvertUTF16toUTF8(errorStr).get());
+        mRunnable->SetReply(new BluetoothReply(BluetoothReplyError(errorStr)));
+        if (NS_FAILED(NS_DispatchToMainThread(mRunnable))) {
+          NS_WARNING("Failed to dispatch to main thread!");
+        }
+        return NS_OK;
       }
       v.get_ArrayOfBluetoothNamedValue().AppendElement(
         BluetoothNamedValue(NS_LITERAL_STRING("Path"), mDeviceAddresses[i])
       );
 
-      InfallibleTArray<BluetoothNamedValue>& deviceProperties = v.get_ArrayOfBluetoothNamedValue();
-      for (uint32_t p = 0; p < v.get_ArrayOfBluetoothNamedValue().Length(); ++p) {
+      InfallibleTArray<BluetoothNamedValue>& deviceProperties =
+        v.get_ArrayOfBluetoothNamedValue();
+      for (uint32_t p = 0;
+           p < v.get_ArrayOfBluetoothNamedValue().Length(); ++p) {
         BluetoothNamedValue& property = v.get_ArrayOfBluetoothNamedValue()[p];
         // Only paired devices will be return back to main thread
         if (property.name().EqualsLiteral("Paired")) {
