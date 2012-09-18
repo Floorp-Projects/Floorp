@@ -5,6 +5,10 @@ import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
 import android.util.Log;
 
+/* Tests related to the about: page:
+ *  - check that about: loads from the awesome bar
+ *  - check that about: loads from Settings/About...
+ */
 public class testAboutPage extends PixelTest {
     @Override
     protected int getTestType() {
@@ -14,7 +18,7 @@ public class testAboutPage extends PixelTest {
     public void testAboutPage() {
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
-        // Load the about: page
+        // Load the about: page and verify its title
         String url = "about:";
         loadAndPaint(url);
 
@@ -31,10 +35,13 @@ public class testAboutPage extends PixelTest {
 
         // Look for the 'More' menu if this device/OS uses it
         if (mSolo.waitForText("^More$")) {
+            mAsserter.dumpLog("found More item in menu");
             mSolo.clickOnText("^More$");
         }
 
-        mSolo.waitForText("^Settings$");
+        if (mSolo.waitForText("^Settings$")) {
+            mAsserter.dumpLog("found Settings item in menu");
+        }
         mSolo.clickOnText("^Settings$");
 
         // Set up listeners to catch the page load we're about to do
@@ -42,7 +49,9 @@ public class testAboutPage extends PixelTest {
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
         // Tap on the "About Xxxx" setting
-        mSolo.waitForText("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
+        if (mSolo.waitForText("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)")) {
+            mAsserter.dumpLog("found About... title text");
+        }
         mSolo.clickOnText("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
 
         // Wait for the new tab and page to load
