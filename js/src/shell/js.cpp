@@ -771,7 +771,7 @@ class AutoNewContext
             suspension.destroy();
             if (throwing)
                 JS_SetPendingException(oldcx, exc);
-            JS_DestroyContextNoGC(newcx);
+            DestroyContext(newcx, false);
         }
     }
 };
