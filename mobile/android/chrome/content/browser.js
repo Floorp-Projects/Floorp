@@ -6159,9 +6159,10 @@ var WebappsUI = {
 
   observe: function observe(aSubject, aTopic, aData) {
     let data = {};
-    try { data = JSON.parse(aData); }
-    data.mm = aSubject;
-    catch(ex) { }
+    try {
+      data = JSON.parse(aData);
+      data.mm = aSubject;
+    } catch(ex) { }
     switch (aTopic) {
       case "webapps-install-error":
         let msg = "";
