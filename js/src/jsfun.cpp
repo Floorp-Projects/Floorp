@@ -51,6 +51,7 @@
 #include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 

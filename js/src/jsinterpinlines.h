@@ -955,6 +955,16 @@ UrshOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
 
 #undef RELATIONAL_OP
 
+inline JSFunction *
+ReportIfNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct = NO_CONSTRUCT)
+{
+    if (v.isObject() && v.toObject().isFunction())
+        return v.toObject().toFunction();
+
+    ReportIsNotFunction(cx, v, construct);
+    return NULL;
+}
+
 }  /* namespace js */
 
 #endif /* jsinterpinlines_h__ */
