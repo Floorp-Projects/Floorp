@@ -376,7 +376,7 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, uint8_t *contents)
 
     js::Shape *empty = EmptyShape::getInitialShape(cx, &ArrayBufferClass,
                                                    obj->getProto(), obj->getParent(),
-                                                   gc::FINALIZE_OBJECT16);
+                                                   gc::FINALIZE_OBJECT16_BACKGROUND);
     if (!empty)
         return NULL;
     obj->setLastPropertyInfallible(empty);
