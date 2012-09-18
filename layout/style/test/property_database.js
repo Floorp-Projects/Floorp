@@ -3887,6 +3887,12 @@ var gCSSProperties = {
 			"translate(calc(5px - 10% * 3))",
 			"translate(calc(5px - 3 * 10%), 50px)",
 			"translate(-50px, calc(5px - 10% * 3))",
+			/* valid only when prefixed */
+			"matrix(1, 2, 3, 4, 5px, 6%)",
+			"matrix(1, 2, 3, 4, 5%, 6px)",
+			"matrix(1, 2, 3, 4, 5%, 6%)",
+			"matrix(1, 2, 3, 4, 5px, 6em)",
+			"matrix(1, 0, 0, 1, calc(5px * 3), calc(10% - 3px))",
 		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
 			"translatez(1px)", "translatez(4em)", "translatez(-4px)",
 			"translatez(0px)", "translatez(2px) translatez(5px)",
@@ -3897,6 +3903,9 @@ var gCSSProperties = {
 			"rotate3d(-3, 7, 0, 12rad)", "rotatex(15deg)", "rotatey(-12grad)",
 			"rotatez(72rad)", "rotatex(0.125turn)", "perspective(1000px)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)",
+			/* valid only when prefixed */
+			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13px, 14em, 15px, 16)",
+			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20%, 10%, 15, 16)",
 		] : []),
 		invalid_values: ["1px", "#0000ff", "red", "auto",
 			"translatex(1)", "translatey(1)", "translate(2)",
@@ -3906,9 +3915,7 @@ var gCSSProperties = {
 			"matrix(1px, 2px, 3px, 4px, 5px, 6px)", "scale(150%)",
 			"skewx(red)", "matrix(1%, 0, 0, 0, 0px, 0px)",
 			"matrix(0, 1%, 2, 3, 4px,5px)", "matrix(0, 1, 2%, 3, 4px, 5px)",
-			"matrix(0, 1, 2, 3%, 4%, 5%)", "matrix(1, 2, 3, 4, 5px, 6%)",
-			"matrix(1, 2, 3, 4, 5%, 6px)", "matrix(1, 2, 3, 4, 5%, 6%)",
-			"matrix(1, 2, 3, 4, 5px, 6em)",
+			"matrix(0, 1, 2, 3%, 4%, 5%)",
 			/* invalid calc() values */
 			"translatey(-moz-min(5px,10%))",
 			"translatex(-moz-max(5px,10%))",
@@ -3922,8 +3929,6 @@ var gCSSProperties = {
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15%, 16)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16px)",
 			"rotatey(words)", "rotatex(7)", "translate3d(3px, 4px, 1px, 7px)",
-			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13px, 14em, 15px, 16)",
-			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20%, 10%, 15, 16)"
 		] : [])
 	},
 	"-moz-transform-origin": {
