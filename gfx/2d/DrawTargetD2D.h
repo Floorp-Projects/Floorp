@@ -172,8 +172,9 @@ private:
   void PopClipsFromRT(ID2D1RenderTarget *aRT);
 
   // This function ensures mCurrentClipMaskTexture contains a texture containing
-  // a mask corresponding with the current DrawTarget clip.
-  void EnsureClipMaskTexture();
+  // a mask corresponding with the current DrawTarget clip. See
+  // GetClippedGeometry for a description of aClipBounds.
+  void EnsureClipMaskTexture(IntRect *aClipBounds);
 
   bool FillGlyphsManual(ScaledFontDWrite *aFont,
                         const GlyphBuffer &aBuffer,
@@ -183,7 +184,14 @@ private:
 
   TemporaryRef<ID2D1RenderTarget> CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
   TemporaryRef<ID2D1Geometry> ConvertRectToGeometry(const D2D1_RECT_F& aRect);
-  TemporaryRef<ID2D1Geometry> GetClippedGeometry();
+  TemporaryRef<ID2D1Geometry> GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform);
+  TemporaryRef<ID2D1Geometry> Intersect(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB);
+
+  // This returns the clipped geometry, in addition it returns aClipBounds which
+  // represents the intersection of all pixel-aligned rectangular clips that
+  // are currently set. The returned clipped geometry must be clipped by these
+  // bounds to correctly reflect the total clip. This is in device space.
+  TemporaryRef<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
@@ -199,6 +207,10 @@ private:
   void SetupEffectForRadialGradient(const RadialGradientPattern *aPattern);
   void SetupStateForRendering();
 
+  // Set the scissor rect to a certain IntRects, resets the scissor rect to
+  // surface bounds when NULL is specified.
+  void SetScissorToRect(IntRect *aRect);
+
   static const uint32_t test = 4;
 
   IntSize mSize;
@@ -207,6 +219,10 @@ private:
   RefPtr<ID3D10Texture2D> mTexture;
   RefPtr<ID3D10Texture2D> mCurrentClipMaskTexture;
   RefPtr<ID2D1Geometry> mCurrentClippedGeometry;
+  // This is only valid if mCurrentClippedGeometry is non-null. And will
+  // only be the intersection of all pixel-aligned retangular clips. This is in
+  // device space.
+  IntRect mCurrentClipBounds;
   mutable RefPtr<ID2D1RenderTarget> mRT;
 
   // We store this to prevent excessive SetTextRenderingParams calls.
@@ -224,7 +240,12 @@ private:
   {
     RefPtr<ID2D1Layer> mLayer;
     D2D1_RECT_F mBounds;
-    D2D1_MATRIX_3X2_F mTransform;
+    union {
+      // If mPath is non-NULL, the mTransform member will be used, otherwise
+      // the mIsPixelAligned member is valid.
+      D2D1_MATRIX_3X2_F mTransform;
+      bool mIsPixelAligned;
+    };
     RefPtr<PathD2D> mPath;
   };
   std::vector<PushedClip> mPushedClips;

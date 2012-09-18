@@ -75,7 +75,7 @@ SamplerState sShadowSampler
 };
 RasterizerState TextureRast
 {
-    ScissorEnable = bool(FALSE /* 0 */);
+    ScissorEnable = bool(TRUE /* 1 */);
     CullMode = uint(NONE /* 1 */);
 };
 BlendState ShadowBlendH
@@ -3057,10 +3057,10 @@ technique10 SampleTextTexture
 
 const BYTE d2deffect[] =
 {
-     68,  88,  66,  67, 180,  92, 
-     99,   8,  31, 243, 141,  10, 
-    239,  43,  71, 236,  45, 138, 
-     71, 112,   1,   0,   0,   0, 
+     68,  88,  66,  67, 162, 185, 
+     42, 249, 229,   2,  50,  89, 
+      3, 159,  21, 149,  11, 251, 
+     62, 135,   1,   0,   0,   0, 
     144, 191,   0,   0,   1,   0, 
       0,   0,  36,   0,   0,   0, 
      70,  88,  49,  48, 100, 191, 
@@ -3212,7 +3212,7 @@ const BYTE d2deffect[] =
       0,   0,  84, 101, 120, 116, 
     117, 114, 101,  82,  97, 115, 
     116,   0,   1,   0,   0,   0, 
-      2,   0,   0,   0,   0,   0, 
+      2,   0,   0,   0,   1,   0, 
       0,   0,   1,   0,   0,   0, 
       2,   0,   0,   0,   1,   0, 
       0,   0,  66, 108, 101, 110, 
