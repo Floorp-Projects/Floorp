@@ -209,7 +209,7 @@ public:
    * null-checked.
    *
    * The typesafe functions below are preferred to the use of this
-   * function, bothe because they're easier to read and  because they're
+   * function, both because they're easier to read and because they're
    * faster.
    */
   const void* NS_FASTCALL GetStyleData(nsStyleStructID aSID);
