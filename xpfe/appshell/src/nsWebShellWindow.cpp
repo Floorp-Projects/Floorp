@@ -59,6 +59,7 @@
 #include "nsIScreen.h"
 
 #include "nsIContent.h" // for menus
+#include "nsIScriptSecurityManager.h"
 
 // For calculating size
 #include "nsIPresShell.h"
@@ -195,6 +196,25 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   if (webProgress) {
     webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_NETWORK);
   }
+
+  // Eagerly create an about:blank content viewer with the right principal here,
+  // rather than letting it happening in the upcoming call to
+  // SetInitialPrincipalToSubject. This avoids creating the about:blank document
+  // and then blowing it away with a second one, which can cause problems for the
+  // top-level chrome window case. See bug 789773.
+  nsCOMPtr<nsIScriptSecurityManager> ssm =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv) && ssm);
+  nsCOMPtr<nsIPrincipal> principal;
+  ssm->GetSubjectPrincipal(getter_AddRefs(principal));
+  if (!principal) {
+    ssm->GetSystemPrincipal(getter_AddRefs(principal));
+  }
+  rv = mDocShell->CreateAboutBlankContentViewer(principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> doc = do_GetInterface(mDocShell);
+  NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);
+  doc->SetIsInitialDocument(true);
 
   if (nullptr != aUrl)  {
     nsCString tmpStr;
