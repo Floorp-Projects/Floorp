@@ -13,6 +13,10 @@
 
 #include "jsobjinlines.h"
 
+// Sentinel value used to initialize ArrayBufferViews' NEXT_BUFFER_SLOTs to
+// show that they have not yet been added to any ArrayBuffer list
+JSObject * const UNSET_BUFFER_LINK = (JSObject*)0x2;
+
 inline void
 js::ArrayBufferObject::setElementsHeader(js::ObjectElements *header, uint32_t bytes)
 {
@@ -245,7 +249,8 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     dvobj.setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
     dvobj.setFixedSlot(BYTELENGTH_SLOT, Int32Value(byteLength));
     dvobj.setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
-    dvobj.setFixedSlot(NEXT_VIEW_SLOT, NullValue());
+    dvobj.setFixedSlot(NEXT_VIEW_SLOT, PrivateValue(NULL));
+    dvobj.setFixedSlot(NEXT_BUFFER_SLOT, PrivateValue(UNSET_BUFFER_LINK));
     InitTypedArrayDataPointer(obj, arrayBuffer, byteOffset);
     JS_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 

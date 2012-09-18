@@ -24,7 +24,9 @@
 #include "jsobj.h"
 #include "jstypedarray.h"
 
+#include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "gc/StoreBuffer.h"
 #include "mozilla/Util.h"
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
@@ -257,7 +259,7 @@ ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, uint8_t *co
 static JSObject *
 NextView(JSObject *obj)
 {
-    return obj->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toObjectOrNull();
+    return static_cast<JSObject*>(obj->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toPrivate());
 }
 
 static JSObject **
@@ -315,45 +317,84 @@ ArrayBufferObject::uninlineData(JSContext *maybecx)
    return true;
 }
 
-static void
-SetNextView(JSObject *obj, JSObject *view)
+#ifdef JSGC_GENERATIONAL
+class WeakObjectSlotRef : public js::gc::BufferableRef
 {
-    return obj->setFixedSlot(BufferView::NEXT_VIEW_SLOT, ObjectOrNullValue(view));
+    JSObject *owner;
+    size_t slot;
+    const char *desc;
+
+  public:
+    WeakObjectSlotRef(JSObject *owner, size_t slot, const char desc[])
+      : owner(owner), slot(slot), desc(desc)
+    {
+    }
+
+    virtual bool match(void *location) {
+        return location == owner->getFixedSlot(slot).toPrivate();
+    }
+
+    virtual void mark(JSTracer *trc) {
+        JSObject *obj = static_cast<JSObject*>(owner->getFixedSlot(slot).toPrivate());
+        MarkObjectUnbarriered(trc, &obj, desc);
+        owner->setFixedSlot(slot, PrivateValue(obj));
+    }
+};
+#endif
+
+// Custom barrier is necessary for PrivateValues because they are not traced by
+// default.
+static void
+WeakObjectSlotBarrierPost(JSObject *obj, size_t slot, const char *desc)
+{
+#ifdef JSGC_GENERATIONAL
+    obj->compartment()->gcStoreBuffer.putGeneric(WeakObjectSlotRef(obj, slot, desc));
+#endif
+}
+
+static JSObject *
+BufferLink(JSObject *view)
+{
+    return static_cast<JSObject*>(view->getFixedSlot(BufferView::NEXT_BUFFER_SLOT).toPrivate());
+}
+
+static void
+SetBufferLink(JSObject *view, JSObject *buffer)
+{
+    view->setFixedSlot(BufferView::NEXT_BUFFER_SLOT, PrivateValue(buffer));
 }
 
 void
 ArrayBufferObject::addView(JSContext *cx, RawObject view)
 {
+    // This view should never have been associated with a buffer before
+    JS_ASSERT(BufferLink(view) == UNSET_BUFFER_LINK);
+
+    // Note that pre-barriers are not needed here because either the list was
+    // previously empty, in which case no pointer is being overwritten, or the
+    // list was nonempty and will be made weak during this call (and weak
+    // pointers cannot violate the snapshot-at-the-beginning invariant.)
+
     JSObject **views = GetViewList(this);
-    SetNextView(view, *views);
+    if (*views == NULL) {
+        // This ArrayBuffer will have a single view at this point, so it is a
+        // strong pointer (it will be marked during tracing.)
+        JS_ASSERT(NextView(view) == NULL);
+    } else {
+        view->setFixedSlot(BufferView::NEXT_VIEW_SLOT, PrivateValue(*views));
+        WeakObjectSlotBarrierPost(view, BufferView::NEXT_VIEW_SLOT, "arraybuffer.nextview");
+
+        // Move the multiview buffer list link into this view since we're
+        // prepending it to the list.
+        SetBufferLink(view, BufferLink(*views));
+        WeakObjectSlotBarrierPost(view, BufferView::NEXT_BUFFER_SLOT, "view.nextbuffer");
+    }
+
     *views = view;
-}
 
-void
-ArrayBufferObject::removeFinalizedView(FreeOp *fop, RawObject view)
-{
-    JSObject **views = GetViewList(this);
-
-    if (*views == view) {
-        *views = NextView(view);
-        return;
-    }
-
-    /*
-     * We traverse this during finalization, but all views in the list are
-     * guaranteed to be valid. Any view that has already been finalized will
-     * have already been removed from the list. Anything left either has not
-     * been finalized yet, or is still alive.
-     */
-    JSObject *next;
-    for (JSObject *linkObj = *views; true; linkObj = next) {
-        JS_ASSERT(linkObj); // Should always find view in the list
-        next = linkObj->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toObjectOrNull();
-        if (next == view) {
-            linkObj->setFixedSlot(BufferView::NEXT_VIEW_SLOT, ObjectOrNullValue(NextView(next)));
-            return;
-        }
-    }
+    // The view list is not stored in the private slot, but it needs the same
+    // post barrier implementation
+    privateWriteBarrierPost((void**)views);
 }
 
 JSObject *
@@ -476,6 +517,71 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
         MarkObjectUnbarriered(trc, &delegate, "arraybuffer.delegate");
         obj->setPrivateUnbarriered(delegate);
     }
+
+    // ArrayBuffers need to maintain a list of possibly-weak pointers to their
+    // views. The straightforward way to update the weak pointers would be in
+    // the views' finalizers, but giving views finalizers means they cannot be
+    // swept in the background. This results in a very high performance cost.
+    // Instead, ArrayBuffers with a single view hold a strong pointer to the
+    // view. This can entrain garbage when the single view becomes otherwise
+    // unreachable while the buffer is still live, but this is expected to be
+    // rare. ArrayBuffers with 0-1 views are expected to be by far the most
+    // common cases. ArrayBuffers with multiple views are collected into a
+    // linked list during collection, and then swept to prune out their dead
+    // views.
+
+    JSObject **views = GetViewList(&obj->asArrayBuffer());
+    if (!*views)
+        return;
+
+    JSObject *firstView = *views;
+    if (NextView(firstView) == NULL) {
+        // Single view: mark it, but only if we're actually doing a GC pass
+        // right now. Otherwise, the tracing pass for barrier verification will
+        // fail if we add another view and the pointer becomes weak.
+        if (IS_GC_MARKING_TRACER(trc))
+            MarkObjectUnbarriered(trc, views, "arraybuffer.singleview");
+    } else {
+        // Multiple views: do not mark, but append buffer to list.
+
+        // obj_trace may be called multiple times before sweepAll(), so avoid
+        // adding this buffer to the list multiple times.
+        if (BufferLink(firstView) == UNSET_BUFFER_LINK)  {
+            JSObject **bufList = &trc->runtime->liveArrayBuffers;
+            SetBufferLink(firstView, *bufList);
+            *bufList = obj;
+        }
+    }
+}
+
+void
+ArrayBufferObject::sweepAll(JSRuntime *rt)
+{
+    JSObject *buffer = rt->liveArrayBuffers;
+    while (buffer) {
+        JSObject **views = GetViewList(&buffer->asArrayBuffer());
+        JS_ASSERT(*views);
+        JSObject *nextBuffer = BufferLink(*views);
+        SetBufferLink(*views, UNSET_BUFFER_LINK);
+
+        // Rebuild the list of views of the ArrayBuffer, discarding dead views
+        JSObject *prevLiveView = NULL;
+        JSObject *view = *views;
+        while (view) {
+            JSObject *nextView =
+                static_cast<JSObject*>(view->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toPrivate());
+            if (!JS_IsAboutToBeFinalized(view)) {
+                view->setFixedSlot(BufferView::NEXT_VIEW_SLOT, PrivateValue(prevLiveView));
+                prevLiveView = view;
+            }
+            view = nextView;
+        }
+        *views = prevLiveView;
+
+        buffer = nextBuffer;
+    }
+
+    rt->liveArrayBuffers = NULL;
 }
 
 JSBool
@@ -1066,15 +1172,6 @@ class TypedArrayTemplate
     }
 
     static void
-    obj_finalize(FreeOp *fop, JSObject *obj)
-    {
-        JS_ASSERT(obj->hasClass(fastClass()));
-        JSObject *bufobj = buffer(obj);
-        if (!JS_IsAboutToBeFinalized(bufobj))
-            bufobj->asArrayBuffer().removeFinalizedView(fop, obj);
-    }
-
-    static void
     obj_trace(JSTracer *trc, JSObject *obj)
     {
         MarkSlot(trc, &obj->getFixedSlotRef(BUFFER_SLOT), "typedarray.buffer");
@@ -1398,7 +1495,7 @@ class TypedArrayTemplate
         RootedObject obj(cx, NewBuiltinClassInstance(cx, fastClass()));
         if (!obj)
             return NULL;
-        JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT8);
+        JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT8_BACKGROUND);
 
         if (proto) {
             types::TypeObject *type = proto->getNewType(cx);
@@ -1429,7 +1526,8 @@ class TypedArrayTemplate
         obj->setSlot(LENGTH_SLOT, Int32Value(len));
         obj->setSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
         obj->setSlot(BYTELENGTH_SLOT, Int32Value(len * sizeof(NativeType)));
-        obj->setSlot(NEXT_VIEW_SLOT, NullValue());
+        obj->setSlot(NEXT_VIEW_SLOT, PrivateValue(NULL));
+        obj->setSlot(NEXT_BUFFER_SLOT, PrivateValue(UNSET_BUFFER_LINK));
 
         // Mark the object as non-extensible. We cannot simply call
         // obj->preventExtensions() because that has to iterate through all
@@ -1439,7 +1537,7 @@ class TypedArrayTemplate
         // following code anyway:
         js::Shape *empty = EmptyShape::getInitialShape(cx, fastClass(),
                                                        obj->getProto(), obj->getParent(),
-                                                       gc::FINALIZE_OBJECT8,
+                                                       gc::FINALIZE_OBJECT8_BACKGROUND,
                                                        BaseShape::NOT_EXTENSIBLE);
         if (!empty)
             return NULL;
@@ -2423,14 +2521,6 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
     return construct(cx, bufobj, args, NULL);
 }
 
-/* static */ void
-DataViewObject::obj_finalize(FreeOp *fop, JSObject *obj)
-{
-    DataViewObject &view = obj->asDataView();
-    if (view.hasBuffer() && !JS_IsAboutToBeFinalized(&view.arrayBuffer()))
-        view.arrayBuffer().removeFinalizedView(fop, &view);
-}
-
 /* static */ bool
 DataViewObject::getDataPointer(JSContext *cx, Handle<DataViewObject*> obj,
                                CallArgs args, size_t typeSize, uint8_t **data)
@@ -3139,7 +3229,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JS_EnumerateStub,                                                          \
     JS_ResolveStub,                                                            \
     JS_ConvertStub,                                                            \
-    _typedArray::obj_finalize,                                                 \
+    NULL,                    /* finalize */                                    \
     NULL,                    /* checkAccess */                                 \
     NULL,                    /* call        */                                 \
     NULL,                    /* construct   */                                 \
@@ -3339,7 +3429,7 @@ Class js::DataViewClass = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    DataViewObject::obj_finalize,
+    NULL,           /* finalize */
     NULL,           /* checkAccess */
     NULL,           /* call        */
     NULL,           /* construct   */

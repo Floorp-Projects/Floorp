@@ -824,6 +824,7 @@ JSRuntime::JSRuntime()
     alwaysPreserveCode(false),
     hadOutOfMemory(false),
     debugScopes(NULL),
+    liveArrayBuffers(NULL),
     data(NULL),
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
