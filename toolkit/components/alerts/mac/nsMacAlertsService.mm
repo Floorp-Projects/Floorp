@@ -8,101 +8,17 @@
 
 #include "nsMacAlertsService.h"
 #include "nsStringAPI.h"
-#include "nsAlertsImageLoadListener.h"
 #include "nsIURI.h"
 #include "nsIStreamLoader.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
-#include "nsIStringBundle.h"
 #include "nsIObserverService.h"
 #include "nsAutoPtr.h"
-#include "nsNotificationsList.h"
 #include "nsObjCExceptions.h"
 #include "nsPIDOMWindow.h"
 
-#import "mozGrowlDelegate.h"
 #import "mozNotificationCenterDelegate.h"
-#import "GrowlApplicationBridge.h"
 #import "nsNotificationCenterCompat.h"
-
-////////////////////////////////////////////////////////////////////////////////
-//// GrowlDelegateWrapper
-
-struct GrowlDelegateWrapper
-{
-  mozGrowlDelegate* mDelegate;
-
-  GrowlDelegateWrapper()
-  {
-    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-    mDelegate = [[mozGrowlDelegate alloc] init];
-
-    NS_OBJC_END_TRY_ABORT_BLOCK;
-  }
-
-  ~GrowlDelegateWrapper()
-  {
-    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-    [mDelegate release];
-
-    NS_OBJC_END_TRY_ABORT_BLOCK;
-  }
-};
-
-/**
- * Helper function to dispatch a notification to Growl
- */
-static nsresult
-DispatchGrowlNotification(const nsAString &aName,
-                          const nsAString &aImage,
-                          const nsAString &aTitle,
-                          const nsAString &aMessage,
-                          const nsAString &aCookie,
-                          nsIObserver *aListener)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  if ([GrowlApplicationBridge isGrowlRunning] == NO) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  mozGrowlDelegate *delegate =
-    static_cast<mozGrowlDelegate *>([GrowlApplicationBridge growlDelegate]);
-  if (!delegate) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  uint32_t ind = 0;
-  if (aListener) {
-    ind = [delegate addObserver: aListener];
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aImage);
-  if (NS_FAILED(rv)) {
-    // image uri failed to resolve, so dispatch to growl with no image
-    [mozGrowlDelegate notifyWithName: aName
-                               title: aTitle
-                         description: aMessage
-                            iconData: [NSData data]
-                                 key: ind
-                              cookie: aCookie];
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsAlertsImageLoadListener> listener =
-    new nsAlertsImageLoadListener(aName, aTitle, aMessage, aCookie, ind);
-  if (!listener) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIStreamLoader> loader;
-  return NS_NewStreamLoader(getter_AddRefs(loader), uri, listener);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// NotificationCenterDelegateWrapper
@@ -191,52 +107,23 @@ nsMacAlertsService::Init()
     do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Only use Growl with OS version < 10.8.
+  // Only use Notification Center with OS version >= 10.8.
   SInt32 osVersion = 0;
   OSErr err = ::Gestalt (gestaltSystemVersion, &osVersion);
   osVersion &= 0xFFFF; // The system version is in the low order word
-  if ((err != noErr) || (osVersion < 0x00001080)) {
-    rv = InitGrowl();
+  if (err != noErr || (osVersion < 0x00001080)) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
-  else {
-    rv = InitNotificationCenter();
+
+  rv = InitNotificationCenter();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   (void)os->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, false);
   (void)os->AddObserver(this, "profile-before-change", false);
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-nsresult
-nsMacAlertsService::InitGrowl() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  NS_ASSERTION([GrowlApplicationBridge growlDelegate] == nil,
-               "We already registered with Growl!");
-
-  nsresult rv;
-  nsCOMPtr<nsIObserverService> os =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<nsNotificationsList> notifications = new nsNotificationsList();
-
-  if (notifications) {
-    (void)os->NotifyObservers(notifications, "before-growl-registration", nullptr);
-  }
-
-  mGrowlDelegate = new GrowlDelegateWrapper();
-
-  if (notifications) {
-    notifications->informController(mGrowlDelegate->mDelegate);
-  }
-
-  [GrowlApplicationBridge setGrowlDelegate: mGrowlDelegate->mDelegate];
-
-  return NS_OK;
+  return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -248,13 +135,11 @@ nsMacAlertsService::InitNotificationCenter() {
 }
 
 nsMacAlertsService::nsMacAlertsService()
-: mGrowlDelegate(nullptr)
-, mNCDelegate(nullptr)
+: mNCDelegate(nullptr)
 {}
 
 nsMacAlertsService::~nsMacAlertsService()
 {
-  delete mGrowlDelegate;
   delete mNCDelegate;
 }
 
@@ -270,47 +155,8 @@ nsMacAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
                                             nsIObserver* aAlertListener,
                                             const nsAString& aAlertName)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  // Growl requires a few extra steps, like checking that it's registered and
-  // the alert has a name.
-  if (mGrowlDelegate) {
-    NS_ASSERTION(mGrowlDelegate->mDelegate == [GrowlApplicationBridge growlDelegate],
-                 "Growl Delegate was not registered properly.");
-
-    if (!aAlertName.IsEmpty()) {
-      return DispatchGrowlNotification(aAlertName, aImageUrl, aAlertTitle,
-                                       aAlertText, aAlertCookie, aAlertListener);
-    }
-
-    nsresult rv;
-    nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService("@mozilla.org/intl/stringbundle;1", &rv);
-
-    // We don't want to fail just yet if we can't get the alert name
-    nsString name = NS_LITERAL_STRING("General Notification");
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIStringBundle> bundle;
-      rv = bundleService->CreateBundle(GROWL_STRING_BUNDLE_LOCATION,
-                                       getter_AddRefs(bundle));
-      if (NS_SUCCEEDED(rv)) {
-        rv = bundle->GetStringFromName(NS_LITERAL_STRING("general").get(),
-                                       getter_Copies(name));
-        if (NS_FAILED(rv)) {
-          name = NS_LITERAL_STRING("General Notification");
-        }
-      }
-    }
-
-    return DispatchGrowlNotification(name, aImageUrl, aAlertTitle,
-                                     aAlertText, aAlertCookie, aAlertListener);
-  } else {
-    // Notification Center is easy: no image, no name.
-    return DispatchNCNotification(mNCDelegate, aAlertTitle, aAlertText,
-                                  aAlertCookie, aAlertListener);
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  return DispatchNCNotification(mNCDelegate, aAlertTitle, aAlertText,
+                                aAlertCookie, aAlertListener);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -322,20 +168,18 @@ nsMacAlertsService::Observe(nsISupports* aSubject, const char* aTopic,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (!mGrowlDelegate && !mNCDelegate) {
+  if (!mNCDelegate) {
     return NS_OK;
   }
 
   if (strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) == 0) {
     nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(aSubject));
     if (window) {
-      mGrowlDelegate ? [mGrowlDelegate->mDelegate forgetObserversForWindow:window]
-                     : [mNCDelegate->mDelegate forgetObserversForWindow:window];
+      [mNCDelegate->mDelegate forgetObserversForWindow:window];
     }
   }
   else if (strcmp(aTopic, "profile-before-change") == 0) {
-    mGrowlDelegate ? [mGrowlDelegate->mDelegate forgetObservers]
-                   : [mNCDelegate->mDelegate forgetObservers];
+    [mNCDelegate->mDelegate forgetObservers];
   }
 
   return NS_OK;
