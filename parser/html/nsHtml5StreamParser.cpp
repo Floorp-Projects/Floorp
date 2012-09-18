@@ -1190,17 +1190,25 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
     mFeedChardet = false; // don't feed chardet when confident
     return false;
   }
-  
+
   // XXX check HTML5 non-IANA aliases here
-  
+
   nsAutoCString preferred;
-  
   rv = nsCharsetAlias::GetPreferred(newEncoding, preferred);
   if (NS_FAILED(rv)) {
-    NS_NOTREACHED("Finding the preferred name failed.");
+    // This charset has been blacklisted for permitting XSS smuggling.
+    // EncMetaNonRoughSuperset is a reasonable approximation to the
+    // right error message.
+    mTreeBuilder->MaybeComplainAboutCharset("EncMetaNonRoughSuperset",
+                                            true,
+                                            mTokenizer->getLineNumber());
     return false;
   }
-  
+
+  // ??? Explicit further blacklist of character sets that are not
+  // "rough supersets" of ASCII.  Some of these are handled above (utf-16),
+  // some by the XSS smuggling blacklist in charsetData.properties,
+  // maybe all of the remainder should also be blacklisted there.
   if (preferred.LowerCaseEqualsLiteral("utf-16") ||
       preferred.LowerCaseEqualsLiteral("utf-16be") ||
       preferred.LowerCaseEqualsLiteral("utf-16le") ||
