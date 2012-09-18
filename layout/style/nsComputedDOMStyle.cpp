@@ -410,7 +410,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   // aliases to be enumerable (via GetLength and IndexedGetter), so
   // handle them here rather than adding entries to
   // GetQueryablePropertyMap.
-  if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_IS_ALIAS)) {
+  if (prop != eCSSProperty_UNKNOWN &&
+      nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_IS_ALIAS)) {
     const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(prop);
     NS_ABORT_IF_FALSE(subprops[1] == eCSSProperty_UNKNOWN,
                       "must have list of length 1");
