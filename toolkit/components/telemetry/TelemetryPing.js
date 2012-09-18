@@ -796,7 +796,7 @@ TelemetryPing.prototype = {
       initFlags |= PR_EXCL;
     }
     try {
-      ostream.init(file, initFlags, RW_OWNER, ostream.DEFER_OPEN);
+      ostream.init(file, initFlags, RW_OWNER, 0);
     } catch (e) {
       // Probably due to PR_EXCL.
       return;
