@@ -94,6 +94,7 @@ MOCHITEST_CHROME_FILES =	\
 		test_principalInherit.xul \
 		test_mozFrameType.xul \
 		mozFrameType_window.xul \
+		test_bug789773.xul \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES += \
