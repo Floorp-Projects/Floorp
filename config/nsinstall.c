@@ -285,12 +285,15 @@ main(int argc, char **argv)
 	  case 'd':
 	    dodir = 1;
 	    break;
+	  case 'l':
+	    dolink = 1;
+	    break;
 	  case 'L':
 	    linkprefix = optarg;
 	    lplen = strlen(linkprefix);
 	    dolink = 1;
 	    break;
-	  case 'R':
+     case 'R':
 	    dolink = dorelsymlink = 1;
 	    break;
 	  case 'm':
@@ -386,7 +389,7 @@ main(int argc, char **argv)
 		linkname = 0;
 	    } else {
 		if (linkprefix) {
-		    /* -L prefixes names with a $cwd arg. */
+		    /* -L implies -l and prefixes names with a $cwd arg. */
 		    len += lplen + 1;
 		    linkname = xmalloc((unsigned int)(len + 1));
 		    sprintf(linkname, "%s/%s", linkprefix, name);
