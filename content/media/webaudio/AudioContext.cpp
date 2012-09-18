@@ -9,6 +9,8 @@
 #include "nsIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AudioContextBinding.h"
+#include "AudioDestinationNode.h"
+#include "AudioBufferSourceNode.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,6 +25,7 @@ NS_INTERFACE_MAP_END
 
 AudioContext::AudioContext(nsIDOMWindow* aWindow)
   : mWindow(aWindow)
+  , mDestination(new AudioDestinationNode(this))
 {
   SetIsDOMBinding();
 }
@@ -50,6 +53,14 @@ AudioContext::Constructor(nsISupports* aGlobal, ErrorResult& aRv)
   AudioContext* object = new AudioContext(window);
   NS_ADDREF(object);
   return object;
+}
+
+already_AddRefed<AudioBufferSourceNode>
+AudioContext::CreateBufferSource()
+{
+  nsRefPtr<AudioBufferSourceNode> bufferNode =
+    new AudioBufferSourceNode(this);
+  return bufferNode.forget();
 }
 
 }

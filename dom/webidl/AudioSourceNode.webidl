@@ -10,15 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor, PrefControlled]
-interface mozAudioContext {
-
-    readonly attribute AudioDestinationNode destination;
-
-    // AudioNode creation 
-    AudioBufferSourceNode createBufferSource();
+[PrefControlled]
+interface AudioSourceNode : AudioNode {
 
 };
-
-typedef mozAudioContext AudioContext;
 
