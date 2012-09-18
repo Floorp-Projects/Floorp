@@ -24,7 +24,6 @@
 #include "nsString.h"                   // for nsCString
 #include "nsWeakReference.h"            // for nsSupportsWeakReference
 #include "nscore.h"                     // for nsresult, nsAString, etc
-#include "prtypes.h"                    // for int32_t, uint32_t, int8_t, etc
 
 class AddStyleSheetTxn;
 class ChangeAttributeTxn;

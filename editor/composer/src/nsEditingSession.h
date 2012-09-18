@@ -17,7 +17,6 @@
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nsWeakReference.h"            // for nsSupportsWeakReference, etc
 #include "nscore.h"                     // for nsresult
-#include "prtypes.h"                    // for uint32_t, uint16_t
 
 #ifndef __gen_nsIWebProgressListener_h__
 #include "nsIWebProgressListener.h"

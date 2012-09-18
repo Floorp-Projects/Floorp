@@ -7,7 +7,6 @@
 #define __TextEditorTest_h__
 
 #include "nscore.h"
-#include "prtypes.h"
 
 class nsIEditor;
 class nsIPlaintextEditor;

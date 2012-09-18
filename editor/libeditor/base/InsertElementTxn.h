@@ -12,7 +12,6 @@
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
 #include "nscore.h"                     // for NS_IMETHOD
-#include "prtypes.h"                    // for int32_t
 
 class nsIEditor;
 
