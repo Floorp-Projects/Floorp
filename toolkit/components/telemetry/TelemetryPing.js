@@ -989,7 +989,9 @@ TelemetryPing.prototype = {
       }
       break;
     case "quit-application-granted":
-      this.savePendingPings();
+      if (Telemetry.canSend) {
+        this.savePendingPings();
+      }
       break;
     }
   },
