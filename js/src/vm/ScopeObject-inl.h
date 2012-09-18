@@ -129,14 +129,12 @@ BlockObject::localIndexToSlot(const Bindings &bindings, unsigned i)
 inline const Value &
 BlockObject::slotValue(unsigned i)
 {
-    JS_ASSERT(i < slotCount());
     return getSlotRef(RESERVED_SLOTS + i);
 }
 
 inline void
 BlockObject::setSlotValue(unsigned i, const Value &v)
 {
-    JS_ASSERT(i < slotCount());
     setSlot(RESERVED_SLOTS + i, v);
 }
 
