@@ -286,18 +286,6 @@ IsTypedArrayProtoClass(const Class *clasp)
            clasp < &TypedArray::protoClasses[TypedArray::TYPE_MAX];
 }
 
-inline bool
-IsTypedArray(JSObject *obj)
-{
-    return IsTypedArrayClass(obj->getClass());
-}
-
-inline bool
-IsTypedArrayProto(JSObject *obj)
-{
-    return IsTypedArrayProtoClass(obj->getClass());
-}
-
 class DataViewObject : public JSObject
 {
 public:

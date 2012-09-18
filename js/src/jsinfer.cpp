@@ -5698,7 +5698,7 @@ JSObject::makeLazyType(JSContext *cx)
     if (self->isSlowArray())
         type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY | OBJECT_FLAG_NON_PACKED_ARRAY;
 
-    if (IsTypedArrayProto(self))
+    if (IsTypedArrayProtoClass(self->getClass()))
         type->flags |= OBJECT_FLAG_NON_TYPED_ARRAY;
 
     self->type_ = type;
