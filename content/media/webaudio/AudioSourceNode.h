@@ -6,14 +6,18 @@
 
 #pragma once
 
+#include "AudioNode.h"
+
 namespace mozilla {
 namespace dom {
 
-// This is a helper class which enables Web Audio to be enabled or disabled
-// as whole.  Individual Web Audio object classes should inherit from this.
-class EnableWebAudioCheck {
+class AudioSourceNode : public AudioNode
+{
 public:
-  static bool PrefEnabled();
+  explicit AudioSourceNode(AudioContext* aContext);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
 };
 
 }
