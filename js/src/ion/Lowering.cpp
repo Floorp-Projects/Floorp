@@ -330,8 +330,8 @@ LIRGenerator::visitTest(MTest *test)
 
     // Constant Double operand.
     if (opd->type() == MIRType_Double && opd->isConstant()) {
-        double dbl = opd->toConstant()->value().toDouble();
-        return add(new LGoto(dbl ? ifTrue : ifFalse));
+        bool result = ToBoolean(opd->toConstant()->value());
+        return add(new LGoto(result ? ifTrue : ifFalse));
     }
 
     // Constant Int32 operand.
