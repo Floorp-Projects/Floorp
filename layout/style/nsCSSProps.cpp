@@ -219,6 +219,11 @@ nsCSSProps::BuildShorthandsContainingTable()
       subpropCounts[shorthand - eCSSProperty_COUNT_no_shorthands];
     subpropCountsEntry.property = shorthand;
     subpropCountsEntry.count = 0;
+    if (nsCSSProps::PropHasFlags(shorthand, CSS_PROPERTY_IS_ALIAS)) {
+      // Don't put shorthands that are acting as aliases in the
+      // shorthands-containing lists.
+      continue;
+    }
     for (const nsCSSProperty* subprops = SubpropertyEntryFor(shorthand);
          *subprops != eCSSProperty_UNKNOWN;
          ++subprops) {
@@ -279,6 +284,12 @@ nsCSSProps::BuildShorthandsContainingTable()
            shorthandAndCount->count,
            nsCSSProps::GetStringValue(shorthandAndCount->property).get());
 #endif
+    if (nsCSSProps::PropHasFlags(shorthandAndCount->property,
+                                 CSS_PROPERTY_IS_ALIAS)) {
+      // Don't put shorthands that are acting as aliases in the
+      // shorthands-containing lists.
+      continue;
+    }
     for (const nsCSSProperty* subprops =
            SubpropertyEntryFor(shorthandAndCount->property);
          *subprops != eCSSProperty_UNKNOWN;
@@ -307,6 +318,11 @@ nsCSSProps::BuildShorthandsContainingTable()
   for (nsCSSProperty shorthand = eCSSProperty_COUNT_no_shorthands;
        shorthand < eCSSProperty_COUNT;
        shorthand = nsCSSProperty(shorthand + 1)) {
+    if (nsCSSProps::PropHasFlags(shorthand, CSS_PROPERTY_IS_ALIAS)) {
+      // Don't put shorthands that are acting as aliases in the
+      // shorthands-containing lists.
+      continue;
+    }
     for (const nsCSSProperty* subprops = SubpropertyEntryFor(shorthand);
          *subprops != eCSSProperty_UNKNOWN;
          ++subprops) {
@@ -2240,6 +2256,13 @@ static const nsCSSProperty gMarkerSubpropTable[] = {
   eCSSProperty_marker_start,
   eCSSProperty_marker_mid,
   eCSSProperty_marker_end,
+  eCSSProperty_UNKNOWN
+};
+
+// Subproperty tables for shorthands that are just aliases with
+// different parsing rules.
+static const nsCSSProperty gMozTransformSubpropTable[] = {
+  eCSSProperty_transform,
   eCSSProperty_UNKNOWN
 };
 
