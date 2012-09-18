@@ -71,8 +71,8 @@ static bool GetIntPref(const char* aPref, int32_t* aResult)
 {
   // GetIntPref() is called on the decoder thread, but the Preferences API
   // can only be called on the main thread. Post a runnable and wait.
-  NS_ENSURE_ARG_POINTER(aPref);
-  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_TRUE(aPref, false);
+  NS_ENSURE_TRUE(aResult, false);
   nsCOMPtr<GetIntPrefEvent> event = new GetIntPrefEvent(aPref, aResult);
   return NS_SUCCEEDED(NS_DispatchToMainThread(event, NS_DISPATCH_SYNC));
 }

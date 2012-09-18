@@ -422,8 +422,8 @@ class ProcessMetrics {
   int processor_count_;
 
   // Used to store the previous times so we can compute the CPU usage.
-  int64 last_time_;
-  int64 last_system_time_;
+  int64_t last_time_;
+  int64_t last_system_time_;
 
   DISALLOW_EVIL_CONSTRUCTORS(ProcessMetrics);
 };

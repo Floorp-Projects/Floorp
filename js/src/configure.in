@@ -2222,11 +2222,6 @@ MOZ_ARG_ENABLE_BOOL(methodjit-spew,
   ENABLE_METHODJIT_SPEW=1,
   ENABLE_METHODJIT_SPEW= )
 
-MOZ_ARG_DISABLE_BOOL(ion,
-[  --disable-ion      Disable use of IONMonkey compiler],
-  ENABLE_ION=,
-  ENABLE_ION=1 )
-
 AC_SUBST(ENABLE_METHODJIT)
 AC_SUBST(ENABLE_METHODJIT_SPEW)
 
@@ -2527,6 +2522,8 @@ AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(VISIBILITY_FLAGS)
 
 MOZ_GCC_PR49911
+MOZ_GCC_PR39608
+MOZ_LLVM_PR8927
 
 dnl Checks for header files.
 dnl ========================================================

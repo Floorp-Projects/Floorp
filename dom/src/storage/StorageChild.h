@@ -27,7 +27,7 @@ public:
   StorageChild(nsDOMStorage* aOwner, StorageChild& aOther);
 
   virtual void InitAsSessionStorage(nsIURI* aDomainURI, bool aPrivate);
-  virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist, bool aPrivate);
+  virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aPrivate);
 
   virtual bool CacheStoragePermissions();
   
@@ -41,8 +41,6 @@ public:
   virtual nsresult RemoveValue(bool aCallerSecure, const nsAString& aKey,
                                nsAString& aOldValue);
   virtual nsresult Clear(bool aCallerSecure, int32_t* aOldCount);
-
-  virtual bool CanUseChromePersist();
 
   virtual nsresult GetDBValue(const nsAString& aKey,
                               nsAString& aValue,

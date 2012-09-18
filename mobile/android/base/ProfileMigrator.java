@@ -13,11 +13,6 @@ import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
-import org.mozilla.gecko.util.GeckoEventListener;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.accounts.Account;
 import android.content.ContentProviderOperation;
@@ -532,39 +527,26 @@ public class ProfileMigrator {
         }
     }
 
-    private class SyncTask implements Runnable, GeckoEventListener {
-        private List<String> mSyncSettingsList;
+    private class SyncTask implements Runnable {
         private Map<String, String> mSyncSettingsMap;
 
-        // Initialize preferences by sending the "Preferences:Get" command to Gecko
         protected void requestValues() {
-            mSyncSettingsList = Arrays.asList(SYNC_SETTINGS_LIST);
             mSyncSettingsMap = new HashMap<String, String>();
-            JSONArray jsonPrefs = new JSONArray(mSyncSettingsList);
-            Log.d(LOGTAG, "Sending: " + jsonPrefs.toString());
-            GeckoEvent event =
-                GeckoEvent.createBroadcastEvent("Preferences:Get",
-                                                jsonPrefs.toString());
-            GeckoAppShell.sendEventToGecko(event);
-        }
+            PrefsHelper.getPrefs(SYNC_SETTINGS_LIST, new PrefsHelper.PrefHandlerBase() {
+                @Override public void prefValue(String pref, boolean value) {
+                    mSyncSettingsMap.put(pref, value ? "1" : "0");
+                }
 
-        // Receive settings reply from Gecko, do the rest of the setup
-        public void handleMessage(String event, JSONObject message) {
-            Log.d(LOGTAG, "Received event: " + event);
-            try {
-                if (event.equals("Preferences:Data")) {
-                    // Receive most settings from Gecko's service.
-                    // This includes personal info, so don't log.
-                    // Log.d(LOGTAG, "Message: " + message.toString());
-                    JSONArray jsonPrefs = message.getJSONArray("preferences");
+                @Override public void prefValue(String pref, String value) {
+                    if (!TextUtils.isEmpty(value)) {
+                        mSyncSettingsMap.put(pref, value);
+                    } else {
+                        Log.w(LOGTAG, "Could not recover setting for = " + pref);
+                        mSyncSettingsMap.put(pref, null);
+                    }
+                }
 
-                    // Check that the batch of preferences we got notified of are in
-                    // the ones we requested and not those requested by other java code.
-                    if (!parsePrefs(jsonPrefs))
-                        return;
-
-                    unregisterEventListener("Preferences:Data", this);
-
+                @Override public void finish() {
                     // Now call the password provider to fill in the rest.
                     for (String location: SYNC_REALM_LIST) {
                         Log.d(LOGTAG, "Checking: " + location);
@@ -581,9 +563,7 @@ public class ProfileMigrator {
                     // Call Sync and transfer settings.
                     configureSync();
                 }
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
-            }
+            });
         }
 
         protected String getPassword(String realm) {
@@ -617,41 +597,6 @@ public class ProfileMigrator {
             }
 
             return result;
-        }
-
-        // Returns true if we sucessfully got the preferences we requested.
-        protected boolean parsePrefs(JSONArray jsonPrefs) {
-            try {
-                final int length = jsonPrefs.length();
-                for (int i = 0; i < length; i++) {
-                    JSONObject jPref = jsonPrefs.getJSONObject(i);
-                    final String prefName = jPref.getString("name");
-
-                    // Check to make sure we're working with preferences we requested.
-                    if (!mSyncSettingsList.contains(prefName))
-                        return false;
-
-                    final String prefType = jPref.getString("type");
-                    if ("bool".equals(prefType)) {
-                        final boolean value = jPref.getBoolean("value");
-                        mSyncSettingsMap.put(prefName, value ? "1" : "0");
-                    } else {
-                        final String value = jPref.getString("value");
-                        if (!TextUtils.isEmpty(value)) {
-                            mSyncSettingsMap.put(prefName, value);
-                        } else {
-                            Log.w(LOGTAG, "Could not recover setting for = " + prefName);
-                            mSyncSettingsMap.put(prefName, null);
-                        }
-                    }
-                }
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Exception handling preferences answer: "
-                      + e.getMessage());
-                return false;
-            }
-
-            return true;
         }
 
         protected void configureSync() {
@@ -692,7 +637,6 @@ public class ProfileMigrator {
         protected void registerAndRequest() {
             GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
-                    registerEventListener("Preferences:Data", SyncTask.this);
                     requestValues();
                 }
             });
@@ -717,14 +661,6 @@ public class ProfileMigrator {
                     }
                 }
             }.execute(mContext);
-        }
-
-        private void registerEventListener(String event, GeckoEventListener listener) {
-            GeckoAppShell.getEventDispatcher().registerEventListener(event, listener);
-        }
-
-        private void unregisterEventListener(String event, GeckoEventListener listener) {
-            GeckoAppShell.getEventDispatcher().unregisterEventListener(event, listener);
         }
     }
 

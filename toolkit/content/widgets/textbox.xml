@@ -151,6 +151,15 @@
         ]]></body>
       </method>
 
+      <method name="_maybeSelectAll">
+        <body><![CDATA[
+          if (!this.mIgnoreClick && this.clickSelectsAll &&
+              document.activeElement == this.inputField &&
+              this.inputField.selectionStart == this.inputField.selectionEnd)
+            this.editor.selectAll();
+        ]]></body>
+      </method>
+
       <constructor><![CDATA[
         var str = this.boxObject.getProperty("value");
         if (str) {
@@ -232,22 +241,19 @@
         ]]>
       </handler>
 
-      <handler event="click">
-        <![CDATA[
-          if (!this.mIgnoreClick && this.clickSelectsAll &&
-              document.activeElement == this.inputField &&
-              this.inputField.selectionStart == this.inputField.selectionEnd) {
-            this.editor.selectAll();
+      <handler event="click" action="this._maybeSelectAll();"/>
+
 #ifndef XP_WIN
-            // see bug 576135 comment 4
-            let box = this.inputField.parentNode;
-            let menu = document.getAnonymousElementByAttribute(box, "anonid", "input-box-contextmenu");
-            if ((menu.state == "open" || menu.state == "showing") && box._doPopupItemEnabling)
-              box._doPopupItemEnabling(menu);
-#endif
-          }
-        ]]>
+      <handler event="contextmenu">
+        if (!event.button) // context menu opened via keyboard shortcut
+          return;
+        this._maybeSelectAll();
+        // see bug 576135 comment 4
+        let box = this.inputField.parentNode;
+        let menu = document.getAnonymousElementByAttribute(box, "anonid", "input-box-contextmenu");
+        box._doPopupItemEnabling(menu);
       </handler>
+#endif
     </handlers>
   </binding>
 

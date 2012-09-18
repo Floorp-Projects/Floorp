@@ -26,7 +26,7 @@ namespace frontend {
 class AnyContextFlags
 {
     // This class's data is all private and so only visible to these friends.
-    friend struct SharedContext;
+    friend class SharedContext;
 
     // True if "use strict"; appears in the body instead of being inherited.
     bool            hasExplicitUseStrict:1;
@@ -64,7 +64,7 @@ class AnyContextFlags
 class FunctionContextFlags
 {
     // This class's data is all private and so only visible to these friends.
-    friend struct FunctionBox;
+    friend class FunctionBox;
 
     // We parsed a yield statement in the function.
     bool            isGenerator:1;

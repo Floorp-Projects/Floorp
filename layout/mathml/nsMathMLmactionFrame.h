@@ -31,30 +31,30 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(ChildListID     aListID,
-                      nsFrameList&    aChildList);
+                      nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual nsresult
-  ChildListChanged(int32_t aModType);
+  ChildListChanged(int32_t aModType) MOZ_OVERRIDE;
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
         bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize);
+        nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus);
+         nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD
   AttributeChanged(int32_t  aNameSpaceID,
                    nsIAtom* aAttribute,
-                   int32_t  aModType);
+                   int32_t  aModType) MOZ_OVERRIDE;
 
 private:
   void MouseClick();

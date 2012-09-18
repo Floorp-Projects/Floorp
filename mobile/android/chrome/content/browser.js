@@ -450,8 +450,10 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareImage"),
       NativeWindow.contextmenus.imageSaveableContext,
       function(aTarget) {
-        let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
-        let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
+        let doc = aTarget.ownerDocument;
+        let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                                                         .getImgCacheForDocument(doc);
+        let props = imageCache.findEntryProperties(aTarget.currentURI, doc.characterSet);
         let src = aTarget.src;
         let type = "";
         try {
@@ -471,8 +473,10 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.saveImage"),
       NativeWindow.contextmenus.imageSaveableContext,
       function(aTarget) {
-        let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
-        let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
+        let doc = aTarget.ownerDocument;
+        let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                                                         .getImgCacheForDocument(doc);
+        let props = imageCache.findEntryProperties(aTarget.currentURI, doc.characterSet);
         let contentDisposition = "";
         let type = "";
         try {
@@ -811,7 +815,7 @@ var BrowserApp = {
       let json = JSON.parse(aPrefNames);
       let prefs = [];
 
-      for each (let prefName in json) {
+      for each (let prefName in json.preferences) {
         let pref = {
           name: prefName
         };
@@ -880,6 +884,7 @@ var BrowserApp = {
       sendMessageToJava({
         gecko: {
           type: "Preferences:Data",
+          requestId: json.requestId,    // opaque request identifier, can be any string/int/whatever
           preferences: prefs
         }
       });
@@ -2694,9 +2699,9 @@ Tab.prototype = {
         // require error page UI to do privileged things, without letting error
         // pages have any privilege themselves.
         if (/^about:/.test(target.documentURI)) {
-          this.browser.addEventListener("click", ErrorPageEventHandler, false);
+          this.browser.addEventListener("click", ErrorPageEventHandler, true);
           let listener = function() {
-            this.browser.removeEventListener("click", ErrorPageEventHandler, false);
+            this.browser.removeEventListener("click", ErrorPageEventHandler, true);
             this.browser.removeEventListener("pagehide", listener, true);
           }.bind(this);
 
@@ -3437,8 +3442,24 @@ var BrowserEventHandler = {
     if (!closest)
       closest = aEvent.target;
 
-    if (closest)
+    if (closest) {
+      let uri = this._getLinkURI(closest);
+      if (uri) {
+        Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null, null);
+      }
       this._doTapHighlight(closest);
+    }
+  },
+
+  _getLinkURI: function(aElement) {
+    if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
+        ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
+        (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href))) {
+      try {
+        return Services.io.newURI(aElement.href, null, null);
+      } catch (e) {}
+    }
+    return null;
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -4052,6 +4073,10 @@ var ErrorPageEventHandler = {
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
             errorDoc.location = "about:home";
           }
+        } else if (/^about:neterror\?e=netOffline/.test(ownerDoc.documentURI)) {
+          let tryAgain = errorDoc.getElementById("errorTryAgain");
+          if (target == tryAgain)
+            Services.io.offline = false;
         }
         break;
       }
@@ -6358,18 +6383,32 @@ var WebappsUI = {
     });
   },
 
+  get iconSize() {
+    let iconSize = 64;
+    try {
+      Cu.import("resource://gre/modules/JNI.jsm");
+      let jni = new JNI();
+      let cls = jni.findClass("org.mozilla.gecko.GeckoAppShell");
+      let method = jni.getStaticMethodID(cls, "getPreferredIconSize", "()I");
+      iconSize = jni.callStaticIntMethod(cls, method);
+      jni.close();
+    } catch(ex) {
+      console.log(ex);
+    }
+
+    delete this.iconSize;
+    return this.iconSize = iconSize;
+  },
+
   makeBase64Icon: function loadAndMakeBase64Icon(aIconURL, aCallbackFunction) {
-    // The images are 64px, but Android will resize as needed.
-    // Bigger is better than too small.
-    const kIconSize = 64;
+    let size = this.iconSize;
 
     let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-
-    canvas.width = canvas.height = kIconSize;
+    canvas.width = canvas.height = size;
     let ctx = canvas.getContext("2d");
     let favicon = new Image();
     favicon.onload = function() {
-      ctx.drawImage(favicon, 0, 0, kIconSize, kIconSize);
+      ctx.drawImage(favicon, 0, 0, size, size);
       let base64icon = canvas.toDataURL("image/png", "");
       canvas = null;
       aCallbackFunction.call(null, base64icon);

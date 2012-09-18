@@ -8,6 +8,7 @@
 
 #include "Workers.h"
 
+#include "nsIContentSecurityPolicy.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsIThreadInternal.h"
@@ -182,6 +183,7 @@ private:
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIURI> mScriptURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIContentSecurityPolicy> mCSP;
 
   // Only used for top level workers.
   nsTArray<nsRefPtr<WorkerRunnable> > mQueuedRunnables;
@@ -196,6 +198,7 @@ private:
   bool mIsChromeWorker;
   bool mPrincipalIsSystem;
   bool mMainThreadObjectsForgotten;
+  bool mEvalAllowed;
 
 protected:
   WorkerPrivateParent(JSContext* aCx, JSObject* aObject, WorkerPrivate* aParent,
@@ -204,7 +207,9 @@ protected:
                       nsCOMPtr<nsPIDOMWindow>& aWindow,
                       nsCOMPtr<nsIScriptContext>& aScriptContext,
                       nsCOMPtr<nsIURI>& aBaseURI,
-                      nsCOMPtr<nsIPrincipal>& aPrincipal);
+                      nsCOMPtr<nsIPrincipal>& aPrincipal,
+                      nsCOMPtr<nsIContentSecurityPolicy>& aCSP,
+                      bool aEvalAllowed);
 
   ~WorkerPrivateParent();
 
@@ -435,6 +440,32 @@ public:
     return mWindow;
   }
 
+  nsIContentSecurityPolicy*
+  GetCSP() const
+  {
+    AssertIsOnMainThread();
+    return mCSP;
+  }
+
+  void
+  SetCSP(nsIContentSecurityPolicy* aCSP)
+  {
+    AssertIsOnMainThread();
+    mCSP = aCSP;
+  }
+
+  bool
+  IsEvalAllowed() const
+  {
+    return mEvalAllowed;
+  }
+
+  void
+  SetEvalAllowed(bool aEvalAllowed)
+  {
+    mEvalAllowed = aEvalAllowed;
+  }
+
   LocationInfo&
   GetLocationInfo()
   {
@@ -539,6 +570,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mCloseHandlerStarted;
   bool mCloseHandlerFinished;
   bool mMemoryReporterRunning;
+  bool mXHRParamsAllowed;
 
 #ifdef DEBUG
   nsCOMPtr<nsIThread> mThread;
@@ -679,6 +711,18 @@ public:
   bool
   DisableMemoryReporter();
 
+  bool
+  XHRParamsAllowed() const
+  {
+    return mXHRParamsAllowed;
+  }
+
+  void
+  SetXHRParamsAllowed(bool aAllowed)
+  {
+    mXHRParamsAllowed = aAllowed;
+  }
+
 #ifdef JS_GC_ZEAL
   void
   UpdateGCZealInternal(JSContext* aCx, uint8_t aGCZeal);
@@ -719,7 +763,13 @@ private:
                 bool aIsChromeWorker, const nsACString& aDomain,
                 nsCOMPtr<nsPIDOMWindow>& aWindow,
                 nsCOMPtr<nsIScriptContext>& aScriptContext,
-                nsCOMPtr<nsIURI>& aBaseURI, nsCOMPtr<nsIPrincipal>& aPrincipal);
+                nsCOMPtr<nsIURI>& aBaseURI, nsCOMPtr<nsIPrincipal>& aPrincipal,
+                nsCOMPtr<nsIContentSecurityPolicy>& aCSP, bool aEvalAllowed,
+                bool aXHRParamsAllowed);
+
+  static bool
+  GetContentSecurityPolicy(JSContext *aCx,
+                           nsIContentSecurityPolicy** aCsp);
 
   bool
   Dispatch(WorkerRunnable* aEvent, EventQueue* aQueue);
@@ -775,6 +825,9 @@ private:
 
   bool
   ProcessAllControlRunnables();
+
+  static bool
+  CheckXHRParamsAllowed(nsPIDOMWindow* aWindow);
 };
 
 WorkerPrivate*

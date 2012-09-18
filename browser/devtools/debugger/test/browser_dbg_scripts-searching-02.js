@@ -4,6 +4,10 @@
 
 const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
 
+/**
+ * Tests basic functionality of scripts filtering (file search).
+ */
+
 var gPane = null;
 var gTab = null;
 var gDebuggee = null;

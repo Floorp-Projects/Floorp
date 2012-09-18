@@ -8,6 +8,7 @@
 #include "nsIDOMSVGUseElement.h"
 #include "nsSVGGFrame.h"
 #include "nsSVGUseElement.h"
+#include "nsContentList.h"
 
 typedef nsSVGGFrame nsSVGUseFrameBase;
 

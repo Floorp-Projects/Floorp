@@ -36,6 +36,13 @@ class nsIDOMMozSmsMessage;
 
 /* See the comment in AndroidBridge about this function before using it */
 extern "C" JNIEnv * GetJNIForThread();
+extern "C" jclass jsjni_FindClass(const char *className);
+extern "C" jmethodID jsjni_GetStaticMethodID(jclass methodClass,
+                                       const char *methodName,
+                                       const char *signature);
+extern "C" bool jsjni_ExceptionCheck();
+extern "C" void jsjni_CallStaticVoidMethodA(jclass cls, jmethodID method, jvalue *values);
+extern "C" int jsjni_CallStaticIntMethodA(jclass cls, jmethodID method, jvalue *values);
 
 extern bool mozilla_AndroidBridge_SetMainThread(void *);
 extern jclass GetGeckoAppShellClass();

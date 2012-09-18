@@ -31,6 +31,12 @@ const char* kFunctionEmulationVertexSource[] = {
     "#error no emulation for dot(vec3, vec3)",
     "#error no emulation for dot(vec4, vec4)",
 
+    // |faceforward(N, I, Nref)| is |dot(NRef, I) < 0 ? N : -N|
+    "#define webgl_faceforward_emu(N, I, Nref) (((Nref) * (I) < 0.0) ? (N) : -(N))",
+    "#error no emulation for faceforward(vec2, vec2, vec2)",
+    "#error no emulation for faceforward(vec3, vec3, vec3)",
+    "#error no emulation for faceforward(vec4, vec4, vec4)",
+
     "#define webgl_length_emu(x) ((x) >= 0.0 ? (x) : -(x))",
     "#error no emulation for length(vec2)",
     "#error no emulation for length(vec3)",
@@ -63,6 +69,12 @@ const char* kFunctionEmulationFragmentSource[] = {
     "#error no emulation for dot(vec3, vec3)",
     "#error no emulation for dot(vec4, vec4)",
 
+    // |faceforward(N, I, Nref)| is |dot(NRef, I) < 0 ? N : -N|
+    "#define webgl_faceforward_emu(N, I, Nref) (((Nref) * (I) < 0.0) ? (N) : -(N))",
+    "#error no emulation for faceforward(vec2, vec2, vec2)",
+    "#error no emulation for faceforward(vec3, vec3, vec3)",
+    "#error no emulation for faceforward(vec4, vec4, vec4)",
+
     "#define webgl_length_emu(x) ((x) >= 0.0 ? (x) : -(x))",
     "#error no emulation for length(vec2)",
     "#error no emulation for length(vec3)",
@@ -94,6 +106,10 @@ const bool kFunctionEmulationVertexMask[] = {
     false, // TFunctionDot2_2
     false, // TFunctionDot3_3
     false, // TFunctionDot4_4
+    true,  // TFunctionFaceForward1_1_1
+    false, // TFunctionFaceForward2_2_2
+    false, // TFunctionFaceForward3_3_3
+    false, // TFunctionFaceForward4_4_4
     true,  // TFunctionLength1
     false, // TFunctionLength2
     false, // TFunctionLength3
@@ -120,6 +136,10 @@ const bool kFunctionEmulationVertexMask[] = {
     false, // TFunctionDot2_2
     false, // TFunctionDot3_3
     false, // TFunctionDot4_4
+    false, // TFunctionFaceForward1_1_1
+    false, // TFunctionFaceForward2_2_2
+    false, // TFunctionFaceForward3_3_3
+    false, // TFunctionFaceForward4_4_4
     false, // TFunctionLength1
     false, // TFunctionLength2
     false, // TFunctionLength3
@@ -151,6 +171,10 @@ const bool kFunctionEmulationFragmentMask[] = {
     false, // TFunctionDot2_2
     false, // TFunctionDot3_3
     false, // TFunctionDot4_4
+    true,  // TFunctionFaceForward1_1_1
+    false, // TFunctionFaceForward2_2_2
+    false, // TFunctionFaceForward3_3_3
+    false, // TFunctionFaceForward4_4_4
     true,  // TFunctionLength1
     false, // TFunctionLength2
     false, // TFunctionLength3
@@ -177,6 +201,10 @@ const bool kFunctionEmulationFragmentMask[] = {
     false, // TFunctionDot2_2
     false, // TFunctionDot3_3
     false, // TFunctionDot4_4
+    false, // TFunctionFaceForward1_1_1
+    false, // TFunctionFaceForward2_2_2
+    false, // TFunctionFaceForward3_3_3
+    false, // TFunctionFaceForward4_4_4
     false, // TFunctionLength1
     false, // TFunctionLength2
     false, // TFunctionLength3
@@ -244,15 +272,27 @@ public:
                     return true;
             };
             const TIntermSequence& sequence = node->getSequence();
-            // Right now we only handle built-in functions with two parameters.
-            if (sequence.size() != 2)
+            bool needToEmulate = false;
+
+            if (sequence.size() == 2) {
+                TIntermTyped* param1 = sequence[0]->getAsTyped();
+                TIntermTyped* param2 = sequence[1]->getAsTyped();
+                if (!param1 || !param2)
+                    return true;
+                needToEmulate = mEmulator.SetFunctionCalled(
+                    node->getOp(), param1->getType(), param2->getType());
+            } else if (sequence.size() == 3) {
+                TIntermTyped* param1 = sequence[0]->getAsTyped();
+                TIntermTyped* param2 = sequence[1]->getAsTyped();
+                TIntermTyped* param3 = sequence[2]->getAsTyped();
+                if (!param1 || !param2 || !param3)
+                    return true;
+                needToEmulate = mEmulator.SetFunctionCalled(
+                    node->getOp(), param1->getType(), param2->getType(), param3->getType());
+            } else {
                 return true;
-            TIntermTyped* param1 = sequence[0]->getAsTyped();
-            TIntermTyped* param2 = sequence[1]->getAsTyped();
-            if (!param1 || !param2)
-                return true;
-            bool needToEmulate = mEmulator.SetFunctionCalled(
-                node->getOp(), param1->getType(), param2->getType());
+            }
+
             if (needToEmulate)
                 node->setUseEmulatedFunction();
         }
@@ -287,6 +327,13 @@ bool BuiltInFunctionEmulator::SetFunctionCalled(
     TOperator op, const TType& param1, const TType& param2)
 {
     TBuiltInFunction function = IdentifyFunction(op, param1, param2);
+    return SetFunctionCalled(function);
+}
+
+bool BuiltInFunctionEmulator::SetFunctionCalled(
+    TOperator op, const TType& param1, const TType& param2, const TType& param3)
+{
+    TBuiltInFunction function = IdentifyFunction(op, param1, param2, param3);
     return SetFunctionCalled(function);
 }
 
@@ -371,6 +418,34 @@ BuiltInFunctionEmulator::IdentifyFunction(
             break;
         case EOpReflect:
             function = TFunctionReflect1_1;
+            break;
+        default:
+            break;
+    }
+    if (function == TFunctionUnknown)
+        return TFunctionUnknown;
+    if (param1.isVector())
+        function += param1.getNominalSize() - 1;
+    return static_cast<TBuiltInFunction>(function);
+}
+
+BuiltInFunctionEmulator::TBuiltInFunction
+BuiltInFunctionEmulator::IdentifyFunction(
+    TOperator op, const TType& param1, const TType& param2, const TType& param3)
+{
+    // Check that all params have the same type, length,
+    // and that they're not too large.
+    if (param1.isVector() != param2.isVector() ||
+        param2.isVector() != param3.isVector() ||
+        param1.getNominalSize() != param2.getNominalSize() ||
+        param2.getNominalSize() != param3.getNominalSize() ||
+        param1.getNominalSize() > 4)
+        return TFunctionUnknown;
+
+    unsigned int function = TFunctionUnknown;
+    switch (op) {
+        case EOpFaceForward:
+            function = TFunctionFaceForward1_1_1;
             break;
         default:
             break;

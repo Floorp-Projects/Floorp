@@ -54,44 +54,44 @@ using namespace js::analyze;
 
 static inline jsid
 id_prototype(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.classPrototypeAtom);
+    return NameToId(cx->names().classPrototype);
 }
 
 static inline jsid
 id_arguments(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.argumentsAtom);
+    return NameToId(cx->names().arguments);
 }
 
 static inline jsid
 id_length(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.lengthAtom);
+    return NameToId(cx->names().length);
 }
 
 static inline jsid
 id___proto__(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.protoAtom);
+    return NameToId(cx->names().proto);
 }
 
 static inline jsid
 id_constructor(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.constructorAtom);
+    return NameToId(cx->names().constructor);
 }
 
 static inline jsid
 id_caller(JSContext *cx) {
-    return NameToId(cx->runtime->atomState.callerAtom);
+    return NameToId(cx->names().caller);
 }
 
 static inline jsid
 id_toString(JSContext *cx)
 {
-    return NameToId(cx->runtime->atomState.toStringAtom);
+    return NameToId(cx->names().toString);
 }
 
 static inline jsid
 id_toSource(JSContext *cx)
 {
-    return NameToId(cx->runtime->atomState.toSourceAtom);
+    return NameToId(cx->names().toSource);
 }
 
 #ifdef DEBUG
@@ -2063,6 +2063,9 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
                                JSProtoKey key, JSObject *proto_, bool unknown,
                                bool isDOM)
 {
+    JS_ASSERT_IF(script, cx->compartment == script->compartment());
+    JS_ASSERT_IF(proto_, cx->compartment == proto_->compartment());
+
     RootedObject proto(cx, proto_);
     TypeObject *object = gc::NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
@@ -3635,7 +3638,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_RSH:
       case JSOP_LSH:
       case JSOP_URSH:
-      case JSOP_ACTUALSFILLED:
         pushed[0].addType(cx, Type::Int32Type());
         break;
       case JSOP_FALSE:
@@ -3733,13 +3735,14 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         /*
          * Normally we rely on lazy standard class initialization to fill in
          * the types of global properties the script can access. In a few cases
-         * the method JIT will bypass this, and we need to add the types direclty.
+         * the method JIT will bypass this, and we need to add the types
+         * directly.
          */
-        if (id == NameToId(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]))
+        if (id == NameToId(cx->names().undefined))
             seen->addType(cx, Type::UndefinedType());
-        if (id == NameToId(cx->runtime->atomState.NaNAtom))
+        if (id == NameToId(cx->names().NaN))
             seen->addType(cx, Type::DoubleType());
-        if (id == NameToId(cx->runtime->atomState.InfinityAtom))
+        if (id == NameToId(cx->names().Infinity))
             seen->addType(cx, Type::DoubleType());
 
         TypeObject *global = script->global().getType(cx);
@@ -5580,6 +5583,8 @@ JSObject::shouldSplicePrototype(JSContext *cx)
 bool
 JSObject::splicePrototype(JSContext *cx, JSObject *proto_)
 {
+    JS_ASSERT(cx->compartment == compartment());
+
     RootedObject proto(cx, proto_);
     RootedObject self(cx, this);
 
@@ -5640,6 +5645,7 @@ TypeObject *
 JSObject::makeLazyType(JSContext *cx)
 {
     JS_ASSERT(hasLazyType());
+    JS_ASSERT(cx->compartment == compartment());
 
     RootedObject self(cx, this);
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
@@ -5693,7 +5699,7 @@ JSObject::makeLazyType(JSContext *cx)
     if (self->isSlowArray())
         type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY | OBJECT_FLAG_NON_PACKED_ARRAY;
 
-    if (IsTypedArrayProto(self))
+    if (IsTypedArrayProtoClass(self->getClass()))
         type->flags |= OBJECT_FLAG_NON_TYPED_ARRAY;
 
     self->type_ = type;
@@ -5750,6 +5756,8 @@ JSObject::setNewTypeUnknown(JSContext *cx)
 TypeObject *
 JSObject::getNewType(JSContext *cx, JSFunction *fun_, bool isDOM)
 {
+    JS_ASSERT(cx->compartment == compartment());
+
     TypeObjectSet &table = cx->compartment->newTypeObjects;
 
     if (!table.initialized() && !table.init())
@@ -5838,6 +5846,9 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun_, bool isDOM)
 TypeObject *
 JSCompartment::getLazyType(JSContext *cx, JSObject *proto_)
 {
+    JS_ASSERT(cx->compartment == this);
+    JS_ASSERT_IF(proto_, cx->compartment == proto_->compartment());
+
     RootedObject proto(cx, proto_);
     MaybeCheckStackRoots(cx);
 
@@ -6129,9 +6140,8 @@ void
 TypeCompartment::sweepCompilerOutputs(FreeOp *fop, bool discardConstraints)
 {
     if (constrainedOutputs) {
-        bool isCompiling = compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning;
         if (discardConstraints) {
-            JS_ASSERT(!isCompiling);
+            JS_ASSERT(compiledInfo.outputIndex == RecompileInfo::NoCompilerRunning);
 #if DEBUG
             for (unsigned i = 0; i < constrainedOutputs->length(); i++) {
                 CompilerOutput &co = (*constrainedOutputs)[i];

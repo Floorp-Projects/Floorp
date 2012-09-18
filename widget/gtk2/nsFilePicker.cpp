@@ -433,8 +433,9 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
   gtk_window_set_modal(window, TRUE);
   if (parent_widget) {
     gtk_window_set_destroy_with_parent(window, TRUE);
-    if (parent_widget->group) {
-      gtk_window_group_add_window(parent_widget->group, window);
+    GtkWindowGroup *parentGroup = gtk_window_get_group(parent_widget);
+    if (parentGroup) {
+      gtk_window_group_add_window(parentGroup, window);
     }
   }
 

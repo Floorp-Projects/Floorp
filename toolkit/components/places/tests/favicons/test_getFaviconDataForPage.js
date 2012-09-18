@@ -28,7 +28,9 @@ add_test(function test_normal()
 
   addVisits(pageURI, function () {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
-      pageURI, FAVICON_URI, true, function () {
+      pageURI, FAVICON_URI, true,
+        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        function () {
         PlacesUtils.favicons.getFaviconDataForPage(pageURI,
           function (aURI, aDataLen, aData, aMimeType) {
             do_check_true(aURI.equals(FAVICON_URI));

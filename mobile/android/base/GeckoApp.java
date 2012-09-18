@@ -111,7 +111,6 @@ import java.util.regex.Pattern;
 abstract public class GeckoApp
                 extends GeckoActivity 
                 implements GeckoEventListener, SensorEventListener, LocationListener,
-                           GeckoApplication.ApplicationLifecycleCallbacks,
                            Tabs.OnTabsChangedListener, GeckoEventResponder
 {
     private static final String LOGTAG = "GeckoApp";
@@ -154,8 +153,6 @@ abstract public class GeckoApp
     private boolean mIsRestoringActivity;
     private String mCurrentResponse = "";
 
-    private GeckoConnectivityReceiver mConnectivityReceiver;
-    private GeckoBatteryManager mBatteryReceiver;
     private PromptService mPromptService;
     private Favicons mFavicons;
     private TextSelection mTextSelection;
@@ -1443,8 +1440,6 @@ abstract public class GeckoApp
                 editor.commit();
             }
         });
-
-        ((GeckoApplication)getApplication()).addApplicationLifecycleCallbacks(this);
     }
 
     void initializeChrome(String uri, Boolean isExternalURL) {
@@ -1550,8 +1545,9 @@ abstract public class GeckoApp
         }
 
         if (mLayerView == null) {
-            mLayerView = (LayerView) findViewById(R.id.layer_view);
-            mLayerView.createLayerClient(GeckoAppShell.getEventDispatcher());
+            LayerView layerView = (LayerView) findViewById(R.id.layer_view);
+            layerView.createLayerClient(GeckoAppShell.getEventDispatcher());
+            mLayerView = layerView;
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
@@ -1603,24 +1599,13 @@ abstract public class GeckoApp
           SmsManager.getInstance().start();
         }
 
-        mBatteryReceiver = new GeckoBatteryManager();
-        mBatteryReceiver.registerFor(mAppContext);
-
-        mConnectivityReceiver = new GeckoConnectivityReceiver();
-        mConnectivityReceiver.registerFor(mAppContext);
-
         mPromptService = new PromptService();
 
         mTextSelection = new TextSelection((TextSelectionHandle) findViewById(R.id.start_handle),
                                            (TextSelectionHandle) findViewById(R.id.end_handle),
                                            GeckoAppShell.getEventDispatcher());
 
-        GeckoNetworkManager.getInstance().init();
-        GeckoNetworkManager.getInstance().start();
-
         UpdateServiceHelper.registerForUpdates(this);
-
-        GeckoScreenOrientationListener.getInstance().start();
 
         final GeckoApp self = this;
 
@@ -1900,6 +1885,8 @@ abstract public class GeckoApp
             refreshChrome();
         }
 
+        GeckoScreenOrientationListener.getInstance().start();
+
         // User may have enabled/disabled accessibility.
         GeckoAccessibility.updateAccessibilitySettings();
 
@@ -1958,6 +1945,8 @@ abstract public class GeckoApp
                 editor.commit();
             }
         });
+
+        GeckoScreenOrientationListener.getInstance().stop();
 
         super.onPause();
     }
@@ -2067,12 +2056,7 @@ abstract public class GeckoApp
 
         super.onDestroy();
 
-        if (mBatteryReceiver != null)
-            mBatteryReceiver.unregisterFor(mAppContext);
-
         Tabs.unregisterOnTabsChangedListener(this);
-
-        ((GeckoApplication) getApplication()).removeApplicationLifecycleCallbacks(this);
     }
 
     protected void registerEventListener(String event) {
@@ -2132,29 +2116,6 @@ abstract public class GeckoApp
             GeckoAppShell.onLowMemory();
         super.onLowMemory();
         GeckoAppShell.geckoEventSync();
-    }
-
-    @Override
-    public void onApplicationPause() {
-        Log.i(LOGTAG, "application paused");
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
-
-        if (mConnectivityReceiver != null)
-            mConnectivityReceiver.unregisterFor(mAppContext);
-        GeckoNetworkManager.getInstance().stop();
-        GeckoScreenOrientationListener.getInstance().stop();
-    }
-
-    @Override
-    public void onApplicationResume() {
-        Log.i(LOGTAG, "application resumed");
-        if (checkLaunchState(LaunchState.GeckoRunning))
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(true));
-
-        if (mConnectivityReceiver != null)
-            mConnectivityReceiver.registerFor(mAppContext);
-        GeckoNetworkManager.getInstance().start();
-        GeckoScreenOrientationListener.getInstance().start();
     }
 
     @Override
@@ -2494,7 +2455,7 @@ abstract public class GeckoApp
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result ? "true" : "false"));
     }
 
-    private void connectGeckoLayerClient() {
+    protected void connectGeckoLayerClient() {
         mLayerView.getLayerClient().notifyGeckoReady();
 
         mLayerView.getTouchEventHandler().setOnTouchListener(new ContentTouchListener() {

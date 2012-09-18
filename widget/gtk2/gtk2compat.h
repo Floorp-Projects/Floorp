@@ -177,6 +177,20 @@ gtk_window_group_get_current_grab(GtkWindowGroup *window_group)
 
   return GTK_WIDGET(window_group->grabs->data);
 }
+
+static inline GList *
+gdk_drag_context_list_targets(GdkDragContext *context)
+{
+  return context->targets;
+}
+#endif
+
+#if !GTK_CHECK_VERSION(2, 23, 3)
+static inline GdkWindow *
+gdk_drag_context_get_dest_window(GdkDragContext *context)
+{
+  return context->dest_window;
+}
 #endif
 
 #if !GTK_CHECK_VERSION(2, 24, 0)

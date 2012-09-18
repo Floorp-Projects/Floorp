@@ -13,58 +13,46 @@
 
 <!-- LOCALIZATION NOTE (debuggerMenu.label): This is the label for the
   -  application menu item that opens the debugger UI. -->
-<!ENTITY debuggerMenu.label2          "Debugger">
+<!ENTITY debuggerMenu.label2            "Debugger">
 
 <!-- LOCALIZATION NOTE (remoteDebuggerMenu.label): This is the label for the
   -  application menu item that opens the remote debugger UI. -->
-<!ENTITY remoteDebuggerMenu.label    "Remote Debugger">
+<!ENTITY remoteDebuggerMenu.label       "Remote Debugger">
 
 <!-- LOCALIZATION NOTE (chromeDebuggerMenu.label): This is the label for the
   -  application menu item that opens the browser debugger UI. -->
-<!ENTITY chromeDebuggerMenu.label    "Browser Debugger">
+<!ENTITY chromeDebuggerMenu.label       "Browser Debugger">
 
 <!-- LOCALIZATION NOTE (debuggerMenu.commandkey): This is the command key that
   -  launches the debugger UI. Do not translate this one! -->
-<!ENTITY debuggerMenu.commandkey     "S">
+<!ENTITY debuggerMenu.commandkey        "S">
 
 <!-- LOCALIZATION NOTE (debuggerUI.closeButton.tooltip): This is the tooltip for
   -  the button that closes the debugger UI. -->
-<!ENTITY debuggerUI.closeButton.tooltip        "Close">
+<!ENTITY debuggerUI.closeButton.tooltip "Close">
 
 <!-- LOCALIZATION NOTE (debuggerUI.pauseExceptions): This is the label for the
   -  checkbox that toggles pausing on exceptions. -->
-<!ENTITY debuggerUI.pauseExceptions          "Pause on exceptions">
-
-<!-- LOCALIZATION NOTE (debuggerUI.stepOverButton.tooltip): This is the tooltip for
-  -  the button that steps over a function call. -->
-<!ENTITY debuggerUI.stepOverButton.tooltip   "Step Over">
-
-<!-- LOCALIZATION NOTE (debuggerUI.stepInButton): This is the tooltip for the
-  -  button that steps into a function call. -->
-<!ENTITY debuggerUI.stepInButton.tooltip     "Step In">
-
-<!-- LOCALIZATION NOTE (debuggerUI.stepOutButton): This is the tooltip for the
-  -  button that steps out of a function call. -->
-<!ENTITY debuggerUI.stepOutButton.tooltip    "Step Out">
+<!ENTITY debuggerUI.pauseExceptions     "Pause on exceptions">
 
 <!-- LOCALIZATION NOTE (debuggerUI.stackTitle): This is the label for the
   -  widget that displays the call stack frames in the debugger. -->
-<!ENTITY debuggerUI.stackTitle       "Call stack">
+<!ENTITY debuggerUI.stackTitle          "Call stack">
 
 <!-- LOCALIZATION NOTE (debuggerUI.scriptTitle): This is the label for the
   -  widget that displays the source code for the script that is currently
   -  being inspected in the debugger. -->
-<!ENTITY debuggerUI.scriptTitle      "Script">
+<!ENTITY debuggerUI.scriptTitle         "Script">
 
 <!-- LOCALIZATION NOTE (debuggerUI.propertiesTitle): This is the label for the
   -  widget that displays the variables in the various available scopes in the
   -  debugger. -->
-<!ENTITY debuggerUI.propertiesTitle  "Scope variables">
+<!ENTITY debuggerUI.propertiesTitle     "Scope variables">
 
-<!-- LOCALIZATION NOTE (debuggerUI.emptyFilterText): This is the text that
-  -  appears in the filter text box when it is empty. -->
-<!ENTITY debuggerUI.emptyFilterText  "Filter scripts">
+<!-- LOCALIZATION NOTE (debuggerUI.searchPanelTitle): This is the text that
+  -  appears in the filter panel popup as a description. -->
+<!ENTITY debuggerUI.searchPanelTitle    "Operators">
 
 <!-- LOCALIZATION NOTE (emptyScriptText): The text to display in the menulist when
   - there are no scripts. -->
-<!ENTITY debuggerUI.emptyScriptText  "No scripts">
+<!ENTITY debuggerUI.emptyScriptText     "No scripts">

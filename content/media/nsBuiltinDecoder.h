@@ -363,7 +363,14 @@ public:
                         nsIStreamListener** aListener,
                         nsMediaDecoder* aCloneDonor);
 
+  // Called in |Load| to open the media resource.
+  nsresult OpenResource(MediaResource* aResource,
+                        nsIStreamListener** aStreamListener);
+
   virtual nsDecoderStateMachine* CreateStateMachine() = 0;
+
+  // Initialize state machine and schedule it.
+  nsresult InitializeStateMachine(nsMediaDecoder* aCloneDonor);
 
   // Start playback of a video. 'Load' must have previously been
   // called.
@@ -549,16 +556,16 @@ public:
   // has changed.
   void DurationChanged();
 
-  bool OnStateMachineThread() const;
+  virtual bool OnStateMachineThread() const;
 
-  bool OnDecodeThread() const {
+  virtual bool OnDecodeThread() const {
     return mDecoderStateMachine->OnDecodeThread();
   }
 
   // Returns the monitor for other threads to synchronise access to
   // state.
-  ReentrantMonitor& GetReentrantMonitor() { 
-    return mReentrantMonitor; 
+  virtual ReentrantMonitor& GetReentrantMonitor() {
+    return mReentrantMonitor.GetReentrantMonitor();
   }
 
   // Constructs the time ranges representing what segments of the media
@@ -635,8 +642,12 @@ public:
   // change. Call on the main thread only.
   void ChangeState(PlayState aState);
 
-  // Called when the metadata from the media file has been read.
-  // Call on the main thread only.
+  // Called when the metadata from the media file has been read by the reader.
+  // Call on the decode thread only.
+  virtual void OnReadMetadataCompleted() { }
+
+  // Called when the metadata from the media file has been loaded by the
+  // state machine. Call on the main thread only.
   void MetadataLoaded(uint32_t aChannels,
                       uint32_t aRate,
                       bool aHasAudio,
@@ -693,7 +704,7 @@ public:
   nsDecoderStateMachine::State GetDecodeState() { return mDecoderStateMachine->GetState(); }
 
   // Drop reference to state machine.  Only called during shutdown dance.
-  void ReleaseStateMachine() { mDecoderStateMachine = nullptr; }
+  virtual void ReleaseStateMachine() { mDecoderStateMachine = nullptr; }
 
    // Called when a "MozAudioAvailable" event listener is added to the media
    // element. Called on the main thread.
@@ -768,11 +779,42 @@ public:
   // Media data resource.
   nsAutoPtr<MediaResource> mResource;
 
-  // ReentrantMonitor for detecting when the video play state changes. A call
-  // to Wait on this monitor will block the thread until the next
-  // state change.
-  ReentrantMonitor mReentrantMonitor;
+  // |ReentrantMonitor| for detecting when the video play state changes. A call
+  // to |Wait| on this monitor will block the thread until the next state
+  // change.
+  // Using a wrapper class to restrict direct access to the |ReentrantMonitor|
+  // object. Subclasses may override |nsBuiltinDecoder|::|GetReentrantMonitor|
+  // e.g. |nsDASHRepDecoder|::|GetReentrantMonitor| returns the monitor in the
+  // main |nsDASHDecoder| object. In this case, directly accessing the
+  // member variable mReentrantMonitor in |nsDASHRepDecoder| is wrong.
+  // The wrapper |RestrictedAccessMonitor| restricts use to the getter
+  // function rather than the object itself.
+private:
+  class RestrictedAccessMonitor
+  {
+  public:
+    RestrictedAccessMonitor(const char* aName) :
+      mReentrantMonitor(aName)
+    {
+      MOZ_COUNT_CTOR(RestrictedAccessMonitor);
+    }
+    ~RestrictedAccessMonitor()
+    {
+      MOZ_COUNT_DTOR(RestrictedAccessMonitor);
+    }
 
+    // Returns a ref to the reentrant monitor
+    ReentrantMonitor& GetReentrantMonitor() {
+      return mReentrantMonitor;
+    }
+  private:
+    ReentrantMonitor mReentrantMonitor;
+  };
+
+  // The |RestrictedAccessMonitor| member object.
+  RestrictedAccessMonitor mReentrantMonitor;
+
+public:
   // Data about MediaStreams that are being fed by this decoder.
   nsTArray<OutputStreamData> mOutputStreams;
   // The SourceMediaStream we are using to feed the mOutputStreams. This stream

@@ -117,10 +117,7 @@ class NameResolver
 
             switch (cur->getKind()) {
                 case PNK_NAME:     return cur;  /* found the initialized declaration */
-
-                case PNK_FUNCTIONDECL:
-                case PNK_FUNCTIONEXPR:
-                    return NULL; /* won't find an assignment or declaration */
+                case PNK_FUNCTION: return NULL; /* won't find an assignment or declaration */
 
                 case PNK_RETURN:
                     /*
@@ -176,9 +173,9 @@ class NameResolver
      * listed, then it is skipped. Otherwise an intelligent name is guessed to
      * assign to the function's displayAtom field
      */
-    JSAtom *resolveFun(ParseNode *pn, JSAtom *prefix) {
-        JS_ASSERT(pn->isKind(PNK_FUNCTIONDECL) || pn->isKind(PNK_FUNCTIONEXPR));
-        JSFunction *fun = pn->pn_funbox->fun();
+    JSAtom *resolveFun(ParseNode *pn, HandleAtom prefix) {
+        JS_ASSERT(pn != NULL && pn->isKind(PNK_FUNCTION));
+        RootedFunction fun(cx, pn->pn_funbox->fun());
         if (nparents == 0)
             return NULL;
 
@@ -271,14 +268,13 @@ class NameResolver
      * ParseNode instance given. The prefix is for each subsequent name, and
      * should initially be NULL.
      */
-    void resolve(ParseNode *cur, JSAtom *prefix = NULL) {
+    void resolve(ParseNode *cur, HandleAtom prefixArg = NullPtr()) {
+        RootedAtom prefix(cx, prefixArg);
         if (cur == NULL)
             return;
 
-        if ((cur->isKind(PNK_FUNCTIONEXPR) || cur->isKind(PNK_FUNCTIONDECL)) &&
-            cur->isArity(PN_FUNC))
-        {
-            JSAtom *prefix2 = resolveFun(cur, prefix);
+        if (cur->isKind(PNK_FUNCTION) && cur->isArity(PN_FUNC)) {
+            RootedAtom prefix2(cx, resolveFun(cur, prefix));
             /*
              * If a function looks like (function(){})() where the parent node
              * of the definition of the function is a call, then it shouldn't
@@ -318,7 +314,7 @@ class NameResolver
                 resolve(cur->pn_kid3, prefix);
                 break;
             case PN_FUNC:
-                JS_ASSERT(cur->isKind(PNK_FUNCTIONDECL) || cur->isKind(PNK_FUNCTIONEXPR));
+                JS_ASSERT(cur->isKind(PNK_FUNCTION));
                 resolve(cur->pn_body, prefix);
                 break;
             case PN_LIST:

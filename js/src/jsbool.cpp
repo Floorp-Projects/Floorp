@@ -87,7 +87,7 @@ bool_toString_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsBoolean(thisv));
 
     bool b = thisv.isBoolean() ? thisv.toBoolean() : thisv.toObject().asBoolean().unbox();
-    args.rval().setString(cx->runtime->atomState.booleanAtoms[b ? 1 : 0]);
+    args.rval().setString(js_BooleanToString(cx, b));
     return true;
 }
 
@@ -154,7 +154,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
         return NULL;
     booleanProto->setFixedSlot(BooleanObject::PRIMITIVE_VALUE_SLOT, BooleanValue(false));
 
-    RootedFunction ctor(cx, global->createConstructor(cx, Boolean, CLASS_NAME(cx, Boolean), 1));
+    RootedFunction ctor(cx, global->createConstructor(cx, Boolean, cx->names().Boolean, 1));
     if (!ctor)
         return NULL;
 
@@ -164,7 +164,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
     if (!DefinePropertiesAndBrand(cx, booleanProto, NULL, boolean_methods))
         return NULL;
 
-    Rooted<PropertyName*> valueOfName(cx, cx->runtime->atomState.valueOfAtom);
+    Handle<PropertyName*> valueOfName = cx->names().valueOf;
     Rooted<JSFunction*> valueOf(cx,
                                 js_NewFunction(cx, NULL, bool_valueOf, 0, 0, global, valueOfName));
     if (!valueOf)
@@ -187,7 +187,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
 JSString *
 js_BooleanToString(JSContext *cx, JSBool b)
 {
-    return cx->runtime->atomState.booleanAtoms[b ? 1 : 0];
+    return b ? cx->runtime->atomState.true_ : cx->runtime->atomState.false_;
 }
 
 namespace js {

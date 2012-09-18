@@ -5,6 +5,7 @@
 #ifndef nsSimplePageSequence_h___
 #define nsSimplePageSequence_h___
 
+#include "mozilla/Attributes.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsContainerFrame.h"
 #include "nsIPrintSettings.h"
@@ -66,25 +67,25 @@ public:
 
   // nsIPageSequenceFrame
   NS_IMETHOD SetPageNo(int32_t aPageNo) { return NS_OK;}
-  NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
-  NS_IMETHOD SetTotalNumPages(int32_t aTotal) { mTotalPages = aTotal; return NS_OK; }
+  NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) MOZ_OVERRIDE { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
+  NS_IMETHOD SetTotalNumPages(int32_t aTotal) MOZ_OVERRIDE { mTotalPages = aTotal; return NS_OK; }
   
   // For Shrink To Fit
-  NS_IMETHOD GetSTFPercent(float& aSTFPercent);
+  NS_IMETHOD GetSTFPercent(float& aSTFPercent) MOZ_OVERRIDE;
 
   // Async Printing
   NS_IMETHOD StartPrint(nsPresContext*  aPresContext,
                         nsIPrintSettings* aPrintSettings,
                         PRUnichar*        aDocTitle,
                         PRUnichar*        aDocURL);
-  NS_IMETHOD PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone);
-  NS_IMETHOD PrintNextPage();
-  NS_IMETHOD ResetPrintCanvasList();
-  NS_IMETHOD GetCurrentPageNum(int32_t* aPageNum);
-  NS_IMETHOD GetNumPages(int32_t* aNumPages);
-  NS_IMETHOD IsDoingPrintRange(bool* aDoing);
-  NS_IMETHOD GetPrintRange(int32_t* aFromPage, int32_t* aToPage);
-  NS_IMETHOD DoPageEnd();
+  NS_IMETHOD PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone) MOZ_OVERRIDE;
+  NS_IMETHOD PrintNextPage() MOZ_OVERRIDE;
+  NS_IMETHOD ResetPrintCanvasList() MOZ_OVERRIDE;
+  NS_IMETHOD GetCurrentPageNum(int32_t* aPageNum) MOZ_OVERRIDE;
+  NS_IMETHOD GetNumPages(int32_t* aNumPages) MOZ_OVERRIDE;
+  NS_IMETHOD IsDoingPrintRange(bool* aDoing) MOZ_OVERRIDE;
+  NS_IMETHOD GetPrintRange(int32_t* aFromPage, int32_t* aToPage) MOZ_OVERRIDE;
+  NS_IMETHOD DoPageEnd() MOZ_OVERRIDE;
 
   // We must allow Print Preview UI to have a background, no matter what the
   // user's settings

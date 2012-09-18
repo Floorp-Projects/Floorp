@@ -96,6 +96,7 @@ FENNEC_JAVA_FILES = \
   NSSBridge.java \
   CustomEditText.java \
   OnInterceptTouchListener.java \
+  PrefsHelper.java \
   PrivateDataPreference.java \
   PropertyAnimator.java \
   ProfileMigrator.java \
@@ -107,6 +108,7 @@ FENNEC_JAVA_FILES = \
   ReaderModeUtils.java \
   RemoteTabs.java \
   RobocopAPI.java \
+  ScreenshotHandler.java \
   SetupScreen.java \
   ShapedButton.java \
   SiteIdentityPopup.java \

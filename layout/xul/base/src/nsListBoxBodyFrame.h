@@ -6,6 +6,7 @@
 #ifndef nsListBoxBodyFrame_h
 #define nsListBoxBodyFrame_h
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsBoxFrame.h"
 #include "nsIListBoxObject.h"
@@ -49,22 +50,22 @@ public:
   // nsIFrame
   NS_IMETHOD Init(nsIContent*     aContent,
                   nsIFrame*       aParent, 
-                  nsIFrame*       aPrevInFlow);
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+                  nsIFrame*       aPrevInFlow) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
-  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID, nsIAtom* aAttribute, int32_t aModType);
+  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID, nsIAtom* aAttribute, int32_t aModType) MOZ_OVERRIDE;
 
   // nsIScrollbarMediator
   NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t& aNewIndex);
-  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t aNewIndex);
-  NS_IMETHOD VisibilityChanged(bool aVisible);
+  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t aNewIndex) MOZ_OVERRIDE;
+  NS_IMETHOD VisibilityChanged(bool aVisible) MOZ_OVERRIDE;
 
   // nsIReflowCallback
-  virtual bool ReflowFinished();
-  virtual void ReflowCallbackCanceled();
+  virtual bool ReflowFinished() MOZ_OVERRIDE;
+  virtual void ReflowCallbackCanceled() MOZ_OVERRIDE;
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
-  virtual void MarkIntrinsicWidthsDirty();
+  virtual void MarkIntrinsicWidthsDirty() MOZ_OVERRIDE;
 
   virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
@@ -118,9 +119,9 @@ public:
     return true;
   }
 
-  virtual bool SupportsOrdinalsInChildren();
+  virtual bool SupportsOrdinalsInChildren() MOZ_OVERRIDE;
 
-  virtual bool ComputesOwnOverflowArea() { return true; }
+  virtual bool ComputesOwnOverflowArea() MOZ_OVERRIDE { return true; }
 
 protected:
   class nsPositionChangedEvent;

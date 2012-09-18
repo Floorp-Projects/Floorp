@@ -642,7 +642,8 @@ BookmarkImporter.prototype = {
     if (aIconURI) {
       if (aIconURI.scheme == "chrome") {
         PlacesUtils.favicons.setAndFetchFaviconForPage(aPageURI, aIconURI,
-                                                       false);
+                                                       false,
+                                                       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
         return;
       }
     }
@@ -672,7 +673,8 @@ BookmarkImporter.prototype = {
     // case neither the favicon URI nor the favicon data will be saved.  If the
     // bookmark is visited again later, the URI and data will be fetched.
     PlacesUtils.favicons.replaceFaviconDataFromDataURL(faviconURI, aData);
-    PlacesUtils.favicons.setAndFetchFaviconForPage(aPageURI, faviconURI, false);
+    PlacesUtils.favicons.setAndFetchFaviconForPage(aPageURI, faviconURI, false,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
   },
 
   /**

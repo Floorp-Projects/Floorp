@@ -6258,10 +6258,10 @@ nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
   NS_PRECONDITION(aRootNode, "Must have root node");
   
   nsContentList* elements =
-    NS_GetFuncStringContentList(aRootNode, MatchClassNames,
-                                DestroyClassNameArray,
-                                AllocClassMatchingInfo,
-                                aClasses).get();
+    NS_GetFuncStringHTMLCollection(aRootNode, MatchClassNames,
+                                   DestroyClassNameArray,
+                                   AllocClassMatchingInfo,
+                                   aClasses).get();
   NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
 
   // Transfer ownership

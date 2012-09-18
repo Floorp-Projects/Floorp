@@ -30,13 +30,13 @@
 #include "nsIDOMXPathNSResolver.h"
 #include "nsPresContext.h"
 #include "nsIDOMDOMStringMap.h"
-#include "nsContentList.h"
 #include "nsDOMClassInfoID.h" // DOMCI_DATA
 #include "nsIDOMTouchEvent.h"
 #include "nsIInlineEventHandlers.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/Attributes.h"
 #include "nsContentUtils.h"
+#include "nsINodeList.h"
 #include "nsISMILAttr.h"
 
 class nsIDOMAttr;
@@ -57,7 +57,7 @@ class nsDOMTokenList;
 class ContentUnbinder;
 struct nsRect;
 
-typedef PRUptrdiff PtrBits;
+typedef uintptr_t PtrBits;
 
 /**
  * A generic base class for DOM elements, implementing many nsIContent,

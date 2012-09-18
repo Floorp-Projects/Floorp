@@ -9,6 +9,10 @@ let connection = navigator.mozMobileConnection;
 ok(connection instanceof MozMobileConnection,
    "connection is instanceof " + connection.constructor);
 
+// The emulator's hard coded iccid value.
+// See it here {B2G_HOME}/external/qemu/telephony/sim_card.c#L299.
+is(connection.iccInfo.iccid, 89014103211118510720);
+
 // The emulator's hard coded mcc and mnc codes.
 // See it here {B2G_HOME}/external/qemu/telephony/android_modem.c#L2465.
 is(connection.iccInfo.mcc, 310);

@@ -51,6 +51,7 @@
 #include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
@@ -108,7 +109,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
 
     StackFrame *fp = iter.fp();
 
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
+    if (JSID_IS_ATOM(id, cx->names().arguments)) {
         if (fun->hasRest()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_FUNCTION_ARGUMENTS_AND_REST);
             return false;
@@ -141,7 +142,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
     if (iter.isScript() && iter.isIon())
         fp = NULL;
 
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom) && fp && fp->prev()) {
+    if (JSID_IS_ATOM(id, cx->names().caller) && fp && fp->prev()) {
         /*
          * If the frame was called from within an inlined frame, mark the
          * innermost function as uninlineable to expand its frame and allow us
@@ -158,7 +159,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
     }
 #endif
 
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
+    if (JSID_IS_ATOM(id, cx->names().caller)) {
         ++iter;
         if (iter.done() || !iter.isFunctionFrame()) {
             JS_ASSERT(vp.isNull());
@@ -205,16 +206,16 @@ fun_enumerate(JSContext *cx, HandleObject obj)
     bool found;
 
     if (!obj->isBoundFunction()) {
-        id = NameToId(cx->runtime->atomState.classPrototypeAtom);
+        id = NameToId(cx->names().classPrototype);
         if (!JSObject::hasProperty(cx, obj, id, &found, JSRESOLVE_QUALIFIED))
             return false;
     }
 
-    id = NameToId(cx->runtime->atomState.lengthAtom);
+    id = NameToId(cx->names().length);
     if (!JSObject::hasProperty(cx, obj, id, &found, JSRESOLVE_QUALIFIED))
         return false;
 
-    id = NameToId(cx->runtime->atomState.nameAtom);
+    id = NameToId(cx->names().name);
     if (!JSObject::hasProperty(cx, obj, id, &found, JSRESOLVE_QUALIFIED))
         return false;
 
@@ -264,10 +265,10 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
      */
     RootedValue protoVal(cx, ObjectValue(*proto));
     RootedValue objVal(cx, ObjectValue(*obj));
-    if (!JSObject::defineProperty(cx, obj, cx->runtime->atomState.classPrototypeAtom,
+    if (!JSObject::defineProperty(cx, obj, cx->names().classPrototype,
                                   protoVal, JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT) ||
-        !JSObject::defineProperty(cx, proto, cx->runtime->atomState.constructorAtom,
+        !JSObject::defineProperty(cx, proto, cx->names().constructor,
                                   objVal, JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
        return NULL;
@@ -285,20 +286,20 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
     RootedFunction fun(cx, obj->toFunction());
 
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
+    if (JSID_IS_ATOM(id, cx->names().classPrototype)) {
         /*
-         * Native or "built-in" functions do not have a .prototype property per
-         * ECMA-262, or (Object.prototype, Function.prototype, etc.) have that
-         * property created eagerly.
+         * Built-in functions do not have a .prototype property per ECMA-262,
+         * or (Object.prototype, Function.prototype, etc.) have that property
+         * created eagerly.
          *
          * ES5 15.3.4: the non-native function object named Function.prototype
          * does not have a .prototype property.
          *
          * ES5 15.3.4.5: bound functions don't have a prototype property. The
-         * isNative() test covers this case because bound functions are native
-         * functions by definition/construction.
+         * isBuiltin() test covers this case because bound functions are native
+         * (and thus built-in) functions by definition/construction.
          */
-        if (fun->isNative() || fun->isFunctionPrototype())
+        if (fun->isBuiltin() || fun->isFunctionPrototype())
             return true;
 
         if (!ResolveInterpretedFunctionPrototype(cx, fun))
@@ -307,12 +308,11 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         return true;
     }
 
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
-        JSID_IS_ATOM(id, cx->runtime->atomState.nameAtom)) {
+    if (JSID_IS_ATOM(id, cx->names().length) || JSID_IS_ATOM(id, cx->names().name)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
 
         RootedValue v(cx);
-        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
+        if (JSID_IS_ATOM(id, cx->names().length))
             v.setInt32(fun->nargs - fun->hasRest());
         else
             v.setString(fun->atom() == NULL ?  cx->runtime->emptyString : fun->atom());
@@ -480,7 +480,7 @@ fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, JSBool
     }
 
     RootedValue pval(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.classPrototypeAtom, &pval))
+    if (!JSObject::getProperty(cx, obj, obj, cx->names().classPrototype, &pval))
         return JS_FALSE;
 
     if (pval.isPrimitive()) {
@@ -1386,7 +1386,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
      * and so would a call to f from another top-level's script or function.
      */
     RootedFunction fun(cx, js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                          global, cx->runtime->atomState.anonymousAtom));
+                                          global, cx->names().anonymous));
     if (!fun)
         return false;
 

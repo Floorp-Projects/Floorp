@@ -4,6 +4,11 @@
 
 const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
 
+/**
+ * Tests if the global search results are cleared on location changes, and
+ * the expected UI behaviors are triggered.
+ */
+
 var gPane = null;
 var gTab = null;
 var gDebuggee = null;
@@ -166,5 +171,6 @@ registerCleanupFunction(function() {
   gDebugger = null;
   gEditor = null;
   gScripts = null;
+  gSearchView = null;
   gSearchBox = null;
 });

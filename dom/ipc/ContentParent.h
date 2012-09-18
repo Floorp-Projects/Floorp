@@ -120,7 +120,7 @@ public:
     void KillHard();
 
 protected:
-    void OnChannelConnected(int32 pid);
+    void OnChannelConnected(int32_t pid);
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
@@ -232,6 +232,10 @@ private:
 
     virtual PStorageParent* AllocPStorage(const StorageConstructData& aData);
     virtual bool DeallocPStorage(PStorageParent* aActor);
+
+    virtual PBluetoothParent* AllocPBluetooth();
+    virtual bool DeallocPBluetooth(PBluetoothParent* aActor);
+    virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor);
 
     virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs);
     virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue);

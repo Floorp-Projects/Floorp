@@ -105,8 +105,8 @@ public:
   Element *GetHead() { return GetHeadElement(); }
   already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
   {
-    return NS_GetFuncStringContentList(this, MatchNameAttribute, nullptr,
-                                       UseExistingNameString, aName);
+    return NS_GetFuncStringNodeList(this, MatchNameAttribute, nullptr,
+                                    UseExistingNameString, aName);
   }
 
   virtual nsresult ResolveName(const nsAString& aName,

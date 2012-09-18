@@ -24,6 +24,10 @@
 #include "mozilla/Services.h"
 #endif
 
+#if (MOZ_WIDGET_GTK == 2)
+#include "gtk2compat.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::widget;
 
@@ -101,7 +105,7 @@ nsGtkIMModule::Init()
 
     MozContainer* container = mOwnerWindow->GetMozContainer();
     NS_PRECONDITION(container, "container is null");
-    GdkWindow* gdkWindow = GTK_WIDGET(container)->window;
+    GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(container));
 
     // NOTE: gtk_im_*_new() abort (kill) the whole process when it fails.
     //       So, we don't need to check the result.
@@ -255,7 +259,11 @@ nsGtkIMModule::PrepareToDestroyContext(GtkIMContext *aContext)
     NS_PRECONDITION(container, "The container of the window is null");
 
     GtkIMMulticontext *multicontext = GTK_IM_MULTICONTEXT(aContext);
+#if (MOZ_WIDGET_GTK == 2)
     GtkIMContext *slave = multicontext->slave;
+#else
+    GtkIMContext *slave = NULL; //TODO GTK3
+#endif
     if (!slave) {
         return;
     }

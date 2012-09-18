@@ -613,7 +613,7 @@ protected:
         mPresShell = nullptr;
       }
     }
-    virtual void WillRefresh(mozilla::TimeStamp aTime) {
+    virtual void WillRefresh(mozilla::TimeStamp aTime) MOZ_OVERRIDE {
       if (mPresShell)
         mPresShell->ProcessSynthMouseMoveEvent(mFromScroll);
     }

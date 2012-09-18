@@ -7,6 +7,7 @@
 #include "mozilla/layers/ImageContainerParent.h"
 
 #include "ImageContainer.h" // for PlanarYCBCRImage
+#include "mozilla/layers/ShmemYCbCrImage.h"
 #include "ipc/AutoOpenSurface.h"
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
@@ -763,6 +764,7 @@ ShadowImageLayerOGL::Swap(const SharedImage& aNewFront,
                           SharedImage* aNewBack)
 {
   if (!mDestroyed) {
+
     if (aNewFront.type() == SharedImage::TSharedImageID) {
       // We are using ImageBridge protocol. The image data will be queried at render
       // time in the parent side.
@@ -873,6 +875,47 @@ void ShadowImageLayerOGL::UploadSharedYUVToTexture(const YUVImage& yuv)
   UploadYUVToTexture(gl(), data, &mYUVTexture[0], &mYUVTexture[1], &mYUVTexture[2]);
 }
 
+void ShadowImageLayerOGL::UploadSharedYCbCrToTexture(ShmemYCbCrImage& aImage,
+                                                     nsIntRect aPictureRect)
+{
+  mPictureRect = aPictureRect;
+
+  gfxIntSize size = aImage.GetYSize();
+  gfxIntSize CbCrSize = aImage.GetCbCrSize();
+  if (size != mSize || mCbCrSize != CbCrSize || !mYUVTexture[0].IsAllocated()) {
+
+    mSize = size;
+    mCbCrSize = CbCrSize;
+
+    if (!mYUVTexture[0].IsAllocated()) {
+        mYUVTexture[0].Allocate(gl());
+        mYUVTexture[1].Allocate(gl());
+        mYUVTexture[2].Allocate(gl());
+    }
+
+    NS_ASSERTION(mYUVTexture[0].IsAllocated() &&
+                 mYUVTexture[1].IsAllocated() &&
+                 mYUVTexture[2].IsAllocated(),
+                 "Texture allocation failed!");
+
+    gl()->MakeCurrent();
+    SetClamping(gl(), mYUVTexture[0].GetTextureID());
+    SetClamping(gl(), mYUVTexture[1].GetTextureID());
+    SetClamping(gl(), mYUVTexture[2].GetTextureID());
+  }
+
+  PlanarYCbCrImage::Data data;
+  data.mYChannel = aImage.GetYData();
+  data.mYStride = aImage.GetYStride();
+  data.mYSize = aImage.GetYSize();
+  data.mCbChannel = aImage.GetCbData();
+  data.mCrChannel = aImage.GetCrData();
+  data.mCbCrStride = aImage.GetCbCrStride();
+  data.mCbCrSize = aImage.GetCbCrSize();
+
+  UploadYUVToTexture(gl(), data, &mYUVTexture[0], &mYUVTexture[1], &mYUVTexture[2]);
+}
+
 
 void
 ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
@@ -892,6 +935,10 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
         UploadSharedYUVToTexture(img->get_YUVImage());
   
         mImageVersion = imgVersion;
+      } else if (img && (img->type() == SharedImage::TYCbCrImage)) {
+        ShmemYCbCrImage shmemImage(img->get_YCbCrImage().data(),
+                                   img->get_YCbCrImage().offset());
+        UploadSharedYCbCrToTexture(shmemImage, img->get_YCbCrImage().picture());
 #ifdef MOZ_WIDGET_GONK
       } else if (img
                  && (img->type() == SharedImage::TSurfaceDescriptor)

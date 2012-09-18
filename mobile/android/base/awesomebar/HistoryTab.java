@@ -205,7 +205,6 @@ public class HistoryTab extends AwesomeBarTab {
         private static final long MS_PER_WEEK = MS_PER_DAY * 7;
 
         protected Pair<GroupList,List<ChildrenList>> doInBackground(Void... arg0) {
-            Pair<GroupList, List<ChildrenList>> result = null;
             Cursor cursor = BrowserDB.getRecentHistory(getContentResolver(), MAX_RESULTS);
 
             Date now = new Date();
@@ -217,9 +216,9 @@ public class HistoryTab extends AwesomeBarTab {
 
             // Split the list of urls into separate date range groups
             // and show it in an expandable list view.
-            List<ChildrenList> childrenLists = null;
+            List<ChildrenList> childrenLists = new LinkedList<ChildrenList>();
             ChildrenList children = null;
-            GroupList groups = null;
+            GroupList groups = new GroupList();
             HistorySection section = null;
 
             // Move cursor before the first row in preparation
@@ -233,12 +232,6 @@ public class HistoryTab extends AwesomeBarTab {
             while (cursor.moveToNext()) {
                 long time = cursor.getLong(cursor.getColumnIndexOrThrow(URLColumns.DATE_LAST_VISITED));
                 HistorySection itemSection = getSectionForTime(time, today);
-
-                if (groups == null)
-                    groups = new GroupList();
-
-                if (childrenLists == null)
-                    childrenLists = new LinkedList<ChildrenList>();
 
                 if (section != itemSection) {
                     if (section != null) {
@@ -263,11 +256,8 @@ public class HistoryTab extends AwesomeBarTab {
             // Close the query cursor as we won't use it anymore
             cursor.close();
 
-            if (groups != null && childrenLists != null) {
-                result = Pair.<GroupList,List<ChildrenList>>create(groups, childrenLists);
-            }
-
-            return result;
+            // groups and childrenLists will be empty lists if there's no history
+            return Pair.<GroupList,List<ChildrenList>>create(groups, childrenLists);
         }
 
         public Map<String,Object> createHistoryItem(Cursor cursor) {
@@ -350,10 +340,6 @@ public class HistoryTab extends AwesomeBarTab {
         }
 
         protected void onPostExecute(Pair<GroupList,List<ChildrenList>> result) {
-            // FIXME: display some sort of message when there's no history
-            if (result == null)
-                return;
-
             mCursorAdapter = new HistoryListAdapter(
                 mContext,
                 result.first,

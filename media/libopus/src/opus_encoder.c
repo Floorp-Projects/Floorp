@@ -1,6 +1,10 @@
-/* Copyright (c) 2010-2011 Xiph.Org Foundation, Skype Limited
+/* Copyright (c) 2010-2012 IETF Trust, Xiph.Org Foundation, Skype Limited. All rights reserved.
    Written by Jean-Marc Valin and Koen Vos */
 /*
+
+   This file is extracted from RFC6716. Please see that RFC for additional
+   information.
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -212,7 +216,7 @@ int opus_encoder_init(OpusEncoder* st, opus_int32 Fs, int channels, int applicat
     st->voice_ratio = -1;
     st->encoder_buffer = st->Fs/100;
 
-    /* Delay compensation of 4 ms (2.5 ms for SILK's extra look-ahead 
+    /* Delay compensation of 4 ms (2.5 ms for SILK's extra look-ahead
        + 1.5 ms for SILK resamplers and stereo prediction) */
     st->delay_compensation = st->Fs/250;
 

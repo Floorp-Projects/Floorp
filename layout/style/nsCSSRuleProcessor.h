@@ -12,6 +12,7 @@
 #ifndef nsCSSRuleProcessor_h_
 #define nsCSSRuleProcessor_h_
 
+#include "mozilla/Attributes.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsCSSStyleSheet.h"
 #include "nsTArray.h"
@@ -88,24 +89,24 @@ public:
   static bool IsLink(mozilla::dom::Element* aElement);
 
   // nsIStyleRuleProcessor
-  virtual void RulesMatching(ElementRuleProcessorData* aData);
+  virtual void RulesMatching(ElementRuleProcessorData* aData) MOZ_OVERRIDE;
 
-  virtual void RulesMatching(PseudoElementRuleProcessorData* aData);
+  virtual void RulesMatching(PseudoElementRuleProcessorData* aData) MOZ_OVERRIDE;
 
-  virtual void RulesMatching(AnonBoxRuleProcessorData* aData);
+  virtual void RulesMatching(AnonBoxRuleProcessorData* aData) MOZ_OVERRIDE;
 
 #ifdef MOZ_XUL
-  virtual void RulesMatching(XULTreeRuleProcessorData* aData);
+  virtual void RulesMatching(XULTreeRuleProcessorData* aData) MOZ_OVERRIDE;
 #endif
 
-  virtual nsRestyleHint HasStateDependentStyle(StateRuleProcessorData* aData);
+  virtual nsRestyleHint HasStateDependentStyle(StateRuleProcessorData* aData) MOZ_OVERRIDE;
 
-  virtual bool HasDocumentStateDependentStyle(StateRuleProcessorData* aData);
+  virtual bool HasDocumentStateDependentStyle(StateRuleProcessorData* aData) MOZ_OVERRIDE;
 
   virtual nsRestyleHint
-    HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
+    HasAttributeDependentStyle(AttributeRuleProcessorData* aData) MOZ_OVERRIDE;
 
-  virtual bool MediumFeaturesChanged(nsPresContext* aPresContext);
+  virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) MOZ_OVERRIDE;
 
   virtual NS_MUST_OVERRIDE size_t
     SizeOfExcludingThis(nsMallocSizeOfFun mallocSizeOf) const MOZ_OVERRIDE;

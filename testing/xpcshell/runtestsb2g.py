@@ -22,9 +22,10 @@ class B2GXPCShellRemote(XPCShellRemote):
 
     # Overridden
     def setupUtilities(self):
-        # Ensure a fresh directory structure for our tests
-        self.clean()
-        self.device.mkDir(DEVICE_TEST_ROOT)
+        if self.options.clean:
+            # Ensure a fresh directory structure for our tests
+            self.clean()
+            self.device.mkDir(DEVICE_TEST_ROOT)
 
         XPCShellRemote.setupUtilities(self)
 
@@ -70,6 +71,12 @@ class B2GOptions(RemoteXPCShellOptions):
                         type='string', dest='emu_path',
                         help="Path to emulator folder (if different "
                                                       "from b2gpath")
+
+        self.add_option('--no-clean', action='store_false',
+                        dest='clean',
+                        help="Do not clean TESTROOT. Saves [lots of] time")
+        defaults['clean'] = True
+
         defaults['emu_path'] = None
 
         self.add_option('--emulator', action='store',

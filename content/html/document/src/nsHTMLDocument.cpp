@@ -1860,8 +1860,8 @@ NS_IMETHODIMP
 nsHTMLDocument::GetItems(const nsAString& types, nsIDOMNodeList** aReturn)
 {
   nsRefPtr<nsContentList> elements = 
-    NS_GetFuncStringContentList(this, MatchItems, DestroyTokens, 
-                                CreateTokens, types);
+    NS_GetFuncStringNodeList(this, MatchItems, DestroyTokens, CreateTokens,
+                             types);
   NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
   elements.forget(aReturn);
   return NS_OK;
@@ -2405,7 +2405,7 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
   EditingState oldState = mEditingState;
 
   nsresult rv = EditingStateChanged();
-  NS_ENSURE_SUCCESS(rv, );
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   if (oldState == mEditingState && mEditingState == eContentEditable) {
     // We just changed the contentEditable state of a node, we need to reset
@@ -2422,7 +2422,7 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
 
       nsCOMPtr<nsIEditorDocShell> editorDocShell =
         do_QueryInterface(docshell, &rv);
-      NS_ENSURE_SUCCESS(rv, );
+      NS_ENSURE_SUCCESS_VOID(rv);
 
       nsCOMPtr<nsIEditor> editor;
       editorDocShell->GetEditor(getter_AddRefs(editor));
@@ -2439,7 +2439,7 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
         nsCOMPtr<nsIInlineSpellChecker> spellChecker;
         rv = editor->GetInlineSpellChecker(false,
                                            getter_AddRefs(spellChecker));
-        NS_ENSURE_SUCCESS(rv, );
+        NS_ENSURE_SUCCESS_VOID(rv);
 
         if (spellChecker) {
           rv = spellChecker->SpellCheckRange(range);

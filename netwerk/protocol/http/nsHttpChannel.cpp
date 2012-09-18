@@ -525,9 +525,12 @@ nsHttpChannel::SpeculativeConnect()
     // Before we take the latency hit of dealing with the cache, try and
     // get the TCP (and SSL) handshakes going so they can overlap.
 
-    // don't speculate on uses of the offline application cache or if
-    // we are actually offline
-    if (mApplicationCache || gIOService->IsOffline())
+    // don't speculate on uses of the offline application cache,
+    // if we are offline, when doing http upgrade (i.e. websockets bootstrap),
+    // or if we can't do keep-alive (because then we couldn't reuse
+    // the speculative connection anyhow).
+    if (mApplicationCache || gIOService->IsOffline() || 
+        mUpgradeProtocolCallback || !(mCaps & NS_HTTP_ALLOW_KEEPALIVE))
         return;
 
     // LOAD_ONLY_FROM_CACHE and LOAD_NO_NETWORK_IO must not hit network.
@@ -604,7 +607,7 @@ nsHttpChannel::ContinueHandleAsyncRedirect(nsresult rv)
     // for some reason (the cache entry might be corrupt).
     if (mCacheEntry) {
         if (NS_FAILED(rv))
-            mCacheEntry->Doom();
+            mCacheEntry->AsyncDoom(nullptr);
     }
     CloseCacheEntry(false);
 
@@ -979,7 +982,7 @@ nsHttpChannel::CallOnStartRequest()
 
     // if this channel is for a download, close off access to the cache.
     if (mCacheEntry && mChannelIsForDownload) {
-        mCacheEntry->Doom();
+        mCacheEntry->AsyncDoom(nullptr);
         CloseCacheEntry(false);
     }
 
@@ -1259,7 +1262,7 @@ nsHttpChannel::ProcessResponse()
             LOG(("AsyncProcessRedirection failed [rv=%x]\n", rv));
             // don't cache failed redirect responses.
             if (mCacheEntry)
-                mCacheEntry->Doom();
+                mCacheEntry->AsyncDoom(nullptr);
             if (DoNotRender3xxBody(rv)) {
                 mStatus = rv;
                 DoNotifyListener();
@@ -2178,7 +2181,7 @@ nsHttpChannel::ProcessNotModified()
              "[%s] and [%s]\n",
              lastModifiedCached.get(), lastModified304.get()));
 
-        mCacheEntry->Doom();
+        mCacheEntry->AsyncDoom(nullptr);
         if (mConnectionInfo)
             gHttpHandler->ConnMgr()->
                 PipelineFeedbackInfo(mConnectionInfo,
@@ -2256,7 +2259,7 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
     // Kill any offline cache entry, and disable offline caching for the
     // fallback.
     if (mOfflineCacheEntry) {
-        mOfflineCacheEntry->Doom();
+        mOfflineCacheEntry->AsyncDoom(nullptr);
         mOfflineCacheEntry = 0;
         mOfflineCacheAccess = 0;
     }
@@ -3567,7 +3570,7 @@ nsHttpChannel::CloseCacheEntry(bool doomOnFailure)
 
     if (doom) {
         LOG(("  dooming cache entry!!"));
-        mCacheEntry->Doom();
+        mCacheEntry->AsyncDoom(nullptr);
     }
 
     mCachedResponseHead = nullptr;
@@ -3588,12 +3591,12 @@ nsHttpChannel::CloseOfflineCacheEntry()
     LOG(("nsHttpChannel::CloseOfflineCacheEntry [this=%p]", this));
 
     if (NS_FAILED(mStatus)) {
-        mOfflineCacheEntry->Doom();
+        mOfflineCacheEntry->AsyncDoom(nullptr);
     }
     else {
         bool succeeded;
         if (NS_SUCCEEDED(GetRequestSucceeded(&succeeded)) && !succeeded)
-            mOfflineCacheEntry->Doom();
+            mOfflineCacheEntry->AsyncDoom(nullptr);
     }
 
     mOfflineCacheEntry = 0;
@@ -4065,7 +4068,7 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
     if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE) &&
         NS_SUCCEEDED(mURI->Equals(mRedirectURI, &redirectingBackToSameURI)) &&
         redirectingBackToSameURI)
-            mCacheEntry->Doom();
+            mCacheEntry->AsyncDoom(nullptr);
 
     // move the reference of the old location to the new one if the new
     // one has none.

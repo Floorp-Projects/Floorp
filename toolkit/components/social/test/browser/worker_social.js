@@ -17,7 +17,6 @@ onconnect = function(e) {
     switch (topic) {
       case "social.initialize":
         apiPort = port;
-        apiPort.postMessage({topic: "social.initialize-response"});
         break;
       case "test-initialization":
         testerPort = port;

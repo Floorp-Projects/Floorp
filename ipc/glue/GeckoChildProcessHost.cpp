@@ -169,7 +169,7 @@ private:
 };
 #endif
 
-nsresult GeckoChildProcessHost::GetArchitecturesForBinary(const char *path, uint32 *result)
+nsresult GeckoChildProcessHost::GetArchitecturesForBinary(const char *path, uint32_t *result)
 {
   *result = 0;
 
@@ -217,12 +217,12 @@ nsresult GeckoChildProcessHost::GetArchitecturesForBinary(const char *path, uint
 #endif
 }
 
-uint32 GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType type)
+uint32_t GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType type)
 {
 #ifdef MOZ_WIDGET_COCOA
   if (type == GeckoProcessType_Plugin) {
     // Cache this, it shouldn't ever change.
-    static uint32 pluginContainerArchs = 0;
+    static uint32_t pluginContainerArchs = 0;
     if (pluginContainerArchs == 0) {
       FilePath exePath;
       GetPathToBinary(exePath);
@@ -744,7 +744,7 @@ GeckoChildProcessHost::OpenPrivilegedHandle(base::ProcessId aPid)
 }
 
 void
-GeckoChildProcessHost::OnChannelConnected(int32 peer_pid)
+GeckoChildProcessHost::OnChannelConnected(int32_t peer_pid)
 {
   OpenPrivilegedHandle(peer_pid);
   {

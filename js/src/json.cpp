@@ -68,7 +68,7 @@ js_json_parse(JSContext *cx, unsigned argc, Value *vp)
         if (!linear)
             return false;
     } else {
-        linear = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
+        linear = cx->names().undefined;
     }
     JS::Anchor<JSString *> anchor(linear);
 
@@ -281,7 +281,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
     /* Step 2. */
     if (vp.get().isObject()) {
         RootedValue toJSON(cx);
-        RootedId id(cx, NameToId(cx->runtime->atomState.toJSONAtom));
+        RootedId id(cx, NameToId(cx->names().toJSON));
         Rooted<JSObject*> obj(cx, &vp.get().toObject());
         if (!GetMethod(cx, obj, id, 0, &toJSON))
             return false;
@@ -725,7 +725,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
         return false;
 
     /* Step 10. */
-    RootedId emptyId(cx, NameToId(cx->runtime->atomState.emptyAtom));
+    RootedId emptyId(cx, NameToId(cx->names().empty));
     if (!DefineNativeProperty(cx, wrapper, emptyId, vp, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
@@ -856,10 +856,10 @@ Revive(JSContext *cx, HandleValue reviver, MutableHandleValue vp)
     if (!obj)
         return false;
 
-    if (!JSObject::defineProperty(cx, obj, cx->runtime->atomState.emptyAtom, vp))
+    if (!JSObject::defineProperty(cx, obj, cx->names().empty, vp))
         return false;
 
-    Rooted<jsid> id(cx, NameToId(cx->runtime->atomState.emptyAtom));
+    Rooted<jsid> id(cx, NameToId(cx->names().empty));
     return Walk(cx, obj, id, reviver, vp);
 }
 
@@ -887,7 +887,7 @@ ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, HandleVa
 static JSBool
 json_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
-    vp->setString(CLASS_NAME(cx, JSON));
+    vp->setString(cx->names().JSON);
     return JS_TRUE;
 }
 #endif

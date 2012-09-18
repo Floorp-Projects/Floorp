@@ -607,6 +607,9 @@ nsCookieService::Init()
   mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // init our pref and observer
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
@@ -1417,8 +1420,7 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
 
   // Determine whether the request is foreign. Failure is acceptable.
   bool isForeign = true;
-  if (RequireThirdPartyCheck())
-    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
+  mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   nsAutoCString result;
   GetCookieStringInternal(aHostURI, isForeign, aHttpBound, result);
@@ -1459,8 +1461,7 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
 
   // Determine whether the request is foreign. Failure is acceptable.
   bool isForeign = true;
-  if (RequireThirdPartyCheck())
-    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
+  mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   nsDependentCString cookieString(aCookieHeader);
   nsDependentCString serverTime(aServerTime ? aServerTime : "");
@@ -1594,12 +1595,6 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
   bool boolval;
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefThirdPartySession, &boolval)))
     mThirdPartySession = boolval;
-
-  // Lazily instantiate the third party service if necessary.
-  if (!mThirdPartyUtil && RequireThirdPartyCheck()) {
-    mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
-    NS_ABORT_IF_FALSE(mThirdPartyUtil, "require ThirdPartyUtil service");
-  }
 }
 
 /******************************************************************************
@@ -3055,13 +3050,6 @@ static inline bool IsSubdomainOf(const nsCString &a, const nsCString &b)
   return false;
 }
 
-bool
-nsCookieService::RequireThirdPartyCheck()
-{
-  // 'true' iff we need to perform a third party test.
-  return mCookieBehavior == BEHAVIOR_REJECTFOREIGN || mThirdPartySession;
-}
-
 CookieStatus
 nsCookieService::CheckPrefs(nsIURI          *aHostURI,
                             bool             aIsForeign,
@@ -3090,11 +3078,23 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
     if (NS_SUCCEEDED(rv)) {
       switch (access) {
       case nsICookiePermission::ACCESS_DENY:
-        COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are blocked for this site");
+        COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI,
+                          aCookieHeader, "cookies are blocked for this site");
         return STATUS_REJECTED;
 
       case nsICookiePermission::ACCESS_ALLOW:
         return STATUS_ACCEPTED;
+
+      case nsICookiePermission::ACCESS_ALLOW_FIRST_PARTY_ONLY:
+        if (aIsForeign) {
+          COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI,
+                            aCookieHeader, "third party cookies are blocked "
+                            "for this site");
+          return STATUS_REJECTED;
+
+        }
+        return STATUS_ACCEPTED;
+
       }
     }
   }
@@ -3105,13 +3105,15 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
     return STATUS_REJECTED;
   }
 
-  if (RequireThirdPartyCheck() && aIsForeign) {
-    // check if cookie is foreign
+  // check if cookie is foreign
+  if (aIsForeign) {
     if (mCookieBehavior == BEHAVIOR_ACCEPT && mThirdPartySession)
       return STATUS_ACCEPT_SESSION;
 
-    COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
-    return STATUS_REJECTED;
+    if (mCookieBehavior == BEHAVIOR_REJECTFOREIGN) {
+      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
+      return STATUS_REJECTED;
+    }
   }
 
   // if nothing has complained, accept cookie

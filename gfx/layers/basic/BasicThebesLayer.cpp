@@ -248,13 +248,13 @@ struct NS_STACK_CLASS AutoBufferTracker {
     mLayer->mBufferTracker = this;
     if (IsSurfaceDescriptorValid(mLayer->mBackBuffer)) {
       mInitialBuffer.construct(OPEN_READ_WRITE, mLayer->mBackBuffer);
-      mLayer->mBuffer.MapBuffer(mInitialBuffer.ref().Get());
+      mLayer->mBuffer.ProvideBuffer(&mInitialBuffer.ref());
     }
   }
 
   ~AutoBufferTracker() {
     mLayer->mBufferTracker = nullptr;
-    mLayer->mBuffer.UnmapBuffer();
+    mLayer->mBuffer.RevokeBuffer();
     // mInitialBuffer and mNewBuffer will clean up after themselves if
     // they were constructed.
   }
@@ -597,11 +597,11 @@ BasicShadowThebesLayer::PaintThebes(gfxContext* aContext,
   }
 
   AutoOpenSurface autoFrontBuffer(OPEN_READ_ONLY, mFrontBufferDescriptor);
-  mFrontBuffer.MapBuffer(autoFrontBuffer.Get());
+  mFrontBuffer.ProvideBuffer(&autoFrontBuffer);
 
   mFrontBuffer.DrawTo(this, aContext, GetEffectiveOpacity(), aMaskLayer);
 
-  mFrontBuffer.UnmapBuffer();
+  mFrontBuffer.RevokeBuffer();
 }
 
 already_AddRefed<ThebesLayer>

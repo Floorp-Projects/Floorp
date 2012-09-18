@@ -26,11 +26,33 @@ const USB_FUNCTION_RETRY_TIMES = 20;
 // Check "sys.usb.state" every 100ms.
 const USB_FUNCTION_RETRY_INTERVAL = 100;
 
+// 1xx - Requested action is proceeding
+const NETD_COMMAND_PROCEEDING   = 100;
 // 2xx - Requested action has been successfully completed
-const NETD_COMMAND_OKAY  = 200;
-const NETD_COMMAND_ERROR = 300;
+const NETD_COMMAND_OKAY         = 200;
+// 4xx - The command is accepted but the requested action didn't
+// take place.
+const NETD_COMMAND_FAIL         = 400;
+// 5xx - The command syntax or parameters error
+const NETD_COMMAND_ERROR        = 500;
+// 6xx - Unsolicited broadcasts
+const NETD_COMMAND_UNSOLICITED  = 600;
 
 importScripts("systemlibs.js");
+
+function netdResponseType(code) {
+  return Math.floor(code/100)*100;
+}
+
+function isError(code) {
+  let type = netdResponseType(code);
+  return (type != NETD_COMMAND_PROCEEDING && type != NETD_COMMAND_OKAY);
+}
+
+function isComplete(code) {
+  let type = netdResponseType(code);
+  return (type != NETD_COMMAND_PROCEEDING);
+}
 
 let gWifiFailChain = [stopSoftAP,
                       setIpForwardingEnabled,
@@ -224,17 +246,22 @@ function onNetdMessage(data) {
   }
 
   // Set pending to false before we handle next command.
-  gPending = false;
   debug("Receiving '" + gCurrentCommand + "' command response from netd.");
   debug("          ==> Code: " + code + "  Reason: " + reason);
+
+  // 1xx response code regards as command is proceeding, we need to wait for
+  // final response code such as 2xx, 4xx and 5xx before sending next command.
+  if (isComplete(code)) {
+    gPending = false;
+  }
   if (gCurrentCallback) {
-    let error;
-    (code >= NETD_COMMAND_OKAY && code < NETD_COMMAND_ERROR) ? (error = false) : (error = true);
-    gCurrentCallback(error, {code: code, reason: reason});
+    gCurrentCallback(isError(code), {code: code, reason: reason});
   }
 
   // Handling pending commands if any.
-  nextNetdCommand();
+  if (isComplete(code)) {
+    nextNetdCommand();
+  }
 }
 
 /**

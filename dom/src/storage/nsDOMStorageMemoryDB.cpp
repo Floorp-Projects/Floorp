@@ -148,10 +148,7 @@ nsresult
 nsDOMStorageMemoryDB::SetKey(DOMStorageImpl* aStorage,
                              const nsAString& aKey,
                              const nsAString& aValue,
-                             bool aSecure,
-                             int32_t aQuota,
-                             bool aExcludeOfflineFromUsage,
-                             int32_t *aNewUsage)
+                             bool aSecure)
 {
   nsresult rv;
 
@@ -160,8 +157,8 @@ nsDOMStorageMemoryDB::SetKey(DOMStorageImpl* aStorage,
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t usage = 0;
-  if (!aStorage->GetQuotaDomainDBKey(!aExcludeOfflineFromUsage).IsEmpty()) {
-    rv = GetUsage(aStorage, aExcludeOfflineFromUsage, &usage);
+  if (!aStorage->GetQuotaDBKey().IsEmpty()) {
+    rv = GetUsage(aStorage, &usage);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -169,7 +166,7 @@ nsDOMStorageMemoryDB::SetKey(DOMStorageImpl* aStorage,
 
   nsInMemoryItem* item;
   if (!storage->mTable.Get(aKey, &item)) {
-    if (usage > aQuota) {
+    if (usage > GetQuota()) {
       return NS_ERROR_DOM_QUOTA_REACHED;
     }
 
@@ -185,7 +182,7 @@ nsDOMStorageMemoryDB::SetKey(DOMStorageImpl* aStorage,
     if (!aSecure && item->mSecure)
       return NS_ERROR_DOM_SECURITY_ERR;
     usage -= aKey.Length() + item->mValue.Length();
-    if (usage > aQuota) {
+    if (usage > GetQuota()) {
       return NS_ERROR_DOM_QUOTA_REACHED;
     }
   }
@@ -194,8 +191,6 @@ nsDOMStorageMemoryDB::SetKey(DOMStorageImpl* aStorage,
 
   item->mValue = aValue;
   item->mSecure = aSecure;
-
-  *aNewUsage = usage;
 
   MarkScopeDirty(aStorage);
 
@@ -226,9 +221,7 @@ nsDOMStorageMemoryDB::SetSecure(DOMStorageImpl* aStorage,
 
 nsresult
 nsDOMStorageMemoryDB::RemoveKey(DOMStorageImpl* aStorage,
-                                const nsAString& aKey,
-                                bool aExcludeOfflineFromUsage,
-                                int32_t aKeyUsage)
+                                const nsAString& aKey)
 {
   nsresult rv;
 
@@ -304,52 +297,15 @@ RemoveOwnersEnum(const nsACString& key,
 }
 
 nsresult
-nsDOMStorageMemoryDB::RemoveOwner(const nsACString& aOwner,
-                                  bool aIncludeSubDomains)
+nsDOMStorageMemoryDB::RemoveOwner(const nsACString& aOwner)
 {
   nsAutoCString subdomainsDBKey;
-  nsDOMStorageDBWrapper::CreateDomainScopeDBKey(aOwner, subdomainsDBKey);
-
-  if (!aIncludeSubDomains)
-    subdomainsDBKey.AppendLiteral(":");
+  nsDOMStorageDBWrapper::CreateReversedDomain(aOwner, subdomainsDBKey);
 
   RemoveOwnersStruc struc;
   struc.mSubDomain = &subdomainsDBKey;
   struc.mMatch = true;
   mData.Enumerate(RemoveOwnersEnum, &struc);
-
-  MarkAllScopesDirty();
-
-  return NS_OK;
-}
-
-
-nsresult
-nsDOMStorageMemoryDB::RemoveOwners(const nsTArray<nsString> &aOwners,
-                                   bool aIncludeSubDomains,
-                                   bool aMatch)
-{
-  if (aOwners.Length() == 0) {
-    if (aMatch) {
-      return NS_OK;
-    }
-
-    return RemoveAll();
-  }
-
-  for (uint32_t i = 0; i < aOwners.Length(); i++) {
-    nsAutoCString quotaKey;
-    nsDOMStorageDBWrapper::CreateDomainScopeDBKey(
-      NS_ConvertUTF16toUTF8(aOwners[i]), quotaKey);
-
-    if (!aIncludeSubDomains)
-      quotaKey.AppendLiteral(":");
-
-    RemoveOwnersStruc struc;
-    struc.mSubDomain = &quotaKey;
-    struc.mMatch = aMatch;
-    mData.Enumerate(RemoveOwnersEnum, &struc);
-  }
 
   MarkAllScopesDirty();
 
@@ -367,34 +323,27 @@ nsDOMStorageMemoryDB::RemoveAll()
 }
 
 nsresult
-nsDOMStorageMemoryDB::GetUsage(DOMStorageImpl* aStorage,
-                               bool aExcludeOfflineFromUsage, int32_t *aUsage)
+nsDOMStorageMemoryDB::GetUsage(DOMStorageImpl* aStorage, int32_t *aUsage)
 {
-  return GetUsageInternal(aStorage->GetQuotaDomainDBKey(!aExcludeOfflineFromUsage),
-                          aExcludeOfflineFromUsage, aUsage);
+  return GetUsageInternal(aStorage->GetQuotaDBKey(), aUsage);
 }
 
 nsresult
 nsDOMStorageMemoryDB::GetUsage(const nsACString& aDomain,
-                               bool aIncludeSubDomains,
                                int32_t *aUsage)
 {
   nsresult rv;
 
-  nsAutoCString quotadomainDBKey;
-  rv = nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomain,
-                                                     aIncludeSubDomains,
-                                                     false,
-                                                     quotadomainDBKey);
+  nsAutoCString quotaDBKey;
+  rv = nsDOMStorageDBWrapper::CreateQuotaDBKey(aDomain, quotaDBKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetUsageInternal(quotadomainDBKey, false, aUsage);
+  return GetUsageInternal(quotaDBKey, aUsage);
 }
 
 struct GetUsageEnumStruc
 {
   int32_t mUsage;
-  int32_t mExcludeOfflineFromUsage;
   nsCString mSubdomain;
 };
 
@@ -406,13 +355,6 @@ GetUsageEnum(const nsACString& key,
   GetUsageEnumStruc* struc = (GetUsageEnumStruc*)closure;
 
   if (StringBeginsWith(key, struc->mSubdomain)) {
-    if (struc->mExcludeOfflineFromUsage) {
-      nsAutoCString domain;
-      nsresult rv = nsDOMStorageDBWrapper::GetDomainFromScopeKey(key, domain);
-      if (NS_SUCCEEDED(rv) && IsOfflineAllowed(domain))
-        return PL_DHASH_NEXT;
-    }
-
     struc->mUsage += storageData->mUsageDelta;
   }
 
@@ -420,20 +362,17 @@ GetUsageEnum(const nsACString& key,
 }
 
 nsresult
-nsDOMStorageMemoryDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
-                                       bool aExcludeOfflineFromUsage,
+nsDOMStorageMemoryDB::GetUsageInternal(const nsACString& aQuotaDBKey,
                                        int32_t *aUsage)
 {
   GetUsageEnumStruc struc;
   struc.mUsage = 0;
-  struc.mExcludeOfflineFromUsage = aExcludeOfflineFromUsage;
-  struc.mSubdomain = aQuotaDomainDBKey;
+  struc.mSubdomain = aQuotaDBKey;
 
   if (mPreloadDB) {
     nsresult rv;
 
-    rv = mPreloadDB->GetUsageInternal(aQuotaDomainDBKey,
-                                      aExcludeOfflineFromUsage, &struc.mUsage);
+    rv = mPreloadDB->GetUsageInternal(aQuotaDBKey, &struc.mUsage);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

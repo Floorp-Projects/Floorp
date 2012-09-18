@@ -20,7 +20,6 @@
   locale/@AB_CD@/browser/config.dtd               (%chrome/config.dtd)
   locale/@AB_CD@/browser/config.properties        (%chrome/config.properties)
   locale/@AB_CD@/browser/localepicker.properties  (%chrome/localepicker.properties)
-  locale/@AB_CD@/browser/aboutHome.dtd            (%chrome/aboutHome.dtd)
   locale/@AB_CD@/browser/checkbox.dtd             (%chrome/checkbox.dtd)
   locale/@AB_CD@/browser/notification.dtd         (%chrome/notification.dtd)
   locale/@AB_CD@/browser/sync.dtd                 (%chrome/sync.dtd)

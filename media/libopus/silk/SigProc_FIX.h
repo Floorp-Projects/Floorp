@@ -1,5 +1,9 @@
 /***********************************************************************
-Copyright (c) 2006-2011, Skype Limited. All rights reserved.
+Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
+
+This file is extracted from RFC6716. Please see that RFC for additional
+information.
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -8,7 +12,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -141,7 +145,7 @@ opus_int32 silk_LPC_inverse_pred_gain_Q24(          /* O    Returns inverse pred
 
 /* Split signal in two decimated bands using first-order allpass filters */
 void silk_ana_filt_bank_1(
-    const opus_int16            *in,                /* I    Input signal [N]                                            */ 
+    const opus_int16            *in,                /* I    Input signal [N]                                            */
     opus_int32                  *S,                 /* I/O  State vector [2]                                            */
     opus_int16                  *outL,              /* O    Low band [N/2]                                              */
     opus_int16                  *outH,              /* O    High band [N/2]                                             */
@@ -154,18 +158,18 @@ void silk_ana_filt_bank_1(
 
 /* Approximation of 128 * log2() (exact inverse of approx 2^() below) */
 /* Convert input to a log scale    */
-opus_int32 silk_lin2log( 
+opus_int32 silk_lin2log(
     const opus_int32            inLin               /* I  input in linear scale                                         */
 );
 
 /* Approximation of a sigmoid function */
-opus_int silk_sigm_Q15( 
+opus_int silk_sigm_Q15(
     opus_int                    in_Q5               /* I                                                                */
 );
 
 /* Approximation of 2^() (exact inverse of approx log2() above) */
 /* Convert input to a linear scale */
-opus_int32 silk_log2lin( 
+opus_int32 silk_log2lin(
     const opus_int32            inLog_Q7            /* I  input on log scale                                            */
 );
 

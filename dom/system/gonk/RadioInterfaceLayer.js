@@ -1080,7 +1080,12 @@ RadioInterfaceLayer.prototype = {
   handleICCInfoChange: function handleICCInfoChange(message) {
     let oldIcc = this.rilContext.icc;
     this.rilContext.icc = message;
-    if (oldIcc && (oldIcc.mcc == message.mcc || oldIcc.mnc == message.mnc)) {
+   
+    let iccInfoChanged = !oldIcc ||
+                         oldIcc.iccid != message.iccid ||
+                         oldIcc.mcc != message.mcc || 
+                         oldIcc.mnc != message.mnc;
+    if (!iccInfoChanged) {
       return;
     }
     // RIL:IccInfoChanged corresponds to a DOM event that gets fired only
@@ -1823,14 +1828,14 @@ RadioInterfaceLayer.prototype = {
   },
 
   _contactsCallbacks: null,
-  getICCContacts: function getICCContacts(type, callback) {
+  getICCContacts: function getICCContacts(contactType, callback) {
     if (!this._contactsCallbacks) {
       this._contactsCallbacks = {};
     } 
     let requestId = Math.floor(Math.random() * 1000);
     this._contactsCallbacks[requestId] = callback;
     this.worker.postMessage({rilMessageType: "getICCContacts",
-                             type: type,
+                             contactType: contactType,
                              requestId: requestId});
   }
 };

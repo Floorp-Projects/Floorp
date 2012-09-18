@@ -6,6 +6,7 @@
 #ifndef NSTEXTRUNTRANSFORMATIONS_H_
 #define NSTEXTRUNTRANSFORMATIONS_H_
 
+#include "mozilla/Attributes.h"
 #include "gfxFont.h"
 
 class nsTransformedTextRun;
@@ -34,7 +35,7 @@ public:
  */
 class nsFontVariantTextRunFactory : public nsTransformingTextRunFactory {
 public:
-  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun, gfxContext* aRefContext);
+  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun, gfxContext* aRefContext) MOZ_OVERRIDE;
 };
 
 /**
@@ -55,7 +56,7 @@ public:
     : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
       mAllUppercase(aAllUppercase) {}
 
-  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun, gfxContext* aRefContext);
+  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun, gfxContext* aRefContext) MOZ_OVERRIDE;
 
 protected:
   nsAutoPtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;

@@ -859,7 +859,7 @@ class TypeWithSize<4> {
   // unsigned int has size 4 in both gcc and MSVC.
   //
   // As base/basictypes.h doesn't compile on Windows, we cannot use
-  // uint32, uint64, and etc here.
+  // uint32_t, uint64_t, and etc here.
   typedef int Int;
   typedef unsigned int UInt;
 };

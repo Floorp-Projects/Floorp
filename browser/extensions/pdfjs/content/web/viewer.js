@@ -1,5 +1,19 @@
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+/* Copyright 2012 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 'use strict';
 
@@ -21,6 +35,7 @@ var RenderingStates = {
   FINISHED: 3
 };
 
+PDFJS.workerSrc = '../build/pdf.js';
 
 var mozL10n = document.mozL10n || document.webL10n;
 
@@ -31,6 +46,19 @@ function getFileName(url) {
     anchor > 0 ? anchor : url.length,
     query > 0 ? query : url.length);
   return url.substring(url.lastIndexOf('/', end) + 1, end);
+}
+
+function scrollIntoView(element, spot) {
+  var parent = element.offsetParent, offsetY = element.offsetTop;
+  while (parent.clientHeight == parent.scrollHeight) {
+    offsetY += parent.offsetTop;
+    parent = parent.offsetParent;
+    if (!parent)
+      return; // no need to scroll
+  }
+  if (spot)
+    offsetY += spot.top;
+  parent.scrollTop = offsetY;
 }
 
 var Cache = function cacheCache(size) {
@@ -97,6 +125,21 @@ var ProgressBar = (function ProgressBarClosure() {
 
   return ProgressBar;
 })();
+
+/* Copyright 2012 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 var FirefoxCom = (function FirefoxComClosure() {
   return {
@@ -242,6 +285,7 @@ var PDFView = {
   thumbnailViewScroll: null,
   isFullscreen: false,
   previousScale: null,
+  pageRotation: 0,
 
   // called once when the document is loaded
   initialize: function pdfViewInitialize() {
@@ -431,7 +475,13 @@ var PDFView = {
 
   setTitleUsingUrl: function pdfViewSetTitleUsingUrl(url) {
     this.url = url;
-    document.title = decodeURIComponent(getFileName(url)) || url;
+    try {
+      document.title = decodeURIComponent(getFileName(url)) || url;
+    } catch (e) {
+      // decodeURIComponent may throw URIError,
+      // fall back to using the unprocessed url in that case
+      document.title = url;
+    }
   },
 
   open: function pdfViewOpen(url, scale, password) {
@@ -673,6 +723,8 @@ var PDFView = {
 
       storedHash = 'page=' + page + '&zoom=' + zoom + ',' + left + ',' + top;
     }
+
+    this.pageRotation = 0;
 
     var pages = this.pages = [];
     this.pageText = [];
@@ -1147,6 +1199,34 @@ var PDFView = {
     this.isFullscreen = false;
     this.parseScale(this.previousScale);
     this.page = this.page;
+  },
+
+  rotatePages: function pdfViewPageRotation(delta) {
+
+    this.pageRotation = (this.pageRotation + 360 + delta) % 360;
+
+    for (var i = 0, l = this.pages.length; i < l; i++) {
+      var page = this.pages[i];
+      page.update(page.scale, this.pageRotation);
+    }
+
+    for (var i = 0, l = this.thumbnails.length; i < l; i++) {
+      var thumb = this.thumbnails[i];
+      thumb.updateRotation(this.pageRotation);
+    }
+
+    var currentPage = this.pages[this.page - 1];
+
+    if (this.isFullscreen) {
+      this.parseScale('page-fit', true);
+    }
+
+    this.renderHighestPriority();
+
+    // Wait for fullscreen to take effect
+    setTimeout(function() {
+      currentPage.scrollIntoView();
+    }, 0);
   }
 };
 
@@ -1155,8 +1235,9 @@ var PageView = function pageView(container, pdfPage, id, scale,
   this.id = id;
   this.pdfPage = pdfPage;
 
+  this.rotation = 0;
   this.scale = scale || 1.0;
-  this.viewport = this.pdfPage.getViewport(this.scale);
+  this.viewport = this.pdfPage.getViewport(this.scale, this.pdfPage.rotate);
 
   this.renderingState = RenderingStates.INITIAL;
   this.resume = null;
@@ -1167,6 +1248,8 @@ var PageView = function pageView(container, pdfPage, id, scale,
   var div = this.el = document.createElement('div');
   div.id = 'pageContainer' + this.id;
   div.className = 'page';
+  div.style.width = this.viewport.width + 'px';
+  div.style.height = this.viewport.height + 'px';
 
   container.appendChild(anchor);
   container.appendChild(div);
@@ -1176,12 +1259,18 @@ var PageView = function pageView(container, pdfPage, id, scale,
     this.pdfPage.destroy();
   };
 
-  this.update = function pageViewUpdate(scale) {
+  this.update = function pageViewUpdate(scale, rotation) {
     this.renderingState = RenderingStates.INITIAL;
     this.resume = null;
 
+    if (typeof rotation !== 'undefined') {
+      this.rotation = rotation;
+    }
+
     this.scale = scale || this.scale;
-    var viewport = this.pdfPage.getViewport(this.scale);
+
+    var totalRotation = (this.rotation + this.pdfPage.rotate) % 360;
+    var viewport = this.pdfPage.getViewport(this.scale, totalRotation);
 
     this.viewport = viewport;
     div.style.width = viewport.width + 'px';
@@ -1310,7 +1399,7 @@ var PageView = function pageView(container, pdfPage, id, scale,
 
   this.scrollIntoView = function pageViewScrollIntoView(dest) {
       if (!dest) {
-        div.scrollIntoView(true);
+        scrollIntoView(div);
         return;
       }
 
@@ -1369,16 +1458,7 @@ var PageView = function pageView(container, pdfPage, id, scale,
         var width = Math.abs(boundingRect[0][0] - boundingRect[1][0]);
         var height = Math.abs(boundingRect[0][1] - boundingRect[1][1]);
 
-        // using temporary div to scroll it into view
-        var tempDiv = document.createElement('div');
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = Math.floor(x) + 'px';
-        tempDiv.style.top = Math.floor(y) + 'px';
-        tempDiv.style.width = Math.ceil(width) + 'px';
-        tempDiv.style.height = Math.ceil(height) + 'px';
-        div.appendChild(tempDiv);
-        tempDiv.scrollIntoView(true);
-        div.removeChild(tempDiv);
+        scrollIntoView(div, {left: x, top: y, width: width, height: height});
       }, 0);
   };
 
@@ -1521,7 +1601,9 @@ var ThumbnailView = function thumbnailView(container, pdfPage, id) {
     return false;
   };
 
-  var viewport = pdfPage.getViewport(1);
+  var rotation = 0;
+  var totalRotation = (rotation + pdfPage.rotate) % 360;
+  var viewport = pdfPage.getViewport(1, totalRotation);
   var pageWidth = this.width = viewport.width;
   var pageHeight = this.height = viewport.height;
   var pageRatio = pageWidth / pageHeight;
@@ -1536,11 +1618,40 @@ var ThumbnailView = function thumbnailView(container, pdfPage, id) {
   div.id = 'thumbnailContainer' + id;
   div.className = 'thumbnail';
 
+  var ring = document.createElement('div');
+  ring.className = 'thumbnailSelectionRing';
+  ring.style.width = canvasWidth + 'px';
+  ring.style.height = canvasHeight + 'px';
+
+  div.appendChild(ring);
   anchor.appendChild(div);
   container.appendChild(anchor);
 
   this.hasImage = false;
   this.renderingState = RenderingStates.INITIAL;
+
+  this.updateRotation = function(rot) {
+
+    rotation = rot;
+    totalRotation = (rotation + pdfPage.rotate) % 360;
+    viewport = pdfPage.getViewport(1, totalRotation);
+    pageWidth = this.width = viewport.width;
+    pageHeight = this.height = viewport.height;
+    pageRatio = pageWidth / pageHeight;
+
+    canvasHeight = canvasWidth / this.width * this.height;
+    scaleX = this.scaleX = (canvasWidth / pageWidth);
+    scaleY = this.scaleY = (canvasHeight / pageHeight);
+
+    div.removeAttribute('data-loaded');
+    ring.textContent = '';
+    ring.style.width = canvasWidth + 'px';
+    ring.style.height = canvasHeight + 'px';
+
+    this.hasImage = false;
+    this.renderingState = RenderingStates.INITIAL;
+    this.resume = null;
+  }
 
   function getPageDrawContext() {
     var canvas = document.createElement('canvas');
@@ -1555,10 +1666,7 @@ var ThumbnailView = function thumbnailView(container, pdfPage, id) {
 
     div.setAttribute('data-loaded', true);
 
-    var ring = document.createElement('div');
-    ring.className = 'thumbnailSelectionRing';
     ring.appendChild(canvas);
-    div.appendChild(ring);
 
     var ctx = canvas.getContext('2d');
     ctx.save();
@@ -1584,7 +1692,7 @@ var ThumbnailView = function thumbnailView(container, pdfPage, id) {
 
     var self = this;
     var ctx = getPageDrawContext();
-    var drawViewport = pdfPage.getViewport(scaleX);
+    var drawViewport = pdfPage.getViewport(scaleX, totalRotation);
     var renderContext = {
       canvasContext: ctx,
       viewport: drawViewport,
@@ -1890,6 +1998,93 @@ document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
       PDFView.renderHighestPriority();
     });
 
+  document.getElementById('viewThumbnail').addEventListener('click',
+    function() {
+      PDFView.switchSidebarView('thumbs');
+    });
+
+  document.getElementById('viewOutline').addEventListener('click',
+    function() {
+      PDFView.switchSidebarView('outline');
+    });
+
+  document.getElementById('viewSearch').addEventListener('click',
+    function() {
+      PDFView.switchSidebarView('search');
+    });
+
+  document.getElementById('searchButton').addEventListener('click',
+    function() {
+      PDFView.search();
+    });
+
+  document.getElementById('previous').addEventListener('click',
+    function() {
+      PDFView.page--;
+    });
+
+  document.getElementById('next').addEventListener('click',
+    function() {
+      PDFView.page++;
+    });
+
+  document.querySelector('.zoomIn').addEventListener('click',
+    function() {
+      PDFView.zoomIn();
+    });
+
+  document.querySelector('.zoomOut').addEventListener('click',
+    function() {
+      PDFView.zoomOut();
+    });
+
+  document.getElementById('fullscreen').addEventListener('click',
+    function() {
+      PDFView.fullscreen();
+    });
+
+  document.getElementById('openFile').addEventListener('click',
+    function() {
+      document.getElementById('fileInput').click();
+    });
+
+  document.getElementById('print').addEventListener('click',
+    function() {
+      window.print();
+    });
+
+  document.getElementById('download').addEventListener('click',
+    function() {
+      PDFView.download();
+    });
+
+  document.getElementById('searchTermsInput').addEventListener('keydown',
+    function() {
+      if (event.keyCode == 13) {
+        PDFView.search();
+      }
+    });
+
+  document.getElementById('pageNumber').addEventListener('change',
+    function() {
+      PDFView.page = this.value;
+    });
+
+  document.getElementById('scaleSelect').addEventListener('change',
+    function() {
+      PDFView.parseScale(this.value);
+    });
+
+  document.getElementById('page_rotate_ccw').addEventListener('click',
+      function() {
+        PDFView.rotatePages(-90);
+      });
+
+  document.getElementById('page_rotate_cw').addEventListener('click',
+      function() {
+        PDFView.rotatePages(90);
+      });
+
   if (FirefoxCom.requestSync('getLoadingType') == 'passive') {
     PDFView.setTitleUsingUrl(file);
     PDFView.initPassiveLoading();
@@ -2050,7 +2245,7 @@ window.addEventListener('pagechange', function pagechange(evt) {
       var last = numVisibleThumbs > 1 ?
                   visibleThumbs.last.id : first;
       if (page <= first || page >= last)
-        thumbnail.scrollIntoView();
+        scrollIntoView(thumbnail);
     }
 
   }
@@ -2136,6 +2331,18 @@ window.addEventListener('keydown', function keydown(evt) {
           PDFView.page++;
           handled = true;
         }
+        break;
+
+      case 82: // 'r'
+        PDFView.rotatePages(90);
+        break;
+    }
+  }
+
+  if (cmd == 4) { // shift-key
+    switch (evt.keyCode) {
+      case 82: // 'r'
+        PDFView.rotatePages(-90);
         break;
     }
   }

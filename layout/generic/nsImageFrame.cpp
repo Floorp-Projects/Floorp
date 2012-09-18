@@ -1268,12 +1268,12 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
   layer->SetContainer(container);
-  ConfigureLayer(layer);
+  ConfigureLayer(layer, aParameters.mOffset);
   return layer.forget();
 }
 
 void
-nsDisplayImage::ConfigureLayer(ImageLayer *aLayer)
+nsDisplayImage::ConfigureLayer(ImageLayer *aLayer, const nsIntPoint& aOffset)
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
 
@@ -1287,7 +1287,7 @@ nsDisplayImage::ConfigureLayer(ImageLayer *aLayer)
   const gfxRect destRect = GetDestRect();
 
   gfxMatrix transform;
-  transform.Translate(destRect.TopLeft());
+  transform.Translate(destRect.TopLeft() + aOffset);
   transform.Scale(destRect.Width()/imageWidth,
                   destRect.Height()/imageHeight);
   aLayer->SetBaseTransform(gfx3DMatrix::From2D(transform));
