@@ -129,8 +129,13 @@ function test_property(property)
     // We don't care particularly about the whitespace or the placement of
     // semicolons, but for simplicity we'll test the current behavior.
     var expected_serialization = "";
-    if (step1val != "")
-      expected_serialization = property + ": " + step1val + ";";
+    if (step1val != "") {
+      if ("alias_for" in info) {
+        expected_serialization = info.alias_for + ": " + step1val + ";";
+      } else {
+        expected_serialization = property + ": " + step1val + ";";
+      }
+    }
     is(step1ser, expected_serialization,
        "serialization should match property value");
 
