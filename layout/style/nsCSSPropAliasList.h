@@ -35,7 +35,6 @@
 
  ******/
 
-CSS_PROP_ALIAS(-moz-transform, transform, MozTransform, "")
 CSS_PROP_ALIAS(-moz-transform-origin, transform_origin, MozTransformOrigin, "")
 CSS_PROP_ALIAS(-moz-perspective-origin, perspective_origin, MozPerspectiveOrigin, "")
 CSS_PROP_ALIAS(-moz-perspective, perspective, MozPerspective, "")
