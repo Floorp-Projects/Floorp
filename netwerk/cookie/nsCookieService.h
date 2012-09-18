@@ -47,21 +47,79 @@ class CookieServiceParent;
 }
 }
 
-// hash entry class
-class nsCookieEntry : public PLDHashEntryHdr
+// hash key class
+class nsCookieKey : public PLDHashEntryHdr
+{
+public:
+  typedef const nsCookieKey& KeyType;
+  typedef const nsCookieKey* KeyTypePointer;
+
+  nsCookieKey()
+  {}
+
+  nsCookieKey(const nsCString &baseDomain, uint32_t appId, bool inBrowser)
+    : mBaseDomain(baseDomain)
+    , mAppId(appId)
+    , mInBrowserElement(inBrowser)
+  {}
+
+  nsCookieKey(const KeyTypePointer other)
+    : mBaseDomain(other->mBaseDomain)
+    , mAppId(other->mAppId)
+    , mInBrowserElement(other->mInBrowserElement)
+  {}
+
+  nsCookieKey(const KeyType &other)
+    : mBaseDomain(other.mBaseDomain)
+    , mAppId(other.mAppId)
+    , mInBrowserElement(other.mInBrowserElement)
+  {}
+
+  ~nsCookieKey()
+  {}
+
+  bool KeyEquals(KeyTypePointer other) const
+  {
+    return mBaseDomain == other->mBaseDomain &&
+           mAppId == other->mAppId &&
+           mInBrowserElement == other->mInBrowserElement;
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey)
+  {
+    return &aKey;
+  }
+
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    // TODO: more efficient way to generate hash?
+    nsAutoCString temp(aKey->mBaseDomain);
+    temp.Append("#");
+    temp.Append(aKey->mAppId);
+    temp.Append("#");
+    temp.Append(aKey->mInBrowserElement ? 1 : 0);
+    return mozilla::HashString(temp);
+  }
+
+  enum { ALLOW_MEMMOVE = true };
+
+  nsCString   mBaseDomain;
+  uint32_t    mAppId;
+  bool        mInBrowserElement;
+};
+
+// Inherit from nsCookieKey so this can be stored in nsTHashTable
+// TODO: why aren't we using nsClassHashTable<nsCookieKey, ArrayType>?
+class nsCookieEntry : public nsCookieKey
 {
   public:
     // Hash methods
-    typedef const nsCString& KeyType;
-    typedef const nsCString* KeyTypePointer;
     typedef nsTArray< nsRefPtr<nsCookie> > ArrayType;
     typedef ArrayType::index_type IndexType;
 
-    explicit
-    nsCookieEntry(KeyTypePointer aBaseDomain)
-     : mBaseDomain(*aBaseDomain)
-    {
-    }
+    nsCookieEntry(KeyTypePointer aKey)
+     : nsCookieKey(aKey)
+    {}
 
     nsCookieEntry(const nsCookieEntry& toCopy)
     {
@@ -71,42 +129,18 @@ class nsCookieEntry : public PLDHashEntryHdr
     }
 
     ~nsCookieEntry()
-    {
-    }
-
-    KeyType GetKey() const
-    {
-      return mBaseDomain;
-    }
-
-    bool KeyEquals(KeyTypePointer aKey) const
-    {
-      return mBaseDomain == *aKey;
-    }
-
-    static KeyTypePointer KeyToPointer(KeyType aKey)
-    {
-      return &aKey;
-    }
-
-    static PLDHashNumber HashKey(KeyTypePointer aKey)
-    {
-      return mozilla::HashString(*aKey);
-    }
-
-    enum { ALLOW_MEMMOVE = true };
+    {}
 
     inline ArrayType& GetCookies() { return mCookies; }
 
   private:
-    nsCString mBaseDomain;
     ArrayType mCookies;
 };
 
-// encapsulates a (baseDomain, nsCookie) tuple for temporary storage purposes.
+// encapsulates a (key, nsCookie) tuple for temporary storage purposes.
 struct CookieDomainTuple
 {
-  nsCString baseDomain;
+  nsCookieKey key;
   nsRefPtr<nsCookie> cookie;
 };
 
@@ -152,7 +186,7 @@ struct DBState
   // A hashset of baseDomains read in synchronously, while the async read is
   // in flight. This is used to keep track of which data in hostArray is stale
   // when the time comes to merge.
-  nsTHashtable<nsCStringHashKey>        readSet;
+  nsTHashtable<nsCookieKey>        readSet;
 
   // DB completion handlers.
   nsCOMPtr<mozIStorageStatementCallback>  insertListener;
@@ -219,29 +253,30 @@ class nsCookieService : public nsICookieService
     template<class T> nsCookie*   GetCookieFromRow(T &aRow);
     void                          AsyncReadComplete();
     void                          CancelAsyncRead(bool aPurgeReadSet);
-    void                          EnsureReadDomain(const nsCString &aBaseDomain);
+    void                          EnsureReadDomain(const nsCookieKey &aKey);
     void                          EnsureReadComplete();
     nsresult                      NormalizeHost(nsCString &aHost);
     nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, bool &aRequireHostMatch);
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     nsresult                      GetCookieStringCommon(nsIURI *aHostURI, nsIChannel *aChannel, bool aHttpBound, char** aCookie);
-    void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, nsCString &aCookie);
+    void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, uint32_t aAppId, bool aInBrowserElement, nsCString &aCookie);
     nsresult                      SetCookieStringCommon(nsIURI *aHostURI, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, bool aFromHttp);
-    void                          SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, nsDependentCString &aCookieHeader, const nsCString &aServerTime, bool aFromHttp);
-    bool                          SetCookieInternal(nsIURI *aHostURI, const nsCString& aBaseDomain, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp);
-    void                          AddInternal(const nsCString& aBaseDomain, nsCookie *aCookie, int64_t aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, bool aFromHttp);
+    void                          SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, nsDependentCString &aCookieHeader, const nsCString &aServerTime, bool aFromHttp, uint32_t aAppId, bool aInBrowserElement);
+    bool                          SetCookieInternal(nsIURI *aHostURI, const nsCookieKey& aKey, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp);
+    void                          AddInternal(const nsCookieKey& aKey, nsCookie *aCookie, int64_t aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, bool aFromHttp);
     void                          RemoveCookieFromList(const nsListIter &aIter, mozIStorageBindingParamsArray *aParamsArray = NULL);
-    void                          AddCookieToList(const nsCString& aBaseDomain, nsCookie *aCookie, DBState *aDBState, mozIStorageBindingParamsArray *aParamsArray, bool aWriteToDB = true);
+    void                          AddCookieToList(const nsCookieKey& aKey, nsCookie *aCookie, DBState *aDBState, mozIStorageBindingParamsArray *aParamsArray, bool aWriteToDB = true);
     void                          UpdateCookieInList(nsCookie *aCookie, int64_t aLastAccessed, mozIStorageBindingParamsArray *aParamsArray);
     static bool                   GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, bool &aEqualsFound);
     static bool                   ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
-    CookieStatus                  CheckPrefs(nsIURI *aHostURI, bool aIsForeign, const nsCString &aBaseDomain, bool aRequireHostMatch, const char *aCookieHeader);
+    bool                          RequireThirdPartyCheck();
+    CookieStatus                  CheckPrefs(nsIURI *aHostURI, bool aIsForeign, bool aRequireHostMatch, const char *aCookieHeader);
     bool                          CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI, const nsCString &aBaseDomain, bool aRequireHostMatch);
     static bool                   CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static bool                   GetExpiry(nsCookieAttributes &aCookie, int64_t aServerTime, int64_t aCurrentTime);
     void                          RemoveAllFromMemory();
     already_AddRefed<nsIArray>    PurgeCookies(int64_t aCurrentTimeInUsec);
-    bool                          FindCookie(const nsCString& aBaseDomain, const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
+    bool                          FindCookie(const nsCookieKey& aKey, const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
     static void                   FindStaleCookie(nsCookieEntry *aEntry, int64_t aCurrentTime, nsListIter &aIter);
     void                          NotifyRejected(nsIURI *aHostURI);
     void                          NotifyChanged(nsISupports *aSubject, const PRUnichar *aData);

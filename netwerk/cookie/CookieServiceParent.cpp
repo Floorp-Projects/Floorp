@@ -34,6 +34,8 @@ bool
 CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,
                                          const bool& aFromHttp,
+                                         const IPC::SerializedLoadContext&
+                                               aLoadContext,
                                          nsCString* aResult)
 {
   if (!mCookieService)
@@ -45,8 +47,12 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
   if (!hostURI)
     return false;
 
-  mCookieService->GetCookieStringInternal(hostURI, aIsForeign,
-                                          aFromHttp, *aResult);
+  uint32_t appId;
+  bool isInBrowserElement;
+  GetAppInfoFromLoadContext(aLoadContext, appId, isInBrowserElement);
+
+  mCookieService->GetCookieStringInternal(hostURI, aIsForeign, aFromHttp, appId,
+                                          isInBrowserElement, *aResult);
   return true;
 }
 
@@ -55,7 +61,9 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,
                                          const nsCString& aCookieString,
                                          const nsCString& aServerTime,
-                                         const bool& aFromHttp)
+                                         const bool& aFromHttp,
+                                         const IPC::SerializedLoadContext&
+                                               aLoadContext)
 {
   if (!mCookieService)
     return true;
@@ -66,11 +74,32 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
   if (!hostURI)
     return false;
 
+  uint32_t appId;
+  bool isInBrowserElement;
+  GetAppInfoFromLoadContext(aLoadContext, appId, isInBrowserElement);
+
   nsDependentCString cookieString(aCookieString, 0);
-  mCookieService->SetCookieStringInternal(hostURI, aIsForeign,
-                                          cookieString, aServerTime,
-                                          aFromHttp);
+  mCookieService->SetCookieStringInternal(hostURI, aIsForeign, cookieString,
+                                          aServerTime, aFromHttp, appId,
+                                          isInBrowserElement);
   return true;
+}
+
+void
+CookieServiceParent::GetAppInfoFromLoadContext(
+                       const IPC::SerializedLoadContext &aLoadContext,
+                        uint32_t& aAppId,
+                        bool& aIsInBrowserElement)
+{
+  // TODO: bug 782542: what to do when we get null loadContext?  For now assume
+  // NECKO_NO_APP_ID.
+  aAppId = NECKO_NO_APP_ID;
+  aIsInBrowserElement = false;
+
+  if (aLoadContext.IsNotNull()) {
+    aAppId = aLoadContext.mAppId;
+    aIsInBrowserElement = aLoadContext.mIsInBrowserElement;
+  }
 }
 
 }
