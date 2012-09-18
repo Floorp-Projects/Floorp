@@ -7,6 +7,12 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
+%{C++
+  class EditActionListener;
+%}
+
+[ptr] native EditActionListener(EditActionListener);
+
 interface nsIURI;
 interface nsIAtom;
 interface nsIContent;
@@ -16,12 +22,11 @@ interface nsIDocumentStateListener;
 interface nsIOutputStream;
 interface nsITransactionManager;
 interface nsITransaction;
-interface nsIEditorObserver;
 interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(7ad59e28-f3d5-4e14-8ea3-794ad4a86de3)]
+[scriptable, uuid(12efa18c-920a-47cd-94a1-4052f245f76c)]
 
 interface nsIEditor  : nsISupports
 {
@@ -29,6 +34,7 @@ interface nsIEditor  : nsISupports
   typedef short EDirection;
   typedef short EStripWrappers;
 %}
+
   const short eNone = 0;
   const short eNext = 1;
   const short ePrevious = 2;
@@ -512,10 +518,10 @@ interface nsIEditor  : nsISupports
    */
 
   /** add an EditorObserver to the editors list of observers. */
-  void addEditorObserver(in nsIEditorObserver observer);
+  void setEditorObserver(in EditActionListener observer);
 
   /** Remove an EditorObserver from the editor's list of observers. */
-  void removeEditorObserver(in nsIEditorObserver observer);
+  void removeEditorObserver();
 
   /** add an EditActionListener to the editors list of listeners. */
   void addEditActionListener(in nsIEditActionListener listener);

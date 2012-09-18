@@ -329,12 +329,12 @@ IDBTransaction::RollbackSavepoint()
   nsCOMPtr<mozIStorageStatement> stmt = GetCachedStatement(NS_LITERAL_CSTRING(
     "ROLLBACK TO SAVEPOINT " SAVEPOINT_NAME
   ));
-  NS_ENSURE_TRUE(stmt,);
+  NS_ENSURE_TRUE_VOID(stmt);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv,);
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 nsresult
@@ -1065,14 +1065,14 @@ UpdateRefcountFunction::DidCommit()
   mFileInfoEntries.EnumerateRead(FileInfoUpdateCallback, nullptr);
 
   nsresult rv = RemoveJournals(mJournalsToRemoveAfterCommit);
-  NS_ENSURE_SUCCESS(rv,);
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 void
 UpdateRefcountFunction::DidAbort()
 {
   nsresult rv = RemoveJournals(mJournalsToRemoveAfterAbort);
-  NS_ENSURE_SUCCESS(rv,);
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 nsresult

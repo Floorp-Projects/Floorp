@@ -45,6 +45,7 @@
   <command id="sp-cmd-display" oncommand="Scratchpad.display();"/>
   <command id="sp-cmd-contentContext" oncommand="Scratchpad.setContentContext();"/>
   <command id="sp-cmd-browserContext" oncommand="Scratchpad.setBrowserContext();" disabled="true"/>
+  <command id="sp-cmd-reloadAndRun" oncommand="Scratchpad.reloadAndRun();"/>
   <command id="sp-cmd-resetContext" oncommand="Scratchpad.resetContext();"/>
   <command id="sp-cmd-errorConsole" oncommand="Scratchpad.openErrorConsole();" disabled="true"/>
   <command id="sp-cmd-webConsole" oncommand="Scratchpad.openWebConsole();"/>
@@ -90,6 +91,10 @@
        key="&display.key;"
        command="sp-cmd-display"
        modifiers="accel"/>
+  <key id="sp-key-reloadAndRun"
+       key="&reloadAndRun.key;"
+       command="sp-cmd-reloadAndRun"
+       modifiers="accel,shift"/>
   <key id="sp-key-errorConsole"
        key="&errorConsoleCmd.commandkey;"
        command="sp-cmd-errorConsole"
@@ -194,6 +199,11 @@
                 key="sp-key-display"
                 command="sp-cmd-display"/>
       <menuseparator/>
+      <menuitem id="sp-text-reloadAndRun"
+                label="&reloadAndRun.label;"
+                key="sp-key-reloadAndRun"
+                accesskey="&reloadAndRun.accesskey;"
+                command="sp-cmd-reloadAndRun"/>
       <menuitem id="sp-text-resetContext"
                 label="&resetContext2.label;"
                 accesskey="&resetContext2.accesskey;"

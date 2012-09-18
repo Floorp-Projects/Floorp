@@ -73,7 +73,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.13
+SQLITE_VERSION=3.7.14
 
 MSMANIFEST_TOOL=
 
@@ -754,9 +754,6 @@ if test -n "$_WIN32_MSVC"; then
     AC_DEFINE(HAVE_IO_H)
     AC_DEFINE(HAVE_SETBUF)
     AC_DEFINE(HAVE_ISATTY)
-    if test $_MSC_VER -ge 1600; then
-        AC_DEFINE(HAVE_NULLPTR)
-    fi
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -2804,21 +2801,6 @@ dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
     fi
 fi
 
-dnl Check for nullptr (bug 626472)
-AC_LANG_CPLUSPLUS
-AC_MSG_CHECKING(for nullptr)
-AC_CACHE_VAL(ac_cv_nullptr,
- [AC_TRY_COMPILE([],
-                 [int* foo = nullptr;],
-                 [ac_cv_nullptr=true],
-                 [ac_cv_nullptr=false])])
-if test "$ac_cv_nullptr" = true ; then
-  AC_DEFINE(HAVE_NULLPTR)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-
 AC_LANG_C
 
 dnl Check for .hidden assembler directive and visibility attribute.
@@ -2944,6 +2926,8 @@ AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(VISIBILITY_FLAGS)
 
 MOZ_GCC_PR49911
+MOZ_GCC_PR39608
+MOZ_LLVM_PR8927
 
 dnl Check for __force_align_arg_pointer__ for SSE2 on gcc
 dnl ========================================================
@@ -4017,7 +4001,11 @@ if test "$MOZ_NATIVE_JPEG" = 1; then
                      #include <jpeglib.h> ],
                    [ #if JPEG_LIB_VERSION < $MOZJPEG
                      #error "Insufficient JPEG library version ($MOZJPEG required)."
-                     #endif ],
+                     #endif
+                     #ifndef JCS_EXTENSIONS
+                     #error "libjpeg-turbo JCS_EXTENSIONS required"
+                     #endif
+                     ],
                    MOZ_NATIVE_JPEG=1,
                    AC_MSG_ERROR([Insufficient JPEG library version for --with-system-jpeg]))
 fi
@@ -7256,7 +7244,7 @@ MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
 AC_SUBST(STDCXX_COMPAT)
 
 if test -n "$STDCXX_COMPAT"; then
-   eval $(CXX="$CXX" MACOS_SDK_DIR="$MACOS_SDK_DIR" $PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
+   eval $(CXX="$CXX" $PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
    AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
    AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
 fi

@@ -5,12 +5,15 @@
 
 package org.mozilla.gecko.ui;
 
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.FloatUtils;
 
 import org.json.JSONArray;
 
 import android.util.Log;
+import android.view.View;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -60,7 +63,8 @@ abstract class Axis {
         return (value == null || value < 0 ? defaultValue : value);
     }
 
-    static void addPrefNames(JSONArray prefs) {
+    static void initPrefs() {
+        JSONArray prefs = new JSONArray();
         prefs.put(PREF_SCROLLING_FRICTION_FAST);
         prefs.put(PREF_SCROLLING_FRICTION_SLOW);
         prefs.put(PREF_SCROLLING_VELOCITY_THRESHOLD);
@@ -68,6 +72,18 @@ abstract class Axis {
         prefs.put(PREF_SCROLLING_OVERSCROLL_DECEL_RATE);
         prefs.put(PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT);
         prefs.put(PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE);
+
+        PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
+            Map<String, Integer> mPrefs = new HashMap<String, Integer>();
+
+            @Override public void prefValue(String name, int value) {
+                mPrefs.put(name, value);
+            }
+
+            @Override public void finish() {
+                setPrefs(mPrefs);
+            }
+        });
     }
 
     static void setPrefs(Map<String, Integer> prefs) {
@@ -105,6 +121,7 @@ abstract class Axis {
 
     private final SubdocumentScrollHelper mSubscroller;
 
+    private int mOverscrollMode; /* Default to only overscrolling if we're allowed to scroll in a direction */
     private float mFirstTouchPos;           /* Position of the first touch event on the current drag. */
     private float mTouchPos;                /* Position of the most recent touch event on the current drag. */
     private float mLastTouchPos;            /* Position of the touch event before touchPos. */
@@ -122,6 +139,15 @@ abstract class Axis {
 
     Axis(SubdocumentScrollHelper subscroller) {
         mSubscroller = subscroller;
+        mOverscrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+    }
+
+    public void setOverScrollMode(int overscrollMode) {
+        mOverscrollMode = overscrollMode;
+    }
+
+    public int getOverScrollMode() {
+        return mOverscrollMode;
     }
 
     private float getViewportEnd() {
@@ -201,15 +227,22 @@ abstract class Axis {
      * Returns true if the page is zoomed in to some degree along this axis such that scrolling is
      * possible and this axis has not been scroll locked while panning. Otherwise, returns false.
      */
-    private boolean scrollable() {
+    boolean scrollable() {
         // If we're scrolling a subdocument, ignore the viewport length restrictions (since those
         // apply to the top-level document) and only take into account axis locking.
         if (mSubscroller.scrolling()) {
             return !mScrollingDisabled;
-        } else {
-            return getViewportLength() <= getPageLength() - MIN_SCROLLABLE_DISTANCE &&
-                   !mScrollingDisabled;
         }
+
+        // if we are axis locked, return false
+        if (mScrollingDisabled) {
+            return false;
+        }
+
+        // there is scrollable space, and we're not disabled, or the document fits the viewport
+        // but we always allow overscroll anyway
+        return getViewportLength() <= getPageLength() - MIN_SCROLLABLE_DISTANCE ||
+               getOverScrollMode() == View.OVER_SCROLL_ALWAYS;
     }
 
     /*
@@ -294,14 +327,27 @@ abstract class Axis {
 
     // Performs displacement of the viewport position according to the current velocity.
     void displace() {
-        if (!scrollable()) {
+        // if this isn't scrollable just return
+        if (!scrollable())
             return;
-        }
 
         if (mFlingState == FlingStates.PANNING)
             mDisplacement += (mLastTouchPos - mTouchPos) * getEdgeResistance(false);
         else
             mDisplacement += mVelocity;
+
+        // if overscroll is disabled and we're trying to overscroll, reset the displacement
+        // to remove any excess. Using getExcess alone isn't enough here since it relies on
+        // getOverscroll which doesn't take into account any new displacment being applied
+        if (getOverScrollMode() == View.OVER_SCROLL_NEVER) {
+            if (mDisplacement + getOrigin() < getPageStart()) {
+                mDisplacement = getPageStart() - getOrigin();
+                stopFling();
+            } else if (mDisplacement + getViewportEnd() > getPageEnd()) {
+                mDisplacement = getPageEnd() - getViewportEnd();
+                stopFling();
+            }
+        }
     }
 
     float resetDisplacement() {

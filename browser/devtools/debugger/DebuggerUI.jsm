@@ -46,8 +46,8 @@ DebuggerUI.prototype = {
     tabs.addEventListener("TabSelect", bound_refreshCommand, true);
 
     win.addEventListener("unload", function onClose(aEvent) {
-      tabs.removeEventListener("TabSelect", bound_refreshCommand, true);
       win.removeEventListener("unload", onClose, false);
+      tabs.removeEventListener("TabSelect", bound_refreshCommand, true);
     }, false);
   },
 
@@ -245,7 +245,7 @@ DebuggerPane.prototype = {
   _initServer: function DP__initServer() {
     if (!DebuggerServer.initialized) {
       // Always allow connections from nsIPipe transports.
-      DebuggerServer.init(function () { return true; });
+      DebuggerServer.init(function() true);
       DebuggerServer.addBrowserActors();
     }
   },

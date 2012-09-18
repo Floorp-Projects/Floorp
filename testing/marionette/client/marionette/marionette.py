@@ -85,7 +85,7 @@ class Marionette(object):
     CONTEXT_CONTENT = 'content'
 
     def __init__(self, host='localhost', port=2828, bin=None, profile=None,
-                 emulator=None, emulatorBinary=None, emulatorImg=None,
+                 emulator=None, sdcard= None, emulatorBinary=None, emulatorImg=None,
                  emulator_res='480x800', connectToRunningEmulator=False,
                  homedir=None, baseurl=None, noWindow=False, logcat_dir=None):
         self.host = host
@@ -112,6 +112,7 @@ class Marionette(object):
                                      noWindow=self.noWindow,
                                      logcat_dir=self.logcat_dir,
                                      arch=emulator,
+                                     sdcard=sdcard,
                                      emulatorBinary=emulatorBinary,
                                      userdata=emulatorImg,
                                      res=emulator_res)

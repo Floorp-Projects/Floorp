@@ -77,13 +77,11 @@ nsDOMCameraManager::GetListOfCameras(JSContext* cx, JS::Value* _retval)
     }
     if (!v) {
       DOM_CAMERA_LOGE("getListOfCameras : out of memory populating camera list");
-      delete a;
       return NS_ERROR_NOT_AVAILABLE;
     }
     jv = STRING_TO_JSVAL(v);
     if (!JS_SetElement(cx, a, index, &jv)) {
       DOM_CAMERA_LOGE("getListOfCameras : failed building list of cameras");
-      delete a;
       return NS_ERROR_NOT_AVAILABLE;
     }
   }

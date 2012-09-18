@@ -216,6 +216,8 @@ interface TestInterface {
   sequence<DOMString> receiveStringSequence();
   void passStringSequence(sequence<DOMString> arg);
 
+  sequence<any> receiveAnySequence();
+
   // Typed array types
   void passArrayBuffer(ArrayBuffer arg);
   void passNullableArrayBuffer(ArrayBuffer? arg);
@@ -319,6 +321,9 @@ interface TestInterface {
   void exerciseTypedefInterfaces1(AnotherNameForTestInterface arg);
   AnotherNameForTestInterface exerciseTypedefInterfaces2(NullableTestInterface arg);
   void exerciseTypedefInterfaces3(YetAnotherNameForTestInterface arg);
+
+  // Miscellania
+  [LenientThis] attribute long attrWithLenientThis;
 };
 
 interface TestNonWrapperCacheInterface {

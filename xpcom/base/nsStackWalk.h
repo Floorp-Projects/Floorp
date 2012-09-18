@@ -56,7 +56,7 @@ typedef struct {
      * string and zero if unknown.
      */
     char library[256];
-    PRUptrdiff loffset;
+    ptrdiff_t loffset;
     /*
      * The name of the file name and line number of the code
      * corresponding to the address, or empty string and zero if
@@ -69,7 +69,7 @@ typedef struct {
      * offset within that function, or empty string and zero if unknown.
      */
     char function[256];
-    PRUptrdiff foffset;
+    ptrdiff_t foffset;
 } nsCodeAddressDetails;
 
 /**

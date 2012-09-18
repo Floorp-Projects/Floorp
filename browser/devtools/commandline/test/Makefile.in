@@ -24,6 +24,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_cmd_pagemod_export.js \
   browser_cmd_pref.js \
   browser_cmd_restart.js \
+  browser_cmd_screenshot.js \
   browser_cmd_settings.js \
   browser_gcli_web.js \
   head.js \
@@ -33,6 +34,7 @@ MOCHITEST_BROWSER_FILES = \
 MOCHITEST_BROWSER_FILES += \
   browser_dbg_cmd_break.html \
   browser_dbg_cmd.html \
+  browser_cmd_screenshot.html \
   browser_cmd_pagemod_export.html \
   browser_cmd_jsb_script.jsi \
   $(NULL)

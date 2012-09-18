@@ -41,9 +41,9 @@ bool
 PluginProcessParent::Launch(int32_t timeoutMs)
 {
     ProcessArchitecture currentArchitecture = base::GetCurrentProcessArchitecture();
-    uint32 containerArchitectures = GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
+    uint32_t containerArchitectures = GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
 
-    uint32 pluginLibArchitectures = currentArchitecture;
+    uint32_t pluginLibArchitectures = currentArchitecture;
 #ifdef XP_MACOSX
     nsresult rv = GetArchitecturesForBinary(mPluginFilePath.c_str(), &pluginLibArchitectures);
     if (NS_FAILED(rv)) {

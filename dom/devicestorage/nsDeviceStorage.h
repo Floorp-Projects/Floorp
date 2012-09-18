@@ -25,6 +25,7 @@ class nsPIDOMWindow;
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIObserver.h"
+#include "nsIStringBundle.h"
 #include "mozilla/Mutex.h"
 #include "prtime.h"
 #include "DeviceStorage.h"
@@ -40,6 +41,29 @@ class nsPIDOMWindow;
 #define POST_ERROR_EVENT_NOT_IMPLEMENTED             "Not implemented"
 
 using namespace mozilla::dom;
+
+class DeviceStorageTypeChecker MOZ_FINAL
+{
+public:
+  static DeviceStorageTypeChecker* CreateOrGet();
+
+  DeviceStorageTypeChecker();
+  ~DeviceStorageTypeChecker();
+
+  void InitFromBundle(nsIStringBundle* aBundle);
+
+  bool Check(const nsAString& aType, nsIDOMBlob* aBlob);
+  bool Check(const nsAString& aType, nsIFile* aFile);
+
+  static nsresult GetPermissionForType(const nsAString& aType, nsACString& aPermissionResult);
+
+private:
+  nsString mPicturesExtensions;
+  nsString mVideosExtensions;
+  nsString mMusicExtensions;
+
+  static nsAutoPtr<DeviceStorageTypeChecker> sDeviceStorageTypeChecker;
+};
 
 class DeviceStorageFile MOZ_FINAL
   : public nsISupports {
@@ -59,7 +83,6 @@ public:
   // we want to make sure that the names of file can't reach
   // outside of the type of storage the user asked for.
   bool IsSafePath();
-  bool IsType(nsAString& aType);
 
   nsresult Remove();
   nsresult Write(nsIInputStream* aInputStream);
@@ -67,7 +90,7 @@ public:
   void CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRTime aSince = 0);
   void collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRTime aSince, nsAString& aRootPath);
 
-  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar);
+  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const nsAString& aStorageType);
 
 private:
   void NormalizeFilePath();

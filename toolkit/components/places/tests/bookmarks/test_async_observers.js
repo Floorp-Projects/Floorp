@@ -75,7 +75,8 @@ let gTests = [
   {
     observer.reset();
     PlacesUtils.favicons.setAndFetchFaviconForPage(NetUtil.newURI("http://book.ma.rk/"),
-                                                   SMALLPNG_DATA_URI, true);
+                                                   SMALLPNG_DATA_URI, true,
+                                                   PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
   },
   function remove_page_test()
   {

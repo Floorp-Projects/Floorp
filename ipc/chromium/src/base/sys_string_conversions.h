@@ -44,8 +44,8 @@ std::wstring SysNativeMBToWide(const StringPiece& native_mb);
 // Converts between 8-bit and wide strings, using the given code page. The
 // code page identifier is one accepted by the Windows function
 // MultiByteToWideChar().
-std::wstring SysMultiByteToWide(const StringPiece& mb, uint32 code_page);
-std::string SysWideToMultiByte(const std::wstring& wide, uint32 code_page);
+std::wstring SysMultiByteToWide(const StringPiece& mb, uint32_t code_page);
+std::string SysWideToMultiByte(const std::wstring& wide, uint32_t code_page);
 
 #endif  // defined(OS_WIN)
 

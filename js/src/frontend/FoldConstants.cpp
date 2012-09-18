@@ -201,9 +201,9 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
     RootedString str(cx);
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
         if (kind == PNK_XMLETAGO)
-            accum = cx->runtime->atomState.etagoAtom;
+            accum = cx->names().etago;
         else if (kind == PNK_XMLSTAGO || kind == PNK_XMLPTAGC)
-            accum = cx->runtime->atomState.stagoAtom;
+            accum = cx->names().stago;
     }
 
     /*
@@ -307,9 +307,9 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
         str = NULL;
         if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
             if (kind == PNK_XMLPTAGC)
-                str = cx->runtime->atomState.ptagcAtom;
+                str = cx->names().ptagc;
             else if (kind == PNK_XMLSTAGO || kind == PNK_XMLETAGO)
-                str = cx->runtime->atomState.tagcAtom;
+                str = cx->names().tagc;
         }
         if (str) {
             accum = js_ConcatStrings(cx, accum, str);
@@ -363,6 +363,25 @@ Boolish(ParseNode *pn)
 
       case JSOP_STRING:
         return (pn->pn_atom->length() > 0) ? Truthy : Falsy;
+
+#if JS_HAS_GENERATOR_EXPRS
+      case JSOP_CALL:
+      {
+        /*
+         * A generator expression as an if or loop condition has no effects, it
+         * simply results in a truthy object reference. This condition folding
+         * is needed for the decompiler. See bug 442342 and bug 443074.
+         */
+        if (pn->pn_count != 1)
+            return Unknown;
+        ParseNode *pn2 = pn->pn_head;
+        if (!pn2->isKind(PNK_FUNCTION))
+            return Unknown;
+        if (!(pn2->pn_funbox->inGenexpLambda))
+            return Unknown;
+        return Truthy;
+      }
+#endif
 
       case JSOP_DEFFUN:
       case JSOP_LAMBDA:

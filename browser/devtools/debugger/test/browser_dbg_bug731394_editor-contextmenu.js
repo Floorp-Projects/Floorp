@@ -70,6 +70,8 @@ function test()
 
     isnot(editor.getText().indexOf("debugger"), -1,
           "The correct script was loaded initially.");
+    isnot(editor.getText().indexOf("\u263a"), -1,
+      "Unicode characters are converted correctly.");
 
     contextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
     ok(contextMenu, "source editor context menupopup");

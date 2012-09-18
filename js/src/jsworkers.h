@@ -121,10 +121,12 @@ class AutoLockWorkerThreadState
     AutoLockWorkerThreadState(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : rt(rt)
     {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
 #ifdef JS_PARALLEL_COMPILATION
         rt->workerThreadState->lock();
+#else
+        (void)this->rt;
 #endif
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~AutoLockWorkerThreadState()
@@ -145,10 +147,12 @@ class AutoUnlockWorkerThreadState
     AutoUnlockWorkerThreadState(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : rt(rt)
     {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
 #ifdef JS_PARALLEL_COMPILATION
         rt->workerThreadState->unlock();
+#else
+        (void)this->rt;
 #endif
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~AutoUnlockWorkerThreadState()

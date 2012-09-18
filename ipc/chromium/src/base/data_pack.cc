@@ -54,8 +54,8 @@ bool DataPack::Load(const FilePath& path) {
 
   // Parse the header of the file.
   // First uint32_t: version; second: resource count.
-  const uint32* ptr = reinterpret_cast<const uint32_t*>(mmap_->data());
-  uint32 version = ptr[0];
+  const uint32_t* ptr = reinterpret_cast<const uint32_t*>(mmap_->data());
+  uint32_t version = ptr[0];
   if (version != kFileFormatVersion) {
     LOG(ERROR) << "Bad data pack version: got " << version << ", expected "
                << kFileFormatVersion;

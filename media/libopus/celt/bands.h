@@ -1,8 +1,11 @@
-/* Copyright (c) 2007-2008 CSIRO
-   Copyright (c) 2007-2009 Xiph.Org Foundation
-   Copyright (c) 2008-2009 Gregory Maxwell
+/* Copyright (c) 2007-2012 IETF Trust, CSIRO, Xiph.Org Foundation,
+                           Gregory Maxwell. All rights reserved.
    Written by Jean-Marc Valin and Gregory Maxwell */
 /*
+
+   This file is extracted from RFC6716. Please see that RFC for additional
+   information.
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:

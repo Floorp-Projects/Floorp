@@ -38,11 +38,11 @@ SignatureVerifier::~SignatureVerifier() {
   }
 }
 
-bool SignatureVerifier::VerifyInit(const uint8* signature_algorithm,
+bool SignatureVerifier::VerifyInit(const uint8_t* signature_algorithm,
                                    int signature_algorithm_len,
-                                   const uint8* signature,
+                                   const uint8_t* signature,
                                    int signature_len,
-                                   const uint8* public_key_info,
+                                   const uint8_t* public_key_info,
                                    int public_key_info_len) {
   signature_.reserve(signature_len);
   // CryptoAPI uses big integers in the little-endian byte order, so we need
@@ -114,7 +114,7 @@ bool SignatureVerifier::VerifyInit(const uint8* signature_algorithm,
   return true;
 }
 
-void SignatureVerifier::VerifyUpdate(const uint8* data_part,
+void SignatureVerifier::VerifyUpdate(const uint8_t* data_part,
                                      int data_part_len) {
   BOOL ok = CryptHashData(hash_object_, data_part, data_part_len, 0);
   DCHECK(ok) << "CryptHashData failed: " << GetLastError();

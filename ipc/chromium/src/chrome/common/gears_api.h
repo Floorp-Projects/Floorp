@@ -80,7 +80,7 @@ typedef struct _GearsShortcutList {
   // Memory for these shortcuts, including the strings they hold, should be
   // freed by the browser using CPB_Free.
   GearsShortcutData* shortcuts;  // array of installed shortcuts
-  uint32 num_shortcuts;  // size of the array
+  uint32_t num_shortcuts;  // size of the array
 } GearsShortcutList;
 
 // Command data for GEARSBROWSERCOMMAND_CREATE_SHORTCUT_DONE

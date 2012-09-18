@@ -30,6 +30,7 @@
 #include "nsILoadContext.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "nsThreadUtils.h"
+#include "PrivateBrowsingChannel.h"
 
 namespace mozilla {
 namespace net {
@@ -50,6 +51,7 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsISupportsPriority
                       , public nsIResumableChannel
                       , public nsITraceableChannel
+                      , public PrivateBrowsingChannel<HttpBaseChannel>
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -208,6 +210,8 @@ protected:
                                   getter_AddRefs(aResult));
   }
 
+  friend class PrivateBrowsingChannel<HttpBaseChannel>;
+
   nsCOMPtr<nsIURI>                  mURI;
   nsCOMPtr<nsIURI>                  mOriginalURI;
   nsCOMPtr<nsIURI>                  mDocumentURI;
@@ -263,7 +267,6 @@ protected:
   // True if timing collection is enabled
   uint32_t                          mTimingEnabled              : 1;
   uint32_t                          mAllowSpdy                  : 1;
-  uint32_t                          mPrivateBrowsing            : 1;
 
   // Current suspension depth for this channel object
   uint32_t                          mSuspendCount;

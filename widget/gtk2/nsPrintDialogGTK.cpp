@@ -4,7 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <gtk/gtk.h>
+#if (MOZ_WIDGET_GTK == 2)
 #include <gtk/gtkprintunixdialog.h>
+#include "gtk2compat.h"
+#else
+#include <gtk/gtkunixprint.h>
+#endif
 #include <stdlib.h>
 
 #include "mozilla/Util.h"
@@ -77,7 +82,11 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
 
   printBundle->GetStringFromName(NS_LITERAL_STRING("headerFooterCustom").get(), getter_Copies(intlString));
   GtkWidget* prompt_dialog = gtk_dialog_new_with_buttons(NS_ConvertUTF16toUTF8(intlString).get(), printDialog,
+#if (MOZ_WIDGET_GTK == 2)
                                                          (GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
+#else
+                                                         (GtkDialogFlags)(GTK_DIALOG_MODAL),
+#endif
                                                          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                                          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                                          NULL);
@@ -110,7 +119,8 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
   gtk_container_set_border_width(GTK_CONTAINER(custom_hbox), 2);
   gtk_widget_show_all(custom_hbox);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(prompt_dialog)->vbox), custom_hbox, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prompt_dialog))), 
+                     custom_hbox, FALSE, FALSE, 0);
   gint diag_response = gtk_dialog_run(GTK_DIALOG(prompt_dialog));
 
   if (diag_response == GTK_RESPONSE_ACCEPT) {
@@ -481,14 +491,23 @@ nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings *aNSSettings)
 GtkWidget*
 nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const PRUnichar *currentString)
 {
+#if (MOZ_WIDGET_GTK == 2)
   GtkWidget* dropdown = gtk_combo_box_new_text();
+#else
+  GtkWidget* dropdown = gtk_combo_box_text_new();
+#endif
   const char hf_options[][22] = {"headerFooterBlank", "headerFooterTitle",
                                  "headerFooterURL", "headerFooterDate",
                                  "headerFooterPage", "headerFooterPageTotal",
                                  "headerFooterCustom"};
 
   for (unsigned int i = 0; i < ArrayLength(hf_options); i++) {
+#if (MOZ_WIDGET_GTK == 2)
     gtk_combo_box_append_text(GTK_COMBO_BOX(dropdown), GetUTF8FromBundle(hf_options[i]).get());
+#else
+    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(dropdown), NULL, 
+                              GetUTF8FromBundle(hf_options[i]).get());
+#endif
   }
 
   bool shouldBeCustom = true;

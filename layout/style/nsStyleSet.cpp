@@ -28,6 +28,7 @@
 #include "nsAnimationManager.h"
 #include "nsEventStates.h"
 #include "mozilla/dom/Element.h"
+#include "sampler.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -714,6 +715,8 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
                       void* aData, nsIContent* aContent,
                       nsRuleWalker* aRuleWalker)
 {
+  SAMPLE_LABEL("nsStyleSet", "FileRules");
+
   // Cascading order:
   // [least important]
   //  - UA normal rules                    = Agent        normal

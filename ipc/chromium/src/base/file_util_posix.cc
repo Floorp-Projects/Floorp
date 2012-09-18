@@ -718,7 +718,7 @@ bool MemoryMappedFile::MapFileToMemory(const FilePath& file_name) {
     return false;
   length_ = file_stat.st_size;
 
-  data_ = static_cast<uint8*>(
+  data_ = static_cast<uint8_t*>(
       mmap(NULL, length_, PROT_READ, MAP_SHARED, file_, 0));
   if (data_ == MAP_FAILED)
     data_ = NULL;

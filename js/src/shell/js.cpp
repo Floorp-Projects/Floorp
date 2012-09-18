@@ -1701,7 +1701,7 @@ Notes(JSContext *cx, unsigned argc, jsval *vp)
     for (unsigned i = 0; i < argc; i++) {
         JSScript *script = ValueToScript(cx, argv[i]);
         if (!script)
-            continue;
+            return false;
 
         SrcNotes(cx, script, &sprinter);
     }
@@ -1813,38 +1813,45 @@ struct DisassembleOptionParser {
 
 } /* anonymous namespace */
 
-static JSBool
-DisassembleToString(JSContext *cx, unsigned argc, jsval *vp)
+static bool
+DisassembleToSprinter(JSContext *cx, unsigned argc, jsval *vp, Sprinter *sprinter)
 {
     DisassembleOptionParser p(argc, JS_ARGV(cx, vp));
     if (!p.parse(cx))
         return false;
 
-    Sprinter sprinter(cx);
-    if (!sprinter.init())
-        return false;
-
-    bool ok = true;
     if (p.argc == 0) {
         /* Without arguments, disassemble the current script. */
         RootedScript script(cx, GetTopScript(cx));
         if (script) {
-            if (js_Disassemble(cx, script, p.lines, &sprinter)) {
-                SrcNotes(cx, script, &sprinter);
-                TryNotes(cx, script, &sprinter);
-            } else {
-                ok = false;
-            }
+            if (!js_Disassemble(cx, script, p.lines, sprinter))
+                return false;
+            SrcNotes(cx, script, sprinter);
+            TryNotes(cx, script, sprinter);
         }
     } else {
         for (unsigned i = 0; i < p.argc; i++) {
             JSFunction *fun;
             JSScript *script = ValueToScript(cx, p.argv[i], &fun);
-            ok = ok && script && DisassembleScript(cx, script, fun, p.lines, p.recursive, &sprinter);
+            if (!script)
+                return false;
+            if (!DisassembleScript(cx, script, fun, p.lines, p.recursive, sprinter))
+                return false;
         }
     }
+    return true;
+}
 
-    JSString *str = ok ? JS_NewStringCopyZ(cx, sprinter.string()) : NULL;
+static JSBool
+DisassembleToString(JSContext *cx, unsigned argc, jsval *vp)
+{
+    Sprinter sprinter(cx);
+    if (!sprinter.init())
+        return false;
+    if (!DisassembleToSprinter(cx, argc, vp, &sprinter))
+        return false;
+
+    JSString *str = JS_NewStringCopyZ(cx, sprinter.string());
     if (!str)
         return false;
     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
@@ -1854,38 +1861,15 @@ DisassembleToString(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 Disassemble(JSContext *cx, unsigned argc, jsval *vp)
 {
-    DisassembleOptionParser p(argc, JS_ARGV(cx, vp));
-    if (!p.parse(cx))
-        return false;
-
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return false;
+    if (!DisassembleToSprinter(cx, argc, vp, &sprinter))
+        return false;
 
-    bool ok = true;
-    if (p.argc == 0) {
-        /* Without arguments, disassemble the current script. */
-        RootedScript script(cx, GetTopScript(cx));
-        if (script) {
-            if (js_Disassemble(cx, script, p.lines, &sprinter)) {
-                SrcNotes(cx, script, &sprinter);
-                TryNotes(cx, script, &sprinter);
-            } else {
-                ok = false;
-            }
-        }
-    } else {
-        for (unsigned i = 0; i < p.argc; i++) {
-            JSFunction *fun;
-            JSScript *script = ValueToScript(cx, p.argv[i], &fun);
-            ok = ok && script && DisassembleScript(cx, script, fun, p.lines, p.recursive, &sprinter);
-        }
-    }
-
-    if (ok)
-        fprintf(stdout, "%s\n", sprinter.string());
+    fprintf(stdout, "%s\n", sprinter.string());
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return ok;
+    return true;
 }
 
 static JSBool
@@ -2145,129 +2129,6 @@ DumpObject(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 #endif /* DEBUG */
-
-#ifdef TEST_CVTARGS
-#include <ctype.h>
-
-static const char *
-EscapeWideString(jschar *w)
-{
-    static char enuf[80];
-    static char hex[] = "0123456789abcdef";
-    jschar u;
-    unsigned char b, c;
-    int i, j;
-
-    if (!w)
-        return "";
-    for (i = j = 0; i < sizeof enuf - 1; i++, j++) {
-        u = w[j];
-        if (u == 0)
-            break;
-        b = (unsigned char)(u >> 8);
-        c = (unsigned char)(u);
-        if (b) {
-            if (i >= sizeof enuf - 6)
-                break;
-            enuf[i++] = '\\';
-            enuf[i++] = 'u';
-            enuf[i++] = hex[b >> 4];
-            enuf[i++] = hex[b & 15];
-            enuf[i++] = hex[c >> 4];
-            enuf[i] = hex[c & 15];
-        } else if (!isprint(c)) {
-            if (i >= sizeof enuf - 4)
-                break;
-            enuf[i++] = '\\';
-            enuf[i++] = 'x';
-            enuf[i++] = hex[c >> 4];
-            enuf[i] = hex[c & 15];
-        } else {
-            enuf[i] = (char)c;
-        }
-    }
-    enuf[i] = 0;
-    return enuf;
-}
-
-#include <stdarg.h>
-
-static JSBool
-ZZ_formatter(JSContext *cx, const char *format, bool fromJS, jsval **vpp,
-             va_list *app)
-{
-    jsval *vp;
-    va_list ap;
-    double re, im;
-
-    printf("entering ZZ_formatter");
-    vp = *vpp;
-    ap = *app;
-    if (fromJS) {
-        if (!JS_ValueToNumber(cx, vp[0], &re))
-            return false;
-        if (!JS_ValueToNumber(cx, vp[1], &im))
-            return false;
-        *va_arg(ap, double *) = re;
-        *va_arg(ap, double *) = im;
-    } else {
-        re = va_arg(ap, double);
-        im = va_arg(ap, double);
-        vp[0] = JS_NumberValue(re);
-        vp[1] = JS_NumberValue(im);
-    }
-    *vpp = vp + 2;
-    *app = ap;
-    printf("leaving ZZ_formatter");
-    return true;
-}
-
-static JSBool
-ConvertArgs(JSContext *cx, unsigned argc, jsval *vp)
-{
-    bool b = false;
-    jschar c = 0;
-    int32_t i = 0, j = 0;
-    uint32_t u = 0;
-    double d = 0, I = 0, re = 0, im = 0;
-    JSString *str = NULL;
-    jschar *w = NULL;
-    JSObject *obj2 = NULL;
-    JSFunction *fun = NULL;
-    jsval v = JSVAL_VOID;
-    bool ok;
-
-    if (!JS_AddArgumentFormatter(cx, "ZZ", ZZ_formatter))
-        return false;
-    ok = JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "b/ciujdISWofvZZ*",
-                             &b, &c, &i, &u, &j, &d, &I, &str, &w, &obj2,
-                             &fun, &v, &re, &im);
-    JS_RemoveArgumentFormatter(cx, "ZZ");
-    if (!ok)
-        return false;
-    fprintf(gOutFile,
-            "b %u, c %x (%c), i %ld, u %lu, j %ld\n",
-            b, c, (char)c, i, u, j);
-    ToStringHelper obj2string(cx, obj2);
-    ToStringHelper valueString(cx, v);
-    JSAutoByteString strBytes;
-    if (str)
-        strBytes.encode(cx, str);
-    JSString *tmpstr = JS_DecompileFunction(cx, fun, 4);
-    JSAutoByteString func;
-    if (!tmpstr || !func.encode(cx, tmpstr))
-        ReportException(cx);
-    fprintf(gOutFile,
-            "d %g, I %g, S %s, W %s, obj %s, fun %s\n"
-            "v %s, re %g, im %g\n",
-            d, I, !!strBytes ? strBytes.ptr() : "", EscapeWideString(w),
-            obj2string.getBytes(),
-            fun ? (!!func ? func.ptr() : "error decompiling fun") : "",
-            valueString.getBytes(), re, im);
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return true;
-}
-#endif
 
 static JSBool
 BuildDate(JSContext *cx, unsigned argc, jsval *vp)
@@ -3722,12 +3583,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "  If any references are found by the conservative scanner, the references\n"
 "  object will have a property named \"edge: machine stack\"; the referrers will\n"
 "  be 'null', because they are roots."),
-
-#endif
-#ifdef TEST_CVTARGS
-    JS_FN_HELP("cvtargs", ConvertArgs, 0, 0,
-"cvtargs(arg1..., arg12)",
-"  Test argument formatter."),
 
 #endif
     JS_FN_HELP("build", BuildDate, 0, 0,

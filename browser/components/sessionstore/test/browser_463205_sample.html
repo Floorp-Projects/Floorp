@@ -3,15 +3,13 @@
 <!DOCTYPE html>
 <title>Test for bug 463205</title>
 
-<body>
+<body onload="onLoad()">
 <iframe src="data:text/html,<input%20id='original'>"></iframe>
 <iframe src="browser_463205_helper.html"></iframe>
 <iframe src="data:text/html,mark1"></iframe>
 
 <script type="application/javascript">
-  frames[2].addEventListener("DOMContentLoaded", function() {
-    frames[2].removeEventListener("DOMContentLoaded", arguments.callee, false);
-
+  function onLoad() {
     if (frames[2].document.location.href == "data:text/html,mark1") {
       frames[2].document.location = "data:text/html,mark2";
     }
@@ -20,6 +18,6 @@
       frames[0].document.location = "http://mochi.test:8888/browser/" +
         "browser/components/sessionstore/test/browser_463205_helper.html";
     }
-  }, false);
+  }
 </script>
 </body>

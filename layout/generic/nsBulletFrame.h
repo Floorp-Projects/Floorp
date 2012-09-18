@@ -8,6 +8,7 @@
 #ifndef nsBulletFrame_h___
 #define nsBulletFrame_h___
 
+#include "mozilla/Attributes.h"
 #include "nsFrame.h"
 #include "nsStyleContext.h"
 
@@ -65,19 +66,19 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
-  virtual nsIAtom* GetType() const;
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
+                    nsReflowStatus& aStatus) MOZ_OVERRIDE;
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   // nsBulletFrame
   int32_t SetListItemOrdinal(int32_t aNextOrdinal, bool* aChanged,
@@ -108,8 +109,8 @@ public:
   void PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                    const nsRect& aDirtyRect);
   
-  virtual bool IsEmpty();
-  virtual bool IsSelfEmpty();
+  virtual bool IsEmpty() MOZ_OVERRIDE;
+  virtual bool IsSelfEmpty() MOZ_OVERRIDE;
   virtual nscoord GetBaseline() const;
 
   float GetFontSizeInflation() const;

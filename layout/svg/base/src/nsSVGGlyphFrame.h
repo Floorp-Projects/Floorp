@@ -6,6 +6,7 @@
 #ifndef __NS_SVGGLYPHFRAME_H__
 #define __NS_SVGGLYPHFRAME_H__
 
+#include "mozilla/Attributes.h"
 #include "gfxFont.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsISVGChildFrame.h"
@@ -155,14 +156,14 @@ public:
   // These four always use the global transform, even if NS_STATE_NONDISPLAY_CHILD
   NS_IMETHOD PaintSVG(nsRenderingContext *aContext,
                       const nsIntRect *aDirtyRect);
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
+  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint) MOZ_OVERRIDE;
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      uint32_t aFlags);
+                                      uint32_t aFlags) MOZ_OVERRIDE;
 
-  NS_IMETHOD_(nsRect) GetCoveredRegion();
-  virtual void ReflowSVG();
-  virtual void NotifySVGChanged(uint32_t aFlags);
-  NS_IMETHOD_(bool) IsDisplayContainer() { return false; }
+  NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
+  virtual void ReflowSVG() MOZ_OVERRIDE;
+  virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsDisplayContainer() MOZ_OVERRIDE { return false; }
 
   // nsSVGGeometryFrame methods
   gfxMatrix GetCanvasTM(uint32_t aFor);
@@ -170,12 +171,12 @@ public:
   // nsISVGGlyphFragmentNode interface:
   // These do not use the global transform if NS_STATE_NONDISPLAY_CHILD
   virtual uint32_t GetNumberOfChars();
-  virtual float GetComputedTextLength();
-  virtual float GetSubStringLength(uint32_t charnum, uint32_t fragmentChars);
-  virtual int32_t GetCharNumAtPosition(nsIDOMSVGPoint *point);
-  NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame();
-  NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame();
-  NS_IMETHOD_(void) SetWhitespaceCompression(bool aCompressWhitespace) {
+  virtual float GetComputedTextLength() MOZ_OVERRIDE;
+  virtual float GetSubStringLength(uint32_t charnum, uint32_t fragmentChars) MOZ_OVERRIDE;
+  virtual int32_t GetCharNumAtPosition(nsIDOMSVGPoint *point) MOZ_OVERRIDE;
+  NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame() MOZ_OVERRIDE;
+  NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame() MOZ_OVERRIDE;
+  NS_IMETHOD_(void) SetWhitespaceCompression(bool aCompressWhitespace) MOZ_OVERRIDE {
     if (mCompressWhitespace != aCompressWhitespace) {
       mCompressWhitespace = aCompressWhitespace;
       ClearTextRun();

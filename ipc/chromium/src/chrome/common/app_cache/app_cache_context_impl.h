@@ -20,25 +20,25 @@ class AppCacheContextImpl : public WebAppCacheContext {
 
   // WebAppCacheContext implementation
   virtual int GetContextID() { return context_id_; }
-  virtual int64 GetAppCacheID() { return app_cache_id_; }
+  virtual int64_t GetAppCacheID() { return app_cache_id_; }
   virtual void Initialize(WebAppCacheContext::ContextType context_type,
                           WebAppCacheContext* opt_parent);
   virtual void SelectAppCacheWithoutManifest(
                                      const GURL& document_url,
-                                     int64 cache_document_was_loaded_from);
+                                     int64_t cache_document_was_loaded_from);
   virtual void SelectAppCacheWithManifest(
                                      const GURL& document_url,
-                                     int64 cache_document_was_loaded_from,
+                                     int64_t cache_document_was_loaded_from,
                                      const GURL& manifest_url);
 
   // Called by AppCacheDispatcher when the browser has selected an appcache.
-  void OnAppCacheSelected(int select_request_id, int64 app_cache_id);
+  void OnAppCacheSelected(int select_request_id, int64_t app_cache_id);
 
  private:
   void UnInitializeContext();
 
   int context_id_;
-  int64 app_cache_id_;
+  int64_t app_cache_id_;
   int pending_select_request_id_;
   IPC::Message::Sender* sender_;
 

@@ -22,6 +22,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_toolbar_tooltip.js \
   browser_toolbar_webconsole_errors_count.js \
   browser_layoutHelpers.js \
+  browser_eventemitter_basic.js \
   head.js \
   helpers.js \
   leakhunt.js \

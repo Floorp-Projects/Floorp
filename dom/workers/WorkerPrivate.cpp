@@ -8,12 +8,14 @@
 
 #include "mozIThirdPartyUtil.h"
 #include "nsIClassInfo.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIConsoleService.h"
 #include "nsIDOMFile.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIJSContextStack.h"
 #include "nsIMemoryReporter.h"
+#include "nsIPermissionManager.h"
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
@@ -1892,7 +1894,9 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                                      nsCOMPtr<nsPIDOMWindow>& aWindow,
                                      nsCOMPtr<nsIScriptContext>& aScriptContext,
                                      nsCOMPtr<nsIURI>& aBaseURI,
-                                     nsCOMPtr<nsIPrincipal>& aPrincipal)
+                                     nsCOMPtr<nsIPrincipal>& aPrincipal,
+                                     nsCOMPtr<nsIContentSecurityPolicy>& aCSP,
+                                     bool aEvalAllowed)
 : EventTarget(aParent ? aCx : NULL), mMutex("WorkerPrivateParent Mutex"),
   mCondVar(mMutex, "WorkerPrivateParent CondVar"),
   mJSObject(aObject), mParent(aParent), mParentJSContext(aParentJSContext),
@@ -1900,7 +1904,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mParentStatus(Pending), mJSContextOptions(0), mJSRuntimeHeapSize(0),
   mGCZeal(0), mJSObjectRooted(false), mParentSuspended(false),
   mIsChromeWorker(aIsChromeWorker), mPrincipalIsSystem(false),
-  mMainThreadObjectsForgotten(false)
+  mMainThreadObjectsForgotten(false), mEvalAllowed(aEvalAllowed)
 {
   MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivateParent);
 
@@ -1913,6 +1917,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mScriptNotify = do_QueryInterface(mScriptContext);
   mBaseURI.swap(aBaseURI);
   mPrincipal.swap(aPrincipal);
+  mCSP.swap(aCSP);
 
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
@@ -2452,15 +2457,19 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx, JSObject* aObject,
                              nsCOMPtr<nsPIDOMWindow>& aWindow,
                              nsCOMPtr<nsIScriptContext>& aParentScriptContext,
                              nsCOMPtr<nsIURI>& aBaseURI,
-                             nsCOMPtr<nsIPrincipal>& aPrincipal)
+                             nsCOMPtr<nsIPrincipal>& aPrincipal,
+                             nsCOMPtr<nsIContentSecurityPolicy>& aCSP,
+                             bool aEvalAllowed,
+                             bool aXHRParamsAllowed)
 : WorkerPrivateParent<WorkerPrivate>(aCx, aObject, aParent, aParentJSContext,
                                      aScriptURL, aIsChromeWorker, aDomain,
                                      aWindow, aParentScriptContext, aBaseURI,
-                                     aPrincipal),
+                                     aPrincipal, aCSP, aEvalAllowed),
   mJSContext(nullptr), mErrorHandlerRecursionCount(0), mNextTimeoutId(1),
   mStatus(Pending), mSuspended(false), mTimerRunning(false),
   mRunningExpiredTimeouts(false), mCloseHandlerStarted(false),
-  mCloseHandlerFinished(false), mMemoryReporterRunning(false)
+  mCloseHandlerFinished(false), mMemoryReporterRunning(false),
+  mXHRParamsAllowed(aXHRParamsAllowed)
 {
   MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivate);
 }
@@ -2481,8 +2490,13 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
   nsCOMPtr<nsIScriptContext> scriptContext;
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsPIDOMWindow> window;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+
+  bool evalAllowed = true;
 
   JSContext* parentContext;
+
+  bool xhrParamsAllowed = false;
 
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
@@ -2606,6 +2620,8 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
           }
         }
       }
+
+      xhrParamsAllowed = CheckXHRParamsAllowed(window);
     }
     else {
       // Not a window
@@ -2623,12 +2639,23 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
           return nullptr;
         }
       }
+
+      xhrParamsAllowed = true;
     }
 
     NS_ASSERTION(principal, "Must have a principal now!");
 
     if (!isChrome && domain.IsEmpty()) {
       NS_ERROR("Must be chrome or have an domain!");
+      return nullptr;
+    }
+
+    if (!GetContentSecurityPolicy(aCx, getter_AddRefs(csp))) {
+      return nullptr;
+    }
+
+    if (csp && NS_FAILED(csp->GetAllowsEval(&evalAllowed))) {
+      NS_ERROR("CSP: failed to get allowsEval");
       return nullptr;
     }
   }
@@ -2645,7 +2672,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
   nsRefPtr<WorkerPrivate> worker =
     new WorkerPrivate(aCx, aObj, aParent, parentContext, scriptURL,
                       aIsChromeWorker, domain, window, scriptContext, baseURI,
-                      principal);
+                      principal, csp, evalAllowed, xhrParamsAllowed);
 
   worker->SetIsDOMBinding();
   worker->SetWrapper(aObj);
@@ -2987,6 +3014,36 @@ WorkerPrivate::ProcessAllControlRunnables()
     NS_RELEASE(event);
   }
   return result;
+}
+
+bool
+WorkerPrivate::CheckXHRParamsAllowed(nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  NS_ASSERTION(aWindow, "Wrong cannot be null");
+
+  if (!aWindow->GetDocShell()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
+  if (!doc) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permMgr) {
+    return false;
+  }
+
+  uint32_t permission;
+  nsresult rv = permMgr->TestPermissionFromPrincipal(doc->NodePrincipal(),
+                                                     "systemXHR", &permission);
+  if (NS_FAILED(rv) || permission != nsIPermissionManager::ALLOW_ACTION) {
+    return false;
+  }
+
+  return true;
 }
 
 bool
@@ -4009,6 +4066,34 @@ WorkerPrivate::GetCrossThreadDispatcher()
     mCrossThreadDispatcher = new WorkerCrossThreadDispatcher(this);
   }
   return mCrossThreadDispatcher;
+}
+
+bool
+WorkerPrivate::GetContentSecurityPolicy(JSContext* aCx,
+                                        nsIContentSecurityPolicy** aCSP)
+{
+  AssertIsOnMainThread();
+
+  // Get the security manager
+  nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
+
+  if (!ssm) {
+    NS_ERROR("Failed to get security manager service");
+    return false;
+  }
+
+  nsCOMPtr<nsIPrincipal> subjectPrincipal = ssm->GetCxSubjectPrincipal(aCx);
+  NS_ASSERTION(subjectPrincipal, "Failed to get subjectPrincipal");
+
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsresult rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("CSP: Failed to get CSP from principal.");
+    return false;
+  }
+
+  csp.forget(aCSP);
+  return true;
 }
 
 BEGIN_WORKERS_NAMESPACE

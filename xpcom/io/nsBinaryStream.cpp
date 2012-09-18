@@ -190,7 +190,7 @@ nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
         if (!copy)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_ASSERTION((PRUptrdiff(aString) & 0x1) == 0, "aString not properly aligned");
+    NS_ASSERTION((uintptr_t(aString) & 0x1) == 0, "aString not properly aligned");
     for (uint32_t i = 0; i < length; i++)
         copy[i] = NS_SWAP16(aString[i]);
     rv = WriteBytes(reinterpret_cast<const char*>(copy), byteCount);

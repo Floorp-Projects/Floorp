@@ -202,7 +202,7 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
-  if (NS_GET_A(mExtraBackgroundColor) > 0) {
+  if (mIsBottommostLayer && NS_GET_A(mExtraBackgroundColor) > 0) {
     aCtx->SetColor(mExtraBackgroundColor);
     aCtx->FillRect(bgClipRect);
   }
@@ -234,7 +234,7 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
                                   surf ? bounds : mVisibleRect,
                                   nsRect(offset, mFrame->GetSize()),
                                   aBuilder->GetBackgroundPaintFlags(),
-                                  &bgClipRect);
+                                  &bgClipRect, mLayer);
   if (surf) {
     BlitSurface(dest, mDestRect, surf);
 
@@ -295,10 +295,19 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // We don't have any border or outline, and our background draws over
   // the overflow area, so just add nsDisplayCanvasBackground instead of
   // calling DisplayBorderBackgroundOutline.
-  if (IsVisibleForPainting(aBuilder)) { 
-    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-           nsDisplayCanvasBackground(aBuilder, this));
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (IsVisibleForPainting(aBuilder)) {
+    nsStyleContext* bgSC;
+    const nsStyleBackground* bg = nullptr;
+    if (!IsThemed() &&
+        nsCSSRendering::FindBackground(PresContext(), this, &bgSC)) {
+      bg = bgSC->GetStyleBackground();
+    }
+    // Create separate items for each background layer.
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+      rv = aLists.BorderBackground()->AppendNewToTop(
+          new (aBuilder) nsDisplayCanvasBackground(aBuilder, this, i));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   nsIFrame* kid;

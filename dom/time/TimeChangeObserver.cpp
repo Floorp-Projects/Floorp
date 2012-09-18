@@ -36,25 +36,23 @@ nsSystemTimeChangeObserver::Notify(const SystemTimeChange& aReason)
   //Copy mWindowListeners and iterate over windowListeners instead because
   //mWindowListeners may be modified while we loop.
   nsTArray<nsWeakPtr> windowListeners;
-  for (uint32 i = 0; i < mWindowListeners.Length(); i++) {
+  for (uint32_t i = 0; i < mWindowListeners.Length(); i++) {
     windowListeners.AppendElement(mWindowListeners.SafeElementAt(i));
   }
 
-  for (int32 i = windowListeners.Length() - 1; i >= 0; i--) {
-    nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(windowListeners[i]);
+  for (int32_t i = windowListeners.Length() - 1; i >= 0; i--) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(windowListeners[i]);
     if (!window) {
       mWindowListeners.RemoveElement(windowListeners[i]);
       return;
     }
 
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    window->GetDocument(getter_AddRefs(domdoc));
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
-    if (!domdoc) {
+    nsCOMPtr<nsIDocument> document = window->GetDoc();
+    if (!document) {
       return;
     }
 
-    nsContentUtils::DispatchTrustedEvent(doc, window,
+    nsContentUtils::DispatchTrustedEvent(document, window,
       NS_LITERAL_STRING("moztimechange"), /* bubbles = */ true,
       /* canceable = */ false);
   }

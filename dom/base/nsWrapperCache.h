@@ -12,7 +12,7 @@ struct JSObject;
 struct JSContext;
 class XPCWrappedNativeScope;
 
-typedef PRUptrdiff PtrBits;
+typedef uintptr_t PtrBits;
 
 namespace mozilla {
 namespace dom {

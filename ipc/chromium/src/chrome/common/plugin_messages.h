@@ -62,8 +62,8 @@ struct PluginMsg_DidReceiveResponseParams {
   int id;
   std::string mime_type;
   std::string headers;
-  uint32 expected_length;
-  uint32 last_modified;
+  uint32_t expected_length;
+  uint32_t last_modified;
   bool request_is_seekable;
 };
 

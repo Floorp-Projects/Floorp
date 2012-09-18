@@ -258,6 +258,17 @@
 #define NS_ENSURE_FALSE(x, ret)                               \
   NS_ENSURE_TRUE(!(x), ret)
 
+#define NS_ENSURE_TRUE_VOID(x)                                \
+  do {                                                        \
+    if (NS_UNLIKELY(!(x))) {                                  \
+       NS_WARNING("NS_ENSURE_TRUE(" #x ") failed");           \
+       return;                                                \
+    }                                                         \
+  } while(0)
+
+#define NS_ENSURE_FALSE_VOID(x)                               \
+  NS_ENSURE_TRUE_VOID(!(x))
+
 /******************************************************************************
 ** Macros for checking results
 ******************************************************************************/
@@ -270,10 +281,19 @@
     NS_WARNING(msg);                                                      \
     PR_smprintf_free(msg);
 
+#define NS_ENSURE_SUCCESS_BODY_VOID(res)                                  \
+    char *msg = PR_smprintf("NS_ENSURE_SUCCESS_VOID(%s) failed with "     \
+                            "result 0x%X", #res, __rv);                   \
+    NS_WARNING(msg);                                                      \
+    PR_smprintf_free(msg);
+
 #else
 
 #define NS_ENSURE_SUCCESS_BODY(res, ret)                                  \
     NS_WARNING("NS_ENSURE_SUCCESS(" #res ", " #ret ") failed");
+
+#define NS_ENSURE_SUCCESS_BODY_VOID(res)                                  \
+    NS_WARNING("NS_ENSURE_SUCCESS_VOID(" #res ") failed");
 
 #endif
 
@@ -283,6 +303,15 @@
     if (NS_FAILED(__rv)) {                                                \
       NS_ENSURE_SUCCESS_BODY(res, ret)                                    \
       return ret;                                                         \
+    }                                                                     \
+  } while(0)
+
+#define NS_ENSURE_SUCCESS_VOID(res)                                       \
+  do {                                                                    \
+    nsresult __rv = res;                                                  \
+    if (NS_FAILED(__rv)) {                                                \
+      NS_ENSURE_SUCCESS_BODY_VOID(res)                                    \
+      return;                                                             \
     }                                                                     \
   } while(0)
 

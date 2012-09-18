@@ -19,7 +19,7 @@
 
 TEST(IPCMessageIntegrity, ReadBeyondBufferStr) {
   //This was BUG 984408.
-  uint32 v1 = kuint32max - 1;
+  uint32_t v1 = kuint32max - 1;
   int v2 = 666;
   IPC::Message m(0, 1, IPC::Message::PRIORITY_NORMAL);
   EXPECT_TRUE(m.WriteInt(v1));
@@ -32,7 +32,7 @@ TEST(IPCMessageIntegrity, ReadBeyondBufferStr) {
 
 TEST(IPCMessageIntegrity, ReadBeyondBufferWStr) {
   //This was BUG 984408.
-  uint32 v1 = kuint32max - 1;
+  uint32_t v1 = kuint32max - 1;
   int v2 = 777;
   IPC::Message m(0, 1, IPC::Message::PRIORITY_NORMAL);
   EXPECT_TRUE(m.WriteInt(v1));
@@ -77,7 +77,7 @@ TEST(IPCMessageIntegrity, ReadVectorTooLarge1) {
   EXPECT_TRUE(m.WriteInt64(1));
   EXPECT_TRUE(m.WriteInt64(2));
 
-  std::vector<int64> vec;
+  std::vector<int64_t> vec;
   void* iter = 0;
   EXPECT_FALSE(ReadParam(&m, &iter, &vec));
 }
@@ -91,7 +91,7 @@ TEST(IPCMessageIntegrity, ReadVectorTooLarge2) {
   EXPECT_TRUE(m.WriteInt64(1));
   EXPECT_TRUE(m.WriteInt64(2));
 
-  std::vector<int64> vec;
+  std::vector<int64_t> vec;
   void* iter = 0;
   EXPECT_FALSE(ReadParam(&m, &iter, &vec));
 }

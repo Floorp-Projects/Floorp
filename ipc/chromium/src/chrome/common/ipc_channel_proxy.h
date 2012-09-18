@@ -62,7 +62,7 @@ class ChannelProxy : public Message::Sender {
 
     // Called to inform the filter that the IPC channel is connected and we
     // have received the internal Hello message from the peer.
-    virtual void OnChannelConnected(int32 peer_pid) {}
+    virtual void OnChannelConnected(int32_t peer_pid) {}
 
     // Called when there is an error on the channel, typically that the channel
     // has been closed.
@@ -149,7 +149,7 @@ class ChannelProxy : public Message::Sender {
    protected:
     // IPC::Channel::Listener methods:
     virtual void OnMessageReceived(const Message& message);
-    virtual void OnChannelConnected(int32 peer_pid);
+    virtual void OnChannelConnected(int32_t peer_pid);
     virtual void OnChannelError();
 
     // Like OnMessageReceived but doesn't try the filters.

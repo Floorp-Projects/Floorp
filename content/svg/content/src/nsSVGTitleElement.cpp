@@ -5,6 +5,7 @@
 
 #include "nsSVGStylableElement.h"
 #include "nsIDOMSVGTitleElement.h"
+#include "nsStubMutationObserver.h"
 
 typedef nsSVGStylableElement nsSVGTitleElementBase;
 

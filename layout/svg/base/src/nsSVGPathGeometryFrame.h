@@ -6,6 +6,7 @@
 #ifndef __NS_SVGPATHGEOMETRYFRAME_H__
 #define __NS_SVGPATHGEOMETRYFRAME_H__
 
+#include "mozilla/Attributes.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "nsFrame.h"
@@ -84,13 +85,13 @@ protected:
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsRenderingContext *aContext,
                       const nsIntRect *aDirtyRect);
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
-  NS_IMETHOD_(nsRect) GetCoveredRegion();
-  virtual void ReflowSVG();
-  virtual void NotifySVGChanged(uint32_t aFlags);
+  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint) MOZ_OVERRIDE;
+  NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
+  virtual void ReflowSVG() MOZ_OVERRIDE;
+  virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      uint32_t aFlags);
-  NS_IMETHOD_(bool) IsDisplayContainer() { return false; }
+                                      uint32_t aFlags) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsDisplayContainer() MOZ_OVERRIDE { return false; }
 
 protected:
   void GeneratePath(gfxContext *aContext, const gfxMatrix &aTransform);

@@ -29,7 +29,7 @@ typedef uint64_t uint64_t;
 /* OS/2's stdlib typdefs uintptr_t. So we'll just include that so we don't collide */
 #include <stdlib.h>
 #elif !defined(__intptr_t_defined) && !defined(_UINTPTR_T_DEFINED)
-typedef PRUptrdiff uintptr_t;
+typedef unsigned long uintptr_t;
 #endif
 #endif
 

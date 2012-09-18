@@ -429,7 +429,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             while (!r.empty()) {
                 Rooted<Shape*> shape(cx, &r.front());
                 JSAtom *atom = JSID_IS_INT(shape->propid())
-                               ? cx->runtime->atomState.emptyAtom
+                               ? cx->names().empty
                                : JSID_TO_ATOM(shape->propid());
 
                 JSAutoByteString bytes;
@@ -2342,7 +2342,7 @@ GetBlockNames(JSContext *cx, StaticBlockObject &blockObj, AtomVector *atoms)
         --i;
         LOCAL_ASSERT((unsigned)shape.shortid() == i);
         (*atoms)[i] = JSID_IS_INT(shape.propid())
-                      ? cx->runtime->atomState.emptyAtom
+                      ? cx->names().empty
                       : JSID_TO_ATOM(shape.propid());
     }
 
@@ -3467,7 +3467,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                         if (ss->sprinter.put(rhs + DestructuredStringLength) < 0)
                             return NULL;
                     } else {
-                        JS_ASSERT(atoms[i] != cx->runtime->atomState.emptyAtom);
+                        JS_ASSERT(atoms[i] != cx->names().empty);
                         if (!QuoteString(&ss->sprinter, atoms[i], 0))
                             return NULL;
                         if (*rhs) {
@@ -5385,12 +5385,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 break;
 #endif /* JS_HAS_XML_SUPPORT */
 
-              case JSOP_ACTUALSFILLED:
-                JS_ASSERT(!defaultsSwitch);
-                defaultsSwitch = true;
-                todo = -2;
-                break;
-
               case JSOP_REST:
                 // Ignore bytecode related to handling rest.
                 pc += GetBytecodeLength(pc);
@@ -5644,11 +5638,12 @@ js_DecompileFunction(JSPrinter *jp)
         unsigned nformal = fun->nargs - fun->hasRest();
 
         if (fun->hasDefaults()) {
+            // Since bug 781422, this code is completely wrong. If you ever have
+            // the unenviable task of reenabling the decompiler, you'll have to
+            // completely rewrite defaults decompiling.
+            MOZ_CRASH();
+
             jsbytecode *defpc;
-            for (defpc = pc; defpc < endpc; defpc += GetBytecodeLength(defpc)) {
-                if (*defpc == JSOP_ACTUALSFILLED)
-                    break;
-            }
             LOCAL_ASSERT_RV(defpc < endpc, JS_FALSE);
             defpc += GetBytecodeLength(defpc);
             LOCAL_ASSERT_RV(*defpc == JSOP_TABLESWITCH, JS_FALSE);
@@ -5965,7 +5960,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_LENGTH:
       case JSOP_GETPROP:
       case JSOP_CALLPROP: {
-        JSAtom *prop = (op == JSOP_LENGTH) ? cx->runtime->atomState.lengthAtom : loadAtom(pc);
+        JSAtom *prop = (op == JSOP_LENGTH) ? cx->names().length : loadAtom(pc);
         if (!decompilePC(pcstack[-1]))
             return false;
         if (IsIdentifier(prop))

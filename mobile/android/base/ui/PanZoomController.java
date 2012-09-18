@@ -8,6 +8,7 @@ package org.mozilla.gecko.ui;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.PointUtils;
@@ -16,8 +17,6 @@ import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.graphics.PointF;
@@ -28,8 +27,6 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -48,8 +45,6 @@ public class PanZoomController
 
     private static String MESSAGE_ZOOM_RECT = "Browser:ZoomToRect";
     private static String MESSAGE_ZOOM_PAGE = "Browser:ZoomToPageWidth";
-    private static String MESSAGE_PREFS_GET = "Preferences:Get";
-    private static String MESSAGE_PREFS_DATA = "Preferences:Data";
 
     private static final String PREF_ZOOM_ANIMATION_FRAMES = "ui.zooming.animation_frames";
 
@@ -139,18 +134,18 @@ public class PanZoomController
         mEventDispatcher = eventDispatcher;
         registerEventListener(MESSAGE_ZOOM_RECT);
         registerEventListener(MESSAGE_ZOOM_PAGE);
-        registerEventListener(MESSAGE_PREFS_DATA);
 
-        JSONArray prefs = new JSONArray();
-        prefs.put(PREF_ZOOM_ANIMATION_FRAMES);
-        Axis.addPrefNames(prefs);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(MESSAGE_PREFS_GET, prefs.toString()));
+        PrefsHelper.getPref(PREF_ZOOM_ANIMATION_FRAMES, new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, String value) {
+                setZoomAnimationFrames(value);
+            }
+        });
+        Axis.initPrefs();
     }
 
     public void destroy() {
         unregisterEventListener(MESSAGE_ZOOM_RECT);
         unregisterEventListener(MESSAGE_ZOOM_PAGE);
-        unregisterEventListener(MESSAGE_PREFS_DATA);
         mSubscroller.destroy();
     }
 
@@ -213,32 +208,6 @@ public class PanZoomController
                         animatedZoomTo(r);
                     }
                 });
-            } else if (MESSAGE_PREFS_DATA.equals(event)) {
-                JSONArray jsonPrefs = message.getJSONArray("preferences");
-                Map<String, Integer> axisPrefs = new HashMap<String, Integer>();
-                String zoomAnimationFrames = null;
-                for (int i = jsonPrefs.length() - 1; i >= 0; i--) {
-                    JSONObject pref = jsonPrefs.getJSONObject(i);
-                    String name = pref.getString("name");
-                    if (PREF_ZOOM_ANIMATION_FRAMES.equals(name)) {
-                        zoomAnimationFrames = pref.getString("value");
-                    } else {
-                        try {
-                            axisPrefs.put(name, pref.getInt("value"));
-                        } catch (JSONException je) {
-                            // the value could not be parsed as an int. ignore this
-                            // pref and continue
-                        }
-                    }
-                }
-                // check for null to make sure the batch of preferences we got notified
-                // of are in the fact the ones we requested and not those requested by
-                // other java code
-                if (zoomAnimationFrames != null) {
-                    setZoomAnimationFrames(zoomAnimationFrames);
-                    Axis.setPrefs(axisPrefs);
-                    unregisterEventListener(MESSAGE_PREFS_DATA);
-                }
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -493,7 +462,9 @@ public class PanZoomController
         mY.startTouch(y);
         mLastEventTime = time;
 
-        if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
+        if (!mX.scrollable() || !mY.scrollable()) {
+            setState(PanZoomState.PANNING);
+        } else if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
             mY.setScrollingDisabled(true);
             setState(PanZoomState.PANNING_LOCKED);
         } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
@@ -1111,5 +1082,14 @@ public class PanZoomController
     public void abortPanning() {
         checkMainThread();
         bounce();
+    }
+
+    public void setOverScrollMode(int overscrollMode) {
+        mX.setOverScrollMode(overscrollMode);
+        mY.setOverScrollMode(overscrollMode);
+    }
+
+    public int getOverScrollMode() {
+        return mX.getOverScrollMode();
     }
 }

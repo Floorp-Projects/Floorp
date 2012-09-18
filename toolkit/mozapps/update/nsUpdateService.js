@@ -30,7 +30,6 @@ const PREF_APP_UPDATE_CERT_CHECKATTRS     = "app.update.cert.checkAttributes";
 const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
 const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
 const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
-const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
@@ -50,7 +49,6 @@ const PREF_APP_UPDATE_SERVICE_ENABLED     = "app.update.service.enabled";
 const PREF_APP_UPDATE_SERVICE_ERRORS      = "app.update.service.errors";
 const PREF_APP_UPDATE_SERVICE_MAX_ERRORS  = "app.update.service.maxErrors";
 
-const PREF_PARTNER_BRANCH                 = "app.partner.";
 const PREF_APP_DISTRIBUTION               = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION       = "distribution.version";
 
@@ -159,6 +157,9 @@ const UPDATE_WINDOW_NAME      = "Update:Wizard";
 const DEFAULT_SERVICE_MAX_ERRORS = 10;
 
 var gLocale     = null;
+
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
+                                  "resource://gre/modules/UpdateChannel.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
   return getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
@@ -871,44 +872,6 @@ function getLocale() {
   LOG("getLocale - getting locale from file: " + channel.originalURI.spec +
       ", locale: " + gLocale);
   return gLocale;
-}
-
-/**
- * Read the update channel from defaults only.  We do this to ensure that
- * the channel is tightly coupled with the application and does not apply
- * to other instances of the application that may use the same profile.
- */
-function getUpdateChannel() {
-  // Preprocess the channel name that is defined when building to allow updating
-  // even when the preference file that defines the channel name doesn't exist.
-  var channel = "@MOZ_UPDATE_CHANNEL@";
-  var prefName;
-  var prefValue;
-
-  try {
-    channel = Services.prefs.getDefaultBranch(null).
-              getCharPref(PREF_APP_UPDATE_CHANNEL);
-  } catch (e) {
-    // Use the channel name from above that was preprocessed when building.
-  }
-
-  try {
-    var partners = Services.prefs.getChildList(PREF_PARTNER_BRANCH);
-    if (partners.length) {
-      channel += "-cck";
-      partners.sort();
-
-      for each (prefName in partners) {
-        prefValue = Services.prefs.getCharPref(prefName);
-        channel += "-" + prefValue;
-      }
-    }
-  }
-  catch (e) {
-    Components.utils.reportError(e);
-  }
-
-  return channel;
 }
 
 /* Get the distribution pref values, from defaults only */
@@ -2450,7 +2413,7 @@ UpdateManager.prototype = {
    */
   get activeUpdate() {
     if (this._activeUpdate &&
-        this._activeUpdate.channel != getUpdateChannel()) {
+        this._activeUpdate.channel != UpdateChannel.get()) {
       // User switched channels, clear out any old active updates and remove
       // partial downloads
       this._activeUpdate = null;
@@ -2661,7 +2624,7 @@ Checker.prototype = {
     url = url.replace(/%OS_VERSION%/g, gOSVersion);
     if (/%LOCALE%/.test(url))
       url = url.replace(/%LOCALE%/g, getLocale());
-    url = url.replace(/%CHANNEL%/g, getUpdateChannel());
+    url = url.replace(/%CHANNEL%/g, UpdateChannel.get());
     url = url.replace(/%PLATFORM_VERSION%/g, Services.appinfo.platformVersion);
     url = url.replace(/%DISTRIBUTION%/g,
                       getDistributionPrefValue(PREF_APP_DISTRIBUTION));
@@ -2754,7 +2717,7 @@ Checker.prototype = {
         continue;
       }
       update.serviceURL = this.getUpdateURL(this._forced);
-      update.channel = getUpdateChannel();
+      update.channel = UpdateChannel.get();
       updates.push(update);
     }
 

@@ -13,6 +13,4 @@ elif [ -d "$topsrcdir/../clang" ]; then
     export CC=$topsrcdir/../clang/bin/clang
     export CXX=$topsrcdir/../clang/bin/clang++
 fi
-
-ac_add_options --enable-stdcxx-compat
 ac_add_options --with-ccache

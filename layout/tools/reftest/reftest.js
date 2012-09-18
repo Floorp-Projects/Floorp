@@ -1484,25 +1484,29 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
                          gURLs[0].prettyPath + " | "; // the URL being tested
             switch (gURLs[0].type) {
                 case TYPE_REFTEST_NOTEQUAL:
-                    result += "image comparison (!=) ";
+                    result += "image comparison (!=)";
                     break;
                 case TYPE_REFTEST_EQUAL:
-                    result += "image comparison (==) ";
+                    result += "image comparison (==)";
                     break;
             }
-            gDumpLog(result + "\n");
 
             if (!test_passed && expected == EXPECTED_PASS ||
                 !test_passed && expected == EXPECTED_FUZZY ||
                 test_passed && expected == EXPECTED_FAIL) {
                 if (!equal) {
-                    gDumpLog("REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n");
-                    gDumpLog("REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n");
-                    gDumpLog("REFTEST max difference: " + maxDifference.value + " number of differing pixels: " + differences + "\n");
+                    result += ", max difference: " + maxDifference.value + ", number of differing pixels: " + differences + "\n";
+                    result += "REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n";
+                    result += "REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n";
                 } else {
+                    result += "\n";
                     gDumpLog("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
                 }
+            } else {
+                result += "\n";
             }
+
+            gDumpLog(result);
 
             if (!test_passed && expected == EXPECTED_PASS) {
                 FlushTestLog();

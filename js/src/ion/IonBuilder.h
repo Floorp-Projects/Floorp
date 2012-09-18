@@ -328,7 +328,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_not();
     bool jsop_getprop(HandlePropertyName name);
     bool jsop_setprop(HandlePropertyName name);
-    bool jsop_delprop(JSAtom *atom);
+    bool jsop_delprop(HandlePropertyName name);
     bool jsop_newarray(uint32 count);
     bool jsop_newobject(HandleObject baseObj);
     bool jsop_initelem();
@@ -395,11 +395,7 @@ class IonBuilder : public MIRGenerator
                             types::StackTypeSet *types, types::StackTypeSet *barrier);
     bool makeInliningDecision(AutoObjectVector &targets);
 
-    bool jsop_call_fun_barrier(AutoObjectVector &targets, uint32_t numTargets,
-                               uint32 argc,
-                               bool constructing,
-                               types::StackTypeSet *types,
-                               types::StackTypeSet *barrier);
+    MCall *makeCallHelper(HandleFunction target, uint32 argc, bool constructing);
     bool makeCallBarrier(HandleFunction target, uint32 argc, bool constructing,
                          types::StackTypeSet *types, types::StackTypeSet *barrier);
 

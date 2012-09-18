@@ -71,7 +71,7 @@ public:
         virtual void OnChannelError() = 0;
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
         virtual void OnProcessingError(Result aError) = 0;
-        virtual void OnChannelConnected(int32 peer_pid) {};
+        virtual void OnChannelConnected(int32_t peer_pid) {};
     };
 
     enum Side { Parent, Child, Unknown };
@@ -115,7 +115,7 @@ public:
     virtual bool Echo(Message* msg);
 
     // Send OnChannelConnected notification to listeners.
-    void DispatchOnChannelConnected(int32 peer_pid);
+    void DispatchOnChannelConnected(int32_t peer_pid);
 
     //
     // Each AsyncChannel is associated with either a ProcessLink or a
@@ -169,7 +169,7 @@ public:
         // similarly named methods in AsyncChannel below
         // (OnMessageReceivedFromLink(), etc)
         virtual void OnMessageReceived(const Message& msg) MOZ_OVERRIDE;
-        virtual void OnChannelConnected(int32 peer_pid) MOZ_OVERRIDE;
+        virtual void OnChannelConnected(int32_t peer_pid) MOZ_OVERRIDE;
         virtual void OnChannelError() MOZ_OVERRIDE;
 
         virtual void EchoMessage(Message *msg) MOZ_OVERRIDE;
@@ -233,7 +233,7 @@ protected:
 
     // Run on the worker thread
     void OnDispatchMessage(const Message& aMsg);
-    virtual bool OnSpecialMessage(uint16 id, const Message& msg);
+    virtual bool OnSpecialMessage(uint16_t id, const Message& msg);
     void SendSpecialMessage(Message* msg) const;
 
     // Tell the IO thread to close the channel and wait for it to ACK.

@@ -14,5 +14,16 @@ class UbuntuBootstrapper(BaseBootstrapper):
         self.dist_id = dist_id
 
     def install_system_packages(self):
-        os.system("sudo apt-get build-dep firefox")
-        os.system("sudo apt-get install mercurial libasound2-dev libcurl4-openssl-dev libnotify-dev libxt-dev libiw-dev mesa-common-dev autoconf2.13 yasm uuid")
+        self.run_as_root(['apt-get', 'build-dep', 'firefox'])
+
+        self.apt_install(
+            'autoconf2.13',
+            'libasound2-dev',
+            'libcurl4-openssl-dev',
+            'libiw-dev',
+            'libnotify-dev',
+            'libxt-dev',
+            'mercurial',
+            'mesa-common-dev',
+            'uuid',
+            'yasm')

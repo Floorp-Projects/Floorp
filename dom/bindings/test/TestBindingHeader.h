@@ -295,6 +295,8 @@ public:
   void ReceiveStringSequence(nsTArray<nsString>&);
   void PassStringSequence(const Sequence<nsString>&);
 
+  void ReceiveAnySequence(JSContext*, nsTArray<JS::Value>&);
+
   // Typed array types
   void PassArrayBuffer(ArrayBuffer&);
   void PassNullableArrayBuffer(ArrayBuffer*);
@@ -400,6 +402,10 @@ public:
   void ExerciseTypedefInterfaces1(TestInterface&);
   already_AddRefed<TestInterface> ExerciseTypedefInterfaces2(TestInterface*);
   void ExerciseTypedefInterfaces3(TestInterface&);
+
+  // Miscellania
+  int32_t AttrWithLenientThis();
+  void SetAttrWithLenientThis(int32_t);
 
   // Methods and properties imported via "implements"
   bool ImplementedProperty();

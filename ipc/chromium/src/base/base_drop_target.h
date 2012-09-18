@@ -86,7 +86,7 @@ class BaseDropTarget : public IDropTarget {
                        DWORD effect);
 
   // Return the drag identity.
-  static int32 GetDragIdentity() { return drag_identity_; }
+  static int32_t GetDragIdentity() { return drag_identity_; }
 
  private:
   // Returns the cached drop helper, creating one if necessary. The returned
@@ -110,9 +110,9 @@ class BaseDropTarget : public IDropTarget {
   // moves over the HWND in a DnD session (OnDragEnter). 0 is reserved to mean
   // the "no/unknown" identity, and is used for initialization. The identity is
   // sent to the renderer in drag enter notifications. Note: the identity value
-  // is passed over the renderer NPAPI interface to gears, so use int32 instead
+  // is passed over the renderer NPAPI interface to gears, so use int32_t instead
   // of int here.
-  static int32 drag_identity_;
+  static int32_t drag_identity_;
 
   // The HWND of the source. This HWND is used to determine coordinates for
   // mouse events that are sent to the renderer notifying various drag states.

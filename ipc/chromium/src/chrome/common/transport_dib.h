@@ -50,7 +50,7 @@ class TransportDIB {
           sequence_num(0) {
     }
 
-    HandleAndSequenceNum(HANDLE h, uint32 seq_num)
+    HandleAndSequenceNum(HANDLE h, uint32_t seq_num)
         : handle(h),
           sequence_num(seq_num) {
     }
@@ -63,7 +63,7 @@ class TransportDIB {
     }
 
     HANDLE handle;
-    uint32 sequence_num;
+    uint32_t sequence_num;
   };
   typedef HandleAndSequenceNum Id;
 #elif defined(OS_MACOSX) || defined(OS_BSD)
@@ -79,7 +79,7 @@ class TransportDIB {
   //   size: the minimum size, in bytes
   //   epoch: Windows only: a global counter. See comment above.
   //   returns: NULL on failure
-  static TransportDIB* Create(size_t size, uint32 sequence_num);
+  static TransportDIB* Create(size_t size, uint32_t sequence_num);
 
   // Map the referenced transport DIB. Returns NULL on failure.
   static TransportDIB* Map(Handle transport_dib);
@@ -111,7 +111,7 @@ class TransportDIB {
 #if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_BSD)
   explicit TransportDIB(base::SharedMemoryHandle dib);
   base::SharedMemory shared_memory_;
-  uint32 sequence_num_;
+  uint32_t sequence_num_;
 #elif defined(OS_LINUX)
   int key_;  // SysV shared memory id
   void* address_;  // mapped address

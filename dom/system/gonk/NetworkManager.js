@@ -46,9 +46,17 @@ const TETHERING_TYPE_USB  = "USB";
 const USB_FUNCTION_RNDIS = "rndis,adb";
 const USB_FUNCTION_ADB   = "adb";
 
-// 2xx - Requested action has been successfully completed.
-const NETD_COMMAND_OKAY  = 200;
-const NETD_COMMAND_ERROR = 300;
+// 1xx - Requested action is proceeding
+const NETD_COMMAND_PROCEEDING   = 100;
+// 2xx - Requested action has been successfully completed
+const NETD_COMMAND_OKAY         = 200;
+// 4xx - The command is accepted but the requested action didn't
+// take place.
+const NETD_COMMAND_FAIL         = 400;
+// 5xx - The command syntax or parameters error
+const NETD_COMMAND_ERROR        = 500;
+// 6xx - Unsolicited broadcasts
+const NETD_COMMAND_UNSOLICITED  = 600;
 
 const WIFI_FIRMWARE_AP            = "AP";
 const WIFI_FIRMWARE_STATION       = "STA";
@@ -80,6 +88,20 @@ const SETTINGS_USB_DHCPSERVER_ENDIP    = "tethering.usb.dhcpserver.endip";
 const MANUAL_PROXY_CONFIGURATION = 1;
 
 const DEBUG = false;
+
+function netdResponseType(code) {
+  return Math.floor(code/100)*100;
+}
+
+function isError(code) {
+  let type = netdResponseType(code);
+  return (type != NETD_COMMAND_PROCEEDING && type != NETD_COMMAND_OKAY);
+}
+
+function isComplete(code) {
+  let type = netdResponseType(code);
+  return (type != NETD_COMMAND_PROCEEDING);
+}
 
 /**
  * This component watches for network interfaces changing state and then
@@ -761,7 +783,7 @@ NetworkManager.prototype = {
     }
 
     // Disable tethering settings when fail to enable it.
-    if (code < NETD_COMMAND_OKAY && code >= NETD_COMMAND_ERROR) {
+    if (isError(code)) {
       this.tetheringSettings[SETTINGS_WIFI_ENABLED] = false;
       settingsLock.set("tethering.wifi.enabled", false, null);
     }
@@ -776,7 +798,7 @@ NetworkManager.prototype = {
 
     debug(enableString + " USB tethering result: Code " + code + " reason " + reason);
     // Disable tethering settings when fail to enable it.
-    if (code < NETD_COMMAND_OKAY && code >= NETD_COMMAND_ERROR) {
+    if (isError(code)) {
       this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
       settingsLock.set("tethering.usb.enabled", false, null);
     }

@@ -63,7 +63,8 @@ Sanitizer.prototype = {
           cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
         } catch(er) {}
 
-        let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
+        let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                                                         .getImgCacheForDocument(null);
         try {
           imageCache.clearCache(false); // true=chrome, false=content
         } catch(er) {}
@@ -123,9 +124,6 @@ Sanitizer.prototype = {
         try {
           cacheService.evictEntries(Ci.nsICache.STORE_OFFLINE);
         } catch(er) {}
-
-        var storage = Cc["@mozilla.org/dom/storagemanager;1"].getService(Ci.nsIDOMStorageManager);
-        storage.clearOfflineApps();
       },
 
       get canClear()

@@ -666,7 +666,7 @@ TEST(StringUtilTest, LowerCaseEqualsASCII) {
 
 TEST(StringUtilTest, GetByteDisplayUnits) {
   static const struct {
-    int64 bytes;
+    int64_t bytes;
     DataUnits expected;
   } cases[] = {
     {0, DATA_UNITS_BYTE},
@@ -686,7 +686,7 @@ TEST(StringUtilTest, GetByteDisplayUnits) {
 
 TEST(StringUtilTest, FormatBytes) {
   static const struct {
-    int64 bytes;
+    int64_t bytes;
     DataUnits units;
     const wchar_t* expected;
     const wchar_t* expected_with_units;
@@ -798,13 +798,13 @@ TEST(StringUtilTest, IntToString) {
       { std::numeric_limits<int>::max(), "2147483647", "2147483647" },
       { std::numeric_limits<int>::min(), "-2147483648", "2147483648" },
   };
-  static const IntToStringTest<int64> int64_tests[] = {
+  static const IntToStringTest<int64_t> int64_tests[] = {
       { 0, "0", "0" },
       { -1, "-1", "18446744073709551615" },
-      { std::numeric_limits<int64>::max(),
+      { std::numeric_limits<int64_t>::max(),
         "9223372036854775807",
         "9223372036854775807", },
-      { std::numeric_limits<int64>::min(),
+      { std::numeric_limits<int64_t>::min(),
         "-9223372036854775808",
         "9223372036854775808" },
   };
@@ -817,7 +817,7 @@ TEST(StringUtilTest, IntToString) {
     EXPECT_EQ(UintToWString(test->num), UTF8ToWide(test->uexpected));
   }
   for (size_t i = 0; i < arraysize(int64_tests); ++i) {
-    const IntToStringTest<int64>* test = &int64_tests[i];
+    const IntToStringTest<int64_t>* test = &int64_tests[i];
     EXPECT_EQ(Int64ToString(test->num), test->sexpected);
     EXPECT_EQ(Int64ToWString(test->num), UTF8ToWide(test->sexpected));
     EXPECT_EQ(Uint64ToString(test->num), test->uexpected);
@@ -827,7 +827,7 @@ TEST(StringUtilTest, IntToString) {
 
 TEST(StringUtilTest, Uint64ToString) {
   static const struct {
-    uint64 input;
+    uint64_t input;
     std::string output;
   } cases[] = {
     {0, "0"},
@@ -900,7 +900,7 @@ TEST(StringUtilTest, StringToInt) {
 TEST(StringUtilTest, StringToInt64) {
   static const struct {
     std::string input;
-    int64 output;
+    int64_t output;
     bool success;
   } cases[] = {
     {"0", 0, true},
@@ -937,7 +937,7 @@ TEST(StringUtilTest, StringToInt64) {
 
   for (size_t i = 0; i < ARRAYSIZE_UNSAFE(cases); ++i) {
     EXPECT_EQ(cases[i].output, StringToInt64(cases[i].input));
-    int64 output;
+    int64_t output;
     EXPECT_EQ(cases[i].success, StringToInt64(cases[i].input, &output));
     EXPECT_EQ(cases[i].output, output);
 
@@ -953,7 +953,7 @@ TEST(StringUtilTest, StringToInt64) {
   // interpreted as junk after the number.
   const char input[] = "6\06";
   std::string input_string(input, arraysize(input) - 1);
-  int64 output;
+  int64_t output;
   EXPECT_FALSE(StringToInt64(input_string, &output));
   EXPECT_EQ(6, output);
 
@@ -1051,12 +1051,12 @@ TEST(StringUtilTest, HexStringToBytes) {
 
 
   for (size_t i = 0; i < ARRAYSIZE_UNSAFE(cases); ++i) {
-    std::vector<uint8> output;
-    std::vector<uint8> compare;
+    std::vector<uint8_t> output;
+    std::vector<uint8_t> compare;
     EXPECT_EQ(cases[i].success, HexStringToBytes(cases[i].input, &output)) <<
         i << ": " << cases[i].input;
     for (size_t j = 0; j < cases[i].output_len; ++j)
-      compare.push_back(static_cast<uint8>(cases[i].output[j]));
+      compare.push_back(static_cast<uint8_t>(cases[i].output[j]));
     ASSERT_EQ(output.size(), compare.size()) << i << ": " << cases[i].input;
     EXPECT_TRUE(std::equal(output.begin(), output.end(), compare.begin())) <<
         i << ": " << cases[i].input;
@@ -1069,7 +1069,7 @@ TEST(StringUtilTest, HexStringToBytes) {
               HexStringToBytes(WideToUTF16Hack(wide_input), &output)) <<
         i << ": " << cases[i].input;
     for (size_t j = 0; j < cases[i].output_len; ++j)
-      compare.push_back(static_cast<uint8>(cases[i].output[j]));
+      compare.push_back(static_cast<uint8_t>(cases[i].output[j]));
     ASSERT_EQ(output.size(), compare.size()) << i << ": " << cases[i].input;
     EXPECT_TRUE(std::equal(output.begin(), output.end(), compare.begin())) <<
         i << ": " << cases[i].input;

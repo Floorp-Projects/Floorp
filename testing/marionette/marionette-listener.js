@@ -259,7 +259,12 @@ function createExecuteContentSandbox(aWindow) {
   let marionette = new Marionette(this, aWindow, "content", marionetteLogObj, marionettePerf);
   sandbox.marionette = marionette;
   marionette.exports.forEach(function(fn) {
-    sandbox[fn] = marionette[fn].bind(marionette);
+    try {
+      sandbox[fn] = marionette[fn].bind(marionette);
+    }
+    catch(e) {
+      sandbox[fn] = marionette[fn];
+    }
   });
 
   sandbox.SpecialPowers = new SpecialPowers(aWindow);

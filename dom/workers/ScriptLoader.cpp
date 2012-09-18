@@ -496,6 +496,15 @@ public:
       }
 
       mWorkerPrivate->SetPrincipal(channelPrincipal);
+
+      if (parent) {
+        // XHR Params Allowed
+        mWorkerPrivate->SetXHRParamsAllowed(parent->XHRParamsAllowed());
+
+        // Set Eval and ContentSecurityPolicy
+        mWorkerPrivate->SetCSP(parent->GetCSP());
+        mWorkerPrivate->SetEvalAllowed(parent->IsEvalAllowed());
+      }
     }
 
     return NS_OK;

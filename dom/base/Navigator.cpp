@@ -881,9 +881,19 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
                  nsIRequest::LOAD_FROM_CACHE;
   }
 
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
+  if (!win) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  nsCOMPtr<nsIDocument> doc = win->GetDoc();
+  if (doc) {
+    loadGroup = doc->GetDocumentLoadGroup();
+  }
+
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), uri,
-                     nullptr, nullptr, nullptr, loadFlags);
+                     nullptr, loadGroup, nullptr, loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInputStream> stream;
@@ -1325,6 +1335,7 @@ Navigator::MozSetMessageHandler(const nsAString& aType,
 NS_IMETHODIMP
 Navigator::GetMozTime(nsIDOMMozTimeManager** aTime)
 {
+  *aTime = nullptr;
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_OK);
 
@@ -1343,7 +1354,6 @@ Navigator::GetMozTime(nsIDOMMozTimeManager** aTime)
   }
 
   if (!mTimeManager) {
-    *aTime = nullptr;
     mTimeManager = new time::TimeManager();
   }
 

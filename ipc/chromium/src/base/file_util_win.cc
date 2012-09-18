@@ -488,7 +488,7 @@ bool CreateNewTempDirectory(const FilePath::StringType& prefix,
     return false;
 
   FilePath path_to_create;
-  srand(static_cast<uint32>(time(NULL)));
+  srand(static_cast<uint32_t>(time(NULL)));
 
   int count = 0;
   while (count < 50) {
@@ -779,7 +779,7 @@ bool MemoryMappedFile::MapFileToMemory(const FilePath& file_name) {
   if (file_mapping_ == INVALID_HANDLE_VALUE)
     return false;
 
-  data_ = static_cast<uint8*>(
+  data_ = static_cast<uint8_t*>(
       ::MapViewOfFile(file_mapping_, FILE_MAP_READ, 0, 0, length_));
   return data_ != NULL;
 }

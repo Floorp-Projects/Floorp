@@ -53,6 +53,7 @@
 
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDragEvent.h"
+#include "nsContentList.h"
 
 namespace dom = mozilla::dom;
 
@@ -370,12 +371,11 @@ nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
     // Tell our input element that this update of the value is a user
     // initiated change. Otherwise it'll think that the value is being set by
     // a script and not fire onchange when it should.
-   
+
     inputElement->SetFiles(newFiles, true);
-    
-    // Should fire a change event here since the SetFiles() call above ensures 
-    // a different value from the mFocusedValue of the inputElement. 
-    inputElement->FireChangeEventIfNeeded();
+    nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
+                                         NS_LITERAL_STRING("change"), true,
+                                         false);
   }
 
   return NS_OK;
@@ -434,9 +434,10 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIDOMFileList> fileList;
     dataTransfer->GetFiles(getter_AddRefs(fileList));
 
-    
     inputElement->SetFiles(fileList, true);
-    inputElement->FireChangeEventIfNeeded();
+    nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
+                                         NS_LITERAL_STRING("change"), true,
+                                         false);
   }
 
   return NS_OK;

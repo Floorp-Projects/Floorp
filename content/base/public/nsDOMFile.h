@@ -430,6 +430,20 @@ public:
     return static_cast<nsDOMFileList*>(aSupports);
   }
 
+  nsIDOMFile* Item(uint32_t aIndex)
+  {
+    return mFiles.SafeObjectAt(aIndex);
+  }
+  nsIDOMFile* IndexedGetter(uint32_t aIndex, bool& aFound)
+  {
+    aFound = aIndex < static_cast<uint32_t>(mFiles.Count());
+    return aFound ? mFiles.ObjectAt(aIndex) : nullptr;
+  }
+  uint32_t Length()
+  {
+    return mFiles.Count();
+  }
+
 private:
   nsCOMArray<nsIDOMFile> mFiles;
   nsISupports *mParent;

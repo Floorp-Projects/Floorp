@@ -53,6 +53,7 @@
 #include "nsIDOMHTMLButtonElement.h"
 #include "dombindings.h"
 #include "nsSandboxFlags.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla::dom;
 
@@ -96,6 +97,9 @@ public:
   {
     return mForm;
   }
+
+  virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
+                              mozilla::ErrorResult& error);
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
@@ -2215,7 +2219,7 @@ nsFormControlList::GetLength(uint32_t* aLength)
 NS_IMETHODIMP
 nsFormControlList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
 {
-  nsISupports* item = GetNodeAt(aIndex);
+  nsISupports* item = GetElementAt(aIndex);
   if (!item) {
     *aReturn = nullptr;
 
@@ -2512,8 +2516,8 @@ nsFormControlList::GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aContr
   return NS_OK;
 }
 
-nsIContent*
-nsFormControlList::GetNodeAt(uint32_t aIndex)
+nsGenericElement*
+nsFormControlList::GetElementAt(uint32_t aIndex)
 {
   FlushPendingNotifications();
 
@@ -2526,4 +2530,22 @@ nsFormControlList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache)
   nsISupports *item = NamedItemInternal(aName, true);
   *aCache = nullptr;
   return item;
+}
+
+JSObject*
+nsFormControlList::NamedItem(JSContext* cx, const nsAString& name,
+                             mozilla::ErrorResult& error)
+{
+  nsISupports *item = NamedItemInternal(name, true);
+  if (!item) {
+    return nullptr;
+  }
+  JSObject* wrapper = GetWrapper();
+  JSAutoCompartment ac(cx, wrapper);
+  JS::Value v;
+  if (!mozilla::dom::WrapObject(cx, wrapper, item, &v)) {
+    error.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  return &v.toObject();
 }

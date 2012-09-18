@@ -37,12 +37,13 @@ class Emulator(object):
     deviceRe = re.compile(r"^emulator-(\d+)(\s*)(.*)$")
 
     def __init__(self, homedir=None, noWindow=False, logcat_dir=None, arch="x86",
-                 emulatorBinary=None, res='480x800', userdata=None):
+                  emulatorBinary=None, res='480x800', sdcard=None, userdata=None):
         self.port = None
         self._emulator_launched = False
         self.proc = None
         self.marionette_port = None
         self.telnet = None
+        self._tmp_sdcard = None
         self._tmp_userdata = None
         self._adb_started = False
         self.logcat_dir = logcat_dir
@@ -52,6 +53,7 @@ class Emulator(object):
         self.res = res
         self.battery = EmulatorBattery(self)
         self.homedir = homedir
+        self.sdcard = sdcard
         self.noWindow = noWindow
         if self.homedir is not None:
             self.homedir = os.path.expanduser(homedir)
@@ -91,6 +93,9 @@ class Emulator(object):
             self.tail_args = ["-cpu", "cortex-a8"]
 
         self._check_for_adb()
+        if(self.sdcard):
+            self.mksdcard = os.path.join(self.homedir, host_bin_dir, "mksdcard")
+            self.create_sdcard(self.sdcard)
 
         if not self.binary:
             self.binary = os.path.join(self.homedir, binary)
@@ -124,6 +129,8 @@ class Emulator(object):
                       '-kernel', self.kernelImg,
                       '-sysdir', self.sysDir,
                       '-data', self.dataImg ]
+        if self._tmp_sdcard:
+            qemuArgs.extend(['-sdcard', self._tmp_sdcard])
         if self.noWindow:
             qemuArgs.append('-no-window')
         qemuArgs.extend(['-memory', '512',
@@ -140,6 +147,16 @@ class Emulator(object):
             return self.proc is not None and self.proc.poll() is None
         else:
             return self.port is not None
+ 
+    def create_sdcard(self, sdcard):
+         self._tmp_sdcard = tempfile.mktemp(prefix='sdcard')
+         sdargs = [self.mksdcard, "-l" , "mySdCard", sdcard, self._tmp_sdcard]
+         sd = subprocess.Popen(sdargs, stdout= subprocess.PIPE, stderr=subprocess.STDOUT)
+         retcode = sd.wait()
+         if retcode: 
+             raise Exception('unable to create sdcard : exit code %d: %s' 
+                              % (retcode, adb.stdout.read()))
+         return None
 
     def _check_for_adb(self):
         host_dir = "linux-x86"
@@ -202,6 +219,9 @@ class Emulator(object):
             if self._tmp_userdata:
                 os.remove(self._tmp_userdata)
                 self._tmp_userdata = None
+            if self._tmp_sdcard: 
+                os.remove(self._tmp_sdcard)
+                self._tmp_sdcard = None
             return retcode
         if self.logcat_proc:
             self.logcat_proc.kill()

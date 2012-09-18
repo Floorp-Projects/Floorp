@@ -680,7 +680,6 @@ var xml = <prefs>
 <pref><name>capability.policy.mailnews.Window.outerHeight.set</name></pref>
 <pref><name>capability.policy.mailnews.SOAPFault.faultActor</name></pref>
 <pref><name>font.size.fixed.tr</name></pref>
-<pref><name>extensions.getMoreThemesURL</name></pref>
 <pref><name>browser.search.param.Google.1.custom</name></pref>
 <pref><name>extensions.logging.enabled</name></pref>
 <pref><name>browser.frames.enabled</name></pref>
@@ -865,7 +864,6 @@ var xml = <prefs>
 <pref><name>font.name-list.sans-serif.ja</name></pref>
 <pref><name>browser.search.order.1</name></pref>
 <pref><name>capability.policy.mailnews.XMLHttpRequest.responseXML</name></pref>
-<pref><name>extensions.getMoreExtensionsURL</name></pref>
 <pref><name>font.name.serif.x-beng</name></pref>
 <pref><name>font.size.variable.th</name></pref>
 <pref><name>network.http.use-cache</name></pref>
