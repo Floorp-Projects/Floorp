@@ -40,7 +40,7 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
-
+#include "nsIPermissionManager.h"
 #include "nsIStringBundle.h"
 
 // Microsoft's API Name hackery sucks
@@ -1655,6 +1655,23 @@ nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType)
     return NS_ERROR_FAILURE;
   }
   mPrincipal = doc->NodePrincipal();
+
+  // the 'apps' type is special.  We only want this exposed
+  // if the caller has the "webapps-manage" permission.
+  if (aType.EqualsLiteral("apps")) {
+    nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    NS_ENSURE_TRUE(permissionManager, NS_ERROR_FAILURE);
+
+    uint32_t permission;
+    nsresult rv = permissionManager->TestPermissionFromPrincipal(mPrincipal,
+                                                                 "webapps-manage",
+                                                                 &permission);
+
+    if (NS_FAILED(rv) || permission != nsIPermissionManager::ALLOW_ACTION) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -2075,7 +2092,7 @@ nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRU
     }
     nsString volName;
     vol->GetName(volName);
-    if (!volName.Equals(NS_LITERAL_STRING("sdcard"))) {
+    if (!volName.EqualsLiteral("sdcard")) {
       return NS_OK;
     }
 
