@@ -173,9 +173,9 @@ int GetMaxFilesOpenInProcess() {
     return 0;
   }
 
-  // rlim_t is a uint64 - clip to maxint. We do this since FD #s are ints
+  // rlim_t is a uint64_t - clip to maxint. We do this since FD #s are ints
   // which are all 32 bits on the supported platforms.
-  rlim_t max_int = static_cast<rlim_t>(std::numeric_limits<int32>::max());
+  rlim_t max_int = static_cast<rlim_t>(std::numeric_limits<int32_t>::max());
   if (rlim.rlim_cur > max_int) {
     return max_int;
   }

@@ -41,14 +41,14 @@ MockTimeTicks::TickFunctionType MockTimeTicks::old_tick_function_;
 HANDLE g_rollover_test_start;
 
 unsigned __stdcall RolloverTestThreadMain(void* param) {
-  int64 counter = reinterpret_cast<int64>(param);
+  int64_t counter = reinterpret_cast<int64_t>(param);
   DWORD rv = WaitForSingleObject(g_rollover_test_start, INFINITE);
   EXPECT_EQ(rv, WAIT_OBJECT_0);
 
   TimeTicks last = TimeTicks::Now();
   for (int index = 0; index < counter; index++) {
     TimeTicks now = TimeTicks::Now();
-    int64 milliseconds = (now - last).InMilliseconds();
+    int64_t milliseconds = (now - last).InMilliseconds();
     // This is a tight loop; we could have looped faster than our
     // measurements, so the time might be 0 millis.
     EXPECT_GE(milliseconds, 0);
@@ -71,8 +71,8 @@ TEST(TimeTicks, WinRollover) {
   //   5) Each thread verifies integrity of result.
 
   const int kThreads = 8;
-  // Use int64 so we can cast into a void* without a compiler warning.
-  const int64 kChecks = 10;
+  // Use int64_t so we can cast into a void* without a compiler warning.
+  const int64_t kChecks = 10;
 
   // It takes a lot of iterations to reproduce the bug!
   // (See bug 1081395)
@@ -112,7 +112,7 @@ TEST(TimeTicks, SubMillisecondTimers) {
   // see at least one case where we get a new sample in
   // less than one millisecond.
   bool saw_submillisecond_timer = false;
-  int64 min_timer = 1000;
+  int64_t min_timer = 1000;
   TimeTicks last_time = TimeTicks::HighResNow();
   for (int index = 0; index < 1000; index++) {
     TimeTicks now = TimeTicks::HighResNow();

@@ -19,7 +19,7 @@ class SysInfo {
   static int NumberOfProcessors();
 
   // Return the number of bytes of physical memory on the current machine.
-  static int64 AmountOfPhysicalMemory();
+  static int64_t AmountOfPhysicalMemory();
 
   // Return the number of megabytes of physical memory on the current machine.
   static int AmountOfPhysicalMemoryMB() {
@@ -28,7 +28,7 @@ class SysInfo {
 
   // Return the available disk space in bytes on the volume containing |path|,
   // or -1 on failure.
-  static int64 AmountOfFreeDiskSpace(const std::wstring& path);
+  static int64_t AmountOfFreeDiskSpace(const std::wstring& path);
 
   // Return true if the given environment variable is defined.
   // TODO: find a better place for HasEnvVar.
@@ -50,9 +50,9 @@ class SysInfo {
   // until it's been initialized by being called once without a race.
   // TODO(port): Implement a Linux version of this method and enable the
   // corresponding unit test.
-  static void OperatingSystemVersionNumbers(int32 *major_version,
-                                            int32 *minor_version,
-                                            int32 *bugfix_version);
+  static void OperatingSystemVersionNumbers(int32_t *major_version,
+                                            int32_t *minor_version,
+                                            int32_t *bugfix_version);
 
   // Returns the CPU architecture of the system. Exact return value may differ
   // across platforms.

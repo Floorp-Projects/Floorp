@@ -199,7 +199,7 @@ FILE* CreateAndOpenTemporaryFile(FilePath* path) {
   return CreateAndOpenTemporaryFileInDir(directory, path);
 }
 
-bool GetFileSize(const FilePath& file_path, int64* file_size) {
+bool GetFileSize(const FilePath& file_path, int64_t* file_size) {
   FileInfo info;
   if (!GetFileInfo(file_path, &info))
     return false;
@@ -379,7 +379,7 @@ std::wstring GetFilenameFromPath(const std::wstring& path) {
 
   return FilePath::FromWStringHack(path).BaseName().ToWStringHack();
 }
-bool GetFileSize(const std::wstring& file_path, int64* file_size) {
+bool GetFileSize(const std::wstring& file_path, int64_t* file_size) {
   return GetFileSize(FilePath::FromWStringHack(file_path), file_size);
 }
 bool GetTempDir(std::wstring* path_str) {

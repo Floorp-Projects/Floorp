@@ -28,7 +28,7 @@ bool Version::Equals(const Version& that) const {
 }
 
 int Version::CompareTo(const Version& other) const {
-  std::vector<uint16> other_components = other.components();
+  std::vector<uint16_t> other_components = other.components();
   size_t count = std::min(components_.size(), other_components.size());
   for (size_t i = 0; i < count; ++i) {
     if (components_[i] > other_components[i])
@@ -69,13 +69,13 @@ bool Version::InitFromString(const std::string& version_str) {
       return false;
     if (num < 0)
       return false;
-    const uint16 max = 0xFFFF;
+    const uint16_t max = 0xFFFF;
     if (num > max)
       return false;
     // This throws out things like +3, or 032.
     if (IntToString(num) != *i)
       return false;
-    uint16 component = static_cast<uint16>(num);
+    uint16_t component = static_cast<uint16_t>(num);
     components_.push_back(component);
   }
   return true;

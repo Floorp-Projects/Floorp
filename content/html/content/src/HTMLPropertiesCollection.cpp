@@ -12,6 +12,8 @@
 #include "nsVariant.h"
 #include "nsDOMSettableTokenList.h"
 #include "nsAttrValue.h"
+#include "mozilla/ErrorResult.h"
+#include "nsWrapperCacheInlines.h"
 
 DOMCI_DATA(HTMLPropertiesCollection, mozilla::dom::HTMLPropertiesCollection)
 DOMCI_DATA(PropertyNodeList, mozilla::dom::PropertyNodeList)
@@ -123,10 +125,12 @@ HTMLPropertiesCollection::GetLength(uint32_t* aLength)
 NS_IMETHODIMP
 HTMLPropertiesCollection::Item(uint32_t aIndex, nsIDOMNode** aResult)
 {
-  EnsureFresh();
-  nsGenericHTMLElement* property = mProperties.SafeElementAt(aIndex);
-  *aResult = property ? property->AsDOMNode() : NULL;
-  NS_IF_ADDREF(*aResult);
+  nsINode* result = nsIHTMLCollection::Item(aIndex);
+  if (result) {
+    NS_ADDREF(*aResult = result->AsDOMNode());
+  } else {
+    *aResult = nullptr;
+  }
   return NS_OK;
 }
 
@@ -138,12 +142,21 @@ HTMLPropertiesCollection::NamedItem(const nsAString& aName,
   return NS_OK;
 }
 
+JSObject*
+HTMLPropertiesCollection::NamedItem(JSContext* cx, const nsAString& name,
+                                    mozilla::ErrorResult& error)
+{
+  // HTMLPropertiesCollection.namedItem and the named getter call the NamedItem
+  // that returns a PropertyNodeList, calling HTMLCollection.namedItem doesn't
+  // make sense so this returns null.
+  return nullptr;
+}
+
 nsISupports*
 HTMLPropertiesCollection::GetNamedItem(const nsAString& aName,
                                        nsWrapperCache **aCache)
 {
-  EnsureFresh();
-  if (!mNames->ContainsInternal(aName)) {
+  if (!IsSupportedNamedProperty(aName)) {
     *aCache = NULL;
     return NULL;
   }
@@ -157,8 +170,8 @@ HTMLPropertiesCollection::GetNamedItem(const nsAString& aName,
   return static_cast<nsIDOMPropertyNodeList*>(propertyList);
 }
 
-nsIContent*
-HTMLPropertiesCollection::GetNodeAt(uint32_t aIndex)
+nsGenericElement*
+HTMLPropertiesCollection::GetElementAt(uint32_t aIndex)
 {
   EnsureFresh();
   return mProperties.SafeElementAt(aIndex);
@@ -170,26 +183,33 @@ HTMLPropertiesCollection::GetParentObject()
   return mRoot;
 }
 
+PropertyNodeList*
+HTMLPropertiesCollection::NamedItem(const nsAString& aName)
+{
+  EnsureFresh();
+
+  PropertyNodeList* propertyList = mNamedItemEntries.GetWeak(aName);
+  if (!propertyList) {
+    nsRefPtr<PropertyNodeList> newPropertyList =
+      new PropertyNodeList(this, mRoot, aName);
+    mNamedItemEntries.Put(aName, newPropertyList);
+    propertyList = newPropertyList;
+  }
+  return propertyList;
+}
+
 NS_IMETHODIMP
 HTMLPropertiesCollection::NamedItem(const nsAString& aName,
                                     nsIDOMPropertyNodeList** aResult)
 {
-  EnsureFresh();
- 
-  nsRefPtr<PropertyNodeList> propertyList;
-  if (!mNamedItemEntries.Get(aName, getter_AddRefs(propertyList))) {
-    propertyList = new PropertyNodeList(this, mRoot, aName);
-    mNamedItemEntries.Put(aName, propertyList);
-  }
-  propertyList.forget(aResult);
+  NS_ADDREF(*aResult = NamedItem(aName));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLPropertiesCollection::GetNames(nsIDOMDOMStringList** aResult)
 {
-  EnsureFresh();
-  NS_ADDREF(*aResult = mNames);
+  NS_ADDREF(*aResult = Names());
   return NS_OK;
 }
 
@@ -463,6 +483,24 @@ NS_INTERFACE_TABLE_HEAD(PropertyNodeList)
     NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(PropertyNodeList)
     NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PropertyNodeList)
 NS_INTERFACE_MAP_END
+
+void
+PropertyNodeList::GetValues(JSContext* aCx, nsTArray<JS::Value >& aResult,
+                            ErrorResult& aError)
+{
+  EnsureFresh();
+
+  JSObject* wrapper = GetWrapper();
+  JSAutoCompartment ac(aCx, wrapper);
+  uint32_t length = mElements.Length();
+  for (uint32_t i = 0; i < length; ++i) {
+    JS::Value v = mElements.ElementAt(i)->GetItemValue(aCx, wrapper, aError);
+    if (aError.Failed()) {
+      return;
+    }
+    aResult.AppendElement(v);
+  }
+}
 
 NS_IMETHODIMP
 PropertyNodeList::GetValues(nsIVariant** aValues)

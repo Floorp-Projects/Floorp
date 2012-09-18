@@ -55,6 +55,7 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsRenderingContext.h"
 #include "mozilla/Preferences.h"
+#include "nsContentList.h"
 
 using namespace mozilla;
 
@@ -81,10 +82,6 @@ class nsPresState;
 // The ListWasSelected code will turn off mouse-capture for the drop-down list.
 // The drop-down list does not explicitly set capture when it is in the drop-down mode.
 
-
-//XXX: This is temporary. It simulates pseudo states by using a attribute selector on 
-
-const int32_t kSizeNotSet = -1;
 
 /**
  * Helper class that listens to the combo boxes button. If the button is pressed the 

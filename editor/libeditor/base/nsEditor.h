@@ -54,7 +54,6 @@ class nsIDOMRange;
 class nsIDocument;
 class nsIDocumentStateListener;
 class nsIEditActionListener;
-class nsIEditorObserver;
 class nsIInlineSpellChecker;
 class nsINode;
 class nsIPresShell;
@@ -860,7 +859,7 @@ protected:
 
   // various listeners
   nsCOMArray<nsIEditActionListener> mActionListeners;  // listens to all low level actions on the doc
-  nsCOMArray<nsIEditorObserver> mEditorObservers;  // just notify once per high level change
+  EditActionListener* mEditActionListener;  // just notify once per high level change
   nsCOMArray<nsIDocumentStateListener> mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
   nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset

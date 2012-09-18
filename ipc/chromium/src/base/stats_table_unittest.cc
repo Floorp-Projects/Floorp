@@ -206,7 +206,7 @@ TEST_F(StatsTableTest, MultipleProcesses) {
   ProcessHandle procs[kMaxProcs];
 
   // Spawn the processes.
-  for (int16 index = 0; index < kMaxProcs; index++) {
+  for (int16_t index = 0; index < kMaxProcs; index++) {
     procs[index] = this->SpawnChild(L"StatsTableMultipleProcessMain");
     EXPECT_NE(static_cast<ProcessHandle>(NULL), procs[index]);
   }

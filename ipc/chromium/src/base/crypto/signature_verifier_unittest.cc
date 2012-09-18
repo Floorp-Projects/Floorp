@@ -22,7 +22,7 @@ TEST(SignatureVerifierTest, BasicTest) {
   //    TBSCertificate  ::=  SEQUENCE  {
   //        ...  -- omitted, not important
   //        }
-  const uint8 tbs_certificate[1017] = {
+  const uint8_t tbs_certificate[1017] = {
     0x30, 0x82, 0x03, 0xf5,  // a SEQUENCE of length 1013 (0x3f5)
     0xa0, 0x03, 0x02, 0x01, 0x02, 0x02, 0x03, 0x43, 0xdd, 0x63, 0x30, 0x0d,
     0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x05, 0x05,
@@ -116,7 +116,7 @@ TEST(SignatureVerifierTest, BasicTest) {
   //        algorithm               OBJECT IDENTIFIER,
   //        parameters              ANY DEFINED BY algorithm OPTIONAL  }
   //
-  const uint8 signature_algorithm[15] = {
+  const uint8_t signature_algorithm[15] = {
     0x30, 0x0d,  // a SEQUENCE of length 13 (0xd)
       0x06, 0x09,  // an OBJECT IDENTIFIER of length 9
         // 1.2.840.113549.1.1.5 - sha1WithRSAEncryption
@@ -125,7 +125,7 @@ TEST(SignatureVerifierTest, BasicTest) {
   };
 
   // RSA signature, a big integer in the big-endian byte order.
-  const uint8 signature[256] = {
+  const uint8_t signature[256] = {
     0x1e, 0x6a, 0xe7, 0xe0, 0x4f, 0xe7, 0x4d, 0xd0, 0x69, 0x7c, 0xf8, 0x8f,
     0x99, 0xb4, 0x18, 0x95, 0x36, 0x24, 0x0f, 0x0e, 0xa3, 0xea, 0x34, 0x37,
     0xf4, 0x7d, 0xd5, 0x92, 0x35, 0x53, 0x72, 0x76, 0x3f, 0x69, 0xf0, 0x82,
@@ -154,7 +154,7 @@ TEST(SignatureVerifierTest, BasicTest) {
   //   SubjectPublicKeyInfo  ::=  SEQUENCE  {
   //       algorithm            AlgorithmIdentifier,
   //       subjectPublicKey     BIT STRING  }
-  const uint8 public_key_info[294] = {
+  const uint8_t public_key_info[294] = {
     0x30, 0x82, 0x01, 0x22,  // a SEQUENCE of length 290 (0x122)
       // algorithm
       0x30, 0x0d,  // a SEQUENCE of length 13
@@ -228,7 +228,7 @@ TEST(SignatureVerifierTest, BasicTest) {
   EXPECT_TRUE(ok);
 
   // Test 3: verify the signature with incorrect data.
-  uint8 bad_tbs_certificate[sizeof(tbs_certificate)];
+  uint8_t bad_tbs_certificate[sizeof(tbs_certificate)];
   memcpy(bad_tbs_certificate, tbs_certificate, sizeof(tbs_certificate));
   bad_tbs_certificate[10] += 1;  // Corrupt one byte of the data.
   ok = verifier.VerifyInit(signature_algorithm,
@@ -248,7 +248,7 @@ TEST(SignatureVerifierTest, BasicTest) {
 #endif
 
   // Test 4: verify a bad signature.
-  uint8 bad_signature[sizeof(signature)];
+  uint8_t bad_signature[sizeof(signature)];
   memcpy(bad_signature, signature, sizeof(signature));
   bad_signature[10] += 1;  // Corrupt one byte of the signature.
   ok = verifier.VerifyInit(signature_algorithm,

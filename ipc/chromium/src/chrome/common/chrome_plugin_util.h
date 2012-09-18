@@ -61,7 +61,7 @@ class PluginResponseUtils {
 public:
   // Helper to convert request load flags from the plugin API to the net API
   // versions.
-  static uint32 CPLoadFlagsToNetFlags(uint32 flags);
+  static uint32_t CPLoadFlagsToNetFlags(uint32_t flags);
 
   // Common implementation of a CPR_GetResponseInfo call.
   static int GetResponseInfo(
@@ -71,7 +71,7 @@ public:
 
 // Helper to allocate a string using the given CPB_Alloc function.
 inline char* CPB_StringDup(CPB_AllocFunc alloc, const std::string& str) {
-  char* cstr = static_cast<char*>(alloc(static_cast<uint32>(str.length() + 1)));
+  char* cstr = static_cast<char*>(alloc(static_cast<uint32_t>(str.length() + 1)));
   memcpy(cstr, str.c_str(), str.length() + 1);  // Include null terminator.
   return cstr;
 }
@@ -79,7 +79,7 @@ inline char* CPB_StringDup(CPB_AllocFunc alloc, const std::string& str) {
 CPError CPB_GetCommandLineArgumentsCommon(const char* url,
                                           std::string* arguments);
 
-void* STDCALL CPB_Alloc(uint32 size);
+void* STDCALL CPB_Alloc(uint32_t size);
 void STDCALL CPB_Free(void* memory);
 
 #endif  // CHROME_COMMON_CHROME_PLUGIN_UTIL_H_

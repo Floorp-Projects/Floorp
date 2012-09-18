@@ -964,6 +964,8 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   }
   if (!mVisibleRegion.IsEmpty()) {
     AppendToString(aTo, mVisibleRegion, " [visible=", "]");
+  } else {
+    aTo += " [not visible]";
   }
   if (1.0 != mOpacity) {
     aTo.AppendPrintf(" [opacity=%g]", mOpacity);

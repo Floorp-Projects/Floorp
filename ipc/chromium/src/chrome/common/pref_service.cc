@@ -520,7 +520,7 @@ void PrefService::SetFilePath(const wchar_t* path, const FilePath& value) {
   FireObserversIfChanged(path, old_value.get());
 }
 
-void PrefService::SetInt64(const wchar_t* path, int64 value) {
+void PrefService::SetInt64(const wchar_t* path, int64_t value) {
   DCHECK(CalledOnValidThread());
 
   const Preference* pref = FindPreference(path);
@@ -540,7 +540,7 @@ void PrefService::SetInt64(const wchar_t* path, int64 value) {
   FireObserversIfChanged(path, old_value.get());
 }
 
-int64 PrefService::GetInt64(const wchar_t* path) const {
+int64_t PrefService::GetInt64(const wchar_t* path) const {
   DCHECK(CalledOnValidThread());
 
   std::wstring result;
@@ -557,7 +557,7 @@ int64 PrefService::GetInt64(const wchar_t* path) const {
   return StringToInt64(WideToUTF16Hack(result));
 }
 
-void PrefService::RegisterInt64Pref(const wchar_t* path, int64 default_value) {
+void PrefService::RegisterInt64Pref(const wchar_t* path, int64_t default_value) {
   Preference* pref = new Preference(persistent_.get(), path,
       Value::CreateStringValue(Int64ToWString(default_value)));
   RegisterPreference(pref);

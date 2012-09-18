@@ -31,13 +31,13 @@ namespace base {
 // Some functions in time.cc use time_t directly, so we provide a zero offset
 // for them.  The epoch is 1970-01-01 00:00:00 UTC.
 // static
-const int64 Time::kTimeTToMicrosecondsOffset = GG_INT64_C(0);
+const int64_t Time::kTimeTToMicrosecondsOffset = GG_INT64_C(0);
 
 // static
 Time Time::Now() {
   CFAbsoluteTime now =
       CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970;
-  return Time(static_cast<int64>(now * kMicrosecondsPerSecond));
+  return Time(static_cast<int64_t>(now * kMicrosecondsPerSecond));
 }
 
 // static
@@ -61,7 +61,7 @@ Time Time::FromExploded(bool is_local, const Exploded& exploded) {
       time_zone(is_local ? CFTimeZoneCopySystem() : NULL);
   CFAbsoluteTime seconds = CFGregorianDateGetAbsoluteTime(date, time_zone) +
       kCFAbsoluteTimeIntervalSince1970;
-  return Time(static_cast<int64>(seconds * kMicrosecondsPerSecond));
+  return Time(static_cast<int64_t>(seconds * kMicrosecondsPerSecond));
 }
 
 void Time::Explode(bool is_local, Exploded* exploded) const {

@@ -530,7 +530,7 @@ RPCChannel::UnblockChild()
 }
 
 bool
-RPCChannel::OnSpecialMessage(uint16 id, const Message& msg)
+RPCChannel::OnSpecialMessage(uint16_t id, const Message& msg)
 {
     AssertWorkerThread();
 
@@ -666,7 +666,7 @@ RPCChannel::DumpRPCStack(const char* const pfx) const
 
     // print a python-style backtrace, first frame to last
     for (uint32_t i = 0; i < mCxxStackFrames.size(); ++i) {
-        int32 id;
+        int32_t id;
         const char* dir, *sems, *name;
         mCxxStackFrames[i].Describe(&id, &dir, &sems, &name);
 

@@ -29,7 +29,7 @@ public:
   {
     IPC::WriteParam(this, aDescriptor);
     IPC::WriteParam(this, aOtherProcess);
-    IPC::WriteParam(this, static_cast<uint32>(aProtocol));
+    IPC::WriteParam(this, static_cast<uint32_t>(aProtocol));
   }
 
   static bool Read(const IPC::Message& aMsg,
@@ -40,7 +40,7 @@ public:
     void* iter = nullptr;
     if (!IPC::ReadParam(&aMsg, &iter, aDescriptor) ||
         !IPC::ReadParam(&aMsg, &iter, aOtherProcess) ||
-        !IPC::ReadParam(&aMsg, &iter, reinterpret_cast<uint32*>(aProtocol))) {
+        !IPC::ReadParam(&aMsg, &iter, reinterpret_cast<uint32_t*>(aProtocol))) {
       return false;
     }
     aMsg.EndRead(iter);

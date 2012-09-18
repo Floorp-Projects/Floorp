@@ -107,7 +107,7 @@ std::wstring ReadTextFile(const FilePath& filename) {
 }
 
 #if defined(OS_WIN)
-uint64 FileTimeAsUint64(const FILETIME& ft) {
+uint64_t FileTimeAsUint64(const FILETIME& ft) {
   ULARGE_INTEGER u;
   u.LowPart = ft.dwLowDateTime;
   u.HighPart = ft.dwHighDateTime;

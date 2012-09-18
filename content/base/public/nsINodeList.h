@@ -36,6 +36,25 @@ public:
    * Get the root node for this nodelist.
    */
   virtual nsINode* GetParentObject() = 0;
+
+  using nsIDOMNodeList::Item;
+
+  uint32_t Length()
+  {
+    uint32_t length;
+    GetLength(&length);
+    return length;
+  }
+  nsIContent* Item(uint32_t aIndex)
+  {
+    return GetNodeAt(aIndex);
+  }
+  nsIContent* IndexedGetter(uint32_t aIndex, bool& aFound)
+  {
+    nsIContent* item = Item(aIndex);
+    aFound = !!item;
+    return item;
+  }
 };
 
 #define NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                  \

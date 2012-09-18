@@ -52,7 +52,7 @@ class ScopedBstr {
   //
   // NOTE: The actual allocated size of the BSTR MUST be >= bytes.
   //  That responsibility is with the caller.
-  void SetByteLen(uint32 bytes);
+  void SetByteLen(uint32_t bytes);
 
   // Swap values of two ScopedBstr's.
   void Swap(ScopedBstr& bstr2);
@@ -64,10 +64,10 @@ class ScopedBstr {
   BSTR* Receive();
 
   // Returns number of chars in the BSTR.
-  uint32 Length() const;
+  uint32_t Length() const;
 
   // Returns the number of bytes allocated for the BSTR.
-  uint32 ByteLength() const;
+  uint32_t ByteLength() const;
 
   operator BSTR() const {
     return bstr_;
@@ -87,7 +87,7 @@ class ScopedBstr {
 // Template class to generate a BSTR from a static wide string
 // without touching the heap.  Use this class via the StackBstrVar and
 // StackBstr macros.
-template <uint32 string_bytes>
+template <uint32_t string_bytes>
 class StackBstrT {
  public:
   // Try to stay as const as we can in an attempt to avoid someone
@@ -95,9 +95,9 @@ class StackBstrT {
   // of a verbatim string.  We also have an assert in the constructor
   // as an extra runtime check since the const-ness only catches one case.
   explicit StackBstrT(const wchar_t* const str) {
-    // The BSTR API uses UINT, but we prefer uint32.
+    // The BSTR API uses UINT, but we prefer uint32_t.
     // Make sure we'll know about it if these types don't match.
-    COMPILE_ASSERT(sizeof(uint32) == sizeof(UINT), UintToUint32);
+    COMPILE_ASSERT(sizeof(uint32_t) == sizeof(UINT), UintToUint32);
     COMPILE_ASSERT(sizeof(wchar_t) == sizeof(OLECHAR), WcharToOlechar);
 
     // You shouldn't pass string pointers to this constructor since
@@ -115,7 +115,7 @@ class StackBstrT {
 
  protected:
   struct BstrInternal {
-    uint32 len_;
+    uint32_t len_;
     wchar_t str_[string_bytes / sizeof(wchar_t)];
   } bstr_;
 };

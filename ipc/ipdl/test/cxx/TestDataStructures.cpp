@@ -9,7 +9,7 @@ typedef InfallibleTArray<nsIntRegion> RegionArray;
 namespace mozilla {
 namespace _ipdltest {
 
-static const uint32 nactors = 10;
+static const uint32_t nactors = 10;
 
 #define test_assert(_cond, _msg) \
     if (!(_cond)) fail(_msg)
@@ -49,7 +49,7 @@ TestDataStructuresParent::~TestDataStructuresParent()
 void
 TestDataStructuresParent::Main()
 {
-    for (uint32 i = 0; i < nactors; ++i)
+    for (uint32_t i = 0; i < nactors; ++i)
         if (!SendPTestDataStructuresSubConstructor(i))
             fail("can't alloc actor");
 
@@ -88,7 +88,7 @@ bool TestDataStructuresParent::RecvTest2(
         InfallibleTArray<PTestDataStructuresSubParent*>* o1)
 {
     test_assert(nactors == i1.Length(), "wrong #actors");
-    for (uint32 i = 0; i < i1.Length(); ++i)
+    for (uint32_t i = 0; i < i1.Length(); ++i)
         test_assert(i == Cast(i1[i]).mI, "wrong mI value");
     *o1 = i1;
     return true;
@@ -500,7 +500,7 @@ TestDataStructuresChild::RecvStart()
         Test18();
     }
 
-    for (uint32 i = 0; i < nactors; ++i)
+    for (uint32_t i = 0; i < nactors; ++i)
         if (!PTestDataStructuresSubChild::Send__delete__(mKids[i]))
             fail("can't send dtor");
 

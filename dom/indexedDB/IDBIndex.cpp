@@ -1392,7 +1392,7 @@ GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    for (uint32 index = 0, count = keys.Length(); index < count; index++) {
+    for (uint32_t index = 0, count = keys.Length(); index < count; index++) {
       const Key& key = keys[index];
       NS_ASSERTION(!key.IsUnset(), "Bad key!");
 

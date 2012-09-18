@@ -539,7 +539,7 @@ struct TimeoutData
 
 void
 InitTimeoutData(TimeoutData* aData,
-                int32 aTimeoutMs)
+                int32_t aTimeoutMs)
 {
   aData->startTicks = GetTickCount();
   if (!aData->startTicks) {

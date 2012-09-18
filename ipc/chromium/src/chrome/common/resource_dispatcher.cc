@@ -54,7 +54,7 @@ class IPCResourceLoaderBridge : public ResourceLoaderBridge {
                           int load_flags,
                           int origin_pid,
                           ResourceType::Type resource_type,
-                          uint32 request_context,
+                          uint32_t request_context,
                           int app_cache_context_id,
                           int route_id);
   virtual ~IPCResourceLoaderBridge();
@@ -62,8 +62,8 @@ class IPCResourceLoaderBridge : public ResourceLoaderBridge {
   // ResourceLoaderBridge
   virtual void AppendDataToUpload(const char* data, int data_len);
   virtual void AppendFileRangeToUpload(const FilePath& path,
-                                       uint64 offset, uint64 length);
-  virtual void SetUploadIdentifier(int64 identifier);
+                                       uint64_t offset, uint64_t length);
+  virtual void SetUploadIdentifier(int64_t identifier);
   virtual bool Start(Peer* peer);
   virtual void Cancel();
   virtual void SetDefersLoading(bool value);
@@ -108,7 +108,7 @@ IPCResourceLoaderBridge::IPCResourceLoaderBridge(
     int load_flags,
     int origin_pid,
     ResourceType::Type resource_type,
-    uint32 request_context,
+    uint32_t request_context,
     int app_cache_context_id,
     int route_id)
     : peer_(NULL),
@@ -158,7 +158,7 @@ void IPCResourceLoaderBridge::AppendDataToUpload(const char* data,
 }
 
 void IPCResourceLoaderBridge::AppendFileRangeToUpload(
-    const FilePath& path, uint64 offset, uint64 length) {
+    const FilePath& path, uint64_t offset, uint64_t length) {
   DCHECK(request_id_ == -1) << "request already started";
 
   if (!request_.upload_data)
@@ -166,7 +166,7 @@ void IPCResourceLoaderBridge::AppendFileRangeToUpload(
   request_.upload_data->AppendFileRange(path, offset, length);
 }
 
-void IPCResourceLoaderBridge::SetUploadIdentifier(int64 identifier) {
+void IPCResourceLoaderBridge::SetUploadIdentifier(int64_t identifier) {
   DCHECK(request_id_ == -1) << "request already started";
 
   if (!request_.upload_data)
@@ -293,7 +293,7 @@ bool ResourceDispatcher::OnMessageReceived(const IPC::Message& message) {
 }
 
 void ResourceDispatcher::OnDownloadProgress(
-    const IPC::Message& message, int request_id, int64 position, int64 size) {
+    const IPC::Message& message, int request_id, int64_t position, int64_t size) {
   PendingRequestList::iterator it = pending_requests_.find(request_id);
   if (it == pending_requests_.end()) {
      DLOG(WARNING) << "Got download progress for a nonexistant or "
@@ -316,7 +316,7 @@ void ResourceDispatcher::OnDownloadProgress(
 }
 
 void ResourceDispatcher::OnUploadProgress(
-    const IPC::Message& message, int request_id, int64 position, int64 size) {
+    const IPC::Message& message, int request_id, int64_t position, int64_t size) {
   PendingRequestList::iterator it = pending_requests_.find(request_id);
   if (it == pending_requests_.end()) {
     // this might happen for kill()ed requests on the webkit end, so perhaps
@@ -529,7 +529,7 @@ webkit_glue::ResourceLoaderBridge* ResourceDispatcher::CreateBridge(
     int flags,
     int origin_pid,
     ResourceType::Type resource_type,
-    uint32 request_context,
+    uint32_t request_context,
     int app_cache_context_id,
     int route_id) {
   return new webkit_glue::IPCResourceLoaderBridge(this, method, url, policy_url,

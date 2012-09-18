@@ -110,7 +110,7 @@ bool Emf::GetData(void* buffer, size_t size) const {
   return size2 == size && size2 != 0;
 }
 
-bool Emf::GetData(std::vector<uint8>* buffer) const {
+bool Emf::GetData(std::vector<uint8_t>* buffer) const {
   unsigned size = GetDataSize();
   if (!size)
     return false;
@@ -129,7 +129,7 @@ bool Emf::SaveTo(const std::wstring& filename) const {
     return false;
 
   bool success = false;
-  std::vector<uint8> buffer;
+  std::vector<uint8_t> buffer;
   if (GetData(&buffer)) {
     DWORD written = 0;
     if (WriteFile(file, &*buffer.begin(), static_cast<DWORD>(buffer.size()),

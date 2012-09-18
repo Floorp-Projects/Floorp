@@ -20,7 +20,7 @@ int SysInfo::NumberOfProcessors() {
 }
 
 // static
-int64 SysInfo::AmountOfPhysicalMemory() {
+int64_t SysInfo::AmountOfPhysicalMemory() {
   MEMORYSTATUSEX memory_info;
   memory_info.dwLength = sizeof(memory_info);
   if (!GlobalMemoryStatusEx(&memory_info)) {
@@ -28,19 +28,19 @@ int64 SysInfo::AmountOfPhysicalMemory() {
     return 0;
   }
 
-  int64 rv = static_cast<int64>(memory_info.ullTotalPhys);
+  int64_t rv = static_cast<int64_t>(memory_info.ullTotalPhys);
   if (rv < 0)
     rv = kint64max;
   return rv;
 }
 
 // static
-int64 SysInfo::AmountOfFreeDiskSpace(const std::wstring& path) {
+int64_t SysInfo::AmountOfFreeDiskSpace(const std::wstring& path) {
   ULARGE_INTEGER available, total, free;
   if (!GetDiskFreeSpaceExW(path.c_str(), &available, &total, &free)) {
     return -1;
   }
-  int64 rv = static_cast<int64>(available.QuadPart);
+  int64_t rv = static_cast<int64_t>(available.QuadPart);
   if (rv < 0)
     rv = kint64max;
   return rv;
@@ -109,9 +109,9 @@ size_t SysInfo::VMAllocationGranularity() {
 }
 
 // static
-void SysInfo::OperatingSystemVersionNumbers(int32 *major_version,
-                                            int32 *minor_version,
-                                            int32 *bugfix_version) {
+void SysInfo::OperatingSystemVersionNumbers(int32_t *major_version,
+                                            int32_t *minor_version,
+                                            int32_t *bugfix_version) {
   OSVERSIONINFO info = {0};
   info.dwOSVersionInfoSize = sizeof(info);
   GetVersionEx(&info);
