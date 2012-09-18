@@ -1631,16 +1631,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  gfxIntSize size;
-
-#ifdef XP_MACOSX
-  if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation) {
-    size = container->GetCurrentSize();
-  } else
-#endif
-  {
-    size = gfxIntSize(window->width, window->height);
-  }
+  gfxIntSize size(window->width, window->height);
 
   nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
   gfxRect r = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
@@ -1663,9 +1654,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
     UpdateImageLayer(r);
 
-#ifdef XP_WIN
     imglayer->SetScaleToSize(size, ImageLayer::SCALE_STRETCH);
-#endif
     imglayer->SetContainer(container);
     gfxPattern::GraphicsFilter filter =
       nsLayoutUtils::GetGraphicsFilterForFrame(this);
