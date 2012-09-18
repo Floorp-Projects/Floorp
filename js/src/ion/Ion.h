@@ -9,6 +9,7 @@
 #define jsion_ion_h__
 
 #include "jscntxt.h"
+#include "jscompartment.h"
 #include "IonCode.h"
 #include "jsinfer.h"
 #include "jsinterp.h"
