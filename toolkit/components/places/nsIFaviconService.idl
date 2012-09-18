@@ -8,7 +8,7 @@
 interface nsIURI;
 interface nsIFaviconDataCallback;
 
-[scriptable, uuid(2cf188f4-3c96-4bca-b668-36b25aaf7c1d)]
+[scriptable, uuid(8062a652-e0ea-4a50-b204-a0dde133de0e)]
 interface nsIFaviconService : nsISupports
 {
   /**
@@ -33,6 +33,11 @@ interface nsIFaviconService : nsISupports
    */
   void setFaviconUrlForPage(in nsIURI aPageURI,
                             in nsIURI aFaviconURI);
+
+  // The favicon is being loaded from a private browsing window
+  const unsigned long FAVICON_LOAD_PRIVATE = 1;
+  // The favicon is being loaded from a non-private browsing window
+  const unsigned long FAVICON_LOAD_NON_PRIVATE = 2;
 
   /**
    * Same as SetFaviconUrlForPage except that this also attempts to fetch and
@@ -63,6 +68,9 @@ interface nsIFaviconService : nsISupports
    *        Unset is normal behavior, we will only try to reload the favicon
    *        if we don't have it or if it has expired from the cache.  If set,
    *        it will always try to reload the favicon.
+   * @param aFaviconLoadType
+   *        Set to FAVICON_LOAD_PRIVATE if the favicon is loaded from a private
+   *        browsing window.  Set to FAVICON_LOAD_NON_PRIVATE otherwise.
    * @param aCallback
    *        Once we're done setting and/or loading the favicon, we invoke this
    *        callback.
@@ -74,6 +82,7 @@ interface nsIFaviconService : nsISupports
   void setAndLoadFaviconForPage(in nsIURI aPageURI,
                                 in nsIURI aFaviconURI,
                                 in boolean aForceReload,
+                                in unsigned long aFaviconLoadType,
                                 [optional] in nsIFaviconDataCallback aCallback);
 
   /**

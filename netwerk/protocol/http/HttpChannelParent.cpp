@@ -152,6 +152,10 @@ HttpChannelParent::RecvAsyncOpen(const URIParams&           aURI,
       mLoadContext = new LoadContext(loadContext, mTabParent->GetOwnerElement());
     else
       mLoadContext = new LoadContext(loadContext);
+  } else if (loadContext.IsPrivateBitValid()) {
+    nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(mChannel);
+    if (pbChannel)
+      pbChannel->SetPrivate(loadContext.mUsePrivateBrowsing);
   }
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());

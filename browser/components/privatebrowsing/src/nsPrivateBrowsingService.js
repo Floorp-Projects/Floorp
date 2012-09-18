@@ -651,8 +651,8 @@ PrivateBrowsingService.prototype = {
     }
 
     // Image Cache
-    let (imageCache = Cc["@mozilla.org/image/cache;1"].
-                      getService(Ci.imgICache)) {
+    let (imageCache = Cc["@mozilla.org/image/tools;1"].
+                      getService(Ci.imgITools).getImgCacheForDocument(null)) {
       try {
         imageCache.clearCache(false); // true=chrome, false=content
       } catch (ex) {

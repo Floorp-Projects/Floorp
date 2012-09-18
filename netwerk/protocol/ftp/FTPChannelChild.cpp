@@ -69,13 +69,14 @@ FTPChannelChild::ReleaseIPDLReference()
 // FTPChannelChild::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED5(FTPChannelChild,
+NS_IMPL_ISUPPORTS_INHERITED6(FTPChannelChild,
                              nsBaseChannel,
                              nsIFTPChannel,
                              nsIUploadChannel,
                              nsIResumableChannel,
                              nsIProxiedChannel,
-                             nsIChildChannel)
+                             nsIChildChannel,
+                             nsIPrivateBrowsingChannel)
 
 //-----------------------------------------------------------------------------
 
@@ -544,6 +545,26 @@ FTPChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
   // listeners or load group observers canceled us, let the parent handle it
   // and send it back to us naturally.
   return NS_OK;
+}
+
+NS_IMETHODIMP
+FTPChannelChild::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
+{
+  if (!CanSetCallbacks()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return nsBaseChannel::SetNotificationCallbacks(aCallbacks);
+}
+
+NS_IMETHODIMP
+FTPChannelChild::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+  if (!CanSetLoadGroup()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return nsBaseChannel::SetLoadGroup(aLoadGroup);
 }
 
 } // namespace net

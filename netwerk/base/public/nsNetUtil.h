@@ -76,6 +76,7 @@
 #include "nsIMIMEHeaderParam.h"
 #include "nsILoadContext.h"
 #include "mozilla/Services.h"
+#include "nsIPrivateBrowsingChannel.h"
 
 #ifdef MOZILLA_INTERNAL_API
 
@@ -1325,6 +1326,14 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *callbacks,
 inline bool
 NS_UsePrivateBrowsing(nsIChannel *channel)
 {
+    bool isPrivate = false;
+    bool isOverriden = false;
+    nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
+    if (pbChannel &&
+        NS_SUCCEEDED(pbChannel->IsPrivateModeOverriden(&isPrivate, &isOverriden)) &&
+        isOverriden) {
+        return isPrivate;
+    }
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(channel, loadContext);
     return loadContext && loadContext->UsePrivateBrowsing();

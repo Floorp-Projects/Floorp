@@ -997,13 +997,16 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aNode);
+
+  // If the element is focusable or global ARIA attribute is applied to it or
+  // it is referenced by ARIA relationship then treat role="presentation" on
+  // the element as the role is not there.
   if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::presentation)) {
-    // Ignore presentation role if element is focusable (focus event shouldn't
-    // be ever lost and should be sensible).
-    if (content->IsFocusable())
-      roleMapEntry = nullptr;
-    else
+    if (!content->IsFocusable() && !HasUniversalAriaProperty(content) &&
+        !HasRelatedContent(content))
       return nullptr;
+
+    roleMapEntry = nullptr;
   }
 
   if (weakFrame.IsAlive() && !newAcc && isHTML) {  // HTML accessibles

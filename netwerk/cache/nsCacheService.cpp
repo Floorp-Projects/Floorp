@@ -994,30 +994,6 @@ private:
 };
 
 /******************************************************************************
- * nsNotifyDoomListener
- *****************************************************************************/
-
-class nsNotifyDoomListener : public nsRunnable {
-public:
-    nsNotifyDoomListener(nsICacheListener *listener,
-                         nsresult status)
-        : mListener(listener)      // transfers reference
-        , mStatus(status)
-    {}
-
-    NS_IMETHOD Run()
-    {
-        mListener->OnCacheEntryDoomed(mStatus);
-        NS_RELEASE(mListener);
-        return NS_OK;
-    }
-
-private:
-    nsICacheListener *mListener;
-    nsresult          mStatus;
-};
-
-/******************************************************************************
  * nsDoomEvent
  *****************************************************************************/
 
@@ -2871,27 +2847,35 @@ nsCacheService::ClearDoomList()
 void
 nsCacheService::ClearActiveEntries()
 {
-    mActiveEntries.VisitEntries(DeactivateAndClearEntry, nullptr);
+    nsVoidArray entries;
+
+    // We can't detach descriptors while enumerating hash table since calling
+    // entry->DetachDescriptors() could involve dooming the entry which tries
+    // to remove the entry from the hash table.
+    mActiveEntries.VisitEntries(GetActiveEntries, &entries);
+
+    for (int32_t i = 0 ; i < entries.Count() ; i++) {
+        nsCacheEntry * entry = static_cast<nsCacheEntry *>(entries.ElementAt(i));
+        NS_ASSERTION(entry, "### active entry = nullptr!");
+        // only called from Shutdown() so we don't worry about pending requests
+        gService->ClearPendingRequests(entry);
+        entry->DetachDescriptors();
+        gService->DeactivateEntry(entry);
+    }
+
     mActiveEntries.Shutdown();
 }
 
 
 PLDHashOperator
-nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
-                                        PLDHashEntryHdr * hdr,
-                                        uint32_t          number,
-                                        void *            arg)
+nsCacheService::GetActiveEntries(PLDHashTable *    table,
+                                 PLDHashEntryHdr * hdr,
+                                 uint32_t          number,
+                                 void *            arg)
 {
-    nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
-    NS_ASSERTION(entry, "### active entry = nullptr!");
-    // only called from Shutdown() so we don't worry about pending requests
-    gService->ClearPendingRequests(entry);
-    entry->DetachDescriptors();
-    
-    entry->MarkInactive();  // so we don't call Remove() while we're enumerating
-    gService->DeactivateEntry(entry);
-    
-    return PL_DHASH_REMOVE; // and continue enumerating
+    static_cast<nsVoidArray *>(arg)->AppendElement(
+        ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry);
+    return PL_DHASH_NEXT;
 }
 
 struct ActiveEntryArgs

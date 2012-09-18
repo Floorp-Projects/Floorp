@@ -4641,7 +4641,6 @@ class MDeleteProperty
     public BoxInputsPolicy
 {
     CompilerRootPropertyName name_;
-    bool needsBarrier_;
 
   protected:
     MDeleteProperty(MDefinition *val, HandlePropertyName name)
@@ -5434,12 +5433,9 @@ class FlattenedMResumePointIter
     MResumePoint *newest;
     size_t numOperands_;
 
-    size_t resumePointIndex;
-    size_t operand;
-
   public:
     explicit FlattenedMResumePointIter(MResumePoint *newest)
-      : newest(newest), numOperands_(0), resumePointIndex(0), operand(0)
+      : newest(newest), numOperands_(0)
     {}
 
     bool init() {

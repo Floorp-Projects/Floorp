@@ -1,0 +1,5 @@
+<!DOCTYPE html>
+<html class="reftest-wait"><meta charset=utf-8>
+<script>
+var xhr=new XMLHttpRequest();xhr.open("GET","data:,");xhr.responseType='blob';xhr.onloadend=function(){document.documentElement.removeAttribute('class');};xhr.send();
+</script>

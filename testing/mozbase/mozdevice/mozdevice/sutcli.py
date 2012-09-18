@@ -38,6 +38,11 @@ class SUTCli(object):
                                     'max_args': 2,
                                     'help_args': '<local> <remote>',
                                     'help': 'copy file/dir to device' },
+                          'pull': { 'function': self.pull,
+                                    'min_args': 1,
+                                    'max_args': 2,
+                                    'help_args': '<local> [remote]',
+                                    'help': 'copy file/dir from device' },
                           'shell': { 'function': self.shell,
                                      'min_args': 1,
                                      'max_args': None,
@@ -129,6 +134,24 @@ class SUTCli(object):
             if dest_is_dir:
                 dest = posixpath.join(dest, os.path.basename(src))
             self.dm.pushFile(src, dest)
+
+    def pull(self, src, dest=None):
+        if not self.dm.fileExists(src):
+            print 'No such file or directory'
+            return
+        if not dest:
+            dest = posixpath.basename(src)
+        if self.dm.isDir(src):
+            result = self.dm.getDirectory(src, dest)
+            if result:
+                print '\n'.join([posixpath.join(dest, x) for x in result])
+                return
+        else:
+            result = self.dm.getFile(src, dest)
+            if result:
+                print dest
+                return
+        print 'Pull failed.'
 
     def install(self, apkfile):
         basename = os.path.basename(apkfile)

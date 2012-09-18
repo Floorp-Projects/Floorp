@@ -4705,7 +4705,7 @@ Selection::SetAnchorFocusToRange(nsRange* aRange)
 void
 Selection::ReplaceAnchorFocusRange(nsRange* aRange)
 {
-  NS_ENSURE_TRUE(mAnchorFocusRange, );
+  NS_ENSURE_TRUE_VOID(mAnchorFocusRange);
   nsRefPtr<nsPresContext> presContext;
   GetPresContext(getter_AddRefs(presContext));
   if (presContext) {

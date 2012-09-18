@@ -1385,7 +1385,7 @@ nsTextEditorState::DestroyEditor()
 void
 nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
 {
-  NS_ENSURE_TRUE(mBoundFrame, );
+  NS_ENSURE_TRUE_VOID(mBoundFrame);
 
   // If it was, however, it should be unbounded from the same frame.
   NS_ASSERTION(!aFrame || aFrame == mBoundFrame, "Unbinding from the wrong frame");
@@ -1984,7 +1984,7 @@ nsTextEditorState::SetPlaceholderClass(bool aVisible,
     classValue.AppendLiteral(" hidden");
 
   nsIContent* placeholderDiv = GetPlaceholderNode();
-  NS_ENSURE_TRUE(placeholderDiv, );
+  NS_ENSURE_TRUE_VOID(placeholderDiv);
 
   placeholderDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                           classValue, aNotify);

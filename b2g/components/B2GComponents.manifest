@@ -41,3 +41,7 @@ contract @mozilla.org/uriloader/content-handler;1?type=application/pdf {d18d0216
 # PaymentGlue.js
 component {8b83eabc-7929-47f4-8b48-4dea8d887e4b} PaymentGlue.js
 contract @mozilla.org/payment/ui-glue;1 {8b83eabc-7929-47f4-8b48-4dea8d887e4b}
+
+# YoutubeProtocolHandler.js
+component {c3f1b945-7e71-49c8-95c7-5ae9cc9e2bad} YoutubeProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=vnd.youtube {c3f1b945-7e71-49c8-95c7-5ae9cc9e2bad}

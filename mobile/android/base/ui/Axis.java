@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.ui;
 
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.FloatUtils;
 
 import org.json.JSONArray;
@@ -12,6 +13,7 @@ import org.json.JSONArray;
 import android.util.Log;
 import android.view.View;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -61,7 +63,8 @@ abstract class Axis {
         return (value == null || value < 0 ? defaultValue : value);
     }
 
-    static void addPrefNames(JSONArray prefs) {
+    static void initPrefs() {
+        JSONArray prefs = new JSONArray();
         prefs.put(PREF_SCROLLING_FRICTION_FAST);
         prefs.put(PREF_SCROLLING_FRICTION_SLOW);
         prefs.put(PREF_SCROLLING_VELOCITY_THRESHOLD);
@@ -69,6 +72,18 @@ abstract class Axis {
         prefs.put(PREF_SCROLLING_OVERSCROLL_DECEL_RATE);
         prefs.put(PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT);
         prefs.put(PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE);
+
+        PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
+            Map<String, Integer> mPrefs = new HashMap<String, Integer>();
+
+            @Override public void prefValue(String name, int value) {
+                mPrefs.put(name, value);
+            }
+
+            @Override public void finish() {
+                setPrefs(mPrefs);
+            }
+        });
     }
 
     static void setPrefs(Map<String, Integer> prefs) {

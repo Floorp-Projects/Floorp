@@ -597,6 +597,20 @@ LinearScanAllocator::buildLivenessInfo()
                     // The first instruction, LLabel, has no uses.
                     JS_ASSERT(inputOf(*ins) > outputOf(block->firstId()));
 
+                    // Call uses should always be at-start or fixed, since the fixed intervals
+                    // use all registers.
+                    JS_ASSERT_IF(ins->isCall() && !alloc.isSnapshotInput(),
+                                 use->isFixedRegister() || use->usedAtStart());
+
+#ifdef DEBUG
+                    // Don't allow at-start call uses if there are temps of the same kind,
+                    // so that we don't assign the same register.
+                    if (ins->isCall() && use->usedAtStart()) {
+                        for (size_t i = 0; i < ins->numTemps(); i++)
+                            JS_ASSERT(vregs[ins->getTemp(i)].isDouble() != vregs[use].isDouble());
+                    }
+#endif
+
                     CodePosition to;
                     if (use->isFixedRegister()) {
                         JS_ASSERT(!use->usedAtStart());
@@ -605,12 +619,7 @@ LinearScanAllocator::buildLivenessInfo()
                             return false;
                         to = inputOf(*ins);
                     } else {
-                        // Call instruction operands default to at-start, since the
-                        // fixed intervals use all registers.
-                        if (use->usedAtStart() || (ins->isCall() && !alloc.isSnapshotInput()))
-                            to = inputOf(*ins);
-                        else
-                            to = outputOf(*ins);
+                        to = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
                     }
 
                     LiveInterval *interval = vregs[use].getInterval(0);
