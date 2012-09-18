@@ -24,6 +24,7 @@ let WebappsHandler = {
 
   observe: function(subject, topic, data) {
     data = JSON.parse(data);
+    data.mm = subject;
 
     switch (topic) {
       case "webapps-ask-install":

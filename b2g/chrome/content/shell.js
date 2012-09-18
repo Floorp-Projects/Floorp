@@ -594,6 +594,8 @@ var WebappsHelper = {
 
   observe: function webapps_observe(subject, topic, data) {
     let json = JSON.parse(data);
+    json.mm = subject;
+
     switch(topic) {
       case "webapps-launch":
         DOMApplicationRegistry.getManifestFor(json.origin, function(aManifest) {

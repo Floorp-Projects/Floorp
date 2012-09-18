@@ -61,6 +61,7 @@ function becomeWebapp(manifestURL, parameters, onBecome) {
     scope.DOMApplicationRegistry.confirmInstall(JSON.parse(data));
 
     let installRecord = JSON.parse(data);
+    installRecord.mm = subj;
     installRecord.registryDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
     WebappRT.config = installRecord;
 
