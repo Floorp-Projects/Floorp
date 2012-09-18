@@ -46,6 +46,11 @@ class B2GOptions(MochitestOptions):
                     help = "Architecture of emulator to use: x86 or arm")
         defaults["emulator"] = None
 
+        self.add_option("--sdcard", action="store", 
+                    type="string", dest = "sdcard", 
+                    help = "Define size of sdcard: 1MB, 50MB...etc")
+        defaults["sdcard"] = None
+
         self.add_option("--no-window", action="store_true",
                     dest = "noWindow",
                     help = "Pass --no-window to the emulator")
@@ -402,6 +407,9 @@ def main():
         auto.setEmulator(True)
         if options.noWindow:
             kwargs['noWindow'] = True
+    # needless to say sdcard is only valid if using an emulator
+    if options.sdcard:
+        kwargs['sdcard'] = options.sdcard
     if options.b2gPath:
         kwargs['homedir'] = options.b2gPath
     if options.marionette:
