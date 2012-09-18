@@ -54,6 +54,19 @@
       ] };
     testAccessibleTree("tblfocusable_cnt", tree);
 
+    // Has ARIA globals or referred by ARIA relationship.
+    tree =
+      { SECTION: [ // container
+        { LABEL: [ // label, has aria-owns
+          { TEXT_LEAF: [ ] }
+        ] },
+        { TEXT_LEAF: [ ] },
+        { LABEL: [ // label, referenced by aria-owns
+          { TEXT_LEAF: [ ] }
+        ] }
+      ] };
+    testAccessibleTree("airaglobalprop_cnt", tree);
+
     SimpleTest.finish();
   }
 
@@ -96,6 +109,11 @@
         <td>cell</td>
       </tr>
     </table>
+  </div>
+
+  <div id="airaglobalprop_cnt">
+    <label role="presentation" aria-owns="ariaowned">has aria-owns</label>
+    <label role="presentation" id="ariaowned">referred by aria-owns</label>
   </div>
 
 </body>
