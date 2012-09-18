@@ -199,6 +199,7 @@
 @BINPATH@/components/dom_power.xpt
 @BINPATH@/components/dom_range.xpt
 @BINPATH@/components/dom_settings.xpt
+@BINPATH@/components/dom_permissionsettings.xpt
 @BINPATH@/components/dom_sidebar.xpt
 @BINPATH@/components/dom_sms.xpt
 @BINPATH@/components/dom_storage.xpt
