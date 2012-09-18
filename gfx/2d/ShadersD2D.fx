@@ -98,7 +98,7 @@ sampler sShadowSampler = sampler_state {
 
 RasterizerState TextureRast
 {
-  ScissorEnable = False;
+  ScissorEnable = True;
   CullMode = None;
 };
 
