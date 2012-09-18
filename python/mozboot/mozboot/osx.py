@@ -119,7 +119,7 @@ class OSXBootstrapper(BaseBootstrapper):
         # Once Xcode is installed, you need to agree to the license before you can
         # use it.
         try:
-            output = subprocess.check_output(['/usr/bin/xcrun', 'clang'],
+            output = self.check_output(['/usr/bin/xcrun', 'clang'],
                 stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
              if 'license' in e.output:
@@ -135,7 +135,7 @@ class OSXBootstrapper(BaseBootstrapper):
                 print(INSTALL_XCODE_COMMAND_LINE_TOOLS_STEPS)
                 sys.exit(1)
 
-            output = subprocess.check_output(['/usr/bin/clang', '--version'])
+            output = self.check_output(['/usr/bin/clang', '--version'])
             match = RE_CLANG_VERSION.search(output)
             if match is None:
                 raise Exception('Could not determine Clang version.')
@@ -170,7 +170,7 @@ class OSXBootstrapper(BaseBootstrapper):
         brew = self.which('brew')
         assert brew is not None
 
-        installed = subprocess.check_output([brew, 'list']).split()
+        installed = self.check_output([brew, 'list']).split()
 
         if 'python' not in installed:
             self.ensure_xquartz()
