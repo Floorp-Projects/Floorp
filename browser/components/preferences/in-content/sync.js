@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.import("resource://services-sync/service.js");
+Components.utils.import("resource://services-sync/main.js");
 
 const PAGE_NO_ACCOUNT = 0;
 const PAGE_HAS_ACCOUNT = 1;
@@ -65,7 +65,7 @@ let gSyncPane = {
       this.needsUpdate();
     } else {
       this.page = PAGE_HAS_ACCOUNT;
-      document.getElementById("accountName").value = Weave.Identity.account;
+      document.getElementById("accountName").value = Weave.Service.identity.account;
       document.getElementById("syncComputerName").value = Weave.Service.clientsEngine.localName;
       document.getElementById("tosPP").hidden = this._usingCustomServer;
     }
