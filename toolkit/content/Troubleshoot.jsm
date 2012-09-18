@@ -301,7 +301,7 @@ let dataProviders = {
         gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE) !=
           Ci.nsIGfxInfo.FEATURE_NO_INFO &&
         gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_OPENGL) ==
-          Ci.nsIGfxInfo.FEATURE_NO_INFO) ?
+          Ci.nsIGfxInfo.FEATURE_NO_INFO ?
         Ci.nsIGfxInfo.FEATURE_WEBGL_OPENGL :
         Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE;
 #else
