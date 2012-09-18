@@ -1821,20 +1821,6 @@ already_AddRefed<ImageContainer> nsPluginInstanceOwner::GetImageContainerForVide
   return container.forget();
 }
 
-nsIntRect nsPluginInstanceOwner::GetVisibleRect()
-{
-  if (!mObjectFrame || !mPluginWindow)
-    return nsIntRect(0, 0, 0, 0);
-  
-  gfxRect r = nsIntRect(0, 0, mPluginWindow->width, mPluginWindow->height);
-
-  float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
-  float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
-  r.Scale(xResolution, yResolution);
-
-  return nsIntRect(r.x, r.y, r.width, r.height);
-}
-
 void nsPluginInstanceOwner::Invalidate() {
   NPRect rect;
   rect.left = rect.top = 0;

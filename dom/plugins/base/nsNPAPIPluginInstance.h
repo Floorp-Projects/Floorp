@@ -131,6 +131,8 @@ public:
   void NotifyFullScreen(bool aFullScreen);
   void NotifySize(nsIntSize size);
 
+  nsIntSize CurrentSize() { return mCurrentSize; }
+
   bool IsOnScreen() {
     return mOnScreen;
   }
