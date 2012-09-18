@@ -7,26 +7,25 @@
 #define nsAboutCacheEntry_h__
 
 #include "nsIAboutModule.h"
-#include "nsIChannel.h"
 #include "nsICacheListener.h"
-#include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
-#include "nsIStreamListener.h"
-#include "nsIOutputStream.h"
-#include "nsIInputStreamChannel.h"
-#include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
 class nsICacheEntryDescriptor;
+class nsIAsyncOutputStream;
+class nsIInputStream;
+class nsIURI;
 
 class nsAboutCacheEntry : public nsIAboutModule
                         , public nsICacheMetaDataVisitor
+                        , public nsICacheListener
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIABOUTMODULE
     NS_DECL_NSICACHEMETADATAVISITOR
+    NS_DECL_NSICACHELISTENER
 
     nsAboutCacheEntry()
         : mBuffer(nullptr)
@@ -36,13 +35,14 @@ public:
 
 private:
     nsresult GetContentStream(nsIURI *, nsIInputStream **);
-    nsresult OpenCacheEntry(nsIURI *, nsICacheEntryDescriptor **);
-    nsresult WriteCacheEntryDescription(nsIOutputStream *, nsICacheEntryDescriptor *);
-    nsresult WriteCacheEntryUnavailable(nsIOutputStream *);
+    nsresult OpenCacheEntry(nsIURI *);
+    nsresult WriteCacheEntryDescription(nsICacheEntryDescriptor *);
+    nsresult WriteCacheEntryUnavailable();
     nsresult ParseURI(nsIURI *, nsCString &, bool &, nsCString &);
 
 private:
     nsCString *mBuffer;
+    nsCOMPtr<nsIAsyncOutputStream> mOutputStream;
 };
 
 #define NS_ABOUT_CACHE_ENTRY_MODULE_CID              \
