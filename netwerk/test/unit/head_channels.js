@@ -184,3 +184,37 @@ ChannelEventSink.prototype = {
     callback.onRedirectVerifyCallback(Cr.NS_OK);
   }
 };
+
+
+/**
+ * Class that implements nsILoadContext.  Use it as callbacks for channel when
+ * test needs it.
+ */
+function LoadContextCallback(appId, inBrowserElement, isPrivate, isContent) {
+  this.appId = appId;
+  this.isInBrowserElement = inBrowserElement;
+  this.usePrivateBrowsing = isPrivate;
+  this.isContent = isContent;
+}
+
+LoadContextCallback.prototype = {
+  associatedWindow: null,
+  topWindow : null,
+  isAppOfType: function(appType) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  QueryInterface: function(iid) {
+    if (iid == Ci.nsILoadContext ||
+               Ci.nsIInterfaceRequestor ||
+               Ci.nsISupports) {
+        return this;
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+  getInterface: function(iid) {
+    if (iid.equals(Ci.nsILoadContext))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+}
+

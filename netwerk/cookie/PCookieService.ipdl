@@ -8,6 +8,10 @@
 include protocol PNecko;
 include URIParams;
 
+include "SerializedLoadContext.h";
+
+using IPC::SerializedLoadContext;
+
 namespace mozilla {
 namespace net {
 
@@ -47,6 +51,9 @@ parent:
    *        Whether the result is for an HTTP request header. This should be
    *        true for nsICookieService.getCookieStringFromHttp calls, false
    *        otherwise.
+   * @param loadContext
+   *        The loadContext from the HTTP channel or document that the cookie is
+   *        being set on.
    *
    * @see nsICookieService.getCookieString
    * @see nsICookieService.getCookieStringFromHttp
@@ -56,7 +63,8 @@ parent:
    */
   sync GetCookieString(URIParams host,
                        bool isForeign,
-                       bool fromHttp)
+                       bool fromHttp,
+                       SerializedLoadContext loadContext)
        returns (nsCString result);
 
   /*
@@ -80,6 +88,9 @@ parent:
    *        Whether the result is for an HTTP request header. This should be
    *        true for nsICookieService.setCookieStringFromHttp calls, false
    *        otherwise.
+   * @param loadContext
+   *        The loadContext from the HTTP channel or document that the cookie is
+   *        being set on.
    *
    * @see nsICookieService.setCookieString
    * @see nsICookieService.setCookieStringFromHttp
@@ -89,7 +100,8 @@ parent:
                   bool isForeign,
                   nsCString cookieString,
                   nsCString serverTime,
-                  bool fromHttp);
+                  bool fromHttp,
+                  SerializedLoadContext loadContext);
 
   __delete__();
 };

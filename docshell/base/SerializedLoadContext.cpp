@@ -18,6 +18,11 @@ SerializedLoadContext::SerializedLoadContext(nsILoadContext* aLoadContext)
 
 SerializedLoadContext::SerializedLoadContext(nsIChannel* aChannel)
 {
+  if (!aChannel) {
+    Init(nullptr);
+    return;
+  }
+
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(aChannel, loadContext);
   Init(loadContext);
@@ -40,7 +45,9 @@ SerializedLoadContext::SerializedLoadContext(nsIChannel* aChannel)
 SerializedLoadContext::SerializedLoadContext(nsIWebSocketChannel* aChannel)
 {
   nsCOMPtr<nsILoadContext> loadContext;
-  NS_QueryNotificationCallbacks(aChannel, loadContext);
+  if (aChannel) {
+    NS_QueryNotificationCallbacks(aChannel, loadContext);
+  }
   Init(loadContext);
 }
 
