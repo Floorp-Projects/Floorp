@@ -647,14 +647,10 @@ SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aSta
   nsCSSValueList* interpolatedList = interpolatedValue.GetCSSValueListValue();
 
   TransformData& data = aAnimation.data().get_TransformData();
-  nsDisplayTransform::FrameTransformProperties props(interpolatedList,
-                                                     data.mozOrigin(),
-                                                     data.perspectiveOrigin(),
-                                                     data.perspective());
   gfx3DMatrix transform =
-    nsDisplayTransform::GetResultingTransformMatrix(props, data.origin(),
-                                                    nsDeviceContext::AppUnitsPerCSSPixel(),
-                                                    &data.bounds());
+    nsDisplayTransform::GetResultingTransformMatrix(nullptr, data.origin(), nsDeviceContext::AppUnitsPerCSSPixel(),
+                                                    &data.bounds(), interpolatedList, &data.mozOrigin(),
+                                                    &data.perspectiveOrigin(), &data.perspective());
 
   InfallibleTArray<TransformFunction>* functions = new InfallibleTArray<TransformFunction>();
   functions->AppendElement(TransformMatrix(transform));
