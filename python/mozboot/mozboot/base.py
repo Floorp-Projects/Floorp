@@ -52,3 +52,23 @@ class BaseBootstrapper(object):
         command.extend(packages)
 
         self.run_as_root(command)
+
+    def check_output(self, *args, **kwargs):
+        """Run subprocess.check_output even if Python doesn't provide it."""
+        fn = getattr(subprocess, 'check_output', BaseBootstrapper._check_output)
+
+        return fn(*args, **kwargs)
+
+    @staticmethod
+    def _check_output(*args, **kwargs):
+        """Python 2.6 compatible implementation of subprocess.check_output."""
+        proc = subprocess.Popen(stdout=subprocess.PIPE, *args, **kwargs)
+        output, unused_err = proc.communicate()
+        retcode = proc.poll()
+        if retcode:
+            cmd = kwargs.get('args', args[0])
+            e = subprocess.CalledProcessError(retcode, cmd)
+            e.output = output
+            raise e
+
+        return output
