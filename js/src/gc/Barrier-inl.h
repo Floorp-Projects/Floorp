@@ -16,6 +16,13 @@
 
 namespace js {
 
+template <typename T, typename Unioned>
+void
+EncapsulatedPtr<T, Unioned>::pre()
+{
+    T::writeBarrierPre(value);
+}
+
 template <typename T>
 inline void
 RelocatablePtr<T>::post()

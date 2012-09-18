@@ -173,7 +173,7 @@ class EncapsulatedPtr
     operator T*() const { return value; }
 
   protected:
-    void pre() { T::writeBarrierPre(value); }
+    void pre();
 };
 
 template <class T, class Unioned = uintptr_t>
