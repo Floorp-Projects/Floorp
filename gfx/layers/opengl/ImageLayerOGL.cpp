@@ -247,8 +247,6 @@ ImageLayerOGL::RenderLayer(int,
 
   NS_ASSERTION(image->GetFormat() != REMOTE_IMAGE_BITMAP,
     "Remote images aren't handled yet in OGL layers!");
-  NS_ASSERTION(mScaleMode == SCALE_NONE,
-    "Scale modes other than none not handled yet in OGL layers!");
 
   if (image->GetFormat() == PLANAR_YCBCR) {
     PlanarYCbCrImage *yuvImage =
