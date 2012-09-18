@@ -39,9 +39,27 @@ class nsPresContext;
 class nsStyleContext
 {
 public:
+  /**
+   * Create a new style context.
+   * @param aParent  The parent of a style context is used for CSS
+   *                 inheritance.  When the element or pseudo-element
+   *                 this style context represents the style data of
+   *                 inherits a CSS property, the value comes from the
+   *                 parent style context.  This means style context
+   *                 parentage must match the definitions of inheritance
+   *                 in the CSS specification.
+   * @param aPseudoTag  The pseudo-element or anonymous box for which
+   *                    this style context represents style.  Null if
+   *                    this style context is for a normal DOM element.
+   * @param aPseudoType  Must match aPseudoTag.
+   * @param aRuleNode  A rule node representing the ordered sequence of
+   *                   rules that any element, pseudo-element, or
+   *                   anonymous box that this style context is for
+   *                   matches.  See |nsRuleNode| and |nsIStyleRule|.
+   */
   nsStyleContext(nsStyleContext* aParent, nsIAtom* aPseudoTag,
                  nsCSSPseudoElements::Type aPseudoType,
-                 nsRuleNode* aRuleNode, nsPresContext* aPresContext);
+                 nsRuleNode* aRuleNode);
   ~nsStyleContext();
 
   void* operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW;
@@ -323,7 +341,7 @@ protected:
   void AddChild(nsStyleContext* aChild);
   void RemoveChild(nsStyleContext* aChild);
 
-  void ApplyStyleFixups(nsPresContext* aPresContext);
+  void ApplyStyleFixups();
 
   void FreeAllocations(nsPresContext* aPresContext);
 
@@ -416,6 +434,5 @@ already_AddRefed<nsStyleContext>
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    nsCSSPseudoElements::Type aPseudoType,
-                   nsRuleNode* aRuleNode,
-                   nsPresContext* aPresContext);
+                   nsRuleNode* aRuleNode);
 #endif
