@@ -30,7 +30,7 @@ through the App Store.
 '''
 
 XCODE_REQUIRED_LEGACY = '''
-You will need to download nad install Xcode to build Firefox.
+You will need to download and install Xcode to build Firefox.
 
 Please complete the Xcode download and then relaunch this script.
 '''
@@ -201,6 +201,6 @@ class OSXBootstrapper(BaseBootstrapper):
         if self.os_version < 7 and 'llvm' not in installed:
             print(HOMEBREW_OLD_CLANG)
 
-            subprocess.check_call([brew, '-v' 'install', 'llvm',
+            subprocess.check_call([brew, '-v', 'install', 'llvm',
                 '--with-clang', '--all-targets'])
 
