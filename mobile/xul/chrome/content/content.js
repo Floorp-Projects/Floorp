@@ -292,7 +292,7 @@ let Content = {
     // pages and other similar page. This lets us fix bugs like 401575 which
     // require error page UI to do privileged things, without letting error
     // pages have any privilege themselves.
-    addEventListener("click", this, false);
+    addEventListener("click", this, true);
 
     docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
   },
@@ -384,6 +384,10 @@ let Content = {
             //       http://hg.mozilla.org/mozilla-central/file/855e5cd3c884/browser/base/content/browser.js#l2672
             //       http://hg.mozilla.org/mozilla-central/file/855e5cd3c884/browser/components/safebrowsing/content/globalstore.js
           }
+        } else if (/^about:neterror\?e=netOffline/.test(ownerDoc.documentURI)) {
+          let tryAgain = errorDoc.getElementById("errorTryAgain");
+          if (target == tryAgain)
+            sendSyncMessage("Browser:GoOnline", { });
         }
         break;
       }

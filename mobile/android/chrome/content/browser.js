@@ -2694,9 +2694,9 @@ Tab.prototype = {
         // require error page UI to do privileged things, without letting error
         // pages have any privilege themselves.
         if (/^about:/.test(target.documentURI)) {
-          this.browser.addEventListener("click", ErrorPageEventHandler, false);
+          this.browser.addEventListener("click", ErrorPageEventHandler, true);
           let listener = function() {
-            this.browser.removeEventListener("click", ErrorPageEventHandler, false);
+            this.browser.removeEventListener("click", ErrorPageEventHandler, true);
             this.browser.removeEventListener("pagehide", listener, true);
           }.bind(this);
 
@@ -4068,6 +4068,10 @@ var ErrorPageEventHandler = {
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
             errorDoc.location = "about:home";
           }
+        } else if (/^about:neterror\?e=netOffline/.test(ownerDoc.documentURI)) {
+          let tryAgain = errorDoc.getElementById("errorTryAgain");
+          if (target == tryAgain)
+            Services.io.offline = false;
         }
         break;
       }
