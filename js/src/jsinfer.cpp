@@ -1320,6 +1320,12 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
         return;
     }
 
+    if (callee->isInterpretedLazy()) {
+        RootedFunction fun(cx, callee);
+        if (!InitializeLazyFunctionScript(cx, fun))
+            return;
+    }
+
     RootedScript calleeScript(cx, callee->script());
     if (!calleeScript->ensureHasTypes(cx))
         return;
@@ -1395,6 +1401,12 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
     } else {
         /* Ignore calls to primitives, these will go through a stub. */
         return;
+    }
+
+    if (callee->isInterpretedLazy()) {
+        RootedFunction fun(cx, callee);
+        if (!InitializeLazyFunctionScript(cx, fun))
+            return;
     }
 
     if (!callee->script()->ensureHasTypes(cx))
@@ -5682,6 +5694,12 @@ JSObject::makeLazyType(JSContext *cx)
     JS_ASSERT(cx->compartment == compartment());
 
     RootedObject self(cx, this);
+    /* De-lazification of functions can GC, so we need to do it up here. */
+    if (self->isFunction() && self->toFunction()->isInterpretedLazy()) {
+        RootedFunction fun(cx, self->toFunction());
+        if (!InitializeLazyFunctionScript(cx, fun))
+            return NULL;
+    }
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
     Rooted<TaggedProto> proto(cx, getTaggedProto());
     TypeObject *type = cx->compartment->types.newTypeObject(cx, key, proto);

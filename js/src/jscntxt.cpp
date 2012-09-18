@@ -413,27 +413,43 @@ JSRuntime::markSelfHostedGlobal(JSTracer *trc)
     MarkObjectRoot(trc, &selfHostedGlobal_, "self-hosting global");
 }
 
-JSFunction *
-JSRuntime::getSelfHostedFunction(JSContext *cx, Handle<PropertyName*> name)
+bool
+JSRuntime::getUnclonedSelfHostedValue(JSContext *cx, Handle<PropertyName*> name,
+                                      MutableHandleValue vp)
 {
-    RootedObject holder(cx, cx->global()->getIntrinsicsHolder());
-    RootedId id(cx, NameToId(name));
-    RootedValue funVal(cx, NullValue());
-    if (!cloneSelfHostedValueById(cx, id, holder, &funVal))
-        return NULL;
-    return funVal.toObject().toFunction();
+    RootedObject shg(cx, selfHostedGlobal_);
+    AutoCompartment ac(cx, shg);
+    return JS_GetPropertyById(cx, shg, NameToId(name), vp.address());
 }
 
 bool
-JSRuntime::cloneSelfHostedValueById(JSContext *cx, HandleId id, HandleObject holder, MutableHandleValue vp)
+JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> name,
+                                         Handle<JSFunction*> targetFun)
 {
-    Value funVal;
-    {
-        RootedObject shg(cx, selfHostedGlobal_);
-        AutoCompartment ac(cx, shg);
-        if (!JS_GetPropertyById(cx, shg, id, &funVal) || !funVal.isObject())
-            return false;
-    }
+    RootedValue funVal(cx);
+    if (!getUnclonedSelfHostedValue(cx, name, &funVal))
+        return false;
+
+    RootedFunction sourceFun(cx, funVal.toObject().toFunction());
+    Rooted<JSScript*> sourceScript(cx, sourceFun->script());
+    JS_ASSERT(!sourceScript->enclosingStaticScope());
+    RawScript cscript = CloneScript(cx, NullPtr(), targetFun, sourceScript);
+    if (!cscript)
+        return false;
+    targetFun->setScript(cscript);
+    cscript->setFunction(targetFun);
+    JS_ASSERT(sourceFun->nargs == targetFun->nargs);
+    targetFun->flags = sourceFun->flags | JSFunction::EXTENDED;
+    return true;
+}
+
+bool
+JSRuntime::cloneSelfHostedValue(JSContext *cx, Handle<PropertyName*> name, HandleObject holder,
+                                MutableHandleValue vp)
+{
+    RootedValue funVal(cx);
+    if (!getUnclonedSelfHostedValue(cx, name, &funVal))
+        return false;
 
     /*
      * We don't clone if we're operating in the self-hosting global, as that
@@ -441,14 +457,15 @@ JSRuntime::cloneSelfHostedValueById(JSContext *cx, HandleId id, HandleObject hol
      * initializing the runtime (see JSRuntime::initSelfHosting).
      */
     if (cx->global() == selfHostedGlobal_) {
-        vp.set(ObjectValue(funVal.toObject()));
-    } else {
-        RootedObject clone(cx, JS_CloneFunctionObject(cx,  &funVal.toObject(), cx->global()));
+        vp.set(funVal);
+    } else if (funVal.toObject().isFunction()){
+        RootedFunction fun(cx, funVal.toObject().toFunction());
+        RootedObject clone(cx, CloneFunctionObject(cx, fun, cx->global(), fun->getAllocKind()));
         if (!clone)
             return false;
         vp.set(ObjectValue(*clone));
     }
-    DebugOnly<bool> ok = JS_DefinePropertyById(cx, holder, id, vp, NULL, NULL, 0);
+    DebugOnly<bool> ok = JS_DefinePropertyById(cx, holder, NameToId(name), vp, NULL, NULL, 0);
     JS_ASSERT(ok);
     return true;
 }
