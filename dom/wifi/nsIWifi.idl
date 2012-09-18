@@ -36,7 +36,7 @@ interface nsIWifi : nsISupports
     void setWifiTethering(in boolean enabled, in nsIWifiTetheringCallback callback);
 };
 
-[scriptable, uuid(540674a6-edbe-11e1-87c9-dbcd31c74284)]
+[scriptable, uuid(e3a967e0-015e-11e2-a21f-0800200c9a66)]
 interface nsIDOMWifiManager : nsISupports
 {
     /**
@@ -86,6 +86,14 @@ interface nsIDOMWifiManager : nsISupports
      * onerror: We have failed to start/cancel wps.
      */
     nsIDOMDOMRequest wps(in jsval detail);
+
+    /**
+     * Turn on/off wifi power saving mode.
+     * @param enabled true or false.
+     * onsuccess: We have successfully turn on/off wifi power saving mode.
+     * onerror: We have failed to turn on/off wifi power saving mode.
+     */
+    nsIDOMDOMRequest setPowerSavingMode(in boolean enabled);
 
     /**
      * Returns whether or not wifi is currently enabled.
