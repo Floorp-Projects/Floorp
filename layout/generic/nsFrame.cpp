@@ -1457,16 +1457,18 @@ nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                         bool                    aForceBackground,
                                         nsDisplayBackground**   aBackground)
 {
+  *aBackground = nullptr;
+
   // Here we don't try to detect background propagation. Frames that might
   // receive a propagated background should just set aForceBackground to
   // true.
   if (aBuilder->IsForEventDelivery() || aForceBackground ||
       !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
-    nsDisplayBackground* bg = new (aBuilder) nsDisplayBackground(aBuilder, this);
-    *aBackground = bg;
-    return aLists.BorderBackground()->AppendNewToTop(bg);
+    return nsDisplayBackground::AppendBackgroundItemsToTop(aBuilder, this,
+                                                           aLists.BorderBackground(),
+                                                           aBackground);
   }
-  *aBackground = nullptr;
+
   return NS_OK;
 }
 
@@ -2016,6 +2018,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   return rv;
 }
 
+static bool
+IsRootScrollFrameActive(nsIPresShell* aPresShell)
+{
+  nsIScrollableFrame* sf = aPresShell->GetRootScrollFrameAsScrollable();
+  return sf && sf->IsScrollingActive();
+}
+
 nsresult
 nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                    nsIFrame*               aChild,
@@ -2150,8 +2159,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // nsDisplayFixedPosition. We check if we're already building a fixed-pos
   // item and disallow nesting, to prevent the situation of bug #769541
   // occurring.
-  bool buildFixedPositionItem = disp->mPosition == NS_STYLE_POSITION_FIXED
-    && !child->GetParent()->GetParent() && !isSVG && !aBuilder->IsInFixedPosition();
+  // Don't build an nsDisplayFixedPosition if our root scroll frame is not
+  // active, that's pointless and the extra layer(s) created may be wasteful.
+  bool buildFixedPositionItem = disp->mPosition == NS_STYLE_POSITION_FIXED &&
+    !child->GetParent()->GetParent() && !aBuilder->IsInFixedPosition() &&
+    IsRootScrollFrameActive(PresContext()->PresShell()) && !isSVG;
 
   nsDisplayListBuilder::AutoBuildingDisplayList
     buildingForChild(aBuilder, child, pseudoStackingContext, buildFixedPositionItem);
@@ -4816,7 +4828,7 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
 }
 
 gfx3DMatrix
-nsIFrame::GetTransformMatrix(nsIFrame* aStopAtAncestor,
+nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                              nsIFrame** aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
@@ -5630,13 +5642,13 @@ NS_IMETHODIMP
 nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
 {
   IndentBy(out, aIndent);
-  fprintf(out, "<frame va=\"%ld\" type=\"", PRUptrdiff(this));
+  fprintf(out, "<frame va=\"%p\" type=\"", (void*)this);
   nsAutoString name;
   GetFrameName(name);
   XMLQuote(name);
   fputs(NS_LossyConvertUTF16toASCII(name).get(), out);
-  fprintf(out, "\" state=\"%016llx\" parent=\"%ld\">\n",
-          (unsigned long long)GetDebugStateBits(), PRUptrdiff(mParent));
+  fprintf(out, "\" state=\"%016llx\" parent=\"%p\">\n",
+          (unsigned long long)GetDebugStateBits(), (void*)mParent);
 
   aIndent++;
   DumpBaseRegressionData(aPresContext, out, aIndent);
@@ -5653,12 +5665,12 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t 
 {
   if (GetNextSibling()) {
     IndentBy(out, aIndent);
-    fprintf(out, "<next-sibling va=\"%ld\"/>\n", PRUptrdiff(GetNextSibling()));
+    fprintf(out, "<next-sibling va=\"%p\"/>\n", (void*)GetNextSibling());
   }
 
   if (HasView()) {
     IndentBy(out, aIndent);
-    fprintf(out, "<view va=\"%ld\">\n", PRUptrdiff(GetView()));
+    fprintf(out, "<view va=\"%p\">\n", (void*)GetView());
     aIndent++;
     // XXX add in code to dump out view state too...
     aIndent--;

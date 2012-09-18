@@ -161,10 +161,10 @@ TEST(PickleTest, Resize) {
 
   // construct a message that will be exactly the size of one payload unit,
   // note that any data will have a 4-byte header indicating the size
-  const size_t payload_size_after_header = unit - sizeof(uint32);
+  const size_t payload_size_after_header = unit - sizeof(uint32_t);
   Pickle pickle;
   pickle.WriteData(data_ptr,
-      static_cast<int>(payload_size_after_header - sizeof(uint32)));
+      static_cast<int>(payload_size_after_header - sizeof(uint32_t)));
   size_t cur_payload = payload_size_after_header;
 
   // note: we assume 'unit' is a power of 2
@@ -172,7 +172,7 @@ TEST(PickleTest, Resize) {
   EXPECT_EQ(pickle.payload_size(), payload_size_after_header);
 
   // fill out a full page (noting data header)
-  pickle.WriteData(data_ptr, static_cast<int>(unit - sizeof(uint32)));
+  pickle.WriteData(data_ptr, static_cast<int>(unit - sizeof(uint32_t)));
   cur_payload += unit;
   EXPECT_EQ(unit * 2, pickle.capacity());
   EXPECT_EQ(cur_payload, pickle.payload_size());
@@ -193,7 +193,7 @@ struct CustomHeader : Pickle::Header {
 }  // namespace
 
 TEST(PickleTest, HeaderPadding) {
-  const uint32 kMagic = 0x12345678;
+  const uint32_t kMagic = 0x12345678;
 
   Pickle pickle(sizeof(CustomHeader));
   pickle.WriteInt(kMagic);
@@ -205,7 +205,7 @@ TEST(PickleTest, HeaderPadding) {
   int result;
   ASSERT_TRUE(pickle.ReadInt(&iter, &result));
 
-  EXPECT_EQ(static_cast<uint32>(result), kMagic);
+  EXPECT_EQ(static_cast<uint32_t>(result), kMagic);
 }
 
 TEST(PickleTest, EqualsOperator) {

@@ -6,9 +6,9 @@
 
 #include "base/basictypes.h"
 #include "BluetoothPropertyEvent.h"
-#include "BluetoothTypes.h"
 
 #include "nsDOMClassInfo.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 USING_BLUETOOTH_NAMESPACE
 

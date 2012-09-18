@@ -63,7 +63,7 @@ class Logging : public base::WaitableEventWatcher::Delegate,
   // Like the *MsgLog functions declared for each message class, except this
   // calls the correct one based on the message type automatically.  Defined in
   // ipc_logging.cc.
-  static void GetMessageText(uint16 type, std::wstring* name,
+  static void GetMessageText(uint16_t type, std::wstring* name,
                              const Message* message, std::wstring* params);
 
   // WaitableEventWatcher::Delegate implementation
@@ -72,7 +72,7 @@ class Logging : public base::WaitableEventWatcher::Delegate,
   // MessageLoop::DestructionObserver implementation
   void WillDestroyCurrentMessageLoop();
 
-  typedef void (*LogFunction)(uint16 type,
+  typedef void (*LogFunction)(uint16_t type,
                              std::wstring* name,
                              const Message* msg,
                              std::wstring* params);

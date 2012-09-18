@@ -32,7 +32,7 @@ void ConditionVariable::Wait() {
 }
 
 void ConditionVariable::TimedWait(const TimeDelta& max_time) {
-  int64 usecs = max_time.InMicroseconds();
+  int64_t usecs = max_time.InMicroseconds();
 
   // The timeout argument to pthread_cond_timedwait is in absolute time.
   struct timeval now;

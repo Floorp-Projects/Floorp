@@ -474,7 +474,7 @@ AsyncChannel::OnDispatchMessage(const Message& msg)
 }
 
 bool
-AsyncChannel::OnSpecialMessage(uint16 id, const Message& msg)
+AsyncChannel::OnSpecialMessage(uint16_t id, const Message& msg)
 {
     return false;
 }
@@ -646,7 +646,7 @@ AsyncChannel::ReportConnectionError(const char* channelName) const
 }
 
 void
-AsyncChannel::DispatchOnChannelConnected(int32 peer_pid)
+AsyncChannel::DispatchOnChannelConnected(int32_t peer_pid)
 {
     AssertWorkerThread();
     if (mListener)
@@ -722,7 +722,7 @@ AsyncChannel::ProcessLink::OnTakeConnectedChannel()
 }
 
 void
-AsyncChannel::ProcessLink::OnChannelConnected(int32 peer_pid)
+AsyncChannel::ProcessLink::OnChannelConnected(int32_t peer_pid)
 {
     AssertIOThread();
 

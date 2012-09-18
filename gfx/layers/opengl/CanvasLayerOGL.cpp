@@ -428,6 +428,8 @@ ShadowCanvasLayerOGL::DestroyFrontBuffer()
     SharedTextureDescriptor texDescriptor = mFrontBufferDescriptor.get_SharedTextureDescriptor();
     gl()->ReleaseSharedHandle(texDescriptor.shareType(), texDescriptor.handle());
     mFrontBufferDescriptor = SurfaceDescriptor();
+  } else if (IsSurfaceDescriptorValid(mFrontBufferDescriptor)) {
+    mAllocator->DestroySharedSurface(&mFrontBufferDescriptor);
   }
 }
 

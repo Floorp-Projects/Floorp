@@ -1012,14 +1012,20 @@ class AttrDefiner(PropertyDefiner):
             return "JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS"
 
         def getter(attr):
-            return ("{(JSPropertyOp)genericGetter, &%(name)s_getterinfo}"
-                    % {"name" : attr.identifier.name})
+            native = ("genericLenientGetter" if attr.hasLenientThis()
+                      else "genericGetter")
+            return ("{(JSPropertyOp)%(native)s, &%(name)s_getterinfo}"
+                    % {"name" : attr.identifier.name,
+                       "native" : native})
 
         def setter(attr):
             if attr.readonly:
                 return "JSOP_NULLWRAPPER"
-            return ("{(JSStrictPropertyOp)genericSetter, &%(name)s_setterinfo}"
-                    % {"name" : attr.identifier.name})
+            native = ("genericLenientSetter" if attr.hasLenientThis()
+                      else "genericSetter")
+            return ("{(JSStrictPropertyOp)%(native)s, &%(name)s_setterinfo}"
+                    % {"name" : attr.identifier.name,
+                       "native" : native})
 
         def specData(attr):
             return (attr.identifier.name, flags(attr), getter(attr),
@@ -1360,6 +1366,25 @@ class CGIsMethod(CGAbstractMethod):
         #   js::GetObjectJSClass(obj) == &Class.mBase
         return """  return IsProxy(obj);"""
 
+def CreateBindingJSObject(descriptor, parent):
+    if descriptor.proxy:
+        create = """  JSObject *obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
+                                 JS::PrivateValue(aObject), proto, %s);
+  if (!obj) {
+    return NULL;
+  }
+
+"""
+    else:
+        create = """  JSObject* obj = JS_NewObject(aCx, &Class.mBase, proto, %s);
+  if (!obj) {
+    return NULL;
+  }
+
+  js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
+"""
+    return create % parent
+
 class CGWrapWithCacheMethod(CGAbstractMethod):
     def __init__(self, descriptor):
         assert descriptor.interface.hasInterfacePrototypeObject()
@@ -1373,23 +1398,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         if self.descriptor.workers:
             return """  *aTriedToWrap = true;
   return aObject->GetJSObject();"""
-
-        if self.descriptor.proxy:
-            create = """  JSObject *obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
-                                 JS::PrivateValue(aObject), proto, parent);
-  if (!obj) {
-    return NULL;
-  }
-
-"""
-        else:
-            create = """  JSObject* obj = JS_NewObject(aCx, &Class.mBase, proto, parent);
-  if (!obj) {
-    return NULL;
-  }
-
-  js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
-"""
 
         return """  *aTriedToWrap = true;
 
@@ -1411,7 +1419,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
   aCache->SetWrapper(obj);
 
-  return obj;""" % (CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aCache"), create)
+  return obj;""" % (CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aCache"),
+                    CreateBindingJSObject(self.descriptor, "parent"))
 
 class CGWrapMethod(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -1440,15 +1449,10 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
     return NULL;
   }
 
-  JSObject* obj = JS_NewObject(aCx, &Class.mBase, proto, global);
-  if (!obj) {
-    return NULL;
-  }
-
-  js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
+%s
   NS_ADDREF(aObject);
 
-  return obj;"""
+  return obj;""" % CreateBindingJSObject(self.descriptor, "global")
 
 builtinNames = {
     IDLType.Tags.bool: 'bool',
@@ -2816,10 +2820,13 @@ def infallibleForMember(member, type, descriptorProvider):
                                   memberIsCreator(member))[1]
 
 def typeNeedsCx(type):
-    return (type is not None and
-            (type.isCallback() or type.isAny() or type.isObject() or
-             (type.isUnion() and
-              any(typeNeedsCx(t) for t in type.unroll().flatMemberTypes))))
+    if type is None:
+        return False
+    if type.isSequence() or type.isArray():
+        type = type.inner
+    if type.isUnion():
+        return any(typeNeedsCx(t) for t in type.unroll().flatMemberTypes)
+    return type.isCallback() or type.isAny() or type.isObject()
 
 # Returns a tuple consisting of a CGThing containing the type of the return
 # value, or None if there is no need for a return value, and a boolean signaling
@@ -2852,7 +2859,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         # XXXbz we're going to assume that callback types are always
         # nullable for now.
         return CGGeneric("JSObject*"), False
-    if returnType.tag() is IDLType.Tags.any:
+    if returnType.isAny():
         return CGGeneric("JS::Value"), False
     if returnType.isObject() or returnType.isSpiderMonkeyInterface():
         return CGGeneric("JSObject*"), False
@@ -3386,8 +3393,14 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     function to do the rest of the work.  This function should return a
     CGThing which is already properly indented.
     """
-    def __init__(self, descriptor, name, args):
+    def __init__(self, descriptor, name, args, unwrapFailureCode=None):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
+
+        if unwrapFailureCode is None:
+            self.unwrapFailureCode = ("return Throw<%s>(cx, rv);" %
+                                      toStringBool(not descriptor.workers))
+        else:
+            self.unwrapFailureCode = unwrapFailureCode
 
     def definition_body(self):
         # Our descriptor might claim that we're not castable, simply because
@@ -3395,9 +3408,9 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         # know that we're the real deal.  So fake a descriptor here for
         # consumption by FailureFatalCastableObjectUnwrapper.
         unwrapThis = CGIndenter(CGGeneric(
-            str(FailureFatalCastableObjectUnwrapper(
+            str(CastableObjectUnwrapper(
                         FakeCastableDescriptor(self.descriptor),
-                        "obj", "self"))))
+                        "obj", "self", self.unwrapFailureCode))))
         return CGList([ self.getThis(), unwrapThis,
                         self.generate_code() ], "\n").define()
 
@@ -3454,10 +3467,20 @@ class CGGenericGetter(CGAbstractBindingMethod):
     """
     A class for generating the C++ code for an IDL attribute getter.
     """
-    def __init__(self, descriptor):
+    def __init__(self, descriptor, lenientThis=False):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
-        CGAbstractBindingMethod.__init__(self, descriptor, 'genericGetter', args)
+        if lenientThis:
+            name = "genericLenientGetter"
+            unwrapFailureCode = (
+                "MOZ_ASSERT(!JS_IsExceptionPending(cx));\n"
+                "JS_SET_RVAL(cx, vp, JS::UndefinedValue());\n"
+                "return true;")
+        else:
+            name = "genericGetter"
+            unwrapFailureCode = None
+        CGAbstractBindingMethod.__init__(self, descriptor, name, args,
+                                         unwrapFailureCode)
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
@@ -3498,10 +3521,19 @@ class CGGenericSetter(CGAbstractBindingMethod):
     """
     A class for generating the C++ code for an IDL attribute setter.
     """
-    def __init__(self, descriptor):
+    def __init__(self, descriptor, lenientThis=False):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
-        CGAbstractBindingMethod.__init__(self, descriptor, 'genericSetter', args)
+        if lenientThis:
+            name = "genericLenientSetter"
+            unwrapFailureCode = (
+                "MOZ_ASSERT(!JS_IsExceptionPending(cx));\n"
+                "return true;")
+        else:
+            name = "genericSetter"
+            unwrapFailureCode = None
+        CGAbstractBindingMethod.__init__(self, descriptor, name, args,
+                                         unwrapFailureCode)
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
@@ -5005,7 +5037,8 @@ class CGDescriptor(CGThing):
 
         cgThings = []
         if descriptor.interface.hasInterfacePrototypeObject():
-            hasMethod, hasGetter, hasSetter = False, False, False
+            (hasMethod, hasGetter, hasLenientGetter,
+             hasSetter, hasLenientSetter) = False, False, False, False, False
             for m in descriptor.interface.members:
                 if m.isMethod() and not m.isStatic() and not m.isIdentifierLess():
                     cgThings.append(CGSpecializedMethod(descriptor, m))
@@ -5013,14 +5046,24 @@ class CGDescriptor(CGThing):
                     hasMethod = True
                 elif m.isAttr():
                     cgThings.append(CGSpecializedGetter(descriptor, m))
-                    hasGetter = True
+                    if m.hasLenientThis():
+                        hasLenientGetter = True
+                    else:
+                        hasGetter = True
                     if not m.readonly:
                         cgThings.append(CGSpecializedSetter(descriptor, m))
-                        hasSetter = True
+                        if m.hasLenientThis():
+                            hasLenientSetter = True
+                        else:
+                            hasSetter = True
                     cgThings.append(CGMemberJITInfo(descriptor, m))
             if hasMethod: cgThings.append(CGGenericMethod(descriptor))
             if hasGetter: cgThings.append(CGGenericGetter(descriptor))
+            if hasLenientGetter: cgThings.append(CGGenericGetter(descriptor,
+                                                                 lenientThis=True))
             if hasSetter: cgThings.append(CGGenericSetter(descriptor))
+            if hasLenientSetter: cgThings.append(CGGenericSetter(descriptor,
+                                                                 lenientThis=True))
 
         if descriptor.concrete and not descriptor.proxy:
             if not descriptor.workers and descriptor.wrapperCache:

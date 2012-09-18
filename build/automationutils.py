@@ -150,7 +150,7 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
   removeSymbolsPath = False
 
   # If our symbols are at a remote URL, download them now
-  if isURL(symbolsPath):
+  if symbolsPath and isURL(symbolsPath):
     print "Downloading symbols from: " + symbolsPath
     removeSymbolsPath = True
     # Get the symbols and write them to a temporary zipfile

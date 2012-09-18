@@ -83,12 +83,13 @@ mozilla::fallocate(PRFileDesc *aFD, int64_t aLength)
 
   int nWrite; // Return value from write()
   int64_t iWrite = ((buf.st_size + 2 * nBlk - 1) / nBlk) * nBlk - 1; // Next offset to write to
-  do {
+  while (iWrite < aLength) {
     nWrite = 0;
     if (PR_Seek64(aFD, iWrite, PR_SEEK_SET) == iWrite)
       nWrite = PR_Write(aFD, "", 1);
+    if (nWrite != 1) break;
     iWrite += nBlk;
-  } while (nWrite == 1 && iWrite < aLength);
+  }
 
   PR_Seek64(aFD, oldpos, PR_SEEK_SET);
   return nWrite == 1;

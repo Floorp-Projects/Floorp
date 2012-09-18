@@ -12,9 +12,11 @@ function h(a=b, b=43) {
 var res = h();
 assertEq(res[0], res[1]);
 assertEq(res[0](), 42);
-assertThrowsInstanceOf(function i(b=FAIL) {
+function i(b=FAIL) {
     function b() {}
-}, ReferenceError);
+}
+i();
+i(42);
 function j(a=(b=42), b=8) {
     return b;
     function b() {}

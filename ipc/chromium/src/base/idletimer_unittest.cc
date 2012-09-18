@@ -23,10 +23,10 @@ namespace {
 // the time stored here.
 static Time mock_timer_started;
 
-bool MockIdleTimeSource(int32 *milliseconds_interval_since_last_event) {
+bool MockIdleTimeSource(int32_t *milliseconds_interval_since_last_event) {
   TimeDelta delta = Time::Now() - mock_timer_started;
   *milliseconds_interval_since_last_event =
-      static_cast<int32>(delta.InMilliseconds());
+      static_cast<int32_t>(delta.InMilliseconds());
   return true;
 }
 

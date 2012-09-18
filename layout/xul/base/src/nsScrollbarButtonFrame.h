@@ -13,6 +13,7 @@
 #ifndef nsScrollbarButtonFrame_h___
 #define nsScrollbarButtonFrame_h___
 
+#include "mozilla/Attributes.h"
 #include "nsButtonBoxFrame.h"
 #include "nsITimer.h"
 #include "nsRepeatService.h"
@@ -28,13 +29,13 @@ public:
     nsButtonBoxFrame(aPresShell, aContext), mCursorOnThis(false) {}
 
   // Overrides
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   friend nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
+                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   static nsresult GetChildWithTag(nsPresContext* aPresContext,
                                   nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
@@ -47,18 +48,18 @@ public:
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                                  nsGUIEvent *    aEvent,
                                  nsEventStatus*  aEventStatus,
-                                 bool aControlHeld)  { return NS_OK; }
+                                 bool aControlHeld) MOZ_OVERRIDE { return NS_OK; }
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus) { return NS_OK; }
+                        nsEventStatus*  aEventStatus) MOZ_OVERRIDE { return NS_OK; }
 
   NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus*  aEventStatus);
+                           nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
 
 protected:
-  virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent) MOZ_OVERRIDE;
   void DoButtonAction(bool aSmoothScroll);
 
   void StartRepeat() {

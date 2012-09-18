@@ -45,7 +45,7 @@ int SysInfo::NumberOfProcessors() {
 }
 
 // static
-int64 SysInfo::AmountOfPhysicalMemory() {
+int64_t SysInfo::AmountOfPhysicalMemory() {
   // _SC_PHYS_PAGES is not part of POSIX and not available on OS X
 #if defined(OS_MACOSX)
   struct host_basic_info hostinfo;
@@ -60,7 +60,7 @@ int64 SysInfo::AmountOfPhysicalMemory() {
     return 0;
   }
 
-  return static_cast<int64>(hostinfo.max_mem);
+  return static_cast<int64_t>(hostinfo.max_mem);
 #elif defined(OS_NETBSD)
   int mib[2];
   int rc;
@@ -83,18 +83,18 @@ int64 SysInfo::AmountOfPhysicalMemory() {
     return 0;
   }
 
-  return static_cast<int64>(pages) * page_size;
+  return static_cast<int64_t>(pages) * page_size;
 #endif
 }
 
 // static
-int64 SysInfo::AmountOfFreeDiskSpace(const std::wstring& path) {
+int64_t SysInfo::AmountOfFreeDiskSpace(const std::wstring& path) {
 #ifndef ANDROID
   struct statvfs stats;
   if (statvfs(WideToUTF8(path).c_str(), &stats) != 0) {
     return -1;
   }
-  return static_cast<int64>(stats.f_bavail) * stats.f_frsize;
+  return static_cast<int64_t>(stats.f_bavail) * stats.f_frsize;
 #else
   return -1;
 #endif

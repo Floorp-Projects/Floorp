@@ -1,10 +1,14 @@
-/* Copyright (C) 2002-2003 Jean-Marc Valin
-   Copyright (C) 2007-2009 Xiph.Org Foundation */
+/* Copyright (C) 2002-2012 IETF Trust, Jean-Marc Valin, Xiph.Org Foundation.
+                           All rights reserved.*/
 /**
    @file stack_alloc.h
    @brief Temporary memory allocation on stack
 */
 /*
+
+   This file is extracted from RFC6716. Please see that RFC for additional
+   information.
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:

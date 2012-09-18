@@ -133,11 +133,11 @@ struct EnumSerializer {
 
   static void Write(Message* aMsg, const paramType& aValue) {
     MOZ_ASSERT(IsLegalValue(aValue));
-    WriteParam(aMsg, (int32)aValue);
+    WriteParam(aMsg, (int32_t)aValue);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
-    int32 value;
+    int32_t value;
     if(!ReadParam(aMsg, aIter, &value) ||
        !IsLegalValue(paramType(value))) {
       return false;

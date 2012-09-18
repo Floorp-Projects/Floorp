@@ -85,7 +85,7 @@ public:
                                int32_t aFlags = 0);
   nsresult      SubtractRange(RangeData* aRange, nsRange* aSubtract,
                               nsTArray<RangeData>* aOutput);
-  nsresult      AddItem(nsRange *aRange, int32_t* aOutIndex = nullptr);
+  nsresult      AddItem(nsRange *aRange, int32_t* aOutIndex);
   nsresult      RemoveItem(nsRange *aRange);
   nsresult      RemoveCollapsedRanges();
   nsresult      Clear(nsPresContext* aPresContext);

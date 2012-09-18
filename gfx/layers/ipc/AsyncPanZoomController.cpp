@@ -524,7 +524,15 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
 }
 
 nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEvent) {
-  // XXX: Implement this.
+  if (mGeckoContentController) {
+    MonitorAutoLock monitor(mMonitor);
+
+    gfx::Point point = WidgetSpaceToCompensatedViewportSpace(
+      gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
+      mFrameMetrics.mResolution.width);
+    mGeckoContentController->HandleSingleTap(nsIntPoint(NS_lround(point.x), NS_lround(point.y)));
+    return nsEventStatus_eConsumeNoDefault;
+  }
   return nsEventStatus_eIgnore;
 }
 
@@ -952,6 +960,27 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     } else {
       mContentPainterStatus = CONTENT_IDLE;
     }
+  } else {
+    // No paint was requested, but we got one anyways. One possible cause of this
+    // is that content could have fired a scrollTo(). In this case, we should take
+    // the new scroll offset. Document/viewport changes are handled elsewhere.
+    // Also note that, since NotifyLayersUpdated() is called whenever there's a
+    // layers update, we didn't necessarily get a new scroll offset, but we're
+    // updating our local copy of it anyways just in case.
+    switch (mState) {
+    case NOTHING:
+    case FLING:
+    case TOUCHING:
+    case WAITING_LISTENERS:
+      // FIXME/bug 784908: Scroll offset is stored in layer pixels in the rest
+      // of the layers code, but we want it in CSS pixels.
+      mFrameMetrics.mViewportScrollOffset =
+        aViewportFrame.mViewportScrollOffset / aViewportFrame.mResolution.width;
+      break;
+    // Don't clobber if we're in other states.
+    default:
+      break;
+    }
   }
 
   if (aIsFirstPaint || mFrameMetrics.IsDefault()) {
@@ -968,6 +997,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     // we get a larger displayport. This is very bad because we're wasting a
     // paint and not initializating the displayport correctly.
     RequestContentRepaint();
+
+    mState = NOTHING;
   } else if (!mFrameMetrics.mCSSContentRect.IsEqualEdges(aViewportFrame.mCSSContentRect)) {
     mFrameMetrics.mCSSContentRect = aViewportFrame.mCSSContentRect;
     SetPageRect(mFrameMetrics.mCSSContentRect);

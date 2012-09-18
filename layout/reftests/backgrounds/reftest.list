@@ -87,6 +87,9 @@ random-if(bug685516) == background-size-contain-position-fifty-fifty.html backgr
 random-if(bug685516) == background-size-contain-clip-padding-origin-border.html background-size-contain-clip-padding-origin-border-ref.html
 random-if(bug685516) == background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding-ref.html
 
+== background-layers-1a.html background-layers-1-ref.html
+== background-layers-1b.html background-layers-1-ref.html
+
 # -moz-background-inline-policy is touchy and hard to test due to stretching
 # artifacts and the difficulty of covering exact lines, and its CSS3 analog is
 # on the chopping block at the moment, so just make sure background-size results

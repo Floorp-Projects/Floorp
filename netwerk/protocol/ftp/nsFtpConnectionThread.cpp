@@ -1118,7 +1118,7 @@ nsFtpState::S_list() {
 
         // open cache entry for writing, and configure it to receive data.
         if (NS_FAILED(InstallCacheListener())) {
-            mCacheEntry->Doom();
+            mCacheEntry->AsyncDoom(nullptr);
             mCacheEntry = nullptr;
         }
     }
@@ -1181,7 +1181,7 @@ nsFtpState::R_retr() {
         // any cache entry, otherwise we'll have problems reading it later.
         // See bug 122548
         if (mCacheEntry) {
-            (void)mCacheEntry->Doom();
+            (void)mCacheEntry->AsyncDoom(nullptr);
             mCacheEntry = nullptr;
         }
         if (HasPendingCallback())
@@ -2149,7 +2149,7 @@ nsFtpState::CloseWithStatus(nsresult status)
 
     mDataStream = nullptr;
     if (mDoomCache && mCacheEntry)
-        mCacheEntry->Doom();
+        mCacheEntry->AsyncDoom(nullptr);
     mCacheEntry = nullptr;
 
     return nsBaseContentStream::CloseWithStatus(status);

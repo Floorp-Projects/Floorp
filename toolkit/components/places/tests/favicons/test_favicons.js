@@ -269,6 +269,7 @@ add_test(function test_insert_asynchronous_mints_guid() {
     do_log_info("Asynchronously setting page favicon.");
     PlacesUtils.favicons.setAndFetchFaviconForPage(
       pageURI, iconURI, false,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
       function AMG_faviconDataCallback(uri, len, data, mimeType) {
         do_check_true(iconURI.equals(uri));
 
@@ -291,6 +292,7 @@ add_test(function test_insert_asynchronous_update_preserves_guid() {
     do_log_info("Asynchronously re-setting page favicon.");
     PlacesUtils.favicons.setAndFetchFaviconForPage(
       pageURI, iconURI, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
       function UPG_faviconDataCallback(uri, len, data, mimeType) {
         do_check_true(iconURI.equals(uri));
 

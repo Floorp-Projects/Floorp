@@ -62,10 +62,6 @@ pref("browser.cache.offline.enable",           true);
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         512000);
 
-// offline apps should be limited to this much data in global storage
-// (in kilobytes)
-pref("offline-apps.quota.max",        204800);
-
 // the user should be warned if offline app disk usage exceeds this amount
 // (in kilobytes)
 pref("offline-apps.quota.warn",        51200);
@@ -245,16 +241,14 @@ pref("gfx.canvas.azure.enabled", true);
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
 pref("gfx.canvas.azure.backends", "direct2d,cairo");
+pref("gfx.content.azure.backends", "direct2d");
 pref("gfx.content.azure.enabled", true);
 #else
 #ifdef XP_MACOSX
 pref("gfx.canvas.azure.backends", "cg");
 #else
-#ifdef ANDROID
 pref("gfx.canvas.azure.backends", "cairo");
-#else
-pref("gfx.canvas.azure.backends", "cairo");
-#endif
+pref("gfx.content.azure.backends", "cairo");
 #endif
 #endif
 
@@ -1340,6 +1334,10 @@ pref("security.dialog_enable_delay", 2000);
 
 pref("security.csp.enable", true);
 pref("security.csp.debug", false);
+
+// Mixed content blocking
+pref("security.mixed_content.block_active_content", false);
+pref("security.mixed_content.block_display_content", false);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.

@@ -22,9 +22,39 @@ NS_IMPL_ISUPPORTS1(nsEffectiveTLDService, nsIEffectiveTLDService)
 
 // ----------------------------------------------------------------------
 
-static const ETLDEntry gEntries[] =
+#define ETLD_STR_NUM_1(line) str##line
+#define ETLD_STR_NUM(line) ETLD_STR_NUM_1(line)
+#define ETLD_ENTRY_OFFSET(name) offsetof(struct etld_string_list, ETLD_STR_NUM(__LINE__))
+
+const ETLDEntry nsDomainEntry::entries[] = {
+#define ETLD_ENTRY(name, ex, wild) { ETLD_ENTRY_OFFSET(name), ex, wild },
 #include "etld_data.inc"
-;
+#undef ETLD_ENTRY
+};
+
+const union nsDomainEntry::etld_strings nsDomainEntry::strings = {
+  {
+#define ETLD_ENTRY(name, ex, wild) name,
+#include "etld_data.inc"
+#undef ETLD_ENTRY
+  }
+};
+
+// Dummy function to statically ensure that our indices don't overflow
+// the storage provided for them.
+void
+nsDomainEntry::FuncForStaticAsserts(void)
+{
+#define ETLD_ENTRY(name, ex, wild)                                      \
+  MOZ_STATIC_ASSERT(ETLD_ENTRY_OFFSET(name) < (1 << ETLD_ENTRY_N_INDEX_BITS), \
+                    "invalid strtab index");
+#include "etld_data.inc"
+#undef ETLD_ENTRY
+}
+
+#undef ETLD_ENTRY_OFFSET
+#undef ETLD_STR_NUM
+#undef ETLD_STR_NUM1
 
 // ----------------------------------------------------------------------
 
@@ -33,28 +63,31 @@ nsEffectiveTLDService::Init()
 {
   NS_TIME_FUNCTION;
 
+  const ETLDEntry *entries = nsDomainEntry::entries;
+
   // We'll probably have to rehash at least once, since nsTHashtable doesn't
   // use a perfect hash, but at least we'll save a few rehashes along the way.
   // Next optimization here is to precompute the hash using something like
   // gperf, but one step at a time.  :-)
-  mHash.Init(ArrayLength(gEntries) - 1);
+  mHash.Init(ArrayLength(nsDomainEntry::entries));
 
   nsresult rv;
   mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // Initialize eTLD hash from static array
-  for (uint32_t i = 0; i < ArrayLength(gEntries) - 1; i++) {
+  for (uint32_t i = 0; i < ArrayLength(nsDomainEntry::entries); i++) {
+    const char *domain = nsDomainEntry::GetEffectiveTLDName(entries[i].strtab_index);
 #ifdef DEBUG
-    nsDependentCString name(gEntries[i].domain);
-    nsAutoCString normalizedName(gEntries[i].domain);
+    nsDependentCString name(domain);
+    nsAutoCString normalizedName(domain);
     NS_ASSERTION(NS_SUCCEEDED(NormalizeHostname(normalizedName)),
                  "normalization failure!");
     NS_ASSERTION(name.Equals(normalizedName), "domain not normalized!");
 #endif
-    nsDomainEntry *entry = mHash.PutEntry(gEntries[i].domain);
+    nsDomainEntry *entry = mHash.PutEntry(domain);
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-    entry->SetData(&gEntries[i]);
+    entry->SetData(&entries[i]);
   }
   return NS_OK;
 }

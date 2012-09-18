@@ -1705,7 +1705,7 @@ HyperTextAccessible::GetSelectionDOMRanges(int16_t aType,
   uint32_t childCount = startNode->GetChildCount();
   nsresult rv = domSel->
     GetRangesForIntervalArray(startNode, 0, startNode, childCount, true, aRanges);
-  NS_ENSURE_SUCCESS(rv,);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // Remove collapsed ranges
   uint32_t numRanges = aRanges->Length();

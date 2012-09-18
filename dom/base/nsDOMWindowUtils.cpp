@@ -2812,7 +2812,7 @@ nsDOMWindowUtils::ExitFullscreen()
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SelectAtPoint(float aX, float aY, PRUint32 aSelectBehavior,
+nsDOMWindowUtils::SelectAtPoint(float aX, float aY, uint32_t aSelectBehavior,
                                 bool *_retval)
 {
   *_retval = false;
@@ -2885,7 +2885,7 @@ nsDOMWindowUtils::SelectAtPoint(float aX, float aY, PRUint32 aSelectBehavior,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, PRUint32 aSheetType)
+nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -2916,7 +2916,7 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, PRUint32 aSheetType)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, PRUint32 aSheetType)
+nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;

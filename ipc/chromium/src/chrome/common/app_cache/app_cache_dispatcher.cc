@@ -18,7 +18,7 @@ bool AppCacheDispatcher::OnMessageReceived(const IPC::Message& msg) {
 
 void AppCacheDispatcher::OnAppCacheSelected(int context_id,
                                             int select_request_id,
-                                            int64 app_cache_id) {
+                                            int64_t app_cache_id) {
   AppCacheContextImpl *context = AppCacheContextImpl::FromContextId(context_id);
   if (context) {
     context->OnAppCacheSelected(select_request_id, app_cache_id);

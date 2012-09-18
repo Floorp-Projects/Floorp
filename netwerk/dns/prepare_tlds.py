@@ -104,16 +104,13 @@ def main():
 
   def boolStr(b):
     if b:
-      return "PR_TRUE"
-    return "PR_FALSE"
+      return "true"
+    return "false"
 
-  print "{"
   for etld in getEffectiveTLDs(sys.argv[1]):
     exception = boolStr(etld.exception())
     wild = boolStr(etld.wild())
-    print '  { "%s", %s, %s },' % (etld.domain(), exception, wild)
-  print "  { nullptr, PR_FALSE, PR_FALSE }"
-  print "}"
+    print 'ETLD_ENTRY("%s", %s, %s)' % (etld.domain(), exception, wild)
 
 if __name__ == '__main__':
   main()

@@ -2391,25 +2391,6 @@ mjit::Compiler::generateMethod()
                 frame.push(MagicValue(JS_OPTIMIZED_ARGUMENTS));
             }
           END_CASE(JSOP_ARGUMENTS)
-          BEGIN_CASE(JSOP_ACTUALSFILLED)
-          {
-
-            // We never inline things with defaults because of the switch.
-            JS_ASSERT(a == outer);
-            RegisterID value = frame.allocReg(), nactual = frame.allocReg();
-            int32_t defstart = GET_UINT16(PC);
-            masm.move(Imm32(defstart), value);
-            masm.load32(Address(JSFrameReg, StackFrame::offsetOfNumActual()), nactual);
-
-            // Best would be a single instruction where available (like
-            // cmovge on x86), but there's no way get that yet, so jump.
-            Jump j = masm.branch32(Assembler::LessThan, nactual, Imm32(defstart));
-            masm.move(nactual, value);
-            j.linkTo(masm.label(), &masm);
-            frame.freeReg(nactual);
-            frame.pushInt32(value);
-          }
-          END_CASE(JSOP_ACTUALSFILLED)
 
           BEGIN_CASE(JSOP_ITERNEXT)
             iterNext();
@@ -5045,13 +5026,12 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
      */
     RejoinState rejoin = REJOIN_GETTER;
     if (forPrototype) {
-        JS_ASSERT(top->isType(JSVAL_TYPE_OBJECT) &&
-                  name == cx->runtime->atomState.classPrototypeAtom);
+        JS_ASSERT(top->isType(JSVAL_TYPE_OBJECT) && name == cx->names().classPrototype);
         rejoin = REJOIN_THIS_PROTOTYPE;
     }
 
     /* Handle length accesses on known strings without using a PIC. */
-    if (name == cx->runtime->atomState.lengthAtom &&
+    if (name == cx->names().length &&
         top->isType(JSVAL_TYPE_STRING) &&
         (!cx->typeInferenceEnabled() || knownPushedType(0) == JSVAL_TYPE_INT32)) {
         if (top->isConstant()) {
@@ -5071,7 +5051,7 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
     }
 
     /* Handle lenth accesses of optimize 'arguments'. */
-    if (name == cx->runtime->atomState.lengthAtom &&
+    if (name == cx->names().length &&
         cx->typeInferenceEnabled() &&
         analysis->poppedTypes(PC, 0)->isMagicArguments() &&
         knownPushedType(0) == JSVAL_TYPE_INT32)
@@ -6479,15 +6459,15 @@ mjit::Compiler::jsop_getgname(uint32_t index)
 {
     /* Optimize undefined, NaN and Infinity. */
     PropertyName *name = script->getName(index);
-    if (name == cx->runtime->atomState.typeAtoms[JSTYPE_VOID]) {
+    if (name == cx->names().undefined) {
         frame.push(UndefinedValue());
         return true;
     }
-    if (name == cx->runtime->atomState.NaNAtom) {
+    if (name == cx->names().NaN) {
         frame.push(cx->runtime->NaNValue);
         return true;
     }
-    if (name == cx->runtime->atomState.InfinityAtom) {
+    if (name == cx->names().Infinity) {
         frame.push(cx->runtime->positiveInfinityValue);
         return true;
     }
@@ -6815,7 +6795,7 @@ mjit::Compiler::jsop_instanceof()
     /* This is sadly necessary because the error case needs the object. */
     frame.dup();
 
-    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, JSVAL_TYPE_UNKNOWN))
+    if (!jsop_getprop(cx->names().classPrototype, JSVAL_TYPE_UNKNOWN))
         return false;
 
     /* Primitive prototypes are invalid. */
@@ -7397,7 +7377,7 @@ mjit::Compiler::constructThis()
             break;
         }
 
-        jsid id = NameToId(cx->runtime->atomState.classPrototypeAtom);
+        Rooted<jsid> id(cx, NameToId(cx->names().classPrototype));
         types::HeapTypeSet *protoTypes = fun->getType(cx)->getProperty(cx, id, false);
 
         JSObject *proto = protoTypes->getSingleton(cx);
@@ -7446,7 +7426,7 @@ mjit::Compiler::constructThis()
     frame.pushCallee();
 
     // Get callee.prototype.
-    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, JSVAL_TYPE_UNKNOWN, false, /* forPrototype = */ true))
+    if (!jsop_getprop(cx->names().classPrototype, JSVAL_TYPE_UNKNOWN, false, /* forPrototype = */ true))
         return false;
 
     // Reach into the proto Value and grab a register for its data.

@@ -29,17 +29,23 @@ var tests = {
 
     function triggerIconPanel() {
       let statusIcons = document.getElementById("social-status-iconbox");
-      ok(!statusIcons.firstChild.hidden, "status icon is visible");
-      // Click the button to trigger its contentPanel
-      let panel = document.getElementById("social-notification-panel");
-      EventUtils.synthesizeMouseAtCenter(statusIcons.firstChild, {});
+      waitForCondition(function() statusIcons.firstChild && !statusIcons.firstChild.hidden,
+                       function() {
+        // Click the button to trigger its contentPanel
+        let panel = document.getElementById("social-notification-panel");
+        EventUtils.synthesizeMouseAtCenter(statusIcons.firstChild, {});
+      }, "Status icon didn't become non-hidden");
     }
 
-    let port = Social.provider.port;
+    let port = Social.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
       switch (topic) {
+        case "test-init-done":
+          iconsReady = true;
+          checkNext();
+          break;
         case "got-panel-message":
           ok(true, "got panel message");
           // Check the panel isn't in our history.
@@ -52,6 +58,7 @@ var tests = {
             panel.hidePopup();
           } else if (e.data.result == "hidden") {
             ok(true, "panel hidden");
+            port.close();
             next();
           }
           break;
@@ -66,24 +73,5 @@ var tests = {
       }
     }
     port.postMessage({topic: "test-init"});
-
-    // Our worker sets up ambient notification at the same time as it responds to
-    // the workerAPI initialization. If it's already initialized, we can
-    // immediately check the icons, otherwise wait for initialization by
-    // observing the topic sent out by the social service.
-    if (Social.provider.workerAPI.initialized) {
-      iconsReady = true;
-      checkNext();
-    } else {
-      Services.obs.addObserver(function obs() {
-        Services.obs.removeObserver(obs, "social:ambient-notification-changed");
-        // Let the other observers (like the one that updates the UI) run before
-        // checking the icons.
-        executeSoon(function () {
-          iconsReady = true;
-          checkNext();
-        });
-      }, "social:ambient-notification-changed", false);
-    }
   }
 }

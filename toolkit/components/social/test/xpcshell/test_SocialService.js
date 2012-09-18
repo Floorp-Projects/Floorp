@@ -5,11 +5,12 @@
 Cu.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
+  // NOTE: none of the manifests here can have a workerURL set, or we attempt
+  // to create a FrameWorker and that fails under xpcshell...
   let manifests = [
     { // normal provider
       name: "provider 1",
       origin: "https://example1.com",
-      workerURL: "https://example1.com/worker.js"
     },
     { // provider without workerURL
       name: "provider 2",

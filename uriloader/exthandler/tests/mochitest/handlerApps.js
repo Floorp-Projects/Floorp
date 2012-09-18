@@ -9,6 +9,13 @@ const Cc = SpecialPowers.wrap(Components).classes;
 
 function test() {
 
+  const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
+  if (isOSXMtnLion) {
+    todo(false, "This test fails on OS X 10.8, see bug 786938");
+    SimpleTest.finish();
+    return;
+  }
+
   // set up the web handler object
   var webHandler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
     createInstance(Components.interfaces.nsIWebHandlerApp);

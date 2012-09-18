@@ -410,12 +410,6 @@ OS_LIBS += \
   -lsensorservice \
   -ldbus \
   $(NULL)
-
-ifdef MOZ_CUBEB
-OS_LIBS += \
-  -lOpenSLES \
-  $(NULL)
-endif
 endif
 
 EXTRA_DEPS += \

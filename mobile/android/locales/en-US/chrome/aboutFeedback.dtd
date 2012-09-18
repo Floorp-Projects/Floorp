@@ -35,7 +35,7 @@
 <!ENTITY happy.maybeLater          "Maybe Later">
 <!ENTITY happy.noThanks            "No thanks">
 
-<!ENTITY sad.message               "We’re sorry that you had some problems with &brandShortName;. Please tell us what happened so that we can fix it.">
+<!ENTITY sad.message               "We're sorry that you had some problems with &brandShortName;. Please tell us what happened so that we can fix it.">
 <!ENTITY sad.placeholder           "Enter your feedback here">
 <!ENTITY sad.lastSite              "Last visited site (optional)">
 
@@ -45,7 +45,7 @@
 
 <!-- LOCALIZATION NOTE (sad.thanksMessageTop): "real people" — We're stating that an actual human will look at the feedback
      and that it doesn't just go to some automated system that looks for keywords, or something like that. -->
-<!ENTITY sad.thanksMessageTop      "We’re always working to make &brandShortName; better. Rest assured that real people will look at your feedback and do their very best to resolve your issue.">
+<!ENTITY sad.thanksMessageTop      "We're always working to make &brandShortName; better. Rest assured that real people will look at your feedback and do their very best to resolve your issue.">
 
 <!-- LOCALIZATION NOTE (sad.thanksMessageBottom): We're suggesting that there will be consequences for the people working
      on Firefox if they don't resolve the user's problem, like "or if they don't fix it, we'll fire them." If this doesn't
@@ -59,12 +59,12 @@
 <!ENTITY idea.placeholder          "Enter your idea here">
 <!ENTITY idea.thanksHeader         "Thanks!">
 
-<!ENTITY idea.thanksMessageTop     "We appreciate you taking the time to share your thoughts. We’re always working to make &brandShortName; better and contributions like yours can lead to great things.">
+<!ENTITY idea.thanksMessageTop     "We appreciate you taking the time to share your thoughts. We're always working to make &brandShortName; better and contributions like yours can lead to great things.">
 
 <!-- LOCALIZATION NOTE (idea.thanksMessageBottom): "high five" — This is a celebratory or congratulatory gesture.
      It could also be a handshake, a pat on the back, a thumbs up or something similar. The idea is that it's
      something physical, which is why they can't see it.-->
 <!ENTITY idea.thanksMessageBottom  "You can't see it, but we're giving you a high five right now.">
 
-<!ENTITY feedback.privacy          "For your privacy, please don't include any personally indentifiable information in your feedback.">
+<!ENTITY feedback.privacy          "For your privacy, please don't include any personally identifiable information in your feedback.">
 <!ENTITY feedback.send             "Send Feedback">

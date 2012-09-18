@@ -1,5 +1,9 @@
 /***********************************************************************
-Copyright (c) 2006-2011, Skype Limited. All rights reserved.
+Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
+
+This file is extracted from RFC6716. Please see that RFC for additional
+information.
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -8,7 +12,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -33,12 +37,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "resampler_private.h"
 
 static inline opus_int16 *silk_resampler_private_down_FIR_INTERPOL(
-    opus_int16          *out, 
-    opus_int32          *buf, 
-    const opus_int16    *FIR_Coefs, 
+    opus_int16          *out,
+    opus_int32          *buf,
+    const opus_int16    *FIR_Coefs,
     opus_int            FIR_Order,
     opus_int            FIR_Fracs,
-    opus_int32          max_index_Q16, 
+    opus_int32          max_index_Q16,
     opus_int32          index_increment_Q16
 )
 {
@@ -170,7 +174,7 @@ void silk_resampler_private_down_FIR(
         max_index_Q16 = silk_LSHIFT32( nSamplesIn, 16 );
 
         /* Interpolate filtered signal */
-        out = silk_resampler_private_down_FIR_INTERPOL( out, buf, FIR_Coefs, S->FIR_Order, 
+        out = silk_resampler_private_down_FIR_INTERPOL( out, buf, FIR_Coefs, S->FIR_Order,
             S->FIR_Fracs, max_index_Q16, index_increment_Q16 );
 
         in += nSamplesIn;

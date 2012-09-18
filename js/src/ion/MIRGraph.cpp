@@ -185,7 +185,7 @@ MBasicBlock::inherit(MBasicBlock *pred)
             for (size_t i = 0; i < stackDepth(); i++) {
                 MPhi *phi = MPhi::New(i);
                 if (!phi->addInput(pred->getSlot(i)))
-                    return NULL;
+                    return false;
                 addPhi(phi);
                 setSlot(i, phi);
                 entryResumePoint()->initOperand(i, phi);

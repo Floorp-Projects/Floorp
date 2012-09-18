@@ -228,8 +228,9 @@ gfxPlatform::gfxPlatform()
 #endif
     mBidiNumeralOption = UNINITIALIZED_VALUE;
 
-    uint32_t backendMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
-    InitCanvasBackend(backendMask);
+    uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
+    uint32_t contentMask = 0;
+    InitBackendPrefs(canvasMask, contentMask);
 }
 
 gfxPlatform*
@@ -854,7 +855,7 @@ gfxPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 static void
 AppendGenericFontFromPref(nsString& aFonts, nsIAtom *aLangGroup, const char *aGenericName)
 {
-    NS_ENSURE_TRUE(Preferences::GetRootBranch(), );
+    NS_ENSURE_TRUE_VOID(Preferences::GetRootBranch());
 
     nsAutoCString prefName, langGroupString;
 
@@ -1184,25 +1185,36 @@ gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], uint32_t& aLen, eFontPre
 }
 
 void
-gfxPlatform::InitCanvasBackend(uint32_t aBackendBitmask)
+gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, uint32_t aContentBitmask)
 {
-    if (!Preferences::GetBool("gfx.canvas.azure.enabled", false)) {
-        mPreferredCanvasBackend = BACKEND_NONE;
-        mFallbackCanvasBackend = BACKEND_NONE;
-        return;
-    }
-
-    mPreferredCanvasBackend = GetCanvasBackendPref(aBackendBitmask);
-    mFallbackCanvasBackend = GetCanvasBackendPref(aBackendBitmask & ~(1 << mPreferredCanvasBackend));
+    mPreferredCanvasBackend = GetCanvasBackendPref(aCanvasBitmask);
+    mFallbackCanvasBackend = GetCanvasBackendPref(aCanvasBitmask & ~(1 << mPreferredCanvasBackend));
+    mContentBackend = GetContentBackendPref(aContentBitmask);
 }
 
 /* static */ BackendType
 gfxPlatform::GetCanvasBackendPref(uint32_t aBackendBitmask)
 {
+    return GetBackendPref("gfx.canvas.azure.enabled", "gfx.canvas.azure.backends", aBackendBitmask);
+}
+
+/* static */ BackendType
+gfxPlatform::GetContentBackendPref(uint32_t aBackendBitmask)
+{
+    return GetBackendPref("gfx.content.azure.enabled", "gfx.content.azure.backends", aBackendBitmask);
+}
+
+/* static */ BackendType
+gfxPlatform::GetBackendPref(const char* aEnabledPrefName, const char* aBackendPrefName, uint32_t aBackendBitmask)
+{
+    if (!Preferences::GetBool(aEnabledPrefName, false)) {
+        return BACKEND_NONE;
+    }
+
     if (!gBackendList) {
         gBackendList = new nsTArray<nsCString>();
         nsCString prefString;
-        if (NS_SUCCEEDED(Preferences::GetCString("gfx.canvas.azure.backends", &prefString))) {
+        if (NS_SUCCEEDED(Preferences::GetCString(aBackendPrefName, &prefString))) {
             ParseString(prefString, ',', *gBackendList);
         }
     }

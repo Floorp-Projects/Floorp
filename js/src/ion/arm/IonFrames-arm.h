@@ -185,14 +185,28 @@ class IonExitFrameLayout : public IonCommonFrameLayout
         JS_ASSERT(footer()->ionCode() != NULL);
         return top();
     }
+
+    inline bool isWrapperExit() {
+        return footer()->function() != NULL;
+    }
+    inline bool isNativeExit() {
+        return footer()->ionCode() == NULL;
+    }
+    inline bool isDomExit() {
+        IonCode *code = footer()->ionCode();
+        return
+            code == ION_FRAME_DOMGETTER ||
+            code == ION_FRAME_DOMSETTER ||
+            code == ION_FRAME_DOMMETHOD;
+    }
+
     inline IonNativeExitFrameLayout *nativeExit() {
         // see CodeGenerator::visitCallNative
-        JS_ASSERT(footer()->ionCode() == NULL);
+        JS_ASSERT(isNativeExit());
         return reinterpret_cast<IonNativeExitFrameLayout *>(footer());
     }
     inline IonDOMExitFrameLayout *DOMExit() {
-        JS_ASSERT(footer()->ionCode() == ION_FRAME_DOMGETTER ||
-                  footer()->ionCode() == ION_FRAME_DOMSETTER);
+        JS_ASSERT(isDomExit());
         return reinterpret_cast<IonDOMExitFrameLayout *>(footer());
     }
 };

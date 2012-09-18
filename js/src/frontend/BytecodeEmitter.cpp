@@ -772,7 +772,7 @@ EmitAtomOp(JSContext *cx, JSAtom *atom, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
-    if (op == JSOP_GETPROP && atom == cx->runtime->atomState.lengthAtom) {
+    if (op == JSOP_GETPROP && atom == cx->names().length) {
         /* Specialize length accesses for the interpreter. */
         op = JSOP_LENGTH;
     }
@@ -936,7 +936,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
         sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
         sc.slot = AliasedNameToSlot(bceOfDef->script, pn->name());
     } else {
-        JS_ASSERT(IsLocalOp(pn->getOp()) || pn->isKind(PNK_FUNCTIONDECL));
+        JS_ASSERT(IsLocalOp(pn->getOp()) || pn->isKind(PNK_FUNCTION));
         unsigned local = pn->pn_cookie.slot();
         if (local < bceOfDef->script->bindings.numVars()) {
             sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
@@ -960,7 +960,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
 static bool
 EmitVarOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
-    JS_ASSERT(pn->isKind(PNK_FUNCTIONDECL) || pn->isKind(PNK_NAME));
+    JS_ASSERT(pn->isKind(PNK_FUNCTION) || pn->isKind(PNK_NAME));
     JS_ASSERT_IF(pn->isKind(PNK_NAME), IsArgOp(op) || IsLocalOp(op));
     JS_ASSERT(!pn->pn_cookie.isFree());
 
@@ -1222,7 +1222,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_NAME) || pn->isKind(PNK_INTRINSICNAME));
 
-    JS_ASSERT_IF(pn->isKind(PNK_FUNCTIONDECL), pn->isBound());
+    JS_ASSERT_IF(pn->isKind(PNK_FUNCTION), pn->isBound());
 
     /* Don't attempt if 'pn' is already bound or deoptimized or a function. */
     if (pn->isBound() || pn->isDeoptimized())
@@ -2626,7 +2626,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         if (bce->script->varIsAliased(varIndex)) {
             ScopeCoordinate sc;
             sc.hops = 0;
-            sc.slot = AliasedNameToSlot(bce->script, cx->runtime->atomState.argumentsAtom);
+            sc.slot = AliasedNameToSlot(bce->script, cx->names().arguments);
             if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
                 return false;
         } else {
@@ -3553,7 +3553,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
           case PNK_DOT: {
             if (Emit1(cx, bce, JSOP_DUP) < 0)
                 return false;
-            bool isLength = (lhs->pn_atom == cx->runtime->atomState.lengthAtom);
+            bool isLength = (lhs->pn_atom == cx->names().length);
             if (!EmitIndex32(cx, isLength ? JSOP_LENGTH : JSOP_GETPROP, atomIndex, bce))
                 return false;
             break;
@@ -3776,7 +3776,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
                     return false;
             } else {
                 JS_ASSERT(pnid->isKind(PNK_NAME) || pnid->isKind(PNK_STRING));
-                JS_ASSERT(pnid->pn_atom != cx->runtime->atomState.protoAtom);
+                JS_ASSERT(pnid->pn_atom != cx->names().proto);
                 RootedId id(cx, AtomToId(pnid->pn_atom));
                 if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0)) {
@@ -4356,9 +4356,9 @@ EmitXMLTag(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         jsatomid index;
-        JSAtom *tagAtom = (pn->isKind(PNK_XMLETAGO))
-                          ? cx->runtime->atomState.etagoAtom
-                          : cx->runtime->atomState.stagoAtom;
+        HandlePropertyName tagAtom = (pn->isKind(PNK_XMLETAGO))
+                                     ? cx->names().etago
+                                     : cx->names().stago;
         if (!bce->makeAtomIndex(tagAtom, &index))
             return false;
         if (!EmitIndex32(cx, JSOP_STRING, index, bce))
@@ -4390,8 +4390,9 @@ EmitXMLTag(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         jsatomid index;
-        JSAtom *tmp = (pn->isKind(PNK_XMLPTAGC)) ? cx->runtime->atomState.ptagcAtom
-                                                 : cx->runtime->atomState.tagcAtom;
+        HandlePropertyName tmp = pn->isKind(PNK_XMLPTAGC)
+                                 ? cx->names().ptagc
+                                 : cx->names().tagc;
         if (!bce->makeAtomIndex(tmp, &index))
             return false;
         if (!EmitIndex32(cx, JSOP_STRING, index, bce))
@@ -5351,7 +5352,7 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
             return false;
         break;
       case PNK_INTRINSICNAME:
-        if (pn2->name() == cx->runtime->atomState._CallFunctionAtom)
+        if (pn2->name() == cx->names()._CallFunction)
         {
             /*
              * Special-casing of %_CallFunction to emit bytecode that directly
@@ -5800,7 +5801,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * Disable NEWOBJECT on initializers that set __proto__, which has
              * a non-standard setter on objects.
              */
-            if (pn3->pn_atom == cx->runtime->atomState.protoAtom)
+            if (pn3->pn_atom == cx->names().proto)
                 obj = NULL;
             op = JSOP_INITPROP;
 
@@ -5961,71 +5962,31 @@ static bool
 EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_ARGSBODY));
-    uint16_t ndefaults = bce->sc->asFunbox()->ndefaults;
-    JSFunction *fun = bce->sc->asFunbox()->fun();
-    unsigned nformal = fun->nargs - fun->hasRest();
-    EMIT_UINT16_IMM_OP(JSOP_ACTUALSFILLED, nformal - ndefaults);
-    ptrdiff_t top = bce->offset();
-    size_t tableSize = (size_t)(JUMP_OFFSET_LEN * (3 + ndefaults));
-    if (EmitN(cx, bce, JSOP_TABLESWITCH, tableSize) < 0)
-        return false;
-    ptrdiff_t jumpoff = top + JUMP_OFFSET_LEN;
-    JS_ASSERT(nformal >= ndefaults);
-    uint16_t defstart = nformal - ndefaults;
-    SET_JUMP_OFFSET(bce->code(jumpoff), defstart);
-    jumpoff += JUMP_OFFSET_LEN;
-    SET_JUMP_OFFSET(bce->code(jumpoff), nformal - 1);
-    jumpoff += JUMP_OFFSET_LEN;
 
-    // Fill body of switch, which sets defaults where needed.
-    unsigned i;
     ParseNode *arg, *pnlast = pn->last();
-    for (arg = pn->pn_head, i = 0; arg != pnlast; arg = arg->pn_next, i++) {
-        if (!(arg->pn_dflags & PND_DEFAULT))
+    for (arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
+        if (!(arg->pn_dflags & PND_DEFAULT) || !arg->isKind(PNK_NAME))
             continue;
-        SET_JUMP_OFFSET(bce->code(jumpoff), bce->offset() - top);
-        jumpoff += JUMP_OFFSET_LEN;
-        ParseNode *expr;
-        if (arg->isKind(PNK_NAME)) {
-            expr = arg->expr();
-        } else {
-            // The argument name is bound to a function. We still have to
-            // evaluate the default in case it has side effects.
-            JS_ASSERT(!arg->isDefn());
-            JS_ASSERT(arg->isKind(PNK_ASSIGN));
-            expr = arg->pn_right;
-        }
-        if (!EmitTree(cx, bce, expr))
+        if (!BindNameToSlot(cx, bce, arg))
             return false;
-        if (arg->isKind(PNK_NAME)) {
-            if (!BindNameToSlot(cx, bce, arg))
-                return false;
-            if (!EmitVarOp(cx, arg, JSOP_SETARG, bce))
-                return false;
-        } else {
-            // Create a dummy JSOP_SETLOCAL for the decompiler. Jump over it
-            // with a JSOP_GOTO in real code.
-            if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-                return false;
-            ptrdiff_t hop = bce->offset();
-            if (EmitJump(cx, bce, JSOP_GOTO, 0) < 0)
-                return false;
-
-            // It doesn't matter if this is correct with respect to aliasing or
-            // not. Only the decompiler is going to see it.
-            PropertyName *name = arg->pn_left->name();
-            BindingIter bi(bce->script->bindings);
-            while (bi->name() != name)
-                bi++;
-            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bi.frameIndex(), bce))
-                return false;
-            SET_JUMP_OFFSET(bce->code(hop), bce->offset() - hop);
-        }
+        if (!EmitVarOp(cx, arg, JSOP_GETARG, bce))
+            return false;
+        if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+            return false;
+        if (Emit1(cx, bce, JSOP_STRICTEQ) < 0)
+            return false;
+        ptrdiff_t jump = EmitJump(cx, bce, JSOP_IFEQ, 0);
+        if (jump < 0)
+            return false;
+        if (!EmitTree(cx, bce, arg->expr()))
+            return false;
+        if (!EmitVarOp(cx, arg, JSOP_SETARG, bce))
+            return false;
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
+        SET_JUMP_OFFSET(bce->code(jump), bce->offset() - jump);
     }
-    JS_ASSERT(jumpoff == top + ptrdiff_t(tableSize));
-    SET_JUMP_OFFSET(bce->code(top), bce->offset() - top);
+
     return true;
 }
 
@@ -6045,8 +6006,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     switch (pn->getKind()) {
-      case PNK_FUNCTIONDECL:
-      case PNK_FUNCTIONEXPR:
+      case PNK_FUNCTION:
         ok = EmitFunc(cx, bce, pn);
         break;
 
@@ -6076,11 +6036,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // main pass later the emitter will add JSOP_NOP with source notes
             // for the function to preserve the original functions position
             // when decompiling.
-
+             
             // Currently this is used only for functions, as compile-as-we go
             // mode for scripts does not allow separate emitter passes.
             for (ParseNode *pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
-                if (pn2->isKind(PNK_FUNCTIONDECL) && pn2->functionIsHoisted()) {
+                if (pn2->isKind(PNK_FUNCTION) && pn2->functionIsHoisted()) {
                     if (!EmitTree(cx, bce, pn2))
                         return false;
                 }
@@ -6586,9 +6546,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (pn->pn_xflags & PNX_XMLROOT) {
             if (pn->pn_count == 0) {
                 JS_ASSERT(pn->isKind(PNK_XMLLIST));
-                JSAtom *atom = cx->runtime->atomState.emptyAtom;
                 jsatomid index;
-                if (!bce->makeAtomIndex(atom, &index))
+                if (!bce->makeAtomIndex(cx->names().empty, &index))
                     return false;
                 if (!EmitIndex32(cx, JSOP_STRING, index, bce))
                     return false;

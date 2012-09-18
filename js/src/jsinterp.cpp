@@ -172,7 +172,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
 {
     RootedValue idval(cx, idval_);
 
-    RootedId id(cx, NameToId(cx->runtime->atomState.noSuchMethodAtom));
+    RootedId id(cx, NameToId(cx->names().noSuchMethod));
     RootedValue value(cx);
     if (!GetMethod(cx, obj, id, 0, &value))
         return false;
@@ -2763,12 +2763,6 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
 END_VARLEN_CASE
 }
 
-BEGIN_CASE(JSOP_ACTUALSFILLED)
-{
-    PUSH_INT32(Max(regs.fp()->numActualArgs(), GET_UINT16(regs.pc)));
-}
-END_CASE(JSOP_ACTUALSFILLED)
-
 BEGIN_CASE(JSOP_ARGUMENTS)
     JS_ASSERT(!regs.fp()->fun()->hasRest());
     if (script->needsArgsObj()) {
@@ -3169,7 +3163,7 @@ BEGIN_CASE(JSOP_INITPROP)
     RootedId &id = rootId0;
     id = NameToId(name);
 
-    if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
+    if (JS_UNLIKELY(name == cx->names().proto)
         ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, script->strictModeCode)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
@@ -3987,7 +3981,7 @@ js::Throw(JSContext *cx, HandleValue v)
 bool
 js::GetProperty(JSContext *cx, HandleValue v, PropertyName *name, MutableHandleValue vp)
 {
-    if (name == cx->runtime->atomState.lengthAtom) {
+    if (name == cx->names().length) {
         // Fast path for strings, arrays and arguments.
         if (GetLengthProperty(v, vp))
             return true;

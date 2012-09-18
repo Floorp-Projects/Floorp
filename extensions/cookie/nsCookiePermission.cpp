@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "nsCookiePermission.h"
+
+#include "mozIThirdPartyUtil.h"
 #include "nsICookie2.h"
 #include "nsIServiceManager.h"
 #include "nsICookiePromptService.h"
@@ -63,6 +64,8 @@ nsCookiePermission::Init()
   // lazily.
   nsresult rv;
   mPermMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return false;
+  mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return false;
 
   // failure to access the pref service is non-fatal...
@@ -167,29 +170,15 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
   // finally, check with permission manager...
   rv = mPermMgr->TestPermission(aURI, kPermissionType, (uint32_t *) aResult);
   if (NS_SUCCEEDED(rv)) {
-    switch (*aResult) {
-    // if we have one of the publicly-available values, just return it
-    case nsIPermissionManager::UNKNOWN_ACTION: // ACCESS_DEFAULT
-    case nsIPermissionManager::ALLOW_ACTION:   // ACCESS_ALLOW
-    case nsIPermissionManager::DENY_ACTION:    // ACCESS_DENY
-      break;
-
-    // ACCESS_SESSION means the cookie can be accepted; the session 
-    // downgrade will occur in CanSetCookie().
-    case nsICookiePermission::ACCESS_SESSION:
-      *aResult = ACCESS_ALLOW;
-      break;
-
-    // ack, an unknown type! just use the defaults.
-    default:
-      *aResult = ACCESS_DEFAULT;
+    if (*aResult == nsICookiePermission::ACCESS_SESSION) {
+      *aResult = nsICookiePermission::ACCESS_ALLOW;
     }
   }
 
   return rv;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsCookiePermission::CanSetCookie(nsIURI     *aURI,
                                  nsIChannel *aChannel,
                                  nsICookie2 *aCookie,
@@ -207,34 +196,42 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
 
   uint32_t perm;
   mPermMgr->TestPermission(aURI, kPermissionType, &perm);
+  bool isThirdParty = false;
   switch (perm) {
   case nsICookiePermission::ACCESS_SESSION:
     *aIsSession = true;
 
-  case nsIPermissionManager::ALLOW_ACTION: // ACCESS_ALLOW
+  case nsICookiePermission::ACCESS_ALLOW:
     *aResult = true;
     break;
 
-  case nsIPermissionManager::DENY_ACTION:  // ACCESS_DENY
+  case nsICookiePermission::ACCESS_DENY:
     *aResult = false;
+    break;
+
+  case nsICookiePermission::ACCESS_ALLOW_FIRST_PARTY_ONLY:
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aURI, &isThirdParty);
+    // If it's third party, we can't set the cookie
+    if (isThirdParty)
+      *aResult = false;
     break;
 
   default:
     // the permission manager has nothing to say about this cookie -
     // so, we apply the default prefs to it.
     NS_ASSERTION(perm == nsIPermissionManager::UNKNOWN_ACTION, "unknown permission");
-    
+
     // now we need to figure out what type of accept policy we're dealing with
     // if we accept cookies normally, just bail and return
     if (mCookiesLifetimePolicy == ACCEPT_NORMALLY) {
       *aResult = true;
       return NS_OK;
     }
-    
+
     // declare this here since it'll be used in all of the remaining cases
     int64_t currentTime = PR_Now() / PR_USEC_PER_SEC;
     int64_t delta = *aExpiry - currentTime;
-    
+
     // check whether the user wants to be prompted
     if (mCookiesLifetimePolicy == ASK_BEFORE_ACCEPT) {
       // if it's a session cookie and the user wants to accept these 
@@ -245,7 +242,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
         *aResult = true;
         return NS_OK;
       }
-      
+
       // default to rejecting, in case the prompting process fails
       *aResult = false;
 

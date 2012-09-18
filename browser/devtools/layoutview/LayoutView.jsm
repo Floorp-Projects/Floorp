@@ -123,8 +123,8 @@ LayoutView.prototype = {
    * Destroy the nodes. Remove listeners.
    */
   destroy: function LV_destroy() {
-    this.inspector.removeListener("select", this.onSelect);
-    this.inspector.removeListener("unlocked", this.onUnlock);
+    this.inspector.off("select", this.onSelect);
+    this.inspector.off("unlocked", this.onUnlock);
     this.browser.removeEventListener("MozAfterPaint", this.update, true);
     this.iframe.removeEventListener("keypress", this.bound_handleKeypress, true);
     this.inspector.chromeWindow.removeEventListener("message", this.onMessage, true);

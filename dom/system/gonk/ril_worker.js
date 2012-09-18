@@ -1059,6 +1059,7 @@ let RIL = {
    * Fetch ICC records.
    */
   fetchICCRecords: function fetchICCRecords() {
+    this.getICCID();
     this.getIMSI();
     this.getMSISDN();
     this.getAD();
@@ -1089,6 +1090,35 @@ let RIL = {
     Buf.writeUint32(1);
     Buf.writeString(aid ? aid : this.aid);
     Buf.sendParcel();
+  },
+
+  /**
+   * Read the ICCD from the ICC card.
+   */
+  getICCID: function getICCID() {
+    function callback() {
+      let length = Buf.readUint32();
+      this.iccInfo.iccid = GsmPDUHelper.readSwappedNibbleBcdString(length / 2);
+      Buf.readStringDelimiter(length);
+
+      if (DEBUG) debug("ICCID: " + this.iccInfo.iccid);
+      if (this.iccInfo.iccid) {
+        this._handleICCInfoChange();
+      }
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_ICCID,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_ICCID),
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
+    });
   },
 
   /**
@@ -1291,14 +1321,15 @@ let RIL = {
                                 " number = " + this.iccInfo.fdn[i].number);
           }
         }
-        this.sendDOMMessage({rilMessageType: "icccontacts",
-                             contactType: "FDN",
-                             contacts: this.iccInfo.fdn,
-                             requestId: options.requestId});
+        delete options.callback;
+        delete options.onerror;
+        options.rilMessageType = "icccontacts";
+        options.contacts = this.iccInfo.fdn;
+        this.sendDOMMessage(options);
       };
       this.parseDiallingNumber(options, add, finish);
     }
-    
+
     this.iccInfo.fdn = [];
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
@@ -1334,20 +1365,27 @@ let RIL = {
         if (DEBUG) {
           for (let i = 0; i < this.iccInfo.adn.length; i++) {
             debug("ADN[" + i + "] alphaId = " + this.iccInfo.adn[i].alphaId +
-                                " number = " + this.iccInfo.adn[i].number);
+                                " number  = " + this.iccInfo.adn[i].number);
           }
         }
+        // To prevent DataCloneError when sending parcels,
+        // We need to delete those properties which are not
+        // 'Structured Clone Data',
+        // in this case, those callback functions.
+        delete options.callback;
+        delete options.onerror;
         options.rilMessageType = "icccontacts";
-        options.contactType = "ADN";
-        options.contacts = this.iccInfo.adn,
+        options.contacts = this.iccInfo.adn;
         this.sendDOMMessage(options);
       };
       this.parseDiallingNumber(options, add, finish);
     }
 
     function error(options) {
+      // TODO: Error handling should be addressed in Bug 787477
+      delete options.callback;
+      delete options.onerror;
       options.rilMessageType = "icccontacts";
-      options.contactType = "ADN";
       options.contacts = [];
       this.sendDOMMessage(options);
     }
@@ -1432,11 +1470,18 @@ let RIL = {
   /**
    * Get UICC Phonebook.
    *
-   * @params type
+   * @params contactType
    *         "ADN" or "FDN".
    */
   getICCContacts: function getICCContacts(options) {
-    let type = options.type;
+    if (!this.appType) {
+      // TODO: Error handling should be addressed in Bug 787477
+      options.rilMessageType = "icccontacts";
+      options.contacts = [];
+      this.sendDOMMessage(options);
+    }
+
+    let type = options.contactType;
     switch (type) {
       case "ADN":
         switch (this.appType) {
@@ -1478,8 +1523,10 @@ let RIL = {
     }
 
     function error(options) {
+      // TODO: Error handling should be addressed in Bug 787477
+      delete options.callback;
+      delete options.onerror;
       options.rilMessageType = "icccontacts";
-      options.contactType = "ADN";
       options.contacts = [];
       this.sendDOMMessage(options);
     }
@@ -2312,10 +2359,20 @@ let RIL = {
       return null;
     }
 
+    // Here we handle only file ids that are common to RUIM, SIM, USIM
+    // and other types of ICC cards.
+    switch (fileId) {
+      case ICC_EF_ICCID:
+        return EF_PATH_MF_SIM;
+      case ICC_EF_ADN:
+        return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
+      case ICC_EF_PBR:
+        return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
+    }
+
     switch (app.app_type) {
       case CARD_APPTYPE_SIM:
         switch (fileId) {
-          case ICC_EF_ADN:
           case ICC_EF_FDN:
           case ICC_EF_MSISDN:
             return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
@@ -2324,21 +2381,16 @@ let RIL = {
           case ICC_EF_MBDN:
           case ICC_EF_UST:
             return EF_PATH_MF_SIM + EF_PATH_DF_GSM;
-          case ICC_EF_PBR:
-            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
         }
       case CARD_APPTYPE_USIM:
         switch (fileId) {
           case ICC_EF_AD:
+          case ICC_EF_FDN:
           case ICC_EF_MBDN:
           case ICC_EF_UST:
           case ICC_EF_MSISDN:
             return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
-          case ICC_EF_ADN:
-          case ICC_EF_FDN:
-            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
-          case ICC_EF_PBR:
-            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
+
           default:
             // The file ids in USIM phone book entries are decided by the
 	    // card manufacturer. So if we don't match any of the cases

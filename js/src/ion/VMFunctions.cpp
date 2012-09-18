@@ -131,7 +131,7 @@ InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue v
     RootedValue rval(cx, value);
     RootedId id(cx, NameToId(name));
 
-    if (name == cx->runtime->atomState.protoAtom)
+    if (name == cx->names().proto)
         return baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, false);
     return !!DefineNativeProperty(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0);
 }
@@ -276,28 +276,32 @@ NewInitObject(JSContext *cx, HandleObject templateObject)
 }
 
 bool
-ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval)
+ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
-    AutoDetectInvalidation adi(cx, rval);
+    JS_ASSERT(obj->isDenseArray());
 
-    Value argv[3] = { UndefinedValue(), ObjectValue(*obj) };
+    AutoDetectInvalidation adi(cx, rval.address());
+
+    Value argv[] = { UndefinedValue(), ObjectValue(*obj) };
+    AutoValueArray ava(cx, argv, 2);
     if (!js::array_pop(cx, 0, argv))
         return false;
 
     // If the result is |undefined|, the array was probably empty and we
     // have to monitor the return value.
-    *rval = argv[0];
-    if (rval->isUndefined())
-        types::TypeScript::Monitor(cx, *rval);
+    rval.set(argv[0]);
+    if (rval.isUndefined())
+        types::TypeScript::Monitor(cx, rval);
     return true;
 }
 
 bool
-ArrayPushDense(JSContext *cx, JSObject *obj, HandleValue v, uint32_t *length)
+ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 {
     JS_ASSERT(obj->isDenseArray());
 
-    Value argv[3] = { UndefinedValue(), ObjectValue(*obj), v };
+    Value argv[] = { UndefinedValue(), ObjectValue(*obj), v };
+    AutoValueArray ava(cx, argv, 3);
     if (!js::array_push(cx, 1, argv))
         return false;
 
@@ -306,19 +310,22 @@ ArrayPushDense(JSContext *cx, JSObject *obj, HandleValue v, uint32_t *length)
 }
 
 bool
-ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval)
+ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
-    AutoDetectInvalidation adi(cx, rval);
+    JS_ASSERT(obj->isDenseArray());
 
-    Value argv[3] = { UndefinedValue(), ObjectValue(*obj) };
+    AutoDetectInvalidation adi(cx, rval.address());
+
+    Value argv[] = { UndefinedValue(), ObjectValue(*obj) };
+    AutoValueArray ava(cx, argv, 2);
     if (!js::array_shift(cx, 0, argv))
         return false;
 
     // If the result is |undefined|, the array was probably empty and we
     // have to monitor the return value.
-    *rval = argv[0];
-    if (rval->isUndefined())
-        types::TypeScript::Monitor(cx, *rval);
+    rval.set(argv[0]);
+    if (rval.isUndefined())
+        types::TypeScript::Monitor(cx, rval);
     return true;
 }
 

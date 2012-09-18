@@ -219,7 +219,7 @@ void Logging::OnPostDispatchMessage(const Message& message,
   }
 }
 
-void Logging::GetMessageText(uint16 type, std::wstring* name,
+void Logging::GetMessageText(uint16_t type, std::wstring* name,
                              const Message* message,
                              std::wstring* params) {
   if (!log_function_mapping_)

@@ -232,7 +232,7 @@ GLXLibrary::EnsureInitialized(bool aUseMesaLLVMPipe)
                                          (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
     {
 #ifdef MOZ_WIDGET_GTK
-        mUseTextureFromPixmap = gfxPlatformGtk::UseXRender();
+        mUseTextureFromPixmap = gfxPlatformGtk::GetPlatform()->UseXRender();
 #else
         mUseTextureFromPixmap = true;
 #endif

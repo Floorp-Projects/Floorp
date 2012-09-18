@@ -337,14 +337,14 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
     return;
   }
 
-  nsIWidget *widget = aView->GetWidget();
-  if (!widget) {
-    return;
-  }
-
   if (aView->ForcedRepaint() && IsRefreshDriverPaintingEnabled()) {
     ProcessPendingUpdates();
     aView->SetForcedRepaint(false);
+  }
+  
+  nsIWidget *widget = aView->GetWidget();
+  if (!widget) {
+    return;
   }
 
   NS_ASSERTION(!IsPainting(), "recursive painting not permitted");

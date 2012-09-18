@@ -6,6 +6,7 @@
 #ifndef NS_SVGTEXTCONTAINERFRAME_H
 #define NS_SVGTEXTCONTAINERFRAME_H
 
+#include "mozilla/Attributes.h"
 #include "nsFrame.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
@@ -40,8 +41,8 @@ public:
   // nsIFrame
   NS_IMETHOD InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList);
-  NS_IMETHOD RemoveFrame(ChildListID aListID, nsIFrame *aOldFrame);
+                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+  NS_IMETHOD RemoveFrame(ChildListID aListID, nsIFrame *aOldFrame) MOZ_OVERRIDE;
 
   NS_IMETHOD GetStartPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval);
   NS_IMETHOD GetEndPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval);

@@ -8,21 +8,23 @@
 #include "nsIDOMPropertyNodeList.idl"
 #include "nsIDOMDOMStringList.idl"
 
+interface nsGenericElement;
+
 // This interface should extend nsIDOMHTMLCollection, which will be fixed when
 // it is converted to webidl.
-[scriptable, uuid(da1101db-d1d7-465d-9fd6-49ec9960cb20)]
+[scriptable, uuid(b7e84688-98e0-46b2-9d20-8a0e7329dd25)]
 interface nsIDOMHTMLPropertiesCollection : nsISupports
 {
   readonly attribute unsigned long    length;
   readonly attribute nsIDOMDOMStringList names;
 
-  [getter,forward(getNodeAt)] nsIDOMNode                item(in unsigned long index);
+  [getter,forward(getElementAt)] nsIDOMNode                item(in unsigned long index);
   nsIDOMPropertyNodeList namedItem(in DOMString name);
 
   /**
    * Get the node at the index.  Returns null if the index is out of bounds.
    */
-  [noscript,notxpcom,nostdcall] nsIContent  getNodeAt(in unsigned long index);
+  [noscript,notxpcom,nostdcall] nsGenericElement getElementAt(in unsigned long index);
 
   /**
    * Get the node for the name.  Returns null if no node exists for the name.

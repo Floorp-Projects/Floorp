@@ -457,6 +457,10 @@ nsXMLHttpRequest::InitParameters(JSContext* aCx, const jsval* aParams)
 void
 nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
 {
+  if (!aAnon && !aSystem) {
+    return;
+  }
+
   // Check for permissions.
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetOwner());
   if (!window || !window->GetDocShell()) {
@@ -485,8 +489,7 @@ nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
     }
   }
 
-  mIsAnon = aAnon;
-  mIsSystem = aSystem;
+  SetParameters(aAnon, aSystem);
 }
 
 void
@@ -2263,6 +2266,11 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
       mResponseBlob = mDOMFile;
       mDOMFile = nullptr;
     } else {
+      // mBuilder can be null if the channel is non-file non-cacheable
+      // and if the response length is zero.
+      if (!mBuilder) {
+        mBuilder = new nsDOMBlobBuilder();
+      }
       // Smaller files may be written in cache map instead of separate files.
       // Also, no-store response cannot be written in persistent cache.
       nsAutoCString contentType;
@@ -3153,7 +3161,9 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     }
 
     if (!safeHeader) {
-      mCORSUnsafeHeaders.AppendElement(header);
+      if (!mCORSUnsafeHeaders.Contains(header)) {
+        mCORSUnsafeHeaders.AppendElement(header);
+      }
     }
   }
 

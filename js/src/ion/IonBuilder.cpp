@@ -1022,7 +1022,10 @@ IonBuilder::inspectOpcode(JSOp op)
       }
 
       case JSOP_DELPROP:
-        return jsop_delprop(info().getAtom(pc));
+      {
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_delprop(name);
+      }
 
       case JSOP_REGEXP:
         return jsop_regexp(info().getRegExp(pc));
@@ -3462,8 +3465,7 @@ IonBuilder::createThisScripted(MDefinition *callee)
     // This instruction MUST be idempotent: since it does not correspond to an
     // explicit operation in the bytecode, we cannot use resumeAfter(). But
     // calling GetProperty can trigger a GC, and thus invalidation.
-    RootedPropertyName name(cx, cx->runtime->atomState.classPrototypeAtom);
-    MCallGetProperty *getProto = MCallGetProperty::New(callee, name);
+    MCallGetProperty *getProto = MCallGetProperty::New(callee, cx->names().classPrototype);
 
     // Getters may not override |prototype| fetching, so this is repeatable.
     getProto->markUneffectful();
@@ -3483,7 +3485,7 @@ IonBuilder::getSingletonPrototype(JSFunction *target)
     if (target->getType(cx)->unknownProperties())
         return NULL;
 
-    jsid protoid = AtomToId(cx->runtime->atomState.classPrototypeAtom);
+    jsid protoid = NameToId(cx->names().classPrototype);
     types::HeapTypeSet *protoTypes = target->getType(cx)->getProperty(cx, protoid, false);
     if (!protoTypes)
         return NULL;
@@ -3661,17 +3663,54 @@ IonBuilder::jsop_funapply(uint32 argc)
     return pushTypeBarrier(apply, types, barrier);
 }
 
-bool
-IonBuilder::jsop_call_fun_barrier(AutoObjectVector &targets, uint32_t numTargets,
-                                  uint32 argc, 
-                                  bool constructing,
-                                  types::StackTypeSet *types,
-                                  types::StackTypeSet *barrier)
+// Get the builtin RegExp.prototype.test function.
+static bool
+GetBuiltinRegExpTest(JSContext *cx, JSScript *script, JSFunction **result)
 {
+    JS_ASSERT(*result == NULL);
+
+    // Get the builtin RegExp.prototype object.
+    RootedObject proto(cx, script->global().getOrCreateRegExpPrototype(cx));
+    if (!proto)
+        return false;
+
+    // Get the |test| property. Note that we use lookupProperty, not getProperty,
+    // to avoid calling a getter.
+    RootedShape shape(cx);
+    RootedObject holder(cx);
+    if (!JSObject::lookupProperty(cx, proto, cx->names().test, &holder, &shape))
+        return false;
+
+    if (proto != holder || !shape || !shape->hasDefaultGetter() || !shape->hasSlot())
+        return true;
+
+    // The RegExp.prototype.test property is writable, so we have to ensure
+    // we got the builtin function.
+    Value val = holder->getSlot(shape->slot());
+    if (!val.isObject())
+        return true;
+
+    JSObject *obj = &val.toObject();
+    if (!obj->isFunction() || obj->toFunction()->maybeNative() != regexp_test)
+        return true;
+
+    *result = obj->toFunction();
+    return true;
+}
+
+bool
+IonBuilder::jsop_call(uint32 argc, bool constructing)
+{
+    // Acquire known call target if existent.
+    AutoObjectVector targets(cx);
+    uint32_t numTargets = getPolyCallTargets(argc, pc, targets, 4);
+    types::StackTypeSet *barrier;
+    types::StackTypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
+
     // Attempt to inline native and scripted functions.
     if (inliningEnabled()) {
         // Inline a single native call if possible.
-        if(numTargets == 1 && targets[0]->toFunction()->isNative()) {
+        if (numTargets == 1 && targets[0]->toFunction()->isNative()) {
             RootedFunction target(cx, targets[0]->toFunction());
             switch (inlineNativeCall(target->native(), argc, constructing)) {
               case InliningStatus_Inlined:
@@ -3687,26 +3726,26 @@ IonBuilder::jsop_call_fun_barrier(AutoObjectVector &targets, uint32_t numTargets
             return inlineScriptedCall(targets, argc, constructing, types, barrier);
     }
 
-    RootedFunction target(cx, numTargets == 1 ? targets[0]->toFunction() : NULL);
+    RootedFunction target(cx, NULL);
+    if (numTargets == 1) {
+        target = targets[0]->toFunction();
+
+        // Call RegExp.test instead of RegExp.exec if the result will not be used
+        // or will only be used to test for existence.
+        if (target->maybeNative() == regexp_exec && !CallResultEscapes(pc)) {
+            JSFunction *newTarget = NULL;
+            if (!GetBuiltinRegExpTest(cx, script, &newTarget))
+                return false;
+            if (newTarget)
+                target = newTarget;
+        }
+    }
+
     return makeCallBarrier(target, argc, constructing, types, barrier);
 }
 
-bool
-IonBuilder::jsop_call(uint32 argc, bool constructing)
-{
-    // Acquire known call target if existent.
-    AutoObjectVector targets(cx);
-    uint32_t numTargets = getPolyCallTargets(argc, pc, targets, 4);
-    types::StackTypeSet *barrier;
-    types::StackTypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
-    return jsop_call_fun_barrier(targets, numTargets, argc, constructing, types, barrier);
-}
-
-bool
-IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
-                            bool constructing,
-                            types::StackTypeSet *types,
-                            types::StackTypeSet *barrier)
+MCall *
+IonBuilder::makeCallHelper(HandleFunction target, uint32 argc, bool constructing)
 {
     // This function may be called with mutated stack.
     // Querying TI for popped types is invalid.
@@ -3720,7 +3759,7 @@ IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
 
     MCall *call = MCall::New(target, targetArgs + 1, argc, constructing);
     if (!call)
-        return false;
+        return NULL;
 
     // Explicitly pad any missing arguments with |undefined|.
     // This permits skipping the argumentsRectifier.
@@ -3751,8 +3790,10 @@ IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
     if (constructing && target) {
         MDefinition *callee = current->peek(-1);
         MDefinition *create = createThis(target, callee);
-        if (!create)
-            return abort("Failure inlining constructor for call.");
+        if (!create) {
+            abort("Failure inlining constructor for call.");
+            return NULL;
+        }
 
         MPassArg *newThis = MPassArg::New(create);
 
@@ -3770,6 +3811,19 @@ IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
     call->initFunction(fun);
 
     current->add(call);
+    return call;
+}
+
+bool
+IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
+                            bool constructing,
+                            types::StackTypeSet *types,
+                            types::StackTypeSet *barrier)
+{
+    MCall *call = makeCallHelper(target, argc, constructing);
+    if (!call)
+        return false;
+
     current->push(call);
     if (!resumeAfter(call))
         return false;
@@ -4557,11 +4611,11 @@ bool
 IonBuilder::jsop_getgname(HandlePropertyName name)
 {
     // Optimize undefined, NaN, and Infinity.
-    if (name == cx->runtime->atomState.typeAtoms[JSTYPE_VOID])
+    if (name == cx->names().undefined)
         return pushConstant(UndefinedValue());
-    if (name == cx->runtime->atomState.NaNAtom)
+    if (name == cx->names().NaN)
         return pushConstant(cx->runtime->NaNValue);
-    if (name == cx->runtime->atomState.InfinityAtom)
+    if (name == cx->names().Infinity)
         return pushConstant(cx->runtime->positiveInfinityValue);
 
     RootedObject globalObj(cx, &script->global());
@@ -5942,7 +5996,14 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         current->push(arg);
         current->add(arg);
 
-        return makeCallBarrier(setter, 1, false, NULL, NULL);
+        // Call the setter. Note that we have to push the original value, not
+        // the setter's return value.
+        MCall *call = makeCallHelper(setter, 1, false);
+        if (!call)
+            return false;
+
+        current->push(value);
+        return resumeAfter(call);
     }
 
     oracle->binaryOp(script, pc);
@@ -5988,11 +6049,11 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
 }
 
 bool
-IonBuilder::jsop_delprop(JSAtom *atom)
+IonBuilder::jsop_delprop(HandlePropertyName name)
 {
     MDefinition *obj = current->pop();
 
-    MInstruction *ins = MDeleteProperty::New(obj, atom);
+    MInstruction *ins = MDeleteProperty::New(obj, name);
 
     current->add(ins);
     current->push(ins);
