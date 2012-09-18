@@ -11,9 +11,9 @@ interface nsIDOMMozTimeManager : nsISupports
    *
    * The |time| argument can be either a Date object or a number.
    *
-   * - If |time| is a number, it's interpreted as seconds since the epoch 
-   *   (midnight UTC on January 1, 1970)
-   * - If |time| is a Date object, |set(time)| is equivalent to 
+   * - If |time| is a number, it's interpreted as milliseconds
+   *   since the epoch (midnight UTC on January 1, 1970).
+   * - If |time| is a Date object, |set(time)| is equivalent to
    *   |set(time.getTime())|.
    */
   [implicit_jscontext] void set(in jsval time);
