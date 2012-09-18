@@ -312,25 +312,6 @@ diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
    // ->1   2<-
    // Rotations that start at right side of image.
    if ((view_rotate == ROTATE_180) ||
-@@ -243,17 +262,17 @@ void ScaleYUVToRGB32(const uint8* y_buf,
-       uv_pitch = 1;
-     }
-   }
- 
-   // Need padding because FilterRows() will write 1 to 16 extra pixels
-   // after the end for SSE2 version.
-   uint8 yuvbuf[16 + kFilterBufferSize * 3 + 16];
-   uint8* ybuf =
--      reinterpret_cast<uint8*>(reinterpret_cast<uintptr_t>(yuvbuf + 15) & ~15);
-+      reinterpret_cast<uint8*>(reinterpret_cast<uintptr_t>(yuvbuf + 15) & ~15);
-   uint8* ubuf = ybuf + kFilterBufferSize;
-   uint8* vbuf = ubuf + kFilterBufferSize;
-   // TODO(fbarchard): Fixed point math is off by 1 on negatives.
-   int yscale_fixed = (source_height << kFractionBits) / height;
- 
-   // TODO(fbarchard): Split this into separate function for better efficiency.
-   for (int y = 0; y < height; ++y) {
-     uint8* dest_pixel = rgb_buf + y * rgb_pitch;
 @@ -276,17 +295,17 @@ void ScaleYUVToRGB32(const uint8* y_buf,
      int source_uv_fraction =
          ((source_y_subpixel >> y_shift) & kFractionMask) >> 8;
