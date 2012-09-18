@@ -2963,34 +2963,49 @@ Parser::matchInOrOf(bool *isForOfp)
 static bool
 IsValidForStatementLHS(ParseNode *pn1, JSVersion version, bool forDecl, bool forEach, bool forOf)
 {
-    return !(forDecl
-             ? (pn1->pn_count > 1 || pn1->isOp(JSOP_DEFCONST)
+    if (forDecl) {
+        if (pn1->pn_count > 1)
+            return false;
+        if (pn1->isOp(JSOP_DEFCONST))
+            return false;
 #if JS_HAS_DESTRUCTURING
-                || (version == JSVERSION_1_7 &&
-                    !forEach &&
-                    !forOf &&
-                    (pn1->pn_head->isKind(PNK_OBJECT) ||
-                     (pn1->pn_head->isKind(PNK_ARRAY) &&
-                      pn1->pn_head->pn_count != 2) ||
-                     (pn1->pn_head->isKind(PNK_ASSIGN) &&
-                      (!pn1->pn_head->pn_left->isKind(PNK_ARRAY) ||
-                       pn1->pn_head->pn_left->pn_count != 2))))
+        // In JS 1.7 only, for (var [K, V] in EXPR) has a special meaning.
+        // Hence all other destructuring decls are banned there.
+        if (version == JSVERSION_1_7 && !forEach && !forOf) {
+            ParseNode *lhs = pn1->pn_head;
+            if (lhs->isKind(PNK_ASSIGN))
+                lhs = lhs->pn_left;
+
+            if (lhs->isKind(PNK_OBJECT))
+                return false;
+            if (lhs->isKind(PNK_ARRAY) && lhs->pn_count != 2)
+                return false;
+        }
 #endif
-                 )
-             : (!pn1->isKind(PNK_NAME) &&
-                !pn1->isKind(PNK_DOT) &&
+        return true;
+    }
+
+    switch (pn1->getKind()) {
+      case PNK_NAME:
+      case PNK_DOT:
+      case PNK_CALL:
+      case PNK_XMLUNARY:
+      case PNK_ELEM:
+        return true;
+
 #if JS_HAS_DESTRUCTURING
-                ((version == JSVERSION_1_7 &&
-                  !forEach &&
-                  !forOf)
-                 ? (!pn1->isKind(PNK_ARRAY) || pn1->pn_count != 2)
-                 : (!pn1->isKind(PNK_ARRAY) && !pn1->isKind(PNK_OBJECT))) &&
+      case PNK_ARRAY:
+      case PNK_OBJECT:
+        // In JS 1.7 only, for ([K, V] in EXPR) has a special meaning.
+        // Hence all other destructuring left-hand sides are banned there.
+        if (version == JSVERSION_1_7 && !forEach && !forOf)
+            return pn1->isKind(PNK_ARRAY) && pn1->pn_count == 2;
+        return true;
 #endif
-                !pn1->isKind(PNK_CALL) &&
-#if JS_HAS_XML_SUPPORT
-                !pn1->isKind(PNK_XMLUNARY) &&
-#endif
-                !pn1->isKind(PNK_ELEM)));
+
+      default:
+        return false;
+    }
 }
 
 ParseNode *
