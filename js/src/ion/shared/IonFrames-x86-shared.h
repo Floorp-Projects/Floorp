@@ -197,6 +197,7 @@ class IonExitFrameLayout : public IonCommonFrameLayout
 
 class IonNativeExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
     uintptr_t argc_;
@@ -224,6 +225,7 @@ class IonNativeExitFrameLayout
 
 class IonDOMExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
     JSObject *thisObj;
@@ -257,6 +259,7 @@ class IonDOMExitFrameLayout
 
 class IonDOMMethodExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
     // This must be the last thing pushed, so as to stay common with
