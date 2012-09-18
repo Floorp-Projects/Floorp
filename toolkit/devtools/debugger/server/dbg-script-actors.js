@@ -1826,7 +1826,7 @@ function getFunctionName(aFunction) {
     let desc = aFunction.getOwnPropertyDescriptor("displayName");
     if (desc && desc.value && typeof desc.value == "string") {
       name = desc.value;
-    } else if ("displayName" in aFunction) {
+    } else {
       // Otherwise use SpiderMonkey's inferred name.
       name = aFunction.displayName;
     }

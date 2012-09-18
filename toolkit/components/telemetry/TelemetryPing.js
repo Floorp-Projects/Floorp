@@ -82,6 +82,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
 XPCOMUtils.defineLazyServiceGetter(this, "idleService",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
+                                  "resource://gre/modules/UpdateChannel.jsm");
 
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
@@ -141,42 +143,6 @@ function getSimpleMeasurements() {
     ret.shutdownDuration = shutdownDuration;
 
   return ret;
-}
-
-/**
- * Read the update channel from defaults only.  We do this to ensure that
- * the channel is tightly coupled with the application and does not apply
- * to other installations of the application that may use the same profile.
- */
-function getUpdateChannel() {
-  var channel = "default";
-  var prefName;
-  var prefValue;
-
-  var defaults = Services.prefs.getDefaultBranch(null);
-  try {
-    channel = defaults.getCharPref("app.update.channel");
-  } catch (e) {
-    // use default when pref not found
-  }
-
-  try {
-    var partners = Services.prefs.getChildList("app.partner.");
-    if (partners.length) {
-      channel += "-cck";
-      partners.sort();
-
-      for each (prefName in partners) {
-        prefValue = Services.prefs.getCharPref(prefName);
-        channel += "-" + prefValue;
-      }
-    }
-  }
-  catch (e) {
-    Cu.reportError(e);
-  }
-
-  return channel;
 }
 
 /**
@@ -359,7 +325,7 @@ TelemetryPing.prototype = {
       appVersion: ai.version,
       appName: ai.name,
       appBuildID: ai.appBuildID,
-      appUpdateChannel: getUpdateChannel(),
+      appUpdateChannel: UpdateChannel.get(),
       platformBuildID: ai.platformBuildID,
       locale: getLocale()
     };
