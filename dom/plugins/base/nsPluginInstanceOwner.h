@@ -288,11 +288,6 @@ private:
   bool mFullScreen;
   void* mJavaView;
 #endif 
-
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
-  void AddScrollPositionListener();
-  void RemoveScrollPositionListener();
-#endif
  
   nsPluginNativeWindow       *mPluginWindow;
   nsRefPtr<nsNPAPIPluginInstance> mInstance;
@@ -330,9 +325,6 @@ private:
 #endif
   bool                        mPluginWindowVisible;
   bool                        mPluginDocumentActiveState;
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
-  bool                        mRegisteredScrollPositionListener;
-#endif
 
   uint16_t          mNumCachedAttrs;
   uint16_t          mNumCachedParams;
