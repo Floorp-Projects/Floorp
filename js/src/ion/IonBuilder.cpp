@@ -1022,7 +1022,10 @@ IonBuilder::inspectOpcode(JSOp op)
       }
 
       case JSOP_DELPROP:
-        return jsop_delprop(info().getAtom(pc));
+      {
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_delprop(name);
+      }
 
       case JSOP_REGEXP:
         return jsop_regexp(info().getRegExp(pc));
@@ -6047,11 +6050,11 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
 }
 
 bool
-IonBuilder::jsop_delprop(JSAtom *atom)
+IonBuilder::jsop_delprop(HandlePropertyName name)
 {
     MDefinition *obj = current->pop();
 
-    MInstruction *ins = MDeleteProperty::New(obj, atom);
+    MInstruction *ins = MDeleteProperty::New(obj, name);
 
     current->add(ins);
     current->push(ins);

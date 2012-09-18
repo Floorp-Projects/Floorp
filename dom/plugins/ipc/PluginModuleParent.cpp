@@ -203,7 +203,7 @@ PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
     if (!strcmp(aPref, kChildTimeoutPref)) {
       // The timeout value used by the parent for children
       int32_t timeoutSecs = Preferences::GetInt(kChildTimeoutPref, 0);
-      int32 timeoutMs = (timeoutSecs > 0) ? (1000 * timeoutSecs) :
+      int32_t timeoutMs = (timeoutSecs > 0) ? (1000 * timeoutSecs) :
                         SyncChannel::kNoTimeout;
       static_cast<PluginModuleParent*>(aModule)->SetReplyTimeoutMs(timeoutMs);
     } else if (!strcmp(aPref, kParentTimeoutPref)) {

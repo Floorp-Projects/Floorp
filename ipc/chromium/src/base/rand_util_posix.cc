@@ -12,8 +12,8 @@
 
 namespace base {
 
-uint64 RandUint64() {
-  uint64 number;
+uint64_t RandUint64() {
+  uint64_t number;
 
   int urandom_fd = open("/dev/urandom", O_RDONLY);
   CHECK(urandom_fd >= 0);

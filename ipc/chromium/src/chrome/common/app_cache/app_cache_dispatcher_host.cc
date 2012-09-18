@@ -51,7 +51,7 @@ void AppCacheDispatcherHost::OnSelectAppCache(
                                 int context_id,
                                 int select_request_id,
                                 const GURL& document_url,
-                                int64 cache_document_was_loaded_from,
+                                int64_t cache_document_was_loaded_from,
                                 const GURL& opt_manifest_url) {
   // TODO(michaeln): implement me, plumb to request_context->app_cache_service
   DCHECK(context_id != WebAppCacheContext::kNoAppCacheContextId);

@@ -2018,6 +2018,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   return rv;
 }
 
+static bool
+IsRootScrollFrameActive(nsIPresShell* aPresShell)
+{
+  nsIScrollableFrame* sf = aPresShell->GetRootScrollFrameAsScrollable();
+  return sf && sf->IsScrollingActive();
+}
+
 nsresult
 nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                    nsIFrame*               aChild,
@@ -2152,8 +2159,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // nsDisplayFixedPosition. We check if we're already building a fixed-pos
   // item and disallow nesting, to prevent the situation of bug #769541
   // occurring.
-  bool buildFixedPositionItem = disp->mPosition == NS_STYLE_POSITION_FIXED
-    && !child->GetParent()->GetParent() && !isSVG && !aBuilder->IsInFixedPosition();
+  // Don't build an nsDisplayFixedPosition if our root scroll frame is not
+  // active, that's pointless and the extra layer(s) created may be wasteful.
+  bool buildFixedPositionItem = disp->mPosition == NS_STYLE_POSITION_FIXED &&
+    !child->GetParent()->GetParent() && !aBuilder->IsInFixedPosition() &&
+    IsRootScrollFrameActive(PresContext()->PresShell()) && !isSVG;
 
   nsDisplayListBuilder::AutoBuildingDisplayList
     buildingForChild(aBuilder, child, pseudoStackingContext, buildFixedPositionItem);
@@ -4818,7 +4828,7 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
 }
 
 gfx3DMatrix
-nsIFrame::GetTransformMatrix(nsIFrame* aStopAtAncestor,
+nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                              nsIFrame** aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");

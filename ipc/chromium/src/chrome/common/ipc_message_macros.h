@@ -386,7 +386,7 @@ void class_name::OnMessageReceived(const IPC::Message& msg) \
 
 #ifndef IPC_LOG_TABLE_CREATED
 #define IPC_LOG_TABLE_CREATED
-typedef void (*LogFunction)(uint16 type,
+typedef void (*LogFunction)(uint16_t type,
                            std::wstring* name,
                            const IPC::Message* msg,
                            std::wstring* params);
@@ -396,7 +396,7 @@ LogFunction g_log_function_mapping[LastMsgIndex];
 
 
 #define IPC_BEGIN_MESSAGES(label) \
-  void label##MsgLog(uint16 type, std::wstring* name, const IPC::Message* msg, std::wstring* params) { \
+  void label##MsgLog(uint16_t type, std::wstring* name, const IPC::Message* msg, std::wstring* params) { \
   switch (type) {
 
 #define IPC_END_MESSAGES(label) \
@@ -650,7 +650,7 @@ LogFunction g_log_function_mapping[LastMsgIndex];
   class msg_class : public IPC::Message { \
    public: \
     enum { ID = msg_class##__ID }; \
-    msg_class(int32 routing_id) \
+    msg_class(int32_t routing_id) \
         : IPC::Message(routing_id, ID, PRIORITY_NORMAL) {} \
   };
 
@@ -658,7 +658,7 @@ LogFunction g_log_function_mapping[LastMsgIndex];
   class msg_class : public IPC::MessageWithTuple<type1> { \
    public: \
     enum { ID = msg_class##__ID }; \
-    msg_class(int32 routing_id, const type1& arg1) \
+    msg_class(int32_t routing_id, const type1& arg1) \
         : IPC::MessageWithTuple<type1>(routing_id, ID, arg1) {} \
   };
 
@@ -666,7 +666,7 @@ LogFunction g_log_function_mapping[LastMsgIndex];
   class msg_class : public IPC::MessageWithTuple< Tuple2<type1, type2> > { \
    public: \
     enum { ID = msg_class##__ID }; \
-    msg_class(int32 routing_id, const type1& arg1, const type2& arg2) \
+    msg_class(int32_t routing_id, const type1& arg1, const type2& arg2) \
         : IPC::MessageWithTuple< Tuple2<type1, type2> >( \
             routing_id, ID, MakeTuple(arg1, arg2)) {} \
   };
@@ -676,7 +676,7 @@ LogFunction g_log_function_mapping[LastMsgIndex];
       public IPC::MessageWithTuple< Tuple3<type1, type2, type3> > { \
    public: \
     enum { ID = msg_class##__ID }; \
-    msg_class(int32 routing_id, const type1& arg1, const type2& arg2, \
+    msg_class(int32_t routing_id, const type1& arg1, const type2& arg2, \
               const type3& arg3) \
         : IPC::MessageWithTuple< Tuple3<type1, type2, type3> >( \
             routing_id, ID, MakeTuple(arg1, arg2, arg3)) {} \
@@ -687,7 +687,7 @@ LogFunction g_log_function_mapping[LastMsgIndex];
       public IPC::MessageWithTuple< Tuple4<type1, type2, type3, type4> > { \
    public: \
     enum { ID = msg_class##__ID }; \
-    msg_class(int32 routing_id, const type1& arg1, const type2& arg2, \
+    msg_class(int32_t routing_id, const type1& arg1, const type2& arg2, \
                const type3& arg3, const type4& arg4) \
         : IPC::MessageWithTuple< Tuple4<type1, type2, type3, type4> >( \
             routing_id, ID, MakeTuple(arg1, arg2, arg3, arg4)) {} \
@@ -698,7 +698,7 @@ LogFunction g_log_function_mapping[LastMsgIndex];
       public IPC::MessageWithTuple< Tuple5<type1, type2, type3, type4, type5> > { \
    public: \
     enum { ID = msg_class##__ID }; \
-    msg_class(int32 routing_id, const type1& arg1, const type2& arg2, \
+    msg_class(int32_t routing_id, const type1& arg1, const type2& arg2, \
               const type3& arg3, const type4& arg4, const type5& arg5) \
         : IPC::MessageWithTuple< Tuple5<type1, type2, type3, type4, type5> >( \
             routing_id, ID, MakeTuple(arg1, arg2, arg3, arg4, arg5)) {} \
@@ -711,7 +711,7 @@ LogFunction g_log_function_mapping[LastMsgIndex];
                                            type6> > {                   \
  public:                                                                \
     enum { ID = msg_class##__ID };                                      \
-    msg_class(int32 routing_id, const type1& arg1, const type2& arg2,   \
+    msg_class(int32_t routing_id, const type1& arg1, const type2& arg2,   \
               const type3& arg3, const type4& arg4, const type5& arg5,  \
               const type6& arg6)                                        \
       : IPC::MessageWithTuple< Tuple6<type1, type2, type3, type4, type5, \

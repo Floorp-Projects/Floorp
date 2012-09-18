@@ -147,7 +147,7 @@ nsHTMLTableRowElement::GetRowIndex(int32_t* aValue)
   rows->GetLength(&numRows);
 
   for (uint32_t i = 0; i < numRows; i++) {
-    if (rows->GetNodeAt(i) == static_cast<nsIContent*>(this)) {
+    if (rows->GetElementAt(i) == this) {
       *aValue = i;
       break;
     }
@@ -170,7 +170,7 @@ nsHTMLTableRowElement::GetSectionRowIndex(int32_t* aValue)
   uint32_t numRows;
   rows->GetLength(&numRows);
   for (uint32_t i = 0; i < numRows; i++) {
-    if (rows->GetNodeAt(i) == static_cast<nsIContent*>(this)) {
+    if (rows->GetElementAt(i) == this) {
       *aValue = i;
       break;
     }

@@ -15,12 +15,12 @@ bool MessageRouter::Send(IPC::Message* msg) {
   return false;
 }
 
-void MessageRouter::AddRoute(int32 routing_id,
+void MessageRouter::AddRoute(int32_t routing_id,
                              IPC::Channel::Listener* listener) {
   routes_.AddWithID(listener, routing_id);
 }
 
-void MessageRouter::RemoveRoute(int32 routing_id) {
+void MessageRouter::RemoveRoute(int32_t routing_id) {
   routes_.Remove(routing_id);
 }
 

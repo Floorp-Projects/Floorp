@@ -316,12 +316,12 @@ struct ParamTraits<NPWindowType>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    aMsg->WriteInt16(int16(aParam));
+    aMsg->WriteInt16(int16_t(aParam));
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    int16 result;
+    int16_t result;
     if (aMsg->ReadInt16(aIter, &result)) {
       *aResult = paramType(result);
       return true;
@@ -331,7 +331,7 @@ struct ParamTraits<NPWindowType>
 
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
-    aLog->append(StringPrintf(L"%d", int16(aParam)));
+    aLog->append(StringPrintf(L"%d", int16_t(aParam)));
   }
 };
 
@@ -342,12 +342,12 @@ struct ParamTraits<NPImageFormat>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    aMsg->WriteInt16(int16(aParam));
+    aMsg->WriteInt16(int16_t(aParam));
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    int16 result;
+    int16_t result;
     if (aMsg->ReadInt16(aIter, &result)) {
       *aResult = paramType(result);
       return true;
@@ -357,7 +357,7 @@ struct ParamTraits<NPImageFormat>
 
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
-    aLog->append(StringPrintf(L"%d", int16(aParam)));
+    aLog->append(StringPrintf(L"%d", int16_t(aParam)));
   }
 };
 
@@ -386,7 +386,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    uint64 window;
+    uint64_t window;
     int32_t x, y;
     uint32_t width, height;
     NPRect clipRect;
@@ -712,7 +712,7 @@ struct ParamTraits<NPVariant>
       } break;
 
       case 3: {
-        int32 value;
+        int32_t value;
         if (ReadParam(aMsg, aIter, &value)) {
           INT32_TO_NPVARIANT(value, *aResult);
           return true;
@@ -856,12 +856,12 @@ struct ParamTraits<NPCoordinateSpace>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, int32(aParam));
+    WriteParam(aMsg, int32_t(aParam));
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    int32 intval;
+    int32_t intval;
     if (ReadParam(aMsg, aIter, &intval)) {
       switch (intval) {
       case NPCoordinateSpacePlugin:

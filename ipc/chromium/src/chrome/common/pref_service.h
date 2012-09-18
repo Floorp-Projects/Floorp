@@ -159,9 +159,9 @@ class PrefService : public NonThreadSafe {
   // Int64 helper methods that actually store the given value as a string.
   // Note that if obtaining the named value via GetDictionary or GetList, the
   // Value type will be TYPE_STRING.
-  void SetInt64(const wchar_t* path, int64 value);
-  int64 GetInt64(const wchar_t* path) const;
-  void RegisterInt64Pref(const wchar_t* path, int64 default_value);
+  void SetInt64(const wchar_t* path, int64_t value);
+  int64_t GetInt64(const wchar_t* path) const;
+  void RegisterInt64Pref(const wchar_t* path, int64_t default_value);
 
   // Used to set the value of dictionary or list values in the pref tree.  This
   // will create a dictionary or list if one does not exist in the pref tree.

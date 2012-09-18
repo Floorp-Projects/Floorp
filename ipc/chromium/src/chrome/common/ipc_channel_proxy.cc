@@ -69,7 +69,7 @@ void ChannelProxy::Context::OnMessageReceivedNoFilter(const Message& message) {
 }
 
 // Called on the IPC::Channel thread
-void ChannelProxy::Context::OnChannelConnected(int32 peer_pid) {
+void ChannelProxy::Context::OnChannelConnected(int32_t peer_pid) {
   peer_pid_ = peer_pid;
   for (size_t i = 0; i < filters_.size(); ++i)
     filters_[i]->OnChannelConnected(peer_pid);

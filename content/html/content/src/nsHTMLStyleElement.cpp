@@ -16,6 +16,7 @@
 #include "nsUnicharUtils.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
+#include "nsStubMutationObserver.h"
 
 class nsHTMLStyleElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLStyleElement,

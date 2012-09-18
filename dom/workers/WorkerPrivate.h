@@ -570,6 +570,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mCloseHandlerStarted;
   bool mCloseHandlerFinished;
   bool mMemoryReporterRunning;
+  bool mXHRParamsAllowed;
 
 #ifdef DEBUG
   nsCOMPtr<nsIThread> mThread;
@@ -710,6 +711,18 @@ public:
   bool
   DisableMemoryReporter();
 
+  bool
+  XHRParamsAllowed() const
+  {
+    return mXHRParamsAllowed;
+  }
+
+  void
+  SetXHRParamsAllowed(bool aAllowed)
+  {
+    mXHRParamsAllowed = aAllowed;
+  }
+
 #ifdef JS_GC_ZEAL
   void
   UpdateGCZealInternal(JSContext* aCx, uint8_t aGCZeal);
@@ -751,7 +764,8 @@ private:
                 nsCOMPtr<nsPIDOMWindow>& aWindow,
                 nsCOMPtr<nsIScriptContext>& aScriptContext,
                 nsCOMPtr<nsIURI>& aBaseURI, nsCOMPtr<nsIPrincipal>& aPrincipal,
-                nsCOMPtr<nsIContentSecurityPolicy>& aCSP, bool aEvalAllowed);
+                nsCOMPtr<nsIContentSecurityPolicy>& aCSP, bool aEvalAllowed,
+                bool aXHRParamsAllowed);
 
   static bool
   GetContentSecurityPolicy(JSContext *aCx,
@@ -811,6 +825,9 @@ private:
 
   bool
   ProcessAllControlRunnables();
+
+  static bool
+  CheckXHRParamsAllowed(nsPIDOMWindow* aWindow);
 };
 
 WorkerPrivate*

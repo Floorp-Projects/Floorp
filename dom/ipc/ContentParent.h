@@ -120,7 +120,7 @@ public:
     void KillHard();
 
 protected:
-    void OnChannelConnected(int32 pid);
+    void OnChannelConnected(int32_t pid);
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:

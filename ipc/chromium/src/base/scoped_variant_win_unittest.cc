@@ -123,7 +123,7 @@ TEST(ScopedVariantTest, ScopedVariant) {
   // need to be freed explicitly).
 
   // We need static cast here since char defaults to int (!?).
-  var.Set(static_cast<int8>('v'));
+  var.Set(static_cast<int8_t>('v'));
   EXPECT_EQ(VT_I1, var.type());
   EXPECT_EQ('v', V_I1(&var));
 
@@ -131,15 +131,15 @@ TEST(ScopedVariantTest, ScopedVariant) {
   EXPECT_EQ(VT_I2, var.type());
   EXPECT_EQ(123, V_I2(&var));
 
-  var.Set(static_cast<int32>(123));
+  var.Set(static_cast<int32_t>(123));
   EXPECT_EQ(VT_I4, var.type());
   EXPECT_EQ(123, V_I4(&var));
 
-  var.Set(static_cast<int64>(123));
+  var.Set(static_cast<int64_t>(123));
   EXPECT_EQ(VT_I8, var.type());
   EXPECT_EQ(123, V_I8(&var));
 
-  var.Set(static_cast<uint8>(123));
+  var.Set(static_cast<uint8_t>(123));
   EXPECT_EQ(VT_UI1, var.type());
   EXPECT_EQ(123, V_UI1(&var));
 
@@ -147,11 +147,11 @@ TEST(ScopedVariantTest, ScopedVariant) {
   EXPECT_EQ(VT_UI2, var.type());
   EXPECT_EQ(123, V_UI2(&var));
 
-  var.Set(static_cast<uint32>(123));
+  var.Set(static_cast<uint32_t>(123));
   EXPECT_EQ(VT_UI4, var.type());
   EXPECT_EQ(123, V_UI4(&var));
 
-  var.Set(static_cast<uint64>(123));
+  var.Set(static_cast<uint64_t>(123));
   EXPECT_EQ(VT_UI8, var.type());
   EXPECT_EQ(123, V_UI8(&var));
 
