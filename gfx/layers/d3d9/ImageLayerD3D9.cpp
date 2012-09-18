@@ -368,7 +368,7 @@ ImageLayerD3D9::RenderLayer()
 
   SetShaderTransformAndOpacity();
 
-  gfxIntSize size = mScaleMode == SCALE_NONE ? image->GetSize() : mScaleToSize;
+  gfxIntSize size = image->GetSize();
 
   if (image->GetFormat() == CAIRO_SURFACE ||
       image->GetFormat() == REMOTE_IMAGE_BITMAP)
