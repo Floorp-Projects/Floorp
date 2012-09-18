@@ -27,6 +27,20 @@ LIRGeneratorX86::useBox(LInstruction *lir, size_t n, MDefinition *mir,
 }
 
 bool
+LIRGeneratorX86::useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1,
+                             Register reg2)
+{
+    JS_ASSERT(mir->type() == MIRType_Value);
+    JS_ASSERT(reg1 != reg2);
+
+    if (!ensureDefined(mir))
+        return false;
+    lir->setOperand(n, LUse(reg1, mir->virtualRegister()));
+    lir->setOperand(n + 1, LUse(reg2, VirtualRegisterOfPayload(mir)));
+    return true;
+}
+
+bool
 LIRGeneratorX86::lowerConstantDouble(double d, MInstruction *mir)
 {
     uint32 index;
