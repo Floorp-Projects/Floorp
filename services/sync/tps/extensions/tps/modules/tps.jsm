@@ -15,7 +15,7 @@ CU.import("resource://gre/modules/XPCOMUtils.jsm");
 CU.import("resource://gre/modules/Services.jsm");
 CU.import("resource://services-common/async.js");
 CU.import("resource://services-sync/constants.js");
-CU.import("resource://services-sync/service.js");
+CU.import("resource://services-sync/main.js");
 CU.import("resource://services-sync/util.js");
 CU.import("resource://tps/addons.jsm");
 CU.import("resource://tps/bookmarks.jsm");
@@ -567,10 +567,10 @@ let TPS = {
           names[name] = true;
         }
 
-        for (let engine of Service.engineManager.getEnabled()) {
+        for (let engine of Weave.Service.engineManager.getEnabled()) {
           if (!(engine.name in names)) {
             Logger.logInfo("Unregistering unused engine: " + engine.name);
-            Service.engineManager.unregister(engine);
+            Weave.Service.engineManager.unregister(engine);
           }
         }
       }
@@ -725,10 +725,10 @@ let TPS = {
   ResetData: function ResetData() {
     this.Login(true);
 
-    Service.login();
-    Service.wipeServer();
-    Service.resetClient();
-    Service.login();
+    Weave.Service.login();
+    Weave.Service.wipeServer();
+    Weave.Service.resetClient();
+    Weave.Service.login();
 
     this.waitForTracking();
   },
@@ -746,7 +746,7 @@ let TPS = {
     }
 
     if (account["serverURL"]) {
-      Service.serverURL = account["serverURL"];
+      Weave.Service.serverURL = account["serverURL"];
     }
 
     Logger.logInfo("Setting client credentials.");
@@ -758,7 +758,7 @@ let TPS = {
       Weave.Service.identity.account = "tps" + suffix + "@mozilla.com";
       Weave.Service.identity.basicPassword = "tps" + suffix + "tps" + suffix;
       Weave.Service.identity.syncKey = Weave.Utils.generatePassphrase();
-      Service.createAccount(Weave.Service.identity.account,
+      Weave.Service.createAccount(Weave.Service.identity.account,
                             Weave.Service.identity.basicPassword,
                             "dummy1", "dummy2");
     } else if (account["username"] && account["password"] &&
@@ -772,7 +772,7 @@ let TPS = {
       return;
     }
 
-    Service.login();
+    Weave.Service.login();
     Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status not OK");
     Weave.Svc.Obs.notify("weave:service:setup-complete");
     this._loggedIn = true;

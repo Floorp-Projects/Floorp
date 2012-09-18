@@ -11,7 +11,7 @@ const EXPORTED_SYMBOLS = ["BrowserTabs"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/main.js");
 
 let BrowserTabs = {
   /**
@@ -48,7 +48,7 @@ let BrowserTabs = {
    */
   Find: function(uri, title, profile) {
     // Find the uri in Weave's list of tabs for the given profile.
-    let engine = Service.engineManager.get("tabs");
+    let engine = Weave.Service.engineManager.get("tabs");
     for (let [guid, client] in Iterator(engine.getAllClients())) {
       for each (tab in client.tabs) {
         let weaveTabUrl = tab.urlHistory[0];
