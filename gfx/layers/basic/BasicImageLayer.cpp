@@ -98,15 +98,6 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   }
 
   pat->SetFilter(mFilter);
-  gfxIntSize sourceSize = surface->GetSize();
-  if (mScaleMode != SCALE_NONE) {
-    NS_ASSERTION(mScaleMode == SCALE_STRETCH,
-      "No other scalemodes than stretch and none supported yet.");
-    gfxMatrix mat = pat->GetMatrix();
-    mat.Scale(float(sourceSize.width) / mScaleToSize.width, float(sourceSize.height) / mScaleToSize.height);
-    pat->SetMatrix(mat);
-    size = mScaleToSize;
-  }
 
   // The visible region can extend outside the image, so just draw
   // within the image bounds.
