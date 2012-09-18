@@ -814,6 +814,9 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Bookkeeping information for debug scope objects. */
     js::DebugScopes     *debugScopes;
 
+    /* Linked list of live array buffers with >1 view */
+    JSObject            *liveArrayBuffers;
+
     /* Client opaque pointers */
     void                *data;
 
