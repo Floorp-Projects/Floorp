@@ -99,16 +99,10 @@ anp_window_visibleRect(NPP instance)
 
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
 
-  nsRefPtr<nsPluginInstanceOwner> owner;
-  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner)))) {
-    return rect;
-  }
-
-  nsIntRect visibleRect = owner->GetVisibleRect();
-  rect.left = visibleRect.x;
-  rect.top = visibleRect.y;
-  rect.right = visibleRect.x + visibleRect.width;
-  rect.bottom = visibleRect.y + visibleRect.height;
+  nsIntSize currentSize = pinst->CurrentSize();
+  rect.left = rect.top = 0;
+  rect.right = currentSize.width;
+  rect.bottom = currentSize.height;
 
   return rect;
 }
