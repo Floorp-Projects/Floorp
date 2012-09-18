@@ -332,12 +332,11 @@ ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 JSFixedString *
 StringFromCharCode(JSContext *cx, int32_t code)
 {
-    code = uint16_t(code);
-
-    if (StaticStrings::hasUnit(code))
-        return cx->runtime->staticStrings.getUnit(code);
-
     jschar c = jschar(code);
+
+    if (StaticStrings::hasUnit(c))
+        return cx->runtime->staticStrings.getUnit(c);
+
     return js_NewStringCopyN(cx, &c, 1);
 
 }
