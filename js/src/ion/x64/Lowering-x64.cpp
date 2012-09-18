@@ -26,6 +26,17 @@ LIRGeneratorX64::useBox(LInstruction *lir, size_t n, MDefinition *mir,
 }
 
 bool
+LIRGeneratorX64::useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1, Register)
+{
+    JS_ASSERT(mir->type() == MIRType_Value);
+
+    if (!ensureDefined(mir))
+        return false;
+    lir->setOperand(n, LUse(reg1, mir->virtualRegister()));
+    return true;
+}
+
+bool
 LIRGeneratorX64::lowerConstantDouble(double d, MInstruction *mir)
 {
     return define(new LDouble(d), mir);
