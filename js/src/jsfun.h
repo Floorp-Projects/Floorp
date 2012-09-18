@@ -84,6 +84,8 @@ struct JSFunction : public JSObject
     /* Possible attributes of an interpreted function: */
     bool isHeavyweight()            const { return flags & HEAVYWEIGHT; }
     bool isFunctionPrototype()      const { return flags & IS_FUN_PROTO; }
+    bool isLazy()                   const { return isInterpreted() && !hasScript(); }
+    bool hasScript()                const { return isInterpreted() && u.i.script_; }
     bool isExprClosure()            const { return flags & EXPR_CLOSURE; }
     bool hasGuessedAtom()           const { return flags & HAS_GUESSED_ATOM; }
     bool isLambda()                 const { return flags & LAMBDA; }
@@ -167,7 +169,7 @@ struct JSFunction : public JSObject
     static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
     js::Return<JSScript*> script() const {
-        JS_ASSERT(isInterpreted());
+        JS_ASSERT(hasScript());
         return JS::HandleScript::fromMarkedLocation(&u.i.script_);
     }
 
@@ -288,7 +290,7 @@ js_CloneFunctionObject(JSContext *cx, js::HandleFunction fun,
 
 extern JSFunction *
 js_DefineFunction(JSContext *cx, js::HandleObject obj, js::HandleId id, JSNative native,
-                  unsigned nargs, unsigned flags, js::Handle<js::PropertyName*> selfHostedName = JS::NullPtr(),
+                  unsigned nargs, unsigned flags,
                   js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 namespace js {
@@ -333,6 +335,9 @@ XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope,
 
 extern JSObject *
 CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleFunction fun);
+
+bool
+InitializeLazyFunctionScript(JSContext *cx, HandleFunction fun);
 
 /*
  * Report an error that call.thisv is not compatible with the specified class,

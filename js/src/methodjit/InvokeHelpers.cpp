@@ -284,6 +284,10 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     JSContext *cx = f.cx;
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
     RootedFunction newfun(cx, args.callee().toFunction());
+
+    if (newfun->isLazy() && !InitializeLazyFunctionScript(cx, newfun))
+        return false;
+
     RootedScript newscript(cx, newfun->script());
 
     bool construct = InitialFrameFlagsAreConstructing(initial);

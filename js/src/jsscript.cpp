@@ -1841,8 +1841,6 @@ JSScript::isShortRunning()
 bool
 JSScript::enclosingScriptsCompiledSuccessfully() const
 {
-    AutoAssertNoGC nogc;
-
     /*
      * When a nested script is succesfully compiled, it is eagerly given the
      * static JSFunction of its enclosing script. The enclosing function's
@@ -1854,7 +1852,7 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
     while (enclosing) {
         if (enclosing->isFunction()) {
             RawFunction fun = enclosing->toFunction();
-            if (!fun->script().get(nogc))
+            if (!fun->hasScript())
                 return false;
             enclosing = fun->script()->enclosingScope_;
         } else {
