@@ -1250,9 +1250,37 @@ struct JSContext : js::ContextFriendFields
   private:
     unsigned            enterCompartmentDepth_;
   public:
-    inline bool hasEnteredCompartment() const;
-    inline void enterCompartment(JSCompartment *c);
-    inline void leaveCompartment(JSCompartment *c);
+    bool hasEnteredCompartment() const {
+        return enterCompartmentDepth_ > 0;
+    }
+
+    void enterCompartment(JSCompartment *c) {
+        enterCompartmentDepth_++;
+        compartment = c;
+        if (throwing)
+            wrapPendingException();
+    }
+
+    inline void leaveCompartment(JSCompartment *oldCompartment) {
+        JS_ASSERT(hasEnteredCompartment());
+        enterCompartmentDepth_--;
+
+        /*
+         * Before we entered the current compartment, 'compartment' was
+         * 'oldCompartment', so we might want to simply set it back. However, we
+         * currently have this terrible scheme whereby defaultCompartmentObject_
+         * can be updated while enterCompartmentDepth_ > 0. In this case,
+         * oldCompartment != defaultCompartmentObject_->compartment and we must
+         * ignore oldCompartment.
+         */
+        if (hasEnteredCompartment() || !defaultCompartmentObject_)
+            compartment = oldCompartment;
+        else
+            compartment = defaultCompartmentObject_->compartment();
+
+        if (throwing)
+            wrapPendingException();
+    }
 
     /* See JS_SaveFrameChain/JS_RestoreFrameChain. */
   private:
