@@ -332,10 +332,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mUseAsyncRendering = false;
 #endif
 
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
-  mRegisteredScrollPositionListener = false;
-#endif
-
   mWaitingForPaint = false;
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -779,17 +775,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(int32_t eventModel)
 {
 #ifdef XP_MACOSX
-  NPEventModel newEventModel = static_cast<NPEventModel>(eventModel);
-#ifndef NP_NO_CARBON
-  bool eventModelChange = (mEventModel != newEventModel);
-  if (eventModelChange)
-    RemoveScrollPositionListener();
-#endif
   mEventModel = static_cast<NPEventModel>(eventModel);
-#ifndef NP_NO_CARBON
-  if (eventModelChange)
-    AddScrollPositionListener();
-#endif
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -3686,38 +3672,6 @@ nsPluginInstanceOwner::CallSetWindow()
   return NS_OK;
 }
 
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
-void nsPluginInstanceOwner::AddScrollPositionListener()
-{
-  // We need to register as a scroll position listener on every scrollable frame up to the top.
-  if (!mRegisteredScrollPositionListener && GetEventModel() == NPEventModelCarbon) {
-    for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-      nsIScrollableFrame* sf = do_QueryFrame(f);
-      if (sf) {
-        sf->AddScrollPositionListener(this);
-      }
-    }
-    mRegisteredScrollPositionListener = true;
-  }
-}
-
-void nsPluginInstanceOwner::RemoveScrollPositionListener()
-{
-  // Our frame is changing or going away, unregister for a scroll position listening.
-  // It's OK to unregister when we didn't register, so don't be strict about unregistering.
-  // Better to unregister when we didn't have to than to not unregister when we should.
-  if (mRegisteredScrollPositionListener) {
-    for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-      nsIScrollableFrame* sf = do_QueryFrame(f);
-      if (sf) {
-        sf->RemoveScrollPositionListener(this);
-      }
-    }
-    mRegisteredScrollPositionListener = false;
-  }
-}
-#endif
-
 void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
 {
   // Don't do anything if the frame situation hasn't changed.
@@ -3753,7 +3707,17 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
 
     // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
-    RemoveScrollPositionListener();
+    // Our frame is changing or going away, unregister for a scroll position listening.
+    // It's OK to unregister when we didn't register, so don't be strict about unregistering.
+    // Better to unregister when we didn't have to than to not unregister when we should.
+    if (GetEventModel() == NPEventModelCarbon) {
+      for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+        nsIScrollableFrame* sf = do_QueryFrame(f);
+        if (sf) {
+          sf->RemoveScrollPositionListener(this);
+        }
+      }
+    }
 #endif
 
     // Make sure the old frame isn't holding a reference to us.
@@ -3776,7 +3740,15 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
 
     // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
-    AddScrollPositionListener();
+    // We need to register as a scroll position listener on every scrollable frame up to the top.
+    if (GetEventModel() == NPEventModelCarbon) {
+      for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+        nsIScrollableFrame* sf = do_QueryFrame(f);
+        if (sf) {
+          sf->AddScrollPositionListener(this);
+        }
+      }
+    }
 #endif
     
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
