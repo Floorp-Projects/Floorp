@@ -779,7 +779,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(int32_t eventModel)
 {
 #ifdef XP_MACOSX
-  NPEventModel newEventModel = static_cast<NPEventModel>(eventModel));
+  NPEventModel newEventModel = static_cast<NPEventModel>(eventModel);
 #ifndef NP_NO_CARBON
   bool eventModelChange = (mEventModel != newEventModel);
   if (eventModelChange)
