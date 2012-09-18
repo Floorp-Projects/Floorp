@@ -32,6 +32,11 @@
 <!ENTITY saveBodies.label     "Log Request and Response Bodies">
 <!ENTITY saveBodies.accesskey "L">
 
+<!-- LOCALIZATION NOTE (openURL.label): You can see this string in the Web
+   - Console context menu. -->
+<!ENTITY openURL.label     "Open URL in New Tab">
+<!ENTITY openURL.accesskey "T">
+
 <!-- LOCALIZATION NOTE (btnPageNet.label): This string is used for the menu
   -  button that allows users to toggle the network logging output.
   -  This string and the following strings toggle various kinds of output
