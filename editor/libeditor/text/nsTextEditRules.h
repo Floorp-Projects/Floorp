@@ -16,7 +16,6 @@
 #include "nsPlaintextEditor.h"
 #include "nsString.h"
 #include "nscore.h"
-#include "prtypes.h"
 
 class nsIDOMElement;
 class nsIDOMNode;

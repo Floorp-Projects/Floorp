@@ -8,7 +8,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsDeque.h"
-#include "prtypes.h"
 
 class nsCycleCollectionTraversalCallback;
 class nsTransactionItem;

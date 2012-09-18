@@ -23,7 +23,6 @@
 #include "nsISelection.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
-#include "prtypes.h"
 
 /*
  * nsHTMLEditorEventListener implementation

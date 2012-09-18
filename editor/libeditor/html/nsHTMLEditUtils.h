@@ -6,7 +6,6 @@
 #ifndef nsHTMLEditUtils_h__
 #define nsHTMLEditUtils_h__
 
-#include "prtypes.h"  // for int32_t
 
 class nsIDOMNode;
 class nsINode;
