@@ -430,6 +430,8 @@ bool ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 bool ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length);
 bool ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 
+JSFixedString *StringFromCharCode(JSContext *cx, int32_t code);
+
 bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
                  bool strict, bool isSetName);
 

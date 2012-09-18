@@ -329,6 +329,19 @@ ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
     return true;
 }
 
+JSFixedString *
+StringFromCharCode(JSContext *cx, int32_t code)
+{
+    code = uint16_t(code);
+
+    if (StaticStrings::hasUnit(code))
+        return cx->runtime->staticStrings.getUnit(code);
+
+    jschar c = jschar(code);
+    return js_NewStringCopyN(cx, &c, 1);
+
+}
+
 bool
 SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
             bool strict, bool isSetName)
