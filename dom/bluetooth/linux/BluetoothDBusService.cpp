@@ -80,7 +80,11 @@ static Properties sDeviceProperties[] = {
   {"Class", DBUS_TYPE_UINT32},
   {"UUIDs", DBUS_TYPE_ARRAY},
   {"Paired", DBUS_TYPE_BOOLEAN},
+#ifdef MOZ_WIDGET_GONK
+  {"Connected", DBUS_TYPE_ARRAY},
+#else
   {"Connected", DBUS_TYPE_BOOLEAN},
+#endif
   {"Trusted", DBUS_TYPE_BOOLEAN},
   {"Blocked", DBUS_TYPE_BOOLEAN},
   {"Alias", DBUS_TYPE_STRING},
@@ -706,7 +710,7 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
       dbus_message_iter_recurse(&prop_val, &array_val_iter);
       array_type = dbus_message_iter_get_arg_type(&array_val_iter);
       if (array_type == DBUS_TYPE_OBJECT_PATH ||
-          array_type == DBUS_TYPE_STRING){
+          array_type == DBUS_TYPE_STRING) {
         InfallibleTArray<nsString> arr;
         do {
           const char* tmp;
@@ -714,6 +718,14 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
           nsString s;
           s = NS_ConvertUTF8toUTF16(tmp);
           arr.AppendElement(s);
+        } while (dbus_message_iter_next(&array_val_iter));
+        propertyValue = arr;
+      } else if (array_type == DBUS_TYPE_BYTE) {
+        InfallibleTArray<uint8_t> arr;
+        do {
+          uint8_t tmp;
+          dbus_message_iter_get_basic(&array_val_iter, &tmp);
+          arr.AppendElement(tmp);
         } while (dbus_message_iter_next(&array_val_iter));
         propertyValue = arr;
       } else {
