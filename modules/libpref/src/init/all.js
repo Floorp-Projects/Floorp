@@ -3732,7 +3732,7 @@ pref("toolkit.identity.debug", false);
 pref("dom.mozApps.dev_mode", false);
 
 // Lowest localId for apps.
-pref("dom.mozApps.maxLocalId", 0);
+pref("dom.mozApps.maxLocalId", 1000);
 
 // Let us know wether we should run the permissions update algorithm.
 // See Bug 787439
