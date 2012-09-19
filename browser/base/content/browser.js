@@ -154,11 +154,8 @@ XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
 });
 #endif
 
-XPCOMUtils.defineLazyGetter(this, "gBrowserNewTabPreloader", function () {
-  let tmp = {};
-  Cu.import("resource:///modules/BrowserNewTabPreloader.jsm", tmp);
-  return new tmp.BrowserNewTabPreloader();
-});
+XPCOMUtils.defineLazyModuleGetter(this, "gBrowserNewTabPreloader",
+  "resource://gre/modules/BrowserNewTabPreloader.jsm", "BrowserNewTabPreloader");
 
 let gInitialPages = [
   "about:blank",
@@ -1409,12 +1406,6 @@ var gBrowserInit = {
     gSyncUI.init();
 #endif
 
-    // Don't preload new tab pages when the toolbar is hidden
-    // (i.e. when the current window is a popup window).
-    if (window.toolbar.visible) {
-      gBrowserNewTabPreloader.init(window);
-    }
-
     gBrowserThumbnails.init();
     TabView.init();
 
@@ -1562,10 +1553,6 @@ var gBrowserInit = {
     FullScreen.cleanup();
 
     Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
-
-    if (!__lookupGetter__("gBrowserNewTabPreloader")) {
-      gBrowserNewTabPreloader.uninit();
-    }
 
     try {
       gBrowser.removeProgressListener(window.XULBrowserWindow);
