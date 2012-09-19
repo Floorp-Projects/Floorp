@@ -653,9 +653,11 @@ Is(JSObject *wrapper)
 static JSBool
 mozMatchesSelectorStub(JSContext *cx, unsigned argc, jsval *vp)
 {
-    if (argc < 1)
+    if (argc < 1) {
         JS_ReportError(cx, "Not enough arguments");
-    
+        return false;
+    }
+
     JSObject *wrapper = JS_THIS_OBJECT(cx, vp);
     JSString *selector = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     nsDependentJSString selectorStr;
