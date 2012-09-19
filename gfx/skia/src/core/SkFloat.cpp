@@ -8,7 +8,7 @@
 
 
 #include "SkFloat.h"
-#include "SkMath.h"
+#include "SkMathPriv.h"
 
 #define EXP_BIAS    (127+23)
 
@@ -268,9 +268,7 @@ int SkFloat::Cmp(int32_t packed_a, int32_t packed_b)
 #ifdef SK_DEBUG
 
 #include "SkRandom.h"
-#ifdef SK_CAN_USE_FLOAT
-    #include "SkFloatingPoint.h"
-#endif
+#include "SkFloatingPoint.h"
 
 void SkFloat::UnitTest()
 {
@@ -291,11 +289,10 @@ void SkFloat::UnitTest()
     SkASSERT(n == -3);
 
     d.setAdd(c, b);
-    SkDebugf("SkFloat: %d + %d = %d\n", c.getInt(), b.getInt(), d.getInt());    
+    SkDebugf("SkFloat: %d + %d = %d\n", c.getInt(), b.getInt(), d.getInt());
 
     SkRandom    rand;
 
-#ifdef SK_CAN_USE_FLOAT
     int i;
     for (i = 0; i < 1000; i++)
     {
@@ -390,7 +387,6 @@ void SkFloat::UnitTest()
         a.assertEquals(3.0f, 0);
 #endif
     }
-#endif
 #endif
 }
 

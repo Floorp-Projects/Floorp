@@ -775,8 +775,8 @@ JSScript::initScriptCounts(JSContext *cx)
     }
 
     size_t bytes = (length * sizeof(PCCounts)) + (n * sizeof(double));
-    char *cursor = (char *) cx->calloc_(bytes);
-    if (!cursor)
+    char *base = (char *) cx->calloc_(bytes);
+    if (!base)
         return false;
 
     /* Create compartment's scriptCountsMap if necessary. */
@@ -784,14 +784,14 @@ JSScript::initScriptCounts(JSContext *cx)
     if (!map) {
         map = cx->new_<ScriptCountsMap>();
         if (!map || !map->init()) {
-            js_free(cursor);
+            js_free(base);
             js_delete(map);
             return false;
         }
         compartment()->scriptCountsMap = map;
     }
 
-    DebugOnly<char *> base = cursor;
+    char *cursor = base;
 
     ScriptCounts scriptCounts;
     scriptCounts.pcCountsVector = (PCCounts *) cursor;
@@ -809,8 +809,7 @@ JSScript::initScriptCounts(JSContext *cx)
     }
 
     if (!map->putNew(this, scriptCounts)) {
-        js_free(cursor);
-        js_delete(map);
+        js_free(base);
         return false;
     }
     hasScriptCounts = true; // safe to set this;  we can't fail after this point
@@ -2289,7 +2288,6 @@ JSScript::ensureHasDebugScript(JSContext *cx)
 
     if (!map->putNew(this, debug)) {
         js_free(debug);
-        js_delete(map);
         return false;
     }
     hasDebugScript = true; // safe to set this;  we can't fail after this point

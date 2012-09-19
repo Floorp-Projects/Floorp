@@ -222,6 +222,12 @@ nsServerSocket::OnSocketDetached(PRFileDesc *fd)
   }
 }
 
+void
+nsServerSocket::IsLocal(bool *aIsLocal)
+{
+  // If bound to loopback, this server socket only accepts local connections.
+  *aIsLocal = PR_IsNetAddrType(&mAddr, PR_IpAddrLoopback);
+}
 
 //-----------------------------------------------------------------------------
 // nsServerSocket::nsISupports

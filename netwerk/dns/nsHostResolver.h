@@ -224,7 +224,9 @@ public:
         RES_CANON_NAME   = 1 << 1,
         RES_PRIORITY_MEDIUM   = 1 << 2,
         RES_PRIORITY_LOW  = 1 << 3,
-        RES_SPECULATE     = 1 << 4   
+        RES_SPECULATE     = 1 << 4,
+        //RES_DISABLE_IPV6 = 1 << 5, // Not used
+        RES_OFFLINE       = 1 << 6
     };
 
 private:

@@ -129,8 +129,13 @@ function test_property(property)
     // We don't care particularly about the whitespace or the placement of
     // semicolons, but for simplicity we'll test the current behavior.
     var expected_serialization = "";
-    if (step1val != "")
-      expected_serialization = property + ": " + step1val + ";";
+    if (step1val != "") {
+      if ("alias_for" in info) {
+        expected_serialization = info.alias_for + ": " + step1val + ";";
+      } else {
+        expected_serialization = property + ": " + step1val + ";";
+      }
+    }
     is(step1ser, expected_serialization,
        "serialization should match property value");
 
@@ -151,7 +156,9 @@ function test_property(property)
     if ("subproperties" in info &&
         // Using setProperty over subproperties is not sufficient for
         // system fonts, since the shorthand does more than its parts.
-        (property != "font" || !(value in gSystemFont))) {
+        (property != "font" || !(value in gSystemFont)) &&
+        // Likewise for special compatibility values of transform
+        (property != "-moz-transform" || !value.match(/^matrix.*(px|em|%)/))) {
       gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];

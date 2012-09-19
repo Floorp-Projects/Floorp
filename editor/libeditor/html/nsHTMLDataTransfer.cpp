@@ -91,7 +91,6 @@
 #include "nscore.h"
 #include "plbase64.h"
 #include "prmem.h"
-#include "prtypes.h"
 
 class nsIAtom;
 class nsILoadContext;

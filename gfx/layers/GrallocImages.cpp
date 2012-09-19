@@ -79,7 +79,7 @@ GrallocPlanarYCbCrImage::SetData(const Data& aData)
   // equals to the image width then we can use only one copy.
   if (yStride == mData.mYStride &&
       yStride == ySize.width) {
-    memcpy(yChannel, mData.mYChannel, yStride * ySize.width);
+    memcpy(yChannel, mData.mYChannel, yStride * ySize.height);
   } else {
     for (int i = 0; i < ySize.height; i++) {
       memcpy(yChannel + i * yStride,
@@ -89,8 +89,8 @@ GrallocPlanarYCbCrImage::SetData(const Data& aData)
   }
   if (uvStride == mData.mCbCrStride &&
       uvStride == uvSize.width) {
-    memcpy(uChannel, mData.mCbChannel, uvStride * uvSize.width);
-    memcpy(vChannel, mData.mCrChannel, uvStride * uvSize.width);
+    memcpy(uChannel, mData.mCbChannel, uvStride * uvSize.height);
+    memcpy(vChannel, mData.mCrChannel, uvStride * uvSize.height);
   } else {
     for (int i = 0; i < uvSize.height; i++) {
       memcpy(uChannel + i * uvStride,

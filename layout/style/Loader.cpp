@@ -1573,9 +1573,10 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   if (ourCORSMode != CORS_NONE) {
     bool withCredentials = (ourCORSMode == CORS_USE_CREDENTIALS);
     LOG(("  Doing CORS-enabled load; credentials %d", withCredentials));
-    channelListener =
+    nsRefPtr<nsCORSListenerProxy> corsListener =
       new nsCORSListenerProxy(streamLoader, aLoadData->mLoaderPrincipal,
-			      channel, withCredentials, &rv);
+			      withCredentials);
+    rv = corsListener->Init(channel);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       mSyncCallback = false;
@@ -1584,6 +1585,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
       SheetComplete(aLoadData, rv);
       return rv;
     }
+    channelListener = corsListener;
   } else {
     channelListener = streamLoader;
   }

@@ -12,7 +12,6 @@
 #include "nsID.h"                       // for REFNSIID
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nscore.h"                     // for NS_IMETHOD
-#include "prtypes.h"                    // for uint32_t
 
 class nsEditor;
 

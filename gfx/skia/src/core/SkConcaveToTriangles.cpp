@@ -34,6 +34,7 @@
 // - There is no need to use SkTDArray for everything. Use SkAutoTMalloc for
 //   everything else.
 
+#include "SkConcaveToTriangles.h"
 #include "SkTDArray.h"
 #include "SkGeometry.h"
 #include "SkTSort.h"
@@ -42,6 +43,7 @@
 // the code has been proven robust.
 #define kMaxCount 1000
 
+#define DEBUG
 #ifdef DEBUG
 //------------------------------------------------------------------------------
 // Debugging support
@@ -419,7 +421,7 @@ public:
 };
 
 
-bool operator<(VertexPtr &v0, VertexPtr &v1) {
+static bool operator<(VertexPtr &v0, VertexPtr &v1) {
     // DebugPrintf("< %p %p\n", &v0, &v1);
     if (v0.vt->point().fY < v1.vt->point().fY)  return true;
     if (v0.vt->point().fY > v1.vt->point().fY)  return false;
@@ -428,14 +430,15 @@ bool operator<(VertexPtr &v0, VertexPtr &v1) {
 }
 
 
-bool operator>(VertexPtr &v0, VertexPtr &v1) {
+#if 0 // UNUSED
+static bool operator>(VertexPtr &v0, VertexPtr &v1) {
     // DebugPrintf("> %p %p\n", &v0, &v1);
     if (v0.vt->point().fY > v1.vt->point().fY)  return true;
     if (v0.vt->point().fY < v1.vt->point().fY)  return false;
     if (v0.vt->point().fX > v1.vt->point().fX)  return true;
     else                                        return false;
 }
-
+#endif
 
 static void SetVertexPoints(size_t numPts, const SkPoint *pt, Vertex *vt) {
     for (; numPts-- != 0; ++pt, ++vt)
@@ -674,7 +677,7 @@ static void RemoveDegenerateTrapezoids(size_t numVt, Vertex *vt) {
 
 
 // Enhance the polygon with trapezoids.
-bool ConvertPointsToVertices(size_t numPts, const SkPoint *pts, Vertex *vta) {
+static bool ConvertPointsToVertices(size_t numPts, const SkPoint *pts, Vertex *vta) {
     DebugPrintf("ConvertPointsToVertices()\n");
 
     // Clear everything.
@@ -834,7 +837,7 @@ static size_t CountVertices(const Vertex *first, const Vertex *last) {
 }
 
 
-bool operator<(const SkPoint &p0, const SkPoint &p1) {
+static bool operator<(const SkPoint &p0, const SkPoint &p1) {
     if (p0.fY < p1.fY)  return true;
     if (p0.fY > p1.fY)  return false;
     if (p0.fX < p1.fX)  return true;
@@ -853,7 +856,7 @@ static void PrintLinkedVertices(size_t n, Vertex *vertices) {
 
 
 // Triangulate an unimonotone chain.
-bool TriangulateMonotone(Vertex *first, Vertex *last,
+static bool TriangulateMonotone(Vertex *first, Vertex *last,
                          SkTDArray<SkPoint> *triangles) {
     DebugPrintf("TriangulateMonotone()\n");
 
@@ -914,7 +917,7 @@ bool TriangulateMonotone(Vertex *first, Vertex *last,
 
 // Split the polygon into sets of unimonotone chains, and eventually call
 // TriangulateMonotone() to convert them into triangles.
-bool Triangulate(Vertex *first, Vertex *last, SkTDArray<SkPoint> *triangles) {
+static bool Triangulate(Vertex *first, Vertex *last, SkTDArray<SkPoint> *triangles) {
     DebugPrintf("Triangulate()\n");
     Vertex *currentVertex = first;
     while (!currentVertex->done()) {

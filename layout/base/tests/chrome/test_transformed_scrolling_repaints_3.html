@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that scaled elements with scrolled contents don't repaint unnecessarily when we scroll inside them</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<!-- Need a timeout here to allow paint unsuppression before we start the test -->
+<body>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var root = getRootDirectory(window.location.href);
+window.open(root + "transformed_scrolling_repaints_3_window.html", "transformed_scrolling_repaints_3",
+            "chrome,width=300,height=400");
+</script>
+</pre>
+</body>
+</html>

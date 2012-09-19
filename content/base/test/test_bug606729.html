@@ -16,22 +16,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=606729
   
 </div>
 <pre id="test">
+<script>
+  SimpleTest.waitForExplicitFinish();
+  var events = 0;
+  var expectedEvents = 2;
+  function eventFired() {
+    ++events;
+    if (events == expectedEvents) {
+      SimpleTest.finish();
+    }
+  }
+</script>
 <script
   src="data:"
-  onerror="ok(false, 'Script with src=data: should not fire onerror.');"
-  onload="ok(false, 'Script with src=data: should not fire onload.');"
+  onerror="ok(true, 'Script with src=data: should fire onerror.');
+           eventFired();"
+  onload="ok(false, 'Script with src=data: should not fire onload.');
+          eventFired();"
 >
 ok(false, "Script with src=data: should not run textContent.");
 </script>
 <script
   src="bogus:"
-  onerror="ok(false, 'Script with src=bogus: should not fire onerror.');"
-  onload="ok(false, 'Script with src=bogus: should not fire onload.');"
+  onerror="ok(true, 'Script with src=bogus: should fire onerror.');
+           eventFired();"
+  onload="ok(false, 'Script with src=bogus: should not fire onload.');
+          eventFired();"
 >
 ok(false, "Script with src=bogus: should not run textContent.");
-</script>
-<script class="testbody" type="text/javascript">
-ok(true, "Obligatory succeeding test assertion.");
 </script>
 </pre>
 </body>

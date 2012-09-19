@@ -166,6 +166,7 @@ FENNEC_JAVA_FILES = \
   ui/PanZoomTarget.java \
   ui/SimpleScaleGestureDetector.java \
   ui/SubdocumentScrollHelper.java \
+  widget/DateTimePicker.java \
   GeckoNetworkManager.java \
   GeckoScreenOrientationListener.java \
   UpdateService.java \
@@ -329,6 +330,7 @@ RES_LAYOUT = \
   res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
   res/layout/bookmark_edit.xml \
+  res/layout/datetime_picker.xml \
   res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
   res/layout/find_in_page_content.xml \
