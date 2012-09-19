@@ -397,6 +397,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     uint32_t length, lineno, nslots;
     uint32_t natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, i;
     uint32_t prologLength, version;
+    uint32_t ndefaults = 0;
     uint32_t nTypeSets = 0;
     uint32_t scriptBits = 0;
 
@@ -450,6 +451,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             ntrynotes = script->trynotes()->length;
 
         nTypeSets = script->nTypeSets;
+        ndefaults = script->ndefaults;
 
         if (script->noScriptRval)
             scriptBits |= (1 << NoScriptRval);
@@ -508,6 +510,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         return JS_FALSE;
     if (!xdr->codeUint32(&nTypeSets))
         return JS_FALSE;
+    if (!xdr->codeUint32(&ndefaults))
+        return JS_FALSE;
     if (!xdr->codeUint32(&scriptBits))
         return JS_FALSE;
 
@@ -550,6 +554,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         JS_ASSERT(!script->mainOffset);
         script->mainOffset = prologLength;
         script->nfixed = uint16_t(version >> 16);
+        script->ndefaults = ndefaults;
 
         /* If we know nsrcnotes, we allocated space for notes in script. */
         notes = script->notes();
@@ -1686,6 +1691,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
         } else {
             JS_ASSERT(!funbox->definitelyNeedsArgsObj());
         }
+
+        script->ndefaults = funbox->ndefaults;
     }
 
     RootedFunction fun(cx, NULL);
