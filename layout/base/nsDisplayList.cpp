@@ -333,12 +333,15 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
 
   nsIFrame* frame = aItem->GetUnderlyingFrame();
 
-  nsIContent* aContent = frame->GetContent();
+  nsIContent* content = frame->GetContent();
+  if (!content) {
+    return;
+  }
   ElementTransitions* et =
-    nsTransitionManager::GetTransitionsForCompositor(aContent, aProperty);
+    nsTransitionManager::GetTransitionsForCompositor(content, aProperty);
 
   ElementAnimations* ea =
-    nsAnimationManager::GetAnimationsForCompositor(aContent, aProperty);
+    nsAnimationManager::GetAnimationsForCompositor(content, aProperty);
 
   if (!ea && !et) {
     return;
@@ -3150,8 +3153,24 @@ nsIFrame *GetTransformRootFrame(nsIFrame* aFrame)
 }
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
+                                       nsDisplayList *aList, ComputeTransformFunction aTransformGetter, 
+                                       uint32_t aIndex) 
+  : nsDisplayItem(aBuilder, aFrame)
+  , mStoredList(aBuilder, aFrame, aList)
+  , mTransformGetter(aTransformGetter)
+  , mIndex(aIndex)
+{
+  MOZ_COUNT_CTOR(nsDisplayTransform);
+  NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
+  NS_ABORT_IF_FALSE(!aFrame->IsTransformed(), "Can't specify a transform getter for a transformed frame!");
+}
+
+nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                                        nsDisplayList *aList, uint32_t aIndex) 
-  : nsDisplayItem(aBuilder, aFrame), mStoredList(aBuilder, aFrame, aList), mIndex(aIndex)
+  : nsDisplayItem(aBuilder, aFrame)
+  , mStoredList(aBuilder, aFrame, aList)
+  , mTransformGetter(nullptr)
+  , mIndex(aIndex)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
@@ -3162,7 +3181,10 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame 
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                                        nsDisplayItem *aItem, uint32_t aIndex) 
-  : nsDisplayItem(aBuilder, aFrame), mStoredList(aBuilder, aFrame, aItem), mIndex(aIndex)
+  : nsDisplayItem(aBuilder, aFrame)
+  , mStoredList(aBuilder, aFrame, aItem)
+  , mTransformGetter(nullptr)
+  , mIndex(aIndex)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
@@ -3541,10 +3563,19 @@ const gfx3DMatrix&
 nsDisplayTransform::GetTransform(float aAppUnitsPerPixel)
 {
   if (mTransform.IsIdentity() || mCachedAppUnitsPerPixel != aAppUnitsPerPixel) {
-    mTransform =
-      GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
-                                  aAppUnitsPerPixel);
-    mCachedAppUnitsPerPixel = aAppUnitsPerPixel;
+    if (mTransformGetter) {
+      gfxPoint3D newOrigin =
+        gfxPoint3D(NSAppUnitsToFloatPixels(mToReferenceFrame.x, aAppUnitsPerPixel),
+                   NSAppUnitsToFloatPixels(mToReferenceFrame.y, aAppUnitsPerPixel),
+                    0.0f);
+      mTransform = mTransformGetter(mFrame, aAppUnitsPerPixel);
+      mTransform = nsLayoutUtils::ChangeMatrixBasis(newOrigin, mTransform);
+    } else {
+      mTransform =
+        GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
+                                    aAppUnitsPerPixel);
+      mCachedAppUnitsPerPixel = aAppUnitsPerPixel;
+    }
   }
   return mTransform;
 }
