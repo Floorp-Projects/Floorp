@@ -4354,10 +4354,12 @@ class MGuardShape
     public SingleObjectPolicy
 {
     const Shape *shape_;
+    BailoutKind bailoutKind_;
 
-    MGuardShape(MDefinition *obj, const Shape *shape)
+    MGuardShape(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
-        shape_(shape)
+        shape_(shape),
+        bailoutKind_(bailoutKind)
     {
         setGuard();
         setMovable();
@@ -4366,8 +4368,8 @@ class MGuardShape
   public:
     INSTRUCTION_HEADER(GuardShape);
 
-    static MGuardShape *New(MDefinition *obj, const Shape *shape) {
-        return new MGuardShape(obj, shape);
+    static MGuardShape *New(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind) {
+        return new MGuardShape(obj, shape, bailoutKind);
     }
 
     TypePolicy *typePolicy() {
@@ -4379,10 +4381,15 @@ class MGuardShape
     const Shape *shape() const {
         return shape_;
     }
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
+    }
     bool congruentTo(MDefinition * const &ins) const {
         if (!ins->isGuardShape())
             return false;
         if (shape() != ins->toGuardShape()->shape())
+            return false;
+        if (bailoutKind() != ins->toGuardShape()->bailoutKind())
             return false;
         return congruentIfOperandsEqual(ins);
     }

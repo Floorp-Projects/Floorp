@@ -2815,7 +2815,7 @@ CodeGenerator::generate()
                                  bailouts_.length(), graph.numConstants(),
                                  safepointIndices_.length(), osiIndices_.length(),
                                  cacheList_.length(), barrierOffsets_.length(),
-                                 safepoints_.size());
+                                 safepoints_.size(), graph.mir().numScripts());
     if (!script->ion)
         return false;
     invalidateEpilogueData_.fixup(&masm);
@@ -2850,6 +2850,9 @@ CodeGenerator::generate()
         script->ion->copyPrebarrierEntries(&barrierOffsets_[0], masm);
     if (safepoints_.size())
         script->ion->copySafepoints(&safepoints_);
+
+    JS_ASSERT(graph.mir().numScripts() > 0);
+    script->ion->copyScriptEntries(graph.mir().scripts());
 
     linkAbsoluteLabels();
 

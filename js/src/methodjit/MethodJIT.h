@@ -1016,6 +1016,18 @@ IsLowerableFunCallOrApply(jsbytecode *pc)
 Shape *
 GetPICSingleShape(JSContext *cx, JSScript *script, jsbytecode *pc, bool constructing);
 
+static inline void
+PurgeCaches(JSScript *script)
+{
+    for (int constructing = 0; constructing <= 1; constructing++) {
+        for (int barriers = 0; barriers <= 1; barriers++) {
+            mjit::JITScript *jit = script->getJIT((bool) constructing, (bool) barriers);
+            if (jit)
+                jit->purgeCaches();
+        }
+    }
+}
+
 } /* namespace mjit */
 
 inline mjit::JITChunk *
