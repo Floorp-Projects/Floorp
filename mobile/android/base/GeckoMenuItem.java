@@ -51,6 +51,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
     private boolean mEnabled;
     private Drawable mIcon;
     private int mIconRes;
+    private GeckoSubMenu mSubMenu;
     private MenuItem.OnMenuItemClickListener mMenuItemClickListener;
     private OnVisibilityChangedListener mVisibilityChangedListener;
     private OnShowAsActionChangedListener mShowAsActionChangedListener;
@@ -141,7 +142,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     @Override
     public SubMenu getSubMenu() {
-        return null;
+        return mSubMenu;
     }
 
     @Override
@@ -156,7 +157,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     @Override
     public boolean hasSubMenu() {
-        return false;
+        return (mSubMenu != null);
     }
 
     @Override
@@ -305,6 +306,11 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     @Override
     public MenuItem setShowAsActionFlags(int actionEnum) {
+        return this;
+    }
+
+    public MenuItem setSubMenu(GeckoSubMenu subMenu) {
+        mSubMenu = subMenu;
         return this;
     }
 

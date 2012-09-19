@@ -142,6 +142,7 @@ abstract public class GeckoApp
     public SurfaceView cameraView;
     public static GeckoApp mAppContext;
     public boolean mDOMFullScreen = false;
+    protected MenuPresenter mMenuPresenter;
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
     private static GeckoThread sGeckoThread;
@@ -466,8 +467,12 @@ abstract public class GeckoApp
             return super.getMenuInflater();
     }
 
-    public View getMenuPanel() {
+    public MenuPanel getMenuPanel() {
         return mMenuPanel;
+    }
+
+    public MenuPresenter getMenuPresenter() {
+        return mMenuPresenter;
     }
 
     // MenuPanel holds the scrollable Menu
@@ -497,11 +502,41 @@ abstract public class GeckoApp
         }
     }
 
+    // MenuPresenter takes care of proper animation and inflation.
+    public class MenuPresenter {
+        GeckoApp mActivity;
+
+        public MenuPresenter(GeckoApp activity) {
+            mActivity = activity;
+        }
+
+        public void show(GeckoMenu menu) {
+            mActivity.closeOptionsMenu();
+
+            MenuPanel panel = mActivity.getMenuPanel();
+            panel.removeAllViews();
+            panel.addView(menu);
+
+            mActivity.openOptionsMenu();
+        }
+
+        public void hide() {
+            mActivity.closeOptionsMenu();
+        }
+
+        public void onOptionsMenuClosed() {
+            MenuPanel panel = mActivity.getMenuPanel();
+            panel.removeAllViews();
+            panel.addView((GeckoMenu) mMenu);
+        }
+    }
+
     @Override
     public View onCreatePanelView(int featureId) {
         if (Build.VERSION.SDK_INT >= 11 && featureId == Window.FEATURE_OPTIONS_PANEL) {
             if (mMenuPanel == null) {
                 mMenuPanel = new MenuPanel(mAppContext, null);
+                mMenuPresenter = new MenuPresenter(this);
             } else {
                 // Prepare the panel everytime before showing the menu.
                 onPreparePanel(featureId, mMenuPanel, mMenu);
@@ -572,6 +607,12 @@ abstract public class GeckoApp
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onOptionsMenuClosed(Menu menu) {
+        if (Build.VERSION.SDK_INT >= 11)
+            mMenuPresenter.onOptionsMenuClosed();
     }
  
     @Override
