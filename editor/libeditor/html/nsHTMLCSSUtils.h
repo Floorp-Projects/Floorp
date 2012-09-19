@@ -9,7 +9,6 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsTArray.h"                   // for nsTArray
 #include "nscore.h"                     // for nsAString, nsresult, nullptr
-#include "prtypes.h"                    // for uint8_t, int32_t, uint32_t
 
 class ChangeCSSInlineStyleTxn;
 class nsComputedDOMStyle;

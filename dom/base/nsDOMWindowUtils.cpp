@@ -2262,31 +2262,6 @@ nsDOMWindowUtils::GetCursorType(int16_t *aCursor)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GoOnline()
-{
-  // This is only allowed from about:neterror, which is unprivileged, so it
-  // can't access the io-service itself.
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIURI> documentURI;
-  documentURI = doc->GetDocumentURI();
-
-  nsAutoCString spec;
-  documentURI->GetSpec(spec);
-  if (!StringBeginsWith(spec,  NS_LITERAL_CSTRING("about:neterror?")))
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  nsCOMPtr<nsIIOService> ios = do_GetService("@mozilla.org/network/io-service;1");
-  if (ios) {
-    ios->SetOffline(false); // !offline
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetDisplayDPI(float *aDPI)
 {
   if (!IsUniversalXPConnectCapable()) {

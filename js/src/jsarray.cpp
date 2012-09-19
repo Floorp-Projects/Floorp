@@ -407,7 +407,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
                 break;
             if (idx >= obj->getArrayLength())
                 obj->setDenseArrayLength(idx + 1);
-            obj->setDenseArrayElementWithType(cx, idx, v);
+            JSObject::setDenseArrayElementWithType(cx, obj, idx, v);
             return true;
         } while (false);
 
@@ -541,7 +541,7 @@ array_length_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict,
 
     vp.setNumber(newlen);
     if (oldlen < newlen) {
-        obj->setArrayLength(cx, newlen);
+        JSObject::setArrayLength(cx, obj, newlen);
         return true;
     }
 
@@ -562,12 +562,12 @@ array_length_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict,
         do {
             --oldlen;
             if (!JS_CHECK_OPERATION_LIMIT(cx)) {
-                obj->setArrayLength(cx, oldlen + 1);
+                JSObject::setArrayLength(cx, obj, oldlen + 1);
                 return false;
             }
             int deletion = DeleteArrayElement(cx, obj, oldlen, strict);
             if (deletion <= 0) {
-                obj->setArrayLength(cx, oldlen + 1);
+                JSObject::setArrayLength(cx, obj, oldlen + 1);
                 return deletion >= 0;
             }
         } while (oldlen != newlen);
@@ -599,7 +599,7 @@ array_length_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict,
         }
     }
 
-    obj->setArrayLength(cx, newlen);
+    JSObject::setArrayLength(cx, obj, newlen);
     return true;
 }
 
@@ -800,7 +800,7 @@ slowarray_addProperty(JSContext *cx, HandleObject obj, HandleId id,
         return JS_TRUE;
     length = obj->getArrayLength();
     if (index >= length)
-        obj->setArrayLength(cx, index + 1);
+        JSObject::setArrayLength(cx, obj, index + 1);
     return JS_TRUE;
 }
 
@@ -831,7 +831,7 @@ array_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
 
         if (i >= obj->getArrayLength())
             obj->setDenseArrayLength(i + 1);
-        obj->setDenseArrayElementWithType(cx, i, vp);
+        JSObject::setDenseArrayElementWithType(cx, obj, i, vp);
         return true;
     } while (false);
 
@@ -879,7 +879,7 @@ array_setElement(JSContext *cx, HandleObject obj, uint32_t index,
 
         if (index >= obj->getArrayLength())
             obj->setDenseArrayLength(index + 1);
-        obj->setDenseArrayElementWithType(cx, index, vp);
+        JSObject::setDenseArrayElementWithType(cx, obj, index, vp);
         return true;
     } while (false);
 
@@ -944,7 +944,7 @@ array_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue va
 
         if (i >= obj->getArrayLength())
             obj->setDenseArrayLength(i + 1);
-        obj->setDenseArrayElementWithType(cx, i, value);
+        JSObject::setDenseArrayElementWithType(cx, obj, i, value);
         return true;
     } while (false);
 
@@ -991,7 +991,7 @@ array_defineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue
 
         if (index >= obj->getArrayLength())
             obj->setDenseArrayLength(index + 1);
-        obj->setDenseArrayElementWithType(cx, index, value);
+        JSObject::setDenseArrayElementWithType(cx, obj, index, value);
         return true;
     } while (false);
 
@@ -2231,7 +2231,7 @@ array_push1_dense(JSContext* cx, HandleObject obj, CallArgs &args)
     }
 
     obj->setDenseArrayLength(length + 1);
-    obj->setDenseArrayElementWithType(cx, length, args[0]);
+    JSObject::setDenseArrayElementWithType(cx, obj, length, args[0]);
     args.rval().setNumber(obj->getArrayLength());
     return true;
 }
@@ -2258,7 +2258,7 @@ NewbornArrayPushImpl(JSContext *cx, HandleObject obj, const Value &v)
 
     obj->setDenseArrayInitializedLength(length + 1);
     obj->setDenseArrayLength(length + 1);
-    obj->initDenseArrayElementWithType(cx, length, v);
+    JSObject::initDenseArrayElementWithType(cx, obj, length, v);
     return true;
 }
 
@@ -2336,7 +2336,7 @@ array_pop_dense(JSContext *cx, HandleObject obj, CallArgs &args)
         if (obj->getDenseArrayInitializedLength() > index)
             obj->setDenseArrayInitializedLength(index);
 
-        obj->setArrayLength(cx, index);
+        JSObject::setArrayLength(cx, obj, index);
         return true;
     }
 
@@ -2403,7 +2403,7 @@ js::array_shift(JSContext *cx, unsigned argc, Value *vp)
                 args.rval().setUndefined();
             obj->moveDenseArrayElements(0, 1, obj->getDenseArrayInitializedLength() - 1);
             obj->setDenseArrayInitializedLength(obj->getDenseArrayInitializedLength() - 1);
-            obj->setArrayLength(cx, length);
+            JSObject::setArrayLength(cx, obj, length);
             if (!js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(length)))
                 return JS_FALSE;
             return JS_TRUE;
@@ -2795,7 +2795,7 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
         if (!nobj)
             return JS_FALSE;
         TryReuseArrayType(aobj, nobj);
-        nobj->setArrayLength(cx, length);
+        JSObject::setArrayLength(cx, nobj, length);
         args.rval().setObject(*nobj);
         if (argc == 0)
             return JS_TRUE;
@@ -3525,7 +3525,7 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    JSObject *obj = NewDenseUnallocatedArray(cx, length);
+    RootedObject obj(cx, NewDenseUnallocatedArray(cx, length));
     if (!obj)
         return false;
 
@@ -3533,7 +3533,7 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
 
     /* If the length calculation overflowed, make sure that is marked for the new type. */
     if (obj->getArrayLength() > INT32_MAX)
-        obj->setArrayLength(cx, obj->getArrayLength());
+        JSObject::setArrayLength(cx, obj, obj->getArrayLength());
 
     args.rval().setObject(*obj);
     return true;
@@ -3549,7 +3549,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     RootedObject arrayProto(cx, global->createBlankPrototype(cx, &SlowArrayClass));
     if (!arrayProto || !AddLengthProperty(cx, arrayProto))
         return NULL;
-    arrayProto->setArrayLength(cx, 0);
+    JSObject::setArrayLength(cx, arrayProto, 0);
 
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, js_Array, cx->names().Array, 1);
@@ -3614,11 +3614,11 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg)
 
     NewObjectCache::EntryIndex entry = -1;
     if (cache.lookupGlobal(&ArrayClass, cx->global(), kind, &entry)) {
-        JSObject *obj = cache.newObjectFromHit(cx, entry);
+        RootedObject obj(cx, cache.newObjectFromHit(cx, entry));
         if (obj) {
             /* Fixup the elements pointer and length, which may be incorrect. */
             obj->setFixedElements();
-            obj->setArrayLength(cx, length);
+            JSObject::setArrayLength(cx, obj, length);
             if (allocateCapacity && !EnsureNewArrayElements(cx, obj, length))
                 return NULL;
             return obj;
@@ -3716,7 +3716,7 @@ NewSlowEmptyArray(JSContext *cx)
     if (!obj || !AddLengthProperty(cx, obj))
         return NULL;
 
-    obj->setArrayLength(cx, 0);
+    JSObject::setArrayLength(cx, obj, 0);
     return obj;
 }
 

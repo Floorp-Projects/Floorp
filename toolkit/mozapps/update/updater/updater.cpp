@@ -2639,11 +2639,16 @@ int NS_main(int argc, NS_tchar **argv)
 #endif
 
 #if defined(MOZ_WIDGET_GONK)
+  // In gonk, the master b2g process sets its umask to 0027 because
+  // there's no reason for it to ever create world-readable files.
+  // The updater binary, however, needs to do this, and it inherits
+  // the master process's cautious umask.  So we drop down a bit here.
+  umask(0022);
+
   // Remount the /system partition as read-write for gonk. The destructor will
   // remount /system as read-only. We add an extra level of scope here to avoid
   // calling LogFinish() before the GonkAutoMounter destructor has a chance
   // to be called
-
   {
     GonkAutoMounter mounter;
     if (mounter.GetAccess() != MountAccess::ReadWrite) {

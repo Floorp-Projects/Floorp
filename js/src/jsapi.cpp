@@ -737,7 +737,6 @@ JSRuntime::JSRuntime()
     activityCallback(NULL),
     activityCallbackArg(NULL),
 #ifdef JS_THREADSAFE
-    suspendCount(0),
     requestDepth(0),
 # ifdef DEBUG
     checkRequestDepth(0),
@@ -1166,7 +1165,7 @@ StopRequest(JSContext *cx)
     if (rt->requestDepth != 1) {
         rt->requestDepth--;
     } else {
-        rt->conservativeGC.updateForRequestEnd(rt->suspendCount);
+        rt->conservativeGC.updateForRequestEnd();
         rt->requestDepth = 0;
 
         if (rt->activityCallback)
@@ -1194,70 +1193,12 @@ JS_EndRequest(JSContext *cx)
 #endif
 }
 
-/* Yield to pending GC operations, regardless of request depth */
-JS_PUBLIC_API(void)
-JS_YieldRequest(JSContext *cx)
-{
-#ifdef JS_THREADSAFE
-    CHECK_REQUEST(cx);
-    JS_ResumeRequest(cx, JS_SuspendRequest(cx));
-#endif
-}
-
-JS_PUBLIC_API(unsigned)
-JS_SuspendRequest(JSContext *cx)
-{
-#ifdef JS_THREADSAFE
-    JSRuntime *rt = cx->runtime;
-    rt->assertValidThread();
-
-    unsigned saveDepth = rt->requestDepth;
-    if (!saveDepth)
-        return 0;
-
-    rt->suspendCount++;
-    rt->requestDepth = 1;
-    StopRequest(cx);
-    return saveDepth;
-#else
-    return 0;
-#endif
-}
-
-JS_PUBLIC_API(void)
-JS_ResumeRequest(JSContext *cx, unsigned saveDepth)
-{
-#ifdef JS_THREADSAFE
-    JSRuntime *rt = cx->runtime;
-    rt->assertValidThread();
-    if (saveDepth == 0)
-        return;
-    JS_ASSERT(saveDepth >= 1);
-    JS_ASSERT(!rt->requestDepth);
-    JS_ASSERT(rt->suspendCount);
-    StartRequest(cx);
-    rt->requestDepth = saveDepth;
-    rt->suspendCount--;
-#endif
-}
-
 JS_PUBLIC_API(JSBool)
 JS_IsInRequest(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
     rt->assertValidThread();
     return rt->requestDepth != 0;
-#else
-    return false;
-#endif
-}
-
-JS_PUBLIC_API(JSBool)
-JS_IsInSuspendedRequest(JSRuntime *rt)
-{
-#ifdef JS_THREADSAFE
-    rt->assertValidThread();
-    return rt->suspendCount != 0;
 #else
     return false;
 #endif
@@ -5232,7 +5173,8 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, options.principals, options.originPrincipals);
+    assertSameCompartment(cx, obj);
+    JS_ASSERT_IF(options.principals, cx->compartment->principals == options.principals);
     AutoLastFrameCheck lfc(cx);
 
     return frontend::CompileScript(cx, obj, NULL, options, chars, length);
@@ -5495,7 +5437,8 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, options.principals, options.originPrincipals);
+    assertSameCompartment(cx, obj);
+    JS_ASSERT_IF(options.principals, cx->compartment->principals == options.principals);
     AutoLastFrameCheck lfc(cx);
 
     RootedAtom funAtom(cx);
@@ -5712,7 +5655,9 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, options.principals, options.originPrincipals);
+    assertSameCompartment(cx, obj);
+    JS_ASSERT_IF(options.principals, cx->compartment->principals == options.principals);
+
     AutoLastFrameCheck lfc(cx);
 
     options.setCompileAndGo(true);

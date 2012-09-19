@@ -18,6 +18,8 @@
 //    c) Schema 3: the 'creationTime' column already exists; or the
 //       'moz_uniqueid' index already exists.
 
+let COOKIE_DATABASE_SCHEMA_CURRENT = 5;
+
 let test_generator = do_run_test();
 
 function run_test() {
@@ -59,6 +61,10 @@ function do_run_test() {
   yield;
 
   this.sub_generator = run_test_3(test_generator, 99);
+  sub_generator.next();
+  yield;
+
+  this.sub_generator = run_test_3(test_generator, COOKIE_DATABASE_SCHEMA_CURRENT);
   sub_generator.next();
   yield;
 
@@ -206,7 +212,7 @@ function run_test_3(generator, schema)
 
   // Check that the schema version has been reset.
   let db = Services.storage.openDatabase(cookieFile);
-  do_check_eq(db.schemaVersion, 4);
+  do_check_eq(db.schemaVersion, COOKIE_DATABASE_SCHEMA_CURRENT);
   db.close();
 
   // Clean up.
@@ -233,7 +239,7 @@ function run_test_4_exists(generator, schema, stmt)
 
   // Check that the schema version has been reset and the backup file exists.
   db = Services.storage.openDatabase(cookieFile);
-  do_check_eq(db.schemaVersion, 4);
+  do_check_eq(db.schemaVersion, COOKIE_DATABASE_SCHEMA_CURRENT);
   db.close();
   do_check_true(backupFile.exists());
 
@@ -264,7 +270,7 @@ function run_test_4_baseDomain(generator)
 
   // Check that the schema version has been reset and the backup file exists.
   db = Services.storage.openDatabase(cookieFile);
-  do_check_eq(db.schemaVersion, 4);
+  do_check_eq(db.schemaVersion, COOKIE_DATABASE_SCHEMA_CURRENT);
   db.close();
   do_check_true(backupFile.exists());
 

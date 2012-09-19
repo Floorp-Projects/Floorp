@@ -1097,20 +1097,21 @@ nsresult nsHTMLMediaElement::LoadResource()
 
   nsCOMPtr<nsIStreamListener> listener;
   if (ShouldCheckAllowOrigin()) {
-    listener =
+    nsRefPtr<nsCORSListenerProxy> corsListener =
       new nsCORSListenerProxy(loadListener,
                               NodePrincipal(),
-                              channel,
-                              GetCORSMode() == CORS_USE_CREDENTIALS,
-                              &rv);
+                              GetCORSMode() == CORS_USE_CREDENTIALS);
+    rv = corsListener->Init(channel);
+    NS_ENSURE_SUCCESS(rv, rv);
+    listener = corsListener;
   } else {
     rv = nsContentUtils::GetSecurityManager()->
            CheckLoadURIWithPrincipal(NodePrincipal(),
                                      mLoadingSrc,
                                      nsIScriptSecurityManager::STANDARD);
     listener = loadListener;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(channel);
   if (hc) {

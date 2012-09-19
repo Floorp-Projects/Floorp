@@ -111,13 +111,13 @@ bool GrAtlas::addSubImage(int width, int height, const void* image,
     }
     adjustForPlot(loc, fPlot);
     GrContext* context = fTexture->getContext();
-    // We call the internal version so that we don't force a flush. We assume
-    // our caller is smart and hasn't referenced the part of the texture we're
-    // about to update since the last flush.
-    context->internalWriteTexturePixels(fTexture, loc->fX, loc->fY,
-                                        dstW, dstH, fTexture->config(),
-                                        image, 0,
-                                        GrContext::kDontFlush_PixelOpsFlag);
+    // We pass the flag that does not force a flush. We assume our caller is
+    // smart and hasn't referenced the part of the texture we're about to update
+    // since the last flush.
+    context->writeTexturePixels(fTexture,
+                                loc->fX, loc->fY, dstW, dstH,
+                                fTexture->config(), image, 0,
+                                GrContext::kDontFlush_PixelOpsFlag);
 
     // now tell the caller to skip the top/left BORDER
     loc->fX += BORDER;
@@ -131,7 +131,7 @@ GrAtlasMgr::GrAtlasMgr(GrGpu* gpu) {
     fGpu = gpu;
     gpu->ref();
     Gr_bzero(fTexture, sizeof(fTexture));
-    fPlotMgr = new GrPlotMgr(GR_PLOT_WIDTH, GR_PLOT_HEIGHT);
+    fPlotMgr = SkNEW_ARGS(GrPlotMgr, (GR_PLOT_WIDTH, GR_PLOT_HEIGHT));
 }
 
 GrAtlasMgr::~GrAtlasMgr() {
@@ -177,20 +177,19 @@ GrAtlas* GrAtlasMgr::addToAtlas(GrAtlas* atlas,
     GrAssert(0 == kA8_GrMaskFormat);
     GrAssert(1 == kA565_GrMaskFormat);
     if (NULL == fTexture[format]) {
-        GrTextureDesc desc = {
-            kDynamicUpdate_GrTextureFlagBit,
-            GR_ATLAS_TEXTURE_WIDTH,
-            GR_ATLAS_TEXTURE_HEIGHT,
-            maskformat2pixelconfig(format),
-            0 // samples
-        };
+        GrTextureDesc desc;
+        desc.fFlags = kDynamicUpdate_GrTextureFlagBit;
+        desc.fWidth = GR_ATLAS_TEXTURE_WIDTH;
+        desc.fHeight = GR_ATLAS_TEXTURE_HEIGHT;
+        desc.fConfig = maskformat2pixelconfig(format);
+
         fTexture[format] = fGpu->createTexture(desc, NULL, 0);
         if (NULL == fTexture[format]) {
             return NULL;
         }
     }
 
-    GrAtlas* newAtlas = new GrAtlas(this, plot.fX, plot.fY, format);
+    GrAtlas* newAtlas = SkNEW_ARGS(GrAtlas, (this, plot.fX, plot.fY, format));
     if (!newAtlas->addSubImage(width, height, image, loc)) {
         delete newAtlas;
         return NULL;

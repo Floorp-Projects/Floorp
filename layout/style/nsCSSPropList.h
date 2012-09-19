@@ -3358,6 +3358,16 @@ CSS_PROP_SVGRESET(
     offsetof(nsStyleSVGReset, mVectorEffect),
     eStyleAnimType_EnumU8)
 
+// The shorthands below are essentially aliases, but they require different
+// parsing rules, and are therefore implemented as shorthands.
+CSS_PROP_SHORTHAND(
+    -moz-transform,
+    _moz_transform,
+    MozTransform,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_IS_ALIAS,
+    "")
+
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 // We have a few properties that are in style structs but are not stored
 // in style sheets (or nsCSS* structs).  Some fields in these property

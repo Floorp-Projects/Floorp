@@ -48,7 +48,6 @@
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nsString.h"                   // for nsAutoString
-#include "prtypes.h"                    // for int32_t, uint16_t, uint32_t
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
 #include "nsContentUtils.h"             // for nsContentUtils, etc
 #include "nsIBidiKeyboard.h"            // for nsIBidiKeyboard

@@ -13,8 +13,10 @@
 #include "SkBitmap.h"
 #include "SkChunkAlloc.h"
 #include "SkDescriptor.h"
+#include "SkGlyph.h"
 #include "SkScalerContext.h"
 #include "SkTemplates.h"
+#include "SkTDArray.h"
 
 class SkPaint;
 
@@ -119,9 +121,8 @@ public:
     bool getAuxProcData(void (*auxProc)(void*), void** dataPtr) const;
     //! Add a proc/data pair to the glyphcache. proc should be non-null
     void setAuxProc(void (*auxProc)(void*), void* auxData);
-    //! If found, remove the proc/data pair from the glyphcache (does not
-    //  call the proc)
-    void removeAuxProc(void (*auxProc)(void*));
+
+    SkScalerContext* getScalerContext() const { return fScalerContext; }
 
     /** Call proc on all cache entries, stopping early if proc returns true.
         The proc should not create or delete caches, since it could produce

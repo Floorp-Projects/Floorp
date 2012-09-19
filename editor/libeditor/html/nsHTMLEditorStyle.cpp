@@ -49,7 +49,6 @@
 #include "nsTextEditUtils.h"
 #include "nsUnicharUtils.h"
 #include "nscore.h"
-#include "prtypes.h"
 
 class nsISupports;
 

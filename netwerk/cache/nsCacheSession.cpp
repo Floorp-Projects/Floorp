@@ -7,6 +7,7 @@
 #include "nsCacheSession.h"
 #include "nsCacheService.h"
 #include "nsCRT.h"
+#include "nsThreadUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsCacheSession, nsICacheSession)
 
@@ -81,12 +82,16 @@ nsCacheSession::OpenCacheEntry(const nsACString &         key,
                                nsICacheEntryDescriptor ** result)
 {
     nsresult rv;
-    rv =  nsCacheService::OpenCacheEntry(this,
-                                         key,
-                                         accessRequested,
-                                         blockingMode,
-                                         nullptr, // no listener
-                                         result);
+
+    if (NS_IsMainThread())
+        rv = NS_ERROR_NOT_AVAILABLE;
+    else
+        rv = nsCacheService::OpenCacheEntry(this,
+                                            key,
+                                            accessRequested,
+                                            blockingMode,
+                                            nullptr, // no listener
+                                            result);
     return rv;
 }
 

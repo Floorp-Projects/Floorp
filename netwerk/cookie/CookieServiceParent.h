@@ -7,6 +7,7 @@
 #define mozilla_net_CookieServiceParent_h
 
 #include "mozilla/net/PCookieServiceParent.h"
+#include "SerializedLoadContext.h"
 
 class nsCookieService;
 class nsIIOService;
@@ -24,13 +25,20 @@ protected:
   virtual bool RecvGetCookieString(const URIParams& aHost,
                                    const bool& aIsForeign,
                                    const bool& aFromHttp,
+                                   const IPC::SerializedLoadContext&
+                                         loadContext,
                                    nsCString* aResult);
 
   virtual bool RecvSetCookieString(const URIParams& aHost,
                                    const bool& aIsForeign,
                                    const nsCString& aCookieString,
                                    const nsCString& aServerTime,
-                                   const bool& aFromHttp);
+                                   const bool& aFromHttp,
+                                   const IPC::SerializedLoadContext&
+                                         loadContext);
+
+  void GetAppInfoFromLoadContext(const IPC::SerializedLoadContext& aLoadContext,
+                                 uint32_t& aAppId, bool& aIsInBrowserElement);
 
   nsRefPtr<nsCookieService> mCookieService;
 };

@@ -14,6 +14,7 @@
 
 class SkCanvas;
 class SkPaint;
+struct SkRect;
 
 /** \class SkDrawLooper
     Subclasses of SkDrawLooper can be attached to a SkPaint. Where they are,
@@ -25,6 +26,8 @@ class SkPaint;
 */
 class SK_API SkDrawLooper : public SkFlattenable {
 public:
+    SK_DECLARE_INST_COUNT(SkDrawLooper)
+
     /**
      *  Called right before something is being drawn. This will be followed by
      *  calls to next() until next() returns false.
@@ -44,7 +47,7 @@ public:
      *  init() was first called.
      */
     virtual bool next(SkCanvas*, SkPaint* paint) = 0;
-    
+
     /**
      * The fast bounds functions are used to enable the paint to be culled early
      * in the drawing pipeline. If a subclass can support this feature it must
