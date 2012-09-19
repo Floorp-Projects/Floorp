@@ -1096,8 +1096,9 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
                 return false;
 
             JS_ASSERT(ArgumentsRectifierReg != objreg);
+            masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
+            masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
             masm.movePtr(argcreg, ArgumentsRectifierReg);
-            masm.movePtr(ImmWord(argumentsRectifier->raw()), objreg);
         }
 
         masm.bind(&rejoin);
