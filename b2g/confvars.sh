@@ -8,6 +8,8 @@ MOZ_APP_VENDOR=Mozilla
 MOZ_APP_VERSION=18.0a1
 MOZ_APP_UA_NAME=Firefox
 
+MOZ_B2G_VERSION=1.0.0
+
 MOZ_BRANDING_DIRECTORY=b2g/branding/unofficial
 MOZ_OFFICIAL_BRANDING_DIRECTORY=b2g/branding/official
 # MOZ_APP_DISPLAYNAME is set by branding/configure.sh
