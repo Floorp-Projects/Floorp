@@ -429,6 +429,7 @@ RES_XML = \
 
 RES_ANIM = \
   res/anim/grow_fade_in.xml \
+  res/anim/grow_fade_in_center.xml \
   res/anim/shrink_fade_out.xml \
   $(NULL)
 

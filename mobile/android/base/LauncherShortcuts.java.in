@@ -85,7 +85,7 @@ public class LauncherShortcuts extends Activity {
         } catch (JSONException e) { }
 
         WebAppAllocator allocator = WebAppAllocator.getInstance(this);
-        int index = allocator.findAndAllocateIndex(uri);
+        int index = allocator.findAndAllocateIndex(uri, title, favicon);
         Intent shortcutintent = new Intent(GeckoApp.ACTION_WEBAPP_PREFIX + index);
         shortcutintent.setClassName(this, GeckoApp.mAppContext.getPackageName() + ".WebApps$WebApp" + index);
         shortcutintent.putExtra("args", "--webapp=" + uri);
