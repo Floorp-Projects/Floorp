@@ -469,8 +469,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_menu_reload.png \
   res/drawable/ic_menu_save_as_pdf.png \
   res/drawable/ic_menu_share.png \
-  res/drawable/ic_menu_reading_list_add.png \
-  res/drawable/ic_menu_reading_list_remove.png \
   res/drawable/ic_menu_forward.png \
   res/drawable/remote_tabs_off.png \
   res/drawable/remote_tabs_on.png \
@@ -543,8 +541,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
   res/drawable-hdpi/ic_menu_forward.png \
-  res/drawable-hdpi/ic_menu_reading_list_add.png \
-  res/drawable-hdpi/ic_menu_reading_list_remove.png \
   res/drawable-hdpi/ic_menu_reload.png \
   res/drawable-hdpi/ic_menu_save_as_pdf.png \
   res/drawable-hdpi/ic_menu_share.png \
@@ -608,8 +604,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_menu_bookmark_add.png \
   res/drawable-xhdpi/ic_menu_bookmark_remove.png \
   res/drawable-xhdpi/ic_menu_forward.png \
-  res/drawable-xhdpi/ic_menu_reading_list_add.png \
-  res/drawable-xhdpi/ic_menu_reading_list_remove.png \
   res/drawable-xhdpi/ic_menu_reload.png \
   res/drawable-xhdpi/ic_menu_save_as_pdf.png \
   res/drawable-xhdpi/ic_menu_share.png \
@@ -651,8 +645,6 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_desktop_mode.png \
   res/drawable-mdpi-v11/ic_menu_find_in_page.png \
   res/drawable-mdpi-v11/ic_menu_forward.png \
-  res/drawable-mdpi-v11/ic_menu_reading_list_add.png \
-  res/drawable-mdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-mdpi-v11/ic_menu_reload.png \
   res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v11/ic_menu_share.png \
@@ -673,8 +665,6 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_desktop_mode.png \
   res/drawable-hdpi-v11/ic_menu_find_in_page.png \
   res/drawable-hdpi-v11/ic_menu_forward.png \
-  res/drawable-hdpi-v11/ic_menu_reading_list_add.png \
-  res/drawable-hdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-hdpi-v11/ic_menu_reload.png \
   res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v11/ic_menu_share.png \
@@ -695,8 +685,6 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_desktop_mode.png \
   res/drawable-xhdpi-v11/ic_menu_find_in_page.png \
   res/drawable-xhdpi-v11/ic_menu_forward.png \
-  res/drawable-xhdpi-v11/ic_menu_reading_list_add.png \
-  res/drawable-xhdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-xhdpi-v11/ic_menu_reload.png \
   res/drawable-xhdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-xhdpi-v11/ic_menu_share.png \
