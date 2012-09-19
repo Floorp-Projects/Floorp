@@ -482,6 +482,10 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     // external script
     nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
     if (!scriptURI) {
+      // Asynchronously report the failure to create a URI object
+      NS_DispatchToCurrentThread(
+        NS_NewRunnableMethod(aElement,
+                             &nsIScriptElement::FireErrorEvent));
       return false;
     }
     CORSMode ourCORSMode = aElement->GetCORSMode();
@@ -516,7 +520,13 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       request->mIsInline = false;
       request->mLoading = true;
       rv = StartLoad(request, type);
-      NS_ENSURE_SUCCESS(rv, false);
+      if (NS_FAILED(rv)) {
+        // Asynchronously report the load failure
+        NS_DispatchToCurrentThread(
+          NS_NewRunnableMethod(aElement,
+                               &nsIScriptElement::FireErrorEvent));
+        return false;
+      }
     }
 
     request->mJSVersion = version;
