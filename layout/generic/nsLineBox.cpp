@@ -224,7 +224,7 @@ nsLineBox::StateToString(char* aBuf, int32_t aBufSize) const
 }
 
 void
-nsLineBox::List(FILE* out, int32_t aIndent) const
+nsLineBox::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
   int32_t i;
 
@@ -254,7 +254,7 @@ nsLineBox::List(FILE* out, int32_t aIndent) const
   nsIFrame* frame = mFirstChild;
   int32_t n = GetChildCount();
   while (--n >= 0) {
-    frame->List(out, aIndent + 1);
+    frame->List(out, aIndent + 1, aFlags);
     frame = frame->GetNextSibling();
   }
 
