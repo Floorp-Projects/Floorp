@@ -1693,7 +1693,7 @@ JSCompartment::getEmptyType(JSContext *cx)
 
     if (!emptyTypeObject) {
         JS::RootedObject nullproto(cx, NULL);
-        emptyTypeObject = types.newTypeObject(cx, NULL, JSProto_Object, nullproto, true);
+        emptyTypeObject = types.newTypeObject(cx, JSProto_Object, nullproto, true);
     }
     return emptyTypeObject;
 }
