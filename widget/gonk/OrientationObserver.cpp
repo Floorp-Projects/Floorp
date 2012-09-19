@@ -37,10 +37,10 @@ struct OrientationMapping {
 static OrientationMapping sOrientationMappings[] = {
   {nsIScreen::ROTATION_0_DEG,   eScreenOrientation_PortraitPrimary},
   {nsIScreen::ROTATION_180_DEG, eScreenOrientation_PortraitSecondary},
-  {nsIScreen::ROTATION_0_DEG,   eScreenOrientation_Portrait},
+  {nsIScreen::ROTATION_0_DEG,   eScreenOrientation_PortraitPrimary | eScreenOrientation_PortraitSecondary},
   {nsIScreen::ROTATION_90_DEG,  eScreenOrientation_LandscapePrimary},
   {nsIScreen::ROTATION_270_DEG, eScreenOrientation_LandscapeSecondary},
-  {nsIScreen::ROTATION_90_DEG,  eScreenOrientation_Landscape}
+  {nsIScreen::ROTATION_90_DEG,  eScreenOrientation_LandscapePrimary | eScreenOrientation_LandscapeSecondary}
 };
 
 const static int sDefaultLandscape = 3;
@@ -290,8 +290,10 @@ OrientationObserver::LockScreenOrientation(ScreenOrientation aOrientation)
 
   // Enable/disable the observer depending on 1. multiple orientations
   // allowed, and 2. observer enabled.
-  if (aOrientation == eScreenOrientation_Landscape ||
-      aOrientation == eScreenOrientation_Portrait) {
+  if (aOrientation == (eScreenOrientation_LandscapePrimary |
+                       eScreenOrientation_LandscapeSecondary) ||
+      aOrientation == (eScreenOrientation_PortraitPrimary |
+                       eScreenOrientation_PortraitSecondary)) {
     if (!mAutoOrientationEnabled) {
       EnableAutoOrientation();
     }

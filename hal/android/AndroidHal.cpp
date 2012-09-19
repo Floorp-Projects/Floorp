@@ -189,10 +189,10 @@ LockScreenOrientation(const ScreenOrientation& aOrientation)
     // The Android backend only supports these orientations.
     case eScreenOrientation_PortraitPrimary:
     case eScreenOrientation_PortraitSecondary:
-    case eScreenOrientation_Portrait:
+    case eScreenOrientation_PortraitPrimary | eScreenOrientation_PortraitSecondary:
     case eScreenOrientation_LandscapePrimary:
     case eScreenOrientation_LandscapeSecondary:
-    case eScreenOrientation_Landscape:
+    case eScreenOrientation_LandscapePrimary | eScreenOrientation_LandscapeSecondary:
       bridge->LockScreenOrientation(aOrientation);
       return true;
     default:
