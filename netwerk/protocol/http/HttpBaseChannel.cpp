@@ -441,7 +441,7 @@ HttpBaseChannel::GetUploadStream(nsIInputStream **stream)
 NS_IMETHODIMP
 HttpBaseChannel::SetUploadStream(nsIInputStream *stream,
                                const nsACString &contentType,
-                               int32_t contentLength)
+                               int64_t contentLength)
 {
   // NOTE: for backwards compatibility and for compatibility with old style
   // plugins, |stream| may include headers, specifically Content-Type and
