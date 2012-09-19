@@ -21,7 +21,12 @@
 
   <commandset id="editMenuCommands"/>
 
-  <commandset>
+  <commandset id="consoleCommands"
+              commandupdater="true"
+              events="richlistbox-select"
+              oncommandupdate="goUpdateConsoleCommands();">
+    <command id="consoleCmd_openURL"
+             oncommand="goDoCommand('consoleCmd_openURL');"/>
     <command id="cmd_fullZoomEnlarge" oncommand="goDoCommand('cmd_fontSizeEnlarge');"/>
     <command id="cmd_fullZoomReduce" oncommand="goDoCommand('cmd_fontSizeReduce');"/>
     <command id="cmd_fullZoomReset" oncommand="goDoCommand('cmd_fontSizeReset');"/>
@@ -38,9 +43,13 @@
   <keyset id="editMenuKeys"/>
 
   <popupset id="mainPopupSet">
-    <menupopup id="output-contextmenu">
+    <menupopup id="output-contextmenu"
+               onpopupshowing="ConsoleContextMenu.build(event);">
       <menuitem id="saveBodiesContextMenu" type="checkbox" label="&saveBodies.label;"
                 accesskey="&saveBodies.accesskey;"/>
+      <menuitem id="menu_openURL" label="&openURL.label;"
+                accesskey="&openURL.accesskey;" command="consoleCmd_openURL"
+                selection="network" selectionType="single"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_selectAll"/>
     </menupopup>
