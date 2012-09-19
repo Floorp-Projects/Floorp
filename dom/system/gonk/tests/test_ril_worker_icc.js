@@ -114,3 +114,31 @@ add_test(function test_is_icc_service_available() {
 
   run_next_test();
 });
+
+/**
+ * Verify writeDiallingNumber
+ */
+add_test(function test_write_dialling_number() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+
+  // with +
+  let number = "+123456";
+  let len = 4;
+  helper.writeDiallingNumber(number);
+  do_check_eq(helper.readDiallingNumber(len), number);
+
+  // without +
+  number = "987654";
+  len = 4;
+  helper.writeDiallingNumber(number);
+  do_check_eq(helper.readDiallingNumber(len), number);
+
+  number = "9876543";
+  len = 5;
+  helper.writeDiallingNumber(number);
+  do_check_eq(helper.readDiallingNumber(len), number);
+
+  run_next_test();
+});
+
