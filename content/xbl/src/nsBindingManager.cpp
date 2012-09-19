@@ -16,7 +16,6 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
-#include "mozilla/FunctionTimer.h"
 #include "nsContentUtils.h"
 #include "nsIPresShell.h"
 #include "nsIXMLContentSink.h"
@@ -995,8 +994,6 @@ nsBindingManager::ProcessAttachedQueue(uint32_t aSkipSize)
 {
   if (mProcessingAttachedStack || mAttachedStack.Length() <= aSkipSize)
     return;
-
-  NS_TIME_FUNCTION;
 
   mProcessingAttachedStack = true;
 

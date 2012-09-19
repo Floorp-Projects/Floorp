@@ -17,7 +17,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
-#include "mozilla/FunctionTimer.h"
 #include "prsystem.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -2103,7 +2102,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_NewDHashTable(JS_DHashGetStubOps(), nullptr,
                          sizeof(JSDHashEntryStub), 128);
 #endif
-    NS_TIME_FUNCTION;
 
     DOM_InitInterfaces();
     Preferences::AddBoolVarCache(&gNewDOMBindingsEnabled, "dom.new_bindings",
@@ -2225,8 +2223,6 @@ bool InternStaticDictionaryJSVals(JSContext* aCx);
 JSBool
 XPCJSRuntime::OnJSContextNew(JSContext *cx)
 {
-    NS_TIME_FUNCTION;
-
     // if it is our first context then we need to generate our string ids
     JSBool ok = true;
     if (JSID_IS_VOID(mStrIDs[0])) {
