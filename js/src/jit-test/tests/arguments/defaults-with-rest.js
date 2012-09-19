@@ -5,7 +5,7 @@ function f1(a, bIs, b=3, ...rest) {
     assertEq(bIs, b);
     assertEqArray(rest, []);
 }
-assertEq(f1.length, 3);
+assertEq(f1.length, 2);
 f1(1, 3);
 f1(1, 42, 42);
 function f2(a=rest, ...rest) {

@@ -312,10 +312,12 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         JS_ASSERT(!IsInternalFunctionObject(obj));
 
         RootedValue v(cx);
-        if (JSID_IS_ATOM(id, cx->names().length))
-            v.setInt32(fun->nargs - fun->hasRest());
-        else
+        if (JSID_IS_ATOM(id, cx->names().length)) {
+            uint16_t defaults = fun->isInterpreted() ? fun->script()->ndefaults : 0;
+            v.setInt32(fun->nargs - defaults - fun->hasRest());
+        } else {
             v.setString(fun->atom() == NULL ?  cx->runtime->emptyString : fun->atom());
+        }
 
         if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
