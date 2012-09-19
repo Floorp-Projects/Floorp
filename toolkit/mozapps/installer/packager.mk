@@ -244,7 +244,7 @@ endif #Create an RPM file
 ifeq ($(MOZ_PKG_FORMAT),APK)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
-include $(topsrcdir)/config/android-common.mk
+include $(MOZILLA_DIR)/config/android-common.mk
 
 JARSIGNER ?= echo
 
@@ -304,7 +304,7 @@ NON_DIST_FILES = \
 
 UPLOAD_EXTRA_FILES += gecko-unsigned-unaligned.apk
 
-include $(topsrcdir)/ipc/app/defs.mk
+include $(MOZILLA_DIR)/ipc/app/defs.mk
 
 DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
 
