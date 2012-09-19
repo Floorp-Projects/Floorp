@@ -67,52 +67,38 @@ let DOMApplicationRegistry = {
       ppmm.addMessageListener(msgName, this);
     }).bind(this));
 
+    cpmm.addMessageListener("Activities:Register:OK", this);
+
     Services.obs.addObserver(this, "xpcom-shutdown", false);
 
     this.appsFile = FileUtils.getFile(DIRECTORY_NAME,
                                       ["webapps", "webapps.json"], true);
 
-    let dirList = [DIRECTORY_NAME];
+    this.loadAndUpdateApps();
+  },
 
-#ifdef MOZ_WIDGET_GONK
-    dirList.push("coreAppsDir");
-#endif
-    let currentId = 1;
-    this.dirsToLoad = dirList.length;
-    this.dirsLoaded = 0;
-    dirList.forEach((function(dir) {
-      let curFile;
-      try {
-        // getFile calls getDir with |shouldCreate = true|, so we have
-        // to wrap in a try..catch in case the file does not exist on a
-        // read-only partition.
-        curFile = FileUtils.getFile(dir, ["webapps", "webapps.json"], false);
-      } catch(e) { }
-      if (curFile && curFile.exists()) {
-        let appDir = FileUtils.getDir(dir, ["webapps"], false);
-        this._loadJSONAsync(curFile, (function(aData) {
-          if (!aData) {
-            return;
-          }
-#ifdef MOZ_SYS_MSG
-          let ids = [];
-#endif
-          // Add new apps to the merged list.
-          for (let id in aData) {
-            this.webapps[id] = aData[id];
-            this.webapps[id].basePath = appDir.path;
-            this.webapps[id].removable = (dir == DIRECTORY_NAME);
-#ifdef MOZ_SYS_MSG
-            ids.push({ id: id });
-#endif
-            // local ids must be stable between restarts.
-            // We partition the ids in two buckets:
-            // - 1 to 1000 for the core apps.
-            // - 1001 to Inf for installed apps.
-            // This way, a gecko update with new core apps will not lead to
-            // changes for installed apps ids.
-            if (!this.webapps[id].removable) {
-              this.webapps[id].localId = currentId++;
+  // loads the current registry, that could be empty on first run.
+  // aNext() is called after we load the current webapps list.
+  loadCurrentRegistry: function loadCurrentRegistry(aNext) {
+    let file = FileUtils.getFile(DIRECTORY_NAME, ["webapps", "webapps.json"], false);
+    if (file && file.exists) {
+      this._loadJSONAsync(file, (function loadRegistry(aData) {
+        if (aData) {
+          this.webapps = aData;
+          let appDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], false);
+          for (let id in this.webapps) {
+            // Make sure we have a localId
+            if (this.webapps[id].localId === undefined) {
+              this.webapps[id].localId = this._nextLocalId();
+            }
+
+            if (this.webapps[id].basePath === undefined) {
+              this.webapps[id].basePath = appDir.path;
+            }
+
+            // Default to removable apps.
+            if (this.webapps[id].removable === undefined) {
+              this.webapps[id].removable = true;
             }
 
             // Default to a non privileged status.
@@ -120,14 +106,101 @@ let DOMApplicationRegistry = {
               this.webapps[id].appStatus = Ci.nsIPrincipal.APP_STATUS_INSTALLED;
             }
           };
+        }
+        aNext();
+      }).bind(this));
+    } else {
+      aNext();
+    }
+  },
+
+  // We are done with loading and initializing. Notify and
+  // save a copy of the registry.
+  onInitDone: function onInitDone() {
+    Services.obs.notifyObservers(this, "webapps-registry-ready", null);
+    this._saveApps();
+  },
+
+  // registers all the activities and system messages
+  registerAppsHandlers: function registerAppsHandlers() {
 #ifdef MOZ_SYS_MSG
-          this._processManifestForIds(ids);
+    let ids = [];
+    for (let id in this.webapps) {
+      ids.push({ id: id });
+    }
+    this._processManifestForIds(ids);
+#else
+    // Nothing else to do but notifying we're ready.
+    this.onInitDone();
 #endif
+  },
+
+  // Implements the core of bug 787439
+  // 1. load the apps from the current registry.
+  // 2. if at first run, go through these steps:
+  //   a. load the core apps registry.
+  //   b. uninstall any core app from the current registry but not in the
+  //      new core apps registry.
+  //   c. for all apps in the new core registry, install them if they are not
+  //      yet in the current registry, and run installPermissions()
+  loadAndUpdateApps: function loadAndUpdateApps() {
+    let runUpdate = Services.prefs.getBoolPref("dom.mozApps.runUpdate");
+    Services.prefs.setBoolPref("dom.mozApps.runUpdate", false);
+
+    // 1.
+    this.loadCurrentRegistry((function() {
+#ifdef MOZ_WIDGET_GONK
+    // if first run, merge the system apps.
+    if (runUpdate) {
+      let file = FileUtils.getFile("coreAppsDir", ["webapps", "webapps.json"], false);
+      if (file && file.exists) {
+        // 2.a
+        this._loadJSONAsync(file, (function loadCoreRegistry(aData) {
+          if (!aData) {
+            this.registerAppsHandlers();
+            return;
+          }
+
+          // 2.b : core apps are not removable.
+          for (let id in this.webapps) {
+            if (id in aData || this.webapps[id].removable)
+              continue;
+            let localId = this.webapps[id].localId;
+            delete this.webapps[id];
+            // XXXX once bug 758269 is ready, revoke perms for this app
+            // removePermissions(localId);
+          }
+
+          let appDir = FileUtils.getDir("coreAppsDir", ["webapps"], false);
+          // 2.c
+          for (let id in aData) {
+            // Core apps have ids matching their domain name (eg: dialer.gaiamobile.org)
+            // Use that property to check if they are new or not.
+            if (!(id in this.webapps)) {
+              this.webapps[id] = aData[id];
+              this.webapps[id].basePath = appDir.path;
+
+              // Create a new localId.
+              this.webapps[id].localId = this._nextLocalId();
+
+              // Core apps are not removable.
+              if (this.webapps[id].removable === undefined) {
+                this.webapps[id].removable = false;
+              }
+            }
+            // XXXX once bug 758269 is ready, revoke perms for this app
+            // let localId = this.webapps[id].localId;
+            // installPermissions(localId);
+          }
+          this.registerAppsHandlers();
         }).bind(this));
-      } else {
-        // The directory we're trying to load from doesn't exist.
-        this.dirsToLoad--;
       }
+    } else {
+      this.registerAppsHandlers();
+    }
+#else
+    this.registerAppsHandlers();
+#endif
     }).bind(this));
   },
 
@@ -200,6 +273,7 @@ let DOMApplicationRegistry = {
         "icon": manifest.iconURLForSize(128),
         "description": description
       }
+      this.activitiesToRegister++;
       cpmm.sendAsyncMessage("Activities:Register", json);
 
       let launchPath =
@@ -254,6 +328,9 @@ let DOMApplicationRegistry = {
   },
 
   _processManifestForIds: function(aIds) {
+    this.activitiesToRegister = 0;
+    this.activitiesRegistered = 0;
+    this.allActivitiesSent = false;
     this._readManifests(aIds, (function registerManifests(aResults) {
       aResults.forEach(function registerManifest(aResult) {
         let app = this.webapps[aResult.id];
@@ -262,10 +339,7 @@ let DOMApplicationRegistry = {
         this._registerSystemMessages(manifest, app);
         this._registerActivities(manifest, app);
       }, this);
-      this.dirsLoaded++;
-      if (this.dirsLoaded == this.dirsToLoad) {
-        Services.obs.notifyObservers(this, "webapps-registry-ready", null);
-      }
+      this.allActivitiesSent = true;
     }).bind(this));
   },
 #endif
@@ -393,6 +467,13 @@ let DOMApplicationRegistry = {
       case "Webapps:GetList":
         this.addMessageListener(["Webapps:AddApp", "Webapps:RemoveApp"], mm);
         return this.webapps;
+      case "Activities:Register:OK":
+        this.activitiesRegistered++;
+        if (this.allActivitiesSent &&
+            this.activitiesRegistered === this.activitiesToRegister) {
+          this.onInitDone();
+        }
+        break;
     }
   },
 
