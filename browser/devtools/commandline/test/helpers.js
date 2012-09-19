@@ -375,7 +375,7 @@ DeveloperToolbarTest.exec = function DTT_exec(tests) {
  * the tests have completed. If a single test function is passed then this
  * function should arrange for 'finish()' to be called on completion.
  */
-DeveloperToolbarTest.test = function DTT_test(uri, target) {
+DeveloperToolbarTest.test = function DTT_test(uri, target, isGcli) {
   let menuItem = document.getElementById("menu_devToolbar");
   let command = document.getElementById("Tools:DevToolbar");
   let appMenuItem = document.getElementById("appmenu_devToolbar");
@@ -420,14 +420,21 @@ DeveloperToolbarTest.test = function DTT_test(uri, target) {
     browser.removeEventListener("load", onTabLoad, true);
 
     DeveloperToolbarTest.show(function() {
-      if (helpers) {
-        helpers.setup({ display: DeveloperToolbar.display });
+      var options = {
+        window: content,
+        display: DeveloperToolbar.display,
+        isFirefox: true
+      };
+
+      if (helpers && !isGcli) {
+        helpers.setup(options);
       }
 
       if (Array.isArray(target)) {
         try {
           target.forEach(function(func) {
-            func(browser, tab);
+            var args = isGcli ? [ options ] : [ browser, tab ];
+            func.apply(null, args);
           })
         }
         finally {
@@ -498,18 +505,18 @@ DeveloperToolbarTest.closeAllTabs = function() {
 
 var helpers = {};
 
+var assert = { ok: ok, is: is, log: info };
+
 helpers._display = undefined;
+helpers._options = undefined;
 
 helpers.setup = function(options) {
+  helpers._options = options;
   helpers._display = options.display;
-  if (typeof ok !== 'undefined') {
-    test.ok = ok;
-    test.is = is;
-    test.log = info;
-  }
 };
 
 helpers.shutdown = function(options) {
+  helpers._options = undefined;
   helpers._display = undefined;
 };
 
@@ -628,10 +635,23 @@ helpers.setInput = function(typed, cursor) {
   if (cursor) {
     helpers._display.inputter.setCursor({ start: cursor, end: cursor });
   }
+  else {
+    // This is a hack because jsdom appears to not handle cursor updates
+    // in the same way as most browsers.
+    if (helpers._options.isJsdom) {
+      helpers._display.inputter.setCursor({
+        start: typed.length,
+        end: typed.length
+      });
+    }
+  }
 
   helpers._display.focusManager.onInputChange();
 
-  test.log('setInput("' + typed + '"' + (cursor == null ? '' : ', ' + cursor) + ')');
+  // Firefox testing is noisy and distant, so logging helps
+  if (helpers._options.isFirefox) {
+    assert.log('setInput("' + typed + '"' + (cursor == null ? '' : ', ' + cursor) + ')');
+  }
 };
 
 /**
@@ -692,35 +712,35 @@ helpers.pressKey = function(keyCode) {
  */
 helpers.check = function(checks) {
   if ('input' in checks) {
-    test.is(helpers._actual.input(), checks.input, 'input');
+    assert.is(helpers._actual.input(), checks.input, 'input');
   }
 
   if ('cursor' in checks) {
-    test.is(helpers._actual.cursor(), checks.cursor, 'cursor');
+    assert.is(helpers._actual.cursor(), checks.cursor, 'cursor');
   }
 
   if ('current' in checks) {
-    test.is(helpers._actual.current(), checks.current, 'current');
+    assert.is(helpers._actual.current(), checks.current, 'current');
   }
 
   if ('status' in checks) {
-    test.is(helpers._actual.status(), checks.status, 'status');
+    assert.is(helpers._actual.status(), checks.status, 'status');
   }
 
   if ('markup' in checks) {
-    test.is(helpers._actual.markup(), checks.markup, 'markup');
+    assert.is(helpers._actual.markup(), checks.markup, 'markup');
   }
 
   if ('hints' in checks) {
-    test.is(helpers._actual.hints(), checks.hints, 'hints');
+    assert.is(helpers._actual.hints(), checks.hints, 'hints');
   }
 
   if ('tooltipState' in checks) {
-    test.is(helpers._actual.tooltipState(), checks.tooltipState, 'tooltipState');
+    assert.is(helpers._actual.tooltipState(), checks.tooltipState, 'tooltipState');
   }
 
   if ('outputState' in checks) {
-    test.is(helpers._actual.outputState(), checks.outputState, 'outputState');
+    assert.is(helpers._actual.outputState(), checks.outputState, 'outputState');
   }
 
   if (checks.args != null) {
@@ -737,42 +757,42 @@ helpers.check = function(checks) {
       }
 
       if (assignment == null) {
-        test.ok(false, 'Unknown arg: ' + paramName);
+        assert.ok(false, 'Unknown arg: ' + paramName);
         return;
       }
 
       if ('value' in check) {
-        test.is(assignment.value,
+        assert.is(assignment.value,
                 check.value,
                 'arg.' + paramName + '.value');
       }
 
       if ('name' in check) {
-        test.is(assignment.value.name,
+        assert.is(assignment.value.name,
                 check.name,
                 'arg.' + paramName + '.name');
       }
 
       if ('type' in check) {
-        test.is(assignment.arg.type,
+        assert.is(assignment.arg.type,
                 check.type,
                 'arg.' + paramName + '.type');
       }
 
       if ('arg' in check) {
-        test.is(assignment.arg.toString(),
+        assert.is(assignment.arg.toString(),
                 check.arg,
                 'arg.' + paramName + '.arg');
       }
 
       if ('status' in check) {
-        test.is(assignment.getStatus().toString(),
+        assert.is(assignment.getStatus().toString(),
                 check.status,
                 'arg.' + paramName + '.status');
       }
 
       if ('message' in check) {
-        test.is(assignment.getMessage(),
+        assert.is(assignment.getMessage(),
                 check.message,
                 'arg.' + paramName + '.message');
       }
@@ -806,19 +826,19 @@ helpers.exec = function(tests) {
   var typed = inputter.getInputState().typed;
   var output = requisition.exec({ hidden: true });
 
-  test.is(typed, output.typed, 'output.command for: ' + typed);
+  assert.is(typed, output.typed, 'output.command for: ' + typed);
 
   if (tests.completed !== false) {
-    test.ok(output.completed, 'output.completed false for: ' + typed);
+    assert.ok(output.completed, 'output.completed false for: ' + typed);
   }
   else {
     // It is actually an error if we say something is async and it turns
     // out not to be? For now we're saying 'no'
-    // test.ok(!output.completed, 'output.completed true for: ' + typed);
+    // assert.ok(!output.completed, 'output.completed true for: ' + typed);
   }
 
   if (tests.args != null) {
-    test.is(Object.keys(tests.args).length, Object.keys(output.args).length,
+    assert.is(Object.keys(tests.args).length, Object.keys(output.args).length,
             'arg count for ' + typed);
 
     Object.keys(output.args).forEach(function(arg) {
@@ -827,36 +847,36 @@ helpers.exec = function(tests) {
 
       if (Array.isArray(expectedArg)) {
         if (!Array.isArray(actualArg)) {
-          test.ok(false, 'actual is not an array. ' + typed + '/' + arg);
+          assert.ok(false, 'actual is not an array. ' + typed + '/' + arg);
           return;
         }
 
-        test.is(expectedArg.length, actualArg.length,
+        assert.is(expectedArg.length, actualArg.length,
                 'array length: ' + typed + '/' + arg);
         for (var i = 0; i < expectedArg.length; i++) {
-          test.is(expectedArg[i], actualArg[i],
+          assert.is(expectedArg[i], actualArg[i],
                   'member: "' + typed + '/' + arg + '/' + i);
         }
       }
       else {
-        test.is(expectedArg, actualArg, 'typed: "' + typed + '" arg: ' + arg);
+        assert.is(expectedArg, actualArg, 'typed: "' + typed + '" arg: ' + arg);
       }
     });
   }
 
-  if (!options.window.document.createElement) {
-    test.log('skipping output tests (missing doc.createElement) for ' + typed);
+  if (!helpers._options.window.document.createElement) {
+    assert.log('skipping output tests (missing doc.createElement) for ' + typed);
     return;
   }
 
-  var div = options.window.document.createElement('div');
+  var div = helpers._options.window.document.createElement('div');
   output.toDom(div);
   var displayed = div.textContent.trim();
 
   if (tests.outputMatch) {
     var doTest = function(match, against) {
       if (!match.test(against)) {
-        test.ok(false, "html output for " + typed + " against " + match.source);
+        assert.ok(false, "html output for " + typed + " against " + match.source);
         console.log("Actual textContent");
         console.log(against);
       }
@@ -873,7 +893,7 @@ helpers.exec = function(tests) {
 
   if (tests.blankOutput != null) {
     if (!/^$/.test(displayed)) {
-      test.ok(false, "html for " + typed + " (textContent sent to info)");
+      assert.ok(false, "html for " + typed + " (textContent sent to info)");
       console.log("Actual textContent");
       console.log(displayed);
     }
