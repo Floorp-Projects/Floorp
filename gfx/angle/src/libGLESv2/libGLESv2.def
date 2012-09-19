@@ -180,3 +180,8 @@ EXPORTS
     glGetCurrentContext             @147 NONAME
     glGetProcAddress                @148 NONAME
     glBindTexImage                  @158 NONAME
+
+    ; GCC has problems with linking to undecored stdcall functions,
+    ; so we explicitly add aliases for APIs used by EGL
+    glGetProcAddress@4=glGetProcAddress
+    glBindTexImage@4=glBindTexImage
