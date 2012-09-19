@@ -7,8 +7,17 @@ package org.mozilla.gecko;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+import android.util.Log;
+
+import java.io.FileOutputStream;
+
+import org.mozilla.gecko.gfx.BitmapUtils;
 
 public class WebAppAllocator {
+    private final String LOGTAG = "GeckoWebAppAllocator";
     // The number of WebApp# and WEBAPP# activites/apps/intents
     private final static int MAX_WEB_APPS = 100;
 
@@ -44,20 +53,38 @@ public class WebAppAllocator {
         mPrefs = context.getSharedPreferences("webapps", Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
     }
 
-    static String appKey(int index) {
+    public static String appKey(int index) {
         return "app" + index;
     }
 
-    public synchronized int findAndAllocateIndex(String app) {
+    static public String iconKey(int index) {
+        return "icon" + index;
+    }
+
+    public synchronized int findAndAllocateIndex(String app, String name, String aIconData) {
+        byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+        return findAndAllocateIndex(app, name, bitmap);
+    }
+
+    public synchronized int findAndAllocateIndex(String app, String name, Bitmap aIcon) {
         int index = getIndexForApp(app);
         if (index != -1)
             return index;
+
+        int color = 0;
+        try {
+            color = BitmapUtils.getDominantColor(aIcon);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         for (int i = 0; i < MAX_WEB_APPS; ++i) {
             if (!mPrefs.contains(appKey(i))) {
                 // found unused index i
                 mPrefs.edit()
                     .putString(appKey(i), app)
+                    .putInt(iconKey(i), color)
                     .apply();
                 return i;
             }
@@ -78,7 +105,7 @@ public class WebAppAllocator {
     }
 
     public synchronized String getAppForIndex(int index) {
-            return mPrefs.getString(appKey(index), null);
+        return mPrefs.getString(appKey(index), null);
     }
 
     public synchronized int releaseIndexForApp(String app) {
@@ -93,6 +120,7 @@ public class WebAppAllocator {
     public synchronized void releaseIndex(int index) {
         mPrefs.edit()
             .remove(appKey(index))
+            .remove(iconKey(index))
             .apply();
     }
 }
