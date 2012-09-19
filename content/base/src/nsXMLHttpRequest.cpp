@@ -2928,9 +2928,11 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   if (!IsSystemXHR()) {
     // Always create a nsCORSListenerProxy here even if it's
     // a same-origin request right now, since it could be redirected.
-    listener = new nsCORSListenerProxy(listener, mPrincipal, mChannel,
-                                       withCredentials, true, &rv);
+    nsRefPtr<nsCORSListenerProxy> corsListener =
+      new nsCORSListenerProxy(listener, mPrincipal, withCredentials);
+    rv = corsListener->Init(mChannel, true);
     NS_ENSURE_SUCCESS(rv, rv);
+    listener = corsListener;
   }
   else {
     // Because of bug 682305, we can't let listener be the XHR object itself
