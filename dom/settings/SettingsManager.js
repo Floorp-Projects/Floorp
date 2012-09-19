@@ -209,7 +209,7 @@ SettingsLock.prototype = {
 };
 
 const SETTINGSMANAGER_CONTRACTID = "@mozilla.org/settingsManager;1";
-const SETTINGSMANAGER_CID        = Components.ID("{0694f5e0-f777-11e1-a21f-0800200c9a66}");
+const SETTINGSMANAGER_CID        = Components.ID("{c40b1c70-00fb-11e2-a21f-0800200c9a66}");
 const nsIDOMSettingsManager      = Ci.nsIDOMSettingsManager;
 
 let myGlobal = this;
@@ -257,11 +257,6 @@ SettingsManager.prototype = {
       myGlobal );
     this.nextTick(function() { this._open = false; }, lock);
     return lock;
-  },
-
-  getLock: function() {
-    dump("WARNING: Use createLock instead of getLock!");
-    return this.createLock();
   },
 
   receiveMessage: function(aMessage) {
