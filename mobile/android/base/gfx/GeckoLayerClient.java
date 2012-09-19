@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.ScreenshotHandler;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
@@ -428,7 +429,7 @@ public class GeckoLayerClient
         DisplayPortCalculator.resetPageState();
         mDrawTimingQueue.reset();
         mView.getRenderer().resetCheckerboard();
-        GeckoAppShell.screenshotWholePage(Tabs.getInstance().getSelectedTab());
+        ScreenshotHandler.screenshotWholePage(Tabs.getInstance().getSelectedTab());
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature.
