@@ -502,6 +502,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
     Label recompile;
     Label boundscheck;
     Label overrecursed;
+    Label invalidate;
 
     // The return value from Bailout is tagged as:
     // - 0x0: done (thunk to interpreter)
@@ -512,6 +513,8 @@ MacroAssembler::generateBailoutTail(Register scratch)
     // - 0x5: recompile to inline calls
     // - 0x6: bounds check failure
     // - 0x7: force invalidation
+    // - 0x8: overrecursed
+    // - 0x9: cached shape guard failure
 
     branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &interpret);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &exception);
@@ -519,10 +522,21 @@ MacroAssembler::generateBailoutTail(Register scratch)
     branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK), &reflow);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK), &recompile);
 
-    branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_INVALIDATE), &boundscheck);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_BOUNDS_CHECK), &boundscheck);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OVERRECURSED), &overrecursed);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_INVALIDATE), &invalidate);
 
-    // Fall-through: force invalidation.
+    // Fall-through: cached shape guard failure.
+    {
+        setupUnalignedABICall(0, scratch);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, CachedShapeGuardFailure));
+
+        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+        jump(&interpret);
+    }
+
+    // Force invalidation.
+    bind(&invalidate);
     {
         setupUnalignedABICall(0, scratch);
         callWithABI(JS_FUNC_TO_DATA_PTR(void *, ForceInvalidation));

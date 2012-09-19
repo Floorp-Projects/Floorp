@@ -316,7 +316,7 @@ LIRGeneratorARM::visitGuardShape(MGuardShape *ins)
 {
     LDefinition tempObj = temp(LDefinition::OBJECT);
     LGuardShape *guard = new LGuardShape(useRegister(ins->obj()), tempObj);
-    return assignSnapshot(guard, Bailout_Invalidate) && add(guard, ins);
+    return assignSnapshot(guard, ins->bailoutKind()) && add(guard, ins);
 }
 
 bool
