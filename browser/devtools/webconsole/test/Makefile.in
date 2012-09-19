@@ -105,6 +105,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_664131_console_group.js \
 	browser_webconsole_bug_704295.js \
 	browser_webconsole_bug_658368_time_methods.js \
+	browser_webconsole_bug_764572_output_open_url.js \
 	browser_webconsole_bug_622303_persistent_filters.js \
 	browser_webconsole_window_zombie.js \
 	browser_cached_messages.js \
