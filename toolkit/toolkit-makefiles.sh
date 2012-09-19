@@ -1219,12 +1219,6 @@ if [ "$MOZ_PAY" ]; then
   "
 fi
 
-if [ "$MOZ_B2G_FM" ]; then
-  add_makefiles "
-    dom/fm/Makefile
-  "
-fi
-
 if [ "$MOZ_CRASHREPORTER" ]; then
   add_makefiles "
     toolkit/crashreporter/Makefile
