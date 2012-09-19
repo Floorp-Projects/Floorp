@@ -1255,8 +1255,7 @@ struct TypeCompartment
      * or JSProto_Object to indicate a type whose class is unknown (not just
      * js_ObjectClass).
      */
-    TypeObject *newTypeObject(JSContext *cx, JSScript *script,
-                              JSProtoKey kind, HandleObject proto,
+    TypeObject *newTypeObject(JSContext *cx, JSProtoKey kind, HandleObject proto,
                               bool unknown = false, bool isDOM = false);
 
     /* Get or make an object for an allocation site, and add to the allocation site table. */
