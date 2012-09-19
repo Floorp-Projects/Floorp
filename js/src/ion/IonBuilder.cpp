@@ -267,6 +267,9 @@ IonBuilder::build()
     IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) (usecount=%d) (maxloopcount=%d)",
             script->filename, script->lineno, (void *) script, (int) script->getUseCount(), (int) script->getMaxLoopCount());
 
+    if (!graph().addScript(script))
+        return false;
+
     if (!initParameters())
         return false;
 
@@ -388,6 +391,9 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 {
     IonSpew(IonSpew_Scripts, "Inlining script %s:%d (%p)",
             script->filename, script->lineno, (void *)script);
+
+    if (!graph().addScript(script))
+        return false;
 
     callerBuilder_ = callerBuilder;
     callerResumePoint_ = callerResumePoint;
@@ -4667,7 +4673,7 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
     // If we have a property typeset, the isOwnProperty call will trigger recompilation if
     // the property is deleted or reconfigured.
     if (!propertyTypes && shape->configurable()) {
-        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty());
+        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty(), Bailout_Invalidate);
         current->add(guard);
     }
 
@@ -4720,7 +4726,7 @@ IonBuilder::jsop_setgname(HandlePropertyName name)
     // if the property is deleted or reconfigured. Without TI, we always need a shape guard
     // to guard against the property being reconfigured as non-writable.
     if (!propertyTypes) {
-        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty());
+        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty(), Bailout_Invalidate);
         current->add(guard);
     }
 
@@ -5470,7 +5476,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
     // are no lookup hooks for this property.
     MInstruction *wrapper = MConstant::New(ObjectValue(*foundProto));
     current->add(wrapper);
-    MGuardShape *guard = MGuardShape::New(wrapper, foundProto->lastProperty());
+    MGuardShape *guard = MGuardShape::New(wrapper, foundProto->lastProperty(), Bailout_Invalidate);
     current->add(guard);
 
     // Now we have to freeze all the property typesets to ensure there isn't a
@@ -5898,7 +5904,7 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
             // that the shape is still a lastProperty, and calling
             // Shape::search() on dictionary mode shapes that aren't
             // lastProperty is invalid.
-            MGuardShape *guard = MGuardShape::New(obj, objShape);
+            MGuardShape *guard = MGuardShape::New(obj, objShape, Bailout_CachedShapeGuard);
             current->add(guard);
 
             spew("Inlining monomorphic GETPROP");
@@ -6020,7 +6026,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             // long as the shape is not in dictionary mode. We cannot be sure
             // that the shape is still a lastProperty, and calling Shape::search
             // on dictionary mode shapes that aren't lastProperty is invalid.
-            MGuardShape *guard = MGuardShape::New(obj, objShape);
+            MGuardShape *guard = MGuardShape::New(obj, objShape, Bailout_CachedShapeGuard);
             current->add(guard);
 
             Shape *shape = objShape->search(cx, NameToId(name));
