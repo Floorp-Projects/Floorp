@@ -5173,7 +5173,8 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, options.principals, options.originPrincipals);
+    assertSameCompartment(cx, obj);
+    JS_ASSERT_IF(options.principals, cx->compartment->principals == options.principals);
     AutoLastFrameCheck lfc(cx);
 
     return frontend::CompileScript(cx, obj, NULL, options, chars, length);
@@ -5436,7 +5437,8 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, options.principals, options.originPrincipals);
+    assertSameCompartment(cx, obj);
+    JS_ASSERT_IF(options.principals, cx->compartment->principals == options.principals);
     AutoLastFrameCheck lfc(cx);
 
     RootedAtom funAtom(cx);
@@ -5653,7 +5655,9 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, options.principals, options.originPrincipals);
+    assertSameCompartment(cx, obj);
+    JS_ASSERT_IF(options.principals, cx->compartment->principals == options.principals);
+
     AutoLastFrameCheck lfc(cx);
 
     options.setCompileAndGo(true);

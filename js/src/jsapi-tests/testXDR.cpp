@@ -9,6 +9,7 @@
 #include "tests.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsfriendapi.h"
 
 static JSScript *
 CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JS::HandleObject obj,
@@ -78,6 +79,7 @@ static JSPrincipals testPrincipals[] = {
 BEGIN_TEST(testXDR_principals)
 {
     JSScript *script;
+    JSCompartment *compartment = js::GetContextCompartment(cx);
     for (int i = TEST_FIRST; i != TEST_END; ++i) {
         script = createScriptViaXDR(NULL, NULL, i);
         CHECK(script);
@@ -89,6 +91,10 @@ BEGIN_TEST(testXDR_principals)
         CHECK(!JS_GetScriptPrincipals(script));
         CHECK(!JS_GetScriptOriginPrincipals(script));
 
+        // Appease the new JSAPI assertions. The stuff being tested here is
+        // going away anyway.
+        JSPrincipals *old = JS_GetCompartmentPrincipals(compartment);
+        JS_SetCompartmentPrincipals(compartment, &testPrincipals[0]);
         script = createScriptViaXDR(&testPrincipals[0], NULL, i);
         CHECK(script);
         CHECK(JS_GetScriptPrincipals(script) == &testPrincipals[0]);
@@ -108,6 +114,7 @@ BEGIN_TEST(testXDR_principals)
         CHECK(script);
         CHECK(!JS_GetScriptPrincipals(script));
         CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipals[1]);
+        JS_SetCompartmentPrincipals(compartment, old);
     }
 
     return true;
