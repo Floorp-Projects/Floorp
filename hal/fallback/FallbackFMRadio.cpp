@@ -24,7 +24,6 @@ FMRadioSeek(const hal::FMRadioSeekDirection& aDirection)
 void
 GetFMRadioSettings(hal::FMRadioSettings* aInfo)
 {
-  aInfo->type() = FM_RADIO_COUNTRY_UNKNOWN;
   aInfo->upperLimit() = 0;
   aInfo->lowerLimit() = 0;
   aInfo->spaceType() = 0;
