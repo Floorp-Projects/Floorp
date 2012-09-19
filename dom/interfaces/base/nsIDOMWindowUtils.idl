@@ -40,7 +40,7 @@ interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 
-[scriptable, uuid(37cf79ee-fe7a-4d5a-9e41-e2186553969f)]
+[scriptable, uuid(6cf3e8f0-fb82-11e1-a21f-0800200c9a66)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1021,13 +1021,6 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void suspendTimeouts();
   void resumeTimeouts();
-
-  /**
-   * Set the network status to online from the Offline mode error page.
-   *
-   * The caller of this method must be about:neterror.
-   */
-  void goOnline();
 
   /**
    * What type of layer manager the widget associated with this window is
