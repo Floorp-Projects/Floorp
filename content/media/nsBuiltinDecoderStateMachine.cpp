@@ -1490,7 +1490,9 @@ void nsBuiltinDecoderStateMachine::Seek(double aTime)
   mSeekTime = NS_MAX(mStartTime, mSeekTime);
   LOG(PR_LOG_DEBUG, ("%p Changed state to SEEKING (to %f)", mDecoder.get(), aTime));
   mState = DECODER_STATE_SEEKING;
-  mDecoder->RecreateDecodedStream(mSeekTime - mStartTime);
+  if (mDecoder->GetDecodedStream()) {
+    mDecoder->RecreateDecodedStream(mSeekTime - mStartTime);
+  }
   ScheduleStateMachine();
 }
 
