@@ -1,3 +1,5 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -145,6 +147,24 @@ protected:
 
   bool
   DoRequest(const DevicePropertiesRequest& aRequest);
+
+  bool
+  DoRequest(const SetPinCodeRequest& aRequest);
+
+  bool
+  DoRequest(const SetPasskeyRequest& aRequest);
+
+  bool
+  DoRequest(const ConfirmPairingConfirmationRequest& aRequest);
+
+  bool
+  DoRequest(const DenyPairingConfirmationRequest& aRequest);
+
+  bool
+  DoRequest(const ConfirmAuthorizationRequest& aRequest);
+
+  bool
+  DoRequest(const DenyAuthorizationRequest& aRequest);
 };
 
 END_BLUETOOTH_NAMESPACE
