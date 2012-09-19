@@ -37,7 +37,6 @@
 #include "mozilla/Services.h"
 #include "nsITimer.h"
 
-#include "mozilla/FunctionTimer.h"
 
 #include "mozilla/net/NeckoCommon.h"
 
@@ -1109,8 +1108,6 @@ nsCacheService::~nsCacheService()
 nsresult
 nsCacheService::Init()
 {
-    NS_TIME_FUNCTION;
-
     // Thie method must be called on the main thread because mCacheIOThread must
     // only be modified on the main thread.
     if (!NS_IsMainThread()) {
