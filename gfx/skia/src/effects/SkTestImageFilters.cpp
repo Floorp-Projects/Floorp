@@ -1,7 +1,16 @@
+
 #include "SkTestImageFilters.h"
 #include "SkCanvas.h"
 #include "SkDevice.h"
+#include "SkFlattenableBuffers.h"
 
+// Simple helper canvas that "takes ownership" of the provided device, so that
+// when this canvas goes out of scope, so will its device. Could be replaced
+// with the following:
+//
+//  SkCanvas canvas(device);
+//  SkAutoTUnref<SkDevice> aur(device);
+//
 class OwnDeviceCanvas : public SkCanvas {
 public:
     OwnDeviceCanvas(SkDevice* device) : SkCanvas(device) {
@@ -15,7 +24,7 @@ bool SkOffsetImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
                                         SkIPoint* loc) {
     SkVector vec;
     matrix.mapVectors(&vec, &fOffset, 1);
-    
+
     loc->fX += SkScalarRoundToInt(vec.fX);
     loc->fY += SkScalarRoundToInt(vec.fY);
     *result = src;
@@ -34,13 +43,11 @@ bool SkOffsetImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix& ctm
 
 void SkOffsetImageFilter::flatten(SkFlattenableWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
-    buffer.writeScalar(fOffset.x());
-    buffer.writeScalar(fOffset.y());
+    buffer.writePoint(fOffset);
 }
 
 SkOffsetImageFilter::SkOffsetImageFilter(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {
-    fOffset.fX = buffer.readScalar();
-    fOffset.fY = buffer.readScalar();
+    buffer.readPoint(&fOffset);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,11 +65,11 @@ bool SkComposeImageFilter::onFilterImage(Proxy* proxy,
     if (!fOuter && !fInner) {
         return false;
     }
-    
+
     if (!fOuter || !fInner) {
         return (fOuter ? fOuter : fInner)->filterImage(proxy, src, ctm, result, loc);
     }
-    
+
     SkBitmap tmp;
     return fInner->filterImage(proxy, src, ctm, &tmp, loc) &&
            fOuter->filterImage(proxy, tmp, ctm, result, loc);
@@ -74,11 +81,11 @@ bool SkComposeImageFilter::onFilterBounds(const SkIRect& src,
     if (!fOuter && !fInner) {
         return false;
     }
-    
+
     if (!fOuter || !fInner) {
         return (fOuter ? fOuter : fInner)->filterBounds(src, ctm, dst);
     }
-    
+
     SkIRect tmp;
     return fInner->filterBounds(src, ctm, &tmp) &&
            fOuter->filterBounds(tmp, ctm, dst);
@@ -92,8 +99,8 @@ void SkComposeImageFilter::flatten(SkFlattenableWriteBuffer& buffer) const {
 }
 
 SkComposeImageFilter::SkComposeImageFilter(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {
-    fOuter = (SkImageFilter*)buffer.readFlattenable();
-    fInner = (SkImageFilter*)buffer.readFlattenable();
+    fOuter = buffer.readFlattenableT<SkImageFilter>();
+    fInner = buffer.readFlattenableT<SkImageFilter>();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -163,7 +170,7 @@ bool SkMergeImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix& ctm,
     }
 
     SkIRect totalBounds;
-    
+
     for (int i = 0; i < fCount; ++i) {
         SkImageFilter* filter = fFilters[i];
         SkIRect r;
@@ -224,7 +231,7 @@ bool SkMergeImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
         } else {
             srcPtr = &src;
         }
-        
+
         if (fModes) {
             paint.setXfermodeMode((SkXfermode::Mode)fModes[i]);
         } else {
@@ -246,75 +253,33 @@ void SkMergeImageFilter::flatten(SkFlattenableWriteBuffer& buffer) const {
         // negative count signals we have modes
         storedCount = -storedCount;
     }
-    buffer.write32(storedCount);
+    buffer.writeInt(storedCount);
 
     if (fCount) {
         for (int i = 0; i < fCount; ++i) {
             buffer.writeFlattenable(fFilters[i]);
         }
         if (fModes) {
-            buffer.write(fModes, fCount * sizeof(fModes[0]));
+            buffer.writeByteArray(fModes, fCount * sizeof(fModes[0]));
         }
     }
 }
 
 SkMergeImageFilter::SkMergeImageFilter(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {
-    int storedCount = buffer.readS32();
+    int storedCount = buffer.readInt();
     this->initAlloc(SkAbs32(storedCount), storedCount < 0);
 
     for (int i = 0; i < fCount; ++i) {
-        fFilters[i] = (SkImageFilter*)buffer.readFlattenable();
+        fFilters[i] = buffer.readFlattenableT<SkImageFilter>();
     }
 
     if (fModes) {
         SkASSERT(storedCount < 0);
-        buffer.read(fModes, fCount * sizeof(fModes[0]));
+        SkASSERT(buffer.getArrayCount() == fCount * sizeof(fModes[0]));
+        buffer.readByteArray(fModes);
     } else {
         SkASSERT(storedCount >= 0);
     }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-#include "SkColorFilter.h"
-
-SkColorFilterImageFilter::~SkColorFilterImageFilter() {
-    SkSafeUnref(fColorFilter);
-}
-
-bool SkColorFilterImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
-                                             const SkMatrix& matrix,
-                                             SkBitmap* result,
-                                             SkIPoint* loc) {
-    SkColorFilter* cf = fColorFilter;
-    if (NULL == cf) {
-        *result = src;
-        return true;
-    }
-
-    SkDevice* dev = proxy->createDevice(src.width(), src.height());
-    if (NULL == dev) {
-        return false;
-    }
-    OwnDeviceCanvas canvas(dev);
-    SkPaint paint;
-
-    paint.setXfermodeMode(SkXfermode::kSrc_Mode);
-    paint.setColorFilter(fColorFilter);
-    canvas.drawSprite(src, 0, 0, &paint);
-
-    *result = dev->accessBitmap(false);
-    return true;
-}
-
-void SkColorFilterImageFilter::flatten(SkFlattenableWriteBuffer& buffer) const {
-    this->INHERITED::flatten(buffer);
-    
-    buffer.writeFlattenable(fColorFilter);
-}
-
-SkColorFilterImageFilter::SkColorFilterImageFilter(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {
-    fColorFilter = (SkColorFilter*)buffer.readFlattenable();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -326,7 +291,7 @@ bool SkDownSampleImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
     if (scale > SK_Scalar1 || scale <= 0) {
         return false;
     }
-    
+
     int dstW = SkScalarRoundToInt(src.width() * scale);
     int dstH = SkScalarRoundToInt(src.height() * scale);
     if (dstW < 1) {
@@ -371,7 +336,7 @@ bool SkDownSampleImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
 
 void SkDownSampleImageFilter::flatten(SkFlattenableWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
-    
+
     buffer.writeScalar(fScale);
 }
 
@@ -382,5 +347,4 @@ SkDownSampleImageFilter::SkDownSampleImageFilter(SkFlattenableReadBuffer& buffer
 SK_DEFINE_FLATTENABLE_REGISTRAR(SkOffsetImageFilter)
 SK_DEFINE_FLATTENABLE_REGISTRAR(SkComposeImageFilter)
 SK_DEFINE_FLATTENABLE_REGISTRAR(SkMergeImageFilter)
-SK_DEFINE_FLATTENABLE_REGISTRAR(SkColorFilterImageFilter)
 SK_DEFINE_FLATTENABLE_REGISTRAR(SkDownSampleImageFilter)

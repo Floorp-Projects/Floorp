@@ -15,6 +15,7 @@
 #include "SkDrawLooper.h"
 #include "SkXfermode.h"
 
+class SkAnnotation;
 class SkAutoGlyphCache;
 class SkColorFilter;
 class SkDescriptor;
@@ -28,6 +29,7 @@ class SkMaskFilter;
 class SkMatrix;
 class SkPath;
 class SkPathEffect;
+struct SkPoint;
 class SkRasterizer;
 class SkShader;
 class SkTypeface;
@@ -206,7 +208,7 @@ public:
     bool isVerticalText() const {
         return SkToBool(this->getFlags() & kVerticalText_Flag);
     }
-    
+
     /**
      *  Helper for setting or clearing the kVerticalText_Flag bit in
      *  setFlags(...).
@@ -582,6 +584,17 @@ public:
     SkImageFilter* getImageFilter() const { return fImageFilter; }
     SkImageFilter* setImageFilter(SkImageFilter*);
 
+    SkAnnotation* getAnnotation() const { return fAnnotation; }
+    SkAnnotation* setAnnotation(SkAnnotation*);
+
+    /**
+     *  Returns true if there is an annotation installed on this paint, and
+     *  the annotation specifics no-drawing.
+     */
+    bool isNoDrawAnnotation() const {
+        return SkToBool(fPrivFlags & kNoDrawAnnotation_PrivFlag);
+    }
+
     /**
      *  Return the paint's SkDrawLooper (if any). Does not affect the looper's
      *  reference count.
@@ -654,6 +667,20 @@ public:
         @param skewX set the paint's skew factor in X for drawing text.
     */
     void setTextSkewX(SkScalar skewX);
+
+#ifdef SK_SUPPORT_HINTING_SCALE_FACTOR
+    /** Return the paint's scale factor used for correctly rendering
+        glyphs in high DPI mode without text subpixel positioning.
+        @return the scale factor used for rendering glyphs in high DPI mode.
+    */
+    SkScalar getHintingScaleFactor() const { return fHintingScaleFactor; }
+
+    /** Set the paint's scale factor used for correctly rendering
+        glyphs in high DPI mode without text subpixel positioning.
+        @param the scale factor used for rendering glyphs in high DPI mode.
+    */
+    void setHintingScaleFactor(SkScalar hintingScaleFactor);
+#endif
 
     /** Describes how to interpret the text parameters that are passed to paint
         methods like measureText() and getTextWidths().
@@ -774,7 +801,7 @@ public:
     /** Return the number of bytes of text that were measured. If
      *  isVerticalText() is true, then the vertical advances are used for
      *  the measurement.
-     *  
+     *
      *  @param text     The text to be measured
      *  @param length   Number of bytes of text to measure
      *  @param maxWidth Maximum width. Only the subset of text whose accumulated
@@ -813,7 +840,7 @@ public:
     void getTextPath(const void* text, size_t length, SkScalar x, SkScalar y,
                      SkPath* path) const;
 
-    void getPosTextPath(const void* text, size_t length, 
+    void getPosTextPath(const void* text, size_t length,
                         const SkPoint pos[], SkPath* path) const;
 
 #ifdef SK_BUILD_FOR_ANDROID
@@ -845,18 +872,18 @@ public:
         }
         return !this->getRasterizer();
     }
-    
+
     /** Only call this if canComputeFastBounds() returned true. This takes a
      raw rectangle (the raw bounds of a shape), and adjusts it for stylistic
      effects in the paint (e.g. stroking). If needed, it uses the storage
      rect parameter. It returns the adjusted bounds that can then be used
      for quickReject tests.
-     
+
      The returned rect will either be orig or storage, thus the caller
      should not rely on storage being set to the result, but should always
      use the retured value. It is legal for orig and storage to be the same
      rect.
-     
+
      e.g.
      if (paint.canComputeFastBounds()) {
      SkRect r, storage;
@@ -878,25 +905,28 @@ public:
                 return orig;
             }
         }
-        
+
         return this->doComputeFastBounds(orig, storage, style);
     }
-    
+
     const SkRect& computeFastStrokeBounds(const SkRect& orig,
                                           SkRect* storage) const {
         return this->doComputeFastBounds(orig, storage, kStroke_Style);
     }
-    
+
     // Take the style explicitly, so the caller can force us to be stroked
     // without having to make a copy of the paint just to change that field.
     const SkRect& doComputeFastBounds(const SkRect& orig, SkRect* storage,
                                       Style) const;
-    
+
 private:
     SkTypeface*     fTypeface;
     SkScalar        fTextSize;
     SkScalar        fTextScaleX;
     SkScalar        fTextSkewX;
+#ifdef SK_SUPPORT_HINTING_SCALE_FACTOR
+    SkScalar        fHintingScaleFactor;
+#endif
 
     SkPathEffect*   fPathEffect;
     SkShader*       fShader;
@@ -906,17 +936,24 @@ private:
     SkRasterizer*   fRasterizer;
     SkDrawLooper*   fLooper;
     SkImageFilter*  fImageFilter;
+    SkAnnotation*   fAnnotation;
 
     SkColor         fColor;
     SkScalar        fWidth;
     SkScalar        fMiterLimit;
-    unsigned        fFlags : 15;
+    // all of these bitfields should add up to 32
+    unsigned        fFlags : 16;
     unsigned        fTextAlign : 2;
     unsigned        fCapType : 2;
     unsigned        fJoinType : 2;
     unsigned        fStyle : 2;
     unsigned        fTextEncoding : 2;  // 3 values
     unsigned        fHinting : 2;
+    unsigned        fPrivFlags : 4; // these are not flattened/unflattened
+
+    enum PrivFlags {
+        kNoDrawAnnotation_PrivFlag  = 1 << 0,
+    };
 
     SkDrawCacheProc    getDrawCacheProc() const;
     SkMeasureCacheProc getMeasureCacheProc(TextBufferDirection dir,
@@ -931,12 +968,15 @@ private:
                         void (*proc)(const SkDescriptor*, void*),
                         void* context, bool ignoreGamma = false) const;
 
+    static void Term();
+
     enum {
         kCanonicalTextSizeForPaths = 64
     };
     friend class SkAutoGlyphCache;
     friend class SkCanvas;
     friend class SkDraw;
+    friend class SkGraphics; // So Term() can be called.
     friend class SkPDFDevice;
     friend class SkTextToPathIter;
 

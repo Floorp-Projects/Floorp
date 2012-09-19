@@ -21,6 +21,8 @@ var t = document.getElementById("t");
 var e = document.getElementById("e");
 var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                getInterface(Components.interfaces.nsIDOMWindowUtils);
+const isLinux = navigator.platform.indexOf("Linux") >= 0;
+const is64 = navigator.platform.indexOf("x86_64") >= 0;
 
 function startTest() {
   // Do a couple of scrolls to ensure we've triggered activity heuristics.
@@ -34,10 +36,10 @@ function startTest() {
         t.scrollTop = 33;
         waitForAllPaintsFlushed(function () {
           var painted = utils.checkAndClearPaintedState(e);
-          if (navigator.platform.indexOf("Linux") == -1) {
-            is(painted, false, "Fully-visible scrolled element should not have been painted");
+          if (isLinux && !is64) {
+            todo_is(painted, false, "Fully-visible scrolled element should not have been painted (disabled on Linux-32)");
           } else {
-            ok(true, "Fully-visible scrolled element should not have been painted");
+            is(painted, false, "Fully-visible scrolled element should not have been painted");
           }
           SimpleTest.finish();
         });

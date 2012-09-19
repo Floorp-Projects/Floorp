@@ -37,9 +37,10 @@ interface nsICacheSession : nsISupports
      */
 
     /**
-     * Synchronous cache access.  This returns a unique descriptor each
-     * time it is called, even if the same key is specified.  When
-     * called by multiple threads for write access, only one writable
+     * Synchronous cache access. This method fails if it is called on the main
+     * thread. Use asyncOpenCacheEntry() instead. This returns a unique
+     * descriptor each time it is called, even if the same key is specified.
+     * When called by multiple threads for write access, only one writable
      * descriptor will be granted.  If 'blockingMode' is set to false, it will
      * return NS_ERROR_CACHE_WAIT_FOR_VALIDATION rather than block when another
      * descriptor has been given WRITE access but hasn't validated the entry yet.

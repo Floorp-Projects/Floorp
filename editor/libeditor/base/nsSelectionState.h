@@ -11,7 +11,6 @@
 #include "nsINode.h"
 #include "nsTArray.h"
 #include "nscore.h"
-#include "prtypes.h"
 
 class nsCycleCollectionTraversalCallback;
 class nsIDOMCharacterData;

@@ -2260,22 +2260,9 @@ nsFtpState::CheckCache()
         key.Truncate(pos);
     NS_ENSURE_FALSE(key.IsEmpty(), false);
 
-    // Try to open a cache entry immediately, but if the cache entry is busy,
-    // then wait for it to be available.
+    nsresult rv = session->AsyncOpenCacheEntry(key, accessReq, this, false);
+    return NS_SUCCEEDED(rv);
 
-    nsresult rv = session->OpenCacheEntry(key, accessReq, false,
-                                          getter_AddRefs(mCacheEntry));
-    if (NS_SUCCEEDED(rv) && mCacheEntry) {
-        mDoomCache = true;
-        return false;  // great, we're ready to proceed!
-    }
-
-    if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-        rv = session->AsyncOpenCacheEntry(key, accessReq, this, false);
-        return NS_SUCCEEDED(rv);
-    }
-
-    return false;
 }
 
 nsresult

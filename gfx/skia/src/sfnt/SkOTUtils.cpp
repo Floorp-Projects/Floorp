@@ -40,7 +40,7 @@ SkData* SkOTUtils::RenameFont(SkStream* fontData,
         if (fontData->read(&tableEntry, sizeof(tableEntry)) < sizeof(tableEntry)) {
             return NULL;
         }
-        if ('name' == SkEndian_SwapBE32(tableEntry.tag)) {
+        if (SkOTTableName::TAG == tableEntry.tag) {
             break;
         }
     }
@@ -73,7 +73,7 @@ SkData* SkOTUtils::RenameFont(SkStream* fontData,
     //originalDataSize is the size of the original data without the name table.
     size_t originalDataSize = fontData->getLength() - oldNameTablePhysicalSize;
     size_t newDataSize = originalDataSize + nameTablePhysicalSize;
-    
+
     SK_OT_BYTE* data = static_cast<SK_OT_BYTE*>(sk_malloc_throw(newDataSize));
     SkAutoTUnref<SkData> rewrittenFontData(SkData::NewFromMalloc(data, newDataSize));
 
@@ -96,7 +96,7 @@ SkData* SkOTUtils::RenameFont(SkStream* fontData,
         if (oldOffset > oldNameTableOffset) {
             currentEntry->offset = SkEndian_SwapBE32(oldOffset - oldNameTablePhysicalSize);
         }
-        if ('head' == SkEndian_SwapBE32(tableEntry.tag)) {
+        if (SkOTTableHead::TAG == tableEntry.tag) {
             headTableEntry = currentEntry;
         }
     }

@@ -11,37 +11,26 @@
 #ifndef GrDrawTarget_DEFINED
 #define GrDrawTarget_DEFINED
 
-#include "GrClip.h"
-#include "GrColor.h"
 #include "GrDrawState.h"
 #include "GrIndexBuffer.h"
 #include "GrMatrix.h"
 #include "GrRefCnt.h"
-#include "GrSamplerState.h"
-#include "GrStencil.h"
-#include "GrTexture.h"
+#include "GrTemplates.h"
 
 #include "SkXfermode.h"
 #include "SkTLazy.h"
+#include "SkTArray.h"
 
-class GrTexture;
-class GrClipIterator;
+class GrClipData;
+class GrPath;
 class GrVertexBuffer;
-class GrIndexBuffer;
 
 class GrDrawTarget : public GrRefCnt {
-public:
-    /**
-     * Represents the draw target capabilities.
-     */
-    struct Caps {
-        Caps() { memset(this, 0, sizeof(Caps)); }
-        Caps(const Caps& c) { *this = c; }
-        Caps& operator= (const Caps& c) {
-            memcpy(this, &c, sizeof(Caps));
-            return *this;
-        }
-        void print() const;
+protected:
+    /** This helper class allows GrDrawTarget subclasses to set the caps values without having to be
+        made a friend of GrDrawTarget::Caps. */
+    class CapsInternals {
+    public:
         bool f8BitPaletteSupport        : 1;
         bool fNPOTTextureTileSupport    : 1;
         bool fTwoSidedStencilSupport    : 1;
@@ -52,12 +41,45 @@ public:
         bool fFSAASupport               : 1;
         bool fDualSourceBlendingSupport : 1;
         bool fBufferLockSupport         : 1;
+        bool fPathStencilingSupport     : 1;
         int fMaxRenderTargetSize;
         int fMaxTextureSize;
     };
 
-    // for convenience
-    typedef GrDrawState::StageMask StageMask;
+public:
+    SK_DECLARE_INST_COUNT(GrDrawTarget)
+
+    /**
+     * Represents the draw target capabilities.
+     */
+    class Caps {
+    public:
+        Caps() { memset(this, 0, sizeof(Caps)); }
+        Caps(const Caps& c) { *this = c; }
+        Caps& operator= (const Caps& c) {
+            memcpy(this, &c, sizeof(Caps));
+            return *this;
+        }
+        void print() const;
+
+        bool eightBitPaletteSupport() const { return fInternals.f8BitPaletteSupport; }
+        bool npotTextureTileSupport() const { return fInternals.fNPOTTextureTileSupport; }
+        bool twoSidedStencilSupport() const { return fInternals.fTwoSidedStencilSupport; }
+        bool stencilWrapOpsSupport() const { return  fInternals.fStencilWrapOpsSupport; }
+        bool hwAALineSupport() const { return fInternals.fHWAALineSupport; }
+        bool shaderDerivativeSupport() const { return fInternals.fShaderDerivativeSupport; }
+        bool geometryShaderSupport() const { return fInternals.fGeometryShaderSupport; }
+        bool fsaaSupport() const { return fInternals.fFSAASupport; }
+        bool dualSourceBlendingSupport() const { return fInternals.fDualSourceBlendingSupport; }
+        bool bufferLockSupport() const { return fInternals.fBufferLockSupport; }
+        bool pathStencilingSupport() const { return fInternals.fPathStencilingSupport; }
+
+        int maxRenderTargetSize() const { return fInternals.fMaxRenderTargetSize; }
+        int maxTextureSize() const { return fInternals.fMaxTextureSize; }
+    private:
+        CapsInternals fInternals;
+        friend class GrDrawTarget; // to set values of fInternals
+    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -77,14 +99,14 @@ public:
      *
      * @param description of the clipping region
      */
-    void setClip(const GrClip& clip);
+    void setClip(const GrClipData* clip);
 
     /**
      * Gets the current clip.
      *
      * @return the clip.
      */
-    const GrClip& getClip() const;
+    const GrClipData* getClip() const;
 
     /**
      * Sets the draw state object for the draw target. Note that this does not
@@ -106,17 +128,6 @@ public:
     GrDrawState* drawState() { return fDrawState; }
 
     /**
-     * Shortcut for drawState()->preConcatSamplerMatrices() on all enabled
-     * stages
-     *
-     * @param matrix  the matrix to concat
-     */
-    void preConcatEnabledSamplerMatrices(const GrMatrix& matrix) {
-        StageMask stageMask = this->enabledStages();
-        this->drawState()->preConcatSamplerMatrices(stageMask, matrix);
-    }
-
-    /**
      * Color alpha and coverage are two inputs to the drawing pipeline. For some
      * blend modes it is safe to fold the coverage into constant or per-vertex
      * color alpha value. For other blend modes they must be handled separately.
@@ -129,7 +140,7 @@ public:
      *    1. The caller intends to somehow specify coverage. This can be
      *       specified either by enabling a coverage stage on the GrDrawState or
      *       via the vertex layout.
-     *    2. Other than enabling coverage stages, the current configuration of 
+     *    2. Other than enabling coverage stages, the current configuration of
      *       the target's GrDrawState is as it will be at draw time.
      *    3. If a vertex source has not yet been specified then all stages with
      *       non-NULL textures will be referenced by the vertex layout.
@@ -146,7 +157,7 @@ public:
     bool canTweakAlphaForCoverage() const;
 
     /**
-     * Given the current draw state and hw support, will HW AA lines be used 
+     * Given the current draw state and hw support, will HW AA lines be used
      * (if line primitive type is drawn)? If a vertex source has not yet been
      * specified then  the function assumes that all stages with non-NULL
      * textures will be referenced by the vertex layout.
@@ -157,8 +168,8 @@ public:
      * The format of vertices is represented as a bitfield of flags.
      * Flags that indicate the layout of vertex data. Vertices always contain
      * positions and may also contain up to GrDrawState::kMaxTexCoords sets
-     * of 2D texture * coordinates, per-vertex colors, and per-vertex coverage.
-     * Each stage can 
+     * of 2D texture coordinates, per-vertex colors, and per-vertex coverage.
+     * Each stage can
      * use any of the texture coordinates as its input texture coordinates or it
      * may use the positions as texture coordinates.
      *
@@ -169,8 +180,8 @@ public:
      * example StageTexCoordVertexLayoutBit(0, 2) and
      * StagePosAsTexCoordVertexLayoutBit(0) cannot both be specified.
      *
-     * The order in memory is always (position, texture coord 0, ..., color, 
-     * coverage) with any unused fields omitted. Note that this means that if 
+     * The order in memory is always (position, texture coord 0, ..., color,
+     * coverage) with any unused fields omitted. Note that this means that if
      * only texture coordinates 1 is referenced then there is no texture
      * coordinates 0 and the order would be (position, texture coordinate 1
      * [, color][, coverage]).
@@ -190,45 +201,12 @@ public:
         return 1 << (stage + (texCoordIdx * GrDrawState::kNumStages));
     }
 
-    virtual void postClipPush() {};
-    virtual void preClipPop() {};
+    static bool StageUsesTexCoords(GrVertexLayout layout, int stage);
 
 private:
-    static const int TEX_COORD_BIT_CNT = GrDrawState::kNumStages *
-                                         GrDrawState::kMaxTexCoords;
-
-public:
-    /**
-     * Generates a bit indicating that a texture stage uses the position
-     * as its texture coordinate.
-     *
-     * @param stage       the stage that will use position as texture
-     *                    coordinates.
-     *
-     * @return the bit to add to a GrVertexLayout bitfield.
-     */
-    static int StagePosAsTexCoordVertexLayoutBit(int stage) {
-        GrAssert(stage < GrDrawState::kNumStages);
-        return (1 << (TEX_COORD_BIT_CNT + stage));
-    }
-
-    /**
-     * Modify the existing vertex layout. Realistically the only thing that 
-     * can be added w/o recomputing the vertex layout is one of the 
-     * StagePosAsTexCoordVertexLayoutBit flags
-     */
-    void addToVertexLayout(int flag) {
-        GrAssert((1 << TEX_COORD_BIT_CNT) == flag ||
-                 (1 << (TEX_COORD_BIT_CNT + 1)) == flag ||
-                 (1 << (TEX_COORD_BIT_CNT + 2)) == flag ||
-                 (1 << (TEX_COORD_BIT_CNT + 3)) == flag);
-        fGeoSrcStateStack.back().fVertexLayout |= flag;
-    }
-
-private:
-    static const int STAGE_BIT_CNT = TEX_COORD_BIT_CNT +
-        GrDrawState::kNumStages;
-
+    // non-stage bits start at this index.
+    static const int STAGE_BIT_CNT = GrDrawState::kNumStages *
+                                     GrDrawState::kMaxTexCoords;
 public:
 
     /**
@@ -286,7 +264,7 @@ public:
      *    that the draw target make room for some amount of vertex and/or index
      *    data. The target provides ptrs to hold the vertex and/or index data.
      *
-     *    The data is writable up until the next drawIndexed, drawNonIndexed, 
+     *    The data is writable up until the next drawIndexed, drawNonIndexed,
      *    drawIndexedInstances, or pushGeometrySource. At this point the data is
      *    frozen and the ptrs are no longer valid.
      *
@@ -295,7 +273,7 @@ public:
      *
      * 3. Vertex and Index Buffers. This is most useful for geometry that will
      *    is long-lived. When the data in the buffer is consumed depends on the
-     *    GrDrawTarget subclass. For deferred subclasses the caller has to 
+     *    GrDrawTarget subclass. For deferred subclasses the caller has to
      *    guarantee that the data is still available in the buffers at playback.
      *    (TODO: Make this more automatic as we have done for read/write pixels)
      */
@@ -303,7 +281,7 @@ public:
     /**
      * Reserves space for vertices and/or indices. Zero can be specifed as
      * either the vertex or index count if the caller desires to only reserve
-     * space for only indices or only vertices. If zero is specifed for 
+     * space for only indices or only vertices. If zero is specifed for
      * vertexCount then the vertex source will be unmodified and likewise for
      * indexCount.
      *
@@ -324,7 +302,7 @@ public:
      *                     0.
      * @param indexCount   the number of indices to reserve space for. Can be 0.
      * @param vertices     will point to reserved vertex space if vertexCount is
-     *                     non-zero. Illegal to pass NULL if vertexCount > 0.    
+     *                     non-zero. Illegal to pass NULL if vertexCount > 0.
      * @param indices      will point to reserved index space if indexCount is
      *                     non-zero. Illegal to pass NULL if indexCount > 0.
      */
@@ -400,7 +378,7 @@ public:
      *               before indexed draw call.
      */
     void setIndexSourceToBuffer(const GrIndexBuffer* buffer);
-    
+
     /**
      * Resets vertex source. Drawing from reset vertices is illegal. Set vertex
      * source to reserved, array, or buffer before next draw. May be able to free
@@ -408,7 +386,7 @@ public:
      * reserveVertexSpace.
      */
     void resetVertexSource();
-    
+
     /**
      * Resets index source. Indexed Drawing from reset indices is illegal. Set
      * index source to reserved, array, or buffer before next indexed draw. May
@@ -416,7 +394,7 @@ public:
      * or reserveIndexSpace.
      */
     void resetIndexSource();
-    
+
     /**
      * Query to find out if the vertex or index source is reserved.
      */
@@ -436,7 +414,7 @@ public:
      * Pops the vertex / index sources from the matching push.
      */
     void popGeometrySource();
-    
+
     /**
      * Draws indexed geometry using the current state and current vertex / index
      * sources.
@@ -470,6 +448,13 @@ public:
                         int vertexCount);
 
     /**
+     * Draws path into the stencil buffer. The fill must be either even/odd or
+     * winding (not inverse or hairline). It will respect the HW antialias flag
+     * on the draw state (if possible in the 3D API).
+     */
+    void stencilPath(const GrPath*, GrPathFill);
+
+    /**
      * Helper function for drawing rects. This does not use the current index
      * and vertex sources. After returning, the vertex and index sources may
      * have changed. They should be reestablished before the next drawIndexed
@@ -479,8 +464,6 @@ public:
      * drawNonIndexed.
      * @param rect      the rect to draw
      * @param matrix    optional matrix applied to rect (before viewMatrix)
-     * @param stageMask bitmask indicating which stages are enabled.
-     *                  Bit i indicates whether stage i is enabled.
      * @param srcRects  specifies rects for stages enabled by stageEnableMask.
      *                  if stageEnableMask bit i is 1, srcRects is not NULL,
      *                  and srcRects[i] is not NULL, then srcRects[i] will be
@@ -494,7 +477,6 @@ public:
      */
     virtual void drawRect(const GrRect& rect,
                           const GrMatrix* matrix,
-                          StageMask stageMask,
                           const GrRect* srcRects[],
                           const GrMatrix* srcMatrices[]);
 
@@ -536,17 +518,18 @@ public:
      * matrices.
      */
     void drawSimpleRect(const GrRect& rect,
-                        const GrMatrix* matrix,
-                        StageMask stageEnableBitfield) {
-         drawRect(rect, matrix, stageEnableBitfield, NULL, NULL);
+                        const GrMatrix* matrix) {
+         drawRect(rect, matrix, NULL, NULL);
     }
 
     /**
-     * Clear the render target. Ignores the clip and all other draw state
-     * (blend mode, stages, etc). Clears the whole thing if rect is NULL,
-     * otherwise just the rect.
+     * Clear the current render target if one isn't passed in. Ignores the
+     * clip and all other draw state (blend mode, stages, etc). Clears the
+     * whole thing if rect is NULL, otherwise just the rect.
      */
-    virtual void clear(const GrIRect* rect, GrColor color) = 0;
+    virtual void clear(const GrIRect* rect,
+                       GrColor color,
+                       GrRenderTarget* renderTarget = NULL) = 0;
 
     /**
      * Release any resources that are cached but not currently in use. This
@@ -577,7 +560,7 @@ public:
      *                             // Therefore, rt is set on the GrDrawState
      *                             // that will be restored after asr's
      *                             // destructor rather than target's current
-     *                             // GrDrawState. 
+     *                             // GrDrawState.
      */
     class AutoStateRestore : ::GrNoncopyable {
     public:
@@ -616,19 +599,30 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
 
-    /** 
+    /**
      * Sets the view matrix to I and preconcats all stage matrices enabled in
      * mask by the view inverse. Destructor undoes these changes.
      */
     class AutoDeviceCoordDraw : ::GrNoncopyable {
     public:
-        AutoDeviceCoordDraw(GrDrawTarget* target, StageMask stageMask);
+        /**
+         * If a stage's texture matrix is applied to explicit per-vertex coords,
+         * rather than to positions, then we don't want to modify its matrix.
+         * The explicitCoordStageMask is used to specify such stages.
+         *
+         * TODO: Remove this when custom stage's control their own texture
+         * matrix and there is a "view matrix has changed" notification to the
+         * custom stages.
+         */
+        AutoDeviceCoordDraw(GrDrawTarget* target,
+                            uint32_t explicitCoordStageMask = 0);
+        bool succeeded() const { return NULL != fDrawTarget; }
         ~AutoDeviceCoordDraw();
     private:
         GrDrawTarget*       fDrawTarget;
         GrMatrix            fViewMatrix;
         GrMatrix            fSamplerMatrices[GrDrawState::kNumStages];
-        int                 fStageMask;
+        int                 fRestoreMask;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -654,7 +648,7 @@ public:
 
     private:
         void reset();
-        
+
         GrDrawTarget* fTarget;
         void*         fVertices;
         void*         fIndices;
@@ -673,12 +667,12 @@ public:
             fTarget->setClip(fClip);
         }
     private:
-        GrDrawTarget* fTarget;
-        GrClip        fClip;
+        GrDrawTarget*      fTarget;
+        const GrClipData*  fClip;
     };
-    
+
     ////////////////////////////////////////////////////////////////////////////
-    
+
     class AutoGeometryPush : ::GrNoncopyable {
     public:
         AutoGeometryPush(GrDrawTarget* target) {
@@ -757,18 +751,6 @@ public:
      */
     static bool VertexUsesTexCoordIdx(int coordIndex,
                                       GrVertexLayout vertexLayout);
-
-    /**
-     * Helper function to determine if vertex layout contains either explicit or
-     * implicit texture coordinates for a stage.
-     *
-     * @param stage         the stage to query
-     * @param vertexLayout  layout to query
-     *
-     * @return true if vertex specifies texture coordinates for the stage,
-     *              false otherwise.
-     */
-    static bool VertexUsesStage(int stage, GrVertexLayout vertexLayout);
 
     /**
      * Helper function to compute the size of each vertex and the offsets of
@@ -950,7 +932,7 @@ protected:
         kArray_GeometrySrcType,    //<! src was set using set*SourceToArray
         kBuffer_GeometrySrcType    //<! src was set using set*SourceToBuffer
     };
-    
+
     struct GeometrySrcState {
         GeometrySrcType         fVertexSrc;
         union {
@@ -959,7 +941,7 @@ protected:
             // valid if src type is reserved or array
             int                     fVertexCount;
         };
-        
+
         GeometrySrcType         fIndexSrc;
         union {
             // valid if src type is buffer
@@ -967,7 +949,7 @@ protected:
             // valid if src type is reserved or array
             int                     fIndexCount;
         };
-        
+
         GrVertexLayout          fVertexLayout;
     };
 
@@ -986,24 +968,9 @@ protected:
                 return 0;
         }
     }
-    // given a vertex layout and a draw state, will a stage be used?
-    static bool StageWillBeUsed(int stage, GrVertexLayout layout, 
-                                const GrDrawState& state) {
-        return NULL != state.getTexture(stage) &&
-               VertexUsesStage(stage, layout);
-    }
 
     bool isStageEnabled(int stage) const {
-        return StageWillBeUsed(stage, this->getVertexLayout(),
-                               this->getDrawState());
-    }
-
-    StageMask enabledStages() const {
-        StageMask mask = 0;
-        for (int s = 0; s < GrDrawState::kNumStages; ++s) {
-            mask |= this->isStageEnabled(s) ? 1 : 0;
-        }
-        return mask;
+        return this->getDrawState().isStageEnabled(stage);
     }
 
     // A sublcass can optionally overload this function to be notified before
@@ -1011,7 +978,7 @@ protected:
     virtual void willReserveVertexAndIndexSpace(GrVertexLayout vertexLayout,
                                                 int vertexCount,
                                                 int indexCount) {}
-    
+
 
     // implemented by subclass to allocate space for reserved geom
     virtual bool onReserveVertexSpace(GrVertexLayout vertexLayout,
@@ -1042,14 +1009,15 @@ protected:
     virtual void onDrawNonIndexed(GrPrimitiveType type,
                                   int startVertex,
                                   int vertexCount) = 0;
+    virtual void onStencilPath(const GrPath*, GrPathFill) = 0;
+
     // subclass overrides to be notified when clip is set. Must call
     // INHERITED::clipwillBeSet
-    virtual void clipWillBeSet(const GrClip& clip) {}
+    virtual void clipWillBeSet(const GrClipData* clipData) {}
 
     // Helpers for drawRect, protected so subclasses that override drawRect
     // can use them.
-    static GrVertexLayout GetRectVertexLayout(StageMask stageEnableBitfield,
-                                              const GrRect* srcRects[]);
+    static GrVertexLayout GetRectVertexLayout(const GrRect* srcRects[]);
 
     static void SetRectVertices(const GrRect& rect,
                                 const GrMatrix* matrix,
@@ -1071,7 +1039,10 @@ protected:
         return this->getGeomSrc().fVertexLayout;
     }
 
-    GrClip fClip;
+    // allows derived class to set the caps
+    CapsInternals* capsInternals() { return &fCaps.fInternals; }
+
+    const GrClipData* fClip;
 
     GrDrawState* fDrawState;
     GrDrawState fDefaultDrawState;
@@ -1079,7 +1050,7 @@ protected:
     Caps fCaps;
 
     // subclasses must call this in their destructors to ensure all vertex
-    // and index sources have been released (including those held by 
+    // and index sources have been released (including those held by
     // pushGeometrySource())
     void releaseGeometry();
 
@@ -1089,7 +1060,7 @@ private:
                             int vertexCount,
                             void** vertices);
     bool reserveIndexSpace(int indexCount, void** indices);
-    
+
     // called by drawIndexed and drawNonIndexed. Use a negative indexCount to
     // indicate non-indexed drawing.
     bool checkDraw(GrPrimitiveType type, int startVertex,
@@ -1098,13 +1069,14 @@ private:
     // called when setting a new vert/idx source to unref prev vb/ib
     void releasePreviousVertexSource();
     void releasePreviousIndexSource();
-    
+
     enum {
         kPreallocGeoSrcStateStackCnt = 4,
     };
-    SkSTArray<kPreallocGeoSrcStateStackCnt, 
+    SkSTArray<kPreallocGeoSrcStateStackCnt,
               GeometrySrcState, true>           fGeoSrcStateStack;
-    
+
+    typedef GrRefCnt INHERITED;
 };
 
 GR_MAKE_BITFIELD_OPS(GrDrawTarget::BlendOptFlags);

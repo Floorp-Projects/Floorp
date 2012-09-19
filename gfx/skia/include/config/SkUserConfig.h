@@ -35,16 +35,6 @@
     commented out, so including it will have no effect.
 */
 
-/*
-    Override new/delete with Mozilla's allocator, mozalloc
-
-    Ideally we shouldn't need to do this here, but until
-    http://code.google.com/p/skia/issues/detail?id=598 is fixed
-    we need to include this here to override operator new and delete
-*/
-
-#include "mozilla/mozalloc.h"
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /*  Scalars (the fractional value type in skia) can be implemented either as
@@ -54,13 +44,6 @@
 //#define SK_SCALAR_IS_FLOAT
 //#define SK_SCALAR_IS_FIXED
 
-
-/*  Somewhat independent of how SkScalar is implemented, Skia also wants to know
-    if it can use floats at all. Naturally, if SK_SCALAR_IS_FLOAT is defined,
-    SK_CAN_USE_FLOAT must be too; but if scalars are fixed, SK_CAN_USE_FLOAT
-    can go either way.
- */
-//#define SK_CAN_USE_FLOAT
 
 /*  For some performance-critical scalar operations, skia will optionally work
     around the standard float operators if it knows that the CPU does not have
@@ -82,6 +65,12 @@
 //#define SK_DEBUG
 //#define SK_RELEASE
 
+/*  To assist debugging, Skia provides an instance counting utility in
+    include/core/SkInstCount.h. This flag turns on and off that utility to
+    allow instance count tracking in either debug or release builds. By
+    default it is enabled in debug but disabled in release.
+ */
+//#define SK_ENABLE_INST_COUNT
 
 /*  If, in debugging mode, Skia needs to stop (presumably to invoke a debugger)
     it will call SK_CRASH(). If this is not defined it, it is defined in
@@ -149,7 +138,7 @@
 /*  Define this to remove dimension checks on bitmaps. Not all blits will be
     correct yet, so this is mostly for debugging the implementation.
  */
-//#define SK_ALLOW_OVER_32K_BITMAPS
+#define SK_ALLOW_OVER_32K_BITMAPS
 
 /*  Define this to set the upper limit for text to support LCD. Values that
     are very large increase the cost in the font cache and draw slower, without
@@ -165,10 +154,6 @@
 #ifdef SK_DEBUG
 //#define SK_SUPPORT_UNITTEST
 #endif
-
-/*  Don't dither 32bit gradients, to match what the canvas test suite expects.
- */
-#define SK_DISABLE_DITHER_32BIT_GRADIENT
 
 /* If your system embeds skia and has complex event logging, define this
    symbol to name a file that maps the following macros to your system's
@@ -190,6 +175,20 @@
         #define SK_B32_SHIFT    0
         #define SK_A32_SHIFT    24
 #endif
+
+
+/* Determines whether to build code that supports the GPU backend. Some classes
+   that are not GPU-specific, such as SkShader subclasses, have optional code
+   that is used allows them to interact with the GPU backend. If you'd like to
+   omit this code set SK_SUPPORT_GPU to 0. This also allows you to omit the gpu
+   directories from your include search path when you're not building the GPU
+   backend. Defaults to 1 (build the GPU code).
+ */
+#define SK_SUPPORT_GPU 0
+
+/*  Don't dither 32bit gradients, to match what the canvas test suite expects.
+ */
+#define SK_DISABLE_DITHER_32BIT_GRADIENT
 
 /*  Don't include stdint.h on windows as it conflicts with our build system.
  */

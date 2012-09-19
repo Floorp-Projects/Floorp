@@ -15,6 +15,11 @@
 #include "GrTextStrike_impl.h"
 #include "GrRect.h"
 
+SK_DEFINE_INST_COUNT(GrFontScaler)
+SK_DEFINE_INST_COUNT(GrKey)
+
+///////////////////////////////////////////////////////////////////////////////
+
 GrFontCache::GrFontCache(GrGpu* gpu) : fGpu(gpu) {
     gpu->ref();
     fAtlasMgr = NULL;
@@ -31,10 +36,11 @@ GrFontCache::~GrFontCache() {
 GrTextStrike* GrFontCache::generateStrike(GrFontScaler* scaler,
                                           const Key& key) {
     if (NULL == fAtlasMgr) {
-        fAtlasMgr = new GrAtlasMgr(fGpu);
+        fAtlasMgr = SkNEW_ARGS(GrAtlasMgr, (fGpu));
     }
-    GrTextStrike* strike = new GrTextStrike(this, scaler->getKey(),
-                                            scaler->getMaskFormat(), fAtlasMgr);
+    GrTextStrike* strike = SkNEW_ARGS(GrTextStrike,
+                                      (this, scaler->getKey(),
+                                       scaler->getMaskFormat(), fAtlasMgr));
     fCache.insert(key, strike);
 
     if (fHead) {

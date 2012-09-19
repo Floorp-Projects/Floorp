@@ -229,14 +229,14 @@ void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mCenter1.x), SkFloatToScalar(pat.mCenter1.y));
         points[1] = SkPoint::Make(SkFloatToScalar(pat.mCenter2.x), SkFloatToScalar(pat.mCenter2.y));
 
-        SkShader* shader = SkGradientShader::CreateTwoPointRadial(points[0], 
-                                                                  SkFloatToScalar(pat.mRadius1),
-                                                                  points[1], 
-                                                                  SkFloatToScalar(pat.mRadius2),
-                                                                  &stops->mColors.front(), 
-                                                                  &stops->mPositions.front(), 
-                                                                  stops->mCount, 
-                                                                  mode);
+        SkShader* shader = SkGradientShader::CreateTwoPointConical(points[0], 
+                                                                   SkFloatToScalar(pat.mRadius1),
+                                                                   points[1], 
+                                                                   SkFloatToScalar(pat.mRadius2),
+                                                                   &stops->mColors.front(), 
+                                                                   &stops->mPositions.front(), 
+                                                                   stops->mCount, 
+                                                                   mode);
         if (shader) {
             SkMatrix mat;
             GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
@@ -676,6 +676,12 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
 void
 DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat)
 {
+  if (aFormat == FORMAT_B8G8R8X8) {
+    // We have to manually set the A channel to be 255 as Skia doesn't understand BGRX
+    ConvertBGRXToBGRA(aData, aSize, aStride);
+    mBitmap.setIsOpaque(true);
+  }
+
   mBitmap.setConfig(GfxFormatToSkiaConfig(aFormat), aSize.width, aSize.height, aStride);
   mBitmap.setPixels(aData);
   

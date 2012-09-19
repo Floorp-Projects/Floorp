@@ -64,8 +64,8 @@ static inline void getcpuid(int info_type, int info[4]) {
 #endif
 #endif
 
-#if defined(__x86_64__) || defined(_WIN64)
-/* All x86_64 machines have SSE2, so don't even bother checking. */
+#if defined(__x86_64__) || defined(_WIN64) || SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
+/* All x86_64 machines have SSE2, or we know it's supported at compile time,  so don't even bother checking. */
 static inline bool hasSSE2() {
     return true;
 }
@@ -78,11 +78,23 @@ static inline bool hasSSE2() {
 }
 #endif
 
+#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSSE3
+/* If we know SSSE3 is supported at compile time, don't even bother checking. */
 static inline bool hasSSSE3() {
+    return true;
+}
+#else
+
+static inline bool hasSSSE3() {
+#if defined(SK_BUILD_SSSE3)
     int cpu_info[4] = { 0 };
     getcpuid(1, cpu_info);
     return (cpu_info[2] & 0x200) != 0;
+#else
+    return false;
+#endif
 }
+#endif
 
 static bool cachedHasSSE2() {
     static bool gHasSSE2 = hasSSE2();
@@ -96,7 +108,7 @@ static bool cachedHasSSSE3() {
 
 void SkBitmapProcState::platformProcs() {
     if (cachedHasSSSE3()) {
-#if defined(SK_BUILD_SSSE3)
+#if !defined(SK_BUILD_FOR_ANDROID) && defined(SK_BUILD_SSSE3)
         // Disable SSSE3 optimization for Android x86
         if (fSampleProc32 == S32_opaque_D32_filter_DX) {
             fSampleProc32 = S32_opaque_D32_filter_DX_SSSE3;
@@ -115,6 +127,10 @@ void SkBitmapProcState::platformProcs() {
             fSampleProc32 = S32_opaque_D32_filter_DX_SSE2;
         } else if (fSampleProc32 == S32_alpha_D32_filter_DX) {
             fSampleProc32 = S32_alpha_D32_filter_DX_SSE2;
+        }
+
+        if (fSampleProc16 == S32_D16_filter_DX) {
+            fSampleProc16 = S32_D16_filter_DX_SSE2;
         }
     }
 
@@ -171,7 +187,7 @@ SkBlitMask::ColorProc SkBlitMask::PlatformColorProcs(SkBitmap::Config dstConfig,
     if (SkMask::kA8_Format != maskFormat) {
         return NULL;
     }
-    
+
     ColorProc proc = NULL;
     if (cachedHasSSE2()) {
         switch (dstConfig) {
@@ -222,6 +238,8 @@ SkMemset32Proc SkMemset32GetPlatformProc() {
         return NULL;
     }
 }
+
+SkBlitRow::ColorRectProc PlatformColorRectProcFactory(); // suppress warning
 
 SkBlitRow::ColorRectProc PlatformColorRectProcFactory() {
     if (cachedHasSSE2()) {

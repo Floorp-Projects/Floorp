@@ -32,6 +32,8 @@ class SkGpuTexture;
 */
 class SK_API SkPixelRef : public SkFlattenable {
 public:
+    SK_DECLARE_INST_COUNT(SkPixelRef)
+
     explicit SkPixelRef(SkBaseMutex* mutex = NULL);
 
     /** Return the pixel memory returned from lockPixels, or null if the
@@ -119,7 +121,7 @@ public:
 
     /** Makes a deep copy of this PixelRef, respecting the requested config.
         Returns NULL if either there is an error (e.g. the destination could
-        not be created with the given config), or this PixelRef does not 
+        not be created with the given config), or this PixelRef does not
         support deep copies.  */
     virtual SkPixelRef* deepCopy(SkBitmap::Config config) { return NULL; }
 
@@ -190,6 +192,10 @@ private:
     int             fLockCount;
 
     mutable uint32_t fGenerationID;
+
+    // SkBitmap is only a friend so that when copying, it can modify the new SkPixelRef to have the
+    // same fGenerationID as the original.
+    friend class SkBitmap;
 
     SkString    fURI;
 

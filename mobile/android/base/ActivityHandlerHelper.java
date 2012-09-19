@@ -237,7 +237,7 @@ class ActivityHandlerHelper {
         }
 
         public void run() {
-            GeckoApp.mAppContext.getPromptService().show(mTitle, "", null, mItems, false);
+            GeckoApp.mAppContext.getPromptService().show(mTitle, "", mItems, false);
         }
     }
 }

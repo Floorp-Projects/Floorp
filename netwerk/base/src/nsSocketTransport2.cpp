@@ -1048,6 +1048,10 @@ nsSocketTransport::InitiateSocket()
 
     nsresult rv;
 
+    if (gIOService->IsOffline() &&
+        !PR_IsNetAddrType(&mNetAddr, PR_IpAddrLoopback))
+        return NS_ERROR_OFFLINE;
+
     //
     // find out if it is going to be ok to attach another socket to the STS.
     // if not then we have to wait for the STS to tell us that it is ok.
@@ -1661,6 +1665,15 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
             mCallbacks.swap(ourCallbacks);
             mEventSink.swap(ourEventSink);
         }
+    }
+}
+
+void
+nsSocketTransport::IsLocal(bool *aIsLocal)
+{
+    {
+        MutexAutoLock lock(mLock);
+        *aIsLocal = PR_IsNetAddrType(&mNetAddr, PR_IpAddrLoopback);
     }
 }
 

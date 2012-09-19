@@ -1164,7 +1164,7 @@ Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, boo
 // Decide if a transition from interpreter execution to Ion code should occur.
 // May compile or recompile the target JSScript.
 MethodStatus
-ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *pc)
+ion::CanEnterAtBranch(JSContext *cx, HandleScript script, StackFrame *fp, jsbytecode *pc)
 {
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT((JSOp)*pc == JSOP_LOOPENTRY);
@@ -1214,7 +1214,7 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecod
 }
 
 MethodStatus
-ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
+ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
 {
     JS_ASSERT(ion::IsEnabled(cx));
 

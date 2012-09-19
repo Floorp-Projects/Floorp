@@ -17,6 +17,9 @@
 #include "SkPaint.h"
 
 class SkPath;
+class GrContext;
+class GrCustomStage;
+class GrSamplerState;
 
 /** \class SkShader
  *
@@ -30,7 +33,9 @@ class SkPath;
  */
 class SK_API SkShader : public SkFlattenable {
 public:
-            SkShader();
+    SK_DECLARE_INST_COUNT(SkShader)
+
+    SkShader();
     virtual ~SkShader();
 
     /**
@@ -210,8 +215,20 @@ public:
                             //         space
                             //      2: the second radius minus the first radius
                             //         in pre-transformed space.
+        kTwoPointConical_BitmapType,
+                            //<! Matrix transforms to space where (0,0) is
+                            //   the center of the starting circle.  The second
+                            //   circle will be centered (x, 0) where x  may be
+                            //   0.
+                            //   Three extra parameters are returned:
+                            //      0: x-offset of second circle center
+                            //         to first.
+                            //      1: radius of first circle
+                            //      2: the second radius minus the first radius
+        kLinear_BitmapType, //<! Access bitmap using local coords transformed
+                            //   by matrix. No extras
 
-       kLast_BitmapType = kTwoPointRadial_BitmapType
+       kLast_BitmapType = kLinear_BitmapType
     };
     /** Optional methods for shaders that can pretend to be a bitmap/texture
         to play along with opengl. Default just returns kNone_BitmapType and
@@ -229,7 +246,7 @@ public:
                                     about the first point.
     */
     virtual BitmapType asABitmap(SkBitmap* outTexture, SkMatrix* outMatrix,
-                         TileMode xy[2], SkScalar* twoPointRadialParams) const;
+                         TileMode xy[2]) const;
 
     /**
      *  If the shader subclass can be represented as a gradient, asAGradient
@@ -267,7 +284,8 @@ public:
         kRadial_GradientType,
         kRadial2_GradientType,
         kSweep_GradientType,
-        kLast_GradientType = kSweep_GradientType
+        kConical_GradientType,
+        kLast_GradientType = kConical_GradientType
     };
 
     struct GradientInfo {
@@ -283,6 +301,16 @@ public:
     };
 
     virtual GradientType asAGradient(GradientInfo* info) const;
+
+    /**
+     *  If the shader subclass has a GrCustomStage implementation, this returns
+     *  a new custom stage (the caller assumes ownership, and will need to
+     *  unref it). A GrContext pointer is required since custom stages may
+     *  need to create textures. The sampler parameter is necessary to set
+     *  up matrix/tile modes/etc, and will eventually be removed.
+     */
+    virtual GrCustomStage* asNewCustomStage(GrContext* context,
+                                            GrSamplerState* sampler) const;
 
     //////////////////////////////////////////////////////////////////////////
     //  Factory methods for stock shaders

@@ -948,7 +948,7 @@ GetAccessibleWrap(AtkObject* aAtkObj)
 
   NS_ENSURE_TRUE(accWrap->GetAtkObject() == aAtkObj, nullptr);
 
-  AccessibleWrap* appAccWrap = nsAccessNode::GetApplicationAccessible();
+  AccessibleWrap* appAccWrap = ApplicationAcc();
   if (appAccWrap != accWrap && !accWrap->IsValidObject())
     return nullptr;
 

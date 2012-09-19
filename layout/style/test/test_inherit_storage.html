@@ -58,8 +58,13 @@ function test_property(property)
 
   // We don't care particularly about the whitespace or the placement of
   // semicolons, but for simplicity we'll test the current behavior.
-  is(gDeclaration.cssText, property + ": inherit;",
-    "declaration should serialize to exactly what went in (for inherit)");
+  if ("alias_for" in info) {
+    is(gDeclaration.cssText, info.alias_for + ": inherit;",
+      "declaration should serialize to exactly what went in (for inherit)");
+  } else {
+    is(gDeclaration.cssText, property + ": inherit;",
+      "declaration should serialize to exactly what went in (for inherit)");
+  }
 
   gDeclaration.removeProperty(property);
 

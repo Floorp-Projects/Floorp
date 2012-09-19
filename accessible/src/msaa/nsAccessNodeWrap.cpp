@@ -130,7 +130,7 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
 
   // Can get to IAccessibleApplication from any node via QS
   if (guidService == IID_IAccessibleApplication) {
-    ApplicationAccessible* applicationAcc = GetApplicationAccessible();
+    ApplicationAccessible* applicationAcc = ApplicationAcc();
     if (!applicationAcc)
       return E_NOINTERFACE;
 
@@ -558,8 +558,6 @@ void nsAccessNodeWrap::ShutdownAccessibility()
   ::DestroyCaret();
 
   nsWinUtils::ShutdownWindowEmulation();
-
-  nsAccessNode::ShutdownXPAccessibility();
 }
 
 int nsAccessNodeWrap::FilterA11yExceptions(unsigned int aCode, EXCEPTION_POINTERS *aExceptionInfo)

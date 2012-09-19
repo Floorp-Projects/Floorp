@@ -1388,11 +1388,6 @@ static int MSCRTReportHook( int aReportType, char *aMessage, int *oReturnValue)
 
 #endif
 
-#if defined(FREEBSD)
-// pick up fpsetmask prototype.
-#include <ieeefp.h>
-#endif
-
 static inline void
 DumpVersion()
 {
@@ -4135,12 +4130,5 @@ SetupErrorHandling(const char* progname)
 
   // Unbuffer stdout, needed for tinderbox tests.
   setbuf(stdout, 0);
-
-#if defined(FREEBSD)
-  // Disable all SIGFPE's on FreeBSD, as it has non-IEEE-conformant fp
-  // trap behavior that trips up on floating-point tests performed by
-  // the JS engine.  See bugzilla bug 9967 details.
-  fpsetmask(0);
-#endif
 }
 

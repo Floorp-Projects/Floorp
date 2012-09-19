@@ -10,7 +10,7 @@
 #include "SkCornerPathEffect.h"
 #include "SkPath.h"
 #include "SkPoint.h"
-#include "SkBuffer.h"
+#include "SkFlattenableBuffers.h"
 
 SkCornerPathEffect::SkCornerPathEffect(SkScalar radius) : fRadius(radius)
 {
@@ -25,7 +25,7 @@ static bool ComputeStep(const SkPoint& a, const SkPoint& b, SkScalar radius,
     SkScalar dist = SkPoint::Distance(a, b);
 
     step->set(b.fX - a.fX, b.fY - a.fY);
-    
+
     if (dist <= radius * 2) {
         step->scale(SK_ScalarHalf);
         return false;
@@ -36,7 +36,7 @@ static bool ComputeStep(const SkPoint& a, const SkPoint& b, SkScalar radius,
 }
 
 bool SkCornerPathEffect::filterPath(SkPath* dst, const SkPath& src,
-                                    SkScalar* width) {
+                                    SkStrokeRec*) {
     if (fRadius == 0) {
         return false;
     }

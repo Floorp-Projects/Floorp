@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=789856
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 789856</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=789856">Mozilla Bug 789856</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 789856 **/
+SimpleTest.waitForExplicitFinish();
+
+var script = document.createElement("script");
+script.onload = function() {
+  ok(false, "This script should not load");
+  SimpleTest.finish();
+}
+script.onerror = function() {
+  ok(true, "This script should fail to load");
+  SimpleTest.finish();
+}
+// If neither one fires,  the test fails, as it should
+
+// Use a URL the test is not allowed to load
+script.src = "file:///tmp/"
+document.body.appendChild(script);
+
+</script>
+</pre>
+</body>
+</html>

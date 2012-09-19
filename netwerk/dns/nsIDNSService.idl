@@ -111,4 +111,10 @@ interface nsIDNSService : nsISupports
      * If set, only IPv4 addresses will be returned from resolve/asyncResolve.
      */
     const unsigned long RESOLVE_DISABLE_IPV6 = (1 << 5);
+
+    /**
+     * If set, only literals and cached entries will be returned from resolve/
+     * asyncResolve.
+     */
+    const unsigned long RESOLVE_OFFLINE = (1 << 6);
 };

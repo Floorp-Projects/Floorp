@@ -13,6 +13,8 @@
 
 class SkBoundary : public SkRefCnt {
 public:
+    SK_DECLARE_INST_COUNT(SkBoundary)
+
     // These must be 0, 1, 2, 3 for efficiency in the subclass implementations
     enum Edge {
         kTop    = 0,
@@ -22,6 +24,9 @@ public:
     };
     // Edge index goes clockwise around the boundary, beginning at the "top"
     virtual SkPoint eval(Edge, SkScalar unitInterval) = 0;
+
+private:
+    typedef SkRefCnt INHERITED;
 };
 
 class SkBoundaryPatch {
@@ -44,7 +49,7 @@ private:
 class SkLineBoundary : public SkBoundary {
 public:
     SkPoint fPts[4];
-    
+
     // override
     virtual SkPoint eval(Edge, SkScalar);
 };
@@ -53,7 +58,7 @@ class SkCubicBoundary : public SkBoundary {
 public:
     // the caller sets the first 12 entries. The 13th is used by the impl.
     SkPoint fPts[13];
-    
+
     // override
     virtual SkPoint eval(Edge, SkScalar);
 };

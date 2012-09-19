@@ -24,9 +24,7 @@ public:
     */
     SkDiscretePathEffect(SkScalar segLength, SkScalar deviation);
 
-    // overrides for SkPathEffect
-    //  This method is not exported to java.
-    virtual bool filterPath(SkPath* dst, const SkPath& src, SkScalar* width);
+    virtual bool filterPath(SkPath* dst, const SkPath& src, SkStrokeRec*) SK_OVERRIDE;
 
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkDiscretePathEffect)
 
@@ -36,7 +34,7 @@ protected:
 
 private:
     SkScalar fSegLength, fPerterb;
-    
+
     typedef SkPathEffect INHERITED;
 };
 

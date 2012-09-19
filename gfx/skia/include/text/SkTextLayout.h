@@ -13,6 +13,8 @@
 
 class SkTextStyle : public SkRefCnt {
 public:
+    SK_DECLARE_INST_COUNT(SkTextStyle)
+
     SkTextStyle();
     SkTextStyle(const SkTextStyle&);
     explicit SkTextStyle(const SkPaint&);
@@ -20,11 +22,13 @@ public:
 
     const SkPaint& paint() const { return fPaint; }
     SkPaint& paint() { return fPaint; }
-    
+
     // todo: bidi-override, language
 
 private:
     SkPaint fPaint;
+
+    typedef SkRefCnt INHERITED;
 };
 
 class SkTextLayout {

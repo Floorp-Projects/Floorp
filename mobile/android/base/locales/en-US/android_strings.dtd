@@ -171,6 +171,8 @@ size. -->
 <!ENTITY button_ok "OK">
 <!ENTITY button_cancel "Cancel">
 <!ENTITY button_clear_data "Clear data">
+<!ENTITY button_set "Set">
+<!ENTITY button_clear "Clear">
 
 <!ENTITY abouthome_addons_title "Add-ons for your &brandShortName;">
 <!ENTITY abouthome_addons_browse "Browse all &brandShortName; add-ons">

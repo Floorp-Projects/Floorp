@@ -2906,21 +2906,8 @@ JS_BeginRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_EndRequest(JSContext *cx);
 
-/* Yield to pending GC operations, regardless of request depth */
-extern JS_PUBLIC_API(void)
-JS_YieldRequest(JSContext *cx);
-
-extern JS_PUBLIC_API(unsigned)
-JS_SuspendRequest(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
-JS_ResumeRequest(JSContext *cx, unsigned saveDepth);
-
 extern JS_PUBLIC_API(JSBool)
 JS_IsInRequest(JSRuntime *rt);
-
-extern JS_PUBLIC_API(JSBool)
-JS_IsInSuspendedRequest(JSRuntime *rt);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
@@ -2958,7 +2945,7 @@ template <> struct RootMethods<jsid>
 class JSAutoRequest {
   public:
     JSAutoRequest(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx), mSaveDepth(0) {
+        : mContext(cx) {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_BeginRequest(mContext);
     }
@@ -2966,48 +2953,8 @@ class JSAutoRequest {
         JS_EndRequest(mContext);
     }
 
-    void suspend() {
-        mSaveDepth = JS_SuspendRequest(mContext);
-    }
-    void resume() {
-        JS_ResumeRequest(mContext, mSaveDepth);
-    }
-
   protected:
     JSContext *mContext;
-    unsigned  mSaveDepth;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-#if 0
-  private:
-    static void *operator new(size_t) CPP_THROW_NEW { return 0; };
-    static void operator delete(void *, size_t) { };
-#endif
-};
-
-class JSAutoSuspendRequest {
-  public:
-    JSAutoSuspendRequest(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx), mSaveDepth(0) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        if (mContext) {
-            mSaveDepth = JS_SuspendRequest(mContext);
-        }
-    }
-    ~JSAutoSuspendRequest() {
-        resume();
-    }
-
-    void resume() {
-        if (mContext) {
-            JS_ResumeRequest(mContext, mSaveDepth);
-            mContext = 0;
-        }
-    }
-
-  protected:
-    JSContext *mContext;
-    unsigned mSaveDepth;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 #if 0

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var ms = Components.lookupMethod(document.documentElement, "mozMatchesSelector");
+  ms.apply({});
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
