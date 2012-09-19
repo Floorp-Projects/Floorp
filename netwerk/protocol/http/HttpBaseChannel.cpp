@@ -1580,7 +1580,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
           if (clen) {
             uploadChannel->SetUploadStream(mUploadStream,
                                            nsDependentCString(ctype),
-                                           atoi(clen));
+                                           nsCRT::atoll(clen));
           }
         }
       }
