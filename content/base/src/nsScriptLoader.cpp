@@ -320,10 +320,12 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
 
   if (aRequest->mCORSMode != CORS_NONE) {
     bool withCredentials = (aRequest->mCORSMode == CORS_USE_CREDENTIALS);
-    listener =
-      new nsCORSListenerProxy(listener, mDocument->NodePrincipal(), channel,
-                              withCredentials, &rv);
+    nsRefPtr<nsCORSListenerProxy> corsListener =
+      new nsCORSListenerProxy(listener, mDocument->NodePrincipal(),
+                              withCredentials);
+    rv = corsListener->Init(channel);
     NS_ENSURE_SUCCESS(rv, rv);
+    listener = corsListener;
   }
 
   rv = channel->AsyncOpen(listener, aRequest);
