@@ -2063,12 +2063,10 @@ TypeCompartment::init(JSContext *cx)
 }
 
 TypeObject *
-TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
-                               JSProtoKey key, HandleObject proto, bool unknown,
-                               bool isDOM)
+TypeCompartment::newTypeObject(JSContext *cx, JSProtoKey key, HandleObject proto,
+                               bool unknown, bool isDOM)
 {
-    JS_ASSERT_IF(script, cx->compartment == script->compartment());
-    JS_ASSERT_IF(proto,  cx->compartment == proto->compartment());
+    JS_ASSERT_IF(proto, cx->compartment == proto->compartment());
 
     TypeObject *object = gc::NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
@@ -2221,7 +2219,7 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
             return NULL;
 
         RootedScript keyScript(cx, key.script);
-        res = newTypeObject(cx, key.script, key.kind, proto);
+        res = newTypeObject(cx, key.kind, proto);
         if (!res) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return NULL;
@@ -2855,7 +2853,7 @@ TypeCompartment::fixArrayType(JSContext *cx, HandleObject obj)
         Rooted<Type> origType(cx, type);
         /* Make a new type to use for future arrays with the same elements. */
         RootedObject objProto(cx, obj->getProto());
-        Rooted<TypeObject*> objType(cx, newTypeObject(cx, NULL, JSProto_Array, objProto));
+        Rooted<TypeObject*> objType(cx, newTypeObject(cx, JSProto_Array, objProto));
         if (!objType) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2985,7 +2983,7 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
     } else {
         /* Make a new type to use for the object and similar future ones. */
         RootedObject objProto(cx, obj->getProto());
-        TypeObject *objType = newTypeObject(cx, NULL, JSProto_Object, objProto);
+        TypeObject *objType = newTypeObject(cx, JSProto_Object, objProto);
         if (!objType || !objType->addDefiniteProperties(cx, obj)) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -5517,8 +5515,7 @@ JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool s
          */
     } else {
         RootedObject funProto(cx, fun->getProto());
-        TypeObject *type = cx->compartment->types.newTypeObject(cx, fun->script(),
-                                                                JSProto_Function, funProto);
+        TypeObject *type = cx->compartment->types.newTypeObject(cx, JSProto_Function, funProto);
         if (!type)
             return false;
 
@@ -5653,7 +5650,7 @@ JSObject::makeLazyType(JSContext *cx)
     RootedObject self(cx, this);
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
     RootedObject proto(cx, getProto());
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, key, proto);
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, key, proto);
     AutoAssertNoGC nogc;
     if (!type) {
         if (cx->typeInferenceEnabled())
@@ -5800,8 +5797,7 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun_, bool isDOM)
     bool markUnknown = self->lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN);
 
     RootedTypeObject type(cx);
-    type = cx->compartment->types.newTypeObject(cx, NULL, JSProto_Object, self,
-                                                markUnknown, isDOM);
+    type = cx->compartment->types.newTypeObject(cx, JSProto_Object, self, markUnknown, isDOM);
     if (!type)
         return NULL;
 
@@ -5868,8 +5864,7 @@ JSCompartment::getLazyType(JSContext *cx, HandleObject proto)
         return type;
     }
 
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
-                                                            JSProto_Object, proto, false);
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, JSProto_Object, proto, false);
     if (!type)
         return NULL;
 
