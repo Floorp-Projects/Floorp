@@ -51,6 +51,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
     private boolean mEnabled;
     private Drawable mIcon;
     private int mIconRes;
+    private GeckoMenu mMenu;
     private GeckoSubMenu mSubMenu;
     private MenuItem.OnMenuItemClickListener mMenuItemClickListener;
     private OnVisibilityChangedListener mVisibilityChangedListener;
@@ -123,6 +124,10 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     public View getLayout() {
         return mLayout.getLayout();
+    }
+
+    public void setMenu(GeckoMenu menu) {
+        mMenu = menu;
     }
 
     @Override
@@ -347,8 +352,13 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        if (mMenuItemClickListener != null)
-            mMenuItemClickListener.onMenuItemClick(this);
+        // If there is a custom listener, pass it to parent menu, so that it can do default cleanups.
+        if (mMenuItemClickListener != null) {
+            if (mMenuItemClickListener instanceof GeckoMenu)
+                mMenuItemClickListener.onMenuItemClick(this);
+            else
+                mMenu.onCustomMenuItemClick(this, mMenuItemClickListener);
+        }
     }
 
     public void setOnShowAsActionChangedListener(OnShowAsActionChangedListener listener) {
