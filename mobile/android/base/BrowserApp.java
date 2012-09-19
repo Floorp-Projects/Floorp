@@ -716,7 +716,11 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void closeOptionsMenu() {
-        if (!mBrowserToolbar.closeOptionsMenu())
+        boolean closed = mBrowserToolbar.closeOptionsMenu();
+
+        if (closed)
+            onOptionsMenuClosed(mMenu);
+        else
             super.closeOptionsMenu();
     }
 

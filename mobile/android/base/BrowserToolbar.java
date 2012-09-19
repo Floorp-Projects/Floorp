@@ -304,6 +304,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 if (mHasSoftMenuButton) {
                     mMenuPopup = new MenuPopup(mActivity);
                     mMenuPopup.setPanelView(panel);
+
+                    mMenuPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                        public void onDismiss() {
+                            mActivity.onOptionsMenuClosed(null);
+                        }
+                    });
                 }
             }
         }
@@ -696,7 +702,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
-    public class MenuPopup extends PopupWindow {
+    public static class MenuPopup extends PopupWindow {
         private RelativeLayout mPanel;
 
         public MenuPopup(Context context) {

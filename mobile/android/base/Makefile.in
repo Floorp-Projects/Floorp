@@ -81,6 +81,7 @@ FENNEC_JAVA_FILES = \
   GeckoMenuInflater.java \
   GeckoMenuItem.java \
   GeckoMessageReceiver.java \
+  GeckoSubMenu.java \
   GeckoPreferences.java \
   GeckoProfile.java \
   GeckoThread.java \
