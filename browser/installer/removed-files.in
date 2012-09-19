@@ -1343,6 +1343,25 @@ xpicleanup@BIN_SUFFIX@
   plugins/MRJPlugin.plugin/Contents/Resources/MRJPlugin.rsrc
   redo-prebinding.sh
   res/bloatcycle.html
+  res/cursors/arrowN.tiff
+  res/cursors/arrowS.tiff
+  res/cursors/colResize.tiff
+  res/cursors/help.tiff
+  res/cursors/rowResize.tiff
+  res/cursors/sizeNE.tiff
+  res/cursors/sizeNESW.tiff
+  res/cursors/sizeNS.tiff
+  res/cursors/sizeNW.tiff
+  res/cursors/sizeNWSE.tiff
+  res/cursors/sizeSE.tiff
+  res/cursors/sizeSW.tiff
+  res/cursors/spin1.tiff
+  res/cursors/spin2.tiff
+  res/cursors/spin3.tiff
+  res/cursors/spin4.tiff
+  res/cursors/vtIBeam.tiff
+  res/cursors/zoomIn.tiff
+  res/cursors/zoomOut.tiff
   res/cursors/CVS/Entries
   res/cursors/CVS/Repository
   res/cursors/CVS/Root

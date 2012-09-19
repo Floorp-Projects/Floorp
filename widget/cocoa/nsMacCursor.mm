@@ -166,7 +166,7 @@
   if (!pathToImage)
     goto INIT_FAILURE;
   pathToImage = [pathToImage stringByAppendingPathComponent:imageName];
-  pathToImage = [pathToImage stringByAppendingPathExtension:@"tiff"];
+  pathToImage = [pathToImage stringByAppendingPathExtension:@"png"];
 
   cursorImage = [[[NSImage alloc] initWithContentsOfFile:pathToImage] autorelease];
   if (!cursorImage)
