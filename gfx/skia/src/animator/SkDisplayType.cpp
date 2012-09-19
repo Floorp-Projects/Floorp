@@ -67,7 +67,7 @@
 #else
     #define CASE_DEBUG_RETURN_NIL(_class)
 #endif
-    
+
 
 SkDisplayTypes SkDisplayType::gNewTypes = kNumberOfTypes;
 
@@ -133,14 +133,14 @@ SkDisplayable* SkDisplayType::CreateInstance(SkAnimateMaker* maker, SkDisplayTyp
         CASE_NEW(Group);
         CASE_NEW(HitClear);
         CASE_NEW(HitTest);
-        CASE_NEW(Image);
+        CASE_NEW(ImageBaseBitmap);
         CASE_NEW(Include);
         CASE_NEW(Input);
         CASE_DISPLAY_NEW(Int);
         CASE_DEBUG_RETURN_NIL(Join);
         CASE_NEW(Line);
         CASE_NEW(LineTo);
-        CASE_NEW(LinearGradient);
+        CASE_NEW(DrawLinearGradient);
         CASE_DRAW_NEW(MaskFilter);
         CASE_DEBUG_RETURN_NIL(MaskFilterBlurStyle);
         // maskfilterlight
@@ -167,7 +167,7 @@ SkDisplayable* SkDisplayType::CreateInstance(SkAnimateMaker* maker, SkDisplayTyp
         CASE_NEW(RLineTo);
         CASE_NEW(RMoveTo);
         CASE_NEW(RQuadTo);
-        CASE_NEW(RadialGradient);
+        CASE_NEW(DrawRadialGradient);
         CASE_DISPLAY_NEW(Random);
         CASE_DRAW_NEW(Rect);
         CASE_NEW(RectToRect);
@@ -224,7 +224,7 @@ SkDisplayable* SkDisplayType::CreateInstance(SkAnimateMaker* maker, SkDisplayTyp
     info = SkDisplay##_class::fInfo; infoCount = SkDisplay##_class::fInfoCount; \
     break
 
-const SkMemberInfo* SkDisplayType::GetMembers(SkAnimateMaker* maker, 
+const SkMemberInfo* SkDisplayType::GetMembers(SkAnimateMaker* maker,
         SkDisplayTypes type, int* infoCountPtr) {
     const SkMemberInfo* info = NULL;
     int infoCount = 0;
@@ -284,18 +284,18 @@ const SkMemberInfo* SkDisplayType::GetMembers(SkAnimateMaker* maker,
         CASE_GET_INFO(FromPath);
         // frompathmode
         // full
-        CASE_GET_INFO(Gradient);
+        CASE_GET_INFO(DrawGradient);
         CASE_GET_INFO(Group);
         CASE_GET_INFO(HitClear);
         CASE_GET_INFO(HitTest);
-        CASE_GET_INFO(Image);
+        CASE_GET_INFO(ImageBaseBitmap);
         CASE_GET_INFO(Include);
         CASE_GET_INFO(Input);
         CASE_GET_DISPLAY_INFO(Int);
         // join
         CASE_GET_INFO(Line);
         CASE_GET_INFO(LineTo);
-        CASE_GET_INFO(LinearGradient);
+        CASE_GET_INFO(DrawLinearGradient);
         // maskfilter
         // maskfilterblurstyle
         // maskfilterlight
@@ -322,7 +322,7 @@ const SkMemberInfo* SkDisplayType::GetMembers(SkAnimateMaker* maker,
         CASE_GET_INFO(RLineTo);
         CASE_GET_INFO(RMoveTo);
         CASE_GET_INFO(RQuadTo);
-        CASE_GET_INFO(RadialGradient);
+        CASE_GET_INFO(DrawRadialGradient);
         CASE_GET_DISPLAY_INFO(Random);
         CASE_GET_DRAW_INFO(Rect);
         CASE_GET_INFO(RectToRect);
@@ -355,7 +355,7 @@ const SkMemberInfo* SkDisplayType::GetMembers(SkAnimateMaker* maker,
         CASE_GET_DRAW_INFO(Typeface);
         // xfermode
         // knumberoftypes
-        default: 
+        default:
             if (maker) {
                 SkExtras** end = maker->fExtras.end();
                 for (SkExtras** extraPtr = maker->fExtras.begin(); extraPtr < end; extraPtr++) {
@@ -370,7 +370,7 @@ const SkMemberInfo* SkDisplayType::GetMembers(SkAnimateMaker* maker,
     return info;
 }
 
-const SkMemberInfo* SkDisplayType::GetMember(SkAnimateMaker* maker, 
+const SkMemberInfo* SkDisplayType::GetMember(SkAnimateMaker* maker,
         SkDisplayTypes type, const char** matchPtr ) {
     int infoCount;
     const SkMemberInfo* info = GetMembers(maker, type, &infoCount);
@@ -455,14 +455,14 @@ const TypeNames gTypeNames[] = {
     { "group", SkType_Group                     INIT_BOOL_FIELDS },
     { "hitClear", SkType_HitClear               INIT_BOOL_FIELDS },
     { "hitTest", SkType_HitTest                 INIT_BOOL_FIELDS },
-    { "image", SkType_Image                     INIT_BOOL_FIELDS },
+    { "image", SkType_ImageBaseBitmap           INIT_BOOL_FIELDS },
     { "include", SkType_Include                 INIT_BOOL_FIELDS },
     { "input", SkType_Input                     INIT_BOOL_FIELDS },
     { "int", SkType_Int                         INIT_BOOL_FIELDS },
     // join
     { "line", SkType_Line                       INIT_BOOL_FIELDS },
     { "lineTo", SkType_LineTo                   INIT_BOOL_FIELDS },
-    { "linearGradient", SkType_LinearGradient   INIT_BOOL_FIELDS },
+    { "linearGradient", SkType_DrawLinearGradient   INIT_BOOL_FIELDS },
     { "maskFilter", SkType_MaskFilter           INIT_BOOL_FIELDS },
     // maskfilterblurstyle
     // maskfilterlight
@@ -489,7 +489,7 @@ const TypeNames gTypeNames[] = {
     { "rLineTo", SkType_RLineTo                 INIT_BOOL_FIELDS },
     { "rMoveTo", SkType_RMoveTo                 INIT_BOOL_FIELDS },
     { "rQuadTo", SkType_RQuadTo                 INIT_BOOL_FIELDS },
-    { "radialGradient", SkType_RadialGradient   INIT_BOOL_FIELDS },
+    { "radialGradient", SkType_DrawRadialGradient   INIT_BOOL_FIELDS },
     DISPLAY_NAME("random", SkType_Random),
     { "rect", SkType_Rect                       INIT_BOOL_FIELDS },
     { "rectToRect", SkType_RectToRect           INIT_BOOL_FIELDS },
@@ -546,7 +546,7 @@ SkDisplayTypes SkDisplayType::GetParent(SkAnimateMaker* maker, SkDisplayTypes ba
     SkASSERT(info);
     if (info->fType != SkType_BaseClassInfo)
         return SkType_Unknown; // if no base, done
-    // !!! could change SK_MEMBER_INHERITED macro to take type, stuff in offset, so that 
+    // !!! could change SK_MEMBER_INHERITED macro to take type, stuff in offset, so that
     // this (and table builder) could know type without the following steps:
     const SkMemberInfo* inherited = info->getInherited();
     SkDisplayTypes result = (SkDisplayTypes) (SkType_Unknown + 1);
@@ -560,7 +560,7 @@ SkDisplayTypes SkDisplayType::GetParent(SkAnimateMaker* maker, SkDisplayTypes ba
 }
 
 SkDisplayTypes SkDisplayType::GetType(SkAnimateMaker* maker, const char match[], size_t len ) {
-    int index = SkStrSearch(&gTypeNames[0].fName, kTypeNamesSize, match, 
+    int index = SkStrSearch(&gTypeNames[0].fName, kTypeNamesSize, match,
         len, sizeof(gTypeNames[0]));
     if (index >= 0 && index < kTypeNamesSize)
         return gTypeNames[index].fType;
@@ -636,11 +636,11 @@ bool SkDisplayType::IsDisplayable(SkAnimateMaker* , SkDisplayTypes type) {
         case SkType_FromPath:
         case SkType_Full:
         case SkType_Group:
-        case SkType_Image:
+        case SkType_ImageBaseBitmap:
         case SkType_Input:
         case SkType_Line:
         case SkType_LineTo:
-        case SkType_LinearGradient:
+        case SkType_DrawLinearGradient:
         case SkType_Matrix:
         case SkType_Move:
         case SkType_MoveTo:
@@ -657,7 +657,7 @@ bool SkDisplayType::IsDisplayable(SkAnimateMaker* , SkDisplayTypes type) {
         case SkType_RLineTo:
         case SkType_RMoveTo:
         case SkType_RQuadTo:
-        case SkType_RadialGradient:
+        case SkType_DrawRadialGradient:
         case SkType_Random:
         case SkType_Rect:
         case SkType_RectToRect:

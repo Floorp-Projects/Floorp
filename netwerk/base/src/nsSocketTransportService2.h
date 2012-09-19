@@ -107,6 +107,11 @@ private:
     bool          mShuttingDown;
                             // indicates whether we are currently in the
                             // process of shutting down
+    bool          mOffline;
+    bool          mGoingOffline;
+
+    // Detaches all sockets.
+    void Reset(bool aGuardLocals);
 
     //-------------------------------------------------------------------------
     // socket lists (socket thread only)

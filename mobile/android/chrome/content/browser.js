@@ -36,6 +36,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 [
   ["HelperApps", "chrome://browser/content/HelperApps.js"],
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
+  ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
   ["AboutReader", "chrome://browser/content/aboutReader.js"],
   ["WebAppRT", "chrome://browser/content/WebAppRT.js"],
 ].forEach(function (aScript) {
@@ -3413,6 +3414,7 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
     BrowserApp.deck.addEventListener("touchstart", this, true);
+    BrowserApp.deck.addEventListener("click", InputWidgetHelper, true);
     BrowserApp.deck.addEventListener("click", SelectHelper, true);
   },
 
@@ -6159,8 +6161,10 @@ var WebappsUI = {
 
   observe: function observe(aSubject, aTopic, aData) {
     let data = {};
-    try { data = JSON.parse(aData); }
-    catch(ex) { }
+    try {
+      data = JSON.parse(aData);
+      data.mm = aSubject;
+    } catch(ex) { }
     switch (aTopic) {
       case "webapps-install-error":
         let msg = "";

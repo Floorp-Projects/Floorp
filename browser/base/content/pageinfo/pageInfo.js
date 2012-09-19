@@ -289,6 +289,8 @@ var onFinished = [ ];
 // These functions are called once when the Page Info window is closed.
 var onUnloadRegistry = [ ];
 
+// These functions are called once when an image preview is shown.
+var onImagePreviewShown = [ ];
 
 /* Called when PageInfo window is loaded.  Arguments are:
  *  window.arguments[0] - (optional) an object consisting of
@@ -464,6 +466,23 @@ function toggleGroupbox(id)
   }
 }
 
+function openCacheEntry(key, cb)
+{
+  var tries = 0;
+  var checkCacheListener = {
+    onCacheEntryAvailable: function(entry, access, status) {
+      if (entry || tries == 1) {
+        cb(entry);
+      }
+      else {
+        tries++;
+        ftpCacheSession.asyncOpenCacheEntry(key, ACCESS_READ, this, true);
+      }
+    }
+  };
+  httpCacheSession.asyncOpenCacheEntry(key, ACCESS_READ, checkCacheListener, true);
+}
+
 function makeGeneralTab()
 {
   var title = (gDocument.title) ? gBundle.getFormattedString("pageTitle", [gDocument.title]) : gBundle.getString("noPageTitle");
@@ -514,23 +533,15 @@ function makeGeneralTab()
 
   // get cache info
   var cacheKey = url.replace(/#.*$/, "");
-  try {
-    var cacheEntryDescriptor = httpCacheSession.openCacheEntry(cacheKey, ACCESS_READ, false);
-  }
-  catch(ex) {
-    try {
-      cacheEntryDescriptor = ftpCacheSession.openCacheEntry(cacheKey, ACCESS_READ, false);
+  openCacheEntry(cacheKey, function(cacheEntry) {
+    var sizeText;
+    if (cacheEntry) {
+      var pageSize = cacheEntry.dataSize;
+      var kbSize = formatNumber(Math.round(pageSize / 1024 * 100) / 100);
+      sizeText = gBundle.getFormattedString("generalSize", [kbSize, formatNumber(pageSize)]);
     }
-    catch(ex2) { }
-  }
-
-  var sizeText;
-  if (cacheEntryDescriptor) {
-    var pageSize = cacheEntryDescriptor.dataSize;
-    var kbSize = formatNumber(Math.round(pageSize / 1024 * 100) / 100);
-    sizeText = gBundle.getFormattedString("generalSize", [kbSize, formatNumber(pageSize)]);
-  }
-  setItemValue("sizetext", sizeText);
+    setItemValue("sizetext", sizeText);
+  });
 
   securityOnLoad();
 }
@@ -595,20 +606,18 @@ function addImage(url, type, alt, elem, isBg)
     gImageHash[url][type] = { };
   if (!gImageHash[url][type].hasOwnProperty(alt)) {
     gImageHash[url][type][alt] = gImageView.data.length;
-    try {
-      // open for READ, in non-blocking mode
-      var cacheEntryDescriptor = httpCacheSession.openCacheEntry(url, ACCESS_READ, false);
-    }
-    catch(ex) {
-      try {
-        // open for READ, in non-blocking mode
-        cacheEntryDescriptor = ftpCacheSession.openCacheEntry(url, ACCESS_READ, false);
-      }
-      catch(ex2) { }
-    }
+    var row = [url, type, -1, alt, 1, elem, isBg];
+    gImageView.addRow(row);
 
-    var dataSize = (cacheEntryDescriptor) ? cacheEntryDescriptor.dataSize : -1;
-    gImageView.addRow([url, type, dataSize, alt, 1, elem, isBg]);
+    // Fill in cache data asynchronously
+    openCacheEntry(url, function(cacheEntry) {
+      // The data at row[2] corresponds to the data size.
+      if (cacheEntry) {
+        row[2] = cacheEntry.dataSize;
+        // Invalidate the row to trigger a repaint.
+        gImageView.tree.invalidateRow(gImageView.data.indexOf(row));
+      }
+    });
 
     // Add the observer, only once.
     if (gImageView.data.length == 1) {
@@ -898,173 +907,166 @@ function makePreview(row)
 
   // get cache info
   var cacheKey = url.replace(/#.*$/, "");
-  try {
-    // open for READ, in non-blocking mode
-    var cacheEntryDescriptor = httpCacheSession.openCacheEntry(cacheKey, ACCESS_READ, false);
-  }
-  catch(ex) {
-    try {
-      // open for READ, in non-blocking mode
-      cacheEntryDescriptor = ftpCacheSession.openCacheEntry(cacheKey, ACCESS_READ, false);
+  openCacheEntry(cacheKey, function(cacheEntry) {
+    // find out the file size
+    var sizeText;
+    if (cacheEntry) {
+      var imageSize = cacheEntry.dataSize;
+      var kbSize = Math.round(imageSize / 1024 * 100) / 100;
+      sizeText = gBundle.getFormattedString("generalSize",
+                                            [formatNumber(kbSize), formatNumber(imageSize)]);
     }
-    catch(ex2) { }
-  }
+    else
+      sizeText = gBundle.getString("mediaUnknownNotCached");
+    setItemValue("imagesizetext", sizeText);
 
-  // find out the file size
-  var sizeText;
-  if (cacheEntryDescriptor) {
-    var imageSize = cacheEntryDescriptor.dataSize;
-    var kbSize = Math.round(imageSize / 1024 * 100) / 100;
-    sizeText = gBundle.getFormattedString("generalSize",
-                                          [formatNumber(kbSize), formatNumber(imageSize)]);
-  }
-  else
-    sizeText = gBundle.getString("mediaUnknownNotCached");
-  setItemValue("imagesizetext", sizeText);
+    var mimeType;
+    var numFrames = 1;
+    if (item instanceof HTMLObjectElement ||
+        item instanceof HTMLEmbedElement ||
+        item instanceof HTMLLinkElement)
+      mimeType = item.type;
 
-  var mimeType;
-  var numFrames = 1;
-  if (item instanceof HTMLObjectElement ||
-      item instanceof HTMLEmbedElement ||
-      item instanceof HTMLLinkElement)
-    mimeType = item.type;
-
-  if (!mimeType && !isBG && item instanceof nsIImageLoadingContent) {
-    var imageRequest = item.getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
-    if (imageRequest) {
-      mimeType = imageRequest.mimeType;
-      var image = imageRequest.image;
-      if (image)
-        numFrames = image.numFrames;
+    if (!mimeType && !isBG && item instanceof nsIImageLoadingContent) {
+      var imageRequest = item.getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+      if (imageRequest) {
+        mimeType = imageRequest.mimeType;
+        var image = imageRequest.image;
+        if (image)
+          numFrames = image.numFrames;
+      }
     }
-  }
-  if (!mimeType)
-    mimeType = getContentTypeFromHeaders(cacheEntryDescriptor);
+    
+    if (!mimeType)
+      mimeType = getContentTypeFromHeaders(cacheEntry);
 
-  // if we have a data url, get the MIME type from the url
-  if (!mimeType && /^data:/.test(url)) {
-    let dataMimeType = /^data:(image\/[^;,]+)/i.exec(url);
-    if (dataMimeType)
-      mimeType = dataMimeType[1].toLowerCase();
-  }
+    // if we have a data url, get the MIME type from the url
+    if (!mimeType && /^data:/.test(url)) {
+      let dataMimeType = /^data:(image\/[^;,]+)/i.exec(url);
+      if (dataMimeType)
+        mimeType = dataMimeType[1].toLowerCase();
+    }
 
-  var imageType;
-  if (mimeType) {
-    // We found the type, try to display it nicely
-    let imageMimeType = /^image\/(.*)/i.exec(mimeType);
-    if (imageMimeType) {
-      imageType = imageMimeType[1].toUpperCase();
-      if (numFrames > 1)
-        imageType = gBundle.getFormattedString("mediaAnimatedImageType",
-                                               [imageType, numFrames]);
-      else
-        imageType = gBundle.getFormattedString("mediaImageType", [imageType]);
+    var imageType;
+    if (mimeType) {
+      // We found the type, try to display it nicely
+      let imageMimeType = /^image\/(.*)/i.exec(mimeType);
+      if (imageMimeType) {
+        imageType = imageMimeType[1].toUpperCase();
+        if (numFrames > 1)
+          imageType = gBundle.getFormattedString("mediaAnimatedImageType",
+                                                 [imageType, numFrames]);
+        else
+          imageType = gBundle.getFormattedString("mediaImageType", [imageType]);
+      }
+      else {
+        // the MIME type doesn't begin with image/, display the raw type
+        imageType = mimeType;
+      }
     }
     else {
-      // the MIME type doesn't begin with image/, display the raw type
-      imageType = mimeType;
+      // We couldn't find the type, fall back to the value in the treeview
+      imageType = gImageView.data[row][COL_IMAGE_TYPE];
     }
-  }
-  else {
-    // We couldn't find the type, fall back to the value in the treeview
-    imageType = gImageView.data[row][COL_IMAGE_TYPE];
-  }
-  setItemValue("imagetypetext", imageType);
+    setItemValue("imagetypetext", imageType);
 
-  var imageContainer = document.getElementById("theimagecontainer");
-  var oldImage = document.getElementById("thepreviewimage");
+    var imageContainer = document.getElementById("theimagecontainer");
+    var oldImage = document.getElementById("thepreviewimage");
 
-  var isProtocolAllowed = checkProtocol(gImageView.data[row]);
+    var isProtocolAllowed = checkProtocol(gImageView.data[row]);
 
-  var newImage = new Image;
-  newImage.id = "thepreviewimage";
-  var physWidth = 0, physHeight = 0;
-  var width = 0, height = 0;
+    var newImage = new Image;
+    newImage.id = "thepreviewimage";
+    var physWidth = 0, physHeight = 0;
+    var width = 0, height = 0;
 
-  if ((item instanceof HTMLLinkElement || item instanceof HTMLInputElement ||
-       item instanceof HTMLImageElement ||
-       item instanceof SVGImageElement ||
-      (item instanceof HTMLObjectElement && /^image\//.test(mimeType)) || isBG) && isProtocolAllowed) {
-    newImage.setAttribute("src", url);
-    physWidth = newImage.width || 0;
-    physHeight = newImage.height || 0;
+    if ((item instanceof HTMLLinkElement || item instanceof HTMLInputElement ||
+         item instanceof HTMLImageElement ||
+         item instanceof SVGImageElement ||
+        (item instanceof HTMLObjectElement && /^image\//.test(mimeType)) || isBG) && isProtocolAllowed) {
+      newImage.setAttribute("src", url);
+      physWidth = newImage.width || 0;
+      physHeight = newImage.height || 0;
 
-    // "width" and "height" attributes must be set to newImage,
-    // even if there is no "width" or "height attribute in item;
-    // otherwise, the preview image cannot be displayed correctly.
-    if (!isBG) {
-      newImage.width = ("width" in item && item.width) || newImage.naturalWidth;
-      newImage.height = ("height" in item && item.height) || newImage.naturalHeight;
+      // "width" and "height" attributes must be set to newImage,
+      // even if there is no "width" or "height attribute in item;
+      // otherwise, the preview image cannot be displayed correctly.
+      if (!isBG) {
+        newImage.width = ("width" in item && item.width) || newImage.naturalWidth;
+        newImage.height = ("height" in item && item.height) || newImage.naturalHeight;
+      }
+      else {
+        // the Width and Height of an HTML tag should not be used for its background image
+        // (for example, "table" can have "width" or "height" attributes)
+        newImage.width = newImage.naturalWidth;
+        newImage.height = newImage.naturalHeight;
+      }
+
+      if (item instanceof SVGImageElement) {
+        newImage.width = item.width.baseVal.value;
+        newImage.height = item.height.baseVal.value;
+      }
+
+      width = newImage.width;
+      height = newImage.height;
+
+      document.getElementById("theimagecontainer").collapsed = false
+      document.getElementById("brokenimagecontainer").collapsed = true;
     }
-    else {
-      // the Width and Height of an HTML tag should not be used for its background image
-      // (for example, "table" can have "width" or "height" attributes)
-      newImage.width = newImage.naturalWidth;
-      newImage.height = newImage.naturalHeight;
-    }
-
-    if (item instanceof SVGImageElement) {
-      newImage.width = item.width.baseVal.value;
-      newImage.height = item.height.baseVal.value;
-    }
-
-    width = newImage.width;
-    height = newImage.height;
-
-    document.getElementById("theimagecontainer").collapsed = false
-    document.getElementById("brokenimagecontainer").collapsed = true;
-  }
 #ifdef MOZ_MEDIA
-  else if (item instanceof HTMLVideoElement && isProtocolAllowed) {
-    newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
-    newImage.id = "thepreviewimage";
-    newImage.mozLoadFrom(item);
-    newImage.controls = true;
-    width = physWidth = item.videoWidth;
-    height = physHeight = item.videoHeight;
+    else if (item instanceof HTMLVideoElement && isProtocolAllowed) {
+      newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
+      newImage.id = "thepreviewimage";
+      newImage.mozLoadFrom(item);
+      newImage.controls = true;
+      width = physWidth = item.videoWidth;
+      height = physHeight = item.videoHeight;
 
-    document.getElementById("theimagecontainer").collapsed = false;
-    document.getElementById("brokenimagecontainer").collapsed = true;
-  }
-  else if (item instanceof HTMLAudioElement && isProtocolAllowed) {
-    newImage = new Audio;
-    newImage.id = "thepreviewimage";
-    newImage.src = url;
-    newImage.controls = true;
-    isAudio = true;
+      document.getElementById("theimagecontainer").collapsed = false;
+      document.getElementById("brokenimagecontainer").collapsed = true;
+    }
+    else if (item instanceof HTMLAudioElement && isProtocolAllowed) {
+      newImage = new Audio;
+      newImage.id = "thepreviewimage";
+      newImage.src = url;
+      newImage.controls = true;
+      isAudio = true;
 
-    document.getElementById("theimagecontainer").collapsed = false;
-    document.getElementById("brokenimagecontainer").collapsed = true;
-  }
+      document.getElementById("theimagecontainer").collapsed = false;
+      document.getElementById("brokenimagecontainer").collapsed = true;
+    }
 #endif
-  else {
-    // fallback image for protocols not allowed (e.g., javascript:)
-    // or elements not [yet] handled (e.g., object, embed).
-    document.getElementById("brokenimagecontainer").collapsed = false;
-    document.getElementById("theimagecontainer").collapsed = true;
-  }
-
-  var imageSize = "";
-  if (url && !isAudio) {
-    if (width != physWidth || height != physHeight) {
-      imageSize = gBundle.getFormattedString("mediaDimensionsScaled",
-                                             [formatNumber(physWidth),
-                                              formatNumber(physHeight),
-                                              formatNumber(width),
-                                              formatNumber(height)]);
-    }
     else {
-      imageSize = gBundle.getFormattedString("mediaDimensions",
-                                             [formatNumber(width),
-                                              formatNumber(height)]);
+      // fallback image for protocols not allowed (e.g., javascript:)
+      // or elements not [yet] handled (e.g., object, embed).
+      document.getElementById("brokenimagecontainer").collapsed = false;
+      document.getElementById("theimagecontainer").collapsed = true;
     }
-  }
-  setItemValue("imagedimensiontext", imageSize);
 
-  makeBlockImage(url);
+    var imageSize = "";
+    if (url && !isAudio) {
+      if (width != physWidth || height != physHeight) {
+        imageSize = gBundle.getFormattedString("mediaDimensionsScaled",
+                                               [formatNumber(physWidth),
+                                                formatNumber(physHeight),
+                                                formatNumber(width),
+                                                formatNumber(height)]);
+      }
+      else {
+        imageSize = gBundle.getFormattedString("mediaDimensions",
+                                               [formatNumber(width),
+                                                formatNumber(height)]);
+      }
+    }
+    setItemValue("imagedimensiontext", imageSize);
 
-  imageContainer.removeChild(oldImage);
-  imageContainer.appendChild(newImage);
+    makeBlockImage(url);
+
+    imageContainer.removeChild(oldImage);
+    imageContainer.appendChild(newImage);
+
+    onImagePreviewShown.forEach(function(func) { func(); });
+  });
 }
 
 function makeBlockImage(url)

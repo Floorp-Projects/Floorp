@@ -650,7 +650,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   // date and update our ImageContainer with the new surface.
   nsRefPtr<ImageContainer> container;
   mInstance->GetImageContainer(getter_AddRefs(container));
-  gfxIntSize oldSize(0, 0);
 
 #ifndef XP_MACOSX
   // Windowed plugins should not be calling NPN_InvalidateRect, but
@@ -668,16 +667,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
               presContext->DevPixelsToAppUnits(invalidRect->top),
               presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
               presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
-  if (container) {
-    gfxIntSize newSize = container->GetCurrentSize();
-    if (newSize != oldSize) {
-      // The image size has changed - invalidate the old area too, bug 635405.
-      nsRect oldRect = nsRect(0, 0,
-                              presContext->DevPixelsToAppUnits(oldSize.width),
-                              presContext->DevPixelsToAppUnits(oldSize.height));
-      rect.UnionRect(rect, oldRect);
-    }
-  }
+
   rect.MoveBy(mObjectFrame->GetContentRectRelativeToSelf().TopLeft());
   mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
   return NS_OK;
@@ -1819,20 +1809,6 @@ already_AddRefed<ImageContainer> nsPluginInstanceOwner::GetImageContainerForVide
   container->SetCurrentImageInTransaction(img);
 
   return container.forget();
-}
-
-nsIntRect nsPluginInstanceOwner::GetVisibleRect()
-{
-  if (!mObjectFrame || !mPluginWindow)
-    return nsIntRect(0, 0, 0, 0);
-  
-  gfxRect r = nsIntRect(0, 0, mPluginWindow->width, mPluginWindow->height);
-
-  float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
-  float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
-  r.Scale(xResolution, yResolution);
-
-  return nsIntRect(r.x, r.y, r.width, r.height);
 }
 
 void nsPluginInstanceOwner::Invalidate() {

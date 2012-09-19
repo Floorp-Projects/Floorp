@@ -612,8 +612,8 @@ ProfilingGetPC(JSRuntime *rt, JSScript *script, void *ip);
 JS_FRIEND_API(void *)
 GetOwnerThread(const JSContext *cx);
 
-JS_FRIEND_API(unsigned)
-GetContextOutstandingRequests(const JSContext *cx);
+JS_FRIEND_API(bool)
+ContextHasOutstandingRequests(const JSContext *cx);
 #endif
 
 JS_FRIEND_API(JSCompartment *)

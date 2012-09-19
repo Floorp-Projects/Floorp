@@ -2046,30 +2046,19 @@ CodeGenerator::visitFromCharCode(LFromCharCode *lir)
     Register code = ToRegister(lir->code());
     Register output = ToRegister(lir->output());
 
-    // This static variable would be used by js_NewString as an initial buffer.
-    Label fast;
-    masm.cmpPtr(code, ImmWord(StaticStrings::UNIT_STATIC_LIMIT));
-    masm.j(Assembler::Below, &fast);
-
-    // Store the code in the tmpString. This assume that jitted codes are not
-    // running concurently.
-    static jschar tmpString[2] = {0, 0};
-    Register tmpStringAddr = output;
-    masm.movePtr(ImmWord(tmpString), tmpStringAddr);
-    masm.store16(code, Address(tmpStringAddr, 0));
-
-    // Copy the tmpString to a newly allocated string.
-    typedef JSFixedString *(*pf)(JSContext *, const jschar *, size_t);
-    static const VMFunction newStringCopyNInfo = FunctionInfo<pf>(js_NewStringCopyN);
-    OutOfLineCode *ool = oolCallVM(newStringCopyNInfo, lir, (ArgList(), tmpStringAddr, Imm32(1)),
-                                   StoreRegisterTo(output));
+    typedef JSFixedString *(*pf)(JSContext *, int32_t);
+    static const VMFunction Info = FunctionInfo<pf>(ion::StringFromCharCode);
+    OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), code), StoreRegisterTo(output));
     if (!ool)
         return false;
 
-    masm.jump(ool->entry());
-    masm.bind(&fast);
+    // OOL path if code >= UNIT_STATIC_LIMIT.
+    masm.branch32(Assembler::AboveOrEqual, code, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
+                  ool->entry());
+
     masm.movePtr(ImmWord(&gen->compartment->rt->staticStrings.unitStaticTable), output);
     masm.loadPtr(BaseIndex(output, code, ScalePointer), output);
+
     masm.bind(ool->rejoin());
     return true;
 }

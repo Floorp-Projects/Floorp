@@ -8,7 +8,7 @@
 
 
 #include "SkDiscretePathEffect.h"
-#include "SkBuffer.h"
+#include "SkFlattenableBuffers.h"
 #include "SkPathMeasure.h"
 #include "SkRandom.h"
 
@@ -26,8 +26,8 @@ SkDiscretePathEffect::SkDiscretePathEffect(SkScalar segLength, SkScalar deviatio
 }
 
 bool SkDiscretePathEffect::filterPath(SkPath* dst, const SkPath& src,
-                                      SkScalar* width) {
-    bool doFill = *width < 0;
+                                      SkStrokeRec* rec) {
+    bool doFill = rec->isFillStyle();
 
     SkPathMeasure   meas(src, doFill);
     uint32_t        seed = SkScalarRound(meas.getLength());
@@ -50,7 +50,7 @@ bool SkDiscretePathEffect::filterPath(SkPath* dst, const SkPath& src,
                 n -= 1;
                 distance += delta/2;
             }
-            
+
             if (meas.getPosTan(distance, &p, &v)) {
                 Perterb(&p, v, SkScalarMul(rand.nextSScalar1(), scale));
                 dst->moveTo(p);

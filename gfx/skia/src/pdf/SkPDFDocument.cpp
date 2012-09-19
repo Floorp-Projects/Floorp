@@ -17,7 +17,7 @@
 
 // Add the resources, starting at firstIndex to the catalog, removing any dupes.
 // A hash table would be really nice here.
-void addResourcesToCatalog(int firstIndex, bool firstPage,
+static void addResourcesToCatalog(int firstIndex, bool firstPage,
                           SkTDArray<SkPDFObject*>* resourceList,
                           SkPDFCatalog* catalog) {
     for (int i = firstIndex; i < resourceList->count(); i++) {
@@ -125,7 +125,8 @@ bool SkPDFDocument::emitPDF(SkWStream* stream) {
         off_t fileOffset = headerSize();
         fileOffset += fCatalog->setFileOffset(fDocCatalog.get(), fileOffset);
         fileOffset += fCatalog->setFileOffset(fPages[0], fileOffset);
-        fileOffset += fPages[0]->getPageSize(fCatalog.get(), fileOffset);
+        fileOffset += fPages[0]->getPageSize(fCatalog.get(),
+                (size_t) fileOffset);
         for (int i = 0; i < fSecondPageFirstResourceIndex; i++) {
             fileOffset += fCatalog->setFileOffset(fPageResources[i],
                                                   fileOffset);

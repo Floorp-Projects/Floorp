@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=371375
   SimpleTest.waitForExplicitFinish();
   addLoadEvent(function() {
     is(load1Called, false, "Load handler should not be called");
-    is(error1Called, false, "Error handler should not be called");
+    is(error1Called, true, "Error handler should be called");
     is(load2Called, true, "Load handler for valid script should be called");
     is(error2Called, false,
        "Error handler for valid script should not be called");

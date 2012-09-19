@@ -98,6 +98,9 @@ MOZ_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // Does this property suppor the unitless length quirk in quirks mode?
 #define CSS_PROPERTY_UNITLESS_LENGTH_QUIRK        (1<<16)
 
+// Is this property (which must be a shorthand) really an alias?
+#define CSS_PROPERTY_IS_ALIAS                     (1<<17)
+
 /**
  * Types of animatable values.
  */

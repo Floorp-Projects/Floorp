@@ -11,6 +11,8 @@
 #define SkRefCnt_DEFINED
 
 #include "SkThread.h"
+#include "SkInstCnt.h"
+#include "SkTemplates.h"
 
 /** \class SkRefCnt
 
@@ -24,6 +26,8 @@
 */
 class SK_API SkRefCnt : SkNoncopyable {
 public:
+    SK_DECLARE_INST_COUNT_ROOT(SkRefCnt)
+
     /** Default construct, initializing the reference count to 1.
     */
     SkRefCnt() : fRefCnt(1) {}
@@ -67,19 +71,36 @@ public:
         SkASSERT(fRefCnt > 0);
     }
 
-private:
-    /** Called when the ref count goes to 0.
-    */
-    virtual void internal_dispose() const {
+protected:
+    /**
+     *  Allow subclasses to call this if they've overridden internal_dispose
+     *  so they can reset fRefCnt before the destructor is called. Should only
+     *  be called right before calling through to inherited internal_dispose()
+     *  or before calling the destructor.
+     */
+    void internal_dispose_restore_refcnt_to_1() const {
 #ifdef SK_DEBUG
-        // so our destructor won't complain
+        SkASSERT(0 == fRefCnt);
         fRefCnt = 1;
 #endif
+    }
+
+private:
+    /**
+     *  Called when the ref count goes to 0.
+     */
+    virtual void internal_dispose() const {
+        this->internal_dispose_restore_refcnt_to_1();
         SkDELETE(this);
     }
+
     friend class SkWeakRefCnt;
+    friend class GrTexture;     // to allow GrTexture's internal_dispose to
+                                // call SkRefCnt's & directly set fRefCnt (to 1)
 
     mutable int32_t fRefCnt;
+
+    typedef SkNoncopyable INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -96,12 +117,21 @@ private:
     } while (0)
 
 
-/** Check if the argument is non-null, and if so, call obj->ref()
+/** Call obj->ref() and return obj. The obj must not be NULL.
  */
-template <typename T> static inline void SkSafeRef(T* obj) {
+template <typename T> static inline T* SkRef(T* obj) {
+    SkASSERT(obj);
+    obj->ref();
+    return obj;
+}
+
+/** Check if the argument is non-null, and if so, call obj->ref() and return obj.
+ */
+template <typename T> static inline T* SkSafeRef(T* obj) {
     if (obj) {
         obj->ref();
     }
+    return obj;
 }
 
 /** Check if the argument is non-null, and if so, call obj->unref()
@@ -129,6 +159,12 @@ public:
         fObj = obj;
     }
 
+    void swap(SkAutoTUnref* other) {
+        T* tmp = fObj;
+        fObj = other->fObj;
+        other->fObj = tmp;
+    }
+
     /**
      *  Return the hosted object (which may be null), transferring ownership.
      *  The reference count is not modified, and the internal ptr is set to NULL
@@ -141,7 +177,29 @@ public:
         return obj;
     }
 
-    T* operator->() { return fObj; }
+    /**
+     * BlockRef<B> is a type which inherits from B, cannot be created,
+     * and makes ref and unref private.
+     */
+    template<typename B> class BlockRef : public B {
+    private:
+        BlockRef();
+        void ref() const;
+        void unref() const;
+    };
+
+    /** If T is const, the type returned from operator-> will also be const. */
+    typedef typename SkTConstType<BlockRef<T>, SkTIsConst<T>::value>::type BlockRefType;
+
+    /**
+     *  SkAutoTUnref assumes ownership of the ref. As a result, it is an error
+     *  for the user to ref or unref through SkAutoTUnref. Therefore
+     *  SkAutoTUnref::operator-> returns BlockRef<T>*. This prevents use of
+     *  skAutoTUnrefInstance->ref() and skAutoTUnrefInstance->unref().
+     */
+    BlockRefType *operator->() const {
+        return static_cast<BlockRefType*>(fObj);
+    }
     operator T*() { return fObj; }
 
 private:

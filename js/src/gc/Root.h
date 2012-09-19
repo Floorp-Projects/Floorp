@@ -380,21 +380,6 @@ class Rooted : public RootedBase<T>
     }
 
   public:
-    Rooted(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
-      : ptr(RootMethods<T>::initial())
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(JS::TlsRuntime);
-    }
-
-    Rooted(const T &initial
-           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(initial)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(JS::TlsRuntime);
-    }
-
     Rooted(JSRuntime *rt
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : ptr(RootMethods<T>::initial())
@@ -567,7 +552,7 @@ JS_FRIEND_API(bool) InNoGCScope();
 /*
  * The scoped guard object AutoAssertNoGC forces the GC to assert if a GC is
  * attempted while the guard object is live.  If you have a GC-unsafe operation
- * to perform, use this guard object to protect your opertion.
+ * to perform, use this guard object to protect your operation.
  */
 class AutoAssertNoGC
 {

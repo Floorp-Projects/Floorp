@@ -1339,6 +1339,12 @@ NS_UsePrivateBrowsing(nsIChannel *channel)
     return loadContext && loadContext->UsePrivateBrowsing();
 }
 
+// Constants duplicated from nsIScriptSecurityManager so we avoid having necko
+// know about script security manager.
+#define NECKO_NO_APP_ID 0
+// Note: UNKNOWN also equals PR_UINT32_MAX
+#define NECKO_UNKNOWN_APP_ID 4294967295
+
 /**
  * Gets AppId and isInBrowserElement from channel's nsILoadContext.
  * Returns false if error or channel's callbacks don't implement nsILoadContext.

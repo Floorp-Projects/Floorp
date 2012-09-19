@@ -15,7 +15,6 @@
 #include "nsISupportsImpl.h"
 #include "nsRange.h"
 #include "nscore.h"
-#include "prtypes.h"
 
 class nsEditor;
 class nsINode;

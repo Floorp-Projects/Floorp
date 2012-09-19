@@ -615,7 +615,6 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" ]; then
     toolkit/themes/pinstripe/global/Makefile
     toolkit/themes/pinstripe/mozapps/Makefile
     toolkit/components/alerts/mac/Makefile
-    toolkit/components/alerts/mac/growl/Makefile
     widget/cocoa/Makefile
   "
 elif [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" ]; then

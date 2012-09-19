@@ -560,6 +560,7 @@ MOCHITEST_FILES_B = \
 		test_mixed_content_blocker.html \
 		file_mixed_content_main.html \
 		file_mixed_content_server.sjs \
+		test_bug789856.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES =	\

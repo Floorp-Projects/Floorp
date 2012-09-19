@@ -14,7 +14,6 @@
 #include "nsString.h"                   // for nsString
 #include "nsTArray.h"                   // for nsTArray
 #include "nscore.h"                     // for nsresult
-#include "prtypes.h"                    // for int32_t
 
 class nsIEditor;
 class nsISpellChecker;
