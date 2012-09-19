@@ -100,6 +100,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -642,8 +644,19 @@ abstract public class GeckoApp
 
             PackageManager pm = getPackageManager();
             List<ResolveInfo> activities = pm.queryIntentActivities(shareIntent, 0);
-            GeckoSubMenu menu = new GeckoSubMenu(mAppContext, null);
+            Collections.sort(activities, new Comparator<ResolveInfo>() {
+                @Override
+                public int compare(ResolveInfo one, ResolveInfo two) {
+                    return one.preferredOrder - two.preferredOrder;
+                }
 
+                @Override
+                public boolean equals(Object info) {
+                    return this.equals(info);
+                }
+            });
+                        
+            GeckoSubMenu menu = new GeckoSubMenu(mAppContext, null);
             for (ResolveInfo activity : activities) {
                  final ActivityInfo activityInfo = activity.activityInfo;
 
