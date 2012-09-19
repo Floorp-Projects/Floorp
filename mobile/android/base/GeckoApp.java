@@ -959,7 +959,7 @@ abstract public class GeckoApp
             } else if (event.equals("WebApps:Open")) {
                 String url = message.getString("uri");
                 String origin = message.getString("origin");
-                Intent intent = GeckoAppShell.getWebAppIntent(url, origin, false);
+                Intent intent = GeckoAppShell.getWebAppIntent(url, origin, "", null);
                 if (intent == null)
                     return;
                 startActivity(intent);
