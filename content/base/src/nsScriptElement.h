@@ -31,6 +31,8 @@ public:
   {
   }
 
+  virtual nsresult FireErrorEvent();
+
 protected:
   // Internal methods
 
