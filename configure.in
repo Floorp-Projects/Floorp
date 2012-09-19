@@ -8720,9 +8720,29 @@ esac
 
 AC_SUBST(PYTHON)
 
-# Populate the virtualenv
+dnl Populate the virtualenv
+
+dnl We always use the version Python was compiled with to ensure that compiled
+dnl extensions work properly. This works around a bug in Python. See also
+dnl http://bugs.python.org/issue9516 and bug 659881.
+dnl
+dnl Please note that this assumes nothing built during virtualenv population is
+dnl shipped as part of a release package. If it does ship, binaries built here
+dnl may not be compatible with the minimum supported OS X version.
+osx_deployment_target_system=
+
+if test $python_version_major -ne 2; then
+    AC_MSG_ERROR([Assertion failed: building with Python 2.])
+fi
+
+dnl sysconfig is only present on Python 2.7 and above.
+if test $python_version_minor -ge 7; then
+    osx_deployment_target_system=`$PYTHON -c 'import sysconfig; print sysconfig.get_config_var("MACOSX_DEPLOYMENT_TARGET")'`
+fi
+
 AC_MSG_RESULT([Populating Python virtualenv])
-MACOSX_DEPLOYMENT_TARGET= LDFLAGS="${HOST_LDFLAGS}" \
+MACOSX_DEPLOYMENT_TARGET=$osx_deployment_target_system \
+  LDFLAGS="${HOST_LDFLAGS}" \
   CC="${HOST_CC}" CXX="${HOST_CXX}" \
   CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" \
   $PYTHON $_topsrcdir/build/virtualenv/populate_virtualenv.py \
