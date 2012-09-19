@@ -118,6 +118,12 @@ using mozilla::dom::gonk::AudioManager;
 #include "nsVolumeService.h"
 using mozilla::system::nsVolumeService;
 #endif
+
+#ifdef MOZ_B2G_FM
+#include "FMRadio.h"
+using mozilla::dom::fm::FMRadio;
+#endif
+
 #include "nsDOMMutationObserver.h"
 
 // Editor stuff
@@ -287,6 +293,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMMutationObserver)
 NS_GENERIC_FACTORY_CONSTRUCTOR(AudioManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVolumeService)
 #endif
+
+#ifdef MOZ_B2G_FM
+NS_GENERIC_FACTORY_CONSTRUCTOR(FMRadio)
+#endif
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceSensors)
 
 #ifndef MOZ_WIDGET_GONK
@@ -767,6 +778,11 @@ NS_DEFINE_NAMED_CID(BLUETOOTHSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_AUDIOMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_VOLUMESERVICE_CID);
 #endif
+
+#ifdef MOZ_B2G_FM
+NS_DEFINE_NAMED_CID(NS_FMRADIO_CID);
+#endif
+
 #ifdef ENABLE_EDITOR_API_LOG
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 #else
@@ -1043,6 +1059,9 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_AUDIOMANAGER_CID, true, NULL, AudioManagerConstructor },
   { &kNS_VOLUMESERVICE_CID, true, NULL, nsVolumeServiceConstructor },
 #endif
+#ifdef MOZ_B2G_FM
+  { &kNS_FMRADIO_CID, true, NULL, FMRadioConstructor },
+#endif
 #ifdef ENABLE_EDITOR_API_LOG
   { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorLogConstructor },
 #else
@@ -1183,6 +1202,9 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #ifdef MOZ_WIDGET_GONK
   { NS_AUDIOMANAGER_CONTRACTID, &kNS_AUDIOMANAGER_CID },
   { NS_VOLUMESERVICE_CONTRACTID, &kNS_VOLUMESERVICE_CID },
+#endif
+#ifdef MOZ_B2G_FM
+  { NS_FMRADIO_CONTRACTID, &kNS_FMRADIO_CID },
 #endif
 #ifdef ENABLE_EDITOR_API_LOG
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },

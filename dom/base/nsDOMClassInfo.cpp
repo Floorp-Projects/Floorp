@@ -518,6 +518,10 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "StkCommandEvent.h"
 #endif
 
+#ifdef MOZ_B2G_FM
+#include "FMRadio.h"
+#endif
+
 #ifdef MOZ_B2G_BT
 #include "BluetoothManager.h"
 #include "BluetoothAdapter.h"
@@ -1680,6 +1684,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozStkCommandEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+#endif
+
+#ifdef MOZ_B2G_FM
+  NS_DEFINE_CLASSINFO_DATA(FMRadio, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
 #endif
 
 #ifdef MOZ_B2G_BT
@@ -4482,6 +4491,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+#endif
+
+#ifdef MOZ_B2G_FM
+  DOM_CLASSINFO_MAP_BEGIN(FMRadio, nsIFMRadio)
+    DOM_CLASSINFO_MAP_ENTRY(nsIFMRadio)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
 #endif
 
 #ifdef MOZ_B2G_BT
