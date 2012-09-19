@@ -2082,6 +2082,7 @@ ia64*-hpux*)
         _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
         MOZ_B2G_RIL=1
         MOZ_B2G_BT=1
+        MOZ_B2G_FM=1
     else
         _PLATFORM_DEFAULT_TOOLKIT=cairo-android
         MOZ_LINKER=1
@@ -7319,6 +7320,14 @@ if test -n "$MOZ_B2G_RIL"; then
     AC_DEFINE(MOZ_B2G_RIL)
 fi
 AC_SUBST(MOZ_B2G_RIL)
+
+dnl ========================================================
+dnl = Enable Radio FM for B2G (Gonk usually)
+dnl ========================================================
+if test -n "$MOZ_B2G_FM"; then
+    AC_DEFINE(MOZ_B2G_FM)
+fi
+AC_SUBST(MOZ_B2G_FM)
 
 dnl ========================================================
 dnl = Enable Bluetooth Interface for B2G (Gonk usually)
