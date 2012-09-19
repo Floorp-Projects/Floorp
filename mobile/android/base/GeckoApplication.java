@@ -25,6 +25,7 @@ public class GeckoApplication extends Application {
         GeckoBatteryManager.getInstance().init(getApplicationContext());
         GeckoBatteryManager.getInstance().start();
         GeckoNetworkManager.getInstance().init(getApplicationContext());
+        MemoryMonitor.getInstance().init(getApplicationContext());
     }
 
     protected void onActivityPause(GeckoActivity activity) {

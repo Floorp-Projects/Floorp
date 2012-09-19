@@ -1,0 +1,119 @@
+
+Intro
+=====
+
+We would like to recognize some of the people who have been instrumental in the
+development of psutil.
+I'm sure we are forgetting some people (feel free to email us), but here is a
+short list.
+It's modeled after the Linux CREDITS file where the fields are:
+name (N), e-mail (E), web-address (W), country (C), description (D), (I) issues
+(issue tracker is at http://code.google.com/p/psutil/issues/list).
+Really thanks to all of you.
+
+
+Maintainers
+===========
+
+N: Giampaolo Rodola'
+C: Italy
+E: g.rodola@gmail.com
+
+N: Jay Loden
+C: NJ, USA
+E: jloden@gmail.com
+W: http://www.jayloden.com
+
+
+Contributors
+============
+
+N: Jeremy Whitlock
+E: jcscoobyrs@gmail.com
+I: 125, 150, 174, 206
+
+N: wj32
+E: wj32.64@gmail.com
+D: process username() and get_connections() on Windows
+I: 114, 115
+
+N: Yan Raber
+C: Bologna, Italy
+E: yanraber@gmail.com
+D: help on Windows development
+
+N: Dave Daeschler
+C: USA
+E: david.daeschler@gmail.com
+D: initial design/bootstrap and continuing bug fixes
+
+N: cjgohlke
+E: cjgohlke@gmail.com
+D: Windows 64 bit support
+I: 107
+
+N: Jeffery Kline
+E: jeffery.kline@gmail.com
+I: 130
+
+N: Grabriel Monnerat
+E: gabrielmonnerat@gmail.com
+I: 146
+
+N: Philip Roberts
+E: philip.roberts@gmail.com
+I: 168
+
+N: jcscoobyrs
+E: jcscoobyrs@gmail.com
+I: 125
+
+N: Sandro Tosi
+E: sandro.tosi@gmail.com
+I: 200, 201
+
+N: Andrew Colin
+E: andrew.colin@gmail.com
+I: 248
+
+N: Amoser
+E: amoser@google.com
+I: 266, 267
+
+N: Matthew Grant
+E: matthewgrant5@gmail.com
+I: 271
+
+N: oweidner
+E: oweidner@cct.lsu.edu
+I: 275
+
+N: Tarek Ziade
+E: ziade.tarek
+I: 281
+
+N: Luca Cipriani
+C: Turin, Italy
+E: luca.opensource@gmail.com
+I: 278
+
+N: Maciej Lach,
+E: maciej.lach@gmail.com
+I: 294
+
+N: James Pye
+E: james.pye@gmail.com
+I: 305, 306
+
+N: Stanchev Emil
+E: stanchev.emil
+I: 314
+
+N: Kim Gräsman
+E: kim.grasman@gmail.com
+D: ...also kindly donated some money.
+I: 316
+
+N: Riccardo Murri
+C: Italy
+I: 318
