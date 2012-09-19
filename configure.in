@@ -2283,6 +2283,7 @@ ia64*-hpux*)
         if test -n "$GNU_CC"; then
             CFLAGS="$CFLAGS -mstackrealign -fno-keep-inline-dllexport"
             CXXFLAGS="$CXXFLAGS -mstackrealign -fno-keep-inline-dllexport"
+            LDFLAGS="$LDFLAGS -Wl,--enable-stdcall-fixup"
         else
             AC_DEFINE(HAVE_STDCALL)
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
@@ -5725,7 +5726,7 @@ if test -n "$MOZ_WEBGL_DISABLED"; then
   MOZ_ANGLE_RENDERER=
 fi
 
-if test -n "$MOZ_ANGLE_RENDERER"; then
+if test -n "$MOZ_ANGLE_RENDERER" -a -z "$CROSS_COMPILE"; then
   # Get the SDK path from the registry.
   # First try to get the June 2010 SDK
   MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK (June 2010)' | head -n 1`
