@@ -245,27 +245,11 @@ CompartmentDestroyedCallback(JSFreeOp *fop, JSCompartment *compartment)
     return;
 }
 
-struct ObjectHolder : public JSDHashEntryHdr
-{
-    void *holder;
-    nsScriptObjectTracer* tracer;
-};
-
 nsresult
 XPCJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
-    if (!mJSHolders.ops)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    ObjectHolder *entry =
-        reinterpret_cast<ObjectHolder*>(JS_DHashTableOperate(&mJSHolders,
-                                                             aHolder,
-                                                             JS_DHASH_ADD));
-    if (!entry)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    entry->holder = aHolder;
-    entry->tracer = aTracer;
+    MOZ_ASSERT(aTracer->Trace, "AddJSHolder needs a non-null Trace function");
+    mJSHolders.Put(aHolder, aTracer);
 
     return NS_OK;
 }
@@ -273,10 +257,7 @@ XPCJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 nsresult
 XPCJSRuntime::RemoveJSHolder(void* aHolder)
 {
-    if (!mJSHolders.ops)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    JS_DHashTableOperate(&mJSHolders, aHolder, JS_DHASH_REMOVE);
+    mJSHolders.Remove(aHolder);
 
     return NS_OK;
 }
@@ -284,10 +265,7 @@ XPCJSRuntime::RemoveJSHolder(void* aHolder)
 nsresult
 XPCJSRuntime::TestJSHolder(void* aHolder, bool* aRetval)
 {
-    if (!mJSHolders.ops)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *aRetval = !!JS_DHashTableOperate(&mJSHolders, aHolder, JS_DHASH_LOOKUP);
+    *aRetval = mJSHolders.Get(aHolder, nullptr);
 
     return NS_OK;
 }
@@ -335,15 +313,12 @@ TraceJSObject(void *aScriptThing, const char *name, void *aClosure)
                    js_GetGCThingTraceKind(aScriptThing), name);
 }
 
-static JSDHashOperator
-TraceJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
-              void *arg)
+static PLDHashOperator
+TraceJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
 {
-    ObjectHolder* entry = reinterpret_cast<ObjectHolder*>(hdr);
+    tracer->Trace(holder, TraceJSObject, arg);
 
-    entry->tracer->Trace(entry->holder, TraceJSObject, arg);
-
-    return JS_DHASH_NEXT;
+    return PL_DHASH_NEXT;
 }
 
 static PLDHashOperator
@@ -373,8 +348,7 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
     for (XPCRootSetElem *e = mWrappedJSRoots; e ; e = e->GetNextRoot())
         static_cast<nsXPCWrappedJS*>(e)->TraceJS(trc);
 
-    if (mJSHolders.ops)
-        JS_DHashTableEnumerate(&mJSHolders, TraceJSHolder, trc);
+    mJSHolders.Enumerate(TraceJSHolder, trc);
 
     // Trace compartments.
     XPCCompartmentSet &set = GetCompartmentSet();
@@ -406,22 +380,18 @@ CheckParticipatesInCycleCollection(void *aThing, const char *name, void *aClosur
     }
 }
 
-static JSDHashOperator
-NoteJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
-             void *arg)
+static PLDHashOperator
+NoteJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
 {
-    ObjectHolder* entry = reinterpret_cast<ObjectHolder*>(hdr);
     Closure *closure = static_cast<Closure*>(arg);
 
     closure->cycleCollectionEnabled = false;
-    entry->tracer->Trace(entry->holder, CheckParticipatesInCycleCollection,
-                         closure);
-    if (!closure->cycleCollectionEnabled)
-        return JS_DHASH_NEXT;
+    tracer->Trace(holder, CheckParticipatesInCycleCollection,
+                  closure);
+    if (closure->cycleCollectionEnabled)
+        closure->cb->NoteNativeRoot(holder, tracer);
 
-    closure->cb->NoteNativeRoot(entry->holder, entry->tracer);
-
-    return JS_DHASH_NEXT;
+    return PL_DHASH_NEXT;
 }
 
 // static
@@ -510,9 +480,7 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
     }
 
     Closure closure = { true, &cb };
-    if (mJSHolders.ops) {
-        JS_DHashTableEnumerate(&mJSHolders, NoteJSHolder, &closure);
-    }
+    mJSHolders.Enumerate(NoteJSHolder, &closure);
 
     // Suspect objects with expando objects.
     XPCCompartmentSet &set = GetCompartmentSet();
@@ -523,22 +491,18 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
     }
 }
 
-static JSDHashOperator
-UnmarkJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
-               void *arg)
+static PLDHashOperator
+UnmarkJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
 {
-    ObjectHolder* entry = reinterpret_cast<ObjectHolder*>(hdr);
-    entry->tracer->CanSkip(entry->holder, true);
-    return JS_DHASH_NEXT;
+    tracer->CanSkip(holder, true);
+    return PL_DHASH_NEXT;
 }
 
 void
 XPCJSRuntime::UnmarkSkippableJSHolders()
 {
     XPCAutoLock lock(mMapLock);
-    if (mJSHolders.ops) {             
-        JS_DHashTableEnumerate(&mJSHolders, UnmarkJSHolder, nullptr);
-    }
+    mJSHolders.Enumerate(UnmarkJSHolder, nullptr);
 }
 
 void
@@ -1024,7 +988,7 @@ XPCJSRuntime::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
 
     // NULL for the second arg;  we're not measuring anything hanging off the
     // entries in mJSHolders.
-    n += JS_DHashTableSizeOfExcludingThis(&mJSHolders, NULL, mallocSizeOf);
+    n += mJSHolders.SizeOfExcludingThis(nullptr, mallocSizeOf);
 
     // There are other XPCJSRuntime members that could be measured; the above
     // ones have been seen by DMD to be worth measuring.  More stuff may be
@@ -1221,11 +1185,6 @@ XPCJSRuntime::~XPCJSRuntime()
             printf("deleting XPCJSRuntime with %d live detached XPCWrappedNativeProto\n", (int)count);
 #endif
         delete mDetachedWrappedNativeProtoMap;
-    }
-
-    if (mJSHolders.ops) {
-        JS_DHashTableFinish(&mJSHolders);
-        mJSHolders.ops = nullptr;
     }
 
     if (mJSRuntime) {
@@ -2202,9 +2161,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
     NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
 
-    if (!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nullptr,
-                           sizeof(ObjectHolder), 512))
-        mJSHolders.ops = nullptr;
+    mJSHolders.Init(512);
 
     mCompartmentSet.init();
 
