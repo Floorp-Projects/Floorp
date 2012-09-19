@@ -2450,15 +2450,14 @@ unsigned
 js_InferFlags(JSContext *cx, unsigned defaultFlags)
 {
     /*
-     * Use ScriptFrameIter since we intentionally want to look across
-     * compartment boundaries in the case of cross-compartment property access.
+     * We intentionally want to look across compartment boundaries to correctly
+     * handle the case of cross-compartment property access.
      */
-    ScriptFrameIter i(cx);
-    if (i.done())
+    jsbytecode *pc;
+    JSScript *script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
+    if (!script)
         return defaultFlags;
 
-    jsbytecode *pc = i.pc();
-    JSScript *script = i.script();
     const JSCodeSpec *cs = &js_CodeSpec[*pc];
     uint32_t format = cs->format;
     unsigned flags = 0;
