@@ -954,7 +954,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             if (headerStr.LowerCaseEqualsLiteral("content-type")) {
                 mContentType = headerVal;
             } else if (headerStr.LowerCaseEqualsLiteral("content-length")) {
-                mContentLength = atoi(headerVal.get()); // XXX 64-bit math?
+                mContentLength = nsCRT::atoll(headerVal.get());
             } else if (headerStr.LowerCaseEqualsLiteral("content-disposition")) {
                 mContentDisposition = headerVal;
             } else if (headerStr.LowerCaseEqualsLiteral("set-cookie")) {
@@ -988,14 +988,14 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                     
                     tmpPtr[0] = '\0';
                     
-                    mByteRangeStart = atoi(range); // XXX want 64-bit conv
+                    mByteRangeStart = nsCRT::atoll(range);
                     tmpPtr++;
-                    mByteRangeEnd = atoi(tmpPtr);
+                    mByteRangeEnd = nsCRT::atoll(tmpPtr);
                 }
 
                 mIsByteRangeRequest = true;
                 if (mContentLength == LL_MAXUINT)
-                    mContentLength = uint64_t(int64_t(mByteRangeEnd - mByteRangeStart + int64_t(1)));
+                    mContentLength = uint64_t(mByteRangeEnd - mByteRangeStart + 1);
             }
         }
         *newLine = tmpChar;
