@@ -67,8 +67,10 @@ let Preferences = {
   },
 
   uninit: function Preferences_uninit() {
-    this._branch.removeObserver("", this);
-    this._branch = null;
+    if (this._branch) {
+      this._branch.removeObserver("", this);
+      this._branch = null;
+    }
   },
 
   observe: function Preferences_observe(aSubject, aTopic, aData) {
