@@ -5006,6 +5006,21 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Write Dialling Number.
+   *
+   * @param number  The Dialling number
+   */
+  writeDiallingNumber: function writeDiallingNumber(number) {
+    let toa = PDU_TOA_ISDN; // 81
+    if (number[0] == '+') {
+      toa = PDU_TOA_INTERNATIONAL | PDU_TOA_ISDN; // 91
+      number = number.substring(1);
+    }
+    this.writeHexOctet(toa);
+    this.writeSwappedNibbleBCD(number);
+  },
+
+  /**
    * Read TP-Protocol-Indicator(TP-PID).
    *
    * @param msg
