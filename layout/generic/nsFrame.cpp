@@ -5409,7 +5409,7 @@ DebugListFrameTree(nsIFrame* aFrame)
 
 // Debugging
 NS_IMETHODIMP
-nsFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
+nsFrame::List(FILE* out, int32_t aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);

@@ -1708,7 +1708,7 @@ nsImageFrame::GetFrameName(nsAString& aResult) const
 }
 
 NS_IMETHODIMP
-nsImageFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
+nsImageFrame::List(FILE* out, int32_t aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
