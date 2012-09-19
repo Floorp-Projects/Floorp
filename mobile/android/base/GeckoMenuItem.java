@@ -34,6 +34,10 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
         public void onShowAsActionChanged(GeckoMenuItem item, boolean isActionItem);
     }
 
+    public static interface OnVisibilityChangedListener {
+        public void onVisibilityChanged(GeckoMenuItem item, boolean isVisible);
+    }
+
     private Context mContext;
     private int mId;
     private int mOrder;
@@ -48,6 +52,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
     private Drawable mIcon;
     private int mIconRes;
     private MenuItem.OnMenuItemClickListener mMenuItemClickListener;
+    private OnVisibilityChangedListener mVisibilityChangedListener;
     private OnShowAsActionChangedListener mShowAsActionChangedListener;
 
     public GeckoMenuItem(Context context, int id) {
@@ -63,8 +68,6 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
         mCheckable = true;
         mChecked = false;
         mMenuItemClickListener = null;
-
-        mLayout.setOnClickListener(this);
     }
 
     public GeckoMenuItem(Context context, int id, int order) {
@@ -329,6 +332,10 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
     public MenuItem setVisible(boolean visible) {
         mVisible = visible;
         mLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
+
+        if (mVisibilityChangedListener != null)
+            mVisibilityChangedListener.onVisibilityChanged(this, visible);
+
         return this;
     }
 
@@ -340,5 +347,9 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     public void setOnShowAsActionChangedListener(OnShowAsActionChangedListener listener) {
         mShowAsActionChangedListener = listener;
-    } 
+    }
+
+    public void setOnVisibilityChangedListener(OnVisibilityChangedListener listener) {
+        mVisibilityChangedListener = listener;
+    }
 }
