@@ -33,6 +33,19 @@ using namespace mozilla;
 #define HEADPHONES_STATUS_OFF     NS_LITERAL_STRING("off").get()
 #define HEADPHONES_STATUS_UNKNOWN NS_LITERAL_STRING("unknown").get()
 
+static bool
+IsFmRadioAudioOn()
+{
+  if (static_cast<
+      audio_policy_dev_state_t (*) (audio_devices_t, const char *)
+      >(AudioSystem::getDeviceConnectionState)) {
+    return AudioSystem::getDeviceConnectionState(AUDIO_DEVICE_OUT_FM, "") == 
+           AUDIO_POLICY_DEVICE_STATE_AVAILABLE ? true : false;
+  } else {
+    return false;
+  }
+}
+
 NS_IMPL_ISUPPORTS1(AudioManager, nsIAudioManager)
 
 static AudioSystem::audio_devices
@@ -133,6 +146,11 @@ AudioManager::SetMasterVolume(float aMasterVolume)
   if (AudioSystem::setVoiceVolume(aMasterVolume)) {
     return NS_ERROR_FAILURE;
   }
+
+  if (IsFmRadioAudioOn() && AudioSystem::setFmVolume(aMasterVolume)) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -234,5 +252,36 @@ AudioManager::SetAudioRoute(int aRoutes) {
         GetRoutingMode(aRoutes) == AudioSystem::DEVICE_OUT_WIRED_HEADSET ? 
         AUDIO_POLICY_DEVICE_STATE_AVAILABLE : AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE,
         "");
+
+    // The audio volume is not consistent when we plug and unplug the headset.
+    // Set the fm volume again here.
+    if (IsFmRadioAudioOn()) {
+      float masterVolume;
+      AudioSystem::getMasterVolume(&masterVolume);
+      AudioSystem::setFmVolume(masterVolume);
+    }
+  }
+}
+
+NS_IMETHODIMP
+AudioManager::GetFmRadioAudioEnabled(bool *aFmRadioAudioEnabled)
+{
+  *aFmRadioAudioEnabled = IsFmRadioAudioOn();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
+{
+  if (static_cast<
+      status_t (*) (AudioSystem::audio_devices, AudioSystem::device_connection_state, const char *)
+      >(AudioSystem::setDeviceConnectionState)) {
+    AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_FM,
+      aFmRadioAudioEnabled ? AUDIO_POLICY_DEVICE_STATE_AVAILABLE : 
+      AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
+    InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
+    return NS_OK;
+  } else {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 }
