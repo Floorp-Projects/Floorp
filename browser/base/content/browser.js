@@ -1983,11 +1983,9 @@ function focusAndSelectUrlBar() {
     if (window.fullScreen)
       FullScreen.mouseoverToggle(true);
 
-    gURLBar.focus();
-    if (document.activeElement == gURLBar.inputField) {
-      gURLBar.select();
+    gURLBar.select();
+    if (document.activeElement == gURLBar.inputField)
       return true;
-    }
   }
   return false;
 }
@@ -3329,12 +3327,9 @@ const BrowserSearch = {
     if (searchBar && window.fullScreen)
       FullScreen.mouseoverToggle(true);
     if (searchBar)
-      searchBar.focus();
-    if (searchBar && document.activeElement == searchBar.textbox.inputField) {
       searchBar.select();
-    } else {
+    if (!searchBar || document.activeElement != searchBar.textbox.inputField)
       openUILinkIn(Services.search.defaultEngine.searchForm, "current");
-    }
   },
 
   /**
