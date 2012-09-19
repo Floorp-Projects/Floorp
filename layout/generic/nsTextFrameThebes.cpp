@@ -8392,7 +8392,7 @@ nsTextFrame::GetDebugStateBits() const
 }
 
 NS_IMETHODIMP
-nsTextFrame::List(FILE* out, int32_t aIndent) const
+nsTextFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
   // Output the tag
   IndentBy(out, aIndent);
