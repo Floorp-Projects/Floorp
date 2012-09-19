@@ -3757,6 +3757,9 @@ PartitionCompartments::processNode(Node v)
 void
 PartitionCompartments::partition()
 {
+    if (failed())
+        return;
+
     for (Node n = 0; n < runtime->compartments.length(); n++) {
         if (discoveryTime[n] == Undefined)
             processNode(n);
