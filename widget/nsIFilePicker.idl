@@ -11,7 +11,7 @@ interface nsIURI;
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(0d79adad-b244-49A5-9997-2a8cad93fc44)]
+[scriptable, function, uuid(0d79adad-b244-49A5-9997-2a8cad93fc44)]
 interface nsIFilePickerShownCallback : nsISupports
 {
  /**

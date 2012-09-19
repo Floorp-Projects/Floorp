@@ -151,26 +151,28 @@ let gSyncUtils = {
     let dialogTitle = this.bundle.GetStringFromName("save.recoverykey.title");
     let defaultSaveName = this.bundle.GetStringFromName("save.recoverykey.defaultfilename");
     this._preparePPiframe(elid, function(iframe) {
-      let filepicker = Cc["@mozilla.org/filepicker;1"]
-                         .createInstance(Ci.nsIFilePicker);
-      filepicker.init(window, dialogTitle, Ci.nsIFilePicker.modeSave);
-      filepicker.appendFilters(Ci.nsIFilePicker.filterHTML);
-      filepicker.defaultString = defaultSaveName;
-      let rv = filepicker.show();
-      if (rv == Ci.nsIFilePicker.returnOK
-          || rv == Ci.nsIFilePicker.returnReplace) {
-        let stream = Cc["@mozilla.org/network/file-output-stream;1"]
-                       .createInstance(Ci.nsIFileOutputStream);
-        stream.init(filepicker.file, -1, 0600, 0);
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      let fpCallback = function fpCallback_done(aResult) {
+        if (aResult == Ci.nsIFilePicker.returnOK ||
+            aResult == Ci.nsIFilePicker.returnReplace) {
+          let stream = Cc["@mozilla.org/network/file-output-stream;1"].
+                       createInstance(Ci.nsIFileOutputStream);
+          stream.init(fp.file, -1, 0600, 0);
 
-        let serializer = new XMLSerializer();
-        let output = serializer.serializeToString(iframe.contentDocument);
-        output = output.replace(/<!DOCTYPE (.|\n)*?]>/,
-          '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" ' +
-          '"DTD/xhtml1-strict.dtd">');
-        output = Weave.Utils.encodeUTF8(output);
-        stream.write(output, output.length);
-      }
+          let serializer = new XMLSerializer();
+          let output = serializer.serializeToString(iframe.contentDocument);
+          output = output.replace(/<!DOCTYPE (.|\n)*?]>/,
+            '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" ' +
+            '"DTD/xhtml1-strict.dtd">');
+          output = Weave.Utils.encodeUTF8(output);
+          stream.write(output, output.length);
+        }
+      };
+
+      fp.init(window, dialogTitle, Ci.nsIFilePicker.modeSave);
+      fp.appendFilters(Ci.nsIFilePicker.filterHTML);
+      fp.defaultString = defaultSaveName;
+      fp.open(fpCallback);
       return false;
     });
   },

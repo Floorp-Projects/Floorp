@@ -255,17 +255,29 @@ var gMainPane = {
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
     const nsILocalFile = Components.interfaces.nsILocalFile;
 
-    var fp = Components.classes["@mozilla.org/filepicker;1"]
-                       .createInstance(nsIFilePicker);
-    var bundlePreferences = document.getElementById("bundlePreferences");
-    var title = bundlePreferences.getString("chooseDownloadFolderTitle");
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let title = bundlePreferences.getString("chooseDownloadFolderTitle");
+    let folderListPref = document.getElementById("browser.download.folderList");
+    let currentDirPref = this._indexToFolder(folderListPref.value); // file
+    let defDownloads = this._indexToFolder(1); // file
+    let fp = Components.classes["@mozilla.org/filepicker;1"].
+             createInstance(nsIFilePicker);
+    let fpCallback = function fpCallback_done(aResult) {
+      if (aResult == nsIFilePicker.returnOK) {
+        let file = fp.file.QueryInterface(nsILocalFile);
+        let downloadDirPref = document.getElementById("browser.download.dir");
+
+        downloadDirPref.value = file;
+        folderListPref.value = this._folderToIndex(file);
+        // Note, the real prefs will not be updated yet, so dnld manager's
+        // userDownloadsDirectory may not return the right folder after
+        // this code executes. displayDownloadDirPref will be called on
+        // the assignment above to update the UI.
+      }
+    }.bind(this);
+
     fp.init(window, title, nsIFilePicker.modeGetFolder);
     fp.appendFilters(nsIFilePicker.filterAll);
-
-    var folderListPref = document.getElementById("browser.download.folderList");
-    var currentDirPref = this._indexToFolder(folderListPref.value); // file
-    var defDownloads = this._indexToFolder(1); // file
-
     // First try to open what's currently configured
     if (currentDirPref && currentDirPref.exists()) {
       fp.displayDirectory = currentDirPref;
@@ -276,18 +288,7 @@ var gMainPane = {
     else {
       fp.displayDirectory = this._indexToFolder(0);
     }
-
-    if (fp.show() == nsIFilePicker.returnOK) {
-      var file = fp.file.QueryInterface(nsILocalFile);
-      var currentDirPref = document.getElementById("browser.download.dir");
-      currentDirPref.value = file;
-      var folderListPref = document.getElementById("browser.download.folderList");
-      folderListPref.value = this._folderToIndex(file);
-      // Note, the real prefs will not be updated yet, so dnld manager's
-      // userDownloadsDirectory may not return the right folder after
-      // this code executes. displayDownloadDirPref will be called on
-      // the assignment above to update the UI.
-    }
+    fp.open(fpCallback);
   },
 
   /**
