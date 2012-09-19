@@ -7266,19 +7266,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Profiling and Instrumenting)
 
 dnl ========================================================
-dnl = Enable NS_FUNCTION_TIMER, which provides Function
-dnl = timing for identifying code bottlenecks
-dnl = NS_FUNCTION_TIMER is off by default.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(functiontimer,
-[  --enable-functiontimer  Enable NS_FUNCTION_TIMER ],
-    NS_FUNCTION_TIMER=1,
-    NS_FUNCTION_TIMER= )
-if test -n "$NS_FUNCTION_TIMER"; then
-    AC_DEFINE(NS_FUNCTION_TIMER)
-fi
-
-dnl ========================================================
 dnl = Enable runtime visual profiling logger
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(visual-event-tracer,
