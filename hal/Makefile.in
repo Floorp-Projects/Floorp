@@ -57,6 +57,7 @@ CPPSRCS += \
   GonkSensor.cpp \
   UeventPoller.cpp \
   GonkSwitch.cpp \
+  GonkFMRadio.cpp \
   $(NULL)
 else ifeq (Linux,$(OS_TARGET))
 CPPSRCS += \
@@ -125,6 +126,7 @@ CPPSRCS += \
   FallbackSwitch.cpp \
   FallbackScreenPower.cpp \
   FallbackProcessPriority.cpp \
+  FallbackFMRadio.cpp \
   $(NULL)
 endif #}
 
