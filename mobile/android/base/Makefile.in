@@ -338,6 +338,7 @@ RES_LAYOUT = \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
+  res/layout/menu_action_bar.xml \
   res/layout/menu_item.xml \
   res/layout/menu_popup.xml \
   res/layout/notification_icon_text.xml \
@@ -495,9 +496,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/larry_blue.png \
   res/drawable/larry_green.png \
   res/drawable/menu.xml \
-  res/drawable/menu_item_bg.xml \
-  res/drawable/menu_item_default.xml \
-  res/drawable/menu_item_pressed.xml \
   res/drawable/site_security_identified.png \
   res/drawable/site_security_verified.png \
   res/drawable/urlbar_stop.png \
@@ -661,8 +659,6 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/menu_panel_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_arrow.png \
-  res/drawable-mdpi-v11/menu_item_texture.png \
-  res/drawable-mdpi-v11/menu_item_pressed_texture.png \
   res/drawable-mdpi-v11/menu_item_check.png \
   $(NULL)
 
@@ -685,8 +681,6 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/menu_panel_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_arrow.png \
-  res/drawable-hdpi-v11/menu_item_texture.png \
-  res/drawable-hdpi-v11/menu_item_pressed_texture.png \
   res/drawable-hdpi-v11/menu_item_check.png \
   $(NULL)
 
@@ -709,8 +703,6 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/menu_panel_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_arrow.png \
-  res/drawable-xhdpi-v11/menu_item_texture.png \
-  res/drawable-xhdpi-v11/menu_item_pressed_texture.png \
   res/drawable-xhdpi-v11/menu_item_check.png \
   $(NULL)
 

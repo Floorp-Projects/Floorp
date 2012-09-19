@@ -83,7 +83,6 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -472,10 +471,10 @@ abstract public class GeckoApp
     }
 
     // MenuPanel holds the scrollable Menu
-    public static class MenuPanel extends ScrollView {
+    public static class MenuPanel extends LinearLayout {
         public MenuPanel(Context context, AttributeSet attrs) {
             super(context, attrs);
-            setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+            setLayoutParams(new ViewGroup.LayoutParams((int) context.getResources().getDimension(R.dimen.menu_item_row_width),
                                                        ViewGroup.LayoutParams.WRAP_CONTENT));
         }
 

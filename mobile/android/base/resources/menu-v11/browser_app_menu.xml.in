@@ -6,17 +6,20 @@
 
 <menu xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
 
-    <item gecko:id="@+id/reload"
-          gecko:icon="@drawable/ic_menu_reload"
-          gecko:title="@string/reload"/>
-
     <item gecko:id="@+id/forward"
           gecko:icon="@drawable/ic_menu_forward"
-          gecko:title="@string/forward"/>
+          gecko:title="@string/forward"
+          gecko:showAsAction="true"/>
+
+    <item gecko:id="@+id/reload"
+          gecko:icon="@drawable/ic_menu_reload"
+          gecko:title="@string/reload"
+          gecko:showAsAction="true"/>
 
     <item gecko:id="@+id/bookmark"
           gecko:icon="@drawable/ic_menu_bookmark_add"
-          gecko:title="@string/bookmark"/>
+          gecko:title="@string/bookmark"
+          gecko:showAsAction="true"/>
 
     <item gecko:id="@+id/share"
           gecko:icon="@drawable/ic_menu_share"
