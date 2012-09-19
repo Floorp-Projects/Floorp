@@ -121,6 +121,7 @@
 #include "nsIImageLoadingContent.h"
 #include "mozilla/Preferences.h"
 #include "nsVersionComparator.h"
+#include "nsIPrivateBrowsingChannel.h"
 
 #if defined(XP_WIN)
 #include "nsIWindowMediator.h"
@@ -3173,6 +3174,18 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
       NS_ENSURE_SUCCESS(rv,rv);
     }
   }
+
+  // Override the privacy state of the channel based on that of the document
+  if (doc) {
+    nsILoadContext* loadContext = doc->GetLoadContext();
+    if (loadContext) {
+      nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
+      if (pbChannel) {
+        pbChannel->SetPrivate(loadContext->UsePrivateBrowsing());
+      }
+    }
+  }
+
   rv = channel->AsyncOpen(listenerPeer, nullptr);
   if (NS_SUCCEEDED(rv))
     listenerPeer->TrackRequest(channel);

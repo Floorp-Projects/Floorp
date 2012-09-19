@@ -26,9 +26,30 @@ MOCHITEST_BROWSER_FILES = \
   browser_cmd_restart.js \
   browser_cmd_screenshot.js \
   browser_cmd_settings.js \
-  browser_gcli_web.js \
+  browser_gcli_canon.js \
+  browser_gcli_cli.js \
+  browser_gcli_completion.js \
+  browser_gcli_exec.js \
+  browser_gcli_focus.js \
+  browser_gcli_history.js \
+  browser_gcli_incomplete.js \
+  browser_gcli_inputter.js \
+  browser_gcli_intro.js \
+  browser_gcli_js.js \
+  browser_gcli_keyboard.js \
+  browser_gcli_menu.js \
+  browser_gcli_node.js \
+  browser_gcli_resource.js \
+  browser_gcli_scratchpad.js \
+  browser_gcli_spell.js \
+  browser_gcli_split.js \
+  browser_gcli_tokenize.js \
+  browser_gcli_tooltip.js \
+  browser_gcli_types.js \
+  browser_gcli_util.js \
   head.js \
   helpers.js \
+  mockCommands.js \
   $(NULL)
 
 MOCHITEST_BROWSER_FILES += \
