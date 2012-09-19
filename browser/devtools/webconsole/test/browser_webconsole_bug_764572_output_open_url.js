@@ -170,57 +170,6 @@ function finalizeTest() {
   finishTest();
 }
 
-/**
- * Polls a given function waiting for opening context menu.
- *
- * @Param {nsIDOMElement} aContextMenu
- * @param object aOptions
- *        Options object with the following properties:
- *        - successFn
- *        A function called if opening the given context menu - success to return.
- *        - failureFn
- *        A function called if not opening the given context menu - fails to return.
- *        - target
- *        The target element for showing a context menu.
- *        - timeout
- *        Timeout for popup shown, in milliseconds. Default is 5000.
- */
-function waitForOpenContextMenu(aContextMenu, aOptions) {
-  let start = Date.now();
-  let timeout = aOptions.timeout || 5000;
-  let targetElement = aOptions.target;
-
-  if (!aContextMenu) {
-    ok(false, "Can't get a context menu.");
-    aOptions.failureFn();
-    return;
-  }
-  if (!targetElement) {
-    ok(false, "Can't get a target element.");
-    aOptions.failureFn();
-    return;
-  }
-
-  function onPopupShown() {
-    aContextMenu.removeEventListener("popupshown", onPopupShown);
-    clearTimeout(onTimeout);
-    aOptions.successFn();
-  }
-
-
-  aContextMenu.addEventListener("popupshown", onPopupShown);
-
-  let onTimeout = setTimeout(function(){
-    aContextMenu.removeEventListener("popupshown", onPopupShown);
-    aOptions.failureFn();
-  }, timeout);
-
-  // open a context menu.
-  let eventDetails = { type : "contextmenu", button : 2};
-  EventUtils.synthesizeMouse(targetElement, 2, 2,
-                             eventDetails, targetElement.ownerDocument.defaultView);
-}
-
 function closeContextMenu (aContextMenu) {
   aContextMenu.hidePopup();
 }
