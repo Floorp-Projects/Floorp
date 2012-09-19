@@ -30,7 +30,7 @@ through the App Store.
 '''
 
 XCODE_REQUIRED_LEGACY = '''
-You will need to download nad install Xcode to build Firefox.
+You will need to download and install Xcode to build Firefox.
 
 Please complete the Xcode download and then relaunch this script.
 '''
@@ -119,7 +119,7 @@ class OSXBootstrapper(BaseBootstrapper):
         # Once Xcode is installed, you need to agree to the license before you can
         # use it.
         try:
-            output = subprocess.check_output(['/usr/bin/xcrun', 'clang'],
+            output = self.check_output(['/usr/bin/xcrun', 'clang'],
                 stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
              if 'license' in e.output:
@@ -135,7 +135,7 @@ class OSXBootstrapper(BaseBootstrapper):
                 print(INSTALL_XCODE_COMMAND_LINE_TOOLS_STEPS)
                 sys.exit(1)
 
-            output = subprocess.check_output(['/usr/bin/clang', '--version'])
+            output = self.check_output(['/usr/bin/clang', '--version'])
             match = RE_CLANG_VERSION.search(output)
             if match is None:
                 raise Exception('Could not determine Clang version.')
@@ -170,7 +170,7 @@ class OSXBootstrapper(BaseBootstrapper):
         brew = self.which('brew')
         assert brew is not None
 
-        installed = subprocess.check_output([brew, 'list']).split()
+        installed = self.check_output([brew, 'list']).split()
 
         if 'python' not in installed:
             self.ensure_xquartz()
@@ -201,6 +201,6 @@ class OSXBootstrapper(BaseBootstrapper):
         if self.os_version < 7 and 'llvm' not in installed:
             print(HOMEBREW_OLD_CLANG)
 
-            subprocess.check_call([brew, '-v' 'install', 'llvm',
+            subprocess.check_call([brew, '-v', 'install', 'llvm',
                 '--with-clang', '--all-targets'])
 

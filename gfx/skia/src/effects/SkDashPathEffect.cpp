@@ -8,7 +8,7 @@
 
 
 #include "SkDashPathEffect.h"
-#include "SkBuffer.h"
+#include "SkFlattenableBuffers.h"
 #include "SkPathMeasure.h"
 
 static inline int is_even(int x) {
@@ -16,14 +16,21 @@ static inline int is_even(int x) {
 }
 
 static SkScalar FindFirstInterval(const SkScalar intervals[], SkScalar phase,
-                                  int32_t* index) {
-    int i;
-
-    for (i = 0; phase > intervals[i]; i++) {
-        phase -= intervals[i];
+                                  int32_t* index, int count) {
+    for (int i = 0; i < count; ++i) {
+        if (phase > intervals[i]) {
+            phase -= intervals[i];
+        } else {
+            *index = i;
+            return intervals[i] - phase;
+        }
     }
-    *index = i;
-    return intervals[i] - phase;
+    // If we get here, phase "appears" to be larger than our length. This
+    // shouldn't happen with perfect precision, but we can accumulate errors
+    // during the initial length computation (rounding can make our sum be too
+    // big or too small. In that event, we just have to eat the error here.
+    *index = 0;
+    return intervals[0];
 }
 
 SkDashPathEffect::SkDashPathEffect(const SkScalar intervals[], int count,
@@ -67,7 +74,8 @@ SkDashPathEffect::SkDashPathEffect(const SkScalar intervals[], int count,
         }
         SkASSERT(phase >= 0 && phase < len);
 
-        fInitialDashLength = FindFirstInterval(intervals, phase, &fInitialDashIndex);
+        fInitialDashLength = FindFirstInterval(intervals, phase,
+                                               &fInitialDashIndex, count);
 
         SkASSERT(fInitialDashLength >= 0);
         SkASSERT(fInitialDashIndex >= 0 && fInitialDashIndex < fCount);
@@ -80,15 +88,86 @@ SkDashPathEffect::~SkDashPathEffect() {
     sk_free(fIntervals);
 }
 
+class SpecialLineRec {
+public:
+    bool init(const SkPath& src, SkPath* dst, SkStrokeRec* rec,
+              SkScalar pathLength,
+              int intervalCount, SkScalar intervalLength) {
+        if (rec->isHairlineStyle() || !src.isLine(fPts)) {
+            return false;
+        }
+
+        // can relax this in the future, if we handle square and round caps
+        if (SkPaint::kButt_Cap != rec->getCap()) {
+            return false;
+        }
+
+        fTangent = fPts[1] - fPts[0];
+        if (fTangent.isZero()) {
+            return false;
+        }
+
+        fPathLength = pathLength;
+        fTangent.scale(SkScalarInvert(pathLength));
+        fTangent.rotateCCW(&fNormal);
+        fNormal.scale(SkScalarHalf(rec->getWidth()));
+
+        // now estimate how many quads will be added to the path
+        //     resulting segments = pathLen * intervalCount / intervalLen
+        //     resulting points = 4 * segments
+
+        SkScalar ptCount = SkScalarMulDiv(pathLength,
+                                          SkIntToScalar(intervalCount),
+                                          intervalLength);
+        int n = SkScalarCeilToInt(ptCount) << 2;
+        dst->incReserve(n);
+
+        // we will take care of the stroking
+        rec->setFillStyle();
+        return true;
+    }
+
+    void addSegment(SkScalar d0, SkScalar d1, SkPath* path) const {
+        SkASSERT(d0 < fPathLength);
+        // clamp the segment to our length
+        if (d1 > fPathLength) {
+            d1 = fPathLength;
+        }
+
+        SkScalar x0 = fPts[0].fX + SkScalarMul(fTangent.fX, d0);
+        SkScalar x1 = fPts[0].fX + SkScalarMul(fTangent.fX, d1);
+        SkScalar y0 = fPts[0].fY + SkScalarMul(fTangent.fY, d0);
+        SkScalar y1 = fPts[0].fY + SkScalarMul(fTangent.fY, d1);
+
+        SkPoint pts[4];
+        pts[0].set(x0 + fNormal.fX, y0 + fNormal.fY);   // moveTo
+        pts[1].set(x1 + fNormal.fX, y1 + fNormal.fY);   // lineTo
+        pts[2].set(x1 - fNormal.fX, y1 - fNormal.fY);   // lineTo
+        pts[3].set(x0 - fNormal.fX, y0 - fNormal.fY);   // lineTo
+
+        path->addPoly(pts, SK_ARRAY_COUNT(pts), false);
+    }
+
+private:
+    SkPoint fPts[2];
+    SkVector fTangent;
+    SkVector fNormal;
+    SkScalar fPathLength;
+};
+
 bool SkDashPathEffect::filterPath(SkPath* dst, const SkPath& src,
-                                  SkScalar* width) {
+                                  SkStrokeRec* rec) {
     // we do nothing if the src wants to be filled, or if our dashlength is 0
-    if (*width < 0 || fInitialDashLength < 0) {
+    if (rec->isFillStyle() || fInitialDashLength < 0) {
         return false;
     }
 
     SkPathMeasure   meas(src, false);
     const SkScalar* intervals = fIntervals;
+
+    SpecialLineRec lineRec;
+    const bool specialLine = lineRec.init(src, dst, rec, meas.getLength(),
+                                          fCount >> 1, fIntervalLength);
 
     do {
         bool        skipFirstSegment = meas.isClosed();
@@ -115,7 +194,12 @@ bool SkDashPathEffect::filterPath(SkPath* dst, const SkPath& src,
             addedSegment = false;
             if (is_even(index) && dlen > 0 && !skipFirstSegment) {
                 addedSegment = true;
-                meas.getSegment(distance, distance + dlen, dst, true);
+
+                if (specialLine) {
+                    lineRec.addSegment(distance, distance + dlen, dst);
+                } else {
+                    meas.getSegment(distance, distance + dlen, dst, true);
+                }
             }
             distance += dlen;
 
@@ -139,6 +223,7 @@ bool SkDashPathEffect::filterPath(SkPath* dst, const SkPath& src,
             meas.getSegment(0, SkScalarMul(fInitialDashLength, scale), dst, !addedSegment);
         }
     } while (meas.nextContour());
+
     return true;
 }
 
@@ -150,27 +235,26 @@ void SkDashPathEffect::flatten(SkFlattenableWriteBuffer& buffer) const {
     SkASSERT(fInitialDashLength >= 0);
 
     this->INHERITED::flatten(buffer);
-    buffer.write32(fCount);
-    buffer.write32(fInitialDashIndex);
+    buffer.writeInt(fInitialDashIndex);
     buffer.writeScalar(fInitialDashLength);
     buffer.writeScalar(fIntervalLength);
-    buffer.write32(fScaleToFit);
-    buffer.writeMul4(fIntervals, fCount * sizeof(fIntervals[0]));
+    buffer.writeBool(fScaleToFit);
+    buffer.writeScalarArray(fIntervals, fCount);
 }
 
 SkFlattenable* SkDashPathEffect::CreateProc(SkFlattenableReadBuffer& buffer) {
     return SkNEW_ARGS(SkDashPathEffect, (buffer));
 }
 
-SkDashPathEffect::SkDashPathEffect(SkFlattenableReadBuffer& buffer) {
-    fCount = buffer.readS32();
-    fInitialDashIndex = buffer.readS32();
+SkDashPathEffect::SkDashPathEffect(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {
+    fInitialDashIndex = buffer.readInt();
     fInitialDashLength = buffer.readScalar();
     fIntervalLength = buffer.readScalar();
-    fScaleToFit = (buffer.readS32() != 0);
-    
+    fScaleToFit = buffer.readBool();
+
+    fCount = buffer.getArrayCount();
     fIntervals = (SkScalar*)sk_malloc_throw(sizeof(SkScalar) * fCount);
-    buffer.read(fIntervals, fCount * sizeof(fIntervals[0]));
+    buffer.readScalarArray(fIntervals);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

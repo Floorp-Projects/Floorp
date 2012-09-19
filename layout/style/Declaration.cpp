@@ -818,6 +818,15 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       break;
     }
 #endif // MOZ_FLEXBOX
+    case eCSSProperty__moz_transform: {
+      // shorthands that are just aliases with different parsing rules
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      NS_ABORT_IF_FALSE(subprops[1] == eCSSProperty_UNKNOWN,
+                        "must have exactly one subproperty");
+      AppendValueToString(subprops[0], aValue);
+      break;
+    }
     default:
       NS_ABORT_IF_FALSE(false, "no other shorthands");
       break;

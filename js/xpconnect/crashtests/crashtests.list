@@ -45,3 +45,4 @@ asserts(1) load 753162.html # We hit bug 675518 or bug 680086 here.
 load 754311.html
 load 776328.html
 load 776333.html
+load 791845.html

@@ -1,0 +1,13 @@
+diff --git a/gfx/angle/src/libGLESv2/libGLESv2.def b/gfx/angle/src/libGLESv2/libGLESv2.def
+index 5f935c3..2324dcb 100644
+--- a/gfx/angle/src/libGLESv2/libGLESv2.def
++++ b/gfx/angle/src/libGLESv2/libGLESv2.def
+@@ -180,3 +180,8 @@ EXPORTS
+     glGetCurrentContext             @147 NONAME
+     glGetProcAddress                @148 NONAME
+     glBindTexImage                  @158 NONAME
++
++    ; GCC has problems with linking to undecored stdcall functions,
++    ; so we explicitly add aliases for APIs used by EGL
++    glGetProcAddress@4=glGetProcAddress
++    glBindTexImage@4=glBindTexImage

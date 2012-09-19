@@ -19,7 +19,6 @@
 #include "nsISupportsUtils.h"
 #include "nsITextServicesFilter.h"
 #include "nsRange.h"
-#include "prtypes.h"
 
 //------------------------------------------------------------
 nsFilteredContentIterator::nsFilteredContentIterator(nsITextServicesFilter* aFilter) :

@@ -1055,6 +1055,11 @@ nsSVGGlyphFrame::SetupObjectPaint(gfxContext *aContext,
                                   float& aOpacity,
                                   gfxTextObjectPaint *aOuterObjectPaint)
 {
+  if (!aOuterObjectPaint) {
+    NS_WARNING("Outer object paint value used outside SVG glyph");
+    return false;
+  }
+
   const nsStyleSVG *style = GetStyleSVG();
   const nsStyleSVGPaint &paint = style->*aFillOrStroke;
 

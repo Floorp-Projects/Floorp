@@ -11,10 +11,17 @@ const kUniqueURI = Services.io.newURI("http://mochi.test:8888/#bug_680727",
 var gAsyncHistory = 
   Cc["@mozilla.org/browser/history;1"].getService(Ci.mozIAsyncHistory);
 
+let proxyPrefValue;
+
 function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
+
+  // Tests always connect to localhost, and per bug 87717, localhost is now
+  // reachable in offline mode.  To avoid this, disable any proxy.
+  proxyPrefValue = Services.prefs.getIntPref("network.proxy.type");
+  Services.prefs.setIntPref("network.proxy.type", 0);
 
   // Clear network cache.
   Components.classes["@mozilla.org/network/cache-service;1"]
@@ -57,6 +64,8 @@ function errorAsyncListener(aURI, aIsVisited) {
   ok(kUniqueURI.equals(aURI) && !aIsVisited,
      "The neterror page is not listed in global history.");
 
+  Services.prefs.setIntPref("network.proxy.type", proxyPrefValue);
+
   // Now press the "Try Again" button, with offline mode off.
   Services.io.offline = false;
 
@@ -93,6 +102,7 @@ function reloadAsyncListener(aURI, aIsVisited) {
 }
 
 registerCleanupFunction(function() {
+  Services.prefs.setIntPref("network.proxy.type", proxyPrefValue);
   Services.io.offline = false;
   window.removeEventListener("DOMContentLoaded", errorListener, false);
   window.removeEventListener("DOMContentLoaded", reloadListener, false);

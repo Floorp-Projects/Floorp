@@ -58,7 +58,7 @@ NS_IMPL_ISUPPORTS_INHERITED5(nsFtpChannel,
 NS_IMETHODIMP
 nsFtpChannel::SetUploadStream(nsIInputStream *stream,
                               const nsACString &contentType,
-                              int32_t contentLength)
+                              int64_t contentLength)
 {
     NS_ENSURE_TRUE(!IsPending(), NS_ERROR_IN_PROGRESS);
 

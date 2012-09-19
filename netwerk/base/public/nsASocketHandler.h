@@ -60,6 +60,13 @@ public:
     // by the socket transport service.
     //
     virtual void OnSocketDetached(PRFileDesc *fd) = 0;
+
+    //
+    // called to determine if the socket is for a local peer.
+    // when used for server sockets, indicates if it only accepts local
+    // connections.
+    //
+    virtual void IsLocal(bool *aIsLocal) = 0;
 };
 
 #endif // !nsASocketHandler_h__

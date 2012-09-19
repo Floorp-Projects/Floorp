@@ -17,6 +17,8 @@ class SkStream;
 
 class SkMovie : public SkRefCnt {
 public:
+    SK_DECLARE_INST_COUNT(SkMovie)
+
     /** Try to create a movie from the stream. If the stream format is not
         supported, return NULL.
     */
@@ -38,7 +40,7 @@ public:
     int     width();
     int     height();
     int     isOpaque();
-    
+
     /** Specify the time code (between 0...duration) to sample a bitmap
         from the movie. Returns true if this time code generated a different
         bitmap/frame from the previous state (i.e. true means you need to
@@ -48,7 +50,7 @@ public:
 
     // return the right bitmap for the current time code
     const SkBitmap& bitmap();
-    
+
 protected:
     struct Info {
         SkMSec  fDuration;
@@ -69,8 +71,10 @@ private:
     SkMSec      fCurrTime;
     SkBitmap    fBitmap;
     bool        fNeedBitmap;
-    
+
     void ensureInfo();
+
+    typedef SkRefCnt INHERITED;
 };
 
 #endif

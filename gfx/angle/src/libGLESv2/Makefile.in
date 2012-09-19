@@ -165,6 +165,22 @@ RCFILE = $(srcdir)/libGLESv2.rc
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef GNU_CC
+
+TextureSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+
+OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
+OS_LIBS += -ld3d9
+ifdef MOZ_D3DX9_VERSION
+OS_LIBS += -ld3dx9_$(MOZ_D3DX9_VERSION) -ld3dcompiler_$(MOZ_D3DX9_VERSION)
+else
+OS_LIBS += -ld3dx9 -ld3dcompiler
+endif
+
+else
+
 EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib" \
                    "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3dx9.lib" \
                    "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/D3DCompiler.lib"
+
+endif

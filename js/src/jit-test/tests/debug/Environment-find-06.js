@@ -20,7 +20,7 @@ function test1(code) {
 }
 
 var manyNames = '';
-for (var i = 0; i < 4096; i++)
+for (var i = 0; i < 2048; i++)
     manyNames += 'x' + i + ', ';
 manyNames += 'X';
 

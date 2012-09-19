@@ -537,7 +537,7 @@ public:
   virtual bool
   RecvAdjustSystemClock(const int32_t &aDeltaMilliseconds) MOZ_OVERRIDE
   {
-    if (!AppProcessHasPermission(this, "systemclock-write")) {
+    if (!AppProcessHasPermission(this, "time")) {
       return false;
     }
     hal::AdjustSystemClock(aDeltaMilliseconds);
@@ -547,7 +547,7 @@ public:
   virtual bool 
   RecvSetTimezone(const nsCString& aTimezoneSpec) MOZ_OVERRIDE
   {
-    if (!AppProcessHasPermission(this, "systemclock-write")) {
+    if (!AppProcessHasPermission(this, "time")) {
       return false;
     }
     hal::SetTimezone(aTimezoneSpec);
@@ -557,7 +557,7 @@ public:
   virtual bool
   RecvGetTimezone(nsCString *aTimezoneSpec) MOZ_OVERRIDE
   {
-    if (!AppProcessHasPermission(this, "systemclock-read")) {
+    if (!AppProcessHasPermission(this, "time")) {
       return false;
     }
     *aTimezoneSpec = hal::GetTimezone();

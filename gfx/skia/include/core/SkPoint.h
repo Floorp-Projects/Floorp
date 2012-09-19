@@ -145,6 +145,11 @@ struct SK_API SkPoint {
     SkScalar x() const { return fX; }
     SkScalar y() const { return fY; }
 
+    /**
+     *  Returns true iff fX and fY are both zero.
+     */
+    bool isZero() const { return (0 == fX) & (0 == fY); }
+
     /** Set the point's X and Y coordinates */
     void set(SkScalar x, SkScalar y) { fX = x; fY = y; }
 
@@ -168,7 +173,7 @@ struct SK_API SkPoint {
         fX = SkScalarAbs(pt.fX);
         fY = SkScalarAbs(pt.fY);
     }
-    
+
     // counter-clockwise fan
     void setIRectFan(int l, int t, int r, int b) {
         SkPoint* v = this;
@@ -309,6 +314,29 @@ struct SK_API SkPoint {
         fY -= v.fY;
     }
 
+    /**
+     *  Returns true if both X and Y are finite (not infinity or NaN)
+     */
+    bool isFinite() const {
+#ifdef SK_SCALAR_IS_FLOAT
+        SkScalar accum = 0;
+        accum *= fX;
+        accum *= fY;
+
+        // accum is either NaN or it is finite (zero).
+        SkASSERT(0 == accum || !(accum == accum));
+
+        // value==value will be true iff value is not NaN
+        // TODO: is it faster to say !accum or accum==accum?
+        return accum == accum;
+#else
+        // use bit-or for speed, since we don't care about short-circuting the
+        // tests, and we expect the common case will be that we need to check all.
+        int isNaN = (SK_FixedNaN == fX) | (SK_FixedNaN == fX));
+        return !isNaN;
+#endif
+    }
+
     /** Returns true if the point's coordinates equal (x,y)
     */
     bool equals(SkScalar x, SkScalar y) const { return fX == x && fY == y; }
@@ -403,11 +431,11 @@ struct SK_API SkPoint {
     SkScalar dot(const SkPoint& vec) const {
         return DotProduct(*this, vec);
     }
-    
+
     SkScalar lengthSqd() const {
         return DotProduct(*this, *this);
     }
-    
+
     SkScalar distanceToSqd(const SkPoint& pt) const {
         SkScalar dx = fX - pt.fX;
         SkScalar dy = fY - pt.fY;
