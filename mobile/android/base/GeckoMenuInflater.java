@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.content.res.XmlResourceParser;
@@ -20,8 +19,7 @@ import android.view.MenuItem;
 
 import java.io.IOException;
 
-public class GeckoMenuInflater extends MenuInflater 
-                               implements MenuItem.OnMenuItemClickListener {
+public class GeckoMenuInflater extends MenuInflater { 
     private static final String LOGTAG = "GeckoMenuInflater";
 
     private static final String TAG_ITEM = "item";
@@ -80,7 +78,6 @@ public class GeckoMenuInflater extends MenuInflater
                             // Add the item.
                             MenuItem menuItem = menu.add(NO_ID, item.id, item.order, item.title);
                             setValues(item, menuItem);
-                            menuItem.setOnMenuItemClickListener(this);
                         }
                         break;
                 }
@@ -99,14 +96,6 @@ public class GeckoMenuInflater extends MenuInflater
         }
     }
 
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        Activity activity = (Activity) mContext;
-        boolean result = activity.onOptionsItemSelected(item);
-        activity.closeOptionsMenu();
-        return result;
-    }
-        
     public void parseItem(ParsedItem item, AttributeSet attrs) {
         TypedArray a = mContext.obtainStyledAttributes(attrs, R.styleable.MenuItem);
 
@@ -128,6 +117,7 @@ public class GeckoMenuInflater extends MenuInflater
                 .setVisible(item.visible)
                 .setEnabled(item.enabled)
                 .setCheckable(item.checkable)
+                .setCheckable(item.checked)
                 .setIcon(item.iconRes)
                 .setShowAsAction(item.showAsAction ? 1 : 0);
     }
