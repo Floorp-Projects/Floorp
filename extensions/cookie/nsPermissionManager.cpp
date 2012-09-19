@@ -722,10 +722,6 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
       id = oldPermissionEntry.mID;
       entry->GetPermissions().RemoveElementAt(index);
 
-      // If no more types are present, remove the entry
-      if (entry->GetPermissions().IsEmpty())
-        mPermissionTable.RawRemoveEntry(entry);
-
       if (aDBOperation == eWriteToDB)
         // We care only about the id here so we pass dummy values for all other
         // parameters.
@@ -741,6 +737,11 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                       oldPermissionEntry.mExpireType,
                                       oldPermissionEntry.mExpireTime,
                                       NS_LITERAL_STRING("deleted").get());
+      }
+
+      // If there are no more permissions stored for that entry, clear it.
+      if (entry->GetPermissions().IsEmpty()) {
+        mPermissionTable.RawRemoveEntry(entry);
       }
 
       break;
