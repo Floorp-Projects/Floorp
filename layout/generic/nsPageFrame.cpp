@@ -359,16 +359,114 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
   }
 }
 
-static void PaintPageContent(nsIFrame* aFrame, nsRenderingContext* aCtx,
-                             const nsRect& aDirtyRect, nsPoint aPt)
+/**
+ * Remove all leaf display items that are not for descendants of
+ * aBuilder->GetReferenceFrame() from aList, and move all nsDisplayClip
+ * wrappers to their correct locations.
+ * @param aExtraPage the page we constructed aList for
+ * @param aY the Y-coordinate where aPage would be positioned relative
+ * to the main page (aBuilder->GetReferenceFrame()), considering only
+ * the content and ignoring page margins and dead space
+ * @param aList the list that is modified in-place
+ */
+static void
+PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
+        nsIFrame* aExtraPage, nscoord aY, nsDisplayList* aList)
 {
-  static_cast<nsPageFrame*>(aFrame)->PaintPageContent(*aCtx, aDirtyRect, aPt);
+  nsDisplayList newList;
+  // The page which we're really constructing a display list for
+  nsIFrame* mainPage = aBuilder->RootReferenceFrame();
+
+  while (true) {
+    nsDisplayItem* i = aList->RemoveBottom();
+    if (!i)
+      break;
+    nsDisplayList* subList = i->GetList();
+    if (subList) {
+      PruneDisplayListForExtraPage(aBuilder, aExtraPage, aY, subList);
+      nsDisplayItem::Type type = i->GetType();
+      if (type == nsDisplayItem::TYPE_CLIP ||
+          type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
+        // This might clip an element which should appear on the first
+        // page, and that element might be visible if this uses a 'clip'
+        // property with a negative top.
+        // The clip area needs to be moved because the frame geometry doesn't
+        // put page content frames for adjacent pages vertically adjacent,
+        // there are page margins and dead space between them in print
+        // preview, and in printing all pages are at (0,0)...
+        // XXX we have no way to test this right now that I know of;
+        // the 'clip' property requires an abs-pos element and we never
+        // paint abs-pos elements that start after the main page
+        // (bug 426909).
+        nsDisplayClip* clip = static_cast<nsDisplayClip*>(i);
+        clip->SetClipRect(clip->GetClipRect() + nsPoint(0, aY) -
+                aExtraPage->GetOffsetTo(mainPage));
+      }
+      newList.AppendToTop(i);
+    } else {
+      nsIFrame* f = i->GetUnderlyingFrame();
+      if (f && nsLayoutUtils::IsProperAncestorFrameCrossDoc(mainPage, f)) {
+        // This one is in the page we care about, keep it
+        newList.AppendToTop(i);
+      } else {
+        // We're throwing this away so call its destructor now. The memory
+        // is owned by aBuilder which destroys all items at once.
+        i->~nsDisplayItem();
+      }
+    }
+  }
+  aList->AppendToTop(&newList);
+}
+
+
+static nsresult
+BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
+        nsIFrame* aPage, nscoord aY, nsDisplayList* aList)
+{
+  nsDisplayList list;
+  // Pass an empty dirty rect since we're only interested in finding
+  // placeholders whose out-of-flows are in the page
+  // aBuilder->GetReferenceFrame(), and the paths to those placeholders
+  // have already been marked as NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO.
+  // Note that we should still do a prune step since we don't want to
+  // rely on dirty-rect checking for correctness.
+  nsresult rv = aPage->BuildDisplayListForStackingContext(aBuilder, nsRect(), &list);
+  if (NS_FAILED(rv))
+    return rv;
+  PruneDisplayListForExtraPage(aBuilder, aPage, aY, &list);
+  aList->AppendToTop(&list);
+  return NS_OK;
+}
+
+static nsIFrame*
+GetNextPage(nsIFrame* aPageContentFrame)
+{
+  // XXX ugh
+  nsIFrame* pageFrame = aPageContentFrame->GetParent();
+  NS_ASSERTION(pageFrame->GetType() == nsGkAtoms::pageFrame,
+               "pageContentFrame has unexpected parent");
+  nsIFrame* nextPageFrame = pageFrame->GetNextSibling();
+  if (!nextPageFrame)
+    return nullptr;
+  NS_ASSERTION(nextPageFrame->GetType() == nsGkAtoms::pageFrame,
+               "pageFrame's sibling is not a page frame...");
+  nsIFrame* f = nextPageFrame->GetFirstPrincipalChild();
+  NS_ASSERTION(f, "pageFrame has no page content frame!");
+  NS_ASSERTION(f->GetType() == nsGkAtoms::pageContentFrame,
+               "pageFrame's child is not page content!");
+  return f;
 }
 
 static void PaintHeaderFooter(nsIFrame* aFrame, nsRenderingContext* aCtx,
                               const nsRect& aDirtyRect, nsPoint aPt)
 {
   static_cast<nsPageFrame*>(aFrame)->PaintHeaderFooter(*aCtx, aPt);
+}
+
+static gfx3DMatrix ComputePageTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
+{
+  float scale = aFrame->PresContext()->GetPageScale();
+  return gfx3DMatrix::ScalingMatrix(scale, scale, 1);
 }
 
 //------------------------------------------------------------------------------
@@ -385,11 +483,55 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = set.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(aBuilder, this, ::PaintPageContent,
-                         "PageContent",
-                         nsDisplayItem::TYPE_PAGE_CONTENT));
+  nsDisplayList content;
+  nsIFrame *child = mFrames.FirstChild();
+  rv = child->BuildDisplayListForStackingContext(aBuilder, aDirtyRect - child->GetOffsetTo(this), &content);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // We may need to paint out-of-flow frames whose placeholders are
+  // on other pages. Add those pages to our display list. Note that
+  // out-of-flow frames can't be placed after their placeholders so
+  // we don't have to process earlier pages. The display lists for
+  // these extra pages are pruned so that only display items for the
+  // page we currently care about (which we would have reached by
+  // following placeholders to their out-of-flows) end up on the list.
+  nsIFrame* page = child;
+  nscoord y = child->GetSize().height;
+  while ((page = GetNextPage(page)) != nullptr) {
+    rv = BuildDisplayListForExtraPage(aBuilder, page, y, &content);
+    if (NS_FAILED(rv))
+      break;
+    y += page->GetSize().height;
+  }
+
+  float scale = PresContext()->GetPageScale();
+  nsRect clipRect(nsPoint(0, 0), child->GetSize());
+  // Note: this computation matches how we compute maxSize.height
+  // in nsPageFrame::Reflow
+  nscoord expectedPageContentHeight = 
+    NSToCoordCeil((GetSize().height - mPD->mReflowMargin.TopBottom()) / scale);
+  if (clipRect.height > expectedPageContentHeight) {
+    // We're doing print-selection, with one long page-content frame.
+    // Clip to the appropriate page-content slice for the current page.
+    NS_ASSERTION(mPageNum > 0, "page num should be positive");
+    // Note: The pageContentFrame's y-position has been set such that a zero
+    // y-value matches the top edge of the current page.  So, to clip to the
+    // current page's content (in coordinates *relative* to the page content
+    // frame), we just negate its y-position and add the top margin.
+    clipRect.y = NSToCoordCeil((-child->GetRect().y + 
+                                mPD->mReflowMargin.top) / scale);
+    clipRect.height = expectedPageContentHeight;
+    NS_ASSERTION(clipRect.y < child->GetSize().height,
+                 "Should be clipping to region inside the page content bounds");
+  }
+  clipRect += aBuilder->ToReferenceFrame(child);
+  rv = content.AppendNewToTop(new (aBuilder) nsDisplayClip(aBuilder, child, &content, clipRect));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = content.AppendNewToTop(new (aBuilder) nsDisplayTransform(aBuilder, child, &content, ::ComputePageTransform));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  set.Content()->AppendToTop(&content);
 
   if (PresContext()->IsRootPaginatedDocument()) {
     rv = set.Content()->AppendNewToTop(new (aBuilder)
@@ -459,57 +601,6 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   DrawHeaderFooter(aRenderingContext, eFooter,
                    footerLeft, footerCenter, footerRight,
                    rect, ascent, visibleHeight);
-}
-
-//------------------------------------------------------------------------------
-void
-nsPageFrame::PaintPageContent(nsRenderingContext& aRenderingContext,
-                              const nsRect&        aDirtyRect,
-                              nsPoint              aPt) {
-  nsIFrame* pageContentFrame  = mFrames.FirstChild();
-  nsRect rect = aDirtyRect;
-  float scale = PresContext()->GetPageScale();
-  aRenderingContext.PushState();
-  nsPoint framePos = aPt + pageContentFrame->GetOffsetTo(this);
-  aRenderingContext.Translate(framePos);
-  // aPt translates to coords relative to this, then margins translate to
-  // pageContentFrame's coords
-  rect -= framePos;
-  aRenderingContext.Scale(scale, scale);
-  rect.ScaleRoundOut(1.0f / scale);
-  // Make sure we don't draw where we aren't supposed to draw, especially
-  // when printing selection
-  nsRect clipRect(nsPoint(0, 0), pageContentFrame->GetSize());
-  // Note: this computation matches how we compute maxSize.height
-  // in nsPageFrame::Reflow
-  nscoord expectedPageContentHeight = 
-    NSToCoordCeil((GetSize().height - mPD->mReflowMargin.TopBottom()) / scale);
-  if (clipRect.height > expectedPageContentHeight) {
-    // We're doing print-selection, with one long page-content frame.
-    // Clip to the appropriate page-content slice for the current page.
-    NS_ASSERTION(mPageNum > 0, "page num should be positive");
-    // Note: The pageContentFrame's y-position has been set such that a zero
-    // y-value matches the top edge of the current page.  So, to clip to the
-    // current page's content (in coordinates *relative* to the page content
-    // frame), we just negate its y-position and add the top margin.
-    clipRect.y = NSToCoordCeil((-pageContentFrame->GetRect().y + 
-                                mPD->mReflowMargin.top) / scale);
-    clipRect.height = expectedPageContentHeight;
-    NS_ASSERTION(clipRect.y < pageContentFrame->GetSize().height,
-                 "Should be clipping to region inside the page content bounds");
-  }
-  aRenderingContext.IntersectClip(clipRect);
-
-  nsRect backgroundRect = nsRect(nsPoint(0, 0), pageContentFrame->GetSize());
-  nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
-                                  rect, backgroundRect,
-                                  nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES);
-
-  nsLayoutUtils::PaintFrame(&aRenderingContext, pageContentFrame,
-                            nsRegion(rect), NS_RGBA(0,0,0,0),
-                            nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES);
-
-  aRenderingContext.PopState();
 }
 
 void
