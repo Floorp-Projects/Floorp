@@ -4,57 +4,75 @@
 
 // Verify that API functions fail if the Add-ons Manager isn't initialised.
 
-const IGNORE = ["escapeAddonURI", "shouldAutoUpdate", "getStartupChanges",
-                "addTypeListener", "removeTypeListener",
-                "addAddonListener", "removeAddonListener",
-                "addInstallListener", "removeInstallListener",
-                "addManagerListener", "removeManagerListener"];
+const IGNORE = {
+  funcs: ["escapeAddonURI", "getStartupChanges", "addTypeListener",
+          "removeTypeListener", "addAddonListener", "removeAddonListener",
+          "addInstallListener", "removeInstallListener", "addManagerListener",
+          "removeManagerListener"],
+  getters: ["__AddonManagerInternal__"],
+  setters: []
+};
 
-const IGNORE_PRIVATE = ["AddonAuthor", "AddonCompatibilityOverride",
-                        "AddonScreenshot", "AddonType", "startup", "shutdown",
-                        "registerProvider", "unregisterProvider",
-                        "addStartupChange", "removeStartupChange"];
+const IGNORE_PRIVATE = {
+  funcs: ["AddonAuthor", "AddonCompatibilityOverride", "AddonScreenshot",
+          "AddonType", "startup", "shutdown", "registerProvider",
+          "unregisterProvider", "addStartupChange", "removeStartupChange"],
+  getters: [],
+  setters: []
+};
 
-function test_functions() {
-  for (let prop in AddonManager) {
-    if (typeof AddonManager[prop] != "function")
-      continue;
-    if (IGNORE.indexOf(prop) != -1)
-      continue;
 
-    try {
-      do_print("AddonManager." + prop);
-      AddonManager[prop]();
-      do_throw(prop + " did not throw an exception");
-    }
-    catch (e) {
-      if (e.result != Components.results.NS_ERROR_NOT_INITIALIZED)
-        do_throw(prop + " threw an unexpected exception: " + e);
-    }
-  }
+function test_functions(aObjName, aIgnore) {
+  let obj = this[aObjName];
+  for (let prop in obj) {
+    let desc = Object.getOwnPropertyDescriptor(obj, prop);
 
-  for (let prop in AddonManagerPrivate) {
-    if (typeof AddonManagerPrivate[prop] != "function")
-      continue;
-    if (IGNORE_PRIVATE.indexOf(prop) != -1)
-      continue;
+    if (typeof desc.value == "function") {
+      if (aIgnore.funcs.indexOf(prop) != -1)
+        continue;
 
-    try {
-      do_print("AddonManagerPrivate." + prop);
-      AddonManagerPrivate[prop]();
-      do_throw(prop + " did not throw an exception");
-    }
-    catch (e) {
-      if (e.result != Components.results.NS_ERROR_NOT_INITIALIZED)
-        do_throw(prop + " threw an unexpected exception: " + e);
+      try {
+        do_print(aObjName + "." + prop + "()");
+        obj[prop]();
+        do_throw(prop + " did not throw an exception");
+      }
+      catch (e) {
+        if (e.result != Components.results.NS_ERROR_NOT_INITIALIZED)
+          do_throw(prop + " threw an unexpected exception: " + e);
+      }
+    } else {
+      if (typeof desc.get == "function" && aIgnore.getters.indexOf(prop) == -1) {
+        do_print(aObjName + "." + prop + " getter");
+        try {
+          let temp = obj[prop];
+          do_throw(prop + " did not throw an exception");
+        }
+        catch (e) {
+          if (e.result != Components.results.NS_ERROR_NOT_INITIALIZED)
+            do_throw(prop + " threw an unexpected exception: " + e);
+        }
+      }
+      if (typeof desc.set == "function" && aIgnore.setters.indexOf(prop) == -1) {
+        do_print(aObjName + "." + prop + " setter");
+        try {
+          obj[prop] = "i am the walrus";
+          do_throw(prop + " did not throw an exception");
+        }
+        catch (e) {
+          if (e.result != Components.results.NS_ERROR_NOT_INITIALIZED)
+            do_throw(prop + " threw an unexpected exception: " + e);
+        }
+      }
     }
   }
 }
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  test_functions();
+  test_functions("AddonManager", IGNORE);
+  test_functions("AddonManagerPrivate", IGNORE_PRIVATE);
   startupManager();
   shutdownManager();
-  test_functions();
+  test_functions("AddonManager", IGNORE);
+  test_functions("AddonManagerPrivate", IGNORE_PRIVATE);
 }
