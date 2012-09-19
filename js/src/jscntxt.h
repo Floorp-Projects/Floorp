@@ -165,11 +165,8 @@ struct ConservativeGCData
     JS_NEVER_INLINE void recordStackTop();
 
 #ifdef JS_THREADSAFE
-    void updateForRequestEnd(unsigned suspendCount) {
-        if (suspendCount)
-            recordStackTop();
-        else
-            nativeStackTop = NULL;
+    void updateForRequestEnd() {
+        nativeStackTop = NULL;
     }
 #endif
 
@@ -502,9 +499,6 @@ struct JSRuntime : js::RuntimeFriendFields
     void                 *activityCallbackArg;
 
 #ifdef JS_THREADSAFE
-    /* Number of JS_SuspendRequest calls withot JS_ResumeRequest. */
-    unsigned            suspendCount;
-
     /* The request depth for this thread. */
     unsigned            requestDepth;
 

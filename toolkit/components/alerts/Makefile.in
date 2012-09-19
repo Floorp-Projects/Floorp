@@ -22,10 +22,7 @@ CPPSRCS = \
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/build/
 
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
-XPIDLSRCS += nsINotificationsList.idl
-# mac/growl needs to be first for linking to work!
 TOOL_DIRS += \
-  mac/growl \
   mac \
   $(NULL)
 endif

@@ -13,7 +13,11 @@
 class SkBitmap;
 class SkDevice;
 class SkMatrix;
-struct SkPoint;
+struct SkIPoint;
+struct SkIRect;
+struct SkRect;
+class GrCustomStage;
+class GrTexture;
 
 /**
  *  Experimental.
@@ -38,6 +42,8 @@ struct SkPoint;
  */
 class SK_API SkImageFilter : public SkFlattenable {
 public:
+    SK_DECLARE_INST_COUNT(SkImageFilter)
+
     class Proxy {
     public:
         virtual ~Proxy() {};
@@ -60,7 +66,7 @@ public:
      *  The matrix is the current matrix on the canvas.
      *
      *  Offset is the amount to translate the resulting image relative to the
-     *  src when it is drawn. 
+     *  src when it is drawn.
      *
      *  If the result image cannot be created, return false, in which case both
      *  the result and offset parameters will be ignored by the caller.
@@ -75,28 +81,32 @@ public:
     bool filterBounds(const SkIRect& src, const SkMatrix& ctm, SkIRect* dst);
 
     /**
-     *  Experimental.
+     *  Returns true if the filter can be expressed a single-pass
+     *  GrCustomStage, used to process this filter on the GPU, or false if
+     *  not.
      *
-     *  If the filter can be expressed as a gaussian-blur, return true and
-     *  set the sigma to the values for horizontal and vertical.
+     *  If stage is non-NULL, a new GrCustomStage instance is stored
+     *  in it.  The caller assumes ownership of the stage, and it is up to the
+     *  caller to unref it.
      */
-    virtual bool asABlur(SkSize* sigma) const;
+    virtual bool asNewCustomStage(GrCustomStage** stage, GrTexture*) const;
 
     /**
-     *  Experimental.
-     *
-     *  If the filter can be expressed as an erode, return true and
-     *  set the radius in X and Y.
+     *  Returns true if the filter can be processed on the GPU.  This is most
+     *  often used for multi-pass effects, where intermediate results must be
+     *  rendered to textures.  For single-pass effects, use asNewCustomStage().
+     *  The default implementation returns false.
      */
-    virtual bool asAnErode(SkISize* radius) const;
+    virtual bool canFilterImageGPU() const;
 
     /**
-     *  Experimental.
-     *
-     *  If the filter can be expressed as a dilation, return true and
-     *  set the radius in X and Y.
+     *  Process this image filter on the GPU.  texture is the source texture
+     *  for processing, and rect is the effect region to process.  The
+     *  function must allocate a new texture of at least rect width/height
+     *  size, and return it to the caller.  The default implementation returns
+     *  NULL.
      */
-    virtual bool asADilate(SkISize* radius) const;
+    virtual GrTexture* onFilterImageGPU(GrTexture* texture, const SkRect& rect);
 
 protected:
     SkImageFilter() {}

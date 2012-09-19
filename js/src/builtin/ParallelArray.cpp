@@ -135,18 +135,18 @@ NewDenseCopiedArrayWithType(JSContext *cx, uint32_t length, HandleObject source)
         Value elem;
         for (uint32_t i = 0; i < copyUpTo; i++) {
             elem = srcvp[i].isMagic(JS_ARRAY_HOLE) ? UndefinedValue() : srcvp[i];
-            buffer->initDenseArrayElementWithType(cx, i, elem);
+            JSObject::initDenseArrayElementWithType(cx, buffer, i, elem);
         }
 
         // Fill the rest with undefineds.
         for (uint32_t i = copyUpTo; i < length; i++)
-            buffer->initDenseArrayElementWithType(cx, i, UndefinedValue());
+            JSObject::initDenseArrayElementWithType(cx, buffer, i, UndefinedValue());
     } else {
         // This path might GC. The GC expects an object's slots to be
         // initialized, so we have to make sure all the array's slots are
         // initialized.
         for (uint32_t i = 0; i < length; i++)
-            buffer->initDenseArrayElementWithType(cx, i, UndefinedValue());
+            JSObject::initDenseArrayElementWithType(cx, buffer, i, UndefinedValue());
 
         IndexInfo siv(cx);
         RootedParallelArrayObject sourcePA(cx);
@@ -160,7 +160,7 @@ NewDenseCopiedArrayWithType(JSContext *cx, uint32_t length, HandleObject source)
         for (uint32_t i = 0; i < copyUpTo; i++) {
             if (!GetElementFromArrayLikeObject(cx, source, sourcePA, siv, i, &elem))
                 return NULL;
-            buffer->setDenseArrayElementWithType(cx, i, elem);
+            JSObject::setDenseArrayElementWithType(cx, buffer, i, elem);
         }
     }
 
@@ -324,7 +324,7 @@ ParallelArrayObject::SequentialMode::build(JSContext *cx, IndexInfo &iv,
         if (!Invoke(cx, args))
             return ExecutionFailed;
 
-        buffer->setDenseArrayElementWithType(cx, i, args.rval());
+        JSObject::setDenseArrayElementWithType(cx, buffer, i, args.rval());
     }
 
     return ExecutionSucceeded;
@@ -364,7 +364,7 @@ ParallelArrayObject::SequentialMode::map(JSContext *cx, HandleParallelArrayObjec
         if (!Invoke(cx, args))
             return ExecutionFailed;
 
-        buffer->setDenseArrayElementWithType(cx, i, args.rval());
+        JSObject::setDenseArrayElementWithType(cx, buffer, i, args.rval());
     }
 
     return ExecutionSucceeded;
@@ -396,7 +396,7 @@ ParallelArrayObject::SequentialMode::reduce(JSContext *cx, HandleParallelArrayOb
         return ExecutionFailed;
 
     if (buffer)
-        buffer->setDenseArrayElementWithType(cx, 0, acc);
+        JSObject::setDenseArrayElementWithType(cx, buffer, 0, acc);
 
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, 2, &args))
@@ -420,7 +420,7 @@ ParallelArrayObject::SequentialMode::reduce(JSContext *cx, HandleParallelArrayOb
         // Update the accumulator.
         acc = args.rval();
         if (buffer)
-            buffer->setDenseArrayElementWithType(cx, i, args.rval());
+            JSObject::setDenseArrayElementWithType(cx, buffer, i, args.rval());
     }
 
     vp.set(acc);
@@ -501,13 +501,13 @@ ParallelArrayObject::SequentialMode::scatter(JSContext *cx, HandleParallelArrayO
             }
         }
 
-        buffer->setDenseArrayElementWithType(cx, targetIndex, elem);
+        JSObject::setDenseArrayElementWithType(cx, buffer, targetIndex, elem);
     }
 
     // Fill holes with the default value.
     for (uint32_t i = 0; i < length; i++) {
         if (buffer->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE))
-            buffer->setDenseArrayElementWithType(cx, i, defaultValue);
+            JSObject::setDenseArrayElementWithType(cx, buffer, i, defaultValue);
     }
 
     return ExecutionSucceeded;
@@ -554,7 +554,7 @@ ParallelArrayObject::SequentialMode::filter(JSContext *cx, HandleParallelArrayOb
             return ExecutionFailed;
         if (i >= buffer->getArrayLength())
             buffer->setDenseArrayLength(pos + 1);
-        buffer->setDenseArrayElementWithType(cx, pos, elem);
+        JSObject::setDenseArrayElementWithType(cx, buffer, pos, elem);
 
         // We didn't filter this element out, so bump the position.
         pos++;
@@ -862,18 +862,18 @@ ParallelArrayObject::initClass(JSContext *cx, JSObject *obj)
     RootedId shapeId(cx, AtomToId(cx->names().shape));
     unsigned flags = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_GETTER;
 
-    JSObject *scriptedLength = js_NewFunction(cx, NULL, NonGenericMethod<lengthGetter>,
-                                              0, 0, global, NULL);
-    JSObject *scriptedShape = js_NewFunction(cx, NULL, NonGenericMethod<dimensionsGetter>,
-                                             0, 0, global, NULL);
+    RootedObject scriptedLength(cx, js_NewFunction(cx, NULL, NonGenericMethod<lengthGetter>,
+                                                   0, 0, global, NULL));
+    RootedObject scriptedShape(cx, js_NewFunction(cx, NULL, NonGenericMethod<dimensionsGetter>,
+                                                  0, 0, global, NULL));
 
     RootedValue value(cx, UndefinedValue());
     if (!scriptedLength || !scriptedShape ||
         !DefineNativeProperty(cx, proto, lengthId, value,
-                              JS_DATA_TO_FUNC_PTR(PropertyOp, scriptedLength), NULL,
+                              JS_DATA_TO_FUNC_PTR(PropertyOp, scriptedLength.get()), NULL,
                               flags, 0, 0) ||
         !DefineNativeProperty(cx, proto, shapeId, value,
-                              JS_DATA_TO_FUNC_PTR(PropertyOp, scriptedShape), NULL,
+                              JS_DATA_TO_FUNC_PTR(PropertyOp, scriptedShape.get()), NULL,
                               flags, 0, 0))
     {
         return NULL;
@@ -1017,7 +1017,8 @@ ParallelArrayObject::create(JSContext *cx, HandleObject buffer, uint32_t offset,
         return false;
 
     for (uint32_t i = 0; i < dims.length(); i++)
-        dimArray->setDenseArrayElementWithType(cx, i, Int32Value(static_cast<int32_t>(dims[i])));
+        JSObject::setDenseArrayElementWithType(cx, dimArray, i,
+                                               Int32Value(static_cast<int32_t>(dims[i])));
 
     result->setSlot(SLOT_DIMENSIONS, ObjectValue(*dimArray));
 

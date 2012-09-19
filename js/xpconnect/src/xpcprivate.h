@@ -544,8 +544,6 @@ public:
         return mCycleCollectionContext;
     }
 
-    unsigned GetOutstandingRequests(JSContext* cx);
-
     // This returns the singleton nsCycleCollectionParticipant for JSContexts.
     static nsCycleCollectionParticipant *JSContextParticipant();
 
@@ -3645,16 +3643,12 @@ private:
 struct XPCJSContextInfo {
     XPCJSContextInfo(JSContext* aCx) :
         cx(aCx),
-        savedFrameChain(false),
-        suspendDepth(0)
+        savedFrameChain(false)
     {}
     JSContext* cx;
 
     // Whether the frame chain was saved
     bool savedFrameChain;
-
-    // Greater than 0 if a request was suspended.
-    unsigned suspendDepth;
 };
 
 class XPCJSContextStack

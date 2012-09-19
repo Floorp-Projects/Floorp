@@ -9,11 +9,9 @@
 
 #include "SkDeque.h"
 
-#define INIT_ELEM_COUNT 1  // should we let the caller set this?
-
-struct SkDeque::Head {
-    Head*   fNext;
-    Head*   fPrev;
+struct SkDeque::Block {
+    Block*  fNext;
+    Block*  fPrev;
     char*   fBegin; // start of used section in this chunk
     char*   fEnd;   // end of used section in this chunk
     char*   fStop;  // end of the allocated chunk
@@ -28,80 +26,56 @@ struct SkDeque::Head {
     }
 };
 
-SkDeque::SkDeque(size_t elemSize)
-        : fElemSize(elemSize), fInitialStorage(NULL), fCount(0) {
+SkDeque::SkDeque(size_t elemSize, int allocCount)
+        : fElemSize(elemSize)
+        , fInitialStorage(NULL)
+        , fCount(0)
+        , fAllocCount(allocCount) {
+    SkASSERT(allocCount >= 1);
+    fFrontBlock = fBackBlock = NULL;
     fFront = fBack = NULL;
 }
 
-SkDeque::SkDeque(size_t elemSize, void* storage, size_t storageSize)
-        : fElemSize(elemSize), fInitialStorage(storage), fCount(0) {
+SkDeque::SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount)
+        : fElemSize(elemSize)
+        , fInitialStorage(storage)
+        , fCount(0)
+        , fAllocCount(allocCount) {
     SkASSERT(storageSize == 0 || storage != NULL);
+    SkASSERT(allocCount >= 1);
 
-    if (storageSize >= sizeof(Head) + elemSize) {
-        fFront = (Head*)storage;
-        fFront->init(storageSize);
+    if (storageSize >= sizeof(Block) + elemSize) {
+        fFrontBlock = (Block*)storage;
+        fFrontBlock->init(storageSize);
     } else {
-        fFront = NULL;
+        fFrontBlock = NULL;
     }
-    fBack = fFront;
+    fBackBlock = fFrontBlock;
+    fFront = fBack = NULL;
 }
 
 SkDeque::~SkDeque() {
-    Head* head = fFront;
-    Head* initialHead = (Head*)fInitialStorage;
+    Block* head = fFrontBlock;
+    Block* initialHead = (Block*)fInitialStorage;
 
     while (head) {
-        Head* next = head->fNext;
+        Block* next = head->fNext;
         if (head != initialHead) {
-            sk_free(head);
+            this->freeBlock(head);
         }
         head = next;
     }
 }
 
-const void* SkDeque::front() const {
-    Head* front = fFront;
-
-    if (NULL == front) {
-        return NULL;
-    }
-    if (NULL == front->fBegin) {
-        front = front->fNext;
-        if (NULL == front) {
-            return NULL;
-        }
-    }
-    SkASSERT(front->fBegin);
-    return front->fBegin;
-}
-
-const void* SkDeque::back() const {
-    Head* back = fBack;
-
-    if (NULL == back) {
-        return NULL;
-    }
-    if (NULL == back->fEnd) {  // marked as deleted
-        back = back->fPrev;
-        if (NULL == back) {
-            return NULL;
-        }
-    }
-    SkASSERT(back->fEnd);
-    return back->fEnd - fElemSize;
-}
-
 void* SkDeque::push_front() {
     fCount += 1;
 
-    if (NULL == fFront) {
-        fFront = (Head*)sk_malloc_throw(sizeof(Head) +
-                                        INIT_ELEM_COUNT * fElemSize);
-        fFront->init(sizeof(Head) + INIT_ELEM_COUNT * fElemSize);
-        fBack = fFront;     // update our linklist
+    if (NULL == fFrontBlock) {
+        fFrontBlock = this->allocateBlock(fAllocCount);
+        fBackBlock = fFrontBlock;     // update our linklist
     }
 
-    Head*   first = fFront;
+    Block*  first = fFrontBlock;
     char*   begin;
 
     if (NULL == first->fBegin) {
@@ -112,32 +86,36 @@ void* SkDeque::push_front() {
         begin = first->fBegin - fElemSize;
         if (begin < first->start()) {    // no more room in this chunk
             // should we alloc more as we accumulate more elements?
-            size_t  size = sizeof(Head) + INIT_ELEM_COUNT * fElemSize;
-
-            first = (Head*)sk_malloc_throw(size);
-            first->init(size);
-            first->fNext = fFront;
-            fFront->fPrev = first;
-            fFront = first;
+            first = this->allocateBlock(fAllocCount);
+            first->fNext = fFrontBlock;
+            fFrontBlock->fPrev = first;
+            fFrontBlock = first;
             goto INIT_CHUNK;
         }
     }
 
     first->fBegin = begin;
+
+    if (NULL == fFront) {
+        SkASSERT(NULL == fBack);
+        fFront = fBack = begin;
+    } else {
+        SkASSERT(NULL != fBack);
+        fFront = begin;
+    }
+
     return begin;
 }
 
 void* SkDeque::push_back() {
     fCount += 1;
 
-    if (NULL == fBack) {
-        fBack = (Head*)sk_malloc_throw(sizeof(Head) +
-                                       INIT_ELEM_COUNT * fElemSize);
-        fBack->init(sizeof(Head) + INIT_ELEM_COUNT * fElemSize);
-        fFront = fBack; // update our linklist
+    if (NULL == fBackBlock) {
+        fBackBlock = this->allocateBlock(fAllocCount);
+        fFrontBlock = fBackBlock; // update our linklist
     }
 
-    Head*   last = fBack;
+    Block*  last = fBackBlock;
     char*   end;
 
     if (NULL == last->fBegin) {
@@ -148,44 +126,59 @@ void* SkDeque::push_back() {
         end = last->fEnd + fElemSize;
         if (end > last->fStop) {  // no more room in this chunk
             // should we alloc more as we accumulate more elements?
-            size_t  size = sizeof(Head) + INIT_ELEM_COUNT * fElemSize;
-
-            last = (Head*)sk_malloc_throw(size);
-            last->init(size);
-            last->fPrev = fBack;
-            fBack->fNext = last;
-            fBack = last;
+            last = this->allocateBlock(fAllocCount);
+            last->fPrev = fBackBlock;
+            fBackBlock->fNext = last;
+            fBackBlock = last;
             goto INIT_CHUNK;
         }
     }
 
     last->fEnd = end;
-    return end - fElemSize;
+    end -= fElemSize;
+
+    if (NULL == fBack) {
+        SkASSERT(NULL == fFront);
+        fFront = fBack = end;
+    } else {
+        SkASSERT(NULL != fFront);
+        fBack = end;
+    }
+
+    return end;
 }
 
 void SkDeque::pop_front() {
     SkASSERT(fCount > 0);
     fCount -= 1;
 
-    Head*   first = fFront;
+    Block*  first = fFrontBlock;
 
     SkASSERT(first != NULL);
 
     if (first->fBegin == NULL) {  // we were marked empty from before
         first = first->fNext;
         first->fPrev = NULL;
-        sk_free(fFront);
-        fFront = first;
+        this->freeBlock(fFrontBlock);
+        fFrontBlock = first;
         SkASSERT(first != NULL);    // else we popped too far
     }
 
     char* begin = first->fBegin + fElemSize;
     SkASSERT(begin <= first->fEnd);
 
-    if (begin < fFront->fEnd) {
+    if (begin < fFrontBlock->fEnd) {
         first->fBegin = begin;
+        SkASSERT(NULL != first->fBegin);
+        fFront = first->fBegin;
     } else {
         first->fBegin = first->fEnd = NULL;  // mark as empty
+        if (NULL == first->fNext) {
+            fFront = fBack = NULL;
+        } else {
+            SkASSERT(NULL != first->fNext->fBegin);
+            fFront = first->fNext->fBegin;
+        }
     }
 }
 
@@ -193,15 +186,15 @@ void SkDeque::pop_back() {
     SkASSERT(fCount > 0);
     fCount -= 1;
 
-    Head* last = fBack;
+    Block* last = fBackBlock;
 
     SkASSERT(last != NULL);
 
     if (last->fEnd == NULL) {  // we were marked empty from before
         last = last->fPrev;
         last->fNext = NULL;
-        sk_free(fBack);
-        fBack = last;
+        this->freeBlock(fBackBlock);
+        fBackBlock = last;
         SkASSERT(last != NULL);  // else we popped too far
     }
 
@@ -210,41 +203,106 @@ void SkDeque::pop_back() {
 
     if (end > last->fBegin) {
         last->fEnd = end;
+        SkASSERT(NULL != last->fEnd);
+        fBack = last->fEnd - fElemSize;
     } else {
         last->fBegin = last->fEnd = NULL;    // mark as empty
+        if (NULL == last->fPrev) {
+            fFront = fBack = NULL;
+        } else {
+            SkASSERT(NULL != last->fPrev->fEnd);
+            fBack = last->fPrev->fEnd - fElemSize;
+        }
     }
+}
+
+int SkDeque::numBlocksAllocated() const {
+    int numBlocks = 0;
+
+    for (const Block* temp = fFrontBlock; temp; temp = temp->fNext) {
+        ++numBlocks;
+    }
+
+    return numBlocks;
+}
+
+SkDeque::Block* SkDeque::allocateBlock(int allocCount) {
+    Block* newBlock = (Block*)sk_malloc_throw(sizeof(Block) + allocCount * fElemSize);
+    newBlock->init(sizeof(Block) + allocCount * fElemSize);
+    return newBlock;
+}
+
+void SkDeque::freeBlock(Block* block) {
+    sk_free(block);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkDeque::F2BIter::F2BIter() : fHead(NULL), fPos(NULL), fElemSize(0) {}
+SkDeque::Iter::Iter() : fCurBlock(NULL), fPos(NULL), fElemSize(0) {}
 
-SkDeque::F2BIter::F2BIter(const SkDeque& d) {
-    this->reset(d);
+SkDeque::Iter::Iter(const SkDeque& d, IterStart startLoc) {
+    this->reset(d, startLoc);
 }
 
-void* SkDeque::F2BIter::next() {
+// Due to how reset and next work, next actually returns the current element
+// pointed to by fPos and then updates fPos to point to the next one.
+void* SkDeque::Iter::next() {
     char* pos = fPos;
 
     if (pos) {   // if we were valid, try to move to the next setting
         char* next = pos + fElemSize;
-        SkASSERT(next <= fHead->fEnd);
-        if (next == fHead->fEnd) { // exhausted this chunk, move to next
+        SkASSERT(next <= fCurBlock->fEnd);
+        if (next == fCurBlock->fEnd) { // exhausted this chunk, move to next
             do {
-                fHead = fHead->fNext;
-            } while (fHead != NULL && fHead->fBegin == NULL);
-            next = fHead ? fHead->fBegin : NULL;
+                fCurBlock = fCurBlock->fNext;
+            } while (fCurBlock != NULL && fCurBlock->fBegin == NULL);
+            next = fCurBlock ? fCurBlock->fBegin : NULL;
         }
         fPos = next;
     }
     return pos;
 }
 
-void SkDeque::F2BIter::reset(const SkDeque& d) {
-    fElemSize = d.fElemSize;
-    fHead = d.fFront;
-    while (fHead != NULL && fHead->fBegin == NULL) {
-        fHead = fHead->fNext;
+// Like next, prev actually returns the current element pointed to by fPos and
+// then makes fPos point to the previous element.
+void* SkDeque::Iter::prev() {
+    char* pos = fPos;
+
+    if (pos) {   // if we were valid, try to move to the prior setting
+        char* prev = pos - fElemSize;
+        SkASSERT(prev >= fCurBlock->fBegin - fElemSize);
+        if (prev < fCurBlock->fBegin) { // exhausted this chunk, move to prior
+            do {
+                fCurBlock = fCurBlock->fPrev;
+            } while (fCurBlock != NULL && fCurBlock->fEnd == NULL);
+            prev = fCurBlock ? fCurBlock->fEnd - fElemSize : NULL;
+        }
+        fPos = prev;
     }
-    fPos = fHead ? fHead->fBegin : NULL;
+    return pos;
+}
+
+// reset works by skipping through the spare blocks at the start (or end)
+// of the doubly linked list until a non-empty one is found. The fPos
+// member is then set to the first (or last) element in the block. If
+// there are no elements in the deque both fCurBlock and fPos will come
+// out of this routine NULL.
+void SkDeque::Iter::reset(const SkDeque& d, IterStart startLoc) {
+    fElemSize = d.fElemSize;
+
+    if (kFront_IterStart == startLoc) {
+        // initialize the iterator to start at the front
+        fCurBlock = d.fFrontBlock;
+        while (NULL != fCurBlock && NULL == fCurBlock->fBegin) {
+            fCurBlock = fCurBlock->fNext;
+        }
+        fPos = fCurBlock ? fCurBlock->fBegin : NULL;
+    } else {
+        // initialize the iterator to start at the back
+        fCurBlock = d.fBackBlock;
+        while (NULL != fCurBlock && NULL == fCurBlock->fEnd) {
+            fCurBlock = fCurBlock->fPrev;
+        }
+        fPos = fCurBlock ? fCurBlock->fEnd - fElemSize : NULL;
+    }
 }

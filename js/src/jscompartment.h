@@ -304,7 +304,7 @@ struct JSCompartment
     /* Get the default 'new' type for objects with a NULL prototype. */
     inline js::types::TypeObject *getEmptyType(JSContext *cx);
 
-    js::types::TypeObject *getLazyType(JSContext *cx, JSObject *proto);
+    js::types::TypeObject *getLazyType(JSContext *cx, js::HandleObject proto);
 
     /*
      * Keeps track of the total number of malloc bytes connected to a

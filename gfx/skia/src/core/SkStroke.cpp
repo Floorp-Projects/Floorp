@@ -319,7 +319,7 @@ DRAW_LINE:
         this->cubic_to(&tmp[3], norm, unit, &dummy, &unitDummy, subDivide);
     } else {
         SkVector    normalB, normalC;
-        
+
         // need normals to inset/outset the off-curve pts B and C
 
         if (0) {    // this is normal to the line between our adjacent pts
@@ -462,6 +462,15 @@ void SkPathStroker::cubicTo(const SkPoint& pt1, const SkPoint& pt2,
 
         }
 
+#if 0
+        /*
+         *  Why was this code here? It caused us to draw circles where we didn't
+         *  want them. See http://code.google.com/p/chromium/issues/detail?id=112145
+         *  and gm/dashcubics.cpp
+         *
+         *  Simply removing this code seemed to fix the problem (no more circles).
+         *  Wish I had a repro case earlier when I added this check/hack...
+         */
         // check for too pinchy
         for (i = 1; i < count; i++) {
             SkPoint p;
@@ -476,7 +485,7 @@ void SkPathStroker::cubicTo(const SkPoint& pt1, const SkPoint& pt2,
                 fExtra.addCircle(p.fX, p.fY, fRadius, SkPath::kCW_Direction);
             }
         }
-
+#endif
     }
 
     this->postJoinTo(pt3, normalCD, unitCD);
@@ -563,16 +572,43 @@ void SkStroke::setJoin(SkPaint::Join join) {
     #define APPLY_PROC(proc, pts, count)
 #endif
 
+// If src==dst, then we use a tmp path to record the stroke, and then swap
+// its contents with src when we're done.
+class AutoTmpPath {
+public:
+    AutoTmpPath(const SkPath& src, SkPath** dst) : fSrc(src) {
+        if (&src == *dst) {
+            *dst = &fTmpDst;
+            fSwapWithSrc = true;
+        } else {
+            (*dst)->reset();
+            fSwapWithSrc = false;
+        }
+    }
+
+    ~AutoTmpPath() {
+        if (fSwapWithSrc) {
+            fTmpDst.swap(*const_cast<SkPath*>(&fSrc));
+        }
+    }
+
+private:
+    SkPath          fTmpDst;
+    const SkPath&   fSrc;
+    bool            fSwapWithSrc;
+};
+
 void SkStroke::strokePath(const SkPath& src, SkPath* dst) const {
     SkASSERT(&src != NULL && dst != NULL);
 
     SkScalar radius = SkScalarHalf(fWidth);
 
-    dst->reset();
+    AutoTmpPath tmp(src, &dst);
+
     if (radius <= 0) {
         return;
     }
-    
+
 #ifdef SK_SCALAR_IS_FIXED
     void (*proc)(SkPoint pts[], int count) = identity_proc;
     if (needs_to_shrink(src)) {
@@ -650,7 +686,7 @@ void SkStroke::strokePath(const SkPath& src, SkPath* dst) const {
             paint.setStrokeWidth(7);
             paint.setStrokeCap(SkPaint::kRound_Cap);
             canvas->drawLine(pts[0].fX, pts[0].fY, pts[1].fX, pts[1].fY, paint);
-        }        
+        }
 #endif
 #if 0
         if (2 == src.countPoints()) {

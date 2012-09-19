@@ -28,8 +28,8 @@ SkAnimate::SkAnimate() : fComponents(0) {
 SkAnimate::~SkAnimate() {
 }
 
-int SkAnimate::components() { 
-    return fComponents; 
+int SkAnimate::components() {
+    return fComponents;
 }
 
 #ifdef SK_DUMP_ENABLED
@@ -41,29 +41,19 @@ void SkAnimate::dump(SkAnimateMaker* maker) {
             SkDebugf("mirror=\"true\" ");
         if (fReset)
             SkDebugf("reset=\"true\" ");
-#ifdef SK_CAN_USE_FLOAT
         SkDebugf("dur=\"%g\" ", SkScalarToFloat(SkScalarDiv(dur,1000)));
         if (repeat != SK_Scalar1)
             SkDebugf("repeat=\"%g\" ", SkScalarToFloat(repeat));
-#else
-        SkDebugf("dur=\"%x\" ", SkScalarDiv(dur,1000));
-        if (repeat != SK_Scalar1)
-            SkDebugf("repeat=\"%x\" ", repeat);
-#endif
         //if (fHasValues)
         //    SkDebugf("values=\"%s\" ", values);
         if (blend.count() != 1 || blend[0] != SK_Scalar1) {
             SkDebugf("blend=\"[");
             bool firstElem = true;
             for (int i = 0; i < blend.count(); i++) {
-                if (!firstElem) 
+                if (!firstElem)
                     SkDebugf(",");
                 firstElem = false;
-#ifdef SK_CAN_USE_FLOAT
                 SkDebugf("%g", SkScalarToFloat(blend[i]));
-#else
-                SkDebugf("%x", blend[i]);
-#endif
             }
             SkDebugf("]\" ");
         }
@@ -92,7 +82,7 @@ void SkAnimate::onEndElement(SkAnimateMaker& maker) {
         SkASSERT(to.size() > 0);
         fFieldInfo->setValue(maker, &fValues, 0, 0, NULL, outType, to);
         SkASSERT(0);
-        // !!! this needs to set fComponents 
+        // !!! this needs to set fComponents
         return;
     }
     fComponents = fFieldInfo->getCount();

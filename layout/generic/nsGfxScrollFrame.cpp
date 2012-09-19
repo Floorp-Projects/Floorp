@@ -1593,6 +1593,7 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
   , mScrollPosAtLastPaint(0, 0)
   , mRestorePos(-1, -1)
   , mLastPos(-1, -1)
+  , mScrollPosForLayerPixelAlignment(-1, -1)
   , mNeverHasVerticalScrollbar(false)
   , mNeverHasHorizontalScrollbar(false)
   , mHasVerticalScrollbar(false)
@@ -1953,15 +1954,15 @@ void nsGfxScrollFrameInner::ScrollVisual(nsPoint aOldScrolledFramePos)
     MarkActive();
   }
 
-  nsRect invalidateRect, displayport;
+  nsRect invalidateRect, displayPort;
+  bool hasDisplayPort =
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
   if (IsIgnoringViewportClipping()) {
     nsRect visualOverflow = mScrolledFrame->GetVisualOverflowRect();
     invalidateRect.UnionRect(visualOverflow + mScrolledFrame->GetPosition(),
             visualOverflow + aOldScrolledFramePos);
   } else {
-    invalidateRect =
-      (nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayport)) ?
-      displayport : mScrollPort;
+    invalidateRect = hasDisplayPort ? displayPort : mScrollPort;
   }
 
   mOuter->InvalidateWithFlags(invalidateRect, flags);
@@ -1970,10 +1971,29 @@ void nsGfxScrollFrameInner::ScrollVisual(nsPoint aOldScrolledFramePos)
     nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
     nsRect update =
       GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot);
-    update = update.ConvertAppUnitsRoundOut(
+    nsRect displayRootUpdate = update.ConvertAppUnitsRoundOut(
       mOuter->PresContext()->AppUnitsPerDevPixel(),
       displayRoot->PresContext()->AppUnitsPerDevPixel());
-    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame, update);
+    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame, displayRootUpdate);
+
+    // Invalidate content that has scrolled into view. Normally, this will
+    // already be invalid, because it shouldn't have been drawn in any layer,
+    // but there can be stray rows/columns of pixels that partially overlapped
+    // the layer's visible region and hence were drawn and added to the layer's
+    // visible region, but these pixels ended up outside the cliprect after
+    // snapping so their contents need to be updated now that new content has
+    // scrolled into the cliprect.
+    nsPoint scrollDelta = mScrolledFrame->GetPosition() - aOldScrolledFramePos;
+    if (!hasDisplayPort) {
+      displayPort = GetScrollPortRect();
+    }
+    nsRect preservedContents = displayPort + scrollDelta;
+    nsRegion invalidate;
+    invalidate.Sub(displayPort, preservedContents);
+    nsRegionRectIterator iter(invalidate);
+    while (const nsRect* r = iter.Next()) {
+      mOuter->InvalidateWithFlags(*r, nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT);
+    }
   }
 }
 
@@ -2072,6 +2092,8 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt, const nsRect& aRange)
   // when rendering the scrolled content to its own ThebesLayer.
   gfxSize scale = FrameLayerBuilder::GetThebesLayerScaleForFrame(mScrolledFrame);
   nsPoint curPos = GetScrollPosition();
+  nsPoint alignWithPos = mScrollPosForLayerPixelAlignment == nsPoint(-1,-1)
+      ? curPos : mScrollPosForLayerPixelAlignment;
   // Try to align aPt with curPos so they have an integer number of layer
   // pixels between them. This gives us the best chance of scrolling without
   // having to invalidate due to changes in subpixel rendering.
@@ -2086,10 +2108,9 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt, const nsRect& aRange)
     ClampAndAlignWithLayerPixels(aPt,
                                  GetScrollRangeForClamping(),
                                  aRange,
-                                 curPos,
+                                 alignWithPos,
                                  appUnitsPerDevPixel,
                                  scale);
-
   if (pt == curPos) {
     return;
   }
@@ -2216,6 +2237,13 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     mScrollPosAtLastPaint = GetScrollPosition();
     if (IsScrollingActive() && !CanScrollWithBlitting(mOuter)) {
       MarkInactive();
+    }
+    if (IsScrollingActive()) {
+      if (mScrollPosForLayerPixelAlignment == nsPoint(-1,-1)) {
+        mScrollPosForLayerPixelAlignment = mScrollPosAtLastPaint;
+      }
+    } else {
+      mScrollPosForLayerPixelAlignment = nsPoint(-1,-1);
     }
   }
 

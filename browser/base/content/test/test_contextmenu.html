@@ -758,6 +758,31 @@ function runTest(testNum) {
                            ].concat(inspectItems));
         }
         closeContextMenu();
+        // clear the selection because following tests don't expect any selection
+        subwindow.getSelection().removeAllRanges();
+
+        openContextMenuFor(imagelink)
+        break;
+
+    case 26:
+        // Context menu for image link
+        checkContextMenu(["context-openlinkintab", true,
+                          "context-openlink",      true,
+                          "---",                   null,
+                          "context-bookmarklink",  true,
+                          "context-savelink",      true,
+                          "context-copylink",      true,
+                          "---",                   null,
+                          "context-viewimage",            true,
+                          "context-copyimage-contents",   true,
+                          "context-copyimage",            true,
+                          "---",                          null,
+                          "context-saveimage",            true,
+                          "context-sendimage",            true,
+                          "context-setDesktopBackground", true,
+                          "context-viewimageinfo",        true
+                         ].concat(inspectItems));
+        closeContextMenu();
 
         subwindow.close();
         SimpleTest.finish();
@@ -784,7 +809,8 @@ var testNum = 1;
 var subwindow, chromeWin, contextMenu, lastElement;
 var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
-    inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video;
+    inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video,
+    imagelink;
 
 function startTest() {
     chromeWin = SpecialPowers.wrap(subwindow)
@@ -809,6 +835,7 @@ function startTest() {
 
     text   = subwindow.document.getElementById("test-text");
     link   = subwindow.document.getElementById("test-link");
+    imagelink = subwindow.document.getElementById("test-image-link");
     mailto = subwindow.document.getElementById("test-mailto");
     input  = subwindow.document.getElementById("test-input");
     img    = subwindow.document.getElementById("test-image");
@@ -853,7 +880,7 @@ function waitForEvents(event)
   }
 }
 
-var subwindow = window.open("./subtst_contextmenu.html", "contextmenu-subtext", "width=600,height=700");
+var subwindow = window.open("./subtst_contextmenu.html", "contextmenu-subtext", "width=600,height=800");
 subwindow.addEventListener("MozAfterPaint", waitForEvents, false);
 subwindow.onload = waitForEvents;
 

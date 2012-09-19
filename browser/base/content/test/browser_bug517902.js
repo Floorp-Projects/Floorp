@@ -14,7 +14,7 @@ function test() {
 
     pageInfo.addEventListener("load", function () {
       pageInfo.removeEventListener("load", arguments.callee, true);
-      pageInfo.onFinished.push(function () {
+      pageInfo.onImagePreviewShown.push(function () {
         executeSoon(function () {
           var pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
 

@@ -134,11 +134,11 @@ void GrBufferAllocPool::validate(bool unusedBlockAllowed) const {
         GrAssert(!fBlocks[i].fBuffer->isLocked());
     }
     for (int i = 0; i < fBlocks.count(); ++i) {
-        size_t bytes = fBlocks[i].fBuffer->sizeInBytes() - fBlocks[i].fBytesFree; 
+        size_t bytes = fBlocks[i].fBuffer->sizeInBytes() - fBlocks[i].fBytesFree;
         bytesInUse += bytes;
         GrAssert(bytes || unusedBlockAllowed);
     }
-    
+
     GrAssert(bytesInUse == fBytesInUse);
     if (unusedBlockAllowed) {
         GrAssert((fBytesInUse && !fBlocks.empty()) ||
@@ -181,7 +181,7 @@ void* GrBufferAllocPool::makeSpace(size_t size,
     // may be cheating on the actual buffer size by shrinking the buffer on
     // updateData() if the amount of data passed is less than the full buffer
     // size.
-    
+
     if (!createBlock(size)) {
         return NULL;
     }
@@ -296,7 +296,7 @@ bool GrBufferAllocPool::createBlock(size_t requestSize) {
 
     GrAssert(NULL == fBufferPtr);
 
-    if (fGpu->getCaps().fBufferLockSupport &&
+    if (fGpu->getCaps().bufferLockSupport() &&
         size > GR_GEOM_BUFFER_LOCK_THRESHOLD &&
         (!fFrequentResetHint || requestSize > GR_GEOM_BUFFER_LOCK_THRESHOLD)) {
         fBufferPtr = block.fBuffer->lock();
@@ -338,7 +338,7 @@ void GrBufferAllocPool::flushCpuData(GrGeometryBuffer* buffer,
     GrAssert(flushSize <= buffer->sizeInBytes());
     VALIDATE(true);
 
-    if (fGpu->getCaps().fBufferLockSupport &&
+    if (fGpu->getCaps().bufferLockSupport() &&
         flushSize > GR_GEOM_BUFFER_LOCK_THRESHOLD) {
         void* data = buffer->lock();
         if (NULL != data) {
