@@ -637,7 +637,6 @@ abstract public class BrowserApp extends GeckoApp
             public boolean onMenuItemClick(MenuItem item) {
                 Log.i(LOGTAG, "menu item clicked");
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(id)));
-                ((Activity) GeckoApp.mAppContext).closeOptionsMenu();
                 return true;
             }
         });
@@ -716,11 +715,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void closeOptionsMenu() {
-        boolean closed = mBrowserToolbar.closeOptionsMenu();
-
-        if (closed)
-            onOptionsMenuClosed(mMenu);
-        else
+        if (!mBrowserToolbar.closeOptionsMenu())
             super.closeOptionsMenu();
     }
 

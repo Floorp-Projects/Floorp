@@ -112,6 +112,7 @@ public class GeckoMenu extends ListView
     }
 
     private void addItem(GeckoMenuItem menuItem) {
+        menuItem.setMenu(this);
         menuItem.setOnShowAsActionChangedListener(this);
         menuItem.setOnVisibilityChangedListener(this);
         menuItem.setOnMenuItemClickListener(this);
@@ -120,6 +121,7 @@ public class GeckoMenu extends ListView
     }
 
     private void addActionItem(GeckoMenuItem menuItem) {
+        menuItem.setMenu(this);
         menuItem.setOnShowAsActionChangedListener(this);
         menuItem.setOnVisibilityChangedListener(null);
         menuItem.setOnMenuItemClickListener(this);
@@ -320,17 +322,21 @@ public class GeckoMenu extends ListView
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         GeckoApp activity = (GeckoApp) mContext;
+        activity.closeOptionsMenu();
 
         if (!item.hasSubMenu()) {
-            boolean result = activity.onOptionsItemSelected(item);
-            activity.closeOptionsMenu();
-            return result;
+            return activity.onOptionsItemSelected(item);
         } else {
-            // Dismiss this menu.
+            // Show the submenu.
             GeckoApp.MenuPresenter presenter = activity.getMenuPresenter();
             presenter.show((GeckoSubMenu) item.getSubMenu());
             return true;
         }
+    }
+
+    public boolean onCustomMenuItemClick(MenuItem item, MenuItem.OnMenuItemClickListener listener) {
+        ((GeckoApp) mContext).closeOptionsMenu();
+        return listener.onMenuItemClick(item);
     }
 
     public void setActionItemBarPresenter(ActionItemBarPresenter presenter) {
