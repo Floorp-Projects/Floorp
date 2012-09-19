@@ -503,16 +503,28 @@ class GeckoInputConnection
             }
         }
 
-        if (imm != null && imm.isFullscreenMode()) {
-            View v = getView();
-            if (hasCompositionString()) {
-                Span span = getComposingSpan();
-                imm.updateSelection(v, start, end, span.start, span.end);
-            } else {
-                imm.updateSelection(v, start, end, -1, -1);
+        // FIXME: Remove this postToUiThread() after bug 780543 is fixed.
+        final int oldStart = start;
+        final int oldEnd = end;
+        postToUiThread(new Runnable() {
+            public void run() {
+                InputMethodManager imm = getInputMethodManager();
+                if (imm != null && imm.isFullscreenMode()) {
+                    int newStart;
+                    int newEnd;
+                    if (hasCompositionString()) {
+                        Span span = getComposingSpan();
+                        newStart = span.start;
+                        newEnd = span.end;
+                    } else {
+                        newStart = -1;
+                        newEnd = -1;
+                    }
+                    View v = getView();
+                    imm.updateSelection(v, oldStart, oldEnd, newStart, newEnd);
+                }
             }
-
-        }
+        });
     }
 
     protected void resetCompositionState() {
@@ -1006,54 +1018,58 @@ class GeckoInputConnection
         return mIMEState != IME_STATE_DISABLED;
     }
 
-    public void notifyIME(int type, int state) {
-        View v = getView();
-        if (v == null)
-            return;
+    public void notifyIME(final int type, final int state) {
+        postToUiThread(new Runnable() {
+            public void run() {
+                View v = getView();
+                if (v == null)
+                    return;
 
-        switch (type) {
-        case NOTIFY_IME_RESETINPUTSTATE:
-            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: reset");
+                switch (type) {
+                    case NOTIFY_IME_RESETINPUTSTATE:
+                        if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: reset");
 
-            // Gecko just cancelled the current composition from underneath us,
-            // so abandon our active composition string WITHOUT committing it!
-            resetCompositionState();
+                        // Gecko just cancelled the current composition from underneath us,
+                        // so abandon our active composition string WITHOUT committing it!
+                        resetCompositionState();
 
-            // Don't use IMEStateUpdater for reset.
-            // Because IME may not work showSoftInput()
-            // after calling restartInput() immediately.
-            // So we have to call showSoftInput() delay.
-            InputMethodManager imm = getInputMethodManager();
-            if (imm == null) {
-                // no way to reset IME status directly
-                IMEStateUpdater.resetIME();
-            } else {
-                imm.restartInput(v);
+                        // Don't use IMEStateUpdater for reset.
+                        // Because IME may not work showSoftInput()
+                        // after calling restartInput() immediately.
+                        // So we have to call showSoftInput() delay.
+                        InputMethodManager imm = getInputMethodManager();
+                        if (imm == null) {
+                            // no way to reset IME status directly
+                            IMEStateUpdater.resetIME();
+                        } else {
+                            imm.restartInput(v);
+                        }
+
+                        // keep current enabled state
+                        IMEStateUpdater.enableIME();
+                        break;
+
+                    case NOTIFY_IME_CANCELCOMPOSITION:
+                        if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: cancel");
+                        IMEStateUpdater.resetIME();
+                        break;
+
+                    case NOTIFY_IME_FOCUSCHANGE:
+                        if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
+                        IMEStateUpdater.resetIME();
+                        break;
+
+                    case NOTIFY_IME_SETOPENSTATE:
+                    default:
+                        if (DEBUG)
+                            throw new IllegalArgumentException("Unexpected NOTIFY_IME=" + type);
+                        break;
+                }
             }
-
-            // keep current enabled state
-            IMEStateUpdater.enableIME();
-            break;
-
-        case NOTIFY_IME_CANCELCOMPOSITION:
-            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: cancel");
-            IMEStateUpdater.resetIME();
-            break;
-
-        case NOTIFY_IME_FOCUSCHANGE:
-            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
-            IMEStateUpdater.resetIME();
-            break;
-
-        case NOTIFY_IME_SETOPENSTATE:
-        default:
-            if (DEBUG)
-                throw new IllegalArgumentException("Unexpected NOTIFY_IME=" + type);
-            break;
-        }
+        });
     }
 
-    public void notifyIMEEnabled(int state, String typeHint, final String modeHint, String actionHint) {
+    public void notifyIMEEnabled(final int state, final String typeHint, final String modeHint, final String actionHint) {
         // For some input type we will use a  widget to display the ui, for those we must not
         // display the ime. We can display a widget for date and time types and, if the sdk version
         // is greater than 11, for datetime/month/week as well.
@@ -1064,29 +1080,45 @@ class GeckoInputConnection
             return;
         }
 
-        View v = getView();
+        postToUiThread(new Runnable() {
+            public void run() {
+                View v = getView();
+                if (v == null)
+                    return;
 
-        if (v == null)
-            return;
-
-        /* When IME is 'disabled', IME processing is disabled.
-           In addition, the IME UI is hidden */
-        mIMEState = state;
-        mIMETypeHint = (typeHint == null) ? "" : typeHint;
-        mIMEModeHint = (modeHint == null) ? "" : modeHint;
-        mIMEActionHint = (actionHint == null) ? "" : actionHint;
-        IMEStateUpdater.enableIME();
+                /* When IME is 'disabled', IME processing is disabled.
+                   In addition, the IME UI is hidden */
+                mIMEState = state;
+                mIMETypeHint = (typeHint == null) ? "" : typeHint;
+                mIMEModeHint = (modeHint == null) ? "" : modeHint;
+                mIMEActionHint = (actionHint == null) ? "" : actionHint;
+                IMEStateUpdater.enableIME();
+            }
+        });
     }
 
-    public void notifyIMEChange(String text, int start, int end, int newEnd) {
-        InputMethodManager imm = getInputMethodManager();
-        if (imm == null)
-            return;
-
-        if (newEnd < 0)
-            notifySelectionChange(imm, start, end);
-        else
-            notifyTextChange(imm, text, start, end, newEnd);
+    public final void notifyIMEChange(final String text, final int start, final int end,
+                                      final int newEnd) {
+        if (newEnd < 0) {
+            // FIXME: Post notifySelectionChange() to UI thread after bug 780543 is fixed.
+            // notifyIMEChange() is called on the Gecko thread. We want to run all
+            // InputMethodManager code on the UI thread to avoid IME race conditions that cause
+            // crashes like bug 747629. However, if notifySelectionChange() is run on the UI thread,
+            // it causes mysterious problems with repeating characters like bug 780543. This
+            // band-aid fix is to run all InputMethodManager code on the UI thread except
+            // notifySelectionChange() until I can find the root cause.
+            InputMethodManager imm = getInputMethodManager();
+            if (imm != null)
+                notifySelectionChange(imm, start, end);
+        } else {
+            postToUiThread(new Runnable() {
+                public void run() {
+                    InputMethodManager imm = getInputMethodManager();
+                    if (imm != null)
+                        notifyTextChange(imm, text, start, end, newEnd);
+                }
+            });
+        }
     }
 
     /* Delay updating IME states (see bug 573800) */
@@ -1117,25 +1149,30 @@ class GeckoInputConnection
                 instance = null;
             }
 
-            final View v = getView();
-            if (v == null)
+            // TimerTask.run() is running on a random background thread, so post to UI thread.
+            postToUiThread(new Runnable() {
+                public void run() {
+                    final View v = getView();
+                    if (v == null)
                         return;
 
-            final InputMethodManager imm = getInputMethodManager();
-            if (imm == null)
-                return;
+                    final InputMethodManager imm = getInputMethodManager();
+                    if (imm == null)
+                        return;
 
-            if (mReset)
-                imm.restartInput(v);
+                    if (mReset)
+                        imm.restartInput(v);
 
-            if (!mEnable)
-                return;
+                    if (!mEnable)
+                        return;
 
-            if (mIMEState != IME_STATE_DISABLED) {
-                imm.showSoftInput(v, 0);
-            } else if (imm.isActive(v)) {
-                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-            }
+                    if (mIMEState != IME_STATE_DISABLED) {
+                        imm.showSoftInput(v, 0);
+                    } else if (imm.isActive(v)) {
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    }
+                }
+            });
         }
     }
 
