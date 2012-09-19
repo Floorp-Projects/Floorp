@@ -29,12 +29,10 @@ public class GeckoScreenOrientationListener
 
   // Make sure that any change in dom/base/ScreenOrientation.h happens here too.
   static public final short eScreenOrientation_None               = 0;
-  static public final short eScreenOrientation_PortraitPrimary    = 1;
-  static public final short eScreenOrientation_PortraitSecondary  = 2;
-  static public final short eScreenOrientation_Portrait           = 3;
-  static public final short eScreenOrientation_LandscapePrimary   = 4;
-  static public final short eScreenOrientation_LandscapeSecondary = 8;
-  static public final short eScreenOrientation_Landscape          = 12;
+  static public final short eScreenOrientation_PortraitPrimary    = 1; // PR_BIT(0)
+  static public final short eScreenOrientation_PortraitSecondary  = 2; // PR_BIT(1)
+  static public final short eScreenOrientation_LandscapePrimary   = 4; // PR_BIT(2)
+  static public final short eScreenOrientation_LandscapeSecondary = 8; // PR_BIT(3)
 
   private short mOrientation;
   private OrientationEventListenerImpl mListener = null;
@@ -136,7 +134,7 @@ public class GeckoScreenOrientationListener
       case eScreenOrientation_PortraitSecondary:
         orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
         break;
-      case eScreenOrientation_Portrait:
+      case eScreenOrientation_PortraitPrimary | eScreenOrientation_PortraitSecondary:
         orientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
         break;
       case eScreenOrientation_LandscapePrimary:
@@ -145,7 +143,7 @@ public class GeckoScreenOrientationListener
       case eScreenOrientation_LandscapeSecondary:
         orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
         break;
-      case eScreenOrientation_Landscape:
+      case eScreenOrientation_LandscapePrimary | eScreenOrientation_LandscapeSecondary:
         orientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
         break;
       default:
