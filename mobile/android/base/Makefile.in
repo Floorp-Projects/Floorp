@@ -90,6 +90,7 @@ FENNEC_JAVA_FILES = \
   InputMethods.java \
   LinkPreference.java \
   LinkTextView.java \
+  MemoryMonitor.java \
   MenuButton.java \
   MenuItemActionBar.java \
   MenuItemDefault.java \
