@@ -25,10 +25,12 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -511,17 +513,11 @@ abstract public class GeckoApp
         }
 
         public void show(GeckoMenu menu) {
-            mActivity.closeOptionsMenu();
-
             MenuPanel panel = mActivity.getMenuPanel();
             panel.removeAllViews();
             panel.addView(menu);
 
             mActivity.openOptionsMenu();
-        }
-
-        public void hide() {
-            mActivity.closeOptionsMenu();
         }
 
         public void onOptionsMenuClosed() {
@@ -627,19 +623,47 @@ abstract public class GeckoApp
     }
 
     protected void shareCurrentUrl() {
-      Tab tab = Tabs.getInstance().getSelectedTab();
-      if (tab == null)
-        return;
-
-      String url = tab.getURL();
-      if (url == null)
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null)
           return;
 
-      if (ReaderModeUtils.isAboutReader(url))
-          url = ReaderModeUtils.getUrlFromAboutReader(url);
+        String url = tab.getURL();
+        if (url == null)
+            return;
 
-      GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                    Intent.ACTION_SEND, tab.getDisplayTitle());
+        if (ReaderModeUtils.isAboutReader(url))
+            url = ReaderModeUtils.getUrlFromAboutReader(url);
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            final Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, tab.getDisplayTitle());
+            shareIntent.setType("text/plain");
+
+            PackageManager pm = getPackageManager();
+            List<ResolveInfo> activities = pm.queryIntentActivities(shareIntent, 0);
+            GeckoSubMenu menu = new GeckoSubMenu(mAppContext, null);
+
+            for (ResolveInfo activity : activities) {
+                 final ActivityInfo activityInfo = activity.activityInfo;
+
+                 MenuItem item = menu.add(activity.loadLabel(pm));
+                 item.setIcon(activity.loadIcon(pm));
+                 item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                     @Override
+                     public boolean onMenuItemClick(MenuItem item) {
+                         shareIntent.setComponent(new ComponentName(activityInfo.packageName, activityInfo.name));
+                         startActivity(shareIntent);
+                         return true;
+                     }
+                 });
+            }
+
+            mMenuPresenter.show(menu);
+        } else {
+            GeckoAppShell.openUriExternal(url, "text/plain", "", "",
+                                          Intent.ACTION_SEND, tab.getDisplayTitle());
+        }
     }
 
     protected void onSaveInstanceState(Bundle outState) {
