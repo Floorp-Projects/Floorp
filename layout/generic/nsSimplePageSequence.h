@@ -106,10 +106,6 @@ public:
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
 #endif
 
-  void PaintPageSequence(nsRenderingContext& aRenderingContext,
-                         const nsRect&        aDirtyRect,
-                         nsPoint              aPt);
-
 protected:
   nsSimplePageSequenceFrame(nsStyleContext* aContext);
   virtual ~nsSimplePageSequenceFrame();
