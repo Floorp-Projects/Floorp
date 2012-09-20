@@ -429,11 +429,6 @@ members = [
     # can't be quickstubbed
     '-nsIXMLHttpRequest.upload',
 
-    # webgl
-    'nsIDOMWebGLRenderingContext.*',
-    # getContextAttributes is directly manipulating its return value
-    '-nsIDOMWebGLRenderingContext.getContextAttributes',
-
     # Audio
     'nsIDOMNotifyAudioAvailableEvent.frameBuffer',
     'nsIDOMNotifyAudioAvailableEvent.time',
@@ -527,7 +522,6 @@ customIncludes = [
     ]
 
 customQuickStubs = [
-    'CustomQS_WebGL.h',
     'CustomQS_Canvas2D.h'
     ]
 
@@ -963,9 +957,6 @@ customMethodCalls = {
         'thisType' : 'nsIDOMWindow',
         'unwrapThisFailureFatal' : False
         },
-    # WebGL
-    'nsIDOMWebGLRenderingContext_TexImage2D': CUSTOM_QS,
-    'nsIDOMWebGLRenderingContext_TexSubImage2D': CUSTOM_QS,
     # Canvas 2D
     'nsIDOMCanvasRenderingContext2D_CreateImageData': CUSTOM_QS,
     'nsIDOMCanvasRenderingContext2D_PutImageData': CUSTOM_QS,
