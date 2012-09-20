@@ -34,7 +34,7 @@
  *
  * Author: Mark Mentovai
  * Split into its own file: Neal Sidhwaney */
- 
+
 
 #ifndef GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_SOLARIS_H__
 #define GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_SOLARIS_H__
@@ -69,7 +69,7 @@ typedef enum {
   MD_EXCEPTION_CODE_SOL_SIGPWR = 19,     /* power-fail restart */
   MD_EXCEPTION_CODE_SOL_SIGWINCH = 20,   /* window size change */
   MD_EXCEPTION_CODE_SOL_SIGURG = 21,     /* urgent socket condition */
-  MD_EXCEPTION_CODE_SOL_SIGPOLL = 22,    /* pollable event occured */
+  MD_EXCEPTION_CODE_SOL_SIGPOLL = 22,    /* pollable event occurred */
   MD_EXCEPTION_CODE_SOL_SIGIO = 22,      /* socket I/O possible (SIGPOLL alias) */
   MD_EXCEPTION_CODE_SOL_SIGSTOP = 23,    /* stop (cannot be caught or ignored) */
   MD_EXCEPTION_CODE_SOL_SIGTSTP = 24,    /* user stop requested from tty */

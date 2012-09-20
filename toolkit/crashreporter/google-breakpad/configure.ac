@@ -30,24 +30,44 @@
 
 AC_PREREQ(2.57)
 
-AC_INIT(breakpad, 0.1, opensource@google.com)
+AC_INIT(breakpad, 0.1, google-breakpad-dev@googlegroups.com)
 dnl Sanity check: the argument is just a file that should exist.
 AC_CONFIG_SRCDIR(README)
 AC_CONFIG_AUX_DIR(autotools)
+AC_CONFIG_MACRO_DIR([m4])
+AC_CANONICAL_HOST
 
 AM_INIT_AUTOMAKE(subdir-objects tar-ustar 1.11.1)
 AM_CONFIG_HEADER(src/config.h)
 
+AM_PROG_AS
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_CPP
 AC_PROG_CXX
-
-AC_PROG_LIBTOOL
-AC_SUBST(LIBTOOL_DEPS)
+AC_PROG_RANLIB
+AM_CONDITIONAL(GCC, test "$GCC" = yes)   # let the Makefile know if we're gcc
 
 AC_HEADER_STDC
 m4_include(m4/ax_pthread.m4)
 AX_PTHREAD
+AC_CHECK_HEADERS([a.out.h])
+
+# Only build Linux client libs when compiling for Linux
+case $host in
+  *-*-linux* | *-android* )
+    LINUX_HOST=true
+    ;;
+esac
+AM_CONDITIONAL(LINUX_HOST, test x$LINUX_HOST = xtrue)
+
+# Only use Android support headers when compiling for Android
+case $host in
+  *-android*)
+    ANDROID_HOST=true
+    ;;
+esac
+AM_CONDITIONAL(ANDROID_HOST, test x$ANDROID_HOST = xtrue)
 
 AC_ARG_ENABLE(m32,
               AS_HELP_STRING([--enable-m32],
@@ -55,7 +75,8 @@ AC_ARG_ENABLE(m32,
                              [(default is no)]),
               [case "${enableval}" in
                  yes)
-		   CFLAGS=$(CFLAGS) -m32
+                   CFLAGS="${CFLAGS} -m32"
+                   CXXFLAGS="${CXXFLAGS} -m32"
                    usem32=true
                    ;;
                  no)
@@ -67,14 +88,45 @@ AC_ARG_ENABLE(m32,
                esac],
               [usem32=false])
 
-AC_CHECK_MEMBER(struct sockaddr.sa_len,
-                [AC_DEFINE([GET_SA_LEN(X)],[(((struct sockaddr*)&(X))->sa_len)],
-                           [actual length of specific struct sockaddr])],
-                [AC_DEFINE([GET_SA_LEN(X)],
-                           [(((struct sockaddr*)&(X))->sa_family == AF_INET  ? sizeof(struct sockaddr_in) : \
-                            ((struct sockaddr*)&(X))->sa_family == AF_INET6 ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr))],
-                           [actual length of specific struct sockaddr])],
-                [#include <sys/socket.h>])
+AC_ARG_ENABLE(processor,
+              AS_HELP_STRING([--disable-processor],
+                             [Don't build processor library]
+                             [(default is no)]),
+              [case "${enableval}" in
+                 yes)
+                   disable_processor=false
+                   ;;
+                 no)
+                   disable_processor=true
+                   ;;
+                 *)
+                   AC_MSG_ERROR(bad value ${enableval} for --disable-processor)
+                   ;;
+               esac],
+              [disable_processor=false])
+AM_CONDITIONAL(DISABLE_PROCESSOR, test x$disable_processor = xtrue)
+
+AC_ARG_ENABLE(tools,
+              AS_HELP_STRING([--disable-tools],
+                             [Don't build tool binaries]
+                             [(default is no)]),
+              [case "${enableval}" in
+                 yes)
+                   disable_tools=false
+                   ;;
+                 no)
+                   disable_tools=true
+                   ;;
+                 *)
+                   AC_MSG_ERROR(bad value ${enableval} for --disable-tools)
+                   ;;
+               esac],
+              [disable_tools=false])
+AM_CONDITIONAL(DISABLE_TOOLS, test x$disable_tools = xtrue)
+
+if test x$LINUX_HOST = xfalse -a x$disable_processor = xtrue -a x$disable_tools = xtrue; then
+   AC_MSG_ERROR([--disable-processor and --disable-tools were specified, and not building for Linux. Nothing to build!])
+fi
 
 AC_ARG_ENABLE(selftest,
               AS_HELP_STRING([--enable-selftest],

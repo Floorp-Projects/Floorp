@@ -32,16 +32,10 @@
 // It will perform throttling based on the parameters passed to it and will
 // prompt the user to send the minidump.
 
-#include <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
-#include "client/mac/Framework/Breakpad.h"
+#include "client/mac/sender/uploader.h"
 #import "GTMDefines.h"
-
-#define kClientIdPreferenceKey @"clientid"
-
-extern NSString *const kGoogleServerType;
-extern NSString *const kSocorroServerType;
-extern NSString *const kDefaultServerType;
 
 // We're sublcassing NSTextField in order to override a particular
 // method (see the implementation) that lets us reject changes if they
@@ -87,29 +81,12 @@ extern NSString *const kDefaultServerType;
   NSString *countdownMessage_;             // Message indicating time
                                            // left for input.
  @private
-  int configFile_;                         // File descriptor for config file
-  NSMutableDictionary *parameters_;        // Key value pairs of data (STRONG)
-  NSData *minidumpContents_;               // The data in the minidump (STRONG)
-  NSData *logFileData_;                    // An NSdata for the tar,
-                                           // bz2'd log file.
   NSTimeInterval remainingDialogTime_;     // Keeps track of how long
                                            // we have until we cancel
                                            // the dialog
   NSTimer *messageTimer_;                  // Timer we use to update
                                            // the dialog
-  NSMutableDictionary *serverDictionary_;  // The dictionary mapping a
-                                           // server type name to a
-                                           // dictionary of server
-                                           // parameter names.
-  NSMutableDictionary *socorroDictionary_; // The dictionary for
-                                           // Socorro.
-  NSMutableDictionary *googleDictionary_;  // The dictionary for
-                                           // Google.
-  NSMutableDictionary *extraServerVars_;   // A dictionary containing
-                                           // extra key/value pairs
-                                           // that are uploaded to the
-                                           // crash server with the
-                                           // minidump.
+  Uploader* uploader_;                     // Uploader we use to send the data.
 }
 
 // Stops the modal panel with an NSAlertDefaultReturn value. This is the action

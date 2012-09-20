@@ -201,8 +201,9 @@ typedef struct {
 } MDRawContextAMD64;  /* CONTEXT */
 
 /* For (MDRawContextAMD64).context_flags.  These values indicate the type of
- * context stored in the structure.  The high 26 bits identify the CPU, the
- * low 6 bits identify the type of context saved. */
+ * context stored in the structure.  The high 24 bits identify the CPU, the
+ * low 8 bits identify the type of context saved. */
+#define MD_CONTEXT_AMD64 0x00100000  /* CONTEXT_AMD64 */
 #define MD_CONTEXT_AMD64_CONTROL         (MD_CONTEXT_AMD64 | 0x00000001)
      /* CONTEXT_CONTROL */
 #define MD_CONTEXT_AMD64_INTEGER         (MD_CONTEXT_AMD64 | 0x00000002)
@@ -213,6 +214,9 @@ typedef struct {
      /* CONTEXT_FLOATING_POINT */
 #define MD_CONTEXT_AMD64_DEBUG_REGISTERS (MD_CONTEXT_AMD64 | 0x00000010)
      /* CONTEXT_DEBUG_REGISTERS */
+#define MD_CONTEXT_AMD64_XSTATE          (MD_CONTEXT_AMD64 | 0x00000040)
+     /* CONTEXT_XSTATE */
+
 /* WinNT.h refers to CONTEXT_MMX_REGISTERS but doesn't appear to define it
  * I think it really means CONTEXT_FLOATING_POINT.
  */

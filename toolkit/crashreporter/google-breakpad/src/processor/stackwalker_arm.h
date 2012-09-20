@@ -40,7 +40,6 @@
 #ifndef PROCESSOR_STACKWALKER_ARM_H__
 #define PROCESSOR_STACKWALKER_ARM_H__
 
-
 #include "google_breakpad/common/breakpad_types.h"
 #include "google_breakpad/common/minidump_format.h"
 #include "google_breakpad/processor/stackwalker.h"
@@ -57,6 +56,7 @@ class StackwalkerARM : public Stackwalker {
   // to the base Stackwalker constructor.
   StackwalkerARM(const SystemInfo *system_info,
                  const MDRawContextARM *context,
+                 int fp_register,
                  MemoryRegion *memory,
                  const CodeModules *modules,
                  SymbolSupplier *supplier,
@@ -69,13 +69,30 @@ class StackwalkerARM : public Stackwalker {
 
  private:
   // Implementation of Stackwalker, using arm context and stack conventions.
-  // TODO: currently stubbed out, needs CFI symbol dumper support
   virtual StackFrame* GetContextFrame();
   virtual StackFrame* GetCallerFrame(const CallStack *stack);
+
+  // Use cfi_frame_info (derived from STACK CFI records) to construct
+  // the frame that called frames.back(). The caller takes ownership
+  // of the returned frame. Return NULL on failure.
+  StackFrameARM *GetCallerByCFIFrameInfo(const vector<StackFrame *> &frames,
+                                         CFIFrameInfo *cfi_frame_info);
+
+  // Use the frame pointer. The caller takes ownership of the returned frame.
+  // Return NULL on failure.
+  StackFrameARM *GetCallerByFramePointer(const vector<StackFrame *> &frames);
+
+  // Scan the stack for plausible return addresses. The caller takes ownership
+  // of the returned frame. Return NULL on failure.
+  StackFrameARM *GetCallerByStackScan(const vector<StackFrame *> &frames);
 
   // Stores the CPU context corresponding to the youngest stack frame, to
   // be returned by GetContextFrame.
   const MDRawContextARM *context_;
+
+  // The register to use a as frame pointer. The value is -1 if frame pointer
+  // cannot be used.
+  int fp_register_;
 
   // Validity mask for youngest stack frame. This is always
   // CONTEXT_VALID_ALL in real use; it is only changeable for the sake of

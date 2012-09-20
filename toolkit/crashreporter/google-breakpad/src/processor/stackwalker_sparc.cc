@@ -66,6 +66,7 @@ StackFrame* StackwalkerSPARC::GetContextFrame() {
   // straight out of the CPU context structure.
   frame->context = *context_;
   frame->context_validity = StackFrameSPARC::CONTEXT_VALID_ALL;
+  frame->trust = StackFrame::FRAME_TRUST_CONTEXT;
   frame->instruction = frame->context.pc;
 
   return frame;
@@ -129,6 +130,7 @@ StackFrame* StackwalkerSPARC::GetCallerFrame(const CallStack *stack) {
   frame->context_validity = StackFrameSPARC::CONTEXT_VALID_PC |
                             StackFrameSPARC::CONTEXT_VALID_SP |
                             StackFrameSPARC::CONTEXT_VALID_FP;
+  frame->trust = StackFrame::FRAME_TRUST_FP;
                             
   return frame;
 }

@@ -139,21 +139,30 @@ static void Start(Options *options) {
   parameters["code_file"] = module_parts[4];
   parameters["debug_identifier"] = compacted_id;
   std::string response, error;
+  long response_code;
   bool success = HTTPUpload::SendRequest(options->uploadURLStr,
                                          parameters,
                                          options->symbolsPath,
                                          "symbol_file",
                                          options->proxy,
                                          options->proxy_user_pwd,
+                                         "",
                                          &response,
+                                         &response_code,
                                          &error);
 
-  if (success) {
-    printf("Successfully sent the symbol file.\n");
-  } else {
+  if (!success) {
     printf("Failed to send symbol file: %s\n", error.c_str());
     printf("Response:\n");
     printf("%s\n", response.c_str());
+  } else if (response_code == 0) {
+    printf("Failed to send symbol file: No response code\n");
+  } else if (response_code != 200) {
+    printf("Failed to send symbol file: Response code %ld\n", response_code);
+    printf("Response:\n");
+    printf("%s\n", response.c_str());
+  } else {
+    printf("Successfully sent the symbol file.\n");
   }
   options->success = success;
 }

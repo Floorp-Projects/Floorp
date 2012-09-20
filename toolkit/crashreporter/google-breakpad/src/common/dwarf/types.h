@@ -33,6 +33,8 @@
 #ifndef _COMMON_DWARF_TYPES_H__
 #define _COMMON_DWARF_TYPES_H__
 
+#include <stdint.h>
+
 typedef signed char         int8;
 typedef short               int16;
 typedef int                 int32;

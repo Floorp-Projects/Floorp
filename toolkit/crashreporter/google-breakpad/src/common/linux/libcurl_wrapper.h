@@ -30,23 +30,24 @@
 // A wrapper for libcurl to do HTTP Uploads, to support easy mocking
 // and unit testing of the HTTPUpload class.
 
-#include <curl/curl.h>
-
 #include <string>
 #include <map>
+
+#include "common/using_std_string.h"
+#include "third_party/curl/curl.h"
 
 namespace google_breakpad {
 class LibcurlWrapper {
  public:
   LibcurlWrapper();
   virtual bool Init();
-  virtual bool SetProxy(const std::string& proxy_host,
-                        const std::string& proxy_userpwd);
-  virtual bool AddFile(const std::string& upload_file_path,
-                       const std::string& basename);
-  virtual bool SendRequest(const std::string& url,
-                           const std::map<std::string, std::string>& parameters,
-                           std::string* server_response);
+  virtual bool SetProxy(const string& proxy_host,
+                        const string& proxy_userpwd);
+  virtual bool AddFile(const string& upload_file_path,
+                       const string& basename);
+  virtual bool SendRequest(const string& url,
+                           const std::map<string, string>& parameters,
+                           string* server_response);
  private:
   // This function initializes class state corresponding to function
   // pointers into the CURL library.
@@ -55,7 +56,7 @@ class LibcurlWrapper {
   bool init_ok_;                 // Whether init succeeded
   void* curl_lib_;               // Pointer to result of dlopen() on
                                  // curl library
-  std::string last_curl_error_;  // The text of the last error when
+  string last_curl_error_;  // The text of the last error when
                                  // dealing
   // with CURL.
 

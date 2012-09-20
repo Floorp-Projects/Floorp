@@ -33,9 +33,10 @@
 #import "common/mac/SimpleStringDictionary.h"
 
 #import <Foundation/Foundation.h>
-#import "client/mac/handler/minidump_generator.h"
+#include <mach/mach.h>
 
-#define VERBOSE 0
+#import "client/mac/crash_generation/ConfigFile.h"
+#import "client/mac/handler/minidump_generator.h"
 
 extern bool gDebugLog;
 
@@ -78,52 +79,10 @@ using google_breakpad::MinidumpGenerator;
 
 namespace google_breakpad {
 
-static BOOL EnsureDirectoryPathExists(NSString *dirPath);
-
-//=============================================================================
-class ConfigFile {
- public:
-  ConfigFile() {
-    config_file_ = -1;
-    config_file_path_[0] = 0;
-    has_created_file_ = false;
-  };
-
-  ~ConfigFile() {
-  };
-
-  void WriteFile(const SimpleStringDictionary *configurationParameters,
-                 const char *dump_dir,
-                 const char *minidump_id);
-
-  const char *GetFilePath() { return config_file_path_; }
-
-  void Unlink() {
-    if (config_file_ != -1)
-      unlink(config_file_path_);
-
-    config_file_ = -1;
-  }
-
- private:
-  BOOL WriteData(const void *data, size_t length);
-
-  BOOL AppendConfigData(const char *key,
-                        const void *data,
-                        size_t length);
-
-  BOOL AppendConfigString(const char *key,
-                          const char *value);
-
-  int   config_file_;                    // descriptor for config file
-  char  config_file_path_[PATH_MAX];     // Path to configuration file
-  bool  has_created_file_;
-};
-
 //=============================================================================
 class MinidumpLocation {
  public:
-  MinidumpLocation(const NSString *minidumpDir) {
+  MinidumpLocation(NSString *minidumpDir) {
     // Ensure that the path exists.  Fallback to /tmp if unable to locate path.
     assert(minidumpDir);
     if (!EnsureDirectoryPathExists(minidumpDir)) {
@@ -163,6 +122,18 @@ class Inspector {
   void            Inspect(const char *receive_port_name);
 
  private:
+  // The Inspector is invoked with its bootstrap port set to the bootstrap
+  // subset established in OnDemandServer.mm OnDemandServer::Initialize.
+  // For proper communication with the system, the sender (which will inherit
+  // the Inspector's bootstrap port) needs the per-session bootstrap namespace
+  // available directly in its bootstrap port. OnDemandServer stashed this
+  // port into the subset namespace under a special name. ResetBootstrapPort
+  // recovers this port and switches this task to use it as its own bootstrap
+  // (ensuring that children like the sender will inherit it), and saves the
+  // subset in bootstrap_subset_port_ for use by ServiceCheckIn and
+  // ServiceCheckOut.
+  kern_return_t   ResetBootstrapPort();
+
   kern_return_t   ServiceCheckIn(const char *receive_port_name);
   kern_return_t   ServiceCheckOut(const char *receive_port_name);
 
@@ -172,7 +143,9 @@ class Inspector {
   kern_return_t   SendAcknowledgement();
   void            LaunchReporter(const char *inConfigFilePath);
 
-  void            SetCrashTimeParameters();
+  // The bootstrap port in which the inspector is registered and into which it
+  // must check in.
+  mach_port_t     bootstrap_subset_port_;
 
   mach_port_t     service_rcv_port_;
 

@@ -84,12 +84,22 @@ vector<string> DwarfCFIToModule::RegisterNames::X86_64() {
   return MakeVector(names, sizeof(names) / sizeof(names[0]));
 }
 
+// Per ARM IHI 0040A, section 3.1
 vector<string> DwarfCFIToModule::RegisterNames::ARM() {
   static const char *const names[] = {
     "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",
     "r8",  "r9",  "r10", "r11", "r12", "sp",  "lr",  "pc",
     "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",
-    "fps", "cpsr"
+    "fps", "cpsr", "",   "",    "",    "",    "",    "",
+    "",    "",    "",    "",    "",    "",    "",    "",
+    "",    "",    "",    "",    "",    "",    "",    "",
+    "",    "",    "",    "",    "",    "",    "",    "",
+    "",    "",    "",    "",    "",    "",    "",    "",
+    "s0",  "s1",  "s2",  "s3",  "s4",  "s5",  "s6",  "s7",
+    "s8",  "s9",  "s10", "s11", "s12", "s13", "s14", "s15",
+    "s16", "s17", "s18", "s19", "s20", "s21", "s22", "s23",
+    "s24", "s25", "s26", "s27", "s28", "s29", "s30", "s31",
+    "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7"
   };
 
   return MakeVector(names, sizeof(names) / sizeof(names[0]));
@@ -132,7 +142,8 @@ string DwarfCFIToModule::RegisterName(int i) {
   if (reg == return_address_)
     return ra_name_;
 
-  if (0 <= reg && reg < register_names_.size())
+  // Ensure that a non-empty name exists for this register value.
+  if (reg < register_names_.size() && !register_names_[reg].empty())
     return register_names_[reg];
 
   reporter_->UnnamedRegister(entry_offset_, reg);

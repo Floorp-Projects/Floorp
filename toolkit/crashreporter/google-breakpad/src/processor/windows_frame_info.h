@@ -39,10 +39,12 @@
 #define PROCESSOR_WINDOWS_FRAME_INFO_H__
 
 #include <string.h>
+#include <stdlib.h>
 
 #include <string>
 #include <vector>
 
+#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 #include "processor/logging.h"
 #include "processor/tokenize.h"
@@ -71,7 +73,8 @@ struct WindowsFrameInfo {
     STACK_INFO_UNKNOWN = -1
   };
 
-  WindowsFrameInfo() : valid(VALID_NONE),
+  WindowsFrameInfo() : type_(STACK_INFO_UNKNOWN),
+                     valid(VALID_NONE),
                      prolog_size(0),
                      epilog_size(0),
                      parameter_size(0),
@@ -81,15 +84,17 @@ struct WindowsFrameInfo {
                      allocates_base_pointer(0),
                      program_string() {}
 
-  WindowsFrameInfo(u_int32_t set_prolog_size,
+  WindowsFrameInfo(StackInfoTypes type,
+                 u_int32_t set_prolog_size,
                  u_int32_t set_epilog_size,
                  u_int32_t set_parameter_size,
                  u_int32_t set_saved_register_size,
                  u_int32_t set_local_size,
                  u_int32_t set_max_stack_size,
                  int set_allocates_base_pointer,
-                 const std::string set_program_string)
-      : valid(VALID_ALL),
+                 const string set_program_string)
+      : type_(type),
+        valid(VALID_ALL),
         prolog_size(set_prolog_size),
         epilog_size(set_epilog_size),
         parameter_size(set_parameter_size),
@@ -103,7 +108,7 @@ struct WindowsFrameInfo {
   // a string. Returns NULL if parsing fails, or a new object
   // otherwise. type, rva and code_size are present in the STACK line,
   // but not the StackFrameInfo structure, so return them as outparams.
-  static WindowsFrameInfo *ParseFromString(const std::string string,
+  static WindowsFrameInfo *ParseFromString(const string string,
                                            int &type,
                                            u_int64_t &rva,
                                            u_int64_t &code_size) {
@@ -139,7 +144,8 @@ struct WindowsFrameInfo {
       allocates_base_pointer = strtoul(tokens[10], NULL, 16);
     }
 
-    return new WindowsFrameInfo(prolog_size,
+    return new WindowsFrameInfo(static_cast<StackInfoTypes>(type),
+                                prolog_size,
                                 epilog_size,
                                 parameter_size,
                                 saved_register_size,
@@ -151,6 +157,7 @@ struct WindowsFrameInfo {
 
   // CopyFrom makes "this" WindowsFrameInfo object identical to "that".
   void CopyFrom(const WindowsFrameInfo &that) {
+    type_ = that.type_;
     valid = that.valid;
     prolog_size = that.prolog_size;
     epilog_size = that.epilog_size;
@@ -165,9 +172,12 @@ struct WindowsFrameInfo {
   // Clears the WindowsFrameInfo object so that users will see it as though
   // it contains no information.
   void Clear() {
+    type_ = STACK_INFO_UNKNOWN;
     valid = VALID_NONE;
     program_string.erase();
   }
+
+  StackInfoTypes type_;
 
   // Identifies which fields in the structure are valid.  This is of
   // type Validity, but it is defined as an int because it's not
@@ -186,7 +196,7 @@ struct WindowsFrameInfo {
   // Only one of allocates_base_pointer or program_string will be valid.
   // If program_string is empty, use allocates_base_pointer.
   bool allocates_base_pointer;
-  std::string program_string;
+  string program_string;
 };
 
 }  // namespace google_breakpad

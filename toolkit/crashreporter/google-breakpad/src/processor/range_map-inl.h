@@ -184,7 +184,7 @@ bool RangeMap<AddressType, EntryType>::RetrieveRangeAtIndex(
 
   *entry = iterator->second.entry();
   if (entry_base)
-    *entry_base = iterator->first;
+    *entry_base = iterator->second.base();
   if (entry_size)
     *entry_size = iterator->first - iterator->second.base() + 1;
 
