@@ -490,7 +490,7 @@ argumentUnboxingTemplates = {
 # `null`; this behavior is from XPCWrappedNative::CallMethod. The 'jsval' type,
 # however, defaults to 'undefined'.
 #
-def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
+def writeArgumentUnboxing(f, i, name, type, optional, rvdeclared,
                           nullBehavior, undefinedBehavior):
     # f - file to write to
     # i - int or None - Indicates the source jsval.  If i is an int, the source
@@ -561,8 +561,6 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
             if isSetter:
                 f.write("        xpc_qsThrowBadSetterValue("
                         "cx, rv, JSVAL_TO_OBJECT(*tvr.jsval_addr()), id);\n")
-            elif haveCcx:
-                f.write("        xpc_qsThrowBadArgWithCcx(ccx, rv, %d);\n" % i)
             else:
                 f.write("        xpc_qsThrowBadArg(cx, rv, vp, %d);\n" % i)
             f.write("        return JS_FALSE;\n"
@@ -723,14 +721,8 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
             % jsvalRef)
     f.write("    return xpc_qsThrow(cx, NS_ERROR_UNEXPECTED); // FIXME\n")
 
-def anyParamRequiresCcx(member):
-    return False
-
-def memberNeedsCcx(member):
-    return member.kind == 'method' and anyParamRequiresCcx(member)
-
 def memberNeedsCallee(member):
-    return memberNeedsCcx(member) or isInterfaceType(member.realtype)
+    return isInterfaceType(member.realtype)
 
 def validateParam(member, param):
     def pfail(msg):
@@ -851,61 +843,40 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                 "    if (!obj)\n"
                 "        return JS_FALSE;\n")
 
-    # Create ccx if needed.
-    haveCcx = memberNeedsCcx(member)
-    if haveCcx and not unwrapThisFailureFatal:
-        raise UserError(member.iface.name + '.' + member.name + ": "
-                        "Unwrapping this failure must be fatal when we have a ccx")
-
-    if haveCcx:
-        f.write("    XPCCallContext ccx(JS_CALLER, cx, obj, "
-                "JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));\n")
-        if isInterfaceType(member.realtype):
-            f.write("    XPCLazyCallContext lccx(ccx);\n")
-
     # Get the 'self' pointer.
     if customMethodCall is None or not 'thisType' in customMethodCall:
         f.write("    %s *self;\n" % member.iface.name)
     else:
         f.write("    %s *self;\n" % customMethodCall['thisType'])
     f.write("    xpc_qsSelfRef selfref;\n")
-    # Don't use FromCcx for getters or setters; the way we construct the ccx in
-    # a getter/setter causes it to find the wrong wrapper in some cases.
-    if haveCcx:
-        # Undocumented, but the interpreter puts 'this' at argv[-1],
-        # which is vp[1]; and it's ok to overwrite it.
-        f.write("    if (!xpc_qsUnwrapThisFromCcx(ccx, &self, &selfref.ptr, "
-                "&vp[1]))\n")
-        f.write("        return JS_FALSE;\n")
+    if isGetter:
+        pthisval = 'vp'
+    elif isSetter:
+        f.write("    JS::AutoValueRooter tvr(cx);\n")
+        pthisval = 'tvr.jsval_addr()'
     else:
-        if isGetter:
-            pthisval = 'vp'
-        elif isSetter:
-            f.write("    JS::AutoValueRooter tvr(cx);\n")
-            pthisval = 'tvr.jsval_addr()'
-        else:
-            pthisval = '&vp[1]' # as above, ok to overwrite vp[1]
+        pthisval = '&vp[1]' # as above, ok to overwrite vp[1]
 
-        if unwrapThisFailureFatal:
-            unwrapFatalArg = "true"
-        else:
-            unwrapFatalArg = "false"
+    if unwrapThisFailureFatal:
+        unwrapFatalArg = "true"
+    else:
+        unwrapFatalArg = "false"
 
-        if not isSetter and isInterfaceType(member.realtype):
-            f.write("    XPCLazyCallContext lccx(JS_CALLER, cx, obj);\n")
-            f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
-                    "&selfref.ptr, %s, &lccx, %s))\n" % (pthisval, unwrapFatalArg))
-        else:
-            f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
-                    "&selfref.ptr, %s, nullptr, %s))\n" % (pthisval, unwrapFatalArg))
-        f.write("        return JS_FALSE;\n")
+    if not isSetter and isInterfaceType(member.realtype):
+        f.write("    XPCLazyCallContext lccx(JS_CALLER, cx, obj);\n")
+        f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
+                "&selfref.ptr, %s, &lccx, %s))\n" % (pthisval, unwrapFatalArg))
+    else:
+        f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
+                "&selfref.ptr, %s, nullptr, %s))\n" % (pthisval, unwrapFatalArg))
+    f.write("        return JS_FALSE;\n")
 
-        if not unwrapThisFailureFatal:
-            f.write("      if (!self) {\n")
-            if (isGetter):
-                f.write("        *vp = JSVAL_NULL;\n")
-            f.write("        return JS_TRUE;\n")
-            f.write("    }\n");
+    if not unwrapThisFailureFatal:
+        f.write("      if (!self) {\n")
+        if (isGetter):
+            f.write("        *vp = JSVAL_NULL;\n")
+        f.write("        return JS_TRUE;\n")
+        f.write("    }\n");
 
     if isMethod:
         # If there are any required arguments, check argc.
@@ -934,14 +905,13 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             # Emit code to convert this argument from jsval.
             rvdeclared = writeArgumentUnboxing(
                 f, i, argName, realtype,
-                haveCcx=haveCcx,
                 optional=param.optional,
                 rvdeclared=rvdeclared,
                 nullBehavior=param.null,
                 undefinedBehavior=param.undefined)
     elif isSetter:
         rvdeclared = writeArgumentUnboxing(f, None, 'arg0', member.realtype,
-                                           haveCcx=False, optional=False,
+                                           optional=False,
                                            rvdeclared=rvdeclared,
                                            nullBehavior=member.null,
                                            undefinedBehavior=member.undefined)
@@ -1014,12 +984,8 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         # Check for errors.
         f.write("    if (NS_FAILED(rv))\n")
         if isMethod:
-            if haveCcx:
-                f.write("        return xpc_qsThrowMethodFailedWithCcx("
-                        "ccx, rv);\n")
-            else:
-                f.write("        return xpc_qsThrowMethodFailed("
-                        "cx, rv, vp);\n")
+            f.write("        return xpc_qsThrowMethodFailed("
+                    "cx, rv, vp);\n")
         else:
             if isGetter:
                 thisval = '*vp'
