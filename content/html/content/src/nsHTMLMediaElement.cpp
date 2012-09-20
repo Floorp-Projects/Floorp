@@ -2542,8 +2542,11 @@ class nsHTMLMediaElement::StreamListener : public MediaStreamListener {
 public:
   StreamListener(nsHTMLMediaElement* aElement) :
     mElement(aElement),
+    mHaveCurrentData(false),
+    mBlocked(false),
     mMutex("nsHTMLMediaElement::StreamListener"),
-    mPendingNotifyOutput(false)
+    mPendingNotifyOutput(false),
+    mDidHaveCurrentData(false)
   {}
   void Forget() { mElement = nullptr; }
 
@@ -2554,17 +2557,22 @@ public:
       mElement->PlaybackEnded();
     }
   }
+  void UpdateReadyStateForData()
+  {
+    if (mElement && mHaveCurrentData) {
+      mElement->UpdateReadyStateForData(
+        mBlocked ? NEXT_FRAME_UNAVAILABLE_BUFFERING : NEXT_FRAME_AVAILABLE);
+    }
+  }
   void DoNotifyBlocked()
   {
-    if (mElement) {
-      mElement->UpdateReadyStateForData(NEXT_FRAME_UNAVAILABLE_BUFFERING);
-    }
+    mBlocked = true;
+    UpdateReadyStateForData();
   }
   void DoNotifyUnblocked()
   {
-    if (mElement) {
-      mElement->UpdateReadyStateForData(NEXT_FRAME_AVAILABLE);
-    }
+    mBlocked = false;
+    UpdateReadyStateForData();
   }
   void DoNotifyOutput()
   {
@@ -2572,9 +2580,18 @@ public:
       MutexAutoLock lock(mMutex);
       mPendingNotifyOutput = false;
     }
-    if (mElement) {
+    if (mElement && mHaveCurrentData) {
       mElement->FireTimeUpdate(true);
     }
+  }
+  void DoNotifyHaveCurrentData()
+  {
+    mHaveCurrentData = true;
+    if (mElement) {
+      mElement->FirstFrameLoaded(false);
+    }
+    UpdateReadyStateForData();
+    DoNotifyOutput();
   }
 
   // These notifications run on the media graph thread so we need to
@@ -2595,6 +2612,22 @@ public:
       NS_NewRunnableMethod(this, &StreamListener::DoNotifyFinished);
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(event);
   }
+  virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph,
+                                    bool aHasCurrentData)
+  {
+    MutexAutoLock lock(mMutex);
+    if (mDidHaveCurrentData == aHasCurrentData)
+      return;
+    mDidHaveCurrentData = aHasCurrentData;
+    // Ignore the case where aHasCurrentData is false. If aHasCurrentData
+    // changes from true to false, we don't worry about it. Video elements
+    // preserve the last played frame anyway.
+    if (aHasCurrentData) {
+      nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethod(this, &StreamListener::DoNotifyHaveCurrentData);
+      aGraph->DispatchToMainThreadAfterStreamStateUpdate(event);
+    }
+  }
   virtual void NotifyOutput(MediaStreamGraph* aGraph)
   {
     MutexAutoLock lock(mMutex);
@@ -2607,10 +2640,15 @@ public:
   }
 
 private:
+  // These fields may only be accessed on the main thread
   nsHTMLMediaElement* mElement;
+  bool mHaveCurrentData;
+  bool mBlocked;
 
+  // mMutex protects the fields below; they can be accessed on any thread
   Mutex mMutex;
   bool mPendingNotifyOutput;
+  bool mDidHaveCurrentData;
 };
 
 void nsHTMLMediaElement::SetupSrcMediaStreamPlayback()
@@ -2638,7 +2676,11 @@ void nsHTMLMediaElement::SetupSrcMediaStreamPlayback()
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
-  ResourceLoaded();
+  DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
+  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
+  AddRemoveSelfReference();
+  // FirstFrameLoaded(false) will be called when the stream has current data,
+  // to complete the setup by entering the HAVE_CURRENT_DATA state.
 }
 
 void nsHTMLMediaElement::EndSrcMediaStreamPlayback()
@@ -2769,6 +2811,8 @@ void nsHTMLMediaElement::FirstFrameLoaded(bool aResourceFullyLoaded)
 
 void nsHTMLMediaElement::ResourceLoaded()
 {
+  NS_ASSERTION(!mSrcStream, "Don't call this for streams");
+
   mBegun = false;
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
   AddRemoveSelfReference();
