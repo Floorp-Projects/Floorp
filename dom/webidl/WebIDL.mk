@@ -9,11 +9,7 @@ generated_webidl_files = \
   $(NULL)
 
 webidl_files = \
-  AudioBufferSourceNode.webidl \
   AudioContext.webidl \
-  AudioDestinationNode.webidl \
-  AudioNode.webidl \
-  AudioSourceNode.webidl \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
   ClientRectList.webidl \

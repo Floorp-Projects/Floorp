@@ -15,20 +15,8 @@ LIBRARY_NAME   := gkconwebaudio_s
 LIBXUL_LIBRARY := 1
 
 CPPSRCS := \
-  AudioBufferSourceNode.cpp \
   AudioContext.cpp \
-  AudioDestinationNode.cpp \
-  AudioNode.cpp \
-  AudioSourceNode.cpp \
   EnableWebAudioCheck.cpp \
-  $(NULL)
-
-EXPORTS_NAMESPACES := mozilla/dom
-EXPORTS_mozilla/dom := \
-  AudioBufferSourceNode.h \
-  AudioDestinationNode.h \
-  AudioNode.h \
-  AudioSourceNode.h \
   $(NULL)
 
 PARALLEL_DIRS := test
