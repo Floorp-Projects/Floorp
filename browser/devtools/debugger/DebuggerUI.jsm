@@ -469,7 +469,6 @@ ChromeDebuggerProcess.prototype = {
       DebuggerServer.init(this._allowConnection);
       DebuggerServer.addBrowserActors();
     }
-    DebuggerServer.closeListener();
     DebuggerServer.openListener(DebuggerPreferences.remotePort);
   },
 
@@ -493,7 +492,7 @@ ChromeDebuggerProcess.prototype = {
       return true;
     }
     if (result == 2) {
-      DebuggerServer.closeListener();
+      DebuggerServer.closeListener(true);
       Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
     }
     return false;
