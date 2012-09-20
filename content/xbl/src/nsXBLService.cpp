@@ -23,7 +23,6 @@
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
 #include "nsXMLDocument.h"
-#include "mozilla/FunctionTimer.h"
 #include "nsGkAtoms.h"
 #include "nsIMemory.h"
 #include "nsIObserverService.h"
@@ -1067,8 +1066,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
                                    nsIURI* aDocumentURI, nsIURI* aBindingURI, 
                                    bool aForceSyncLoad, nsIDocument** aResult)
 {
-  NS_TIME_FUNCTION;
-
   nsresult rv = NS_OK;
   // Initialize our out pointer to nullptr
   *aResult = nullptr;

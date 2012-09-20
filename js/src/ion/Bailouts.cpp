@@ -308,6 +308,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         return BAILOUT_RETURN_BOUNDS_CHECK;
       case Bailout_Invalidate:
         return BAILOUT_RETURN_INVALIDATE;
+      case Bailout_CachedShapeGuard:
+        return BAILOUT_RETURN_CACHED_SHAPE_GUARD;
 
       // When bailing out from an argument check, none of the code of the
       // function has run yet. When profiling, this means that the function
@@ -548,6 +550,25 @@ ion::ForceInvalidation()
     JS_ASSERT(!script->ion->invalidated());
 
     IonSpew(IonSpew_Invalidate, "Forced invalidation bailout");
+
+    return Invalidate(cx, script);
+}
+
+uint32
+ion::CachedShapeGuardFailure()
+{
+    JSContext *cx = GetIonContext()->cx;
+    JSScript *script = GetBailedJSScript(cx);
+
+    JS_ASSERT(script->hasIonScript());
+    JS_ASSERT(!script->ion->invalidated());
+
+    // Purge JM caches in the script and all inlined script, to avoid baking in
+    // the same shape guard next time.
+    for (size_t i = 0; i < script->ion->scriptEntries(); i++)
+        mjit::PurgeCaches(script->ion->getScript(i));
+
+    IonSpew(IonSpew_Invalidate, "Invalidating due to shape guard failure");
 
     return Invalidate(cx, script);
 }

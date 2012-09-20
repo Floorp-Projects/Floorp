@@ -36,6 +36,8 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
+    <style name="Gecko.Translucent.NoActionBar"  parent="Gecko.Translucent"/>
+
     <style name="Gecko.App">
         <item name="android:windowBackground">@drawable/abouthome_bg_repeat</item>
     </style>

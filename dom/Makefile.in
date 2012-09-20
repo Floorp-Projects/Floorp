@@ -35,6 +35,7 @@ PARALLEL_DIRS = \
   interfaces/offline \
   interfaces/geolocation \
   interfaces/notification \
+  interfaces/permission \
   interfaces/svg \
   interfaces/smil \
   interfaces/apps \

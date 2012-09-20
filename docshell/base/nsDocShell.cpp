@@ -51,7 +51,6 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIUploadChannel.h"
 #include "nsISecurityEventSink.h"
-#include "mozilla/FunctionTimer.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -6662,8 +6661,6 @@ nsDocShell::EnsureContentViewer()
     if (mIsBeingDestroyed)
         return NS_ERROR_FAILURE;
 
-    NS_TIME_FUNCTION;
-
     nsCOMPtr<nsIURI> baseURI;
     nsIPrincipal* principal = GetInheritedPrincipal(false);
     nsCOMPtr<nsIDocShellTreeItem> parentItem;
@@ -11199,8 +11196,6 @@ nsDocShell::EnsureScriptEnvironment()
     if (mIsBeingDestroyed) {
         return NS_ERROR_NOT_AVAILABLE;
     }
-
-    NS_TIME_FUNCTION;
 
 #ifdef DEBUG
     NS_ASSERTION(!mInEnsureScriptEnv,

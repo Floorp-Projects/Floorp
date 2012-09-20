@@ -197,7 +197,7 @@ CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)
 {
-    typedef JSFixedString *(*pf)(JSContext *, int);
+    typedef JSFlatString *(*pf)(JSContext *, int);
     static const VMFunction IntToStringInfo = FunctionInfo<pf>(Int32ToString);
 
     pushArg(ToRegister(lir->input()));
@@ -1096,8 +1096,9 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
                 return false;
 
             JS_ASSERT(ArgumentsRectifierReg != objreg);
+            masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
+            masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
             masm.movePtr(argcreg, ArgumentsRectifierReg);
-            masm.movePtr(ImmWord(argumentsRectifier->raw()), objreg);
         }
 
         masm.bind(&rejoin);
@@ -2046,7 +2047,7 @@ CodeGenerator::visitFromCharCode(LFromCharCode *lir)
     Register code = ToRegister(lir->code());
     Register output = ToRegister(lir->output());
 
-    typedef JSFixedString *(*pf)(JSContext *, int32_t);
+    typedef JSFlatString *(*pf)(JSContext *, int32_t);
     static const VMFunction Info = FunctionInfo<pf>(ion::StringFromCharCode);
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), code), StoreRegisterTo(output));
     if (!ool)
@@ -2815,7 +2816,7 @@ CodeGenerator::generate()
                                  bailouts_.length(), graph.numConstants(),
                                  safepointIndices_.length(), osiIndices_.length(),
                                  cacheList_.length(), barrierOffsets_.length(),
-                                 safepoints_.size());
+                                 safepoints_.size(), graph.mir().numScripts());
     if (!script->ion)
         return false;
     invalidateEpilogueData_.fixup(&masm);
@@ -2850,6 +2851,9 @@ CodeGenerator::generate()
         script->ion->copyPrebarrierEntries(&barrierOffsets_[0], masm);
     if (safepoints_.size())
         script->ion->copySafepoints(&safepoints_);
+
+    JS_ASSERT(graph.mir().numScripts() > 0);
+    script->ion->copyScriptEntries(graph.mir().scripts());
 
     linkAbsoluteLabels();
 

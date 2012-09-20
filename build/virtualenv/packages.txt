@@ -8,5 +8,7 @@ mozprofile.pth:testing/mozbase/mozprofile
 mozrunner.pth:testing/mozbase/mozrunner
 blessings.pth:python/blessings
 mozbuild.pth:python/mozbuild
+optional:setup.py:python/psutil:build_ext:--inplace
+optional:psutil.pth:python/psutil
 mozilla.pth:build
 mozilla.pth:config

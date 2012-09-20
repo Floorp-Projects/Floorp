@@ -9,7 +9,6 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
-#include "mozilla/FunctionTimer.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsXBLProtoImplMethod.h"
@@ -139,7 +138,6 @@ nsresult
 nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
                                     JSObject* aClassObject)
 {
-  NS_TIME_FUNCTION_MIN(5);
   NS_PRECONDITION(!IsCompiled(),
                   "Trying to compile an already-compiled method");
   NS_PRECONDITION(aClassObject,

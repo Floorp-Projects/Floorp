@@ -84,7 +84,6 @@ TabParent::TabParent(mozIApplication* aApp, bool aIsBrowserElement)
   , mIMESeqno(0)
   , mEventCaptureDepth(0)
   , mDPI(0)
-  , mActive(false)
   , mIsBrowserElement(aIsBrowserElement)
   , mShown(false)
 {
@@ -260,21 +259,13 @@ void TabParent::HandleSingleTap(const nsIntPoint& aPoint)
 void
 TabParent::Activate()
 {
-    mActive = true;
     unused << SendActivate();
 }
 
 void
 TabParent::Deactivate()
 {
-  mActive = false;
   unused << SendDeactivate();
-}
-
-bool
-TabParent::Active()
-{
-  return mActive;
 }
 
 NS_IMETHODIMP

@@ -80,7 +80,7 @@ function test_focus_first()
       test_remove_tab();
     });
   }, false);
-  window.content.focus();
+  window.focus();
 }
 
 function test_remove_tab()

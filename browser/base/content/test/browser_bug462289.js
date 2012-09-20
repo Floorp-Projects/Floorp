@@ -68,7 +68,7 @@ function step5()
   is(document.activeElement, tab2, "click on tab2 while tab1 is activated activates tab");
 
   ok(true, "focusing content then sending middle-button mousedown to tab2.");
-  content.focus();
+  gBrowser.selectedBrowser.focus();
   EventUtils.synthesizeMouseAtCenter(tab2, {button: 1, type: "mousedown"});
   setTimeout(step6, 0);
 }

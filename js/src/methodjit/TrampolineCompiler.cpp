@@ -64,7 +64,7 @@ TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where,
     JS_ASSERT(entry.isSet());
 
     bool ok;
-    JSC::LinkBuffer buffer(&masm, execAlloc, poolp, &ok, JSC::METHOD_CODE);
+    JSC::LinkBuffer buffer(&masm, execAlloc, poolp, &ok, JSC::JAEGER_CODE);
     if (!ok)
         return false;
     masm.finalize(buffer);

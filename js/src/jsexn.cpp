@@ -1135,8 +1135,8 @@ js_ReportUncaughtException(JSContext *cx)
         report.exnType = int16_t(JSEXN_NONE);
         report.column = (unsigned) column;
         if (str) {
-            if (JSFixedString *fixed = str->ensureFixed(cx))
-                report.ucmessage = fixed->chars();
+            if (JSStableString *stable = str->ensureStable(cx))
+                report.ucmessage = stable->chars();
         }
     }
 

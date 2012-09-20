@@ -6325,13 +6325,13 @@ var WebappsUI = {
       // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
       // a unique ID for Android webapp allocation
       this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
-        (function(icon) {
+        (function(scaledIcon, fullsizeIcon) {
           let profilePath = sendMessageToJava({
             gecko: {
               type: "WebApps:Install",
               name: manifest.name,
               launchPath: manifest.fullLaunchPath(),
-              iconURL: icon,
+              iconURL: scaledIcon,
               uniqueURI: aData.app.origin
             }
           });
@@ -6351,6 +6351,20 @@ var WebappsUI = {
             let defaultPrefsFile = file.clone();
             defaultPrefsFile.append(this.DEFAULT_PREFS_FILENAME);
             this.writeDefaultPrefs(defaultPrefsFile, prefs);
+
+            // also save the icon so that it can be used in the splash screen
+            try {
+              let iconFile = file.clone();
+              iconFile.append("logo.png");
+              let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
+              persist.persistFlags = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+              persist.persistFlags |= Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+  
+              let source = Services.io.newURI(fullsizeIcon, "UTF8", null);
+              persist.saveURI(source, null, null, null, null, iconFile);
+            } catch(ex) {
+              console.log(ex);
+            }
           }
           DOMApplicationRegistry.confirmInstall(aData, false, file);
         }).bind(this));
@@ -6363,7 +6377,7 @@ var WebappsUI = {
     if (aPrefs.length > 0) {
       let data = JSON.stringify(aPrefs);
 
-      var ostream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+      let ostream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
       ostream.init(aFile, -1, -1, 0);
 
       let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
@@ -6413,9 +6427,15 @@ var WebappsUI = {
     let favicon = new Image();
     favicon.onload = function() {
       ctx.drawImage(favicon, 0, 0, size, size);
-      let base64icon = canvas.toDataURL("image/png", "");
+      let scaledIcon = canvas.toDataURL("image/png", "");
+
+      canvas.width = favicon.width;
+      canvas.height = favicon.height;
+      ctx.drawImage(favicon, 0, 0, favicon.width, favicon.height);
+      let fullsizeIcon = canvas.toDataURL("image/png", "");
+
       canvas = null;
-      aCallbackFunction.call(null, base64icon);
+      aCallbackFunction.call(null, scaledIcon, fullsizeIcon);
     };
     favicon.onerror = function() {
       Cu.reportError("CreateShortcut: favicon image load error");

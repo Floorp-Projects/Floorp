@@ -3904,16 +3904,7 @@ nsCanvasRenderingContext2DAzure::DrawWindow(nsIDOMWindow* window, double x,
     return;
   }
 
-  nsRefPtr<gfxASurface> drawSurf;
-  GetThebesSurface(getter_AddRefs(drawSurf));
-
-  nsRefPtr<gfxContext> thebes = new gfxContext(drawSurf);
-
   EnsureTarget();
-  Matrix matrix = mTarget->GetTransform();
-  thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
-                              matrix._22, matrix._31, matrix._32));
-
   // We can't allow web apps to call this until we fix at least the
   // following potential security issues:
   // -- rendering cross-domain IFRAMEs and then extracting the results
@@ -3928,8 +3919,9 @@ nsCanvasRenderingContext2DAzure::DrawWindow(nsIDOMWindow* window, double x,
   }
 
   // Flush layout updates
-  if (!(flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH))
+  if (!(flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH)) {
     nsContentUtils::FlushLayoutForTree(window);
+  }
 
   nsRefPtr<nsPresContext> presContext;
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
@@ -3970,8 +3962,22 @@ nsCanvasRenderingContext2DAzure::DrawWindow(nsIDOMWindow* window, double x,
     renderDocFlags |= nsIPresShell::RENDER_ASYNC_DECODE_IMAGES;
   }
 
+  // gfxContext-over-Azure may modify the DrawTarget's transform, so
+  // save and restore it
+  Matrix matrix = mTarget->GetTransform();
+  nsRefPtr<gfxContext> thebes;
+  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+    thebes = new gfxContext(mTarget);
+  } else {
+    nsRefPtr<gfxASurface> drawSurf;
+    GetThebesSurface(getter_AddRefs(drawSurf));
+    thebes = new gfxContext(drawSurf);
+  }
+  thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
+                              matrix._22, matrix._31, matrix._32));
   unused << presContext->PresShell()->
     RenderDocument(r, renderDocFlags, backgroundColor, thebes);
+  mTarget->SetTransform(matrix);
 
   // note that x and y are coordinates in the document that
   // we're drawing; x and y are drawn to 0,0 in current user
