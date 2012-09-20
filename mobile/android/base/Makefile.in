@@ -652,6 +652,7 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/menu_popup_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_arrow.png \
   res/drawable-mdpi-v11/menu_item_check.png \
+  res/drawable-mdpi-v11/menu_item_uncheck.png \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V11 = \
@@ -672,6 +673,7 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/menu_popup_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_arrow.png \
   res/drawable-hdpi-v11/menu_item_check.png \
+  res/drawable-hdpi-v11/menu_item_uncheck.png \
   $(NULL)
 
 RES_DRAWABLE_XHDPI_V11 = \
@@ -692,6 +694,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/menu_popup_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_arrow.png \
   res/drawable-xhdpi-v11/menu_item_check.png \
+  res/drawable-xhdpi-v11/menu_item_uncheck.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_V14 = \
@@ -881,6 +884,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/desktop_notification.png               \
   mobile/android/base/resources/drawable/highlight.xml                          \
   mobile/android/base/resources/drawable/menu_button.xml                        \
+  mobile/android/base/resources/drawable/menu_item_checkmark.xml                \
   mobile/android/base/resources/drawable/menu_level.xml                         \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
   mobile/android/base/resources/drawable/progress_spinner_1.png                 \

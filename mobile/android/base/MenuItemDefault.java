@@ -9,9 +9,10 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.AbsListView;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.AbsListView;
 import android.widget.TextView;
 
 public class MenuItemDefault extends LinearLayout
@@ -20,7 +21,10 @@ public class MenuItemDefault extends LinearLayout
 
     private ImageView mIcon;
     private TextView mTitle;
-    private ImageView mCheck;
+    private CheckBox mCheck;
+
+    private boolean mCheckable;
+    private boolean mChecked;
 
     public MenuItemDefault(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -32,7 +36,10 @@ public class MenuItemDefault extends LinearLayout
         inflate(context, R.layout.menu_item, this);
         mIcon = (ImageView) findViewById(R.id.icon);
         mTitle = (TextView) findViewById(R.id.title);
-        mCheck = (ImageView) findViewById(R.id.check);
+        mCheck = (CheckBox) findViewById(R.id.check);
+
+        mCheckable = false;
+        mChecked = false;
     }
 
     @Override
@@ -75,11 +82,13 @@ public class MenuItemDefault extends LinearLayout
 
     @Override
     public void setCheckable(boolean checkable) {
-        mCheck.setVisibility(checkable ? VISIBLE : GONE);
+        mCheckable = checkable;
+        mCheck.setVisibility(mCheckable ? VISIBLE : GONE);
     }
 
     @Override
     public void setChecked(boolean checked) {
-        mCheck.setVisibility(checked ? VISIBLE : GONE);
+        mChecked = checked;
+        mCheck.setChecked(mChecked);
     }
 }
