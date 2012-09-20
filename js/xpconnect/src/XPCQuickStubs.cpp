@@ -408,7 +408,7 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
                 const char *ifaceName, jsid memberId, const char *memberName)
 {
     /* Only one of memberId or memberName should be given. */
-    JS_ASSERT(JSID_IS_VOID(memberId) != !memberName);
+    MOZ_ASSERT(JSID_IS_VOID(memberId) != !memberName);
 
     // From XPCThrower::ThrowBadResult.
     char* sz;
@@ -492,7 +492,7 @@ ThrowBadArg(JSContext *cx, nsresult rv, const char *ifaceName,
             jsid memberId, const char *memberName, unsigned paramnum)
 {
     /* Only one memberId or memberName should be given. */
-    JS_ASSERT(JSID_IS_VOID(memberId) != !memberName);
+    MOZ_ASSERT(JSID_IS_VOID(memberId) != !memberName);
 
     // From XPCThrower::ThrowBadParam.
     char* sz;
@@ -899,7 +899,7 @@ xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes)
 {
     JSString *str;
 
-    JS_ASSERT(!bytes->ptr());
+    MOZ_ASSERT(!bytes->ptr());
     if (JSVAL_IS_STRING(v)) {
         str = JSVAL_TO_STRING(v);
     } else if (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v)) {
