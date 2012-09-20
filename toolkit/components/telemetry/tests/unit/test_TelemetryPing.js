@@ -382,11 +382,7 @@ function registerFakePluginHost() {
                             PLUGINHOST_CONTRACTID, PluginHostFactory);
 }
 
-function write_fake_shutdown_file() {
-  let profileDirectory = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  let file = profileDirectory.clone();
-  file.append("Telemetry.ShutdownTime.txt");
-  let contents = "" + SHUTDOWN_TIME;
+function writeStringToFile(file, contents) {
   let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
                 .createInstance(Ci.nsIFileOutputStream);
   ostream.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
@@ -394,6 +390,14 @@ function write_fake_shutdown_file() {
   ostream.write(contents, contents.length);
   ostream.QueryInterface(Ci.nsISafeOutputStream).finish();
   ostream.close();
+}
+
+function write_fake_shutdown_file() {
+  let profileDirectory = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  let file = profileDirectory.clone();
+  file.append("Telemetry.ShutdownTime.txt");
+  let contents = "" + SHUTDOWN_TIME;
+  writeStringToFile(file, contents);
 }
 
 function run_test() {
