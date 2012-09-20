@@ -631,6 +631,33 @@ private:
 
 /***************************************************************************/
 
+// class to export a JSString as an const nsAString, no refcounting :(
+class XPCReadableJSStringWrapper : public nsDependentString
+{
+public:
+    typedef nsDependentString::char_traits char_traits;
+
+    XPCReadableJSStringWrapper(const PRUnichar *chars, size_t length) :
+        nsDependentString(chars, length)
+    { }
+
+    XPCReadableJSStringWrapper() :
+        nsDependentString(char_traits::sEmptyBuffer, char_traits::sEmptyBuffer)
+    { SetIsVoid(true); }
+
+    JSBool init(JSContext* aContext, JSString* str)
+    {
+        size_t length;
+        const jschar* chars = JS_GetStringCharsZAndLength(aContext, str, &length);
+        if (!chars)
+            return false;
+
+        NS_ASSERTION(IsEmpty(), "init() on initialized string");
+        new(static_cast<nsDependentString *>(this)) nsDependentString(chars, length);
+        return true;
+    }
+};
+
 // In the current xpconnect system there can only be one XPCJSRuntime.
 // So, xpconnect can only be used on one JSRuntime within the process.
 
@@ -823,6 +850,8 @@ public:
         return false;
     }
 
+    XPCReadableJSStringWrapper *NewStringWrapper(const PRUnichar *str, uint32_t len);
+    void DeleteString(nsAString *string);
 
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
    void DEBUG_AddWrappedNative(nsIXPConnectWrappedNative* wrapper)
@@ -917,6 +946,23 @@ private:
     nsCOMPtr<nsIException>   mPendingException;
     nsCOMPtr<nsIExceptionManager> mExceptionManager;
     bool mExceptionManagerNotAvailable;
+
+#define XPCCCX_STRING_CACHE_SIZE 2
+
+    // String wrapper entry, holds a string, and a boolean that tells
+    // whether the string is in use or not.
+    //
+    // NB: The string is not stored by value so that we avoid the cost of
+    // construction/destruction.
+    struct StringWrapperEntry
+    {
+        StringWrapperEntry() : mInUse(false) { }
+
+        js::AlignedStorage2<XPCReadableJSStringWrapper> mString;
+        bool mInUse;
+    };
+
+    StringWrapperEntry mScratchStrings[XPCCCX_STRING_CACHE_SIZE];
 
     friend class AutoLockWatchdog;
     friend class XPCIncrementalReleaseRunnable;
@@ -1044,33 +1090,6 @@ private:
 #define NATIVE_CALLER  XPCContext::LANG_NATIVE
 #define JS_CALLER      XPCContext::LANG_JS
 
-// class to export a JSString as an const nsAString, no refcounting :(
-class XPCReadableJSStringWrapper : public nsDependentString
-{
-public:
-    typedef nsDependentString::char_traits char_traits;
-
-    XPCReadableJSStringWrapper(const PRUnichar *chars, size_t length) :
-        nsDependentString(chars, length)
-    { }
-
-    XPCReadableJSStringWrapper() :
-        nsDependentString(char_traits::sEmptyBuffer, char_traits::sEmptyBuffer)
-    { SetIsVoid(true); }
-
-    JSBool init(JSContext* aContext, JSString* str)
-    {
-        size_t length;
-        const jschar* chars = JS_GetStringCharsZAndLength(aContext, str, &length);
-        if (!chars)
-            return false;
-
-        NS_ASSERTION(IsEmpty(), "init() on initialized string");
-        new(static_cast<nsDependentString *>(this)) nsDependentString(chars, length);
-        return true;
-    }
-};
-
 // No virtuals
 // XPCCallContext is ALWAYS declared as a local variable in some function;
 // i.e. instance lifetime is always controled by some C++ function returning.
@@ -1181,9 +1200,6 @@ public:
 
     operator JSContext*() const {return GetJSContext();}
 
-    XPCReadableJSStringWrapper *NewStringWrapper(const PRUnichar *str, uint32_t len);
-    void DeleteString(nsAString *string);
-
 private:
 
     // no copy ctor or assignment allowed
@@ -1271,23 +1287,6 @@ private:
     jsval*                          mRetVal;
 
     uint16_t                        mMethodIndex;
-
-#define XPCCCX_STRING_CACHE_SIZE 2
-
-    // String wrapper entry, holds a string, and a boolean that tells
-    // whether the string is in use or not.
-    //
-    // NB: The string is not stored by value so that we avoid the cost of
-    // construction/destruction.
-    struct StringWrapperEntry
-    {
-        StringWrapperEntry() : mInUse(false) { }
-
-        js::AlignedStorage2<XPCReadableJSStringWrapper> mString;
-        bool mInUse;
-    };
-
-    StringWrapperEntry mScratchStrings[XPCCCX_STRING_CACHE_SIZE];
 };
 
 class XPCLazyCallContext
