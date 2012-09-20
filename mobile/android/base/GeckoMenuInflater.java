@@ -41,7 +41,7 @@ public class GeckoMenuInflater extends MenuInflater {
         public boolean checked;
         public boolean visible;
         public boolean enabled;
-        public boolean showAsAction;
+        public int showAsAction;
     }
 
     public GeckoMenuInflater(Context context) {
@@ -126,15 +126,15 @@ public class GeckoMenuInflater extends MenuInflater {
     public void parseItem(ParsedItem item, AttributeSet attrs) {
         TypedArray a = mContext.obtainStyledAttributes(attrs, R.styleable.MenuItem);
 
-        item.id = a.getResourceId(R.styleable.MenuItem_id, NO_ID);
-        item.order = a.getInt(R.styleable.MenuItem_orderInCategory, 0);
-        item.title = a.getText(R.styleable.MenuItem_title);
-        item.iconRes = a.getResourceId(R.styleable.MenuItem_icon, 0);
-        item.checkable = a.getBoolean(R.styleable.MenuItem_checkable, false);
-        item.checked = a.getBoolean(R.styleable.MenuItem_checked, false);
-        item.visible = a.getBoolean(R.styleable.MenuItem_visible, true);
-        item.enabled = a.getBoolean(R.styleable.MenuItem_enabled, true);
-        item.showAsAction = a.getBoolean(R.styleable.MenuItem_showAsAction, false);
+        item.id = a.getResourceId(R.styleable.MenuItem_android_id, NO_ID);
+        item.order = a.getInt(R.styleable.MenuItem_android_orderInCategory, 0);
+        item.title = a.getText(R.styleable.MenuItem_android_title);
+        item.iconRes = a.getResourceId(R.styleable.MenuItem_android_icon, 0);
+        item.checkable = a.getBoolean(R.styleable.MenuItem_android_checkable, false);
+        item.checked = a.getBoolean(R.styleable.MenuItem_android_checked, false);
+        item.visible = a.getBoolean(R.styleable.MenuItem_android_visible, true);
+        item.enabled = a.getBoolean(R.styleable.MenuItem_android_enabled, true);
+        item.showAsAction = a.getInt(R.styleable.MenuItem_android_showAsAction, 0);
 
         a.recycle();
     }
@@ -146,6 +146,6 @@ public class GeckoMenuInflater extends MenuInflater {
                 .setCheckable(item.checkable)
                 .setCheckable(item.checked)
                 .setIcon(item.iconRes)
-                .setShowAsAction(item.showAsAction ? 1 : 0);
+                .setShowAsAction(item.showAsAction);
     }
 }

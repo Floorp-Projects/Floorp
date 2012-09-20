@@ -1,69 +1,68 @@
-#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<menu xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item gecko:id="@+id/forward"
-          gecko:icon="@drawable/ic_menu_forward"
-          gecko:title="@string/forward"
-          gecko:showAsAction="true"/>
+    <item android:id="@+id/forward"
+          android:icon="@drawable/ic_menu_forward"
+          android:title="@string/forward"
+          android:showAsAction="always"/>
 
-    <item gecko:id="@+id/reload"
-          gecko:icon="@drawable/ic_menu_reload"
-          gecko:title="@string/reload"
-          gecko:showAsAction="true"/>
+    <item android:id="@+id/reload"
+          android:icon="@drawable/ic_menu_reload"
+          android:title="@string/reload"
+          android:showAsAction="always"/>
 
-    <item gecko:id="@+id/bookmark"
-          gecko:icon="@drawable/ic_menu_bookmark_add"
-          gecko:title="@string/bookmark"
-          gecko:showAsAction="true"/>
+    <item android:id="@+id/bookmark"
+          android:icon="@drawable/ic_menu_bookmark_add"
+          android:title="@string/bookmark"
+          android:showAsAction="always"/>
 
-    <item gecko:id="@+id/share"
-          gecko:icon="@drawable/ic_menu_share"
-          gecko:title="@string/share" /> 
+    <item android:id="@+id/share"
+          android:icon="@drawable/ic_menu_share"
+          android:title="@string/share" /> 
     
-    <item gecko:id="@+id/find_in_page"
-          gecko:icon="@drawable/ic_menu_find_in_page"
-          gecko:title="@string/find_in_page" />
+    <item android:id="@+id/find_in_page"
+          android:icon="@drawable/ic_menu_find_in_page"
+          android:title="@string/find_in_page" />
 
-    <item gecko:id="@+id/desktop_mode"
-          gecko:icon="@drawable/ic_menu_desktop_mode"
-          gecko:title="@string/desktop_mode"
-          gecko:checkable="true" />
+    <item android:id="@+id/desktop_mode"
+          android:icon="@drawable/ic_menu_desktop_mode"
+          android:title="@string/desktop_mode"
+          android:checkable="true" />
 
-    <item gecko:title="@string/tools">
+    <item android:title="@string/tools">
 
         <menu>
 
-            <item gecko:id="@+id/save_as_pdf"
-                  gecko:icon="@drawable/ic_menu_save_as_pdf"
-                  gecko:title="@string/save_as_pdf" />
+            <item android:id="@+id/save_as_pdf"
+                  android:icon="@drawable/ic_menu_save_as_pdf"
+                  android:title="@string/save_as_pdf" />
 
-            <item gecko:id="@+id/addons"
-                  gecko:title="@string/addons"/>
+            <item android:id="@+id/addons"
+                  android:title="@string/addons"/>
 
-            <item gecko:id="@+id/downloads"
-                  gecko:title="@string/downloads"/>
+            <item android:id="@+id/downloads"
+                  android:title="@string/downloads"/>
 
-            <item gecko:id="@+id/apps"
-                  gecko:title="@string/apps"/>
+            <item android:id="@+id/apps"
+                  android:title="@string/apps"/>
 
         </menu>
 
     </item>
 
-    <item gecko:id="@+id/char_encoding"
-          gecko:visible="false"
-          gecko:title="@string/char_encoding"/>
+    <item android:id="@+id/char_encoding"
+          android:visible="false"
+          android:title="@string/char_encoding"/>
 
-    <item gecko:id="@+id/settings"
-          gecko:title="@string/settings" />
+    <item android:id="@+id/settings"
+          android:title="@string/settings" />
 
 #ifdef MOZ_PROFILING
-    <item gecko:id="@+id/toggle_profiling"
-          gecko:title="@string/toggle_profiling" />
+    <item android:id="@+id/toggle_profiling"
+          android:title="@string/toggle_profiling" />
 #endif
 </menu>

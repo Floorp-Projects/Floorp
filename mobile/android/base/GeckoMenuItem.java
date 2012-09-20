@@ -276,10 +276,10 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
         if (mShowAsActionChangedListener == null)
             return;
 
-        if (mActionItem == (actionEnum == 1))
+        if (mActionItem == (actionEnum > 0))
             return;
 
-        if (actionEnum == 1) {
+        if (actionEnum > 0) {
             if (!mShowAsActionChangedListener.hasActionItemBar())
                 return;
 
@@ -290,7 +290,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
             mLayout = new MenuItemDefault(mContext, null);
         }
 
-        mActionItem = (actionEnum == 1);         
+        mActionItem = (actionEnum > 0);         
 
         mLayout.setId(mId);
         mLayout.setOnClickListener(this);
