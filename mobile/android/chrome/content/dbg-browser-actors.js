@@ -43,7 +43,7 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   // an ActorPool.
 
   let actorPool = new ActorPool(this.conn);
-  let actorList = [];
+  let tabActorList = [];
 
   let win = windowMediator.getMostRecentWindow("navigator:browser");
   this.browser = win.BrowserApp.selectedBrowser;
@@ -59,7 +59,7 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
     let browser = tab.browser;
 
     if (browser == this.browser) {
-      selected = actorList.length;
+      selected = tabActorList.length;
     }
 
     let actor = this._tabActors.get(browser);
@@ -70,8 +70,10 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
     }
 
     actorPool.addActor(actor);
-    actorList.push(actor);
+    tabActorList.push(actor);
   }
+
+  this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
 
   // Now drop the old actorID -> actor map.  Actors that still
   // mattered were added to the new map, others will go
@@ -83,10 +85,13 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   this._tabActorPool = actorPool;
   this.conn.addActorPool(this._tabActorPool);
 
-  return { "from": "root",
-           "selected": selected,
-           "tabs": [actor.grip()
-                    for each (actor in actorList)] };
+  let response = {
+    "from": "root",
+    "selected": selected,
+    "tabs": [actor.grip() for (actor of tabActorList)]
+  };
+  this._appendExtraActors(response);
+  return response;
 };
 
 /**
