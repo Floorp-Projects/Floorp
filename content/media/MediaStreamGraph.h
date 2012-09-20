@@ -128,6 +128,12 @@ public:
   virtual void NotifyBlockingChanged(MediaStreamGraph* aGraph, Blocking aBlocked) {}
 
   /**
+   * Notify that the stream has (or does not have) data in each track
+   * for the stream's current time.
+   */
+  virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph, bool aHasCurrentData) {}
+
+  /**
    * Notify that the stream output is advancing.
    */
   virtual void NotifyOutput(MediaStreamGraph* aGraph) {}
