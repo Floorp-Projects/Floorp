@@ -149,6 +149,10 @@ nsIdleServiceDaily::Init()
 #ifdef ANDROID
     __android_log_print(ANDROID_LOG_INFO, "IdleService", "DailyCallback started");
 #endif
+    // The timer would have been started after the previous idle-daily. Need to
+    // set this here so DailyCallback knows the timer didn't fire early.
+    mDailyTimerStart = lastDaily * PR_USEC_PER_SEC;
+
     // Wait for the user to become idle, so we can do todays idle tasks.
     DailyCallback(nullptr, this);
   }
