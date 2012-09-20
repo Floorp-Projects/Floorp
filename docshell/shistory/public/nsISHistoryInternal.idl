@@ -24,7 +24,7 @@ struct nsTArrayDefaultAllocator;
 
 [ref] native nsDocshellIDArray(nsTArray<uint64_t, nsTArrayDefaultAllocator>);
 
-[scriptable, uuid(e27cf38e-c19f-4294-bd31-d7e0916e7fa2)]
+[scriptable, uuid(f9348014-0239-11e2-b029-3d38e719eb2d)]
 interface nsISHistoryInternal: nsISupports
 {
   /**
@@ -58,10 +58,17 @@ interface nsISHistoryInternal: nsISupports
    */
    void replaceEntry(in long aIndex, in nsISHEntry aReplaceEntry);
 
-  /** 
-   * Get handle to the history listener
+  /**
+   * Notifies all registered session history listeners about an impending
+   * reload.
+   *
+   * @param aReloadURI    The URI of the document to be reloaded.
+   * @param aReloadFlags  Flags that indicate how the document is to be
+   *                      refreshed. See constants on the nsIWebNavigation
+   *                      interface.
+   * @return              Whether the operation can proceed.
    */
-   readonly attribute nsISHistoryListener listener;
+   boolean notifyOnHistoryReload(in nsIURI aReloadURI, in unsigned long aReloadFlags);
 
    /**
     * Evict content viewers which don't lie in the "safe" range around aIndex.
