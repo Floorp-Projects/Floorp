@@ -327,6 +327,11 @@ class MarionetteTestRunner(object):
             with open(self.xml_output, 'w') as f:
                 f.write(self.generate_xml(self.results))
 
+        if self.marionette.instance:
+            self.marionette.instance.close()
+            self.marionette.instance = None
+        del self.marionette
+
     def run_test(self, test, testtype):
         if not self.httpd:
             print "starting httpd"
