@@ -956,9 +956,10 @@ ListBase<LC>::iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp)
 
 template<class LC>
 bool
-ListBase<LC>::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
+ListBase<LC>::hasInstance(JSContext *cx, JS::HandleObject proxy, JS::MutableHandleValue vp,
+                          bool *bp)
 {
-    *bp = vp->isObject() && js::GetObjectClass(&vp->toObject()) == &sInterfaceClass;
+    *bp = vp.isObject() && js::GetObjectClass(&vp.toObject()) == &sInterfaceClass;
     return true;
 }
 
