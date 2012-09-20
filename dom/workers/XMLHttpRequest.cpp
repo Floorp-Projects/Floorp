@@ -30,10 +30,11 @@
 #include "DOMBindingInlines.h"
 #include "mozilla/Attributes.h"
 
+using namespace mozilla;
+
 USING_WORKERS_NAMESPACE
 
 using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
-using mozilla::ErrorResult;
 
 // XXX Need to figure this out...
 #define UNCATCHABLE_EXCEPTION NS_ERROR_OUT_OF_MEMORY

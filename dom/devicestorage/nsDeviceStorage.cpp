@@ -57,6 +57,7 @@
 #define DEVICESTORAGE_MUSIC      "music"
 #define DEVICESTORAGE_APPS       "apps"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::devicestorage;
 
