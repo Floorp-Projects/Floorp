@@ -126,7 +126,7 @@ BluetoothServiceChildProcess::GetPairedDevicePropertiesInternal(
 nsresult
 BluetoothServiceChildProcess::StopDiscoveryInternal(
                                               const nsAString& aAdapterPath,
-                                              BluetoothReplyRunnable* aRunnable) 
+                                              BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, StopDiscoveryRequest(nsString(aAdapterPath)));
   return NS_OK;
@@ -275,6 +275,13 @@ BluetoothServiceChildProcess::SetAuthorizationInternal(
                 DenyAuthorizationRequest(nsString(aDeviceAddress)));
   }
   return NS_OK;
+}
+
+nsresult
+BluetoothServiceChildProcess::PrepareAdapterInternal(const nsAString& aPath)
+{
+  MOZ_NOT_REACHED("Should never be called from child");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
