@@ -12,12 +12,12 @@ mochikit.jar:
   content/dynamic/getMyDirectory.sjs (dynamic/getMyDirectory.sjs)
   content/static/harness.css (static/harness.css)
   content/tests/SimpleTest/ChromePowers.js (tests/SimpleTest/ChromePowers.js)
-  content/tests/SimpleTest/specialpowersAPI.js (tests/SimpleTest/specialpowersAPI.js)
-  content/tests/SimpleTest/SpecialPowersObserverAPI.js (tests/SimpleTest/SpecialPowersObserverAPI.js)
   content/tests/SimpleTest/EventUtils.js (tests/SimpleTest/EventUtils.js)
   content/tests/SimpleTest/ChromeUtils.js (tests/SimpleTest/ChromeUtils.js)
-  content/tests/SimpleTest/MozillaLogger.js (tests/SimpleTest/MozillaLogger.js)
   content/tests/SimpleTest/LogController.js (tests/SimpleTest/LogController.js)
+  content/tests/SimpleTest/MozillaLogger.js (../specialpowers/content/MozillaLogger.js)
+  content/tests/SimpleTest/SpecialPowersObserverAPI.js (../specialpowers/content/SpecialPowersObserverAPI.js)
+  content/tests/SimpleTest/specialpowersAPI.js (../specialpowers/content/specialpowersAPI.js)
   content/tests/SimpleTest/setup.js (tests/SimpleTest/setup.js)
   content/tests/SimpleTest/SimpleTest.js (tests/SimpleTest/SimpleTest.js)
   content/tests/SimpleTest/test.css (tests/SimpleTest/test.css)
@@ -27,5 +27,3 @@ mochikit.jar:
   content/tests/SimpleTest/NativeKeyCodes.js (tests/SimpleTest/NativeKeyCodes.js)
   content/tests/SimpleTest/docshell_helpers.js (../../docshell/test/chrome/docshell_helpers.js)
 
-% resource mochikit %modules/
-  modules/MockFilePicker.jsm (MockFilePicker.jsm)

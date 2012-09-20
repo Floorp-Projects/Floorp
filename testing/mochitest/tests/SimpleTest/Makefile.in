@@ -10,8 +10,7 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
-_SIMPLETEST_FILES =	MozillaLogger.js \
-			LogController.js \
+_SIMPLETEST_FILES =	LogController.js \
 			SimpleTest.js \
 			test.css \
 			TestRunner.js \
@@ -19,10 +18,9 @@ _SIMPLETEST_FILES =	MozillaLogger.js \
 			EventUtils.js \
 			ChromeUtils.js \
 			WindowSnapshot.js \
-			specialpowersAPI.js \
-			SpecialPowersObserverAPI.js \
 			MockObjects.js \
 			NativeKeyCodes.js \
+			$(DEPTH)/testing/specialpowers/content/MozillaLogger.js \
 			$(DEPTH)/docshell/test/chrome/docshell_helpers.js \
 			$(NULL)
 
