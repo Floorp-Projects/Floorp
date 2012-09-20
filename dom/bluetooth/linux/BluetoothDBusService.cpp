@@ -583,7 +583,13 @@ void
 RunDBusCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable,
                 UnpackFunc aFunc)
 {
+#ifdef MOZ_WIDGET_GONK
+  // Due to the fact that we're running two dbus loops on desktop implicitly by
+  // being gtk based, sometimes we'll get signals/reply coming in on the main
+  // thread. There's not a lot we can do about that for the time being and it
+  // (technically) shouldn't hurt anything. However, on gonk, die.
   MOZ_ASSERT(!NS_IsMainThread());
+#endif
   nsRefPtr<BluetoothReplyRunnable> replyRunnable =
     dont_AddRef(static_cast< BluetoothReplyRunnable* >(aBluetoothReplyRunnable));
 
@@ -896,7 +902,6 @@ GetPropertiesInternal(const nsAString& aPath, const char* aIface, BluetoothValue
                                             aIface,
                                             "GetProperties",
                                             DBUS_TYPE_INVALID);
-
   if (!strcmp(aIface, DBUS_DEVICE_IFACE)) {
     UnpackDevicePropertiesMessage(msg, &err, aValue, replyError);
   } else if (!strcmp(aIface, DBUS_ADAPTER_IFACE)) {
@@ -1790,11 +1795,17 @@ BluetoothDBusService::RemoveDeviceInternal(const nsAString& aAdapterPath,
 }
 
 bool
-BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode)
+BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress,
+                                         const nsAString& aPinCode,
+                                         BluetoothReplyRunnable* aRunnable)
 {
+  nsString errorStr;
+  BluetoothValue v = true;
   DBusMessage *msg;
   if (!sPairingReqTable.Get(aDeviceAddress, &msg)) {
     LOG("%s: Couldn't get original request message.", __FUNCTION__);
+    errorStr.AssignLiteral("Couldn't get original request message.");
+    DispatchBluetoothReply(aRunnable, v, errorStr);
     return false;
   }
 
@@ -1803,6 +1814,8 @@ BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress, const 
   if (!reply) {
     LOG("%s: Memory can't be allocated for the message.", __FUNCTION__);
     dbus_message_unref(msg);
+    errorStr.AssignLiteral("Memory can't be allocated for the message.");
+    DispatchBluetoothReply(aRunnable, v, errorStr);
     return false;
   }
 
@@ -1815,6 +1828,7 @@ BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress, const 
                                 DBUS_TYPE_STRING, &pinCode,
                                 DBUS_TYPE_INVALID)) {
     LOG("%s: Couldn't append arguments to dbus message.", __FUNCTION__);
+    errorStr.AssignLiteral("Couldn't append arguments to dbus message.");
     result = false;
   } else {
     result = dbus_connection_send(mConnection, reply, NULL);
@@ -1824,16 +1838,22 @@ BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress, const 
   dbus_message_unref(reply);
 
   sPairingReqTable.Remove(aDeviceAddress);
-
+  DispatchBluetoothReply(aRunnable, v, errorStr);
   return result;
 }
 
 bool
-BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey)
+BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress,
+                                         uint32_t aPasskey,
+                                         BluetoothReplyRunnable* aRunnable)
 {
+  nsString errorStr;
+  BluetoothValue v = true;
   DBusMessage *msg;
   if (!sPairingReqTable.Get(aDeviceAddress, &msg)) {
     LOG("%s: Couldn't get original request message.", __FUNCTION__);
+    errorStr.AssignLiteral("Couldn't get original request message.");
+    DispatchBluetoothReply(aRunnable, v, errorStr);
     return false;
   }
 
@@ -1842,6 +1862,8 @@ BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress, uint32
   if (!reply) {
     LOG("%s: Memory can't be allocated for the message.", __FUNCTION__);
     dbus_message_unref(msg);
+    errorStr.AssignLiteral("Memory can't be allocated for the message.");
+    DispatchBluetoothReply(aRunnable, v, errorStr);
     return false;
   }
 
@@ -1852,6 +1874,7 @@ BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress, uint32
                                 DBUS_TYPE_UINT32, &passkey,
                                 DBUS_TYPE_INVALID)) {
     LOG("%s: Couldn't append arguments to dbus message.", __FUNCTION__);
+    errorStr.AssignLiteral("Couldn't append arguments to dbus message.");
     result = false;
   } else {
     result = dbus_connection_send(mConnection, reply, NULL);
@@ -1861,16 +1884,22 @@ BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress, uint32
   dbus_message_unref(reply);
 
   sPairingReqTable.Remove(aDeviceAddress);
-
+  DispatchBluetoothReply(aRunnable, v, errorStr);
   return result;
 }
 
 bool
-BluetoothDBusService::SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm)
+BluetoothDBusService::SetPairingConfirmationInternal(const nsAString& aDeviceAddress,
+                                                     bool aConfirm,
+                                                     BluetoothReplyRunnable* aRunnable)
 {
+  nsString errorStr;
+  BluetoothValue v = true;
   DBusMessage *msg;
   if (!sPairingReqTable.Get(aDeviceAddress, &msg)) {
     LOG("%s: Couldn't get original request message.", __FUNCTION__);
+    errorStr.AssignLiteral("Couldn't get original request message.");
+    DispatchBluetoothReply(aRunnable, v, errorStr);
     return false;
   }
 
@@ -1879,31 +1908,43 @@ BluetoothDBusService::SetPairingConfirmationInternal(const nsAString& aDeviceAdd
   if (aConfirm) {
     reply = dbus_message_new_method_return(msg);   
   } else {
-    reply = dbus_message_new_error(msg, "org.bluez.Error.Rejected", "User rejected confirmation");
+    reply = dbus_message_new_error(msg, "org.bluez.Error.Rejected",
+                                   "User rejected confirmation");
   }
 
   if (!reply) {
     LOG("%s: Memory can't be allocated for the message.", __FUNCTION__);
     dbus_message_unref(msg);
+    errorStr.AssignLiteral("Memory can't be allocated for the message.");
+    DispatchBluetoothReply(aRunnable, v, errorStr);
     return false;
   }
 
   bool result = dbus_connection_send(mConnection, reply, NULL);
+  if (!result) {
+    errorStr.AssignLiteral("Can't send message!");
+  }
   dbus_message_unref(msg);
   dbus_message_unref(reply);
 
   sPairingReqTable.Remove(aDeviceAddress);
-
+  DispatchBluetoothReply(aRunnable, v, errorStr);
   return result;
 }
 
 bool
-BluetoothDBusService::SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow)
+BluetoothDBusService::SetAuthorizationInternal(const nsAString& aDeviceAddress,
+                                               bool aAllow,
+                                               BluetoothReplyRunnable* aRunnable)
 {
+  nsString errorStr;
+  BluetoothValue v = true;
   DBusMessage *msg;
   
   if (!sAuthorizeReqTable.Get(aDeviceAddress, &msg)) {
     LOG("%s: Couldn't get original request message.", __FUNCTION__);
+    errorStr.AssignLiteral("Couldn't get original request message.");
+    DispatchBluetoothReply(aRunnable, v, errorStr);
     return false;
   }
 
@@ -1912,21 +1953,27 @@ BluetoothDBusService::SetAuthorizationInternal(const nsAString& aDeviceAddress, 
   if (aAllow) {
     reply = dbus_message_new_method_return(msg);   
   } else {
-    reply = dbus_message_new_error(msg, "org.bluez.Error.Rejected", "Authorization rejected");
+    reply = dbus_message_new_error(msg, "org.bluez.Error.Rejected",
+                                   "User rejected authorization");
   }
 
   if (!reply) {
     LOG("%s: Memory can't be allocated for the message.", __FUNCTION__);
     dbus_message_unref(msg);
+    errorStr.AssignLiteral("Memory can't be allocated for the message.");
+    DispatchBluetoothReply(aRunnable, v, errorStr);
     return false;
   }
 
   bool result = dbus_connection_send(mConnection, reply, NULL);
+  if (!result) {
+    errorStr.AssignLiteral("Can't send message!");
+  }
   dbus_message_unref(msg);
   dbus_message_unref(reply);
 
   sAuthorizeReqTable.Remove(aDeviceAddress);
-
+  DispatchBluetoothReply(aRunnable, v, errorStr);
   return result;
 }
 

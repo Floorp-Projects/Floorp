@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
-class ScreenshotHandler implements Runnable {
+public final class ScreenshotHandler implements Runnable {
     public static final int SCREENSHOT_THUMBNAIL = 0;
     public static final int SCREENSHOT_CHECKERBOARD = 1;
 
@@ -138,6 +138,7 @@ class ScreenshotHandler implements Runnable {
         return Math.max(Math.min(max, val), min);
     }
 
+    // Called from native code by JNI
     public static void notifyPaintedRect(float top, float left, float bottom, float right) {
         if (sDisableScreenshot) {
             return;
@@ -264,6 +265,7 @@ class ScreenshotHandler implements Runnable {
         }
     }
 
+    // Called from native code by JNI
     public static void notifyScreenShot(final ByteBuffer data, final int tabId,
                                         final int left, final int top,
                                         final int right, final int bottom,

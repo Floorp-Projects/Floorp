@@ -904,7 +904,7 @@ private:
     XPCRootSetElem *mVariantRoots;
     XPCRootSetElem *mWrappedJSRoots;
     XPCRootSetElem *mObjectHolderRoots;
-    JSDHashTable mJSHolders;
+    nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
     PRLock *mWatchdogLock;
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;

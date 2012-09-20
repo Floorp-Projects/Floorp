@@ -48,6 +48,7 @@ interface nsIPermissionManager : nsISupports
   const uint32_t UNKNOWN_ACTION = 0;
   const uint32_t ALLOW_ACTION = 1;
   const uint32_t DENY_ACTION = 2;
+  const uint32_t PROMPT_ACTION = 3;
 
   /**
    * Predefined expiration types for permissions.  Permissions can be permanent

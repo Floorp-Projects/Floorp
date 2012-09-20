@@ -40,18 +40,21 @@ ExecutablePool::~ExecutablePool()
 }
 
 void
-ExecutableAllocator::sizeOfCode(size_t *method, size_t *regexp, size_t *unused) const
+ExecutableAllocator::sizeOfCode(size_t *jaeger, size_t *ion, size_t *regexp, size_t *unused) const
 {
-    *method = 0;
+    *jaeger = 0;
+    *ion    = 0;
     *regexp = 0;
     *unused = 0;
 
     if (m_pools.initialized()) {
         for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
             ExecutablePool* pool = r.front();
-            *method += pool->m_mjitCodeMethod;
-            *regexp += pool->m_mjitCodeRegexp;
-            *unused += pool->m_allocation.size - pool->m_mjitCodeMethod - pool->m_mjitCodeRegexp;
+            *jaeger += pool->m_jaegerCodeBytes;
+            *ion    += pool->m_ionCodeBytes;
+            *regexp += pool->m_regexpCodeBytes;
+            *unused += pool->m_allocation.size - pool->m_jaegerCodeBytes - pool->m_ionCodeBytes
+                                               - pool->m_regexpCodeBytes;
         }
     }
 }

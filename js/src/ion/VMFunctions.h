@@ -174,7 +174,7 @@ template <class> struct TypeToDataType { /* Unexpected return type for a VMFunct
 template <> struct TypeToDataType<bool> { static const DataType result = Type_Bool; };
 template <> struct TypeToDataType<JSObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSString *> { static const DataType result = Type_Object; };
-template <> struct TypeToDataType<JSFixedString *> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<JSFlatString *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<HandleObject> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleString> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandlePropertyName> { static const DataType result = Type_Handle; };
@@ -430,7 +430,7 @@ bool ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 bool ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length);
 bool ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 
-JSFixedString *StringFromCharCode(JSContext *cx, int32_t code);
+JSFlatString *StringFromCharCode(JSContext *cx, int32_t code);
 
 bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
                  bool strict, bool isSetName);

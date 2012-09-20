@@ -75,7 +75,6 @@
 #include "prlog.h"
 #include "prthread.h"
 
-#include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -1236,9 +1235,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                      JS::Value* aRetValue,
                                      bool* aIsUndefined)
 {
-  NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
-                           __LINE__, aURL, aLineNo);
-
   SAMPLE_LABEL("JS", "EvaluateStringWithValue");
   NS_ABORT_IF_FALSE(aScopeObject,
     "Shouldn't call EvaluateStringWithValue with null scope object.");
@@ -1422,9 +1418,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             nsAString *aRetValue,
                             bool* aIsUndefined)
 {
-  NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
-                           __LINE__, aURL, aLineNo);
-
   SAMPLE_LABEL("JS", "EvaluateString");
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
@@ -1739,9 +1732,6 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
                                  uint32_t aVersion,
                                  nsScriptObjectHolder<JSObject>& aHandler)
 {
-  NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
-                           __LINE__, aURL, aLineNo);
-
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   NS_PRECONDITION(AtomIsEventHandlerName(aName), "Bad event name");
@@ -1801,9 +1791,6 @@ nsJSContext::CompileFunction(JSObject* aTarget,
                              bool aShared,
                              JSObject** aFunctionObject)
 {
-  NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s, url: %s, line: %d)", MOZ_FUNCTION_NAME,
-                       __LINE__, aName.BeginReading(), aURL, aLineNo);
-
   NS_ABORT_IF_FALSE(aFunctionObject,
     "Shouldn't call CompileFunction with null return value.");
 
@@ -1860,17 +1847,6 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
     return NS_OK;
   }
 
-#ifdef NS_FUNCTION_TIMER
-  {
-    JSObject *obj = aHandler;
-    if (js::IsFunctionProxy(obj))
-      obj = js::UnwrapObject(obj);
-    JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(obj)));
-    JSAutoByteString bytes;
-    const char *name = !id ? "anonymous" : bytes.encode(mContext, id) ? bytes.ptr() : "<error>";
-    NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME, __LINE__, name);
-  }
-#endif
   SAMPLE_LABEL("JS", "CallEventHandler");
 
   nsAutoMicroTask mt;
@@ -2022,8 +1998,6 @@ nsresult
 nsJSContext::Deserialize(nsIObjectInputStream* aStream,
                          nsScriptObjectHolder<JSScript>& aResult)
 {
-  NS_TIME_FUNCTION_MIN(1.0);
-  
   JSScript *script;
   nsresult rv = nsContentUtils::XPConnect()->ReadScript(aStream, mContext, &script);
   if (NS_FAILED(rv)) return rv;
@@ -2908,7 +2882,6 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason,
                                IsShrinking aShrinking,
                                int64_t aSliceMillis)
 {
-  NS_TIME_FUNCTION_MIN(1.0);
   SAMPLE_LABEL("GC", "GarbageCollectNow");
 
   MOZ_ASSERT_IF(aSliceMillis, aIncremental == IncrementalGC);
@@ -2976,7 +2949,6 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason,
 void
 nsJSContext::ShrinkGCBuffersNow()
 {
-  NS_TIME_FUNCTION_MIN(1.0);
   SAMPLE_LABEL("GC", "ShrinkGCBuffersNow");
 
   KillShrinkGCBuffersTimer();
@@ -3079,7 +3051,6 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   }
 
   SAMPLE_LABEL("GC", "CycleCollectNow");
-  NS_TIME_FUNCTION_MIN(1.0);
 
   KillCCTimer();
 

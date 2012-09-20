@@ -11,7 +11,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
+import android.widget.AbsListView;
 import android.widget.TextView;
 
 public class MenuItemDefault extends LinearLayout
@@ -26,9 +26,8 @@ public class MenuItemDefault extends LinearLayout
         super(context, attrs);
 
         Resources res = context.getResources();
-        setLayoutParams(new LayoutParams((int) (res.getDimension(R.dimen.menu_item_row_width)),
-                                         (int) (res.getDimension(R.dimen.menu_item_row_height))));
-        setBackgroundResource(R.drawable.menu_item_bg);
+        setLayoutParams(new AbsListView.LayoutParams((int) (res.getDimension(R.dimen.menu_item_row_width)),
+                                                     (int) (res.getDimension(R.dimen.menu_item_row_height))));
 
         inflate(context, R.layout.menu_item, this);
         mIcon = (ImageView) findViewById(R.id.icon);

@@ -230,7 +230,7 @@ template <class T> class MediaQueue : private nsDeque {
    MediaQueue()
      : nsDeque(new MediaQueueDeallocator<T>()),
        mReentrantMonitor("mediaqueue"),
-       mEndOfStream(0)
+       mEndOfStream(false)
    {}
   
   ~MediaQueue() {
@@ -296,7 +296,7 @@ template <class T> class MediaQueue : private nsDeque {
     return GetSize() == 0 && mEndOfStream;
   }
 
-  // Returns true if the media queue has had it last item added to it.
+  // Returns true if the media queue has had its last item added to it.
   // This happens when the media stream has been completely decoded. Note this
   // does not mean that the corresponding stream has finished playback.
   bool IsFinished() {

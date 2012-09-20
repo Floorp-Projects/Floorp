@@ -69,7 +69,7 @@ public:
     , mInBrowserElement(other->mInBrowserElement)
   {}
 
-  nsCookieKey(const KeyType &other)
+  nsCookieKey(const KeyType other)
     : mBaseDomain(other.mBaseDomain)
     , mAppId(other.mAppId)
     , mInBrowserElement(other.mInBrowserElement)

@@ -57,7 +57,6 @@
 #include "private/pprthred.h"
 #include "nsTArray.h"
 #include "prio.h"
-#include "mozilla/FunctionTimer.h"
 #include "ManifestParser.h"
 #include "mozilla/Services.h"
 
@@ -129,20 +128,6 @@ NS_DEFINE_CID(kEmptyCID, NS_EMPTY_IID);
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
 #define UID_STRING_LENGTH 39
-
-#ifdef NS_FUNCTION_TIMER
-#define COMPMGR_TIME_FUNCTION_CID(cid)                                          \
-  char cid_buf__[NSID_LENGTH] = { '\0' };                                      \
-  cid.ToProvidedString(cid_buf__);                                             \
-  NS_TIME_FUNCTION_MIN_FMT(5, "%s (line %d) (cid: %s)", MOZ_FUNCTION_NAME, \
-                           __LINE__, cid_buf__)
-#define COMPMGR_TIME_FUNCTION_CONTRACTID(cid)                                  \
-  NS_TIME_FUNCTION_MIN_FMT(5, "%s (line %d) (contractid: %s)", MOZ_FUNCTION_NAME, \
-                           __LINE__, (cid))
-#else
-#define COMPMGR_TIME_FUNCTION_CID(cid) do {} while (0)
-#define COMPMGR_TIME_FUNCTION_CONTRACTID(cid) do {} while (0)
-#endif
 
 nsresult
 nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) const
@@ -294,8 +279,6 @@ nsComponentManagerImpl::InitializeModuleLocations()
 
 nsresult nsComponentManagerImpl::Init()
 {
-    NS_TIME_FUNCTION;
-
     PR_ASSERT(NOT_INITIALIZED == mStatus);
 
     if (nsComponentManagerLog == nullptr)
@@ -304,7 +287,6 @@ nsresult nsComponentManagerImpl::Init()
     }
 
     // Initialize our arena
-    NS_TIME_FUNCTION_MARK("Next: init component manager arena");
     PL_INIT_ARENA_POOL(&mArena, "ComponentManagerArena", NS_CM_BLOCK_SIZE);
 
     mFactories.Init(CONTRACTID_HASHTABLE_INITIAL_SIZE);
@@ -337,7 +319,6 @@ nsresult nsComponentManagerImpl::Init()
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
            ("nsComponentManager: Initialized."));
 
-    NS_TIME_FUNCTION_MARK("Next: init native module loader");
     nsresult rv = mNativeModuleLoader.Init();
     if (NS_FAILED(rv))
         return rv;
@@ -720,8 +701,6 @@ nsComponentManagerImpl::KnownModule::Description() const
 
 nsresult nsComponentManagerImpl::Shutdown(void)
 {
-    NS_TIME_FUNCTION;
-
     PR_ASSERT(NORMAL == mStatus);
 
     mStatus = SHUTDOWN_IN_PROGRESS;
@@ -898,8 +877,6 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
                                        const nsIID &aIID,
                                        void **aResult)
 {
-    COMPMGR_TIME_FUNCTION_CID(aClass);
-
     // test this first, since there's no point in creating a component during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
@@ -982,8 +959,6 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
                                                    const nsIID &aIID,
                                                    void **aResult)
 {
-    COMPMGR_TIME_FUNCTION_CONTRACTID(aContractID);
-
     NS_ENSURE_ARG_POINTER(aContractID);
 
     // test this first, since there's no point in creating a component during
@@ -1182,9 +1157,6 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
         return supports->QueryInterface(aIID, result);
     }
 
-    // We only care about time when we create the service.
-    COMPMGR_TIME_FUNCTION_CID(aClass);
-
     PRThread* currentPRThread = PR_GetCurrentThread();
     NS_ASSERTION(currentPRThread, "This should never be null!");
 
@@ -1265,8 +1237,6 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
                                               const nsIID& aIID,
                                               bool *result)
 {
-    COMPMGR_TIME_FUNCTION_CID(aClass);
-
     // Now we want to get the service if we already got it. If not, we don't want
     // to create an instance of it. mmh!
 
@@ -1306,8 +1276,6 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
                                                                         const nsIID& aIID,
                                                                         bool *result)
 {
-    COMPMGR_TIME_FUNCTION_CONTRACTID(aContractID);
-
     // Now we want to get the service if we already got it. If not, we don't want
     // to create an instance of it. mmh!
 
@@ -1376,9 +1344,6 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
         mon.Exit();
         return serviceObject->QueryInterface(aIID, result);
     }
-
-    // We only care about time when we create the service.
-    COMPMGR_TIME_FUNCTION_CONTRACTID(aContractID);
 
     PRThread* currentPRThread = PR_GetCurrentThread();
     NS_ASSERTION(currentPRThread, "This should never be null!");
@@ -1600,8 +1565,6 @@ EnumerateCIDHelper(const nsID& id, nsFactoryEntry* entry, void* closure)
 NS_IMETHODIMP
 nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator **aEnumerator)
 {
-    NS_TIME_FUNCTION;
-
     nsCOMArray<nsISupports> array;
     mFactories.EnumerateRead(EnumerateCIDHelper, &array);
 
@@ -1619,8 +1582,6 @@ EnumerateContractsHelper(const nsACString& contract, nsFactoryEntry* entry, void
 NS_IMETHODIMP
 nsComponentManagerImpl::EnumerateContractIDs(nsISimpleEnumerator **aEnumerator)
 {
-    NS_TIME_FUNCTION;
-
     nsTArray<nsCString>* array = new nsTArray<nsCString>;
     mContractIDs.EnumerateRead(EnumerateContractsHelper, array);
 

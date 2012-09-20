@@ -10,7 +10,6 @@
 
 #include "GfxInfo.h"
 #include "nsUnicharUtils.h"
-#include "mozilla/FunctionTimer.h"
 #include "nsCocoaFeatures.h"
 #include "mozilla/Preferences.h"
 
@@ -103,8 +102,6 @@ GfxInfo::GetDeviceInfo()
 nsresult
 GfxInfo::Init()
 {
-  NS_TIME_FUNCTION;
-
   nsresult rv = GfxInfoBase::Init();
 
   // Calling CGLQueryRendererInfo causes us to switch to the discrete GPU

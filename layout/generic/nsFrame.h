@@ -668,7 +668,7 @@ private:
 public:
   // Formerly the nsIFrameDebug interface
 
-  NS_IMETHOD  List(FILE* out, int32_t aIndent) const;
+  NS_IMETHOD  List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
   /**
    * lists the frames beginning from the root frame
    * - calls root frame's List(...)

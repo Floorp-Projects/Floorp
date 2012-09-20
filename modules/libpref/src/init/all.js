@@ -1116,6 +1116,11 @@ pref("network.dns.ipv4OnlyDomains", "");
 // This preference can be used to turn off IPv6 name lookups. See bug 68796.
 pref("network.dns.disableIPv6", false);
 
+// The grace period allows the DNS cache to use expired entries, while kicking off
+// a revalidation in the background. In seconds, but rounded to minutes in gecko.
+// Default to 30 days. (basically forever)
+pref("network.dnsCacheExpirationGracePeriod", 2592000);
+
 // This preference controls whether or not URLs with UTF-8 characters are
 // escaped.  Set this preference to TRUE for strict RFC2396 conformance.
 pref("network.standard-url.escape-utf8", true);
@@ -3676,6 +3681,7 @@ pref("dom.mozAlarms.enabled", false);
 
 // WebSettings
 pref("dom.mozSettings.enabled", false);
+pref("dom.mozPermissionSettings.enabled", false);
 
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);
@@ -3725,5 +3731,9 @@ pref("toolkit.identity.debug", false);
 // for them in their manifest.
 pref("dom.mozApps.dev_mode", false);
 
-// Lowest localId for installed apps.
-pref("dom.mozApps.maxLocalId", 10000);
+// Lowest localId for apps.
+pref("dom.mozApps.maxLocalId", 1000);
+
+// Let us know wether we should run the permissions update algorithm.
+// See Bug 787439
+pref("dom.mozApps.runUpdate", true);

@@ -601,7 +601,7 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
     return;
   }
 
-  aContext->Multiply(aTransform);
+  aContext->MultiplyAndNudgeToIntegers(aTransform);
 
   // Hack to let SVGPathData::ConstructPath know if we have square caps:
   const nsStyleSVG* style = GetStyleSVG();

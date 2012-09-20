@@ -193,8 +193,10 @@ public:
      * This lets us inherit paints and paint opacities (i.e. fill/stroke and
      * fill-opacity/stroke-opacity) separately.
      */
-    virtual already_AddRefed<gfxPattern> GetFillPattern(float aOpacity) = 0;
-    virtual already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity) = 0;
+    virtual already_AddRefed<gfxPattern> GetFillPattern(float aOpacity,
+                                                        const gfxMatrix& aCTM) = 0;
+    virtual already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity,
+                                                          const gfxMatrix& aCTM) = 0;
 
     virtual float GetFillOpacity() { return 1.0f; }
     virtual float GetStrokeOpacity() { return 1.0f; }
@@ -214,12 +216,12 @@ public:
         return mStrokeWidth;
     }
 
-    already_AddRefed<gfxPattern> GetFillPattern() {
-        return GetFillPattern(GetFillOpacity());
+    already_AddRefed<gfxPattern> GetFillPattern(const gfxMatrix& aCTM) {
+        return GetFillPattern(GetFillOpacity(), aCTM);
     }
 
-    already_AddRefed<gfxPattern> GetStrokePattern() {
-        return GetStrokePattern(GetStrokeOpacity());
+    already_AddRefed<gfxPattern> GetStrokePattern(const gfxMatrix& aCTM) {
+        return GetStrokePattern(GetStrokeOpacity(), aCTM);
     }
 
     virtual ~gfxTextObjectPaint() { }
@@ -240,25 +242,39 @@ private:
     static const gfxRGBA sZero;
 
 public:
-    SimpleTextObjectPaint(gfxPattern *aFillPattern, gfxPattern *aStrokePattern) :
-        mFillPattern(aFillPattern ? aFillPattern : new gfxPattern(sZero)),
-        mStrokePattern(aStrokePattern ? aStrokePattern : new gfxPattern(sZero)),
-        mFillMatrix(aFillPattern ? aFillPattern->GetMatrix() : gfxMatrix()),
-        mStrokeMatrix(aStrokePattern ? aStrokePattern->GetMatrix() : gfxMatrix())
+    static gfxMatrix SetupDeviceToPatternMatrix(gfxPattern *aPattern,
+                                                const gfxMatrix& aCTM)
     {
+        if (!aPattern) {
+            return gfxMatrix();
+        }
+        gfxMatrix deviceToUser = aCTM;
+        deviceToUser.Invert();
+        return deviceToUser * aPattern->GetMatrix();
     }
 
-    already_AddRefed<gfxPattern> GetFillPattern(float aOpacity) {
+    SimpleTextObjectPaint(gfxPattern *aFillPattern, gfxPattern *aStrokePattern,
+                          const gfxMatrix& aCTM) :
+        mFillPattern(aFillPattern ? aFillPattern : new gfxPattern(sZero)),
+        mStrokePattern(aStrokePattern ? aStrokePattern : new gfxPattern(sZero))
+    {
+        mFillMatrix = SetupDeviceToPatternMatrix(aFillPattern, aCTM);
+        mStrokeMatrix = SetupDeviceToPatternMatrix(aStrokePattern, aCTM);
+    }
+
+    already_AddRefed<gfxPattern> GetFillPattern(float aOpacity,
+                                                const gfxMatrix& aCTM) {
         if (mFillPattern) {
-            mFillPattern->SetMatrix(mFillMatrix);
+            mFillPattern->SetMatrix(aCTM * mFillMatrix);
         }
         nsRefPtr<gfxPattern> fillPattern = mFillPattern;
         return fillPattern.forget();
     }
 
-    already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity) {
+    already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity,
+                                                  const gfxMatrix& aCTM) {
         if (mStrokePattern) {
-            mStrokePattern->SetMatrix(mStrokeMatrix);
+            mStrokePattern->SetMatrix(aCTM * mStrokeMatrix);
         }
         nsRefPtr<gfxPattern> strokePattern = mStrokePattern;
         return strokePattern.forget();
@@ -276,6 +292,7 @@ private:
     nsRefPtr<gfxPattern> mFillPattern;
     nsRefPtr<gfxPattern> mStrokePattern;
 
+    // Device space to pattern space transforms
     gfxMatrix mFillMatrix;
     gfxMatrix mStrokeMatrix;
 };
