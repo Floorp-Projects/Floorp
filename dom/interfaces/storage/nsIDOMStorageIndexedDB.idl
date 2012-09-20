@@ -15,11 +15,12 @@
 
 interface nsIIDBFactory;
 
-[scriptable, uuid(c5982775-3f65-4d3e-b5f0-2400c987a900)]
+[scriptable, uuid(94ca74e8-9cff-456e-a7a4-a4071a32ff58)]
 interface nsIDOMStorageIndexedDB : nsISupports
 {
   /**
    * Indexed Databases for the current browsing context.
    */
   readonly attribute nsIIDBFactory indexedDB;
+  readonly attribute nsIIDBFactory mozIndexedDB;
 };
