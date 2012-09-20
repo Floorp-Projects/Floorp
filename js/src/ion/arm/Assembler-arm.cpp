@@ -1611,10 +1611,10 @@ Assembler::placeConstantPoolBarrier(int offset)
 // bx can *only* branch to a register
 // never to an immediate.
 BufferOffset
-Assembler::as_bx(Register r, Condition c)
+Assembler::as_bx(Register r, Condition c, bool isPatchable)
 {
     BufferOffset ret = writeInst(((int) c) | op_bx | r.code());
-    if (c == Always)
+    if (c == Always && !isPatchable)
         m_buffer.markGuard();
     return ret;
 }
@@ -1628,17 +1628,17 @@ Assembler::writePoolGuard(BufferOffset branch, Instruction *dest, BufferOffset a
 // Branches to immediates are pc relative, branches to registers
 // are absolute
 BufferOffset
-Assembler::as_b(BOffImm off, Condition c)
+Assembler::as_b(BOffImm off, Condition c, bool isPatchable)
 {
     m_buffer.markNextAsBranch();
     BufferOffset ret =writeInst(((int)c) | op_b | off.encode());
-    if (c == Always)
+    if (c == Always && !isPatchable)
         m_buffer.markGuard();
     return ret;
 }
 
 BufferOffset
-Assembler::as_b(Label *l, Condition c)
+Assembler::as_b(Label *l, Condition c, bool isPatchable)
 {
     m_buffer.markNextAsBranch();
     if (l->bound()) {
@@ -1652,11 +1652,11 @@ Assembler::as_b(Label *l, Condition c)
             old = l->offset();
             // This will currently throw an assertion if we couldn't actually
             // encode the offset of the branch.
-            ret = as_b(BOffImm(old), c);
+            ret = as_b(BOffImm(old), c, isPatchable);
         } else {
             old = LabelBase::INVALID_OFFSET;
             BOffImm inv;
-            ret = as_b(inv, c);
+            ret = as_b(inv, c, isPatchable);
         }
         int32 check = l->use(ret.getOffset());
         JS_ASSERT(check == old);
