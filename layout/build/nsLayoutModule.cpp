@@ -78,8 +78,6 @@
 
 #include "ArchiveReader.h"
 
-using namespace mozilla::dom::file;
-
 #include "nsFormData.h"
 #include "nsBlobProtocolHandler.h"
 #include "nsBlobURI.h"
@@ -95,10 +93,6 @@ using namespace mozilla::dom::file;
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/OSFileConstants.h"
 #include "mozilla/dom/Activity.h"
-
-using mozilla::dom::indexedDB::IndexedDatabaseManager;
-using mozilla::dom::DOMRequestService;
-using mozilla::dom::Activity;
 
 #ifdef MOZ_B2G_RIL
 #include "SystemWorkerManager.h"
@@ -238,15 +232,17 @@ static void Shutdown();
 #include "nsIAlarmHalService.h"
 #include "nsMixedContentBlocker.h"
 
-using namespace mozilla::dom::sms;
-
 #include "mozilla/dom/power/PowerManagerService.h"
-
-using mozilla::dom::power::PowerManagerService;
-
 #include "mozilla/dom/alarm/AlarmHalService.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::dom::file;
+using namespace mozilla::dom::sms;
 using mozilla::dom::alarm::AlarmHalService;
+using mozilla::dom::indexedDB::IndexedDatabaseManager;
+using mozilla::dom::power::PowerManagerService;
+
 
 // Transformiix
 /* 5d5d92cd-6bf8-11d9-bf4a-000a95dc234c */

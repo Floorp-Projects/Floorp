@@ -7,7 +7,7 @@
   function setup() {
     window.testObject = { myNumber: 42,
                           myDomain: window.location.domain };
-    window.blob = (new MozBlobBuilder()).getBlob('text/plain');
+    window.blob = new Blob([], { type: 'text/plain' });
     window.fileList = document.getElementById('fileinput').files;
   }
 
