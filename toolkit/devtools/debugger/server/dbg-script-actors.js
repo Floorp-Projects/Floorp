@@ -40,8 +40,6 @@ ThreadActor.prototype = {
 
   get state() { return this._state; },
 
-  get dbg() { return this._dbg; },
-
   get _breakpointStore() { return ThreadActor._breakpointStore; },
 
   get threadLifetimePool() {
@@ -53,10 +51,10 @@ ThreadActor.prototype = {
   },
 
   clearDebuggees: function TA_clearDebuggees() {
-    if (this._dbg) {
-      let debuggees = this._dbg.getDebuggees();
+    if (this.dbg) {
+      let debuggees = this.dbg.getDebuggees();
       for (let debuggee of debuggees) {
-        this._dbg.removeDebuggee(debuggee);
+        this.dbg.removeDebuggee(debuggee);
       }
     }
     this.conn.removeActorPool(this._threadLifetimePool || undefined);
@@ -79,11 +77,11 @@ ThreadActor.prototype = {
     // medium- to long-term, and will be managed by the engine
     // instead.
 
-    if (!this._dbg) {
-      this._dbg = new Debugger();
-      this._dbg.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
-      this._dbg.onDebuggerStatement = this.onDebuggerStatement.bind(this);
-      this._dbg.onNewScript = this.onNewScript.bind(this);
+    if (!this.dbg) {
+      this.dbg = new Debugger();
+      this.dbg.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
+      this.dbg.onDebuggerStatement = this.onDebuggerStatement.bind(this);
+      this.dbg.onNewScript = this.onNewScript.bind(this);
       // Keep the debugger disabled until a client attaches.
       this.dbg.enabled = this._state != "detached";
     }
@@ -115,11 +113,11 @@ ThreadActor.prototype = {
 
     this.clearDebuggees();
 
-    if (!this._dbg) {
+    if (!this.dbg) {
       return;
     }
-    this._dbg.enabled = false;
-    this._dbg = null;
+    this.dbg.enabled = false;
+    this.dbg = null;
   },
 
   /**
