@@ -113,6 +113,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
 #ifdef MOZ_MEDIA_NAVIGATOR
+  NS_INTERFACE_MAP_ENTRY(nsINavigatorUserMedia)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorUserMedia)
 #endif
 #ifdef MOZ_B2G_RIL
@@ -939,7 +940,7 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIDOMDeviceSt
   }
 
   NS_ADDREF(*_retval = storage.get());
-  mDeviceStorageStores.AppendElement(storage);                                                                                                                                                                                              
+  mDeviceStorageStores.AppendElement(storage);
   return NS_OK;
 }
 
@@ -987,22 +988,45 @@ NS_IMETHODIMP Navigator::GetGeolocation(nsIDOMGeoGeolocation** _retval)
 #ifdef MOZ_MEDIA_NAVIGATOR
 NS_IMETHODIMP
 Navigator::MozGetUserMedia(nsIMediaStreamOptions* aParams,
-                           nsIDOMGetUserMediaSuccessCallback* onSuccess,
-                           nsIDOMGetUserMediaErrorCallback* onError)
+                           nsIDOMGetUserMediaSuccessCallback* aOnSuccess,
+                           nsIDOMGetUserMediaErrorCallback* aOnError)
 {
   if (!Preferences::GetBool("media.navigator.enabled", false)) {
     return NS_OK;
   }
 
-  MediaManager *manager = MediaManager::Get();
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
-
   if (!win || !win->GetOuterWindow() ||
       win->GetOuterWindow()->GetCurrentInnerWindow() != win) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return manager->GetUserMedia(win, aParams, onSuccess, onError);
+  bool privileged = nsContentUtils::IsChromeDoc(win->GetExtantDoc());
+
+  MediaManager* manager = MediaManager::Get();
+  return manager->GetUserMedia(privileged, win, aParams, aOnSuccess, aOnError);
+}
+
+//*****************************************************************************
+//    Navigator::nsINavigatorUserMedia (mozGetUserMediaDevices)
+//*****************************************************************************
+NS_IMETHODIMP
+Navigator::MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
+                                  nsIDOMGetUserMediaErrorCallback* aOnError)
+{
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
+  if (!win || !win->GetOuterWindow() ||
+      win->GetOuterWindow()->GetCurrentInnerWindow() != win) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Check if the caller is chrome privileged, bail if not
+  if (!nsContentUtils::IsChromeDoc(win->GetExtantDoc())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MediaManager* manager = MediaManager::Get();
+  return manager->GetUserMediaDevices(win, aOnSuccess, aOnError);
 }
 #endif
 
