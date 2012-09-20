@@ -24,6 +24,9 @@ let gEnableRemote = Services.prefs.getBoolPref("devtools.debugger.remote-enabled
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 registerCleanupFunction(function() {
   Services.prefs.setBoolPref("devtools.debugger.remote-enabled", gEnableRemote);
+
+  // Properly shut down the server to avoid memory leaks.
+  DebuggerServer.destroy();
 });
 
 if (!DebuggerServer.initialized) {

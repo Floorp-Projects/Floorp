@@ -24,10 +24,14 @@ function test()
 
 function get_tab()
 {
-  gTab1 = addTab(TAB1_URL, function () {
-    attach_tab_actor_for_url(gClient, TAB1_URL, function (aGrip) {
+  gTab1 = addTab(TAB1_URL, function() {
+    attach_tab_actor_for_url(gClient, TAB1_URL, function(aGrip) {
       gTab1Actor = aGrip.actor;
-      gClient.request({ to: aGrip.actor, type: "testTabActor1" }, function (aResponse) {
+      ok(aGrip.testTabActor1, "Found the test tab actor.")
+      ok(aGrip.testTabActor1.indexOf("testone") >= 0,
+         "testTabActor's actorPrefix should be used.");
+      gClient.request({ to: aGrip.testTabActor1, type: "ping" }, function(aResponse) {
+        is(aResponse.pong, "pong", "Actor should respond to requests.");
         close_tab(aResponse.actor);
       });
     });
@@ -37,10 +41,16 @@ function get_tab()
 function close_tab(aTestActor)
 {
   removeTab(gTab1);
-  gClient.request({ to: aTestActor, type: "ping" }, function (aResponse) {
-    is(aResponse.error, "noSuchActor", "testTabActor1 should have gone away with the tab.");
+  try {
+    gClient.request({ to: aTestActor, type: "ping" }, function (aResponse) {
+      is(aResponse, undefined, "testTabActor1 didn't go away with the tab.");
+      finish_test();
+    });
+  } catch (e) {
+    is(e.message, "'ping' request packet has no destination.",
+       "testTabActor1 should have gone away with the tab.");
     finish_test();
-  });
+  }
 }
 
 function finish_test()
