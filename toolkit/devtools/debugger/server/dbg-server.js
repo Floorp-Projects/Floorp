@@ -15,8 +15,10 @@ const Cc = Components.classes;
 const CC = Components.Constructor;
 const Cu = Components.utils;
 const Cr = Components.results;
+const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 
 Cu.import("resource://gre/modules/jsdebugger.jsm");
@@ -59,7 +61,6 @@ var DebuggerServer = {
   _listener: null,
   _transportInitialized: false,
   xpcInspector: null,
-  _allowConnection: null,
   // Number of currently open TCP connections.
   _socketConnections: 0,
   // Map of global actor names to actor constructors provided by extensions.
@@ -69,6 +70,32 @@ var DebuggerServer = {
 
   LONG_STRING_LENGTH: 10000,
   LONG_STRING_INITIAL_LENGTH: 1000,
+
+  /**
+   * Prompt the user to accept or decline the incoming connection.
+   *
+   * @return true if the connection should be permitted, false otherwise
+   */
+  _allowConnection: function DH__allowConnection() {
+    let title = L10N.getStr("remoteIncomingPromptTitle");
+    let msg = L10N.getStr("remoteIncomingPromptMessage");
+    let disableButton = L10N.getStr("remoteIncomingPromptDisable");
+    let prompt = Services.prompt;
+    let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_OK +
+                prompt.BUTTON_POS_1 * prompt.BUTTON_TITLE_CANCEL +
+                prompt.BUTTON_POS_2 * prompt.BUTTON_TITLE_IS_STRING +
+                prompt.BUTTON_POS_1_DEFAULT;
+    let result = prompt.confirmEx(null, title, msg, flags, null, null,
+                                  disableButton, null, { value: false });
+    if (result == 0) {
+      return true;
+    }
+    if (result == 2) {
+      DebuggerServer.closeListener(true);
+      Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
+    }
+    return false;
+  },
 
   /**
    * Initialize the debugger server.
@@ -106,7 +133,9 @@ var DebuggerServer = {
     this._connections = {};
     this._nextConnID = 0;
     this._transportInitialized = true;
-    this._allowConnection = aAllowConnectionCallback;
+    if (aAllowConnectionCallback) {
+      this._allowConnection = aAllowConnectionCallback;
+    }
   },
 
   get initialized() { return !!this.globalActorFactories; },
@@ -232,6 +261,9 @@ var DebuggerServer = {
   // nsIServerSocketListener implementation
 
   onSocketAccepted: function DH_onSocketAccepted(aSocket, aTransport) {
+    if (!this._allowConnection()) {
+      return;
+    }
     dumpn("New debugging connection on " + aTransport.host + ":" + aTransport.port);
 
     try {
@@ -264,9 +296,6 @@ var DebuggerServer = {
    * after connectPipe() or after an incoming socket connection.
    */
   _onConnection: function DH_onConnection(aTransport) {
-    if (!this._allowConnection()) {
-      return;
-    }
     let connID = "conn" + this._nextConnID++ + '.';
     let conn = new DebuggerServerConnection(connID, aTransport);
     this._connections[connID] = conn;
@@ -553,3 +582,23 @@ DebuggerServerConnection.prototype = {
     DebuggerServer._connectionClosed(this);
   }
 };
+
+/**
+ * Localization convenience methods.
+ */
+let L10N = {
+
+  /**
+   * L10N shortcut function.
+   *
+   * @param string aName
+   * @return string
+   */
+  getStr: function L10N_getStr(aName) {
+    return this.stringBundle.GetStringFromName(aName);
+  }
+};
+
+XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
+  return Services.strings.createBundle(DBG_STRINGS_URI);
+});
