@@ -135,7 +135,7 @@ private:
   bool mShuttingDown;
 };
 
-NS_IMPL_ISUPPORTS2(VibratorRunnable, nsIRunnable, nsIObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS2(VibratorRunnable, nsIRunnable, nsIObserver);
 
 NS_IMETHODIMP
 VibratorRunnable::Run()
