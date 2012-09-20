@@ -6,7 +6,6 @@ DEPTH            = @DEPTH@
 topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
-
 relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
@@ -16,6 +15,7 @@ XPIDL_MODULE     = dom_media
 LIBRARY_NAME     = dom_media_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
+FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
