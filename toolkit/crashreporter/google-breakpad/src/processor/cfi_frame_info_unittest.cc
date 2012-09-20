@@ -35,7 +35,6 @@
 #include <string.h>
 
 #include "breakpad_googletest_includes.h"
-#include "common/using_std_string.h"
 #include "processor/cfi_frame_info.h"
 #include "google_breakpad/processor/memory_region.h"
 
@@ -44,6 +43,7 @@ using google_breakpad::CFIFrameInfoParseHandler;
 using google_breakpad::CFIRuleParser;
 using google_breakpad::MemoryRegion;
 using google_breakpad::SimpleCFIWalker;
+using std::string;
 using testing::_;
 using testing::A;
 using testing::AtMost;

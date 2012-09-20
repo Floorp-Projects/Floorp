@@ -46,7 +46,6 @@
 #include "common/dwarf/bytereader.h"
 #include "common/dwarf/dwarf2diehandler.h"
 #include "common/dwarf/dwarf2reader.h"
-#include "common/using_std_string.h"
 
 namespace google_breakpad {
 
@@ -59,10 +58,9 @@ using dwarf2reader::DwarfTag;
 // Populate a google_breakpad::Module with DWARF debugging information.
 //
 // An instance of this class can be provided as a handler to a
-// dwarf2reader::DIEDispatcher, which can in turn be a handler for a
-// dwarf2reader::CompilationUnit DWARF parser. The handler uses the results
-// of parsing to populate a google_breakpad::Module with source file,
-// function, and source line information.
+// dwarf2reader::CompilationUnit DWARF parser. The handler uses the
+// results of parsing to populate a google_breakpad::Module with
+// source file, function, and source line information.
 class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
   struct FilePrivate;
  public:
@@ -159,11 +157,6 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
     // Line number NUMBER in LINE_FILE, of length LENGTH, includes code
     // covered by no function.
     virtual void UncoveredLine(const Module::Line &line);
-
-    // The DW_TAG_subprogram DIE at OFFSET has no name specified directly
-    // in the DIE, nor via a DW_AT_specification or DW_AT_abstract_origin
-    // link.
-    virtual void UnnamedFunction(uint64 offset);
 
    protected:
     string filename_;

@@ -88,12 +88,12 @@ static int PrintRegister(const char *name, u_int32_t value, int sequence) {
 
 //=============================================================================
 static void PrintStack(const CallStack *stack, const string &cpu) {
-  size_t frame_count = stack->frames()->size();
+  int frame_count = stack->frames()->size();
   char buffer[1024];
-  for (size_t frame_index = 0; frame_index < frame_count; ++frame_index) {
+  for (int frame_index = 0; frame_index < frame_count; ++frame_index) {
     const StackFrame *frame = stack->frames()->at(frame_index);
     const CodeModule *module = frame->module;
-    printf("%2zu ", frame_index);
+    printf("%2d ", frame_index);
 
     if (module) {
       // Module name (20 chars max)
@@ -106,7 +106,7 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
       buffer[maxStr] = 0;
 
       printf("%-*s",maxStr, buffer);
-
+      
       u_int64_t instruction = frame->instruction;
 
       // PPC only: Adjust the instruction to match that of Crash reporter.  The
@@ -195,16 +195,16 @@ static void PrintRegisters(const CallStack *stack, const string &cpu) {
 static void PrintModules(const CodeModules *modules) {
   if (!modules)
     return;
-
+        
   printf("\n");
   printf("Loaded modules:\n");
-
+        
   u_int64_t main_address = 0;
   const CodeModule *main_module = modules->GetMainModule();
   if (main_module) {
     main_address = main_module->base_address();
   }
-
+        
   unsigned int module_count = modules->module_count();
   for (unsigned int module_sequence = 0;
        module_sequence < module_count;
@@ -223,7 +223,7 @@ static void PrintModules(const CodeModules *modules) {
 }
 
 static void ProcessSingleReport(Options *options, NSString *file_path) {
-  string minidump_file([file_path fileSystemRepresentation]);
+  string minidump_file([file_path fileSystemRepresentation]);  
   BasicSourceLineResolver resolver;
   string search_dir = options->searchDir ?
     [options->searchDir fileSystemRepresentation] : "";
@@ -279,7 +279,7 @@ static void ProcessSingleReport(Options *options, NSString *file_path) {
   }
 
   // Print all of the threads in the dump.
-  int thread_count = static_cast<int>(process_state.threads()->size());
+  int thread_count = process_state.threads()->size();
   const std::vector<google_breakpad::MinidumpMemoryRegion*>
     *thread_memory_regions = process_state.thread_memory_regions();
 
@@ -338,15 +338,15 @@ static void Start(Options *options) {
 static void Usage(int argc, const char *argv[]) {
   fprintf(stderr, "Convert a minidump to a crash report.  Breakpad symbol "
                   "files will be used (or created if missing) in /tmp.\n"
-                  "If a symbol-file-search-dir is specified, any symbol "
-                  "files in it will be used instead of being loaded from "
-                  "modules on disk.\n"
+                  "If a symbol-file-search-dir is specified, any symbol " 
+                  "files in it will be used instead of being loaded from "  
+                  "modules on disk.\n" 
                   "If modules cannot be found at the paths stored in the "
-                  "minidump file, they will be searched for at "
+                  "minidump file, they will be searched for at "    
                   "<module-search-dir>/<path-in-minidump-file>.\n");
   fprintf(stderr, "Usage: %s [-s module-search-dir] [-S symbol-file-search-dir] "
 	          "minidump-file\n", argv[0]);
-  fprintf(stderr, "\t-s: Specify a search directory to use for missing modules\n"
+  fprintf(stderr, "\t-s: Specify a search directory to use for missing modules\n" 
                   "\t-S: Specify a search directory to use for symbol files\n"
                   "\t-t: Print thread stack memory in hex\n"
                   "\t-h: Usage\n"
@@ -371,7 +371,7 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
           stringWithFileSystemRepresentation:optarg
                                       length:strlen(optarg)];
         break;
-
+        
       case 't':
         options->printThreadMemory = YES;
         break;

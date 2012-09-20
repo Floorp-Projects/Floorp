@@ -31,28 +31,15 @@
 #define GOOGLE_BREAKPAD_PROCESSOR_STACK_FRAME_H__
 
 #include <string>
-
-#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
 
 class CodeModule;
 
-struct StackFrame {
-  // Indicates how well the instruction pointer derived during
-  // stack walking is trusted. Since the stack walker can resort to
-  // stack scanning, it can wind up with dubious frames.
-  // In rough order of "trust metric".
-  enum FrameTrust {
-    FRAME_TRUST_NONE,     // Unknown
-    FRAME_TRUST_SCAN,     // Scanned the stack, found this
-    FRAME_TRUST_CFI_SCAN, // Scanned the stack using call frame info, found this
-    FRAME_TRUST_FP,       // Derived from frame pointer
-    FRAME_TRUST_CFI,      // Derived from call frame info
-    FRAME_TRUST_CONTEXT   // Given as instruction pointer in a context
-  };
+using std::string;
 
+struct StackFrame {
   StackFrame()
       : instruction(),
         module(NULL),
@@ -60,28 +47,8 @@ struct StackFrame {
         function_base(),
         source_file_name(),
         source_line(),
-        source_line_base(),
-        trust(FRAME_TRUST_NONE) {}
+        source_line_base() {}
   virtual ~StackFrame() {}
-
-  // Return a string describing how this stack frame was found
-  // by the stackwalker.
-  string trust_description() const {
-    switch (trust) {
-      case StackFrame::FRAME_TRUST_CONTEXT:
-        return "given as instruction pointer in context";
-      case StackFrame::FRAME_TRUST_CFI:
-        return "call frame info";
-      case StackFrame::FRAME_TRUST_CFI_SCAN:
-        return "call frame info with scanning";
-      case StackFrame::FRAME_TRUST_FP:
-        return "previous frame's frame pointer";
-      case StackFrame::FRAME_TRUST_SCAN:
-        return "stack scanning";
-      default:
-        return "unknown";
-    }
-  };
 
   // The program counter location as an absolute virtual address.  For the
   // innermost called frame in a stack, this will be an exact program counter
@@ -110,10 +77,6 @@ struct StackFrame {
   // The start address of the source line, may be omitted if debug symbols
   // are not available.
   u_int64_t source_line_base;
-
-  // Amount of trust the stack walker has in the instruction pointer
-  // of this frame.
-  FrameTrust trust;
 };
 
 }  // namespace google_breakpad

@@ -30,17 +30,7 @@
 // crash_generation_app.cpp : Defines the entry point for the application.
 //
 
-#include "client/windows/tests/crash_generation_app/crash_generation_app.h"
-
-#include <windows.h>
-#include <tchar.h>
-
-#include "client/windows/crash_generation/client_info.h"
-#include "client/windows/crash_generation/crash_generation_server.h"
-#include "client/windows/handler/exception_handler.h"
-#include "client/windows/common/ipc_protocol.h"
-
-#include "client/windows/tests/crash_generation_app/abstract_class.h"
+#include "precompile.h"
 
 namespace google_breakpad {
 
@@ -237,7 +227,7 @@ static void _cdecl ShowClientCrashed(void* context,
   }
 
   wstring str_line;
-  for (size_t i = 0; i < custom_info.count; ++i) {
+  for (int i = 0; i < custom_info.count; ++i) {
     if (i > 0) {
       str_line += L", ";
     }
@@ -290,8 +280,6 @@ void CrashServerStart() {
                                            ShowClientCrashed,
                                            NULL,
                                            ShowClientExited,
-                                           NULL,
-                                           NULL,
                                            NULL,
                                            true,
                                            &dump_path);
@@ -520,3 +508,4 @@ int APIENTRY _tWinMain(HINSTANCE instance,
 
   return (int)msg.wParam;
 }
+

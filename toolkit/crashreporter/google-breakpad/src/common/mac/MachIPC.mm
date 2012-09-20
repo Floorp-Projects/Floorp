@@ -32,7 +32,6 @@
 
 #import <stdio.h>
 #import "MachIPC.h"
-#include "common/mac/bootstrap_compat.h"
 
 namespace google_breakpad {
 //==============================================================================
@@ -188,10 +187,9 @@ ReceivePort::ReceivePort(const char *receive_port_name) {
   if (init_result_ != KERN_SUCCESS)
     return;
 
-  init_result_ = breakpad::BootstrapRegister(
-      bootstrap_port,
-      const_cast<char*>(receive_port_name),
-      port_);
+  init_result_ = bootstrap_register(bootstrap_port,
+                                    const_cast<char*>(receive_port_name),
+                                    port_);
 }
 
 //==============================================================================

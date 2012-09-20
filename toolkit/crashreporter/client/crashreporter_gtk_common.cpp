@@ -184,7 +184,6 @@ void LoadProxyinfo()
 gpointer SendThread(gpointer args)
 {
   string response, error;
-  long response_code;
 
   bool success = google_breakpad::HTTPUpload::SendRequest
     (gSendURL,
@@ -194,7 +193,6 @@ gpointer SendThread(gpointer args)
      gHttpProxy, gAuth,
      gCACertificateFile,
      &response,
-     &response_code,
      &error);
   if (success) {
     LogMessage("Crash report submitted successfully");

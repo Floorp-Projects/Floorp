@@ -38,7 +38,6 @@
 
 #include "processor/postfix_evaluator-inl.h"
 
-#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 #include "google_breakpad/processor/memory_region.h"
 #include "processor/logging.h"
@@ -48,6 +47,7 @@ namespace {
 
 
 using std::map;
+using std::string;
 using google_breakpad::MemoryRegion;
 using google_breakpad::PostfixEvaluator;
 
@@ -148,9 +148,7 @@ static bool RunTests() {
     { "$rSub 9 6 - =",     true },   // $rSub = 9 - 6 = 3
     { "$rDivQ 9 6 / =",    true },   // $rDivQ = 9 / 6 = 1
     { "$rDivM 9 6 % =",    true },   // $rDivM = 9 % 6 = 3
-    { "$rDeref 9 ^ =",     true },   // $rDeref = ^9 = 10 (FakeMemoryRegion)
-    { "$rAlign 36 8 @ =",  true },   // $rAlign = 36 @ 8
-    { "$rAdd3 2 2 + =$rMul2 9 6 * =", true } // smashed-equals tokenization
+    { "$rDeref 9 ^ =",     true }    // $rDeref = ^9 = 10 (FakeMemoryRegion)
   };
   map<string, unsigned int> validate_data_0;
   validate_data_0["$rAdd"]   = 8;
@@ -160,9 +158,6 @@ static bool RunTests() {
   validate_data_0["$rDivQ"]  = 1;
   validate_data_0["$rDivM"]  = 3;
   validate_data_0["$rDeref"] = 10;
-  validate_data_0["$rAlign"] = 32;
-  validate_data_0["$rAdd3"]  = 4;
-  validate_data_0["$rMul2"]  = 54;
 
   // The second test set simulates a couple of MSVC program strings.
   // The data is fudged a little bit because the tests use FakeMemoryRegion

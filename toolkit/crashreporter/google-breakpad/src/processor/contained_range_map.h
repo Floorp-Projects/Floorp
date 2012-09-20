@@ -66,8 +66,6 @@
 
 namespace google_breakpad {
 
-// Forward declarations (for later friend declarations of specialized template).
-template<class, class> class ContainedRangeMapSerializer;
 
 template<typename AddressType, typename EntryType>
 class ContainedRangeMap {
@@ -105,9 +103,6 @@ class ContainedRangeMap {
   void Clear();
 
  private:
-  friend class ContainedRangeMapSerializer<AddressType, EntryType>;
-  friend class ModuleComparer;
-
   // AddressToRangeMap stores pointers.  This makes reparenting simpler in
   // StoreRange, because it doesn't need to copy entire objects.
   typedef std::map<AddressType, ContainedRangeMap *> AddressToRangeMap;

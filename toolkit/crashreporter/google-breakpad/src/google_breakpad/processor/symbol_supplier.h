@@ -34,12 +34,12 @@
 #define GOOGLE_BREAKPAD_PROCESSOR_SYMBOL_SUPPLIER_H__
 
 #include <string>
-#include "common/using_std_string.h"
 
 namespace google_breakpad {
 
+using std::string;
 class CodeModule;
-struct SystemInfo;
+class SystemInfo;
 
 class SymbolSupplier {
  public:
@@ -75,22 +75,6 @@ class SymbolSupplier {
                                      const SystemInfo *system_info,
                                      string *symbol_file,
                                      string *symbol_data) = 0;
-
-  // Same as above, except allocates data buffer on heap and then places the
-  // symbol data into the buffer as C-string.
-  // SymbolSupplier is responsible for deleting the data buffer. After the call
-  // to GetCStringSymbolData(), the caller should call FreeSymbolData(const
-  // Module *module) once the data buffer is no longer needed.
-  // If symbol_data is not NULL, symbol supplier won't return FOUND unless it
-  // returns a valid buffer in symbol_data, e.g., returns INTERRUPT on memory
-  // allocation failure.
-  virtual SymbolResult GetCStringSymbolData(const CodeModule *module,
-                                            const SystemInfo *system_info,
-                                            string *symbol_file,
-                                            char **symbol_data) = 0;
-
-  // Frees the data buffer allocated for the module in GetCStringSymbolData.
-  virtual void FreeSymbolData(const CodeModule *module) = 0;
 };
 
 }  // namespace google_breakpad

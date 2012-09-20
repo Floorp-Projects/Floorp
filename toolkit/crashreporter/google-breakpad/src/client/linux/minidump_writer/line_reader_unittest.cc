@@ -33,18 +33,11 @@
 
 #include "client/linux/minidump_writer/line_reader.h"
 #include "breakpad_googletest_includes.h"
-#include "common/linux/eintr_wrapper.h"
 
 using namespace google_breakpad;
 
-#if !defined(__ANDROID__)
-#define TEMPDIR "/tmp"
-#else
-#define TEMPDIR "/data/local/tmp"
-#endif
-
 static int TemporaryFile() {
-  static const char templ[] = TEMPDIR "/line-reader-unittest-XXXXXX";
+  static const char templ[] = "/tmp/line-reader-unittest-XXXXXX";
   char templ_copy[sizeof(templ)];
   memcpy(templ_copy, templ, sizeof(templ));
   const int fd = mkstemp(templ_copy);
@@ -71,17 +64,16 @@ TEST(LineReaderTest, EmptyFile) {
 
 TEST(LineReaderTest, OneLineTerminated) {
   const int fd = TemporaryFile();
-  const int r = HANDLE_EINTR(write(fd, "a\n", 2));
-  ASSERT_EQ(2, r);
+  write(fd, "a\n", 2);
   lseek(fd, 0, SEEK_SET);
   LineReader reader(fd);
 
   const char *line;
   unsigned int len;
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ((unsigned int)1, len);
-  ASSERT_EQ('a', line[0]);
-  ASSERT_EQ('\0', line[1]);
+  ASSERT_EQ(len, (unsigned int)1);
+  ASSERT_EQ(line[0], 'a');
+  ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
 
   ASSERT_FALSE(reader.GetNextLine(&line, &len));
@@ -91,17 +83,16 @@ TEST(LineReaderTest, OneLineTerminated) {
 
 TEST(LineReaderTest, OneLine) {
   const int fd = TemporaryFile();
-  const int r = HANDLE_EINTR(write(fd, "a", 1));
-  ASSERT_EQ(1, r);
+  write(fd, "a", 1);
   lseek(fd, 0, SEEK_SET);
   LineReader reader(fd);
 
   const char *line;
   unsigned len;
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ((unsigned)1, len);
-  ASSERT_EQ('a', line[0]);
-  ASSERT_EQ('\0', line[1]);
+  ASSERT_EQ(len, (unsigned)1);
+  ASSERT_EQ(line[0], 'a');
+  ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
 
   ASSERT_FALSE(reader.GetNextLine(&line, &len));
@@ -111,23 +102,22 @@ TEST(LineReaderTest, OneLine) {
 
 TEST(LineReaderTest, TwoLinesTerminated) {
   const int fd = TemporaryFile();
-  const int r = HANDLE_EINTR(write(fd, "a\nb\n", 4));
-  ASSERT_EQ(4, r);
+  write(fd, "a\nb\n", 4);
   lseek(fd, 0, SEEK_SET);
   LineReader reader(fd);
 
   const char *line;
   unsigned len;
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ((unsigned)1, len);
-  ASSERT_EQ('a', line[0]);
-  ASSERT_EQ('\0', line[1]);
+  ASSERT_EQ(len, (unsigned)1);
+  ASSERT_EQ(line[0], 'a');
+  ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
 
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ((unsigned)1, len);
-  ASSERT_EQ('b', line[0]);
-  ASSERT_EQ('\0', line[1]);
+  ASSERT_EQ(len, (unsigned)1);
+  ASSERT_EQ(line[0], 'b');
+  ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
 
   ASSERT_FALSE(reader.GetNextLine(&line, &len));
@@ -137,23 +127,22 @@ TEST(LineReaderTest, TwoLinesTerminated) {
 
 TEST(LineReaderTest, TwoLines) {
   const int fd = TemporaryFile();
-  const int r = HANDLE_EINTR(write(fd, "a\nb", 3));
-  ASSERT_EQ(3, r);
+  write(fd, "a\nb", 3);
   lseek(fd, 0, SEEK_SET);
   LineReader reader(fd);
 
   const char *line;
   unsigned len;
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ((unsigned)1, len);
-  ASSERT_EQ('a', line[0]);
-  ASSERT_EQ('\0', line[1]);
+  ASSERT_EQ(len, (unsigned)1);
+  ASSERT_EQ(line[0], 'a');
+  ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
 
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ((unsigned)1, len);
-  ASSERT_EQ('b', line[0]);
-  ASSERT_EQ('\0', line[1]);
+  ASSERT_EQ(len, (unsigned)1);
+  ASSERT_EQ(line[0], 'b');
+  ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
 
   ASSERT_FALSE(reader.GetNextLine(&line, &len));
@@ -165,17 +154,16 @@ TEST(LineReaderTest, MaxLength) {
   const int fd = TemporaryFile();
   char l[LineReader::kMaxLineLen - 1];
   memset(l, 'a', sizeof(l));
-  const int r = HANDLE_EINTR(write(fd, l, sizeof(l)));
-  ASSERT_EQ(sizeof(l), r);
+  write(fd, l, sizeof(l));
   lseek(fd, 0, SEEK_SET);
   LineReader reader(fd);
 
   const char *line;
   unsigned len;
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ(sizeof(l), len);
+  ASSERT_EQ(len, sizeof(l));
   ASSERT_TRUE(memcmp(l, line, sizeof(l)) == 0);
-  ASSERT_EQ('\0', line[len]);
+  ASSERT_EQ(line[len], 0);
 
   close(fd);
 }
@@ -184,8 +172,7 @@ TEST(LineReaderTest, TooLong) {
   const int fd = TemporaryFile();
   char l[LineReader::kMaxLineLen];
   memset(l, 'a', sizeof(l));
-  const int r = HANDLE_EINTR(write(fd, l, sizeof(l)));
-  ASSERT_EQ(sizeof(l), r);
+  write(fd, l, sizeof(l));
   lseek(fd, 0, SEEK_SET);
   LineReader reader(fd);
 

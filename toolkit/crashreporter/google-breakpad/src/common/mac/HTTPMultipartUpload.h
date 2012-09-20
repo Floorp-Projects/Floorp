@@ -32,7 +32,7 @@
 // Each file is sent with a name field in addition to the filename and data
 // The data will be sent synchronously.
 
-#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
 @interface HTTPMultipartUpload : NSObject {
  @protected

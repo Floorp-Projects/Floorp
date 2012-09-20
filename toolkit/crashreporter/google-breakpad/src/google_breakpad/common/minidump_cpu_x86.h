@@ -141,8 +141,8 @@ typedef struct {
 } MDRawContextX86;  /* CONTEXT */
 
 /* For (MDRawContextX86).context_flags.  These values indicate the type of
- * context stored in the structure.  The high 24 bits identify the CPU, the
- * low 8 bits identify the type of context saved. */
+ * context stored in the structure.  The high 26 bits identify the CPU, the
+ * low 6 bits identify the type of context saved. */
 #define MD_CONTEXT_X86                    0x00010000
      /* CONTEXT_i386, CONTEXT_i486: identifies CPU */
 #define MD_CONTEXT_X86_CONTROL            (MD_CONTEXT_X86 | 0x00000001)
@@ -157,8 +157,6 @@ typedef struct {
      /* CONTEXT_DEBUG_REGISTERS */
 #define MD_CONTEXT_X86_EXTENDED_REGISTERS (MD_CONTEXT_X86 | 0x00000020)
      /* CONTEXT_EXTENDED_REGISTERS */
-#define MD_CONTEXT_X86_XSTATE             (MD_CONTEXT_X86 | 0x00000040)
-     /* CONTEXT_XSTATE */
 
 #define MD_CONTEXT_X86_FULL              (MD_CONTEXT_X86_CONTROL | \
                                           MD_CONTEXT_X86_INTEGER | \

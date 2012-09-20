@@ -13,21 +13,14 @@ MODULE		= writer
 LIBRARY_NAME	= minidump_writer_s
 XPI_NAME 	= crashreporter
 
-LOCAL_INCLUDES = \
-  -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src \
-  $(NULL)
+LOCAL_INCLUDES 	= -I$(srcdir)/../../..
 
 CPPSRCS	= \
   linux_dumper.cc \
-  linux_ptrace_dumper.cc \
   minidump_writer.cc \
   $(NULL)
 
 # need static lib
 FORCE_STATIC_LIB = 1
-
-ifeq ($(OS_TARGET),Android)
-LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/
-endif
 
 include $(topsrcdir)/config/rules.mk

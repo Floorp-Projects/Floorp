@@ -1,7 +1,10 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if you have the <a.out.h> header file. */
-#undef HAVE_A_OUT_H
+/* actual length of specific struct sockaddr */
+#undef GET_SA_LEN
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -33,8 +36,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to 1 if your C compiler doesn't accept -c and -o together. */
-#undef NO_MINUS_C_MINUS_O
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Name of package */
 #undef PACKAGE
