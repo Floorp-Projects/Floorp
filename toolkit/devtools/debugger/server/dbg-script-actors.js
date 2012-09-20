@@ -1124,7 +1124,11 @@ PauseScopedActor.prototype = {
  */
 function update(aTarget, aNewAttrs) {
   for (let key in aNewAttrs) {
-    aTarget[key] = aNewAttrs[key];
+    let desc = Object.getOwnPropertyDescriptor(aNewAttrs, key);
+
+    if (desc) {
+      Object.defineProperty(aTarget, key, desc);
+    }
   }
 }
 
