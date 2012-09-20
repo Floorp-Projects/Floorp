@@ -412,23 +412,6 @@ members = [
     # FileReader
     'nsIDOMFileReader.*',
     
-    # XHR
-    'nsIXMLHttpRequest.*',
-    # nsIXMLHttpRequest.channel is not used on the web, and more
-    # importantly relies on the CAPS check that quickstubs don't make.
-    '-nsIXMLHttpRequest.channel',
-    # various XHR things use ACString and AUTF8String and [cstring]
-    # which quickstubs don't handle as return values (or at all in the
-    # case of AUTF8String) yet.
-    '-nsIXMLHttpRequest.statusText',
-    '-nsIXMLHttpRequest.getAllResponseHeaders',
-    '-nsIXMLHttpRequest.getResponseHeader',
-    '-nsIXMLHttpRequest.setRequestHeader',
-    '-nsIXMLHttpRequest.overrideMimeType',
-    # nsIXMLHttpRequestUpload doesn't live in its own IDL file, so
-    # can't be quickstubbed
-    '-nsIXMLHttpRequest.upload',
-
     # Audio
     'nsIDOMNotifyAudioAvailableEvent.frameBuffer',
     'nsIDOMNotifyAudioAvailableEvent.time',
