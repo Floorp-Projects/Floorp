@@ -96,6 +96,48 @@ static PRLogModuleInfo* gLogModule = PR_LOG_DEFINE("nsSHistory");
     }                                                      \
   PR_END_MACRO
 
+// Iterates over all registered session history listeners.
+#define ITERATE_LISTENERS(body)                            \
+  PR_BEGIN_MACRO                                           \
+  {                                                        \
+    nsAutoTObserverArray<nsWeakPtr, 2>::EndLimitedIterator \
+      iter(mListeners);                                    \
+    while (iter.HasMore()) {                               \
+      nsCOMPtr<nsISHistoryListener> listener =             \
+        do_QueryReferent(iter.GetNext());                  \
+      if (listener) {                                      \
+        body;                                              \
+      }                                                    \
+    }                                                      \
+  }                                                        \
+  PR_END_MACRO
+
+// Calls a given method on all registered session history listeners.
+#define NOTIFY_LISTENERS(method, args)                     \
+  ITERATE_LISTENERS(                                       \
+    listener->method args;                                 \
+  );
+
+// Calls a given method on all registered session history listeners.
+// Listeners may return 'false' to cancel an action so make sure that we
+// set the return value to 'false' if one of the listeners wants to cancel.
+#define NOTIFY_LISTENERS_CANCELABLE(method, retval, args)  \
+  PR_BEGIN_MACRO                                           \
+  {                                                        \
+    bool canceled = false;                                 \
+    retval = true;                                         \
+    ITERATE_LISTENERS(                                     \
+      listener->method args;                               \
+      if (!retval) {                                       \
+        canceled = true;                                   \
+      }                                                    \
+    );                                                     \
+    if (canceled) {                                        \
+      retval = false;                                      \
+    }                                                      \
+  }                                                        \
+  PR_END_MACRO
+
 enum HistCmd{
   HIST_CMD_BACK,
   HIST_CMD_FORWARD,
@@ -370,22 +412,17 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, bool aPersist)
   nsCOMPtr<nsISHTransaction> txn(do_CreateInstance(NS_SHTRANSACTION_CONTRACTID));
   NS_ENSURE_TRUE(txn, NS_ERROR_FAILURE);
 
-  // Notify any listener about the new addition
-  if (mListener) {
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
-    if (listener) {
-      nsCOMPtr<nsIURI> uri;
-      nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(aSHEntry));
-      if (hEntry) {
-        int32_t currentIndex = mIndex;
-        hEntry->GetURI(getter_AddRefs(uri));
-        listener->OnHistoryNewEntry(uri);
+  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(aSHEntry));
+  if (hEntry) {
+    int32_t currentIndex = mIndex;
+    hEntry->GetURI(getter_AddRefs(uri));
+    NOTIFY_LISTENERS(OnHistoryNewEntry, (uri));
 
-        // If a listener has changed mIndex, we need to get currentTxn again,
-        // otherwise we'll be left at an inconsistent state (see bug 320742)
-        if (currentIndex != mIndex)
-          GetTransactionAtIndex(mIndex, getter_AddRefs(currentTxn));
-      }
+    // If a listener has changed mIndex, we need to get currentTxn again,
+    // otherwise we'll be left at an inconsistent state (see bug 320742)
+    if (currentIndex != mIndex) {
+      GetTransactionAtIndex(mIndex, getter_AddRefs(currentTxn));
     }
   }
 
@@ -622,13 +659,8 @@ nsSHistory::PurgeHistory(int32_t aEntries)
   aEntries = NS_MIN(aEntries, mLength);
   
   bool purgeHistory = true;
-  // Notify the listener about the history purge
-  if (mListener) {
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
-    if (listener) {
-      listener->OnHistoryPurge(aEntries, &purgeHistory);
-    } 
-  }
+  NOTIFY_LISTENERS_CANCELABLE(OnHistoryPurge, purgeHistory,
+                              (aEntries, &purgeHistory));
 
   if (!purgeHistory) {
     // Listener asked us not to purge
@@ -674,8 +706,9 @@ nsSHistory::AddSHistoryListener(nsISHistoryListener * aListener)
   // have the right ownership with who ever listens to SHistory
   nsWeakPtr listener = do_GetWeakReference(aListener);
   if (!listener) return NS_ERROR_FAILURE;
-  mListener = listener;
-  return NS_OK;
+
+  return mListeners.AppendElementUnlessExists(listener) ?
+    NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -684,12 +717,9 @@ nsSHistory::RemoveSHistoryListener(nsISHistoryListener * aListener)
 {
   // Make sure the listener that wants to be removed is the
   // one we have in store. 
-  nsWeakPtr listener = do_GetWeakReference(aListener);  
-  if (listener == mListener) {
-    mListener = nullptr;
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  nsWeakPtr listener = do_GetWeakReference(aListener);
+  mListeners.RemoveElement(listener);
+  return NS_OK;
 }
 
 
@@ -717,14 +747,12 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry * aReplaceEntry)
   return rv;
 }
 
-/* Get a handle to the Session history listener */
 NS_IMETHODIMP
-nsSHistory::GetListener(nsISHistoryListener ** aListener)
+nsSHistory::NotifyOnHistoryReload(nsIURI* aReloadURI, uint32_t aReloadFlags,
+                                  bool* aCanReload)
 {
-  NS_ENSURE_ARG_POINTER(aListener);
-  if (mListener) 
-    CallQueryReferent(mListener.get(),  aListener);
-  // Don't addref aListener. It is a weak pointer.
+  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, *aCanReload,
+                              (aReloadURI, aReloadFlags, aCanReload));
   return NS_OK;
 }
 
@@ -842,20 +870,15 @@ nsSHistory::Reload(uint32_t aReloadFlags)
     loadType = nsIDocShellLoadInfo::loadReloadNormal;
   }
   
-  // Notify listeners
+  // We are reloading. Send Reload notifications.
+  // nsDocShellLoadFlagType is not public, where as nsIWebNavigation
+  // is public. So send the reload notifications with the
+  // nsIWebNavigation flags.
   bool canNavigate = true;
-  if (mListener) {
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
-    // We are reloading. Send Reload notifications. 
-    // nsDocShellLoadFlagType is not public, where as nsIWebNavigation
-    // is public. So send the reload notifications with the
-    // nsIWebNavigation flags. 
-    if (listener) {
-      nsCOMPtr<nsIURI> currentURI;
-      rv = GetCurrentURI(getter_AddRefs(currentURI));
-      listener->OnHistoryReload(currentURI, aReloadFlags, &canNavigate);
-    }
-  }
+  nsCOMPtr<nsIURI> currentURI;
+  rv = GetCurrentURI(getter_AddRefs(currentURI));
+  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, canNavigate,
+                              (currentURI, aReloadFlags, &canNavigate));
   if (!canNavigate)
     return NS_OK;
 
@@ -867,14 +890,10 @@ nsSHistory::ReloadCurrentEntry()
 {
   // Notify listeners
   bool canNavigate = true;
-  if (mListener) {
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
-    if (listener) {
-      nsCOMPtr<nsIURI> currentURI;
-      GetCurrentURI(getter_AddRefs(currentURI));
-      listener->OnHistoryGotoIndex(mIndex, currentURI, &canNavigate);
-    }
-  }
+  nsCOMPtr<nsIURI> currentURI;
+  GetCurrentURI(getter_AddRefs(currentURI));
+  NOTIFY_LISTENERS_CANCELABLE(OnHistoryGotoIndex, canNavigate,
+                              (mIndex, currentURI, &canNavigate));
   if (!canNavigate)
     return NS_OK;
 
@@ -1515,22 +1534,18 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
   nsCOMPtr<nsIURI> nextURI;
   nHEntry->GetURI(getter_AddRefs(nextURI));
 
-  if(mListener) {
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
-    if (listener) {
-      if (aHistCmd == HIST_CMD_BACK) {
-        // We are going back one entry. Send GoBack notifications
-        listener->OnHistoryGoBack(nextURI, &canNavigate);
-      }
-      else if (aHistCmd == HIST_CMD_FORWARD) {
-        // We are going forward. Send GoForward notification
-        listener->OnHistoryGoForward(nextURI, &canNavigate);
-      }
-      else if (aHistCmd == HIST_CMD_GOTOINDEX) {
-        // We are going somewhere else. This is not reload either
-        listener->OnHistoryGotoIndex(aIndex, nextURI, &canNavigate);
-      }
-    }
+  if (aHistCmd == HIST_CMD_BACK) {
+    // We are going back one entry. Send GoBack notifications
+    NOTIFY_LISTENERS_CANCELABLE(OnHistoryGoBack, canNavigate,
+                                (nextURI, &canNavigate));
+  } else if (aHistCmd == HIST_CMD_FORWARD) {
+    // We are going forward. Send GoForward notification
+    NOTIFY_LISTENERS_CANCELABLE(OnHistoryGoForward, canNavigate,
+                                (nextURI, &canNavigate));
+  } else if (aHistCmd == HIST_CMD_GOTOINDEX) {
+    // We are going somewhere else. This is not reload either
+    NOTIFY_LISTENERS_CANCELABLE(OnHistoryGotoIndex, canNavigate,
+                                (aIndex, nextURI, &canNavigate));
   }
 
   if (!canNavigate) {
