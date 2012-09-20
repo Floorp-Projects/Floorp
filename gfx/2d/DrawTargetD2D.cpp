@@ -291,9 +291,15 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
       AddDependencyOnSource(srcSurf);
     }
     break;
-  case SURFACE_DATA:
+  default:
     {
-      DataSourceSurface *srcSurf = static_cast<DataSourceSurface*>(aSurface);
+      RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+
+      if (!srcSurf) {
+        gfxDebug() << "Not able to deal with non-data source surface.";
+        return;
+      }
+
       if (aSource.width > rt->GetMaximumBitmapSize() ||
           aSource.height > rt->GetMaximumBitmapSize()) {
         gfxDebug() << "Bitmap source larger than texture size specified. DrawBitmap will silently fail.";
@@ -314,8 +320,6 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
       srcRect.x -= (uint32_t)aSource.x;
       srcRect.y -= (uint32_t)aSource.y;
     }
-    break;
-  default:
     break;
   }
 
