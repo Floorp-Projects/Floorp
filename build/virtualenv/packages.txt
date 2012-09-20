@@ -12,3 +12,4 @@ optional:setup.py:python/psutil:build_ext:--inplace
 optional:psutil.pth:python/psutil
 mozilla.pth:build
 mozilla.pth:config
+copy:build/buildconfig.py
