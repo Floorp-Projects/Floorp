@@ -4454,13 +4454,9 @@ nsDocShell::Reload(uint32_t aReloadFlags)
     nsCOMPtr<nsISHistory> rootSH;
     rv = GetRootSessionHistory(getter_AddRefs(rootSH));
     nsCOMPtr<nsISHistoryInternal> shistInt(do_QueryInterface(rootSH));
-    bool canReload = true; 
+    bool canReload = true;
     if (rootSH) {
-      nsCOMPtr<nsISHistoryListener> listener;
-      shistInt->GetListener(getter_AddRefs(listener));
-      if (listener) {
-        listener->OnHistoryReload(mCurrentURI, aReloadFlags, &canReload);
-      }
+      shistInt->NotifyOnHistoryReload(mCurrentURI, aReloadFlags, &canReload);
     }
 
     if (!canReload)
