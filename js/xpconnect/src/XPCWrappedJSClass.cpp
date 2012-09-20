@@ -107,11 +107,11 @@ JSBool xpc_IsReportableErrorCode(nsresult code)
 
 // static
 nsresult
-nsXPCWrappedJSClass::GetNewOrUsed(XPCCallContext& ccx, REFNSIID aIID,
+nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID,
                                   nsXPCWrappedJSClass** resultClazz)
 {
     nsXPCWrappedJSClass* clazz = nullptr;
-    XPCJSRuntime* rt = ccx.GetRuntime();
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
 
     {   // scoped lock
         XPCAutoLock lock(rt->GetMapLock());
@@ -122,13 +122,13 @@ nsXPCWrappedJSClass::GetNewOrUsed(XPCCallContext& ccx, REFNSIID aIID,
 
     if (!clazz) {
         nsCOMPtr<nsIInterfaceInfo> info;
-        ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
+        nsXPConnect::GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if (info) {
             bool canScript, isBuiltin;
             if (NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
                 NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
                 nsXPConnect::IsISupportsDescendant(info)) {
-                clazz = new nsXPCWrappedJSClass(ccx, aIID, info);
+                clazz = new nsXPCWrappedJSClass(cx, aIID, info);
                 if (clazz && !clazz->mDescriptors)
                     NS_RELEASE(clazz);  // sets clazz to nullptr
             }
@@ -138,9 +138,9 @@ nsXPCWrappedJSClass::GetNewOrUsed(XPCCallContext& ccx, REFNSIID aIID,
     return NS_OK;
 }
 
-nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
+nsXPCWrappedJSClass::nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
                                          nsIInterfaceInfo* aInfo)
-    : mRuntime(ccx.GetRuntime()),
+    : mRuntime(nsXPConnect::GetRuntimeInstance()),
       mInfo(aInfo),
       mName(nullptr),
       mIID(aIID),
@@ -196,11 +196,10 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
 }
 
 JSObject*
-nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
+nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                                                   JSObject* jsobj,
                                                   REFNSIID aIID)
 {
-    JSContext* cx = ccx.GetJSContext();
     JSObject* id;
     jsval retval;
     JSObject* retObj;
@@ -230,7 +229,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
         return nullptr;
 
     // protect fun so that we're sure it's alive when we call it
-    AUTO_MARK_JSVAL(ccx, fun);
+    AUTO_MARK_JSVAL(cx, fun);
 
     // Ensure that we are asking for a scriptable interface.
     // NB:  It's important for security that this check is here rather
@@ -240,7 +239,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     // We so often ask for nsISupports that we can short-circuit the test...
     if (!aIID.Equals(NS_GET_IID(nsISupports))) {
         nsCOMPtr<nsIInterfaceInfo> info;
-        ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
+        nsXPConnect::GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if (!info)
             return nullptr;
         bool canScript, isBuiltin;
@@ -268,7 +267,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
                          "JS failed without setting an exception!");
 
             jsval jsexception = JSVAL_NULL;
-            AUTO_MARK_JSVAL(ccx, &jsexception);
+            AUTO_MARK_JSVAL(cx, &jsexception);
 
             if (JS_GetPendingException(cx, &jsexception)) {
                 nsresult rv;
@@ -278,7 +277,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
                     nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
 
                     nsXPConnect::GetXPConnect()->
-                        GetWrappedNativeOfJSObject(ccx,
+                        GetWrappedNativeOfJSObject(cx,
                                                    &jsexception.toObject(),
                                                    getter_AddRefs(wrapper));
 
@@ -746,13 +745,13 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
 }
 
 JSObject*
-nsXPCWrappedJSClass::GetRootJSObject(XPCCallContext& ccx, JSObject* aJSObj)
+nsXPCWrappedJSClass::GetRootJSObject(JSContext* cx, JSObject* aJSObj)
 {
-    JSObject* result = CallQueryInterfaceOnJSObject(ccx, aJSObj,
+    JSObject* result = CallQueryInterfaceOnJSObject(cx, aJSObj,
                                                     NS_GET_IID(nsISupports));
     if (!result)
         return aJSObj;
-    JSObject* inner = XPCWrapper::Unwrap(ccx, result);
+    JSObject* inner = XPCWrapper::Unwrap(cx, result);
     if (inner)
         return inner;
     return result;
