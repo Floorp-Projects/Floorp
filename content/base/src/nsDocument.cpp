@@ -127,6 +127,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsICategoryManager.h"
 #include "nsIDocumentLoaderFactory.h"
+#include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIXMLContentSink.h"
 #include "nsIXULDocument.h"
@@ -7628,8 +7629,15 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   clone->mDocumentBaseURI = mDocumentBaseURI;
 
   if (mCreatingStaticClone) {
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    
+    // |mDocumentContainer| is the container of the document that is being
+    // created and not the original container. See CreateStaticClone function().
+    nsCOMPtr<nsIDocumentLoader> docLoader = do_QueryReferent(mDocumentContainer);
+    if (docLoader) {
+      docLoader->GetLoadGroup(getter_AddRefs(loadGroup));
+    }
     nsCOMPtr<nsIChannel> channel = GetChannel();
-    nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
     if (channel && loadGroup) {
       clone->Reset(channel, loadGroup);
     } else {
