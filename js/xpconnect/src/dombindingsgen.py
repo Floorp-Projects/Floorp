@@ -573,7 +573,7 @@ listTemplateFooter = (
 "\n")
 
 def writeBindingStub(f, classname, member, stubName, isSetter=False):
-    def writeThisUnwrapping(f, member, isMethod, isGetter, customMethodCall, haveCcx):
+    def writeThisUnwrapping(f, member, isMethod, isGetter, customMethodCall):
         if isMethod:
             f.write("    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));\n"
                     "    if (!%sWrapper::instanceIsListObject(cx, obj, callee))\n"
@@ -582,7 +582,7 @@ def writeBindingStub(f, classname, member, stubName, isSetter=False):
             f.write("    if (!%sWrapper::instanceIsListObject(cx, obj, NULL))\n"
                     "        return false;\n" % classname)
         return "%sWrapper::getListObject(obj)" % classname
-    def writeCheckForFailure(f, isMethod, isGeter, haveCcx):
+    def writeCheckForFailure(f, isMethod, isGeter):
         f.write("    if (NS_FAILED(rv))\n"
                 "        return xpc_qsThrowMethodFailedWithDetails(cx, rv, \"%s\", \"%s\");\n" % (classname, member.name))
     def writeResultWrapping(f, member, jsvalPtr, jsvalRef):
