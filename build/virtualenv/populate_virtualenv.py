@@ -7,6 +7,7 @@
 
 from __future__ import with_statement
 import os
+import shutil
 import subprocess
 import sys
 import distutils.sysconfig
@@ -23,10 +24,15 @@ def populate_virtualenv(top_source_directory, manifest_filename, log_handle):
         2. argument(s) to setup.py. e.g. "develop". Each program argument is
            delimited by a colon. Arguments with colons are not yet supported.
 
+      filename.pth -- Adds the path given as argument to filename.pth under
+          the virtualenv site packages directory.
+
       optional -- This denotes the action as optional. The requested action
           is attempted. If it fails, we issue a warning and go on. The initial
           "optional" field is stripped then the remaining line is processed
           like normal. e.g. "optional:setup.py:python/foo:built_ext:-i"
+
+      copy -- Copies the given file in the virtualenv site packages directory.
 
     Note that the Python interpreter running this function should be the one
     from the virtualenv. If it is the system Python or if the environment is
@@ -40,6 +46,7 @@ def populate_virtualenv(top_source_directory, manifest_filename, log_handle):
     fh.close()
 
     def handle_package(package):
+        python_lib = distutils.sysconfig.get_python_lib()
         if package[0] == 'setup.py':
             assert len(package) >= 2
 
@@ -48,10 +55,18 @@ def populate_virtualenv(top_source_directory, manifest_filename, log_handle):
 
             return True
 
+        if package[0] == 'copy':
+            assert len(package) == 2
+
+            shutil.copy(os.path.join(top_source_directory, package[1]),
+                        os.path.join(python_lib, os.path.basename(package[1])))
+
+            return True
+
         if package[0].endswith('.pth'):
             assert len(package) == 2
 
-            with open(os.path.join(distutils.sysconfig.get_python_lib(), package[0]), 'a') as f:
+            with open(os.path.join(python_lib, package[0]), 'a') as f:
                 f.write("%s\n" % os.path.join(top_source_directory, package[1]))
 
             return True
