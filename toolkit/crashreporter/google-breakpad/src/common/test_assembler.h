@@ -60,12 +60,12 @@
 #include <vector>
 #include <string>
 
-#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
 
 using std::list;
+using std::string;
 using std::vector;
 
 namespace test_assembler {
@@ -271,10 +271,7 @@ class Section {
  public:
   Section(Endianness endianness = kUnsetEndian)
       : endianness_(endianness) { };
-
-  // A base class destructor should be either public and virtual,
-  // or protected and nonvirtual.
-  virtual ~Section() { };
+  ~Section() { };
 
   // Set the default endianness of this section to ENDIANNESS. This
   // sets the behavior of the D<N> appending functions. If the

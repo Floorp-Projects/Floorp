@@ -134,8 +134,7 @@ static void Start(Options *options) {
   fprintf(stdout, "Send: %s\n", error ? [[error description] UTF8String] :
           "No Error");
   fprintf(stdout, "Response: %d\n", status);
-  fprintf(stdout, "Result: %lu bytes\n%s\n",
-          (unsigned long)[data length], [result UTF8String]);
+  fprintf(stdout, "Result: %lu bytes\n%s\n", [data length], [result UTF8String]);
 
   [result release];
   [ul release];

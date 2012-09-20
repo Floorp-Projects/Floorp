@@ -33,63 +33,21 @@
 // Author: Mark Mentovai
 
 #include <stdio.h>
-#include <string.h>
 
 #include "google_breakpad/processor/minidump.h"
 #include "processor/logging.h"
-#include "processor/scoped_ptr.h"
 
 namespace {
 
 using google_breakpad::Minidump;
 using google_breakpad::MinidumpThreadList;
 using google_breakpad::MinidumpModuleList;
-using google_breakpad::MinidumpMemoryInfoList;
 using google_breakpad::MinidumpMemoryList;
 using google_breakpad::MinidumpException;
 using google_breakpad::MinidumpAssertion;
 using google_breakpad::MinidumpSystemInfo;
 using google_breakpad::MinidumpMiscInfo;
 using google_breakpad::MinidumpBreakpadInfo;
-
-static void DumpRawStream(Minidump *minidump,
-                          u_int32_t stream_type,
-                          const char *stream_name,
-                          int *errors) {
-  u_int32_t length = 0;
-  if (!minidump->SeekToStreamType(stream_type, &length)) {
-    return;
-  }
-
-  printf("Stream %s:\n", stream_name);
-
-  if (length == 0) {
-    printf("\n");
-    return;
-  }
-  std::vector<char> contents(length);
-  if (!minidump->ReadBytes(&contents[0], length)) {
-    ++*errors;
-    BPLOG(ERROR) << "minidump.ReadBytes failed";
-    return;
-  }
-  size_t current_offset = 0;
-  while (current_offset < length) {
-    size_t remaining = length - current_offset;
-    // Printf requires an int and direct casting from size_t results
-    // in compatibility warnings.
-    u_int32_t int_remaining = remaining;
-    printf("%.*s", int_remaining, &contents[current_offset]);
-    char *next_null = reinterpret_cast<char *>(
-        memchr(&contents[current_offset], 0, remaining));
-    if (next_null == NULL)
-      break;
-    printf("\\0\n");
-    size_t null_offset = next_null - &contents[0];
-    current_offset = null_offset + 1;
-  }
-  printf("\n\n");
-}
 
 static bool PrintMinidumpDump(const char *minidump_file) {
   Minidump minidump(minidump_file);
@@ -162,39 +120,6 @@ static bool PrintMinidumpDump(const char *minidump_file) {
   } else {
     breakpad_info->Print();
   }
-
-  MinidumpMemoryInfoList *memory_info_list = minidump.GetMemoryInfoList();
-  if (!memory_info_list) {
-    ++errors;
-    BPLOG(ERROR) << "minidump.GetMemoryInfoList() failed";
-  } else {
-    memory_info_list->Print();
-  }
-
-  DumpRawStream(&minidump,
-                MD_LINUX_CMD_LINE,
-                "MD_LINUX_CMD_LINE",
-                &errors);
-  DumpRawStream(&minidump,
-                MD_LINUX_ENVIRON,
-                "MD_LINUX_ENVIRON",
-                &errors);
-  DumpRawStream(&minidump,
-                MD_LINUX_LSB_RELEASE,
-                "MD_LINUX_LSB_RELEASE",
-                &errors);
-  DumpRawStream(&minidump,
-                MD_LINUX_PROC_STATUS,
-                "MD_LINUX_PROC_STATUS",
-                &errors);
-  DumpRawStream(&minidump,
-                MD_LINUX_CPU_INFO,
-                "MD_LINUX_CPU_INFO",
-                &errors);
-  DumpRawStream(&minidump,
-                MD_LINUX_MAPS,
-                "MD_LINUX_MAPS",
-                &errors);
 
   return errors == 0;
 }

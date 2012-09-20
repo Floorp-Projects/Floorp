@@ -37,21 +37,21 @@
 
 #include <iostream>
 
-#include "common/using_std_string.h"
+using std::string;
 
 namespace google_breakpad {
 
-GoogleCrashdumpUploader::GoogleCrashdumpUploader(const string& product,
-                                                 const string& version,
-                                                 const string& guid,
-                                                 const string& ptime,
-                                                 const string& ctime,
-                                                 const string& email,
-                                                 const string& comments,
-                                                 const string& minidump_pathname,
-                                                 const string& crash_server,
-                                                 const string& proxy_host,
-                                                 const string& proxy_userpassword) {
+GoogleCrashdumpUploader::GoogleCrashdumpUploader(const std::string& product,
+                                                 const std::string& version,
+                                                 const std::string& guid,
+                                                 const std::string& ptime,
+                                                 const std::string& ctime,
+                                                 const std::string& email,
+                                                 const std::string& comments,
+                                                 const std::string& minidump_pathname,
+                                                 const std::string& crash_server,
+                                                 const std::string& proxy_host,
+                                                 const std::string& proxy_userpassword) {
   LibcurlWrapper* http_layer = new LibcurlWrapper();
   Init(product,
        version,
@@ -67,17 +67,17 @@ GoogleCrashdumpUploader::GoogleCrashdumpUploader(const string& product,
        http_layer);
 }
 
-GoogleCrashdumpUploader::GoogleCrashdumpUploader(const string& product,
-                                                 const string& version,
-                                                 const string& guid,
-                                                 const string& ptime,
-                                                 const string& ctime,
-                                                 const string& email,
-                                                 const string& comments,
-                                                 const string& minidump_pathname,
-                                                 const string& crash_server,
-                                                 const string& proxy_host,
-                                                 const string& proxy_userpassword,
+GoogleCrashdumpUploader::GoogleCrashdumpUploader(const std::string& product,
+                                                 const std::string& version,
+                                                 const std::string& guid,
+                                                 const std::string& ptime,
+                                                 const std::string& ctime,
+                                                 const std::string& email,
+                                                 const std::string& comments,
+                                                 const std::string& minidump_pathname,
+                                                 const std::string& crash_server,
+                                                 const std::string& proxy_host,
+                                                 const std::string& proxy_userpassword,
                                                  LibcurlWrapper* http_layer) {
   Init(product,
        version,
@@ -93,17 +93,17 @@ GoogleCrashdumpUploader::GoogleCrashdumpUploader(const string& product,
        http_layer);
 }
 
-void GoogleCrashdumpUploader::Init(const string& product,
-                                   const string& version,
-                                   const string& guid,
-                                   const string& ptime,
-                                   const string& ctime,
-                                   const string& email,
-                                   const string& comments,
-                                   const string& minidump_pathname,
-                                   const string& crash_server,
-                                   const string& proxy_host,
-                                   const string& proxy_userpassword,
+void GoogleCrashdumpUploader::Init(const std::string& product,
+                                   const std::string& version,
+                                   const std::string& guid,
+                                   const std::string& ptime,
+                                   const std::string& ctime,
+                                   const std::string& email,
+                                   const std::string& comments,
+                                   const std::string& minidump_pathname,
+                                   const std::string& crash_server,
+                                   const std::string& proxy_host,
+                                   const std::string& proxy_userpassword,
                                    LibcurlWrapper* http_layer) {
   product_ = product;
   version_ = version;
@@ -137,7 +137,7 @@ void GoogleCrashdumpUploader::Init(const string& product,
 }
 
 bool GoogleCrashdumpUploader::CheckRequiredParametersArePresent() {
-  string error_text;
+  std::string error_text;
   if (product_.empty()) {
     error_text.append("\nProduct name must be specified.");
   }

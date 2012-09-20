@@ -104,17 +104,3 @@ uint64_t SaveAppMemory()
 
   return (int64_t)testData;
 }
-
-#ifdef XP_WIN32
-static LONG WINAPI HandleException(EXCEPTION_POINTERS* exinfo)
-{
-  TerminateProcess(GetCurrentProcess(), 0);
-  return 0;
-}
-
-extern "C" NS_EXPORT
-void TryOverrideExceptionHandler()
-{
-  SetUnhandledExceptionFilter(HandleException);
-}
-#endif

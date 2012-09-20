@@ -44,7 +44,6 @@
 #include "google_breakpad/processor/source_line_resolver_interface.h"
 #include "google_breakpad/processor/stack_frame.h"
 #include "google_breakpad/processor/symbol_supplier.h"
-#include "google_breakpad/processor/system_info.h"
 #include "processor/linked_ptr.h"
 #include "processor/logging.h"
 #include "processor/scoped_ptr.h"
@@ -56,7 +55,6 @@
 
 namespace google_breakpad {
 
-u_int32_t Stackwalker::max_frames_ = 1024;
 
 Stackwalker::Stackwalker(const SystemInfo *system_info,
                          MemoryRegion *memory,
@@ -98,18 +96,15 @@ bool Stackwalker::Walk(CallStack *stack) {
             no_symbol_modules_.find(
                 module->code_file()) == no_symbol_modules_.end() &&
             supplier_) {
-          string symbol_file;
-          char *symbol_data = NULL;
+          string symbol_data, symbol_file;
           SymbolSupplier::SymbolResult symbol_result =
-              supplier_->GetCStringSymbolData(module,
-                                              system_info_,
-                                              &symbol_file,
-                                              &symbol_data);
+              supplier_->GetSymbolFile(module, system_info_,
+                                       &symbol_file, &symbol_data);
 
           switch (symbol_result) {
             case SymbolSupplier::FOUND:
-              resolver_->LoadModuleUsingMemoryBuffer(frame->module,
-                                                     symbol_data);
+              resolver_->LoadModuleUsingMapBuffer(frame->module,
+                                                  symbol_data);
               break;
             case SymbolSupplier::NOT_FOUND:
               no_symbol_modules_.insert(module->code_file());
@@ -117,22 +112,14 @@ bool Stackwalker::Walk(CallStack *stack) {
             case SymbolSupplier::INTERRUPT:
               return false;
           }
-          // Inform symbol supplier to free the unused data memory buffer.
-          if (resolver_->ShouldDeleteMemoryBufferAfterLoadModule())
-            supplier_->FreeSymbolData(module);
         }
-        if (resolver_)
-          resolver_->FillSourceLineInfo(frame.get());
+        resolver_->FillSourceLineInfo(frame.get());
       }
     }
 
     // Add the frame to the call stack.  Relinquish the ownership claim
     // over the frame, because the stack now owns it.
     stack->frames_.push_back(frame.release());
-    if (stack->frames_.size() > max_frames_) {
-      BPLOG(ERROR) << "The stack is over " << max_frames_ << " frames.";
-      break;
-    }
 
     // Get the next frame and take ownership.
     frame.reset(GetCallerFrame(stack));
@@ -179,7 +166,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                              memory, modules, supplier,
                                              resolver);
       break;
-
+  
     case MD_CONTEXT_SPARC:
       cpu_stackwalker = new StackwalkerSPARC(system_info,
                                              context->GetContextSPARC(),
@@ -188,13 +175,10 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
       break;
 
     case MD_CONTEXT_ARM:
-      int fp_register = -1;
-      if (system_info->os_short == "ios")
-        fp_register = MD_CONTEXT_ARM_REG_IOS_FP;
       cpu_stackwalker = new StackwalkerARM(system_info,
                                            context->GetContextARM(),
-					   fp_register, memory, modules,
-					   supplier, resolver);
+                                           memory, modules, supplier,
+                                           resolver);
       break;
   }
 
@@ -218,14 +202,13 @@ bool Stackwalker::InstructionAddressSeemsValid(u_int64_t address) {
   }
 
   if (!resolver_->HasModule(module)) {
-    string symbol_file;
-    char *symbol_data = NULL;
+    string symbol_data, symbol_file;
     SymbolSupplier::SymbolResult symbol_result =
-      supplier_->GetCStringSymbolData(module, system_info_,
-                                      &symbol_file, &symbol_data);
+      supplier_->GetSymbolFile(module, system_info_,
+                               &symbol_file, &symbol_data);
 
     if (symbol_result != SymbolSupplier::FOUND ||
-        !resolver_->LoadModuleUsingMemoryBuffer(module,
+        !resolver_->LoadModuleUsingMapBuffer(module,
                                              symbol_data)) {
       // we don't have symbols, but we're inside a loaded module
       return true;

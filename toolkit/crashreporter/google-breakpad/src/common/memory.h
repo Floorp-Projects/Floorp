@@ -41,7 +41,7 @@
 #define sys_munmap munmap
 #define MAP_ANONYMOUS MAP_ANON
 #else
-#include "third_party/lss/linux_syscall_support.h"
+#include "common/linux/linux_syscall_support.h"
 #endif
 
 namespace google_breakpad {
@@ -143,18 +143,6 @@ class wasteful_vector {
         a_((T*) allocator->Alloc(sizeof(T) * size_hint)),
         allocated_(size_hint),
         used_(0) {
-  }
-
-  T& back() {
-    return a_[used_ - 1];
-  }
-
-  const T& back() const {
-    return a_[used_ - 1];
-  }
-
-  bool empty() const {
-    return used_ == 0;
   }
 
   void push_back(const T& new_element) {

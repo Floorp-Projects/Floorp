@@ -41,36 +41,14 @@
         'minidump_test.cc',
         'dump_analysis.cc',
         'dump_analysis.h',
-        'crash_generation_server_test.cc'
       ],
       'dependencies': [
-        'testing.gyp:gtest',
-        'testing.gyp:gmock',
+        'gtest.gyp:gtest',
         '../breakpad_client.gyp:common',
         '../crash_generation/crash_generation.gyp:crash_generation_server',
         '../crash_generation/crash_generation.gyp:crash_generation_client',
         '../handler/exception_handler.gyp:exception_handler',
-	'processor_bits',
       ]
     },
-    {
-      'target_name': 'processor_bits',
-      'type': 'static_library',
-      'include_dirs': [
-        '<(DEPTH)',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '<(DEPTH)',
-        ]
-      },
-      'sources': [
-        '<(DEPTH)/common/string_conversion.cc',
-        '<(DEPTH)/processor/basic_code_modules.cc',
-        '<(DEPTH)/processor/logging.cc',
-        '<(DEPTH)/processor/minidump.cc',
-        '<(DEPTH)/processor/pathname_stripper.cc',
-      ]
-    }
   ],
 }

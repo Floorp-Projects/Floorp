@@ -49,7 +49,8 @@
 #include "common/dwarf/bytereader.h"
 #include "common/dwarf/dwarf2enums.h"
 #include "common/dwarf/types.h"
-#include "common/using_std_string.h"
+
+using namespace std;
 
 namespace dwarf2reader {
 struct LineStateMachine;
@@ -58,9 +59,8 @@ class LineInfoHandler;
 
 // This maps from a string naming a section to a pair containing a
 // the data for the section, and the size of the section.
-typedef std::map<string, std::pair<const char*, uint64> > SectionMap;
-typedef std::list<std::pair<enum DwarfAttribute, enum DwarfForm> >
-    AttributeList;
+typedef map<string, pair<const char*, uint64> > SectionMap;
+typedef list<pair<enum DwarfAttribute, enum DwarfForm> > AttributeList;
 typedef AttributeList::iterator AttributeIterator;
 typedef AttributeList::const_iterator ConstAttributeIterator;
 
@@ -75,7 +75,7 @@ struct LineInfoHeader {
   uint8 opcode_base;
   // Use a pointer so that signalsafe_addr2line is able to use this structure
   // without heap allocation problem.
-  std::vector<unsigned char> *std_opcode_lengths;
+  vector<unsigned char> *std_opcode_lengths;
 };
 
 class LineInfo {
@@ -313,7 +313,7 @@ class CompilationUnit {
   // Set of DWARF2/3 abbreviations for this compilation unit.  Indexed
   // by abbreviation number, which means that abbrevs_[0] is not
   // valid.
-  std::vector<Abbrev>* abbrevs_;
+  vector<Abbrev>* abbrevs_;
 
   // String section buffer and length, if we have a string section.
   // This is here to avoid doing a section lookup for strings in

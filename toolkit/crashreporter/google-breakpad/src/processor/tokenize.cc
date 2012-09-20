@@ -32,10 +32,9 @@
 #include <string>
 #include <vector>
 
-#include "common/using_std_string.h"
-
 namespace google_breakpad {
 
+using std::string;
 using std::vector;
 
 bool Tokenize(char *line,
@@ -68,7 +67,7 @@ bool Tokenize(char *line,
 }
 
 void StringToVector(const string &str, vector<char> &vec) {
-  vec.resize(str.length() + 1);
+  vec.reserve(str.length() + 1);
   std::copy(str.begin(), str.end(),
 	    vec.begin());
   vec[str.length()] = '\0';

@@ -90,8 +90,7 @@ enum MessageTag {
   MESSAGE_TAG_NONE = 0,
   MESSAGE_TAG_REGISTRATION_REQUEST = 1,
   MESSAGE_TAG_REGISTRATION_RESPONSE = 2,
-  MESSAGE_TAG_REGISTRATION_ACK = 3,
-  MESSAGE_TAG_UPLOAD_REQUEST = 4
+  MESSAGE_TAG_REGISTRATION_ACK = 3
 };
 
 struct CustomClientInfo {
@@ -103,7 +102,7 @@ struct CustomClientInfo {
 struct ProtocolMessage {
   ProtocolMessage()
       : tag(MESSAGE_TAG_NONE),
-        id(0),
+        pid(0),
         dump_type(MiniDumpNormal),
         thread_id(0),
         exception_pointers(NULL),
@@ -116,7 +115,7 @@ struct ProtocolMessage {
 
   // Creates an instance with the given parameters.
   ProtocolMessage(MessageTag arg_tag,
-                  DWORD arg_id,
+                  DWORD arg_pid,
                   MINIDUMP_TYPE arg_dump_type,
                   DWORD* arg_thread_id,
                   EXCEPTION_POINTERS** arg_exception_pointers,
@@ -126,7 +125,7 @@ struct ProtocolMessage {
                   HANDLE arg_dump_generated_handle,
                   HANDLE arg_server_alive)
     : tag(arg_tag),
-      id(arg_id),
+      pid(arg_pid),
       dump_type(arg_dump_type),
       thread_id(arg_thread_id),
       exception_pointers(arg_exception_pointers),
@@ -140,9 +139,8 @@ struct ProtocolMessage {
   // Tag in the message.
   MessageTag tag;
 
-  // The id for this message. This may be either a process id or a crash id
-  // depending on the type of message.
-  DWORD id;
+  // Process id.
+  DWORD pid;
 
   // Dump type requested.
   MINIDUMP_TYPE dump_type;

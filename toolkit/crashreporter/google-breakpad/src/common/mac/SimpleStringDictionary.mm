@@ -55,13 +55,13 @@ int SimpleStringDictionary::GetCount() const {
 }
 
 //==============================================================================
-const char *SimpleStringDictionary::GetValueForKey(const char *key) const {
+const char *SimpleStringDictionary::GetValueForKey(const char *key) {
   assert(key);
   if (!key)
     return NULL;
 
   for (int i = 0; i < MAX_NUM_ENTRIES; ++i) {
-    const KeyValueEntry &entry = entries_[i];
+    KeyValueEntry &entry = entries_[i];
     if (entry.IsActive() && !strcmp(entry.GetKey(), key)) {
       return entry.GetValue();
     }

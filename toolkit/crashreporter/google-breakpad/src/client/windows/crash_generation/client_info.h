@@ -65,24 +65,25 @@ class ClientInfo {
   HANDLE process_handle() const { return process_handle_; }
   HANDLE dump_requested_handle() const { return dump_requested_handle_; }
   HANDLE dump_generated_handle() const { return dump_generated_handle_; }
-  DWORD crash_id() const { return crash_id_; }
+
+  HANDLE dump_request_wait_handle() const {
+    return dump_request_wait_handle_;
+  }
 
   void set_dump_request_wait_handle(HANDLE value) {
     dump_request_wait_handle_ = value;
+  }
+
+  HANDLE process_exit_wait_handle() const {
+    return process_exit_wait_handle_;
   }
 
   void set_process_exit_wait_handle(HANDLE value) {
     process_exit_wait_handle_ = value;
   }
 
-  // Unregister the dump request wait operation and wait for all callbacks
-  // that might already be running to complete before returning.
-  void UnregisterDumpRequestWaitAndBlockUntilNoPending();
-
-  // Unregister the process exit wait operation.  If block_until_no_pending is
-  // true, wait for all callbacks that might already be running to complete
-  // before returning.
-  void UnregisterProcessExitWait(bool block_until_no_pending);
+  // Unregister all waits for the client.
+  void UnregisterWaits();
 
   bool Initialize();
   bool GetClientExceptionInfo(EXCEPTION_POINTERS** ex_info) const;
@@ -158,11 +159,6 @@ class ClientInfo {
   // Time when the client process started. It is used to determine the uptime
   // for the client process when it signals a crash.
   FILETIME start_time_;
-
-  // The crash id which can be used to request an upload. This will be the
-  // value of the low order dword of the process creation time for the process
-  // being dumped.
-  DWORD crash_id_;
 
   // Disallow copy ctor and operator=.
   ClientInfo(const ClientInfo& client_info);

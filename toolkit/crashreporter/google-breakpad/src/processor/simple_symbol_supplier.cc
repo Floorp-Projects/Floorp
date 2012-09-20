@@ -36,7 +36,6 @@
 #include "processor/simple_symbol_supplier.h"
 
 #include <assert.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -44,7 +43,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "common/using_std_string.h"
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/system_info.h"
 #include "processor/logging.h"
@@ -88,52 +86,11 @@ SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFile(
 
   if (s == FOUND) {
     std::ifstream in(symbol_file->c_str());
-    std::getline(in, *symbol_data, string::traits_type::to_char_type(
-                     string::traits_type::eof()));
+    std::getline(in, *symbol_data, std::string::traits_type::to_char_type(
+                     std::string::traits_type::eof()));
     in.close();
   }
   return s;
-}
-
-SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetCStringSymbolData(
-    const CodeModule *module,
-    const SystemInfo *system_info,
-    string *symbol_file,
-    char **symbol_data) {
-  assert(symbol_data);
-
-  string symbol_data_string;
-  SymbolSupplier::SymbolResult s =
-      GetSymbolFile(module, system_info, symbol_file, &symbol_data_string);
-
-  if (s == FOUND) {
-    unsigned int size = symbol_data_string.size() + 1;
-    *symbol_data = new char[size];
-    if (*symbol_data == NULL) {
-      BPLOG(ERROR) << "Memory allocation for size " << size << " failed";
-      return INTERRUPT;
-    }
-    memcpy(*symbol_data, symbol_data_string.c_str(), size - 1);
-    (*symbol_data)[size - 1] = '\0';
-    memory_buffers_.insert(make_pair(module->code_file(), *symbol_data));
-  }
-  return s;
-}
-
-void SimpleSymbolSupplier::FreeSymbolData(const CodeModule *module) {
-  if (!module) {
-    BPLOG(INFO) << "Cannot free symbol data buffer for NULL module";
-    return;
-  }
-
-  map<string, char *>::iterator it = memory_buffers_.find(module->code_file());
-  if (it == memory_buffers_.end()) {
-    BPLOG(INFO) << "Cannot find symbol data buffer for module "
-                << module->code_file();
-    return;
-  }
-  delete [] it->second;
-  memory_buffers_.erase(it);
 }
 
 SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFileAtPathFromRoot(

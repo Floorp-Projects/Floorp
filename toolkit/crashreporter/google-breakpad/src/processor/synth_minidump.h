@@ -114,7 +114,6 @@
 #include <string>
 
 #include "common/test_assembler.h"
-#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 #include "google_breakpad/common/minidump_format.h"
 
@@ -122,6 +121,7 @@ namespace google_breakpad {
 
 namespace SynthMinidump {
 
+using std::string;
 using test_assembler::Endianness;
 using test_assembler::kBigEndian;
 using test_assembler::kLittleEndian;
@@ -196,7 +196,7 @@ class SystemInfo: public Stream {
   static const string windows_x86_csd_version;
 };
 
-// An MDString: a string preceded by a 32-bit length.
+// An MDString: a string predeced by a 32-bit length.
 class String: public Section {
  public:
   String(const Dump &dump, const string &value);
@@ -227,7 +227,6 @@ class Context: public Section {
  public:
   // Create a context belonging to DUMP whose contents are a copy of CONTEXT.
   Context(const Dump &dump, const MDRawContextX86 &context);
-  Context(const Dump &dump, const MDRawContextARM &context);
   // Add constructors for other architectures here. Remember to byteswap.
 };
 
@@ -265,16 +264,6 @@ class Module: public Section {
   // minidumps.  There's no reason to make users write out all this crap
   // over and over.
   static const MDVSFixedFileInfo stock_version_info;
-};
-
-class Exception : public Stream {
-public:
-  Exception(const Dump &dump,
-            const Context &context,
-            u_int32_t thread_id = 0,
-            u_int32_t exception_code = 0,
-            u_int32_t exception_flags = 0,
-            u_int64_t exception_address = 0);
 };
 
 // A list of entries starting with a 32-bit count, like a memory list

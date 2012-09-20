@@ -49,7 +49,7 @@ class CPPLanguage: public Language {
   }
 };
 
-CPPLanguage CPPLanguageSingleton;
+const CPPLanguage CPPLanguageSingleton;
 
 // Java language-specific operations.
 class JavaLanguage: public Language {

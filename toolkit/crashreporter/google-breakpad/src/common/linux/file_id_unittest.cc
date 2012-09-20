@@ -32,58 +32,38 @@
 #include <elf.h>
 #include <stdlib.h>
 
-#include <string>
-
 #include "common/linux/file_id.h"
-#include "common/linux/safe_readlink.h"
-#include "common/linux/synth_elf.h"
-#include "common/test_assembler.h"
-#include "common/tests/auto_tempdir.h"
-#include "common/using_std_string.h"
 #include "breakpad_googletest_includes.h"
 
 using namespace google_breakpad;
-using google_breakpad::SafeReadLink;
-using google_breakpad::synth_elf::BuildIDNote;
-using google_breakpad::synth_elf::ELF;
-using google_breakpad::test_assembler::kLittleEndian;
-using google_breakpad::test_assembler::Section;
 
 namespace {
-
-// Simply calling Section::Append(size, byte) produces a uninteresting pattern
-// that tends to get hashed to 0000...0000. This populates the section with
-// data to produce better hashes.
-void PopulateSection(Section* section, int size, int prime_number) {
-  for (int i = 0; i < size; i++)
-    section->Append(1, (i % prime_number) % 256);
+typedef testing::Test FileIDTest;
 }
 
-}  // namespace
-
-TEST(FileIDStripTest, StripSelf) {
-  // Calculate the File ID of this binary using
-  // FileID::ElfFileIdentifier, then make a copy of this binary,
-  // strip it, and ensure that the result is the same.
+TEST(FileIDTest, FileIDStrip) {
+  // Calculate the File ID of our binary using
+  // FileID::ElfFileIdentifier, then make a copy of our binary,
+  // strip it, and ensure that we still get the same result.
   char exe_name[PATH_MAX];
-  ASSERT_TRUE(SafeReadLink("/proc/self/exe", exe_name));
+  ssize_t len = readlink("/proc/self/exe", exe_name, PATH_MAX - 1);
+  ASSERT_NE(len, -1);
+  exe_name[len] = '\0';
 
   // copy our binary to a temp file, and strip it
-  AutoTempDir temp_dir;
-  string templ = temp_dir.path() + "/file-id-unittest";
+  char templ[] = "/tmp/file-id-unittest-XXXXXX";
+  mktemp(templ);
   char cmdline[4096];
-  sprintf(cmdline, "cp \"%s\" \"%s\"", exe_name, templ.c_str());
-  ASSERT_EQ(0, system(cmdline)) << "Failed to execute: " << cmdline;
-  sprintf(cmdline, "chmod u+w \"%s\"", templ.c_str());
-  ASSERT_EQ(0, system(cmdline)) << "Failed to execute: " << cmdline;
-  sprintf(cmdline, "strip \"%s\"", templ.c_str());
-  ASSERT_EQ(0, system(cmdline)) << "Failed to execute: " << cmdline;
+  sprintf(cmdline, "cp \"%s\" \"%s\"", exe_name, templ);
+  ASSERT_EQ(system(cmdline), 0);
+  sprintf(cmdline, "strip \"%s\"", templ);
+  ASSERT_EQ(system(cmdline), 0);
 
   uint8_t identifier1[sizeof(MDGUID)];
   uint8_t identifier2[sizeof(MDGUID)];
   FileID fileid1(exe_name);
   EXPECT_TRUE(fileid1.ElfFileIdentifier(identifier1));
-  FileID fileid2(templ.c_str());
+  FileID fileid2(templ);
   EXPECT_TRUE(fileid2.ElfFileIdentifier(identifier2));
   char identifier_string1[37];
   char identifier_string2[37];
@@ -92,42 +72,61 @@ TEST(FileIDStripTest, StripSelf) {
   FileID::ConvertIdentifierToString(identifier2, identifier_string2,
                                     37);
   EXPECT_STREQ(identifier_string1, identifier_string2);
+  unlink(templ);
 }
 
-class FileIDTest : public testing::Test {
-public:
-  void GetElfContents(ELF& elf) {
-    string contents;
-    ASSERT_TRUE(elf.GetContents(&contents));
-    ASSERT_LT(0, contents.size());
-
-    elfdata_v.clear();
-    elfdata_v.insert(elfdata_v.begin(), contents.begin(), contents.end());
-    elfdata = &elfdata_v[0];
-  }
-
-  vector<uint8_t> elfdata_v;
-  uint8_t* elfdata;
+struct ElfClass32 {
+  typedef Elf32_Ehdr Ehdr;
+  typedef Elf32_Shdr Shdr;
+  static const int kClass = ELFCLASS32;
 };
 
-TEST_F(FileIDTest, ElfClass) {
+struct ElfClass64 {
+  typedef Elf64_Ehdr Ehdr;
+  typedef Elf64_Shdr Shdr;
+  static const int kClass = ELFCLASS64;
+};
+
+template<typename ElfClass>
+struct ElfishElf {
+  static const size_t kTextSectionSize = 128;
+  typedef typename ElfClass::Ehdr Ehdr;
+  typedef typename ElfClass::Shdr Shdr;
+
+  Ehdr elf_header;
+  Shdr text_header;
+  Shdr string_header;
+  char text_section[kTextSectionSize];
+  char string_section[8];
+
+  static void Populate(ElfishElf* elf) {
+    memset(elf, 0, sizeof(ElfishElf));
+    memcpy(elf, ELFMAG, SELFMAG);
+    elf->elf_header.e_ident[EI_CLASS] = ElfClass::kClass;
+    elf->elf_header.e_shoff = offsetof(ElfishElf, text_header);
+    elf->elf_header.e_shnum = 2;
+    elf->elf_header.e_shstrndx = 1;
+    elf->text_header.sh_name = 0;
+    elf->text_header.sh_type = SHT_PROGBITS;
+    elf->text_header.sh_offset = offsetof(ElfishElf, text_section);
+    elf->text_header.sh_size = kTextSectionSize;
+    for (size_t i = 0; i < kTextSectionSize; ++i) {
+      elf->text_section[i] = i * 3;
+    }
+    elf->string_header.sh_offset = offsetof(ElfishElf, string_section);
+    strcpy(elf->string_section, ".text");
+  }
+};
+
+TEST(FileIDTest, ElfClass) {
   uint8_t identifier[sizeof(MDGUID)];
   const char expected_identifier_string[] =
       "80808080-8080-0000-0000-008080808080";
   char identifier_string[sizeof(expected_identifier_string)];
-  const size_t kTextSectionSize = 128;
 
-  ELF elf32(EM_386, ELFCLASS32, kLittleEndian);
-  Section text32(kLittleEndian);
-  for (size_t i = 0; i < kTextSectionSize; ++i) {
-    text32.D8(i * 3);
-  }
-  elf32.AddSection(".text", text32, SHT_PROGBITS);
-  elf32.Finish();
-  GetElfContents(elf32);
-
-  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(elfdata, identifier));
-
+  ElfishElf<ElfClass32> elf32;
+  ElfishElf<ElfClass32>::Populate(&elf32);
+  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(&elf32, identifier));
   FileID::ConvertIdentifierToString(identifier, identifier_string,
                                     sizeof(identifier_string));
   EXPECT_STREQ(expected_identifier_string, identifier_string);
@@ -135,155 +134,10 @@ TEST_F(FileIDTest, ElfClass) {
   memset(identifier, 0, sizeof(identifier));
   memset(identifier_string, 0, sizeof(identifier_string));
 
-  ELF elf64(EM_X86_64, ELFCLASS64, kLittleEndian);
-  Section text64(kLittleEndian);
-  for (size_t i = 0; i < kTextSectionSize; ++i) {
-    text64.D8(i * 3);
-  }
-  elf64.AddSection(".text", text64, SHT_PROGBITS);
-  elf64.Finish();
-  GetElfContents(elf64);
-
-  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(elfdata, identifier));
-
+  ElfishElf<ElfClass64> elf64;
+  ElfishElf<ElfClass64>::Populate(&elf64);
+  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(&elf64, identifier));
   FileID::ConvertIdentifierToString(identifier, identifier_string,
                                     sizeof(identifier_string));
   EXPECT_STREQ(expected_identifier_string, identifier_string);
-}
-
-TEST_F(FileIDTest, BuildID) {
-  const uint8_t kExpectedIdentifier[sizeof(MDGUID)] =
-    {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-     0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
-  char expected_identifier_string[] =
-    "00000000-0000-0000-0000-000000000000";
-  FileID::ConvertIdentifierToString(kExpectedIdentifier,
-                                    expected_identifier_string,
-                                    sizeof(expected_identifier_string));
-
-  uint8_t identifier[sizeof(MDGUID)];
-  char identifier_string[sizeof(expected_identifier_string)];
-
-  ELF elf32(EM_386, ELFCLASS32, kLittleEndian);
-  Section text(kLittleEndian);
-  text.Append(4096, 0);
-  elf32.AddSection(".text", text, SHT_PROGBITS);
-  BuildIDNote::AppendSection(elf32,
-                             kExpectedIdentifier,
-                             sizeof(kExpectedIdentifier));
-  elf32.Finish();
-  GetElfContents(elf32);
-
-  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(elfdata, identifier));
-
-  FileID::ConvertIdentifierToString(identifier, identifier_string,
-                                    sizeof(identifier_string));
-  EXPECT_STREQ(expected_identifier_string, identifier_string);
-
-  memset(identifier, 0, sizeof(identifier));
-  memset(identifier_string, 0, sizeof(identifier_string));
-
-  ELF elf64(EM_X86_64, ELFCLASS64, kLittleEndian);
-  // Re-use empty text section from previous test
-  elf64.AddSection(".text", text, SHT_PROGBITS);
-  BuildIDNote::AppendSection(elf64,
-                             kExpectedIdentifier,
-                             sizeof(kExpectedIdentifier));
-  elf64.Finish();
-  GetElfContents(elf64);
-
-  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(elfdata, identifier));
-
-  FileID::ConvertIdentifierToString(identifier, identifier_string,
-                                    sizeof(identifier_string));
-  EXPECT_STREQ(expected_identifier_string, identifier_string);
-}
-
-// Test to make sure two files with different text sections produce
-// different hashes when not using a build id.
-TEST_F(FileIDTest, UniqueHashes32) {
-  char identifier_string_1[] =
-    "00000000-0000-0000-0000-000000000000";
-  char identifier_string_2[] =
-    "00000000-0000-0000-0000-000000000000";
-  uint8_t identifier_1[sizeof(MDGUID)];
-  uint8_t identifier_2[sizeof(MDGUID)];
-
-  {
-    ELF elf1(EM_386, ELFCLASS32, kLittleEndian);
-    Section foo_1(kLittleEndian);
-    PopulateSection(&foo_1, 32, 5);
-    elf1.AddSection(".foo", foo_1, SHT_PROGBITS);
-    Section text_1(kLittleEndian);
-    PopulateSection(&text_1, 4096, 17);
-    elf1.AddSection(".text", text_1, SHT_PROGBITS);
-    elf1.Finish();
-    GetElfContents(elf1);
-  }
-
-  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(elfdata, identifier_1));
-  FileID::ConvertIdentifierToString(identifier_1, identifier_string_1,
-                                    sizeof(identifier_string_1));
-
-  {
-    ELF elf2(EM_386, ELFCLASS32, kLittleEndian);
-    Section text_2(kLittleEndian);
-    Section foo_2(kLittleEndian);
-    PopulateSection(&foo_2, 32, 5);
-    elf2.AddSection(".foo", foo_2, SHT_PROGBITS);
-    PopulateSection(&text_2, 4096, 31);
-    elf2.AddSection(".text", text_2, SHT_PROGBITS);
-    elf2.Finish();
-    GetElfContents(elf2);
-  }
-
-  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(elfdata, identifier_2));
-  FileID::ConvertIdentifierToString(identifier_2, identifier_string_2,
-                                    sizeof(identifier_string_2));
-
-  EXPECT_STRNE(identifier_string_1, identifier_string_2);
-}
-
-// Same as UniqueHashes32, for x86-64.
-TEST_F(FileIDTest, UniqueHashes64) {
-  char identifier_string_1[] =
-    "00000000-0000-0000-0000-000000000000";
-  char identifier_string_2[] =
-    "00000000-0000-0000-0000-000000000000";
-  uint8_t identifier_1[sizeof(MDGUID)];
-  uint8_t identifier_2[sizeof(MDGUID)];
-
-  {
-    ELF elf1(EM_X86_64, ELFCLASS64, kLittleEndian);
-    Section foo_1(kLittleEndian);
-    PopulateSection(&foo_1, 32, 5);
-    elf1.AddSection(".foo", foo_1, SHT_PROGBITS);
-    Section text_1(kLittleEndian);
-    PopulateSection(&text_1, 4096, 17);
-    elf1.AddSection(".text", text_1, SHT_PROGBITS);
-    elf1.Finish();
-    GetElfContents(elf1);
-  }
-
-  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(elfdata, identifier_1));
-  FileID::ConvertIdentifierToString(identifier_1, identifier_string_1,
-                                    sizeof(identifier_string_1));
-
-  {
-    ELF elf2(EM_X86_64, ELFCLASS64, kLittleEndian);
-    Section text_2(kLittleEndian);
-    Section foo_2(kLittleEndian);
-    PopulateSection(&foo_2, 32, 5);
-    elf2.AddSection(".foo", foo_2, SHT_PROGBITS);
-    PopulateSection(&text_2, 4096, 31);
-    elf2.AddSection(".text", text_2, SHT_PROGBITS);
-    elf2.Finish();
-    GetElfContents(elf2);
-  }
-
-  EXPECT_TRUE(FileID::ElfFileIdentifierFromMappedFile(elfdata, identifier_2));
-  FileID::ConvertIdentifierToString(identifier_2, identifier_string_2,
-                                    sizeof(identifier_string_2));
-
-  EXPECT_STRNE(identifier_string_1, identifier_string_2);
 }

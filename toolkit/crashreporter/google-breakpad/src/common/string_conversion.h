@@ -34,8 +34,6 @@
 
 #include <string>
 #include <vector>
-
-#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
@@ -61,7 +59,7 @@ void UTF32ToUTF16(const wchar_t *in, vector<u_int16_t> *out);
 void UTF32ToUTF16Char(wchar_t in, u_int16_t out[2]);
 
 // Convert |in| to UTF-8.  If |swap| is true, swap bytes before converting.
-string UTF16ToUTF8(const vector<u_int16_t> &in, bool swap);
+std::string UTF16ToUTF8(const vector<u_int16_t> &in, bool swap);
 
 }  // namespace google_breakpad
 
