@@ -89,13 +89,16 @@ public:
   SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey,
                      BluetoothReplyRunnable* aRunnable);
 
-  virtual bool 
+  virtual bool
   SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable);
 
-  virtual bool 
+  virtual bool
   SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow,
                            BluetoothReplyRunnable* aRunnable);
+
+  virtual nsresult
+  PrepareAdapterInternal(const nsAString& aPath);
 
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
