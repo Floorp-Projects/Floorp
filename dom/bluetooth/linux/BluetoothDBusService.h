@@ -82,16 +82,20 @@ public:
                        BluetoothReplyRunnable* aRunnable);
 
   virtual bool
-  SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode);
+  SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode,
+                     BluetoothReplyRunnable* aRunnable);
 
   virtual bool
-  SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey);
+  SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey,
+                     BluetoothReplyRunnable* aRunnable);
 
   virtual bool 
-  SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm);
+  SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
+                                 BluetoothReplyRunnable* aRunnable);
 
   virtual bool 
-  SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow);
+  SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow,
+                           BluetoothReplyRunnable* aRunnable);
 
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,

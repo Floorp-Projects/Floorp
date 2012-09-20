@@ -455,6 +455,52 @@ nsSubDocumentFrame::GetIntrinsicHeight()
 }
 
 #ifdef DEBUG
+NS_IMETHODIMP
+nsSubDocumentFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
+{
+  IndentBy(out, aIndent);
+  ListTag(out);
+#ifdef DEBUG_waterson
+  fprintf(out, " [parent=%p]", static_cast<void*>(mParent));
+#endif
+  if (HasView()) {
+    fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
+  }
+  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
+  if (0 != mState) {
+    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
+  }
+  nsIFrame* prevInFlow = GetPrevInFlow();
+  nsIFrame* nextInFlow = GetNextInFlow();
+  if (nullptr != prevInFlow) {
+    fprintf(out, " prev-in-flow=%p", static_cast<void*>(prevInFlow));
+  }
+  if (nullptr != nextInFlow) {
+    fprintf(out, " next-in-flow=%p", static_cast<void*>(nextInFlow));
+  }
+  fprintf(out, " [content=%p]", static_cast<void*>(mContent));
+  nsSubDocumentFrame* f = const_cast<nsSubDocumentFrame*>(this);
+  if (f->HasOverflowAreas()) {
+    nsRect overflowArea = f->GetVisualOverflowRect();
+    fprintf(out, " [vis-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+            overflowArea.width, overflowArea.height);
+    overflowArea = f->GetScrollableOverflowRect();
+    fprintf(out, " [scr-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+            overflowArea.width, overflowArea.height);
+  }
+  fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
+  fputs("\n", out);
+
+  if (aFlags & TRAVERSE_SUBDOCUMENT_FRAMES) {
+    nsIFrame* subdocRootFrame = f->GetSubdocumentRootFrame();
+    if (subdocRootFrame) {
+      subdocRootFrame->List(out, aIndent + 1);
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsSubDocumentFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("FrameOuter"), aResult);

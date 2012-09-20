@@ -397,6 +397,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     uint32_t length, lineno, nslots;
     uint32_t natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, i;
     uint32_t prologLength, version;
+    uint32_t ndefaults = 0;
     uint32_t nTypeSets = 0;
     uint32_t scriptBits = 0;
 
@@ -450,6 +451,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             ntrynotes = script->trynotes()->length;
 
         nTypeSets = script->nTypeSets;
+        ndefaults = script->ndefaults;
 
         if (script->noScriptRval)
             scriptBits |= (1 << NoScriptRval);
@@ -508,6 +510,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         return JS_FALSE;
     if (!xdr->codeUint32(&nTypeSets))
         return JS_FALSE;
+    if (!xdr->codeUint32(&ndefaults))
+        return JS_FALSE;
     if (!xdr->codeUint32(&scriptBits))
         return JS_FALSE;
 
@@ -550,6 +554,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         JS_ASSERT(!script->mainOffset);
         script->mainOffset = prologLength;
         script->nfixed = uint16_t(version >> 16);
+        script->ndefaults = ndefaults;
 
         /* If we know nsrcnotes, we allocated space for notes in script. */
         notes = script->notes();
@@ -1042,14 +1047,14 @@ JSScript::loadSource(JSContext *cx, bool *worked)
     return true;
 }
 
-JSFixedString *
+JSFlatString *
 JSScript::sourceData(JSContext *cx)
 {
     JS_ASSERT(scriptSource_->hasSourceData());
     return scriptSource_->substring(cx, sourceStart, sourceEnd);
 }
 
-JSFixedString *
+JSStableString *
 SourceDataCache::lookup(ScriptSource *ss)
 {
     if (!map_)
@@ -1060,7 +1065,7 @@ SourceDataCache::lookup(ScriptSource *ss)
 }
 
 void
-SourceDataCache::put(ScriptSource *ss, JSFixedString *str)
+SourceDataCache::put(ScriptSource *ss, JSStableString *str)
 {
     if (!map_) {
         map_ = js_new<Map>();
@@ -1082,13 +1087,13 @@ SourceDataCache::purge()
     map_ = NULL;
 }
 
-JSFixedString *
+JSFlatString *
 ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 {
     JS_ASSERT(ready());
     const jschar *chars;
 #if USE_ZLIB
-    Rooted<JSFixedString *> cached(cx, NULL);
+    Rooted<JSStableString *> cached(cx, NULL);
     if (compressed()) {
         cached = cx->runtime->sourceDataCache.lookup(this);
         if (!cached) {
@@ -1110,7 +1115,7 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
             }
             cx->runtime->sourceDataCache.put(this, cached);
         }
-        chars = cached->getChars(cx);
+        chars = cached->chars();
         JS_ASSERT(chars);
     } else {
         chars = data.source;
@@ -1136,7 +1141,7 @@ ScriptSource::setSourceCopy(JSContext *cx, const jschar *src, uint32_t length,
 #ifdef JS_THREADSAFE
     if (tok) {
 #ifdef DEBUG
-        ready_ = false;  
+        ready_ = false;
 #endif
         tok->ss = this;
         tok->chars = src;
@@ -1686,6 +1691,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
         } else {
             JS_ASSERT(!funbox->definitelyNeedsArgsObj());
         }
+
+        script->ndefaults = funbox->ndefaults;
     }
 
     RootedFunction fun(cx, NULL);

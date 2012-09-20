@@ -333,7 +333,7 @@ nsBlockFrame::GetSplittableType() const
 
 #ifdef DEBUG
 NS_METHOD
-nsBlockFrame::List(FILE* out, int32_t aIndent) const
+nsBlockFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
@@ -422,7 +422,7 @@ nsBlockFrame::List(FILE* out, int32_t aIndent) const
   if (!mLines.empty()) {
     const_line_iterator line = begin_lines(), line_end = end_lines();
     for ( ; line != line_end; ++line) {
-      line->List(out, aIndent);
+      line->List(out, aIndent, aFlags);
     }
   }
 
@@ -434,7 +434,7 @@ nsBlockFrame::List(FILE* out, int32_t aIndent) const
     const_line_iterator line = overflowLines->mLines.begin(),
                         line_end = overflowLines->mLines.end();
     for ( ; line != line_end; ++line) {
-      line->List(out, aIndent + 1);
+      line->List(out, aIndent + 1, aFlags);
     }
     IndentBy(out, aIndent);
     fputs(">\n", out);
@@ -453,7 +453,7 @@ nsBlockFrame::List(FILE* out, int32_t aIndent) const
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       nsIFrame* kid = childFrames.get();
-      kid->List(out, aIndent + 1);
+      kid->List(out, aIndent + 1, aFlags);
     }
     IndentBy(out, aIndent);
     fputs(">\n", out);

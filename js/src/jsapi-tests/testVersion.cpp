@@ -162,11 +162,9 @@ EvalScriptVersion16(JSContext *cx, unsigned argc, jsval *vp)
     JS_ASSERT(argc == 1);
     jsval *argv = JS_ARGV(cx, vp);
     JS_ASSERT(JSVAL_IS_STRING(argv[0]));
-    JSString *str = JSVAL_TO_STRING(argv[0]);
-    const jschar *chars = str->getChars(cx);
-    JS_ASSERT(chars);
-    size_t len = str->length();
-    return callbackData->evalVersion(chars, len, JSVERSION_1_6);
+    JSStableString *str = JSVAL_TO_STRING(argv[0])->ensureStable(cx);
+    JS_ASSERT(str);
+    return callbackData->evalVersion(str->chars(), str->length(), JSVERSION_1_6);
 }
 
 JSBool

@@ -36,10 +36,10 @@ interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
   nsIDOMDOMRequest pair(in nsIDOMBluetoothDevice aDevice);
   nsIDOMDOMRequest unpair(in nsIDOMBluetoothDevice aDevice);
   nsIDOMDOMRequest getPairedDevices();
-  void setPinCode(in DOMString aDeviceAddress, in DOMString aPinCode);
-  void setPasskey(in DOMString aDeviceAddress, in unsigned long aPasskey);
-  void setPairingConfirmation(in DOMString aDeviceAddress, in bool aConfirmation);
-  void setAuthorization(in DOMString aDeviceAddress, in bool aAllow);
+  nsIDOMDOMRequest setPinCode(in DOMString aDeviceAddress, in DOMString aPinCode);
+  nsIDOMDOMRequest setPasskey(in DOMString aDeviceAddress, in unsigned long aPasskey);
+  nsIDOMDOMRequest setPairingConfirmation(in DOMString aDeviceAddress, in bool aConfirmation);
+  nsIDOMDOMRequest setAuthorization(in DOMString aDeviceAddress, in bool aAllow);
 
   // Fired when discoverying and any device is discovered.
   [implicit_jscontext] attribute jsval ondevicefound;

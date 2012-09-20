@@ -325,23 +325,7 @@ public:
               PBrowserParent *browserParent) MOZ_OVERRIDE
   {
     // We give all content vibration permission.
-
-    // Check whether browserParent is active.  We should have already
-    // checked that the corresponding window is active, but this check
-    // isn't redundant.  A window may be inactive in an active
-    // browser.  And a window is not notified synchronously when it's
-    // deactivated, so the window may think it's active when the tab
-    // is actually inactive.  This also mitigates user annoyance that
-    // buggy/malicious processes could cause.
     TabParent *tabParent = static_cast<TabParent*>(browserParent);
-    if (!tabParent->Active()) {
-      HAL_LOG(("RecvVibrate: Tab is not active. Cancelling."));
-      return true;
-    }
-
-    // Forward to hal::, not hal_impl::, because we might be a
-    // subprocess of another sandboxed process.  The hal:: entry point
-    // will do the right thing.
     nsCOMPtr<nsIDOMWindow> window =
       do_QueryInterface(tabParent->GetBrowserDOMWindow());
     WindowIdentifier newID(id, window);

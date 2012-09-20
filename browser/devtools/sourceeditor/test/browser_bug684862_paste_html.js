@@ -36,7 +36,7 @@ function pageLoaded()
   const windowFeatures = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
   let doCopy = function() {
-    content.focus();
+    gBrowser.selectedBrowser.focus();
     EventUtils.synthesizeKey("a", {accelKey: true}, content);
     EventUtils.synthesizeKey("c", {accelKey: true}, content);
   };

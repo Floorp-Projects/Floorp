@@ -2829,7 +2829,8 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
 
         bool isFill = mOp == nsCanvasRenderingContext2D::TEXT_DRAW_OPERATION_FILL;
         SimpleTextObjectPaint objectPaint(isFill ? pattern.get() : nullptr,
-                                          isFill ? nullptr : pattern.get());
+                                          isFill ? nullptr : pattern.get(),
+                                          mThebes->CurrentMatrix());
 
         mTextRun->Draw(mThebes,
                        point,

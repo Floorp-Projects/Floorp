@@ -322,15 +322,9 @@ BrowserElementParent.prototype = {
     try {
       this._mm.sendAsyncMessage('browser-element-api:' + msg, data);
     } catch (e) {
-      // Ignore NS_ERROR_NOT_INITIALIZED. This exception is thrown when
-      // we call _sendAsyncMsg if our frame is not in the DOM, in which case
-      // we don't have child to receive the message.
-      if (e.result == Cr.NS_ERROR_NOT_INITIALIZED) {
-        debug("Handle NS_ERROR_NOT_INITIALIZED");
-        return;
-      }
-      throw e;
+      return false;
     }
+    return true;
   },
 
   _recvHello: function(data) {
@@ -462,8 +456,11 @@ BrowserElementParent.prototype = {
   _sendDOMRequest: function(msgName) {
     let id = 'req_' + this._domRequestCounter++;
     let req = Services.DOMRequest.createRequest(this._window);
-    this._pendingDOMRequests[id] = req;
-    this._sendAsyncMsg(msgName, {id: id});
+    if (this._sendAsyncMsg(msgName, {id: id})) {
+      this._pendingDOMRequests[id] = req;
+    } else {
+      Services.DOMRequest.fireErrorAsync(req, "fail");
+    }
     return req;
   },
 

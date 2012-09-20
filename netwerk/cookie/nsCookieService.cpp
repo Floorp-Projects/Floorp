@@ -46,7 +46,6 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 #include "mozilla/storage.h"
-#include "mozilla/FunctionTimer.h"
 #include "mozilla/Util.h" // for DebugOnly
 #include "mozilla/Attributes.h"
 
@@ -608,8 +607,6 @@ nsCookieService::nsCookieService()
 nsresult
 nsCookieService::Init()
 {
-  NS_TIME_FUNCTION;
-
   nsresult rv;
   mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);

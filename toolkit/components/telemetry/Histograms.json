@@ -891,6 +891,24 @@
     "n_buckets": 50,
     "description": "Time to search offline cache (ms)"
   },
+  "TRANSACTION_WAIT_TIME_HTTP": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 100,
+    "description": "Time from submission to dispatch of HTTP transaction (ms)"
+  },
+  "TRANSACTION_WAIT_TIME_HTTP_PIPELINES": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 100,
+    "description": "Time from submission to dispatch of HTTP with pipelines transaction (ms)"
+  },
+  "TRANSACTION_WAIT_TIME_SPDY": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 100,
+    "description": "Time from submission to dispatch of SPDY transaction (ms)"
+  },
   "HTTP_DISK_CACHE_OVERHEAD": {
     "kind": "exponential",
     "high": "32000000",

@@ -256,8 +256,22 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
     var dirname = dir.split(/\s+/)[0];
     var dirvalue = dir.substring(dirname.length).trim();
 
+    if (aCSPR._directives.hasOwnProperty(dirname)) {
+      // Check for (most) duplicate directives
+      CSPError(CSPLocalizer.getFormatStr("duplicateDirective", [dirname]));
+      CSPdebug("Skipping duplicate directive: \"" + dir + "\"");
+      continue directive;
+    }
+
     // OPTIONS DIRECTIVE ////////////////////////////////////////////////
     if (dirname === CSPRep.OPTIONS_DIRECTIVE) {
+      if (aCSPR._allowInlineScripts || aCSPR._allowEval) {
+        // Check for duplicate options directives
+        CSPError(CSPLocalizer.getFormatStr("duplicateDirective", [dirname]));
+        CSPdebug("Skipping duplicate directive: \"" + dir + "\"");
+        continue directive;
+      }
+
       // grab value tokens and interpret them
       var options = dirvalue.split(/\s+/);
       for each (var opt in options) {
@@ -275,6 +289,13 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
     // parse "allow" as equivalent to "default-src", at least until the spec
     // stabilizes, at which time we can stop parsing "allow"
     if (dirname === CSPRep.ALLOW_DIRECTIVE) {
+      CSPWarning(CSPLocalizer.getStr("allowDirectiveDeprecated"));
+      if (aCSPR._directives.hasOwnProperty(SD.DEFAULT_SRC)) {
+        // Check for duplicate default-src and allow directives
+        CSPError(CSPLocalizer.getFormatStr("duplicateDirective", [dirname]));
+        CSPdebug("Skipping duplicate directive: \"" + dir + "\"");
+        continue directive;
+      }
       var dv = CSPSourceList.fromString(dirvalue, self, true);
       if (dv) {
         aCSPR._directives[SD.DEFAULT_SRC] = dv;
@@ -346,7 +367,8 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
               break;
 
             default:
-              CSPWarning(CSPLocalizer.getFormatStr("couldNotParseReportURI", [uriStrings[i]]));
+              CSPWarning(CSPLocalizer.getFormatStr("couldNotParseReportURI",
+                        [uriStrings[i]]));
               continue;
           }
         }

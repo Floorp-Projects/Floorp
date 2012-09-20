@@ -1063,7 +1063,7 @@ let RIL = {
     this.getIMSI();
     this.getMSISDN();
     this.getAD();
-    this.getUST();
+    this.getSST();
     this.getMBDN();
   },
 
@@ -1195,47 +1195,92 @@ let RIL = {
   },
 
   /**
-   * Get whether specificed USIM service is available.
+   * Get whether specificed (U)SIM service is available.
    *
-   * @param service
-   *        Service id, valid in 1..N. See 3GPP TS 31.102 4.2.8.
-   * @return
-   *        true if the service is enabled,
-   *        false otherwise.
+   * @param geckoService
+   *        Service name like "ADN", "BDN", etc.
+   *
+   * @return true if the service is enabled, false otherwise.
    */
-  isUSTServiceAvailable: function isUSTServiceAvailable(service) {
-    service -= 1;
-    let index = service / 8;
-    let bitmask = 1 << (service % 8);
-    return this.iccInfo.ust &&
-           (index < this.iccInfo.ust.length) &&
-           (this.iccInfo.ust[index] & bitmask);
+  isICCServiceAvailable: function isICCServiceAvailable(geckoService) {
+    let serviceTable = this.iccInfo.sst;
+    let index, bitmask;
+    if (this.appType == CARD_APPTYPE_SIM) {
+      /**
+       * Service id is valid in 1..N, and 2 bits are used to code each service.
+       *
+       * +----+--  --+----+----+
+       * | b8 | ...  | b2 | b1 |
+       * +----+--  --+----+----+
+       *
+       * b1 = 0, service not allocated.
+       *      1, service allocated.
+       * b2 = 0, service not activatd.
+       *      1, service allocated.
+       *
+       * @see 3GPP TS 51.011 10.3.7.
+       */
+      let simService = GECKO_ICC_SERVICES.sim[geckoService];
+      if (!simService) {
+        return false;
+      }
+      simService -= 1;
+      index = Math.floor(simService / 4);
+      bitmask = 2 << ((simService % 4) << 1);
+    } else {
+      /**
+       * Service id is valid in 1..N, and 1 bit is used to code each service.
+       *
+       * +----+--  --+----+----+
+       * | b8 | ...  | b2 | b1 |
+       * +----+--  --+----+----+
+       *
+       * b1 = 0, service not avaiable.
+       *      1, service available.
+       * b2 = 0, service not avaiable.
+       *      1, service available.
+       *
+       * @see 3GPP TS 31.102 4.2.8.
+       */
+      let usimService = GECKO_ICC_SERVICES.usim[geckoService];
+      if (!usimService) {
+        return false;
+      }
+      usimService -= 1;
+      index = Math.floor(usimService / 8);
+      bitmask = 1 << ((usimService % 8) << 0);
+    }
+
+    return (serviceTable &&
+           (index < serviceTable.length) &&
+           (serviceTable[index] & bitmask)) != 0;
   },
 
   /**
-   * Read the UST from the ICC.
+   * Read the (U)SIM Service Table from the ICC.
    */
-  getUST: function getUST() {
+  getSST: function getSST() {
     function callback() {
       let length = Buf.readUint32();
       // Each octet is encoded into two chars.
       let len = length / 2;
-      this.iccInfo.ust = GsmPDUHelper.readHexOctetArray(len);
+      this.iccInfo.sst = GsmPDUHelper.readHexOctetArray(len);
       Buf.readStringDelimiter(length);
-      
+
       if (DEBUG) {
         let str = "";
-        for (let i = 0; i < this.iccInfo.ust.length; i++) {
-          str += this.iccInfo.ust[i] + ", ";
+        for (let i = 0; i < this.iccInfo.sst.length; i++) {
+          str += this.iccInfo.sst[i] + ", ";
         }
-        debug("UST: " + str);
+        debug("SST: " + str);
       }
     }
 
+    // ICC_EF_UST has the same value with ICC_EF_SST.
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
-      fileId:    ICC_EF_UST,
-      pathId:    this._getPathIdForICCRecord(ICC_EF_UST),
+      fileId:    ICC_EF_SST,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_SST),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -2379,7 +2424,7 @@ let RIL = {
 
           case ICC_EF_AD:
           case ICC_EF_MBDN:
-          case ICC_EF_UST:
+          case ICC_EF_SST:
             return EF_PATH_MF_SIM + EF_PATH_DF_GSM;
         }
       case CARD_APPTYPE_USIM:
@@ -4958,6 +5003,21 @@ let GsmPDUHelper = {
       number = '+' + number;
     }
     return number;
+  },
+
+  /**
+   * Write Dialling Number.
+   *
+   * @param number  The Dialling number
+   */
+  writeDiallingNumber: function writeDiallingNumber(number) {
+    let toa = PDU_TOA_ISDN; // 81
+    if (number[0] == '+') {
+      toa = PDU_TOA_INTERNATIONAL | PDU_TOA_ISDN; // 91
+      number = number.substring(1);
+    }
+    this.writeHexOctet(toa);
+    this.writeSwappedNibbleBCD(number);
   },
 
   /**

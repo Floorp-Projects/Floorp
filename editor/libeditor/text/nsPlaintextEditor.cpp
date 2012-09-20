@@ -5,7 +5,6 @@
 
 
 #include "mozilla/Assertions.h"
-#include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Selection.h"
 #include "mozilla/dom/Element.h"
@@ -118,8 +117,6 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
                                       nsISelectionController *aSelCon,
                                       uint32_t aFlags)
 {
-  NS_TIME_FUNCTION;
-
   NS_PRECONDITION(aDoc, "bad arg");
   NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
   

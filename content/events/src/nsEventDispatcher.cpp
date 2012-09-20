@@ -10,7 +10,6 @@
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
-#include "mozilla/FunctionTimer.h"
 #include "nsMutationEvent.h"
 #include NEW_H
 #include "nsFixedSizeAllocator.h"
@@ -460,12 +459,6 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   // If aTargets is non-null, the event isn't going to be dispatched.
   NS_ENSURE_TRUE(aEvent->message || !aDOMEvent || aTargets,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
-
-#ifdef NS_FUNCTION_TIMER
-  const char* timer_event_name = nsDOMEvent::GetEventName(aEvent->message);
-  NS_TIME_FUNCTION_MIN_FMT(20, "Dispatching '%s' event",
-                           timer_event_name ? timer_event_name : "<other>");
-#endif
 
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
 

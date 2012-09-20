@@ -1,3 +1,5 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -183,26 +185,37 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
 #endif
 
   switch (aRequest.type()) {
-     case Request::TDefaultAdapterPathRequest:
-       return actor->DoRequest(aRequest.get_DefaultAdapterPathRequest());
-     case Request::TSetPropertyRequest:
-       return actor->DoRequest(aRequest.get_SetPropertyRequest());
-     case Request::TGetPropertyRequest:
-       return actor->DoRequest(aRequest.get_GetPropertyRequest());
-     case Request::TStartDiscoveryRequest:
-       return actor->DoRequest(aRequest.get_StartDiscoveryRequest());
-     case Request::TStopDiscoveryRequest:
-       return actor->DoRequest(aRequest.get_StopDiscoveryRequest());
-     case Request::TPairRequest:
-       return actor->DoRequest(aRequest.get_PairRequest());
-     case Request::TUnpairRequest:
-       return actor->DoRequest(aRequest.get_UnpairRequest());
-     case Request::TDevicePropertiesRequest:
-       return actor->DoRequest(aRequest.get_DevicePropertiesRequest());
-
-     default:
-       MOZ_NOT_REACHED("Unknown type!");
-       return false;
+    case Request::TDefaultAdapterPathRequest:
+      return actor->DoRequest(aRequest.get_DefaultAdapterPathRequest());
+    case Request::TSetPropertyRequest:
+      return actor->DoRequest(aRequest.get_SetPropertyRequest());
+    case Request::TGetPropertyRequest:
+      return actor->DoRequest(aRequest.get_GetPropertyRequest());
+    case Request::TStartDiscoveryRequest:
+      return actor->DoRequest(aRequest.get_StartDiscoveryRequest());
+    case Request::TStopDiscoveryRequest:
+      return actor->DoRequest(aRequest.get_StopDiscoveryRequest());
+    case Request::TPairRequest:
+      return actor->DoRequest(aRequest.get_PairRequest());
+    case Request::TUnpairRequest:
+      return actor->DoRequest(aRequest.get_UnpairRequest());
+    case Request::TDevicePropertiesRequest:
+      return actor->DoRequest(aRequest.get_DevicePropertiesRequest());
+    case Request::TSetPinCodeRequest:
+      return actor->DoRequest(aRequest.get_SetPinCodeRequest());
+    case Request::TSetPasskeyRequest:
+      return actor->DoRequest(aRequest.get_SetPasskeyRequest());
+    case Request::TConfirmPairingConfirmationRequest:
+      return actor->DoRequest(aRequest.get_ConfirmPairingConfirmationRequest());
+    case Request::TConfirmAuthorizationRequest:
+      return actor->DoRequest(aRequest.get_ConfirmAuthorizationRequest());
+    case Request::TDenyPairingConfirmationRequest:
+      return actor->DoRequest(aRequest.get_DenyPairingConfirmationRequest());
+    case Request::TDenyAuthorizationRequest:
+      return actor->DoRequest(aRequest.get_DenyAuthorizationRequest());
+    default:
+      MOZ_NOT_REACHED("Unknown type!");
+      return false;
   }
 
   MOZ_NOT_REACHED("Should never get here!");
@@ -371,6 +384,104 @@ BluetoothRequestParent::DoRequest(const DevicePropertiesRequest& aRequest)
   nsresult rv =
     mService->GetPairedDevicePropertiesInternal(aRequest.addresses(),
                                                 mReplyRunnable.get());
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const SetPinCodeRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TSetPinCodeRequest);
+
+  nsresult rv =
+    mService->SetPinCodeInternal(aRequest.path(),
+                                 aRequest.pincode(),
+                                 mReplyRunnable.get());
+
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const SetPasskeyRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TSetPasskeyRequest);
+
+  nsresult rv =
+    mService->SetPasskeyInternal(aRequest.path(),
+                                 aRequest.passkey(),
+                                 mReplyRunnable.get());
+
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ConfirmPairingConfirmationRequest&
+                                  aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TConfirmPairingConfirmationRequest);
+
+  nsresult rv =
+    mService->SetPairingConfirmationInternal(aRequest.path(),
+                                             true,
+                                             mReplyRunnable.get());
+
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ConfirmAuthorizationRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TConfirmAuthorizationRequest);
+
+  nsresult rv =
+    mService->SetAuthorizationInternal(aRequest.path(),
+                                       true,
+                                       mReplyRunnable.get());
+
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const DenyPairingConfirmationRequest&
+                                  aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TDenyPairingConfirmationRequest);
+
+  nsresult rv =
+    mService->SetPairingConfirmationInternal(aRequest.path(),
+                                             false,
+                                             mReplyRunnable.get());
+
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const DenyAuthorizationRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TDenyAuthorizationRequest);
+
+  nsresult rv =
+    mService->SetAuthorizationInternal(aRequest.path(),
+                                       false,
+                                       mReplyRunnable.get());
+
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;

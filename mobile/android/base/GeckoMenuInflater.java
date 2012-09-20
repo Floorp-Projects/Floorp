@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.content.res.XmlResourceParser;
@@ -17,17 +16,20 @@ import android.view.InflateException;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SubMenu;
 
 import java.io.IOException;
 
-public class GeckoMenuInflater extends MenuInflater 
-                               implements MenuItem.OnMenuItemClickListener {
+public class GeckoMenuInflater extends MenuInflater { 
     private static final String LOGTAG = "GeckoMenuInflater";
 
+    private static final String TAG_MENU = "menu";
     private static final String TAG_ITEM = "item";
     private static final int NO_ID = 0;
 
     private Context mContext;
+
+    private boolean isSubMenu;
 
     // Private class to hold the parsed menu item. 
     private class ParsedItem {
@@ -45,13 +47,13 @@ public class GeckoMenuInflater extends MenuInflater
     public GeckoMenuInflater(Context context) {
         super(context);
         mContext = context;
+
+        isSubMenu = false;
     }
 
     public void inflate(int menuRes, Menu menu) {
 
-        // This is a very minimal parser for the custom menu.
-        // This assumes that there is only one menu tag in the resource file.
-        // This does not support sub-menus.
+        // This does not check for a well-formed XML.
 
         XmlResourceParser parser = null;
         try {
@@ -59,6 +61,8 @@ public class GeckoMenuInflater extends MenuInflater
             AttributeSet attrs = Xml.asAttributeSet(parser);
 
             ParsedItem item = null;
+            SubMenu subMenu = null;
+            MenuItem menuItem = null;
    
             String tag;
             int eventType = parser.getEventType();
@@ -72,15 +76,35 @@ public class GeckoMenuInflater extends MenuInflater
                             // Parse the menu item.
                             item = new ParsedItem();
                             parseItem(item, attrs);
-                         }
+                         } else if (tag.equals(TAG_MENU)) {
+                            if (item != null) {
+                                // Start parsing the sub menu.
+                                isSubMenu = true;
+                                subMenu = menu.addSubMenu(NO_ID, item.id, item.order, item.title);
+                                menuItem = subMenu.getItem();
+
+                                // Set the menu item in main menu.
+                                setValues(item, menuItem);
+                            }
+                        }
                         break;
                         
                     case XmlPullParser.END_TAG:
                         if (parser.getName().equals(TAG_ITEM)) {
-                            // Add the item.
-                            MenuItem menuItem = menu.add(NO_ID, item.id, item.order, item.title);
-                            setValues(item, menuItem);
-                            menuItem.setOnMenuItemClickListener(this);
+                            if (isSubMenu && subMenu == null) {
+                                isSubMenu = false;
+                            } else {
+                                // Add the item.
+                                if (subMenu == null)
+                                    menuItem = menu.add(NO_ID, item.id, item.order, item.title);
+                                else
+                                    menuItem = subMenu.add(NO_ID, item.id, item.order, item.title);
+
+                                setValues(item, menuItem);
+                            }
+                        } else if (tag.equals(TAG_MENU)) {
+                            // End of sub menu.
+                            subMenu = null;
                         }
                         break;
                 }
@@ -99,14 +123,6 @@ public class GeckoMenuInflater extends MenuInflater
         }
     }
 
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        Activity activity = (Activity) mContext;
-        boolean result = activity.onOptionsItemSelected(item);
-        activity.closeOptionsMenu();
-        return result;
-    }
-        
     public void parseItem(ParsedItem item, AttributeSet attrs) {
         TypedArray a = mContext.obtainStyledAttributes(attrs, R.styleable.MenuItem);
 
@@ -128,6 +144,7 @@ public class GeckoMenuInflater extends MenuInflater
                 .setVisible(item.visible)
                 .setEnabled(item.enabled)
                 .setCheckable(item.checkable)
+                .setCheckable(item.checked)
                 .setIcon(item.iconRes)
                 .setShowAsAction(item.showAsAction ? 1 : 0);
     }

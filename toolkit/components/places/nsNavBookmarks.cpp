@@ -16,7 +16,6 @@
 #include "nsPrintfCString.h"
 #include "prprf.h"
 #include "mozilla/storage.h"
-#include "mozilla/FunctionTimer.h"
 #include "mozilla/Util.h"
 
 #include "sampler.h"
@@ -237,8 +236,6 @@ NS_IMPL_ISUPPORTS5(nsNavBookmarks
 nsresult
 nsNavBookmarks::Init()
 {
-  NS_TIME_FUNCTION;
-
   mDB = Database::GetDatabase();
   NS_ENSURE_STATE(mDB);
 
