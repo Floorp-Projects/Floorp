@@ -84,7 +84,12 @@ function getSavedHistogramsFile(basename) {
   if (histogramsFile.exists()) {
     histogramsFile.remove(true);
   }
-  do_register_cleanup(function () histogramsFile.remove(true));
+  do_register_cleanup(function () {
+    try {
+      histogramsFile.remove(true);
+    } catch (e) {
+    }
+  });
   return histogramsFile;
 }
 
@@ -288,6 +293,16 @@ function checkHistogramsAsync(request, response) {
   checkPayload(request, "test-ping", 3);
 }
 
+function runInvalidJSONTest() {
+  let histogramsFile = getSavedHistogramsFile("invalid-histograms.dat");
+  writeStringToFile(histogramsFile, "this.is.invalid.JSON");
+  do_check_true(histogramsFile.exists());
+  
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
+  do_check_false(histogramsFile.exists());
+}
+
 // copied from toolkit/mozapps/extensions/test/xpcshell/head_addons.js
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
@@ -426,6 +441,8 @@ function run_test() {
 
   // fake plugin host for consistent flash version data
   registerFakePluginHost();
+
+  runInvalidJSONTest();
 
   Services.obs.addObserver(nonexistentServerObserver, "telemetry-test-xhr-complete", false);
   telemetry_ping();
