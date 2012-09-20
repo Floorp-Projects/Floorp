@@ -94,7 +94,7 @@ AccessCheck::isLocationObjectSameOrigin(JSContext *cx, JSObject *wrapper)
     if (!js::GetObjectClass(obj)->ext.innerObject) {
         // ...which might be wrapped in a security wrapper.
         obj = js::UnwrapObject(obj);
-        JS_ASSERT(js::GetObjectClass(obj)->ext.innerObject);
+        MOZ_ASSERT(js::GetObjectClass(obj)->ext.innerObject);
     }
 
     // Now innerize it to find the *current* inner window for our outer.
@@ -319,7 +319,7 @@ AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
 bool
 AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
 {
-    JS_ASSERT(js::IsWrapper(wrapper));
+    MOZ_ASSERT(js::IsWrapper(wrapper));
 
     unsigned flags;
     JSObject *obj = js::UnwrapObject(wrapper, true, &flags);
