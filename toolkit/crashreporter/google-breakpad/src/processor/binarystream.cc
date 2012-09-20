@@ -30,15 +30,16 @@
 #include <arpa/inet.h>
 #include <limits.h>
 
+#include <string>
 #include <vector>
 
+#include "common/using_std_string.h"
 #include "processor/binarystream.h"
 
 namespace google_breakpad {
-using std::string;
 using std::vector;
 
-binarystream &binarystream::operator>>(std::string &str) {
+binarystream &binarystream::operator>>(string &str) {
   u_int16_t length;
   *this >> length;
   if (eof())
@@ -83,7 +84,7 @@ binarystream &binarystream::operator>>(u_int64_t &u64) {
   return *this;
 }
 
-binarystream &binarystream::operator<<(const std::string &str) {
+binarystream &binarystream::operator<<(const string &str) {
   if (str.length() > USHRT_MAX) {
     // truncate to 16-bit length
     *this << static_cast<u_int16_t>(USHRT_MAX);

@@ -32,6 +32,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <utility>
 
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/minidump.h"
@@ -49,7 +50,7 @@ using google_breakpad::PathnameStripper;
 using google_breakpad::SymbolSupplier;
 using google_breakpad::SystemInfo;
 
-OnDemandSymbolSupplier::OnDemandSymbolSupplier(const string &search_dir, 
+OnDemandSymbolSupplier::OnDemandSymbolSupplier(const string &search_dir,
                                                const string &symbol_search_dir)
   : search_dir_(search_dir) {
   NSFileManager *mgr = [NSFileManager defaultManager];
@@ -159,6 +160,36 @@ OnDemandSymbolSupplier::GetSymbolFile(const CodeModule *module,
   return s;
 }
 
+SymbolSupplier::SymbolResult
+OnDemandSymbolSupplier::GetCStringSymbolData(const CodeModule *module,
+                                             const SystemInfo *system_info,
+                                             string *symbol_file,
+                                             char **symbol_data) {
+  std::string symbol_data_string;
+  SymbolSupplier::SymbolResult result = GetSymbolFile(module,
+                                                      system_info,
+                                                      symbol_file,
+                                                      &symbol_data_string);
+  if (result == FOUND) {
+    *symbol_data = new char[symbol_data_string.size() + 1];
+    if (*symbol_data == NULL) {
+      // Should return INTERRUPT on memory allocation failure.
+      return INTERRUPT;
+    }
+    strcpy(*symbol_data, symbol_data_string.c_str());
+    memory_buffers_.insert(make_pair(module->code_file(), *symbol_data));
+  }
+  return result;
+}
+
+void OnDemandSymbolSupplier::FreeSymbolData(const CodeModule *module) {
+  map<string, char *>::iterator it = memory_buffers_.find(module->code_file());
+  if (it != memory_buffers_.end()) {
+    delete [] it->second;
+    memory_buffers_.erase(it);
+  }
+}
+
 string OnDemandSymbolSupplier::GetLocalModulePath(const CodeModule *module) {
   NSFileManager *mgr = [NSFileManager defaultManager];
   const char *moduleStr = module->code_file().c_str();
@@ -251,12 +282,20 @@ bool OnDemandSymbolSupplier::GenerateSymbolFile(const CodeModule *module,
                                   length:module_path.length()];
     DumpSymbols dump;
     if (dump.Read(module_str)) {
-      if (dump.SetArchitecture(system_info->cpu)) {
-         std::fstream file([symbol_path fileSystemRepresentation],
-                           std::ios_base::out | std::ios_base::trunc);
-         dump.WriteSymbolFile(file);
-     } else {
-        printf("Architecture %s not available for %s\n", 
+      // What Breakpad calls "x86" should be given to the system as "i386".
+      std::string architecture;
+      if (system_info->cpu.compare("x86") == 0) {
+        architecture = "i386";
+      } else {
+        architecture = system_info->cpu;
+      }
+
+      if (dump.SetArchitecture(architecture)) {
+        std::fstream file([symbol_path fileSystemRepresentation],
+                          std::ios_base::out | std::ios_base::trunc);
+        dump.WriteSymbolFile(file, true);
+      } else {
+        printf("Architecture %s not available for %s\n",
                system_info->cpu.c_str(), name.c_str());
         result = false;
       }

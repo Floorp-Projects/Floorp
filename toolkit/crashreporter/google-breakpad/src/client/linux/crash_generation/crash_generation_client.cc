@@ -35,8 +35,9 @@
 
 #include "client/linux/crash_generation/crash_generation_client.h"
 #include "common/linux/eintr_wrapper.h"
+#include "common/linux/ignore_ret.h"
 #include "common/linux/linux_libc_support.h"
-#include "common/linux/linux_syscall_support.h"
+#include "third_party/lss/linux_syscall_support.h"
 
 namespace google_breakpad {
 
@@ -67,12 +68,14 @@ CrashGenerationClient::RequestDump(const void* blob, size_t blob_size)
   int* p = reinterpret_cast<int*>(CMSG_DATA(hdr));
   *p = fds[1];
 
-  HANDLE_EINTR(sys_sendmsg(server_fd_, &msg, 0));
+  ssize_t ret = HANDLE_EINTR(sys_sendmsg(server_fd_, &msg, 0));
   sys_close(fds[1]);
+  if (ret <= 0)
+    return false;
 
   // wait for an ACK from the server
   char b;
-  HANDLE_EINTR(sys_read(fds[0], &b, 1));
+  IGNORE_RET(HANDLE_EINTR(sys_read(fds[0], &b, 1)));
 
   return true;
 }
