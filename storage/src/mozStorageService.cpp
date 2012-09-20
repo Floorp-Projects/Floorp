@@ -894,11 +894,11 @@ Service::UpdateQuotaInformationForFile(nsIFile *aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
 
-  nsString path;
-  nsresult rv = aFile->GetPath(path);
+  nsCString path;
+  nsresult rv = aFile->GetNativePath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int rc = ::sqlite3_quota_file(NS_ConvertUTF16toUTF8(path).get());
+  int rc = ::sqlite3_quota_file(PromiseFlatCString(path).get());
   NS_ENSURE_TRUE(rc == SQLITE_OK, convertResultCode(rc));
 
   return NS_OK;
