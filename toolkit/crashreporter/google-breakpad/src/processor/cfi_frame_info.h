@@ -41,12 +41,12 @@
 #include <map>
 #include <string>
 
-#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
 
 using std::map;
+using std::string;
 
 class MemoryRegion;
 

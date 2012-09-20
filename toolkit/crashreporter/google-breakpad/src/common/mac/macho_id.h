@@ -37,15 +37,15 @@
 #include <limits.h>
 #include <mach-o/loader.h>
 
-#include "common/mac/macho_walker.h"
 #include "common/md5.h"
 
 namespace MacFileUtilities {
 
+class MachoWalker;
+
 class MachoID {
  public:
   MachoID(const char *path);
-  MachoID(const char *path, void *memory, size_t size);
   ~MachoID();
 
   // For the given |cpu_type|, return a UUID from the LC_UUID command.
@@ -80,10 +80,6 @@ class MachoID {
   // Bottleneck for update routines
   void Update(MachoWalker *walker, off_t offset, size_t size);
 
-  // Factory for the MachoWalker
-  bool WalkHeader(int cpu_type, MachoWalker::LoadCommandCallback callback,
-                  void *context);
-
   // The callback from the MachoWalker for CRC and MD5
   static bool WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
                        bool swap, void *context);
@@ -99,11 +95,8 @@ class MachoID {
   // File path
   char path_[PATH_MAX];
 
-  // Memory region to read from
-  void *memory_;
-
-  // Size of the memory region
-  size_t memory_size_;
+  // File descriptor
+  int file_;
 
   // The current crc value
   uint32_t crc_;

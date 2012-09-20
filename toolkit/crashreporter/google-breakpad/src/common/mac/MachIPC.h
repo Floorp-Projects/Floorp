@@ -139,6 +139,12 @@ class MachMsgPortDescriptor : public mach_msg_port_descriptor_t {
     return disposition;
   }
 
+  // We're just a simple wrapper for mach_msg_port_descriptor_t
+  // and have the same memory layout
+  operator mach_msg_port_descriptor_t&() {
+    return *this;
+  }
+
   // For convenience
   operator mach_port_t() const {
     return GetMachPort();

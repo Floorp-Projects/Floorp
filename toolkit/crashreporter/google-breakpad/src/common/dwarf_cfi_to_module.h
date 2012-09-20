@@ -48,13 +48,13 @@
 
 #include "common/module.h"
 #include "common/dwarf/dwarf2reader.h"
-#include "common/using_std_string.h"
 
 namespace google_breakpad {
 
 using dwarf2reader::CallFrameInfo;
 using google_breakpad::Module;
 using std::set;
+using std::string;
 using std::vector;
 
 // A class that accepts parsed call frame information from the DWARF

@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2011, Google Inc.
+// Copyright (c) 2010, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,23 +35,19 @@
 #ifndef COMMON_LINUX_DUMP_SYMBOLS_H__
 #define COMMON_LINUX_DUMP_SYMBOLS_H__
 
-#include <iostream>
-#include <string>
+#include <stdio.h>
 
-#include "common/using_std_string.h"
+#include <string>
 
 namespace google_breakpad {
 
 // Find all the debugging information in OBJ_FILE, an ELF executable
-// or shared library, and write it to SYM_STREAM in the Breakpad symbol
+// or shared library, and write it to SYM_FILE in the Breakpad symbol
 // file format.
 // If OBJ_FILE has been stripped but contains a .gnu_debuglink section,
 // then look for the debug file in DEBUG_DIR.
-// If CFI is set to false, then omit the CFI section.
-bool WriteSymbolFile(const string &obj_file,
-                     const string &debug_dir,
-                     bool cfi,
-                     std::ostream &sym_stream);
+bool WriteSymbolFile(const std::string &obj_file,
+                     const std::string &debug_dir, FILE *sym_file);
 
 }  // namespace google_breakpad
 

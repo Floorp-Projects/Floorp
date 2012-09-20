@@ -77,10 +77,6 @@ class StackwalkerAMD64 : public Stackwalker {
   StackFrameAMD64 *GetCallerByCFIFrameInfo(const vector<StackFrame *> &frames,
                                            CFIFrameInfo *cfi_frame_info);
 
-  // Scan the stack for plausible return addresses. The caller takes ownership
-  // of the returned frame. Return NULL on failure. 
-  StackFrameAMD64 *GetCallerByStackScan(const vector<StackFrame *> &frames);
-
   // Stores the CPU context corresponding to the innermost stack frame to
   // be returned by GetContextFrame.
   const MDRawContextAMD64 *context_;

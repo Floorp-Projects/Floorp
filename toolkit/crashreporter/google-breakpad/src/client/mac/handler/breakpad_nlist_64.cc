@@ -67,7 +67,6 @@
 
 #include "breakpad_nlist_64.h"
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <fcntl.h>
 #include <mach-o/nlist.h>
 #include <mach-o/loader.h>
@@ -190,16 +189,16 @@ int __breakpad_fdnlist(int fd, nlist_type *list, const char **symbolNames,
 
   struct exec buf;
   if (read(fd, (char *)&buf, sizeof(buf)) != sizeof(buf) ||
-      (N_BADMAG(buf) && *((uint32_t *)&buf) != magic &&
-        CFSwapInt32BigToHost(*((uint32_t *)&buf)) != FAT_MAGIC &&
-       /* The following is the big-endian ppc64 check */
-       (*((uint32_t*)&buf)) != FAT_MAGIC)) {
+      (N_BADMAG(buf) && *((long *)&buf) != magic &&
+       NXSwapBigLongToHost(*((long *)&buf)) != FAT_MAGIC) &&
+      /* The following is the big-endian ppc64 check */
+      (*((long*)&buf)) != FAT_MAGIC) {
     return -1;
   }
 
   /* Deal with fat file if necessary */
   unsigned arch_offset = 0;
-  if (CFSwapInt32BigToHost(*((uint32_t *)&buf)) == FAT_MAGIC ||
+  if (NXSwapBigLongToHost(*((long *)&buf)) == FAT_MAGIC ||
       /* The following is the big-endian ppc64 check */
       *((unsigned int *)&buf) == FAT_MAGIC) {
     /* Get host info */
@@ -223,7 +222,7 @@ int __breakpad_fdnlist(int fd, nlist_type *list, const char **symbolNames,
     }
 
     /* Convert fat_narchs to host byte order */
-    fh.nfat_arch = CFSwapInt32BigToHost(fh.nfat_arch);
+    fh.nfat_arch = NXSwapBigIntToHost(fh.nfat_arch);
 
     /* Read in the fat archs */
     struct fat_arch *fat_archs =
@@ -233,7 +232,7 @@ int __breakpad_fdnlist(int fd, nlist_type *list, const char **symbolNames,
     }
     if (read(fd, (char *)fat_archs,
              sizeof(struct fat_arch) * fh.nfat_arch) !=
-        (ssize_t)(sizeof(struct fat_arch) * fh.nfat_arch)) {
+        (ssize_t)sizeof(struct fat_arch) * fh.nfat_arch) {
       free(fat_archs);
       return -1;
     }
@@ -244,15 +243,15 @@ int __breakpad_fdnlist(int fd, nlist_type *list, const char **symbolNames,
      */
     for (unsigned i = 0; i < fh.nfat_arch; i++) {
       fat_archs[i].cputype =
-        CFSwapInt32BigToHost(fat_archs[i].cputype);
+        NXSwapBigIntToHost(fat_archs[i].cputype);
       fat_archs[i].cpusubtype =
-        CFSwapInt32BigToHost(fat_archs[i].cpusubtype);
+        NXSwapBigIntToHost(fat_archs[i].cpusubtype);
       fat_archs[i].offset =
-        CFSwapInt32BigToHost(fat_archs[i].offset);
+        NXSwapBigIntToHost(fat_archs[i].offset);
       fat_archs[i].size =
-        CFSwapInt32BigToHost(fat_archs[i].size);
+        NXSwapBigIntToHost(fat_archs[i].size);
       fat_archs[i].align =
-        CFSwapInt32BigToHost(fat_archs[i].align);
+        NXSwapBigIntToHost(fat_archs[i].align);
     }
 
     struct fat_arch *fap = NULL;
@@ -297,7 +296,7 @@ int __breakpad_fdnlist(int fd, nlist_type *list, const char **symbolNames,
       return -1;
     }
     if (read(fd, (char *)load_commands, mh.sizeofcmds) !=
-        (ssize_t)mh.sizeofcmds) {
+        mh.sizeofcmds) {
       free(load_commands);
       return -1;
     }
@@ -305,7 +304,7 @@ int __breakpad_fdnlist(int fd, nlist_type *list, const char **symbolNames,
     struct load_command *lcp = load_commands;
     // iterate through all load commands, looking for
     // LC_SYMTAB load command
-    for (uint32_t i = 0; i < mh.ncmds; i++) {
+    for (long i = 0; i < mh.ncmds; i++) {
       if (lcp->cmdsize % sizeof(word_type) != 0 ||
           lcp->cmdsize <= 0 ||
           (char *)lcp + lcp->cmdsize >

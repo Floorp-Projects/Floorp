@@ -31,10 +31,10 @@
 
 #include <cstdio>
 #include <iostream>
-#include <servers/bootstrap.h>
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <sys/time.h>
 
 #import "client/mac/crash_generation/Inspector.h"
 
@@ -43,22 +43,167 @@
 
 #import "common/mac/SimpleStringDictionary.h"
 #import "common/mac/MachIPC.h"
-#include "common/mac/bootstrap_compat.h"
 
 #import "GTMDefines.h"
 
 #import <Foundation/Foundation.h>
 
+#if VERBOSE
+  bool gDebugLog = true;
+#else
+  bool gDebugLog = false;
+#endif
+
 namespace google_breakpad {
 
 //=============================================================================
-void Inspector::Inspect(const char *receive_port_name) {
-  kern_return_t result = ResetBootstrapPort();
-  if (result != KERN_SUCCESS) {
-    return;
+static BOOL EnsureDirectoryPathExists(NSString *dirPath) {
+  NSFileManager *mgr = [NSFileManager defaultManager];
+
+  // If we got a relative path, prepend the current directory
+  if (![dirPath isAbsolutePath])
+    dirPath = [[mgr currentDirectoryPath] stringByAppendingPathComponent:dirPath];
+
+  NSString *path = dirPath;
+
+  // Ensure that no file exists within the path which would block creation
+  while (1) {
+    BOOL isDir;
+    if ([mgr fileExistsAtPath:path isDirectory:&isDir]) {
+      if (isDir)
+        break;
+
+      return NO;
+    }
+
+    path = [path stringByDeletingLastPathComponent];
   }
 
-  result = ServiceCheckIn(receive_port_name);
+  // Path now contains the first valid directory (or is empty)
+  if (![path length])
+    return NO;
+
+  NSString *common =
+    [dirPath commonPrefixWithString:path options:NSLiteralSearch];
+
+  // If everything is good
+  if ([common isEqualToString:dirPath])
+    return YES;
+
+  // Break up the difference into components
+  NSString *diff = [dirPath substringFromIndex:[common length] + 1];
+  NSArray *components = [diff pathComponents];
+  NSUInteger count = [components count];
+
+  // Rebuild the path one component at a time
+  NSDictionary *attrs =
+    [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:0750]
+                                forKey:NSFilePosixPermissions];
+  path = common;
+  for (NSUInteger i = 0; i < count; ++i) {
+    path = [path stringByAppendingPathComponent:[components objectAtIndex:i]];
+
+    if (![mgr createDirectoryAtPath:path attributes:attrs])
+      return NO;
+  }
+
+  return YES;
+}
+
+//=============================================================================
+BOOL ConfigFile::WriteData(const void *data, size_t length) {
+  size_t result = write(config_file_, data, length);
+
+  return result == length;
+}
+
+//=============================================================================
+BOOL ConfigFile::AppendConfigData(const char *key,
+                                  const void *data, size_t length) {
+  assert(config_file_ != -1);
+
+  if (!key) {
+    DEBUGLOG(stderr, "Breakpad: Missing Key\n");
+    return NO;
+  }
+
+  if (!data) {
+    DEBUGLOG(stderr, "Breakpad: Missing data for key: %s\n", key ? key :
+            "<Unknown Key>");
+    return NO;
+  }
+
+  // Write the key, \n, length of data (ascii integer), \n, data
+  char buffer[16];
+  char nl = '\n';
+  BOOL result = WriteData(key, strlen(key));
+
+  snprintf(buffer, sizeof(buffer) - 1, "\n%lu\n", length);
+  result &= WriteData(buffer, strlen(buffer));
+  result &= WriteData(data, length);
+  result &= WriteData(&nl, 1);
+  return result;
+}
+
+//=============================================================================
+BOOL ConfigFile::AppendConfigString(const char *key,
+                                    const char *value) {
+  return AppendConfigData(key, value, strlen(value));
+}
+
+//=============================================================================
+void ConfigFile::WriteFile(const SimpleStringDictionary *configurationParameters,
+                           const char *dump_dir,
+                           const char *minidump_id) {
+
+  assert(config_file_ == -1);
+
+  // Open and write out configuration file preamble
+  strlcpy(config_file_path_, "/tmp/Config-XXXXXX",
+          sizeof(config_file_path_));
+  config_file_ = mkstemp(config_file_path_);
+
+  if (config_file_ == -1) {
+    DEBUGLOG(stderr,
+             "mkstemp(config_file_path_) == -1 (%s)\n",
+             strerror(errno));
+    return;
+  }
+  else {
+    DEBUGLOG(stderr, "Writing config file to (%s)\n", config_file_path_);
+  }
+
+  has_created_file_ = true;
+
+  // Add the minidump dir
+  AppendConfigString(kReporterMinidumpDirectoryKey, dump_dir);
+  AppendConfigString(kReporterMinidumpIDKey, minidump_id);
+
+  // Write out the configuration parameters
+  BOOL result = YES;
+  const SimpleStringDictionary &dictionary = *configurationParameters;
+
+  const KeyValueEntry *entry = NULL;
+  SimpleStringDictionaryIterator iter(dictionary);
+
+  while ((entry = iter.Next())) {
+    DEBUGLOG(stderr,
+             "config: (%s) -> (%s)\n",
+             entry->GetKey(),
+             entry->GetValue());
+    result = AppendConfigString(entry->GetKey(), entry->GetValue());
+
+    if (!result)
+      break;
+  }
+
+  close(config_file_);
+  config_file_ = -1;
+}
+
+//=============================================================================
+void Inspector::Inspect(const char *receive_port_name) {
+  kern_return_t result = ServiceCheckIn(receive_port_name);
 
   if (result == KERN_SUCCESS) {
     result = ReadMessages();
@@ -96,55 +241,10 @@ void Inspector::Inspect(const char *receive_port_name) {
 }
 
 //=============================================================================
-kern_return_t Inspector::ResetBootstrapPort() {
-  // A reasonable default, in case anything fails.
-  bootstrap_subset_port_ = bootstrap_port;
-
-  mach_port_t self_task = mach_task_self();
-
-  kern_return_t kr = task_get_bootstrap_port(self_task,
-                                             &bootstrap_subset_port_);
-  if (kr != KERN_SUCCESS) {
-    NSLog(@"ResetBootstrapPort: task_get_bootstrap_port failed: %s (%d)",
-          mach_error_string(kr), kr);
-    return kr;
-  }
-
-  mach_port_t bootstrap_parent_port;
-  kr = bootstrap_look_up(bootstrap_subset_port_,
-                         const_cast<char*>(BREAKPAD_BOOTSTRAP_PARENT_PORT),
-                         &bootstrap_parent_port);
-  if (kr != BOOTSTRAP_SUCCESS) {
-    NSLog(@"ResetBootstrapPort: bootstrap_look_up failed: %s (%d)",
-#if defined(MAC_OS_X_VERSION_10_5) && \
-    MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5
-          bootstrap_strerror(kr),
-#else
-          mach_error_string(kr),
-#endif
-          kr);
-    return kr;
-  }
-
-  kr = task_set_bootstrap_port(self_task, bootstrap_parent_port);
-  if (kr != KERN_SUCCESS) {
-    NSLog(@"ResetBootstrapPort: task_set_bootstrap_port failed: %s (%d)",
-          mach_error_string(kr), kr);
-    return kr;
-  }
-
-  // Some things access the bootstrap port through this global variable
-  // instead of calling task_get_bootstrap_port.
-  bootstrap_port = bootstrap_parent_port;
-
-  return KERN_SUCCESS;
-}
-
-//=============================================================================
 kern_return_t Inspector::ServiceCheckIn(const char *receive_port_name) {
   // We need to get the mach port representing this service, so we can
   // get information from the crashed process.
-  kern_return_t kr = bootstrap_check_in(bootstrap_subset_port_,
+  kern_return_t kr = bootstrap_check_in(bootstrap_port,
                                         (char*)receive_port_name,
                                         &service_rcv_port_);
 
@@ -175,9 +275,9 @@ kern_return_t Inspector::ServiceCheckOut(const char *receive_port_name) {
   }
 
   // Unregister the service associated with the receive port.
-  kr = breakpad::BootstrapRegister(bootstrap_subset_port_,
-                                   (char*)receive_port_name,
-                                   MACH_PORT_NULL);
+  kr = bootstrap_register(bootstrap_port,
+                          (char*)receive_port_name,
+                          MACH_PORT_NULL);
 
   if (kr != KERN_SUCCESS) {
     PRINT_MACH_RESULT(kr, "Inspector: UNREGISTERING: bootstrap_register()");
@@ -263,6 +363,30 @@ kern_return_t Inspector::ReadMessages() {
 }
 
 //=============================================================================
+// Sets keys in the parameters dictionary that are specific to process uptime.
+// The two we set are process up time, and process crash time.
+void Inspector::SetCrashTimeParameters() {
+  // Set process uptime parameter
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+
+  char processUptimeString[32], processCrashtimeString[32];
+  const char *processStartTimeString =
+    config_params_.GetValueForKey(BREAKPAD_PROCESS_START_TIME);
+
+  // Set up time if we've received the start time.
+  if (processStartTimeString) {
+    time_t processStartTime = strtol(processStartTimeString, NULL, 10);
+    time_t processUptime = tv.tv_sec - processStartTime;
+    sprintf(processUptimeString, "%zd", processUptime);
+    config_params_.SetKeyValue(BREAKPAD_PROCESS_UP_TIME, processUptimeString);
+  }
+
+  sprintf(processCrashtimeString, "%zd", tv.tv_sec);
+  config_params_.SetKeyValue(BREAKPAD_PROCESS_CRASH_TIME,
+                             processCrashtimeString);
+}
+
 bool Inspector::InspectTask() {
   // keep the task quiet while we're looking at it
   task_suspend(remote_task_);
@@ -273,6 +397,7 @@ bool Inspector::InspectTask() {
   const char *minidumpDirectory =
     config_params_.GetValueForKey(BREAKPAD_DUMP_DIRECTORY);
 
+  SetCrashTimeParameters();
   // If the client app has not specified a minidump directory,
   // use a default of Library/<kDefaultLibrarySubdirectory>/<Product Name>
   if (!minidumpDirectory || 0 == strlen(minidumpDirectory)) {
@@ -323,8 +448,7 @@ bool Inspector::InspectTask() {
            [minidumpPath UTF8String]);
 
 
-  config_file_.WriteFile( 0,
-                          &config_params_,
+  config_file_.WriteFile( &config_params_,
                           minidumpLocation.GetPath(),
                           minidumpLocation.GetID());
 

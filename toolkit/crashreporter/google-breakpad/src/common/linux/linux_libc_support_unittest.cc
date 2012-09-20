@@ -27,8 +27,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "breakpad_googletest_includes.h"
 #include "common/linux/linux_libc_support.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace {
 typedef testing::Test LinuxLibcSupportTest;
@@ -59,12 +59,8 @@ TEST(LinuxLibcSupportTest, strcmp) {
   for (unsigned i = 0; ; ++i) {
     if (!test_data[i*2])
       break;
-    int libc_result = strcmp(test_data[i*2], test_data[i*2 + 1]);
-    if (libc_result > 1)
-      libc_result = 1;
-    else if (libc_result < -1)
-      libc_result = -1;
-    ASSERT_EQ(my_strcmp(test_data[i*2], test_data[i*2 + 1]), libc_result);
+    ASSERT_EQ(my_strcmp(test_data[i*2], test_data[i*2 + 1]),
+              strcmp(test_data[i*2], test_data[i*2 + 1]));
   }
 }
 
@@ -89,41 +85,35 @@ TEST(LinuxLibcSupportTest, strtoui) {
   ASSERT_EQ(result, 123);
 }
 
-TEST(LinuxLibcSupportTest, uint_len) {
-  ASSERT_EQ(my_uint_len(0), 1);
-  ASSERT_EQ(my_uint_len(2), 1);
-  ASSERT_EQ(my_uint_len(5), 1);
-  ASSERT_EQ(my_uint_len(9), 1);
-  ASSERT_EQ(my_uint_len(10), 2);
-  ASSERT_EQ(my_uint_len(99), 2);
-  ASSERT_EQ(my_uint_len(100), 3);
-  ASSERT_EQ(my_uint_len(101), 3);
-  ASSERT_EQ(my_uint_len(1000), 4);
-  // 0xFFFFFFFFFFFFFFFF
-  ASSERT_EQ(my_uint_len(18446744073709551615LLU), 20);
+TEST(LinuxLibcSupportTest, int_len) {
+  ASSERT_EQ(my_int_len(0), 1);
+  ASSERT_EQ(my_int_len(2), 1);
+  ASSERT_EQ(my_int_len(5), 1);
+  ASSERT_EQ(my_int_len(9), 1);
+  ASSERT_EQ(my_int_len(10), 2);
+  ASSERT_EQ(my_int_len(99), 2);
+  ASSERT_EQ(my_int_len(100), 3);
+  ASSERT_EQ(my_int_len(101), 3);
+  ASSERT_EQ(my_int_len(1000), 4);
 }
 
-TEST(LinuxLibcSupportTest, uitos) {
-  char buf[32];
+TEST(LinuxLibcSupportTest, itos) {
+  char buf[10];
 
-  my_uitos(buf, 0, 1);
+  my_itos(buf, 0, 1);
   ASSERT_EQ(0, memcmp(buf, "0", 1));
 
-  my_uitos(buf, 1, 1);
+  my_itos(buf, 1, 1);
   ASSERT_EQ(0, memcmp(buf, "1", 1));
 
-  my_uitos(buf, 10, 2);
+  my_itos(buf, 10, 2);
   ASSERT_EQ(0, memcmp(buf, "10", 2));
 
-  my_uitos(buf, 63, 2);
+  my_itos(buf, 63, 2);
   ASSERT_EQ(0, memcmp(buf, "63", 2));
 
-  my_uitos(buf, 101, 3);
+  my_itos(buf, 101, 3);
   ASSERT_EQ(0, memcmp(buf, "101", 2));
-
-  // 0xFFFFFFFFFFFFFFFF
-  my_uitos(buf, 18446744073709551615LLU, 20);
-  ASSERT_EQ(0, memcmp(buf, "18446744073709551615", 20));
 }
 
 TEST(LinuxLibcSupportTest, strchr) {
@@ -135,23 +125,6 @@ TEST(LinuxLibcSupportTest, strchr) {
   ASSERT_TRUE(my_strchr("abc", 'a'));
   ASSERT_TRUE(my_strchr("bcda", 'a'));
   ASSERT_TRUE(my_strchr("sdfasdf", 'a'));
-
-  static const char abc3[] = "abcabcabc";
-  ASSERT_EQ(abc3, my_strchr(abc3, 'a'));
-}
-
-TEST(LinuxLibcSupportTest, strrchr) {
-  ASSERT_EQ(NULL, my_strrchr("abc", 'd'));
-  ASSERT_EQ(NULL, my_strrchr("", 'd'));
-  ASSERT_EQ(NULL, my_strrchr("efghi", 'd'));
-
-  ASSERT_TRUE(my_strrchr("a", 'a'));
-  ASSERT_TRUE(my_strrchr("abc", 'a'));
-  ASSERT_TRUE(my_strrchr("bcda", 'a'));
-  ASSERT_TRUE(my_strrchr("sdfasdf", 'a'));
-
-  static const char abc3[] = "abcabcabc";
-  ASSERT_EQ(abc3 + 6, my_strrchr(abc3, 'a'));
 }
 
 TEST(LinuxLibcSupportTest, read_hex_ptr) {
@@ -176,26 +149,5 @@ TEST(LinuxLibcSupportTest, read_hex_ptr) {
 
   last = my_read_hex_ptr(&result, "0123a-");
   ASSERT_EQ(result, 0x123a);
-  ASSERT_EQ(*last, '-');
-}
-
-TEST(LinuxLibcSupportTest, read_decimal_ptr) {
-  uintptr_t result;
-  const char* last;
-
-  last = my_read_decimal_ptr(&result, "0");
-  ASSERT_EQ(result, 0);
-  ASSERT_EQ(*last, 0);
-
-  last = my_read_decimal_ptr(&result, "0123");
-  ASSERT_EQ(result, 123);
-  ASSERT_EQ(*last, 0);
-
-  last = my_read_decimal_ptr(&result, "1234");
-  ASSERT_EQ(result, 1234);
-  ASSERT_EQ(*last, 0);
-
-  last = my_read_decimal_ptr(&result, "01234-");
-  ASSERT_EQ(result, 1234);
   ASSERT_EQ(*last, '-');
 }

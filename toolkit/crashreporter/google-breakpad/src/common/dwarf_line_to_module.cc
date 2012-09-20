@@ -32,12 +32,7 @@
 // dwarf_line_to_module.cc: Implementation of DwarfLineToModule class.
 // See dwarf_line_to_module.h for details. 
 
-#include <stdio.h>
-
-#include <string>
-
 #include "common/dwarf_line_to_module.h"
-#include "common/using_std_string.h"
 
 // Trying to support Windows paths in a reasonable way adds a lot of
 // variations to test; it would be better to just put off dealing with
@@ -50,8 +45,7 @@ static bool PathIsAbsolute(const string &path) {
 
 // If PATH is an absolute path, return PATH.  If PATH is a relative path,
 // treat it as relative to BASE and return the combined path.
-static string ExpandPath(const string &path,
-                         const string &base) {
+static string ExpandPath(const string &path, const string &base) {
   if (PathIsAbsolute(path))
     return path;
   return base + "/" + path;
@@ -74,7 +68,7 @@ void DwarfLineToModule::DefineFile(const string &name, int32 file_num,
   else if (file_num > highest_file_number_)
     highest_file_number_ = file_num;
 
-  string full_name;
+  std::string full_name;
   if (dir_num != 0) {
     DirectoryTable::const_iterator directory_it = directories_.find(dir_num);
     if (directory_it != directories_.end()) {

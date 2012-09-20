@@ -118,7 +118,7 @@ StackFrame *StackwalkerX86::GetContextFrame() {
   // straight out of the CPU context structure.
   frame->context = *context_;
   frame->context_validity = StackFrameX86::CONTEXT_VALID_ALL;
-  frame->trust = StackFrame::FRAME_TRUST_CONTEXT;
+  frame->trust = StackFrameX86::FRAME_TRUST_CONTEXT;
   frame->instruction = frame->context.eip;
 
   return frame;
@@ -127,7 +127,7 @@ StackFrame *StackwalkerX86::GetContextFrame() {
 StackFrameX86 *StackwalkerX86::GetCallerByWindowsFrameInfo(
     const vector<StackFrame *> &frames,
     WindowsFrameInfo *last_frame_info) {
-  StackFrame::FrameTrust trust = StackFrame::FRAME_TRUST_NONE;
+  StackFrameX86::FrameTrust trust = StackFrameX86::FRAME_TRUST_NONE;
 
   StackFrameX86 *last_frame = static_cast<StackFrameX86 *>(frames.back());
 
@@ -203,37 +203,10 @@ StackFrameX86 *StackwalkerX86::GetCallerByWindowsFrameInfo(
   dictionary[".cbCalleeParams"] = last_frame_callee_parameter_size;
   dictionary[".cbSavedRegs"] = last_frame_info->saved_register_size;
   dictionary[".cbLocals"] = last_frame_info->local_size;
-
-  u_int32_t raSearchStart = last_frame->context.esp +
-                            last_frame_callee_parameter_size +
-                            last_frame_info->local_size +
-                            last_frame_info->saved_register_size;
-
-  u_int32_t raSearchStartOld = raSearchStart;
-  u_int32_t found = 0; // dummy value
-  // Scan up to three words above the calculated search value, in case
-  // the stack was aligned to a quadword boundary.
-  if (ScanForReturnAddress(raSearchStart, &raSearchStart, &found, 3) &&
-      last_frame->trust == StackFrame::FRAME_TRUST_CONTEXT &&
-      last_frame->windows_frame_info != NULL &&
-      last_frame_info->type_ == WindowsFrameInfo::STACK_INFO_FPO &&
-      raSearchStartOld == raSearchStart &&
-      found == last_frame->context.eip) {
-    // The context frame represents an FPO-optimized Windows system call.
-    // On the top of the stack we have a pointer to the current instruction.
-    // This means that the callee has returned but the return address is still
-    // on the top of the stack which is very atypical situaltion.
-    // Skip one slot from the stack and do another scan in order to get the
-    // actual return address.
-    raSearchStart += 4;
-    ScanForReturnAddress(raSearchStart, &raSearchStart, &found, 3);
-  }
-
-  // The difference between raSearch and raSearchStart is unknown,
-  // but making them the same seems to work well in practice.
-  dictionary[".raSearchStart"] = raSearchStart;
-  dictionary[".raSearch"] = raSearchStart;
-
+  dictionary[".raSearchStart"] = last_frame->context.esp +
+                                 last_frame_callee_parameter_size +
+                                 last_frame_info->local_size +
+                                 last_frame_info->saved_register_size;
   dictionary[".cbParams"] = last_frame_info->parameter_size;
 
   // Decide what type of program string to use. The program string is in
@@ -246,7 +219,7 @@ StackFrameX86 *StackwalkerX86::GetCallerByWindowsFrameInfo(
   string program_string;
   bool recover_ebp = true;
 
-  trust = StackFrame::FRAME_TRUST_CFI;
+  trust = StackFrameX86::FRAME_TRUST_CFI;
   if (!last_frame_info->program_string.empty()) {
     // The FPO data has its own program string, which will tell us how to
     // get to the caller frame, and may even fill in the values of
@@ -345,7 +318,7 @@ StackFrameX86 *StackwalkerX86::GetCallerByWindowsFrameInfo(
     // one where the return address was found.
     dictionary["$eip"] = eip;
     dictionary["$esp"] = location + 4;
-    trust = StackFrame::FRAME_TRUST_SCAN;
+    trust = StackFrameX86::FRAME_TRUST_SCAN;
   }
 
   // Since this stack frame did not use %ebp in a traditional way,
@@ -383,7 +356,7 @@ StackFrameX86 *StackwalkerX86::GetCallerByWindowsFrameInfo(
         dictionary["$eip"] = eip;
         dictionary["$esp"] = location + 4;
         offset = location - location_start;
-        trust = StackFrame::FRAME_TRUST_CFI_SCAN;
+        trust = StackFrameX86::FRAME_TRUST_CFI_SCAN;
       }
     }
 
@@ -468,14 +441,14 @@ StackFrameX86 *StackwalkerX86::GetCallerByCFIFrameInfo(
   if ((frame->context_validity & essentials) != essentials)
     return NULL;
 
-  frame->trust = StackFrame::FRAME_TRUST_CFI;
+  frame->trust = StackFrameX86::FRAME_TRUST_CFI;
 
   return frame.release();
 }
 
 StackFrameX86 *StackwalkerX86::GetCallerByEBPAtBase(
     const vector<StackFrame *> &frames) {
-  StackFrame::FrameTrust trust;
+  StackFrameX86::FrameTrust trust;
   StackFrameX86 *last_frame = static_cast<StackFrameX86 *>(frames.back());
   u_int32_t last_esp = last_frame->context.esp;
   u_int32_t last_ebp = last_frame->context.ebp;
@@ -508,7 +481,7 @@ StackFrameX86 *StackwalkerX86::GetCallerByEBPAtBase(
   if (memory_->GetMemoryAtAddress(last_ebp + 4, &caller_eip) &&
       memory_->GetMemoryAtAddress(last_ebp, &caller_ebp)) {
     caller_esp = last_ebp + 8;
-    trust = StackFrame::FRAME_TRUST_FP;
+    trust = StackFrameX86::FRAME_TRUST_FP;
   } else {
     // We couldn't read the memory %ebp refers to. It may be that %ebp
     // is pointing to non-stack memory. We'll scan the stack for a
@@ -518,7 +491,7 @@ StackFrameX86 *StackwalkerX86::GetCallerByEBPAtBase(
     if (!ScanForReturnAddress(last_esp, &caller_esp, &caller_eip)) {
       // if we can't find an instruction pointer even with stack scanning,
       // give up.
-      return NULL;
+      return false;
     }
 
     // ScanForReturnAddress found a reasonable return address. Advance
@@ -527,7 +500,7 @@ StackFrameX86 *StackwalkerX86::GetCallerByEBPAtBase(
     caller_esp += 4;
     caller_ebp = last_ebp;
 
-    trust = StackFrame::FRAME_TRUST_SCAN;
+    trust = StackFrameX86::FRAME_TRUST_SCAN;
   }
 
   // Create a new stack frame (ownership will be transferred to the caller)
@@ -558,14 +531,13 @@ StackFrame *StackwalkerX86::GetCallerFrame(const CallStack *stack) {
 
   // If the resolver has Windows stack walking information, use that.
   WindowsFrameInfo *windows_frame_info
-      = resolver_ ? resolver_->FindWindowsFrameInfo(last_frame) : NULL;
+      = resolver_->FindWindowsFrameInfo(last_frame);
   if (windows_frame_info)
     new_frame.reset(GetCallerByWindowsFrameInfo(frames, windows_frame_info));
 
   // If the resolver has DWARF CFI information, use that.
   if (!new_frame.get()) {
-    CFIFrameInfo *cfi_frame_info = 
-        resolver_ ? resolver_->FindCFIFrameInfo(last_frame) : NULL;
+    CFIFrameInfo *cfi_frame_info = resolver_->FindCFIFrameInfo(last_frame);
     if (cfi_frame_info)
       new_frame.reset(GetCallerByCFIFrameInfo(frames, cfi_frame_info));
   }
@@ -599,6 +571,29 @@ StackFrame *StackwalkerX86::GetCallerFrame(const CallStack *stack) {
   new_frame->instruction = new_frame->context.eip - 1;
 
   return new_frame.release();
+}
+
+bool StackwalkerX86::ScanForReturnAddress(u_int32_t location_start,
+                                          u_int32_t *location_found,
+                                          u_int32_t *eip_found) {
+  const int kRASearchWords = 15;
+  for (u_int32_t location = location_start;
+       location <= location_start + kRASearchWords * 4;
+       location += 4) {
+    u_int32_t eip;
+    if (!memory_->GetMemoryAtAddress(location, &eip))
+      break;
+
+    if (modules_ && modules_->GetModuleForAddress(eip) &&
+        InstructionAddressSeemsValid(eip)) {
+
+      *eip_found = eip;
+      *location_found = location;
+      return true;
+    }
+  }
+  // nothing found
+  return false;
 }
 
 }  // namespace google_breakpad

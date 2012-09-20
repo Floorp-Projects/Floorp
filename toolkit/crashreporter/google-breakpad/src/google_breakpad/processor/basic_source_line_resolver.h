@@ -27,53 +27,59 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// basic_source_line_resolver.h: BasicSourceLineResolver is derived from
-// SourceLineResolverBase, and is a concrete implementation of
-// SourceLineResolverInterface, using address map files produced by a
-// compatible writer, e.g. PDBSourceLineWriter.
-//
-// see "processor/source_line_resolver_base.h"
-// and "source_line_resolver_interface.h" for more documentation.
+// BasicSourceLineResolver implements SourceLineResolverInterface, using
+// address map files produced by a compatible writer, e.g. PDBSourceLineWriter.
 
 #ifndef GOOGLE_BREAKPAD_PROCESSOR_BASIC_SOURCE_LINE_RESOLVER_H__
 #define GOOGLE_BREAKPAD_PROCESSOR_BASIC_SOURCE_LINE_RESOLVER_H__
 
 #include <map>
-#include <string>
 
-#include "common/using_std_string.h"
-#include "google_breakpad/processor/source_line_resolver_base.h"
+#include "google_breakpad/processor/source_line_resolver_interface.h"
 
 namespace google_breakpad {
 
+using std::string;
 using std::map;
 
-class BasicSourceLineResolver : public SourceLineResolverBase {
+class BasicSourceLineResolver : public SourceLineResolverInterface {
  public:
   BasicSourceLineResolver();
-  virtual ~BasicSourceLineResolver() { }
+  virtual ~BasicSourceLineResolver();
 
-  using SourceLineResolverBase::LoadModule;
-  using SourceLineResolverBase::LoadModuleUsingMapBuffer;
-  using SourceLineResolverBase::LoadModuleUsingMemoryBuffer;
-  using SourceLineResolverBase::ShouldDeleteMemoryBufferAfterLoadModule;
-  using SourceLineResolverBase::UnloadModule;
-  using SourceLineResolverBase::HasModule;
-  using SourceLineResolverBase::FillSourceLineInfo;
-  using SourceLineResolverBase::FindWindowsFrameInfo;
-  using SourceLineResolverBase::FindCFIFrameInfo;
+  // SourceLineResolverInterface methods, see source_line_resolver_interface.h
+  // for more details.
+
+  // Adds a module to this resolver, returning true on success.
+  // The given map_file is read into memory, and its symbols will be
+  // retained until the BasicSourceLineResolver is destroyed.
+  virtual bool LoadModule(const CodeModule *module, const string &map_file);
+
+  // Exactly the same as above, except the given map_buffer is used
+  // for symbols. 
+  virtual bool LoadModuleUsingMapBuffer(const CodeModule *module,
+                                        const string &map_buffer);
+
+  void UnloadModule(const CodeModule *module);
+  virtual bool HasModule(const CodeModule *module);
+  virtual void FillSourceLineInfo(StackFrame *frame);
+  virtual WindowsFrameInfo *FindWindowsFrameInfo(const StackFrame *frame);
+  virtual CFIFrameInfo *FindCFIFrameInfo(const StackFrame *frame);
 
  private:
-  // friend declarations:
-  friend class BasicModuleFactory;
-  friend class ModuleComparer;
-  friend class ModuleSerializer;
-  template<class> friend class SimpleSerializer;
-
-  // Function derives from SourceLineResolverBase::Function.
+  template<class T> class MemAddrMap;
+  struct Line;
   struct Function;
-  // Module implements SourceLineResolverBase::Module interface.
+  struct PublicSymbol;
+  struct File;
+  struct CompareString {
+    bool operator()(const string &s1, const string &s2) const;
+  };
   class Module;
+
+  // All of the modules we've loaded
+  typedef map<string, Module*, CompareString> ModuleMap;
+  ModuleMap *modules_;
 
   // Disallow unwanted copy ctor and assignment operator
   BasicSourceLineResolver(const BasicSourceLineResolver&);

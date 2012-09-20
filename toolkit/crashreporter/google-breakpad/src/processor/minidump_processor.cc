@@ -35,7 +35,6 @@
 #include "google_breakpad/processor/call_stack.h"
 #include "google_breakpad/processor/minidump.h"
 #include "google_breakpad/processor/process_state.h"
-#include "google_breakpad/processor/exploitability.h"
 #include "processor/logging.h"
 #include "processor/scoped_ptr.h"
 #include "processor/stackwalker_x86.h"
@@ -44,15 +43,7 @@ namespace google_breakpad {
 
 MinidumpProcessor::MinidumpProcessor(SymbolSupplier *supplier,
                                      SourceLineResolverInterface *resolver)
-    : supplier_(supplier), resolver_(resolver),
-      enable_exploitability_(false) {
-}
-
-MinidumpProcessor::MinidumpProcessor(SymbolSupplier *supplier,
-                                     SourceLineResolverInterface *resolver,
-                                     bool enable_exploitability)
-    : supplier_(supplier), resolver_(resolver),
-      enable_exploitability_(enable_exploitability) {
+    : supplier_(supplier), resolver_(resolver) {
 }
 
 MinidumpProcessor::~MinidumpProcessor() {
@@ -96,8 +87,8 @@ ProcessResult MinidumpProcessor::Process(
         dump, &process_state->crash_address_);
   }
 
-  // This will just return an empty string if it doesn't exist.
-  process_state->assertion_ = GetAssertion(dump);
+   // This will just return an empty string if it doesn't exist.
+   process_state->assertion_ = GetAssertion(dump);
 
   MinidumpModuleList *module_list = dump->GetModuleList();
 
@@ -239,22 +230,6 @@ ProcessResult MinidumpProcessor::Process(
     process_state->requesting_thread_ = -1;
   }
 
-  // Exploitability defaults to EXPLOITABILITY_NOT_ANALYZED
-  process_state->exploitability_ = EXPLOITABILITY_NOT_ANALYZED;
-
-  // If an exploitability run was requested we perform the platform specific
-  // rating.
-  if (enable_exploitability_) {
-    scoped_ptr<Exploitability> exploitability(
-        Exploitability::ExploitabilityForPlatform(dump, process_state));
-    // The engine will be null if the platform is not supported
-    if (exploitability != NULL) {
-      process_state->exploitability_ = exploitability->CheckExploitability();
-    } else {
-      process_state->exploitability_ = EXPLOITABILITY_ERR_NOENGINE;
-    }
-  }
-
   BPLOG(INFO) << "Processed " << dump->path();
   return PROCESS_OK;
 }
@@ -267,7 +242,7 @@ ProcessResult MinidumpProcessor::Process(
   if (!dump.Read()) {
      BPLOG(ERROR) << "Minidump " << dump.path() << " could not be read";
      return PROCESS_ERROR_MINIDUMP_NOT_FOUND;
-  }
+   }
 
   return Process(&dump, process_state);
 }
@@ -386,11 +361,6 @@ bool MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
       break;
     }
 
-    case MD_OS_IOS: {
-      info->os = "iOS";
-      break;
-    }
-
     case MD_OS_LINUX: {
       info->os = "Linux";
       break;
@@ -398,11 +368,6 @@ bool MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
 
     case MD_OS_SOLARIS: {
       info->os = "Solaris";
-      break;
-    }
-
-    case MD_OS_ANDROID: {
-      info->os = "Android";
       break;
     }
 
@@ -461,8 +426,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
     return reason;
 
   switch (raw_system_info->platform_id) {
-    case MD_OS_MAC_OS_X:
-    case MD_OS_IOS: {
+    case MD_OS_MAC_OS_X: {
       char flags_string[11];
       snprintf(flags_string, sizeof(flags_string), "0x%08x", exception_flags);
       switch (exception_code) {
@@ -648,12 +612,6 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
         case MD_EXCEPTION_MAC_SOFTWARE:
           reason = "EXC_SOFTWARE / ";
           switch (exception_flags) {
-            case MD_EXCEPTION_CODE_MAC_ABORT:
-              reason.append("SIGABRT");
-              break;
-            case MD_EXCEPTION_CODE_MAC_NS_EXCEPTION:
-              reason.append("UNCAUGHT_NS_EXCEPTION");
-              break;
             // These are ppc only but shouldn't be a problem as they're
             // unused on x86
             case MD_EXCEPTION_CODE_MAC_PPC_TRAP:
@@ -747,17 +705,14 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
           // This information is useful in addition to the code address, which
           // will be present in the crash thread's instruction field anyway.
           if (raw_exception->exception_record.number_parameters >= 1) {
-            MDAccessViolationTypeWin av_type =
-                static_cast<MDAccessViolationTypeWin>
-                (raw_exception->exception_record.exception_information[0]);
-            switch (av_type) {
-              case MD_ACCESS_VIOLATION_WIN_READ:
+            switch (raw_exception->exception_record.exception_information[0]) {
+              case 0:
                 reason = "EXCEPTION_ACCESS_VIOLATION_READ";
                 break;
-              case MD_ACCESS_VIOLATION_WIN_WRITE:
+              case 1:
                 reason = "EXCEPTION_ACCESS_VIOLATION_WRITE";
                 break;
-              case MD_ACCESS_VIOLATION_WIN_EXEC:
+              case 8:
                 reason = "EXCEPTION_ACCESS_VIOLATION_EXEC";
                 break;
               default:
@@ -834,8 +789,8 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
           reason = "EXCEPTION_HEAP_CORRUPTION";
           break;
         case MD_EXCEPTION_CODE_WIN_UNHANDLED_CPP_EXCEPTION:
-          reason = "Unhandled C++ Exception";
-          break;
+	  reason = "Unhandled C++ Exception";
+	  break;
         default:
           BPLOG(INFO) << "Unknown exception reason " << reason;
           break;
@@ -843,7 +798,6 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
       break;
     }
 
-    case MD_OS_ANDROID:
     case MD_OS_LINUX: {
       switch (exception_code) {
         case MD_EXCEPTION_CODE_LIN_SIGHUP:
@@ -938,9 +892,6 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
           break;
         case MD_EXCEPTION_CODE_LIN_SIGSYS:
           reason = "SIGSYS";
-          break;
-      case MD_EXCEPTION_CODE_LIN_DUMP_REQUESTED:
-          reason = "DUMP_REQUESTED";
           break;
         default:
           BPLOG(INFO) << "Unknown exception reason " << reason;
@@ -1088,7 +1039,8 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
 }
 
 // static
-string MinidumpProcessor::GetAssertion(Minidump *dump) {
+string MinidumpProcessor::GetAssertion(Minidump *dump)
+{
   MinidumpAssertion *assertion = dump->GetAssertion();
   if (!assertion)
     return "";

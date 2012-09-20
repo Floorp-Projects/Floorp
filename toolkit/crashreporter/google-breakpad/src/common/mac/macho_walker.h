@@ -52,8 +52,7 @@ class MachoWalker {
                                       off_t offset, bool swap, void *context);
 
   MachoWalker(const char *path, LoadCommandCallback callback, void *context);
-  MachoWalker(void *memory, size_t size, LoadCommandCallback callback,
-              void *context);
+  MachoWalker(int file_descriptor, LoadCommandCallback callback, void *context);
   ~MachoWalker();
 
   // Begin walking the header for |cpu_type|.  If |cpu_type| is 0, then the
@@ -69,7 +68,7 @@ class MachoWalker {
 
   // Read |size| bytes from the opened file at |offset| into |buffer|
   bool ReadBytes(void *buffer, size_t size, off_t offset);
-
+  
   // Return the current header and header offset
   bool CurrentHeader(struct mach_header_64 *header, off_t *offset);
 
@@ -88,25 +87,19 @@ class MachoWalker {
   // File descriptor to the opened file
   int file_;
 
-  // Memory location to read from.
-  void *memory_;
-
-  // Size of the memory segment we can read from.
-  size_t memory_size_;
-
   // User specified callback & context
   LoadCommandCallback callback_;
   void *callback_context_;
-
+  
   // Current header, size, and offset.  The mach_header_64 is used for both
   // 32-bit and 64-bit headers because they only differ in their last field
-  // (reserved).  By adding the |current_header_size_| and the
+  // (reserved).  By adding the |current_header_size_| and the 
   // |current_header_offset_|, you can determine the offset in the file just
   // after the header.
   struct mach_header_64 *current_header_;
   unsigned long current_header_size_;
   off_t current_header_offset_;
-
+  
  private:
   MachoWalker(const MachoWalker &);
   MachoWalker &operator=(const MachoWalker &);

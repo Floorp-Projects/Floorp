@@ -17,9 +17,9 @@ LOCAL_INCLUDES 	= -I$(srcdir)/../../..
 
 CPPSRCS	= \
   breakpad_nlist_64.cc \
-  dynamic_images.cc \
   exception_handler.cc \
   minidump_generator.cc \
+  dynamic_images.cc \
   $(NULL)
 
 # need static lib

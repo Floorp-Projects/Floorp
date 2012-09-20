@@ -31,7 +31,6 @@
 #include "client/windows/common/ipc_protocol.h"
 
 static const wchar_t kCustomInfoProcessUptimeName[] = L"ptime";
-static const size_t kMaxCustomInfoEntries = 4096;
 
 namespace google_breakpad {
 
@@ -53,8 +52,7 @@ ClientInfo::ClientInfo(CrashGenerationServer* crash_server,
       dump_requested_handle_(NULL),
       dump_generated_handle_(NULL),
       dump_request_wait_handle_(NULL),
-      process_exit_wait_handle_(NULL),
-      crash_id_(NULL) {
+      process_exit_wait_handle_(NULL) {
   GetSystemTimeAsFileTime(&start_time_);
 }
 
@@ -63,12 +61,6 @@ bool ClientInfo::Initialize() {
   if (!process_handle_) {
     return false;
   }
-
-  // The crash_id will be the low order word of the process creation time.
-  FILETIME creation_time, exit_time, kernel_time, user_time;
-  if (GetProcessTimes(process_handle_, &creation_time, &exit_time,
-                      &kernel_time, &user_time))
-    crash_id_ = creation_time.dwLowDateTime;
 
   dump_requested_handle_ = CreateEvent(NULL,    // Security attributes.
                                        TRUE,    // Manual reset.
@@ -85,38 +77,16 @@ bool ClientInfo::Initialize() {
   return dump_generated_handle_ != NULL;
 }
 
-void ClientInfo::UnregisterDumpRequestWaitAndBlockUntilNoPending() {
+ClientInfo::~ClientInfo() {
   if (dump_request_wait_handle_) {
     // Wait for callbacks that might already be running to finish.
     UnregisterWaitEx(dump_request_wait_handle_, INVALID_HANDLE_VALUE);
-    dump_request_wait_handle_ = NULL;
   }
-}
 
-void ClientInfo::UnregisterProcessExitWait(bool block_until_no_pending) {
   if (process_exit_wait_handle_) {
-    if (block_until_no_pending) {
-      // Wait for the callback that might already be running to finish.
-      UnregisterWaitEx(process_exit_wait_handle_, INVALID_HANDLE_VALUE);
-    } else {
-      UnregisterWait(process_exit_wait_handle_);
-    }
-    process_exit_wait_handle_ = NULL;
+    // Wait for the callback that might already be running to finish.
+    UnregisterWaitEx(process_exit_wait_handle_, INVALID_HANDLE_VALUE);
   }
-}
-
-ClientInfo::~ClientInfo() {
-  // Waiting for the callback to finish here is safe because ClientInfo's are
-  // never destroyed from the dump request handling callback.
-  UnregisterDumpRequestWaitAndBlockUntilNoPending();
-
-  // This is a little tricky because ClientInfo's may be destroyed by the same
-  // callback (OnClientEnd) and waiting for it to finish will cause a deadlock.
-  // Regardless of this complication, wait for any running callbacks to finish
-  // so that the common case is properly handled.  In order to avoid deadlocks,
-  // the OnClientEnd callback must call UnregisterProcessExitWait(false)
-  // before deleting the ClientInfo.
-  UnregisterProcessExitWait(true);
 
   if (process_handle_) {
     CloseHandle(process_handle_);
@@ -128,6 +98,18 @@ ClientInfo::~ClientInfo() {
 
   if (dump_generated_handle_) {
     CloseHandle(dump_generated_handle_);
+  }
+}
+
+void ClientInfo::UnregisterWaits() {
+  if (dump_request_wait_handle_) {
+    UnregisterWait(dump_request_wait_handle_);
+    dump_request_wait_handle_ = NULL;
+  }
+
+  if (process_exit_wait_handle_) {
+    UnregisterWait(process_exit_wait_handle_);
+    process_exit_wait_handle_ = NULL;
   }
 }
 
@@ -178,9 +160,6 @@ void ClientInfo::SetProcessUptime() {
 }
 
 bool ClientInfo::PopulateCustomInfo() {
-  if (custom_client_info_.count > kMaxCustomInfoEntries)
-    return false;
-
   SIZE_T bytes_count = 0;
   SIZE_T read_count = sizeof(CustomInfoEntry) * custom_client_info_.count;
 

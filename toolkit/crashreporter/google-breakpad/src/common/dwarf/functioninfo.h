@@ -40,7 +40,6 @@
 #include <vector>
 
 #include "common/dwarf/dwarf2reader.h"
-#include "common/using_std_string.h"
 
 
 namespace dwarf2reader {
@@ -67,8 +66,8 @@ struct SourceFileInfo {
   uint64 lowpc;
 };
 
-typedef std::map<uint64, FunctionInfo*> FunctionMap;
-typedef std::map<uint64, std::pair<string, uint32> > LineMap;
+typedef map<uint64, FunctionInfo*> FunctionMap;
+typedef map<uint64, pair<string, uint32> > LineMap;
 
 // This class is a basic line info handler that fills in the dirs,
 // file, and linemap passed into it with the data produced from the
@@ -77,8 +76,8 @@ class CULineInfoHandler: public LineInfoHandler {
  public:
 
   //
-  CULineInfoHandler(std::vector<SourceFileInfo>* files,
-                    std::vector<string>* dirs,
+  CULineInfoHandler(vector<SourceFileInfo>* files,
+                    vector<string>* dirs,
                     LineMap* linemap);
   virtual ~CULineInfoHandler() { }
 
@@ -103,14 +102,14 @@ class CULineInfoHandler: public LineInfoHandler {
 
  private:
   LineMap* linemap_;
-  std::vector<SourceFileInfo>* files_;
-  std::vector<string>* dirs_;
+  vector<SourceFileInfo>* files_;
+  vector<string>* dirs_;
 };
 
 class CUFunctionInfoHandler: public Dwarf2Handler {
  public:
-  CUFunctionInfoHandler(std::vector<SourceFileInfo>* files,
-                        std::vector<string>* dirs,
+  CUFunctionInfoHandler(vector<SourceFileInfo>* files,
+                        vector<string>* dirs,
                         LineMap* linemap,
                         FunctionMap* offset_to_funcinfo,
                         FunctionMap* address_to_funcinfo,
@@ -173,8 +172,8 @@ class CUFunctionInfoHandler: public Dwarf2Handler {
   virtual void EndDIE(uint64 offset);
 
  private:
-  std::vector<SourceFileInfo>* files_;
-  std::vector<string>* dirs_;
+  vector<SourceFileInfo>* files_;
+  vector<string>* dirs_;
   LineMap* linemap_;
   FunctionMap* offset_to_funcinfo_;
   FunctionMap* address_to_funcinfo_;

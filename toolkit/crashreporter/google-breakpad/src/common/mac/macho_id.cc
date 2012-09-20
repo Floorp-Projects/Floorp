@@ -45,6 +45,7 @@ extern "C" {  // necessary for Leopard
   #include <unistd.h>
 }
 
+#include "common/md5.h"
 #include "common/mac/macho_id.h"
 #include "common/mac/macho_walker.h"
 #include "common/mac/macho_utilities.h"
@@ -56,24 +57,17 @@ using google_breakpad::MD5Update;
 using google_breakpad::MD5Final;
 
 MachoID::MachoID(const char *path)
-   : memory_(0),
-     memory_size_(0),
+   : file_(0), 
      crc_(0), 
      md5_context_(), 
      update_function_(NULL) {
   strlcpy(path_, path, sizeof(path_));
-}
-
-MachoID::MachoID(const char *path, void *memory, size_t size)
-   : memory_(memory),
-     memory_size_(size),
-     crc_(0), 
-     md5_context_(), 
-     update_function_(NULL) {
-  strlcpy(path_, path, sizeof(path_));
+  file_ = open(path, O_RDONLY);
 }
 
 MachoID::~MachoID() {
+  if (file_ != -1)
+    close(file_);
 }
 
 // The CRC info is from http://en.wikipedia.org/wiki/Adler-32
@@ -155,8 +149,10 @@ void MachoID::Update(MachoWalker *walker, off_t offset, size_t size) {
 
 bool MachoID::UUIDCommand(int cpu_type, unsigned char bytes[16]) {
   struct breakpad_uuid_command uuid_cmd;
+  MachoWalker walker(path_, UUIDWalkerCB, &uuid_cmd);
+
   uuid_cmd.cmd = 0;
-  if (!WalkHeader(cpu_type, UUIDWalkerCB, &uuid_cmd))
+  if (!walker.WalkHeader(cpu_type))
     return false;
 
   // If we found the command, we'll have initialized the uuid_command
@@ -171,14 +167,16 @@ bool MachoID::UUIDCommand(int cpu_type, unsigned char bytes[16]) {
 
 bool MachoID::IDCommand(int cpu_type, unsigned char identifier[16]) {
   struct dylib_command dylib_cmd;
+  MachoWalker walker(path_, IDWalkerCB, &dylib_cmd);
+
   dylib_cmd.cmd = 0;
-  if (!WalkHeader(cpu_type, IDWalkerCB, &dylib_cmd))
+  if (!walker.WalkHeader(cpu_type))
     return false;
 
   // If we found the command, we'll have initialized the dylib_command
   // structure
   if (dylib_cmd.cmd == LC_ID_DYLIB) {
-    // Take the hashed filename, version, and compatability version bytes
+    // Take the hashed filename, version, and compatibility version bytes
     // to form the first 12 bytes, pad the rest with zeros
 
     // create a crude hash of the filename to generate the first 4 bytes
@@ -211,37 +209,26 @@ bool MachoID::IDCommand(int cpu_type, unsigned char identifier[16]) {
 }
 
 uint32_t MachoID::Adler32(int cpu_type) {
+  MachoWalker walker(path_, WalkerCB, this);
   update_function_ = &MachoID::UpdateCRC;
   crc_ = 0;
 
-  if (!WalkHeader(cpu_type, WalkerCB, this))
+  if (!walker.WalkHeader(cpu_type))
     return 0;
 
   return crc_;
 }
 
 bool MachoID::MD5(int cpu_type, unsigned char identifier[16]) {
+  MachoWalker walker(path_, WalkerCB, this);
   update_function_ = &MachoID::UpdateMD5;
 
   MD5Init(&md5_context_);
-
-  if (!WalkHeader(cpu_type, WalkerCB, this))
+  if (!walker.WalkHeader(cpu_type))
     return false;
 
   MD5Final(identifier, &md5_context_);
   return true;
-}
-
-bool MachoID::WalkHeader(int cpu_type,
-                         MachoWalker::LoadCommandCallback callback,
-                         void *context) {
-  if (memory_) {
-    MachoWalker walker(memory_, memory_size_, callback, context);
-    return walker.WalkHeader(cpu_type);
-  } else {
-    MachoWalker walker(path_, callback, context);
-    return walker.WalkHeader(cpu_type);
-  }
 }
 
 // static

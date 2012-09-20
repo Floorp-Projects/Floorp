@@ -40,7 +40,6 @@
 #include <string>
 #include <vector>
 
-#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/code_modules.h"
@@ -55,7 +54,7 @@ class MockMemoryRegion: public google_breakpad::MemoryRegion {
   // Set this region's address and contents. If we have placed an
   // instance of this class in a test fixture class, individual tests
   // can use this to provide the region's contents.
-  void Init(u_int64_t base_address, const string &contents) {
+  void Init(u_int64_t base_address, const std::string &contents) {
     base_address_ = base_address;
     contents_ = contents;
   }
@@ -94,22 +93,22 @@ class MockMemoryRegion: public google_breakpad::MemoryRegion {
   }
 
   u_int64_t base_address_;
-  string contents_;
+  std::string contents_;
 };
 
 class MockCodeModule: public google_breakpad::CodeModule {
  public:
   MockCodeModule(u_int64_t base_address, u_int64_t size,
-                 const string &code_file, const string &version)
+                 const std::string &code_file, const std::string &version)
       : base_address_(base_address), size_(size), code_file_(code_file) { }
 
   u_int64_t base_address()       const { return base_address_; }
   u_int64_t size()               const { return size_; }
-  string code_file()        const { return code_file_; }
-  string code_identifier()  const { return code_file_; }
-  string debug_file()       const { return code_file_; }
-  string debug_identifier() const { return code_file_; }
-  string version()          const { return version_; }
+  std::string code_file()        const { return code_file_; }
+  std::string code_identifier()  const { return code_file_; }
+  std::string debug_file()       const { return code_file_; }
+  std::string debug_identifier() const { return code_file_; }
+  std::string version()          const { return version_; }
   const google_breakpad::CodeModule *Copy() const {
     abort(); // Tests won't use this.
   }
@@ -117,8 +116,8 @@ class MockCodeModule: public google_breakpad::CodeModule {
  private:
   u_int64_t base_address_;
   u_int64_t size_;
-  string code_file_;
-  string version_;
+  std::string code_file_;
+  std::string version_;
 };
 
 class MockCodeModules: public google_breakpad::CodeModules {
@@ -166,39 +165,11 @@ class MockSymbolSupplier: public google_breakpad::SymbolSupplier {
   typedef google_breakpad::SystemInfo SystemInfo;
   MOCK_METHOD3(GetSymbolFile, SymbolResult(const CodeModule *module,
                                            const SystemInfo *system_info,
-                                           string *symbol_file));
+                                           std::string *symbol_file));
   MOCK_METHOD4(GetSymbolFile, SymbolResult(const CodeModule *module,
                                            const SystemInfo *system_info,
-                                           string *symbol_file,
-                                           string *symbol_data));
-  MOCK_METHOD4(GetCStringSymbolData, SymbolResult(const CodeModule *module,
-                                                  const SystemInfo *system_info,
-                                                  string *symbol_file,
-                                                  char **symbol_data));
-  MOCK_METHOD1(FreeSymbolData, void(const CodeModule *module));
-
-  // Copies the passed string contents into a newly allocated buffer.
-  // The newly allocated buffer will be freed during destruction.
-  char* CopySymbolDataAndOwnTheCopy(const std::string &info) {
-    unsigned int buffer_size = info.size() + 1;
-    char *symbol_data = new char [buffer_size];
-    strcpy(symbol_data, info.c_str());
-    symbol_data_to_free_.push_back(symbol_data);
-    return symbol_data;
-  }
-
-  virtual ~MockSymbolSupplier() {
-    for (SymbolDataVector::const_iterator i = symbol_data_to_free_.begin();
-         i != symbol_data_to_free_.end(); i++) {
-      char* symbol_data = *i;
-      delete [] symbol_data;
-    }
-  }
-
- private:
-  // List of symbol data to be freed upon destruction
-  typedef std::vector<char*> SymbolDataVector;
-  SymbolDataVector symbol_data_to_free_;
+                                           std::string *symbol_file,
+                                           std::string *symbol_data));
 };
 
 #endif // PROCESSOR_STACKWALKER_UNITTEST_UTILS_H_

@@ -31,24 +31,20 @@
 
 // dwarf_line_to_module.cc: Unit tests for google_breakpad::DwarfLineToModule.
 
-#include <vector>
-
 #include "breakpad_googletest_includes.h"
 #include "common/dwarf_line_to_module.h"
-
-using std::vector;
 
 using google_breakpad::DwarfLineToModule;
 using google_breakpad::Module;
 using google_breakpad::Module;
 
-TEST(SimpleModule, One) {
+TEST(Simple, One) {
   Module m("name", "os", "architecture", "id");
   vector<Module::Line> lines;
   DwarfLineToModule h(&m, &lines);
 
   h.DefineFile("file1", 0x30bf0f27, 0, 0, 0);
-  h.AddLine(0x6fd126fbf74f2680LL, 0x63c9a14cf556712bLL, 0x30bf0f27,
+  h.AddLine(0x6fd126fbf74f2680LL, 0x63c9a14cf556712bLL, 0x30bf0f27, 
             0x4c090cbf, 0x1cf9fe0d);
 
   vector<Module::File *> files;
@@ -63,7 +59,7 @@ TEST(SimpleModule, One) {
   EXPECT_EQ(0x4c090cbf, lines[0].number);
 }
 
-TEST(SimpleModule, Many) {
+TEST(Simple, Many) {
   Module m("name", "os", "architecture", "id");
   vector<Module::Line> lines;
   DwarfLineToModule h(&m, &lines);
@@ -200,7 +196,7 @@ TEST(Filenames, StrangeDirectoryAndFile) {
 
 // We should silently ignore attempts to define directory number zero,
 // since that is always the compilation directory.
-TEST(ModuleErrors, DirectoryZero) {
+TEST(Errors, DirectoryZero) {
   Module m("name", "os", "architecture", "id");
   vector<Module::Line> lines;
   DwarfLineToModule h(&m, &lines);
@@ -216,7 +212,7 @@ TEST(ModuleErrors, DirectoryZero) {
 
 // We should refuse to add lines with bogus file numbers. We should
 // produce only one warning, however.
-TEST(ModuleErrors, BadFileNumber) {
+TEST(Errors, BadFileNumber) {
   Module m("name", "os", "architecture", "id");
   vector<Module::Line> lines;
   DwarfLineToModule h(&m, &lines);
@@ -230,7 +226,7 @@ TEST(ModuleErrors, BadFileNumber) {
 
 // We should treat files with bogus directory numbers as relative to
 // the compilation unit.
-TEST(ModuleErrors, BadDirectoryNumber) {
+TEST(Errors, BadDirectoryNumber) {
   Module m("name", "os", "architecture", "id");
   vector<Module::Line> lines;
   DwarfLineToModule h(&m, &lines);
@@ -245,7 +241,7 @@ TEST(ModuleErrors, BadDirectoryNumber) {
 }
 
 // We promise not to report empty lines.
-TEST(ModuleErrors, EmptyLine) {
+TEST(Errors, EmptyLine) {
   Module m("name", "os", "architecture", "id");
   vector<Module::Line> lines;
   DwarfLineToModule h(&m, &lines);
@@ -258,7 +254,7 @@ TEST(ModuleErrors, EmptyLine) {
 
 // We are supposed to clip lines that extend beyond the end of the
 // address space.
-TEST(ModuleErrors, BigLine) {
+TEST(Errors, BigLine) {
   Module m("name", "os", "architecture", "id");
   vector<Module::Line> lines;
   DwarfLineToModule h(&m, &lines);

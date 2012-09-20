@@ -60,7 +60,6 @@
 #include <iostream>
 #include <string>
 
-#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 #ifdef BP_LOGGING_INCLUDE
@@ -119,14 +118,14 @@ class LogMessageVoidify {
 };
 
 // Returns number formatted as a hexadecimal string, such as "0x7b".
-string HexString(u_int32_t number);
-string HexString(u_int64_t number);
-string HexString(int number);
+std::string HexString(u_int32_t number);
+std::string HexString(u_int64_t number);
+std::string HexString(int number);
 
 // Returns the error code as set in the global errno variable, and sets
 // error_string, a required argument, to a string describing that error
 // code.
-int ErrnoString(string *error_string);
+int ErrnoString(std::string *error_string);
 
 }  // namespace google_breakpad
 

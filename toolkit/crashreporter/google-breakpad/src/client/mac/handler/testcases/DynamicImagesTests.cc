@@ -55,17 +55,21 @@ void DynamicImagesTests::ReadTaskMemoryTest() {
   // pick test2 as a symbol we know to be valid to read
   // anything will work, really
   void *addr = reinterpret_cast<void*>(&test2);
-  std::vector<uint8_t> buf(getpagesize());
+  void *buf;
 
   fprintf(stderr, "reading 0x%p\n", addr);
-  kr = google_breakpad::ReadTaskMemory(mach_task_self(),
-                                       (uint64_t)addr,
-                                       getpagesize(),
-                                       buf);
+  buf = google_breakpad::ReadTaskMemory(mach_task_self(),
+                                        addr,
+                                        getpagesize(),
+                                        &kr);
 
   CPTAssert(kr == KERN_SUCCESS);
 
-  CPTAssert(0 == memcmp(&buf[0], (const void*)addr, getpagesize()));
+  CPTAssert(buf != NULL);
+
+  CPTAssert(0 == memcmp(buf, (const void*)addr, getpagesize()));
+
+  free(buf);
 }
 
 void DynamicImagesTests::ReadLibrariesFromLocalTaskTest() {
@@ -74,6 +78,8 @@ void DynamicImagesTests::ReadLibrariesFromLocalTaskTest() {
   google_breakpad::DynamicImages *d = new google_breakpad::DynamicImages(me);
 
   fprintf(stderr,"Local task image count: %d\n", d->GetImageCount());
+
+  d->TestPrint();
 
   CPTAssert(d->GetImageCount() > 0);
 }

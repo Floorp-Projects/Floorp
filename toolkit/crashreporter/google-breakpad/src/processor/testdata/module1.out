@@ -1,5 +1,4 @@
 MODULE windows x86 111111111111111111111111111111111 module1.pdb
-INFO CODE_ID FFFFFFFF module1.exe
 FILE 1 file1_1.cc
 FILE 2 file1_2.cc
 FILE 3 file1_3.cc

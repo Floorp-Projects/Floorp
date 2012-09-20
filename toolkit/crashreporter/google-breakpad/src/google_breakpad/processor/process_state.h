@@ -36,54 +36,17 @@
 
 #include <string>
 #include <vector>
-
-#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 #include "google_breakpad/processor/system_info.h"
 #include "google_breakpad/processor/minidump.h"
 
 namespace google_breakpad {
 
+using std::string;
 using std::vector;
 
 class CallStack;
 class CodeModules;
-
-enum ExploitabilityRating {
-  EXPLOITABILITY_HIGH,                    // The crash likely represents
-                                          // a exploitable memory corruption
-                                          // vulnerability.
-
-  EXPLOITABLITY_MEDIUM,                   // The crash appears to corrupt
-                                          // memory in a way which may be
-                                          // exploitable in some situations.
-
-  EXPLOITABILITY_LOW,                     // The crash either does not corrupt
-                                          // memory directly or control over
-                                          // the effected data is limited. The
-                                          // issue may still be exploitable
-                                          // on certain platforms or situations.
-
-  EXPLOITABILITY_INTERESTING,             // The crash does not appear to be
-                                          // directly exploitable. However it
-                                          // represents a condition which should
-                                          // be furthur analyzed.
-
-  EXPLOITABILITY_NONE,                    // The crash does not appear to represent
-                                          // an exploitable condition.
-
-  EXPLOITABILITY_NOT_ANALYZED,            // The crash was not analyzed for
-                                          // exploitability because the engine
-                                          // was disabled.
-
-  EXPLOITABILITY_ERR_NOENGINE,            // The supplied minidump's platform does
-                                          // not have a exploitability engine
-                                          // associated with it.
-
-  EXPLOITABILITY_ERR_PROCESSING           // An error occured within the
-                                          // exploitability engine and no rating
-                                          // was calculated.
-};
 
 class ProcessState {
  public:
@@ -106,7 +69,6 @@ class ProcessState {
   }
   const SystemInfo* system_info() const { return &system_info_; }
   const CodeModules* modules() const { return modules_; }
-  ExploitabilityRating exploitability() const { return exploitability_; }
 
  private:
   // MinidumpProcessor is responsible for building ProcessState objects.
@@ -157,11 +119,6 @@ class ProcessState {
   // The modules that were loaded into the process represented by the
   // ProcessState.
   const CodeModules *modules_;
-
-  // The exploitability rating as determined by the exploitability
-  // engine. When the exploitability engine is not enabled this
-  // defaults to EXPLOITABILITY_NONE.
-  ExploitabilityRating exploitability_;
 };
 
 }  // namespace google_breakpad

@@ -13,23 +13,15 @@ MODULE		= breakpad_linux_common
 LIBRARY_NAME	= breakpad_linux_common_s
 HOST_LIBRARY_NAME = host_breakpad_linux_common_s
 
-LOCAL_INCLUDES = \
-  -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src \
-  $(NULL)
+LOCAL_INCLUDES 	= -I$(srcdir)/../..
 
 CPPSRCS	= \
-  elfutils.cc \
   file_id.cc \
   guid_creator.cc \
-  linux_libc_support.cc \
-  memory_mapped_file.cc \
-  safe_readlink.cc \
   $(NULL)
 
 ifneq (Android,$(OS_TARGET))
 CPPSRCS += http_upload.cc
-else
-TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
@@ -38,12 +30,8 @@ endif
 
 HOST_CPPSRCS = \
   dump_symbols.cc \
-  elf_symbols_to_module.cc \
-  elfutils.cc \
   file_id.cc \
   guid_creator.cc \
-  linux_libc_support.cc \
-  memory_mapped_file.cc \
   $(NULL)
 
 # need static lib
