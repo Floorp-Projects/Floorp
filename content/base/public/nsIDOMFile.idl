@@ -74,12 +74,3 @@ interface nsIDOMFile : nsIDOMBlob
   // This performs no security checks!
   [noscript] readonly attribute DOMString mozFullPathInternal;
 };
-
-[scriptable, builtinclass, uuid(57195950-edd9-496b-9b45-e4893a9ffca9)]
-interface nsIDOMMozBlobBuilder : nsISupports
-{
-  nsIDOMBlob getBlob([optional] in DOMString contentType);
-  nsIDOMFile getFile(in DOMString name, [optional] in DOMString contentType);
-  [implicit_jscontext] void append(in jsval data,
-                                   [optional] in DOMString endings);
-};

@@ -371,7 +371,6 @@ DOMCI_CLASS(FileReader)
 DOMCI_CLASS(ArchiveReader)
 DOMCI_CLASS(ArchiveRequest)
 DOMCI_CLASS(MozURLProperty)
-DOMCI_CLASS(MozBlobBuilder)
 
 DOMCI_CLASS(DOMStringMap)
 
