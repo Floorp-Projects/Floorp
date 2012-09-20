@@ -5319,7 +5319,7 @@ nsTextFrame::PaintOneShadow(uint32_t aOffset, uint32_t aLength,
   }
 
   aCtx->Save();
-  aCtx->NewPath();
+  aCtx->NewPath(); 
   aCtx->SetColor(gfxRGBA(shadowColor));
 
   // Draw the text onto our alpha-only surface to capture the alpha values.
@@ -5330,10 +5330,8 @@ nsTextFrame::PaintOneShadow(uint32_t aOffset, uint32_t aLength,
                     aDirtyRect.width, aDirtyRect.height);
   DrawText(shadowContext, dirtyRect, aFramePt + shadowOffset,
            aTextBaselinePt + shadowOffset, aOffset, aLength, *aProvider,
-           nsTextPaintStyle(this),
-           aCtx == shadowContext ? shadowColor : NS_RGB(0, 0, 0), aClipEdges,
-           advanceWidth, (GetStateBits() & TEXT_HYPHEN_BREAK) != 0,
-           decorationOverrideColor);
+           nsTextPaintStyle(this), shadowColor, aClipEdges, advanceWidth,
+           (GetStateBits() & TEXT_HYPHEN_BREAK) != 0, decorationOverrideColor);
 
   contextBoxBlur.DoPaint();
   aCtx->Restore();
