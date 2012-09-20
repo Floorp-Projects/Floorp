@@ -25,12 +25,12 @@ NS_IMPL_CI_INTERFACE_GETTER2(XPCVariant, XPCVariant, nsIVariant)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(XPCVariant)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(XPCVariant)
 
-XPCVariant::XPCVariant(XPCCallContext& ccx, jsval aJSVal)
+XPCVariant::XPCVariant(JSContext* cx, jsval aJSVal)
     : mJSVal(aJSVal), mCCGeneration(0)
 {
     nsVariant::Initialize(&mData);
     if (!JSVAL_IS_PRIMITIVE(mJSVal)) {
-        JSObject *obj = JS_ObjectToInnerObject(ccx, JSVAL_TO_OBJECT(mJSVal));
+        JSObject *obj = JS_ObjectToInnerObject(cx, JSVAL_TO_OBJECT(mJSVal));
 
         mJSVal = OBJECT_TO_JSVAL(obj);
 
@@ -40,7 +40,7 @@ XPCVariant::XPCVariant(XPCCallContext& ccx, jsval aJSVal)
 
         JSObject* proto;
         XPCWrappedNative* wn =
-            XPCWrappedNative::GetWrappedNativeOfJSObject(ccx,
+            XPCWrappedNative::GetWrappedNativeOfJSObject(cx,
                                                          JSVAL_TO_OBJECT(mJSVal),
                                                          nullptr,
                                                          &proto);
@@ -107,20 +107,20 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 // static
-XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)
+XPCVariant* XPCVariant::newVariant(JSContext* cx, jsval aJSVal)
 {
     XPCVariant* variant;
 
     if (!JSVAL_IS_TRACEABLE(aJSVal))
-        variant = new XPCVariant(ccx, aJSVal);
+        variant = new XPCVariant(cx, aJSVal);
     else
-        variant = new XPCTraceableVariant(ccx, aJSVal);
+        variant = new XPCTraceableVariant(cx, aJSVal);
 
     if (!variant)
         return nullptr;
     NS_ADDREF(variant);
 
-    if (!variant->InitializeData(ccx))
+    if (!variant->InitializeData(cx))
         NS_RELEASE(variant);     // Also sets variant to nullptr.
 
     return variant;
@@ -152,7 +152,7 @@ private:
     static const Type StateTable[tTypeCount][tTypeCount-1];
 
 public:
-    static JSBool GetTypeForArray(XPCCallContext& ccx, JSObject* array,
+    static JSBool GetTypeForArray(JSContext* cx, JSObject* array,
                                   uint32_t length,
                                   nsXPTType* resultType, nsID* resultID);
 };
@@ -177,7 +177,7 @@ XPCArrayHomogenizer::StateTable[tTypeCount][tTypeCount-1] = {
 
 // static
 JSBool
-XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
+XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, JSObject* array,
                                      uint32_t length,
                                      nsXPTType* resultType, nsID* resultID)
 {
@@ -186,7 +186,7 @@ XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
 
     for (uint32_t i = 0; i < length; i++) {
         JS::Value val;
-        if (!JS_GetElement(ccx, array, i, &val))
+        if (!JS_GetElement(cx, array, i, &val))
             return false;
 
         if (val.isInt32()) {
@@ -205,9 +205,9 @@ XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
         } else {
             NS_ASSERTION(val.isObject(), "invalid type of jsval!");
             JSObject* jsobj = &val.toObject();
-            if (JS_IsArrayObject(ccx, jsobj))
+            if (JS_IsArrayObject(cx, jsobj))
                 type = tArr;
-            else if (xpc_JSObjectIsID(ccx, jsobj))
+            else if (xpc_JSObjectIsID(cx, jsobj))
                 type = tID;
             else
                 type = tISup;
@@ -266,9 +266,9 @@ XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
     return true;
 }
 
-JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
+JSBool XPCVariant::InitializeData(JSContext* cx)
 {
-    JS_CHECK_RECURSION(ccx.GetJSContext(), return false);
+    JS_CHECK_RECURSION(cx, return false);
 
     JS::Value val = GetJSVal();
 
@@ -296,7 +296,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         // Despite the fact that the variant holds the length, there are
         // implicit assumptions that mWStringValue[mWStringLength] == 0
         size_t length;
-        const jschar *chars = JS_GetStringCharsZAndLength(ccx, str, &length);
+        const jschar *chars = JS_GetStringCharsZAndLength(cx, str, &length);
         if (!chars)
             return false;
 
@@ -316,7 +316,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
     // Let's see if it is a xpcJSID.
 
-    const nsID* id = xpc_JSObjectToID(ccx, jsobj);
+    const nsID* id = xpc_JSObjectToID(cx, jsobj);
     if (id)
         return NS_SUCCEEDED(nsVariant::SetFromID(&mData, *id));
 
@@ -324,7 +324,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
     uint32_t len;
 
-    if (JS_IsArrayObject(ccx, jsobj) && JS_GetArrayLength(ccx, jsobj, &len)) {
+    if (JS_IsArrayObject(cx, jsobj) && JS_GetArrayLength(cx, jsobj, &len)) {
         if (!len) {
             // Zero length array
             nsVariant::SetToEmptyArray(&mData);
@@ -334,10 +334,10 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         nsXPTType type;
         nsID id;
 
-        if (!XPCArrayHomogenizer::GetTypeForArray(ccx, jsobj, len, &type, &id))
+        if (!XPCArrayHomogenizer::GetTypeForArray(cx, jsobj, len, &type, &id))
             return false;
 
-        if (!XPCConvert::JSArray2Native(ccx, &mData.u.array.mArrayValue,
+        if (!XPCConvert::JSArray2Native(cx, &mData.u.array.mArrayValue,
                                         val, len, type, &id, nullptr))
             return false;
 
@@ -357,7 +357,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
     const nsIID& iid = NS_GET_IID(nsISupports);
 
     return nullptr != (xpc = nsXPConnect::GetXPConnect()) &&
-           NS_SUCCEEDED(xpc->WrapJS(ccx, jsobj,
+           NS_SUCCEEDED(xpc->WrapJS(cx, jsobj,
                                     iid, getter_AddRefs(wrapper))) &&
            NS_SUCCEEDED(nsVariant::SetFromInterface(&mData, iid, wrapper));
 }
