@@ -161,6 +161,10 @@ ifndef MOZ_NATIVE_PNG
 tier_platform_dirs += media/libpng
 endif
 
+ifdef ENABLE_TESTS
+tier_platform_dirs += testing/specialpowers
+endif
+
 tier_platform_dirs	+= \
 		uriloader \
 		caps \

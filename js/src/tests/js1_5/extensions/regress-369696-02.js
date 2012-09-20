@@ -9,6 +9,8 @@ var summary = 'Do not assert: map->depth > 0" in js_LeaveSharpObject';
 var actual = '';
 var expect = '';
 
+// Bug 762908 requires us to set sp=null;
+window.SpecialPowers = null;
 
 //-----------------------------------------------------------------------------
 test();

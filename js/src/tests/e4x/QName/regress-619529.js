@@ -1,4 +1,5 @@
 // |reftest| pref(javascript.options.xml.content,true)
+// |reftest| skip
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * Any copyright is dedicated to the Public Domain.

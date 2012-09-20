@@ -25,7 +25,7 @@ XPI_NAME=specialpowers
 # Used in install.rdf
 USE_EXTENSION_MANIFEST=1
 
-TEST_EXTENSIONS_DIR = $(DEPTH)/_tests/testing/mochitest/extensions
+TEST_EXTENSIONS_DIR = $(DEPTH)/testing/specialpowers
 
 include $(topsrcdir)/config/rules.mk
 
@@ -39,3 +39,8 @@ libs-preqs = \
 
 libs:: $(libs-preqs)
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - $(XPI_NAME)) | (cd $(TEST_EXTENSIONS_DIR) && tar -xf -)
+	$(NSINSTALL) -D $(DEPTH)/_tests/testing/mochitest/extensions/specialpowers
+	cp -RL $(DEPTH)/testing/specialpowers/specialpowers $(DEPTH)/_tests/testing/mochitest/extensions
+	$(NSINSTALL) -D $(DEPTH)/_tests/reftest/specialpowers
+	cp -RL $(DEPTH)/testing/specialpowers/specialpowers $(DEPTH)/_tests/reftest
+
