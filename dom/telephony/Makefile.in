@@ -14,6 +14,7 @@ LIBRARY_NAME     = domtelephony_s
 XPIDL_MODULE     = dom_telephony
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
+FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
