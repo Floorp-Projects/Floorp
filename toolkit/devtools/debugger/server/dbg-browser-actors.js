@@ -113,17 +113,7 @@ BrowserRootActor.prototype = {
       }
     }
 
-    // Walk over global actors added by extensions.
-    for (let name in DebuggerServer.globalActorFactories) {
-      let actor = this._extraActors[name];
-      if (!actor) {
-        actor = DebuggerServer.globalActorFactories[name].bind(null, this.conn);
-        actor.prototype = DebuggerServer.globalActorFactories[name].prototype;
-        actor.parentID = this.actorID;
-        this._extraActors[name] = actor;
-      }
-      actorPool.addActor(actor);
-    }
+    this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
 
     // Now drop the old actorID -> actor map.  Actors that still
     // mattered were added to the new map, others will go
@@ -139,11 +129,35 @@ BrowserRootActor.prototype = {
       "selected": selected,
       "tabs": [actor.grip() for (actor of tabActorList)]
     };
+    this._appendExtraActors(response);
+    return response;
+  },
+
+  /**
+   * Adds dynamically-added actors from add-ons to the provided pool.
+   */
+  _createExtraActors: function BRA_createExtraActors(aFactories, aPool) {
+    // Walk over global actors added by extensions.
+    for (let name in aFactories) {
+      let actor = this._extraActors[name];
+      if (!actor) {
+        actor = aFactories[name].bind(null, this.conn);
+        actor.prototype = aFactories[name].prototype;
+        actor.parentID = this.actorID;
+        this._extraActors[name] = actor;
+      }
+      aPool.addActor(actor);
+    }
+  },
+
+  /**
+   * Appends the extra actors to the specified object.
+   */
+  _appendExtraActors: function BRA_appendExtraActors(aObject) {
     for (let name in this._extraActors) {
       let actor = this._extraActors[name];
-      response[name] = actor.actorID;
+      aObject[name] = actor.actorID;
     }
-    return response;
   },
 
   /**
@@ -230,6 +244,8 @@ function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
   // A map of actor names to actor instances provided by extensions.
   this._extraActors = {};
 
+  this._createExtraActors = BrowserRootActor.prototype._createExtraActors.bind(this);
+  this._appendExtraActors = BrowserRootActor.prototype._appendExtraActors.bind(this);
   this._onWindowCreated = this.onWindowCreated.bind(this);
 }
 
@@ -288,25 +304,13 @@ BrowserTabActor.prototype = {
 
     // Walk over tab actors added by extensions and add them to a new ActorPool.
     let actorPool = new ActorPool(this.conn);
-    for (let name in DebuggerServer.tabActorFactories) {
-      let actor = this._extraActors[name];
-      if (!actor) {
-        actor = DebuggerServer.tabActorFactories[name].bind(null, this.conn);
-        actor.prototype = DebuggerServer.tabActorFactories[name].prototype;
-        actor.parentID = this.actorID;
-        this._extraActors[name] = actor;
-      }
-      actorPool.addActor(actor);
-    }
+    this._createExtraActors(DebuggerServer.tabActorFactories, actorPool);
     if (!actorPool.isEmpty()) {
       this._tabActorPool = actorPool;
       this.conn.addActorPool(this._tabActorPool);
     }
 
-    for (let name in this._extraActors) {
-      let actor = this._extraActors[name];
-      response[name] = actor.actorID;
-    }
+    this._appendExtraActors(response);
     return response;
   },
 
