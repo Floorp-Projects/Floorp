@@ -2027,14 +2027,18 @@ class TypedArrayTemplate
         return NativeType(ToInt32(d));
     }
 
-    static NativeType
-    nativeFromValue(JSContext *cx, const Value &v)
+    static bool
+    nativeFromValue(JSContext *cx, const Value &v, NativeType *result)
     {
-        if (v.isInt32())
-            return NativeType(v.toInt32());
+        if (v.isInt32()) {
+            *result = v.toInt32();
+            return true;
+        }
 
-        if (v.isDouble())
-            return nativeFromDouble(v.toDouble());
+        if (v.isDouble()) {
+            *result = nativeFromDouble(v.toDouble());
+            return true;
+        }
 
         /*
          * The condition guarantees that holes and undefined values
@@ -2043,13 +2047,17 @@ class TypedArrayTemplate
         if (v.isPrimitive() && !v.isMagic() && !v.isUndefined()) {
             RootedValue primitive(cx, v);
             double dval;
-            JS_ALWAYS_TRUE(ToNumber(cx, primitive, &dval));
-            return nativeFromDouble(dval);
+            // ToNumber will only fail from OOM
+            if (!ToNumber(cx, primitive, &dval))
+                return false;
+            *result = nativeFromDouble(dval);
+            return true;
         }
 
-        return ArrayTypeIsFloatingPoint()
-               ? NativeType(js_NaN)
-               : NativeType(int32_t(0));
+        *result = ArrayTypeIsFloatingPoint()
+                  ? NativeType(js_NaN)
+                  : NativeType(int32_t(0));
+        return true;
     }
 
     static bool
@@ -2070,20 +2078,22 @@ class TypedArrayTemplate
 
             const Value *src = ar->getDenseArrayElements();
             SkipRoot skipSrc(cx, &src);
-
-            /*
-             * It is valid to skip the hole check here because nativeFromValue
-             * treats a hole as undefined.
-             */
-            for (unsigned i = 0; i < len; ++i)
-                *dest++ = nativeFromValue(cx, *src++);
+            for (uint32_t i = 0; i < len; ++i) {
+                NativeType n;
+                if (!nativeFromValue(cx, src[i], &n))
+                    return false;
+                dest[i] = n;
+            }
         } else {
             RootedValue v(cx);
 
-            for (unsigned i = 0; i < len; ++i) {
+            for (uint32_t i = 0; i < len; ++i) {
                 if (!JSObject::getElement(cx, ar, ar, i, &v))
                     return false;
-                *dest++ = nativeFromValue(cx, v);
+                NativeType n;
+                if (!nativeFromValue(cx, v, &n))
+                    return false;
+                dest[i] = n;
             }
         }
 
