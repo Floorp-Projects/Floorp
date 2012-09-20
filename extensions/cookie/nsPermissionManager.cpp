@@ -26,6 +26,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
+#include "mozilla/Attributes.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
@@ -123,7 +124,7 @@ GetHostForPrincipal(nsIPrincipal* aPrincipal, nsACString& aHost)
   return NS_OK;
 }
 
-class AppUninstallObserver : public nsIObserver {
+class AppUninstallObserver MOZ_FINAL : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
 
