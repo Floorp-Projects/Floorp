@@ -740,8 +740,8 @@ function loadManifestFromRDF(aUri, aStream) {
     }
   }
   else {
-    // spell check dictionaries never require a restart
-    if (addon.type == "dictionary")
+    // spell check dictionaries and language packs never require a restart
+    if (addon.type == "dictionary" || addon.type == "locale")
       addon.bootstrap = true;
 
     // Only extensions are allowed to provide an optionsURL, optionsType or aboutURL. For
@@ -3695,6 +3695,11 @@ var XPIProvider = {
       Components.manager.addBootstrappedManifestLocation(aFile);
 
     try {
+      // Don't call bootstrap.js methods for language packs,
+      // they only contain chrome.
+      if (aType == "locale")
+         return;
+
       // Load the scope if it hasn't already been loaded
       if (!(aId in this.bootstrapScopes))
         this.loadBootstrapScope(aId, aFile, aVersion, aType);
