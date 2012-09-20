@@ -53,6 +53,7 @@ CompartmentStats::gcHeapThingsSize()
     n += gcHeapShapesBase;
     n += gcHeapScripts;
     n += gcHeapTypeObjects;
+    n += gcHeapIonCodes;
 #if JS_HAS_XML_SUPPORT
     n += gcHeapXML;
 #endif
@@ -182,10 +183,10 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         cStats->gcHeapScripts += thingSize;
         cStats->scriptData += script->sizeOfData(rtStats->mallocSizeOf);
 #ifdef JS_METHODJIT
-        cStats->mjitData += script->sizeOfJitScripts(rtStats->mallocSizeOf);
+        cStats->jaegerData += script->sizeOfJitScripts(rtStats->mallocSizeOf);
 # ifdef JS_ION
         if (script->hasIonScript())
-            cStats->mjitData += script->ion->size();
+            cStats->ionData += script->ion->sizeOfIncludingThis(rtStats->mallocSizeOf);
 # endif
 #endif
 
@@ -201,9 +202,8 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
     {
 #ifdef JS_METHODJIT
 # ifdef JS_ION
-        ion::IonCode *code = static_cast<ion::IonCode *>(thing);
-        cStats->gcHeapScripts += thingSize;
-        cStats->mjitData += code->bufferSize();
+        cStats->gcHeapIonCodes += thingSize;
+        // The code for a script is counted in ExecutableAllocator::sizeOfCode().
 # endif
 #endif
         break;
