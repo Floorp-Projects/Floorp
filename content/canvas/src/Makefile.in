@@ -19,7 +19,6 @@ LIBXUL_LIBRARY  = 1
 EXPORTS = \
 	CustomQS_Canvas.h \
 	CustomQS_Canvas2D.h \
-	CustomQS_WebGL.h \
 	WebGLContext.h \
 	$(NULL)
 
