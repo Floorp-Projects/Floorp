@@ -140,7 +140,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jScanMedia = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
     jGetSystemColors = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getSystemColors", "()[I");
     jGetIconForExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getIconForExtension", "(Ljava/lang/String;I)[B");
-    jFireAndWaitForTracerEvent = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "fireAndWaitForTracerEvent", "()V");
     jCreateShortcut = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jGetShowPasswordSetting = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getShowPasswordSetting", "()Z");
     jPostToJavaThread = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "postToJavaThread", "(Z)V");
@@ -1446,18 +1445,6 @@ AndroidBridge::OpenGraphicsLibraries()
     }
 }
 
-void
-AndroidBridge::FireAndWaitForTracerEvent() {
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return;
-
-    AutoLocalJNIFrame jniFrame(env, 0);
-    env->CallStaticVoidMethod(mGeckoAppShellClass,
-                              jFireAndWaitForTracerEvent);
-}
-
-
 namespace mozilla {
     class TracerRunnable : public nsRunnable{
     public:
@@ -1479,7 +1466,6 @@ namespace mozilla {
             if (!AndroidBridge::Bridge())
                 return NS_OK;
 
-            AndroidBridge::Bridge()->FireAndWaitForTracerEvent();
             mHasRun = true;
             mTracerCondVar->Notify();
             return NS_OK;
