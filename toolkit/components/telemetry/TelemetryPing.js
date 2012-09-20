@@ -805,8 +805,13 @@ TelemetryPing.prototype = {
     if (sync) {
       let utf8String = converter.ConvertFromUnicode(pingString);
       utf8String += converter.Finish();
-      let amount = ostream.write(utf8String, utf8String.length);
-      this.finishTelemetrySave(amount == utf8String.length, ostream);
+      let success = false;
+      try {
+        let amount = ostream.write(utf8String, utf8String.length);
+        success = amount == utf8String.length;
+      } catch (e) {
+      }
+      this.finishTelemetrySave(success, ostream);
     } else {
       let istream = converter.convertToInputStream(pingString)
       let self = this;
