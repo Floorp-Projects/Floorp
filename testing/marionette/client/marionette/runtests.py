@@ -78,6 +78,16 @@ class MarionetteTestResult(unittest._TextTestResult):
                 else:
                     self.perfdata.join_results(testcase.perfdata)
 
+    def printErrorList(self, flavour, errors):
+        for test, err in errors:
+            self.stream.writeln(self.separator1)
+            self.stream.writeln("%s: %s" % (flavour,self.getDescription(test)))
+            self.stream.writeln(self.separator2)
+            errlines = err.strip().split('\n')
+            for line in errlines[0:-1]:
+                self.stream.writeln("%s" % line)
+            self.stream.writeln("TEST-UNEXPECTED-FAIL : %s" % errlines[-1])
+
 
 class MarionetteTextTestRunner(unittest.TextTestRunner):
 
