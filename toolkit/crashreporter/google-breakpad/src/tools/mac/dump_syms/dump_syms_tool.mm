@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2011, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 #include <mach-o/arch.h>
 #include <unistd.h>
 
+#include <iostream>
 #include <vector>
 
 #include "common/mac/dump_syms.h"
@@ -44,9 +45,10 @@ using google_breakpad::DumpSymbols;
 using std::vector;
 
 struct Options {
-  Options() : srcPath(), arch() { }
+  Options() : srcPath(), arch(), cfi(true) { }
   NSString *srcPath;
   const NXArchInfo *arch;
+  bool cfi;
 };
 
 //=============================================================================
@@ -81,17 +83,18 @@ static bool Start(const Options &options) {
       return false;
     }
   }
-      
-  return dump_symbols.WriteSymbolFile(stdout);
+
+  return dump_symbols.WriteSymbolFile(std::cout, options.cfi);
 }
 
 //=============================================================================
 static void Usage(int argc, const char *argv[]) {
   fprintf(stderr, "Output a Breakpad symbol file from a Mach-o file.\n");
-  fprintf(stderr, "Usage: %s [-a ARCHITECTURE] <Mach-o file>\n",
+  fprintf(stderr, "Usage: %s [-a ARCHITECTURE] [-c] <Mach-o file>\n",
           argv[0]);
   fprintf(stderr, "\t-a: Architecture type [default: native, or whatever is\n");
   fprintf(stderr, "\t    in the file, if it contains only one architecture]\n");
+  fprintf(stderr, "\t-c: Do not generate CFI section\n");
   fprintf(stderr, "\t-h: Usage\n");
   fprintf(stderr, "\t-?: Usage\n");
 }
@@ -101,7 +104,7 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
   extern int optind;
   signed char ch;
 
-  while ((ch = getopt(argc, (char * const *)argv, "a:h?")) != -1) {
+  while ((ch = getopt(argc, (char * const *)argv, "a:ch?")) != -1) {
     switch (ch) {
       case 'a': {
         const NXArchInfo *arch_info = NXGetArchInfoFromName(optarg);
@@ -113,6 +116,9 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
         options->arch = arch_info;
         break;
       }
+      case 'c':
+        options->cfi = false;
+        break;
       case '?':
       case 'h':
         Usage(argc, argv);
@@ -120,7 +126,7 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
         break;
     }
   }
-  
+
   if ((argc - optind) != 1) {
     fprintf(stderr, "Must specify Mach-o file\n");
     Usage(argc, argv);
@@ -136,7 +142,7 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
 int main (int argc, const char * argv[]) {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   Options options;
-  bool result; 
+  bool result;
 
   SetupOptions(argc, argv, &options);
   result = Start(options);

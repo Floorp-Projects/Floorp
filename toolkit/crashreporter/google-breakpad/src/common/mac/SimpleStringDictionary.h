@@ -134,7 +134,7 @@ class SimpleStringDictionary {
   // Given |key|, returns its corresponding |value|.
   // If |key| is NULL, an assert will fire or NULL will be returned.  If |key|
   // is not found or is an empty string, NULL is returned.
-  const char *GetValueForKey(const char *key);
+  const char *GetValueForKey(const char *key) const;
     
   // Stores a string |value| represented by |key|.  If |key| is NULL or an empty
   // string, this will assert (or do nothing).  If |value| is NULL then

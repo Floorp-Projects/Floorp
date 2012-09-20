@@ -33,11 +33,11 @@
 #include <list>
 #include <string>
 #include "client/windows/common/ipc_protocol.h"
-#include "client/windows/crash_generation/client_info.h"
 #include "client/windows/crash_generation/minidump_generator.h"
 #include "processor/scoped_ptr.h"
 
 namespace google_breakpad {
+class ClientInfo;
 
 // Abstraction for server side implementation of out-of-process crash
 // generation protocol for Windows platform only. It generates Windows
@@ -58,6 +58,9 @@ class CrashGenerationServer {
 
   typedef void (*OnClientExitedCallback)(void* context,
                                          const ClientInfo* client_info);
+
+  typedef void (*OnClientUploadRequestCallback)(void* context,
+                                                const DWORD crash_id);
 
   // Creates an instance with the given parameters.
   //
@@ -86,12 +89,15 @@ class CrashGenerationServer {
                         void* dump_context,
                         OnClientExitedCallback exit_callback,
                         void* exit_context,
+                        OnClientUploadRequestCallback upload_request_callback,
+                        void* upload_context,
                         bool generate_dumps,
                         const std::wstring* dump_path);
 
   ~CrashGenerationServer();
 
-  // Performs initialization steps needed to start listening to clients.
+  // Performs initialization steps needed to start listening to clients. Upon
+  // successful return clients may connect to this server's pipe.
   //
   // Returns true if initialization is successful; false otherwise.
   bool Start();
@@ -100,6 +106,9 @@ class CrashGenerationServer {
   // Various states the client can be in during the handshake with
   // the server.
   enum IPCServerState {
+    // Server starts in this state.
+    IPC_SERVER_STATE_UNINITIALIZED,
+
     // Server is in error state and it cannot serve any clients.
     IPC_SERVER_STATE_ERROR,
 
@@ -180,11 +189,8 @@ class CrashGenerationServer {
   // Callback for client process exit event.
   static void CALLBACK OnClientEnd(void* context, BOOLEAN timer_or_wait);
 
-  // Releases resources for a client.
-  static DWORD WINAPI CleanupClient(void* context);
-
-  // Cleans up for the given client.
-  void DoCleanup(ClientInfo* client_info);
+  // Handles client process exit.
+  void HandleClientProcessExit(ClientInfo* client_info);
 
   // Adds the given client to the list of registered clients.
   bool AddClient(ClientInfo* client_info);
@@ -192,8 +198,23 @@ class CrashGenerationServer {
   // Generates dump for the given client.
   bool GenerateDump(const ClientInfo& client, std::wstring* dump_path);
 
+  // Puts the server in a permanent error state and sets a signal such that
+  // the state will be immediately entered after the current state transition
+  // is complete.
+  void EnterErrorState();
+
+  // Puts the server in the specified state and sets a signal such that the
+  // state is immediately entered after the current state transition is
+  // complete.
+  void EnterStateImmediately(IPCServerState state);
+
+  // Puts the server in the specified state. No signal will be set, so the state
+  // transition will only occur when signaled manually or by completion of an
+  // asynchronous IO operation.
+  void EnterStateWhenSignaled(IPCServerState state);
+
   // Sync object for thread-safe access to the shared list of clients.
-  CRITICAL_SECTION clients_sync_;
+  CRITICAL_SECTION sync_;
 
   // List of clients.
   std::list<ClientInfo*> clients_;
@@ -231,6 +252,12 @@ class CrashGenerationServer {
   // Context for client process exit callback.
   void* exit_context_;
 
+  // Callback for upload request.
+  OnClientUploadRequestCallback upload_request_callback_;
+
+  // Context for upload request callback.
+  void* upload_context_;
+
   // Whether to generate dumps.
   bool generate_dumps_;
 
@@ -241,10 +268,10 @@ class CrashGenerationServer {
   // Note that since we restrict the pipe to one instance, we
   // only need to keep one state of the server. Otherwise, server
   // would have one state per client it is talking to.
-  volatile IPCServerState server_state_;
+  IPCServerState server_state_;
 
   // Whether the server is shutting down.
-  volatile bool shutting_down_;
+  bool shutting_down_;
 
   // Overlapped instance for async I/O on the pipe.
   OVERLAPPED overlapped_;
@@ -254,10 +281,6 @@ class CrashGenerationServer {
 
   // Client Info for the client that's connecting to the server.
   ClientInfo* client_info_;
-
-  // Count of clean-up work items that are currently running or are
-  // already queued to run.
-  volatile LONG cleanup_item_count_;
 
   // Disable copy ctor and operator=.
   CrashGenerationServer(const CrashGenerationServer& crash_server);

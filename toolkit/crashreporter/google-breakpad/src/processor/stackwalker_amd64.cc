@@ -114,6 +114,7 @@ StackFrame* StackwalkerAMD64::GetContextFrame() {
   // straight out of the CPU context structure.
   frame->context = *context_;
   frame->context_validity = StackFrameAMD64::CONTEXT_VALID_ALL;
+  frame->trust = StackFrame::FRAME_TRUST_CONTEXT;
   frame->instruction = frame->context.rip;
 
   return frame;
@@ -130,14 +131,64 @@ StackFrameAMD64 *StackwalkerAMD64::GetCallerByCFIFrameInfo(
                            last_frame->context, last_frame->context_validity,
                            &frame->context, &frame->context_validity))
     return NULL;
-  
+
   // Make sure we recovered all the essentials.
   static const int essentials = (StackFrameAMD64::CONTEXT_VALID_RIP
                                  | StackFrameAMD64::CONTEXT_VALID_RSP);
   if ((frame->context_validity & essentials) != essentials)
     return NULL;
 
+  frame->trust = StackFrame::FRAME_TRUST_CFI;
   return frame.release();
+}
+
+StackFrameAMD64 *StackwalkerAMD64::GetCallerByStackScan(
+    const vector<StackFrame *> &frames) {
+  StackFrameAMD64 *last_frame = static_cast<StackFrameAMD64 *>(frames.back());
+  u_int64_t last_rsp = last_frame->context.rsp;
+  u_int64_t caller_rip_address, caller_rip;
+
+  if (!ScanForReturnAddress(last_rsp, &caller_rip_address, &caller_rip)) {
+    // No plausible return address was found.
+    return NULL;
+  }
+
+  // Create a new stack frame (ownership will be transferred to the caller)
+  // and fill it in.
+  StackFrameAMD64 *frame = new StackFrameAMD64();
+
+  frame->trust = StackFrame::FRAME_TRUST_SCAN;
+  frame->context = last_frame->context;
+  frame->context.rip = caller_rip;
+  // The caller's %rsp is directly underneath the return address pushed by
+  // the call.
+  frame->context.rsp = caller_rip_address + 8;
+  frame->context_validity = StackFrameAMD64::CONTEXT_VALID_RIP |
+                            StackFrameAMD64::CONTEXT_VALID_RSP;
+
+  // Other unwinders give up if they don't have an %rbp value, so see if we
+  // can pass some plausible value on.
+  if (last_frame->context_validity & StackFrameAMD64::CONTEXT_VALID_RBP) {
+    // Functions typically push their caller's %rbp immediately upon entry,
+    // and then set %rbp to point to that. So if the callee's %rbp is
+    // pointing to the first word below the alleged return address, presume
+    // that the caller's %rbp is saved there.
+    if (caller_rip_address - 8 == last_frame->context.rbp) {
+      u_int64_t caller_rbp = 0;
+      if (memory_->GetMemoryAtAddress(last_frame->context.rbp, &caller_rbp) &&
+          caller_rbp > caller_rip_address) {
+        frame->context.rbp = caller_rbp;
+        frame->context_validity |= StackFrameAMD64::CONTEXT_VALID_RBP;
+      }
+    } else if (last_frame->context.rbp >= caller_rip_address + 8) {
+      // If the callee's %rbp is plausible as a value for the caller's
+      // %rbp, presume that the callee left it unchanged.
+      frame->context.rbp = last_frame->context.rbp;
+      frame->context_validity |= StackFrameAMD64::CONTEXT_VALID_RBP;
+    }
+  }
+
+  return frame;
 }
 
 StackFrame* StackwalkerAMD64::GetCallerFrame(const CallStack *stack) {
@@ -151,17 +202,21 @@ StackFrame* StackwalkerAMD64::GetCallerFrame(const CallStack *stack) {
   scoped_ptr<StackFrameAMD64> new_frame;
 
   // If we have DWARF CFI information, use it.
+  scoped_ptr<CFIFrameInfo> cfi_frame_info(
+      resolver_ ? resolver_->FindCFIFrameInfo(last_frame) : NULL);
+  if (cfi_frame_info.get())
+    new_frame.reset(GetCallerByCFIFrameInfo(frames, cfi_frame_info.get()));
+
+  // If CFI failed, or there wasn't CFI available, fall back
+  // to stack scanning.
   if (!new_frame.get()) {
-    scoped_ptr<CFIFrameInfo> cfi_frame_info(resolver_
-                                            ->FindCFIFrameInfo(last_frame));
-    if (cfi_frame_info.get())
-      new_frame.reset(GetCallerByCFIFrameInfo(frames, cfi_frame_info.get()));
+    new_frame.reset(GetCallerByStackScan(frames));
   }
 
   // If nothing worked, tell the caller.
   if (!new_frame.get())
     return NULL;
-  
+
   // Treat an instruction address of 0 as end-of-stack.
   if (new_frame->context.rip == 0)
     return NULL;
@@ -184,6 +239,5 @@ StackFrame* StackwalkerAMD64::GetCallerFrame(const CallStack *stack) {
 
   return new_frame.release();
 }
-
 
 }  // namespace google_breakpad

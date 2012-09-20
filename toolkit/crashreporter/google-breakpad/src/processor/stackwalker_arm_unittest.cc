@@ -37,6 +37,7 @@
 
 #include "breakpad_googletest_includes.h"
 #include "common/test_assembler.h"
+#include "common/using_std_string.h"
 #include "google_breakpad/common/minidump_format.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/call_stack.h"
@@ -56,7 +57,6 @@ using google_breakpad::WindowsFrameInfo;
 using google_breakpad::test_assembler::kLittleEndian;
 using google_breakpad::test_assembler::Label;
 using google_breakpad::test_assembler::Section;
-using std::string;
 using std::vector;
 using testing::_;
 using testing::Return;
@@ -87,15 +87,16 @@ class StackwalkerARMFixture {
 
     // By default, none of the modules have symbol info; call
     // SetModuleSymbols to override this.
-    EXPECT_CALL(supplier, GetSymbolFile(_, _, _, _))
+    EXPECT_CALL(supplier, GetCStringSymbolData(_, _, _, _))
       .WillRepeatedly(Return(MockSymbolSupplier::NOT_FOUND));
   }
 
   // Set the Breakpad symbol information that supplier should return for
   // MODULE to INFO.
   void SetModuleSymbols(MockCodeModule *module, const string &info) {
-    EXPECT_CALL(supplier, GetSymbolFile(module, &system_info, _, _))
-      .WillRepeatedly(DoAll(SetArgumentPointee<3>(info),
+    char *buffer = supplier.CopySymbolDataAndOwnTheCopy(info);
+    EXPECT_CALL(supplier, GetCStringSymbolData(module, &system_info, _, _))
+      .WillRepeatedly(DoAll(SetArgumentPointee<3>(buffer),
                             Return(MockSymbolSupplier::FOUND)));
   }
 
@@ -113,7 +114,7 @@ class StackwalkerARMFixture {
     for (size_t i = 0; i < sizeof(*raw_context); i++)
       reinterpret_cast<u_int8_t *>(raw_context)[i] = (x += 17);
   }
-  
+
   SystemInfo system_info;
   MDRawContextARM raw_context;
   Section stack_section;
@@ -127,13 +128,31 @@ class StackwalkerARMFixture {
   const vector<StackFrame *> *frames;
 };
 
+class SanityCheck: public StackwalkerARMFixture, public Test { };
+
+TEST_F(SanityCheck, NoResolver) {
+  // Since we have no call frame information, and all unwinding
+  // requires call frame information, the stack walk will end after
+  // the first frame.
+  StackwalkerARM walker(&system_info, &raw_context, -1, &stack_region, &modules,
+                        NULL, NULL);
+  // This should succeed even without a resolver or supplier.
+  ASSERT_TRUE(walker.Walk(&call_stack));
+  frames = call_stack.frames();
+  ASSERT_EQ(1U, frames->size());
+  StackFrameARM *frame = static_cast<StackFrameARM *>(frames->at(0));
+  // Check that the values from the original raw context made it
+  // through to the context in the stack frame.
+  EXPECT_EQ(0, memcmp(&raw_context, &frame->context, sizeof(raw_context)));
+}
+
 class GetContextFrame: public StackwalkerARMFixture, public Test { };
 
 TEST_F(GetContextFrame, Simple) {
   // Since we have no call frame information, and all unwinding
   // requires call frame information, the stack walk will end after
   // the first frame.
-  StackwalkerARM walker(&system_info, &raw_context, &stack_region, &modules,
+  StackwalkerARM walker(&system_info, &raw_context, -1, &stack_region, &modules,
                         &supplier, &resolver);
   ASSERT_TRUE(walker.Walk(&call_stack));
   frames = call_stack.frames();
@@ -141,7 +160,130 @@ TEST_F(GetContextFrame, Simple) {
   StackFrameARM *frame = static_cast<StackFrameARM *>(frames->at(0));
   // Check that the values from the original raw context made it
   // through to the context in the stack frame.
-  EXPECT_TRUE(memcmp(&raw_context, &frame->context, sizeof(raw_context)) == 0);
+  EXPECT_EQ(0, memcmp(&raw_context, &frame->context, sizeof(raw_context)));
+}
+
+class GetCallerFrame: public StackwalkerARMFixture, public Test { };
+
+TEST_F(GetCallerFrame, ScanWithoutSymbols) {
+  // When the stack walker resorts to scanning the stack,
+  // only addresses located within loaded modules are
+  // considered valid return addresses.
+  // Force scanning through three frames to ensure that the
+  // stack pointer is set properly in scan-recovered frames.
+  stack_section.start() = 0x80000000;
+  u_int32_t return_address1 = 0x50000100;
+  u_int32_t return_address2 = 0x50000900;
+  Label frame1_sp, frame2_sp;
+  stack_section
+    // frame 0
+    .Append(16, 0)                      // space
+
+    .D32(0x40090000)                    // junk that's not
+    .D32(0x60000000)                    // a return address
+
+    .D32(return_address1)               // actual return address
+    // frame 1
+    .Mark(&frame1_sp)
+    .Append(16, 0)                      // space
+
+    .D32(0xF0000000)                    // more junk
+    .D32(0x0000000D)
+
+    .D32(return_address2)               // actual return address
+    // frame 2
+    .Mark(&frame2_sp)
+    .Append(32, 0);                     // end of stack
+  RegionFromSection();
+
+  raw_context.iregs[MD_CONTEXT_ARM_REG_PC] = 0x40005510;
+  raw_context.iregs[MD_CONTEXT_ARM_REG_SP] = stack_section.start().Value();
+
+  StackwalkerARM walker(&system_info, &raw_context, -1, &stack_region, &modules,
+                        &supplier, &resolver);
+  ASSERT_TRUE(walker.Walk(&call_stack));
+  frames = call_stack.frames();
+  ASSERT_EQ(3U, frames->size());
+
+  StackFrameARM *frame0 = static_cast<StackFrameARM *>(frames->at(0));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
+  ASSERT_EQ(StackFrameARM::CONTEXT_VALID_ALL, frame0->context_validity);
+  EXPECT_EQ(0, memcmp(&raw_context, &frame0->context, sizeof(raw_context)));
+
+  StackFrameARM *frame1 = static_cast<StackFrameARM *>(frames->at(1));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_SCAN, frame1->trust);
+  ASSERT_EQ((StackFrameARM::CONTEXT_VALID_PC |
+             StackFrameARM::CONTEXT_VALID_SP),
+            frame1->context_validity);
+  EXPECT_EQ(return_address1, frame1->context.iregs[MD_CONTEXT_ARM_REG_PC]);
+  EXPECT_EQ(frame1_sp.Value(), frame1->context.iregs[MD_CONTEXT_ARM_REG_SP]);
+
+  StackFrameARM *frame2 = static_cast<StackFrameARM *>(frames->at(2));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_SCAN, frame2->trust);
+  ASSERT_EQ((StackFrameARM::CONTEXT_VALID_PC |
+             StackFrameARM::CONTEXT_VALID_SP),
+            frame2->context_validity);
+  EXPECT_EQ(return_address2, frame2->context.iregs[MD_CONTEXT_ARM_REG_PC]);
+  EXPECT_EQ(frame2_sp.Value(), frame2->context.iregs[MD_CONTEXT_ARM_REG_SP]);
+}
+
+TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
+  // During stack scanning, if a potential return address
+  // is located within a loaded module that has symbols,
+  // it is only considered a valid return address if it
+  // lies within a function's bounds.
+  stack_section.start() = 0x80000000;
+  u_int32_t return_address = 0x50000200;
+  Label frame1_sp;
+
+  stack_section
+    // frame 0
+    .Append(16, 0)                      // space
+
+    .D32(0x40090000)                    // junk that's not
+    .D32(0x60000000)                    // a return address
+
+    .D32(0x40001000)                    // a couple of plausible addresses
+    .D32(0x5000F000)                    // that are not within functions
+
+    .D32(return_address)                // actual return address
+    // frame 1
+    .Mark(&frame1_sp)
+    .Append(32, 0);                     // end of stack
+  RegionFromSection();
+
+  raw_context.iregs[MD_CONTEXT_ARM_REG_PC] = 0x40000200;
+  raw_context.iregs[MD_CONTEXT_ARM_REG_SP] = stack_section.start().Value();
+
+  SetModuleSymbols(&module1,
+                   // The youngest frame's function.
+                   "FUNC 100 400 10 monotreme\n");
+  SetModuleSymbols(&module2,
+                   // The calling frame's function.
+                   "FUNC 100 400 10 marsupial\n");
+
+  StackwalkerARM walker(&system_info, &raw_context, -1, &stack_region, &modules,
+                        &supplier, &resolver);
+  ASSERT_TRUE(walker.Walk(&call_stack));
+  frames = call_stack.frames();
+  ASSERT_EQ(2U, frames->size());
+
+  StackFrameARM *frame0 = static_cast<StackFrameARM *>(frames->at(0));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
+  ASSERT_EQ(StackFrameARM::CONTEXT_VALID_ALL, frame0->context_validity);
+  EXPECT_EQ(0, memcmp(&raw_context, &frame0->context, sizeof(raw_context)));
+  EXPECT_EQ("monotreme", frame0->function_name);
+  EXPECT_EQ(0x40000100, frame0->function_base);
+
+  StackFrameARM *frame1 = static_cast<StackFrameARM *>(frames->at(1));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_SCAN, frame1->trust);
+  ASSERT_EQ((StackFrameARM::CONTEXT_VALID_PC |
+             StackFrameARM::CONTEXT_VALID_SP),
+            frame1->context_validity);
+  EXPECT_EQ(return_address, frame1->context.iregs[MD_CONTEXT_ARM_REG_PC]);
+  EXPECT_EQ(frame1_sp.Value(), frame1->context.iregs[MD_CONTEXT_ARM_REG_SP]);
+  EXPECT_EQ("marsupial", frame1->function_name);
+  EXPECT_EQ(0x50000100, frame1->function_base);
 }
 
 struct CFIFixture: public StackwalkerARMFixture {
@@ -230,19 +372,21 @@ struct CFIFixture: public StackwalkerARMFixture {
     RegionFromSection();
     raw_context.iregs[MD_CONTEXT_ARM_REG_SP] = stack_section.start().Value();
 
-    StackwalkerARM walker(&system_info, &raw_context, &stack_region, &modules,
-                          &supplier, &resolver);
+    StackwalkerARM walker(&system_info, &raw_context, -1, &stack_region,
+                          &modules, &supplier, &resolver);
     walker.SetContextFrameValidity(context_frame_validity);
     ASSERT_TRUE(walker.Walk(&call_stack));
     frames = call_stack.frames();
     ASSERT_EQ(2U, frames->size());
 
     StackFrameARM *frame0 = static_cast<StackFrameARM *>(frames->at(0));
+    EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
     ASSERT_EQ(context_frame_validity, frame0->context_validity);
     EXPECT_EQ("enchiridion", frame0->function_name);
     EXPECT_EQ(0x40004000U, frame0->function_base);
 
     StackFrameARM *frame1 = static_cast<StackFrameARM *>(frames->at(1));
+    EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame1->trust);
     ASSERT_EQ(expected_validity, frame1->context_validity);
     if (expected_validity & StackFrameARM::CONTEXT_VALID_R1)
       EXPECT_EQ(expected.iregs[1], frame1->context.iregs[1]);
@@ -271,7 +415,7 @@ struct CFIFixture: public StackwalkerARMFixture {
     EXPECT_EQ(expected.iregs[MD_CONTEXT_ARM_REG_PC],
               frame1->context.iregs[MD_CONTEXT_ARM_REG_PC]);
     EXPECT_EQ(expected.iregs[MD_CONTEXT_ARM_REG_PC],
-              frame1->instruction + 1);
+              frame1->instruction + 2);
     EXPECT_EQ("epictetus", frame1->function_name);
   }
 
@@ -418,9 +562,9 @@ TEST_F(CFI, At4006) {
 // move in the wrong direction.
 TEST_F(CFI, RejectBackwards) {
   raw_context.iregs[MD_CONTEXT_ARM_REG_PC] = 0x40006000;
-  raw_context.iregs[MD_CONTEXT_ARM_REG_SP] = 0x80000000;  
+  raw_context.iregs[MD_CONTEXT_ARM_REG_SP] = 0x80000000;
   raw_context.iregs[MD_CONTEXT_ARM_REG_LR] = 0x40005510;
-  StackwalkerARM walker(&system_info, &raw_context, &stack_region, &modules,
+  StackwalkerARM walker(&system_info, &raw_context, -1, &stack_region, &modules,
                         &supplier, &resolver);
   ASSERT_TRUE(walker.Walk(&call_stack));
   frames = call_stack.frames();
@@ -430,11 +574,189 @@ TEST_F(CFI, RejectBackwards) {
 // Check that we reject rules whose expressions' evaluation fails.
 TEST_F(CFI, RejectBadExpressions) {
   raw_context.iregs[MD_CONTEXT_ARM_REG_PC] = 0x40007000;
-  raw_context.iregs[MD_CONTEXT_ARM_REG_SP] = 0x80000000;  
-  StackwalkerARM walker(&system_info, &raw_context, &stack_region, &modules,
+  raw_context.iregs[MD_CONTEXT_ARM_REG_SP] = 0x80000000;
+  StackwalkerARM walker(&system_info, &raw_context, -1, &stack_region, &modules,
                         &supplier, &resolver);
   ASSERT_TRUE(walker.Walk(&call_stack));
   frames = call_stack.frames();
   ASSERT_EQ(1U, frames->size());
 }
 
+class StackwalkerARMFixtureIOS : public StackwalkerARMFixture {
+ public:
+  StackwalkerARMFixtureIOS() {
+    system_info.os = "iOS";
+    system_info.os_short = "ios";
+  }
+};
+
+class GetFramesByFramePointer: public StackwalkerARMFixtureIOS, public Test { };
+
+TEST_F(GetFramesByFramePointer, OnlyFramePointer) {
+  stack_section.start() = 0x80000000;
+  u_int32_t return_address1 = 0x50000100;
+  u_int32_t return_address2 = 0x50000900;
+  Label frame1_sp, frame2_sp;
+  Label frame1_fp, frame2_fp;
+  stack_section
+    // frame 0
+    .Append(32, 0)           // Whatever values on the stack.
+    .D32(0x0000000D)         // junk that's not
+    .D32(0xF0000000)         // a return address.
+
+    .Mark(&frame1_fp)        // Next fp will point to the next value.
+    .D32(frame2_fp)          // Save current frame pointer.
+    .D32(return_address2)    // Save current link register.
+    .Mark(&frame1_sp)
+
+    // frame 1
+    .Append(32, 0)           // Whatever values on the stack.
+    .D32(0x0000000D)         // junk that's not
+    .D32(0xF0000000)         // a return address.
+
+    .Mark(&frame2_fp)
+    .D32(0)
+    .D32(0)
+    .Mark(&frame2_sp)
+
+    // frame 2
+    .Append(32, 0)           // Whatever values on the stack.
+    .D32(0x0000000D)         // junk that's not
+    .D32(0xF0000000);        // a return address.
+  RegionFromSection();
+
+
+  raw_context.iregs[MD_CONTEXT_ARM_REG_PC] = 0x40005510;
+  raw_context.iregs[MD_CONTEXT_ARM_REG_LR] = return_address1;
+  raw_context.iregs[MD_CONTEXT_ARM_REG_IOS_FP] = frame1_fp.Value();
+  raw_context.iregs[MD_CONTEXT_ARM_REG_SP] = stack_section.start().Value();
+
+  StackwalkerARM walker(&system_info, &raw_context, MD_CONTEXT_ARM_REG_IOS_FP,
+                        &stack_region, &modules, &supplier, &resolver);
+
+  ASSERT_TRUE(walker.Walk(&call_stack));
+  frames = call_stack.frames();
+  ASSERT_EQ(3U, frames->size());
+
+  StackFrameARM *frame0 = static_cast<StackFrameARM *>(frames->at(0));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
+  ASSERT_EQ(StackFrameARM::CONTEXT_VALID_ALL, frame0->context_validity);
+  EXPECT_EQ(0, memcmp(&raw_context, &frame0->context, sizeof(raw_context)));
+
+  StackFrameARM *frame1 = static_cast<StackFrameARM *>(frames->at(1));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_FP, frame1->trust);
+  ASSERT_EQ((StackFrameARM::CONTEXT_VALID_PC |
+             StackFrameARM::CONTEXT_VALID_LR |
+             StackFrameARM::RegisterValidFlag(MD_CONTEXT_ARM_REG_IOS_FP) |
+             StackFrameARM::CONTEXT_VALID_SP),
+            frame1->context_validity);
+  EXPECT_EQ(return_address1, frame1->context.iregs[MD_CONTEXT_ARM_REG_PC]);
+  EXPECT_EQ(return_address2, frame1->context.iregs[MD_CONTEXT_ARM_REG_LR]);
+  EXPECT_EQ(frame1_sp.Value(), frame1->context.iregs[MD_CONTEXT_ARM_REG_SP]);
+  EXPECT_EQ(frame2_fp.Value(),
+            frame1->context.iregs[MD_CONTEXT_ARM_REG_IOS_FP]);
+
+  StackFrameARM *frame2 = static_cast<StackFrameARM *>(frames->at(2));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_FP, frame2->trust);
+  ASSERT_EQ((StackFrameARM::CONTEXT_VALID_PC |
+             StackFrameARM::CONTEXT_VALID_LR |
+             StackFrameARM::RegisterValidFlag(MD_CONTEXT_ARM_REG_IOS_FP) |
+             StackFrameARM::CONTEXT_VALID_SP),
+            frame2->context_validity);
+  EXPECT_EQ(return_address2, frame2->context.iregs[MD_CONTEXT_ARM_REG_PC]);
+  EXPECT_EQ(0, frame2->context.iregs[MD_CONTEXT_ARM_REG_LR]);
+  EXPECT_EQ(frame2_sp.Value(), frame2->context.iregs[MD_CONTEXT_ARM_REG_SP]);
+  EXPECT_EQ(0, frame2->context.iregs[MD_CONTEXT_ARM_REG_IOS_FP]);
+}
+
+TEST_F(GetFramesByFramePointer, FramePointerAndCFI) {
+  // Provide the standatd STACK CFI records that is obtained when exmining an
+  // executable produced by XCode.
+  SetModuleSymbols(&module1,
+                     // Adding a function in CFI.
+                     "FUNC 4000 1000 10 enchiridion\n"
+
+                     "STACK CFI INIT 4000 100 .cfa: sp 0 + .ra: lr\n"
+                     "STACK CFI 4001 .cfa: sp 8 + .ra: .cfa -4 + ^"
+                     " r7: .cfa -8 + ^\n"
+                     "STACK CFI 4002 .cfa: r7 8 +\n"
+                  );
+
+  stack_section.start() = 0x80000000;
+  u_int32_t return_address1 = 0x40004010;
+  u_int32_t return_address2 = 0x50000900;
+  Label frame1_sp, frame2_sp;
+  Label frame1_fp, frame2_fp;
+  stack_section
+    // frame 0
+    .Append(32, 0)           // Whatever values on the stack.
+    .D32(0x0000000D)         // junk that's not
+    .D32(0xF0000000)         // a return address.
+
+    .Mark(&frame1_fp)        // Next fp will point to the next value.
+    .D32(frame2_fp)          // Save current frame pointer.
+    .D32(return_address2)    // Save current link register.
+    .Mark(&frame1_sp)
+
+    // frame 1
+    .Append(32, 0)           // Whatever values on the stack.
+    .D32(0x0000000D)         // junk that's not
+    .D32(0xF0000000)         // a return address.
+
+    .Mark(&frame2_fp)
+    .D32(0)
+    .D32(0)
+    .Mark(&frame2_sp)
+
+    // frame 2
+    .Append(32, 0)           // Whatever values on the stack.
+    .D32(0x0000000D)         // junk that's not
+    .D32(0xF0000000);        // a return address.
+  RegionFromSection();
+
+
+  raw_context.iregs[MD_CONTEXT_ARM_REG_PC] = 0x50000400;
+  raw_context.iregs[MD_CONTEXT_ARM_REG_LR] = return_address1;
+  raw_context.iregs[MD_CONTEXT_ARM_REG_IOS_FP] = frame1_fp.Value();
+  raw_context.iregs[MD_CONTEXT_ARM_REG_SP] = stack_section.start().Value();
+
+  StackwalkerARM walker(&system_info, &raw_context, MD_CONTEXT_ARM_REG_IOS_FP,
+                        &stack_region, &modules, &supplier, &resolver);
+
+  ASSERT_TRUE(walker.Walk(&call_stack));
+  frames = call_stack.frames();
+  ASSERT_EQ(3U, frames->size());
+
+  StackFrameARM *frame0 = static_cast<StackFrameARM *>(frames->at(0));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
+  ASSERT_EQ(StackFrameARM::CONTEXT_VALID_ALL, frame0->context_validity);
+  EXPECT_EQ(0, memcmp(&raw_context, &frame0->context, sizeof(raw_context)));
+
+  StackFrameARM *frame1 = static_cast<StackFrameARM *>(frames->at(1));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_FP, frame1->trust);
+  ASSERT_EQ((StackFrameARM::CONTEXT_VALID_PC |
+             StackFrameARM::CONTEXT_VALID_LR |
+             StackFrameARM::RegisterValidFlag(MD_CONTEXT_ARM_REG_IOS_FP) |
+             StackFrameARM::CONTEXT_VALID_SP),
+            frame1->context_validity);
+  EXPECT_EQ(return_address1, frame1->context.iregs[MD_CONTEXT_ARM_REG_PC]);
+  EXPECT_EQ(return_address2, frame1->context.iregs[MD_CONTEXT_ARM_REG_LR]);
+  EXPECT_EQ(frame1_sp.Value(), frame1->context.iregs[MD_CONTEXT_ARM_REG_SP]);
+  EXPECT_EQ(frame2_fp.Value(),
+            frame1->context.iregs[MD_CONTEXT_ARM_REG_IOS_FP]);
+  EXPECT_EQ("enchiridion", frame1->function_name);
+  EXPECT_EQ(0x40004000U, frame1->function_base);
+
+
+  StackFrameARM *frame2 = static_cast<StackFrameARM *>(frames->at(2));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame2->trust);
+  ASSERT_EQ((StackFrameARM::CONTEXT_VALID_PC |
+             StackFrameARM::CONTEXT_VALID_LR |
+             StackFrameARM::RegisterValidFlag(MD_CONTEXT_ARM_REG_IOS_FP) |
+             StackFrameARM::CONTEXT_VALID_SP),
+            frame2->context_validity);
+  EXPECT_EQ(return_address2, frame2->context.iregs[MD_CONTEXT_ARM_REG_PC]);
+  EXPECT_EQ(0, frame2->context.iregs[MD_CONTEXT_ARM_REG_LR]);
+  EXPECT_EQ(frame2_sp.Value(), frame2->context.iregs[MD_CONTEXT_ARM_REG_SP]);
+  EXPECT_EQ(0, frame2->context.iregs[MD_CONTEXT_ARM_REG_IOS_FP]);
+}

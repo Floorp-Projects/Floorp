@@ -27,12 +27,15 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// minidump_upload.m: Upload a minidump to a HTTP server.  The upload is sent as
-// a multipart/form-data POST request with the following parameters:
+// minidump_upload.cc: Upload a minidump to a HTTP server.
+// The upload is sent as a multipart/form-data POST request with
+// the following parameters:
 //  prod: the product name
 //  ver: the product version
 //  symbol_file: the breakpad format symbol file
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <string>
@@ -66,7 +69,9 @@ static void Start(Options *options) {
                                          "upload_file_minidump",
                                          options->proxy,
                                          options->proxy_user_pwd,
+                                         "",
                                          &response,
+                                         NULL,
                                          &error);
 
   if (success) {

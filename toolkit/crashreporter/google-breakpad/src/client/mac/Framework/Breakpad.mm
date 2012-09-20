@@ -39,20 +39,19 @@
 #define DEBUGLOG if (gDebugLog) fprintf
 #define IGNORE_DEBUGGER "BREAKPAD_IGNORE_DEBUGGER"
 
-#import "common/mac/MachIPC.h"
-#import "common/mac/SimpleStringDictionary.h"
+#import "client/mac/Framework/Breakpad.h"
+
+#import <Foundation/Foundation.h>
+#import <sys/stat.h>
+#import <sys/sysctl.h>
 
 #import "client/mac/crash_generation/Inspector.h"
 #import "client/mac/handler/exception_handler.h"
 #import "client/mac/Framework/Breakpad.h"
 #import "client/mac/Framework/OnDemandServer.h"
 #import "client/mac/handler/protected_memory_allocator.h"
-
-#import <sys/stat.h>
-#import <sys/sysctl.h>
-
-#import <Foundation/Foundation.h>
-
+#import "common/mac/MachIPC.h"
+#import "common/mac/SimpleStringDictionary.h"
 
 using google_breakpad::KeyValueEntry;
 using google_breakpad::MachPortSender;

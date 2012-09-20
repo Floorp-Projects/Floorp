@@ -27,14 +27,15 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "common/convert_UTF.h"
-#include "processor/scoped_ptr.h"
-#include "common/string_conversion.h"
 #include <string.h>
+
+#include "common/convert_UTF.h"
+#include "common/string_conversion.h"
+#include "common/using_std_string.h"
+#include "processor/scoped_ptr.h"
 
 namespace google_breakpad {
 
-using std::string;
 using std::vector;
 
 void UTF8ToUTF16(const char *in, vector<u_int16_t> *out) {
@@ -42,7 +43,7 @@ void UTF8ToUTF16(const char *in, vector<u_int16_t> *out) {
   const UTF8 *source_ptr = reinterpret_cast<const UTF8 *>(in);
   const UTF8 *source_end_ptr = source_ptr + source_length;
   // Erase the contents and zero fill to the expected size
-  out->empty();
+  out->clear();
   out->insert(out->begin(), source_length, 0);
   u_int16_t *target_ptr = &(*out)[0];
   u_int16_t *target_end_ptr = target_ptr + out->capacity() * sizeof(u_int16_t);
@@ -86,7 +87,7 @@ void UTF32ToUTF16(const wchar_t *in, vector<u_int16_t> *out) {
   const UTF32 *source_ptr = reinterpret_cast<const UTF32 *>(in);
   const UTF32 *source_end_ptr = source_ptr + source_length;
   // Erase the contents and zero fill to the expected size
-  out->empty();
+  out->clear();
   out->insert(out->begin(), source_length, 0);
   u_int16_t *target_ptr = &(*out)[0];
   u_int16_t *target_end_ptr = target_ptr + out->capacity() * sizeof(u_int16_t);
