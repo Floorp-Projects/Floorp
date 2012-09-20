@@ -369,7 +369,6 @@ JSInlineString::uninline(JSContext *maybecx)
 {
     JS_ASSERT(isInline());
     size_t n = length();
-    size_t nbytes = (n + 1) * sizeof(jschar);
     jschar *news = maybecx ? maybecx->pod_malloc<jschar>(n + 1) : js_pod_malloc<jschar>(n + 1);
     if (!news)
         return NULL;
