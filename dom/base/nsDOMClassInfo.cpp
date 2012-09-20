@@ -2480,6 +2480,7 @@ nsDOMClassInfo::Init()
                                         battery::BatteryManager::HasSupport())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozNavigatorSms)
 #ifdef MOZ_MEDIA_NAVIGATOR
+    DOM_CLASSINFO_MAP_ENTRY(nsINavigatorUserMedia)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorUserMedia)
 #endif
 #ifdef MOZ_B2G_RIL

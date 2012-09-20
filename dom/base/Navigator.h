@@ -87,6 +87,7 @@ class Navigator : public nsIDOMNavigator
                 , public nsINavigatorBattery
                 , public nsIDOMMozNavigatorSms
 #ifdef MOZ_MEDIA_NAVIGATOR
+                , public nsINavigatorUserMedia
                 , public nsIDOMNavigatorUserMedia
 #endif
 #ifdef MOZ_B2G_RIL
@@ -116,6 +117,7 @@ public:
   NS_DECL_NSINAVIGATORBATTERY
   NS_DECL_NSIDOMMOZNAVIGATORSMS
 #ifdef MOZ_MEDIA_NAVIGATOR
+  NS_DECL_NSINAVIGATORUSERMEDIA
   NS_DECL_NSIDOMNAVIGATORUSERMEDIA
 #endif
 #ifdef MOZ_B2G_RIL
