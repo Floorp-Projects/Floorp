@@ -90,14 +90,24 @@
              return INVALID_HANDLE;
            }
          return ctypes.CDataFinalizer(maybe, _CloseHandle);
-         };
+       };
 
        /**
         * A C integer holding INVALID_HANDLE_VALUE in case of error or
         * a file descriptor in case of success.
         */
        Types.maybe_find_HANDLE =
-         Types.maybe_HANDLE.withName("maybe_find_HANDLE");
+         Types.HANDLE.withName("maybe_find_HANDLE");
+       Types.maybe_find_HANDLE.importFromC =
+         function maybe_find_HANDLE_importFromC(maybe) {
+           if (Types.int.cast(maybe).value == INVALID_HANDLE) {
+             // Ensure that API clients can effectively compare against
+             // Const.INVALID_HANDLE_VALUE. Without this cast,
+             // == would always return |false|.
+             return INVALID_HANDLE;
+           }
+         return ctypes.CDataFinalizer(maybe, _FindClose);
+       };
 
        let INVALID_HANDLE = exports.OS.Constants.Win.INVALID_HANDLE_VALUE;
 
@@ -187,12 +197,12 @@
        };
 
        let _FindClose =
-         libc.declare("CloseHandle", ctypes.winapi_abi,
+         libc.declare("FindClose", ctypes.winapi_abi,
                         /*return */ctypes.bool,
                         /*handle*/ ctypes.voidptr_t);
 
        WinFile.FindClose = function(handle) {
-         return handle.dispose(); // Returns the value of |CloseHandle|.
+         return handle.dispose(); // Returns the value of |FindClose|.
        };
 
        // Declare libc functions as functions of |OS.Win.File|
