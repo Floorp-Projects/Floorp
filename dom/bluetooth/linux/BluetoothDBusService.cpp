@@ -1073,7 +1073,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     if (v.get_ArrayOfBluetoothNamedValue()[0].name().EqualsLiteral("Paired")) {
       // transfer signal to BluetoothService and 
       // broadcast system message of bluetooth-pairingstatuschanged
-      signalName = NS_LITERAL_STRING("PairedStatusChagned");
+      signalName = NS_LITERAL_STRING("PairedStatusChanged");
       signalPath = NS_LITERAL_STRING(LOCAL_AGENT_PATH);
       v.get_ArrayOfBluetoothNamedValue()[0].name() = NS_LITERAL_STRING("paired");
     }
