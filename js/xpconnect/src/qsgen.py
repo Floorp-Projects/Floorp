@@ -537,12 +537,11 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
     elif isInterfaceType(type):
         if type.name == 'nsIVariant':
             # Totally custom.
-            assert haveCcx
             template = (
                 "    nsCOMPtr<nsIVariant> ${name}(already_AddRefed<nsIVariant>("
-                "XPCVariant::newVariant(ccx, ${argVal})));\n"
+                "XPCVariant::newVariant(cx, ${argVal})));\n"
                 "    if (!${name}) {\n"
-                "        xpc_qsThrowBadArgWithCcx(ccx, NS_ERROR_XPC_BAD_CONVERT_JS, %d);\n"
+                "        xpc_qsThrowBadArg(cx, NS_ERROR_INVALID_ARG, vp, %d);\n"
                 "        return JS_FALSE;\n"
                 "    }") % i
             f.write(substitute(template, params))
@@ -725,9 +724,6 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
     f.write("    return xpc_qsThrow(cx, NS_ERROR_UNEXPECTED); // FIXME\n")
 
 def anyParamRequiresCcx(member):
-    for p in member.params:
-        if isVariantType(p.realtype):
-            return True
     return False
 
 def memberNeedsCcx(member):

@@ -958,7 +958,7 @@ private:
     {
         StringWrapperEntry() : mInUse(false) { }
 
-        js::AlignedStorage2<XPCReadableJSStringWrapper> mString;
+        mozilla::AlignedStorage2<XPCReadableJSStringWrapper> mString;
         bool mInUse;
     };
 
@@ -3037,7 +3037,7 @@ class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 public:
 
     static nsresult
-    GetNewOrUsed(XPCCallContext& ccx,
+    GetNewOrUsed(JSContext* cx,
                  REFNSIID aIID,
                  nsXPCWrappedJSClass** clazz);
 
@@ -3051,13 +3051,13 @@ public:
     NS_IMETHOD DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,
                                        void** aInstancePtr);
 
-    JSObject* GetRootJSObject(XPCCallContext& ccx, JSObject* aJSObj);
+    JSObject* GetRootJSObject(JSContext* cx, JSObject* aJSObj);
 
     NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                           const XPTMethodDescriptor* info,
                           nsXPTCMiniVariant* params);
 
-    JSObject*  CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
+    JSObject*  CallQueryInterfaceOnJSObject(JSContext* cx,
                                             JSObject* jsobj, REFNSIID aIID);
 
     static nsresult BuildPropertyEnumerator(XPCCallContext& ccx,
@@ -3077,7 +3077,7 @@ public:
                                       bool aForceReport);
 private:
     nsXPCWrappedJSClass();   // not implemented
-    nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
+    nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
                         nsIInterfaceInfo* aInfo);
 
     JSObject*  NewOutObject(JSContext* cx, JSObject* scope);
@@ -3151,7 +3151,7 @@ public:
     */
 
     static nsresult
-    GetNewOrUsed(XPCCallContext& ccx,
+    GetNewOrUsed(JSContext* cx,
                  JSObject* aJSObj,
                  REFNSIID aIID,
                  nsISupports* aOuter,
@@ -3209,7 +3209,7 @@ public:
     virtual ~nsXPCWrappedJS();
 protected:
     nsXPCWrappedJS();   // not implemented
-    nsXPCWrappedJS(XPCCallContext& ccx,
+    nsXPCWrappedJS(JSContext* cx,
                    JSObject* aJSObj,
                    nsXPCWrappedJSClass* aClass,
                    nsXPCWrappedJS* root,
@@ -3295,6 +3295,7 @@ public:
      *        chain
      * @param pErr [out] relevant error code, if any.
      */
+
     static JSBool NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                                 const nsXPTType& type, const nsID* iid,
                                 nsresult* pErr)
@@ -3302,11 +3303,12 @@ public:
         XPCLazyCallContext lccx(ccx);
         return NativeData2JS(lccx, d, s, type, iid, pErr);
     }
+
     static JSBool NativeData2JS(XPCLazyCallContext& lccx, jsval* d,
                                 const void* s, const nsXPTType& type,
                                 const nsID* iid, nsresult* pErr);
 
-    static JSBool JSData2Native(XPCCallContext& ccx, void* d, jsval s,
+    static JSBool JSData2Native(JSContext* cx, void* d, jsval s,
                                 const nsXPTType& type,
                                 JSBool useAllocator, const nsID* iid,
                                 nsresult* pErr);
@@ -3353,7 +3355,7 @@ public:
                                                  void** dest, JSObject* src,
                                                  const nsID* iid,
                                                  nsresult* pErr);
-    static JSBool JSObject2NativeInterface(XPCCallContext& ccx,
+    static JSBool JSObject2NativeInterface(JSContext* cx,
                                            void** dest, JSObject* src,
                                            const nsID* iid,
                                            nsISupports* aOuter,
@@ -3377,11 +3379,11 @@ public:
                                  const nsXPTType& type, const nsID* iid,
                                  uint32_t count, nsresult* pErr);
 
-    static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
+    static JSBool JSArray2Native(JSContext* cx, void** d, jsval s,
                                  uint32_t count, const nsXPTType& type,
                                  const nsID* iid, nsresult* pErr);
 
-    static JSBool JSTypedArray2Native(XPCCallContext& ccx,
+    static JSBool JSTypedArray2Native(JSContext* cx,
                                       void** d,
                                       JSObject* jsarray,
                                       uint32_t count,
@@ -3938,7 +3940,7 @@ private:
 class AutoMarkingPtr
 {
   public:
-    AutoMarkingPtr(XPCCallContext& ccx) {
+    AutoMarkingPtr(JSContext* cx) {
         mRoot = XPCJSRuntime::Get()->GetAutoRootsAdr();
         mNext = *mRoot;
         *mRoot = this;
@@ -3974,8 +3976,8 @@ template<class T>
 class TypedAutoMarkingPtr : public AutoMarkingPtr
 {
   public:
-    TypedAutoMarkingPtr(XPCCallContext& ccx) : AutoMarkingPtr(ccx), mPtr(nullptr) {}
-    TypedAutoMarkingPtr(XPCCallContext& ccx, T* ptr) : AutoMarkingPtr(ccx), mPtr(ptr) {}
+    TypedAutoMarkingPtr(JSContext* cx) : AutoMarkingPtr(cx), mPtr(nullptr) {}
+    TypedAutoMarkingPtr(JSContext* cx, T* ptr) : AutoMarkingPtr(cx), mPtr(ptr) {}
 
     T* get() const { return mPtr; }
     operator T *() const { return mPtr; }
@@ -4014,10 +4016,10 @@ template<class T>
 class ArrayAutoMarkingPtr : public AutoMarkingPtr
 {
   public:
-    ArrayAutoMarkingPtr(XPCCallContext& ccx)
-      : AutoMarkingPtr(ccx), mPtr(nullptr), mCount(0) {}
-    ArrayAutoMarkingPtr(XPCCallContext& ccx, T** ptr, uint32_t count, bool clear)
-      : AutoMarkingPtr(ccx), mPtr(ptr), mCount(count)
+    ArrayAutoMarkingPtr(JSContext* cx)
+      : AutoMarkingPtr(cx), mPtr(nullptr), mCount(0) {}
+    ArrayAutoMarkingPtr(JSContext* cx, T** ptr, uint32_t count, bool clear)
+      : AutoMarkingPtr(cx), mPtr(ptr), mCount(count)
     {
         if (!mPtr) mCount = 0;
         else if (clear) memset(mPtr, 0, mCount*sizeof(T*));
@@ -4063,10 +4065,10 @@ typedef ArrayAutoMarkingPtr<XPCNativeInterface> AutoMarkingNativeInterfacePtrArr
 #define AUTO_MARK_JSVAL_HELPER2(tok, line) tok##line
 #define AUTO_MARK_JSVAL_HELPER(tok, line) AUTO_MARK_JSVAL_HELPER2(tok, line)
 
-#define AUTO_MARK_JSVAL(ccx, val)                                             \
+#define AUTO_MARK_JSVAL(cx, val)                                              \
     XPCMarkableJSVal AUTO_MARK_JSVAL_HELPER(_val_,__LINE__)(val);             \
     AutoMarkingJSVal AUTO_MARK_JSVAL_HELPER(_automarker_,__LINE__)            \
-    (ccx, &AUTO_MARK_JSVAL_HELPER(_val_,__LINE__))
+    (cx, &AUTO_MARK_JSVAL_HELPER(_val_,__LINE__))
 
 /***************************************************************************/
 // Allocates a string that grants all access ("AllAccess")
@@ -4105,7 +4107,7 @@ public:
     // if a given nsIVariant is in fact an XPCVariant.
     NS_DECLARE_STATIC_IID_ACCESSOR(XPCVARIANT_IID)
 
-    static XPCVariant* newVariant(XPCCallContext& ccx, jsval aJSVal);
+    static XPCVariant* newVariant(JSContext* cx, jsval aJSVal);
 
     /**
      * This getter clears the gray bit before handing out the jsval if the jsval
@@ -4128,7 +4130,7 @@ public:
      */
     jsval GetJSValPreserveColor() const {return mJSVal;}
 
-    XPCVariant(XPCCallContext& ccx, jsval aJSVal);
+    XPCVariant(JSContext* cx, jsval aJSVal);
 
     /**
      * Convert a variant into a jsval.
@@ -4162,7 +4164,7 @@ public:
 protected:
     virtual ~XPCVariant() { }
 
-    JSBool InitializeData(XPCCallContext& ccx);
+    JSBool InitializeData(JSContext* cx);
 
 protected:
     nsDiscriminatedUnion mData;
@@ -4177,10 +4179,10 @@ class XPCTraceableVariant: public XPCVariant,
                            public XPCRootSetElem
 {
 public:
-    XPCTraceableVariant(XPCCallContext& ccx, jsval aJSVal)
-        : XPCVariant(ccx, aJSVal)
+    XPCTraceableVariant(JSContext* cx, jsval aJSVal)
+        : XPCVariant(cx, aJSVal)
     {
-        ccx.GetRuntime()->AddVariantRoot(this);
+         nsXPConnect::GetRuntimeInstance()->AddVariantRoot(this);
     }
 
     virtual ~XPCTraceableVariant();
