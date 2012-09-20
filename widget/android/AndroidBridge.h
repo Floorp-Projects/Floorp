@@ -252,8 +252,6 @@ public:
 
     bool GetShowPasswordSetting();
 
-    void FireAndWaitForTracerEvent();
-
     /* See GLHelpers.java as to why this is needed */
     void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
 
@@ -442,7 +440,6 @@ protected:
     jmethodID jScanMedia;
     jmethodID jGetSystemColors;
     jmethodID jGetIconForExtension;
-    jmethodID jFireAndWaitForTracerEvent;
     jmethodID jCreateShortcut;
     jmethodID jGetShowPasswordSetting;
     jmethodID jPostToJavaThread;
