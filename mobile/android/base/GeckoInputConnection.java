@@ -428,8 +428,7 @@ class GeckoInputConnection
         return InputMethods.getInputMethodManager(context);
     }
 
-    protected void notifyTextChange(InputMethodManager imm, String text,
-                                    int start, int oldEnd, int newEnd) {
+    protected void notifyTextChange(String text, int start, int oldEnd, int newEnd) {
         if (mBatchEditCount == 0) {
             if (!text.contentEquals(mEditable)) {
                 if (DEBUG) Log.d(LOGTAG, ". . . notifyTextChange: current mEditable="
@@ -444,13 +443,9 @@ class GeckoInputConnection
         if (mUpdateRequest == null)
             return;
 
-        View v = getView();
-
-        if (imm == null) {
-            imm = getInputMethodManager();
-            if (imm == null)
-                return;
-        }
+        InputMethodManager imm = getInputMethodManager();
+        if (imm == null)
+            return;
 
         mUpdateExtract.flags = 0;
 
@@ -469,10 +464,11 @@ class GeckoInputConnection
         mUpdateExtract.text = updatedText;
         mUpdateExtract.startOffset = 0;
 
+        View v = getView();
         imm.updateExtractedText(v, mUpdateRequest.token, mUpdateExtract);
     }
 
-    protected void notifySelectionChange(InputMethodManager imm, int start, int end) {
+    protected void notifySelectionChange(int start, int end) {
         if (mBatchEditCount == 0) {
             Span newSelection = Span.clamp(start, end, mEditable);
             start = newSelection.start;
@@ -1110,15 +1106,11 @@ class GeckoInputConnection
             // it causes mysterious problems with repeating characters like bug 780543. This
             // band-aid fix is to run all InputMethodManager code on the UI thread except
             // notifySelectionChange() until I can find the root cause.
-            InputMethodManager imm = getInputMethodManager();
-            if (imm != null)
-                notifySelectionChange(imm, start, end);
+            notifySelectionChange(start, end);
         } else {
             postToUiThread(new Runnable() {
                 public void run() {
-                    InputMethodManager imm = getInputMethodManager();
-                    if (imm != null)
-                        notifyTextChange(imm, text, start, end, newEnd);
+                    notifyTextChange(text, start, end, newEnd);
                 }
             });
         }
@@ -1404,8 +1396,7 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
     }
 
     @Override
-    protected void notifyTextChange(InputMethodManager imm, String text,
-                                    int start, int oldEnd, int newEnd) {
+    protected void notifyTextChange(String text, int start, int oldEnd, int newEnd) {
         // notifyTextChange() call is posted to UI thread from notifyIMEChange().
         GeckoApp.assertOnUiThread();
         String msg = String.format("IME: >notifyTextChange(%s, start=%d, oldEnd=%d, newEnd=%d)",
@@ -1414,16 +1405,16 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
         if (start < 0 || oldEnd < start || newEnd < start || newEnd > text.length()) {
             throw new IllegalArgumentException("BUG! " + msg);
         }
-        super.notifyTextChange(imm, text, start, oldEnd, newEnd);
+        super.notifyTextChange(text, start, oldEnd, newEnd);
     }
 
     @Override
-    protected void notifySelectionChange(InputMethodManager imm, int start, int end) {
+    protected void notifySelectionChange(int start, int end) {
         // notifySelectionChange() call is posted to UI thread from notifyIMEChange().
         // FIXME: Uncomment assert after bug 780543 is fixed.
         //GeckoApp.assertOnUiThread();
         Log.d(LOGTAG, String.format("IME: >notifySelectionChange(start=%d, end=%d)", start, end));
-        super.notifySelectionChange(imm, start, end);
+        super.notifySelectionChange(start, end);
     }
 
     @Override
