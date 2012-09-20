@@ -18,7 +18,6 @@ DIRS = \
   tests \
   chrome \
   ssltunnel \
-  specialpowers \
   $(NULL)
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
