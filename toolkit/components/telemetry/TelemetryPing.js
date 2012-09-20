@@ -719,7 +719,7 @@ TelemetryPing.prototype = {
     return ping.checksum == checksumNow;
   },
 
-  addToPendingPings: function addToPendingPings(stream) {
+  addToPendingPings: function addToPendingPings(file, stream) {
     try {
       let string = NetUtil.readInputStreamToString(stream, stream.available(), { charset: "UTF-8" });
       stream.close();
@@ -736,6 +736,8 @@ TelemetryPing.prototype = {
       }
     } catch (e) {
       // An error reading the file, or an error parsing the contents.
+      stream.close();           // close is idempotent.
+      file.remove(true);
     }
   },
 
@@ -745,7 +747,7 @@ TelemetryPing.prototype = {
       let stream = Cc["@mozilla.org/network/file-input-stream;1"]
                    .createInstance(Ci.nsIFileInputStream);
       stream.init(file, -1, -1, 0);
-      this.addToPendingPings(stream);
+      this.addToPendingPings(file, stream);
     } else {
       let channel = NetUtil.newChannel(file);
       channel.contentType = "application/json"
@@ -754,7 +756,7 @@ TelemetryPing.prototype = {
         if (!Components.isSuccessCode(result)) {
           return;
         }
-        this.addToPendingPings(stream);
+        this.addToPendingPings(file, stream);
       }).bind(this));
     }
   },
