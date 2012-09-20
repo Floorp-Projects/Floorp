@@ -42,6 +42,13 @@ CrashTestUtils.lockDir = lib.declare("LockDir",
                                      ctypes.voidptr_t);  // nsISupports*
 
 
+try {
+  CrashTestUtils.TryOverrideExceptionHandler = lib.declare("TryOverrideExceptionHandler",
+                                                           ctypes.default_abi,
+                                                           ctypes.void_t);
+}
+catch(ex) {}
+
 CrashTestUtils.dumpHasStream = lib.declare("DumpHasStream",
                                            ctypes.default_abi,
                                            ctypes.bool,
