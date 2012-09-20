@@ -324,55 +324,8 @@ XPCCallContext::~XPCCallContext()
         }
     }
 
-#ifdef DEBUG
-    for (uint32_t i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i) {
-        NS_ASSERTION(!mScratchStrings[i].mInUse, "Uh, string wrapper still in use!");
-    }
-#endif
-
     if (shouldReleaseXPC && mXPC)
         NS_RELEASE(mXPC);
-}
-
-XPCReadableJSStringWrapper *
-XPCCallContext::NewStringWrapper(const PRUnichar *str, uint32_t len)
-{
-    for (uint32_t i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i) {
-        StringWrapperEntry& ent = mScratchStrings[i];
-
-        if (!ent.mInUse) {
-            ent.mInUse = true;
-
-            // Construct the string using placement new.
-
-            return new (ent.mString.addr()) XPCReadableJSStringWrapper(str, len);
-        }
-    }
-
-    // All our internal string wrappers are used, allocate a new string.
-
-    return new XPCReadableJSStringWrapper(str, len);
-}
-
-void
-XPCCallContext::DeleteString(nsAString *string)
-{
-    for (uint32_t i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i) {
-        StringWrapperEntry& ent = mScratchStrings[i];
-        if (string == ent.mString.addr()) {
-            // One of our internal strings is no longer in use, mark
-            // it as such and destroy the string.
-
-            ent.mInUse = false;
-            ent.mString.addr()->~XPCReadableJSStringWrapper();
-
-            return;
-        }
-    }
-
-    // We're done with a string that's not one of our internal
-    // strings, delete it.
-    delete string;
 }
 
 /* readonly attribute nsISupports Callee; */
