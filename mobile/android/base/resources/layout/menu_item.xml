@@ -22,13 +22,14 @@
                android:ellipsize="middle"
                android:layout_gravity="center_vertical"/>
 
-     <ImageView android:id="@+id/check"
-                android:layout_width="20dp"
-                android:layout_height="14dp"
-                android:paddingLeft="6dp"
-                android:layout_gravity="center_vertical"
-                android:src="@drawable/menu_item_check"
-                android:visibility="gone"/>
+     <CheckBox android:id="@+id/check"
+               android:layout_width="18dp"
+               android:layout_height="18dp"
+               android:layout_gravity="center_vertical"
+               android:button="@drawable/menu_item_checkmark"
+               android:focusable="false"
+               android:clickable="false"
+               android:visibility="gone"/>
 
      <View android:layout_width="14dp"
            android:layout_height="fill_parent"

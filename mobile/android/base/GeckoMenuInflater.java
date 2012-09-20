@@ -144,7 +144,6 @@ public class GeckoMenuInflater extends MenuInflater {
                 .setVisible(item.visible)
                 .setEnabled(item.enabled)
                 .setCheckable(item.checkable)
-                .setCheckable(item.checked)
                 .setIcon(item.iconRes)
                 .setShowAsAction(item.showAsAction);
     }
