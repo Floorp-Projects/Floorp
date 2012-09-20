@@ -32,6 +32,13 @@ typedef ParallelArrayObject::IndexVector IndexVector;
 typedef ParallelArrayObject::IndexInfo IndexInfo;
 
 static bool
+ReportMoreArgsNeeded(JSContext *cx, const char *name, const char *num, const char *p)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED, name, num, p);
+    return false;
+}
+
+static bool
 ReportBadArg(JSContext *cx, const char *s = "")
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG, s);
@@ -473,8 +480,7 @@ ParallelArrayObject::SequentialMode::scatter(JSContext *cx, HandleParallelArrayO
         }
 
         if (targetIndex >= length) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_PAR_ARRAY_SCATTER_BOUNDS);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_SCATTER_BOUNDS);
             return ExecutionFailed;
         }
 
@@ -1045,12 +1051,9 @@ ParallelArrayObject::construct(JSContext *cx, unsigned argc, Value *vp)
 
     // First case: initialize using an array value.
     if (args.length() == 1) {
-        if (!args[0].isObject()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG, "");
+        RootedObject source(cx, NonNullObject(cx, args[0]));
+        if (!source)
             return false;
-        }
-
-        RootedObject source(cx, &(args[0].toObject()));
 
         // When using an array value we can only make one dimensional arrays.
         IndexVector dims(cx);
@@ -1126,11 +1129,8 @@ ParallelArrayObject::construct(JSContext *cx, unsigned argc, Value *vp)
 bool
 ParallelArrayObject::map(JSContext *cx, CallArgs args)
 {
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "ParallelArray.prototype.map", "0", "s");
-        return false;
-    }
+    if (args.length() < 1)
+        return ReportMoreArgsNeeded(cx, "ParallelArray.prototype.map", "0", "s");
 
     RootedParallelArrayObject obj(cx, as(&args.thisv().toObject()));
 
@@ -1165,11 +1165,8 @@ ParallelArrayObject::map(JSContext *cx, CallArgs args)
 bool
 ParallelArrayObject::reduce(JSContext *cx, CallArgs args)
 {
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "ParallelArray.prototype.reduce", "0", "s");
-        return false;
-    }
+    if (args.length() < 1)
+        return ReportMoreArgsNeeded(cx, "ParallelArray.prototype.reduce", "0", "s");
 
     RootedParallelArrayObject obj(cx, as(&args.thisv().toObject()));
     uint32_t outer = obj->outermostDimension();
@@ -1202,14 +1199,10 @@ ParallelArrayObject::reduce(JSContext *cx, CallArgs args)
 bool
 ParallelArrayObject::scan(JSContext *cx, CallArgs args)
 {
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "ParallelArray.prototype.scan", "0", "s");
-        return false;
-    }
+    if (args.length() < 1)
+        return ReportMoreArgsNeeded(cx, "ParallelArray.prototype.scan", "0", "s");
 
     RootedParallelArrayObject obj(cx, as(&args.thisv().toObject()));
-
     uint32_t outer = obj->outermostDimension();
 
     // Throw if the array is empty.
@@ -1252,23 +1245,16 @@ ParallelArrayObject::scan(JSContext *cx, CallArgs args)
 bool
 ParallelArrayObject::scatter(JSContext *cx, CallArgs args)
 {
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "ParallelArray.prototype.scatter", "0", "s");
-        return false;
-    }
-
-    if (!args[0].isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG,
-                             ".prototype.scatter");
-        return false;
-    }
+    if (args.length() < 1)
+        return ReportMoreArgsNeeded(cx, "ParallelArray.prototype.scatter", "0", "s");
 
     RootedParallelArrayObject obj(cx, as(&args.thisv().toObject()));
     uint32_t outer = obj->outermostDimension();
 
     // Get the scatter vector.
-    RootedObject targets(cx, &args[0].toObject());
+    RootedObject targets(cx, NonNullObject(cx, args[0]));
+    if (!targets)
+        return false;
 
     // The default value is optional and defaults to undefined.
     Value defaultValue;
@@ -1326,22 +1312,15 @@ ParallelArrayObject::scatter(JSContext *cx, CallArgs args)
 bool
 ParallelArrayObject::filter(JSContext *cx, CallArgs args)
 {
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "ParallelArray.prototype.filter", "0", "s");
-        return false;
-    }
-
-    if (!args[0].isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG,
-                             ".prototype.filter");
-        return false;
-    }
+    if (args.length() < 1)
+        return ReportMoreArgsNeeded(cx, "ParallelArray.prototype.filter", "0", "s");
 
     RootedParallelArrayObject obj(cx, as(&args.thisv().toObject()));
 
     // Get the filter vector.
-    RootedObject filters(cx, &args[0].toObject());
+    RootedObject filters(cx, NonNullObject(cx, args[0]));
+    if (!filters)
+        return false;
 
     RootedObject buffer(cx, NewDenseArrayWithType(cx, 0));
     if (!buffer)
@@ -1392,11 +1371,8 @@ ParallelArrayObject::flatten(JSContext *cx, CallArgs args)
 bool
 ParallelArrayObject::partition(JSContext *cx, CallArgs args)
 {
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "ParallelArray.prototype.partition", "0", "s");
-        return false;
-    }
+    if (args.length() < 1)
+        return ReportMoreArgsNeeded(cx, "ParallelArray.prototype.partition", "0", "s");
 
     uint32_t newDimension;
     if (!ToUint32(cx, args[0], &newDimension))
@@ -1430,20 +1406,13 @@ ParallelArrayObject::partition(JSContext *cx, CallArgs args)
 bool
 ParallelArrayObject::get(JSContext *cx, CallArgs args)
 {
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "ParallelArray.prototype.get", "0", "s");
-        return false;
-    }
-
-    if (!args[0].isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG,
-                             ".prototype.get");
-        return false;
-    }
+    if (args.length() < 1)
+        return ReportMoreArgsNeeded(cx, "ParallelArray.prototype.get", "0", "s");
 
     RootedParallelArrayObject obj(cx, as(&args.thisv().toObject()));
-    RootedObject indicesObj(cx, &(args[0].toObject()));
+    RootedObject indicesObj(cx, NonNullObject(cx, args[0]));
+    if (!indicesObj)
+        return false;
 
     IndexInfo iv(cx);
     if (!iv.initialize(cx, obj, 0))
@@ -1452,11 +1421,8 @@ ParallelArrayObject::get(JSContext *cx, CallArgs args)
         return false;
 
     // Throw if the shape of the index vector is wrong.
-    if (iv.indices.length() == 0 || iv.indices.length() > iv.dimensions.length()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG,
-                             ".prototype.get");
-        return false;
-    }
+    if (iv.indices.length() == 0 || iv.indices.length() > iv.dimensions.length())
+        return ReportBadArg(cx, ".prototype.get");
 
     return obj->getParallelArrayElement(cx, iv, args.rval());
 }
