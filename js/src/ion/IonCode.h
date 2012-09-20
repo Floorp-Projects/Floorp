@@ -80,9 +80,6 @@ class IonCode : public gc::Cell
     size_t instructionsSize() const {
         return insnSize_;
     }
-    size_t bufferSize() const {
-        return bufferSize_;
-    }
     void trace(JSTracer *trc);
     void finalize(FreeOp *fop);
     void setInvalidated() {
@@ -336,8 +333,8 @@ struct IonScript
     size_t scriptEntries() const {
         return scriptEntries_;
     }
-    size_t size() const {
-        return scriptList_ + scriptEntries_ * sizeof(JSScript *);
+    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+        return mallocSizeOf(this);
     }
     HeapValue &getConstant(size_t index) {
         JS_ASSERT(index < numConstants());

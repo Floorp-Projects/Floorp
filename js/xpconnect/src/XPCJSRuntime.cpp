@@ -1426,6 +1426,12 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds type inference information.");
 
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/ion-codes"),
+                     cStats.gcHeapIonCodes,
+                     "Memory on the garbage-collected JavaScript "
+                     "heap that holds references to executable code pools "
+                     "used by IonMonkey.");
+
 #if JS_HAS_XML_SUPPORT
     CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/xml"),
                      cStats.gcHeapXML,
@@ -1494,11 +1500,15 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "Memory allocated for JSScript bytecode and various "
                   "variable-length tables.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("mjit-data"),
-                  cStats.mjitData,
-                  "Memory used by the method JIT for "
-                  "compilation data: JITScripts, native maps, and inline "
-                  "cache structs.");
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("jaeger-data"),
+                  cStats.jaegerData,
+                  "Memory used by the JaegerMonkey JIT for compilation data: "
+                  "JITScripts, native maps, and inline cache structs.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
+                  cStats.ionData,
+                  "Memory used by the IonMonkey JIT for compilation data: "
+                  "IonScripts.");
 
     CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrappers"),
                   cStats.crossCompartmentWrappers,
@@ -1597,18 +1607,23 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   "Memory held transiently in JSRuntime and used during "
                   "compilation.  It mostly holds parse nodes.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/mjit-code"),
-                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.mjitCode,
-                  "Memory used by the method JIT to hold the runtime's "
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/jaeger-code"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.jaegerCode,
+                  "Memory used by the JaegerMonkey JIT to hold the runtime's "
+                  "generated code.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/ion-code"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.ionCode,
+                  "Memory used by the IonMonkey JIT to hold the runtime's "
                   "generated code.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/regexp-code"),
                   nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.regexpCode,
                   "Memory used by the regexp JIT to hold generated code.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/unused-code-memory"),
-                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.unusedCodeMemory,
-                  "Memory allocated by the method and/or regexp JIT to hold the "
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/unused-code"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.unusedCode,
+                  "Memory allocated by one of the JITs to hold the "
                   "runtime's code, but which is currently unused.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/stack-committed"),
