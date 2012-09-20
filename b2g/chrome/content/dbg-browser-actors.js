@@ -38,6 +38,7 @@ DeviceRootActor.prototype = new BrowserRootActor();
  * Disconnects the actor from the browser window.
  */
 DeviceRootActor.prototype.disconnect = function DRA_disconnect() {
+  this._extraActors = null;
   let actor = this._tabActors.get(this.browser);
   if (actor) {
     actor.exit();
@@ -61,6 +62,8 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   let actorPool = new ActorPool(this.conn);
   actorPool.addActor(actor);
 
+  this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
+
   // Now drop the old actorID -> actor map. Actors that still mattered were
   // added to the new map, others will go away.
   if (this._tabActorPool) {
@@ -69,11 +72,13 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   this._tabActorPool = actorPool;
   this.conn.addActorPool(this._tabActorPool);
 
-  return {
+  let response = {
     'from': 'root',
     'selected': 0,
     'tabs': [actor.grip()]
   };
+  this._appendExtraActors(response);
+  return response;
 };
 
 /**
@@ -103,11 +108,23 @@ DeviceTabActor.prototype.grip = function DTA_grip() {
              'grip() should not be called on exited browser actor.');
   dbg_assert(this.actorID,
              'tab should have an actorID.');
-  return {
+
+  let response = {
     'actor': this.actorID,
     'title': this.browser.title,
     'url': this.browser.document.documentURI
+  };
+
+  // Walk over tab actors added by extensions and add them to a new ActorPool.
+  let actorPool = new ActorPool(this.conn);
+  this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
+  if (!actorPool.isEmpty()) {
+    this._tabActorPool = actorPool;
+    this.conn.addActorPool(this._tabActorPool);
   }
+
+  this._appendExtraActors(response);
+  return response;
 };
 
 /**

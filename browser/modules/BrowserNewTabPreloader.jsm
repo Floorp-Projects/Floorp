@@ -7,154 +7,220 @@
 let EXPORTED_SYMBOLS = ["BrowserNewTabPreloader"];
 
 const Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const PREF_NEWTAB_URL = "browser.newtab.url";
-const PREF_NEWTAB_PRELOAD = "browser.newtab.preload";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const PREF_BRANCH = "browser.newtab.";
 
-function BrowserNewTabPreloader() {
-}
+let BrowserNewTabPreloader =  {
+  init: function Preloader_init() {
+    Preferences.init();
 
-BrowserNewTabPreloader.prototype = {
-  _url: null,
-  _window: null,
-  _browser: null,
-  _enabled: null,
-
-  init: function Preloader_init(aWindow) {
-    if (this._window) {
-      return;
-    }
-
-    this._window = aWindow;
-    this._enabled = Preferences.enabled;
-    this._url = Preferences.url;
-    Preferences.addObserver(this);
-
-    if (this._enabled) {
-      this._createBrowser();
+    if (Preferences.enabled) {
+      HiddenBrowser.create();
     }
   },
 
   uninit: function Preloader_uninit() {
-    if (!this._window) {
-      return;
-    }
-
-    if (this._browser) {
-      this._browser.parentNode.removeChild(this._browser);
-      this._browser = null;
-    }
-
-    this._window = null;
-    Preferences.removeObserver(this);
+    HostFrame.destroy();
+    Preferences.uninit();
+    HiddenBrowser.destroy();
   },
 
   newTab: function Preloader_newTab(aTab) {
-    if (!this._window || !this._enabled) {
-      return;
-    }
-
-    let tabbrowser = this._window.gBrowser;
-    if (tabbrowser && this._isPreloaded()) {
-      tabbrowser.swapNewTabWithBrowser(aTab, this._browser);
-    }
-  },
-
-  observe: function Preloader_observe(aEnabled, aURL) {
-    if (this._url != aURL) {
-      this._url = aURL;
-
-      if (this._enabled && aEnabled) {
-        // We're still enabled but the newtab URL has changed.
-        this._browser.setAttribute("src", aURL);
-        return;
-      }
-    }
-
-    if (this._enabled && !aEnabled) {
-      // We got disabled. Remove the browser.
-      this._browser.parentNode.removeChild(this._browser);
-      this._browser = null;
-      this._enabled = false;
-    } else if (!this._enabled && aEnabled) {
-      // We got enabled. Create a browser and start preloading.
-      this._createBrowser();
-      this._enabled = true;
-    }
-  },
-
-  _createBrowser: function Preloader_createBrowser() {
-    let document = this._window.document;
-    this._browser = document.createElement("browser");
-    this._browser.setAttribute("type", "content");
-    this._browser.setAttribute("src", this._url);
-    this._browser.collapsed = true;
-
-    let panel = document.getElementById("browser-panel");
-    panel.appendChild(this._browser);
-  },
-
-  _isPreloaded: function Preloader_isPreloaded()  {
-    return this._browser &&
-           this._browser.contentDocument &&
-           this._browser.contentDocument.readyState == "complete" &&
-           this._browser.currentURI.spec == this._url;
+    HiddenBrowser.swapWithNewTab(aTab);
   }
 };
 
-let Preferences = {
-  _observers: [],
+Object.freeze(BrowserNewTabPreloader);
 
-  get _branch() {
-    delete this._branch;
-    return this._branch = Services.prefs.getBranch("browser.newtab.");
-  },
+let Preferences = {
+  _enabled: null,
+  _branch: null,
+  _url: null,
 
   get enabled() {
-    if (!this._branch.getBoolPref("preload")) {
-      return false;
+    if (this._enabled === null) {
+      this._enabled = this._branch.getBoolPref("preload") &&
+                      !this._branch.prefHasUserValue("url") &&
+                      this.url && this.url != "about:blank";
     }
 
-    if (this._branch.prefHasUserValue("url")) {
-      return false;
-    }
-
-    let url = this.url;
-    return url && url != "about:blank";
+    return this._enabled;
   },
 
   get url() {
-    return this._branch.getCharPref("url");
-  },
-
-  addObserver: function Preferences_addObserver(aObserver) {
-    let index = this._observers.indexOf(aObserver);
-    if (index == -1) {
-      if (this._observers.length == 0) {
-        this._branch.addObserver("", this, false);
-      }
-      this._observers.push(aObserver);
+    if (this._url === null) {
+      this._url = this._branch.getCharPref("url");
     }
+
+    return this._url;
   },
 
-  removeObserver: function Preferences_removeObserver(aObserver) {
-    let index = this._observers.indexOf(aObserver);
-    if (index > -1) {
-      if (this._observers.length == 1) {
-        this._branch.removeObserver("", this);
-      }
-      this._observers.splice(index, 1);
+  init: function Preferences_init() {
+    this._branch = Services.prefs.getBranch(PREF_BRANCH);
+    this._branch.addObserver("", this, false);
+  },
+
+  uninit: function Preferences_uninit() {
+    if (this._branch) {
+      this._branch.removeObserver("", this);
+      this._branch = null;
     }
   },
 
   observe: function Preferences_observe(aSubject, aTopic, aData) {
-    let url = this.url;
-    let enabled = this.enabled;
+    let {url, enabled} = this;
+    this._url = this._enabled = null;
 
-    for (let obs of this._observers) {
-      obs.observe(enabled, url);
+    if (enabled && !this.enabled) {
+      HiddenBrowser.destroy();
+    } else if (!enabled && this.enabled) {
+      HiddenBrowser.create();
+    } else if (this._browser && url != this.url) {
+      HiddenBrowser.update(this.url);
+    }
+  },
+};
+
+let HiddenBrowser = {
+  get isPreloaded() {
+    return this._browser &&
+           this._browser.contentDocument &&
+           this._browser.contentDocument.readyState == "complete" &&
+           this._browser.currentURI.spec == Preferences.url;
+  },
+
+  swapWithNewTab: function HiddenBrowser_swapWithNewTab(aTab) {
+    if (this.isPreloaded) {
+      let tabbrowser = aTab.ownerDocument.defaultView.gBrowser;
+      if (tabbrowser) {
+        tabbrowser.swapNewTabWithBrowser(aTab, this._browser);
+      }
+    }
+  },
+
+  create: function HiddenBrowser_create() {
+    HostFrame.getFrame(function (aFrame) {
+      let doc = aFrame.document;
+      this._browser = doc.createElementNS(XUL_NS, "browser");
+      this._browser.setAttribute("type", "content");
+      this._browser.setAttribute("src", Preferences.url);
+      doc.documentElement.appendChild(this._browser);
+    }.bind(this));
+  },
+
+  update: function HiddenBrowser_update(aURL) {
+    this._browser.setAttribute("src", aURL);
+  },
+
+  destroy: function HiddenBrowser_destroy() {
+    if (this._browser) {
+      this._browser.parentNode.removeChild(this._browser);
+      this._browser = null;
     }
   }
+};
+
+let HostFrame = {
+  _listener: null,
+  _privilegedFrame: null,
+
+  _privilegedContentTypes: {
+    "application/vnd.mozilla.xul+xml": true,
+    "application/xhtml+xml": true
+  },
+
+  get _frame() {
+    delete this._frame;
+    return this._frame = Services.appShell.hiddenDOMWindow;
+  },
+
+  get _isReady() {
+    let readyState = this._frame.document.readyState;
+    return (readyState == "complete" || readyState == "interactive");
+  },
+
+  get _isPrivileged() {
+    return (this._frame.location.protocol == "chrome:" &&
+            this._frame.document.contentType in this._privilegedContentTypes);
+  },
+
+  getFrame: function HostFrame_getFrame(aCallback) {
+    if (this._isReady && !this._isPrivileged) {
+      this._createPrivilegedFrame();
+    }
+
+    if (this._isReady) {
+      aCallback(this._frame);
+    } else {
+      this._waitUntilLoaded(aCallback);
+    }
+  },
+
+  destroy: function HostFrame_destroy() {
+    delete this._frame;
+    this._listener = null;
+  },
+
+  _createPrivilegedFrame: function HostFrame_createPrivilegedFrame() {
+    let doc = this._frame.document;
+    let iframe = doc.createElement("iframe");
+    iframe.setAttribute("src", "chrome://browser/content/newtab/preload.xhtml");
+    doc.documentElement.appendChild(iframe);
+    this._frame = iframe.contentWindow;
+  },
+
+  _waitUntilLoaded: function HostFrame_waitUntilLoaded(aCallback) {
+    this._listener = new HiddenWindowLoadListener(this._frame, function () {
+      HostFrame.getFrame(aCallback);
+    });
+  }
+};
+
+
+function HiddenWindowLoadListener(aWindow, aCallback) {
+  this._window = aWindow;
+  this._callback = aCallback;
+
+  let docShell = Services.appShell.hiddenWindow.docShell;
+  this._webProgress = docShell.QueryInterface(Ci.nsIWebProgress);
+  this._webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
+}
+
+HiddenWindowLoadListener.prototype = {
+  _window: null,
+  _callback: null,
+  _webProgress: null,
+
+  _destroy: function HiddenWindowLoadListener_destroy() {
+    this._webProgress.removeProgressListener(this);
+    this._window = null;
+    this._callback = null;
+    this._webProgress = null;
+  },
+
+  onStateChange:
+  function HiddenWindowLoadListener_onStateChange(aWebProgress, aRequest,
+                                                  aStateFlags, aStatus) {
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
+        this._window == aWebProgress.DOMWindow) {
+      this._callback();
+      this._destroy();
+    }
+  },
+
+  onStatusChange: function () {},
+  onLocationChange: function () {},
+  onProgressChange: function () {},
+  onSecurityChange: function () {},
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference])
 };
