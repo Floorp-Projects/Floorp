@@ -27,7 +27,12 @@ function really_long() {
 
 function test_socket_conn()
 {
-  DebuggerServer.openListener(2929);
+  do_check_eq(DebuggerServer._socketConnections, 0);
+  do_check_true(DebuggerServer.openListener(2929));
+  do_check_eq(DebuggerServer._socketConnections, 1);
+  // Make sure opening the listener twice does nothing.
+  do_check_true(DebuggerServer.openListener(2929));
+  do_check_eq(DebuggerServer._socketConnections, 1);
 
   let unicodeString = "(╯°□°）╯︵ ┻━┻";
   let transport = debuggerSocketConnect("127.0.0.1", 2929);
@@ -54,7 +59,12 @@ function test_socket_conn()
 
 function test_socket_shutdown()
 {
-  DebuggerServer.closeListener();
+  do_check_eq(DebuggerServer._socketConnections, 1);
+  do_check_true(DebuggerServer.closeListener());
+  do_check_eq(DebuggerServer._socketConnections, 0);
+  // Make sure closing the listener twice does nothing.
+  do_check_false(DebuggerServer.closeListener());
+  do_check_eq(DebuggerServer._socketConnections, 0);
 
   let transport = debuggerSocketConnect("127.0.0.1", 2929);
   transport.hooks = {

@@ -2,11 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Check extension-added tab actor lifetimes.
+ * Check extension-added global actor API.
  */
-
-var gTab1 = null;
-var gTab1Actor = null;
 
 var gClient = null;
 
@@ -16,21 +13,14 @@ function test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect(function (aType, aTraits) {
+  gClient.connect(function(aType, aTraits) {
     is(aType, "browser", "Root actor should identify itself as a browser.");
-    get_tab();
-  });
-}
-
-function get_tab()
-{
-  gTab1 = addTab(TAB1_URL, function() {
-    attach_tab_actor_for_url(gClient, TAB1_URL, function(aGrip) {
-      gTab1Actor = aGrip.actor;
-      ok(aGrip.testTabActor1, "Found the test tab actor.")
-      ok(aGrip.testTabActor1.indexOf("testone") >= 0,
+    gClient.listTabs(function(aResponse) {
+      let globalActor = aResponse.testGlobalActor1;
+      ok(globalActor, "Found the test tab actor.")
+      ok(globalActor.indexOf("testone") >= 0,
          "testTabActor's actorPrefix should be used.");
-      gClient.request({ to: aGrip.testTabActor1, type: "ping" }, function(aResponse) {
+      gClient.request({ to: globalActor, type: "ping" }, function(aResponse) {
         is(aResponse.pong, "pong", "Actor should respond to requests.");
         finish_test();
       });
@@ -41,7 +31,6 @@ function get_tab()
 function finish_test()
 {
   gClient.close(function() {
-    removeTab(gTab1);
     finish();
   });
 }
