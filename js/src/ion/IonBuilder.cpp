@@ -2614,7 +2614,7 @@ IonBuilder::jsop_bitnot()
     MBitNot *ins = MBitNot::New(input);
 
     current->add(ins);
-    ins->infer(oracle->unaryOp(script, pc));
+    ins->infer(oracle->unaryTypes(script, pc));
 
     current->push(ins);
     if (ins->isEffectful() && !resumeAfter(ins))
@@ -2660,7 +2660,7 @@ IonBuilder::jsop_bitop(JSOp op)
     }
 
     current->add(ins);
-    ins->infer(oracle->binaryOp(script, pc));
+    ins->infer(oracle->binaryTypes(script, pc));
 
     current->push(ins);
     if (ins->isEffectful() && !resumeAfter(ins))
