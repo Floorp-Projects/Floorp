@@ -60,6 +60,12 @@ var DebuggerServer = {
   _transportInitialized: false,
   xpcInspector: null,
   _allowConnection: null,
+  // Number of currently open TCP connections.
+  _socketConnections: 0,
+  // Map of global actor names to actor constructors provided by extensions.
+  globalActorFactories: null,
+  // Map of tab actor names to actor constructors provided by extensions.
+  tabActorFactories: null,
 
   LONG_STRING_LENGTH: 10000,
   LONG_STRING_INITIAL_LENGTH: 1000,
@@ -79,6 +85,9 @@ var DebuggerServer = {
     this.xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     this.initTransport(aAllowConnectionCallback);
     this.addActors("chrome://global/content/devtools/dbg-script-actors.js");
+
+    this.globalActorFactories = {};
+    this.tabActorFactories = {};
   },
 
   /**
@@ -100,7 +109,22 @@ var DebuggerServer = {
     this._allowConnection = aAllowConnectionCallback;
   },
 
-  get initialized() { return !!this.xpcInspector; },
+  get initialized() { return !!this.globalActorFactories; },
+
+  /**
+   * Performs cleanup tasks before shutting down the debugger server, if no
+   * connections are currently open. Such tasks include clearing any actor
+   * constructors added at runtime. This method should be called whenever a
+   * debugger server is no longer useful, to avoid memory leaks. After this
+   * method returns, the debugger server must be initialized again before use.
+   */
+  destroy: function DH_destroy() {
+    if (Object.keys(this._connections).length == 0) {
+      dumpn("Shutting down debugger server.");
+      delete this.globalActorFactories;
+      delete this.tabActorFactories;
+    }
+  },
 
   /**
    * Load a subscript into the debugging global.
@@ -133,8 +157,9 @@ var DebuggerServer = {
     }
     this._checkInit();
 
+    // Return early if the server is already listening.
     if (this._listener) {
-      throw "Debugging listener already open.";
+      return true;
     }
 
     let localOnly = false;
@@ -151,22 +176,32 @@ var DebuggerServer = {
       dumpn("Could not start debugging listener on port " + aPort + ": " + e);
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
+    this._socketConnections++;
 
     return true;
   },
 
   /**
    * Close a previously-opened TCP listener.
+   *
+   * @param aForce boolean [optional]
+   *        If set to true, then the socket will be closed, regardless of the
+   *        number of open connections.
    */
-  closeListener: function DH_closeListener() {
+  closeListener: function DH_closeListener(aForce) {
     this._checkInit();
 
-    if (!this._listener) {
+    if (!this._listener || this._socketConnections == 0) {
       return false;
     }
 
-    this._listener.close();
-    this._listener = null;
+    // Only close the listener when the last connection is closed, or if the
+    // aForce flag is passed.
+    if (--this._socketConnections == 0 || aForce) {
+      this._listener.close();
+      this._listener = null;
+      this._socketConnections = 0;
+    }
 
     return true;
   },
@@ -244,10 +279,12 @@ var DebuggerServer = {
   },
 
   /**
-   * Remove the connection from the debugging server.
+   * Remove the connection from the debugging server and shut down the server
+   * if no other connections are open.
    */
   _connectionClosed: function DH_connectionClosed(aConnection) {
     delete this._connections[aConnection.prefix];
+    this.destroy();
   }
 };
 
@@ -278,7 +315,11 @@ ActorPool.prototype = {
   addActor: function AP_addActor(aActor) {
     aActor.conn = this.conn;
     if (!aActor.actorID) {
-      aActor.actorID = this.conn.allocID(aActor.actorPrefix || undefined);
+      let prefix = aActor.actorPrefix;
+      if (typeof aActor == "function") {
+        prefix = aActor.prototype.actorPrefix;
+      }
+      aActor.actorID = this.conn.allocID(prefix || undefined);
     }
 
     if (aActor.registeredPool) {
@@ -298,6 +339,13 @@ ActorPool.prototype = {
 
   has: function AP_has(aActorID) {
     return aActorID in this._actors;
+  },
+
+  /**
+   * Returns true if the pool is empty.
+   */
+  isEmpty: function AP_isEmpty() {
+    return Object.keys(this._actors).length == 0;
   },
 
   /**
@@ -435,6 +483,24 @@ DebuggerServerConnection.prototype = {
       this.transport.send({ from: aPacket.to ? aPacket.to : "root",
                             error: "noSuchActor" });
       return;
+    }
+
+    // Dyamically-loaded actors have to be created lazily.
+    if (typeof actor == "function") {
+      let instance;
+      try {
+        instance = new actor();
+      } catch (e) {
+        Cu.reportError(e);
+        this.transport.send({
+          error: "unknownError",
+          message: ("error occurred while creating actor '" + actor.name +
+                    "': " + safeErrorString(e))
+        });
+      }
+      actor.registeredPool.addActor(instance);
+      actor.registeredPool.removeActor(actor);
+      actor = instance;
     }
 
     var ret = null;

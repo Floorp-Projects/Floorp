@@ -31,20 +31,24 @@ function BrowserRootActor(aConnection)
   this.conn = aConnection;
   this._tabActors = new WeakMap();
   this._tabActorPool = null;
-  this._actorFactories = null;
+  // A map of actor names to actor instances provided by extensions.
+  this._extraActors = {};
 
   this.onTabClosed = this.onTabClosed.bind(this);
   windowMediator.addListener(this);
 }
 
 BrowserRootActor.prototype = {
+
   /**
    * Return a 'hello' packet as specified by the Remote Debugging Protocol.
    */
   sayHello: function BRA_sayHello() {
-    return { from: "root",
-             applicationType: "browser",
-             traits: [] };
+    return {
+      from: "root",
+      applicationType: "browser",
+      traits: {}
+    };
   },
 
   /**
@@ -52,6 +56,7 @@ BrowserRootActor.prototype = {
    */
   disconnect: function BRA_disconnect() {
     windowMediator.removeListener(this);
+    this._extraActors = null;
 
     // We may have registered event listeners on browser windows to
     // watch for tab closes, remove those.
@@ -77,7 +82,7 @@ BrowserRootActor.prototype = {
     // an ActorPool.
 
     let actorPool = new ActorPool(this.conn);
-    let actorList = [];
+    let tabActorList = [];
 
     // Walk over open browser windows.
     let e = windowMediator.getEnumerator("navigator:browser");
@@ -95,7 +100,7 @@ BrowserRootActor.prototype = {
       let browsers = win.getBrowser().browsers;
       for each (let browser in browsers) {
         if (browser == selectedBrowser && win == top) {
-          selected = actorList.length;
+          selected = tabActorList.length;
         }
         let actor = this._tabActors.get(browser);
         if (!actor) {
@@ -104,8 +109,20 @@ BrowserRootActor.prototype = {
           this._tabActors.set(browser, actor);
         }
         actorPool.addActor(actor);
-        actorList.push(actor);
+        tabActorList.push(actor);
       }
+    }
+
+    // Walk over global actors added by extensions.
+    for (let name in DebuggerServer.globalActorFactories) {
+      let actor = this._extraActors[name];
+      if (!actor) {
+        actor = DebuggerServer.globalActorFactories[name].bind(null, this.conn);
+        actor.prototype = DebuggerServer.globalActorFactories[name].prototype;
+        actor.parentID = this.actorID;
+        this._extraActors[name] = actor;
+      }
+      actorPool.addActor(actor);
     }
 
     // Now drop the old actorID -> actor map.  Actors that still
@@ -117,10 +134,16 @@ BrowserRootActor.prototype = {
     this._tabActorPool = actorPool;
     this.conn.addActorPool(this._tabActorPool);
 
-    return { "from": "root",
-             "selected": selected,
-             "tabs": [actor.grip()
-                      for each (actor in actorList)] };
+    let response = {
+      "from": "root",
+      "selected": selected,
+      "tabs": [actor.grip() for (actor of tabActorList)]
+    };
+    for (let name in this._extraActors) {
+      let actor = this._extraActors[name];
+      response[name] = actor.actorID;
+    }
+    return response;
   },
 
   /**
@@ -203,6 +226,9 @@ function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
   this.conn = aConnection;
   this._browser = aBrowser;
   this._tabbrowser = aTabBrowser;
+  this._tabActorPool = null;
+  // A map of actor names to actor instances provided by extensions.
+  this._extraActors = {};
 
   this._onWindowCreated = this.onWindowCreated.bind(this);
 }
@@ -245,6 +271,7 @@ BrowserTabActor.prototype = {
     this.conn.removeActor(aActor);
   },
 
+  // A constant prefix that will be used to form the actor ID by the server.
   actorPrefix: "tab",
 
   grip: function BTA_grip() {
@@ -252,9 +279,35 @@ BrowserTabActor.prototype = {
                "grip() shouldn't be called on exited browser actor.");
     dbg_assert(this.actorID,
                "tab should have an actorID.");
-    return { actor: this.actorID,
-             title: this.browser.contentTitle,
-             url: this.browser.currentURI.spec }
+
+    let response = {
+      actor: this.actorID,
+      title: this.browser.contentTitle,
+      url: this.browser.currentURI.spec
+    };
+
+    // Walk over tab actors added by extensions and add them to a new ActorPool.
+    let actorPool = new ActorPool(this.conn);
+    for (let name in DebuggerServer.tabActorFactories) {
+      let actor = this._extraActors[name];
+      if (!actor) {
+        actor = DebuggerServer.tabActorFactories[name].bind(null, this.conn);
+        actor.prototype = DebuggerServer.tabActorFactories[name].prototype;
+        actor.parentID = this.actorID;
+        this._extraActors[name] = actor;
+      }
+      actorPool.addActor(actor);
+    }
+    if (!actorPool.isEmpty()) {
+      this._tabActorPool = actorPool;
+      this.conn.addActorPool(this._tabActorPool);
+    }
+
+    for (let name in this._extraActors) {
+      let actor = this._extraActors[name];
+      response[name] = actor.actorID;
+    }
+    return response;
   },
 
   /**
@@ -266,6 +319,7 @@ BrowserTabActor.prototype = {
     if (this._progressListener) {
       this._progressListener.destroy();
     }
+    this._extraActors = null;
   },
 
   /**
@@ -370,6 +424,10 @@ BrowserTabActor.prototype = {
     // Shut down actors that belong to this tab's pool.
     this.conn.removeActorPool(this._tabPool);
     this._tabPool = null;
+    if (this._tabActorPool) {
+      this.conn.removeActorPool(this._tabActorPool);
+      this._tabActorPool = null;
+    }
 
     this._attached = false;
   },
@@ -535,9 +593,14 @@ DebuggerProgressListener.prototype = {
   }
 };
 
+// DebuggerServer extension API.
+
 /**
- * Registers handlers for new request types defined dynamically. This is used
- * for example by add-ons to augment the functionality of the tab actor.
+ * Registers handlers for new tab-scoped request types defined dynamically.
+ * This is used for example by add-ons to augment the functionality of the tab
+ * actor.
+ * TODO: remove this API in the next release after bug 753401 lands, once all
+ * our experimental add-ons have been converted to the new API.
  *
  * @param aName string
  *        The name of the new request type.
@@ -550,5 +613,81 @@ DebuggerServer.addTabRequest = function DS_addTabRequest(aName, aFunction) {
       return { error: "wrongState" };
     }
     return aFunction(this, aRequest);
+  }
+};
+
+/**
+ * Registers handlers for new tab-scoped request types defined dynamically.
+ * This is used for example by add-ons to augment the functionality of the tab
+ * actor.
+ *
+ * @param aFunction function
+ *        The constructor function for this request type.
+ * @param aName string [optional]
+ *        The name of the new request type. If this is not present, the
+ *        actorPrefix property of the constructor prototype is used.
+ */
+DebuggerServer.addTabActor = function DS_addTabActor(aFunction, aName) {
+  let name = aName ? aName : aFunction.prototype.actorPrefix;
+  if (["title", "url", "actor"].indexOf(name) != -1) {
+    throw Error(name + " is not allowed");
+  }
+  if (DebuggerServer.tabActorFactories.hasOwnProperty(name)) {
+    throw Error(name + " already exists");
+  }
+  DebuggerServer.tabActorFactories[name] = aFunction;
+};
+
+/**
+ * Unregisters the handler for the specified tab-scoped request type.
+ * This may be used for example by add-ons when shutting down or upgrading.
+ *
+ * @param aFunction function
+ *        The constructor function for this request type.
+ */
+DebuggerServer.removeTabActor = function DS_removeTabActor(aFunction) {
+  for (let name in DebuggerServer.tabActorFactories) {
+    let handler = DebuggerServer.tabActorFactories[name];
+    if (handler.name == aFunction.name) {
+      delete DebuggerServer.tabActorFactories[name];
+    }
+  }
+};
+
+/**
+ * Registers handlers for new browser-scoped request types defined dynamically.
+ * This is used for example by add-ons to augment the functionality of the root
+ * actor.
+ *
+ * @param aFunction function
+ *        The constructor function for this request type.
+ * @param aName string [optional]
+ *        The name of the new request type. If this is not present, the
+ *        actorPrefix property of the constructor prototype is used.
+ */
+DebuggerServer.addGlobalActor = function DS_addGlobalActor(aFunction, aName) {
+  let name = aName ? aName : aFunction.prototype.actorPrefix;
+  if (["from", "tabs", "selected"].indexOf(name) != -1) {
+    throw Error(name + " is not allowed");
+  }
+  if (DebuggerServer.globalActorFactories.hasOwnProperty(name)) {
+    throw Error(name + " already exists");
+  }
+  DebuggerServer.globalActorFactories[name] = aFunction;
+};
+
+/**
+ * Unregisters the handler for the specified browser-scoped request type.
+ * This may be used for example by add-ons when shutting down or upgrading.
+ *
+ * @param aFunction function
+ *        The constructor function for this request type.
+ */
+DebuggerServer.removeGlobalActor = function DS_removeGlobalActor(aFunction) {
+  for (let name in DebuggerServer.globalActorFactories) {
+    let handler = DebuggerServer.globalActorFactories[name];
+    if (handler.name == aFunction.name) {
+      delete DebuggerServer.globalActorFactories[name];
+    }
   }
 };
