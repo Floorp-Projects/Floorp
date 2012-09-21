@@ -6074,6 +6074,15 @@ let StkCommandParamsFactory = {
   createParam: function createParam(cmdDetails, ctlvs) {
     let param;
     switch (cmdDetails.typeOfCommand) {
+      case STK_CMD_REFRESH:
+        param = this.processRefresh(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_POLL_INTERVAL:
+        param = this.processPollInterval(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_POLL_OFF:
+        param = this.processPollOff(cmdDetails, ctlvs);
+        break;
       case STK_CMD_SET_UP_EVENT_LIST:
         param = this.processSetUpEventList(cmdDetails, ctlvs);
         break;
@@ -6102,14 +6111,77 @@ let StkCommandParamsFactory = {
       case STK_CMD_SET_UP_CALL:
         param = this.processSetupCall(cmdDetails, ctlvs);
         break;
-      case STK_LAUNCH_BROWSER:
+      case STK_CMD_LAUNCH_BROWSER:
         param = this.processLaunchBrowser(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_PLAY_TONE:
+        param = this.processPlayTone(cmdDetails, ctlvs);
         break;
       default:
         debug("unknown proactive command");
         break;
     }
     return param;
+  },
+
+  /**
+   * Construct a param for Refresh.
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processRefresh: function processRefresh(cmdDetails, ctlvs) {
+    let refreshType = cmdDetails.commandQualifier;
+    switch (refreshType) {
+      case STK_REFRESH_FILE_CHANGE:
+      case STK_REFRESH_NAA_INIT_AND_FILE_CHANGE:
+        let ctlv = StkProactiveCmdHelper.searchForTag(
+          COMPREHENSIONTLV_FILE_LIST, ctlvs);
+        if (ctlv) {
+          let list = ctlv.value.fileList;
+          if (DEBUG) {
+            debug("Refresh, list = " + list);
+          }
+          RIL.fetchICCRecords();
+        }
+        break;
+    }
+    return {};
+  },
+
+  /**
+   * Construct a param for Poll Interval.
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processPollInterval: function processPollInterval(cmdDetails, ctlvs) {
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_DURATION, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        command: cmdDetails,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Poll Interval: Required value missing : Duration");
+    }
+
+    return ctlv.value;
+  },
+
+  /**
+   * Construct a param for Poll Off.
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processPollOff: function processPollOff(cmdDetails, ctlvs) {
+    return {};
   },
 
   /**
@@ -6377,6 +6449,32 @@ let StkCommandParamsFactory = {
     browser.mode = cmdDetails.commandQualifier & 0x03;
 
     return browser;
+  },
+
+  processPlayTone: function processPlayTone(cmdDetails, ctlvs) {
+    let playTone = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+    if (ctlv) {
+      playTone.text = ctlv.value.identifier;
+    }
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TONE, ctlvs);
+    if (ctlv) {
+      playTone.tone = ctlv.value.tone;
+    }
+
+    ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_DURATION, ctlvs);
+    if (ctlv) {
+      playTone.duration = ctlv.value;
+    }
+
+    // vibrate is only defined in TS 102.223
+    playTone.isVibrate = (cmdDetails.commandQualifier & 0x01) != 0x00;
+
+    return playTone;
   }
 };
 
@@ -6389,16 +6487,22 @@ let StkProactiveCmdHelper = {
         return this.retrieveDeviceId(length);
       case COMPREHENSIONTLV_TAG_ALPHA_ID:
         return this.retrieveAlphaId(length);
+      case COMPREHENSIONTLV_TAG_DURATION:
+        return this.retrieveDuration(length);
       case COMPREHENSIONTLV_TAG_ADDRESS:
         return this.retrieveAddress(length);
       case COMPREHENSIONTLV_TAG_TEXT_STRING:
         return this.retrieveTextString(length);
+      case COMPREHENSIONTLV_TAG_TONE:
+        return this.retrieveTone(length);
       case COMPREHENSIONTLV_TAG_ITEM:
         return this.retrieveItem(length);
       case COMPREHENSIONTLV_TAG_ITEM_ID:
         return this.retrieveItemId(length);
       case COMPREHENSIONTLV_TAG_RESPONSE_LENGTH:
         return this.retrieveResponseLength(length);
+      case COMPREHENSIONTLV_TAG_FILE_LIST:
+        return this.retrieveFileList(length);
       case COMPREHENSIONTLV_TAG_DEFAULT_TEXT:
         return this.retrieveDefaultText(length);
       case COMPREHENSIONTLV_TAG_EVENT_LIST:
@@ -6467,6 +6571,23 @@ let StkProactiveCmdHelper = {
   },
 
   /**
+   * Duration.
+   *
+   * | Byte | Description           | Length |
+   * |  1   | Response Length Tag   |   1    |
+   * |  2   | Lenth = 02            |   1    |
+   * |  3   | Time unit             |   1    |
+   * |  4   | Time interval         |   1    |
+   */
+  retrieveDuration: function retrieveDuration(length) {
+    let duration = {
+      timeUnit: GsmPDUHelper.readHexOctet(),
+      timeInterval: GsmPDUHelper.readHexOctet(),
+    };
+    return duration;
+  },
+
+  /**
    * Address.
    *
    * | Byte         | Description            | Length |
@@ -6519,6 +6640,21 @@ let StkProactiveCmdHelper = {
   },
 
   /**
+   * Tone.
+   *
+   * | Byte | Description     | Length |
+   * |  1   | Tone Tag        |   1    |
+   * |  2   | Lenth = 01      |   1    |
+   * |  3   | Tone            |   1    |
+   */
+  retrieveTone: function retrieveTone(length) {
+    let tone = {
+      tone: GsmPDUHelper.readHexOctet(),
+    };
+    return tone;
+  },
+
+  /**
    * Item.
    *
    * | Byte         | Description            | Length |
@@ -6566,6 +6702,30 @@ let StkProactiveCmdHelper = {
       maxLength : GsmPDUHelper.readHexOctet()
     };
     return rspLength;
+  },
+
+  /**
+   * File List.
+   *
+   * | Byte         | Description            | Length |
+   * |  1           | File List Tag          |   1    |
+   * | 2 ~ (Y-1)+2  | Length (X)             |   Y    |
+   * | (Y-1)+3      | Number of files        |   1    |
+   * | (Y-1)+4 ~    | Files                  |   X    |
+   * | (Y-1)+X+2    |                        |        |
+   */
+  retrieveFileList: function retrieveFileList(length) {
+    let num = GsmPDUHelper.readHexOctet();
+    let fileList = "";
+    length--; // -1 for the num octet.
+    for (let i = 0; i < 2 * length; i++) {
+      // Didn't use readHexOctet here,
+      // otherwise 0x00 will be "0", not "00"
+      fileList += String.fromCharCode(Buf.readUint16());
+    }
+    return {
+      fileList: fileList
+    };
   },
 
   /**
