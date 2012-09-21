@@ -146,7 +146,7 @@ interface mozIStorageValueArray : nsISupports {
   }
 
   inline bool IsNull(uint32_t idx) {
-    bool b = PR_FALSE;
+    bool b = false;
 #ifdef DEBUG
     nsresult rv =
 #endif
