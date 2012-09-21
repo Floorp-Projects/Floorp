@@ -34,14 +34,15 @@
     ${RegCleanMain} "Software\Mozilla"
     ${RegCleanUninstall}
     ${UpdateProtocolHandlers}
-    ${FixShellIconHandler}
+    ${FixShellIconHandler} "HKLM"
     ${SetAppLSPCategories} ${LSP_CATEGORIES}
 
     ; Win7 taskbar and start menu link maintenance
     Call FixShortcutAppModelIDs
 
-    ; Only update the Clients\StartMenuInternet registry key values if they
-    ; don't exist or this installation is the same as the one set in those keys.
+    ; Only update the Clients\StartMenuInternet registry key values in HKLM if
+    ; they don't exist or this installation is the same as the one set in those
+    ; keys.
     ${StrFilter} "${FileMainEXE}" "+" "" "" $1
     ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$1\DefaultIcon" ""
     ${GetPathFromString} "$0" $0
@@ -50,7 +51,22 @@
       ${GetLongPath} "$0" $0
     ${EndIf}
     ${If} "$0" == "$INSTDIR"
-      ${SetStartMenuInternet} ; Does not use SHCTX
+      ${SetStartMenuInternet} "HKLM"
+    ${EndIf}
+
+    ; Only update the Clients\StartMenuInternet registry key values in HKCU if
+    ; they don't exist or this installation is the same as the one set in those
+    ; keys.  This is only done in Windows 8 to avoid a UAC prompt.
+    ${If} ${AtLeastWin8}
+      ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$1\DefaultIcon" ""
+      ${GetPathFromString} "$0" $0
+      ${GetParent} "$0" $0
+      ${If} ${FileExists} "$0"
+        ${GetLongPath} "$0" $0
+      ${EndIf}
+      ${If} "$0" == "$INSTDIR"
+        ${SetStartMenuInternet} "HKCU"
+      ${EndIf}
     ${EndIf}
 
     ReadRegStr $0 HKLM "Software\mozilla.org\Mozilla" "CurrentVersion"
@@ -131,8 +147,8 @@
 
   SetShellVarContext all      ; Set SHCTX to all users (e.g. HKLM)
   ${SetHandlers} ; Uses SHCTX
-  ${SetStartMenuInternet} ; Does not use SHCTX
-  ${FixShellIconHandler} ; Does not use SHCTX
+  ${SetStartMenuInternet} "HKLM"
+  ${FixShellIconHandler} "HKLM"
   ${ShowShortcuts}
   ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
   WriteRegStr HKLM "Software\Clients\StartMenuInternet" "" "$R9"
@@ -146,6 +162,9 @@
   ${StrFilter} "${FileMainEXE}" "+" "" "" $0
   StrCpy $R1 "Software\Clients\StartMenuInternet\$0\InstallInfo"
   WriteRegDWORD HKLM "$R1" "IconsVisible" 0
+  ${If} ${AtLeastWin8}
+    WriteRegDWORD HKCU "$R1" "IconsVisible" 0
+  ${EndIf}
 
   SetShellVarContext all  ; Set $DESKTOP to All Users
   ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
@@ -205,6 +224,9 @@
   ${StrFilter} "${FileMainEXE}" "+" "" "" $0
   StrCpy $R1 "Software\Clients\StartMenuInternet\$0\InstallInfo"
   WriteRegDWORD HKLM "$R1" "IconsVisible" 1
+  ${If} ${AtLeastWin8}
+    WriteRegDWORD HKCU "$R1" "IconsVisible" 1
+  ${EndIf}
 
   SetShellVarContext all  ; Set $DESKTOP to All Users
   ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
@@ -346,10 +368,15 @@
 ; the key name is derived from the main application executable.
 ; http://support.microsoft.com/kb/297878
 ;
+; In Windows 8 this changes slightly, you can store StartMenuInternet entries in
+; HKCU.  The icon in start menu for StartMenuInternet is deprecated as of Win7,
+; but the subkeys are what's important.  Control panel default programs looks
+; for them only in HKLM pre win8.
+;
 ; Note: we might be able to get away with using the full path to the
 ; application executable for the key name in order to support multiple
 ; installations.
-!macro SetStartMenuInternet
+!macro SetStartMenuInternet RegKey
   ${GetLongPath} "$INSTDIR\${FileMainEXE}" $8
   ${GetLongPath} "$INSTDIR\uninstall\helper.exe" $7
 
@@ -357,55 +384,55 @@
 
   StrCpy $0 "Software\Clients\StartMenuInternet\$R9"
 
-  WriteRegStr HKLM "$0" "" "${BrandFullName}"
+  WriteRegStr ${RegKey} "$0" "" "${BrandFullName}"
 
-  WriteRegStr HKLM "$0\DefaultIcon" "" "$8,0"
+  WriteRegStr ${RegKey} "$0\DefaultIcon" "" "$8,0"
 
   ; The Reinstall Command is defined at
   ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
-  WriteRegStr HKLM "$0\InstallInfo" "HideIconsCommand" "$\"$7$\" /HideShortcuts"
-  WriteRegStr HKLM "$0\InstallInfo" "ShowIconsCommand" "$\"$7$\" /ShowShortcuts"
-  WriteRegStr HKLM "$0\InstallInfo" "ReinstallCommand" "$\"$7$\" /SetAsDefaultAppGlobal"
+  WriteRegStr ${RegKey} "$0\InstallInfo" "HideIconsCommand" "$\"$7$\" /HideShortcuts"
+  WriteRegStr ${RegKey} "$0\InstallInfo" "ShowIconsCommand" "$\"$7$\" /ShowShortcuts"
+  WriteRegStr ${RegKey} "$0\InstallInfo" "ReinstallCommand" "$\"$7$\" /SetAsDefaultAppGlobal"
 
   ClearErrors
-  ReadRegDWORD $1 HKLM "$0\InstallInfo" "IconsVisible"
+  ReadRegDWORD $1 ${RegKey} "$0\InstallInfo" "IconsVisible"
   ; If the IconsVisible name value pair doesn't exist add it otherwise the
   ; application won't be displayed in Set Program Access and Defaults.
   ${If} ${Errors}
     ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-      WriteRegDWORD HKLM "$0\InstallInfo" "IconsVisible" 1
+      WriteRegDWORD ${RegKey} "$0\InstallInfo" "IconsVisible" 1
     ${Else}
-      WriteRegDWORD HKLM "$0\InstallInfo" "IconsVisible" 0
+      WriteRegDWORD ${RegKey} "$0\InstallInfo" "IconsVisible" 0
     ${EndIf}
   ${EndIf}
 
-  WriteRegStr HKLM "$0\shell\open\command" "" "$8"
+  WriteRegStr ${RegKey} "$0\shell\open\command" "" "$8"
 
-  WriteRegStr HKLM "$0\shell\properties" "" "$(CONTEXT_OPTIONS)"
-  WriteRegStr HKLM "$0\shell\properties\command" "" "$\"$8$\" -preferences"
+  WriteRegStr ${RegKey} "$0\shell\properties" "" "$(CONTEXT_OPTIONS)"
+  WriteRegStr ${RegKey} "$0\shell\properties\command" "" "$\"$8$\" -preferences"
 
-  WriteRegStr HKLM "$0\shell\safemode" "" "$(CONTEXT_SAFE_MODE)"
-  WriteRegStr HKLM "$0\shell\safemode\command" "" "$\"$8$\" -safe-mode"
+  WriteRegStr ${RegKey} "$0\shell\safemode" "" "$(CONTEXT_SAFE_MODE)"
+  WriteRegStr ${RegKey} "$0\shell\safemode\command" "" "$\"$8$\" -safe-mode"
 
   ; Vista Capabilities registry keys
-  WriteRegStr HKLM "$0\Capabilities" "ApplicationDescription" "$(REG_APP_DESC)"
-  WriteRegStr HKLM "$0\Capabilities" "ApplicationIcon" "$8,0"
-  WriteRegStr HKLM "$0\Capabilities" "ApplicationName" "${BrandShortName}"
+  WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationDescription" "$(REG_APP_DESC)"
+  WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationIcon" "$8,0"
+  WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationName" "${BrandShortName}"
 
-  WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".htm"   "FirefoxHTML"
-  WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".html"  "FirefoxHTML"
-  WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".shtml" "FirefoxHTML"
-  WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".xht"   "FirefoxHTML"
-  WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".xhtml" "FirefoxHTML"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".htm"   "FirefoxHTML"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".html"  "FirefoxHTML"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".shtml" "FirefoxHTML"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".xht"   "FirefoxHTML"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".xhtml" "FirefoxHTML"
 
-  WriteRegStr HKLM "$0\Capabilities\StartMenu" "StartMenuInternet" "$R9"
+  WriteRegStr ${RegKey} "$0\Capabilities\StartMenu" "StartMenuInternet" "$R9"
 
-  WriteRegStr HKLM "$0\Capabilities\URLAssociations" "ftp"    "FirefoxURL"
-  WriteRegStr HKLM "$0\Capabilities\URLAssociations" "http"   "FirefoxURL"
-  WriteRegStr HKLM "$0\Capabilities\URLAssociations" "https"  "FirefoxURL"
+  WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "ftp"    "FirefoxURL"
+  WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "http"   "FirefoxURL"
+  WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "https"  "FirefoxURL"
 
   ; Vista Registered Application
-  WriteRegStr HKLM "Software\RegisteredApplications" "${AppRegName}" "$0\Capabilities"
+  WriteRegStr ${RegKey} "Software\RegisteredApplications" "${AppRegName}" "$0\Capabilities"
 !macroend
 !define SetStartMenuInternet "!insertmacro SetStartMenuInternet"
 
@@ -413,14 +440,14 @@
 ; due to changes not being detected by the IconHandler for side by side
 ; installs (see bug 268512). The symptoms can be either an incorrect icon or no
 ; icon being displayed for files associated with Firefox (does not use SHCTX).
-!macro FixShellIconHandler
+!macro FixShellIconHandler RegKey
   ClearErrors
-  ReadRegStr $1 HKLM "Software\Classes\FirefoxHTML\ShellEx\IconHandler" ""
+  ReadRegStr $1 ${RegKey} "Software\Classes\FirefoxHTML\ShellEx\IconHandler" ""
   ${Unless} ${Errors}
-    ReadRegStr $1 HKLM "Software\Classes\FirefoxHTML\DefaultIcon" ""
+    ReadRegStr $1 ${RegKey} "Software\Classes\FirefoxHTML\DefaultIcon" ""
     ${GetLongPath} "$INSTDIR\${FileMainEXE}" $2
     ${If} "$1" != "$2,1"
-      WriteRegStr HKLM "Software\Classes\FirefoxHTML\DefaultIcon" "" "$2,1"
+      WriteRegStr ${RegKey} "Software\Classes\FirefoxHTML\DefaultIcon" "" "$2,1"
     ${EndIf}
   ${EndUnless}
 !macroend
@@ -1061,7 +1088,12 @@ Function SetAsDefaultAppUserHKCU
   ; registry keys are for this install.
   ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
   ClearErrors
-  ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ${If} ${Errors}
+  ${OrIf} ${AtMostWin2008R2}
+    ClearErrors
+    ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ${EndIf}
   ${Unless} ${Errors}
     ${GetPathFromString} "$0" $0
     ${GetParent} "$0" $0
@@ -1084,6 +1116,8 @@ Function SetAsDefaultAppUserHKCU
     ClearErrors
     ReadRegStr $0 HKLM "Software\RegisteredApplications" "${AppRegName}"
     ${Unless} ${Errors}
+      ; This is all protected by a user choice hash in Windows 8 so it won't
+      ; help, but it also won't hurt.
       AppAssocReg::SetAppAsDefaultAll "${AppRegName}"
     ${EndUnless}
   ${EndIf}
@@ -1112,7 +1146,13 @@ Function SetAsDefaultAppUser
   ; Check if this install location registered as the StartMenuInternet client
   ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
   ClearErrors
-  ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ${If} ${Errors}
+  ${OrIf} ${AtMostWin2008R2}
+    ClearErrors
+    ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ${EndIf}
+
   ${Unless} ${Errors}
     ${GetPathFromString} "$0" $0
     ${GetParent} "$0" $0
@@ -1134,18 +1174,29 @@ Function SetAsDefaultAppUser
     ${EndIf}
   ${EndUnless}
 
+  ; On Win8, we want to avoid having a UAC prompt since we'll already have
+  ; another action for control panel default browser selection popping up
+  ; to the user.  Win8 is the first OS where the start menu keys can be
+  ; added into HKCU.
+  ${If} ${AtLeastWin8}
+    ${SetStartMenuInternet} "HKCU"
+    ${FixShellIconHandler} "HKCU"
+    ${FixClassKeys} ; Does not use SHCTX
+    Return
+  ${EndIf}
+
   ; The code after ElevateUAC won't be executed on Vista and above when the
   ; user:
   ; a) is a member of the administrators group (e.g. elevation is required)
   ; b) is not a member of the administrators group and chooses to elevate
   ${ElevateUAC}
 
-  ${SetStartMenuInternet} ; Does not use SHCTX
+  ${SetStartMenuInternet} "HKLM"
 
   SetShellVarContext all  ; Set SHCTX to all users (e.g. HKLM)
 
   ${FixClassKeys} ; Does not use SHCTX
-  ${FixShellIconHandler} ; Does not use SHCTX
+  ${FixShellIconHandler} "HKLM"
   ${RemoveDeprecatedKeys} ; Does not use SHCTX
 
   ClearErrors
