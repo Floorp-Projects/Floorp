@@ -1528,20 +1528,6 @@ public class GeckoAppShell
         return SurfaceInfo.class;
     }
 
-    static native void executeNextRunnable();
-
-    static class GeckoRunnableCallback implements Runnable {
-        public void run() {
-            Log.i("GeckoShell", "run GeckoRunnableCallback");
-            GeckoAppShell.executeNextRunnable();
-        }
-    }
-
-    public static void postToJavaThread(boolean mainThread) {
-        Log.i("GeckoShell", "post to " + (mainThread ? "main " : "") + "java thread");
-        getMainHandler().post(new GeckoRunnableCallback());
-    }
-
     public static android.hardware.Camera sCamera = null;
     
     static native void cameraCallbackBridge(byte[] data);
