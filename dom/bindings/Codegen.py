@@ -2849,13 +2849,17 @@ def infallibleForMember(member, type, descriptorProvider):
     return getWrapTemplateForType(type, descriptorProvider, 'result', None,\
                                   memberIsCreator(member))[1]
 
-def typeNeedsCx(type):
+def typeNeedsCx(type, retVal=False):
     if type is None:
         return False
+    if type.nullable():
+        type = type.inner
     if type.isSequence() or type.isArray():
         type = type.inner
     if type.isUnion():
         return any(typeNeedsCx(t) for t in type.unroll().flatMemberTypes)
+    if retVal and type.isSpiderMonkeyInterface():
+        return True
     return type.isCallback() or type.isAny() or type.isObject()
 
 # Returns a tuple consisting of a CGThing containing the type of the return
@@ -2949,7 +2953,7 @@ class CGCallGenerator(CGThing):
         if isFallible:
             args.append(CGGeneric("rv"))
 
-        needsCx = (typeNeedsCx(returnType) or
+        needsCx = (typeNeedsCx(returnType, True) or
                    any(typeNeedsCx(a.type) for (a, _) in arguments) or
                    'implicitJSContext' in extendedAttributes)
 
@@ -3616,7 +3620,7 @@ class CGMemberJITInfo(CGThing):
         return ""
 
     def defineJitInfo(self, infoName, opName, infallible):
-        protoID = "prototypes::id::%s" % self.descriptor.interface.identifier.name
+        protoID = "prototypes::id::%s" % self.descriptor.name
         depth = "PrototypeTraits<%s>::Depth" % protoID
         failstr = "true" if infallible else "false"
         return ("\n"
