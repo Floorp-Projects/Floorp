@@ -360,9 +360,9 @@ WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
     }
 
     boundBuffer->SetByteLength(size);
-    boundBuffer->InvalidateCachedMaxElements();
-    if (!boundBuffer->ZeroDataIfElementArray())
+    if (!boundBuffer->ElementArrayCacheBufferData(nullptr, size)) {
         return ErrorOutOfMemory("bufferData: out of memory");
+    }
 }
 
 void
@@ -403,9 +403,9 @@ WebGLContext::BufferData(WebGLenum target, ArrayBuffer *data, WebGLenum usage)
     }
 
     boundBuffer->SetByteLength(data->Length());
-    boundBuffer->InvalidateCachedMaxElements();
-    if (!boundBuffer->CopyDataIfElementArray(data->Data()))
+    if (!boundBuffer->ElementArrayCacheBufferData(data->Data(), data->Length())) {
         return ErrorOutOfMemory("bufferData: out of memory");
+    }
 }
 
 void
@@ -440,9 +440,9 @@ WebGLContext::BufferData(WebGLenum target, ArrayBufferView& data, WebGLenum usag
     }
 
     boundBuffer->SetByteLength(data.Length());
-    boundBuffer->InvalidateCachedMaxElements();
-    if (!boundBuffer->CopyDataIfElementArray(data.Data()))
+    if (!boundBuffer->ElementArrayCacheBufferData(data.Data(), data.Length())) {
         return ErrorOutOfMemory("bufferData: out of memory");
+    }
 }
 
 void
@@ -483,8 +483,7 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
 
     MakeContextCurrent();
 
-    boundBuffer->CopySubDataIfElementArray(byteOffset, data->Length(), data->Data());
-    boundBuffer->InvalidateCachedMaxElements();
+    boundBuffer->ElementArrayCacheBufferSubData(byteOffset, data->Data(), data->Length());
 
     gl->fBufferSubData(target, byteOffset, data->Length(), data->Data());
 }
@@ -520,11 +519,9 @@ WebGLContext::BufferSubData(WebGLenum target, WebGLsizeiptr byteOffset,
         return ErrorInvalidOperation("bufferSubData: not enough data -- operation requires %d bytes, but buffer only has %d bytes",
                                      checked_neededByteLength.value(), boundBuffer->ByteLength());
 
+    boundBuffer->ElementArrayCacheBufferSubData(byteOffset, data.Data(), data.Length());
+
     MakeContextCurrent();
-
-    boundBuffer->CopySubDataIfElementArray(byteOffset, data.Length(), data.Data());
-    boundBuffer->InvalidateCachedMaxElements();
-
     gl->fBufferSubData(target, byteOffset, data.Length(), data.Data());
 }
 
@@ -1459,12 +1456,16 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
 
     CheckedUint32 checked_byteCount;
 
+    WebGLsizei first = 0;
+
     if (type == LOCAL_GL_UNSIGNED_SHORT) {
         checked_byteCount = 2 * CheckedUint32(count);
         if (byteOffset % 2 != 0)
             return ErrorInvalidOperation("drawElements: invalid byteOffset for UNSIGNED_SHORT (must be a multiple of 2)");
+        first = byteOffset / 2;
     } else if (type == LOCAL_GL_UNSIGNED_BYTE) {
         checked_byteCount = count;
+        first = byteOffset;
     } else {
         return ErrorInvalidEnum("drawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
     }
@@ -1480,7 +1481,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
     if (!mBoundElementArrayBuffer)
         return ErrorInvalidOperation("drawElements: must have element array buffer binding");
 
-    if (!mBoundElementArrayBuffer->Data())
+    if (!mBoundElementArrayBuffer->ByteLength())
         return ErrorInvalidOperation("drawElements: bound element array buffer doesn't have any data");
 
     CheckedUint32 checked_neededByteCount = checked_byteCount + byteOffset;
@@ -1495,33 +1496,12 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
     if (!ValidateBuffers(&maxAllowedCount, "drawElements"))
       return;
 
-    int32_t maxIndex
-      = type == LOCAL_GL_UNSIGNED_SHORT
-        ? mBoundElementArrayBuffer->FindMaxUshortElement()
-        : mBoundElementArrayBuffer->FindMaxUbyteElement();
+    int32_t maxAllowedIndex = NS_MAX(maxAllowedCount - 1, 0);
 
-    CheckedInt32 checked_maxIndexPlusOne = CheckedInt32(maxIndex) + 1;
-
-    if (!checked_maxIndexPlusOne.isValid() ||
-        checked_maxIndexPlusOne.value() > maxAllowedCount)
-    {
-        // the index array contains invalid indices for the current drawing state, but they
-        // might not be used by the present drawElements call, depending on first and count.
-
-        int32_t maxIndexInSubArray
-          = type == LOCAL_GL_UNSIGNED_SHORT
-            ? mBoundElementArrayBuffer->FindMaxElementInSubArray<GLushort>(count, byteOffset)
-            : mBoundElementArrayBuffer->FindMaxElementInSubArray<GLubyte>(count, byteOffset);
-
-        CheckedInt32 checked_maxIndexInSubArrayPlusOne = CheckedInt32(maxIndexInSubArray) + 1;
-
-        if (!checked_maxIndexInSubArrayPlusOne.isValid() ||
-            checked_maxIndexInSubArrayPlusOne.value() > maxAllowedCount)
-        {
-            return ErrorInvalidOperation(
-                "DrawElements: bound vertex attribute buffers do not have sufficient "
-                "size for given indices from the bound element array");
-        }
+    if (!mBoundElementArrayBuffer->Validate(type, maxAllowedIndex, first, count)) {
+        return ErrorInvalidOperation(
+            "DrawElements: bound vertex attribute buffers do not have sufficient "
+            "size for given indices from the bound element array");
     }
 
     MakeContextCurrent();
@@ -1534,7 +1514,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
     }
 
     BindFakeBlackTextures();
-    if (!DoFakeVertexAttrib0(checked_maxIndexPlusOne.value()))
+    if (!DoFakeVertexAttrib0(maxAllowedCount))
         return;
 
     SetupContextLossTimer();

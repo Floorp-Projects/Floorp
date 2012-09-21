@@ -20,6 +20,7 @@ EXPORTS = \
 	CustomQS_Canvas.h \
 	CustomQS_Canvas2D.h \
 	WebGLContext.h \
+	WebGLElementArrayCache.h \
 	$(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
@@ -52,6 +53,7 @@ CPPSRCS += \
 	WebGLTexelConversions.cpp \
 	WebGLExtensionCompressedTextureS3TC.cpp \
 	WebGLExtensionDepthTexture.cpp \
+	WebGLElementArrayCache.cpp \
 	$(NULL)
 
 DEFINES += -DUSE_ANGLE
