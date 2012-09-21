@@ -1821,7 +1821,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
 }
 
 JSObject *
-js_InitIteratorClasses(JSContext *cx, JSObject *obj)
+js_InitIteratorClasses(JSContext *cx, HandleObject obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
     if (!GlobalObject::initIteratorClasses(cx, global))

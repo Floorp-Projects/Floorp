@@ -56,7 +56,7 @@ class StringObject : public JSObject
 
     /* For access to init, as String.prototype is special. */
     friend JSObject *
-    ::js_InitStringClass(JSContext *cx, JSObject *global);
+    ::js_InitStringClass(JSContext *cx, js::HandleObject global);
 
     /*
      * Compute the initial shape to associate with fresh String objects, which

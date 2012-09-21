@@ -3215,9 +3215,8 @@ static JSFunctionSpec static_methods[] = {
 };
 
 JS_FRIEND_API(JSObject *)
-js_InitProxyClass(JSContext *cx, JSObject *obj_)
+js_InitProxyClass(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, obj_);
     RootedObject module(cx, NewObjectWithClassProto(cx, &ProxyClass, NULL, obj));
     if (!module || !JSObject::setSingletonType(cx, module))
         return NULL;

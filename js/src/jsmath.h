@@ -52,7 +52,7 @@ class MathCache
  */
 
 extern JSObject *
-js_InitMathClass(JSContext *cx, JSObject *obj);
+js_InitMathClass(JSContext *cx, js::HandleObject obj);
 
 extern void
 js_InitRandom(JSContext *cx);
