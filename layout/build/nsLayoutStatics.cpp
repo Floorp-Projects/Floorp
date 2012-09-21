@@ -100,14 +100,12 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ipc/ProcessPriorityManager.h"
 #include "nsPermissionManager.h"
-#include "DateCacheCleaner.h"
 
 extern void NS_ShutdownChainItemPool();
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
-using namespace mozilla::time;
 
 nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
 
@@ -259,8 +257,6 @@ nsLayoutStatics::Initialize()
   nsPermissionManager::AppUninstallObserverInit();
 
   nsDOMStorageBaseDB::Init();
-
-  InitializeDateCacheCleaner();
 
   return NS_OK;
 }
