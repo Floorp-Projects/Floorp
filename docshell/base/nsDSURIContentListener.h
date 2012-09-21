@@ -41,6 +41,15 @@ protected:
     bool CheckOneFrameOptionsPolicy(nsIRequest* request,
                                     const nsAString& policy);
 
+    enum XFOHeader {
+      eDENY,
+      eSAMEORIGIN,
+      eALLOWFROM
+    };
+
+    void ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem,
+                            nsIURI* aThisURI,
+                            XFOHeader aHeader);
 protected:
     nsDocShell*                      mDocShell;
 
