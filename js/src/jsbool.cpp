@@ -143,7 +143,7 @@ Boolean(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSObject *
-js_InitBooleanClass(JSContext *cx, JSObject *obj)
+js_InitBooleanClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 

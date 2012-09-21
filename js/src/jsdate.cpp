@@ -3147,7 +3147,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSObject *
-js_InitDateClass(JSContext *cx, JSObject *obj)
+js_InitDateClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 

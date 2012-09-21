@@ -3540,7 +3540,7 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSObject *
-js_InitArrayClass(JSContext *cx, JSObject *obj)
+js_InitArrayClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 

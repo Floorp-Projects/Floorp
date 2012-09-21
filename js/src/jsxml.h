@@ -15,11 +15,11 @@
 
 #if JS_HAS_XML_SUPPORT
 extern JSObject *
-js_InitXMLClass(JSContext *cx, JSObject *obj);
+js_InitXMLClass(JSContext *cx, js::HandleObject obj);
 extern JSObject *
-js_InitNamespaceClass(JSContext *cx, JSObject *obj);
+js_InitNamespaceClass(JSContext *cx, js::HandleObject obj);
 extern JSObject *
-js_InitQNameClass(JSContext *cx, JSObject *obj);
+js_InitQNameClass(JSContext *cx, js::HandleObject obj);
 #else
 #define js_InitXMLClass js_InitNullClass
 #define js_InitNamespaceClass js_InitNullClass
@@ -210,7 +210,7 @@ extern JSObject *
 js_GetXMLObject(JSContext *cx, JSXML *xml);
 
 extern JSObject *
-js_InitXMLClasses(JSContext *cx, JSObject *obj);
+js_InitXMLClasses(JSContext *cx, js::HandleObject obj);
 
 /*
  * If obj is a QName corresponding to function::name, set *funidp to name's id
