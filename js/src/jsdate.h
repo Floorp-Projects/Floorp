@@ -84,7 +84,7 @@ extern JS_FRIEND_API(int)
 js_DateGetMinutes(JSContext *cx, JSObject* obj);
 
 extern JS_FRIEND_API(int)
-js_DateGetSeconds(JSContext *cx, JSObject* obj);
+js_DateGetSeconds(JSObject* obj);
 
 /* Date constructor native. Exposed only so the JIT can know its address. */
 JSBool
