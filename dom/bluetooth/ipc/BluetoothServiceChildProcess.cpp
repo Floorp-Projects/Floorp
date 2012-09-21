@@ -104,8 +104,7 @@ BluetoothServiceChildProcess::GetDefaultAdapterPathInternal(
 
 nsresult
 BluetoothServiceChildProcess::GetDevicePropertiesInternal(
-                                                   const nsAString& aDevicePath,
-                                                   const nsAString& aSignalPath)
+                                                 const BluetoothSignal& aSignal)
 {
   MOZ_NOT_REACHED("Should never be called from child");
   return NS_ERROR_NOT_IMPLEMENTED;
