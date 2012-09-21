@@ -24,7 +24,6 @@ CPPSRCS = \
   Exceptions.cpp \
   File.cpp \
   FileReaderSync.cpp \
-  FileReaderSyncPrivate.cpp \
   ImageData.cpp \
   Location.cpp \
   Navigator.cpp \
@@ -52,6 +51,7 @@ EXPORTS_mozilla/dom/workers/bindings = \
   DOMBindingBase.h \
   EventListenerManager.h \
   EventTarget.h \
+  FileReaderSync.h \
   WorkerFeature.h \
   XMLHttpRequestEventTarget.h \
   XMLHttpRequestUpload.h \
