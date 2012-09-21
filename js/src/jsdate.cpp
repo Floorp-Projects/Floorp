@@ -1265,7 +1265,7 @@ date_now(JSContext *cx, unsigned argc, Value *vp)
  * Set UTC time to a given time and invalidate cached local time.
  */
 static JSBool
-SetUTCTime(JSObject *obj, double t, Value *vp = NULL)
+SetUTCTime(RawObject obj, double t, Value *vp = NULL)
 {
     JS_ASSERT(obj->isDate());
 
@@ -1282,7 +1282,7 @@ SetUTCTime(JSObject *obj, double t, Value *vp = NULL)
 }
 
 static void
-SetDateToNaN(JSObject *obj, Value *vp = NULL)
+SetDateToNaN(RawObject obj, Value *vp = NULL)
 {
     SetUTCTime(obj, js_NaN, vp);
 }
@@ -1293,7 +1293,7 @@ SetDateToNaN(JSObject *obj, Value *vp = NULL)
  * slots will be set to the UTC time without conversion.
  */
 static bool
-CacheLocalTime(DSTOffsetCache *dstOffsetCache, JSObject *obj)
+CacheLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj)
 {
     JS_ASSERT(obj->isDate());
 
@@ -1430,7 +1430,7 @@ CacheLocalTime(DSTOffsetCache *dstOffsetCache, JSObject *obj)
 }
 
 inline bool
-GetCachedLocalTime(DSTOffsetCache *dstOffsetCache, JSObject *obj, double *time)
+GetCachedLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj, double *time)
 {
     if (!obj || !CacheLocalTime(dstOffsetCache, obj))
         return false;
@@ -2339,7 +2339,7 @@ date_setUTCMonth(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static double
-ThisLocalTimeOrZero(Handle<JSObject*> date, DSTOffsetCache *dstOffsetCache)
+ThisLocalTimeOrZero(HandleObject date, DSTOffsetCache *dstOffsetCache)
 {
     double t = date->getDateUTCTime().toNumber();
     if (MOZ_DOUBLE_IS_NaN(t))
@@ -2348,7 +2348,7 @@ ThisLocalTimeOrZero(Handle<JSObject*> date, DSTOffsetCache *dstOffsetCache)
 }
 
 static double
-ThisUTCTimeOrZero(Handle<JSObject*> date)
+ThisUTCTimeOrZero(HandleObject date)
 {
     double t = date->getDateUTCTime().toNumber();
     return MOZ_DOUBLE_IS_NaN(t) ? +0 : t;
@@ -2775,7 +2775,7 @@ date_format(JSContext *cx, double date, formatspec format, CallReceiver call)
 }
 
 static bool
-ToLocaleHelper(JSContext *cx, CallReceiver call, JSObject *obj, const char *format)
+ToLocaleHelper(JSContext *cx, CallReceiver call, HandleObject obj, const char *format)
 {
     double utctime = obj->getDateUTCTime().toNumber();
 
@@ -2821,7 +2821,7 @@ ToLocaleHelper(JSContext *cx, CallReceiver call, JSObject *obj, const char *form
 }
 
 static bool
-ToLocaleStringHelper(JSContext *cx, CallReceiver call, Handle<JSObject*> thisObj)
+ToLocaleStringHelper(JSContext *cx, CallReceiver call, HandleObject thisObj)
 {
     /*
      * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
@@ -3137,7 +3137,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
         d = msec_time;
     }
 
-    JSObject *obj = js_NewDateObjectMsec(cx, d);
+    RawObject obj = js_NewDateObjectMsec(cx, d);
     if (!obj)
         return false;
 
@@ -3196,7 +3196,7 @@ js_InitDateClass(JSContext *cx, HandleObject obj)
 JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, double msec_time)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &DateClass);
+    RawObject obj = NewBuiltinClassInstance(cx, &DateClass);
     if (!obj)
         return NULL;
     if (!SetUTCTime(obj, msec_time))
@@ -3220,13 +3220,13 @@ js_ClearDateCaches()
 }
 
 JS_FRIEND_API(JSBool)
-js_DateIsValid(JSObject* obj)
+js_DateIsValid(RawObject obj)
 {
     return obj->isDate() && !MOZ_DOUBLE_IS_NaN(obj->getDateUTCTime().toNumber());
 }
 
 JS_FRIEND_API(int)
-js_DateGetYear(JSContext *cx, JSObject* obj)
+js_DateGetYear(JSContext *cx, RawObject obj)
 {
     double localtime;
 
@@ -3238,7 +3238,7 @@ js_DateGetYear(JSContext *cx, JSObject* obj)
 }
 
 JS_FRIEND_API(int)
-js_DateGetMonth(JSContext *cx, JSObject* obj)
+js_DateGetMonth(JSContext *cx, RawObject obj)
 {
     double localtime;
 
@@ -3249,7 +3249,7 @@ js_DateGetMonth(JSContext *cx, JSObject* obj)
 }
 
 JS_FRIEND_API(int)
-js_DateGetDate(JSContext *cx, JSObject* obj)
+js_DateGetDate(JSContext *cx, RawObject obj)
 {
     double localtime;
 
@@ -3260,7 +3260,7 @@ js_DateGetDate(JSContext *cx, JSObject* obj)
 }
 
 JS_FRIEND_API(int)
-js_DateGetHours(JSContext *cx, JSObject* obj)
+js_DateGetHours(JSContext *cx, RawObject obj)
 {
     double localtime;
 
@@ -3271,7 +3271,7 @@ js_DateGetHours(JSContext *cx, JSObject* obj)
 }
 
 JS_FRIEND_API(int)
-js_DateGetMinutes(JSContext *cx, JSObject* obj)
+js_DateGetMinutes(JSContext *cx, RawObject obj)
 {
     double localtime;
 
@@ -3282,7 +3282,7 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 }
 
 JS_FRIEND_API(int)
-js_DateGetSeconds(JSObject* obj)
+js_DateGetSeconds(RawObject obj)
 {
     if (!obj->isDate())
         return 0;
