@@ -773,21 +773,45 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, uint32_t aCount)
       break;
 
     case gif_extension:
+      // Comment taken directly from WebKit's GIFImageReader.cpp.
+      //
+      // The GIF spec mandates lengths for three of the extensions below.
+      // However, it's possible for GIFs in the wild to deviate. For example,
+      // some GIFs that embed ICC color profiles using gif_application_extension
+      // violate the spec and treat this extension block like a sort of
+      // "extension + data" block, giving a size greater than 11 and filling the
+      // remaining bytes with data (then following with more data blocks as
+      // needed), instead of placing a true data block just after the 11 byte
+      // extension block.
+      //
+      // Accordingly, if the specified length is larger than the required value,
+      // we use it. If it's smaller, then we enforce the spec value, because the
+      // parsers for these extensions expect to have the specified number of
+      // bytes available, and if we don't ensure that, they could read off the
+      // end of the heap buffer. (In this case, it's likely the GIF is corrupt
+      // and we'll soon fail to decode anyway.)
       mGIFStruct.bytes_to_consume = q[1];
       if (mGIFStruct.bytes_to_consume) {
         switch (*q) {
         case GIF_GRAPHIC_CONTROL_LABEL:
           mGIFStruct.state = gif_control_extension;
+          mGIFStruct.bytes_to_consume = NS_MAX(mGIFStruct.bytes_to_consume, 4u);
           break;
-  
+
         case GIF_APPLICATION_EXTENSION_LABEL:
           mGIFStruct.state = gif_application_extension;
+          mGIFStruct.bytes_to_consume = NS_MAX(mGIFStruct.bytes_to_consume, 11u);
           break;
-  
+
+        case GIF_PLAIN_TEXT_LABEL:
+          mGIFStruct.state = gif_skip_block;
+          mGIFStruct.bytes_to_consume = NS_MAX(mGIFStruct.bytes_to_consume, 12u);
+          break;
+
         case GIF_COMMENT_LABEL:
           mGIFStruct.state = gif_consume_comment;
           break;
-  
+
         default:
           mGIFStruct.state = gif_skip_block;
         }
