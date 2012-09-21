@@ -25,8 +25,9 @@ public:
   NS_DECL_NSIWINDOWSSHELLSERVICE
 
 protected:
-  static nsresult IsDefaultBrowser(bool* aIsDefaultBrowser);
-  static bool IsDefaultBrowserVista(bool* aIsDefaultBrowser);
+  bool IsDefaultBrowserVista(bool aCheckAllTypes, bool* aIsDefaultBrowser);
+  nsresult LaunchControlPanelDefaultPrograms();
+  nsresult LaunchHTTPHandlerPane();
 
 private:
   bool      mCheckedThisSession;
