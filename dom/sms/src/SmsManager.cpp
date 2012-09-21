@@ -69,24 +69,12 @@ SmsManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
   Preferences::GetBool("dom.sms.enabled", &enabled);
   NS_ENSURE_TRUE(enabled, nullptr);
 
-  nsPIDOMWindow* innerWindow = aWindow->IsInnerWindow() ?
-    aWindow :
-    aWindow->GetCurrentInnerWindow();
-
-  // Need the document for security check.
-  nsCOMPtr<nsIDocument> document =
-    do_QueryInterface(innerWindow->GetExtantDocument());
-  NS_ENSURE_TRUE(document, nullptr);
-
-  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
-  NS_ENSURE_TRUE(principal, nullptr);
-
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permMgr, nullptr);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  permMgr->TestPermissionFromPrincipal(principal, "sms", &permission);
+  permMgr->TestPermissionFromWindow(aWindow, "sms", &permission);
 
   if (permission != nsIPermissionManager::ALLOW_ACTION) {
     return nullptr;
