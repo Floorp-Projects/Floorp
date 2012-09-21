@@ -1,0 +1,11 @@
+This code was imported from:
+
+https://svn.resiprocate.org/rep/resiprocate/main/nICEr
+
+SVN revision 9873
+
+Some minor changes have been made to improve portability as well
+as to add trickle ICE. These changes are being submitted for
+upstreaming and can be found in upstream.diff.
+
+
