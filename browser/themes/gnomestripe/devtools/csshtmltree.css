@@ -281,3 +281,7 @@
 .ruleview-propertycontainer:hover > .ruleview-propertyvalue {
   border-bottom-color: hsl(0,0%,50%);
 }
+
+.ruleview-selector-separator, .ruleview-selector-unmatched {
+  color: #888;
+}

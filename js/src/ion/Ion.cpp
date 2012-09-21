@@ -423,6 +423,8 @@ IonScript::IonScript()
     prebarrierEntries_(0),
     safepointsStart_(0),
     safepointsSize_(0),
+    scriptList_(0),
+    scriptEntries_(0),
     refcount_(0),
     slowCallCount(0),
     recompileInfo_()
@@ -433,7 +435,7 @@ IonScript *
 IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
                size_t osiIndices, size_t cacheEntries, size_t prebarrierEntries,
-               size_t safepointsSize)
+               size_t safepointsSize, size_t scriptEntries)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32)))
@@ -454,6 +456,7 @@ IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapsh
     size_t paddedPrebarrierEntriesSize =
         AlignBytes(prebarrierEntries * sizeof(CodeOffsetLabel), DataAlignment);
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
+    size_t paddedScriptSize = AlignBytes(scriptEntries * sizeof(JSScript *), DataAlignment);
     size_t bytes = paddedSnapshotsSize +
                    paddedBailoutSize +
                    paddedConstantsSize +
@@ -461,7 +464,8 @@ IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapsh
                    paddedOsiIndicesSize +
                    paddedCacheEntriesSize +
                    paddedPrebarrierEntriesSize +
-                   paddedSafepointSize;
+                   paddedSafepointSize +
+                   paddedScriptSize;
     uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
         return NULL;
@@ -502,6 +506,10 @@ IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapsh
     script->safepointsStart_ = offsetCursor;
     script->safepointsSize_ = safepointsSize;
     offsetCursor += paddedSafepointSize;
+
+    script->scriptList_ = offsetCursor;
+    script->scriptEntries_ = scriptEntries;
+    offsetCursor += paddedScriptSize;
 
     script->frameSlots_ = frameSlots;
     script->frameSize_ = frameSize;
@@ -549,6 +557,13 @@ IonScript::copyConstants(const HeapValue *vp)
 {
     for (size_t i = 0; i < constantEntries_; i++)
         constants()[i].init(vp[i]);
+}
+
+void
+IonScript::copyScriptEntries(JSScript **scripts)
+{
+    for (size_t i = 0; i < scriptEntries_; i++)
+        scriptList()[i] = scripts[i];
 }
 
 void

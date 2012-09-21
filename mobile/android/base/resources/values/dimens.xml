@@ -22,6 +22,7 @@
     <dimen name="local_tab_row_height">108dp</dimen>
     <dimen name="menu_item_row_height">44dp</dimen>
     <dimen name="menu_item_row_width">240dp</dimen>
+    <dimen name="menu_popup_offset">8dp</dimen>
     <dimen name="prompt_service_group_padding_size">32dp</dimen>
     <dimen name="prompt_service_icon_size">72dp</dimen>
     <dimen name="prompt_service_icon_text_padding">10dp</dimen>

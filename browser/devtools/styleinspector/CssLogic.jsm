@@ -832,6 +832,69 @@ CssLogic.getShortNamePath = function CssLogic_getShortNamePath(aElement)
 };
 
 /**
+ * Get a string list of selectors for a given CSSStyleRule.selectorText
+ *
+ * @param {string} aSelectorText The CSSStyleRule.selectorText to parse.
+ * @return {array} An array of string selectors.
+ */
+CssLogic.getSelectors = function CssLogic_getSelectors(aSelectorText)
+{
+  let selectors = [];
+
+  let selector = aSelectorText.trim();
+  if (!selector) {
+    return selectors;
+  }
+
+  let nesting = 0;
+  let currentSelector = [];
+
+  // Parse a selector group into selectors. Normally we could just .split(',')
+  // however Gecko allows -moz-any(a, b, c) as a selector so we ignore commas
+  // inside brackets.
+  for (let i = 0, selLen = selector.length; i < selLen; i++) {
+    let c = selector.charAt(i);
+    switch (c) {
+      case ",":
+        if (nesting == 0 && currentSelector.length > 0) {
+          let selectorStr = currentSelector.join("").trim();
+          if (selectorStr) {
+            selectors.push(selectorStr);
+          }
+          currentSelector = [];
+        } else {
+          currentSelector.push(c);
+        }
+        break;
+
+      case "(":
+        nesting++;
+        currentSelector.push(c);
+        break;
+
+      case ")":
+        nesting--;
+        currentSelector.push(c);
+        break;
+
+      default:
+        currentSelector.push(c);
+        break;
+    }
+  }
+
+  // Add the last selector.
+  if (nesting == 0 && currentSelector.length > 0) {
+    let selectorStr = currentSelector.join("").trim();
+    if (selectorStr) {
+      selectors.push(selectorStr);
+    }
+  }
+
+  return selectors;
+}
+
+/**
  * Memonized lookup of a l10n string from a string bundle.
  * @param {string} aName The key to lookup.
  * @returns A localized version of the given key.
@@ -1268,56 +1331,8 @@ CssRule.prototype = {
       return this._selectors;
     }
 
-    let selector = this._domRule.selectorText.trim();
-    if (!selector) {
-      return this._selectors;
-    }
-
-    let nesting = 0;
-    let currentSelector = [];
-
-    // Parse a selector group into selectors. Normally we could just .split(',')
-    // however Gecko allows -moz-any(a, b, c) as a selector so we ignore commas
-    // inside brackets.
-    for (let i = 0, selLen = selector.length; i < selLen; i++) {
-      let c = selector.charAt(i);
-      switch (c) {
-        case ",":
-          if (nesting == 0 && currentSelector.length > 0) {
-            let selectorStr = currentSelector.join("").trim();
-            if (selectorStr) {
-              this._selectors.push(new CssSelector(this, selectorStr));
-            }
-            currentSelector = [];
-          } else {
-            currentSelector.push(c);
-          }
-          break;
-
-        case "(":
-          nesting++;
-          currentSelector.push(c);
-          break;
-
-        case ")":
-          nesting--;
-          currentSelector.push(c);
-          break;
-
-        default:
-          currentSelector.push(c);
-          break;
-      }
-    }
-
-    // Add the last selector.
-    if (nesting == 0 && currentSelector.length > 0) {
-      let selectorStr = currentSelector.join("").trim();
-      if (selectorStr) {
-        this._selectors.push(new CssSelector(this, selectorStr));
-      }
-    }
-
+    let selectors = CssLogic.getSelectors(this._domRule.selectorText);
+    this._selectors = [new CssSelector(this, text) for (text of selectors)];
     return this._selectors;
   },
 

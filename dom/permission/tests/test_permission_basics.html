@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={770731}
+-->
+<head>
+  <title>Test for Bug {770731} Permissions</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={770731}">Mozilla Bug {674720}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+"use strict";
+
+SpecialPowers.addPermission("permissions", true, document);
+var comp = SpecialPowers.wrap(Components);
+SpecialPowers.pushPrefEnv({ "set": [["dom.mozPermissionSettings.enabled", true]] }, 
+                          function() {
+                            SpecialPowers.removePermission("permissions", document);
+                          });
+
+comp.utils.import("resource://gre/modules/PermissionSettings.jsm");
+var mozPermissions = window.navigator.mozPermissionSettings;
+
+function permissionTest() {
+  if (gPermissionssEnabled) {
+    mozPermissions.set("a", "unknown", "http://examplemanifestURI.com", "http://origin.com", true);
+    var result = mozPermissions.get("a", "http://examplemanifestURI.com", "http://origin.com", true);
+    is(result, "unknown", "same result");
+    mozPermissions.set("a", "allow", "http://examplemanifestURI.com", "http://origin.com", true);
+    result = mozPermissions.get("a", "http://examplemanifestURI.com", "http://origin.com", true);
+    is(result, "allow", "same result");
+    mozPermissions.set("a", "deny", "http://examplemanifestURI.com", "http://origin.com", true);
+    result = mozPermissions.get("a", "http://examplemanifestURI.com", "http://origin.com", true);
+    is(result, "deny", "same result");
+    mozPermissions.set("a", "prompt", "http://examplemanifestURI.com", "http://origin.com", true);
+    result = mozPermissions.get("a", "http://examplemanifestURI.com", "http://origin.com", true);
+    is(result, "prompt", "same result");
+    SimpleTest.finish();
+  } else {
+    is(mozPermissions, null, "mozPermissionSettings is null when not enabled.");
+    SimpleTest.finish();
+  }
+}
+
+var gPermissionssEnabled = SpecialPowers.getBoolPref("dom.mozPermissionSettings.enabled");
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(permissionTest);
+
+ok(true, "test passed");
+</script>
+</pre>
+</body>
+</html>

@@ -371,7 +371,6 @@ DOMCI_CLASS(FileReader)
 DOMCI_CLASS(ArchiveReader)
 DOMCI_CLASS(ArchiveRequest)
 DOMCI_CLASS(MozURLProperty)
-DOMCI_CLASS(MozBlobBuilder)
 
 DOMCI_CLASS(DOMStringMap)
 
@@ -448,7 +447,6 @@ DOMCI_CLASS(MozTouchEvent)
 DOMCI_CLASS(MathMLElement)
 
 // WebGL
-DOMCI_CLASS(WebGLRenderingContext)
 DOMCI_CLASS(WebGLBuffer)
 DOMCI_CLASS(WebGLTexture)
 DOMCI_CLASS(WebGLProgram)

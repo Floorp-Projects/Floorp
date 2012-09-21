@@ -13,6 +13,7 @@ MODULE          = dom
 XPIDL_MODULE    = dom_system
 LIBRARY_NAME    = domsystem_s
 LIBXUL_LIBRARY  = 1
+FAIL_ON_WARNINGS := 1
 
 ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = unix

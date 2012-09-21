@@ -248,9 +248,11 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   nsWindowType type;
   mWindow->GetWindowType(type);
 
-  if (curBounds.IsEmpty() && mDimBounds.IsEmpty() && type == eWindowType_popup) {
-    // Don't manipulate empty popup widgets. For example there's no point
-    // moving hidden comboboxes around, or doing X server roundtrips
+  if (type == eWindowType_popup &&
+      ((curBounds.IsEmpty() && mDimBounds.IsEmpty()) ||
+       mVis == nsViewVisibility_kHide)) {
+    // Don't manipulate empty or hidden popup widgets. For example there's no
+    // point moving hidden comboboxes around, or doing X server roundtrips
     // to compute their true screen position. This could mean that WidgetToScreen
     // operations on these widgets don't return up-to-date values, but popup
     // positions aren't reliable anyway because of correction to be on or off-screen.

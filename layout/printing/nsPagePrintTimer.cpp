@@ -8,7 +8,7 @@
 #include "nsIServiceManager.h"
 #include "nsPrintEngine.h"
 
-NS_IMPL_ISUPPORTS1(nsPagePrintTimer, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED1(nsPagePrintTimer, nsRunnable, nsITimerCallback)
 
 nsPagePrintTimer::~nsPagePrintTimer()
 {

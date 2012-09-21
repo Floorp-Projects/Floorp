@@ -269,8 +269,8 @@ createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent)
     // wrapped native alive. Furthermore, the reachability of that object and
     // the associated holder are exactly the same, so we can use that for our
     // strong reference.
-    JS_ASSERT(IS_WN_WRAPPER(wrappedNative) ||
-              js::GetObjectClass(wrappedNative)->ext.innerObject);
+    MOZ_ASSERT(IS_WN_WRAPPER(wrappedNative) ||
+               js::GetObjectClass(wrappedNative)->ext.innerObject);
     js::SetReservedSlot(holder, JSSLOT_WN, PrivateValue(wn));
     js::SetReservedSlot(holder, JSSLOT_RESOLVING, PrivateValue(NULL));
     return holder;

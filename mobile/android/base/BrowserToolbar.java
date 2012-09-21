@@ -304,6 +304,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 if (mHasSoftMenuButton) {
                     mMenuPopup = new MenuPopup(mActivity);
                     mMenuPopup.setPanelView(panel);
+
+                    mMenuPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                        public void onDismiss() {
+                            mActivity.onOptionsMenuClosed(null);
+                        }
+                    });
                 }
             }
         }
@@ -696,12 +702,16 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
-    public class MenuPopup extends PopupWindow {
+    public static class MenuPopup extends PopupWindow {
         private RelativeLayout mPanel;
+        private int mYOffset;
 
         public MenuPopup(Context context) {
             super(context);
             setFocusable(true);
+
+            // The arrow height is constant for both orientations.
+            mYOffset = (int) (context.getResources().getDimension(R.dimen.menu_popup_offset));
 
             // Setting a null background makes the popup to not close on touching outside.
             setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -718,6 +728,11 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         public void setPanelView(View view) {
             mPanel.removeAllViews();
             mPanel.addView(view);
+        }
+
+        @Override
+        public void showAsDropDown(View anchor) {
+            showAsDropDown(anchor, 0, -mYOffset);
         }
     }
 

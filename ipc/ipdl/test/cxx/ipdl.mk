@@ -1,4 +1,7 @@
 IPDLSRCS =					\
+  PTestActorPunning.ipdl			\
+  PTestActorPunningPunned.ipdl			\
+  PTestActorPunningSub.ipdl			\
   PTestBlockChild.ipdl				\
   PTestBridgeMain.ipdl				\
   PTestBridgeSub.ipdl				\

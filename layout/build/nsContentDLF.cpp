@@ -31,7 +31,6 @@
 #include "nsCharsetSource.h"
 #include "nsMimeTypes.h"
 
-#include "mozilla/FunctionTimer.h"
 
 // plugins
 #include "nsIPluginHost.h"
@@ -145,16 +144,6 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer)
 {
-#ifdef NS_FUNCTION_TIMER
-  nsAutoCString channelURL__("N/A");
-  nsCOMPtr<nsIURI> url__;
-  if (aChannel && NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(url__)))) {
-    url__->GetSpec(channelURL__);
-  }
-  NS_TIME_FUNCTION_FMT("%s (line %d) (url: %s)", MOZ_FUNCTION_NAME,
-                       __LINE__, channelURL__.get());
-#endif
-
   // Declare "type" here.  This is because although the variable itself only
   // needs limited scope, we need to use the raw string memory -- as returned
   // by "type.get()" farther down in the function.
@@ -297,8 +286,6 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
                                         const char *aCommand,
                                         nsIContentViewer** aContentViewer)
 {
-  NS_TIME_FUNCTION;
-
   nsCOMPtr<nsIContentViewer> contentViewer;
   nsresult rv = NS_NewContentViewer(getter_AddRefs(contentViewer));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -314,8 +301,6 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
                                   nsIPrincipal* aPrincipal,
                                   nsIDocument **aDocument)
 {
-  NS_TIME_FUNCTION;
-
   *aDocument = nullptr;
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -396,8 +381,6 @@ nsContentDLF::CreateDocument(const char* aCommand,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aContentViewer)
 {
-  NS_TIME_FUNCTION;
-
   nsresult rv = NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIURI> aURL;
@@ -446,8 +429,6 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
                                 nsIStreamListener** aDocListener,
                                 nsIContentViewer** aContentViewer)
 {
-  NS_TIME_FUNCTION;
-
   nsresult rv;
   nsCOMPtr<nsIDocument> doc = do_CreateInstance(kXULDocumentCID, &rv);
   if (NS_FAILED(rv)) return rv;

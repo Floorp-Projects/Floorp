@@ -402,7 +402,6 @@ protected:
     jmethodID jNotifyIME;
     jmethodID jNotifyIMEEnabled;
     jmethodID jNotifyIMEChange;
-    jmethodID jNotifyScreenShot;
     jmethodID jAcknowledgeEventSync;
     jmethodID jEnableLocation;
     jmethodID jEnableLocationHighAccuracy;
@@ -463,8 +462,6 @@ protected:
     jmethodID jHideSurface;
     jmethodID jDestroySurface;
 
-    jmethodID jNotifyPaintedRect;
-
     jmethodID jNumberOfMessages;
     jmethodID jSendMessage;
     jmethodID jSaveSentMessage;
@@ -487,6 +484,10 @@ protected:
     jmethodID jNotifyWakeLockChanged;
     jmethodID jRegisterSurfaceTextureFrameListener;
     jmethodID jUnregisterSurfaceTextureFrameListener;
+
+    jclass jScreenshotHandlerClass;
+    jmethodID jNotifyScreenShot;
+    jmethodID jNotifyPaintedRect;
 
     // for GfxInfo (gfx feature detection and blacklisting)
     jmethodID jGetGfxInfoData;

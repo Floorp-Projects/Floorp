@@ -16,6 +16,7 @@ LIBRARY_NAME    = domsystemwindows_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
+FAIL_ON_WARNINGS := 1
 
 # We fire the nsDOMDeviceAcceleration
 LOCAL_INCLUDES += -I$(topsrcdir)/content/events/src

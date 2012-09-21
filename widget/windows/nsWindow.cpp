@@ -158,7 +158,6 @@
 
 #include "nsWindowDefs.h"
 
-#include "mozilla/FunctionTimer.h"
 #include "nsCrashOnException.h"
 #include "nsIXULRuntime.h"
 
@@ -1063,18 +1062,6 @@ NS_METHOD nsWindow::Show(bool bState)
       }
     }
   }
-
-#ifdef NS_FUNCTION_TIMER
-  static bool firstShow = true;
-  if (firstShow &&
-      (mWindowType == eWindowType_toplevel ||
-       mWindowType == eWindowType_dialog ||
-       mWindowType == eWindowType_popup))
-  {
-    firstShow = false;
-    mozilla::FunctionTimer::LogMessage("@ First toplevel/dialog/popup showing");
-  }
-#endif
 
   bool syncInvalidate = false;
 
@@ -4280,10 +4267,6 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
 LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  NS_TIME_FUNCTION_MIN_FMT(5.0, "%s (line %d) (hWnd: %p, msg: %p, wParam: %p, lParam: %p",
-                           MOZ_FUNCTION_NAME, __LINE__, hWnd, msg,
-                           wParam, lParam);
-
   if (::GetWindowLongPtrW(hWnd, GWLP_ID) == eFakeTrackPointScrollableID) {
     // This message was sent to the FAKETRACKPOINTSCROLLABLE.
     if (msg == WM_HSCROLL) {

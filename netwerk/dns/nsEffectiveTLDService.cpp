@@ -14,7 +14,6 @@
 #include "nsNetUtil.h"
 #include "prnetdb.h"
 
-#include "mozilla/FunctionTimer.h"
 
 using namespace mozilla;
 
@@ -61,8 +60,6 @@ nsDomainEntry::FuncForStaticAsserts(void)
 nsresult
 nsEffectiveTLDService::Init()
 {
-  NS_TIME_FUNCTION;
-
   const ETLDEntry *entries = nsDomainEntry::entries;
 
   // We'll probably have to rehash at least once, since nsTHashtable doesn't

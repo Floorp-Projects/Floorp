@@ -26,6 +26,7 @@ typedef pthread_t PlatformThreadHandle;
 #include <unistd.h>
 typedef pid_t PlatformThreadId;
 #elif defined(OS_BSD)
+#include <sys/types.h>
 typedef lwpid_t PlatformThreadId;
 #elif defined(OS_MACOSX)
 #include <mach/mach.h>

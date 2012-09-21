@@ -235,6 +235,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY scratchpad.keytext           "F4">
 
 <!ENTITY inspectCloseButton.tooltiptext "Close Inspector">
+<!ENTITY inspectSidebarCloseButton.tooltiptext "Close sidebar">
 
 <!ENTITY devToolbarCloseButton.tooltiptext "Close Developer Toolbar">
 <!ENTITY devToolbarMenu.label              "Developer Toolbar">

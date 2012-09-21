@@ -216,8 +216,6 @@ Submitter.prototype = {
         formData.append("upload_file_minidump_"+i.name,
                         File(i.dump.path));
       }
-
-      formData.append("additional_minidumps", names.join(","));
     }
 
     let self = this;
@@ -275,8 +273,8 @@ Submitter.prototype = {
     let additionalDumps = [];
     if ("additional_minidumps" in reportData) {
       let names = reportData.additional_minidumps.split(',');
-      for (let name in names) {
-        let [dump, extra] = getPendingMiniDump(this.id + "-" + name);
+      for (let name of names) {
+        let [dump, extra] = getPendingMinidump(this.id + "-" + name);
         if (!dump.exists()) {
           this.notifyStatus(FAILED);
           this.cleanup();

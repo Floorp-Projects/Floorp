@@ -76,6 +76,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro CleanUpdatesDir
 !insertmacro CopyFilesFromDir
 !insertmacro CreateRegKey
+!insertmacro GetLongPath
 !insertmacro GetPathFromString
 !insertmacro GetParent
 !insertmacro InitHashAppModelId
@@ -90,6 +91,9 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
+!ifdef MOZ_METRO
+!insertmacro RemoveDEHRegistrationIfMatching
+!endif
 !insertmacro SetAppLSPCategories
 !insertmacro SetBrandNameVars
 !insertmacro UpdateShortcutAppModelIDs
@@ -324,16 +328,43 @@ Section "-Application" APP_IDX
   ${GetLongPath} "$INSTDIR\${FileMainEXE}" $8
   StrCpy $2 "$\"$8$\" -osint -url $\"%1$\""
 
+  ; In Win8, the delegate execute handler picks up the value in FirefoxURL and
+  ; FirefoxHTML to launch the desktop browser when it needs to.
   ${AddDisabledDDEHandlerValues} "FirefoxHTML" "$2" "$8,1" \
                                  "${AppRegName} Document" ""
   ${AddDisabledDDEHandlerValues} "FirefoxURL" "$2" "$8,1" "${AppRegName} URL" \
                                  "true"
+  ${If} ${AtLeastWin8}
+!ifdef MOZ_METRO
+    ${CleanupMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID}
+    ${AddMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
+                                    "$INSTDIR\CommandExecuteHandler.exe" \
+                                    $AppUserModelID \
+                                    "FirefoxURL" \
+                                    "FirefoxHTML"
+!endif
+    ; Set the Start Menu Internet and Vista Registered App HKCU registry keys.
+    ${SetStartMenuInternet} "HKCU"
+    ${FixShellIconHandler} "HKCU"
 
-  ; The following keys should only be set if we can write to HKLM
+    ; If we create either the desktop or start menu shortcuts, then
+    ; set IconsVisible to 1 otherwise to 0.
+    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+    StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
+    ${If} $AddDesktopSC == 1
+    ${OrIf} $AddStartMenuSC == 1
+      WriteRegDWORD HKCU "$0" "IconsVisible" 1
+    ${Else}
+      WriteRegDWORD HKCU "$0" "IconsVisible" 0
+    ${EndIf}
+  ${EndIf}
+
+  ; The following keys should only be set if we can write to HKLM for pre win8
+  ; For post win8 we set the keys above in HKCU in addition to below in HKLM.
   ${If} $TmpVal == "HKLM"
     ; Set the Start Menu Internet and Vista Registered App HKLM registry keys.
-    ${SetStartMenuInternet}
-    ${FixShellIconHandler}
+    ${SetStartMenuInternet} "HKLM"
+    ${FixShellIconHandler} "HKLM"
 
     ; If we are writing to HKLM and create either the desktop or start menu
     ; shortcuts set IconsVisible to 1 otherwise to 0.
@@ -444,7 +475,7 @@ Section "-Application" APP_IDX
                                            "$INSTDIR"
       ${If} ${AtLeastWin7}
       ${AndIf} "$AppUserModelID" != ""
-        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID"
+        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID" "true"
       ${EndIf}
       ${LogMsg} "Added Shortcut: $SMPROGRAMS\${BrandFullName}.lnk"
     ${Else}
@@ -459,7 +490,7 @@ Section "-Application" APP_IDX
                                              "$INSTDIR"
       ${If} ${AtLeastWin7}
       ${AndIf} "$AppUserModelID" != ""
-        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "$AppUserModelID"
+        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "$AppUserModelID"  "true"
       ${EndIf}
       ${LogMsg} "Added Shortcut: $DESKTOP\${BrandFullName}.lnk"
     ${Else}

@@ -927,7 +927,7 @@ MakeJITScript(JSContext *cx, JSScript *script)
         masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::CrossChunkShim),
                             pc, NULL, script->nfixed + analysis->getCode(pc).stackDepth);
     }
-    LinkerHelper linker(masm, JSC::METHOD_CODE);
+    LinkerHelper linker(masm, JSC::JAEGER_CODE);
     JSC::ExecutablePool *ep = linker.init(cx);
     if (!ep)
         return NULL;
@@ -1398,7 +1398,7 @@ mjit::Compiler::finishThisUp()
 
     JSC::ExecutableAllocator &execAlloc = cx->runtime->execAlloc();
     JSC::ExecutablePool *execPool;
-    uint8_t *result = (uint8_t *)execAlloc.alloc(codeSize, &execPool, JSC::METHOD_CODE);
+    uint8_t *result = (uint8_t *)execAlloc.alloc(codeSize, &execPool, JSC::JAEGER_CODE);
     if (!result) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
@@ -1408,8 +1408,8 @@ mjit::Compiler::finishThisUp()
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
 
-    JSC::LinkBuffer fullCode(result, codeSize, JSC::METHOD_CODE);
-    JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size(), JSC::METHOD_CODE);
+    JSC::LinkBuffer fullCode(result, codeSize, JSC::JAEGER_CODE);
+    JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size(), JSC::JAEGER_CODE);
 
     JS_ASSERT(!loop);
 

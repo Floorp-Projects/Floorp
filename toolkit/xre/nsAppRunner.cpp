@@ -91,7 +91,6 @@
 #include "nsIDocShell.h"
 #include "nsAppShellCID.h"
 
-#include "mozilla/FunctionTimer.h"
 #include "mozilla/unused.h"
 
 using namespace mozilla;
@@ -184,7 +183,6 @@ using mozilla::unused;
 
 #include "base/command_line.h"
 
-#include "mozilla/FunctionTimer.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -1232,7 +1230,6 @@ nsSingletonFactory::LockFactory(bool)
 nsresult
 ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
 {
-  NS_TIME_FUNCTION;
   nsresult rv;
 
   NS_IF_ADDREF(gNativeAppSupport = native);
@@ -1240,23 +1237,16 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
   // Inform the chrome registry about OS accessibility
   nsCOMPtr<nsIToolkitChromeRegistry> cr =
     mozilla::services::GetToolkitChromeRegistryService();
-  NS_TIME_FUNCTION_MARK("Got ToolkitChromeRegistry service");
 
   if (cr)
     cr->CheckForOSAccessibility();
 
-  NS_TIME_FUNCTION_MARK("OS Accessibility check");
-
   nsCOMPtr<nsIWindowCreator> creator (do_GetService(NS_APPSTARTUP_CONTRACTID));
   if (!creator) return NS_ERROR_UNEXPECTED;
-
-  NS_TIME_FUNCTION_MARK("Got AppStartup service");
 
   nsCOMPtr<nsIWindowWatcher> wwatch
     (do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  NS_TIME_FUNCTION_MARK("Got WindowWatcher service");
 
   return wwatch->SetWindowCreator(creator);
 }
@@ -2798,8 +2788,6 @@ public:
 int
 XREMain::XRE_mainInit(const nsXREAppData* aAppData, bool* aExitFlag)
 {
-  NS_TIME_FUNCTION;
-
   if (!aExitFlag)
     return 1;
   *aExitFlag = false;
@@ -3193,7 +3181,6 @@ XREMain::XRE_mainInit(const nsXREAppData* aAppData, bool* aExitFlag)
 int
 XREMain::XRE_mainStartup(bool* aExitFlag)
 {
-  NS_TIME_FUNCTION;
   nsresult rv;
 
   if (!aExitFlag)
@@ -3570,7 +3557,6 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 nsresult
 XREMain::XRE_mainRun()
 {
-  NS_TIME_FUNCTION;
   nsresult rv = NS_OK;
   NS_ASSERTION(mScopedXPCom, "Scoped xpcom not initialized.");
 
@@ -3581,30 +3567,21 @@ XREMain::XRE_mainRun()
     nsCOMPtr<nsISupports> comp;
 
     comp = do_GetService("@mozilla.org/preferences-service;1");
-    NS_TIME_FUNCTION_MARK("Pref Service");
 
     comp = do_GetService("@mozilla.org/network/socket-transport-service;1");
-    NS_TIME_FUNCTION_MARK("Socket Transport Service");
 
     comp = do_GetService("@mozilla.org/network/dns-service;1");
-    NS_TIME_FUNCTION_MARK("DNS Service");
 
     comp = do_GetService("@mozilla.org/network/io-service;1");
-    NS_TIME_FUNCTION_MARK("IO Service");
 
     comp = do_GetService("@mozilla.org/chrome/chrome-registry;1");
-    NS_TIME_FUNCTION_MARK("Chrome Registry Service");
 
     comp = do_GetService("@mozilla.org/focus-event-suppressor-service;1");
-    NS_TIME_FUNCTION_MARK("Focus Event Suppressor Service");
   }
 #endif
 
   rv = mScopedXPCom->SetWindowCreator(mNativeApp);
-  NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: SetWindowCreator");
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-  NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: Done");
 
 #ifdef MOZ_CRASHREPORTER
   // tell the crash reporter to also send the release channel
@@ -3624,8 +3601,6 @@ XREMain::XRE_mainRun()
   }
 #endif
 
-  NS_TIME_FUNCTION_MARK("Next: AppStartup");
-
   if (mStartOffline) {
     nsCOMPtr<nsIIOService2> io (do_GetService("@mozilla.org/network/io-service;1"));
     NS_ENSURE_TRUE(io, NS_ERROR_FAILURE);
@@ -3641,13 +3616,9 @@ XREMain::XRE_mainRun()
     startupNotifier->Observe(nullptr, APPSTARTUP_TOPIC, nullptr);
   }
 
-  NS_TIME_FUNCTION_MARK("Finished startupNotifier");
-
   nsCOMPtr<nsIAppStartup> appStartup
     (do_GetService(NS_APPSTARTUP_CONTRACTID));
   NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
-
-  NS_TIME_FUNCTION_MARK("Created AppStartup");
 
   if (gDoMigration) {
     nsCOMPtr<nsIFile> file;
@@ -3702,11 +3673,7 @@ XREMain::XRE_mainRun()
     }
   }
 
-  NS_TIME_FUNCTION_MARK("Profile migration");
-
   mDirProvider.DoStartup();
-
-  NS_TIME_FUNCTION_MARK("dirProvider.DoStartup() (profile-after-change)");
 
   appStartup->GetShuttingDown(&mShuttingDown);
 
@@ -3731,10 +3698,6 @@ XREMain::XRE_mainRun()
     if (obsService) {
       obsService->NotifyObservers(cmdLine, "command-line-startup", nullptr);
     }
-
-    NS_TIME_FUNCTION_MARK("Early command line init");
-
-    NS_TIME_FUNCTION_MARK("Next: prepare for Run");
   }
 
   SaveStateForAppInitiatedRestart();
@@ -3749,11 +3712,7 @@ XREMain::XRE_mainRun()
   SaveToEnv("XUL_APP_FILE=");
   SaveToEnv("XRE_BINARY_PATH=");
 
-  NS_TIME_FUNCTION_MARK("env munging");
-
   if (!mShuttingDown) {
-    NS_TIME_FUNCTION_MARK("Next: CreateHiddenWindow");
-
     rv = appStartup->CreateHiddenWindow();
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
@@ -3789,8 +3748,6 @@ XREMain::XRE_mainRun()
     if (obsService)
       obsService->NotifyObservers(nullptr, "final-ui-startup", nullptr);
 
-    NS_TIME_FUNCTION_MARK("final-ui-startup done");
-
     appStartup->GetShuttingDown(&mShuttingDown);
   }
 
@@ -3821,10 +3778,6 @@ XREMain::XRE_mainRun()
   }
 #endif /* MOZ_INSTRUMENT_EVENT_LOOP */
 
-  NS_TIME_FUNCTION_MARK("Next: Run");
-
-  NS_TIME_FUNCTION_MARK("appStartup->Run");
-
   {
     rv = appStartup->Run();
     if (NS_FAILED(rv)) {
@@ -3832,10 +3785,6 @@ XREMain::XRE_mainRun()
       gLogConsoleErrors = true;
     }
   }
-
-  NS_TIME_FUNCTION_MARK("Next: Finish");
-
-  NS_TIME_FUNCTION_MARK("appStartup->Run done");
 
   return rv;
 }
@@ -3846,13 +3795,10 @@ XREMain::XRE_mainRun()
 int
 XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
-  NS_TIME_FUNCTION;
   SAMPLER_INIT();
   SAMPLE_LABEL("Startup", "XRE_Main");
 
   nsresult rv = NS_OK;
-
-  NS_TIME_FUNCTION_MARK("XRE_main init");
 
   gArgc = argc;
   gArgv = argv;
@@ -3883,7 +3829,6 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   if (result != 0 || exit)
     return result;
 
-  NS_TIME_FUNCTION_MARK("XRE_main startup");
   // startup
   result = XRE_mainStartup(&exit);
   if (result != 0 || exit)
@@ -3892,20 +3837,16 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   bool appInitiatedRestart = false;
 
   // Start the real application
-  NS_TIME_FUNCTION_MARK("XRE_main ScopedXPCOMStartup");
   mScopedXPCom = new ScopedXPCOMStartup();
   if (!mScopedXPCom)
     return 1;
 
-  NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: Initialize");
   rv = mScopedXPCom->Initialize();
   NS_ENSURE_SUCCESS(rv, 1);
 
   // run!
-  NS_TIME_FUNCTION_MARK("XRE_main run");
   rv = XRE_mainRun();
 
-  NS_TIME_FUNCTION_MARK("XRE_main shutdown");
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
   mozilla::ShutdownEventTracing();
 #endif

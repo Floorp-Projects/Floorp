@@ -15,7 +15,6 @@
 #include "nsIContent.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
-#include "mozilla/FunctionTimer.h"
 #include "nsIDocumentViewerPrint.h"
 #include "nsIDOMBeforeUnloadEvent.h"
 #include "nsIDocument.h"
@@ -434,7 +433,7 @@ protected:
   nsCOMPtr<nsIPrintSettings>       mCachedPrintSettings;
   nsCOMPtr<nsIWebProgressListener> mCachedPrintWebProgressListner;
 
-  nsCOMPtr<nsPrintEngine>          mPrintEngine;
+  nsRefPtr<nsPrintEngine>          mPrintEngine;
   float                            mOriginalPrintPreviewScale;
   float                            mPrintPreviewZoom;
   nsAutoPtr<nsPrintEventDispatcher> mBeforeAndAfterPrint;
@@ -960,7 +959,6 @@ void DocumentViewerImpl::SetNavigationTiming(nsDOMNavigationTiming* timing)
 NS_IMETHODIMP
 DocumentViewerImpl::LoadComplete(nsresult aStatus)
 {
-  NS_TIME_FUNCTION;
   /* We need to protect ourself against auto-destruction in case the
      window is closed while processing the OnLoad event.  See bug
      http://bugzilla.mozilla.org/show_bug.cgi?id=78445 for more
@@ -1901,8 +1899,10 @@ DocumentViewerImpl::SetBounds(const nsIntRect& aBounds)
   // relating to things being hidden while something is loaded.  It so
   // happens that Firefox does this a good bit with its infobar, and it
   // looks ugly if we don't do this.
-  if (mPreviousViewer)
-    mPreviousViewer->SetBounds(aBounds);
+  if (mPreviousViewer) {
+    nsCOMPtr<nsIContentViewer> previousViewer = mPreviousViewer;
+    previousViewer->SetBounds(aBounds);
+  }
 
   return NS_OK;
 }
@@ -2144,12 +2144,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   // The document will fill in the document sheets when we create the presshell
   
   // Handle the user sheets.
-#ifdef DEBUG
-  nsCOMPtr<nsISupports> debugDocContainer = aDocument->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> debugDocShell(do_QueryReferent(mContainer));
-  NS_ASSERTION(SameCOMIdentity(debugDocContainer, debugDocShell),
-               "Unexpected containers");
-#endif
   nsCSSStyleSheet* sheet = nullptr;
   if (nsContentUtils::IsInChromeDocshell(aDocument)) {
     sheet = nsLayoutStylesheetCache::UserChromeSheet();

@@ -61,7 +61,8 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GLIB_VERSION=1.2.0
 PERL_VERSION=5.006
-PYTHON_VERSION=2.5
+PYTHON_VERSION_MAJOR=2
+PYTHON_VERSION_MINOR=5
 CAIRO_VERSION=1.10
 PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
@@ -1836,13 +1837,20 @@ case "$host" in
 esac
 
 dnl We require version 2.5 or newer of Python to build.
-AC_MSG_CHECKING([for Python version >= $PYTHON_VERSION but not 3.x])
-changequote(,)
-$PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1] or sys.version[:2] != '2.')" $PYTHON_VERSION
-_python_res=$?
+AC_MSG_CHECKING([for Python version >= $PYTHON_VERSION_MAJOR.$PYTHON_VERSION_MINOR but not 3.x])
+
+changequote(:)
+read python_version_major python_version_minor python_version_micro <<EOF
+`$PYTHON -c 'import sys; print sys.version_info[0], sys.version_info[1], sys.version_info[2]'`
+EOF
 changequote([,])
-if test "$_python_res" != 0; then
-    AC_MSG_ERROR([Python $PYTHON_VERSION or higher (but not Python 3.x) is required.])
+
+if test $python_version_major -ne $PYTHON_VERSION_MAJOR; then
+    AC_MSG_ERROR([Cannot build on Python $python_version_major.])
+else
+    if test $python_version_minor -lt $PYTHON_VERSION_MINOR; then
+        AC_MSG_ERROR([Cannot build on Python $python_version_major.$python_version_minor. You need at least $PYTHON_VERSION_MAJOR.$PYTHON_VERSION_MINOR.])
+    fi
 fi
 AC_MSG_RESULT([yes])
 
@@ -7258,19 +7266,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Profiling and Instrumenting)
 
 dnl ========================================================
-dnl = Enable NS_FUNCTION_TIMER, which provides Function
-dnl = timing for identifying code bottlenecks
-dnl = NS_FUNCTION_TIMER is off by default.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(functiontimer,
-[  --enable-functiontimer  Enable NS_FUNCTION_TIMER ],
-    NS_FUNCTION_TIMER=1,
-    NS_FUNCTION_TIMER= )
-if test -n "$NS_FUNCTION_TIMER"; then
-    AC_DEFINE(NS_FUNCTION_TIMER)
-fi
-
-dnl ========================================================
 dnl = Enable runtime visual profiling logger
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(visual-event-tracer,
@@ -8703,9 +8698,29 @@ esac
 
 AC_SUBST(PYTHON)
 
-# Populate the virtualenv
+dnl Populate the virtualenv
+
+dnl We always use the version Python was compiled with to ensure that compiled
+dnl extensions work properly. This works around a bug in Python. See also
+dnl http://bugs.python.org/issue9516 and bug 659881.
+dnl
+dnl Please note that this assumes nothing built during virtualenv population is
+dnl shipped as part of a release package. If it does ship, binaries built here
+dnl may not be compatible with the minimum supported OS X version.
+osx_deployment_target_system=
+
+if test $python_version_major -ne 2; then
+    AC_MSG_ERROR([Assertion failed: building with Python 2.])
+fi
+
+dnl sysconfig is only present on Python 2.7 and above.
+if test $python_version_minor -ge 7; then
+    osx_deployment_target_system=`$PYTHON -c 'import sysconfig; print sysconfig.get_config_var("MACOSX_DEPLOYMENT_TARGET")'`
+fi
+
 AC_MSG_RESULT([Populating Python virtualenv])
-MACOSX_DEPLOYMENT_TARGET= LDFLAGS="${HOST_LDFLAGS}" \
+MACOSX_DEPLOYMENT_TARGET=$osx_deployment_target_system \
+  LDFLAGS="${HOST_LDFLAGS}" \
   CC="${HOST_CC}" CXX="${HOST_CXX}" \
   CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" \
   $PYTHON $_topsrcdir/build/virtualenv/populate_virtualenv.py \

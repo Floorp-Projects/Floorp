@@ -781,8 +781,8 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   rv = patternFile->Append(NS_LITERAL_STRING("*"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCString pattern;
-  rv = patternFile->GetNativePath(pattern);
+  nsString pattern;
+  rv = patternFile->GetPath(pattern);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now tell SQLite to start tracking this pattern for content.
@@ -791,7 +791,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   NS_ENSURE_TRUE(ss, NS_ERROR_FAILURE);
 
   if (aPrivilege != Chrome) {
-    rv = ss->SetQuotaForFilenamePattern(pattern,
+    rv = ss->SetQuotaForFilenamePattern(NS_ConvertUTF16toUTF8(pattern),
                                         GetIndexedDBQuotaMB() * 1024 * 1024,
                                         mQuotaCallbackSingleton, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);

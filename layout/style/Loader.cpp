@@ -65,7 +65,6 @@
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 
-#include "mozilla/FunctionTimer.h"
 
 /**
  * OVERALL ARCHITECTURE
@@ -1387,13 +1386,6 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
                   "Shouldn't use system principal for async loads");
   NS_ASSERTION(mLoadingDatas.IsInitialized(), "mLoadingDatas should be initialized by now.");
 
-#ifdef NS_FUNCTION_TIMER
-  nsAutoCString spec__("N/A");
-  if (aLoadData->mURI) aLoadData->mURI->GetSpec(spec__);
-  NS_TIME_FUNCTION_FMT("Loading stylesheet (url: %s, %ssync)",
-                       spec__.get(), aLoadData->mSyncLoad ? "" : "a");
-#endif
-
   LOG_URI("  Load from: '%s'", aLoadData->mURI);
 
   nsresult rv = NS_OK;
@@ -1622,12 +1614,6 @@ Loader::ParseSheet(const nsAString& aInput,
   LOG(("css::Loader::ParseSheet"));
   NS_PRECONDITION(aLoadData, "Must have load data");
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
-
-#ifdef NS_FUNCTION_TIMER
-  nsAutoCString spec__("N/A");
-  if (aLoadData->mURI) aLoadData->mURI->GetSpec(spec__);
-  NS_TIME_FUNCTION_FMT("Parsing stylesheet (url: %s)", spec__.get());
-#endif
 
   aCompleted = false;
 

@@ -82,8 +82,8 @@ Sandbox.prototype = {
 
     // Insert iframe in to create docshell.
     let frame = doc.createElementNS(XHTML_NS, "iframe");
-    frame.setAttribute("mozbrowser", true);
     frame.setAttribute("mozframetype", "content");
+    frame.sandbox = "allow-forms allow-scripts allow-same-origin";
     frame.style.visibility = "collapse";
     doc.documentElement.appendChild(frame);
 
@@ -91,9 +91,6 @@ Sandbox.prototype = {
                                       .getInterface(Ci.nsIWebNavigation)
                                       .QueryInterface(Ci.nsIInterfaceRequestor)
                                       .getInterface(Ci.nsIDocShell);
-
-    // Mark this docShell as a "browserFrame", to break script access to e.g. window.top
-    docShell.setIsBrowserElement();
 
     // Stop about:blank from being loaded.
     docShell.stop(Ci.nsIWebNavigation.STOP_NETWORK);

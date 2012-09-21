@@ -1647,8 +1647,9 @@ InspectorStyleSidebar.prototype = {
     btn.setAttribute("image", aRegObj.icon || "");
     btn.setAttribute("type", "radio");
     btn.setAttribute("group", "sidebar-tools");
-    this._toolbar.appendChild(btn);
 
+    let spacer = this._toolbar.querySelector("spacer");
+    this._toolbar.insertBefore(btn, spacer);
     // create tool iframe
     let frame = this._chromeDoc.createElement("iframe");
     frame.setAttribute("flex", "1");

@@ -168,16 +168,11 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
+  -I$(srcdir)/../profile \
   -I$(topsrcdir)/dom/ipc \
   -I$(topsrcdir)/toolkit/crashreporter \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/xpcom/build \
-  -I$(topsrcdir)/xpcom/io \
-  $(NULL)
-
-LOCAL_INCLUDES += \
-  -I$(srcdir) \
-  -I$(srcdir)/../profile \
   -I$(topsrcdir)/config \
   $(NULL)
 

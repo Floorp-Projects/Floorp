@@ -37,13 +37,11 @@ struct OrientationMapping {
 static OrientationMapping sOrientationMappings[] = {
   {nsIScreen::ROTATION_0_DEG,   eScreenOrientation_PortraitPrimary},
   {nsIScreen::ROTATION_180_DEG, eScreenOrientation_PortraitSecondary},
-  {nsIScreen::ROTATION_0_DEG,   eScreenOrientation_Portrait},
   {nsIScreen::ROTATION_90_DEG,  eScreenOrientation_LandscapePrimary},
   {nsIScreen::ROTATION_270_DEG, eScreenOrientation_LandscapeSecondary},
-  {nsIScreen::ROTATION_90_DEG,  eScreenOrientation_Landscape}
 };
 
-const static int sDefaultLandscape = 3;
+const static int sDefaultLandscape = 2;
 const static int sDefaultPortrait = 0;
 
 static uint32_t sOrientationOffset = 0;
@@ -109,7 +107,7 @@ static nsresult
 ConvertToScreenRotation(ScreenOrientation aOrientation, uint32_t *aResult)
 {
   for (int i = 0; i < ArrayLength(sOrientationMappings); i++) {
-    if (aOrientation == sOrientationMappings[i].mDomOrientation) {
+    if (aOrientation & sOrientationMappings[i].mDomOrientation) {
       // Shift the mappings in sOrientationMappings so devices with default
       // landscape orientation map landscape-primary to 0 degree and so forth.
       int adjusted = (i + sOrientationOffset) %
@@ -288,10 +286,12 @@ OrientationObserver::LockScreenOrientation(ScreenOrientation aOrientation)
                              eScreenOrientation_LandscapePrimary |
                              eScreenOrientation_LandscapeSecondary));
 
-  // Enable/disable the observer depending on 1. multiple orientations
-  // allowed, and 2. observer enabled.
-  if (aOrientation == eScreenOrientation_Landscape ||
-      aOrientation == eScreenOrientation_Portrait) {
+  // If there are multiple orientations allowed, we should enable the
+  // auto-rotation.
+  if (aOrientation != eScreenOrientation_LandscapePrimary &&
+      aOrientation != eScreenOrientation_LandscapeSecondary &&
+      aOrientation != eScreenOrientation_PortraitPrimary &&
+      aOrientation != eScreenOrientation_PortraitSecondary) {
     if (!mAutoOrientationEnabled) {
       EnableAutoOrientation();
     }
