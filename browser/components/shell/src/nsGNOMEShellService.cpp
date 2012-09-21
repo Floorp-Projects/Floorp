@@ -197,6 +197,7 @@ nsGNOMEShellService::CheckHandlerMatchesAppName(const nsACString &handler) const
 
 NS_IMETHODIMP
 nsGNOMEShellService::IsDefaultBrowser(bool aStartupCheck,
+                                      bool aForAllTypes,
                                       bool* aIsDefaultBrowser)
 {
   *aIsDefaultBrowser = false;
