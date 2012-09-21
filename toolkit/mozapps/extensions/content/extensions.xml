@@ -1137,10 +1137,12 @@
             this.removeAttribute("notification");
 
             var pending = null;
-            ["enable", "disable", "install", "uninstall", "upgrade"].forEach(function(aOp) {
-              if (this.isPending(aOp))
-                pending = aOp;
-            }, this);
+            const PENDING_OPERATIONS = ["enable", "disable", "install",
+                                        "uninstall", "upgrade"];
+            for (let op of PENDING_OPERATIONS) {
+              if (this.isPending(op))
+                pending = op;
+            }
 
             this.setAttribute("pending", pending);
             this._pending.textContent = gStrings.ext.formatStringFromName(
