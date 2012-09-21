@@ -91,11 +91,9 @@ NewKeyValuePair(JSContext *cx, jsid id, const Value &val, MutableHandleValue rva
 }
 
 static inline bool
-Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
+Enumerate(JSContext *cx, JSObject *pobj, jsid id,
           bool enumerable, unsigned flags, IdSet& ht, AutoIdVector *props)
 {
-    JS_ASSERT_IF(flags & JSITER_OWNONLY, obj == pobj);
-
     /*
      * We implement __proto__ using a property on |Object.prototype|, but
      * because __proto__ is highly deserving of removal, we don't want it to
@@ -129,10 +127,10 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
 }
 
 static bool
-EnumerateNativeProperties(JSContext *cx, JSObject *obj_, JSObject *pobj_, unsigned flags, IdSet &ht,
+EnumerateNativeProperties(JSContext *cx, JSObject *pobj_, unsigned flags, IdSet &ht,
                           AutoIdVector *props)
 {
-    RootedObject obj(cx, obj_), pobj(cx, pobj_);
+    RootedObject pobj(cx, pobj_);
 
     size_t initialLength = props->length();
 
@@ -143,7 +141,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj_, JSObject *pobj_, unsign
         Shape &shape = r.front();
 
         if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.propid()) &&
-            !Enumerate(cx, obj, pobj, shape.propid(), shape.enumerable(), flags, ht, props))
+            !Enumerate(cx, pobj, shape.propid(), shape.enumerable(), flags, ht, props))
         {
             return false;
         }
@@ -154,10 +152,10 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj_, JSObject *pobj_, unsign
 }
 
 static bool
-EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, unsigned flags,
+EnumerateDenseArrayProperties(JSContext *cx, JSObject *pobj, unsigned flags,
                               IdSet &ht, AutoIdVector *props)
 {
-    if (!Enumerate(cx, obj, pobj, NameToId(cx->names().length), false, flags, ht, props))
+    if (!Enumerate(cx, pobj, NameToId(cx->names().length), false, flags, ht, props))
         return false;
 
     if (pobj->getArrayLength() > 0) {
@@ -166,7 +164,7 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, unsi
         for (size_t i = 0; i < initlen; ++i, ++vp) {
             if (!vp->isMagic(JS_ARRAY_HOLE)) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
-                if (!Enumerate(cx, obj, pobj, INT_TO_JSID(i), true, flags, ht, props))
+                if (!Enumerate(cx, pobj, INT_TO_JSID(i), true, flags, ht, props))
                     return false;
             }
         }
@@ -206,14 +204,13 @@ struct SortComparatorIds
 #endif /* JS_MORE_DETERMINISTIC */
 
 static bool
-Snapshot(JSContext *cx, RawObject obj_, unsigned flags, AutoIdVector *props)
+Snapshot(JSContext *cx, RawObject pobj_, unsigned flags, AutoIdVector *props)
 {
     IdSet ht(cx);
     if (!ht.init(32))
         return false;
 
-    RootedObject obj(cx, obj_), pobj(cx);
-    pobj = obj;
+    RootedObject pobj(cx, pobj_);
 
     do {
         Class *clasp = pobj->getClass();
@@ -222,10 +219,10 @@ Snapshot(JSContext *cx, RawObject obj_, unsigned flags, AutoIdVector *props)
             !(clasp->flags & JSCLASS_NEW_ENUMERATE)) {
             if (!clasp->enumerate(cx, pobj))
                 return false;
-            if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
+            if (!EnumerateNativeProperties(cx, pobj, flags, ht, props))
                 return false;
         } else if (pobj->isDenseArray()) {
-            if (!EnumerateDenseArrayProperties(cx, obj, pobj, flags, ht, props))
+            if (!EnumerateDenseArrayProperties(cx, pobj, flags, ht, props))
                 return false;
         } else if (ParallelArrayObject::is(pobj)) {
             if (!ParallelArrayObject::enumerate(cx, pobj, flags, props))
@@ -251,7 +248,7 @@ Snapshot(JSContext *cx, RawObject obj_, unsigned flags, AutoIdVector *props)
                         return false;
                 }
                 for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
-                    if (!Enumerate(cx, obj, pobj, proxyProps[n], true, flags, ht, props))
+                    if (!Enumerate(cx, pobj, proxyProps[n], true, flags, ht, props))
                         return false;
                 }
                 /* Proxy objects enumerate the prototype on their own, so we are done here. */
@@ -263,7 +260,7 @@ Snapshot(JSContext *cx, RawObject obj_, unsigned flags, AutoIdVector *props)
             if (!JSObject::enumerate(cx, pobj, op, &state, &id))
                 return false;
             if (state.isMagic(JS_NATIVE_ENUMERATE)) {
-                if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
+                if (!EnumerateNativeProperties(cx, pobj, flags, ht, props))
                     return false;
             } else {
                 while (true) {
@@ -272,7 +269,7 @@ Snapshot(JSContext *cx, RawObject obj_, unsigned flags, AutoIdVector *props)
                         return false;
                     if (state.isNull())
                         break;
-                    if (!Enumerate(cx, obj, pobj, id, true, flags, ht, props))
+                    if (!Enumerate(cx, pobj, id, true, flags, ht, props))
                         return false;
                 }
             }
