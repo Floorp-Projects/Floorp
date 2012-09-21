@@ -1763,7 +1763,7 @@ nsOverflowContinuationTracker::Finish(nsIFrame* aChild)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsContainerFrame::List(FILE* out, int32_t aIndent) const
+nsContainerFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
@@ -1830,7 +1830,7 @@ nsContainerFrame::List(FILE* out, int32_t aIndent) const
       NS_ASSERTION(kid->GetParent() == this, "bad parent frame pointer");
 
       // Have the child frame list
-      kid->List(out, aIndent + 1);
+      kid->List(out, aIndent + 1, aFlags);
     }
     IndentBy(out, aIndent);
     fputs(">\n", out);

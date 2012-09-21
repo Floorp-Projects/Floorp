@@ -112,6 +112,9 @@ def _actorName(pname, side):
 def _actorIdType():
     return Type.INT32
 
+def _actorTypeTagType():
+    return Type.INT32
+
 def _actorId(actor=None):
     if actor is not None:
         return ExprSelect(actor, '->', 'mId')
@@ -3028,6 +3031,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _runtimeAbort("`OnProcessingError' called on non-toplevel actor"))
         self.cls.addstmts([ onprocessingerror, Whitespace.NL ])
 
+        # int32_t GetProtocolTypeId() { return PFoo; }
+        gettypetag = MethodDefn(
+            MethodDecl('GetProtocolTypeId', ret=_actorTypeTagType()))
+        gettypetag.addstmt(StmtReturn(_protocolId(ptype)))
+        self.cls.addstmts([ gettypetag, Whitespace.NL ])
+
         # OnReplyTimeout()
         if toplevel.talksSync() or toplevel.talksRpc():
             ontimeout = MethodDefn(
@@ -4128,28 +4137,44 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         
         # if (NULL_ID == id)
         #   *var = null
-        # else
-        #   *var = Lookup(id)
-        #   if (!*var)
-        #     return false
+        #   return true
         outactor = ExprDeref(var)
         ifnull = StmtIf(ExprBinary(_NULL_ACTOR_ID, '==', idvar))
-        ifnull.addifstmt(StmtExpr(ExprAssn(outactor, ExprLiteral.NULL)))
+        ifnull.addifstmts([ StmtExpr(ExprAssn(outactor, ExprLiteral.NULL)),
+                            StmtReturn.TRUE ])
+        read.addstmts([ ifnull, Whitespace.NL ])
 
-        ifnull.addelsestmt(StmtExpr(ExprAssn(
-            outactor,
-            ExprCast(_lookupListener(idvar), cxxtype, static=1))))
-
-        ifnotfound = StmtIf(ExprNot(outactor))
+        # Listener* listener = Lookup(id)
+        # if (!listener)
+        #   return false
+        listenervar = ExprVar('listener')
+        read.addstmt(StmtDecl(Decl(Type('ChannelListener', ptr=1),
+                                   listenervar.name),
+                              init=_lookupListener(idvar)))
+        ifnotfound = StmtIf(ExprNot(listenervar))
         ifnotfound.addifstmts([
-                _protocolErrorBreakpoint('could not look up '+ self.protocol.name),
+                _protocolErrorBreakpoint('could not look up '+ actortype.name()),
                 StmtReturn.FALSE
         ])
-        ifnull.addelsestmt(ifnotfound)
+        read.addstmts([ ifnotfound, Whitespace.NL ])
 
+        # if listener->GetProtocolTypeId() != [expected protocol type]
+        #   return false
+        ifbadtype = StmtIf(ExprBinary(
+                _protocolId(actortype), '!=',
+                ExprCall(ExprSelect(listenervar, '->', 'GetProtocolTypeId'))))
+        ifbadtype.addifstmts([
+                _protocolErrorBreakpoint('actor that should be of type '+ actortype.name() +' has different type'),
+                StmtReturn.FALSE
+        ])
+        read.addstmts([ ifbadtype, Whitespace.NL ])
+
+        # *outactor = static_cast<ExpectedType>(listener)
+        # return true
         read.addstmts([
-            ifnull,
-            StmtReturn.TRUE
+                StmtExpr(ExprAssn(outactor,
+                                  ExprCast(listenervar, cxxtype, static=1))),
+                StmtReturn.TRUE
         ])
 
         self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])

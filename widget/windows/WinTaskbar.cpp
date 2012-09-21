@@ -328,6 +328,10 @@ WinTaskbar::RegisterAppUserModelID() {
   if (WinUtils::GetWindowsVersion() < WinUtils::WIN7_VERSION)
     return false;
 
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+    return false;
+  }
+
   SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nullptr;
   bool retVal = false;
 

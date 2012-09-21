@@ -15,8 +15,19 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.RelativeLayout;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.view.animation.AnimationUtils;
+import android.view.animation.AnimationUtils;
+import android.view.animation.Animation;
+import android.widget.ImageView;
+import android.view.Display;
+import android.graphics.Point;
 
 import java.net.URL;
+import java.io.File;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -25,12 +36,15 @@ import org.mozilla.gecko.WebAppAllocator;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.DoorHangerPopup;
+import org.json.JSONObject;
 
 public class WebApp extends GeckoApp {
     private URL mOrigin;
     private TextView mTitlebarText = null;
     private View mTitlebar = null;
     private static final String LOGTAG = "WebApp";
+    private View mSplashscreen = null;
 
     protected int getIndex() { return 0; }
 
@@ -44,6 +58,8 @@ public class WebApp extends GeckoApp {
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        overridePendingTransition(R.anim.grow_fade_in_center, android.R.anim.fade_out);
+        showSplash();
 
         String action = getIntent().getAction();
         Bundle extras = getIntent().getExtras();
@@ -69,6 +85,48 @@ public class WebApp extends GeckoApp {
             } catch (java.net.MalformedURLException ex2) {
                 Log.e(LOGTAG, "Unable to parse intent url: ", ex);
             }
+        }
+    }
+
+    private void showSplash() {
+        mSplashscreen = (RelativeLayout) findViewById(R.id.splashscreen);
+
+        SharedPreferences prefs = getSharedPreferences("webapps", Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
+
+        // get the favicon dominant color, stored when the app was installed
+        int[] colors = new int[2];
+        int dominantColor = prefs.getInt(WebAppAllocator.iconKey(getIndex()), -1);
+
+        // now lighten it, to ensure that the icon stands out in the center
+        float[] f = new float[3];
+        Color.colorToHSV(dominantColor, f);
+        f[2] = Math.min(f[2]*2, 1.0f);
+        colors[0] = Color.HSVToColor(255, f);
+
+        // now generate a second, slightly darker version of the same color
+        f[2] *= 0.75;
+        colors[1] = Color.HSVToColor(255, f);
+
+        // Draw the background gradient
+        GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.TL_BR, colors);
+        gd.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+        Display display = getWindowManager().getDefaultDisplay();
+        gd.setGradientCenter(0.5f, 0.5f);
+        gd.setGradientRadius(Math.max(display.getWidth()/2, display.getHeight()/2));
+        mSplashscreen.setBackgroundDrawable((Drawable)gd);
+
+        // look for a logo.png in the profile dir and show it. If we can't find a logo show nothing
+        File profile = getProfile().getDir();
+        File logoFile = new File(profile, "logo.png");
+        if (logoFile.exists()) {
+            ImageView image = (ImageView)findViewById(R.id.splashscreen_icon);
+            Drawable d = Drawable.createFromPath(logoFile.getPath());
+            image.setImageDrawable(d);
+
+            Animation fadein = AnimationUtils.loadAnimation(this, R.anim.grow_fade_in_center);
+            fadein.setStartOffset(500);
+            fadein.setDuration(1000);
+            image.startAnimation(fadein);
         }
     }
 
@@ -143,6 +201,29 @@ public class WebApp extends GeckoApp {
                         Log.e(LOGTAG, "Unable to parse url: ", ex);
                     }
                 }
+                break;
+            case LOADED:
+                if (mSplashscreen.getVisibility() == View.VISIBLE) {
+                    Animation fadeout = AnimationUtils.loadAnimation(this, android.R.anim.fade_out);
+                    fadeout.setAnimationListener(new Animation.AnimationListener() {
+                        public void onAnimationEnd(Animation animation) {
+                          mSplashscreen.setVisibility(View.GONE);
+                        }
+                        public void onAnimationRepeat(Animation animation) { }
+                        public void onAnimationStart(Animation animation) { }
+                    });
+                    mSplashscreen.startAnimation(fadeout);
+                }
+                break;
+            case START:
+                if (mSplashscreen.getVisibility() == View.VISIBLE) {
+                    View area = findViewById(R.id.splashscreen_progress);
+                    area.setVisibility(View.VISIBLE);
+                    Animation fadein = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+                    fadein.setDuration(1000);
+                    area.startAnimation(fadein);
+                }
+                break;
         }
         super.onTabChanged(tab, msg, data);
     }

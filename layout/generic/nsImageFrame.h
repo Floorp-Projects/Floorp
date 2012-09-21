@@ -122,7 +122,7 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
-  NS_IMETHOD List(FILE* out, int32_t aIndent) const;
+  NS_IMETHOD List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
 #endif
 
   virtual int GetSkipSides() const;

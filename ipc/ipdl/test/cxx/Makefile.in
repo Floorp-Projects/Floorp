@@ -18,6 +18,7 @@ EXPORTS_mozilla/_ipdltest =  \
   IPDLUnitTests.h  \
   IPDLUnitTestProcessChild.h  \
   IPDLUnitTestTypes.h \
+  IPDLUnitTestUtils.h \
   $(NULL)
 
 LIBRARY_NAME = $(MODULE)_s
@@ -26,6 +27,7 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
 IPDLTESTS = \
+  TestActorPunning \
   TestBlockChild \
   TestBridgeMain \
   TestCrashCleanup \

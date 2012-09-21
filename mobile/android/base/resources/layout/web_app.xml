@@ -2,7 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:id="@+id/main_layout"
               android:orientation="vertical"
-              style="@style/Screen">
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent">
 
     <LinearLayout android:id="@+id/webapp_titlebar"
                   android:visibility="gone"
@@ -25,6 +26,29 @@
                     android:layout_weight="1">
 
         <include layout="@layout/shared_ui_components"/>
+
+        <RelativeLayout android:id="@+id/splashscreen"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent" >
+
+            <ImageView android:id="@+id/splashscreen_icon"
+                      android:minWidth="128dip"
+                      android:minHeight="128dip"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_centerHorizontal="true"
+                      android:layout_centerVertical="true"/>
+
+            <ProgressBar android:id="@+id/splashscreen_progress"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:gravity="center"
+                         android:layout_centerHorizontal="true"
+                         android:layout_alignParentBottom="true"
+                         android:paddingBottom="30dip"
+                         android:visibility="gone"/>
+
+        </RelativeLayout>
 
     </RelativeLayout>
 

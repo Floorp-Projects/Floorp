@@ -170,7 +170,7 @@ class NativeStubLinker : public LinkerHelper
 #endif
 
     NativeStubLinker(Assembler &masm, JITChunk *chunk, jsbytecode *pc, FinalJump done)
-        : LinkerHelper(masm, JSC::METHOD_CODE), chunk(chunk), pc(pc), done(done)
+        : LinkerHelper(masm, JSC::JAEGER_CODE), chunk(chunk), pc(pc), done(done)
     {}
 
     bool init(JSContext *cx);

@@ -80,9 +80,6 @@ class IonCode : public gc::Cell
     size_t instructionsSize() const {
         return insnSize_;
     }
-    size_t bufferSize() const {
-        return bufferSize_;
-    }
     void trace(JSTracer *trc);
     void finalize(FreeOp *fop);
     void setInvalidated() {
@@ -201,6 +198,10 @@ struct IonScript
     uint32 safepointsStart_;
     uint32 safepointsSize_;
 
+    // List of compiled/inlined JSScript's.
+    uint32 scriptList_;
+    uint32 scriptEntries_;
+
     // Number of references from invalidation records.
     size_t refcount_;
 
@@ -233,6 +234,9 @@ struct IonScript
     CodeOffsetLabel *prebarrierList() {
         return (CodeOffsetLabel *)(reinterpret_cast<uint8 *>(this) + prebarrierList_);
     }
+    JSScript **scriptList() const {
+        return (JSScript **)(reinterpret_cast<const uint8 *>(this) + scriptList_);
+    }
 
   private:
     void trace(JSTracer *trc);
@@ -244,7 +248,8 @@ struct IonScript
     static IonScript *New(JSContext *cx, uint32 frameLocals, uint32 frameSize,
                           size_t snapshotsSize, size_t snapshotEntries,
                           size_t constants, size_t safepointIndexEntries, size_t osiIndexEntries,
-                          size_t cacheEntries, size_t prebarrierEntries, size_t safepointsSize);
+                          size_t cacheEntries, size_t prebarrierEntries, size_t safepointsSize,
+                          size_t scriptEntries);
     static void Trace(JSTracer *trc, IonScript *script);
     static void Destroy(FreeOp *fop, IonScript *script);
 
@@ -321,8 +326,15 @@ struct IonScript
     size_t safepointsSize() const {
         return safepointsSize_;
     }
-    size_t size() const {
-        return safepointsStart_ + safepointsSize_;
+    JSScript *getScript(size_t i) const {
+        JS_ASSERT(i < scriptEntries_);
+        return scriptList()[i];
+    }
+    size_t scriptEntries() const {
+        return scriptEntries_;
+    }
+    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+        return mallocSizeOf(this);
     }
     HeapValue &getConstant(size_t index) {
         JS_ASSERT(index < numConstants());
@@ -366,6 +378,7 @@ struct IonScript
     void copyCacheEntries(const IonCache *caches, MacroAssembler &masm);
     void copyPrebarrierEntries(const CodeOffsetLabel *barriers, MacroAssembler &masm);
     void copySafepoints(const SafepointWriter *writer);
+    void copyScriptEntries(JSScript **scripts);
 
     bool invalidated() const {
         return refcount_ != 0;

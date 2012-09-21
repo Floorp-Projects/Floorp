@@ -19,7 +19,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsISHistoryListener.h"
 #include "nsIHistoryEntry.h"
-#include "nsIObserver.h"
+#include "nsTObserverArray.h"
 
 // Needed to maintain global list of all SHistory objects
 #include "prclist.h"
@@ -91,8 +91,8 @@ protected:
   int32_t mIndex;
   int32_t mLength;
   int32_t mRequestedIndex;
-  // Session History listener
-  nsWeakPtr mListener;
+  // Session History listeners
+  nsAutoTObserverArray<nsWeakPtr, 2> mListeners;
   // Weak reference. Do not refcount this.
   nsIDocShell *  mRootDocShell;
 

@@ -46,12 +46,13 @@ public:
         virtual void OnChannelError() = 0;
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
         virtual void OnProcessingError(Result aError) = 0;
+        virtual int32_t GetProtocolTypeId() = 0;
         virtual bool OnReplyTimeout() = 0;
         virtual Result OnMessageReceived(const Message& aMessage,
                                          Message*& aReply) = 0;
         virtual Result OnCallReceived(const Message& aMessage,
                                       Message*& aReply) = 0;
-        virtual void OnChannelConnected(int32_t peer_pid) {};
+        virtual void OnChannelConnected(int32_t peer_pid) {}
 
         virtual void OnEnteredCxxStack()
         {

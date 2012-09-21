@@ -45,3 +45,8 @@ parser/html/java/javaparser/
 .project
 .cproject
 .settings/
+
+# Python virtualenv artifacts.
+python/psutil/.*.so
+python/psutil/.*.pyd
+python/psutil/build/

@@ -130,7 +130,7 @@ endif
 endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
 	cd $(DIST)/l10n-stage; \
-	  $(MAKE_PACKAGE)
+	  $(PREPARE_PACKAGE) && $(MAKE_PACKAGE)
 ifdef MAKE_COMPLETE_MAR
 	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
 	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \

@@ -450,7 +450,6 @@ MOCHITEST_FILES_B = \
 		bug638112-response.txt \
 		bug638112.sjs \
 		test_bug656283.html \
-		test_blobbuilder.html \
 		test_blobconstructor.html \
 		fileutils.js \
 		test_bug338583.html \

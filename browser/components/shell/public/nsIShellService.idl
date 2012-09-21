@@ -8,19 +8,23 @@
 interface nsIDOMElement;
 interface nsIFile;
 
-[scriptable, uuid(bb477da4-dddf-4106-a562-f06c85c7f9a8)]
+[scriptable, uuid(99d2e9f1-3c86-40f7-81fd-3060c18489f0)]
 interface nsIShellService : nsISupports
 {
   /**
    * Determines whether or not Firefox is the "Default Browser."
-   * This is simply whether or not Firefox is registered to handle 
-   * http links. 
-   * 
+   * This is simply whether or not Firefox is registered to handle
+   * http links.
+   *
    * @param aStartupCheck true if this is the check being performed
-   *                      by the first browser window at startup, 
-   *                      false otherwise. 
+   *                      by the first browser window at startup,
+   *                      false otherwise.
+   * @param aForAllTypes  true if the check should be made for HTTP and HTML.
+   *                      false if the check should be made for HTTP only.
+   *                      This parameter may be ignored on some platforms.
    */
-  boolean isDefaultBrowser(in boolean aStartupCheck);
+  boolean isDefaultBrowser(in boolean aStartupCheck,
+                           [optional] in boolean aForAllTypes);
 
   /**
    * Registers Firefox as the "Default Browser."

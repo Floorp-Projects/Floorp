@@ -10,7 +10,6 @@
 
 DUMMY(NS_NewCanvasRenderingContextWebGL, nsIDOMWebGLRenderingContext)
 
-DOMCI_DATA(WebGLRenderingContext, void)
 DOMCI_DATA(WebGLBuffer, void)
 DOMCI_DATA(WebGLTexture, void)
 DOMCI_DATA(WebGLProgram, void)

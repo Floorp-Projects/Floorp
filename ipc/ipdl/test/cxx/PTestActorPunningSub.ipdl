@@ -1,0 +1,16 @@
+
+include protocol PTestActorPunning;
+
+namespace mozilla {
+namespace _ipdltest {
+
+protocol PTestActorPunningSub {
+    manager PTestActorPunning;
+
+child:
+    Bad();
+    __delete__();
+};
+
+} // namespace mozilla
+} // namespace _ipdltes

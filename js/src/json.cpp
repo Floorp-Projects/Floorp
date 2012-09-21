@@ -59,23 +59,20 @@ js_json_parse(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    JSLinearString *linear;
-    if (argc >= 1) {
-        JSString *str = ToString(cx, args[0]);
-        if (!str)
-            return false;
-        linear = str->ensureLinear(cx);
-        if (!linear)
-            return false;
-    } else {
-        linear = cx->names().undefined;
-    }
-    JS::Anchor<JSString *> anchor(linear);
+    JSString *str = (argc >= 1) ? ToString(cx, args[0]) : cx->names().undefined;
+    if (!str)
+        return false;
+
+    JSStableString *stable = str->ensureStable(cx);
+    if (!stable)
+        return false;
+
+    JS::Anchor<JSString *> anchor(stable);
 
     RootedValue reviver(cx, (argc >= 2) ? args[1] : UndefinedValue());
 
     /* Steps 2-5. */
-    return ParseJSONWithReviver(cx, linear->chars(), linear->length(), reviver, args.rval());
+    return ParseJSONWithReviver(cx, stable->chars(), stable->length(), reviver, args.rval());
 }
 
 /* ES5 15.12.3. */

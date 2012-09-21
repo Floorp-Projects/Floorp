@@ -49,10 +49,6 @@ EXPORTS_mozilla/dom = \
   Link.h \
   $(NULL)
 
-LOCAL_INCLUDES = \
-		-I$(topsrcdir)/image/src \
-		$(NULL)
-
 CPPSRCS		= \
 		DirectionalityUtils.cpp \
 		nsAtomListUtils.cpp \
@@ -171,26 +167,25 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= \
-		-I$(srcdir)/../../events/src \
-		-I$(srcdir)/../../xml/content/src \
-		-I$(srcdir)/../../../layout/xul/base/src \
-		-I$(srcdir)/../../xul/content/src \
-		-I$(srcdir)/../../xul/document/src \
-		-I$(srcdir)/../../html/content/src \
-		-I$(srcdir)/../../base/src \
-		-I$(srcdir)/../../xbl/src \
-		-I$(srcdir)/../../../layout/generic \
-		-I$(srcdir)/../../../layout/style \
-		-I$(srcdir)/../../../layout/svg/base/src \
-		-I$(srcdir)/../../../dom/base \
-		-I$(srcdir)/../../xml/document/src \
-		-I$(topsrcdir)/xpcom/io \
-		-I$(topsrcdir)/dom/ipc \
-		-I$(topsrcdir)/js/xpconnect/src \
-		-I$(topsrcdir)/caps/include \
-		-I$(topsrcdir)/netwerk/base/src \
-		$(NULL)
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/caps/include \
+  -I$(topsrcdir)/content/events/src \
+  -I$(topsrcdir)/content/html/content/src \
+  -I$(topsrcdir)/content/xbl/src \
+  -I$(topsrcdir)/content/xml/content/src \
+  -I$(topsrcdir)/content/xml/document/src \
+  -I$(topsrcdir)/content/xul/content/src \
+  -I$(topsrcdir)/content/xul/document/src \
+  -I$(topsrcdir)/dom/base \
+  -I$(topsrcdir)/dom/ipc \
+  -I$(topsrcdir)/image/src \
+  -I$(topsrcdir)/js/xpconnect/src \
+  -I$(topsrcdir)/layout/generic \
+  -I$(topsrcdir)/layout/style \
+  -I$(topsrcdir)/layout/svg/base/src \
+  -I$(topsrcdir)/layout/xul/base/src \
+  -I$(topsrcdir)/netwerk/base/src \
+  $(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
 DEFINES += -DHB_DONT_DEFINE_STDINT

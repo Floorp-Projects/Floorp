@@ -276,9 +276,10 @@ nsScreen::Notify(const hal::ScreenConfiguration& aConfiguration)
   ScreenOrientation previousOrientation = mOrientation;
   mOrientation = aConfiguration.orientation();
 
-  NS_ASSERTION(mOrientation != eScreenOrientation_None &&
-               mOrientation != eScreenOrientation_Portrait &&
-               mOrientation != eScreenOrientation_Landscape,
+  NS_ASSERTION(mOrientation == eScreenOrientation_PortraitPrimary ||
+               mOrientation == eScreenOrientation_PortraitSecondary ||
+               mOrientation == eScreenOrientation_LandscapePrimary ||
+               mOrientation == eScreenOrientation_LandscapeSecondary,
                "Invalid orientation value passed to notify method!");
 
   if (mOrientation != previousOrientation) {
@@ -306,11 +307,6 @@ NS_IMETHODIMP
 nsScreen::GetMozOrientation(nsAString& aOrientation)
 {
   switch (mOrientation) {
-    case eScreenOrientation_None:
-    case eScreenOrientation_Portrait:
-    case eScreenOrientation_Landscape:
-      NS_ASSERTION(false, "Shouldn't be used when getting value!");
-      return NS_ERROR_FAILURE;
     case eScreenOrientation_PortraitPrimary:
       aOrientation.AssignLiteral("portrait-primary");
       break;
@@ -323,6 +319,10 @@ nsScreen::GetMozOrientation(nsAString& aOrientation)
     case eScreenOrientation_LandscapeSecondary:
       aOrientation.AssignLiteral("landscape-secondary");
       break;
+    case eScreenOrientation_None:
+    default:
+      MOZ_ASSERT(false);
+      return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -406,13 +406,15 @@ nsScreen::MozLockOrientation(const jsval& aOrientation, JSContext* aCx, bool* aR
     nsString& item = orientations[i];
 
     if (item.EqualsLiteral("portrait")) {
-      orientation |= eScreenOrientation_Portrait;
+      orientation |= eScreenOrientation_PortraitPrimary |
+                     eScreenOrientation_PortraitSecondary;
     } else if (item.EqualsLiteral("portrait-primary")) {
       orientation |= eScreenOrientation_PortraitPrimary;
     } else if (item.EqualsLiteral("portrait-secondary")) {
       orientation |= eScreenOrientation_PortraitSecondary;
     } else if (item.EqualsLiteral("landscape")) {
-      orientation |= eScreenOrientation_Landscape;
+      orientation |= eScreenOrientation_LandscapePrimary |
+                     eScreenOrientation_LandscapeSecondary;
     } else if (item.EqualsLiteral("landscape-primary")) {
       orientation |= eScreenOrientation_LandscapePrimary;
     } else if (item.EqualsLiteral("landscape-secondary")) {

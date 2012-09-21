@@ -288,8 +288,6 @@ AsyncConnectionHelper::Run()
     mResultCode = DoDatabaseWork(connection);
 
     if (mDatabase) {
-      IndexedDatabaseManager::SetCurrentWindow(nullptr);
-
       // Release or roll back the savepoint depending on the error code.
       if (hasSavepoint) {
         NS_ASSERTION(mTransaction, "Huh?!");
@@ -300,6 +298,10 @@ AsyncConnectionHelper::Run()
           mTransaction->RollbackSavepoint();
         }
       }
+
+      // Don't unset this until we're sure that all SQLite activity has
+      // completed!
+      IndexedDatabaseManager::SetCurrentWindow(nullptr);
     }
   }
   else {

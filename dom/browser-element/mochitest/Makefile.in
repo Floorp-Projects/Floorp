@@ -131,6 +131,8 @@ MOCHITEST_FILES = \
 		file_http_401_response.sjs \
 		browserElement_RemoveBrowserElement.js \
 		test_browserElement_inproc_RemoveBrowserElement.html \
+		browserElement_DOMRequestError.js \
+		test_browserElement_inproc_DOMRequestError.html \
 		$(NULL)
 
 # Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
@@ -190,6 +192,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_ScrollEvent.html \
 		test_browserElement_oop_Auth.html \
 		test_browserElement_oop_RemoveBrowserElement.html \
+		test_browserElement_oop_DOMRequestError.html \
 		$(NULL)
 endif #}
 endif #}

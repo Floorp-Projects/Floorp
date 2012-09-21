@@ -25,10 +25,12 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -83,7 +85,6 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -99,6 +100,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -143,6 +146,7 @@ abstract public class GeckoApp
     public SurfaceView cameraView;
     public static GeckoApp mAppContext;
     public boolean mDOMFullScreen = false;
+    protected MenuPresenter mMenuPresenter;
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
     private static GeckoThread sGeckoThread;
@@ -467,15 +471,19 @@ abstract public class GeckoApp
             return super.getMenuInflater();
     }
 
-    public View getMenuPanel() {
+    public MenuPanel getMenuPanel() {
         return mMenuPanel;
     }
 
+    public MenuPresenter getMenuPresenter() {
+        return mMenuPresenter;
+    }
+
     // MenuPanel holds the scrollable Menu
-    public static class MenuPanel extends ScrollView {
+    public static class MenuPanel extends LinearLayout {
         public MenuPanel(Context context, AttributeSet attrs) {
             super(context, attrs);
-            setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+            setLayoutParams(new ViewGroup.LayoutParams((int) context.getResources().getDimension(R.dimen.menu_item_row_width),
                                                        ViewGroup.LayoutParams.WRAP_CONTENT));
         }
 
@@ -498,11 +506,35 @@ abstract public class GeckoApp
         }
     }
 
+    // MenuPresenter takes care of proper animation and inflation.
+    public class MenuPresenter {
+        GeckoApp mActivity;
+
+        public MenuPresenter(GeckoApp activity) {
+            mActivity = activity;
+        }
+
+        public void show(GeckoMenu menu) {
+            MenuPanel panel = mActivity.getMenuPanel();
+            panel.removeAllViews();
+            panel.addView(menu);
+
+            mActivity.openOptionsMenu();
+        }
+
+        public void onOptionsMenuClosed() {
+            MenuPanel panel = mActivity.getMenuPanel();
+            panel.removeAllViews();
+            panel.addView((GeckoMenu) mMenu);
+        }
+    }
+
     @Override
     public View onCreatePanelView(int featureId) {
         if (Build.VERSION.SDK_INT >= 11 && featureId == Window.FEATURE_OPTIONS_PANEL) {
             if (mMenuPanel == null) {
                 mMenuPanel = new MenuPanel(mAppContext, null);
+                mMenuPresenter = new MenuPresenter(this);
             } else {
                 // Prepare the panel everytime before showing the menu.
                 onPreparePanel(featureId, mMenuPanel, mMenu);
@@ -574,6 +606,12 @@ abstract public class GeckoApp
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    @Override
+    public void onOptionsMenuClosed(Menu menu) {
+        if (Build.VERSION.SDK_INT >= 11)
+            mMenuPresenter.onOptionsMenuClosed();
+    }
  
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -587,19 +625,58 @@ abstract public class GeckoApp
     }
 
     protected void shareCurrentUrl() {
-      Tab tab = Tabs.getInstance().getSelectedTab();
-      if (tab == null)
-        return;
-
-      String url = tab.getURL();
-      if (url == null)
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null)
           return;
 
-      if (ReaderModeUtils.isAboutReader(url))
-          url = ReaderModeUtils.getUrlFromAboutReader(url);
+        String url = tab.getURL();
+        if (url == null)
+            return;
 
-      GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                    Intent.ACTION_SEND, tab.getDisplayTitle());
+        if (ReaderModeUtils.isAboutReader(url))
+            url = ReaderModeUtils.getUrlFromAboutReader(url);
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            final Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, tab.getDisplayTitle());
+            shareIntent.setType("text/plain");
+
+            PackageManager pm = getPackageManager();
+            List<ResolveInfo> activities = pm.queryIntentActivities(shareIntent, 0);
+            Collections.sort(activities, new Comparator<ResolveInfo>() {
+                @Override
+                public int compare(ResolveInfo one, ResolveInfo two) {
+                    return one.preferredOrder - two.preferredOrder;
+                }
+
+                @Override
+                public boolean equals(Object info) {
+                    return this.equals(info);
+                }
+            });
+                        
+            GeckoSubMenu menu = new GeckoSubMenu(mAppContext, null);
+            for (ResolveInfo activity : activities) {
+                 final ActivityInfo activityInfo = activity.activityInfo;
+
+                 MenuItem item = menu.add(activity.loadLabel(pm));
+                 item.setIcon(activity.loadIcon(pm));
+                 item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                     @Override
+                     public boolean onMenuItemClick(MenuItem item) {
+                         shareIntent.setComponent(new ComponentName(activityInfo.packageName, activityInfo.name));
+                         startActivity(shareIntent);
+                         return true;
+                     }
+                 });
+            }
+
+            mMenuPresenter.show(menu);
+        } else {
+            GeckoAppShell.openUriExternal(url, "text/plain", "", "",
+                                          Intent.ACTION_SEND, tab.getDisplayTitle());
+        }
     }
 
     protected void onSaveInstanceState(Bundle outState) {
@@ -959,7 +1036,7 @@ abstract public class GeckoApp
             } else if (event.equals("WebApps:Open")) {
                 String url = message.getString("uri");
                 String origin = message.getString("origin");
-                Intent intent = GeckoAppShell.getWebAppIntent(url, origin, false);
+                Intent intent = GeckoAppShell.getWebAppIntent(url, origin, "", null);
                 if (intent == null)
                     return;
                 startActivity(intent);
@@ -1121,7 +1198,7 @@ abstract public class GeckoApp
                 getAndProcessThumbnailForTab(tab);
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createStartPaintListentingEvent(tab.getId()));
-                    GeckoAppShell.screenshotWholePage(tab);
+                    ScreenshotHandler.screenshotWholePage(tab);
                 }
 
             }
@@ -2106,16 +2183,6 @@ abstract public class GeckoApp
             SiteIdentityPopup.getInstance().dismiss();
             refreshChrome();
         }
-    }
-
-    @Override
-    public void onLowMemory()
-    {
-        Log.e(LOGTAG, "low memory");
-        if (checkLaunchState(LaunchState.GeckoRunning))
-            GeckoAppShell.onLowMemory();
-        super.onLowMemory();
-        GeckoAppShell.geckoEventSync();
     }
 
     @Override

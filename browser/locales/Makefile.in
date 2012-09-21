@@ -200,7 +200,7 @@ installers-%: clobber-% langpack-% repackage-win32-installer-% repackage-zip-%
 ifdef MOZ_UPDATER
 # Note that we want updater.ini to be in the top directory, not the browser/
 # subdirectory, because that's where the updater is installed and runs.
-libs:: $(call MERGE_FILE,updater/updater.ini)
+libs:: $(call MERGE_FILE,updater/updater.ini) $(call mkdir_deps,$(DIST)/bin)
 ifeq ($(OS_ARCH),WINNT)
 	cat $< $(srcdir)/../installer/windows/nsis/updater_append.ini | \
 	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \
@@ -236,8 +236,11 @@ endif
 
 # test target, depends on make package
 # try to repack x-test, with just toolkit/defines.inc being there
+l10n-check:: INNER_UNMAKE_PACKAGE=true
 l10n-check::
 	$(RM) -rf x-test
 	$(NSINSTALL) -D x-test/toolkit
 	echo "#define MOZ_LANG_TITLE Just testing" > x-test/toolkit/defines.inc
 	$(MAKE) installers-x-test L10NBASEDIR="$(PWD)" LOCALE_MERGEDIR="$(PWD)/mergedir"
+	cd $(DIST)/l10n-stage && $(UNMAKE_PACKAGE)
+	cd $(DIST)/l10n-stage && test $$(cat $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/update.locale) = x-test

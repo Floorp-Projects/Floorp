@@ -169,6 +169,19 @@ WrapRotationAxis(int32_t* aRotationPoint, int32_t aSize)
   }
 }
 
+static nsIntRect
+ComputeBufferRect(const nsIntRect& aRequestedRect)
+{
+  nsIntRect rect(aRequestedRect);
+  // Set a minimum width to guarantee a minimum size of buffers we
+  // allocate (and work around problems on some platforms with smaller
+  // dimensions).  64 is the magic number needed to work around the
+  // rendering glitch, and guarantees image rows can be SIMD'd for
+  // even r5g6b5 surfaces pretty much everywhere.
+  rect.width = NS_MAX(aRequestedRect.width, 64);
+  return rect;
+}
+
 ThebesLayerBuffer::PaintState
 ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
                               uint32_t aFlags)
@@ -202,7 +215,8 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
         destBufferRect = neededRegion.GetBounds();
       }
     } else {
-      destBufferRect = neededRegion.GetBounds();
+      // We won't be reusing the buffer.  Compute a new rect.
+      destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
     }
 
     if ((aFlags & PAINT_WILL_RESAMPLE) &&
@@ -271,7 +285,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
         } else {
           // We can't do a real self-copy because the buffer is rotated.
           // So allocate a new buffer for the destination.
-          destBufferRect = neededRegion.GetBounds();
+          destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
           destBuffer = CreateBuffer(contentType, destBufferRect.Size(), bufferFlags);
           if (!destBuffer)
             return result;

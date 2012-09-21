@@ -1338,6 +1338,18 @@ nsHttpConnectionMgr::AddToShortestPipeline(nsConnectionEntry *ent,
 
     if ((ent->PipelineState() == PS_YELLOW) && (trans->PipelinePosition() > 1))
         ent->SetYellowConnection(bestConn);
+
+    if (!trans->GetPendingTime().IsNull()) {
+        if (trans->UsesPipelining())
+            AccumulateTimeDelta(
+                Telemetry::TRANSACTION_WAIT_TIME_HTTP_PIPELINES,
+                trans->GetPendingTime(), mozilla::TimeStamp::Now());
+        else
+            AccumulateTimeDelta(
+                Telemetry::TRANSACTION_WAIT_TIME_HTTP,
+                trans->GetPendingTime(), mozilla::TimeStamp::Now());
+        trans->SetPendingTime(false);
+    }
     return true;
 }
 
@@ -1524,6 +1536,7 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
 {
     uint8_t caps = trans->Caps();
     int32_t priority = trans->Priority();
+    nsresult rv;
 
     LOG(("nsHttpConnectionMgr::DispatchTransaction "
          "[ci=%s trans=%x caps=%x conn=%x priority=%d]\n",
@@ -1534,8 +1547,13 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
              "Connection host = %s\n",
              trans->ConnectionInfo()->Host(),
              conn->ConnectionInfo()->Host()));
-        nsresult rv = conn->Activate(trans, caps, priority);
+        rv = conn->Activate(trans, caps, priority);
         NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "SPDY Cannot Fail Dispatch");
+        if (NS_SUCCEEDED(rv) && !trans->GetPendingTime().IsNull()) {
+            AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_SPDY,
+                trans->GetPendingTime(), mozilla::TimeStamp::Now());
+            trans->SetPendingTime(false);
+        }
         return rv;
     }
 
@@ -1547,7 +1565,17 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
     else
         conn->Classify(trans->Classification());
 
-    return DispatchAbstractTransaction(ent, trans, caps, conn, priority);
+    rv = DispatchAbstractTransaction(ent, trans, caps, conn, priority);
+    if (NS_SUCCEEDED(rv) && !trans->GetPendingTime().IsNull()) {
+        if (trans->UsesPipelining())
+            AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_HTTP_PIPELINES,
+                trans->GetPendingTime(), mozilla::TimeStamp::Now());
+        else
+            AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_HTTP,
+                trans->GetPendingTime(), mozilla::TimeStamp::Now());
+        trans->SetPendingTime(false);
+    }
+    return rv;
 }
 
 
@@ -1651,6 +1679,8 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         LOG(("  transaction was canceled... dropping event!\n"));
         return NS_OK;
     }
+
+    trans->SetPendingTime();
 
     nsresult rv = NS_OK;
     nsHttpConnectionInfo *ci = trans->ConnectionInfo();

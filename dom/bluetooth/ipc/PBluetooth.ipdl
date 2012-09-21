@@ -60,6 +60,38 @@ struct UnpairRequest
   nsString address;
 };
 
+struct SetPinCodeRequest
+{
+  nsString path;
+  nsString pincode;
+};
+
+struct SetPasskeyRequest
+{
+  nsString path;
+  uint32_t passkey;
+};
+
+struct ConfirmPairingConfirmationRequest
+{
+  nsString path;
+};
+
+struct DenyPairingConfirmationRequest
+{
+  nsString path;
+};
+
+struct ConfirmAuthorizationRequest
+{
+  nsString path;
+};
+
+struct DenyAuthorizationRequest
+{
+  nsString path;
+};
+
 struct DevicePropertiesRequest
 {
   nsString[] addresses;
@@ -74,6 +106,12 @@ union Request
   StopDiscoveryRequest;
   PairRequest;
   UnpairRequest;
+  SetPinCodeRequest;
+  SetPasskeyRequest;
+  ConfirmPairingConfirmationRequest;
+  DenyPairingConfirmationRequest;
+  ConfirmAuthorizationRequest;
+  DenyAuthorizationRequest;
   DevicePropertiesRequest;
 };
 

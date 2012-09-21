@@ -1588,8 +1588,18 @@ class ContextStack
     /* Pop a partially-pushed frame after hitting the limit before throwing. */
     void popFrameAfterOverflow();
 
-    /* Get the topmost script and optional pc on the stack. */
-    inline JSScript *currentScript(jsbytecode **pc = NULL) const;
+    /*
+     * Get the topmost script and optional pc on the stack. By default, this
+     * function only returns a JSScript in the current compartment, returning
+     * NULL if the current script is in a different compartment. This behavior
+     * can be overridden by passing ALLOW_CROSS_COMPARTMENT.
+     */
+    enum MaybeAllowCrossCompartment {
+        DONT_ALLOW_CROSS_COMPARTMENT = false,
+        ALLOW_CROSS_COMPARTMENT = true
+    };
+    inline JSScript *currentScript(jsbytecode **pc = NULL,
+                                   MaybeAllowCrossCompartment = DONT_ALLOW_CROSS_COMPARTMENT) const;
 
     /* Get the scope chain for the topmost scripted call on the stack. */
     inline HandleObject currentScriptedScopeChain() const;
