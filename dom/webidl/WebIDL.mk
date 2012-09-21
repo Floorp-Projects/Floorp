@@ -20,6 +20,7 @@ webidl_files = \
   EventListener.webidl \
   EventTarget.webidl \
   FileList.webidl \
+  FileReaderSync.webidl \
   HTMLCollection.webidl \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
