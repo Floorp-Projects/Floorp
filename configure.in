@@ -2981,6 +2981,8 @@ dnl NB - later gcc versions require -mmmx for this header to be successfully
 dnl included (or another option which implies it, such as -march=pentium-mmx)
 MOZ_CHECK_HEADERS(mmintrin.h)
 
+MOZ_CHECK_HEADERS(sys/types.h netinet/in.h byteswap.h)
+
 dnl Check whether the compiler supports the new-style C++ standard
 dnl library headers (i.e. <new>) or needs the old "new.h"
 AC_LANG_CPLUSPLUS
@@ -4189,6 +4191,7 @@ MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
 MOZ_WEBRTC=1
+MOZ_SRTP=
 MOZ_WEBRTC_SIGNALING=
 MOZ_MEDIA_PLUGINS=
 MOZ_MEDIA_NAVIGATOR=
@@ -5191,9 +5194,12 @@ if test -n "$MOZ_WEBRTC"; then
     MOZ_VP8=1
     MOZ_VP8_ENCODER=1
     MOZ_VP8_ERROR_CONCEALMENT=1
+    MOZ_SRTP=1
+    AC_DEFINE(MOZ_SRTP)
 fi
 
 AC_SUBST(MOZ_WEBRTC)
+AC_SUBST(MOZ_SRTP)
 
 case "$target_cpu" in
 arm*)
