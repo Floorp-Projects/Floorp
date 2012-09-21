@@ -81,6 +81,9 @@ public:
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
+
+  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+
   /**
    * Helper for SetAttr/SetParsedAttr. This method will return true if aNotify
    * is true or there are mutation listeners that must be triggered, the
