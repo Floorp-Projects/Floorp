@@ -12,15 +12,15 @@
     </declare-styleable>
 
     <declare-styleable name="MenuItem">
-        <attr name="id" format="string"/>
-        <attr name="orderInCategory" format="string"/>
-        <attr name="title"/>
-        <attr name="icon" format="string"/>
-        <attr name="checkable" format="boolean"/>
-        <attr name="checked" format="boolean"/>
-        <attr name="visible" format="string"/>
-        <attr name="enabled" format="string"/>
-        <attr name="showAsAction" format="boolean"/>
+        <attr name="android:id"/>
+        <attr name="android:orderInCategory"/>
+        <attr name="android:title"/>
+        <attr name="android:icon"/>
+        <attr name="android:checkable"/>
+        <attr name="android:checked"/>
+        <attr name="android:visible"/>
+        <attr name="android:enabled"/>
+        <attr name="android:showAsAction"/>
     </declare-styleable>
 
     <declare-styleable name="FlowLayout">

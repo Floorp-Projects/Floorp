@@ -173,6 +173,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "ToggleProfiling", false);
+    Services.obs.addObserver(this, "Memory:Dump", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -1120,6 +1121,8 @@ var BrowserApp = {
       } else {
         profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
       }
+    } else if (aTopic == "Memory:Dump") {
+      this.dumpMemoryStats(aData);
     }
   },
 
@@ -1132,7 +1135,83 @@ var BrowserApp = {
   // nsIAndroidBrowserApp
   getBrowserTab: function(tabId) {
     return this.getTabForId(tabId);
-  }
+  },
+
+  dumpMemoryStats: function(aLabel) {
+    // TODO once bug 788021 has landed, replace this code and just invoke that instead
+    // currently this code is hijacked from areweslimyet.com, original code can be found at:
+    // https://github.com/Nephyrin/MozAreWeSlimYet/blob/master/mozmill_endurance_test/performance.js
+    var memMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
+
+    var timestamp = new Date();
+    var memory = {};
+
+    // These *should* be identical to the explicit/resident root node
+    // sum, AND the explicit/resident node explicit value (on newer builds),
+    // but we record all three so we can make sure the data is consistent
+    memory['manager_explicit'] = memMgr.explicit;
+    memory['manager_resident'] = memMgr.resident;
+
+    var knownHeap = 0;
+
+    function addReport(path, amount, kind, units) {
+      if (units !== undefined && units != Ci.nsIMemoryReporter.UNITS_BYTES)
+        // Unhandled. (old builds don't specify units, but use only bytes)
+        return;
+
+      if (memory[path])
+        memory[path] += amount;
+      else
+        memory[path] = amount;
+      if (kind !== undefined && kind == Ci.nsIMemoryReporter.KIND_HEAP
+          && path.indexOf('explicit/') == 0)
+        knownHeap += amount;
+    }
+
+    // Normal reporters
+    var reporters = memMgr.enumerateReporters();
+    while (reporters.hasMoreElements()) {
+      var r = reporters.getNext();
+      r instanceof Ci.nsIMemoryReporter;
+      if (r.path.length) {
+        addReport(r.path, r.amount, r.kind, r.units);
+      }
+    }
+
+    // Multireporters
+    if (memMgr.enumerateMultiReporters) {
+      var multireporters = memMgr.enumerateMultiReporters();
+
+      while (multireporters.hasMoreElements()) {
+        var mr = multireporters.getNext();
+        mr instanceof Ci.nsIMemoryMultiReporter;
+        mr.collectReports(function (proc, path, kind, units, amount, description, closure) {
+          addReport(path, amount, kind, units);
+        }, null);
+      }
+    }
+
+    var heapAllocated = memory['heap-allocated'];
+    // Called heap-used in older builds
+    if (!heapAllocated) heapAllocated = memory['heap-used'];
+    // This is how about:memory calculates derived value heap-unclassified, which
+    // is necessary to get a proper explicit value.
+    if (knownHeap && heapAllocated)
+      memory['explicit/heap-unclassified'] = memory['heap-allocated'] - knownHeap;
+
+    // If the build doesn't have a resident/explicit reporter, but does have
+    // the memMgr.explicit/resident field, use that
+    if (!memory['resident'])
+      memory['resident'] = memory['manager_resident']
+    if (!memory['explicit'])
+      memory['explicit'] = memory['manager_explicit']
+
+    var label = "[AboutMemoryDump|" + aLabel + "] ";
+    dump(label + timestamp);
+    for (var type in memory) {
+      dump(label + type + " = " + memory[type]);
+    }
+  },
 };
 
 var NativeWindow = {
