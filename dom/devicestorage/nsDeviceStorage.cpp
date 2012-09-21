@@ -166,15 +166,15 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
   extensionMatch.AppendLiteral(";");
 
   if (aType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
-    return FindInReadable(extensionMatch, mPicturesExtensions);
+    return CaseInsensitiveFindInReadable(extensionMatch, mPicturesExtensions);
   }
 
   if (aType.EqualsLiteral(DEVICESTORAGE_VIDEOS)) {
-    return FindInReadable(extensionMatch, mVideosExtensions);
+    return CaseInsensitiveFindInReadable(extensionMatch, mVideosExtensions);
   }
 
   if (aType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
-    return FindInReadable(extensionMatch, mMusicExtensions);
+    return CaseInsensitiveFindInReadable(extensionMatch, mMusicExtensions);
   }
 
   return false;
