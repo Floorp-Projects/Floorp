@@ -78,6 +78,7 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage &aImage, imgIDecoderObserver* aObserver
   , mCurrentRow(-1)
   , mLastFlushedRow(-1)
   , mImageData(nullptr)
+  , mColormap(nullptr)
   , mOldColor(0)
   , mCurrentFrame(-1)
   , mCurrentPass(0)
@@ -187,6 +188,14 @@ nsresult nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
                             mGIFStruct.width, mGIFStruct.height,
                             format, aDepth, &mImageData, &imageDataLength,
                             &mColormap, &mColormapSize);
+
+    // While EnsureFrame can reuse frames, we unconditionally increment
+    // mGIFStruct.images_decoded when we're done with a frame, so we both can
+    // and need to zero out the colormap and image data after every call to
+    // EnsureFrame.
+    if (NS_SUCCEEDED(rv) && mColormap) {
+      memset(mColormap, 0, mColormapSize);
+    }
   } else {
     // Regardless of depth of input, image is decoded into 24bit RGB
     rv = mImage.EnsureFrame(mGIFStruct.images_decoded,
@@ -197,6 +206,8 @@ nsresult nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 
   if (NS_FAILED(rv))
     return rv;
+
+  memset(mImageData, 0, imageDataLength);
 
   mImage.SetFrameDisposalMethod(mGIFStruct.images_decoded,
                                 mGIFStruct.disposal_method);
