@@ -320,7 +320,8 @@ IsWin8OrLater()
 }
 
 bool
-nsWindowsShellService::IsDefaultBrowserVista(bool* aIsDefaultBrowser)
+nsWindowsShellService::IsDefaultBrowserVista(bool aCheckAllTypes,
+                                             bool* aIsDefaultBrowser)
 {
   IApplicationAssociationRegistration* pAAR;
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
@@ -348,6 +349,22 @@ nsWindowsShellService::IsDefaultBrowserVista(bool* aIsDefaultBrowser)
       } else {
         *aIsDefaultBrowser = false;
       }
+      // If this is a startup check, then we don't check file type
+      // associations. This is because the win8 UI for file type
+      // association has to be done through the control panel.  If this
+      // is not a startup check, then we're checking through the control
+      // panel and we should also check for file type association.
+      if (aCheckAllTypes && *aIsDefaultBrowser) {
+        hr = pAAR->QueryCurrentDefault(L".html", AT_FILEEXTENSION, AL_EFFECTIVE,
+                                       &registeredApp);
+        if (SUCCEEDED(hr)) {
+          LPCWSTR firefoxHTMLProgID = L"FirefoxHTML";
+          *aIsDefaultBrowser = !wcsicmp(registeredApp, firefoxHTMLProgID);
+          CoTaskMemFree(registeredApp);
+        } else {
+          *aIsDefaultBrowser = false;
+        }
+      }
     }
 
     pAAR->Release();
@@ -358,19 +375,17 @@ nsWindowsShellService::IsDefaultBrowserVista(bool* aIsDefaultBrowser)
 
 NS_IMETHODIMP
 nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
+                                        bool aForAllTypes,
                                         bool* aIsDefaultBrowser)
 {
   // If this is the first browser window, maintain internal state that we've
-  // checked this session (so that subsequent window opens don't show the 
+  // checked this session (so that subsequent window opens don't show the
   // default browser dialog).
   if (aStartupCheck)
     mCheckedThisSession = true;
-  return IsDefaultBrowser(aIsDefaultBrowser);
-}
 
-nsresult
-nsWindowsShellService::IsDefaultBrowser(bool* aIsDefaultBrowser)
-{
+  // Assume we're the default unless one of the several checks below tell us
+  // otherwise.
   *aIsDefaultBrowser = true;
 
   PRUnichar exePath[MAX_BUF];
@@ -448,7 +463,7 @@ nsWindowsShellService::IsDefaultBrowser(bool* aIsDefaultBrowser)
   // Only check if Firefox is the default browser on Vista and above if the
   // previous checks show that Firefox is the default browser.
   if (*aIsDefaultBrowser) {
-    IsDefaultBrowserVista(aIsDefaultBrowser);
+    IsDefaultBrowserVista(aForAllTypes, aIsDefaultBrowser);
   }
 
   // To handle the case where DDE isn't disabled due for a user because there
@@ -588,6 +603,49 @@ DynSHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
                                                               NS_ERROR_FAILURE;
 }
 
+nsresult
+nsWindowsShellService::LaunchControlPanelDefaultPrograms()
+{
+  // Build the path control.exe path safely
+  WCHAR controlEXEPath[MAX_PATH + 1] = { '\0' };
+  if (!GetSystemDirectoryW(controlEXEPath, MAX_PATH)) {
+    return NS_ERROR_FAILURE;
+  }
+  LPCWSTR controlEXE = L"control.exe";
+  if (wcslen(controlEXEPath) + wcslen(controlEXE) >= MAX_PATH) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!PathAppendW(controlEXEPath, controlEXE)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  WCHAR params[] = L"control.exe /name Microsoft.DefaultPrograms /page pageDefaultProgram";
+  STARTUPINFOW si = {sizeof(si), 0};
+  si.dwFlags = STARTF_USESHOWWINDOW;
+  si.wShowWindow = SW_SHOWDEFAULT;
+  PROCESS_INFORMATION pi = {0};
+  if (!CreateProcessW(controlEXEPath, params, NULL, NULL, FALSE, 0, NULL,
+                      NULL, &si, &pi)) {
+    return NS_ERROR_FAILURE;
+  }
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
+
+  return NS_OK;
+}
+
+nsresult
+nsWindowsShellService::LaunchHTTPHandlerPane()
+{
+  OPENASINFO info;
+  info.pcszFile = L"http";
+  info.pcszClass = NULL;
+  info.oaifInFlags = OAIF_FORCE_REGISTRATION | 
+                     OAIF_URL_PROTOCOL |
+                     OAIF_REGISTER_EXT;
+  return DynSHOpenWithDialog(NULL, &info);
+}
+
 NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 {
@@ -603,18 +661,23 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 
   nsresult rv = LaunchHelper(appHelperPath);
   if (NS_SUCCEEDED(rv) && IsWin8OrLater()) {
-    OPENASINFO info;
-    info.pcszFile = L"http";
-    info.pcszClass = NULL;
-    info.oaifInFlags = OAIF_FORCE_REGISTRATION | 
-                       OAIF_URL_PROTOCOL |
-                       OAIF_REGISTER_EXT;
-    nsresult rv = DynSHOpenWithDialog(NULL, &info);
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool isDefaultBrowser = false;
-    rv = NS_SUCCEEDED(IsDefaultBrowser(&isDefaultBrowser)) &&
-         isDefaultBrowser ? NS_OK : NS_ERROR_FAILURE;
+    if (aClaimAllTypes) {
+      rv = LaunchControlPanelDefaultPrograms();
+      // The above call should never really fail, but just in case
+      // fall back to showing the HTTP association screen only.
+      if (NS_FAILED(rv)) {
+        rv = LaunchHTTPHandlerPane();
+      }
+    } else {
+      rv = LaunchHTTPHandlerPane();
+      // The above calls hould never really fail, but just in case
+      // fallb ack to showing control panel for all defaults
+      if (NS_FAILED(rv)) {
+        rv = LaunchControlPanelDefaultPrograms();
+      }
+    }
   }
+
   return rv;
 }
 
