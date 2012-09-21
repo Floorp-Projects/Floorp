@@ -81,7 +81,6 @@ enum SystemTimeChange {
   SYS_TIME_CHANGE_GUARD
 };
 
-typedef Observer<SystemTimeChange> SystemTimeChangeObserver;
 } // namespace hal
 } // namespace mozilla
 
