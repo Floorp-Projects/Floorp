@@ -246,7 +246,21 @@ class B2GRemoteAutomation(Automation):
         if 'b2g' not in session:
             raise Exception("bad session value %s returned by start_session" % session)
 
-        if self.context_chrome:
+        if self._is_emulator:
+            # Disable offline status management (bug 777145), otherwise the network
+            # will be 'offline' when the mochitests start.  Presumably, the network
+            # won't be offline on a real device, so we only do this for emulators.
+            self.marionette.set_context(self.marionette.CONTEXT_CHROME)
+            self.marionette.execute_script("""
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                Services.io.manageOfflineStatus = false;
+                Services.io.offline = false;
+                """)
+
+            if not self.context_chrome:
+                self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
+
+        elif self.context_chrome:
             self.marionette.set_context(self.marionette.CONTEXT_CHROME)
 
         # start the tests
