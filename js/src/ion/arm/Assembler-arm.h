@@ -748,7 +748,9 @@ class DTRAddr
     uint32 encode() {
         return data;
     }
-
+    Register getBase() {
+        return Register::FromCode((data >> 16) &0xf);
+    }
   private:
     friend class Operand;
     DTRAddr(uint32 blob)
