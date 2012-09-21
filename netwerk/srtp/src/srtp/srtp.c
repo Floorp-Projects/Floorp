@@ -463,11 +463,7 @@ srtp_stream_init_keys(srtp_stream_ctx_t *srtp, const void *key) {
     }
   }
   debug_print(mod_srtp, "cipher key: %s", 
-	      octet_string_hex_string(tmp_key, rtp_base_key_len));
-  if (rtp_salt_len > 0) {
-    debug_print(mod_srtp, "cipher salt: %s",
-		octet_string_hex_string(tmp_key + rtp_base_key_len, rtp_salt_len));
-  }
+	      octet_string_hex_string(tmp_key, rtp_keylen));
 
   /* initialize cipher */
   stat = cipher_init(srtp->rtp_cipher, tmp_key, direction_any);
@@ -531,11 +527,7 @@ srtp_stream_init_keys(srtp_stream_ctx_t *srtp, const void *key) {
     }
   }
   debug_print(mod_srtp, "rtcp cipher key: %s", 
-	      octet_string_hex_string(tmp_key, rtcp_base_key_len));  
-  if (rtcp_salt_len > 0) {
-    debug_print(mod_srtp, "rtcp cipher salt: %s",
-		octet_string_hex_string(tmp_key + rtcp_base_key_len, rtcp_salt_len));
-  }
+	      octet_string_hex_string(tmp_key, rtcp_keylen));  
 
   /* initialize cipher */
   stat = cipher_init(srtp->rtcp_cipher, tmp_key, direction_any);
