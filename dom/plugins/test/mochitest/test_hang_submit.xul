@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Basic Plugin Tests"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <title>Plugin Hang Submission Test</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+</body>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+SimpleTest.ignoreAllUncaughtExceptions();
+
+const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
+const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
+if (isOSXLion || isOSXMtnLion) {
+  todo(false, "Can't test plugin crash notification on OS X 10.7 or 10.8, see bug 705047");
+  SimpleTest.finish();
+}
+
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+const crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(Ci.nsICrashReporter);
+const oldServerPref = Services.prefs.getCharPref("toolkit.crashreporter.pluginHangSubmitURL");
+const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
+
+const oldTimeoutPref = Services.prefs.getIntPref("dom.ipc.plugins.timeoutSecs");
+
+var testObserver = {
+  observe: function(subject, topic, data) {
+    if (data == "submitting") // not done yet
+      return;
+    is(data, "success", "report should have been submitted successfully");
+    is(topic, "crash-report-status", "Checking correct topic");
+    ok(subject instanceof Ci.nsIPropertyBag2, "Subject should be a property bag");
+    ok(subject.hasKey("serverCrashID"), "Should have a server crash ID");
+    let crashid = subject.getPropertyAsAString("serverCrashID");
+    isnot(crashid, "", "Server crash ID should not be an empty string");
+
+    // Verify the data. The SJS script will return the data that was POSTed
+    let req = new XMLHttpRequest();
+    req.open("GET", SERVER_URL + "?id=" + crashid, false);
+    req.send(null);
+    is(req.status, 200, "Server response should be 200 OK");
+    let submitted = JSON.parse(req.responseText);
+
+    ok(!("Throttleable" in submitted), "Submit request should not be Throttleable");
+    is(submitted.ProcessType, "plugin", "Should specify ProcessType=plugin");
+    ok("PluginHang" in submitted, "Request should contain PluginHang field");
+    ok("additional_minidumps" in submitted, "Request should contain additional_minidumps field");
+    let dumpNames = submitted.additional_minidumps.split(',');
+    ok(dumpNames.indexOf("browser") != -1, "additional_minidumps should contain browser");
+    info("additional_minidumps="+submitted.additional_minidumps);
+    ok("upload_file_minidump" in submitted, "Request should contain upload_file_minidump field");
+    ok("upload_file_minidump_browser" in submitted, "Request should contain upload_file_minidump_browser field");
+
+    // Cleanup
+    // First remove our fake submitted report
+    let file = Services.dirsvc.get("UAppData", Ci.nsILocalFile);
+    file.append("Crash Reports");
+    file.append("submitted");
+    file.append(crashid + ".txt");
+    file.remove(false);
+
+    // Next unregister our observer
+    Services.obs.removeObserver(testObserver, "crash-report-status");
+
+    // Then re-set MOZ_CRASHREPORTER_NO_REPORT
+    let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+    env.set("MOZ_CRASHREPORTER_NO_REPORT", "1");
+
+    // Finally re-set prefs
+    Services.prefs.setCharPref("toolkit.crashreporter.pluginHangSubmitURL", oldServerPref);
+    Services.prefs.setIntPref("dom.ipc.plugins.timeoutSecs", oldTimeoutPref);
+    SimpleTest.finish();
+  },
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsIObserver) ||
+        iid.equals(Ci.nsISupportsWeakReference) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  }
+};
+
+function onPluginCrashed(aEvent) {
+  ok(true, "Plugin crashed notification received");
+  is(aEvent.type, "PluginCrashed", "event is correct type");
+
+  let pleaseLink = document.getAnonymousElementByAttribute(
+                            aEvent.target, "class", "pleaseSubmitLink");
+  // try to submit this report
+  sendMouseEvent({type:'click'}, pleaseLink, window);
+}
+
+function runTests() {
+  if (!SimpleTest.testPluginIsOOP()) {
+    todo(false, "Skipping this test when test plugin is not OOP.");
+    SimpleTest.finish();
+    return;
+  }
+
+  // Default plugin hang timeout is too high for mochitests
+  Services.prefs.setIntPref("dom.ipc.plugins.timeoutSecs", 1);
+
+  // the test harness will have set MOZ_CRASHREPORTER_NO_REPORT,
+  // ensure that we can change the setting and have our minidumps
+  // wind up in Crash Reports/pending
+  let env = Cc["@mozilla.org/process/environment;1"]
+                      .getService(Ci.nsIEnvironment);
+  env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
+
+  // Override the crash reporter URL to send to our fake server
+  Services.prefs.setCharPref("toolkit.crashreporter.pluginHangSubmitURL", SERVER_URL);
+
+  // Hook into plugin crash events
+  Services.obs.addObserver(testObserver, "crash-report-status", true);
+  document.addEventListener("PluginCrashed", onPluginCrashed, false);
+
+  var pluginElement = document.getElementById("plugin1");
+  try {
+    pluginElement.hang();
+  } catch (e) {
+  }
+}
+]]>
+</script>
+</window>
