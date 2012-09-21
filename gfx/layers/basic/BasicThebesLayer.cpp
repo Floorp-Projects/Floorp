@@ -314,6 +314,12 @@ BasicShadowableThebesLayer::SetBackBufferAndAttrs(const OptionalThebesBuffer& aB
   mROFrontBuffer = aReadOnlyFrontBuffer;
   mFrontUpdatedRegion = aFrontUpdatedRegion;
   mFrontValidRegion = aValidRegion;
+  if (OptionalThebesBuffer::Tnull_t == mROFrontBuffer.type()) {
+    // For null readonly front, we have single buffer mode
+    // so we can do sync right now, because it does not create new buffer and
+    // don't do any graphic operations
+    SyncFrontBufferToBackBuffer();
+  }
 }
 
 void
@@ -322,11 +328,6 @@ BasicShadowableThebesLayer::SyncFrontBufferToBackBuffer()
   if (!mFrontAndBackBufferDiffer) {
     return;
   }
-
-  // We temporarily map our back buffer here in order to copy from the
-  // front buffer.  We need a live buffer tracker in order to unmap
-  // that buffer when appropriate.
-  MOZ_ASSERT(mBufferTracker);
 
   gfxASurface* backBuffer = mBuffer.GetBuffer();
   if (!IsSurfaceDescriptorValid(mBackBuffer)) {
