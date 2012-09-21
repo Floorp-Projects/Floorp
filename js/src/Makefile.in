@@ -131,6 +131,7 @@ CPPSRCS		= \
 		SPSProfiler.cpp \
 		TokenStream.cpp \
 		TestingFunctions.cpp \
+		Profilers.cpp \
 		LifoAlloc.cpp \
 		Eval.cpp \
 		MapObject.cpp \
