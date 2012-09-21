@@ -15,17 +15,16 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const PREF_BRANCH = "browser.newtab.";
+const TOPIC_DELAYED_STARTUP = "browser-delayed-startup-finished";
+const PRELOADER_INIT_DELAY_MS = 5000;
 
-let BrowserNewTabPreloader =  {
+let BrowserNewTabPreloader = {
   init: function Preloader_init() {
-    Preferences.init();
-
-    if (Preferences.enabled) {
-      HiddenBrowser.create();
-    }
+    Initializer.start();
   },
 
   uninit: function Preloader_uninit() {
+    Initializer.stop();
     HostFrame.destroy();
     Preferences.uninit();
     HiddenBrowser.destroy();
@@ -37,6 +36,51 @@ let BrowserNewTabPreloader =  {
 };
 
 Object.freeze(BrowserNewTabPreloader);
+
+let Initializer = {
+  _timer: null,
+  _observing: false,
+
+  start: function Initializer_start() {
+    Services.obs.addObserver(this, TOPIC_DELAYED_STARTUP, false);
+    this._observing = true;
+  },
+
+  stop: function Initializer_stop() {
+    if (this._timer) {
+      this._timer.cancel();
+      this._timer = null;
+    }
+
+    if (this._observing) {
+      Services.obs.removeObserver(this, TOPIC_DELAYED_STARTUP);
+      this._observing = false;
+    }
+  },
+
+  observe: function Initializer_observe(aSubject, aTopic, aData) {
+    if (aTopic == TOPIC_DELAYED_STARTUP) {
+      Services.obs.removeObserver(this, TOPIC_DELAYED_STARTUP);
+      this._observing = false;
+      this._startTimer();
+    } else if (aTopic == "timer-callback") {
+      this._timer = null;
+      this._startPreloader();
+    }
+  },
+
+  _startTimer: function Initializer_startTimer() {
+    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._timer.init(this, PRELOADER_INIT_DELAY_MS, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  _startPreloader: function Initializer_startPreloader() {
+    Preferences.init();
+    if (Preferences.enabled) {
+      HiddenBrowser.create();
+    }
+  }
+};
 
 let Preferences = {
   _enabled: null,
