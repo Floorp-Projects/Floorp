@@ -16,24 +16,23 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/PermissionSettings.jsm");
 
-var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"].getService(Components.interfaces.nsISyncMessageSender);
+var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
 
 // PermissionSettings
 
 const PERMISSIONSETTINGS_CONTRACTID = "@mozilla.org/permissionSettings;1";
 const PERMISSIONSETTINGS_CID        = Components.ID("{18390770-02ab-11e2-a21f-0800200c9a66}");
-const nsIDOMPermissionSettings      = Components.interfaces.nsIDOMPermissionSettings;
+const nsIDOMPermissionSettings      = Ci.nsIDOMPermissionSettings;
 
 function PermissionSettings()
 {
   debug("Constructor");
 }
 
-var permissionManager = Components.classes["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
-var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService(Components.interfaces.nsIScriptSecurityManager);
-var appsService = Components.classes["@mozilla.org/AppsService;1"].getService(Components.interfaces.nsIAppsService);
+var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
+var appsService = Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
 
 PermissionSettings.prototype = {
   get: function get(aPermission, aManifestURL, aOrigin, aBrowserFlag) {
