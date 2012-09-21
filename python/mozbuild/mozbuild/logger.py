@@ -6,6 +6,8 @@
 # could likely be split out of mozbuild. For now, mozbuild is the only
 # consumer and thus it lives here.
 
+from __future__ import unicode_literals
+
 try:
     import blessings
 except ImportError:
@@ -59,7 +61,7 @@ class StructuredHumanFormatter(logging.Formatter):
     def format(self, record):
         elapsed = self._time(record)
 
-        return u'%4.2f %s' % (elapsed, record.msg.format(**record.params))
+        return '%4.2f %s' % (elapsed, record.msg.format(**record.params))
 
     def _time(self, record):
         t = record.created - self.start_time
@@ -82,7 +84,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         t = self.terminal.blue('%4.2f' % self._time(record))
         f = record.msg.format(**record.params)
 
-        return u'%s %s' % (t, self._colorize(f))
+        return '%s %s' % (t, self._colorize(f))
 
     def _colorize(self, s):
         if not self.terminal:
@@ -124,6 +126,8 @@ class LoggingManager(object):
 
         self.structured_filter = ConvertToStructuredFilter()
 
+        self.structured_loggers = [self.mozbuild_logger]
+
         self._terminal = None
 
     @property
@@ -145,7 +149,8 @@ class LoggingManager(object):
         handler.setLevel(logging.DEBUG)
 
         # And hook it up.
-        self.mozbuild_logger.addHandler(handler)
+        for logger in self.structured_loggers:
+            logger.addHandler(handler)
 
         self.json_handlers.append(handler)
 
@@ -165,7 +170,8 @@ class LoggingManager(object):
         handler.setFormatter(formatter)
         handler.setLevel(level)
 
-        self.mozbuild_logger.addHandler(handler)
+        for logger in self.structured_loggers:
+            logger.addHandler(handler)
 
         self.terminal_handler = handler
         self.terminal_formatter = formatter
@@ -180,10 +186,12 @@ class LoggingManager(object):
         old = self.terminal_handler
 
         if old:
-            self.mozbuild_logger.removeHandler(old)
+            for logger in self.structured_loggers:
+                logger.removeHandler(old)
 
         if handler:
-            self.mozbuild_logger.addHandler(handler)
+            for logger in self.structured_loggers:
+                logger.addHandler(handler)
 
         self.terminal_handler = handler
 
@@ -200,3 +208,11 @@ class LoggingManager(object):
         if self.terminal_handler:
             self.terminal_handler.removeFilter(self.structured_filter)
             self.root_logger.removeHandler(self.terminal_handler)
+
+    def register_structured_logger(self, logger):
+        """Register a structured logger.
+
+        This needs to be called for all structured loggers that don't chain up
+        to the mozbuild logger in order for their output to be captured.
+        """
+        self.structured_loggers.append(logger)

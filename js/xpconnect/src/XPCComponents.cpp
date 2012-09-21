@@ -1403,7 +1403,7 @@ nsXPCComponents_Results::NewResolve(nsIXPConnectWrappedNative *wrapper,
         nsresult rv;
         while (nsXPCException::IterateNSResults(&rv, &rv_name, nullptr, &iter)) {
             if (!strcmp(name.ptr(), rv_name)) {
-                // The double cast below is required since nsresult is an enum,
+                // The two casts below is required since nsresult is an enum,
                 // and it can be interpreted as a signed integer if we directly
                 // cast to a double.
                 jsval val = JS_NumberValue((double)(uint32_t)rv);
@@ -4721,7 +4721,10 @@ nsXPCComponents::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
     nsresult rv = NS_OK;
     if (doResult) {
-        *vp = JS_NumberValue((double) res);
+        // The two casts below is required since nsresult is an enum,
+        // and it can be interpreted as a signed integer if we directly
+        // cast to a double.
+        *vp = JS_NumberValue((double)(uint32_t) res);
         rv = NS_SUCCESS_I_DID_SOMETHING;
     }
 
