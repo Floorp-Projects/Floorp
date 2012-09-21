@@ -1373,6 +1373,7 @@ BufferOffset
 Assembler::as_dtr(LoadStore ls, int size, Index mode,
                   Register rt, DTRAddr addr, Condition c, uint32 *dest)
 {
+    JS_ASSERT (mode == Offset ||  (rt != addr.getBase() && pc != addr.getBase()));
     JS_ASSERT(size == 32 || size == 8);
     return writeInst( 0x04000000 | ls | (size == 8 ? 0x00400000 : 0) | mode | c |
                       RT(rt) | addr.encode(), dest);
