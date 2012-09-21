@@ -39,13 +39,12 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
         JSScript *script = GetTopIonJSScript(cx);
         if (script->hasIonScript() && ++script->ion->slowCallCount >= js_IonOptions.slowCallLimit) {
             AutoFlushCache afc("InvokeFunction");
-            Invalidate(cx, script, false);
 
-            // Finally, poison the script so we don't try to run it again
-            ForbidCompilation(script);
+            // Poison the script so we don't try to run it again. This will
+            // trigger invalidation.
+            ForbidCompilation(cx, script);
         }
     }
-
 
     // TI will return false for monitorReturnTypes, meaning there is no
     // TypeBarrier or Monitor instruction following this. However, we need to
