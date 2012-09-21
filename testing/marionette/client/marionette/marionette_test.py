@@ -219,7 +219,7 @@ class MarionetteJSTestCase(CommonTestCase):
                 self.loglines = self.marionette.get_logs()
                 raise
 
-        self.marionette.execute_script("log('TEST-END: %s');" % self.jsFile)
+        self.marionette.execute_script("log('TEST-END: %s');" % self.jsFile.replace('\\', '\\\\'))
 
 
 
