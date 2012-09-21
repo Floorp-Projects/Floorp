@@ -46,9 +46,27 @@ PaymentContentHelper.prototype = {
   pay: function pay(aJwts) {
     let request = this.createRequest();
     let requestId = this.getRequestId(request);
+
+    let docShell = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIWebNavigation)
+                   .QueryInterface(Ci.nsIDocShell);
+    if (!docShell.isActive) {
+      debug("The caller application is a background app. No request " +
+            "will be sent");
+      let runnable = {
+        run: function run() {
+          Services.DOMRequest.fireError(request, "BACKGROUND_APP");
+        }
+      }
+      Services.tm.currentThread.dispatch(runnable,
+                                         Ci.nsIThread.DISPATCH_NORMAL);
+      return request;
+    }
+
     if (!Array.isArray(aJwts)) {
       aJwts = [aJwts];
     }
+
     cpmm.sendAsyncMessage("Payment:Pay", {
       jwts: aJwts,
       requestId: requestId
@@ -59,6 +77,7 @@ PaymentContentHelper.prototype = {
   // nsIDOMGlobalPropertyInitializer
 
   init: function(aWindow) {
+    this._window = aWindow;
     this.initHelper(aWindow, PAYMENT_IPC_MSG_NAMES);
     return this.pay.bind(this);
   },
