@@ -12,7 +12,7 @@ Version:        %{moz_numeric_app_version}
 Release:        %{?moz_rpm_release:%{moz_rpm_release}}%{?buildid:.%{buildid}}
 Summary:        %{pr_name}
 Group:          Applications/Internet
-License:        MPLv1.1 or GPLv2+ or LGPLv2+
+License:        MPL 2
 Vendor:         Mozilla
 URL:            http://www.mozilla.org/projects/firefox/
 Source0:        %{name}.desktop

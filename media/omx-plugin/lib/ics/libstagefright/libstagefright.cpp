@@ -77,7 +77,14 @@ MetaData::findCString(uint32_t key, const char **value)
 {
   return false;
 }
- 
+
+MOZ_EXPORT_API(bool)
+MetaData::findRect(unsigned int key, int *cropLeft, int *cropTop,
+                   int *cropRight, int *cropBottom)
+{
+  abort();
+}
+
 MOZ_EXPORT_API(MediaSource::ReadOptions)::ReadOptions()
 {
 }

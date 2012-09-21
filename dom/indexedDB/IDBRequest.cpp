@@ -81,12 +81,6 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   NS_ASSERTION(!mHaveResultOrErrorCode, "Already called!");
   NS_ASSERTION(JSVAL_IS_VOID(mResultVal), "Should be undefined!");
 
-  // See if our window is still valid. If not then we're going to pretend that
-  // we never completed.
-  if (NS_FAILED(CheckInnerWindowCorrectness())) {
-    return NS_OK;
-  }
-
   mHaveResultOrErrorCode = true;
 
   nsresult rv = aHelper->GetResultCode();
@@ -94,6 +88,12 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   // If the request failed then set the error code and return.
   if (NS_FAILED(rv)) {
     SetError(rv);
+    return NS_OK;
+  }
+
+  // See if our window is still valid. If not then we're going to pretend that
+  // we never completed.
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
     return NS_OK;
   }
 

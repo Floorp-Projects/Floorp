@@ -353,6 +353,7 @@ NetworkManager.prototype = {
       }
       this.setDefaultRouteAndDNS(oldActive);
     }
+    Services.io.offline = !this.active;
   },
 
   setDefaultRouteAndDNS: function setDefaultRouteAndDNS(oldInterface) {

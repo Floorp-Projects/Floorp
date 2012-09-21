@@ -1403,7 +1403,10 @@ nsXPCComponents_Results::NewResolve(nsIXPConnectWrappedNative *wrapper,
         nsresult rv;
         while (nsXPCException::IterateNSResults(&rv, &rv_name, nullptr, &iter)) {
             if (!strcmp(name.ptr(), rv_name)) {
-                jsval val = JS_NumberValue((double)rv);
+                // The double cast below is required since nsresult is an enum,
+                // and it can be interpreted as a signed integer if we directly
+                // cast to a double.
+                jsval val = JS_NumberValue((double)(uint32_t)rv);
 
                 *objp = obj;
                 if (!JS_DefinePropertyById(cx, obj, id, val,
