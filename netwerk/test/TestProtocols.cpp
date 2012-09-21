@@ -50,12 +50,15 @@
 #include "nsITimedChannel.h"
 #include "nsChannelProperties.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/unused.h"
 
 #include "nsISimpleEnumerator.h"
 #include "nsStringAPI.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
 #include "prtime.h"
+
+using namespace mozilla;
 
 namespace TestProtocols {
 
@@ -307,7 +310,7 @@ TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
     int n;
 
     printf("Enter username: ");
-    fgets(buf, sizeof(buf), stdin);
+    unused << fgets(buf, sizeof(buf), stdin);
     n = strlen(buf);
     buf[n-1] = '\0'; // trim trailing newline
     *user = NS_StringCloneData(NS_ConvertUTF8toUTF16(buf));
@@ -799,7 +802,7 @@ nsresult LoadURLFromConsole()
 {
     char buffer[1024];
     printf("Enter URL (\"q\" to start): ");
-    scanf("%s", buffer);
+    unused << scanf("%s", buffer);
     if (buffer[0]=='q') 
         gAskUserForInput = false;
     else
