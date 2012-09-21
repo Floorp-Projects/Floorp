@@ -6,6 +6,8 @@
 # could likely be split out of mozbuild. For now, mozbuild is the only
 # consumer and thus it lives here.
 
+from __future__ import unicode_literals
+
 try:
     import blessings
 except ImportError:
@@ -59,7 +61,7 @@ class StructuredHumanFormatter(logging.Formatter):
     def format(self, record):
         elapsed = self._time(record)
 
-        return u'%4.2f %s' % (elapsed, record.msg.format(**record.params))
+        return '%4.2f %s' % (elapsed, record.msg.format(**record.params))
 
     def _time(self, record):
         t = record.created - self.start_time
@@ -82,7 +84,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         t = self.terminal.blue('%4.2f' % self._time(record))
         f = record.msg.format(**record.params)
 
-        return u'%s %s' % (t, self._colorize(f))
+        return '%s %s' % (t, self._colorize(f))
 
     def _colorize(self, s):
         if not self.terminal:
