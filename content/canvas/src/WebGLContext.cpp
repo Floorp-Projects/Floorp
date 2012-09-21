@@ -612,8 +612,8 @@ void WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
     const size_t kMaxWebGLContextsPerPrincipal = 2;
     const size_t kMaxWebGLContexts             = 4;
 #else
-    const size_t kMaxWebGLContextsPerPrincipal = 8;
-    const size_t kMaxWebGLContexts             = 16;
+    const size_t kMaxWebGLContextsPerPrincipal = 16;
+    const size_t kMaxWebGLContexts             = 32;
 #endif
     MOZ_ASSERT(kMaxWebGLContextsPerPrincipal < kMaxWebGLContexts);
 
