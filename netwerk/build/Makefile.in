@@ -36,6 +36,12 @@ SHARED_LIBRARY_LIBS = \
   ../ipc/$(LIB_PREFIX)neckoipc_s.$(LIB_SUFFIX) \
   $(NULL)
 
+ifdef MOZ_SRTP
+SHARED_LIBRARY_LIBS += \
+  ../srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \
+  $(NULL)
+endif
+
 ifeq ($(OS_ARCH),WINNT)
     SHARED_LIBRARY_LIBS += \
         ../system/win32/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
