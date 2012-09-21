@@ -343,13 +343,28 @@ Section "-Application" APP_IDX
                                     "FirefoxURL" \
                                     "FirefoxHTML"
 !endif
+    ; Set the Start Menu Internet and Vista Registered App HKCU registry keys.
+    ${SetStartMenuInternet} "HKCU"
+    ${FixShellIconHandler} "HKCU"
+
+    ; If we create either the desktop or start menu shortcuts, then
+    ; set IconsVisible to 1 otherwise to 0.
+    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+    StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
+    ${If} $AddDesktopSC == 1
+    ${OrIf} $AddStartMenuSC == 1
+      WriteRegDWORD HKCU "$0" "IconsVisible" 1
+    ${Else}
+      WriteRegDWORD HKCU "$0" "IconsVisible" 0
+    ${EndIf}
   ${EndIf}
 
-  ; The following keys should only be set if we can write to HKLM
+  ; The following keys should only be set if we can write to HKLM for pre win8
+  ; For post win8 we set the keys above in HKCU in addition to below in HKLM.
   ${If} $TmpVal == "HKLM"
     ; Set the Start Menu Internet and Vista Registered App HKLM registry keys.
-    ${SetStartMenuInternet}
-    ${FixShellIconHandler}
+    ${SetStartMenuInternet} "HKLM"
+    ${FixShellIconHandler} "HKLM"
 
     ; If we are writing to HKLM and create either the desktop or start menu
     ; shortcuts set IconsVisible to 1 otherwise to 0.
