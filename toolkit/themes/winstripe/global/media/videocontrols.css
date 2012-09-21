@@ -79,7 +79,7 @@
   -moz-appearance: none;
   background: url(chrome://global/skin/media/volumeThumb.png) no-repeat center;
   border: none;
-  min-width: 21px;
+  min-width: 20px;
   min-height: 10px;
 }
 
