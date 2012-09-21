@@ -39,8 +39,8 @@ struct EnumerationResponse
 
 struct StatStorageResponse
 {
-  int64_t totalBytes;
   int64_t freeBytes;
+  int64_t totalBytes;
   nsString mountState;
 };
 

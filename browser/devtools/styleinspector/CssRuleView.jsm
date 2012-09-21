@@ -1404,7 +1404,34 @@ RuleEditor.prototype = {
    */
   populate: function RuleEditor_populate()
   {
-    this.selectorText.textContent = this.rule.selectorText;
+    // Clear out existing viewers.
+    while (this.selectorText.hasChildNodes()) {
+      this.selectorText.removeChild(this.selectorText.lastChild);
+    }
+
+    // If selector text comes from a css rule, highlight selectors that
+    // actually match.  For custom selector text (such as for the 'element'
+    // style, just show the text directly.
+    if (this.rule.domRule && this.rule.domRule.selectorText) {
+      let selectors = CssLogic.getSelectors(this.rule.selectorText);
+      let element = this.rule.inherited || this.ruleView._viewedElement;
+      for (let i = 0; i < selectors.length; i++) {
+        let selector = selectors[i];
+        if (i != 0) {
+          createChild(this.selectorText, "span", {
+            class: "ruleview-selector-separator",
+            textContent: ", "
+          });
+        }
+        let cls = element.mozMatchesSelector(selector) ? "ruleview-selector-matched" : "ruleview-selector-unmatched";
+        createChild(this.selectorText, "span", {
+          class: cls,
+          textContent: selector
+        });
+      }
+    } else {
+      this.selectorText.textContent = this.rule.selectorText;
+    }
 
     for (let prop of this.rule.textProps) {
       if (!prop.editor) {
