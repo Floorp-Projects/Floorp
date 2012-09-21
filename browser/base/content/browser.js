@@ -155,7 +155,7 @@ XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
 #endif
 
 XPCOMUtils.defineLazyModuleGetter(this, "gBrowserNewTabPreloader",
-  "resource://gre/modules/BrowserNewTabPreloader.jsm", "BrowserNewTabPreloader");
+  "resource:///modules/BrowserNewTabPreloader.jsm", "BrowserNewTabPreloader");
 
 let gInitialPages = [
   "about:blank",
