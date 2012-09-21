@@ -14,7 +14,6 @@
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#include <new>
 #include <string.h>
 
 #include "jstypes.h"
