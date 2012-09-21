@@ -437,7 +437,7 @@ DaylightSavingTA(double t, JSContext *cx)
     }
 
     int64_t timeMilliseconds = static_cast<int64_t>(t);
-    int64_t offsetMilliseconds = cx->dstOffsetCache.getDSTOffsetMilliseconds(timeMilliseconds, cx);
+    int64_t offsetMilliseconds = cx->dstOffsetCache.getDSTOffsetMilliseconds(timeMilliseconds);
     return static_cast<double>(offsetMilliseconds);
 }
 
@@ -1265,7 +1265,7 @@ date_now(JSContext *cx, unsigned argc, Value *vp)
  * Set UTC time to a given time and invalidate cached local time.
  */
 static JSBool
-SetUTCTime(JSContext *cx, JSObject *obj, double t, Value *vp = NULL)
+SetUTCTime(JSObject *obj, double t, Value *vp = NULL)
 {
     JS_ASSERT(obj->isDate());
 
@@ -1282,10 +1282,9 @@ SetUTCTime(JSContext *cx, JSObject *obj, double t, Value *vp = NULL)
 }
 
 static void
-SetDateToNaN(JSContext *cx, JSObject *obj, Value *vp = NULL)
+SetDateToNaN(JSObject *obj, Value *vp = NULL)
 {
-    double NaN = cx->runtime->NaNValue.getDoubleRef();
-    SetUTCTime(cx, obj, NaN, vp);
+    SetUTCTime(obj, js_NaN, vp);
 }
 
 /*
@@ -1809,7 +1808,7 @@ date_setTime_impl(JSContext *cx, CallArgs args)
 
     Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
     if (args.length() == 0) {
-        SetDateToNaN(cx, thisObj, args.rval().address());
+        SetDateToNaN(thisObj, args.rval().address());
         return true;
     }
 
@@ -1817,7 +1816,7 @@ date_setTime_impl(JSContext *cx, CallArgs args)
     if (!ToNumber(cx, args[0], &result))
         return false;
 
-    return SetUTCTime(cx, thisObj, TimeClip(result), args.rval().address());
+    return SetUTCTime(thisObj, TimeClip(result), args.rval().address());
 }
 
 static JSBool
@@ -1878,7 +1877,7 @@ date_setMilliseconds_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(MakeDate(Day(t), time), cx));
 
     /* Steps 4-5. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    return SetUTCTime(thisObj, u, args.rval().address());
 }
 
 static JSBool
@@ -1909,7 +1908,7 @@ date_setUTCMilliseconds_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(MakeDate(Day(t), time));
 
     /* Steps 4-5. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    return SetUTCTime(thisObj, v, args.rval().address());
 }
 
 static JSBool
@@ -1947,7 +1946,7 @@ date_setSeconds_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(date, cx));
 
     /* Steps 6-7. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    return SetUTCTime(thisObj, u, args.rval().address());
 }
 
 /* ES5 15.9.5.31. */
@@ -1985,7 +1984,7 @@ date_setUTCSeconds_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(date);
 
     /* Steps 6-7. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    return SetUTCTime(thisObj, v, args.rval().address());
 }
 
 /* ES5 15.9.5.32. */
@@ -2028,7 +2027,7 @@ date_setMinutes_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(date, cx));
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    return SetUTCTime(thisObj, u, args.rval().address());
 }
 
 /* ES5 15.9.5.33. */
@@ -2071,7 +2070,7 @@ date_setUTCMinutes_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(date);
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    return SetUTCTime(thisObj, v, args.rval().address());
 }
 
 /* ES5 15.9.5.34. */
@@ -2119,7 +2118,7 @@ date_setHours_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(date, cx));
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    return SetUTCTime(thisObj, u, args.rval().address());
 }
 
 /* ES5 15.9.5.35. */
@@ -2167,7 +2166,7 @@ date_setUTCHours_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 8-9. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    return SetUTCTime(thisObj, v, args.rval().address());
 }
 
 /* ES5 15.9.5.36. */
@@ -2200,7 +2199,7 @@ date_setDate_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(newDate, cx));
 
     /* Steps 5-6. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    return SetUTCTime(thisObj, u, args.rval().address());
 }
 
 /* ES5 15.9.5.37. */
@@ -2233,7 +2232,7 @@ date_setUTCDate_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 5-6. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    return SetUTCTime(thisObj, v, args.rval().address());
 }
 
 static JSBool
@@ -2291,7 +2290,7 @@ date_setMonth_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(newDate, cx));
 
     /* Steps 6-7. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    return SetUTCTime(thisObj, u, args.rval().address());
 }
 
 static JSBool
@@ -2329,7 +2328,7 @@ date_setUTCMonth_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 6-7. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    return SetUTCTime(thisObj, v, args.rval().address());
 }
 
 static JSBool
@@ -2388,7 +2387,7 @@ date_setFullYear_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(newDate, cx));
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    return SetUTCTime(thisObj, u, args.rval().address());
 }
 
 static JSBool
@@ -2431,7 +2430,7 @@ date_setUTCFullYear_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    return SetUTCTime(thisObj, v, args.rval().address());
 }
 
 static JSBool
@@ -2459,7 +2458,7 @@ date_setYear_impl(JSContext *cx, CallArgs args)
 
     /* Step 3. */
     if (MOZ_DOUBLE_IS_NaN(y)) {
-        SetDateToNaN(cx, thisObj, args.rval().address());
+        SetDateToNaN(thisObj, args.rval().address());
         return true;
     }
 
@@ -2475,7 +2474,7 @@ date_setYear_impl(JSContext *cx, CallArgs args)
     double u = UTC(MakeDate(day, TimeWithinDay(t)), cx);
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, TimeClip(u), args.rval().address());
+    return SetUTCTime(thisObj, TimeClip(u), args.rval().address());
 }
 
 static JSBool
@@ -3158,7 +3157,7 @@ js_InitDateClass(JSContext *cx, HandleObject obj)
     RootedObject dateProto(cx, global->createBlankPrototype(cx, &DateClass));
     if (!dateProto)
         return NULL;
-    SetDateToNaN(cx, dateProto);
+    SetDateToNaN(dateProto);
 
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, js_Date, cx->names().Date, MAXARGS);
@@ -3200,7 +3199,7 @@ js_NewDateObjectMsec(JSContext *cx, double msec_time)
     JSObject *obj = NewBuiltinClassInstance(cx, &DateClass);
     if (!obj)
         return NULL;
-    if (!SetUTCTime(cx, obj, msec_time))
+    if (!SetUTCTime(obj, msec_time))
         return NULL;
     return obj;
 }
@@ -3225,7 +3224,7 @@ js_ClearDateCaches()
 }
 
 JS_FRIEND_API(JSBool)
-js_DateIsValid(JSContext *cx, JSObject* obj)
+js_DateIsValid(JSObject* obj)
 {
     return obj->isDate() && !MOZ_DOUBLE_IS_NaN(obj->getDateUTCTime().toNumber());
 }
@@ -3287,7 +3286,7 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 }
 
 JS_FRIEND_API(int)
-js_DateGetSeconds(JSContext *cx, JSObject* obj)
+js_DateGetSeconds(JSObject* obj)
 {
     if (!obj->isDate())
         return 0;
@@ -3299,7 +3298,7 @@ js_DateGetSeconds(JSContext *cx, JSObject* obj)
 }
 
 JS_FRIEND_API(double)
-js_DateGetMsecSinceEpoch(JSContext *cx, RawObject obj)
+js_DateGetMsecSinceEpoch(RawObject obj)
 {
     return obj->isDate() ? obj->getDateUTCTime().toNumber() : 0;
 }
