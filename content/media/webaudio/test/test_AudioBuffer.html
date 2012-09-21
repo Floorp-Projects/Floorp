@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test whether we can create an AudioContext interface</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+  var ac = new mozAudioContext();
+  var buffer = ac.createBuffer(2, 2048, 44100);
+  SpecialPowers.gc(); // Make sure that our channels are accessible after GC
+  ok(buffer, "Buffer was allocated successfully");
+  is(buffer.sampleRate, 44100, "Correct sample rate");
+  is(buffer.length, 2048, "Correct length");
+  ok(Math.abs(buffer.duration - 2048 / 44100) < 0.0001, "Correct duration");
+  is(buffer.numberOfChannels, 2, "Correct number of channels");
+  for (var i = 0; i < buffer.numberOfChannels; ++i) {
+    var buf = buffer.getChannelData(i);
+    ok(buf, "Buffer index " + i + " exists");
+    ok(buf instanceof Float32Array, "Result is a typed array");
+    is(buf.length, buffer.length, "Correct length");
+    var foundNonZero = false;
+    for (var j = 0; j < buf.length; ++j) {
+      if (buf[j] != 0) {
+        foundNonZero = true;
+        break;
+      }
+    }
+    ok(!foundNonZero, "Buffer " + i + " should be initialized to 0");
+  }
+  SpecialPowers.clearUserPref("media.webaudio.enabled");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
