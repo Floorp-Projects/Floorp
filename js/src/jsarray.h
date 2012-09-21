@@ -41,7 +41,7 @@ js_IdIsIndex(jsid id, uint32_t *indexp)
 }
 
 extern JSObject *
-js_InitArrayClass(JSContext *cx, JSObject *obj);
+js_InitArrayClass(JSContext *cx, js::HandleObject obj);
 
 extern bool
 js_InitContextBusyArrayTable(JSContext *cx);

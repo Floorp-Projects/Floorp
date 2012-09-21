@@ -226,6 +226,6 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
 } /* namespace js */
 
 extern JSObject *
-js_InitWeakMapClass(JSContext *cx, JSObject *obj);
+js_InitWeakMapClass(JSContext *cx, js::HandleObject obj);
 
 #endif

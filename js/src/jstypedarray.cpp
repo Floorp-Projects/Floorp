@@ -3458,7 +3458,7 @@ DataViewObject::initClass(JSContext *cx)
 }
 
 JSObject *
-js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
+js_InitTypedArrayClasses(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());

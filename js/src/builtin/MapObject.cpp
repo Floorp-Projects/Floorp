@@ -1180,7 +1180,7 @@ MapObject::iterator(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSObject *
-js_InitMapClass(JSContext *cx, JSObject *obj)
+js_InitMapClass(JSContext *cx, HandleObject obj)
 {
     return MapObject::initClass(cx, obj);
 }
@@ -1521,7 +1521,7 @@ SetObject::iterator(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSObject *
-js_InitSetClass(JSContext *cx, JSObject *obj)
+js_InitSetClass(JSContext *cx, HandleObject obj)
 {
     return SetObject::initClass(cx, obj);
 }
