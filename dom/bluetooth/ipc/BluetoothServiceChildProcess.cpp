@@ -230,7 +230,7 @@ BluetoothServiceChildProcess::SetPinCodeInternal(
 {
   SendRequest(aRunnable,
               SetPinCodeRequest(nsString(aDeviceAddress), nsString(aPinCode)));
-  return NS_OK;
+  return true;
 }
 
 bool
@@ -241,7 +241,7 @@ BluetoothServiceChildProcess::SetPasskeyInternal(
 {
   SendRequest(aRunnable,
               SetPasskeyRequest(nsString(aDeviceAddress), aPasskey));
-  return NS_OK;
+  return true;
 }
 
 bool
@@ -257,7 +257,7 @@ BluetoothServiceChildProcess::SetPairingConfirmationInternal(
     SendRequest(aRunnable,
                 DenyPairingConfirmationRequest(nsString(aDeviceAddress)));
   }
-  return NS_OK;
+  return true;
 }
 
 bool
@@ -273,7 +273,7 @@ BluetoothServiceChildProcess::SetAuthorizationInternal(
     SendRequest(aRunnable,
                 DenyAuthorizationRequest(nsString(aDeviceAddress)));
   }
-  return NS_OK;
+  return true;
 }
 
 nsresult
