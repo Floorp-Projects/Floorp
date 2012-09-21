@@ -14,13 +14,16 @@
 #include "nsIDOMCameraManager.h"
 #include "mozilla/Attributes.h"
 
+class nsPIDOMWindow;
+
 class nsDOMCameraManager MOZ_FINAL : public nsIDOMCameraManager
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMCAMERAMANAGER
 
-  static already_AddRefed<nsDOMCameraManager> Create(uint64_t aWindowId);
+  static already_AddRefed<nsDOMCameraManager>
+    CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow);
 
   void OnNavigation(uint64_t aWindowId);
 

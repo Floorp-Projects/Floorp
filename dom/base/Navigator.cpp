@@ -1162,15 +1162,12 @@ Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window, NS_OK);
 
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDocument());
-    NS_ENSURE_TRUE(document, NS_OK);
-    nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
     nsCOMPtr<nsIPermissionManager> permMgr =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(permMgr, NS_OK);
 
     uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestPermissionFromPrincipal(principal, "voicemail", &permission);
+    permMgr->TestPermissionFromWindow(window, "voicemail", &permission);
 
     if (permission != nsIPermissionManager::ALLOW_ACTION) {
       return NS_OK;
@@ -1220,15 +1217,12 @@ Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window, NS_OK);
 
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDocument());
-    NS_ENSURE_TRUE(document, NS_OK);
-    nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
     nsCOMPtr<nsIPermissionManager> permMgr =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(permMgr, NS_OK);
 
     uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestPermissionFromPrincipal(principal, "mobileconnection", &permission);
+    permMgr->TestPermissionFromWindow(window, "mobileconnection", &permission);
 
     if (permission != nsIPermissionManager::ALLOW_ACTION) {
       return NS_OK;
@@ -1376,7 +1370,8 @@ Navigator::GetMozCameras(nsIDOMCameraManager** aCameraManager)
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    mCameraManager = nsDOMCameraManager::Create(win->WindowID());
+    mCameraManager = nsDOMCameraManager::CheckPermissionAndCreateInstance(win);
+    NS_ENSURE_TRUE(mCameraManager, NS_OK);
   }
 
   nsRefPtr<nsDOMCameraManager> cameraManager = mCameraManager;
