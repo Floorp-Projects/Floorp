@@ -11,6 +11,7 @@
 #include "mozilla/dom/AudioContextBinding.h"
 #include "AudioDestinationNode.h"
 #include "AudioBufferSourceNode.h"
+#include "AudioBuffer.h"
 
 namespace mozilla {
 namespace dom {
@@ -61,6 +62,19 @@ AudioContext::CreateBufferSource()
   nsRefPtr<AudioBufferSourceNode> bufferNode =
     new AudioBufferSourceNode(this);
   return bufferNode.forget();
+}
+
+already_AddRefed<AudioBuffer>
+AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
+                           uint32_t aLength, float aSampleRate,
+                           ErrorResult& aRv)
+{
+  nsRefPtr<AudioBuffer> buffer = new AudioBuffer(this, aLength, aSampleRate);
+  if (!buffer->InitializeBuffers(aNumberOfChannels, aJSContext)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+  return buffer.forget();
 }
 
 }

@@ -10,21 +10,19 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor, PrefControlled]
-interface mozAudioContext {
+[PrefControlled]
+interface AudioBuffer {
 
-    readonly attribute AudioDestinationNode destination;
+    readonly attribute float sampleRate;
+    readonly attribute long length;
 
-    [Creator, Throws]
-    AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
+    // in seconds 
+    readonly attribute float duration;
 
-    // [Creator, Throws]
-    // AudioBuffer createBuffer(ArrayBuffer buffer, boolean mixToMono);
+    readonly attribute long numberOfChannels;
 
-    // AudioNode creation 
-    AudioBufferSourceNode createBufferSource();
+    [Throws]
+    Float32Array getChannelData(unsigned long channel);
 
 };
-
-typedef mozAudioContext AudioContext;
 
