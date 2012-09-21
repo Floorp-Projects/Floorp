@@ -20,10 +20,12 @@ include $(topsrcdir)/dom/dom-config.mk
 CPPSRCS = \
   TimeManager.cpp \
   TimeChangeObserver.cpp \
+  DateCacheCleaner.cpp \
   $(NULL)
 
 EXPORTS = \
   TimeChangeObserver.h \
+  DateCacheCleaner.h \
   $(NULL)
 
 XPIDLSRCS = \
