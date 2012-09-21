@@ -7,7 +7,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, builtinclass, uuid(b45c3873-88bd-4ae9-9c9b-10ee58ca5389)]
+[scriptable, builtinclass, uuid(9d898c66-3485-4cd5-ab8d-92ef2988887b)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -30,6 +30,8 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * @see TS 11.14, clause 13.4
    */
   const unsigned short STK_CMD_REFRESH               = 0x01;
+  const unsigned short STK_CMD_POLL_INTERVAL         = 0x03;
+  const unsigned short STK_CMD_POLL_OFF              = 0x04;
   const unsigned short STK_CMD_SET_UP_EVENT_LIST     = 0x05;
   const unsigned short STK_CMD_SET_UP_CALL           = 0x10;
   const unsigned short STK_CMD_SEND_SS               = 0x11;
@@ -37,6 +39,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_CMD_SEND_SMS              = 0x13;
   const unsigned short STK_CMD_SEND_DTMF             = 0x14;
   const unsigned short STK_CMD_LAUNCH_BROWSER        = 0x15;
+  const unsigned short STK_CMD_PLAY_TONE             = 0x20;
   const unsigned short STK_CMD_DISPLAY_TEXT          = 0x21;
   const unsigned short STK_CMD_GET_INKEY             = 0x22;
   const unsigned short STK_CMD_GET_INPUT             = 0x23;
@@ -168,6 +171,28 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    const unsigned short STK_SERVICE_STATE_NORMAL      = 0x00;
    const unsigned short STK_SERVICE_STATE_LIMITED     = 0x01;
    const unsigned short STK_SERVICE_STATE_UNAVAILABLE = 0x02;
+
+  /**
+   * Tone type.
+   */
+  const unsigned short STK_TONE_TYPE_DIAL_TONE                = 0x01;
+  const unsigned short STK_TONE_TYPE_CALLED_SUBSCRIBER_BUSY   = 0x02;
+  const unsigned short STK_TONE_TYPE_CONGESTION               = 0x03;
+  const unsigned short STK_TONE_TYPE_RADIO_PATH_ACK           = 0x04;
+  const unsigned short STK_TONE_TYPE_RADIO_PATH_NOT_AVAILABLE = 0x05;
+  const unsigned short STK_TONE_TYPE_ERROR                    = 0x06;
+  const unsigned short STK_TONE_TYPE_CALL_WAITING_TONE        = 0x07;
+  const unsigned short STK_TONE_TYPE_RINGING_TONE             = 0x08;
+  const unsigned short STK_TONE_TYPE_GENERAL_BEEP             = 0x10;
+  const unsigned short STK_TONE_TYPE_POSITIVE_ACK_TONE        = 0x11;
+  const unsigned short STK_TONE_TYPE_NEGATIVE_ACK_TONE        = 0x12;
+
+  /**
+   * Time unit
+   */
+  const unsigned short STK_TIME_UNIT_MINUTE       = 0x00;
+  const unsigned short STK_TIME_UNIT_SECOND       = 0x01;
+  const unsigned short STK_TIME_UNIT_TENTH_SECOND = 0x02;
 
   /**
    * Send the response back to ICC after an attempt to execute STK Proactive
