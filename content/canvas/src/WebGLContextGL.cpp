@@ -328,7 +328,6 @@ void
 WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
                          WebGLenum usage)
 {
-    InvalidateCachedMinInUseAttribArrayLength();
     if (!IsContextStable())
         return;
 
@@ -352,7 +351,8 @@ WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
         return ErrorInvalidOperation("bufferData: no buffer bound!");
 
     MakeContextCurrent();
-    
+    InvalidateCachedMinInUseAttribArrayLength();
+
     GLenum error = CheckedBufferData(target, size, 0, usage);
     if (error) {
         GenerateWarning("bufferData generated error %s", ErrorName(error));
@@ -368,7 +368,6 @@ WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
 void
 WebGLContext::BufferData(WebGLenum target, ArrayBuffer *data, WebGLenum usage)
 {
-    InvalidateCachedMinInUseAttribArrayLength();
     if (!IsContextStable())
         return;
 
@@ -394,6 +393,7 @@ WebGLContext::BufferData(WebGLenum target, ArrayBuffer *data, WebGLenum usage)
         return ErrorInvalidOperation("bufferData: no buffer bound!");
 
     MakeContextCurrent();
+    InvalidateCachedMinInUseAttribArrayLength();
 
     GLenum error = CheckedBufferData(target, data->Length(), data->Data(), usage);
 
@@ -411,7 +411,6 @@ WebGLContext::BufferData(WebGLenum target, ArrayBuffer *data, WebGLenum usage)
 void
 WebGLContext::BufferData(WebGLenum target, ArrayBufferView& data, WebGLenum usage)
 {
-    InvalidateCachedMinInUseAttribArrayLength();
     if (!IsContextStable())
         return;
 
@@ -431,6 +430,7 @@ WebGLContext::BufferData(WebGLenum target, ArrayBufferView& data, WebGLenum usag
     if (!boundBuffer)
         return ErrorInvalidOperation("bufferData: no buffer bound!");
 
+    InvalidateCachedMinInUseAttribArrayLength();
     MakeContextCurrent();
 
     GLenum error = CheckedBufferData(target, data.Length(), data.Data(), usage);
@@ -1144,7 +1144,6 @@ WebGLContext::DepthRange(WebGLfloat zNear, WebGLfloat zFar)
 void
 WebGLContext::DisableVertexAttribArray(WebGLuint index)
 {
-    InvalidateCachedMinInUseAttribArrayLength();
     if (!IsContextStable())
         return;
 
@@ -1152,6 +1151,7 @@ WebGLContext::DisableVertexAttribArray(WebGLuint index)
         return;
 
     MakeContextCurrent();
+    InvalidateCachedMinInUseAttribArrayLength();
 
     if (index || gl->IsGLES2())
         gl->fDisableVertexAttribArray(index);
@@ -1594,7 +1594,6 @@ WebGLContext::Disable(WebGLenum cap)
 void
 WebGLContext::EnableVertexAttribArray(WebGLuint index)
 {
-    InvalidateCachedMinInUseAttribArrayLength();
     if (!IsContextStable())
         return;
 
@@ -1602,6 +1601,7 @@ WebGLContext::EnableVertexAttribArray(WebGLuint index)
         return;
 
     MakeContextCurrent();
+    InvalidateCachedMinInUseAttribArrayLength();
 
     gl->fEnableVertexAttribArray(index);
     mAttribBuffers[index].enabled = true;
@@ -3024,12 +3024,14 @@ WebGLContext::IsEnabled(WebGLenum cap)
 void
 WebGLContext::LinkProgram(WebGLProgram *program)
 {
-    InvalidateCachedMinInUseAttribArrayLength();
     if (!IsContextStable())
         return;
 
     if (!ValidateObject("linkProgram", program))
         return;
+
+    InvalidateCachedMinInUseAttribArrayLength(); // we do it early in this function
+    // as some of the validation below changes program state
 
     GLuint progname = program->GLName();
 
@@ -3956,15 +3958,16 @@ SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib4fv, 4, WebGLfloat)
 void
 WebGLContext::UseProgram(WebGLProgram *prog)
 {
-    InvalidateCachedMinInUseAttribArrayLength();
     if (!IsContextStable())
         return;
 
     if (!ValidateObjectAllowNull("useProgram", prog))
         return;
 
-    WebGLuint progname = prog ? prog->GLName() : 0;;
     MakeContextCurrent();
+    InvalidateCachedMinInUseAttribArrayLength();
+
+    WebGLuint progname = prog ? prog->GLName() : 0;
 
     if (prog && !prog->LinkStatus())
         return ErrorInvalidOperation("useProgram: program was not linked successfully");
@@ -4514,7 +4517,6 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
                                   WebGLboolean normalized, WebGLsizei stride,
                                   WebGLintptr byteOffset)
 {
-    InvalidateCachedMinInUseAttribArrayLength();
     if (!IsContextStable())
         return;
 
@@ -4564,7 +4566,9 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
                                      "requirement of given type");
 
     }
-    
+
+    InvalidateCachedMinInUseAttribArrayLength();
+
     /* XXX make work with bufferSubData & heterogeneous types 
     if (type != mBoundArrayBuffer->GLType())
         return ErrorInvalidOperation("vertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
