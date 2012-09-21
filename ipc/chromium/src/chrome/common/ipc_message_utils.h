@@ -168,6 +168,21 @@ struct ParamTraits<unsigned long> {
     l->append(StringPrintf(L"%ul", p));
   }
 };
+
+template <>
+struct ParamTraits<nsresult> {
+  typedef nsresult param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteUInt32(static_cast<uint32_t>(p));
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadUInt32(iter, reinterpret_cast<uint32_t*>(r));
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%u", static_cast<uint32_t>(p)));
+  }
+};
+
 #if (defined(OS_OPENBSD) && defined(ARCH_CPU_64_BITS))
 // On OpenBSD, uint64_t is unsigned long long
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=648735#c27
