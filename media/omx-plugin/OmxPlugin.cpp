@@ -12,6 +12,8 @@
 #else
 #include <stagefright/OMXClient.h>
 #endif
+
+#include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
 #include "MPAPI.h"
 
@@ -21,6 +23,8 @@
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "OmxPlugin" , ## args)
 
 using namespace MPAPI;
+
+const int OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka = 0x7FA30C01;
 
 namespace android {
 
@@ -117,6 +121,8 @@ class OmxDecoder {
   int32_t mVideoColorFormat;
   int32_t mVideoStride;
   int32_t mVideoSliceHeight;
+  int32_t mVideoCropLeft;
+  int32_t mVideoCropTop;
   int32_t mVideoRotation;
   int32_t mAudioChannels;
   int32_t mAudioSampleRate;
@@ -132,11 +138,12 @@ class OmxDecoder {
   void ReleaseVideoBuffer();
   void ReleaseAudioBuffer();
 
-  void PlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  void CbYCrYFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  void SemiPlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  void SemiPlanarYVU420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  void SemiPlanarYVU420Packed32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_YUV420Planar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_CbYCrY(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_YUV420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_YVU420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_YUV420PackedSemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   bool ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   bool ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, size_t aDataOffset, size_t aSize,
                     int32_t aAudioChannels, int32_t aAudioSampleRate);
@@ -182,6 +189,8 @@ OmxDecoder::OmxDecoder(PluginHost *aPluginHost, Decoder *aDecoder) :
   mVideoColorFormat(0),
   mVideoStride(0),
   mVideoSliceHeight(0),
+  mVideoCropLeft(0),
+  mVideoCropTop(0),
   mVideoRotation(0),
   mAudioChannels(-1),
   mAudioSampleRate(-1),
@@ -281,10 +290,6 @@ bool OmxDecoder::Init() {
   for (size_t i = 0; i < extractor->countTracks(); ++i) {
     sp<MetaData> meta = extractor->getTrackMetaData(i);
 
-    int32_t bitRate;
-    if (!meta->findInt32(kKeyBitRate, &bitRate))
-      bitRate = 0;
-
     const char *mime;
     if (!meta->findCString(kKeyMIMEType, &mime)) {
       continue;
@@ -342,6 +347,8 @@ bool OmxDecoder::Init() {
 
     int64_t durationUs;
     if (videoTrack->getFormat()->findInt64(kKeyDuration, &durationUs)) {
+      if (durationUs < 0)
+        LOG("video duration %lld should be nonnegative", durationUs);
       if (durationUs > totalDurationUs)
         totalDurationUs = durationUs;
     }
@@ -373,6 +380,8 @@ bool OmxDecoder::Init() {
 
     int64_t durationUs;
     if (audioTrack->getFormat()->findInt64(kKeyDuration, &durationUs)) {
+      if (durationUs < 0)
+        LOG("audio duration %lld should be nonnegative", durationUs);
       if (durationUs > totalDurationUs)
         totalDurationUs = durationUs;
     }
@@ -398,6 +407,16 @@ bool OmxDecoder::Init() {
         return false;
       }
       mAudioMetadataRead = true;
+
+      if (mAudioChannels < 0) {
+        LOG("audio channel count %d must be nonnegative", mAudioChannels);
+        return false;
+      }
+
+      if (mAudioSampleRate < 0) {
+        LOG("audio sample rate %d must be nonnegative", mAudioSampleRate);
+        return false;
+      }
     }
     else if (!SetAudioFormat()) {
         return false;
@@ -407,33 +426,74 @@ bool OmxDecoder::Init() {
 }
 
 bool OmxDecoder::SetVideoFormat() {
+  sp<MetaData> format = mVideoSource->getFormat();
+
+  // Stagefright's kKeyWidth and kKeyHeight are what MPAPI calls stride and
+  // slice height. Stagefright only seems to use its kKeyStride and
+  // kKeySliceHeight to initialize camera video formats.
+
+#ifdef DEBUG
+  int32_t unexpected;
+  if (format->findInt32(kKeyStride, &unexpected))
+    LOG("Expected kKeyWidth, but found kKeyStride %d", unexpected);
+  if (format->findInt32(kKeySliceHeight, &unexpected))
+    LOG("Expected kKeyHeight, but found kKeySliceHeight %d", unexpected);
+#endif // DEBUG
+
   const char *componentName;
 
-  if (!mVideoSource->getFormat()->findInt32(kKeyWidth, &mVideoWidth) ||
-      !mVideoSource->getFormat()->findInt32(kKeyHeight, &mVideoHeight) ||
-      !mVideoSource->getFormat()->findCString(kKeyDecoderComponent, &componentName) ||
-      !mVideoSource->getFormat()->findInt32(kKeyColorFormat, &mVideoColorFormat) ) {
+  if (!format->findInt32(kKeyWidth, &mVideoStride) ||
+      !format->findInt32(kKeyHeight, &mVideoSliceHeight) ||
+      !format->findCString(kKeyDecoderComponent, &componentName) ||
+      !format->findInt32(kKeyColorFormat, &mVideoColorFormat) ) {
     return false;
   }
 
-  if (!mVideoSource->getFormat()->findInt32(kKeyStride, &mVideoStride)) {
-    mVideoStride = mVideoWidth;
-    LOG("stride not available, assuming width");
+  if (mVideoStride <= 0) {
+    LOG("stride %d must be positive", mVideoStride);
+    return false;
   }
 
-  if (!mVideoSource->getFormat()->findInt32(kKeySliceHeight, &mVideoSliceHeight)) {
-    mVideoSliceHeight = mVideoHeight;
-    LOG("slice height not available, assuming height");
+  if (mVideoSliceHeight <= 0) {
+    LOG("slice height %d must be positive", mVideoSliceHeight);
+    return false;
   }
 
-  if (!mVideoSource->getFormat()->findInt32(kKeyRotation, &mVideoRotation)) {
+  int32_t cropRight, cropBottom;
+  if (!format->findRect(kKeyCropRect, &mVideoCropLeft, &mVideoCropTop,
+                                      &cropRight, &cropBottom)) {
+    mVideoCropLeft = 0;
+    mVideoCropTop = 0;
+    cropRight = mVideoStride - 1;
+    cropBottom = mVideoSliceHeight - 1;
+    LOG("crop rect not available, assuming no cropping");
+  }
+
+  if (mVideoCropLeft < 0 || mVideoCropLeft >= cropRight || cropRight >= mVideoStride ||
+      mVideoCropTop < 0 || mVideoCropTop >= cropBottom || cropBottom >= mVideoSliceHeight) {
+    LOG("invalid crop rect %d,%d-%d,%d", mVideoCropLeft, mVideoCropTop, cropRight, cropBottom);
+    return false;
+  }
+
+  mVideoWidth = cropRight - mVideoCropLeft + 1;
+  mVideoHeight = cropBottom - mVideoCropTop + 1;
+  MOZ_ASSERT(mVideoWidth > 0 && mVideoWidth <= mVideoStride);
+  MOZ_ASSERT(mVideoHeight > 0 && mVideoHeight <= mVideoSliceHeight);
+
+  if (!format->findInt32(kKeyRotation, &mVideoRotation)) {
     mVideoRotation = 0;
     LOG("rotation not available, assuming 0");
   }
 
-  LOG("width: %d height: %d component: %s format: %#x stride: %d sliceHeight: %d rotation: %d",
+  if (mVideoRotation != 0 && mVideoRotation != 90 &&
+      mVideoRotation != 180 && mVideoRotation != 270) {
+    LOG("invalid rotation %d, assuming 0", mVideoRotation);
+  }
+
+  LOG("width: %d height: %d component: %s format: %#x stride: %d sliceHeight: %d rotation: %d crop: %d,%d-%d,%d",
       mVideoWidth, mVideoHeight, componentName, mVideoColorFormat,
-      mVideoStride, mVideoSliceHeight, mVideoRotation);
+      mVideoStride, mVideoSliceHeight, mVideoRotation,
+      mVideoCropLeft, mVideoCropTop, cropRight, cropBottom);
 
   return true;
 }
@@ -445,8 +505,17 @@ bool OmxDecoder::SetAudioFormat() {
     return false;
   }
 
-  LOG("channelCount: %d sampleRate: %d",
-      mAudioChannels, mAudioSampleRate);
+  LOG("channelCount: %d sampleRate: %d", mAudioChannels, mAudioSampleRate);
+
+  if (mAudioChannels < 0) {
+    LOG("audio channel count %d must be nonnegative", mAudioChannels);
+    return false;
+  }
+
+  if (mAudioSampleRate < 0) {
+    LOG("audio sample rate %d must be nonnegative", mAudioSampleRate);
+    return false;
+  }
 
   return true;
 }
@@ -465,11 +534,10 @@ void OmxDecoder::ReleaseAudioBuffer() {
   }
 }
 
-void OmxDecoder::PlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+void OmxDecoder::ToVideoFrame_YUV420Planar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
   void *y = aData;
   void *u = static_cast<uint8_t *>(y) + mVideoStride * mVideoSliceHeight;
   void *v = static_cast<uint8_t *>(u) + mVideoStride/2 * mVideoSliceHeight/2;
-
   aFrame->Set(aTimeUs, aKeyFrame,
               aData, aSize, mVideoStride, mVideoSliceHeight, mVideoRotation,
               y, mVideoStride, mVideoWidth, mVideoHeight, 0, 0,
@@ -477,7 +545,7 @@ void OmxDecoder::PlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aD
               v, mVideoStride/2, mVideoWidth/2, mVideoHeight/2, 0, 0);
 }
 
-void OmxDecoder::CbYCrYFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+void OmxDecoder::ToVideoFrame_CbYCrY(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
   aFrame->Set(aTimeUs, aKeyFrame,
               aData, aSize, mVideoStride, mVideoSliceHeight, mVideoRotation,
               aData, mVideoStride, mVideoWidth, mVideoHeight, 1, 1,
@@ -485,10 +553,9 @@ void OmxDecoder::CbYCrYFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, s
               aData, mVideoStride, mVideoWidth/2, mVideoHeight/2, 2, 3);
 }
 
-void OmxDecoder::SemiPlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+void OmxDecoder::ToVideoFrame_YUV420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
   void *y = aData;
   void *uv = static_cast<uint8_t *>(y) + (mVideoStride * mVideoSliceHeight);
-
   aFrame->Set(aTimeUs, aKeyFrame,
               aData, aSize, mVideoStride, mVideoSliceHeight, mVideoRotation,
               y, mVideoStride, mVideoWidth, mVideoHeight, 0, 0,
@@ -496,13 +563,23 @@ void OmxDecoder::SemiPlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void
               uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 1, 1);
 }
 
-void OmxDecoder::SemiPlanarYVU420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
-  SemiPlanarYUV420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+void OmxDecoder::ToVideoFrame_YVU420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+  ToVideoFrame_YUV420SemiPlanar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
   aFrame->Cb.mOffset = 1;
   aFrame->Cr.mOffset = 0;
 }
 
-void OmxDecoder::SemiPlanarYVU420Packed32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+void OmxDecoder::ToVideoFrame_YUV420PackedSemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+  void *y = aData;
+  void *uv = static_cast<uint8_t *>(y) + mVideoStride * (mVideoSliceHeight - mVideoCropTop/2);
+  aFrame->Set(aTimeUs, aKeyFrame,
+              aData, aSize, mVideoStride, mVideoSliceHeight, mVideoRotation,
+              y, mVideoStride, mVideoWidth, mVideoHeight, 0, 0,
+              uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 0, 1,
+              uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 1, 1);
+}
+
+void OmxDecoder::ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
   size_t roundedSliceHeight = (mVideoSliceHeight + 31) & ~31;
   size_t roundedStride = (mVideoStride + 31) & ~31;
   void *y = aData;
@@ -519,20 +596,23 @@ bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, 
   const int OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka = 0x7FA30C01;
 
   switch (mVideoColorFormat) {
-  case OMX_COLOR_FormatYUV420Planar:
-    PlanarYUV420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_COLOR_FormatYUV420Planar: // e.g. Asus Transformer, Stagefright's software decoder
+    ToVideoFrame_YUV420Planar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
-  case OMX_COLOR_FormatCbYCrY:
-    CbYCrYFrame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_COLOR_FormatCbYCrY: // e.g. Droid 1
+    ToVideoFrame_CbYCrY(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
-  case OMX_COLOR_FormatYUV420SemiPlanar:
-    SemiPlanarYUV420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_COLOR_FormatYUV420SemiPlanar: // e.g. Galaxy S III
+    ToVideoFrame_YUV420SemiPlanar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
-  case OMX_QCOM_COLOR_FormatYVU420SemiPlanar:
-    SemiPlanarYVU420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_QCOM_COLOR_FormatYVU420SemiPlanar: // e.g. Nexus One
+    ToVideoFrame_YVU420SemiPlanar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
-  case OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka:
-    SemiPlanarYVU420Packed32m4ka(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+  case OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka: // e.g. Otoro
+    ToVideoFrame_YVU420PackedSemiPlanar32m4ka(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+    break;
+  case OMX_TI_COLOR_FormatYUV420PackedSemiPlanar: // e.g. Galaxy Nexus
+    ToVideoFrame_YUV420PackedSemiPlanar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
   default:
     LOG("Unknown video color format: %#x", mVideoColorFormat);
@@ -549,6 +629,8 @@ bool OmxDecoder::ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, 
 
 bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
 {
+  MOZ_ASSERT(aSeekTimeUs >= -1);
+
   if (!mVideoSource.get())
     return false;
 
@@ -566,20 +648,20 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
 
   if (err == OK && mVideoBuffer->range_length() > 0) {
     int64_t timeUs;
-    int32_t unreadable;
     int32_t keyFrame;
 
     if (!mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs) ) {
-      LOG("no key time");
+      LOG("no frame time");
+      return false;
+    }
+
+    if (timeUs < 0) {
+      LOG("frame time %lld must be nonnegative", timeUs);
       return false;
     }
 
     if (!mVideoBuffer->meta_data()->findInt32(kKeyIsSyncFrame, &keyFrame)) {
        keyFrame = 0;
-    }
-
-    if (!mVideoBuffer->meta_data()->findInt32(kKeyIsUnreadable, &unreadable)) {
-      unreadable = 0;
     }
 
     char *data = reinterpret_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
@@ -609,6 +691,8 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
 
 bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
 {
+  MOZ_ASSERT(aSeekTimeUs >= -1);
+
   status_t err;
   if (mAudioMetadataRead && aSeekTimeUs == -1) {
     // Use the data read into the buffer during metadata time
@@ -630,8 +714,15 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
 
   if (err == OK && mAudioBuffer->range_length() != 0) {
     int64_t timeUs;
-    if (!mAudioBuffer->meta_data()->findInt64(kKeyTime, &timeUs))
+    if (!mAudioBuffer->meta_data()->findInt64(kKeyTime, &timeUs)) {
+      LOG("no frame time");
       return false;
+    }
+
+    if (timeUs < 0) {
+      LOG("frame time %lld must be nonnegative", timeUs);
+      return false;
+    }
 
     return ToAudioFrame(aFrame, timeUs,
                         mAudioBuffer->data(),

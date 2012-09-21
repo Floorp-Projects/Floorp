@@ -9,7 +9,7 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cu = Components.utils;
 
-Components.utils.import("resource://mochikit/MockFilePicker.jsm");
+Components.utils.import("resource://specialpowers/MockFilePicker.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 function SpecialPowersAPI() { 
@@ -883,6 +883,10 @@ SpecialPowersAPI.prototype = {
     doPreciseGCandCC();
   },
 
+  setGCZeal: function(zeal) {
+    Components.utils.setGCZeal(zeal);
+  },
+
   isMainProcess: function() {
     try {
       return Cc["@mozilla.org/xre/app-info;1"].
@@ -1199,5 +1203,5 @@ SpecialPowersAPI.prototype = {
 
   getMozFullPath: function(file) {
     return file.mozFullPath;
-  }
+  },
 };

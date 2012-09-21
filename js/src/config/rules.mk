@@ -62,12 +62,6 @@ endif # ifndef .PYMAKE
 
 _VPATH_SRCS = $(abspath $<)
 
-# Add $(DIST)/lib to VPATH so that -lfoo dependencies are followed
-VPATH += $(DIST)/lib
-ifdef LIBXUL_SDK
-VPATH += $(LIBXUL_SDK)/lib
-endif
-
 ifdef EXTRA_DSO_LIBS
 EXTRA_DSO_LIBS	:= $(call EXPAND_MOZLIBNAME,$(EXTRA_DSO_LIBS))
 endif
@@ -1608,9 +1602,6 @@ FORCE:
 
 # Delete target if error occurs when building target
 .DELETE_ON_ERROR:
-
-# Properly set LIBPATTERNS for the platform
-.LIBPATTERNS = $(if $(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%.$(IMPORT_LIB_SUFFIX)) $(LIB_PREFIX)%.$(LIB_SUFFIX) $(DLL_PREFIX)%$(DLL_SUFFIX)
 
 tags: TAGS
 

@@ -252,6 +252,9 @@ public:
   SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow,
                            BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual nsresult
+  PrepareAdapterInternal(const nsAString& aPath) = 0;
+
   bool
   IsEnabled() const
   {

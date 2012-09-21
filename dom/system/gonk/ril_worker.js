@@ -1063,6 +1063,7 @@ let RIL = {
     this.getIMSI();
     this.getMSISDN();
     this.getAD();
+    this.getSPN();
     this.getSST();
     this.getMBDN();
   },
@@ -1184,6 +1185,39 @@ let RIL = {
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_AD,
       pathId:    this._getPathIdForICCRecord(ICC_EF_AD),
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
+    });
+  },
+
+  /**
+   * Read the SPN (Service Provider Name) from the ICC.
+   */
+  getSPN: function getSPN() {
+    function callback() {
+      let length = Buf.readUint32();
+      // Each octet is encoded into two chars.
+      // Minus 1 because first is used to store display condition
+      let len = (length / 2) - 1;
+      let spnDisplayCondition = GsmPDUHelper.readHexOctet();
+      this.iccInfo.spn = GsmPDUHelper.readAlphaIdentifier(len);
+      Buf.readStringDelimiter(length);
+
+      if (DEBUG) {
+        debug("SPN: spn=" + this.iccInfo.spn + ", spnDisplayCondition=" + spnDisplayCondition);
+      }
+      this._handleICCInfoChange();
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_SPN,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_SPN),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -2239,12 +2273,19 @@ let RIL = {
    * @param helpRequested
    */
   sendStkMenuSelection: function sendStkMenuSelection(command) {
+    command.tag = BER_MENU_SELECTION_TAG;
+    command.deviceId = {
+      sourceId :STK_DEVICE_ID_KEYPAD,
+      destinationId: STK_DEVICE_ID_SIM
+    };
     this.sendICCEnvelopeCommand(command);
   },
 
   /**
    * Send REQUEST_STK_SEND_ENVELOPE_COMMAND to ICC.
    *
+   * @param tag
+   * @patam deviceId
    * @param [optioanl] itemIdentifier
    * @param [optional] helpRequested
    */
@@ -2258,15 +2299,15 @@ let RIL = {
     Buf.writeUint32(size);
 
     // Write a BER-TLV
-    GsmPDUHelper.writeHexOctet(BER_MENU_SELECTION_TAG);
+    GsmPDUHelper.writeHexOctet(options.tag);
     GsmPDUHelper.writeHexOctet(berLen);
 
     // Device Identifies
     GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_DEVICE_ID |
                                COMPREHENSIONTLV_FLAG_CR);
     GsmPDUHelper.writeHexOctet(2);
-    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_KEYPAD);
-    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_SIM);
+    GsmPDUHelper.writeHexOctet(options.deviceId.sourceId);
+    GsmPDUHelper.writeHexOctet(options.deviceId.destinationId);
 
     // Item Identifier
     if (options.itemIdentifier) {
@@ -2424,6 +2465,7 @@ let RIL = {
 
           case ICC_EF_AD:
           case ICC_EF_MBDN:
+          case ICC_EF_SPN:
           case ICC_EF_SST:
             return EF_PATH_MF_SIM + EF_PATH_DF_GSM;
         }
@@ -2434,6 +2476,7 @@ let RIL = {
           case ICC_EF_MBDN:
           case ICC_EF_UST:
           case ICC_EF_MSISDN:
+          case ICC_EF_SPN:
             return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
 
           default:

@@ -42,6 +42,7 @@
 
 #include "cairo-d2d-private.h"
 #include "cairo-dwrite-private.h"
+#include "cairo-truetype-subset-private.h"
 #include <float.h>
 
 typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
@@ -1041,7 +1042,7 @@ _cairo_dwrite_load_truetype_table(void                 *scaled_font,
     UINT32 size;
     void *tableContext;
     BOOL exists;
-    face->dwriteface->TryGetFontTable(tag,
+    face->dwriteface->TryGetFontTable(be32_to_cpu (tag),
 				      &data,
 				      &size,
 				      &tableContext,
@@ -1481,6 +1482,49 @@ DWriteFactory::CreateRenderingParams()
         &mForceGDIClassicRenderingParams);
 }
 
+static cairo_bool_t
+_name_tables_match (cairo_scaled_font_t *font1,
+                    cairo_scaled_font_t *font2)
+{
+    unsigned long size1;
+    unsigned long size2;
+    cairo_int_status_t status1;
+    cairo_int_status_t status2;
+    unsigned char *buffer1;
+    unsigned char *buffer2;
+    cairo_bool_t result = false;
+
+    if (!font1->backend->load_truetype_table ||
+        !font2->backend->load_truetype_table)
+        return false;
+
+    status1 = font1->backend->load_truetype_table (font1,
+                                                   TT_TAG_name, 0, NULL, &size1);
+    status2 = font2->backend->load_truetype_table (font2,
+                                                   TT_TAG_name, 0, NULL, &size2);
+    if (status1 || status2)
+        return false;
+    if (size1 != size2)
+        return false;
+
+    buffer1 = (unsigned char*)malloc (size1);
+    buffer2 = (unsigned char*)malloc (size2);
+
+    if (buffer1 && buffer2) {
+        status1 = font1->backend->load_truetype_table (font1,
+                                                       TT_TAG_name, 0, buffer1, &size1);
+        status2 = font2->backend->load_truetype_table (font2,
+                                                       TT_TAG_name, 0, buffer2, &size2);
+        if (!status1 && !status2) {
+            result = memcmp (buffer1, buffer2, size1) == 0;
+        }
+    }
+
+    free (buffer1);
+    free (buffer2);
+    return result;
+}
+
 // Helper for _cairo_win32_printing_surface_show_glyphs to create a win32 equivalent
 // of a dwrite scaled_font so that we can print using ExtTextOut instead of drawing
 // paths or blitting glyph bitmaps.
@@ -1533,10 +1577,9 @@ _cairo_dwrite_scaled_font_create_win32_scaled_font (cairo_scaled_font_t *scaled_
         return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    if (_cairo_win32_scaled_font_is_type1 (font) || _cairo_win32_scaled_font_is_bitmap (font)) {
-        // If we somehow got a Type1 or bitmap font, it can't be the same physical font
-        // as directwrite was using, so glyph IDs will not match; best we can do is to
-        // throw it away and fall back on rendering paths or blitting bitmaps instead.
+    if (!_name_tables_match (font, scaled_font)) {
+        // If the font name tables aren't equal, then GDI may have failed to
+        // find the right font and substituted a different font.
         cairo_scaled_font_destroy (font);
         return CAIRO_INT_STATUS_UNSUPPORTED;
     }

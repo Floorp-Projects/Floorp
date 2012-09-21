@@ -163,8 +163,8 @@ function options(aOptionName)
 
   if (aOptionName && aOptionName !== 'allow_xml') {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    if (!(aOptionName in Components.utils))
-    {
+    if (!(aOptionName in Components.utils)) {
+//    if (!(aOptionName in SpecialPowers.wrap(Components).utils)) {
       // This test is trying to flip an unsupported option, so it's
       // likely no longer testing what it was supposed to.  Fail it
       // hard.
@@ -178,6 +178,7 @@ function options(aOptionName)
       // option is not set, toggle it to set
       options.currvalues[aOptionName] = true;
 
+//    SpecialPowers.wrap(Components).utils[aOptionName] = options.currvalues.hasOwnProperty(aOptionName);
     Components.utils[aOptionName] =
       options.currvalues.hasOwnProperty(aOptionName);
   }  
@@ -214,10 +215,12 @@ function optionsInit() {
     if (optionName === "moar_xml")
       propName = "xml";
 
+//    if (!(propName in SpecialPowers.wrap(Components).utils))
     if (!(propName in Components.utils))
     {
       throw "options.currvalues is out of sync with Components.utils";
     }
+//    if (!SpecialPowers.wrap(Components).utils[propName])
     if (!Components.utils[propName])
     {
       delete options.currvalues[optionName];
@@ -459,18 +462,8 @@ var gDialogCloserObserver;
 
 function registerDialogCloser()
 {
-  dlog('registerDialogCloser: start');
-  try
-  {
-    netscape.security.PrivilegeManager.
-      enablePrivilege('UniversalXPConnect');
-  }
-  catch(excp)
-  {
-    print('registerDialogCloser: ' + excp);
-    return;
-  }
-
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+//  gDialogCloser = SpecialPowers.wrap(Components).
   gDialogCloser = Components.
     classes['@mozilla.org/embedcomp/window-watcher;1'].
     getService(Components.interfaces.nsIWindowWatcher);
@@ -478,28 +471,14 @@ function registerDialogCloser()
   gDialogCloserObserver = {observe: dialogCloser_observe};
 
   gDialogCloser.registerNotification(gDialogCloserObserver);
-
-  dlog('registerDialogCloser: complete');
 }
 
 function unregisterDialogCloser()
 {
-  dlog('unregisterDialogCloser: start');
-
   gczeal(0);
 
   if (!gDialogCloserObserver || !gDialogCloser)
   {
-    return;
-  }
-  try
-  {
-    netscape.security.PrivilegeManager.
-      enablePrivilege('UniversalXPConnect');
-  }
-  catch(excp)
-  {
-    print('unregisterDialogCloser: ' + excp);
     return;
   }
 
@@ -507,8 +486,6 @@ function unregisterDialogCloser()
 
   gDialogCloserObserver = null;
   gDialogCloser = null;
-
-  dlog('unregisterDialogCloser: stop');
 }
 
 // use an array to handle the case where multiple dialogs
@@ -517,55 +494,28 @@ var gDialogCloserSubjects = [];
 
 function dialogCloser_observe(subject, topic, data)
 {
-  try
-  {
-    netscape.security.PrivilegeManager.
-      enablePrivilege('UniversalXPConnect');
-
-    dlog('dialogCloser_observe: ' +
-         'subject: ' + subject + 
-         ', topic=' + topic + 
-         ', data=' + data + 
-         ', subject.document.documentURI=' + subject.document.documentURI +
-         ', subjects pending=' + gDialogCloserSubjects.length);
-  }
-  catch(excp)
-  {
-    print('dialogCloser_observe: ' + excp);
-    return;
-  }
-
   if (subject instanceof ChromeWindow && topic == 'domwindowopened' )
   {
     gDialogCloserSubjects.push(subject);
     // timeout of 0 needed when running under reftest framework.
     subject.setTimeout(closeDialog, 0);
   }
-  dlog('dialogCloser_observe: subjects pending: ' + gDialogCloserSubjects.length);
 }
 
 function closeDialog()
 {
   var subject;
-  dlog('closeDialog: subjects pending: ' + gDialogCloserSubjects.length);
 
   while ( (subject = gDialogCloserSubjects.pop()) != null)
   {
-    dlog('closeDialog: subject=' + subject);
-
-    dlog('closeDialog: subject.document instanceof XULDocument: ' + (subject.document instanceof XULDocument));
-    dlog('closeDialog: subject.document.documentURI: ' + subject.document.documentURI);
-
     if (subject.document instanceof XULDocument && 
         subject.document.documentURI == 'chrome://global/content/commonDialog.xul')
     {
-      dlog('closeDialog: close XULDocument dialog?');
       subject.close();
     }
     else
     {
       // alerts inside of reftest framework are not XULDocument dialogs.
-      dlog('closeDialog: close chrome dialog?');
       subject.close();
     }
   }
