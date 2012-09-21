@@ -1468,7 +1468,7 @@ date_getYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
         return false;
 
@@ -1496,7 +1496,7 @@ date_getFullYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
         return false;
 
@@ -1536,7 +1536,7 @@ date_getMonth_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
         return false;
 
@@ -1573,7 +1573,7 @@ date_getDate_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
         return false;
 
@@ -1613,7 +1613,7 @@ date_getDay_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
         return false;
 
@@ -1653,7 +1653,7 @@ date_getHours_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
         return false;
 
@@ -1693,7 +1693,7 @@ date_getMinutes_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
         return false;
 
@@ -1735,7 +1735,7 @@ date_getUTCSeconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
         return false;
 
@@ -1777,7 +1777,7 @@ date_getTimezoneOffset_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     double utctime = thisObj->getDateUTCTime().toNumber();
 
     double localtime;
@@ -1806,7 +1806,7 @@ date_setTime_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (args.length() == 0) {
         SetDateToNaN(thisObj, args.rval().address());
         return true;
@@ -1862,7 +1862,7 @@ date_setMilliseconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
@@ -1893,7 +1893,7 @@ date_setUTCMilliseconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -1924,7 +1924,7 @@ date_setSeconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
@@ -1962,7 +1962,7 @@ date_setUTCSeconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -2000,7 +2000,7 @@ date_setMinutes_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
@@ -2043,7 +2043,7 @@ date_setUTCMinutes_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -2086,7 +2086,7 @@ date_setHours_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
@@ -2134,7 +2134,7 @@ date_setUTCHours_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -2182,7 +2182,7 @@ date_setDate_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
@@ -2215,7 +2215,7 @@ date_setUTCDate_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -2268,7 +2268,7 @@ date_setMonth_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
@@ -2306,7 +2306,7 @@ date_setUTCMonth_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -2360,7 +2360,7 @@ date_setFullYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = ThisLocalTimeOrZero(thisObj, &cx->dstOffsetCache);
@@ -2403,7 +2403,7 @@ date_setUTCFullYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = ThisUTCTimeOrZero(thisObj);
@@ -2446,7 +2446,7 @@ date_setYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = ThisLocalTimeOrZero(thisObj, &cx->dstOffsetCache);
@@ -2842,7 +2842,7 @@ date_toLocaleString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     return ToLocaleStringHelper(cx, args, thisObj);
 }
 
@@ -2871,7 +2871,7 @@ date_toLocaleDateString_impl(JSContext *cx, CallArgs args)
 #endif
                                    ;
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     return ToLocaleHelper(cx, args, thisObj, format);
 }
 
@@ -2888,7 +2888,7 @@ date_toLocaleTimeString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     return ToLocaleHelper(cx, args, thisObj, "%X");
 }
 
@@ -2904,7 +2904,7 @@ date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     if (args.length() == 0)
         return ToLocaleStringHelper(cx, args, thisObj);
@@ -3011,7 +3011,7 @@ date_valueOf_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     args.rval().set(thisObj->getDateUTCTime());
     return true;
