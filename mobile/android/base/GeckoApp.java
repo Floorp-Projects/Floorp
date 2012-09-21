@@ -1679,6 +1679,7 @@ abstract public class GeckoApp
         mPromptService = new PromptService();
 
         mTextSelection = new TextSelection((TextSelectionHandle) findViewById(R.id.start_handle),
+                                           (TextSelectionHandle) findViewById(R.id.middle_handle),
                                            (TextSelectionHandle) findViewById(R.id.end_handle),
                                            GeckoAppShell.getEventDispatcher());
 
