@@ -3478,11 +3478,12 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     if (!serialize.init(builder))
         return JS_FALSE;
 
-    size_t length = src->length();
-    const jschar *chars = src->getChars(cx);
-    if (!chars)
+    JSStableString *stable = src->ensureStable(cx);
+    if (!stable)
         return JS_FALSE;
 
+    const jschar *chars = stable->chars();
+    size_t length = stable->length();
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
     Parser parser(cx, options, chars, length, /* foldConstants = */ false);

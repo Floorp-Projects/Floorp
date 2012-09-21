@@ -94,4 +94,51 @@ add_test(function test_read_8bit_unpacked_to_string() {
   run_next_test();
 });
 
+/**
+ * Verify isICCServiceAvailable.
+ */
+add_test(function test_is_icc_service_available() {
+  let worker = newUint8Worker();
+
+  function test_table(sst, geckoService, simEnabled, usimEnabled) {
+    worker.RIL.iccInfo.sst = sst;
+    worker.RIL.appType = CARD_APPTYPE_SIM;
+    do_check_eq(worker.RIL.isICCServiceAvailable(geckoService), simEnabled);
+    worker.RIL.appType = CARD_APPTYPE_USIM;
+    do_check_eq(worker.RIL.isICCServiceAvailable(geckoService), usimEnabled);
+  }
+
+  test_table([0x08], "ADN", true, false);
+  test_table([0x08], "FDN", false, false);
+  test_table([0x08], "SDN", false, true);
+
+  run_next_test();
+});
+
+/**
+ * Verify writeDiallingNumber
+ */
+add_test(function test_write_dialling_number() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+
+  // with +
+  let number = "+123456";
+  let len = 4;
+  helper.writeDiallingNumber(number);
+  do_check_eq(helper.readDiallingNumber(len), number);
+
+  // without +
+  number = "987654";
+  len = 4;
+  helper.writeDiallingNumber(number);
+  do_check_eq(helper.readDiallingNumber(len), number);
+
+  number = "9876543";
+  len = 5;
+  helper.writeDiallingNumber(number);
+  do_check_eq(helper.readDiallingNumber(len), number);
+
+  run_next_test();
+});
 

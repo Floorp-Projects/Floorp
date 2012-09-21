@@ -180,7 +180,7 @@ public:
     bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, JS::Value *vp);
 
     /* Spidermonkey extensions. */
-    bool hasInstance(JSContext *cx, JSObject *proxy, const JS::Value *vp, bool *bp);
+    bool hasInstance(JSContext *cx, JS::HandleObject proxy, JS::MutableHandleValue vp, bool *bp);
     JSString *obj_toString(JSContext *cx, JSObject *proxy);
     void finalize(JSFreeOp *fop, JSObject *proxy);
 

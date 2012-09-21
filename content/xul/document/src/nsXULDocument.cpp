@@ -58,7 +58,6 @@
 #include "prlog.h"
 #include "rdf.h"
 #include "nsIFrame.h"
-#include "mozilla/FunctionTimer.h"
 #include "nsXBLService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsMimeTypes.h"
@@ -2816,7 +2815,6 @@ FirePendingMergeNotification(nsIURI* aKey, nsCOMPtr<nsIObserver>& aObserver, voi
 nsresult
 nsXULDocument::ResumeWalk()
 {
-    NS_TIME_FUNCTION;
     // Walk the prototype and build the delegate content model. The
     // walk is performed in a top-down, left-to-right fashion. That
     // is, a parent is built before any of its children; a node is

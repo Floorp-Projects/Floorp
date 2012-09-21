@@ -21,10 +21,6 @@
           android:icon="@drawable/ic_menu_share"
           android:title="@string/share" /> 
     
-    <item android:id="@+id/reading_list"
-          android:icon="@drawable/ic_menu_reading_list_add"
-          android:title="@string/reading_list" />
-
     <item android:id="@+id/save_as_pdf"
           android:icon="@drawable/ic_menu_save_as_pdf"
           android:title="@string/save_as_pdf" />

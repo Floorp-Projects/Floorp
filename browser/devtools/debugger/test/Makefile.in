@@ -20,8 +20,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_listtabs.js \
 	browser_dbg_tabactor-01.js \
 	browser_dbg_tabactor-02.js \
-	browser_dbg_contextactor-01.js \
-	browser_dbg_contextactor-02.js \
+	browser_dbg_globalactor-01.js \
 	testactors.js \
 	browser_dbg_nav-01.js \
 	browser_dbg_propertyview-01.js \

@@ -68,6 +68,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
+import android.text.TextUtils;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -591,14 +592,6 @@ public class GeckoAppShell
             mInputConnection.notifyIMEChange(text, start, end, newEnd);
     }
 
-    // Called by AndroidBridge using JNI
-    public static void notifyScreenShot(final ByteBuffer data, final int tabId, 
-                                        final int left, final int top,
-                                        final int right, final int bottom, 
-                                        final int bufferWidth, final int bufferHeight, final int token) {
-        ScreenshotHandler.notifyScreenShot(data, tabId, left, top, right, bottom, bufferWidth, bufferHeight, token);
-    }
-
     private static CountDownLatch sGeckoPendingAcks = null;
 
     // Block the current thread until the Gecko event loop is caught up
@@ -795,17 +788,17 @@ public class GeckoAppShell
     }
 
     public static File installWebApp(String aTitle, String aURI, String aUniqueURI, String aIconURL) {
-        int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI);
+        int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI, aTitle, aIconURL);
         GeckoProfile profile = GeckoProfile.get(GeckoApp.mAppContext, "webapp" + index);
         createShortcut(aTitle, aURI, aUniqueURI, aIconURL, "webapp");
         return profile.getDir();
     }
 
-    public static Intent getWebAppIntent(String aURI, String aUniqueURI, boolean forInstall) {
+    public static Intent getWebAppIntent(String aURI, String aUniqueURI, String aTitle, Bitmap aIcon) {
         int index;
 
-        if (forInstall)
-            index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI);
+        if (aIcon != null && !TextUtils.isEmpty(aTitle))
+            index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI, aTitle, aIcon);
         else
             index = WebAppAllocator.getInstance(GeckoApp.mAppContext).getIndexForApp(aUniqueURI);
 
@@ -853,7 +846,7 @@ public class GeckoAppShell
                 // the intent to be launched by the shortcut
                 Intent shortcutIntent;
                 if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-                    shortcutIntent = getWebAppIntent(aURI, aUniqueURI, true);
+                    shortcutIntent = getWebAppIntent(aURI, aUniqueURI, aTitle, aIcon);
                 } else {
                     shortcutIntent = new Intent();
                     shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
@@ -889,8 +882,8 @@ public class GeckoAppShell
                 // the intent to be launched by the shortcut
                 Intent shortcutIntent;
                 if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-                    int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI);
-                    shortcutIntent = getWebAppIntent(aURI, aUniqueURI, false);
+                    int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).getIndexForApp(aUniqueURI);
+                    shortcutIntent = getWebAppIntent(aURI, aUniqueURI, "", null);
                     if (shortcutIntent == null)
                         return;
                 } else {
@@ -2263,15 +2256,6 @@ public class GeckoAppShell
         if (!sActivityHelper.showFilePicker(GeckoApp.mAppContext, aMimeType, new AsyncResultHandler(id))) {
             GeckoAppShell.notifyFilePickerResult("", id);
         }
-    }
-
-    public static void screenshotWholePage(Tab tab) {
-        ScreenshotHandler.screenshotWholePage(tab);
-    }
-
-    // Called by AndroidBridge using JNI
-    public static void notifyPaintedRect(float top, float left, float bottom, float right) {
-        ScreenshotHandler.notifyPaintedRect(top, left, bottom, right);
     }
 
     public static void notifyWakeLockChanged(String topic, String state) {

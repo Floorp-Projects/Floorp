@@ -387,6 +387,7 @@ pref("dom.mozAlarms.enabled", true);
 
 // WebSettings
 pref("dom.mozSettings.enabled", true);
+pref("dom.mozPermissionSettings.enabled", true);
 
 // controls if we want camera support
 pref("device.camera.enabled", true);
@@ -435,6 +436,9 @@ pref("marionette.defaultPrefs.port", 2828);
 #endif
 
 #ifdef MOZ_UPDATER
+// When we're applying updates, we can't let anything hang us on
+// quit+restart.  The user has no recourse.
+pref("shutdown.watchdog.timeoutSecs", 5);
 // Timeout before the update prompt automatically installs the update
 pref("b2g.update.apply-prompt-timeout", 60000); // milliseconds
 // Optional timeout the user can wait before getting another update prompt
@@ -465,6 +469,10 @@ pref("app.update.download.backgroundInterval", 0);
 // Enable update logging for now, to diagnose growing pains in the
 // field.
 pref("app.update.log", true);
+#else
+// Explicitly disable the shutdown watchdog.  It's enabled by default.
+// When the updater is disabled, we want to know about shutdown hangs.
+pref("shutdown.watchdog.timeoutSecs", -1);
 #endif
 
 // Extensions preferences

@@ -265,7 +265,11 @@ IonBuilder::build()
         return false;
 
     IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) (usecount=%d) (maxloopcount=%d)",
-            script->filename, script->lineno, (void *) script, (int) script->getUseCount(), (int) script->getMaxLoopCount());
+            script->filename, script->lineno, (void *)script, (int)script->getUseCount(),
+            (int)script->getMaxLoopCount());
+
+    if (!graph().addScript(script))
+        return false;
 
     if (!initParameters())
         return false;
@@ -388,6 +392,9 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 {
     IonSpew(IonSpew_Scripts, "Inlining script %s:%d (%p)",
             script->filename, script->lineno, (void *)script);
+
+    if (!graph().addScript(script))
+        return false;
 
     callerBuilder_ = callerBuilder;
     callerResumePoint_ = callerResumePoint;
@@ -1596,7 +1603,7 @@ IonBuilder::processTableSwitchEnd(CFGState &state)
         successor = newBlock(current, state.tableswitch.exitpc);
 
     if (!successor)
-        return ControlStatus_Ended;
+        return ControlStatus_Error;
 
     // If there is current, the current block flows into this one.
     // So current is also a predecessor to this block
@@ -1934,8 +1941,11 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     jsbytecode *bodyStart = GetNextPc(GetNextPc(pc));
     jsbytecode *bodyEnd = conditionpc;
     jsbytecode *exitpc = GetNextPc(ifne);
-    if (!pushLoop(CFGState::DO_WHILE_LOOP_BODY, conditionpc, header, bodyStart, bodyEnd, exitpc, conditionpc))
+    if (!pushLoop(CFGState::DO_WHILE_LOOP_BODY, conditionpc, header,
+                  bodyStart, bodyEnd, exitpc, conditionpc))
+    {
         return ControlStatus_Error;
+    }
 
     CFGState &state = cfgStack_.back();
     state.loop.updatepc = conditionpc;
@@ -2604,7 +2614,7 @@ IonBuilder::jsop_bitnot()
     MBitNot *ins = MBitNot::New(input);
 
     current->add(ins);
-    ins->infer(oracle->unaryOp(script, pc));
+    ins->infer(oracle->unaryTypes(script, pc));
 
     current->push(ins);
     if (ins->isEffectful() && !resumeAfter(ins))
@@ -2650,7 +2660,7 @@ IonBuilder::jsop_bitop(JSOp op)
     }
 
     current->add(ins);
-    ins->infer(oracle->binaryOp(script, pc));
+    ins->infer(oracle->binaryTypes(script, pc));
 
     current->push(ins);
     if (ins->isEffectful() && !resumeAfter(ins))
@@ -3206,6 +3216,8 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
     JS_ASSERT(types::IsInlinableCall(pc));
     jsbytecode *postCall = GetNextPc(pc);
     MBasicBlock *bottom = newBlock(NULL, postCall);
+    if (!bottom)
+        return false;
     bottom->setCallerResumePoint(callerResumePoint_);
 
     Vector<MDefinition *, 8, IonAllocPolicy> retvalDefns;
@@ -3308,7 +3320,8 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
                 MPhi *phi = MPhi::New(inlineBottom->stackDepth() - argc - 2);
                 inlineBottom->addPhi(phi);
 
-                for (MDefinition **it = retvalDefns.begin(), **end = retvalDefns.end(); it != end; ++it) {
+                MDefinition **it = retvalDefns.begin(), **end = retvalDefns.end();
+                for (; it != end; ++it) {
                     if (!phi->addInput(*it))
                         return false;
                 }
@@ -4086,7 +4099,8 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     MSlots *slots = MSlots::New(obj);
     current->add(slots);
 
-    MStoreSlot *store = MStoreSlot::New(slots, templateObject->dynamicSlotIndex(shape->slot()), value);
+    uint32 slot = templateObject->dynamicSlotIndex(shape->slot());
+    MStoreSlot *store = MStoreSlot::New(slots, slot, value);
     if (needsBarrier)
         store->setNeedsBarrier();
 
@@ -4667,7 +4681,7 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
     // If we have a property typeset, the isOwnProperty call will trigger recompilation if
     // the property is deleted or reconfigured.
     if (!propertyTypes && shape->configurable()) {
-        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty());
+        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty(), Bailout_Invalidate);
         current->add(guard);
     }
 
@@ -4720,7 +4734,7 @@ IonBuilder::jsop_setgname(HandlePropertyName name)
     // if the property is deleted or reconfigured. Without TI, we always need a shape guard
     // to guard against the property being reconfigured as non-writable.
     if (!propertyTypes) {
-        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty());
+        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty(), Bailout_Invalidate);
         current->add(guard);
     }
 
@@ -5024,7 +5038,8 @@ IonBuilder::jsop_getelem_typed(int arrayType)
         // Assume we will read out-of-bound values. In this case the
         // bounds check will be part of the instruction, and the instruction
         // will always return a Value.
-        MLoadTypedArrayElementHole *load = MLoadTypedArrayElementHole::New(obj, id, arrayType, allowDouble);
+        MLoadTypedArrayElementHole *load =
+            MLoadTypedArrayElementHole::New(obj, id, arrayType, allowDouble);
         current->add(load);
         current->push(load);
 
@@ -5470,7 +5485,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
     // are no lookup hooks for this property.
     MInstruction *wrapper = MConstant::New(ObjectValue(*foundProto));
     current->add(wrapper);
-    MGuardShape *guard = MGuardShape::New(wrapper, foundProto->lastProperty());
+    MGuardShape *guard = MGuardShape::New(wrapper, foundProto->lastProperty(), Bailout_Invalidate);
     current->add(guard);
 
     // Now we have to freeze all the property typesets to ensure there isn't a
@@ -5898,7 +5913,7 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
             // that the shape is still a lastProperty, and calling
             // Shape::search() on dictionary mode shapes that aren't
             // lastProperty is invalid.
-            MGuardShape *guard = MGuardShape::New(obj, objShape);
+            MGuardShape *guard = MGuardShape::New(obj, objShape, Bailout_CachedShapeGuard);
             current->add(guard);
 
             spew("Inlining monomorphic GETPROP");
@@ -6020,7 +6035,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             // long as the shape is not in dictionary mode. We cannot be sure
             // that the shape is still a lastProperty, and calling Shape::search
             // on dictionary mode shapes that aren't lastProperty is invalid.
-            MGuardShape *guard = MGuardShape::New(obj, objShape);
+            MGuardShape *guard = MGuardShape::New(obj, objShape, Bailout_CachedShapeGuard);
             current->add(guard);
 
             Shape *shape = objShape->search(cx, NameToId(name));

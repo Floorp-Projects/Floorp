@@ -3085,7 +3085,10 @@ private:
 #ifdef DEBUG
 public:
   // Formerly nsIFrameDebug
-  NS_IMETHOD  List(FILE* out, int32_t aIndent) const = 0;
+  enum {
+    TRAVERSE_SUBDOCUMENT_FRAMES = 0x01
+  };
+  NS_IMETHOD  List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const = 0;
   NS_IMETHOD  GetFrameName(nsAString& aResult) const = 0;
   NS_IMETHOD_(nsFrameState)  GetDebugStateBits() const = 0;
   NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext,

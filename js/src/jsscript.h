@@ -396,14 +396,16 @@ struct JSScript : public js::gc::Cell
     uint32_t        idpad;
 #endif
 
-    uint32_t        PADDING;
-
     // 16-bit fields.
 
   private:
+    uint16_t        PADDING;
+
     uint16_t        version;    /* JS version under which script was compiled */
 
   public:
+    uint16_t        ndefaults;  /* number of defaults the function has */
+
     uint16_t        nfixed;     /* number of slots besides stack operands in
                                    slot array */
 
@@ -557,7 +559,7 @@ struct JSScript : public js::gc::Cell
     JSFunction *function() const { return function_; }
     void setFunction(JSFunction *fun);
 
-    JSFixedString *sourceData(JSContext *cx);
+    JSFlatString *sourceData(JSContext *cx);
 
     bool loadSource(JSContext *cx, bool *worked);
 
@@ -1031,7 +1033,7 @@ struct ScriptSource
         JS_ASSERT(hasSourceData());
         return argumentsNotIncluded_;
     }
-    JSFixedString *substring(JSContext *cx, uint32_t start, uint32_t stop);
+    JSFlatString *substring(JSContext *cx, uint32_t start, uint32_t stop);
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
 
     // XDR handling

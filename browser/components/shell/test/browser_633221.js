@@ -10,5 +10,6 @@ function test() {
               getService(Ci.nsIShellService);
 
   shell.setDefaultBrowser(true, false);
-  ok(shell.isDefaultBrowser(true), "we got here and are the default browser");
+  ok(shell.isDefaultBrowser(true, false), "we got here and are the default browser");
+  ok(shell.isDefaultBrowser(true, true), "we got here and are the default browser");
 }

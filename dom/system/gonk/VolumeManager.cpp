@@ -14,6 +14,7 @@
 
 #include "base/message_loop.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/StaticPtr.h"
 
 #include <android/log.h>
 #include <cutils/sockets.h>
@@ -23,7 +24,7 @@
 namespace mozilla {
 namespace system {
 
-static RefPtr<VolumeManager> sVolumeManager;
+static StaticRefPtr<VolumeManager> sVolumeManager;
 
 VolumeManager::STATE VolumeManager::mState = VolumeManager::UNINITIALIZED;
 VolumeManager::StateObserverList VolumeManager::mStateObserverList;

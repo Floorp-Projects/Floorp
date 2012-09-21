@@ -34,7 +34,6 @@
 #include "nsAppShellCID.h"
 #include "nsXPCOMCIDInternal.h"
 #include "mozilla/Services.h"
-#include "mozilla/FunctionTimer.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 #include "prenv.h"
@@ -172,21 +171,16 @@ nsAppStartup::nsAppStartup() :
 nsresult
 nsAppStartup::Init()
 {
-  NS_TIME_FUNCTION;
   nsresult rv;
 
   // Create widget application shell
   mAppShell = do_GetService(kAppShellCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_TIME_FUNCTION_MARK("Got AppShell service");
-
   nsCOMPtr<nsIObserverService> os =
     mozilla::services::GetObserverService();
   if (!os)
     return NS_ERROR_FAILURE;
-
-  NS_TIME_FUNCTION_MARK("Got Observer service");
 
   os->AddObserver(this, "quit-application-forced", true);
   os->AddObserver(this, "sessionstore-windows-restored", true);
@@ -379,6 +373,50 @@ RecordShutdownEndTimeStamp() {
 }
 }
 
+#ifdef MOZ_WIDGET_GONK
+static void
+QuitHard()
+{
+  // Don't let signal handlers affect forced shutdown.
+  kill(0, SIGKILL);
+  // If we can't SIGKILL our process group, something is badly
+  // wrong.  Trying to deliver a catch-able signal to ourselves can
+  // invoke signal handlers and might cause problems.  So try
+  // _exit() and hope we go away.
+  _exit(1);
+}
+
+static void*
+ForceQuitWatchdog(void* aTimeoutSecs)
+{
+  int32_t timeoutSecs = int32_t(intptr_t(aTimeoutSecs));
+  if (timeoutSecs > 0 && timeoutSecs <= 30) {
+    // If we shut down normally before the timeout, this thread will
+    // be harmlessly reaped by the OS.
+    sleep(timeoutSecs);
+  }
+
+  QuitHard();
+  MOZ_NOT_REACHED();
+  return nullptr;
+}
+
+static void
+StartForceQuitWatchdog(int32_t aTimeoutSecs)
+{
+  // Use a raw pthread here to insulate ourselves from bugs in other
+  // Gecko code that we're trying to protect!
+  pthread_t watchdog;
+  if (pthread_create(&watchdog, nullptr,
+                     ForceQuitWatchdog,
+                     reinterpret_cast<void*>(intptr_t(aTimeoutSecs)))) {
+    // Better safe than sorry.
+    QuitHard();
+  }
+  // The watchdog thread is off and running now.
+}
+#endif
+
 NS_IMETHODIMP
 nsAppStartup::Quit(uint32_t aMode)
 {
@@ -423,6 +461,25 @@ nsAppStartup::Quit(uint32_t aMode)
     }
 #endif
   }
+
+#ifdef MOZ_WIDGET_GONK
+  // Force-quits are intepreted a little more ferociously on Gonk,
+  // because while Gecko is in the process of shutting down, the user
+  // can't call 911, for example.  And if we hang on shutdown, bad
+  // things happen.  So, make sure that doesn't happen.
+  //
+  // We rely on a service manager to restart us, so we can get away
+  // with these kind of shenanigans.
+  //
+  // NB: default to *enabling* the watchdog even when the pref is
+  // absent, in case the profile might be damaged and we need to
+  // restart to repair it.
+  int32_t timeoutSecs =
+    Preferences::GetInt("shutdown.watchdog.timeoutSecs", 5);
+  if (ferocity == eForceQuit && timeoutSecs > 0) {
+    StartForceQuitWatchdog(timeoutSecs);
+  }
+#endif
 
   nsCOMPtr<nsIObserverService> obsService;
   if (ferocity == eAttemptQuit || ferocity == eForceQuit) {

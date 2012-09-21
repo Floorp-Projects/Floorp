@@ -38,6 +38,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
                                   "resource:///modules/NewTabUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserNewTabPreloader",
+                                  "resource:///modules/BrowserNewTabPreloader.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "PdfJs",
                                   "resource://pdf.js/PdfJs.jsm");
 
@@ -345,6 +348,7 @@ BrowserGlue.prototype = {
     webappsUI.init();
     PageThumbs.init();
     NewTabUtils.init();
+    BrowserNewTabPreloader.init();
     SignInToWebsiteUX.init();
     PdfJs.init();
 
@@ -370,6 +374,7 @@ BrowserGlue.prototype = {
     this._shutdownPlaces();
     this._sanitizer.onShutdown();
     PageThumbs.uninit();
+    BrowserNewTabPreloader.uninit();
   },
 
   // All initial windows have opened.
@@ -438,7 +443,9 @@ BrowserGlue.prototype = {
           (ss.sessionType == Ci.nsISessionStartup.RECOVER_SESSION);
       }
       catch (ex) { /* never mind; suppose SessionStore is broken */ }
-      if (shouldCheck && !shell.isDefaultBrowser(true) && !willRecoverSession) {
+      if (shouldCheck &&
+          !shell.isDefaultBrowser(true, false) &&
+          !willRecoverSession) {
         Services.tm.mainThread.dispatch(function() {
           var win = this.getMostRecentBrowserWindow();
           var brandBundle = win.document.getElementById("bundle_brand");
@@ -455,8 +462,22 @@ BrowserGlue.prototype = {
           var rv = ps.confirmEx(win, promptTitle, promptMessage,
                                 ps.STD_YES_NO_BUTTONS,
                                 null, null, null, checkboxLabel, checkEveryTime);
-          if (rv == 0)
-            shell.setDefaultBrowser(true, false);
+          if (rv == 0) {
+            var claimAllTypes = true;
+#ifdef XP_WIN
+            try {
+              // In Windows 8, the UI for selecting default protocol is much
+              // nicer than the UI for setting file type associations. So we
+              // only show the protocol association screen on Windows 8.
+              // Windows 8 is version 6.2.
+              let version = Cc["@mozilla.org/system-info;1"]
+                              .getService(Ci.nsIPropertyBag2)
+                              .getProperty("version");
+              claimAllTypes = (parseFloat(version) < 6.2);
+            } catch (ex) { }
+#endif
+            shell.setDefaultBrowser(claimAllTypes, false);
+          }
           shell.shouldCheckDefaultBrowser = checkEveryTime.value;
         }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       }

@@ -104,21 +104,40 @@ static const char baseName[2][5] = { "gre/", "app/" };
 
 static inline bool
 canonicalizeBase(nsAutoCString &spec,
-                 nsACString &out,
-                 mozilla::Omnijar::Type aType)
+                 nsACString &out)
 {
-    nsAutoCString base;
-    nsresult rv = mozilla::Omnijar::GetURIString(aType, base);
-
-    if (NS_FAILED(rv) || !base.Length())
+    nsAutoCString greBase, appBase;
+    nsresult rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::GRE, greBase);
+    if (NS_FAILED(rv) || !greBase.Length())
         return false;
 
-    if (base.Compare(spec.get(), false, base.Length()))
+    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::APP, appBase);
+    if (NS_FAILED(rv))
         return false;
+
+    bool underGre = !greBase.Compare(spec.get(), false, greBase.Length());
+    bool underApp = appBase.Length() &&
+                    !appBase.Compare(spec.get(), false, appBase.Length());
+
+    if (!underGre && !underApp)
+        return false;
+
+    /**
+     * At this point, if both underGre and underApp are true, it can be one
+     * of the two following cases:
+     * - the GRE directory points to a subdirectory of the APP directory,
+     *   meaning spec points under GRE.
+     * - the APP directory points to a subdirectory of the GRE directory,
+     *   meaning spec points under APP.
+     * Checking the GRE and APP path length is enough to know in which case
+     * we are.
+     */
+    if (underGre && underApp && greBase.Length() < appBase.Length())
+        underGre = false;
 
     out.Append("/resource/");
-    out.Append(baseName[aType]);
-    out.Append(Substring(spec, base.Length()));
+    out.Append(baseName[underGre ? mozilla::Omnijar::GRE : mozilla::Omnijar::APP]);
+    out.Append(Substring(spec, underGre ? greBase.Length() : appBase.Length()));
     return true;
 }
 
@@ -188,8 +207,7 @@ PathifyURI(nsIURI *in, nsACString &out)
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (!canonicalizeBase(spec, out, mozilla::Omnijar::GRE) &&
-        !canonicalizeBase(spec, out, mozilla::Omnijar::APP)) {
+    if (!canonicalizeBase(spec, out)) {
         if (NS_SUCCEEDED(uri->SchemeIs("file", &equals)) && equals) {
             nsCOMPtr<nsIFileURL> baseFileURL;
             baseFileURL = do_QueryInterface(uri, &rv);

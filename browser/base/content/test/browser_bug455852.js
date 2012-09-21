@@ -1,7 +1,7 @@
 function test() {
   is(gBrowser.tabs.length, 1, "one tab is open");
 
-  content.focus();
+  gBrowser.selectedBrowser.focus();
   isnot(document.activeElement, gURLBar.inputField, "location bar is not focused");
 
   var tab = gBrowser.selectedTab;

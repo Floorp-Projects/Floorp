@@ -32,7 +32,9 @@
 NS_IMPL_ISUPPORTS3(nsMacShellService, nsIMacShellService, nsIShellService, nsIWebProgressListener)
 
 NS_IMETHODIMP
-nsMacShellService::IsDefaultBrowser(bool aStartupCheck, bool* aIsDefaultBrowser)
+nsMacShellService::IsDefaultBrowser(bool aStartupCheck,
+                                    bool aForAllTypes,
+                                    bool* aIsDefaultBrowser)
 {
   *aIsDefaultBrowser = false;
 

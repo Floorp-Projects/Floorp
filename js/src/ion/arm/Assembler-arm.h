@@ -748,7 +748,9 @@ class DTRAddr
     uint32 encode() {
         return data;
     }
-
+    Register getBase() {
+        return Register::FromCode((data >> 16) &0xf);
+    }
   private:
     friend class Operand;
     DTRAddr(uint32 blob)
@@ -1394,14 +1396,14 @@ class Assembler
 
     // bx can *only* branch to a register
     // never to an immediate.
-    BufferOffset as_bx(Register r, Condition c = Always);
+    BufferOffset as_bx(Register r, Condition c = Always, bool isPatchable = false);
 
     // Branch can branch to an immediate *or* to a register.
     // Branches to immediates are pc relative, branches to registers
     // are absolute
-    BufferOffset as_b(BOffImm off, Condition c);
+    BufferOffset as_b(BOffImm off, Condition c, bool isPatchable = false);
 
-    BufferOffset as_b(Label *l, Condition c = Always);
+    BufferOffset as_b(Label *l, Condition c = Always, bool isPatchable = false);
     BufferOffset as_b(BOffImm off, Condition c, BufferOffset inst);
 
     // blx can go to either an immediate or a register.

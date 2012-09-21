@@ -1031,6 +1031,11 @@ MacroAssemblerARM::ma_pop(Register r)
 void
 MacroAssemblerARM::ma_push(Register r)
 {
+    // pushing sp is not well defined, use two instructions
+    if (r == sp) {
+        ma_mov(sp, ScratchRegister);
+        r = ScratchRegister;
+    }
     ma_dtr(IsStore, sp,Imm32(-4), r, PreIndex);
 }
 
@@ -1051,9 +1056,9 @@ MacroAssemblerARM::ma_vpush(VFPRegister r)
 
 // branches when done from within arm-specific code
 void
-MacroAssemblerARM::ma_b(Label *dest, Assembler::Condition c)
+MacroAssemblerARM::ma_b(Label *dest, Assembler::Condition c, bool isPatchable)
 {
-    as_b(dest, c);
+    as_b(dest, c, isPatchable);
 }
 
 void
@@ -2084,7 +2089,7 @@ MacroAssemblerARMCompat::testGCThing(Assembler::Condition cond, const Address &a
     JS_ASSERT(cond == Equal || cond == NotEqual);
     extractTag(address, ScratchRegister);
     ma_cmp(ScratchRegister, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
-    return cond;
+    return cond == Equal ? AboveOrEqual : Below;
 }
 
 Assembler::Condition
@@ -2093,7 +2098,7 @@ MacroAssemblerARMCompat::testGCThing(Assembler::Condition cond, const BaseIndex 
     JS_ASSERT(cond == Equal || cond == NotEqual);
     extractTag(address, ScratchRegister);
     ma_cmp(ScratchRegister, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
-    return cond;
+    return cond == Equal ? AboveOrEqual : Below;
 }
 
 Assembler::Condition
@@ -2851,7 +2856,7 @@ MacroAssemblerARMCompat::toggledJump(Label *label)
 {
     // Emit a B that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
     CodeOffsetLabel ret(nextOffset().getOffset());
-    ma_b(label);
+    ma_b(label, Always, true);
     return ret;
 }
 

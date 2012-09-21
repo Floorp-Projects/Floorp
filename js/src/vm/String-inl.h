@@ -21,7 +21,7 @@
 
 namespace js {
 
-static JS_ALWAYS_INLINE JSFixedString *
+static JS_ALWAYS_INLINE JSInlineString *
 NewShortString(JSContext *cx, const jschar *chars, size_t length)
 {
     SkipRoot skip(cx, &chars);
@@ -211,32 +211,32 @@ JSFlatString::toPropertyName(JSContext *cx)
     return atom->asPropertyName();
 }
 
+JS_ALWAYS_INLINE JSAtom *
+JSFlatString::morphAtomizedStringIntoAtom()
+{
+    d.lengthAndFlags = buildLengthAndFlags(length(), ATOM_BIT);
+    return &asAtom();
+}
+
 JS_ALWAYS_INLINE void
-JSFixedString::init(const jschar *chars, size_t length)
+JSStableString::init(const jschar *chars, size_t length)
 {
     d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
     d.u1.chars = chars;
 }
 
-JS_ALWAYS_INLINE JSFixedString *
-JSFixedString::new_(JSContext *cx, const jschar *chars, size_t length)
+JS_ALWAYS_INLINE JSStableString *
+JSStableString::new_(JSContext *cx, const jschar *chars, size_t length)
 {
     JS_ASSERT(chars[length] == jschar(0));
 
     if (!validateLength(cx, length))
         return NULL;
-    JSFixedString *str = (JSFixedString *)js_NewGCString(cx);
+    JSStableString *str = (JSStableString *)js_NewGCString(cx);
     if (!str)
         return NULL;
     str->init(chars, length);
     return str;
-}
-
-JS_ALWAYS_INLINE JSAtom *
-JSFixedString::morphAtomizedStringIntoAtom()
-{
-    d.lengthAndFlags = buildLengthAndFlags(length(), ATOM_BIT);
-    return &asAtom();
 }
 
 JS_ALWAYS_INLINE JSInlineString *

@@ -1792,7 +1792,7 @@ class MBitNot
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
-    void infer(const TypeOracle::Unary &u);
+    void infer(const TypeOracle::UnaryTypes &u);
 
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
@@ -1888,7 +1888,7 @@ class MBinaryBitwiseInstruction
     virtual MDefinition *foldIfZero(size_t operand) = 0;
     virtual MDefinition *foldIfNegOne(size_t operand) = 0;
     virtual MDefinition *foldIfEqual()  = 0;
-    virtual void infer(const TypeOracle::Binary &b);
+    virtual void infer(const TypeOracle::BinaryTypes &b);
 
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
@@ -1978,7 +1978,7 @@ class MShiftInstruction
     MDefinition *foldIfEqual() {
         return this;
     }
-    virtual void infer(const TypeOracle::Binary &b);
+    virtual void infer(const TypeOracle::BinaryTypes &b);
 };
 
 class MLsh : public MShiftInstruction
@@ -2055,7 +2055,7 @@ class MUrsh : public MShiftInstruction
         return this;
     }
 
-    void infer(const TypeOracle::Binary &b);
+    void infer(const TypeOracle::BinaryTypes &b);
 
     bool canOverflow() {
         // solution is only negative when lhs < 0 and rhs & 0x1f == 0
@@ -4354,10 +4354,12 @@ class MGuardShape
     public SingleObjectPolicy
 {
     const Shape *shape_;
+    BailoutKind bailoutKind_;
 
-    MGuardShape(MDefinition *obj, const Shape *shape)
+    MGuardShape(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
-        shape_(shape)
+        shape_(shape),
+        bailoutKind_(bailoutKind)
     {
         setGuard();
         setMovable();
@@ -4366,8 +4368,8 @@ class MGuardShape
   public:
     INSTRUCTION_HEADER(GuardShape);
 
-    static MGuardShape *New(MDefinition *obj, const Shape *shape) {
-        return new MGuardShape(obj, shape);
+    static MGuardShape *New(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind) {
+        return new MGuardShape(obj, shape, bailoutKind);
     }
 
     TypePolicy *typePolicy() {
@@ -4379,10 +4381,15 @@ class MGuardShape
     const Shape *shape() const {
         return shape_;
     }
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
+    }
     bool congruentTo(MDefinition * const &ins) const {
         if (!ins->isGuardShape())
             return false;
         if (shape() != ins->toGuardShape()->shape())
+            return false;
+        if (bailoutKind() != ins->toGuardShape()->bailoutKind())
             return false;
         return congruentIfOperandsEqual(ins);
     }

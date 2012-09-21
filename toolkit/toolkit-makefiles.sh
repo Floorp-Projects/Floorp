@@ -854,6 +854,7 @@ if [ "$ENABLE_TESTS" ]; then
     js/xpconnect/tests/components/native/Makefile
     js/xpconnect/tests/idl/Makefile
     js/xpconnect/tests/mochitest/Makefile
+    testing/specialpowers/Makefile
     layout/base/tests/Makefile
     layout/base/tests/chrome/Makefile
     layout/base/tests/cpp-tests/Makefile
@@ -896,7 +897,6 @@ if [ "$ENABLE_TESTS" ]; then
     testing/mochitest/MochiKit/Makefile
     testing/mochitest/chrome/Makefile
     testing/mochitest/dynamic/Makefile
-    testing/mochitest/specialpowers/Makefile
     testing/mochitest/ssltunnel/Makefile
     testing/mochitest/static/Makefile
     testing/mochitest/tests/Makefile

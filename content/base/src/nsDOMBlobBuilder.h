@@ -11,8 +11,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Attributes.h"
 
-using namespace mozilla;
-
 class nsDOMMultipartFile : public nsDOMFile,
                            public nsIJSNativeInitializer
 {
@@ -95,9 +93,19 @@ public:
 
   nsTArray<nsCOMPtr<nsIDOMBlob> >& GetBlobs() { Flush(); return mBlobs; }
 
+  already_AddRefed<nsIDOMBlob>
+  GetBlobInternal(const nsACString& aContentType)
+  {
+    nsCOMPtr<nsIDOMBlob> blob =
+      new nsDOMMultipartFile(GetBlobs(), NS_ConvertASCIItoUTF16(aContentType));
+    return blob.forget();
+  }
+
 protected:
   bool ExpandBufferSize(uint64_t aSize)
   {
+    using mozilla::CheckedUint32;
+
     if (mDataBufferLen >= mDataLen + aSize) {
       mDataLen += aSize;
       return true;
@@ -140,33 +148,6 @@ protected:
   void* mData;
   uint64_t mDataLen;
   uint64_t mDataBufferLen;
-};
-
-class nsDOMBlobBuilder MOZ_FINAL : public nsIDOMMozBlobBuilder,
-                                   public nsIJSNativeInitializer
-{
-public:
-  nsDOMBlobBuilder()
-    : mBlobSet()
-  {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZBLOBBUILDER
-
-  nsresult AppendVoidPtr(const void* aData, uint32_t aLength)
-  { return mBlobSet.AppendVoidPtr(aData, aLength); }
-
-  nsresult GetBlobInternal(const nsAString& aContentType,
-                           bool aClearBuffer, nsIDOMBlob** aBlob);
-
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner,
-                        JSContext* aCx,
-                        JSObject* aObj,
-                        uint32_t aArgc,
-                        jsval* aArgv);
-protected:
-  BlobSet mBlobSet;
 };
 
 #endif

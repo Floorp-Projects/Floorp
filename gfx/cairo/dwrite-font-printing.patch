@@ -1,0 +1,157 @@
+diff --git a/gfx/cairo/cairo/src/cairo-dwrite-font.cpp b/gfx/cairo/cairo/src/cairo-dwrite-font.cpp
+--- a/gfx/cairo/cairo/src/cairo-dwrite-font.cpp
++++ b/gfx/cairo/cairo/src/cairo-dwrite-font.cpp
+@@ -37,16 +37,17 @@
+ #include "cairoint.h"
+ 
+ #include "cairo-win32-private.h"
+ #include "cairo-surface-private.h"
+ #include "cairo-clip-private.h"
+ 
+ #include "cairo-d2d-private.h"
+ #include "cairo-dwrite-private.h"
++#include "cairo-truetype-subset-private.h"
+ #include <float.h>
+ 
+ typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
+     D2D1_FACTORY_TYPE factoryType,
+     REFIID iid,
+     CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+     void **factory
+ );
+@@ -1036,17 +1037,17 @@ cairo_int_status_t
+ {
+     cairo_dwrite_scaled_font_t *dwritesf = static_cast<cairo_dwrite_scaled_font_t*>(scaled_font);
+     cairo_dwrite_font_face_t *face = reinterpret_cast<cairo_dwrite_font_face_t*>(dwritesf->base.font_face);
+ 
+     const void *data;
+     UINT32 size;
+     void *tableContext;
+     BOOL exists;
+-    face->dwriteface->TryGetFontTable(tag,
++    face->dwriteface->TryGetFontTable(be32_to_cpu (tag),
+ 				      &data,
+ 				      &size,
+ 				      &tableContext,
+ 				      &exists);
+ 
+     if (!exists) {
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+@@ -1476,16 +1477,59 @@ DWriteFactory::CreateRenderingParams()
+     Instance()->CreateCustomRenderingParams(gamma, contrast, clearTypeLevel,
+ 	pixelGeometry, renderingMode,
+ 	&mCustomClearTypeRenderingParams);
+     Instance()->CreateCustomRenderingParams(gamma, contrast, clearTypeLevel,
+         pixelGeometry, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+         &mForceGDIClassicRenderingParams);
+ }
+ 
++static cairo_bool_t
++_name_tables_match (cairo_scaled_font_t *font1,
++                    cairo_scaled_font_t *font2)
++{
++    unsigned long size1;
++    unsigned long size2;
++    cairo_int_status_t status1;
++    cairo_int_status_t status2;
++    unsigned char *buffer1;
++    unsigned char *buffer2;
++    cairo_bool_t result = false;
++
++    if (!font1->backend->load_truetype_table ||
++        !font2->backend->load_truetype_table)
++        return false;
++
++    status1 = font1->backend->load_truetype_table (font1,
++                                                   TT_TAG_name, 0, NULL, &size1);
++    status2 = font2->backend->load_truetype_table (font2,
++                                                   TT_TAG_name, 0, NULL, &size2);
++    if (status1 || status2)
++        return false;
++    if (size1 != size2)
++        return false;
++
++    buffer1 = (unsigned char*)malloc (size1);
++    buffer2 = (unsigned char*)malloc (size2);
++
++    if (buffer1 && buffer2) {
++        status1 = font1->backend->load_truetype_table (font1,
++                                                       TT_TAG_name, 0, buffer1, &size1);
++        status2 = font2->backend->load_truetype_table (font2,
++                                                       TT_TAG_name, 0, buffer2, &size2);
++        if (!status1 && !status2) {
++            result = memcmp (buffer1, buffer2, size1) == 0;
++        }
++    }
++
++    free (buffer1);
++    free (buffer2);
++    return result;
++}
++
+ // Helper for _cairo_win32_printing_surface_show_glyphs to create a win32 equivalent
+ // of a dwrite scaled_font so that we can print using ExtTextOut instead of drawing
+ // paths or blitting glyph bitmaps.
+ cairo_int_status_t
+ _cairo_dwrite_scaled_font_create_win32_scaled_font (cairo_scaled_font_t *scaled_font,
+                                                     cairo_scaled_font_t **new_font)
+ {
+     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_DWRITE) {
+@@ -1528,19 +1572,18 @@ cairo_int_status_t
+ 			                                  &ctm,
+ 			                                  &options);
+     cairo_font_face_destroy (win32_face);
+ 
+     if (!font) {
+         return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+ 
+-    if (_cairo_win32_scaled_font_is_type1 (font) || _cairo_win32_scaled_font_is_bitmap (font)) {
+-        // If we somehow got a Type1 or bitmap font, it can't be the same physical font
+-        // as directwrite was using, so glyph IDs will not match; best we can do is to
+-        // throw it away and fall back on rendering paths or blitting bitmaps instead.
++    if (!_name_tables_match (font, scaled_font)) {
++        // If the font name tables aren't equal, then GDI may have failed to
++        // find the right font and substituted a different font.
+         cairo_scaled_font_destroy (font);
+         return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+ 
+     *new_font = font;
+     return CAIRO_INT_STATUS_SUCCESS;
+ }
+diff --git a/gfx/cairo/cairo/src/cairo-truetype-subset-private.h b/gfx/cairo/cairo/src/cairo-truetype-subset-private.h
+--- a/gfx/cairo/cairo/src/cairo-truetype-subset-private.h
++++ b/gfx/cairo/cairo/src/cairo-truetype-subset-private.h
+@@ -34,16 +34,18 @@
+  *	Adrian Johnson <ajohnson@redneon.com>
+  */
+ 
+ #ifndef CAIRO_TRUETYPE_SUBSET_PRIVATE_H
+ #define CAIRO_TRUETYPE_SUBSET_PRIVATE_H
+ 
+ #include "cairoint.h"
+ 
++CAIRO_BEGIN_DECLS
++
+ #if CAIRO_HAS_FONT_SUBSET
+ 
+ /* The structs defined here should strictly follow the TrueType
+  * specification and not be padded.  We use only 16-bit integer
+  * in their definition to guarantee that.  The fields of type
+  * "FIXED" in the TT spec are broken into two *_1 and *_2 16-bit
+  * parts, and 64-bit members are broken into four.
+  *
+@@ -191,9 +193,11 @@ typedef struct _tt_composite_glyph {
+ typedef struct _tt_glyph_data {
+     int16_t           num_contours;
+     int8_t            data[8];
+     tt_composite_glyph_t glyph;
+ } tt_glyph_data_t;
+ 
+ #endif /* CAIRO_HAS_FONT_SUBSET */
+ 
++CAIRO_END_DECLS
++
+ #endif /* CAIRO_TRUETYPE_SUBSET_PRIVATE_H */

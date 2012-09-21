@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Matrix.h"
+#include "Tools.h"
 #include <math.h>
 
 namespace mozilla {
@@ -54,6 +55,17 @@ Matrix::TransformBounds(const Rect &aRect) const
   }
 
   return Rect(min_x, min_y, max_x - min_x, max_y - min_y);
+}
+
+void
+Matrix::NudgeToIntegers()
+{
+  NudgeToInteger(&_11);
+  NudgeToInteger(&_12);
+  NudgeToInteger(&_21);
+  NudgeToInteger(&_22);
+  NudgeToInteger(&_31);
+  NudgeToInteger(&_32);
 }
 
 }
