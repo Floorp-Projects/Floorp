@@ -126,6 +126,8 @@ class LoggingManager(object):
 
         self.structured_filter = ConvertToStructuredFilter()
 
+        self.structured_loggers = [self.mozbuild_logger]
+
         self._terminal = None
 
     @property
@@ -147,7 +149,8 @@ class LoggingManager(object):
         handler.setLevel(logging.DEBUG)
 
         # And hook it up.
-        self.mozbuild_logger.addHandler(handler)
+        for logger in self.structured_loggers:
+            logger.addHandler(handler)
 
         self.json_handlers.append(handler)
 
@@ -167,7 +170,8 @@ class LoggingManager(object):
         handler.setFormatter(formatter)
         handler.setLevel(level)
 
-        self.mozbuild_logger.addHandler(handler)
+        for logger in self.structured_loggers:
+            logger.addHandler(handler)
 
         self.terminal_handler = handler
         self.terminal_formatter = formatter
@@ -182,10 +186,12 @@ class LoggingManager(object):
         old = self.terminal_handler
 
         if old:
-            self.mozbuild_logger.removeHandler(old)
+            for logger in self.structured_loggers:
+                logger.removeHandler(old)
 
         if handler:
-            self.mozbuild_logger.addHandler(handler)
+            for logger in self.structured_loggers:
+                logger.addHandler(handler)
 
         self.terminal_handler = handler
 
@@ -202,3 +208,11 @@ class LoggingManager(object):
         if self.terminal_handler:
             self.terminal_handler.removeFilter(self.structured_filter)
             self.root_logger.removeHandler(self.terminal_handler)
+
+    def register_structured_logger(self, logger):
+        """Register a structured logger.
+
+        This needs to be called for all structured loggers that don't chain up
+        to the mozbuild logger in order for their output to be captured.
+        """
+        self.structured_loggers.append(logger)
