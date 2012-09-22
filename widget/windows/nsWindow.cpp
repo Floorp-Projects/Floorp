@@ -6180,35 +6180,6 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
   uint32_t cInputs = LOWORD(wParam);
   PTOUCHINPUT pInputs = new TOUCHINPUT[cInputs];
 
-  if (mGesture.GetTouchInputInfo((HTOUCHINPUT)lParam, cInputs, pInputs)) {
-    for (uint32_t i = 0; i < cInputs; i++) {
-      uint32_t msg;
-      if (pInputs[i].dwFlags & TOUCHEVENTF_MOVE) {
-        msg = NS_MOZTOUCH_MOVE;
-      } else if (pInputs[i].dwFlags & TOUCHEVENTF_DOWN) {
-        msg = NS_MOZTOUCH_DOWN;
-      } else if (pInputs[i].dwFlags & TOUCHEVENTF_UP) {
-        msg = NS_MOZTOUCH_UP;
-      } else {
-        continue;
-      }
-
-      nsPointWin touchPoint;
-      touchPoint.x = TOUCH_COORD_TO_PIXEL(pInputs[i].x);
-      touchPoint.y = TOUCH_COORD_TO_PIXEL(pInputs[i].y);
-      touchPoint.ScreenToClient(mWnd);
-
-      nsMozTouchEvent touchEvent(true, msg, this, pInputs[i].dwID);
-      ModifierKeyState modifierKeyState;
-      modifierKeyState.InitInputEvent(touchEvent);
-      touchEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-      touchEvent.refPoint = touchPoint;
-
-      nsEventStatus status;
-      DispatchEvent(&touchEvent, status);
-    }
-  }
-
   delete [] pInputs;
   mGesture.CloseTouchInputHandle((HTOUCHINPUT)lParam);
   return true;

@@ -72,8 +72,7 @@ GetPrefsFor(uint8_t aEventStructType)
 {
   EventRadiusPrefs* prefs = nullptr;
   const char* prefBranch = nullptr;
-  if (aEventStructType == NS_MOZTOUCH_EVENT ||
-      aEventStructType == NS_TOUCH_EVENT) {
+  if (aEventStructType == NS_TOUCH_EVENT) {
     prefBranch = "touch";
     prefs = &sTouchEventRadiusPrefs;
   } else if (aEventStructType == NS_MOUSE_EVENT) {

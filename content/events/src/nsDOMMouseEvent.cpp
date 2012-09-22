@@ -88,7 +88,6 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, bool aCanBubble, bool a
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-    case NS_MOZTOUCH_EVENT:
     {
        static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget = aRelatedTarget;
        static_cast<nsMouseEvent_base*>(mEvent)->button = aButton;
@@ -143,7 +142,6 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-    case NS_MOZTOUCH_EVENT:
       static_cast<nsInputEvent*>(mEvent)->modifiers = modifiers;
       return NS_OK;
     default:
@@ -172,7 +170,6 @@ nsDOMMouseEvent::InitFromCtor(const nsAString& aType,
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-    case NS_MOZTOUCH_EVENT:
       static_cast<nsMouseEvent_base*>(mEvent)->buttons = d.buttons;
       break;
     default:
@@ -212,7 +209,6 @@ nsDOMMouseEvent::GetButton(uint16_t* aButton)
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-    case NS_MOZTOUCH_EVENT:
       *aButton = static_cast<nsMouseEvent_base*>(mEvent)->button;
       break;
     default:
@@ -234,7 +230,6 @@ nsDOMMouseEvent::GetButtons(uint16_t* aButtons)
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-    case NS_MOZTOUCH_EVENT:
       *aButtons = static_cast<nsMouseEvent_base*>(mEvent)->buttons;
       break;
     default:
@@ -258,7 +253,6 @@ nsDOMMouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-    case NS_MOZTOUCH_EVENT:
       relatedTarget = static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget;
       break;
     default:
