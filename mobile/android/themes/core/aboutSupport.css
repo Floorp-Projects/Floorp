@@ -26,10 +26,12 @@ body {
   font-weight: bold;
 }
 
+#copy-raw-data-to-clipboard,
 #copy-to-clipboard {
   padding-top: 2%;
   width: 100%;
   padding-bottom: 2%;
+  margin: 1%;
 }
 
 table {
