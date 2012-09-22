@@ -4,6 +4,8 @@
 
 # This modules provides functionality for dealing with compiler warnings.
 
+from __future__ import unicode_literals
+
 import json
 import os
 import re
@@ -68,6 +70,18 @@ class CompilerWarning(dict):
     def __hash__(self):
         """Define so this can exist inside a set, etc."""
         return hash(tuple(sorted(self.items())))
+
+    def __cmp__(self, other):
+        if not isinstance(other, CompilerWarning):
+            return -1
+
+        for key in ('filename', 'line', 'column'):
+            x = cmp(self[key], other[key])
+
+            if x != 0:
+                return x
+
+        return 0
 
 
 class WarningsDatabase(object):
