@@ -283,7 +283,7 @@ interface mozIStorageStatement : mozIStorageBaseStatement {
   }
 
   inline bool IsNull(uint32_t idx) {
-    bool b = PR_FALSE;
+    bool b = false;
     mozilla::DebugOnly<nsresult> rv = GetIsNull(idx, &b);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
                       "Getting value failed, wrong column index?");

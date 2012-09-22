@@ -5,8 +5,6 @@
 #ifndef DOM_CAMERA_DOMCAMERACONTROL_H
 #define DOM_CAMERA_DOMCAMERACONTROL_H
 
-#include "base/basictypes.h"
-#include "prtypes.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"

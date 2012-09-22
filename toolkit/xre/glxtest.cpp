@@ -88,6 +88,9 @@ static void glxtest()
     dup2(fd, i);
   close(fd);
 
+  if (getenv("MOZ_AVOID_OPENGL_ALTOGETHER"))
+    fatal_error("The MOZ_AVOID_OPENGL_ALTOGETHER environment variable is defined");
+
   ///// Open libGL and load needed symbols /////
 #ifdef __OpenBSD__
   #define LIBGL_FILENAME "libGL.so"

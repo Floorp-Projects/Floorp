@@ -12,5 +12,13 @@
 
 [Constructor, PrefControlled]
 interface mozAudioContext {
+
+    readonly attribute AudioDestinationNode destination;
+
+    // AudioNode creation 
+    AudioBufferSourceNode createBufferSource();
+
 };
+
+typedef mozAudioContext AudioContext;
 

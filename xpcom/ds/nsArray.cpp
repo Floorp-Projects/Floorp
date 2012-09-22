@@ -195,14 +195,18 @@ FindElementCallback(void *aElement, void* aClosure)
 }
 
 nsresult
-nsArrayConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult)
+nsArray::XPCOMConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult)
 {
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    nsCOMPtr<nsIArray> inst = NS_IsMainThread() ? new nsArrayCC : new nsArray;
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-
+    nsCOMPtr<nsIMutableArray> inst = Create();
     return inst->QueryInterface(aIID, aResult); 
+}
+
+already_AddRefed<nsIMutableArray>
+nsArray::Create()
+{
+    nsCOMPtr<nsIMutableArray> inst = NS_IsMainThread() ? new nsArrayCC : new nsArray;
+    return inst.forget();
 }

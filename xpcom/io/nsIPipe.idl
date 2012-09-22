@@ -132,8 +132,8 @@ interface nsISearchableInputStream : nsISupports
 extern nsresult
 NS_NewPipe2(nsIAsyncInputStream **pipeIn,
             nsIAsyncOutputStream **pipeOut,
-            bool nonBlockingInput = PR_FALSE,
-            bool nonBlockingOutput = PR_FALSE,
+            bool nonBlockingInput = false,
+            bool nonBlockingOutput = false,
             uint32_t segmentSize = 0,
             uint32_t segmentCount = 0,
             nsIMemory *segmentAlloc = nullptr);
@@ -171,8 +171,8 @@ NS_NewPipe(nsIInputStream **pipeIn,
            nsIOutputStream **pipeOut,
            uint32_t segmentSize = 0,
            uint32_t maxSize = 0,
-           bool nonBlockingInput = PR_FALSE,
-           bool nonBlockingOutput = PR_FALSE,
+           bool nonBlockingInput = false,
+           bool nonBlockingOutput = false,
            nsIMemory *segmentAlloc = nullptr);
 
 %}

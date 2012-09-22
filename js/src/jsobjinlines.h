@@ -8,8 +8,6 @@
 #ifndef jsobjinlines_h___
 #define jsobjinlines_h___
 
-#include <new>
-
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsbool.h"
