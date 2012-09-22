@@ -583,53 +583,51 @@
       * @constructor
       */
      File.DirectoryIterator = function DirectoryIterator(path, options) {
+       exports.OS.Shared.AbstractFile.AbstractIterator.call(this);
        let dir = throw_on_null("DirectoryIterator", UnixFile.opendir(path));
        this._dir = dir;
        this._path = path;
      };
-     File.DirectoryIterator.prototype = {
-       __iterator__: function __iterator__() {
-         return this;
-       },
-       /**
-        * Return the next entry in the directory, if any such entry is
-        * available.
-        *
-        * Skip special directories "." and "..".
-        *
-        * @return {File.Entry} The next entry in the directory.
-        * @throws {StopIteration} Once all files in the directory have been
-        * encountered.
-        */
-       next: function next() {
-         if (!this._dir) {
-           throw StopIteration;
-         }
-         for (let entry = UnixFile.readdir(this._dir);
-              entry != null && !entry.isNull();
-              entry = UnixFile.readdir(this._dir)) {
-           let contents = entry.contents;
-           if (contents.d_type == OS.Constants.libc.DT_DIR) {
-             let name = contents.d_name.readString();
-             if (name == "." || name == "..") {
-               continue;
-             }
-           }
-           return new File.DirectoryIterator.Entry(contents, this._path);
-         }
-         this.close();
-         throw StopIteration;
-       },
+     File.DirectoryIterator.prototype = Object.create(exports.OS.Shared.AbstractFile.AbstractIterator.prototype);
 
-       /**
-        * Close the iterator and recover all resources.
-        * You should call this once you have finished iterating on a directory.
-        */
-       close: function close() {
-         if (!this._dir) return;
-         UnixFile.closedir(this._dir);
-         this._dir = null;
+     /**
+      * Return the next entry in the directory, if any such entry is
+      * available.
+      *
+      * Skip special directories "." and "..".
+      *
+      * @return {File.Entry} The next entry in the directory.
+      * @throws {StopIteration} Once all files in the directory have been
+      * encountered.
+      */
+     File.DirectoryIterator.prototype.next = function next() {
+       if (!this._dir) {
+         throw StopIteration;
        }
+       for (let entry = UnixFile.readdir(this._dir);
+            entry != null && !entry.isNull();
+            entry = UnixFile.readdir(this._dir)) {
+         let contents = entry.contents;
+         if (contents.d_type == OS.Constants.libc.DT_DIR) {
+           let name = contents.d_name.readString();
+           if (name == "." || name == "..") {
+             continue;
+           }
+         }
+         return new File.DirectoryIterator.Entry(contents, this._path);
+       }
+       this.close();
+       throw StopIteration;
+     };
+
+     /**
+      * Close the iterator and recover all resources.
+      * You should call this once you have finished iterating on a directory.
+      */
+     File.DirectoryIterator.prototype.close = function close() {
+       if (!this._dir) return;
+       UnixFile.closedir(this._dir);
+       this._dir = null;
      };
 
      /**

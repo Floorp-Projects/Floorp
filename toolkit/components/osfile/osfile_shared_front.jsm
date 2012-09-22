@@ -191,6 +191,20 @@ AbstractFile.normalizeToPointer = function normalizeToPointer(candidate, bytes, 
 };
 
 /**
+ * Code shared by iterators.
+ */
+AbstractFile.AbstractIterator = function AbstractIterator() {
+};
+AbstractFile.AbstractIterator.prototype = {
+  /**
+   * Allow iterating with |for|
+   */
+  __iterator__: function __iterator__() {
+    return this;
+  }
+};
+
+/**
  * Utility function shared by implementations of |OS.File.open|:
  * extract read/write/trunc/create/existing flags from a |mode|
  * object.
