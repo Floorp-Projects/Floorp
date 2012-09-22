@@ -8,7 +8,6 @@
 #include "nsSVGAngle.h"
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
-#include "nsSVGUtils.h"
 #include "nsSVGMarkerElement.h"
 #include "nsMathUtils.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE

@@ -18,7 +18,6 @@
 
 #include "nsSVGDataParser.h"
 #include "prdtoa.h"
-#include "nsSVGUtils.h"
 #include "nsMathUtils.h"
 #include "nsMemory.h"
 #include "nsReadableUtils.h"

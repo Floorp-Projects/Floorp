@@ -5,7 +5,6 @@
 
 #include "nsError.h"
 #include "nsSVGNumber2.h"
-#include "nsSVGUtils.h"
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
 #include "nsMathUtils.h"
