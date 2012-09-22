@@ -1921,6 +1921,12 @@
     "n_buckets": 10,
     "description": "Firefox: Time taken by the tab closing animation in milliseconds"
   },
+  "FX_TAB_SWITCH_UPDATE_MS": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 20,
+    "description": "Firefox: Time in ms spent updating UI in response to a tab switch"
+  },
   "FX_KEYWORD_URL_USERSET": {
     "kind": "boolean",
     "description": "Firefox: keyword.URL has a user-set value"
