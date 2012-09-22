@@ -217,6 +217,28 @@ AbstractFile.AbstractIterator.prototype = {
     for (let entry in this) {
       cb(entry, index++, this);
     }
+  },
+  /**
+   * Return several entries at once.
+   *
+   * Entries are returned in the same order as a walk with |forEach| or
+   * |for(...)|.
+   *
+   * @param {number=} length If specified, the number of entries
+   * to return. If unspecified, return all remaining entries.
+   * @return {Array} An array containing the next |length| entries, or
+   * less if the iteration contains less than |length| entries left.
+   */
+  nextBatch: function nextBatch(length) {
+    let array = [];
+    let i = 0;
+    for (let entry in this) {
+      array.push(entry);
+      if (++i >= length) {
+        return array;
+      }
+    }
+    return array;
   }
 };
 
