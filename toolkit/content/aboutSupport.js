@@ -228,6 +228,19 @@ function copyRawDataToClipboard(button) {
       Cc["@mozilla.org/widget/clipboard;1"].
         getService(Ci.nsIClipboard).
         setData(transferable, null, Ci.nsIClipboard.kGlobalClipboard);
+#ifdef ANDROID
+      // Present a toast notification.
+      let message = {
+        gecko: {
+          type: "Toast:Show",
+          message: stringBundle().GetStringFromName("rawDataCopied"),
+          duration: "short"
+        }
+      };
+      Cc["@mozilla.org/android/bridge;1"].
+        getService(Ci.nsIAndroidBridge).
+        handleGeckoMessage(JSON.stringify(message));
+#endif
     });
   }
   catch (err) {
@@ -272,6 +285,20 @@ function copyContentsToClipboard() {
   let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
                     .getService(Ci.nsIClipboard);
   clipboard.setData(transferable, null, clipboard.kGlobalClipboard);
+
+#ifdef ANDROID
+  // Present a toast notification.
+  let message = {
+    gecko: {
+      type: "Toast:Show",
+      message: stringBundle().GetStringFromName("textCopied"),
+      duration: "short"
+    }
+  };
+  Cc["@mozilla.org/android/bridge;1"].
+    getService(Ci.nsIAndroidBridge).
+    handleGeckoMessage(JSON.stringify(message));
+#endif
 }
 
 // Return the plain text representation of an element.  Do a little bit
