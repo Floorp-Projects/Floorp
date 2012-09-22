@@ -6,21 +6,21 @@
 #include "mozilla/Util.h"
 
 #include "nsSVGTextPositioningElement.h"
-#include "nsSVGUtils.h"
 #include "SVGAnimatedLengthList.h"
 #include "DOMSVGAnimatedLengthList.h"
-#include "SVGLengthList.h"
 #include "DOMSVGAnimatedNumberList.h"
+#include "SVGContentUtils.h"
+#include "SVGLengthList.h"
 
 using namespace mozilla;
 
 
 nsSVGElement::LengthListInfo nsSVGTextPositioningElement::sLengthListInfo[4] =
 {
-  { &nsGkAtoms::x,  nsSVGUtils::X, false },
-  { &nsGkAtoms::y,  nsSVGUtils::Y, false },
-  { &nsGkAtoms::dx, nsSVGUtils::X, true },
-  { &nsGkAtoms::dy, nsSVGUtils::Y, true }
+  { &nsGkAtoms::x,  SVGContentUtils::X, false },
+  { &nsGkAtoms::y,  SVGContentUtils::Y, false },
+  { &nsGkAtoms::dx, SVGContentUtils::X, true },
+  { &nsGkAtoms::dy, SVGContentUtils::Y, true }
 };
 
 nsSVGElement::LengthListAttributesInfo
@@ -50,7 +50,7 @@ nsSVGTextPositioningElement::GetNumberListInfo()
 NS_IMETHODIMP nsSVGTextPositioningElement::GetX(nsIDOMSVGAnimatedLengthList * *aX)
 {
   *aX = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[X],
-                                                this, X, nsSVGUtils::X).get();
+                                                this, X, SVGContentUtils::X).get();
   return NS_OK;
 }
 
@@ -58,7 +58,7 @@ NS_IMETHODIMP nsSVGTextPositioningElement::GetX(nsIDOMSVGAnimatedLengthList * *a
 NS_IMETHODIMP nsSVGTextPositioningElement::GetY(nsIDOMSVGAnimatedLengthList * *aY)
 {
   *aY = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[Y],
-                                                this, Y, nsSVGUtils::Y).get();
+                                                this, Y, SVGContentUtils::Y).get();
   return NS_OK;
 }
 
@@ -66,7 +66,7 @@ NS_IMETHODIMP nsSVGTextPositioningElement::GetY(nsIDOMSVGAnimatedLengthList * *a
 NS_IMETHODIMP nsSVGTextPositioningElement::GetDx(nsIDOMSVGAnimatedLengthList * *aDx)
 {
   *aDx = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[DX],
-                                                 this, DX, nsSVGUtils::X).get();
+                                                 this, DX, SVGContentUtils::X).get();
   return NS_OK;
 }
 
@@ -74,7 +74,7 @@ NS_IMETHODIMP nsSVGTextPositioningElement::GetDx(nsIDOMSVGAnimatedLengthList * *
 NS_IMETHODIMP nsSVGTextPositioningElement::GetDy(nsIDOMSVGAnimatedLengthList * *aDy)
 {
   *aDy = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[DY],
-                                                 this, DY, nsSVGUtils::Y).get();
+                                                 this, DY, SVGContentUtils::Y).get();
   return NS_OK;
 }
 
