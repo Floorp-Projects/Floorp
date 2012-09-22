@@ -118,7 +118,7 @@
 #include "nsHTMLMediaElement.h"
 #endif
 #include "nsSMILAnimationController.h"
-#include "nsSVGUtils.h"
+#include "SVGContentUtils.h"
 #include "SVGFragmentIdentifier.h"
 
 #include "nsRefreshDriver.h"
@@ -2882,7 +2882,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll)
 
     // If the target is an animation element, activate the animation
     if (content->IsNodeOfType(nsINode::eANIMATION)) {
-      nsSVGUtils::ActivateByHyperlink(content.get());
+      SVGContentUtils::ActivateByHyperlink(content.get());
     }
   } else {
     rv = NS_ERROR_FAILURE;

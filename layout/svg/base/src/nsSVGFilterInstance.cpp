@@ -15,6 +15,7 @@
 #include "nsSVGFilterElement.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGUtils.h"
+#include "SVGContentUtils.h"
 
 float
 nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType, float aValue) const
@@ -31,13 +32,13 @@ nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType, float aValue) const
   }
 
   switch (aCtxType) {
-  case nsSVGUtils::X:
+  case SVGContentUtils::X:
     return value * mFilterSpaceSize.width / mFilterRegion.Width();
-  case nsSVGUtils::Y:
+  case SVGContentUtils::Y:
     return value * mFilterSpaceSize.height / mFilterRegion.Height();
-  case nsSVGUtils::XY:
+  case SVGContentUtils::XY:
   default:
-    return value * nsSVGUtils::ComputeNormalizedHypotenuse(
+    return value * SVGContentUtils::ComputeNormalizedHypotenuse(
                      mFilterSpaceSize.width / mFilterRegion.Width(),
                      mFilterSpaceSize.height / mFilterRegion.Height());
   }
@@ -47,21 +48,21 @@ void
 nsSVGFilterInstance::ConvertLocation(float aValues[3]) const
 {
   nsSVGLength2 val[4];
-  val[0].Init(nsSVGUtils::X, 0xff, aValues[0],
+  val[0].Init(SVGContentUtils::X, 0xff, aValues[0],
               nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
-  val[1].Init(nsSVGUtils::Y, 0xff, aValues[1],
+  val[1].Init(SVGContentUtils::Y, 0xff, aValues[1],
               nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   // Dummy width/height values
-  val[2].Init(nsSVGUtils::X, 0xff, 0,
+  val[2].Init(SVGContentUtils::X, 0xff, 0,
               nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
-  val[3].Init(nsSVGUtils::Y, 0xff, 0,
+  val[3].Init(SVGContentUtils::Y, 0xff, 0,
               nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
 
   gfxRect feArea = nsSVGUtils::GetRelativeRect(mPrimitiveUnits,
     val, mTargetBBox, mTargetFrame);
   aValues[0] = feArea.X();
   aValues[1] = feArea.Y();
-  aValues[2] = GetPrimitiveNumber(nsSVGUtils::XY, aValues[2]);
+  aValues[2] = GetPrimitiveNumber(SVGContentUtils::XY, aValues[2]);
 }
 
 already_AddRefed<gfxImageSurface>

@@ -138,7 +138,7 @@ NS_IMETHODIMP
 nsSVGTextElement::GetX(nsIDOMSVGAnimatedLengthList * *aX)
 {
   *aX = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[X],
-                                                this, X, nsSVGUtils::X).get();
+                                                this, X, SVGContentUtils::X).get();
   return NS_OK;
 }
 
@@ -147,7 +147,7 @@ NS_IMETHODIMP
 nsSVGTextElement::GetY(nsIDOMSVGAnimatedLengthList * *aY)
 {
   *aY = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[Y],
-                                                this, Y, nsSVGUtils::Y).get();
+                                                this, Y, SVGContentUtils::Y).get();
   return NS_OK;
 }
 
@@ -156,7 +156,7 @@ NS_IMETHODIMP
 nsSVGTextElement::GetDx(nsIDOMSVGAnimatedLengthList * *aDx)
 {
   *aDx = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[DX],
-                                                 this, DX, nsSVGUtils::X).get();
+                                                 this, DX, SVGContentUtils::X).get();
   return NS_OK;
 }
 
@@ -165,7 +165,7 @@ NS_IMETHODIMP
 nsSVGTextElement::GetDy(nsIDOMSVGAnimatedLengthList * *aDy)
 {
   *aDy = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[DY],
-                                                 this, DY, nsSVGUtils::Y).get();
+                                                 this, DY, SVGContentUtils::Y).get();
   return NS_OK;
 }
 
@@ -339,10 +339,10 @@ nsSVGTextElement::IsAttributeMapped(const nsIAtom* name) const
 
 nsSVGElement::LengthListInfo nsSVGTextElement::sLengthListInfo[4] =
 {
-  { &nsGkAtoms::x,  nsSVGUtils::X, false },
-  { &nsGkAtoms::y,  nsSVGUtils::Y, false },
-  { &nsGkAtoms::dx, nsSVGUtils::X, true },
-  { &nsGkAtoms::dy, nsSVGUtils::Y, true }
+  { &nsGkAtoms::x,  SVGContentUtils::X, false },
+  { &nsGkAtoms::y,  SVGContentUtils::Y, false },
+  { &nsGkAtoms::dx, SVGContentUtils::X, true },
+  { &nsGkAtoms::dy, SVGContentUtils::Y, true }
 };
 
 nsSVGElement::LengthListAttributesInfo

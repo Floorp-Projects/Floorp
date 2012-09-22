@@ -116,7 +116,7 @@ SVGNumberListSMILType::Add(nsSMILValue& aDest,
                     "adding values from different elements...?");
   if (dest.Length() != valueToAdd.Length()) {
     // For now we only support animation between lists with the same number of
-    // items. nsSVGUtils::ReportToConsole
+    // items. SVGContentUtils::ReportToConsole
     return NS_ERROR_FAILURE;
   }
   for (uint32_t i = 0; i < dest.Length(); ++i) {
@@ -141,7 +141,7 @@ SVGNumberListSMILType::ComputeDistance(const nsSMILValue& aFrom,
 
   if (from.Length() != to.Length()) {
     // Lists in the 'values' attribute must have the same length.
-    // nsSVGUtils::ReportToConsole
+    // SVGContentUtils::ReportToConsole
     return NS_ERROR_FAILURE;
   }
 
@@ -189,7 +189,7 @@ SVGNumberListSMILType::Interpolate(const nsSMILValue& aStartVal,
   if (start.Element() && // 'start' is not an "identity" value
       start.Length() != end.Length()) {
     // For now we only support animation between lists of the same length.
-    // nsSVGUtils::ReportToConsole
+    // SVGContentUtils::ReportToConsole
     return NS_ERROR_FAILURE;
   }
   if (!result.SetLength(end.Length())) {
