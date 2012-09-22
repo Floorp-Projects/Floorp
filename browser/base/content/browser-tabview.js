@@ -11,7 +11,6 @@ let TabView = {
   _closedLastVisibleTabBeforeFrameInitialized: false,
   _isFrameLoading: false,
   _initFrameCallbacks: [],
-  _lastSessionGroupName: null,
   PREF_BRANCH: "browser.panorama.",
   PREF_FIRST_RUN: "browser.panorama.experienced_first_run",
   PREF_STARTUP_PAGE: "browser.startup.page",

@@ -115,6 +115,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_737873_mixedcontent.js \
 	browser_output_breaks_after_console_dir_uninspectable.js \
 	browser_console_log_inspectable_object.js \
+	browser_bug_638949_copy_link_location.js \
 	head.js \
 	$(NULL)
 
