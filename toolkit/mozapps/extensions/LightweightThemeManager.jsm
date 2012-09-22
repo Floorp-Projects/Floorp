@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["LightweightThemeManager"];
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -37,6 +38,9 @@ const PERSIST_FILES = {
   headerURL: "lightweighttheme-header",
   footerURL: "lightweighttheme-footer"
 };
+
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
+  "resource://gre/modules/LightweightThemeImageOptimizer.jsm");
 
 __defineGetter__("_prefs", function () {
   delete this._prefs;
@@ -227,8 +231,12 @@ var LightweightThemeManager = {
       let usedThemes = _usedThemesExceptId(aData.id);
       usedThemes.unshift(aData);
       _updateUsedThemes(usedThemes);
-      if (PERSIST_ENABLED)
-        _persistImages(aData);
+      if (PERSIST_ENABLED) {
+        LightweightThemeImageOptimizer.purge();
+        _persistImages(aData, function () {
+          _notifyWindows(this.currentThemeForDisplay);
+        }.bind(this));
+      }
     }
 
     _prefs.setBoolPref("isThemeSelected", aData != null);
@@ -716,17 +724,24 @@ function _prefObserver(aSubject, aTopic, aData) {
   }
 }
 
-function _persistImages(aData) {
+function _persistImages(aData, aCallback) {
   function onSuccess(key) function () {
     let current = LightweightThemeManager.currentTheme;
-    if (current && current.id == aData.id)
+    if (current && current.id == aData.id) {
       _prefs.setBoolPref("persisted." + key, true);
+    }
+    if (--numFilesToPersist == 0 && aCallback) {
+      aCallback();
+    }
   };
 
+  let numFilesToPersist = 0;
   for (let key in PERSIST_FILES) {
     _prefs.setBoolPref("persisted." + key, false);
-    if (aData[key])
+    if (aData[key]) {
+      numFilesToPersist++;
       _persistImage(aData[key], PERSIST_FILES[key], onSuccess(key));
+    }
   }
 }
 
