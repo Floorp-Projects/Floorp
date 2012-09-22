@@ -179,7 +179,6 @@ var shell = {
     });
 
     this.contentBrowser.src = homeURL;
-    this.isHomeLoaded = false;
 
     ppmm.addMessageListener("content-handler", this);
   },
@@ -305,18 +304,6 @@ var shell = {
         DOMApplicationRegistry.allAppsLaunchable = true;
 
         this.sendEvent(window, 'ContentStart');
-
-        let content = this.contentBrowser.contentWindow;
-        content.addEventListener('load', function shell_homeLoaded() {
-          content.removeEventListener('load', shell_homeLoaded);
-          shell.isHomeLoaded = true;
-
-          if ('pendingChromeEvents' in shell) {
-            shell.pendingChromeEvents.forEach((shell.sendChromeEvent).bind(shell));
-          }
-          delete shell.pendingChromeEvents;
-        });
-
         break;
       case 'MozApplicationManifest':
         try {
@@ -362,15 +349,6 @@ var shell = {
   },
 
   sendChromeEvent: function shell_sendChromeEvent(details) {
-    if (!this.isHomeLoaded) {
-      if (!('pendingChromeEvents' in this)) {
-        this.pendingChromeEvents = [];
-      }
-
-      this.pendingChromeEvents.push(details);
-      return;
-    }
-
     this.sendEvent(getContentWindow(), "mozChromeEvent",
                    ObjectWrapper.wrap(details, getContentWindow()));
   },
