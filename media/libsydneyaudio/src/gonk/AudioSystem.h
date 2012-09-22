@@ -658,6 +658,8 @@ public:
                                         uint32_t channels = CHANNEL_OUT_STEREO,
                                         output_flags flags = OUTPUT_FLAG_INDIRECT);
     static status_t setDeviceConnectionState(audio_devices_t device, audio_policy_dev_state_t state, const char *device_address);
+    static status_t setFmVolume(float volume);
+    static audio_policy_dev_state_t getDeviceConnectionState(audio_devices_t device, const char *device_address);
 #else
     static status_t setForceUse(force_use usage, forced_config config) __attribute__((weak));
     static forced_config getForceUse(force_use usage) __attribute__((weak));
@@ -675,6 +677,8 @@ public:
                                         uint32_t channels = AUDIO_CHANNEL_OUT_STEREO,
                                         audio_policy_output_flags_t flags = AUDIO_POLICY_OUTPUT_FLAG_INDIRECT) __attribute__((weak));
     static status_t setDeviceConnectionState(audio_devices_t device, audio_policy_dev_state_t state, const char *device_address) __attribute__((weak));
+    static status_t setFmVolume(float volume) __attribute__((weak));
+    static audio_policy_dev_state_t getDeviceConnectionState(audio_devices_t device, const char *device_address) __attribute__((weak));
 
 #endif
     static status_t startOutput(audio_io_handle_t output,

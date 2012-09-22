@@ -781,5 +781,208 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
   }
 }
 
+static StaticAutoPtr<ObserverList<FMRadioOperationInformation> > sFMRadioObservers;
+
+static void
+InitializeFMRadioObserver()
+{
+  if (!sFMRadioObservers) {
+    sFMRadioObservers = new ObserverList<FMRadioOperationInformation>;
+    ClearOnShutdown(&sFMRadioObservers);
+  }
+}
+
+void
+RegisterFMRadioObserver(FMRadioObserver* aFMRadioObserver) {
+  AssertMainThread();
+  InitializeFMRadioObserver();
+  sFMRadioObservers->AddObserver(aFMRadioObserver);
+}
+
+void
+UnregisterFMRadioObserver(FMRadioObserver* aFMRadioObserver) {
+  AssertMainThread();
+  InitializeFMRadioObserver();
+  sFMRadioObservers->RemoveObserver(aFMRadioObserver);
+}
+
+void
+NotifyFMRadioStatus(const FMRadioOperationInformation& aFMRadioState) {
+  InitializeFMRadioObserver();
+  sFMRadioObservers->Broadcast(aFMRadioState);
+}
+
+void
+EnableFMRadio(const FMRadioSettings& aInfo) {
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(EnableFMRadio(aInfo));
+}
+
+void
+DisableFMRadio() {
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(DisableFMRadio());
+}
+
+void
+FMRadioSeek(const FMRadioSeekDirection& aDirection) {
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(FMRadioSeek(aDirection));
+}
+
+void
+GetFMRadioSettings(FMRadioSettings* aInfo) {
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(GetFMRadioSettings(aInfo));
+}
+
+void
+SetFMRadioFrequency(const uint32_t aFrequency) {
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(SetFMRadioFrequency(aFrequency));
+}
+
+uint32_t
+GetFMRadioFrequency() {
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(GetFMRadioFrequency());
+}
+
+bool
+IsFMRadioOn() {
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(IsFMRadioOn());
+}
+
+uint32_t
+GetFMRadioSignalStrength() {
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(GetFMRadioSignalStrength());
+}
+
+void
+CancelFMRadioSeek() {
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(CancelFMRadioSeek());
+}
+
+FMRadioSettings
+GetFMBandSettings(FMRadioCountry aCountry) {
+  FMRadioSettings settings;
+
+  switch (aCountry) {
+    case FM_RADIO_COUNTRY_US:
+    case FM_RADIO_COUNTRY_EU:
+      settings.upperLimit() = 108000;
+      settings.lowerLimit() = 87800;
+      settings.spaceType() = 200;
+      settings.preEmphasis() = 75;
+      break;
+    case FM_RADIO_COUNTRY_JP_STANDARD:
+      settings.upperLimit() = 76000;
+      settings.lowerLimit() = 90000;
+      settings.spaceType() = 100;
+      settings.preEmphasis() = 50;
+      break;
+    case FM_RADIO_COUNTRY_CY:
+    case FM_RADIO_COUNTRY_DE:
+    case FM_RADIO_COUNTRY_DK:
+    case FM_RADIO_COUNTRY_ES:
+    case FM_RADIO_COUNTRY_FI:
+    case FM_RADIO_COUNTRY_FR:
+    case FM_RADIO_COUNTRY_HU:
+    case FM_RADIO_COUNTRY_IR:
+    case FM_RADIO_COUNTRY_IT:
+    case FM_RADIO_COUNTRY_KW:
+    case FM_RADIO_COUNTRY_LT:
+    case FM_RADIO_COUNTRY_ML:
+    case FM_RADIO_COUNTRY_NO:
+    case FM_RADIO_COUNTRY_OM:
+    case FM_RADIO_COUNTRY_PG:
+    case FM_RADIO_COUNTRY_NL:
+    case FM_RADIO_COUNTRY_CZ:
+    case FM_RADIO_COUNTRY_UK:
+    case FM_RADIO_COUNTRY_RW:
+    case FM_RADIO_COUNTRY_SN:
+    case FM_RADIO_COUNTRY_SI:
+    case FM_RADIO_COUNTRY_ZA:
+    case FM_RADIO_COUNTRY_SE:
+    case FM_RADIO_COUNTRY_CH:
+    case FM_RADIO_COUNTRY_TW:
+    case FM_RADIO_COUNTRY_UA:
+      settings.upperLimit() = 108000;
+      settings.lowerLimit() = 87500;
+      settings.spaceType() = 100;
+      settings.preEmphasis() = 50;
+      break;
+    case FM_RADIO_COUNTRY_VA:
+    case FM_RADIO_COUNTRY_MA:
+    case FM_RADIO_COUNTRY_TR:
+      settings.upperLimit() = 10800;
+      settings.lowerLimit() = 87500;
+      settings.spaceType() = 100;
+      settings.preEmphasis() = 75;
+      break;
+    case FM_RADIO_COUNTRY_AU:
+    case FM_RADIO_COUNTRY_BD:
+      settings.upperLimit() = 108000;
+      settings.lowerLimit() = 87500;
+      settings.spaceType() = 200;
+      settings.preEmphasis() = 75;
+      break;
+    case FM_RADIO_COUNTRY_AW:
+    case FM_RADIO_COUNTRY_BS:
+    case FM_RADIO_COUNTRY_CO:
+    case FM_RADIO_COUNTRY_KR:
+      settings.upperLimit() = 108000;
+      settings.lowerLimit() = 88000;
+      settings.spaceType() = 200;
+      settings.preEmphasis() = 75;
+      break;
+    case FM_RADIO_COUNTRY_EC:
+      settings.upperLimit() = 108000;
+      settings.lowerLimit() = 88000;
+      settings.spaceType() = 200;
+      settings.preEmphasis() = 0;
+      break;
+    case FM_RADIO_COUNTRY_GM:
+      settings.upperLimit() = 108000;
+      settings.lowerLimit() = 88000;
+      settings.spaceType() = 0;
+      settings.preEmphasis() = 75;
+      break;
+    case FM_RADIO_COUNTRY_QA:
+      settings.upperLimit() = 108000;
+      settings.lowerLimit() = 88000;
+      settings.spaceType() = 200;
+      settings.preEmphasis() = 50;
+      break;
+    case FM_RADIO_COUNTRY_SG:
+      settings.upperLimit() = 108000;
+      settings.lowerLimit() = 88000;
+      settings.spaceType() = 200;
+      settings.preEmphasis() = 50;
+      break;
+    case FM_RADIO_COUNTRY_IN:
+      settings.upperLimit() = 100000;
+      settings.lowerLimit() = 108000;
+      settings.spaceType() = 100;
+      settings.preEmphasis() = 50;
+      break;
+    case FM_RADIO_COUNTRY_NZ:
+      settings.upperLimit() = 100000;
+      settings.lowerLimit() = 88000;
+      settings.spaceType() = 50;
+      settings.preEmphasis() = 50;
+      break;
+    case FM_RADIO_COUNTRY_USER_DEFINED:
+      break;
+    default:
+      MOZ_ASSERT(0);
+      break;
+    };
+    return settings;
+}
+
 } // namespace hal
 } // namespace mozilla

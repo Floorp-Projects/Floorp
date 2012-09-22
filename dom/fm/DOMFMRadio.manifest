@@ -1,0 +1,4 @@
+# DOMFMRadio.js
+component {901f8a83-03a6-4be9-bb8f-35387d3849da} DOMFMRadioChild.js
+contract @mozilla.org/domfmradio;1 {901f8a83-03a6-4be9-bb8f-35387d3849da}
+category JavaScript-navigator-property mozFMRadio @mozilla.org/domfmradio;1

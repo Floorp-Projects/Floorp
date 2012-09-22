@@ -1403,6 +1403,13 @@ urlInlineComplete.prototype = {
 
       if (hasDomainResult) {
         // We got a match for a domain, we can add it immediately.
+        // If the untrimmed value doesn't preserve the user's input just
+        // ignore it and complete to the found domain.
+        if (untrimmedDomain &&
+            !untrimmedDomain.toLowerCase().contains(this._originalSearchString.toLowerCase())) {
+          untrimmedDomain = null;
+        }
+
         // TODO (bug 754265): this is a temporary solution introduced while
         // waiting for a propert dedicated API.
         result.appendMatch(this._strippedPrefix + domain, untrimmedDomain);
@@ -1513,9 +1520,17 @@ urlInlineComplete.prototype = {
     }
 
     // Add the result.
+    // If the untrimmed value doesn't preserve the user's input just
+    // ignore it and complete to the found url.
+    let untrimmedURL = prefix + url;
+    if (untrimmedURL &&
+        !untrimmedURL.toLowerCase().contains(this._originalSearchString.toLowerCase())) {
+      untrimmedURL = null;
+     }
+
     // TODO (bug 754265): this is a temporary solution introduced while
     // waiting for a propert dedicated API.
-    this._result.appendMatch(this._strippedPrefix + url, prefix + url);
+    this._result.appendMatch(this._strippedPrefix + url, untrimmedURL);
 
     // handleCompletion() will cause the result listener to be called, and
     // will display the result in the UI.

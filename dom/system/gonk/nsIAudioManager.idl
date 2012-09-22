@@ -23,6 +23,11 @@ interface nsIAudioManager : nsISupports
   attribute boolean masterMuted;
 
   /**
+   * Are we playing audio from the FM radio?
+   */
+  attribute boolean fmRadioAudioEnabled;
+ 
+  /**
    * Set the phone's audio mode.
    */
   const long PHONE_STATE_INVALID          = -2;

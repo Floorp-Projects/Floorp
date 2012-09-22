@@ -612,8 +612,8 @@ void WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
     const size_t kMaxWebGLContextsPerPrincipal = 2;
     const size_t kMaxWebGLContexts             = 4;
 #else
-    const size_t kMaxWebGLContextsPerPrincipal = 8;
-    const size_t kMaxWebGLContexts             = 16;
+    const size_t kMaxWebGLContextsPerPrincipal = 16;
+    const size_t kMaxWebGLContexts             = 32;
 #endif
     MOZ_ASSERT(kMaxWebGLContextsPerPrincipal < kMaxWebGLContexts);
 
@@ -1009,14 +1009,6 @@ WebGLContext::GetExtension(const nsAString& aName)
     else if (aName.Equals(NS_LITERAL_STRING("EXT_texture_filter_anisotropic"),
              nsCaseInsensitiveStringComparator()))
     {
-        if (IsExtensionSupported(EXT_texture_filter_anisotropic))
-            ext = EXT_texture_filter_anisotropic;
-    }
-    else if (aName.Equals(NS_LITERAL_STRING("MOZ_EXT_texture_filter_anisotropic"),
-             nsCaseInsensitiveStringComparator()))
-    {
-        GenerateWarning("MOZ_EXT_texture_filter_anisotropic has been renamed to EXT_texture_filter_anisotropic. "
-                        "Support for the MOZ_-prefixed string will be removed very soon.");
         if (IsExtensionSupported(EXT_texture_filter_anisotropic))
             ext = EXT_texture_filter_anisotropic;
     }

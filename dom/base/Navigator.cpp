@@ -113,6 +113,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
 #ifdef MOZ_MEDIA_NAVIGATOR
+  NS_INTERFACE_MAP_ENTRY(nsINavigatorUserMedia)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorUserMedia)
 #endif
 #ifdef MOZ_B2G_RIL
@@ -939,7 +940,7 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIDOMDeviceSt
   }
 
   NS_ADDREF(*_retval = storage.get());
-  mDeviceStorageStores.AppendElement(storage);                                                                                                                                                                                              
+  mDeviceStorageStores.AppendElement(storage);
   return NS_OK;
 }
 
@@ -987,22 +988,45 @@ NS_IMETHODIMP Navigator::GetGeolocation(nsIDOMGeoGeolocation** _retval)
 #ifdef MOZ_MEDIA_NAVIGATOR
 NS_IMETHODIMP
 Navigator::MozGetUserMedia(nsIMediaStreamOptions* aParams,
-                           nsIDOMGetUserMediaSuccessCallback* onSuccess,
-                           nsIDOMGetUserMediaErrorCallback* onError)
+                           nsIDOMGetUserMediaSuccessCallback* aOnSuccess,
+                           nsIDOMGetUserMediaErrorCallback* aOnError)
 {
   if (!Preferences::GetBool("media.navigator.enabled", false)) {
     return NS_OK;
   }
 
-  MediaManager *manager = MediaManager::Get();
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
-
   if (!win || !win->GetOuterWindow() ||
       win->GetOuterWindow()->GetCurrentInnerWindow() != win) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return manager->GetUserMedia(win, aParams, onSuccess, onError);
+  bool privileged = nsContentUtils::IsChromeDoc(win->GetExtantDoc());
+
+  MediaManager* manager = MediaManager::Get();
+  return manager->GetUserMedia(privileged, win, aParams, aOnSuccess, aOnError);
+}
+
+//*****************************************************************************
+//    Navigator::nsINavigatorUserMedia (mozGetUserMediaDevices)
+//*****************************************************************************
+NS_IMETHODIMP
+Navigator::MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
+                                  nsIDOMGetUserMediaErrorCallback* aOnError)
+{
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
+  if (!win || !win->GetOuterWindow() ||
+      win->GetOuterWindow()->GetCurrentInnerWindow() != win) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Check if the caller is chrome privileged, bail if not
+  if (!nsContentUtils::IsChromeDoc(win->GetExtantDoc())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MediaManager* manager = MediaManager::Get();
+  return manager->GetUserMediaDevices(win, aOnSuccess, aOnError);
 }
 #endif
 
@@ -1162,15 +1186,12 @@ Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window, NS_OK);
 
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDocument());
-    NS_ENSURE_TRUE(document, NS_OK);
-    nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
     nsCOMPtr<nsIPermissionManager> permMgr =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(permMgr, NS_OK);
 
     uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestPermissionFromPrincipal(principal, "voicemail", &permission);
+    permMgr->TestPermissionFromWindow(window, "voicemail", &permission);
 
     if (permission != nsIPermissionManager::ALLOW_ACTION) {
       return NS_OK;
@@ -1220,15 +1241,12 @@ Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window, NS_OK);
 
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDocument());
-    NS_ENSURE_TRUE(document, NS_OK);
-    nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
     nsCOMPtr<nsIPermissionManager> permMgr =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(permMgr, NS_OK);
 
     uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestPermissionFromPrincipal(principal, "mobileconnection", &permission);
+    permMgr->TestPermissionFromWindow(window, "mobileconnection", &permission);
 
     if (permission != nsIPermissionManager::ALLOW_ACTION) {
       return NS_OK;
@@ -1376,7 +1394,8 @@ Navigator::GetMozCameras(nsIDOMCameraManager** aCameraManager)
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    mCameraManager = nsDOMCameraManager::Create(win->WindowID());
+    mCameraManager = nsDOMCameraManager::CheckPermissionAndCreateInstance(win);
+    NS_ENSURE_TRUE(mCameraManager, NS_OK);
   }
 
   nsRefPtr<nsDOMCameraManager> cameraManager = mCameraManager;

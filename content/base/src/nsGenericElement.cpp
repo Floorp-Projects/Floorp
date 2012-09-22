@@ -1687,6 +1687,20 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
   return nodeInfo;
 }
 
+NS_IMETHODIMP
+nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
+{
+  nsDOMSlots *slots = DOMSlots();
+
+  if (!slots->mAttributeMap) {
+    slots->mAttributeMap = new nsDOMAttributeMap(this);
+  }
+
+  NS_ADDREF(*aAttributes = slots->mAttributeMap);
+
+  return NS_OK;
+}
+
 // static
 bool
 nsGenericElement::ShouldBlur(nsIContent *aContent)

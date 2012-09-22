@@ -1,0 +1,209 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(srtp)
+
+dnl Must come before AC_PROG_CC
+if test -z "$CFLAGS"; then
+   dnl Default value for CFLAGS if not specified.
+   CFLAGS="-Wall -O4 -fexpensive-optimizations -funroll-loops"
+fi
+
+dnl Checks for programs.
+AC_PROG_RANLIB
+AC_PROG_CC
+AC_PROG_INSTALL
+
+dnl Check the byte order
+AC_C_BIGENDIAN
+
+AC_CANONICAL_HOST
+
+dnl check host_cpu type, set defines appropriately
+case $host_cpu in
+     i*86 | x86_64 )
+	AC_DEFINE(CPU_CISC, 1,
+	   [Define if building for a CISC machine (e.g. Intel).])
+        AC_DEFINE(HAVE_X86, 1,
+	   [Define to use X86 inlined assembly code]);; 
+	* )
+	# CPU_RISC is only supported for big endian machines.
+	if test "$ac_cv_c_bigendian" = "yes"; then
+	   AC_DEFINE(CPU_RISC, 1,
+	    [Define if building for a RISC machine (assume slow byte access).])
+	else
+	   AC_DEFINE(CPU_CISC, 1)
+	fi
+	;;
+esac	
+
+dnl Check if we are on a Windows platform.
+case $host_os in
+    *cygwin*|*mingw* ) 
+	EXE=.exe
+	HOST_IS_WINDOWS=yes
+	;;
+    * )
+	EXE=""
+	;;
+esac
+AC_SUBST(EXE)   # define executable suffix; this is needed for `make clean'
+
+
+AC_ARG_ENABLE(kernel-linux,
+  [AS_HELP_STRING([--enable-kernel-linux],
+		  [build library to run in Linux kernel context])],
+  [], enable_kernel_linux=no)
+AC_MSG_CHECKING(whether to build for Linux kernel context)
+if test "$enable_kernel_linux" = "yes"; then
+   AC_DEFINE(SRTP_KERNEL, 1,
+	[Define to compile for kernel contexts.])
+   AC_DEFINE(SRTP_KERNEL_LINUX, 1,
+	[Define to compile for Linux kernel context.])
+fi
+AC_MSG_RESULT($enable_kernel_linux)
+
+if test "$cross_compiling" != yes -a "$HOST_IS_WINDOWS" != yes; then
+   dnl Check for /dev/urandom
+   AC_CHECK_FILE(/dev/urandom, DEV_URANDOM=/dev/urandom,
+      [AC_CHECK_FILE(/dev/random, DEV_URANDOM=/dev/random)])
+fi
+
+AC_MSG_CHECKING(which random device to use)
+if test "$enable_kernel_linux" = "yes"; then
+   RNG_OBJS=rand_linux_kernel.o
+   AC_MSG_RESULT([Linux kernel builtin])
+else
+   RNG_OBJS=rand_source.o
+   if test -n "$DEV_URANDOM"; then
+      AC_DEFINE_UNQUOTED(DEV_URANDOM, "$DEV_URANDOM",[Path to random device])
+      AC_MSG_RESULT([$DEV_URANDOM])
+   else
+      AC_MSG_RESULT([standard rand() function...])
+   fi
+fi
+AC_SUBST(RNG_OBJS)
+
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(stdlib.h)
+AC_CHECK_HEADERS(unistd.h)
+AC_CHECK_HEADERS(byteswap.h)
+AC_CHECK_HEADERS(stdint.h)
+AC_CHECK_HEADERS(sys/uio.h)
+AC_CHECK_HEADERS(inttypes.h)
+AC_CHECK_HEADERS(sys/types.h)
+AC_CHECK_HEADERS(machine/types.h)
+AC_CHECK_HEADERS(sys/int_types.h)
+
+dnl socket() and friends
+AC_CHECK_HEADERS(sys/socket.h netinet/in.h arpa/inet.h)
+AC_CHECK_HEADERS(windows.h, [AC_CHECK_HEADERS(winsock2.h)])
+
+AC_CHECK_HEADERS(syslog.h)
+
+AC_CHECK_TYPES([int8_t,uint8_t,int16_t,uint16_t,int32_t,uint32_t,uint64_t])
+AC_CHECK_SIZEOF(unsigned long)
+AC_CHECK_SIZEOF(unsigned long long)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_SIZE_T
+
+dnl Checks for library functions.
+AC_CHECK_FUNCS(socket inet_aton usleep sigaction)
+
+dnl Find socket function if not found yet.
+if test "x$ac_cv_func_socket" = "xno"; then
+  AC_CHECK_LIB(socket, socket)
+  AC_MSG_CHECKING([for socket in -lwsock32])
+  SAVELIBS="$LIBS"
+  LIBS="$LIBS -lwsock32"
+  AC_TRY_LINK([
+#include <winsock2.h>
+],[
+socket(0, 0, 0);
+],
+    ac_cv_func_socket=yes
+    AC_MSG_RESULT(yes),
+    LIBS="$SAVELIBS"
+    AC_MSG_RESULT(no))
+fi
+
+AC_MSG_CHECKING(whether to compile in debugging)
+AC_ARG_ENABLE(debug,
+  [AS_HELP_STRING([--disable-debug],
+		  [do not compile in dynamic debugging system])],
+  [], enable_debug=yes)
+if test "$enable_debug" = "yes"; then
+   AC_DEFINE(ENABLE_DEBUGGING, 1,
+      [Define to compile in dynamic debugging system.])
+fi
+AC_MSG_RESULT($enable_debug)
+
+AC_MSG_CHECKING(whether to use ISMAcryp code)
+AC_ARG_ENABLE(generic-aesicm,
+  [AS_HELP_STRING([--enable-generic-aesicm],
+		  [compile in changes for ISMAcryp])],
+  [], enable_generic_aesicm=no)
+if test "$enable_generic_aesicm" = "yes"; then
+   AC_DEFINE(GENERIC_AESICM, 1, [Define this to use ISMAcryp code.])
+fi
+AC_MSG_RESULT($enable_generic_aesicm)
+
+AC_MSG_CHECKING(whether to use syslog for error reporting)
+AC_ARG_ENABLE(syslog,
+  [AS_HELP_STRING([--enable-syslog], [use syslog for error reporting])],
+  [], enable_syslog=no)
+if test "$enable_syslog" = "yes"; then
+   AC_DEFINE(USE_SYSLOG, 1, [Define to use syslog logging.])
+fi
+AC_MSG_RESULT($enable_syslog)
+
+AC_MSG_CHECKING(whether to use stdout for error reporting)
+AC_ARG_ENABLE(stdout,
+  [AS_HELP_STRING([--disable-stdout], [don't use stdout for error reporting])],
+  [], enable_stdout=yes)
+if test "$enable_stdout" = "yes"; then
+   AC_DEFINE(ERR_REPORTING_STDOUT, 1, [Define to use logging to stdout.])
+fi
+AC_MSG_RESULT($enable_stdout)
+
+AC_MSG_CHECKING(whether to use /dev/console for error reporting)
+AC_ARG_ENABLE(console,
+  [AS_HELP_STRING([--enable-console], [use /dev/console for error reporting])],
+  [], enable_console=no)
+if test "$enable_console" = "yes"; then
+   AC_DEFINE(USE_ERR_REPORTING_FILE, 1, [Write errors to this file])
+   AC_DEFINE(ERR_REPORTING_FILE, "/dev/console", [Report errors to this file.])
+fi
+AC_MSG_RESULT($enable_console)
+
+AC_MSG_CHECKING(whether to use GDOI key management)
+AC_ARG_ENABLE(gdoi,
+  [AS_HELP_STRING([--enable-gdoi], [enable GDOI key management])],
+  [], enable_gdoi=no)
+if test "$enable_gdoi" = "yes"; then
+   AC_DEFINE(SRTP_GDOI, 1, [Define to use GDOI.])
+   GDOI_OBJS=gdoi/srtp+gdoi.o
+   AC_SUBST(GDOI_OBJS)                              
+fi
+AC_MSG_RESULT($enable_gdoi)
+
+AC_CONFIG_HEADER(crypto/include/config.h:config_in.h)
+
+AC_OUTPUT(Makefile crypto/Makefile doc/Makefile)
+
+# This is needed when building outside the source dir.
+AS_MKDIR_P(crypto/ae_xfm)
+AS_MKDIR_P(crypto/cipher)
+AS_MKDIR_P(crypto/hash)
+AS_MKDIR_P(crypto/kernel)
+AS_MKDIR_P(crypto/math)
+AS_MKDIR_P(crypto/replay)
+AS_MKDIR_P(crypto/rng)
+AS_MKDIR_P(crypto/test)
+AS_MKDIR_P(doc)
+AS_MKDIR_P(srtp)
+AS_MKDIR_P(tables)
+AS_MKDIR_P(test)

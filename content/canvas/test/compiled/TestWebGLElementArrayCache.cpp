@@ -1,0 +1,167 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla/Assertions.h"
+
+#include "WebGLElementArrayCache.cpp"
+
+#include <cstdlib>
+#include <iostream>
+#include "nscore.h"
+#include "nsTArray.h"
+
+using namespace mozilla;
+
+int gTestsPassed = 0;
+
+void VerifyImplFunction(bool condition, const char* file, int line)
+{
+  if (condition) {
+    gTestsPassed++;
+  } else {
+    std::cerr << "Test failed at " << file << ":" << line << std::endl;
+    abort();
+  }
+}
+
+#define VERIFY(condition) \
+    VerifyImplFunction((condition), __FILE__, __LINE__)
+
+void MakeRandomVector(nsTArray<uint8_t>& a, size_t size) {
+  a.SetLength(size);
+  // only the most-significant bits of rand() are reasonably random
+  // 16 here is arbitrary, may fail on platforms where RAND_MAX is low,
+  // but guarded by an assertion.
+  enum { bitsToIgnore = 16 };
+  MOZ_STATIC_ASSERT((unsigned int)(RAND_MAX) >> (8 + bitsToIgnore),
+                    "Didn't expect RAND_MAX to be so low");
+  for (size_t i = 0; i < size; i++)
+    a[i] = static_cast<uint8_t>((unsigned int)(rand()) >> bitsToIgnore);
+}
+
+template<typename T>
+T RandomInteger(T a, T b)
+{
+  T result(a + rand() % (b - a + 1));
+  return result;
+}
+
+template<typename T>
+GLenum GLType()
+{
+  return sizeof(T) == 1
+             ? LOCAL_GL_UNSIGNED_BYTE
+             : LOCAL_GL_UNSIGNED_SHORT;
+}
+
+template<typename T>
+void CheckValidateOneType(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
+{
+  size_t first = firstByte / sizeof(T);
+  size_t count = countBytes / sizeof(T);
+
+  GLenum type = GLType<T>();
+
+  T max = 0;
+  for (size_t i = 0; i < count; i++)
+    if (c.Element<T>(first + i) > max)
+      max = c.Element<T>(first + i);
+
+  VERIFY(c.Validate(type, max, first, count));
+  VERIFY(c.Validate(type, T(-1), first, count));
+  if (T(max + 1)) VERIFY(c.Validate(type, T(max + 1), first, count));
+  if (max > 0) {
+    VERIFY(!c.Validate(type, max - 1, first, count));
+    VERIFY(!c.Validate(type, 0, first, count));
+  }
+}
+
+void CheckValidate(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
+{
+  CheckValidateOneType<uint8_t>(c, firstByte, countBytes);
+  CheckValidateOneType<uint16_t>(c, firstByte, countBytes);
+}
+
+template<typename T>
+void CheckSanity()
+{
+  const size_t numElems = 64; // should be significantly larger than tree leaf size to
+                        // ensure we exercise some nontrivial tree-walking
+  T data[numElems] = {1,0,3,1,2,6,5,4}; // intentionally specify only 8 elements for now
+  size_t numBytes = numElems * sizeof(T);
+  MOZ_ASSERT(numBytes == sizeof(data));
+
+  GLenum type = GLType<T>();
+
+  WebGLElementArrayCache c;
+  c.BufferData(data, numBytes);
+  VERIFY( c.Validate(type, 6, 0, 8));
+  VERIFY(!c.Validate(type, 5, 0, 8));
+  VERIFY( c.Validate(type, 3, 0, 3));
+  VERIFY(!c.Validate(type, 2, 0, 3));
+  VERIFY( c.Validate(type, 6, 2, 4));
+  VERIFY(!c.Validate(type, 5, 2, 4));
+
+  c.BufferSubData(5*sizeof(T), data, sizeof(T));
+  VERIFY( c.Validate(type, 5, 0, 8));
+  VERIFY(!c.Validate(type, 4, 0, 8));
+
+  // now test a somewhat larger size to ensure we exceed the size of a tree leaf
+  for(size_t i = 0; i < numElems; i++)
+    data[i] = numElems - i;
+  c.BufferData(data, numBytes);
+  VERIFY( c.Validate(type, numElems,     0, numElems));
+  VERIFY(!c.Validate(type, numElems - 1, 0, numElems));
+
+  MOZ_ASSERT(numElems > 10);
+  VERIFY( c.Validate(type, numElems - 10, 10, numElems - 10));
+  VERIFY(!c.Validate(type, numElems - 11, 10, numElems - 10));
+}
+
+int main(int argc, char *argv[])
+{
+  srand(0); // do not want a random seed here.
+
+  CheckSanity<uint8_t>();
+  CheckSanity<uint16_t>();
+
+  nsTArray<uint8_t> v, vsub;
+  WebGLElementArrayCache b;
+
+  for (int maxBufferSize = 1; maxBufferSize <= 4096; maxBufferSize *= 2) {
+    int repeat = std::min(maxBufferSize, 20);
+    for (int i = 0; i < repeat; i++) {
+      size_t size = RandomInteger<size_t>(1, maxBufferSize);
+      MakeRandomVector(v, size);
+      b.BufferData(v.Elements(), size);
+      CheckValidate(b, 0, size);
+
+      for (int j = 0; j < 16; j++) {
+        for (int bufferSubDataCalls = 1; bufferSubDataCalls <= 8; bufferSubDataCalls *= 2) {
+          for (int validateCalls = 1; validateCalls <= 8; validateCalls *= 2) {
+
+            size_t offset = 0, subsize = 0;
+
+            for (int k = 0; k < bufferSubDataCalls; k++) {
+              offset = RandomInteger<size_t>(0, size);
+              subsize = RandomInteger<size_t>(0, size - offset);
+              MakeRandomVector(vsub, subsize);
+              b.BufferSubData(offset, vsub.Elements(), subsize);
+            }
+
+            for (int k = 0; k < validateCalls; k++) {
+              offset = RandomInteger<size_t>(0, size);
+              subsize = RandomInteger<size_t>(0, size - offset);
+              CheckValidate(b, offset, subsize);
+            }
+          } // validateCalls
+        } // bufferSubDataCalls
+      } // j
+    } // i
+  } // maxBufferSize
+
+  std::cerr << argv[0] << ": all " << gTestsPassed << " tests passed" << std::endl;
+  return 0;
+}

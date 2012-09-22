@@ -909,15 +909,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       return NS_OK;
     }
 
-    // ANGLE currently uses D3D10 <-> D3D9 interop, which crashes on Optimus
-    // machines.
-    if (aFeature == FEATURE_WEBGL_ANGLE &&
-        gfxWindowsPlatform::IsOptimus())
-    {
-      *aStatus = FEATURE_BLOCKED_DEVICE;
-      return NS_OK;
-    }
-
     // Windows Server 2003 should be just like Windows XP for present purpose, but still has a different version number.
     // OTOH Windows Server 2008 R1 and R2 already have the same version numbers as Vista and Seven respectively
     if (os == DRIVER_OS_WINDOWS_SERVER_2003)

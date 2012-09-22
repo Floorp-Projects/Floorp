@@ -10,7 +10,6 @@
 /*
  * JS symbol tables.
  */
-#include <new>
 #ifdef DEBUG
 #include <stdio.h>
 #endif
