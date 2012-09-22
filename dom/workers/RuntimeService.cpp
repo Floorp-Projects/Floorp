@@ -254,9 +254,46 @@ OperationCallback(JSContext* aCx)
 
 class LogViolationDetailsRunnable : public nsRunnable
 {
-  nsRefPtr<WorkerPrivate> mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
   nsString mFileName;
   uint32_t mLineNum;
+  uint32_t mSyncQueueKey;
+
+private:
+  class LogViolationDetailsResponseRunnable : public WorkerSyncRunnable
+  {
+    uint32_t mSyncQueueKey;
+
+  public:
+    LogViolationDetailsResponseRunnable(WorkerPrivate* aWorkerPrivate,
+                                        uint32_t aSyncQueueKey)
+    : WorkerSyncRunnable(aWorkerPrivate, aSyncQueueKey, false),
+      mSyncQueueKey(aSyncQueueKey)
+    {
+      NS_ASSERTION(aWorkerPrivate, "Don't hand me a null WorkerPrivate!");
+    }
+
+    bool
+    WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+    {
+      aWorkerPrivate->StopSyncLoop(mSyncQueueKey, true);
+      return true;
+    }
+
+    bool
+    PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+    {
+      AssertIsOnMainThread();
+      return true;
+    }
+
+    void
+    PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                 bool aDispatchResult)
+    {
+      AssertIsOnMainThread();
+    }
+  };
 
 public:
   LogViolationDetailsRunnable(WorkerPrivate* aWorker,
@@ -264,9 +301,23 @@ public:
                               uint32_t aLineNum)
   : mWorkerPrivate(aWorker),
     mFileName(aFileName),
-    mLineNum(aLineNum)
+    mLineNum(aLineNum),
+    mSyncQueueKey(0)
   {
     NS_ASSERTION(aWorker, "WorkerPrivate cannot be null");
+  }
+
+  bool
+  Dispatch(JSContext* aCx)
+  {
+    mSyncQueueKey = mWorkerPrivate->CreateNewSyncLoop();
+
+    if (NS_FAILED(NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL))) {
+      JS_ReportError(aCx, "Failed to dispatch to main thread!");
+      return false;
+    }
+
+    return mWorkerPrivate->RunSyncLoop(aCx, mSyncQueueKey);
   }
 
   NS_IMETHOD
@@ -280,6 +331,12 @@ public:
          "Call to eval() or related function blocked by CSP.");
       csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                                 mFileName, scriptSample, mLineNum);
+    }
+
+    nsRefPtr<LogViolationDetailsResponseRunnable> response =
+        new LogViolationDetailsResponseRunnable(mWorkerPrivate, mSyncQueueKey);
+    if (!response->Dispatch(nullptr)) {
+      NS_WARNING("Failed to dispatch response!");
     }
 
     return NS_OK;
@@ -308,11 +365,11 @@ ContentSecurityPolicyAllows(JSContext* aCx)
     JS_ReportPendingException(aCx);
   }
 
-  nsRefPtr<nsRunnable> runnable = new LogViolationDetailsRunnable(worker,
-                                                                  fileName,
-                                                                  lineNum);
-  if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Failed to dispatch to main thread!");
+  nsRefPtr<LogViolationDetailsRunnable> runnable =
+      new LogViolationDetailsRunnable(worker, fileName, lineNum);
+
+  if (!runnable->Dispatch(aCx)) {
+    JS_ReportPendingException(aCx);
   }
 
   return false;
