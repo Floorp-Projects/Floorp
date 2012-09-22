@@ -117,6 +117,7 @@
 #include "WinUtils.h"
 #include "WidgetUtils.h"
 #include "nsIWidgetListener.h"
+#include "nsDOMTouchEvent.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -6179,6 +6180,86 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
 {
   uint32_t cInputs = LOWORD(wParam);
   PTOUCHINPUT pInputs = new TOUCHINPUT[cInputs];
+
+  if (mGesture.GetTouchInputInfo((HTOUCHINPUT)lParam, cInputs, pInputs)) {
+    nsTouchEvent* touchEventToSend = nullptr;
+    nsTouchEvent* touchEndEventToSend = nullptr;
+    nsEventStatus status;
+
+    // Walk across the touch point array processing each contact point
+    for (uint32_t i = 0; i < cInputs; i++) {
+      uint32_t msg;
+
+      if (pInputs[i].dwFlags & (TOUCHEVENTF_DOWN | TOUCHEVENTF_MOVE)) {
+        // Create a standard touch event to send
+        if (!touchEventToSend) {
+          touchEventToSend = new nsTouchEvent(true, NS_TOUCH_MOVE, this);
+          touchEventToSend->time = ::GetMessageTime();
+          ModifierKeyState modifierKeyState;
+          modifierKeyState.InitInputEvent(*touchEventToSend);
+        }
+
+        // Pres shell expects this event to be a NS_TOUCH_START if new contact
+        // points have been added since the last event sent.
+        if (pInputs[i].dwFlags & TOUCHEVENTF_DOWN) {
+          touchEventToSend->message = msg = NS_TOUCH_START;
+        } else {
+          msg = NS_TOUCH_MOVE;
+        }
+      } else if (pInputs[i].dwFlags & TOUCHEVENTF_UP) {
+        // Pres shell expects removed contacts points to be delivered in a
+        // separate NS_TOUCH_END event containing only the contact points
+        // that were removed.
+        if (!touchEndEventToSend) {
+          touchEndEventToSend = new nsTouchEvent(true, NS_TOUCH_END, this);
+          touchEndEventToSend->time = ::GetMessageTime();
+          ModifierKeyState modifierKeyState;
+          modifierKeyState.InitInputEvent(*touchEndEventToSend);
+        }
+        msg = NS_TOUCH_END;
+      } else {
+        // Filter out spurious Windows events we don't understand, like palm
+        // contact.
+        continue;
+      }
+
+      // Setup the touch point we'll append to the touch event array
+      nsPointWin touchPoint;
+      touchPoint.x = TOUCH_COORD_TO_PIXEL(pInputs[i].x);
+      touchPoint.y = TOUCH_COORD_TO_PIXEL(pInputs[i].y);
+      touchPoint.ScreenToClient(mWnd);
+      nsCOMPtr<nsIDOMTouch> touch =
+        new nsDOMTouch(pInputs[i].dwID,
+                       touchPoint,
+                       /* radius, if known */
+                       pInputs[i].dwFlags & TOUCHINPUTMASKF_CONTACTAREA ?
+                         nsIntPoint(
+                           TOUCH_COORD_TO_PIXEL(pInputs[i].cxContact) / 2,
+                           TOUCH_COORD_TO_PIXEL(pInputs[i].cyContact) / 2) :
+                         nsIntPoint(1,1),
+                       /* rotation angle and force */
+                       0.0f, 0.0f);
+
+      // Append to the appropriate event
+      if (msg == NS_TOUCH_START || msg == NS_TOUCH_MOVE) {
+        touchEventToSend->touches.AppendElement(touch);
+      } else {
+        touchEndEventToSend->touches.AppendElement(touch);
+      }
+    }
+
+    // Dispatch touch start and move event if we have one.
+    if (touchEventToSend) {
+      DispatchEvent(touchEventToSend, status);
+      delete touchEventToSend;
+    }
+
+    // Dispatch touch end event if we have one.
+    if (touchEndEventToSend) {
+      DispatchEvent(touchEndEventToSend, status);
+      delete touchEndEventToSend;
+    }
+  }
 
   delete [] pInputs;
   mGesture.CloseTouchInputHandle((HTOUCHINPUT)lParam);
