@@ -106,7 +106,7 @@ static PRLogModuleInfo* gLogModule = PR_LOG_DEFINE("nsSHistory");
       nsCOMPtr<nsISHistoryListener> listener =             \
         do_QueryReferent(iter.GetNext());                  \
       if (listener) {                                      \
-        body;                                              \
+        body                                               \
       }                                                    \
     }                                                      \
   }                                                        \

@@ -93,3 +93,6 @@
 
 <!ENTITY fullZoomResetCmd.commandkey    "0">
 <!ENTITY fullZoomResetCmd.commandkey2   "">
+
+<!ENTITY copyURLCmd.label     "Copy Link Location">
+<!ENTITY copyURLCmd.accesskey "a">
