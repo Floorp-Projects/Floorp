@@ -146,9 +146,11 @@ gcli.addCommand({
 
         let trans = Cc["@mozilla.org/widget/transferable;1"]
                       .createInstance(Ci.nsITransferable);
-        if ("init" in trans) {
-          trans.init(null);
-        }
+        let loadContext = document.defaultView
+                                  .QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIWebNavigation)
+                                  .QueryInterface(Ci.nsILoadContext);
+        trans.init(loadContext);
         trans.addDataFlavor(channel.contentType);
         trans.setTransferData(channel.contentType, wrapped, -1);
 
@@ -214,7 +216,8 @@ gcli.addCommand({
     let source = ioService.newURI(data, "UTF8", null);
     persist.saveURI(source, null, null, null, null, file);
 
-    div.textContent = gcli.lookup("screenshotSavedToFile") + " " + filename;
+    div.textContent = gcli.lookup("screenshotSavedToFile") + " \"" + filename +
+                      "\"";
     div.addEventListener("click", function openFile() {
       div.removeEventListener("click", openFile);
       file.reveal();
@@ -224,6 +227,7 @@ gcli.addCommand({
     let previewHeight = parseInt(256*height/width);
     image.setAttribute("style",
                        "width:256px; height:" + previewHeight + "px;" +
+                       "max-height: 256px;" +
                        "background-image: url('" + data + "');" +
                        "background-size: 256px " + previewHeight + "px;" +
                        "margin: 4px; display: block");
