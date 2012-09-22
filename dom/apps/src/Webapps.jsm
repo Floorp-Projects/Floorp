@@ -152,7 +152,11 @@ let DOMApplicationRegistry = {
 #ifdef MOZ_WIDGET_GONK
     // if first run, merge the system apps.
     if (runUpdate) {
-      let file = FileUtils.getFile("coreAppsDir", ["webapps", "webapps.json"], false);
+      let file;
+      try {
+        file = FileUtils.getFile("coreAppsDir", ["webapps", "webapps.json"], false);
+      } catch(e) { }
+
       if (file && file.exists) {
         // 2.a
         this._loadJSONAsync(file, (function loadCoreRegistry(aData) {
@@ -194,6 +198,8 @@ let DOMApplicationRegistry = {
           }
           this.registerAppsHandlers();
         }).bind(this));
+      } else {
+        this.registerAppsHandlers();
       }
     } else {
       this.registerAppsHandlers();
@@ -381,7 +387,8 @@ let DOMApplicationRegistry = {
           if (aCallback)
             aCallback(data);
         } catch (ex) {
-          Cu.reportError("DOMApplicationRegistry: Could not parse JSON: " + ex);
+          Cu.reportError("DOMApplicationRegistry: Could not parse JSON: " +
+                         aFile.path + " " + ex);
           if (aCallback)
             aCallback(null);
         }
