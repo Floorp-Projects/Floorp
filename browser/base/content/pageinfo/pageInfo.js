@@ -761,31 +761,33 @@ function getSelectedRow(tree)
   return (rows.length == 1) ? rows[0] : -1;
 }
 
-function selectSaveFolder()
+function selectSaveFolder(aCallback)
 {
   const nsILocalFile = Components.interfaces.nsILocalFile;
   const nsIFilePicker = Components.interfaces.nsIFilePicker;
-  var fp = Components.classes["@mozilla.org/filepicker;1"]
-                     .createInstance(nsIFilePicker);
+  let titleText = gBundle.getString("mediaSelectFolder");
+  let fp = Components.classes["@mozilla.org/filepicker;1"].
+           createInstance(nsIFilePicker);
+  let fpCallback = function fpCallback_done(aResult) {
+    if (aResult == nsIFilePicker.returnOK) {
+      aCallback(fp.file.QueryInterface(nsILocalFile));
+    } else {
+      aCallback(null);
+    }
+  };
 
-  var titleText = gBundle.getString("mediaSelectFolder");
   fp.init(window, titleText, nsIFilePicker.modeGetFolder);
-  try {
-    var prefs = Components.classes[PREFERENCES_CONTRACTID]
-                          .getService(Components.interfaces.nsIPrefBranch);
-
-    var initialDir = prefs.getComplexValue("browser.download.dir", nsILocalFile);
-    if (initialDir)
-      fp.displayDirectory = initialDir;
-  }
-  catch (ex) { }
-
   fp.appendFilters(nsIFilePicker.filterAll);
-  var ret = fp.show();
-
-  if (ret == nsIFilePicker.returnOK)
-    return fp.file.QueryInterface(nsILocalFile);
-  return null;
+  try {
+    let prefs = Components.classes[PREFERENCES_CONTRACTID].
+                getService(Components.interfaces.nsIPrefBranch);
+    let initialDir = prefs.getComplexValue("browser.download.dir", nsILocalFile);
+    if (initialDir) {
+      fp.displayDirectory = initialDir;
+    }
+  } catch (ex) {
+  }
+  fp.open(fpCallback);
 }
 
 function saveMedia()
@@ -807,37 +809,39 @@ function saveMedia()
 
       saveURL(url, null, titleKey, false, false, makeURI(item.baseURI));
     }
-  }
-  else {
-    var odir  = selectSaveFolder();
-
-    var saveAnImage = function(aURIString, aChosenData, aBaseURI) {
-      internalSave(aURIString, null, null, null, null, false, "SaveImageTitle",
-                   aChosenData, aBaseURI);
-    }
-
-    for (var i = 0; i < rowArray.length; i++) {
-      var v = rowArray[i];
-      var dir = odir.clone();
-      var item = gImageView.data[v][COL_IMAGE_NODE];
-      var uriString = gImageView.data[v][COL_IMAGE_ADDRESS];
-      var uri = makeURI(uriString);
- 
-      try {
-        uri.QueryInterface(Components.interfaces.nsIURL);
-        dir.append(decodeURIComponent(uri.fileName));
+  } else {
+    selectSaveFolder(function(aDirectory) {
+      if (aDirectory) {
+        var saveAnImage = function(aURIString, aChosenData, aBaseURI) {
+          internalSave(aURIString, null, null, null, null, false, "SaveImageTitle",
+                       aChosenData, aBaseURI);
+        };
+      
+        for (var i = 0; i < rowArray.length; i++) {
+          var v = rowArray[i];
+          var dir = aDirectory.clone();
+          var item = gImageView.data[v][COL_IMAGE_NODE];
+          var uriString = gImageView.data[v][COL_IMAGE_ADDRESS];
+          var uri = makeURI(uriString);
+  
+          try {
+            uri.QueryInterface(Components.interfaces.nsIURL);
+            dir.append(decodeURIComponent(uri.fileName));
+          } catch(ex) {
+            /* data: uris */
+          }
+  
+          if (i == 0) {
+            saveAnImage(uriString, new AutoChosen(dir, uri), makeURI(item.baseURI));
+          } else {
+            // This delay is a hack which prevents the download manager
+            // from opening many times. See bug 377339.
+            setTimeout(saveAnImage, 200, uriString, new AutoChosen(dir, uri),
+                       makeURI(item.baseURI));
+          }
+        }
       }
-      catch(ex) { /* data: uris */ }
-
-      if (i == 0)
-        saveAnImage(uriString, new AutoChosen(dir, uri), makeURI(item.baseURI));
-      else {
-        // This delay is a hack which prevents the download manager
-        // from opening many times. See bug 377339.
-        setTimeout(saveAnImage, 200, uriString, new AutoChosen(dir, uri),
-                   makeURI(item.baseURI));
-      }
-    }
+    });
   }
 }
 

@@ -78,6 +78,7 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage &aImage, imgIDecoderObserver* aObserver
   , mCurrentRow(-1)
   , mLastFlushedRow(-1)
   , mImageData(nullptr)
+  , mColormap(nullptr)
   , mOldColor(0)
   , mCurrentFrame(-1)
   , mCurrentPass(0)
@@ -187,6 +188,14 @@ nsresult nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
                             mGIFStruct.width, mGIFStruct.height,
                             format, aDepth, &mImageData, &imageDataLength,
                             &mColormap, &mColormapSize);
+
+    // While EnsureFrame can reuse frames, we unconditionally increment
+    // mGIFStruct.images_decoded when we're done with a frame, so we both can
+    // and need to zero out the colormap and image data after every call to
+    // EnsureFrame.
+    if (NS_SUCCEEDED(rv) && mColormap) {
+      memset(mColormap, 0, mColormapSize);
+    }
   } else {
     // Regardless of depth of input, image is decoded into 24bit RGB
     rv = mImage.EnsureFrame(mGIFStruct.images_decoded,
@@ -197,6 +206,8 @@ nsresult nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 
   if (NS_FAILED(rv))
     return rv;
+
+  memset(mImageData, 0, imageDataLength);
 
   mImage.SetFrameDisposalMethod(mGIFStruct.images_decoded,
                                 mGIFStruct.disposal_method);
@@ -762,21 +773,45 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, uint32_t aCount)
       break;
 
     case gif_extension:
+      // Comment taken directly from WebKit's GIFImageReader.cpp.
+      //
+      // The GIF spec mandates lengths for three of the extensions below.
+      // However, it's possible for GIFs in the wild to deviate. For example,
+      // some GIFs that embed ICC color profiles using gif_application_extension
+      // violate the spec and treat this extension block like a sort of
+      // "extension + data" block, giving a size greater than 11 and filling the
+      // remaining bytes with data (then following with more data blocks as
+      // needed), instead of placing a true data block just after the 11 byte
+      // extension block.
+      //
+      // Accordingly, if the specified length is larger than the required value,
+      // we use it. If it's smaller, then we enforce the spec value, because the
+      // parsers for these extensions expect to have the specified number of
+      // bytes available, and if we don't ensure that, they could read off the
+      // end of the heap buffer. (In this case, it's likely the GIF is corrupt
+      // and we'll soon fail to decode anyway.)
       mGIFStruct.bytes_to_consume = q[1];
       if (mGIFStruct.bytes_to_consume) {
         switch (*q) {
         case GIF_GRAPHIC_CONTROL_LABEL:
           mGIFStruct.state = gif_control_extension;
+          mGIFStruct.bytes_to_consume = NS_MAX(mGIFStruct.bytes_to_consume, 4u);
           break;
-  
+
         case GIF_APPLICATION_EXTENSION_LABEL:
           mGIFStruct.state = gif_application_extension;
+          mGIFStruct.bytes_to_consume = NS_MAX(mGIFStruct.bytes_to_consume, 11u);
           break;
-  
+
+        case GIF_PLAIN_TEXT_LABEL:
+          mGIFStruct.state = gif_skip_block;
+          mGIFStruct.bytes_to_consume = NS_MAX(mGIFStruct.bytes_to_consume, 12u);
+          break;
+
         case GIF_COMMENT_LABEL:
           mGIFStruct.state = gif_consume_comment;
           break;
-  
+
         default:
           mGIFStruct.state = gif_skip_block;
         }
