@@ -5,7 +5,6 @@
 
 #include "mozilla/Util.h"
 
-#include "prtypes.h"
 #include "nsAlgorithm.h"
 #include "prmem.h"
 #include "nsString.h"
