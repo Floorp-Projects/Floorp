@@ -103,7 +103,6 @@ ifeq ($(OS_TARGET),WINNT)
 DEFINES += \
   -DHAVE_WINSOCK2_H=1 \
   -Dinline=__inline \
-  -DFORCE_UINT64_T=1 \
   $(NULL)
 endif
 
