@@ -442,8 +442,6 @@ DOMCI_CLASS(NotifyAudioAvailableEvent)
 
 DOMCI_CLASS(SimpleGestureEvent)
 
-DOMCI_CLASS(MozTouchEvent)
-
 DOMCI_CLASS(MathMLElement)
 
 // WebGL
