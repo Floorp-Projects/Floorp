@@ -164,9 +164,8 @@ DebuggerTransport.prototype = {
 
     try {
       dumpn("Got: " + packet);
-      let thr = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
       let self = this;
-      thr.dispatch({run: function() {
+      Services.tm.currentThread.dispatch({run: function() {
         self.hooks.onPacket(parsed);
       }}, 0);
     } catch(e) {
@@ -177,3 +176,82 @@ DebuggerTransport.prototype = {
     return true;
   }
 }
+
+
+/**
+ * An adapter that handles data transfers between the debugger client and
+ * server when they both run in the same process. It presents the same API as
+ * DebuggerTransport, but instead of transmitting serialized messages across a
+ * connection it merely calls the packet dispatcher of the other side.
+ *
+ * @param aOther LocalDebuggerTransport
+ *        The other endpoint for this debugger connection.
+ *
+ * @see DebuggerTransport
+ */
+function LocalDebuggerTransport(aOther)
+{
+  this.other = aOther;
+  this.hooks = null;
+}
+
+LocalDebuggerTransport.prototype = {
+  /**
+   * Transmit a message by directly calling the onPacket handler of the other
+   * endpoint.
+   */
+  send: function LDT_send(aPacket) {
+    try {
+      // Avoid the cost of uneval() when logging is disabled.
+      if (wantLogging) {
+        dumpn("Got: " + uneval(aPacket));
+      }
+      this._deepFreeze(aPacket);
+      let self = this;
+      Services.tm.currentThread.dispatch({run: function() {
+        self.other.hooks.onPacket(aPacket);
+      }}, 0);
+    } catch(e) {
+      dumpn("Error handling incoming packet: " + e + " - " + e.stack);
+      dumpn("Packet was: " + aPacket);
+    }
+  },
+
+  /**
+   * Close the transport.
+   */
+  close: function LDT_close() {
+    if (this.other) {
+      // Remove the reference to the other endpoint before calling close(), to
+      // avoid infinite recursion.
+      let other = this.other;
+      delete this.other;
+      other.close();
+    }
+    this.hooks.onClosed();
+  },
+
+  /**
+   * An empty method for emulating the DebuggerTransport API.
+   */
+  ready: function LDT_ready() {},
+
+  /**
+   * Helper function that makes an object fully immutable.
+   */
+  _deepFreeze: function LDT_deepFreeze(aObject) {
+    Object.freeze(aObject);
+    for (let prop in aObject) {
+      // Freeze the properties that are objects, not on the prototype, and not
+      // already frozen. Note that this might leave an unfrozen reference
+      // somewhere in the object if there is an already frozen object containing
+      // an unfrozen object.
+      if (aObject.hasOwnProperty(prop) && typeof aObject === "object" &&
+          !Object.isFrozen(aObject)) {
+        this._deepFreeze(o[prop]);
+      }
+    }
+  }
+
+}
+

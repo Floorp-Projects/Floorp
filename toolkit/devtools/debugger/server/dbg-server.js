@@ -238,8 +238,9 @@ var DebuggerServer = {
   },
 
   /**
-   * Creates a new connection to the local debugger speaking over an
-   * nsIPipe.
+   * Creates a new connection to the local debugger speaking over a fake
+   * transport. This connection results in straightforward calls to the onPacket
+   * handlers of each side.
    *
    * @returns a client-side DebuggerTransport for communicating with
    *          the newly-created connection.
@@ -247,16 +248,12 @@ var DebuggerServer = {
   connectPipe: function DH_connectPipe() {
     this._checkInit();
 
-    let toServer = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
-    toServer.init(true, true, 0, 0, null);
-    let toClient = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
-    toClient.init(true, true, 0, 0, null);
-
-    let serverTransport = new DebuggerTransport(toServer.inputStream,
-                                                toClient.outputStream);
+    let serverTransport = new LocalDebuggerTransport;
+    let clientTransport = new LocalDebuggerTransport(serverTransport);
+    serverTransport.other = clientTransport;
     this._onConnection(serverTransport);
 
-    return new DebuggerTransport(toClient.inputStream, toServer.outputStream);
+    return clientTransport;
   },
 
 
