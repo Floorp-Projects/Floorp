@@ -2421,8 +2421,9 @@ nsXMLHttpRequest::SendAsBinary(const nsAString &aBody,
 }
 
 static nsresult
-GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult, uint64* aContentLength,
-               nsACString& aContentType, nsACString& aCharset)
+GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
+               uint64_t* aContentLength, nsACString& aContentType,
+               nsACString& aCharset)
 {
   aContentType.AssignLiteral("application/xml");
   nsAutoString inputEncoding;
@@ -2464,8 +2465,9 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult, uint64* aContentL
 }
 
 static nsresult
-GetRequestBody(const nsAString& aString, nsIInputStream** aResult, uint64* aContentLength,
-               nsACString& aContentType, nsACString& aCharset)
+GetRequestBody(const nsAString& aString, nsIInputStream** aResult,
+               uint64_t* aContentLength, nsACString& aContentType,
+               nsACString& aCharset)
 {
   aContentType.AssignLiteral("text/plain");
   aCharset.AssignLiteral("UTF-8");
@@ -2476,8 +2478,9 @@ GetRequestBody(const nsAString& aString, nsIInputStream** aResult, uint64* aCont
 }
 
 static nsresult
-GetRequestBody(nsIInputStream* aStream, nsIInputStream** aResult, uint64* aContentLength,
-               nsACString& aContentType, nsACString& aCharset)
+GetRequestBody(nsIInputStream* aStream, nsIInputStream** aResult,
+               uint64_t* aContentLength, nsACString& aContentType,
+               nsACString& aCharset)
 {
   aContentType.AssignLiteral("text/plain");
   aCharset.Truncate();
@@ -2615,7 +2618,8 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult, uint64_t* aContentLe
 nsresult
 nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
                                  const Nullable<RequestBody>& aBody,
-                                 nsIInputStream** aResult, uint64* aContentLength,
+                                 nsIInputStream** aResult,
+                                 uint64_t* aContentLength,
                                  nsACString& aContentType, nsACString& aCharset)
 {
   if (aVariant) {
