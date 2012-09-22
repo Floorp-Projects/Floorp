@@ -561,7 +561,8 @@
          if (!this._handle) {
            return;
          }
-         WinFile.FindClose(this._handle);
+         throw_on_zero("FindClose",
+           WinFile.FindClose(this._handle));
          this._handle = null;
        }
      };
