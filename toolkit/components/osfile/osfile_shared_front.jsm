@@ -191,6 +191,58 @@ AbstractFile.normalizeToPointer = function normalizeToPointer(candidate, bytes, 
 };
 
 /**
+ * Code shared by iterators.
+ */
+AbstractFile.AbstractIterator = function AbstractIterator() {
+};
+AbstractFile.AbstractIterator.prototype = {
+  /**
+   * Allow iterating with |for|
+   */
+  __iterator__: function __iterator__() {
+    return this;
+  },
+  /**
+   * Apply a function to all elements of the directory sequentially.
+   *
+   * @param {Function} cb This function will be applied to all entries
+   * of the directory. It receives as arguments
+   *  - the OS.File.Entry corresponding to the entry;
+   *  - the index of the entry in the enumeration;
+   *  - the iterator itself - calling |close| on the iterator stops
+   *   the loop.
+   */
+  forEach: function forEach(cb) {
+    let index = 0;
+    for (let entry in this) {
+      cb(entry, index++, this);
+    }
+  },
+  /**
+   * Return several entries at once.
+   *
+   * Entries are returned in the same order as a walk with |forEach| or
+   * |for(...)|.
+   *
+   * @param {number=} length If specified, the number of entries
+   * to return. If unspecified, return all remaining entries.
+   * @return {Array} An array containing the next |length| entries, or
+   * less if the iteration contains less than |length| entries left.
+   */
+  nextBatch: function nextBatch(length) {
+    let array = [];
+    let i = 0;
+    for (let entry in this) {
+      array.push(entry);
+      if (++i >= length) {
+        return array;
+      }
+    }
+    return array;
+  }
+};
+
+/**
  * Utility function shared by implementations of |OS.File.open|:
  * extract read/write/trunc/create/existing flags from a |mode|
  * object.

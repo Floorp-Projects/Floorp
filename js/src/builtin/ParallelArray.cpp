@@ -226,6 +226,13 @@ ArrayLikeToIndexVector(JSContext *cx, HandleObject obj, IndexVector &indices)
     return true;
 }
 
+static inline bool
+IdIsInBoundsIndex(JSContext *cx, HandleObject obj, HandleId id)
+{
+    uint32_t i;
+    return js_IdIsIndex(id, &i) && i < ParallelArrayObject::as(obj)->outermostDimension();
+}
+
 template <bool impl(JSContext *, CallArgs)>
 static inline
 JSBool NonGenericMethod(JSContext *cx, unsigned argc, Value *vp)
@@ -820,7 +827,7 @@ Class ParallelArrayObject::class_ = {
         getGeneric,
         getProperty,
         getElement,
-        NULL,                // getElementIfPresent
+        getElementIfPresent,
         getSpecial,
         setGeneric,
         setProperty,
@@ -1033,6 +1040,15 @@ ParallelArrayObject::create(JSContext *cx, HandleObject buffer, uint32_t offset,
     // Store the buffer and offset.
     result->setSlot(SLOT_BUFFER, ObjectValue(*buffer));
     result->setSlot(SLOT_BUFFER_OFFSET, Int32Value(static_cast<int32_t>(offset)));
+
+    // ParallelArray objects are frozen, so mark it as non-extensible here.
+    Shape *empty = EmptyShape::getInitialShape(cx, &class_,
+                                               result->getProto(), result->getParent(),
+                                               result->getAllocKind(),
+                                               BaseShape::NOT_EXTENSIBLE);
+    if (!empty)
+        return false;
+    result->setLastPropertyInfallible(empty);
 
     // This is usually args.rval() from build or construct.
     vp.setObject(*result);
@@ -1430,7 +1446,14 @@ ParallelArrayObject::get(JSContext *cx, CallArgs args)
 bool
 ParallelArrayObject::dimensionsGetter(JSContext *cx, CallArgs args)
 {
-    args.rval().setObject(*(as(&args.thisv().toObject())->dimensionArray()));
+    RootedObject dimArray(cx, as(&args.thisv().toObject())->dimensionArray());
+    RootedObject copy(cx, NewDenseCopiedArray(cx, dimArray->getDenseArrayInitializedLength(),
+                                              dimArray->getDenseArrayElements()));
+    if (!copy)
+        return false;
+    // Reuse the existing dimension array's type.
+    copy->setType(dimArray->type());
+    args.rval().setObject(*copy);
     return true;
 }
 
@@ -1507,7 +1530,7 @@ ParallelArrayObject::toStringBufferImpl(JSContext *cx, IndexInfo &iv, bool useLo
         if (!elem->isNullOrUndefined()) {
             if (useLocale) {
                 tmp = *elem;
-                JSObject *robj = ToObject(cx, tmp);
+                RootedObject robj(cx, ToObject(cx, tmp));
                 if (!robj)
                     return false;
 
@@ -1589,12 +1612,6 @@ ParallelArrayObject::lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
     if (js_IdIsIndex(id, &i))
         return lookupElement(cx, obj, i, objp, propp);
 
-    if (JSID_IS_ATOM(id, cx->names().length)) {
-        MarkNonNativePropertyFound(obj, propp);
-        objp.set(obj);
-        return true;
-    }
-
     RootedObject proto(cx, obj->getProto());
     if (proto)
         return JSObject::lookupGeneric(cx, proto, id, objp, propp);
@@ -1637,11 +1654,27 @@ ParallelArrayObject::lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecia
 }
 
 JSBool
-ParallelArrayObject::defineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue Value,
+ParallelArrayObject::defineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
                                    JSPropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    uint32_t i;
+    if (js_IdIsIndex(id, &i) && i < as(obj)->outermostDimension()) {
+        RootedValue existingValue(cx);
+        if (!as(obj)->getParallelArrayElement(cx, i, &existingValue))
+            return false;
+
+        bool same;
+        if (!SameValue(cx, value, existingValue, &same))
+            return false;
+        if (!same)
+            return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
+    } else {
+        RootedValue tmp(cx, value);
+        if (!setGeneric(cx, obj, id, &tmp, true))
+            return false;
+    }
+
+    return setGenericAttributes(cx, obj, id, &attrs);
 }
 
 JSBool
@@ -1649,8 +1682,8 @@ ParallelArrayObject::defineProperty(JSContext *cx, HandleObject obj,
                                     HandlePropertyName name, HandleValue value,
                                     JSPropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx, NameToId(name));
+    return defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
 JSBool
@@ -1658,8 +1691,10 @@ ParallelArrayObject::defineElement(JSContext *cx, HandleObject obj,
                                    uint32_t index, HandleValue value,
                                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx);
+    if (!IndexToId(cx, index, id.address()))
+        return false;
+    return defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
 JSBool
@@ -1667,19 +1702,23 @@ ParallelArrayObject::defineSpecial(JSContext *cx, HandleObject obj,
                                    HandleSpecialId sid, HandleValue value,
                                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
+    return defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
 JSBool
 ParallelArrayObject::getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
                                 HandleId id, MutableHandleValue vp)
 {
-    Value idval = IdToValue(id);
+    RootedValue idval(cx, IdToValue(id));
 
     uint32_t index;
     if (IsDefinitelyIndex(idval, &index))
         return getElement(cx, obj, receiver, index, vp);
+
+    Rooted<SpecialId> sid(cx);
+    if (ValueIsSpecial(obj, &idval, sid.address(), cx))
+        return getSpecial(cx, obj, receiver, sid, vp);
 
     JSAtom *atom = ToAtom(cx, idval);
     if (!atom)
@@ -1696,11 +1735,6 @@ JSBool
 ParallelArrayObject::getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                                  HandlePropertyName name, MutableHandleValue vp)
 {
-    if (name == cx->names().length) {
-        vp.setNumber(as(obj)->outermostDimension());
-        return true;
-    }
-
     RootedObject proto(cx, obj->getProto());
     if (proto)
         return JSObject::getProperty(cx, proto, receiver, name, vp);
@@ -1716,6 +1750,23 @@ ParallelArrayObject::getElement(JSContext *cx, HandleObject obj, HandleObject re
     // Unlike normal arrays, [] for ParallelArray does not walk the prototype
     // chain and just returns undefined.
     return as(obj)->getParallelArrayElement(cx, index, vp);
+}
+
+JSBool
+ParallelArrayObject::getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                         uint32_t index, MutableHandleValue vp, bool *present)
+{
+    RootedParallelArrayObject source(cx, as(obj));
+    if (index < source->outermostDimension()) {
+        if (!source->getParallelArrayElement(cx, index, vp))
+            return false;
+        *present = true;
+        return true;
+    }
+
+    *present = false;
+    vp.setUndefined();
+    return true;
 }
 
 JSBool
@@ -1735,43 +1786,57 @@ JSBool
 ParallelArrayObject::setGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                 MutableHandleValue vp, JSBool strict)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    JS_ASSERT(!obj->isExtensible());
+
+    if (IdIsInBoundsIndex(cx, obj, id)) {
+        if (strict)
+            return JSObject::reportReadOnly(cx, id);
+        if (cx->hasStrictOption())
+            return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+    } else {
+        if (strict)
+            return obj->reportNotExtensible(cx);
+        if (cx->hasStrictOption())
+            return obj->reportNotExtensible(cx, JSREPORT_STRICT | JSREPORT_WARNING);
+    }
+
+    return true;
 }
 
 JSBool
 ParallelArrayObject::setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                  MutableHandleValue vp, JSBool strict)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx, NameToId(name));
+    return setGeneric(cx, obj, id, vp, strict);
 }
 
 JSBool
 ParallelArrayObject::setElement(JSContext *cx, HandleObject obj, uint32_t index,
                                 MutableHandleValue vp, JSBool strict)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx);
+    if (!IndexToId(cx, index, id.address()))
+        return false;
+    return setGeneric(cx, obj, id, vp, strict);
 }
 
 JSBool
 ParallelArrayObject::setSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                                 MutableHandleValue vp, JSBool strict)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
+    return setGeneric(cx, obj, id, vp, strict);
 }
 
 JSBool
 ParallelArrayObject::getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id,
                                           unsigned *attrsp)
 {
-    if (JSID_IS_ATOM(id, cx->names().length))
-        *attrsp = JSPROP_PERMANENT | JSPROP_READONLY;
-    else
-        *attrsp = JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_ENUMERATE;
-
+    *attrsp = JSPROP_PERMANENT | JSPROP_READONLY;
+    uint32_t i;
+    if (js_IdIsIndex(id, &i))
+        *attrsp |= JSPROP_ENUMERATE;
     return true;
 }
 
@@ -1779,8 +1844,7 @@ JSBool
 ParallelArrayObject::getPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                            unsigned *attrsp)
 {
-    if (name == cx->names().length)
-        *attrsp = JSPROP_PERMANENT | JSPROP_READONLY;
+    *attrsp = JSPROP_PERMANENT | JSPROP_READONLY;
     return true;
 }
 
@@ -1804,64 +1868,87 @@ JSBool
 ParallelArrayObject::setGenericAttributes(JSContext *cx, HandleObject obj, HandleId id,
                                           unsigned *attrsp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    if (IdIsInBoundsIndex(cx, obj, id)) {
+        unsigned attrs;
+        if (!getGenericAttributes(cx, obj, id, &attrs))
+            return false;
+        if (*attrsp != attrs)
+            return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
+    }
+
+    return obj->reportNotExtensible(cx);
 }
 
 JSBool
 ParallelArrayObject::setPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                            unsigned *attrsp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx, NameToId(name));
+    return setGenericAttributes(cx, obj, id, attrsp);
 }
 
 JSBool
 ParallelArrayObject::setElementAttributes(JSContext *cx, HandleObject obj, uint32_t index,
                                           unsigned *attrsp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx);
+    if (!IndexToId(cx, index, id.address()))
+        return false;
+    return setGenericAttributes(cx, obj, id, attrsp);
 }
 
 JSBool
 ParallelArrayObject::setSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                                           unsigned *attrsp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
+    return setGenericAttributes(cx, obj, id, attrsp);
 }
 
 JSBool
 ParallelArrayObject::deleteGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                    MutableHandleValue rval, JSBool strict)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    if (IdIsInBoundsIndex(cx, obj, id)) {
+        if (strict)
+            return obj->reportNotConfigurable(cx, id);
+        if (cx->hasStrictOption()) {
+            if (!obj->reportNotConfigurable(cx, id, JSREPORT_STRICT | JSREPORT_WARNING))
+                return false;
+        }
+
+        rval.setBoolean(false);
+        return true;
+    }
+
+    rval.setBoolean(true);
+    return true;
 }
 
 JSBool
 ParallelArrayObject::deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                     MutableHandleValue rval, JSBool strict)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx, NameToId(name));
+    return deleteGeneric(cx, obj, id, rval, strict);
 }
 
 JSBool
 ParallelArrayObject::deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
                                    MutableHandleValue rval, JSBool strict)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx);
+    if (!IndexToId(cx, index, id.address()))
+        return false;
+    return deleteGeneric(cx, obj, id, rval, strict);
 }
 
 JSBool
 ParallelArrayObject::deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                                    MutableHandleValue rval, JSBool strict)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_IMMUTABLE);
-    return false;
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
+    return deleteGeneric(cx, obj, id, rval, strict);
 }
 
 bool
@@ -1870,13 +1957,12 @@ ParallelArrayObject::enumerate(JSContext *cx, HandleObject obj, unsigned flags,
 {
     RootedParallelArrayObject source(cx, as(obj));
 
-    if (flags & JSITER_HIDDEN && !props->append(NameToId(cx->names().length)))
-        return false;
-
     // ParallelArray objects have no holes.
     if (source->outermostDimension() > 0) {
-        for (uint32_t i = 0; i < source->outermostDimension(); i++)
-            props->append(INT_TO_JSID(i));
+        for (uint32_t i = 0; i < source->outermostDimension(); i++) {
+            if (!props->append(INT_TO_JSID(i)))
+                return false;
+        }
     }
 
     if (flags & JSITER_OWNONLY)

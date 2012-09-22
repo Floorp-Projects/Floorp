@@ -1,11 +1,9 @@
 function testLength() {
-  // Test length attributes
+  // Test length immutability.
   var p = new ParallelArray([1,2,3,4]);
-  var desc = Object.getOwnPropertyDescriptor(p, "length");
-  assertEq(desc.enumerable, false);
-  assertEq(desc.configurable, false);
-  assertEq(desc.writable, false);
-  assertEq(desc.value, 4);
+  p.length = 0;
+  assertEq(p[0], 1);
+  assertEq(p.length, 4);
 }
 
 testLength();
