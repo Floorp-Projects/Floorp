@@ -344,13 +344,25 @@ AddonsStore.prototype = {
   update: function update(record) {
     let addon = this.getAddonByID(record.addonID);
 
-    // This should only happen if there is a race condition between an add-on
-    // being uninstalled locally and Sync calling this function after it
-    // determines an add-on exists.
+    // update() is called if !this.itemExists. And, since itemExists consults
+    // the reconciler only, we need to take care of some corner cases.
+    //
+    // First, the reconciler could know about an add-on that was uninstalled
+    // and no longer present in the add-ons manager.
     if (!addon) {
-      this._log.warn("Requested to update record but add-on not found: " +
-                     record.addonID);
+      this.create(record);
       return;
+    }
+
+    // It's also possible that the add-on is non-restartless and has pending
+    // install/uninstall activity.
+    //
+    // We wouldn't get here if the incoming record was for a deletion. So,
+    // check for pending uninstall and cancel if necessary.
+    if (addon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
+      addon.cancelUninstall();
+
+      // We continue with processing because there could be state or ID change.
     }
 
     let cb = Async.makeSpinningCallback();

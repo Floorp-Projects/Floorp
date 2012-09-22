@@ -1,0 +1,113 @@
+# High Priority
+
+- Figure out the script story on the various platforms. On Windows, look into
+  the launcher thing that effbot has. Unix, don't install the script my
+  default. They can always do "python -m which ..." with Python >= 2.4.
+  Suggest an alias that some folks might want to use for that.
+
+
+# Medium Priority
+
+- define __all__?
+- improve test suite
+- test with other versions of Python
+- get the PATHEXT attached extension to reflect the actual canonical
+  case of file matches on Windows, currently the extension from PATHEXT
+  is always uppercase
+- What to do with Change 145624 by shanec. It is a bit of a
+  bastardization. Maybe allow this with a special option to allow the change
+  in semantics.
+
+    > Change 145624 by shanec@shanec-ocelotl on 2005/05/24 16:51:55
+    > 
+    >     make which work better on OSX
+    >     - add support for searching /Applications and /Network/Applications
+    >     - add support for .app bundles
+    > 
+    > Affected files ...
+    > 
+    > ... //depot/main/Apps/Komodo-devel/src/python-sitelib/which.py#7 edit
+    > 
+    > Differences ...
+    > 
+    > ==== //depot/main/Apps/Komodo-devel/src/python-sitelib/which.py#7 (text) ====
+    > 
+    > @@ -126,10 +126,11 @@
+    >                  sys.stderr.write("duplicate: %s (%s)\n" % potential)
+    >              return None
+    >      else:
+    > -        if not stat.S_ISREG(os.stat(potential[0]).st_mode):
+    > +        darwinApp = sys.platform == 'darwin' and potential[0][-4:]=='.app'
+    > +        if not darwinApp and not stat.S_ISREG(os.stat(potential[0]).st_mode):
+    >              if verbose:
+    >                  sys.stderr.write("not a regular file: %s (%s)\n" % potential)
+    > -        elif not os.access(potential[0], os.X_OK):
+    > +        elif not darwinApp and not os.access(potential[0], os.X_OK):
+    >              if verbose:
+    >                  sys.stderr.write("no executable access: %s (%s)\n"\
+    >                                   % potential)
+    > @@ -166,6 +167,9 @@
+    >          path = os.environ.get("PATH", "").split(os.pathsep)
+    >          if sys.platform.startswith("win"):
+    >              path.insert(0, os.curdir)  # implied by Windows shell
+    > +        if sys.platform == 'darwin':
+    > +            path.insert(0, '/Network/Applications')
+    > +            path.insert(0, '/Applications')
+    >      else:
+    >          usingGivenPath = 1
+    >  
+    > @@ -182,6 +186,9 @@
+    >                  exts = ['.COM', '.EXE', '.BAT']
+    >          elif not isinstance(exts, list):
+    >              raise TypeError("'exts' argument must be a list or None")
+    > +    elif sys.platform == 'darwin':
+    > +        if exts is None:
+    > +            exts = ['.app']
+    >      else:
+    >          if exts is not None:
+    >              raise WhichError("'exts' argument is not supported on "\
+    > @@ -202,7 +209,8 @@
+    >              for ext in ['']+exts:
+    >                  absName = os.path.abspath(
+    >                      os.path.normpath(os.path.join(dirName, command+ext)))
+    > -                if os.path.isfile(absName):
+    > +                if os.path.isfile(absName) or (sys.platform == 'darwin' and \
+    > +                    absName[-4:]=='.app' and os.path.isdir(absName)):
+    >                      if usingGivenPath:
+    >                          fromWhere = "from given path element %d" % i
+    >                      elif not sys.platform.startswith("win"):
+
+  Here is a start with slight improvements:
+
+    > Index: which.py
+    > ===================================================================
+    > --- which.py	(revision 270)
+    > +++ which.py	(working copy)
+    > @@ -126,9 +126,18 @@
+    >                  sys.stderr.write("duplicate: %s (%s)\n" % potential)
+    >              return None
+    >      else:
+    > -        if not stat.S_ISREG(os.stat(potential[0]).st_mode):
+    > +        st_mode = os.stat(potential[0]).st_mode
+    > +        isMacAppBundle = sys.platform == "darwin" \
+    > +                         and potential[0].endswith(".app") \
+    > +                         and stat.S_ISDIR(st_mode)
+    > +        if not isMacAppBundle and not stat.S_ISREG(st_mode):
+    >              if verbose:
+    > -                sys.stderr.write("not a regular file: %s (%s)\n" % potential)
+    > +                if sys.platform == "darwin":
+    > +                    sys.stderr.write("not a regular file or .app bundle: "
+    > +                                     "%s (%s)\n" % potential)
+    > +                else:
+    > +                    sys.stderr.write("not a regular file: %s (%s)\n"
+    > +                                     % potential)
+    >          elif not os.access(potential[0], os.X_OK):
+    >              if verbose:
+    >                  sys.stderr.write("no executable access: %s (%s)\n"\
+
+
+# Low Priority
+
+- have a version for pre-generators (i.e. Python 2.1)
+- add a "logging" interface
+

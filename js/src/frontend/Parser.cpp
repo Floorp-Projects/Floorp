@@ -403,8 +403,6 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
                          ParseContext *outerpc, StrictMode sms)
   : SharedContext(cx, /* isFunction = */ true, sms),
     objbox(traceListHead, fun, this),
-    siblings(outerpc ? outerpc->functionList : NULL),
-    kids(NULL),
     bindings(),
     bufStart(0),
     bufEnd(0),
@@ -475,8 +473,6 @@ Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, StrictMode sms)
         return NULL;
     }
 
-    if (outerpc)
-        outerpc->functionList = funbox;
     traceListHead = &funbox->objbox;
 
     return funbox;
@@ -1151,7 +1147,6 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 
     FunctionBox *funbox = fn->pn_funbox;
     JS_ASSERT(funbox == funpc->sc->asFunbox());
-    funbox->kids = funpc->functionList;
 
     if (!pc->topStmt || pc->topStmt->type == STMT_BLOCK)
         fn->pn_dflags |= PND_BLOCKCHILD;
@@ -1795,16 +1790,6 @@ Parser::functionExpr()
     return functionDef(name, Normal, Expression);
 }
 
-void
-FunctionBox::recursivelySetStrictMode(StrictMode strictness)
-{
-    if (strictModeState == StrictMode::UNKNOWN) {
-        strictModeState = strictness;
-        for (FunctionBox *kid = kids; kid; kid = kid->siblings)
-            kid->recursivelySetStrictMode(strictness);
-    }
-}
-
 /*
  * Indicate that the current scope can't switch to strict mode with a body-level
  * "use strict" directive anymore. Return false on error.
@@ -1818,10 +1803,12 @@ Parser::setStrictMode(bool strictMode)
         if (pc->sc->isFunction) {
             JS_ASSERT(pc->parent->sc->strictModeState == StrictMode::STRICT);
         } else {
-            JS_ASSERT(StrictModeFromContext(context) == StrictMode::STRICT || pc->staticLevel);
+            JS_ASSERT_IF(pc->staticLevel == 0,
+                         StrictModeFromContext(context) == StrictMode::STRICT);
         }
         return true;
     }
+
     if (strictMode) {
         if (pc->queuedStrictModeError) {
             // There was a strict mode error in this scope before we knew it was
@@ -1831,24 +1818,24 @@ Parser::setStrictMode(bool strictMode)
             return false;
         }
         pc->sc->strictModeState = StrictMode::STRICT;
-    } else if (!pc->parent || pc->parent->sc->strictModeState == StrictMode::NOTSTRICT) {
-        // This scope will not be strict.
-        pc->sc->strictModeState = StrictMode::NOTSTRICT;
-        if (pc->queuedStrictModeError && context->hasStrictOption() &&
-            pc->queuedStrictModeError->report.errorNumber != JSMSG_STRICT_CODE_WITH) {
-            // Convert queued strict mode error to a warning.
-            pc->queuedStrictModeError->report.flags |= JSREPORT_WARNING;
-            pc->queuedStrictModeError->throwError();
+    } else {
+        if (!pc->parent || pc->parent->sc->strictModeState == StrictMode::NOTSTRICT) {
+            // This scope lacks a strict directive, and its parent (if it has
+            // one) definitely isn't strict, so it definitely won't be strict.
+            pc->sc->strictModeState = StrictMode::NOTSTRICT;
+            if (pc->queuedStrictModeError && context->hasStrictOption() &&
+                pc->queuedStrictModeError->report.errorNumber != JSMSG_STRICT_CODE_WITH) {
+                // Convert queued strict mode error to a warning.
+                pc->queuedStrictModeError->report.flags |= JSREPORT_WARNING;
+                pc->queuedStrictModeError->throwError();
+            }
+        } else {
+            // This scope (which has a parent and so must be a function) lacks
+            // a strict directive, but it's not yet clear if its parent is
+            // strict.  (This can only happen for functions in default
+            // arguments.)  Leave it in the UNKNOWN state for now.
+            JS_ASSERT(pc->sc->isFunction);
         }
-    }
-    JS_ASSERT_IF(!pc->sc->isFunction, !pc->functionList);
-    if (pc->sc->strictModeState != StrictMode::UNKNOWN && pc->sc->isFunction) {
-        // We changed the strict mode state. Retroactively recursively set
-        // strict mode status on all the function children we've seen so far
-        // children (That is, functions in default expressions).
-        pc->sc->asFunbox()->strictModeState = pc->sc->strictModeState;
-        for (FunctionBox *kid = pc->functionList; kid; kid = kid->siblings)
-            kid->recursivelySetStrictMode(pc->sc->strictModeState);
     }
     return true;
 }
@@ -4777,12 +4764,11 @@ class CompExprTransplanter {
     Parser          *parser;
     bool            genexp;
     unsigned        adjust;
-    unsigned        funcLevel;
     HashSet<Definition *> visitedImplicitArguments;
 
   public:
     CompExprTransplanter(ParseNode *pn, Parser *parser, bool ge, unsigned adj)
-      : root(pn), parser(parser), genexp(ge), adjust(adj), funcLevel(0),
+      : root(pn), parser(parser), genexp(ge), adjust(adj),
         visitedImplicitArguments(parser->context)
     {}
 
@@ -4961,33 +4947,9 @@ CompExprTransplanter::transplant(ParseNode *pn)
         break;
 
       case PN_FUNC:
-      {
-        /*
-         * Only the first level of transplant recursion through functions needs
-         * to reparent the funbox, since all descendant functions are correctly
-         * linked under the top-most funbox.
-         */
-        FunctionBox *funbox = pn->pn_funbox;
-
-        if (++funcLevel == 1 && genexp) {
-            FunctionBox *parent = pc->sc->asFunbox();
-
-            FunctionBox **funboxp = &pc->parent->functionList;
-            while (*funboxp != funbox)
-                funboxp = &(*funboxp)->siblings;
-            *funboxp = funbox->siblings;
-
-            funbox->siblings = parent->kids;
-            parent->kids = funbox;
-        }
-        /* FALL THROUGH */
-      }
-
       case PN_NAME:
         if (!transplant(pn->maybeExpr()))
             return false;
-        if (pn->isArity(PN_FUNC))
-            --funcLevel;
 
         if (pn->isDefn()) {
             if (genexp && !BumpStaticLevel(pn, pc))

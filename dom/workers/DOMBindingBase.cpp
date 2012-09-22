@@ -29,6 +29,13 @@ DOMBindingBase::~DOMBindingBase()
   }
 }
 
+NS_IMPL_ADDREF(DOMBindingBase)
+NS_IMPL_RELEASE(DOMBindingBase)
+NS_INTERFACE_MAP_BEGIN(DOMBindingBase)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+NS_INTERFACE_MAP_END
+
 void
 DOMBindingBase::_trace(JSTracer* aTrc)
 {

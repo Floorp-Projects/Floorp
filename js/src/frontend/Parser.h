@@ -157,7 +157,6 @@ struct ParseContext                 /* tree context for semantic checks */
     ParseNode       *yieldNode;     /* parse node for a yield expression that might
                                        be an error if we turn out to be inside a
                                        generator expression */
-    FunctionBox     *functionList;
 
     // A strict mode error found in this scope or one of its children. It is
     // used only when strictModeState is UNKNOWN. If the scope turns out to be

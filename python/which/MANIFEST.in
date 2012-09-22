@@ -1,0 +1,3 @@
+include *.py *.cpp *.in which.exe Makefile* *.txt logo.jpg
+exclude *~
+recursive-include test *.txt *.py

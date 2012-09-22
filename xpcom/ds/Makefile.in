@@ -59,6 +59,7 @@ EXPORTS_mozilla = \
   $(NULL)
 
 EXPORTS		= \
+		nsArray.h \
 		nsAtomService.h \
 		nsCheapSets.h \
 		nsCppSharedAllocator.h \

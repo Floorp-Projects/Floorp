@@ -104,8 +104,7 @@ BluetoothServiceChildProcess::GetDefaultAdapterPathInternal(
 
 nsresult
 BluetoothServiceChildProcess::GetDevicePropertiesInternal(
-                                                   const nsAString& aDevicePath,
-                                                   const nsAString& aSignalPath)
+                                                 const BluetoothSignal& aSignal)
 {
   MOZ_NOT_REACHED("Should never be called from child");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -231,7 +230,7 @@ BluetoothServiceChildProcess::SetPinCodeInternal(
 {
   SendRequest(aRunnable,
               SetPinCodeRequest(nsString(aDeviceAddress), nsString(aPinCode)));
-  return NS_OK;
+  return true;
 }
 
 bool
@@ -242,7 +241,7 @@ BluetoothServiceChildProcess::SetPasskeyInternal(
 {
   SendRequest(aRunnable,
               SetPasskeyRequest(nsString(aDeviceAddress), aPasskey));
-  return NS_OK;
+  return true;
 }
 
 bool
@@ -258,7 +257,7 @@ BluetoothServiceChildProcess::SetPairingConfirmationInternal(
     SendRequest(aRunnable,
                 DenyPairingConfirmationRequest(nsString(aDeviceAddress)));
   }
-  return NS_OK;
+  return true;
 }
 
 bool
@@ -274,7 +273,7 @@ BluetoothServiceChildProcess::SetAuthorizationInternal(
     SendRequest(aRunnable,
                 DenyAuthorizationRequest(nsString(aDeviceAddress)));
   }
-  return NS_OK;
+  return true;
 }
 
 nsresult
