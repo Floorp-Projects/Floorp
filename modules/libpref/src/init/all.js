@@ -3683,6 +3683,11 @@ pref("dom.mozAlarms.enabled", false);
 pref("dom.mozSettings.enabled", false);
 pref("dom.mozPermissionSettings.enabled", false);
 
+// W3C touch events
+#ifdef XP_WIN
+pref("dom.w3c_touch_events.enabled", true);
+#endif
+
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);
 
