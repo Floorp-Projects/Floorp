@@ -201,6 +201,22 @@ AbstractFile.AbstractIterator.prototype = {
    */
   __iterator__: function __iterator__() {
     return this;
+  },
+  /**
+   * Apply a function to all elements of the directory sequentially.
+   *
+   * @param {Function} cb This function will be applied to all entries
+   * of the directory. It receives as arguments
+   *  - the OS.File.Entry corresponding to the entry;
+   *  - the index of the entry in the enumeration;
+   *  - the iterator itself - calling |close| on the iterator stops
+   *   the loop.
+   */
+  forEach: function forEach(cb) {
+    let index = 0;
+    for (let entry in this) {
+      cb(entry, index++, this);
+    }
   }
 };
 
