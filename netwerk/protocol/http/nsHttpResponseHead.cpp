@@ -290,7 +290,7 @@ nsHttpResponseHead::ComputeFreshnessLifetime(uint32_t *result) const
     }
 
     // These responses can be cached indefinitely.
-    if ((mStatus == 300) || (mStatus == 301)) {
+    if ((mStatus == 300) || nsHttp::IsPermanentRedirect(mStatus)) {
         *result = uint32_t(-1);
         return NS_OK;
     }
