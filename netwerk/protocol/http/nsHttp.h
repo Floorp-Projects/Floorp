@@ -180,6 +180,9 @@ struct nsHttp
         return ParseInt64(input, &next, result) && *next == '\0';
     }
 
+    // Return whether the HTTP status code represents a permanent redirect
+    static bool IsPermanentRedirect(PRUint32 httpStatus);
+
     // Declare all atoms
     //
     // The atom names and values are stored in nsHttpAtomList.h and are brought
