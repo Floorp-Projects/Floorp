@@ -189,6 +189,9 @@ function RadioInterfaceLayer() {
   let lock = gSettingsService.createLock();
   lock.get("ril.radio.disabled", this);
 
+  // Read preferred network type from the setting DB.
+  lock.get("ril.radio.preferredNetworkType", this);
+
   // Read the APN data form the setting DB.
   lock.get("ril.data.apn", this);
   lock.get("ril.data.user", this);
@@ -470,6 +473,9 @@ RadioInterfaceLayer.prototype = {
       case "stksessionend":
         ppmm.broadcastAsyncMessage("RIL:StkSessionEnd", null);
         break;
+      case "setPreferredNetworkType":
+        this.handleSetPreferredNetworkType(message);
+        break;
       default:
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
@@ -643,6 +649,39 @@ RadioInterfaceLayer.prototype = {
     this.updateRILNetworkInterface();
   },
 
+  _preferredNetworkType: null,
+  setPreferredNetworkType: function setPreferredNetworkType(value) {
+    let networkType = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.indexOf(value);
+    if (networkType < 0) {
+      gSettingsService.createLock().set("ril.radio.preferredNetworkType",
+                                        this._preferredNetworkType || RIL.GECKO_PREFERRED_NETWORK_TYPE_DEFAULT,
+                                        false);
+      return;
+    }
+
+    if (networkType == this._preferredNetworkType) {
+      return;
+    }
+
+    this.worker.postMessage({rilMessageType: "setPreferredNetworkType",
+                             networkType: networkType});
+
+    this._ensureRadioState();
+  },
+
+  handleSetPreferredNetworkType: function handleSetPreferredNetworkType(message) {
+    if ((this._preferredNetworkType != null) && !message.success) {
+      gSettingsService.createLock().set("ril.radio.preferredNetworkType",
+                                        this._preferredNetworkType,
+                                        false);
+      return;
+    }
+
+    this._preferredNetworkType = message.networkType;
+    debug("_preferredNetworkType is now " +
+          RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[this._preferredNetworkType]);
+  },
+
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
     let voiceInfo = this.rilContext.voice;
     // TODO CDMA, EVDO, LTE, etc. (see bug 726098)
@@ -700,6 +739,11 @@ RadioInterfaceLayer.prototype = {
     debug("Reported radio state is " + this.rilContext.radioState +
           ", desired radio enabled state is " + this._radioEnabled);
     if (this._radioEnabled == null) {
+      // We haven't read the initial value from the settings DB yet.
+      // Wait for that.
+      return;
+    }
+    if (this._preferredNetworkType == null) {
       // We haven't read the initial value from the settings DB yet.
       // Wait for that.
       return;
@@ -1202,6 +1246,10 @@ RadioInterfaceLayer.prototype = {
         debug("'ril.radio.disabled' is now " + aResult);
         this._radioEnabled = !aResult;
         this._ensureRadioState();
+        break;
+      case "ril.radio.preferredNetworkType":
+        debug("'ril.radio.preferredNetworkType' is now " + aResult);
+        this.setPreferredNetworkType(aResult);
         break;
       case "ril.data.enabled":
         this._oldRilDataEnabledState = this.dataCallSettings["enabled"];
