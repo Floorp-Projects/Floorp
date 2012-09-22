@@ -9,7 +9,6 @@
 #include "gfxTypes.h"
 #include "gfxPlatform.h"
 
-#include "prtypes.h"
 #include "nsAlgorithm.h"
 #include "prcpucfg.h"
 
