@@ -47,6 +47,6 @@ parser/html/java/javaparser/
 .settings/
 
 # Python virtualenv artifacts.
-python/psutil/.*.so
-python/psutil/.*.pyd
+python/psutil/*.so
+python/psutil/*.pyd
 python/psutil/build/

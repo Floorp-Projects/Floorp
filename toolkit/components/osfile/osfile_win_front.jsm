@@ -480,6 +480,7 @@
       * @constructor
       */
      File.DirectoryIterator = function DirectoryIterator(path, options) {
+       exports.OS.Shared.AbstractFile.AbstractIterator.call(this);
        if (options && options.winPattern) {
          this._pattern = path + "\\" + options.winPattern;
        } else {
@@ -488,18 +489,22 @@
        this._handle = null;
        this._path = path;
        this._started = false;
+       this._closed = false;
      };
-     File.DirectoryIterator.prototype = {
-       __iterator__: function __iterator__() {
-         return this;
-       },
+     File.DirectoryIterator.prototype = Object.create(exports.OS.Shared.AbstractFile.AbstractIterator.prototype);
 
        /**
         * Fetch the next entry in the directory.
         *
         * @return null If we have reached the end of the directory.
         */
-       _next: function _next() {
+     File.DirectoryIterator.prototype._next = function _next() {
+        // Bailout if the iterator is closed. Note that this may
+        // happen even before it is fully initialized.
+        if (this._closed) {
+          return null;
+        }
+
          // Iterator is not fully initialized yet. Finish
          // initialization.
          if (!this._started) {
@@ -515,11 +520,6 @@
               }
             }
             return gFindData;
-         }
-
-         // We have closed this iterator already.
-         if (!this._handle) {
-           return null;
          }
 
          if (WinFile.FindNextFile(this._handle, gFindDataPtr)) {
@@ -544,7 +544,7 @@
         * @throws {StopIteration} Once all files in the directory have been
         * encountered.
         */
-       next: function next() {
+     File.DirectoryIterator.prototype.next = function next() {
          // FIXME: If we start supporting "\\?\"-prefixed paths, do not forget
          // that "." and ".." are absolutely normal file names if _path starts
          // with such prefix
@@ -556,15 +556,22 @@
            return new File.DirectoryIterator.Entry(entry, this._path);
          }
          throw StopIteration;
-       },
-       close: function close() {
-         if (!this._handle) {
-           return;
-         }
-         WinFile.FindClose(this._handle);
+     };
+
+     File.DirectoryIterator.prototype.close = function close() {
+       if (this._closed) {
+         return;
+       }
+       this._closed = true;
+       if (this._handle) {
+         // We might not have a handle if the iterator is closed
+         // before being used.
+         throw_on_zero("FindClose",
+           WinFile.FindClose(this._handle));
          this._handle = null;
        }
      };
+
      File.DirectoryIterator.Entry = function Entry(win_entry, parent) {
        // Copy the relevant part of |win_entry| to ensure that
        // our data is not overwritten prematurely.

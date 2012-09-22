@@ -24,8 +24,6 @@
 
 using namespace MPAPI;
 
-const int OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka = 0x7FA30C01;
-
 namespace android {
 
 // MediaStreamSource is a DataSource that reads from a MPAPI media stream.

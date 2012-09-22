@@ -604,6 +604,12 @@ let RIL = {
    */
   _pendingSentSmsMap: {},
 
+  /**
+   * Index of the RIL_PREFERRED_NETWORK_TYPE_TO_GECKO. Its value should be
+   * preserved over rild reset.
+   */
+  preferredNetworkType: null,
+
   initRILState: function initRILState() {
     /**
      * One of the RADIO_STATE_* constants.
@@ -1681,13 +1687,30 @@ let RIL = {
   /**
    * Set the preferred network type.
    *
-   * @param network_type
-   *        The network type. One of the PREFERRED_NETWORK_TYPE_* constants.
+   * @param options An object contains a valid index of
+   *                RIL_PREFERRED_NETWORK_TYPE_TO_GECKO as its `networkType`
+   *                attribute, or undefined to set current preferred network
+   *                type.
    */
-  setPreferredNetworkType: function setPreferredNetworkType(network_type) {
-    Buf.newParcel(REQUEST_SET_PREFERRED_NETWORK_TYPE);
-    Buf.writeUint32(network_type);
+  setPreferredNetworkType: function setPreferredNetworkType(options) {
+    if (options) {
+      this.preferredNetworkType = options.networkType;
+    }
+    if (this.preferredNetworkType == null) {
+      return;
+    }
+
+    Buf.newParcel(REQUEST_SET_PREFERRED_NETWORK_TYPE, options);
+    Buf.writeUint32(1);
+    Buf.writeUint32(this.preferredNetworkType);
     Buf.sendParcel();
+  },
+
+  /**
+   * Get the preferred network type.
+   */
+  getPreferredNetworkType: function getPreferredNetworkType() {
+    Buf.simpleRequest(REQUEST_GET_PREFERRED_NETWORK_TYPE);
   },
 
   /**
@@ -3999,8 +4022,33 @@ RIL[REQUEST_STK_SEND_ENVELOPE_COMMAND] = null;
 RIL[REQUEST_STK_SEND_TERMINAL_RESPONSE] = null;
 RIL[REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM] = null;
 RIL[REQUEST_EXPLICIT_CALL_TRANSFER] = null;
-RIL[REQUEST_SET_PREFERRED_NETWORK_TYPE] = null;
-RIL[REQUEST_GET_PREFERRED_NETWORK_TYPE] = null;
+RIL[REQUEST_SET_PREFERRED_NETWORK_TYPE] = function REQUEST_SET_PREFERRED_NETWORK_TYPE(length, options) {
+  if (options.networkType == null) {
+    // The request was made by ril_worker itself automatically. Don't report.
+    return;
+  }
+
+  this.sendDOMMessage({
+    rilMessageType: "setPreferredNetworkType",
+    networkType: options.networkType,
+    success: options.rilRequestError == ERROR_SUCCESS
+  });
+};
+RIL[REQUEST_GET_PREFERRED_NETWORK_TYPE] = function REQUEST_GET_PREFERRED_NETWORK_TYPE(length, options) {
+  let networkType;
+  if (!options.rilRequestError) {
+    networkType = RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.indexOf(GECKO_PREFERRED_NETWORK_TYPE_DEFAULT);
+    if (Buf.readUint32()) {
+      this.preferredNetworkType = networkType = Buf.readUint32();
+    }
+  }
+
+  this.sendDOMMessage({
+    rilMessageType: "getPreferredNetworkType",
+    networkType: networkType,
+    success: options.rilRequestError == ERROR_SUCCESS
+  });
+};
 RIL[REQUEST_GET_NEIGHBORING_CELL_IDS] = null;
 RIL[REQUEST_SET_LOCATION_UPDATES] = null;
 RIL[REQUEST_CDMA_SET_SUBSCRIPTION_SOURCE] = null;
@@ -4233,6 +4281,8 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
   }
 
   this.initRILState();
+
+  this.setPreferredNetworkType();
 };
 
 /**

@@ -1,6 +1,10 @@
 import re
-from subprocess import list2cmdline
 from progressbar import NullProgressBar, ProgressBar
+import pipes
+
+# subprocess.list2cmdline does not properly escape for sh-like shells
+def escape_cmdline(args):
+    return ' '.join([ pipes.quote(a) for a in args ])
 
 class TestOutput:
     """Output from a test run."""
@@ -107,7 +111,7 @@ class ResultsSink:
             self.n += 1
         else:
             if self.options.show_cmd:
-                print >> self.fp, list2cmdline(output.cmd)
+                print >> self.fp, escape_cmdline(output.cmd)
 
             if self.options.show_output:
                 print >> self.fp, '    rc = %d, run time = %f' % (output.rc, output.dt)

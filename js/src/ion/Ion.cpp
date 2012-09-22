@@ -1047,7 +1047,7 @@ TestIonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osr
 {
     if (!IonCompile<TestCompiler>(cx, script, fun, osrPc, constructing)) {
         if (!cx->isExceptionPending())
-            ForbidCompilation(script);
+            ForbidCompilation(cx, script);
         return false;
     }
     return true;
@@ -1202,7 +1202,7 @@ ion::CanEnterAtBranch(JSContext *cx, HandleScript script, StackFrame *fp, jsbyte
 
     // Mark as forbidden if frame can't be handled.
     if (!CheckFrame(fp)) {
-        ForbidCompilation(script);
+        ForbidCompilation(cx, script);
         return Method_CantCompile;
     }
 
@@ -1211,7 +1211,7 @@ ion::CanEnterAtBranch(JSContext *cx, HandleScript script, StackFrame *fp, jsbyte
     MethodStatus status = Compile<TestCompiler>(cx, script, fun, pc, false);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
-            ForbidCompilation(script);
+            ForbidCompilation(cx, script);
         return status;
     }
 
@@ -1258,7 +1258,7 @@ ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
 
     // Mark as forbidden if frame can't be handled.
     if (!CheckFrame(fp)) {
-        ForbidCompilation(script);
+        ForbidCompilation(cx, script);
         return Method_CantCompile;
     }
 
@@ -1267,7 +1267,7 @@ ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
     MethodStatus status = Compile<TestCompiler>(cx, script, fun, NULL, fp->isConstructing());
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
-            ForbidCompilation(script);
+            ForbidCompilation(cx, script);
         return status;
     }
 
@@ -1634,7 +1634,9 @@ ion::Invalidate(JSContext *cx, JSScript *script, bool resetUses)
     JS_ASSERT(script->hasIonScript());
 
     Vector<types::RecompileInfo> scripts(cx);
-    scripts.append(script->ionScript()->recompileInfo());
+    if (!scripts.append(script->ionScript()->recompileInfo()))
+        return false;
+
     Invalidate(cx, scripts, resetUses);
     return true;
 }
@@ -1667,17 +1669,19 @@ ion::MarkFromIon(JSCompartment *comp, Value *vp)
 }
 
 void
-ion::ForbidCompilation(JSScript *script)
+ion::ForbidCompilation(JSContext *cx, JSScript *script)
 {
     IonSpew(IonSpew_Abort, "Disabling Ion compilation of script %s:%d",
             script->filename, script->lineno);
 
-    if (script->hasIonScript() && script->compartment()->needsBarrier()) {
-        // We're about to remove edges from the JSScript to gcthings
-        // embedded in the IonScript. Perform one final trace of the
-        // IonScript for the incremental GC, as it must know about
-        // those edges.
-        IonScript::Trace(script->compartment()->barrierTracer(), script->ion);
+    if (script->hasIonScript()) {
+        // It is only safe to modify script->ion if the script is not currently
+        // running, because IonFrameIterator needs to tell what ionScript to
+        // use (either the one on the JSScript, or the one hidden in the
+        // breadcrumbs Invalidation() leaves). Therefore, if invalidation
+        // fails, we cannot disable the script.
+        if (!Invalidate(cx, script, false))
+            return;
     }
 
     script->ion = ION_DISABLED_SCRIPT;
