@@ -37,29 +37,6 @@ let Storage = {
   },
 
   // ----------
-  // Function: wipe
-  // Cleans out all the stored data, leaving empty objects.
-  wipe: function Storage_wipe() {
-    try {
-      var self = this;
-
-      // ___ Tabs
-      AllTabs.tabs.forEach(function(tab) {
-        self.saveTab(tab, null);
-      });
-
-      // ___ Other
-      this.saveGroupItemsData(gWindow, {});
-      this.saveUIData(gWindow, {});
-
-      this._sessionStore.setWindowValue(gWindow, this.GROUP_DATA_IDENTIFIER,
-        JSON.stringify({}));
-    } catch (e) {
-      Utils.log("Error in wipe: "+e);
-    }
-  },
-
-  // ----------
   // Function: saveTab
   // Saves the data for a single tab.
   saveTab: function Storage_saveTab(tab, data) {
