@@ -12,8 +12,8 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Util.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/StandardInteger.h"
 
-#include "prtypes.h"
 #include "nsID.h"
 #include "nsMemory.h"
 #include "nsStringGlue.h"
