@@ -655,7 +655,7 @@ RadioInterfaceLayer.prototype = {
     if (networkType < 0) {
       gSettingsService.createLock().set("ril.radio.preferredNetworkType",
                                         this._preferredNetworkType || RIL.GECKO_PREFERRED_NETWORK_TYPE_DEFAULT,
-                                        null);
+                                        false);
       return;
     }
 
@@ -673,7 +673,7 @@ RadioInterfaceLayer.prototype = {
     if ((this._preferredNetworkType != null) && !message.success) {
       gSettingsService.createLock().set("ril.radio.preferredNetworkType",
                                         this._preferredNetworkType,
-                                        null);
+                                        false);
       return;
     }
 
