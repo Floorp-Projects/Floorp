@@ -93,32 +93,32 @@ WebappsRegistry.prototype = {
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
+        let manifest;
         try {
-          let manifest = JSON.parse(xhr.responseText, installOrigin);
-          if (!AppsUtils.checkManifest(manifest, installOrigin)) {
-            Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
-          } else {
-            if (!this.checkAppStatus(manifest)) {
-              Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
-            } else {
-              let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
-              let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
-              cpmm.sendAsyncMessage("Webapps:Install", { app: { installOrigin: installOrigin,
-                                                                origin: this._getOrigin(aURL),
-                                                                manifestURL: aURL,
-                                                                manifest: manifest,
-                                                                receipts: receipts,
-                                                                categories: categories },
-                                                                from: installURL,
-                                                                oid: this._id,
-                                                                requestID: requestID });
-            }
-          }
-        } catch(e) {
+          manifest = JSON.parse(xhr.responseText, installOrigin);
+        } catch (e) {
           Services.DOMRequest.fireError(request, "MANIFEST_PARSE_ERROR");
+          return;
         }
-      }
-      else {
+
+        if (!AppsUtils.checkManifest(manifest, installOrigin)) {
+          Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
+        } else if (!this.checkAppStatus(manifest)) {
+          Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
+        } else {
+          let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
+          let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
+          cpmm.sendAsyncMessage("Webapps:Install", { app: { installOrigin: installOrigin,
+                                                            origin: this._getOrigin(aURL),
+                                                            manifestURL: aURL,
+                                                            manifest: manifest,
+                                                            receipts: receipts,
+                                                            categories: categories },
+                                                            from: installURL,
+                                                            oid: this._id,
+                                                            requestID: requestID });
+        }
+      } else {
         Services.DOMRequest.fireError(request, "MANIFEST_URL_ERROR");
       }
     }).bind(this), false);
