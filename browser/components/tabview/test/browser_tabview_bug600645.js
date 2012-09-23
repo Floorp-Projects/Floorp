@@ -50,7 +50,7 @@ function onTabPinned() {
 
       // with moz-anno:favicon automatically redirects to the default favIcon 
       // if the given url is invalid
-      ok(/^moz-anno:favicon:/.test(iconSrc),
+      ok(iconSrc.startsWith("moz-anno:favicon:"),
          "The icon url starts with moz-anno:favicon so the default fav icon would be displayed");
 
       // At this point, as an additional integrity check we could also verify

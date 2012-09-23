@@ -161,7 +161,7 @@ gImageView.getCellProperties = function(row, col, props) {
   var item = gImageView.data[row][COL_IMAGE_NODE];
   if (!checkProtocol(data) ||
       item instanceof HTMLEmbedElement ||
-      (item instanceof HTMLObjectElement && !/^image\//.test(item.type)))
+      (item instanceof HTMLObjectElement && !item.type.startsWith("image/")))
     props.AppendElement(this._brokenAtom);
 
   if (col.element.id == "image-address")
@@ -945,7 +945,7 @@ function makePreview(row)
       mimeType = getContentTypeFromHeaders(cacheEntry);
 
     // if we have a data url, get the MIME type from the url
-    if (!mimeType && /^data:/.test(url)) {
+    if (!mimeType && url.startsWith("data:")) {
       let dataMimeType = /^data:(image\/[^;,]+)/i.exec(url);
       if (dataMimeType)
         mimeType = dataMimeType[1].toLowerCase();
@@ -987,7 +987,7 @@ function makePreview(row)
     if ((item instanceof HTMLLinkElement || item instanceof HTMLInputElement ||
          item instanceof HTMLImageElement ||
          item instanceof SVGImageElement ||
-        (item instanceof HTMLObjectElement && /^image\//.test(mimeType)) || isBG) && isProtocolAllowed) {
+         (item instanceof HTMLObjectElement && mimeType.startsWith("image/")) || isBG) && isProtocolAllowed) {
       newImage.setAttribute("src", url);
       physWidth = newImage.width || 0;
       physHeight = newImage.height || 0;
