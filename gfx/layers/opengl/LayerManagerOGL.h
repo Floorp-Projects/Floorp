@@ -59,8 +59,6 @@ public:
                   bool aIsRenderingToEGLSurface = false);
   virtual ~LayerManagerOGL();
 
-  void CleanupResources();
-
   void Destroy();
 
 
