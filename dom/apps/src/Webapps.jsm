@@ -697,21 +697,6 @@ let DOMApplicationRegistry = {
 
     let dir = FileUtils.getDir("TmpD", ["webapps", id], true, true);
 
-    /** from https://developer.mozilla.org/en/OpenWebApps/The_Manifest
-     * only the name property is mandatory
-     */
-    function checkManifest(aManifest) {
-      if (aManifest.name == undefined)
-        return false;
-
-      if (aManifest.installs_allowed_from) {
-        return aManifest.installs_allowed_from.some(function(aOrigin) {
-          return aOrigin == "*" || aOrigin == aData.installOrigin;
-        });
-      }
-      return true;
-    }
-
     // Removes the directory we created, and sends an error to the DOM side.
     function cleanup(aError) {
       try {
@@ -808,7 +793,7 @@ let DOMApplicationRegistry = {
           let istream = zipReader.getInputStream("manifest.webapp");
           msg.app.manifest = JSON.parse(NetUtil.readInputStreamToString(istream,
                                         istream.available()) || "");
-          if (!checkManifest(msg.app.manifest)) {
+          if (!AppsUtils.checkManifest(msg.app.manifest, aData.installOrigin)) {
             throw "INVALID_MANIFEST";
           }
 

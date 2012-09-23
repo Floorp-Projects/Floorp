@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -31,21 +32,6 @@ function WebappsRegistry() {
 
 WebappsRegistry.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
-
-  /** from https://developer.mozilla.org/en/OpenWebApps/The_Manifest
-   * only the name property is mandatory
-   */
-  checkManifest: function(aManifest, aInstallOrigin) {
-    if (aManifest.name == undefined)
-      return false;
-
-    if (aManifest.installs_allowed_from) {
-      return aManifest.installs_allowed_from.some(function(aOrigin) {
-        return aOrigin == "*" || aOrigin == aInstallOrigin;
-      });
-    }
-    return true;
-  },
 
   // Hosted apps can't be trusted or certified, so just check that the
   // manifest doesn't ask for those.
@@ -109,7 +95,7 @@ WebappsRegistry.prototype = {
       if (xhr.status == 200) {
         try {
           let manifest = JSON.parse(xhr.responseText, installOrigin);
-          if (!this.checkManifest(manifest, installOrigin)) {
+          if (!AppsUtils.checkManifest(manifest, installOrigin)) {
             Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
           } else {
             if (!this.checkAppStatus(manifest)) {
