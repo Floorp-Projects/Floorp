@@ -10,6 +10,8 @@ const TAB_STATE_RESTORING = 2;
 function test() {
   /** Test for Bug 586068 - Cascade page loads when restoring **/
   waitForExplicitFinish();
+  // Too many uncaught exceptions, see bug 789003.
+  ignoreAllUncaughtExceptions();
   // This test does a lot of window opening / closing and waiting for loads.
   // In order to prevent timeouts, we'll extend the default that mochitest uses.
   requestLongerTimeout(4);
