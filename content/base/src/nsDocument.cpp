@@ -9647,6 +9647,11 @@ nsDocument::ShouldLockPointer(Element* aElement)
     return false;
   }
 
+  if (mSandboxFlags & SANDBOXED_POINTER_LOCK) {
+    NS_WARNING("ShouldLockPointer(): Document is sandboxed and doesn't allow pointer-lock");
+    return false;
+  }
+
   // Check if the element is in a document with a docshell.
   nsCOMPtr<nsIDocument> ownerDoc = aElement->OwnerDoc();
   if (!ownerDoc) {

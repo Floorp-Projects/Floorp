@@ -920,7 +920,8 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAString& aSandboxAttrValue)
                  SANDBOXED_ORIGIN |
                  SANDBOXED_FORMS |
                  SANDBOXED_SCRIPTS |
-                 SANDBOXED_AUTOMATIC_FEATURES;
+                 SANDBOXED_AUTOMATIC_FEATURES |
+                 SANDBOXED_POINTER_LOCK;
 
   if (!aSandboxAttrValue.IsEmpty()) {
     // The separator optional flag is used because the HTML5 spec says any
@@ -930,7 +931,6 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAString& aSandboxAttrValue)
 
     while (tokenizer.hasMoreTokens()) {
       nsDependentSubstring token = tokenizer.nextToken();
-
       if (token.LowerCaseEqualsLiteral("allow-same-origin")) {
         out &= ~SANDBOXED_ORIGIN;
       } else if (token.LowerCaseEqualsLiteral("allow-forms")) {
@@ -942,6 +942,8 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAString& aSandboxAttrValue)
         out &= ~SANDBOXED_AUTOMATIC_FEATURES;
       } else if (token.LowerCaseEqualsLiteral("allow-top-navigation")) {
         out &= ~SANDBOXED_TOPLEVEL_NAVIGATION;
+      } else if (token.LowerCaseEqualsLiteral("allow-pointer-lock")) {
+        out &= ~SANDBOXED_POINTER_LOCK;
       }
     }
   }
