@@ -4349,18 +4349,17 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
         ResizeTransparencyBitmap();
     }
 
-    NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0
-            && aRect.XMost() <= mBounds.width && aRect.YMost() <= mBounds.height,
-            "Rect is out of window bounds");
+    nsIntRect rect;
+    rect.IntersectRect(aRect, nsIntRect(0, 0, mBounds.width, mBounds.height));
 
     if (!ChangedMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height,
-                         aRect, aAlphas, aStride))
+                         rect, aAlphas, aStride))
         // skip the expensive stuff if the mask bits haven't changed; hopefully
         // this is the common case
         return NS_OK;
 
     UpdateMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height,
-                   aRect, aAlphas, aStride);
+                   rect, aAlphas, aStride);
 
     if (!mNeedsShow) {
         ApplyTransparencyBitmap();
