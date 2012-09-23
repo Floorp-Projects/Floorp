@@ -406,37 +406,38 @@ bool GetLight(LightType light, hal::LightConfiguration* aConfig)
   RETURN_PROXY_IF_SANDBOXED(GetLight(light, aConfig));
 }
 
-static StaticAutoPtr<ObserverList<SystemTimeChange> > sSystemTimeObservers;
-
-static void
-InitializeSystemTimeChangeObserver()
+class SystemTimeObserversManager : public ObserversManager<SystemTimeChange>
 {
-  if (!sSystemTimeObservers) {
-    sSystemTimeObservers = new ObserverList<SystemTimeChange>;
-    ClearOnShutdown(&sSystemTimeObservers);
+protected:
+  void EnableNotifications() {
+    PROXY_IF_SANDBOXED(EnableSystemTimeChangeNotifications());
   }
-}
+
+  void DisableNotifications() {
+    PROXY_IF_SANDBOXED(DisableSystemTimeChangeNotifications());
+  }
+};
+
+static SystemTimeObserversManager sSystemTimeObservers;
 
 void
 RegisterSystemTimeChangeObserver(SystemTimeObserver *aObserver)
 {
   AssertMainThread();
-  InitializeSystemTimeChangeObserver();
-  sSystemTimeObservers->AddObserver(aObserver);
+  sSystemTimeObservers.AddObserver(aObserver);
 }
 
 void
 UnregisterSystemTimeChangeObserver(SystemTimeObserver *aObserver)
 {
   AssertMainThread();
-  sSystemTimeObservers->RemoveObserver(aObserver);
+  sSystemTimeObservers.RemoveObserver(aObserver);
 }
 
 void
 NotifySystemTimeChange(const hal::SystemTimeChange& aReason)
 {
-  InitializeSystemTimeChangeObserver();
-  sSystemTimeObservers->Broadcast(aReason);
+  sSystemTimeObservers.BroadcastInformation(aReason);
 }
  
 void 
