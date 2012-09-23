@@ -442,6 +442,14 @@ private:
 
     void DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent);
 
+    // nsBaseWidget
+    virtual LayerManager* GetLayerManager(PLayersChild* aShadowManager = nullptr,
+                                          LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
+                                          LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+                                          bool* aAllowRetaining = nullptr) MOZ_OVERRIDE;
+
+    void CleanLayerManagerRecursive();
+
     /**
      * |mIMModule| takes all IME related stuff.
      *
