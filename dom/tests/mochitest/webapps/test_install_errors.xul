@@ -28,6 +28,7 @@ var steps = [
   invalidLaunchPath,
   invalidEntryPoint,
   invalidLocaleEntryPoint,
+  fileURL,
 ];
 
 runAll(steps);
@@ -133,6 +134,39 @@ function invalidLocaleEntryPoint(next) {
 function installPackageNotImplemented(next) {
   ok(!("installPackage" in navigator.mozApps),
      "installPackage not in navigator.mozApps");
+  next();
+}
+
+function fileURL(next) {
+  try {
+    navigator.mozApps.install("file:///nonexistent");
+    ok(false,
+       "attempt to install nonexistent file: URL doesn't throw exception");
+  } catch(ex) {
+    is(ex.message, "INVALID_URL_SCHEME: 'file'; must be 'http' or 'https'",
+       "attempt to install nonexistent file: URL throws exception");
+  }
+
+  // Get the file:/// URL of an existent file, which we will use to test that
+  // attempting to install an existent file has exactly the same effect as
+  // attempting to install a nonexistent file.  We use the URL of the Services
+  // module in the test because we use the Services module to get the URL,
+  // so we know it exists.
+  var { Services: Services } =
+    Components.utils.import("resource://gre/modules/Services.jsm", {});
+  var file =
+    Services.io.newURI("resource://gre/modules/Services.jsm", null, null).
+    QueryInterface(Components.interfaces.nsIFileURL).file;
+  var url = Services.io.newFileURI(file).spec;
+
+  try {
+    navigator.mozApps.install(url);
+    ok(false, "attempt to install existent file: URL doesn't throw exception");
+  } catch(ex) {
+    is(ex.message, "INVALID_URL_SCHEME: 'file'; must be 'http' or 'https'",
+       "attempt to install existent file: URL throws exception");
+  }
+
   next();
 }
 
