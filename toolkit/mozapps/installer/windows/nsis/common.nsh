@@ -6971,6 +6971,7 @@
     Push $R8
     Push $R7
 
+    ; Conditionally remove the DEH as long as we are the default (HKCU)
     ReadRegStr $R8 HKCU "Software\Classes\CLSID\$R0\LocalServer32" ""
     ${${un}GetLongPath} "$INSTDIR" $R7
     StrCmp "$R8" "" next +1
@@ -6980,11 +6981,9 @@
     StrCmp "$R7" "$R8" clearHKCU next
     clearHKCU:
     DeleteRegKey HKCU "Software\Classes\CLSID\$R0"
-    DeleteRegValue HKCU \
-                   "Software\Classes\$AppUserModelID\.exe\shell\open\command" \
-                   "DelegateExecute"
     next:
 
+    ; Conditionally remove the DEH as long as we are the default (HKLM)
     ReadRegStr $R8 HKLM "Software\Classes\CLSID\$R0\LocalServer32" ""
     ${${un}GetLongPath} "$INSTDIR" $R7
     StrCmp "$R8" "" done +1
@@ -6994,10 +6993,11 @@
     StrCmp "$R7" "$R8" clearHKLM done
     clearHKLM:
     DeleteRegKey HKLM "Software\Classes\CLSID\$R0"
-    DeleteRegValue HKLM \
-                   "Software\Classes\$AppUserModelID\.exe\shell\open\command" \
-                   "DelegateExecute"
     done:
+
+    ; Always remove the AppUserModelID keys for this installation
+    DeleteRegKey HKCU "Software\Classes\$AppUserModelID"
+    DeleteRegKey HKLM "Software\Classes\$AppUserModelID"
 
     ; Restore the stack back to its original state
     Pop $R7
