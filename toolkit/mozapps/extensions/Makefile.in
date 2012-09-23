@@ -55,6 +55,7 @@ EXTRA_JS_MODULES = \
   AddonRepository.jsm \
   AddonUpdateChecker.jsm \
   ChromeManifestParser.jsm \
+  LightweightThemeImageOptimizer.jsm \
   LightweightThemeManager.jsm \
   PluginProvider.jsm \
   SpellCheckDictionaryBootstrap.js \
