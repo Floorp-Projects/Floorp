@@ -1,0 +1,21 @@
+{
+  "name": "Basic App with Launch Paths",
+  "installs_allowed_from": [ "*" ],
+  "launch_path": "/lp",
+  "entry_points": {
+    "ep1": {
+      "name": "Entry Point 1",
+      "launch_path": "/test"
+    }
+  },
+  "locales": {
+    "it": {
+      "entry_points": {
+        "ep1": {
+          "name": "Punto d'ingresso",
+          "launch_path": "/prova"
+        }
+      }
+    }
+  }
+}

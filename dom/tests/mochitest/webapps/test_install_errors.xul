@@ -25,6 +25,9 @@ var steps = [
   permissionDenied,
   invalidContent,
   installPackageNotImplemented,
+  invalidLaunchPath,
+  invalidEntryPoint,
+  invalidLocaleEntryPoint,
 ];
 
 runAll(steps);
@@ -94,6 +97,36 @@ function invalidContent(next) {
     this.result.uninstall().onsuccess = function onUninstall() {
       next();
     };
+  };
+}
+
+function invalidLaunchPath(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_launch_path.webapp";
+
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
+    next();
+  };
+}
+
+function invalidEntryPoint(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_entry_point.webapp";
+
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
+    next();
+  };
+}
+
+function invalidLocaleEntryPoint(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_locale_entry_point.webapp";
+
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
+    next();
   };
 }
 
