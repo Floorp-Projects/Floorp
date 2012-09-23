@@ -487,7 +487,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       unit[1] = GetCommonUnit(aProperty, pair1->mYValue.GetUnit(),
                               pair2->mYValue.GetUnit());
       if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
-          unit[0] == eCSSUnit_URL) {
+          unit[0] == eCSSUnit_URL || unit[0] == eCSSUnit_Enumerated) {
         return false;
       }
 
@@ -1827,7 +1827,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       unit[1] = GetCommonUnit(aProperty, pair1->mYValue.GetUnit(),
                               pair2->mYValue.GetUnit());
       if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
-          unit[0] == eCSSUnit_URL) {
+          unit[0] == eCSSUnit_URL || unit[0] == eCSSUnit_Enumerated) {
         return false;
       }
 
@@ -3120,6 +3120,17 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                                      doc->GetDocumentURI(),
                                      doc->NodePrincipal());
         pair->mXValue.SetURLValue(url);
+        pair->mYValue.SetColorValue(paint.mFallbackColor);
+        aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
+                                                    eUnit_CSSValuePair);
+        return true;
+      }
+      if (paint.mType == eStyleSVGPaintType_ObjectFill ||
+          paint.mType == eStyleSVGPaintType_ObjectStroke) {
+        nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
+        pair->mXValue.SetIntValue(paint.mType == eStyleSVGPaintType_ObjectFill ?
+                                    NS_COLOR_OBJECTFILL : NS_COLOR_OBJECTSTROKE,
+                                  eCSSUnit_Enumerated);
         pair->mYValue.SetColorValue(paint.mFallbackColor);
         aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
                                                     eUnit_CSSValuePair);
