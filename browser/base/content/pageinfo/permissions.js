@@ -83,7 +83,7 @@ function onLoadPermission()
 
   var uri = gDocument.documentURIObject;
   var permTab = document.getElementById("permTab");
-  if (/^https?$/.test(uri.scheme)) {
+  if(/^https?/.test(uri.scheme)) {
     gPermURI = uri;
     var hostText = document.getElementById("hostText");
     hostText.value = gPermURI.host;
