@@ -11,7 +11,6 @@
 #include "nsCoord.h"
 #include "nsRect.h"
 #include "nsPoint.h"
-#include "nsRegion.h"
 #include "nsStringGlue.h"
 
 #include "prthread.h"
@@ -36,6 +35,7 @@ class   gfxASurface;
 class   nsIContent;
 class   ViewWrapper;
 class   nsIWidgetListener;
+class   nsIntRegion;
 
 namespace mozilla {
 namespace dom {
