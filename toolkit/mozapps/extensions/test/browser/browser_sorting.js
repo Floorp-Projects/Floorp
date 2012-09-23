@@ -212,9 +212,8 @@ function set_order(aSortBy, aAscending) {
     node = node.nextSibling;
   }
   gManagerWindow.sortElements(elements, ["uiState", aSortBy], aAscending);
-  elements.forEach(function(aElement) {
-    list.appendChild(aElement);
-  });
+  for (let element of elements)
+    list.appendChild(element);
 }
 
 function check_order(aExpectedOrder) {
