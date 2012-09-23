@@ -95,7 +95,7 @@ var FeedHandler = {
     var feedURI = makeURI(href, document.characterSet);
     // Use the feed scheme so X-Moz-Is-Feed will be set
     // The value doesn't matter
-    if (/^https?$/.test(feedURI.scheme))
+    if (/^https?/.test(feedURI.scheme))
       href = "feed:" + href;
     this.loadFeed(href, event);
   },
