@@ -35,6 +35,8 @@
 //
 
 #if defined(MOZALLOC_HAVE_XMALLOC)
+#include "mozilla/mozalloc_abort.h"
+
 struct nsTArrayFallibleAllocator
 {
   static void* Malloc(size_t size) {
@@ -47,6 +49,9 @@ struct nsTArrayFallibleAllocator
 
   static void Free(void* ptr) {
     moz_free(ptr);
+  }
+
+  static void SizeTooBig() {
   }
 };
 
@@ -62,6 +67,10 @@ struct nsTArrayInfallibleAllocator
 
   static void Free(void* ptr) {
     moz_free(ptr);
+  }
+
+  static void SizeTooBig() {
+    mozalloc_abort("Trying to allocate an infallible array that's too big");
   }
 };
 
@@ -80,6 +89,9 @@ struct nsTArrayFallibleAllocator
 
   static void Free(void* ptr) {
     free(ptr);
+  }
+
+  static void SizeTooBig() {
   }
 };
 
