@@ -281,7 +281,7 @@ public:
     NS_IMETHOD OnIMEFocusChange(bool aFocus);
     NS_IMETHOD GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState);
 
-   void                ResizeTransparencyBitmap(int32_t aNewWidth, int32_t aNewHeight);
+   void                ResizeTransparencyBitmap();
    void                ApplyTransparencyBitmap();
    virtual void        SetTransparencyMode(nsTransparencyMode aMode);
    virtual nsTransparencyMode GetTransparencyMode();
