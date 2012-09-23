@@ -202,8 +202,16 @@ DebuggerUI.prototype = {
       label: L10N.getStr("confirmTabSwitch.buttonOpen"),
       accessKey: L10N.getStr("confirmTabSwitch.buttonOpen.accessKey"),
       callback: function DUI_notificationButtonOpen() {
-        this.findDebugger().close();
-        this.toggleDebugger();
+        let scriptDebugger = this.findDebugger();
+        let targetWindow = scriptDebugger.globalUI.chromeWindow;
+        scriptDebugger.close();
+        let self = this;
+        targetWindow.addEventListener("Debugger:Shutdown", function toggle() {
+          targetWindow.removeEventListener("Debugger:Shutdown", toggle, false);
+          Services.tm.currentThread.dispatch({ run: function() {
+            self.toggleDebugger();
+          }}, 0);
+        }, false);
       }.bind(this)
     }];
 
