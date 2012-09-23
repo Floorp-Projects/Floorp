@@ -1160,8 +1160,11 @@ nsGenericElement::HasAttribute(const nsAString& aName, bool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
-  *aReturn = (name != nullptr);
+  const nsAttrValue* val =
+    mAttrsAndChildren.GetAttr(aName,
+                              IsHTML() && IsInHTMLDocument() ?
+                                eIgnoreCase : eCaseMatters);
+  *aReturn = (val != nullptr);
 
   return NS_OK;
 }
