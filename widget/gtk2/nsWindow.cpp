@@ -3979,6 +3979,24 @@ nsWindow::EnsureGrabs(void)
 }
 
 void
+nsWindow::CleanLayerManagerRecursive(void) {
+    if (mLayerManager) {
+        mLayerManager->Destroy();
+        mLayerManager = nullptr;
+    }
+
+    DestroyCompositor();
+
+    GList* children = gdk_window_peek_children(mGdkWindow);
+    for (GList* list = children; list; list = list->next) {
+        nsWindow* window = get_window_for_gdk_window(GDK_WINDOW(list->data));
+        if (window) {
+            window->CleanLayerManagerRecursive();
+        }
+    }
+}
+
+void
 nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
 {
     if (!mShell) {
@@ -4016,6 +4034,10 @@ nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
     // need to change anything yet
 
     mIsTransparent = isTransparent;
+
+    // Need to clean our LayerManager up while still alive because
+    // we don't want to use layers acceleration on shaped windows
+    CleanLayerManagerRecursive();
 }
 
 nsTransparencyMode
@@ -6136,6 +6158,20 @@ nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVert
                                  screenX, screenY, aEvent->time);
 
     return NS_OK;
+}
+
+nsIWidget::LayerManager*
+nsWindow::GetLayerManager(PLayersChild* aShadowManager,
+                          LayersBackend aBackendHint,
+                          LayerManagerPersistence aPersistence,
+                          bool* aAllowRetaining)
+{
+    if (!mLayerManager && eTransparencyTransparent == GetTransparencyMode()) {
+        mLayerManager = CreateBasicLayerManager();
+    }
+
+    return nsBaseWidget::GetLayerManager(aShadowManager, aBackendHint,
+                                         aPersistence, aAllowRetaining);
 }
 
 void
