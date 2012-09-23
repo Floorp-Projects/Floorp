@@ -1340,7 +1340,7 @@ FeedWriter.prototype = {
   _setFaviconForWebReader:
   function FW__setFaviconForWebReader(aReaderUrl, aMenuItem) {
     var readerURI = makeURI(aReaderUrl);
-    if (!/^https?/.test(readerURI.scheme)) {
+    if (!/^https?$/.test(readerURI.scheme)) {
       // Don't try to get a favicon for non http(s) URIs.
       return;
     }
