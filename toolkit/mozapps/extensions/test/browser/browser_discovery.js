@@ -130,24 +130,23 @@ function testHash(aBrowser, aTestAddonVisible, aCallback) {
   // Test against all the add-ons the manager knows about since plugins and
   // app extensions may exist
   AddonManager.getAllAddons(function(aAddons) {
-    aAddons.forEach(function(aAddon) {
-      if (!(aAddon.id in data)) {
+    for (let addon of aAddons) {
+      if (!(addon.id in data)) {
         // Test add-ons will have shown an error if necessary above
-        if (aAddon.id.substring(6) != "@tests.mozilla.org")
-          ok(false, "Add-on " + aAddon.id + " was not included in the data");
-        return;
+        if (addon.id.substring(6) != "@tests.mozilla.org")
+          ok(false, "Add-on " + addon.id + " was not included in the data");
+        continue;
       }
 
-      info("Testing data for add-on " + aAddon.id);
-      var addonData = data[aAddon.id];
-      is(addonData.name, aAddon.name, "Name should be correct");
-      is(addonData.version, aAddon.version, "Version should be correct");
-      is(addonData.type, aAddon.type, "Type should be correct");
-      is(addonData.userDisabled, aAddon.userDisabled, "userDisabled should be correct");
-      is(addonData.isBlocklisted, aAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED, "blocklisted should be correct");
-      is(addonData.isCompatible, aAddon.isCompatible, "isCompatible should be correct");
-    });
-
+      info("Testing data for add-on " + addon.id);
+      var addonData = data[addon.id];
+      is(addonData.name, addon.name, "Name should be correct");
+      is(addonData.version, addon.version, "Version should be correct");
+      is(addonData.type, addon.type, "Type should be correct");
+      is(addonData.userDisabled, addon.userDisabled, "userDisabled should be correct");
+      is(addonData.isBlocklisted, addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED, "blocklisted should be correct");
+      is(addonData.isCompatible, addon.isCompatible, "isCompatible should be correct");
+    }
     aCallback();
   });
 }
