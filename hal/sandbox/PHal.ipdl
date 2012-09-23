@@ -135,6 +135,8 @@ parent:
     SetTimezone(nsCString aTimezoneSpec);
     sync GetTimezone()
       returns (nsCString aTimezoneSpec);
+    EnableSystemTimeChangeNotifications();
+    DisableSystemTimeChangeNotifications();
 
     sync SetLight(LightType light, LightConfiguration aConfig)
       returns (bool status);
