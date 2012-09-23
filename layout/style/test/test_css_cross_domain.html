@@ -79,8 +79,18 @@
 /** Test for Bug 524223 **/
 function check_iframe(ifr) {
     var doc = ifr.contentDocument;
+    var i;
+
+    // Check that all links have in fact either loaded or errored.
+    // Doesn't seem to be possible to do this for @import, but this is
+    // just a diagnostic, anyway.  See corresponding code in ccd-*.html.
+    var links = doc.getElementsByTagName("link");
+    for (i = 0; i < links.length; i++) {
+       ok(links[i].dataset.completed, ifr.id + " " + links[i].href + " loaded");
+    }
+
     var cases = doc.getElementsByTagName("p");
-    for (var i = 0; i < cases.length; i++) {
+    for (i = 0; i < cases.length; i++) {
 	var color = doc.defaultView.getComputedStyle(cases[i], "")
 	    .getPropertyValue("background-color");
 
@@ -88,10 +98,22 @@ function check_iframe(ifr) {
     }
 }
 
+var quirks = document.getElementById("quirks");
+var standards = document.getElementById("standards");
+var quirks_loaded = false;
+var standards_loaded = false;
+
 SimpleTest.waitForExplicitFinish();
+
+quirks.onload = function() { quirks_loaded = true; }
+standards.onload = function() { standards_loaded = true; }
+
 window.onload = function() {
-    check_iframe(document.getElementById("quirks"));
-    check_iframe(document.getElementById("standards"));
+    ok(quirks_loaded, "quirks frame loaded");
+    ok(standards_loaded, "standards frame loaded");
+
+    check_iframe(quirks);
+    check_iframe(standards);
     SimpleTest.finish();
 };
 </script>
