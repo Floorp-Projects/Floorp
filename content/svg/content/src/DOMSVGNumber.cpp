@@ -47,7 +47,7 @@ NS_INTERFACE_MAP_END
 DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList *aList,
                            uint8_t aAttrEnum,
                            uint32_t aListIndex,
-                           uint8_t aIsAnimValItem)
+                           bool aIsAnimValItem)
   : mList(aList)
   , mListIndex(aListIndex)
   , mAttrEnum(aAttrEnum)
@@ -57,8 +57,7 @@ DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList *aList,
   // These shifts are in sync with the members in the header.
   NS_ABORT_IF_FALSE(aList &&
                     aAttrEnum < (1 << 4) &&
-                    aListIndex <= MaxListIndex() &&
-                    aIsAnimValItem < (1 << 1), "bad arg");
+                    aListIndex <= MaxListIndex(), "bad arg");
 
   NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGNumber!");
 }
@@ -111,7 +110,7 @@ void
 DOMSVGNumber::InsertingIntoList(DOMSVGNumberList *aList,
                                 uint8_t aAttrEnum,
                                 uint32_t aListIndex,
-                                uint8_t aIsAnimValItem)
+                                bool aIsAnimValItem)
 {
   NS_ASSERTION(!HasOwner(), "Inserting item that is already in a list");
 
