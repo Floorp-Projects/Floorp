@@ -1,0 +1,10 @@
+{
+  "name": "Absolute Entry Point Launch Path App",
+  "installs_allowed_from": [ "*" ],
+  "entry_points": {
+    "ep1": {
+      "name": "Entry Point 1",
+      "launch_path": "http://www.mozilla.org/"
+    }
+  }
+}
