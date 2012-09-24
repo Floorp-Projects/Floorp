@@ -724,6 +724,25 @@ FrameLayerBuilder::DidBeginRetainedLayerTransaction(LayerManager* aManager)
   }
 }
 
+void
+FrameLayerBuilder::StoreOptimizedLayerForFrame(nsIFrame* aFrame, PRUint32 aDisplayItemKey, Layer* aImage)
+{
+  DisplayItemDataEntry *entry = mNewDisplayItemData.GetEntry(aFrame);
+  if (!entry)
+    return;
+
+  nsTArray<DisplayItemData> *array = &entry->mData;
+  if (!array)
+    return;
+
+  for (PRUint32 i = 0; i < array->Length(); ++i) {
+    if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
+      array->ElementAt(i).mOptLayer = aImage;
+      return;
+    }
+  }
+}
+
 /**
  * A helper function to remove the mThebesLayerItems entries and
  * layer ownership user-data for every layer in aLayer's subtree.
@@ -1376,6 +1395,9 @@ ContainerState::PopThebesLayerData()
         imageLayer->IntersectClipRect(clip);
       }
       layer = imageLayer;
+      mLayerBuilder->StoreOptimizedLayerForFrame(data->mImage->GetUnderlyingFrame(), 
+                                                 data->mImage->GetPerFrameKey(),
+                                                 imageLayer);
     } else {
       nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer(data->mLayer);
       colorLayer->SetIsFixedPosition(data->mLayer->GetIsFixedPosition());
@@ -2741,6 +2763,9 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, uint32_t aDisplayItemKey)
 
   for (uint32_t i = 0; i < array->Length(); ++i) {
     if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
+      if (array->ElementAt(i).mOptLayer) {
+        return array->ElementAt(i).mOptLayer;
+      }
       Layer* layer = array->ElementAt(i).mLayer;
       if (!layer->HasUserData(&gColorLayerUserData) &&
           !layer->HasUserData(&gImageLayerUserData) &&

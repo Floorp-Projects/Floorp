@@ -635,8 +635,7 @@ NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIRequest *aRequest,
                                             imgIContainer *aContainer,
                                             const nsIntRect *aDirtyRect)
 {
-  nsBoxLayoutState state(PresContext());
-  this->Redraw(state);
+  Layer* layer = InvalidateLayer(GetVisualOverflowRect(), nsDisplayItem::TYPE_XUL_IMAGE);
 
   return NS_OK;
 }
