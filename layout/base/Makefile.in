@@ -134,7 +134,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/html/content/src \
 		-I$(srcdir)/../../content/svg/content/src \
 		-I$(topsrcdir)/xpcom/ds \
-		-I$(srcdir)/../svg/base/src \
+		-I$(srcdir)/../svg \
 		-I$(srcdir)/../mathml \
 		$(NULL)
 
