@@ -362,15 +362,13 @@ public:
  * image itself, and hence receive events just as if the image itself
  * received events.
  */
-class nsDisplayImage : public nsDisplayItem {
+class nsDisplayImage : public nsDisplayImageContainer {
 public:
-  typedef mozilla::layers::ImageContainer ImageContainer;
-  typedef mozilla::layers::ImageLayer ImageLayer;
   typedef mozilla::layers::LayerManager LayerManager;
 
   nsDisplayImage(nsDisplayListBuilder* aBuilder, nsImageFrame* aFrame,
                  imgIContainer* aImage)
-    : nsDisplayItem(aBuilder, aFrame), mImage(aImage) {
+    : nsDisplayImageContainer(aBuilder, aFrame), mImage(aImage) {
     MOZ_COUNT_CTOR(nsDisplayImage);
   }
   virtual ~nsDisplayImage() {
@@ -383,7 +381,7 @@ public:
    * Returns an ImageContainer for this image if the image type
    * supports it (TYPE_RASTER only).
    */
-  already_AddRefed<ImageContainer> GetContainer();
+  virtual already_AddRefed<ImageContainer> GetContainer() MOZ_OVERRIDE;
 
   gfxRect GetDestRect();
 
@@ -399,7 +397,7 @@ public:
    * Configure an ImageLayer for this display item.
    * Set the required filter and scaling transform.
    */
-  void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset);
+  virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) MOZ_OVERRIDE;
 
   NS_DISPLAY_DECL_NAME("Image", TYPE_IMAGE)
 private:
