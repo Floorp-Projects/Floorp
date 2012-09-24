@@ -1571,6 +1571,9 @@ public:
 
     virtual FontType GetType() const = 0;
 
+    virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
+    { return gfxPlatform::GetPlatform()->GetScaledFontForFont(aTarget, this); }
+
 protected:
     // Call the appropriate shaper to generate glyphs for aText and store
     // them into aShapedWord.
@@ -1693,6 +1696,7 @@ protected:
 #ifdef MOZ_GRAPHITE
     nsAutoPtr<gfxFontShaper>   mGraphiteShaper;
 #endif
+    mozilla::RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
 
     // Create a default platform text shaper for this font.
     // (TODO: This should become pure virtual once all font backends have

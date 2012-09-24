@@ -44,7 +44,7 @@ public:
     // use CGFontRef API to get direct access to system font data
     virtual hb_blob_t *GetFontTable(uint32_t aTag);
 
-    mozilla::RefPtr<mozilla::gfx::ScaledFont> GetScaledFont();
+    virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(mozilla::gfx::DrawTarget *aTarget);
 
     virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                      FontCacheSizes*   aSizes) const;
@@ -81,8 +81,6 @@ protected:
 
     Metrics               mMetrics;
     uint32_t              mSpaceGlyph;
-
-    mozilla::RefPtr<mozilla::gfx::ScaledFont> mAzureFont;
 };
 
 #endif /* GFX_MACFONT_H */
