@@ -761,12 +761,18 @@ let AboutPermissions = {
       permissionValue = PermissionDefaults[aType];
       if (aType == "plugins")
         document.getElementById("plugins-pref-item").hidden = false;
+      else if (aType == "cookie")
+	// cookie-9 corresponds to ALLOW_FIRST_PARTY_ONLY, which is reserved
+	// for site-specific preferences only.
+	document.getElementById("cookie-9").hidden = true;
     } else {
       if (aType == "plugins") {
         document.getElementById("plugins-pref-item").hidden =
           !Services.prefs.getBoolPref("plugins.click_to_play");
         return;
       }
+      if (aType == "cookie")
+        document.getElementById("cookie-9").hidden = false;
       let result = {};
       permissionValue = this._selectedSite.getPermission(aType, result) ?
                         result.value : PermissionDefaults[aType];
