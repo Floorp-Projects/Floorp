@@ -3327,7 +3327,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
               return NS_ERROR_XPC_UNEXPECTED;
 
           if (options.wantComponents &&
-              !nsXPCComponents::AttachComponentsObject(ccx, scope, sandbox))
+              !nsXPCComponents::AttachComponentsObject(ccx, scope))
               return NS_ERROR_XPC_UNEXPECTED;
 
           if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, sandbox))
@@ -4762,10 +4762,12 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
 JSBool
 nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
                                         XPCWrappedNativeScope* aScope,
-                                        JSObject* aGlobal)
+                                        JSObject* aTarget)
 {
-    if (!aGlobal)
-        return false;
+    JSObject *global = aScope->GetGlobalJSObject();
+    MOZ_ASSERT(js::IsObjectInContextCompartment(global, ccx));
+    if (!aTarget)
+        aTarget = global;
 
     nsXPCComponents* components = aScope->GetComponents();
     if (!components) {
@@ -4796,7 +4798,7 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
         return false;
 
     jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
-    return JS_DefinePropertyById(ccx, aGlobal, id, v, nullptr, nullptr,
+    return JS_DefinePropertyById(ccx, aTarget, id, v, nullptr, nullptr,
                                  JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
