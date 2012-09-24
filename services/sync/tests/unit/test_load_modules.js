@@ -32,6 +32,7 @@ const modules = [
 ];
 
 const testingModules = [
+  "fakeservices.js",
   "rotaryengine.js",
 ];
 

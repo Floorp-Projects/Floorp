@@ -6,6 +6,8 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://testing-common/services/sync/fakeservices.js");
+
 let btoa;
 let atob;
 
@@ -143,89 +145,6 @@ function uninstallAddon(addon) {
   addon.uninstall();
   Async.waitForSyncCallback(cb);
 }
-
-function FakeFilesystemService(contents) {
-  this.fakeContents = contents;
-  let self = this;
-
-  Utils.jsonSave = function jsonSave(filePath, that, obj, callback) {
-    let json = typeof obj == "function" ? obj.call(that) : obj;
-    self.fakeContents["weave/" + filePath + ".json"] = JSON.stringify(json);
-    callback.call(that);
-  };
-
-  Utils.jsonLoad = function jsonLoad(filePath, that, callback) {
-    let obj;
-    let json = self.fakeContents["weave/" + filePath + ".json"];
-    if (json) {
-      obj = JSON.parse(json);
-    }
-    callback.call(that, obj);
-  };
-};
-
-function FakeGUIDService() {
-  let latestGUID = 0;
-
-  Utils.makeGUID = function fake_makeGUID() {
-    return "fake-guid-" + latestGUID++;
-  };
-}
-
-
-function fakeSHA256HMAC(message) {
-   message = message.substr(0, 64);
-   while (message.length < 64) {
-     message += " ";
-   }
-   return message;
-}
-
-/*
- * Mock implementation of WeaveCrypto. It does not encrypt or
- * decrypt, merely returning the input verbatim.
- */
-function FakeCryptoService() {
-  this.counter = 0;
-
-  delete Svc.Crypto;  // get rid of the getter first
-  Svc.Crypto = this;
-
-  CryptoWrapper.prototype.ciphertextHMAC = function ciphertextHMAC(keyBundle) {
-    return fakeSHA256HMAC(this.ciphertext);
-  };
-}
-FakeCryptoService.prototype = {
-
-  encrypt: function(aClearText, aSymmetricKey, aIV) {
-    return aClearText;
-  },
-
-  decrypt: function(aCipherText, aSymmetricKey, aIV) {
-    return aCipherText;
-  },
-
-  generateRandomKey: function() {
-    return btoa("fake-symmetric-key-" + this.counter++);
-  },
-
-  generateRandomIV: function() {
-    // A base64-encoded IV is 24 characters long
-    return btoa("fake-fake-fake-random-iv");
-  },
-
-  expandData : function expandData(data, len) {
-    return data;
-  },
-
-  deriveKeyFromPassphrase : function (passphrase, salt, keyLength) {
-    return "some derived key string composed of bytes";
-  },
-
-  generateRandomBytes: function(aByteCount) {
-    return "not-so-random-now-are-we-HA-HA-HA! >:)".slice(aByteCount);
-  }
-};
 
 function setBasicCredentials(username, password, syncKey) {
   let ns = {};
