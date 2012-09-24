@@ -86,4 +86,4 @@ toolkit.jar:
 #ifdef XP_MACOSX
    content/global/macWindowMenu.js             (macWindowMenu.js)
 #endif
-   content/global/svg/svgBindings.xml          (/layout/svg/base/src/resources/content/svgBindings.xml)
+   content/global/svg/svgBindings.xml          (/layout/svg/resources/content/svgBindings.xml)

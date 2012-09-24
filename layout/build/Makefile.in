@@ -210,7 +210,7 @@ SHARED_LIBRARY_LIBS += \
 endif
 
 SHARED_LIBRARY_LIBS += \
-		../svg/base/src/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
+		../svg/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/document/src/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/content/src/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/smil/$(LIB_PREFIX)gkconsmil_s.$(LIB_SUFFIX) \
