@@ -151,7 +151,7 @@ INCLUDES += 	\
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../../layout/generic \
 		-I$(srcdir)/../../../../layout/xul/base/src \
-		-I$(srcdir)/../../../../layout/svg/base/src \
+		-I$(srcdir)/../../../../layout/svg \
 		-I$(srcdir)/../../../../layout/style \
 		-I$(srcdir)/../../../events/src \
 		-I$(srcdir)/../../../html/content/src \
