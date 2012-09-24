@@ -383,11 +383,12 @@ CanScrollOn(nsIScrollableFrame* aScrollFrame, double aDeltaX, double aDeltaY)
 
   nsPoint scrollPt = aScrollFrame->GetScrollPosition();
   nsRect scrollRange = aScrollFrame->GetScrollRange();
-  uint32_t directions = aScrollFrame->GetPerceivedScrollingDirections();
+  nscoord oneDevPixel =
+    aScrollFrame->GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
 
-  return (aDeltaX && (directions & nsIScrollableFrame::HORIZONTAL) &&
+  return (aDeltaX && scrollRange.width >= oneDevPixel &&
           CanScrollInRange(scrollRange.x, scrollPt.x, scrollRange.XMost(), aDeltaX)) ||
-         (aDeltaY && (directions & nsIScrollableFrame::VERTICAL) &&
+         (aDeltaY && scrollRange.height >= oneDevPixel &&
           CanScrollInRange(scrollRange.y, scrollPt.y, scrollRange.YMost(), aDeltaY));
 }
 
