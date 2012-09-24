@@ -99,8 +99,8 @@ function isInaccessible(wnd, message) {
 
 function xpcEnumerateContentWindows(callback) {
 
-  var Ci = Components.interfaces;
-  var ww = SpecialPowers.wrap(Components)
+  var Ci = SpecialPowers.Ci;
+  var ww = SpecialPowers.wrap(SpecialPowers.Components)
                         .classes["@mozilla.org/embedcomp/window-watcher;1"]
                         .getService(Ci.nsIWindowWatcher);
   var enumerator = ww.getWindowEnumerator();

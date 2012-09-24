@@ -19,7 +19,7 @@ function setPass(aNode) {
 SimpleTest.waitForExplicitFinish();
 
 window.addEventListener("load", function() {
-  const nsIDOMNodeFilter = Components.interfaces.nsIDOMNodeFilter;
+  const nsIDOMNodeFilter = SpecialPowers.Ci.nsIDOMNodeFilter;
   var walker = document.createTreeWalker(
     document,
     nsIDOMNodeFilter.SHOW_TEXT | nsIDOMNodeFilter.SHOW_DOCUMENT,

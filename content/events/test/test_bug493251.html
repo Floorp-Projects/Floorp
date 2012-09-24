@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
     var utils = SpecialPowers.getDOMWindowUtils(win);
     ok(true, "Dipatching key event: type=" + type);
     utils.sendKeyEvent(type, 
-                       Components.interfaces.nsIDOMKeyEvent.DOM_VK_A,
+                       SpecialPowers.Ci.nsIDOMKeyEvent.DOM_VK_A,
                        0, 0);
   }
 
@@ -82,8 +82,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
     }
     ok(true, aEvent.type + " event is handled: " + detail);
 
-    var fm = SpecialPowers.wrap(Components).classes["@mozilla.org/focus-manager;1"].
-                        getService(Components.interfaces.nsIFocusManager);
+    var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
+                        getService(SpecialPowers.Ci.nsIFocusManager);
     ok(true, "focused element is \"" + fm.focusedElement +
              "\" and focused window is \"" + fm.focusedWindow +
              "\" (the testing window is \"" + win + "\"");

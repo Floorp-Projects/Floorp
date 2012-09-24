@@ -137,7 +137,7 @@ var storageObserver = {
                         Ci.nsISupports, Ci.nsISupportsWeakReference];
 
     if (!interfaces.some( function(v) { return iid.equals(v) } ))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
     return this;
   },
 

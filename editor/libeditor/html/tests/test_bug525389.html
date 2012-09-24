@@ -8,9 +8,9 @@
 <script class="testbody" type="application/javascript">
 
   var utils = SpecialPowers.wrap(window)
-                .QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
-  var Cc = SpecialPowers.wrap(Components).classes;
-  var Ci = Components.interfaces;
+                .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  var Cc = SpecialPowers.Cc;
+  var Ci = SpecialPowers.Ci;
 
 function getLoadContext() {
   return SpecialPowers.wrap(window)
@@ -87,7 +87,7 @@ function runTest() {
     }
 
     // We cannot use plain strings, we have to use nsSupportsString.
-    var supportsStringClass = Components.classes["@mozilla.org/supports-string;1"];
+    var supportsStringClass = SpecialPowers.Components.classes["@mozilla.org/supports-string;1"];
     var ssData = supportsStringClass.createInstance(Ci.nsISupportsString);
 
     // Create the transferable.

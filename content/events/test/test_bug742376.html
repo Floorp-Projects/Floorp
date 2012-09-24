@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402089
 
 function getListenerCount() {
 
-  var Cc = SpecialPowers.wrap(Components).classes;
-  var Ci = SpecialPowers.wrap(Components).interfaces;
+  var Cc = SpecialPowers.Cc;
+  var Ci = SpecialPowers.Ci;
   var dss = Cc["@mozilla.org/devicesensors;1"].getService(Ci.nsIDeviceSensors);
 
   return dss.listenerCount(Ci.nsIDeviceSensorData.TYPE_ORIENTATION);

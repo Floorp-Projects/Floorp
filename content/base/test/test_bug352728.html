@@ -29,7 +29,7 @@ function checkTypes(aNode, aNodeType, aTypeArray)
 function checkInterfaces(aNode, aNodeType, aInterfaceArray)
 {
   for (var i = 0; i < aInterfaceArray.length; ++i) {
-    ok(aNode instanceof Components.interfaces[aInterfaceArray[i]],
+    ok(aNode instanceof SpecialPowers.Ci[aInterfaceArray[i]],
        aNodeType + " interface test " + i,
        aNodeType + " should be a " + aInterfaceArray[i]);
   }

@@ -6,14 +6,14 @@
 <script>
 
 SimpleTest.waitForExplicitFinish();
-const Cc = SpecialPowers.wrap(Components).classes;
-const Cr = SpecialPowers.wrap(Components).results;
+const Cc = SpecialPowers.Cc;
+const Cr = SpecialPowers.Cr;
 
 function IsD2DEnabled() {
     var enabled = false;
 
     try {
-        enabled = Cc["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled;
+        enabled = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).D2DEnabled;
     } catch(e) {}
     
     return enabled;
@@ -29,7 +29,7 @@ function IsMacOSX10_5orOlder() {
 
     if (navigator.platform.indexOf("Mac") == 0) {
         var version = Cc["@mozilla.org/system-info;1"]
-                        .getService(Components.interfaces.nsIPropertyBag2)
+                        .getService(SpecialPowers.Ci.nsIPropertyBag2)
                         .getProperty("version");
         // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
         // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
@@ -44,7 +44,7 @@ function IsAzureEnabled() {
   var enabled = false;
 
   try {
-    var backend = Cc["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend != "none");
   } catch (e) { }
 
@@ -55,7 +55,7 @@ function IsAzureSkia() {
   var enabled = false;
   
   try {
-    var backend = Cc["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend == "skia");
   } catch (e) { }
 
@@ -66,7 +66,7 @@ function IsAzureCairo() {
   var enabled = false;
   
   try {
-    var backend = Cc["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend == "cairo");
   } catch (e) { }
 
