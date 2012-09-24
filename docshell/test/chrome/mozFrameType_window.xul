@@ -32,19 +32,23 @@
       SimpleTest.is(getDocShellType(typeContentFrame), Ci.nsIDocShellTreeItem.typeContent,
                     "iframe with mozFrameType='content' in chrome document is typeContent");
 
-      // Wait for the window to be closed before finishing the test
-      let ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                   .getService(Components.interfaces.nsIWindowWatcher);
-      ww.registerNotification(function(subject, topic, data) {
-        if (topic == "domwindowclosed") {
-          ww.unregisterNotification(arguments.callee);
-          SimpleTest.waitForFocus(function() {
-            SimpleTest.finish();
-          }, opener);
-        }
-      });
+      // avoid closing the window from within the onload event handler to see
+      // whether that fixes the intermittent orange in bug 772823
+      SimpleTest.executeSoon(function () {
+        // Wait for the window to be closed before finishing the test
+        let ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                     .getService(Components.interfaces.nsIWindowWatcher);
+        ww.registerNotification(function windowObs(subject, topic, data) {
+          if (topic == "domwindowclosed") {
+            ww.unregisterNotification(windowObs);
+            SimpleTest.waitForFocus(function() {
+              SimpleTest.finish();
+            }, opener);
+          }
+        });
 
-      window.close();
+        window.close();
+      });
     }
   ]]></script>
 </window>
