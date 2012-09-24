@@ -31,7 +31,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsEventListenerManager.h"
-#include "nsSVGUtils.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
@@ -47,6 +46,7 @@
 #include "SVGAnimatedPointList.h"
 #include "SVGAnimatedPathSegList.h"
 #include "SVGAnimatedTransformList.h"
+#include "SVGContentUtils.h"
 #include "DOMSVGTests.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGRect.h"
@@ -1058,7 +1058,7 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
 NS_IMETHODIMP
 nsSVGElement::GetViewportElement(nsIDOMSVGElement * *aViewportElement)
 {
-  *aViewportElement = nsSVGUtils::GetNearestViewportElement(this).get();
+  *aViewportElement = SVGContentUtils::GetNearestViewportElement(this).get();
   return NS_OK;
 }
 
@@ -2419,9 +2419,9 @@ nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
   const nsAFlatString& attributeValue = PromiseFlatString(aValue);
   const PRUnichar *strings[] = { aAttribute->GetUTF16String(),
                                  attributeValue.get() };
-  return nsSVGUtils::ReportToConsole(aDocument,
-                                     "AttributeParseWarning",
-                                     strings, ArrayLength(strings));
+  return SVGContentUtils::ReportToConsole(aDocument,
+                                          "AttributeParseWarning",
+                                          strings, ArrayLength(strings));
 }
 
 void

@@ -92,12 +92,9 @@
                 onset="if (val) this.setAttribute('clickSelectsAll', 'true');
                        else this.removeAttribute('clickSelectsAll'); return val;" />
 
-      <property name="editor" readonly="true">
-        <getter><![CDATA[
-          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
-          return this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
-        ]]></getter>
-      </property>
+      <field name="editor" readonly="true">
+        this.inputField.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+      </field>
 
       <method name="reset">
         <body><![CDATA[
@@ -217,7 +214,7 @@
 
       <handler event="blur" phase="capturing">
         <![CDATA[
-          this.removeAttribute('focused');
+          this.removeAttribute("focused");
 
           // don't trigger clickSelectsAll when switching application windows
           if (window == window.top &&

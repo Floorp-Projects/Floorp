@@ -5,6 +5,7 @@
 
 #include "AndroidJavaWrappers.h"
 #include "AndroidBridge.h"
+#include "nsIAndroidBridge.h"
 
 using namespace mozilla;
 
@@ -55,6 +56,12 @@ jfieldID AndroidRect::jLeftField = 0;
 jfieldID AndroidRect::jRightField = 0;
 jfieldID AndroidRect::jTopField = 0;
 
+jclass AndroidRectF::jRectClass = 0;
+jfieldID AndroidRectF::jBottomField = 0;
+jfieldID AndroidRectF::jLeftField = 0;
+jfieldID AndroidRectF::jRightField = 0;
+jfieldID AndroidRectF::jTopField = 0;
+
 jclass AndroidLocation::jLocationClass = 0;
 jmethodID AndroidLocation::jGetLatitudeMethod = 0;
 jmethodID AndroidLocation::jGetLongitudeMethod = 0;
@@ -65,12 +72,18 @@ jmethodID AndroidLocation::jGetSpeedMethod = 0;
 jmethodID AndroidLocation::jGetTimeMethod = 0;
 
 jclass AndroidGeckoLayerClient::jGeckoLayerClientClass = 0;
+jclass AndroidGeckoLayerClient::jViewportClass = 0;
+jclass AndroidGeckoLayerClient::jDisplayportClass = 0;
 jmethodID AndroidGeckoLayerClient::jSetFirstPaintViewport = 0;
 jmethodID AndroidGeckoLayerClient::jSetPageRect = 0;
 jmethodID AndroidGeckoLayerClient::jSyncViewportInfoMethod = 0;
 jmethodID AndroidGeckoLayerClient::jCreateFrameMethod = 0;
 jmethodID AndroidGeckoLayerClient::jActivateProgramMethod = 0;
 jmethodID AndroidGeckoLayerClient::jDeactivateProgramMethod = 0;
+jmethodID AndroidGeckoLayerClient::jGetDisplayPort = 0;
+jmethodID AndroidGeckoLayerClient::jViewportCtor = 0;
+jfieldID AndroidGeckoLayerClient::jDisplayportPosition = 0;
+jfieldID AndroidGeckoLayerClient::jDisplayportResolution = 0;
 
 jclass AndroidLayerRendererFrame::jLayerRendererFrameClass = 0;
 jmethodID AndroidLayerRendererFrame::jBeginDrawingMethod = 0;
@@ -169,6 +182,7 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidPoint::InitPointClass(jEnv);
     AndroidLocation::InitLocationClass(jEnv);
     AndroidRect::InitRectClass(jEnv);
+    AndroidRectF::InitRectFClass(jEnv);
     AndroidGeckoLayerClient::InitGeckoLayerClientClass(jEnv);
     AndroidLayerRendererFrame::InitLayerRendererFrameClass(jEnv);
     AndroidViewTransform::InitViewTransformClass(jEnv);
@@ -302,6 +316,19 @@ AndroidRect::InitRectClass(JNIEnv *jEnv)
 }
 
 void
+AndroidRectF::InitRectFClass(JNIEnv *jEnv)
+{
+    initInit();
+
+    jRectClass = getClassGlobalRef("android/graphics/RectF");
+
+    jBottomField = getField("bottom", "F");
+    jLeftField = getField("left", "F");
+    jTopField = getField("top", "F");
+    jRightField = getField("right", "F");
+}
+
+void
 AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 {
 #ifdef MOZ_JAVA_COMPOSITOR
@@ -316,6 +343,15 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
     jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
     jActivateProgramMethod = getMethod("activateProgram", "()V");
     jDeactivateProgramMethod = getMethod("deactivateProgram", "()V");
+    jGetDisplayPort = getMethod("getDisplayPort", "(ZZILorg/mozilla/gecko/gfx/ViewportMetrics;)Lorg/mozilla/gecko/gfx/DisplayPortMetrics;");
+
+    jViewportClass = GetClassGlobalRef(jEnv, "org/mozilla/gecko/gfx/ViewportMetrics");
+    jViewportCtor = GetMethodID(jEnv, jViewportClass, "<init>", "(FFFFFFFFFFFFF)V");
+
+    jDisplayportClass = GetClassGlobalRef(jEnv, "org/mozilla/gecko/gfx/DisplayPortMetrics");
+    jDisplayportPosition = GetFieldID(jEnv, jDisplayportClass, "mPosition", "Landroid/graphics/RectF;");
+    jDisplayportResolution = GetFieldID(jEnv, jDisplayportClass, "mResolution", "F");
+
 #endif
 }
 
@@ -767,6 +803,79 @@ AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float a
     aScaleX = aScaleY = viewTransform.GetScale(env);
 }
 
+jobject ConvertToJavaViewportMetrics(JNIEnv* env, nsIAndroidViewport* metrics) {
+    float x, y, width, height,
+        pageLeft, pageTop, pageRight, pageBottom,
+        cssPageLeft, cssPageTop, cssPageRight, cssPageBottom,
+        zoom;
+    metrics->GetX(&x);
+    metrics->GetY(&y);
+    metrics->GetWidth(&width);
+    metrics->GetHeight(&height);
+    metrics->GetPageLeft(&pageLeft);
+    metrics->GetPageTop(&pageTop);
+    metrics->GetPageRight(&pageRight);
+    metrics->GetPageBottom(&pageBottom);
+    metrics->GetCssPageLeft(&cssPageLeft);
+    metrics->GetCssPageTop(&cssPageTop);
+    metrics->GetCssPageRight(&cssPageRight);
+    metrics->GetCssPageBottom(&cssPageBottom);
+    metrics->GetZoom(&zoom);
+
+    jobject jobj = env->NewObject(AndroidGeckoLayerClient::jViewportClass, AndroidGeckoLayerClient::jViewportCtor,
+                                  x, y, width, height,
+                                  pageLeft, pageTop, pageRight, pageBottom,
+                                  cssPageLeft, cssPageTop, cssPageRight, cssPageBottom, zoom);
+    return jobj;
+}
+
+class nsAndroidDisplayport : public nsIAndroidDisplayport
+{
+public:
+    NS_DECL_ISUPPORTS
+    virtual nsresult GetLeft(float *aLeft) { *aLeft = mLeft; return NS_OK; }
+    virtual nsresult GetTop(float *aTop) { *aTop = mTop; return NS_OK; }
+    virtual nsresult GetRight(float *aRight) { *aRight = mRight; return NS_OK; }
+    virtual nsresult GetBottom(float *aBottom) { *aBottom = mBottom; return NS_OK; }
+    virtual nsresult GetResolution(float *aResolution) { *aResolution = mResolution; return NS_OK; }
+    virtual nsresult SetLeft(float aLeft) { mLeft = aLeft; return NS_OK; }
+    virtual nsresult SetTop(float aTop) { mTop = aTop; return NS_OK; }
+    virtual nsresult SetRight(float aRight) { mRight = aRight; return NS_OK; }
+    virtual nsresult SetBottom(float aBottom) { mBottom = aBottom; return NS_OK; }
+    virtual nsresult SetResolution(float aResolution) { mResolution = aResolution; return NS_OK; }
+
+    nsAndroidDisplayport(AndroidRectF aRect, float aResolution):
+        mLeft(aRect.Left()), mTop(aRect.Top()), mRight(aRect.Right()), mBottom(aRect.Bottom()), mResolution(aResolution) {}
+
+private:
+    ~nsAndroidDisplayport() {}
+    float mLeft, mTop, mRight, mBottom, mResolution;
+};
+
+NS_IMPL_ISUPPORTS1(nsAndroidDisplayport, nsIAndroidDisplayport)
+
+void createDisplayPort(AutoLocalJNIFrame *jniFrame, jobject jobj, nsIAndroidDisplayport** displayPort) {
+    JNIEnv* env = jniFrame->GetEnv();
+    AndroidRectF rect(env, env->GetObjectField(jobj, AndroidGeckoLayerClient::jDisplayportPosition));
+    if (jniFrame->CheckForException()) return;
+    float resolution = env->GetFloatField(jobj, AndroidGeckoLayerClient::jDisplayportResolution);
+    if (jniFrame->CheckForException()) return;
+    *displayPort = new nsAndroidDisplayport(rect, resolution);
+}
+
+void
+AndroidGeckoLayerClient::GetDisplayPort(AutoLocalJNIFrame *jniFrame, bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
+{
+    jobject jmetrics = ConvertToJavaViewportMetrics(jniFrame->GetEnv(), metrics);
+    if (jniFrame->CheckForException()) return;
+    if (!jmetrics)
+        return;
+    jobject jobj = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jGetDisplayPort, aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, jmetrics);
+    if (jniFrame->CheckForException()) return;
+    createDisplayPort(jniFrame, jobj, displayPort);
+    (*displayPort)->AddRef();
+}
+
 jobject
 AndroidGeckoSurfaceView::GetSoftwareDrawBitmap(AutoLocalJNIFrame *jniFrame)
 {
@@ -948,6 +1057,26 @@ AndroidRect::Init(JNIEnv *jenv, jobject jobj)
         mLeft = jenv->GetIntField(jobj, jLeftField);
         mRight = jenv->GetIntField(jobj, jRightField);
         mBottom = jenv->GetIntField(jobj, jBottomField);
+    } else {
+        mTop = 0;
+        mLeft = 0;
+        mRight = 0;
+        mBottom = 0;
+    }
+}
+
+void
+AndroidRectF::Init(JNIEnv *jenv, jobject jobj)
+{
+    NS_ASSERTION(wrapped_obj == nullptr, "Init called on non-null wrapped_obj!");
+
+    wrapped_obj = jobj;
+
+    if (jobj) {
+        mTop = jenv->GetFloatField(jobj, jTopField);
+        mLeft = jenv->GetFloatField(jobj, jLeftField);
+        mRight = jenv->GetFloatField(jobj, jRightField);
+        mBottom = jenv->GetFloatField(jobj, jBottomField);
     } else {
         mTop = 0;
         mLeft = 0;

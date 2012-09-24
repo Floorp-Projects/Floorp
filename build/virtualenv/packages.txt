@@ -10,6 +10,7 @@ blessings.pth:python/blessings
 mozbuild.pth:python/mozbuild
 optional:setup.py:python/psutil:build_ext:--inplace
 optional:psutil.pth:python/psutil
+which.pth:python/which
 mozilla.pth:build
 mozilla.pth:config
 copy:build/buildconfig.py

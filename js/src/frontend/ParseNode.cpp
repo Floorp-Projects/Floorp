@@ -263,12 +263,6 @@ ParseNodeAllocator::prepareNodeForMutation(ParseNode *pn)
 /*
  * Return the nodes in the subtree |pn| to the parser's free node list, for
  * reallocation.
- *
- * Note that all functions in |pn| that are not enclosed by other functions
- * in |pn| must be direct children of |pc|, because we only clean up |pc|'s
- * function and method lists. You must not reach into a function and
- * recycle some part of it (unless you've updated |pc|->functionList, the
- * way js_FoldConstants does).
  */
 ParseNode *
 ParseNodeAllocator::freeTree(ParseNode *pn)

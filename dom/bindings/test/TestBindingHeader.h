@@ -296,6 +296,7 @@ public:
   void PassStringSequence(const Sequence<nsString>&);
 
   void ReceiveAnySequence(JSContext*, nsTArray<JS::Value>&);
+  void ReceiveNullableAnySequence(JSContext*, Nullable<nsTArray<JS::Value> >);
 
   // Typed array types
   void PassArrayBuffer(ArrayBuffer&);
@@ -313,7 +314,7 @@ public:
   void PassUint8ClampedArray(Uint8ClampedArray&);
   void PassFloat32Array(Float32Array&);
   void PassFloat64Array(Float64Array&);
-  JSObject* ReceiveUint8Array();
+  JSObject* ReceiveUint8Array(JSContext*);
 
   // String types
   void PassString(const nsAString&);

@@ -22,6 +22,14 @@ MOCHITEST_CHROME_FILES	= \
     bad_content_type.webapp \
     utf8.webapp \
     utf8.webapp^headers^ \
+    invalid_launch_path.webapp \
+    invalid_launch_path.webapp^headers^ \
+    invalid_entry_point.webapp \
+    invalid_entry_point.webapp^headers^ \
+    invalid_locale_entry_point.webapp \
+    invalid_locale_entry_point.webapp^headers^ \
+    launch_paths.webapp \
+    launch_paths.webapp^headers^ \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -34,7 +34,6 @@ function GroupItem(listOfEls, options) {
   this._inited = false;
   this._uninited = false;
   this._children = []; // an array of Items
-  this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
   this.isAGroupItem = true;
   this.id = options.id || GroupItems.getNextID();
   this._isStacked = false;
@@ -2109,18 +2108,6 @@ let GroupItems = {
     this.nextID++;
     this._save();
     return result;
-  },
-
-  // ----------
-  // Function: getStorageData
-  // Returns an object for saving GroupItems state to persistent storage.
-  getStorageData: function GroupItems_getStorageData() {
-    var data = {nextID: this.nextID, groupItems: []};
-    this.groupItems.forEach(function(groupItem) {
-      data.groupItems.push(groupItem.getStorageData());
-    });
-
-    return data;
   },
 
   // ----------

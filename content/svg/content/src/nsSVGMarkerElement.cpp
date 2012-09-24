@@ -9,19 +9,19 @@
 #include "nsCOMPtr.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsError.h"
-#include "nsSVGUtils.h"
 #include "nsSVGMarkerElement.h"
 #include "gfxMatrix.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
+#include "SVGContentUtils.h"
 
 using namespace mozilla;
 
 nsSVGElement::LengthInfo nsSVGMarkerElement::sLengthInfo[4] =
 {
-  { &nsGkAtoms::refX, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
-  { &nsGkAtoms::refY, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
-  { &nsGkAtoms::markerWidth, 3, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
-  { &nsGkAtoms::markerHeight, 3, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
+  { &nsGkAtoms::refX, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::refY, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::markerWidth, 3, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::markerHeight, 3, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
 };
 
 nsSVGEnumMapping nsSVGMarkerElement::sUnitsMap[] = {
@@ -363,11 +363,11 @@ nsSVGMarkerElement::GetViewBoxTransform()
                       "Rendering should be disabled");
 
     gfxMatrix viewBoxTM =
-      nsSVGUtils::GetViewBoxTransform(this,
-                                      viewportWidth, viewportHeight,
-                                      viewbox.x, viewbox.y,
-                                      viewbox.width, viewbox.height,
-                                      mPreserveAspectRatio);
+      SVGContentUtils::GetViewBoxTransform(this,
+                                           viewportWidth, viewportHeight,
+                                           viewbox.x, viewbox.y,
+                                           viewbox.width, viewbox.height,
+                                           mPreserveAspectRatio);
 
     float refX = mLengthAttributes[REFX].GetAnimValue(mCoordCtx);
     float refY = mLengthAttributes[REFY].GetAnimValue(mCoordCtx);

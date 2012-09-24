@@ -418,7 +418,7 @@ SVGPathSegListSMILType::Add(nsSMILValue& aDest,
 
     PathInterpolationResult check = CanInterpolate(dest, valueToAdd);
     if (check == eCannotInterpolate) {
-      // nsSVGUtils::ReportToConsole - can't add path segment lists with
+      // SVGContentUtils::ReportToConsole - can't add path segment lists with
       // different numbers of segments, with arcs that have different flag
       // values, or with incompatible segment types.
       return NS_ERROR_FAILURE;
@@ -446,7 +446,7 @@ SVGPathSegListSMILType::ComputeDistance(const nsSMILValue& aFrom,
 
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=522306#c18
 
-  // nsSVGUtils::ReportToConsole
+  // SVGContentUtils::ReportToConsole
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -474,7 +474,7 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
   PathInterpolationResult check = CanInterpolate(start, end); 
 
   if (check == eCannotInterpolate) {
-    // nsSVGUtils::ReportToConsole - can't interpolate path segment lists with
+    // SVGContentUtils::ReportToConsole - can't interpolate path segment lists with
     // different numbers of segments, with arcs with different flag values, or
     // with incompatible segment types.
     return NS_ERROR_FAILURE;

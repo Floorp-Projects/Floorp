@@ -17,9 +17,6 @@
 //
 // Subclasses of Item must also provide the <Subscribable> interface.
 //
-// ... and this property:
-//   defaultSize - a Point
-//
 // Make sure to call _init() from your subclass's constructor.
 function Item() {
   // Variable: isAnItem
@@ -102,7 +99,6 @@ Item.prototype = {
     Utils.assert(typeof this.setZ == 'function', 'Subclass must provide setZ');
     Utils.assert(typeof this.close == 'function', 'Subclass must provide close');
     Utils.assert(typeof this.save == 'function', 'Subclass must provide save');
-    Utils.assert(Utils.isPoint(this.defaultSize), 'Subclass must provide defaultSize');
     Utils.assert(Utils.isRect(this.bounds), 'Subclass must provide bounds');
 
     this.container = container;

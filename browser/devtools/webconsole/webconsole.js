@@ -2271,9 +2271,16 @@ WebConsoleFrame.prototype = {
 
   /**
    * Copies the selected items to the system clipboard.
+   *
+   * @param object aOptions
+   *        - linkOnly:
+   *        An optional flag to copy only URL without timestamp and
+   *        other meta-information. Default is false.
    */
-  copySelectedItems: function WCF_copySelectedItems()
+  copySelectedItems: function WCF_copySelectedItems(aOptions)
   {
+    aOptions = aOptions || { linkOnly: false };
+
     // Gather up the selected items and concatenate their clipboard text.
     let strings = [];
     let newGroup = false;
@@ -2300,7 +2307,13 @@ WebConsoleFrame.prototype = {
           strings.push("--");
           newGroup = false;
         }
-        strings.push("[" + timestampString + "] " + item.clipboardText);
+
+        if (aOptions.linkOnly) {
+          strings.push(item.url);
+        }
+        else {
+          strings.push("[" + timestampString + "] " + item.clipboardText);
+        }
       }
     }
 
@@ -3464,6 +3477,11 @@ CommandController.prototype = {
     this.owner.openSelectedItemInTab();
   },
 
+  copyURL: function CommandController_copyURL()
+  {
+    this.owner.copySelectedItems({ linkOnly: true });
+  },
+
   supportsCommand: function CommandController_supportsCommand(aCommand)
   {
     return this.isCommandEnabled(aCommand);
@@ -3475,8 +3493,9 @@ CommandController.prototype = {
       case "cmd_copy":
         // Only enable "copy" if nodes are selected.
         return this.owner.outputNode.selectedCount > 0;
-      case "consoleCmd_openURL": {
-        // Only enable "open url" if node is Net Activity.
+      case "consoleCmd_openURL":
+      case "consoleCmd_copyURL": {
+        // Only enable URL-related actions if node is Net Activity.
         let selectedItem = this.owner.outputNode.selectedItem;
         return selectedItem && selectedItem.url;
       }
@@ -3496,6 +3515,9 @@ CommandController.prototype = {
         break;
       case "consoleCmd_openURL":
         this.openURL();
+        break;
+      case "consoleCmd_copyURL":
+        this.copyURL();
         break;
       case "cmd_selectAll":
         this.selectAll();
@@ -3522,6 +3544,7 @@ gSequenceId.n = 0;
 
 function goUpdateConsoleCommands() {
   goUpdateCommand("consoleCmd_openURL");
+  goUpdateCommand("consoleCmd_copyURL");
 }
 
 

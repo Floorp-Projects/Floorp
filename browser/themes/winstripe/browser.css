@@ -3286,7 +3286,7 @@ html|*#gcli-output-frame {
 .social-statusarea-container {
   -moz-appearance: none;
   margin: 2px; /* make sure we have the correct platform spacing*/
-  padding: 1px;
+  padding: 0 1px;
   border: 1px solid transparent;
   border-radius: 2px;
 }
@@ -3312,7 +3312,7 @@ html|*#gcli-output-frame {
   -moz-appearance: none;
   border: none;
   min-width: 20px;
-  min-height: 20px;
+  min-height: 16px;
   padding: 2px 5px;
   margin: 0;
   background: transparent;

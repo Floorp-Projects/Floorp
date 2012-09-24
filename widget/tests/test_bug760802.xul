@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=760802
+-->
+<window title="Mozilla Bug 760802"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=760802"
+     target="_blank">Mozilla Bug 760802</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"/>
+  <iframe id="iframe_not_editable" width="300" height="150"
+          src="data:text/html,&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;"/><br/>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+function getBaseWindowInterface(win) {
+  return win.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebNavigation)
+    .QueryInterface(Ci.nsIDocShellTreeItem)
+    .treeOwner
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .nsIBaseWindow;
+}
+
+function getBaseWindowInterfaceFromDocShell(win) {
+  return win.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebNavigation)
+    .QueryInterface(Ci.nsIDocShell)
+    .QueryInterface(Ci.nsIBaseWindow);
+}
+
+function shouldThrowException(fun, exception) {
+  try {
+    fun.call();
+    return false;
+  } catch (e) {
+    $("display").innerHTML += "<br/>OK thrown: "+e.message;
+    return (e instanceof Components.Exception &&
+            e.result === exception)
+  }
+}
+function doesntThrowException(fun) !shouldThrowException(fun)
+
+var baseWindow = getBaseWindowInterface(this);
+var nativeHandle = baseWindow.nativeHandle;
+$("display").innerHTML = "found nativeHandle for this window: "+nativeHandle;
+
+var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+var win = wm.getMostRecentWindow("navigator:browser");
+var docShell = getBaseWindowInterfaceFromDocShell(win);
+
+ok(
+  shouldThrowException(function(){docShell.nativeHandle;},
+              Components.results.NS_ERROR_NOT_IMPLEMENTED),
+  "nativeHandle should not be implemented for nsDocShell"
+);
+
+ok(typeof(nativeHandle) === "string", "nativeHandle should be a string");
+ok(nativeHandle.match(/^0x[0-9a-f]+$/), "nativeHandle should have a memory address format");
+
+var iWin = document.getElementById("iframe_not_editable").contentWindow;
+is(getBaseWindowInterface(iWin).nativeHandle, nativeHandle,
+   "the nativeHandle of an iframe should be its parent's nativeHandle");
+
+var dialog = win.openDialog("data:text/plain,this is an active window.", "_blank",
+                            "chrome,dialog=yes,width=100,height=100");
+
+isnot(getBaseWindowInterface(dialog).nativeHandle, "",
+      "the nativeHandle of a dialog should not be empty");
+
+dialog.close();
+
+todo(false, "the nativeHandle of a window without a mainWidget should be empty"); // how to build a window without a mainWidget ?
+
+SimpleTest.finish();
+  ]]></script>
+</window>

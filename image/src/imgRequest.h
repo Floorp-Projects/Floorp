@@ -71,7 +71,7 @@ public:
   // aNotify==false still sends OnStopRequest.
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool aNotify);
 
-  void SniffMimeType(const char *buf, uint32_t len);
+  void SniffMimeType(const char *buf, uint32_t len, nsACString& newType);
 
   // Cancel, but also ensure that all work done in Init() is undone. Call this
   // only when the channel has failed to open, and so calling Cancel() on it
@@ -234,6 +234,7 @@ private:
   bool mGotData : 1;
   bool mIsInCache : 1;
   bool mBlockingOnload : 1;
+  bool mResniffMimeType : 1;
 };
 
 #endif

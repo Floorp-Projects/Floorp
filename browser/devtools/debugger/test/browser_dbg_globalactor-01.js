@@ -22,7 +22,39 @@ function test()
          "testTabActor's actorPrefix should be used.");
       gClient.request({ to: globalActor, type: "ping" }, function(aResponse) {
         is(aResponse.pong, "pong", "Actor should respond to requests.");
-        finish_test();
+        // Send another ping to see if the same actor is used.
+        gClient.request({ to: globalActor, type: "ping" }, function(aResponse) {
+          is(aResponse.pong, "pong", "Actor should respond to requests.");
+
+          // Make sure that lazily-created actors are created only once.
+          let connections = Object.keys(DebuggerServer._connections);
+          is(connections.length, 1, "Only one connection is established.");
+          let connPrefix = connections[0];
+          ok(DebuggerServer._connections[connPrefix],
+             connPrefix + " is the only connection.");
+          // First we look for the pool of global actors.
+          let extraPools = DebuggerServer._connections[connPrefix]._extraPools;
+          let globalPool;
+          for (let pool of extraPools) {
+            if (Object.keys(pool._actors).some(function(elem) {
+              // Tab actors are in the global pool.
+              let re = new RegExp(connPrefix + "tab", "g");
+              return elem.match(re) !== null;
+            })) {
+              globalPool = pool;
+              break;
+            }
+          }
+          // Then we look if the global pool contains only one test actor.
+          let actorPrefix = connPrefix + "testone";
+          let actors = Object.keys(globalPool._actors).join();
+          info("Global actors: " + actors);
+          isnot(actors.indexOf(actorPrefix), -1, "The test actor exists in the pool.");
+          is(actors.indexOf(actorPrefix), actors.lastIndexOf(actorPrefix),
+             "Only one actor exists in the pool.");
+
+          finish_test();
+        });
       });
     });
   });

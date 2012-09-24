@@ -4,12 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGMotionSMILPathUtils.h"
-#include "nsSVGElement.h"
-#include "SVGLength.h"
-#include "nsContentCreatorFunctions.h" // For NS_NewSVGElement
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
-#include "nsSVGUtils.h"
+#include "nsSVGElement.h"
+#include "SVGContentUtils.h"
+#include "SVGLength.h"
 
 namespace mozilla {
 
@@ -113,8 +112,8 @@ SVGMotionSMILPathUtils::PathGenerator::
     return false;
   }
 
-  float xRes = x.GetValueInUserUnits(mSVGElement, nsSVGUtils::X);
-  float yRes = y.GetValueInUserUnits(mSVGElement, nsSVGUtils::Y);
+  float xRes = x.GetValueInUserUnits(mSVGElement, SVGContentUtils::X);
+  float yRes = y.GetValueInUserUnits(mSVGElement, SVGContentUtils::Y);
 
   NS_ENSURE_FINITE2(xRes, yRes, false);
 

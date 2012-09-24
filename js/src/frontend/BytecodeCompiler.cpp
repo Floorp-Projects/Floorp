@@ -194,8 +194,6 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         if (!NameFunctions(cx, pn))
             return NULL;
 
-        pc.functionList = NULL;
-
         if (!EmitTree(cx, &bce, pn))
             return NULL;
 
@@ -310,7 +308,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
      * at the end.
      */
     ParseNode *pn = parser.functionBody(Parser::StatementListBody);
-    if (!pn) 
+    if (!pn)
         return false;
 
     if (!parser.tokenStream.matchToken(TOK_EOF)) {

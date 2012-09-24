@@ -24,5 +24,14 @@ GetTimezone()
   return EmptyCString();
 }
 
+void
+EnableSystemTimeChangeNotifications()
+{
+}
+
+void
+DisableSystemTimeChangeNotifications()
+{
+}
 } // namespace hal_impl
 } // namespace mozilla

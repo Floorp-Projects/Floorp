@@ -25,6 +25,10 @@ using mozilla::hal::ProcessPriority;
 using nsIntRect;
 using PRTime;
 using mozilla::hal::SystemTimeChange;
+using mozilla::hal::FMRadioCountry;
+using mozilla::hal::FMRadioOperation;
+using mozilla::hal::FMRadioOperationStatus;
+using mozilla::hal::FMRadioSeekDirection;
 
 namespace mozilla {
 
@@ -74,6 +78,20 @@ struct ScreenConfiguration {
   uint32_t pixelDepth;
 };
 
+struct FMRadioOperationInformation {
+  FMRadioOperation operation;
+  FMRadioOperationStatus status;
+  uint32_t frequency;
+};
+
+struct FMRadioSettings {
+  FMRadioCountry country;
+  uint32_t upperLimit;
+  uint32_t lowerLimit;
+  uint32_t spaceType;
+  uint32_t preEmphasis;
+};
+
 } // namespace hal
 
 namespace hal_sandbox {
@@ -88,6 +106,7 @@ child:
     NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
     NotifySwitchChange(SwitchEvent aEvent);
     NotifySystemTimeChange(SystemTimeChange aReason); 
+    NotifyFMRadioStatus(FMRadioOperationInformation aInfo);
 
 parent:
     Vibrate(uint32_t[] pattern, uint64_t[] id, PBrowser browser);
@@ -116,6 +135,8 @@ parent:
     SetTimezone(nsCString aTimezoneSpec);
     sync GetTimezone()
       returns (nsCString aTimezoneSpec);
+    EnableSystemTimeChangeNotifications();
+    DisableSystemTimeChangeNotifications();
 
     sync SetLight(LightType light, LightConfiguration aConfig)
       returns (bool status);
@@ -146,10 +167,24 @@ parent:
 
     SetProcessPriority(int aPid, ProcessPriority aPriority);
 
+    EnableFMRadio(FMRadioSettings aSettings);
+    DisableFMRadio();
+    FMRadioSeek(FMRadioSeekDirection aDirection);
+    sync GetFMRadioSettings()
+      returns (FMRadioSettings settings);
+    SetFMRadioFrequency(uint32_t frequency);
+    sync GetFMRadioFrequency()
+      returns (uint32_t frequency);
+    sync IsFMRadioOn()
+      returns (bool radioOn);
+    sync GetFMRadioSignalStrength()
+      returns (uint32_t strength);
+    CancelFMRadioSeek();
+
 child:
     NotifySensorChange(SensorData aSensorData);
 
-parent:    
+parent:
     EnableSensorNotifications(SensorType aSensor);
     DisableSensorNotifications(SensorType aSensor);
 

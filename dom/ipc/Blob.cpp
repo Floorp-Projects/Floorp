@@ -31,21 +31,48 @@ using namespace mozilla::ipc;
 namespace {
 
 class RemoteInputStream : public nsIInputStream,
-                          public nsISeekableStream
+                          public nsISeekableStream,
+                          public nsIIPCSerializableInputStream
 {
   mozilla::Monitor mMonitor;
   nsCOMPtr<nsIDOMBlob> mSourceBlob;
   nsCOMPtr<nsIInputStream> mStream;
   nsCOMPtr<nsISeekableStream> mSeekableStream;
+  ActorFlavorEnum mOrigin;
 
 public:
   NS_DECL_ISUPPORTS
 
-  RemoteInputStream(nsIDOMBlob* aSourceBlob)
-  : mMonitor("RemoteInputStream.mMonitor"), mSourceBlob(aSourceBlob)
+  RemoteInputStream(nsIDOMBlob* aSourceBlob, ActorFlavorEnum aOrigin)
+  : mMonitor("RemoteInputStream.mMonitor"), mSourceBlob(aSourceBlob),
+    mOrigin(aOrigin)
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aSourceBlob);
+  }
+
+  void
+  Serialize(InputStreamParams& aParams)
+  {
+    nsCOMPtr<nsIRemoteBlob> remote = do_QueryInterface(mSourceBlob);
+    MOZ_ASSERT(remote);
+
+    if (mOrigin == Parent) {
+      aParams = RemoteInputStreamParams(
+        static_cast<PBlobParent*>(remote->GetPBlob()), nullptr);
+    } else {
+      aParams = RemoteInputStreamParams(
+        nullptr, static_cast<PBlobChild*>(remote->GetPBlob()));
+    }
+  }
+
+  bool
+  Deserialize(const InputStreamParams& aParams)
+  {
+    // See InputStreamUtils.cpp to see how deserialization of a
+    // RemoteInputStream is special-cased.
+    MOZ_NOT_REACHED("RemoteInputStream should never be deserialized");
+    return false;
   }
 
   void
@@ -234,6 +261,7 @@ NS_IMPL_THREADSAFE_RELEASE(RemoteInputStream)
 
 NS_INTERFACE_MAP_BEGIN(RemoteInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekableStream())
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
@@ -421,7 +449,8 @@ private:
       MOZ_ASSERT(!mInputStream);
       MOZ_ASSERT(!mDone);
 
-      nsRefPtr<RemoteInputStream> stream = new RemoteInputStream(mSourceBlob);
+      nsRefPtr<RemoteInputStream> stream = new RemoteInputStream(mSourceBlob,
+                                                                 ActorFlavor);
 
       StreamActorType* streamActor = new StreamActorType(stream);
       if (mActor->SendPBlobStreamConstructor(streamActor)) {

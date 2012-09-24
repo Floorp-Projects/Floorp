@@ -34,8 +34,9 @@
 interface nsIURI;
 interface nsIObserver;
 interface nsIPrincipal;
+interface nsIDOMWindow;
 
-[scriptable, uuid(da33450a-f3cb-4fdb-93ee-219644e450c2)]
+[scriptable, uuid(ad79e135-6904-4734-8137-a511016d2723)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -145,6 +146,14 @@ interface nsIPermissionManager : nsISupports
    */
   uint32_t testPermissionFromPrincipal(in nsIPrincipal principal,
                                        in string type);
+
+  /**
+   * Test whether the principal associated with the window's document has the
+   * permission to perform a given action.  System principals will always
+   * have permissions granted.
+   */
+  uint32_t testPermissionFromWindow(in nsIDOMWindow window,
+                                    in string type);
 
   /**
    * Test whether a website has permission to perform the given action.

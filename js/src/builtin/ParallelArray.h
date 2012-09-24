@@ -379,6 +379,8 @@ class ParallelArrayObject : public JSObject {
                               MutableHandleValue vp, JSBool strict);
     static JSBool setElement(JSContext *cx, HandleObject obj, uint32_t index,
                              MutableHandleValue vp, JSBool strict);
+    static JSBool getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                      uint32_t index, MutableHandleValue vp, bool *present);
     static JSBool setSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                              MutableHandleValue vp, JSBool strict);
     static JSBool getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id,

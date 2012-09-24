@@ -374,6 +374,7 @@ nsDOMFileBase::GetFileInfo(indexedDB::FileManager* aFileManager)
 
 NS_IMETHODIMP
 nsDOMFileBase::GetSendInfo(nsIInputStream** aBody,
+                           uint64_t* aContentLength,
                            nsACString& aContentType,
                            nsACString& aCharset)
 {
@@ -381,6 +382,9 @@ nsDOMFileBase::GetSendInfo(nsIInputStream** aBody,
 
   nsCOMPtr<nsIInputStream> stream;
   rv = this->GetInternalStream(getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = this->GetSize(aContentLength);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString contentType;

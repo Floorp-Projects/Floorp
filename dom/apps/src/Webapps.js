@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -31,21 +32,6 @@ function WebappsRegistry() {
 
 WebappsRegistry.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
-
-  /** from https://developer.mozilla.org/en/OpenWebApps/The_Manifest
-   * only the name property is mandatory
-   */
-  checkManifest: function(aManifest, aInstallOrigin) {
-    if (aManifest.name == undefined)
-      return false;
-
-    if (aManifest.installs_allowed_from) {
-      return aManifest.installs_allowed_from.some(function(aOrigin) {
-        return aOrigin == "*" || aOrigin == aInstallOrigin;
-      });
-    }
-    return true;
-  },
 
   // Hosted apps can't be trusted or certified, so just check that the
   // manifest doesn't ask for those.
@@ -107,32 +93,32 @@ WebappsRegistry.prototype = {
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
+        let manifest;
         try {
-          let manifest = JSON.parse(xhr.responseText, installOrigin);
-          if (!this.checkManifest(manifest, installOrigin)) {
-            Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
-          } else {
-            if (!this.checkAppStatus(manifest)) {
-              Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
-            } else {
-              let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
-              let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
-              cpmm.sendAsyncMessage("Webapps:Install", { app: { installOrigin: installOrigin,
-                                                                origin: this._getOrigin(aURL),
-                                                                manifestURL: aURL,
-                                                                manifest: manifest,
-                                                                receipts: receipts,
-                                                                categories: categories },
-                                                                from: installURL,
-                                                                oid: this._id,
-                                                                requestID: requestID });
-            }
-          }
-        } catch(e) {
+          manifest = JSON.parse(xhr.responseText, installOrigin);
+        } catch (e) {
           Services.DOMRequest.fireError(request, "MANIFEST_PARSE_ERROR");
+          return;
         }
-      }
-      else {
+
+        if (!AppsUtils.checkManifest(manifest, installOrigin)) {
+          Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
+        } else if (!this.checkAppStatus(manifest)) {
+          Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
+        } else {
+          let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
+          let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
+          cpmm.sendAsyncMessage("Webapps:Install", { app: { installOrigin: installOrigin,
+                                                            origin: this._getOrigin(aURL),
+                                                            manifestURL: aURL,
+                                                            manifest: manifest,
+                                                            receipts: receipts,
+                                                            categories: categories },
+                                                            from: installURL,
+                                                            oid: this._id,
+                                                            requestID: requestID });
+        }
+      } else {
         Services.DOMRequest.fireError(request, "MANIFEST_URL_ERROR");
       }
     }).bind(this), false);

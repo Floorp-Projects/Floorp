@@ -375,8 +375,10 @@ DebuggerClient.prototype = {
 
     try {
       if (!aPacket.from) {
-        Cu.reportError("Server did not specify an actor, dropping packet: " +
-                       JSON.stringify(aPacket));
+        let msg = "Server did not specify an actor, dropping packet: " +
+                  JSON.stringify(aPacket);
+        Cu.reportError(msg);
+        dumpn(msg);
         return;
       }
 

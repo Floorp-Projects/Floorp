@@ -100,18 +100,18 @@ var gChecking = {
       AddonRepository.repopulateCache(ids, function() {
         AddonManagerPrivate.updateAddonRepositoryData(function() {
 
-          aAddons.forEach(function(aAddon) {
+          for (let addonItem of aAddons) {
             // Ignore disabled themes
-            if (aAddon.type != "theme" || !aAddon.userDisabled) {
-              gAddons[aAddon.id] = {
-                addon: aAddon,
+            if (addonItem.type != "theme" || !addonItem.userDisabled) {
+              gAddons[addonItem.id] = {
+                addon: addonItem,
                 install: null,
-                wasActive: aAddon.isActive
+                wasActive: addonItem.isActive
               }
             }
 
-            aAddon.findUpdates(self, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
-          });
+            addonItem.findUpdates(self, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+          }
         });
       });
     });
@@ -144,25 +144,25 @@ var gChecking = {
 
     let rows = document.getElementById("select-rows");
     let lastAddon = null;
-    addons.forEach(function(aEntry) {
+    for (let entry of addons) {
       if (lastAddon &&
-          orderForScope(aEntry.addon.scope) != orderForScope(lastAddon.scope)) {
+          orderForScope(entry.addon.scope) != orderForScope(lastAddon.scope)) {
         let separator = document.createElement("separator");
         rows.appendChild(separator);
       }
 
       let row = document.createElement("row");
-      row.setAttribute("id", aEntry.addon.id);
+      row.setAttribute("id", entry.addon.id);
       row.setAttribute("class", "addon");
       rows.appendChild(row);
-      row.setAddon(aEntry.addon, aEntry.install, aEntry.wasActive,
-                   isAddonDistroInstalled(aEntry.addon.id));
+      row.setAddon(entry.addon, entry.install, entry.wasActive,
+                   isAddonDistroInstalled(entry.addon.id));
 
-      if (aEntry.install)
-        aEntry.install.addListener(gUpdate);
+      if (entry.install)
+        entry.install.addListener(gUpdate);
 
-      lastAddon = aEntry.addon;
-    });
+      lastAddon = entry.addon;
+    }
 
     showView(gSelect);
   }

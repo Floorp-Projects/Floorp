@@ -142,8 +142,7 @@ private:
 
   // Should never be called from the child
   virtual nsresult
-  GetDevicePropertiesInternal(const nsAString& aDevicePath,
-                              const nsAString& aSignalPath) MOZ_OVERRIDE;
+  GetDevicePropertiesInternal(const BluetoothSignal& aSignal) MOZ_OVERRIDE;
 
   // This method should never be called from the child.
   virtual nsresult

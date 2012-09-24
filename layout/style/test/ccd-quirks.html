@@ -61,31 +61,45 @@ p + p { left: 22px }
 </style>
 
 <!-- link directives -->
-<link rel="stylesheet" href="ccd.sjs?IA1lq">
-<link rel="stylesheet" href="ccd.sjs?IA2lq">
-<link rel="stylesheet" href="ccd.sjs?IA3lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?IB1lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?IB2lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?IB3lq">
-<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC1lq">
-<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC2lq">
-<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC3lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID1lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID2lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID3lq">
-<link rel="stylesheet" href="ccd.sjs?JA1lq">
-<link rel="stylesheet" href="ccd.sjs?JA2lq">
-<link rel="stylesheet" href="ccd.sjs?JA3lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?JB1lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?JB2lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?JB3lq">
-<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC1lq">
-<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC2lq">
-<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC3lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD1lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD2lq">
-<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD3lq">
+<link rel="stylesheet" data-href="ccd.sjs?IA1lq">
+<link rel="stylesheet" data-href="ccd.sjs?IA2lq">
+<link rel="stylesheet" data-href="ccd.sjs?IA3lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/ccd.sjs?IB1lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/ccd.sjs?IB2lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/ccd.sjs?IB3lq">
+<link rel="stylesheet" data-href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC1lq">
+<link rel="stylesheet" data-href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC2lq">
+<link rel="stylesheet" data-href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC3lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID1lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID2lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID3lq">
+<link rel="stylesheet" data-href="ccd.sjs?JA1lq">
+<link rel="stylesheet" data-href="ccd.sjs?JA2lq">
+<link rel="stylesheet" data-href="ccd.sjs?JA3lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/ccd.sjs?JB1lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/ccd.sjs?JB2lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/ccd.sjs?JB3lq">
+<link rel="stylesheet" data-href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC1lq">
+<link rel="stylesheet" data-href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC2lq">
+<link rel="stylesheet" data-href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC3lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD1lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD2lq">
+<link rel="stylesheet" data-href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD3lq">
+<script>
+// attach onload and onerror handlers to every link tag, then activate
+// them.  see audit logic in test_css_cross_domain.html
+function setCompleted() {
+  this.dataset.completed = true;
+}
 
+var links = document.getElementsByTagName("link");
+for (var i = 0; i < links.length; i++) {
+  links[i].dataset.completed = false;
+  links[i].addEventListener("load", setCompleted);
+  links[i].addEventListener("error", setCompleted);
+  links[i].href = links[i].dataset.href;
+}
+</script>
 </head><body>
 <div></div>
 <div></div>
@@ -121,4 +135,5 @@ p + p { left: 22px }
 <div><p id="JD1i"></p><p id="JD1l"></p></div>
 <div><p id="JD2i"></p><p id="JD2l"></p></div>
 <div><p id="JD3i"></p><p id="JD3l"></p></div>
+
 </body></html>

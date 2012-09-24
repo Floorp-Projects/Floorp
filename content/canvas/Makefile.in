@@ -12,7 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PARALLEL_DIRS	= public src
 
-TEST_DIRS += test
+TOOLS_DIRS += test
 
 include $(topsrcdir)/config/rules.mk
 

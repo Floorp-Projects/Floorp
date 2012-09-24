@@ -442,8 +442,6 @@ DOMCI_CLASS(NotifyAudioAvailableEvent)
 
 DOMCI_CLASS(SimpleGestureEvent)
 
-DOMCI_CLASS(MozTouchEvent)
-
 DOMCI_CLASS(MathMLElement)
 
 // WebGL
@@ -517,6 +515,10 @@ DOMCI_CLASS(MozVoicemail)
 DOMCI_CLASS(MozVoicemailEvent)
 DOMCI_CLASS(MozIccManager)
 DOMCI_CLASS(MozStkCommandEvent)
+#endif
+
+#ifdef MOZ_B2G_FM
+DOMCI_CLASS(FMRadio)
 #endif
 
 #ifdef MOZ_B2G_BT

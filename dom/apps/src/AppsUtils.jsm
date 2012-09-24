@@ -12,7 +12,7 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-// Shared code for AppsServiceChild.jsm and Webapps.jsm
+// Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
 let EXPORTED_SYMBOLS = ["AppsUtils"];
 
@@ -121,5 +121,54 @@ let AppsUtils = {
     }
 
     return null;
+  },
+
+  /**
+   * from https://developer.mozilla.org/en/OpenWebApps/The_Manifest
+   * only the name property is mandatory
+   */
+  checkManifest: function(aManifest, aInstallOrigin) {
+    if (aManifest.name == undefined)
+      return false;
+
+    function cbCheckAllowedOrigin(aOrigin) {
+      return aOrigin == "*" || aOrigin == aInstallOrigin;
+    }
+
+    if (aManifest.installs_allowed_from && !aManifest.installs_allowed_from.some(cbCheckAllowedOrigin))
+      return false;
+
+    function isAbsolute(uri) {
+      try {
+        Services.io.newURI(uri, null, null);
+      } catch (e if e.result == Cr.NS_ERROR_MALFORMED_URI) {
+        return false;
+      }
+      return true;
+    }
+
+    // launch_path and entry_points launch paths can't be absolute
+    if (aManifest.launch_path && isAbsolute(aManifest.launch_path))
+      return false;
+
+    function checkAbsoluteEntryPoints(entryPoints) {
+      for (let name in entryPoints) {
+        if (entryPoints[name].launch_path && isAbsolute(entryPoints[name].launch_path)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    if (checkAbsoluteEntryPoints(aManifest.entry_points))
+      return false;
+
+    for (let localeName in aManifest.locales) {
+      if (checkAbsoluteEntryPoints(aManifest.locales[localeName].entry_points)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

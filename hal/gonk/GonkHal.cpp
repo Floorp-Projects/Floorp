@@ -670,6 +670,16 @@ GetTimezone()
   return nsCString(timezone);
 }
 
+void
+EnableSystemTimeChangeNotifications()
+{
+}
+
+void
+DisableSystemTimeChangeNotifications()
+{
+}
+
 // Nothing to do here.  Gonk widgetry always listens for screen
 // orientation changes.
 void

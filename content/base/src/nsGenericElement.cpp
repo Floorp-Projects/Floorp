@@ -1160,8 +1160,11 @@ nsGenericElement::HasAttribute(const nsAString& aName, bool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
-  *aReturn = (name != nullptr);
+  const nsAttrValue* val =
+    mAttrsAndChildren.GetAttr(aName,
+                              IsHTML() && IsInHTMLDocument() ?
+                                eIgnoreCase : eCaseMatters);
+  *aReturn = (val != nullptr);
 
   return NS_OK;
 }
@@ -1685,6 +1688,20 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
   }
 
   return nodeInfo;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
+{
+  nsDOMSlots *slots = DOMSlots();
+
+  if (!slots->mAttributeMap) {
+    slots->mAttributeMap = new nsDOMAttributeMap(this);
+  }
+
+  NS_ADDREF(*aAttributes = slots->mAttributeMap);
+
+  return NS_OK;
 }
 
 // static

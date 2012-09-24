@@ -55,4 +55,9 @@ const unsigned long SANDBOXED_SCRIPTS = 0x20;
  * automatically playing a video or automatically focusing a form control.
  */
 const unsigned long SANDBOXED_AUTOMATIC_FEATURES = 0x40;
+
+/**
+ * This flag blocks the document from acquiring pointerlock.
+ */
+const unsigned long SANDBOXED_POINTER_LOCK = 0x80;
 #endif

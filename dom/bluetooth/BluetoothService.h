@@ -175,14 +175,12 @@ public:
   /** 
    * Fetches the propertes for the specified device
    *
-   * @param aDevicePath Path of the object
-   * @param aSignalPath Path to distrubute signal after receiving properties
+   * @param aSignal BluetoothSignal to be distrubuted after retrieving device properties
    *
    * @return NS_OK on function run, NS_ERROR_FAILURE otherwise
    */
   virtual nsresult
-  GetDevicePropertiesInternal(const nsAString& aDevicePath,
-                              const nsAString& aSignalPath) = 0;
+  GetDevicePropertiesInternal(const BluetoothSignal& aSignal) = 0;
 
   /**
    * Set a property for the specified object
