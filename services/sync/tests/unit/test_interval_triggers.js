@@ -4,6 +4,7 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");

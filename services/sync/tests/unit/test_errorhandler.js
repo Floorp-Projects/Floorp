@@ -7,6 +7,7 @@ Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 const TEST_MAINTENANCE_URL = "http://localhost:8080/maintenance/";
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);

@@ -3,6 +3,7 @@ Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/jpakeclient.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 const JPAKE_LENGTH_SECRET     = 8;
 const JPAKE_LENGTH_CLIENTID   = 256;

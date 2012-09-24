@@ -10,6 +10,7 @@ Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-sync/addonsreconciler.js");
 Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 let prefs = new Preferences();
 prefs.set("extensions.getAddons.get.url",

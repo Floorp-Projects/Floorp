@@ -5,6 +5,7 @@ Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 let collections = {steam:  65.11328,
                    petrol: 82.488281,
