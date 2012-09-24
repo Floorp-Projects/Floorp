@@ -833,6 +833,12 @@ protected:
   SurfaceFormat mFormat;
 };
 
+class DrawEventRecorder : public RefCounted<DrawEventRecorder>
+{
+public:
+  virtual ~DrawEventRecorder() { }
+};
+
 class GFX2D_API Factory
 {
 public:
