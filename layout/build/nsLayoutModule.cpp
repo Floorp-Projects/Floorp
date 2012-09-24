@@ -93,6 +93,7 @@
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/OSFileConstants.h"
 #include "mozilla/dom/Activity.h"
+#include "mozilla/dom/network/TCPSocketChild.h"
 
 #ifdef MOZ_B2G_RIL
 #include "SystemWorkerManager.h"
@@ -248,6 +249,7 @@ using namespace mozilla::dom::sms;
 using mozilla::dom::alarm::AlarmHalService;
 using mozilla::dom::indexedDB::IndexedDatabaseManager;
 using mozilla::dom::power::PowerManagerService;
+using mozilla::dom::TCPSocketChild;
 
 
 // Transformiix
@@ -657,6 +659,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNullPrincipal, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStructuredCloneContainer)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(OSFileConstantsService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(TCPSocketChild)
 
 static nsresult
 Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID, 
@@ -824,6 +827,7 @@ NS_DEFINE_NAMED_CID(SMS_REQUEST_MANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
 NS_DEFINE_NAMED_CID(OSFILECONSTANTSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_ALARMHALSERVICE_CID);
+NS_DEFINE_NAMED_CID(TCPSOCKETCHILD_CID);
 
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
@@ -1102,6 +1106,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_POWERMANAGERSERVICE_CID, false, NULL, nsIPowerManagerServiceConstructor },
   { &kOSFILECONSTANTSSERVICE_CID, true, NULL, OSFileConstantsServiceConstructor },
   { &kNS_ALARMHALSERVICE_CID, false, NULL, nsIAlarmHalServiceConstructor },
+  { &kTCPSOCKETCHILD_CID, false, NULL, TCPSocketChildConstructor },
   { NULL }
 };
 
@@ -1245,6 +1250,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID },
   { OSFILECONSTANTSSERVICE_CONTRACTID, &kOSFILECONSTANTSSERVICE_CID },
   { ALARMHALSERVICE_CONTRACTID, &kNS_ALARMHALSERVICE_CID },
+  { "@mozilla.org/tcp-socket-child;1", &kTCPSOCKETCHILD_CID },
   { NULL }
 };
 

@@ -60,6 +60,7 @@ EXPORTS = \
   nsIScriptObjectPrincipal.h \
   nsIScriptRuntime.h \
   nsIScriptTimeoutHandler.h \
+  nsJSUtils.h \
   nsPIDOMWindow.h \
   nsPIWindowRoot.h \
   nsFocusManager.h \
