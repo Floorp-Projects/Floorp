@@ -44,10 +44,14 @@
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
+#include "ImageLayers.h"
+#include "ImageContainer.h"
 
 #include "nsContentUtils.h"
 
 #define ONLOAD_CALLED_TOO_EARLY 1
+
+using namespace mozilla::layers;
 
 class nsImageBoxFrameEvent : public nsRunnable
 {
@@ -282,36 +286,6 @@ nsImageBoxFrame::UpdateLoadFlags()
   }
 }
 
-class nsDisplayXULImage : public nsDisplayItem {
-public:
-  nsDisplayXULImage(nsDisplayListBuilder* aBuilder,
-                    nsImageBoxFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayXULImage);
-  }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayXULImage() {
-    MOZ_COUNT_DTOR(nsDisplayXULImage);
-  }
-#endif
-
-  // Doesn't handle HitTest because nsLeafBoxFrame already creates an
-  // event receiver for us
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("XULImage", TYPE_XUL_IMAGE)
-};
-
-void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
-                              nsRenderingContext* aCtx)
-{
-  static_cast<nsImageBoxFrame*>(mFrame)->
-    PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(),
-               aBuilder->ShouldSyncDecodeImages()
-                 ? (uint32_t) imgIContainer::FLAG_SYNC_DECODE
-                 : (uint32_t) imgIContainer::FLAG_NONE);
-}
-
 NS_IMETHODIMP
 nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
@@ -361,6 +335,74 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
         rect, dirty, aFlags, hasSubRect ? &mSubRect : nullptr);
   }
+}
+
+void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
+                              nsRenderingContext* aCtx)
+{
+  static_cast<nsImageBoxFrame*>(mFrame)->
+    PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(),
+               aBuilder->ShouldSyncDecodeImages()
+                 ? (uint32_t) imgIContainer::FLAG_SYNC_DECODE
+                 : (uint32_t) imgIContainer::FLAG_NONE);
+}
+
+void
+nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
+{
+  aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
+
+  int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
+
+  nsRect dest;
+  imageFrame->GetClientRect(dest);
+  dest += ToReferenceFrame();
+  gfxRect destRect(dest.x, dest.y, dest.width, dest.height);
+  destRect.ScaleInverse(factor); 
+
+  nsCOMPtr<imgIContainer> imgCon;
+  imageFrame->mImageRequest->GetImage(getter_AddRefs(imgCon));
+  int32_t imageWidth;
+  int32_t imageHeight;
+  imgCon->GetWidth(&imageWidth);
+  imgCon->GetHeight(&imageHeight);
+
+  NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
+
+  gfxMatrix transform;
+  transform.Translate(destRect.TopLeft() + aOffset);
+  transform.Scale(destRect.Width()/imageWidth,
+                  destRect.Height()/imageHeight);
+  aLayer->SetBaseTransform(gfx3DMatrix::From2D(transform));
+
+  aLayer->SetVisibleRegion(nsIntRect(0, 0, imageWidth, imageHeight));
+}
+
+already_AddRefed<ImageContainer>
+nsDisplayXULImage::GetContainer()
+{
+  return static_cast<nsImageBoxFrame*>(mFrame)->GetContainer();
+}
+
+already_AddRefed<ImageContainer>
+nsImageBoxFrame::GetContainer()
+{
+  bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
+  if (hasSubRect || !mImageRequest) {
+    return nullptr;
+  }
+
+  nsCOMPtr<imgIContainer> imgCon;
+  mImageRequest->GetImage(getter_AddRefs(imgCon));
+  if (!imgCon) {
+    return nullptr;
+  }
+  
+  nsRefPtr<ImageContainer> container;
+  nsresult rv = imgCon->GetImageContainer(getter_AddRefs(container));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return container.forget();
 }
 
 
