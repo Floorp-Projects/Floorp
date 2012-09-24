@@ -3,6 +3,7 @@
 
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 // Test upgrade of a dashed old-style sync key.
 function run_test() {

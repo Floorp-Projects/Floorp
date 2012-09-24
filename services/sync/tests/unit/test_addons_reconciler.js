@@ -7,6 +7,7 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://services-sync/addonsreconciler.js");
 Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 loadAddonTestFunctions();
 startupManager();
