@@ -6,6 +6,11 @@ import logging, re, os, sys
 import parserdata, parser, functions, process, util, implicit
 from cStringIO import StringIO
 
+if sys.version_info[0] < 3:
+    str_type = basestring
+else:
+    str_type = str
+
 _log = logging.getLogger('pymake.data')
 
 class DataError(util.MakeError):
@@ -141,7 +146,7 @@ class StringExpansion(BaseExpansion):
     simple = True
 
     def __init__(self, s, loc):
-        assert isinstance(s, str)
+        assert isinstance(s, str_type)
         self.s = s
         self.loc = loc
 
@@ -227,7 +232,7 @@ class Expansion(BaseExpansion, list):
         return e
 
     def appendstr(self, s):
-        assert isinstance(s, str)
+        assert isinstance(s, str_type)
         if s == '':
             return
 
@@ -321,9 +326,9 @@ class Expansion(BaseExpansion, list):
             if isfunc:
                 e.resolve(makefile, variables, fd, setting)
             else:
-                assert isinstance(e, str)
+                assert isinstance(e, str_type)
                 fd.write(e)
-                    
+
     def resolvestr(self, makefile, variables, setting=[]):
         fd = StringIO()
         self.resolve(makefile, variables, fd, setting)
@@ -501,7 +506,7 @@ class Variables(object):
     def set(self, name, flavor, source, value):
         assert flavor in (self.FLAVOR_RECURSIVE, self.FLAVOR_SIMPLE)
         assert source in (self.SOURCE_OVERRIDE, self.SOURCE_COMMANDLINE, self.SOURCE_MAKEFILE, self.SOURCE_ENVIRONMENT, self.SOURCE_AUTOMATIC, self.SOURCE_IMPLICIT)
-        assert isinstance(value, str), "expected str, got %s" % type(value)
+        assert isinstance(value, str_type), "expected str, got %s" % type(value)
 
         prevflavor, prevsource, prevvalue = self.get(name)
         if prevsource is not None and source > prevsource:
@@ -513,7 +518,7 @@ class Variables(object):
 
     def append(self, name, source, value, variables, makefile):
         assert source in (self.SOURCE_OVERRIDE, self.SOURCE_MAKEFILE, self.SOURCE_AUTOMATIC)
-        assert isinstance(value, str)
+        assert isinstance(value, str_type)
 
         if name not in self._map:
             self._map[name] = self.FLAVOR_APPEND, source, value, None
@@ -646,7 +651,7 @@ class Pattern(object):
         @param mustmatch If true and this pattern doesn't match the word, throw a DataError. Otherwise
                          return word unchanged.
         """
-        assert isinstance(replacement, str)
+        assert isinstance(replacement, str_type)
 
         stem = self.match(word)
         if stem is None:
@@ -965,7 +970,7 @@ class Target(object):
     wasremade = False
 
     def __init__(self, target, makefile):
-        assert isinstance(target, str)
+        assert isinstance(target, str_type)
         self.target = target
         self.vpathtarget = None
         self.rules = []
@@ -1687,7 +1692,7 @@ class Makefile(object):
         return target in self._targets
 
     def gettarget(self, target):
-        assert isinstance(target, str)
+        assert isinstance(target, str_type)
 
         target = target.rstrip('/')
 
