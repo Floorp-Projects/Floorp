@@ -40,7 +40,13 @@ EXTRA_COMPONENTS = \
         $(NULL)
 
 ifdef MOZ_SAFE_BROWSING
-EXTRA_COMPONENTS += SafeBrowsing.js
+DEFINES += \
+        -DMOZ_APP_UA_NAME=$(MOZ_APP_UA_NAME) \
+        $(NULL)
+
+EXTRA_PP_JS_MODULES = \
+        SafeBrowsing.jsm \
+        $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
