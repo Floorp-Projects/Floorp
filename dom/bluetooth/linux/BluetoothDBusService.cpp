@@ -236,6 +236,40 @@ private:
   nsString mPath;
 };
 
+class DevicePropertiesSignalHandler : public nsRunnable
+{
+public:
+  DevicePropertiesSignalHandler(const BluetoothSignal& aSignal) :
+    mSignal(aSignal)
+  {
+  }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Get device properties and then send to BluetoothAdapter
+    BluetoothService* bs = BluetoothService::Get();
+    if (!bs) {
+      NS_WARNING("BluetoothService not available!");
+      return NS_ERROR_FAILURE;
+    }
+
+    // Due to the fact that we need to queue the dbus call to the command thread
+    // inside the bluetoothservice, we have to route the call down to the main
+    // thread and then back out to the command thread. There has to be a better
+    // way to do this.
+    if (NS_FAILED(bs->GetDevicePropertiesInternal(mSignal))) {
+      NS_WARNING("get properties failed");
+      return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+  }
+private:
+  BluetoothSignal mSignal;
+};
+
 static bool
 IsDBusMessageError(DBusMessage* aMsg, DBusError* aErr, nsAString& aErrorStr)
 {
@@ -418,13 +452,22 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       LOG("%s: Invalid arguments for RequestConfirmation() method", __FUNCTION__);
       errorStr.AssignLiteral("Invalid arguments for RequestConfirmation() method");
     } else {
-      nsString deviceAddress = GetAddressFromObjectPath(NS_ConvertUTF8toUTF16(objectPath));
-      parameters.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("deviceAddress"), deviceAddress));
+      nsString address = NS_LITERAL_STRING("address");
+      parameters.AppendElement(BluetoothNamedValue(address, NS_ConvertUTF8toUTF16(objectPath)));
       parameters.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("passkey"), passkey));
 
-      KeepDBusPairingMessage(deviceAddress, msg);
+      KeepDBusPairingMessage(address, msg);
 
-      v = parameters;
+      BluetoothSignal signal(signalName, signalPath, parameters);
+
+      // Fire a Device properties fetcher at the main thread
+      nsRefPtr<DevicePropertiesSignalHandler> b =
+        new DevicePropertiesSignalHandler(signal);
+      if (NS_FAILED(NS_DispatchToMainThread(b))) {
+        NS_WARNING("Failed to dispatch to main thread!");
+      }
+      // Since we're handling this in other threads, just fall out here
+      return DBUS_HANDLER_RESULT_HANDLED;
     }
   } else if (dbus_message_is_method_call(msg, DBUS_AGENT_IFACE, "RequestPinCode")) {
     // This method gets called when the service daemon needs to get the passkey for an
@@ -437,12 +480,21 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       LOG("%s: Invalid arguments for RequestPinCode() method", __FUNCTION__);
       errorStr.AssignLiteral("Invalid arguments for RequestPinCode() method");
     } else {
-      nsString deviceAddress = GetAddressFromObjectPath(NS_ConvertUTF8toUTF16(objectPath));
-      parameters.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("deviceAddress"), deviceAddress));
+      nsString address = NS_LITERAL_STRING("address");
+      parameters.AppendElement(BluetoothNamedValue(address, NS_ConvertUTF8toUTF16(objectPath)));
 
-      KeepDBusPairingMessage(deviceAddress, msg);
+      KeepDBusPairingMessage(address, msg);
 
-      v = parameters;
+      BluetoothSignal signal(signalName, signalPath, parameters);
+
+      // Fire a Device properties fetcher at the main thread
+      nsRefPtr<DevicePropertiesSignalHandler> b =
+        new DevicePropertiesSignalHandler(signal);
+      if (NS_FAILED(NS_DispatchToMainThread(b))) {
+        NS_WARNING("Failed to dispatch to main thread!");
+      }
+      // Since we're handling this in other threads, just fall out here
+      return DBUS_HANDLER_RESULT_HANDLED;
     }
   } else if (dbus_message_is_method_call(msg, DBUS_AGENT_IFACE, "RequestPasskey")) {
     // This method gets called when the service daemon needs to get the passkey for an
@@ -454,12 +506,21 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       LOG("%s: Invalid arguments for RequestPasskey() method", __FUNCTION__);
       errorStr.AssignLiteral("Invalid arguments for RequestPasskey() method");
     } else {
-      nsString deviceAddress = GetAddressFromObjectPath(NS_ConvertUTF8toUTF16(objectPath));
-      parameters.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("deviceAddress"), deviceAddress));
+      nsString address = NS_LITERAL_STRING("address");
+      parameters.AppendElement(BluetoothNamedValue(address, NS_ConvertUTF8toUTF16(objectPath)));
 
-      KeepDBusPairingMessage(deviceAddress, msg);
+      KeepDBusPairingMessage(address, msg);
 
-      v = parameters;
+      BluetoothSignal signal(signalName, signalPath, parameters);
+
+      // Fire a Device properties fetcher at the main thread
+      nsRefPtr<DevicePropertiesSignalHandler> b =
+        new DevicePropertiesSignalHandler(signal);
+      if (NS_FAILED(NS_DispatchToMainThread(b))) {
+        NS_WARNING("Failed to dispatch to main thread!");
+      }
+      // Since we're handling this in other threads, just fall out here
+      return DBUS_HANDLER_RESULT_HANDLED;
     }
   } else if (dbus_message_is_method_call(msg, DBUS_AGENT_IFACE, "Release")) {
     // This method gets called when the service daemon unregisters the agent. An agent
@@ -1030,43 +1091,6 @@ GetPropertiesInternal(const nsAString& aPath, const char* aIface, BluetoothValue
   return true;
 }
 
-class DevicePropertiesSignalHandler : public nsRunnable
-{
-public:
-  DevicePropertiesSignalHandler(const BluetoothValue& aValue,
-                                const nsAString& aPath) :
-    mValue(aValue),
-    mPath(aPath)
-  {
-  }
-
-  NS_IMETHODIMP
-  Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // Get device properties and then send to BluetoothAdapter
-    BluetoothService* bs = BluetoothService::Get();
-    if (!bs) {
-      NS_WARNING("BluetoothService not available!");
-      return NS_ERROR_FAILURE;
-    }
-
-    // Due to the fact that we need to queue the dbus call to the command thread
-    // inside the bluetoothservice, we have to route the call down to the main
-    // thread and then back out to the command thread. There has to be a better
-    // way to do this.
-    if (NS_FAILED(bs->GetDevicePropertiesInternal(mValue, mPath))) {
-      NS_WARNING("get properties failed");
-      return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
-  }
-private:
-  BluetoothValue mValue;
-  nsString mPath;
-};
-
 // Called by dbus during WaitForAndDispatchEventNative()
 // This function is called on the IOThread
 static
@@ -1147,9 +1171,12 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     } else {
       v = NS_ConvertUTF8toUTF16(str);
     }
+
+    BluetoothSignal signal(signalName, signalPath, v);
+
     // Fire a Device properties fetcher at the main thread
     nsRefPtr<DevicePropertiesSignalHandler> b =
-      new DevicePropertiesSignalHandler(v, signalPath);
+      new DevicePropertiesSignalHandler(signal);
     if (NS_FAILED(NS_DispatchToMainThread(b))) {
       NS_WARNING("Failed to dispatch to main thread!");
     }
@@ -1490,10 +1517,8 @@ BluetoothDBusService::StartDiscoveryInternal(const nsAString& aAdapterPath,
 class BluetoothDevicePropertiesRunnable : public nsRunnable
 {
 public:
-  BluetoothDevicePropertiesRunnable(const nsAString& aDevicePath,
-                                    const nsAString& aSignalPath) :
-    mDevicePath(aDevicePath),
-    mSignalPath(aSignalPath)
+  BluetoothDevicePropertiesRunnable(const BluetoothSignal& aSignal) :
+    mSignal(aSignal)
   {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -1505,16 +1530,57 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    BluetoothValue v;
-    if (!GetPropertiesInternal(mDevicePath, DBUS_DEVICE_IFACE, v)) {
+
+    nsString devicePath;
+    BluetoothValue v = mSignal.value();
+    if (v.type() == BluetoothValue::TArrayOfBluetoothNamedValue &&
+        v.get_ArrayOfBluetoothNamedValue().Length() ) {
+      InfallibleTArray<BluetoothNamedValue> arr = v.get_ArrayOfBluetoothNamedValue();
+      NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString, "failed to get_nsString");
+      devicePath = arr[0].value().get_nsString();
+    }
+    else if (v.type() == BluetoothValue::TnsString) {
+      devicePath = v.get_nsString();
+    }
+    else {
+      NS_WARNING("Invalid value type for GetDeviceProperties() method");
+      return NS_ERROR_FAILURE;
+    }
+
+    BluetoothValue prop;
+    if (!GetPropertiesInternal(devicePath, DBUS_DEVICE_IFACE, prop)) {
       NS_WARNING("Getting properties failed!");
       return NS_ERROR_FAILURE;
     }
-    BluetoothSignal signal(NS_LITERAL_STRING("DeviceCreated"),
-                           mSignalPath, v);
+
+    InfallibleTArray<BluetoothNamedValue> properties = prop.get_ArrayOfBluetoothNamedValue();
+    if (v.type() == BluetoothValue::TArrayOfBluetoothNamedValue) {
+      // Return original dbus message parameters and also device name
+      // for agent events "RequestConfirmation", "RequestPinCode", and "RequestPasskey"
+      InfallibleTArray<BluetoothNamedValue> parameters = v.get_ArrayOfBluetoothNamedValue();
+
+      // Replace object path with device address
+      nsString address = GetAddressFromObjectPath(parameters[0].value());
+      parameters[0].value() = address;
+
+      uint8_t i;
+      for (i = 0; i < properties.Length(); i++) {
+        // Append device name
+        if (properties[i].name().EqualsLiteral("Name")) {
+          properties[i].name().AssignLiteral("name");
+          parameters.AppendElement(properties[i]);
+          mSignal.value() = parameters;
+          break;
+        }
+      }
+      NS_ASSERTION(i != properties.Length(), "failed to get device name");
+    } else {
+      // Return all device properties for event "DeviceCreated"
+      mSignal.value() = properties;
+    }
 
     nsRefPtr<DistributeBluetoothSignalTask> t =
-      new DistributeBluetoothSignalTask(signal);
+      new DistributeBluetoothSignalTask(mSignal);
 
     if (NS_FAILED(NS_DispatchToMainThread(t))) {
        NS_WARNING("Failed to dispatch to main thread!");
@@ -1525,8 +1591,7 @@ public:
   }
 
 private:
-  nsString mDevicePath;
-  nsString mSignalPath;
+  BluetoothSignal mSignal;
 };
 
 class BluetoothPairedDevicePropertiesRunnable : public nsRunnable
@@ -1625,8 +1690,7 @@ BluetoothDBusService::GetProperties(BluetoothObjectType aType,
 }
 
 nsresult
-BluetoothDBusService::GetDevicePropertiesInternal(const nsAString& aDevicePath,
-                                                  const nsAString& aSignalPath)
+BluetoothDBusService::GetDevicePropertiesInternal(const BluetoothSignal& aSignal)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
 
@@ -1635,7 +1699,7 @@ BluetoothDBusService::GetDevicePropertiesInternal(const nsAString& aDevicePath,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<nsRunnable> func(new BluetoothDevicePropertiesRunnable(aDevicePath, aSignalPath));
+  nsRefPtr<nsRunnable> func(new BluetoothDevicePropertiesRunnable(aSignal));
   if (NS_FAILED(mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL))) {
     NS_WARNING("Cannot dispatch task!");
     return NS_ERROR_FAILURE;

@@ -57,6 +57,7 @@ CPPSRCS += \
   GonkSensor.cpp \
   UeventPoller.cpp \
   GonkSwitch.cpp \
+  GonkFMRadio.cpp \
   $(NULL)
 else ifeq (Linux,$(OS_TARGET))
 CPPSRCS += \
@@ -82,7 +83,7 @@ CPPSRCS += \
   $(NULL)
 else ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
-  FallbackBattery.cpp \
+  CocoaBattery.cpp \
   FallbackVibration.cpp \
   FallbackPower.cpp \
   FallbackScreenConfiguration.cpp \
@@ -125,6 +126,7 @@ CPPSRCS += \
   FallbackSwitch.cpp \
   FallbackScreenPower.cpp \
   FallbackProcessPriority.cpp \
+  FallbackFMRadio.cpp \
   $(NULL)
 endif #}
 

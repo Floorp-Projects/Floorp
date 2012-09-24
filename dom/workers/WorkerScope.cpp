@@ -12,6 +12,7 @@
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/FileReaderSyncBinding.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/OSFileConstants.h"
@@ -975,7 +976,6 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   // Init other classes we care about.
   if (!events::InitClasses(aCx, global, false) ||
       !file::InitClasses(aCx, global) ||
-      !filereadersync::InitClass(aCx, global) ||
       !exceptions::InitClasses(aCx, global) ||
       !location::InitClass(aCx, global) ||
       !imagedata::InitClass(aCx, global) ||
@@ -988,7 +988,8 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   // double-calling CreateInterfaceObjects when we actually create an
   // object which has these protos, which breaks things like
   // instanceof.
-  if (!XMLHttpRequestBinding_workers::GetProtoObject(aCx, global, global) ||
+  if (!FileReaderSyncBinding_workers::GetProtoObject(aCx, global, global) ||
+      !XMLHttpRequestBinding_workers::GetProtoObject(aCx, global, global) ||
       !XMLHttpRequestUploadBinding_workers::GetProtoObject(aCx, global, global)) {
     return NULL;
   }

@@ -1,0 +1,122 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIDOMDOMRequest.idl"
+
+[scriptable, uuid(1d0443f3-ac30-4f9e-a070-002bb20ce1e6)]
+interface nsIDOMFMRadio : nsISupports {
+    /* Indicates if the FM radio is enabled. */
+    readonly attribute boolean enabled;
+
+    /* Indicates if the antenna is plugged and available. */
+    readonly attribute boolean antennaAvailable;
+
+    /**
+     * Current frequency in MHz.
+     * The value will be null if the FM radio is disabled.
+     */
+    readonly attribute jsval frequency;
+
+    /* The upper bound of frequency in MHz. */
+    readonly attribute double frequencyUpperBound;
+
+    /* The lower bound of frequency in MHz. */
+    readonly attribute double frequencyLowerBound;
+
+    /**
+     * The channel width of the ranges of frequency, in MHz.
+     * Usually, the value is one of:
+     *  - 0.05 MHz
+     *  - 0.1  MHz
+     *  - 0.2  MHz
+     */
+    readonly attribute double channelWidth;
+
+    /* Fired when the FM radio is enabled. */
+    attribute nsIDOMEventListener onenabled;
+
+    /* Fired when the FM radio is disabled. */
+    attribute nsIDOMEventListener ondisabled;
+
+    /**
+     * Fired when the antenna becomes available or unavailable, i.e., fired when
+     * the antennaAvailable attribute changes.
+     */
+    attribute nsIDOMEventListener onantennaavailablechange;
+
+    /* Fired when the FM radio's frequency is changed. */
+    attribute nsIDOMEventListener onfrequencychange;
+
+    /**
+     * Power the FM radio off.
+     * The disabled event will be fired if this request completes successfully.
+     */
+    nsIDOMDOMRequest disable();
+
+    /**
+     * Power the FM radio on, and tune the radio to the given frequency in MHz.
+     * This will fail if the given frequency is out of range.
+     * The enabled event and frequencychange event will be fired if this request
+     * completes successfully.
+     */
+    nsIDOMDOMRequest enable(in double frequency);
+
+    /**
+     * Tune the FM radio to the given frequency.
+     * This will fail if the given frequency is out of range.
+     *
+     * Note that the FM radio may not tuned to the exact frequency given. To get
+     * the frequency the radio is actually tuned to, wait for the request to fire
+     * onsucess (or wait for the frequencychange event to fire), and then read the
+     * frequency attribute.
+     */
+    nsIDOMDOMRequest setFrequency(in double frequency);
+
+    /**
+     * Tell the FM radio to seek up to the next channel. If the frequency is
+     * successfully changed, the frequencychange event will be triggered.
+     *
+     * Only one seek is allowed at once:
+     * If the radio is seeking when the seekUp is called, onerror will be fired.
+     */
+    nsIDOMDOMRequest seekUp();
+
+    /**
+     * Tell the FM radio to seek down to the next channel. If the frequency is
+     * successfully changed, the frequencychange event will be triggered.
+     *
+     * Only one seek is allowed at once:
+     * If the radio is seeking when the seekDown is called, onerror will be fired.
+     */
+    nsIDOMDOMRequest seekDown();
+
+    /**
+     * Cancel the seek action.
+     * If the radio is not currently seeking up or down, onerror will be fired.
+     */
+    nsIDOMDOMRequest cancelSeek();
+
+
+    /**
+     * These functions related to EventTarget are temporary hacks:
+     *   - addEventListener
+     *   - removeEventListener
+     *   - handleEvent
+     *
+     * These will be removed by inheriting from nsIJSDOMEventTarget,
+     * see bug 731746.
+     */
+    [optional_argc] void addEventListener(in DOMString type,
+                                          in nsIDOMEventListener listener,
+                                          [optional] in boolean useCapture,
+                                          [optional] in boolean wantsUntrusted);
+
+    void  removeEventListener(in DOMString type,
+                              in nsIDOMEventListener listener,
+                              [optional] in boolean useCapture);
+
+    boolean dispatchEvent(in nsIDOMEvent evt) raises(DOMException);
+};
+

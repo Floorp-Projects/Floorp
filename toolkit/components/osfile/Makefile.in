@@ -39,4 +39,6 @@ libs::
 	$(NSINSTALL) $(srcdir)/ospath_win_back.jsm $(FINAL_TARGET)/modules/osfile
 	$(NSINSTALL) $(srcdir)/osfile_win_back.jsm $(FINAL_TARGET)/modules/osfile
 	$(NSINSTALL) $(srcdir)/osfile_win_front.jsm $(FINAL_TARGET)/modules/osfile
+	$(NSINSTALL) $(srcdir)/osfile_async_front.jsm $(FINAL_TARGET)/modules/osfile
+	$(NSINSTALL) $(srcdir)/osfile_async_worker.js $(FINAL_TARGET)/modules/osfile
 	$(NSINSTALL) $(srcdir)/osfile_shared_front.jsm $(FINAL_TARGET)/modules/osfile

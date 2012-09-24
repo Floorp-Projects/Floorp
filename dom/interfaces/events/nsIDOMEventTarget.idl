@@ -103,7 +103,7 @@ interface nsIDOMEventTarget : nsISupports
                             nsIDOMEventListener* aListener,
                             bool aUseCapture)
   {
-    return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
+    return AddEventListener(aType, aListener, aUseCapture, false, 1);
   }
   // non-virtual so it won't affect the vtable
   nsresult AddEventListener(const nsAString& aType,
@@ -118,7 +118,7 @@ interface nsIDOMEventTarget : nsISupports
                                   nsIDOMEventListener* aListener,
                                   bool aUseCapture)
   {
-    return AddSystemEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
+    return AddSystemEventListener(aType, aListener, aUseCapture, false, 1);
   }
   // non-virtual so it won't affect the vtable
   nsresult AddSystemEventListener(const nsAString& aType,

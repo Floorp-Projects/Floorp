@@ -8,10 +8,10 @@
 
 #include "nsISMILAnimationElement.h"
 #include "nsSMILValue.h"
+#include "prdtoa.h"
+#include "SVGContentUtils.h"
 #include "SVGTransform.h"
 #include "SVGTransformListSMILType.h"
-#include "nsSVGUtils.h"
-#include "prdtoa.h"
 
 namespace mozilla {
 

@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=784402
+  -->
+  <head>
+    <title>Bug 784402</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=784402">
+      Mozilla Bug 784402</a>
+    <p id="display"></p>
+
+    <iframe src ="iframe_differentDOM.html" mozallowfullscreen="true" id="iframe"
+      onload="startTest()"
+      sandbox="allow-scripts allow-same-origin allow-pointer-lock">
+    </iframe>
+
+    <pre id="test">
+      <script type="application/javascript">
+        /*
+         * Test for Bug 784402
+         * Test allow-pointer-lock sandbox flag.
+         */
+
+        SimpleTest.waitForExplicitFinish(1);
+
+        var iframe
+          , iframeDiv
+          , contentDocument
+          , pointerLocked = 0
+          , numberOfRuns = 0;
+
+        function runTests () {
+          is(pointerLocked, 1, "Pointer should only have been locked once. " +
+            "Without allow-pointer-lock flag, a sandboxed document should not be " +
+            "able to lock the pointer");
+          SimpleTest.finish();
+        }
+
+        function resetIframe () {
+          contentDocument.mozCancelFullScreen();
+
+          // remove allow-pointer-lock sandbox flag
+          iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
+          // reloads the iframe, startTest function gets called again
+          iframe.setAttribute("src", "iframe_differentDOM.html");
+        }
+
+        function startTest () {
+          iframe = document.getElementById("iframe");
+          contentDocument = iframe.contentDocument;
+          iframeDiv = contentDocument.getElementById("div");
+
+          numberOfRuns++;
+
+          contentDocument.addEventListener("mozpointerlockchange", function () {
+            if (contentDocument.mozPointerLockElement === iframeDiv) {
+              pointerLocked++;
+              resetIframe();
+            }
+          });
+
+          contentDocument.addEventListener("mozpointerlockerror", function () {
+            contentDocument.mozCancelFullScreen();
+          });
+
+          contentDocument.addEventListener("mozfullscreenchange", function () {
+            if (contentDocument.mozFullScreen &&
+              contentDocument.mozFullScreenElement === iframeDiv) {
+              // during second run iframe won't have allow-pointer-lock flag and
+              // mozRequestPointerLock will fail, mozpointerlockerror should be fired
+              iframeDiv.mozRequestPointerLock();
+            } else if (numberOfRuns === 2) {
+              runTests();
+            }
+          });
+
+        iframeDiv.mozRequestFullScreen();
+      }
+      </script>
+    </pre>
+  </body>
+</html>

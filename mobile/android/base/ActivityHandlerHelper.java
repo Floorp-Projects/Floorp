@@ -148,7 +148,7 @@ class ActivityHandlerHelper {
         }
 
         Runnable filePicker = new FilePickerPromptRunnable(getFilePickerTitle(context, aMimeType), items);
-        GeckoAppShell.getHandler().post(filePicker);
+        GeckoAppShell.getMainHandler().post(filePicker);
 
         String promptServiceResult = "";
         try {

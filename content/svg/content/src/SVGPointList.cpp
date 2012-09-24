@@ -6,16 +6,16 @@
 #include "mozilla/Util.h"
 
 #include "SVGPointList.h"
-#include "SVGAnimatedPointList.h"
-#include "nsSVGElement.h"
 #include "nsError.h"
-#include "nsString.h"
-#include "nsSVGUtils.h"
-#include "string.h"
-#include "prdtoa.h"
-#include "nsTextFormatter.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsMathUtils.h"
+#include "nsString.h"
+#include "nsSVGElement.h"
+#include "nsTextFormatter.h"
+#include "prdtoa.h"
+#include "string.h"
+#include "SVGAnimatedPointList.h"
+#include "SVGContentUtils.h"
 
 namespace mozilla {
 

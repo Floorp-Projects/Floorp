@@ -9,7 +9,7 @@
 #include <math.h>
 #include "nsContentUtils.h"
 
-const double radPerDegree = 2.0*3.1415926535 / 360.0;
+const double radPerDegree = 2.0 * M_PI / 360.0;
 
 namespace mozilla {
 

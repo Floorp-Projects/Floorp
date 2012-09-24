@@ -9,10 +9,10 @@
 #include "nsSVGElement.h"
 #include "nsSVGSVGElement.h"
 #include "nsString.h"
-#include "nsSVGUtils.h"
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
 #include "nsMathUtils.h"
+#include "SVGContentUtils.h"
 #include <limits>
 
 namespace mozilla {
@@ -57,7 +57,7 @@ SVGLength::SetValueFromString(const nsAString &aValue)
     tmpUnit = GetUnitTypeForString(
                 Substring(aValue, unit - str, theRest - unit));
     if (tmpUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN) {
-      // nsSVGUtils::ReportToConsole
+      // SVGContentUtils::ReportToConsole
       return false;
     }
     while (*theRest && IsSVGWhitespace(*theRest)) {
@@ -178,9 +178,9 @@ SVGLength::GetUserUnitsPerUnit(const nsSVGElement *aElement, uint8_t aAxis) cons
     case nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE:
       return GetUserUnitsPerPercent(aElement, aAxis);
     case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
-      return nsSVGUtils::GetFontSize(const_cast<nsSVGElement*>(aElement));
+      return SVGContentUtils::GetFontSize(const_cast<nsSVGElement*>(aElement));
     case nsIDOMSVGLength::SVG_LENGTHTYPE_EXS:
-      return nsSVGUtils::GetFontXHeight(const_cast<nsSVGElement*>(aElement));
+      return SVGContentUtils::GetFontXHeight(const_cast<nsSVGElement*>(aElement));
     default:
       NS_NOTREACHED("Unknown unit type");
       return std::numeric_limits<float>::quiet_NaN();

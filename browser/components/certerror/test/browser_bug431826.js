@@ -12,7 +12,7 @@ function testBrokenCert() {
   window.removeEventListener("DOMContentLoaded", testBrokenCert, true);
 
   // Confirm that we are displaying the contributed error page, not the default
-  ok(/^about:certerror/.test(gBrowser.contentDocument.documentURI), "Broken page should go to about:certerror, not about:neterror");
+  ok(gBrowser.contentDocument.documentURI.startsWith("about:certerror"), "Broken page should go to about:certerror, not about:neterror");
 
   // Confirm that the expert section is collapsed
   var expertDiv = gBrowser.contentDocument.getElementById("expertContent");

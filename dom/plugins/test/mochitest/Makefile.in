@@ -130,6 +130,7 @@ MOCHITEST_CHROME_FILES += \
   test_crash_notify.xul \
   test_crash_notify_no_report.xul \
   test_crash_submit.xul \
+  test_hang_submit.xul \
   $(NULL)
   ifeq ($(OS_ARCH),WINNT)
     MOCHITEST_CHROME_FILES += \

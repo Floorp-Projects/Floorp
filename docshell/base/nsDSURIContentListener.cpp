@@ -18,6 +18,8 @@
 #include "nsError.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/Preferences.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 
 using namespace mozilla;
 
@@ -275,105 +277,113 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIRequest *request,
         return true;
     }
 
-    if (mDocShell) {
-        // We need to check the location of this window and the location of the top
-        // window, if we're not the top.  X-F-O: SAMEORIGIN requires that the
-        // document must be same-origin with top window.  X-F-O: DENY requires that
-        // the document must never be framed.
-        nsCOMPtr<nsIDOMWindow> thisWindow = do_GetInterface(static_cast<nsIDocShell*>(mDocShell));
-        // If we don't have DOMWindow there is no risk of clickjacking
-        if (!thisWindow)
-            return true;
+    nsCOMPtr<nsIURI> uri;
+    httpChannel->GetURI(getter_AddRefs(uri));
 
-        // GetScriptableTop, not GetTop, because we want this to respect
-        // <iframe mozbrowser> boundaries.
-        nsCOMPtr<nsIDOMWindow> topWindow;
-        thisWindow->GetScriptableTop(getter_AddRefs(topWindow));
+    // XXXkhuey when does this happen?  Is returning true safe here?
+    if (!mDocShell) {
+        return true;
+    }
 
-        // if the document is in the top window, it's not in a frame.
-        if (thisWindow == topWindow)
-            return true;
+    // We need to check the location of this window and the location of the top
+    // window, if we're not the top.  X-F-O: SAMEORIGIN requires that the
+    // document must be same-origin with top window.  X-F-O: DENY requires that
+    // the document must never be framed.
+    nsCOMPtr<nsIDOMWindow> thisWindow = do_GetInterface(static_cast<nsIDocShell*>(mDocShell));
+    // If we don't have DOMWindow there is no risk of clickjacking
+    if (!thisWindow)
+        return true;
 
-        // Find the top docshell in our parent chain that doesn't have the system
-        // principal and use it for the principal comparison.  Finding the top
-        // content-type docshell doesn't work because some chrome documents are
-        // loaded in content docshells (see bug 593387).
-        nsCOMPtr<nsIDocShellTreeItem> thisDocShellItem(do_QueryInterface(
-                                                       static_cast<nsIDocShell*> (mDocShell)));
-        nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem,
-                                      curDocShellItem = thisDocShellItem;
-        nsCOMPtr<nsIDocument> topDoc;
-        nsresult rv;
-        nsCOMPtr<nsIScriptSecurityManager> ssm =
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-        if (!ssm) {
-            NS_ASSERTION(ssm, "Failed to get the ScriptSecurityManager.");
+    // GetScriptableTop, not GetTop, because we want this to respect
+    // <iframe mozbrowser> boundaries.
+    nsCOMPtr<nsIDOMWindow> topWindow;
+    thisWindow->GetScriptableTop(getter_AddRefs(topWindow));
+
+    // if the document is in the top window, it's not in a frame.
+    if (thisWindow == topWindow)
+        return true;
+
+    // Find the top docshell in our parent chain that doesn't have the system
+    // principal and use it for the principal comparison.  Finding the top
+    // content-type docshell doesn't work because some chrome documents are
+    // loaded in content docshells (see bug 593387).
+    nsCOMPtr<nsIDocShellTreeItem> thisDocShellItem(do_QueryInterface(
+                                                   static_cast<nsIDocShell*> (mDocShell)));
+    nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem,
+                                  curDocShellItem = thisDocShellItem;
+    nsCOMPtr<nsIDocument> topDoc;
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> ssm =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (!ssm) {
+        MOZ_CRASH();
+    }
+
+    // Traverse up the parent chain and stop when we see a docshell whose
+    // parent has a system principal, or a docshell corresponding to
+    // <iframe mozbrowser>.
+    while (NS_SUCCEEDED(curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem))) &&
+           parentDocShellItem) {
+
+        nsCOMPtr<nsIDocShell> curDocShell = do_QueryInterface(curDocShellItem);
+        if (curDocShell && curDocShell->GetIsContentBoundary()) {
+          break;
+        }
+
+        bool system = false;
+        topDoc = do_GetInterface(parentDocShellItem);
+        if (topDoc) {
+            if (NS_SUCCEEDED(ssm->IsSystemPrincipal(topDoc->NodePrincipal(),
+                                                    &system)) && system) {
+                // Found a system-principled doc: last docshell was top.
+                break;
+            }
+        }
+        else {
             return false;
         }
+        curDocShellItem = parentDocShellItem;
+    }
 
-        // Traverse up the parent chain and stop when we see a docshell whose
-        // parent has a system principal, or a docshell corresponding to
-        // <iframe mozbrowser>.
-        while (NS_SUCCEEDED(curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem))) &&
-               parentDocShellItem) {
+    // If this document has the top non-SystemPrincipal docshell it is not being
+    // framed or it is being framed by a chrome document, which we allow.
+    if (curDocShellItem == thisDocShellItem)
+        return true;
 
-            nsCOMPtr<nsIDocShell> curDocShell = do_QueryInterface(curDocShellItem);
-            if (curDocShell && curDocShell->GetIsContentBoundary()) {
-              break;
-            }
+    // If the value of the header is DENY, and the previous condition is
+    // not met (current docshell is not the top docshell), prohibit the
+    // load.
+    if (policy.LowerCaseEqualsLiteral("deny")) {
+        ReportXFOViolation(curDocShellItem, uri, eDENY);
+        return false;
+    }
 
-            bool system = false;
-            topDoc = do_GetInterface(parentDocShellItem);
-            if (topDoc) {
-                if (NS_SUCCEEDED(ssm->IsSystemPrincipal(topDoc->NodePrincipal(),
-                                                        &system)) && system) {
-                    // Found a system-principled doc: last docshell was top.
-                    break;
-                }
-            }
-            else {
-                return false;
-            }
-            curDocShellItem = parentDocShellItem;
+    topDoc = do_GetInterface(curDocShellItem);
+    nsCOMPtr<nsIURI> topUri;
+    topDoc->NodePrincipal()->GetURI(getter_AddRefs(topUri));
+
+    // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
+    // parent chain must be from the same origin as this document.
+    if (policy.LowerCaseEqualsLiteral("sameorigin")) {
+        rv = ssm->CheckSameOriginURI(uri, topUri, true);
+        if (NS_FAILED(rv)) {
+            ReportXFOViolation(curDocShellItem, uri, eSAMEORIGIN);
+            return false; /* wasn't same-origin */
         }
+    }
 
-        // If this document has the top non-SystemPrincipal docshell it is not being
-        // framed or it is being framed by a chrome document, which we allow.
-        if (curDocShellItem == thisDocShellItem)
-            return true;
+    // If the X-Frame-Options value is "allow-from [uri]", then the top
+    // frame in the parent chain must be from that origin
+    if (isAllowFrom) {
+        rv = NS_NewURI(getter_AddRefs(uri),
+                       Substring(policy, allowFromLen));
+        if (NS_FAILED(rv))
+          return false;
 
-        // If the value of the header is DENY, and the previous condition is
-        // not met (current docshell is not the top docshell), prohibit the
-        // load.
-        if (policy.LowerCaseEqualsLiteral("deny")) {
+        rv = ssm->CheckSameOriginURI(uri, topUri, true);
+        if (NS_FAILED(rv)) {
+            ReportXFOViolation(curDocShellItem, uri, eALLOWFROM);
             return false;
-        }
-
-        topDoc = do_GetInterface(curDocShellItem);
-        nsCOMPtr<nsIURI> topUri;
-        topDoc->NodePrincipal()->GetURI(getter_AddRefs(topUri));
-        nsCOMPtr<nsIURI> uri;
-
-        // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
-        // parent chain must be from the same origin as this document.
-        if (policy.LowerCaseEqualsLiteral("sameorigin")) {
-            httpChannel->GetURI(getter_AddRefs(uri));
-            rv = ssm->CheckSameOriginURI(uri, topUri, true);
-            if (NS_FAILED(rv))
-                return false; /* wasn't same-origin */
-        }
-
-        // If the X-Frame-Options value is "allow-from [uri]", then the top
-        // frame in the parent chain must be from that origin
-        if (isAllowFrom) {
-            rv = NS_NewURI(getter_AddRefs(uri),
-                           Substring(policy, allowFromLen));
-            if (NS_FAILED(rv))
-              return false;
-
-            rv = ssm->CheckSameOriginURI(uri, topUri, true);
-            if (NS_FAILED(rv))
-                return false;
         }
     }
 
@@ -419,4 +429,78 @@ bool nsDSURIContentListener::CheckFrameOptions(nsIRequest *request)
     }
 
     return true;
+}
+
+void
+nsDSURIContentListener::ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem,
+                                           nsIURI* aThisURI,
+                                           XFOHeader aHeader)
+{
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsPIDOMWindow> topOuterWindow = do_GetInterface(aTopDocShellItem);
+    if (!topOuterWindow)
+        return;
+
+    NS_ASSERTION(topOuterWindow->IsOuterWindow(), "Huh?");
+    nsPIDOMWindow* topInnerWindow = topOuterWindow->GetCurrentInnerWindow();
+    if (!topInnerWindow)
+        return;
+
+    nsCOMPtr<nsIURI> topURI;
+
+    nsCOMPtr<nsIDocument> document;
+
+    document = do_GetInterface(aTopDocShellItem);
+    rv = document->NodePrincipal()->GetURI(getter_AddRefs(topURI));
+    if (NS_FAILED(rv))
+        return;
+
+    if (!topURI)
+        return;
+
+    nsCString topURIString;
+    nsCString thisURIString;
+
+    rv = topURI->GetSpec(topURIString);
+    if (NS_FAILED(rv))
+        return;
+
+    rv = aThisURI->GetSpec(thisURIString);
+    if (NS_FAILED(rv))
+        return;
+
+    nsCOMPtr<nsIConsoleService> consoleService =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    nsCOMPtr<nsIScriptError> errorObject =
+      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+
+    if (!consoleService || !errorObject)
+        return;
+
+    nsString msg = NS_LITERAL_STRING("Load denied by X-Frame-Options: ");
+    msg.Append(NS_ConvertUTF8toUTF16(thisURIString));
+
+    switch (aHeader) {
+        case eDENY:
+            msg.AppendLiteral(" does not permit framing.");
+            break;
+        case eSAMEORIGIN:
+            msg.AppendLiteral(" does not permit cross-origin framing.");
+            break;
+        case eALLOWFROM:
+            msg.AppendLiteral(" does not permit framing by ");
+            msg.Append(NS_ConvertUTF8toUTF16(topURIString));
+            msg.AppendLiteral(".");
+            break;
+    }
+
+    rv = errorObject->InitWithWindowID(msg, EmptyString(), EmptyString(), 0, 0,
+                                       nsIScriptError::errorFlag,
+                                       "X-Frame-Options",
+                                       topInnerWindow->WindowID());
+    if (NS_FAILED(rv))
+        return;
+
+    consoleService->LogMessage(errorObject);
 }

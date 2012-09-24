@@ -536,21 +536,13 @@ NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
     aWindow :
     aWindow->GetCurrentInnerWindow();
 
-  // Need the document for security check.
-  nsCOMPtr<nsIDocument> document =
-    do_QueryInterface(innerWindow->GetExtantDocument());
-  NS_ENSURE_TRUE(document, NS_NOINTERFACE);
-
-  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
-  NS_ENSURE_TRUE(principal, NS_ERROR_UNEXPECTED);
-
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permMgr, NS_ERROR_UNEXPECTED);
 
   uint32_t permission;
   nsresult rv =
-    permMgr->TestPermissionFromPrincipal(principal, "telephony", &permission);
+    permMgr->TestPermissionFromWindow(aWindow, "telephony", &permission);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (permission != nsIPermissionManager::ALLOW_ACTION) {
