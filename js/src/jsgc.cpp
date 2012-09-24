@@ -959,44 +959,47 @@ InFreeList(ArenaHeader *aheader, uintptr_t addr)
 }
 
 #ifdef JSGC_USE_EXACT_ROOTING
+static inline void
+MarkExactStackRooter(JSTracer *trc, Rooted<void*> rooter, ThingRootKind kind)
+{
+    void **addr = (void **)rooter->address();
+    if (!*addr)
+        return;
+
+    switch (kind) {
+      case THING_ROOT_OBJECT:      MarkObjectRoot(trc, (JSObject **)addr, "exact-object"); break;
+      case THING_ROOT_STRING:      MarkStringRoot(trc, (JSSTring **)addr, "exact-string"); break;
+      case THING_ROOT_SCRIPT:      MarkScriptRoot(trc, (JSScript **)addr, "exact-script"); break;
+      case THING_ROOT_SHAPE:       MarkShapeRoot(trc, (Shape **)addr, "exact-shape"); break;
+      case THING_ROOT_BASE_SHAPE:  MarkBaseShapeRoot(trc, (BaseShape **)addr, "exact-baseshape"); break;
+      case THING_ROOT_TYPE:        MarkTypeRoot(trc, (types::Type *)addr, "exact-type"); break;
+      case THING_ROOT_TYPE_OBJECT: MarkTypeObjectRoot(trc, (types::TypeObject **)addr, "exact-typeobject"); break;
+      case THING_ROOT_VALUE:       MarkValueRoot(trc, (Value *)addr, "exact-value"); break;
+      case THING_ROOT_ID:          MarkIdRoot(trc, (jsid *)addr, "exact-id"); break;
+      case THING_ROOT_PROPERTY_ID: MarkIdRoot(trc, &((js::PropertyId *)addr)->asId(), "exact-propertyid"); break;
+      case THING_ROOT_BINDINGS:    ((Bindings *)addr)->trace(trc); break;
+      default: JS_NOT_REACHED("Invalid THING_ROOT kind"); break;
+    }
+}
+
+static inline void
+MarkExactStackRooters(JSTracer *trc, Rooted<void*> rooter, ThingRootKind kind)
+{
+    Rooted<void*> *rooter = cx->thingGCRooters[i];
+    while (rooter) {
+        MarkExactStackRoot(trc, rooter, ThingRootKind(i));
+        rooter = rooter->previous();
+    }
+}
+
 static void
 MarkExactStackRoots(JSTracer *trc)
 {
-    for (ContextIter cx(trc->runtime); !cx.done(); cx.next()) {
-        for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-            Rooted<void*> *rooter = cx->thingGCRooters[i];
-            while (rooter) {
-                void **addr = (void **)rooter->address();
-                if (*addr) {
-                    if (i == THING_ROOT_OBJECT) {
-                        MarkObjectRoot(trc, (JSObject **)addr, "exact stackroot object");
-                    } else if (i == THING_ROOT_STRING) {
-                        MarkStringRoot(trc, (JSString **)addr, "exact stackroot string");
-                    } else if (i == THING_ROOT_ID) {
-                        MarkIdRoot(trc, (jsid *)addr, "exact stackroot id");
-                    } else if (i == THING_ROOT_PROPERTY_ID) {
-                        MarkIdRoot(trc, &((PropertyId *)addr)->asId(), "exact stackroot property id");
-                    } else if (i == THING_ROOT_VALUE) {
-                        MarkValueRoot(trc, (Value *)addr, "exact stackroot value");
-                    } else if (i == THING_ROOT_TYPE) {
-                        MarkTypeRoot(trc, (types::Type *)addr, "exact stackroot type");
-                    } else if (i == THING_ROOT_SHAPE) {
-                        MarkShapeRoot(trc, (Shape **)addr, "exact stackroot shape");
-                    } else if (i == THING_ROOT_BASE_SHAPE) {
-                        MarkBaseShapeRoot(trc, (BaseShape **)addr, "exact stackroot baseshape");
-                    } else if (i == THING_ROOT_TYPE_OBJECT) {
-                        MarkTypeObjectRoot(trc, (types::TypeObject **)addr, "exact stackroot typeobject");
-                    } else if (i == THING_ROOT_SCRIPT) {
-                        MarkScriptRoot(trc, (JSScript **)addr, "exact stackroot script");
-                    } else if (i == THING_ROOT_XML) {
-                        MarkXMLRoot(trc, (JSXML **)addr, "exact stackroot xml");
-                    } else {
-                        JS_NOT_REACHED("Invalid thing root kind.");
-                    }
-                }
-                rooter = rooter->previous();
-            }
+    for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
+        for (ContextIter cx(trc->runtime); !cx.done(); cx.next()) {
+            MarkExactStackRooters(trc, cx->thingGCRooters[i], ThingRootKind(i));
         }
+        MarkExactStackRooters(trc, rt->thingGCRooters[i], ThingRootKind(i));
     }
 }
 #endif /* JSGC_USE_EXACT_ROOTING */
@@ -4970,11 +4973,21 @@ SetValidateGC(JSContext *cx, bool enabled)
 
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 
+JS_ALWAYS_INLINE bool
+CheckStackRootThing(uintptr_t *w, void *address, ThingRootKind kind)
+{
+    if (kind != THING_ROOT_BINDINGS)
+        return address == static_cast<void*>(w);
+
+    Bindings *bp = static_cast<Bindings*>(address);
+    return w >= (uintptr_t*)bp && w < (uintptr_t*)(bp + 1);
+}
+
 JS_ALWAYS_INLINE void
-CheckStackRootThings(uintptr_t *w, Rooted<void*> *rooter, bool *matched)
+CheckStackRootThings(uintptr_t *w, Rooted<void*> *rooter, ThingRootKind kind, bool *matched)
 {
     while (rooter) {
-        if (rooter->address() == static_cast<void*>(w))
+        if (CheckStackRootThing(w, rooter->address(), kind))
             *matched = true;
         rooter = rooter->previous();
     }
@@ -4994,9 +5007,9 @@ CheckStackRoot(JSTracer *trc, uintptr_t *w)
         bool matched = false;
         JSRuntime *rt = trc->runtime;
         for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-            CheckStackRootThings(w, rt->thingGCRooters[i], &matched);
+            CheckStackRootThings(w, rt->thingGCRooters[i], ThingRootKind(i), &matched);
             for (ContextIter cx(rt); !cx.done(); cx.next()) {
-                CheckStackRootThings(w, cx->thingGCRooters[i], &matched);
+                CheckStackRootThings(w, cx->thingGCRooters[i], ThingRootKind(i), &matched);
                 SkipRoot *skip = cx->skipGCRooters;
                 while (skip) {
                     if (skip->contains(reinterpret_cast<uint8_t*>(w), sizeof(w)))
