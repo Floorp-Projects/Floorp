@@ -404,7 +404,7 @@ var WifiManager = (function() {
   }
 
   function setPowerModeCommand(mode, callback) {
-    doBooleanCommand("DRIVER POWERMODE " + mode, "OK", callback);
+    doBooleanCommand("DRIVER POWERMODE " + (mode === "AUTO" ? 0 : 1), "OK", callback);
   }
 
   function getPowerModeCommand(callback) {
@@ -1174,6 +1174,8 @@ var WifiManager = (function() {
   manager.wpsPbc = wpsPbcCommand;
   manager.wpsPin = wpsPinCommand;
   manager.wpsCancel = wpsCancelCommand;
+  manager.setPowerMode = setPowerModeCommand;
+  manager.setSuspendOptimizations = setSuspendOptimizationsCommand;
   manager.getRssiApprox = getRssiApproxCommand;
   manager.getLinkSpeed = getLinkSpeedCommand;
   manager.getDhcpInfo = function() { return dhcpInfo; }
@@ -1370,6 +1372,7 @@ function WifiWorker() {
   const messages = ["WifiManager:getNetworks",
                     "WifiManager:associate", "WifiManager:forget",
                     "WifiManager:wps", "WifiManager:getState",
+                    "WifiManager:setPowerSavingMode",
                     "WifiManager:managerFinished"];
 
   messages.forEach((function(msgName) {
@@ -1982,6 +1985,9 @@ WifiWorker.prototype = {
       case "WifiManager:wps":
         this.wps(msg);
         break;
+      case "WifiManager:setPowerSavingMode":
+        this.setPowerSavingMode(msg);
+        break;
       case "WifiManager:getState": {
         let net = this.currentNetwork ? netToDOM(this.currentNetwork) : null;
         let i;
@@ -2265,6 +2271,25 @@ WifiWorker.prototype = {
       self._sendMessage(message, false, "Invalid WPS method=" + detail.method,
                         msg);
     }
+  },
+
+  setPowerSavingMode: function(msg) {
+    const message = "WifiManager:setPowerSavingMode:Return";
+    let self = this;
+    let enabled = msg.data;
+    let mode = enabled ? "AUTO" : "ACTIVE";
+
+    // Some wifi drivers may not implement this command. Set power mode
+    // even if suspend optimization command failed.
+    WifiManager.setSuspendOptimizations(enabled, function(ok) {
+      WifiManager.setPowerMode(mode, function(ok) {
+        if (ok) {
+          self._sendMessage(message, true, true, msg);
+        } else {
+          self._sendMessage(message, false, "Set power saving mode failed", msg);
+        }
+      });
+    });
   },
 
   // This is a bit ugly, but works. In particular, this depends on the fact
