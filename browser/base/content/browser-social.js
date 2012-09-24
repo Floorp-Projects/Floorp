@@ -80,10 +80,6 @@ let SocialUI = {
     let accesskey = gNavigatorBundle.getString("social.toggle.accesskey");
     toggleCommand.setAttribute("label", label);
     toggleCommand.setAttribute("accesskey", accesskey);
-    // Override the normal 'checked' state set by updateToggleCommand
-    // when in safe mode so the feature can be disabled.
-    if (Services.appinfo.inSafeMode)
-      toggleCommand.setAttribute("checked", Services.prefs.getBoolPref("social.enabled"));
 
     SocialToolbar.init();
     SocialShareButton.init();
