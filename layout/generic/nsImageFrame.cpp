@@ -679,11 +679,7 @@ nsImageFrame::FrameChanged(imgIRequest *aRequest,
     return NS_OK;
   }
 
-  if (aDirtyRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect())) {
-    InvalidateFrame();
-  } else {
-    InvalidateFrameWithRect(SourceRectToDest(*aDirtyRect));
-  }
+  InvalidateLayer(nsDisplayItem::TYPE_IMAGE);
   return NS_OK;
 }
 
