@@ -63,6 +63,7 @@ sync_stage_modules := \
   $(NULL)
 
 sync_testing_modules := \
+  fakeservices.js \
   rotaryengine.js \
   $(NULL)
 
