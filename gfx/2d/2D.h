@@ -36,6 +36,7 @@ namespace gfx {
 class SourceSurface;
 class DataSourceSurface;
 class DrawTarget;
+class DrawEventRecorder;
 
 struct NativeSurface {
   NativeSurfaceType mType;
@@ -848,7 +849,10 @@ public:
 
   static TemporaryRef<DrawTarget>
     CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
-  
+
+  static TemporaryRef<DrawTarget>
+    CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT);
+     
   static TemporaryRef<DrawTarget>
     CreateDrawTargetForData(BackendType aBackend, unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
 
@@ -893,6 +897,11 @@ public:
     CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
                                     const IntSize &aSize, SurfaceFormat aFormat);
 
+  static TemporaryRef<DrawEventRecorder>
+    CreateEventRecorderForFile(const char *aFilename);
+
+  static void SetGlobalEventRecorder(DrawEventRecorder *aRecorder);
+
 #ifdef WIN32
   static TemporaryRef<DrawTarget> CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
   static TemporaryRef<DrawTarget>
@@ -912,6 +921,8 @@ public:
 private:
   static ID3D10Device1 *mD3D10Device;
 #endif
+
+  static DrawEventRecorder *mRecorder;
 };
 
 }
