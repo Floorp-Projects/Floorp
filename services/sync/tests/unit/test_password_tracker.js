@@ -5,6 +5,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/passwords.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 Service.engineManager.register(PasswordEngine);
 let engine = Service.engineManager.get("passwords");

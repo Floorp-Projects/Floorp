@@ -4,6 +4,7 @@
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 const TEST_GET_URL = "http://localhost:8080/1.1/johndoe/storage/meta/global";
