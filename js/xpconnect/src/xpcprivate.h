@@ -1586,6 +1586,10 @@ public:
     nsXPCComponents*
     GetComponents() const {return mComponents;}
 
+    // Returns the JS object reflection of the Components object.
+    JSObject*
+    GetComponentsJSObject(XPCCallContext& ccx);
+
     JSObject*
     GetGlobalJSObject() const
         {return xpc_UnmarkGrayObject(mGlobalJSObject);}
@@ -1682,8 +1686,6 @@ public:
     static JSBool
     IsDyingScope(XPCWrappedNativeScope *scope);
 
-    void SetComponents(nsXPCComponents* aComponents);
-    nsXPCComponents *GetComponents();
     void SetGlobal(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative);
 
     static void InitStatics() { gScopes = nullptr; gDyingScopes = nullptr; }
