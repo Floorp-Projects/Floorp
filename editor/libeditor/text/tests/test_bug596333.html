@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=596333
 <script type="application/javascript">
 
 /** Test for Bug 596333 **/
-const Ci = Components.interfaces;
+const Ci = SpecialPowers.Ci;
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() SimpleTest.executeSoon(runTest));

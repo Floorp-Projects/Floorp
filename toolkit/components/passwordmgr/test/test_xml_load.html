@@ -22,15 +22,12 @@ Login Manager test: XML prompt
 var pwmgr, login1, login2;
 
 function initLogins() {
-  pwmgr = SpecialPowers.wrap(Components)
-                       .classes["@mozilla.org/login-manager;1"]
+  pwmgr = SpecialPowers.wrap(Components).classes["@mozilla.org/login-manager;1"]
                        .getService(Ci.nsILoginManager);
 
-  login1 = SpecialPowers.wrap(Components)
-                        .classes["@mozilla.org/login-manager/loginInfo;1"]
+  login1 = SpecialPowers.wrap(Components).classes["@mozilla.org/login-manager/loginInfo;1"]
                         .createInstance(Ci.nsILoginInfo);
-  login2 = SpecialPowers.wrap(Components)
-                        .classes["@mozilla.org/login-manager/loginInfo;1"]
+  login2 = SpecialPowers.wrap(Components).classes["@mozilla.org/login-manager/loginInfo;1"]
                         .createInstance(Ci.nsILoginInfo);
 
   login1.init("http://mochi.test:8888", null, "xml",
@@ -167,8 +164,7 @@ initLogins();
 
 // clear plain HTTP auth sessions before the test, to allow
 // running them more than once.
-var authMgr = SpecialPowers.wrap(Components)
-                           .classes['@mozilla.org/network/http-auth-manager;1']
+var authMgr = SpecialPowers.wrap(Components).classes['@mozilla.org/network/http-auth-manager;1']
                            .getService(Components.interfaces.nsIHttpAuthManager);
 authMgr.clearAll();
 

@@ -19,8 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=422537
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 422537 **/
-var isupports_string = SpecialPowers.wrap(Components)
-                                    .classes["@mozilla.org/supports-string;1"]
+var isupports_string = SpecialPowers.wrap(Components).classes["@mozilla.org/supports-string;1"]
                                     .createInstance(Components.interfaces.nsISupportsString);
 isupports_string.data = "foo";
 

@@ -22,8 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=627498
 
 var importObj = {};
 
-var Cc = SpecialPowers.wrap(Components).classes;
-var Ci = Components.interfaces;
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
 
 var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
 

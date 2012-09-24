@@ -107,8 +107,7 @@ for each (var data in types) {
                            .getService(Components.interfaces.nsIProperties);
     var file = dirSvc.get("ProfD", Components.interfaces.nsIFile);
     file.append('635499_file');
-    var outStream = Components.
-                    classes["@mozilla.org/network/file-output-stream;1"].
+    var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"].
                     createInstance(Components.interfaces.nsIFileOutputStream);
     outStream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
                    0666, 0);

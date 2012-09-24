@@ -45,7 +45,7 @@ function HTML_TAG(aTagName, aImplClass) {
       "nsISupportsWeakReference" ];
 
   var interfaceName = "nsIDOM" + getClassName(aTagName);
-  if (interfaceName in Components.interfaces) {  // no nsIDOMHTMLSpanElement
+  if (interfaceName in SpecialPowers.Ci) {  // no nsIDOMHTMLSpanElement
     interfaces[aTagName].push(interfaceName);
     interfacesNonClassinfo[aTagName].push("nsIDOMHTMLElement");
   } else {
@@ -54,7 +54,7 @@ function HTML_TAG(aTagName, aImplClass) {
   }
 
   var interfaceNameNS = "nsIDOMNS" + getClassName(aTagName);
-  if (interfaceNameNS in Components.interfaces) {
+  if (interfaceNameNS in SpecialPowers.Ci) {
     interfaces[aTagName].push(interfaceNameNS);
   }
 
@@ -245,24 +245,24 @@ for each (var tag in allTags) {
      tagName(tag) + " not an instance of " + classInfos[tag]);
   is(node instanceof HTMLUnknownElement, false,
      tagName(tag) + " is an instance of HTMLUnknownElement");
-  is(node instanceof Components.interfaces.nsIDOMHTMLUnknownElement, false,
+  is(node instanceof SpecialPowers.Ci.nsIDOMHTMLUnknownElement, false,
      tagName(tag) + " is an instance of nsIDOMHTMLUnknownElement");
 
   // Check that each node QIs to all the things we expect it to QI to
   for each (var iface in interfaces[tag].concat(interfacesNonClassinfo[tag])) {
-    is(iface in Components.interfaces, true,
+    is(iface in SpecialPowers.Ci, true,
        iface + " not in Components.interfaces");
-    is(node instanceof Components.interfaces[iface], true,
+    is(node instanceof SpecialPowers.Ci[iface], true,
        tagName(tag) + " does not QI to " + iface);
   }
 
   // Now see what classinfo reports
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var nodeClassInfo = node.QueryInterface(Components.interfaces.nsIClassInfo);
+  var nodeClassInfo = SpecialPowers.wrap(node).QueryInterface(SpecialPowers.Ci.nsIClassInfo);
   var count = {};
   var classInfoInterfaces =
     nodeClassInfo.getInterfaces(count).
-    map(function(id) { return Components.interfacesByID[id].toString(); });
+    map(function(id) { return SpecialPowers.Components.interfacesByID[id].toString(); });
 
   // Make sure that we know about all the things classinfo claims
   for each (var classInfoInterface in classInfoInterfaces) {
