@@ -350,6 +350,11 @@ gfxPlatform::Init()
     // ::Shutdown to be called.
     nsCOMPtr<nsISupports> forceReg
         = do_CreateInstance("@mozilla.org/gfx/init;1");
+
+    if (Preferences::GetBool("gfx.2d.recording", false)) {
+      gPlatform->mRecorder = Factory::CreateEventRecorderForFile("browserrecording.aer");
+      Factory::SetGlobalEventRecorder(gPlatform->mRecorder);
+    }
 }
 
 void

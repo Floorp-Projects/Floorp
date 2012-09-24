@@ -551,6 +551,8 @@ private:
 
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
     bool mWorkAroundDriverBugs;
+
+    mozilla::RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
 };
 
 #endif /* GFX_PLATFORM_H */
