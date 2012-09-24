@@ -204,6 +204,18 @@ GetTimezone()
 }
 
 void
+EnableSystemTimeChangeNotifications()
+{
+  Hal()->SendEnableSystemTimeChangeNotifications();
+}
+
+void
+DisableSystemTimeChangeNotifications()
+{
+  Hal()->SendDisableSystemTimeChangeNotifications();
+}
+
+void
 Reboot()
 {
   Hal()->SendReboot();
@@ -362,6 +374,7 @@ class HalParent : public PHalParent
                 , public WakeLockObserver
                 , public ScreenConfigurationObserver
                 , public SwitchObserver
+                , public SystemTimeObserver
 {
 public:
   virtual void
@@ -605,6 +618,20 @@ public:
       return false;
     }
     *aTimezoneSpec = hal::GetTimezone();
+    return true;
+  }
+
+  virtual bool
+  RecvEnableSystemTimeChangeNotifications() MOZ_OVERRIDE
+  {
+    hal::RegisterSystemTimeChangeObserver(this);
+    return true;
+  }
+
+  virtual bool
+  RecvDisableSystemTimeChangeNotifications() MOZ_OVERRIDE
+  {
+    hal::UnregisterSystemTimeChangeObserver(this);
     return true;
   }
 

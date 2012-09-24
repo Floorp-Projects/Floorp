@@ -51,7 +51,7 @@
         url = decodeURIComponent(match[1]);
 
         // If this is a view-source page, then get then real URI of the page
-        if (/^view-source\:/.test(url))
+        if (url.startsWith("view-source:"))
           url = url.slice(12);
         return url;
       }

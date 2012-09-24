@@ -735,7 +735,7 @@ var allTabs = {
   },
 
   handleEvent: function allTabs_handleEvent(event) {
-    if (/^Tab/.test(event.type)) {
+    if (event.type.startsWith("Tab")) {
       var tab = event.target;
       if (event.type != "TabOpen")
         var preview = this._getPreview(tab);
