@@ -7,7 +7,7 @@
 %include ../shared.inc
 
 #body {
-  background: -moz-dialog;
+  background-color: white;
 }
 
 /**
