@@ -463,7 +463,7 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
         rv = WriteCacheEntryUnavailable();
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 n;
+    uint32_t n;
     NS_NAMED_LITERAL_CSTRING(buffer, "</body>\n</html>\n");
     mOutputStream->Write(buffer.get(), buffer.Length(), &n);
     mOutputStream->Close();
