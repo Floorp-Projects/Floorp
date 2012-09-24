@@ -122,6 +122,7 @@ nsIDocument* nsEventStateManager::sMouseOverDocument = nullptr;
 nsWeakFrame nsEventStateManager::sLastDragOverFrame = nullptr;
 nsIntPoint nsEventStateManager::sLastRefPoint = nsIntPoint(0,0);
 nsIntPoint nsEventStateManager::sLastScreenPoint = nsIntPoint(0,0);
+nsIntPoint nsEventStateManager::sSynthCenteringPoint = nsIntPoint(-1,-1);
 nsIntPoint nsEventStateManager::sLastClientPoint = nsIntPoint(0,0);
 bool nsEventStateManager::sIsPointerLocked = false;
 // Reference to the pointer locked element.
@@ -4132,19 +4133,36 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
   switch(aEvent->message) {
   case NS_MOUSE_MOVE:
     {
+      // Mouse movement is reported on the MouseEvent.movement{X,Y} fields.
+      // Movement is calculated in nsDOMUIEvent::GetMovementPoint() as:
+      //   previous_mousemove_refPoint - current_mousemove_refPoint.
       if (sIsPointerLocked && aEvent->widget) {
-        // Perform mouse lock by recentering the mouse directly, and storing
-        // the refpoints so movement deltas can be calculated.
+        // The pointer is locked. If the pointer is not located at the center of
+        // the window, dispatch a synthetic mousemove to return the pointer there.
+        // Doing this between "real" pointer moves gives the impression that the
+        // (locked) pointer can continue moving and won't stop at the screen
+        // boundary. We cancel the synthetic event so that we don't end up
+        // dispatching the centering move event to content.
         nsIntPoint center = GetWindowInnerRectCenter(mDocument->GetWindow(),
                                                      aEvent->widget,
                                                      mPresContext);
         aEvent->lastRefPoint = center;
         if (aEvent->refPoint != center) {
-          // This mouse move doesn't finish at the center of the widget,
-          // dispatch a synthetic mouse move to return the mouse back to
-          // the center.
+          // Mouse move doesn't finish at the center of the window. Dispatch a
+          // synthetic native mouse event to move the pointer back to the center
+          // of the window, to faciliate more movement. But first, record that
+          // we've dispatched a synthetic mouse movement, so we can cancel it
+          // in the other branch here.
+          sSynthCenteringPoint = center;
           aEvent->widget->SynthesizeNativeMouseMove(
             center + aEvent->widget->WidgetToScreenOffset());
+        } else if (aEvent->refPoint == sSynthCenteringPoint) {
+          // This is the "synthetic native" event we dispatched to re-center the
+          // pointer. Cancel it so we don't expose the centering move to content.
+          aEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+          // Clear sSynthCenteringPoint so we don't cancel other events
+          // targeted at the center.
+          sSynthCenteringPoint = nsIntPoint(-1,-1);
         }
       } else {
         aEvent->lastRefPoint = sLastRefPoint;
