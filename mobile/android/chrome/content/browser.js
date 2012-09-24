@@ -3231,7 +3231,7 @@ Tab.prototype = {
         tabID: this.id,
         uri: fixedURI.spec,
         documentURI: documentURI,
-        contentType: contentType,
+        contentType: (contentType ? contentType : ""),
         sameDocument: sameDocument
       }
     };
