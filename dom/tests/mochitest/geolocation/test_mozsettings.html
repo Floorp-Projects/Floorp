@@ -37,10 +37,9 @@ resume_geolocationProvider();
 force_prompt(true);
 
 
-var comp = SpecialPowers.wrap(SpecialPowers.Components);
 SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
 SpecialPowers.addPermission("settings", true, document);
-comp.utils.import("resource://gre/modules/SettingsChangeNotifier.jsm");
+SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
 
 toggleGeolocationSetting(false, function() {
     ok(true, "turned off geolocation via mozSettings");
