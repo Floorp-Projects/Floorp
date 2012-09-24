@@ -32,6 +32,14 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   return NetUtil;
 });
 
+#ifdef MOZ_SAFE_BROWSING
+XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
+  let tmp = {};
+ Cu.import("resource://gre/modules/SafeBrowsing.jsm", tmp);
+  return tmp.SafeBrowsing;
+});
+#endif
+
 // Lazily-loaded browser scripts:
 [
   ["HelperApps", "chrome://browser/content/HelperApps.js"],
@@ -344,6 +352,11 @@ var BrowserApp = {
         "value": Services.prefs.getBoolPref("gfx.show_checkerboard_pattern")
       }
     });
+
+#ifdef MOZ_SAFE_BROWSING
+    // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
+    setTimeout(function() { SafeBrowsing.init(); }, 2000);
+#endif
   },
 
   isAppUpdated: function() {
@@ -4212,6 +4225,59 @@ var ErrorPageEventHandler = {
             errorDoc.location.reload();
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
             errorDoc.location = "about:home";
+          }
+        } else if (/^about:blocked/.test(errorDoc.documentURI)) {
+          let secHistogram = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry).getHistogramById("SECURITY_UI");
+
+          // The event came from a button on a malware/phishing block page
+          // First check whether it's malware or phishing, so that we can
+          // use the right strings/links
+          let isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
+          let bucketName = isMalware ? "WARNING_MALWARE_PAGE_" : "WARNING_PHISHING_PAGE_";
+          let nsISecTel = Ci.nsISecurityUITelemetry;
+
+          let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+
+          if (target == errorDoc.getElementById("getMeOutButton")) {
+            secHistogram.add(nsISecTel[bucketName + "GET_ME_OUT_OF_HERE"]);
+            errorDoc.location = "about:home";
+          } else if (target == errorDoc.getElementById("reportButton")) {
+            // We log even if malware/phishing info URL couldn't be found:
+            // the measurement is for how many users clicked the WHY BLOCKED button
+            secHistogram.add(nsISecTel[bucketName + "WHY_BLOCKED"]);
+
+            // This is the "Why is this site blocked" button.  For malware,
+            // we can fetch a site-specific report, for phishing, we redirect
+            // to the generic page describing phishing protection.
+            if (isMalware) {
+              // Get the stop badware "why is this blocked" report url, append the current url, and go there.
+              try {
+                let reportURL = formatter.formatURLPref("browser.safebrowsing.malware.reportURL");
+                reportURL += errorDoc.location.href;
+                BrowserApp.selectedBrowser.loadURI(reportURL);
+              } catch (e) {
+                Cu.reportError("Couldn't get malware report URL: " + e);
+              }
+            } else {
+              // It's a phishing site, not malware. (There's no report URL)
+              try {
+                let reportURL = formatter.formatURLPref("browser.safebrowsing.warning.infoURL");
+                BrowserApp.selectedBrowser.loadURI(reportURL);
+              } catch (e) {
+                Cu.reportError("Couldn't get phishing info URL: " + e);
+              }
+            }
+          } else if (target == errorDoc.getElementById("ignoreWarningButton")) {
+            secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
+
+            // Allow users to override and continue through to the site,
+            let webNav = BrowserApp.selectedBrowser.docShell.QueryInterface(Ci.nsIWebNavigation);
+            let location = BrowserApp.selectedBrowser.contentWindow.location;
+            webNav.loadURI(location, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER, null, null, null);
+
+            // ....but add a notify bar as a reminder, so that they don't lose
+            // track after, e.g., tab switching.
+            NativeWindow.doorhanger.show(Strings.browser.GetStringFromName("safeBrowsingDoorhanger"), "safebrowsing-warning", [], BrowserApp.selectedTab.id);
           }
         }
         break;
