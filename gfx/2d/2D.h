@@ -456,6 +456,8 @@ class ScaledFont : public RefCounted<ScaledFont>
 public:
   virtual ~ScaledFont() {}
 
+  typedef void (*FontFileDataOutput)(const uint8_t *aData, uint32_t aLength, uint32_t aIndex, Float aGlyphSize, void *aBaton);
+
   virtual FontType GetType() const = 0;
 
   /* This allows getting a path that describes the outline of a set of glyphs.
@@ -471,6 +473,8 @@ public:
    * others.
    */
   virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder) = 0;
+
+  virtual bool GetFontFileData(FontFileDataOutput, void *) { return false; }
 
 protected:
   ScaledFont() {}
@@ -835,6 +839,18 @@ public:
 
   static TemporaryRef<ScaledFont>
     CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize);
+
+  /**
+   * This creates a ScaledFont from TrueType data.
+   *
+   * aData - Pointer to the data
+   * aSize - Size of the TrueType data
+   * aFaceIndex - Index of the font face in the truetype data this ScaledFont needs to represent.
+   * aGlyphSize - Size of the glyphs in this ScaledFont
+   * aType - Type of ScaledFont that should be created.
+   */
+  static TemporaryRef<ScaledFont>
+    CreateScaledFontForTrueTypeData(uint8_t *aData, uint32_t aSize, uint32_t aFaceIndex, Float aGlyphSize, FontType aType);
 
   /*
    * This creates a scaled font with an associated cairo_scaled_font_t, and
