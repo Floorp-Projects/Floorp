@@ -127,6 +127,7 @@ namespace mozilla {
 namespace layers {
 class LayerManager;
 class ImageContainer;
+class Image;
 }
 namespace image {
 
@@ -574,6 +575,12 @@ private:
 
   bool ApplyDecodeFlags(uint32_t aNewFlags);
 
+  already_AddRefed<layers::Image> GetCurrentImage();
+  void UpdateImageContainer();
+
+  void SetInUpdateImageContainer(bool aInUpdate) { mInUpdateImageContainer = aInUpdate; }
+  bool IsInUpdateImageContainer() { return mInUpdateImageContainer; }
+
 private: // data
 
   nsIntSize                  mSize;
@@ -653,6 +660,8 @@ private: // data
 
   // Whether we're calling Decoder::Finish() from ShutdownDecoder.
   bool                       mFinishing:1;
+
+  bool                       mInUpdateImageContainer:1;
 
   // Decoding
   nsresult WantDecodedFrames();

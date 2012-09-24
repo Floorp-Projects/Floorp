@@ -171,7 +171,8 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   mHasBeenDecoded(false),
   mInDecoder(false),
   mAnimationFinished(false),
-  mFinishing(false)
+  mFinishing(false),
+  mInUpdateImageContainer(false)
 {
   // Set up the discard tracker node.
   mDiscardTrackerNode.img = this;
@@ -292,7 +293,6 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
   uint32_t currentFrameIndex = mAnim->currentAnimationFrameIndex;
   uint32_t nextFrameIndex = mAnim->currentAnimationFrameIndex + 1;
   uint32_t timeout = 0;
-  mImageContainer = nullptr;
 
   // Figure out if we have the next full frame. This is more complicated than
   // just checking for mFrames.Length() because decoders append their frames
@@ -439,6 +439,7 @@ RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
       mFramesNotified++;
     #endif
 
+    UpdateImageContainer();
     observer->FrameChanged(nullptr, this, &dirtyRect);
   }
 }
@@ -862,6 +863,28 @@ RasterImage::GetFrame(uint32_t aWhichFrame,
   return rv;
 }
 
+already_AddRefed<layers::Image>
+RasterImage::GetCurrentImage()
+{
+  nsRefPtr<gfxASurface> imageSurface;
+  nsresult rv = GetFrame(FRAME_CURRENT, FLAG_SYNC_DECODE, getter_AddRefs(imageSurface));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  CairoImage::Data cairoData;
+  cairoData.mSurface = imageSurface;
+  GetWidth(&cairoData.mSize.width);
+  GetHeight(&cairoData.mSize.height);
+
+  ImageFormat cairoFormat = CAIRO_SURFACE;
+  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&cairoFormat, 1);
+  NS_ASSERTION(image, "Failed to create Image");
+  
+  NS_ASSERTION(image->GetFormat() == cairoFormat, "Wrong format");
+  static_cast<CairoImage*>(image.get())->SetData(cairoData);
+
+  return image.forget();
+}
+
 
 NS_IMETHODIMP
 RasterImage::GetImageContainer(ImageContainer **_retval)
@@ -872,29 +895,34 @@ RasterImage::GetImageContainer(ImageContainer **_retval)
     return NS_OK;
   }
   
-  CairoImage::Data cairoData;
-  nsRefPtr<gfxASurface> imageSurface;
-  nsresult rv = GetFrame(FRAME_CURRENT, FLAG_SYNC_DECODE, getter_AddRefs(imageSurface));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  cairoData.mSurface = imageSurface;
-  GetWidth(&cairoData.mSize.width);
-  GetHeight(&cairoData.mSize.height);
-
   mImageContainer = LayerManager::CreateImageContainer();
   
-  // Now create a CairoImage to display the surface.
-  ImageFormat cairoFormat = CAIRO_SURFACE;
-  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&cairoFormat, 1);
-  NS_ASSERTION(image, "Failed to create Image");
-
-  NS_ASSERTION(image->GetFormat() == cairoFormat, "Wrong format");
-  static_cast<CairoImage*>(image.get())->SetData(cairoData);
+  nsRefPtr<layers::Image> image = GetCurrentImage();
+  if (!image) {
+    return NS_ERROR_FAILURE;
+  }
   mImageContainer->SetCurrentImageInTransaction(image);
 
   *_retval = mImageContainer;
   NS_ADDREF(*_retval);
   return NS_OK;
+}
+
+void
+RasterImage::UpdateImageContainer()
+{
+  if (!mImageContainer || IsInUpdateImageContainer()) {
+    return;
+  }
+
+  SetInUpdateImageContainer(true);
+
+  nsRefPtr<layers::Image> image = GetCurrentImage();
+  if (!image) {
+    return;
+  }
+  mImageContainer->SetCurrentImage(image);
+  SetInUpdateImageContainer(false);
 }
 
 size_t
@@ -1185,8 +1213,11 @@ RasterImage::FrameUpdated(uint32_t aFrameNum, nsIntRect &aUpdatedRect)
   NS_ABORT_IF_FALSE(frame, "Calling FrameUpdated on frame that doesn't exist!");
 
   frame->ImageUpdated(aUpdatedRect);
-  // The image has changed, so we need to invalidate our cached ImageContainer.
-  mImageContainer = NULL;
+    
+  if (aFrameNum == GetCurrentImgFrameIndex()) {
+    // The image has changed, so we need to invalidate our cached ImageContainer.
+    UpdateImageContainer();
+  }
 }
 
 nsresult
@@ -1380,7 +1411,7 @@ RasterImage::ResetAnimation()
 
   mAnim->lastCompositedFrameIndex = -1;
   mAnim->currentAnimationFrameIndex = 0;
-  mImageContainer = nullptr;
+  UpdateImageContainer();
 
   // Note - We probably want to kick off a redecode somewhere around here when
   // we fix bug 500402.
