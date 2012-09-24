@@ -2385,11 +2385,14 @@ Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy_, HandleObject rece
     RootedObject proxy(cx, proxy_);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
     bool hasOwn, status = true;
-    if (!handler->hasPrototype() ||
-        ((status = handler->hasOwn(cx, proxy, INT_TO_JSID(index), &hasOwn)) && hasOwn))
+    RootedId id(cx);
+    if (!handler->hasPrototype()) {
+        return GetProxyHandler(proxy)->getElementIfPresent(cx, proxy, receiver, index, vp.address(), present);
+    } else if (status = IndexToId(cx, index, id.address()) &&
+               (status = handler->hasOwn(cx, proxy, id, &hasOwn)) && hasOwn)
     {
-        return GetProxyHandler(proxy)->getElementIfPresent(cx, proxy, receiver,
-                                                           index, vp.address(), present);
+        *present = true;
+        return GetProxyHandler(proxy)->get(cx, proxy, receiver, id, vp.address());
     } else if (!status) {
         return false;
     }
