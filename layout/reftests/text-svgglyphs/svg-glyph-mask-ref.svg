@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @font-face {
+      font-family: "Liberation";
+      src: url(resources/svg.woff);
+    }
+  </style>
+  <mask id="m" x="0" y="0" width="200" height="200">
+    <rect x="30" y="60" width="80" height="80" stroke-width="5"
+      stroke="black" fill="red"/>
+    <rect x="30" y="50" width="10" height="10" stroke="none"
+      fill="turquoise" />
+  </mask>
+  <rect width="200" height="200" mask="url(#m)"/>
+</svg>

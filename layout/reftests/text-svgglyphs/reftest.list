@@ -13,3 +13,4 @@ pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectopacity
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-paintnone.svg svg-glyph-paintnone-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-cachedopacity.svg svg-glyph-cachedopacity-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectvalue.svg svg-glyph-objectvalue-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-mask.svg svg-glyph-mask-ref.svg
