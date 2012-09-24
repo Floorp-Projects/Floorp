@@ -4170,3 +4170,18 @@ nsGfxScrollFrameInner::FireScrolledAreaEvent()
     nsEventDispatcher::Dispatch(doc, prescontext, &event, nullptr);
   }
 }
+
+uint32_t
+nsIScrollableFrame::GetPerceivedScrollingDirections() const
+{
+  nscoord oneDevPixel = GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
+  uint32_t directions = GetScrollbarVisibility();
+  nsRect scrollRange = GetScrollRange();
+  if (scrollRange.width >= oneDevPixel) {
+    directions |= HORIZONTAL;
+  }
+  if (scrollRange.height >= oneDevPixel) {
+    directions |= VERTICAL;
+  }
+  return directions;
+}
