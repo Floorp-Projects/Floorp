@@ -252,7 +252,7 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32 localS
         si.skip();
 
     Value v = si.read();
-    JSObject *obj = &v.toObject();
+    RootedObject obj(cx, &v.toObject());
 
     if (cx->isExceptionPending())
         UnwindIteratorForException(cx, obj);
