@@ -3976,7 +3976,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
 
     clause.Condition("b.parent IN(");
     for (nsTArray<int64_t>::size_type i = 0; i < includeFolders.Length(); ++i) {
-      clause.Str(nsPrintfCString("%d", includeFolders[i]).get());
+      clause.Str(nsPrintfCString("%lld", includeFolders[i]).get());
       if (i < includeFolders.Length() - 1) {
         clause.Str(",");
       }
