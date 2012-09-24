@@ -19,7 +19,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
 let Social = {
   lastEventReceived: 0,
   provider: null,
+  _disabledForSafeMode: false,
   init: function Social_init(callback) {
+    this._disabledForSafeMode = Services.appinfo.inSafeMode && this.enabled;
+
     if (this.provider) {
       schedule(callback);
       return;
@@ -54,7 +57,8 @@ let Social = {
   },
 
   toggle: function Social_toggle() {
-    this.enabled = !this.enabled;
+    this.enabled = this._disabledForSafeMode ? false : !this.enabled;
+    this._disabledForSafeMode = false;
   },
 
   toggleSidebar: function SocialSidebar_toggle() {

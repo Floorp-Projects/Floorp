@@ -91,7 +91,7 @@ let SocialUI = {
 
   updateToggleCommand: function SocialUI_updateToggleCommand() {
     let toggleCommand = this.toggleCommand;
-    toggleCommand.setAttribute("checked", Social.enabled);
+    toggleCommand.setAttribute("checked", Services.prefs.getBoolPref("social.enabled"));
 
     // FIXME: bug 772808: menu items don't inherit the "hidden" state properly,
     // need to update them manually.
