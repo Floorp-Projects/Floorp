@@ -12,6 +12,7 @@ include protocol PBrowser;
 include protocol PWyciwygChannel;
 include protocol PFTPChannel;
 include protocol PWebSocket;
+include protocol PTCPSocket;
 
 namespace mozilla {
 namespace net {
@@ -26,6 +27,7 @@ sync protocol PNecko
   manages PWyciwygChannel;
   manages PFTPChannel;
   manages PWebSocket;
+  manages PTCPSocket;
 
 parent:
   __delete__();
@@ -34,6 +36,8 @@ parent:
   PWyciwygChannel();
   PFTPChannel();
   PWebSocket(PBrowser browser);
+  PTCPSocket(nsString host, uint16_t port, bool useSSL, nsString binaryType,
+             nullable PBrowser browser);
 
   HTMLDNSPrefetch(nsString hostname, uint16_t flags);
   CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);

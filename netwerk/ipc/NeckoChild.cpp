@@ -13,6 +13,9 @@
 #include "mozilla/net/WyciwygChannelChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
+#include "mozilla/dom/network/TCPSocketChild.h"
+
+using mozilla::dom::TCPSocketChild;
 
 namespace mozilla {
 namespace net {
@@ -145,6 +148,25 @@ bool
 NeckoChild::DeallocPWebSocket(PWebSocketChild* child)
 {
   WebSocketChannelChild* p = static_cast<WebSocketChannelChild*>(child);
+  p->ReleaseIPDLReference();
+  return true;
+}
+
+PTCPSocketChild*
+NeckoChild::AllocPTCPSocket(const nsString& aHost,
+                            const uint16_t& aPort,
+                            const bool& useSSL,
+                            const nsString& aBinaryType,
+                            PBrowserChild* aBrowser)
+{
+  NS_NOTREACHED("AllocPTCPSocket should not be called");
+  return nullptr;
+}
+
+bool
+NeckoChild::DeallocPTCPSocket(PTCPSocketChild* child)
+{
+  TCPSocketChild* p = static_cast<TCPSocketChild*>(child);
   p->ReleaseIPDLReference();
   return true;
 }
