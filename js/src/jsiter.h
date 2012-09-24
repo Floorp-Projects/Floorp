@@ -65,7 +65,7 @@ struct NativeIterator
 
     static NativeIterator *allocateIterator(JSContext *cx, uint32_t slength,
                                             const js::AutoIdVector &props);
-    void init(JSObject *obj, unsigned flags, uint32_t slength, uint32_t key);
+    void init(RawObject obj, unsigned flags, uint32_t slength, uint32_t key);
 
     void mark(JSTracer *trc);
 };
@@ -79,8 +79,8 @@ class PropertyIteratorObject : public JSObject
     inline void setNativeIterator(js::NativeIterator *ni);
 
   private:
-    static void trace(JSTracer *trc, JSObject *obj);
-    static void finalize(FreeOp *fop, JSObject *obj);
+    static void trace(JSTracer *trc, RawObject obj);
+    static void finalize(FreeOp *fop, RawObject obj);
 };
 
 /*
@@ -145,13 +145,13 @@ bool
 ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp);
 
 bool
-CloseIterator(JSContext *cx, JSObject *iterObj);
+CloseIterator(JSContext *cx, HandleObject iterObj);
 
 bool
-UnwindIteratorForException(JSContext *cx, JSObject *obj);
+UnwindIteratorForException(JSContext *cx, js::HandleObject obj);
 
 void
-UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj);
+UnwindIteratorForUncatchableException(JSContext *cx, RawObject obj);
 
 JSBool
 IteratorConstructor(JSContext *cx, unsigned argc, Value *vp);
@@ -176,7 +176,7 @@ extern bool
 js_IteratorMore(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue rval);
 
 extern bool
-js_IteratorNext(JSContext *cx, JSObject *iterobj, js::MutableHandleValue rval);
+js_IteratorNext(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue rval);
 
 extern JSBool
 js_ThrowStopIteration(JSContext *cx);

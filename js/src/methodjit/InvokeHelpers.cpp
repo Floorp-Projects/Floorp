@@ -107,7 +107,8 @@ FindExceptionHandler(JSContext *cx)
                    * pending exception.
                    */
                   JS_ASSERT(JSOp(*pc) == JSOP_ENDITER);
-                  bool ok = UnwindIteratorForException(cx, &cx->regs().sp[-1].toObject());
+                  RootedObject obj(cx, &cx->regs().sp[-1].toObject());
+                  bool ok = UnwindIteratorForException(cx, obj);
                   cx->regs().sp -= 1;
                   if (!ok)
                       goto error;
