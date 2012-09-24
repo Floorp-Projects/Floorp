@@ -13,8 +13,7 @@
         // Class monitoring number of open dialog windows
         // It checks there is always open just a single dialog per application
         function dialogMonitor() {
-            var observerService = SpecialPowers.wrap(Components)
-                                               .classes["@mozilla.org/observer-service;1"]
+            var observerService = SpecialPowers.wrap(Components).classes["@mozilla.org/observer-service;1"]
                                                .getService(Ci.nsIObserverService);
             observerService.addObserver(this, "domwindowopened", false);
             observerService.addObserver(this, "domwindowclosed", false);
@@ -52,8 +51,7 @@
             },
 
             shutdown: function() {
-                var observerService = SpecialPowers.wrap(Components)
-                                               .classes["@mozilla.org/observer-service;1"]
+                var observerService = SpecialPowers.wrap(Components).classes["@mozilla.org/observer-service;1"]
                                                .getService(Ci.nsIObserverService);
                 observerService.removeObserver(this, "domwindowopened");
                 observerService.removeObserver(this, "domwindowclosed");
@@ -70,13 +68,11 @@
         var pwmgr, logins = [];
 
         function initLogins() {
-            pwmgr = SpecialPowers.wrap(Components)
-                                 .classes["@mozilla.org/login-manager;1"]
+            pwmgr = SpecialPowers.wrap(Components).classes["@mozilla.org/login-manager;1"]
                                  .getService(Ci.nsILoginManager);
 
             function addLogin(host, realm, user, pass) {
-                var login = SpecialPowers.wrap(Components)
-                                         .classes["@mozilla.org/login-manager/loginInfo;1"]
+                var login = SpecialPowers.wrap(Components).classes["@mozilla.org/login-manager/loginInfo;1"]
                                          .createInstance(Ci.nsILoginInfo);
                 login.init(host, null, realm, user, pass, "", "");
                 pwmgr.addLogin(login);
@@ -125,8 +121,7 @@
             for (i in logins)
                 pwmgr.removeLogin(logins[i]);
 
-            var authMgr = SpecialPowers.wrap(Components)
-                                       .classes['@mozilla.org/network/http-auth-manager;1']
+            var authMgr = SpecialPowers.wrap(Components).classes['@mozilla.org/network/http-auth-manager;1']
                                        .getService(Ci.nsIHttpAuthManager);
             authMgr.clearAll();
 

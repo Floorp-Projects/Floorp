@@ -26,8 +26,7 @@ var fullPath;
 
 
 function initVals() {
-  var dirSvc = SpecialPowers.wrap(Components)
-                            .classes["@mozilla.org/file/directory_service;1"]
+  var dirSvc = SpecialPowers.wrap(Components).classes["@mozilla.org/file/directory_service;1"]
                             .getService(Components.interfaces.nsIProperties);
   var file = dirSvc.get("XpcomLib", Components.interfaces.nsILocalFile);
   isnot(file, null, "Must have file here");

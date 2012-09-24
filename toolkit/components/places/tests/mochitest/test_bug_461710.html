@@ -19,11 +19,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=461710
 
 SimpleTest.waitForExplicitFinish();
 
-const Ci = Components.interfaces;
-const Cc = SpecialPowers.wrap(Components).classes;
-const Cr = SpecialPowers.wrap(Components).results;
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
+const Cr = SpecialPowers.Cr;
 
-SpecialPowers.wrap(Components).utils.import("resource://gre/modules/NetUtil.jsm", window);
+SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm", window);
 var Services = SpecialPowers.Services;
 
 var gIframe = document.getElementById("iframe");

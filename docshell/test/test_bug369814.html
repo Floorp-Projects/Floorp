@@ -186,8 +186,7 @@ var gNextTest = 0;
 
 function runNextTest()
 {
-  var prefs = SpecialPowers.wrap(Components)
-                           .classes["@mozilla.org/preferences-service;1"]
+  var prefs = SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
 
   if (gNextTest < gTests.length) {
@@ -214,8 +213,7 @@ function runNextTest()
 
 function finishTest()
 {
-    var prefs = SpecialPowers.wrap(Components)
-                             .classes["@mozilla.org/preferences-service;1"]
+    var prefs = SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
                              .getService(Components.interfaces.nsIPrefBranch);
     prefs.setBoolPref("network.jar.open-unsafe-types", false);
 
@@ -228,8 +226,7 @@ function finishTest()
 
 function startTests()
 {
-  var prefs = SpecialPowers.wrap(Components)
-                           .classes["@mozilla.org/preferences-service;1"]
+  var prefs = SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
   gPrefValue = prefs.getBoolPref("network.jar.open-unsafe-types");
 }
