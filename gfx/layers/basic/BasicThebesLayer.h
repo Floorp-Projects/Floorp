@@ -167,10 +167,6 @@ private:
               LayerManager::DrawThebesLayerCallback aCallback,
               void* aCallbackData) MOZ_OVERRIDE;
 
-  // This function may *not* open the buffer it allocates.
-  void
-  AllocBackBuffer(Buffer::ContentType aType, const nsIntSize& aSize);
-
   virtual already_AddRefed<gfxASurface>
   CreateBuffer(Buffer::ContentType aType, const nsIntSize& aSize) MOZ_OVERRIDE;
 
