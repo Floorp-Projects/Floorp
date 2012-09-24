@@ -1,34 +1,4 @@
 {
-    inflateReset2
-    Memcheck:Cond
-    fun:inflateReset2
-    fun:inflateInit2_
-}
-{
-   write-XQueryExtension
-   Memcheck:Param
-   writev(vector[...])
-   fun:writev
-   fun:_X11TransSocketWritev
-   fun:_XSend
-   fun:XQueryExtension
-}
-{
-   write-pthread
-   Memcheck:Param
-   write(buf)
-   obj:/lib64/libpthread-2.5.so
-}
-{
-   write-XChangeProperty
-   Memcheck:Param
-   writev(vector[...])
-   fun:writev
-   fun:_X11TransSocketWritev
-   fun:_XSend
-   fun:XChangeProperty
-}
-{
    Bug 793532
    Memcheck:Leak
    fun:malloc
@@ -82,4 +52,138 @@
    ...
    obj:/usr/lib64/libgnomevfs-2.so.0.2400.2
    ...
+}
+{
+   Bug 793548
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:NS_Alloc_P
+   fun:_Z12ToNewCStringRK19nsACString_internal
+   fun:_ZN13CrashReporter14SetupExtraDataEP7nsIFileRK19nsACString_internal
+   ...
+}
+{
+   Bug 793549
+   Memcheck:Leak
+   fun:realloc
+   fun:PR_Realloc
+   fun:GrowStuff
+   ...
+}
+{
+   Bug 793598
+   Memcheck:Leak
+   fun:realloc
+   ...
+   obj:/lib64/libdbus-1.so.3.4.0
+   ...
+}
+{
+   Bug 793600
+   Memcheck:Leak
+   fun:realloc
+   obj:/usr/lib64/libfontconfig.so.1.4.4
+   obj:/usr/lib64/libfontconfig.so.1.4.4
+   fun:FcDefaultSubstitute
+   fun:_ZN17gfxPangoFontGroup11MakeFontSetEP14_PangoLanguagedP9nsAutoRefI10_FcPatternE
+   ...
+}
+{
+   Bug 793601
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN2js15ArgumentsObject6createEP9JSContextPNS_10StackFrameE
+   ...
+}
+{
+   Bug 793602
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_Z22NS_NewComputedDOMStylePN7mozilla3dom7ElementERK18nsAString_internalP12nsIPresShell
+   fun:_ZN14nsGlobalWindow16GetComputedStyleEP13nsIDOMElementRK18nsAString_internalPP25nsIDOMCSSStyleDeclaration
+   ...
+}
+{
+   Bug 793603
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN18nsDeflateConverter15OnDataAvailableEP10nsIRequestP11nsISupportsP14nsIInputStreammj
+   ...
+}
+{
+   Bug 793605
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_Z30nsStringInputStreamConstructorP11nsISupportsRK4nsIDPPv
+   ...
+}
+{
+   Bug 793606
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZL27nsXMLHttpRequestConstructorP11nsISupportsRK4nsIDPPv
+   ...
+}
+{
+   Bug 793607
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN11nsZipWriter14AddEntryStreamERK19nsACString_internalliP14nsIInputStreambj
+   ...
+}
+{
+   Bug 793608
+   Memcheck:Leak
+   fun:malloc
+   fun:__libc_res_nsend
+   fun:__libc_res_nquery
+   fun:__libc_res_nquerydomain
+   fun:__libc_res_nsearch
+   obj:*
+   fun:gaih_inet
+   fun:getaddrinfo
+   fun:PR_GetAddrInfoByName
+   fun:_ZN14nsHostResolver10ThreadFuncEPv
+   fun:_pt_root
+   fun:start_thread
+   fun:clone
+}
+{
+   Bug 793611
+   Memcheck:Leak
+   fun:memalign
+   fun:tls_get_addr_tail
+   fun:__tls_get_addr
+   fun:_ZN8nsThread16ProcessNextEventEbPb
+   fun:_Z21NS_ProcessNextEvent_PP9nsIThreadb
+   fun:_ZN8nsThread10ThreadFuncEPv
+   fun:_pt_root
+   fun:start_thread
+   fun:clone
+}
+{
+   Bug 793615
+   Memcheck:Leak
+   fun:malloc
+   fun:sqlite3MemMalloc
+   ...
+}
+{
+   Bug 793616
+   Memcheck:Leak
+   fun:malloc
+   fun:make_request
+   fun:__check_pf
+   fun:getaddrinfo
+   fun:PR_GetAddrInfoByName
+   fun:_ZN14nsHostResolver10ThreadFuncEPv
+   fun:_pt_root
+   fun:start_thread
+   fun:clone
 }
