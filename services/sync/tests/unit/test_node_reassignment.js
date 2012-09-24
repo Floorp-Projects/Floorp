@@ -9,6 +9,7 @@ Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
+Cu.import("resource://testing-common/services/sync/rotaryengine.js");
 
 Service.engineManager.clear();
 

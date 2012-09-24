@@ -62,6 +62,10 @@ sync_stage_modules := \
   enginesync.js \
   $(NULL)
 
+sync_testing_modules := \
+  rotaryengine.js \
+  $(NULL)
+
 DIRS += locales
 TEST_DIRS += tests
 
@@ -84,5 +88,8 @@ INSTALL_TARGETS += SYNC_ENGINES
 SYNC_STAGES_FILES := $(addprefix modules/stages/,$(sync_stage_modules))
 SYNC_STAGES_DEST = $(FINAL_TARGET)/modules/services-sync/stages
 INSTALL_TARGETS += SYNC_STAGES
+
+TESTING_JS_MODULES := $(addprefix modules-testing/,$(sync_testing_modules))
+TESTING_JS_MODULE_DIR := services/sync
 
 include $(topsrcdir)/config/rules.mk
