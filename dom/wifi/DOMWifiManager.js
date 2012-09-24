@@ -78,6 +78,7 @@ DOMWifiManager.prototype = {
                       "WifiManager:associate:Return:OK", "WifiManager:associate:Return:NO",
                       "WifiManager:forget:Return:OK", "WifiManager:forget:Return:NO",
                       "WifiManager:wps:Return:OK", "WifiManager:wps:Return:NO",
+                      "WifiManager:setPowerSavingMode:Return:OK", "WifiManager:setPowerSavingMode:Return:NO",
                       "WifiManager:wifiDown", "WifiManager:wifiUp",
                       "WifiManager:onconnecting", "WifiManager:onassociate",
                       "WifiManager:onconnect", "WifiManager:ondisconnect",
@@ -160,6 +161,16 @@ DOMWifiManager.prototype = {
         break;
 
       case "WifiManager:wps:Return:NO":
+        request = this.takeRequest(msg.rid);
+        Services.DOMRequest.fireError(request, msg.data);
+        break;
+
+      case "WifiManager:setPowerSavingMode:Return:OK":
+        request = this.takeRequest(msg.rid);
+        Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
+        break;
+
+      case "WifiManager:setPowerSavingMode:Return:NO":
         request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, msg.data);
         break;
@@ -299,6 +310,14 @@ DOMWifiManager.prototype = {
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
     var request = this.createRequest();
     this._sendMessageForRequest("WifiManager:wps", detail, request);
+    return request;
+  },
+
+  setPowerSavingMode: function nsIDOMWifiManager_setPowerSavingMode(enabled) {
+    if (!this._hasPrivileges)
+      throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
+    var request = this.createRequest();
+    this._sendMessageForRequest("WifiManager:setPowerSavingMode", enabled, request);
     return request;
   },
 
