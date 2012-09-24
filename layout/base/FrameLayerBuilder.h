@@ -13,6 +13,7 @@
 #include "nsIFrame.h"
 #include "nsDisplayListInvalidation.h"
 #include "LayerTreeInvalidation.h"
+#include "ImageLayers.h"
 
 class nsDisplayListBuilder;
 class nsDisplayList;
@@ -100,6 +101,7 @@ public:
   typedef layers::ContainerLayer ContainerLayer;
   typedef layers::Layer Layer;
   typedef layers::ThebesLayer ThebesLayer;
+  typedef layers::ImageLayer ImageLayer;
   typedef layers::LayerManager LayerManager;
 
   FrameLayerBuilder() :
@@ -411,6 +413,14 @@ public:
   static gfxSize GetThebesLayerScaleForFrame(nsIFrame* aFrame);
 
   /**
+   * Stores a Layer as the dedicated layer in the DisplayItemData for a given frame/key pair.
+   *
+   * Used when we optimize a ThebesLayer into an ImageLayer and want to retroactively update the 
+   * DisplayItemData so we can retrieve the layer from within layout.
+   */
+  void StoreOptimizedLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey, Layer* aImage);
+
+  /**
    * Clip represents the intersection of an optional rectangle with a
    * list of rounded rectangles.
    */
@@ -534,6 +544,7 @@ protected:
     bool FrameListMatches(nsDisplayItem* aOther);
 
     nsRefPtr<Layer> mLayer;
+    nsRefPtr<Layer> mOptLayer;
     nsRefPtr<LayerManager> mInactiveManager;
     nsAutoTArray<nsIFrame*, 2> mFrameList;
     nsAutoPtr<nsDisplayItemGeometry> mGeometry;

@@ -638,9 +638,8 @@ NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIRequest *aRequest,
   if ((0 == mRect.width) || (0 == mRect.height)) {
     return NS_OK;
   }
-  
-  nsBoxLayoutState state(PresContext());
-  this->Redraw(state);
+ 
+  InvalidateLayer(nsDisplayItem::TYPE_XUL_IMAGE);
 
   return NS_OK;
 }

@@ -875,6 +875,25 @@ FrameLayerBuilder::DidBeginRetainedLayerTransaction(LayerManager* aManager)
 }
 
 void
+FrameLayerBuilder::StoreOptimizedLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey, Layer* aImage)
+{
+  DisplayItemDataEntry *entry = mNewDisplayItemData.GetEntry(aFrame);
+  if (!entry)
+    return;
+
+  nsTArray<nsRefPtr<DisplayItemData> > *array = &entry->mData;
+  if (!array)
+    return;
+
+  for (uint32_t i = 0; i < array->Length(); ++i) {
+    if (array->ElementAt(i)->mDisplayItemKey == aDisplayItemKey) {
+      array->ElementAt(i)->mOptLayer = aImage;
+      return;
+    }
+  }
+}
+
+void
 FrameLayerBuilder::DidEndTransaction()
 {
   GetMaskLayerImageCache()->Sweep();
@@ -1610,6 +1629,9 @@ ContainerState::PopThebesLayerData()
         imageLayer->IntersectClipRect(clip);
       }
       layer = imageLayer;
+      mLayerBuilder->StoreOptimizedLayerForFrame(data->mImage->GetUnderlyingFrame(), 
+                                                 data->mImage->GetPerFrameKey(),
+                                                 imageLayer);
     } else {
       nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer(data->mLayer);
       colorLayer->SetIsFixedPosition(data->mLayer->GetIsFixedPosition());
@@ -2989,6 +3011,10 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, uint32_t aDisplayItemKey)
   DisplayItemData *data = GetDisplayItemDataForManager(aFrame, aDisplayItemKey);
   if (!data) {
     return nullptr;
+  }
+
+  if (data->mOptLayer) {
+    return data->mOptLayer;
   }
 
   Layer* layer = data->mLayer;
