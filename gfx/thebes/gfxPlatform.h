@@ -184,7 +184,7 @@ public:
     virtual mozilla::RefPtr<mozilla::gfx::SourceSurface>
       GetSourceSurfaceForSurface(mozilla::gfx::DrawTarget *aTarget, gfxASurface *aSurface);
 
-    virtual mozilla::RefPtr<mozilla::gfx::ScaledFont>
+    virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 
     virtual already_AddRefed<gfxASurface>
