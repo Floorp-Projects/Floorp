@@ -5,7 +5,7 @@
                   android:launchMode="singleInstance"
                   android:taskAffinity="org.mozilla.gecko.WEBAPP@APPNUM@"
                   android:process=":@ANDROID_PACKAGE_NAME@.WebApp@APPNUM@"
-                  android:theme="@style/Gecko.Translucent.NoActionBar">
+                  android:theme="@style/Gecko.App">
             <intent-filter>
                 <action android:name="org.mozilla.gecko.WEBAPP@APPNUM@" />
             </intent-filter>
