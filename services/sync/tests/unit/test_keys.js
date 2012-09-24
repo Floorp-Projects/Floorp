@@ -4,6 +4,8 @@
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/keys.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/util.js");
 
 let collectionKeys = new CollectionKeyManager();
 

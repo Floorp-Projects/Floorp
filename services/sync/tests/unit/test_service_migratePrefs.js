@@ -1,4 +1,8 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://services-sync/util.js");
 
 function test_migrate_logging() {
   _("Testing log pref migration.");

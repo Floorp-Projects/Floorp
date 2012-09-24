@@ -1,3 +1,8 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-sync/util.js");
+
 function run_test() {
   Log4Moz.repository.getLogger("Sync.Test.Server").level = Log4Moz.Level.Trace;
   initTestLogging();
