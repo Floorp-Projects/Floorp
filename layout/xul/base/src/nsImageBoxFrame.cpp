@@ -343,8 +343,8 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
   static_cast<nsImageBoxFrame*>(mFrame)->
     PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(),
                aBuilder->ShouldSyncDecodeImages()
-                 ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
-                 : (PRUint32) imgIContainer::FLAG_NONE);
+                 ? (uint32_t) imgIContainer::FLAG_SYNC_DECODE
+                 : (uint32_t) imgIContainer::FLAG_NONE);
 }
 
 void
@@ -352,7 +352,7 @@ nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
 
-  PRInt32 factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
 
   nsRect dest;
@@ -363,8 +363,8 @@ nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
 
   nsCOMPtr<imgIContainer> imgCon;
   imageFrame->mImageRequest->GetImage(getter_AddRefs(imgCon));
-  PRInt32 imageWidth;
-  PRInt32 imageHeight;
+  int32_t imageWidth;
+  int32_t imageHeight;
   imgCon->GetWidth(&imageWidth);
   imgCon->GetHeight(&imageHeight);
 
