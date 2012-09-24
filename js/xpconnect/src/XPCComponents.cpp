@@ -4764,41 +4764,18 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
                                         XPCWrappedNativeScope* aScope,
                                         JSObject* aTarget)
 {
+    JSObject *components = aScope->GetComponentsJSObject(ccx);
+    if (!components)
+        return false;
+
     JSObject *global = aScope->GetGlobalJSObject();
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, ccx));
     if (!aTarget)
         aTarget = global;
 
-    nsXPCComponents* components = aScope->GetComponents();
-    if (!components) {
-        components = new nsXPCComponents(aScope);
-        if (!components)
-            return false;
-        aScope->SetComponents(components);
-    }
-
-    nsCOMPtr<nsIXPCComponents> cholder(components);
-
-    AutoMarkingNativeInterfacePtr iface(ccx);
-    iface = XPCNativeInterface::GetNewOrUsed(ccx, &NS_GET_IID(nsIXPCComponents));
-
-    if (!iface)
-        return false;
-
-    nsCOMPtr<XPCWrappedNative> wrapper;
-    xpcObjectHelper helper(cholder);
-    XPCWrappedNative::GetNewOrUsed(ccx, helper, aScope, iface, getter_AddRefs(wrapper));
-    if (!wrapper)
-        return false;
-
-    // The call to wrap() here is necessary even though the object is same-
-    // compartment, because it applies our security wrapper.
-    js::Value v = ObjectValue(*wrapper->GetFlatJSObject());
-    if (!JS_WrapValue(ccx, &v))
-        return false;
-
     jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
-    return JS_DefinePropertyById(ccx, aTarget, id, v, nullptr, nullptr,
+    return JS_DefinePropertyById(ccx, aTarget, id, js::ObjectValue(*components),
+                                 nullptr, nullptr,
                                  JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
