@@ -7,7 +7,7 @@
     <title>Page testing content in the Sandbox can't escape</title>
     <script type="application/javascript;version=1.8">
       const TEST_BASE = "http://mochi.test:8888/chrome/toolkit/identity/tests/chrome/"
-      const Ci = Components.interfaces;
+      const Ci = SpecialPowers.Ci;
 
       function expectException(aFunc) {
         try {
@@ -28,7 +28,7 @@
                                .docCharsetIsForced;
         }),
 
-        ccAccess: Components.classes == null,
+        ccAccess: SpecialPowers.Components.classes == null,
       };
 
       let resultsJSON = JSON.stringify(results);

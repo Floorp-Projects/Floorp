@@ -30,7 +30,7 @@ var interfaces = SpecialPowers.wrap(x).
                  getInterfaces(count).
                  map(function(id) {
                             id = SpecialPowers.wrap(id);
-                            return SpecialPowers.wrap(Components).interfacesByID[id].toString();
+                            return SpecialPowers.wrap(SpecialPowers.Components).interfacesByID[id].toString();
                      });
 isnot(interfaces.indexOf("nsIInterfaceRequestor"), "-1",
       "Must have interface requestor classinfo");
