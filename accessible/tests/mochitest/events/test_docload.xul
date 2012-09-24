@@ -187,7 +187,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    //gA11yEventDumpToConsole = true; // debug
+    gA11yEventDumpToConsole = true; // debug
     //gA11yEventDumpFeature = "parentchain:reorder";
 
     var gQueue = null;
