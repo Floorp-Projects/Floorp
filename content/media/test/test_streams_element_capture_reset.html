@@ -17,8 +17,8 @@ SimpleTest.waitForExplicitFinish();
 var v = document.getElementById('v');
 var vout = document.getElementById('vout');
 var vout_untilended = document.getElementById('vout_untilended');
-vout.src = v.mozCaptureStream();
-vout_untilended.src = v.mozCaptureStreamUntilEnded();
+vout.mozSrcObject = v.mozCaptureStream();
+vout_untilended.mozSrcObject = v.mozCaptureStreamUntilEnded();
 
 function dumpEvent(event) {
   dump("GOT EVENT " + event.type + " currentTime=" + event.target.currentTime +
