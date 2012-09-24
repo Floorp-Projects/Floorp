@@ -476,8 +476,17 @@ public:
 
   virtual bool GetFontFileData(FontFileDataOutput, void *) { return false; }
 
+  void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
+    mUserData.Add(key, userData, destroy);
+  }
+  void *GetUserData(UserDataKey *key) {
+    return mUserData.Get(key);
+  }
+
 protected:
   ScaledFont() {}
+
+  UserData mUserData;
 };
 
 #ifdef MOZ_ENABLE_FREETYPE
