@@ -902,16 +902,17 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             options |= JSOPTION_COMPILE_N_GO;
         if (noScriptRval)
             options |= JSOPTION_NO_SCRIPT_RVAL;
-        JS_SetOptions(cx, options);
 
+        JS_SetOptions(cx, options);
         JSScript *script = JS_CompileUCScript(cx, global, codeChars, codeLength, fileName, lineNumber);
+        JS_SetOptions(cx, saved);
         if (!script)
             return false;
+
         if (sourceMapURL && !script->scriptSource()->hasSourceMap()) {
             if (!script->scriptSource()->setSourceMap(cx, sourceMapURL, script->filename))
                 return false;
         }
-        JS_SetOptions(cx, saved);
         if (!JS_ExecuteScript(cx, global, script, vp))
             return false;
     }

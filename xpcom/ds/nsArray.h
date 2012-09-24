@@ -20,23 +20,27 @@
 { 0x35c66fd1, 0x95e9, 0x4e0a, \
   { 0x80, 0xc5, 0xc3, 0xbd, 0x2b, 0x37, 0x54, 0x81 } }
 
-
-// adapter class to map nsIArray->nsCOMArray
-// do NOT declare this as a stack or member variable, use
-// nsCOMArray instead!
-// if you need to convert a nsCOMArray->nsIArray, see NS_NewArray above
 class nsArray : public nsIMutableArray
 {
 public:
-    nsArray() { }
-    nsArray(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray)
-    { }
-    
     NS_DECL_ISUPPORTS
     NS_DECL_NSIARRAY
     NS_DECL_NSIMUTABLEARRAY
 
+    /* Both of these factory functions create a cycle-collectable array
+       on the main thread and a non-cycle-collectable array on other
+       threads.  */
+    static already_AddRefed<nsIMutableArray> Create();
+    /* Only for the benefit of the XPCOM module system, use Create()
+       instead.  */
+    static nsresult XPCOMConstructor(nsISupports* aOuter, const nsIID& aIID,
+                                     void** aResult);
 protected:
+    nsArray() { }
+    nsArray(const nsArray& other);
+    nsArray(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray)
+    { }
+    
     virtual ~nsArray(); // nsArrayCC inherits from this
 
     nsCOMArray_base mArray;
@@ -44,15 +48,17 @@ protected:
 
 class nsArrayCC MOZ_FINAL : public nsArray
 {
+    friend class nsArray;
+
 public:
-    nsArrayCC() : nsArray() { }
-    nsArrayCC(const nsCOMArray_base& aBaseArray) : nsArray(aBaseArray)
-    { }
-    
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(nsArrayCC)
-};
 
-nsresult nsArrayConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult);
+private:
+    nsArrayCC() : nsArray() { }
+    nsArrayCC(const nsArrayCC& other);
+    nsArrayCC(const nsCOMArray_base& aBaseArray) : nsArray(aBaseArray)
+    { }
+};
 
 #endif

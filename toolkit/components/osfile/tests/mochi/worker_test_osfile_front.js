@@ -449,6 +449,63 @@ function test_iter_dir()
 
   ok(true, "test_iter_dir: Cleaning up");
   iterator.close();
+
+  // Testing nextBatch()
+  iterator = new OS.File.DirectoryIterator(parent);
+  let allentries = [x for(x in iterator)];
+  iterator.close();
+
+  ok(allentries.length >= 14, "test_iter_dir: Meta-check: the test directory should contain at least 14 items");
+
+  iterator = new OS.File.DirectoryIterator(parent);
+  let firstten = iterator.nextBatch(10);
+  is(firstten.length, 10, "test_iter_dir: nextBatch(10) returns 10 items");
+  for (let i = 0; i < firstten.length; ++i) {
+    is(allentries[i].path, firstten[i].path, "test_iter_dir: Checking that batch returns the correct entries");
+  }
+  let nextthree = iterator.nextBatch(3);
+  is(nextthree.length, 3, "test_iter_dir: nextBatch(3) returns 3 items");
+  for (let i = 0; i < nextthree.length; ++i) {
+    is(allentries[i + firstten.length].path, nextthree[i].path, "test_iter_dir: Checking that batch 2 returns the correct entries");
+  }
+  let everythingelse = iterator.nextBatch();
+  ok(everythingelse.length >= 1, "test_iter_dir: nextBatch() returns at least one item");
+  for (let i = 0; i < everythingelse.length; ++i) {
+    is(allentries[i + firstten.length + nextthree.length].path, everythingelse[i].path, "test_iter_dir: Checking that batch 3 returns the correct entries");
+  }
+  is(iterator.nextBatch().length, 0, "test_iter_dir: Once there is nothing left, nextBatch returns an empty array");
+  iterator.close();
+
+  iterator = new OS.File.DirectoryIterator(parent);
+  iterator.close();
+  is(iterator.nextBatch().length, 0, "test_iter_dir: nextBatch on closed iterator returns an empty array");
+
+  iterator = new OS.File.DirectoryIterator(parent);
+  let allentries2 = iterator.nextBatch();
+  is(allentries.length, allentries2.length, "test_iter_dir: Checking that getBatch(null) returns the right number of entries");
+  for (let i = 0; i < allentries.length; ++i) {
+    is(allentries[i].path, allentries2[i].path, "test_iter_dir: Checking that getBatch(null) returns everything in the right order");
+  }
+  iterator.close();
+
+  // Test forEach
+  iterator = new OS.File.DirectoryIterator(parent);
+  let index = 0;
+  iterator.forEach(
+    function cb(entry, aIndex, aIterator) {
+      is(index, aIndex, "test_iter_dir: Checking that forEach index is correct");
+      ok(iterator == aIterator, "test_iter_dir: Checking that right iterator is passed");
+      if (index < 10) {
+        is(allentries[index].path, entry.path, "test_iter_dir: Checking that forEach entry is correct");
+      } else if (index == 10) {
+        iterator.close();
+      } else {
+        ok(false, "test_iter_dir: Checking that forEach can be stopped early");
+      }
+      ++index;
+  });
+  iterator.close();
+
   ok(true, "test_iter_dir: Complete");
 }
 

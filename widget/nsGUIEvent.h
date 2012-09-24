@@ -85,7 +85,6 @@ class nsHashKey;
 #define NS_SELECTION_EVENT                38
 #define NS_CONTENT_COMMAND_EVENT          39
 #define NS_GESTURENOTIFY_EVENT            40
-#define NS_MOZTOUCH_EVENT                 42
 #define NS_PLUGIN_EVENT                   43
 #define NS_TOUCH_EVENT                    44
 #define NS_WHEEL_EVENT                    45
@@ -418,11 +417,6 @@ class nsHashKey;
 #define NS_SMIL_BEGIN                (NS_SMIL_TIME_EVENT_START)
 #define NS_SMIL_END                  (NS_SMIL_TIME_EVENT_START + 1)
 #define NS_SMIL_REPEAT               (NS_SMIL_TIME_EVENT_START + 2)
-
-#define NS_MOZTOUCH_EVENT_START      4400
-#define NS_MOZTOUCH_DOWN             (NS_MOZTOUCH_EVENT_START)
-#define NS_MOZTOUCH_MOVE             (NS_MOZTOUCH_EVENT_START+1)
-#define NS_MOZTOUCH_UP               (NS_MOZTOUCH_EVENT_START+2)
 
 // script notification events
 #define NS_NOTIFYSCRIPT_START        4500
@@ -1471,19 +1465,6 @@ public:
   bool mIsEnabled;                                 // [out]
 };
 
-class nsMozTouchEvent : public nsMouseEvent_base
-{
-public:
-  nsMozTouchEvent(bool isTrusted, uint32_t msg, nsIWidget* w,
-                  uint32_t streamIdArg)
-    : nsMouseEvent_base(isTrusted, msg, w, NS_MOZTOUCH_EVENT),
-      streamId(streamIdArg)
-  {
-  }
-
-  uint32_t streamId;
-};
-
 class nsTouchEvent : public nsInputEvent
 {
 public:
@@ -1660,7 +1641,6 @@ enum nsDragDropEventStatus {
         ((evnt)->eventStructType == NS_TOUCH_EVENT) || \
         ((evnt)->eventStructType == NS_DRAG_EVENT) || \
         ((evnt)->eventStructType == NS_MOUSE_SCROLL_EVENT) || \
-        ((evnt)->eventStructType == NS_MOZTOUCH_EVENT) || \
         ((evnt)->eventStructType == NS_SIMPLE_GESTURE_EVENT))
 
 #define NS_IS_MOUSE_EVENT(evnt) \

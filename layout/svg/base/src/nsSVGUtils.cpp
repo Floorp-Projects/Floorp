@@ -17,25 +17,20 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Preferences.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsComputedDOMStyle.h"
-#include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsFrameList.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPresShell.h"
-#include "nsIScriptError.h"
 #include "nsISVGChildFrame.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
-#include "nsSVGAnimationElement.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGEffects.h"
@@ -56,7 +51,7 @@
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextContainerFrame.h"
 #include "nsTextFrame.h"
-#include "SVGAnimatedPreserveAspectRatio.h"
+#include "SVGContentUtils.h"
 #include "mozilla/unused.h"
 
 using namespace mozilla;
@@ -233,119 +228,6 @@ nsSVGUtils::Init()
                                "svg.text.css-frames.enabled");
 }
 
-nsSVGSVGElement*
-nsSVGUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
-{
-  nsIContent *element = nullptr;
-  nsIContent *ancestor = aSVGElement->GetFlattenedTreeParent();
-
-  while (ancestor && ancestor->IsSVG() &&
-                     ancestor->Tag() != nsGkAtoms::foreignObject) {
-    element = ancestor;
-    ancestor = element->GetFlattenedTreeParent();
-  }
-
-  if (element && element->Tag() == nsGkAtoms::svg) {
-    return static_cast<nsSVGSVGElement*>(element);
-  }
-  return nullptr;
-}
-
-void
-nsSVGUtils::ActivateByHyperlink(nsIContent *aContent)
-{
-  NS_ABORT_IF_FALSE(aContent->IsNodeOfType(nsINode::eANIMATION),
-                    "Expecting an animation element");
-
-  static_cast<nsSVGAnimationElement*>(aContent)->ActivateByHyperlink();
-}
-
-float
-nsSVGUtils::GetFontSize(Element *aElement)
-{
-  if (!aElement)
-    return 1.0f;
-
-  nsRefPtr<nsStyleContext> styleContext = 
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
-                                                         nullptr, nullptr);
-  if (!styleContext) {
-    // ReportToConsole
-    NS_WARNING("Couldn't get style context for content in GetFontStyle");
-    return 1.0f;
-  }
-
-  return GetFontSize(styleContext);
-}
-
-float
-nsSVGUtils::GetFontSize(nsIFrame *aFrame)
-{
-  NS_ABORT_IF_FALSE(aFrame, "NULL frame in GetFontSize");
-  return GetFontSize(aFrame->GetStyleContext());
-}
-
-float
-nsSVGUtils::GetFontSize(nsStyleContext *aStyleContext)
-{
-  NS_ABORT_IF_FALSE(aStyleContext, "NULL style context in GetFontSize");
-
-  nsPresContext *presContext = aStyleContext->PresContext();
-  NS_ABORT_IF_FALSE(presContext, "NULL pres context in GetFontSize");
-
-  nscoord fontSize = aStyleContext->GetStyleFont()->mSize;
-  return nsPresContext::AppUnitsToFloatCSSPixels(fontSize) / 
-         presContext->TextZoom();
-}
-
-float
-nsSVGUtils::GetFontXHeight(Element *aElement)
-{
-  if (!aElement)
-    return 1.0f;
-
-  nsRefPtr<nsStyleContext> styleContext = 
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
-                                                         nullptr, nullptr);
-  if (!styleContext) {
-    // ReportToConsole
-    NS_WARNING("Couldn't get style context for content in GetFontStyle");
-    return 1.0f;
-  }
-
-  return GetFontXHeight(styleContext);
-}
-  
-float
-nsSVGUtils::GetFontXHeight(nsIFrame *aFrame)
-{
-  NS_ABORT_IF_FALSE(aFrame, "NULL frame in GetFontXHeight");
-  return GetFontXHeight(aFrame->GetStyleContext());
-}
-
-float
-nsSVGUtils::GetFontXHeight(nsStyleContext *aStyleContext)
-{
-  NS_ABORT_IF_FALSE(aStyleContext, "NULL style context in GetFontXHeight");
-
-  nsPresContext *presContext = aStyleContext->PresContext();
-  NS_ABORT_IF_FALSE(presContext, "NULL pres context in GetFontXHeight");
-
-  nsRefPtr<nsFontMetrics> fontMetrics;
-  nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
-                                               getter_AddRefs(fontMetrics));
-
-  if (!fontMetrics) {
-    // ReportToConsole
-    NS_WARNING("no FontMetrics in GetFontXHeight()");
-    return 1.0f;
-  }
-
-  nscoord xHeight = fontMetrics->XHeight();
-  return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
-         presContext->TextZoom();
-}
-
 void
 nsSVGUtils::UnPremultiplyImageDataAlpha(uint8_t *data, 
                                         int32_t stride,
@@ -433,19 +315,6 @@ nsSVGUtils::ConvertImageDataFromLinearRGB(uint8_t *data,
   }
 }
 
-nsresult
-nsSVGUtils::ReportToConsole(nsIDocument* doc,
-                            const char* aWarning,
-                            const PRUnichar **aParams,
-                            uint32_t aParamsLength)
-{
-  return nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                         "SVG", doc,
-                                         nsContentUtils::eSVG_PROPERTIES,
-                                         aWarning,
-                                         aParams, aParamsLength);
-}
-
 float
 nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
                          nsSVGElement *aContent,
@@ -461,118 +330,11 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
 
   case eStyleUnit_Percent: {
       nsSVGSVGElement* ctx = aContent->GetCtx();
-      return ctx ? aCoord.GetPercentValue() * ctx->GetLength(nsSVGUtils::XY) : 0.0f;
+      return ctx ? aCoord.GetPercentValue() * ctx->GetLength(SVGContentUtils::XY) : 0.0f;
     }
   default:
     return 0.0f;
   }
-}
-
-bool
-nsSVGUtils::EstablishesViewport(nsIContent *aContent)
-{
-  // Although SVG 1.1 states that <image> is an element that establishes a
-  // viewport, this is really only for the document it references, not
-  // for any child content, which is what this function is used for.
-  return aContent && aContent->IsSVG() &&
-           (aContent->Tag() == nsGkAtoms::svg ||
-            aContent->Tag() == nsGkAtoms::foreignObject ||
-            aContent->Tag() == nsGkAtoms::symbol);
-}
-
-already_AddRefed<nsIDOMSVGElement>
-nsSVGUtils::GetNearestViewportElement(nsIContent *aContent)
-{
-  nsIContent *element = aContent->GetFlattenedTreeParent();
-
-  while (element && element->IsSVG()) {
-    if (EstablishesViewport(element)) {
-      if (element->Tag() == nsGkAtoms::foreignObject) {
-        return nullptr;
-      }
-      return nsCOMPtr<nsIDOMSVGElement>(do_QueryInterface(element)).forget();
-    }
-    element = element->GetFlattenedTreeParent();
-  }
-  return nullptr;
-}
-
-static gfxMatrix
-GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
-{
-  gfxMatrix matrix = aElement->PrependLocalTransformsTo(gfxMatrix(),
-    aHaveRecursed ? nsSVGElement::eAllTransforms : nsSVGElement::eUserSpaceToParent);
-  nsSVGElement *element = aElement;
-  nsIContent *ancestor = aElement->GetFlattenedTreeParent();
-
-  while (ancestor && ancestor->IsSVG() &&
-                     ancestor->Tag() != nsGkAtoms::foreignObject) {
-    element = static_cast<nsSVGElement*>(ancestor);
-    matrix *= element->PrependLocalTransformsTo(gfxMatrix()); // i.e. *A*ppend
-    if (!aScreenCTM && nsSVGUtils::EstablishesViewport(element)) {
-      if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
-          !element->NodeInfo()->Equals(nsGkAtoms::symbol, kNameSpaceID_SVG)) {
-        NS_ERROR("New (SVG > 1.1) SVG viewport establishing element?");
-        return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
-      }
-      // XXX spec seems to say x,y translation should be undone for IsInnerSVG
-      return matrix;
-    }
-    ancestor = ancestor->GetFlattenedTreeParent();
-  }
-  if (!aScreenCTM) {
-    // didn't find a nearestViewportElement
-    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
-  }
-  if (element->Tag() != nsGkAtoms::svg) {
-    // Not a valid SVG fragment
-    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
-  }
-  if (element == aElement && !aHaveRecursed) {
-    // We get here when getScreenCTM() is called on an outer-<svg>.
-    // Consistency with other elements would have us include only the
-    // eFromUserSpace transforms, but we include the eAllTransforms
-    // transforms in this case since that's what we've been doing for
-    // a while, and it keeps us consistent with WebKit and Opera (if not
-    // really with the ambiguous spec).
-    matrix = aElement->PrependLocalTransformsTo(gfxMatrix());
-  }
-  if (!ancestor || !ancestor->IsElement()) {
-    return matrix;
-  }
-  if (ancestor->IsSVG()) {
-    return
-      matrix * GetCTMInternal(static_cast<nsSVGElement*>(ancestor), true, true);
-  }
-
-  // XXX this does not take into account CSS transform, or that the non-SVG
-  // content that we've hit may itself be inside an SVG foreignObject higher up
-  nsIDocument* currentDoc = aElement->GetCurrentDoc();
-  float x = 0.0f, y = 0.0f;
-  if (currentDoc && element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
-    nsIPresShell *presShell = currentDoc->GetShell();
-    if (presShell) {
-      nsIFrame* frame = element->GetPrimaryFrame();
-      nsIFrame* ancestorFrame = presShell->GetRootFrame();
-      if (frame && ancestorFrame) {
-        nsPoint point = frame->GetOffsetTo(ancestorFrame);
-        x = nsPresContext::AppUnitsToFloatCSSPixels(point.x);
-        y = nsPresContext::AppUnitsToFloatCSSPixels(point.y);
-      }
-    }
-  }
-  return matrix * gfxMatrix().Translate(gfxPoint(x, y));
-}
-
-gfxMatrix
-nsSVGUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
-{
-  nsIDocument* currentDoc = aElement->GetCurrentDoc();
-  if (currentDoc) {
-    // Flush all pending notifications so that our frames are up to date
-    currentDoc->FlushPendingNotifications(Flush_Layout);
-  }
-  return GetCTMInternal(aElement, aScreenCTM, false);
 }
 
 nsSVGDisplayContainerFrame*
@@ -611,7 +373,7 @@ nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
 bool
 nsSVGUtils::OuterSVGIsCallingReflowSVG(nsIFrame *aFrame)
 {
-  return nsSVGUtils::GetOuterSVGFrame(aFrame)->IsCallingReflowSVG();
+  return GetOuterSVGFrame(aFrame)->IsCallingReflowSVG();
 }
 
 void
@@ -835,26 +597,21 @@ nsSVGUtils::NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame)
   }
 }
 
-double
-nsSVGUtils::ComputeNormalizedHypotenuse(double aWidth, double aHeight)
-{
-  return sqrt((aWidth*aWidth + aHeight*aHeight)/2);
-}
-
 float
 nsSVGUtils::ObjectSpace(const gfxRect &aRect, const nsSVGLength2 *aLength)
 {
   float axis;
 
   switch (aLength->GetCtxType()) {
-  case X:
+  case SVGContentUtils::X:
     axis = aRect.Width();
     break;
-  case Y:
+  case SVGContentUtils::Y:
     axis = aRect.Height();
     break;
-  case XY:
-    axis = float(ComputeNormalizedHypotenuse(aRect.Width(), aRect.Height()));
+  case SVGContentUtils::XY:
+    axis = float(SVGContentUtils::ComputeNormalizedHypotenuse(
+                   aRect.Width(), aRect.Height()));
     break;
   default:
     NS_NOTREACHED("unexpected ctx type");
@@ -880,22 +637,6 @@ nsSVGUtils::UserSpace(nsIFrame *aNonSVGContext, const nsSVGLength2 *aLength)
   return aLength->GetAnimValue(aNonSVGContext);
 }
 
-float
-nsSVGUtils::AngleBisect(float a1, float a2)
-{
-  float delta = fmod(a2 - a1, static_cast<float>(2*M_PI));
-  if (delta < 0) {
-    delta += 2*M_PI;
-  }
-  /* delta is now the angle from a1 around to a2, in the range [0, 2*M_PI) */
-  float r = a1 + delta/2;
-  if (delta >= M_PI) {
-    /* the arc from a2 to a1 is smaller, so use the ray on that side */
-    r += M_PI;
-  }
-  return r;
-}
-
 nsSVGOuterSVGFrame *
 nsSVGUtils::GetOuterSVGFrame(nsIFrame *aFrame)
 {
@@ -918,107 +659,6 @@ nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect)
   *aRect = (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) ?
              nsRect(0, 0, 0, 0) : svg->GetCoveredRegion();
   return GetOuterSVGFrame(aFrame);
-}
-
-gfxMatrix
-nsSVGUtils::GetViewBoxTransform(const nsSVGElement* aElement,
-                                float aViewportWidth, float aViewportHeight,
-                                float aViewboxX, float aViewboxY,
-                                float aViewboxWidth, float aViewboxHeight,
-                                const SVGAnimatedPreserveAspectRatio &aPreserveAspectRatio)
-{
-  return GetViewBoxTransform(aElement,
-                             aViewportWidth, aViewportHeight,
-                             aViewboxX, aViewboxY,
-                             aViewboxWidth, aViewboxHeight,
-                             aPreserveAspectRatio.GetAnimValue());
-}
-
-gfxMatrix
-nsSVGUtils::GetViewBoxTransform(const nsSVGElement* aElement,
-                                float aViewportWidth, float aViewportHeight,
-                                float aViewboxX, float aViewboxY,
-                                float aViewboxWidth, float aViewboxHeight,
-                                const SVGPreserveAspectRatio &aPreserveAspectRatio)
-{
-  NS_ASSERTION(aViewportWidth  >= 0, "viewport width must be nonnegative!");
-  NS_ASSERTION(aViewportHeight >= 0, "viewport height must be nonnegative!");
-  NS_ASSERTION(aViewboxWidth  > 0, "viewBox width must be greater than zero!");
-  NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
-
-  uint16_t align = aPreserveAspectRatio.GetAlign();
-  uint16_t meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
-
-  // default to the defaults
-  if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
-    align = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
-  if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN)
-    meetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
-
-  float a, d, e, f;
-  a = aViewportWidth / aViewboxWidth;
-  d = aViewportHeight / aViewboxHeight;
-  e = 0.0f;
-  f = 0.0f;
-
-  if (align != nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE &&
-      a != d) {
-    if ((meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-        a < d) ||
-        (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-        d < a)) {
-      d = a;
-      switch (align) {
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
-        break;
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
-        f = (aViewportHeight - a * aViewboxHeight) / 2.0f;
-        break;
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
-        f = aViewportHeight - a * aViewboxHeight;
-        break;
-      default:
-        NS_NOTREACHED("Unknown value for align");
-      }
-    }
-    else if (
-      (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-      d < a) ||
-      (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-      a < d)) {
-      a = d;
-      switch (align) {
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
-        break;
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
-        e = (aViewportWidth - a * aViewboxWidth) / 2.0f;
-        break;
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
-      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
-        e = aViewportWidth - a * aViewboxWidth;
-        break;
-      default:
-        NS_NOTREACHED("Unknown value for align");
-      }
-    }
-    else NS_NOTREACHED("Unknown value for meetOrSlice");
-  }
-  
-  if (aViewboxX) e += -a * aViewboxX;
-  if (aViewboxY) f += -d * aViewboxY;
-  
-  return gfxMatrix(a, 0.0f, 0.0f, d, e, f);
 }
 
 gfxMatrix
@@ -1186,7 +826,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
         tm = childrenOnlyTM.Invert() * tm;
       }
     }
-    nsIntRect bounds = nsSVGUtils::TransformFrameRectToOuterSVG(overflowRect,
+    nsIntRect bounds = TransformFrameRectToOuterSVG(overflowRect,
                          tm, aFrame->PresContext()).
                            ToOutsidePixels(appUnitsPerDevPx);
     if (!aDirtyRect->Intersects(bounds)) {
@@ -1722,29 +1362,6 @@ nsSVGUtils::GetFirstNonAAncestorFrame(nsIFrame* aStartFrame)
   return nullptr;
 }
 
-#ifdef DEBUG
-void
-nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)
-{
-  FILE *f = fopen(fname, "wb");
-  if (!f)
-    return;
-
-  gfxIntSize size = aSurface->GetSize();
-  fprintf(f, "P6\n%d %d\n255\n", size.width, size.height);
-  unsigned char *data = aSurface->Data();
-  int32_t stride = aSurface->Stride();
-  for (int y=0; y<size.height; y++) {
-    for (int x=0; x<size.width; x++) {
-      unused << fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_R, 1, 1, f);
-      unused << fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_G, 1, 1, f);
-      unused << fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_B, 1, 1, f);
-    }
-  }
-  fclose(f);
-}
-#endif
-
 gfxMatrix
 nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
 {
@@ -1762,7 +1379,7 @@ nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
     // space rather so we need to invert the transform
     // to the screen co-ordinate space to get there.
     // See http://www.w3.org/TR/SVGTiny12/painting.html#NonScalingStroke
-    gfxMatrix transform = nsSVGUtils::GetCTM(
+    gfxMatrix transform = SVGContentUtils::GetCTM(
                             static_cast<nsSVGElement*>(content), true);
     if (!transform.IsSingular()) {
       return transform.Invert();
@@ -2044,8 +1661,8 @@ nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextObjectPaint *aObjectPaint)
 
   nsSVGElement *ctx = static_cast<nsSVGElement*>(content);
 
-  return nsSVGUtils::CoordToFloat(aFrame->PresContext(), ctx,
-                                  style->mStrokeWidth);
+  return CoordToFloat(aFrame->PresContext(), ctx,
+                      style->mStrokeWidth);
 }
 
 void

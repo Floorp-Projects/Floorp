@@ -172,7 +172,7 @@ NS_InvokeByIndex_P(nsISupports * that, uint32_t methodIndex,
     methodAddress += 8 * methodIndex;
     methodAddress = *((uint64_t *)methodAddress);
     
-    typedef uint32_t (*Method)(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
-    uint32_t result = ((Method)methodAddress)(a0, a1, a2, a3, a4, a5);
+    typedef nsresult (*Method)(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+    nsresult result = ((Method)methodAddress)(a0, a1, a2, a3, a4, a5);
     return result;
 }

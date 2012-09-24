@@ -279,13 +279,12 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     EnableDevice(NS_DEVICE_MOTION);
   } else if (aTypeAtom == nsGkAtoms::onmoztimechange) {
     EnableTimeChangeNotifications();
-  } else if ((aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) ||
-             (aTypeAtom == nsGkAtoms::ontouchstart ||
-              aTypeAtom == nsGkAtoms::ontouchend ||
-              aTypeAtom == nsGkAtoms::ontouchmove ||
-              aTypeAtom == nsGkAtoms::ontouchenter ||
-              aTypeAtom == nsGkAtoms::ontouchleave ||
-              aTypeAtom == nsGkAtoms::ontouchcancel)) {
+  } else if (aTypeAtom == nsGkAtoms::ontouchstart ||
+             aTypeAtom == nsGkAtoms::ontouchend ||
+             aTypeAtom == nsGkAtoms::ontouchmove ||
+             aTypeAtom == nsGkAtoms::ontouchenter ||
+             aTypeAtom == nsGkAtoms::ontouchleave ||
+             aTypeAtom == nsGkAtoms::ontouchcancel) {
     mMayHaveTouchEventListener = true;
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     // we don't want touchevent listeners added by scrollbars to flip this flag

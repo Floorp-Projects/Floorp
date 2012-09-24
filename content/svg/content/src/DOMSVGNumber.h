@@ -55,7 +55,7 @@ public:
   DOMSVGNumber(DOMSVGNumberList *aList,
                uint8_t aAttrEnum,
                uint32_t aListIndex,
-               uint8_t aIsAnimValItem);
+               bool aIsAnimValItem);
 
   /**
    * Ctor for creating the objects returned by SVGSVGElement.createSVGNumber(),
@@ -105,7 +105,7 @@ public:
   void InsertingIntoList(DOMSVGNumberList *aList,
                          uint8_t aAttrEnum,
                          uint32_t aListIndex,
-                         uint8_t aIsAnimValItem);
+                         bool aIsAnimValItem);
 
   static uint32_t MaxListIndex() {
     return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;

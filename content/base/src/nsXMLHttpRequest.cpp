@@ -2422,7 +2422,8 @@ nsXMLHttpRequest::SendAsBinary(const nsAString &aBody,
 
 static nsresult
 GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
-               nsACString& aContentType, nsACString& aCharset)
+               uint64_t* aContentLength, nsACString& aContentType,
+               nsACString& aCharset)
 {
   aContentType.AssignLiteral("application/xml");
   nsAutoString inputEncoding;
@@ -2455,25 +2456,37 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
 
   output->Close();
 
+  uint32_t length;
+  rv = storStream->GetLength(&length);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *aContentLength = length;
+
   return storStream->NewInputStream(0, aResult);
 }
 
 static nsresult
 GetRequestBody(const nsAString& aString, nsIInputStream** aResult,
-               nsACString& aContentType, nsACString& aCharset)
+               uint64_t* aContentLength, nsACString& aContentType,
+               nsACString& aCharset)
 {
   aContentType.AssignLiteral("text/plain");
   aCharset.AssignLiteral("UTF-8");
 
-  return NS_NewCStringInputStream(aResult, NS_ConvertUTF16toUTF8(aString));
+  nsCString converted = NS_ConvertUTF16toUTF8(aString);
+  *aContentLength = converted.Length();
+  return NS_NewCStringInputStream(aResult, converted);
 }
 
 static nsresult
 GetRequestBody(nsIInputStream* aStream, nsIInputStream** aResult,
-               nsACString& aContentType, nsACString& aCharset)
+               uint64_t* aContentLength, nsACString& aContentType,
+               nsACString& aCharset)
 {
   aContentType.AssignLiteral("text/plain");
   aCharset.Truncate();
+
+  nsresult rv = aStream->Available(aContentLength);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aResult = aStream);
 
@@ -2481,20 +2494,21 @@ GetRequestBody(nsIInputStream* aStream, nsIInputStream** aResult,
 }
 
 static nsresult
-GetRequestBody(nsIXHRSendable* aSendable, nsIInputStream** aResult,
+GetRequestBody(nsIXHRSendable* aSendable, nsIInputStream** aResult, uint64_t* aContentLength,
                nsACString& aContentType, nsACString& aCharset)
 {
-  return aSendable->GetSendInfo(aResult, aContentType, aCharset);
+  return aSendable->GetSendInfo(aResult, aContentLength, aContentType, aCharset);
 }
 
 static nsresult
-GetRequestBody(ArrayBuffer* aArrayBuffer, nsIInputStream** aResult,
+GetRequestBody(ArrayBuffer* aArrayBuffer, nsIInputStream** aResult, uint64_t* aContentLength,
                nsACString& aContentType, nsACString& aCharset)
 {
   aContentType.SetIsVoid(true);
   aCharset.Truncate();
 
   int32_t length = aArrayBuffer->Length();
+  *aContentLength = length;
   char* data = reinterpret_cast<char*>(aArrayBuffer->Data());
 
   nsCOMPtr<nsIInputStream> stream;
@@ -2508,7 +2522,7 @@ GetRequestBody(ArrayBuffer* aArrayBuffer, nsIInputStream** aResult,
 }
 
 static nsresult
-GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
+GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult, uint64_t* aContentLength,
                nsACString& aContentType, nsACString& aCharset)
 {
   *aResult = nullptr;
@@ -2529,7 +2543,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
     // document?
     nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(supports);
     if (doc) {
-      return GetRequestBody(doc, aResult, aContentType, aCharset);
+      return GetRequestBody(doc, aResult, aContentLength, aContentType, aCharset);
     }
 
     // nsISupportsString?
@@ -2538,19 +2552,19 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
       nsAutoString string;
       wstr->GetData(string);
 
-      return GetRequestBody(string, aResult, aContentType, aCharset);
+      return GetRequestBody(string, aResult, aContentLength, aContentType, aCharset);
     }
 
     // nsIInputStream?
     nsCOMPtr<nsIInputStream> stream = do_QueryInterface(supports);
     if (stream) {
-      return GetRequestBody(stream, aResult, aContentType, aCharset);
+      return GetRequestBody(stream, aResult, aContentLength, aContentType, aCharset);
     }
 
     // nsIXHRSendable?
     nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(supports);
     if (sendable) {
-      return GetRequestBody(sendable, aResult, aContentType, aCharset);
+      return GetRequestBody(sendable, aResult, aContentLength, aContentType, aCharset);
     }
 
     // ArrayBuffer?
@@ -2575,7 +2589,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
       ac.construct(cx, obj);
       if (JS_IsArrayBufferObject(obj, cx)) {
           ArrayBuffer buf(cx, obj);
-          return GetRequestBody(&buf, aResult, aContentType, aCharset);
+          return GetRequestBody(&buf, aResult, aContentLength, aContentType, aCharset);
       }
     }
   }
@@ -2584,6 +2598,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
     // Makes us act as if !aBody, don't upload anything
     aContentType.AssignLiteral("text/plain");
     aCharset.AssignLiteral("UTF-8");
+    *aContentLength = 0;
 
     return NS_OK;
   }
@@ -2596,7 +2611,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
   nsString string;
   string.Adopt(data, len);
 
-  return GetRequestBody(string, aResult, aContentType, aCharset);
+  return GetRequestBody(string, aResult, aContentLength, aContentType, aCharset);
 }
 
 /* static */
@@ -2604,10 +2619,11 @@ nsresult
 nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
                                  const Nullable<RequestBody>& aBody,
                                  nsIInputStream** aResult,
+                                 uint64_t* aContentLength,
                                  nsACString& aContentType, nsACString& aCharset)
 {
   if (aVariant) {
-    return ::GetRequestBody(aVariant, aResult, aContentType, aCharset);
+    return ::GetRequestBody(aVariant, aResult, aContentLength, aContentType, aCharset);
   }
 
   const RequestBody& body = aBody.Value();
@@ -2615,7 +2631,8 @@ nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
   switch (body.GetType()) {
     case nsXMLHttpRequest::RequestBody::ArrayBuffer:
     {
-      return ::GetRequestBody(value.mArrayBuffer, aResult, aContentType, aCharset);
+      return ::GetRequestBody(value.mArrayBuffer, aResult, aContentLength,
+                              aContentType, aCharset);
     }
     case nsXMLHttpRequest::RequestBody::Blob:
     {
@@ -2623,16 +2640,17 @@ nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
       nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(value.mBlob, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      return ::GetRequestBody(sendable, aResult, aContentType, aCharset);
+      return ::GetRequestBody(sendable, aResult, aContentLength, aContentType, aCharset);
     }
     case nsXMLHttpRequest::RequestBody::Document:
     {
       nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(value.mDocument);
-      return ::GetRequestBody(document, aResult, aContentType, aCharset);
+      return ::GetRequestBody(document, aResult, aContentLength, aContentType, aCharset);
     }
     case nsXMLHttpRequest::RequestBody::DOMString:
     {
-      return ::GetRequestBody(*value.mString, aResult, aContentType, aCharset);
+      return ::GetRequestBody(*value.mString, aResult, aContentLength,
+                              aContentType, aCharset);
     }
     case nsXMLHttpRequest::RequestBody::FormData:
     {
@@ -2640,11 +2658,12 @@ nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
       nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(value.mFormData, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      return ::GetRequestBody(sendable, aResult, aContentType, aCharset);
+      return ::GetRequestBody(sendable, aResult, aContentLength, aContentType, aCharset);
     }
     case nsXMLHttpRequest::RequestBody::InputStream:
     {
-      return ::GetRequestBody(value.mStream, aResult, aContentType, aCharset);
+      return ::GetRequestBody(value.mStream, aResult, aContentLength,
+                              aContentType, aCharset);
     }
     default:
     {
@@ -2788,7 +2807,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     nsCOMPtr<nsIInputStream> postDataStream;
 
     rv = GetRequestBody(aVariant, aBody, getter_AddRefs(postDataStream),
-                        defaultContentType, charset);
+                        &mUploadTotal, defaultContentType, charset);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (postDataStream) {
@@ -2851,9 +2870,6 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
       }
 
       mUploadComplete = false;
-      uint64_t uploadTotal = 0;
-      postDataStream->Available(&uploadTotal);
-      mUploadTotal = uploadTotal;
 
       // We want to use a newer version of the upload channel that won't
       // ignore the necessary headers for an empty Content-Type.
@@ -2862,7 +2878,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
       NS_ASSERTION(uploadChannel2, "http must support nsIUploadChannel2");
       if (uploadChannel2) {
           uploadChannel2->ExplicitSetUploadStream(postDataStream, contentType,
-                                                 -1, method, false);
+                                                 mUploadTotal, method, false);
       }
       else {
         // http channel doesn't support the new nsIUploadChannel2. Emulate
@@ -2872,7 +2888,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
         }
         nsCOMPtr<nsIUploadChannel> uploadChannel =
           do_QueryInterface(httpChannel);
-        uploadChannel->SetUploadStream(postDataStream, contentType, -1);
+        uploadChannel->SetUploadStream(postDataStream, contentType, mUploadTotal);
         // Reset the method to its original value
         httpChannel->SetRequestMethod(method);
       }

@@ -12,7 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsSVGPathElement.h"
-#include "nsSVGUtils.h"
 #include "DOMSVGPoint.h"
 #include "gfxContext.h"
 

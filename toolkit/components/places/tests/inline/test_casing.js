@@ -59,7 +59,7 @@ add_autocomplete_test([
 add_autocomplete_test([
   "Searching for untrimmed cased entry with www",
   "http://www.mOz",
-  { autoFilled: "http://www.mOzilla.org/", completed: "www.mozilla.org/" },
+  { autoFilled: "http://www.mOzilla.org/", completed: "http://www.mozilla.org/" },
   function () {
     addBookmark({ url: "http://www.mozilla.org/Test/" });
   },

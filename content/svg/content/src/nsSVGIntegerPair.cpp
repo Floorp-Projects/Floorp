@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSVGIntegerPair.h"
-#include "nsSVGUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsError.h"
 #include "nsMathUtils.h"
 #include "nsSMILValue.h"
+#include "SVGContentUtils.h"
 #include "SVGIntegerPairSMILType.h"
 
 using namespace mozilla;

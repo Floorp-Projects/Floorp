@@ -864,7 +864,7 @@ DownloadsDataItem.prototype = {
     // The download database may contain targets stored as file URLs or native
     // paths.  This can still be true for previously stored items, even if new
     // items are stored using their file URL.  See also bug 239948 comment 12.
-    if (/^file:/.test(this.file)) {
+    if (this.file.startsWith("file:")) {
       // Assume the file URL we obtained from the downloads database or from the
       // "spec" property of the target has the UTF-8 charset.
       let fileUrl = NetUtil.newURI(this.file).QueryInterface(Ci.nsIFileURL);

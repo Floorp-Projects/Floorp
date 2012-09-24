@@ -762,19 +762,6 @@ NON_IDL_EVENT(MozEdgeUIGesture,
               EventNameType_None,
               NS_SIMPLE_GESTURE_EVENT)
 
-NON_IDL_EVENT(MozTouchDown,
-              NS_MOZTOUCH_DOWN,
-              EventNameType_None,
-              NS_MOZTOUCH_EVENT)
-NON_IDL_EVENT(MozTouchMove,
-              NS_MOZTOUCH_MOVE,
-              EventNameType_None,
-              NS_MOZTOUCH_EVENT)
-NON_IDL_EVENT(MozTouchUp,
-              NS_MOZTOUCH_UP,
-              EventNameType_None,
-              NS_MOZTOUCH_EVENT)
-
 NON_IDL_EVENT(transitionend,
               NS_TRANSITION_END,
               EventNameType_None,

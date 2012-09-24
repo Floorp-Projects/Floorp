@@ -378,6 +378,7 @@ nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset,
 {
   mPostDataStream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+  mTotalLength = 0;
 
   mBoundary.AssignLiteral("---------------------------");
   mBoundary.AppendInt(rand());
@@ -391,7 +392,7 @@ nsFSMultipartFormData::~nsFSMultipartFormData()
 }
 
 nsIInputStream*
-nsFSMultipartFormData::GetSubmissionBody()
+nsFSMultipartFormData::GetSubmissionBody(uint64_t* aContentLength)
 {
   // Finish data
   mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
@@ -400,6 +401,7 @@ nsFSMultipartFormData::GetSubmissionBody()
   // Add final data input stream
   AddPostDataStream();
 
+  *aContentLength = mTotalLength;
   return mPostDataStream;
 }
 
@@ -513,6 +515,11 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
     AddPostDataStream();
 
     mPostDataStream->AppendStream(fileStream);
+
+    uint64_t size;
+    nsresult rv = aBlob->GetSize(&size);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mTotalLength += size;
   }
 
   // CRLF after file
@@ -536,7 +543,8 @@ nsFSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
   GetContentType(contentType);
   mimeStream->AddHeader("Content-Type", contentType.get());
   mimeStream->SetAddContentLength(true);
-  mimeStream->SetData(GetSubmissionBody());
+  uint64_t unused;
+  mimeStream->SetData(GetSubmissionBody(&unused));
 
   *aPostDataStream = mimeStream.forget().get();
 
@@ -554,6 +562,7 @@ nsFSMultipartFormData::AddPostDataStream()
   NS_ASSERTION(postDataChunkStream, "Could not open a stream for POST!");
   if (postDataChunkStream) {
     mPostDataStream->AppendStream(postDataChunkStream);
+    mTotalLength += mPostDataChunk.Length();
   }
 
   mPostDataChunk.Truncate();

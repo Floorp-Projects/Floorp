@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,17 +8,51 @@
 #define mozilla_dom_workers_filereadersync_h__
 
 #include "Workers.h"
+#include "mozilla/dom/workers/bindings/DOMBindingBase.h"
 
-#include "jspubtd.h"
+#include "nsICharsetDetectionObserver.h"
+#include "nsStringGlue.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/dom/BindingUtils.h"
+
+class nsIInputStream;
+class nsIDOMBlob;
 
 BEGIN_WORKERS_NAMESPACE
 
-namespace filereadersync {
+class FileReaderSync MOZ_FINAL : public DOMBindingBase,
+                                 public nsICharsetDetectionObserver
+{
+  nsCString mCharset;
+  nsresult ConvertStream(nsIInputStream *aStream, const char *aCharset,
+                         nsAString &aResult);
+  nsresult GuessCharset(nsIInputStream *aStream, nsACString &aCharset);
 
-bool
-InitClass(JSContext* aCx, JSObject* aGlobal);
+public:
+  virtual void
+  _trace(JSTracer* aTrc) MOZ_OVERRIDE;
 
-} // namespace filereadersync
+  virtual void
+  _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
+
+  static FileReaderSync*
+  Constructor(JSContext* aCx, JSObject* aGlobal, ErrorResult& aRv);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  FileReaderSync(JSContext* aCx);
+
+  JSObject* ReadAsArrayBuffer(JSContext* aCx, JSObject* aBlob,
+                              ErrorResult& aRv);
+  void ReadAsBinaryString(JSObject* aBlob, nsAString& aResult,
+                          ErrorResult& aRv);
+  void ReadAsText(JSObject* aBlob, const Optional<nsAString>& aEncoding,
+                  nsAString& aResult, ErrorResult& aRv);
+  void ReadAsDataURL(JSObject* aBlob, nsAString& aResult, ErrorResult& aRv);
+
+  // From nsICharsetDetectionObserver
+  NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);
+};
 
 END_WORKERS_NAMESPACE
 

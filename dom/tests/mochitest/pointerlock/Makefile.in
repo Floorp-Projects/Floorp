@@ -30,6 +30,7 @@ MOCHITEST_FILES	= \
 		file_screenClientXYConst.html \
 		file_suppressSomeMouseEvents.html \
 		file_locksvgelement.html \
+		file_allowPointerLockSandboxFlag.html \
 		iframe_differentDOM.html \
 		$(NULL)
 

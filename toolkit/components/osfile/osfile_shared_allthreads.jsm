@@ -32,7 +32,7 @@
      }
 
      // Define a lazy getter for a property
-     let defineLazyGetter = function(object, name, getter) {
+     let defineLazyGetter = function defineLazyGetter(object, name, getter) {
        Object.defineProperty(object, name, {
          configurable: true,
          get: function lazy() {
@@ -45,6 +45,7 @@
          }
        });
      };
+     exports.OS.Shared.defineLazyGetter = defineLazyGetter;
 
      /**
       * A variable controlling whether we should printout logs.

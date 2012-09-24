@@ -25,6 +25,7 @@
 #define _NSDEQUE
 
 #include "nscore.h"
+#include "mozilla/Attributes.h"
 
 /**
  * The nsDequeFunctor class is used when you want to create
@@ -36,6 +37,7 @@
 class nsDequeFunctor{
 public:
   virtual void* operator()(void* anObject)=0;
+  virtual ~nsDequeFunctor() {}
 };
 
 /******************************************************

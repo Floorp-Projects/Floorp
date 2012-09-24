@@ -20,6 +20,8 @@ MOCHITEST_CHROME_FILES := \
   worker_test_osfile_front.js \
   test_osfile_comms.xul \
   worker_test_osfile_comms.js \
+  test_osfile_async.xul \
+  main_test_osfile_async.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

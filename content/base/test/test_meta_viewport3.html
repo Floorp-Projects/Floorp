@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>meta viewport test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="width=320">
+</head>
+<body>
+  <p>width=320</p>
+  <script type="application/javascript;version=1.7">
+    "use strict";
+
+    SimpleTest.waitForExplicitFinish();
+
+    let tests = [];
+
+    tests.push(function test1() {
+      SpecialPowers.pushPrefEnv({"set": [["browser.viewport.scaleRatio", 100]]},
+        function() {
+          let info = getViewportInfo(800, 480);
+          is(info.defaultZoom, 2.5,   "initial zoom fits the displayWidth");
+          is(info.width,       320,   "width is set explicitly");
+          is(info.height,      223,   "height is at the absolute minimum");
+          is(info.autoSize,    false, "width=device-width enables autoSize");
+          is(info.allowZoom,   true,  "zooming is enabled by default");
+
+          info = getViewportInfo(480, 800);
+          is(info.defaultZoom, 1.5,   "initial zoom fits the new displayWidth");
+          is(info.width,       320,   "explicit width is unchanged");
+          is(info.height,      533,   "height changes proportional to displayHeight");
+
+          nextTest();
+        });
+    });
+
+    tests.push(function test2() {
+      SpecialPowers.pushPrefEnv({"set": [["browser.viewport.scaleRatio", 150]]},
+        function() {
+          // With an explicit width in CSS px, the scaleRatio has no effect.
+          let info = getViewportInfo(800, 480);
+          is(info.defaultZoom, 2.5,   "initial zoom still fits the displayWidth");
+          is(info.width,       320,   "width is still set explicitly");
+          is(info.height,      223,   "height is still minimum height");
+
+          nextTest();
+        });
+    });
+
+    function getViewportInfo(aDisplayWidth, aDisplayHeight) {
+      let defaultZoom = {}, allowZoom = {}, minZoom = {}, maxZoom = {},
+          width = {}, height = {}, autoSize = {};
+
+      let cwu = SpecialPowers.getDOMWindowUtils(window);
+      cwu.getViewportInfo(aDisplayWidth, aDisplayHeight, defaultZoom, allowZoom,
+                          minZoom, maxZoom, width, height, autoSize);
+      return {
+        defaultZoom: defaultZoom.value,
+        minZoom: minZoom.value,
+        maxZoom: maxZoom.value,
+        width: width.value,
+        height: height.value,
+        autoSize: autoSize.value,
+        allowZoom: allowZoom.value
+      };
+    }
+
+    function nextTest() {
+      if (tests.length)
+        (tests.shift())();
+      else
+        SimpleTest.finish();
+    }
+    addEventListener("load", nextTest);
+  </script>
+</body>
+</html>

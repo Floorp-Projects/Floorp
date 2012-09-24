@@ -1,0 +1,21 @@
+# Copyright (c) 2002-2003 ActiveState Corp.
+# Author: Trent Mick (TrentM@ActiveState.com)
+#
+# A Makefile to do this: launcher.cpp -> foo.exe
+
+APPNAME=which
+
+# for release:
+CFLAGS=-D_CONSOLE -D_MBCS -DWIN32 -W3 -Ox -DNDEBUG -D_NDEBUG -MD 
+LDFLAGS=/subsystem:console kernel32.lib user32.lib gdi32.lib advapi32.lib shlwapi.lib
+# for debug:
+#  CFLAGS = -D_CONSOLE -D_MBCS /DWIN32 /Zi /Od /DDEBUG /D_DEBUG /MDd
+#  LDFLAGS += /DEBUG
+
+$(APPNAME).exe: launcher.cpp
+	cl -nologo $(CFLAGS) -c launcher.cpp
+	link -nologo $(LDFLAGS) launcher.obj -out:$(APPNAME).exe
+
+clean:
+	if exist launcher.obj; del launcher.obj
+    if exist $(APPNAME).exe; del $(APPNAME).exe

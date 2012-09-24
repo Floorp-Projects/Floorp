@@ -2722,24 +2722,10 @@ Tab.prototype = {
   },
 
   sendViewportUpdate: function(aPageSizeUpdate) {
-    let message;
-    // for foreground tabs, send the viewport update unless the document
-    // displayed is different from the content document. In that case, just
-    // calculate the display port.
-    if (BrowserApp.selectedTab == this && BrowserApp.isBrowserContentDocumentDisplayed()) {
-      message = this.getViewport();
-      message.type = aPageSizeUpdate ? "Viewport:PageSize" : "Viewport:Update";
-    } else {
-      // for background tabs, request a new display port calculation, so that
-      // when we do switch to that tab, we have the correct display port and
-      // don't need to draw twice (once to allow the first-paint viewport to
-      // get to java, and again once java figures out the display port).
-      message = this.getViewport();
-      message.type = "Viewport:CalculateDisplayPort";
-    }
-    let displayPort = sendMessageToJava({ gecko: message });
+    let viewport = this.getViewport();
+    let displayPort = getBridge().getDisplayPort(aPageSizeUpdate, BrowserApp.isBrowserContentDocumentDisplayed(), this.id, viewport);
     if (displayPort != null)
-      this.setDisplayPort(JSON.parse(displayPort));
+      this.setDisplayPort(displayPort);
   },
 
   handleEvent: function(aEvent) {

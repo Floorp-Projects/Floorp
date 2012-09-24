@@ -45,6 +45,7 @@ public:
   ~AudioManager();
 
   static void SetAudioRoute(int aRoutes);
+
 protected:
   int32_t mPhoneState;
 

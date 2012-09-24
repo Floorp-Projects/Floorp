@@ -1,0 +1,14 @@
+{
+  "name": "Absolute Locale Entry Point Launch Path App",
+  "installs_allowed_from": [ "*" ],
+  "locales": {
+    "it": {
+      "entry_points": {
+        "ep1": {
+          "name": "Punto d'ingresso",
+          "launch_path": "http://www.mozilla.org/"
+        }
+      }
+    }
+  }
+}

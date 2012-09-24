@@ -91,6 +91,21 @@ interface nsITransferable : nsISupports
    * transferable objects.  Failure to do so will result in fatal assertions in
    * debug builds.
    *
+   * The load context is used to track whether the transferable is storing privacy-
+   * sensitive information.  For example, we try to delete data that you copy
+   * to the clipboard when you close a Private Browsing window.
+   *
+   * To get the appropriate load context in Javascript callers, one needs to get
+   * to the document that the transferable corresponds to, and then get the load
+   * context from the document like this:
+   *
+   * var loadContext = doc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+   *                                  .getInterface(Ci.nsIWebNavigation)
+   *                                  .QueryInterface(Ci.nsILoadContext);
+   *
+   * In C++ callers, if you have the corresponding document, you can just call
+   * nsIDocument::GetLoadContext to get to the load context object.
+   *
    * @param aContext the load context associated with the transferable object.
    *        This can be set to null if a load context is not available.
    */

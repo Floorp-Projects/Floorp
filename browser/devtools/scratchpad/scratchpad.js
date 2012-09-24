@@ -668,15 +668,7 @@ var Scratchpad = {
    */
   openFile: function SP_openFile(aIndex)
   {
-    let fp;
-    if (!aIndex && aIndex !== 0) {
-      fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      fp.init(window, this.strings.GetStringFromName("openFile.title"),
-              Ci.nsIFilePicker.modeOpen);
-      fp.defaultString = "";
-    }
-
-    if (aIndex > -1 || fp.show() != Ci.nsIFilePicker.returnCancel) {
+    let promptCallback = function(aFile) {
       this.promptSave(function(aCloseFile, aSaved, aStatus) {
         let shouldOpen = aCloseFile;
         if (aSaved && !Components.isSuccessCode(aStatus)) {
@@ -687,8 +679,8 @@ var Scratchpad = {
           this._skipClosePrompt = true;
 
           let file;
-          if (fp) {
-            file = fp.file;
+          if (aFile) {
+            file = aFile;
           } else {
             file = Components.classes["@mozilla.org/file/local;1"].
                    createInstance(Components.interfaces.nsILocalFile);
@@ -701,6 +693,22 @@ var Scratchpad = {
           this.setRecentFile(file);
         }
       }.bind(this));
+    }.bind(this);
+
+    if (aIndex > -1) {
+      promptCallback();
+    } else {
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      let fpCallback = function fpCallback_done(aResult) {
+        if (aResult != Ci.nsIFilePicker.returnCancel) {
+          promptCallback(fp.file);
+        }
+      };
+
+      fp.init(window, this.strings.GetStringFromName("openFile.title"),
+              Ci.nsIFilePicker.modeOpen);
+      fp.defaultString = "";
+      fp.open(fpCallback);
     }
   },
 
@@ -894,22 +902,25 @@ var Scratchpad = {
   saveFileAs: function SP_saveFileAs(aCallback)
   {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    let fpCallback = function fpCallback_done(aResult) {
+      if (aResult != Ci.nsIFilePicker.returnCancel) {
+        this.setFilename(fp.file.path);
+        this.exportToFile(fp.file, true, false, function(aStatus) {
+          if (Components.isSuccessCode(aStatus)) {
+            this.editor.dirty = false;
+            this.setRecentFile(fp.file);
+          }
+          if (aCallback) {
+            aCallback(aStatus);
+          }
+        });
+      }
+    }.bind(this);
+
     fp.init(window, this.strings.GetStringFromName("saveFileAs"),
             Ci.nsIFilePicker.modeSave);
     fp.defaultString = "scratchpad.js";
-    if (fp.show() != Ci.nsIFilePicker.returnCancel) {
-      this.setFilename(fp.file.path);
-
-      this.exportToFile(fp.file, true, false, function(aStatus) {
-        if (Components.isSuccessCode(aStatus)) {
-          this.editor.dirty = false;
-          this.setRecentFile(fp.file);
-        }
-        if (aCallback) {
-          aCallback(aStatus);
-        }
-      });
-    }
+    fp.open(fpCallback);
   },
 
   /**

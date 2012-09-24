@@ -753,9 +753,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_SIMPLE_GESTURE_EVENT:
       return NS_NewDOMSimpleGestureEvent(aDOMEvent, aPresContext,
                                          static_cast<nsSimpleGestureEvent*>(aEvent));
-    case NS_MOZTOUCH_EVENT:
-      return NS_NewDOMMozTouchEvent(aDOMEvent, aPresContext,
-                                    static_cast<nsMozTouchEvent*>(aEvent));
     case NS_TOUCH_EVENT:
       return NS_NewDOMTouchEvent(aDOMEvent, aPresContext,
                                  static_cast<nsTouchEvent*>(aEvent));
@@ -836,8 +833,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("pagetransition"))
     return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("moztouchevent"))
-    return NS_NewDOMMozTouchEvent(aDOMEvent, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("scrollareaevent"))
     return NS_NewDOMScrollAreaEvent(aDOMEvent, aPresContext, nullptr);
   // FIXME: Should get spec to say what the right string is here!  This

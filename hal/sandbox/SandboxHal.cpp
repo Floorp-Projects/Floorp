@@ -204,6 +204,18 @@ GetTimezone()
 }
 
 void
+EnableSystemTimeChangeNotifications()
+{
+  Hal()->SendEnableSystemTimeChangeNotifications();
+}
+
+void
+DisableSystemTimeChangeNotifications()
+{
+  Hal()->SendDisableSystemTimeChangeNotifications();
+}
+
+void
 Reboot()
 {
   Hal()->SendReboot();
@@ -295,6 +307,66 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
   Hal()->SendSetProcessPriority(aPid, aPriority);
 }
 
+void
+EnableFMRadio(const hal::FMRadioSettings& aSettings)
+{
+  Hal()->SendEnableFMRadio(aSettings);
+}
+
+void
+DisableFMRadio()
+{
+  Hal()->SendDisableFMRadio();
+}
+
+void
+FMRadioSeek(const hal::FMRadioSeekDirection& aDirection)
+{
+  Hal()->SendFMRadioSeek(aDirection);
+}
+
+void
+GetFMRadioSettings(FMRadioSettings* aSettings)
+{
+  Hal()->SendGetFMRadioSettings(aSettings);
+}
+
+void
+SetFMRadioFrequency(const uint32_t aFrequency)
+{
+  Hal()->SendSetFMRadioFrequency(aFrequency);
+}
+
+uint32_t
+GetFMRadioFrequency()
+{
+  uint32_t frequency;
+  Hal()->SendGetFMRadioFrequency(&frequency);
+  return frequency;
+}
+
+bool
+IsFMRadioOn()
+{
+  bool FMRadioOn;
+  Hal()->SendIsFMRadioOn(&FMRadioOn);
+  return FMRadioOn;
+}
+
+uint32_t
+GetFMRadioSignalStrength()
+{
+  uint32_t strength;
+  Hal()->SendGetFMRadioSignalStrength(&strength);
+  return strength;
+}
+
+void
+CancelFMRadioSeek()
+{
+  Hal()->SendCancelFMRadioSeek();
+}
+
 class HalParent : public PHalParent
                 , public BatteryObserver
                 , public NetworkObserver
@@ -302,6 +374,7 @@ class HalParent : public PHalParent
                 , public WakeLockObserver
                 , public ScreenConfigurationObserver
                 , public SwitchObserver
+                , public SystemTimeObserver
 {
 public:
   virtual void
@@ -549,6 +622,20 @@ public:
   }
 
   virtual bool
+  RecvEnableSystemTimeChangeNotifications() MOZ_OVERRIDE
+  {
+    hal::RegisterSystemTimeChangeObserver(this);
+    return true;
+  }
+
+  virtual bool
+  RecvDisableSystemTimeChangeNotifications() MOZ_OVERRIDE
+  {
+    hal::UnregisterSystemTimeChangeObserver(this);
+    return true;
+  }
+
+  virtual bool
   RecvReboot() MOZ_OVERRIDE
   {
     if (!AppProcessHasPermission(this, "power")) {
@@ -665,6 +752,74 @@ public:
   {
     unused << SendNotifySystemTimeChange(aReason);
   }
+
+  virtual bool
+  RecvEnableFMRadio(const hal::FMRadioSettings& aSettings)
+  {
+    hal::EnableFMRadio(aSettings);
+    return true;
+  }
+
+  virtual bool
+  RecvDisableFMRadio()
+  {
+    hal::DisableFMRadio();
+    return true;
+  }
+
+  virtual bool
+  RecvFMRadioSeek(const hal::FMRadioSeekDirection& aDirection)
+  {
+    hal::FMRadioSeek(aDirection);
+    return true;
+  }
+
+  virtual bool
+  RecvGetFMRadioSettings(hal::FMRadioSettings* aSettings)
+  {
+    hal::GetFMRadioSettings(aSettings);
+    return true;
+  }
+
+  virtual bool
+  RecvSetFMRadioFrequency(const uint32_t& aFrequency)
+  {
+    hal::SetFMRadioFrequency(aFrequency);
+    return true;
+  }
+
+  virtual bool
+  RecvGetFMRadioFrequency(uint32_t* aFrequency)
+  {
+    *aFrequency = hal::GetFMRadioFrequency();
+    return true;
+  }
+
+  void Notify(const hal::FMRadioOperationInformation& aRadioStatus)
+  {
+    unused << SendNotifyFMRadioStatus(aRadioStatus);
+  }
+
+  virtual bool
+  RecvIsFMRadioOn(bool* radioOn)
+  {
+    *radioOn = hal::IsFMRadioOn();
+    return true;
+  }
+
+  virtual bool
+  RecvGetFMRadioSignalStrength(uint32_t* strength)
+  {
+    *strength = hal::GetFMRadioSignalStrength();
+    return true;
+  }
+
+  virtual bool
+  RecvCancelFMRadioSeek()
+  {
+    hal::CancelFMRadioSeek();
+    return true;
+  }
 };
 
 class HalChild : public PHalChild {
@@ -705,6 +860,12 @@ public:
   virtual bool
   RecvNotifySystemTimeChange(const SystemTimeChange& aReason) {
     hal::NotifySystemTimeChange(aReason);
+    return true;
+  }
+
+  virtual bool
+  RecvNotifyFMRadioStatus(const FMRadioOperationInformation& aRadioStatus) {
+    hal::NotifyFMRadioStatus(aRadioStatus);
     return true;
   }
 };

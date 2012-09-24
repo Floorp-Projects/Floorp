@@ -155,7 +155,7 @@ XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
 #endif
 
 XPCOMUtils.defineLazyModuleGetter(this, "gBrowserNewTabPreloader",
-  "resource://gre/modules/BrowserNewTabPreloader.jsm", "BrowserNewTabPreloader");
+  "resource:///modules/BrowserNewTabPreloader.jsm", "BrowserNewTabPreloader");
 
 let gInitialPages = [
   "about:blank",
@@ -2076,21 +2076,28 @@ function BrowserOpenFileWindow()
 {
   // Get filepicker component.
   try {
-    const nsIFilePicker = Components.interfaces.nsIFilePicker;
-    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, gNavigatorBundle.getString("openFile"), nsIFilePicker.modeOpen);
-    fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText | nsIFilePicker.filterImages |
-                     nsIFilePicker.filterXML | nsIFilePicker.filterHTML);
-    fp.displayDirectory = gLastOpenDirectory.path;
-
-    if (fp.show() == nsIFilePicker.returnOK) {
-      try {
-        if (fp.file)
-          gLastOpenDirectory.path = fp.file.parent.QueryInterface(Ci.nsILocalFile);
-      } catch(e) {
+    const nsIFilePicker = Ci.nsIFilePicker;
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+    let fpCallback = function fpCallback_done(aResult) {
+      if (aResult == nsIFilePicker.returnOK) {
+        try {
+          if (fp.file) {
+            gLastOpenDirectory.path =
+              fp.file.parent.QueryInterface(Ci.nsILocalFile);
+          }
+        } catch (ex) {
+        }
+        openUILinkIn(fp.fileURL.spec, "current");
       }
-      openUILinkIn(fp.fileURL.spec, "current");
-    }
+    };
+
+    fp.init(window, gNavigatorBundle.getString("openFile"),
+            nsIFilePicker.modeOpen);
+    fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText |
+                     nsIFilePicker.filterImages | nsIFilePicker.filterXML |
+                     nsIFilePicker.filterHTML);
+    fp.displayDirectory = gLastOpenDirectory.path;
+    fp.open(fpCallback);
   } catch (ex) {
   }
 }
@@ -2514,13 +2521,13 @@ let BrowserOnClick = {
 
     // If the event came from an ssl error page, it is probably either the "Add
     // Exception…" or "Get me out of here!" button
-    if (/^about:certerror/.test(ownerDoc.documentURI)) {
+    if (ownerDoc.documentURI.startsWith("about:certerror")) {
       this.onAboutCertError(originalTarget, ownerDoc);
     }
-    else if (/^about:blocked/.test(ownerDoc.documentURI)) {
+    else if (ownerDoc.documentURI.startsWith("about:blocked")) {
       this.onAboutBlocked(originalTarget, ownerDoc);
     }
-    else if (/^about:neterror/.test(ownerDoc.documentURI)) {
+    else if (ownerDoc.documentURI.startsWith("about:neterror")) {
       this.onAboutNetError(originalTarget, ownerDoc);
     }
     else if (/^about:home$/i.test(ownerDoc.documentURI)) {
@@ -4474,7 +4481,7 @@ var TabsProgressListener = {
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         Components.isSuccessCode(aStatus) &&
-        /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
+        aWebProgress.DOMWindow.document.documentURI.startsWith("about:")) {
       aBrowser.addEventListener("click", BrowserOnClick, true);
       aBrowser.addEventListener("pagehide", function onPageHide(event) {
         if (event.target.defaultView.frameElement)

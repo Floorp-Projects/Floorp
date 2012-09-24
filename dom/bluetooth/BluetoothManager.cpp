@@ -249,25 +249,14 @@ NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
 {
   NS_ASSERTION(aWindow, "Null pointer!");
 
-  nsPIDOMWindow* innerWindow = aWindow->IsInnerWindow() ?
-    aWindow :
-    aWindow->GetCurrentInnerWindow();
-
-  // Need the document for security check.
-  nsCOMPtr<nsIDocument> document = innerWindow->GetExtantDoc();
-  NS_ENSURE_TRUE(document, NS_NOINTERFACE);
-
-  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
-  NS_ENSURE_TRUE(principal, NS_ERROR_UNEXPECTED);
-
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permMgr, NS_ERROR_UNEXPECTED);
 
   uint32_t permission;
   nsresult rv =
-    permMgr->TestPermissionFromPrincipal(principal, "mozBluetooth",
-                                         &permission);
+    permMgr->TestPermissionFromWindow(aWindow, "mozBluetooth",
+                                      &permission);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<BluetoothManager> bluetoothManager;

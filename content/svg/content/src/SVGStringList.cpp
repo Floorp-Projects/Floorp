@@ -6,14 +6,14 @@
 #include "mozilla/Util.h"
 
 #include "SVGStringList.h"
-#include "nsSVGElement.h"
 #include "nsError.h"
-#include "nsString.h"
-#include "nsSVGUtils.h"
-#include "nsTextFormatter.h"
-#include "nsWhitespaceTokenizer.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsMathUtils.h"
+#include "nsString.h"
+#include "nsSVGElement.h"
+#include "nsTextFormatter.h"
+#include "nsWhitespaceTokenizer.h"
+#include "SVGContentUtils.h"
 
 namespace mozilla {
 

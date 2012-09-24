@@ -118,7 +118,7 @@
 #include "nsHTMLMediaElement.h"
 #endif
 #include "nsSMILAnimationController.h"
-#include "nsSVGUtils.h"
+#include "SVGContentUtils.h"
 #include "SVGFragmentIdentifier.h"
 
 #include "nsRefreshDriver.h"
@@ -2882,7 +2882,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll)
 
     // If the target is an animation element, activate the animation
     if (content->IsNodeOfType(nsINode::eANIMATION)) {
-      nsSVGUtils::ActivateByHyperlink(content.get());
+      SVGContentUtils::ActivateByHyperlink(content.get());
     }
   } else {
     rv = NS_ERROR_FAILURE;
@@ -3714,7 +3714,21 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
    * SetNeedStyleFlush calls on the document.
    */
 
-  SAMPLE_LABEL("layout", "FlushPendingNotifications");
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  static const char flushTypeNames[][20] = {
+    "Content",
+    "ContentAndNotify",
+    "Style",
+    "InterruptibleLayout",
+    "Layout",
+    "Display"
+  };
+  // Make sure that we don't miss things added to mozFlushType!
+  MOZ_ASSERT(aType <= ArrayLength(flushTypeNames));
+
+  SAMPLE_LABEL_PRINTF("layout", "Flush", "(Flush_%s)",
+                      flushTypeNames[aType - 1]);
+#endif
 
 #ifdef ACCESSIBILITY
 #ifdef DEBUG

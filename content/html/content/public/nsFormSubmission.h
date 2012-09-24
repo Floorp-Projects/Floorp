@@ -169,7 +169,7 @@ public:
       NS_LITERAL_CSTRING("multipart/form-data; boundary=") + mBoundary;
   }
 
-  nsIInputStream* GetSubmissionBody();
+  nsIInputStream* GetSubmissionBody(uint64_t* aContentLength);
 
 protected:
 
@@ -201,6 +201,11 @@ private:
    * submission.
    */
   nsCString mBoundary;
+
+  /**
+   * The total length in bytes of the streams that make up mPostDataStream
+   */
+  uint64_t mTotalLength;
 };
 
 /**

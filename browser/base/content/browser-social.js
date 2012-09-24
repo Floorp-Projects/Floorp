@@ -289,7 +289,18 @@ let SocialFlyout = {
 
     sizeSocialPanelToContent(iframe);
     let anchor = document.getElementById("social-sidebar-browser");
-    panel.openPopup(anchor, "start_before", 0, yOffset, false, false);
+    if (panel.state == "open") {
+      // this is painful - there is no way to say "move to a new anchor offset",
+      // only "move to new screen pos".  So we remember the last yOffset,
+      // calculate the adjustment needed to the new yOffset, then calc the
+      // screen Y position.
+      let yAdjust = yOffset - this.yOffset;
+      let box = panel.boxObject;
+      panel.moveTo(box.screenX, box.screenY + yAdjust);
+    } else {
+      panel.openPopup(anchor, "start_before", 0, yOffset, false, false);
+    }
+    this.yOffset = yOffset;
   }
 }
 

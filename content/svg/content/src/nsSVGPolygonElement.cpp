@@ -6,7 +6,7 @@
 #include "nsSVGPolyElement.h"
 #include "nsIDOMSVGPolygonElement.h"
 #include "gfxContext.h"
-#include "nsSVGUtils.h"
+#include "SVGContentUtils.h"
 
 typedef nsSVGPolyElement nsSVGPolygonElementBase;
 
@@ -83,8 +83,8 @@ nsSVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
     nsSVGMark *startMark = &aMarks->ElementAt(0);
     float angle = atan2(startMark->y - endMark->y, startMark->x - endMark->x);
 
-    endMark->angle = nsSVGUtils::AngleBisect(angle, endMark->angle);
-    startMark->angle = nsSVGUtils::AngleBisect(angle, startMark->angle);
+    endMark->angle = SVGContentUtils::AngleBisect(angle, endMark->angle);
+    startMark->angle = SVGContentUtils::AngleBisect(angle, startMark->angle);
     // for a polygon (as opposed to a polyline) there's an implicit extra point
     // co-located with the start point that nsSVGPolyElement::GetMarkPoints
     // doesn't return

@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSVGViewBox.h"
-#include "nsSVGUtils.h"
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsMathUtils.h"
 #include "nsSMILValue.h"
+#include "SVGContentUtils.h"
 #include "SVGViewBoxSMILType.h"
 
 #define NUM_VIEWBOX_COMPONENTS 4

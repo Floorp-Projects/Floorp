@@ -4,16 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGPathData.h"
-#include "SVGPathSegUtils.h"
-#include "nsSVGElement.h"
+#include "gfxPlatform.h"
 #include "nsError.h"
 #include "nsString.h"
-#include "nsSVGUtils.h"
-#include "string.h"
+#include "nsSVGElement.h"
 #include "nsSVGPathDataParser.h"
 #include "nsSVGPathGeometryElement.h" // for nsSVGMark
-#include "gfxPlatform.h"
 #include <stdarg.h>
+#include "string.h"
+#include "SVGContentUtils.h"
+#include "SVGPathSegUtils.h"
 
 using namespace mozilla;
 
@@ -813,7 +813,7 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
       } else {
         if (!(segType == nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH &&
               prevSegType == nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH))
-          mark.angle = nsSVGUtils::AngleBisect(prevSegEndAngle, segStartAngle);
+          mark.angle = SVGContentUtils::AngleBisect(prevSegEndAngle, segStartAngle);
       }
     }
 
@@ -828,7 +828,7 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
         prevSegType != nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH) {
       aMarks->ElementAt(aMarks->Length() - 1).angle =
         //aMarks->ElementAt(pathStartIndex).angle =
-        nsSVGUtils::AngleBisect(segEndAngle, pathStartAngle);
+        SVGContentUtils::AngleBisect(segEndAngle, pathStartAngle);
     }
 
     prevSegType = segType;

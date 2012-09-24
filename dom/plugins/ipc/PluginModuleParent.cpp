@@ -301,11 +301,35 @@ PluginModuleParent::ShouldContinueFromReplyTimeout()
                 ("generated paired browser/plugin minidumps: %s)",
                  NS_ConvertUTF16toUTF8(mPluginDumpID).get()));
 
+        nsAutoCString additionalDumps("browser");
+
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+        nsCOMPtr<nsIFile> pluginDumpFile;
+
+        if (GetMinidumpForID(mPluginDumpID, getter_AddRefs(pluginDumpFile)) &&
+            pluginDumpFile) {
+          nsCOMPtr<nsIFile> childDumpFile;
+
+          if (mFlashProcess1 &&
+              TakeMinidumpForChild(mFlashProcess1,
+                                   getter_AddRefs(childDumpFile))) {
+            additionalDumps.Append(",flash1");
+            RenameAdditionalHangMinidump(pluginDumpFile, childDumpFile,
+                                         NS_LITERAL_CSTRING("flash1"));
+          }
+          if (mFlashProcess2 &&
+              TakeMinidumpForChild(mFlashProcess2,
+                                   getter_AddRefs(childDumpFile))) {
+            additionalDumps.Append(",flash2");
+            RenameAdditionalHangMinidump(pluginDumpFile, childDumpFile,
+                                         NS_LITERAL_CSTRING("flash2"));
+          }
+        }
+#endif
+
         crashReporter->AnnotateCrashReport(
             NS_LITERAL_CSTRING("additional_minidumps"),
-            NS_LITERAL_CSTRING("browser"));
-
-        // TODO: collect Flash minidumps here
+            additionalDumps);
     } else {
         NS_WARNING("failed to capture paired minidumps from hang");
     }

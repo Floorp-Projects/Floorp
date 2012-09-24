@@ -27,7 +27,8 @@ BEGIN_WORKERS_NAMESPACE
 #define BINDING_ENSURE_SUCCESS(_cond, _result, _retval) \
   BINDING_ENSURE_TRUE(NS_SUCCEEDED(_cond), _result, _retval)
 
-class DOMBindingBase : public nsWrapperCache
+class DOMBindingBase : public nsWrapperCache,
+                       public nsISupports
 {
   JSContext* mJSContext;
   mutable nsCOMPtr<nsIThreadJSContextStack> mContextStack;
@@ -46,7 +47,7 @@ protected:
   GetJSContextFromContextStack() const;
 
 public:
-  NS_INLINE_DECL_REFCOUNTING(DOMBindingBase)
+  NS_DECL_ISUPPORTS
 
   JSContext*
   GetJSContext() const

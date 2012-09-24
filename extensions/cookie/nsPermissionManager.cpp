@@ -910,6 +910,26 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
 }
 
 NS_IMETHODIMP
+nsPermissionManager::TestPermissionFromWindow(nsIDOMWindow* aWindow,
+                                              const char* aType,
+                                              uint32_t* aPermission)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  NS_ENSURE_TRUE(window, NS_NOINTERFACE);
+
+  nsPIDOMWindow* innerWindow = window->IsInnerWindow() ?
+    window.get() :
+    window->GetCurrentInnerWindow();
+
+  // Get the document for security check
+  nsCOMPtr<nsIDocument> document = innerWindow->GetExtantDoc();
+  NS_ENSURE_TRUE(document, NS_NOINTERFACE);
+
+  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
+  return TestPermissionFromPrincipal(principal, aType, aPermission);
+}
+
+NS_IMETHODIMP
 nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                  const char* aType,
                                                  uint32_t* aPermission)

@@ -35,6 +35,7 @@ const PREFS_WHITELIST = [
   "browser.sessionstore.",
   "browser.startup.homepage",
   "browser.tabs.",
+  "browser.urlbar.",
   "browser.zoom.",
   "dom.",
   "extensions.checkCompatibility",

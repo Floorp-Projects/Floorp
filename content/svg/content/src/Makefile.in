@@ -116,6 +116,7 @@ CPPSRCS		= \
 		nsSVGMpathElement.cpp \
 		nsSVGSetElement.cpp \
 		SVGAttrValueWrapper.cpp \
+		SVGContentUtils.cpp \
 		SVGIntegerPairSMILType.cpp \
 		SVGLengthListSMILType.cpp \
 		SVGMotionSMILType.cpp \

@@ -760,6 +760,8 @@ GK_ATOM(onshow, "onshow")
 GK_ATOM(onstatechange, "onstatechange")
 GK_ATOM(onstatuschanged, "onstatuschanged")
 GK_ATOM(onstkcommand, "onstkcommand")
+GK_ATOM(onantennastatechange, "onantennastatechange")
+GK_ATOM(onseekcomplete, "onseekcomplete")
 GK_ATOM(onstksessionend, "onstksessionend")
 GK_ATOM(onsubmit, "onsubmit")
 GK_ATOM(onsuccess, "onsuccess")
@@ -1710,11 +1712,6 @@ GK_ATOM(onMozRotateGesture, "onMozRotateGesture")
 GK_ATOM(onMozTapGesture, "onMozTapGesture")
 GK_ATOM(onMozPressTapGesture, "onMozPressTapGesture")
 GK_ATOM(onMozEdgeUIGesture, "onMozEdgeUIGesture")
-
-// Touch events
-GK_ATOM(onMozTouchDown, "onMozTouchDown")
-GK_ATOM(onMozTouchMove, "onMozTouchMove")
-GK_ATOM(onMozTouchUp, "onMozTouchUp")
 
 // orientation support
 GK_ATOM(ondevicemotion, "ondevicemotion")

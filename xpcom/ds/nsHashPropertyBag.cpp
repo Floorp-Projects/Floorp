@@ -159,7 +159,7 @@ PropertyHashToArrayFunc (const nsAString &aKey,
 NS_IMETHODIMP
 nsHashPropertyBag::GetEnumerator(nsISimpleEnumerator* *_retval)
 {
-    nsCOMPtr<nsIMutableArray> propertyArray = new nsArray();
+    nsCOMPtr<nsIMutableArray> propertyArray = nsArray::Create();
     if (!propertyArray)
         return NS_ERROR_OUT_OF_MEMORY;
 

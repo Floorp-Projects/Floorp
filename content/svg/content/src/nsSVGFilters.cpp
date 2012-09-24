@@ -35,6 +35,7 @@
 #include "nsSVGString.h"
 #include "nsSVGEffects.h"
 #include "gfxUtils.h"
+#include "SVGContentUtils.h"
 
 #if defined(XP_WIN) 
 // Prevent Windows redefining LoadImage
@@ -83,10 +84,10 @@ CopyAndScaleDeviceOffset(const gfxImageSurface *aImage, gfxImageSurface *aResult
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
-  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
-  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
-  { &nsGkAtoms::width, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
-  { &nsGkAtoms::height, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y }
+  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::width, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::height, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y }
 };
 
 //----------------------------------------------------------------------
@@ -123,10 +124,10 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
     return result;
   }
 
-  gfxFloat kernelX = aInstance->GetPrimitiveNumber(nsSVGUtils::X,
+  gfxFloat kernelX = aInstance->GetPrimitiveNumber(SVGContentUtils::X,
                                                    aKernelUnitLength,
                                                    nsSVGNumberPair::eFirst);
-  gfxFloat kernelY = aInstance->GetPrimitiveNumber(nsSVGUtils::Y,
+  gfxFloat kernelY = aInstance->GetPrimitiveNumber(SVGContentUtils::Y,
                                                    aKernelUnitLength,
                                                    nsSVGNumberPair::eSecond);
   if (kernelX <= 0 || kernelY <= 0)
@@ -590,10 +591,10 @@ nsresult
 nsSVGFEGaussianBlurElement::GetDXY(uint32_t *aDX, uint32_t *aDY,
                                    const nsSVGFilterInstance& aInstance)
 {
-  float stdX = aInstance.GetPrimitiveNumber(nsSVGUtils::X,
+  float stdX = aInstance.GetPrimitiveNumber(SVGContentUtils::X,
                                             &mNumberPairAttributes[STD_DEV],
                                             nsSVGNumberPair::eFirst);
-  float stdY = aInstance.GetPrimitiveNumber(nsSVGUtils::Y,
+  float stdY = aInstance.GetPrimitiveNumber(SVGContentUtils::Y,
                                             &mNumberPairAttributes[STD_DEV],
                                             nsSVGNumberPair::eSecond);
   if (stdX < 0 || stdY < 0)
@@ -2616,9 +2617,9 @@ nsIntPoint
 nsSVGFEOffsetElement::GetOffset(const nsSVGFilterInstance& aInstance)
 {
   return nsIntPoint(int32_t(aInstance.GetPrimitiveNumber(
-                              nsSVGUtils::X, &mNumberAttributes[DX])),
+                              SVGContentUtils::X, &mNumberAttributes[DX])),
                     int32_t(aInstance.GetPrimitiveNumber(
-                              nsSVGUtils::Y, &mNumberAttributes[DY])));
+                              SVGContentUtils::Y, &mNumberAttributes[DY])));
 }
 
 nsresult
@@ -3791,11 +3792,11 @@ nsSVGFEMorphologyElement::GetRXY(int32_t *aRX, int32_t *aRY,
   // slightly larger than an integer to round up to the next integer; it's
   // probably meant to be the integer it's close to, modulo machine precision
   // issues.
-  *aRX = NSToIntCeil(aInstance.GetPrimitiveNumber(nsSVGUtils::X,
+  *aRX = NSToIntCeil(aInstance.GetPrimitiveNumber(SVGContentUtils::X,
                                                   &mNumberPairAttributes[RADIUS],
                                                   nsSVGNumberPair::eFirst) -
                      MORPHOLOGY_EPSILON);
-  *aRY = NSToIntCeil(aInstance.GetPrimitiveNumber(nsSVGUtils::Y,
+  *aRY = NSToIntCeil(aInstance.GetPrimitiveNumber(SVGContentUtils::Y,
                                                   &mNumberPairAttributes[RADIUS],
                                                   nsSVGNumberPair::eSecond) -
                      MORPHOLOGY_EPSILON);
@@ -3811,7 +3812,7 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
   GetRXY(&rx, &ry, *instance);
 
   if (rx < 0 || ry < 0) {
-    // XXX nsSVGUtils::ReportToConsole()
+    // XXX SVGContentUtils::ReportToConsole()
     return NS_OK;
   }
   if (rx == 0 && ry == 0) {
@@ -5701,10 +5702,10 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
     const gfxRect& filterSubregion = aTarget->mFilterPrimitiveSubregion;
 
     gfxMatrix viewBoxTM =
-      nsSVGUtils::GetViewBoxTransform(this,
-                                      filterSubregion.Width(), filterSubregion.Height(),
-                                      0,0, nativeWidth, nativeHeight,
-                                      mPreserveAspectRatio);
+      SVGContentUtils::GetViewBoxTransform(this,
+                                           filterSubregion.Width(), filterSubregion.Height(),
+                                           0,0, nativeWidth, nativeHeight,
+                                           mPreserveAspectRatio);
 
     gfxMatrix xyTM = gfxMatrix().Translate(gfxPoint(filterSubregion.X(), filterSubregion.Y()));
 
@@ -5985,7 +5986,7 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance,
                                       const Image* aTarget,
                                       const nsIntRect& rect)
 {
-  float scale = instance->GetPrimitiveNumber(nsSVGUtils::XY,
+  float scale = instance->GetPrimitiveNumber(SVGContentUtils::XY,
                                              &mNumberAttributes[SCALE]);
   if (scale == 0.0f) {
     CopyRect(aTarget, aSources[0], rect);
