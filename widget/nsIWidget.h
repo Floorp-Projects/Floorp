@@ -1357,6 +1357,7 @@ class nsIWidget : public nsISupports {
 
     /**
      * A shortcut to SynthesizeNativeMouseEvent, abstracting away the native message.
+     * aPoint is location in device pixels to which the mouse pointer moves to.
      */
     virtual nsresult SynthesizeNativeMouseMove(nsIntPoint aPoint) = 0;
 

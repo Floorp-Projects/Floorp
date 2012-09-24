@@ -4089,7 +4089,8 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
 
 // Returns the center point of the window's inner content area.
 // This is in widget coordinates, i.e. relative to the widget's top
-// left corner, not in screen coordinates.
+// left corner, not in screen coordinates, the same units that
+// nsDOMUIEvent::refPoint is in.
 static nsIntPoint
 GetWindowInnerRectCenter(nsPIDOMWindow* aWindow,
                          nsIWidget* aWidget,
@@ -4142,7 +4143,8 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
           // This mouse move doesn't finish at the center of the widget,
           // dispatch a synthetic mouse move to return the mouse back to
           // the center.
-          aEvent->widget->SynthesizeNativeMouseMove(center);
+          aEvent->widget->SynthesizeNativeMouseMove(
+            center + aEvent->widget->WidgetToScreenOffset());
         }
       } else {
         aEvent->lastRefPoint = sLastRefPoint;
@@ -4214,7 +4216,8 @@ nsEventStateManager::SetPointerLock(nsIWidget* aWidget,
     sLastRefPoint = GetWindowInnerRectCenter(aElement->OwnerDoc()->GetWindow(),
                                              aWidget,
                                              mPresContext);
-    aWidget->SynthesizeNativeMouseMove(sLastRefPoint);
+    aWidget->SynthesizeNativeMouseMove(
+      sLastRefPoint + aWidget->WidgetToScreenOffset());
 
     // Retarget all events to this element via capture.
     nsIPresShell::SetCapturingContent(aElement, CAPTURE_POINTERLOCK);
@@ -4229,7 +4232,8 @@ nsEventStateManager::SetPointerLock(nsIWidget* aWidget,
     // pre-pointerlock position, so that the synthetic mouse event reports
     // no movement.
     sLastRefPoint = mPreLockPoint;
-    aWidget->SynthesizeNativeMouseMove(mPreLockPoint);
+    aWidget->SynthesizeNativeMouseMove(
+      mPreLockPoint + aWidget->WidgetToScreenOffset());
 
     // Don't retarget events to this element any more.
     nsIPresShell::SetCapturingContent(nullptr, CAPTURE_POINTERLOCK);
