@@ -6,6 +6,7 @@
 "use strict";
 
 const BREAKPOINT_LINE_TOOLTIP_MAX_SIZE = 1000; // chars
+const PANES_APPEARANCE_DELAY = 50; // ms
 const PROPERTY_VIEW_FLASH_DURATION = 400; // ms
 const GLOBAL_SEARCH_MATCH_FLASH_DURATION = 100; // ms
 const GLOBAL_SEARCH_URL_MAX_SIZE = 100; // chars
@@ -103,8 +104,8 @@ let DebuggerView = {
     this._stackframesAndBreakpoints.setAttribute("width", Prefs.stackframesWidth);
     this._variables.setAttribute("width", Prefs.variablesWidth);
 
-    this.showStackframesAndBreakpointsPane(Prefs.stackframesPaneVisible);
-    this.showVariablesPane(Prefs.variablesPaneVisible);
+    this.toggleStackframesAndBreakpointsPane({ silent: true });
+    this.toggleVariablesPane({ silent: true });
   },
 
   /**
@@ -173,34 +174,42 @@ let DebuggerView = {
    * Called when the panes toggle button is clicked.
    */
   _onTogglePanesButtonPressed: function DV__onTogglePanesButtonPressed() {
-    this.showStackframesAndBreakpointsPane(
-      this._togglePanesButton.getAttribute("stackframesAndBreakpointsHidden"), true);
-
-    this.showVariablesPane(
-      this._togglePanesButton.getAttribute("variablesHidden"), true);
+    this.toggleStackframesAndBreakpointsPane({
+      visible: !!this._togglePanesButton.getAttribute("stackframesAndBreakpointsHidden"),
+      animated: true
+    });
+    this.toggleVariablesPane({
+      visible: !!this._togglePanesButton.getAttribute("variablesHidden"),
+      animated: true
+    });
+    this._onPanesToggle();
   },
 
   /**
    * Sets the close button hidden or visible. It's hidden by default.
    * @param boolean aVisibleFlag
    */
-  showCloseButton: function DV_showCloseButton(aVisibleFlag) {
+  toggleCloseButton: function DV_toggleCloseButton(aVisibleFlag) {
     document.getElementById("close").setAttribute("hidden", !aVisibleFlag);
   },
 
   /**
    * Sets the stackframes and breakpoints pane hidden or visible.
-   * @param boolean aVisibleFlag
-   * @param boolean aAnimatedFlag
+   *
+   * @param object aFlags [optional]
+   *        An object containing some of the following booleans:
+   *        - visible: true if the pane should be shown, false for hidden
+   *        - animated: true to display an animation on toggle
+   *        - silent: true to not update any designated prefs
    */
-  showStackframesAndBreakpointsPane:
-  function DV_showStackframesAndBreakpointsPane(aVisibleFlag, aAnimatedFlag) {
-    if (aAnimatedFlag) {
+  toggleStackframesAndBreakpointsPane:
+  function DV_toggleStackframesAndBreakpointsPane(aFlags = {}) {
+    if (aFlags.animated) {
       this._stackframesAndBreakpoints.setAttribute("animated", "");
     } else {
       this._stackframesAndBreakpoints.removeAttribute("animated");
     }
-    if (aVisibleFlag) {
+    if (aFlags.visible) {
       this._stackframesAndBreakpoints.style.marginLeft = "0";
       this._togglePanesButton.removeAttribute("stackframesAndBreakpointsHidden");
       this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
@@ -210,22 +219,28 @@ let DebuggerView = {
       this._togglePanesButton.setAttribute("stackframesAndBreakpointsHidden", "true");
       this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
     }
-    Prefs.stackframesPaneVisible = aVisibleFlag;
+    if (!aFlags.silent) {
+      Prefs.stackframesPaneVisible = !!aFlags.visible;
+    }
   },
 
   /**
    * Sets the variable spane hidden or visible.
-   * @param boolean aVisibleFlag
-   * @param boolean aAnimatedFlag
+   *
+   * @param object aFlags [optional]
+   *        An object containing some of the following booleans:
+   *        - visible: true if the pane should be shown, false for hidden
+   *        - animated: true to display an animation on toggle
+   *        - silent: true to not update any designated prefs
    */
-  showVariablesPane:
-  function DV_showVariablesPane(aVisibleFlag, aAnimatedFlag) {
-    if (aAnimatedFlag) {
+  toggleVariablesPane:
+  function DV_toggleVariablesPane(aFlags = {}) {
+    if (aFlags.animated) {
       this._variables.setAttribute("animated", "");
     } else {
       this._variables.removeAttribute("animated");
     }
-    if (aVisibleFlag) {
+    if (aFlags.visible) {
       this._variables.style.marginRight = "0";
       this._togglePanesButton.removeAttribute("variablesHidden");
       this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
@@ -235,7 +250,54 @@ let DebuggerView = {
       this._togglePanesButton.setAttribute("variablesHidden", "true");
       this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
     }
-    Prefs.variablesPaneVisible = aVisibleFlag;
+    if (!aFlags.silent) {
+      Prefs.variablesPaneVisible = !!aFlags.visible;
+    }
+  },
+
+  /**
+   * Shows the stackframes, breakpoints and variable panes if currently hidden
+   * and the preferences dictate otherwise.
+   */
+  showPanesIfAllowed: function DV_showPanesIfAllowed() {
+    // Try to keep animations as smooth as possible, so wait a few cycles.
+    window.setTimeout(function() {
+      let shown;
+
+      if (Prefs.stackframesPaneVisible &&
+          this._togglePanesButton.getAttribute("stackframesAndBreakpointsHidden")) {
+        this.toggleStackframesAndBreakpointsPane({
+          visible: true,
+          animated: true,
+          silent: true
+        });
+        shown = true;
+      }
+      if (Prefs.variablesPaneVisible &&
+          this._togglePanesButton.getAttribute("variablesHidden")) {
+        this.toggleVariablesPane({
+          visible: true,
+          animated: true,
+          silent: true
+        });
+        shown = true;
+      }
+      if (shown) {
+        this._onPanesToggle();
+      }
+    }.bind(this), PANES_APPEARANCE_DELAY);
+  },
+
+  /**
+   * Displaying the panes may have the effect of triggering scrollbars to
+   * appear in the source editor, which would render the currently highlighted
+   * line to appear behind them in some cases.
+   */
+  _onPanesToggle: function DV__onPanesToggle() {
+    document.addEventListener("transitionend", function onEvent() {
+      document.removeEventListener("transitionend", onEvent);
+      DebuggerController.StackFrames.updateEditorLocation();
+    });
   },
 
   /**
@@ -1625,6 +1687,8 @@ StackFramesView.prototype = {
     if (document.getElementById("stackframe-" + aDepth)) {
       return null;
     }
+    // Stackframes are UI elements which benefit from visible panes.
+    DebuggerView.showPanesIfAllowed();
 
     let frame = document.createElement("box");
     let frameName = document.createElement("label");
