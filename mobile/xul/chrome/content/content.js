@@ -384,7 +384,7 @@ let Content = {
             //       http://hg.mozilla.org/mozilla-central/file/855e5cd3c884/browser/base/content/browser.js#l2672
             //       http://hg.mozilla.org/mozilla-central/file/855e5cd3c884/browser/components/safebrowsing/content/globalstore.js
           }
-        } else if (/^about:neterror\?e=netOffline/.test(ownerDoc.documentURI)) {
+        } else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
           let tryAgain = errorDoc.getElementById("errorTryAgain");
           if (target == tryAgain)
             sendSyncMessage("Browser:GoOnline", { });
