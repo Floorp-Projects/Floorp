@@ -90,7 +90,22 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSEventListener)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsJSEventListener)
-  return tmp->IsBlackForCC();
+  if (tmp->IsBlackForCC()) {
+    return true;
+  }
+  // If we have a target, it is the one which has tmp as onfoo handler.
+  if (tmp->mTarget) {
+    nsXPCOMCycleCollectionParticipant* cp = nullptr;
+    CallQueryInterface(tmp->mTarget, &cp);
+    nsISupports* canonical = nullptr;
+    tmp->mTarget->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                                 reinterpret_cast<void**>(&canonical));
+    // Usually CanSkip ends up unmarking the event listeners of mTarget,
+    // so tmp may become black.
+    if (cp && canonical && cp->CanSkip(canonical, true)) {
+      return tmp->IsBlackForCC();
+    }
+  }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsJSEventListener)
