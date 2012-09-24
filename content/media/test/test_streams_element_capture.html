@@ -31,8 +31,8 @@ function startTest(test, token) {
   v.src = test.name;
   var stream = v.mozCaptureStreamUntilEnded();
   is(stream.currentTime, 0, test.name + " stream initial currentTime");
-  vout.src = stream;
-  is(vout.src, stream, test.name + " set output element .src correctly");
+  vout.mozSrcObject = stream;
+  is(vout.mozSrcObject, stream, test.name + " set output element .srcObject correctly");
 
   var checkEnded = function(test, vout, stream) { return function() {
     is(stream.currentTime, vout.currentTime, test.name + " stream final currentTime");

@@ -429,6 +429,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsHTMLMediaElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 // nsIDOMHTMLMediaElement
+NS_IMPL_URI_ATTR(nsHTMLMediaElement, Src, src)
+NS_IMPL_STRING_ATTR(nsHTMLMediaElement, Crossorigin, crossorigin)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Controls, controls)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Autoplay, autoplay)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Loop, loop)
@@ -436,47 +438,38 @@ NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, DefaultMuted, muted)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMediaElement, Preload, preload, NULL)
 
 NS_IMETHODIMP
-nsHTMLMediaElement::GetSrc(JSContext* aCtx, jsval *aParams)
+nsHTMLMediaElement::GetMozSrcObject(JSContext* aCtx, jsval *aParams)
 {
   if (mSrcAttrStream) {
     NS_ASSERTION(mSrcAttrStream->GetStream(), "MediaStream should have been set up properly");
     return nsContentUtils::WrapNative(aCtx, JS_GetGlobalForScopeChain(aCtx),
                                       mSrcAttrStream, aParams);
   }
-
-  nsAutoString str;
-  nsresult rv = GetURIAttr(nsGkAtoms::src, nullptr, str);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!xpc::StringToJsval(aCtx, str, aParams)) {
-    return NS_ERROR_FAILURE;
-  }
+  *aParams = JSVAL_NULL;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLMediaElement::SetSrc(JSContext* aCtx, const jsval & aParams)
+nsHTMLMediaElement::SetMozSrcObject(JSContext* aCtx, const jsval & aParams)
 {
+  if (aParams.isNull()) {
+    mSrcAttrStream = nullptr;
+    Load();
+    return NS_OK;
+  }
   if (aParams.isObject()) {
     nsCOMPtr<nsIDOMMediaStream> stream;
     stream = do_QueryInterface(nsContentUtils::XPConnect()->
         GetNativeOfWrapper(aCtx, JSVAL_TO_OBJECT(aParams)));
     if (stream) {
       mSrcAttrStream = static_cast<nsDOMMediaStream*>(stream.get());
-      UnsetAttr(kNameSpaceID_None, nsGkAtoms::src, true);
       Load();
       return NS_OK;
     }
   }
-
-  mSrcAttrStream = nullptr;
-  JSString* jsStr = JS_ValueToString(aCtx, aParams);
-  if (!jsStr)
-    return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
-  nsDependentJSString str;
-  if (!str.init(aCtx, jsStr))
-    return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
-  // Will trigger Load()
-  return SetAttrHelper(nsGkAtoms::src, str);
+  // Should we store unsupported values on the element's attribute anyway?
+  // Let's not.
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
@@ -1850,8 +1843,6 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
 
   return NS_OK;
 }
-
-NS_IMPL_STRING_ATTR(nsHTMLMediaElement, Crossorigin, crossorigin)
 
 bool nsHTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
                                           nsIAtom* aAttribute,
