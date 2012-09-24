@@ -4213,10 +4213,6 @@ var ErrorPageEventHandler = {
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
             errorDoc.location = "about:home";
           }
-        } else if (/^about:neterror\?e=netOffline/.test(ownerDoc.documentURI)) {
-          let tryAgain = errorDoc.getElementById("errorTryAgain");
-          if (target == tryAgain)
-            Services.io.offline = false;
         }
         break;
       }
