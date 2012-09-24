@@ -93,9 +93,12 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalHandle<Bindings*> self
     JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == 2);
     gc::AllocKind allocKind = gc::FINALIZE_OBJECT2_BACKGROUND;
     JS_ASSERT(gc::GetGCKindSlots(allocKind) == CallObject::RESERVED_SLOTS);
-    self->callObjShape_ =
+    RootedShape initial(cx,
         EmptyShape::getInitialShape(cx, &CallClass, NULL, cx->global(),
-                                    allocKind, BaseShape::VAROBJ | BaseShape::DELEGATE);
+                                    allocKind, BaseShape::VAROBJ | BaseShape::DELEGATE));
+    if (!initial)
+        return false;
+    self->callObjShape_.init(initial);
 
 #ifdef DEBUG
     HashSet<PropertyName *> added(cx);
@@ -167,6 +170,12 @@ Bindings::clone(JSContext *cx, InternalHandle<Bindings*> self,
         return false;
     self->switchToScriptStorage(dstPackedBindings);
     return true;
+}
+
+/* static */ Bindings
+RootMethods<Bindings>::initial()
+{
+    return Bindings();
 }
 
 template<XDRMode mode>
@@ -2090,9 +2099,9 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
 
     /* Bindings */
 
-    Bindings bindings;
+    Rooted<Bindings> bindings(cx);
     InternalHandle<Bindings*> bindingsHandle =
-        InternalHandle<Bindings*>::fromMarkedLocation(&bindings);
+        InternalHandle<Bindings*>::fromMarkedLocation(bindings.address());
     if (!Bindings::clone(cx, bindingsHandle, data, src))
         return NULL;
 
@@ -2610,3 +2619,4 @@ JSScript::formalLivesInArgumentsObject(unsigned argSlot)
 {
     return argsObjAliasesFormals() && !formalIsAliased(argSlot);
 }
+
