@@ -65,6 +65,7 @@ sync_stage_modules := \
 sync_testing_modules := \
   fakeservices.js \
   rotaryengine.js \
+  utils.js \
   $(NULL)
 
 DIRS += locales
