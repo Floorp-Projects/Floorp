@@ -175,9 +175,9 @@ function fileUriToSrc(path, mustExist) {
   if (navigator.appVersion.indexOf("Android") != -1)
     return path;
 
-  const Ci = Components.interfaces;
-  const Cc = SpecialPowers.wrap(Components).classes;
-  const Cr = SpecialPowers.wrap(Components).results;
+  const Ci = SpecialPowers.Ci;
+  const Cc = SpecialPowers.Cc;
+  const Cr = SpecialPowers.Cr;
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
   var f = dirSvc.get("CurWorkD", Ci.nsILocalFile);
@@ -540,9 +540,9 @@ function mediaTestCleanup() {
 
 (function() {
   // Ensure that preload preferences are comsistent
-  var prefService = SpecialPowers.wrap(Components)
+  var prefService = SpecialPowers.wrap(SpecialPowers.Components)
                                  .classes["@mozilla.org/preferences-service;1"]
-                                 .getService(Components.interfaces.nsIPrefService);
+                                 .getService(SpecialPowers.Ci.nsIPrefService);
   var branch = prefService.getBranch("media.");
   var oldDefault = 2;
   var oldAuto = 3;

@@ -21,10 +21,10 @@ function runTests() {
   let tearDown = (function setUp() {
     SimpleTest.waitForExplicitFinish();
 
-    const {classes: Cc, interfaces: Ci} = SpecialPowers.wrap(Components);
+    const {classes: Cc, interfaces: Ci} = SpecialPowers.wrap(SpecialPowers.Components);
 
     let authMgr = Cc["@mozilla.org/network/http-auth-manager;1"]
-                    .getService(Components.interfaces.nsIHttpAuthManager)
+                    .getService(SpecialPowers.Ci.nsIHttpAuthManager)
     authMgr.setAuthIdentity("http", "example.com", 80, "basic", "testrealm",
                             "", "example.com", "user1", "password1");
 

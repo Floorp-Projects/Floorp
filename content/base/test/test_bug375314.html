@@ -21,11 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375314
 
 var lastContentType = -1;
 const testURL = window.location.href + "/this/is/the/test/url";
-const Cc = SpecialPowers.wrap(Components).classes;
-const Ci = Components.interfaces;
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 
 // Content policy / factory implementation for the test
-var policyID = SpecialPowers.wrap(Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
+var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
 var policyName = "@mozilla.org/testpolicy;1";
 var policy = {
   // nsISupports implementation
@@ -37,7 +37,7 @@ var policy = {
         iid.equals(Ci.nsIContentPolicy))
       return this;
 
-    throw SpecialPowers.wrap(Components).results.NS_ERROR_NO_INTERFACE;
+    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
   },
 
   // nsIFactory implementation
@@ -64,7 +64,7 @@ var policy = {
 }
 
 // Register content policy
-var componentManager = SpecialPowers.wrap(Components).manager
+var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager
                                                      .QueryInterface(Ci.nsIComponentRegistrar);
 
 componentManager.registerFactory(policyID, "Test content policy", policyName, policy);

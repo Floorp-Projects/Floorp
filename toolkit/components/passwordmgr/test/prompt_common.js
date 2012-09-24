@@ -1,6 +1,6 @@
-var Ci = Components.interfaces;
+var Ci = SpecialPowers.Ci;
 ok(Ci != null, "Access Ci");
-var Cc = SpecialPowers.wrap(Components).classes;
+var Cc = SpecialPowers.Cc;
 ok(Cc != null, "Access Cc");
 
 var didDialog;
@@ -24,7 +24,7 @@ var observer = {
                             Ci.nsISupports, Ci.nsISupportsWeakReference];
 
         if (!interfaces.some( function(v) { return iid.equals(v) } ))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
+            throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
         return this;
     },
 

@@ -17,8 +17,8 @@
  * swaps cache for this document, reloads and checks document state.
  */
 
-const NAMESPACE_BYPASS = Components.interfaces.nsIApplicationCacheNamespace.NAMESPACE_BYPASS;
-const NAMESPACE_FALLBACK = Components.interfaces.nsIApplicationCacheNamespace.NAMESPACE_FALLBACK;
+const NAMESPACE_BYPASS = SpecialPowers.Ci.nsIApplicationCacheNamespace.NAMESPACE_BYPASS;
+const NAMESPACE_FALLBACK = SpecialPowers.Ci.nsIApplicationCacheNamespace.NAMESPACE_FALLBACK;
 
 var gStep = 0;
 var gGotFrameVersion = 0;
@@ -153,7 +153,7 @@ function implicitCached()
       "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", false);
 
   // Cache object status
-  OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.IDLE,
+  OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.IDLE,
       "we have associated application cache (1)");
 
   OfflineTest.is(gGotFrameVersion, 1, "IFrame version 1");
@@ -207,7 +207,7 @@ function manifestUpdated()
         "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", false);
 
     // Cache object status
-    OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.UPDATEREADY,
+    OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.UPDATEREADY,
         "we have associated application cache and update is pending (2)");
 
     var entries = [
@@ -256,7 +256,7 @@ function manifestUpdated()
         "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", false);
 
     // Cache object status
-    OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.UPDATEREADY,
+    OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.UPDATEREADY,
         "we have associated application cache and update is pending (3)");
 
     OfflineTest.is(gGotFrameVersion, 1, "IFrame version 1 because cache was not swapped");
@@ -299,10 +299,10 @@ function manifestNoUpdate()
 
   OfflineTest.ok(gStep == 3);
 
-  OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.UPDATEREADY,
+  OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.UPDATEREADY,
         "we have associated application cache and update is pending (4)");
   applicationCache.swapCache();
-  OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.IDLE,
+  OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.IDLE,
         "we have associated application cache (4)");
 
   gGotFrameVersion = 0;
