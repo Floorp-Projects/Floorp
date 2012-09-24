@@ -141,8 +141,8 @@ function check_loaded_content(aSandbox, aNothingShouldLoad, aCallback) {
       // TODO: Media should be disabled after bug 759964.
       isnot(loadedTypes.indexOf("application/javascript"), -1, "Check JS was loaded");
       isnot(loadedTypes.indexOf("text/html"), -1, "Check iframe was loaded");
-      todo_is(loadedTypes.indexOf("video/webm"), -1, "Check webm was not loaded");
-      todo_is(loadedTypes.indexOf("audio/ogg"), -1, "Check ogg was not loaded");
+      //todo_is(loadedTypes.indexOf("video/webm"), -1, "Check webm was not loaded");
+      //todo_is(loadedTypes.indexOf("audio/ogg"), -1, "Check ogg was not loaded");
 
       // Check that no plugin tags have a type other than TYPE_NULL (failed load)
       // --
