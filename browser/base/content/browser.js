@@ -2521,13 +2521,13 @@ let BrowserOnClick = {
 
     // If the event came from an ssl error page, it is probably either the "Add
     // Exception…" or "Get me out of here!" button
-    if (/^about:certerror/.test(ownerDoc.documentURI)) {
+    if (ownerDoc.documentURI.startsWith("about:certerror")) {
       this.onAboutCertError(originalTarget, ownerDoc);
     }
-    else if (/^about:blocked/.test(ownerDoc.documentURI)) {
+    else if (ownerDoc.documentURI.startsWith("about:blocked")) {
       this.onAboutBlocked(originalTarget, ownerDoc);
     }
-    else if (/^about:neterror/.test(ownerDoc.documentURI)) {
+    else if (ownerDoc.documentURI.startsWith("about:neterror")) {
       this.onAboutNetError(originalTarget, ownerDoc);
     }
     else if (/^about:home$/i.test(ownerDoc.documentURI)) {
@@ -4481,7 +4481,7 @@ var TabsProgressListener = {
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         Components.isSuccessCode(aStatus) &&
-        /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
+        aWebProgress.DOMWindow.document.documentURI.startsWith("about:")) {
       aBrowser.addEventListener("click", BrowserOnClick, true);
       aBrowser.addEventListener("pagehide", function onPageHide(event) {
         if (event.target.defaultView.frameElement)
