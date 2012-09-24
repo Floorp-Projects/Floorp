@@ -63,7 +63,7 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
     try {
       var manifest = JSON.parse(MANIFEST_PREFS.getCharPref(pref));
       if (manifest && typeof(manifest) == "object") {
-        let provider = new SocialProvider(manifest, SocialServiceInternal.enabled);
+        let provider = new SocialProvider(manifest, Services.appinfo.inSafeMode ? false : SocialServiceInternal.enabled);
         providers[provider.origin] = provider;
       }
     } catch (err) {
@@ -86,7 +86,11 @@ const SocialService = {
   },
   set enabled(val) {
     let enable = !!val;
-    if (enable == SocialServiceInternal.enabled)
+
+    // Allow setting to the same value when in safe mode so the
+    // feature can be force enabled.
+    if (enable == SocialServiceInternal.enabled &&
+        !Services.appinfo.inSafeMode)
       return;
 
     Services.prefs.setBoolPref("social.enabled", enable);
