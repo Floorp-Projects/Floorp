@@ -70,7 +70,16 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSEventListener)
+  if (NS_UNLIKELY(cb.WantDebugInfo()) && tmp->mEventName) {
+    nsAutoCString name;
+    name.AppendLiteral("nsJSEventListener handlerName=");
+    name.Append(
+      NS_ConvertUTF16toUTF8(nsDependentAtomString(tmp->mEventName)).get());
+    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name.get());
+  } else {
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSEventListener, tmp->mRefCnt.get())
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
