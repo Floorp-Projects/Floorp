@@ -21,12 +21,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=317448
 var x = new XMLHttpRequest();
 x.open("GET", document.location.href);
 x.send("");
-is(x instanceof Components.interfaces.nsIInterfaceRequestor,
+is(x instanceof SpecialPowers.Ci.nsIInterfaceRequestor,
    true, "Must be interface requestor");
 
 var count = {};
 var interfaces = SpecialPowers.wrap(x).
-                 QueryInterface(Components.interfaces.nsIClassInfo).
+                 QueryInterface(SpecialPowers.Ci.nsIClassInfo).
                  getInterfaces(count).
                  map(function(id) {
                             id = SpecialPowers.wrap(id);

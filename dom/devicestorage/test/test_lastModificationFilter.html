@@ -51,8 +51,8 @@ function verifyAndDelete(prefix, files, e) {
 
 function addFiles(prefix, files, date, callback) {
 
-  const Cc = SpecialPowers.wrap(Components).classes;
-  const Ci = Components.interfaces;
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
 
   var directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 

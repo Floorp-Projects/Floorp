@@ -537,7 +537,7 @@ var interfaceNamesInGlobalScope =
     "PermissionSettings"
   ]
 
-for (var i in Components.interfaces) {
+for (var i in SpecialPowers.Components.interfaces) {
   var s = i.toString();
   var name = null;
   if (s.indexOf("nsIDOM") == 0) {

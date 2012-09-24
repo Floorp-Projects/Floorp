@@ -26,7 +26,7 @@ SimpleTest.waitForExplicitFinish();
 // checking the results.
 const gLoadEventLoopCount = 100;
 
-var Ci = Components.interfaces;
+var Ci = SpecialPowers.Ci;
 
 var gCurrentTest;
 var gTargetWindow;
@@ -186,8 +186,8 @@ var gNextTest = 0;
 
 function runNextTest()
 {
-  var prefs = SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
+  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+                           .getService(SpecialPowers.Ci.nsIPrefBranch);
 
   if (gNextTest < gTests.length) {
     gCurrentTest = gTests[gNextTest++];
@@ -213,8 +213,8 @@ function runNextTest()
 
 function finishTest()
 {
-    var prefs = SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefBranch);
+    var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+                             .getService(SpecialPowers.Ci.nsIPrefBranch);
     prefs.setBoolPref("network.jar.open-unsafe-types", false);
 
   if (gNumPokes == 0) {
@@ -226,8 +226,8 @@ function finishTest()
 
 function startTests()
 {
-  var prefs = SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
+  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+                           .getService(SpecialPowers.Ci.nsIPrefBranch);
   gPrefValue = prefs.getBoolPref("network.jar.open-unsafe-types");
 }
 

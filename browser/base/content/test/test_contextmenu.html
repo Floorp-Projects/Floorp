@@ -18,10 +18,10 @@ Browser context menu tests.
 
 /** Test for Login Manager: multiple login autocomplete. **/
 
-SpecialPowers.wrap(Components).utils.import("resource://gre/modules/InlineSpellChecker.jsm", window);
+SpecialPowers.Cu.import("resource://gre/modules/InlineSpellChecker.jsm", window);
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const Cc = SpecialPowers.Components.classes;
+const Ci = SpecialPowers.Ci;
 
 function openContextMenuFor(element, shiftkey, shouldWaitForFocus) {
     // Context menu should be closed before we open it again.

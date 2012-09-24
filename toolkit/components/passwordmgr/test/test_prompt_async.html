@@ -13,7 +13,7 @@
         // Class monitoring number of open dialog windows
         // It checks there is always open just a single dialog per application
         function dialogMonitor() {
-            var observerService = SpecialPowers.wrap(Components).classes["@mozilla.org/observer-service;1"]
+            var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
                                                .getService(Ci.nsIObserverService);
             observerService.addObserver(this, "domwindowopened", false);
             observerService.addObserver(this, "domwindowclosed", false);
@@ -33,7 +33,7 @@
                 const interfaces = [Ci.nsIObserver, Ci.nsISupports];
 
                 if (!interfaces.some( function(v) { return iid.equals(v) } ))
-                        throw Components.results.NS_ERROR_NO_INTERFACE;
+                        throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
                 return this;
             },
 
@@ -51,7 +51,7 @@
             },
 
             shutdown: function() {
-                var observerService = SpecialPowers.wrap(Components).classes["@mozilla.org/observer-service;1"]
+                var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
                                                .getService(Ci.nsIObserverService);
                 observerService.removeObserver(this, "domwindowopened");
                 observerService.removeObserver(this, "domwindowclosed");
@@ -68,11 +68,11 @@
         var pwmgr, logins = [];
 
         function initLogins() {
-            pwmgr = SpecialPowers.wrap(Components).classes["@mozilla.org/login-manager;1"]
+            pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
                                  .getService(Ci.nsILoginManager);
 
             function addLogin(host, realm, user, pass) {
-                var login = SpecialPowers.wrap(Components).classes["@mozilla.org/login-manager/loginInfo;1"]
+                var login = SpecialPowers.Cc["@mozilla.org/login-manager/loginInfo;1"]
                                          .createInstance(Ci.nsILoginInfo);
                 login.init(host, null, realm, user, pass, "", "");
                 pwmgr.addLogin(login);
@@ -80,11 +80,11 @@
             }
 
             //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-            var ios = SpecialPowers.wrap(Components)
+            var ios = SpecialPowers.wrap(SpecialPowers.Components)
                                    .classes["@mozilla.org/network/io-service;1"]
-                                   .getService(Components.interfaces.nsIIOService);
+                                   .getService(SpecialPowers.Ci.nsIIOService);
 
-            var pps = SpecialPowers.wrap(Components)
+            var pps = SpecialPowers.wrap(SpecialPowers.Components)
                                    .classes["@mozilla.org/network/protocol-proxy-service;1"]
                                    .getService();
 
@@ -121,7 +121,7 @@
             for (i in logins)
                 pwmgr.removeLogin(logins[i]);
 
-            var authMgr = SpecialPowers.wrap(Components).classes['@mozilla.org/network/http-auth-manager;1']
+            var authMgr = SpecialPowers.Cc['@mozilla.org/network/http-auth-manager;1']
                                        .getService(Ci.nsIHttpAuthManager);
             authMgr.clearAll();
 
