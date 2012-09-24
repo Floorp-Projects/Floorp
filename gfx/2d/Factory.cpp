@@ -285,6 +285,24 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 }
 
 TemporaryRef<ScaledFont>
+Factory::CreateScaledFontForTrueTypeData(uint8_t *aData, uint32_t aSize,
+                                         uint32_t aFaceIndex, Float aGlyphSize,
+                                         FontType aType)
+{
+  switch (aType) {
+#ifdef WIN32
+  case FONT_DWRITE:
+    {
+      return new ScaledFontDWrite(aData, aSize, aFaceIndex, aGlyphSize);
+    }
+#endif
+  default:
+    gfxWarning() << "Unable to create requested font type from truetype data";
+    return nullptr;
+  }
+}
+
+TemporaryRef<ScaledFont>
 Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont, Float aSize, cairo_scaled_font_t* aScaledFont)
 {
 #ifdef USE_CAIRO
