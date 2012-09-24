@@ -42,34 +42,11 @@ static void sk_memset32_dither(uint32_t dst[], uint32_t v0, uint32_t v1,
     }
 }
 
-//  Clamp
+///////////////////////////////////////////////////////////////////////////////
 
-static SkFixed clamp_tileproc(SkFixed x) {
-    return SkClampMax(x, 0xFFFF);
-}
-
-// Repeat
-
-static SkFixed repeat_tileproc(SkFixed x) {
-    return x & 0xFFFF;
-}
-
-// Mirror
-
-// Visual Studio 2010 (MSC_VER=1600) optimizes bit-shift code incorrectly.
-// See http://code.google.com/p/skia/issues/detail?id=472
-#if defined(_MSC_VER) && (_MSC_VER >= 1600)
-#pragma optimize("", off)
-#endif
-
-static inline SkFixed mirror_tileproc(SkFixed x) {
-    int s = x << 15 >> 31;
-    return (x ^ s) & 0xFFFF;
-}
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1600)
-#pragma optimize("", on)
-#endif
+SkFixed clamp_tileproc(SkFixed x);
+SkFixed mirror_tileproc(SkFixed x);
+SkFixed repeat_tileproc(SkFixed x);
 
 ///////////////////////////////////////////////////////////////////////////////
 
