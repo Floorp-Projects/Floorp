@@ -14,7 +14,6 @@
 #include "nsCSSRendering.h"
 #include "nsCSSFrameConstructor.h"
 #include "gfxUtils.h"
-#include "nsImageFrame.h"
 #include "nsRenderingContext.h"
 #include "MaskLayerImageCache.h"
 #include "nsIScrollableFrame.h"
@@ -347,7 +346,7 @@ protected:
      * Stores the pointer to the nsDisplayImage if we want to
      * convert this to an ImageLayer.
      */
-    nsDisplayImage* mImage;
+    nsDisplayImageContainer* mImage;
     /**
      * Stores the clip that we need to apply to the image or, if there is no
      * image, a clip for SOME item in the layer. There is no guarantee which
@@ -1548,8 +1547,10 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
   /* Mark as available for conversion to image layer if this is a nsDisplayImage and
    * we are the first visible item in the ThebesLayerData object.
    */
-  if (mVisibleRegion.IsEmpty() && aItem->GetType() == nsDisplayItem::TYPE_IMAGE) {
-    mImage = static_cast<nsDisplayImage*>(aItem);
+  if (mVisibleRegion.IsEmpty() &&
+      (aItem->GetType() == nsDisplayItem::TYPE_IMAGE ||
+       aItem->GetType() == nsDisplayItem::TYPE_XUL_IMAGE)) {
+    mImage = static_cast<nsDisplayImageContainer*>(aItem);
   } else {
     mImage = nullptr;
   }
