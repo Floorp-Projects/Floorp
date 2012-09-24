@@ -89,7 +89,14 @@ extern bool stack_key_initialized;
 # define PROFILE_DEFAULT_ENTRY 100000
 #endif
 
-#ifdef ANDROID
+#if defined(PLATFORM_LIKELY_MEMORY_CONSTRAINED)
+/* A 1ms sampling interval has been shown to be a large perf hit
+ * (10fps) on memory-contrained (low-end) platforms, and additionally
+ * to yield different results from the profiler.  Where this is the
+ * important case, b2g, there are also many gecko processes which
+ * magnify these effects. */
+# define PROFILE_DEFAULT_INTERVAL 10
+#elif defined(ANDROID)
 // We use a lower frequency on Android, in order to make things work
 // more smoothly on phones.  This value can be adjusted later with
 // some libunwind optimizations.
