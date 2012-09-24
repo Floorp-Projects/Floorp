@@ -4,6 +4,7 @@
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 const JAPANESE = "\u34ff\u35ff\u36ff\u37ff";
 const APPLES = "\uf8ff\uf8ff\uf8ff\uf8ff";

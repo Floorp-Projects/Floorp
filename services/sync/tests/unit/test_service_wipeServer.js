@@ -1,6 +1,8 @@
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://testing-common/services/sync/fakeservices.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");

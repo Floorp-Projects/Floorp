@@ -8,6 +8,8 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/fakeservices.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 initTestLogging("Trace");
 

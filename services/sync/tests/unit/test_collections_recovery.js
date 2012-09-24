@@ -1,5 +1,9 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 // Verify that we wipe the server if we have to regenerate keys.
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 add_test(function test_missing_crypto_collection() {
   let johnHelper = track_collections_helper();

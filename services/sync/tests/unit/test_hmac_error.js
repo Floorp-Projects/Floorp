@@ -4,8 +4,8 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 // Track HMAC error counts.
 let hmacErrorCount = 0;
