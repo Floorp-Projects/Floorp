@@ -80,12 +80,10 @@
             }
 
             //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-            var ios = SpecialPowers.wrap(SpecialPowers.Components)
-                                   .classes["@mozilla.org/network/io-service;1"]
+            var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
                                    .getService(SpecialPowers.Ci.nsIIOService);
 
-            var pps = SpecialPowers.wrap(SpecialPowers.Components)
-                                   .classes["@mozilla.org/network/protocol-proxy-service;1"]
+            var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"]
                                    .getService();
 
             var uri = ios.newURI("http://example.com", null, null);
