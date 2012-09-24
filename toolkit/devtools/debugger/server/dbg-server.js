@@ -533,6 +533,7 @@ DebuggerServerConnection.prototype = {
                     "': " + safeErrorString(e))
         });
       }
+      instance.parentID = actor.parentID;
       // We want the newly-constructed actor to completely replace the factory
       // actor. Reusing the existing actor ID will make sure ActorPool.addActor
       // does the right thing.
