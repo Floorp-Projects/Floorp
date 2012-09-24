@@ -4330,6 +4330,28 @@ nsXPCComponents_Utils::RecomputeWrappers(const jsval &vobj, JSContext *cx)
     return NS_OK;
 }
 
+/* jsval getComponentsForScope(jsval vscope); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetComponentsForScope(const jsval &vscope, JSContext *cx,
+                                             jsval *rval)
+{
+    if (!vscope.isObject())
+        return NS_ERROR_INVALID_ARG;
+    JSObject *scopeObj = js::UnwrapObject(&vscope.toObject());
+    XPCWrappedNativeScope *scope =
+      XPCWrappedNativeScope::FindInJSObjectScope(cx, scopeObj);
+    if (!scope)
+        return NS_ERROR_FAILURE;
+    XPCCallContext ccx(NATIVE_CALLER, cx);
+    JSObject *components = scope->GetComponentsJSObject(ccx);
+    if (!components)
+        return NS_ERROR_FAILURE;
+    *rval = ObjectValue(*components);
+    if (!JS_WrapValue(cx, rval))
+        return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXPCComponents_Utils::Dispatch(const jsval &runnable_, const jsval &scope,
                                 JSContext *cx)
