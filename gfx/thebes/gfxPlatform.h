@@ -126,6 +126,8 @@ GetBackendName(mozilla::gfx::BackendType aBackend)
         return "cairo";
       case mozilla::gfx::BACKEND_SKIA:
         return "skia";
+      case mozilla::gfx::BACKEND_RECORDING:
+        return "recording";
       case mozilla::gfx::BACKEND_NONE:
         return "none";
   }
