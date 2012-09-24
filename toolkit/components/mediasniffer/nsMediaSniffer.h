@@ -11,6 +11,7 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIContentSniffer.h"
+#include "mozilla/Attributes.h"
 
 // ed905ba3-c656-480e-934e-6bc35bd36aff
 #define NS_MEDIA_SNIFFER_CID \
@@ -19,7 +20,7 @@
 
 #define NS_MEDIA_SNIFFER_CONTRACTID "@mozilla.org/media/sniffer;1"
 
-class nsMediaSniffer : public nsIContentSniffer
+class nsMediaSniffer MOZ_FINAL : public nsIContentSniffer
 {
   public:
     NS_DECL_ISUPPORTS
