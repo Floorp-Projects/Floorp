@@ -263,7 +263,7 @@ public final class Tab {
     }
 
     public void setContentType(String contentType) {
-        mContentType = contentType;
+        mContentType = (contentType == null) ? "" : contentType;
     }
 
     public String getContentType() {
