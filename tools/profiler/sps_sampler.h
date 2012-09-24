@@ -76,7 +76,19 @@ extern bool stack_key_initialized;
 #warning Please add support for your architecture in chromium_types.h
 #endif
 
-#define PROFILE_DEFAULT_ENTRY 1000000
+/* FIXME/bug 789667: memory constraints wouldn't much of a problem for
+ * this small a sample buffer size, except that serializing the
+ * profile data is extremely, unnecessarily memory intensive. */
+#ifdef MOZ_WIDGET_GONK
+# define PLATFORM_LIKELY_MEMORY_CONSTRAINED
+#endif
+
+#ifndef PLATFORM_LIKELY_MEMORY_CONSTRAINED
+# define PROFILE_DEFAULT_ENTRY 1000000
+#else
+# define PROFILE_DEFAULT_ENTRY 100000
+#endif
+
 #ifdef ANDROID
 // We use a lower frequency on Android, in order to make things work
 // more smoothly on phones.  This value can be adjusted later with
