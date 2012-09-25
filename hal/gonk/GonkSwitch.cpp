@@ -38,25 +38,8 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_impl {
 /**
- * The uevent for a headset on SGS2 insertion looks like:
- * 
- * change@/devices/virtual/switch/h2w
- *   ACTION=change
- *   DEVPATH=/devices/virtual/switch/h2w
- *   SUBSYSTEM=switch
- *   SWITCH_NAME=h2w
- *   SWITCH_STATE=2
- *   SEQNUM=2581
- * On Otoro, SWITCH_NAME could be Headset/No Device when plug/unplug.
- * change@/devices/virtual/switch/h2w
- *   ACTION=change
- *   DEVPATH=/devices/virtual/switch/h2w
- *   SUBSYSTEM=switch
- *   SWITCH_NAME=Headset
- *   SWITCH_STATE=1
- *   SEQNUM=1602
- * 
- * The uevent for usb on GB,
+ * The uevent for a usb on GB insertion looks like:
+ *
  *  change@/devices/virtual/switch/usb_configuration
  *    ACTION=change
  *    DEVPATH=/devices/virtual/switch/usb_configuration
@@ -64,7 +47,7 @@ namespace hal_impl {
  *    SWITCH_NAME=usb_configuration
  *    SWITCH_STATE=0
  *    SEQNUM=5038
- */ 
+ */
 class SwitchHandler : public RefCounted<SwitchHandler>
 {
 public:
@@ -184,6 +167,47 @@ protected:
   }
 };
 
+/**
+ * The uevent delivered for the headset under ICS looks like,
+ *
+ * change@/devices/virtual/switch/h2w
+ *   ACTION=change
+ *   DEVPATH=/devices/virtual/switch/h2w
+ *   SUBSYSTEM=switch
+ *   SWITCH_NAME=h2w
+ *   SWITCH_STATE=2 // Headset with no mic
+ *   SEQNUM=2581
+ * On Otoro, SWITCH_NAME could be Headset/No Device when plug/unplug.
+ * change@/devices/virtual/switch/h2w
+ *   ACTION=change
+ *   DEVPATH=/devices/virtual/switch/h2w
+ *   SUBSYSTEM=switch
+ *   SWITCH_NAME=Headset
+ *   SWITCH_STATE=1 // Headset with mic
+ *   SEQNUM=1602
+ */
+class SwitchHandlerHeadphone: public SwitchHandler
+{
+public:
+  SwitchHandlerHeadphone(const char* aDevPath) :
+    SwitchHandler(aDevPath, SWITCH_HEADPHONES)
+  {
+    SwitchHandler::GetInitialState();
+  }
+
+  virtual ~SwitchHandlerHeadphone() { }
+
+protected:
+  SwitchState ConvertState(const char* aState)
+  {
+    MOZ_ASSERT(aState);
+
+    return aState[0] == '0' ? SWITCH_STATE_OFF :
+      (aState[0] == '1' ? SWITCH_STATE_HEADSET : SWITCH_STATE_HEADPHONE);
+  }
+};
+
+
 typedef nsTArray<RefPtr<SwitchHandler> > SwitchHandlerArray;
 
 class SwitchEventRunnable : public nsRunnable
@@ -285,10 +309,10 @@ private:
 
   void Init()
   {
-    mHandler.AppendElement(new SwitchHandler(SWITCH_HEADSET_DEVPATH, SWITCH_HEADPHONES));
+    mHandler.AppendElement(new SwitchHandlerHeadphone(SWITCH_HEADSET_DEVPATH));
     mHandler.AppendElement(new SwitchHandler(SWITCH_USB_DEVPATH_GB, SWITCH_USB));
     mHandler.AppendElement(new SwitchHandlerUsbIcs(SWITCH_USB_DEVPATH_ICS));
-    
+
     SwitchHandlerArray::index_type handlerIndex;
     SwitchHandlerArray::size_type numHandlers = mHandler.Length();
 

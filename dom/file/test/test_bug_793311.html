@@ -1,0 +1,28 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Bug 793311 Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+
+<body>
+  <script type="text/javascript;version=1.7">
+  SimpleTest.waitForExplicitFinish();
+
+  try {
+    SpecialPowers.DOMWindowUtils.wrapDOMFile(null);
+    ok(false, "wrapDOMFile(null) throws an exception");
+  } catch(e) {
+    ok(true, "wrapDOMFile(null) throws an exception");
+  }
+  SimpleTest.finish();
+  </script>
+</body>
+
+</html>

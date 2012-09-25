@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(VSInstallDir)\DIA SDK\lib\diaguids.lib&quot;"
+				AdditionalDependencies="&quot;$(VSInstallDir)\DIA SDK\lib\diaguids.lib&quot; imagehlp.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -133,7 +133,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(VSInstallDir)\DIA SDK\lib\diaguids.lib&quot;"
+				AdditionalDependencies="&quot;$(VSInstallDir)\DIA SDK\lib\diaguids.lib&quot; imagehlp.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"

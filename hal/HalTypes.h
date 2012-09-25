@@ -52,6 +52,8 @@ enum SwitchState {
   SWITCH_STATE_UNKNOWN = -1,
   SWITCH_STATE_ON,
   SWITCH_STATE_OFF,
+  SWITCH_STATE_HEADSET,          // Headphone with microphone
+  SWITCH_STATE_HEADPHONE,        // without microphone
   NUM_SWITCH_STATE
 };
 

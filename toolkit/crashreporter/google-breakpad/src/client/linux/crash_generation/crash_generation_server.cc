@@ -39,12 +39,15 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <vector>
+
 #include "client/linux/crash_generation/crash_generation_server.h"
 #include "client/linux/crash_generation/client_info.h"
 #include "client/linux/handler/exception_handler.h"
 #include "client/linux/minidump_writer/minidump_writer.h"
 #include "common/linux/eintr_wrapper.h"
 #include "common/linux/guid_creator.h"
+#include "common/linux/safe_readlink.h"
 
 static const char kCommandQuit = 'x';
 
@@ -77,12 +80,10 @@ GetInodeForProcPath(ino_t* inode_out, const char* path)
   assert(inode_out);
   assert(path);
 
-  char buf[256];
-  const ssize_t n = readlink(path, buf, sizeof(buf) - 1);
-  if (n == -1) {
+  char buf[PATH_MAX];
+  if (!google_breakpad::SafeReadLink(path, buf)) {
     return false;
   }
-  buf[n] = 0;
 
   if (0 != memcmp(kSocketLinkPrefix, buf, sizeof(kSocketLinkPrefix) - 1)) {
     return false;
@@ -128,7 +129,7 @@ FindProcessHoldingSocket(pid_t* pid_out, ino_t socket_inode)
   for (std::vector<pid_t>::const_iterator
        i = pids.begin(); i != pids.end(); ++i) {
     const pid_t current_pid = *i;
-    char buf[256];
+    char buf[PATH_MAX];
     snprintf(buf, sizeof(buf), "/proc/%d/fd", current_pid);
     DIR* fd = opendir(buf);
     if (!fd)
@@ -142,15 +143,15 @@ FindProcessHoldingSocket(pid_t* pid_out, ino_t socket_inode)
 
       ino_t fd_inode;
       if (GetInodeForProcPath(&fd_inode, buf)
-	  && fd_inode == socket_inode) {
-	if (already_found) {
-	  closedir(fd);
-	  return false;
-	}
+          && fd_inode == socket_inode) {
+        if (already_found) {
+          closedir(fd);
+          return false;
+        }
 
-	already_found = true;
-	*pid_out = current_pid;
-	break;
+        already_found = true;
+        *pid_out = current_pid;
+        break;
       }
     }
 
@@ -169,7 +170,7 @@ CrashGenerationServer::CrashGenerationServer(
   OnClientExitingCallback exit_callback,
   void* exit_context,
   bool generate_dumps,
-  const std::string* dump_path) :
+  const string* dump_path) :
     server_fd_(listen_fd),
     dump_callback_(dump_callback),
     dump_context_(dump_context),
@@ -224,11 +225,11 @@ CrashGenerationServer::Stop()
 {
   assert(pthread_self() != thread_);
 
- if (!started_)
-   return;
+  if (!started_)
+    return;
 
   HANDLE_EINTR(write(control_pipe_out_, &kCommandQuit, 1));
-  
+
   void* dummy;
   pthread_join(thread_, &dummy);
 
@@ -280,7 +281,7 @@ CrashGenerationServer::Run()
       if (EINTR == errno) {
         continue;
       } else {
-	return;
+        return;
       }
     }
 
@@ -383,12 +384,11 @@ CrashGenerationServer::ClientEvent(short revents)
     return true;
   }
 
-  std::string minidump_filename;
+  string minidump_filename;
   if (!MakeMinidumpFilename(minidump_filename))
     return true;
 
-  if (generate_dumps_ &&
-      !google_breakpad::WriteMinidump(minidump_filename.c_str(),
+  if (!google_breakpad::WriteMinidump(minidump_filename.c_str(),
                                       crashing_pid, crash_context,
                                       kCrashContextSize)) {
     HANDLE_EINTR(close(signal_fd));
@@ -396,12 +396,7 @@ CrashGenerationServer::ClientEvent(short revents)
   }
 
   if (dump_callback_) {
-    ClientInfo info;
-
-    info.crash_server_ = this;
-    info.pid_ = crashing_pid;
-    info.crash_context = crash_context;
-    info.crash_context_size = kCrashContextSize;
+    ClientInfo info(crashing_pid, this);
 
     dump_callback_(dump_context_, &info, &minidump_filename);
   }
@@ -442,7 +437,7 @@ CrashGenerationServer::ControlEvent(short revents)
 }
 
 bool
-CrashGenerationServer::MakeMinidumpFilename(std::string& outFilename)
+CrashGenerationServer::MakeMinidumpFilename(string& outFilename)
 {
   GUID guid;
   char guidString[kGUIDStringLength+1];
@@ -466,4 +461,4 @@ CrashGenerationServer::ThreadMain(void *arg)
   return NULL;
 }
 
-} // namespace google_breakpad
+}  // namespace google_breakpad

@@ -49,6 +49,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef HAVE_A_OUT_H
 #include <a.out.h>
 #endif
@@ -60,6 +64,7 @@
 #include <vector>
 
 #include "common/byte_cursor.h"
+#include "common/using_std_string.h"
 
 namespace google_breakpad {
 
@@ -189,7 +194,11 @@ class StabsReader {
   // Return true to continue processing, or false to abort.
   bool ProcessFunction();
 
-  // The STABS entries we're parsing.
+  // Process an exported function symbol.
+  // Return true to continue processing, or false to abort.
+  bool ProcessExtern();
+
+  // The STABS entries being parsed.
   ByteBuffer entries_;
 
   // The string section to which the entries refer.
@@ -284,7 +293,7 @@ class StabsHandler {
   // StartFunction is the function name alone.
   //
   // In languages that use name mangling, like C++, NAME is mangled.
-  virtual bool StartFunction(const std::string &name, uint64_t address) {
+  virtual bool StartFunction(const string &name, uint64_t address) {
     return true;
   }
 
@@ -298,6 +307,12 @@ class StabsHandler {
   // the source file named FILENAME.  The caller must infer the ending
   // address of the line.
   virtual bool Line(uint64_t address, const char *filename, int number) {
+    return true;
+  }
+
+  // Report that an exported function NAME is present at ADDRESS.
+  // The size of the function is unknown.
+  virtual bool Extern(const string &name, uint64_t address) {
     return true;
   }
 

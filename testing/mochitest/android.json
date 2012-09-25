@@ -206,6 +206,7 @@
  "dom/tests/mochitest/pointerlock/test_pointerlock-api.html": "TIMED_OUT",
  "dom/tests/mochitest/sessionstorage/test_sessionStorageClone.html": "",
  "dom/tests/mochitest/sessionstorage/test_sessionStorageHttpHttps.html": "TIMED_OUT",
+ "dom/tests/mochitest/webapps/test_bug_779982.html": "Bug 793211",
  "dom/tests/mochitest/whatwg/test_bug500328.html": "TIMED_OUT",
  "editor/composer/test/test_bug389350.html": "",
  "editor/libeditor/base/tests/test_bug408231.html": "",
