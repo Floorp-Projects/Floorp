@@ -14,10 +14,6 @@
 #include "maiRedundantObjectFactory.h"
 #endif 
 
-#if defined(MOZ_WIDGET_GTK2)
-#include "gtk2compat.h"
-#endif
-
 /* init methods */
 static void moz_container_class_init          (MozContainerClass *klass);
 static void moz_container_init                (MozContainer      *container);
