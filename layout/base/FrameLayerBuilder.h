@@ -388,7 +388,7 @@ public:
    * Used when we optimize a ThebesLayer into an ImageLayer and want to retroactively update the 
    * DisplayItemData so we can retrieve the layer from within layout.
    */
-  void StoreOptimizedLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey, Layer* aImage);
+  void StoreOptimizedLayerForFrame(nsIFrame* aFrame, PRUint32 aDisplayItemKey, Layer* aImage);
 
   /**
    * Clip represents the intersection of an optional rectangle with a
