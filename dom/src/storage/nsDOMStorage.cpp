@@ -1063,6 +1063,14 @@ nsresult
 nsDOMStorage::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
                                    bool aPrivate)
 {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!uri) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   mDocumentURI = aDocumentURI;
   mPrincipal = aPrincipal;
 
@@ -1076,6 +1084,14 @@ nsresult
 nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
                                  bool aPrivate)
 {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!uri) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   mDocumentURI = aDocumentURI;
   mPrincipal = aPrincipal;
 
