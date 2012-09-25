@@ -11,6 +11,7 @@
 #include "nsIURL.h"
 #include "nsIVariant.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
@@ -260,19 +261,40 @@ nsDOMStorageDBWrapper::CreateScopeDBKey(nsIPrincipal* aPrincipal,
     }
   }
 
-  rv = CreateReversedDomain(domainScope, aKey);
+  nsAutoCString key;
+
+  rv = CreateReversedDomain(domainScope, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString scheme;
   rv = uri->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aKey.Append(NS_LITERAL_CSTRING(":") + scheme);
+  key.Append(NS_LITERAL_CSTRING(":") + scheme);
 
   int32_t port = NS_GetRealPort(uri);
   if (port != -1) {
-    aKey.Append(nsPrintfCString(":%d", port));
+    key.Append(nsPrintfCString(":%d", port));
   }
+
+  uint32_t appId;
+  rv = aPrincipal->GetAppId(&appId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isInBrowserElement;
+  rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (appId == nsIScriptSecurityManager::NO_APP_ID && !isInBrowserElement) {
+    aKey.Assign(key);
+    return NS_OK;
+  }
+
+  aKey.Truncate();
+  aKey.AppendInt(appId);
+  aKey.Append(NS_LITERAL_CSTRING(":") + (isInBrowserElement ?
+              NS_LITERAL_CSTRING("t") : NS_LITERAL_CSTRING("f")) +
+              NS_LITERAL_CSTRING(":") + key);
 
   return NS_OK;
 }
@@ -316,7 +338,25 @@ nsDOMStorageDBWrapper::CreateQuotaDBKey(nsIPrincipal* aPrincipal,
 
   CreateReversedDomain(eTLDplusOne, subdomainsDBKey);
 
-  aKey.Assign(subdomainsDBKey);
+  uint32_t appId;
+  rv = aPrincipal->GetAppId(&appId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isInBrowserElement;
+  rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (appId == nsIScriptSecurityManager::NO_APP_ID && !isInBrowserElement) {
+    aKey.Assign(subdomainsDBKey);
+    return NS_OK;
+  }
+
+  aKey.Truncate();
+  aKey.AppendInt(appId);
+  aKey.Append(NS_LITERAL_CSTRING(":") + (isInBrowserElement ?
+              NS_LITERAL_CSTRING("t") : NS_LITERAL_CSTRING("f")) +
+              NS_LITERAL_CSTRING(":") + subdomainsDBKey);
+
   return NS_OK;
 }
 
