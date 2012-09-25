@@ -21,7 +21,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, uuid(115d1081-373e-4837-8d12-d0f4874f3467)]
+[scriptable, uuid(825ffce8-962d-11e1-aef3-8f2b6188709b)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -273,13 +273,6 @@ interface nsIPrincipal : nsISerializable
      * Returns true iif the principal is inside a browser element.
      */
     readonly attribute boolean isInBrowserElement;
-
-    /**
-     * Returns true if this principal has an unknown appId. This shouldn't
-     * generally be used. We only expose it due to not providing the correct
-     * appId everywhere where we construct principals.
-     */
-    readonly attribute boolean unknownAppId;
 };
 
 /**
