@@ -13,6 +13,9 @@ onconnect = function(e) {
         testPort = port;
         port.postMessage({topic: "test-init-done"});
         break;
+      case "test-logout":
+        apiPort.postMessage({topic: "social.user-profile", data: {}});
+        break;
       case "sidebar-message":
         sidebarPort = port;
         if (testPort && event.data.result == "ok")
