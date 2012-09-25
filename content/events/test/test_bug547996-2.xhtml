@@ -29,13 +29,13 @@ function check(event) {
 function doTest() {
   setup();
 
-  expectedInputSource = Components.interfaces.nsIDOMMouseEvent.MOZ_SOURCE_KEYBOARD;
+  expectedInputSource = SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_KEYBOARD;
   testKeyboard();
 
-  expectedInputSource = Components.interfaces.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE;
+  expectedInputSource = SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE;
   testMouse();
 
-  expectedInputSource = Components.interfaces.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN;
+  expectedInputSource = SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN;
   testScriptedClicks();
 
   cleanup();

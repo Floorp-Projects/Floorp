@@ -3453,7 +3453,7 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
         unsigned slot = i.scopeSlot();
         unsigned formal = i.frameIndex();
         MDefinition *param = current->getSlot(info().argSlot(formal));
-        if (slots->type() == MIRType_Slots)
+        if (slot >= templateObj->numFixedSlots())
             current->add(MStoreSlot::New(slots, slot - templateObj->numFixedSlots(), param));
         else
             current->add(MStoreFixedSlot::New(callObj, slot, param));

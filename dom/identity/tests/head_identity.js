@@ -3,8 +3,8 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = SpecialPowers.wrap(Components).utils;
+const Ci = SpecialPowers.Ci;
+const Cu = SpecialPowers.Cu;
 
 SpecialPowers.setBoolPref("toolkit.identity.debug", true);
 SpecialPowers.setBoolPref("dom.identity.enabled", true);

@@ -697,6 +697,13 @@ private:
   // after unlocking.
   nsIntPoint  mPreLockPoint;
 
+  // Stores the refPoint of the last synthetic mouse move we dispatched
+  // to re-center the mouse when we were pointer locked. If this is (-1,-1) it
+  // means we've not recently dispatched a centering event. We use this to
+  // detect when we receive the synth event, so we can cancel and not send it
+  // to content.
+  static nsIntPoint sSynthCenteringPoint;
+
   nsWeakFrame mCurrentTarget;
   nsCOMPtr<nsIContent> mCurrentTargetContent;
   nsWeakFrame mLastMouseOverFrame;

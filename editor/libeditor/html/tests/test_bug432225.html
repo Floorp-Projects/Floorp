@@ -34,7 +34,7 @@ function editDoc() {
 }
 
 function getSpellCheckSelection() {
-  var Ci = Components.interfaces;
+  var Ci = SpecialPowers.Ci;
   var win = editDoc().defaultView;
   var editingSession = SpecialPowers.wrap(win.QueryInterface(Ci.nsIInterfaceRequestor))
                                     .getInterface(Ci.nsIWebNavigation)

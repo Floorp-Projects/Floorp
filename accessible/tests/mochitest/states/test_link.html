@@ -49,6 +49,8 @@
 
       // a: traversal state
       testStates("link_traversed", 0, 0, STATE_TRAVERSED);
+
+      enableLogging("docload");
       registerA11yEventListener(EVENT_DOCUMENT_LOAD_COMPLETE,
                                 traversedLinkTester);
 
@@ -62,6 +64,7 @@
         aEvent.accessible.rootDocument.window.close();
 
         testStates("link_traversed", STATE_TRAVERSED);
+        disableLogging();
         SimpleTest.finish();
       }
     };

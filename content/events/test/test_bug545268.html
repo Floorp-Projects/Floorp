@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=545268
   function dispatchKeyEvent(type) {
     var utils = SpecialPowers.getDOMWindowUtils(subwin);
     utils.sendKeyEvent(type, 
-                       Components.interfaces.nsIDOMKeyEvent.DOM_VK_A,
+                       SpecialPowers.Ci.nsIDOMKeyEvent.DOM_VK_A,
                        0, 0);
   }
 

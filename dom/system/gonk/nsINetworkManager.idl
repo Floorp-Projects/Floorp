@@ -86,10 +86,23 @@ interface nsINetworkInterface : nsISupports
 
 };
 
+[scriptable, function, uuid(91824160-fb25-11e1-a21f-0800200c9a66)]
+interface nsIWifiTetheringCallback : nsISupports
+{
+  /**
+   * Callback function used to report status to WifiManager.
+   *
+   * @param error
+   *        An error message if the operation wasn't successful,
+   *        or `null` if it was.
+   */
+  void wifiTetheringEnabledChange(in jsval error);
+};
+
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(3bc29392-2fba-11e1-80fd-0010183a41af)]
+[scriptable, uuid(a02de6b0-fb25-11e1-a21f-0800200c9a66)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -157,4 +170,22 @@ interface nsINetworkManager : nsISupports
    */
   long overrideActive(in nsINetworkInterface network);
 
+  /**
+   * Returns whether or not wifi tethering is currently enabled.
+   */
+  readonly attribute boolean wifiTetheringEnabled;
+
+  /**
+   * Enable or disable Wifi Tethering
+   *
+   * @param enabled
+   *        Boolean that indicates whether tethering should be enabled (true) or disabled (false).
+   * @param network
+   *        The Wifi network interface with at least name of network interface.
+   * @param callback
+   *        Callback function used to report status to WifiManager.
+   */
+  void setWifiTethering(in boolean enabled,
+                        in nsINetworkInterface networkInterface,
+                        in nsIWifiTetheringCallback callback);
 };

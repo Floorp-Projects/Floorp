@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/layers/PLayerChild.h"
 #include "mozilla/layers/PLayersChild.h"
 #include "mozilla/layers/PLayersParent.h"
@@ -25,6 +26,7 @@
 #include "mozilla/Preferences.h"
 #include "nsIWidget.h"
 
+using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
 namespace mozilla {
@@ -215,6 +217,7 @@ BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(false)
   , mCachedSurfaceInUse(false)
   , mTransactionIncomplete(false)
+  , mCompositorMightResample(false)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
   NS_ASSERTION(aWidget, "Must provide a widget");
@@ -1089,6 +1092,17 @@ BasicShadowLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // to the previous transaction.
   if (HasShadowManager()) {
     ShadowLayerForwarder::BeginTransaction(mTargetBounds, mTargetRotation);
+
+    // If we're drawing on behalf of a context with async pan/zoom
+    // enabled, then the entire buffer of thebes layers might be
+    // composited (including resampling) asynchronously before we get
+    // a chance to repaint, so we have to ensure that it's all valid
+    // and not rotated.
+    if (mWidget) {
+      if (TabChild* window = mWidget->GetOwningTabChild()) {
+        mCompositorMightResample = window->IsAsyncPanZoomEnabled();
+      }
+    }
 
     // If we have a non-default target, we need to let our shadow manager draw
     // to it. This will happen at the end of the transaction.

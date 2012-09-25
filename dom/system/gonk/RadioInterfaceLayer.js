@@ -1002,6 +1002,14 @@ RadioInterfaceLayer.prototype = {
                                            message.timestamp,
                                            false);
 
+    gSystemMessenger.broadcastMessage("sms-received",
+                                      {id: id,
+                                       delivery: DOM_SMS_DELIVERY_RECEIVED,
+                                       sender: message.sender || null,
+                                       receiver: message.receiver || null,
+                                       body: message.fullBody || null,
+                                       timestamp: message.timestamp,
+                                       read: false});
     Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
   },
 

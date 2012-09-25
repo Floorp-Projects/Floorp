@@ -24,7 +24,7 @@ SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function()
   } else {
     ok('mozAlarms' in navigator, "navigator.mozAlarms should exist");
     ok(navigator.mozAlarms, "navigator.mozAlarms should return an object");
-    ok(navigator.mozAlarms instanceof Components.interfaces.nsIDOMMozAlarmsManager,
+    ok(navigator.mozAlarms instanceof SpecialPowers.Ci.nsIDOMMozAlarmsManager,
       "navigator.mozAlarms should be an nsIDOMMozAlarmsManager object");
   }
 

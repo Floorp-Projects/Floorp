@@ -23,8 +23,7 @@ SimpleTest.waitForExplicitFinish();
 
 window.onload = function() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var mgr = Components
-    .classes["@mozilla.org/memory-reporter-manager;1"]
+  var mgr = Components.classes["@mozilla.org/memory-reporter-manager;1"]
     .getService(Components.interfaces.nsIMemoryReporterManager);
 
   var e = mgr.enumerateReporters();

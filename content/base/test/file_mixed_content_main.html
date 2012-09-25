@@ -57,9 +57,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
   var objectCount = 0;
 
   function objectStatus(object) {
-    object instanceof Components.interfaces.nsIObjectLoadingContent;
+    object instanceof SpecialPowers.Ci.nsIObjectLoadingContent;
 
-    if (object.displayedType != Components.interfaces.nsIObjectLoadingContent.TYPE_NULL) {
+    if (object.displayedType != SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_NULL) {
       //object loaded
       parent.postMessage({"test": "object", "msg": "insecure object loaded"}, "http://mochi.test:8888");
     }

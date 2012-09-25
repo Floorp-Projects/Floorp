@@ -14,7 +14,7 @@
 #include "jsobj.h"
 
 extern JSObject *
-js_InitBooleanClass(JSContext *cx, JSObject *obj);
+js_InitBooleanClass(JSContext *cx, js::HandleObject obj);
 
 extern JSString *
 js_BooleanToString(JSContext *cx, JSBool b);

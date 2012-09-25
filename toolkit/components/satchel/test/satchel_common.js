@@ -38,7 +38,7 @@ function $_(formNum, name) {
 // This basically sends an untargeted key event, to whatever's focused.
 function doKey(aKey, modifier) {
     var keyName = "DOM_VK_" + aKey.toUpperCase();
-    var key = Components.interfaces.nsIDOMKeyEvent[keyName];
+    var key = SpecialPowers.Ci.nsIDOMKeyEvent[keyName];
 
     // undefined --> null
     if (!modifier)
@@ -54,7 +54,7 @@ function doKey(aKey, modifier) {
 
 
 function getAutocompletePopup() {
-    var Ci = Components.interfaces;
+    var Ci = SpecialPowers.Ci;
     chromeWin = SpecialPowers.wrap(window)
                     .QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIWebNavigation)
@@ -71,8 +71,8 @@ function getAutocompletePopup() {
 
 
 function cleanUpFormHist() {
-  var formhist = SpecialPowers.wrap(Components).classes["@mozilla.org/satchel/form-history;1"].
-                 getService(Components.interfaces.nsIFormHistory2);
+  var formhist = SpecialPowers.Cc["@mozilla.org/satchel/form-history;1"].
+                 getService(SpecialPowers.Ci.nsIFormHistory2);
   formhist.removeAllEntries();
 }
 cleanUpFormHist();

@@ -747,3 +747,29 @@ gfxDWriteFont::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
     aSizes->mFontInstances += aMallocSizeOf(this);
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
+
+TemporaryRef<ScaledFont>
+gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
+{
+  bool wantCairo = aTarget->GetType() == BACKEND_CAIRO;
+  if (mAzureScaledFont && mAzureScaledFontIsCairo == wantCairo) {
+    return mAzureScaledFont;
+  }
+
+  NativeFont nativeFont;
+  nativeFont.mType = NATIVE_FONT_DWRITE_FONT_FACE;
+  nativeFont.mFont = GetFontFace();
+
+  if (wantCairo) {
+    mAzureScaledFont = Factory::CreateScaledFontWithCairo(nativeFont,
+                                                        GetAdjustedSize(),
+                                                        GetCairoScaledFont());
+  } else {
+    mAzureScaledFont = Factory::CreateScaledFontForNativeFont(nativeFont,
+                                                            GetAdjustedSize());
+  }
+
+  mAzureScaledFontIsCairo = wantCairo;
+
+  return mAzureScaledFont;
+}

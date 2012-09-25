@@ -50,14 +50,14 @@ function tryChromeLoad()
 
 function tryComponentsClasses()
 {
-    return Components.classes["@mozilla.org/dummy;1"];
+    return SpecialPowers.Components.classes["@mozilla.org/dummy;1"];
 }
 
 
 is(inciteCaps(tryChromeLoad), "denied-stack",
    "should get stack for content-loading-chrome rejection");
 is(inciteCaps(tryComponentsClasses), "denied-stack",
-   "should get stack for Components.classes rejection");
+   "should get stack for SpecialPowers.Components.classes rejection");
 </script>
 </pre>
 </body>
