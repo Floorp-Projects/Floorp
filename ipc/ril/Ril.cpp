@@ -126,20 +126,24 @@ void RilReconnectTask::Run() {
     // leading a dangling pointer in sTask.
     sTask = nullptr;
     if (mCanceled) {
-        return;
-    }
-
-    if (sClient->OpenSocket()) {
-        return;
+        if (sClient->OpenSocket()) {
+            return;
+        }
     }
     Enqueue(1000);
 }
 
-class RilWriteTask : public Task {
+class RilWriteTask : public Task
+{
     virtual void Run();
 };
 
-void RilWriteTask::Run() {
+void RilWriteTask::Run()
+{
+    if(sClient->mSocket.get() < 0) {
+        NS_WARNING("Trying to write to non-open socket!");
+        return;
+    }
     sClient->OnFileCanWriteWithoutBlocking(sClient->mSocket.rwget());
 }
 
@@ -161,6 +165,7 @@ ConnectToRil(Monitor* aMonitor, bool* aSuccess)
 bool
 RilClient::OpenSocket()
 {
+    ScopedClose sck;
 #if defined(MOZ_WIDGET_GONK)
     // Using a network socket to test basic functionality
     // before we see how this works on the phone.
@@ -171,7 +176,7 @@ RilClient::OpenSocket()
     memset(&addr, 0, sizeof(addr));
     strcpy(addr.sun_path, RIL_SOCKET_NAME);
     addr.sun_family = AF_LOCAL;
-    mSocket.reset(socket(AF_LOCAL, SOCK_STREAM, 0));
+    sck = socket(AF_LOCAL, SOCK_STREAM, 0);
     alen = strlen(RIL_SOCKET_NAME) + offsetof(struct sockaddr_un, sun_path) + 1;
 #else
     struct hostent *hp;
@@ -185,45 +190,45 @@ RilClient::OpenSocket()
     addr.sin_family = hp->h_addrtype;
     addr.sin_port = htons(RIL_TEST_PORT);
     memcpy(&addr.sin_addr, hp->h_addr, hp->h_length);
-    mSocket.reset(socket(hp->h_addrtype, SOCK_STREAM, 0));
+    sck = socket(hp->h_addrtype, SOCK_STREAM, 0);
     alen = sizeof(addr);
 #endif
 
-    if (mSocket.get() < 0) {
+    if (sck < 0) {
         LOG("Cannot create socket for RIL!\n");
         return false;
     }
 
-    if (connect(mSocket.get(), (struct sockaddr *) &addr, alen) < 0) {
+    if (connect(sck, (struct sockaddr *) &addr, alen) < 0) {
 #if defined(MOZ_WIDGET_GONK)
         LOG("Cannot open socket for RIL!\n");
 #endif
-        mSocket.dispose();
         return false;
     }
 
     // Set close-on-exec bit.
-    int flags = fcntl(mSocket.get(), F_GETFD);
+    int flags = fcntl(sck, F_GETFD);
     if (-1 == flags) {
         return false;
     }
 
     flags |= FD_CLOEXEC;
-    if (-1 == fcntl(mSocket.get(), F_SETFD, flags)) {
+    if (-1 == fcntl(sck, F_SETFD, flags)) {
         return false;
     }
 
     // Select non-blocking IO.
-    if (-1 == fcntl(mSocket.get(), F_SETFL, O_NONBLOCK)) {
+    if (-1 == fcntl(sck, F_SETFL, O_NONBLOCK)) {
         return false;
     }
-    if (!mIOLoop->WatchFileDescriptor(mSocket.get(),
+    if (!mIOLoop->WatchFileDescriptor(sck,
                                       true,
                                       MessageLoopForIO::WATCH_READ,
                                       &mReadWatcher,
                                       this)) {
         return false;
     }
+    mSocket.reset(sck.forget());
     LOG("Socket open for RIL\n");
     return true;
 }
@@ -261,7 +266,7 @@ RilClient::OnFileCanReadWithoutBlocking(int fd)
                 mIncoming.forget();
                 mReadWatcher.StopWatchingFileDescriptor();
                 mWriteWatcher.StopWatchingFileDescriptor();
-                close(mSocket.get());
+                mSocket.reset(-1);
                 RilReconnectTask::Enqueue();
                 return;
             }
