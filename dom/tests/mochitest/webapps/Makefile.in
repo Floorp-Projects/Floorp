@@ -29,4 +29,10 @@ MOCHITEST_CHROME_FILES = \
     test_launch_paths.xul \
     $(NULL)
 
+MOCHITEST_FILES = \
+    test_bug_779982.html \
+    file_bug_779982.js \
+    file_bug_779982.html \
+    $(NULL)
+
 include $(topsrcdir)/config/rules.mk

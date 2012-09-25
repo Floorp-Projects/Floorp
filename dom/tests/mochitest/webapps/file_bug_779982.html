@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    foobar!
+  </body>
+  <script>
+    var finished = false;
+    var data = window.location.search.substring(1).split('&');
+
+    function finish(value) {
+      value ? alert('success') : alert('failure');
+      finished = true;
+    }
+
+    switch (data[0]) {
+      case "getSelf":
+        navigator.mozApps.getSelf().onsuccess = function onGetSelf() {
+          if (data[1] == 'true') {
+            finish(this.result == null);
+          } else {
+            finish(this.result != null);
+          }
+        }
+        break;
+
+      case "isInstalled":
+        navigator.mozApps.isInstalled('http://example.org/manifest.webapp').onsuccess = function onIsInstalled() {
+          if (data[1] == 'true') {
+            finish(this.result == false);
+          } else {
+            finish(this.result == true);
+          }
+        }
+        break;
+
+      case "isInstalledWrong":
+        try {
+          navigator.mozApps.isInstalled('http://something.org/manifest.webapp');
+          finish(false);
+        } catch (e) {
+          finish(true);
+        }
+        break;
+
+      default:
+        finish(false);
+        break;
+    }
+  </script>
+</html>
