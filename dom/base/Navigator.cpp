@@ -1113,36 +1113,16 @@ Navigator::RequestWakeLock(const nsAString &aTopic, nsIDOMMozWakeLock **aWakeLoc
 //    Navigator::nsIDOMNavigatorSms
 //*****************************************************************************
 
-bool
-Navigator::IsSmsSupported() const
-{
-#ifdef MOZ_WEBSMS_BACKEND
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(smsService, false);
-
-  bool result = false;
-  smsService->HasSupport(&result);
-
-  return result;
-#else
-  return false;
-#endif
-}
-
 NS_IMETHODIMP
 Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
 {
   *aSmsManager = nullptr;
 
   if (!mSmsManager) {
-    if (!IsSmsSupported()) {
-      return NS_OK;
-    }
-
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
 
-    mSmsManager = SmsManager::CheckPermissionAndCreateInstance(window);
+    mSmsManager = SmsManager::CreateInstanceIfAllowed(window);
     NS_ENSURE_TRUE(mSmsManager, NS_OK);
   }
 
