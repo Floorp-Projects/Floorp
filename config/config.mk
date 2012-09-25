@@ -27,6 +27,20 @@ ifndef INCLUDED_AUTOCONF_MK
 include $(DEPTH)/config/autoconf.mk
 endif
 
+space = $(NULL) $(NULL)
+
+# Include defs.mk files that can be found in $(srcdir)/$(DEPTH),
+# $(srcdir)/$(DEPTH-1), $(srcdir)/$(DEPTH-2), etc., and $(srcdir)
+# where $(DEPTH-1) is one level less of depth, $(DEPTH-2), two, etc.
+# i.e. for DEPTH=../../.., DEPTH-1 is ../.. and DEPTH-2 is ..
+# These defs.mk files are used to define variables in a directory
+# and all its subdirectories, recursively.
+__depth := $(subst /, ,$(DEPTH))
+ifeq (.,$(__depth))
+__depth :=
+endif
+$(foreach __d,$(__depth) .,$(eval __depth = $(wordlist 2,$(words $(__depth)),$(__depth))$(eval -include $(subst $(space),/,$(strip $(srcdir) $(__depth) defs.mk)))))
+
 COMMA = ,
 
 # Sanity check some variables
@@ -50,9 +64,6 @@ $(foreach x,$(CHECK_VARS),$(check-variable))
 
 core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1)))
 core_realpath = $(if $(realpath $(1)),$(realpath $(1)),$(call core_abspath,$(1)))
-
-nullstr :=
-space :=$(nullstr) # EOL
 
 core_winabspath = $(firstword $(subst /, ,$(call core_abspath,$(1)))):$(subst $(space),,$(patsubst %,\\%,$(wordlist 2,$(words $(subst /, ,$(call core_abspath,$(1)))), $(strip $(subst /, ,$(call core_abspath,$(1)))))))
 
@@ -814,3 +825,7 @@ PLY_INCLUDE = -I$(topsrcdir)/other-licenses/ply
 endif
 
 export CL_INCLUDES_PREFIX
+
+ifeq ($(MOZ_WIDGET_GTK),2)
+MOZ_GTK2_CFLAGS := -I$(topsrcdir)/widget/gtk2/compat $(MOZ_GTK2_CFLAGS)
+endif

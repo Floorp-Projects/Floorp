@@ -65,7 +65,7 @@ PYTHON_VERSION_MAJOR=2
 PYTHON_VERSION_MINOR=5
 CAIRO_VERSION=1.10
 PANGO_VERSION=1.14.0
-GTK2_VERSION=2.10.0
+GTK2_VERSION=2.18.0
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.14
 GNOMEVFS_VERSION=2.0
@@ -4435,6 +4435,8 @@ dnl ========================================================
 dnl = Enable the toolkit as needed                         =
 dnl ========================================================
 
+MOZ_WIDGET_GTK=
+
 case "$MOZ_WIDGET_TOOLKIT" in
 
 cairo-windows)
@@ -4458,7 +4460,8 @@ cairo-gtk2|cairo-gtk2-x11)
     TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
     TK_LIBS='$(MOZ_GTK2_LIBS)'
     AC_DEFINE(MOZ_WIDGET_GTK2)
-    AC_DEFINE(MOZ_WIDGET_GTK,2)
+    MOZ_WIDGET_GTK=2
+    AC_DEFINE_UNQUOTED(MOZ_WIDGET_GTK,$MOZ_WIDGET_GTK)
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
@@ -4732,6 +4735,7 @@ AC_SUBST(MOZ_ENABLE_QTMOBILITY)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
+AC_SUBST(MOZ_WIDGET_GTK)
 AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LIBS)
 
@@ -8802,8 +8806,12 @@ fi
 
 # Generate a JSON config file for unittest harnesses etc to read
 # build configuration details from in a standardized way.
-OS_TARGET=${OS_TARGET} TARGET_CPU=${TARGET_CPU} MOZ_DEBUG=${MOZ_DEBUG} \
-MOZ_WIDGET_TOOLKIT=${MOZ_WIDGET_TOOLKIT} UNIVERSAL_BINARY=${UNIVERSAL_BINARY} \
+OS_TARGET=${OS_TARGET} \
+TARGET_CPU=${TARGET_CPU} \
+MOZ_DEBUG=${MOZ_DEBUG} \
+MOZ_WIDGET_TOOLKIT=${MOZ_WIDGET_TOOLKIT} \
+UNIVERSAL_BINARY=${UNIVERSAL_BINARY} \
+MOZ_CRASHREPORTER=${MOZ_CRASHREPORTER} \
   $PYTHON ${_topsrcdir}/config/writemozinfo.py ./mozinfo.json.tmp
 if cmp -s ./mozinfo.json.tmp ./mozinfo.json; then
   rm ./mozinfo.json.tmp
@@ -8888,10 +8896,10 @@ fi
 # Run freetype configure script
 
 if test "$MOZ_TREE_FREETYPE"; then
-   export CFLAGS="$CFLAGS -std=c99"
-   export CPPFLAGS="$CPPFLAGS"
-   export CXXFLAGS="$CXXFLAGS"
-   export LDFLAGS="$LDFLAGS"
+   export CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS -std=c99"
+   export CPPFLAGS="$CPPFLAGS $MOZ_DEBUG_FLAGS"
+   export CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
+   export LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
    export CONFIG_FILES="unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
    ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes"
    AC_OUTPUT_SUBDIRS(modules/freetype2)

@@ -708,6 +708,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/ProcessGlobal.js
 @BINPATH@/components/ContentHandler.js
 @BINPATH@/components/PaymentGlue.js
+@BINPATH@/components/YoutubeProtocolHandler.js
 
 #ifdef XP_MACOSX
 @BINPATH@/@DLL_PREFIX@plugin_child_interpose@DLL_SUFFIX@

@@ -413,6 +413,7 @@ ContactManager.prototype = {
       case "Contact:Save:Return:KO":
       case "Contact:Remove:Return:KO":
       case "Contacts:Clear:Return:KO":
+      case "Contacts:GetSimContacts:Return:KO":
         req = this.getRequest(msg.requestID);
         if (req)
           Services.DOMRequest.fireError(req.request, msg.errorMsg);
@@ -579,6 +580,7 @@ ContactManager.prototype = {
                               "Contact:Save:Return:OK", "Contact:Save:Return:KO",
                               "Contact:Remove:Return:OK", "Contact:Remove:Return:KO",
                               "Contacts:GetSimContacts:Return:OK",
+                              "Contacts:GetSimContacts:Return:KO",
                               "PermissionPromptHelper:AskPermission:OK"]);
   },
 

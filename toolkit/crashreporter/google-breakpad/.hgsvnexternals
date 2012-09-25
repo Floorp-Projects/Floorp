@@ -1,7 +1,0 @@
-[.]
- src/testing -r175 http://googlemock.googlecode.com/svn/trunk/
- src/tools/gyp -r762 http://gyp.googlecode.com/svn/trunk
-[src/third_party/glog]
- glog http://google-glog.googlecode.com/svn/trunk
-[src/third_party/protobuf]
- protobuf http://protobuf.googlecode.com/svn/trunk

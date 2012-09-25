@@ -36,12 +36,14 @@
 #include <string>
 
 #include "breakpad_googletest_includes.h"
+#include "common/using_std_string.h"
 #include "google_breakpad/common/minidump_format.h"
 #include "processor/synth_minidump.h"
 #include "processor/synth_minidump_unittest_data.h"
 
 using google_breakpad::SynthMinidump::Context;
 using google_breakpad::SynthMinidump::Dump;
+using google_breakpad::SynthMinidump::Exception;
 using google_breakpad::SynthMinidump::List;
 using google_breakpad::SynthMinidump::Memory;
 using google_breakpad::SynthMinidump::Module;
@@ -49,11 +51,9 @@ using google_breakpad::SynthMinidump::Section;
 using google_breakpad::SynthMinidump::Stream;
 using google_breakpad::SynthMinidump::String;
 using google_breakpad::SynthMinidump::SystemInfo;
-using google_breakpad::SynthMinidump::Thread;
 using google_breakpad::test_assembler::kBigEndian;
 using google_breakpad::test_assembler::kLittleEndian;
 using google_breakpad::test_assembler::Label;
-using std::string;
 
 TEST(Section, Simple) {
   Dump dump(0);
@@ -133,12 +133,23 @@ TEST(Context, X86) {
               == 0);
 }
 
+TEST(Context, ARM) {
+  Dump dump(0, kLittleEndian);
+  assert(arm_raw_context.context_flags & MD_CONTEXT_ARM);
+  Context context(dump, arm_raw_context);
+  string contents;
+  ASSERT_TRUE(context.GetContents(&contents));
+  EXPECT_EQ(sizeof(arm_expected_contents), contents.size());
+  EXPECT_TRUE(memcmp(contents.data(), arm_expected_contents, contents.size())
+              == 0);
+}
+
 TEST(ContextDeathTest, X86BadFlags) {
   Dump dump(0, kLittleEndian);
   MDRawContextX86 raw;
   raw.context_flags = 0;
   ASSERT_DEATH(Context context(dump, raw);,
-               "context\\.context_flags & 0x[0-9a-f]+");
+               "context\\.context_flags & (0x[0-9a-f]+|MD_CONTEXT_X86)");
 }
 
 TEST(ContextDeathTest, X86BadEndianness) {
@@ -156,11 +167,12 @@ TEST(Thread, Simple) {
   Memory stack(dump, 0xaad55a93cc3c0efcULL);
   stack.Append("stack contents");
   stack.Finish(0xe08cdbd1);
-  Thread thread(dump, 0x3d7ec360, stack, context,
-                0x3593f44d, // suspend count
-                0xab352b82, // priority class
-                0x2753d838, // priority
-                0xeb2de4be3f29e3e9ULL); // thread environment block
+  google_breakpad::SynthMinidump::Thread thread(
+      dump, 0x3d7ec360, stack, context,
+      0x3593f44d, // suspend count
+      0xab352b82, // priority class
+      0x2753d838, // priority
+      0xeb2de4be3f29e3e9ULL); // thread environment block
   string contents;
   ASSERT_TRUE(thread.GetContents(&contents));
   static const u_int8_t expected_bytes[] = {
@@ -172,6 +184,49 @@ TEST(Thread, Simple) {
     0xfc, 0x0e, 0x3c, 0xcc, 0x93, 0x5a, 0xd5, 0xaa, // stack address
     0x0e, 0x00, 0x00, 0x00, // stack size
     0xd1, 0xdb, 0x8c, 0xe0, // stack MDRVA
+    0xcc, 0x02, 0x00, 0x00, // context size
+    0x0c, 0xda, 0x65, 0x86  // context MDRVA
+  };
+  EXPECT_EQ(sizeof(expected_bytes), contents.size());
+  EXPECT_TRUE(memcmp(contents.data(), expected_bytes, contents.size()) == 0);
+}
+
+TEST(Exception, Simple) {
+  Dump dump(0, kLittleEndian);
+  Context context(dump, x86_raw_context);
+  context.Finish(0x8665da0c);
+  
+  Exception exception(dump, context,
+                      0x1234abcd, // thread id
+                      0xdcba4321, // exception code
+                      0xf0e0d0c0, // exception flags
+                      0x0919a9b9c9d9e9f9ULL); // exception address
+  string contents;
+  ASSERT_TRUE(exception.GetContents(&contents));
+  static const u_int8_t expected_bytes[] = {
+    0xcd, 0xab, 0x34, 0x12, // thread id
+    0x00, 0x00, 0x00, 0x00, // __align
+    0x21, 0x43, 0xba, 0xdc, // exception code
+    0xc0, 0xd0, 0xe0, 0xf0, // exception flags
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception record
+    0xf9, 0xe9, 0xd9, 0xc9, 0xb9, 0xa9, 0x19, 0x09, // exception address
+    0x00, 0x00, 0x00, 0x00, // number parameters
+    0x00, 0x00, 0x00, 0x00, // __align
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exception_information
     0xcc, 0x02, 0x00, 0x00, // context size
     0x0c, 0xda, 0x65, 0x86  // context MDRVA
   };
