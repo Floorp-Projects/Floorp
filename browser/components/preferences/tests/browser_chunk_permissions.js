@@ -14,7 +14,6 @@ const TEST_URI_3 = NetUtil.newURI("http://wikipedia.org/");
 const PERM_UNKNOWN = 0;
 const PERM_ALLOW = 1;
 const PERM_DENY = 2;
-const PERM_SESION = 8;
 
 // used to set permissions on test sites
 const TEST_PERMS = {

@@ -44,12 +44,12 @@ function testInitial(finishcb) {
   ok(port, "Social provider has a port to its FrameWorker");
   port.close();
 
-  let {shareButton, sharePopup} = SocialShareButton;
+  let {shareButton, unsharePopup} = SocialShareButton;
   ok(shareButton, "share button exists");
-  ok(sharePopup, "share popup exists");
+  ok(unsharePopup, "share popup exists");
 
-  let okButton = document.getElementById("editSharePopupOkButton");
-  let undoButton = document.getElementById("editSharePopupUndoButton");
+  let okButton = document.getElementById("unsharePopupContinueSharingButton");
+  let undoButton = document.getElementById("unsharePopupStopSharingButton");
   let shareStatusLabel = document.getElementById("share-button-status");
 
   // ensure the worker initialization and handshakes are all done and we
@@ -62,8 +62,8 @@ function testInitial(finishcb) {
     is(profile.portrait, portrait, "portrait is set");
     let displayName = document.getElementById("socialUserDisplayName");
     is(displayName.label, profile.displayName, "display name is set");
-    ok(!document.getElementById("editSharePopupHeader").hidden, "user profile is visible");
-  
+    ok(!document.getElementById("unsharePopupHeader").hidden, "user profile is visible");
+
     // Check the strings from our worker actually ended up on the button.
     is(shareButton.getAttribute("tooltiptext"), "Share this page", "check tooltip text is correct");
     is(shareStatusLabel.getAttribute("value"), "", "check status label text is blank");
@@ -85,9 +85,9 @@ function testInitial(finishcb) {
 }
 
 function testSecondClick(nextTest) {
-  let {shareButton, sharePopup} = SocialShareButton;
-  sharePopup.addEventListener("popupshown", function listener() {
-    sharePopup.removeEventListener("popupshown", listener);
+  let {shareButton, unsharePopup} = SocialShareButton;
+  unsharePopup.addEventListener("popupshown", function listener() {
+    unsharePopup.removeEventListener("popupshown", listener);
     ok(true, "popup was shown after second click");
     executeSoon(nextTest);
   });
@@ -95,10 +95,10 @@ function testSecondClick(nextTest) {
 }
 
 function testPopupOKButton() {
-  let {shareButton, sharePopup} = SocialShareButton;
-  let okButton = document.getElementById("editSharePopupOkButton");
-  sharePopup.addEventListener("popuphidden", function listener() {
-    sharePopup.removeEventListener("popuphidden", listener);
+  let {shareButton, unsharePopup} = SocialShareButton;
+  let okButton = document.getElementById("unsharePopupContinueSharingButton");
+  unsharePopup.addEventListener("popuphidden", function listener() {
+    unsharePopup.removeEventListener("popuphidden", listener);
     is(shareButton.hasAttribute("shared"), true, "Share button should still have 'shared' attribute after OK button is clicked");
     executeSoon(testSecondClick.bind(window, testPopupUndoButton));
   });
@@ -106,10 +106,10 @@ function testPopupOKButton() {
 }
 
 function testPopupUndoButton() {
-  let {shareButton, sharePopup} = SocialShareButton;
-  let undoButton = document.getElementById("editSharePopupUndoButton");
-  sharePopup.addEventListener("popuphidden", function listener() {
-    sharePopup.removeEventListener("popuphidden", listener);
+  let {shareButton, unsharePopup} = SocialShareButton;
+  let undoButton = document.getElementById("unsharePopupStopSharingButton");
+  unsharePopup.addEventListener("popuphidden", function listener() {
+    unsharePopup.removeEventListener("popuphidden", listener);
     is(shareButton.hasAttribute("shared"), false, "Share button should not have 'shared' attribute after Undo button is clicked");
     executeSoon(testShortcut);
   });
@@ -126,12 +126,12 @@ function testShortcut() {
 }
 
 function checkShortcutWorked(keyTarget) {
-  let {sharePopup, shareButton} = SocialShareButton;
+  let {unsharePopup, shareButton} = SocialShareButton;
   is(shareButton.hasAttribute("shared"), true, "Share button should be in the 'shared' state after keyboard shortcut is used");
 
   // Test a second invocation of the shortcut
-  sharePopup.addEventListener("popupshown", function listener() {
-    sharePopup.removeEventListener("popupshown", listener);
+  unsharePopup.addEventListener("popupshown", function listener() {
+    unsharePopup.removeEventListener("popupshown", listener);
     ok(true, "popup was shown after second use of keyboard shortcut");
     executeSoon(checkOKButton);
   });
@@ -139,9 +139,22 @@ function checkShortcutWorked(keyTarget) {
 }
 
 function checkOKButton() {
-  let okButton = document.getElementById("editSharePopupOkButton");
-  let undoButton = document.getElementById("editSharePopupUndoButton");
+  let okButton = document.getElementById("unsharePopupContinueSharingButton");
+  let undoButton = document.getElementById("unsharePopupStopSharingButton");
   is(document.activeElement, okButton, "ok button should be focused by default");
+
+  // the undo button text, label text, access keys, etc  should be as
+  // specified by the provider.
+  function isEltAttr(eltid, attr, expected) {
+    is(document.getElementById(eltid).getAttribute(attr), expected,
+       "element '" + eltid + "' has correct value for attribute '" + attr + "'");
+  }
+  isEltAttr("socialUserRecommendedText", "value", "You have already shared this page");
+  isEltAttr("unsharePopupContinueSharingButton", "label", "Got it!");
+  isEltAttr("unsharePopupContinueSharingButton", "accesskey", "G");
+  isEltAttr("unsharePopupStopSharingButton", "label", "Unshare it!");
+  isEltAttr("unsharePopupStopSharingButton", "accesskey", "U");
+  isEltAttr("socialUserPortrait", "aria-label", "Your pretty face");
 
   // This rest of particular test doesn't really apply on Mac, since buttons
   // aren't focusable by default.
@@ -183,10 +196,10 @@ function checkNextInTabOrder(element, next) {
 }
 
 function testCloseBySpace() {
-  let sharePopup = SocialShareButton.sharePopup;
-  is(document.activeElement.id, "editSharePopupOkButton", "testCloseBySpace, the ok button should be focused");
-  sharePopup.addEventListener("popuphidden", function listener() {
-    sharePopup.removeEventListener("popuphidden", listener);
+  let unsharePopup = SocialShareButton.unsharePopup;
+  is(document.activeElement.id, "unsharePopupContinueSharingButton", "testCloseBySpace, the ok button should be focused");
+  unsharePopup.addEventListener("popuphidden", function listener() {
+    unsharePopup.removeEventListener("popuphidden", listener);
     ok(true, "space closed the share popup");
     executeSoon(testStillSharedIn2Tabs);
   });
