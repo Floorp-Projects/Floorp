@@ -26,10 +26,7 @@ navigator.mozApps.install(parent.url2, null).onsuccess = function onInstall() {
   parent.app2 = this.result;
 
   navigator.mozApps.getSelf().onsuccess = function onGetSelf() {
-    parent.ok(this.result instanceof SpecialPowers.Ci.mozIDOMApplication,
-              "getSelf() from app's origin returns mozIDOMApplication");
-    parent.is(this.result.manifestURL, parent.url2,
-              "getSelf() from app's origin returns origin's app");
+    parent.ok(this.result == null, "getSelf() from app's origin returns null if called from a browser");
 
     // Tell the test page to continue the tests.
     parent.postMessage("next", "*");
