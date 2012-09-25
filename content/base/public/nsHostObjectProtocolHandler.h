@@ -10,8 +10,10 @@
 #include "nsCOMPtr.h"
 
 #define BLOBURI_SCHEME "blob"
+#define MEDIASTREAMURI_SCHEME "mediastream"
 
 class nsIDOMBlob;
+class nsIDOMMediaStream;
 class nsIPrincipal;
 class nsIInputStream;
 
@@ -44,17 +46,36 @@ public:
   NS_IMETHOD GetScheme(nsACString &result);
 };
 
+class nsMediaStreamProtocolHandler : public nsHostObjectProtocolHandler
+{
+public:
+  NS_IMETHOD GetScheme(nsACString &result);
+};
+
 inline bool IsBlobURI(nsIURI* aUri)
 {
   bool isBlob;
   return NS_SUCCEEDED(aUri->SchemeIs(BLOBURI_SCHEME, &isBlob)) && isBlob;
 }
 
+inline bool IsMediaStreamURI(nsIURI* aUri)
+{
+  bool isStream;
+  return NS_SUCCEEDED(aUri->SchemeIs(MEDIASTREAMURI_SCHEME, &isStream)) && isStream;
+}
+
 extern nsresult
 NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream);
+
+extern nsresult
+NS_GetStreamForMediaStreamURI(nsIURI* aURI, nsIDOMMediaStream** aStream);
 
 #define NS_BLOBPROTOCOLHANDLER_CID \
 { 0xb43964aa, 0xa078, 0x44b2, \
   { 0xb0, 0x6b, 0xfd, 0x4d, 0x1b, 0x17, 0x2e, 0x66 } }
+
+#define NS_MEDIASTREAMPROTOCOLHANDLER_CID \
+{ 0x27d1fa24, 0x2b73, 0x4db3, \
+	{ 0xab, 0x48, 0xb9, 0x83, 0x83, 0x40, 0xe0, 0x81 } }
 
 #endif /* nsHostObjectProtocolHandler_h */
