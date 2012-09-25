@@ -48,34 +48,30 @@ class TaggedProto
     JSObject *proto;
 };
 
-} /* namespace js */
-
-namespace JS {
-
 template <>
-struct RootKind<js::TaggedProto>
+struct RootKind<TaggedProto>
 {
     static ThingRootKind rootKind() { return THING_ROOT_OBJECT; };
 };
 
-template <> struct RootMethods<const js::TaggedProto>
+template <> struct RootMethods<const TaggedProto>
 {
-    static js::TaggedProto initial() { return js::TaggedProto(); }
+    static TaggedProto initial() { return TaggedProto(); }
     static ThingRootKind kind() { return THING_ROOT_OBJECT; }
-    static bool poisoned(const js::TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
+    static bool poisoned(const TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
 };
 
-template <> struct RootMethods<js::TaggedProto>
+template <> struct RootMethods<TaggedProto>
 {
-    static js::TaggedProto initial() { return js::TaggedProto(); }
+    static TaggedProto initial() { return TaggedProto(); }
     static ThingRootKind kind() { return THING_ROOT_OBJECT; }
-    static bool poisoned(const js::TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
+    static bool poisoned(const TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
 };
 
 template<class Outer>
 class TaggedProtoOperations
 {
-    const js::TaggedProto *value() const {
+    const TaggedProto *value() const {
         return static_cast<const Outer*>(this)->extract();
     }
 
@@ -89,26 +85,22 @@ class TaggedProtoOperations
 };
 
 template <>
-class HandleBase<js::TaggedProto> : public TaggedProtoOperations<Handle<js::TaggedProto> >
+class HandleBase<TaggedProto> : public TaggedProtoOperations<Handle<TaggedProto> >
 {
-    friend class TaggedProtoOperations<Handle<js::TaggedProto> >;
-    const js::TaggedProto * extract() const {
-        return static_cast<const Handle<js::TaggedProto>*>(this)->address();
+    friend class TaggedProtoOperations<Handle<TaggedProto> >;
+    const TaggedProto * extract() const {
+        return static_cast<const Handle<TaggedProto>*>(this)->address();
     }
 };
 
 template <>
-class RootedBase<js::TaggedProto> : public TaggedProtoOperations<Rooted<js::TaggedProto> >
+class RootedBase<TaggedProto> : public TaggedProtoOperations<Rooted<TaggedProto> >
 {
-    friend class TaggedProtoOperations<Rooted<js::TaggedProto> >;
-    const js::TaggedProto *extract() const {
-        return static_cast<const Rooted<js::TaggedProto> *>(this)->address();
+    friend class TaggedProtoOperations<Rooted<TaggedProto> >;
+    const TaggedProto *extract() const {
+        return static_cast<const Rooted<TaggedProto> *>(this)->address();
     }
 };
-
-} /* namespace JS */
-
-namespace js {
 
 class CallObject;
 

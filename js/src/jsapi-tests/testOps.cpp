@@ -55,7 +55,7 @@ BEGIN_TEST(testOps_bug559006)
     EXEC("function main() { while(1) return 0 + createMyObject(); }");
 
     for (int i = 0; i < 9; i++) {
-        JS::RootedValue rval(cx);
+        js::RootedValue rval(cx);
         CHECK(JS_CallFunctionName(cx, global, "main", 0, NULL, rval.address()));
         CHECK_SAME(rval, INT_TO_JSVAL(123));
     }

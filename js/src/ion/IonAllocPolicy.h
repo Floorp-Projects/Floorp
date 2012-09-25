@@ -23,7 +23,7 @@ class TempAllocator
     void *mark_;
 
     // Linked list of GCThings rooted by this allocator.
-    JS::CompilerRootNode *rootList_;
+    CompilerRootNode *rootList_;
 
   public:
     TempAllocator(LifoAlloc *lifoAlloc)
@@ -57,7 +57,7 @@ class TempAllocator
         return lifoAlloc_;
     }
 
-    JS::CompilerRootNode *&rootList()
+    CompilerRootNode *&rootList()
     {
         return rootList_;
     }

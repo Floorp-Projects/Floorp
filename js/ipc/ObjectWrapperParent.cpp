@@ -316,7 +316,7 @@ jsval_from_PObjectWrapperParent(JSContext* cx,
                                 const PObjectWrapperParent* from,
                                 jsval* to)
 {
-    JS::RootedObject obj(cx);
+    js::RootedObject obj(cx);
     if (!JSObject_from_PObjectWrapperParent(cx, from, &obj))
         return false;
     *to = OBJECT_TO_JSVAL(obj);
@@ -573,7 +573,7 @@ ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandle
 
     if (objp) {
         AutoResolveFlag arf(objp);
-        JS::RootedObject obj2(cx, objp);
+        js::RootedObject obj2(cx, objp);
         JS_DefinePropertyById(cx, obj2, id, JSVAL_VOID, NULL, NULL,
                               JSPROP_ENUMERATE);
     }
