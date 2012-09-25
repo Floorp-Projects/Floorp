@@ -2480,6 +2480,9 @@ nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, int32_t srcX, int32
     uint32_t stride = bufW * 2 /* 16 bpp */;
 
     void* data = env->GetDirectBufferAddress(buffer);
+    if (!data)
+        return NS_ERROR_FAILURE;
+
     nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(bufW, bufH), stride, gfxASurface::ImageFormatRGB16_565);
     if (surf->CairoStatus() != 0) {
         ALOG_BRIDGE("Error creating gfxImageSurface");
