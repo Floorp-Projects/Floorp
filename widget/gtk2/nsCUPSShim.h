@@ -28,24 +28,24 @@ typedef struct               /**** Destination ****/
     cups_option_t *options;    /* Options */
 } cups_dest_t;
 
-typedef cups_dest_t* (PR_CALLBACK *CupsGetDestType)(const char *printer,
-                                                    const char *instance,
-                                                    int num_dests, 
-                                                    cups_dest_t *dests);
-typedef int (PR_CALLBACK *CupsGetDestsType)(cups_dest_t **dests);
-typedef int (PR_CALLBACK *CupsFreeDestsType)(int         num_dests,
-                                             cups_dest_t *dests);
-typedef int (PR_CALLBACK *CupsPrintFileType)(const char    *printer,
-                                             const char    *filename,
-                                             const char    *title,
-                                             int           num_options,
-                                             cups_option_t *options);
-typedef int (PR_CALLBACK *CupsTempFdType)(char *filename,
-                                          int   length);
-typedef int (PR_CALLBACK *CupsAddOptionType)(const char    *name,
-                                             const char    *value,
-                                             int           num_options,
-                                             cups_option_t **options);
+typedef cups_dest_t* (*CupsGetDestType)(const char *printer,
+                                        const char *instance,
+                                        int num_dests,
+                                        cups_dest_t *dests);
+typedef int (*CupsGetDestsType)(cups_dest_t **dests);
+typedef int (*CupsFreeDestsType)(int         num_dests,
+                                 cups_dest_t *dests);
+typedef int (*CupsPrintFileType)(const char    *printer,
+                                 const char    *filename,
+                                 const char    *title,
+                                 int           num_options,
+                                 cups_option_t *options);
+typedef int (*CupsTempFdType)(char *filename,
+                              int   length);
+typedef int (*CupsAddOptionType)(const char    *name,
+                                 const char    *value,
+                                 int           num_options,
+                                 cups_option_t **options);
 
 struct PRLibrary;
 

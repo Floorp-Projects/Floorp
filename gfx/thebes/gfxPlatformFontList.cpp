@@ -207,7 +207,7 @@ gfxPlatformFontList::InitOtherFamilyNames()
     mFontFamilies.Enumerate(gfxPlatformFontList::InitOtherFamilyNamesProc, this);
 }
                                                          
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 gfxPlatformFontList::InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
                                               nsRefPtr<gfxFontFamily>& aFamilyEntry,
                                               void* userArg)
@@ -227,7 +227,7 @@ gfxPlatformFontList::InitFaceNameLists()
     mFontFamilies.Enumerate(gfxPlatformFontList::InitFaceNameListsProc, this);
 }
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 gfxPlatformFontList::InitFaceNameListsProc(nsStringHashKey::KeyType aKey,
                                            nsRefPtr<gfxFontFamily>& aFamilyEntry,
                                            void* userArg)
@@ -308,7 +308,7 @@ struct FontListData {
     nsTArray<nsString>& mListOfFonts;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 gfxPlatformFontList::HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
                                              nsRefPtr<gfxFontFamily>& aFamilyEntry,
                                              void *aUserArg)
@@ -358,9 +358,9 @@ struct FontFamilyListData {
         : mFamilyArray(aFamilyArray)
     {}
 
-    static PLDHashOperator PR_CALLBACK AppendFamily(nsStringHashKey::KeyType aKey,
-                                                    nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                                                    void *aUserArg)
+    static PLDHashOperator AppendFamily(nsStringHashKey::KeyType aKey,
+                                        nsRefPtr<gfxFontFamily>& aFamilyEntry,
+                                        void *aUserArg)
     {
         FontFamilyListData *data = static_cast<FontFamilyListData*>(aUserArg);
         data->mFamilyArray.AppendElement(aFamilyEntry);
@@ -461,7 +461,7 @@ gfxPlatformFontList::SystemFindFontForChar(const uint32_t aCh,
     return fontEntry;
 }
 
-PLDHashOperator PR_CALLBACK 
+PLDHashOperator 
 gfxPlatformFontList::FindFontForCharProc(nsStringHashKey::KeyType aKey, nsRefPtr<gfxFontFamily>& aFamilyEntry,
      void *userArg)
 {

@@ -221,7 +221,7 @@ static int assembleCmdLine(char *const *argv, PRUnichar **wideCmdLine,
 }
 #endif
 
-void PR_CALLBACK nsProcess::Monitor(void *arg)
+void nsProcess::Monitor(void *arg)
 {
     nsRefPtr<nsProcess> process = dont_AddRef(static_cast<nsProcess*>(arg));
 
