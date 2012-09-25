@@ -968,6 +968,11 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext)
                 isSupported = true;
             }
             break;
+        case WEBGL_compressed_texture_pvrtc:
+            if (gl->IsExtensionSupported(GLContext::IMG_texture_compression_pvrtc)) {
+                isSupported = true;
+            }
+            break;
         case WEBGL_depth_texture:
             if (gl->IsGLES2() && 
                 gl->IsExtensionSupported(GLContext::OES_packed_depth_stencil) &&
@@ -1035,6 +1040,12 @@ WebGLContext::GetExtension(const nsAString& aName)
         if (IsExtensionSupported(WEBGL_compressed_texture_atc))
             ext = WEBGL_compressed_texture_atc;
     }
+    else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_pvrtc"),
+             nsCaseInsensitiveStringComparator()))
+    {
+        if (IsExtensionSupported(WEBGL_compressed_texture_pvrtc))
+            ext = WEBGL_compressed_texture_pvrtc;
+    }
     else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"),
              nsCaseInsensitiveStringComparator()))
     {
@@ -1062,6 +1073,9 @@ WebGLContext::GetExtension(const nsAString& aName)
                 break;
             case WEBGL_compressed_texture_atc:
                 mExtensions[ext] = new WebGLExtensionCompressedTextureATC(this);
+                break;
+            case WEBGL_compressed_texture_pvrtc:
+                mExtensions[ext] = new WebGLExtensionCompressedTexturePVRTC(this);
                 break;
             case WEBGL_depth_texture:
                 mExtensions[ext] = new WebGLExtensionDepthTexture(this);
@@ -1586,6 +1600,8 @@ WebGLContext::GetSupportedExtensions(Nullable< nsTArray<nsString> > &retval)
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_s3tc"));
     if (IsExtensionSupported(WEBGL_compressed_texture_atc))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_atc"));
+    if (IsExtensionSupported(WEBGL_compressed_texture_pvrtc))
+        arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_pvrtc"));
     if (IsExtensionSupported(WEBGL_depth_texture))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"));
 }

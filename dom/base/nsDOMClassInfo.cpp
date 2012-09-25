@@ -1587,6 +1587,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(WebGLExtensionCompressedTextureATC, WebGLExtensionSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_ADDPROPERTY)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionCompressedTexturePVRTC, WebGLExtensionSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
   NS_DEFINE_CLASSINFO_DATA(WebGLExtensionDepthTexture, WebGLExtensionSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_ADDPROPERTY)
@@ -4286,6 +4289,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionCompressedTextureATC, nsIWebGLExtensionCompressedTextureATC)
     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionCompressedTextureATC)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionCompressedTexturePVRTC, nsIWebGLExtensionCompressedTexturePVRTC)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionCompressedTexturePVRTC)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionDepthTexture, nsIWebGLExtensionDepthTexture)

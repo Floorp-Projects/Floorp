@@ -1659,6 +1659,7 @@ public:
         ANGLE_texture_compression_dxt3,
         ANGLE_texture_compression_dxt5,
         AMD_compressed_ATC_texture,
+        IMG_texture_compression_pvrtc,
         EXT_framebuffer_blit,
         ANGLE_framebuffer_blit,
         EXT_framebuffer_multisample,
