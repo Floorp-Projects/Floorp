@@ -115,5 +115,24 @@ var tests = {
       }
     }
     port.postMessage({topic: "test-worker-chat", data: chatUrl});
+  },
+  testCloseOnLogout: function(next) {
+    const chatUrl = "https://example.com/browser/browser/base/content/test/social_chat.html";
+    let port = Social.provider.getWorkerPort();
+    ok(port, "provider has a port");
+    port.postMessage({topic: "test-init"});
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "got-chatbox-message":
+          ok(true, "got a chat window opened");
+          port.postMessage({topic: "test-logout"});
+          waitForCondition(function() document.getElementById("pinnedchats").firstChild == null,
+                           next,
+                           "chat windows didn't close");
+          break;
+      }
+    }
+    port.postMessage({topic: "test-worker-chat", data: chatUrl});
   }
 }
