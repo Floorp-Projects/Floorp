@@ -3462,6 +3462,10 @@ html|*#gcli-output-frame {
   border-bottom: none;
 }
 
+.chat-titlebar[activity] {
+  background-color: #ceeaff;
+}
+
 .chat-titlebar[selected] {
   background-color: #f0f0f0;
 }
@@ -3493,6 +3497,14 @@ html|*#gcli-output-frame {
 .chatbar-button > .toolbarbutton-text,
 .chatbar-button > .toolbarbutton-menu-dropmarker {
   display: none;
+}
+
+.chatbar-button[activity] {
+  background-color: #ceeaff;
+}
+
+.chatbar-button > menupopup > menuitem[activity] {
+  font-weight: bold;
 }
 
 .chatbar-innerbox {
