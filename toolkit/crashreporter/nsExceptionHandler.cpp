@@ -19,6 +19,7 @@
 #endif
 
 #include "nsIWindowsRegKey.h"
+#include "client/windows/crash_generation/client_info.h"
 #include "client/windows/crash_generation/crash_generation_server.h"
 #include "client/windows/handler/exception_handler.h"
 #include <DbgHelp.h>
@@ -44,7 +45,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIINIParser.h"
 #include "common/linux/linux_libc_support.h"
-#include "common/linux/linux_syscall_support.h"
+#include "third_party/lss/linux_syscall_support.h"
 #include "client/linux/crash_generation/client_info.h"
 #include "client/linux/crash_generation/crash_generation_server.h"
 #include "client/linux/handler/exception_handler.h"
@@ -94,6 +95,9 @@ CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
 
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
+#ifdef XP_LINUX
+using google_breakpad::MinidumpDescriptor;
+#endif
 using namespace mozilla;
 using mozilla::dom::CrashReporterChild;
 using mozilla::dom::PCrashReporterChild;
@@ -306,8 +310,7 @@ static bool gBlockUnhandledExceptionFilter = true;
 static LPTOP_LEVEL_EXCEPTION_FILTER WINAPI
 patched_SetUnhandledExceptionFilter (LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
 {
-  if (!gBlockUnhandledExceptionFilter ||
-      lpTopLevelExceptionFilter == google_breakpad::ExceptionHandler::HandleException) {
+  if (!gBlockUnhandledExceptionFilter) {
     // don't intercept
     return stub_SetUnhandledExceptionFilter(lpTopLevelExceptionFilter);
   }
@@ -369,7 +372,7 @@ inline void
 my_inttostring(intmax_t t, char* buffer, size_t buffer_length)
 {
   my_memset(buffer, 0, buffer_length);
-  my_itos(buffer, t, my_int_len(t));
+  my_uitos(buffer, t, my_uint_len(t));
 }
 #endif
 
@@ -408,8 +411,13 @@ void AnnotateOOMAllocationSize(size_t size)
   gOOMAllocationSize = size;
 }
 
-bool MinidumpCallback(const XP_CHAR* dump_path,
+bool MinidumpCallback(
+#ifdef XP_LINUX
+                      const MinidumpDescriptor& descriptor,
+#else
+                      const XP_CHAR* dump_path,
                       const XP_CHAR* minidump_id,
+#endif
                       void* context,
 #ifdef XP_WIN32
                       EXCEPTION_POINTERS* exinfo,
@@ -421,16 +429,27 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 
   static XP_CHAR minidumpPath[XP_PATH_MAX];
   int size = XP_PATH_MAX;
-  XP_CHAR* p = Concat(minidumpPath, dump_path, &size);
+  XP_CHAR* p;
+#ifndef XP_LINUX
+  p = Concat(minidumpPath, dump_path, &size);
   p = Concat(p, XP_PATH_SEPARATOR, &size);
   p = Concat(p, minidump_id, &size);
   Concat(p, dumpFileExtension, &size);
+#else
+  Concat(minidumpPath, descriptor.path(), &size);
+#endif
 
   static XP_CHAR extraDataPath[XP_PATH_MAX];
   size = XP_PATH_MAX;
+#ifndef XP_LINUX
   p = Concat(extraDataPath, dump_path, &size);
   p = Concat(p, XP_PATH_SEPARATOR, &size);
   p = Concat(p, minidump_id, &size);
+#else
+  p = Concat(extraDataPath, descriptor.path(), &size);
+  // Skip back past the .dmp extension.
+  p -= 4;
+#endif
   Concat(p, extraFileExtension, &size);
 
   if (headlessClient) {
@@ -898,8 +917,18 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #endif // XP_WIN32
 
   // now set the exception handler
+#ifdef XP_LINUX
+  MinidumpDescriptor descriptor(tempPath.get());
+#endif
+
   gExceptionHandler = new google_breakpad::
-    ExceptionHandler(tempPath.get(),
+    ExceptionHandler(
+#ifdef XP_LINUX
+                     descriptor,
+#else
+                     tempPath.get(),
+#endif
+
 #ifdef XP_WIN
                      FPEFilter,
 #else
@@ -907,15 +936,18 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #endif
                      MinidumpCallback,
                      nullptr,
-#if defined(XP_WIN32)
+#ifdef XP_WIN32
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
                      minidump_type,
                      (const wchar_t*) NULL,
                      NULL);
 #else
                      true
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
                        , NULL
+#endif
+#ifdef XP_LINUX
+                       , -1
 #endif
                       );
 #endif // XP_WIN32
@@ -927,6 +959,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   gExceptionHandler->set_handle_debug_exceptions(true);
   
   // protect the crash reporter from being unloaded
+  gBlockUnhandledExceptionFilter = true;
   gKernel32Intercept.Init("kernel32.dll");
   bool ok = gKernel32Intercept.AddHook("SetUnhandledExceptionFilter",
           reinterpret_cast<intptr_t>(patched_SetUnhandledExceptionFilter),
@@ -984,7 +1017,12 @@ bool GetMinidumpPath(nsAString& aPath)
   if (!gExceptionHandler)
     return false;
 
+#ifndef XP_LINUX
   aPath = CONVERT_XP_CHAR_TO_UTF16(gExceptionHandler->dump_path().c_str());
+#else
+  aPath = CONVERT_XP_CHAR_TO_UTF16(
+      gExceptionHandler->minidump_descriptor().directory().c_str());
+#endif
   return true;
 }
 
@@ -993,8 +1031,13 @@ nsresult SetMinidumpPath(const nsAString& aPath)
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;
 
-  gExceptionHandler->set_dump_path(CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading());
-
+#ifndef XP_LINUX
+  gExceptionHandler->set_dump_path(
+      CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading());
+#else
+  gExceptionHandler->set_minidump_descriptor(
+      MinidumpDescriptor(CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading()));
+#endif
   return NS_OK;
 }
 
@@ -1861,7 +1904,12 @@ GetMinidumpLimboDir(nsIFile** dir)
     return GetPendingDir(dir);
   }
   else {
+#ifndef XP_LINUX
     CreateFileFromPath(gExceptionHandler->dump_path(), dir);
+#else
+    CreateFileFromPath(gExceptionHandler->minidump_descriptor().directory(),
+                       dir);
+#endif
     return NULL != *dir;
   }
 }
@@ -2079,26 +2127,6 @@ OnChildProcessDumpRequested(void* aContext,
 #endif
                      getter_AddRefs(minidump));
 
-#if defined(MOZ_WIDGET_ANDROID)
-  // Do dump generation here since the CrashGenerationServer doesn't
-  // have access to the library mappings.
-  MappingMap::const_iterator iter = 
-    child_library_mappings.find(aClientInfo->pid_);
-  google_breakpad::AppMemoryList a;
-  if (iter == child_library_mappings.end()) {
-    NS_WARNING("No library mappings found for child, can't write minidump!");
-    return;
-  }
-
-  if (!google_breakpad::WriteMinidump(aFilePath->c_str(),
-                                      aClientInfo->pid_,
-                                      aClientInfo->crash_context,
-                                      aClientInfo->crash_context_size,
-                                      iter->second,
-                                      a))
-    return;
-#endif
-
   if (!WriteExtraForMinidump(minidump,
                              Blacklist(kSubprocessBlacklist,
                                        ArrayLength(kSubprocessBlacklist)),
@@ -2142,10 +2170,12 @@ OOPInitialized()
   return pidToMinidump != NULL;
 }
 
+#ifdef XP_MACOSX
 static bool ChildFilter(void *context) {
   mozilla::DisableWritePoisoning();
   return true;
 }
+#endif
 
 void
 OOPInit()
@@ -2170,6 +2200,7 @@ OOPInit()
     NULL, NULL,                 // we don't care about process connect here
     OnChildProcessDumpRequested, NULL,
     NULL, NULL,                 // we don't care about process exit here
+    NULL, NULL,                 // we don't care about upload request here
     true,                       // automatically generate dumps
     &dumpPath);
 
@@ -2178,18 +2209,13 @@ OOPInit()
                                                   &clientSocketFd))
     NS_RUNTIMEABORT("can't create crash reporter socketpair()");
 
-  const std::string dumpPath = gExceptionHandler->dump_path();
-  bool generateDumps = true;
-#if defined(MOZ_WIDGET_ANDROID)
-  // On Android, the callback will do dump generation, since it needs
-  // to pass the library mappings.
-  generateDumps = false;
-#endif
+  const std::string dumpPath =
+      gExceptionHandler->minidump_descriptor().directory();
   crashServer = new CrashGenerationServer(
     serverSocketFd,
     OnChildProcessDumpRequested, NULL,
     NULL, NULL,                 // we don't care about process exit here
-    generateDumps,
+    true,
     &dumpPath);
 
 #elif defined(XP_MACOSX)
@@ -2450,8 +2476,13 @@ SetRemoteExceptionHandler()
 {
   NS_ABORT_IF_FALSE(!gExceptionHandler, "crash client already init'd");
 
+#ifndef XP_LINUX
+  xpstring path = "";
+#else
+  google_breakpad::MinidumpDescriptor path("");
+#endif
   gExceptionHandler = new google_breakpad::
-    ExceptionHandler("",
+    ExceptionHandler(path,
                      NULL,    // no filter callback
                      NULL,    // no minidump callback
                      NULL,    // no callback context
@@ -2540,8 +2571,13 @@ RenameAdditionalHangMinidump(nsIFile* minidump, nsIFile* childMinidump,
 }
 
 static bool
-PairedDumpCallback(const XP_CHAR* dump_path,
+PairedDumpCallback(
+#ifdef XP_LINUX
+                   const MinidumpDescriptor& descriptor,
+#else
+                   const XP_CHAR* dump_path,
                    const XP_CHAR* minidump_id,
+#endif
                    void* context,
 #ifdef XP_WIN32
                    EXCEPTION_POINTERS* /*unused*/,
@@ -2551,18 +2587,28 @@ PairedDumpCallback(const XP_CHAR* dump_path,
 {
   nsCOMPtr<nsIFile>& minidump = *static_cast< nsCOMPtr<nsIFile>* >(context);
 
-  xpstring dump(dump_path);
+  xpstring dump;
+#ifdef XP_LINUX
+  dump = descriptor.path();
+#else
+  dump = dump_path;
   dump += XP_PATH_SEPARATOR;
   dump += minidump_id;
   dump += dumpFileExtension;
+#endif
 
   CreateFileFromPath(dump, getter_AddRefs(minidump));
   return true;
 }
 
 static bool
-PairedDumpCallbackExtra(const XP_CHAR* dump_path,
+PairedDumpCallbackExtra(
+#ifdef XP_LINUX
+                        const MinidumpDescriptor& descriptor,
+#else
+                        const XP_CHAR* dump_path,
                         const XP_CHAR* minidump_id,
+#endif
                         void* context,
 #ifdef XP_WIN32
                         EXCEPTION_POINTERS* /*unused*/,
@@ -2570,7 +2616,13 @@ PairedDumpCallbackExtra(const XP_CHAR* dump_path,
 #endif
                         bool succeeded)
 {
-  PairedDumpCallback(dump_path, minidump_id, context,
+  PairedDumpCallback(
+#ifdef XP_LINUX
+                     descriptor,
+#else
+                     dump_path, minidump_id,
+#endif
+                     context,
 #ifdef XP_WIN32
                      nullptr, nullptr,
 #endif
@@ -2628,12 +2680,19 @@ CreatePairedMinidumps(ProcessHandle childPid,
   ThreadId childThread = childBlamedThread;
 #endif
 
+  xpstring dump_path;
+#ifndef XP_LINUX
+  dump_path = gExceptionHandler->dump_path();
+#else
+  dump_path = gExceptionHandler->minidump_descriptor().directory();
+#endif
+
   // dump the child
   nsCOMPtr<nsIFile> childMinidump;
   if (!google_breakpad::ExceptionHandler::WriteMinidumpForChild(
          childPid,
          childThread,
-         gExceptionHandler->dump_path(),
+         dump_path,
          PairedDumpCallbackExtra,
          static_cast<void*>(&childMinidump)))
     return false;
@@ -2644,8 +2703,10 @@ CreatePairedMinidumps(ProcessHandle childPid,
   // dump the parent
   nsCOMPtr<nsIFile> parentMinidump;
   if (!google_breakpad::ExceptionHandler::WriteMinidump(
-         gExceptionHandler->dump_path(),
+         dump_path,
+#ifdef XP_MACOSX
          true,                  // write exception stream
+#endif
          PairedDumpCallback,
          static_cast<void*>(&parentMinidump))) {
 
@@ -2718,8 +2779,8 @@ void AddLibraryMappingForChild(uint32_t    childPid,
   info.size = mapping_length;
   info.offset = file_offset;
   strcpy(info.name, library_name);
- 
-  std::pair<google_breakpad::MappingInfo, u_int8_t[sizeof(MDGUID)]> mapping;
+
+  struct google_breakpad::MappingEntry mapping;
   mapping.first = info;
   u_int8_t guid[sizeof(MDGUID)];
   FileIDToGUID(file_id, guid);

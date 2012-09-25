@@ -34,14 +34,14 @@
 #include <assert.h>
 #include <cxxabi.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include <algorithm>
 
 #include "common/stabs_to_module.h"
+#include "common/using_std_string.h"
 
 namespace google_breakpad {
-
-using std::string;
 
 // Demangle using abi call.
 // Older GCC may not support it.
@@ -129,6 +129,22 @@ bool StabsToModule::Line(uint64_t address, const char *name, int number) {
   line.file = current_source_file_;
   line.number = number;
   current_function_->lines.push_back(line);
+  return true;
+}
+
+bool StabsToModule::Extern(const string &name, uint64_t address) {
+  Module::Extern *ext = new Module::Extern;
+  // Older libstdc++ demangle implementations can crash on unexpected
+  // input, so be careful about what gets passed in.
+  if (name.compare(0, 3, "__Z") == 0) {
+    ext->name = Demangle(name.substr(1));
+  } else if (name[0] == '_') {
+    ext->name = name.substr(1);
+  } else {
+    ext->name = name;
+  }
+  ext->address = address;
+  module_->AddExtern(ext);
   return true;
 }
 

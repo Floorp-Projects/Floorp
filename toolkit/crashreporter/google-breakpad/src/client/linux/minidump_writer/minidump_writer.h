@@ -30,41 +30,57 @@
 #ifndef CLIENT_LINUX_MINIDUMP_WRITER_MINIDUMP_WRITER_H_
 #define CLIENT_LINUX_MINIDUMP_WRITER_MINIDUMP_WRITER_H_
 
-#include <list>
-#include <utility>
-
 #include <stdint.h>
 #include <unistd.h>
 
+#include <list>
+#include <utility>
+
+#include "client/linux/minidump_writer/linux_dumper.h"
 #include "google_breakpad/common/minidump_format.h"
 
 namespace google_breakpad {
 
+class ExceptionHandler;
+
+struct MappingEntry {
+  MappingInfo first;
+  u_int8_t second[sizeof(MDGUID)];
+};
+
 // A list of <MappingInfo, GUID>
-typedef std::pair<struct MappingInfo, u_int8_t[sizeof(MDGUID)]> MappingEntry;
 typedef std::list<MappingEntry> MappingList;
 
 // These entries store a list of memory regions that the client wants included
 // in the minidump.
 struct AppMemory {
-  AppMemory(void *ptr, size_t length) : ptr(ptr), length(length) {}
-
-  void *ptr;
+  void* ptr;
   size_t length;
+
+  bool operator==(const struct AppMemory& other) const {
+    return ptr == other.ptr;
+  }
+
+  bool operator==(const void* other) const {
+    return ptr == other;
+  }
 };
 typedef std::list<AppMemory> AppMemoryList;
 
-// Write a minidump to the filesystem. This function does not malloc nor use
+// Writes a minidump to the filesystem. These functions do not malloc nor use
 // libc functions which may. Thus, it can be used in contexts where the state
 // of the heap may be corrupt.
-//   filename: the filename to write to. This is opened O_EXCL and fails if
-//     open fails.
+//   minidump_path: the path to the file to write to. This is opened O_EXCL and
+//     fails open fails.
 //   crashing_process: the pid of the crashing process. This must be trusted.
 //   blob: a blob of data from the crashing process. See exception_handler.h
 //   blob_size: the length of |blob|, in bytes
 //
 // Returns true iff successful.
-bool WriteMinidump(const char* filename, pid_t crashing_process,
+bool WriteMinidump(const char* minidump_path, pid_t crashing_process,
+                   const void* blob, size_t blob_size);
+// Same as above but takes an open file descriptor instead of a path.
+bool WriteMinidump(int minidump_fd, pid_t crashing_process,
                    const void* blob, size_t blob_size);
 
 // Alternate form of WriteMinidump() that works with processes that
@@ -72,15 +88,24 @@ bool WriteMinidump(const char* filename, pid_t crashing_process,
 // meaningful, it will be the one from which a crash signature is
 // extracted.  It is not expected that this function will be called
 // from a compromised context, but it is safe to do so.
-bool WriteMinidump(const char* filename, pid_t process,
+bool WriteMinidump(const char* minidump_path, pid_t process,
                    pid_t process_blamed_thread);
 
-// This overload also allows passing a list of known mappings and
+// These overloads also allow passing a list of known mappings and
 // a list of additional memory regions to be included in the minidump.
-bool WriteMinidump(const char* filename, pid_t crashing_process,
+bool WriteMinidump(const char* minidump_path, pid_t crashing_process,
                    const void* blob, size_t blob_size,
                    const MappingList& mappings,
                    const AppMemoryList& appdata);
+bool WriteMinidump(int minidump_fd, pid_t crashing_process,
+                   const void* blob, size_t blob_size,
+                   const MappingList& mappings,
+                   const AppMemoryList& appdata);
+
+bool WriteMinidump(const char* filename,
+                   const MappingList& mappings,
+                   const AppMemoryList& appdata,
+                   LinuxDumper* dumper);
 
 }  // namespace google_breakpad
 

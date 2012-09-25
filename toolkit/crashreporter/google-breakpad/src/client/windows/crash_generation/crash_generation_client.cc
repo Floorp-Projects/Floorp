@@ -188,6 +188,23 @@ bool CrashGenerationClient::Register() {
   return success;
 }
 
+bool CrashGenerationClient::RequestUpload(DWORD crash_id) {
+  HANDLE pipe = ConnectToServer();
+  if (!pipe) {
+    return false;
+  }
+
+  CustomClientInfo custom_info = {NULL, 0};
+  ProtocolMessage msg(MESSAGE_TAG_UPLOAD_REQUEST, crash_id,
+                      static_cast<MINIDUMP_TYPE>(NULL), NULL, NULL, NULL,
+                      custom_info, NULL, NULL, NULL);
+  DWORD bytes_count = 0;
+  bool success = WriteFile(pipe, &msg, sizeof(msg), &bytes_count, NULL) != 0;
+
+  CloseHandle(pipe);
+  return success;
+}
+
 HANDLE CrashGenerationClient::ConnectToServer() {
   HANDLE pipe = ConnectToPipe(pipe_name_.c_str(),
                               kPipeDesiredAccess,
@@ -244,7 +261,7 @@ bool CrashGenerationClient::RegisterClient(HANDLE pipe) {
   crash_event_ = reply.dump_request_handle;
   crash_generated_ = reply.dump_generated_handle;
   server_alive_ = reply.server_alive_handle;
-  server_process_id_ = reply.pid;
+  server_process_id_ = reply.id;
 
   return true;
 }
@@ -288,7 +305,7 @@ HANDLE CrashGenerationClient::ConnectToPipe(const wchar_t* pipe_name,
 bool CrashGenerationClient::ValidateResponse(
     const ProtocolMessage& msg) const {
   return (msg.tag == MESSAGE_TAG_REGISTRATION_RESPONSE) &&
-         (msg.pid != 0) &&
+         (msg.id != 0) &&
          (msg.dump_request_handle != NULL) &&
          (msg.dump_generated_handle != NULL) &&
          (msg.server_alive_handle != NULL);
