@@ -41,6 +41,7 @@
 #include "common/dwarf/bytereader-inl.h"
 #include "common/dwarf/dwarf2reader_test_common.h"
 #include "common/dwarf/dwarf2reader.h"
+#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 using google_breakpad::test_assembler::Endianness;
@@ -61,7 +62,6 @@ using dwarf2reader::ENDIANNESS_BIG;
 using dwarf2reader::ENDIANNESS_LITTLE;
 using dwarf2reader::SectionMap;
 
-using std::string;
 using std::vector;
 using testing::InSequence;
 using testing::Pointee;
@@ -98,7 +98,7 @@ class MockDwarf2Handler: public Dwarf2Handler {
   MOCK_METHOD4(ProcessAttributeString, void(uint64 offset,
                                             enum DwarfAttribute attr,
                                             enum DwarfForm form,
-                                            const std::string& data));
+                                            const string& data));
   MOCK_METHOD4(ProcessAttributeSignature, void(uint64 offset,
                                                DwarfAttribute attr,
                                                enum DwarfForm form,

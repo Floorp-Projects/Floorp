@@ -41,6 +41,7 @@
 
 #include "common/dwarf/dwarf2enums.h"
 #include "common/test_assembler.h"
+#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
@@ -49,7 +50,6 @@ using dwarf2reader::DwarfPointerEncoding;
 using google_breakpad::test_assembler::Endianness;
 using google_breakpad::test_assembler::Label;
 using google_breakpad::test_assembler::Section;
-using std::string;
 
 class CFISection: public Section {
  public:

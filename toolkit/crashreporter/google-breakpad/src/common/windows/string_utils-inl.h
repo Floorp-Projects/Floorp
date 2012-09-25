@@ -87,6 +87,9 @@ class WindowsStringUtils {
   // without setting wcs.
   static bool safe_mbstowcs(const string &mbs, wstring *wcs);
 
+  // The inverse of safe_mbstowcs.
+  static bool safe_wcstombs(const wstring &wcs, string *mbs);
+
   // Returns the base name of a file, e.g. strips off the path.
   static wstring GetBaseName(const wstring &filename);
 
