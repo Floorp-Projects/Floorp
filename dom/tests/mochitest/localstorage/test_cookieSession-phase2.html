@@ -9,11 +9,11 @@
 
 function startTest()
 {
-  var io = SpecialPowers.wrap(Components).classes["@mozilla.org/network/io-service;1"]
-    .getService(Components.interfaces.nsIIOService);
+  var io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+    .getService(SpecialPowers.Ci.nsIIOService);
   var uri = io.newURI(window.location, "", null);
-  var cp = SpecialPowers.wrap(Components).classes["@mozilla.org/cookie/permission;1"]
-    .getService(Components.interfaces.nsICookiePermission);
+  var cp = SpecialPowers.Cc["@mozilla.org/cookie/permission;1"]
+    .getService(SpecialPowers.Ci.nsICookiePermission);
 
   is(localStorage.getItem("session only"), "session value", "Value present when cookies in session-only mode");
   is(localStorage.getItem("persistent1"), "persistent value 1", "Persistent value present");
@@ -35,21 +35,21 @@ function startTest()
 
   localStorage.setItem("session only 2", "must be deleted on drop of session-only cookies permissions");
 
-  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
 
   is(localStorage.getItem("session only"), null, "No value when cookies are in default mode");
   is(localStorage.getItem("session only 2"), null, "No value when cookies are in default mode");
   is(localStorage.getItem("persistent1"), "persistent value 1", "Persistent value present");
   is(localStorage.getItem("persistent2"), "persistent value 2", "Persistent value present");
 
-  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
 
   is(localStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
   is(localStorage.getItem("session only 2"), null, "Value not present when cookies in session-only mode after delete");
   is(localStorage.getItem("persistent1"), "persistent value 1", "Persistent value present again");
   is(localStorage.getItem("persistent2"), "persistent value 2", "Persistent value present again");
 
-  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
 
   localStorage.clear();
 
@@ -57,14 +57,14 @@ function startTest()
   is(localStorage.getItem("persistent1"), null, "Persistent value not present after delete");
   is(localStorage.getItem("persistent2"), null, "Persistent value not present after delete");
 
-  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
 
   is(localStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
   is(localStorage.getItem("session only 2"), null, "No value when cookies are in default mode");
   is(localStorage.getItem("persistent1"), null, "Persistent value not present in session only after delete");
   is(localStorage.getItem("persistent2"), null, "Persistent value not present in session only after delete");
 
-  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
 
   SimpleTest.finish();
 }

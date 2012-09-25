@@ -17,7 +17,7 @@
  * Initialize the exception constructor/prototype hierarchy.
  */
 extern JSObject *
-js_InitExceptionClasses(JSContext *cx, JSObject *obj);
+js_InitExceptionClasses(JSContext *cx, js::HandleObject obj);
 
 /*
  * Given a JSErrorReport, check to see if there is an exception associated with

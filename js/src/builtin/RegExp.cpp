@@ -480,7 +480,7 @@ static JSPropertySpec regexp_static_props[] = {
 };
 
 JSObject *
-js_InitRegExpClass(JSContext *cx, JSObject *obj)
+js_InitRegExpClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 

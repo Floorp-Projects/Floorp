@@ -41,7 +41,7 @@ TimeClip(double time)
 } /* namespace js */
 
 extern JSObject *
-js_InitDateClass(JSContext *cx, JSObject *obj);
+js_InitDateClass(JSContext *cx, js::HandleObject obj);
 
 /*
  * These functions provide a C interface to the date/time object

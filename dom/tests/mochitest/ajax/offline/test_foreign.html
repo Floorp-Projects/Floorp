@@ -21,8 +21,8 @@
 
 function manifestUpdated()
 {
-  var appCacheService = Components.classes["@mozilla.org/network/application-cache-service;1"]
-    .getService(Components.interfaces.nsIApplicationCacheService);
+  var appCacheService = SpecialPowers.Components.classes["@mozilla.org/network/application-cache-service;1"]
+    .getService(SpecialPowers.Ci.nsIApplicationCacheService);
 
   foreign1cache = appCacheService.chooseApplicationCache(
     "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");

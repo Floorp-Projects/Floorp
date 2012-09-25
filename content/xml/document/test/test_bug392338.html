@@ -48,12 +48,10 @@ obs.prototype = {
       if (ir instanceof this.window.Components.interfaces.nsIClassInfo) {
         var count = {};
         var interfaces = ir.
-                     QueryInterface(this.window.Components
-                                        .interfaces.nsIClassInfo).
+                     QueryInterface(this.window.Components.interfaces.nsIClassInfo).
                      getInterfaces(count).
                      map(function(id) {
-                                return this.window.Components
-                                                  .interfacesByID[id].toString();
+                                return this.window.Components.interfacesByID[id].toString();
                          });
         this.window.isnot(interfaces.indexOf("nsIInterfaceRequestor"), -1,
                           "Must have interface requestor classinfo");

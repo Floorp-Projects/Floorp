@@ -13,7 +13,7 @@ document.getElementById('url').innerHTML = window.location;
   var alreadyBlocked = false;
 
   addEventListener('keydown', function(e) {
-    if (e.keyCode == Components.interfaces.nsIDOMKeyEvent.DOM_VK_ESCAPE &&
+    if (e.keyCode == SpecialPowers.Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE &&
         alreadyBlocked == false) {
       alreadyBlocked = true;
       e.preventDefault();

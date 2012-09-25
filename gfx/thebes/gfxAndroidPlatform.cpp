@@ -164,7 +164,7 @@ gfxAndroidPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                                                      aLength);
 }
 
-RefPtr<ScaledFont>
+TemporaryRef<ScaledFont>
 gfxAndroidPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     NativeFont nativeFont;

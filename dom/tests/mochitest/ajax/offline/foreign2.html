@@ -10,8 +10,8 @@
 
 function manifestUpdated()
 {
-  var appCacheService = Components.classes["@mozilla.org/network/application-cache-service;1"]
-    .getService(Components.interfaces.nsIApplicationCacheService);
+  var appCacheService = SpecialPowers.Components.classes["@mozilla.org/network/application-cache-service;1"]
+    .getService(SpecialPowers.Ci.nsIApplicationCacheService);
 
   var foreign2cache = appCacheService.chooseApplicationCache(
     "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
@@ -30,8 +30,8 @@ function manifestUpdated()
 
 function onLoaded()
 {
-  var appCacheService = Components.classes["@mozilla.org/network/application-cache-service;1"]
-    .getService(Components.interfaces.nsIApplicationCacheService);
+  var appCacheService = SpecialPowers.Components.classes["@mozilla.org/network/application-cache-service;1"]
+    .getService(SpecialPowers.Ci.nsIApplicationCacheService);
 
   var foreign1cache = appCacheService.getActiveCache(
     "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest");
@@ -47,7 +47,7 @@ function onLoaded()
 
   try
   {
-    OfflineTest.ok(applicationCache.status == Components.interfaces.nsIDOMOfflineResourceList.UNCACHED,
+    OfflineTest.ok(applicationCache.status == SpecialPowers.Ci.nsIDOMOfflineResourceList.UNCACHED,
         "there is no associated application cache");
   }
   catch (ex)

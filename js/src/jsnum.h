@@ -31,7 +31,7 @@ FinishRuntimeNumberState(JSRuntime *rt);
 
 /* Initialize the Number class, returning its prototype object. */
 extern JSObject *
-js_InitNumberClass(JSContext *cx, JSObject *obj);
+js_InitNumberClass(JSContext *cx, js::HandleObject obj);
 
 /*
  * String constants for global function names, used in jsapi.c and jsnum.c.

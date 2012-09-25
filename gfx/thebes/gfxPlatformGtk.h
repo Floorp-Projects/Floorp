@@ -35,7 +35,7 @@ public:
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxContentType contentType);
 
-    mozilla::RefPtr<mozilla::gfx::ScaledFont>
+    mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 
     nsresult GetFontList(nsIAtom *aLangGroup,

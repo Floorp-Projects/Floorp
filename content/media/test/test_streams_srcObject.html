@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test interactions of src and srcObject</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body onload="doTest()">
+<audio id="a"></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var a = document.getElementById('a');
+a.src = getPlayableAudio(gSmallTests).name;
+
+var b = new Audio();
+
+function doTest() {
+  var newSrc = a.src + "?2";
+  b.src = newSrc;
+  is(b.mozSrcObject, null, "Initial srcObject is null");
+  var stream = a.mozCaptureStream();
+  b.mozSrcObject = stream;
+  is(b.mozSrcObject, stream, "Stream set correctly");
+  b.mozSrcObject = "invalid";
+  is(b.mozSrcObject, stream, "Stream not set to invalid value");
+  is(b.src, newSrc, "src attribute not affected by setting srcObject");
+  var step = 0;
+  b.addEventListener("loadedmetadata", function() {
+    if (step == 0) {
+      is(b.currentSrc, "", "currentSrc set to empty string while playing srcObject");
+      b.mozSrcObject = null;
+      is(b.mozSrcObject, null, "Stream set to null");
+      // The resource selection algorithm will run again and choose b.src
+    } else if (step == 1) {
+      is(b.currentSrc, b.src, "currentSrc set to src now that srcObject is null");
+      SimpleTest.finish();
+    }
+    ++step;
+  });
+}
+</script>
+</pre>
+</body>
+</html>

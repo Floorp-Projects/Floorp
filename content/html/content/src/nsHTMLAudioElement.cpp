@@ -11,6 +11,7 @@
 #include "nsIDocument.h"
 #include "jsfriendapi.h"
 #include "nsContentUtils.h"
+#include "nsJSUtils.h"
 
 using namespace mozilla::dom;
 
@@ -93,9 +94,18 @@ nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
     return NS_OK;
   }
 
-  // The only (optional) argument is the src of the audio (which can
-  // be a URL string or a MediaStream object)
-  return SetSrc(aContext, argv[0]);
+  // The only (optional) argument is the url of the audio
+  JSString* jsstr = JS_ValueToString(aContext, argv[0]);
+  if (!jsstr)
+    return NS_ERROR_FAILURE;
+
+  nsDependentJSString str;
+  if (!str.init(aContext, jsstr))
+    return NS_ERROR_FAILURE;
+
+  // The only (optional) argument is the src of the audio (which must
+  // be a URL string), used to initialize the 'src' attribute.
+  return SetSrc(str);
 }
 
 NS_IMETHODIMP

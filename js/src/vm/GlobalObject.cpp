@@ -33,7 +33,7 @@
 using namespace js;
 
 JSObject *
-js_InitObjectClass(JSContext *cx, JSObject *obj)
+js_InitObjectClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 
@@ -41,7 +41,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-js_InitFunctionClass(JSContext *cx, JSObject *obj)
+js_InitFunctionClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 

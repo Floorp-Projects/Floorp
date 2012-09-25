@@ -36,6 +36,7 @@ namespace gfx {
 class SourceSurface;
 class DataSourceSurface;
 class DrawTarget;
+class DrawEventRecorder;
 
 struct NativeSurface {
   NativeSurfaceType mType;
@@ -456,6 +457,8 @@ class ScaledFont : public RefCounted<ScaledFont>
 public:
   virtual ~ScaledFont() {}
 
+  typedef void (*FontFileDataOutput)(const uint8_t *aData, uint32_t aLength, uint32_t aIndex, Float aGlyphSize, void *aBaton);
+
   virtual FontType GetType() const = 0;
 
   /* This allows getting a path that describes the outline of a set of glyphs.
@@ -472,8 +475,19 @@ public:
    */
   virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder) = 0;
 
+  virtual bool GetFontFileData(FontFileDataOutput, void *) { return false; }
+
+  void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
+    mUserData.Add(key, userData, destroy);
+  }
+  void *GetUserData(UserDataKey *key) {
+    return mUserData.Get(key);
+  }
+
 protected:
   ScaledFont() {}
+
+  UserData mUserData;
 };
 
 #ifdef MOZ_ENABLE_FREETYPE
@@ -820,6 +834,12 @@ protected:
   SurfaceFormat mFormat;
 };
 
+class DrawEventRecorder : public RefCounted<DrawEventRecorder>
+{
+public:
+  virtual ~DrawEventRecorder() { }
+};
+
 class GFX2D_API Factory
 {
 public:
@@ -829,12 +849,27 @@ public:
 
   static TemporaryRef<DrawTarget>
     CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
-  
+
+  static TemporaryRef<DrawTarget>
+    CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT);
+     
   static TemporaryRef<DrawTarget>
     CreateDrawTargetForData(BackendType aBackend, unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
 
   static TemporaryRef<ScaledFont>
     CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize);
+
+  /**
+   * This creates a ScaledFont from TrueType data.
+   *
+   * aData - Pointer to the data
+   * aSize - Size of the TrueType data
+   * aFaceIndex - Index of the font face in the truetype data this ScaledFont needs to represent.
+   * aGlyphSize - Size of the glyphs in this ScaledFont
+   * aType - Type of ScaledFont that should be created.
+   */
+  static TemporaryRef<ScaledFont>
+    CreateScaledFontForTrueTypeData(uint8_t *aData, uint32_t aSize, uint32_t aFaceIndex, Float aGlyphSize, FontType aType);
 
   /*
    * This creates a scaled font with an associated cairo_scaled_font_t, and
@@ -862,6 +897,11 @@ public:
     CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
                                     const IntSize &aSize, SurfaceFormat aFormat);
 
+  static TemporaryRef<DrawEventRecorder>
+    CreateEventRecorderForFile(const char *aFilename);
+
+  static void SetGlobalEventRecorder(DrawEventRecorder *aRecorder);
+
 #ifdef WIN32
   static TemporaryRef<DrawTarget> CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
   static TemporaryRef<DrawTarget>
@@ -881,6 +921,8 @@ public:
 private:
   static ID3D10Device1 *mD3D10Device;
 #endif
+
+  static DrawEventRecorder *mRecorder;
 };
 
 }

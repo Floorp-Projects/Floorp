@@ -5,7 +5,7 @@
 // whitelisted key events.
 "use strict";
 
-let Ci = Components.interfaces;
+let Ci = SpecialPowers.Ci;
 
 let whitelistedEvents = [
   Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE,   // Back button.
