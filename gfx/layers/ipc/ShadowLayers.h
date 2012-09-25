@@ -319,6 +319,8 @@ public:
   virtual int32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   void SetMaxTextureSize(int32_t aMaxTextureSize) { mMaxTextureSize = aMaxTextureSize; }
 
+  static void PlatformSyncBeforeUpdate();
+
 protected:
   ShadowLayerForwarder();
 
@@ -378,8 +380,6 @@ private:
   PlatformCloseDescriptor(const SurfaceDescriptor& aDescriptor);
 
   bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
-
-  static void PlatformSyncBeforeUpdate();
 
   Transaction* mTxn;
   int32_t mMaxTextureSize;
