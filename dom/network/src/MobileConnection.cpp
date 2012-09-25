@@ -8,6 +8,7 @@
 #include "nsDOMEvent.h"
 #include "nsIObserverService.h"
 #include "USSDReceivedEvent.h"
+#include "DataErrorEvent.h"
 #include "mozilla/Services.h"
 #include "IccManager.h"
 
@@ -18,6 +19,7 @@
 #define CARDSTATECHANGE_EVENTNAME  NS_LITERAL_STRING("cardstatechange")
 #define ICCINFOCHANGE_EVENTNAME    NS_LITERAL_STRING("iccinfochange")
 #define USSDRECEIVED_EVENTNAME     NS_LITERAL_STRING("ussdreceived")
+#define DATAERROR_EVENTNAME        NS_LITERAL_STRING("dataerror")
 
 DOMCI_DATA(MozMobileConnection, mozilla::dom::network::MobileConnection)
 
@@ -30,6 +32,7 @@ const char* kDataChangedTopic      = "mobile-connection-data-changed";
 const char* kCardStateChangedTopic = "mobile-connection-cardstate-changed";
 const char* kIccInfoChangedTopic   = "mobile-connection-iccinfo-changed";
 const char* kUssdReceivedTopic     = "mobile-connection-ussd-received";
+const char* kDataErrorTopic        = "mobile-connection-data-error";
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MobileConnection)
 
@@ -57,6 +60,7 @@ NS_IMPL_EVENT_HANDLER(MobileConnection, iccinfochange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, voicechange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
+NS_IMPL_EVENT_HANDLER(MobileConnection, dataerror)
 
 MobileConnection::MobileConnection()
 {
@@ -85,6 +89,7 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
   obs->AddObserver(this, kCardStateChangedTopic, false);
   obs->AddObserver(this, kIccInfoChangedTopic, false);
   obs->AddObserver(this, kUssdReceivedTopic, false);
+  obs->AddObserver(this, kDataErrorTopic, false);
 
   mIccManager = new icc::IccManager();
   mIccManager->Init(aWindow);
@@ -104,6 +109,7 @@ MobileConnection::Shutdown()
   obs->RemoveObserver(this, kCardStateChangedTopic);
   obs->RemoveObserver(this, kIccInfoChangedTopic);
   obs->RemoveObserver(this, kUssdReceivedTopic);
+  obs->RemoveObserver(this, kDataErrorTopic);
 
   if (mIccManager) {
     mIccManager->Shutdown();
@@ -147,7 +153,18 @@ MobileConnection::Observe(nsISupports* aSubject,
     nsresult rv =
       event->Dispatch(ToIDOMEventTarget(), USSDRECEIVED_EVENTNAME);
     NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
 
+  if (!strcmp(aTopic, kDataErrorTopic)) {
+    nsString dataerror;
+    dataerror.Assign(aData);
+    nsRefPtr<DataErrorEvent> event = DataErrorEvent::Create(dataerror);
+    NS_ASSERTION(event, "This should never fail!");
+
+    nsresult rv =
+      event->Dispatch(ToIDOMEventTarget(), DATAERROR_EVENTNAME);
+    NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 
