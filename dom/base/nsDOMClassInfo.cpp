@@ -7111,7 +7111,7 @@ static JSBool
 LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
                         JSMutableHandleValue vp)
 {
-  JS::RootedObject obj(cx, obj_);
+  js::RootedObject obj(cx, obj_);
 
   JSObject *wrapped = XPCWrapper::UnsafeUnwrapSecurityWrapper(obj);
   if (wrapped) {
@@ -7126,8 +7126,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj_, jsid id_, uint32_t flags,
                        JSObject **objp, bool *_retval)
 {
-  JS::RootedObject obj(cx, obj_);
-  JS::RootedId id(cx, id_);
+  js::RootedObject obj(cx, obj_);
+  js::RootedId id(cx, id_);
 
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 
@@ -7349,7 +7349,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     // Resolve special classes.
     for (uint32_t i = 0; i < ArrayLength(sOtherResolveFuncs); i++) {
-      JS::RootedObject tmp(cx, *objp);
+      js::RootedObject tmp(cx, *objp);
       if (!sOtherResolveFuncs[i](cx, obj, id, flags, &tmp)) {
         return NS_ERROR_FAILURE;
       }
@@ -9077,7 +9077,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
     return JS_TRUE;
   }
 
-  JS::RootedValue v(cx);
+  js::RootedValue v(cx);
 
   if (sItem_id == id || sNamedItem_id == id) {
     // Define the item() or namedItem() method.

@@ -1307,7 +1307,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     options.setFileAndLine(aURL, aLineNo)
            .setVersion(JSVersion(aVersion))
            .setPrincipals(nsJSPrincipals::get(principal));
-    JS::RootedObject rootedScope(mContext, aScopeObject);
+    js::RootedObject rootedScope(mContext, aScopeObject);
     ok = JS::Evaluate(mContext, rootedScope, options, PromiseFlatString(aScript).get(),
                       aScript.Length(), &val);
 
@@ -1495,7 +1495,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     XPCAutoRequest ar(mContext);
     JSAutoCompartment ac(mContext, aScopeObject);
 
-    JS::RootedObject rootedScope(mContext, aScopeObject);
+    js::RootedObject rootedScope(mContext, aScopeObject);
     JS::CompileOptions options(mContext);
     options.setFileAndLine(aURL, aLineNo)
            .setPrincipals(nsJSPrincipals::get(principal))
@@ -1585,7 +1585,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
          .setFileAndLine(aURL, aLineNo)
          .setVersion(JSVersion(aVersion))
          .setSourcePolicy(sp);
-  JS::RootedObject rootedScope(mContext, scopeObject);
+  js::RootedObject rootedScope(mContext, scopeObject);
   JSScript* script = JS::Compile(mContext,
                                  rootedScope,
                                  options,
@@ -1763,7 +1763,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   JS::CompileOptions options(mContext);
   options.setVersion(JSVersion(aVersion))
          .setFileAndLine(aURL, aLineNo);
-  JS::RootedObject empty(mContext, NULL);
+  js::RootedObject empty(mContext, NULL);
   JSFunction* fun = JS::CompileFunction(mContext, empty, options, nsAtomCString(aName).get(),
                                         aArgCount, aArgNames,
                                         PromiseFlatString(aBody).get(), aBody.Length());
@@ -1816,7 +1816,7 @@ nsJSContext::CompileFunction(JSObject* aTarget,
     }
   }
 
-  JS::RootedObject target(mContext, aShared ? NULL : aTarget);
+  js::RootedObject target(mContext, aShared ? NULL : aTarget);
 
   XPCAutoRequest ar(mContext);
 

@@ -11,7 +11,7 @@
 
 BEGIN_TEST(testIntString_bug515273)
 {
-    JS::RootedValue v(cx);
+    js::RootedValue v(cx);
 
     EVAL("'1';", v.address());
     JSString *str = JSVAL_TO_STRING(v);
