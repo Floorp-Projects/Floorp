@@ -52,6 +52,8 @@ CPPSRCS += \
 	WebGLExtensionLoseContext.cpp \
 	WebGLTexelConversions.cpp \
 	WebGLExtensionCompressedTextureS3TC.cpp \
+	WebGLExtensionCompressedTextureATC.cpp \
+	WebGLExtensionCompressedTexturePVRTC.cpp \
 	WebGLExtensionDepthTexture.cpp \
 	WebGLElementArrayCache.cpp \
 	$(NULL)

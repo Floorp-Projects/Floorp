@@ -149,11 +149,19 @@ let DOMContactManager = {
         );
         break;
       case "Contacts:GetSimContacts":
-        let callback = function(aContactType, aContacts) {
-          if (DEBUG) debug("got SIM contacts: " + aContactType + " " + JSON.stringify(aContacts));
-          mm.sendAsyncMessage("Contacts:GetSimContacts:Return:OK", {requestID: msg.requestID, contacts: aContacts});
-        };
-        mRIL.getICCContacts(msg.options.contactType, callback);
+        mRIL.getICCContacts(
+          msg.options.contactType,
+          function (aErrorMsg, aType, aContacts) {
+            if (aErrorMsg) {
+              mm.sendAsyncMessage("Contacts:GetSimContacts:Return:KO",
+                                  {requestID: msg.requestID,
+                                   errorMsg: aErrorMsg});
+            } else {
+              mm.sendAsyncMessage("Contacts:GetSimContacts:Return:OK",
+                                  {requestID: msg.requestID,
+                                   contacts: aContacts});
+            }
+          }.bind(this));
         break;
       default:
         if (DEBUG) debug("WRONG MESSAGE NAME: " + aMessage.name);

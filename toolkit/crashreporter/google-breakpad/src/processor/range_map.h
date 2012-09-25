@@ -46,6 +46,8 @@
 
 namespace google_breakpad {
 
+// Forward declarations (for later friend declarations of specialized template).
+template<class, class> class RangeMapSerializer;
 
 template<typename AddressType, typename EntryType>
 class RangeMap {
@@ -93,6 +95,10 @@ class RangeMap {
   void Clear();
 
  private:
+  // Friend declarations.
+  friend class ModuleComparer;
+  friend class RangeMapSerializer<AddressType, EntryType>;
+
   class Range {
    public:
     Range(const AddressType &base, const EntryType &entry)

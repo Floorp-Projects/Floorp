@@ -73,7 +73,7 @@ interface mozIDOMApplicationMgmt : nsISupports
   attribute nsIDOMEventListener onuninstall;
 };
 
-[scriptable, uuid(dd9a044c-1073-4d2b-a17d-c9b5834b3420)]
+[scriptable, uuid(7ca34d3e-d855-4d0a-a3b3-58c0acad9ec3)]
 interface mozIDOMApplicationRegistry : nsISupports
 {
   /**
@@ -93,6 +93,11 @@ interface mozIDOMApplicationRegistry : nsISupports
    * the request will return the application currently installed, or null.
    */
   nsIDOMDOMRequest getSelf();
+
+  /**
+   * the request will return true if the app from that origin is installed
+   */
+  nsIDOMDOMRequest isInstalled(in DOMString manifestUrl);
 
   /**
    * the request will return the applications installed from this origin, or null.

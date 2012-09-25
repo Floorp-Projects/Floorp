@@ -22,8 +22,9 @@ let CrashTestUtils = {
 };
 
 // Grab APIs from the testcrasher shared library
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/ctypes.jsm");
-let dir = __LOCATION__.parent;
+let dir = Services.dirsvc.get("CurWorkD", Components.interfaces.nsILocalFile);
 let file = dir.clone();
 file.append(ctypes.libraryName("testcrasher"));
 let lib = ctypes.open(file.path);
@@ -40,6 +41,13 @@ CrashTestUtils.lockDir = lib.declare("LockDir",
                                      ctypes.voidptr_t,   // nsILocalFile*
                                      ctypes.voidptr_t);  // nsISupports*
 
+
+try {
+  CrashTestUtils.TryOverrideExceptionHandler = lib.declare("TryOverrideExceptionHandler",
+                                                           ctypes.default_abi,
+                                                           ctypes.void_t);
+}
+catch(ex) {}
 
 CrashTestUtils.dumpHasStream = lib.declare("DumpHasStream",
                                            ctypes.default_abi,

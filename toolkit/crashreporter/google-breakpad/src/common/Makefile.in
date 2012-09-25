@@ -20,13 +20,19 @@ DIRS = dwarf
 endif
 
 CPPSRCS	= \
-  string_conversion.cc \
   md5.cc \
+  string_conversion.cc \
   $(NULL)
 
 CSRCS = \
   convert_UTF.c \
   $(NULL)
+
+ifeq ($(OS_TARGET),Android)
+VPATH += $(srcdir)/android
+SSRCS := breakpad_getcontext.S
+TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/
+endif
 
 HOST_CPPSRCS = $(CPPSRCS)
 HOST_CPPSRCS += \
