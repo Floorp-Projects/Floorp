@@ -10,7 +10,7 @@
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
 #include "nsContentUtils.h"
-#include "nsBlobProtocolHandler.h"
+#include "nsHostObjectProtocolHandler.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,6 +20,17 @@ URL::CreateObjectURL(nsISupports* aGlobal, nsIDOMBlob* aBlob,
                      const objectURLOptions& aOptions,
                      nsAString& aResult,
                      ErrorResult& aError)
+{
+  CreateObjectURLInternal(aGlobal, aBlob, NS_LITERAL_CSTRING(BLOBURI_SCHEME),
+                          aOptions, aResult, aError);
+}
+
+void
+URL::CreateObjectURLInternal(nsISupports* aGlobal, nsISupports* aObject,
+                             const nsACString& aScheme,
+                             const mozilla::dom::objectURLOptions& aOptions,
+                             nsAString& aResult,
+                             ErrorResult& aError)
 {
   nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal);
   nsGlobalWindow* window = static_cast<nsGlobalWindow*>(w.get());
@@ -33,13 +44,16 @@ URL::CreateObjectURL(nsISupports* aGlobal, nsIDOMBlob* aBlob,
 
   nsIDocument* doc = window->GetExtantDoc();
 
-  nsresult rv = aBlob->GetInternalUrl(doc->NodePrincipal(), aResult);
+  nsCString url;
+  nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(aScheme, aObject,
+    doc->NodePrincipal(), url);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
     return;
   }
 
-  doc->RegisterFileDataUri(NS_LossyConvertUTF16toASCII(aResult));
+  doc->RegisterHostObjectUri(url);
+  CopyASCIItoUTF16(url, aResult);
 }
 
 void
@@ -60,15 +74,15 @@ URL::RevokeObjectURL(nsISupports* aGlobal, const nsAString& aURL)
   }
 
   nsIPrincipal* principal =
-    nsBlobProtocolHandler::GetFileDataEntryPrincipal(asciiurl);
+    nsHostObjectProtocolHandler::GetDataEntryPrincipal(asciiurl);
   bool subsumes;
   if (principal && winPrincipal &&
       NS_SUCCEEDED(winPrincipal->Subsumes(principal, &subsumes)) &&
       subsumes) {
     if (window->GetExtantDoc()) {
-      window->GetExtantDoc()->UnregisterFileDataUri(asciiurl);
+      window->GetExtantDoc()->UnregisterHostObjectUri(asciiurl);
     }
-    nsBlobProtocolHandler::RemoveFileDataEntry(asciiurl);
+    nsHostObjectProtocolHandler::RemoveDataEntry(asciiurl);
   }
 }
 

@@ -22,6 +22,13 @@ public:
                               nsAString& aResult,
                               ErrorResult& aError);
   static void RevokeObjectURL(nsISupports* aGlobal, const nsAString& aURL);
+
+private:
+  static void CreateObjectURLInternal(nsISupports* aGlobal, nsISupports* aObject,
+                                      const nsACString& aScheme,
+                                      const mozilla::dom::objectURLOptions& aOptions,
+                                      nsAString& aResult,
+                                      mozilla::ErrorResult& aError);
 };
 
 }
