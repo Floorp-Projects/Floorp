@@ -141,7 +141,7 @@ extern nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 extern nsresult NS_CategoryManagerGetFactory( nsIFactory** );
 
 #ifdef XP_WIN
-extern nsresult ScheduleMediaCacheRemover();
+extern nsresult ScheduleAnonTempFileRemover();
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess)
@@ -464,7 +464,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
                                   nullptr,
                                   NS_XPCOM_STARTUP_OBSERVER_ID);
 #ifdef XP_WIN
-    ScheduleMediaCacheRemover();
+    ScheduleAnonTempFileRemover();
 #endif
 
     mozilla::MapsMemoryReporter::Init();
