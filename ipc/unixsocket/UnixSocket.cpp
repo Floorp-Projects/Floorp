@@ -4,176 +4,391 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Socket.h"
+#include "UnixSocket.h"
 
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
 
 #include <sys/socket.h>
 
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/sco.h>
-#include <bluetooth/rfcomm.h>
-#include <bluetooth/l2cap.h>
+#include "base/eintr_wrapper.h"
+#include "base/message_loop.h"
 
+#include "mozilla/Monitor.h"
+#include "mozilla/Util.h"
+#include "mozilla/FileUtils.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
-
-#undef LOG
-#if defined(MOZ_WIDGET_GONK)
-#include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
-#else
-#define LOG(args...)  printf(args);
-#endif
-#define TYPE_AS_STR(t)                                                  \
-  ((t) == TYPE_RFCOMM ? "RFCOMM" : ((t) == TYPE_SCO ? "SCO" : "L2CAP"))
+#include "nsTArray.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace ipc {
-static const int RFCOMM_SO_SNDBUF = 70 * 1024; // 70 KB send buffer
 
-static const int TYPE_RFCOMM = 1;
-static const int TYPE_SCO = 2;
-static const int TYPE_L2CAP = 3;
-
-static int get_bdaddr(const char *str, bdaddr_t *ba)
+class UnixSocketImpl : public MessageLoopForIO::Watcher
 {
-  char *d = ((char*)ba) + 5, *endp;
-  for (int i = 0; i < 6; i++) {
-    *d-- = strtol(str, &endp, 16);
-    MOZ_ASSERT(*endp != ':' && i != 5);
-    str = endp + 1;
+public:
+  UnixSocketImpl(UnixSocketConsumer* aConsumer, int aFd)
+    : mConsumer(aConsumer)
+    , mIOLoop(nullptr)
+    , mFd(aFd)
+  {
   }
-  return 0;
+
+  ~UnixSocketImpl()
+  {
+    mReadWatcher.StopWatchingFileDescriptor();
+    mWriteWatcher.StopWatchingFileDescriptor();
+  }
+
+  void QueueWriteData(UnixSocketRawData* aData)
+  {
+    mOutgoingQ.AppendElement(aData);
+    OnFileCanWriteWithoutBlocking(mFd);
+  }
+
+  bool isFdValid()
+  {
+    return mFd > 0;
+  }
+
+  void SetUpIO()
+  {
+    MOZ_ASSERT(!mIOLoop);
+    mIOLoop = MessageLoopForIO::current();
+    mIOLoop->WatchFileDescriptor(mFd,
+                                 true,
+                                 MessageLoopForIO::WATCH_READ,
+                                 &mReadWatcher,
+                                 this);
+  }
+
+  void PrepareRemoval()
+  {
+    mConsumer.forget();
+  }
+
+  /**
+   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
+   * directly from main thread. All non-main-thread accesses should happen with
+   * mImpl as container.
+   */
+  RefPtr<UnixSocketConsumer> mConsumer;
+
+private:
+  /**
+   * libevent triggered functions that reads data from socket when available and
+   * guarenteed non-blocking. Only to be called on IO thread.
+   *
+   * @param aFd File descriptor to read from
+   */
+  virtual void OnFileCanReadWithoutBlocking(int aFd);
+
+  /**
+   * libevent or developer triggered functions that writes data to socket when
+   * available and guarenteed non-blocking. Only to be called on IO thread.
+   *
+   * @param aFd File descriptor to read from
+   */
+  virtual void OnFileCanWriteWithoutBlocking(int aFd);
+
+  /**
+   * IO Loop pointer. Must be initalized and called from IO thread only.
+   */
+  MessageLoopForIO* mIOLoop;
+
+  /**
+   * Raw data queue. Must be pushed/popped from IO thread only.
+   */
+  typedef nsTArray<UnixSocketRawData* > UnixSocketRawDataQueue;
+  UnixSocketRawDataQueue mOutgoingQ;
+
+  /**
+   * File descriptor to read from/write to. Connection happens on user provided
+   * thread. Read/write/close happens on IO thread.
+   */
+  ScopedClose mFd;
+
+  /**
+   * Incoming packet. Only to be accessed on IO Thread.
+   */
+  nsAutoPtr<UnixSocketRawData> mIncoming;
+
+  /**
+   * Read watcher for libevent. Only to be accessed on IO Thread.
+   */
+  MessageLoopForIO::FileDescriptorWatcher mReadWatcher;
+
+  /**
+   * Write watcher for libevent. Only to be accessed on IO Thread.
+   */
+  MessageLoopForIO::FileDescriptorWatcher mWriteWatcher;
+};
+
+static void
+DestroyImpl(UnixSocketImpl* impl)
+{
+  delete impl;
 }
 
-int
-OpenSocket(int type, const char* aAddress, int channel, bool auth, bool encrypt)
+class SocketReceiveTask : public nsRunnable
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-  int lm = 0;
-  int fd = -1;
-  int sndbuf;
-
-  switch (type) {
-  case TYPE_RFCOMM:
-    fd = socket(PF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
-    break;
-  case TYPE_SCO:
-    fd = socket(PF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_SCO);
-    break;
-  case TYPE_L2CAP:
-    fd = socket(PF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
-    break;
-  default:
-    return -1;
+public:
+  SocketReceiveTask(UnixSocketImpl* aImpl, UnixSocketRawData* aData) :
+    mImpl(aImpl),
+    mRawData(aData)
+  {
+    MOZ_ASSERT(aImpl);
+    MOZ_ASSERT(aData);
   }
 
-  if (fd < 0) {
-    NS_WARNING("Could not open bluetooth socket!");
-    return -1;
-  }
-
-  /* kernel does not yet support LM for SCO */
-  switch (type) {
-  case TYPE_RFCOMM:
-    lm |= auth ? RFCOMM_LM_AUTH : 0;
-    lm |= encrypt ? RFCOMM_LM_ENCRYPT : 0;
-    lm |= (auth && encrypt) ? RFCOMM_LM_SECURE : 0;
-    break;
-  case TYPE_L2CAP:
-    lm |= auth ? L2CAP_LM_AUTH : 0;
-    lm |= encrypt ? L2CAP_LM_ENCRYPT : 0;
-    lm |= (auth && encrypt) ? L2CAP_LM_SECURE : 0;
-    break;
-  }
-
-  if (lm) {
-    if (setsockopt(fd, SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm))) {
-      LOG("setsockopt(RFCOMM_LM) failed, throwing");
-      return -1;
+  NS_IMETHOD Run()
+  {
+    if(!mImpl->mConsumer) {
+      NS_WARNING("mConsumer is null, aborting receive!");
+      // Since we've already explicitly closed and the close happened before
+      // this, this isn't really an error. Since we've warned, return OK.
+      return NS_OK;
     }
+    mImpl->mConsumer->ReceiveSocketData(mRawData);
+    return NS_OK;
+  }
+private:
+  UnixSocketImpl* mImpl;
+  nsAutoPtr<UnixSocketRawData> mRawData;
+};
+
+class SocketSendTask : public Task
+{
+public:
+  SocketSendTask(UnixSocketConsumer* aConsumer, UnixSocketImpl* aImpl,
+                 UnixSocketRawData* aData)
+    : mConsumer(aConsumer),
+      mImpl(aImpl),
+      mData(aData)
+  {
+    MOZ_ASSERT(aConsumer);
+    MOZ_ASSERT(aImpl);
+    MOZ_ASSERT(aData);
   }
 
-  if (type == TYPE_RFCOMM) {
-    sndbuf = RFCOMM_SO_SNDBUF;
-    if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf))) {
-      LOG("setsockopt(SO_SNDBUF) failed, throwing");
-      return -1;
-    }
+  void Run()
+  {
+    mImpl->QueueWriteData(mData);
   }
 
-  int n = 1;
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n));
-  
-  socklen_t addr_sz;
-  struct sockaddr *addr;
-  bdaddr_t bd_address_obj;
+private:
+  nsRefPtr<UnixSocketConsumer> mConsumer;
+  UnixSocketImpl* mImpl;
+  UnixSocketRawData* mData;
+};
 
-  int mPort = channel;
-
-  char mAddress[18];
-  mAddress[17] = '\0';
-  strncpy(&mAddress[0], aAddress, 17);
-
-  if (get_bdaddr(aAddress, &bd_address_obj)) {
-    NS_WARNING("Can't get bluetooth address!");
-    return -1;
+class StartImplReadingTask : public Task
+{
+public:
+  StartImplReadingTask(UnixSocketImpl* aImpl)
+    : mImpl(aImpl)
+  {
   }
 
-  switch (type) {
-  case TYPE_RFCOMM:
-    struct sockaddr_rc addr_rc;
-    addr = (struct sockaddr *)&addr_rc;
-    addr_sz = sizeof(addr_rc);
+  void Run()
+  {
+    mImpl->SetUpIO();
+  }
+private:
+  UnixSocketImpl* mImpl;
+};
 
-    memset(addr, 0, addr_sz);
-    addr_rc.rc_family = AF_BLUETOOTH;
-    addr_rc.rc_channel = mPort;
-    memcpy(&addr_rc.rc_bdaddr, &bd_address_obj, sizeof(bdaddr_t));
-    break;
-  case TYPE_SCO:
-    struct sockaddr_sco addr_sco;
-    addr = (struct sockaddr *)&addr_sco;
-    addr_sz = sizeof(addr_sco);
-
-    memset(addr, 0, addr_sz);
-    addr_sco.sco_family = AF_BLUETOOTH;
-    memcpy(&addr_sco.sco_bdaddr, &bd_address_obj, sizeof(bdaddr_t));
-    break;
-  default:
-    NS_WARNING("Socket type unknown!");
-    return -1;
+bool
+UnixSocketConnector::Connect(int aFd, const char* aAddress)
+{
+  if (!ConnectInternal(aFd, aAddress))
+  {
+    return false;
   }
 
-  int ret = connect(fd, addr, addr_sz);
+  // Set close-on-exec bit.
+  int flags = fcntl(aFd, F_GETFD);
+  if (-1 == flags) {
+    return false;
+  }
 
-  if (ret) {
-#if DEBUG
-    LOG("Socket connect errno=%d\n", errno);
+  flags |= FD_CLOEXEC;
+  if (-1 == fcntl(aFd, F_SETFD, flags)) {
+    return false;
+  }
+
+  // Select non-blocking IO.
+  if (-1 == fcntl(aFd, F_SETFL, O_NONBLOCK)) {
+    return false;
+  }
+
+  return true;
+}
+
+UnixSocketConsumer::~UnixSocketConsumer()
+{
+}
+
+bool
+UnixSocketConsumer::SendSocketData(UnixSocketRawData* aData)
+{
+  if (!mImpl) {
+    return false;
+  }
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                   new SocketSendTask(this, mImpl, aData));
+  return true;
+}
+
+bool
+UnixSocketConsumer::SendSocketData(const nsACString& aStr)
+{
+  if (!mImpl) {
+    return false;
+  }
+  if (aStr.Length() > UnixSocketRawData::MAX_DATA_SIZE) {
+    return false;
+  }
+  nsCString str(aStr);
+  UnixSocketRawData* d = new UnixSocketRawData(aStr.Length());
+  memcpy(d->mData, str.get(), aStr.Length());
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                   new SocketSendTask(this, mImpl, d));
+  return true;
+}
+
+void
+UnixSocketConsumer::CloseSocket()
+{
+  if (!mImpl) {
+    return;
+  }
+  // To make sure the owner doesn't die on the IOThread, remove pointer here
+  mImpl->PrepareRemoval();
+  // Line it up to be destructed on the IO Thread
+  // Kill our pointer to it
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                   NewRunnableFunction(DestroyImpl,
+                                                       mImpl.forget()));
+}
+
+void
+UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
+{
+  // Keep reading data until either
+  //
+  //   - mIncoming is completely read
+  //     If so, sConsumer->MessageReceived(mIncoming.forget())
+  //
+  //   - mIncoming isn't completely read, but there's no more
+  //     data available on the socket
+  //     If so, break;
+  while (true) {
+    if (!mIncoming) {
+      mIncoming = new UnixSocketRawData();
+      ssize_t ret = read(aFd, mIncoming->mData, UnixSocketRawData::MAX_DATA_SIZE);
+      if (ret <= 0) {
+        if (ret == -1) {
+          if (errno == EINTR) {
+            continue; // retry system call when interrupted
+          }
+          else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            mIncoming.forget();
+            return; // no data available: return and re-poll
+          }
+          // else fall through to error handling on other errno's
+        }
+#ifdef DEBUG
+        nsAutoString str;
+        str.AssignLiteral("Cannot read from network, error ");
+        str += (int)ret;
+        NS_WARNING(NS_ConvertUTF16toUTF8(str).get());
 #endif
-    NS_WARNING("Socket connect error!");
-    return -1;
+        // At this point, assume that we can't actually access
+        // the socket anymore
+        mIncoming.forget();
+        mReadWatcher.StopWatchingFileDescriptor();
+        mWriteWatcher.StopWatchingFileDescriptor();
+        mConsumer->CloseSocket();
+        return;
+      }
+      mIncoming->mData[ret] = 0;
+      mIncoming->mSize = ret;
+      nsRefPtr<SocketReceiveTask> t =
+        new SocketReceiveTask(this, mIncoming.forget());
+      NS_DispatchToMainThread(t);
+      if (ret < ssize_t(UnixSocketRawData::MAX_DATA_SIZE)) {
+        return;
+      }
+    }
   }
-
-  // Match android_bluetooth_HeadsetBase.cpp line 384
-  // Skip many lines
-  return fd;
 }
 
-int
-GetNewSocket(int type, const char* aAddress, int channel, bool auth, bool encrypt)
+void
+UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
 {
-  return OpenSocket(type, aAddress, channel, auth, encrypt);
+  // Try to write the bytes of mCurrentRilRawData.  If all were written, continue.
+  //
+  // Otherwise, save the byte position of the next byte to write
+  // within mCurrentRilRawData, and request another write when the
+  // system won't block.
+  //
+  while (true) {
+    UnixSocketRawData* data;
+    if (mOutgoingQ.IsEmpty()) {
+      return;
+    }
+    data = mOutgoingQ.ElementAt(0);
+    const uint8_t *toWrite;
+    toWrite = data->mData;
+
+    while (data->mCurrentWriteOffset < data->mSize) {
+      ssize_t write_amount = data->mSize - data->mCurrentWriteOffset;
+      ssize_t written;
+      written = write (aFd, toWrite + data->mCurrentWriteOffset,
+                       write_amount);
+      if (written > 0) {
+        data->mCurrentWriteOffset += written;
+      }
+      if (written != write_amount) {
+        break;
+      }
+    }
+
+    if (data->mCurrentWriteOffset != data->mSize) {
+      MessageLoopForIO::current()->WatchFileDescriptor(
+        aFd,
+        false,
+        MessageLoopForIO::WATCH_WRITE,
+        &mWriteWatcher,
+        this);
+      return;
+    }
+    mOutgoingQ.RemoveElementAt(0);
+    delete data;
+  }
 }
 
-int
-CloseSocket(int aFd)
+bool
+UnixSocketConsumer::ConnectSocket(UnixSocketConnector& aConnector,
+                                  const char* aAddress)
 {
-  // This can block since we aren't opening sockets O_NONBLOCK
   MOZ_ASSERT(!NS_IsMainThread());
-  return close(aFd);
+  MOZ_ASSERT(!mImpl);
+  ScopedClose fd(aConnector.Create());
+  if (fd < 0) {
+    return false;
+  }
+  if (!aConnector.Connect(fd, aAddress)) {
+    return false;
+  }
+  mImpl = new UnixSocketImpl(this, fd.forget());
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                   new StartImplReadingTask(mImpl));
+  return true;
 }
 
 } // namespace ipc
