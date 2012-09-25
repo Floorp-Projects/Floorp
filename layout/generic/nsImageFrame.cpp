@@ -686,7 +686,7 @@ nsImageFrame::FrameChanged(imgIRequest *aRequest,
     SourceRectToDest(*aDirtyRect);
 
   // Update border+content to account for image change
-  InvalidateLayer(r, nsDisplayItem::TYPE_IMAGE);
+  Invalidate(r);
   return NS_OK;
 }
 

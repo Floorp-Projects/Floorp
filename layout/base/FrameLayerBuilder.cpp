@@ -14,6 +14,7 @@
 #include "nsCSSRendering.h"
 #include "nsCSSFrameConstructor.h"
 #include "gfxUtils.h"
+#include "nsImageFrame.h"
 #include "nsRenderingContext.h"
 #include "MaskLayerImageCache.h"
 #include "nsIScrollableFrame.h"
@@ -346,7 +347,7 @@ protected:
      * Stores the pointer to the nsDisplayImage if we want to
      * convert this to an ImageLayer.
      */
-    nsDisplayImageContainer* mImage;
+    nsDisplayImage* mImage;
     /**
      * Stores the clip that we need to apply to the image or, if there is no
      * image, a clip for SOME item in the layer. There is no guarantee which
@@ -721,25 +722,6 @@ FrameLayerBuilder::DidBeginRetainedLayerTransaction(LayerManager* aManager)
     (aManager->GetUserData(&gLayerManagerUserData));
   if (data) {
     mInvalidateAllLayers = data->mInvalidateAllLayers;
-  }
-}
-
-void
-FrameLayerBuilder::StoreOptimizedLayerForFrame(nsIFrame* aFrame, PRUint32 aDisplayItemKey, Layer* aImage)
-{
-  DisplayItemDataEntry *entry = mNewDisplayItemData.GetEntry(aFrame);
-  if (!entry)
-    return;
-
-  nsTArray<DisplayItemData> *array = &entry->mData;
-  if (!array)
-    return;
-
-  for (PRUint32 i = 0; i < array->Length(); ++i) {
-    if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
-      array->ElementAt(i).mOptLayer = aImage;
-      return;
-    }
   }
 }
 
@@ -1395,9 +1377,6 @@ ContainerState::PopThebesLayerData()
         imageLayer->IntersectClipRect(clip);
       }
       layer = imageLayer;
-      mLayerBuilder->StoreOptimizedLayerForFrame(data->mImage->GetUnderlyingFrame(), 
-                                                 data->mImage->GetPerFrameKey(),
-                                                 imageLayer);
     } else {
       nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer(data->mLayer);
       colorLayer->SetIsFixedPosition(data->mLayer->GetIsFixedPosition());
@@ -1569,10 +1548,8 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
   /* Mark as available for conversion to image layer if this is a nsDisplayImage and
    * we are the first visible item in the ThebesLayerData object.
    */
-  if (mVisibleRegion.IsEmpty() &&
-      (aItem->GetType() == nsDisplayItem::TYPE_IMAGE ||
-       aItem->GetType() == nsDisplayItem::TYPE_XUL_IMAGE)) {
-    mImage = static_cast<nsDisplayImageContainer*>(aItem);
+  if (mVisibleRegion.IsEmpty() && aItem->GetType() == nsDisplayItem::TYPE_IMAGE) {
+    mImage = static_cast<nsDisplayImage*>(aItem);
   } else {
     mImage = nullptr;
   }
@@ -2763,9 +2740,6 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, uint32_t aDisplayItemKey)
 
   for (uint32_t i = 0; i < array->Length(); ++i) {
     if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
-      if (array->ElementAt(i).mOptLayer) {
-        return array->ElementAt(i).mOptLayer;
-      }
       Layer* layer = array->ElementAt(i).mLayer;
       if (!layer->HasUserData(&gColorLayerUserData) &&
           !layer->HasUserData(&gImageLayerUserData) &&
