@@ -725,7 +725,7 @@ FrameLayerBuilder::DidBeginRetainedLayerTransaction(LayerManager* aManager)
 }
 
 void
-FrameLayerBuilder::StoreOptimizedLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey, Layer* aImage)
+FrameLayerBuilder::StoreOptimizedLayerForFrame(nsIFrame* aFrame, PRUint32 aDisplayItemKey, Layer* aImage)
 {
   DisplayItemDataEntry *entry = mNewDisplayItemData.GetEntry(aFrame);
   if (!entry)
@@ -735,7 +735,7 @@ FrameLayerBuilder::StoreOptimizedLayerForFrame(nsIFrame* aFrame, uint32_t aDispl
   if (!array)
     return;
 
-  for (uint32_t i = 0; i < array->Length(); ++i) {
+  for (PRUint32 i = 0; i < array->Length(); ++i) {
     if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
       array->ElementAt(i).mOptLayer = aImage;
       return;

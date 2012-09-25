@@ -288,7 +288,7 @@ nsHttp::ParseInt64(const char *input, const char **next, int64_t *r)
 }
 
 bool
-nsHttp::IsPermanentRedirect(uint32_t httpStatus)
+nsHttp::IsPermanentRedirect(PRUint32 httpStatus)
 {
   return httpStatus == 301 || httpStatus == 308;
 }

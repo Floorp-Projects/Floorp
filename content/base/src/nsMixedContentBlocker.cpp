@@ -76,14 +76,14 @@ nsMixedContentBlocker::~nsMixedContentBlocker()
 NS_IMPL_ISUPPORTS1(nsMixedContentBlocker, nsIContentPolicy)
 
 NS_IMETHODIMP
-nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
+nsMixedContentBlocker::ShouldLoad(PRUint32 aContentType,
                                   nsIURI* aContentLocation,
                                   nsIURI* aRequestingLocation,
                                   nsISupports* aRequestingContext,
                                   const nsACString& aMimeGuess,
                                   nsISupports* aExtra,
                                   nsIPrincipal* aRequestPrincipal,
-                                  int16_t* aDecision)
+                                  PRInt16* aDecision)
 {
   // Default policy: allow the load if we find no reason to block it.
   *aDecision = nsIContentPolicy::ACCEPT;
@@ -186,14 +186,14 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
 }
 
 NS_IMETHODIMP
-nsMixedContentBlocker::ShouldProcess(uint32_t aContentType,
+nsMixedContentBlocker::ShouldProcess(PRUint32 aContentType,
                                      nsIURI* aContentLocation,
                                      nsIURI* aRequestingLocation,
                                      nsISupports* aRequestingContext,
                                      const nsACString& aMimeGuess,
                                      nsISupports* aExtra,
                                      nsIPrincipal* aRequestPrincipal,
-                                     int16_t* aDecision)
+                                     PRInt16* aDecision)
 {
   return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
                     aRequestingContext, aMimeGuess, aExtra, aRequestPrincipal,
