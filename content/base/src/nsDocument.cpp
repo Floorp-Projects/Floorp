@@ -2394,6 +2394,9 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   mMayStartLayout = false;
 
   mHaveInputEncoding = true;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsresult rv = InitCSP(aChannel, getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aReset) {
     Reset(aChannel, aLoadGroup);
@@ -2423,27 +2426,30 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsresult rv = InitCSP(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (csp) {
+    // Copy into principal
+    nsIPrincipal* principal = GetPrincipal();
+    principal->SetCsp(csp);
+#ifdef PR_LOGGING
+    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+           ("Inserted CSP into principal %p", principal));
+#endif
+  }
 
   return NS_OK;
 }
 
 nsresult
-nsDocument::InitCSP(nsIChannel* aChannel)
+nsDocument::InitCSP(nsIChannel* aChannel, nsIContentSecurityPolicy **aCSP)
 {
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  if (!CSPService::sCSPEnabled) {
-#ifdef PR_LOGGING
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-           ("CSP is disabled, skipping CSP init for document %p", this));
-#endif
-    return NS_OK;
-  }
-
-  nsAutoCString tCspHeaderValue, tCspROHeaderValue;
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
+  *aCSP = nullptr;
+  if (CSPService::sCSPEnabled) {
+    nsAutoCString tCspHeaderValue, tCspROHeaderValue;
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+    if (!httpChannel) {
+      // no CSP for non http channels
+      return NS_OK;
+    }
     httpChannel->GetResponseHeader(
         NS_LITERAL_CSTRING("x-content-security-policy"),
         tCspHeaderValue);
@@ -2451,115 +2457,45 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     httpChannel->GetResponseHeader(
         NS_LITERAL_CSTRING("x-content-security-policy-report-only"),
         tCspROHeaderValue);
-  }
-  NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
-  NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
+    NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
+    NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
 
-  // ----- Figure out if we need to apply an app default CSP
-  bool applyAppDefaultCSP = false;
-  nsIPrincipal* principal = NodePrincipal();
-  PRUint16 appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  bool unknownAppId;
-  if (NS_SUCCEEDED(principal->GetUnknownAppId(&unknownAppId)) &&
-      !unknownAppId &&
-      NS_SUCCEEDED(principal->GetAppStatus(&appStatus))) {
-    applyAppDefaultCSP = ( appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED ||
-                           appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
-  }
+    if (cspHeaderValue.IsEmpty() && cspROHeaderValue.IsEmpty()) {
+      // no CSP header present, stop processing
+      return NS_OK;
+    }
+
 #ifdef PR_LOGGING
-  else
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("Failed to get app status from principal"));
+    PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("CSP header specified for document %p", this));
 #endif
 
-  // If there's no CSP to apply go ahead and return early
-  if (!applyAppDefaultCSP &&
-      cspHeaderValue.IsEmpty() &&
-      cspROHeaderValue.IsEmpty()) {
+    nsresult rv;
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    csp = do_CreateInstance("@mozilla.org/contentsecuritypolicy;1", &rv);
+
+    if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
+      PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("Failed to create CSP object: %x", rv));
+#endif
+      return rv;
+    }
+
+    // Store the request context for violation reports
+    csp->ScanRequestData(httpChannel);
+
+    // Start parsing the policy
     nsCOMPtr<nsIURI> chanURI;
     aChannel->GetURI(getter_AddRefs(chanURI));
-    nsAutoCString aspec;
-    chanURI->GetAsciiSpec(aspec);
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-           ("no CSP for document, %s, %s",
-            aspec.get(),
-            applyAppDefaultCSP ? "is app" : "not an app"));
-#endif
-    return NS_OK;
-  }
 
 #ifdef PR_LOGGING
-  PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("Document is an app or CSP header specified %p", this));
+    PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("CSP Loaded"));
 #endif
 
-  nsresult rv;
-  csp = do_CreateInstance("@mozilla.org/contentsecuritypolicy;1", &rv);
-
-  if (NS_FAILED(rv)) {
-#ifdef PR_LOGGING
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("Failed to create CSP object: %x", rv));
-#endif
-    return rv;
-  }
-
-  // used as a "self" identifier for the CSP.
-  nsCOMPtr<nsIURI> chanURI;
-  aChannel->GetURI(getter_AddRefs(chanURI));
-
-  // Store the request context for violation reports
-  csp->ScanRequestData(httpChannel);
-
-  // ----- process the app default policy, if necessary
-  if (applyAppDefaultCSP) {
-    nsAdoptingString appCSP;
-    if (appStatus ==  nsIPrincipal::APP_STATUS_PRIVILEGED) {
-      appCSP = Preferences::GetString("security.apps.privileged.CSP.default");
-      NS_ASSERTION(appCSP, "App, but no default CSP in security.apps.privileged.CSP.default");
-    } else if (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED) {
-      appCSP = Preferences::GetString("security.apps.certified.CSP.default");
-      NS_ASSERTION(appCSP, "App, but no default CSP in security.apps.certified.CSP.default");
-    }
-
-    if (appCSP)
-      csp->RefinePolicy(appCSP, chanURI);
-  }
-
-  // ----- if there's a full-strength CSP header, apply it.
-  if (!cspHeaderValue.IsEmpty()) {
-    // Need to tokenize the header value since multiple headers could be
-    // concatenated into one comma-separated list of policies.
-    // See RFC2616 section 4.2 (last paragraph)
-    nsCharSeparatedTokenizer tokenizer(cspHeaderValue, ',');
-    while (tokenizer.hasMoreTokens()) {
-        const nsSubstring& policy = tokenizer.nextToken();
-        csp->RefinePolicy(policy, chanURI);
-#ifdef PR_LOGGING
-        {
-          PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-                  ("CSP refined with policy: \"%s\"",
-                    NS_ConvertUTF16toUTF8(policy).get()));
-        }
-#endif
-    }
-  }
-
-  // ----- if there's a report-only CSP header, apply it
-  if (!cspROHeaderValue.IsEmpty()) {
-    // post a warning and skip report-only CSP when both read only and regular
-    // CSP policies are present since CSP only allows one policy and it can't
-    // be partially report-only.
-    if (applyAppDefaultCSP || !cspHeaderValue.IsEmpty()) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "CSP", this,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "ReportOnlyCSPIgnored");
-#ifdef PR_LOGGING
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-              ("Skipped report-only CSP init for document %p because another, enforced policy is set", this));
-#endif
-    } else {
-      // we can apply the report-only policy because there's no other CSP
-      // applied.
+    // ReportOnly mode is enabled *only* if there are no regular-strength CSP
+    // headers present.  If there are, then we ignore the ReportOnly mode and
+    // toss a warning into the error console, proceeding with enforcing the
+    // regular-strength CSP.
+    if (cspHeaderValue.IsEmpty()) {
       csp->SetReportOnlyMode(true);
 
       // Need to tokenize the header value since multiple headers could be
@@ -2572,43 +2508,58 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 #ifdef PR_LOGGING
         {
           PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-                  ("CSP (report-only) refined with policy: \"%s\"",
+                  ("CSP (report only) refined with policy: \"%s\"",
                     NS_ConvertUTF16toUTF8(policy).get()));
         }
 #endif
       }
-    }
-  }
+    } else {
+      //XXX(sstamm): maybe we should post a warning when both read only and regular
+      // CSP headers are present.
 
-  // ----- Enforce frame-ancestor policy on any applied policies
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
-  if (docShell) {
-    bool safeAncestry = false;
-
-    // PermitsAncestry sends violation reports when necessary
-    rv = csp->PermitsAncestry(docShell, &safeAncestry);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!safeAncestry) {
+      // Need to tokenize the header value since multiple headers could be
+      // concatenated into one comma-separated list of policies.
+      // See RFC2616 section 4.2 (last paragraph)
+      nsCharSeparatedTokenizer tokenizer(cspHeaderValue, ',');
+      while (tokenizer.hasMoreTokens()) {
+        const nsSubstring& policy = tokenizer.nextToken();
+        csp->RefinePolicy(policy, chanURI);
 #ifdef PR_LOGGING
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-              ("CSP doesn't like frame's ancestry, not loading."));
+        {
+          PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+                ("CSP refined with policy: \"%s\"",
+                  NS_ConvertUTF16toUTF8(policy).get()));
+        }
 #endif
-      // stop!  ERROR page!
-      aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+      }
     }
-  }
 
-  if (csp) {
-    // Copy into principal
-    nsIPrincipal* principal = GetPrincipal();
-    principal->SetCsp(csp);
+    // Check for frame-ancestor violation
+    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+    if (docShell) {
+        bool safeAncestry = false;
+
+        // PermitsAncestry sends violation reports when necessary
+        rv = csp->PermitsAncestry(docShell, &safeAncestry);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!safeAncestry) {
 #ifdef PR_LOGGING
+            PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+                   ("CSP doesn't like frame's ancestry, not loading."));
+#endif
+            // stop!  ERROR page!
+            aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+        }
+    }
+    csp.forget(aCSP);
+  }
+#ifdef PR_LOGGING
+  else { //CSP was not enabled!
     PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-           ("Inserted CSP into principal %p", principal));
-#endif
+           ("CSP is disabled, skipping CSP init for document %p", this));
   }
-
+#endif
   return NS_OK;
 }
 

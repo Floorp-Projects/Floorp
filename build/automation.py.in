@@ -29,12 +29,6 @@ _DEFAULT_HTTP_PORT = 8888
 _DEFAULT_SSL_PORT = 4443
 _DEFAULT_WEBSOCKET_PORT = 9988
 
-# from nsIPrincipal.idl
-_APP_STATUS_NOT_INSTALLED = 0
-_APP_STATUS_INSTALLED     = 1
-_APP_STATUS_PRIVILEGED    = 2
-_APP_STATUS_CERTIFIED     = 3
-
 #expand _DIST_BIN = __XPC_BIN_PATH__
 #expand _IS_WIN32 = len("__WIN32__") != 0
 #expand _IS_MAC = __IS_MAC__ != 0
@@ -303,8 +297,7 @@ class Automation(object):
 "receipt": null,
 "installTime": 132333986000,
 "manifestURL": "$manifestURL",
-"localId": $localId,
-"appStatus": $appStatus
+"localId": $localId
 }""")
 
     manifestTemplate = Template("""{
@@ -527,50 +520,31 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         'name': 'http_example_org',
         'origin': 'http://example.org',
         'manifestURL': 'http://example.org/manifest.webapp',
-        'description': 'http://example.org App',
-        'appStatus': _APP_STATUS_INSTALLED
+        'description': 'http://example.org App'
       },
       {
         'name': 'https_example_com',
         'origin': 'https://example.com',
         'manifestURL': 'https://example.com/manifest.webapp',
-        'description': 'https://example.com App',
-        'appStatus': _APP_STATUS_INSTALLED
+        'description': 'https://example.com App'
       },
       {
         'name': 'http_test1_example_org',
         'origin': 'http://test1.example.org',
         'manifestURL': 'http://test1.example.org/manifest.webapp',
-        'description': 'http://test1.example.org App',
-        'appStatus': _APP_STATUS_INSTALLED
+        'description': 'http://test1.example.org App'
       },
       {
         'name': 'http_test1_example_org_8000',
         'origin': 'http://test1.example.org:8000',
         'manifestURL': 'http://test1.example.org:8000/manifest.webapp',
-        'description': 'http://test1.example.org:8000 App',
-        'appStatus': _APP_STATUS_INSTALLED
+        'description': 'http://test1.example.org:8000 App'
       },
       {
         'name': 'http_sub1_test1_example_org',
         'origin': 'http://sub1.test1.example.org',
         'manifestURL': 'http://sub1.test1.example.org/manifest.webapp',
-        'description': 'http://sub1.test1.example.org App',
-        'appStatus': _APP_STATUS_INSTALLED
-      },
-      {
-        'name': 'https_example_com_privileged',
-        'origin': 'https://example.com',
-        'manifestURL': 'https://example.com/manifest_priv.webapp',
-        'description': 'https://example.com Privileged App',
-        'appStatus': _APP_STATUS_PRIVILEGED
-      },
-      {
-        'name': 'https_example_com_certified',
-        'origin': 'https://example.com',
-        'manifestURL': 'https://example.com/manifest_cert.webapp',
-        'description': 'https://example.com Certified App',
-        'appStatus': _APP_STATUS_CERTIFIED
+        'description': 'http://sub1.test1.example.org App'
       },
     ];
     self.setupTestApps(profileDir, apps)
