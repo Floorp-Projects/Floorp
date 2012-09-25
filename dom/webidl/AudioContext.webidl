@@ -22,6 +22,7 @@ interface mozAudioContext {
     // AudioBuffer createBuffer(ArrayBuffer buffer, boolean mixToMono);
 
     // AudioNode creation 
+    [Creator]
     AudioBufferSourceNode createBufferSource();
 
 };
