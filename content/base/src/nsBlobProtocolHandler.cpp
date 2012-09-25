@@ -69,9 +69,9 @@ nsBlobProtocolHandler::GetFileDataEntryPrincipal(nsACString& aUri)
 static FileDataInfo*
 GetFileDataInfo(const nsACString& aUri)
 {
-  NS_ASSERTION(StringBeginsWith(aUri,
-                                NS_LITERAL_CSTRING(BLOBURI_SCHEME ":")),
-               "Bad URI");
+  NS_WARN_IF_FALSE(StringBeginsWith(aUri,
+                                    NS_LITERAL_CSTRING(BLOBURI_SCHEME ":")),
+                   "Bad URI");
 
   if (!gFileDataTable) {
     return nullptr;
