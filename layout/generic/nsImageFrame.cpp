@@ -592,10 +592,14 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
   printf("Source rect (%d,%d,%d,%d)\n",
          aRect->x, aRect->y, aRect->width, aRect->height);
 #endif
+
   if (aRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect())) {
-    InvalidateFrame();
+    InvalidateFrame(nsDisplayItem::TYPE_IMAGE);
+    InvalidateFrame(nsDisplayItem::TYPE_ALT_FEEDBACK);
   } else {
-    InvalidateFrameWithRect(SourceRectToDest(*aRect));
+    nsRect invalid = SourceRectToDest(*aRect);
+    InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_IMAGE);
+    InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_ALT_FEEDBACK);
   }
   
   return NS_OK;
