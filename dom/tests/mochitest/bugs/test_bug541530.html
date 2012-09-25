@@ -28,26 +28,26 @@ ok(document.location === location, "properties are properly aliased");
 var canDefine = false;
 try {
     var foo;
-    __defineGetter__.call(foo, 'bar', function() {});
-    __defineSetter__.call(foo, 'bar', function() {});
+    this.__defineGetter__.call(foo, 'bar', function() {});
+    this.__defineSetter__.call(foo, 'bar', function() {});
     canDefine = true;
 } catch (e) {}
 ok(canDefine, "Should have access to __defineGetter__ and __defineSetter__");
 
 try {
-    __defineGetter__('window', function() {});
+    this.__defineGetter__('window', function() {});
     ok(false, "should not be able to defineGetter(window)");
 } catch (e) {
 }
 
 try {
-    __defineGetter__.call(window, 'location', function(){});
+    this.__defineGetter__.call(window, 'location', function(){});
     ok(false, "should not be able to defineGetter(window.location)");
 } catch (e) {
 }
 
 try {
-    __defineGetter__.call(window.location, 'href', function(){});
+    this.__defineGetter__.call(window.location, 'href', function(){});
     ok(false, "shouldn't be able to override location.href");
 } catch (e) {
     ok(/shadow/.exec(e.message), "Should be caught by the anti-shadow mechanism.");
@@ -62,20 +62,20 @@ ok(typeof window.location.href !== 'undefined',
    "shouldn't be able to delete the property off of the prototype");
 
 try {
-    __defineGetter__.call(Object.getPrototypeOf(window.location), 'href', function(){});
+    this.__defineGetter__.call(Object.getPrototypeOf(window.location), 'href', function(){});
     ok(false, "shouldn't be able to use the prototype");
 } catch (e) {
 }
 
 try {
-    __defineSetter__.call(window.location, 'href', function(){});
+    this.__defineSetter__.call(window.location, 'href', function(){});
     ok(false, "overrode a setter for location.href?");
 } catch (e) {
     ok(/shadow/.exec(e.message), "Should be caught by the anti-shadow mechanism.");
 }
 
 try {
-    __defineGetter__.call(document, 'location', function(){});
+    this.__defineGetter__.call(document, 'location', function(){});
     ok(false, "shouldn't be able to override document.location");
 } catch (e) {
 }

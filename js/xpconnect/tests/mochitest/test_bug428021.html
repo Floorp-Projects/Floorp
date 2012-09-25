@@ -19,8 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428021
 
       /** Test for Bug 428021 **/
       var rangetter, ransetter;
-      __defineGetter__('x', function() { rangetter = true; });
-      __defineSetter__('x', function(val) { ransetter = true; });
+      this.__defineGetter__('x', function() { rangetter = true; });
+      this.__defineSetter__('x', function(val) { ransetter = true; });
 
       var exn;
       try {
