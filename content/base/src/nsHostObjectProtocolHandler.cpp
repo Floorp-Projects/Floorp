@@ -9,12 +9,13 @@
 #include "nsNetUtil.h"
 #include "nsIPrincipal.h"
 #include "nsIDOMFile.h"
+#include "nsIDOMMediaStream.h"
 
 // -----------------------------------------------------------------------
 // Hash table
 struct DataInfo
 {
-  // mObject must be an nsIDOMBlob
+  // mObject must be an nsIDOMBlob or an nsIDOMMediaStream
   nsCOMPtr<nsISupports> mObject;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
@@ -223,6 +224,13 @@ nsBlobProtocolHandler::GetScheme(nsACString &result)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMediaStreamProtocolHandler::GetScheme(nsACString &result)
+{
+  result.AssignLiteral(MEDIASTREAMURI_SCHEME);
+  return NS_OK;
+}
+
 nsresult
 NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
 {
@@ -236,4 +244,21 @@ NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
   }
 
   return blob->GetInternalStream(aStream);
+}
+
+nsresult
+NS_GetStreamForMediaStreamURI(nsIURI* aURI, nsIDOMMediaStream** aStream)
+{
+  NS_ASSERTION(IsMediaStreamURI(aURI), "Only call this with mediastream URIs");
+
+  *aStream = nullptr;
+
+  nsCOMPtr<nsIDOMMediaStream> stream = do_QueryInterface(GetDataObject(aURI));
+  if (!stream) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  *aStream = stream;
+  NS_ADDREF(*aStream);
+  return NS_OK;
 }
