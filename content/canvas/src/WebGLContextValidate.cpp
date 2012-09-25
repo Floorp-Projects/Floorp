@@ -374,34 +374,29 @@ bool WebGLContext::ValidateTexImage2DTarget(WebGLenum target, WebGLsizei width, 
 bool WebGLContext::ValidateCompressedTextureSize(WebGLint level, WebGLenum format, WebGLsizei width,
                                                  WebGLsizei height, uint32_t byteLength, const char* info)
 {
-    CheckedUint32 calculated_byteLength = 0;
-    CheckedUint32 checked_byteLength = byteLength;
-    if (!checked_byteLength.isValid()) {
-        ErrorInvalidValue("%s: data length out of bounds", info);
-        return false;
-    }
+    CheckedUint32 required_byteLength = 0;
 
     switch (format) {
         case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        case LOCAL_GL_ATC_RGB:
         {
-            calculated_byteLength = ((CheckedUint32(width) + 3) / 4) * ((CheckedUint32(height) + 3) / 4) * 8;
-            if (!calculated_byteLength.isValid() || !(checked_byteLength == calculated_byteLength)) {
-                ErrorInvalidValue("%s: data size does not match dimensions", info);
-                return false;
-            }
+            required_byteLength = ((CheckedUint32(width) + 3) / 4) * ((CheckedUint32(height) + 3) / 4) * 8;
             break;
         }
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+        case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
+        case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
         {
-            calculated_byteLength = ((CheckedUint32(width) + 3) / 4) * ((CheckedUint32(height) + 3) / 4) * 16;
-            if (!calculated_byteLength.isValid() || !(checked_byteLength == calculated_byteLength)) {
-                ErrorInvalidValue("%s: data size does not match dimensions", info);
-                return false;
-            }
+            required_byteLength = ((CheckedUint32(width) + 3) / 4) * ((CheckedUint32(height) + 3) / 4) * 16;
             break;
         }
+    }
+
+    if (!required_byteLength.isValid() || required_byteLength.value() != byteLength) {
+        ErrorInvalidValue("%s: data size does not match dimensions", info);
+        return false;
     }
 
     switch (format) {
@@ -411,19 +406,20 @@ bool WebGLContext::ValidateCompressedTextureSize(WebGLint level, WebGLenum forma
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
         {
             if (level == 0 && width % 4 == 0 && height % 4 == 0) {
-                return true;
+                break;
             }
             if (level > 0
                 && (width == 0 || width == 1 || width == 2 || width % 4 == 0)
                 && (height == 0 || height == 1 || height == 2 || height % 4 == 0))
             {
-                return true;
+                break;
             }
+            ErrorInvalidOperation("%s: level parameter does not match width and height", info);
+            return false;
         }
     }
 
-    ErrorInvalidOperation("%s: level parameter does not match width and height", info);
-    return false;
+    return true;
 }
 
 bool WebGLContext::ValidateLevelWidthHeightForTarget(WebGLenum target, WebGLint level, WebGLsizei width,
@@ -485,9 +481,12 @@ uint32_t WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
                 return 4 * multiplier;
             case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
             case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+            case LOCAL_GL_ATC_RGB:
                 return 4;
             case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
             case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
+            case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
                 return 8;
             default:
                 break;
