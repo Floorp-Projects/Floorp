@@ -153,6 +153,7 @@ public:
 
   virtual bool IsCompositingCheap() { return false; }
   virtual int32_t GetMaxTextureSize() const { return PR_INT32_MAX; }
+  bool CompositorMightResample() { return mCompositorMightResample; }
 
 protected:
   enum TransactionPhase {
@@ -200,10 +201,11 @@ protected:
   // Cached surface for double buffering
   gfxCachedTempSurface mCachedSurface;
 
-  BufferMode   mDoubleBuffering;
+  BufferMode mDoubleBuffering;
   bool mUsingDefaultTarget;
   bool mCachedSurfaceInUse;
-  bool         mTransactionIncomplete;
+  bool mTransactionIncomplete;
+  bool mCompositorMightResample;
 };
  
 

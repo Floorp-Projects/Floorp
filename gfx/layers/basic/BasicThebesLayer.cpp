@@ -4,11 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BasicThebesLayer.h"
-
+#include "gfxUtils.h"
 #include "nsIWidget.h"
 #include "RenderTrace.h"
 #include "sampler.h"
-#include "gfxUtils.h"
 
 #include "prprf.h"
 
@@ -156,11 +155,16 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
   {
     uint32_t flags = 0;
-#ifndef MOZ_GFX_OPTIMIZE_MOBILE
-    gfxMatrix transform;
-    if (!GetEffectiveTransform().CanDraw2D(&transform) ||
-        transform.HasNonIntegerTranslation()) {
+#ifndef MOZ_WIDGET_ANDROID
+    if (BasicManager()->CompositorMightResample()) {
       flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
+    }
+    if (!(flags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE)) {
+      gfxMatrix transform;
+      if (!GetEffectiveTransform().CanDraw2D(&transform) ||
+          transform.HasNonIntegerTranslation()) {
+        flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
+      }
     }
 #endif
     if (mDrawAtomically) {

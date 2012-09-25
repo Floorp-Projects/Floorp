@@ -1623,6 +1623,12 @@ class nsIWidget : public nsISupports {
      */
     virtual const SizeConstraints& GetSizeConstraints() const = 0;
 
+    /**
+     * If this is owned by a TabChild, return that.  Otherwise return
+     * null.
+     */
+    virtual TabChild* GetOwningTabChild() { return nullptr; }
+
 protected:
 
     // keep the list of children.  We also keep track of our siblings.
