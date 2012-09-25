@@ -235,16 +235,6 @@ MacPowerInformationService::HandleChange(void* aContext) {
       continue;
     }
 
-    if (sIOPSGetTimeRemainingEstimate) {
-      // See if we can get a time estimate.
-      CFTimeInterval estimate = sIOPSGetTimeRemainingEstimate();
-      if (estimate == kIOPSTimeRemainingUnlimited || estimate == kIOPSTimeRemainingUnknown) {
-        remainingTime = kUnknownRemainingTime;
-      } else {
-        remainingTime = estimate;
-      }
-    }
-
     // Get a battery level estimate. This key is required.
     int currentCapacity = 0;
     const void* cfRef = ::CFDictionaryGetValue(currPowerSourceDesc, CFSTR(kIOPSCurrentCapacityKey));
@@ -264,6 +254,31 @@ MacPowerInformationService::HandleChange(void* aContext) {
     // source doesn't have that info.
     if(::CFDictionaryGetValueIfPresent(currPowerSourceDesc, CFSTR(kIOPSIsChargingKey), &cfRef)) {
       charging = ::CFBooleanGetValue((CFBooleanRef)cfRef);
+
+      // Get an estimate of how long it's going to take until we're fully charged.
+      // This key is optional.
+      if (charging) {
+        // Default value that will be changed if we happen to find the actual
+        // remaining time.
+        remainingTime = level == 1.0 ? kDefaultRemainingTime : kUnknownRemainingTime;
+
+        if (::CFDictionaryGetValueIfPresent(currPowerSourceDesc,
+                CFSTR(kIOPSTimeToFullChargeKey), &cfRef)) {
+          int timeToCharge;
+          ::CFNumberGetValue((CFNumberRef)cfRef, kCFNumberIntType, &timeToCharge);
+          if (timeToCharge != kIOPSTimeRemainingUnknown) {
+            remainingTime = timeToCharge*60;
+          }
+        }
+      } else if (sIOPSGetTimeRemainingEstimate) { // not charging
+        // See if we can get a time estimate.
+        CFTimeInterval estimate = sIOPSGetTimeRemainingEstimate();
+        if (estimate == kIOPSTimeRemainingUnlimited || estimate == kIOPSTimeRemainingUnknown) {
+          remainingTime = kUnknownRemainingTime;
+        } else {
+          remainingTime = estimate;
+        }
+      }
     }
 
     break;
