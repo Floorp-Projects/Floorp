@@ -142,3 +142,93 @@ add_test(function test_write_dialling_number() {
   run_next_test();
 });
 
+/**
+ * Verify ComprehensionTlvHelper.writeLocationInfoTlv
+ */
+add_test(function test_write_location_info_tlv() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let tlvHelper = worker.ComprehensionTlvHelper;
+
+  // Test with 2-digit mnc, and gsmCellId obtained from UMTS network.
+  let loc = {
+    mcc: 466,
+    mnc: 92,
+    gsmLocationAreaCode : 10291,
+    gsmCellId: 19072823
+  };
+  tlvHelper.writeLocationInfoTlv(loc);
+
+  let tag = pduHelper.readHexOctet();
+  do_check_eq(tag, COMPREHENSIONTLV_TAG_LOCATION_INFO |
+                   COMPREHENSIONTLV_FLAG_CR);
+
+  let length = pduHelper.readHexOctet();
+  do_check_eq(length, 9);
+
+  let mcc_mnc = pduHelper.readSwappedNibbleBcdString(3);
+  do_check_eq(mcc_mnc, "46692");
+
+  let lac = (pduHelper.readHexOctet() << 8) | pduHelper.readHexOctet();
+  do_check_eq(lac, 10291);
+
+  let cellId = (pduHelper.readHexOctet() << 24) |
+               (pduHelper.readHexOctet() << 16) |
+               (pduHelper.readHexOctet() << 8)  |
+               (pduHelper.readHexOctet());
+  do_check_eq(cellId, 19072823);
+
+  // Test with 1-digit mnc, and gsmCellId obtained from GSM network.
+  loc = {
+    mcc: 466,
+    mnc: 2,
+    gsmLocationAreaCode : 10291,
+    gsmCellId: 65534
+  };
+  tlvHelper.writeLocationInfoTlv(loc);
+
+  tag = pduHelper.readHexOctet();
+  do_check_eq(tag, COMPREHENSIONTLV_TAG_LOCATION_INFO |
+                   COMPREHENSIONTLV_FLAG_CR);
+
+  length = pduHelper.readHexOctet();
+  do_check_eq(length, 7);
+
+  mcc_mnc = pduHelper.readSwappedNibbleBcdString(3);
+  do_check_eq(mcc_mnc, "46602");
+
+  lac = (pduHelper.readHexOctet() << 8) | pduHelper.readHexOctet();
+  do_check_eq(lac, 10291);
+
+  cellId = (pduHelper.readHexOctet() << 8)  |
+               (pduHelper.readHexOctet());
+  do_check_eq(cellId, 65534);
+
+  // Test with 3-digit mnc, and gsmCellId obtained from GSM network.
+  loc = {
+    mcc: 466,
+    mnc: 222,
+    gsmLocationAreaCode : 10291,
+    gsmCellId: 65534
+  };
+  tlvHelper.writeLocationInfoTlv(loc);
+
+  tag = pduHelper.readHexOctet();
+  do_check_eq(tag, COMPREHENSIONTLV_TAG_LOCATION_INFO |
+                   COMPREHENSIONTLV_FLAG_CR);
+
+  length = pduHelper.readHexOctet();
+  do_check_eq(length, 7);
+
+  mcc_mnc = pduHelper.readSwappedNibbleBcdString(3);
+  do_check_eq(mcc_mnc, "466222");
+
+  lac = (pduHelper.readHexOctet() << 8) | pduHelper.readHexOctet();
+  do_check_eq(lac, 10291);
+
+  cellId = (pduHelper.readHexOctet() << 8) |
+           (pduHelper.readHexOctet());
+  do_check_eq(cellId, 65534);
+
+  run_next_test();
+});
