@@ -534,10 +534,10 @@ var XPIDatabase = {
     }
 
     this.initialized = true;
+    this.migrateData = null;
 
     this.connection = this.openDatabaseFile(this.dbfile);
 
-    this.migrateData = null;
     // If the database was corrupt or missing then the new blank database will
     // have a schema version of 0.
     let schemaVersion = this.connection.schemaVersion;
@@ -578,7 +578,14 @@ var XPIDatabase = {
       }
 
       // At this point the database should be completely empty
-      this.createSchema();
+      try {
+        this.createSchema();
+      }
+      catch (e) {
+        // If creating the schema fails, then the database is unusable,
+        // fall back to an in-memory database.
+        this.connection = Services.storage.openSpecialDatabase("memory");
+      }
 
       // If there is no migration data then load the list of add-on directories
       // that were active during the last run
@@ -636,21 +643,22 @@ var XPIDatabase = {
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
 
-    let iniFactory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
-                     getService(Ci.nsIINIParserFactory);
+    if (!addonsList.exists())
+      return null;
 
     try {
-      var parser = iniFactory.createINIParser(addonsList);
+      let iniFactory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"]
+                         .getService(Ci.nsIINIParserFactory);
+      let parser = iniFactory.createINIParser(addonsList);
+      let keys = parser.getKeys("ExtensionDirs");
+
+      while (keys.hasMore())
+        bundles.push(parser.getString("ExtensionDirs", keys.getNext()));
     }
     catch (e) {
       WARN("Failed to parse extensions.ini", e);
       return null;
     }
-
-    let keys = parser.getKeys("ExtensionDirs");
-
-    while (keys.hasMore())
-      bundles.push(parser.getString("ExtensionDirs", keys.getNext()));
 
     // Also include the list of active bootstrapped extensions
     for (let id in XPIProvider.bootstrappedAddons)
@@ -666,58 +674,66 @@ var XPIDatabase = {
    *         userDisabled and any updated compatibility information
    */
   getMigrateDataFromRDF: function XPIDB_getMigrateDataFromRDF(aDbWasMissing) {
-    let migrateData = {};
 
     // Migrate data from extensions.rdf
     let rdffile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_DATABASE], true);
     if (!rdffile.exists())
       return null;
 
-    LOG("Migrating data from extensions.rdf");
-    let ds = gRDF.GetDataSourceBlocking(Services.io.newFileURI(rdffile).spec);
-    let root = Cc["@mozilla.org/rdf/container;1"].
-               createInstance(Ci.nsIRDFContainer);
-    root.Init(ds, gRDF.GetResource(RDFURI_ITEM_ROOT));
-    let elements = root.GetElements();
-    while (elements.hasMoreElements()) {
-      let source = elements.getNext().QueryInterface(Ci.nsIRDFResource);
+    LOG("Migrating data from " + FILE_OLD_DATABASE);
+    let migrateData = {};
 
-      let location = getRDFProperty(ds, source, "installLocation");
-      if (location) {
-        if (!(location in migrateData))
-          migrateData[location] = {};
-        let id = source.ValueUTF8.substring(PREFIX_ITEM_URI.length);
-        migrateData[location][id] = {
-          version: getRDFProperty(ds, source, "version"),
-          userDisabled: false,
-          targetApplications: []
-        }
+    try {
+      let ds = gRDF.GetDataSourceBlocking(Services.io.newFileURI(rdffile).spec);
+      let root = Cc["@mozilla.org/rdf/container;1"].
+                 createInstance(Ci.nsIRDFContainer);
+      root.Init(ds, gRDF.GetResource(RDFURI_ITEM_ROOT));
+      let elements = root.GetElements();
 
-        let disabled = getRDFProperty(ds, source, "userDisabled");
-        if (disabled == "true" || disabled == "needs-disable")
-          migrateData[location][id].userDisabled = true;
+      while (elements.hasMoreElements()) {
+        let source = elements.getNext().QueryInterface(Ci.nsIRDFResource);
 
-        let targetApps = ds.GetTargets(source, EM_R("targetApplication"),
-                                       true);
-        while (targetApps.hasMoreElements()) {
-          let targetApp = targetApps.getNext()
-                                    .QueryInterface(Ci.nsIRDFResource);
-          let appInfo = {
-            id: getRDFProperty(ds, targetApp, "id")
-          };
-
-          let minVersion = getRDFProperty(ds, targetApp, "updatedMinVersion");
-          if (minVersion) {
-            appInfo.minVersion = minVersion;
-            appInfo.maxVersion = getRDFProperty(ds, targetApp, "updatedMaxVersion");
+        let location = getRDFProperty(ds, source, "installLocation");
+        if (location) {
+          if (!(location in migrateData))
+            migrateData[location] = {};
+          let id = source.ValueUTF8.substring(PREFIX_ITEM_URI.length);
+          migrateData[location][id] = {
+            version: getRDFProperty(ds, source, "version"),
+            userDisabled: false,
+            targetApplications: []
           }
-          else {
-            appInfo.minVersion = getRDFProperty(ds, targetApp, "minVersion");
-            appInfo.maxVersion = getRDFProperty(ds, targetApp, "maxVersion");
+
+          let disabled = getRDFProperty(ds, source, "userDisabled");
+          if (disabled == "true" || disabled == "needs-disable")
+            migrateData[location][id].userDisabled = true;
+
+          let targetApps = ds.GetTargets(source, EM_R("targetApplication"),
+                                         true);
+          while (targetApps.hasMoreElements()) {
+            let targetApp = targetApps.getNext()
+                                      .QueryInterface(Ci.nsIRDFResource);
+            let appInfo = {
+              id: getRDFProperty(ds, targetApp, "id")
+            };
+
+            let minVersion = getRDFProperty(ds, targetApp, "updatedMinVersion");
+            if (minVersion) {
+              appInfo.minVersion = minVersion;
+              appInfo.maxVersion = getRDFProperty(ds, targetApp, "updatedMaxVersion");
+            }
+            else {
+              appInfo.minVersion = getRDFProperty(ds, targetApp, "minVersion");
+              appInfo.maxVersion = getRDFProperty(ds, targetApp, "maxVersion");
+            }
+            migrateData[location][id].targetApplications.push(appInfo);
           }
-          migrateData[location][id].targetApplications.push(appInfo);
         }
       }
+    }
+    catch (e) {
+      WARN("Error reading " + FILE_OLD_DATABASE, e);
+      migrateData = null;
     }
 
     return migrateData;
