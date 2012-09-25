@@ -3,7 +3,7 @@
             android:icon="@drawable/icon"
             android:label="@string/sync_app_name"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
             android:taskAffinity="org.mozilla.gecko.sync.setup"
             android:name="org.mozilla.gecko.sync.setup.activities.SetupSyncActivity" >
             <!-- android:configChanges: SetupSyncActivity will handle orientation changes; no longer restarts activity (default) -->
