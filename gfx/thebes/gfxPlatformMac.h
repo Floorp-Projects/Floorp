@@ -38,7 +38,7 @@ public:
     already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
                                                 gfxASurface::gfxImageFormat format);
     
-    mozilla::RefPtr<mozilla::gfx::ScaledFont>
+    mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 
     nsresult ResolveFontName(const nsAString& aFontName,

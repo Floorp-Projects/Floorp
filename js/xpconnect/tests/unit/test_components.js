@@ -6,6 +6,11 @@ function run_test() {
   var sb4 = Cu.Sandbox("http://www.other.com");
   var rv;
 
+  // Components is normally hidden from content on the XBL scope chain, but we
+  // expose it to content here to make sure that the security wrappers work
+  // regardless.
+  [sb1, sb2, sb4].forEach(function(x) { x.Components = Cu.getComponentsForScope(x); });
+
   // non-chrome accessing chrome Components
   sb1.C = Components;
   rv = Cu.evalInSandbox("C.utils", sb1);

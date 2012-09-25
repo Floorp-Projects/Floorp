@@ -132,7 +132,7 @@ function starttest() {
       check = false;
     
       $("textBoxB").focus();
-      const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
+      const nsIDOMWindowUtils = SpecialPowers.Ci.nsIDOMWindowUtils;
       synthesizeText(
         { "composition":
           { "string": "a",

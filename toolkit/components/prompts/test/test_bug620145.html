@@ -31,7 +31,7 @@ var utils = SpecialPowers.DOMWindowUtils;
 
 function hasTabModalPrompts() {
   var prefName = "prompts.tab_modal.enabled";
-  var Services = SpecialPowers.wrap(Components).utils
+  var Services = SpecialPowers.Cu
                               .import("resource://gre/modules/Services.jsm")
                               .Services;
   return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&

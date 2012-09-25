@@ -116,8 +116,8 @@ function test5()
     SimpleTest.executeSoon(function() {
       // We have to focus back the originating window but we can't do that with
       // .focus() or .blur() anymore.
-      var fm = SpecialPowers.wrap(Components).classes["@mozilla.org/focus-manager;1"]
-                            .getService(Components.interfaces.nsIFocusManager);
+      var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"]
+                            .getService(SpecialPowers.Ci.nsIFocusManager);
       fm.focusedWindow = window;
     });
   }, w, true);
@@ -125,8 +125,8 @@ function test5()
 
 function finished()
 {
-  SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
-               .getService(Components.interfaces.nsIPrefBranch)
+  SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+               .getService(SpecialPowers.Ci.nsIPrefBranch)
                .setBoolPref("dom.disable_window_flip", gOldPrefValue);
   SimpleTest.finish();
 }
@@ -135,8 +135,8 @@ SimpleTest.waitForExplicitFinish();
 
 
 // dom.disable_window_flip has to be set to true for this test.
-var prefs = SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
+var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+                         .getService(SpecialPowers.Ci.nsIPrefBranch);
 gOldPrefValue = prefs.getBoolPref("dom.disable_window_flip");
 prefs.setBoolPref("dom.disable_window_flip", true);
 

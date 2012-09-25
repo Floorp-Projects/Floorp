@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462856
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-const Cc = SpecialPowers.wrap(Components).classes;
+const Cc = SpecialPowers.Cc;
 
 var numFinished = 0;
 
@@ -36,17 +36,17 @@ window.addEventListener("message", function(event) {
     if (++numFinished == 3) {
       // Clean up after ourself
       var pm = Cc["@mozilla.org/permissionmanager;1"].
-               getService(Components.interfaces.nsIPermissionManager);
+               getService(SpecialPowers.Ci.nsIPermissionManager);
       var ioService = Cc["@mozilla.org/network/io-service;1"]
-                        .getService(Components.interfaces.nsIIOService);
+                        .getService(SpecialPowers.Ci.nsIIOService);
       var uri1 = ioService.newURI(frames.testFrame.location, null, null);
       var uri2 = ioService.newURI(frames.testFrame3.location, null, null);
 
       var principal1 = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                        .getService(Components.interfaces.nsIScriptSecurityManager)
+                        .getService(SpecialPowers.Ci.nsIScriptSecurityManager)
                         .getNoAppCodebasePrincipal(uri1);
       var principal2 = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                        .getService(Components.interfaces.nsIScriptSecurityManager)
+                        .getService(SpecialPowers.Ci.nsIScriptSecurityManager)
                         .getNoAppCodebasePrincipal(uri2);
 
       pm.removeFromPrincipal(principal1, "offline-app");
@@ -108,8 +108,8 @@ function loaded() {
   // Click the notification bar's "Allow" button.  This should kick
   // off updates, which will eventually lead to getting messages from
   // the children.
-  var wm = SpecialPowers.wrap(Components).classes["@mozilla.org/appshell/window-mediator;1"].
-           getService(Components.interfaces.nsIWindowMediator);
+  var wm = SpecialPowers.Cc["@mozilla.org/appshell/window-mediator;1"].
+           getService(SpecialPowers.Ci.nsIWindowMediator);
   var win = wm.getMostRecentWindow("navigator:browser");
   var notificationBox = win.gBrowser.getNotificationBox();
 

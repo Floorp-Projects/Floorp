@@ -568,7 +568,8 @@ public:
   };
   typedef struct ScrollAxis {
     int16_t mWhereToScroll;
-    WhenToScroll mWhenToScroll : 16;
+    WhenToScroll mWhenToScroll : 8;
+    bool mOnlyIfPerceivedScrollableDirection : 1;
   /**
    * @param aWhere: Either a percentage or a special value.
    *                nsIPresShell defines:
@@ -599,10 +600,17 @@ public:
    *                is visible.
    *                * SCROLL_ALWAYS: Move the frame regardless of its current
    *                visibility.
+   * @param aOnlyIfPerceivedScrollableDirection:
+   *                If the direction is not a perceived scrollable direction (i.e.
+   *                no scrollbar showing and less than one device pixel of
+   *                scrollable distance), don't scroll. Defaults to false.
    */
     ScrollAxis(int16_t aWhere = SCROLL_MINIMUM,
-               WhenToScroll aWhen = SCROLL_IF_NOT_FULLY_VISIBLE) :
-                 mWhereToScroll(aWhere), mWhenToScroll(aWhen) {}
+               WhenToScroll aWhen = SCROLL_IF_NOT_FULLY_VISIBLE,
+               bool aOnlyIfPerceivedScrollableDirection = false) :
+      mWhereToScroll(aWhere), mWhenToScroll(aWhen),
+      mOnlyIfPerceivedScrollableDirection(aOnlyIfPerceivedScrollableDirection)
+    {}
   } ScrollAxis;
   /**
    * Scrolls the view of the document so that the primary frame of the content

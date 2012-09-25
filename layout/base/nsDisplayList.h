@@ -2341,17 +2341,29 @@ private:
  * of <translation-value>s, where percentages are percentages of the element's
  * border box.
  *
- * INVARIANT: The wrapped frame is transformed.
+ * INVARIANT: The wrapped frame is transformed or we supplied a transform getter
+ * function.
  * INVARIANT: The wrapped frame is non-null.
  */ 
 class nsDisplayTransform: public nsDisplayItem
 {
 public:
+  /**
+   * Returns a matrix (in pixels) for the current frame. The matrix should be relative to
+   * the current frame's coordinate space.
+   *
+   * @param aFrame The frame to compute the transform for.
+   * @param aAppUnitsPerPixel The number of app units per graphics unit.
+   */
+  typedef gfx3DMatrix (* ComputeTransformFunction)(nsIFrame* aFrame, float aAppUnitsPerPixel);
+
   /* Constructor accepts a display list, empties it, and wraps it up.  It also
    * ferries the underlying frame to the nsDisplayItem constructor.
    */
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                      nsDisplayList *aList, uint32_t aIndex = 0);
+  nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
+                     nsDisplayList *aList, ComputeTransformFunction aTransformGetter, uint32_t aIndex = 0);
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                      nsDisplayItem *aItem, uint32_t aIndex = 0);
 
@@ -2510,6 +2522,7 @@ private:
 
   nsDisplayWrapList mStoredList;
   gfx3DMatrix mTransform;
+  ComputeTransformFunction mTransformGetter;
   float mCachedAppUnitsPerPixel;
   uint32_t mIndex;
 };

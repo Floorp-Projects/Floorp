@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772288
 /** Test for Bug 772288 **/
 SimpleTest.waitForExplicitFinish();
 
-const Cu = SpecialPowers.wrap(Components).utils;
+const Cu = SpecialPowers.Cu;
 
 function doTest() {
     msg = "Services should be imported on window";

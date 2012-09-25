@@ -164,17 +164,17 @@ function isSecurityState(expectedState, message, test)
 
   // Quit nasty but working :)
   var ui = SpecialPowers.wrap(window)
-    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-    .getInterface(Components.interfaces.nsIWebNavigation)
-    .QueryInterface(Components.interfaces.nsIDocShell)
+    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+    .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+    .QueryInterface(SpecialPowers.Ci.nsIDocShell)
     .securityUI;
 
   var isInsecure = !ui ||
-    (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IS_INSECURE);
+    (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IS_INSECURE);
   var isBroken = ui &&
-    (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IS_BROKEN);
+    (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IS_BROKEN);
   var isEV = ui &&
-    (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
+    (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
 
   var gotState;
   if (isInsecure)

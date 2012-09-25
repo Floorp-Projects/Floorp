@@ -32,11 +32,11 @@ function afterLoad() {
     iframeDoc.getElementById("password").value = "123456";
     iframeDoc.getElementById("hidden").value = "gecko";
 
-    var file = SpecialPowers.wrap(Components).classes["@mozilla.org/file/directory_service;1"]
-             .getService(Components.interfaces.nsIProperties)
-             .get("TmpD", Components.interfaces.nsILocalFile);
+    var file = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
+             .getService(SpecialPowers.Ci.nsIProperties)
+             .get("TmpD", SpecialPowers.Ci.nsILocalFile);
     file.append("345339_test.file");
-    file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
+    file.createUnique(SpecialPowers.Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
     filePath = file.path;
 
     SpecialPowers.wrap(iframeDoc).getElementById("file").value = filePath;

@@ -68,6 +68,10 @@ function bindDOMWindowUtils(aWindow) {
   return target;
 }
 
+function getRawComponents(aWindow) {
+  return Cu.getComponentsForScope(aWindow);
+}
+
 function isWrappable(x) {
   if (typeof x === "object")
     return x !== null;
@@ -414,6 +418,27 @@ SpecialPowersAPI.prototype = {
   get Services() {
     return wrapPrivileged(Services);
   },
+
+  /*
+   * Convenient shortcuts to the standard Components abbreviations. Note that
+   * we don't SpecialPowers-wrap Components.interfaces, because it's available
+   * to untrusted content, and wrapping it confuses QI and identity checks.
+   */
+  get Cc() { return wrapPrivileged(this.Components).classes; },
+  get Ci() { return this.Components.interfaces; },
+  get Cu() { return wrapPrivileged(this.Components).utils; },
+  get Cr() { return wrapPrivileged(this.Components).results; },
+
+  /*
+   * SpecialPowers.getRawComponents() allows content to get a reference to the
+   * naked (non-SpecialPowers-wrapped) Components object for its scope. This
+   * object is normally hidden away on a scope chain available only to XBL
+   * functions.
+   *
+   * SpecialPowers.getRawComponents(window) is defined as the global property
+   * window.SpecialPowers.Components for convenience.
+   */
+  getRawComponents: getRawComponents,
 
   getDOMWindowUtils: function(aWindow) {
     if (aWindow == this.window.get() && this.DOMWindowUtils != null)

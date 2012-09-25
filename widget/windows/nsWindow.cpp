@@ -5841,9 +5841,7 @@ nsWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                      uint32_t aNativeMessage,
                                      uint32_t aModifierFlags)
 {
-  RECT r;
-  ::GetWindowRect(mWnd, &r);
-  ::SetCursorPos(r.left + aPoint.x, r.top + aPoint.y);
+  ::SetCursorPos(aPoint.x, aPoint.y);
 
   INPUT input;
   memset(&input, 0, sizeof(input));

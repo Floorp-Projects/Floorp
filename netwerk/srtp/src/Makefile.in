@@ -68,19 +68,15 @@ LOCAL_INCLUDES = \
 DEFINES += \
   -DHAVE_STDLIB_H=1 \
   -DHAVE_STRING_H=1 \
+  -DINTEGER_TYPES_H="\"mozilla/StandardInteger.h\"" \
+  -DHAVE_UINT8_T=1 \
+  -DHAVE_UINT16_T=1 \
+  -DHAVE_UINT32_T=1 \
+  -DHAVE_UINT64_T=1 \
   $(NULL)
 
-ifeq ($(HAVE_64BIT_OS),0)
-DEFINES += \
-  -DSIZEOF_UNSIGNED_LONG=4 \
-  -DSIZEOF_UNSIGNED_LONG_LONG=8 \
-  $(NULL)
-else
-DEFINES += \
-  -DSIZEOF_UNSIGNED_LONG=8 \
-  -DSIZEOF_UNSIGNED_LONG_LONG=8 \
-  $(NULL)
-endif
+# We know StandardInteger.h will define uint8/16/32/64_t, so we don't need
+# to define SIZEOF_UNSIGNED_LONG/SIZEOF_UNSIGNED_LONG_LONG
 
 ifeq ($(CPU_ARCH),arm)
 DEFINES += -DCPU_RISC=1
