@@ -457,9 +457,9 @@ GenerateDSAKeyPair(PK11SlotInfo * slot,
 
   PQGParams pqgParams  = {
     NULL /*arena*/,
-    { siBuffer, P, mozilla::ArrayLength(P) },
-    { siBuffer, Q, mozilla::ArrayLength(Q) },
-    { siBuffer, G, mozilla::ArrayLength(G) }
+    { siBuffer, P, PR_ARRAY_SIZE(P) },
+    { siBuffer, Q, PR_ARRAY_SIZE(Q) },
+    { siBuffer, G, PR_ARRAY_SIZE(G) }
   };
 
   return GenerateKeyPair(slot, privateKey, publicKey, CKM_DSA_KEY_PAIR_GEN,
