@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=750096
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 750096</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=750096">Mozilla Bug 750096</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 750096 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var u = Components.interfaces.nsIParserUtils;
+var s = Components.classes["@mozilla.org/parserutils;1"]
+        .getService(u);
+
+var elt = document.getElementById("content");
+
+var embed = s.parseFragment("<embed src=\'javascript:this.fail = true;\'>", 0, false, null, elt);
+var img = s.parseFragment("<img src=\'javascript:this.fail = true;\'>", 0, false, null, elt);
+var video = s.parseFragment("<video src=\'javascript:this.fail = true;\'></video>", 0, false, null, elt);
+var object = s.parseFragment("<object data=\'javascript:this.fail = true;\'></object>", 0, false, null, elt);
+var iframe = s.parseFragment("<iframe src=\'javascript:this.fail = true;\'></iframe>", 0, false, null, elt);
+
+setTimeout(function() {
+  ok(!window.fail, "Should not have failed.");
+  SimpleTest.finish();
+}, 0);
+
+</script>
+</pre>
+</body>
+</html>
