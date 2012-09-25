@@ -18,19 +18,25 @@ typedef NS_STDCALL_FUNCPROTO(nsresult, CanvasStyleGetterType, nsIDOMCanvasRender
                              GetStrokeStyle_multi, (nsAString &, nsISupports **, int32_t *));
 
 static JSBool
-Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsid id, JSMutableHandleValue vp,
-                        CanvasStyleSetterType setfunc)
+Canvas2D_SetStyleHelper(JSContext *cx, unsigned argc, JS::Value *vp,
+                        const char* propName, CanvasStyleSetterType setfunc)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
     nsIDOMCanvasRenderingContext2D *self;
     xpc_qsSelfRef selfref;
-    JS::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nullptr))
+    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, &vp[1], nullptr))
         return JS_FALSE;
 
+    if (argc < 1)
+        return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+    jsval *argv = JS_ARGV(cx, vp);
+
     nsresult rv = NS_OK;
-    if (JSVAL_IS_STRING(vp)) {
-        xpc_qsDOMString arg0(cx, vp, vp.address(),
+    if (JSVAL_IS_STRING(argv[0])) {
+        xpc_qsDOMString arg0(cx, argv[0], &argv[0],
                              xpc_qsDOMString::eDefaultNullBehavior,
                              xpc_qsDOMString::eDefaultUndefinedBehavior);
         if (!arg0.IsValid())
@@ -40,9 +46,9 @@ Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsid id, JSMutableHandleVa
     } else {
         nsISupports *arg0;
         xpc_qsSelfRef arg0ref;
-        rv = xpc_qsUnwrapArg<nsISupports>(cx, vp, &arg0, &arg0ref.ptr, vp.address());
+        rv = xpc_qsUnwrapArg<nsISupports>(cx, argv[0], &arg0, &arg0ref.ptr, &argv[0]);
         if (NS_FAILED(rv)) {
-            xpc_qsThrowBadSetterValue(cx, rv, JSVAL_TO_OBJECT(*tvr.jsval_addr()), id);
+            xpc_qsThrowBadSetterValue(cx, rv, JSVAL_TO_OBJECT(vp[1]), propName);
             return JS_FALSE;
         }
 
@@ -50,20 +56,24 @@ Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsid id, JSMutableHandleVa
     }
 
     if (NS_FAILED(rv))
-        return xpc_qsThrowGetterSetterFailed(cx, rv, JSVAL_TO_OBJECT(*tvr.jsval_addr()), id);
+        return xpc_qsThrowGetterSetterFailed(cx, rv, JSVAL_TO_OBJECT(vp[1]),
+                                             propName);
 
     return JS_TRUE;
 }
 
 static JSBool
-Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsid id, JSMutableHandleValue vp,
-                        CanvasStyleGetterType getfunc)
+Canvas2D_GetStyleHelper(JSContext *cx, unsigned argc, JS::Value *vp,
+                        const char* propName, CanvasStyleGetterType getfunc)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
     nsIDOMCanvasRenderingContext2D *self;
     xpc_qsSelfRef selfref;
     XPCLazyCallContext lccx(JS_CALLER, cx, obj);
-    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, vp.address(), &lccx))
+    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, &vp[1], &lccx))
         return JS_FALSE;
     nsresult rv;
 
@@ -72,11 +82,12 @@ Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsid id, JSMutableHandleVa
     int32_t resultType;
     rv = (self->*getfunc)(resultString, getter_AddRefs(resultInterface), &resultType);
     if (NS_FAILED(rv))
-        return xpc_qsThrowGetterSetterFailed(cx, rv, JSVAL_TO_OBJECT(vp), id);
+        return xpc_qsThrowGetterSetterFailed(cx, rv, JSVAL_TO_OBJECT(vp[1]),
+                                             propName);
 
     switch (resultType) {
     case nsIDOMCanvasRenderingContext2D::CMG_STYLE_STRING:
-        return xpc::StringToJsval(cx, resultString, vp.address());
+        return xpc::StringToJsval(cx, resultString, vp);
 
     case nsIDOMCanvasRenderingContext2D::CMG_STYLE_PATTERN:
     {
@@ -84,7 +95,7 @@ Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsid id, JSMutableHandleVa
                               xpc_qsGetWrapperCache(resultInterface));
         return xpc_qsXPCOMObjectToJsval(lccx, helper,
                                         &NS_GET_IID(nsIDOMCanvasPattern),
-                                        &interfaces[k_nsIDOMCanvasPattern], vp.address());
+                                        &interfaces[k_nsIDOMCanvasPattern], vp);
     }
     case nsIDOMCanvasRenderingContext2D::CMG_STYLE_GRADIENT:
     {
@@ -92,35 +103,40 @@ Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsid id, JSMutableHandleVa
                               xpc_qsGetWrapperCache(resultInterface));
         return xpc_qsXPCOMObjectToJsval(lccx, helper,
                                         &NS_GET_IID(nsIDOMCanvasGradient),
-                                        &interfaces[k_nsIDOMCanvasGradient], vp.address());
+                                        &interfaces[k_nsIDOMCanvasGradient], vp);
     }
     default:
-        return xpc_qsThrowGetterSetterFailed(cx, NS_ERROR_FAILURE, JSVAL_TO_OBJECT(vp), id);
+        return xpc_qsThrowGetterSetterFailed(cx, NS_ERROR_FAILURE,
+                                             JSVAL_TO_OBJECT(vp[1]), propName);
     }
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_SetStrokeStyle(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp)
+nsIDOMCanvasRenderingContext2D_SetStrokeStyle(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-    return Canvas2D_SetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::SetStrokeStyle_multi);
+    return Canvas2D_SetStyleHelper(cx, argc, vp, "strokeStyle",
+                                   &nsIDOMCanvasRenderingContext2D::SetStrokeStyle_multi);
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_GetStrokeStyle(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
+nsIDOMCanvasRenderingContext2D_GetStrokeStyle(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-    return Canvas2D_GetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::GetStrokeStyle_multi);
+    return Canvas2D_GetStyleHelper(cx, argc, vp, "strokeStyle",
+                                   &nsIDOMCanvasRenderingContext2D::GetStrokeStyle_multi);
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_SetFillStyle(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp)
+nsIDOMCanvasRenderingContext2D_SetFillStyle(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-    return Canvas2D_SetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::SetFillStyle_multi);
+    return Canvas2D_SetStyleHelper(cx, argc, vp, "fillStyle",
+                                   &nsIDOMCanvasRenderingContext2D::SetFillStyle_multi);
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_GetFillStyle(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
+nsIDOMCanvasRenderingContext2D_GetFillStyle(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-    return Canvas2D_GetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::GetFillStyle_multi);
+    return Canvas2D_GetStyleHelper(cx, argc, vp, "fillStyle",
+                                   &nsIDOMCanvasRenderingContext2D::GetFillStyle_multi);
 }
 
 static bool
