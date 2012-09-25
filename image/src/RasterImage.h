@@ -127,7 +127,6 @@ namespace mozilla {
 namespace layers {
 class LayerManager;
 class ImageContainer;
-class Image;
 }
 namespace image {
 
@@ -574,9 +573,6 @@ private:
                             uint32_t **paletteData, uint32_t *paletteLength);
 
   bool ApplyDecodeFlags(uint32_t aNewFlags);
-
-  already_AddRefed<layers::Image> GetCurrentImage();
-  void UpdateImageContainer();
 
 private: // data
 

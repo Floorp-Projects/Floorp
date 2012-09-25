@@ -15,8 +15,6 @@
 
 class nsImageBoxFrame;
 
-class nsDisplayXULImage;
-
 class nsImageBoxListener : public nsStubImageDecoderObserver
 {
 public:
@@ -45,7 +43,6 @@ private:
 class nsImageBoxFrame : public nsLeafBoxFrame
 {
 public:
-  friend class nsDisplayXULImage;
   NS_DECL_FRAMEARENA_HELPERS
 
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
@@ -106,7 +103,6 @@ public:
                    const nsRect& aDirtyRect,
                    nsPoint aPt, uint32_t aFlags);
 
-  already_AddRefed<mozilla::layers::ImageContainer> GetContainer();
 protected:
   nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
@@ -130,28 +126,5 @@ private:
   bool mUseSrcAttr; ///< Whether or not the image src comes from an attribute.
   bool mSuppressStyleCheck;
 }; // class nsImageBoxFrame
-
-class nsDisplayXULImage : public nsDisplayImageContainer {
-public:
-  nsDisplayXULImage(nsDisplayListBuilder* aBuilder,
-                    nsImageBoxFrame* aFrame) :
-    nsDisplayImageContainer(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayXULImage);
-  }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayXULImage() {
-    MOZ_COUNT_DTOR(nsDisplayXULImage);
-  }
-#endif
-
-  virtual already_AddRefed<ImageContainer> GetContainer() MOZ_OVERRIDE;
-  virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) MOZ_OVERRIDE;
-
-  // Doesn't handle HitTest because nsLeafBoxFrame already creates an
-  // event receiver for us
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("XULImage", TYPE_XUL_IMAGE)
-};
 
 #endif /* nsImageBoxFrame_h___ */

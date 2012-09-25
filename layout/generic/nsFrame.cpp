@@ -4580,8 +4580,6 @@ nsIFrame::InvalidateLayer(const nsRect& aDamageRect, uint32_t aDisplayItemKey)
   uint32_t flags = INVALIDATE_NO_THEBES_LAYERS;
   if (aDisplayItemKey == nsDisplayItem::TYPE_VIDEO ||
       aDisplayItemKey == nsDisplayItem::TYPE_PLUGIN ||
-      aDisplayItemKey == nsDisplayItem::TYPE_IMAGE ||
-      aDisplayItemKey == nsDisplayItem::TYPE_XUL_IMAGE ||
       aDisplayItemKey == nsDisplayItem::TYPE_CANVAS) {
     flags |= INVALIDATE_NO_UPDATE_LAYER_TREE;
   }
