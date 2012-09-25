@@ -63,26 +63,26 @@ XPCOMUtils.defineLazyGetter(window, "gFindBar", function() {
   return findbar;
 });
 
-__defineGetter__("gPrefService", function() {
+this.__defineGetter__("gPrefService", function() {
   delete this.gPrefService;
   return this.gPrefService = Services.prefs;
 });
 
-__defineGetter__("AddonManager", function() {
+this.__defineGetter__("AddonManager", function() {
   let tmp = {};
   Cu.import("resource://gre/modules/AddonManager.jsm", tmp);
   return this.AddonManager = tmp.AddonManager;
 });
-__defineSetter__("AddonManager", function (val) {
+this.__defineSetter__("AddonManager", function (val) {
   delete this.AddonManager;
   return this.AddonManager = val;
 });
 
-__defineGetter__("PluralForm", function() {
+this.__defineGetter__("PluralForm", function() {
   Cu.import("resource://gre/modules/PluralForm.jsm");
   return this.PluralForm;
 });
-__defineSetter__("PluralForm", function (val) {
+this.__defineSetter__("PluralForm", function (val) {
   delete this.PluralForm;
   return this.PluralForm = val;
 });
@@ -1539,7 +1539,7 @@ var gBrowserInit = {
     if (!gStartupRan)
       return;
 
-    if (!__lookupGetter__("InspectorUI"))
+    if (!window.__lookupGetter__("InspectorUI"))
       InspectorUI.destroy();
 
     // First clean up services initialized in gBrowserInit.onLoad (or those whose
@@ -3614,7 +3614,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     // Hacky: update the PopupNotifications' object's reference to the iconBox,
     // if it already exists, since it may have changed if the URL bar was
     // added/removed.
-    if (!__lookupGetter__("PopupNotifications"))
+    if (!window.__lookupGetter__("PopupNotifications"))
       PopupNotifications.iconBox = document.getElementById("notification-popup-box");
   }
 
@@ -4073,7 +4073,7 @@ var XULBrowserWindow = {
         // Only need to call locationChange if the PopupNotifications object
         // for this window has already been initialized (i.e. its getter no
         // longer exists)
-        if (!__lookupGetter__("PopupNotifications"))
+        if (!window.__lookupGetter__("PopupNotifications"))
           PopupNotifications.locationChange();
       }
     }
