@@ -16,7 +16,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(e277b2e8-074e-4c8d-a401-f327b5d477e3)]
+[scriptable, uuid(1fb777fd-952a-4666-bb26-0b32acaf674d)]
 interface nsIDOMHTMLVideoElement : nsIDOMHTMLMediaElement
 {
            attribute long width; 

@@ -26,11 +26,11 @@ SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var viewer =
     SpecialPowers.wrap(frame.contentWindow
-                 .QueryInterface(Components.interfaces.nsIInterfaceRequestor))
-                 .getInterface(Components.interfaces.nsIWebNavigation)
-                 .QueryInterface(Components.interfaces.nsIDocShell)
+                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor))
+                 .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                 .QueryInterface(SpecialPowers.Ci.nsIDocShell)
                  .contentViewer
-                 .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+                 .QueryInterface(SpecialPowers.Ci.nsIMarkupDocumentViewer);
 
   viewer.fullZoom = 1.5;
 

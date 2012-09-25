@@ -26,10 +26,9 @@ var fullPath;
 
 
 function initVals() {
-  var dirSvc = SpecialPowers.wrap(Components)
-                            .classes["@mozilla.org/file/directory_service;1"]
-                            .getService(Components.interfaces.nsIProperties);
-  var file = dirSvc.get("XpcomLib", Components.interfaces.nsILocalFile);
+  var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
+                            .getService(SpecialPowers.Ci.nsIProperties);
+  var file = dirSvc.get("XpcomLib", SpecialPowers.Ci.nsILocalFile);
   isnot(file, null, "Must have file here");
 
   leafName = file.leafName;

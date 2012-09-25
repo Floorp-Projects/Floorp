@@ -5,6 +5,13 @@
 
 var testGenerator = testSteps();
 
+// The test js is shared between xpcshell (which has no SpecialPowers object)
+// and content mochitests (where the |Components| object is accessible only as
+// SpecialPowers.Components). Expose Components if necessary here to make things
+// work everywhere.
+if (typeof Components === 'undefined')
+  Components = SpecialPowers.Components;
+
 function executeSoon(aFun)
 {
   let comp = SpecialPowers.wrap(Components);

@@ -87,15 +87,13 @@ var pword = $_(1, "pword");
 const shiftModifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
 
 // Get the pwmgr service
-var pwmgr = SpecialPowers.wrap(Components)
-                         .classes["@mozilla.org/login-manager;1"]
+var pwmgr = SpecialPowers.wrap(Components).classes["@mozilla.org/login-manager;1"]
                          .getService(Components.interfaces.nsILoginManager);
 ok(pwmgr != null, "nsLoginManager service");
 
 // Create some logins just for this form, since we'll be deleting them.
 var nsLoginInfo =
-SpecialPowers.wrap(Components)
-             .Constructor("@mozilla.org/login-manager/loginInfo;1",
+SpecialPowers.wrap(Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
                           Components.interfaces.nsILoginInfo, "init");
 ok(nsLoginInfo != null, "nsLoginInfo constructor");
 

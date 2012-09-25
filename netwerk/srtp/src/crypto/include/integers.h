@@ -59,9 +59,18 @@
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
+#ifdef INTEGER_TYPES_H
+/* Let configure tell us where to get the equivalent to <stdint.h> */
+#include INTEGER_TYPES_H
+
+#if !defined(HAVE_UINT64_T)
+#define NO_64BIT_MATH 1
+#endif
+#else
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
 #endif
+#endif /* INTEGER_TYPES_H */
 #ifdef HAVE_INTTYPES_H
 # include <inttypes.h>
 #endif
@@ -76,7 +85,7 @@
 #endif
 
 /* Can we do 64 bit integers? */
-#if !defined(HAVE_UINT64_T) || defined(FORCE_UINT64_T)
+#if !defined(HAVE_UINT64_T)
 # if SIZEOF_UNSIGNED_LONG == 8
 typedef unsigned long		uint64_t;
 # elif SIZEOF_UNSIGNED_LONG_LONG == 8
@@ -97,7 +106,6 @@ typedef unsigned short int	uint16_t;
 #ifndef HAVE_UINT32_T
 typedef unsigned int		uint32_t;
 #endif
-
 
 #ifdef NO_64BIT_MATH
 typedef double uint64_t;

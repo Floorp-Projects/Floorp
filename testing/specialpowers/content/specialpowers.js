@@ -11,6 +11,7 @@ function SpecialPowers(window) {
   this._unexpectedCrashDumpFiles = { };
   this._crashDumpDir = null;
   this.DOMWindowUtils = bindDOMWindowUtils(window);
+  this.Components = getRawComponents(window);
   this._pongHandlers = [];
   this._messageListener = this._messageReceived.bind(this);
   addMessageListener("SPPingService", this._messageListener);
@@ -24,6 +25,7 @@ SpecialPowers.prototype.sanityCheck = function() { return "foo"; };
  
 // This gets filled in in the constructor.
 SpecialPowers.prototype.DOMWindowUtils = undefined;
+SpecialPowers.prototype.Components = undefined;
 
 SpecialPowers.prototype._sendSyncMessage = function(msgname, msg) {
   return sendSyncMessage(msgname, msg);

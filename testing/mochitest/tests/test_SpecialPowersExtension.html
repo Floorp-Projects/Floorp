@@ -95,23 +95,23 @@ function starttest(){
   //
 
   // Try some basic stuff with XHR.
-  var xhr2 = SpecialPowers.wrap(Components).classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
+  var xhr2 = SpecialPowers.Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(SpecialPowers.Ci.nsIXMLHttpRequest);
   is(xhr.readyState, XMLHttpRequest.UNSENT, "Should be able to get props off privileged objects");
-  var testURI = SpecialPowers.wrap(Components).classes['@mozilla.org/network/standard-url;1']
-                                              .createInstance(Components.interfaces.nsIURI);
+  var testURI = SpecialPowers.Cc['@mozilla.org/network/standard-url;1']
+                                              .createInstance(SpecialPowers.Ci.nsIURI);
   testURI.spec = "http://www.foobar.org/";
   is(testURI.spec, "http://www.foobar.org/", "Getters/Setters should work correctly");
   is(SpecialPowers.wrap(document).getElementsByTagName('details').length, 0, "Should work with proxy-based DOM bindings.");
 
   // Play with the window object.
-  var webnav = SpecialPowers.wrap(window).QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                         .getInterface(Components.interfaces.nsIWebNavigation);
-  webnav.QueryInterface(Components.interfaces.nsIDocShell);
+  var webnav = SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                                         .getInterface(SpecialPowers.Ci.nsIWebNavigation);
+  webnav.QueryInterface(SpecialPowers.Ci.nsIDocShell);
   ok(webnav.allowJavascript, "Able to pull properties off of docshell!");
 
   // Make sure Xray-wrapped functions work.
   try {
-    SpecialPowers.wrap(Components).ID('{00000000-0000-0000-0000-000000000000}');
+    SpecialPowers.wrap(SpecialPowers.Components).ID('{00000000-0000-0000-0000-000000000000}');
     ok(true, "Didn't throw");
   }
   catch (e) {
@@ -119,7 +119,7 @@ function starttest(){
   }
 
   // Check constructors.
-  var BinaryInputStream = SpecialPowers.wrap(Components).Constructor("@mozilla.org/binaryinputstream;1");
+  var BinaryInputStream = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/binaryinputstream;1");
   var bis = new BinaryInputStream();
   ok(/nsISupports/.exec(bis.toString()), "Should get the proper object out of the constructor");
   function TestConstructor() {

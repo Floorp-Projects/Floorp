@@ -28,8 +28,8 @@ window.fileInputGotClick = false;
 // on a mac.
 function setOrRestoreTabFocus(newValue) {
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
-  const prefSvcIID = Components.interfaces.nsIPrefService;
-  var prefs = SpecialPowers.wrap(Components).classes[prefSvcContractID].getService(prefSvcIID)
+  const prefSvcIID = SpecialPowers.Ci.nsIPrefService;
+  var prefs = SpecialPowers.Cc[prefSvcContractID].getService(prefSvcIID)
                                                    .getBranch("accessibility.");
   if (!newValue) {
     prefs.clearUserPref("tabfocus");
@@ -41,7 +41,7 @@ function setOrRestoreTabFocus(newValue) {
 function tab() {
   var utils = SpecialPowers.DOMWindowUtils;
   // Send tab key events.
-  var key = Components.interfaces.nsIDOMKeyEvent.DOM_VK_TAB;
+  var key = SpecialPowers.Ci.nsIDOMKeyEvent.DOM_VK_TAB;
   utils.sendKeyEvent("keydown", key, 0, 0);
   utils.sendKeyEvent("keypress", key, 0, 0);
   utils.sendKeyEvent("keyup", key, 0, 0);

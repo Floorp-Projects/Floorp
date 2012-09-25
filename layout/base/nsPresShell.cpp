@@ -3106,9 +3106,12 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
   nsPresContext::ScrollbarStyles ss = aScrollFrame->GetScrollbarStyles();
   nsRect allowedRange(scrollPt, nsSize(0, 0));
   bool needToScroll = false;
+  uint32_t directions = aScrollFrame->GetPerceivedScrollingDirections();
 
-  if ((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
-      ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
+  if (((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
+       ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
+      (!aVertical.mOnlyIfPerceivedScrollableDirection ||
+       (directions & nsIScrollableFrame::VERTICAL))) {
 
     if (ComputeNeedToScroll(aVertical.mWhenToScroll,
                             lineSize.height,
@@ -3129,8 +3132,10 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
     }
   }
 
-  if ((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
-      ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
+  if (((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
+       ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) &&
+      (!aHorizontal.mOnlyIfPerceivedScrollableDirection ||
+       (directions & nsIScrollableFrame::HORIZONTAL))) {
 
     if (ComputeNeedToScroll(aHorizontal.mWhenToScroll,
                             lineSize.width,

@@ -43,7 +43,7 @@ class NumberObject : public JSObject
 
     /* For access to init, as Number.prototype is special. */
     friend JSObject *
-    ::js_InitNumberClass(JSContext *cx, JSObject *global);
+    ::js_InitNumberClass(JSContext *cx, js::HandleObject global);
 };
 
 } // namespace js

@@ -60,7 +60,8 @@ let DebuggerController = {
       DebuggerView.StackFrames.initialize();
       DebuggerView.Breakpoints.initialize();
       DebuggerView.Properties.initialize();
-      DebuggerView.showCloseButton(!this._isRemoteDebugger && !this._isChromeDebugger);
+      DebuggerView.toggleCloseButton(!this._isRemoteDebugger &&
+                                     !this._isChromeDebugger);
 
       this.dispatchEvent("Debugger:Loaded");
       this._connect();

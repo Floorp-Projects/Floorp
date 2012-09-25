@@ -1122,7 +1122,7 @@ FinishRuntimeNumberState(JSRuntime *rt)
 } /* namespace js */
 
 JSObject *
-js_InitNumberClass(JSContext *cx, JSObject *obj)
+js_InitNumberClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
 

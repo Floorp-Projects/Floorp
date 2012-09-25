@@ -146,7 +146,7 @@ function runTest() {
   }, SimpleTest.finish);
 }
 
-var isMac = ("nsILocalFileMac" in Components.interfaces);
+var isMac = ("nsILocalFileMac" in SpecialPowers.Ci);
 if (isMac)
   SimpleTest.waitForFocus(runTest);
 else {

@@ -127,6 +127,7 @@
               <menupopup>
                 <menuitem id="cookie-1" value="1" label="&permission.allow;"/>
                 <menuitem id="cookie-8" value="8" label="&permission.allowForSession;"/>
+                <menuitem id="cookie-9" value="9" label="&permission.allowFirstPartyOnly;"/>
                 <menuitem id="cookie-2" value="2" label="&permission.block;"/>
               </menupopup>
             </menulist>

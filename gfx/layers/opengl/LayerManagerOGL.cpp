@@ -308,27 +308,16 @@ LayerManagerOGL::~LayerManagerOGL()
 void
 LayerManagerOGL::Destroy()
 {
-  if (!mDestroyed) {
-    if (mRoot) {
-      RootLayer()->Destroy();
-    }
-    mRoot = nullptr;
-
-    CleanupResources();
-
-    mDestroyed = true;
-  }
-}
-
-void
-LayerManagerOGL::CleanupResources()
-{
-  if (!mGLContext)
+  if (mDestroyed)
     return;
 
   if (mRoot) {
-    RootLayer()->CleanupResources();
+    RootLayer()->Destroy();
+    mRoot = nullptr;
   }
+
+  if (!mGLContext)
+    return;
 
   nsRefPtr<GLContext> ctx = mGLContext->GetSharedContext();
   if (!ctx) {
@@ -362,6 +351,8 @@ LayerManagerOGL::CleanupResources()
   }
 
   mGLContext = nullptr;
+
+  mDestroyed = true;
 }
 
 already_AddRefed<mozilla::gl::GLContext>

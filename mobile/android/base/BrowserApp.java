@@ -51,6 +51,7 @@ abstract public class BrowserApp extends GeckoApp
 
     public static BrowserToolbar mBrowserToolbar;
     private AboutHomeContent mAboutHomeContent;
+    private boolean mAboutHomeShowing;
 
     static Vector<MenuItem> sAddonMenuItems = new Vector<MenuItem>();
 
@@ -584,17 +585,25 @@ abstract public class BrowserApp extends GeckoApp
         mAboutHomeContent.update(EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
     }
 
-    public void showAboutHome() {
+    private void showAboutHome() {
+        if (mAboutHomeShowing)
+            return;
+
+        mAboutHomeShowing = true;
         Runnable r = new AboutHomeRunnable(true);
         mMainHandler.postAtFrontOfQueue(r);
     }
 
-    public void hideAboutHome() {
+    private void hideAboutHome() {
+        if (!mAboutHomeShowing)
+            return;
+
+        mAboutHomeShowing = false;
         Runnable r = new AboutHomeRunnable(false);
         mMainHandler.postAtFrontOfQueue(r);
     }
 
-    public class AboutHomeRunnable implements Runnable {
+    private class AboutHomeRunnable implements Runnable {
         boolean mShow;
         AboutHomeRunnable(boolean show) {
             mShow = show;

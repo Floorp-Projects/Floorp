@@ -549,7 +549,7 @@ function doNextTest() {
 }
 
 function getLoadContext() {
-  const Ci = Components.interfaces;
+  const Ci = SpecialPowers.Ci;
   return SpecialPowers.wrap(window)
                .QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIWebNavigation)
@@ -564,11 +564,11 @@ function runTest(test) {
   } else
     elem.focus();
 
-  var trans = SpecialPowers.wrap(Components).classes["@mozilla.org/widget/transferable;1"]
-                           .createInstance(Components.interfaces.nsITransferable);
+  var trans = SpecialPowers.Cc["@mozilla.org/widget/transferable;1"]
+                           .createInstance(SpecialPowers.Ci.nsITransferable);
   trans.init(getLoadContext());
-  var data = SpecialPowers.wrap(Components).classes["@mozilla.org/supports-string;1"]
-                          .createInstance(Components.interfaces.nsISupportsString);
+  var data = SpecialPowers.Cc["@mozilla.org/supports-string;1"]
+                          .createInstance(SpecialPowers.Ci.nsISupportsString);
   data.data = test.payload;
   trans.addDataFlavor("text/html");
   trans.setTransferData("text/html", data, data.data.length * 2);
@@ -581,16 +581,16 @@ function runTest(test) {
       getSelection().collapse(elem, 0);
       win = window;
     }
-    editor = SpecialPowers.wrap(win).QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                          .getInterface(Components.interfaces.nsIWebNavigation)
-                          .QueryInterface(Components.interfaces.nsIEditorDocShell)
+    editor = SpecialPowers.wrap(win).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                          .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                          .QueryInterface(SpecialPowers.Ci.nsIEditorDocShell)
                           .editor;
     editor.pasteTransferable(trans);
   } else {
-    var clipboard = SpecialPowers.wrap(Components).classes["@mozilla.org/widget/clipboard;1"]
-                                 .getService(Components.interfaces.nsIClipboard);
+    var clipboard = SpecialPowers.Cc["@mozilla.org/widget/clipboard;1"]
+                                 .getService(SpecialPowers.Ci.nsIClipboard);
 
-    clipboard.setData(trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard);
+    clipboard.setData(trans, null, SpecialPowers.Ci.nsIClipboard.kGlobalClipboard);
 
     synthesizeKey("V", {accelKey: true});
   }
