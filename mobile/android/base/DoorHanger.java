@@ -86,6 +86,11 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
             }
          }
 
+        // Enable the button layout if we have buttons.
+        if (buttons.length() > 0) {
+            mChoicesLayout.setVisibility(LinearLayout.VISIBLE);
+        }
+
         setOptions(options);
     }
 

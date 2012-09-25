@@ -12,12 +12,19 @@
                                           android:layout_height="@dimen/text_selection_handle_height"
                                           android:src="@drawable/handle_start"
                                           android:visibility="gone"
-                                          gecko:handleType="START"/>
+                                          gecko:handleType="start"/>
+
+   <org.mozilla.gecko.TextSelectionHandle android:id="@+id/middle_handle"
+                                          android:layout_width="@dimen/text_selection_handle_width"
+                                          android:layout_height="@dimen/text_selection_handle_height"
+                                          android:src="@drawable/handle_middle"
+                                          android:visibility="gone"
+                                          gecko:handleType="middle"/>
 
    <org.mozilla.gecko.TextSelectionHandle android:id="@+id/end_handle"
                                           android:layout_width="@dimen/text_selection_handle_width"
                                           android:layout_height="@dimen/text_selection_handle_height"
                                           android:src="@drawable/handle_end"
                                           android:visibility="gone"
-                                          gecko:handleType="END"/>
+                                          gecko:handleType="end"/>
 </merge>
