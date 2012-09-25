@@ -152,6 +152,9 @@ function run_test() {
   // Startup the profile and setup the initial state
   startupManager();
 
+  // New profile so new add-ons are ignored
+  check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
+
   AddonManager.getAddonsByIDs(["addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
@@ -198,30 +201,35 @@ function run_test_1() {
     do_check_false(a1.userDisabled);
     do_check_false(a1.appDisabled);
     do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
+    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
 
     do_check_neq(a2, null);
     do_check_false(a2.isActive);
     do_check_true(a2.userDisabled);
     do_check_false(a2.appDisabled);
     do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
+    do_check_false(isExtensionInAddonsList(profileDir, a2.id));
 
     do_check_neq(a3, null);
     do_check_true(a3.isActive);
     do_check_false(a3.userDisabled);
     do_check_false(a3.appDisabled);
     do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
+    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
 
     do_check_neq(a4, null);
     do_check_false(a4.isActive);
     do_check_true(a4.userDisabled);
     do_check_false(a4.appDisabled);
     do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
+    do_check_false(isExtensionInAddonsList(profileDir, a4.id));
 
     do_check_neq(a5, null);
     do_check_false(a5.isActive);
     do_check_false(a5.userDisabled);
     do_check_true(a5.appDisabled);
     do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
+    do_check_false(isExtensionInAddonsList(profileDir, a5.id));
 
     do_check_neq(a6, null);
     do_check_true(a6.isActive);
@@ -240,20 +248,30 @@ function run_test_1() {
     do_check_true(t1.userDisabled);
     do_check_false(t1.appDisabled);
     do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+    do_check_false(isThemeInAddonsList(profileDir, t1.id));
 
     do_check_neq(t2, null);
     do_check_true(t2.isActive);
     do_check_false(t2.userDisabled);
     do_check_false(t2.appDisabled);
     do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+    do_check_true(isThemeInAddonsList(profileDir, t2.id));
 
-    // After restarting the database won't be open so lock the file for writing
-    restartManager();
+    // After shutting down the database won't be open so we can lock it
+    shutdownManager();
     var dbfile = gProfD.clone();
     dbfile.append("extensions.sqlite");
-    var fstream = AM_Cc["@mozilla.org/network/file-output-stream;1"].
-                  createInstance(AM_Ci.nsIFileOutputStream);
-    fstream.init(dbfile, FileUtils.MODE_TRUNCATE | FileUtils.MODE_WRONLY, FileUtils.PERMS_FILE, 0);
+    let connection = Services.storage.openUnsharedDatabase(dbfile);
+    connection.executeSimpleSQL("PRAGMA synchronous = FULL");
+    connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
+    // Force the DB to become locked
+    connection.beginTransactionAs(connection.TRANSACTION_EXCLUSIVE);
+    connection.commitTransaction();
+
+    startupManager(false);
+
+    // Shouldn't have seen any startup changes
+    check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
 
     // Accessing the add-ons should open and recover the database
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -273,6 +291,7 @@ function run_test_1() {
       do_check_false(a1.userDisabled);
       do_check_false(a1.appDisabled);
       do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
+      do_check_true(isExtensionInAddonsList(profileDir, a1.id));
 
       // Should be correctly recovered
       do_check_neq(a2, null);
@@ -280,6 +299,7 @@ function run_test_1() {
       do_check_true(a2.userDisabled);
       do_check_false(a2.appDisabled);
       do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
+      do_check_false(isExtensionInAddonsList(profileDir, a2.id));
 
       // The compatibility update won't be recovered but it should still be
       // active for this session
@@ -288,6 +308,7 @@ function run_test_1() {
       do_check_false(a3.userDisabled);
       do_check_true(a3.appDisabled);
       do_check_eq(a3.pendingOperations, AddonManager.PENDING_DISABLE);
+      do_check_true(isExtensionInAddonsList(profileDir, a3.id));
 
       // The compatibility update won't be recovered and it will not have been
       // able to tell that it was previously userDisabled
@@ -296,12 +317,14 @@ function run_test_1() {
       do_check_false(a4.userDisabled);
       do_check_true(a4.appDisabled);
       do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
+      do_check_false(isExtensionInAddonsList(profileDir, a4.id));
 
       do_check_neq(a5, null);
       do_check_false(a5.isActive);
       do_check_false(a5.userDisabled);
       do_check_true(a5.appDisabled);
       do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
+      do_check_false(isExtensionInAddonsList(profileDir, a5.id));
 
       do_check_neq(a6, null);
       do_check_true(a6.isActive);
@@ -321,6 +344,7 @@ function run_test_1() {
       do_check_true(t1.userDisabled);
       do_check_false(t1.appDisabled);
       do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+      do_check_false(isThemeInAddonsList(profileDir, t1.id));
 
       // Should be correctly recovered
       do_check_neq(t2, null);
@@ -328,11 +352,15 @@ function run_test_1() {
       do_check_false(t2.userDisabled);
       do_check_false(t2.appDisabled);
       do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+      do_check_true(isThemeInAddonsList(profileDir, t2.id));
 
       // Restarting will actually apply changes to extensions.ini which will
       // then be put into the in-memory database when we next fail to load the
       // real thing
       restartManager();
+
+      // Shouldn't have seen any startup changes
+      check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
 
       AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                    "addon2@tests.mozilla.org",
@@ -350,30 +378,35 @@ function run_test_1() {
         do_check_false(a1.userDisabled);
         do_check_false(a1.appDisabled);
         do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
+        do_check_true(isExtensionInAddonsList(profileDir, a1.id));
 
         do_check_neq(a2, null);
         do_check_false(a2.isActive);
         do_check_true(a2.userDisabled);
         do_check_false(a2.appDisabled);
         do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
+        do_check_false(isExtensionInAddonsList(profileDir, a2.id));
 
         do_check_neq(a3, null);
         do_check_false(a3.isActive);
         do_check_false(a3.userDisabled);
         do_check_true(a3.appDisabled);
         do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
+        do_check_false(isExtensionInAddonsList(profileDir, a3.id));
 
         do_check_neq(a4, null);
         do_check_false(a4.isActive);
         do_check_false(a4.userDisabled);
         do_check_true(a4.appDisabled);
         do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
+        do_check_false(isExtensionInAddonsList(profileDir, a4.id));
 
         do_check_neq(a5, null);
         do_check_false(a5.isActive);
         do_check_false(a5.userDisabled);
         do_check_true(a5.appDisabled);
         do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
+        do_check_false(isExtensionInAddonsList(profileDir, a5.id));
 
         do_check_neq(a6, null);
         do_check_true(a6.isActive);
@@ -392,15 +425,98 @@ function run_test_1() {
         do_check_true(t1.userDisabled);
         do_check_false(t1.appDisabled);
         do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+        do_check_false(isThemeInAddonsList(profileDir, t1.id));
 
         do_check_neq(t2, null);
         do_check_true(t2.isActive);
         do_check_false(t2.userDisabled);
         do_check_false(t2.appDisabled);
         do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+        do_check_true(isThemeInAddonsList(profileDir, t2.id));
 
-        fstream.close();
-        end_test();
+        connection.close();
+
+        // After allowing access to the original DB things should go back to as
+        // they were previously
+        restartManager();
+
+        // Shouldn't have seen any startup changes
+        check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
+
+        AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                     "addon2@tests.mozilla.org",
+                                     "addon3@tests.mozilla.org",
+                                     "addon4@tests.mozilla.org",
+                                     "addon5@tests.mozilla.org",
+                                     "addon6@tests.mozilla.org",
+                                     "addon7@tests.mozilla.org",
+                                     "theme1@tests.mozilla.org",
+                                     "theme2@tests.mozilla.org"], function([a1, a2, a3,
+                                                                            a4, a5, a6,
+                                                                            a7, t1, t2]) {
+          do_check_neq(a1, null);
+          do_check_true(a1.isActive);
+          do_check_false(a1.userDisabled);
+          do_check_false(a1.appDisabled);
+          do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
+          do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+
+          do_check_neq(a2, null);
+          do_check_false(a2.isActive);
+          do_check_true(a2.userDisabled);
+          do_check_false(a2.appDisabled);
+          do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
+          do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+
+          do_check_neq(a3, null);
+          do_check_true(a3.isActive);
+          do_check_false(a3.userDisabled);
+          do_check_false(a3.appDisabled);
+          do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
+          do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+
+          do_check_neq(a4, null);
+          do_check_false(a4.isActive);
+          do_check_true(a4.userDisabled);
+          do_check_false(a4.appDisabled);
+          do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
+          do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+
+          do_check_neq(a5, null);
+          do_check_false(a5.isActive);
+          do_check_false(a5.userDisabled);
+          do_check_true(a5.appDisabled);
+          do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
+          do_check_false(isExtensionInAddonsList(profileDir, a5.id));
+
+          do_check_neq(a6, null);
+          do_check_true(a6.isActive);
+          do_check_false(a6.userDisabled);
+          do_check_false(a6.appDisabled);
+          do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
+
+          do_check_neq(a7, null);
+          do_check_false(a7.isActive);
+          do_check_true(a7.userDisabled);
+          do_check_false(a7.appDisabled);
+          do_check_eq(a7.pendingOperations, AddonManager.PENDING_NONE);
+
+          do_check_neq(t1, null);
+          do_check_false(t1.isActive);
+          do_check_true(t1.userDisabled);
+          do_check_false(t1.appDisabled);
+          do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+          do_check_false(isThemeInAddonsList(profileDir, t1.id));
+
+          do_check_neq(t2, null);
+          do_check_true(t2.isActive);
+          do_check_false(t2.userDisabled);
+          do_check_false(t2.appDisabled);
+          do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+          do_check_true(isThemeInAddonsList(profileDir, t2.id));
+
+          end_test();
+        });
       });
     });
   });
