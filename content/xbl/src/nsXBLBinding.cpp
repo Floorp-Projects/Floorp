@@ -171,7 +171,7 @@ InstallXBLField(JSContext* cx,
   {
     JSAutoCompartment ac(cx, callee);
 
-    JS::Rooted<JSObject*> xblProto(cx);
+    js::Rooted<JSObject*> xblProto(cx);
     xblProto = &js::GetFunctionNativeReserved(callee, XBLPROTO_SLOT).toObject();
 
     JS::Value name = js::GetFunctionNativeReserved(callee, FIELD_SLOT);
@@ -217,11 +217,11 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
   const JS::Value &thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));
 
-  JS::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
+  js::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
 
   bool installed = false;
-  JS::Rooted<JSObject*> callee(cx, &args.calleev().toObject());
-  JS::Rooted<jsid> id(cx);
+  js::Rooted<JSObject*> callee(cx, &args.calleev().toObject());
+  js::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, id.address(), &installed)) {
     return false;
   }
@@ -231,7 +231,7 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
     return true;
   }
 
-  JS::Rooted<JS::Value> v(cx);
+  js::Rooted<JS::Value> v(cx);
   if (!JS_GetPropertyById(cx, thisObj, id, v.address())) {
     return false;
   }
@@ -253,16 +253,16 @@ FieldSetterImpl(JSContext *cx, JS::CallArgs args)
   const JS::Value &thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));
 
-  JS::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
+  js::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
 
   bool installed = false;
-  JS::Rooted<JSObject*> callee(cx, &args.calleev().toObject());
-  JS::Rooted<jsid> id(cx);
+  js::Rooted<JSObject*> callee(cx, &args.calleev().toObject());
+  js::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, id.address(), &installed)) {
     return false;
   }
 
-  JS::Rooted<JS::Value> v(cx,
+  js::Rooted<JS::Value> v(cx,
                           args.length() > 0 ? args[0] : JS::UndefinedValue());
   return JS_SetPropertyById(cx, thisObj, id, v.address());
 }
@@ -300,9 +300,9 @@ XBLResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
 
   // We have a field: now install a getter/setter pair which will resolve the
   // field onto the actual object, when invoked.
-  JS::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, obj));
+  js::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, obj));
 
-  JS::Rooted<JSObject*> get(cx);
+  js::Rooted<JSObject*> get(cx);
   get = ::JS_GetFunctionObject(js::NewFunctionByIdWithReserved(cx, FieldGetter,
                                                                0, 0, global,
                                                                id));
@@ -313,7 +313,7 @@ XBLResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
   js::SetFunctionNativeReserved(get, FIELD_SLOT,
                                 JS::StringValue(JSID_TO_STRING(id)));
 
-  JS::Rooted<JSObject*> set(cx);
+  js::Rooted<JSObject*> set(cx);
   set = ::JS_GetFunctionObject(js::NewFunctionByIdWithReserved(cx, FieldSetter,
                                                                1, 0, global,
                                                                id));

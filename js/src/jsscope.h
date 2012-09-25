@@ -1123,6 +1123,9 @@ Shape::searchNoAllocation(Shape *start, jsid id)
 void
 MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp);
 
+template<> struct RootKind<Shape *> : SpecificRootKind<Shape *, THING_ROOT_SHAPE> {};
+template<> struct RootKind<BaseShape *> : SpecificRootKind<BaseShape *, THING_ROOT_BASE_SHAPE> {};
+
 } // namespace js
 
 #ifdef _MSC_VER
@@ -1131,13 +1134,8 @@ MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp);
 #endif
 
 namespace JS {
-    template<> class AnchorPermitted<js::Shape *> { };
-    template<> class AnchorPermitted<const js::Shape *> { };
-
-    template<>
-    struct RootKind<js::Shape *> : SpecificRootKind<js::Shape *, THING_ROOT_SHAPE> {};
-    template<>
-    struct RootKind<js::BaseShape *> : SpecificRootKind<js::BaseShape *, THING_ROOT_BASE_SHAPE> {};
+template<> class AnchorPermitted<js::Shape *> { };
+template<> class AnchorPermitted<const js::Shape *> { };
 }
 
 #endif /* jsscope_h___ */

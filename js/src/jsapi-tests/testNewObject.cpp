@@ -17,7 +17,7 @@ static JSBool
 constructHook(JSContext *cx, unsigned argc, jsval *vp)
 {
     // Check that arguments were passed properly from JS_New.
-    JS::RootedObject callee(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+    js::RootedObject callee(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
 
     JSObject *obj = JS_NewObjectForConstructor(cx, js::Jsvalify(&js::ObjectClass), vp);
     if (!obj) {
@@ -57,14 +57,14 @@ BEGIN_TEST(testNewObject_1)
     CHECK(JS_AddNamedValueRoot(cx, &argv[0], "argv0"));
     CHECK(JS_AddNamedValueRoot(cx, &argv[1], "argv1"));
 
-    JS::RootedValue v(cx);
+    js::RootedValue v(cx);
     EVAL("Array", v.address());
-    JS::RootedObject Array(cx, JSVAL_TO_OBJECT(v));
+    js::RootedObject Array(cx, JSVAL_TO_OBJECT(v));
 
     // With no arguments.
-    JS::RootedObject obj(cx, JS_New(cx, Array, 0, NULL));
+    js::RootedObject obj(cx, JS_New(cx, Array, 0, NULL));
     CHECK(obj);
-    JS::RootedValue rt(cx, OBJECT_TO_JSVAL(obj));
+    js::RootedValue rt(cx, OBJECT_TO_JSVAL(obj));
     CHECK(JS_IsArrayObject(cx, obj));
     uint32_t len;
     CHECK(JS_GetArrayLength(cx, obj, &len));
@@ -99,9 +99,9 @@ BEGIN_TEST(testNewObject_1)
         JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
         NULL, NULL, NULL, constructHook
     };
-    JS::RootedObject ctor(cx, JS_NewObject(cx, &cls, NULL, NULL));
+    js::RootedObject ctor(cx, JS_NewObject(cx, &cls, NULL, NULL));
     CHECK(ctor);
-    JS::RootedValue rt2(cx, OBJECT_TO_JSVAL(ctor));
+    js::RootedValue rt2(cx, OBJECT_TO_JSVAL(ctor));
     obj = JS_New(cx, ctor, 3, argv);
     CHECK(obj);
     CHECK(JS_GetElement(cx, ctor, 0, v.address()));

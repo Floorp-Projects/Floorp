@@ -3453,7 +3453,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
 
     def getThis(self):
         return CGIndenter(
-            CGGeneric("JS::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));\n"
+            CGGeneric("js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));\n"
                       "if (!obj) {\n"
                       "  return false;\n"
                       "}\n"

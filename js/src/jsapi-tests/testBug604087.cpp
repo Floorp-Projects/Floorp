@@ -32,7 +32,7 @@ static JSObject *
 wrap(JSContext *cx, JS::HandleObject toWrap, JS::HandleObject target)
 {
     JSAutoCompartment ac(cx, target);
-    JS::RootedObject wrapper(cx, toWrap);
+    js::RootedObject wrapper(cx, toWrap);
     if (!JS_WrapObject(cx, wrapper.address()))
         return NULL;
     return wrapper;
@@ -41,7 +41,7 @@ wrap(JSContext *cx, JS::HandleObject toWrap, JS::HandleObject target)
 static JSObject *
 SameCompartmentWrap(JSContext *cx, JSObject *objArg)
 {
-    JS::RootedObject obj(cx, objArg);
+    js::RootedObject obj(cx, objArg);
     JS_GC(JS_GetRuntime(cx));
     return obj;
 }
@@ -49,8 +49,8 @@ SameCompartmentWrap(JSContext *cx, JSObject *objArg)
 static JSObject *
 PreWrap(JSContext *cx, JSObject *scopeArg, JSObject *objArg, unsigned flags)
 {
-    JS::RootedObject scope(cx, scopeArg);
-    JS::RootedObject obj(cx, objArg);
+    js::RootedObject scope(cx, scopeArg);
+    js::RootedObject obj(cx, objArg);
     JS_GC(JS_GetRuntime(cx));
     return obj;
 }
@@ -58,34 +58,34 @@ PreWrap(JSContext *cx, JSObject *scopeArg, JSObject *objArg, unsigned flags)
 static JSObject *
 Wrap(JSContext *cx, JSObject *objArg, JSObject *protoArg, JSObject *parentArg, unsigned flags)
 {
-    JS::RootedObject obj(cx, objArg);
-    JS::RootedObject proto(cx, protoArg);
-    JS::RootedObject parent(cx, parentArg);
+    js::RootedObject obj(cx, objArg);
+    js::RootedObject proto(cx, protoArg);
+    js::RootedObject parent(cx, parentArg);
     return js::Wrapper::New(cx, obj, proto, parent, &js::CrossCompartmentWrapper::singleton);
 }
 
 BEGIN_TEST(testBug604087)
 {
-    JS::RootedObject outerObj(cx, js::Wrapper::New(cx, global, global->getProto(), global,
+    js::RootedObject outerObj(cx, js::Wrapper::New(cx, global, global->getProto(), global,
                                                &OuterWrapper::singleton));
-    JS::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
-    JS::RootedObject compartment3(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
-    JS::RootedObject compartment4(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    js::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    js::RootedObject compartment3(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    js::RootedObject compartment4(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
 
-    JS::RootedObject c2wrapper(cx, wrap(cx, outerObj, compartment2));
+    js::RootedObject c2wrapper(cx, wrap(cx, outerObj, compartment2));
     CHECK(c2wrapper);
     js::SetProxyExtra(c2wrapper, 0, js::Int32Value(2));
 
-    JS::RootedObject c3wrapper(cx, wrap(cx, outerObj, compartment3));
+    js::RootedObject c3wrapper(cx, wrap(cx, outerObj, compartment3));
     CHECK(c3wrapper);
     js::SetProxyExtra(c3wrapper, 0, js::Int32Value(3));
 
-    JS::RootedObject c4wrapper(cx, wrap(cx, outerObj, compartment4));
+    js::RootedObject c4wrapper(cx, wrap(cx, outerObj, compartment4));
     CHECK(c4wrapper);
     js::SetProxyExtra(c4wrapper, 0, js::Int32Value(4));
     compartment4 = c4wrapper = NULL;
 
-    JS::RootedObject next(cx);
+    js::RootedObject next(cx);
     {
         JSAutoCompartment ac(cx, compartment2);
         next = js::Wrapper::New(cx, compartment2, compartment2->getProto(), compartment2,

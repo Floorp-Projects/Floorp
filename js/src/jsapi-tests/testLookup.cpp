@@ -14,7 +14,7 @@
 BEGIN_TEST(testLookup_bug522590)
 {
     // Define a function that makes method-bearing objects.
-    JS::RootedValue x(cx);
+    js::RootedValue x(cx);
     EXEC("function mkobj() { return {f: function () {return 2;}} }");
 
     // Calling mkobj() multiple times must create multiple functions in ES5.
@@ -23,10 +23,10 @@ BEGIN_TEST(testLookup_bug522590)
 
     // Now make x.f a method.
     EVAL("mkobj()", x.address());
-    JS::RootedObject xobj(cx, JSVAL_TO_OBJECT(x));
+    js::RootedObject xobj(cx, JSVAL_TO_OBJECT(x));
 
     // This lookup must not return an internal function object.
-    JS::RootedValue r(cx);
+    js::RootedValue r(cx);
     CHECK(JS_LookupProperty(cx, xobj, "f", r.address()));
     CHECK(r.isObject());
     JSObject *funobj = &r.toObject();
@@ -42,7 +42,7 @@ document_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flag
                  JSMutableHandleObject objp)
 {
     // If id is "all", and we're not detecting, resolve document.all=true.
-    JS::RootedValue v(cx);
+    js::RootedValue v(cx);
     if (!JS_IdToValue(cx, id, v.address()))
         return false;
     if (JSVAL_IS_STRING(v)) {
@@ -68,10 +68,10 @@ static JSClass document_class = {
 
 BEGIN_TEST(testLookup_bug570195)
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, &document_class, NULL, NULL));
+    js::RootedObject obj(cx, JS_NewObject(cx, &document_class, NULL, NULL));
     CHECK(obj);
     CHECK(JS_DefineProperty(cx, global, "document", OBJECT_TO_JSVAL(obj), NULL, NULL, 0));
-    JS::RootedValue v(cx);
+    js::RootedValue v(cx);
     EVAL("document.all ? true : false", v.address());
     CHECK_SAME(v, JSVAL_FALSE);
     EVAL("document.hasOwnProperty('all')", v.address());
