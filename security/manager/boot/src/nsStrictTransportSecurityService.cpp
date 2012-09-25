@@ -352,7 +352,7 @@ nsStrictTransportSecurityService::GetPreloadListEntry(const char *aHost)
 {
   return (const nsSTSPreload *) bsearch(aHost,
                                         kSTSPreloadList,
-                                        PR_ARRAY_SIZE(kSTSPreloadList),
+                                        mozilla::ArrayLength(kSTSPreloadList),
                                         sizeof(nsSTSPreload),
                                         STSPreloadCompare);
 }
