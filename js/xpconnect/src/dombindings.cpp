@@ -210,14 +210,17 @@ ListBase<LC>::instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *calle
 
 template<class LC>
 JSBool
-ListBase<LC>::length_getter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
+ListBase<LC>::length_getter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return false;
     if (!instanceIsListObject(cx, obj, NULL))
         return false;
     uint32_t length;
     getListObject(obj)->GetLength(&length);
     MOZ_ASSERT(int32_t(length) >= 0);
-    vp.set(UINT_TO_JSVAL(length));
+    JS_SET_RVAL(cx, vp, UINT_TO_JSVAL(length));
     return true;
 }
 
@@ -361,12 +364,16 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope,
     for (size_t n = 0; n < sProtoPropertiesCount; ++n) {
         MOZ_ASSERT(sProtoProperties[n].getter);
         jsid id = sProtoProperties[n].id;
-        unsigned attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
+        unsigned attrs = JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS;
         if (!sProtoProperties[n].setter)
             attrs |= JSPROP_READONLY;
         if (!JS_DefinePropertyById(cx, interfacePrototype, id, JSVAL_VOID,
-                                   sProtoProperties[n].getter, sProtoProperties[n].setter, attrs))
+                                   (JSPropertyOp) sProtoProperties[n].getter,
+                                   (JSStrictPropertyOp) sProtoProperties[n].setter,
+                                   attrs))
+        {
             return NULL;
+        }
     }
 
     for (size_t n = 0; n < sProtoMethodsCount; ++n) {
@@ -763,12 +770,12 @@ ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, JSPrope
 
     for (size_t n = 0; n < sProtoPropertiesCount; ++n) {
         if (id == sProtoProperties[n].id) {
-            desc->attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
+            desc->attrs = JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS;
             if (!sProtoProperties[n].setter)
                 desc->attrs |= JSPROP_READONLY;
             desc->obj = proxy;
-            desc->setter = sProtoProperties[n].setter;
-            desc->getter = sProtoProperties[n].getter;
+            desc->setter = (JSStrictPropertyOp) sProtoProperties[n].setter;
+            desc->getter = (JSPropertyOp) sProtoProperties[n].getter;
             return true;
         }
     }
