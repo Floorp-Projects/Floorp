@@ -47,12 +47,9 @@
       gQueue.push(new synthDownKey("contextmenu", new focusChecker("item1")));
       gQueue.push(new synthDownKey("item1", new focusChecker("item2")));
       gQueue.push(new synthRightKey("item2", new focusChecker("item2.1")));
-      if (WIN) {
-        todo(false, "item2.1 and item2 fail too frequently on Windows, bug 691580");
-      } else {
-        gQueue.push(new synthEscapeKey("item2.1", new focusChecker("item2")));
-        gQueue.push(new synthEscapeKey("item2", new focusChecker("button")));
-      }
+      gQueue.push(new synthEscapeKey("item2.1", new focusChecker("item2")));
+      gQueue.push(new synthEscapeKey("item2", new focusChecker("button")));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
