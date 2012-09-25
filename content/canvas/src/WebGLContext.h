@@ -461,12 +461,13 @@ class WebGLContext :
     public WebGLRectangleObject,
     public nsWrapperCache
 {
+    friend class WebGLContextUserData;
+    friend class WebGLMemoryPressureObserver;
     friend class WebGLMemoryMultiReporterWrapper;
     friend class WebGLExtensionLoseContext;
     friend class WebGLExtensionCompressedTextureS3TC;
     friend class WebGLExtensionCompressedTextureATC;
-    friend class WebGLContextUserData;
-    friend class WebGLMemoryPressureObserver;
+    friend class WebGLExtensionCompressedTexturePVRTC;
     friend class WebGLExtensionDepthTexture;
 
     enum {
@@ -1172,6 +1173,7 @@ protected:
         WEBGL_lose_context,
         WEBGL_compressed_texture_s3tc,
         WEBGL_compressed_texture_atc,
+        WEBGL_compressed_texture_pvrtc,
         WEBGL_depth_texture,
         WebGLExtensionID_number_of_extensions,
         WebGLExtensionID_unknown_extension
@@ -1211,7 +1213,7 @@ protected:
     bool ValidateGLSLString(const nsAString& string, const char *info);
 
     bool ValidateTexImage2DTarget(WebGLenum target, WebGLsizei width, WebGLsizei height, const char* info);
-    bool ValidateCompressedTextureSize(WebGLint level, WebGLenum format, WebGLsizei width, WebGLsizei height, uint32_t byteLength, const char* info);
+    bool ValidateCompressedTextureSize(WebGLenum target, WebGLint level, WebGLenum format, WebGLsizei width, WebGLsizei height, uint32_t byteLength, const char* info);
     bool ValidateLevelWidthHeightForTarget(WebGLenum target, WebGLint level, WebGLsizei width, WebGLsizei height, const char* info);
 
     static uint32_t GetBitsPerTexel(WebGLenum format, WebGLenum type);
