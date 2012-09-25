@@ -381,10 +381,7 @@ RadioInterfaceLayer.prototype = {
         this.updateDataConnection(message);
         break;
       case "datacallerror":
-        // 3G Network revoked the data connection, possible unavailable APN
-        debug("Received data registration error message. Failed APN " +
-              this.dataCallSettings["apn"]);
-        RILNetworkInterface.reset();
+        this.handleDataCallError(message);
         break;
       case "signalstrengthchange":
         this.handleSignalStrengthChange(message);
@@ -643,6 +640,20 @@ RadioInterfaceLayer.prototype = {
       ppmm.broadcastAsyncMessage("RIL:DataInfoChanged", dataInfo);
     }
     this.updateRILNetworkInterface();
+  },
+
+  /**
+   * Handle data errors
+   */
+  handleDataCallError: function handleDataCallError(message) {
+    if (message.apn != this.dataCallSettings["apn"]) {
+      return;
+    }
+
+    // 3G Network revoked the data connection, possible unavailable APN
+    RILNetworkInterface.reset();
+    // Notify datacall error
+    ppmm.broadcastAsyncMessage("RIL:DataError", message);
   },
 
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
