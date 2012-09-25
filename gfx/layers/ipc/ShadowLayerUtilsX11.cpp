@@ -177,7 +177,7 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
     // operations on the back buffers before handing them to the
     // parent, otherwise the surface might be used by the parent's
     // Display in between two operations queued by our Display.
-    XSync(DefaultXDisplay(), False);
+    FinishX(DefaultXDisplay());
   }
 }
 
