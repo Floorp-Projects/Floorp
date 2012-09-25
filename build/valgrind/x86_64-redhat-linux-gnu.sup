@@ -14,12 +14,17 @@
    ...
 }
 {
-   This is intended, see bug 793534
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534 and see bug 793549.)
    Memcheck:Leak
-   fun:malloc
-   fun:strdup
-   fun:moz_strdup
+   ...
    fun:_ZL9SaveToEnvPKc
+   ...
+}
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534 and see bug 793549.)
+   Memcheck:Leak
+   ...
+   fun:_ZL13SaveWordToEnvPKcRK19nsACString_internal
    ...
 }
 {
@@ -61,14 +66,6 @@
    fun:NS_Alloc_P
    fun:_Z12ToNewCStringRK19nsACString_internal
    fun:_ZN13CrashReporter14SetupExtraDataEP7nsIFileRK19nsACString_internal
-   ...
-}
-{
-   Bug 793549
-   Memcheck:Leak
-   fun:realloc
-   fun:PR_Realloc
-   fun:GrowStuff
    ...
 }
 {
