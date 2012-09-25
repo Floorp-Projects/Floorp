@@ -22,7 +22,7 @@ interface AudioBufferSourceNode : AudioSourceNode {
 
     // Playback this in-memory audio asset  
     // Many sources can share the same buffer  
-    //attribute AudioBuffer buffer;
+    attribute AudioBuffer? buffer;
 
     //attribute AudioParam playbackRate;
     //attribute boolean loop;
