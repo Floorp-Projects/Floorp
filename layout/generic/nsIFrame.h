@@ -2183,8 +2183,12 @@ public:
    *
    * This includes all display items created by this frame, including
    * container types.
+   *
+   * @param aDisplayItemKey If specified, only issues an invalidate
+   * if this frame painted a display item of that type during the 
+   * previous paint. SVG rendering observers are always notified.
    */
-  virtual void InvalidateFrame();
+  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0);
 
   /**
    * Same as InvalidateFrame(), but only mark a fixed rect as needing
@@ -2192,8 +2196,11 @@ public:
    *
    * @param aRect The rect to invalidate, relative to the TopLeft of the
    * frame's border box.
+   * @param aDisplayItemKey If specified, only issues an invalidate
+   * if this frame painted a display item of that type during the 
+   * previous paint. SVG rendering observers are always notified.
    */
-  virtual void InvalidateFrameWithRect(const nsRect& aRect);
+  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0);
   
   /**
    * Calls InvalidateFrame() on all frames descendant frames (including
@@ -2201,12 +2208,17 @@ public:
    * 
    * This function doesn't walk through placeholder frames to invalidate
    * the out-of-flow frames.
+   *
+   * @param aDisplayItemKey If specified, only issues an invalidate
+   * if this frame painted a display item of that type during the 
+   * previous paint. SVG rendering observers are always notified.
    */
-  void InvalidateFrameSubtree();
+  void InvalidateFrameSubtree(uint32_t aDisplayItemKey = 0);
 
   /**
    * Called when a frame is about to be removed and needs to be invalidated.
    * Normally does nothing since DLBI handles removed frames.
+   * 
    */
   virtual void InvalidateFrameForRemoval() {}
   
