@@ -52,6 +52,7 @@ webidl_files = \
   SVGTransformList.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
+  URL.webidl \
   WebSocket.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
