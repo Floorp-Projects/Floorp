@@ -19,6 +19,7 @@
 #include "mozIStorageFunction.h"
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
+#include "nsIPrincipal.h"
 
 void ReverseString(const nsCSubstring& source, nsCSubstring& result)
 {
@@ -226,37 +227,16 @@ nsDOMStorageDBWrapper::GetUsage(const nsACString& aDomain,
 }
 
 nsresult
-nsDOMStorageDBWrapper::CreateScopeDBKey(nsIURI* aUri, nsACString& aKey)
+nsDOMStorageDBWrapper::CreateScopeDBKey(nsIPrincipal* aPrincipal,
+                                        nsACString& aKey)
 {
-  nsresult rv;
-
-  rv = CreateReversedDomain(aUri, aKey);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsAutoCString scheme;
-  rv = aUri->GetScheme(scheme);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  aKey.AppendLiteral(":");
-  aKey.Append(scheme);
-
-  int32_t port = NS_GetRealPort(aUri);
-  if (port != -1) {
-    aKey.AppendLiteral(":");
-    aKey.Append(nsPrintfCString("%d", port));
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMStorageDBWrapper::CreateReversedDomain(nsIURI* aUri, nsACString& aKey)
-{
-  nsresult rv;
+  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
   nsAutoCString domainScope;
-  rv = aUri->GetAsciiHost(domainScope);
+  rv = uri->GetAsciiHost(domainScope);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (domainScope.IsEmpty()) {
@@ -264,16 +244,16 @@ nsDOMStorageDBWrapper::CreateReversedDomain(nsIURI* aUri, nsACString& aKey)
     // internally by our own redirector, we can trust them and use path as key.
     // if file:/// protocol, let's make the exact directory the domain
     bool isScheme = false;
-    if ((NS_SUCCEEDED(aUri->SchemeIs("about", &isScheme)) && isScheme) ||
-        (NS_SUCCEEDED(aUri->SchemeIs("moz-safe-about", &isScheme)) && isScheme)) {
-      rv = aUri->GetPath(domainScope);
+    if ((NS_SUCCEEDED(uri->SchemeIs("about", &isScheme)) && isScheme) ||
+        (NS_SUCCEEDED(uri->SchemeIs("moz-safe-about", &isScheme)) && isScheme)) {
+      rv = uri->GetPath(domainScope);
       NS_ENSURE_SUCCESS(rv, rv);
       // While the host is always canonicalized to lowercase, the path is not,
       // thus need to force the casing.
       ToLowerCase(domainScope);
     }
-    else if (NS_SUCCEEDED(aUri->SchemeIs("file", &isScheme)) && isScheme) {
-      nsCOMPtr<nsIURL> url = do_QueryInterface(aUri, &rv);
+    else if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme)) && isScheme) {
+      nsCOMPtr<nsIURL> url = do_QueryInterface(uri, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = url->GetDirectory(domainScope);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -282,6 +262,17 @@ nsDOMStorageDBWrapper::CreateReversedDomain(nsIURI* aUri, nsACString& aKey)
 
   rv = CreateReversedDomain(domainScope, aKey);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString scheme;
+  rv = uri->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aKey.Append(NS_LITERAL_CSTRING(":") + scheme);
+
+  int32_t port = NS_GetRealPort(uri);
+  if (port != -1) {
+    aKey.Append(nsPrintfCString(":%d", port));
+  }
 
   return NS_OK;
 }
@@ -300,7 +291,7 @@ nsDOMStorageDBWrapper::CreateReversedDomain(const nsACString& aAsciiDomain,
 }
 
 nsresult
-nsDOMStorageDBWrapper::CreateQuotaDBKey(const nsACString& aAsciiDomain,
+nsDOMStorageDBWrapper::CreateQuotaDBKey(nsIPrincipal* aPrincipal,
                                         nsACString& aKey)
 {
   nsresult rv;
@@ -311,15 +302,15 @@ nsDOMStorageDBWrapper::CreateQuotaDBKey(const nsACString& aAsciiDomain,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aAsciiDomain);
+  rv = aPrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
   nsAutoCString eTLDplusOne;
   rv = eTLDService->GetBaseDomain(uri, 0, eTLDplusOne);
   if (NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS == rv) {
     // XXX bug 357323 - what to do for localhost/file exactly?
-    eTLDplusOne = aAsciiDomain;
-    rv = NS_OK;
+    rv = uri->GetAsciiHost(eTLDplusOne);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
