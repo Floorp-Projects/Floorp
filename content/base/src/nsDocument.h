@@ -1274,7 +1274,7 @@ private:
   void DoUnblockOnload();
 
   nsresult CheckFrameOptions();
-  nsresult InitCSP(nsIChannel* aChannel);
+  nsresult InitCSP(nsIChannel* aChannel, nsIContentSecurityPolicy **aCSP);
 
   // Sets aElement to be the pending pointer lock element. Once this document's
   // node principal's URI is granted the "fullscreen" permission, the pointer

@@ -360,13 +360,6 @@ nsNullPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNullPrincipal::GetUnknownAppId(bool* aUnknownAppId)
-{
-  *aUnknownAppId = false;
-  return NS_OK;
-}
-
 /**
  * nsISerializable implementation
  */
