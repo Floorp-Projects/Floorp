@@ -587,7 +587,7 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
 
 // digest_open
 // prepare a memory buffer for reading/writing digests
-SECStatus PR_CALLBACK
+SECStatus
 nsPKCS12Blob::digest_open(void *arg, PRBool reading)
 {
   nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
@@ -622,7 +622,7 @@ nsPKCS12Blob::digest_open(void *arg, PRBool reading)
 // digest_close
 // destroy a possibly active iterator
 // remove the data buffer if requested
-SECStatus PR_CALLBACK
+SECStatus
 nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
 {
   nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
@@ -641,7 +641,7 @@ nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
 
 // digest_read
 // read bytes from the memory buffer
-int PR_CALLBACK
+int
 nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
 {
   nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
@@ -664,7 +664,7 @@ nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
 
 // digest_write
 // append bytes to the memory buffer
-int PR_CALLBACK
+int
 nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
 {
   nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
@@ -683,7 +683,7 @@ nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
 // nickname_collision
 // what to do when the nickname collides with one already in the db.
 // TODO: not handled, throw a dialog allowing the nick to be changed?
-SECItem * PR_CALLBACK
+SECItem *
 nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 {
   nsNSSShutDownPreventionLock locker;
@@ -745,7 +745,7 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 
 // write_export_file
 // write bytes to the exported PKCS#12 file
-void PR_CALLBACK
+void
 nsPKCS12Blob::write_export_file(void *arg, const char *buf, unsigned long len)
 {
   nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
