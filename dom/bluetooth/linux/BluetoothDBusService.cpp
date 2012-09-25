@@ -1156,9 +1156,19 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
         // a dict value. After we parse out the properties, we need to go back
         // and add the address to the ipdl dict we've created to make sure we
         // have all of the information to correctly build the device.
+        nsString addrstr = NS_ConvertUTF8toUTF16(addr);
+        nsString path = GetObjectPathFromAddress(signalPath, addrstr);
+
         v.get_ArrayOfBluetoothNamedValue()
           .AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("Address"),
-                                             NS_ConvertUTF8toUTF16(addr)));
+                                             addrstr));
+
+        // We also need to create a path for the device, to make sure we know
+        // where to access it later.
+        v.get_ArrayOfBluetoothNamedValue()
+          .AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("Path"),
+                                             path));
+
       }
     } else {
       errorStr.AssignLiteral("DBus device found message structure not as expected!");
@@ -1571,8 +1581,15 @@ public:
       // for agent events "RequestConfirmation", "RequestPinCode", and "RequestPasskey"
       InfallibleTArray<BluetoothNamedValue> parameters = v.get_ArrayOfBluetoothNamedValue();
 
+      // For consistency, append path
+      nsString path = parameters[0].value();
+      BluetoothNamedValue pathprop;
+      pathprop.name().AssignLiteral("Path");
+      pathprop.value() = path;
+      parameters.AppendElement(pathprop);
+
       // Replace object path with device address
-      nsString address = GetAddressFromObjectPath(parameters[0].value());
+      nsString address = GetAddressFromObjectPath(path);
       parameters[0].value() = address;
 
       uint8_t i;
