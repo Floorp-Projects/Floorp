@@ -3205,10 +3205,12 @@ BEGIN_CASE(JSOP_INITELEM)
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
         JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
-        if (JSOp(regs.pc[JSOP_INITELEM_LENGTH]) == JSOP_ENDINIT &&
-            !SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
+        JSOp next = JSOp(*(regs.pc + GetBytecodeLength(regs.pc)));
+        if ((next == JSOP_ENDINIT && op == JSOP_INITELEM) ||
+            (next == JSOP_POP && op == JSOP_INITELEM_INC))
         {
-            goto error;
+            if (!SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
+                goto error;
         }
     } else {
         if (!JSObject::defineGeneric(cx, obj, id, rref, NULL, NULL, JSPROP_ENUMERATE))
