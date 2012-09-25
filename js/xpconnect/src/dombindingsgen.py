@@ -599,7 +599,7 @@ def writeAttrStubs(f, classname, attr):
     getterName = classname + '_' + header.attributeNativeName(attr, True)
     writeBindingStub(f, classname, attr, getterName)
     if attr.readonly:
-        setterName = 'xpc_qsGetterOnlyPropertyStub'
+        setterName = 'xpc_qsGetterOnlyNativeStub'
     else:
         setterName = (classname + '_'
                       + header.attributeNativeName(attr, False))
