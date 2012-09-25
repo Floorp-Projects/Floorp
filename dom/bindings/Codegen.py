@@ -5636,50 +5636,53 @@ class CGDescriptor(CGThing):
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
         cgThings = []
-        if descriptor.interface.hasInterfacePrototypeObject():
-            # These are set to true if at least one non-static
-            # method/getter/setter exist on the interface.
-            (hasMethod, hasGetter, hasLenientGetter,
-             hasSetter, hasLenientSetter) = False, False, False, False, False
-            for m in descriptor.interface.members:
-                if (m.isMethod() and
-                    (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
-                    if m.isStatic():
-                        cgThings.append(CGStaticMethod(descriptor, m))
+        # These are set to true if at least one non-static
+        # method/getter/setter exist on the interface.
+        (hasMethod, hasGetter, hasLenientGetter,
+         hasSetter, hasLenientSetter) = False, False, False, False, False
+        for m in descriptor.interface.members:
+            if (m.isMethod() and
+                (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
+                if m.isStatic():
+                    assert descriptor.interface.hasInterfaceObject
+                    cgThings.append(CGStaticMethod(descriptor, m))
+                elif descriptor.interface.hasInterfacePrototypeObject():
+                    cgThings.append(CGSpecializedMethod(descriptor, m))
+                    cgThings.append(CGMemberJITInfo(descriptor, m))
+                    hasMethod = True
+            elif m.isAttr():
+                if m.isStatic():
+                    assert descriptor.interface.hasInterfaceObject
+                    cgThings.append(CGStaticGetter(descriptor, m))
+                elif descriptor.interface.hasInterfacePrototypeObject():
+                    cgThings.append(CGSpecializedGetter(descriptor, m))
+                    if m.hasLenientThis():
+                        hasLenientGetter = True
                     else:
-                        cgThings.append(CGSpecializedMethod(descriptor, m))
-                        cgThings.append(CGMemberJITInfo(descriptor, m))
-                        hasMethod = True
-                elif m.isAttr():
+                        hasGetter = True
+                if not m.readonly:
                     if m.isStatic():
-                        cgThings.append(CGStaticGetter(descriptor, m))
-                    else:
-                        cgThings.append(CGSpecializedGetter(descriptor, m))
+                        assert descriptor.interface.hasInterfaceObject
+                        cgThings.append(CGStaticSetter(descriptor, m))
+                    elif descriptor.interface.hasInterfacePrototypeObject():
+                        cgThings.append(CGSpecializedSetter(descriptor, m))
                         if m.hasLenientThis():
-                            hasLenientGetter = True
+                            hasLenientSetter = True
                         else:
-                            hasGetter = True
-                    if not m.readonly:
-                        if m.isStatic():
-                            cgThings.append(CGStaticSetter(descriptor, m))
-                        else:
-                            cgThings.append(CGSpecializedSetter(descriptor, m))
-                            if m.hasLenientThis():
-                                hasLenientSetter = True
-                            else:
-                                hasSetter = True
-                    elif m.getExtendedAttribute("PutForwards"):
-                        cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
-                        hasSetter = True
-                    if not m.isStatic():
-                        cgThings.append(CGMemberJITInfo(descriptor, m))
-            if hasMethod: cgThings.append(CGGenericMethod(descriptor))
-            if hasGetter: cgThings.append(CGGenericGetter(descriptor))
-            if hasLenientGetter: cgThings.append(CGGenericGetter(descriptor,
-                                                                 lenientThis=True))
-            if hasSetter: cgThings.append(CGGenericSetter(descriptor))
-            if hasLenientSetter: cgThings.append(CGGenericSetter(descriptor,
-                                                                 lenientThis=True))
+                            hasSetter = True
+                elif m.getExtendedAttribute("PutForwards"):
+                    cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
+                    hasSetter = True
+                if (not m.isStatic() and
+                    descriptor.interface.hasInterfacePrototypeObject()):
+                    cgThings.append(CGMemberJITInfo(descriptor, m))
+        if hasMethod: cgThings.append(CGGenericMethod(descriptor))
+        if hasGetter: cgThings.append(CGGenericGetter(descriptor))
+        if hasLenientGetter: cgThings.append(CGGenericGetter(descriptor,
+                                                             lenientThis=True))
+        if hasSetter: cgThings.append(CGGenericSetter(descriptor))
+        if hasLenientSetter: cgThings.append(CGGenericSetter(descriptor,
+                                                             lenientThis=True))
 
         if descriptor.concrete:
             if descriptor.nativeOwnership == 'owned' or descriptor.nativeOwnership == 'refcounted':

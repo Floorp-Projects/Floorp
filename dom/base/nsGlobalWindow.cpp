@@ -148,7 +148,6 @@
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
-#include "nsBlobProtocolHandler.h"
 #include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
 #include "nsIURIFixup.h"
@@ -421,85 +420,6 @@ static const char sPopStatePrefStr[] = "browser.history.allowPopState";
 
 #define NETWORK_UPLOAD_EVENT_NAME     NS_LITERAL_STRING("moznetworkupload")
 #define NETWORK_DOWNLOAD_EVENT_NAME   NS_LITERAL_STRING("moznetworkdownload")
-
-/**
- * An object implementing the window.URL property.
- */
-class nsDOMMozURLProperty MOZ_FINAL : public nsIDOMMozURLProperty
-{
-public:
-  nsDOMMozURLProperty(nsGlobalWindow* aWindow)
-    : mWindow(aWindow)
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZURLPROPERTY
-
-  void ClearWindowReference() {
-    mWindow = nullptr;
-  }
-private:
-  nsGlobalWindow* mWindow;
-};
-
-DOMCI_DATA(MozURLProperty, nsDOMMozURLProperty)
-NS_IMPL_ADDREF(nsDOMMozURLProperty)
-NS_IMPL_RELEASE(nsDOMMozURLProperty)
-NS_INTERFACE_MAP_BEGIN(nsDOMMozURLProperty)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMMozURLProperty)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozURLProperty)
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozURLProperty)
-NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP
-nsDOMMozURLProperty::CreateObjectURL(nsIDOMBlob* aBlob, nsAString& aURL)
-{
-  NS_PRECONDITION(!mWindow || mWindow->IsInnerWindow(),
-                  "Should be inner window");
-
-  NS_ENSURE_STATE(mWindow && mWindow->mDoc);
-  NS_ENSURE_ARG_POINTER(aBlob);
-
-  nsIDocument* doc = mWindow->mDoc;
-
-  nsresult rv = aBlob->GetInternalUrl(doc->NodePrincipal(), aURL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  doc->RegisterFileDataUri(NS_LossyConvertUTF16toASCII(aURL));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMMozURLProperty::RevokeObjectURL(const nsAString& aURL)
-{
-  NS_PRECONDITION(!mWindow || mWindow->IsInnerWindow(),
-                  "Should be inner window");
-
-  NS_ENSURE_STATE(mWindow);
-
-  NS_LossyConvertUTF16toASCII asciiurl(aURL);
-
-  nsIPrincipal* winPrincipal = mWindow->GetPrincipal();
-  if (!winPrincipal) {
-    return NS_OK;
-  }
-
-  nsIPrincipal* principal =
-    nsBlobProtocolHandler::GetFileDataEntryPrincipal(asciiurl);
-  bool subsumes;
-  if (principal && winPrincipal &&
-      NS_SUCCEEDED(winPrincipal->Subsumes(principal, &subsumes)) &&
-      subsumes) {
-    if (mWindow->mDoc) {
-      mWindow->mDoc->UnregisterFileDataUri(asciiurl);
-    }
-    nsBlobProtocolHandler::RemoveFileDataEntry(asciiurl);
-  }
-
-  return NS_OK;
-}
 
 /**
  * An indirect observer object that means we don't have to implement nsIObserver
@@ -927,10 +847,6 @@ nsGlobalWindow::~nsGlobalWindow()
 #ifdef DEBUG
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
-
-  if (mURLProperty) {
-    mURLProperty->ClearWindowReference();
-  }
 
   nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac)
@@ -10768,20 +10684,6 @@ nsGlobalWindow::DisableDeviceSensor(uint32_t aType)
   if (ac) {
     ac->RemoveWindowListener(aType, this);
   }
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetURL(nsIDOMMozURLProperty** aURL)
-{
-  FORWARD_TO_INNER(GetURL, (aURL), NS_ERROR_UNEXPECTED);
-
-  if (!mURLProperty) {
-    mURLProperty = new nsDOMMozURLProperty(this);
-  }
-
-  NS_ADDREF(*aURL = mURLProperty);
-
-  return NS_OK;
 }
 
 void
