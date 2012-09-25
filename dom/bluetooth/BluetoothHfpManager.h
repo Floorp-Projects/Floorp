@@ -9,14 +9,19 @@
 
 #include "BluetoothCommon.h"
 #include "mozilla/ipc/UnixSocket.h"
+#include "nsIObserver.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothReplyRunnable;
 
 class BluetoothHfpManager : public mozilla::ipc::UnixSocketConsumer
+                          , public nsIObserver
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
   ~BluetoothHfpManager();
 
   static BluetoothHfpManager* Get();
@@ -31,6 +36,8 @@ public:
 
 private:
   BluetoothHfpManager();
+
+  nsresult HandleVolumeChanged(const nsAString& aData);
 
   int mCurrentVgs;
   int mCurrentCallIndex;
