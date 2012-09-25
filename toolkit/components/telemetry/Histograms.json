@@ -2250,5 +2250,9 @@
   "ENABLE_PRIVILEGE_EVER_CALLED": {
     "kind": "flag",
     "description": "Whether enablePrivilege has ever been called during the current session"
+  },
+  "READ_SAVED_PING_SUCCESS": {
+    "kind": "boolean",
+    "description": "Sucessful reading a saved ping file"
   }
 }
