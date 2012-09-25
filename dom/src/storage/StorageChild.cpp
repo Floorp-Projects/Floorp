@@ -83,21 +83,21 @@ StorageChild::InitRemote()
   ContentChild* child = ContentChild::GetSingleton();
   AddIPDLReference();
   child->SendPStorageConstructor(this, null_t());
-  SendInit(mUseDB, mSessionOnly, mInPrivateBrowsing, mDomain, mScopeDBKey,
+  SendInit(mUseDB, mSessionOnly, mInPrivateBrowsing, mScopeDBKey,
            mQuotaDBKey, mStorageType);
 }
 
 void
-StorageChild::InitAsSessionStorage(nsIURI* aDomainURI, bool aPrivate)
+StorageChild::InitAsSessionStorage(nsIPrincipal* aPrincipal, bool aPrivate)
 {
-  DOMStorageBase::InitAsSessionStorage(aDomainURI, aPrivate);
+  DOMStorageBase::InitAsSessionStorage(aPrincipal, aPrivate);
   InitRemote();
 }
 
 void
-StorageChild::InitAsLocalStorage(nsIURI* aDomainURI, bool aPrivate)
+StorageChild::InitAsLocalStorage(nsIPrincipal* aPrincipal, bool aPrivate)
 {
-  DOMStorageBase::InitAsLocalStorage(aDomainURI, aPrivate);
+  DOMStorageBase::InitAsLocalStorage(aPrincipal, aPrivate);
   InitRemote();
 }
 
@@ -233,7 +233,7 @@ StorageChild::CloneFrom(bool aCallerSecure, DOMStorageBase* aThat)
   StorageClone clone(nullptr, other, aCallerSecure);
   AddIPDLReference();
   child->SendPStorageConstructor(this, clone);
-  SendInit(mUseDB, mSessionOnly, mInPrivateBrowsing, mDomain,
+  SendInit(mUseDB, mSessionOnly, mInPrivateBrowsing,
            mScopeDBKey, mQuotaDBKey, mStorageType);
   return NS_OK;
 }
