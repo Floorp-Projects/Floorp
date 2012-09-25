@@ -68,7 +68,7 @@ bool SimpleCFIWalker<RegisterType, RawContextType>::FindCallerRegisters(
 
   // Populate *caller_context with the values the rules placed in
   // caller_registers.
-  memset(caller_context, 0xda, sizeof(caller_context));
+  memset(caller_context, 0xda, sizeof(*caller_context));
   *caller_validity = 0;
   for (size_t i = 0; i < map_size_; i++) {
     const RegisterSet &r = register_map_[i];

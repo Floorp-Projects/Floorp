@@ -1,4 +1,4 @@
-// Copyright (c) 2010 Google Inc.
+// Copyright (c) 2011 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -33,10 +33,20 @@
 
 #include "common/module.h"
 
+#include <assert.h>
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 
+#include <iostream>
+#include <utility>
+
 namespace google_breakpad {
+
+using std::dec;
+using std::endl;
+using std::hex;
+
 
 Module::Module(const string &name, const string &os,
                const string &architecture, const string &id) :
@@ -47,13 +57,17 @@ Module::Module(const string &name, const string &os,
     load_address_(0) { }
 
 Module::~Module() {
-  for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); it++)
+  for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); ++it)
     delete it->second;
   for (FunctionSet::iterator it = functions_.begin();
-       it != functions_.end(); it++)
+       it != functions_.end(); ++it) {
     delete *it;
+  }
   for (vector<StackFrameEntry *>::iterator it = stack_frame_entries_.begin();
-       it != stack_frame_entries_.end(); it++)
+       it != stack_frame_entries_.end(); ++it) {
+    delete *it;
+  }
+  for (ExternSet::iterator it = externs_.begin(); it != externs_.end(); ++it)
     delete *it;
 }
 
@@ -62,16 +76,20 @@ void Module::SetLoadAddress(Address address) {
 }
 
 void Module::AddFunction(Function *function) {
+  // FUNC lines must not hold an empty name, so catch the problem early if
+  // callers try to add one.
+  assert(!function->name.empty());
   std::pair<FunctionSet::iterator,bool> ret = functions_.insert(function);
   if (!ret.second) {
-    // Free the duplicate we failed to insert because we own it.
+    // Free the duplicate that was not inserted because this Module
+    // now owns it.
     delete function;
   }
 }
 
 void Module::AddFunctions(vector<Function *>::iterator begin,
                           vector<Function *>::iterator end) {
-  for (vector<Function *>::iterator it = begin; it != end; it++)
+  for (vector<Function *>::iterator it = begin; it != end; ++it)
     AddFunction(*it);
 }
 
@@ -79,9 +97,23 @@ void Module::AddStackFrameEntry(StackFrameEntry *stack_frame_entry) {
   stack_frame_entries_.push_back(stack_frame_entry);
 }
 
+void Module::AddExtern(Extern *ext) {
+  std::pair<ExternSet::iterator,bool> ret = externs_.insert(ext);
+  if (!ret.second) {
+    // Free the duplicate that was not inserted because this Module
+    // now owns it.
+    delete ext;
+  }
+}
+
 void Module::GetFunctions(vector<Function *> *vec,
                           vector<Function *>::iterator i) {
   vec->insert(i, functions_.begin(), functions_.end());
+}
+
+void Module::GetExterns(vector<Extern *> *vec,
+                        vector<Extern *>::iterator i) {
+  vec->insert(i, externs_.begin(), externs_.end());
 }
 
 Module::File *Module::FindFile(const string &name) {
@@ -119,7 +151,7 @@ Module::File *Module::FindExistingFile(const string &name) {
 
 void Module::GetFiles(vector<File *> *vec) {
   vec->clear();
-  for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); it++)
+  for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); ++it)
     vec->push_back(it->second);
 }
 
@@ -130,16 +162,17 @@ void Module::GetStackFrameEntries(vector<StackFrameEntry *> *vec) {
 void Module::AssignSourceIds() {
   // First, give every source file an id of -1.
   for (FileByNameMap::iterator file_it = files_.begin();
-       file_it != files_.end(); file_it++)
+       file_it != files_.end(); ++file_it) {
     file_it->second->source_id = -1;
+  }
 
   // Next, mark all files actually cited by our functions' line number
   // info, by setting each one's source id to zero.
   for (FunctionSet::const_iterator func_it = functions_.begin();
-       func_it != functions_.end(); func_it++) {
+       func_it != functions_.end(); ++func_it) {
     Function *func = *func_it;
     for (vector<Line>::iterator line_it = func->lines.begin();
-         line_it != func->lines.end(); line_it++)
+         line_it != func->lines.end(); ++line_it)
       line_it->file->source_id = 0;
   }
 
@@ -149,9 +182,10 @@ void Module::AssignSourceIds() {
   // lexicographical order by name, which is neat.
   int next_source_id = 0;
   for (FileByNameMap::iterator file_it = files_.begin();
-       file_it != files_.end(); file_it++)
+       file_it != files_.end(); ++file_it) {
     if (!file_it->second->source_id)
       file_it->second->source_id = next_source_id++;
+  }
 }
 
 bool Module::ReportError() {
@@ -160,81 +194,101 @@ bool Module::ReportError() {
   return false;
 }
 
-bool Module::WriteRuleMap(const RuleMap &rule_map, FILE *stream) {
+bool Module::WriteRuleMap(const RuleMap &rule_map, std::ostream &stream) {
   for (RuleMap::const_iterator it = rule_map.begin();
-       it != rule_map.end(); it++) {
-    if (it != rule_map.begin() &&
-        0 > putc(' ', stream))
-      return false;
-    if (0 > fprintf(stream, "%s: %s", it->first.c_str(), it->second.c_str()))
-      return false;
+       it != rule_map.end(); ++it) {
+    if (it != rule_map.begin())
+      stream << ' ';
+    stream << it->first << ": " << it->second;
   }
-  return true;
+  return stream.good();
 }
 
-bool Module::Write(FILE *stream) {
-  if (0 > fprintf(stream, "MODULE %s %s %s %s\n",
-                  os_.c_str(), architecture_.c_str(), id_.c_str(),
-                  name_.c_str()))
+bool Module::Write(std::ostream &stream, bool cfi) {
+  stream << "MODULE " << os_ << " " << architecture_ << " "
+         << id_ << " " << name_ << endl;
+  if (!stream.good())
     return ReportError();
 
   AssignSourceIds();
 
   // Write out files.
   for (FileByNameMap::iterator file_it = files_.begin();
-       file_it != files_.end(); file_it++) {
+       file_it != files_.end(); ++file_it) {
     File *file = file_it->second;
     if (file->source_id >= 0) {
-      if (0 > fprintf(stream, "FILE %d %s\n",
-                      file->source_id, file->name.c_str()))
+      stream << "FILE " << file->source_id << " " <<  file->name << endl;
+      if (!stream.good())
         return ReportError();
     }
   }
 
   // Write out functions and their lines.
   for (FunctionSet::const_iterator func_it = functions_.begin();
-       func_it != functions_.end(); func_it++) {
+       func_it != functions_.end(); ++func_it) {
     Function *func = *func_it;
-    if (0 > fprintf(stream, "FUNC %llx %llx %llx %s\n",
-                    (unsigned long long) (func->address - load_address_),
-                    (unsigned long long) func->size,
-                    (unsigned long long) func->parameter_size,
-                    func->name.c_str()))
+    stream << "FUNC " << hex
+           << (func->address - load_address_) << " "
+           << func->size << " "
+           << func->parameter_size << " "
+           << func->name << dec << endl;
+
+    if (!stream.good())
       return ReportError();
     for (vector<Line>::iterator line_it = func->lines.begin();
-         line_it != func->lines.end(); line_it++)
-      if (0 > fprintf(stream, "%llx %llx %d %d\n",
-                      (unsigned long long) (line_it->address - load_address_),
-                      (unsigned long long) line_it->size,
-                      line_it->number,
-                      line_it->file->source_id))
+         line_it != func->lines.end(); ++line_it) {
+      stream << hex
+             << (line_it->address - load_address_) << " "
+             << line_it->size << " "
+             << dec
+             << line_it->number << " "
+             << line_it->file->source_id << endl;
+      if (!stream.good())
         return ReportError();
+    }
   }
 
-  // Write out 'STACK CFI INIT' and 'STACK CFI' records.
-  vector<StackFrameEntry *>::const_iterator frame_it;
-  for (frame_it = stack_frame_entries_.begin();
-       frame_it != stack_frame_entries_.end(); frame_it++) {
-    StackFrameEntry *entry = *frame_it;
-    if (0 > fprintf(stream, "STACK CFI INIT %llx %llx ",
-                    (unsigned long long) entry->address - load_address_,
-                    (unsigned long long) entry->size)
-        || !WriteRuleMap(entry->initial_rules, stream)
-        || 0 > putc('\n', stream))
+  // Write out 'PUBLIC' records.
+  for (ExternSet::const_iterator extern_it = externs_.begin();
+       extern_it != externs_.end(); ++extern_it) {
+    Extern *ext = *extern_it;
+    stream << "PUBLIC " << hex
+           << (ext->address - load_address_) << " 0 "
+           << ext->name << dec << endl;
+    if (!stream.good())
       return ReportError();
+  }
 
-    // Write out this entry's delta rules as 'STACK CFI' records.
-    for (RuleChangeMap::const_iterator delta_it = entry->rule_changes.begin();
-         delta_it != entry->rule_changes.end(); delta_it++) {
-      if (0 > fprintf(stream, "STACK CFI %llx ",
-                      (unsigned long long) delta_it->first - load_address_)
-          || !WriteRuleMap(delta_it->second, stream)
-          || 0 > putc('\n', stream))
+  if (cfi) {
+    // Write out 'STACK CFI INIT' and 'STACK CFI' records.
+    vector<StackFrameEntry *>::const_iterator frame_it;
+    for (frame_it = stack_frame_entries_.begin();
+         frame_it != stack_frame_entries_.end(); ++frame_it) {
+      StackFrameEntry *entry = *frame_it;
+      stream << "STACK CFI INIT " << hex
+             << (entry->address - load_address_) << " "
+             << entry->size << " " << dec;
+      if (!stream.good()
+          || !WriteRuleMap(entry->initial_rules, stream))
         return ReportError();
+
+      stream << endl;
+
+      // Write out this entry's delta rules as 'STACK CFI' records.
+      for (RuleChangeMap::const_iterator delta_it = entry->rule_changes.begin();
+           delta_it != entry->rule_changes.end(); ++delta_it) {
+        stream << "STACK CFI " << hex
+               << (delta_it->first - load_address_) << " " << dec;
+        if (!stream.good()
+            || !WriteRuleMap(delta_it->second, stream))
+          return ReportError();
+
+        stream << endl;
+      }
     }
   }
 
   return true;
 }
 
-} // namespace google_breakpad
+}  // namespace google_breakpad

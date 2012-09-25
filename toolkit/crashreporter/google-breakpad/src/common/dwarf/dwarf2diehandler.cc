@@ -31,9 +31,12 @@
 // dwarf2diehandler.cc: Implement the dwarf2reader::DieDispatcher class.
 // See dwarf2diehandler.h for details.
 
-#include "common/dwarf/dwarf2diehandler.h"
-
 #include <assert.h>
+
+#include <string>
+
+#include "common/dwarf/dwarf2diehandler.h"
+#include "common/using_std_string.h"
 
 namespace dwarf2reader {
 

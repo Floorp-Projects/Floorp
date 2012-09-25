@@ -52,12 +52,26 @@ namespace MacFileUtilities {
 MachoWalker::MachoWalker(const char *path, LoadCommandCallback callback,
                          void *context)
     : file_(0),
+      memory_(NULL),
+      memory_size_(0),
       callback_(callback),
       callback_context_(context),
       current_header_(NULL),
       current_header_size_(0),
       current_header_offset_(0) {
   file_ = open(path, O_RDONLY);
+}
+
+MachoWalker::MachoWalker(void *memory, size_t size,
+                         LoadCommandCallback callback, void *context)
+    : file_(0),
+      memory_(memory),
+      memory_size_(size),
+      callback_(callback),
+      callback_context_(context),
+      current_header_(NULL),
+      current_header_size_(0),
+      current_header_offset_(0) {
 }
 
 MachoWalker::~MachoWalker() {
@@ -90,7 +104,21 @@ bool MachoWalker::WalkHeader(int cpu_type) {
 }
 
 bool MachoWalker::ReadBytes(void *buffer, size_t size, off_t offset) {
-  return pread(file_, buffer, size, offset) == (ssize_t)size;
+  if (memory_) {
+    if (offset < 0)
+      return false;
+    bool result = true;
+    if (offset + size > memory_size_) {
+      if (static_cast<size_t>(offset) >= memory_size_)
+        return false;
+      size = memory_size_ - static_cast<size_t>(offset);
+      result = false;
+    }
+    memcpy(buffer, static_cast<char *>(memory_) + offset, size);
+    return result;
+  } else {
+    return pread(file_, buffer, size, offset) == (ssize_t)size;
+  }
 }
 
 bool MachoWalker::CurrentHeader(struct mach_header_64 *header, off_t *offset) {

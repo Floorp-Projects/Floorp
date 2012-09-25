@@ -67,6 +67,21 @@ struct PDBModuleInfo {
   wstring cpu;
 };
 
+// A structure that carries information that identifies a PE file,
+// either an EXE or a DLL.
+struct PEModuleInfo {
+  // The basename of the PE file.
+  wstring code_file;
+
+  // The PE file's code identifier, which consists of its timestamp
+  // and file size concatenated together into a single hex string.
+  // (The fields IMAGE_OPTIONAL_HEADER::SizeOfImage and
+  // IMAGE_FILE_HEADER::TimeDateStamp, as defined in the ImageHlp
+  // documentation.) This is not well documented, if it's documented
+  // at all, but it's what symstore does and what DbgHelp supports.
+  wstring code_identifier;
+};
+
 class PDBSourceLineWriter {
  public:
   enum FileFormat {
@@ -99,6 +114,10 @@ class PDBSourceLineWriter {
   // Retrieves information about the module's debugging file.  Returns
   // true on success and false on failure.
   bool GetModuleInfo(PDBModuleInfo *info);
+
+  // Retrieves information about the module's PE file.  Returns
+  // true on success and false on failure.
+  bool GetPEInfo(PEModuleInfo *info);
 
   // Sets uses_guid to true if the opened file uses a new-style CodeView
   // record with a 128-bit GUID, or false if the opened file uses an old-style
@@ -139,6 +158,11 @@ class PDBSourceLineWriter {
   // its uuid and age.
   bool PrintPDBInfo();
 
+  // Outputs a line identifying the PE file corresponding to the PDB
+  // file that is being dumped, along with its code identifier,
+  // which consists of its timestamp and file size.
+  bool PrintPEInfo();
+
   // Returns true if this filename has already been seen,
   // and an ID is stored for it, or false if it has not.
   bool FileIDIsCached(const wstring &file) {
@@ -170,6 +194,10 @@ class PDBSourceLineWriter {
     return iter->second;
   };
 
+  // Find the PE file corresponding to the loaded PDB file, and
+  // set the code_file_ member. Returns false on failure.
+  bool FindPEFile();
+
   // Returns the function name for a symbol.  If possible, the name is
   // undecorated.  If the symbol's decorated form indicates the size of
   // parameters on the stack, this information is returned in stack_param_size.
@@ -182,6 +210,10 @@ class PDBSourceLineWriter {
   // parameters.  function must have the tag SymTagFunction.  In the event of
   // a failure, returns 0, which is also a valid number of bytes.
   static int GetFunctionStackParamSize(IDiaSymbol *function);
+
+  // The filename of the PE file corresponding to the currently-open
+  // pdb file.
+  wstring code_file_;
 
   // The session for the currently-open pdb file.
   CComPtr<IDiaSession> session_;

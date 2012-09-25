@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2010, Google Inc.
+// Copyright (c) 2011, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -51,9 +52,9 @@ namespace google_breakpad {
 
 class DumpSymbols {
  public:
-  DumpSymbols() 
+  DumpSymbols()
       : input_pathname_(),
-        object_filename_(), 
+        object_filename_(),
         contents_(),
         selected_object_file_(),
         selected_object_name_() { }
@@ -83,9 +84,9 @@ class DumpSymbols {
   // object file, then the dumper will dump the object file whose
   // architecture matches that of this dumper program.
   bool SetArchitecture(cpu_type_t cpu_type, cpu_subtype_t cpu_subtype);
-  
-  // If this dumper's file includes an object file for |arch_name|, then select 
-  // that object file for dumping, and return true. Otherwise, return false, 
+
+  // If this dumper's file includes an object file for |arch_name|, then select
+  // that object file for dumping, and return true. Otherwise, return false,
   // and leave this dumper's selected architecture unchanged.
   //
   // By default, if this dumper's file contains only one object file, then
@@ -93,7 +94,7 @@ class DumpSymbols {
   // object file, then the dumper will dump the object file whose
   // architecture matches that of this dumper program.
   bool SetArchitecture(const std::string &arch_name);
-  
+
   // Return a pointer to an array of 'struct fat_arch' structures,
   // describing the object files contained in this dumper's file. Set
   // *|count| to the number of elements in the array. The returned array is
@@ -108,10 +109,10 @@ class DumpSymbols {
     return NULL;
   }
 
-  // Read the selected object file's debugging information, and write it
-  // out to |stream|. Return true on success; if an error occurs, report it
-  // and return false.
-  bool WriteSymbolFile(FILE *stream);
+  // Read the selected object file's debugging information, and write it out to
+  // |stream|. Write the CFI section if |cfi| is true. Return true on success;
+  // if an error occurs, report it and return false.
+  bool WriteSymbolFile(std::ostream &stream, bool cfi);
 
  private:
   // Used internally.
@@ -157,7 +158,7 @@ class DumpSymbols {
   // has exactly one element.
   vector<struct fat_arch> object_files_;
 
-  // The object file in object_files_ selected to dump, or NULL if 
+  // The object file in object_files_ selected to dump, or NULL if
   // SetArchitecture hasn't been called yet.
   const struct fat_arch *selected_object_file_;
 
