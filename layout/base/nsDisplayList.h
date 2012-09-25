@@ -2577,17 +2577,4 @@ public:
   nscoord mRightEdge; // length from the right side
 };
 
-class nsDisplayImageContainer : public nsDisplayItem {
-public:
-  typedef mozilla::layers::ImageContainer ImageContainer;
-  typedef mozilla::layers::ImageLayer ImageLayer;
-
-  nsDisplayImageContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame)
-  {}
-
-  virtual already_AddRefed<ImageContainer> GetContainer() = 0;
-  virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) = 0;
-};
-
 #endif /*NSDISPLAYLIST_H_*/
