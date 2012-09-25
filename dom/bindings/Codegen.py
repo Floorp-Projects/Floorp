@@ -1095,7 +1095,9 @@ class MethodDefiner(PropertyDefiner):
                                  "flags": "JSPROP_ENUMERATE",
                                  "pref": None })
 
-        if not descriptor.interface.parent and not static and descriptor.nativeOwnership == 'nsisupports':
+        if (not descriptor.interface.parent and not static and
+            descriptor.nativeOwnership == 'nsisupports' and
+            descriptor.interface.hasInterfacePrototypeObject()):
             self.chrome.append({"name": 'QueryInterface',
                                 "methodInfo": False,
                                 "length": 1,
