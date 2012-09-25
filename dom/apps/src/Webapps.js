@@ -80,9 +80,21 @@ WebappsRegistry.prototype = {
     return uri.prePath;
   },
 
+  _validateScheme: function(aURL) {
+    let scheme = Services.io.newURI(aURL, null, null).scheme;
+    if (scheme != "http" && scheme != "https") {
+      throw new Components.Exception(
+        "INVALID_URL_SCHEME: '" + scheme + "'; must be 'http' or 'https'",
+        Cr.NS_ERROR_FAILURE
+      );
+    }
+  },
+
   // mozIDOMApplicationRegistry implementation
 
   install: function(aURL, aParams) {
+    this._validateScheme(aURL);
+
     let installURL = this._window.location.href;
     let installOrigin = this._getOrigin(installURL);
     let request = this.createRequest();
@@ -162,6 +174,8 @@ WebappsRegistry.prototype = {
   // mozIDOMApplicationRegistry2 implementation
 
   installPackage: function(aPackageURL, aParams) {
+    this._validateScheme(aPackageURL);
+
     let request = this.createRequest();
     let requestID = this.getRequestId(request);
 
