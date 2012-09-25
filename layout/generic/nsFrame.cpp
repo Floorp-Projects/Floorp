@@ -4641,8 +4641,19 @@ LayerActivityTracker::NotifyExpired(LayerActivity* aObject)
 
   nsIFrame* f = aObject->mFrame;
   aObject->mFrame = nullptr;
+
+  // if there are hints other than transform/opacity, invalidate, since we don't know what else to do.
+  if (aObject->mChangeHint & ~(nsChangeHint_UpdateOpacityLayer|nsChangeHint_UpdateTransformLayer)) {
+    f->InvalidateFrameSubtree();
+  } else {
+    if (aObject->mChangeHint & nsChangeHint_UpdateOpacityLayer) {
+      f->InvalidateFrameSubtree(nsDisplayItem::TYPE_OPACITY);
+    } 
+    if (aObject->mChangeHint & nsChangeHint_UpdateTransformLayer) {
+      f->InvalidateFrameSubtree(nsDisplayItem::TYPE_TRANSFORM);
+    }
+  } 
   f->Properties().Delete(LayerActivityProperty());
-  f->InvalidateFrameSubtree();
 }
 
 void
@@ -4752,12 +4763,40 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
      0.0f);
 }
 
-void
-nsIFrame::InvalidateFrameSubtree()
+static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = true)
 {
-  InvalidateFrame();
+  if (aHasDisplayItem) {
+    aFrame->AddStateBits(NS_FRAME_NEEDS_PAINT);
+  }
+  nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
+  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+  while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
+    if (aHasDisplayItem) {
+      parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
+    }
+    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
+    parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
+  }
+  if (!aHasDisplayItem) {
+    return;
+  }
+  if (!parent) {
+    aFrame->SchedulePaint();
+  }
+  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
+    aFrame->Properties().Delete(nsIFrame::InvalidationRect());
+    aFrame->RemoveStateBits(NS_FRAME_HAS_INVALID_RECT);
+  }
+}
 
-  if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
+void
+nsIFrame::InvalidateFrameSubtree(uint32_t aDisplayItemKey)
+{
+  bool hasDisplayItem = 
+    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
+  InvalidateFrameInternal(this, hasDisplayItem);
+
+  if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT) || !hasDisplayItem) {
     return;
   }
 
@@ -4796,40 +4835,29 @@ nsIFrame::ClearInvalidationStateBits()
                   NS_FRAME_ALL_DESCENDANTS_NEED_PAINT);
 }
 
-static void InvalidateFrameInternal(nsIFrame *aFrame)
+void
+nsIFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 {
-  aFrame->AddStateBits(NS_FRAME_NEEDS_PAINT);
-  nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
-  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
-  while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-    parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
-    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
-    parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
-  }
-  if (!parent) {
-    aFrame->SchedulePaint();
-  }
-  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
-    aFrame->Properties().Delete(nsIFrame::InvalidationRect());
-    aFrame->RemoveStateBits(NS_FRAME_HAS_INVALID_RECT);
-  }
+  bool hasDisplayItem = 
+    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
+  InvalidateFrameInternal(this, hasDisplayItem);
 }
 
 void
-nsIFrame::InvalidateFrame()
+nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 {
-  InvalidateFrameInternal(this);
-}
-
-void
-nsIFrame::InvalidateFrameWithRect(const nsRect& aRect)
-{
+  bool hasDisplayItem = 
+    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
   bool alreadyInvalid = false;
   if (!HasAnyStateBits(NS_FRAME_NEEDS_PAINT)) {
-    InvalidateFrameInternal(this);
+    InvalidateFrameInternal(this, hasDisplayItem);
   } else {
     alreadyInvalid = true;
   } 
+
+  if (!hasDisplayItem) {
+    return;
+  }
 
   nsRect *rect = static_cast<nsRect*>(Properties().Get(InvalidationRect()));
   if (!rect) {
@@ -4894,7 +4922,14 @@ nsIFrame::InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect
   }
 
   if (!layer) {
-    InvalidateFrame();
+    // Plugins can transition from not rendering anything to rendering,
+    // and still only call this. So always invalidate, with specifying
+    // the display item type just in case.
+    if (aDisplayItemKey == nsDisplayItem::TYPE_PLUGIN) {
+      InvalidateFrame();
+    } else {
+      InvalidateFrame(aDisplayItemKey);
+    }
     return nullptr;
   }
 
