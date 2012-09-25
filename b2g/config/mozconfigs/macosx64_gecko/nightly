@@ -30,4 +30,6 @@ ENABLE_MARIONETTE=1
 
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
 
+GAIADIR=$topsrcdir/gaia
+
 . "$topsrcdir/b2g/config/mozconfigs/common.override"
