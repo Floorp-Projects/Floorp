@@ -25,10 +25,6 @@
 #include "nsCRT.h"
 #include "mozilla/Services.h"
 
-#if (MOZ_WIDGET_GTK == 2)
-#include "gtk2compat.h"
-#endif
-
 #include "gfxASurface.h"
 #include "gfxXlibSurface.h"
 #include "gfxContext.h"

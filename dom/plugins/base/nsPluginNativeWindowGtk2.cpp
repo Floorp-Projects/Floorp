@@ -17,7 +17,6 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdk.h>
 
-#include "gtk2compat.h"
 #include "gtk2xtbin.h"
 #include "mozilla/X11Util.h"
 
