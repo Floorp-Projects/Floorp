@@ -56,8 +56,6 @@ var tests = {
   testProfileUnset: function(next) {
     Social.provider.updateUserProfile({});
     // check dom values
-    let portrait = document.getElementById("social-statusarea-user-portrait").getAttribute("src");
-    is(portrait, "chrome://browser/skin/social/social.png", "portrait is generic");
     let userButton = document.getElementById("social-statusarea-username");
     ok(userButton.hidden, "username is not visible");
     let ambience = document.getElementById("social-status-iconbox").firstChild;
