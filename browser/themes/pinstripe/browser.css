@@ -3452,6 +3452,7 @@ html|*#gcli-output-frame {
   width: 100%;
   margin: 0;
   padding: 2px;
+  -moz-padding-start: 6px;
   border: none;
   border-bottom: 1px solid #404040;
   cursor: pointer;
