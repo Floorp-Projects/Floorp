@@ -42,7 +42,7 @@ nsReferencedElement.h \
 nsTreeSanitizer.h \
 nsXMLNameSpaceMap.h \
 nsIXFormsUtilityService.h \
-nsBlobProtocolHandler.h \
+nsHostObjectProtocolHandler.h \
 $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom mozilla
