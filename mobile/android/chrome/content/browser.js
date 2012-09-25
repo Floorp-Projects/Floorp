@@ -6453,7 +6453,7 @@ var WebappsUI = {
     request.onsuccess = function() {
       let foundMarket = false;
       for (let i = 0; i < request.result.length; i++) {
-        if (request.result[i].origin == this.MARKETPLACE.URI.prePath)
+        if (request.result[i].origin == WebappsUI.MARKETPLACE.URI.prePath)
           foundMarket = true;
       }
 
