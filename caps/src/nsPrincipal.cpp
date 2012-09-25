@@ -1112,6 +1112,13 @@ nsPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
 }
 
 NS_IMETHODIMP
+nsPrincipal::GetUnknownAppId(bool* aUnknownAppId)
+{
+  *aUnknownAppId = mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPrincipal::Read(nsIObjectInputStream* aStream)
 {
   bool hasCapabilities;
@@ -1533,6 +1540,13 @@ NS_IMETHODIMP
 nsExpandedPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
 {
   return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::GetUnknownAppId(bool* aUnknownAppId)
+{
+  *aUnknownAppId = false;
+  return NS_OK;
 }
 
 void
