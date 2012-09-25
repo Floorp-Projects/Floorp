@@ -329,18 +329,6 @@ nsDOMStorageDBWrapper::CreateQuotaDBKey(const nsACString& aAsciiDomain,
   return NS_OK;
 }
 
-nsresult
-nsDOMStorageDBWrapper::GetDomainFromScopeKey(const nsACString& aScope,
-                                             nsACString& aDomain)
-{
-  nsAutoCString reverseDomain, scope;
-  scope = aScope;
-  scope.Left(reverseDomain, scope.FindChar(':')-1);
-
-  ReverseString(reverseDomain, aDomain);
-  return NS_OK;
-}
-
 void
 nsDOMStorageDBWrapper::EnsureTempTableFlushTimer()
 {
