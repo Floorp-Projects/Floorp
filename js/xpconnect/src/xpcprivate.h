@@ -1586,6 +1586,10 @@ public:
     nsXPCComponents*
     GetComponents() const {return mComponents;}
 
+    // Returns the JS object reflection of the Components object.
+    JSObject*
+    GetComponentsJSObject(XPCCallContext& ccx);
+
     JSObject*
     GetGlobalJSObject() const
         {return xpc_UnmarkGrayObject(mGlobalJSObject);}
@@ -1682,8 +1686,6 @@ public:
     static JSBool
     IsDyingScope(XPCWrappedNativeScope *scope);
 
-    void SetComponents(nsXPCComponents* aComponents);
-    nsXPCComponents *GetComponents();
     void SetGlobal(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative);
 
     static void InitStatics() { gScopes = nullptr; gDyingScopes = nullptr; }
@@ -3747,10 +3749,13 @@ public:
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 public:
+    // The target is the object upon which |Components| will be defined. If
+    // aTarget is left null, a default object will be computed. This is usually
+    // the right thing to do.
     static JSBool
     AttachComponentsObject(XPCCallContext& ccx,
                            XPCWrappedNativeScope* aScope,
-                           JSObject* aGlobal);
+                           JSObject* aTarget = NULL);
 
     void SystemIsBeingShutDown() {ClearMembers();}
 

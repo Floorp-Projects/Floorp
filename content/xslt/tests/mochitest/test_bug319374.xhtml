@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
       var result = xp.evaluate("*",
                                document.getElementById('content'),
                                null,
-                               Components.interfaces.nsIDOMXPathResult.
+                               SpecialPowers.Ci.nsIDOMXPathResult.
                                  UNORDERED_NODE_ITERATOR_TYPE,
                                null);
       var res = null;
@@ -66,7 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
       var xp2 = xp.evaluate(".",
                             anonAttr1,
                             null,
-                            Components.interfaces.nsIDOMXPathResult.
+                            SpecialPowers.Ci.nsIDOMXPathResult.
                               UNORDERED_NODE_ITERATOR_TYPE,
                             null);
       // Attribute changing in a different anonymous tree.
@@ -84,7 +84,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
       var xp3 = xp.evaluate(".",
                             anonAttr1,
                             null,
-                            Components.interfaces.nsIDOMXPathResult.
+                            SpecialPowers.Ci.nsIDOMXPathResult.
                               UNORDERED_NODE_ITERATOR_TYPE,
                             null);
       // Attribute changing in the same anonymous tree.

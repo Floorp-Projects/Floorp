@@ -45,7 +45,7 @@ function runAll(steps) {
 }
 
 function confirmNextInstall() {
-  var Ci = Components.interfaces;
+  var Ci = SpecialPowers.Ci;
 
   var popupPanel = SpecialPowers.wrap(window).top.
                    QueryInterface(Ci.nsIInterfaceRequestor).

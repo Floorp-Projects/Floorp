@@ -118,7 +118,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(25442383-a1f5-440c-9e18-a2a1cdb8a638)]
+[scriptable, uuid(36c19d92-d4a9-4ad1-bee3-945f60c6c991)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -328,6 +328,15 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     void recomputeWrappers([optional] in jsval vobj);
+
+    /*
+     * This seemingly-paradoxical API allows privileged code to explicitly give
+     * unprivileged code a reference to its own Components object (whereas it's
+     * normally hidden away on a scope chain visible only to XBL methods). See
+     * also SpecialPowers.getComponents.
+     */
+    [implicit_jscontext]
+    jsval getComponentsForScope(in jsval vscope);
 
     /*
      * Dispatches a runnable to the current/main thread. If |scope| is passed,

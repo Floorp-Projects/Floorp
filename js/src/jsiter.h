@@ -313,6 +313,6 @@ GeneratorHasMarkableFrame(JSGenerator *gen);
 #endif
 
 extern JSObject *
-js_InitIteratorClasses(JSContext *cx, JSObject *obj);
+js_InitIteratorClasses(JSContext *cx, js::HandleObject obj);
 
 #endif /* jsiter_h___ */

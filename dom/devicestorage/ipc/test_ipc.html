@@ -70,7 +70,7 @@
     }
 
     function onTestComplete() {
-      let comp = SpecialPowers.wrap(Components);
+      let comp = SpecialPowers.wrap(SpecialPowers.Components);
       let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
       let spObserver = comp.classes["@mozilla.org/special-powers-observer;1"]
                             .getService(comp.interfaces.nsIMessageListener);
@@ -109,7 +109,7 @@
 
         let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
 
-        let comp = SpecialPowers.wrap(Components);
+        let comp = SpecialPowers.wrap(SpecialPowers.Components);
 
         let spObserver =
           comp.classes["@mozilla.org/special-powers-observer;1"]

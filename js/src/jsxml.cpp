@@ -7327,7 +7327,7 @@ js_GetXMLObject(JSContext *cx, JSXML *xmlArg)
 }
 
 JSObject *
-js_InitNamespaceClass(JSContext *cx, JSObject *obj)
+js_InitNamespaceClass(JSContext *cx, HandleObject obj)
 {
     cx->runtime->gcExactScanningEnabled = false;
 
@@ -7361,7 +7361,7 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-js_InitQNameClass(JSContext *cx, JSObject *obj)
+js_InitQNameClass(JSContext *cx, HandleObject obj)
 {
     cx->runtime->gcExactScanningEnabled = false;
 
@@ -7394,7 +7394,7 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-js_InitXMLClass(JSContext *cx, JSObject *obj)
+js_InitXMLClass(JSContext *cx, HandleObject obj)
 {
     cx->runtime->gcExactScanningEnabled = false;
     Rooted<GlobalObject *> global(cx, &obj->asGlobal());
@@ -7456,7 +7456,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-js_InitXMLClasses(JSContext *cx, JSObject *obj)
+js_InitXMLClasses(JSContext *cx, HandleObject obj)
 {
     if (!js_InitNamespaceClass(cx, obj))
         return NULL;

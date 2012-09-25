@@ -281,7 +281,7 @@ public:
     NS_IMETHOD OnIMEFocusChange(bool aFocus);
     NS_IMETHOD GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState);
 
-   void                ResizeTransparencyBitmap(int32_t aNewWidth, int32_t aNewHeight);
+   void                ResizeTransparencyBitmap();
    void                ApplyTransparencyBitmap();
    virtual void        SetTransparencyMode(nsTransparencyMode aMode);
    virtual nsTransparencyMode GetTransparencyMode();
@@ -441,6 +441,14 @@ private:
     static bool DragInProgress(void);
 
     void DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent);
+
+    // nsBaseWidget
+    virtual LayerManager* GetLayerManager(PLayersChild* aShadowManager = nullptr,
+                                          LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
+                                          LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+                                          bool* aAllowRetaining = nullptr) MOZ_OVERRIDE;
+
+    void CleanLayerManagerRecursive();
 
     /**
      * |mIMModule| takes all IME related stuff.

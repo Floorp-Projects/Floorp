@@ -26,7 +26,7 @@ navigator.mozApps.install(parent.url2, null).onsuccess = function onInstall() {
   parent.app2 = this.result;
 
   navigator.mozApps.getSelf().onsuccess = function onGetSelf() {
-    parent.ok(this.result instanceof Components.interfaces.mozIDOMApplication,
+    parent.ok(this.result instanceof SpecialPowers.Ci.mozIDOMApplication,
               "getSelf() from app's origin returns mozIDOMApplication");
     parent.is(this.result.manifestURL, parent.url2,
               "getSelf() from app's origin returns origin's app");

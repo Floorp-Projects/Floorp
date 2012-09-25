@@ -32,14 +32,14 @@ SimpleTest.waitForExplicitFinish();
 
 function finishTest() {
   // Clean up after ourselves.
-  var Cc = SpecialPowers.wrap(Components).classes;
+  var Cc = SpecialPowers.Cc;
   var pm = Cc["@mozilla.org/permissionmanager;1"].
-           getService(Components.interfaces.nsIPermissionManager);
+           getService(SpecialPowers.Ci.nsIPermissionManager);
 
-  var uri = Cc["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService)
+  var uri = Cc["@mozilla.org/network/io-service;1"].getService(SpecialPowers.Ci.nsIIOService)
               .newURI(window.frames[0].location, null, null);
   var principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                   .getService(Components.interfaces.nsIScriptSecurityManager)
+                   .getService(SpecialPowers.Ci.nsIScriptSecurityManager)
                    .getNoAppCodebasePrincipal(uri);
 
   pm.removeFromPrincipal(principal, "offline-app");
@@ -99,8 +99,8 @@ function loaded() {
   // Click the notification bar's "Allow" button.  This should kick
   // off updates, which will eventually lead to getting messages from
   // the iframe.
-  var wm = SpecialPowers.wrap(Components).classes["@mozilla.org/appshell/window-mediator;1"].
-           getService(Components.interfaces.nsIWindowMediator);
+  var wm = SpecialPowers.Cc["@mozilla.org/appshell/window-mediator;1"].
+           getService(SpecialPowers.Ci.nsIWindowMediator);
   var win = wm.getMostRecentWindow("navigator:browser");
   var notificationBox = win.gBrowser.getNotificationBox();
 

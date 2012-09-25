@@ -37,7 +37,7 @@ function startTest() {
         waitForAllPaintsFlushed(function () {
           var painted = utils.checkAndClearPaintedState(e);
           if (isLinux && !is64) {
-            todo_is(painted, false, "Fully-visible scrolled element should not have been painted (disabled on Linux-32)");
+            todo(false, "Fully-visible scrolled element should not have been painted (random on Linux-32)");
           } else {
             is(painted, false, "Fully-visible scrolled element should not have been painted");
           }

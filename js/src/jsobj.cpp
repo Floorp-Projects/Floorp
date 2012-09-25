@@ -21,12 +21,14 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
+#include "jsdate.h"
 #include "jsversion.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
+#include "jsmath.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsonparser.h"
@@ -44,6 +46,7 @@
 #include "jsxml.h"
 
 #include "builtin/MapObject.h"
+#include "builtin/ParallelArray.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/Marking.h"
@@ -3465,7 +3468,7 @@ JSObject::shrinkElements(JSContext *cx, unsigned newcap)
 }
 
 static JSObject *
-js_InitNullClass(JSContext *cx, JSObject *obj)
+js_InitNullClass(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(0);
     return NULL;

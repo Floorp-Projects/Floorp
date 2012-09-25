@@ -22,8 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=397571
 /** Test for Bug 397571 **/
 
 // Get the interface
-var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-               getInterface(Components.interfaces.nsIDOMWindowUtils);
+var utils = window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+               getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
 
 // Try to call functions without privileges
 var success = false;
@@ -72,7 +72,7 @@ catch(e) {
 ok(success, "should throw");
 
 // Get privilege
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+utils = SpecialPowers.wrap(utils);
 
 // Try again
 var success = true;

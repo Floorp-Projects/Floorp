@@ -54,9 +54,6 @@ public:
 
   void PaintHeaderFooter(nsRenderingContext& aRenderingContext,
                          nsPoint aPt);
-  void PaintPageContent(nsRenderingContext& aRenderingContext,
-                        const nsRect&        aDirtyRect,
-                        nsPoint              aPt);
 
 protected:
   nsPageFrame(nsStyleContext* aContext);

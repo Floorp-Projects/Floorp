@@ -461,17 +461,17 @@ gfxMacFont::InitMetricsFromATSMetrics(ATSFontRef aFontRef)
     mIsValid = true;
 }
 
-RefPtr<ScaledFont>
-gfxMacFont::GetScaledFont()
+TemporaryRef<ScaledFont>
+gfxMacFont::GetScaledFont(DrawTarget *aTarget)
 {
-  if (!mAzureFont) {
+  if (!mAzureScaledFont) {
     NativeFont nativeFont;
     nativeFont.mType = NATIVE_FONT_MAC_FONT_FACE;
     nativeFont.mFont = GetCGFontRef();
-    mAzureFont = mozilla::gfx::Factory::CreateScaledFontWithCairo(nativeFont, GetAdjustedSize(), mScaledFont);
+    mAzureScaledFont = mozilla::gfx::Factory::CreateScaledFontWithCairo(nativeFont, GetAdjustedSize(), mScaledFont);
   }
 
-  return mAzureFont;
+  return mAzureScaledFont;
 }
 
 void

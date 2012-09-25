@@ -21,19 +21,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
 <script type="application/javascript">
 
 /** Test for Bug 166235 **/
-  var Cc = SpecialPowers.wrap(Components).classes;
-  var Ci = SpecialPowers.wrap(Components).interfaces;
+  var Cc = SpecialPowers.Cc;
+  var Ci = SpecialPowers.Ci;
 
-  var webnav = SpecialPowers.wrap(window).QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                         .getInterface(Components.interfaces.nsIWebNavigation)
+  var webnav = SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                                         .getInterface(SpecialPowers.Ci.nsIWebNavigation)
 
-  var docShell = webnav.QueryInterface(Components.interfaces.nsIDocShell);
+  var docShell = webnav.QueryInterface(SpecialPowers.Ci.nsIDocShell);
 
   var documentViewer = docShell.contentViewer
-                               .QueryInterface(Components.interfaces.nsIContentViewerEdit);
+                               .QueryInterface(SpecialPowers.Ci.nsIContentViewerEdit);
 
   var clipboard = Cc["@mozilla.org/widget/clipboard;1"]
-                    .getService(Components.interfaces.nsIClipboard);
+                    .getService(SpecialPowers.Ci.nsIClipboard);
 
   var textarea = SpecialPowers.wrap(document).getElementById('input');
 
@@ -54,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
   }
   function getClipboardData(mime) {
     var transferable = Cc['@mozilla.org/widget/transferable;1']
-                         .createInstance(Components.interfaces.nsITransferable);
+                         .createInstance(SpecialPowers.Ci.nsITransferable);
     transferable.init(getLoadContext());
     transferable.addDataFlavor(mime);
     clipboard.getData(transferable, 1);
@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
   function testClipboardValue(mime, expected, test) {
     var data = getClipboardData(mime);
     is (data.value == null ? data.value :
-        data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+        data.value.QueryInterface(SpecialPowers.Ci.nsISupportsString).data,
       expected,
       mime + " value in the clipboard");
     return data.value;
@@ -73,7 +73,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
   function testPasteText(expected, test) {
     textarea.value="";
     textarea.focus();
-    textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
+    textarea.QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement)
             .editor.paste(1);
     is(textarea.value, expected, test + ": textarea paste");
   }
