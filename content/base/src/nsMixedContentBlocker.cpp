@@ -195,6 +195,15 @@ nsMixedContentBlocker::ShouldProcess(PRUint32 aContentType,
                                      nsIPrincipal* aRequestPrincipal,
                                      PRInt16* aDecision)
 {
+  if(!aContentLocation) {
+    // aContentLocation may be null when a plugin is loading without an associated URI resource
+    if(aContentType == TYPE_OBJECT) {
+       return NS_OK;
+    } else {
+       return NS_ERROR_FAILURE;
+    }
+  }
+
   return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
                     aRequestingContext, aMimeGuess, aExtra, aRequestPrincipal,
                     aDecision);
