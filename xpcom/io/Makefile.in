@@ -26,6 +26,7 @@ endif
 
 CPPSRCS		= \
 		Base64.cpp \
+		nsAnonymousTemporaryFile.cpp \
 		nsAppFileLocationProvider.cpp \
 		nsBinaryStream.cpp \
 		nsDirectoryService.cpp \
@@ -58,13 +59,14 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS		+= nsLocalFileOS2.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS		+= nsLocalFileWin.cpp nsMediaCacheRemover.cpp
+CPPSRCS		+= nsLocalFileWin.cpp
 else
 CPPSRCS		+= nsLocalFileUnix.cpp
 endif # windows
 endif # OS2
 
 EXPORTS		= \
+		nsAnonymousTemporaryFile.h \
 		nsAppDirectoryServiceDefs.h \
 		nsDirectoryService.h \
 		nsDirectoryServiceAtomList.h \
