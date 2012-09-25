@@ -198,6 +198,9 @@ WebGLContext::IsTextureFormatCompressed(GLenum format)
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+        case LOCAL_GL_ATC_RGB:
+        case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
+        case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
             return true;
     }
 

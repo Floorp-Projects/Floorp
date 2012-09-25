@@ -464,6 +464,7 @@ class WebGLContext :
     friend class WebGLMemoryMultiReporterWrapper;
     friend class WebGLExtensionLoseContext;
     friend class WebGLExtensionCompressedTextureS3TC;
+    friend class WebGLExtensionCompressedTextureATC;
     friend class WebGLContextUserData;
     friend class WebGLMemoryPressureObserver;
     friend class WebGLExtensionDepthTexture;
@@ -1170,6 +1171,7 @@ protected:
         EXT_texture_filter_anisotropic,
         WEBGL_lose_context,
         WEBGL_compressed_texture_s3tc,
+        WEBGL_compressed_texture_atc,
         WEBGL_depth_texture,
         WebGLExtensionID_number_of_extensions,
         WebGLExtensionID_unknown_extension
