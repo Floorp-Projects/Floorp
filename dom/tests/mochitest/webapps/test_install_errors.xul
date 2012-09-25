@@ -28,6 +28,7 @@ var steps = [
   invalidLaunchPath,
   invalidEntryPoint,
   invalidLocaleEntryPoint,
+  fileURL,
 ];
 
 runAll(steps);
@@ -133,6 +134,27 @@ function invalidLocaleEntryPoint(next) {
 function installPackageNotImplemented(next) {
   ok(!("installPackage" in navigator.mozApps),
      "installPackage not in navigator.mozApps");
+  next();
+}
+
+function fileURL(next) {
+  try {
+    navigator.mozApps.install("file:///nonexistent");
+    ok(false,
+       "attempt to install nonexistent file: URL doesn't throw exception");
+  } catch(ex) {
+    is(ex.message, "INVALID_URL_SCHEME: 'file'; must be 'http' or 'https'",
+       "attempt to install nonexistent file: URL throws exception");
+  }
+
+  try {
+    navigator.mozApps.install("file:///");
+    ok(false, "attempt to install existent file: URL doesn't throw exception");
+  } catch(ex) {
+    is(ex.message, "INVALID_URL_SCHEME: 'file'; must be 'http' or 'https'",
+       "attempt to install existent file: URL throws exception");
+  }
+
   next();
 }
 
