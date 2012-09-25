@@ -592,7 +592,7 @@ getSocketInfoIfRunning(PRFileDesc * fd, Operation op,
 
 } // unnnamed namespace
 
-static PRStatus PR_CALLBACK
+static PRStatus
 nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
                     PRIntervalTime timeout)
 {
@@ -667,7 +667,7 @@ nsSSLIOLayerHelpers::rememberTolerantSite(nsNSSSocketInfo *socketInfo)
   nsSSLIOLayerHelpers::mTLSTolerantSites->PutEntry(key);
 }
 
-static PRStatus PR_CALLBACK
+static PRStatus
 nsSSLIOLayerClose(PRFileDesc *fd)
 {
   nsNSSShutDownPreventionLock locker;
@@ -947,7 +947,7 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
 
 }
 
-static int16_t PR_CALLBACK
+static int16_t
 nsSSLIOLayerPoll(PRFileDesc * fd, int16_t in_flags, int16_t *out_flags)
 {
   nsNSSShutDownPreventionLock locker;
@@ -1045,7 +1045,7 @@ static PRFileDesc *_PSM_InvalidDesc(void)
     return NULL;
 }
 
-static PRStatus PR_CALLBACK PSMGetsockname(PRFileDesc *fd, PRNetAddr *addr)
+static PRStatus PSMGetsockname(PRFileDesc *fd, PRNetAddr *addr)
 {
   nsNSSShutDownPreventionLock locker;
   if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
@@ -1054,7 +1054,7 @@ static PRStatus PR_CALLBACK PSMGetsockname(PRFileDesc *fd, PRNetAddr *addr)
   return fd->lower->methods->getsockname(fd->lower, addr);
 }
 
-static PRStatus PR_CALLBACK PSMGetpeername(PRFileDesc *fd, PRNetAddr *addr)
+static PRStatus PSMGetpeername(PRFileDesc *fd, PRNetAddr *addr)
 {
   nsNSSShutDownPreventionLock locker;
   if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
@@ -1063,8 +1063,7 @@ static PRStatus PR_CALLBACK PSMGetpeername(PRFileDesc *fd, PRNetAddr *addr)
   return fd->lower->methods->getpeername(fd->lower, addr);
 }
 
-static PRStatus PR_CALLBACK PSMGetsocketoption(PRFileDesc *fd, 
-                                        PRSocketOptionData *data)
+static PRStatus PSMGetsocketoption(PRFileDesc *fd, PRSocketOptionData *data)
 {
   nsNSSShutDownPreventionLock locker;
   if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
@@ -1073,8 +1072,8 @@ static PRStatus PR_CALLBACK PSMGetsocketoption(PRFileDesc *fd,
   return fd->lower->methods->getsocketoption(fd, data);
 }
 
-static PRStatus PR_CALLBACK PSMSetsocketoption(PRFileDesc *fd, 
-                                        const PRSocketOptionData *data)
+static PRStatus PSMSetsocketoption(PRFileDesc *fd,
+                                   const PRSocketOptionData *data)
 {
   nsNSSShutDownPreventionLock locker;
   if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
@@ -1083,7 +1082,7 @@ static PRStatus PR_CALLBACK PSMSetsocketoption(PRFileDesc *fd,
   return fd->lower->methods->setsocketoption(fd, data);
 }
 
-static int32_t PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, int32_t amount,
+static int32_t PSMRecv(PRFileDesc *fd, void *buf, int32_t amount,
     int flags, PRIntervalTime timeout)
 {
   nsNSSShutDownPreventionLock locker;
@@ -1108,7 +1107,7 @@ static int32_t PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, int32_t amount,
   return checkHandshake(bytesRead, true, fd, socketInfo);
 }
 
-static int32_t PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, int32_t amount,
+static int32_t PSMSend(PRFileDesc *fd, const void *buf, int32_t amount,
     int flags, PRIntervalTime timeout)
 {
   nsNSSShutDownPreventionLock locker;
@@ -1134,19 +1133,19 @@ static int32_t PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, int32_t amou
   return checkHandshake(bytesWritten, false, fd, socketInfo);
 }
 
-static int32_t PR_CALLBACK
+static int32_t
 nsSSLIOLayerRead(PRFileDesc* fd, void* buf, int32_t amount)
 {
   return PSMRecv(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
 }
 
-static int32_t PR_CALLBACK
+static int32_t
 nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, int32_t amount)
 {
   return PSMSend(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
 }
 
-static PRStatus PR_CALLBACK PSMConnectcontinue(PRFileDesc *fd, int16_t out_flags)
+static PRStatus PSMConnectcontinue(PRFileDesc *fd, int16_t out_flags)
 {
   nsNSSShutDownPreventionLock locker;
   if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker)) {

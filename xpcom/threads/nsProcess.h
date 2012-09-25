@@ -44,7 +44,7 @@ public:
 
 private:
   ~nsProcess();
-  static void PR_CALLBACK Monitor(void *arg);
+  static void Monitor(void *arg);
   void ProcessComplete();
   nsresult CopyArgsAndRunProcess(bool blocking, const char** args,
                                  uint32_t count, nsIObserver* observer,

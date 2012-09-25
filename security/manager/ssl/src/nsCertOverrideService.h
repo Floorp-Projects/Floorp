@@ -142,8 +142,8 @@ public:
   void RemoveAllTemporaryOverrides();
 
   typedef void 
-  (*PR_CALLBACK CertOverrideEnumerator)(const nsCertOverride &aSettings,
-                                        void *aUserData);
+  (*CertOverrideEnumerator)(const nsCertOverride &aSettings,
+                            void *aUserData);
 
   // aCert == null: return all overrides
   // aCert != null: return overrides that match the given cert
