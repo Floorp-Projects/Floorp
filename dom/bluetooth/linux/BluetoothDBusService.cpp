@@ -424,11 +424,15 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       LOG("%s: Invalid arguments for Authorize() method", __FUNCTION__);
       errorStr.AssignLiteral("Invalid arguments for Authorize() method");
     } else {
-      nsString deviceAddress = GetAddressFromObjectPath(NS_ConvertUTF8toUTF16(objectPath));
+      nsString deviceAddress =
+        GetAddressFromObjectPath(NS_ConvertUTF8toUTF16(objectPath));
 
-      parameters.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("deviceAddress"), deviceAddress));
-      parameters.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("uuid"),
-                                                   NS_ConvertUTF8toUTF16(uuid)));
+      parameters.AppendElement(BluetoothNamedValue(
+                                 NS_LITERAL_STRING("deviceAddress"),
+                                 deviceAddress));
+      parameters.AppendElement(BluetoothNamedValue(
+                                 NS_LITERAL_STRING("uuid"),
+                                 NS_ConvertUTF8toUTF16(uuid)));
 
       // Because we may have authorization request and pairing request from the
       // same remote device at the same time, we need two tables to keep these messages.
@@ -452,11 +456,15 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       LOG("%s: Invalid arguments for RequestConfirmation() method", __FUNCTION__);
       errorStr.AssignLiteral("Invalid arguments for RequestConfirmation() method");
     } else {
-      nsString address = NS_LITERAL_STRING("address");
-      parameters.AppendElement(BluetoothNamedValue(address, NS_ConvertUTF8toUTF16(objectPath)));
-      parameters.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("passkey"), passkey));
+      parameters.AppendElement(BluetoothNamedValue(
+                                 NS_LITERAL_STRING("address"),
+                                 NS_ConvertUTF8toUTF16(objectPath)));
+      parameters.AppendElement(BluetoothNamedValue(
+                                 NS_LITERAL_STRING("passkey"),
+                                 passkey));
 
-      KeepDBusPairingMessage(address, msg);
+      KeepDBusPairingMessage(GetAddressFromObjectPath(
+                               NS_ConvertUTF8toUTF16(objectPath)), msg);
 
       BluetoothSignal signal(signalName, signalPath, parameters);
 
@@ -480,10 +488,12 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       LOG("%s: Invalid arguments for RequestPinCode() method", __FUNCTION__);
       errorStr.AssignLiteral("Invalid arguments for RequestPinCode() method");
     } else {
-      nsString address = NS_LITERAL_STRING("address");
-      parameters.AppendElement(BluetoothNamedValue(address, NS_ConvertUTF8toUTF16(objectPath)));
+      parameters.AppendElement(BluetoothNamedValue(
+                                 NS_LITERAL_STRING("address"),
+                                 NS_ConvertUTF8toUTF16(objectPath)));
 
-      KeepDBusPairingMessage(address, msg);
+      KeepDBusPairingMessage(GetAddressFromObjectPath(
+                               NS_ConvertUTF8toUTF16(objectPath)), msg);
 
       BluetoothSignal signal(signalName, signalPath, parameters);
 
@@ -506,10 +516,12 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       LOG("%s: Invalid arguments for RequestPasskey() method", __FUNCTION__);
       errorStr.AssignLiteral("Invalid arguments for RequestPasskey() method");
     } else {
-      nsString address = NS_LITERAL_STRING("address");
-      parameters.AppendElement(BluetoothNamedValue(address, NS_ConvertUTF8toUTF16(objectPath)));
+      parameters.AppendElement(BluetoothNamedValue(
+                                 NS_LITERAL_STRING("address"),
+                                 NS_ConvertUTF8toUTF16(objectPath)));
 
-      KeepDBusPairingMessage(address, msg);
+      KeepDBusPairingMessage(GetAddressFromObjectPath(
+                               NS_ConvertUTF8toUTF16(objectPath)), msg);
 
       BluetoothSignal signal(signalName, signalPath, parameters);
 
