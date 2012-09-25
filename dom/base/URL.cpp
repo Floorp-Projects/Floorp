@@ -7,6 +7,7 @@
 
 #include "nsGlobalWindow.h"
 #include "nsIDOMFile.h"
+#include "nsIDOMMediaStream.h"
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
 #include "nsContentUtils.h"
@@ -22,6 +23,16 @@ URL::CreateObjectURL(nsISupports* aGlobal, nsIDOMBlob* aBlob,
                      ErrorResult& aError)
 {
   CreateObjectURLInternal(aGlobal, aBlob, NS_LITERAL_CSTRING(BLOBURI_SCHEME),
+                          aOptions, aResult, aError);
+}
+
+void
+URL::CreateObjectURL(nsISupports* aGlobal, nsIDOMMediaStream* aStream,
+                     const mozilla::dom::objectURLOptions& aOptions,
+                     nsAString& aResult,
+                     ErrorResult& aError)
+{
+  CreateObjectURLInternal(aGlobal, aStream, NS_LITERAL_CSTRING(MEDIASTREAMURI_SCHEME),
                           aOptions, aResult, aError);
 }
 
