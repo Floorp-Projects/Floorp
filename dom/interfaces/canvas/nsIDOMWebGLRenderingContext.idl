@@ -164,6 +164,16 @@ interface nsIWebGLExtensionCompressedTextureATC : nsIWebGLExtension
     const WebGLenum COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL = 0x87EE;
 };
 
+[scriptable, builtinclass, uuid(c33aa5a1-035c-4dfa-b240-df71395ad0f8)]
+interface nsIWebGLExtensionCompressedTexturePVRTC : nsIWebGLExtension
+{
+    /* Compressed Texture Formats */
+    const WebGLenum COMPRESSED_RGB_PVRTC_4BPPV1  = 0x8C00;
+    const WebGLenum COMPRESSED_RGB_PVRTC_2BPPV1  = 0x8C01;
+    const WebGLenum COMPRESSED_RGBA_PVRTC_4BPPV1 = 0x8C02;
+    const WebGLenum COMPRESSED_RGBA_PVRTC_2BPPV1 = 0x8C03;
+};
+
 [scriptable, builtinclass, uuid(ef36f000-c1b2-11e1-afa7-0800200c9a66)]
 interface nsIWebGLExtensionDepthTexture : nsIWebGLExtension
 {
