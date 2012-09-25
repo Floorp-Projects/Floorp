@@ -190,7 +190,9 @@ function checkPayload(request, reason, successfulPings) {
   const TELEMETRY_PING = "TELEMETRY_PING";
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
   const TELEMETRY_TEST_FLAG = "TELEMETRY_TEST_FLAG";
+  const READ_SAVED_PING_SUCCESS = "READ_SAVED_PING_SUCCESS";
   do_check_true(TELEMETRY_PING in payload.histograms);
+  do_check_true(READ_SAVED_PING_SUCCESS in payload.histograms);
   let rh = Telemetry.registeredHistograms;
   for (let name in rh) {
     if (/SQLITE/.test(name) && name in payload.histograms) {
@@ -221,6 +223,9 @@ function checkPayload(request, reason, successfulPings) {
   };
   let tc = payload.histograms[TELEMETRY_SUCCESS];
   do_check_eq(uneval(tc), uneval(expected_tc));
+
+  let h = payload.histograms[READ_SAVED_PING_SUCCESS];
+  do_check_eq(h.values[0], 1);
 
   // The ping should include data from memory reporters.  We can't check that
   // this data is correct, because we can't control the values returned by the
