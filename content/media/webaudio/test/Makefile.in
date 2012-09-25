@@ -13,6 +13,8 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES := \
   test_AudioBuffer.html \
   test_AudioContext.html \
+  test_badConnect.html \
+  test_singleSourceDest.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
