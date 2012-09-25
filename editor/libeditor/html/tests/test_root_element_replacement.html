@@ -84,13 +84,13 @@ function onLoadIFrame()
   var frameDoc = gIFrame.contentWindow.document;
 
   var selCon = SpecialPowers.wrap(gIFrame).contentWindow.
-    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIWebNavigation).
-    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsISelectionDisplay).
-    QueryInterface(Components.interfaces.nsISelectionController);
+    QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+    getInterface(SpecialPowers.Ci.nsIWebNavigation).
+    QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+    getInterface(SpecialPowers.Ci.nsISelectionDisplay).
+    QueryInterface(SpecialPowers.Ci.nsISelectionController);
   var utils = SpecialPowers.getDOMWindowUtils(window);
-  const nsIDOMNode = Components.interfaces.nsIDOMNode;
+  const nsIDOMNode = SpecialPowers.Ci.nsIDOMNode;
 
   // move focus to the HTML editor
   const kTest = kTests[gTestIndex];

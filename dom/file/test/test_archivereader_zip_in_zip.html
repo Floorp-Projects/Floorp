@@ -11,8 +11,8 @@
 
   <script type="text/javascript;version=1.7">
   function createZipInZipData() {
-    var Cc = SpecialPowers.wrap(Components).classes;
-    var Ci = SpecialPowers.wrap(Components).interfaces;
+    var Cc = SpecialPowers.Cc;
+    var Ci = SpecialPowers.Ci;
 
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     var testFile = dirSvc.get("ProfD", Ci.nsIFile);

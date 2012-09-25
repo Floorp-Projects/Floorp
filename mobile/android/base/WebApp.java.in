@@ -186,6 +186,7 @@ public class WebApp extends GeckoApp {
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch(msg) {
+            case SELECTED:
             case LOCATION_CHANGE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     try {

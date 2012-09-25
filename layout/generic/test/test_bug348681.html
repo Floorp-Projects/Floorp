@@ -299,7 +299,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        selection.addRange(range8);
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 8, 10);
-       var privSel = selection.QueryInterface(Components.interfaces.nsISelectionPrivate);
+       var privSel = selection.QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
        ok(privSel, "Test 17 - QIed to instance of nsISelection2 interface");
        var numResults = {};
        var results = privSel.GetRangesForInterval(testNode, 8, testNode, 10,

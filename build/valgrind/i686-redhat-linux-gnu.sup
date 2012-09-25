@@ -1,41 +1,4 @@
 {
-   writev-XQueryExtension
-   Memcheck:Param
-   writev(vector[...])
-   fun:writev
-   fun:_X11TransSocketWritev
-   fun:_X11TransWritev
-   fun:_XSend
-   fun:XQueryExtension
-}
-{
-   write-gdk_x11_drawable_get_picture
-   Memcheck:Param
-   write(buf)
-   obj:/lib/libpthread-2.5.so
-   fun:_X11TransWrite
-   fun:_XFlushInt
-   fun:XRenderCreatePicture
-   fun:gdk_x11_drawable_get_picture
-}
-{
-   writev-XChangeProperty
-   Memcheck:Param
-   writev(vector[...])
-   fun:writev
-   fun:_X11TransSocketWritev
-   fun:_X11TransWritev
-   fun:_XSend
-   fun:XChangeProperty
-}
-{
-   malloc-libmozsqlite3.so
-   Memcheck:Leak
-   fun:malloc
-   ...
-   obj:/builds/slave/valgrind-linux/objdir/dist/firefox/libmozsqlite3.so
-}
-{
    Bug 793532
    Memcheck:Leak
    fun:malloc

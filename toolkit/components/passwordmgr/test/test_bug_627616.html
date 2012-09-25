@@ -10,7 +10,7 @@
 <script class="testbody" type="text/javascript">
     SimpleTest.waitForExplicitFinish();
 
-    var Cc = SpecialPowers.wrap(Components).classes;
+    var Cc = SpecialPowers.Cc;
 
     testNum = 1;
 
@@ -82,7 +82,7 @@
     var gCurrentTest;
     function runNextTest() {
       is(gExpectedDialogs, 0, "received expected number of auth dialogs");
-      Cc["@mozilla.org/network/http-auth-manager;1"].getService(Components.interfaces.nsIHttpAuthManager).clearAll();
+      Cc["@mozilla.org/network/http-auth-manager;1"].getService(SpecialPowers.Ci.nsIHttpAuthManager).clearAll();
       if (pendingTests.length > 0) {
         ({expectedDialogs: gExpectedDialogs,
           test: gCurrentTest}) = pendingTests.shift();

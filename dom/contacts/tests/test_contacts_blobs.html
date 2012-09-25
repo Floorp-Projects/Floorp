@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={674720}
 
 "use strict";
 
-var comp = SpecialPowers.wrap(Components);
+var comp = SpecialPowers.wrap(SpecialPowers.Components);
 comp.utils.import("resource://gre/modules/ContactService.jsm");
 comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
 SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
@@ -106,10 +106,10 @@ function onFailure() {
 function verifyBlob(blob1, blob2, isLast)
 {
   dump("islast? " + isLast + "\n");
-  is(blob1 instanceof Components.interfaces.nsIDOMBlob, true,
+  is(blob1 instanceof SpecialPowers.Ci.nsIDOMBlob, true,
      "Instance of nsIDOMBlob");
-  is(blob1 instanceof Components.interfaces.nsIDOMFile,
-     blob2 instanceof Components.interfaces.nsIDOMFile,
+  is(blob1 instanceof SpecialPowers.Ci.nsIDOMFile,
+     blob2 instanceof SpecialPowers.Ci.nsIDOMFile,
      "Instance of nsIDOMFile");
   is(blob1.size, blob2.size, "Correct size");
   is(blob1.type, blob2.type, "Correct type");

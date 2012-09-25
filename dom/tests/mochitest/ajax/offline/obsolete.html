@@ -50,7 +50,7 @@ applicationCache.oncached = function() {
   var req = new XMLHttpRequest();
   req.open("GET", "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/obsoletingManifest.sjs?state=");
   var channel = SpecialPowers.wrap(req).channel
-    .QueryInterface(Components.interfaces.nsIApplicationCacheChannel);
+    .QueryInterface(SpecialPowers.Ci.nsIApplicationCacheChannel);
   channel.chooseApplicationCache = false;
   channel.inheritApplicationCache = false;
   req.send("");

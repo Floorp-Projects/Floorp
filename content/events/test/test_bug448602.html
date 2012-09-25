@@ -23,12 +23,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448602
 function runTests() {
 /*
   Disabled due to lack of present support for JSD in JM
-  var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
-  var jsd = Components.classes['@mozilla.org/js/jsd/debugger-service;1']
+  var jsdIDebuggerService = SpecialPowers.Ci.jsdIDebuggerService;
+  var jsd = SpecialPowers.Components.classes['@mozilla.org/js/jsd/debugger-service;1']
                       .getService(jsdIDebuggerService);
 */
-  var els = SpecialPowers.wrap(Components).classes["@mozilla.org/eventlistenerservice;1"]
-                      .getService(Components.interfaces.nsIEventListenerService);
+  var els = SpecialPowers.Cc["@mozilla.org/eventlistenerservice;1"]
+                      .getService(SpecialPowers.Ci.nsIEventListenerService);
 
   // Event listener info tests
   var root = document.getElementById("testroot");
@@ -53,7 +53,7 @@ function runTests() {
     jsd.on();
     ok(jsd.isOn, "JSD should be running.");
   }
-  var jsdvalue = infos[0].getDebugObject().QueryInterface(Components.interfaces.jsdIValue);
+  var jsdvalue = infos[0].getDebugObject().QueryInterface(SpecialPowers.Ci.jsdIValue);
   is(jsdvalue.jsType, 3, "Event listener should be a function! (1)");
 */
 
@@ -72,7 +72,7 @@ function runTests() {
   is(infos[0].capturing, true, "Wrong phase (2)");
   is(infos[0].allowsUntrusted, true, "Should allow untrusted events (2)");
 /*
-  jsdvalue = infos[0].getDebugObject().QueryInterface(Components.interfaces.jsdIValue);
+  jsdvalue = infos[0].getDebugObject().QueryInterface(SpecialPowers.Ci.jsdIValue);
   is(jsdvalue.jsType, 3, "Event listener should be a function!(2)");
   is(jsdvalue.getWrappedValue(), l, "Wrong JS value! (1)");
 */
@@ -84,7 +84,7 @@ function runTests() {
   is(infos[1].allowsUntrusted, false, "Shouldn't allow untrusted events (1)");
 
 /*
-  jsdvalue2 = infos[1].getDebugObject().QueryInterface(Components.interfaces.jsdIValue);
+  jsdvalue2 = infos[1].getDebugObject().QueryInterface(SpecialPowers.Ci.jsdIValue);
   is(jsdvalue2.jsType, 3, "Event listener should be a function! (3)");
   is(jsdvalue2.getWrappedValue(), l, "Wrong JS value! (2)");
 */

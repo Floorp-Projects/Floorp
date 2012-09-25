@@ -25,7 +25,7 @@ req.setRequestHeader("Content-Type", "text/plain; charset='uTf-8'");
 req.send("Some text");
 
 is(SpecialPowers.wrap(req).channel
-      .QueryInterface(Components.interfaces.nsIHttpChannel)
+      .QueryInterface(SpecialPowers.Ci.nsIHttpChannel)
       .getRequestHeader("Content-Type"),
    "text/plain; charset='uTf-8'",
    "Headers should match");

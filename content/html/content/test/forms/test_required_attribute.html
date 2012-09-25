@@ -307,8 +307,7 @@ function checkInputRequiredValidityForFile()
                            .getService(Components.interfaces.nsIProperties);
     var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
     testFile.append(fileName);
-    var outStream = Components.
-                    classes["@mozilla.org/network/file-output-stream;1"].
+    var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"].
                     createInstance(Components.interfaces.nsIFileOutputStream);
     outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
                    0666, 0);
