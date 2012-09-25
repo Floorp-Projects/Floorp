@@ -2740,9 +2740,10 @@ var XPIProvider = {
           let oldBootstrap = oldBootstrappedAddons[newAddon.id];
           XPIProvider.bootstrappedAddons[newAddon.id] = oldBootstrap;
 
-          // If the old version is the same as the new version, don't call
-          // uninstall and install methods.
-          if (sameVersion)
+          // If the old version is the same as the new version, or we're
+          // recovering from a corrupt DB, don't call uninstall and install
+          // methods.
+          if (sameVersion || !isNewInstall)
             return false;
 
           installReason = Services.vc.compare(oldBootstrap.version, newAddon.version) < 0 ?
@@ -2937,8 +2938,12 @@ var XPIProvider = {
 
     // Load the list of bootstrapped add-ons first so processFileChanges can
     // modify it
-    this.bootstrappedAddons = JSON.parse(Prefs.getCharPref(PREF_BOOTSTRAP_ADDONS,
-                                         "{}"));
+    try {
+      this.bootstrappedAddons = JSON.parse(Prefs.getCharPref(PREF_BOOTSTRAP_ADDONS,
+                                           "{}"));
+    } catch (e) {
+      WARN("Error parsing enabled bootstrapped extensions cache", e);
+    }
 
     // First install any new add-ons into the locations, if there are any
     // changes then we must update the database with the information in the
