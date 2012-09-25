@@ -35,6 +35,10 @@ public class FindInPageBar extends RelativeLayout implements TextWatcher, View.O
         content.findViewById(R.id.find_next).setOnClickListener(this);
         content.findViewById(R.id.find_close).setOnClickListener(this);
 
+        // Capture clicks on the rest of the view to prevent them from
+        // leaking into other views positioned below.
+        content.setOnClickListener(this);
+
         mFindText = (CustomEditText) content.findViewById(R.id.find_text);
         mFindText.addTextChangedListener(this);
         mFindText.setOnKeyPreImeListener(new CustomEditText.OnKeyPreImeListener() {
