@@ -1214,6 +1214,24 @@
               this._warningLink.href = Services.urlFormatter.formatURLPref("plugins.update.url");
               this._warningLink.hidden = false;
               this._warningBtn.hidden = true;
+            } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE) {
+              this.setAttribute("notification", "error");
+              this._error.textContent = gStrings.ext.formatStringFromName(
+                "notification.vulnerableUpdatable",
+                [this.mAddon.name], 1
+              );
+              this._errorLink.value = gStrings.ext.GetStringFromName("notification.vulnerableUpdatable.link");
+              this._errorLink.href = this.mAddon.blocklistURL;
+              this._errorLink.hidden = false;
+            } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
+              this.setAttribute("notification", "error");
+              this._error.textContent = gStrings.ext.formatStringFromName(
+                "notification.vulnerableNoUpdate",
+                [this.mAddon.name], 1
+              );
+              this._errorLink.value = gStrings.ext.GetStringFromName("notification.vulnerableNoUpdate.link");
+              this._errorLink.href = this.mAddon.blocklistURL;
+              this._errorLink.hidden = false;
             } else {
               this.removeAttribute("notification");
             }
