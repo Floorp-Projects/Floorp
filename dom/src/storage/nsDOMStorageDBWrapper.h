@@ -190,9 +190,6 @@ public:
   static nsresult CreateQuotaDBKey(const nsACString& aAsciiDomain,
                                    nsACString& aKey);
 
-  static nsresult GetDomainFromScopeKey(const nsACString& aScope,
-                                        nsACString& aDomain);
-
   /**
    * Ensures the temp table flush timer is running. This is called when we add
    * data that will need to be flushed.
