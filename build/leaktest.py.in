@@ -46,7 +46,5 @@ if __name__ == '__main__':
     url = "http://localhost:%d/bloatcycle.html" % PORT
     appPath = os.path.join(SCRIPT_DIR, automation.DEFAULT_APP)
     status = automation.runApp(url, browserEnv, appPath, PROFILE_DIRECTORY,
-                               # leaktest builds are slow, give up and
-                               # don't use a timeout.
-                               extraArgs, timeout=None)
+                               extraArgs, timeout=1800)
     sys.exit(status)
