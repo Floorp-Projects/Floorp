@@ -10,7 +10,9 @@
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
 #include "nsINode.h"
+#include "nsString.h"
 #include "nsTArray.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 
 class nsCompositionEvent;
@@ -44,10 +46,20 @@ public:
 
   nsPresContext* GetPresContext() const { return mPresContext; }
   nsINode* GetEventTargetNode() const { return mNode; }
+  // The latest CompositionEvent.data value except compositionstart event.
+  const nsString& GetLastData() const { return mLastData; }
 
   bool MatchesNativeContext(nsIWidget* aWidget) const;
   bool MatchesEventTarget(nsPresContext* aPresContext,
                           nsINode* aNode) const;
+
+  /**
+   * SynthesizeCommit() dispatches compositionupdate, text and compositionend
+   * events for emulating commit on the content.
+   *
+   * @param aDiscard true when committing with empty string.  Otherwise, false.
+   */
+  void SynthesizeCommit(bool aDiscard);
 
 private:
   // This class holds nsPresContext weak.  This instance shouldn't block
@@ -61,6 +73,10 @@ private:
   // composition.  Don't access the instance, it may not be available.
   void* mNativeContext;
 
+  // mLastData stores the data attribute of the latest composition event (except
+  // the compositionstart event).
+  nsString mLastData;
+
   // Hide the default constructor
   TextComposition() {}
 
@@ -71,6 +87,45 @@ private:
   void DispatchEvent(nsGUIEvent* aEvent,
                      nsEventStatus* aStatus,
                      nsDispatchingCallback* aCallBack);
+
+  /**
+   * CompositionEventDispatcher dispatches the specified composition (or text)
+   * event.
+   */
+  class CompositionEventDispatcher : public nsRunnable
+  {
+  public:
+    CompositionEventDispatcher(nsPresContext* aPresContext,
+                               nsINode* aEventTarget,
+                               uint32_t aEventMessage,
+                               const nsAString& aData);
+    NS_IMETHOD Run();
+
+  private:
+    nsRefPtr<nsPresContext> mPresContext;
+    nsCOMPtr<nsINode> mEventTarget;
+    nsCOMPtr<nsIWidget> mWidget;
+    uint32_t mEventMessage;
+    nsString mData;
+
+    CompositionEventDispatcher() {};
+  };
+
+  /**
+   * DispatchCompsotionEventRunnable() dispatches a composition or text event
+   * to the content.  Be aware, if you use this method, nsPresShellEventCB
+   * isn't used.  That means that nsIFrame::HandleEvent() is never called.
+   * WARNING: The instance which is managed by nsIMEStateManager may be
+   *          destroyed by this method call.
+   *
+   * @param aEventMessage       Must be one of composition event or text event.
+   * @param aData               Used for data value if aEventMessage is
+   *                            NS_COMPOSITION_UPDATE or NS_COMPOSITION_END.
+   *                            Used for theText value if aEventMessage is
+   *                            NS_TEXT_TEXT.
+   */
+  void DispatchCompsotionEventRunnable(uint32_t aEventMessage,
+                                       const nsAString& aData);
 };
 
 /**

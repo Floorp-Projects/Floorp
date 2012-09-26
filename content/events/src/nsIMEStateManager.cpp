@@ -102,7 +102,10 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
   if (sTextCompositions) {
     TextComposition* compositionInContent =
       sTextCompositions->GetCompositionInContent(aPresContext, aContent);
+
     if (compositionInContent) {
+      // Store the composition before accessing the native IME.
+      TextComposition storedComposition = *compositionInContent;
       // Try resetting the native IME state.  Be aware, typically, this method
       // is called during the content being removed.  Then, the native
       // composition events which are caused by following APIs are ignored due
@@ -113,8 +116,18 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
         if (NS_FAILED(rv)) {
           widget->ResetInputState();
         }
-        // WARNING: the |compositionInContent| may have been destroyed.
+        // By calling the APIs, the composition may have been finished normally.
+        compositionInContent =
+          sTextCompositions->GetCompositionFor(
+                               storedComposition.GetPresContext(),
+                               storedComposition.GetEventTargetNode());
       }
+    }
+
+    // If the compositionInContent is still available, we should finish the
+    // composition just on the content forcibly.
+    if (compositionInContent) {
+      compositionInContent->SynthesizeCommit(true);
     }
   }
 
