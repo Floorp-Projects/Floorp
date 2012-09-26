@@ -49,6 +49,27 @@ class DeviceManager:
         failure: None
         """
 
+    def shellCheckOutput(self, cmd, env=None, cwd=None, timeout=None, root=False):
+        """
+        executes shell command on device (with root privileges if
+        specified)  and returns the the output
+
+        timeout is specified in seconds, and if no timeout is given,
+        we will run until the script returns
+        returns:
+        success: Returns output of shell command
+        failure: DMError will be raised
+        """
+        buf = StringIO.StringIO()
+        retval = self.shell(cmd, buf, env=env, cwd=cwd, timeout=timeout, root=root)
+        output = str(buf.getvalue()[0:-1]).rstrip()
+        buf.close()
+        if retval is None:
+            raise DMError("Did not successfully run command %s (output: '%s', retval: 'None')" % (cmd, output))
+        if retval != 0:
+            raise DMError("Non-zero return code for command: %s (output: '%s', retval: '%i')" % (cmd, output, retval))
+        return output
+
     @abstractmethod
     def pushFile(self, localname, destname):
         """
