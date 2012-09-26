@@ -27,6 +27,89 @@ struct TypeInferenceSizes;
 
 namespace js {
 
+class TaggedProto
+{
+  public:
+    TaggedProto() : proto(NULL) {}
+    TaggedProto(JSObject *proto) : proto(proto) {}
+
+    uintptr_t toWord() const { return uintptr_t(proto); }
+
+    inline bool isLazy() const;
+    inline bool isObject() const;
+    inline JSObject *toObject() const;
+    inline JSObject *toObjectOrNull() const;
+    JSObject *raw() const { return proto; }
+
+    bool operator ==(const TaggedProto &other) { return proto == other.proto; }
+    bool operator !=(const TaggedProto &other) { return proto != other.proto; }
+
+  private:
+    JSObject *proto;
+};
+
+} /* namespace js */
+
+namespace JS {
+
+template <>
+struct RootKind<js::TaggedProto>
+{
+    static ThingRootKind rootKind() { return THING_ROOT_OBJECT; };
+};
+
+template <> struct RootMethods<const js::TaggedProto>
+{
+    static js::TaggedProto initial() { return js::TaggedProto(); }
+    static ThingRootKind kind() { return THING_ROOT_OBJECT; }
+    static bool poisoned(const js::TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
+};
+
+template <> struct RootMethods<js::TaggedProto>
+{
+    static js::TaggedProto initial() { return js::TaggedProto(); }
+    static ThingRootKind kind() { return THING_ROOT_OBJECT; }
+    static bool poisoned(const js::TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
+};
+
+template<class Outer>
+class TaggedProtoOperations
+{
+    const js::TaggedProto *value() const {
+        return static_cast<const Outer*>(this)->extract();
+    }
+
+  public:
+    uintptr_t toWord() const { return value()->toWord(); }
+    inline bool isLazy() const;
+    inline bool isObject() const;
+    inline JSObject *toObject() const;
+    inline JSObject *toObjectOrNull() const;
+    JSObject *raw() const { return value()->raw(); }
+};
+
+template <>
+class HandleBase<js::TaggedProto> : public TaggedProtoOperations<Handle<js::TaggedProto> >
+{
+    friend class TaggedProtoOperations<Handle<js::TaggedProto> >;
+    const js::TaggedProto * extract() const {
+        return static_cast<const Handle<js::TaggedProto>*>(this)->address();
+    }
+};
+
+template <>
+class RootedBase<js::TaggedProto> : public TaggedProtoOperations<Rooted<js::TaggedProto> >
+{
+    friend class TaggedProtoOperations<Rooted<js::TaggedProto> >;
+    const js::TaggedProto *extract() const {
+        return static_cast<const Rooted<js::TaggedProto> *>(this)->address();
+    }
+};
+
+} /* namespace JS */
+
+namespace js {
+
 class CallObject;
 
 namespace mjit {
@@ -874,7 +957,7 @@ struct TypeObject : gc::Cell
     void *padding;
 #endif
 
-    inline TypeObject(RawObject proto, bool isFunction, bool unknown);
+    inline TypeObject(TaggedProto proto, bool isFunction, bool unknown);
 
     bool isFunction() { return !!(flags & OBJECT_FLAG_FUNCTION); }
 
@@ -970,10 +1053,10 @@ struct TypeObject : gc::Cell
  */
 struct TypeObjectEntry
 {
-    typedef JSObject *Lookup;
+    typedef TaggedProto Lookup;
 
-    static inline HashNumber hash(RawObject base);
-    static inline bool match(TypeObject *key, RawObject lookup);
+    static inline HashNumber hash(TaggedProto base);
+    static inline bool match(TypeObject *key, TaggedProto lookup);
 };
 typedef HashSet<ReadBarriered<TypeObject>, TypeObjectEntry, SystemAllocPolicy> TypeObjectSet;
 
@@ -1258,7 +1341,7 @@ struct TypeCompartment
      * or JSProto_Object to indicate a type whose class is unknown (not just
      * js_ObjectClass).
      */
-    TypeObject *newTypeObject(JSContext *cx, JSProtoKey kind, HandleObject proto,
+    TypeObject *newTypeObject(JSContext *cx, JSProtoKey kind, Handle<TaggedProto> proto,
                               bool unknown = false, bool isDOM = false);
 
     /* Get or make an object for an allocation site, and add to the allocation site table. */

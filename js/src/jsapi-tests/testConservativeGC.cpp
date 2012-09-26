@@ -6,6 +6,8 @@
 #include "jsobj.h"
 #include "vm/String.h"
 
+#include "jsobjinlines.h"
+
 BEGIN_TEST(testConservativeGC)
 {
 #ifndef JSGC_USE_EXACT_ROOTING

@@ -21,6 +21,61 @@
 #ifndef jsinferinlines_h___
 #define jsinferinlines_h___
 
+inline bool
+js::TaggedProto::isObject() const
+{
+    /* Skip NULL and Proxy::LazyProto. */
+    return uintptr_t(proto) > uintptr_t(Proxy::LazyProto);
+}
+
+inline bool
+js::TaggedProto::isLazy() const
+{
+    return proto == Proxy::LazyProto;
+}
+
+inline JSObject *
+js::TaggedProto::toObject() const
+{
+    JS_ASSERT(isObject());
+    return proto;
+}
+
+inline JSObject *
+js::TaggedProto::toObjectOrNull() const
+{
+    JS_ASSERT(!proto || isObject());
+    return proto;
+}
+
+template<class Outer>
+inline bool
+JS::TaggedProtoOperations<Outer>::isLazy() const
+{
+    return value()->isLazy();
+}
+
+template<class Outer>
+inline bool
+JS::TaggedProtoOperations<Outer>::isObject() const
+{
+    return value()->isObject();
+}
+
+template<class Outer>
+inline JSObject *
+JS::TaggedProtoOperations<Outer>::toObject() const
+{
+    return value()->toObject();
+}
+
+template<class Outer>
+inline JSObject *
+JS::TaggedProtoOperations<Outer>::toObjectOrNull() const
+{
+    return value()->toObjectOrNull();
+}
+
 namespace js {
 namespace types {
 
@@ -1400,14 +1455,14 @@ TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-inline TypeObject::TypeObject(RawObject proto, bool function, bool unknown)
+inline TypeObject::TypeObject(TaggedProto proto, bool function, bool unknown)
 {
     PodZero(this);
 
     /* Inner objects may not appear on prototype chains. */
-    JS_ASSERT_IF(proto, !proto->getClass()->ext.outerObject);
+    JS_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);
 
-    this->proto = proto;
+    this->proto = proto.raw();
 
     if (function)
         flags |= OBJECT_FLAG_FUNCTION;
@@ -1686,17 +1741,6 @@ js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32_t offset, uint3
     pushed->addType(cx, type);
 }
 
-inline js::types::TypeObject *
-JSCompartment::getEmptyType(JSContext *cx)
-{
-    JS::MaybeCheckStackRoots(cx);
-
-    if (!emptyTypeObject) {
-        JS::RootedObject nullproto(cx, NULL);
-        emptyTypeObject = types.newTypeObject(cx, JSProto_Object, nullproto, true);
-    }
-    return emptyTypeObject;
-}
 
 namespace JS {
 

@@ -102,7 +102,7 @@ Enumerate(JSContext *cx, HandleObject pobj, jsid id,
      * the built-in prototypes).  So exclude __proto__ if the object where the
      * property was found has no [[Prototype]] and might be |Object.prototype|.
      */
-    if (JS_UNLIKELY(!pobj->getProto() && JSID_IS_ATOM(id, cx->names().proto)))
+    if (JS_UNLIKELY(!pobj->getTaggedProto().isObject() && JSID_IS_ATOM(id, cx->names().proto)))
         return true;
 
     if (!(flags & JSITER_OWNONLY) || pobj->isProxy() || pobj->getOps()->enumerate) {
@@ -116,7 +116,7 @@ Enumerate(JSContext *cx, HandleObject pobj, jsid id,
          * the prototype chain, but custom enumeration behaviors might return
          * duplicated properties, so always add in such cases.
          */
-        if ((pobj->getProto() || pobj->isProxy() || pobj->getOps()->enumerate) && !ht.add(p, id))
+        if ((pobj->isProxy() || pobj->getProto() || pobj->getOps()->enumerate) && !ht.add(p, id))
             return false;
     }
 
@@ -404,7 +404,7 @@ static inline PropertyIteratorObject *
 NewPropertyIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
+        RootedTypeObject type(cx, cx->compartment->getNewType(cx, NULL));
         if (!type)
             return NULL;
 
@@ -627,18 +627,21 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue 
              */
             PropertyIteratorObject *last = cx->runtime->nativeIterCache.last;
             if (last) {
-                RawObject proto = obj->getProto();
                 NativeIterator *lastni = last->getNativeIterator();
                 if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                     obj->isNative() &&
-                    obj->lastProperty() == lastni->shapes_array[0] &&
-                    proto && proto->isNative() &&
-                    proto->lastProperty() == lastni->shapes_array[1] &&
-                    !proto->getProto()) {
-                    vp.setObject(*last);
-                    UpdateNativeIterator(lastni, obj);
-                    RegisterEnumerator(cx, last, lastni);
-                    return true;
+                    obj->lastProperty() == lastni->shapes_array[0])
+                {
+                    JSObject *proto = obj->getProto();
+                    if (proto->isNative() &&
+                        proto->lastProperty() == lastni->shapes_array[1] &&
+                        !proto->getProto())
+                    {
+                        vp.setObject(*last);
+                        UpdateNativeIterator(lastni, obj);
+                        RegisterEnumerator(cx, last, lastni);
+                        return true;
+                    }
                 }
             }
 
@@ -1093,8 +1096,11 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                      * Check whether another property along the prototype chain
                      * became visible as a result of this deletion.
                      */
-                    if (obj->getProto()) {
-                        RootedObject proto(cx, obj->getProto()), obj2(cx);
+                    RootedObject proto(cx);
+                    if (!JSObject::getProto(cx, obj, &proto))
+                        return false;
+                    if (proto) {
+                        RootedObject obj2(cx);
                         RootedShape prop(cx);
                         RootedId id(cx);
                         if (!ValueToId(cx, StringValue(*idp), id.address()))

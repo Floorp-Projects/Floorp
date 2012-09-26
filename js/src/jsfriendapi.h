@@ -400,6 +400,7 @@ SetFunctionNativeReserved(RawObject fun, size_t which, const Value &val);
 inline JSObject *
 GetObjectProto(RawObject obj)
 {
+    /* FIXME */
     return reinterpret_cast<const shadow::Object*>(obj)->type->proto;
 }
 

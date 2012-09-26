@@ -12,6 +12,8 @@
 #include "jsobj.h"
 #include "jswrapper.h"
 
+#include "jsobjinlines.h"
+
 struct OuterWrapper : js::DirectWrapper
 {
     OuterWrapper() : DirectWrapper(0) {}
