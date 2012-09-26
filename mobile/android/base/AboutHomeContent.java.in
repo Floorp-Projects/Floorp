@@ -221,6 +221,20 @@ public class AboutHomeContent extends ScrollView
         AboutHomePromoBox.Type type = mPrelimPromoBoxType;
         if (syncIsSetup && type == AboutHomePromoBox.Type.SYNC)
             type = AboutHomePromoBox.Type.APPS;
+
+// Remove the Apps promo from Beta and Release until we get go-ahead from Marketplace team.
+// Two blocks are silly, but the preprocessor does not support complex expressions and I
+// am not trying to make something elegant here. This code should disappear soon or the
+// entire feature should be removed.
+#if MOZ_UPDATE_CHANNEL == beta
+        if (type == AboutHomePromoBox.Type.APPS)
+            type = (syncIsSetup ? AboutHomePromoBox.Type.NONE : AboutHomePromoBox.Type.SYNC);
+#endif
+#if MOZ_UPDATE_CHANNEL == release
+        if (type == AboutHomePromoBox.Type.APPS)
+            type = (syncIsSetup ? AboutHomePromoBox.Type.NONE : AboutHomePromoBox.Type.SYNC);
+#endif
+
         mPromoBox.show(type);
     }
 
