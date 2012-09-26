@@ -11,12 +11,13 @@
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
+const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 
 let tempScope = {};
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", tempScope);
 Cu.import("resource://gre/modules/Services.jsm", tempScope);
 Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm", tempScope);
-Cu.import("resource:///modules/WebConsoleUtils.jsm", tempScope);
+Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tempScope);
 Cu.import("resource:///modules/NetworkHelper.jsm", tempScope);
 Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
 
@@ -24,7 +25,7 @@ let XPCOMUtils = tempScope.XPCOMUtils;
 let Services = tempScope.Services;
 let gConsoleStorage = tempScope.ConsoleAPIStorage;
 let WebConsoleUtils = tempScope.WebConsoleUtils;
-let l10n = WebConsoleUtils.l10n;
+let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 let JSPropertyProvider = tempScope.JSPropertyProvider;
 let NetworkHelper = tempScope.NetworkHelper;
 let NetUtil = tempScope.NetUtil;
@@ -185,6 +186,8 @@ let Manager = {
     if (aMessage.cachedMessages) {
       this._sendCachedMessages(aMessage.cachedMessages);
     }
+
+    this.sendMessage("WebConsole:Initialized", {});
   },
 
   /**

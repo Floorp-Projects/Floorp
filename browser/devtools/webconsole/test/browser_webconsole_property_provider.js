@@ -17,7 +17,7 @@ function testPropertyProvider() {
   browser.removeEventListener("load", testPropertyProvider, true);
 
   let tmp = {};
-  Cu.import("resource:///modules/WebConsoleUtils.jsm", tmp);
+  Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tmp);
   let JSPropertyProvider = tmp.JSPropertyProvider;
   tmp = null;
 
