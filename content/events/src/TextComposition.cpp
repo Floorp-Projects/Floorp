@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TextComposition.h"
+#include "nsContentEventHandler.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsGUIEvent.h"
+#include "nsIMEStateManager.h"
 #include "nsIPresShell.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
@@ -33,6 +35,7 @@ TextComposition::TextComposition(const TextComposition& aOther)
   mNativeContext = aOther.mNativeContext;
   mPresContext = aOther.mPresContext;
   mNode = aOther.mNode;
+  mLastData = aOther.mLastData;
 }
 
 bool
@@ -55,8 +58,93 @@ TextComposition::DispatchEvent(nsGUIEvent* aEvent,
                                nsEventStatus* aStatus,
                                nsDispatchingCallback* aCallBack)
 {
+  if (aEvent->message == NS_COMPOSITION_UPDATE) {
+    mLastData = static_cast<nsCompositionEvent*>(aEvent)->data;
+  }
+
   nsEventDispatcher::Dispatch(mNode, mPresContext,
                               aEvent, nullptr, aStatus, aCallBack);
+}
+
+void
+TextComposition::DispatchCompsotionEventRunnable(uint32_t aEventMessage,
+                                                 const nsAString& aData)
+{
+  nsContentUtils::AddScriptRunner(
+    new CompositionEventDispatcher(mPresContext, mNode,
+                                   aEventMessage, aData));
+}
+
+void
+TextComposition::SynthesizeCommit(bool aDiscard)
+{
+  // backup this instance and use it since this instance might be destroyed
+  // by nsIMEStateManager if this is managed by it.
+  TextComposition composition = *this;
+  nsAutoString data(aDiscard ? EmptyString() : composition.mLastData);
+  if (composition.mLastData != data) {
+    composition.DispatchCompsotionEventRunnable(NS_COMPOSITION_UPDATE, data);
+    composition.DispatchCompsotionEventRunnable(NS_TEXT_TEXT, data);
+  }
+  composition.DispatchCompsotionEventRunnable(NS_COMPOSITION_END, data);
+}
+
+/******************************************************************************
+ * TextComposition::CompositionEventDispatcher
+ ******************************************************************************/
+
+TextComposition::CompositionEventDispatcher::CompositionEventDispatcher(
+                                               nsPresContext* aPresContext,
+                                               nsINode* aEventTarget,
+                                               uint32_t aEventMessage,
+                                               const nsAString& aData) :
+  mPresContext(aPresContext), mEventTarget(aEventTarget),
+  mEventMessage(aEventMessage), mData(aData)
+{
+  mWidget = mPresContext->GetNearestWidget();
+}
+
+NS_IMETHODIMP
+TextComposition::CompositionEventDispatcher::Run()
+{
+  if (!mPresContext->GetPresShell() ||
+      mPresContext->GetPresShell()->IsDestroying()) {
+    return NS_OK; // cannot dispatch any events anymore
+  }
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  switch (mEventMessage) {
+    case NS_COMPOSITION_START: {
+      nsCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
+      nsQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT, mWidget);
+      nsContentEventHandler handler(mPresContext);
+      handler.OnQuerySelectedText(&selectedText);
+      NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
+      compStart.data = selectedText.mReply.mString;
+      nsIMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
+                                                  &compStart, &status, nullptr);
+      break;
+    }
+    case NS_COMPOSITION_UPDATE:
+    case NS_COMPOSITION_END: {
+      nsCompositionEvent compEvent(true, mEventMessage, mWidget);
+      compEvent.data = mData;
+      nsIMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
+                                                  &compEvent, &status, nullptr);
+      break;
+    }
+    case NS_TEXT_TEXT: {
+      nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+      textEvent.theText = mData;
+      nsIMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
+                                                  &textEvent, &status, nullptr);
+      break;
+    }
+    default:
+      MOZ_NOT_REACHED("Unsupported event");
+      break;
+  }
+  return NS_OK;
 }
 
 /******************************************************************************
