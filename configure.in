@@ -2298,7 +2298,6 @@ ia64*-hpux*)
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
         fi
 
-        MOZ_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
     x86_64-*)
@@ -2976,11 +2975,6 @@ MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 dnl Quota support
 MOZ_CHECK_HEADERS(sys/quota.h sys/sysmacros.h)
 MOZ_CHECK_HEADERS(linux/quota.h)
-
-dnl Try for MMX support
-dnl NB - later gcc versions require -mmmx for this header to be successfully
-dnl included (or another option which implies it, such as -march=pentium-mmx)
-MOZ_CHECK_HEADERS(mmintrin.h)
 
 MOZ_CHECK_HEADERS(sys/types.h netinet/in.h byteswap.h)
 

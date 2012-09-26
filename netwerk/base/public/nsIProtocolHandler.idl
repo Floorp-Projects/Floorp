@@ -241,6 +241,13 @@ interface nsIProtocolHandler : nsISupports
      * protocols.
      */
     const unsigned long URI_FORBIDS_COOKIE_ACCESS = (1<<15);
+
+    /**
+     * URIs for this protocol require the webapps permission on the principal
+     * when opening URIs for a different domain. See bug#773886
+     */
+    const unsigned long URI_CROSS_ORIGIN_NEEDS_WEBAPPS_PERM = (1<<16);
+
 };
 
 %{C++

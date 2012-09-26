@@ -299,7 +299,6 @@ SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
 SHELL_WRAPPER1(removeObserver, jstring)
 SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
 SHELL_WRAPPER1(reportJavaCrash, jstring)
-SHELL_WRAPPER0(executeNextRunnable)
 SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble)
 SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong)
@@ -723,7 +722,6 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(removeObserver);
   GETFUNC(onChangeNetworkLinkStatus);
   GETFUNC(reportJavaCrash);
-  GETFUNC(executeNextRunnable);
   GETFUNC(cameraCallbackBridge);
   GETFUNC(notifyBatteryChange);
   GETFUNC(notifySmsReceived);

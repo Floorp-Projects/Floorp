@@ -61,6 +61,10 @@
 #include "mozilla/StandardInteger.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "nsContentUtils.h"
+
+// This should be probably defined on some other place... but I couldn't find it
+#define WEBAPPS_PERM_NAME "webapps-manage"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1403,7 +1407,25 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                                  nsCaseInsensitiveCStringComparator()))
     {
         // every scheme can access another URI from the same scheme,
-        // as long as they don't represent null principals.
+        // as long as they don't represent null principals...
+        // Or they don't require an special permission to do so
+        // See bug#773886
+
+        bool hasFlags;
+        rv = NS_URIChainHasFlags(targetBaseURI,
+                                 nsIProtocolHandler::URI_CROSS_ORIGIN_NEEDS_WEBAPPS_PERM,
+                                 &hasFlags);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (hasFlags) {
+            // In this case, we allow opening only if the source and target URIS
+            // are on the same domain, or the opening URI has the webapps
+            // permision granted
+            if (!SecurityCompareURIs(sourceBaseURI,targetBaseURI) &&
+                !nsContentUtils::IsExactSitePermAllow(aPrincipal,WEBAPPS_PERM_NAME)){
+                return NS_ERROR_DOM_BAD_URI;
+            }
+        }
         return NS_OK;
     }
 
