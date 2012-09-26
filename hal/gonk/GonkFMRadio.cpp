@@ -33,7 +33,9 @@ uint32_t GetFMRadioFrequency();
 
 static int sRadioFD;
 static bool sRadioEnabled;
-static pthread_t sMonitorThread;
+static pthread_t sRadioThread;
+static hal::FMRadioSettings sRadioSettings;
+static int sTavaruaVersion;
 
 static int
 setControl(uint32_t id, int32_t value)
@@ -46,91 +48,31 @@ setControl(uint32_t id, int32_t value)
 
 class RadioUpdate : public nsRunnable {
   hal::FMRadioOperation mOp;
+  hal::FMRadioOperationStatus mStatus;
 public:
-  RadioUpdate(hal::FMRadioOperation op)
+  RadioUpdate(hal::FMRadioOperation op, hal::FMRadioOperationStatus status)
     : mOp(op)
+    , mStatus(status)
   {}
 
   NS_IMETHOD Run() {
     hal::FMRadioOperationInformation info;
     info.operation() = mOp;
-    info.status() = hal::FM_RADIO_OPERATION_STATUS_SUCCESS;
+    info.status() = mStatus;
     info.frequency() = GetFMRadioFrequency();
     hal::NotifyFMRadioStatus(info);
     return NS_OK;
   }
 };
 
-static void *
-pollTavaruaRadio(void *)
+/* Runs on the radio thread */
+static void
+initTavaruaRadio(hal::FMRadioSettings &aInfo)
 {
-  uint8_t buf[128];
-  struct v4l2_buffer buffer = {0};
-  buffer.index = 1;
-  buffer.type = V4L2_BUF_TYPE_PRIVATE;
-  buffer.length = sizeof(buf);
-  buffer.m.userptr = (long unsigned int)buf;
-
-  while (sRadioEnabled) {
-    int rc = ioctl(sRadioFD, VIDIOC_DQBUF, &buffer);
-    if (rc)
-      return NULL;
-
-    for (unsigned int i = 0; i < buffer.bytesused; i++) {
-      switch (buf[i]) {
-      case TAVARUA_EVT_RADIO_READY:
-        NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_ENABLE));
-        break;
-      case TAVARUA_EVT_SEEK_COMPLETE:
-        NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_SEEK));
-        break;
-      default:
-        break;
-      }
-    }
-  }
-
-  return NULL;
-}
-
-void
-EnableFMRadio(const hal::FMRadioSettings& aInfo)
-{
-  if (sRadioEnabled) {
-    HAL_LOG(("Radio already enabled!"));
-    return;
-  }
-
-  mozilla::ScopedClose fd(open("/dev/radio0", O_RDWR));
-  if (fd < 0) {
-    HAL_LOG(("Unable to open radio device"));
-    return;
-  }
-
-  struct v4l2_capability cap;
-  int rc = ioctl(fd, VIDIOC_QUERYCAP, &cap);
-  if (rc < 0) {
-    HAL_LOG(("Unable to query radio device"));
-    return;
-  }
-
-  HAL_LOG(("Radio: %s (%s)\n", cap.driver, cap.card));
-
-  if (!(cap.capabilities & V4L2_CAP_RADIO)) {
-    HAL_LOG(("/dev/radio0 isn't a radio"));
-    return;
-  }
-
-  if (!(cap.capabilities & V4L2_CAP_TUNER)) {
-    HAL_LOG(("/dev/radio0 doesn't support the tuner interface"));
-    return;
-  }
-  sRadioFD = fd;
-
-  // Tavarua specific start
+  mozilla::ScopedClose fd(sRadioFD);
   char command[64];
-  snprintf(command, sizeof(command), "/system/bin/fm_qsoc_patches %d 0", cap.version);
-  rc = system(command);
+  snprintf(command, sizeof(command), "/system/bin/fm_qsoc_patches %d 0", sTavaruaVersion);
+  int rc = system(command);
   if (rc) {
     HAL_LOG(("Unable to initialize radio"));
     return;
@@ -206,11 +148,91 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
     return;
   }
 
-  pthread_create(&sMonitorThread, NULL, pollTavaruaRadio, NULL);
-  // Tavarua specific end
-
   fd.forget();
   sRadioEnabled = true;
+}
+
+/* Runs on the radio thread */
+static void *
+runTavaruaRadio(void *)
+{
+  initTavaruaRadio(sRadioSettings);
+  if (!sRadioEnabled) {
+    NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_ENABLE,
+                                            hal::FM_RADIO_OPERATION_STATUS_FAIL));
+    return NULL;
+  }
+
+  uint8_t buf[128];
+  struct v4l2_buffer buffer = {0};
+  buffer.index = 1;
+  buffer.type = V4L2_BUF_TYPE_PRIVATE;
+  buffer.length = sizeof(buf);
+  buffer.m.userptr = (long unsigned int)buf;
+
+  while (sRadioEnabled) {
+    if (ioctl(sRadioFD, VIDIOC_DQBUF, &buffer) < 0)
+      break;
+
+    for (unsigned int i = 0; i < buffer.bytesused; i++) {
+      switch (buf[i]) {
+      case TAVARUA_EVT_RADIO_READY:
+        NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_ENABLE,                                                 hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
+        break;
+      case TAVARUA_EVT_SEEK_COMPLETE:
+        NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_SEEK,
+                                                hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
+        break;
+      default:
+        break;
+      }
+    }
+  }
+
+  return NULL;
+}
+
+/* This runs on the main thread but most of the
+ * initialization is pushed to the radio thread. */
+void
+EnableFMRadio(const hal::FMRadioSettings& aInfo)
+{
+  if (sRadioEnabled) {
+    HAL_LOG(("Radio already enabled!"));
+    return;
+  }
+
+  mozilla::ScopedClose fd(open("/dev/radio0", O_RDWR));
+  if (fd < 0) {
+    HAL_LOG(("Unable to open radio device"));
+    return;
+  }
+
+  struct v4l2_capability cap;
+  int rc = ioctl(fd, VIDIOC_QUERYCAP, &cap);
+  if (rc < 0) {
+    HAL_LOG(("Unable to query radio device"));
+    return;
+  }
+
+  HAL_LOG(("Radio: %s (%s)\n", cap.driver, cap.card));
+
+  if (!(cap.capabilities & V4L2_CAP_RADIO)) {
+    HAL_LOG(("/dev/radio0 isn't a radio"));
+    return;
+  }
+
+  if (!(cap.capabilities & V4L2_CAP_TUNER)) {
+    HAL_LOG(("/dev/radio0 doesn't support the tuner interface"));
+    return;
+  }
+  sRadioFD = fd.forget();
+  sRadioSettings = aInfo;
+
+  // Tavarua specific start
+  sTavaruaVersion = cap.version;
+  pthread_create(&sRadioThread, NULL, runTavaruaRadio, NULL);
+  // Tavarua specific end
 }
 
 void
@@ -228,7 +250,7 @@ DisableFMRadio()
   }
   // Tavarua specific end
 
-  pthread_join(sMonitorThread, NULL);
+  pthread_join(sRadioThread, NULL);
 
   close(sRadioFD);
 
