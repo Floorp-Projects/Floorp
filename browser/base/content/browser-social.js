@@ -257,6 +257,7 @@ let SocialFlyout = {
 
   unload: function() {
     let panel = this.panel;
+    panel.hidePopup();
     if (!panel.firstChild)
       return
     panel.removeChild(panel.firstChild);
