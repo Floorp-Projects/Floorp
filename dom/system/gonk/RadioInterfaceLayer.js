@@ -1004,9 +1004,12 @@ RadioInterfaceLayer.prototype = {
       return;
     }
 
-    let id = gSmsDatabaseService.saveReceivedMessage(message.sender || null,
-                                                     message.fullBody || null,
-                                                     message.timestamp);
+    let id = -1;
+    if (message.messageClass != RIL.PDU_DCS_MSG_CLASS_0) {
+      id = gSmsDatabaseService.saveReceivedMessage(message.sender || null,
+                                                   message.fullBody || null,
+                                                   message.timestamp);
+    }
     let sms = gSmsService.createSmsMessage(id,
                                            DOM_SMS_DELIVERY_RECEIVED,
                                            message.sender || null,
