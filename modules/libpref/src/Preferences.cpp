@@ -1111,6 +1111,21 @@ Preferences::GetInt(const char* aPref, int32_t* aResult)
 }
 
 // static
+nsresult
+Preferences::GetFloat(const char* aPref, float* aResult)
+{
+  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  nsAutoCString result;
+  nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), false);
+  if (NS_SUCCEEDED(rv)) {
+    *aResult = result.ToFloat(&rv);
+  }
+
+  return rv;
+}
+
+// static
 nsAdoptingCString
 Preferences::GetCString(const char* aPref)
 {
