@@ -69,6 +69,8 @@ static const char *sExtensionNames[] = {
     "GL_EXT_texture_compression_dxt1",
     "GL_ANGLE_texture_compression_dxt3",
     "GL_ANGLE_texture_compression_dxt5",
+    "GL_AMD_compressed_ATC_texture",
+    "GL_IMG_texture_compression_pvrtc",
     "GL_EXT_framebuffer_blit",
     "GL_ANGLE_framebuffer_blit",
     "GL_EXT_framebuffer_multisample",

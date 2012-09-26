@@ -90,19 +90,20 @@ typedef struct {
  * WinNT.h
  */
 
-/* Non-x86 CPU identifiers found in the high 26 bits of
+/* Non-x86 CPU identifiers found in the high 24 bits of
  * (MDRawContext*).context_flags.  These aren't used by Breakpad, but are
  * defined here for reference, to avoid assigning values that conflict
  * (although some values already conflict). */
 #define MD_CONTEXT_IA64  0x00080000  /* CONTEXT_IA64 */
-#define MD_CONTEXT_AMD64 0x00100000  /* CONTEXT_AMD64 */
 /* Additional values from winnt.h in the Windows CE 5.0 SDK: */
 #define MD_CONTEXT_SHX   0x000000c0  /* CONTEXT_SH4 (Super-H, includes SH3) */
-#define MD_CONTEXT_ARM   0x00000040  /* CONTEXT_ARM (0x40 bit set in SHx?) */
 #define MD_CONTEXT_MIPS  0x00010000  /* CONTEXT_R4000 (same value as x86?) */
 #define MD_CONTEXT_ALPHA 0x00020000  /* CONTEXT_ALPHA */
 
-#define MD_CONTEXT_CPU_MASK 0xffffffc0
+/* As of Windows 7 SP1, the number of flag bits has increased to
+ * include 0x40 (CONTEXT_XSTATE):
+ * http://msdn.microsoft.com/en-us/library/hh134238%28v=vs.85%29.aspx */
+#define MD_CONTEXT_CPU_MASK 0xffffff00
 
 
 /* This is a base type for MDRawContextX86 and MDRawContextPPC.  This
@@ -291,7 +292,12 @@ typedef enum {
   MD_WITHOUT_OPTIONAL_DATA             = 0x00000400,
   MD_WITH_FULL_MEMORY_INFO             = 0x00000800,
   MD_WITH_THREAD_INFO                  = 0x00001000,
-  MD_WITH_CODE_SEGS                    = 0x00002000
+  MD_WITH_CODE_SEGS                    = 0x00002000,
+  MD_WITHOUT_AUXILLIARY_SEGS           = 0x00004000,
+  MD_WITH_FULL_AUXILLIARY_STATE        = 0x00008000,
+  MD_WITH_PRIVATE_WRITE_COPY_MEMORY    = 0x00010000,
+  MD_IGNORE_INACCESSIBLE_MEMORY        = 0x00020000,
+  MD_WITH_TOKEN_INFORMATION            = 0x00040000
 } MDType;  /* MINIDUMP_TYPE */
 
 
@@ -318,11 +324,24 @@ typedef enum {
   MD_FUNCTION_TABLE_STREAM       = 13,
   MD_UNLOADED_MODULE_LIST_STREAM = 14,
   MD_MISC_INFO_STREAM            = 15,  /* MDRawMiscInfo */
+  MD_MEMORY_INFO_LIST_STREAM     = 16,  /* MDRawMemoryInfoList */
+  MD_THREAD_INFO_LIST_STREAM     = 17,
+  MD_HANDLE_OPERATION_LIST_STREAM = 18,
   MD_LAST_RESERVED_STREAM        = 0x0000ffff,
 
   /* Breakpad extension types.  0x4767 = "Gg" */
-  MD_BREAKPAD_INFO_STREAM          = 0x47670001,  /* MDRawBreakpadInfo */
-  MD_ASSERTION_INFO_STREAM       = 0x47670002   /* MDRawAssertionInfo */
+  MD_BREAKPAD_INFO_STREAM        = 0x47670001,  /* MDRawBreakpadInfo  */
+  MD_ASSERTION_INFO_STREAM       = 0x47670002,  /* MDRawAssertionInfo */
+  /* These are additional minidump stream values which are specific to
+   * the linux breakpad implementation. */
+  MD_LINUX_CPU_INFO              = 0x47670003,  /* /proc/cpuinfo      */
+  MD_LINUX_PROC_STATUS           = 0x47670004,  /* /proc/$x/status    */
+  MD_LINUX_LSB_RELEASE           = 0x47670005,  /* /etc/lsb-release   */
+  MD_LINUX_CMD_LINE              = 0x47670006,  /* /proc/$x/cmdline   */
+  MD_LINUX_ENVIRON               = 0x47670007,  /* /proc/$x/environ   */
+  MD_LINUX_AUXV                  = 0x47670008,  /* /proc/$x/auxv      */
+  MD_LINUX_MAPS                  = 0x47670009,  /* /proc/$x/maps      */
+  MD_LINUX_DSO_DEBUG             = 0x4767000A   /* MDRawDebug         */
 } MDStreamType;  /* MINIDUMP_STREAM_TYPE */
 
 
@@ -600,8 +619,10 @@ typedef enum {
   /* The following values are Breakpad-defined. */
   MD_OS_UNIX          = 0x8000,  /* Generic Unix-ish */
   MD_OS_MAC_OS_X      = 0x8101,  /* Mac OS X/Darwin */
+  MD_OS_IOS           = 0x8102,  /* iOS */
   MD_OS_LINUX         = 0x8201,  /* Linux */
-  MD_OS_SOLARIS       = 0x8202   /* Solaris */
+  MD_OS_SOLARIS       = 0x8202,  /* Solaris */
+  MD_OS_ANDROID       = 0x8203   /* Android */
 } MDOSPlatform;
 
 
@@ -645,6 +666,69 @@ typedef enum {
       /* MINIDUMP_MISC1_PROCESSOR_POWER_INFO */
 } MDMiscInfoFlags1;
 
+/* 
+ * Around DbgHelp version 6.0, the style of new LIST structures changed
+ * from including an array of length 1 at the end of the struct to
+ * represent the variable-length data to including explicit
+ * "size of header", "size of entry" and "number of entries" fields
+ * in the header, presumably to allow backwards-compatibly-extending
+ * the structures in the future. The actual list entries follow the
+ * header data directly in this case.
+ */
+
+typedef struct {
+  u_int32_t size_of_header;    /* sizeof(MDRawMemoryInfoList) */
+  u_int32_t size_of_entry;     /* sizeof(MDRawMemoryInfo) */
+  u_int64_t number_of_entries;
+} MDRawMemoryInfoList;  /* MINIDUMP_MEMORY_INFO_LIST */
+
+typedef struct {
+  u_int64_t base_address;           /* Base address of a region of pages */
+  u_int64_t allocation_base;        /* Base address of a range of pages
+                                     * within this region. */
+  u_int32_t allocation_protection;  /* Memory protection when this region
+                                     * was originally allocated:
+                                     * MDMemoryProtection */
+  u_int32_t __alignment1;
+  u_int64_t region_size;
+  u_int32_t state;                  /* MDMemoryState */
+  u_int32_t protection;             /* MDMemoryProtection */
+  u_int32_t type;                   /* MDMemoryType */
+  u_int32_t __alignment2;
+} MDRawMemoryInfo;  /* MINIDUMP_MEMORY_INFO */
+
+/* For (MDRawMemoryInfo).state */
+typedef enum {
+  MD_MEMORY_STATE_COMMIT   = 0x1000,  /* physical storage has been allocated */
+  MD_MEMORY_STATE_RESERVE  = 0x2000,  /* reserved, but no physical storage */
+  MD_MEMORY_STATE_FREE     = 0x10000  /* available to be allocated */
+} MDMemoryState;
+
+/* For (MDRawMemoryInfo).allocation_protection and .protection */
+typedef enum {
+  MD_MEMORY_PROTECT_NOACCESS          = 0x01,  /* PAGE_NOACCESS */
+  MD_MEMORY_PROTECT_READONLY          = 0x02,  /* PAGE_READONLY */
+  MD_MEMORY_PROTECT_READWRITE         = 0x04,  /* PAGE_READWRITE */
+  MD_MEMORY_PROTECT_WRITECOPY         = 0x08,  /* PAGE_WRITECOPY */
+  MD_MEMORY_PROTECT_EXECUTE           = 0x10,  /* PAGE_EXECUTE */
+  MD_MEMORY_PROTECT_EXECUTE_READ      = 0x20,  /* PAGE_EXECUTE_READ */
+  MD_MEMORY_PROTECT_EXECUTE_READWRITE = 0x40,  /* PAGE_EXECUTE_READWRITE */
+  MD_MEMORY_PROTECT_EXECUTE_WRITECOPY = 0x80,  /* PAGE_EXECUTE_WRITECOPY */
+  /* These options can be combined with the previous flags. */
+  MD_MEMORY_PROTECT_GUARD             = 0x100,  /* PAGE_GUARD */
+  MD_MEMORY_PROTECT_NOCACHE           = 0x200,  /* PAGE_NOCACHE */
+  MD_MEMORY_PROTECT_WRITECOMBINE      = 0x400,  /* PAGE_WRITECOMBINE */
+} MDMemoryProtection;
+
+/* Used to mask the mutually exclusive options from the combinable flags. */
+const u_int32_t MD_MEMORY_PROTECTION_ACCESS_MASK = 0xFF;
+
+/* For (MDRawMemoryInfo).type */
+typedef enum {
+  MD_MEMORY_TYPE_PRIVATE = 0x20000,   /* not shared by other processes */
+  MD_MEMORY_TYPE_MAPPED  = 0x40000,   /* mapped into the view of a section */
+  MD_MEMORY_TYPE_IMAGE   = 0x1000000  /* mapped into the view of an image */
+} MDMemoryType;
 
 /*
  * Breakpad extension types
@@ -712,6 +796,23 @@ typedef enum {
    * directed to a pure virtual call handler instead. */
   MD_ASSERTION_INFO_TYPE_PURE_VIRTUAL_CALL
 } MDAssertionInfoData;
+
+/* These structs are used to store the DSO debug data in Linux minidumps,
+ * which is necessary for converting minidumps to usable coredumps. */
+typedef struct {
+  void*     addr;
+  MDRVA     name;
+  void*     ld;
+} MDRawLinkMap;
+
+typedef struct {
+  u_int32_t version;
+  MDRVA     map;
+  u_int32_t dso_count;
+  void*     brk;
+  void*     ldbase;
+  void*     dynamic;
+} MDRawDebug;
 
 #if defined(_MSC_VER)
 #pragma warning(pop)

@@ -123,11 +123,11 @@ uint64 ByteReader::ReadEncodedPointer(const char *buffer,
 
     // First, find the offset to START from the closest prior aligned
     // address.
-    size_t skew = section_base_ & (AddressSize() - 1);
+    uint64 skew = section_base_ & (AddressSize() - 1);
     // Now find the offset from that aligned address to buffer.
-    off_t offset = skew + (buffer - buffer_base_);
+    uint64 offset = skew + (buffer - buffer_base_);
     // Round up to the next boundary.
-    size_t aligned = (offset + AddressSize() - 1) & -AddressSize();
+    uint64 aligned = (offset + AddressSize() - 1) & -AddressSize();
     // Convert back to a pointer.
     const char *aligned_buffer = buffer_base_ + (aligned - skew);
     // Finally, store the length and actually fetch the pointer.
@@ -156,7 +156,7 @@ uint64 ByteReader::ReadEncodedPointer(const char *buffer,
     case DW_EH_PE_uleb128:
       offset = ReadUnsignedLEB128(buffer, len);
       break;
-      
+
     case DW_EH_PE_udata2:
       offset = ReadTwoBytes(buffer);
       *len = 2;

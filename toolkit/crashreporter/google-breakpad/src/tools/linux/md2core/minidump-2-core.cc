@@ -35,12 +35,10 @@
 
 #include <elf.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <link.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/user.h>
 #include <unistd.h>
 
@@ -48,11 +46,11 @@
 #include <string>
 #include <vector>
 
+#include "common/linux/memory_mapped_file.h"
 #include "google_breakpad/common/minidump_format.h"
-#include "google_breakpad/common/minidump_cpu_x86.h"
-#include "client/linux/minidump_writer/minidump_extension_linux.h"
-#include "common/linux/linux_syscall_support.h"
-
+#include "processor/scoped_ptr.h"
+#include "third_party/lss/linux_syscall_support.h"
+#include "tools/linux/md2core/minidump_memory_range.h"
 
 #if __WORDSIZE == 64
   #define ELF_CLASS ELFCLASS64
@@ -70,11 +68,21 @@
   #define ELF_ARCH  EM_X86_64
 #elif defined(__i386__)
   #define ELF_ARCH  EM_386
-#elif defined(__ARM_ARCH_3__)
+#elif defined(__arm__)
   #define ELF_ARCH  EM_ARM
 #elif defined(__mips__)
   #define ELF_ARCH  EM_MIPS
 #endif
+
+#if defined(__arm__)
+// GLibc/ARM and Android/ARM both use 'user_regs' for the structure type
+// containing core registers, while they use 'user_regs_struct' on other
+// architectures. This file-local typedef simplifies the source code.
+typedef user_regs user_regs_struct;
+#endif
+
+using google_breakpad::MemoryMappedFile;
+using google_breakpad::MinidumpMemoryRange;
 
 static const MDRVA kInvalidMDRVA = static_cast<MDRVA>(-1);
 static bool verbose;
@@ -104,63 +112,6 @@ writea(int fd, const void* idata, size_t length) {
 
   return true;
 }
-
-// A range of a mmaped file.
-class MMappedRange {
- public:
-  MMappedRange(const void* data, size_t length)
-      : data_(reinterpret_cast<const uint8_t*>(data)),
-        length_(length) {
-  }
-
-  // Get an object of |length| bytes at |offset| and return a pointer to it
-  // unless it's out of bounds.
-  const void* GetObject(size_t offset, size_t length) const {
-    if (offset + length < offset)
-      return NULL;
-    if (offset + length > length_)
-      return NULL;
-    return data_ + offset;
-  }
-
-  // Get element |index| of an array of objects of length |length| starting at
-  // |offset| bytes. Return NULL if out of bounds.
-  const void* GetArrayElement(size_t offset, size_t length,
-                              unsigned index) const {
-    const size_t element_offset = offset + index * length;
-    return GetObject(element_offset, length);
-  }
-
-  // Get a zero-terminated string. This method only works correctly for ASCII
-  // characters and does not convert between UTF-16 and UTF-8.
-  const std::string GetString(size_t offset) const {
-    const MDString* s = (const MDString*) GetObject(offset, sizeof(MDString));
-    const u_int16_t* buf = &s->buffer[0];
-    std::string str;
-    for (unsigned i = 0; i < s->length && buf[i]; ++i) {
-      str.push_back(buf[i]);
-    }
-    return str;
-  }
-
-  // Return a new range which is a subset of this range.
-  MMappedRange Subrange(const MDLocationDescriptor& location) const {
-    if (location.rva > length_ ||
-        location.rva + location.data_size < location.rva ||
-        location.rva + location.data_size > length_) {
-      return MMappedRange(NULL, 0);
-    }
-
-    return MMappedRange(data_ + location.rva, location.data_size);
-  }
-
-  const uint8_t* data() const { return data_; }
-  size_t length() const { return length_; }
-
- private:
-  const uint8_t* const data_;
-  const size_t length_;
-};
 
 /* Dynamically determines the byte sex of the system. Returns non-zero
  * for big-endian machines.
@@ -251,7 +202,9 @@ struct CrashedProcess {
   struct Thread {
     pid_t tid;
     user_regs_struct regs;
+#if defined(__i386__) || defined(__x86_64__)
     user_fpregs_struct fpregs;
+#endif
 #if defined(__i386__)
     user_fpxregs_struct fpxregs;
 #endif
@@ -289,9 +242,9 @@ U16(const uint8_t* data) {
 }
 
 static void
-ParseThreadRegisters(CrashedProcess::Thread* thread, MMappedRange range) {
-  const MDRawContextX86* rawregs =
-      (const MDRawContextX86*) range.GetObject(0, sizeof(MDRawContextX86));
+ParseThreadRegisters(CrashedProcess::Thread* thread,
+                     const MinidumpMemoryRange& range) {
+  const MDRawContextX86* rawregs = range.GetData<MDRawContextX86>(0);
 
   thread->regs.ebx = rawregs->ebx;
   thread->regs.ecx = rawregs->ecx;
@@ -335,9 +288,9 @@ ParseThreadRegisters(CrashedProcess::Thread* thread, MMappedRange range) {
 }
 #elif defined(__x86_64__)
 static void
-ParseThreadRegisters(CrashedProcess::Thread* thread, MMappedRange range) {
-  const MDRawContextAMD64* rawregs =
-      (const MDRawContextAMD64*) range.GetObject(0, sizeof(MDRawContextAMD64));
+ParseThreadRegisters(CrashedProcess::Thread* thread,
+                     const MinidumpMemoryRange& range) {
+  const MDRawContextAMD64* rawregs = range.GetData<MDRawContextAMD64>(0);
 
   thread->regs.r15 = rawregs->r15;
   thread->regs.r14 = rawregs->r14;
@@ -378,15 +331,40 @@ ParseThreadRegisters(CrashedProcess::Thread* thread, MMappedRange range) {
   memcpy(thread->fpregs.st_space, rawregs->flt_save.float_registers, 8 * 16);
   memcpy(thread->fpregs.xmm_space, rawregs->flt_save.xmm_registers, 16 * 16);
 }
+#elif defined(__arm__)
+static void
+ParseThreadRegisters(CrashedProcess::Thread* thread,
+                     const MinidumpMemoryRange& range) {
+  const MDRawContextARM* rawregs = range.GetData<MDRawContextARM>(0);
+
+  thread->regs.uregs[0] = rawregs->iregs[0];
+  thread->regs.uregs[1] = rawregs->iregs[1];
+  thread->regs.uregs[2] = rawregs->iregs[2];
+  thread->regs.uregs[3] = rawregs->iregs[3];
+  thread->regs.uregs[4] = rawregs->iregs[4];
+  thread->regs.uregs[5] = rawregs->iregs[5];
+  thread->regs.uregs[6] = rawregs->iregs[6];
+  thread->regs.uregs[7] = rawregs->iregs[7];
+  thread->regs.uregs[8] = rawregs->iregs[8];
+  thread->regs.uregs[9] = rawregs->iregs[9];
+  thread->regs.uregs[10] = rawregs->iregs[10];
+  thread->regs.uregs[11] = rawregs->iregs[11];
+  thread->regs.uregs[12] = rawregs->iregs[12];
+  thread->regs.uregs[13] = rawregs->iregs[13];
+  thread->regs.uregs[14] = rawregs->iregs[14];
+  thread->regs.uregs[15] = rawregs->iregs[15];
+
+  thread->regs.uregs[16] = rawregs->cpsr;
+  thread->regs.uregs[17] = 0;  // what is ORIG_r0 exactly?
+}
 #else
 #error "This code has not been ported to your platform yet"
 #endif
 
 static void
-ParseThreadList(CrashedProcess* crashinfo, MMappedRange range,
-                const MMappedRange& full_file) {
-  const uint32_t num_threads =
-      *(const uint32_t*) range.GetObject(0, sizeof(uint32_t));
+ParseThreadList(CrashedProcess* crashinfo, const MinidumpMemoryRange& range,
+                const MinidumpMemoryRange& full_file) {
+  const uint32_t num_threads = *range.GetData<uint32_t>(0);
   if (verbose) {
     fprintf(stderr,
             "MD_THREAD_LIST_STREAM:\n"
@@ -398,11 +376,11 @@ ParseThreadList(CrashedProcess* crashinfo, MMappedRange range,
     CrashedProcess::Thread thread;
     memset(&thread, 0, sizeof(thread));
     const MDRawThread* rawthread =
-        (MDRawThread*) range.GetArrayElement(sizeof(uint32_t),
-                                             sizeof(MDRawThread), i);
+        range.GetArrayElement<MDRawThread>(sizeof(uint32_t), i);
     thread.tid = rawthread->thread_id;
     thread.stack_addr = rawthread->stack.start_of_memory_range;
-    MMappedRange stack_range = full_file.Subrange(rawthread->stack.memory);
+    MinidumpMemoryRange stack_range =
+        full_file.Subrange(rawthread->stack.memory);
     thread.stack = stack_range.data();
     thread.stack_length = rawthread->stack.memory.data_size;
 
@@ -414,10 +392,9 @@ ParseThreadList(CrashedProcess* crashinfo, MMappedRange range,
 }
 
 static void
-ParseSystemInfo(CrashedProcess* crashinfo, MMappedRange range,
-                const MMappedRange &full_file) {
-  const MDRawSystemInfo* sysinfo =
-    (MDRawSystemInfo*) range.GetObject(0, sizeof(MDRawSystemInfo));
+ParseSystemInfo(CrashedProcess* crashinfo, const MinidumpMemoryRange& range,
+                const MinidumpMemoryRange& full_file) {
+  const MDRawSystemInfo* sysinfo = range.GetData<MDRawSystemInfo>(0);
   if (!sysinfo) {
     fprintf(stderr, "Failed to access MD_SYSTEM_INFO_STREAM\n");
     _exit(1);
@@ -438,10 +415,17 @@ ParseSystemInfo(CrashedProcess* crashinfo, MMappedRange range,
             ",\nbut the minidump file is from a 32bit machine" : "");
     _exit(1);
   }
+#elif defined(__arm__)
+  if (sysinfo->processor_architecture != MD_CPU_ARCHITECTURE_ARM) {
+    fprintf(stderr,
+            "This version of minidump-2-core only supports ARM (32bit).\n");
+    _exit(1);
+  }
 #else
 #error "This code has not been ported to your platform yet"
 #endif
-  if (!strstr(full_file.GetString(sysinfo->csd_version_rva).c_str(), "Linux")){
+  if (!strstr(full_file.GetAsciiMDString(sysinfo->csd_version_rva).c_str(),
+              "Linux")) {
     fprintf(stderr, "This minidump was not generated by Linux.\n");
     _exit(1);
   }
@@ -477,13 +461,13 @@ ParseSystemInfo(CrashedProcess* crashinfo, MMappedRange range,
       fputs("\n", stderr);
     }
     fprintf(stderr, "OS: %s\n",
-            full_file.GetString(sysinfo->csd_version_rva).c_str());
+            full_file.GetAsciiMDString(sysinfo->csd_version_rva).c_str());
     fputs("\n\n", stderr);
   }
 }
 
 static void
-ParseCPUInfo(CrashedProcess* crashinfo, MMappedRange range) {
+ParseCPUInfo(CrashedProcess* crashinfo, const MinidumpMemoryRange& range) {
   if (verbose) {
     fputs("MD_LINUX_CPU_INFO:\n", stderr);
     fwrite(range.data(), range.length(), 1, stderr);
@@ -492,7 +476,8 @@ ParseCPUInfo(CrashedProcess* crashinfo, MMappedRange range) {
 }
 
 static void
-ParseProcessStatus(CrashedProcess* crashinfo, MMappedRange range) {
+ParseProcessStatus(CrashedProcess* crashinfo,
+                   const MinidumpMemoryRange& range) {
   if (verbose) {
     fputs("MD_LINUX_PROC_STATUS:\n", stderr);
     fwrite(range.data(), range.length(), 1, stderr);
@@ -501,7 +486,7 @@ ParseProcessStatus(CrashedProcess* crashinfo, MMappedRange range) {
 }
 
 static void
-ParseLSBRelease(CrashedProcess* crashinfo, MMappedRange range) {
+ParseLSBRelease(CrashedProcess* crashinfo, const MinidumpMemoryRange& range) {
   if (verbose) {
     fputs("MD_LINUX_LSB_RELEASE:\n", stderr);
     fwrite(range.data(), range.length(), 1, stderr);
@@ -510,7 +495,7 @@ ParseLSBRelease(CrashedProcess* crashinfo, MMappedRange range) {
 }
 
 static void
-ParseMaps(CrashedProcess* crashinfo, MMappedRange range) {
+ParseMaps(CrashedProcess* crashinfo, const MinidumpMemoryRange& range) {
   if (verbose) {
     fputs("MD_LINUX_MAPS:\n", stderr);
     fwrite(range.data(), range.length(), 1, stderr);
@@ -556,7 +541,7 @@ ParseMaps(CrashedProcess* crashinfo, MMappedRange range) {
 }
 
 static void
-ParseEnvironment(CrashedProcess* crashinfo, MMappedRange range) {
+ParseEnvironment(CrashedProcess* crashinfo, const MinidumpMemoryRange& range) {
   if (verbose) {
     fputs("MD_LINUX_ENVIRON:\n", stderr);
     char *env = new char[range.length()];
@@ -594,7 +579,7 @@ ParseEnvironment(CrashedProcess* crashinfo, MMappedRange range) {
 }
 
 static void
-ParseAuxVector(CrashedProcess* crashinfo, MMappedRange range) {
+ParseAuxVector(CrashedProcess* crashinfo, const MinidumpMemoryRange& range) {
   // Some versions of Chrome erroneously used the MD_LINUX_AUXV stream value
   // when dumping /proc/$x/maps
   if (range.length() > 17) {
@@ -615,7 +600,7 @@ ParseAuxVector(CrashedProcess* crashinfo, MMappedRange range) {
 }
 
 static void
-ParseCmdLine(CrashedProcess* crashinfo, MMappedRange range) {
+ParseCmdLine(CrashedProcess* crashinfo, const MinidumpMemoryRange& range) {
   // The command line is supposed to use NUL bytes to separate arguments.
   // As Chrome rewrites its own command line and (incorrectly) substitutes
   // spaces, this is often not the case in our minidump files.
@@ -653,9 +638,9 @@ ParseCmdLine(CrashedProcess* crashinfo, MMappedRange range) {
 
       len = range.length() > args_len ? args_len : range.length();
       memcpy(crashinfo->prps.pr_psargs, cmdline, len);
-      for (unsigned i = 0; i < len; ++i) {
-        if (crashinfo->prps.pr_psargs[i] == 0)
-          crashinfo->prps.pr_psargs[i] = ' ';
+      for (unsigned j = 0; j < len; ++j) {
+        if (crashinfo->prps.pr_psargs[j] == 0)
+          crashinfo->prps.pr_psargs[j] = ' ';
       }
       break;
     }
@@ -663,10 +648,9 @@ ParseCmdLine(CrashedProcess* crashinfo, MMappedRange range) {
 }
 
 static void
-ParseDSODebugInfo(CrashedProcess* crashinfo, MMappedRange range,
-                  const MMappedRange &full_file) {
-  const MDRawDebug* debug =
-    (MDRawDebug*) range.GetObject(0, sizeof(MDRawDebug));
+ParseDSODebugInfo(CrashedProcess* crashinfo, const MinidumpMemoryRange& range,
+                  const MinidumpMemoryRange& full_file) {
+  const MDRawDebug* debug = range.GetData<MDRawDebug>(0);
   if (!debug) {
     return;
   }
@@ -693,14 +677,13 @@ ParseDSODebugInfo(CrashedProcess* crashinfo, MMappedRange range,
   if (debug->map != kInvalidMDRVA) {
     for (int i = 0; i < debug->dso_count; ++i) {
       const MDRawLinkMap* link_map =
-        (MDRawLinkMap*) full_file.GetArrayElement(debug->map,
-                                                  sizeof(MDRawLinkMap), i);
+          full_file.GetArrayElement<MDRawLinkMap>(debug->map, i);
       if (link_map) {
         if (verbose) {
           fprintf(stderr,
                   "#%03d: %p, %p, \"%s\"\n",
                   i, link_map->addr, link_map->ld,
-                  full_file.GetString(link_map->name).c_str());
+                  full_file.GetAsciiMDString(link_map->name).c_str());
         }
         crashinfo->link_map.push_back(*link_map);
       }
@@ -712,9 +695,9 @@ ParseDSODebugInfo(CrashedProcess* crashinfo, MMappedRange range,
 }
 
 static void
-ParseExceptionStream(CrashedProcess* crashinfo, MMappedRange range) {
-  const MDRawExceptionStream* exp =
-      (MDRawExceptionStream*) range.GetObject(0, sizeof(MDRawExceptionStream));
+ParseExceptionStream(CrashedProcess* crashinfo,
+                     const MinidumpMemoryRange& range) {
+  const MDRawExceptionStream* exp = range.GetData<MDRawExceptionStream>(0);
   crashinfo->crashing_tid = exp->thread_id;
   crashinfo->fatal_signal = (int) exp->exception_record.exception_code;
 }
@@ -740,6 +723,7 @@ WriteThread(const CrashedProcess::Thread& thread, int fatal_signal) {
     return false;
   }
 
+#if defined(__i386__) || defined(__x86_64__)
   nhdr.n_descsz = sizeof(user_fpregs_struct);
   nhdr.n_type = NT_FPREGSET;
   if (!writea(1, &nhdr, sizeof(nhdr)) ||
@@ -747,6 +731,7 @@ WriteThread(const CrashedProcess::Thread& thread, int fatal_signal) {
       !writea(1, &thread.fpregs, sizeof(user_fpregs_struct))) {
     return false;
   }
+#endif
 
 #if defined(__i386__)
   nhdr.n_descsz = sizeof(user_fpxregs_struct);
@@ -762,18 +747,16 @@ WriteThread(const CrashedProcess::Thread& thread, int fatal_signal) {
 }
 
 static void
-ParseModuleStream(CrashedProcess* crashinfo, MMappedRange range,
-                  const MMappedRange &full_file) {
+ParseModuleStream(CrashedProcess* crashinfo, const MinidumpMemoryRange& range,
+                  const MinidumpMemoryRange& full_file) {
   if (verbose) {
     fputs("MD_MODULE_LIST_STREAM:\n", stderr);
   }
-  const uint32_t num_mappings =
-      *(const uint32_t*) range.GetObject(0, sizeof(uint32_t));
+  const uint32_t num_mappings = *range.GetData<uint32_t>(0);
   for (unsigned i = 0; i < num_mappings; ++i) {
     CrashedProcess::Mapping mapping;
-    const MDRawModule* rawmodule =
-        (MDRawModule*) range.GetArrayElement(sizeof(uint32_t),
-                                             MD_MODULE_SIZE, i);
+    const MDRawModule* rawmodule = reinterpret_cast<const MDRawModule*>(
+        range.GetArrayElement(sizeof(uint32_t), MD_MODULE_SIZE, i));
     mapping.start_address = rawmodule->base_of_image;
     mapping.end_address = rawmodule->size_of_image + rawmodule->base_of_image;
 
@@ -784,9 +767,8 @@ ParseModuleStream(CrashedProcess* crashinfo, MMappedRange range,
       crashinfo->mappings[mapping.start_address] = mapping;
     }
 
-    const MDCVInfoPDB70* record =
-      (const MDCVInfoPDB70*)full_file.GetObject(rawmodule->cv_record.rva,
-                                                MDCVInfoPDB70_minsize);
+    const MDCVInfoPDB70* record = reinterpret_cast<const MDCVInfoPDB70*>(
+        full_file.GetData(rawmodule->cv_record.rva, MDCVInfoPDB70_minsize));
     char guid[40];
     sprintf(guid, "%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X",
             record->signature.data1, record->signature.data2,
@@ -795,7 +777,8 @@ ParseModuleStream(CrashedProcess* crashinfo, MMappedRange range,
             record->signature.data4[2], record->signature.data4[3],
             record->signature.data4[4], record->signature.data4[5],
             record->signature.data4[6], record->signature.data4[7]);
-    std::string filename = full_file.GetString(rawmodule->module_name_rva);
+    std::string filename =
+        full_file.GetAsciiMDString(rawmodule->module_name_rva);
     size_t slash = filename.find_last_of('/');
     std::string basename = slash == std::string::npos ?
       filename : filename.substr(slash + 1);
@@ -868,7 +851,7 @@ AddDataToMapping(CrashedProcess* crashinfo, const std::string& data,
 
 static void
 AugmentMappings(CrashedProcess* crashinfo,
-                const MMappedRange &full_file) {
+                const MinidumpMemoryRange& full_file) {
   // For each thread, find the memory mapping that matches the thread's stack.
   // Then adjust the mapping to include the stack dump.
   for (unsigned i = 0; i < crashinfo->threads.size(); ++i) {
@@ -902,7 +885,7 @@ AugmentMappings(CrashedProcess* crashinfo,
     link_map.l_ld = (ElfW(Dyn)*)iter->ld;
     link_map.l_prev = prev;
     prev = (struct link_map*)(start_addr + data.size());
-    std::string filename = full_file.GetString(iter->name);
+    std::string filename = full_file.GetAsciiMDString(iter->name);
 
     // Look up signature for this filename. If available, change filename
     // to point to GUID, instead.
@@ -969,24 +952,15 @@ main(int argc, char** argv) {
   if (argc != argi + 1)
     return usage(argv[0]);
 
-  const int fd = open(argv[argi], O_RDONLY);
-  if (fd < 0)
-    return usage(argv[0]);
-
-  struct stat st;
-  fstat(fd, &st);
-
-  const void* bytes = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-  close(fd);
-  if (bytes == MAP_FAILED) {
-    perror("Failed to mmap dump file");
+  MemoryMappedFile mapped_file(argv[argi]);
+  if (!mapped_file.data()) {
+    fprintf(stderr, "Failed to mmap dump file\n");
     return 1;
   }
 
-  MMappedRange dump(bytes, st.st_size);
+  MinidumpMemoryRange dump(mapped_file.data(), mapped_file.size());
 
-  const MDRawHeader* header =
-      (const MDRawHeader*) dump.GetObject(0, sizeof(MDRawHeader));
+  const MDRawHeader* header = dump.GetData<MDRawHeader>(0);
 
   CrashedProcess crashinfo;
 
@@ -995,8 +969,7 @@ main(int argc, char** argv) {
   bool ok = false;
   for (unsigned i = 0; i < header->stream_count; ++i) {
     const MDRawDirectory* dirent =
-        (const MDRawDirectory*) dump.GetArrayElement(
-            header->stream_directory_rva, sizeof(MDRawDirectory), i);
+        dump.GetArrayElement<MDRawDirectory>(header->stream_directory_rva, i);
     switch (dirent->stream_type) {
       case MD_SYSTEM_INFO_STREAM:
         ParseSystemInfo(&crashinfo, dump.Subrange(dirent->location), dump);
@@ -1013,8 +986,7 @@ main(int argc, char** argv) {
 
   for (unsigned i = 0; i < header->stream_count; ++i) {
     const MDRawDirectory* dirent =
-        (const MDRawDirectory*) dump.GetArrayElement(
-            header->stream_directory_rva, sizeof(MDRawDirectory), i);
+        dump.GetArrayElement<MDRawDirectory>(header->stream_directory_rva, i);
     switch (dirent->stream_type) {
       case MD_THREAD_LIST_STREAM:
         ParseThreadList(&crashinfo, dump.Subrange(dirent->location), dump);
@@ -1089,8 +1061,10 @@ main(int argc, char** argv) {
                   // sizeof(Nhdr) + 8 + sizeof(user) +
                   sizeof(Nhdr) + 8 + crashinfo.auxv_length +
                   crashinfo.threads.size() * (
-                    (sizeof(Nhdr) + 8 + sizeof(prstatus)) +
-                     sizeof(Nhdr) + 8 + sizeof(user_fpregs_struct)
+                    (sizeof(Nhdr) + 8 + sizeof(prstatus))
+#if defined(__i386__) || defined(__x86_64__)
+                   + sizeof(Nhdr) + 8 + sizeof(user_fpregs_struct)
+#endif
 #if defined(__i386__)
                    + sizeof(Nhdr) + 8 + sizeof(user_fpxregs_struct)
 #endif
@@ -1170,9 +1144,9 @@ main(int argc, char** argv) {
   }
 
   if (note_align) {
-    char scratch[note_align];
-    memset(scratch, 0, sizeof(scratch));
-    if (!writea(1, scratch, sizeof(scratch)))
+    google_breakpad::scoped_array<char> scratch(new char[note_align]);
+    memset(scratch.get(), 0, note_align);
+    if (!writea(1, scratch.get(), note_align))
       return 1;
   }
 
@@ -1185,8 +1159,6 @@ main(int argc, char** argv) {
         return 1;
     }
   }
-
-  munmap(const_cast<void*>(bytes), st.st_size);
 
   return 0;
 }

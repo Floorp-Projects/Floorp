@@ -6,7 +6,6 @@
 #include <gtk/gtk.h>
 #if (MOZ_WIDGET_GTK == 2)
 #include <gtk/gtkprintunixdialog.h>
-#include "gtk2compat.h"
 #else
 #include <gtk/gtkunixprint.h>
 #endif

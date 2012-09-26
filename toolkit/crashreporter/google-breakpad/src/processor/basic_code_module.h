@@ -43,11 +43,10 @@
 
 #include <string>
 
+#include "common/using_std_string.h"
 #include "google_breakpad/processor/code_module.h"
 
 namespace google_breakpad {
-
-using std::string;
 
 class BasicCodeModule : public CodeModule {
  public:
