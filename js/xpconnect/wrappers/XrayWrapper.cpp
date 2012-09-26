@@ -665,6 +665,9 @@ Is(JSObject *wrapper)
     return !!native;
 }
 
+static nsQueryInterface
+do_QueryInterfaceNative(JSContext* cx, JSObject* wrapper);
+
 // Helper function to work around some limitations of the current XPC 
 // calling mechanism. See: bug 763897.
 // The idea is that we unwrap the 'this' object, and find the wrapped
@@ -686,24 +689,7 @@ mozMatchesSelectorStub(JSContext *cx, unsigned argc, jsval *vp)
     nsDependentJSString selectorStr;
     NS_ENSURE_TRUE(selectorStr.init(cx, selector), false);
 
-    nsCOMPtr<nsIDOMElement> element;
-    if (IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper)) {       
-        // If it's xray wrapped we can get the wn directly.
-        XPCWrappedNative *wn = XPCWrappedNativeXrayTraits::getWN(wrapper);
-        element = do_QueryWrappedNative(wn);
-    } else {
-        // Else we can use the XPC utility function for unwrapping it.
-        nsCOMPtr<nsIXPConnectWrappedNative> iwn;  
-        nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
-        nsresult rv = xpc->GetWrappedNativeOfJSObject(cx, wrapper, 
-                                                      getter_AddRefs(iwn));
-        if (NS_FAILED(rv) || !iwn) {
-            JS_ReportError(cx, "Unexpected object");
-            return false;
-        }
-        element = do_QueryWrappedNative(iwn);
-    }
-
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterfaceNative(cx, wrapper);
     if (!element) {
         JS_ReportError(cx, "Unexpected object");
         return false;
@@ -872,13 +858,7 @@ WrapURI(JSContext *cx, nsIURI *uri, jsval *vp)
 static JSBool
 documentURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMutableHandleValue vp)
 {
-    if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    XPCWrappedNative *wn = XPCWrappedNativeXrayTraits::getWN(wrapper);
-    nsCOMPtr<nsIDocument> native = do_QueryWrappedNative(wn);
+    nsCOMPtr<nsIDocument> native = do_QueryInterfaceNative(cx, wrapper);
     if (!native) {
         JS_ReportError(cx, "Unexpected object");
         return false;
@@ -896,17 +876,12 @@ documentURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, J
 static JSBool
 baseURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMutableHandleValue vp)
 {
-    if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    XPCWrappedNative *wn = XPCWrappedNativeXrayTraits::getWN(wrapper);
-    nsCOMPtr<nsINode> native = do_QueryWrappedNative(wn);
+    nsCOMPtr<nsINode> native = do_QueryInterfaceNative(cx, wrapper);
     if (!native) {
         JS_ReportError(cx, "Unexpected object");
         return false;
     }
+
     nsCOMPtr<nsIURI> uri = native->GetBaseURI();
     if (!uri) {
         JS_ReportOutOfMemory(cx);
@@ -919,13 +894,7 @@ baseURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMut
 static JSBool
 nodePrincipal_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMutableHandleValue vp)
 {
-    if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    XPCWrappedNative *wn = XPCWrappedNativeXrayTraits::getWN(wrapper);
-    nsCOMPtr<nsINode> node = do_QueryWrappedNative(wn);
+    nsCOMPtr<nsINode> node = do_QueryInterfaceNative(cx, wrapper);
     if (!node) {
         JS_ReportError(cx, "Unexpected object");
         return false;
@@ -1736,5 +1705,27 @@ template class SCSecurityXrayXPCWN;
 template<>
 SCPermissiveXrayDOM SCPermissiveXrayDOM::singleton(0);
 template class SCPermissiveXrayDOM;
+
+static nsQueryInterface
+do_QueryInterfaceNative(JSContext* cx, JSObject* wrapper)
+{
+    nsISupports* nativeSupports;
+    if (IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper)) {
+        JSObject* target = XrayTraits::getTargetObject(wrapper);
+        if (GetXrayType(target) == XrayForDOMObject) {
+            if (!UnwrapDOMObjectToISupports(target, nativeSupports)) {
+                nativeSupports = nullptr;
+            }
+        } else {
+            XPCWrappedNative *wn = GetWrappedNative(target);
+            nativeSupports = wn->Native();
+        }
+    } else {
+        nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
+        nativeSupports = xpc->GetNativeOfWrapper(cx, wrapper);
+    }
+
+    return nsQueryInterface(nativeSupports);
+}
 
 }
