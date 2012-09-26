@@ -222,7 +222,7 @@ nsFtpChannel::GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult)
 NS_IMETHODIMP
 nsFtpChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
-  if (!CanSetCallbacks()) {
+  if (!CanSetCallbacks(aCallbacks)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -232,7 +232,7 @@ nsFtpChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 NS_IMETHODIMP
 nsFtpChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
-  if (!CanSetLoadGroup()) {
+  if (!CanSetLoadGroup(aLoadGroup)) {
     return NS_ERROR_FAILURE;
   }
 
