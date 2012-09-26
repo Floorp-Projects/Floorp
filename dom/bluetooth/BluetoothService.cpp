@@ -269,8 +269,6 @@ BluetoothService::Init()
     return false;
   }
 
-  RegisterBluetoothSignalHandler(NS_LITERAL_STRING(LOCAL_AGENT_PATH), this);
-  RegisterBluetoothSignalHandler(NS_LITERAL_STRING(REMOTE_AGENT_PATH), this);
   mRegisteredForLocalAgent = true;
 
   return true;
@@ -382,6 +380,16 @@ BluetoothService::StartStopBluetooth(bool aStart)
     rv = NS_NewNamedThread("BluetoothCmd",
                            getter_AddRefs(mBluetoothCommandThread));
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aStart) {
+    RegisterBluetoothSignalHandler(NS_LITERAL_STRING(LOCAL_AGENT_PATH), this);
+    RegisterBluetoothSignalHandler(NS_LITERAL_STRING(REMOTE_AGENT_PATH), this);
+
+    BluetoothManagerList::ForwardIterator iter(mLiveManagers);
+    while (iter.HasMore()) {
+      RegisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), (BluetoothSignalObserver*)iter.GetNext());
+    }
   }
 
   nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(aStart);
