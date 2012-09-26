@@ -20,10 +20,12 @@ from mozbuild.logger import LoggingManager
 # TODO Bug 794509 do this via auto-discovery. Update README once this is
 # done.
 from mach.settings import Settings
+from mach.testing import Testing
 
 # Classes inheriting from ArgumentProvider that provide commands.
 HANDLERS = [
     Settings,
+    Testing,
 ]
 
 # Classes inheriting from ConfigProvider that provide settings.
@@ -56,6 +58,7 @@ an action/sub-command and it performs it.
 Some common actions are:
 
     %(prog)s help      Show full help, including the list of all commands.
+    %(prog)s test      Run tests.
 
 To see more help for a specific action, run:
 
