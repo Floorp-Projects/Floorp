@@ -809,6 +809,9 @@ NotifyDidPaint(JSRuntime *rt);
 extern JS_FRIEND_API(bool)
 IsIncrementalGCEnabled(JSRuntime *rt);
 
+JS_FRIEND_API(bool)
+IsIncrementalGCInProgress(JSRuntime *rt);
+
 extern JS_FRIEND_API(void)
 DisableIncrementalGC(JSRuntime *rt);
 
