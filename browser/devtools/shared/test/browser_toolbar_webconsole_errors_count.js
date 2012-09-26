@@ -47,8 +47,11 @@ function test() {
 
   function addErrors() {
     expectUncaughtException();
-    let button = content.document.querySelector("button");
-    EventUtils.synthesizeMouse(button, 2, 2, {}, content);
+
+    waitForFocus(function() {
+      let button = content.document.querySelector("button");
+      EventUtils.synthesizeMouse(button, 2, 2, {}, content);
+    }, content);
 
     waitForValue({
       name: "button shows one more error after click in page",

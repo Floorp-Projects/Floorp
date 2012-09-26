@@ -13,7 +13,7 @@
 const TEST_HTTPS_URI = "https://example.com/browser/browser/devtools/webconsole/test/test-bug-737873-mixedcontent.html";
 
 function test() {
-  addTab("data:text/html,Web Console basic network logging test");
+  addTab("data:text/html;charset=utf8,Web Console mixed content test");
   browser.addEventListener("load", onLoad, true);
 }
 
@@ -68,8 +68,9 @@ function testClickOpenNewTab(warningNode) {
   let oldOpenUILinkIn = window.openUILinkIn;
 
   window.openUILinkIn = function(aLink) {
-   if (aLink == "https://developer.mozilla.org/en/Security/MixedContent");
-     linkOpened = true;
+    if (aLink == "https://developer.mozilla.org/en/Security/MixedContent") {
+      linkOpened = true;
+    }
   }
 
   EventUtils.synthesizeMouse(warningNode, 2, 2, {},
