@@ -176,4 +176,33 @@ private: // data
 #endif
 };
 
+namespace mozilla {
+namespace image {
+  // An RAII class to ensure it's easy to balance locks and unlocks on
+  // imgFrames.
+  class AutoFrameLocker
+  {
+  public:
+    AutoFrameLocker(imgFrame* frame)
+      : mFrame(frame)
+      , mSucceeded(NS_SUCCEEDED(frame->LockImageData()))
+    {}
+
+    ~AutoFrameLocker()
+    {
+      if (mSucceeded) {
+        mFrame->UnlockImageData();
+      }
+    }
+
+    // Whether the lock request succeeded.
+    bool Succeeded() { return mSucceeded; }
+
+  private:
+    imgFrame* mFrame;
+    bool mSucceeded;
+  };
+}
+}
+
 #endif /* imgFrame_h */

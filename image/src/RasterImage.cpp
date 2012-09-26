@@ -999,14 +999,14 @@ RasterImage::InternalAddFrameHelper(uint32_t framenum, imgFrame *aFrame,
 
   nsAutoPtr<imgFrame> frame(aFrame);
 
+  // We are in the middle of decoding. This will be unlocked when we finish the
+  // decoder->Write() call.
+  frame->LockImageData();
+
   if (paletteData && paletteLength)
     frame->GetPaletteData(paletteData, paletteLength);
 
   frame->GetImageData(imageData, imageLength);
-
-  // We are in the middle of decoding. This will be unlocked when we finish the
-  // decoder->Write() call.
-  frame->LockImageData();
 
   mFrames.InsertElementAt(framenum, frame.forget());
 
@@ -1187,6 +1187,11 @@ RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
   }
 
   // Not reusable, so replace the frame directly.
+
+  // We know this frame is already locked, because it's the one we're currently
+  // writing to.
+  frame->UnlockImageData();
+
   DeleteImgFrame(aFrameNum);
   mFrames.RemoveElementAt(aFrameNum);
   nsAutoPtr<imgFrame> newFrame(new imgFrame());
@@ -1999,18 +2004,21 @@ RasterImage::CopyFrameImage(imgFrame *aSrcFrame,
   if (!aSrcFrame || !aDstFrame)
     return false;
 
-  if (NS_FAILED(aDstFrame->LockImageData()))
+  AutoFrameLocker dstLock(aDstFrame);
+  AutoFrameLocker srcLock(aSrcFrame);
+
+  if (!srcLock.Succeeded() || !dstLock.Succeeded()) {
     return false;
+  }
 
   // Copy Image Over
   aSrcFrame->GetImageData(&aDataSrc, &aDataLengthSrc);
   aDstFrame->GetImageData(&aDataDest, &aDataLengthDest);
   if (!aDataDest || !aDataSrc || aDataLengthDest != aDataLengthSrc) {
-    aDstFrame->UnlockImageData();
     return false;
   }
+
   memcpy(aDataDest, aDataSrc, aDataLengthSrc);
-  aDstFrame->UnlockImageData();
 
   return true;
 }
@@ -2029,6 +2037,9 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
 {
   NS_ENSURE_ARG_POINTER(aSrc);
   NS_ENSURE_ARG_POINTER(aDst);
+
+  AutoFrameLocker srcLock(aSrc);
+  AutoFrameLocker dstLock(aDst);
 
   nsIntRect dstRect = aDst->GetRect();
 
@@ -2057,7 +2068,7 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
     NS_ASSERTION((width <= aSrcRect.width) && (height <= aSrcRect.height),
                  "RasterImage::DrawFrameTo: source must be smaller than dest");
 
-    if (NS_FAILED(aDst->LockImageData()))
+    if (!srcLock.Succeeded() || !dstLock.Succeeded())
       return NS_ERROR_FAILURE;
 
     // Get pointers to image data
@@ -2070,7 +2081,6 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
     aSrc->GetPaletteData(&colormap, &size);
     aDst->GetImageData((uint8_t **)&dstPixels, &size);
     if (!srcPixels || !dstPixels || !colormap) {
-      aDst->UnlockImageData();
       return NS_ERROR_FAILURE;
     }
 
@@ -2098,14 +2108,12 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
       }
     }
 
-    aDst->UnlockImageData();
     return NS_OK;
   }
 
   nsRefPtr<gfxPattern> srcPatt;
   aSrc->GetPattern(getter_AddRefs(srcPatt));
 
-  aDst->LockImageData();
   nsRefPtr<gfxASurface> dstSurf;
   aDst->GetSurface(getter_AddRefs(dstSurf));
 
@@ -2123,8 +2131,6 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
   }
   dst.SetPattern(srcPatt);
   dst.Paint();
-
-  aDst->UnlockImageData();
 
   return NS_OK;
 }
