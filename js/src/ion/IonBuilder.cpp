@@ -5389,7 +5389,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
             types::HeapTypeSet *propSet = typeObj->getProperty(cx, typeId, false);
             if (!propSet)
                 return false;
-            if (propSet->isOwnProperty(cx, typeObj, false))
+            if (propSet->ownProperty(false))
                 return true;
 
             // Check the DOM status of the instance type
@@ -5477,7 +5477,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
             types::HeapTypeSet *propSet = typeObj->getProperty(cx, typeId, false);
             if (!propSet)
                 return false;
-            if (propSet->isOwnProperty(cx, typeObj, false))
+            if (propSet->ownProperty(false))
                 return true;
 
             curObj = curObj->getProto();
