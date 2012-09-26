@@ -199,7 +199,7 @@ function RadioInterfaceLayer() {
   let lock = gSettingsService.createLock();
   lock.get("ril.radio.disabled", this);
 
-  // Read the APN data form the setting DB.
+  // Read the APN data from the settings DB.
   lock.get("ril.data.apn", this);
   lock.get("ril.data.user", this);
   lock.get("ril.data.passwd", this);
@@ -214,6 +214,21 @@ function RadioInterfaceLayer() {
                                   "ril.data.passwd",
                                   "ril.data.httpProxyHost",
                                   "ril.data.httpProxyPort"];
+
+  // Read secondary APNs from the settings DB.
+  lock.get("ril.mms.apn", this);
+  lock.get("ril.mms.user", this);
+  lock.get("ril.mms.passwd", this);
+  lock.get("ril.mms.httpProxyHost", this);
+  lock.get("ril.mms.httpProxyPort", this);
+  lock.get("ril.mms.mmsc", this);
+  lock.get("ril.mms.mmsproxy", this);
+  lock.get("ril.mms.mmsport", this);
+  lock.get("ril.supl.apn", this);
+  lock.get("ril.supl.user", this);
+  lock.get("ril.supl.passwd", this);
+  lock.get("ril.supl.httpProxyHost", this);
+  lock.get("ril.supl.httpProxyPort", this);
 
   // Read the desired setting of call waiting from the settings DB.
   lock.get("ril.callwaiting.enabled", this);
@@ -1227,6 +1242,8 @@ RadioInterfaceLayer.prototype = {
 
   // APN data for making data calls.
   dataCallSettings: {},
+  dataCallSettingsMMS: {},
+  dataCallSettingsSUPL: {},
   _dataCallSettingsToRead: [],
   _oldRilDataEnabledState: null,
 
@@ -1256,6 +1273,25 @@ RadioInterfaceLayer.prototype = {
           this._dataCallSettingsToRead.splice(index, 1);
         }
         this.updateRILNetworkInterface();
+        break;
+      case "ril.mms.apn":
+      case "ril.mms.user":
+      case "ril.mms.passwd":
+      case "ril.mms.httpProxyHost":
+      case "ril.mms.httpProxyPort":
+      case "ril.mms.mmsc":
+      case "ril.mms.mmsproxy":
+      case "ril.mms.mmsport":
+        key = aName.slice(8);
+        this.dataCallSettingsMMS[key] = aResult;
+        break;
+      case "ril.supl.apn":
+      case "ril.supl.user":
+      case "ril.supl.passwd":
+      case "ril.supl.httpProxyHost":
+      case "ril.supl.httpProxyPort":
+        key = aName.slice(9);
+        this.dataCallSettingsSUPL[key] = aResult;
         break;
       case "ril.callwaiting.enabled":
         this._callWaitingEnabled = aResult;
@@ -1853,6 +1889,74 @@ RadioInterfaceLayer.prototype = {
     }
   },
 
+  /**
+   * Determine whether secondary APN goes through default APN.
+   */
+  usingDefaultAPN: function usingDefaultAPN(apntype) {
+    switch (apntype) {
+      case "mms":
+        return (this.dataCallSettingsMMS["apn"] == this.dataCallSettings["apn"]);
+      case "supl":
+        return (this.dataCallSettingsSUPL["apn"] == this.dataCallSettings["apn"]);
+      return false;
+    }
+  },
+
+  setupDataCallByType: function setupDataCallByType(apntype) {
+    if (apntype != "default" && this.usingDefaultAPN(apntype)) {
+      debug("Secondary APN type " + apntype + " goes through default APN, nothing to do.");
+      return;
+    }
+    switch (apntype) {
+      case "default":
+        this.dataNetworkInterface.connect(this.dataCallSettings);
+        break;
+      case "mms":
+        this.mmsNetworkInterface.connect(this.dataCallSettingsMMS);
+        break;
+      case "supl":
+        this.suplNetworkInterface.connect(this.dataCallSettingsSUPL);
+        break;
+      default:
+        debug("Unsupported APN type " + apntype);
+        break;
+    }
+  },
+
+  deactivateDataCallByType: function deactivateDataCallByType(apntype) {
+    if (apntype != "default" && this.usingDefaultAPN(apntype)) {
+      debug("Secondary APN type " + apntype + " goes through default APN, nothing to do.");
+      return;
+    }
+    switch (apntype) {
+      case "default":
+        this.dataNetworkInterface.disconnect();
+        break;
+      case "mms":
+        this.mmsNetworkInterface.disconnect();
+        break;
+      case "supl":
+        this.suplNetworkInterface.disconnect();
+        break;
+      default:
+        debug("Unsupported APN type " + apntype);
+        break;
+    }
+  },
+
+  getDataCallStateByType: function getDataCallStateByType(apntype) {
+    switch (apntype) {
+      case "default":
+        return this.dataNetworkInterface.state;
+      case "mms":
+        return this.mmsNetworkInterface.state;
+      case "supl":
+        return this.suplNetworkInterface.state;
+      default:
+        return RIL.GECKO_NETWORK_STATE_UNKNOWN;
+    }
+  },
+
   setupDataCall: function setupDataCall(radioTech, apn, user, passwd, chappap, pdptype) {
     this.worker.postMessage({rilMessageType: "setupDataCall",
                              radioTech: radioTech,
@@ -2049,6 +2153,11 @@ RILNetworkInterface.prototype = {
     if (options) {
       // Save the APN data locally for using them in connection retries.
       this.dataCallSettings = options;
+    }
+
+    if (!this.dataCallSettings["apn"]) {
+      debug("APN name is empty, nothing to do.");
+      return;
     }
 
     this.httpProxyHost = this.dataCallSettings["httpProxyHost"];
