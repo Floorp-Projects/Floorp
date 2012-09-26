@@ -18,7 +18,7 @@ PARALLEL_DIRS = \
 		generic \
 		forms \
 		tables \
-		svg/base/src \
+		svg \
 		xul/base/public \
 		xul/base/src \
 		ipc \

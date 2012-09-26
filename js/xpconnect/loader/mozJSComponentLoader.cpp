@@ -731,7 +731,7 @@ mozJSComponentLoader::GlobalForLocation(nsIFile *aComponentFile,
                .setVersion(JSVERSION_LATEST)
                .setFileAndLine(nativePath.get(), 1)
                .setSourcePolicy(JS::CompileOptions::LAZY_SOURCE);
-        JS::RootedObject rootedGlobal(cx, global);
+        js::RootedObject rootedGlobal(cx, global);
 
         if (realFile) {
 #ifdef HAVE_PR_MEMMAP

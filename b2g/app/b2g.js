@@ -546,5 +546,9 @@ pref("dom.disable_window_open_dialog_feature", true);
 // Screen reader support
 pref("accessibility.accessfu.activate", 2);
 
+// Enable hit-target fluffing
+pref("ui.touch.radius.enabled", true);
+pref("ui.mouse.radius.enabled", true);
+
 // Disable native prompt
 pref("browser.prompt.allowNative", false);

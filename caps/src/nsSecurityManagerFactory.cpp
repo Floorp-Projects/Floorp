@@ -83,8 +83,12 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
     JSObject *obj = global;
     JSObject *proto;
     JSAutoRequest ar(cx);
-    while ((proto = JS_GetPrototype(obj)) != nullptr)
+    for (;;) {
+        MOZ_ALWAYS_TRUE(JS_GetPrototype(cx, obj, &proto));
+        if (!proto)
+            break;
         obj = proto;
+    }
     JSClass *objectClass = JS_GetClass(obj);
 
     JS::Value v;

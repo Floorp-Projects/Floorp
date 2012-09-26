@@ -16,6 +16,10 @@ gfxAlphaBoxBlur::gfxAlphaBoxBlur()
 
 gfxAlphaBoxBlur::~gfxAlphaBoxBlur()
 {
+  // Drop references to mContext and mImageSurface before we delete mBlur,
+  // because the image surface points to data in mBlur.
+  mContext = nullptr;
+  mImageSurface = nullptr;
   delete mBlur;
 }
 

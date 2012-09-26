@@ -381,10 +381,6 @@ ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx);
 inline bool
 IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx);
 
-}  /* namespace js */
-
-namespace JS {
-
 inline bool
 IsPoisonedSpecialId(js::SpecialId iden)
 {
@@ -393,14 +389,14 @@ IsPoisonedSpecialId(js::SpecialId iden)
     return false;
 }
 
-template <> struct RootMethods<js::SpecialId>
+template <> struct RootMethods<SpecialId>
 {
-    static js::SpecialId initial() { return js::SpecialId(); }
+    static SpecialId initial() { return SpecialId(); }
     static ThingRootKind kind() { return THING_ROOT_ID; }
-    static bool poisoned(js::SpecialId id) { return IsPoisonedSpecialId(id); }
+    static bool poisoned(SpecialId id) { return IsPoisonedSpecialId(id); }
 };
 
-} /* namespace JS */
+}  /* namespace js */
 
 #endif  /* __cplusplus */
 

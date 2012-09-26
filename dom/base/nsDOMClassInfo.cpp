@@ -1905,14 +1905,14 @@ static const JSClass *sObjectClass = nullptr;
  * Set our JSClass pointer for the Object class
  */
 static void
-FindObjectClass(JSObject* aGlobalObject)
+FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
 {
   NS_ASSERTION(!sObjectClass,
                "Double set of sObjectClass");
   JSObject *obj, *proto = aGlobalObject;
   do {
     obj = proto;
-    proto = js::GetObjectProto(obj);
+    js::GetObjectProto(cx, obj, &proto);
   } while (proto);
 
   sObjectClass = js::GetObjectJSClass(obj);
@@ -5126,14 +5126,17 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
   // sObjectClass, so compute it here. We assume that nobody has had a
   // chance to monkey around with proto's prototype chain before this.
   if (!sObjectClass) {
-    FindObjectClass(proto);
+    FindObjectClass(cx, proto);
     NS_ASSERTION(sObjectClass && !strcmp(sObjectClass->name, "Object"),
                  "Incorrect object class!");
   }
 
-  NS_ASSERTION(::JS_GetPrototype(proto) &&
-               JS_GetClass(::JS_GetPrototype(proto)) == sObjectClass,
-               "Hmm, somebody did something evil?");
+#ifdef DEBUG
+    JSObject *proto2;
+    JS_GetPrototype(cx, proto, &proto2);
+    NS_ASSERTION(proto2 && JS_GetClass(proto2) == sObjectClass,
+                 "Hmm, somebody did something evil?");
+#endif
 
 #ifdef DEBUG
   if (mData->mHasClassInterface && mData->mProtoChainInterface &&
@@ -5462,7 +5465,10 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
     return JS_TRUE;
   }
 
-  JSObject *proto = ::JS_GetPrototype(obj);
+  JSObject *proto;
+  if (!::JS_GetPrototype(cx, obj, &proto)) {
+    return JS_FALSE;
+  }
   JSBool hasProp;
 
   if (!proto || !::JS_HasPropertyById(cx, proto, id, &hasProp) ||
@@ -5505,14 +5511,21 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
 }
 
 // static
-void
+JSBool
 nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
 {
   JSObject *proto;
 
   JSAutoRequest ar(cx);
 
-  while ((proto = ::JS_GetPrototype(obj))) {
+  for (;;) {
+    if (!::JS_GetPrototype(cx, obj, &proto)) {
+      return JS_FALSE;
+    }
+    if (!proto) {
+      break;
+    }
+
     if (JS_GetClass(proto) == &sGlobalScopePolluterClass) {
       nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(proto);
 
@@ -5520,15 +5533,22 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
 
       ::JS_SetPrivate(proto, nullptr);
 
+      JSObject *proto_proto;
+      if (!::JS_GetPrototype(cx, proto, &proto_proto)) {
+        return JS_FALSE;
+      }
+
       // Pull the global scope polluter out of the prototype chain so
       // that it can be freed.
-      ::JS_SplicePrototype(cx, obj, ::JS_GetPrototype(proto));
+      ::JS_SplicePrototype(cx, obj, proto_proto);
 
       break;
     }
 
     obj = proto;
   }
+
+  return JS_TRUE;
 }
 
 // static
@@ -5554,7 +5574,13 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
   // Find the place in the prototype chain where we want this global
   // scope polluter (right before Object.prototype).
 
-  while ((proto = ::JS_GetPrototype(o))) {
+  for (;;) {
+    if (!::JS_GetPrototype(cx, o, &proto)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!proto) {
+      break;
+    }
     if (JS_GetClass(proto) == sObjectClass) {
       // Set the global scope polluters prototype to Object.prototype
       ::JS_SplicePrototype(cx, gsp, proto);
@@ -6322,8 +6348,14 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
     JSObject *dot_prototype = JSVAL_TO_OBJECT(val);
 
-    JSObject *proto = JS_GetPrototype(dom_obj);
-    for ( ; proto; proto = JS_GetPrototype(proto)) {
+    JSObject *proto = dom_obj;
+    for (;;) {
+      if (!JS_GetPrototype(cx, proto, &proto)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (!proto) {
+        break;
+      }
       if (proto == dot_prototype) {
         *bp = true;
         break;
@@ -6682,7 +6714,10 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
     if (dot_prototype) {
       JSAutoCompartment ac(cx, dot_prototype);
-      JSObject *xpc_proto_proto = ::JS_GetPrototype(dot_prototype);
+      JSObject *xpc_proto_proto;
+      if (!::JS_GetPrototype(cx, dot_prototype, &xpc_proto_proto)) {
+        return NS_ERROR_UNEXPECTED;
+      }
 
       if (proto &&
           (!xpc_proto_proto ||
@@ -7076,7 +7111,7 @@ static JSBool
 LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
                         JSMutableHandleValue vp)
 {
-  JS::RootedObject obj(cx, obj_);
+  js::RootedObject obj(cx, obj_);
 
   JSObject *wrapped = XPCWrapper::UnsafeUnwrapSecurityWrapper(obj);
   if (wrapped) {
@@ -7091,8 +7126,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj_, jsid id_, uint32_t flags,
                        JSObject **objp, bool *_retval)
 {
-  JS::RootedObject obj(cx, obj_);
-  JS::RootedId id(cx, id_);
+  js::RootedObject obj(cx, obj_);
+  js::RootedId id(cx, id_);
 
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 
@@ -7314,7 +7349,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     // Resolve special classes.
     for (uint32_t i = 0; i < ArrayLength(sOtherResolveFuncs); i++) {
-      JS::RootedObject tmp(cx, *objp);
+      js::RootedObject tmp(cx, *objp);
       if (!sOtherResolveFuncs[i](cx, obj, id, flags, &tmp)) {
         return NS_ERROR_FAILURE;
       }
@@ -7500,7 +7535,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     wrapper->GetJSObject(&realObj);
 
     if (obj == realObj) {
-      JSObject *proto = js::GetObjectProto(obj);
+      JSObject *proto;
+      if (!js::GetObjectProto(cx, obj, &proto)) {
+          *_retval = JS_FALSE;
+          return NS_OK;
+      }
       if (proto) {
         JSObject *pobj = NULL;
         jsval val;
@@ -8424,7 +8463,10 @@ nsNamedArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       }
 
       JSAutoCompartment ac(cx, realObj);
-      JSObject *proto = ::JS_GetPrototype(realObj);
+      JSObject *proto;
+      if (!::JS_GetPrototype(cx, realObj, &proto)) {
+        return NS_ERROR_FAILURE;
+      }
 
       if (proto) {
         JSBool hasProp;
@@ -8939,7 +8981,9 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
   }
 
   while (js::GetObjectJSClass(obj) != &sHTMLDocumentAllClass) {
-    obj = js::GetObjectProto(obj);
+    if (!js::GetObjectProto(cx, obj, &obj)) {
+      return JS_FALSE;
+    }
 
     if (!obj) {
       NS_ERROR("The JS engine lies!");
@@ -9033,7 +9077,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
     return JS_TRUE;
   }
 
-  JS::RootedValue v(cx);
+  js::RootedValue v(cx);
 
   if (sItem_id == id || sNamedItem_id == id) {
     // Define the item() or namedItem() method.
@@ -9138,14 +9182,17 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 
-static inline JSObject *
-GetDocumentAllHelper(JSObject *obj)
+static inline bool
+GetDocumentAllHelper(JSContext *cx, JSObject *obj, JSObject **result)
 {
   while (obj && JS_GetClass(obj) != &sHTMLDocumentAllHelperClass) {
-    obj = ::JS_GetPrototype(obj);
+    if (!::JS_GetPrototype(cx, obj, &obj)) {
+      return false;
+    }
   }
 
-  return obj;
+  *result = obj;
+  return true;
 }
 
 static inline void *
@@ -9171,7 +9218,10 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj
     return JS_TRUE;
   }
 
-  JSObject *helper = GetDocumentAllHelper(obj);
+  JSObject *helper;
+  if (!GetDocumentAllHelper(cx, obj, &helper)) {
+    return JS_FALSE;
+  }
 
   if (!helper) {
     NS_ERROR("Uh, how'd we get here?");
@@ -9229,7 +9279,10 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
 {
   if (nsDOMClassInfo::sAll_id == id) {
     // document.all is resolved for the first time. Define it.
-    JSObject *helper = GetDocumentAllHelper(obj);
+    JSObject *helper;
+    if (!GetDocumentAllHelper(cx, obj, &helper)) {
+      return JS_FALSE;
+    }
 
     if (helper) {
       if (!::JS_DefineProperty(cx, helper, "all", JSVAL_VOID, nullptr, nullptr,
@@ -9253,7 +9306,10 @@ nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
   if (JSID_IS_STRING(id)) {
     nsDocument *doc = GetDocument(obj);
 
-    JSObject *proto = ::JS_GetPrototype(obj);
+    JSObject *proto;
+    if (!::JS_GetPrototype(cx, obj, &proto)) {
+      return JS_FALSE;
+    }
     if (NS_UNLIKELY(!proto)) {
       return JS_TRUE;
     }
@@ -9332,9 +9388,19 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       nsIDocument *doc = static_cast<nsIDocument*>(wrapper->Native());
 
       if (doc->GetCompatibilityMode() == eCompatibility_NavQuirks) {
-        JSObject *helper = GetDocumentAllHelper(::JS_GetPrototype(obj));
+        JSObject *proto;
+        if (!::JS_GetPrototype(cx, obj, &proto)) {
+          return NS_ERROR_FAILURE;
+        }
 
-        JSObject *proto = ::JS_GetPrototype(helper ? helper : obj);
+        JSObject *helper;
+        if (!GetDocumentAllHelper(cx, proto, &helper)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        if (!::JS_GetPrototype(cx, helper ? helper : obj, &proto)) {
+          return NS_ERROR_FAILURE;
+        }
 
         // Check if the property all is defined on obj's (or helper's
         // if obj doesn't exist) prototype, if it is, don't expose our
@@ -9349,11 +9415,14 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           // Our helper's prototype now has an "all" property, remove
           // the helper out of the prototype chain to prevent
           // shadowing of the now defined "all" property.
-          JSObject *tmp = obj, *tmpProto;
+          JSObject *tmp = obj, *tmpProto = tmp;
 
-          while ((tmpProto = ::JS_GetPrototype(tmp)) != helper) {
+          do {
             tmp = tmpProto;
-          }
+            if (!::JS_GetPrototype(cx, tmp, &tmpProto)) {
+              return NS_ERROR_UNEXPECTED;
+            }
+          } while (tmpProto != helper);
 
           ::JS_SetPrototype(cx, tmp, proto);
         }
@@ -9367,8 +9436,11 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           // Print a warning so developers can stop using document.all
           PrintWarningOnConsole(cx, "DocumentAllUsed");
 
+          if (!::JS_GetPrototype(cx, obj, &proto)) {
+            return NS_ERROR_UNEXPECTED;
+          }
           helper = ::JS_NewObject(cx, &sHTMLDocumentAllHelperClass,
-                                  ::JS_GetPrototype(obj),
+                                  proto,
                                   ::JS_GetGlobalForObject(cx, obj));
 
           if (!helper) {
@@ -9938,7 +10010,10 @@ nsHTMLPluginObjElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 {
   JSAutoRequest ar(cx);
 
-  JSObject *pi_obj = ::JS_GetPrototype(obj);
+  JSObject *pi_obj;
+  if (!::JS_GetPrototype(cx, obj, &pi_obj)) {
+    return NS_ERROR_UNEXPECTED;
+  }
   if (NS_UNLIKELY(!pi_obj)) {
     return NS_OK;
   }
@@ -9967,7 +10042,10 @@ nsHTMLPluginObjElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 {
   JSAutoRequest ar(cx);
 
-  JSObject *pi_obj = ::JS_GetPrototype(obj);
+  JSObject *pi_obj;
+  if (!::JS_GetPrototype(cx, obj, &pi_obj)) {
+    return NS_ERROR_UNEXPECTED;
+  }
   if (NS_UNLIKELY(!pi_obj)) {
     return NS_OK;
   }
@@ -10043,7 +10121,9 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   if (plugin_inst) {
     plugin_inst->GetJSObject(cx, plugin_obj);
     if (*plugin_obj) {
-      *plugin_proto = ::JS_GetPrototype(*plugin_obj);
+      if (!::JS_GetPrototype(cx, *plugin_obj, plugin_proto)) {
+        return NS_ERROR_UNEXPECTED;
+      }
     }
   }
 
@@ -10388,7 +10468,10 @@ nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  JSObject *proto = ::JS_GetPrototype(realObj);
+  JSObject *proto;
+  if (!::JS_GetPrototype(cx, realObj, &proto)) {
+    return NS_ERROR_FAILURE;
+  }
   JSBool hasProp;
 
   if (proto &&

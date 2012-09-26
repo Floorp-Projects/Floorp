@@ -154,6 +154,7 @@ IsNativeFunction(const js::Value &v, JSNative native)
 static JS_ALWAYS_INLINE bool
 ClassMethodIsNative(JSContext *cx, HandleObject obj, Class *clasp, HandleId methodid, JSNative native)
 {
+    JS_ASSERT(!obj->isProxy());
     JS_ASSERT(obj->getClass() == clasp);
 
     Value v;

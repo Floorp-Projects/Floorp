@@ -35,7 +35,7 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
     bool strict = fp->callee().inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, proto,
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(proto),
                                                       proto->getParent(), FINALIZE_KIND,
                                                       BaseShape::INDEXED));
     if (!shape)
