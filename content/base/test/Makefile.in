@@ -569,7 +569,6 @@ MOCHITEST_FILES_B = \
 		file_mixed_content_main.html \
 		file_mixed_content_server.sjs \
 		test_bug789856.html \
-		test_messagemanager_assertpermission.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES =	\

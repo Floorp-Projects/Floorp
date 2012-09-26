@@ -76,7 +76,6 @@
 
 #include "Layers.h"
 
-#include "AppProcessPermissions.h"
 #include "ContentParent.h"
 #include "TabParent.h"
 #include "mozilla/GuardObjects.h"
@@ -98,7 +97,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 typedef FrameMetrics::ViewID ViewID;
@@ -1259,13 +1257,13 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     mMessageManager->RemoveFromParent();
     mMessageManager->SetJSContext(otherCx);
     mMessageManager->SetParentManager(otherParentManager);
-    mMessageManager->SetCallback(aOther, false);
+    mMessageManager->SetCallbackData(aOther, false);
   }
   if (aOther->mMessageManager) {
     aOther->mMessageManager->RemoveFromParent();
     aOther->mMessageManager->SetJSContext(thisCx);
     aOther->mMessageManager->SetParentManager(ourParentManager);
-    aOther->mMessageManager->SetCallback(this, false);
+    aOther->mMessageManager->SetCallbackData(this, false);
   }
   mMessageManager.swap(aOther->mMessageManager);
 
@@ -2157,15 +2155,16 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
   return NS_OK;
 }
 
-bool
-nsFrameLoader::DoLoadFrameScript(const nsAString& aURL)
+bool LoadScript(void* aCallbackData, const nsAString& aURL)
 {
-  mozilla::dom::PBrowserParent* tabParent = GetRemoteBrowser();
+  mozilla::dom::PBrowserParent* tabParent =
+    static_cast<nsFrameLoader*>(aCallbackData)->GetRemoteBrowser();
   if (tabParent) {
     return tabParent->SendLoadRemoteScript(nsString(aURL));
   }
+  nsFrameLoader* fl = static_cast<nsFrameLoader*>(aCallbackData);
   nsRefPtr<nsInProcessTabChildGlobal> tabChild =
-    static_cast<nsInProcessTabChildGlobal*>(GetTabChildGlobalAsEventTarget());
+    static_cast<nsInProcessTabChildGlobal*>(fl->GetTabChildGlobalAsEventTarget());
   if (tabChild) {
     tabChild->LoadFrameScript(aURL);
   }
@@ -2176,8 +2175,8 @@ class nsAsyncMessageToChild : public nsRunnable
 {
 public:
   nsAsyncMessageToChild(nsFrameLoader* aFrameLoader,
-                        const nsAString& aMessage,
-                        const StructuredCloneData& aData)
+                              const nsAString& aMessage,
+                              const StructuredCloneData& aData)
     : mFrameLoader(aFrameLoader), mMessage(aMessage)
   {
     if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
@@ -2210,11 +2209,12 @@ public:
   StructuredCloneClosure mClosure;
 };
 
-bool
-nsFrameLoader::DoSendAsyncMessage(const nsAString& aMessage,
-                                  const StructuredCloneData& aData)
+bool SendAsyncMessageToChild(void* aCallbackData,
+                             const nsAString& aMessage,
+                                   const StructuredCloneData& aData)
 {
-  PBrowserParent* tabParent = GetRemoteBrowser();
+  PBrowserParent* tabParent =
+    static_cast<nsFrameLoader*>(aCallbackData)->GetRemoteBrowser();
   if (tabParent) {
     ClonedMessageData data;
 
@@ -2244,21 +2244,16 @@ nsFrameLoader::DoSendAsyncMessage(const nsAString& aMessage,
     return tabParent->SendAsyncMessage(nsString(aMessage), data);
   }
 
-  if (mChildMessageManager) {
-    nsRefPtr<nsIRunnable> ev = new nsAsyncMessageToChild(this, aMessage, aData);
+  if (static_cast<nsFrameLoader*>(aCallbackData)->mChildMessageManager) {
+    nsRefPtr<nsIRunnable> ev =
+      new nsAsyncMessageToChild(static_cast<nsFrameLoader*>(aCallbackData),
+                                aMessage, aData);
     NS_DispatchToCurrentThread(ev);
     return true;
   }
 
   // We don't have any targets to send our asynchronous message to.
   return false;
-}
-
-bool
-nsFrameLoader::CheckPermission(const nsAString& aPermission)
-{
-  return AssertAppProcessPermission(GetRemoteBrowser(),
-                                    NS_ConvertUTF16toUTF8(aPermission).get());
 }
 
 NS_IMETHODIMP
@@ -2341,7 +2336,7 @@ nsFrameLoader::EnsureMessageManager()
 
   if (mMessageManager) {
     if (ShouldUseRemoteProcess()) {
-      mMessageManager->SetCallback(mRemoteBrowserShown ? this : nullptr);
+      mMessageManager->SetCallbackData(mRemoteBrowserShown ? this : nullptr);
     }
     return NS_OK;
   }
@@ -2360,20 +2355,24 @@ nsFrameLoader::EnsureMessageManager()
   }
 
   if (ShouldUseRemoteProcess()) {
-    mMessageManager = new nsFrameMessageManager(mRemoteBrowserShown ? this : nullptr,
+    mMessageManager = new nsFrameMessageManager(true, /* aChrome */
+                                                nullptr,
+                                                SendAsyncMessageToChild,
+                                                LoadScript,
+                                                mRemoteBrowserShown ? this : nullptr,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
-                                                cx,
-                                                MM_CHROME);
+                                                cx);
   } else {
-    mMessageManager = new nsFrameMessageManager(nullptr,
+    mMessageManager = new nsFrameMessageManager(true, /* aChrome */
+                                                nullptr,
+                                                SendAsyncMessageToChild,
+                                                LoadScript,
+                                                nullptr,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
-                                                cx,
-                                                MM_CHROME);
-
+                                                cx);
     mChildMessageManager =
       new nsInProcessTabChildGlobal(mDocShell, mOwnerContent, mMessageManager);
-    // Force pending frame scripts to be loaded.
-    mMessageManager->SetCallback(this);
+    mMessageManager->SetCallbackData(this);
   }
   return NS_OK;
 }
