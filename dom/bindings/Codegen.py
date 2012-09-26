@@ -3980,10 +3980,7 @@ class CGUnionStruct(CGThing):
   ${externalType} GetAs${name}() const
   {
     MOZ_ASSERT(Is${name}(), "Wrong type!");
-    // The cast to ${externalType} is needed to work around a bug in Apple's
-    // clang compiler, for some reason it doesn't call |S::operator T&| when
-    // casting S<T> to T& and T is forward declared.
-    return (${externalType})mValue.m${name}.Value();
+    return const_cast<${structType}&>(mValue.m${name}.Value());
   }
   ${structType}& SetAs${name}()
   {
