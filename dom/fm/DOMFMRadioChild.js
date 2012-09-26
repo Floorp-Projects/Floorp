@@ -46,13 +46,10 @@ DOMFMRadioChild.prototype = {
 
   // nsIDOMGlobalPropertyInitializer implementation
   init: function(aWindow) {
-    let principal = aWindow.document.nodePrincipal;
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
                    .getService(Ci.nsIScriptSecurityManager);
 
-    let perm = (principal == secMan.getSystemPrincipal()) ?
-                 Ci.nsIPermissionManager.ALLOW_ACTION :
-                 Services.perms.testExactPermission(principal.URI, "fmradio");
+    let perm = Services.perms.testExactPermissionFromPrincipal(aWindow.document.nodePrincipal, "fmradio");
     this._hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;
 
     if (!this._hasPrivileges) {
