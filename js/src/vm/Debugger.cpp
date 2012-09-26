@@ -3741,7 +3741,8 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
 
         if (fun->nargs > 0) {
             BindingVector bindings(cx);
-            if (!FillBindingVector(fun->script()->bindings, &bindings))
+            RootedScript script(cx, fun->script());
+            if (!FillBindingVector(script, &bindings))
                 return false;
             for (size_t i = 0; i < fun->nargs; i++) {
                 Value v;
