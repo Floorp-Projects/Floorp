@@ -30,6 +30,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsObjectLoadingContent.h"
 #include "nsDOMMutationObserver.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla::dom;
 
@@ -400,7 +401,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
   nsresult rv;
   JSObject *wrapper;
-  if (aCx && (wrapper = aNode->GetWrapper())) {
+  bool isDOMBinding;
+  if (aCx && (wrapper = aNode->GetWrapper()) &&
+      !(isDOMBinding = IsDOMObject(wrapper))) {
       rv = xpc_MorphSlimWrapper(aCx, aNode);
       NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -525,14 +528,18 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     }
 
     if (aCx && wrapper) {
-      nsIXPConnect *xpc = nsContentUtils::XPConnect();
-      if (xpc) {
-        rv = xpc->ReparentWrappedNativeIfFound(aCx, wrapper, aNewScope, aNode);
-        if (NS_FAILED(rv)) {
-          aNode->mNodeInfo.swap(nodeInfo);
-
-          return rv;
+      if (isDOMBinding) {
+        rv = ReparentWrapper(aCx, wrapper);
+      } else {
+        nsIXPConnect *xpc = nsContentUtils::XPConnect();
+        if (xpc) {
+          rv = xpc->ReparentWrappedNativeIfFound(aCx, wrapper, aNewScope, aNode);
         }
+      }
+      if (NS_FAILED(rv)) {
+        aNode->mNodeInfo.swap(nodeInfo);
+
+        return rv;
       }
     }
   }
