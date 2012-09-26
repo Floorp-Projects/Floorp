@@ -65,11 +65,11 @@ WebappsRegistry.prototype = {
           Services.DOMRequest.fireSuccess(req, null);
         }
         break;
+      case "Webapps:IsInstalled:Return:OK":
+        Services.DOMRequest.fireSuccess(req, msg.installed);
+        break;
       case "Webapps:GetInstalled:Return:OK":
         Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
-        break;
-      case "Webapps:GetSelf:Return:KO":
-        Services.DOMRequest.fireError(req, "ERROR");
         break;
     }
     this.removeRequest(msg.requestID);
@@ -80,9 +80,21 @@ WebappsRegistry.prototype = {
     return uri.prePath;
   },
 
+  _validateScheme: function(aURL) {
+    let scheme = Services.io.newURI(aURL, null, null).scheme;
+    if (scheme != "http" && scheme != "https") {
+      throw new Components.Exception(
+        "INVALID_URL_SCHEME: '" + scheme + "'; must be 'http' or 'https'",
+        Cr.NS_ERROR_FAILURE
+      );
+    }
+  },
+
   // mozIDOMApplicationRegistry implementation
 
   install: function(aURL, aParams) {
+    this._validateScheme(aURL);
+
     let installURL = this._window.location.href;
     let installOrigin = this._getOrigin(installURL);
     let request = this.createRequest();
@@ -134,8 +146,21 @@ WebappsRegistry.prototype = {
   getSelf: function() {
     let request = this.createRequest();
     cpmm.sendAsyncMessage("Webapps:GetSelf", { origin: this._getOrigin(this._window.location.href),
+                                               appId: this._window.document.nodePrincipal.appId,
                                                oid: this._id,
                                                requestID: this.getRequestId(request) });
+    return request;
+  },
+
+  isInstalled: function(aManifestURL) {
+    let manifestURL = Services.io.newURI(aManifestURL, null, this._window.document.baseURIObject);
+    this._window.document.nodePrincipal.checkMayLoad(manifestURL, true, false);
+
+    let request = this.createRequest();
+    cpmm.sendAsyncMessage("Webapps:IsInstalled", { origin: this._getOrigin(this._window.location.href),
+                                                   manifestURL: manifestURL.spec,
+                                                   oid: this._id,
+                                                   requestID: this.getRequestId(request) });
     return request;
   },
 
@@ -162,6 +187,8 @@ WebappsRegistry.prototype = {
   // mozIDOMApplicationRegistry2 implementation
 
   installPackage: function(aPackageURL, aParams) {
+    this._validateScheme(aPackageURL);
+
     let request = this.createRequest();
     let requestID = this.getRequestId(request);
 
@@ -183,7 +210,8 @@ WebappsRegistry.prototype = {
   init: function(aWindow) {
     this.initHelper(aWindow, ["Webapps:Install:Return:OK", "Webapps:Install:Return:KO",
                               "Webapps:GetInstalled:Return:OK",
-                              "Webapps:GetSelf:Return:OK", "Webapps:GetSelf:Return:KO"]);
+                              "Webapps:GetSelf:Return:OK",
+                              "Webapps:IsInstalled:Return:OK" ]);
 
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this._id = util.outerWindowID;

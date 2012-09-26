@@ -190,6 +190,10 @@ protected:
     mBufferProvider = aProvider;
     if (!mBufferProvider) {
       mBuffer = nullptr;
+    } else {
+      // Only this buffer provider can give us a buffer.  If we
+      // already have one, something has gone wrong.
+      MOZ_ASSERT(!mBuffer);
     }
   }
 

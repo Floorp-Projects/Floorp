@@ -117,18 +117,22 @@ interface nsIRILDataCallback : nsISupports
                            in unsigned long length);
 };
 
-[scriptable, function, uuid(cfff68a2-7799-4c37-acca-bf58c19b2236)]
+[scriptable, function, uuid(a94282b6-da60-4daf-95c1-82ee6889d0df)]
 interface nsIRILContactCallback : nsISupports
 {
   /**
    * Called when nsIRadioInterfaceLayer is asked to provide ICC contacts.
    *
+   * @param errorMsg
+   *        error message from RIL.
    * @param contactType
    *        Type of the dialling number, i.e. ADN, FDN.
    * @param contacts
    *        Array of the ICC contacts of the specified type.
    */
-  void receiveContactsList(in DOMString contactType, in jsval contacts);
+  void receiveContactsList(in DOMString errorMsg,
+                           in DOMString contactType,
+                           in jsval contacts);
 };
 
 /**

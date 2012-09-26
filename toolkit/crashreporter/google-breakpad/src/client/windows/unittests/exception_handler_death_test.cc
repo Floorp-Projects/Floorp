@@ -161,8 +161,8 @@ TEST_F(ExceptionHandlerDeathTest, OutOfProcTest) {
   ASSERT_TRUE(DoesPathExist(temp_path_));
   std::wstring dump_path(temp_path_);
   google_breakpad::CrashGenerationServer server(
-    kPipeName, NULL, NULL, NULL, &clientDumpCallback, NULL, NULL, NULL, true,
-    &dump_path);
+    kPipeName, NULL, NULL, NULL, &clientDumpCallback, NULL, NULL, NULL, NULL,
+    NULL, true, &dump_path);
 
   // This HAS to be EXPECT_, because when this test case is executed in the
   // child process, the server registration will fail due to the named pipe
@@ -303,17 +303,7 @@ TEST_F(ExceptionHandlerDeathTest, InstructionPointerMemory) {
     ASSERT_TRUE(context);
 
     u_int64_t instruction_pointer;
-    switch (context->GetContextCPU()) {
-    case MD_CONTEXT_X86:
-      instruction_pointer = context->GetContextX86()->eip;
-      break;
-    case MD_CONTEXT_AMD64:
-      instruction_pointer = context->GetContextAMD64()->rip;
-      break;
-    default:
-      FAIL() << "Unknown context CPU: " << context->GetContextCPU();
-      break;
-    }
+    ASSERT_TRUE(context->GetInstructionPointer(&instruction_pointer));
 
     MinidumpMemoryRegion* region =
         memory_list->GetMemoryRegionForAddress(instruction_pointer);
@@ -403,17 +393,7 @@ TEST_F(ExceptionHandlerDeathTest, InstructionPointerMemoryMinBound) {
     ASSERT_TRUE(context);
 
     u_int64_t instruction_pointer;
-    switch (context->GetContextCPU()) {
-    case MD_CONTEXT_X86:
-      instruction_pointer = context->GetContextX86()->eip;
-      break;
-    case MD_CONTEXT_AMD64:
-      instruction_pointer = context->GetContextAMD64()->rip;
-      break;
-    default:
-      FAIL() << "Unknown context CPU: " << context->GetContextCPU();
-      break;
-    }
+    ASSERT_TRUE(context->GetInstructionPointer(&instruction_pointer));
 
     MinidumpMemoryRegion* region =
         memory_list->GetMemoryRegionForAddress(instruction_pointer);
@@ -495,17 +475,7 @@ TEST_F(ExceptionHandlerDeathTest, InstructionPointerMemoryMaxBound) {
     ASSERT_TRUE(context);
 
     u_int64_t instruction_pointer;
-    switch (context->GetContextCPU()) {
-    case MD_CONTEXT_X86:
-      instruction_pointer = context->GetContextX86()->eip;
-      break;
-    case MD_CONTEXT_AMD64:
-      instruction_pointer = context->GetContextAMD64()->rip;
-      break;
-    default:
-      FAIL() << "Unknown context CPU: " << context->GetContextCPU();
-      break;
-    }
+    ASSERT_TRUE(context->GetInstructionPointer(&instruction_pointer));
 
     MinidumpMemoryRegion* region =
         memory_list->GetMemoryRegionForAddress(instruction_pointer);

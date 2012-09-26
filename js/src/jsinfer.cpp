@@ -3890,13 +3890,16 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             TypeObject *rest = TypeScript::InitObject(cx, script, pc, JSProto_Array);
             if (!rest)
                 return false;
-            types->addType(cx, Type::ObjectType(rest));
 
             // Simulate setting a element.
-            HeapTypeSet *propTypes = rest->getProperty(cx, JSID_VOID, true);
-            if (!propTypes)
-                return false;
-            propTypes->addType(cx, Type::UnknownType());
+            if (!rest->unknownProperties()) {
+                HeapTypeSet *propTypes = rest->getProperty(cx, JSID_VOID, true);
+                if (!propTypes)
+                    return false;
+                propTypes->addType(cx, Type::UnknownType());
+            }
+
+            types->addType(cx, Type::ObjectType(rest));
         } else {
             types->addType(cx, Type::UnknownType());
         }

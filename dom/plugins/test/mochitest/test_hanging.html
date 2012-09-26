@@ -6,13 +6,6 @@
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
-  const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
-  if (isOSXLion || isOSXMtnLion) {
-    todo(false, "Can't test plugin crash notification on OS X 10.7 or 10.8, see bug 705047");
-    SimpleTest.finish();
-  }
-
   window.frameLoaded = function frameLoaded_toCrash() {
     if (!SimpleTest.testPluginIsOOP()) {
       ok(true, "Skipping this test when test plugin is not OOP.");

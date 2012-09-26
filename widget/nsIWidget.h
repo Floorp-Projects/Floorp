@@ -1357,6 +1357,7 @@ class nsIWidget : public nsISupports {
 
     /**
      * A shortcut to SynthesizeNativeMouseEvent, abstracting away the native message.
+     * aPoint is location in device pixels to which the mouse pointer moves to.
      */
     virtual nsresult SynthesizeNativeMouseMove(nsIntPoint aPoint) = 0;
 
@@ -1621,6 +1622,12 @@ class nsIWidget : public nsISupports {
      * @return the constraints in device pixels
      */
     virtual const SizeConstraints& GetSizeConstraints() const = 0;
+
+    /**
+     * If this is owned by a TabChild, return that.  Otherwise return
+     * null.
+     */
+    virtual TabChild* GetOwningTabChild() { return nullptr; }
 
 protected:
 
