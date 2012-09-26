@@ -449,6 +449,13 @@ const EF_TYPE_TRANSPARENT = 0;
 const EF_TYPE_LINEAR_FIXED = 1;
 const EF_TYPE_CYCLIC = 3;
 
+// Status code of EFsms
+// see 3GPP TS 51.011 clause 10.5.3
+const EFSMS_STATUS_FREE       = 0x00;
+const EFSMS_STATUS_READ       = 0x01;
+const EFSMS_STATUS_TO_BE_READ = 0x03;
+const EFSMS_STATUS_TO_BE_SENT = 0x07;
+
 // For retrieving MSISDN, TS 151.011 clause 10.5.5
 const MSISDN_FOOTER_SIZE_BYTES = 14;
 const MSISDN_MAX_NUMBER_SIZE_BYTES = 10;
@@ -471,6 +478,7 @@ const EF_PATH_ADF_USIM     = "7fff";
 // see GSM11.11 and TS 51.011 clause 9.4, and ISO 7816-4
 const ICC_STATUS_NORMAL_ENDING = 0x90;
 const ICC_STATUS_NORMAL_ENDING_WITH_EXTRA = 0x91;
+const ICC_STATUS_SAT_BUSY = 0x93;
 const ICC_STATUS_WITH_SIM_DATA = 0x9e;
 const ICC_STATUS_WITH_RESPONSE_DATA = 0x9f;
 const ICC_STATUS_ERROR_WRONG_LENGTH = 0x67;
@@ -516,6 +524,7 @@ const ICC_USIM_EFCCP1_TAG  = 0xcb;
 //  Tags for Ber Tlv.
 const BER_UNKNOWN_TAG = 0x00;
 const BER_PROACTIVE_COMMAND_TAG = 0xd0;
+const BER_SMS_PP_DOWNLOAD_TAG = 0xd1;
 const BER_MENU_SELECTION_TAG = 0xd3;
 const BER_EVENT_DOWNLOAD_TAG = 0xd6;
 
@@ -529,6 +538,7 @@ const COMPREHENSIONTLV_TAG_RESULT = 0x03;
 const COMPREHENSIONTLV_TAG_DURATION = 0x04;
 const COMPREHENSIONTLV_TAG_ALPHA_ID = 0x05;
 const COMPREHENSIONTLV_TAG_ADDRESS = 0x06;
+const COMPREHENSIONTLV_TAG_SMS_TPDU = 0x0b;
 const COMPREHENSIONTLV_TAG_TEXT_STRING = 0x0d;
 const COMPREHENSIONTLV_TAG_ITEM = 0x0f;
 const COMPREHENSIONTLV_TAG_ITEM_ID = 0x10;
@@ -728,12 +738,14 @@ const GECKO_ICC_SERVICES = {
     ADN: 2,
     FDN: 3,
     SDN: 18,
+    DATA_DOWNLOAD_SMS_PP: 26,
     BDN: 31
   },
   usim: {
     FDN: 2,
     SDN: 4,
-    BDN: 6
+    BDN: 6,
+    DATA_DOWNLOAD_SMS_PP: 28
   }
 };
 
@@ -825,8 +837,16 @@ const PDU_PI_PROTOCOL_IDENTIFIER = 0x01;
 const PDU_PI_RESERVED            = 0x78;
 
 // FCS - Failure Cause
-const PDU_FCS_OK          = 0x00;
-const PDU_FCS_UNSPECIFIED = 0xFF;
+// 0...127   see 3GPP TS 24.011 clause E.2
+// 128...255 see 3GPP TS 23.040 clause 9.2.3.22
+// others    see 3GPP TS 27.005 clause 3.2.5
+const PDU_FCS_OK                       = 0x00;
+const PDU_FCS_PROTOCOL_ERROR           = 0x6F;
+const PDU_FCS_MEMORY_CAPACITY_EXCEEDED = 0XD3;
+const PDU_FCS_USAT_BUSY                = 0XD4;
+const PDU_FCS_USIM_DATA_DOWNLOAD_ERROR = 0xD5;
+const PDU_FCS_RESERVED                 = 0xE0;
+const PDU_FCS_UNSPECIFIED              = 0xFF;
 
 // ST - Status
 // Bit 7..0 = 000xxxxx, short message transaction completed
