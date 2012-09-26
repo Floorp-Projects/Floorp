@@ -20,6 +20,7 @@
 #include "mozilla/Util.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "mozilla/ipc/UnixSocket.h"
 #include "nsContentUtils.h"
 #include "nsIDOMDOMRequest.h"
 #include "nsIObserverService.h"
@@ -242,10 +243,9 @@ BluetoothService::Create()
   return new BluetoothGonkService();
 #elif defined(MOZ_BLUETOOTH_DBUS)
   return new BluetoothDBusService();
-#else
+#endif
   NS_WARNING("No platform support for bluetooth!");
   return nullptr;
-#endif
 }
 
 bool
@@ -269,8 +269,6 @@ BluetoothService::Init()
     return false;
   }
 
-  RegisterBluetoothSignalHandler(NS_LITERAL_STRING(LOCAL_AGENT_PATH), this);
-  RegisterBluetoothSignalHandler(NS_LITERAL_STRING(REMOTE_AGENT_PATH), this);
   mRegisteredForLocalAgent = true;
 
   return true;
@@ -360,16 +358,6 @@ BluetoothService::StartStopBluetooth(bool aStart)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef DEBUG
-  if (aStart && mLastRequestedEnable) {
-    MOZ_ASSERT(false, "Calling Start twice in a row!");
-  }
-  else if (!aStart && !mLastRequestedEnable) {
-    MOZ_ASSERT(false, "Calling Stop twice in a row!");
-  }
-  mLastRequestedEnable = aStart;
-#endif
-
   if (gInShutdown) {
     if (aStart) {
       // Don't try to start if we're already shutting down.
@@ -392,6 +380,16 @@ BluetoothService::StartStopBluetooth(bool aStart)
     rv = NS_NewNamedThread("BluetoothCmd",
                            getter_AddRefs(mBluetoothCommandThread));
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aStart) {
+    RegisterBluetoothSignalHandler(NS_LITERAL_STRING(LOCAL_AGENT_PATH), this);
+    RegisterBluetoothSignalHandler(NS_LITERAL_STRING(REMOTE_AGENT_PATH), this);
+
+    BluetoothManagerList::ForwardIterator iter(mLiveManagers);
+    while (iter.HasMore()) {
+      RegisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), (BluetoothSignalObserver*)iter.GetNext());
+    }
   }
 
   nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(aStart);
@@ -697,7 +695,7 @@ SetJsObject(JSContext* aContext,
             JSObject* aObj,
             const InfallibleTArray<BluetoothNamedValue>& aData)
 {
-  for (int i = 0; i < aData.Length(); i++) {
+  for (uint32_t i = 0; i < aData.Length(); i++) {
     jsval v;
     if (aData[i].value().type() == BluetoothValue::TnsString) {
       nsString data = aData[i].value().get_nsString();

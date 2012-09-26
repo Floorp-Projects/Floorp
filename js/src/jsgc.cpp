@@ -3822,6 +3822,9 @@ BeginSweepPhase(JSRuntime *rt)
     WeakMapBase::sweepAll(&rt->gcMarker);
     rt->debugScopes->sweep();
 
+    /* Prune out dead views from ArrayBuffer's view lists. */
+    ArrayBufferObject::sweepAll(rt);
+
     /* Collect watch points associated with unreachable objects. */
     WatchpointMap::sweepAll(rt);
 

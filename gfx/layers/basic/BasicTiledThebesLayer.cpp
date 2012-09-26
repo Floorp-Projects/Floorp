@@ -240,7 +240,16 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   if (regionToPaint.IsEmpty())
     return;
 
-  if (gfxPlatform::UseProgressiveTilePainting()) {
+  gfxSize resolution(1, 1);
+  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
+    const FrameMetrics& metrics = parent->GetFrameMetrics();
+    resolution.width *= metrics.mResolution.width;
+    resolution.height *= metrics.mResolution.height;
+  }
+
+  // Force immediate tile painting when the layer has changed resolution.
+  if (gfxPlatform::UseProgressiveTilePainting() &&
+      mTiledBuffer.GetResolution() == resolution) {
     nsIntRegionRectIterator it(regionToPaint);
     const nsIntRect* rect = it.Next();
     if (!rect)
@@ -265,37 +274,19 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       // therefore update what we want to paint and ask for a new paint transaction.
       regionToPaint.And(regionToPaint, maxPaint);
       BasicManager()->SetRepeatTransaction();
+
+      // Make sure that tiles that fall outside of the visible region are discarded.
+      mValidRegion.And(mValidRegion, mVisibleRegion);
     }
 
-    // We want to continue to retain invalidated tiles that we're about to paint soon
-    // to prevent them from disapearing while doing progressive paint. However we only
-    // want to this if they were painted at the same resolution.
-    gfxSize resolution(1, 1);
-    for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
-      const FrameMetrics& metrics = parent->GetFrameMetrics();
-      resolution.width *= metrics.mResolution.width;
-      resolution.height *= metrics.mResolution.height;
-    }
-
-    nsIntRegion regionToRetain(mTiledBuffer.GetValidRegion());
-    if (false && mTiledBuffer.GetResolution() == resolution) {
-      // Retain stale tiles but keep them marked as invalid in mValidRegion
-      // so that they will be eventually repainted.
-      regionToRetain.And(regionToRetain, mVisibleRegion);
-      regionToRetain.Or(regionToRetain, regionToPaint);
-    } else {
-      regionToRetain = mValidRegion;
-      regionToRetain.Or(regionToRetain, regionToPaint);
-      mTiledBuffer.SetResolution(resolution);
-    }
-
-    // Paint and keep track of what we refreshed
-    mTiledBuffer.PaintThebes(this, regionToRetain, regionToPaint, aCallback, aCallbackData);
+    // Keep track of what we're about to refresh.
     mValidRegion.Or(mValidRegion, regionToPaint);
   } else {
-    mTiledBuffer.PaintThebes(this, mVisibleRegion, regionToPaint, aCallback, aCallbackData);
+    mTiledBuffer.SetResolution(resolution);
     mValidRegion = mVisibleRegion;
   }
+
+  mTiledBuffer.PaintThebes(this, mVisibleRegion, regionToPaint, aCallback, aCallbackData);
 
   mTiledBuffer.ReadLock();
   if (aMaskLayer) {

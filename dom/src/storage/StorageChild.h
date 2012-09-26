@@ -26,8 +26,8 @@ public:
   StorageChild(nsDOMStorage* aOwner);
   StorageChild(nsDOMStorage* aOwner, StorageChild& aOther);
 
-  virtual void InitAsSessionStorage(nsIURI* aDomainURI, bool aPrivate);
-  virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aPrivate);
+  virtual void InitAsSessionStorage(nsIPrincipal* aPrincipal, bool aPrivate);
+  virtual void InitAsLocalStorage(nsIPrincipal* aPrincipal, bool aPrivate);
 
   virtual bool CacheStoragePermissions();
   
