@@ -8,7 +8,7 @@
 interface nsIDOMDOMRequest;
 interface nsIArray;
 
-[scriptable, uuid(e3649c1d-c950-495e-b0ed-6ce40be9743b)]
+[scriptable, uuid(738360f5-19ad-456a-a477-cdbc250e1718)]
 interface mozIDOMApplication  : nsISupports
 {
   readonly attribute jsval manifest;
@@ -41,6 +41,9 @@ interface mozIDOMApplication  : nsISupports
   /* startPoint will be used when several launch_path exists for an app */
   nsIDOMDOMRequest launch([optional] in DOMString startPoint);
   nsIDOMDOMRequest uninstall();
+
+  /* Clear data that has been collected through mozbrowser elements. */
+  void clearBrowserData();
 };
 
 [scriptable, uuid(4c36ca48-841e-4d5a-8c46-dda14ac633ca)]

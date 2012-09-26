@@ -63,6 +63,8 @@ let DOMApplicationRegistry = {
                      "Webapps:GetList", "Webapps:RegisterForMessages",
                      "Webapps:UnregisterForMessages"];
 
+    this.frameMessages = ["Webapps:ClearBrowserData"];
+
     this.messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);
     }).bind(this));
@@ -1136,6 +1138,79 @@ let DOMApplicationRegistry = {
     return true;
 #endif
 
+  },
+
+  _notifyCategoryAndObservers: function(subject, topic, data) {
+    const serviceMarker = "service,";
+
+    // First create observers from the category manager.
+    let cm =
+      Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+    let enumerator = cm.enumerateCategory(topic);
+
+    let observers = [];
+
+    while (enumerator.hasMoreElements()) {
+      let entry =
+        enumerator.getNext().QueryInterface(Ci.nsISupportsCString).data;
+      let contractID = cm.getCategoryEntry(topic, entry);
+
+      let factoryFunction;
+      if (contractID.substring(0, serviceMarker.length) == serviceMarker) {
+        contractID = contractID.substring(serviceMarker.length);
+        factoryFunction = "getService";
+      }
+      else {
+        factoryFunction = "createInstance";
+      }
+
+      try {
+        let handler = Cc[contractID][factoryFunction]();
+        if (handler) {
+          let observer = handler.QueryInterface(Ci.nsIObserver);
+          observers.push(observer);
+        }
+      } catch(e) { }
+    }
+
+    // Next enumerate the registered observers.
+    enumerator = Services.obs.enumerateObservers(topic);
+    while (enumerator.hasMoreElements()) {
+      let observer = enumerator.getNext();
+      if (observers.indexOf(observer) == -1) {
+        observers.push(observer);
+      }
+    }
+
+    observers.forEach(function (observer) {
+      try {
+        observer.observe(subject, topic, data);
+      } catch(e) { }
+    });
+  },
+
+  registerBrowserElementParentForApp: function(bep, appId) {
+    let mm = bep._mm;
+
+    // Make a listener function that holds on to this appId.
+    let listener = this.receiveAppMessage.bind(this, appId);
+
+    this.frameMessages.forEach(function(msgName) {
+      mm.addMessageListener(msgName, listener);
+    });
+  },
+
+  receiveAppMessage: function(appId, message) {
+    switch (message.name) {
+      case "Webapps:ClearBrowserData":
+        let subject = {
+          appId: appId,
+          browserOnly: true,
+          QueryInterface: XPCOMUtils.generateQI([Ci.mozIApplicationClearPrivateDataParams])
+        };
+        this._notifyCategoryAndObservers(subject, "webapps-clear-data", null);
+        break;
+    }
   }
 };
 
