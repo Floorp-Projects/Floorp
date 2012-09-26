@@ -143,6 +143,8 @@ add_test(function test_stop_tracking_twice() {
 add_test(function cleanup() {
    _("Clean up.");
   PlacesUtils.history.removeAllPages();
-  tracker._lazySave.clear();
+  if (tracker._lazySave) {
+    tracker._lazySave.clear();
+  }
   run_next_test();
 });

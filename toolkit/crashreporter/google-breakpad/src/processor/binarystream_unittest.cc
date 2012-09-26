@@ -32,11 +32,11 @@
 #include <vector>
 
 #include "breakpad_googletest_includes.h"
+#include "common/using_std_string.h"
 #include "processor/binarystream.h"
 
 namespace {
 using std::ios_base;
-using std::string;
 using std::vector;
 using google_breakpad::binarystream;
 

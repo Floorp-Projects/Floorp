@@ -16,7 +16,8 @@ const TEST_PRINCIPAL_2 = Services.scriptSecurityManager.getNoAppCodebasePrincipa
 const PERM_UNKNOWN = 0;
 const PERM_ALLOW = 1;
 const PERM_DENY = 2;
-const PERM_SESION = 8;
+// cookie specific permissions
+const PERM_FIRST_PARTY_ONLY = 9;
 
 // used to set permissions on test sites
 const TEST_PERMS = {
@@ -252,6 +253,18 @@ var tests = [
     // check to make sure this change is reflected in the permission manager
     is(Services.perms.testPermissionFromPrincipal(TEST_PRINCIPAL_2, "geo"), PERM_ALLOW,
        "permission manager shows that geolocation is allowed");
+
+
+    // change a site-specific cookie permission, just for fun
+    let cookieMenuList = getPermissionMenulist("cookie");
+    let cookieItem = gBrowser.contentDocument.getElementById("cookie-" + PERM_FIRST_PARTY_ONLY);
+    cookieMenuList.selectedItem = cookieItem;
+    cookieMenuList.doCommand();
+    is(cookieMenuList.value, PERM_FIRST_PARTY_ONLY, "menulist correctly shows that " +
+       "first party only cookies are allowed");
+    is(Services.perms.testPermissionFromPrincipal(TEST_PRINCIPAL_2, "cookie"),
+       PERM_FIRST_PARTY_ONLY, "permission manager shows that first party cookies " +
+       "are allowed");
 
     runNextTest();
   },

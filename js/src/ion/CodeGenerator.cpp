@@ -2645,7 +2645,7 @@ CodeGenerator::visitIteratorNext(LIteratorNext *lir)
     const Register temp = ToRegister(lir->temp());
     const ValueOperand output = ToOutValue(lir);
 
-    typedef bool (*pf)(JSContext *, JSObject *, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, HandleObject, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(js_IteratorNext);
 
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), obj), StoreValueTo(output));
@@ -2703,7 +2703,7 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd *lir)
     const Register temp1 = ToRegister(lir->temp1());
     const Register temp2 = ToRegister(lir->temp2());
 
-    typedef bool (*pf)(JSContext *, JSObject *);
+    typedef bool (*pf)(JSContext *, HandleObject);
     static const VMFunction Info = FunctionInfo<pf>(CloseIterator);
 
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), obj), StoreNothing());

@@ -41,11 +41,13 @@
 #include <map>
 #include <memory>
 #include <stack>
+#include <string>
 #include <utility>
 
 #include "common/dwarf/bytereader-inl.h"
 #include "common/dwarf/bytereader.h"
 #include "common/dwarf/line_state_machine.h"
+#include "common/using_std_string.h"
 
 namespace dwarf2reader {
 
@@ -75,7 +77,7 @@ void CompilationUnit::ReadAbbrevs() {
     iter = sections_.find("__debug_abbrev");
   assert(iter != sections_.end());
 
-  abbrevs_ = new vector<Abbrev>;
+  abbrevs_ = new std::vector<Abbrev>;
   abbrevs_->resize(1);
 
   // The only way to check whether we are reading over the end of the
@@ -122,7 +124,7 @@ void CompilationUnit::ReadAbbrevs() {
       const enum DwarfAttribute name =
         static_cast<enum DwarfAttribute>(nametemp);
       const enum DwarfForm form = static_cast<enum DwarfForm>(formtemp);
-      abbrev.attributes.push_back(make_pair(name, form));
+      abbrev.attributes.push_back(std::make_pair(name, form));
     }
     assert(abbrev.number == abbrevs_->size());
     abbrevs_->push_back(abbrev);
@@ -473,11 +475,8 @@ void CompilationUnit::ProcessDIEs() {
   else
     lengthstart += 4;
 
-  // we need semantics of boost scoped_ptr here - no intention of trasnferring
-  // ownership of the stack.  use const, but then we limit ourselves to not
-  // ever being able to call .reset() on the smart pointer.
-  std::auto_ptr<stack<uint64> > const die_stack(new stack<uint64>);
-
+  std::stack<uint64> die_stack;
+  
   while (dieptr < (lengthstart + header_.length)) {
     // We give the user the absolute offset from the beginning of
     // debug_info, since they need it to deal with ref_addr forms.
@@ -487,10 +486,14 @@ void CompilationUnit::ProcessDIEs() {
 
     dieptr += len;
 
-    // Abbrev == 0 represents the end of a list of children.
+    // Abbrev == 0 represents the end of a list of children, or padding
+    // at the end of the compilation unit.
     if (abbrev_num == 0) {
-      const uint64 offset = die_stack->top();
-      die_stack->pop();
+      if (die_stack.size() == 0)
+        // If it is padding, then we are done with the compilation unit's DIEs.
+        return;
+      const uint64 offset = die_stack.top();
+      die_stack.pop();
       handler_->EndDIE(offset);
       continue;
     }
@@ -504,7 +507,7 @@ void CompilationUnit::ProcessDIEs() {
     }
 
     if (abbrev.has_children) {
-      die_stack->push(absolute_offset);
+      die_stack.push(absolute_offset);
     } else {
       handler_->EndDIE(absolute_offset);
     }
@@ -562,7 +565,7 @@ void LineInfo::ReadHeader() {
   header_.opcode_base = reader_->ReadOneByte(lineptr);
   lineptr += 1;
 
-  header_.std_opcode_lengths = new vector<unsigned char>;
+  header_.std_opcode_lengths = new std::vector<unsigned char>;
   header_.std_opcode_lengths->resize(header_.opcode_base + 1);
   (*header_.std_opcode_lengths)[0] = 0;
   for (int i = 1; i < header_.opcode_base; i++) {
@@ -1075,7 +1078,7 @@ class CallFrameInfo::RuleMap {
 
  private:
   // A map from register numbers to Rules.
-  typedef map<int, Rule *> RuleByNumber;
+  typedef std::map<int, Rule *> RuleByNumber;
 
   // Remove all register rules and clear cfa_rule_.
   void Clear();
@@ -1320,7 +1323,7 @@ class CallFrameInfo::State {
 
   // A stack of saved states, for DW_CFA_remember_state and
   // DW_CFA_restore_state.
-  stack<RuleMap> saved_rules_;
+  std::stack<RuleMap> saved_rules_;
 };
 
 bool CallFrameInfo::State::InterpretCIE(const CIE &cie) {
@@ -1856,20 +1859,14 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
   cie->version = reader_->ReadOneByte(cursor);
   cursor++;
 
-  // If we don't recognize the version, we can't parse any more fields
-  // of the CIE. For DWARF CFI, we handle versions 1 through 3 (there
-  // was never a version 2 of CFI data). For .eh_frame, we handle only
-  // version 1.
-  if (eh_frame_) {
-    if (cie->version != 1) {
-      reporter_->UnrecognizedVersion(cie->offset, cie->version);
-      return false;
-    }
-  } else {
-    if (cie->version < 1 || cie->version > 3) {
-      reporter_->UnrecognizedVersion(cie->offset, cie->version);
-      return false;
-    }
+  // If we don't recognize the version, we can't parse any more fields of the
+  // CIE. For DWARF CFI, we handle versions 1 through 3 (there was never a
+  // version 2 of CFI data). For .eh_frame, we handle versions 1 and 3 as well;
+  // the difference between those versions seems to be the same as for
+  // .debug_frame.
+  if (cie->version < 1 || cie->version > 3) {
+    reporter_->UnrecognizedVersion(cie->offset, cie->version);
+    return false;
   }
 
   const char *augmentation_start = cursor;
@@ -1877,7 +1874,8 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
       memchr(augmentation_start, '\0', cie->end - augmentation_start);
   if (! augmentation_end) return ReportIncomplete(cie);
   cursor = static_cast<const char *>(augmentation_end);
-  cie->augmentation = string(augmentation_start, cursor - augmentation_start);
+  cie->augmentation = string(augmentation_start,
+                                  cursor - augmentation_start);
   // Skip the terminating '\0'.
   cursor++;
 

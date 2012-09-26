@@ -39,14 +39,17 @@
 #include <string.h>
 #include <time.h>
 
+#include <string>
+
+#include "common/using_std_string.h"
 #include "processor/logging.h"
 #include "processor/pathname_stripper.h"
-
-namespace google_breakpad {
 
 #ifdef _WIN32
 #define snprintf _snprintf
 #endif
+
+namespace google_breakpad {
 
 LogStream::LogStream(std::ostream &stream, Severity severity,
                      const char *file, int line)
@@ -80,25 +83,25 @@ LogStream::~LogStream() {
   stream_ << std::endl;
 }
 
-std::string HexString(u_int32_t number) {
+string HexString(u_int32_t number) {
   char buffer[11];
   snprintf(buffer, sizeof(buffer), "0x%x", number);
-  return std::string(buffer);
+  return string(buffer);
 }
 
-std::string HexString(u_int64_t number) {
+string HexString(u_int64_t number) {
   char buffer[19];
   snprintf(buffer, sizeof(buffer), "0x%" PRIx64, number);
-  return std::string(buffer);
+  return string(buffer);
 }
 
-std::string HexString(int number) {
+string HexString(int number) {
   char buffer[19];
   snprintf(buffer, sizeof(buffer), "0x%x", number);
-  return std::string(buffer);
+  return string(buffer);
 }
 
-int ErrnoString(std::string *error_string) {
+int ErrnoString(string *error_string) {
   assert(error_string);
 
   // strerror isn't necessarily thread-safe.  strerror_r would be preferrable,
