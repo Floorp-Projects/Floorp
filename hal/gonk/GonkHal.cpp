@@ -351,8 +351,8 @@ GetCurrentBatteryInformation(hal::BatteryInformation *aBatteryInfo)
     chargingFile = fopen("/sys/class/power_supply/battery/status", "r");
     if (chargingFile) {
       char status[16];
-      fscanf(chargingFile, "%s", &status);
-      if (!strcmp(status, "Charging") || !strcmp(status, "Full")) {
+      char *str = fgets(status, sizeof(status), chargingFile);
+      if (str && (!strcmp(str, "Charging\n") || !strcmp(str, "Full\n"))) {
         // no way here to know if we're charging from USB or AC.
         chargingSrc = BATTERY_CHARGING_USB;
       } else {
