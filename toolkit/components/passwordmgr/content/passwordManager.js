@@ -88,7 +88,7 @@ function LoadSignons() {
   // disable "remove all signons" button if there are no signons
   var element = document.getElementById("removeAllSignons");
   var toggle = document.getElementById("togglePasswords");
-  if (signons.length == 0 || gSelectUserInUse) {
+  if (signons.length == 0) {
     element.setAttribute("disabled","true");
     toggle.setAttribute("disabled","true");
   } else {
@@ -101,7 +101,7 @@ function LoadSignons() {
 
 function SignonSelected() {
   var selections = GetTreeSelections(signonsTree);
-  if (selections.length && !gSelectUserInUse) {
+  if (selections.length) {
     document.getElementById("removeSignon").removeAttribute("disabled");
   }
 }

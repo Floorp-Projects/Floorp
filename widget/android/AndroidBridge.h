@@ -279,10 +279,6 @@ public:
 
     void UnlockBitmap(jobject bitmap);
 
-    void PostToJavaThread(JNIEnv *aEnv, nsIRunnable* aRunnable, bool aMainThread = false);
-
-    void ExecuteNextRunnable(JNIEnv *aEnv);
-
     /* Copied from Android's native_window.h in newer (platform 9) NDK */
     enum {
         WINDOW_FORMAT_RGBA_8888          = 1,
@@ -394,8 +390,6 @@ protected:
     bool mHasNativeWindowFallback;
 
     int mAPIVersion;
-
-    nsCOMArray<nsIRunnable> mRunnableQueue;
 
     // other things
     jmethodID jNotifyIME;

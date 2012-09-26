@@ -121,11 +121,7 @@ public:
   {
     MOZ_COUNT_CTOR(BasicShadowableThebesLayer);
   }
-  virtual ~BasicShadowableThebesLayer()
-  {
-    DestroyBackBuffer();
-    MOZ_COUNT_DTOR(BasicShadowableThebesLayer);
-  }
+  virtual ~BasicShadowableThebesLayer();
 
   virtual void PaintThebes(gfxContext* aContext,
                            Layer* aMaskLayer,

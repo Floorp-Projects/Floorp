@@ -7,7 +7,6 @@
 /*** =================== INITIALISATION CODE =================== ***/
 
 var kObserverService;
-var gSelectUserInUse = false;
 
 // interface variables
 var passwordmanager     = null;
@@ -32,10 +31,7 @@ function Startup() {
 
   // be prepared to reload the display if anything changes
   kObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  kObserverService.addObserver(signonReloadDisplay, "signonChanged", false);
-
-  // be prepared to disable the buttons when selectuser dialog is in use
-  kObserverService.addObserver(signonReloadDisplay, "signonSelectUser", false);
+  kObserverService.addObserver(signonReloadDisplay, "passwordmgr-storage-changed", false);
 
   signonsTree = document.getElementById("signonsTree");
   rejectsTree = document.getElementById("rejectsTree");
@@ -46,49 +42,43 @@ function Startup() {
 }
 
 function Shutdown() {
-  kObserverService.removeObserver(signonReloadDisplay, "signonChanged");
-  kObserverService.removeObserver(signonReloadDisplay, "signonSelectUser");
+  kObserverService.removeObserver(signonReloadDisplay, "passwordmgr-storage-changed");
 }
 
 var signonReloadDisplay = {
-  observe: function(subject, topic, state) {
-    if (topic == "signonChanged") {
-      if (state == "signons") {
-        signons.length = 0;
-        if (lastSignonSortColumn == "hostname") {
-          lastSignonSortAscending = !lastSignonSortAscending; // prevents sort from being reversed
-        }
-        LoadSignons();
-        // apply the filter if needed
-        if (document.getElementById("filter") && document.getElementById("filter").value != "") {
-          _filterPasswords();
-        }
-      } else if (state == "rejects") {
-        rejects.length = 0;
-        if (lastRejectSortColumn == "hostname") {
-          lastRejectSortAscending = !lastRejectSortAscending; // prevents sort from being reversed
-        }
-        LoadRejects();
+  observe: function(subject, topic, data) {
+    if (topic == "passwordmgr-storage-changed") {
+      switch (data) {
+        case "addLogin":
+        case "modifyLogin":
+        case "removeLogin":
+        case "removeAllLogins":
+          if (!signonsTree) {
+            return;
+          }
+          signons.length = 0;
+          if (lastSignonSortColumn == "hostname") {
+            lastSignonSortAscending = !lastSignonSortAscending; // prevents sort from being reversed
+          }
+          LoadSignons();
+          // apply the filter if needed
+          if (document.getElementById("filter") && document.getElementById("filter").value != "") {
+            _filterPasswords();
+          }
+          break;
+        case "hostSavingEnabled":
+        case "hostSavingDisabled":
+          if (!rejectsTree) {
+            return;
+          }
+          rejects.length = 0;
+          if (lastRejectSortColumn == "hostname") {
+            lastRejectSortAscending = !lastRejectSortAscending; // prevents sort from being reversed
+          }
+          LoadRejects();
+          break;
       }
-    } else if (topic == "signonSelectUser") {
-      if (state == "suspend") {
-        gSelectUserInUse = true;
-        document.getElementById("removeSignon").disabled = true;
-        document.getElementById("removeAllSignons").disabled = true;
-        document.getElementById("togglePasswords").disabled = true;
-      } else if (state == "resume") {
-        gSelectUserInUse = false;
-        var selections = GetTreeSelections(signonsTree);
-        if (selections.length > 0) {
-          document.getElementById("removeSignon").disabled = false;
-        }
-        if (signons.length > 0) {
-          document.getElementById("removeAllSignons").disabled = false;
-          document.getElementById("togglePasswords").disabled = false;
-        }
-      } else if (state == "inUse") {
-        gSelectUserInUse = true;
-      }
+      kObserverService.notifyObservers(null, "passwordmgr-dialog-updated", null);
     }
   }
 }
