@@ -19,6 +19,7 @@ ID
 /config.cache
 /config.log
 /.clang_complete
+/mach.ini
 
 # Empty marker file that's generated when we check out NSS
 security/manager/.nss.checkout
