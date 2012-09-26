@@ -230,7 +230,8 @@ parent:
      *   has already been cached (stickDocument=false).
      */
     POfflineCacheUpdate(URIParams manifestURI, URIParams documentURI,
-                        nsCString clientID, bool stickDocument);
+                        bool isInBrowserElement, uint32_t appId,
+                        bool stickDocument);
 
     sync PIndexedDB(nsCString asciiOrigin)
         returns (bool allowed);

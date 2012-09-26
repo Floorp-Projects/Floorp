@@ -72,9 +72,8 @@ private:
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIURI> mDocumentURI;
 
-    nsCString mClientID;
-
     nsCOMPtr<nsIObserverService> mObserverService;
+    nsCOMPtr<nsILoadContext> mLoadContext;
 
     /* Clients watching this update for changes */
     nsCOMArray<nsIWeakReference> mWeakObservers;

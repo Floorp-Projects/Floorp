@@ -2517,8 +2517,7 @@ private:
                                                          gfxPoint3D* aToMozOrigin,
                                                          gfxPoint3D* aToPerspectiveOrigin,
                                                          nscoord* aChildPerspective,
-                                                         nsIFrame** aOutAncestor,
-                                                         bool aRecursing);
+                                                         nsIFrame** aOutAncestor);
 
   nsDisplayWrapList mStoredList;
   gfx3DMatrix mTransform;

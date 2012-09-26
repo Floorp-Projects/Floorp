@@ -15,6 +15,7 @@ LIBRARY_NAME   := gkconwebaudio_s
 LIBXUL_LIBRARY := 1
 
 CPPSRCS := \
+  AudioBuffer.cpp \
   AudioBufferSourceNode.cpp \
   AudioContext.cpp \
   AudioDestinationNode.cpp \
@@ -25,6 +26,7 @@ CPPSRCS := \
 
 EXPORTS_NAMESPACES := mozilla/dom
 EXPORTS_mozilla/dom := \
+  AudioBuffer.h \
   AudioBufferSourceNode.h \
   AudioDestinationNode.h \
   AudioNode.h \

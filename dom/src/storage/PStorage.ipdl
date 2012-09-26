@@ -36,8 +36,7 @@ parent:
   __delete__();
 
   Init(bool useDB, bool sessionOnly, bool isPrivate,
-       nsCString domain, nsCString scopeDBKey,
-       nsCString quotaDBKey, uint32_t storageType);
+       nsCString scopeDBKey, nsCString quotaDBKey, uint32_t storageType);
   
   sync GetKeys(bool callerSecure)
       returns (nsString[] keys);

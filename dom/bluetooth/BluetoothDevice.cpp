@@ -61,6 +61,17 @@ BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aOwner,
     aValue.get_ArrayOfBluetoothNamedValue();
   for (uint32_t i = 0; i < values.Length(); ++i) {
     SetPropertyByValue(values[i]);
+    if (values[i].name().EqualsLiteral("Path")) {
+      // Since this is our signal handler string, set it as we set the property
+      // in the object. Odd place to do it, but makes more sense than in
+      // SetPropertyByValue.
+      BluetoothService* bs = BluetoothService::Get();
+      if (!bs) {
+        NS_WARNING("BluetoothService not available!");
+      } else {
+        bs->RegisterBluetoothSignalHandler(mPath, this);
+      }
+    }
   }
 }
 
@@ -100,14 +111,8 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
   if (name.EqualsLiteral("Name")) {
     mName = value.get_nsString();
   } else if (name.EqualsLiteral("Path")) {
+    MOZ_ASSERT(value.get_nsString().Length() > 0);
     mPath = value.get_nsString();
-    NS_WARNING(NS_ConvertUTF16toUTF8(mPath).get());
-    BluetoothService* bs = BluetoothService::Get();
-    if (!bs) {
-      NS_WARNING("BluetoothService not available!");
-    } else {
-      bs->RegisterBluetoothSignalHandler(mPath, this);
-    }
   } else if (name.EqualsLiteral("Address")) {
     mAddress = value.get_nsString();
   } else if (name.EqualsLiteral("Class")) {

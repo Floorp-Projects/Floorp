@@ -1,0 +1,149 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage app isolation</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+var fileTestOnCurrentOrigin = (location.protocol + "//" + location.host + location.pathname)
+                              .replace("test_a", "frameA");
+
+var previousPrefs = {
+  mozBrowserFramesEnabled: undefined,
+};
+
+try {
+  previousPrefs.mozBrowserFramesEnabled = SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
+} catch(e)
+{
+}
+
+SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
+
+SpecialPowers.addPermission("browser", true, window.document);
+
+var gData = [
+  // APP 1
+  {
+    app: 'http://example.org/manifest.webapp',
+    action: 'read-no',
+  },
+  {
+    app: 'http://example.org/manifest.webapp',
+    action: 'write',
+  },
+  {
+    app: 'http://example.org/manifest.webapp',
+    action: 'read-yes',
+  },
+  // APP 2
+  {
+    app: 'https://example.com/manifest.webapp',
+    action: 'read-no',
+  },
+  {
+    app: 'https://example.com/manifest.webapp',
+    action: 'write',
+  },
+  {
+    app: 'https://example.com/manifest.webapp',
+    action: 'read-yes',
+  },
+  // Browser
+  {
+    browser: true,
+    action: 'read-no',
+  },
+  {
+    browser: true,
+    action: 'write',
+  },
+  {
+    browser: true,
+    action: 'read-yes',
+  },
+  // Clear APP 1
+  {
+    app: 'http://example.org/manifest.webapp',
+    action: 'clear',
+  },
+  // Clear APP 2
+  {
+    app: 'https://example.com/manifest.webapp',
+    action: 'clear',
+  },
+  // Clear Browser
+  {
+    browser: true,
+    action: 'clear',
+  },
+];
+
+function runTest()
+{
+  for (var i in gData) {
+    var iframe = document.createElement('iframe');
+    var data = gData[i];
+
+    if (data.app) {
+      iframe.setAttribute('mozbrowser', '');
+      iframe.setAttribute('mozapp', data.app);
+    } else if (data.browser) {
+      iframe.setAttribute('mozbrowser', '');
+    }
+
+    if (data.app || data.browser) {
+      iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
+        is(e.detail.message, "success", "test number " + i);
+
+        document.body.removeChild(iframe);
+
+        i++;
+        if (i >= gData.length) {
+          localStorage.clear();
+
+          SpecialPowers.removePermission("browser", window.document);
+
+          if (previousPrefs.mozBrowserFramesEnabled !== undefined) {
+            SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', previousPrefs.mozBrowserFramesEnabled);
+          }
+
+          SimpleTest.finish();
+        } else {
+          gTestRunner.next();
+        }
+      });
+    }
+
+    iframe.src = fileTestOnCurrentOrigin + "?" + data.action;
+
+    document.body.appendChild(iframe);
+
+    yield;
+  }
+}
+
+var gTestRunner = runTest();
+
+function startTest()
+{
+  is(localStorage.getItem("0"), null, "no data");
+  localStorage.setItem("0", "foo");
+  is(localStorage.getItem("0"), "foo", "data have been written");
+
+  gTestRunner.next();
+}
+
+addLoadEvent(startTest);
+
+</script>
+
+</head>
+
+<body>
+</body>
+</html>

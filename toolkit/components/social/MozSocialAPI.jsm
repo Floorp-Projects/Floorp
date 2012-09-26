@@ -125,6 +125,17 @@ function attachToWindow(provider, targetWindow) {
         chromeWindow.SocialFlyout.open(fullURL, offset, callback);
       }
     },
+    closePanel: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(toURL, offset, callback) {
+        let chromeWindow = getChromeWindow(targetWindow);
+        if (!chromeWindow.SocialFlyout || !chromeWindow.SocialFlyout.panel)
+          return;
+        chromeWindow.SocialFlyout.panel.hidePopup();
+      }
+    },
     getAttention: {
       enumerable: true,
       configurable: true,

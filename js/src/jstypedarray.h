@@ -49,117 +49,102 @@ class ArrayBufferObject : public JSObject
     static JSBool createDataViewForThis(JSContext *cx, unsigned argc, Value *vp);
 
     template<typename T>
-    static bool
-    createTypedArrayFromBufferImpl(JSContext *cx, CallArgs args);
+    static bool createTypedArrayFromBufferImpl(JSContext *cx, CallArgs args);
 
     template<typename T>
-    static JSBool
-    createTypedArrayFromBuffer(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool createTypedArrayFromBuffer(JSContext *cx, unsigned argc, Value *vp);
 
-    static void
-    obj_trace(JSTracer *trc, JSObject *obj);
+    static void obj_trace(JSTracer *trc, JSObject *obj);
 
-    static JSBool
-    obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                      MutableHandleObject objp, MutableHandleShape propp);
-    static JSBool
-    obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                       MutableHandleObject objp, MutableHandleShape propp);
-    static JSBool
-    obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
-                      MutableHandleObject objp, MutableHandleShape propp);
-    static JSBool
-    obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                      MutableHandleObject objp, MutableHandleShape propp);
+    static JSBool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
+                                    MutableHandleObject objp, MutableHandleShape propp);
+    static JSBool obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                                     MutableHandleObject objp, MutableHandleShape propp);
+    static JSBool obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
+                                    MutableHandleObject objp, MutableHandleShape propp);
+    static JSBool obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+                                    MutableHandleObject objp, MutableHandleShape propp);
 
-    static JSBool
-    obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-    static JSBool
-    obj_defineProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue v,
-                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-    static JSBool
-    obj_defineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v,
-                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-    static JSBool
-    obj_defineSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, HandleValue v,
-                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+    static JSBool obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
+                                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+    static JSBool obj_defineProperty(JSContext *cx, HandleObject obj,
+                                     HandlePropertyName name, HandleValue v,
+                                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+    static JSBool obj_defineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v,
+                                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+    static JSBool obj_defineSpecial(JSContext *cx, HandleObject obj,
+                                    HandleSpecialId sid, HandleValue v,
+                                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 
-    static JSBool
-    obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id, MutableHandleValue vp);
+    static JSBool obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                 HandleId id, MutableHandleValue vp);
 
-    static JSBool
-    obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name,
-                    MutableHandleValue vp);
+    static JSBool obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                  HandlePropertyName name, MutableHandleValue vp);
 
-    static JSBool
-    obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, MutableHandleValue vp);
-    static JSBool
-    obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
-                            MutableHandleValue vp, bool *present);
+    static JSBool obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                 uint32_t index, MutableHandleValue vp);
+    static JSBool obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                          uint32_t index, MutableHandleValue vp, bool *present);
 
-    static JSBool
-    obj_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid, MutableHandleValue vp);
+    static JSBool obj_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                 HandleSpecialId sid, MutableHandleValue vp);
 
-    static JSBool
-    obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp, JSBool strict);
-    static JSBool
-    obj_setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue vp, JSBool strict);
-    static JSBool
-    obj_setElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp, JSBool strict);
-    static JSBool
-    obj_setSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, MutableHandleValue vp, JSBool strict);
+    static JSBool obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
+                                 MutableHandleValue vp, JSBool strict);
+    static JSBool obj_setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                                  MutableHandleValue vp, JSBool strict);
+    static JSBool obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
+                                 MutableHandleValue vp, JSBool strict);
+    static JSBool obj_setSpecial(JSContext *cx, HandleObject obj,
+                                 HandleSpecialId sid, MutableHandleValue vp, JSBool strict);
 
-    static JSBool
-    obj_getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
-    static JSBool
-    obj_getPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
-    static JSBool
-    obj_getElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
-    static JSBool
-    obj_getSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
+    static JSBool obj_getGenericAttributes(JSContext *cx, HandleObject obj,
+                                           HandleId id, unsigned *attrsp);
+    static JSBool obj_getPropertyAttributes(JSContext *cx, HandleObject obj,
+                                            HandlePropertyName name, unsigned *attrsp);
+    static JSBool obj_getElementAttributes(JSContext *cx, HandleObject obj,
+                                           uint32_t index, unsigned *attrsp);
+    static JSBool obj_getSpecialAttributes(JSContext *cx, HandleObject obj,
+                                           HandleSpecialId sid, unsigned *attrsp);
 
-    static JSBool
-    obj_setGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
-    static JSBool
-    obj_setPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
-    static JSBool
-    obj_setElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
-    static JSBool
-    obj_setSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
+    static JSBool obj_setGenericAttributes(JSContext *cx, HandleObject obj,
+                                           HandleId id, unsigned *attrsp);
+    static JSBool obj_setPropertyAttributes(JSContext *cx, HandleObject obj,
+                                            HandlePropertyName name, unsigned *attrsp);
+    static JSBool obj_setElementAttributes(JSContext *cx, HandleObject obj,
+                                           uint32_t index, unsigned *attrsp);
+    static JSBool obj_setSpecialAttributes(JSContext *cx, HandleObject obj,
+                                           HandleSpecialId sid, unsigned *attrsp);
 
-    static JSBool
-    obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue rval, JSBool strict);
-    static JSBool
-    obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue rval, JSBool strict);
-    static JSBool
-    obj_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, MutableHandleValue rval, JSBool strict);
+    static JSBool obj_deleteProperty(JSContext *cx, HandleObject obj,
+                                     HandlePropertyName name, MutableHandleValue rval,
+                                     JSBool strict);
+    static JSBool obj_deleteElement(JSContext *cx, HandleObject obj,
+                                    uint32_t index, MutableHandleValue rval,
+                                    JSBool strict);
+    static JSBool obj_deleteSpecial(JSContext *cx, HandleObject obj,
+                                    HandleSpecialId sid, MutableHandleValue rval,
+                                    JSBool strict);
 
-    static JSBool
-    obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
-                  MutableHandleValue statep, MutableHandleId idp);
+    static JSBool obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
+                                MutableHandleValue statep, MutableHandleId idp);
 
-    static bool
-    stealContents(JSContext *cx, JSObject *obj, void **contents);
+    static void sweepAll(JSRuntime *rt);
 
-    static inline void
-    setElementsHeader(js::ObjectElements *header, uint32_t bytes);
+    static bool stealContents(JSContext *cx, JSObject *obj, void **contents);
 
-    void
-    addView(JSContext *cx, RawObject view);
+    static inline void setElementsHeader(js::ObjectElements *header, uint32_t bytes);
 
-    void
-    removeFinalizedView(FreeOp *fop, RawObject view);
+    void addView(JSContext *cx, RawObject view);
 
-    bool
-    allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
+    bool allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
 
     /*
      * Ensure that the data is not stored inline. Used when handing back a
      * GC-safe pointer.
      */
-    bool
-    uninlineData(JSContext *cx);
+    bool uninlineData(JSContext *cx);
 
     inline uint32_t byteLength() const;
 
@@ -174,6 +159,36 @@ class ArrayBufferObject : public JSObject
 };
 
 /*
+ * BufferView
+ *
+ * Common definitions shared by all ArrayBufferViews. (The name ArrayBufferView
+ * is currently being used for a namespace in jsfriendapi.h.)
+ */
+
+struct BufferView {
+    /* Offset of view in underlying ArrayBuffer */
+    static const size_t BYTEOFFSET_SLOT  = 0;
+
+    /* Byte length of view */
+    static const size_t BYTELENGTH_SLOT  = 1;
+
+    /* Underlying ArrayBuffer */
+    static const size_t BUFFER_SLOT      = 2;
+
+    /* ArrayBuffers point to a linked list of views, chained through this slot */
+    static const size_t NEXT_VIEW_SLOT   = 3;
+
+    /*
+     * When ArrayBuffers are traced during GC, they construct a linked list of
+     * ArrayBuffers with more than one view, chained through this slot of the
+     * first view of each ArrayBuffer
+     */
+    static const size_t NEXT_BUFFER_SLOT = 4;
+
+    static const size_t NUM_SLOTS        = 5;
+};
+
+/*
  * TypedArray
  *
  * The non-templated base class for the specific typed implementations.
@@ -181,7 +196,7 @@ class ArrayBufferObject : public JSObject
  * the subclasses.
  */
 
-struct TypedArray {
+struct TypedArray : public BufferView {
     enum {
         TYPE_INT8 = 0,
         TYPE_UINT8,
@@ -201,23 +216,16 @@ struct TypedArray {
         TYPE_MAX
     };
 
-    enum {
-        /* Properties of the typed array stored in reserved slots. */
-        FIELD_LENGTH = 0,
-        FIELD_BYTEOFFSET,
-        FIELD_BYTELENGTH,
-        FIELD_TYPE,
-        FIELD_BUFFER,
-        FIELD_NEXT_VIEW,
-        FIELD_MAX,
-        NUM_FIXED_SLOTS = 7
-    };
+    /*
+     * Typed array properties stored in slots, beyond those shared by all
+     * ArrayBufferViews.
+     */
+    static const size_t LENGTH_SLOT     = BufferView::NUM_SLOTS;
+    static const size_t TYPE_SLOT       = BufferView::NUM_SLOTS + 1;
+    static const size_t RESERVED_SLOTS  = BufferView::NUM_SLOTS + 2;
+    static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
 
-    // and MUST NOT be used to construct new objects.
     static Class classes[TYPE_MAX];
-
-    // These are the proto/original classes, used
-    // fo constructing new objects
     static Class protoClasses[TYPE_MAX];
 
     static JSBool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
@@ -229,15 +237,23 @@ struct TypedArray {
     static JSBool obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                                     MutableHandleObject objp, MutableHandleShape propp);
 
-    static JSBool obj_getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
-    static JSBool obj_getPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
-    static JSBool obj_getElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
-    static JSBool obj_getSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
+    static JSBool obj_getGenericAttributes(JSContext *cx, HandleObject obj,
+                                           HandleId id, unsigned *attrsp);
+    static JSBool obj_getPropertyAttributes(JSContext *cx, HandleObject obj,
+                                            HandlePropertyName name, unsigned *attrsp);
+    static JSBool obj_getElementAttributes(JSContext *cx, HandleObject obj,
+                                           uint32_t index, unsigned *attrsp);
+    static JSBool obj_getSpecialAttributes(JSContext *cx, HandleObject obj,
+                                           HandleSpecialId sid, unsigned *attrsp);
 
-    static JSBool obj_setGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
-    static JSBool obj_setPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
-    static JSBool obj_setElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
-    static JSBool obj_setSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
+    static JSBool obj_setGenericAttributes(JSContext *cx, HandleObject obj,
+                                           HandleId id, unsigned *attrsp);
+    static JSBool obj_setPropertyAttributes(JSContext *cx, HandleObject obj,
+                                            HandlePropertyName name, unsigned *attrsp);
+    static JSBool obj_setElementAttributes(JSContext *cx, HandleObject obj,
+                                           uint32_t index, unsigned *attrsp);
+    static JSBool obj_setSpecialAttributes(JSContext *cx, HandleObject obj,
+                                           HandleSpecialId sid, unsigned *attrsp);
 
     static inline Value bufferValue(JSObject *obj);
     static inline Value byteOffsetValue(JSObject *obj);
@@ -253,11 +269,9 @@ struct TypedArray {
     static inline void * viewData(JSObject *obj);
 
   public:
-    static bool
-    isArrayIndex(JSContext *cx, JSObject *obj, jsid id, uint32_t *ip = NULL);
+    static bool isArrayIndex(JSContext *cx, JSObject *obj, jsid id, uint32_t *ip = NULL);
 
-    static void
-    neuter(JSContext *cx, RawObject tarray);
+    static void neuter(JSContext *cx, RawObject tarray);
 
     static inline uint32_t slotWidth(int atype);
     static inline int slotWidth(JSObject *obj);
@@ -286,13 +300,9 @@ IsTypedArrayProtoClass(const Class *clasp)
            clasp < &TypedArray::protoClasses[TypedArray::TYPE_MAX];
 }
 
-class DataViewObject : public JSObject
+class DataViewObject : public JSObject, public BufferView
 {
 public:
-    static const size_t BYTEOFFSET_SLOT = 0;
-    static const size_t BYTELENGTH_SLOT = 1;
-    static const size_t BUFFER_SLOT     = 2;
-    static const size_t NEXT_VIEW_SLOT  = 3;
 
 private:
     static Class protoClass;
@@ -312,9 +322,8 @@ private:
     defineGetter(JSContext *cx, PropertyName *name, HandleObject proto);
 
   public:
-    // 4 slots + 1 private = 5, which gets rounded up to FINALIZE_OBJECT8,
-    // which is 7 non-private
-    static const size_t RESERVED_SLOTS  = 7;
+    static const size_t RESERVED_SLOTS = BufferView::NUM_SLOTS;
+    static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
 
     static inline Value bufferValue(DataViewObject &view);
     static inline Value byteOffsetValue(DataViewObject &view);
@@ -322,7 +331,8 @@ private:
 
     static JSBool class_constructor(JSContext *cx, unsigned argc, Value *vp);
     static JSBool constructWithProto(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool construct(JSContext *cx, JSObject *bufobj, const CallArgs &args, JSObject *proto);
+    static JSBool construct(JSContext *cx, JSObject *bufobj, const CallArgs &args,
+                            JSObject *proto);
 
     static inline DataViewObject *
     create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
@@ -375,9 +385,6 @@ private:
 
     static bool setFloat64Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
-
-    static void
-    obj_finalize(FreeOp *fop, JSObject *obj);
 
     inline uint32_t byteLength();
     inline uint32_t byteOffset();

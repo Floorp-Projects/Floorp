@@ -203,6 +203,7 @@
  "dom/tests/mochitest/localstorage/test_localStorageReplace.html": "",
  "dom/tests/mochitest/localstorage/test_removeOwnersAPI.html": "TIMED_OUT",
  "dom/tests/mochitest/localstorage/test_removeOwnersAPISessionOnly.html": "TIMED_OUT",
+ "dom/tests/mochitest/localstorage/test_appIsolation.html": "bug 793211",
  "dom/tests/mochitest/pointerlock/test_pointerlock-api.html": "TIMED_OUT",
  "dom/tests/mochitest/sessionstorage/test_sessionStorageClone.html": "",
  "dom/tests/mochitest/sessionstorage/test_sessionStorageHttpHttps.html": "TIMED_OUT",

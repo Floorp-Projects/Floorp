@@ -894,9 +894,9 @@ static void
 make_opaque (cairo_image_surface_t *image, cairo_rectangle_int_t src_r)
 {
     int x; int y;
-    for (y = src_r.y; y < src_r.height; y++) {
-        for (x = src_r.x; x < src_r.width; x++) {
-            image->data[y * image->stride + x*4 + 3] = 0xff;
+    for (y = 0; y < src_r.height; y++) {
+        for (x = 0; x < src_r.width; x++) {
+            image->data[(src_r.y + y) * image->stride + (src_r.x + x)*4 + 3] = 0xff;
         }
     }
 }

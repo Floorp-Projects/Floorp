@@ -11,6 +11,7 @@
 
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
 
 <script class="testbody" type="text/javascript">
 
@@ -96,12 +97,7 @@ function cleanCache(manifestURL)
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
-
-  var serv = Cc["@mozilla.org/network/application-cache-service;1"]
-             .getService(Ci.nsIApplicationCacheService);
-  var cache = serv.getActiveCache(manifestURL);
+  var cache = OfflineTest.getActiveCache(manifestURL);
   if (cache)
     cache.discard();
 }
