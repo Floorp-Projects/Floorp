@@ -108,9 +108,11 @@ public class FindInPageBar extends RelativeLayout implements TextWatcher, View.O
         switch (v.getId()) {
             case R.id.find_prev:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FindInPage:Prev", mFindText.getText().toString()));
+                getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
                 break;
             case R.id.find_next:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FindInPage:Next", mFindText.getText().toString()));
+                getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
                 break;
             case R.id.find_close:
                 hide();
