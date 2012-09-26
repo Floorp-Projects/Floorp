@@ -48,6 +48,9 @@ public:
   nsINode* GetEventTargetNode() const { return mNode; }
   // The latest CompositionEvent.data value except compositionstart event.
   const nsString& GetLastData() const { return mLastData; }
+  // Returns true if the composition is started with synthesized event which
+  // came from nsDOMWindowUtils.
+  bool IsSynthesizedForTests() const { return mIsSynthesizedForTests; }
 
   bool MatchesNativeContext(nsIWidget* aWidget) const;
   bool MatchesEventTarget(nsPresContext* aPresContext,
@@ -82,6 +85,9 @@ private:
   // mLastData stores the data attribute of the latest composition event (except
   // the compositionstart event).
   nsString mLastData;
+
+  // See the comment for IsSynthesizedForTests().
+  bool mIsSynthesizedForTests;
 
   // Hide the default constructor
   TextComposition() {}

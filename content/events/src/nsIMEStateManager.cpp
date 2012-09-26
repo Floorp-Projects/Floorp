@@ -508,16 +508,83 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
   if (sTextCompositions) {
     composition = sTextCompositions->GetCompositionFor(aWidget);
   }
+  if (!composition || !composition->IsSynthesizedForTests()) {
+    switch (aNotification) {
+      case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
+        return aWidget->ResetInputState();
+      case REQUEST_TO_COMMIT_COMPOSITION:
+        return composition ? aWidget->ResetInputState() : NS_OK;
+      case REQUEST_TO_CANCEL_COMPOSITION:
+        return composition ? aWidget->CancelIMEComposition() : NS_OK;
+      default:
+        MOZ_NOT_REACHED("Unsupported notification");
+        return NS_ERROR_INVALID_ARG;
+    }
+    MOZ_NOT_REACHED(
+      "Failed to handle the notification for non-synthesized composition");
+  }
+
+  // If the composition is synthesized events for automated tests, we should
+  // dispatch composition events for emulating the native composition behavior.
+  // NOTE: The dispatched events are discarded if it's not safe to run script.
   switch (aNotification) {
-    case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
-      return aWidget->ResetInputState();
-    case REQUEST_TO_COMMIT_COMPOSITION:
-      return composition ? aWidget->ResetInputState() : NS_OK;
-    case REQUEST_TO_CANCEL_COMPOSITION:
-      return composition ? aWidget->CancelIMEComposition() : NS_OK;
+    case REQUEST_TO_COMMIT_COMPOSITION: {
+      nsCOMPtr<nsIWidget> widget(aWidget);
+      TextComposition backup = *composition;
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      if (!backup.GetLastData().IsEmpty()) {
+        nsTextEvent textEvent(true, NS_TEXT_TEXT, widget);
+        textEvent.theText = backup.GetLastData();
+        textEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+        widget->DispatchEvent(&textEvent, status);
+        if (widget->Destroyed()) {
+          return NS_OK;
+        }
+      }
+
+      status = nsEventStatus_eIgnore;
+      nsCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
+      endEvent.data = backup.GetLastData();
+      endEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+      widget->DispatchEvent(&endEvent, status);
+
+      return NS_OK;
+    }
+    case REQUEST_TO_CANCEL_COMPOSITION: {
+      nsCOMPtr<nsIWidget> widget(aWidget);
+      TextComposition backup = *composition;
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      if (!backup.GetLastData().IsEmpty()) {
+        nsCompositionEvent updateEvent(true, NS_COMPOSITION_UPDATE, widget);
+        updateEvent.data = backup.GetLastData();
+        updateEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+        widget->DispatchEvent(&updateEvent, status);
+        if (widget->Destroyed()) {
+          return NS_OK;
+        }
+
+        status = nsEventStatus_eIgnore;
+        nsTextEvent textEvent(true, NS_TEXT_TEXT, widget);
+        textEvent.theText = backup.GetLastData();
+        textEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+        widget->DispatchEvent(&textEvent, status);
+        if (widget->Destroyed()) {
+          return NS_OK;
+        }
+      }
+
+      status = nsEventStatus_eIgnore;
+      nsCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
+      endEvent.data = backup.GetLastData();
+      endEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+      widget->DispatchEvent(&endEvent, status);
+
+      return NS_OK;
+    }
     default:
-      MOZ_NOT_REACHED("Unsupported notification");
-      return NS_ERROR_INVALID_ARG;
+      return NS_OK;
   }
 }
 
