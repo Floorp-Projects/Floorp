@@ -150,6 +150,7 @@ _VALGRIND_DIR = $(DEPTH)/_valgrind
 GARBAGE_DIRS += $(_VALGRIND_DIR)
 
 _VALGRIND_FILES = \
+		$(topsrcdir)/build/valgrind/cross-architecture.sup \
 		$(topsrcdir)/build/valgrind/i386-redhat-linux-gnu.sup \
 		$(topsrcdir)/build/valgrind/x86_64-redhat-linux-gnu.sup \
 		$(NULL)
