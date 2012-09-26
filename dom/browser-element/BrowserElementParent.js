@@ -13,6 +13,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "DOMApplicationRegistry", function () {
+  Cu.import("resource://gre/modules/Webapps.jsm");
+  return DOMApplicationRegistry;
+});
+
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 const BROWSER_FRAMES_ENABLED_PREF = "dom.mozBrowserFramesEnabled";
 const TOUCH_EVENTS_ENABLED_PREF = "dom.w3c_touch_events.enabled";
@@ -250,6 +255,18 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
 
   // Insert ourself into the prompt service.
   BrowserElementPromptService.mapFrameToBrowserElementParent(this._frameElement, this);
+
+  // If this browser represents an app then let the Webapps module register for
+  // any messages that it needs.
+  let appManifestURL =
+    this._frameElement.QueryInterface(Ci.nsIMozBrowserFrame).appManifestURL;
+  if (appManifestURL) {
+    let appId =
+      DOMApplicationRegistry.getAppLocalIdByManifestURL(appManifestURL);
+    if (appId != Ci.nsIScriptSecurityManager.NO_APP_ID) {
+      DOMApplicationRegistry.registerBrowserElementParentForApp(this, appId);
+    }
+  }
 }
 
 BrowserElementParent.prototype = {

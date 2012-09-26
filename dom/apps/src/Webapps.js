@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
+Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -317,6 +318,14 @@ WebappsApplication.prototype = {
                                                  oid: this._id,
                                                  requestID: this.getRequestId(request) });
     return request;
+  },
+
+  clearBrowserData: function() {
+    let browserChild =
+      BrowserElementPromptService.getBrowserElementChildForWindow(this._window);
+    if (browserChild) {
+      browserChild.messageManager.sendAsyncMessage("Webapps:ClearBrowserData");
+    }
   },
 
   uninit: function() {
