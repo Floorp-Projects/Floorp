@@ -266,7 +266,9 @@ class Descriptor(DescriptorProvider):
         self.customTrace = desc.get('customTrace', self.workers)
         self.customFinalize = desc.get('customFinalize', self.workers)
         self.wrapperCache = (not self.interface.isCallback() and
-                             (self.workers or desc.get('wrapperCache', True)))
+                             (self.workers or
+                              (self.nativeOwnership != 'owned' and
+                               desc.get('wrapperCache', True))))
 
         if not self.wrapperCache and self.prefable:
             raise TypeError("Descriptor for %s is prefable but not wrappercached" %
