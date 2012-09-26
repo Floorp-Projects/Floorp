@@ -1592,7 +1592,6 @@ WebGLContext::GetSupportedExtensions(Nullable< nsTArray<nsString> > &retval)
         arr.AppendElement(NS_LITERAL_STRING("OES_standard_derivatives"));
     if (IsExtensionSupported(EXT_texture_filter_anisotropic)) {
         arr.AppendElement(NS_LITERAL_STRING("EXT_texture_filter_anisotropic"));
-        arr.AppendElement(NS_LITERAL_STRING("MOZ_EXT_texture_filter_anisotropic"));
     }
     if (IsExtensionSupported(WEBGL_lose_context))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"));
