@@ -53,7 +53,6 @@ static PRLogModuleInfo *gCompressedImageAccountingLog = PR_NewLogModule ("Compre
 // Tweakable progressive decoding parameters.  These are initialized to 0 here
 // because otherwise, we have to initialize them in a static initializer, which
 // makes us slower to start up.
-static bool gInitializedPrefCaches = false;
 static uint32_t gDecodeBytesAtATime = 0;
 static uint32_t gMaxMSBeforeYield = 0;
 
@@ -64,7 +63,6 @@ InitPrefCaches()
                                "image.mem.decode_bytes_at_a_time", 200000);
   Preferences::AddUintVarCache(&gMaxMSBeforeYield,
                                "image.mem.max_ms_before_yield", 400);
-  gInitializedPrefCaches = true;
 }
 
 /* We define our own error checking macros here for 2 reasons:
@@ -181,10 +179,6 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   // Statistics
   num_containers++;
 
-  // Register our pref observers if we haven't yet.
-  if (NS_UNLIKELY(!gInitializedPrefCaches)) {
-    InitPrefCaches();
-  }
 }
 
 //******************************************************************************
@@ -222,6 +216,16 @@ RasterImage::~RasterImage()
   // Total statistics
   num_containers--;
   total_source_bytes -= mSourceData.Length();
+}
+
+void
+RasterImage::Initialize()
+{
+  InitPrefCaches();
+
+  // Create our singletons now, so we don't have to worry about what thread
+  // they're created on.
+  DecodeWorker::Singleton();
 }
 
 nsresult
