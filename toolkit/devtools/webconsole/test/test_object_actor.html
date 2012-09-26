@@ -1,0 +1,172 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the object actor</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the object actor</p>
+
+<script type="text/javascript;version=1.8">
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+SimpleTest.waitForExplicitFinish();
+
+let expectedProps = [];
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole(["ConsoleAPI"], onAttach);
+}
+
+function onAttach(aState, aResponse)
+{
+  onConsoleCall = onConsoleCall.bind(null, aState);
+  aState.dbgClient.addListener("consoleAPICall", onConsoleCall);
+
+  window.foobarObject = Object.create(null);
+  foobarObject.foo = 1;
+  foobarObject.foobar = "hello";
+  foobarObject.foobaz = document;
+  foobarObject.omg = null;
+  foobarObject.testfoo = false;
+  foobarObject.notInspectable = {};
+  foobarObject.omgfn = function _omgfn() {
+    return "myResult";
+  };
+  foobarObject.abArray = ["a", "b"];
+
+  Object.defineProperty(foobarObject, "getterAndSetter", {
+    enumerable: true,
+    get: function fooGet() { return "foo"; },
+    set: function fooSet() { 1+2 },
+  });
+
+  console.log("hello", foobarObject);
+
+  expectedProps = [
+    {
+      name: "abArray",
+      value: {
+        type: "object",
+        className: "Array",
+        actor: /[a-z]/,
+        inspectable: true,
+      },
+    },
+    {
+      name: "foo",
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: 1,
+    },
+    {
+      name: "foobar",
+      value: "hello",
+    },
+    {
+      name: "foobaz",
+      value: {
+        type: "object",
+        className: "HTMLDocument",
+        displayString: /\[object HTMLDocument/,
+        inspectable: true,
+        actor: /[a-z]/,
+      },
+    },
+    {
+      name: "getterAndSetter",
+      get: {
+        type: "function",
+        className: "function",
+        displayString: /function fooGet/,
+        actor: /[a-z]/,
+        inspectable: false,
+      },
+      set: {
+        type: "function",
+        className: "function",
+        displayString: /function fooSet/,
+        actor: /[a-z]/,
+        inspectable: false,
+      },
+    },
+    {
+      name: "notInspectable",
+      value: {
+        type: "object",
+        className: "Object",
+        actor: /[a-z]/,
+        inspectable: false,
+      },
+    },
+    {
+      name: "omg",
+      value: { type: "null" },
+    },
+    {
+      name: "omgfn",
+      value: {
+        type: "function",
+        className: "function",
+        displayString: /function _omgfn/,
+        actor: /[a-z]/,
+        inspectable: false,
+      },
+    },
+    {
+      name: "testfoo",
+      value: false,
+    },
+  ];
+}
+
+function onConsoleCall(aState, aType, aPacket)
+{
+  is(aPacket.from, aState.actor, "console API call actor");
+
+  info("checking the console API call packet");
+
+  checkConsoleAPICall(aPacket.message, {
+    level: "log",
+    filename: /test_object_actor/,
+    functionName: "onAttach",
+    arguments: ["hello", {
+      type: "object",
+      actor: /[a-z]/,
+      inspectable: true,
+    }],
+  });
+
+  aState.dbgClient.removeListener("consoleAPICall", onConsoleCall);
+
+  info("inspecting object properties");
+  let args = aPacket.message.arguments;
+  onProperties = onProperties.bind(null, aState);
+  aState.client.inspectObjectProperties(args[1].actor, onProperties);
+}
+
+function onProperties(aState, aResponse)
+{
+  let props = aResponse.properties;
+  is(props.length, expectedProps.length,
+     "number of enumerable properties");
+  checkObject(props, expectedProps);
+
+  expectedProps = [];
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
