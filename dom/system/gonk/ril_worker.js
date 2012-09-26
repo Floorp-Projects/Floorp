@@ -1461,11 +1461,10 @@ let RIL = {
     }
 
     function error(options) {
-      // TODO: Error handling should be addressed in Bug 787477
       delete options.callback;
       delete options.onerror;
       options.rilMessageType = "icccontacts";
-      options.contacts = [];
+      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
       this.sendDOMMessage(options);
     }
 
@@ -1554,9 +1553,8 @@ let RIL = {
    */
   getICCContacts: function getICCContacts(options) {
     if (!this.appType) {
-      // TODO: Error handling should be addressed in Bug 787477
       options.rilMessageType = "icccontacts";
-      options.contacts = [];
+      options.errorMsg = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
       this.sendDOMMessage(options);
     }
 
@@ -1602,11 +1600,10 @@ let RIL = {
     }
 
     function error(options) {
-      // TODO: Error handling should be addressed in Bug 787477
       delete options.callback;
       delete options.onerror;
       options.rilMessageType = "icccontacts";
-      options.contacts = [];
+      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
       this.sendDOMMessage(options);
     }
 
@@ -2147,8 +2144,6 @@ let RIL = {
    * @param [optional] itemIdentifier
    * @param [optional] input
    * @param [optional] isYesNo
-   * @param [optional] isUCS2
-   * @param [optional] isPacked
    * @param [optional] hasConfirmed
    */
   sendStkTerminalResponse: function sendStkTerminalResponse(response) {
@@ -2159,13 +2154,14 @@ let RIL = {
 
     let token = Buf.newParcel(REQUEST_STK_SEND_TERMINAL_RESPONSE);
     let textLen = 0;
+    let command = response.command;
     if (response.resultCode != STK_RESULT_HELP_INFO_REQUIRED) {
       if (response.isYesNo) {
         textLen = 1;
       } else if (response.input) {
-        if (response.isUCS2) {
+        if (command.options.isUCS2) {
           textLen = response.input.length * 2;
-        } else if (response.isPacked) {
+        } else if (command.options.isPacked) {
           let bits = response.input.length * 7;
           textLen = bits * 7 / 8 + (bits % 8 ? 1 : 0);
         } else {
@@ -2187,9 +2183,9 @@ let RIL = {
                                COMPREHENSIONTLV_FLAG_CR);
     GsmPDUHelper.writeHexOctet(3);
     if (response.command) {
-      GsmPDUHelper.writeHexOctet(response.command.commandNumber);
-      GsmPDUHelper.writeHexOctet(response.command.typeOfCommand);
-      GsmPDUHelper.writeHexOctet(response.command.commandQualifier);
+      GsmPDUHelper.writeHexOctet(command.commandNumber);
+      GsmPDUHelper.writeHexOctet(command.typeOfCommand);
+      GsmPDUHelper.writeHexOctet(command.commandQualifier);
     } else {
       GsmPDUHelper.writeHexOctet(0x00);
       GsmPDUHelper.writeHexOctet(0x00);
@@ -2240,8 +2236,10 @@ let RIL = {
         GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TEXT_STRING |
                                    COMPREHENSIONTLV_FLAG_CR);
         GsmPDUHelper.writeHexOctet(textLen + 1); // +1 for coding
-        let coding = response.isUCS2 ? STK_TEXT_CODING_UCS2 :
-                       (response.isPacked ? STK_TEXT_CODING_GSM_7BIT_PACKED :
+        let coding = command.options.isUCS2 ?
+                       STK_TEXT_CODING_UCS2 :
+                       (command.options.isPacked ?
+                          STK_TEXT_CODING_GSM_7BIT_PACKED :
                           STK_TEXT_CODING_GSM_8BIT);
         GsmPDUHelper.writeHexOctet(coding);
 
@@ -5620,6 +5618,9 @@ let StkCommandParamsFactory = {
   createParam: function createParam(cmdDetails, ctlvs) {
     let param;
     switch (cmdDetails.typeOfCommand) {
+      case STK_CMD_SET_UP_EVENT_LIST:
+        param = this.processSetUpEventList(cmdDetails, ctlvs);
+        break;
       case STK_CMD_SET_UP_MENU:
       case STK_CMD_SELECT_ITEM:
         param = this.processSelectItem(cmdDetails, ctlvs);
@@ -5653,6 +5654,27 @@ let StkCommandParamsFactory = {
         break;
     }
     return param;
+  },
+
+  /**
+   * Construct a param for Set Up Event list.
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processSetUpEventList: function processSetUpEventList(cmdDetails, ctlvs) {
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_EVENT_LIST, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        command: cmdDetails,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Event List: Required value missing : Event List");
+    }
+
+    return ctlv.value || {eventList: null};
   },
 
   /**
@@ -5923,6 +5945,8 @@ let StkProactiveCmdHelper = {
         return this.retrieveResponseLength(length);
       case COMPREHENSIONTLV_TAG_DEFAULT_TEXT:
         return this.retrieveDefaultText(length);
+      case COMPREHENSIONTLV_TAG_EVENT_LIST:
+        return this.retrieveEventList(length);
       case COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE:
         return this.retrieveImmediaResponse(length);
       case COMPREHENSIONTLV_TAG_URL:
@@ -6095,6 +6119,21 @@ let StkProactiveCmdHelper = {
    */
   retrieveDefaultText: function retrieveDefaultText(length) {
     return this.retrieveTextString(length);
+  },
+
+  /**
+   * Event List.
+   */
+  retrieveEventList: function retrieveEventList(length) {
+    if (!length) {
+      // null means an indication to ME to remove the existing list of events
+      // in ME.
+      return null;
+    }
+
+    return {
+      eventList: GsmPDUHelper.readHexOctetArray(length)
+    };
   },
 
   /**

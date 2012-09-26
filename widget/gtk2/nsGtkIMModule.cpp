@@ -24,10 +24,6 @@
 #include "mozilla/Services.h"
 #endif
 
-#if (MOZ_WIDGET_GTK == 2)
-#include "gtk2compat.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::widget;
 

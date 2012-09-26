@@ -65,14 +65,14 @@ class CrashGenerationServer {
 
   typedef void (*OnClientExitingCallback)(void *context,
                                           const ClientInfo &client_info);
+  // If a FilterCallback returns false, the dump will not be written.
   typedef bool (*FilterCallback)(void *context);
 
   // Create an instance with the given parameters.
   //
   // mach_port_name: Named server port to listen on.
-  // filter: Callback for a client to know that we are about to write a dump
-  // and mabybe prevent it.
-  // filter_context: Context for the filte callback.
+  // filter: Callback for a client to cancel writing a dump.
+  // filter_context: Context for the filter callback.
   // dump_callback: Callback for a client crash dump request.
   // dump_context: Context for client crash dump request callback.
   // exit_callback: Callback for client process exit.
