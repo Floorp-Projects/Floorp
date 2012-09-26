@@ -89,6 +89,13 @@ TextComposition::SynthesizeCommit(bool aDiscard)
   composition.DispatchCompsotionEventRunnable(NS_COMPOSITION_END, data);
 }
 
+nsresult
+TextComposition::NotifyIME(widget::NotificationToIME aNotification)
+{
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_AVAILABLE);
+  return nsIMEStateManager::NotifyIME(aNotification, mPresContext);
+}
+
 /******************************************************************************
  * TextComposition::CompositionEventDispatcher
  ******************************************************************************/
