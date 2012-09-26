@@ -297,20 +297,20 @@ TestObserver::OnAddStream(nsIDOMMediaStream *stream, const char *type)
 
   nsDOMMediaStream *ms = static_cast<nsDOMMediaStream *>(stream);
 
-  cout << "OnAddStream called hints=" << ms->GetHintContents() << endl;
-  state = stateSuccess;
+  cout << "OnAddStream called hints=" << ms->GetHintContents() << " type=" << type << " thread=" <<
+    PR_GetCurrentThread() << endl ;
+
   onAddStreamCalled = true;
+
+  streams.push_back(ms);
 
   // We know that the media stream is secretly a Fake_SourceMediaStream,
   // so now we can start it pulling from us
   Fake_SourceMediaStream *fs = static_cast<Fake_SourceMediaStream *>(ms->GetStream());
 
-  nsresult ret;
   test_utils->sts_target()->Dispatch(
-    WrapRunnableRet(fs, &Fake_SourceMediaStream::Start, &ret),
-    NS_DISPATCH_SYNC);
-
-  streams.push_back(ms);
+    WrapRunnable(fs, &Fake_SourceMediaStream::Start),
+    NS_DISPATCH_NORMAL);
 
   return NS_OK;
 }
@@ -475,14 +475,15 @@ class ParsedSDP {
 
 class SignalingAgent {
  public:
-  SignalingAgent() {
-    Init();
-  }
+  SignalingAgent() : pc(nullptr) {}
+
   ~SignalingAgent() {
-    Close();
+    pc->GetMainThread()->Dispatch(
+      WrapRunnable(this, &SignalingAgent::Close),
+      NS_DISPATCH_SYNC);
   }
 
-  void Init()
+  void Init(nsCOMPtr<nsIThread> thread)
   {
     size_t found = 2;
     ASSERT_TRUE(found > 0);
@@ -493,7 +494,7 @@ class SignalingAgent {
     pObserver = new TestObserver(pc);
     ASSERT_TRUE(pObserver);
 
-    ASSERT_EQ(pc->Initialize(pObserver, nullptr, nullptr), NS_OK);
+    ASSERT_EQ(pc->Initialize(pObserver, nullptr, thread), NS_OK);
 
     ASSERT_TRUE_WAIT(sipcc_state() == sipcc::PeerConnectionImpl::kStarted,
                      kDefaultTimeout);
@@ -520,7 +521,10 @@ class SignalingAgent {
   void Close()
   {
     cout << "Close" << endl;
+
     pc->Close(false);
+    pc = nullptr;
+
     // Shutdown is synchronous evidently.
     // ASSERT_TRUE(pObserver->WaitForObserverCall());
     // ASSERT_EQ(pc->sipcc_state(), sipcc::PeerConnectionInterface::kIdle);
@@ -794,6 +798,24 @@ class SignalingEnvironment : public ::testing::Environment {
 
 class SignalingTest : public ::testing::Test {
 public:
+  static void SetUpTestCase() {
+    nsIThread *thread;
+
+    nsresult rv = NS_NewThread(&thread);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+    gThread = thread;
+  }
+
+  void SetUp() {
+    a1_.Init(gThread);
+    a2_.Init(gThread);
+  }
+
+  static void TearDownTestCase() {
+    gThread = nullptr;
+  }
+
   void CreateOffer(sipcc::MediaConstraints& constraints,
                    uint32_t offerFlags, uint32_t sdpCheck) {
     a1_.CreateOffer(constraints, offerFlags, sdpCheck);
@@ -882,9 +904,12 @@ public:
   }
 
  protected:
+  static nsCOMPtr<nsIThread> gThread;
   SignalingAgent a1_;  // Canonically "caller"
   SignalingAgent a2_;  // Canonically "callee"
 };
+
+nsCOMPtr<nsIThread> SignalingTest::gThread;
 
 
 TEST_F(SignalingTest, JustInit)
@@ -1232,6 +1257,7 @@ TEST_F(SignalingTest, FullCallTrickle)
   OfferAnswerTrickle(constraints, constraints,
                      SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
 
+  std::cerr << "ICE handshake completed" << std::endl;
   PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
 
   a1_.CloseSendStreams();
