@@ -18,12 +18,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-                                  "resource:///modules/WebConsoleUtils.jsm");
+                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "l10n", function() {
-  return WebConsoleUtils.l10n;
-});
-
+const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
+let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 var EXPORTED_SYMBOLS = ["HUDService"];
 
@@ -172,7 +170,10 @@ HUD_SERVICE.prototype =
     let hud = this.getHudReferenceById(hudId);
     let document = hud.chromeDocument;
 
-    hud.destroy();
+    hud.destroy(function() {
+      let id = WebConsoleUtils.supportsString(hudId);
+      Services.obs.notifyObservers(id, "web-console-destroyed", null);
+    });
 
     delete this.hudReferences[hudId];
 
@@ -199,9 +200,6 @@ HUD_SERVICE.prototype =
     contentWindow.focus();
 
     HeadsUpDisplayUICommands.refreshCommand();
-
-    let id = WebConsoleUtils.supportsString(hudId);
-    Services.obs.notifyObservers(id, "web-console-destroyed", null);
   },
 
   /**
@@ -539,7 +537,7 @@ WebConsole.prototype = {
    * @type array
    */
   _messageListeners: ["JSTerm:EvalObject", "WebConsole:ConsoleAPI",
-    "WebConsole:CachedMessages", "WebConsole:PageError", "JSTerm:EvalResult",
+    "WebConsole:CachedMessages", "WebConsole:Initialized", "JSTerm:EvalResult",
     "JSTerm:AutocompleteProperties", "JSTerm:ClearOutput",
     "JSTerm:InspectObject", "WebConsole:NetworkActivity",
     "WebConsole:FileActivity", "WebConsole:LocationChange",
@@ -926,8 +924,7 @@ WebConsole.prototype = {
     }, this);
 
     let message = {
-      features: ["ConsoleAPI", "JSTerm", "PageError", "NetworkMonitor",
-                 "LocationChange"],
+      features: ["ConsoleAPI", "JSTerm", "NetworkMonitor", "LocationChange"],
       cachedMessages: ["ConsoleAPI", "PageError"],
       NetworkMonitor: { monitorFileActivity: true },
       JSTerm: { notifyNonNativeConsoleAPI: true },
@@ -938,19 +935,6 @@ WebConsole.prototype = {
     };
 
     this.sendMessageToContent("WebConsole:Init", message);
-  },
-
-  /**
-   * Callback method for when the Web Console initialization is complete. For
-   * now this method sends the web-console-created notification using the
-   * nsIObserverService.
-   *
-   * @private
-   */
-  _onInitComplete: function WC__onInitComplete()
-  {
-    let id = WebConsoleUtils.supportsString(this.hudId);
-    Services.obs.notifyObservers(id, "web-console-created", null);
   },
 
   /**
@@ -1051,8 +1035,12 @@ WebConsole.prototype = {
   /**
    * Destroy the object. Call this method to avoid memory leaks when the Web
    * Console is closed.
+   *
+   * @param function [aOnDestroy]
+   *        Optional function to invoke when the Web Console instance is
+   *        destroyed.
    */
-  destroy: function WC_destroy()
+  destroy: function WC_destroy(aOnDestroy)
   {
     this.sendMessageToContent("WebConsole:Destroy", {});
 
@@ -1072,24 +1060,31 @@ WebConsole.prototype = {
       }
     }
 
+    let onDestroy = function WC_onDestroyUI() {
+      // Remove the iframe and the consolePanel if the Web Console is inside a
+      // floating panel.
+      if (this.consolePanel && this.consolePanel.parentNode) {
+        this.consolePanel.hidePopup();
+        this.consolePanel.parentNode.removeChild(this.consolePanel);
+        this.consolePanel = null;
+      }
+
+      if (this.iframe.parentNode) {
+        this.iframe.parentNode.removeChild(this.iframe);
+      }
+
+      if (this.splitter.parentNode) {
+        this.splitter.parentNode.removeChild(this.splitter);
+      }
+
+      aOnDestroy && aOnDestroy();
+    }.bind(this);
+
     if (this.ui) {
-      this.ui.destroy();
+      this.ui.destroy(onDestroy);
     }
-
-    // Remove the iframe and the consolePanel if the Web Console is inside a
-    // floating panel.
-    if (this.consolePanel && this.consolePanel.parentNode) {
-      this.consolePanel.hidePopup();
-      this.consolePanel.parentNode.removeChild(this.consolePanel);
-      this.consolePanel = null;
-    }
-
-    if (this.iframe.parentNode) {
-      this.iframe.parentNode.removeChild(this.iframe);
-    }
-
-    if (this.splitter.parentNode) {
-      this.splitter.parentNode.removeChild(this.splitter);
+    else {
+      onDestroy();
     }
   },
 };
