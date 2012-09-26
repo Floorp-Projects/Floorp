@@ -90,7 +90,9 @@ interface imgITools : nsISupports
      * document.
      *
      * @param doc
-     *        A document. Must not be null.
+     *        A document. Null is allowed, but must _only_ be passed
+     *        when there is no way to obtain a relevant document for
+     *        the current context in which a cache is desired.
      */
     imgICache getImgCacheForDocument(in nsIDOMDocument doc);
 
