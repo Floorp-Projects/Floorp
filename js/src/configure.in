@@ -596,8 +596,6 @@ if test -n "$_WIN32_MSVC"; then
     # Windows lacks <stdint.h>, but has __int8, and so on.
     AC_DEFINE(JS_HAVE___INTN)
     AC_DEFINE(HAVE_LOCALECONV)
-    AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
-    AC_DEFINE(HAVE_GETSYSTEMTIMEASFILETIME)
 
     # Windows <stddef.h> defines intptr_t and uintptr_t.
     # VS2005: http://msdn.microsoft.com/en-us/library/323b6b3k(VS.80).aspx
@@ -1865,7 +1863,6 @@ ia64*-hpux*)
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
         fi
 
-        MOZ_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
     x86_64-*)
@@ -2545,11 +2542,6 @@ dnl Quota support
 MOZ_CHECK_HEADERS(sys/quota.h)
 MOZ_CHECK_HEADERS(linux/quota.h)
 
-dnl Try for MMX support
-dnl NB - later gcc versions require -mmmx for this header to be successfully
-dnl included (or another option which implies it, such as -march=pentium-mmx)
-MOZ_CHECK_HEADERS(mmintrin.h)
-
 dnl Check whether the compiler supports the new-style C++ standard
 dnl library headers (i.e. <new>) or needs the old "new.h"
 AC_LANG_CPLUSPLUS
@@ -2769,22 +2761,6 @@ AC_FUNC_MEMCMP
 AC_CHECK_FUNCS([fchmod flockfile getc_unlocked _getc_nolock getpagesize \
                 lchown localtime_r lstat64 memmove random rint sbrk snprintf \
                 stat64 statvfs statvfs64 strerror strtok_r truncate64])
-
-dnl Windows functions, for mingw.
-AC_TRY_LINK([#include <windows.h>],
-             [SYSTEMTIME st;FILETIME ft;SystemTimeToFileTime(&st,&ft);],
-             ac_cv_have_systemtimetofiletime="yes",
-             ac_cv_have_systemtimetofiletime="no")
-if test "$ac_cv_have_systemtimetofiletime" = "yes"; then
-    AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
-fi
-AC_TRY_LINK([#include <windows.h>],
-             [FILETIME ft;GetSystemTimeAsFileTime(&ft);],
-             ac_cv_have_getsystemtimeasfiletime="yes",
-             ac_cv_have_getsystemtimeasfiletime="no")
-if test "$ac_cv_have_getsystemtimeasfiletime" = "yes"; then
-    AC_DEFINE(HAVE_GETSYSTEMTIMEASFILETIME)
-fi
 
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================

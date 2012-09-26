@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>slave for app isolation test</title>
+  <script type="text/javascript">
+  var success = false;
+
+  var action = window.location.search.substring(1);
+
+  switch (action) {
+    case "read-no":
+      if (localStorage.getItem("0") == null) {
+        success = true;
+      }
+      break;
+    case "write":
+      localStorage.setItem("0", "foo");
+      success = true;
+      break;
+    case "read-yes":
+      if (localStorage.getItem("0") == "foo") {
+        success = true;
+      }
+      break;
+    case "clear":
+      localStorage.clear();
+      success = true;
+      break;
+  }
+  success ? alert("success") : alert("failure");
+  </script>
+</head>
+
+<body>
+</body>
+</html>

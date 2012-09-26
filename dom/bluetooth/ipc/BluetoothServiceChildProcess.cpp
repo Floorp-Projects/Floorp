@@ -203,23 +203,16 @@ BluetoothServiceChildProcess::RemoveDeviceInternal(
 
 nsresult
 BluetoothServiceChildProcess::GetSocketViaService(
-                                              const nsAString& aObjectPath,
-                                              const nsAString& aService,
-                                              int aType,
-                                              bool aAuth,
-                                              bool aEncrypt,
-                                              BluetoothReplyRunnable* aRunnable)
+                                       const nsAString& aObjectPath,
+                                       const nsAString& aService,
+                                       BluetoothSocketType aType,
+                                       bool aAuth,
+                                       bool aEncrypt,
+                                       mozilla::ipc::UnixSocketConsumer* aConsumer,
+                                       BluetoothReplyRunnable* aRunnable)
 {
-  MOZ_NOT_REACHED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-bool
-BluetoothServiceChildProcess::CloseSocket(int aFd,
-                                          BluetoothReplyRunnable* aRunnable)
-{
-  MOZ_NOT_REACHED("Implement me!");
-  return false;
+  MOZ_NOT_REACHED("This should never be called!");
+  return NS_ERROR_FAILURE;
 }
 
 bool

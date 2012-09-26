@@ -68,13 +68,13 @@ class SUTCli(object):
                                   'help_args': '<remote>',
                                   'help': 'list files on device'
                                 },
-                          'rm': { 'function': lambda file: self.dm.removeFile(file),
+                          'rm': { 'function': lambda f: self.dm.removeFile(f),
                                     'min_args': 1,
                                     'max_args': 1,
                                     'help_args': '<remote>',
                                     'help': 'remove file from device'
                                 },
-                          'rmdir': { 'function': lambda dir: self.dm.removeDir(dir),
+                          'rmdir': { 'function': lambda d: self.dm.removeDir(d),
                                     'min_args': 1,
                                     'max_args': 1,
                                     'help_args': '<remote>',

@@ -46,6 +46,9 @@
 // Required for using placement new.
 #include <new>
 
+// HACK WARNING - Workaround for Windows 8 since we don't have the windows 8 SDK.
+#include "moz-d2d1-1.h"
+
 #define CAIRO_INT_STATUS_SUCCESS (cairo_int_status_t)CAIRO_STATUS_SUCCESS
 
 struct Vertex
@@ -900,19 +903,38 @@ push_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_path_t *clip_path)
 	hr = d2dsurf->rt->CreateLayer (&layer);
 
 	D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
+	D2D1_LAYER_OPTIONS1 options1 =  D2D1_LAYER_OPTIONS1_NONE;
+
 	if (d2dsurf->base.content == CAIRO_CONTENT_COLOR) {
 	    options = D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE;
+	    options1 = D2D1_LAYER_OPTIONS1_IGNORE_ALPHA;
+	    options1 = D2D1_LAYER_OPTIONS1_INITIALIZE_FROM_BACKGROUND;
 	}
 
-	d2dsurf->rt->PushLayer(D2D1::LayerParameters(
-		    D2D1::InfiniteRect(),
-		    geom,
-		    D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
-		    D2D1::IdentityMatrix(),
-		    1.0,
-		    0,
-		    options),
-		layer);
+	RefPtr<ID2D1DeviceContext> dc;
+	hr = d2dsurf->rt->QueryInterface(IID_ID2D1DeviceContext, (void**)&dc);
+
+	if (FAILED(hr)) {
+	    d2dsurf->rt->PushLayer(D2D1::LayerParameters(
+				       D2D1::InfiniteRect(),
+				       geom,
+				       D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
+				       D2D1::IdentityMatrix(),
+				       1.0,
+				       0,
+				       options),
+				   layer);
+	} else {
+	    dc->PushLayer(D2D1::LayerParameters1(
+			      D2D1::InfiniteRect(),
+			      geom,
+			      D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
+			      D2D1::IdentityMatrix(),
+			      1.0,
+			      0,
+			      options1),
+			  layer);
+	}
 
 	d2dsurf->d2d_clip = new d2d_clip_t(d2dsurf->d2d_clip, d2d_clip_t::LAYER);
    }

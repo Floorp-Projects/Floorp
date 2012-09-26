@@ -3401,7 +3401,6 @@ html|*#gcli-output-frame {
   height: 32px;
   border-radius: 2px;
   margin: 10px;
-  list-style-image: url("chrome://browser/skin/social/social.png");
 }
 
 #social-statusarea-username {
@@ -3412,6 +3411,7 @@ html|*#gcli-output-frame {
   cursor: pointer;
   min-width: 0;
   margin: 0 6px;
+  list-style-image: none;
 }
 #social-statusarea-username:hover {
   text-decoration: underline;
@@ -3470,6 +3470,7 @@ html|*#gcli-output-frame {
   width: 100%;
   margin: 0;
   padding: 2px;
+  -moz-padding-start: 6px;
   border: none;
   border-bottom: 1px solid gray;
   cursor: pointer;

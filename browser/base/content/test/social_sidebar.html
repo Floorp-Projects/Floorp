@@ -11,6 +11,9 @@
             case "test-flyout-open":
               navigator.mozSocial.openPanel("social_flyout.html");
               break;
+            case "test-flyout-close":
+              navigator.mozSocial.closePanel();
+              break;
             case "test-chatbox-open":
               var url = "social_chat.html";
               var data = e.data.data;
