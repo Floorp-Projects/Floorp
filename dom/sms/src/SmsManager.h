@@ -31,7 +31,7 @@ public:
                                            nsDOMEventTargetHelper)
 
   static already_AddRefed<SmsManager>
-  CheckPermissionAndCreateInstance(nsPIDOMWindow *aWindow);
+  CreateInstanceIfAllowed(nsPIDOMWindow *aWindow);
 
   void Init(nsPIDOMWindow *aWindow);
   void Shutdown();

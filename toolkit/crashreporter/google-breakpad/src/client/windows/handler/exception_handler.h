@@ -65,9 +65,9 @@
 // Disable exception handler warnings.
 #pragma warning( disable : 4530 )
 
+#include <list>
 #include <string>
 #include <vector>
-#include <list>
 
 #include "client/windows/common/ipc_protocol.h"
 #include "client/windows/crash_generation/crash_generation_client.h"
@@ -82,10 +82,16 @@ using std::wstring;
 // These entries store a list of memory regions that the client wants included
 // in the minidump.
 struct AppMemory {
-  AppMemory(ULONG64 ptr, ULONG length) : ptr(ptr), length(length) {}
-
   ULONG64 ptr;
   ULONG length;
+
+  bool operator==(const struct AppMemory& other) const {
+    return ptr == other.ptr;
+  }
+
+  bool operator==(const void* other) const {
+    return ptr == reinterpret_cast<ULONG64>(other);
+  }
 };
 typedef std::list<AppMemory> AppMemoryList;
 
@@ -99,9 +105,9 @@ class ExceptionHandler {
   // if any.
   //
   // If a FilterCallback returns true, Breakpad will continue processing,
-  // attempting to write a minidump.  If a FilterCallback returns false, Breakpad
-  // will immediately report the exception as unhandled without writing a
-  // minidump, allowing another handler the opportunity to handle it.
+  // attempting to write a minidump.  If a FilterCallback returns false,
+  // Breakpad will immediately report the exception as unhandled without
+  // writing a minidump, allowing another handler the opportunity to handle it.
   typedef bool (*FilterCallback)(void* context, EXCEPTION_POINTERS* exinfo,
                                  MDRawAssertionInfo* assertion);
 
@@ -199,6 +205,9 @@ class ExceptionHandler {
     UpdateNextID();  // Necessary to put dump_path_ in next_minidump_path_.
   }
 
+  // Requests that a previously reported crash be uploaded.
+  bool RequestUpload(DWORD crash_id);
+
   // Writes a minidump immediately.  This can be used to capture the
   // execution state independently of a crash.  Returns true on success.
   bool WriteMinidump();
@@ -212,12 +221,6 @@ class ExceptionHandler {
   static bool WriteMinidump(const wstring &dump_path,
                             MinidumpCallback callback, void* callback_context);
 
-  // Variant of WriteMinidump() above that optionally allows writing
-  // an artificial exception stream in the minidump.
-  static bool WriteMinidump(const wstring &dump_path,
-                            bool write_exception_stream,
-                            MinidumpCallback callback, void* callback_context);
-
   // Write a minidump of |child| immediately.  This can be used to
   // capture the execution state of |child| independently of a crash.
   // Pass a meaningful |child_blamed_thread| to make that thread in
@@ -225,9 +228,9 @@ class ExceptionHandler {
   // extracted.
   static bool WriteMinidumpForChild(HANDLE child,
                                     DWORD child_blamed_thread,
-                                    const wstring &dump_path,
+                                    const wstring& dump_path,
                                     MinidumpCallback callback,
-                                    void *callback_context);
+                                    void* callback_context);
 
   // Get the thread ID of the thread requesting the dump (either the exception
   // thread or any other thread that called WriteMinidump directly).  This
@@ -246,12 +249,8 @@ class ExceptionHandler {
 
   // Calling RegisterAppMemory(p, len) causes len bytes starting
   // at address p to be copied to the minidump when a crash happens.
-  void RegisterAppMemory(void *ptr, size_t length);
-  void UnregisterAppMemory(void *ptr);
-
-  // Called on the exception thread when an unhandled exception occurs.
-  // Signals the exception handler thread to handle the exception.
-  static LONG WINAPI HandleException(EXCEPTION_POINTERS* exinfo);
+  void RegisterAppMemory(void* ptr, size_t length);
+  void UnregisterAppMemory(void* ptr);
 
  private:
   friend class AutoExceptionHandler;
@@ -283,6 +282,10 @@ class ExceptionHandler {
 
   // Runs the main loop for the exception handler thread.
   static DWORD WINAPI ExceptionHandlerThreadMain(void* lpParameter);
+
+  // Called on the exception thread when an unhandled exception occurs.
+  // Signals the exception handler thread to handle the exception.
+  static LONG WINAPI HandleException(EXCEPTION_POINTERS* exinfo);
 
 #if _MSC_VER >= 1400  // MSVC 2005/8
   // This function will be called by some CRT functions when they detect
@@ -342,7 +345,6 @@ class ExceptionHandler {
                                             EXCEPTION_POINTERS* exinfo,
                                             MDRawAssertionInfo* assertion,
                                             HANDLE process,
-                                            DWORD processId,
                                             bool write_requester_stream);
 
   // Generates a new ID and stores it in next_minidump_id_, and stores the

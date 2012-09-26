@@ -89,10 +89,3 @@ contract @mozilla.org/login-manager/prompter;1 {97d12931-abe2-11df-94e2-0800200c
 component {4e6ea350-b09a-11df-94e2-0800200c9a66} BlocklistPrompt.js
 contract @mozilla.org/addons/blocklist-prompt;1 {4e6ea350-b09a-11df-94e2-0800200c9a66}
 
-#ifdef MOZ_SAFE_BROWSING
-# SafeBrowsing.js
-component {aadaed90-6c03-42d0-924a-fc61198ff283} SafeBrowsing.js
-contract @mozilla.org/safebrowsing/application;1 {aadaed90-6c03-42d0-924a-fc61198ff283}
-category app-startup SafeBrowsing service,@mozilla.org/safebrowsing/application;1
-#endif
-

@@ -498,6 +498,9 @@ user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
 user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless to others
 """ % {"pacURL": pacURL}
       prefs.append(part)
+    else:
+      part = 'user_pref("network.proxy.type", 0);\n'
+      prefs.append(part)
 
     for v in extraPrefs:
       thispref = v.split("=", 1)

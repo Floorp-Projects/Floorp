@@ -90,8 +90,10 @@ void FileID::ConvertIdentifierToString(const unsigned char identifier[16],
     if (idx == 4 || idx == 6 || idx == 8 || idx == 10)
       buffer[buffer_idx++] = '-';
 
-    buffer[buffer_idx++] = (hi >= 10) ? 'A' + hi - 10 : '0' + hi;
-    buffer[buffer_idx++] = (lo >= 10) ? 'A' + lo - 10 : '0' + lo;
+    buffer[buffer_idx++] =
+        static_cast<char>((hi >= 10) ? ('A' + hi - 10) : ('0' + hi));
+    buffer[buffer_idx++] =
+        static_cast<char>((lo >= 10) ? ('A' + lo - 10) : ('0' + lo));
   }
 
   // NULL terminate

@@ -31,6 +31,7 @@ MOCHITEST_FILES = \
   test_workers.html \
   test_archivereader.html \
   test_archivereader_zip_in_zip.html \
+  test_bug_793311.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
