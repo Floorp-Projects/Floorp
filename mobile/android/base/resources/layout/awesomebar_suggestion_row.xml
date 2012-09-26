@@ -7,6 +7,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="@dimen/awesomebar_row_height"
+                android:gravity="center_vertical"
                 android:padding="6dip">
 
     <ImageView android:id="@+id/suggestion_icon"

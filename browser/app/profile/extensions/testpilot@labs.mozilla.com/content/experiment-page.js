@@ -73,100 +73,103 @@ var stringBundle;
 
   function saveCanvas(canvas) {
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
-    let filePicker = Components.classes["@mozilla.org/filepicker;1"].
-      createInstance(nsIFilePicker);
-    filePicker.init(window, null, nsIFilePicker.modeSave);
-    filePicker.appendFilters(
-	nsIFilePicker.filterImages | nsIFilePicker.filterAll);
-    filePicker.defaultString = "canvas.png";
+    let fp = Components.classes["@mozilla.org/filepicker;1"].
+             createInstance(nsIFilePicker);
+    let fpCallback = function fpCallback_done(aResult) {
+      if (aResult == nsIFilePicker.returnOK ||
+          aResult == nsIFilePicker.returnReplace) {
+        const nsIWebBrowserPersist =
+          Components.interfaces.nsIWebBrowserPersist;
+        let file = fp.file;
 
-    let response = filePicker.show();
-    if (response == nsIFilePicker.returnOK ||
-	response == nsIFilePicker.returnReplace) {
-      const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
-      let file = filePicker.file;
+        // create a data url from the canvas and then create URIs of the
+        // source and targets
+        let io = Components.classes["@mozilla.org/network/io-service;1"].
+                 getService(Components.interfaces.nsIIOService);
+        let source = io.newURI(canvas.toDataURL("image/png"), "UTF8", null);
+        let target = io.newFileURI(file);
 
-      // create a data url from the canvas and then create URIs of the source
-      // and targets
-      let io = Components.classes["@mozilla.org/network/io-service;1"].
-	getService(Components.interfaces.nsIIOService);
-      let source = io.newURI(canvas.toDataURL("image/png"), "UTF8", null);
-      let target = io.newFileURI(file);
+        // prepare to save the canvas data
+        let persist = Components.classes[
+          "@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
+          createInstance(nsIWebBrowserPersist);
+        persist.persistFlags = nsIWebBrowserPersist.
+          PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+        persist.persistFlags |= nsIWebBrowserPersist.
+          PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
-      // prepare to save the canvas data
-      let persist = Components.classes[
-	"@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
-	  createInstance(nsIWebBrowserPersist);
-      persist.persistFlags = nsIWebBrowserPersist.
-	PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-      persist.persistFlags |= nsIWebBrowserPersist.
-        PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+        // displays a download dialog (remove these 3 lines for silent download)
+        let xfer = Components.classes["@mozilla.org/transfer;1"].
+                   createInstance(Components.interfaces.nsITransfer);
+        xfer.init(source, target, "", null, null, null, persist);
+        persist.progressListener = xfer;
 
-      // displays a download dialog (remove these 3 lines for silent download)
-      let xfer = Components.classes["@mozilla.org/transfer;1"].
-	createInstance(Components.interfaces.nsITransfer);
-      xfer.init(source, target, "", null, null, null, persist);
-      persist.progressListener = xfer;
+        // save the canvas data to the file
+        persist.saveURI(source, null, null, null, null, file);
+      }
+    };
 
-      // save the canvas data to the file
-      persist.saveURI(source, null, null, null, null, file);
-    }
+    fp.init(window, null, nsIFilePicker.modeSave);
+    fp.appendFilters(nsIFilePicker.filterImages | nsIFilePicker.filterAll);
+    fp.defaultString = "canvas.png";
+    fp.open(fpCallback);
   }
 
   function exportData() {
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
-    let filePicker = Components.classes["@mozilla.org/filepicker;1"].
-      createInstance(nsIFilePicker);
     let eid = getUrlParam("eid");
     let task = TestPilotSetup.getTaskById(eid);
+    let fp = Components.classes["@mozilla.org/filepicker;1"].
+             createInstance(nsIFilePicker);
+    let fpCallback = function fpCallback_done(aResult) {
+      if (aResult == nsIFilePicker.returnOK ||
+          aResult == nsIFilePicker.returnReplace) {
+        const nsIWebBrowserPersist =
+          Components.interfaces.nsIWebBrowserPersist;
+        let foStream =
+          Components.classes["@mozilla.org/network/file-output-stream;1"].
+          createInstance(Components.interfaces.nsIFileOutputStream);
+        let converter =
+          Components.classes["@mozilla.org/intl/converter-output-stream;1"].
+          createInstance(Components.interfaces.nsIConverterOutputStream);
+        let file = fp.file;
+        let dataStore = task.dataStore;
+        let columnNames = dataStore.getHumanReadableColumnNames();
+        let propertyNames = dataStore.getPropertyNames();
+        let csvString = "";
 
-    filePicker.init(window, null, nsIFilePicker.modeSave);
-    filePicker.appendFilters(
-	nsIFilePicker.filterImages | nsIFilePicker.filterAll);
-    filePicker.defaultString = task.title + ".csv";
-
-    let response = filePicker.show();
-    if (response == nsIFilePicker.returnOK ||
-	response == nsIFilePicker.returnReplace) {
-      const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
-      let foStream =
-        Components.classes["@mozilla.org/network/file-output-stream;1"].
-	  createInstance(Components.interfaces.nsIFileOutputStream);
-      let converter =
-        Components.classes["@mozilla.org/intl/converter-output-stream;1"].
-	  createInstance(Components.interfaces.nsIConverterOutputStream);
-      let file = filePicker.file;
-      let dataStore = task.dataStore;
-      let columnNames = dataStore.getHumanReadableColumnNames();
-      let propertyNames = dataStore.getPropertyNames();
-      let csvString = "";
-
-      // titles
-      for (let i = 0; i < columnNames.length; i++) {
-	csvString += "\"" + columnNames[i] + "\",";
-      }
-      if (csvString.length > 0) {
-	csvString = csvString.substring(0, (csvString.length - 1));
-        csvString += "\n";
-      }
-
-      dataStore.getAllDataAsJSON(true, function(rawData) {
-        // data
-        for (let i = 0; i < rawData.length; i++) {
-          for (let j = 0; j < columnNames.length; j++) {
-	    csvString += "\"" + rawData[i][propertyNames[j]] + "\",";
-          }
-	  csvString = csvString.substring(0, (csvString.length - 1));
+        // titles
+        for (let i = 0; i < columnNames.length; i++) {
+          csvString += "\"" + columnNames[i] + "\",";
+        }
+        if (csvString.length > 0) {
+          csvString = csvString.substring(0, (csvString.length - 1));
           csvString += "\n";
         }
 
-        // write, create, truncate
-        foStream.init(file, 0x02 | 0x08 | 0x20, 0664, 0);
-        converter.init(foStream, "UTF-8", 0, 0);
-        converter.writeString(csvString);
-        converter.close();
-      });
-    }
+        dataStore.getAllDataAsJSON(true, function(rawData) {
+          // data
+          for (let i = 0; i < rawData.length; i++) {
+            for (let j = 0; j < columnNames.length; j++) {
+              csvString += "\"" + rawData[i][propertyNames[j]] + "\",";
+            }
+            csvString = csvString.substring(0, (csvString.length - 1));
+            csvString += "\n";
+          }
+
+          // write, create, truncate
+          foStream.init(file, 0x02 | 0x08 | 0x20, 0664, 0);
+          converter.init(foStream, "UTF-8", 0, 0);
+          converter.writeString(csvString);
+          converter.close();
+        });
+      }
+    };
+
+    fp.init(window, null, nsIFilePicker.modeSave);
+    fp.appendFilters(nsIFilePicker.filterImages | nsIFilePicker.filterAll);
+    fp.defaultString = task.title + ".csv";
+    fp.open(fpCallback);
   }
 
   function openLink(url) {

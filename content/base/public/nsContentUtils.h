@@ -570,6 +570,22 @@ public:
   // system principal, and true for a null principal.
   static bool IsSitePermDeny(nsIPrincipal* aPrincipal, const char* aType);
 
+  // Get a permission-manager setting for the given principal and type.
+  // If the pref doesn't exist or if it isn't ALLOW_ACTION, false is
+  // returned, otherwise true is returned. Always returns true for the
+  // system principal, and false for a null principal.
+  // This version checks the permission for an exact host match on
+  // the principal
+  static bool IsExactSitePermAllow(nsIPrincipal* aPrincipal, const char* aType);
+
+  // Get a permission-manager setting for the given principal and type.
+  // If the pref doesn't exist or if it isn't DENY_ACTION, false is
+  // returned, otherwise true is returned. Always returns false for the
+  // system principal, and true for a null principal.
+  // This version checks the permission for an exact host match on
+  // the principal
+  static bool IsExactSitePermDeny(nsIPrincipal* aPrincipal, const char* aType);
+
   // Returns true if aDoc1 and aDoc2 have equal NodePrincipal()s.
   static bool HaveEqualPrincipals(nsIDocument* aDoc1, nsIDocument* aDoc2);
 

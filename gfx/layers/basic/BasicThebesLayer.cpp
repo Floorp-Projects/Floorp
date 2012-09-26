@@ -281,6 +281,17 @@ private:
   AutoBufferTracker& operator=(const AutoBufferTracker&) MOZ_DELETE;
 };
 
+BasicShadowableThebesLayer::~BasicShadowableThebesLayer()
+{
+  // Finish any use of mROFrontBuffer since the last ForwardTransaction(),
+  // before the Shadow frees the surface.
+  if (OptionalThebesBuffer::Tnull_t != mROFrontBuffer.type()) {
+    ShadowLayerForwarder::PlatformSyncBeforeUpdate();
+  }
+  DestroyBackBuffer();
+  MOZ_COUNT_DTOR(BasicShadowableThebesLayer);
+}
+
 void
 BasicShadowableThebesLayer::PaintThebes(gfxContext* aContext,
                                         Layer* aMaskLayer,

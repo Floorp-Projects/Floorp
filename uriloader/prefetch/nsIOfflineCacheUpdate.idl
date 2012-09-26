@@ -15,6 +15,7 @@ interface nsIPrincipal;
 interface nsIPrefBranch;
 interface nsIApplicationCache;
 interface nsIFile;
+interface nsILoadContext;
 
 [scriptable, uuid(47360d57-8ef4-4a5d-8865-1a27a739ad1a)]
 interface nsIOfflineCacheUpdateObserver : nsISupports {
@@ -62,7 +63,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * load its items one by one, sending itemCompleted() to any registered
  * observers.
  */
-[scriptable, uuid(2FA574B8-AE62-426b-BE95-08E6AA957455)]
+[scriptable, uuid(D47966B2-1EBC-45c5-8639-2937ED200281)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
@@ -107,7 +108,8 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        The page that is requesting the update.
    */
   void init(in nsIURI aManifestURI, in nsIURI aDocumentURI, in nsIDOMDocument aDocument,
-            [optional] in nsIFile aCustomProfileDir);
+            [optional] in nsIFile aCustomProfileDir,
+            [optional] in nsILoadContext aLoadContext);
 
   /**
    * Initialize the update for partial processing. 
@@ -237,5 +239,3 @@ interface nsIOfflineCacheUpdateService : nsISupports {
     boolean offlineAppAllowedForURI(in nsIURI aURI,
                                     in nsIPrefBranch aPrefBranch);
 };
-
-

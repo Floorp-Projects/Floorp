@@ -28,8 +28,8 @@
     function testTabHierarchy()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 0),
-        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 0),
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
       ];
 
       this.invoke = function testTabHierarchy_invoke()
