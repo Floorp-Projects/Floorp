@@ -530,35 +530,6 @@ CompositorParent::Composite()
 
 // Do a breadth-first search to find the first layer in the tree that is
 // scrollable.
-Layer*
-CompositorParent::GetPrimaryScrollableLayer()
-{
-  Layer* root = mLayerManager->GetRoot();
-
-  nsTArray<Layer*> queue;
-  queue.AppendElement(root);
-  while (queue.Length()) {
-    ContainerLayer* containerLayer = queue[0]->AsContainerLayer();
-    queue.RemoveElementAt(0);
-    if (!containerLayer) {
-      continue;
-    }
-
-    const FrameMetrics& frameMetrics = containerLayer->GetFrameMetrics();
-    if (frameMetrics.IsScrollable()) {
-      return containerLayer;
-    }
-
-    Layer* child = containerLayer->GetFirstChild();
-    while (child) {
-      queue.AppendElement(child);
-      child = child->GetNextSibling();
-    }
-  }
-
-  return root;
-}
-
 static void
 Translate2D(gfx3DMatrix& aTransform, const gfxPoint& aOffset)
 {
@@ -771,7 +742,7 @@ bool
 CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 {
   bool wantNextFrame = false;
-  Layer* layer = GetPrimaryScrollableLayer();
+  Layer* layer = mLayerManager->GetPrimaryScrollableLayer();
   ShadowLayer* shadow = layer->AsShadowLayer();
   ContainerLayer* container = layer->AsContainerLayer();
   Layer* root = mLayerManager->GetRoot();
