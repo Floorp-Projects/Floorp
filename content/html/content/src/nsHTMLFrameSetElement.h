@@ -47,6 +47,8 @@ public:
   nsHTMLFrameSetElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLFrameSetElement();
 
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLFrameSetElement, frameset)
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -111,12 +113,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
-  static nsHTMLFrameSetElement* FromContent(nsIContent *aContent)
-  {
-    if (aContent->IsHTML(nsGkAtoms::frameset))
-      return static_cast<nsHTMLFrameSetElement*>(aContent);
-    return nullptr;
-  }
 
 private:
   nsresult ParseRowCol(const nsAString& aValue,

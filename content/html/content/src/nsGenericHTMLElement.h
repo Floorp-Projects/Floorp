@@ -53,13 +53,7 @@ public:
     SetFlags(NODE_HAS_DIRECTION_LTR);
   }
 
-  /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
-  static nsGenericHTMLElement* FromContent(nsIContent *aContent)
-  {
-    if (aContent->IsHTML())
-      return static_cast<nsGenericHTMLElement*>(aContent);
-    return nullptr;
-  }
+  NS_IMPL_FROMCONTENT(nsGenericHTMLElement, kNameSpaceID_XHTML)
 
   /**
    * Handle QI for the standard DOM interfaces (DOMNode, DOMElement,

@@ -65,6 +65,8 @@ public:
                      mozilla::dom::FromParser aFromParser);
   virtual ~nsHTMLInputElement();
 
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLInputElement, input)
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -195,13 +197,6 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
-
-  static nsHTMLInputElement* FromContent(nsIContent *aContent)
-  {
-    if (aContent->NodeInfo()->Equals(nsGkAtoms::input, kNameSpaceID_XHTML))
-      return static_cast<nsHTMLInputElement*>(aContent);
-    return NULL;
-  }
 
   // nsIConstraintValidation
   bool     IsTooLong();

@@ -23,13 +23,6 @@
 using namespace mozilla;
 using namespace mozilla::layers;
 
-static nsHTMLCanvasElement *
-CanvasElementFromContent(nsIContent *content)
-{
-  nsCOMPtr<nsIDOMHTMLCanvasElement> domCanvas(do_QueryInterface(content));
-  return domCanvas ? static_cast<nsHTMLCanvasElement*>(domCanvas.get()) : nullptr;
-}
-
 class nsDisplayCanvas : public nsDisplayItem {
 public:
   nsDisplayCanvas(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
@@ -49,7 +42,8 @@ public:
                                    bool* aSnap) {
     *aSnap = false;
     nsIFrame* f = GetUnderlyingFrame();
-    nsHTMLCanvasElement *canvas = CanvasElementFromContent(f->GetContent());
+    nsHTMLCanvasElement *canvas =
+      nsHTMLCanvasElement::FromContent(f->GetContent());
     nsRegion result;
     if (canvas->GetIsOpaque()) {
       result = GetBounds(aBuilder, aSnap);
@@ -74,7 +68,7 @@ public:
                                    LayerManager* aManager,
                                    const FrameLayerBuilder::ContainerParameters& aParameters)
   {
-    if (CanvasElementFromContent(mFrame->GetContent())->ShouldForceInactiveLayer(aManager))
+    if (nsHTMLCanvasElement::FromContent(mFrame->GetContent())->ShouldForceInactiveLayer(aManager))
       return LAYER_INACTIVE;
 
     // If compositing is cheap, just do that
@@ -117,7 +111,8 @@ nsIntSize
 nsHTMLCanvasFrame::GetCanvasSize()
 {
   nsIntSize size(0,0);
-  nsHTMLCanvasElement *canvas = CanvasElementFromContent(GetContent());
+  nsHTMLCanvasElement *canvas =
+    nsHTMLCanvasElement::FromContentOrNull(GetContent());
   if (canvas) {
     size = canvas->GetSize();
   } else {
