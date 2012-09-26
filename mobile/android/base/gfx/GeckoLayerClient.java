@@ -345,7 +345,7 @@ public class GeckoLayerClient
             // for foreground tabs, send the viewport update unless the document
             // displayed is different from the content document. In that case, just
             // calculate the display port.
-            return handleViewportMessage(metrics, pageSizeUpdate ? ViewportMessageType.UPDATE : ViewportMessageType.PAGE_SIZE);
+            return handleViewportMessage(metrics, pageSizeUpdate ? ViewportMessageType.PAGE_SIZE : ViewportMessageType.UPDATE);
         } else {
             // for background tabs, request a new display port calculation, so that
             // when we do switch to that tab, we have the correct display port and
