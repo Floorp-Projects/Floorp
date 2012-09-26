@@ -366,4 +366,12 @@ let dataProviders = {
     }
     done(data);
   },
+
+  userJS: function userJS(done) {
+    let userJSFile = Services.dirsvc.get("PrefD", Ci.nsIFile);
+    userJSFile.append("user.js");
+    done({
+      exists: userJSFile.exists() && userJSFile.fileSize > 0,
+    });
+  },
 };
