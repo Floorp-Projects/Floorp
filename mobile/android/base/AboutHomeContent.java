@@ -214,21 +214,14 @@ public class AboutHomeContent extends ScrollView
         findViewById(R.id.all_top_sites_text).setVisibility(visibility);
     }
 
-    private void setPromoBoxVisibility(boolean visible, AboutHomePromoBox.Type type) {
-        if (visible)
-            mPromoBox.show(type);
-        else
-            mPromoBox.hide();
-    }
-
     private void updateLayout(boolean syncIsSetup) {
         boolean hasTopSites = mTopSitesAdapter.getCount() > 0;
-
         setTopSitesVisibility(hasTopSites);
-        if (!syncIsSetup && mPrelimPromoBoxType == AboutHomePromoBox.Type.SYNC)
-            setPromoBoxVisibility(true, AboutHomePromoBox.Type.SYNC);
-        else
-            setPromoBoxVisibility(true, AboutHomePromoBox.Type.APPS);
+
+        AboutHomePromoBox.Type type = mPrelimPromoBoxType;
+        if (syncIsSetup && type == AboutHomePromoBox.Type.SYNC)
+            type = AboutHomePromoBox.Type.APPS;
+        mPromoBox.show(type);
     }
 
     private void updateLayoutForSync() {
