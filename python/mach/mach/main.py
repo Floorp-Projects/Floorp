@@ -19,10 +19,11 @@ from mozbuild.logger import LoggingManager
 # Import sub-command modules
 # TODO Bug 794509 do this via auto-discovery. Update README once this is
 # done.
-# TODO import modules
+from mach.settings import Settings
 
 # Classes inheriting from ArgumentProvider that provide commands.
 HANDLERS = [
+    Settings,
 ]
 
 # Classes inheriting from ConfigProvider that provide settings.
