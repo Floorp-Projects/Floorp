@@ -34,6 +34,7 @@ try {
 SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
 
 SpecialPowers.addPermission("browser", true, window.document);
+SpecialPowers.addPermission("embed-apps", true, window.document);
 
 var gData = [
   // APP 1
@@ -105,6 +106,7 @@ function runTest() {
           }
 
           SpecialPowers.removePermission("browser", window.document);
+          SpecialPowers.removePermission("embed-apps", window.document);
 
           SimpleTest.finish();
         } else {

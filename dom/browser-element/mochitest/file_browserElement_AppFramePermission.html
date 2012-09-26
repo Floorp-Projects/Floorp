@@ -1,0 +1,17 @@
+<html>
+<head>
+<script type="text/javascript">
+  addEventListener('load', function(e) {
+    navigator.mozApps.getSelf().onsuccess = function onGetSelf() {
+      if (this.result) {
+        alert('app');
+      } else {
+        alert('notapp');
+      }
+    };
+  });
+</script>
+</head>
+<body>
+</body>
+</html>
