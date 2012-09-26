@@ -190,6 +190,8 @@ gdi-RGB24-ARGB32.patch: bug 788794
 
 dwrite-font-printing.patch: bug 468568; don't substitute a GDI font for a DWrite font if the name tables aren't equal
 
+d2d-gradient-ensure-stops.patch: bug 792903, ensure we don't set num_stops to 0
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
