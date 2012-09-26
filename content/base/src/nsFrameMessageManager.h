@@ -24,53 +24,10 @@
 
 namespace mozilla {
 namespace dom {
-
 class ContentParent;
 struct StructuredCloneData;
-
-namespace ipc {
-
-enum MessageManagerFlags {
-  MM_CHILD = 0,
-  MM_CHROME = 1,
-  MM_GLOBAL = 2,
-  MM_PROCESSMANAGER = 4,
-  MM_BROADCASTER = 8,
-  MM_OWNSCALLBACK = 16
-};
-
-class MessageManagerCallback
-{
-public:
-  virtual ~MessageManagerCallback() {}
-
-  virtual bool DoLoadFrameScript(const nsAString& aURL)
-  {
-    return true;
-  }
-
-  virtual bool DoSendSyncMessage(const nsAString& aMessage,
-                                 const mozilla::dom::StructuredCloneData& aData,
-                                 InfallibleTArray<nsString>* aJSONRetVal)
-  {
-    return true;
-  }
-
-  virtual bool DoSendAsyncMessage(const nsAString& aMessage,
-                                  const mozilla::dom::StructuredCloneData& aData)
-  {
-    return true;
-  }
-
-  virtual bool CheckPermission(const nsAString& aPermission)
-  {
-    return false;
-  }
-};
-
-} // namespace ipc
-} // namespace dom
-} // namespace mozilla
+}
+}
 
 class nsAXPCNativeCallContext;
 struct JSContext;
@@ -82,43 +39,53 @@ struct nsMessageListenerInfo
   nsCOMPtr<nsIAtom> mMessage;
 };
 
+typedef bool (*nsLoadScriptCallback)(void* aCallbackData, const nsAString& aURL);
+typedef bool (*nsSyncMessageCallback)(void* aCallbackData,
+                                      const nsAString& aMessage,
+                                      const mozilla::dom::StructuredCloneData& aData,
+                                      InfallibleTArray<nsString>* aJSONRetVal);
+typedef bool (*nsAsyncMessageCallback)(void* aCallbackData,
+                                       const nsAString& aMessage,
+                                             const mozilla::dom::StructuredCloneData& aData);
 
 class nsFrameMessageManager MOZ_FINAL : public nsIContentFrameMessageManager,
                                         public nsIMessageBroadcaster,
-                                        public nsIFrameScriptLoader,
-                                        public nsIPermissionChecker
+                                        public nsIFrameScriptLoader
 {
   typedef mozilla::dom::StructuredCloneData StructuredCloneData;
 public:
-  nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
+  nsFrameMessageManager(bool aChrome,
+                        nsSyncMessageCallback aSyncCallback,
+                        nsAsyncMessageCallback aAsyncCallback,
+                        nsLoadScriptCallback aLoadScriptCallback,
+                        void* aCallbackData,
                         nsFrameMessageManager* aParentManager,
                         JSContext* aContext,
-                        /* mozilla::dom::ipc::MessageManagerFlags */ uint32_t aFlags)
-  : mChrome(!!(aFlags & mozilla::dom::ipc::MM_CHROME)),
-    mGlobal(!!(aFlags & mozilla::dom::ipc::MM_GLOBAL)),
-    mIsProcessManager(!!(aFlags & mozilla::dom::ipc::MM_PROCESSMANAGER)),
-    mIsBroadcaster(!!(aFlags & mozilla::dom::ipc::MM_BROADCASTER)),
-    mOwnsCallback(!!(aFlags & mozilla::dom::ipc::MM_OWNSCALLBACK)),
+                        bool aGlobal = false,
+                        bool aProcessManager = false,
+                        bool aBroadcaster = false)
+  : mChrome(aChrome),
+    mGlobal(aGlobal),
+    mIsProcessManager(aProcessManager),
+    mIsBroadcaster(aBroadcaster),
     mHandlingMessage(false),
     mDisconnected(false),
-    mCallback(aCallback),
     mParentManager(aParentManager),
+    mSyncCallback(aSyncCallback),
+    mAsyncCallback(aAsyncCallback),
+    mLoadScriptCallback(aLoadScriptCallback),
+    mCallbackData(aCallbackData),
     mContext(aContext)
   {
-    NS_ASSERTION(mContext || (mChrome && !mParentManager) || mIsProcessManager,
+    NS_ASSERTION(mContext || (aChrome && !aParentManager) || aProcessManager,
                  "Should have mContext in non-global/non-process manager!");
-    NS_ASSERTION(mChrome || !aParentManager, "Should not set parent manager!");
-    NS_ASSERTION(!mIsBroadcaster || !mCallback,
-                 "Broadcasters cannot have callbacks!");
+    NS_ASSERTION(aChrome || !aParentManager, "Should not set parent manager!");
     // This is a bit hackish. When parent manager is global, we want
     // to attach the window message manager to it immediately.
     // Is it just the frame message manager which waits until the
     // content process is running.
-    if (mParentManager && (mCallback || IsWindowLevel())) {
+    if (mParentManager && (mCallbackData || IsWindowLevel())) {
       mParentManager->AddChildManager(this);
-    }
-    if (mOwnsCallback) {
-      mOwnedCallback = aCallback;
     }
   }
 
@@ -152,7 +119,6 @@ public:
   NS_DECL_NSISYNCMESSAGESENDER
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
   NS_DECL_NSIFRAMESCRIPTLOADER
-  NS_DECL_NSIPERMISSIONCHECKER
 
   static nsFrameMessageManager*
   NewProcessMessageManager(mozilla::dom::ContentParent* aProcess);
@@ -169,21 +135,19 @@ public:
   {
     mChildManagers.RemoveObject(aManager);
   }
+
   void Disconnect(bool aRemoveFromParent = true);
-
-  void SetCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback,
-                   bool aLoadScripts = true);
-  mozilla::dom::ipc::MessageManagerCallback* GetCallback()
-  {
-    return mCallback;
-  }
-
+  void SetCallbackData(void* aData, bool aLoadScripts = true);
+  void* GetCallbackData() { return mCallbackData; }
+  enum ShouldBroadcast { BROADCAST, DONT_BROADCAST };
   nsresult DispatchAsyncMessage(const nsAString& aMessageName,
                                 const jsval& aObject,
                                 JSContext* aCx,
-                                uint8_t aArgc);
+                                uint8_t aArgc,
+                                ShouldBroadcast aBroadcast);
   nsresult DispatchAsyncMessageInternal(const nsAString& aMessage,
-                                        const StructuredCloneData& aData);
+                                        const StructuredCloneData& aData,
+                                        ShouldBroadcast aBroadcast);
   JSContext* GetJSContext() { return mContext; }
   void SetJSContext(JSContext* aCx) { mContext = aCx; }
   void RemoveFromParent();
@@ -210,15 +174,16 @@ protected:
   nsTArray<nsMessageListenerInfo> mListeners;
   nsCOMArray<nsIContentFrameMessageManager> mChildManagers;
   bool mChrome;     // true if we're in the chrome process
-  bool mGlobal;     // true if we're the global frame message manager
+  bool mGlobal;     // true if 
   bool mIsProcessManager; // true if the message manager belongs to the process realm
   bool mIsBroadcaster; // true if the message manager is a broadcaster
-  bool mOwnsCallback;
   bool mHandlingMessage;
   bool mDisconnected;
-  mozilla::dom::ipc::MessageManagerCallback* mCallback;
-  nsAutoPtr<mozilla::dom::ipc::MessageManagerCallback> mOwnedCallback;
   nsFrameMessageManager* mParentManager;
+  nsSyncMessageCallback mSyncCallback;
+  nsAsyncMessageCallback mAsyncCallback;
+  nsLoadScriptCallback mLoadScriptCallback;
+  void* mCallbackData;
   JSContext* mContext;
   nsTArray<nsString> mPendingScripts;
 public:

@@ -335,30 +335,3 @@ interface nsIFrameScriptLoader : nsISupports
    */
   void removeDelayedFrameScript(in AString aURL);
 };
-
-[scriptable, builtinclass, uuid(5f552699-01a2-4f17-833b-ddb3fa0d98b2)]
-interface nsIPermissionChecker : nsISupports
-{
-
-  /**
-   * Return true iff the "remote" process has |aPermission|.  This is
-   * intended to be used by JS implementations of cross-process DOM
-   * APIs, like so
-   *
-   *   recvFooRequest: function(message) {
-   *     if (!message.target.assertPermission("foo")) {
-   *       return false;
-   *     }
-   *     // service foo request
-   *
-   * This interface only returns meaningful data when our content is
-   * in a separate process.  If it shares the same OS process as us,
-   * then applying this permission check doesn't add any security,
-   * though it doesn't hurt anything either.
-   *
-   * Note: If the remote content process does *not* have |aPermission|,
-   * it will be killed as a precaution.
-   */
-  boolean assertPermission(in DOMString aPermission);
-
-};
