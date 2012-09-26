@@ -1,18 +1,7 @@
-{
-   Bug 793532
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN8JSObject25allocateSlowArrayElementsEP9JSContext
-   ...
-}
-{
-   Bug 793533
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_Z22xpc_CreateGlobalObjectP9JSContextP7JSClassP12nsIPrincipalP11nsISupportsbPP8JSObjectPP13JSCompartment
-   ...
-}
+####################
+#  Intended leaks  #
+####################
+
 {
    PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534 and see bug 793549.)
    Memcheck:Leak
@@ -28,14 +17,42 @@
    ...
 }
 {
-   Bug 793535
+   See bug 793535
    Memcheck:Leak
    fun:calloc
    fun:_dlerror_run
    fun:dlsym
-   fun:PR_SetCurrentThreadName
    ...
 }
+{
+   See bug 793611
+   Memcheck:Leak
+   fun:memalign
+   fun:tls_get_addr_tail
+   fun:__tls_get_addr
+   ...
+}
+
+#################
+#  Other leaks  #
+#################
+
+{
+   Bug 793532
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN8JSObject25allocateSlowArrayElementsEP9JSContext
+   ...
+}
+# Suppressing the suppression(s) to get Valgrind stacks with line numbers
+#{
+#   Bug 793533
+#   Memcheck:Leak
+#   fun:malloc
+#   fun:moz_xmalloc
+#   fun:_Z22xpc_CreateGlobalObjectP9JSContextP7JSClassP12nsIPrincipalP11nsISupportsbPP8JSObjectPP13JSCompartment
+#   ...
+#}
 {
    Bug 793536 (all 64-bit systems)
    Memcheck:Leak
@@ -62,80 +79,62 @@
    fun:_ZN13CrashReporter14SetupExtraDataEP7nsIFileRK19nsACString_internal
    ...
 }
-{
-   Bug 793601
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN2js15ArgumentsObject6createEP9JSContextPNS_10StackFrameE
-   ...
-}
-{
-   Bug 793602
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_Z22NS_NewComputedDOMStylePN7mozilla3dom7ElementERK18nsAString_internalP12nsIPresShell
-   fun:_ZN14nsGlobalWindow16GetComputedStyleEP13nsIDOMElementRK18nsAString_internalPP25nsIDOMCSSStyleDeclaration
-   ...
-}
-{
-   Bug 793603
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_ZN18nsDeflateConverter15OnDataAvailableEP10nsIRequestP11nsISupportsP14nsIInputStreammj
-   ...
-}
-{
-   Bug 793605
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_Z30nsStringInputStreamConstructorP11nsISupportsRK4nsIDPPv
-   ...
-}
-{
-   Bug 793606
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_ZL27nsXMLHttpRequestConstructorP11nsISupportsRK4nsIDPPv
-   ...
-}
-{
-   Bug 793607
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_ZN11nsZipWriter14AddEntryStreamERK19nsACString_internalliP14nsIInputStreambj
-   ...
-}
+#{
+#   Bug 793601
+#   Memcheck:Leak
+#   fun:malloc
+#   fun:_ZN2js15ArgumentsObject6createEP9JSContextPNS_10StackFrameE
+#   ...
+#}
+#{
+#   Bug 793602
+#   Memcheck:Leak
+#   fun:malloc
+#   fun:moz_xmalloc
+#   fun:_Z22NS_NewComputedDOMStylePN7mozilla3dom7ElementERK18nsAString_internalP12nsIPresShell
+#   fun:_ZN14nsGlobalWindow16GetComputedStyleEP13nsIDOMElementRK18nsAString_internalPP25nsIDOMCSSStyleDeclaration
+#   ...
+#}
+#{
+#   Bug 793603
+#   Memcheck:Leak
+#   fun:malloc
+#   fun:moz_xmalloc
+#   fun:_ZN18nsDeflateConverter15OnDataAvailableEP10nsIRequestP11nsISupportsP14nsIInputStreammj
+#   ...
+#}
+#{
+#   Bug 793605
+#   Memcheck:Leak
+#   fun:malloc
+#   fun:moz_xmalloc
+#   fun:_Z30nsStringInputStreamConstructorP11nsISupportsRK4nsIDPPv
+#   ...
+#}
+#{
+#   Bug 793606
+#   Memcheck:Leak
+#   fun:malloc
+#   fun:moz_xmalloc
+#   fun:_ZL27nsXMLHttpRequestConstructorP11nsISupportsRK4nsIDPPv
+#   ...
+#}
+#{
+#   Bug 793607
+#   Memcheck:Leak
+#   fun:malloc
+#   fun:moz_xmalloc
+#   fun:_ZN11nsZipWriter14AddEntryStreamERK19nsACString_internalliP14nsIInputStreambj
+#   ...
+#}
 {
    Bug 793608
    Memcheck:Leak
-   fun:malloc
-   fun:__libc_res_nsend
-   fun:__libc_res_nquery
-   fun:__libc_res_nquerydomain
-   fun:__libc_res_nsearch
-   obj:*
+   ...
    fun:gaih_inet
    fun:getaddrinfo
    fun:PR_GetAddrInfoByName
    fun:_ZN14nsHostResolver10ThreadFuncEPv
-   fun:_pt_root
-   fun:start_thread
-   fun:clone
-}
-{
-   Bug 793611
-   Memcheck:Leak
-   fun:memalign
-   fun:tls_get_addr_tail
-   fun:__tls_get_addr
-   fun:_ZN8nsThread16ProcessNextEventEbPb
-   fun:_Z21NS_ProcessNextEvent_PP9nsIThreadb
-   fun:_ZN8nsThread10ThreadFuncEPv
    fun:_pt_root
    fun:start_thread
    fun:clone
@@ -159,4 +158,82 @@
    fun:_pt_root
    fun:start_thread
    fun:clone
+}
+{
+   Bug 794350
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN11MessageLoopC1ENS_4TypeE
+   fun:_ZN4base6Thread10ThreadMainEv
+   fun:_ZL10ThreadFuncPv
+   fun:start_thread
+   fun:clone
+}
+{
+   Bug 794354
+   Memcheck:Leak
+   ...
+   fun:_ZN7mozilla12safebrowsing10Classifier12ApplyUpdatesEP8nsTArrayIPNS0_11TableUpdateE24nsTArrayDefaultAllocatorE
+   fun:_ZN30nsUrlClassifierDBServiceWorker11ApplyUpdateEv
+   fun:_ZN30nsUrlClassifierDBServiceWorker12FinishUpdateEv
+   ...
+}
+{
+   Bug 794358
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:PK11_InitPin
+   fun:_ZN11nsPK11Token12InitPasswordEPKt
+   ...
+}
+{
+   Bug 794364
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN9PICLinker4initEP9JSContext
+   fun:_ZN2js4mjit2ic12GetElementIC13attachGetPropERNS_7VMFrameEN2JS6HandleIP8JSObjectEENS6_INS5_5ValueEEENS6_IPNS_12PropertyNameEEENS5_13MutableHandleISA_EE
+   fun:_ZN2js4mjit2ic12GetElementIC6updateERNS_7VMFrameEN2JS6HandleIP8JSObjectEENS6_INS5_5ValueEEENS6_IlEENS5_13MutableHandleISA_EE
+   fun:_ZN2js4mjit2ic10GetElementERNS_7VMFrameEPNS1_12GetElementICE
+   ...
+}
+{
+   Bug 794365
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN14JSInlineString8uninlineEP9JSContext
+   ...
+}
+{
+   Bug 794369
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN20mozJSComponentLoader10LoadModuleERN7mozilla12FileLocationE
+   ...
+}
+{
+   Bug 794370
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN22nsComponentManagerImpl15RegisterFactoryERK4nsIDPKcS4_P10nsIFactory
+   ...
+}
+{
+   Bug 794372
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN22nsComponentManagerImpl16RegisterCIDEntryEPKN7mozilla6Module8CIDEntryEPNS_11KnownModuleE
+   ...
+}
+{
+   Bug 794374
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN22nsComponentManagerImpl17ManifestComponentERNS_25ManifestProcessingContextEiPKPc
+   ...
 }
