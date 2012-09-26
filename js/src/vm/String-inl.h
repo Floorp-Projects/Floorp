@@ -341,6 +341,7 @@ js::StaticStrings::getInt(int32_t i)
 inline JSLinearString *
 js::StaticStrings::getUnitStringForElement(JSContext *cx, JSString *str, size_t index)
 {
+    AssertCanGC();
     JS_ASSERT(index < str->length());
     const jschar *chars = str->getChars(cx);
     if (!chars)

@@ -204,7 +204,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     /* Create |Function.prototype| next so we can create other functions. */
     RootedFunction functionProto(cx);
     {
-        JSObject *functionProto_ = NewObjectWithGivenProto(cx, &FunctionClass, objectProto, self);
+        RawObject functionProto_ = NewObjectWithGivenProto(cx, &FunctionClass, objectProto, self);
         if (!functionProto_)
             return NULL;
         functionProto = functionProto_->toFunction();
@@ -213,12 +213,14 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
          * Bizarrely, |Function.prototype| must be an interpreted function, so
          * give it the guts to be one.
          */
-        JSObject *proto = js_NewFunction(cx, functionProto,
-                                         NULL, 0, JSFUN_INTERPRETED, self, NullPtr());
-        if (!proto)
-            return NULL;
-        JS_ASSERT(proto == functionProto);
-        functionProto->flags |= JSFUN_PROTOTYPE;
+        {
+            RawObject proto = js_NewFunction(cx, functionProto,
+                                             NULL, 0, JSFUN_INTERPRETED, self, NullPtr());
+            if (!proto)
+                return NULL;
+            JS_ASSERT(proto == functionProto);
+            functionProto->flags |= JSFUN_PROTOTYPE;
+        }
 
         const char *rawSource = "() {\n}";
         size_t sourceLen = strlen(rawSource);
@@ -236,14 +238,14 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         CompileOptions options(cx);
         options.setNoScriptRval(true)
                .setVersion(JSVERSION_DEFAULT);
-        Rooted<JSScript*> script(cx, JSScript::Create(cx,
-                                                      /* enclosingScope = */ NullPtr(),
-                                                      /* savedCallerFun = */ false,
-                                                      options,
-                                                      /* staticLevel = */ 0,
-                                                      ss,
-                                                      0,
-                                                      ss->length()));
+        RootedScript script(cx, JSScript::Create(cx,
+                                                 /* enclosingScope = */ NullPtr(),
+                                                 /* savedCallerFun = */ false,
+                                                 options,
+                                                 /* staticLevel = */ 0,
+                                                 ss,
+                                                 0,
+                                                 ss->length()));
         if (!script || !JSScript::fullyInitTrivial(cx, script))
             return NULL;
 
@@ -347,18 +349,16 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     }
 
     /* Add the global Function and Object properties now. */
-    jsid objectId = NameToId(cx->names().Object);
-    if (!self->addDataProperty(cx, objectId, JSProto_Object + JSProto_LIMIT * 2, 0))
+    if (!self->addDataProperty(cx, NameToId(cx->names().Object), JSProto_Object + JSProto_LIMIT * 2, 0))
         return NULL;
-    jsid functionId = NameToId(cx->names().Function);
-    if (!self->addDataProperty(cx, functionId, JSProto_Function + JSProto_LIMIT * 2, 0))
+    if (!self->addDataProperty(cx, NameToId(cx->names().Function), JSProto_Function + JSProto_LIMIT * 2, 0))
         return NULL;
 
     /* Heavy lifting done, but lingering tasks remain. */
 
     /* ES5 15.1.2.1. */
-    RootedId id(cx, NameToId(cx->names().eval));
-    JSObject *evalobj = js_DefineFunction(cx, self, id, IndirectEval, 1, JSFUN_STUB_GSOPS);
+    RootedId evalId(cx, NameToId(cx->names().eval));
+    RawObject evalobj = js_DefineFunction(cx, self, evalId, IndirectEval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;
     self->setOriginalEval(evalobj);
@@ -401,7 +401,8 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * Notify any debuggers about the creation of the script for
      * |Function.prototype| -- after all initialization, for simplicity.
      */
-    js_CallNewScriptHook(cx, functionProto->script(), functionProto);
+    RootedScript functionProtoScript(cx, functionProto->script());
+    js_CallNewScriptHook(cx, functionProtoScript, functionProto);
     return functionProto;
 }
 

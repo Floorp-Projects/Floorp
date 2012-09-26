@@ -111,6 +111,7 @@ class PICStubCompiler : public BaseCompiler
   protected:
     void spew(const char *event, const char *op) {
 #ifdef JS_METHODJIT_SPEW
+        AutoAssertNoGC nogc;
         JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
                    type, event, op, f.script()->filename, CurrentLine(cx));
 #endif
@@ -728,6 +729,7 @@ struct GetPropHelper {
     }
 
     LookupStatus testForGet() {
+        AutoAssertNoGC nogc;
         if (!shape->hasDefaultGetter()) {
             if (shape->hasGetterValue()) {
                 JSObject *getterObj = shape->getterObject();
@@ -896,6 +898,8 @@ class GetPropCompiler : public PICStubCompiler
 
     LookupStatus generateStringPropertyStub()
     {
+        AssertCanGC();
+
         if (!f.fp()->script()->compileAndGo)
             return disable("String.prototype without compile-and-go global");
 
@@ -1050,6 +1054,8 @@ class GetPropCompiler : public PICStubCompiler
     void generateGetterStub(Assembler &masm, Shape *shape, jsid userid,
                             Label start, Vector<Jump, 8> &shapeMismatches)
     {
+        AutoAssertNoGC nogc;
+
         /*
          * Getter hook needs to be called from the stub. The state is fully
          * synced and no registers are live except the result registers.
@@ -1160,6 +1166,8 @@ class GetPropCompiler : public PICStubCompiler
     void generateNativeGetterStub(Assembler &masm, Shape *shape,
                                   Label start, Vector<Jump, 8> &shapeMismatches)
     {
+        AutoAssertNoGC nogc;
+
         /*
          * Getter hook needs to be called from the stub. The state is fully
          * synced and no registers are live except the result registers.
@@ -1250,6 +1258,7 @@ class GetPropCompiler : public PICStubCompiler
 
     LookupStatus generateStub(JSObject *holder, HandleShape shape)
     {
+        AssertCanGC();
         Vector<Jump, 8> shapeMismatches(cx);
 
         MJITInstrumentation sps(&f.cx->runtime->spsProfiler);
@@ -1264,7 +1273,10 @@ class GetPropCompiler : public PICStubCompiler
 
         bool setStubShapeOffset = true;
         if (obj->isDenseArray()) {
-            MarkNotIdempotent(f.script(), f.pc());
+            {
+                RawScript script = f.script().unsafeGet();
+                MarkNotIdempotent(script, f.pc());
+            }
 
             start = masm.label();
             shapeGuardJump = masm.branchPtr(Assembler::NotEqual,
@@ -1380,7 +1392,10 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         if (shape && !shape->hasDefaultGetter()) {
-            MarkNotIdempotent(f.script(), f.pc());
+            {
+                RawScript script = f.script().unsafeGet();
+                MarkNotIdempotent(script, f.pc());
+            }
 
             if (shape->hasGetterValue()) {
                 generateNativeGetterStub(masm, shape, start, shapeMismatches);
@@ -1485,14 +1500,17 @@ class GetPropCompiler : public PICStubCompiler
             /* Don't touch the IC if it may have been destroyed. */
             if (!monitor.recompiled())
                 pic.hadUncacheable = true;
-            MarkNotIdempotent(f.script(), f.pc());
+            RawScript script = f.script().unsafeGet();
+            MarkNotIdempotent(script, f.pc());
             return status;
         }
 
         // Mark as not idempotent to avoid recompilation in Ion Monkey
         // GetPropertyCache.
-        if (!obj->hasIdempotentProtoChain())
-            MarkNotIdempotent(f.script(), f.pc());
+        if (!obj->hasIdempotentProtoChain()) {
+            RawScript script = f.script().unsafeGet();
+            MarkNotIdempotent(script, f.pc());
+        }
 
         if (hadGC())
             return Lookup_Uncacheable;
@@ -2046,7 +2064,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
 
     RootedValue v(f.cx);
     if (cached) {
-        if (!GetPropertyOperation(f.cx, f.script(), f.pc(), &objval, &v))
+        RootedScript script(f.cx, f.script());
+        if (!GetPropertyOperation(f.cx, script, f.pc(), &objval, &v))
             THROW();
     } else {
         if (!JSObject::getProperty(f.cx, obj, obj, name, &v))
@@ -2170,6 +2189,7 @@ void
 BaseIC::spew(VMFrame &f, const char *event, const char *message)
 {
 #ifdef JS_METHODJIT_SPEW
+    AutoAssertNoGC nogc;
     JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
                js_CodeName[JSOp(*f.pc())], event, message,
                f.cx->fp()->script()->filename, CurrentLine(f.cx));
@@ -2177,8 +2197,11 @@ BaseIC::spew(VMFrame &f, const char *event, const char *message)
 }
 
 /* Total length of scripts preceding a frame. */
-inline uint32_t frameCountersOffset(VMFrame &f)
+inline uint32_t
+frameCountersOffset(VMFrame &f)
 {
+    AutoAssertNoGC nogc;
+
     JSContext *cx = f.cx;
 
     uint32_t offset = 0;
@@ -2413,7 +2436,8 @@ GetElementIC::attachGetProp(VMFrame &f, HandleObject obj, HandleValue v, HandleP
     char *chars = DeflateString(cx, v.toString()->getChars(cx), v.toString()->length());
     JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom %p (\"%s\") shape %p (%s: %d)\n",
                js_CodeName[JSOp(*f.pc())], cs.executableAddress(), (void*)name, chars,
-               (void*)holder->lastProperty(), cx->fp()->script()->filename, CurrentLine(cx));
+               (void*)holder->lastProperty(), cx->fp()->script()->filename,
+               CurrentLine(cx));
     js_free(chars);
 #endif
 
