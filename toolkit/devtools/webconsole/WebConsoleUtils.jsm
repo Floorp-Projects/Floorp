@@ -44,21 +44,7 @@ const REGEX_MATCH_FUNCTION_NAME = /^\(?function\s+([^(\s]+)\s*\(/;
 // Match the function arguments from the result of toString() or toSource().
 const REGEX_MATCH_FUNCTION_ARGS = /^\(?function\s*[^\s(]*\s*\((.+?)\)/;
 
-const TYPES = { OBJECT: 0,
-                FUNCTION: 1,
-                ARRAY: 2,
-                OTHER: 3,
-                ITERATOR: 4,
-                GETTER: 5,
-                GENERATOR: 6,
-                STRING: 7
-              };
-
-var gObjectId = 0;
-
 var WebConsoleUtils = {
-  TYPES: TYPES,
-
   /**
    * Convenience function to unwrap a wrapped object.
    *
@@ -355,103 +341,6 @@ var WebConsoleUtils = {
   },
 
   /**
-   * Figures out the type of aObject and the string to display as the object
-   * value.
-   *
-   * @see TYPES
-   * @param object aObject
-   *        The object to operate on.
-   * @return object
-   *         An object of the form:
-   *         {
-   *           type: TYPES.OBJECT || TYPES.FUNCTION || ...
-   *           display: string for displaying the object
-   *         }
-   */
-  presentableValueFor: function WCU_presentableValueFor(aObject)
-  {
-    let type = this.getResultType(aObject);
-    let presentable;
-
-    switch (type) {
-      case "undefined":
-      case "null":
-        return {
-          type: TYPES.OTHER,
-          display: type
-        };
-
-      case "array":
-        return {
-          type: TYPES.ARRAY,
-          display: "Array"
-        };
-
-      case "string":
-        return {
-          type: TYPES.STRING,
-          display: "\"" + aObject + "\""
-        };
-
-      case "date":
-      case "regexp":
-      case "number":
-      case "boolean":
-        return {
-          type: TYPES.OTHER,
-          display: aObject.toString()
-        };
-
-      case "iterator":
-        return {
-          type: TYPES.ITERATOR,
-          display: "Iterator"
-        };
-
-      case "function":
-        presentable = aObject.toString();
-        return {
-          type: TYPES.FUNCTION,
-          display: presentable.substring(0, presentable.indexOf(')') + 1)
-        };
-
-      default:
-        presentable = String(aObject);
-        let m = /^\[object (\S+)\]/.exec(presentable);
-
-        try {
-          if (typeof aObject == "object" && typeof aObject.next == "function" &&
-              m && m[1] == "Generator") {
-            return {
-              type: TYPES.GENERATOR,
-              display: m[1]
-            };
-          }
-        }
-        catch (ex) {
-          // window.history.next throws in the typeof check above.
-          return {
-            type: TYPES.OBJECT,
-            display: m ? m[1] : "Object"
-          };
-        }
-
-        if (typeof aObject == "object" &&
-            typeof aObject.__iterator__ == "function") {
-          return {
-            type: TYPES.ITERATOR,
-            display: "Iterator"
-          };
-        }
-
-        return {
-          type: TYPES.OBJECT,
-          display: m ? m[1] : "Object"
-        };
-    }
-  },
-
-  /**
    * Tells if the given function is native or not.
    *
    * @param function aFunction
@@ -517,95 +406,6 @@ var WebConsoleUtils = {
       }
     }
     return desc;
-  },
-
-  /**
-   * Get an array that describes the properties of the given object.
-   *
-   * @param object aObject
-   *        The object to get the properties from.
-   * @param object aObjectCache
-   *        Optional object cache where to store references to properties of
-   *        aObject that are inspectable. See this.isObjectInspectable().
-   * @return array
-   *         An array that describes each property from the given object. Each
-   *         array element is an object (a property descriptor). Each property
-   *         descriptor has the following properties:
-   *         - name - property name
-   *         - value - a presentable property value representation (see
-   *                   this.presentableValueFor())
-   *         - type - value type (see this.presentableValueFor())
-   *         - inspectable - tells if the property value holds further
-   *                         properties (see this.isObjectInspectable()).
-   *         - objectId - optional, available only if aObjectCache is given and
-   *         if |inspectable| is true. You can do
-   *         aObjectCache[propertyDescriptor.objectId] to get the actual object
-   *         referenced by the property of aObject.
-   */
-  namesAndValuesOf: function WCU_namesAndValuesOf(aObject, aObjectCache)
-  {
-    let pairs = [];
-    let value, presentable;
-
-    let isDOMDocument = aObject instanceof Ci.nsIDOMDocument;
-    let deprecated = ["width", "height", "inputEncoding"];
-
-    for (let propName in aObject) {
-      // See bug 632275: skip deprecated properties.
-      if (isDOMDocument && deprecated.indexOf(propName) > -1) {
-        continue;
-      }
-
-      // Also skip non-native getters.
-      if (this.isNonNativeGetter(aObject, propName)) {
-        value = "";
-        presentable = {type: TYPES.GETTER, display: "Getter"};
-      }
-      else {
-        try {
-          value = aObject[propName];
-          presentable = this.presentableValueFor(value);
-        }
-        catch (ex) {
-          continue;
-        }
-      }
-
-      let pair = {};
-      pair.name = propName;
-      pair.value = presentable.display;
-      pair.inspectable = false;
-      pair.type = presentable.type;
-
-      switch (presentable.type) {
-        case TYPES.GETTER:
-        case TYPES.ITERATOR:
-        case TYPES.GENERATOR:
-        case TYPES.STRING:
-          break;
-        default:
-          try {
-            for (let p in value) {
-              pair.inspectable = true;
-              break;
-            }
-          }
-          catch (ex) { }
-          break;
-      }
-
-      // Store the inspectable object.
-      if (pair.inspectable && aObjectCache) {
-        pair.objectId = ++gObjectId;
-        aObjectCache[pair.objectId] = value;
-      }
-
-      pairs.push(pair);
-    }
-
-    pairs.sort(this.propertiesSort);
-
-    return pairs;
   },
 
   /**
@@ -1368,7 +1168,7 @@ function getMatchedProps(aObj, aOptions = {matchProp: ""})
     aObj = aObj.constructor.prototype;
   }
   let c = MAX_COMPLETIONS;
-  let names = {};   // Using an Object to avoid duplicates.
+  let names = Object.create(null);   // Using an Object to avoid duplicates.
 
   // We need to go up the prototype chain.
   let ownNames = null;
@@ -1378,7 +1178,7 @@ function getMatchedProps(aObj, aOptions = {matchProp: ""})
       // Filtering happens here.
       // If we already have it in, no need to append it.
       if (ownNames[i].indexOf(aOptions.matchProp) != 0 ||
-          names[ownNames[i]] == true) {
+          ownNames[i] in names) {
         continue;
       }
       c--;
