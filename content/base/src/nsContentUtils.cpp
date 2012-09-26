@@ -6394,26 +6394,24 @@ DebugWrapperTraceCallback(void *p, const char *name, void *closure)
 
 // static
 void
-nsContentUtils::CheckCCWrapperTraversal(nsISupports* aScriptObjectHolder,
-                                        nsWrapperCache* aCache)
+nsContentUtils::CheckCCWrapperTraversal(void* aScriptObjectHolder,
+                                        nsWrapperCache* aCache,
+                                        nsScriptObjectTracer* aTracer)
 {
   JSObject* wrapper = aCache->GetWrapper();
   if (!wrapper) {
     return;
   }
 
-  nsXPCOMCycleCollectionParticipant* participant;
-  CallQueryInterface(aScriptObjectHolder, &participant);
-
   DebugWrapperTraversalCallback callback(wrapper);
 
-  participant->Traverse(aScriptObjectHolder, callback);
+  aTracer->Traverse(aScriptObjectHolder, callback);
   NS_ASSERTION(callback.mFound,
                "Cycle collection participant didn't traverse to preserved "
                "wrapper! This will probably crash.");
 
   callback.mFound = false;
-  participant->Trace(aScriptObjectHolder, DebugWrapperTraceCallback, &callback);
+  aTracer->Trace(aScriptObjectHolder, DebugWrapperTraceCallback, &callback);
   NS_ASSERTION(callback.mFound,
                "Cycle collection participant didn't trace preserved wrapper! "
                "This will probably crash.");
@@ -6932,7 +6930,7 @@ nsContentUtils::GetRootDocument(nsIDocument* aDoc)
 
 // static
 void
-nsContentUtils::ReleaseWrapper(nsISupports* aScriptObjectHolder,
+nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
                                nsWrapperCache* aCache)
 {
   if (aCache->PreservingWrapper()) {

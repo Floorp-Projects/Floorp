@@ -1295,8 +1295,9 @@ public:
 #ifdef DEBUG
   static bool AreJSObjectsHeld(void* aScriptObjectHolder); 
 
-  static void CheckCCWrapperTraversal(nsISupports* aScriptObjectHolder,
-                                      nsWrapperCache* aCache);
+  static void CheckCCWrapperTraversal(void* aScriptObjectHolder,
+                                      nsWrapperCache* aCache,
+                                      nsScriptObjectTracer* aTracer);
 #endif
 
   static void PreserveWrapper(nsISupports* aScriptObjectHolder,
@@ -1309,15 +1310,23 @@ public:
       MOZ_ASSERT(ccISupports);
       nsXPCOMCycleCollectionParticipant* participant;
       CallQueryInterface(ccISupports, &participant);
-      HoldJSObjects(ccISupports, participant);
+      PreserveWrapper(ccISupports, aCache, participant);
+    }
+  }
+  static void PreserveWrapper(void* aScriptObjectHolder,
+                              nsWrapperCache* aCache,
+                              nsScriptObjectTracer* aTracer)
+  {
+    if (!aCache->PreservingWrapper()) {
+      HoldJSObjects(aScriptObjectHolder, aTracer);
       aCache->SetPreservingWrapper(true);
 #ifdef DEBUG
       // Make sure the cycle collector will be able to traverse to the wrapper.
-      CheckCCWrapperTraversal(ccISupports, aCache);
+      CheckCCWrapperTraversal(aScriptObjectHolder, aCache, aTracer);
 #endif
     }
   }
-  static void ReleaseWrapper(nsISupports* aScriptObjectHolder,
+  static void ReleaseWrapper(void* aScriptObjectHolder,
                              nsWrapperCache* aCache);
   static void TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
                            void *aClosure);
