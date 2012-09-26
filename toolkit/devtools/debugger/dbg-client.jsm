@@ -22,6 +22,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "socketTransportService",
                                    "@mozilla.org/network/socket-transport-service;1",
                                    "nsISocketTransportService");
 
+XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleClient",
+                                  "resource://gre/modules/devtools/WebConsoleClient.jsm");
+
 let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 
 function dumpn(str)
@@ -167,6 +170,7 @@ const UnsolicitedNotifications = {
   "newScript": "newScript",
   "tabDetached": "tabDetached",
   "tabNavigated": "tabNavigated",
+  "pageError": "pageError",
   "profilerStateChanged": "profilerStateChanged"
 };
 
@@ -194,6 +198,7 @@ function DebuggerClient(aTransport)
   this._transport.hooks = this;
   this._threadClients = {};
   this._tabClients = {};
+  this._consoleClients = {};
 
   this._pendingRequests = [];
   this._activeRequests = {};
@@ -249,10 +254,32 @@ DebuggerClient.prototype = {
       }
     }.bind(this);
 
-    if (this.activeThread) {
-      this.activeThread.detach(detachTab);
-    } else {
-      detachTab();
+    let detachThread = function _detachThread() {
+      if (this.activeThread) {
+        this.activeThread.detach(detachTab);
+      } else {
+        detachTab();
+      }
+    }.bind(this);
+
+    let consolesClosed = 0;
+    let consolesToClose = 0;
+
+    let onConsoleClose = function _onConsoleClose() {
+      consolesClosed++;
+      if (consolesClosed >= consolesToClose) {
+        this._consoleClients = {};
+        detachThread();
+      }
+    }.bind(this);
+
+    for each (let client in this._consoleClients) {
+      consolesToClose++;
+      client.close(onConsoleClose);
+    }
+
+    if (!consolesToClose) {
+      detachThread();
     }
   },
 
@@ -282,12 +309,43 @@ DebuggerClient.prototype = {
     let self = this;
     let packet = { to: aTabActor, type: "attach" };
     this.request(packet, function(aResponse) {
+      let tabClient;
       if (!aResponse.error) {
-        var tabClient = new TabClient(self, aTabActor);
+        tabClient = new TabClient(self, aTabActor);
         self._tabClients[aTabActor] = tabClient;
         self.activeTab = tabClient;
       }
       aOnResponse(aResponse, tabClient);
+    });
+  },
+
+  /**
+   * Attach to a Web Console actor.
+   *
+   * @param string aConsoleActor
+   *        The ID for the console actor to attach to.
+   * @param array aListeners
+   *        The console listeners you want to start.
+   * @param function aOnResponse
+   *        Called with the response packet and a WebConsoleClient
+   *        instance (which will be undefined on error).
+   */
+  attachConsole:
+  function DC_attachConsole(aConsoleActor, aListeners, aOnResponse) {
+    let self = this;
+    let packet = {
+      to: aConsoleActor,
+      type: "startListeners",
+      listeners: aListeners,
+    };
+
+    this.request(packet, function(aResponse) {
+      let consoleClient;
+      if (!aResponse.error) {
+        consoleClient = new WebConsoleClient(self, aConsoleActor);
+        self._consoleClients[aConsoleActor] = consoleClient;
+      }
+      aOnResponse(aResponse, consoleClient);
     });
   },
 
