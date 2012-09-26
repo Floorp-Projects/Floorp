@@ -1,0 +1,8 @@
+msgid "build.threads.short"
+msgstr "Thread Count"
+
+msgid "build.threads.full"
+msgstr "The number of threads to use when performing CPU intensive tasks. "
+       "This constrols the level of parallelization. The default value is "
+       "the number of cores in your machine."
+
