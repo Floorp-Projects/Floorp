@@ -29,6 +29,7 @@ using namespace js::ion;
 JSScript *
 ion::MaybeScriptFromCalleeToken(CalleeToken token)
 {
+    AutoAssertNoGC nogc;
     switch (GetCalleeTokenTag(token)) {
       case CalleeToken_Script:
         return CalleeTokenToScript(token);
@@ -67,8 +68,9 @@ IonFrameIterator::checkInvalidation() const
 bool
 IonFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
 {
+    AutoAssertNoGC nogc;
     uint8 *returnAddr = returnAddressToFp();
-    JSScript *script = this->script();
+    RawScript script = this->script();
     // N.B. the current IonScript is not the same as the frame's
     // IonScript if the frame has since been invalidated.
     IonScript *currentIonScript = script->ion;
@@ -170,8 +172,9 @@ IonFrameIterator::isEntryJSFrame() const
 JSScript *
 IonFrameIterator::script() const
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(isScripted());
-    JSScript *script = MaybeScriptFromCalleeToken(calleeToken());
+    RawScript script = MaybeScriptFromCalleeToken(calleeToken());
     JS_ASSERT(script);
     return script;
 }
@@ -260,6 +263,7 @@ IonFrameIterator::machineState() const
 static void
 CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32 localSlot)
 {
+    AssertCanGC();
     SnapshotIterator si = frame.snapshotIterator();
 
     // Skip stack slots until we reach the iterator object.
@@ -281,7 +285,8 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32 localS
 static void
 CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
 {
-    JSScript *script = frame.script();
+    AssertCanGC();
+    RootedScript script(cx, frame.script());
     jsbytecode *pc = frame.pc();
 
     if (!script->hasTrynotes())
@@ -311,6 +316,7 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
 void
 ion::HandleException(ResumeFromException *rfe)
 {
+    AssertCanGC();
     JSContext *cx = GetIonContext()->cx;
 
     IonSpew(IonSpew_Invalidate, "handling exception");
@@ -331,7 +337,8 @@ ion::HandleException(ResumeFromException *rfe)
                 // When profiling, each frame popped needs a notification that
                 // the function has exited, so invoke the probe that a function
                 // is exiting.
-                JSScript *script = frames.script();
+                AutoAssertNoGC nogc;
+                RawScript script = frames.script();
                 Probes::exitScript(cx, script, script->function(), NULL);
                 if (!frames.more())
                     break;
@@ -900,6 +907,7 @@ InlineFrameIterator::InlineFrameIterator(const IonFrameIterator *iter)
 void
 InlineFrameIterator::findNextFrame()
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(more());
 
     si_ = start_;
@@ -1141,6 +1149,7 @@ struct DumpOp {
 void
 InlineFrameIterator::dump() const
 {
+    AutoAssertNoGC nogc;
     if (more())
         fprintf(stderr, " JS frame (inlined)\n");
     else

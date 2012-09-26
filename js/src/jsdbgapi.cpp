@@ -410,8 +410,9 @@ JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 extern JS_PUBLIC_API(uintptr_t *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
+    RootedScript script(cx, fun->script());
     BindingVector bindings(cx);
-    if (!FillBindingVector(fun->script(), &bindings))
+    if (!FillBindingVector(script, &bindings))
         return NULL;
 
     /* Munge data into the API this method implements.  Avert your eyes! */
@@ -450,6 +451,7 @@ JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mark)
 JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
+    AutoAssertNoGC nogc;
     return fun->maybeScript();
 }
 
@@ -498,6 +500,7 @@ JS_BrokenFrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 JS_PUBLIC_API(JSScript *)
 JS_GetFrameScript(JSContext *cx, JSStackFrame *fpArg)
 {
+    AutoAssertNoGC nogc;
     return Valueify(fpArg)->script();
 }
 
@@ -532,6 +535,7 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fpArg)
 JS_PUBLIC_API(void)
 JS_SetTopFrameAnnotation(JSContext *cx, void *annotation)
 {
+    AutoAssertNoGC nogc;
     StackFrame *fp = cx->fp();
     JS_ASSERT_IF(fp->beginsIonActivation(), !fp->annotation());
 
@@ -542,7 +546,7 @@ JS_SetTopFrameAnnotation(JSContext *cx, void *annotation)
     // because we will never EnterIon on a frame with an annotation.
     fp->setAnnotation(annotation);
 
-    JSScript *script = fp->script();
+    RawScript script = fp->script();
 
     ReleaseAllJITCode(cx->runtime->defaultFreeOp());
 
@@ -671,6 +675,7 @@ JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(void)
 JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fpArg, jsval rval)
 {
+    AutoAssertNoGC nogc;
     StackFrame *fp = Valueify(fpArg);
 #ifdef JS_METHODJIT
     JS_ASSERT(fp->script()->debugMode);
@@ -1006,9 +1011,8 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
 JS_PUBLIC_API(size_t)
 JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
 {
-    size_t nbytes;
-
-    nbytes = sizeof *fun;
+    AutoAssertNoGC nogc;
+    size_t nbytes = sizeof *fun;
     nbytes += JS_GetObjectTotalSize(cx, fun);
     if (fun->isInterpreted())
         nbytes += JS_GetScriptTotalSize(cx, fun->script());
@@ -1175,11 +1179,13 @@ JS_UnwrapObjectAndInnerize(JSObject *obj)
 JS_FRIEND_API(JSBool)
 js_CallContextDebugHandler(JSContext *cx)
 {
+    AssertCanGC();
     ScriptFrameIter iter(cx);
     JS_ASSERT(!iter.done());
 
-    jsval rval;
-    switch (js::CallContextDebugHandler(cx, iter.script(), iter.pc(), &rval)) {
+    RootedValue rval(cx);
+    RootedScript script(cx, iter.script());
+    switch (js::CallContextDebugHandler(cx, script, iter.pc(), rval.address())) {
       case JSTRAP_ERROR:
         JS_ClearPendingException(cx);
         return JS_FALSE;
@@ -1196,6 +1202,7 @@ js_CallContextDebugHandler(JSContext *cx)
 JS_PUBLIC_API(StackDescription *)
 JS::DescribeStack(JSContext *cx, unsigned maxFrames)
 {
+    AutoAssertNoGC nogc;
     Vector<FrameDescription> frames(cx);
 
     for (ScriptFrameIter i(cx); !i.done(); ++i) {
@@ -1272,7 +1279,9 @@ static char *
 FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
             JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
-    JSScript* script = iter.script();
+    AssertCanGC();
+
+    RootedScript script(cx, iter.script());
     jsbytecode* pc = iter.pc();
 
     RootedObject scopeChain(cx, iter.scopeChain());
@@ -1280,12 +1289,12 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
 
     const char *filename = script->filename;
     unsigned lineno = PCToLineNumber(script, pc);
-    JSFunction *fun = iter.maybeCallee();
-    JSString *funname = NULL;
+    RootedFunction fun(cx, iter.maybeCallee());
+    RootedString funname(cx);
     if (fun)
         funname = fun->atom();
 
-    JSObject *callObj = NULL;
+    RootedObject callObj(cx);
     AutoPropertyDescArray callProps(cx);
 
     if (!iter.isIon() && (showArgs || showLocals)) {
@@ -1294,7 +1303,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
             callProps.fetch(callObj);
     }
 
-    Value thisVal = UndefinedValue();
+    RootedValue thisVal(cx);
     AutoPropertyDescArray thisProps(cx);
     if (iter.computeThis()) {
         thisVal = iter.thisv();
@@ -1340,11 +1349,11 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
         }
 
         // print any unnamed trailing args (found in 'arguments' object)
-        Value val;
-        if (JS_GetProperty(cx, callObj, "arguments", &val) && val.isObject()) {
+        RootedValue val(cx);
+        if (JS_GetProperty(cx, callObj, "arguments", val.address()) && val.isObject()) {
             uint32_t argCount;
-            JSObject* argsObj = &val.toObject();
-            if (JS_GetProperty(cx, argsObj, "length", &val) &&
+            RootedObject argsObj(cx, &val.toObject());
+            if (JS_GetProperty(cx, argsObj, "length", val.address()) &&
                 ToUint32(cx, val, &argCount) &&
                 argCount > namedArgCount)
             {
@@ -1352,7 +1361,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
                     char number[8];
                     JS_snprintf(number, 8, "%d", (int) k);
 
-                    if (JS_GetProperty(cx, argsObj, number, &val)) {
+                    if (JS_GetProperty(cx, argsObj, number, val.address())) {
                         JSAutoByteString valueBytes;
                         const char *value = FormatValue(cx, val, valueBytes);
                         buf = JS_sprintf_append(buf, "%s%s%s%s",
@@ -1401,7 +1410,8 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
     if (showLocals) {
         if (!thisVal.isUndefined()) {
             JSAutoByteString thisValBytes;
-            if (JSString* thisValStr = ToString(cx, thisVal)) {
+            RootedString thisValStr(cx, ToString(cx, thisVal));
+            if (thisValStr) {
                 if (const char *str = thisValBytes.encode(cx, thisValStr)) {
                     buf = JS_sprintf_append(buf, "    this = %s\n", str);
                     if (!buf)

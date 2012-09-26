@@ -5540,6 +5540,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
 JS_FRIEND_API(void)
 js_DumpBacktrace(JSContext *cx)
 {
+    AutoAssertNoGC nogc;
     Sprinter sprinter(cx);
     sprinter.init();
     size_t depth = 0;
@@ -5547,10 +5548,10 @@ js_DumpBacktrace(JSContext *cx)
         if (i.isScript()) {
             const char *filename = JS_GetScriptFilename(cx, i.script());
             unsigned line = JS_PCToLineNumber(cx, i.script(), i.pc());
+            RawScript script = i.script();
             sprinter.printf("#%d %14p   %s:%d (%p @ %d)\n",
-                            depth, (i.isIon() ? 0 : i.interpFrame()),
-                            filename, line,
-                            i.script(), i.pc() - i.script()->code);
+                            depth, (i.isIon() ? 0 : i.interpFrame()), filename, line,
+                            script, i.pc() - script->code);
         } else {
             sprinter.printf("#%d ???\n", depth);
         }
