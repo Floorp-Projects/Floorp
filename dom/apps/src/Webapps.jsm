@@ -863,7 +863,7 @@ let DOMApplicationRegistry = {
     }
 
     if (!found) {
-      aData.mm.broadcastMessage("Webapps:Uninstall:Return:KO", aData);
+      aData.mm.sendAsyncMessage("Webapps:Uninstall:Return:KO", aData);
     }
   },
 
