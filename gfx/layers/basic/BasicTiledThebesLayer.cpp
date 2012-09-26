@@ -250,18 +250,21 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   // Force immediate tile painting when the layer has changed resolution.
   if (gfxPlatform::UseProgressiveTilePainting() &&
       mTiledBuffer.GetResolution() == resolution) {
+    // Paint tiles that have no content before tiles that only have stale content.
+    nsIntRegion staleRegion = mTiledBuffer.GetValidRegion();
+    staleRegion.And(staleRegion, regionToPaint);
+    if (!staleRegion.IsEmpty() && !staleRegion.Contains(regionToPaint)) {
+      regionToPaint.Sub(regionToPaint, staleRegion);
+    }
+
     nsIntRegionRectIterator it(regionToPaint);
     const nsIntRect* rect = it.Next();
     if (!rect)
       return;
 
-    // Currently we start painting from the first rect of the invalid
-    // region and convert that into a tile.
-    // TODO: Use a smart tile prioritization such as:
-    //         (1) Paint tiles that have no content first
-    //         (2) Then paint tiles that have stale content
-    //         (3) Order tiles using they position from relevant
-    //             user interaction events.
+    // Currently we start painting from the first rect of the paint
+    // region and convert that into a tile. We should order tiles using
+    // their position from relevant user interaction events.
     int paintTileStartX = mTiledBuffer.RoundDownToTileEdge(rect->x);
     int paintTileStartY = mTiledBuffer.RoundDownToTileEdge(rect->y);
 
