@@ -3349,8 +3349,11 @@ HttpCacheQuery::OpenCacheInputStream(bool startBuffering)
             NS_WARNING("failed to parse security-info");
             return rv;
         }
-        MOZ_ASSERT(mCachedSecurityInfo);
-        if (!mCachedSecurityInfo) {
+
+        // XXX: We should not be skilling this check in the offline cache
+        // case, but we have to do so now to work around bug 794507.
+        MOZ_ASSERT(mCachedSecurityInfo || mLoadedFromApplicationCache);
+        if (!mCachedSecurityInfo && !mLoadedFromApplicationCache) {
             LOG(("mCacheEntry->GetSecurityInfo returned success but did not "
                  "return the security info [channel=%p, entry=%p]",
                  this, mCacheEntry.get()));
