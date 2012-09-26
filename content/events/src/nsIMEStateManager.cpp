@@ -34,7 +34,10 @@
 #include "nsIForm.h"
 #include "nsHTMLFormElement.h"
 #include "mozilla/Attributes.h"
+#include "nsEventDispatcher.h"
+#include "TextComposition.h"
 
+using namespace mozilla;
 using namespace mozilla::widget;
 
 /******************************************************************/
@@ -47,11 +50,33 @@ bool           nsIMEStateManager::sInstalledMenuKeyboardListener = false;
 bool           nsIMEStateManager::sInSecureInputMode = false;
 
 nsTextStateManager* nsIMEStateManager::sTextStateObserver = nullptr;
+TextCompositionArray* nsIMEStateManager::sTextCompositions = nullptr;
+
+void
+nsIMEStateManager::Shutdown()
+{
+  MOZ_ASSERT(!sTextCompositions || !sTextCompositions->Length());
+  delete sTextCompositions;
+  sTextCompositions = nullptr;
+}
 
 nsresult
 nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
+
+  // First, if there is a composition in the aPresContext, clean up it.
+  if (sTextCompositions) {
+    TextCompositionArray::index_type i =
+      sTextCompositions->IndexOf(aPresContext);
+    if (i != TextCompositionArray::NoIndex) {
+      // there should be only one composition per presContext object.
+      sTextCompositions->RemoveElementAt(i);
+      MOZ_ASSERT(sTextCompositions->IndexOf(aPresContext) ==
+                   TextCompositionArray::NoIndex);
+    }
+  }
+
   if (aPresContext != sPresContext)
     return NS_OK;
   nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
@@ -72,17 +97,35 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
                                    nsIContent* aContent)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
+
+  // First, if there is a composition in the aContent, clean up it.
+  if (sTextCompositions) {
+    TextComposition* compositionInContent =
+      sTextCompositions->GetCompositionInContent(aPresContext, aContent);
+    if (compositionInContent) {
+      // Try resetting the native IME state.  Be aware, typically, this method
+      // is called during the content being removed.  Then, the native
+      // composition events which are caused by following APIs are ignored due
+      // to unsafe to run script (in PresShell::HandleEvent()).
+      nsCOMPtr<nsIWidget> widget = aPresContext->GetNearestWidget();
+      if (widget) {
+        nsresult rv = widget->CancelIMEComposition();
+        if (NS_FAILED(rv)) {
+          widget->ResetInputState();
+        }
+        // WARNING: the |compositionInContent| may have been destroyed.
+      }
+    }
+  }
+
   if (!sPresContext || !sContent ||
-      aPresContext != sPresContext ||
-      aContent != sContent)
+      !nsContentUtils::ContentIsDescendantOf(sContent, aContent)) {
     return NS_OK;
+  }
 
   // Current IME transaction should commit
   nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
   if (widget) {
-    nsresult rv = widget->CancelIMEComposition();
-    if (NS_FAILED(rv))
-      widget->ResetInputState();
     IMEState newState = GetNewIMEState(sPresContext, nullptr);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::LOST_FOCUS);
@@ -382,6 +425,61 @@ nsIMEStateManager::GetWidget(nsPresContext* aPresContext)
   nsresult rv = vm->GetRootWidget(getter_AddRefs(widget));
   NS_ENSURE_SUCCESS(rv, nullptr);
   return widget;
+}
+
+void
+nsIMEStateManager::EnsureTextCompositionArray()
+{
+  if (sTextCompositions) {
+    return;
+  }
+  sTextCompositions = new TextCompositionArray();
+}
+
+void
+nsIMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
+                                            nsPresContext* aPresContext,
+                                            nsEvent* aEvent,
+                                            nsEventStatus* aStatus,
+                                            nsDispatchingCallback* aCallBack)
+{
+  MOZ_ASSERT(aEvent->eventStructType == NS_COMPOSITION_EVENT ||
+             aEvent->eventStructType == NS_TEXT_EVENT);
+  if (!NS_IS_TRUSTED_EVENT(aEvent) ||
+      (aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) != 0) {
+    return;
+  }
+
+  EnsureTextCompositionArray();
+
+  nsGUIEvent* GUIEvent = static_cast<nsGUIEvent*>(aEvent);
+
+  TextComposition* composition =
+    sTextCompositions->GetCompositionFor(GUIEvent->widget);
+  if (!composition) {
+    MOZ_ASSERT(GUIEvent->message == NS_COMPOSITION_START);
+    TextComposition newComposition(aPresContext, aEventTargetNode, GUIEvent);
+    composition = sTextCompositions->AppendElement(newComposition);
+  }
+#ifdef DEBUG
+  else {
+    MOZ_ASSERT(GUIEvent->message != NS_COMPOSITION_START);
+  }
+#endif // #ifdef DEBUG
+
+  // Dispatch the event on composing target.
+  composition->DispatchEvent(GUIEvent, aStatus, aCallBack);
+
+  // WARNING: the |composition| might have been destroyed already.
+
+  // Remove the ended composition from the array.
+  if (aEvent->message == NS_COMPOSITION_END) {
+    TextCompositionArray::index_type i =
+      sTextCompositions->IndexOf(GUIEvent->widget);
+    if (i != TextCompositionArray::NoIndex) {
+      sTextCompositions->RemoveElementAt(i);
+    }
+  }
 }
 
 
