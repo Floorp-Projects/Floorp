@@ -2972,8 +2972,15 @@ let RIL = {
       }
 
       if (!updatedDataCall) {
-        delete this.currentDataCalls[currentDataCall.callIndex];
         currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+        currentDataCall.rilMessageType = "datacallstatechange";
+        this.sendDOMMessage(currentDataCall);
+        continue;
+      }
+
+      if (updatedDataCall && !updatedDataCall.ifname) {
+        delete this.currentDataCalls[currentDataCall.cid];
+        currentDataCall.state = GECKO_NETWORK_STATE_UNKNOWN;
         currentDataCall.rilMessageType = "datacallstatechange";
         this.sendDOMMessage(currentDataCall);
         continue;
@@ -2990,6 +2997,9 @@ let RIL = {
     }
 
     for each (let newDataCall in datacalls) {
+      if (!newDataCall.ifname) {
+        continue;
+      }
       this.currentDataCalls[newDataCall.cid] = newDataCall;
       this._setDataCallGeckoState(newDataCall);
       if (newDataCallOptions) {
@@ -4071,7 +4081,7 @@ RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length
 
   let datacall = this.currentDataCalls[options.cid];
   delete this.currentDataCalls[options.cid];
-  datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+  datacall.state = GECKO_NETWORK_STATE_UNKNOWN;
   datacall.rilMessageType = "datacallstatechange";
   this.sendDOMMessage(datacall);
 };
