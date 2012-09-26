@@ -29,8 +29,8 @@
     function testTabRelations()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 0),
-        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 0),
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
      ];
 
       this.invoke = function testTabRelations_invoke()
@@ -61,8 +61,10 @@
     
     ////////////////////////////////////////////////////////////////////////////
     // Test
+
+    //gA11yEventDumpToConsole = true; // debug stuff
+
     var gQueue = null;
-    gA11yEventDumpToConsole = true;
     function doTest()
     {
       // Load documents into tabs and wait for DocLoadComplete events caused by
