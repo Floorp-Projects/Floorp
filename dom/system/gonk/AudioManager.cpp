@@ -33,6 +33,9 @@ using namespace mozilla;
 #define HEADPHONES_STATUS_OFF     NS_LITERAL_STRING("off").get()
 #define HEADPHONES_STATUS_UNKNOWN NS_LITERAL_STRING("unknown").get()
 
+// A bitwise variable for recording what kind of headset is attached.
+static int sHeadsetState;
+
 static bool
 IsFmRadioAudioOn()
 {
@@ -64,12 +67,58 @@ GetRoutingMode(int aType) {
 }
 
 static void
+InternalSetAudioRoutesICS(SwitchState aState)
+{
+  if (aState == SWITCH_STATE_HEADSET) {
+    AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADSET,
+                                          AUDIO_POLICY_DEVICE_STATE_AVAILABLE, "");
+    sHeadsetState |= AUDIO_DEVICE_OUT_WIRED_HEADSET;
+  } else if (aState == SWITCH_STATE_HEADPHONE) {
+    AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADPHONE,
+                                          AUDIO_POLICY_DEVICE_STATE_AVAILABLE, "");
+    sHeadsetState |= AUDIO_DEVICE_OUT_WIRED_HEADPHONE;
+  } else if (aState == SWITCH_STATE_OFF) {
+    AudioSystem::setDeviceConnectionState(static_cast<audio_devices_t>(sHeadsetState),
+                                          AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
+    sHeadsetState = 0;
+  }
+
+  // The audio volume is not consistent when we plug and unplug the headset.
+  // Set the fm volume again here.
+  if (IsFmRadioAudioOn()) {
+    float masterVolume;
+    AudioSystem::getMasterVolume(&masterVolume);
+    AudioSystem::setFmVolume(masterVolume);
+  }
+}
+
+static void
+InternalSetAudioRoutesGB(SwitchState aState)
+{
+  audio_io_handle_t handle = 
+    AudioSystem::getOutput((AudioSystem::stream_type)AudioSystem::SYSTEM);
+  String8 cmd;
+
+  if (aState == SWITCH_STATE_HEADSET || aState == SWITCH_STATE_HEADPHONE) {
+    cmd.appendFormat("routing=%d", GetRoutingMode(nsIAudioManager::FORCE_HEADPHONES));
+  } else if (aState == SWITCH_STATE_OFF) {
+    cmd.appendFormat("routing=%d", GetRoutingMode(nsIAudioManager::FORCE_SPEAKER));
+  }
+
+  AudioSystem::setParameters(handle, cmd);
+}
+
+static void
 InternalSetAudioRoutes(SwitchState aState)
 {
-  if (aState == SWITCH_STATE_ON) {
-    AudioManager::SetAudioRoute(nsIAudioManager::FORCE_HEADPHONES);
-  } else if (aState == SWITCH_STATE_OFF) {
-    AudioManager::SetAudioRoute(nsIAudioManager::FORCE_SPEAKER);
+  if (static_cast<
+    status_t (*)(audio_devices_t, audio_policy_dev_state_t, const char*)
+    >(AudioSystem::setDeviceConnectionState)) {
+    InternalSetAudioRoutesICS(aState);
+  } else if (static_cast<
+    audio_io_handle_t (*)(AudioSystem::stream_type, uint32_t, uint32_t, uint32_t, AudioSystem::output_flags)
+    >(AudioSystem::getOutput)) {
+    InternalSetAudioRoutesGB(aState);
   }
 }
 
@@ -101,7 +150,7 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
                  mObserver(new HeadphoneSwitchObserver())
 {
   RegisterSwitchObserver(SWITCH_HEADPHONES, mObserver);
-  
+
   InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
 }
 
@@ -233,34 +282,6 @@ AudioManager::GetForceForUse(int32_t aUsage, int32_t* aForce) {
     *aForce = AudioSystem::getForceUse((audio_policy_force_use_t)aUsage);
   }
   return NS_OK;
-}
-
-void
-AudioManager::SetAudioRoute(int aRoutes) {
-  if (static_cast<
-      audio_io_handle_t (*)(AudioSystem::stream_type, uint32_t, uint32_t, uint32_t, AudioSystem::output_flags)
-      >(AudioSystem::getOutput)) {
-    audio_io_handle_t handle = 0;
-    handle = AudioSystem::getOutput((AudioSystem::stream_type)AudioSystem::SYSTEM);
-    String8 cmd;
-    cmd.appendFormat("routing=%d", GetRoutingMode(aRoutes));
-    AudioSystem::setParameters(handle, cmd);
-  } else if (static_cast<
-             status_t (*)(audio_devices_t, audio_policy_dev_state_t, const char*)
-             >(AudioSystem::setDeviceConnectionState)) {
-    AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADSET, 
-        GetRoutingMode(aRoutes) == AudioSystem::DEVICE_OUT_WIRED_HEADSET ? 
-        AUDIO_POLICY_DEVICE_STATE_AVAILABLE : AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE,
-        "");
-
-    // The audio volume is not consistent when we plug and unplug the headset.
-    // Set the fm volume again here.
-    if (IsFmRadioAudioOn()) {
-      float masterVolume;
-      AudioSystem::getMasterVolume(&masterVolume);
-      AudioSystem::setFmVolume(masterVolume);
-    }
-  }
 }
 
 NS_IMETHODIMP

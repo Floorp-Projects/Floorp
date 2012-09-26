@@ -250,7 +250,7 @@ struct FunctionInfo
 
   // Calling convention of the function. Convert to ffi_abi using GetABI
   // and OBJECT_TO_JSVAL. Stored as a JSObject* for ease of tracing.
-  JSObject* mABI;                
+  JSObject* mABI;
 
   // The CType of the value returned by the function.
   JSObject* mReturnType;

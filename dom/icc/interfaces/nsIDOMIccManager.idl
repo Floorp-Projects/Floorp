@@ -7,7 +7,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, builtinclass, uuid(cf58adc2-2db6-4130-86d2-2044788889cb)]
+[scriptable, builtinclass, uuid(2eace3f9-6aa4-491b-820e-7d69ce7b3f02)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -30,6 +30,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * @see TS 11.14, clause 13.4
    */
   const unsigned short STK_CMD_REFRESH               = 0x01;
+  const unsigned short STK_CMD_SET_UP_EVENT_LIST     = 0x05;
   const unsigned short STK_CMD_SET_UP_CALL           = 0x10;
   const unsigned short STK_CMD_SEND_SS               = 0x11;
   const unsigned short STK_CMD_SEND_USSD             = 0x12;
@@ -139,6 +140,27 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
 
   /** Bearer Independent Protocol error */
   const unsigned short STK_RESULT_BIP_ERROR                         = 0x3a;
+
+  /**
+   * STK Event List
+   */
+   const unsigned short STK_EVENT_TYPE_MT_CALL                          = 0x00;
+   const unsigned short STK_EVENT_TYPE_CALL_CONNECTED                   = 0x01;
+   const unsigned short STK_EVENT_TYPE_CALL_DISCONNECTED                = 0x02;
+   const unsigned short STK_EVENT_TYPE_LOCATION_STATUS                  = 0x03;
+   const unsigned short STK_EVENT_TYPE_USER_ACTIVITY                    = 0x04;
+   const unsigned short STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE            = 0x05;
+   const unsigned short STK_EVENT_TYPE_CARD_READER_STATUS               = 0x06;
+   const unsigned short STK_EVENT_TYPE_LANGUAGE_SELECTION               = 0x07;
+   const unsigned short STK_EVENT_TYPE_BROWSER_TERMINATION              = 0x08;
+   const unsigned short STK_EVENT_TYPE_DATA_AVAILABLE                   = 0x09;
+   const unsigned short STK_EVENT_TYPE_CHANNEL_STATUS                   = 0x0a;
+   const unsigned short STK_EVENT_TYPE_SINGLE_ACCESS_TECHNOLOGY_CHANGED = 0x0b;
+   const unsigned short STK_EVENT_TYPE_DISPLAY_PARAMETER_CHANGED        = 0x0c;
+   const unsigned short STK_EVENT_TYPE_LOCAL_CONNECTION                 = 0x0d;
+   const unsigned short STK_EVENT_TYPE_NETWORK_SEARCH_MODE_CHANGED      = 0x0e;
+   const unsigned short STK_EVENT_TYPE_BROWSING_STATUS                  = 0x0f;
+   const unsigned short STK_EVENT_TYPE_FRAMES_INFORMATION_CHANGED       = 0x10;
 
   /**
    * Send the response back to ICC after an attempt to execute STK Proactive

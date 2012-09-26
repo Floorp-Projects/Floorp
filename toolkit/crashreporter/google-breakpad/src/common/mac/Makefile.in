@@ -19,6 +19,7 @@ LOCAL_INCLUDES 	= -I$(srcdir)/../..
 # The host lib is used for dump_syms, and the target lib for the
 # crash reporter client.  Therefore, we don't need all the srcs in both.
 CPPSRCS	= \
+  bootstrap_compat.cc \
   file_id.cc \
   macho_id.cc \
   macho_reader.cc \

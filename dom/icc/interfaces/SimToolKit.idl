@@ -243,6 +243,18 @@ dictionary MozStkSetUpCall
   jsval callMessage;
 };
 
+dictionary MozStkSetUpEventList
+{
+  /**
+   * The list of events that needs to provide details to ICC when they happen.
+   * When this valus is null, means an indication to remove the existing list
+   * of events in ME.
+   *
+   * @see nsIDOMMozIccManager.STK_EVENT_TYPE_*
+   */
+   jsval eventList; // unsigned short []
+};
+
 dictionary MozStkCommand
 {
   /**
@@ -267,29 +279,33 @@ dictionary MozStkCommand
    * options varies accrording to the typeOfCommand in MozStkCommand.
    *
    * When typeOfCommand is
-   * - STK_DISPLAY_TEXT
-   * - STK_SET_UP_IDLE_MODE_TEXT
-   * - STK_REFRESH
-   * - STK_SEND_{SS|USSD|SMS|DTMF},
+   * - STK_CMD_DISPLAY_TEXT
+   * - STK_CMD_SET_UP_IDLE_MODE_TEXT
+   * - STK_CMD_REFRESH
+   * - STK_CMD_SEND_{SS|USSD|SMS|DTMF},
    * options is MozStkTextMessage.
    *
    * When typeOfCommand is
-   * - STK_SELECT_ITEM
-   * - STK_SET_UP_MENU
+   * - STK_CMD_SELECT_ITEM
+   * - STK_CMD_SET_UP_MENU
    * options is MozStkMenu.
    *
    * When typeOfCommand is
-   * - STK_GET_INKEY
-   * - STK_GET_INPUT,
+   * - STK_CMD_GET_INKEY
+   * - STK_CMD_GET_INPUT,
    * options is MozStkInput.
    *
    * When typeOfCommand is
-   * - STK_LAUNCH_BROWSER
+   * - STK_CMD_LAUNCH_BROWSER
    * options is MozStkBrowserSetting.
    *
    * When typeOfCommand is
-   * - STK_SET_UP_CALL
+   * - STK_CMD_SET_UP_CALL
    * options is MozStkSetUpCall.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_SET_UP_EVENT_LIST
+   * options is MozStkSetUpEventList.
    */
   jsval options;
 };
@@ -324,25 +340,11 @@ dictionary MozStkResponse
   DOMString input;
 
   /**
-   * Alphabet encoding.
-   *
-   * @see MozStkInput.isUCS2
-   */
-  boolean isUCS2;
-
-  /**
    * YES/NO response.
    *
    * @see MozStkInput.isYesNoRequested
    */
   boolean isYesNo;
-
-  /**
-   * Packed or unpacked format.
-   *
-   * @see MozStkInput.isPacked
-   */
-  boolean isPacked;
 
   /**
    * User has confirmed or rejected the call during STK_CMD_CALL_SET_UP.
