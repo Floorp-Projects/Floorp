@@ -308,6 +308,9 @@ public:
 
   const char* GetURIString() { return mURIString.get();}
 
+  // Called from module startup. Sets up RasterImage to be used.
+  static void Initialize();
+
 private:
   struct Anim
   {
