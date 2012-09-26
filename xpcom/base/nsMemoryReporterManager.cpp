@@ -979,7 +979,7 @@ DumpReport(nsIFileOutputStream *aOStream, bool isFirst,
     return NS_OK;
 }
 
-class DumpMultiReporterCallback : public nsIMemoryMultiReporterCallback
+class DumpMultiReporterCallback MOZ_FINAL : public nsIMemoryMultiReporterCallback
 {
 public:
     NS_DECL_ISUPPORTS

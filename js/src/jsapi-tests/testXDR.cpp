@@ -134,7 +134,7 @@ JSScript *createScriptViaXDR(JSPrincipals *prin, JSPrincipals *orig, int testCas
         "function f() { return 1; }\n"
         "f;\n";
 
-    JS::RootedObject global(cx, JS_GetGlobalObject(cx));
+    js::RootedObject global(cx, JS_GetGlobalObject(cx));
     JSScript *script = CompileScriptForPrincipalsVersionOrigin(cx, global, prin, orig,
                                                                src, strlen(src), "test", 1,
                                                                JSVERSION_DEFAULT);
@@ -153,7 +153,7 @@ JSScript *createScriptViaXDR(JSPrincipals *prin, JSPrincipals *orig, int testCas
     JSBool ok = JS_ExecuteScript(cx, global, script, &v);
     if (!ok || !v.isObject())
         return NULL;
-    JS::RootedObject funobj(cx, &v.toObject());
+    js::RootedObject funobj(cx, &v.toObject());
     if (testCase == TEST_FUNCTION) {
         funobj = FreezeThaw(cx, funobj);
         if (!funobj)
@@ -185,7 +185,7 @@ BEGIN_TEST(testXDR_atline)
     CHECK(ok);
     CHECK(v.isObject());
 
-    JS::RootedObject funobj(cx, &v.toObject());
+    js::RootedObject funobj(cx, &v.toObject());
     script = JS_GetFunctionScript(cx, JS_GetObjectFunction(funobj));
     CHECK(!strcmp("foo", JS_GetScriptFilename(cx, script)));
 
@@ -212,7 +212,7 @@ BEGIN_TEST(testXDR_bug506491)
     CHECK(script);
 
     // execute
-    JS::RootedValue v2(cx);
+    js::RootedValue v2(cx);
     CHECK(JS_ExecuteScript(cx, global, script, v2.address()));
 
     // try to break the Block object that is the parent of f
@@ -220,7 +220,7 @@ BEGIN_TEST(testXDR_bug506491)
 
     // confirm
     EVAL("f() === 'ok';\n", v2.address());
-    JS::RootedValue trueval(cx, JSVAL_TRUE);
+    js::RootedValue trueval(cx, JSVAL_TRUE);
     CHECK_SAME(v2, trueval);
     return true;
 }

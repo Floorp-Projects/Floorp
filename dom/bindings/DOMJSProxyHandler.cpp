@@ -97,7 +97,10 @@ DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JSObject* proxy, jsid id, 
     return true;
   }
 
-  JSObject* proto = js::GetObjectProto(proxy);
+  JSObject* proto;
+  if (!js::GetObjectProto(cx, proxy, &proto)) {
+    return false;
+  }
   if (!proto) {
     desc->obj = NULL;
     return true;
@@ -151,7 +154,10 @@ DOMProxyHandler::delete_(JSContext* cx, JSObject* proxy, jsid id, bool* bp)
 bool
 DOMProxyHandler::enumerate(JSContext* cx, JSObject* proxy, AutoIdVector& props)
 {
-  JSObject* proto = JS_GetPrototype(proxy);
+  JSObject* proto;
+  if (!JS_GetPrototype(cx, proxy, &proto)) {
+    return false;
+  }
   return getOwnPropertyNames(cx, proxy, props) &&
          (!proto || js::GetPropertyNames(cx, proto, 0, &props));
 }
@@ -177,7 +183,10 @@ DOMProxyHandler::has(JSContext* cx, JSObject* proxy, jsid id, bool* bp)
   }
 
   // OK, now we have to look at the proto
-  JSObject *proto = js::GetObjectProto(proxy);
+  JSObject *proto;
+  if (!js::GetObjectProto(cx, proxy, &proto)) {
+    return false;
+  }
   if (!proto) {
     return true;
   }
