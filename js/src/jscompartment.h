@@ -299,12 +299,10 @@ struct JSCompartment
     js::types::TypeObjectSet     lazyTypeObjects;
     void sweepNewTypeObjectTable(js::types::TypeObjectSet &table);
 
-    js::ReadBarriered<js::types::TypeObject> emptyTypeObject;
+    js::types::TypeObject *getNewType(JSContext *cx, js::TaggedProto proto,
+                                      JSFunction *fun = NULL, bool isDOM = false);
 
-    /* Get the default 'new' type for objects with a NULL prototype. */
-    inline js::types::TypeObject *getEmptyType(JSContext *cx);
-
-    js::types::TypeObject *getLazyType(JSContext *cx, js::HandleObject proto);
+    js::types::TypeObject *getLazyType(JSContext *cx, js::Handle<js::TaggedProto> proto);
 
     /*
      * Keeps track of the total number of malloc bytes connected to a

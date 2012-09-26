@@ -6814,9 +6814,11 @@ mjit::Compiler::jsop_instanceof()
 
     Label loop = masm.label();
 
-    /* Walk prototype chain, break out on NULL or hit. */
+    /* Walk prototype chain, break out on NULL, a lazy proto (0x1), or a hit. */
     masm.loadPtr(Address(obj, JSObject::offsetOfType()), obj);
     masm.loadPtr(Address(obj, offsetof(types::TypeObject, proto)), obj);
+    Jump isLazy = masm.branch32(Assembler::Equal, obj, Imm32(1));
+    stubcc.linkExit(isLazy, Uses(2));
     Jump isFalse2 = masm.branchTestPtr(Assembler::Zero, obj, obj);
     Jump isTrue = masm.branchPtr(Assembler::NotEqual, obj, proto);
     isTrue.linkTo(loop, &masm);
