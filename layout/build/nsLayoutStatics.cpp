@@ -103,6 +103,7 @@
 #include "nsCookieService.h"
 #include "nsApplicationCacheService.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
+#include "nsIMEStateManager.h"
 
 extern void NS_ShutdownChainItemPool();
 
@@ -284,6 +285,7 @@ nsLayoutStatics::Shutdown()
   txMozillaXSLTProcessor::Shutdown();
   nsDOMAttribute::Shutdown();
   nsEventListenerManager::Shutdown();
+  nsIMEStateManager::Shutdown();
   nsComputedDOMStyle::Shutdown();
   nsCSSParser::Shutdown();
   nsCSSRuleProcessor::Shutdown();
