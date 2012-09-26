@@ -3127,7 +3127,7 @@ nsGenericHTMLElement::GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu)
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
     nsRefPtr<nsHTMLMenuElement> element =
-      nsHTMLMenuElement::FromContent(doc->GetElementById(value));
+      nsHTMLMenuElement::FromContentOrNull(doc->GetElementById(value));
     element.forget(aContextMenu);
   }
 

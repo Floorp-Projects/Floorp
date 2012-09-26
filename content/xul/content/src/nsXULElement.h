@@ -333,24 +333,17 @@ PR_STATIC_ASSERT((ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2) < 32);
 
 class nsScriptEventHandlerOwnerTearoff;
 
-class nsXULElement : public nsStyledElement, public nsIDOMXULElement
+class nsXULElement : public nsStyledElement,
+                     public nsIDOMXULElement
 {
-public:
-
-    /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
-    static nsXULElement* FromContent(nsIContent *aContent)
-    {
-        if (aContent->IsXUL())
-            return static_cast<nsXULElement*>(aContent);
-        return nullptr;
-    }
-
 public:
     nsXULElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
     static nsresult
     Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument,
            bool aIsScriptable, mozilla::dom::Element** aResult);
+
+    NS_IMPL_FROMCONTENT(nsXULElement, kNameSpaceID_XUL)
 
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
