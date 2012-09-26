@@ -1,0 +1,20 @@
+{
+  "name": "Super Crazy Basic App",
+  "installs_allowed_from": [ "*" ],
+  "type": "privileged",
+  "permissions": {
+    "geolocation": {
+      "description": "geolocate"
+    },
+    "alarm" : {
+      "description": "alarm"
+    },
+    "contacts": {
+      "description": "contacts",
+      "access": "readwrite"
+    },
+    "device-storage:apps": {
+      "description": "storage"
+    }
+  }
+}

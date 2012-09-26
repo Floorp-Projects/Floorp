@@ -20,6 +20,12 @@ MOCHITEST_BROWSER_FILES := \
   browser_ConsoleStoragePBTest.js \
   browser_autofocus_preference.js \
   browser_bug396843.js \
+  browser_webapps_permissions.js \
+  browser_webapps_perms_reinstall.js \
+  test-webapp.webapp \
+  test-webapp-reinstall.webapp \
+  test-webapp-original.webapp \
+  test-webapps-permissions.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
