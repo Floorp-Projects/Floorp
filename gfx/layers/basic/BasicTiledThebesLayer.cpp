@@ -257,16 +257,53 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       regionToPaint.Sub(regionToPaint, staleRegion);
     }
 
-    nsIntRegionRectIterator it(regionToPaint);
-    const nsIntRect* rect = it.Next();
-    if (!rect)
-      return;
+    // The following code decides what order to draw tiles in, based on the
+    // current scroll direction of the primary scrollable layer.
+    // XXX While this code is of a reasonable size currently, it is likely
+    //     we'll want to add more comprehensive methods of deciding what
+    //     tiles to draw. This is a good candidate for splitting out into a
+    //     separate function.
 
-    // Currently we start painting from the first rect of the paint
-    // region and convert that into a tile. We should order tiles using
-    // their position from relevant user interaction events.
-    int paintTileStartX = mTiledBuffer.RoundDownToTileEdge(rect->x);
-    int paintTileStartY = mTiledBuffer.RoundDownToTileEdge(rect->y);
+    gfx::Point scrollOffset(0, 0);
+    Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
+    if (primaryScrollable) {
+      const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
+      scrollOffset = metrics.mViewportScrollOffset;
+    }
+
+    // First, decide whether to iterate on the region from the beginning or end
+    // of the rect list. This relies on the specific behaviour of nsRegion when
+    // subtracting rects. If we're moving more in the X direction, we draw
+    // tiles by column, otherwise by row.
+    nsIntRegionRectIterator it(regionToPaint);
+    const nsIntRect* rect;
+    int32_t scrollDiffX = scrollOffset.x - mLastScrollOffset.x;
+    int32_t scrollDiffY = scrollOffset.y - mLastScrollOffset.y;
+    if ((NS_ABS(scrollDiffY) > NS_ABS(scrollDiffX) && scrollDiffY >= 0)) {
+      rect = it.Next();
+    } else {
+      const nsIntRect* lastRect;
+      while (lastRect = it.Next()) {
+        rect = lastRect;
+      }
+    }
+
+    // Second, decide what direction to start drawing rects from by checking
+    // the scroll offset difference of the primary scrollable layer. If we're
+    // scrolling to the right, make sure to start from the left, downwards
+    // start from the top, etc.
+    int paintTileStartX, paintTileStartY;
+    if (scrollOffset.x >= mLastScrollOffset.x) {
+      paintTileStartX = mTiledBuffer.RoundDownToTileEdge(rect->x);
+    } else {
+      paintTileStartX = mTiledBuffer.RoundDownToTileEdge(rect->XMost() - 1);
+    }
+
+    if (scrollOffset.y >= mLastScrollOffset.y) {
+      paintTileStartY = mTiledBuffer.RoundDownToTileEdge(rect->y);
+    } else {
+      paintTileStartY = mTiledBuffer.RoundDownToTileEdge(rect->YMost() - 1);
+    }
 
     nsIntRegion maxPaint(
       nsIntRect(paintTileStartX, paintTileStartY,
@@ -280,6 +317,9 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
 
       // Make sure that tiles that fall outside of the visible region are discarded.
       mValidRegion.And(mValidRegion, mVisibleRegion);
+    } else {
+      // The transaction is completed, store the last scroll offset.
+      mLastScrollOffset = scrollOffset;
     }
 
     // Keep track of what we're about to refresh.
