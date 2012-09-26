@@ -61,6 +61,7 @@ CPPSRCS		= \
 		nsDOMTouchEvent.cpp \
 		nsDOMCompositionEvent.cpp \
 		DOMWheelEvent.cpp \
+		TextComposition.cpp \
 		$(NULL)
 
 ifdef MOZ_B2G_RIL
