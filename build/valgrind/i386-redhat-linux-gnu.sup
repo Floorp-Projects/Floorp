@@ -15,3 +15,41 @@
    obj:/usr/lib/libgnomevfs-2.so.0.2400.2
    ...
 }
+{
+   Bug 793598
+   Memcheck:Leak
+   ...
+   obj:/lib/libdbus-1.so.3.4.0
+   ...
+}
+{
+   Bug 793600
+   Memcheck:Leak
+   fun:realloc
+   obj:/usr/lib/libfontconfig.so.1.4.4
+   ...
+   fun:FcDefaultSubstitute
+   fun:_ZN17gfxPangoFontGroup11MakeFontSetEP14_PangoLanguagedP9nsAutoRefI10_FcPatternE
+   ...
+}
+{
+   Bug 794366
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/libgtk-x11-2.0.so.0.1800.9
+   ...
+}
+{
+   Bug 794368
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/libXrandr.so.2.2.0
+   ...
+}
+{
+   Bug 794373
+   Memcheck:Leak
+   ...
+   obj:/lib/libgobject-2.0.so.0.2200.5
+   ...
+}
