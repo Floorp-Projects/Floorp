@@ -114,6 +114,19 @@ var shell = {
    },
 
   start: function shell_start() {
+
+    // Dogfood id. We might want to remove it in the future.
+    // see bug 789466
+    try {
+      let dogfoodId = Services.prefs.getCharPref('prerelease.dogfood.id');
+      if (dogfoodId != "") {
+        let cr = Cc["@mozilla.org/xre/app-info;1"]
+                   .getService(Ci.nsICrashReporter);
+        cr.annotateCrashReport("Email", dogfoodId);
+      }
+    }
+    catch (e) { }
+
     let homeURL = this.homeURL;
     if (!homeURL) {
       let msg = 'Fatal error during startup: No homescreen found: try setting B2G_HOMESCREEN';
