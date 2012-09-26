@@ -178,8 +178,8 @@ def writeArgumentUnboxing(f, i, name, type, optional, rvdeclared,
     isSetter = (i is None)
 
     if isSetter:
-        argPtr = "argv"
-        argVal = "*argv"
+        argPtr = "vp"
+        argVal = "*vp"
     elif optional:
         if typeName == "[jsval]":
             val = "JSVAL_VOID"
@@ -429,8 +429,16 @@ def writeStub(f, customMethodCalls, member, stubName, writeThisUnwrapping, write
     isNotxpcom = isMethod and member.notxpcom
     isGetter = isAttr and not isSetter
 
-    signature = ("static JSBool\n"
-                 "%s(JSContext *cx, unsigned argc,%s jsval *vp)\n")
+    signature = "static JSBool\n"
+    if isAttr:
+        # JSPropertyOp signature.
+        if isSetter:
+            signature += "%s(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,%s JSMutableHandleValue vp_)\n"
+        else:
+            signature += "%s(JSContext *cx, JSHandleObject obj, JSHandleId id,%s JSMutableHandleValue vp_)\n"
+    else:
+        # JSFastNative.
+        signature += "%s(JSContext *cx, unsigned argc,%s jsval *vp)\n"
 
     customMethodCall = customMethodCalls.get(stubName, None)
 
@@ -462,7 +470,7 @@ def writeStub(f, customMethodCalls, member, stubName, writeThisUnwrapping, write
             argumentValues = (customMethodCall['additionalArgumentValues']
                               % header.methodNativeName(member))
             if isAttr:
-                callTemplate += ("    return %s(cx, obj, id%s, %s, vp);\n"
+                callTemplate += ("    return %s(cx, obj, id%s, %s, vp_);\n"
                                  % (templateName, ", strict" if isSetter else "", argumentValues))
             else:
                 callTemplate += ("    return %s(cx, argc, %s, vp);\n"
@@ -496,10 +504,15 @@ def writeStub(f, customMethodCalls, member, stubName, writeThisUnwrapping, write
     f.write("{\n")
     f.write("    XPC_QS_ASSERT_CONTEXT_OK(cx);\n")
 
-    # Compute "this".
-    f.write("    JSObject *obj = JS_THIS_OBJECT(cx, vp);\n"
-            "    if (!obj)\n"
-            "        return JS_FALSE;\n")
+    # Convert JSMutableHandleValue to jsval*
+    if isAttr:
+        f.write("    jsval *vp = vp_.address();\n")
+
+    # For methods, compute "this".
+    if isMethod:
+        f.write("    JSObject *obj = JS_THIS_OBJECT(cx, vp);\n"
+                "    if (!obj)\n"
+                "        return JS_FALSE;\n")
 
     selfname = writeThisUnwrapping(f, member, isMethod, isGetter, customMethodCall)
 
@@ -510,20 +523,14 @@ def writeStub(f, customMethodCalls, member, stubName, writeThisUnwrapping, write
         requiredArgs = inArgs
         while requiredArgs and member.params[requiredArgs-1].optional:
             requiredArgs -= 1
-    elif isSetter:
-        inArgs = requiredArgs = 1
-    else:
-        inArgs = requiredArgs = 0
+        if requiredArgs:
+            f.write("    if (argc < %d)\n" % requiredArgs)
+            f.write("        return xpc_qsThrow(cx, "
+                    "NS_ERROR_XPC_NOT_ENOUGH_ARGS);\n")
 
-    if requiredArgs:
-        f.write("    if (argc < %d)\n" % requiredArgs)
-        f.write("        return xpc_qsThrow(cx, "
-                "NS_ERROR_XPC_NOT_ENOUGH_ARGS);\n")
-
-    # Convert in-parameters.
-    if inArgs > 0:
-        f.write("    jsval *argv = JS_ARGV(cx, vp);\n")
-    if isMethod:
+        # Convert in-parameters.
+        if inArgs > 0:
+            f.write("    jsval *argv = JS_ARGV(cx, vp);\n")
         for i in range(inArgs):
             param = member.params[i]
             argName = 'arg%d' % i
@@ -625,8 +632,7 @@ def writeStub(f, customMethodCalls, member, stubName, writeThisUnwrapping, write
     if isMethod or isGetter:
         writeResultWrapping(f, member, 'vp', '*vp')
     else:
-        f.write("    JS_SET_RVAL(cx, vp, JS::UndefinedValue());\n"
-                "    return JS_TRUE;\n")
+        f.write("    return JS_TRUE;\n")
 
     # Epilog.
     f.write("}\n\n")
