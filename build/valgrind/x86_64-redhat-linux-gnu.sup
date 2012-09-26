@@ -27,7 +27,7 @@
    Memcheck:Leak
    fun:realloc
    obj:/usr/lib64/libfontconfig.so.1.4.4
-   obj:/usr/lib64/libfontconfig.so.1.4.4
+   ...
    fun:FcDefaultSubstitute
    fun:_ZN17gfxPangoFontGroup11MakeFontSetEP14_PangoLanguagedP9nsAutoRefI10_FcPatternE
    ...
