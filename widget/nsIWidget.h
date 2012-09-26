@@ -409,6 +409,7 @@ class nsIWidget : public nsISupports {
     nsIWidget()
       : mLastChild(nullptr)
       , mPrevSibling(nullptr)
+      , mOnDestroyCalled(false)
     {}
 
         
@@ -510,6 +511,12 @@ class nsIWidget : public nsISupports {
      */
 
     NS_IMETHOD Destroy(void) = 0;
+
+    /**
+     * Destroyed() returns true if Destroy() has been called already.
+     * Otherwise, false.
+     */
+    bool Destroyed() const { return mOnDestroyCalled; }
 
 
     /**
@@ -1654,6 +1661,8 @@ protected:
     nsIWidget* mLastChild;
     nsCOMPtr<nsIWidget> mNextSibling;
     nsIWidget* mPrevSibling;
+    // When Destroy() is called, the sub class should set this true.
+    bool mOnDestroyCalled;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget, NS_IWIDGET_IID)

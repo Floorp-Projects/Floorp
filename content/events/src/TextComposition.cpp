@@ -26,7 +26,9 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   mPresContext(aPresContext), mNode(aNode),
   // temporarily, we should assume that one native IME context is per native
   // widget.
-  mNativeContext(aEvent->widget)
+  mNativeContext(aEvent->widget),
+  mIsSynthesizedForTests(
+    (aEvent->flags & NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT) != 0)
 {
 }
 
@@ -36,6 +38,7 @@ TextComposition::TextComposition(const TextComposition& aOther)
   mPresContext = aOther.mPresContext;
   mNode = aOther.mNode;
   mLastData = aOther.mLastData;
+  mIsSynthesizedForTests = aOther.mIsSynthesizedForTests;
 }
 
 bool
