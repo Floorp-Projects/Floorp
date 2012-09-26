@@ -37,6 +37,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "gfxContext.h"
 #include "gfxFont.h"
+#include "nsContentList.h"
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/GuardObjects.h"
@@ -1814,9 +1815,16 @@ public:
    * Utility method for getElementsByClassName.  aRootNode is the node (either
    * document or element), which getElementsByClassName was called on.
    */
-  static nsresult GetElementsByClassName(nsINode* aRootNode,
-                                         const nsAString& aClasses,
-                                         nsIDOMNodeList** aReturn);
+  static already_AddRefed<nsContentList>
+  GetElementsByClassName(nsINode* aRootNode, const nsAString& aClasses)
+  {
+    NS_PRECONDITION(aRootNode, "Must have root node");
+
+    return NS_GetFuncStringHTMLCollection(aRootNode, MatchClassNames,
+                                          DestroyClassNameArray,
+                                          AllocClassMatchingInfo,
+                                          aClasses);
+  }
 
   /**
    * Returns a presshell for this document, if there is one. This will be
@@ -2179,6 +2187,12 @@ private:
   static void InitializeModifierStrings();
 
   static void DropFragmentParsers();
+
+  static bool MatchClassNames(nsIContent* aContent, int32_t aNamespaceID,
+                              nsIAtom* aAtom, void* aData);
+  static void DestroyClassNameArray(void* aData);
+  static void* AllocClassMatchingInfo(nsINode* aRootNode,
+                                      const nsString* aClasses);
 
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 
