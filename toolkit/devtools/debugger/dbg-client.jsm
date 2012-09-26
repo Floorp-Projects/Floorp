@@ -167,6 +167,7 @@ const ThreadStateTypes = {
  * by the client.
  */
 const UnsolicitedNotifications = {
+  "consoleAPICall": "consoleAPICall",
   "newScript": "newScript",
   "tabDetached": "tabDetached",
   "tabNavigated": "tabNavigated",
@@ -369,6 +370,20 @@ DebuggerClient.prototype = {
       }
       aOnResponse(aResponse, threadClient);
     });
+  },
+
+  /**
+   * Release an object actor.
+   *
+   * @param string aActor
+   *        The actor ID to send the request to.
+   */
+  release: function DC_release(aActor) {
+    let packet = {
+      to: aActor,
+      type: "release",
+    };
+    this.request(packet);
   },
 
   /**

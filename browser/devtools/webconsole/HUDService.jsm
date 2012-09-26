@@ -536,12 +536,8 @@ WebConsole.prototype = {
    * @private
    * @type array
    */
-  _messageListeners: ["JSTerm:EvalObject", "WebConsole:ConsoleAPI",
-    "WebConsole:CachedMessages", "WebConsole:Initialized", "JSTerm:EvalResult",
-    "JSTerm:AutocompleteProperties", "JSTerm:ClearOutput",
-    "JSTerm:InspectObject", "WebConsole:NetworkActivity",
-    "WebConsole:FileActivity", "WebConsole:LocationChange",
-    "JSTerm:NonNativeConsoleAPI"],
+  _messageListeners: ["WebConsole:Initialized", "WebConsole:NetworkActivity",
+    "WebConsole:FileActivity", "WebConsole:LocationChange"],
 
   /**
    * The xul:panel that holds the Web Console when it is positioned as a window.
@@ -901,10 +897,10 @@ WebConsole.prototype = {
 
   /**
    * The clear output button handler.
+   * @private
    */
-  onClearButton: function WC_onClearButton()
+  _onClearButton: function WC__onClearButton()
   {
-    this.ui.jsterm.clearOutput(true);
     this.chromeWindow.DeveloperToolbar.resetErrorsCount(this.tab);
   },
 
@@ -924,10 +920,8 @@ WebConsole.prototype = {
     }, this);
 
     let message = {
-      features: ["ConsoleAPI", "JSTerm", "NetworkMonitor", "LocationChange"],
-      cachedMessages: ["ConsoleAPI", "PageError"],
+      features: ["NetworkMonitor", "LocationChange"],
       NetworkMonitor: { monitorFileActivity: true },
-      JSTerm: { notifyNonNativeConsoleAPI: true },
       preferences: {
         "NetworkMonitor.saveRequestAndResponseBodies":
           this.ui.saveRequestAndResponseBodies,
