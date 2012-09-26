@@ -15,8 +15,22 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["WebConsoleUtils", "JSPropertyProvider",
-                        "PageErrorListener"];
+XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIStorage",
+                                  "resource://gre/modules/ConsoleAPIStorage.jsm");
+
+var EXPORTED_SYMBOLS = ["WebConsoleUtils", "JSPropertyProvider", "JSTermHelpers",
+                        "PageErrorListener", "ConsoleAPIListener"];
+
+// Match the function name from the result of toString() or toSource().
+//
+// Examples:
+// (function foobar(a, b) { ...
+// function foobar2(a) { ...
+// function() { ...
+const REGEX_MATCH_FUNCTION_NAME = /^\(?function\s+([^(\s]+)\s*\(/;
+
+// Match the function arguments from the result of toString() or toSource().
+const REGEX_MATCH_FUNCTION_ARGS = /^\(?function\s*[^\s(]*\s*\((.+?)\)/;
 
 const TYPES = { OBJECT: 0,
                 FUNCTION: 1,
@@ -213,7 +227,12 @@ var WebConsoleUtils = {
       case "error":
       case "number":
       case "regexp":
-        output = aResult.toString();
+        try {
+          output = aResult + "";
+        }
+        catch (ex) {
+          output = ex;
+        }
         break;
       case "null":
       case "undefined":
@@ -309,8 +328,15 @@ var WebConsoleUtils = {
   getResultType: function WCU_getResultType(aResult)
   {
     let type = aResult === null ? "null" : typeof aResult;
-    if (type == "object" && aResult.constructor && aResult.constructor.name) {
-      type = aResult.constructor.name;
+    try {
+      if (type == "object" && aResult.constructor && aResult.constructor.name) {
+        type = aResult.constructor.name + "";
+      }
+    }
+    catch (ex) {
+      // Prevent potential exceptions in page-provided objects from taking down
+      // the Web Console. If the constructor.name is a getter that throws, or
+      // something else bad happens.
     }
 
     return type.toLowerCase();
@@ -442,27 +468,43 @@ var WebConsoleUtils = {
     if (typeof aObject != "object") {
       return false;
     }
-    let desc;
+    let desc = this.getPropertyDescriptor(aObject, aProp);
+    return desc && desc.get && !this.isNativeFunction(desc.get);
+  },
+
+  /**
+   * Get the property descriptor for the given object.
+   *
+   * @param object aObject
+   *        The object that contains the property.
+   * @param string aProp
+   *        The property you want to get the descriptor for.
+   * @return object
+   *         Property descriptor.
+   */
+  getPropertyDescriptor: function WCU_getPropertyDescriptor(aObject, aProp)
+  {
+    let desc = null;
     while (aObject) {
       try {
         if (desc = Object.getOwnPropertyDescriptor(aObject, aProp)) {
           break;
         }
       }
-      catch (ex) {
+      catch (ex if (ex.name == "NS_ERROR_XPC_BAD_CONVERT_JS" ||
+                    ex.name == "NS_ERROR_XPC_BAD_OP_ON_WN_PROTO" ||
+                    ex.name == "TypeError")) {
         // Native getters throw here. See bug 520882.
-        if (ex.name == "NS_ERROR_XPC_BAD_CONVERT_JS" ||
-            ex.name == "NS_ERROR_XPC_BAD_OP_ON_WN_PROTO") {
-          return false;
-        }
-        throw ex;
+        // null throws TypeError.
       }
-      aObject = Object.getPrototypeOf(aObject);
+      try {
+        aObject = Object.getPrototypeOf(aObject);
+      }
+      catch (ex if (ex.name == "TypeError")) {
+        return desc;
+      }
     }
-    if (desc && desc.get && !this.isNativeFunction(desc.get)) {
-      return true;
-    }
-    return false;
+    return desc;
   },
 
   /**
@@ -549,35 +591,207 @@ var WebConsoleUtils = {
       pairs.push(pair);
     }
 
-    pairs.sort(function(a, b)
-    {
-      // Convert the pair.name to a number for later sorting.
-      let aNumber = parseFloat(a.name);
-      let bNumber = parseFloat(b.name);
-
-      // Sort numbers.
-      if (!isNaN(aNumber) && isNaN(bNumber)) {
-        return -1;
-      }
-      else if (isNaN(aNumber) && !isNaN(bNumber)) {
-        return 1;
-      }
-      else if (!isNaN(aNumber) && !isNaN(bNumber)) {
-        return aNumber - bNumber;
-      }
-      // Sort string.
-      else if (a.name < b.name) {
-        return -1;
-      }
-      else if (a.name > b.name) {
-        return 1;
-      }
-      else {
-        return 0;
-      }
-    });
+    pairs.sort(this.propertiesSort);
 
     return pairs;
+  },
+
+  /**
+   * Sort function for object properties.
+   *
+   * @param object a
+   *        Property descriptor.
+   * @param object b
+   *        Property descriptor.
+   * @return integer
+   *         -1 if a.name < b.name,
+   *         1 if a.name > b.name,
+   *         0 otherwise.
+   */
+  propertiesSort: function WCU_propertiesSort(a, b)
+  {
+    // Convert the pair.name to a number for later sorting.
+    let aNumber = parseFloat(a.name);
+    let bNumber = parseFloat(b.name);
+
+    // Sort numbers.
+    if (!isNaN(aNumber) && isNaN(bNumber)) {
+      return -1;
+    }
+    else if (isNaN(aNumber) && !isNaN(bNumber)) {
+      return 1;
+    }
+    else if (!isNaN(aNumber) && !isNaN(bNumber)) {
+      return aNumber - bNumber;
+    }
+    // Sort string.
+    else if (a.name < b.name) {
+      return -1;
+    }
+    else if (a.name > b.name) {
+      return 1;
+    }
+    else {
+      return 0;
+    }
+  },
+
+  /**
+   * Inspect the properties of the given object. For each property a descriptor
+   * object is created. The descriptor gives you information about the property
+   * name, value, type, getter and setter. When the property value references
+   * another object you get a wrapper that holds information about that object.
+   *
+   * @see this.inspectObjectProperty
+   * @param object aObject
+   *        The object you want to inspect.
+   * @param function aObjectWrapper
+   *        The function that creates wrappers for property values which
+   *        reference other objects. This function must take one argument, the
+   *        object to wrap, and it must return an object grip that gives
+   *        information about the referenced object.
+   * @return array
+   *         An array of property descriptors.
+   */
+  inspectObject: function WCU_inspectObject(aObject, aObjectWrapper)
+  {
+    let properties = [];
+    let isDOMDocument = aObject instanceof Ci.nsIDOMDocument;
+    let deprecated = ["width", "height", "inputEncoding"];
+
+    for (let name in aObject) {
+      // See bug 632275: skip deprecated properties.
+      if (isDOMDocument && deprecated.indexOf(name) > -1) {
+        continue;
+      }
+
+      properties.push(this.inspectObjectProperty(aObject, name, aObjectWrapper));
+    }
+
+    return properties.sort(this.propertiesSort);
+  },
+
+  /**
+   * A helper method that creates a property descriptor for the provided object,
+   * properly formatted for sending in a protocol response.
+   *
+   * The property value can reference other objects. Since actual objects cannot
+   * be sent to the client, we need to send simple object grips - descriptors
+   * for those objects. This is why you need to give an object wrapper function
+   * that creates object grips.
+   *
+   * @param string aProperty
+   *        Property name for which we have the descriptor.
+   * @param object aObject
+   *        The object that the descriptor is generated for.
+   * @param function aObjectWrapper
+   *        This function is given the property value. Whatever the function
+   *        returns is used as the representation of the property value.
+   * @return object
+   *         The property descriptor formatted for sending to the client.
+   */
+  inspectObjectProperty:
+  function WCU_inspectObjectProperty(aObject, aProperty, aObjectWrapper)
+  {
+    let descriptor = this.getPropertyDescriptor(aObject, aProperty) || {};
+
+    let result = { name: aProperty };
+    result.configurable = descriptor.configurable;
+    result.enumerable = descriptor.enumerable;
+    result.writable = descriptor.writable;
+    if (descriptor.value !== undefined) {
+      result.value = this.createValueGrip(descriptor.value, aObjectWrapper);
+    }
+    else if (descriptor.get) {
+      if (this.isNativeFunction(descriptor.get)) {
+        result.value = this.createValueGrip(aObject[aProperty], aObjectWrapper);
+      }
+      else {
+        result.get = this.createValueGrip(descriptor.get, aObjectWrapper);
+        result.set = this.createValueGrip(descriptor.set, aObjectWrapper);
+      }
+    }
+
+    // There are cases with properties that have no value and no getter. For
+    // example window.screen.width.
+    if (result.value === undefined && result.get === undefined) {
+      result.value = this.createValueGrip(aObject[aProperty], aObjectWrapper);
+    }
+
+    return result;
+  },
+
+  /**
+   * Make an object grip for the given object. An object grip of the simplest
+   * form with minimal information about the given object is returned. This
+   * method is usually combined with other functions that add further state
+   * information and object ID such that, later, the client is able to retrieve
+   * more information about the object being represented by this grip.
+   *
+   * @param object aObject
+   *        The object you want to create a grip for.
+   * @return object
+   *         The object grip.
+   */
+  getObjectGrip: function WCU_getObjectGrip(aObject)
+  {
+    let className = null;
+    let type = typeof aObject;
+
+    let result = {
+      "type": type,
+      "className": this.getObjectClassName(aObject),
+      "displayString": this.formatResult(aObject),
+      "inspectable": this.isObjectInspectable(aObject),
+    };
+
+    if (type == "function") {
+      result.functionName = this.getFunctionName(aObject);
+      result.functionArguments = this.getFunctionArguments(aObject);
+    }
+
+    return result;
+  },
+
+  /**
+   * Create a grip for the given value. If the value is an object,
+   * an object wrapper will be created.
+   *
+   * @param mixed aValue
+   *        The value you want to create a grip for, before sending it to the
+   *        client.
+   * @param function aObjectWrapper
+   *        If the value is an object then the aObjectWrapper function is
+   *        invoked to give us an object grip. See this.getObjectGrip().
+   * @return mixed
+   *         The value grip.
+   */
+  createValueGrip: function WCU_createValueGrip(aValue, aObjectWrapper)
+  {
+    let type = typeof(aValue);
+    switch (type) {
+      case "boolean":
+      case "string":
+      case "number":
+        return aValue;
+      case "object":
+      case "function":
+        if (aValue) {
+          return aObjectWrapper(aValue);
+        }
+      default:
+        if (aValue === null) {
+          return { type: "null" };
+        }
+
+        if (aValue === undefined) {
+          return { type: "undefined" };
+        }
+
+        Cu.reportError("Failed to provide a grip for value of " + type + ": " +
+                       aValue);
+        return null;
+    }
   },
 
   /**
@@ -637,6 +851,159 @@ var WebConsoleUtils = {
     catch (ex) {
       return false;
     }
+  },
+
+  /**
+   * Make a string representation for an object actor grip.
+   *
+   * @param object aGrip
+   *        The object grip received from the server.
+   * @param boolean [aFormatString=false]
+   *        Optional boolean that tells if you want strings to be unevaled or
+   *        not.
+   * @return string
+   *         The object grip converted to a string.
+   */
+  objectActorGripToString: function WCU_objectActorGripToString(aGrip, aFormatString)
+  {
+    // Primitives like strings and numbers are not sent as objects.
+    // But null and undefined are sent as objects with the type property
+    // telling which type of value we have.
+    let type = typeof(aGrip);
+    if (aGrip && type == "object") {
+      return aGrip.displayString || aGrip.className || aGrip.type || type;
+    }
+    return type == "string" && aFormatString ?
+           this.formatResultString(aGrip) : aGrip + "";
+  },
+
+  /**
+   * Helper function to deduce the name of the provided function.
+   *
+   * @param funtion aFunction
+   *        The function whose name will be returned.
+   * @return string
+   *         Function name.
+   */
+  getFunctionName: function WCF_getFunctionName(aFunction)
+  {
+    let name = null;
+    if (aFunction.name) {
+      name = aFunction.name;
+    }
+    else {
+      let desc;
+      try {
+        desc = aFunction.getOwnPropertyDescriptor("displayName");
+      }
+      catch (ex) { }
+      if (desc && typeof desc.value == "string") {
+        name = desc.value;
+      }
+    }
+    if (!name) {
+      try {
+        let str = (aFunction.toString() || aFunction.toSource()) + "";
+        name = (str.match(REGEX_MATCH_FUNCTION_NAME) || [])[1];
+      }
+      catch (ex) { }
+    }
+    return name;
+  },
+
+  /**
+   * Helper function to deduce the arguments of the provided function.
+   *
+   * @param funtion aFunction
+   *        The function whose name will be returned.
+   * @return array
+   *         Function arguments.
+   */
+  getFunctionArguments: function WCF_getFunctionArguments(aFunction)
+  {
+    let args = [];
+    try {
+      let str = (aFunction.toString() || aFunction.toSource()) + "";
+      let argsString = (str.match(REGEX_MATCH_FUNCTION_ARGS) || [])[1];
+      if (argsString) {
+        args = argsString.split(/\s*,\s*/);
+      }
+    }
+    catch (ex) { }
+    return args;
+  },
+
+  /**
+   * Get the object class name. For example, the |window| object has the Window
+   * class name (based on [object Window]).
+   *
+   * @param object aObject
+   *        The object you want to get the class name for.
+   * @return string
+   *         The object class name.
+   */
+  getObjectClassName: function WCF_getObjectClassName(aObject)
+  {
+    if (aObject === null) {
+      return "null";
+    }
+    if (aObject === undefined) {
+      return "undefined";
+    }
+
+    let type = typeof aObject;
+    if (type != "object") {
+      return type;
+    }
+
+    let className;
+
+    try {
+      className = ((aObject + "").match(/^\[object (\S+)\]$/) || [])[1];
+      if (!className) {
+        className = ((aObject.constructor + "").match(/^\[object (\S+)\]$/) || [])[1];
+      }
+      if (!className && typeof aObject.constructor == "function") {
+        className = this.getFunctionName(aObject.constructor);
+      }
+    }
+    catch (ex) { }
+
+    return className;
+  },
+
+  /**
+   * Determine the string to display as a property value in the property panel.
+   *
+   * @param object aActor
+   *        Object actor grip.
+   * @return string
+   *         Property value as suited for the property panel.
+   */
+  getPropertyPanelValue: function WCU_getPropertyPanelValue(aActor)
+  {
+    if (aActor.get) {
+      return "Getter";
+    }
+
+    let val = aActor.value;
+    if (typeof val == "string") {
+      return this.formatResultString(val);
+    }
+
+    if (typeof val != "object" || !val) {
+      return val;
+    }
+
+    if (val.type == "function" && val.functionName) {
+      return "function " + val.functionName + "(" +
+             val.functionArguments.join(", ") + ")";
+    }
+    if (val.type == "object" && val.className) {
+      return val.className;
+    }
+
+    return val.displayString || val.type;
   },
 };
 
@@ -1163,3 +1530,327 @@ PageErrorListener.prototype =
     this.listener = this.window = null;
   },
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+// The window.console API observer
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * The window.console API observer. This allows the window.console API messages
+ * to be sent to the remote Web Console instance.
+ *
+ * @constructor
+ * @param nsIDOMWindow aWindow
+ *        The window object for which we are created.
+ * @param object aOwner
+ *        The owner object must have the following methods:
+ *        - onConsoleAPICall(). This method is invoked with one argument, the
+ *        Console API message that comes from the observer service, whenever
+ *        a relevant console API call is received.
+ */
+function ConsoleAPIListener(aWindow, aOwner)
+{
+  this.window = aWindow;
+  this.owner = aOwner;
+}
+
+ConsoleAPIListener.prototype =
+{
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  /**
+   * The content window for which we listen to window.console API calls.
+   * @type nsIDOMWindow
+   */
+  window: null,
+
+  /**
+   * The owner object which is notified of window.console API calls. It must
+   * have a onConsoleAPICall method which is invoked with one argument: the
+   * console API call object that comes from the observer service.
+   *
+   * @type object
+   * @see WebConsoleActor
+   */
+  owner: null,
+
+  /**
+   * Initialize the window.console API observer.
+   */
+  init: function CAL_init()
+  {
+    // Note that the observer is process-wide. We will filter the messages as
+    // needed, see CAL_observe().
+    Services.obs.addObserver(this, "console-api-log-event", false);
+  },
+
+  /**
+   * The console API message observer. When messages are received from the
+   * observer service we forward them to the remote Web Console instance.
+   *
+   * @param object aMessage
+   *        The message object receives from the observer service.
+   * @param string aTopic
+   *        The message topic received from the observer service.
+   */
+  observe: function CAL_observe(aMessage, aTopic)
+  {
+    if (!this.owner || !this.window) {
+      return;
+    }
+
+    let apiMessage = aMessage.wrappedJSObject;
+    let msgWindow = WebConsoleUtils.getWindowByOuterId(apiMessage.ID,
+                                                       this.window);
+    if (!msgWindow || msgWindow.top != this.window) {
+      // Not the same window!
+      return;
+    }
+
+    this.owner.onConsoleAPICall(apiMessage);
+  },
+
+  /**
+   * Get the cached messages for the current inner window.
+   *
+   * @return array
+   *         The array of cached messages. Each element is a Console API
+   *         prepared to be sent to the remote Web Console instance.
+   */
+  getCachedMessages: function CAL_getCachedMessages()
+  {
+    let innerWindowId = WebConsoleUtils.getInnerWindowId(this.window);
+    let messages = ConsoleAPIStorage.getEvents(innerWindowId);
+    return messages;
+  },
+
+  /**
+   * Destroy the console API listener.
+   */
+  destroy: function CAL_destroy()
+  {
+    Services.obs.removeObserver(this, "console-api-log-event");
+    this.window = this.owner = null;
+  },
+};
+
+
+
+/**
+ * JSTerm helper functions.
+ *
+ * Defines a set of functions ("helper functions") that are available from the
+ * Web Console but not from the web page.
+ *
+ * A list of helper functions used by Firebug can be found here:
+ *   http://getfirebug.com/wiki/index.php/Command_Line_API
+ *
+ * @param object aOwner
+ *        The owning object.
+ */
+function JSTermHelpers(aOwner)
+{
+  /**
+   * Find a node by ID.
+   *
+   * @param string aId
+   *        The ID of the element you want.
+   * @return nsIDOMNode or null
+   *         The result of calling document.querySelector(aSelector).
+   */
+  aOwner.sandbox.$ = function JSTH_$(aSelector)
+  {
+    return aOwner.window.document.querySelector(aSelector);
+  };
+
+  /**
+   * Find the nodes matching a CSS selector.
+   *
+   * @param string aSelector
+   *        A string that is passed to window.document.querySelectorAll.
+   * @return nsIDOMNodeList
+   *         Returns the result of document.querySelectorAll(aSelector).
+   */
+  aOwner.sandbox.$$ = function JSTH_$$(aSelector)
+  {
+    return aOwner.window.document.querySelectorAll(aSelector);
+  };
+
+  /**
+   * Runs an xPath query and returns all matched nodes.
+   *
+   * @param string aXPath
+   *        xPath search query to execute.
+   * @param [optional] nsIDOMNode aContext
+   *        Context to run the xPath query on. Uses window.document if not set.
+   * @return array of nsIDOMNode
+   */
+  aOwner.sandbox.$x = function JSTH_$x(aXPath, aContext)
+  {
+    let nodes = [];
+    let doc = aOwner.window.document;
+    let aContext = aContext || doc;
+
+    try {
+      let results = doc.evaluate(aXPath, aContext, null,
+                                 Ci.nsIDOMXPathResult.ANY_TYPE, null);
+      let node;
+      while (node = results.iterateNext()) {
+        nodes.push(node);
+      }
+    }
+    catch (ex) {
+      aOwner.window.console.error(ex.message);
+    }
+
+    return nodes;
+  };
+
+  /**
+   * Returns the currently selected object in the highlighter.
+   *
+   * TODO: this implementation crosses the client/server boundaries! This is not
+   * usable within a remote browser. To implement this feature correctly we need
+   * support for remote inspection capabilities within the Inspector as well.
+   * See bug 787975.
+   *
+   * @return nsIDOMElement|null
+   *         The DOM element currently selected in the highlighter.
+   */
+  Object.defineProperty(aOwner.sandbox, "$0", {
+    get: function() {
+      try {
+        return aOwner.chromeWindow().InspectorUI.selection;
+      }
+      catch (ex) {
+        aOwner.window.console.error(ex.message);
+      }
+    },
+    enumerable: true,
+    configurable: false
+  });
+
+  /**
+   * Clears the output of the JSTerm.
+   */
+  aOwner.sandbox.clear = function JSTH_clear()
+  {
+    aOwner.helperResult = {
+      type: "clearOutput",
+    };
+  };
+
+  /**
+   * Returns the result of Object.keys(aObject).
+   *
+   * @param object aObject
+   *        Object to return the property names from.
+   * @return array of strings
+   */
+  aOwner.sandbox.keys = function JSTH_keys(aObject)
+  {
+    return Object.keys(WebConsoleUtils.unwrap(aObject));
+  };
+
+  /**
+   * Returns the values of all properties on aObject.
+   *
+   * @param object aObject
+   *        Object to display the values from.
+   * @return array of string
+   */
+  aOwner.sandbox.values = function JSTH_values(aObject)
+  {
+    let arrValues = [];
+    let obj = WebConsoleUtils.unwrap(aObject);
+
+    try {
+      for (let prop in obj) {
+        arrValues.push(obj[prop]);
+      }
+    }
+    catch (ex) {
+      aOwner.window.console.error(ex.message);
+    }
+
+    return arrValues;
+  };
+
+  /**
+   * Opens a help window in MDN.
+   */
+  aOwner.sandbox.help = function JSTH_help()
+  {
+    aOwner.helperResult = { type: "help" };
+  };
+
+  /**
+   * Inspects the passed aObject. This is done by opening the PropertyPanel.
+   *
+   * @param object aObject
+   *        Object to inspect.
+   */
+  aOwner.sandbox.inspect = function JSTH_inspect(aObject)
+  {
+    let obj = WebConsoleUtils.unwrap(aObject);
+    if (!WebConsoleUtils.isObjectInspectable(obj)) {
+      return aObject;
+    }
+
+    aOwner.helperResult = {
+      type: "inspectObject",
+      input: aOwner.evalInput,
+      object: aOwner.createValueGrip(obj),
+    };
+  };
+
+  /**
+   * Prints aObject to the output.
+   *
+   * @param object aObject
+   *        Object to print to the output.
+   * @return string
+   */
+  aOwner.sandbox.pprint = function JSTH_pprint(aObject)
+  {
+    if (aObject === null || aObject === undefined || aObject === true ||
+        aObject === false) {
+      aOwner.helperResult = {
+        type: "error",
+        message: "helperFuncUnsupportedTypeError",
+      };
+      return;
+    }
+
+    aOwner.helperResult = { rawOutput: true };
+
+    if (typeof aObject == "function") {
+      return aObject + "\n";
+    }
+
+    let output = [];
+    let getObjectGrip = WebConsoleUtils.getObjectGrip.bind(WebConsoleUtils);
+    let obj = WebConsoleUtils.unwrap(aObject);
+    let props = WebConsoleUtils.inspectObject(obj, getObjectGrip);
+    props.forEach(function(aProp) {
+      output.push(aProp.name + ": " +
+                  WebConsoleUtils.getPropertyPanelValue(aProp));
+    });
+
+    return "  " + output.join("\n  ");
+  };
+
+  /**
+   * Print a string to the output, as-is.
+   *
+   * @param string aString
+   *        A string you want to output.
+   * @return void
+   */
+  aOwner.sandbox.print = function JSTH_print(aString)
+  {
+    aOwner.helperResult = { rawOutput: true };
+    return String(aString);
+  };
+}
