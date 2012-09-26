@@ -312,10 +312,22 @@ let Buf = {
    * Functions for writing data to the outgoing buffer.
    */
 
-  writeUint8: function writeUint8(value) {
-    if (this.outgoingIndex >= this.OUTGOING_BUFFER_LENGTH) {
-      this.growOutgoingBuffer(this.outgoingIndex + 1);
+  /**
+   * Ensure position specified is writable.
+   *
+   * @param index
+   *        Data position in outgoing parcel, valid from 0 to
+   *        this.OUTGOING_BUFFER_LENGTH.
+   */
+  ensureOutgoingAvailable: function ensureOutgoingAvailable(index) {
+    if (index >= this.OUTGOING_BUFFER_LENGTH) {
+      this.growOutgoingBuffer(index + 1);
     }
+  },
+
+  writeUint8: function writeUint8(value) {
+    this.ensureOutgoingAvailable(this.outgoingIndex);
+
     this.outgoingBytes[this.outgoingIndex] = value;
     this.outgoingIndex++;
   },
@@ -376,6 +388,38 @@ let Buf = {
     this.outgoingIndex = currentIndex;
   },
 
+  copyIncomingToOutgoing: function copyIncomingToOutgoing(length) {
+    if (!length || (length < 0)) {
+      return;
+    }
+
+    let translatedReadIndexEnd = this.currentParcelSize - this.readAvailable + length - 1;
+    this.ensureIncomingAvailable(translatedReadIndexEnd);
+
+    let translatedWriteIndexEnd = this.outgoingIndex + length - 1
+    this.ensureOutgoingAvailable(translatedWriteIndexEnd);
+
+    let newIncomingReadIndex = this.incomingReadIndex + length;
+    if (newIncomingReadIndex < this.INCOMING_BUFFER_LENGTH) {
+      // Reading won't cause wrapping, go ahead with builtin copy.
+      this.outgoingBytes.set(this.incomingBytes.subarray(this.incomingReadIndex, newIncomingReadIndex),
+                             this.outgoingIndex);
+    } else {
+      // Not so lucky.
+      newIncomingReadIndex %= this.INCOMING_BUFFER_LENGTH;
+      this.outgoingBytes.set(this.incomingBytes.subarray(this.incomingReadIndex, this.INCOMING_BUFFER_LENGTH),
+                             this.outgoingIndex);
+      if (newIncomingReadIndex) {
+        let firstPartLength = this.INCOMING_BUFFER_LENGTH - this.incomingReadIndex;
+        this.outgoingBytes.set(this.incomingBytes.subarray(0, newIncomingReadIndex),
+                               this.outgoingIndex + firstPartLength);
+      }
+    }
+
+    this.incomingReadIndex = newIncomingReadIndex;
+    this.readAvailable -= length;
+    this.outgoingIndex += length;
+  },
 
   /**
    * Parcel management
