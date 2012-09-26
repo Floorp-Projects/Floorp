@@ -2660,6 +2660,23 @@ CurrentThreadId()
 #endif
 }
 
+#ifdef XP_MACOSX
+static mach_port_t
+GetChildThread(ProcessHandle childPid, ThreadId childBlamedThread)
+{
+  mach_port_t childThread = MACH_PORT_NULL;
+  thread_act_port_array_t   threads_for_task;
+  mach_msg_type_number_t    thread_count;
+
+  if (task_threads(childPid, &threads_for_task, &thread_count)
+      == KERN_SUCCESS && childBlamedThread < thread_count) {
+    childThread = threads_for_task[childBlamedThread];
+  }
+
+  return childThread;
+}
+#endif
+
 bool
 CreatePairedMinidumps(ProcessHandle childPid,
                       ThreadId childBlamedThread,
@@ -2669,14 +2686,7 @@ CreatePairedMinidumps(ProcessHandle childPid,
     return false;
 
 #ifdef XP_MACOSX
-  mach_port_t childThread = MACH_PORT_NULL;
-  thread_act_port_array_t   threads_for_task;
-  mach_msg_type_number_t    thread_count;
-
-  if (task_threads(childPid, &threads_for_task, &thread_count)
-      == KERN_SUCCESS && childBlamedThread < thread_count) {
-    childThread = threads_for_task[childBlamedThread];
-  }
+  mach_port_t childThread = GetChildThread(childPid, childBlamedThread);
 #else
   ThreadId childThread = childBlamedThread;
 #endif
@@ -2727,6 +2737,44 @@ CreatePairedMinidumps(ProcessHandle childPid,
   }
 
   childMinidump.forget(childDump);
+
+  return true;
+}
+
+bool
+CreateAdditionalChildMinidump(ProcessHandle childPid,
+                              ThreadId childBlamedThread,
+                              nsIFile* parentMinidump,
+                              const nsACString& name)
+{
+  if (!GetEnabled())
+    return false;
+
+#ifdef XP_MACOSX
+  mach_port_t childThread = GetChildThread(childPid, childBlamedThread);
+#else
+  ThreadId childThread = childBlamedThread;
+#endif
+
+  xpstring dump_path;
+#ifndef XP_LINUX
+  dump_path = gExceptionHandler->dump_path();
+#else
+  dump_path = gExceptionHandler->minidump_descriptor().directory();
+#endif
+
+  // dump the child
+  nsCOMPtr<nsIFile> childMinidump;
+  if (!google_breakpad::ExceptionHandler::WriteMinidumpForChild(
+         childPid,
+         childThread,
+         dump_path,
+         PairedDumpCallback,
+         static_cast<void*>(&childMinidump))) {
+    return false;
+  }
+
+  RenameAdditionalHangMinidump(childMinidump, parentMinidump, name);
 
   return true;
 }
