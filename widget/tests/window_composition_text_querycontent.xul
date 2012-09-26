@@ -25,10 +25,14 @@
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">
-<div style="margin: 0; padding: 0; font-size: 24px;">Here is a text frame.</div>
+<div id="div" style="margin: 0; padding: 0; font-size: 24px;">Here is a text frame.</div>
 <textarea style="margin: 0;" id="textarea" cols="20" rows="4"></textarea><br/>
 <iframe id="iframe" width="300" height="150"
         src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe><br/>
+<iframe id="iframe2" width="300" height="150"
+        src="data:text/html,&lt;body onload='document.designMode=%22on%22'&gt;body content&lt;/body&gt;"></iframe><br/>
+<iframe id="iframe3" width="300" height="150"
+        src="data:text/html,&lt;body onload='document.designMode=%22on%22'&gt;body content&lt;/body&gt;"></iframe><br/>
 <input id="input" type="text"/><br/>
 </p>
 <div id="content" style="display: none">
@@ -68,14 +72,46 @@ function onunload()
   window.opener.wrappedJSObject.SimpleTest.finish();
 }
 
+var div = document.getElementById("div");
 var textarea = document.getElementById("textarea");
 var panel = document.getElementById("panel");
 var textbox = document.getElementById("textbox");
 var iframe = document.getElementById("iframe");
+var iframe2 = document.getElementById("iframe2");
+var iframe3 = document.getElementById("iframe3");
 var input = document.getElementById("input");
 var textareaInFrame;
 
 const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
+const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+const nsIEditorIMESupport = Components.interfaces.nsIEditorIMESupport;
+const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
+const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+const nsIEditorDocShell = Components.interfaces.nsIEditorDocShell;
+
+function hitEventLoop(aFunc, aTimes)
+{
+  if (--aTimes) {
+    setTimeout(hitEventLoop, 0, aFunc, aTimes);
+  } else {
+    setTimeout(aFunc, 20);
+  }
+}
+
+function getEditorIMESupport(aNode)
+{
+  return aNode.QueryInterface(nsIDOMNSEditableElement).
+               editor.
+               QueryInterface(nsIEditorIMESupport);
+}
+
+function getHTMLEditorIMESupport(aWindow)
+{
+  return aWindow.QueryInterface(nsIInterfaceRequestor).
+                 getInterface(nsIWebNavigation).
+                 QueryInterface(nsIEditorDocShell).
+                 editor;
+}
 
 const kIsWin = (navigator.platform.indexOf("Win") == 0);
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
@@ -2240,6 +2276,600 @@ function runBug722639Test()
   }
 }
 
+function runForceCommitTest()
+{
+  var events;
+  function eventHandler(aEvent)
+  {
+    events.push(aEvent);
+  }
+  window.addEventListener("compositionstart", eventHandler, true);
+  window.addEventListener("compositionupdate", eventHandler, true);
+  window.addEventListener("compositionend", eventHandler, true);
+  window.addEventListener("input", eventHandler, true);
+  window.addEventListener("text", eventHandler, true);
+
+  // Make the composition in textarea commit by click in the textarea
+  textarea.focus();
+  textarea.value = "";
+
+  events = [];
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  is(events.length, 4,
+     "runForceCommitTest: wrong event count #1");
+  is(events[0].type, "compositionstart",
+     "runForceCommitTest: the 1st event must be compositionstart #1");
+  is(events[1].type, "compositionupdate",
+     "runForceCommitTest: the 2nd event must be compositionupdate #1");
+  is(events[2].type, "text",
+     "runForceCommitTest: the 3rd event must be text #1");
+  is(events[3].type, "input",
+     "runForceCommitTest: the 4th event must be input #1");
+
+  events = [];
+  synthesizeMouseAtCenter(textarea, {});
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #2");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #2");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #2");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #2");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #2");
+  is(events[0].target, textarea,
+     "runForceCommitTest: The 1st event was fired on wrong event target #2");
+  is(events[1].target, textarea,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #2");
+  is(events[2].target, textarea,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #2");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runForceCommitTest: the textarea still has composition #2");
+  is(textarea.value, "\u306E",
+     "runForceCommitTest: the textarea doesn't have the committed text #2");
+
+  // Make the composition in textarea commit by click in another editor (input)
+  textarea.focus();
+  textarea.value = "";
+  input.value = "";
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  synthesizeMouseAtCenter(input, {});
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #3");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #3");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #3");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #3");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #3");
+  is(events[0].target, textarea,
+     "runForceCommitTest: The 1st event was fired on wrong event target #3");
+  is(events[1].target, textarea,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #3");
+  is(events[2].target, textarea,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #3");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runForceCommitTest: the textarea still has composition #3");
+  ok(!getEditorIMESupport(input).isComposing,
+     "runForceCommitTest: the input has composition #3");
+  is(textarea.value, "\u306E",
+     "runForceCommitTest: the textarea doesn't have the committed text #3");
+  is(input.value, "",
+     "runForceCommitTest: the input has the committed text? #3");
+
+  // Make the composition in textarea commit by blur()
+  textarea.focus();
+  textarea.value = "";
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  textarea.blur();
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #4");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #4");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #4");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #4");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #4");
+  is(events[0].target, textarea,
+     "runForceCommitTest: The 1st event was fired on wrong event target #4");
+  is(events[1].target, textarea,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #4");
+  is(events[2].target, textarea,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #4");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runForceCommitTest: the textarea still has composition #4");
+  is(textarea.value, "\u306E",
+     "runForceCommitTest: the textarea doesn't have the committed text #4");
+
+  // Make the composition in textarea commit by input.focus()
+  textarea.focus();
+  textarea.value = "";
+  input.value = "";
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  input.focus();
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #5");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #5");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #5");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #5");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #5");
+  is(events[0].target, textarea,
+     "runForceCommitTest: The 1st event was fired on wrong event target #5");
+  is(events[1].target, textarea,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #5");
+  is(events[2].target, textarea,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #5");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runForceCommitTest: the textarea still has composition #5");
+  ok(!getEditorIMESupport(input).isComposing,
+     "runForceCommitTest: the input has composition #5");
+  is(textarea.value, "\u306E",
+     "runForceCommitTest: the textarea doesn't have the committed text #5");
+  is(input.value, "",
+     "runForceCommitTest: the input has the committed text? #5");
+
+  // Make the composition in textarea commit by click in another document's editor
+  textarea.focus();
+  textarea.value = "";
+  textareaInFrame.value = "";
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  synthesizeMouseAtCenter(textareaInFrame, {}, iframe.contentWindow);
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #6");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #6");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #6");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #6");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #6");
+  is(events[0].target, textarea,
+     "runForceCommitTest: The 1st event was fired on wrong event target #6");
+  is(events[1].target, textarea,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #6");
+  is(events[2].target, textarea,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #6");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runForceCommitTest: the textarea still has composition #6");
+  ok(!getEditorIMESupport(textareaInFrame).isComposing,
+     "runForceCommitTest: the textarea in frame has composition #6");
+  is(textarea.value, "\u306E",
+     "runForceCommitTest: the textarea doesn't have the committed text #6");
+  is(textareaInFrame.value, "",
+     "runForceCommitTest: the textarea in frame has the committed text? #6");
+
+  // Make the composition in textarea commit by another document's editor's focus()
+  textarea.focus();
+  textarea.value = "";
+  textareaInFrame.value = "";
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  textareaInFrame.focus();
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #7");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #7");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #7");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #7");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #7");
+  is(events[0].target, textarea,
+     "runForceCommitTest: The 1st event was fired on wrong event target #7");
+  is(events[1].target, textarea,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #7");
+  is(events[2].target, textarea,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #7");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runForceCommitTest: the textarea still has composition #7");
+  ok(!getEditorIMESupport(textareaInFrame).isComposing,
+     "runForceCommitTest: the textarea in frame has composition #7");
+  is(textarea.value, "\u306E",
+     "runForceCommitTest: the textarea doesn't have the committed text #7");
+  is(textareaInFrame.value, "",
+     "runForceCommitTest: the textarea in frame has the committed text? #7");
+
+  // Make the composition in a textarea commit by click in another editable document
+  textarea.focus();
+  textarea.value = "";
+  iframe2.contentDocument.body.innerHTML = "Text in the Body";
+  var iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  synthesizeMouseAtCenter(iframe2.contentDocument.body, {}, iframe2.contentWindow);
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #8");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #8");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #8");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #8");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #8");
+  is(events[0].target, textarea,
+     "runForceCommitTest: The 1st event was fired on wrong event target #8");
+  is(events[1].target, textarea,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #8");
+  is(events[2].target, textarea,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #8");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runForceCommitTest: the textarea still has composition #8");
+  ok(!getHTMLEditorIMESupport(iframe2.contentWindow).isComposing,
+     "runForceCommitTest: the editable document has composition #8");
+  is(textarea.value, "\u306E",
+     "runForceCommitTest: the textarea doesn't have the committed text #8");
+  is(iframe2.contentDocument.body.innerHTML, iframe2BodyInnerHTML,
+     "runForceCommitTest: the editable document has the committed text? #8");
+
+  // Make the composition in an editable document commit by click in it
+  iframe2.contentWindow.focus();
+  iframe2.contentDocument.body.innerHTML = "Text in the Body";
+  iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
+
+  synthesizeComposition({ type: "compositionstart" }, iframe2.contentWindow);
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" }, iframe2.contentWindow);
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    }, iframe2.contentWindow);
+
+  events = [];
+  synthesizeMouseAtCenter(iframe2.contentDocument.body, {}, iframe2.contentWindow);
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #9");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #9");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #9");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #9");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #9");
+  is(events[0].target, iframe2.contentDocument.body,
+     "runForceCommitTest: The 1st event was fired on wrong event target #9");
+  is(events[1].target, iframe2.contentDocument.body,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #9");
+  is(events[2].target, iframe2.contentDocument.body,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #9");
+  ok(!getHTMLEditorIMESupport(iframe2.contentWindow).isComposing,
+     "runForceCommitTest: the editable document still has composition #9");
+  ok(iframe2.contentDocument.body.innerHTML != iframe2BodyInnerHTML &&
+     iframe2.contentDocument.body.innerHTML.indexOf("\u306E") >= 0,
+     "runForceCommitTest: the editable document doesn't have the committed text #9");
+
+  // Make the composition in an editable document commit by click in another document's editor
+  textarea.value = "";
+  iframe2.contentWindow.focus();
+  iframe2.contentDocument.body.innerHTML = "Text in the Body";
+  iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
+
+  synthesizeComposition({ type: "compositionstart" }, iframe2.contentWindow);
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" }, iframe2.contentWindow);
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    }, iframe2.contentWindow);
+
+  events = [];
+  synthesizeMouseAtCenter(textarea, {});
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #10");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #10");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #10");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #10");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #10");
+  is(events[0].target, iframe2.contentDocument.body,
+     "runForceCommitTest: The 1st event was fired on wrong event target #10");
+  is(events[1].target, iframe2.contentDocument.body,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #10");
+  is(events[2].target, iframe2.contentDocument.body,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #10");
+  ok(!getHTMLEditorIMESupport(iframe2.contentWindow).isComposing,
+     "runForceCommitTest: the editable document still has composition #10");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runForceCommitTest: the textarea has composition #10");
+  ok(iframe2.contentDocument.body.innerHTML != iframe2BodyInnerHTML &&
+     iframe2.contentDocument.body.innerHTML.indexOf("\u306E") >= 0,
+     "runForceCommitTest: the editable document doesn't have the committed text #10");
+  is(textarea.value, "",
+     "runForceCommitTest: the textarea has the committed text? #10");
+
+  // Make the composition in an editable document commit by click in the another editable document
+  iframe2.contentWindow.focus();
+  iframe2.contentDocument.body.innerHTML = "Text in the Body";
+  iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
+  iframe3.contentDocument.body.innerHTML = "Text in the Body";
+  iframe3BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
+
+  synthesizeComposition({ type: "compositionstart" }, iframe2.contentWindow);
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" }, iframe2.contentWindow);
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    }, iframe2.contentWindow);
+
+  events = [];
+  synthesizeMouseAtCenter(iframe3.contentDocument.body, {}, iframe3.contentWindow);
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #11");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #11");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #11");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #11");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #11");
+  is(events[0].target, iframe2.contentDocument.body,
+     "runForceCommitTest: The 1st event was fired on wrong event target #11");
+  is(events[1].target, iframe2.contentDocument.body,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #11");
+  is(events[2].target, iframe2.contentDocument.body,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #11");
+  ok(!getHTMLEditorIMESupport(iframe2.contentWindow).isComposing,
+     "runForceCommitTest: the editable document still has composition #11");
+  ok(!getHTMLEditorIMESupport(iframe3.contentWindow).isComposing,
+     "runForceCommitTest: the other editable document has composition #11");
+  ok(iframe2.contentDocument.body.innerHTML != iframe2BodyInnerHTML &&
+     iframe2.contentDocument.body.innerHTML.indexOf("\u306E") >= 0,
+     "runForceCommitTest: the editable document doesn't have the committed text #11");
+  is(iframe3.contentDocument.body.innerHTML, iframe3BodyInnerHTML,
+     "runForceCommitTest: the other editable document has the committed text? #11");
+
+  window.removeEventListener("compositionstart", eventHandler, true);
+  window.removeEventListener("compositionupdate", eventHandler, true);
+  window.removeEventListener("compositionend", eventHandler, true);
+  window.removeEventListener("input", eventHandler, true);
+  window.removeEventListener("text", eventHandler, true);
+}
+
+function runRemoveContentTest(aCallback)
+{
+  var events = [];
+  function eventHandler(aEvent)
+  {
+    events.push(aEvent);
+  }
+  textarea.addEventListener("compositionstart", eventHandler, true);
+  textarea.addEventListener("compositionupdate", eventHandler, true);
+  textarea.addEventListener("compositionend", eventHandler, true);
+  textarea.addEventListener("input", eventHandler, true);
+  textarea.addEventListener("text", eventHandler, true);
+
+  textarea.focus();
+  textarea.value = "";
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  var nextSibling = textarea.nextSibling;
+  var parent = textarea.parentElement;
+
+  events = [];
+  parent.removeChild(textarea);
+
+  hitEventLoop(function () {
+    // XXX Currently, "input" event isn't fired on removed content.
+    is(events.length, 3,
+       "runRemoveContentTest: wrong event count #1");
+    is(events[0].type, "compositionupdate",
+       "runRemoveContentTest: the 1st event must be compositionupdate #1");
+    is(events[1].type, "text",
+       "runRemoveContentTest: the 2nd event must be text #1");
+    is(events[2].type, "compositionend",
+       "runRemoveContentTest: the 3rd event must be compositionend #1");
+    is(events[0].data, "",
+       "runRemoveContentTest: compositionupdate has wrong data #1");
+    is(events[2].data, "",
+       "runRemoveContentTest: compositionend has wrong data #1");
+    is(events[0].target, textarea,
+       "runRemoveContentTest: The 1st event was fired on wrong event target #1");
+    is(events[1].target, textarea,
+       "runRemoveContentTest: The 2nd event was fired on wrong event target #1");
+    is(events[2].target, textarea,
+       "runRemoveContentTest: The 3rd event was fired on wrong event target #1");
+    ok(!getEditorIMESupport(textarea).isComposing,
+       "runRemoveContentTest: the textarea still has composition #1");
+    todo_is(textarea.value, "",
+       "runRemoveContentTest: the textarea has the committed text? #1");
+
+    parent.insertBefore(textarea, nextSibling);
+
+    textarea.focus();
+    textarea.value = "";
+
+    synthesizeComposition({ type: "compositionstart" });
+
+    events = [];
+    parent.removeChild(textarea);
+
+    hitEventLoop(function () {
+      // XXX Currently, "input" event isn't fired on removed content.
+      is(events.length, 1,
+         "runRemoveContentTest: wrong event count #2");
+      is(events[0].type, "compositionend",
+         "runRemoveContentTest: the 1st event must be compositionend #2");
+      is(events[0].data, "",
+         "runRemoveContentTest: compositionupdate has wrong data #2");
+      is(events[0].target, textarea,
+         "runRemoveContentTest: The 1st event was fired on wrong event target #2");
+      ok(!getEditorIMESupport(textarea).isComposing,
+         "runRemoveContentTest: the textarea still has composition #2");
+      is(textarea.value, "",
+         "runRemoveContentTest: the textarea has the committed text? #2");
+
+      parent.insertBefore(textarea, nextSibling);
+
+      textarea.removeEventListener("compositionstart", eventHandler, true);
+      textarea.removeEventListener("compositionupdate", eventHandler, true);
+      textarea.removeEventListener("compositionend", eventHandler, true);
+      textarea.removeEventListener("input", eventHandler, true);
+      textarea.removeEventListener("text", eventHandler, true);
+
+      SimpleTest.executeSoon(aCallback);
+    }, 50);
+  }, 50);
+}
+
 function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
 {
   aFocusedEditor.value = "";
@@ -2354,7 +2984,6 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
 
 function runFrameTest()
 {
-  var textareaInFrame = iframe.contentDocument.getElementById("textarea");
   textareaInFrame.focus();
   runTestOnAnotherContext(iframe, textareaInFrame, "runFrameTest");
   runCharAtPointTest(textareaInFrame, "textarea in the iframe");
@@ -2719,15 +3348,20 @@ function runMaxLengthTest()
 
 function runTest()
 {
+  textareaInFrame = iframe.contentDocument.getElementById("textarea");
+
   runUndoRedoTest();
   runCompositionTest();
   runCompositionEventTest();
   runCharAtPointTest(textarea, "textarea in the document");
   runCharAtPointAtOutsideTest();
   runBug722639Test();
-  runFrameTest();
-  runPanelTest();
-  runMaxLengthTest();
+  runForceCommitTest();
+  runRemoveContentTest(function () {
+    runFrameTest();
+    runPanelTest();
+    runMaxLengthTest();
+  });
 }
 
 ]]>
