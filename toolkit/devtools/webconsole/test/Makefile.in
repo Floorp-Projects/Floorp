@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH          = @DEPTH@
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = @relativesrcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+# Mochitest tests
+MOCHITEST_FILES = \
+    test_basics.html \
+    test_cached_messages.html \
+    test_page_errors.html \
+    test_consoleapi.html \
+    test_jsterm.html \
+    test_object_actor.html \
+    test_network_get.html \
+    test_network_post.html \
+    network_requests_iframe.html \
+    data.json \
+    common.js \
+    $(NULL)
+
+include $(topsrcdir)/config/rules.mk
