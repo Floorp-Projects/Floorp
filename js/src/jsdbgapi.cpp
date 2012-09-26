@@ -411,7 +411,7 @@ extern JS_PUBLIC_API(uintptr_t *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
     BindingVector bindings(cx);
-    if (!FillBindingVector(fun->script()->bindings, &bindings))
+    if (!FillBindingVector(fun->script(), &bindings))
         return NULL;
 
     /* Munge data into the API this method implements.  Avert your eyes! */

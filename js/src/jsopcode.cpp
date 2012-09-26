@@ -1078,7 +1078,8 @@ SetPrinterLocalNames(JSContext *cx, JSScript *script, JSPrinter *jp)
     BindingVector *localNames = NULL;
     if (script->bindings.count() > 0) {
         localNames = cx->new_<BindingVector>(cx);
-        if (!localNames || !FillBindingVector(script->bindings, localNames))
+        RootedScript script_(cx, script);
+        if (!localNames || !FillBindingVector(script_, localNames))
             return false;
     }
     jp->localNames = localNames;
@@ -6047,7 +6048,8 @@ ExpressionDecompiler::init()
     localNames = cx->new_<BindingVector>(cx);
     if (!localNames)
         return false;
-    if (!FillBindingVector(script->bindings, localNames))
+    RootedScript script_(cx, script);
+    if (!FillBindingVector(script_, localNames))
         return false;
 
     return true;

@@ -141,7 +141,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     bool allVarsAliased = script_->compartment()->debugMode();
     bool allArgsAliased = allVarsAliased || script_->argumentsHasVarBinding();
 
-    for (BindingIter bi(script_->bindings); bi; bi++) {
+    RootedScript script(cx, script_);
+    for (BindingIter bi(script); bi; bi++) {
         if (bi->kind() == ARGUMENT)
             escapedSlots[ArgSlot(bi.frameIndex())] = allArgsAliased || bi->aliased();
         else
