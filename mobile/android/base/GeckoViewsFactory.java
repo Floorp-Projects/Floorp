@@ -40,6 +40,10 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
 
             if (TextUtils.equals(viewName, "AboutHomePromoBox"))
                 return new AboutHomePromoBox(context, attrs);
+            else if (TextUtils.equals(viewName, "AboutHomeContent"))
+                return new AboutHomeContent(context, attrs);
+            else if (TextUtils.equals(viewName, "AboutHomeContent$TopSitesGridView"))
+                return new AboutHomeContent.TopSitesGridView(context, attrs);
             else if (TextUtils.equals(viewName, "AboutHomeSection"))
                 return new AboutHomeSection(context, attrs);
             else if (TextUtils.equals(viewName, "AwesomeBarTabs"))
@@ -65,7 +69,7 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
             else if (TextUtils.equals(viewName, "gfx.LayerView"))
                 return new LayerView(context, attrs);
             else
-                Log.e(LOGTAG, "Error: unknown custom view: " + viewName);
+                Log.d(LOGTAG, "Warning: unknown custom view: " + viewName);
         }
 
         return null;
