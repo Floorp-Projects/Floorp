@@ -405,9 +405,11 @@ nsNativeAppSupportWin::CheckConsole() {
                 if (_fileno(stdout) == -1 ||
                     _get_osfhandle(fileno(stdout)) == -1)
                     freopen("CONOUT$", "w", stdout);
+                // Merge stderr into CONOUT$ since there isn't any `CONERR$`.
+                // http://msdn.microsoft.com/en-us/library/windows/desktop/ms683231%28v=vs.85%29.aspx
                 if (_fileno(stderr) == -1 ||
                     _get_osfhandle(fileno(stderr)) == -1)
-                    freopen("CONERR$", "w", stderr);
+                    freopen("CONOUT$", "w", stderr);
                 if (_fileno(stdin) == -1 || _get_osfhandle(fileno(stdin)) == -1)
                     freopen("CONIN$", "r", stdin);
             }
