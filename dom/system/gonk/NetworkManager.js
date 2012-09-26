@@ -174,8 +174,9 @@ NetworkManager.prototype = {
         debug("Network " + network.name + " changed state to " + network.state);
         switch (network.state) {
           case Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED:
-            // Add host route on secondary APN
-            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+            // Add host route for data calls
+            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
+                network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
                 network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
               this.addHostRoute(network);
             }
@@ -185,8 +186,9 @@ NetworkManager.prototype = {
             this.setAndConfigureActive();
             break;
           case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
-            // Remove host route on secondary APN
-            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+            // Remove host route for data calls
+            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
+                network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
                 network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
               this.removeHostRoute(network);
             }
@@ -218,8 +220,9 @@ NetworkManager.prototype = {
                                  Cr.NS_ERROR_INVALID_ARG);
     }
     this.networkInterfaces[network.name] = network;
-    // Add host route on secondary APN
-    if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+    // Add host route for data calls
+    if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
+        network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
         network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
       this.addHostRoute(network);
     }
@@ -241,8 +244,9 @@ NetworkManager.prototype = {
                                  Cr.NS_ERROR_INVALID_ARG);
     }
     delete this.networkInterfaces[network.name];
-    // Remove host route on secondary APN
-    if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+    // Remove host route for data calls
+    if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
+        network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
         network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
       this.removeHostRoute(network);
     }
@@ -260,7 +264,8 @@ NetworkManager.prototype = {
   set preferredNetworkType(val) {
     if ([Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
          Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
-         Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS].indexOf(val) == -1) {
+         Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS,
+         Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL].indexOf(val) == -1) {
       throw "Invalid network type";
     }
     this._preferredNetworkType = val;

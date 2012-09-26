@@ -230,7 +230,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(0a05f286-608d-4d2e-ab72-16bd36e93c15)]
+[scriptable, uuid(a90fef2c-44aa-4f2b-a0ee-a590e9dd345e)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -256,6 +256,9 @@ interface nsIRadioInterfaceLayer : nsISupports
   /**
    * PDP APIs
    */
+  void setupDataCallByType(in DOMString apntype);
+  void deactivateDataCallByType(in DOMString apntype);
+  long getDataCallStateByType(in DOMString apntype);
   void setupDataCall(in long radioTech,
                      in DOMString apn,
                      in DOMString user,
