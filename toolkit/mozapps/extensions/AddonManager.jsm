@@ -2252,6 +2252,12 @@ var AddonManager = {
   // Options will be displayed in a new tab, if possible
   OPTIONS_TYPE_TAB: 3,
 
+  // Constants for displayed or hidden options notifications
+  // Options notification will be displayed
+  OPTIONS_NOTIFICATION_DISPLAYED: "addon-options-displayed",
+  // Options notification will be hidden
+  OPTIONS_NOTIFICATION_HIDDEN: "addon-options-hidden",
+
   // Constants for getStartupChanges, addStartupChange and removeStartupChange
   // Add-ons that were detected as installed during startup. Doesn't include
   // add-ons that were pending installation the last time the application ran.
