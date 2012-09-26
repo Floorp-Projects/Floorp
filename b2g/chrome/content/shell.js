@@ -77,11 +77,6 @@ var shell = {
     if (Services.prefs.getBoolPref('app.reportCrashes') &&
         crashID) {
 
-      if (!Services.io.offline) {
-        this.CrashSubmit.submit(crashID);
-        return;
-      }
-
       Services.obs.addObserver(function observer(subject, topic, state) {
           if (topic != "network:offline-status-changed")
             return;
