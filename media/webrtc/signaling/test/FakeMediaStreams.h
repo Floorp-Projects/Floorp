@@ -48,15 +48,17 @@ public:
 
 // Note: only one listener supported
 class Fake_MediaStream {
-public:
-  Fake_MediaStream () : mListeners() {}
+ public:
+  Fake_MediaStream () : mListeners(), mMutex("Fake MediaStream") {}
   virtual ~Fake_MediaStream() { Stop(); }
 
   void AddListener(Fake_MediaStreamListener *aListener) {
+    mozilla::MutexAutoLock lock(mMutex);
     mListeners.insert(aListener);
   }
 
   void RemoveListener(Fake_MediaStreamListener *aListener) {
+    mozilla::MutexAutoLock lock(mMutex);
     mListeners.erase(aListener);
   }
 
@@ -67,8 +69,12 @@ public:
 
   virtual void Periodic() {}
 
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStream);
+
  protected:
   std::set<Fake_MediaStreamListener *> mListeners;
+  mozilla::Mutex mMutex;  // Lock to prevent the listener list from being modified while
+  		 	  // executing Periodic().
 };
 
 class Fake_MediaPeriodic : public nsITimerCallback {
@@ -205,7 +211,7 @@ public:
   void SetHintContents(uint32_t aHintContents) { mHintContents = aHintContents; }
 
 private:
-  Fake_MediaStream *mMediaStream;
+  nsRefPtr<Fake_MediaStream> mMediaStream;
 
   // tells the SDP generator about whether this
   // MediaStream probably has audio and/or video

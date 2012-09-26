@@ -17,12 +17,14 @@
 
 namespace sipcc {
 
-// Currently SIPCC only allows a single stack instance to exist in a process
-// at once. This class implements a singleton object that wraps that
-// instance. It also hosts the observer class that demuxes events onto
-// individual PCs.
+// A class to hold some of the singleton objects we need:
+// * The global PeerConnectionImpl table and its associated lock.
+// * Currently SIPCC only allows a single stack instance to exist in a process
+//   at once. This class implements a singleton object that wraps that.
+// * The observer class that demuxes events onto individual PCs.
 class PeerConnectionCtx : public CSF::CC_Observer {
  public:
+  static nsresult InitializeGlobal(nsIThread *mainThread);
   static PeerConnectionCtx* GetInstance();
   static void Destroy();
 
@@ -37,7 +39,14 @@ class PeerConnectionCtx : public CSF::CC_Observer {
 
   PeerConnectionImpl::SipccState sipcc_state() { return mSipccState; }
 
+  // Make these classes friend so that they can access mPeerconnections.
+  friend class PeerConnectionImpl;
+  friend class PeerConnectionWrapper;
+
  private:
+  // We could make these available only via accessors but it's too much trouble.
+  std::map<const std::string, PeerConnectionImpl *> mPeerConnections;
+
   PeerConnectionCtx() :  mSipccState(PeerConnectionImpl::kIdle),
                          mCCM(NULL), mDevice(NULL) {}
   // This is a singleton, so don't copy construct it, etc.
@@ -52,12 +61,17 @@ class PeerConnectionCtx : public CSF::CC_Observer {
     mSipccState = aState;
   }
 
+  virtual void onCallEvent_m(ccapi_call_event_e callEvent,
+			     CSF::CC_CallPtr call,
+			     CSF::CC_CallInfoPtr info);
+
   // SIPCC objects
   PeerConnectionImpl::SipccState mSipccState;  // TODO(ekr@rtfm.com): refactor this out? What does it do?
   CSF::CallControlManagerPtr mCCM;
   CSF::CC_DevicePtr mDevice;
 
-  static PeerConnectionCtx *instance;
+  static PeerConnectionCtx *gInstance;
+  static nsIThread *gMainThread;
 };
 
 }  // namespace sipcc
