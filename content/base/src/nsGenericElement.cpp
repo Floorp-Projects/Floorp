@@ -809,9 +809,10 @@ nsGenericElement::GetBoundingClientRect(nsIDOMClientRect** aResult)
 
 NS_IMETHODIMP
 nsGenericElement::GetElementsByClassName(const nsAString& aClasses,
-                                         nsIDOMNodeList** aReturn)
+                                         nsIDOMHTMLCollection** aReturn)
 {
-  return nsContentUtils::GetElementsByClassName(this, aClasses, aReturn);
+  *aReturn = nsContentUtils::GetElementsByClassName(this, aClasses).get();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1005,7 +1006,7 @@ nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
 
 nsresult
 nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
-                                       nsIDOMNodeList** aReturn)
+                                       nsIDOMHTMLCollection** aReturn)
 {
   nsContentList *list = NS_GetContentList(this, kNameSpaceID_Unknown, 
                                           aTagname).get();
@@ -1135,7 +1136,7 @@ nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
 nsresult
 nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                          const nsAString& aLocalName,
-                                         nsIDOMNodeList** aReturn)
+                                         nsIDOMHTMLCollection** aReturn)
 {
   int32_t nameSpaceId = kNameSpaceID_Wildcard;
 

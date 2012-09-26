@@ -959,7 +959,7 @@ HTMLTableAccessible::HasDescendant(const nsAString& aTagName, bool aAllowEmpty)
   nsCOMPtr<nsIDOMElement> tableElt(do_QueryInterface(mContent));
   NS_ENSURE_TRUE(tableElt, false);
 
-  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsCOMPtr<nsIDOMHTMLCollection> nodeList;
   tableElt->GetElementsByTagName(aTagName, getter_AddRefs(nodeList));
   NS_ENSURE_TRUE(nodeList, false);
 

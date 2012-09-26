@@ -3034,7 +3034,8 @@ NS_IMETHODIMP
 nsDocument::GetElementsByClassName(const nsAString& aClasses,
                                    nsIDOMNodeList** aReturn)
 {
-  return nsContentUtils::GetElementsByClassName(this, aClasses, aReturn);
+  *aReturn = nsContentUtils::GetElementsByClassName(this, aClasses).get();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
