@@ -441,7 +441,7 @@ NotifySystemTimeChange(const hal::SystemTimeChange& aReason)
 }
  
 void 
-AdjustSystemClock(int32_t aDeltaMilliseconds)
+AdjustSystemClock(int64_t aDeltaMilliseconds)
 {
   AssertMainThread();
   PROXY_IF_SANDBOXED(AdjustSystemClock(aDeltaMilliseconds));

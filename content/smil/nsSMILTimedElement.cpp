@@ -2318,7 +2318,7 @@ nsSMILTimedElement::AreEndTimesDependentOn(
 //----------------------------------------------------------------------
 // Hashtable callback functions
 
-/* static */ PR_CALLBACK PLDHashOperator
+/* static */ PLDHashOperator
 nsSMILTimedElement::NotifyNewIntervalCallback(TimeValueSpecPtrKey* aKey,
                                               void* aData)
 {

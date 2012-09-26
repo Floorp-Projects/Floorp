@@ -312,10 +312,22 @@ let Buf = {
    * Functions for writing data to the outgoing buffer.
    */
 
-  writeUint8: function writeUint8(value) {
-    if (this.outgoingIndex >= this.OUTGOING_BUFFER_LENGTH) {
-      this.growOutgoingBuffer(this.outgoingIndex + 1);
+  /**
+   * Ensure position specified is writable.
+   *
+   * @param index
+   *        Data position in outgoing parcel, valid from 0 to
+   *        this.OUTGOING_BUFFER_LENGTH.
+   */
+  ensureOutgoingAvailable: function ensureOutgoingAvailable(index) {
+    if (index >= this.OUTGOING_BUFFER_LENGTH) {
+      this.growOutgoingBuffer(index + 1);
     }
+  },
+
+  writeUint8: function writeUint8(value) {
+    this.ensureOutgoingAvailable(this.outgoingIndex);
+
     this.outgoingBytes[this.outgoingIndex] = value;
     this.outgoingIndex++;
   },
@@ -376,6 +388,38 @@ let Buf = {
     this.outgoingIndex = currentIndex;
   },
 
+  copyIncomingToOutgoing: function copyIncomingToOutgoing(length) {
+    if (!length || (length < 0)) {
+      return;
+    }
+
+    let translatedReadIndexEnd = this.currentParcelSize - this.readAvailable + length - 1;
+    this.ensureIncomingAvailable(translatedReadIndexEnd);
+
+    let translatedWriteIndexEnd = this.outgoingIndex + length - 1
+    this.ensureOutgoingAvailable(translatedWriteIndexEnd);
+
+    let newIncomingReadIndex = this.incomingReadIndex + length;
+    if (newIncomingReadIndex < this.INCOMING_BUFFER_LENGTH) {
+      // Reading won't cause wrapping, go ahead with builtin copy.
+      this.outgoingBytes.set(this.incomingBytes.subarray(this.incomingReadIndex, newIncomingReadIndex),
+                             this.outgoingIndex);
+    } else {
+      // Not so lucky.
+      newIncomingReadIndex %= this.INCOMING_BUFFER_LENGTH;
+      this.outgoingBytes.set(this.incomingBytes.subarray(this.incomingReadIndex, this.INCOMING_BUFFER_LENGTH),
+                             this.outgoingIndex);
+      if (newIncomingReadIndex) {
+        let firstPartLength = this.INCOMING_BUFFER_LENGTH - this.incomingReadIndex;
+        this.outgoingBytes.set(this.incomingBytes.subarray(0, newIncomingReadIndex),
+                               this.outgoingIndex + firstPartLength);
+      }
+    }
+
+    this.incomingReadIndex = newIncomingReadIndex;
+    this.readAvailable -= length;
+    this.outgoingIndex += length;
+  },
 
   /**
    * Parcel management
@@ -2928,8 +2972,15 @@ let RIL = {
       }
 
       if (!updatedDataCall) {
-        delete this.currentDataCalls[currentDataCall.callIndex];
         currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+        currentDataCall.rilMessageType = "datacallstatechange";
+        this.sendDOMMessage(currentDataCall);
+        continue;
+      }
+
+      if (updatedDataCall && !updatedDataCall.ifname) {
+        delete this.currentDataCalls[currentDataCall.cid];
+        currentDataCall.state = GECKO_NETWORK_STATE_UNKNOWN;
         currentDataCall.rilMessageType = "datacallstatechange";
         this.sendDOMMessage(currentDataCall);
         continue;
@@ -2946,6 +2997,9 @@ let RIL = {
     }
 
     for each (let newDataCall in datacalls) {
+      if (!newDataCall.ifname) {
+        continue;
+      }
       this.currentDataCalls[newDataCall.cid] = newDataCall;
       this._setDataCallGeckoState(newDataCall);
       if (newDataCallOptions) {
@@ -3037,6 +3091,164 @@ let RIL = {
   },
 
   /**
+   * @param message A decoded SMS-DELIVER message.
+   *
+   * @see 3GPP TS 31.111 section 7.1.1
+   */
+  dataDownloadViaSMSPP: function dataDownloadViaSMSPP(message) {
+    let options = {
+      pid: message.pid,
+      dcs: message.dcs,
+      encoding: message.encoding,
+    };
+    Buf.newParcel(REQUEST_STK_SEND_ENVELOPE_WITH_STATUS, options);
+
+    Buf.seekIncoming(-1 * (Buf.currentParcelSize - Buf.readAvailable
+                           - 2 * UINT32_SIZE)); // Skip response_type & request_type.
+    let messageStringLength = Buf.readUint32(); // In semi-octets
+    let smscLength = GsmPDUHelper.readHexOctet(); // In octets, inclusive of TOA
+    let tpduLength = (messageStringLength / 2) - (smscLength + 1); // In octets
+
+    // Device identities: 4 bytes
+    // Address: 0 or (2 + smscLength)
+    // SMS TPDU: (2 or 3) + tpduLength
+    let berLen = 4 +
+                 (smscLength ? (2 + smscLength) : 0) +
+                 (tpduLength <= 127 ? 2 : 3) + tpduLength; // In octets
+
+    let parcelLength = (berLen <= 127 ? 2 : 3) + berLen; // In octets
+    Buf.writeUint32(parcelLength * 2); // In semi-octets
+
+    // Write a BER-TLV
+    GsmPDUHelper.writeHexOctet(BER_SMS_PP_DOWNLOAD_TAG);
+    if (berLen > 127) {
+      GsmPDUHelper.writeHexOctet(0x81);
+    }
+    GsmPDUHelper.writeHexOctet(berLen);
+
+    // Device Identifies-TLV
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_DEVICE_ID |
+                               COMPREHENSIONTLV_FLAG_CR);
+    GsmPDUHelper.writeHexOctet(0x02);
+    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_NETWORK);
+    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_SIM);
+
+    // Address-TLV
+    if (smscLength) {
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_ADDRESS);
+      GsmPDUHelper.writeHexOctet(smscLength);
+      Buf.copyIncomingToOutgoing(PDU_HEX_OCTET_SIZE * smscLength);
+    }
+
+    // SMS TPDU-TLV
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_SMS_TPDU |
+                               COMPREHENSIONTLV_FLAG_CR);
+    if (tpduLength > 127) {
+      GsmPDUHelper.writeHexOctet(0x81);
+    }
+    GsmPDUHelper.writeHexOctet(tpduLength);
+    Buf.copyIncomingToOutgoing(PDU_HEX_OCTET_SIZE * tpduLength);
+
+    // Write 2 string delimitors for the total string length must be even.
+    Buf.writeStringDelimiter(0);
+
+    Buf.sendParcel();
+  },
+
+  /**
+   * @param success A boolean value indicating the result of previous
+   *                SMS-DELIVER message handling.
+   * @param responsePduLen ICC IO response PDU length in octets.
+   * @param options An object that contains four attributes: `pid`, `dcs`,
+   *                `encoding` and `responsePduLen`.
+   *
+   * @see 3GPP TS 23.040 section 9.2.2.1a
+   */
+  acknowledgeIncomingGsmSmsWithPDU: function acknowledgeIncomingGsmSmsWithPDU(success, responsePduLen, options) {
+    Buf.newParcel(REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU);
+
+    // Two strings.
+    Buf.writeUint32(2);
+
+    // String 1: Success
+    Buf.writeString(success ? "1" : "0");
+
+    // String 2: RP-ACK/RP-ERROR PDU
+    Buf.writeUint32(2 * (responsePduLen + (success ? 5 : 6))); // In semi-octet
+    // 1. TP-MTI & TP-UDHI
+    GsmPDUHelper.writeHexOctet(PDU_MTI_SMS_DELIVER);
+    if (!success) {
+      // 2. TP-FCS
+      GsmPDUHelper.writeHexOctet(PDU_FCS_USIM_DATA_DOWNLOAD_ERROR);
+    }
+    // 3. TP-PI
+    GsmPDUHelper.writeHexOctet(PDU_PI_USER_DATA_LENGTH |
+                               PDU_PI_DATA_CODING_SCHEME |
+                               PDU_PI_PROTOCOL_IDENTIFIER);
+    // 4. TP-PID
+    GsmPDUHelper.writeHexOctet(options.pid);
+    // 5. TP-DCS
+    GsmPDUHelper.writeHexOctet(options.dcs);
+    // 6. TP-UDL
+    if (options.encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
+      GsmPDUHelper.writeHexOctet(Math.floor(responsePduLen * 8 / 7));
+    } else {
+      GsmPDUHelper.writeHexOctet(responsePduLen);
+    }
+    // TP-UD
+    Buf.copyIncomingToOutgoing(PDU_HEX_OCTET_SIZE * responsePduLen);
+    // Write 2 string delimitors for the total string length must be even.
+    Buf.writeStringDelimiter(0);
+
+    Buf.sendParcel();
+  },
+
+  /**
+   * @param message A decoded SMS-DELIVER message.
+   */
+  writeSmsToSIM: function writeSmsToSIM(message) {
+    Buf.newParcel(REQUEST_WRITE_SMS_TO_SIM);
+
+    // Write EFsms Status
+    Buf.writeUint32(EFSMS_STATUS_FREE);
+
+    Buf.seekIncoming(-1 * (Buf.currentParcelSize - Buf.readAvailable
+                           - 2 * UINT32_SIZE)); // Skip response_type & request_type.
+    let messageStringLength = Buf.readUint32(); // In semi-octets
+    let smscLength = GsmPDUHelper.readHexOctet(); // In octets, inclusive of TOA
+    let pduLength = (messageStringLength / 2) - (smscLength + 1); // In octets
+
+    // 1. Write PDU first.
+    if (smscLength > 0) {
+      Buf.seekIncoming(smscLength * PDU_HEX_OCTET_SIZE);
+    }
+    // Write EFsms PDU string length
+    Buf.writeUint32(2 * pduLength); // In semi-octets
+    if (pduLength) {
+      Buf.copyIncomingToOutgoing(PDU_HEX_OCTET_SIZE * pduLength);
+    }
+    // Write 2 string delimitors for the total string length must be even.
+    Buf.writeStringDelimiter(0);
+
+    // 2. Write SMSC
+    // Write EFsms SMSC string length
+    Buf.writeUint32(2 * (smscLength + 1)); // Plus smscLength itself, in semi-octets
+    // Write smscLength
+    GsmPDUHelper.writeHexOctet(smscLength);
+    // Write TOA & SMSC Address
+    if (smscLength) {
+      Buf.seekIncoming(-1 * (Buf.currentParcelSize - Buf.readAvailable
+                             - 2 * UINT32_SIZE // Skip response_type, request_type.
+                             - 2 * PDU_HEX_OCTET_SIZE)); // Skip messageStringLength & smscLength.
+      Buf.copyIncomingToOutgoing(PDU_HEX_OCTET_SIZE * smscLength);
+    }
+    // Write 2 string delimitors for the total string length must be even.
+    Buf.writeStringDelimiter(0);
+
+    Buf.sendParcel();
+  },
+
+  /**
    * Helper for processing received SMS parcel data.
    *
    * @param length
@@ -3084,6 +3296,47 @@ let RIL = {
       return PDU_FCS_OK;
     }
 
+    if (message.messageClass == PDU_DCS_MSG_CLASS_SIM_SPECIFIC) {
+      switch (message.epid) {
+        case PDU_PID_ANSI_136_R_DATA:
+        case PDU_PID_USIM_DATA_DOWNLOAD:
+          if (this.isICCServiceAvailable("DATA_DOWNLOAD_SMS_PP")) {
+            // `If the service "data download via SMS Point-to-Point" is
+            // allocated and activated in the (U)SIM Service Table, ... then the
+            // ME shall pass the message transparently to the UICC using the
+            // ENVELOPE (SMS-PP DOWNLOAD).` ~ 3GPP TS 31.111 7.1.1.1
+            this.dataDownloadViaSMSPP(message);
+
+            // `the ME shall not display the message, or alert the user of a
+            // short message waiting.` ~ 3GPP TS 31.111 7.1.1.1
+            return PDU_FCS_RESERVED;
+          }
+
+          // If the service "data download via SMS-PP" is not available in the
+          // (U)SIM Service Table, ..., then the ME shall store the message in
+          // EFsms in accordance with TS 31.102` ~ 3GPP TS 31.111 7.1.1.1
+        default:
+          this.writeSmsToSIM(message);
+          break;
+      }
+    }
+
+    // TODO: Bug 739143: B2G SMS: Support SMS Storage Full event
+    if ((message.messageClass != PDU_DCS_MSG_CLASS_0) && !true) {
+      // `When a mobile terminated message is class 0..., the MS shall display
+      // the message immediately and send a ACK to the SC ..., irrespective of
+      // whether there is memory available in the (U)SIM or ME.` ~ 3GPP 23.038
+      // clause 4.
+
+      if (message.messageClass == PDU_DCS_MSG_CLASS_SIM_SPECIFIC) {
+        // `If all the short message storage at the MS is already in use, the
+        // MS shall return "memory capacity exceeded".` ~ 3GPP 23.038 clause 4.
+        return PDU_FCS_MEMORY_CAPACITY_EXCEEDED;
+      }
+
+      return PDU_FCS_UNSPECIFIED;
+    }
+
     if (message.header && (message.header.segmentMaxSeq > 1)) {
       message = this._processReceivedSmsSegment(message);
     } else {
@@ -3099,6 +3352,12 @@ let RIL = {
     if (message) {
       message.rilMessageType = "sms-received";
       this.sendDOMMessage(message);
+    }
+
+    if (message.messageClass == PDU_DCS_MSG_CLASS_SIM_SPECIFIC) {
+      // `MS shall ensure that the message has been to the SMS data field in
+      // the (U)SIM before sending an ACK to the SC.`  ~ 3GPP 23.038 clause 4
+      return PDU_FCS_RESERVED;
     }
 
     return PDU_FCS_OK;
@@ -3822,7 +4081,7 @@ RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length
 
   let datacall = this.currentDataCalls[options.cid];
   delete this.currentDataCalls[options.cid];
-  datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+  datacall.state = GECKO_NETWORK_STATE_UNKNOWN;
   datacall.rilMessageType = "datacallstatechange";
   this.sendDOMMessage(datacall);
 };
@@ -4006,7 +4265,17 @@ RIL[REQUEST_OEM_HOOK_RAW] = null;
 RIL[REQUEST_OEM_HOOK_STRINGS] = null;
 RIL[REQUEST_SCREEN_STATE] = null;
 RIL[REQUEST_SET_SUPP_SVC_NOTIFICATION] = null;
-RIL[REQUEST_WRITE_SMS_TO_SIM] = null;
+RIL[REQUEST_WRITE_SMS_TO_SIM] = function REQUEST_WRITE_SMS_TO_SIM(length, options) {
+  if (options.rilRequestError) {
+    // `The MS shall return a "protocol error, unspecified" error message if
+    // the short message cannot be stored in the (U)SIM, and there is other
+    // message storage available at the MS` ~ 3GPP TS 23.038 section 4. Here
+    // we assume we always have indexed db as another storage.
+    this.acknowledgeSMS(false, PDU_FCS_PROTOCOL_ERROR);
+  } else {
+    this.acknowledgeSMS(true, PDU_FCS_OK);
+  }
+};
 RIL[REQUEST_DELETE_SMS_ON_SIM] = null;
 RIL[REQUEST_SET_BAND_MODE] = null;
 RIL[REQUEST_QUERY_AVAILABLE_BAND_MODE] = null;
@@ -4053,6 +4322,33 @@ RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, option
 RIL[REQUEST_SET_SMSC_ADDRESS] = null;
 RIL[REQUEST_REPORT_SMS_MEMORY_STATUS] = null;
 RIL[REQUEST_REPORT_STK_SERVICE_IS_RUNNING] = null;
+RIL[REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU] = null;
+RIL[REQUEST_STK_SEND_ENVELOPE_WITH_STATUS] = function REQUEST_STK_SEND_ENVELOPE_WITH_STATUS(length, options) {
+  if (options.rilRequestError) {
+    this.acknowledgeSMS(false, PDU_FCS_UNSPECIFIED);
+    return;
+  }
+
+  let sw1 = Buf.readUint32();
+  let sw2 = Buf.readUint32();
+  if ((sw1 == ICC_STATUS_SAT_BUSY) && (sw2 == 0x00)) {
+    this.acknowledgeSMS(false, PDU_FCS_USAT_BUSY);
+    return;
+  }
+
+  let success = ((sw1 == ICC_STATUS_NORMAL_ENDING) && (sw2 == 0x00))
+                || (sw1 == ICC_STATUS_NORMAL_ENDING_WITH_EXTRA);
+
+  let messageStringLength = Buf.readUint32(); // In semi-octets
+  let responsePduLen = messageStringLength / 2; // In octets
+  if (!responsePduLen) {
+    this.acknowledgeSMS(success, success ? PDU_FCS_OK
+                                         : PDU_FCS_USIM_DATA_DOWNLOAD_ERROR);
+    return;
+  }
+
+  this.acknowledgeIncomingGsmSmsWithPDU(success, responsePduLen, options);
+};
 RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {
   let radioState = Buf.readUint32();
 
@@ -4122,7 +4418,10 @@ RIL[UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RES
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length) {
   let result = this._processSmsDeliver(length);
-  this.acknowledgeSMS(result == PDU_FCS_OK, result);
+  if (result != PDU_FCS_RESERVED) {
+    // Not reserved FCS values, send ACK now.
+    this.acknowledgeSMS(result == PDU_FCS_OK, result);
+  }
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
   let result = this._processSmsStatusReport(length);
@@ -5099,6 +5398,8 @@ let GsmPDUHelper = {
         // Bit 7..0 = 01xxxxxx
         switch (msg.epid) {
           case PDU_PID_SHORT_MESSAGE_TYPE_0:
+          case PDU_PID_ANSI_136_R_DATA:
+          case PDU_PID_USIM_DATA_DOWNLOAD:
             return;
           case PDU_PID_RETURN_CALL_MESSAGE:
             // Level 1 of message waiting indication:
@@ -5130,14 +5431,23 @@ let GsmPDUHelper = {
     let dcs = this.readHexOctet();
     if (DEBUG) debug("PDU: read dcs: " + dcs);
 
-    // Level 2 of message waiting indication
-    this.readMessageWaitingFromDCS(msg, dcs);
-
+    // No message class by default.
+    let messageClass = PDU_DCS_MSG_CLASS_UNKNOWN;
     // 7 bit is the default fallback encoding.
     let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-    switch (dcs & 0xC0) {
-      case 0x0:
-        // bits 7..4 = 00xx
+    switch (dcs & PDU_DCS_CODING_GROUP_BITS) {
+      case 0x40: // bits 7..4 = 01xx
+      case 0x50:
+      case 0x60:
+      case 0x70:
+        // Bit 5..0 are coded exactly the same as Group 00xx
+      case 0x00: // bits 7..4 = 00xx
+      case 0x10:
+      case 0x20:
+      case 0x30:
+        if (dcs & 0x10) {
+          messageClass = dcs & PDU_DCS_MSG_CLASS_BITS;
+        }
         switch (dcs & 0x0C) {
           case 0x4:
             encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
@@ -5147,19 +5457,51 @@ let GsmPDUHelper = {
             break;
         }
         break;
-      case 0xC0:
-        // bits 7..4 = 11xx
-        switch (dcs & 0x30) {
-          case 0x20:
-            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
-            break;
-          case 0x30:
-            if (dcs & 0x04) {
-              encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
+
+      case 0xE0: // bits 7..4 = 1110
+        encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+        // Bit 3..0 are coded exactly the same as Message Waiting Indication
+        // Group 1101.
+      case 0xC0: // bits 7..4 = 1100
+      case 0xD0: // bits 7..4 = 1101
+        // Indiciates voicemail indicator set or clear
+        let active = (dcs & PDU_DCS_MWI_ACTIVE_BITS) == PDU_DCS_MWI_ACTIVE_VALUE;
+
+        // If TP-UDH is present, these values will be overwritten
+        switch (dcs & PDU_DCS_MWI_TYPE_BITS) {
+          case PDU_DCS_MWI_TYPE_VOICEMAIL:
+            let mwi = msg.mwi;
+            if (!mwi) {
+              mwi = msg.mwi = {};
             }
+
+            mwi.active = active;
+            mwi.discard = (dcs & PDU_DCS_CODING_GROUP_BITS) == 0xC0;
+            mwi.msgCount = active ? GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN : 0;
+
+            if (DEBUG) {
+              debug("MWI in DCS received for voicemail: " + JSON.stringify(mwi));
+            }
+            break;
+          case PDU_DCS_MWI_TYPE_FAX:
+            if (DEBUG) debug("MWI in DCS received for fax");
+            break;
+          case PDU_DCS_MWI_TYPE_EMAIL:
+            if (DEBUG) debug("MWI in DCS received for email");
+            break;
+          default:
+            if (DEBUG) debug("MWI in DCS received for \"other\"");
             break;
         }
         break;
+
+      case 0xF0: // bits 7..4 = 1111
+        if (dcs & 0x04) {
+          encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
+        }
+        messageClass = dcs & PDU_DCS_MSG_CLASS_BITS;
+        break;
+
       default:
         // Falling back to default encoding.
         break;
@@ -5167,50 +5509,9 @@ let GsmPDUHelper = {
 
     msg.dcs = dcs;
     msg.encoding = encoding;
+    msg.messageClass = messageClass;
 
     if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
-  },
-
-  readMessageWaitingFromDCS: function readMessageWaitingFromDCS(msg, dcs) {
-    // 0xC0 == 7 bit, don't store
-    // 0xD0 == 7 bit, store
-    // 0xE0 == UCS-2, store
-    let codingGroup = dcs & PDU_DCS_CODING_GROUP_BITS;
-
-    if (codingGroup == PDU_DCS_CODING_GROUP_7BITS_DISCARD ||
-        codingGroup == PDU_DCS_CODING_GROUP_7BITS_STORE ||
-        codingGroup == PDU_DCS_CODING_GROUP_16BITS_STORE) {
-
-      // Indiciates voicemail indicator set or clear
-      let active = (dcs & PDU_DCS_MWI_ACTIVE_BITS) == PDU_DCS_MWI_ACTIVE_VALUE;
-
-      // If TP-UDH is present, these values will be overwritten
-      switch (dcs & PDU_DCS_MWI_TYPE_BITS) {
-        case PDU_DCS_MWI_TYPE_VOICEMAIL:
-          let mwi = msg.mwi;
-          if (!mwi) {
-            mwi = msg.mwi = {};
-          }
-
-          mwi.active = active;
-          mwi.discard = codingGroup == PDU_DCS_CODING_GROUP_7BITS_DISCARD;
-          mwi.msgCount = active ? GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN : 0;
-
-          if (DEBUG) {
-            debug("MWI in DCS received for voicemail: " + JSON.stringify(mwi));
-          }
-          break;
-        case PDU_DCS_MWI_TYPE_FAX:
-          if (DEBUG) debug("MWI in DCS received for fax");
-          break;
-        case PDU_DCS_MWI_TYPE_EMAIL:
-          if (DEBUG) debug("MWI in DCS received for email");
-          break;
-        default:
-          if (DEBUG) debug("MWI in DCS received for \"other\"");
-          break;
-      }
-    }
   },
 
   /**

@@ -220,7 +220,7 @@ JS_END_EXTERN_C
 
 #ifdef __cplusplus
 
-namespace JS {
+namespace js {
 
 template <typename T>
 class Rooted;
@@ -262,7 +262,7 @@ template <> struct RootKind<JSFunction *> : SpecificRootKind<JSFunction *, THING
 template <> struct RootKind<JSString *> : SpecificRootKind<JSString *, THING_ROOT_STRING> {};
 template <> struct RootKind<JSScript *> : SpecificRootKind<JSScript *, THING_ROOT_SCRIPT> {};
 template <> struct RootKind<jsid> : SpecificRootKind<jsid, THING_ROOT_ID> {};
-template <> struct RootKind<Value> : SpecificRootKind<Value, THING_ROOT_VALUE> {};
+template <> struct RootKind<JS::Value> : SpecificRootKind<JS::Value, THING_ROOT_VALUE> {};
 
 struct ContextFriendFields {
     JSRuntime *const    runtime;
@@ -326,7 +326,7 @@ struct RuntimeFriendFields {
     }
 };
 
-} /* namespace JS */
+} /* namespace js */
 
 #endif /* __cplusplus */
 

@@ -771,7 +771,7 @@ void PK11PasswordPromptRunnable::RunOnTargetThread()
   }
 }
 
-char* PR_CALLBACK
+char*
 PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg)
 {
   nsRefPtr<PK11PasswordPromptRunnable> runnable = 
@@ -781,7 +781,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg)
   return runnable->mResult;
 }
 
-void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
+void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   nsNSSShutDownPreventionLock locker;
   int32_t sslStatus;
   char* signer = nullptr;
@@ -1026,7 +1026,7 @@ static CERT_StringFromCertFcn oldOCSPAIAInfoCallback = nullptr;
  *
  * The result needs to be freed (PORT_Free) when no longer in use.
  */
-char* PR_CALLBACK MyAlternateOCSPAIAInfoCallback(CERTCertificate *cert) {
+char* MyAlternateOCSPAIAInfoCallback(CERTCertificate *cert) {
   if (cert && !cert->isRoot) {
     unsigned int i;
     for (i=0; i < numResponders; i++) {

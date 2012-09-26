@@ -255,7 +255,7 @@ MAKEFILES_layout="
   layout/style/Makefile
   layout/style/xbl-marquee/Makefile
   layout/tables/Makefile
-  layout/svg/base/src/Makefile
+  layout/svg/Makefile
   layout/xul/base/public/Makefile
   layout/xul/base/src/Makefile
 "

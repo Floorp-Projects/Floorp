@@ -43,7 +43,7 @@ LOCAL_INCLUDES += \
 			$(NULL)
 
 # Because VectorImage.cpp includes nsSVGUtils.h and nsSVGEffects.h
-LOCAL_INCLUDES += -I$(topsrcdir)/layout/svg/base/src
+LOCAL_INCLUDES += -I$(topsrcdir)/layout/svg
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

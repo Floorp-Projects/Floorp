@@ -12,28 +12,6 @@
 #include "nsString.h"
 
 extern "C" {
-
-static gboolean
-setRunAttributesCB(AtkEditableText *aText, AtkAttributeSet *aAttribSet,
-                   gint aStartOffset, gint aEndOffset)
-{
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return FALSE;
-
-    nsCOMPtr<nsIAccessibleEditableText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, FALSE);
-
-    nsCOMPtr<nsISupports> attrSet;
-    /* how to insert attributes into nsISupports ??? */
-
-    nsresult rv = accText->SetAttributes(aStartOffset, aEndOffset,
-                                         attrSet);
-    return NS_FAILED(rv) ? FALSE : TRUE;
-}
-
 static void
 setTextContentsCB(AtkEditableText *aText, const gchar *aString)
 {
@@ -41,16 +19,14 @@ setTextContentsCB(AtkEditableText *aText, const gchar *aString)
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleEditableText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                            getter_AddRefs(accText));
-    if (!accText)
-        return;
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return;
 
-    MAI_LOG_DEBUG(("EditableText: setTextContentsCB, aString=%s", aString));
+  MAI_LOG_DEBUG(("EditableText: setTextContentsCB, aString=%s", aString));
 
-    NS_ConvertUTF8toUTF16 strContent(aString);
-    accText->SetTextContents(strContent);
+  NS_ConvertUTF8toUTF16 strContent(aString);
+  text->SetTextContents(strContent);
 }
 
 static void
@@ -61,24 +37,15 @@ insertTextCB(AtkEditableText *aText,
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleEditableText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                            getter_AddRefs(accText));
-    if (!accText)
-        return;
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return;
 
-    NS_ConvertUTF8toUTF16 strContent(aString, aLength);
+  NS_ConvertUTF8toUTF16 strContent(aString, aLength);
+  text->InsertText(strContent, *aPosition);
 
-    // interface changed in nsIAccessibleEditableText.idl ???
-    //
-    // int32_t pos = *aPosition;
-    // nsresult rv = accText->InsertText(strContent, aLength, &pos);
-    // *aPosition = pos;
-
-    accText->InsertText(strContent, *aPosition);
-
-    MAI_LOG_DEBUG(("EditableText: insert aString=%s, aLength=%d, aPosition=%d",
-                   aString, aLength, *aPosition));
+  MAI_LOG_DEBUG(("EditableText: insert aString=%s, aLength=%d, aPosition=%d",
+                 aString, aLength, *aPosition));
 }
 
 static void
@@ -88,15 +55,13 @@ copyTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleEditableText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                            getter_AddRefs(accText));
-    if (!accText)
-        return;
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return;
 
-    MAI_LOG_DEBUG(("EditableText: copyTextCB, aStartPos=%d, aEndPos=%d",
-                   aStartPos, aEndPos));
-    accText->CopyText(aStartPos, aEndPos);
+  MAI_LOG_DEBUG(("EditableText: copyTextCB, aStartPos=%d, aEndPos=%d",
+                 aStartPos, aEndPos));
+  text->CopyText(aStartPos, aEndPos);
 }
 
 static void
@@ -106,14 +71,13 @@ cutTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleEditableText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                            getter_AddRefs(accText));
-    if (!accText)
-        return;
-    MAI_LOG_DEBUG(("EditableText: cutTextCB, aStartPos=%d, aEndPos=%d",
-                   aStartPos, aEndPos));
-    accText->CutText(aStartPos, aEndPos);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return;
+
+  MAI_LOG_DEBUG(("EditableText: cutTextCB, aStartPos=%d, aEndPos=%d",
+                 aStartPos, aEndPos));
+  text->CutText(aStartPos, aEndPos);
 }
 
 static void
@@ -123,15 +87,13 @@ deleteTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleEditableText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                            getter_AddRefs(accText));
-    if (!accText)
-        return;
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return;
 
-    MAI_LOG_DEBUG(("EditableText: deleteTextCB, aStartPos=%d, aEndPos=%d",
-                   aStartPos, aEndPos));
-    accText->DeleteText(aStartPos, aEndPos);
+  MAI_LOG_DEBUG(("EditableText: deleteTextCB, aStartPos=%d, aEndPos=%d",
+                 aStartPos, aEndPos));
+  text->DeleteText(aStartPos, aEndPos);
 }
 
 static void
@@ -141,14 +103,12 @@ pasteTextCB(AtkEditableText *aText, gint aPosition)
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleEditableText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                            getter_AddRefs(accText));
-    if (!accText)
-        return;
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return;
 
-    MAI_LOG_DEBUG(("EditableText: pasteTextCB, aPosition=%d", aPosition));
-    accText->PasteText(aPosition);
+  MAI_LOG_DEBUG(("EditableText: pasteTextCB, aPosition=%d", aPosition));
+  text->PasteText(aPosition);
 }
 }
 
@@ -159,7 +119,6 @@ editableTextInterfaceInitCB(AtkEditableTextIface* aIface)
   if (NS_UNLIKELY(!aIface))
     return;
 
-  aIface->set_run_attributes = setRunAttributesCB;
   aIface->set_text_contents = setTextContentsCB;
   aIface->insert_text = insertTextCB;
   aIface->copy_text = copyTextCB;

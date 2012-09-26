@@ -16,7 +16,7 @@ using namespace mozilla::psm;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtectedAuthThread, nsIProtectedAuthThread)
 
-static void PR_CALLBACK nsProtectedAuthThreadRunner(void *arg)
+static void nsProtectedAuthThreadRunner(void *arg)
 {
     PR_SetCurrentThreadName("Protected Auth");
 

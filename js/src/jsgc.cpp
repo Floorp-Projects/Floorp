@@ -112,9 +112,10 @@ using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
-void * const JS::InternalHandleBase::zeroPointer = NULL;
-
 namespace js {
+
+void * const InternalHandleBase::zeroPointer = NULL;
+
 namespace gc {
 
 /*

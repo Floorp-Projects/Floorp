@@ -651,9 +651,10 @@ JSObject::setSingletonType(JSContext *cx, js::HandleObject obj)
         return true;
 
     JS_ASSERT(!obj->hasLazyType());
-    JS_ASSERT_IF(obj->getProto(), obj->type() == obj->getProto()->getNewType(cx, NULL));
+    JS_ASSERT_IF(obj->getTaggedProto().isObject(),
+                 obj->type() == obj->getTaggedProto().toObject()->getNewType(cx, NULL));
 
-    js::RootedObject objProto(cx, obj->getProto());
+    js::Rooted<js::TaggedProto> objProto(cx, obj->getTaggedProto());
     js::types::TypeObject *type = cx->compartment->getLazyType(cx, objProto);
     if (!type)
         return false;
@@ -677,7 +678,7 @@ JSObject::clearType(JSContext *cx, js::HandleObject obj)
     JS_ASSERT(!obj->hasSingletonType());
     JS_ASSERT(cx->compartment == obj->compartment());
 
-    js::types::TypeObject *type = cx->compartment->getEmptyType(cx);
+    js::types::TypeObject *type = cx->compartment->getNewType(cx, NULL);
     if (!type)
         return false;
 
@@ -688,16 +689,37 @@ JSObject::clearType(JSContext *cx, js::HandleObject obj)
 inline void
 JSObject::setType(js::types::TypeObject *newType)
 {
-#ifdef DEBUG
     JS_ASSERT(newType);
-    for (JSObject *obj = newType->proto; obj; obj = obj->getProto())
-        JS_ASSERT(obj != this);
-#endif
     JS_ASSERT_IF(hasSpecialEquality(),
                  newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     JS_ASSERT(!hasSingletonType());
     JS_ASSERT(compartment() == newType->compartment());
     type_ = newType;
+}
+
+inline js::TaggedProto
+JSObject::getTaggedProto() const
+{
+    return js::TaggedProto(js::ObjectImpl::getProto());
+}
+
+inline JSObject *
+JSObject::getProto() const
+{
+    JS_ASSERT(!isProxy());
+    return js::ObjectImpl::getProto();
+}
+
+/* static */ inline bool
+JSObject::getProto(JSContext *cx, js::HandleObject obj, js::MutableHandleObject protop)
+{
+    if (obj->getTaggedProto().isLazy()) {
+        JS_ASSERT(obj->isProxy());
+        return js::Proxy::getPrototypeOf(cx, obj, protop.address());
+    } else {
+        protop.set(obj->js::ObjectImpl::getProto());
+        return true;
+    }
 }
 
 inline bool JSObject::setIteratedSingleton(JSContext *cx)
@@ -1378,14 +1400,20 @@ CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
  * default to the prototype's global if the prototype is non-null.
  */
 JSObject *
-NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, TaggedProto proto, JSObject *parent,
                         gc::AllocKind kind);
+
+inline JSObject *
+NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, TaggedProto proto, JSObject *parent)
+{
+    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
+    return NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
+}
 
 inline JSObject *
 NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 {
-    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
-    return NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
+    return NewObjectWithGivenProto(cx, clasp, TaggedProto(proto), parent);
 }
 
 inline JSProtoKey
