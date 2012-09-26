@@ -64,7 +64,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     lastAnimationTime(0),
     regExps(rt),
     propertyTree(thisForCtor()),
-    emptyTypeObject(NULL),
     gcMallocAndFreeBytes(0),
     gcTriggerMallocAndFreeBytes(0),
     gcMallocBytes(0),
@@ -271,13 +270,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         if (vp->isObject()) {
             RootedObject obj(cx, &vp->toObject());
             JS_ASSERT(obj->isCrossCompartmentWrapper());
-            if (obj->getParent() != global) {
-                do {
-                    if (!JSObject::setParent(cx, obj, global))
-                        return false;
-                    obj = obj->getProto();
-                } while (obj && obj->isCrossCompartmentWrapper());
-            }
+            JS_ASSERT(obj->getParent() == global);
         }
         return true;
     }
@@ -306,7 +299,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * here (since Object.prototype->parent->proto leads to Object.prototype
      * itself).
      */
-    RootedObject proto(cx, obj->getProto());
+    RootedObject proto(cx, obj->getTaggedProto().raw());
     if (!wrap(cx, proto.address()))
         return false;
 
@@ -557,9 +550,6 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         sweepInitialShapeTable();
         sweepNewTypeObjectTable(newTypeObjects);
         sweepNewTypeObjectTable(lazyTypeObjects);
-
-        if (emptyTypeObject && !IsTypeObjectMarked(emptyTypeObject.unsafeGet()))
-            emptyTypeObject = NULL;
 
         sweepBreakpoints(fop);
 

@@ -504,14 +504,16 @@ js::SetLengthProperty(JSContext *cx, HandleObject obj, double length)
 static JSBool
 array_length_getter(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValue vp)
 {
-    JSObject *obj = obj_;
+    RootedObject obj(cx, obj_);
     do {
         if (obj->isArray()) {
             vp.setNumber(obj->getArrayLength());
-            return JS_TRUE;
+            return true;
         }
-    } while ((obj = obj->getProto()) != NULL);
-    return JS_TRUE;
+        if (!JSObject::getProto(cx, obj, &obj))
+            return false;
+    } while (obj);
+    return true;
 }
 
 static JSBool
@@ -899,6 +901,8 @@ array_setSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 JSBool
 js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
 {
+    JS_ASSERT(obj->isDenseArray());
+
     /*
      * Walk up the prototype chain and see if this indexed element already
      * exists. If we hit the end of the prototype chain, it's safe to set the
@@ -3640,7 +3644,7 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg)
      * Get a shape with zero fixed slots, regardless of the size class.
      * See JSObject::createDenseArray.
      */
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayClass, proto,
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayClass, TaggedProto(proto),
                                                       cx->global(), gc::FINALIZE_OBJECT0));
     if (!shape)
         return NULL;

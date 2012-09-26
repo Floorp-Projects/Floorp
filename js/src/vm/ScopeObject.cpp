@@ -160,7 +160,7 @@ CallObject::createTemplateObject(JSContext *cx, JSScript *script)
 {
     RootedShape shape(cx, script->bindings.callObjShape());
 
-    RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
+    RootedTypeObject type(cx, cx->compartment->getNewType(cx, NULL));
     if (!type)
         return NULL;
 
@@ -268,7 +268,7 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
 {
     assertSameCompartment(cx, fp);
 
-    RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
+    RootedTypeObject type(cx, cx->compartment->getNewType(cx, NULL));
     if (!type)
         return NULL;
 
@@ -302,7 +302,7 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
     if (!type)
         return NULL;
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &WithClass, proto,
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &WithClass, TaggedProto(proto),
                                                       &enclosing->global(), FINALIZE_KIND));
     if (!shape)
         return NULL;
@@ -641,7 +641,7 @@ ClonedBlockObject::copyUnaliasedValues(StackFrame *fp)
 StaticBlockObject *
 StaticBlockObject::create(JSContext *cx)
 {
-    RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
+    RootedTypeObject type(cx, cx->compartment->getNewType(cx, NULL));
     if (!type)
         return NULL;
 

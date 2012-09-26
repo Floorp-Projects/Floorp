@@ -97,7 +97,8 @@ JS_SplicePrototype(JSContext *cx, JSObject *objArg, JSObject *protoArg)
         return JS_SetPrototype(cx, obj, proto);
     }
 
-    return obj->splicePrototype(cx, proto);
+    Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
+    return obj->splicePrototype(cx, tagged);
 }
 
 JS_FRIEND_API(JSObject *)
@@ -536,6 +537,15 @@ JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback)
 {
     rt->telemetryCallback = callback;
+}
+
+JS_FRIEND_API(JSObject *)
+JS_CloneObject(JSContext *cx, JSObject *obj_, JSObject *proto_, JSObject *parent_)
+{
+    RootedObject obj(cx, obj_);
+    Rooted<js::TaggedProto> proto(cx, proto_);
+    RootedObject parent(cx, parent_);
+    return CloneObject(cx, obj, proto, parent);
 }
 
 #ifdef DEBUG

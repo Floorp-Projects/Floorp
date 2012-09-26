@@ -74,9 +74,10 @@ using namespace js::frontend;
 static JSBool
 fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValue vp)
 {
-    JSObject *obj = obj_;
+    RootedObject obj(cx, obj_);
     while (!obj->isFunction()) {
-        obj = obj->getProto();
+        if (!JSObject::getProto(cx, obj, &obj))
+            return false;
         if (!obj)
             return true;
     }
@@ -483,7 +484,7 @@ fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, JSBool
 
     RootedValue pval(cx);
     if (!JSObject::getProperty(cx, obj, obj, cx->names().classPrototype, &pval))
-        return JS_FALSE;
+        return false;
 
     if (pval.isPrimitive()) {
         /*
@@ -492,11 +493,15 @@ fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, JSBool
          */
         RootedValue val(cx, ObjectValue(*obj));
         js_ReportValueError(cx, JSMSG_BAD_PROTOTYPE, -1, val, NullPtr());
-        return JS_FALSE;
+        return false;
     }
 
-    *bp = js_IsDelegate(cx, &pval.toObject(), v);
-    return JS_TRUE;
+    RootedObject pobj(cx, &pval.toObject());
+    bool isDelegate;
+    if (!IsDelegate(cx, pobj, v, &isDelegate))
+        return false;
+    *bp = isDelegate;
+    return true;
 }
 
 inline void
@@ -1587,6 +1592,7 @@ js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp)
 #ifdef DEBUG
     if (thisv.isObject()) {
         JS_ASSERT(thisv.toObject().getClass() != clasp ||
+                  !thisv.toObject().isNative() ||
                   !thisv.toObject().getProto() ||
                   thisv.toObject().getProto()->getClass() != clasp);
     } else if (thisv.isString()) {

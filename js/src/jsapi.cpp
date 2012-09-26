@@ -1931,7 +1931,10 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *objArg, jsid id, JSBool *resolv
             }
         }
 
-        if (!stdnm && !obj->getProto()) {
+        RootedObject proto(cx);
+        if (!JSObject::getProto(cx, obj, &proto))
+            return false;
+        if (!stdnm && !proto) {
             /*
              * Try even less frequently used names delegated from the global
              * object to Object.prototype, but only if the Object class hasn't
@@ -3268,6 +3271,7 @@ JS_GetInstancePrivate(JSContext *cx, JSObject *objArg, JSClass *clasp, jsval *ar
 JS_PUBLIC_API(JSObject *)
 JS_GetPrototype(RawObject obj)
 {
+    /* FIXME! */
     return obj->getProto();
 }
 

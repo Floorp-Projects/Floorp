@@ -357,8 +357,7 @@ bool
 BaseProxyHandler::getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **proto)
 {
     // The default implementation here just uses proto of the proxy object.
-    JS_ASSERT(hasPrototype());
-    *proto = proxy->getProto();
+    *proto = proxy->getTaggedProto().toObjectOrNull();
     return true;
 }
 
@@ -2388,7 +2387,7 @@ Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy_, HandleObject rece
     RootedId id(cx);
     if (!handler->hasPrototype()) {
         return GetProxyHandler(proxy)->getElementIfPresent(cx, proxy, receiver, index, vp.address(), present);
-    } else if (status = IndexToId(cx, index, id.address()) &&
+    } else if ((status = IndexToId(cx, index, id.address())) &&
                (status = handler->hasOwn(cx, proxy, id, &hasOwn)) && hasOwn)
     {
         *present = true;
@@ -2538,6 +2537,15 @@ Proxy::iteratorNext(JSContext *cx, JSObject *proxy_, Value *vp)
     RootedObject proxy(cx, proxy_);
     return GetProxyHandler(proxy)->iteratorNext(cx, proxy, vp);
 }
+
+bool
+Proxy::getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **proto)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    return GetProxyHandler(proxy)->getPrototypeOf(cx, proxy, proto);
+}
+
+JSObject * const Proxy::LazyProto = reinterpret_cast<JSObject *>(0x1);
 
 static JSObject *
 proxy_innerObject(JSContext *cx, HandleObject obj)
@@ -3052,14 +3060,15 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
     }
 };
 
-JS_FRIEND_API(JSObject *)
-js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, JSObject *proto_,
+static JSObject *
+NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, TaggedProto proto_,
                    JSObject *parent_, JSObject *call_, JSObject *construct_)
 {
     RootedValue priv(cx, priv_);
-    RootedObject proto(cx, proto_), parent(cx, parent_), call(cx, call_), construct(cx, construct_);
+    Rooted<TaggedProto> proto(cx, proto_);
+    RootedObject parent(cx, parent_), call(cx, call_), construct(cx, construct_);
 
-    JS_ASSERT_IF(proto, cx->compartment == proto->compartment());
+    JS_ASSERT_IF(proto.isObject(), cx->compartment == proto.toObject()->compartment());
     JS_ASSERT_IF(parent, cx->compartment == parent->compartment());
     JS_ASSERT_IF(construct, cx->compartment == construct->compartment());
     JS_ASSERT_IF(call && cx->compartment != call->compartment(), priv.get() == ObjectValue(*call));
@@ -3075,7 +3084,7 @@ js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_,
      * their properties and so that we don't need to walk the compartment if
      * their prototype changes later.
      */
-    if (proto && !proto->setNewTypeUnknown(cx))
+    if (proto.isObject() && !proto.toObject()->setNewTypeUnknown(cx))
         return NULL;
 
     RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent));
@@ -3098,6 +3107,13 @@ js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_,
         return NULL;
 
     return obj;
+}
+
+JS_FRIEND_API(JSObject *)
+js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, JSObject *proto_,
+                   JSObject *parent_, JSObject *call_, JSObject *construct_)
+{
+    return NewProxyObject(cx, handler, priv_, TaggedProto(proto_), parent_, call_, construct_);
 }
 
 static JSBool

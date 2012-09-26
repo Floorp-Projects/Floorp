@@ -1049,7 +1049,11 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
                 js_ReportValueError(cx, JSMSG_BAD_PROTOTYPE, -1, val, NullPtr());
                 return js_InternalThrow(f);
             }
-            nextsp[-1].setBoolean(js_IsDelegate(cx, &f.regs.sp[0].toObject(), f.regs.sp[-2]));
+            bool isDelegate;
+            RootedObject obj(cx, &f.regs.sp[0].toObject());
+            if (!IsDelegate(cx, obj, f.regs.sp[-2], &isDelegate))
+                return js_InternalThrow(f);
+            nextsp[-1].setBoolean(isDelegate);
             f.regs.pc = nextpc;
             break;
           }
