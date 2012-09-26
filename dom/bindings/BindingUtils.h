@@ -1050,6 +1050,28 @@ WrapNativeParent(JSContext* cx, JSObject* scope, const T& p)
   return WrapNativeParent(cx, scope, GetParentPointer(p), GetWrapperCache(p));
 }
 
+HAS_MEMBER(GetParentObject)
+
+template<typename T, bool WrapperCached=HasGetParentObjectMember<T>::Value>
+struct GetParentObject
+{
+  static JSObject* Get(JSContext* cx, JSObject* obj)
+  {
+    T* native = UnwrapDOMObject<T>(obj);
+    return WrapNativeParent(cx, obj, native->GetParentObject());
+  }
+};
+
+template<typename T>
+struct GetParentObject<T, false>
+{
+  static JSObject* Get(JSContext* cx, JSObject* obj)
+  {
+    MOZ_CRASH();
+    return nullptr;
+  }
+};
+
 template<typename T>
 static inline JSObject*
 WrapCallThisObject(JSContext* cx, JSObject* scope, const T& p)
@@ -1656,6 +1678,9 @@ protected:
 bool
 NativeToString(JSContext* cx, JSObject* wrapper, JSObject* obj, const char* pre,
                const char* post, JS::Value* v);
+
+nsresult
+ReparentWrapper(JSContext* aCx, JSObject* aObj);
 
 } // namespace dom
 } // namespace mozilla

@@ -135,6 +135,9 @@ enum DOMObjectType {
   eInterfacePrototype
 };
 
+typedef JSObject* (*ParentGetter)(JSContext* aCx, JSObject* aObj);
+typedef JSObject* (*ProtoGetter)(JSContext* aCx, JSObject* aGlobal);
+
 struct DOMClass
 {
   // A list of interfaces that this object implements, in order of decreasing
@@ -148,6 +151,9 @@ struct DOMClass
   const bool mDOMObjectIsISupports;
 
   const NativePropertyHooks* mNativeHooks;
+
+  ParentGetter mGetParent;
+  ProtoGetter mGetProto;
 
   // This stores the CC participant for the native, null if this class is for a
   // worker or for a native inheriting from nsISupports (we can get the CC
