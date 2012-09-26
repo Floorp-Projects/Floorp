@@ -354,6 +354,7 @@ CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32 *callPointOffset)
 bool
 CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Register *dynStack)
 {
+    AssertCanGC();
 #ifdef DEBUG
     if (ins->mirRaw()) {
         JS_ASSERT(ins->mirRaw()->isInstruction());

@@ -433,7 +433,7 @@ class IonBuilder : public MIRGenerator
 
     void clearForBackEnd();
 
-    JSScript *script() const { return script_; }
+    Return<JSScript*> script() const { return script_; }
 
   private:
     JSContext *cx;

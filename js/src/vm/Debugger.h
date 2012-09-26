@@ -192,7 +192,7 @@ class Debugger {
 
     static JSTrapStatus slowPathOnEnterFrame(JSContext *cx, Value *vp);
     static bool slowPathOnLeaveFrame(JSContext *cx, bool ok);
-    static void slowPathOnNewScript(JSContext *cx, JSScript *script,
+    static void slowPathOnNewScript(JSContext *cx, HandleScript script,
                                     GlobalObject *compileAndGoGlobal);
     static bool slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
     static JSTrapStatus dispatchHook(JSContext *cx, Value *vp, Hook which);
@@ -256,7 +256,7 @@ class Debugger {
     static inline bool onLeaveFrame(JSContext *cx, bool ok);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, Value *vp);
     static inline JSTrapStatus onExceptionUnwind(JSContext *cx, Value *vp);
-    static inline void onNewScript(JSContext *cx, JSScript *script,
+    static inline void onNewScript(JSContext *cx, HandleScript script,
                                    GlobalObject *compileAndGoGlobal);
     static inline bool onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
     static JSTrapStatus onTrap(JSContext *cx, Value *vp);
@@ -544,7 +544,7 @@ Debugger::onExceptionUnwind(JSContext *cx, Value *vp)
 }
 
 void
-Debugger::onNewScript(JSContext *cx, JSScript *script, GlobalObject *compileAndGoGlobal)
+Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal)
 {
     JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal);
     JS_ASSERT_IF(!script->compileAndGo, !compileAndGoGlobal);

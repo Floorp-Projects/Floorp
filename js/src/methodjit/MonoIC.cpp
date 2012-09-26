@@ -61,6 +61,8 @@ PatchGetFallback(VMFrame &f, ic::GetGlobalNameIC *ic)
 void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
+    AssertCanGC();
+
     RootedObject obj(f.cx, &f.fp()->global());
     PropertyName *name = f.script()->getName(GET_UINT32_INDEX(f.pc()));
 
@@ -100,7 +102,9 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 static void JS_FASTCALL
 DisabledSetGlobal(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    stubs::SetName(f, f.script()->getName(GET_UINT32_INDEX(f.pc())));
+    AssertCanGC();
+    RootedPropertyName name(f.cx, f.script()->getName(GET_UINT32_INDEX(f.pc())));
+    stubs::SetName(f, name);
 }
 
 static void
@@ -151,6 +155,8 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, Shape *s
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
+    AssertCanGC();
+
     RootedObject obj(f.cx, &f.fp()->global());
     RootedPropertyName name(f.cx, f.script()->getName(GET_UINT32_INDEX(f.pc())));
 
@@ -418,6 +424,8 @@ mjit::NativeStubEpilogue(VMFrame &f, Assembler &masm, NativeStubLinker::FinalJum
                          int32_t initialFrameDepth, int32_t vpOffset,
                          MaybeRegisterID typeReg, MaybeRegisterID dataReg)
 {
+    AutoAssertNoGC nogc;
+
     /* Reload fp, which may have been clobbered by restoreStackBase(). */
     masm.loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);
 
@@ -829,6 +837,8 @@ class CallCompiler : public BaseCompiler
 
     bool generateFullCallStub(JSScript *script, uint32_t flags)
     {
+        AutoAssertNoGC nogc;
+
         /*
          * Create a stub that works with arity mismatches. Like the fast-path,
          * this allocates a frame on the caller side, but also performs extra
@@ -974,6 +984,7 @@ class CallCompiler : public BaseCompiler
 
     bool generateStubForClosures(JSObject *obj)
     {
+        AutoAssertNoGC nogc;
         JS_ASSERT(ic.frameSize.isStatic());
 
         /* Slightly less fast path - guard on fun->script() instead. */
@@ -1066,9 +1077,9 @@ class CallCompiler : public BaseCompiler
          * inlining the parent frame in the first place, so mark the immediate
          * caller as uninlineable.
          */
-        if (f.script()->function()) {
-            f.script()->uninlineable = true;
-            MarkTypeObjectFlags(cx, f.script()->function(), types::OBJECT_FLAG_UNINLINEABLE);
+        if (fscript->function()) {
+            fscript->uninlineable = true;
+            MarkTypeObjectFlags(cx, fscript->function(), types::OBJECT_FLAG_UNINLINEABLE);
         }
 
         /* Don't touch the IC if the call triggered a recompilation. */
@@ -1104,7 +1115,7 @@ class CallCompiler : public BaseCompiler
 
         /* N.B. After this call, the frame will have a dynamic frame size. */
         if (ic.frameSize.isDynamic()) {
-            masm.bumpStubCount(f.script(), f.pc(), Registers::tempCallReg());
+            masm.bumpStubCount(fscript, f.pc(), Registers::tempCallReg());
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
                                 JS_FUNC_TO_DATA_PTR(void *, ic::SplatApplyArgs),
                                 f.regs.pc, NULL, initialFrameDepth);
@@ -1112,7 +1123,7 @@ class CallCompiler : public BaseCompiler
 
         Registers tempRegs = Registers::tempCallRegMask();
         RegisterID t0 = tempRegs.takeAnyReg().reg();
-        masm.bumpStubCount(f.script(), f.pc(), t0);
+        masm.bumpStubCount(fscript, f.pc(), t0);
 
         int32_t storeFrameDepth = ic.frameSize.isStatic() ? initialFrameDepth : -1;
         masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, storeFrameDepth);
@@ -1229,6 +1240,8 @@ class CallCompiler : public BaseCompiler
                 disable();
 
 #ifdef JS_ION
+            AutoAssertNoGC nogc;
+
             // If the following conditions pass, try to inline a call into
             // an IonMonkey JIT'd function.
             if (!callingNew &&
@@ -1246,6 +1259,7 @@ class CallCompiler : public BaseCompiler
             return NULL;
         }
 
+        AutoAssertNoGC nogc;
         JS_ASSERT(fun);
         JSScript *script = fun->script();
         JS_ASSERT(script);
@@ -1412,6 +1426,7 @@ ic::SplatApplyArgs(VMFrame &f)
 void
 ic::GenerateArgumentCheckStub(VMFrame &f)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(f.cx->typeInferenceEnabled());
 
     JITScript *jit = f.jit();

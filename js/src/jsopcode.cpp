@@ -371,7 +371,7 @@ js_DumpPC(JSContext *cx)
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return JS_FALSE;
-    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs().pc, &sprinter);
+    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script().unsafeGet(), true, cx->regs().pc, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
     return ok;
 }
@@ -1108,7 +1108,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->localNames = NULL;
     jp->decompiledOpcodes = NULL;
     if (fun && fun->isInterpreted()) {
-        if (!SetPrinterLocalNames(cx, fun->script(), jp)) {
+        if (!SetPrinterLocalNames(cx, fun->script().unsafeGet(), jp)) {
             js_DestroyPrinter(jp);
             return NULL;
         }
@@ -1764,7 +1764,7 @@ GetArgOrVarAtom(JSPrinter *jp, unsigned slot)
 {
     LOCAL_ASSERT_RV(jp->fun, NULL);
     LOCAL_ASSERT_RV(slot < jp->script->bindings.count(), NULL);
-    LOCAL_ASSERT_RV(jp->script == jp->fun->script(), NULL);
+    LOCAL_ASSERT_RV(jp->script == jp->fun->script().unsafeGet(), NULL);
     JSAtom *name = (*jp->localNames)[slot].name();
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -4705,10 +4705,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      */
                     LifoAllocScope las(&cx->tempLifoAlloc());
                     outerLocalNames = jp->localNames;
-                    if (!SetPrinterLocalNames(cx, fun->script(), jp))
+                    if (!SetPrinterLocalNames(cx, fun->script().unsafeGet(), jp))
                         return NULL;
 
-                    inner = fun->script();
+                    inner = fun->script().unsafeGet();
                     if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
                         js_delete(jp->localNames);
                         jp->localNames = outerLocalNames;
@@ -5579,7 +5579,7 @@ js_DecompileFunctionBody(JSPrinter *jp)
         return JS_TRUE;
     }
 
-    script = jp->fun->script();
+    script = jp->fun->script().unsafeGet();
     return DecompileBody(jp, script, script->code);
 }
 
@@ -6133,7 +6133,7 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
     *valuepc = NULL;
 
     PCStack pcstack;
-    if (!pcstack.init(cx, iter.script(), current))
+    if (!pcstack.init(cx, iter.script().unsafeGet(), current))
         return false;
 
     if (spindex == JSDVG_SEARCH_STACK) {
@@ -6160,6 +6160,7 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
 static bool
 DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, Value v, char **res)
 {
+    AssertCanGC();
     JS_ASSERT(spindex < 0 ||
               spindex == JSDVG_IGNORE_STACK ||
               spindex == JSDVG_SEARCH_STACK);
@@ -6180,11 +6181,11 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, Valu
     if (frameIter.done())
         return true;
 
-    JSScript *script = frameIter.script();
+    RootedScript script(cx, frameIter.script());
     jsbytecode *valuepc = frameIter.pc();
-    JSFunction *fun = frameIter.isFunctionFrame()
-                      ? frameIter.callee()
-                      : NULL;
+    RootedFunction fun(cx, frameIter.isFunctionFrame()
+                           ? frameIter.callee()
+                           : NULL);
 
     JS_ASSERT(script->code <= valuepc && valuepc < script->code + script->length);
 
@@ -6210,6 +6211,7 @@ char *
 js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
                             HandleString fallbackArg, int skipStackHits)
 {
+    AssertCanGC();
     RootedString fallback(cx, fallbackArg);
     {
         char *result;
