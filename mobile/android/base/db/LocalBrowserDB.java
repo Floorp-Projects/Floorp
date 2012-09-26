@@ -24,6 +24,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.provider.Browser;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -138,13 +139,15 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         // The combined history/bookmarks selection queries for sites with a url or title containing
         // the constraint string(s), treating space-separated words as separate constraints
-        String[] constraintWords = constraint.toString().split(" ");
-        for (int i = 0; i < constraintWords.length; i++) {
-            selection = DBUtils.concatenateWhere(selection, "(" + Combined.URL + " LIKE ? OR " +
-                                                                  Combined.TITLE + " LIKE ?)");
-            String constraintWord =  "%" + constraintWords[i] + "%";
-            selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
-                new String[] { constraintWord, constraintWord });
+        if (!TextUtils.isEmpty(constraint)) {
+          String[] constraintWords = constraint.toString().split(" ");
+          for (int i = 0; i < constraintWords.length; i++) {
+              selection = DBUtils.concatenateWhere(selection, "(" + Combined.URL + " LIKE ? OR " +
+                                                                    Combined.TITLE + " LIKE ?)");
+              String constraintWord =  "%" + constraintWords[i] + "%";
+              selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                  new String[] { constraintWord, constraintWord });
+          }
         }
 
         if (urlFilter != null) {
