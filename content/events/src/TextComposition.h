@@ -61,6 +61,12 @@ public:
    */
   void SynthesizeCommit(bool aDiscard);
 
+  /**
+   * Send a notification to IME.  It depends on the IME or platform spec what
+   * will occur (or not occur).
+   */
+  nsresult NotifyIME(widget::NotificationToIME aNotification);
+
 private:
   // This class holds nsPresContext weak.  This instance shouldn't block
   // destroying it.  When the presContext is being destroyed, it's notified to

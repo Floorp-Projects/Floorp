@@ -2031,73 +2031,31 @@ nsEditor::GetPhonetic(nsAString& aPhonetic)
   return NS_OK;
 }
 
-
-static nsresult
-GetEditorContentWindow(dom::Element *aRoot, nsIWidget **aResult)
-{
-  NS_ENSURE_TRUE(aRoot && aResult, NS_ERROR_NULL_POINTER);
-
-  *aResult = 0;
-
-  // Not ref counted
-  nsIFrame *frame = aRoot->GetPrimaryFrame();
-
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  *aResult = frame->GetNearestWidget();
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_FAILURE);
-
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
-nsresult
-nsEditor::GetWidget(nsIWidget **aWidget)
-{
-  NS_ENSURE_TRUE(aWidget, NS_ERROR_NULL_POINTER);
-  *aWidget = nullptr;
-
-  nsCOMPtr<nsIWidget> widget;
-  nsresult res = GetEditorContentWindow(GetRoot(), getter_AddRefs(widget));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(widget, NS_ERROR_NOT_AVAILABLE);
-
-  NS_ADDREF(*aWidget = widget);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsEditor::ForceCompositionEnd()
 {
-
-// We can test mInIMEMode and do some optimization for Mac and Window
-// Howerver, since UNIX support over-the-spot, we cannot rely on that 
-// flag for Unix.
-// We should use LookAndFeel to resolve this
-
-#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2)
-  // XXXmnakano see bug 558976, ResetInputState() has two meaning which are
-  // "commit the composition" and "cursor is moved".  This method name is
-  // "ForceCompositionEnd", so, ResetInputState() should be used only for the
-  // former here.  However, ResetInputState() is also used for the latter here
-  // because even if we don't have composition, we call ResetInputState() on
-  // Linux.  Currently, nsGtkIMModule can know the timing of the cursor move,
-  // so, the latter meaning should be gone and we should remove this #if.
-  if(! mInIMEMode)
-    return NS_OK;
-#endif
-
-  nsCOMPtr<nsIWidget> widget;
-  nsresult res = GetWidget(getter_AddRefs(widget));
-  NS_ENSURE_SUCCESS(res, res);
-
-  if (widget) {
-    res = widget->ResetInputState();
-    NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIPresShell> ps = GetPresShell();
+  if (!ps) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  nsPresContext* pc = ps->GetPresContext();
+  if (!pc) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return NS_OK;
+  if (!mInIMEMode) {
+    // XXXmnakano see bug 558976, ResetInputState() has two meaning which are
+    // "commit the composition" and "cursor is moved".  This method name is
+    // "ForceCompositionEnd", so, ResetInputState() should be used only for the
+    // former here.  However, ResetInputState() is also used for the latter here
+    // because even if we don't have composition, we call ResetInputState() on
+    // Linux.  Currently, nsGtkIMModule can know the timing of the cursor move,
+    // so, the latter meaning should be gone.
+    // XXX This may commit a composition in another editor.
+    return nsIMEStateManager::NotifyIME(NOTIFY_IME_OF_CURSOR_POS_CHANGED, pc);
+  }
+
+  return nsIMEStateManager::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, pc);
 }
 
 NS_IMETHODIMP

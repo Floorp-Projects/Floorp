@@ -112,9 +112,10 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
       // to unsafe to run script (in PresShell::HandleEvent()).
       nsCOMPtr<nsIWidget> widget = aPresContext->GetNearestWidget();
       if (widget) {
-        nsresult rv = widget->CancelIMEComposition();
+        nsresult rv =
+          storedComposition.NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
         if (NS_FAILED(rv)) {
-          widget->ResetInputState();
+          storedComposition.NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
         }
         // By calling the APIs, the composition may have been finished normally.
         compositionInContent =
@@ -220,8 +221,9 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       oldWidget = widget;
     else
       oldWidget = GetWidget(sPresContext);
-    if (oldWidget)
-      oldWidget->ResetInputState();
+    if (oldWidget) {
+      NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, oldWidget);
+    }
   }
 
   // Update IME state for new focus widget
@@ -307,7 +309,7 @@ nsIMEStateManager::UpdateIMEState(const IMEState &aNewIMEState,
   }
 
   // commit current composition
-  widget->ResetInputState();
+  NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, widget);
 
   InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                             InputContextAction::FOCUS_NOT_CHANGED);
@@ -493,6 +495,44 @@ nsIMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
       sTextCompositions->RemoveElementAt(i);
     }
   }
+}
+
+// static
+nsresult
+nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
+                             nsIWidget* aWidget)
+{
+  NS_ENSURE_TRUE(aWidget, NS_ERROR_INVALID_ARG);
+
+  TextComposition* composition = nullptr;
+  if (sTextCompositions) {
+    composition = sTextCompositions->GetCompositionFor(aWidget);
+  }
+  switch (aNotification) {
+    case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
+      return aWidget->ResetInputState();
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      return composition ? aWidget->ResetInputState() : NS_OK;
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      return composition ? aWidget->CancelIMEComposition() : NS_OK;
+    default:
+      MOZ_NOT_REACHED("Unsupported notification");
+      return NS_ERROR_INVALID_ARG;
+  }
+}
+
+// static
+nsresult
+nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
+                             nsPresContext* aPresContext)
+{
+  NS_ENSURE_TRUE(aPresContext, NS_ERROR_INVALID_ARG);
+
+  nsIWidget* widget = aPresContext->GetNearestWidget();
+  if (!widget) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return NotifyIME(aNotification, widget);
 }
 
 
