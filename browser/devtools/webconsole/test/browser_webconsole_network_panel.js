@@ -64,11 +64,6 @@ function testGen() {
   let hud = HUDService.getHudByWindow(content);
   let filterBox = hud.ui.filterBox;
 
-  let tempScope  = {};
-  Cu.import("resource:///modules/WebConsoleUtils.jsm", tempScope);
-  let l10n = tempScope.WebConsoleUtils.l10n;
-  tempScope = null;
-
   let httpActivity = {
     meta: {
       stages: [],
@@ -442,7 +437,7 @@ function testGen() {
   });
 
   let responseString =
-    l10n.getFormatStr("NetworkPanel.responseBodyUnableToDisplay.content",
+    WCU_l10n.getFormatStr("NetworkPanel.responseBodyUnableToDisplay.content",
                       ["application/x-shockwave-flash"]);
   checkNodeContent(networkPanel, "responseBodyUnknownTypeContent", responseString);
   networkPanel.panel.hidePopup();
