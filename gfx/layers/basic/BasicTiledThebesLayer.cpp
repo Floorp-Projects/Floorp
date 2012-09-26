@@ -247,9 +247,21 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     resolution.height *= metrics.mResolution.height;
   }
 
-  // Force immediate tile painting when the layer has changed resolution.
+  // Calculate the scroll offset since the last transaction. Progressive tile
+  // painting is only used when scrolling.
+  gfx::Point scrollOffset(0, 0);
+  Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
+  if (primaryScrollable) {
+    const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
+    scrollOffset = metrics.mViewportScrollOffset;
+  }
+  int32_t scrollDiffX = scrollOffset.x - mLastScrollOffset.x;
+  int32_t scrollDiffY = scrollOffset.y - mLastScrollOffset.y;
+
+  // Only draw progressively when we're panning and the resolution is unchanged.
   if (gfxPlatform::UseProgressiveTilePainting() &&
-      mTiledBuffer.GetResolution() == resolution) {
+      mTiledBuffer.GetResolution() == resolution &&
+      (scrollDiffX != 0 || scrollDiffY != 0)) {
     // Paint tiles that have no content before tiles that only have stale content.
     nsIntRegion staleRegion = mTiledBuffer.GetValidRegion();
     staleRegion.And(staleRegion, regionToPaint);
@@ -264,21 +276,12 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     //     tiles to draw. This is a good candidate for splitting out into a
     //     separate function.
 
-    gfx::Point scrollOffset(0, 0);
-    Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
-    if (primaryScrollable) {
-      const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
-      scrollOffset = metrics.mViewportScrollOffset;
-    }
-
     // First, decide whether to iterate on the region from the beginning or end
     // of the rect list. This relies on the specific behaviour of nsRegion when
     // subtracting rects. If we're moving more in the X direction, we draw
     // tiles by column, otherwise by row.
     nsIntRegionRectIterator it(regionToPaint);
     const nsIntRect* rect;
-    int32_t scrollDiffX = scrollOffset.x - mLastScrollOffset.x;
-    int32_t scrollDiffY = scrollOffset.y - mLastScrollOffset.y;
     if ((NS_ABS(scrollDiffY) > NS_ABS(scrollDiffX) && scrollDiffY >= 0)) {
       rect = it.Next();
     } else {
