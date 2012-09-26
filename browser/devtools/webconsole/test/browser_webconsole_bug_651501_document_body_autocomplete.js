@@ -23,7 +23,7 @@ function consoleOpened(aHud) {
   let completeNode = jsterm.completeNode;
 
   let tmp = {};
-  Cu.import("resource:///modules/WebConsoleUtils.jsm", tmp);
+  Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tmp);
   let WCU = tmp.WebConsoleUtils;
   tmp = null;
 
