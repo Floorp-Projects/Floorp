@@ -146,6 +146,8 @@ function NetworkManager() {
   settingsLock.get(SETTINGS_USB_PREFIX, this);
   settingsLock.get(SETTINGS_USB_DHCPSERVER_STARTIP, this);
   settingsLock.get(SETTINGS_USB_DHCPSERVER_ENDIP, this);
+
+  this.setAndConfigureActive();
 }
 NetworkManager.prototype = {
   classID:   NETWORKMANAGER_CID,
