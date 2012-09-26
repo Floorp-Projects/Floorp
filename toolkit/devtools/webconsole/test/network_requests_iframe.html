@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Console HTTP test page</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+       - http://creativecommons.org/publicdomain/zero/1.0/ -->
+    <script type="text/javascript"><!--
+      function makeXhr(aMethod, aUrl, aRequestBody, aCallback) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open(aMethod, aUrl, true);
+        if (aCallback) {
+          xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4) {
+              aCallback();
+            }
+          };
+        }
+        xmlhttp.send(aRequestBody);
+      }
+
+      function testXhrGet(aCallback) {
+        makeXhr('get', 'data.json', null, aCallback);
+      }
+
+      function testXhrPost(aCallback) {
+        makeXhr('post', 'data.json', "Hello world!", aCallback);
+      }
+
+      document.cookie = "foobar=fooval";
+      document.cookie = "omgfoo=bug768096";
+    // --></script>
+  </head>
+  <body>
+    <h1>Web Console HTTP Logging Testpage</h1>
+    <h2>This page is used to test the HTTP logging.</h2>
+
+    <form action="?" method="post">
+      <input name="name" type="text" value="foo bar"><br>
+      <input name="age" type="text" value="144"><br>
+    </form>
+  </body>
+</html>
