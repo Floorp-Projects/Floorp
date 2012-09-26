@@ -308,7 +308,6 @@ package-tests: \
   stage-xpcshell \
   stage-jstests \
   stage-jetpack \
-  stage-firebug \
   stage-peptest \
   stage-mozbase \
   stage-tps \
@@ -344,7 +343,6 @@ make-stage-dir:
 	$(NSINSTALL) -D $(PKG_STAGE)/bin/components
 	$(NSINSTALL) -D $(PKG_STAGE)/certs
 	$(NSINSTALL) -D $(PKG_STAGE)/jetpack
-	$(NSINSTALL) -D $(PKG_STAGE)/firebug
 	$(NSINSTALL) -D $(PKG_STAGE)/peptest
 	$(NSINSTALL) -D $(PKG_STAGE)/mozbase
 	$(NSINSTALL) -D $(PKG_STAGE)/modules
@@ -378,9 +376,6 @@ stage-android: make-stage-dir
 
 stage-jetpack: make-stage-dir
 	$(NSINSTALL) $(topsrcdir)/testing/jetpack/jetpack-location.txt $(PKG_STAGE)/jetpack
-
-stage-firebug: make-stage-dir
-	$(MAKE) -C $(DEPTH)/testing/firebug stage-package
 
 stage-peptest: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/peptest stage-package
@@ -426,7 +421,6 @@ stage-mozbase: make-stage-dir
   stage-jstests \
   stage-android \
   stage-jetpack \
-  stage-firebug \
   stage-peptest \
   stage-mozbase \
   stage-tps \
