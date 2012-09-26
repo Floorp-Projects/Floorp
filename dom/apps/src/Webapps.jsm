@@ -497,10 +497,20 @@ let DOMApplicationRegistry = {
     if (!(aMsgName in this.children)) {
       return;
     }
-
-    this.children[aMsgName].forEach(function _doBroadcast(aMsgMgr) {
-      aMsgMgr.sendAsyncMessage(aMsgName, aContent);
-    });
+    let i;
+    for (i = this.children[aMsgName].length - 1; i >= 0; i -= 1) {
+      let msgMgr = this.children[aMsgName][i];
+      try {
+        msgMgr.sendAsyncMessage(aMsgName, aContent);
+      } catch (e) {
+        // Remove once 777508 lands.
+        let index;
+        if ((index = this.children[aMsgName].indexOf(msgMgr)) != -1) {
+          this.children[aMsgName].splice(index, 1);
+          dump("Remove dead MessageManager!\n");
+        }
+      }
+    };
   },
 
   _getAppDir: function(aId) {
