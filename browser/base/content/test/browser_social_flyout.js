@@ -31,11 +31,12 @@ var tests = {
         case "got-flyout-visibility":
           if (e.data.result == "hidden") {
             ok(true, "flyout visibility is 'hidden'");
+            is(panel.state, "closed", "panel really is closed");
             port.close();
             next();
           } else if (e.data.result == "shown") {
             ok(true, "flyout visibility is 'shown");
-            panel.hidePopup();
+            port.postMessage({topic: "test-flyout-close"});
           }
           break;
         case "got-flyout-message":
