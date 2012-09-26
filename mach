@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import print_function, unicode_literals
+
+import os
+import platform
+import sys
+
+# Ensure we are running Python 2.7+. We put this check here so we generate a
+# user-friendly error message rather than a cryptic stack trace on module
+# import.
+if sys.version_info[0] == 2 and sys.version_info[1] < 7:
+    print('Python 2.7 or above is required to run mach.')
+    print('You are running', platform.python_version())
+    sys.exit(1)
+
+# TODO Bug 794506 Integrate with the in-tree virtualenv configuration.
+SEARCH_PATHS = [
+    'python/mach',
+    'python/mozbuild',
+    'build',
+    'build/pymake',
+    'python/blessings',
+    'python/psutil',
+    'python/which',
+    'other-licenses/ply',
+    'xpcom/idl-parser',
+    'testing/xpcshell',
+    'testing/mozbase/mozprocess',
+    'testing/mozbase/mozinfo',
+]
+
+our_dir = os.path.dirname(os.path.abspath(__file__))
+
+try:
+    import mach.main
+except ImportError:
+    SEARCH_PATHS.reverse()
+    sys.path[0:0] = [os.path.join(our_dir, path) for path in SEARCH_PATHS]
+
+    import mach.main
+
+# All of the code is in a module because EVERYTHING IS A LIBRARY.
+mach = mach.main.Mach(our_dir)
+mach.run(sys.argv[1:])
