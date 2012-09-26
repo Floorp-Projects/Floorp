@@ -10,6 +10,8 @@ extern "C"
 #include "ccapi_types.h"
 }
 
+class nsIThread;
+
 namespace CSF
 {
     class AudioTermination;
@@ -53,12 +55,16 @@ namespace CSF
         static int getAudioCodecs();
         static int getVideoCodecs();
 
+	static void setMainThread(nsIThread *thread);
+	static nsIThread *getMainThread();
+
     private:
-        static VcmSIPCCBinding * _pSelf;
+        static VcmSIPCCBinding * gSelf;
         StreamObserver* streamObserver;
         MediaProviderObserver *mediaProviderObserver;
-        static int mAudioCodecMask;
-        static int mVideoCodecMask;
+        static int gAudioCodecMask;
+        static int gVideoCodecMask;
+	static nsIThread *gMainThread;
     };
 }
 
