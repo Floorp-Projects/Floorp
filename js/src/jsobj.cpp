@@ -825,6 +825,7 @@ PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
     isUndefined_ = false;
     pd_.setUndefined();
     attrs = uint8_t(desc.attrs);
+    JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     if (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         hasGet_ = true;
         get_ = ((desc.attrs & JSPROP_GETTER) && desc.getter)
