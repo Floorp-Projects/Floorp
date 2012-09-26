@@ -30,7 +30,7 @@ import android.widget.TextView;
 public class AboutHomePromoBox extends LinearLayout implements View.OnClickListener {
     private static final String LOGTAG = "AboutHomePromoBox";
 
-    public enum Type { SYNC, APPS };
+    public enum Type { NONE, SYNC, APPS };
 
     private Type mType;
 
@@ -101,7 +101,8 @@ public class AboutHomePromoBox extends LinearLayout implements View.OnClickListe
 
             default:
                 Log.e(LOGTAG, "show() - Invalid AboutHomePromoBox.Type specified.");
-                break;
+                hide();
+                return;
         }
         updateViewResources();
         setVisibility(View.VISIBLE);
