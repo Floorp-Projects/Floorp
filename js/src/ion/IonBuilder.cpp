@@ -5452,21 +5452,32 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
         else if (foundProto != proto)
             return true;
 
-        // Check here to make sure that everyone has Type Objects which known
+        // Check here to make sure that everyone has Type Objects with known
         // properties between them and the proto we found the accessor on. We
         // need those to add freezes safely. NOTE: We do not do this above, as
         // we may be able to freeze all the types up to where we found the
         // property, even if there are unknown types higher in the prototype
         // chain.
         while (curObj != foundProto) {
-            if (curObj->getType(cx)->unknownProperties())
+            types::TypeObject *typeObj = curObj->getType(cx);
+
+            if (typeObj->unknownProperties())
                 return true;
 
-            // If anyone on the chain is watched, TI thinks they have an own
-            // property, which means if they were to actually overwrite the
-            // property accessors, we would never know, since we are freezing on
-            // setting that flag.
-            if (curObj->watched())
+            // Check here to make sure that nobody on the prototype chain is
+            // marked as having the property as an "own property". This can
+            // happen in cases of |delete| having been used, or cases with
+            // watched objects. If TI ever decides to be more accurate about
+            // |delete| handling, this should go back to curObj->watched().
+
+            // Even though we are not directly accessing the properties on the whole
+            // prototype chain, we need to fault in the sets anyway, as we need
+            // to freeze on them.
+            jsid typeId = types::MakeTypeId(cx, id);
+            types::HeapTypeSet *propSet = typeObj->getProperty(cx, typeId, false);
+            if (!propSet)
+                return false;
+            if (propSet->isOwnProperty(cx, typeObj, false))
                 return true;
 
             curObj = curObj->getProto();
@@ -5518,6 +5529,8 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
             jsid typeId = types::MakeTypeId(cx, id);
             while (true) {
                 types::HeapTypeSet *propSet = curType->getProperty(cx, typeId, false);
+                // This assert is now assured, since we have faulted them in
+                // above.
                 JS_ASSERT(propSet);
                 // Asking, freeze by asking.
                 DebugOnly<bool> isOwn = propSet->isOwnProperty(cx, curType, false);
