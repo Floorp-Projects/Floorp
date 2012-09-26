@@ -257,7 +257,9 @@ namespace js {
 namespace ion {
 
 JSScript *
-GetTopIonJSScript(JSContext *cx);
+GetTopIonJSScript(JSContext *cx,
+                  const SafepointIndex **safepointIndexOut = NULL,
+                  void **returnAddrOut = NULL);
 
 void
 GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes);
