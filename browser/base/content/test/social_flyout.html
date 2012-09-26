@@ -14,9 +14,16 @@
         var port = navigator.mozSocial.getWorker().port;
         port.postMessage({topic: "flyout-visibility", result: "hidden"});
       }, false);
+      window.addEventListener("socialTest-MakeWider", function(e) {
+        document.body.setAttribute("style", "width: 500px;");
+        document.body.offsetWidth; // force a layout flush
+        var evt = document.createEvent("CustomEvent");
+        evt.initCustomEvent("SocialTest-DoneMakeWider", true, true, {});
+        document.documentElement.dispatchEvent(evt);
+      }, false);
     </script>
   </head>
-  <body onload="pingWorker();">
+  <body style="max-width: 250px;" onload="pingWorker();">
     <p>This is a test social flyout panel.</p>
   </body>
 </html>
