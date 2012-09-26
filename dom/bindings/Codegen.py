@@ -93,11 +93,16 @@ def DOMClass(descriptor):
         protoList.extend(['prototypes::id::_ID_Count'] * (descriptor.config.maxProtoChainLength - len(protoList)))
         prototypeChainString = ', '.join(protoList)
         nativeHooks = "NULL" if descriptor.workers else "&NativeHooks"
+        if descriptor.workers or descriptor.nativeOwnership != 'refcounted':
+            participant = "nullptr"
+        else:
+            participant = "NS_CYCLE_COLLECTION_PARTICIPANT(%s)" % descriptor.nativeType
         return """{
   { %s },
-  %s, %s
+  %s, %s, %s
 }""" % (prototypeChainString, toStringBool(descriptor.nativeOwnership == 'nsisupports'),
-          nativeHooks)
+        nativeHooks,
+        participant)
 
 class CGDOMJSClass(CGThing):
     """
@@ -633,12 +638,13 @@ class CGAddPropertyHook(CGAbstractClassHook):
                                      'JSBool', args)
 
     def generate_code(self):
-        # FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=774279
-        # Using a real trace hook might enable us to deal with non-nsISupports
-        # wrappercached things here.
-        assert self.descriptor.nativeOwnership == 'nsisupports'
-        return """  nsContentUtils::PreserveWrapper(reinterpret_cast<nsISupports*>(self), self);
-  return true;"""
+        assert not self.descriptor.workers and self.descriptor.wrapperCache
+        if self.descriptor.nativeOwnership == 'nsisupports':
+            preserveArgs = "reinterpret_cast<nsISupports*>(self), self"
+        else:
+            preserveArgs = "self, self, NS_CYCLE_COLLECTION_PARTICIPANT(%s)" % self.descriptor.nativeType
+        return """  nsContentUtils::PreserveWrapper(%s);
+  return true;""" % preserveArgs
 
 def DeferredFinalizeSmartPtr(descriptor):
     if descriptor.nativeOwnership == 'owned':
