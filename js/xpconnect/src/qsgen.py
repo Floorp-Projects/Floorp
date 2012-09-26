@@ -385,7 +385,6 @@ class StringTable:
                     % (offset, explodeToCharArray(string)))
         f.write("  /* %5d */ %s, '\\0' };\n\n"
                 % (entries[-1][1], explodeToCharArray(entries[-1][0])))
-        f.write("const char* xpc_qsStringTable = %s;\n\n" % name);
 
 def substitute(template, vals):
     """ Simple replacement for string.Template, which isn't in Python 2.3. """
@@ -492,11 +491,10 @@ argumentUnboxingTemplates = {
 # however, defaults to 'undefined'.
 #
 def writeArgumentUnboxing(f, i, name, type, optional, rvdeclared,
-                          nullBehavior, undefinedBehavior,
-                          propIndex=None):
+                          nullBehavior, undefinedBehavior):
     # f - file to write to
     # i - int or None - Indicates the source jsval.  If i is an int, the source
-    #     jsval is argv[i]; otherwise it is argv[0].  But if Python i >= C++ argc,
+    #     jsval is argv[i]; otherwise it is *vp.  But if Python i >= C++ argc,
     #     which can only happen if optional is True, the argument is missing;
     #     use JSVAL_NULL as the source jsval instead.
     # name - str - name of the native C++ variable to create.
@@ -509,8 +507,8 @@ def writeArgumentUnboxing(f, i, name, type, optional, rvdeclared,
     isSetter = (i is None)
 
     if isSetter:
-        argPtr = "argv"
-        argVal = "argv[0]"
+        argPtr = "vp"
+        argVal = "*vp"
     elif optional:
         if typeName == "[jsval]":
             val = "JSVAL_VOID"
@@ -561,9 +559,8 @@ def writeArgumentUnboxing(f, i, name, type, optional, rvdeclared,
                     % (type.name, argVal, name, name, argPtr))
             f.write("    if (NS_FAILED(rv)) {\n")
             if isSetter:
-                assert(propIndex is not None)
-                f.write("        xpc_qsThrowBadSetterValue(cx, rv, JSVAL_TO_OBJECT(vp[1]), (uint16_t)%s);\n" %
-                        propIndex)
+                f.write("        xpc_qsThrowBadSetterValue("
+                        "cx, rv, JSVAL_TO_OBJECT(*tvr.jsval_addr()), id);\n")
             else:
                 f.write("        xpc_qsThrowBadArg(cx, rv, vp, %d);\n" % i)
             f.write("        return JS_FALSE;\n"
@@ -572,7 +569,7 @@ def writeArgumentUnboxing(f, i, name, type, optional, rvdeclared,
 
     warn("Unable to unbox argument of type %s (native type %s)" % (type.name, typeName))
     if i is None:
-        src = 'argv[0]'
+        src = '*vp'
     else:
         src = 'argv[%d]' % i
     f.write("    !; // TODO - Unbox argument %s = %s\n" % (name, src))
@@ -744,8 +741,7 @@ def validateParam(member, param):
     if param.const or param.array or param.shared:
         pfail("I am a simple caveman.")
 
-def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
-                   isSetter=False):
+def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     """ Write a single quick stub (a custom SpiderMonkey getter/setter/method)
     for the specified XPCOM interface-member. 
     """
@@ -754,8 +750,16 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
     assert isAttr or isMethod
     isGetter = isAttr and not isSetter
 
-    signature = ("static JSBool\n" +
-                 "%s(JSContext *cx, unsigned argc,%s jsval *vp)\n")
+    signature = "static JSBool\n"
+    if isAttr:
+        # JSPropertyOp signature.
+        if isSetter:
+            signature += "%s(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,%s JSMutableHandleValue vp_)\n"
+        else:
+            signature += "%s(JSContext *cx, JSHandleObject obj, JSHandleId id,%s JSMutableHandleValue vp_)\n"
+    else:
+        # JSFastNative.
+        signature += "%s(JSContext *cx, unsigned argc,%s jsval *vp)\n"
 
     customMethodCall = customMethodCalls.get(stubName, None)
 
@@ -788,8 +792,12 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
                           or header.firstCap(member.name))
             argumentValues = (customMethodCall['additionalArgumentValues']
                               % nativeName)
-            callTemplate += ("    return %s(cx, argc, %s, vp);\n"
-                             % (templateName, argumentValues))
+            if isAttr:
+                callTemplate += ("    return %s(cx, obj, id%s, %s, vp_);\n"
+                                 % (templateName, ", strict" if isSetter else "", argumentValues))
+            else:
+                callTemplate += ("    return %s(cx, argc, %s, vp);\n"
+                                 % (templateName, argumentValues))
             callTemplate += "}\n\n"
 
             # Fall through and create the template function stub called from the
@@ -825,10 +833,15 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
     f.write("{\n")
     f.write("    XPC_QS_ASSERT_CONTEXT_OK(cx);\n")
 
-    # Compute "this".
-    f.write("    JSObject *obj = JS_THIS_OBJECT(cx, vp);\n"
-            "    if (!obj)\n"
-            "        return JS_FALSE;\n")
+    # Convert JSMutableHandleValue to jsval*
+    if isAttr:
+        f.write("    jsval *vp = vp_.address();\n")
+
+    # For methods, compute "this".
+    if isMethod:
+        f.write("    JSObject *obj = JS_THIS_OBJECT(cx, vp);\n"
+                "    if (!obj)\n"
+                "        return JS_FALSE;\n")
 
     # Get the 'self' pointer.
     if customMethodCall is None or not 'thisType' in customMethodCall:
@@ -836,7 +849,13 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
     else:
         f.write("    %s *self;\n" % customMethodCall['thisType'])
     f.write("    xpc_qsSelfRef selfref;\n")
-    pthisval = '&vp[1]' # as above, ok to overwrite vp[1]
+    if isGetter:
+        pthisval = 'vp'
+    elif isSetter:
+        f.write("    JS::AutoValueRooter tvr(cx);\n")
+        pthisval = 'tvr.jsval_addr()'
+    else:
+        pthisval = '&vp[1]' # as above, ok to overwrite vp[1]
 
     if unwrapThisFailureFatal:
         unwrapFatalArg = "true"
@@ -864,14 +883,10 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
         requiredArgs = len(member.params)
         while requiredArgs and member.params[requiredArgs-1].optional:
             requiredArgs -= 1
-    elif isSetter:
-        requiredArgs = 1
-    else:
-        requiredArgs = 0
-    if requiredArgs:
-        f.write("    if (argc < %d)\n" % requiredArgs)
-        f.write("        return xpc_qsThrow(cx, "
-                "NS_ERROR_XPC_NOT_ENOUGH_ARGS);\n")
+        if requiredArgs:
+            f.write("    if (argc < %d)\n" % requiredArgs)
+            f.write("        return xpc_qsThrow(cx, "
+                    "NS_ERROR_XPC_NOT_ENOUGH_ARGS);\n")
 
     # Convert in-parameters.
     rvdeclared = False
@@ -895,13 +910,11 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
                 nullBehavior=param.null,
                 undefinedBehavior=param.undefined)
     elif isSetter:
-        f.write("    jsval *argv = JS_ARGV(cx, vp);\n")
         rvdeclared = writeArgumentUnboxing(f, None, 'arg0', member.realtype,
                                            optional=False,
                                            rvdeclared=rvdeclared,
                                            nullBehavior=member.null,
-                                           undefinedBehavior=member.undefined,
-                                           propIndex=stringtable.stringIndex(member.name))
+                                           undefinedBehavior=member.undefined)
 
     canFail = customMethodCall is None or customMethodCall.get('canFail', True)
     if canFail and not rvdeclared:
@@ -974,9 +987,12 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
             f.write("        return xpc_qsThrowMethodFailed("
                     "cx, rv, vp);\n")
         else:
+            if isGetter:
+                thisval = '*vp'
+            else:
+                thisval = '*tvr.jsval_addr()'
             f.write("        return xpc_qsThrowGetterSetterFailed(cx, rv, " +
-                    "JSVAL_TO_OBJECT(vp[1]), (uint16_t)%d);\n" %
-                    stringtable.stringIndex(member.name))
+                    "JSVAL_TO_OBJECT(%s), id);\n" % thisval)
 
     # Convert the return value.
     if isMethod or isGetter:
@@ -998,15 +1014,14 @@ def writeAttrStubs(f, customMethodCalls, stringtable, attr):
     getterName = (attr.iface.name + '_'
                   + header.attributeNativeName(attr, True))
     if not custom:
-        writeQuickStub(f, customMethodCalls, stringtable, attr, getterName)
+        writeQuickStub(f, customMethodCalls, attr, getterName)
     if attr.readonly:
-        setterName = 'xpc_qsGetterOnlyNativeStub'
+        setterName = 'xpc_qsGetterOnlyPropertyStub'
     else:
         setterName = (attr.iface.name + '_'
                       + header.attributeNativeName(attr, False))
         if not custom:
-            writeQuickStub(f, customMethodCalls, stringtable, attr, setterName,
-                           isSetter=True)
+            writeQuickStub(f, customMethodCalls, attr, setterName, isSetter=True)
 
     ps = ('{%d, %s, %s}'
           % (stringtable.stringIndex(attr.name), getterName, setterName))
@@ -1020,7 +1035,7 @@ def writeMethodStub(f, customMethodCalls, stringtable, method):
 
     stubName = method.iface.name + '_' + header.methodNativeName(method)
     if not custom:
-        writeQuickStub(f, customMethodCalls, stringtable, method, stubName)
+        writeQuickStub(f, customMethodCalls, method, stubName)
     fs = '{%d, %d, %s}' % (stringtable.stringIndex(method.name),
                            len(method.params), stubName)
     return fs
