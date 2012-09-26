@@ -3084,6 +3084,15 @@ let RIL = {
       return PDU_FCS_OK;
     }
 
+    // TODO: Bug 739143: B2G SMS: Support SMS Storage Full event
+    if ((message.messageClass != PDU_DCS_MSG_CLASS_0) && !true) {
+      // `When a mobile terminated message is class 0..., the MS shall display
+      // the message immediately and send a ACK to the SC ..., irrespective of
+      // whether there is memory available in the (U)SIM or ME.` ~ 3GPP 23.038
+      // clause 4.
+      return PDU_FCS_UNSPECIFIED;
+    }
+
     if (message.header && (message.header.segmentMaxSeq > 1)) {
       message = this._processReceivedSmsSegment(message);
     } else {
