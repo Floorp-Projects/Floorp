@@ -38,5 +38,5 @@
   
   <text x="220" y="200">T ST8</text>
 
-  <g transform="translate(150,100)rotate(90) "><text>A</text></g>
+  <g transform="translate(150,100)rotate(45)"><text>A</text></g>
 </svg>
