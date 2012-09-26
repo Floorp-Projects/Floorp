@@ -1672,8 +1672,8 @@ bool
 nsTextEditorState::GetMaxLength(int32_t* aMaxLength)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
-  NS_ENSURE_TRUE(content, false);
-  nsGenericHTMLElement* element = nsGenericHTMLElement::FromContent(content);
+  nsGenericHTMLElement* element =
+    nsGenericHTMLElement::FromContentOrNull(content);
   NS_ENSURE_TRUE(element, false);
 
   const nsAttrValue* attr = element->GetParsedAttr(nsGkAtoms::maxlength);

@@ -53,7 +53,7 @@ nsSafeOptionListMutation::nsSafeOptionListMutation(nsIContent* aSelect,
                                                    nsIContent* aKid,
                                                    uint32_t aIndex,
                                                    bool aNotify)
-  : mSelect(nsHTMLSelectElement::FromContent(aSelect))
+  : mSelect(nsHTMLSelectElement::FromContentOrNull(aSelect))
   , mTopLevelMutation(false)
   , mNeedsRebuild(false)
 {

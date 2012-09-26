@@ -15,13 +15,7 @@ public:
   nsHTMLMenuElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLMenuElement();
 
-  /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
-  static nsHTMLMenuElement* FromContent(nsIContent* aContent)
-  {
-    if (aContent && aContent->IsHTML(nsGkAtoms::menu))
-      return static_cast<nsHTMLMenuElement*>(aContent);
-    return nullptr;
-  }
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLMenuElement, menu)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
