@@ -12,7 +12,7 @@ interface nsIFile;
  * Additions to the frozen nsICookieManager
  */
 
-[scriptable, uuid(94628d1d-8b31-4baa-b474-9c872c440f90)]
+[scriptable, uuid(c0058e11-8ac3-4349-b87c-7332d0bb542c)]
 interface nsICookieManager2 : nsICookieManager
 {
   /**
@@ -107,4 +107,16 @@ interface nsICookieManager2 : nsICookieManager
    * @param aCookieFile the file to import, usually cookies.txt
    */
   void importCookies(in nsIFile aCookieFile);
+
+  /**
+   * Returns an enumerator of all cookies that are related to a specific app.
+   *
+   * If the onlyBrowserELement parameter is set to true, only cookies part of
+   * a browser element inside the app will be returned. If set to false, all
+   * cookies will be returned, regardless of their browserElement flag.
+   *
+   * This method assumes that appId is a valid app id. It should not be a
+   * special value like UNKNOWN_APP_ID or NO_APP_ID.
+   */
+  nsISimpleEnumerator getCookiesForApp(in unsigned long appId, in boolean onlyBrowserElement);
 };

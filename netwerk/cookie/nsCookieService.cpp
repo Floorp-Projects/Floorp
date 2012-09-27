@@ -3717,6 +3717,65 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
   return NS_NewArrayEnumerator(aEnumerator, cookieList);
 }
 
+namespace {
+
+/**
+ * This structure is used as a in/out parameter when enumerating the cookies
+ * for an app.
+ * It will contain the app id and onlyBrowserElement flag information as input
+ * and will contain the array of matching cookies as output.
+ */
+struct GetCookiesForAppStruct {
+  uint32_t              appId;
+  bool                  onlyBrowserElement;
+  nsCOMArray<nsICookie> cookies;
+
+  GetCookiesForAppStruct() MOZ_DELETE;
+  GetCookiesForAppStruct(uint32_t aAppId, bool aOnlyBrowserElement)
+    : appId(aAppId)
+    , onlyBrowserElement(aOnlyBrowserElement)
+  {}
+};
+
+} // anonymous namespace
+
+/* static */ PLDHashOperator
+nsCookieService::GetCookiesForApp(nsCookieEntry* entry, void* arg)
+{
+  GetCookiesForAppStruct* data = static_cast<GetCookiesForAppStruct*>(arg);
+
+  if (entry->mAppId != data->appId ||
+      (data->onlyBrowserElement && !entry->mInBrowserElement)) {
+    return PL_DHASH_NEXT;
+  }
+
+  const nsCookieEntry::ArrayType& cookies = entry->GetCookies();
+
+  for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
+    data->cookies.AppendObject(cookies[i]);
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+nsCookieService::GetCookiesForApp(uint32_t aAppId, bool aOnlyBrowserElement,
+                                  nsISimpleEnumerator** aEnumerator)
+{
+  if (!mDBState) {
+    NS_WARNING("No DBState! Profile already closed?");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_ENSURE_TRUE(aAppId != NECKO_NO_APP_ID && aAppId != NECKO_UNKNOWN_APP_ID,
+                 NS_ERROR_INVALID_ARG);
+
+  GetCookiesForAppStruct data(aAppId, aOnlyBrowserElement);
+  mDBState->hostTable.EnumerateEntries(GetCookiesForApp, &data);
+
+  return NS_NewArrayEnumerator(aEnumerator, data.cookies);
+}
+
 // find an exact cookie specified by host, name, and path that hasn't expired.
 bool
 nsCookieService::FindCookie(const nsCookieKey    &aKey,
