@@ -43,8 +43,6 @@ private:
     return static_cast<nsDOMEventTargetHelper*>(
            const_cast<IccManager*>(this));
   }
-
-  nsresult InternalDispatchEvent(const nsAString& aType);
 };
 
 } // namespace icc

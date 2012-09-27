@@ -200,7 +200,7 @@ void FMRadio::Notify(const SwitchEvent& aEvent)
   if (mHeadphoneState != aEvent.status()) {
     LOG("Antenna state is changed!");
     mHeadphoneState = aEvent.status();
-    DispatchTrustedEventToSelf(ANTENNA_STATE_CHANGED_EVENT_NAME);
+    DispatchTrustedEvent(ANTENNA_STATE_CHANGED_EVENT_NAME);
   }
 }
 
@@ -209,33 +209,13 @@ void FMRadio::Notify(const FMRadioOperationInformation& info)
   switch (info.operation())
   {
     case FM_RADIO_OPERATION_ENABLE:
-      DispatchTrustedEventToSelf(RADIO_ENABLED_EVENT_NAME);
+      DispatchTrustedEvent(RADIO_ENABLED_EVENT_NAME);
       break;
     case FM_RADIO_OPERATION_DISABLE:
-      DispatchTrustedEventToSelf(RADIO_DIABLED_EVENT_NAME);
+      DispatchTrustedEvent(RADIO_DIABLED_EVENT_NAME);
       break;
     case FM_RADIO_OPERATION_SEEK:
-      DispatchTrustedEventToSelf(RADIO_SEEK_COMPLETE_EVENT_NAME);
+      DispatchTrustedEvent(RADIO_SEEK_COMPLETE_EVENT_NAME);
       break;
   }
 }
-
-nsresult
-FMRadio::DispatchTrustedEventToSelf(const nsAString& aEventName)
-{
-  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
-  nsresult rv = event->InitEvent(aEventName,
-                                 /* bubbles = */ false,
-                                 /* cancelable = */ false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool dummy;
-  rv = DispatchEvent(event, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-

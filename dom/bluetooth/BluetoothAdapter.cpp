@@ -277,9 +277,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsCOMPtr<nsIDOMBluetoothDeviceEvent> e = do_QueryInterface(event);
     e->InitBluetoothDeviceEvent(NS_LITERAL_STRING("devicefound"),
                                 false, false, device);
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
+    DispatchTrustedEvent(event);
   } else if (aData.name().EqualsLiteral("DeviceDisappeared")) {
     const nsAString& deviceAddress = aData.value().get_nsString();
 
@@ -289,9 +287,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsCOMPtr<nsIDOMBluetoothDeviceAddressEvent> e = do_QueryInterface(event);
     e->InitBluetoothDeviceAddressEvent(NS_LITERAL_STRING("devicedisappeared"),
                                        false, false, deviceAddress);
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
+    DispatchTrustedEvent(e);
   } else if (aData.name().EqualsLiteral("DeviceCreated")) {
     NS_ASSERTION(aData.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue,
                  "DeviceCreated: Invalid value type");
@@ -305,9 +301,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsCOMPtr<nsIDOMBluetoothDeviceEvent> e = do_QueryInterface(event);
     e->InitBluetoothDeviceEvent(NS_LITERAL_STRING("devicecreated"),
                                 false, false, device);
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
+    DispatchTrustedEvent(e);
   } else if (aData.name().EqualsLiteral("PropertyChanged")) {
     NS_ASSERTION(aData.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue,
                  "PropertyChanged: Invalid value type");
