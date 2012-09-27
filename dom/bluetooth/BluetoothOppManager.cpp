@@ -10,6 +10,7 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothServiceUuid.h"
+#include "ObexBase.h"
 
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/RefPtr.h"
@@ -19,7 +20,9 @@ using namespace mozilla::ipc;
 
 static mozilla::RefPtr<BluetoothOppManager> sInstance;
 
-BluetoothOppManager::BluetoothOppManager()
+BluetoothOppManager::BluetoothOppManager() : mConnected(false)
+                                           , mConnectionId(1)
+                                           , mLastCommand(0)
 {
 }
 
@@ -94,6 +97,38 @@ BluetoothOppManager::StopSendingFile(BluetoothReplyRunnable* aRunnable)
 void
 BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
 {
-  // will implement in another patch.
+  uint8_t responseCode = aMessage->mData[0];
+
+  if (mLastCommand == ObexRequestCode::Connect) {
+    if (responseCode == ObexResponseCode::Success) {
+      mConnected = true;
+    }
+  } else if (mLastCommand == ObexRequestCode::Disconnect) {
+    if (responseCode == ObexResponseCode::Success) {
+      mConnected = false;
+    }
+  }
+}
+
+void
+BluetoothOppManager::SendConnectReqeust()
+{
+  // Section 3.3.1 "Connect", IrOBEX 1.2
+  // [opcode:1][length:2][version:1][flags:1][MaxPktSizeWeCanReceive:2][Headers:var]
+  uint8_t req[255];
+  int index = 7;
+
+  req[3] = 0x10; // version=1.0
+  req[4] = 0x00; // flag=0x00
+  req[5] = BluetoothOppManager::MAX_PACKET_LENGTH >> 8;
+  req[6] = BluetoothOppManager::MAX_PACKET_LENGTH;
+
+  index += AppendHeaderConnectionId(&req[index], mConnectionId++);
+  SetObexPacketInfo(req, ObexRequestCode::Connect, index);
+  mLastCommand = ObexRequestCode::Connect;
+
+  UnixSocketRawData* s = new UnixSocketRawData(index);
+  memcpy(s->mData, req, s->mSize);
+  SendSocketData(s);
 }
 

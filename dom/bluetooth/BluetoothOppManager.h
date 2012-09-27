@@ -24,6 +24,7 @@ public:
    * external/bluetooth/bluez/src/adapter.c for more information.
    */
   static const int DEFAULT_OPP_CHANNEL = 10;
+  static const int MAX_PACKET_LENGTH = 0xFFFE;
 
   ~BluetoothOppManager();
   static BluetoothOppManager* Get();
@@ -51,6 +52,11 @@ public:
 
 private:
   BluetoothOppManager();
+  void SendConnectReqeust();
+
+  bool mConnected;
+  int mConnectionId;
+  int mLastCommand;
 };
 
 END_BLUETOOTH_NAMESPACE
