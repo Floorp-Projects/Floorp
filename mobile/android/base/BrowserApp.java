@@ -54,7 +54,19 @@ abstract public class BrowserApp extends GeckoApp
     private boolean mAboutHomeShowing;
 
     private static final int ADDON_MENU_OFFSET = 1000;
-    static Vector<MenuItem> sAddonMenuItems = new Vector<MenuItem>();
+    private class MenuItemInfo {
+        int id;
+        String label;
+        String icon;
+
+        public MenuItemInfo(int id, String label, String icon) {
+            this.id = id;
+            this.label = label;
+            this.icon = icon;
+        }
+    }
+
+    private Vector<MenuItemInfo> mAddonMenuItemsCache;
 
     private PropertyAnimator mMainLayoutAnimator;
 
@@ -637,8 +649,13 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void addAddonMenuItem(final int id, final String label, final String icon) {
-        if (mMenu == null)
+        if (mMenu == null) {
+            if (mAddonMenuItemsCache == null)
+                mAddonMenuItemsCache = new Vector<MenuItemInfo>();
+
+            mAddonMenuItemsCache.add(new MenuItemInfo(id, label, icon));
             return;
+        }
 
         final MenuItem item = mMenu.add(Menu.NONE, id, Menu.NONE, label);
 
@@ -677,24 +694,25 @@ abstract public class BrowserApp extends GeckoApp
                 });
             }
         }
-        sAddonMenuItems.add(item);
     }
 
     private void removeAddonMenuItem(int id) {
-        for (MenuItem item : sAddonMenuItems) {
-            if (item.getItemId() == id) {
-                sAddonMenuItems.remove(item);
-
-                if (mMenu == null)
-                    break;
-
-                MenuItem menuItem = mMenu.findItem(id);
-                if (menuItem != null)
-                    mMenu.removeItem(id);
-
-                break;
+        // Remove add-on menu item from cache, if available.
+        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
+            for (MenuItemInfo item : mAddonMenuItemsCache) {
+                 if (item.id == id) {
+                     mAddonMenuItemsCache.remove(item);
+                     break;
+                 }
             }
         }
+
+        if (mMenu == null)
+            return;
+
+        MenuItem menuItem = mMenu.findItem(id);
+        if (menuItem != null)
+            mMenu.removeItem(id);
     }
 
     @Override
@@ -707,6 +725,16 @@ abstract public class BrowserApp extends GeckoApp
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.browser_app_menu, mMenu);
+
+        // Add add-on menu items if any.
+        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
+            for (MenuItemInfo item : mAddonMenuItemsCache) {
+                 addAddonMenuItem(item.id, item.label, item.icon);
+            }
+
+            mAddonMenuItemsCache.clear();
+        }
+
         return true;
     }
 
