@@ -34,7 +34,13 @@ let AppsUtils = {
       removable: aApp.removable,
       localId: aApp.localId,
       progress: aApp.progress || 0.0,
-      status: aApp.status || "installed"
+      installState: aApp.installState || "installed",
+      downloadAvailable: aApp.downloadAvailable,
+      downloading: aApp.downloading,
+      readyToApplyDownload: aApp.readyToApplyDownload,
+      downloadSize: aApp.downloadSize || 0,
+      lastUpdateCheck: aApp.lastUpdateCheck,
+      etag: aApp.etag
     };
   },
 

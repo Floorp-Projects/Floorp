@@ -723,7 +723,7 @@ mjit::Compiler::jsop_typeof()
         JSOp op = JSOp(PC[JSOP_TYPEOF_LENGTH + JSOP_STRING_LENGTH]);
 
         if (op == JSOP_STRICTEQ || op == JSOP_EQ || op == JSOP_STRICTNE || op == JSOP_NE) {
-            JSAtom *atom = script->getAtom(GET_UINT32_INDEX(PC + JSOP_TYPEOF_LENGTH));
+            JSAtom *atom = script_->getAtom(GET_UINT32_INDEX(PC + JSOP_TYPEOF_LENGTH));
             JSRuntime *rt = cx->runtime;
             JSValueType type = JSVAL_TYPE_UNKNOWN;
             Assembler::Condition cond = (op == JSOP_STRICTEQ || op == JSOP_EQ)
@@ -967,7 +967,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32_t slot)
     if (!analysis->incrementInitialValueObserved(PC)) {
         // Before:
         // After:  V
-        if (script->argsObjAliasesFormals())
+        if (script_->argsObjAliasesFormals())
             jsop_aliasedArg(slot, /* get = */ true);
         else
             frame.pushArg(slot);
@@ -985,14 +985,14 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32_t slot)
         // Before: N+1
         // After:  N+1
         bool popGuaranteed = analysis->popGuaranteed(PC);
-        if (script->argsObjAliasesFormals())
+        if (script_->argsObjAliasesFormals())
             jsop_aliasedArg(slot, /* get = */ false, popGuaranteed);
         else
             frame.storeArg(slot, popGuaranteed);
     } else {
         // Before:
         // After: V
-        if (script->argsObjAliasesFormals())
+        if (script_->argsObjAliasesFormals())
             jsop_aliasedArg(slot, /* get = */ true);
         else
             frame.pushArg(slot);
@@ -1016,7 +1016,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32_t slot)
 
         // Before: N N+1
         // After:  N N+1
-        if (script->argsObjAliasesFormals())
+        if (script_->argsObjAliasesFormals())
             jsop_aliasedArg(slot, /* get = */ false, true);
         else
             frame.storeArg(slot, true);
@@ -1219,7 +1219,7 @@ mjit::Compiler::jsop_setelem_dense()
         masm.storeValue(vr, BaseIndex(slotsReg, key.reg(), masm.JSVAL_SCALE));
 
     stubcc.leave();
-    OOL_STUBCALL(STRICT_VARIANT(script, stubs::SetElem), REJOIN_FALLTHROUGH);
+    OOL_STUBCALL(STRICT_VARIANT(script_, stubs::SetElem), REJOIN_FALLTHROUGH);
 
     if (!hoisted)
         frame.freeReg(slotsReg);
@@ -1493,7 +1493,7 @@ mjit::Compiler::jsop_setelem_typed(int atype)
         frame.freeReg(objReg);
 
     stubcc.leave();
-    OOL_STUBCALL(STRICT_VARIANT(script, stubs::SetElem), REJOIN_FALLTHROUGH);
+    OOL_STUBCALL(STRICT_VARIANT(script_, stubs::SetElem), REJOIN_FALLTHROUGH);
 
     frame.shimmy(2);
     stubcc.rejoin(Changes(2));
@@ -1538,8 +1538,8 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     FrameEntry *value = frame.peek(-1);
 
     if (!IsCacheableSetElem(obj, id, value) || monitored(PC)) {
-        if (monitored(PC) && script == outerScript)
-            monitoredBytecodes.append(PC - script->code);
+        if (monitored(PC) && script_ == outerScript)
+            monitoredBytecodes.append(PC - script_->code);
 
         jsop_setelem_slow();
         return true;
@@ -1697,9 +1697,9 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     stubcc.leave();
 #if defined JS_POLYIC
     passICAddress(&ic);
-    ic.slowPathCall = OOL_STUBCALL(STRICT_VARIANT(script, ic::SetElement), REJOIN_FALLTHROUGH);
+    ic.slowPathCall = OOL_STUBCALL(STRICT_VARIANT(script_, ic::SetElement), REJOIN_FALLTHROUGH);
 #else
-    OOL_STUBCALL(STRICT_VARIANT(script, stubs::SetElem), REJOIN_FALLTHROUGH);
+    OOL_STUBCALL(STRICT_VARIANT(script_, stubs::SetElem), REJOIN_FALLTHROUGH);
 #endif
 
     ic.fastPathRejoin = masm.label();
@@ -2684,13 +2684,13 @@ mjit::Compiler::jsop_initprop()
 {
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);
-    PropertyName *name = script->getName(GET_UINT32_INDEX(PC));
+    PropertyName *name = script_->getName(GET_UINT32_INDEX(PC));
 
     RootedObject baseobj(cx, frame.extra(obj).initObject);
 
     if (!baseobj || monitored(PC) || cx->compartment->compileBarriers()) {
-        if (monitored(PC) && script == outerScript)
-            monitoredBytecodes.append(PC - script->code);
+        if (monitored(PC) && script_ == outerScript)
+            monitoredBytecodes.append(PC - script_->code);
 
         prepareStubCall(Uses(2));
         masm.move(ImmPtr(name), Registers::ArgReg1);

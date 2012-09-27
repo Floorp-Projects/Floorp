@@ -85,6 +85,31 @@ void DocDestroy(const char* aMsg, nsIDocument* aDocumentNode,
 void OuterDocDestroy(OuterDocAccessible* OuterDoc);
 
 /**
+ * Log the focus notification target.
+ */
+void FocusNotificationTarget(const char* aMsg, const char* aTargetDescr,
+                             Accessible* aTarget);
+void FocusNotificationTarget(const char* aMsg, const char* aTargetDescr,
+                             nsINode* aTargetNode);
+void FocusNotificationTarget(const char* aMsg, const char* aTargetDescr,
+                             nsISupports* aTargetThing);
+
+/**
+ * Log a cause of active item descendant change (submessage).
+ */
+void ActiveItemChangeCausedBy(const char* aMsg, Accessible* aTarget);
+
+/**
+ * Log the active widget (submessage).
+ */
+void ActiveWidget(Accessible* aWidget);
+
+/**
+ * Log the focus event was dispatched (submessage).
+ */
+void FocusDispatched(Accessible* aTarget);
+
+/**
  * Log the selection change.
  */
 void SelChange(nsISelection* aSelection, DocAccessible* aDocument);
@@ -96,6 +121,13 @@ void SelChange(nsISelection* aSelection, DocAccessible* aDocument);
  */
 void MsgBegin(const char* aTitle, const char* aMsgText, ...);
 void MsgEnd();
+
+/**
+ * Print start and end boundaries of the message body designated by '{' and '}'
+ * (2 spaces indent for body).
+ */
+void SubMsgBegin();
+void SubMsgEnd();
 
 /**
  * Log the entry into message body (4 spaces indent).
@@ -116,6 +148,11 @@ void Address(const char* aDescr, Accessible* aAcc);
  * Log the DOM node info as message entry.
  */
 void Node(const char* aDescr, nsINode* aNode);
+
+/**
+ * Log the accessible and its DOM node as a message entry.
+ */
+void AccessibleNNode(const char* aDescr, Accessible* aAccessible);
 
 /**
  * Log the call stack, two spaces offset is used.

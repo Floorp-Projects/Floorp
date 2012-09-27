@@ -213,13 +213,13 @@ class DummyOracle : public TypeOracle
 class TypeInferenceOracle : public TypeOracle
 {
     JSContext *cx;
-    JSScript *script;
+    HeapPtrScript script_;
 
     MIRType getMIRType(types::StackTypeSet *types);
     MIRType getMIRType(types::HeapTypeSet *types);
 
   public:
-    TypeInferenceOracle() : cx(NULL), script(NULL) {}
+    TypeInferenceOracle() : cx(NULL), script_(NULL) {}
 
     bool init(JSContext *cx, JSScript *script);
 
