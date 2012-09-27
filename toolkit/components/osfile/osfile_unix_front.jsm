@@ -515,7 +515,7 @@
            if (options.noOverwrite) {
              dest = File.open(destPath, {create:true});
            } else {
-             dest = File.open(destPath, {write:true});
+             dest = File.open(destPath, {trunc:true});
            }
            result = pump(source, dest, options);
          } catch (x) {
