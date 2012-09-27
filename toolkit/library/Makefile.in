@@ -409,6 +409,9 @@ OS_LIBS += \
   -lbinder \
   -lsensorservice \
   -ldbus \
+  -lstagefright \
+  -lstagefright_omx \
+  -lbinder \
   $(NULL)
 endif
 
