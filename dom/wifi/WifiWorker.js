@@ -1279,7 +1279,8 @@ Network.api = {
   keyManagement: "rw",
   psk: "rw",
   identity: "rw",
-  wep: "rw"
+  wep: "rw",
+  hidden: "rw"
 };
 
 // Note: We never use ScanResult.prototype, so the fact that it's unrelated to
@@ -1438,6 +1439,8 @@ function WifiWorker() {
       pub.identity = dequote(net.identity);
     if (net.netId)
       pub.known = true;
+    if (net.scan_ssid === 1)
+      pub.hidden = true;
     return pub;
   };
 
@@ -1470,6 +1473,11 @@ function WifiWorker() {
       delete net.keyManagement;
     } else {
       configured.key_mgmt = net.key_mgmt = "NONE";
+    }
+
+    if (net.hidden) {
+      configured.scan_ssid = net.scan_ssid = 1;
+      delete net.hidden;
     }
 
     function checkAssign(name, checkStar) {
