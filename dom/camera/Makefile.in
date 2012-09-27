@@ -33,6 +33,12 @@ CPPSRCS += \
   GonkCameraHwMgr.cpp \
   GonkNativeWindow.cpp \
   $(NULL)
+else ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += \
+  FallbackCameraManager.cpp \
+  FallbackCameraControl.cpp \
+  GonkNativeWindow.cpp \
+  $(NULL)
 else
 CPPSRCS += \
   FallbackCameraManager.cpp \
@@ -46,7 +52,9 @@ XPIDLSRCS = \
   $(NULL)
 
 EXPORTS = \
+  CameraCommon.h \
   DOMCameraManager.h \
+  GonkNativeWindow.h \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
