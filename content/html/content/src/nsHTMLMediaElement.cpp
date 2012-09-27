@@ -6,6 +6,7 @@
 
 #include "mozilla/Util.h"
 
+#include "base/basictypes.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsHTMLMediaElement.h"
@@ -86,6 +87,9 @@
 #ifdef MOZ_MEDIA_PLUGINS
 #include "nsMediaPluginHost.h"
 #include "nsMediaPluginDecoder.h"
+#endif
+#ifdef MOZ_WIDGET_GONK
+#include "nsMediaOmxDecoder.h"
 #endif
 
 #ifdef PR_LOGGING
@@ -2125,7 +2129,7 @@ nsHTMLMediaElement::IsWebMType(const nsACString& aType)
 }
 #endif
 
-#ifdef MOZ_GSTREAMER
+#if defined(MOZ_GSTREAMER) || defined(MOZ_WIDGET_GONK)
 const char nsHTMLMediaElement::gH264Types[3][16] = {
   "video/mp4",
   "video/3gpp",
@@ -2141,7 +2145,9 @@ char const *const nsHTMLMediaElement::gH264Codecs[7] = {
   "mp4a.40.2",
   nullptr
 };
+#endif
 
+#ifdef MOZ_GSTREAMER
 bool
 nsHTMLMediaElement::IsH264Enabled()
 {
@@ -2152,6 +2158,30 @@ bool
 nsHTMLMediaElement::IsH264Type(const nsACString& aType)
 {
   if (!IsH264Enabled()) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < ArrayLength(gH264Types); ++i) {
+    if (aType.EqualsASCII(gH264Types[i])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+bool
+nsHTMLMediaElement::IsOmxEnabled()
+{
+  return Preferences::GetBool("media.omx.enabled", false);
+}
+
+bool
+nsHTMLMediaElement::IsH264Type(const nsACString& aType)
+{
+  if (!IsOmxEnabled()) {
     return false;
   }
 
@@ -2227,6 +2257,12 @@ nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
     return CANPLAY_MAYBE;
   }
 #endif
+#ifdef MOZ_WIDGET_GONK
+  if (IsH264Type(nsDependentCString(aMIMEType))) {
+    *aCodecList = gH264Codecs;
+    return CANPLAY_MAYBE;
+  }
+#endif
 #ifdef MOZ_MEDIA_PLUGINS
   if (IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), aCodecList))
     return CANPLAY_MAYBE;
@@ -2252,6 +2288,11 @@ bool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
 #ifdef MOZ_GSTREAMER
   if (IsH264Type(nsDependentCString(aMIMEType)))
     return true;
+#endif
+#ifdef MOZ_WIDGET_GONK
+  if (IsH264Type(nsDependentCString(aMIMEType))) {
+    return true;
+  }
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
   if (IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), NULL))
@@ -2364,6 +2405,14 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #ifdef MOZ_WAVE
   if (IsWaveType(aType)) {
     nsRefPtr<nsWaveDecoder> decoder = new nsWaveDecoder();
+    if (decoder->Init(this)) {
+      return decoder.forget();
+    }
+  }
+#endif
+#ifdef MOZ_WIDGET_GONK
+  if (IsH264Type(aType)) {
+    nsRefPtr<nsMediaOmxDecoder> decoder = new nsMediaOmxDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
     }

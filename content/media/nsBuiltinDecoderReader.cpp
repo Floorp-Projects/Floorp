@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "GonkIOSurfaceImage.h"
 #include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderReader.h"
 #include "nsBuiltinDecoderStateMachine.h"
@@ -237,6 +238,74 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   videoImage->SetData(data);
   return v.forget();
 }
+
+#ifdef MOZ_WIDGET_GONK
+VideoData* VideoData::Create(nsVideoInfo& aInfo,
+                             ImageContainer* aContainer,
+                             int64_t aOffset,
+                             int64_t aTime,
+                             int64_t aEndTime,
+                             mozilla::layers::GraphicBufferLocked *aBuffer,
+                             bool aKeyframe,
+                             int64_t aTimecode,
+                             nsIntRect aPicture)
+{
+  if (!aContainer) {
+    // Create a dummy VideoData with no image. This gives us something to
+    // send to media streams if necessary.
+    nsAutoPtr<VideoData> v(new VideoData(aOffset,
+                                         aTime,
+                                         aEndTime,
+                                         aKeyframe,
+                                         aTimecode,
+                                         aInfo.mDisplay));
+    return v.forget();
+  }
+
+  // The following situations could be triggered by invalid input
+  if (aPicture.width <= 0 || aPicture.height <= 0) {
+    NS_WARNING("Empty picture rect");
+    return nullptr;
+  }
+
+  // Ensure the picture size specified in the headers can be extracted out of
+  // the frame we've been supplied without indexing out of bounds.
+  CheckedUint32 xLimit = aPicture.x + CheckedUint32(aPicture.width);
+  CheckedUint32 yLimit = aPicture.y + CheckedUint32(aPicture.height);
+  if (!xLimit.isValid() || !yLimit.isValid())
+  {
+    // The specified picture dimensions can't be contained inside the video
+    // frame, we'll stomp memory if we try to copy it. Fail.
+    NS_WARNING("Overflowing picture rect");
+    return nullptr;
+  }
+
+  nsAutoPtr<VideoData> v(new VideoData(aOffset,
+                                       aTime,
+                                       aEndTime,
+                                       aKeyframe,
+                                       aTimecode,
+                                       aInfo.mDisplay));
+
+  ImageFormat format = GONK_IO_SURFACE;
+  v->mImage = aContainer->CreateImage(&format, 1);
+  if (!v->mImage) {
+    return nullptr;
+  }
+  NS_ASSERTION(v->mImage->GetFormat() == GONK_IO_SURFACE,
+               "Wrong format?");
+  typedef mozilla::layers::GonkIOSurfaceImage GonkIOSurfaceImage;
+  GonkIOSurfaceImage* videoImage = static_cast<GonkIOSurfaceImage*>(v->mImage.get());
+  GonkIOSurfaceImage::Data data;
+
+  data.mPicSize = gfxIntSize(aPicture.width, aPicture.height);
+  data.mGraphicBuffer = aBuffer;
+
+  videoImage->SetData(data);
+
+  return v.forget();
+}
+#endif  // MOZ_WIDGET_GONK
 
 void* nsBuiltinDecoderReader::VideoQueueMemoryFunctor::operator()(void* anObject) {
   const VideoData* v = static_cast<const VideoData*>(anObject);
