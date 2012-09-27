@@ -75,6 +75,9 @@ WorkerAPI.prototype = {
       openChatWindow(xulWindow, this._provider, data, null, "minimized");
     },
     'social.notification-create': function(data) {
+      if (!Services.prefs.getBoolPref("social.toast-notifications.enabled"))
+        return;
+
       let port = this._port;
       let provider = this._provider;
       let {id, type, icon, body, action, actionArgs} = data;

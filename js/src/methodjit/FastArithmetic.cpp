@@ -170,6 +170,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::Typ
              * itself. Note that monitorOverflow will propagate the type as
              * necessary if a *INC operation overflowed.
              */
+            RootedScript script(cx, script_);
             types::TypeScript::MonitorOverflow(cx, script, PC);
             return false;
         }
@@ -197,7 +198,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::Typ
      * from ignored overflows are not live across points where the interpreter
      * can join into JIT code (loop heads and safe points).
      */
-    CrossSSAValue pushv(a->inlineIndex, SSAValue::PushedValue(PC - script->code, 0));
+    CrossSSAValue pushv(a->inlineIndex, SSAValue::PushedValue(PC - script_->code, 0));
     bool cannotOverflow = loop && loop->cannotIntegerOverflow(pushv);
     bool ignoreOverflow = loop && loop->ignoreIntegerOverflow(pushv);
 
@@ -910,6 +911,7 @@ mjit::Compiler::jsop_mod()
     if (tryBinaryConstantFold(cx, frame, JSOP_MOD, lhs, rhs, &v)) {
         types::TypeSet *pushed = pushedTypeSet(0);
         if (!v.isInt32() && pushed && !pushed->hasType(types::Type::DoubleType())) {
+            RootedScript script(cx, script_);
             types::TypeScript::MonitorOverflow(cx, script, PC);
             return false;
         }

@@ -71,6 +71,9 @@
       // click menuitem to close menu, focus gets back to document
       gQueue.push(new synthClick("tricycle", new focusChecker(document)));
 
+      enableLogging("focus");
+      gQueue.onFinish = function() { disableLogging(); }
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 

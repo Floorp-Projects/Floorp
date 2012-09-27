@@ -22,4 +22,12 @@ gdk_window_get_screen(GdkWindow *window)
 {
   return gdk_drawable_get_screen (window);
 }
+
+#if GDK_PIXBUF_MAJOR == 2 && GDK_PIXBUF_MINOR < 18
+static inline gboolean
+gdk_window_is_destroyed(GdkWindow *window)
+{
+  return GDK_WINDOW_OBJECT(window)->destroyed;
+}
+#endif
 #endif /* GDKWINDOW_WRAPPER_H */

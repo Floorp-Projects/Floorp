@@ -138,6 +138,15 @@ public:
   RemoveAll();
 
   /**
+   * Removes all keys from storage for a specific app.
+   * If aOnlyBrowserElement is true, it will remove only keys with the
+   * browserElement flag set.
+   * aAppId has to be a valid app id. It can't be NO_APP_ID or UNKNOWN_APP_ID.
+   */
+  nsresult
+  RemoveAllForApp(uint32_t aAppId, bool aOnlyBrowserElement);
+
+  /**
     * Returns usage for a storage using its GetQuotaDBKey() as a key.
     */
   nsresult
