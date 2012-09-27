@@ -1218,7 +1218,11 @@ stubs::FastInstanceOf(VMFrame &f)
         THROW();
     }
 
-    f.regs.sp[-3].setBoolean(js_IsDelegate(f.cx, &lref.toObject(), f.regs.sp[-3]));
+    bool isDelegate;
+    RootedObject obj(f.cx, &lref.toObject());
+    if (!IsDelegate(f.cx, obj, f.regs.sp[-3], &isDelegate))
+        THROW();
+    f.regs.sp[-3].setBoolean(isDelegate);
 }
 
 void JS_FASTCALL

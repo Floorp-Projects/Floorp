@@ -259,6 +259,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public DirectWrapper
     virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp) MOZ_OVERRIDE;
     virtual bool iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp);
+    virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);
 
     static CrossCompartmentWrapper singleton;
     static CrossCompartmentWrapper singletonWithPrototype;
@@ -320,7 +321,7 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
     virtual bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
                                      uint32_t index, Value *vp, bool *present);
-
+    virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);
 
     static DeadObjectProxy singleton;
 };
@@ -365,7 +366,7 @@ JSObject *
 NewDeadProxyObject(JSContext *cx, JSObject *parent);
 
 void
-NukeCrossCompartmentWrapper(JSObject *wrapper);
+NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper);
 
 bool
 RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget);

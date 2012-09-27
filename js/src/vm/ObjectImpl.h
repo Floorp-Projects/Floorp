@@ -1402,15 +1402,13 @@ extern bool
 HasElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned resolveFlags,
            bool *found);
 
-} /* namespace js */
-
-namespace JS {
-template <> struct RootMethods<js::PropertyId>
+template <> struct RootMethods<PropertyId>
 {
-    static js::PropertyId initial() { return js::PropertyId(); }
+    static PropertyId initial() { return PropertyId(); }
     static ThingRootKind kind() { return THING_ROOT_PROPERTY_ID; }
-    static bool poisoned(js::PropertyId propid) { return IsPoisonedId(propid.asId()); }
+    static bool poisoned(PropertyId propid) { return IsPoisonedId(propid.asId()); }
 };
-}
+
+} /* namespace js */
 
 #endif /* ObjectImpl_h__ */

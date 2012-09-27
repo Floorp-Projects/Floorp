@@ -182,7 +182,7 @@
           if (domain[0] != "[") {
             try {
               baseDomain = Services.eTLD.getBaseDomainFromHost(domain);
-              if (!domain.contains(baseDomain)) {
+              if (!domain.endsWith(baseDomain)) {
                 // getBaseDomainFromHost converts its resultant to ACE.
                 let IDNService = Cc["@mozilla.org/network/idn-service;1"]
                                  .getService(Ci.nsIIDNService);

@@ -565,7 +565,10 @@ obj_isPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Step 3. */
-    args.rval().setBoolean(js_IsDelegate(cx, obj, args[0]));
+    bool isDelegate;
+    if (!IsDelegate(cx, obj, args[0], &isDelegate))
+        return false;
+    args.rval().setBoolean(isDelegate);
     return true;
 }
 
@@ -1895,7 +1898,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
          * dictionary mode.
          */
         Shape *last = EmptyShape::getInitialShape(cx, obj->getClass(),
-                                                  obj->getProto(),
+                                                  obj->getTaggedProto(),
                                                   obj->getParent(),
                                                   obj->getAllocKind(),
                                                   obj->lastProperty()->getObjectFlags());
@@ -2120,7 +2123,8 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type_, JSObject *paren
 
     RootedTypeObject type(cx, type_);
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, type->proto, parent, kind));
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(type->proto),
+                                                      parent, kind));
     if (!shape)
         return NULL;
 
@@ -2146,10 +2150,12 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type_, JSObject *paren
 }
 
 JSObject *
-js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto_, JSObject *parent_,
+js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp,
+                            js::TaggedProto proto_, JSObject *parent_,
                             gc::AllocKind kind)
 {
-    RootedObject proto(cx, proto_), parent(cx, parent_);
+    Rooted<TaggedProto> proto(cx, proto_);
+    RootedObject parent(cx, parent_);
 
     if (CanBeFinalizedInBackground(kind, clasp))
         kind = GetBackgroundAllocKind(kind);
@@ -2157,8 +2163,10 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto_, J
     NewObjectCache &cache = cx->runtime->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
-    if (proto && (!parent || parent == proto->getParent()) && !proto->isGlobal()) {
-        if (cache.lookupProto(clasp, proto, kind, &entry)) {
+    if (proto.isObject() &&
+        (!parent || parent == proto.toObject()->getParent()) && !proto.toObject()->isGlobal())
+    {
+        if (cache.lookupProto(clasp, proto.toObject(), kind, &entry)) {
             JSObject *obj = cache.newObjectFromHit(cx, entry);
             if (obj)
                 return obj;
@@ -2166,8 +2174,7 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto_, J
     }
 
     bool isDOM = (clasp->flags & JSCLASS_IS_DOMJSCLASS);
-    types::TypeObject *type = proto ? proto->getNewType(cx, NULL, isDOM)
-                                    : cx->compartment->getEmptyType(cx);
+    types::TypeObject *type = cx->compartment->getNewType(cx, proto, NULL, isDOM);
     if (!type)
         return NULL;
 
@@ -2175,8 +2182,8 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto_, J
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    if (!parent && proto)
-        parent = proto->getParent();
+    if (!parent && proto.isObject())
+        parent = proto.toObject()->getParent();
 
     JSObject *obj = NewObject(cx, clasp, type, parent, kind);
     if (!obj)
@@ -2590,13 +2597,9 @@ CopySlots(JSContext *cx, JSObject *from, JSObject *to)
     return true;
 }
 
-JS_FRIEND_API(JSObject *)
-JS_CloneObject(JSContext *cx, JSObject *obj_, JSObject *proto_, JSObject *parent_)
+JSObject *
+js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, HandleObject parent)
 {
-    RootedObject obj(cx, obj_);
-    RootedObject proto(cx, proto_);
-    RootedObject parent(cx, parent_);
-
     /*
      * We can only clone native objects and proxies. Dense arrays are slowified if
      * we try to clone them.
@@ -2611,7 +2614,8 @@ JS_CloneObject(JSContext *cx, JSObject *obj_, JSObject *proto_, JSObject *parent
             return NULL;
         }
     }
-    JSObject *clone = NewObjectWithGivenProto(cx, obj->getClass(), proto, parent, obj->getAllocKind());
+    JSObject *clone = NewObjectWithGivenProto(cx, obj->getClass(),
+                                              proto, parent, obj->getAllocKind());
     if (!clone)
         return NULL;
     if (obj->isNative()) {
@@ -2676,7 +2680,10 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
      * Swap prototypes on the two objects, so that TradeGuts can preserve
      * the types of the two objects.
      */
-    RootedObject na(cx, a), aProto(cx, a->getProto()), nb(cx, b), bProto(cx, b->getProto());
+    RootedObject na(cx, a);
+    RootedObject nb(cx, b);
+    Rooted<TaggedProto> aProto(cx, a->getTaggedProto());
+    Rooted<TaggedProto> bProto(cx, b->getTaggedProto());
     if (!SetProto(cx, na, bProto, false) || !SetProto(cx, nb, aProto, false))
         return false;
 
@@ -2694,7 +2701,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
             return false;
     } else {
         reserved.newbshape = EmptyShape::getInitialShape(cx, a->getClass(),
-                                                         a->getProto(), a->getParent(),
+                                                         a->getTaggedProto(), a->getParent(),
                                                          b->getAllocKind());
         if (!reserved.newbshape)
             return false;
@@ -2704,7 +2711,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
             return false;
     } else {
         reserved.newashape = EmptyShape::getInitialShape(cx, b->getClass(),
-                                                         b->getProto(), b->getParent(),
+                                                         b->getTaggedProto(), b->getParent(),
                                                          a->getAllocKind());
         if (!reserved.newashape)
             return false;
@@ -2906,8 +2913,11 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
 
 /* Use this method with extreme caution. It trades the guts of two objects. */
 bool
-JSObject::swap(JSContext *cx, JSObject *other)
+JSObject::swap(JSContext *cx, JSObject *other_)
 {
+    RootedObject self(cx, this);
+    RootedObject other(cx, other_);
+
     // Ensure swap doesn't cause a finalizer to not be run.
     JS_ASSERT(IsBackgroundFinalized(getAllocKind()) ==
               IsBackgroundFinalized(other->getAllocKind()));
@@ -3082,7 +3092,8 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
             goto bad;
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
-        if (ctor->getClass() == clasp && !ctor->splicePrototype(cx, proto))
+        Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
+        if (ctor->getClass() == clasp && !ctor->splicePrototype(cx, tagged))
             goto bad;
     }
 
@@ -3488,12 +3499,12 @@ static JSClassInitializerOp lazy_prototype_init[JSProto_LIMIT] = {
 namespace js {
 
 bool
-SetProto(JSContext *cx, HandleObject obj, HandleObject proto, bool checkForCycles)
+SetProto(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, bool checkForCycles)
 {
-    JS_ASSERT_IF(!checkForCycles, obj != proto);
+    JS_ASSERT_IF(!checkForCycles, obj.get() != proto.raw());
 
 #if JS_HAS_XML_SUPPORT
-    if (proto && proto->isXML()) {
+    if (proto.isObject() && proto.toObject()->isXML()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XML_PROTO_FORBIDDEN);
         return false;
     }
@@ -3531,12 +3542,17 @@ SetProto(JSContext *cx, HandleObject obj, HandleObject proto, bool checkForCycle
     }
 
     if (checkForCycles) {
-        for (JSObject *obj2 = proto; obj2; obj2 = obj2->getProto()) {
+        JS_ASSERT(!proto.isLazy());
+        RootedObject obj2(cx);
+        for (obj2 = proto.toObjectOrNull(); obj2; ) {
             if (obj2 == obj) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE,
                                      js_proto_str);
                 return false;
             }
+
+            if (!JSObject::getProto(cx, obj2, &obj2))
+                return false;
         }
     }
 
@@ -3551,12 +3567,10 @@ SetProto(JSContext *cx, HandleObject obj, HandleObject proto, bool checkForCycle
         return true;
     }
 
-    if (proto && !proto->setNewTypeUnknown(cx))
+    if (proto.isObject() && !proto.toObject()->setNewTypeUnknown(cx))
         return false;
 
-    TypeObject *type = proto
-        ? proto->getNewType(cx, NULL)
-        : cx->compartment->getEmptyType(cx);
+    TypeObject *type = cx->compartment->getNewType(cx, proto);
     if (!type)
         return false;
 
@@ -3753,10 +3767,10 @@ PurgeProtoChain(JSContext *cx, JSObject *obj_, jsid id_)
     RootedId id(cx, id_);
 
     while (obj) {
-        if (!obj->isNative()) {
-            obj = obj->getProto();
-            continue;
-        }
+        /* Lookups will not be cached through non-native protos. */
+        if (!obj->isNative())
+            break;
+
         shape = obj->nativeLookup(cx, id);
         if (shape) {
             if (!obj->shadowingShapeChange(cx, *shape))
@@ -3777,6 +3791,7 @@ js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj_, jsid id_)
     RootedObject obj(cx, obj_);
     RootedId id(cx, id_);
 
+    JS_ASSERT(obj->isNative());
     JS_ASSERT(obj->isDelegate());
     PurgeProtoChain(cx, obj->getProto(), id);
 
@@ -4080,27 +4095,14 @@ LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsi
             }
         }
 
-        RootedObject proto(cx, current->getProto());
+        RootedObject proto(cx);
+        if (!JSObject::getProto(cx, current, &proto))
+            return false;
         if (!proto)
             break;
         if (!proto->isNative()) {
             if (!JSObject::lookupGeneric(cx, proto, id, objp, propp))
                 return false;
-#ifdef DEBUG
-            /*
-             * Non-native objects must have either non-native lookup results,
-             * or else native results from the non-native's prototype chain.
-             *
-             * See StackFrame::getValidCalleeObject, where we depend on this
-             * fact to force a prototype-delegated joined method accessed via
-             * arguments.callee through the delegating |this| object's method
-             * read barrier.
-             */
-            if (propp && objp->isNative()) {
-                while ((proto = proto->getProto()) != objp)
-                    JS_ASSERT(proto);
-            }
-#endif
             return true;
         }
 
@@ -4965,8 +4967,12 @@ CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
     switch (mode & JSACC_TYPEMASK) {
       case JSACC_PROTO:
         pobj = obj;
-        if (!writing)
-            vp.setObjectOrNull(obj->getProto());
+        if (!writing) {
+            RootedObject proto(cx);
+            if (!JSObject::getProto(cx, obj, &proto))
+                return JS_FALSE;
+            vp.setObjectOrNull(proto);
+        }
         *attrsp = JSPROP_PERMANENT;
         break;
 
@@ -5028,16 +5034,25 @@ baseops::TypeOf(JSContext *cx, HandleObject obj)
 }
 
 bool
-js_IsDelegate(JSContext *cx, JSObject *obj, const Value &v)
+js::IsDelegate(JSContext *cx, HandleObject obj, const js::Value &v, bool *result)
 {
-    if (v.isPrimitive())
-        return false;
-    JSObject *obj2 = &v.toObject();
-    while ((obj2 = obj2->getProto()) != NULL) {
-        if (obj2 == obj)
-            return true;
+    if (v.isPrimitive()) {
+        *result = false;
+        return true;
     }
-    return false;
+    RootedObject obj2(cx, &v.toObject());
+    for (;;) {
+        if (!JSObject::getProto(cx, obj2, &obj2))
+            return false;
+        if (!obj2) {
+            *result = false;
+            return true;
+        }
+        if (obj2 == obj) {
+            *result = true;
+            return true;
+        }
+    }
 }
 
 /*
@@ -5365,7 +5380,11 @@ JSObject::dump()
     }
 
     fprintf(stderr, "proto ");
-    dumpValue(ObjectOrNullValue(obj->getProto()));
+    TaggedProto proto = obj->getTaggedProto();
+    if (proto.isLazy())
+        fprintf(stderr, "<lazy>");
+    else
+        dumpValue(ObjectOrNullValue(proto.toObjectOrNull()));
     fputc('\n', stderr);
 
     fprintf(stderr, "parent ");

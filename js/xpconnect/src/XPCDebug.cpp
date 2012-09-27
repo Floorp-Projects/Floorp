@@ -168,68 +168,6 @@ private:
 static const int tab_width = 2;
 #define INDENT(_d) (_d)*tab_width, " "
 
-static void PrintObjectBasics(JSObject* obj)
-{
-    if (JS_IsNative(obj))
-        DebugDump("%p 'native' <%s>",
-                  (void *)obj, js::GetObjectClass(obj)->name);
-    else
-        DebugDump("%p 'host'", (void *)obj);
-}
-
-static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
-{
-    PrintObjectBasics(obj);
-
-    switch (pile->Visit(obj)) {
-    case ObjectPile::primary:
-        DebugDump("%s", "\n");
-        break;
-    case ObjectPile::seen:
-        DebugDump("%s", " (SEE ABOVE)\n");
-        return;
-    case ObjectPile::overflow:
-        DebugDump("%s", " (TOO MANY OBJECTS)\n");
-        return;
-    }
-
-    if (!JS_IsNative(obj))
-        return;
-
-    JSObject* parent = js::GetObjectParent(obj);
-    JSObject* proto  = js::GetObjectProto(obj);
-
-    DebugDump("%*sparent: ", INDENT(depth+1));
-    if (parent)
-        PrintObject(parent, depth+1, pile);
-    else
-        DebugDump("%s", "null\n");
-    DebugDump("%*sproto: ", INDENT(depth+1));
-    if (proto)
-        PrintObject(proto, depth+1, pile);
-    else
-        DebugDump("%s", "null\n");
-}
-
-JSBool
-xpc_DumpJSObject(JSObject* obj)
-{
-    ObjectPile pile;
-
-    DebugDump("%s", "Debugging reminders...\n");
-    DebugDump("%s", "  class:  (JSClass*)(obj->fslots[2]-1)\n");
-    DebugDump("%s", "  parent: (JSObject*)(obj->fslots[1])\n");
-    DebugDump("%s", "  proto:  (JSObject*)(obj->fslots[0])\n");
-    DebugDump("%s", "\n");
-
-    if (obj)
-        PrintObject(obj, 0, &pile);
-    else
-        DebugDump("%s", "xpc_DumpJSObject passed null!\n");
-
-    return true;
-}
-
 #ifdef DEBUG
 void
 xpc_PrintAllReferencesTo(void *p)

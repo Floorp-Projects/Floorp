@@ -2666,6 +2666,9 @@ DocHasPrintCallbackCanvas(nsIDocument* aDoc, void* aData)
     return true;
   }
   Element* root = aDoc->GetRootElement();
+  if (!root) {
+    return true;
+  }
   nsRefPtr<nsContentList> canvases = NS_GetContentList(root,
                                                        kNameSpaceID_XHTML,
                                                        NS_LITERAL_STRING("canvas"));

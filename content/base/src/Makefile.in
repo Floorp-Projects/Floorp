@@ -182,7 +182,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/layout/generic \
   -I$(topsrcdir)/layout/style \
-  -I$(topsrcdir)/layout/svg/base/src \
+  -I$(topsrcdir)/layout/svg \
   -I$(topsrcdir)/layout/xul/base/src \
   -I$(topsrcdir)/netwerk/base/src \
   $(NULL)

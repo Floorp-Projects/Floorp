@@ -1,0 +1,32 @@
+# HG changeset patch
+# User Robert O'Callahan <robert@ocallahan.org>
+# Date 1348618772 -43200
+# Node ID 55ccbc8d52e69b020f2ba493e92ad2e214388df0
+# Parent  e0d69219dd2b3b2826d186dc99c673b879409ea6
+Bug 792903. Prevent num_stops from being set to zero. r=bas
+
+diff --git a/gfx/cairo/cairo/src/cairo-d2d-surface.cpp b/gfx/cairo/cairo/src/cairo-d2d-surface.cpp
+--- a/gfx/cairo/cairo/src/cairo-d2d-surface.cpp
++++ b/gfx/cairo/cairo/src/cairo-d2d-surface.cpp
+@@ -1641,17 +1641,20 @@ static RefPtr<ID2D1Brush>
+ 	min_dist = MIN(_cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(top_left, p1)),
+ 		       _cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(top_right, p1)));
+ 	min_dist = MIN(min_dist, _cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(bottom_left, p1)));
+ 	min_dist = MIN(min_dist, _cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(bottom_right, p1)));
+ 
+ 	min_dist = MAX(-min_dist, 0);
+ 
+ 	// Repeats after gradient start.
+-	int after_repeat = (int)ceil(max_dist / gradient_length);
++ 	// It's possible for max_dist and min_dist to both be zero, in which case
++ 	// we'll set num_stops to 0 and crash D2D. Let's just ensure after_repeat
++ 	// is at least 1.
++ 	int after_repeat = MAX((int)ceil(max_dist / gradient_length), 1);
+ 	int before_repeat = (int)ceil(min_dist / gradient_length);
+ 	num_stops *= (after_repeat + before_repeat);
+ 
+ 	p2.x = p1.x + u.x * after_repeat * gradient_length;
+ 	p2.y = p1.y + u.y * after_repeat * gradient_length;
+ 	p1.x = p1.x - u.x * before_repeat * gradient_length;
+ 	p1.y = p1.y - u.y * before_repeat * gradient_length;
+ 

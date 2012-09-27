@@ -11,8 +11,8 @@
 
 BEGIN_TEST(testArrayBuffer_bug720949_steal)
 {
-    JS::RootedObject buf_len1(cx), buf_len200(cx);
-    JS::RootedObject tarray_len1(cx), tarray_len200(cx);
+    js::RootedObject buf_len1(cx), buf_len200(cx);
+    js::RootedObject tarray_len1(cx), tarray_len200(cx);
 
     uint32_t sizes[NUM_TEST_BUFFERS] = { sizeof(uint32_t), 200 * sizeof(uint32_t) };
     JS::HandleObject testBuf[NUM_TEST_BUFFERS] = { buf_len1, buf_len200 };
@@ -71,11 +71,11 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK_SAME(v, JSVAL_VOID);
 
         // Transfer to a new ArrayBuffer
-        JS::RootedObject dst(cx, JS_NewArrayBufferWithContents(cx, contents));
+        js::RootedObject dst(cx, JS_NewArrayBufferWithContents(cx, contents));
         CHECK(JS_IsArrayBufferObject(dst, cx));
         data = JS_GetArrayBufferData(obj, cx);
 
-        JS::RootedObject dstview(cx, JS_NewInt32ArrayWithBuffer(cx, dst, 0, -1));
+        js::RootedObject dstview(cx, JS_NewInt32ArrayWithBuffer(cx, dst, 0, -1));
         CHECK(dstview != NULL);
 
         CHECK_EQUAL(JS_GetArrayBufferByteLength(dst, cx), size);
@@ -99,7 +99,7 @@ static void GC(JSContext *cx)
 // Varying number of views of a buffer, to test the neutering weak pointers
 BEGIN_TEST(testArrayBuffer_bug720949_viewList)
 {
-    JS::RootedObject buffer(cx);
+    js::RootedObject buffer(cx);
 
     // No views
     buffer = JS_NewArrayBuffer(cx, 2000);
@@ -109,7 +109,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
     // One view.
     {
         buffer = JS_NewArrayBuffer(cx, 2000);
-        JS::RootedObject view(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
+        js::RootedObject view(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
         void *contents;
         CHECK(JS_StealArrayBufferContents(cx, buffer, &contents));
         CHECK(contents != NULL);
@@ -127,8 +127,8 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
     {
         buffer = JS_NewArrayBuffer(cx, 2000);
 
-        JS::RootedObject view1(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
-        JS::RootedObject view2(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 1, 200));
+        js::RootedObject view1(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
+        js::RootedObject view2(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 1, 200));
 
         // Remove, re-add a view
         view2 = NULL;

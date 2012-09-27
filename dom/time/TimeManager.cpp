@@ -48,7 +48,7 @@ TimeManager::Set(const JS::Value& date, JSContext* ctx) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  hal::AdjustSystemClock(JS_DoubleToInt32(dateMSec - nowMSec));
+  hal::AdjustSystemClock(dateMSec - nowMSec);
   return NS_OK;
 }
 

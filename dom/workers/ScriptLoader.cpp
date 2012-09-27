@@ -585,7 +585,7 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
   }
 
-  JS::RootedObject global(aCx, JS_GetGlobalObject(aCx));
+  js::RootedObject global(aCx, JS_GetGlobalObject(aCx));
   NS_ASSERTION(global, "Must have a global by now!");
 
   JSPrincipals* principal = GetWorkerPrincipal();

@@ -62,6 +62,8 @@ AudioBuffer::~AudioBuffer()
 bool
 AudioBuffer::InitializeBuffers(uint32_t aNumberOfChannels, JSContext* aJSContext)
 {
+  NS_HOLD_JS_OBJECTS(this, AudioBuffer);
+
   if (!mChannels.SetCapacity(aNumberOfChannels)) {
     return false;
   }
@@ -72,8 +74,6 @@ AudioBuffer::InitializeBuffers(uint32_t aNumberOfChannels, JSContext* aJSContext
     }
     mChannels.AppendElement(array);
   }
-
-  NS_HOLD_JS_OBJECTS(this, AudioBuffer);
 
   return true;
 }

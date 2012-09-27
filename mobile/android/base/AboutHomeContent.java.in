@@ -214,21 +214,28 @@ public class AboutHomeContent extends ScrollView
         findViewById(R.id.all_top_sites_text).setVisibility(visibility);
     }
 
-    private void setPromoBoxVisibility(boolean visible, AboutHomePromoBox.Type type) {
-        if (visible)
-            mPromoBox.show(type);
-        else
-            mPromoBox.hide();
-    }
-
     private void updateLayout(boolean syncIsSetup) {
         boolean hasTopSites = mTopSitesAdapter.getCount() > 0;
-
         setTopSitesVisibility(hasTopSites);
-        if (!syncIsSetup && mPrelimPromoBoxType == AboutHomePromoBox.Type.SYNC)
-            setPromoBoxVisibility(true, AboutHomePromoBox.Type.SYNC);
-        else
-            setPromoBoxVisibility(true, AboutHomePromoBox.Type.APPS);
+
+        AboutHomePromoBox.Type type = mPrelimPromoBoxType;
+        if (syncIsSetup && type == AboutHomePromoBox.Type.SYNC)
+            type = AboutHomePromoBox.Type.APPS;
+
+// Remove the Apps promo from Beta and Release until we get go-ahead from Marketplace team.
+// Two blocks are silly, but the preprocessor does not support complex expressions and I
+// am not trying to make something elegant here. This code should disappear soon or the
+// entire feature should be removed.
+#if MOZ_UPDATE_CHANNEL == beta
+        if (type == AboutHomePromoBox.Type.APPS)
+            type = (syncIsSetup ? AboutHomePromoBox.Type.NONE : AboutHomePromoBox.Type.SYNC);
+#endif
+#if MOZ_UPDATE_CHANNEL == release
+        if (type == AboutHomePromoBox.Type.APPS)
+            type = (syncIsSetup ? AboutHomePromoBox.Type.NONE : AboutHomePromoBox.Type.SYNC);
+#endif
+
+        mPromoBox.show(type);
     }
 
     private void updateLayoutForSync() {
