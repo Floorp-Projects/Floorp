@@ -41,6 +41,54 @@ void
 BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  const char* msg = (const char*)aMessage->mData;
+
+  // For more information, please refer to 4.34.1 "Bluetooth Defined AT
+  // Capabilities" in Bluetooth hands-free profile 1.6
+  if (!strncmp(msg, "AT+BRSF=", 8)) {
+    SendLine("+BRSF: 23");
+    SendLine("OK");
+  } else if (!strncmp(msg, "AT+CIND=?", 9)) {
+    nsAutoCString cindRange;
+
+    cindRange += "+CIND: ";
+    cindRange += "(\"battchg\",(0-5)),";
+    cindRange += "(\"signal\",(0-5)),";
+    cindRange += "(\"service\",(0,1)),";
+    cindRange += "(\"call\",(0,1)),";
+    cindRange += "(\"callsetup\",(0-3)),";
+    cindRange += "(\"callheld\",(0-2)),";
+    cindRange += "(\"roam\",(0,1))";
+
+    SendLine(cindRange.get());
+    SendLine("OK");
+  } else if (!strncmp(msg, "AT+CIND", 7)) {
+    // FIXME - Bug 794349
+    // This value reflects current status of telephony, roaming, battery ...,
+    // so obviously fixed value must be wrong if there is an ongoing call. 
+    // Need a patch for this, but currently just using fixed value for basic 
+    // SLC establishment.
+    SendLine("+CIND: 5,5,1,0,0,0,0");
+    SendLine("OK");
+  } else if (!strncmp(msg, "AT+CMER=", 8)) {
+    SendLine("OK");
+  } else if (!strncmp(msg, "AT+CHLD=?", 9)) {
+    SendLine("+CHLD: (0,1,2,3)");
+    SendLine("OK");
+  } else if (!strncmp(msg, "AT+CHLD=", 8)) {
+    SendLine("OK");
+  } else if (!strncmp(msg, "AT+VGS=", 7)) {
+    SendLine("OK");
+  } else {
+#ifdef DEBUG
+    nsCString warningMsg;
+    warningMsg.AssignLiteral("Not handling HFP message, reply ok: ");
+    warningMsg.Append(msg);
+    NS_WARNING(warningMsg.get());
+#endif
+    SendLine("OK");
+  }
 }
 
 bool
@@ -76,5 +124,18 @@ void
 BluetoothHfpManager::Disconnect()
 {
   CloseSocket();
+}
+
+bool
+BluetoothHfpManager::SendLine(const char* aMessage)
+{
+  const char* kHfpCrlf = "\xd\xa";
+  nsAutoCString msg;
+
+  msg += kHfpCrlf;
+  msg += aMessage;
+  msg += kHfpCrlf;
+
+  return SendSocketData(msg);
 }
 
