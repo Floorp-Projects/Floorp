@@ -617,6 +617,7 @@ Accessible::VisibilityState()
     return states::INVISIBLE;
 
   nsIFrame* curFrame = frame;
+  nsPoint framePos(0, 0);
   do {
     nsIView* view = curFrame->GetView();
     if (view && view->GetVisibility() == nsViewVisibility_kHide)
@@ -627,6 +628,21 @@ Accessible::VisibilityState()
     nsDeckFrame* deckFrame = do_QueryFrame(parentFrame);
     if (deckFrame && deckFrame->GetSelectedBox() != curFrame)
       return states::OFFSCREEN;
+
+    // If contained by scrollable frame then check that at least 12 pixels
+    // around the object is visible, otherwise the object is offscreen.
+    framePos += curFrame->GetPosition();
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(parentFrame);
+    if (scrollableFrame) {
+      nsRect scrollPortRect = scrollableFrame->GetScrollPortRect();
+      nsRect frameRect(framePos, frame->GetSize());
+      if (!scrollPortRect.Contains(frameRect)) {
+        const nscoord kMinPixels = nsPresContext::CSSPixelsToAppUnits(12);
+        scrollPortRect.Deflate(kMinPixels, kMinPixels);
+        if (!scrollPortRect.Intersects(frameRect))
+          return states::OFFSCREEN;
+      }
+    }
 
     if (!parentFrame) {
       parentFrame = nsLayoutUtils::GetCrossDocParentFrame(curFrame);
@@ -650,17 +666,6 @@ Accessible::VisibilityState()
     if (renderedText.IsEmpty())
       return states::INVISIBLE;
   }
-
-  // We need to know if at least a kMinPixels around the object is visible,
-  // otherwise it will be marked states::OFFSCREEN.
-  const uint16_t kMinPixels  = 12;
-  const nsSize frameSize = frame->GetSize();
-  const nsRectVisibility rectVisibility =
-    mDoc->PresShell()->GetRectVisibility(frame, nsRect(nsPoint(0,0), frameSize),
-                                         nsPresContext::CSSPixelsToAppUnits(kMinPixels));
-
-  if (rectVisibility != nsRectVisibility_kVisible)
-    return states::OFFSCREEN;
 
   return 0;
 }
