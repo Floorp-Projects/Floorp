@@ -96,11 +96,13 @@ DOMWifiManager.prototype = {
       this._lastConnectionInfo = state.connectionInfo;
       this._enabled = state.enabled;
       this._connectionStatus = state.status;
+      this._macAddress = state.macAddress;
     } else {
       this._currentNetwork = null;
       this._lastConnectionInfo = null;
       this._enabled = false;
       this._connectionStatus = "disconnected";
+      this._macAddress = "";
     }
   },
 
@@ -266,7 +268,8 @@ DOMWifiManager.prototype = {
                                                             { network: this._currentNetwork,
                                                               signalStrength: info.signalStrength,
                                                               relSignalStrength: info.relSignalStrength,
-                                                              linkSpeed: info.linkSpeed
+                                                              linkSpeed: info.linkSpeed,
+                                                              ipAddress: info.ipAddress,
                                                             });
       this._onConnectionInfoUpdate.handleEvent(evt);
     }
@@ -325,6 +328,12 @@ DOMWifiManager.prototype = {
     if (!this._hasPrivileges)
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
     return this._enabled;
+  },
+
+  get macAddress() {
+    if (!this._hasPrivileges)
+      throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
+    return this._macAddress;
   },
 
   get connection() {

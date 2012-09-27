@@ -17,7 +17,7 @@ interface nsIWifi : nsISupports
     void shutdown();
 };
 
-[scriptable, uuid(e3a967e0-015e-11e2-a21f-0800200c9a66)]
+[scriptable, uuid(65286912-141e-4aec-ba48-cb7d74851fd8)]
 interface nsIDOMWifiManager : nsISupports
 {
     /**
@@ -80,6 +80,11 @@ interface nsIDOMWifiManager : nsISupports
      * Returns whether or not wifi is currently enabled.
      */
     readonly attribute boolean enabled;
+
+    /**
+     * Returns the MAC address of the wifi adapter.
+     */
+    readonly attribute DOMString macAddress;
 
     /**
      * An non-null object containing the following information:
@@ -154,7 +159,7 @@ interface nsIDOMMozWifiStatusChangeEvent : nsIDOMEvent
                                                  in DOMString status);
 };
 
-[scriptable, builtinclass, uuid(34994296-d694-4aed-953d-fc25ee25c050)]
+[scriptable, builtinclass, uuid(1717f9d9-5fd8-43d8-a098-55924c6d37de)]
 interface nsIDOMMozWifiConnectionInfoEvent : nsIDOMEvent
 {
     /**
@@ -177,11 +182,17 @@ interface nsIDOMMozWifiConnectionInfoEvent : nsIDOMEvent
      */
     readonly attribute long linkSpeed;
 
+    /**
+     * IP address in the dotted quad format.
+     */
+    readonly attribute DOMString ipAddress;
+
     [noscript] void initMozWifiConnectionInfoEvent(in DOMString aType,
                                                    in boolean aCanBubble,
                                                    in boolean aCancelable,
                                                    in nsIVariant aNetwork,
                                                    in short signalStrength,
                                                    in short relSignalStrength,
-                                                   in long linkSpeed);
+                                                   in long linkSpeed,
+                                                   in DOMString ipAddress);
 };
