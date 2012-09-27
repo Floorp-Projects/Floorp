@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(e4e28307-d409-4cf7-93cd-6ea8e889f87a)]
+[scriptable, uuid(e4e28307-d409-4cf7-93cd-6ea8e889f87a)]
 interface nsIDOMDOMError : nsISupports
 {
   readonly attribute DOMString name;

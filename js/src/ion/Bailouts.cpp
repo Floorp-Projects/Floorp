@@ -443,7 +443,7 @@ ReflowArgTypes(JSContext *cx)
 {
     StackFrame *fp = cx->fp();
     unsigned nargs = fp->fun()->nargs;
-    JSScript *script = fp->script();
+    RootedScript script(cx, fp->script());
 
     types::AutoEnterTypeInference enter(cx);
 
@@ -467,7 +467,7 @@ ion::ReflowTypeInfo(uint32 bailoutResult)
         return true;
     }
 
-    JSScript *script = cx->fp()->script();
+    RootedScript script(cx, cx->fp()->script());
     jsbytecode *pc = activation->bailout()->bailoutPc();
 
     JS_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);

@@ -25,9 +25,12 @@ public:
   bool Connect(const nsAString& aDeviceObjectPath,
                BluetoothReplyRunnable* aRunnable);
   void Disconnect();
+  bool SendLine(const char* aMessage);
 
 private:
   BluetoothHfpManager();
+
+  int mCurrentVgs;
 };
 
 END_BLUETOOTH_NAMESPACE
