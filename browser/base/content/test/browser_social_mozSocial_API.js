@@ -28,12 +28,16 @@ var tests = {
     }
 
     function triggerIconPanel() {
-      let statusIcons = document.getElementById("social-status-iconbox");
-      waitForCondition(function() statusIcons.firstChild && !statusIcons.firstChild.hidden,
-                       function() {
+      let statusIcon = document.querySelector("#social-toolbar-item > box");
+      info("status icon is " + statusIcon);
+      waitForCondition(function() {
+        statusIcon = document.querySelector("#social-toolbar-item > box");
+        info("status icon is " + statusIcon);
+        return !!statusIcon;
+      }, function() {
         // Click the button to trigger its contentPanel
         let panel = document.getElementById("social-notification-panel");
-        EventUtils.synthesizeMouseAtCenter(statusIcons.firstChild, {});
+        EventUtils.synthesizeMouseAtCenter(statusIcon, {});
       }, "Status icon didn't become non-hidden");
     }
 

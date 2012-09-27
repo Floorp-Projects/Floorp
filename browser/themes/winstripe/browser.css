@@ -670,7 +670,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-box-pack: center;
 }
 
-@navbarLargeIcons@ .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button) {
+@navbarLargeIcons@ .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#social-provider-button) {
   padding-left: 5px;
   padding-right: 5px;
 }
@@ -708,7 +708,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 3px 7px;
 }
 
-@navbarLargeIcons@ .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button) > .toolbarbutton-icon,
+@navbarLargeIcons@ .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#social-provider-button) > .toolbarbutton-icon,
 @navbarLargeIcons@ .toolbarbutton-1[type=menu] > .toolbarbutton-text /* hack for add-ons that forcefully display the label */ {
   -moz-padding-end: 17px;
 }
@@ -725,13 +725,18 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 8px 3px 7px;
 }
 
-@navbarLargeIcons@ .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before {
+@navbarLargeIcons@ .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before,
+@navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1:not(:first-child)::before {
   content: "";
   display: -moz-box;
   width: 1px;
   height: 18px;
   -moz-margin-end: -1px;
-  background: hsla(210,54%,20%,.2) padding-box;
+  background-image: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 18px);
+  background-clip: padding-box;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 1px 18px;
   box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
 }
 
@@ -3286,88 +3291,44 @@ html|*#gcli-output-frame {
   -moz-margin-end: 5px;
 }
 
+/* Social toolbar item */
 
-/* social toolbar button */
-.social-statusarea-container {
-  -moz-appearance: none;
-  margin: 2px; /* make sure we have the correct platform spacing*/
-  padding: 0 1px;
-  border: 1px solid transparent;
-  border-radius: 2px;
-}
-
-.social-statusarea-container:hover {
-  background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
-  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
-  box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
-              0 1px hsla(210,54%,20%,.03),
-              0 0 2px hsla(210,54%,20%,.1);
-}
-
-#social-toolbar-button[open="true"] > .social-statusarea-container {
-  background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
-  background-color: hsla(210,54%,20%,.15);
-  border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
-  box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
-              0 0 1px hsla(210,54%,20%,.2) inset;
-}
-
-/* favicon for the service */
-#social-provider-image {
-  -moz-appearance: none;
-  border: none;
-  min-width: 20px;
-  min-height: 16px;
-  padding: 2px 5px;
-  margin: 0;
-  background: transparent;
-  list-style-image: url("chrome://browser/skin/social/social.png");
-}
-
-#social-provider-image > .button-box > .box-inherit > .button-icon {
-  max-height: 16px;
-  max-width: 16px;
-}
-
-#social-provider-image > .button-box {
-  padding: 0;
-  margin: 0;
-  background: transparent;
-  border: none;
-}
-
-#social-provider-image > .button-box > .button-menu-dropmarker {
+#social-provider-button > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
-/* hbox that hold notification icons */
-#social-status-iconbox {
-  margin: 0;
-  padding: 0;
+@navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1 {
+  padding: 5px 0;
 }
 
-/* hbox that surrounds an image and its counter */
-.social-notification-icon-container {
-  padding: 0;
-  margin: 0;
-  position: relative;
+@navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1:first-child {
+  -moz-padding-start: 5px;
 }
 
-/* notification counter box */
-.social-notification-icon-counter {
-  background-color: rgb(240,61,37);
-  border: 1px solid rgb(216,55,34);
-  box-shadow: 0px 1px 0px rgba(0,39,121,0.77);
-  padding-right: 1px;
-  padding-left: 1px;
-  color: white;
+@navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1:last-child {
+  -moz-padding-end: 5px;
+}
+
+.social-notification-icon-hbox {
+  pointer-events: none;
+  margin-top: -5px;
+  -moz-margin-end: -12px;
+}
+
+.social-notification-icon-label {
+  text-align: end;
   font-size: 9px;
   font-weight: bold;
-  position: absolute;
-  right: -3px;
-  top: -4px;
-  z-index: 1;
-  text-align: center;
+  padding: 0 1px;
+  color: white;
+  background-color: rgb(240,61,37);
+  border: 1px solid rgb(216,55,34);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 rgba(0,39,121,0.77);
+}
+
+.social-notification-icon-label[value=""] {
+  display: none;
 }
 
 /* notification image */
