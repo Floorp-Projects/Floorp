@@ -197,11 +197,25 @@ CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)
 {
+    Register input = ToRegister(lir->input());
+    Register output = ToRegister(lir->output());
+
     typedef JSFlatString *(*pf)(JSContext *, int);
     static const VMFunction IntToStringInfo = FunctionInfo<pf>(Int32ToString);
 
-    pushArg(ToRegister(lir->input()));
-    return callVM(IntToStringInfo, lir);
+    OutOfLineCode *ool = oolCallVM(IntToStringInfo, lir, (ArgList(), input),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    masm.branch32(Assembler::AboveOrEqual, input, Imm32(StaticStrings::INT_STATIC_LIMIT),
+                  ool->entry());
+
+    masm.movePtr(ImmWord(&gen->compartment->rt->staticStrings.intStaticTable), output);
+    masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
+
+    masm.bind(ool->rejoin());
+    return true;
 }
 
 bool
