@@ -61,6 +61,9 @@ struct nsProtocolInfo {
 
 //----------------------------------------------------------------------------
 
+// The nsPACManCallback portion of this implementation should be run
+// on the main thread - so call nsPACMan::AsyncGetProxyForURI() with
+// a true mainThreadResponse parameter.
 class nsAsyncResolveRequest MOZ_FINAL : public nsIRunnable
                                       , public nsPACManCallback
                                       , public nsICancelable
@@ -214,7 +217,7 @@ private:
                 // now that the load is triggered, we can resubmit the query
                 nsRefPtr<nsAsyncResolveRequest> newRequest =
                     new nsAsyncResolveRequest(mPPS, mURI, mResolveFlags, mCallback);
-                rv = mPPS->mPACMan->AsyncGetProxyForURI(mURI, newRequest, false);
+                rv = mPPS->mPACMan->AsyncGetProxyForURI(mURI, newRequest, true);
             }
 
             if (NS_FAILED(rv))
@@ -954,6 +957,11 @@ nsProtocolProxyService::ReloadPAC()
 }
 
 // When sync interface is removed this can go away too
+// The nsPACManCallback portion of this implementation should be run
+// off the main thread, because it uses a condvar for signaling and
+// the main thread is blocking on that condvar -
+//  so call nsPACMan::AsyncGetProxyForURI() with
+// a false mainThreadResponse parameter.
 class nsAsyncBridgeRequest MOZ_FINAL  : public nsPACManCallback
 {
     NS_DECL_ISUPPORTS
