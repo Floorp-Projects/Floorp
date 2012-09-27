@@ -2266,7 +2266,12 @@ Tab.prototype = {
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content-targetable");
     this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
-    BrowserApp.deck.appendChild(this.browser);
+
+    // Make sure the previously selected panel remains selected. The selected panel of a deck is
+    // not stable when panels are added.
+    let selectedPanel = BrowserApp.deck.selectedPanel;
+    BrowserApp.deck.insertBefore(this.browser, aParams.sibling || null);
+    BrowserApp.deck.selectedPanel = selectedPanel;
 
     // Must be called after appendChild so the docshell has been created.
     this.setActive(false);
@@ -2282,25 +2287,28 @@ Tab.prototype = {
       uri = Services.io.newURI(aURL, null, null).spec;
     } catch (e) {}
 
-    this.id = ++gTabIDFactory;
-    this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;
+    if (!aParams.zombifying) {
+      this.id = ++gTabIDFactory;
+      this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;
 
-    let message = {
-      gecko: {
-        type: "Tab:Added",
-        tabID: this.id,
-        uri: uri,
-        parentId: ("parentId" in aParams) ? aParams.parentId : -1,
-        external: ("external" in aParams) ? aParams.external : false,
-        selected: ("selected" in aParams) ? aParams.selected : true,
-        title: aParams.title || aURL,
-        delayLoad: aParams.delayLoad || false,
-        desktopMode: this.desktopMode
-      }
-    };
-    sendMessageToJava(message);
+      let message = {
+        gecko: {
+          type: "Tab:Added",
+          tabID: this.id,
+          uri: uri,
+          parentId: ("parentId" in aParams) ? aParams.parentId : -1,
+          external: ("external" in aParams) ? aParams.external : false,
+          selected: ("selected" in aParams) ? aParams.selected : true,
+          title: aParams.title || aURL,
+          delayLoad: aParams.delayLoad || false,
+          desktopMode: this.desktopMode
+        }
+      };
+      sendMessageToJava(message);
 
-    this.overscrollController = new OverscrollController(this);
+      this.overscrollController = new OverscrollController(this);
+    }
+
     this.browser.contentWindow.controllers.insertControllerAt(0, this.overscrollController);
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
@@ -7268,6 +7276,33 @@ var MemoryObserver = {
 
   handleLowMemory: function() {
     // do things to reduce memory usage here
+    let tabs = BrowserApp.tabs;
+    let selected = BrowserApp.selectedTab;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i] != selected) {
+        this.zombify(tabs[i]);
+      }
+    }
+  },
+
+  zombify: function(tab) {
+    let browser = tab.browser;
+    let data = browser.__SS_data;
+    let extra = browser.__SS_extdata;
+
+    // We need this data to correctly create and position the new browser
+    // If this browser is already a zombie, fallback to the session data
+    let currentURL = browser.__SS_restore ? data.entries[0].url : browser.currentURI.spec;
+    let sibling = browser.nextSibling;
+
+    tab.destroy();
+    tab.create(currentURL, { sibling: sibling, zombifying: true, delayLoad: true });
+
+    // Reattach session store data and flag this browser so it is restored on select
+    browser = tab.browser;
+    browser.__SS_data = data;
+    browser.__SS_extdata = extra;
+    browser.__SS_restore = true;
   },
 
   gc: function() {
