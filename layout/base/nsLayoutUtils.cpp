@@ -4961,7 +4961,7 @@ nsLayoutUtils::FontSizeInflationEnabled(nsPresContext *aPresContext)
   nsresult rv;
   nsCOMPtr<nsIScreenManager> screenMgr =
     do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<nsIScreen> screen;
   screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
