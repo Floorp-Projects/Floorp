@@ -22,31 +22,98 @@
           src="../browser.js"></script>
 
   <script type="application/javascript">
-    function addTab(aURL)
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function loadURIInvoker(aURI, aFunc)
+    {
+      this.invoke = function loadURIInvoker_invoke()
+      {
+        tabBrowser().loadURI(aURI);
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument)
+      ];
+
+      this.finalCheck = function loadURIInvoker_finalCheck()
+      {
+        aFunc.call();
+      }
+
+      this.getID = function loadURIInvoker_getID()
+      {
+        return "load uri " + aURI;
+      }
+    }
+
+    function addTabInvoker(aURL, aFunc)
     {
       this.eventSeq = [
         new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
       ];
 
-      this.invoke = function addTab_invoke()
+      this.invoke = function addTabInvoker_invoke()
       {
         tabBrowser().loadOneTab(aURL, null, "", null, false);
       }
 
-      this.finalCheck = function addTab_finalCheck()
+      this.finalCheck = function addTabInvoker_finalCheck()
       {
-        var tabDoc = tabDocumentAt(0);
-        var input = getAccessible(tabDoc.getElementById("input"));
-        testStates(input, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+        aFunc.call();
       }
 
-      this.getID = function addTab_getID()
+      this.getID = function addTabInvoker_getID()
       {
         return "add tab: " + aURL;
       }
     }
 
-    var gInputDocURI = "data:text/html,<html><input id='input'></html>";
+    ////////////////////////////////////////////////////////////////////////////
+    // Tests
+
+    function testBackgroundTab()
+    {
+      // Accessibles in background tab should have offscreen state and no
+      // invisible state.
+      var tabDoc = tabDocumentAt(0);
+      var input = getAccessible(tabDoc.getElementById("input"));
+      testStates(input, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+    }
+
+    function testScrolledOff()
+    {
+      var tabDoc = tabDocumentAt(1);
+
+      // scrolled off
+      input = getAccessible(tabDoc.getElementById("input_scrolledoff"));
+      testStates(input, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+
+      // scrolled off item (twice)
+      var lastLiNode = tabDoc.getElementById("li_last");
+      var lastLi = getAccessible(lastLiNode);
+      testStates(lastLi, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+
+      // scroll into view the item
+      lastLiNode.scrollIntoView(true);
+      testStates(lastLi, 0, 0, STATE_OFFSCREEN | STATE_INVISIBLE);
+
+      // first item is scrolled off now (testcase for bug 768786)
+      var firstLi = getAccessible(tabDoc.getElementById("li_first"));
+      testStates(firstLi, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+    }
+
+    var gInputDocURI = "data:text/html,<html><body>";
+    gInputDocURI += "<input id='input'></body></html>";
+
+    var gDocURI = "data:text/html,<html><body>";
+    gDocURI += "<div style='border:2px solid blue; width: 500px; height: 600px;'></div>";
+    gDocURI += "<input id='input_scrolledoff'>";
+    gDocURI += "<ul style='border:2px solid red; width: 100px; height: 50px; overflow: auto;'>";
+    gDocURI += "  <li id='li_first'>item1</li><li>item2</li><li>item3</li>";
+    gDocURI += "  <li>item4</li><li>item5</li><li id='li_last'>item6</li>";
+    gDocURI += "</ul>";
+    gDocURI += "</body></html>";
 
     function doTests()
     {
@@ -56,16 +123,15 @@
 
       gQueue = new eventQueue();
 
-      // Accessibles in background tab should have offscreen state and no
-      // invisible state.
-      gQueue.push(new addTab("about:blank"));
+      gQueue.push(new addTabInvoker("about:blank", testBackgroundTab));
+      gQueue.push(new loadURIInvoker(gDocURI, testScrolledOff));
 
       gQueue.onFinish = function() { closeBrowserWindow(); }
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    openBrowserWindow(doTests, gInputDocURI);
+    openBrowserWindow(doTests, gInputDocURI, { width: 600, height: 600 });
   </script>
 
 </head>
@@ -76,6 +142,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=591363"
      title="(in)visible state is not always correct?">
     Mozilla Bug 591363
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=768786"
+     title="Offscreen state is not exposed under certain circumstances">
+    Mozilla Bug 768786
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
