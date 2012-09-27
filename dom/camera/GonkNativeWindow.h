@@ -50,11 +50,13 @@ public:
 class GonkNativeWindow : public EGLNativeBase<ANativeWindow, GonkNativeWindow, RefBase>
 {
     typedef mozilla::layers::SurfaceDescriptor SurfaceDescriptor;
+    typedef mozilla::layers::GraphicBufferLocked GraphicBufferLocked;
 
 public:
     enum { MIN_UNDEQUEUED_BUFFERS = 2 };
     enum { MIN_BUFFER_SLOTS = MIN_UNDEQUEUED_BUFFERS };
     enum { NUM_BUFFER_SLOTS = 32 };
+    enum { NATIVE_WINDOW_SET_BUFFERS_SIZE = 0x10000000 };
 
     GonkNativeWindow();
     GonkNativeWindow(GonkNativeWindowNewFrameCallback* aCallback);
@@ -79,6 +81,8 @@ public:
 
     // Release all internal buffers
     void abandon();
+
+    SurfaceDescriptor *getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer);
 
 protected:
     virtual int cancelBuffer(ANativeWindowBuffer* buffer);
@@ -234,6 +238,7 @@ private:
 class CameraGraphicBuffer : public mozilla::layers::GraphicBufferLocked
 {
     typedef mozilla::layers::SurfaceDescriptor SurfaceDescriptor;
+    typedef mozilla::layers::ImageBridgeChild ImageBridgeChild;
 
 public:
     CameraGraphicBuffer(GonkNativeWindow* aNativeWindow,
