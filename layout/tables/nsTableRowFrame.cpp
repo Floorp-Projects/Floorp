@@ -339,9 +339,9 @@ nsTableRowFrame::DidResize()
       if (cellRect.height != cellHeight)
       {
         cellFrame->SetSize(nsSize(cellRect.width, cellHeight));
-        nsTableFrame::InvalidateTableFrame(cellFrame, cellRect,
-                                           cellVisualOverflow,
-                                           false);
+        nsTableFrame::InvalidateFrame(cellFrame, cellRect,
+                                      cellVisualOverflow,
+                                      false);
       }
 
       // realign cell content based on the new height.  We might be able to
@@ -930,8 +930,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 
       FinishReflowChild(kidFrame, aPresContext, nullptr, desiredSize, x, 0, 0);
 
-      nsTableFrame::InvalidateTableFrame(kidFrame, kidRect, kidVisualOverflow,
-                                         firstReflow);
+      nsTableFrame::InvalidateFrame(kidFrame, kidRect, kidVisualOverflow,
+                                    firstReflow);
       
       x += desiredSize.width;  
     }
@@ -1028,9 +1028,8 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
-  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-      nsSize(aDesiredSize.width, aDesiredSize.height) != mRect.Size()) {
-    InvalidateFrame();
+  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    CheckInvalidateSizeChange(aDesiredSize);
   }
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -1079,10 +1078,10 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
     aCellFrame->VerticallyAlignChild(mMaxCellAscent);
   }
   
-  nsTableFrame::InvalidateTableFrame(aCellFrame, cellRect,
-                                     cellVisualOverflow,
-                                     (aCellFrame->GetStateBits() &
-                                      NS_FRAME_FIRST_REFLOW) != 0);
+  nsTableFrame::InvalidateFrame(aCellFrame, cellRect,
+                                cellVisualOverflow,
+                                (aCellFrame->GetStateBits() &
+                                   NS_FRAME_FIRST_REFLOW) != 0);
   
   aCellFrame->DidReflow(aPresContext, nullptr, NS_FRAME_REFLOW_FINISHED);
 
@@ -1130,7 +1129,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
       // need to invalidate if our row is not moving, because the cell might
       // span out of this row, so invalidating our row rect won't do enough.
       if (aRowOffset == 0) {
-        InvalidateFrame();
+        Invalidate(cRect);
       }
       cRect.height = 0;
       cellFrame->SetRect(cRect);
@@ -1241,9 +1240,9 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         ConsiderChildOverflow(overflow, cellFrame);
                 
         if (aRowOffset == 0) {
-          nsTableFrame::InvalidateTableFrame(cellFrame, oldCellRect,
-                                             oldCellVisualOverflow,
-                                             false);
+          nsTableFrame::InvalidateFrame(cellFrame, oldCellRect,
+                                        oldCellVisualOverflow,
+                                        false);
         }
       }
       kidFrame = iter.Next(); // Get the next child
@@ -1255,7 +1254,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   FinishAndStoreOverflow(overflow, nsSize(rowRect.width, rowRect.height));
 
   nsTableFrame::RePositionViews(this);
-  nsTableFrame::InvalidateTableFrame(this, oldRect, oldVisualOverflow, false);
+  nsTableFrame::InvalidateFrame(this, oldRect, oldVisualOverflow, false);
   return shift;
 }
 
@@ -1380,23 +1379,6 @@ void nsTableRowFrame::InitHasCellWithStyleHeight(nsTableFrame* aTableFrame)
     }
   }
   RemoveStateBits(NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT);
-}
-  
-void 
-nsTableRowFrame::InvalidateFrame(uint32_t aDisplayItemKey)
-{
-  nsIFrame::InvalidateFrame(aDisplayItemKey);
-  GetParent()->InvalidateFrameWithRect(GetVisualOverflowRect() + GetPosition(), aDisplayItemKey);
-}
-
-void
-nsTableRowFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
-{
-  nsIFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey);
-  // If we have filters applied that would affects our bounds, then
-  // we get an inactive layer created and this is computed
-  // within FrameLayerBuilder
-  GetParent()->InvalidateFrameWithRect(aRect + GetPosition(), aDisplayItemKey);
 }
 
 /* ----- global methods ----- */

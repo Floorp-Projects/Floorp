@@ -84,6 +84,7 @@ nsViewManager::nsViewManager()
 
   // NOTE:  we use a zeroing operator new, so all data members are
   // assumed to be cleared here.
+  mHasPendingUpdates = false;
   mHasPendingWidgetGeometryChanges = false;
   mRecursiveRefreshPending = false;
 }
@@ -407,7 +408,8 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
 
   // Push out updates after we've processed the children; ensures that
   // damage is applied based on the final widget geometry
-  if (aFlushDirtyRegion) {
+  if (aFlushDirtyRegion && aView->HasNonEmptyDirtyRegion()) {
+    FlushDirtyRegionToWidget(aView);
     if (IsRefreshDriverPaintingEnabled()) {
       nsIWidget *widget = aView->GetWidget();
       if (widget && widget->NeedsPaint()) {
@@ -441,7 +443,6 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
         SetPainting(false);
       }
     }
-    FlushDirtyRegionToWidget(aView);
   }
 }
 
@@ -484,6 +485,7 @@ void
 nsViewManager::PostPendingUpdate()
 {
   nsViewManager* rootVM = RootViewManager();
+  rootVM->mHasPendingUpdates = true;
   rootVM->mHasPendingWidgetGeometryChanges = true;
   if (rootVM->mPresShell) {
     rootVM->mPresShell->ScheduleViewManagerFlush();
@@ -624,6 +626,9 @@ NS_IMETHODIMP nsViewManager::InvalidateViewNoSuppression(nsIView *aView,
   // accumulate this rectangle in the view's dirty region, so we can
   // process it later.
   AddDirtyRegion(displayRoot, nsRegion(damagedRect));
+
+  // Schedule an invalidation flush with the refresh driver.
+  PostPendingUpdate();
 
   return NS_OK;
 }
@@ -1201,16 +1206,20 @@ nsViewManager::ProcessPendingUpdates()
 
   if (IsRefreshDriverPaintingEnabled()) {
     mPresShell->GetPresContext()->RefreshDriver()->RevokeViewManagerFlush();
+    if (mHasPendingUpdates) {
+      mHasPendingUpdates = false;
       
-    // Flush things like reflows and plugin widget geometry updates by
-    // calling WillPaint on observer presShells.
-    if (mPresShell) {
-      CallWillPaintOnObservers(true);
+      // Flush things like reflows and plugin widget geometry updates by
+      // calling WillPaint on observer presShells.
+      if (mPresShell) {
+        CallWillPaintOnObservers(true);
+      }
+      ProcessPendingUpdatesForView(mRootView, true);
+      CallDidPaintOnObserver();
     }
+  } else if (mHasPendingUpdates) {
     ProcessPendingUpdatesForView(mRootView, true);
-    CallDidPaintOnObserver();
-  } else {
-    ProcessPendingUpdatesForView(mRootView, true);
+    mHasPendingUpdates = false;
   }
 }
 

@@ -78,8 +78,6 @@ public:
 
   Element* GetReferencedElement();
 
-  virtual bool ObservesReflow() { return true; }
-
 protected:
   // Non-virtual protected methods
   void StartListening();
@@ -187,8 +185,6 @@ public:
   nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
-  virtual bool ObservesReflow() MOZ_OVERRIDE { return false; }
-
 protected:
   virtual void DoUpdate() MOZ_OVERRIDE;
 };
@@ -246,12 +242,6 @@ public:
    * our reference to them.
    */
   void InvalidateAll();
-
-  /**
-   * Drop all observers that observe reflow, and notify them that we have changed and dropped
-   * our reference to them.
-   */
-  void InvalidateAllForReflow();
 
   /**
    * Drop all our observers, and notify them that we have dropped our reference
@@ -382,17 +372,12 @@ public:
    * to make invalidation relatively lightweight when an SVG effect changes.
    */
   static void InvalidateRenderingObservers(nsIFrame *aFrame);
-
-  enum {
-    INVALIDATE_REFLOW = 1
-  };
-
   /**
    * This can be called on any element or frame. Only direct observers of this
    * (frame's) element, if any, are invalidated.
    */
-  static void InvalidateDirectRenderingObservers(Element *aElement, uint32_t aFlags = 0);
-  static void InvalidateDirectRenderingObservers(nsIFrame *aFrame, uint32_t aFlags = 0);
+  static void InvalidateDirectRenderingObservers(Element *aElement);
+  static void InvalidateDirectRenderingObservers(nsIFrame *aFrame);
 
   /**
    * Get an nsSVGMarkerProperty for the frame, creating a fresh one if necessary

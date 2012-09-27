@@ -28,7 +28,6 @@
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
-#include "FrameLayerBuilder.h"
 
 //TABLECELL SELECTION
 #include "nsFrameSelection.h"
@@ -395,21 +394,6 @@ nsDisplayTableCellBackground::GetBounds(nsDisplayListBuilder* aBuilder,
   // revert from nsDisplayTableItem's implementation ... cell backgrounds
   // don't overflow the cell
   return nsDisplayItem::GetBounds(aBuilder, aSnap);
-}
-
-void nsTableCellFrame::InvalidateFrame(uint32_t aDisplayItemKey)
-{
-  nsIFrame::InvalidateFrame(aDisplayItemKey);
-  GetParent()->InvalidateFrameWithRect(GetVisualOverflowRect() + GetPosition(), aDisplayItemKey);
-}
-
-void nsTableCellFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
-{
-  nsIFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey);
-  // If we have filters applied that would affects our bounds, then
-  // we get an inactive layer created and this is computed
-  // within FrameLayerBuilder
-  GetParent()->InvalidateFrameWithRect(aRect + GetPosition(), aDisplayItemKey);
 }
 
 static void
@@ -926,8 +910,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   FinishReflowChild(firstKid, aPresContext, &kidReflowState, kidSize,
                     kidOrigin.x, kidOrigin.y, 0);
 
-  nsTableFrame::InvalidateTableFrame(firstKid, origRect, origVisualOverflow,
-                                     firstReflow);
+  nsTableFrame::InvalidateFrame(firstKid, origRect, origVisualOverflow,
+                                firstReflow);
 
   // first, compute the height which can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height;
@@ -963,9 +947,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
-  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-      nsSize(aDesiredSize.width, aDesiredSize.height) != mRect.Size()) {
-    InvalidateFrame();
+  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    CheckInvalidateSizeChange(aDesiredSize);
   }
 
   // remember the desired size for this reflow

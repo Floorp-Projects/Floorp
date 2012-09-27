@@ -48,7 +48,6 @@ function print_event(event) {
 function step0(event) {
   // Wait until we get the MozAfterPaint following the load event
   // before starting.
-  ok(true, "loaded");
   window.addEventListener("MozAfterPaint", step1, false);
 
   // Ensure a MozAfterPaint event is fired

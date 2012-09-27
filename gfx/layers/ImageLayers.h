@@ -54,8 +54,6 @@ public:
 
   ImageContainer* GetContainer() { return mContainer; }
   gfxPattern::GraphicsFilter GetFilter() { return mFilter; }
-  const gfxIntSize& GetScaleToSize() { return mScaleToSize; }
-  ScaleMode GetScaleMode() { return mScaleMode; }
 
   MOZ_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
 

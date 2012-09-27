@@ -40,10 +40,12 @@ nsRegion
 nsDOMNotifyPaintEvent::GetRegion()
 {
   nsRegion r;
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
-    return r;
-  }
+  bool isTrusted = nsContentUtils::IsCallerTrustedForRead();
   for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
+    if (!isTrusted &&
+        (mInvalidateRequests[i].mFlags & nsIFrame::INVALIDATE_CROSS_DOC))
+      continue;
+
     r.Or(r, mInvalidateRequests[i].mRect);
     r.SimplifyOutward(10);
   }
@@ -97,15 +99,17 @@ nsDOMNotifyPaintEvent::GetPaintRequests(nsIDOMPaintRequestList** aResult)
   if (!requests)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (nsContentUtils::IsCallerTrustedForRead()) {
-    for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
-      nsRefPtr<nsPaintRequest> r = new nsPaintRequest();
-      if (!r)
-        return NS_ERROR_OUT_OF_MEMORY;
- 
-      r->SetRequest(mInvalidateRequests[i]);
-      requests->Append(r);
-    }
+  bool isTrusted = nsContentUtils::IsCallerTrustedForRead();
+  for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
+    if (!isTrusted &&
+        (mInvalidateRequests[i].mFlags & nsIFrame::INVALIDATE_CROSS_DOC))
+      continue;
+
+    nsRefPtr<nsPaintRequest> r = new nsPaintRequest();
+    if (!r)
+      return NS_ERROR_OUT_OF_MEMORY;
+    r->SetRequest(mInvalidateRequests[i]);
+    requests->Append(r);
   }
 
   requests.forget(aResult);

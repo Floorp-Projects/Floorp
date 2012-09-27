@@ -193,18 +193,14 @@ var tests = [
     result: function(testname, panel) {
       var panelrect = panel.getBoundingClientRect();
       ok(panelrect.left >= 200 - mozInnerScreenX, testname + "left");
-      if (navigator.platform.indexOf("Linux") < 0) {
-        ok(panelrect.top >= 210 - mozInnerScreenY + 10, testname + "top greater");
-      }
+      ok(panelrect.top >= 210 - mozInnerScreenY + 10, testname + "top greater");
       ok(panelrect.top <= 210 - mozInnerScreenY + 30, testname + "top less");
       is(panelrect.width, 120, testname + "width");
       is(panelrect.height, 40, testname + "height");
 
       var screenRect = panel.getOuterScreenRect();
-      if (navigator.platform.indexOf("Linux") < 0) {
-        is(screenRect.left, 200, testname + " screen left");
-        is(screenRect.top, 210, testname + " screen top");
-      }
+      is(screenRect.left, 200, testname + " screen left");
+      is(screenRect.top, 210, testname + " screen top");
       ok(screenRect.width >= 120 && screenRect.width <= 140, testname + " screen width");
       ok(screenRect.height >= 40 && screenRect.height <= 80, testname + " screen height");
 

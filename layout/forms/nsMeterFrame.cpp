@@ -209,7 +209,7 @@ nsMeterFrame::AttributeChanged(int32_t  aNameSpaceID,
     PresContext()->PresShell()->FrameNeedsReflow(barFrame,
                                                  nsIPresShell::eResize,
                                                  NS_FRAME_IS_DIRTY);
-    InvalidateFrame();
+    Invalidate(GetVisualOverflowRectRelativeToSelf());
   }
 
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,

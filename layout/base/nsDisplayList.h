@@ -25,7 +25,6 @@
 #include "FrameLayerBuilder.h"
 #include "nsThemeConstants.h"
 #include "nsLayoutUtils.h"
-#include "nsDisplayListInvalidation.h"
 
 #include "mozilla/StandardInteger.h"
 
@@ -760,72 +759,6 @@ public:
     *aSnap = false;
     return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
   }
-  nsRect GetBorderRect() {
-    return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
-  }
-  nsRect GetPaddingRect() {
-    return GetUnderlyingFrame()->GetPaddingRectRelativeToSelf() + ToReferenceFrame();
-  }
-  nsRect GetContentRect() {
-    return GetUnderlyingFrame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
-  }
-
-  /**
-   * Checks if the frame(s) owning this display item have been marked as invalid,
-   * and needing repainting.
-   */
-  virtual bool IsInvalid(nsRect& aRect) { 
-    bool result = mFrame ? mFrame->IsInvalid(aRect) : false;
-    aRect += ToReferenceFrame();
-    return result;
-  }
-
-  /**
-   * Creates and initializes an nsDisplayItemGeometry object that retains the current
-   * areas covered by this display item. These need to retain enough information
-   * such that they can be compared against a future nsDisplayItem of the same type, 
-   * and determine if repainting needs to happen.
-   *
-   * Subclasses wishing to store more information need to override both this
-   * and ComputeInvalidationRegion, as well as implementing an nsDisplayItemGeometry
-   * subclass.
-   *
-   * The default implementation tracks both the display item bounds, and the frame's
-   * border rect.
-   */
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder)
-  {
-    return new nsDisplayItemGenericGeometry(this, aBuilder);
-  }
-
-  /**
-   * Compares an nsDisplayItemGeometry object from a previous paint against the 
-   * current item. Computes if the geometry of the item has changed, and the 
-   * invalidation area required for correct repainting.
-   *
-   * The existing geometry will have been created from a display item with a 
-   * matching GetPerFrameKey()/mFrame pair to the current item.
-   *
-   * The default implementation compares the display item bounds, and the frame's
-   * border rect, and invalidates the entire bounds if either rect changes.
-   *
-   * @param aGeometry The geometry of the matching display item from the 
-   * previous paint.
-   * @param aInvalidRegion Output param, the region to invalidate, or
-   * unchanged if none.
-   */
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion)
-  {
-    const nsDisplayItemGenericGeometry* geometry = static_cast<const nsDisplayItemGenericGeometry*>(aGeometry);
-    bool snap;
-    if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
-        !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
-      aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
-    }
-  }
-  
   /**
    * @param aSnap set to true if the edges of the rectangles of the opaque
    * region would be snapped to device pixels when drawing
@@ -1674,12 +1607,6 @@ public:
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
   NS_DISPLAY_DECL_NAME("Border", TYPE_BORDER)
-  
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder);
-
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion);
 };
 
 /**
@@ -1782,22 +1709,6 @@ public:
   // Returns the value of GetUnderlyingFrame()->IsThemed(), but cached
   bool IsThemed() { return mIsThemed; }
 
-  /**
-   * Returns true if existing rendered pixels of this display item may need
-   * to be redrawn if the frame size changes.
-   * If false, only the changed area needs to be redrawn.
-   */
-  bool RenderingMightDependOnFrameSize();
-  
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder)
-  {
-    return new nsDisplayBackgroundGeometry(this, aBuilder);
-  }
-
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion);
-
 protected:
   typedef class mozilla::layers::ImageContainer ImageContainer;
   typedef class mozilla::layers::ImageLayer ImageLayer;
@@ -1845,21 +1756,6 @@ public:
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
   NS_DISPLAY_DECL_NAME("BoxShadowOuter", TYPE_BOX_SHADOW_OUTER)
-  
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion)
-  {
-    const nsDisplayItemGenericGeometry* geometry = static_cast<const nsDisplayItemGenericGeometry*>(aGeometry);
-    bool snap;
-    if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
-        !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
-      nsRegion oldShadow, newShadow;
-      oldShadow = oldShadow.Sub(geometry->mBounds, geometry->mBorderRect);
-      newShadow = newShadow.Sub(GetBounds(aBuilder, &snap), GetBorderRect());
-      aInvalidRegion->Or(oldShadow, newShadow);
-    }
-  }
 
 private:
   nsRegion mVisibleRegion;
@@ -1885,24 +1781,6 @@ public:
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
   NS_DISPLAY_DECL_NAME("BoxShadowInner", TYPE_BOX_SHADOW_INNER)
-  
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder)
-  {
-    return new nsDisplayBoxShadowInnerGeometry(this, aBuilder);
-  }
-
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion)
-  {
-    const nsDisplayBoxShadowInnerGeometry* geometry = static_cast<const nsDisplayBoxShadowInnerGeometry*>(aGeometry);
-    if (!geometry->mPaddingRect.IsEqualInterior(GetPaddingRect())) {
-      // nsDisplayBoxShadowInner is based around the padding rect, but it can
-      // touch pixels outside of this. We should invalidate the entire bounds.
-      bool snap;
-      aInvalidRegion->Or(geometry->mBounds, GetBounds(aBuilder, &snap));
-    }
-  }
 
 private:
   nsRegion mVisibleRegion;
@@ -2008,22 +1886,6 @@ public:
   virtual void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) MOZ_OVERRIDE
   {
     aFrames->AppendElements(mMergedFrames);
-  }
-  virtual bool IsInvalid(nsRect& aRect)
-  {
-    if (mFrame->IsInvalid(aRect) && aRect.IsEmpty()) {
-      return true;
-    }
-    nsRect temp;
-    for (uint32_t i = 0; i < mMergedFrames.Length(); i++) {
-      if (mMergedFrames[i]->IsInvalid(temp) && temp.IsEmpty()) {
-        aRect.SetEmpty();
-        return true;
-      }
-      aRect = aRect.Union(temp);
-    }
-    aRect += ToReferenceFrame();
-    return !aRect.IsEmpty();
   }
   NS_DISPLAY_DECL_NAME("WrapList", TYPE_WRAP_LIST)
 
@@ -2137,21 +1999,8 @@ public:
  */
 class nsDisplayOwnLayer : public nsDisplayWrapList {
 public:
-
-  /**
-   * nsDisplayOwnLayer constructor flags
-   */
-  enum {
-    GENERATE_SUBDOC_INVALIDATIONS = 0x01
-  };
-
-  /**
-   * @param aFlags GENERATE_SUBDOC_INVALIDATIONS :
-   * Add UserData to the created ContainerLayer, so that invalidations
-   * for this layer are send to our nsPresContext.
-   */
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayList* aList, uint32_t aFlags = 0);
+                    nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
@@ -2171,8 +2020,6 @@ public:
     return false;
   }
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
-private:
-  uint32_t mFlags;
 };
 
 /**
@@ -2406,14 +2253,10 @@ public:
    * @param aAPD is the app units per dev pixel ratio of the subdocument.
    * @param aParentAPD is the app units per dev pixel ratio of the parent
    * document.
-   * @param aFlags GENERATE_SUBDOC_INVALIDATIONS :
-   * Add UserData to the created ContainerLayer, so that invalidations
-   * for this layer are send to our nsPresContext.
    */
   nsDisplayZoom(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsDisplayList* aList,
-                int32_t aAPD, int32_t aParentAPD,
-                uint32_t aFlags = 0);
+                int32_t aAPD, int32_t aParentAPD);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayZoom();
 #endif
@@ -2731,19 +2574,6 @@ public:
 
   nscoord mLeftEdge;  // length from the left side
   nscoord mRightEdge; // length from the right side
-};
-
-class nsDisplayImageContainer : public nsDisplayItem {
-public:
-  typedef mozilla::layers::ImageContainer ImageContainer;
-  typedef mozilla::layers::ImageLayer ImageLayer;
-
-  nsDisplayImageContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame)
-  {}
-
-  virtual already_AddRefed<ImageContainer> GetContainer() = 0;
-  virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) = 0;
 };
 
 #endif /*NSDISPLAYLIST_H_*/

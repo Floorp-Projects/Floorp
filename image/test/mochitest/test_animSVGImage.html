@@ -55,7 +55,6 @@ function takeReferenceSnapshot() {
 
 function myOnStopFrame(aRequest, aFrame) {
   gOnStopFrameCounter++;
-  ok(true, "myOnStopFrame called");
   let currentSnapshot = snapshotWindow(window, false);
   if (compareSnapshots(currentSnapshot, gReferenceSnapshot, true)[0]) {
     // SUCCESS!
@@ -63,7 +62,6 @@ function myOnStopFrame(aRequest, aFrame) {
              "at call #" + gOnStopFrameCounter + " to onStopFrame");
     cleanUpAndFinish();
   }
-  setTimeout(function() { myOnStopFrame(0, 0); }, 1000);
 }
 
 function failTest() {

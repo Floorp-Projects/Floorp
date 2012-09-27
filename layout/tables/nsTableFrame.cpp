@@ -1211,7 +1211,10 @@ AnyTablePartHasBorderOrBackground(nsIFrame* aStart, nsIFrame* aEnd)
   for (nsIFrame* f = aStart; f != aEnd; f = f->GetNextSibling()) {
     NS_ASSERTION(IsFrameAllowedInTable(f->GetType()), "unexpected frame type");
 
-    if (FrameHasBorderOrBackground(f))
+    if (f->GetStyleVisibility()->IsVisible() &&
+        (!f->GetStyleBackground()->IsTransparent() ||
+         f->GetStyleDisplay()->mAppearance ||
+         f->GetStyleBorder()->HasBorder()))
       return true;
 
     nsTableCellFrame *cellFrame = do_QueryFrame(f);
@@ -1391,7 +1394,10 @@ nsTableFrame::ProcessRowInserted(nscoord aNewHeight)
         if (rowFrame->IsFirstInserted()) {
           rowFrame->SetFirstInserted(false);
           // damage the table from the 1st row inserted to the end of the table
-          nsIFrame::InvalidateFrame();
+          nscoord damageY = rgFrame->GetPosition().y + rowFrame->GetPosition().y;
+          nsRect damageRect(0, damageY, GetSize().width, aNewHeight - damageY);
+
+          Invalidate(damageRect);
           // XXXbz didn't we do this up front?  Why do we need to do it again?
           SetRowInserted(false);
           return; // found it, so leave
@@ -1806,9 +1812,11 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
   }
   aDesiredSize.mOverflowAreas.UnionAllWith(tableRect);
 
-  if ((GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
-      nsSize(aDesiredSize.width, aDesiredSize.height) != mRect.Size()) {
-      nsIFrame::InvalidateFrame();
+  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    // Fulfill the promise InvalidateFrame makes.
+    Invalidate(aDesiredSize.VisualOverflow());
+  } else {
+    CheckInvalidateSizeChange(aDesiredSize);
   }
 
   FinishAndStoreOverflow(&aDesiredSize);
@@ -2503,8 +2511,8 @@ void nsTableFrame::PlaceChild(nsTableReflowState&  aReflowState,
   FinishReflowChild(aKidFrame, PresContext(), nullptr, aKidDesiredSize,
                     aReflowState.x, aReflowState.y, 0);
 
-  InvalidateTableFrame(aKidFrame, aOriginalKidRect, aOriginalKidVisualOverflow,
-                       isFirstReflow);
+  InvalidateFrame(aKidFrame, aOriginalKidRect, aOriginalKidVisualOverflow,
+                  isFirstReflow);
 
   // Adjust the running y-offset
   aReflowState.y += aKidDesiredSize.height;
@@ -3121,8 +3129,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
             //rowFrame->DidResize();
             nsTableFrame::RePositionViews(rowFrame);
 
-            rgFrame->InvalidateFrameWithRect(oldRowRect);
-            rgFrame->InvalidateFrame();
+            rgFrame->InvalidateRectDifference(oldRowRect, rowRect);
           }
         }
         else {
@@ -3151,8 +3158,8 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
 
         rgFrame->SetRect(rgRect);
 
-        nsTableFrame::InvalidateTableFrame(rgFrame, origRgRect,
-                                           origRgVisualOverflow, false);
+        nsTableFrame::InvalidateFrame(rgFrame, origRgRect,
+                                      origRgVisualOverflow, false);
       }
     }
     else if (amountUsed > 0 && yOriginRG != rgRect.y) {
@@ -3286,8 +3293,8 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
           //rowFrame->DidResize();
           nsTableFrame::RePositionViews(rowFrame);
 
-          nsTableFrame::InvalidateTableFrame(rowFrame, rowRect, rowVisualOverflow,
-                                             false);
+          nsTableFrame::InvalidateFrame(rowFrame, rowRect, rowVisualOverflow,
+                                        false);
         }
         else {
           if (amountUsed > 0 && yOriginRow != rowRect.y) {
@@ -3309,8 +3316,8 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
         rgFrame->SetRect(nsRect(rgRect.x, yOriginRG, rgRect.width,
                                 rgRect.height + amountUsedByRG));
 
-        nsTableFrame::InvalidateTableFrame(rgFrame, rgRect, rgVisualOverflow,
-                                           false);
+        nsTableFrame::InvalidateFrame(rgFrame, rgRect, rgVisualOverflow,
+                                      false);
       }
       // Make sure child views are properly positioned
     }
@@ -7234,10 +7241,10 @@ bool nsTableFrame::RowIsSpannedInto(int32_t aRowIndex, int32_t aNumEffCols)
 
 /* static */
 void
-nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
-                                   const nsRect& aOrigRect,
-                                   const nsRect& aOrigVisualOverflow,
-                                   bool aIsFirstReflow)
+nsTableFrame::InvalidateFrame(nsIFrame* aFrame,
+                              const nsRect& aOrigRect,
+                              const nsRect& aOrigVisualOverflow,
+                              bool aIsFirstReflow)
 {
   nsIFrame* parent = aFrame->GetParent();
   NS_ASSERTION(parent, "What happened here?");
@@ -7251,9 +7258,6 @@ nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
   // The part that looks at both the rect and the overflow rect is a
   // bit of a hack.  See nsBlockFrame::ReflowLine for an eloquent
   // description of its hackishness.
-  //
-  // This doesn't really make sense now that we have DLBI.
-  // This code can probably be simplified a fair bit.
   nsRect visualOverflow = aFrame->GetVisualOverflowRect();
   if (aIsFirstReflow ||
       aOrigRect.TopLeft() != aFrame->GetPosition() ||
@@ -7264,12 +7268,13 @@ nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
     // aFrame's parent, and reposition that overflow rect to the right
     // place.
     // XXXbz this doesn't handle outlines, does it?
-    aFrame->InvalidateFrame();
-    parent->InvalidateFrameWithRect(aOrigVisualOverflow + aOrigRect.TopLeft());
+    aFrame->Invalidate(visualOverflow);
+    parent->Invalidate(aOrigVisualOverflow + aOrigRect.TopLeft());
   } else {
-    aFrame->InvalidateFrameWithRect(aOrigVisualOverflow);;
-    aFrame->InvalidateFrame();
-    parent->InvalidateFrameWithRect(aOrigRect);;
-    parent->InvalidateFrame();
+    nsRect rect = aFrame->GetRect();
+    aFrame->CheckInvalidateSizeChange(aOrigRect, aOrigVisualOverflow,
+                                      rect.Size());
+    aFrame->InvalidateRectDifference(aOrigVisualOverflow, visualOverflow);
+    parent->InvalidateRectDifference(aOrigRect, rect);
   }
 }
