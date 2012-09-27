@@ -8,6 +8,7 @@
 #define mozilla_dom_bluetooth_bluetoothhfpmanager_h__
 
 #include "BluetoothCommon.h"
+#include "BluetoothRilListener.h"
 #include "mozilla/ipc/UnixSocket.h"
 #include "nsIObserver.h"
 
@@ -37,11 +38,14 @@ public:
 private:
   BluetoothHfpManager();
 
+  bool BroadcastSystemMessage(const char* aCommand,
+                              const int aCommandLength);
   nsresult HandleVolumeChanged(const nsAString& aData);
 
   int mCurrentVgs;
   int mCurrentCallIndex;
   int mCurrentCallState;
+  nsAutoPtr<BluetoothRilListener> mListener;
 };
 
 END_BLUETOOTH_NAMESPACE

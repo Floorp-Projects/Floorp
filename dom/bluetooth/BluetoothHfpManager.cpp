@@ -16,6 +16,7 @@
 #include "nsContentUtils.h"
 #include "nsIObserverService.h"
 #include "nsIRadioInterfaceLayer.h"
+#include "nsISystemMessagesInternal.h"
 #include "nsVariant.h"
 
 #include <unistd.h> /* usleep() */
@@ -66,10 +67,34 @@ BluetoothHfpManager::BluetoothHfpManager()
   if (obs && NS_FAILED(obs->AddObserver(sInstance, MOZSETTINGS_CHANGED_ID, false))) {
     NS_WARNING("Failed to add settings change observer!");
   }
+
+  mListener = new BluetoothRilListener();
+  if (!mListener->StartListening()) {
+    NS_WARNING("Failed to start listening RIL");
+  }
+
+  if (!sHfpCommandThread) {
+    if (NS_FAILED(NS_NewThread(getter_AddRefs(sHfpCommandThread)))) {
+      NS_ERROR("Failed to new thread for sHfpCommandThread");
+    }
+  }
 }
 
 BluetoothHfpManager::~BluetoothHfpManager()
 {
+  if (!mListener->StopListening()) {
+    NS_WARNING("Failed to stop listening RIL");
+  }
+  mListener = nullptr;
+
+  // Shut down the command thread if it still exists.
+  if (sHfpCommandThread) {
+    nsCOMPtr<nsIThread> thread;
+    sHfpCommandThread.swap(thread);
+    if (NS_FAILED(thread->Shutdown())) {
+      NS_WARNING("Failed to shut down the bluetooth hfpmanager command thread!");
+    }
+  }
 }
 
 //static
@@ -83,6 +108,49 @@ BluetoothHfpManager::Get()
   }
 
   return sInstance;
+}
+
+bool
+BluetoothHfpManager::BroadcastSystemMessage(const char* aCommand,
+                                            const int aCommandLength)
+{
+  nsString type;
+  type.AssignLiteral("bluetooth-dialer-command");
+
+  JSContext* cx = nsContentUtils::GetSafeJSContext();
+  NS_ASSERTION(!::JS_IsExceptionPending(cx),
+               "Shouldn't get here when an exception is pending!");
+
+  JSAutoRequest jsar(cx);
+  JSObject* obj = JS_NewObject(cx, NULL, NULL, NULL);
+  if (!obj) {
+    NS_WARNING("Failed to new JSObject for system message!");
+    return false;
+  }
+
+  JSString* JsData = JS_NewStringCopyN(cx, aCommand, aCommandLength);
+  if (!JsData) {
+    NS_WARNING("JS_NewStringCopyN is out of memory");
+    return false;
+  }
+
+  jsval v = STRING_TO_JSVAL(JsData);
+  if (!JS_SetProperty(cx, obj, "command", &v)) {
+    NS_WARNING("Failed to set properties of system message!");
+    return false;
+  }
+
+  nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
+    do_GetService("@mozilla.org/system-message-internal;1");
+
+  if (!systemMessenger) {
+    NS_WARNING("Failed to get SystemMessenger service!");
+    return false;
+  }
+
+  systemMessenger->BroadcastMessage(type, OBJECT_TO_JSVAL(obj));
+
+  return true;
 }
 
 nsresult
@@ -247,6 +315,24 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
     mCurrentVgs = newVgs;
 
     SendLine("OK");
+  } else if (!strncmp(msg, "AT+BLDN", 7)) {
+    if (!BroadcastSystemMessage("BLDN", 4)) {
+      NS_WARNING("Failed to broadcast system message to dialer");
+      return;
+    }
+    SendLine("OK");
+  } else if (!strncmp(msg, "ATA", 3)) {
+    if (!BroadcastSystemMessage("ATA", 3)) {
+      NS_WARNING("Failed to broadcast system message to dialer");
+      return;
+    }
+    SendLine("OK");
+  } else if (!strncmp(msg, "AT+CHUP", 7)) {
+    if (!BroadcastSystemMessage("CHUP", 4)) {
+      NS_WARNING("Failed to broadcast system message to dialer");
+      return;
+    }
+    SendLine("OK");
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
@@ -325,7 +411,11 @@ BluetoothHfpManager::CallStateChanged(int aCallIndex, int aCallState,
       // Start sending RING indicator to HF
       sStopSendingRingFlag = false;
       sendRingTask = new SendRingIndicatorTask();
-      sHfpCommandThread->Dispatch(sendRingTask, NS_DISPATCH_NORMAL);
+
+      if (NS_FAILED(sHfpCommandThread->Dispatch(sendRingTask, NS_DISPATCH_NORMAL))) {
+        NS_WARNING("Cannot dispatch ring task!");
+        return;
+      };
       break;
     case nsIRadioInterfaceLayer::CALL_STATE_DIALING:
       // Send "CallSetup = 2"
