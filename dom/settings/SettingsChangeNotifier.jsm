@@ -28,7 +28,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
 let SettingsChangeNotifier = {
   init: function() {
     debug("init");
-    ppmm.addMessageListener("Settings:Changed", this);
+    this.children = [];
+    this._messages = ["Settings:Changed", "Settings:RegisterForMessages", "Settings:UnregisterForMessages"];
+    this._messages.forEach((function(msgName) {
+      ppmm.addMessageListener(msgName, this);
+    }).bind(this));
+
     Services.obs.addObserver(this, kXpcomShutdownObserverTopic, false);
     Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
   },
@@ -37,7 +42,9 @@ let SettingsChangeNotifier = {
     debug("observe");
     switch (aTopic) {
       case kXpcomShutdownObserverTopic:
-        ppmm.removeMessageListener("Settings:Changed", this);
+        this._messages.forEach((function(msgName) {
+          ppmm.removeMessageListener(msgName, this);
+        }).bind(this));
         Services.obs.removeObserver(this, kXpcomShutdownObserverTopic);
         Services.obs.removeObserver(this, kMozSettingsChangedObserverTopic);
         ppmm = null;
@@ -50,7 +57,7 @@ let SettingsChangeNotifier = {
         // messages that are notified from the internal SettingsChangeNotifier.
         if (setting.message && setting.message === kFromSettingsChangeNotifier)
           return;
-        ppmm.broadcastAsyncMessage("Settings:Change:Return:OK",
+        this.broadcastMessage("Settings:Change:Return:OK",
           { key: setting.key, value: setting.value });
         break;
       }
@@ -60,12 +67,29 @@ let SettingsChangeNotifier = {
     }
   },
 
+  broadcastMessage: function broadcastMessage(aMsgName, aContent) {
+    let i;
+    for (i = this.children.length - 1; i >= 0; i -= 1) {
+      let msgMgr = this.children[i];
+      try {
+        msgMgr.sendAsyncMessage(aMsgName, aContent);
+      } catch (e) {
+        let index;
+        if ((index = this.children.indexOf(msgMgr)) != -1) {
+          this.children.splice(index, 1);
+          dump("Remove dead MessageManager!\n");
+        }
+      }
+    };
+  },
+
   receiveMessage: function(aMessage) {
     debug("receiveMessage");
     let msg = aMessage.json;
+    let mm = aMessage.target;
     switch (aMessage.name) {
       case "Settings:Changed":
-        ppmm.broadcastAsyncMessage("Settings:Change:Return:OK",
+        this.broadcastMessage("Settings:Change:Return:OK",
           { key: msg.key, value: msg.value });
         Services.obs.notifyObservers(this, kMozSettingsChangedObserverTopic,
           JSON.stringify({
@@ -73,6 +97,19 @@ let SettingsChangeNotifier = {
             value: msg.value,
             message: kFromSettingsChangeNotifier
           }));
+        break;
+      case "Settings:RegisterForMessages":
+        debug("Register!");
+        if (this.children.indexOf(mm) == -1) {
+          this.children.push(mm);
+        }
+        break;
+      case "Settings:UnregisterForMessages":
+        debug("Unregister");
+        let index;
+        if ((index = this.children.indexOf(mm)) != -1) {
+          this.children.splice(index, 1);
+        }
         break;
       default:
         debug("Wrong message: " + aMessage.name);
