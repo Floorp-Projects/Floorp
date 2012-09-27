@@ -12,7 +12,7 @@ interface nsIFile;
  * Additions to the frozen nsICookieManager
  */
 
-[scriptable, uuid(c0058e11-8ac3-4349-b87c-7332d0bb542c)]
+[scriptable, uuid(daf0caa7-b431-4b4d-ba51-08c179bb9dfe)]
 interface nsICookieManager2 : nsICookieManager
 {
   /**
@@ -119,4 +119,14 @@ interface nsICookieManager2 : nsICookieManager
    * special value like UNKNOWN_APP_ID or NO_APP_ID.
    */
   nsISimpleEnumerator getCookiesForApp(in unsigned long appId, in boolean onlyBrowserElement);
+
+  /**
+   * Remove all the cookies associated with the app with the id aAppId.
+   *
+   * If onlyBrowserElement is set to true, the method will only remove the
+   * cookies marked as part of a browser element inside the app.
+   *
+   * Special app id values are not allowed (NO_APP_ID or UNKNOWN_APP_ID for example).
+   */
+  void removeCookiesForApp(in unsigned long appId, in boolean onlyBrowserElement);
 };
