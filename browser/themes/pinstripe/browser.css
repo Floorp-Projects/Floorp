@@ -3324,48 +3324,59 @@ html|*#gcli-output-frame {
 /* === social toolbar button === */
 
 /* button icon for the service */
-#social-provider-image {
-  -moz-appearance: none;
-  margin: 0;
-  padding: 2px;
-  min-width: 0;
-  max-height: 20px;
-  list-style-image: url("chrome://browser/skin/social/social.png");
+#social-toolbar-item {
+  -moz-box-orient: horizontal;
 }
 
-/* hbox that surrounds an image and its counter */
-.social-notification-icon-container {
-  cursor: pointer;
-  padding: 0px;
+#social-toolbar-item > .toolbarbutton-1 {
   margin: 0px;
-  position: relative;
 }
 
-/* notification counter box */
-.social-notification-icon-counter {
-  background-color: rgb(240,61,37);
-  border: 1px solid rgb(216,55,34);
-  box-shadow: 0px 1px 0px rgba(0,39,121,0.77);
-  padding-right: 1px;
-  padding-left: 1px;
-  color: white;
+.social-notification-icon-hbox {
+  pointer-events: none;
+}
+
+.social-status-button {
+  list-style-image: none;
+}
+
+#social-provider-button > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+.social-notification-icon-stack {
+  padding: 0;
+}
+
+.social-notification-icon-stack > image {
+  max-height: 16px;
+}
+
+.social-notification-icon-hbox {
+  padding: 0;
+}
+.social-notification-icon-label {
+  text-align: end;
   font-size: 9px;
   font-weight: bold;
-  position: absolute;
-  right: -3px;
-  top: -4px;
-  z-index: 1;
-  text-align: center;
+  padding: 0 1px;
+  color: white;
+  margin: 0;
+  background-color: rgb(240,61,37);
+  border: 1px solid rgb(216,55,34);
+  box-shadow: 0 1px 0 rgba(0,39,121,0.77);
+  -moz-margin-end: -4px;
+  margin-top: -4px;
 }
 
-/* notification image */
-.social-notification-icon-image {
-  padding: 2px;
-  margin: 0px;
-  min-width: 20px;
-  max-width: 32px;
-  max-height: 20px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+.social-notification-icon-label[value=""] {
+  display: none;
+}
+
+@media (-moz-mac-lion-theme) {
+  .social-notification-icon-stack > image:-moz-window-inactive {
+    opacity: .5;
+  }
 }
 
 /* === end of social toolbar button === */
