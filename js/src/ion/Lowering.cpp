@@ -1085,9 +1085,9 @@ LIRGenerator::visitToString(MToString *ins)
         break;
 
       case MIRType_Int32: {
-        LIntToString *lir = new LIntToString(useRegisterAtStart(opd));
+        LIntToString *lir = new LIntToString(useRegister(opd));
 
-        if (!defineVMReturn(lir, ins))
+        if (!define(lir, ins))
             return false;
         return assignSafepoint(lir, ins);
       }

@@ -1613,7 +1613,7 @@ class LTruncateDToInt32 : public LInstructionHelper<1, 1, 1>
 
 // Convert a any input type hosted on one definition to a string with a function
 // call.
-class LIntToString : public LCallInstructionHelper<1, 1, 0>
+class LIntToString : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(IntToString);
