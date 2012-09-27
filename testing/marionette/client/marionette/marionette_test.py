@@ -129,7 +129,8 @@ class MarionetteTestCase(CommonTestCase):
                                emulatorBinary=self.marionette.emulator.binary,
                                homedir=self.marionette.homedir,
                                baseurl=self.marionette.baseurl,
-                               noWindow=self.marionette.noWindow)
+                               noWindow=self.marionette.noWindow,
+                               gecko_path=self.marionette.gecko_path)
             qemu.start_session()
             self.marionette.extra_emulators.append(qemu)
         else:
