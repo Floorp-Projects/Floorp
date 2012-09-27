@@ -6,6 +6,7 @@
 #ifndef GFX_FONT_H
 #define GFX_FONT_H
 
+#include "prtypes.h"
 #include "nsAlgorithm.h"
 #include "gfxTypes.h"
 #include "nsString.h"
