@@ -12,13 +12,45 @@
 
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
+#include "nsIRadioInterfaceLayer.h"
+
+#include <unistd.h> /* usleep() */
 
 USING_BLUETOOTH_NAMESPACE
 using namespace mozilla::ipc;
 
 static nsRefPtr<BluetoothHfpManager> sInstance = nullptr;
+static nsCOMPtr<nsIThread> sHfpCommandThread;
+static bool sStopSendingRingFlag = true;
 
-BluetoothHfpManager::BluetoothHfpManager() : mCurrentVgs(-1)
+static int kRingInterval = 3000000;  //unit: us
+
+class SendRingIndicatorTask : public nsRunnable
+{
+public:
+  SendRingIndicatorTask()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    while (!sStopSendingRingFlag) {
+      sInstance->SendLine("RING");
+
+      usleep(kRingInterval);
+    }
+
+    return NS_OK;
+  }
+};
+
+BluetoothHfpManager::BluetoothHfpManager()
+  : mCurrentVgs(-1)
+  , mCurrentCallIndex(0)
+  , mCurrentCallState(nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED)
 {
 }
 
@@ -167,9 +199,88 @@ BluetoothHfpManager::SendLine(const char* aMessage)
   return SendSocketData(msg);
 }
 
+/*
+ * CallStateChanged will be called whenever call status is changed, and it
+ * also means we need to notify HS about the change. For more information, 
+ * please refer to 4.13 ~ 4.15 in Bluetooth hands-free profile 1.6.
+ */
 void
 BluetoothHfpManager::CallStateChanged(int aCallIndex, int aCallState,
                                       const char* aNumber, bool aIsActive)
 {
+  nsRefPtr<nsRunnable> sendRingTask;
 
+  switch (aCallState) {
+    case nsIRadioInterfaceLayer::CALL_STATE_INCOMING:
+      // Send "CallSetup = 1"
+      SendLine("+CIEV: 5,1");
+
+      // Start sending RING indicator to HF
+      sStopSendingRingFlag = false;
+      sendRingTask = new SendRingIndicatorTask();
+      sHfpCommandThread->Dispatch(sendRingTask, NS_DISPATCH_NORMAL);
+      break;
+    case nsIRadioInterfaceLayer::CALL_STATE_DIALING:
+      // Send "CallSetup = 2"
+      SendLine("+CIEV: 5,2");
+      break;
+    case nsIRadioInterfaceLayer::CALL_STATE_ALERTING:
+      // Send "CallSetup = 3"
+      if (mCurrentCallIndex == nsIRadioInterfaceLayer::CALL_STATE_DIALING) {
+        SendLine("+CIEV: 5,3");
+      } else {
+#ifdef DEBUG
+        NS_WARNING("Not handling state changed");
+#endif
+      }
+      break;
+    case nsIRadioInterfaceLayer::CALL_STATE_CONNECTED:
+      switch (mCurrentCallState) {
+        case nsIRadioInterfaceLayer::CALL_STATE_INCOMING:
+          sStopSendingRingFlag = true;
+          // Continue executing, no break
+        case nsIRadioInterfaceLayer::CALL_STATE_DIALING:
+          // Send "Call = 1, CallSetup = 0"
+          SendLine("+CIEV: 4,1");
+          SendLine("+CIEV: 5,0");
+          break;
+        default:
+#ifdef DEBUG
+          NS_WARNING("Not handling state changed");
+#endif
+          break;
+      }
+
+      break;
+    case nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED:
+      switch (mCurrentCallState) {
+        case nsIRadioInterfaceLayer::CALL_STATE_INCOMING:
+          sStopSendingRingFlag = true;
+          // Continue executing, no break
+        case nsIRadioInterfaceLayer::CALL_STATE_DIALING:
+        case nsIRadioInterfaceLayer::CALL_STATE_ALERTING:
+          // Send "CallSetup = 0"
+          SendLine("+CIEV: 5,0");
+          break;
+        case nsIRadioInterfaceLayer::CALL_STATE_CONNECTED:
+          // Send "Call = 0"
+          SendLine("+CIEV: 4,0");
+          break;
+        default:
+#ifdef DEBUG
+          NS_WARNING("Not handling state changed");
+#endif
+          break;
+      }
+      break;
+
+    default:
+#ifdef DEBUG
+      NS_WARNING("Not handling state changed");
+#endif
+      break;
+  }
+
+  mCurrentCallIndex = aCallIndex;
+  mCurrentCallState = aCallState;
 }
