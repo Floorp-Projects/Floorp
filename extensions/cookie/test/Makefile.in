@@ -54,7 +54,9 @@ MOCHITEST_FILES = \
 
 MOCHITEST_CHROME_FILES = \
   test_permissionmanager_app_isolation.html \
-  test_app_uninstall.html \
+  test_app_uninstall_permissions.html \
+  test_app_uninstall_cookies.html \
+  channel_utils.js \
   $(NULL)
 
 MOCHITEST_BROWSER_FILES = \
