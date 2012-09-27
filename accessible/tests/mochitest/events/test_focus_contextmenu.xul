@@ -50,6 +50,9 @@
       gQueue.push(new synthEscapeKey("item2.1", new focusChecker("item2")));
       gQueue.push(new synthEscapeKey("item2", new focusChecker("button")));
 
+      enableLogging("focus");
+      gQueue.onFinish = function() { disableLogging(); }
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
