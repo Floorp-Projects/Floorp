@@ -91,6 +91,8 @@ RefTestCmdLineHandler.prototype =
     // Disable addon updates and prefetching so we don't leak them
     branch.setBoolPref("extensions.update.enabled", false);
     branch.setBoolPref("extensions.getAddons.cache.enabled", false);
+    // Disable high-quality downscaling, since it makes reftests more difficult.
+    branch.setBoolPref("image.high_quality_downscaling.enabled", false);
 
     var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                            .getService(nsIWindowWatcher);
