@@ -59,35 +59,10 @@ function test_socket_conn()
 
 function test_socket_shutdown()
 {
-  let count = 0;
-  wait_for_server_shutdown(count);
-}
-
-function wait_for_server_shutdown(aCount)
-{
-  do_timeout(100, function() {
-    dump("count: "+aCount+" ");
-    if (++aCount > 20) {
-      do_throw("Timed out waiting for the server to shut down.");
-      return;
-    }
-    if (DebuggerServer.initialized) {
-      wait_for_server_shutdown(aCount);
-      return;
-    }
-    real_test_socket_shutdown(aCount);
-  });
-}
-
-function real_test_socket_shutdown()
-{
-  // After the last conection was closed, the server must be initialized again.
-  // Allow incoming connections.
-  DebuggerServer.init(function () true);
-  DebuggerServer.addActors("resource://test/testactors.js");
-
+  do_check_eq(DebuggerServer._socketConnections, 1);
+  do_check_true(DebuggerServer.closeListener());
   do_check_eq(DebuggerServer._socketConnections, 0);
-  // Make sure closing a non-started listener does nothing.
+  // Make sure closing the listener twice does nothing.
   do_check_false(DebuggerServer.closeListener());
   do_check_eq(DebuggerServer._socketConnections, 0);
 
