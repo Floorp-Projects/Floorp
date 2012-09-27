@@ -283,23 +283,7 @@ nsScreen::Notify(const hal::ScreenConfiguration& aConfiguration)
                "Invalid orientation value passed to notify method!");
 
   if (mOrientation != previousOrientation) {
-    // TODO: use an helper method, see bug 720768.
-    nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
-    nsresult rv = event->InitEvent(NS_LITERAL_STRING("mozorientationchange"), false, false);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    rv = event->SetTrusted(true);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    bool dummy;
-    rv = DispatchEvent(event, &dummy);
-    if (NS_FAILED(rv)) {
-      return;
-    }
+    DispatchTrustedEvent(NS_LITERAL_STRING("mozorientationchange"));
   }
 }
 
