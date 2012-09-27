@@ -123,7 +123,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
                                      uint32_t index, Value *vp, bool *present);
-    virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **proto);
+    virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);
 };
 
 /*
@@ -245,6 +245,9 @@ class Proxy {
     static bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
     static bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
     static bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
+    static bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);
+
+    static JSObject * const LazyProto;
 };
 
 inline bool IsObjectProxyClass(const Class *clasp)

@@ -500,7 +500,7 @@ nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 {
   JSAutoRequest ar(cx);
 
-  JS::RootedValue reviver(cx, JS::NullValue()), value(cx);
+  js::RootedValue reviver(cx, JS::NullValue()), value(cx);
 
   if (!js::ParseJSONWithReviver(cx, static_cast<const jschar*>(PromiseFlatString(str).get()),
                                 str.Length(), reviver,
@@ -570,7 +570,7 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JS::RootedValue reviver(mCx, JS::NullValue()), value(mCx);
+  js::RootedValue reviver(mCx, JS::NullValue()), value(mCx);
 
   const jschar* chars = reinterpret_cast<const jschar*>(mBufferedChars.Elements());
   JSBool ok = js::ParseJSONWithReviver(mCx, chars,

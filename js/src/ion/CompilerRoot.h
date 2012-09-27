@@ -35,7 +35,7 @@ class CompilerRoot : public CompilerRootNode
   public:
     // Sets the pointer and inserts into root list. The pointer becomes read-only.
     void setRoot(T root) {
-        JS::CompilerRootNode *&rootList = GetIonContext()->temp->rootList();
+        CompilerRootNode *&rootList = GetIonContext()->temp->rootList();
 
         JS_ASSERT(!ptr);
         ptr = root;

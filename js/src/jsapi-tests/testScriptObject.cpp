@@ -21,7 +21,7 @@ struct ScriptObjectFixture : public JSAPITest {
 
     bool tryScript(JS::HandleObject global, JSScript *scriptArg)
     {
-        JS::RootedScript script(cx, scriptArg);
+        js::RootedScript script(cx, scriptArg);
         CHECK(script);
 
         JS_GC(rt);

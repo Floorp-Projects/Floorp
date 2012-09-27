@@ -25,7 +25,7 @@ class nsAdoptingString;
 class nsAdoptingCString;
 
 #ifndef have_PrefChangedFunc_typedef
-typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
+typedef int (*PrefChangedFunc)(const char *, void *);
 #define have_PrefChangedFunc_typedef
 #endif
 

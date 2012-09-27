@@ -2803,6 +2803,26 @@ var gDetailView = {
         warningLink.value = gStrings.ext.GetStringFromName("details.notification.outdated.link");
         warningLink.href = Services.urlFormatter.formatURLPref("plugins.update.url");
         warningLink.hidden = false;
+      } else if (this._addon.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE) {
+        this.node.setAttribute("notification", "error");
+        document.getElementById("detail-error").textContent = gStrings.ext.formatStringFromName(
+          "details.notification.vulnerableUpdatable",
+          [this._addon.name], 1
+        );
+        var errorLink = document.getElementById("detail-error-link");
+        errorLink.value = gStrings.ext.GetStringFromName("details.notification.vulnerableUpdatable.link");
+        errorLink.href = this._addon.blocklistURL;
+        errorLink.hidden = false;
+      } else if (this._addon.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
+        this.node.setAttribute("notification", "error");
+        document.getElementById("detail-error").textContent = gStrings.ext.formatStringFromName(
+          "details.notification.vulnerableNoUpdate",
+          [this._addon.name], 1
+        );
+        var errorLink = document.getElementById("detail-error-link");
+        errorLink.value = gStrings.ext.GetStringFromName("details.notification.vulnerableNoUpdate.link");
+        errorLink.href = this._addon.blocklistURL;
+        errorLink.hidden = false;
       } else {
         this.node.removeAttribute("notification");
       }

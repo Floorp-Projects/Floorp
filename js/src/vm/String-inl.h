@@ -164,7 +164,7 @@ JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length
 JS_ALWAYS_INLINE JSLinearString *
 JSDependentString::new_(JSContext *cx, JSLinearString *base_, const jschar *chars, size_t length)
 {
-    JS::Rooted<JSLinearString*> base(cx, base_);
+    js::Rooted<JSLinearString*> base(cx, base_);
 
     /* Try to avoid long chains of dependent strings. */
     while (base->isDependent())

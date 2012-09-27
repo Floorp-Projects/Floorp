@@ -437,6 +437,23 @@ struct JSObject : public js::ObjectImpl
         return type_;
     }
 
+    /*
+     * We allow the prototype of an object to be lazily computed if the object
+     * is a proxy. In the lazy case, we store (JSObject *)0x1 in the proto field
+     * of the object's TypeObject. We offer three ways of getting the prototype:
+     *
+     * 1. obj->getProto() returns the prototype, but asserts if obj is a proxy.
+     * 2. obj->getTaggedProto() returns a TaggedProto, which can be tested to
+     *    check if the proto is an object, NULL, or lazily computed.
+     * 3. JSObject::getProto(cx, obj, &proto) computes the proto of an object.
+     *    If obj is a proxy and the proto is lazy, this code may allocate or
+     *    GC in order to compute the proto. Currently, it will not run JS code.
+     */
+    inline JSObject *getProto() const;
+    inline js::TaggedProto getTaggedProto() const;
+    static inline bool getProto(JSContext *cx, js::HandleObject obj,
+                                js::MutableHandleObject protop);
+
     inline void setType(js::types::TypeObject *newType);
 
     js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL,
@@ -460,7 +477,7 @@ struct JSObject : public js::ObjectImpl
     bool setNewTypeUnknown(JSContext *cx);
 
     /* Set a new prototype for an object with a singleton type. */
-    bool splicePrototype(JSContext *cx, js::HandleObject proto);
+    bool splicePrototype(JSContext *cx, js::Handle<js::TaggedProto> proto);
 
     /*
      * For bootstrapping, whether to splice a prototype for Function.prototype
@@ -1167,6 +1184,9 @@ js_DefineOwnProperty(JSContext *cx, js::HandleObject obj, js::HandleId id,
 
 namespace js {
 
+JSObject *
+CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, HandleObject parent);
+
 /*
  * Flags for the defineHow parameter of js_DefineNativeProperty.
  */
@@ -1324,10 +1344,10 @@ extern JSBool
 CheckAccess(JSContext *cx, JSObject *obj, HandleId id, JSAccessMode mode,
             MutableHandleValue v, unsigned *attrsp);
 
-} /* namespace js */
-
 extern bool
-js_IsDelegate(JSContext *cx, JSObject *obj, const js::Value &v);
+IsDelegate(JSContext *cx, HandleObject obj, const Value &v, bool *result);
+
+} /* namespace js */
 
 /*
  * Wrap boolean, number or string as Boolean, Number or String object.
@@ -1400,7 +1420,7 @@ js_GetClassPrototype(JSContext *cx, JSProtoKey protoKey, js::MutableHandleObject
 namespace js {
 
 extern bool
-SetProto(JSContext *cx, HandleObject obj, HandleObject proto, bool checkForCycles);
+SetProto(JSContext *cx, HandleObject obj, Handle<TaggedProto> proto, bool checkForCycles);
 
 extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);
