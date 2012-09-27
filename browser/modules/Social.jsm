@@ -62,6 +62,11 @@ let Social = {
     Services.prefs.setBoolPref("social.sidebar.open", !prefValue);
   },
 
+  toggleNotifications: function SocialNotifications_toggle() {
+    let prefValue = Services.prefs.getBoolPref("social.toast-notifications.enabled");
+    Services.prefs.setBoolPref("social.toast-notifications.enabled", !prefValue);
+  },
+
   // Sharing functionality
   _getShareablePageUrl: function Social_getShareablePageUrl(aURI) {
     let uri = aURI.clone();

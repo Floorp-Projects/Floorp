@@ -146,10 +146,6 @@ child:
     returns (NPError rv);
 
 parent:
-  rpc NPN_GetValue_NPNVjavascriptEnabledBool()
-    returns (bool value, NPError result);
-  rpc NPN_GetValue_NPNVisOfflineBool()
-    returns (bool value, NPError result);
   rpc NPN_GetValue_NPNVWindowNPObject()
     returns (nullable PPluginScriptableObject value, NPError result);
   rpc NPN_GetValue_NPNVPluginElementNPObject()
