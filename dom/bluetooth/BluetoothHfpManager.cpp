@@ -167,3 +167,9 @@ BluetoothHfpManager::SendLine(const char* aMessage)
   return SendSocketData(msg);
 }
 
+void
+BluetoothHfpManager::CallStateChanged(int aCallIndex, int aCallState,
+                                      const char* aNumber, bool aIsActive)
+{
+
+}
