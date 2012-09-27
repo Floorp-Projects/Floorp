@@ -490,7 +490,8 @@ pref("ui.click_hold_context_menus.delay", 1000);
 // Enable device storage
 pref("device.storage.enabled", true);
 
-pref("media.plugins.enabled", true);
+pref("media.plugins.enabled", false);
+pref("media.omx.enabled", true);
 
 // Disable printing (particularly, window.print())
 pref("dom.disable_window_print", true);
