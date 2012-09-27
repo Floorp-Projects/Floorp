@@ -3816,7 +3816,9 @@ nsCookieService::GetCookiesForApp(uint32_t aAppId, bool aOnlyBrowserElement,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_ENSURE_TRUE(aAppId != NECKO_NO_APP_ID && aAppId != NECKO_UNKNOWN_APP_ID,
+  // TODO: For the moment NECKO_UNKNOWN_APP_ID isn't working well with Necko.
+  // This should be uncommented with bug 794023.
+  NS_ENSURE_TRUE(aAppId != NECKO_NO_APP_ID /*&& aAppId != NECKO_UNKNOWN_APP_ID*/,
                  NS_ERROR_INVALID_ARG);
 
   GetCookiesForAppStruct data(aAppId, aOnlyBrowserElement);
