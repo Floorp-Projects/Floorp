@@ -382,6 +382,7 @@ class IonBuilder : public MIRGenerator
                                       bool constructing);
 
     // String natives.
+    InliningStatus inlineStringObject(uint32 argc, bool constructing);
     InliningStatus inlineStrCharCodeAt(uint32 argc, bool constructing);
     InliningStatus inlineStrFromCharCode(uint32 argc, bool constructing);
     InliningStatus inlineStrCharAt(uint32 argc, bool constructing);

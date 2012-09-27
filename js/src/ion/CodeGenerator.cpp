@@ -14,6 +14,8 @@
 #include "jsmath.h"
 #include "jsinterpinlines.h"
 
+#include "vm/StringObject-inl.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -1529,6 +1531,35 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
 }
 
 bool
+CodeGenerator::visitNewStringObject(LNewStringObject *lir)
+{
+    Register input = ToRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
+
+    typedef JSObject *(*pf)(JSContext *, HandleString);
+    static const VMFunction NewStringObjectInfo = FunctionInfo<pf>(NewStringObject);
+
+    StringObject *templateObj = lir->mir()->templateObj();
+
+    OutOfLineCode *ool = oolCallVM(NewStringObjectInfo, lir, (ArgList(), input),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    masm.newGCThing(output, templateObj, ool->entry());
+    masm.initGCThing(output, templateObj);
+
+    masm.loadStringLength(input, temp);
+
+    masm.storeValue(JSVAL_TYPE_STRING, input, Address(output, StringObject::offsetOfPrimitiveValue()));
+    masm.storeValue(JSVAL_TYPE_INT32, temp, Address(output, StringObject::offsetOfLength()));
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
 CodeGenerator::visitInitProp(LInitProp *lir)
 {
     Register objReg = ToRegister(lir->getObject());
@@ -1652,11 +1683,10 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements *lir)
 bool
 CodeGenerator::visitStringLength(LStringLength *lir)
 {
-    Address lengthAndFlags(ToRegister(lir->string()), JSString::offsetOfLengthAndFlags());
+    Register input = ToRegister(lir->string());
     Register output = ToRegister(lir->output());
 
-    masm.loadPtr(lengthAndFlags, output);
-    masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), output);
+    masm.loadStringLength(input, output);
     return true;
 }
 

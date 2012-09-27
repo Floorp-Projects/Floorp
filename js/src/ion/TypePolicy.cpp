@@ -282,7 +282,15 @@ StringPolicy::staticAdjustInputs(MInstruction *def)
     if (in->type() == MIRType_String)
         return true;
 
-    MUnbox *replace = MUnbox::New(in, MIRType_String, MUnbox::Fallible);
+    MInstruction *replace;
+    if (in->type() == MIRType_Int32) {
+        replace = MToString::New(in);
+    } else {
+        if (in->type() != MIRType_Value)
+            in = boxAt(def, in);
+        replace = MUnbox::New(in, MIRType_String, MUnbox::Fallible);
+    }
+
     def->block()->insertBefore(def, replace);
     def->replaceOperand(0, replace);
     return true;

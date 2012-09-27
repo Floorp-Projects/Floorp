@@ -439,6 +439,7 @@ bool InterruptCheck(JSContext *cx);
 
 HeapSlot *NewSlots(JSRuntime *rt, unsigned nslots);
 JSObject *NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
+JSObject *NewStringObject(JSContext *cx, HandleString str);
 
 bool SPSEnter(JSContext *cx, HandleScript script);
 bool SPSExit(JSContext *cx, HandleScript script);
