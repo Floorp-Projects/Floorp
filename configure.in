@@ -4980,12 +4980,10 @@ dnl ========================================================
 
 if test "$MOZ_ENABLE_GTK2"
 then
-    MOZ_ENABLE_GNOMEUI=1
-
-    MOZ_ARG_DISABLE_BOOL(gnomeui,
-    [  --disable-gnomeui       Disable libgnomeui support (default: auto, optional at runtime) ],
-        MOZ_ENABLE_GNOMEUI=,
-        MOZ_ENABLE_GNOMEUI=force)
+    MOZ_ARG_ENABLE_BOOL(gnomeui,
+    [  --enable-gnomeui        Enable libgnomeui instead of GIO & GTK for icon theme support ],
+        MOZ_ENABLE_GNOMEUI=force,
+        MOZ_ENABLE_GNOMEUI=)
 
     if test "$MOZ_ENABLE_GNOMEUI"
     then
