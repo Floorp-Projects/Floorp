@@ -331,9 +331,10 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 {
     /*** early success return cases ***/
 
-    if (mCanvasElement) {
-        mCanvasElement->InvalidateCanvas();
-    }
+    if (!GetCanvas())
+        return NS_ERROR_FAILURE;
+
+    GetCanvas()->InvalidateCanvas();
 
     if (gl && mWidth == width && mHeight == height)
         return NS_OK;
