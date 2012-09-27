@@ -109,7 +109,7 @@ function whitelistOnLoad(version)
 
 function manifestCached()
 {
-  OfflineTest.is(gStep, 0);
+  OfflineTest.is(gStep, 0, "Got manifestCached in step 0, gStep=" + gStep);
 
   reloadLocations([fallbackFrame1, fallbackFrame2]);
   waitForLocations([fallbackFrame1, fallbackFrame2],
@@ -190,7 +190,7 @@ function implicitCached()
 
 function manifestUpdated()
 {
-  OfflineTest.ok(gStep == 1 || gStep == 2);
+  OfflineTest.ok(gStep == 1 || gStep == 2, "Got manifestUpdated in step 1 or 2, gStep=" + gStep);
 
   switch (gStep)
   {
@@ -297,7 +297,7 @@ function manifestNoUpdate()
 {
   applicationCache.onnoupdate = null;
 
-  OfflineTest.ok(gStep == 3);
+  OfflineTest.ok(gStep == 3, "Got manifestNoUpdate in step 3, gStep=" + gStep);
 
   OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.UPDATEREADY,
         "we have associated application cache and update is pending (4)");
