@@ -2404,16 +2404,19 @@ Tab.prototype = {
     this.browser.contentWindow.controllers.removeController(this.overscrollController);
 
     this.browser.removeProgressListener(this);
+    this.browser.sessionHistory.removeSHistoryListener(this);
+
     this.browser.removeEventListener("DOMContentLoaded", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.removeEventListener("scroll", this, true);
+    this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
     this.browser.removeEventListener("PluginClickToPlay", this, true);
     this.browser.removeEventListener("PluginPlayPreview", this, true);
     this.browser.removeEventListener("PluginNotFound", this, true);
-    this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
+    this.browser.removeEventListener("pageshow", this, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
     Services.prefs.removeObserver("browser.ui.zoom.force-user-scalable", this);
