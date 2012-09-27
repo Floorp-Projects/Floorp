@@ -587,7 +587,8 @@ ProxyAutoConfig::SetupJS()
                                       mJSRuntime->Global(),
                                       mPACScript.get(), mPACScript.Length(),
                                       mPACURI.get(), 1);
-  if (!JS_ExecuteScript(mJSRuntime->Context(), mJSRuntime->Global(), script, nullptr)) {
+  if (!script ||
+      !JS_ExecuteScript(mJSRuntime->Context(), mJSRuntime->Global(), script, nullptr)) {
     nsString alertMessage(NS_LITERAL_STRING("PAC file failed to install from "));
     alertMessage += NS_ConvertUTF8toUTF16(mPACURI);
     PACLogToConsole(alertMessage);
