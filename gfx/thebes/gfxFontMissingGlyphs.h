@@ -6,6 +6,7 @@
 #ifndef GFX_FONTMISSINGGLYPHS_H
 #define GFX_FONTMISSINGGLYPHS_H
 
+#include "prtypes.h"
 #include "gfxTypes.h"
 #include "gfxContext.h"
 #include "gfxRect.h"
