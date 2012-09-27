@@ -210,10 +210,6 @@ public:
                             nsPoint              aPt);
 
   virtual bool UpdateOverflow();
-  
-  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0) MOZ_OVERRIDE;
-  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) MOZ_OVERRIDE;
-  virtual void InvalidateFrameForRemoval() MOZ_OVERRIDE { InvalidateFrameSubtree(); }
 
 protected:
   /** implement abstract method on nsContainerFrame */

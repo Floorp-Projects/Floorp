@@ -116,8 +116,8 @@ public:
    * Used to adjust the area of a frame that needs to be invalidated to take
    * account of SVG effects.
    */
-  static nsIntRect
-  AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame, const nsIntRect& aInvalidRect);
+  static nsRect
+  AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame, const nsRect& aInvalidRect);
 
   /**
    * Figure out which area of the source is needed given an area to

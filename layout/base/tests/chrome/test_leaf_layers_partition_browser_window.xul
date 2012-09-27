@@ -43,7 +43,7 @@
       var initialCount = win.mozPaintCount;
 
       function nextStep() {
-        if (win.mozPaintCount == initialCount || win.isMozAfterPaintPending) {
+        if (win.mozPaintCount == initialCount) {
           SimpleTest.info("Waiting for mozPaintCount (= " + initialCount + ") to increase" + testInfo());
           // Do not use SimpleTest.executeSoon() here: give a little more time.
           setTimeout(nextStep, 100);

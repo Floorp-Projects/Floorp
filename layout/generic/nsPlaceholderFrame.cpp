@@ -135,6 +135,7 @@ nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsIPresShell* shell = PresContext()->GetPresShell();
   nsIFrame* oof = mOutOfFlowFrame;
   if (oof) {
+    oof->InvalidateFrameSubtree();
     // Unregister out-of-flow frame
     shell->FrameManager()->UnregisterPlaceholderFrame(this);
     mOutOfFlowFrame = nullptr;
@@ -145,7 +146,7 @@ nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
         ((GetStateBits() & PLACEHOLDER_FOR_POPUP) ||
          !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof))) {
       ChildListID listId = nsLayoutUtils::GetChildListNameFor(oof);
-      shell->FrameManager()->RemoveFrame(listId, oof);
+      shell->FrameManager()->RemoveFrame(listId, oof, false);
     }
     // else oof will be destroyed by its parent
   }

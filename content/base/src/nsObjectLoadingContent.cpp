@@ -951,7 +951,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
 
     // Set up new frame to draw.
     objFrame->FixupWindow(objFrame->GetContentRectRelativeToSelf().Size());
-    objFrame->InvalidateFrame();
+    objFrame->Invalidate(objFrame->GetContentRectRelativeToSelf());
   }
   return NS_OK;
 }

@@ -67,6 +67,10 @@ public:
       ~(nsIFrame::eSVG | nsIFrame::eSVGForeignObject));
   }
 
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                  uint32_t aFlags);
+
   virtual bool IsSVGTransformed(gfxMatrix *aOwnTransform,
                                 gfxMatrix *aFromParentTransform) const;
 
@@ -90,17 +94,25 @@ public:
 
   gfxMatrix GetCanvasTM(uint32_t aFor);
 
-  nsRect GetInvalidRegion();
-
 protected:
   // implementation helpers:
   void DoReflow();
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
 
+  void InvalidateDirtyRect(const nsRect& aRect, uint32_t aFlags,
+                           bool aDuringReflowSVG);
+  void FlushDirtyRegion(uint32_t aFlags, bool aDuringReflowSVG);
+
   // If width or height is less than or equal to zero we must disable rendering
   bool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
 
   nsAutoPtr<gfxMatrix> mCanvasTM;
+
+  // Areas dirtied by changes to decendents that are in our document
+  nsRegion mSameDocDirtyRegion;
+
+  // Areas dirtied by changes to sub-documents embedded by our decendents
+  nsRegion mSubDocDirtyRegion;
 
   bool mInReflow;
 };

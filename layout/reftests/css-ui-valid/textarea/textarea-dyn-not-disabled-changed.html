@@ -1,19 +1,11 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-  <head>
-    <script>
-      function doTest() {
-        document.getElementById('t').removeAttribute('disabled');
-        document.getElementById('t').value = '';
-        document.documentElement.className='';
-      }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
-    </script>
-  </head>
   <!-- Test: if textarea is not disabled and its value has been modifie,
              it should be affected by :-moz-ui-valid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
-  <body>
+  <body onload="document.getElementById('t').removeAttribute('disabled');
+                document.getElementById('t').value = '';
+                document.documentElement.className='';">
     <textarea class='valid' id='t' disabled></textarea>
   </body>
 </html>
