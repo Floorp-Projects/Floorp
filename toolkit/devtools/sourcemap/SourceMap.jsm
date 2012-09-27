@@ -31,15 +31,6 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
   var ArraySet = require('source-map/array-set').ArraySet;
   var base64VLQ = require('source-map/base64-vlq');
 
-  // TODO:  bug 673487
-  //
-  // Sometime in the future, if we decide we need to be able to query where in
-  // the generated source a piece of the original code came from, we may want to
-  // add a slot `_originalMappings` which would be an object keyed by the
-  // original source and whose value would be an array of mappings ordered by
-  // original line/col rather than generated (which is what we have now in
-  // `_generatedMappings`).
-
   /**
    * A SourceMapConsumer instance represents a parsed source map which we can
    * query for information about the original file positions by giving it a file
@@ -72,7 +63,7 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
   function SourceMapConsumer(aSourceMap) {
     var sourceMap = aSourceMap;
     if (typeof aSourceMap === 'string') {
-      sourceMap = JSON.parse(aSourceMap);
+      sourceMap = JSON.parse(aSourceMap.replace(/^\)\]\}'/, ''));
     }
 
     var version = util.getArg(sourceMap, 'version');
@@ -89,9 +80,9 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
     this._names = ArraySet.fromArray(names);
     this._sources = ArraySet.fromArray(sources);
 
-    // `this._generatedMappings` hold the parsed mapping coordinates from the
-    // source map's "mappings" attribute. Each object in the array is of the
-    // form
+    // `this._generatedMappings` and `this._originalMappings` hold the parsed
+    // mapping coordinates from the source map's "mappings" attribute. Each
+    // object in the array is of the form
     //
     //     {
     //       generatedLine: The line number in the generated code,
@@ -108,7 +99,12 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
     //
     // All properties except for `generatedLine` and `generatedColumn` can be
     // `null`.
+    //
+    // `this._generatedMappings` is ordered by the generated positions.
+    //
+    // `this._originalMappings` is ordered by the original positions.
     this._generatedMappings = [];
+    this._originalMappings = [];
     this._parseMappings(mappings, sourceRoot);
   }
 
@@ -195,8 +191,65 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
           }
 
           this._generatedMappings.push(mapping);
+          this._originalMappings.push(mapping);
         }
       }
+
+      this._originalMappings.sort(this._compareOriginalPositions);
+    };
+
+  /**
+   * Comparator between two mappings where the original positions are compared.
+   */
+  SourceMapConsumer.prototype._compareOriginalPositions =
+    function SourceMapConsumer_compareOriginalPositions(mappingA, mappingB) {
+      if (mappingA.source > mappingB.source) {
+        return 1;
+      }
+      else if (mappingA.source < mappingB.source) {
+        return -1;
+      }
+      else {
+        var cmp = mappingA.originalLine - mappingB.originalLine;
+        return cmp === 0
+          ? mappingA.originalColumn - mappingB.originalColumn
+          : cmp;
+      }
+    };
+
+  /**
+   * Comparator between two mappings where the generated positions are compared.
+   */
+  SourceMapConsumer.prototype._compareGeneratedPositions =
+    function SourceMapConsumer_compareGeneratedPositions(mappingA, mappingB) {
+      var cmp = mappingA.generatedLine - mappingB.generatedLine;
+      return cmp === 0
+        ? mappingA.generatedColumn - mappingB.generatedColumn
+        : cmp;
+    };
+
+  /**
+   * Find the mapping that best matches the hypothetical "needle" mapping that
+   * we are searching for in the given "haystack" of mappings.
+   */
+  SourceMapConsumer.prototype._findMapping =
+    function SourceMapConsumer_findMapping(aNeedle, aMappings, aLineName,
+                                           aColumnName, aComparator) {
+      // To return the position we are searching for, we must first find the
+      // mapping for the given position and then return the opposite position it
+      // points to. Because the mappings are sorted, we can use binary search to
+      // find the best mapping.
+
+      if (aNeedle[aLineName] <= 0) {
+        throw new TypeError('Line must be greater than or equal to 1, got '
+                            + aNeedle[aLineName]);
+      }
+      if (aNeedle[aColumnName] < 0) {
+        throw new TypeError('Column must be greater than or equal to 0, got '
+                            + aNeedle[aColumnName]);
+      }
+
+      return binarySearch.search(aNeedle, aMappings, aComparator);
     };
 
   /**
@@ -216,35 +269,16 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
    */
   SourceMapConsumer.prototype.originalPositionFor =
     function SourceMapConsumer_originalPositionFor(aArgs) {
-      // To return the original position, we must first find the mapping for the
-      // given generated position and then return the original position it
-      // points to. Because the mappings are sorted by generated line/column, we
-      // can use binary search to find the best mapping.
-
-      // To perform a binary search on the mappings, we must be able to compare
-      // two mappings.
-      function compare(mappingA, mappingB) {
-        var cmp = mappingA.generatedLine - mappingB.generatedLine;
-        return cmp === 0
-          ? mappingA.generatedColumn - mappingB.generatedColumn
-          : cmp;
-      }
-
-      // This is the mock of the mapping we are looking for: the needle in the
-      // haystack of mappings.
       var needle = {
         generatedLine: util.getArg(aArgs, 'line'),
         generatedColumn: util.getArg(aArgs, 'column')
       };
 
-      if (needle.generatedLine <= 0) {
-        throw new TypeError('Line must be greater than or equal to 1.');
-      }
-      if (needle.generatedColumn < 0) {
-        throw new TypeError('Column must be greater than or equal to 0.');
-      }
-
-      var mapping = binarySearch.search(needle, this._generatedMappings, compare);
+      var mapping = this._findMapping(needle,
+                                      this._generatedMappings,
+                                      "generatedLine",
+                                      "generatedColumn",
+                                      this._compareGeneratedPositions)
 
       if (mapping) {
         return {
@@ -261,7 +295,47 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
         column: null,
         name: null
       };
+    };
 
+  /**
+   * Returns the generated line and column information for the original source,
+   * line, and column positions provided. The only argument is an object with
+   * the following properties:
+   *
+   *   - source: The filename of the original source.
+   *   - line: The line number in the original source.
+   *   - column: The column number in the original source.
+   *
+   * and an object is returned with the following properties:
+   *
+   *   - line: The line number in the generated source, or null.
+   *   - column: The column number in the generated source, or null.
+   */
+  SourceMapConsumer.prototype.generatedPositionFor =
+    function SourceMapConsumer_generatedPositionFor(aArgs) {
+      var needle = {
+        source: util.getArg(aArgs, 'source'),
+        originalLine: util.getArg(aArgs, 'line'),
+        originalColumn: util.getArg(aArgs, 'column')
+      };
+
+      var mapping = this._findMapping(needle,
+                                      this._originalMappings,
+                                      "originalLine",
+                                      "originalColumn",
+                                      this._compareOriginalPositions)
+
+      if (mapping) {
+        return {
+          line: util.getArg(mapping, 'generatedLine', null),
+          column: util.getArg(mapping, 'generatedColumn', null)
+        };
+      }
+
+      return {
+        line: null,
+        column: null
+      };
     };
 
   exports.SourceMapConsumer = SourceMapConsumer;
@@ -885,7 +959,9 @@ define('source-map/source-node', ['require', 'exports', 'module' , 'source-map/s
       }, this);
     }
     else if (aChunk instanceof SourceNode || typeof aChunk === "string") {
-      this.children.push(aChunk);
+      if (aChunk) {
+        this.children.push(aChunk);
+      }
     }
     else {
       throw new TypeError(
@@ -973,7 +1049,7 @@ define('source-map/source-node', ['require', 'exports', 'module' , 'source-map/s
       lastChild.replaceRight(aPattern, aReplacement);
     }
     else if (typeof lastChild === 'string') {
-      this.children[this.children.lenth - 1] = lastChild.replace(aPattern, aReplacement);
+      this.children[this.children.length - 1] = lastChild.replace(aPattern, aReplacement);
     }
     else {
       this.children.push(''.replace(aPattern, aReplacement));

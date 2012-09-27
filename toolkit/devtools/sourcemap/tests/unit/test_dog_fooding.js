@@ -56,14 +56,22 @@ define("test/source-map/test-dog-fooding", ["require", "exports", "module"], fun
     util.assertMapping(5, 2, '/wu/tang/gza.coffee', 4, 0, null, smc, assert);
 
     // Fuzzy
-    util.assertMapping(2, 0, null, null, null, null, smc, assert);
-    util.assertMapping(2, 9, '/wu/tang/gza.coffee', 1, 0, null, smc, assert);
-    util.assertMapping(3, 0, '/wu/tang/gza.coffee', 1, 0, null, smc, assert);
-    util.assertMapping(3, 9, '/wu/tang/gza.coffee', 2, 0, null, smc, assert);
-    util.assertMapping(4, 0, '/wu/tang/gza.coffee', 2, 0, null, smc, assert);
-    util.assertMapping(4, 9, '/wu/tang/gza.coffee', 3, 0, null, smc, assert);
-    util.assertMapping(5, 0, '/wu/tang/gza.coffee', 3, 0, null, smc, assert);
-    util.assertMapping(5, 9, '/wu/tang/gza.coffee', 4, 0, null, smc, assert);
+
+    // Original to generated
+    util.assertMapping(2, 0, null, null, null, null, smc, assert, true);
+    util.assertMapping(2, 9, '/wu/tang/gza.coffee', 1, 0, null, smc, assert, true);
+    util.assertMapping(3, 0, '/wu/tang/gza.coffee', 1, 0, null, smc, assert, true);
+    util.assertMapping(3, 9, '/wu/tang/gza.coffee', 2, 0, null, smc, assert, true);
+    util.assertMapping(4, 0, '/wu/tang/gza.coffee', 2, 0, null, smc, assert, true);
+    util.assertMapping(4, 9, '/wu/tang/gza.coffee', 3, 0, null, smc, assert, true);
+    util.assertMapping(5, 0, '/wu/tang/gza.coffee', 3, 0, null, smc, assert, true);
+    util.assertMapping(5, 9, '/wu/tang/gza.coffee', 4, 0, null, smc, assert, true);
+
+    // Generated to original
+    util.assertMapping(2, 2, '/wu/tang/gza.coffee', 1, 1, null, smc, assert, null, true);
+    util.assertMapping(3, 2, '/wu/tang/gza.coffee', 2, 3, null, smc, assert, null, true);
+    util.assertMapping(4, 2, '/wu/tang/gza.coffee', 3, 6, null, smc, assert, null, true);
+    util.assertMapping(5, 2, '/wu/tang/gza.coffee', 4, 9, null, smc, assert, null, true);
   };
 
 });
