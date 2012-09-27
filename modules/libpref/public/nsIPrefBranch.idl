@@ -78,6 +78,19 @@ interface nsIPrefBranch : nsISupports
   void setBoolPref(in string aPrefName, in boolean aValue);
 
   /**
+   * Called to get the state of an individual floating-point preference.
+   * "Floating point" preferences are really string preferences that
+   * are converted to floating point numbers.
+   *
+   * @param aPrefName The floating point preference to get the state of.
+   *
+   * @return float  The value of the requested floating point preference.
+   *
+   * @see setCharPref
+   */
+  float getFloatPref(in string aPrefName);
+
+  /**
    * Called to get the state of an individual string preference.
    *
    * @param aPrefName The string preference to retrieve.

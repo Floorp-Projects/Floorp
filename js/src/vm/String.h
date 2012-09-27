@@ -687,19 +687,26 @@ class StaticStrings
     JSAtom *length2StaticTable[NUM_SMALL_CHARS * NUM_SMALL_CHARS];
     JSAtom *intStaticTable[INT_STATIC_LIMIT];
 
+    void clear() {
+        PodArrayZero(unitStaticTable);
+        PodArrayZero(length2StaticTable);
+        PodArrayZero(intStaticTable);
+    }
+
   public:
     /* We keep these public for the methodjit. */
     static const size_t UNIT_STATIC_LIMIT   = 256U;
     JSAtom *unitStaticTable[UNIT_STATIC_LIMIT];
 
     StaticStrings() {
-        PodArrayZero(unitStaticTable);
-        PodArrayZero(length2StaticTable);
-        PodArrayZero(intStaticTable);
+        clear();
     }
 
     bool init(JSContext *cx);
     void trace(JSTracer *trc);
+    void finish() {
+        clear();
+    }
 
     static inline bool hasUint(uint32_t u);
     inline JSAtom *getUint(uint32_t u);
