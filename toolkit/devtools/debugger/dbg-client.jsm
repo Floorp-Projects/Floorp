@@ -487,6 +487,7 @@ function ThreadClient(aClient, aActor) {
   this._frameCache = [];
   this._scriptCache = {};
   this._pauseGrips = {};
+  this._threadGrips = {};
 }
 
 ThreadClient.prototype = {
@@ -861,30 +862,74 @@ ThreadClient.prototype = {
   },
 
   /**
-   * Return an instance of LongStringClient for the given long string grip.
+   * Get or create a long string client, checking the grip client cache if it
+   * already exists.
+   *
+   * @param aGrip Object
+   *        The long string grip returned by the protocol.
+   * @param aGripCacheName String
+   *        The property name of the grip client cache to check for existing
+   *        clients in.
+   */
+  _longString: function TC__longString(aGrip, aGripCacheName) {
+    if (aGrip.actor in this[aGripCacheName]) {
+      return this[aGripCacheName][aGrip.actor];
+    }
+
+    let client = new LongStringClient(this._client, aGrip);
+    this[aGripCacheName][aGrip.actor] = client;
+    return client;
+  },
+
+  /**
+   * Return an instance of LongStringClient for the given long string grip that
+   * is scoped to the current pause.
    *
    * @param aGrip Object
    *        The long string grip returned by the protocol.
    */
-  longString: function TC_longString(aGrip) {
-    if (aGrip.actor in this._pauseGrips) {
-      return this._pauseGrips[aGrip.actor];
-    }
+  pauseLongString: function TC_pauseLongString(aGrip) {
+    return this._longString(aGrip, "_pauseGrips");
+  },
 
-    let client = new LongStringClient(this._client, aGrip);
-    this._pauseGrips[aGrip.actor] = client;
-    return client;
+  /**
+   * Return an instance of LongStringClient for the given long string grip that
+   * is scoped to the thread lifetime.
+   *
+   * @param aGrip Object
+   *        The long string grip returned by the protocol.
+   */
+  threadLongString: function TC_threadLongString(aGrip) {
+    return this._longString(aGrip, "_threadGrips");
+  },
+
+  /**
+   * Clear and invalidate all the grip clients from the given cache.
+   *
+   * @param aGripCacheName
+   *        The property name of the grip cache we want to clear.
+   */
+  _clearGripClients: function TC_clearGrips(aGripCacheName) {
+    for each (let grip in this[aGripCacheName]) {
+      grip.valid = false;
+    }
+    this[aGripCacheName] = {};
   },
 
   /**
    * Invalidate pause-lifetime grip clients and clear the list of
    * current grip clients.
    */
-  _clearPauseGrips: function TC_clearPauseGrips(aPacket) {
-    for each (let grip in this._pauseGrips) {
-      grip.valid = false;
-    }
-    this._pauseGrips = {};
+  _clearPauseGrips: function TC_clearPauseGrips() {
+    this._clearGripClients("_pauseGrips");
+  },
+
+  /**
+   * Invalidate pause-lifetime grip clients and clear the list of
+   * current grip clients.
+   */
+  _clearThreadGrips: function TC_clearPauseGrips() {
+    this._clearGripClients("_threadGrips");
   },
 
   /**
@@ -895,6 +940,7 @@ ThreadClient.prototype = {
     this._state = ThreadStateTypes[aPacket.type];
     this._clearFrames();
     this._clearPauseGrips();
+    aPacket.type === ThreadStateTypes.detached && this._clearThreadGrips();
     this._client._eventsEnabled && this.notify(aPacket.type, aPacket);
   },
 };
