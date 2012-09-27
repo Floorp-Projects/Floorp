@@ -283,6 +283,12 @@ class nsCookieService : public nsICookieService
     void                          NotifyPurged(nsICookie2* aCookie);
     already_AddRefed<nsIArray>    CreatePurgeList(nsICookie2* aCookie);
 
+    /**
+     * This method is used to iterate the cookie hash table and select the ones
+     * that are part of a specific app.
+     */
+    static PLDHashOperator GetCookiesForApp(nsCookieEntry* entry, void* arg);
+
   protected:
     // cached members.
     nsCOMPtr<nsIObserverService>     mObserverService;
