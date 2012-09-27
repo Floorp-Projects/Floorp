@@ -48,6 +48,8 @@
 #include "mozilla/storage.h"
 #include "mozilla/Util.h" // for DebugOnly
 #include "mozilla/Attributes.h"
+#include "nsIAppsService.h"
+#include "mozIApplication.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -541,6 +543,37 @@ public:
 
 NS_IMPL_ISUPPORTS1(CloseCookieDBListener, mozIStorageCompletionCallback)
 
+namespace {
+
+class AppUninstallObserver MOZ_FINAL : public nsIObserver {
+public:
+  NS_DECL_ISUPPORTS
+
+  // nsIObserver implementation.
+  NS_IMETHODIMP
+  Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *data)
+  {
+    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "webapps-uninstall"));
+
+    nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
+    nsCOMPtr<mozIApplication> app;
+
+    appsService->GetAppFromObserverMessage(nsAutoString(data), getter_AddRefs(app));
+    NS_ENSURE_TRUE(app, NS_ERROR_UNEXPECTED);
+
+    uint32_t appId;
+    app->GetLocalId(&appId);
+    MOZ_ASSERT(appId != NECKO_NO_APP_ID);
+
+    nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID);
+    return cookieManager->RemoveCookiesForApp(appId, false);
+  }
+};
+
+NS_IMPL_ISUPPORTS1(AppUninstallObserver, nsIObserver)
+
+} // anonymous namespace
+
 /******************************************************************************
  * nsCookieService impl:
  * singleton instance ctor/dtor methods
@@ -580,6 +613,13 @@ nsCookieService::GetSingleton()
   }
 
   return gCookieService;
+}
+
+/* static */ void
+nsCookieService::AppUninstallObserverInit()
+{
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  observerService->AddObserver(new AppUninstallObserver(), "webapps-uninstall", /* holdsWeak= */ false);
 }
 
 /******************************************************************************

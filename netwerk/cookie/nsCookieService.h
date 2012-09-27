@@ -239,6 +239,14 @@ class nsCookieService : public nsICookieService
     static nsICookieService*      GetXPCOMSingleton();
     nsresult                      Init();
 
+  /**
+   * Start watching the observer service for messages indicating that an app has
+   * been uninstalled.  When an app is uninstalled, we get the cookie service
+   * (thus instantiating it, if necessary) and clear all the cookies for that
+   * app.
+   */
+  static void AppUninstallObserverInit();
+
   protected:
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
     void                          InitDBStates();
