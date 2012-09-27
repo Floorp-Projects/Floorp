@@ -46,6 +46,7 @@ public:
   // Call on any thread
   void SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Image* aImage,
                        TimeStamp aTargetTime);
+  void ClearCurrentFrame();
   // Time in seconds by which the last painted video frame was late by.
   // E.g. if the last painted frame should have been painted at time t,
   // but was actually painted at t+n, this returns n in seconds. Threadsafe.
