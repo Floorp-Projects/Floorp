@@ -109,6 +109,7 @@
     <command id="Social:SharePage" oncommand="SocialShareButton.sharePage();"/>
     <command id="Social:UnsharePage" oncommand="SocialShareButton.unsharePage();"/>
     <command id="Social:ToggleSidebar" oncommand="Social.toggleSidebar();"/>
+    <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();"/>
     <command id="Social:Toggle" oncommand="Social.toggle();" hidden="true"/>
   </commandset>
 

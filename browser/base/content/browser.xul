@@ -684,6 +684,12 @@
                         command="Social:ToggleSidebar"
                         label="&social.toggleSidebar.label;"
                         accesskey="&social.toggleSidebar.accesskey;"/>
+              <menuitem id="social-toggle-notifications-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleNotifications"
+                        label="&social.toggleNotifications.label;"
+                        accesskey="&social.toggleNotifications.accesskey;"/>
             </menupopup>
           </button>
           <hbox id="social-status-iconbox" flex="1">
