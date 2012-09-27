@@ -2394,6 +2394,24 @@ let RIL = {
           command.locationInfo = command.event.locationInfo;
         }
         break;
+      case STK_EVENT_TYPE_MT_CALL:
+        command.deviceId = {
+          sourceId: STK_DEVICE_ID_NETWORK,
+          destinationId: STK_DEVICE_ID_SIM
+        };
+        command.transactionId = 0;
+        command.address = command.eventData.number;
+        break;
+      case STK_EVENT_TYPE_CALL_DISCONNECTED:
+        command.cause = command.eventData.error;
+      case STK_EVENT_TYPE_CALL_CONNECTED:  // Fall through
+        command.deviceId = {
+          sourceId: (command.eventData.isIssuedByRemote ?
+                     STK_DEVICE_ID_NETWORK : STK_DEVICE_ID_ME),
+          destinationId: STK_DEVICE_ID_SIM
+        };
+        command.transactionId = 0;
+        break;
     }
     this.sendICCEnvelopeCommand(command);
   },
@@ -2408,6 +2426,9 @@ let RIL = {
    * @param [optional] eventList
    * @param [optional] locationStatus
    * @param [optional] locationInfo
+   * @param [optional] address
+   * @param [optional] transactionId
+   * @param [optional] cause
    */
   sendICCEnvelopeCommand: function sendICCEnvelopeCommand(options) {
     if (DEBUG) {
@@ -2423,7 +2444,15 @@ let RIL = {
                     (options.locationInfo.gsmCellId > 0xffff ?
                       TLV_LOCATION_INFO_UMTS_SIZE :
                       TLV_LOCATION_INFO_GSM_SIZE) :
-                    0);
+                    0) +
+                 (options.transactionId ? 3 : 0) +
+                 (options.address ?
+                  1 + // Length of tag.
+                  ComprehensionTlvHelper.getSizeOfLengthOctets(
+                    Math.ceil(options.address.length/2) + 1) + // Length of length field.
+                  Math.ceil(options.address.length/2) + 1 // address BCD + TON.
+                  : 0) +
+                 (options.cause ? 4 : 0);
     let size = (2 + berLen) * 2;
 
     Buf.writeUint32(size);
@@ -2475,6 +2504,29 @@ let RIL = {
     // Location Info
     if (options.locationInfo) {
       ComprehensionTlvHelper.writeLocationInfoTlv(options.locationInfo);
+    }
+
+    // Transaction Id
+    if (options.transactionId) {
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TRANSACTION_ID |
+                                 COMPREHENSIONTLV_FLAG_CR);
+      GsmPDUHelper.writeHexOctet(1);
+      GsmPDUHelper.writeHexOctet(options.transactionId);
+    }
+
+    // Address
+    if (options.address) {
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_ADDRESS |
+                                 COMPREHENSIONTLV_FLAG_CR);
+      ComprehensionTlvHelper.writeLength(
+        Math.ceil(options.address.length/2) + 1 // address BCD + TON
+      );
+      GsmPDUHelper.writeDiallingNumber(options.address);
+    }
+
+    // Cause of disconnection.
+    if (options.cause) {
+      ComprehensionTlvHelper.writeCauseTlv(options.cause);
     }
 
     Buf.writeUint32(0);
@@ -6957,6 +7009,75 @@ let ComprehensionTlvHelper = {
       // GSM, gsmCellId is 16 bits.
       GsmPDUHelper.writeHexOctet((loc.gsmCellId >> 8) & 0xff);
       GsmPDUHelper.writeHexOctet(loc.gsmCellId & 0xff);
+    }
+  },
+
+  /**
+   * Given a geckoError string, this function translates it into cause value
+   * and write the value into buffer.
+   *
+   * @param geckoError Error string that is passed to gecko.
+   */
+  writeCauseTlv: function writeCauseTlv(geckoError) {
+    let cause = -1;
+    for (let errorNo in RIL_ERROR_TO_GECKO_ERROR) {
+      if (geckoError == RIL_ERROR_TO_GECKO_ERROR[errorNo]) {
+        cause = errorNo;
+        break;
+      }
+    }
+    cause = (cause == -1) ? ERROR_SUCCESS : cause;
+
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_CAUSE |
+                               COMPREHENSIONTLV_FLAG_CR);
+    GsmPDUHelper.writeHexOctet(2);  // For single cause value.
+
+    // TS 04.08, clause 10.5.4.11: National standard code + user location.
+    GsmPDUHelper.writeHexOctet(0x60);
+
+    // TS 04.08, clause 10.5.4.11: ext bit = 1 + 7 bits for cause.
+    // +-----------------+----------------------------------+
+    // | Ext = 1 (1 bit) |          Cause (7 bits)          |
+    // +-----------------+----------------------------------+
+    GsmPDUHelper.writeHexOctet(0x80 | cause);
+  },
+
+  getSizeOfLengthOctets: function getSizeOfLengthOctets(length) {
+    if (length >= 0x10000) {
+      return 4; // 0x83, len_1, len_2, len_3
+    } else if (length >= 0x100) {
+      return 3; // 0x82, len_1, len_2
+    } else if (length >= 0x80) {
+      return 2; // 0x81, len
+    } else {
+      return 1; // len
+    }
+  },
+
+  writeLength: function writeLength(length) {
+    // TS 101.220 clause 7.1.2, Length Encoding.
+    // Length   |  Byte 1  | Byte 2 | Byte 3 | Byte 4 |
+    // 0 - 127  |  00 - 7f | N/A    | N/A    | N/A    |
+    // 128-255  |  81      | 80 - ff| N/A    | N/A    |
+    // 256-65535|  82      | 0100 - ffff     | N/A    |
+    // 65536-   |  83      |     010000 - ffffff      |
+    // 16777215
+    if (length < 0x80) {
+      GsmPDUHelper.writeHexOctet(length);
+    } else if (0x80 <= length && length < 0x100) {
+      GsmPDUHelper.writeHexOctet(0x81);
+      GsmPDUHelper.writeHexOctet(length);
+    } else if (0x100 <= length && length < 0x10000) {
+      GsmPDUHelper.writeHexOctet(0x82);
+      GsmPDUHelper.writeHexOctet((length >> 8) & 0xff);
+      GsmPDUHelper.writeHexOctet(length & 0xff);
+    } else if (0x10000 <= length && length < 0x1000000) {
+      GsmPDUHelper.writeHexOctet(0x83);
+      GsmPDUHelper.writeHexOctet((length >> 16) & 0xff);
+      GsmPDUHelper.writeHexOctet((length >> 8) & 0xff);
+      GsmPDUHelper.writeHexOctet(length & 0xff);
+    } else {
+      throw new Error("Invalid length value :" + length);
     }
   },
 };
