@@ -929,7 +929,11 @@ SourceScripts.prototype = {
       return;
     }
 
-    this._addScript({ url: aPacket.url, startLine: aPacket.startLine }, true);
+    this._addScript({
+      url: aPacket.url,
+      startLine: aPacket.startLine,
+      source: aPacket.source
+    }, true);
 
     let preferredScriptUrl = DebuggerView.Scripts.preferredScriptUrl;
 
@@ -1217,7 +1221,7 @@ SourceScripts.prototype = {
 
     // Notify that we need to load a script file.
     DebuggerController.dispatchEvent("Debugger:LoadSource", {
-      url: aScript.url,
+      script: aScript,
       options: aOptions
     });
   },
@@ -1256,84 +1260,41 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Handles notifications to load a source script from the cache or from a
-   * local file.
-   *
-   * XXX: It may be better to use nsITraceableChannel to get to the sources
-   * without relying on caching when we can (not for eval, etc.):
-   * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
+   * Handles notifications to load a source script.
    */
   _onLoadSource: function SS__onLoadSource(aEvent) {
-    let url = aEvent.detail.url;
+    let script = aEvent.detail.script;
     let options = aEvent.detail.options;
-    let self = this;
 
-    switch (Services.io.extractScheme(url)) {
-      case "file":
-      case "chrome":
-      case "resource":
-        try {
-          NetUtil.asyncFetch(url, function onFetch(aStream, aStatus) {
-            if (!Components.isSuccessCode(aStatus)) {
-              return self._logError(url, aStatus);
-            }
-            let source = NetUtil.readInputStreamToString(aStream, aStream.available());
-            source = self._convertToUnicode(source);
-            self._onLoadSourceFinished(url, source, null, options);
-            aStream.close();
-          });
-        } catch (ex) {
-          return self._logError(url, ex.name);
+    let sourceClient = this.activeThread.source(script.source);
+    sourceClient.source(function (aResponse) {
+      if (aResponse.error) {
+        return this._logError(script.url, -1);
+      }
+
+      if (typeof aResponse.source === "string") {
+        // We did not receive a long string, instead we got the source directly.
+        this._onLoadSourceFinished(script.url,
+                                   aResponse.source,
+                                   options);
+        return;
+      }
+
+      if (aResponse.source.type !== "longString") {
+        return this._logError(script.url, -1);
+      }
+
+      let sourceTextClient = this.activeThread.threadLongString(aResponse.source);
+      let length = sourceTextClient.length;
+      sourceTextClient.substring(0, length, function (aResponse) {
+        if (aResponse.error) {
+          return this._logError(script.url, -1);
         }
-        break;
-
-      default:
-        let channel = Services.io.newChannel(url, null, null);
-        let chunks = [];
-        let streamListener = {
-          onStartRequest: function(aRequest, aContext, aStatusCode) {
-            if (!Components.isSuccessCode(aStatusCode)) {
-              return self._logError(url, aStatusCode);
-            }
-          },
-          onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
-            chunks.push(NetUtil.readInputStreamToString(aStream, aCount));
-          },
-          onStopRequest: function(aRequest, aContext, aStatusCode) {
-            if (!Components.isSuccessCode(aStatusCode)) {
-              return self._logError(url, aStatusCode);
-            }
-            let source = self._convertToUnicode(chunks.join(""), channel.contentCharset);
-            self._onLoadSourceFinished(url, source, channel.contentType, options);
-          }
-        };
-
-        channel.loadFlags = channel.LOAD_FROM_CACHE;
-        channel.asyncOpen(streamListener, null);
-        break;
-    }
-  },
-
-  /**
-   * Convert a given string, encoded in a given character set, to unicode.
-   * @param string aString
-   *        A string.
-   * @param string aCharset
-   *        A character set.
-   * @return string
-   *         A unicode string.
-   */
-  _convertToUnicode: function SS__convertToUnicode(aString, aCharset) {
-    // Decoding primitives.
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-        .createInstance(Ci.nsIScriptableUnicodeConverter);
-
-    try {
-      converter.charset = aCharset || "UTF-8";
-      return converter.ConvertToUnicode(aString);
-    } catch(e) {
-      return aString;
-    }
+        this._onLoadSourceFinished(script.url,
+                                   aResponse.substring,
+                                   options);
+      }.bind(this));
+    }.bind(this));
   },
 
   /**
@@ -1344,14 +1305,12 @@ SourceScripts.prototype = {
    *        The URL of the source script.
    * @param string aSourceText
    *        The text of the source script.
-   * @param string aContentType
-   *        The content type of the source script.
    * @param object aOptions [optional]
    *        Additional options for showing the script. Supported options:
    *        - targetLine: place the editor at the given line number.
    */
   _onLoadSourceFinished:
-  function SS__onLoadSourceFinished(aScriptUrl, aSourceText, aContentType, aOptions) {
+  function SS__onLoadSourceFinished(aScriptUrl, aSourceText, aOptions) {
     let element = DebuggerView.Scripts.getScriptByLocation(aScriptUrl);
 
     // Tab navigated before we got a chance to finish loading and displaying
@@ -1367,7 +1326,6 @@ SourceScripts.prototype = {
 
     script.loaded = true;
     script.text = aSourceText;
-    script.contentType = aContentType;
     element.setUserData("sourceScript", script, null);
 
     if (aOptions.silent) {
