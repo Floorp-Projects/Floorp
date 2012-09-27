@@ -8,7 +8,7 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(ba0e6c8e-8c03-4b9b-8f9b-4fb14216f56e)]
-interface mozIApplicationClearPrivateDataParams
+interface mozIApplicationClearPrivateDataParams : nsISupports
 {
   readonly attribute unsigned long appId;
   readonly attribute boolean browserOnly;
