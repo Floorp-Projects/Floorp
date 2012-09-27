@@ -119,7 +119,7 @@ public class UpdateService extends IntentService {
     protected void onHandleIntent (Intent intent) {
         if (UpdateServiceHelper.ACTION_REGISTER_FOR_UPDATES.equals(intent.getAction())) {
             registerForUpdates(false);
-        } if (UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE.equals(intent.getAction())) {
+        } else if (UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE.equals(intent.getAction())) {
             startUpdate(intent.getIntExtra(UpdateServiceHelper.EXTRA_UPDATE_FLAGS_NAME, 0));
         } else if (UpdateServiceHelper.ACTION_APPLY_UPDATE.equals(intent.getAction())) {
             applyUpdate(intent.getStringExtra(UpdateServiceHelper.EXTRA_PACKAGE_PATH_NAME));
