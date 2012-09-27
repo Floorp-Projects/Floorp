@@ -93,7 +93,7 @@ function GroupItem(listOfEls, options) {
   // ___ Titlebar
   var html =
     "<div class='title-container'>" +
-      "<input class='name' placeholder='" + this.defaultName + "'/>" +
+      "<input class='name' />" +
       "<div class='title-shield' />" +
     "</div>";
 
@@ -112,7 +112,7 @@ function GroupItem(listOfEls, options) {
 
   // ___ Title
   this.$titleContainer = iQ('.title-container', this.$titlebar);
-  this.$title = iQ('.name', this.$titlebar);
+  this.$title = iQ('.name', this.$titlebar).attr('placeholder', this.defaultName);
   this.$titleShield = iQ('.title-shield', this.$titlebar);
   this.setTitle(options.title);
 
