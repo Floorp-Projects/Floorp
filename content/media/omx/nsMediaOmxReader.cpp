@@ -98,6 +98,13 @@ nsresult nsMediaOmxReader::ReadMetadata(nsVideoInfo* aInfo,
 // Resets all state related to decoding, emptying all buffers etc.
 nsresult nsMediaOmxReader::ResetDecode()
 {
+  nsBuiltinDecoderReader::ResetDecode();
+
+  VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
+  if (container) {
+    container->ClearCurrentFrame();
+  }
+
   if (mLastVideoFrame) {
     delete mLastVideoFrame;
     mLastVideoFrame = nullptr;
