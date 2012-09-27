@@ -304,6 +304,9 @@ public final class ScreenshotHandler implements Runnable {
                     case SCREENSHOT_CHECKERBOARD:
                     {
                         ScreenshotHandler handler = getInstance();
+                        if (handler == null) {
+                            break;
+                        }
                         if (Tabs.getInstance().getSelectedTab().getId() == tabId) {
                             PendingScreenshot current;
                             synchronized (handler.mPendingScreenshots) {
