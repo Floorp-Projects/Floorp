@@ -1,16 +1,14 @@
 [
 {
-"size": 195,
-"digest":
-"7236ccc28312303e2f64b0afea767ca29c6c47c4714d727d68c294c898c75d06ba53486bf66cf4d76133fa780b1f5e330204c30a461f43f9b07a3dbfd4f653d4",
-"algorithm": "sha512",
+"size": 195, 
+"digest": "236362c71c433971c36b46d34e8560342435718364bc390df8de6a33249fb1fbf4fc3d0143f1e22bca262a7af7dc1b277a920bfde3ee8197eb07db2e7cef3e1f", 
+"algorithm": "sha512", 
 "filename": "setup.sh"
-},
+}, 
 {
-"size": 62788533,
-"digest":
-"1471e8847c9070d2062419a7be9d8921506b2d8b728d98986059771b8d45b4dba9afe54b25ba5665e4adde847cf4d5574c016c0390741139f6dd1749cd61d263",
-"algorithm": "sha512",
-"filename": "gonk-toolchain-6.tar.bz2"
+"size": 63159127, 
+"digest": "fcf629c815b5cbed7858d7697815f355275dcc6b060ae5455b4b31fde0d78ebc176927564a5353ceacdb9f9c9bfc1357f1341bf6ba844c25153a89664e661510", 
+"algorithm": "sha512", 
+"filename": "gonk-toolchain-7.tar.bz2"
 }
 ]
