@@ -46,20 +46,4 @@ try {
 
 assertEq(actual, expect);
 
-/* Make 64K blocks in a row, each with two vars, the second one named x. */
-s = "{let y, x;}";
-for (i = 0; i < 16; i++)
-    s += s;
-
-/* Now append code to alias block 0 and botch a JS_NOT_REACHED or get the wrong x. */
-s += "var g; { let x = 42; g = function() { return x; }; x = x; }";
-
-try {
-    eval(s);
-    actual = g();
-} catch (e) {
-    actual = e;
-}
-assertEq(actual, 42);
-
 reportCompare(0, 0, "ok");
