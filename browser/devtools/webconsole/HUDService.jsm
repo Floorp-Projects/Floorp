@@ -530,26 +530,10 @@ WebConsole.prototype = {
   _asyncRequests: null,
 
   /**
-   * Message names that the HUD listens for. These messages come from the remote
-   * Web Console content script.
-   *
-   * @private
-   * @type array
-   */
-  _messageListeners: ["WebConsole:Initialized", "WebConsole:NetworkActivity",
-    "WebConsole:FileActivity", "WebConsole:LocationChange"],
-
-  /**
    * The xul:panel that holds the Web Console when it is positioned as a window.
    * @type nsIDOMElement
    */
   consolePanel: null,
-
-  /**
-   * The current tab location.
-   * @type string
-   */
-  contentLocation: "",
 
   /**
    * Getter for the xul:popupset that holds any popups we open.
@@ -621,7 +605,6 @@ WebConsole.prototype = {
 
     this.iframeWindow = this.iframe.contentWindow.wrappedJSObject;
     this.ui = new this.iframeWindow.WebConsoleFrame(this, position);
-    this._setupMessageManager();
   },
 
   /**
@@ -766,8 +749,8 @@ WebConsole.prototype = {
    */
   getPanelTitle: function WC_getPanelTitle()
   {
-    return l10n.getFormatStr("webConsoleWindowTitleAndURL",
-                             [this.contentLocation]);
+    let url = this.ui ? this.ui.contentLocation : "";
+    return l10n.getFormatStr("webConsoleWindowTitleAndURL", [url]);
   },
 
   positions: {
@@ -991,16 +974,16 @@ WebConsole.prototype = {
   },
 
   /**
-   * Handler for the "WebConsole:LocationChange" message. If the Web Console is
+   * Handler for page location changes. If the Web Console is
    * opened in a panel the panel title is updated.
    *
-   * @param object aMessage
-   *        The message received from the content script. It needs to hold two
-   *        properties: location and title.
+   * @param string aURI
+   *        New page location.
+   * @param string aTitle
+   *        New page title.
    */
-  onLocationChange: function WC_onLocationChange(aMessage)
+  onLocationChange: function WC_onLocationChange(aURI, aTitle)
   {
-    this.contentLocation = aMessage.location;
     if (this.consolePanel) {
       this.consolePanel.label = this.getPanelTitle();
     }
@@ -1036,12 +1019,6 @@ WebConsole.prototype = {
    */
   destroy: function WC_destroy(aOnDestroy)
   {
-    this.sendMessageToContent("WebConsole:Destroy", {});
-
-    this._messageListeners.forEach(function(aName) {
-      this.messageManager.removeMessageListener(aName, this.ui);
-    }, this);
-
     // Make sure that the console panel does not try to call
     // deactivateHUDForContext() again.
     this.consoleWindowUnregisterOnHide = false;

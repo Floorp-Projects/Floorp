@@ -118,6 +118,143 @@ WebConsoleClient.prototype = {
   },
 
   /**
+   * Set Web Console-related preferences on the server.
+   *
+   * @param object aPreferences
+   *        An object with the preferences you want to change.
+   * @param function [aOnResponse]
+   *        Optional function to invoke when the response is received.
+   */
+  setPreferences: function WCC_setPreferences(aPreferences, aOnResponse)
+  {
+    let packet = {
+      to: this._actor,
+      type: "setPreferences",
+      preferences: aPreferences,
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
+   * Retrieve the request headers from the given NetworkEventActor.
+   *
+   * @param string aActor
+   *        The NetworkEventActor ID.
+   * @param function aOnResponse
+   *        The function invoked when the response is received.
+   */
+  getRequestHeaders: function WCC_getRequestHeaders(aActor, aOnResponse)
+  {
+    let packet = {
+      to: aActor,
+      type: "getRequestHeaders",
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
+   * Retrieve the request cookies from the given NetworkEventActor.
+   *
+   * @param string aActor
+   *        The NetworkEventActor ID.
+   * @param function aOnResponse
+   *        The function invoked when the response is received.
+   */
+  getRequestCookies: function WCC_getRequestCookies(aActor, aOnResponse)
+  {
+    let packet = {
+      to: aActor,
+      type: "getRequestCookies",
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
+   * Retrieve the request post data from the given NetworkEventActor.
+   *
+   * @param string aActor
+   *        The NetworkEventActor ID.
+   * @param function aOnResponse
+   *        The function invoked when the response is received.
+   */
+  getRequestPostData: function WCC_getRequestPostData(aActor, aOnResponse)
+  {
+    let packet = {
+      to: aActor,
+      type: "getRequestPostData",
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
+   * Retrieve the response headers from the given NetworkEventActor.
+   *
+   * @param string aActor
+   *        The NetworkEventActor ID.
+   * @param function aOnResponse
+   *        The function invoked when the response is received.
+   */
+  getResponseHeaders: function WCC_getResponseHeaders(aActor, aOnResponse)
+  {
+    let packet = {
+      to: aActor,
+      type: "getResponseHeaders",
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
+   * Retrieve the response cookies from the given NetworkEventActor.
+   *
+   * @param string aActor
+   *        The NetworkEventActor ID.
+   * @param function aOnResponse
+   *        The function invoked when the response is received.
+   */
+  getResponseCookies: function WCC_getResponseCookies(aActor, aOnResponse)
+  {
+    let packet = {
+      to: aActor,
+      type: "getResponseCookies",
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
+   * Retrieve the response content from the given NetworkEventActor.
+   *
+   * @param string aActor
+   *        The NetworkEventActor ID.
+   * @param function aOnResponse
+   *        The function invoked when the response is received.
+   */
+  getResponseContent: function WCC_getResponseContent(aActor, aOnResponse)
+  {
+    let packet = {
+      to: aActor,
+      type: "getResponseContent",
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
+   * Retrieve the timing information for the given NetworkEventActor.
+   *
+   * @param string aActor
+   *        The NetworkEventActor ID.
+   * @param function aOnResponse
+   *        The function invoked when the response is received.
+   */
+  getEventTimings: function WCC_getEventTimings(aActor, aOnResponse)
+  {
+    let packet = {
+      to: aActor,
+      type: "getEventTimings",
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
    * Start the given Web Console listeners.
    *
    * @see this.LISTENERS

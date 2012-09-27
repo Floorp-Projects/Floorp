@@ -86,8 +86,17 @@ function onpopupshown2(aEvent)
     });
   }, false);
 
-  executeSoon(function() {
-    menupopups[1].hidePopup();
+  waitForSuccess({
+    name: "saveRequestAndResponseBodies update",
+    validatorFn: function()
+    {
+      return huds[1].ui.saveRequestAndResponseBodies;
+    },
+    successFn: function()
+    {
+      menupopups[1].hidePopup();
+    },
+    failureFn: finishTest,
   });
 }
 
@@ -147,8 +156,17 @@ function onpopupshown1(aEvent)
     }, tabs[runCount*2 + 1].linkedBrowser.contentWindow);
   }, false);
 
-  executeSoon(function() {
-    menupopups[0].hidePopup();
+  waitForSuccess({
+    name: "saveRequestAndResponseBodies update",
+    validatorFn: function()
+    {
+      return huds[0].ui.saveRequestAndResponseBodies;
+    },
+    successFn: function()
+    {
+      menupopups[0].hidePopup();
+    },
+    failureFn: finishTest,
   });
 }
 
