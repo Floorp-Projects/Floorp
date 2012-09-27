@@ -6,6 +6,7 @@
 #ifndef GFX_SKIP_CHARS_H
 #define GFX_SKIP_CHARS_H
 
+#include "prtypes.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "gfxTypes.h"
