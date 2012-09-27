@@ -77,11 +77,6 @@ var shell = {
     if (Services.prefs.getBoolPref('app.reportCrashes') &&
         crashID) {
 
-      if (!Services.io.offline) {
-        this.CrashSubmit.submit(crashID);
-        return;
-      }
-
       Services.obs.addObserver(function observer(subject, topic, state) {
           if (topic != "network:offline-status-changed")
             return;
@@ -114,6 +109,19 @@ var shell = {
    },
 
   start: function shell_start() {
+
+    // Dogfood id. We might want to remove it in the future.
+    // see bug 789466
+    try {
+      let dogfoodId = Services.prefs.getCharPref('prerelease.dogfood.id');
+      if (dogfoodId != "") {
+        let cr = Cc["@mozilla.org/xre/app-info;1"]
+                   .getService(Ci.nsICrashReporter);
+        cr.annotateCrashReport("Email", dogfoodId);
+      }
+    }
+    catch (e) { }
+
     let homeURL = this.homeURL;
     if (!homeURL) {
       let msg = 'Fatal error during startup: No homescreen found: try setting B2G_HOMESCREEN';
@@ -431,6 +439,16 @@ Services.obs.addObserver(function(aSubject, aTopic, aData) {
 Services.obs.addObserver(function onWebappsReady(subject, topic, data) {
   shell.sendChromeEvent({ type: 'webapps-registry-ready' });
 }, 'webapps-registry-ready', false);
+
+Services.obs.addObserver(function onBluetoothVolumeChange(subject, topic, data) {
+  if (data == 'up') {
+    shell.sendChromeEvent({ type: 'volume-up-button-press' });
+    shell.sendChromeEvent({ type: 'volume-up-button-release' });
+  } else if (data == 'down') {
+    shell.sendChromeEvent({ type: 'volume-down-button-press' });
+    shell.sendChromeEvent({ type: 'volume-down-button-release' });
+  }
+}, 'bluetooth-volume-change', false);
 
 (function Repl() {
   if (!Services.prefs.getBoolPref('b2g.remote-js.enabled')) {

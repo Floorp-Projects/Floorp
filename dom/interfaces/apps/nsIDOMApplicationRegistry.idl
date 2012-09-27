@@ -6,12 +6,13 @@
 #include "nsIDOMEventTarget.idl"
 
 interface nsIDOMDOMRequest;
-interface nsIArray;
+interface nsIDOMDOMError;
 
-[scriptable, uuid(e3649c1d-c950-495e-b0ed-6ce40be9743b)]
+[scriptable, uuid(b00a5908-1228-46bf-a42b-091dce3abde1)]
 interface mozIDOMApplication  : nsISupports
 {
   readonly attribute jsval manifest;
+  readonly attribute jsval updateManifest;
   readonly attribute DOMString manifestURL;
   readonly attribute jsval receipts; /* an array of strings */
   readonly attribute DOMString origin;
@@ -19,31 +20,72 @@ interface mozIDOMApplication  : nsISupports
   readonly attribute unsigned long long installTime;
   readonly attribute boolean removable;
 
-  /* 
+  /**
    * The current progress when downloading an offline cache.
    */
   readonly attribute double progress;
 
-  /*
-   * The application status :
-   * "installed"   : The app is in the registry, but we have no offline cache.
-   * "downlading"  : We are downloading the offline cache.
-   * "cached"      : We are done with the offline cache download.
-   * "cache-error" : An error occured while downloading the offline-cache.
+  /**
+   * The application installation state :
+   * "pending"   : The application is being installed (eg, we're downloading the
+   *               offline cache or the package).
+   * "installed" : The application is installed and ready to be launched.
+   * "updating"  : We are updating the offline-cache or the package.
    */
-  readonly attribute DOMString status;
+  readonly attribute DOMString installState;
 
-  /*
-   * fires a nsIDOMApplicationEvent when a change in appcache download or status happens
+  /**
+   * fires a nsIDOMApplicationEvent when a change in appcache download or
+   * package download happens.
    */
   attribute nsIDOMEventListener onprogress;
+
+  /**
+   * The date of the last update.
+   */
+  readonly attribute unsigned long long lastUpdateCheck;
+
+  /**
+   * Starts the process of looking for an update.
+   */
+  nsIDOMDOMRequest checkForUpdate();
+
+  readonly attribute boolean downloadAvailable;
+  readonly attribute boolean downloading;
+  readonly attribute boolean readyToApplyDownload;
+  readonly attribute long downloadSize;
+
+  readonly attribute nsIDOMDOMError downloadError;
+
+  attribute nsIDOMEventListener ondownloadsuccess;
+  attribute nsIDOMEventListener ondownloaderror;
+  attribute nsIDOMEventListener ondownloadavailable;
+
+  /**
+   * Will fire once the mgmt.applyDownload() call succeeds.
+   */
+  attribute nsIDOMEventListener ondownloadapplied;
+
+  /**
+   * Starts to download an update. If |downloading| is true, this
+   * is a no-op.
+   */
+  void download();
+
+  /**
+   * Cancels an ongoing update download.
+   */
+  void cancelDownload();
 
   /* startPoint will be used when several launch_path exists for an app */
   nsIDOMDOMRequest launch([optional] in DOMString startPoint);
   nsIDOMDOMRequest uninstall();
+
+  /* Clear data that has been collected through mozbrowser elements. */
+  void clearBrowserData();
 };
 
-[scriptable, uuid(4c36ca48-841e-4d5a-8c46-dda14ac633ca)]
+[scriptable, uuid(0015d114-70c1-44ae-a8a3-fb6c107fe0e1)]
 interface mozIDOMApplicationMgmt : nsISupports
 {
   /**
@@ -71,6 +113,13 @@ interface mozIDOMApplicationMgmt : nsISupports
    * the event will be a mozIDOMApplicationEvent
    */
   attribute nsIDOMEventListener onuninstall;
+
+  /**
+   * Applies a downloaded update.
+   * This function is a no-op if it's passed an app object which doesn't have
+   * |readyToApplyDownload| set to true.
+   */
+  void applyDownload(in mozIDOMApplication app);
 };
 
 [scriptable, uuid(7ca34d3e-d855-4d0a-a3b3-58c0acad9ec3)]
