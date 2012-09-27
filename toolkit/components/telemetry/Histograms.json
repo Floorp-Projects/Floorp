@@ -1956,6 +1956,12 @@
     "n_buckets": 20,
     "description": "Firefox: Time taken to open a new browser window (ms)"
   },
+  "FX_PAGE_LOAD_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 20,
+    "description": "Firefox: Time taken to load a page (ms)"
+  },
   "FX_THUMBNAILS_CAPTURE_TIME_MS": {
     "kind": "exponential",
     "high": "500",
