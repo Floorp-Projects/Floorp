@@ -87,7 +87,7 @@ onconnect = function(e) {
       case "test-ambient-notification":
         let icon = {
           name: "testIcon",
-          iconURL: "chrome://branding/content/icon48.png",
+          iconURL: "chrome://browser/skin/Info.png",
           contentPanel: "https://example.com/browser/browser/base/content/test/social_panel.html",
           counter: 1
         };
