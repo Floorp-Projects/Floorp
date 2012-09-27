@@ -2948,12 +2948,12 @@ DrawBorderImage(nsPresContext*       aPresContext,
   };
   const int32_t sliceWidth[3] = {
     slice.left,
-    PR_MAX(imageSize.width - slice.left - slice.right, 0),
+    NS_MAX(imageSize.width - slice.left - slice.right, 0),
     slice.right,
   };
   const int32_t sliceHeight[3] = {
     slice.top,
-    PR_MAX(imageSize.height - slice.top - slice.bottom, 0),
+    NS_MAX(imageSize.height - slice.top - slice.bottom, 0),
     slice.bottom,
   };
 
