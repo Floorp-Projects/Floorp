@@ -24,10 +24,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIListener",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ConsoleProgressListener",
+                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "JSTermHelpers",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "JSPropertyProvider",
+                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "NetworkMonitor",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIStorage",
@@ -51,6 +57,11 @@ function WebConsoleActor(aConnection, aTabActor)
 
   this._objectActorsPool = new ActorPool(this.conn);
   this.conn.addActorPool(this._objectActorsPool);
+
+  this._networkEventActorsPool = new ActorPool(this.conn);
+  this.conn.addActorPool(this._networkEventActorsPool);
+
+  this._prefs = {};
 }
 
 WebConsoleActor.prototype =
@@ -67,9 +78,25 @@ WebConsoleActor.prototype =
    * @private
    * @type object
    * @see ActorPool
+   * @see WebConsoleObjectActor
    * @see this.objectGrip()
    */
   _objectActorsPool: null,
+
+  /**
+   * Actor pool for all of the network event actors.
+   * @private
+   * @type object
+   * @see NetworkEventActor
+   */
+  _networkEventActorsPool: null,
+
+  /**
+   * Web Console-related preferences.
+   * @private
+   * @type object
+   */
+  _prefs: null,
 
   /**
    * Tells the current page location associated to the sandbox. When the page
@@ -107,6 +134,23 @@ WebConsoleActor.prototype =
    * The ConsoleAPIListener instance.
    */
   consoleAPIListener: null,
+
+  /**
+   * The NetworkMonitor instance.
+   */
+  networkMonitor: null,
+
+  /**
+   * The ConsoleProgressListener instance.
+   */
+  consoleProgressListener: null,
+
+  /**
+   * Getter for the NetworkMonitor.saveRequestAndResponseBodies preference.
+   * @type boolean
+   */
+  get saveRequestAndResponseBodies()
+    this._prefs["NetworkMonitor.saveRequestAndResponseBodies"],
 
   actorPrefix: "console",
 
@@ -146,8 +190,18 @@ WebConsoleActor.prototype =
       this.consoleAPIListener.destroy();
       this.consoleAPIListener = null;
     }
+    if (this.networkMonitor) {
+      this.networkMonitor.destroy();
+      this.networkMonitor = null;
+    }
+    if (this.consoleProgressListener) {
+      this.consoleProgressListener.destroy();
+      this.consoleProgressListener = null;
+    }
     this.conn.removeActorPool(this._objectActorsPool);
+    this.conn.removeActorPool(this._networkEventActorsPool);
     this._objectActorsPool = null;
+    this._networkEventActorsPool = null;
     this._sandboxLocation = this.sandbox = null;
     this.conn = this._browser = null;
   },
@@ -206,6 +260,21 @@ WebConsoleActor.prototype =
   },
 
   /**
+   * Release a network event actor.
+   *
+   * @param object aActor
+   *        The NetworkEventActor instance you want to release.
+   */
+  releaseNetworkEvent: function WCA_releaseNetworkEvent(aActor)
+  {
+    this._networkEventActorsPool.removeActor(aActor.actorID);
+  },
+
+  //////////////////
+  // Request handlers for known packet types.
+  //////////////////
+
+  /**
    * Handler for the "startListeners" request.
    *
    * @param object aRequest
@@ -236,6 +305,30 @@ WebConsoleActor.prototype =
           }
           startedListeners.push(listener);
           break;
+        case "NetworkActivity":
+          if (!this.networkMonitor) {
+            this.networkMonitor =
+              new NetworkMonitor(this.window, this);
+            this.networkMonitor.init();
+          }
+          startedListeners.push(listener);
+          break;
+        case "FileActivity":
+          if (!this.consoleProgressListener) {
+            this.consoleProgressListener =
+              new ConsoleProgressListener(this._browser, this);
+          }
+          this.consoleProgressListener.startMonitor(this.consoleProgressListener.
+                                                    MONITOR_FILE_ACTIVITY);
+          startedListeners.push(listener);
+          break;
+        case "LocationChange":
+          if (!this.consoleProgressListener) {
+            this.consoleProgressListener =
+              new ConsoleProgressListener(this._browser, this);
+          }
+          this.consoleProgressListener.startMonitor(this.consoleProgressListener.
+                                                    MONITOR_LOCATION_CHANGE);
       }
     }
     return {
@@ -259,7 +352,9 @@ WebConsoleActor.prototype =
 
     // If no specific listeners are requested to be detached, we stop all
     // listeners.
-    let toDetach = aRequest.listeners || ["PageError", "ConsoleAPI"];
+    let toDetach = aRequest.listeners ||
+                   ["PageError", "ConsoleAPI", "NetworkActivity",
+                    "FileActivity", "LocationChange"];
 
     while (toDetach.length > 0) {
       let listener = toDetach.shift();
@@ -275,6 +370,27 @@ WebConsoleActor.prototype =
           if (this.consoleAPIListener) {
             this.consoleAPIListener.destroy();
             this.consoleAPIListener = null;
+          }
+          stoppedListeners.push(listener);
+          break;
+        case "NetworkActivity":
+          if (this.networkMonitor) {
+            this.networkMonitor.destroy();
+            this.networkMonitor = null;
+          }
+          stoppedListeners.push(listener);
+          break;
+        case "FileActivity":
+          if (this.consoleProgressListener) {
+            this.consoleProgressListener.stopMonitor(this.consoleProgressListener.
+                                                     MONITOR_FILE_ACTIVITY);
+          }
+          stoppedListeners.push(listener);
+          break;
+        case "LocationChange":
+          if (this.consoleProgressListener) {
+            this.consoleProgressListener.stopMonitor(this.consoleProgressListener.
+                                                     MONITOR_LOCATION_CHANGE);
           }
           stoppedListeners.push(listener);
           break;
@@ -410,6 +526,24 @@ WebConsoleActor.prototype =
   },
 
   /**
+   * The "setPreferences" request handler.
+   *
+   * @param object aRequest
+   *        The request message - which preferences need to be updated.
+   */
+  onSetPreferences: function WCA_onSetPreferences(aRequest)
+  {
+    for (let key in aRequest.preferences) {
+      this._prefs[key] = aRequest.preferences[key];
+    }
+    return { updated: Object.keys(aRequest.preferences) };
+  },
+
+  //////////////////
+  // End of request handlers.
+  //////////////////
+
+  /**
    * Create the JavaScript sandbox where user input is evaluated.
    * @private
    */
@@ -474,6 +608,10 @@ WebConsoleActor.prototype =
     return result;
   },
 
+  //////////////////
+  // Event handlers for various listeners.
+  //////////////////
+
   /**
    * Handler for page errors received from the PageErrorListener. This method
    * sends the nsIScriptError to the remote Web Console client.
@@ -521,6 +659,7 @@ WebConsoleActor.prototype =
    * Handler for window.console API calls received from the ConsoleAPIListener.
    * This method sends the object to the remote Web Console client.
    *
+   * @see ConsoleAPIListener
    * @param object aMessage
    *        The console API call we need to send to the remote client.
    */
@@ -533,6 +672,88 @@ WebConsoleActor.prototype =
     };
     this.conn.send(packet);
   },
+
+  /**
+   * Handler for network events. This method is invoked when a new network event
+   * is about to be recorded.
+   *
+   * @see NetworkEventActor
+   * @see NetworkMonitor from WebConsoleUtils.jsm
+   *
+   * @param object aEvent
+   *        The initial network request event information.
+   * @return object
+   *         A new NetworkEventActor is returned. This is used for tracking the
+   *         network request and response.
+   */
+  onNetworkEvent: function WCA_onNetworkEvent(aEvent)
+  {
+    let actor = new NetworkEventActor(aEvent, this);
+    this._networkEventActorsPool.addActor(actor);
+
+    let packet = {
+      from: this.actorID,
+      type: "networkEvent",
+      eventActor: actor.grip(),
+    };
+
+    this.conn.send(packet);
+
+    return actor;
+  },
+
+  /**
+   * Handler for file activity. This method sends the file request information
+   * to the remote Web Console client.
+   *
+   * @see ConsoleProgressListener
+   * @param string aFileURI
+   *        The requested file URI.
+   */
+  onFileActivity: function WCA_onFileActivity(aFileURI)
+  {
+    let packet = {
+      from: this.actorID,
+      type: "fileActivity",
+      uri: aFileURI,
+    };
+    this.conn.send(packet);
+  },
+
+  /**
+   * Handler for location changes. This method sends the new browser location
+   * to the remote Web Console client.
+   *
+   * @see ConsoleProgressListener
+   * @param string aState
+   *        Tells the location change state:
+   *        - "start" means a load has begun.
+   *        - "stop" means load completed.
+   * @param string aURI
+   *        The new browser URI.
+   * @param string aTitle
+   *        The new page title URI.
+   */
+  onLocationChange: function WCA_onLocationChange(aState, aURI, aTitle)
+  {
+    // TODO: we should use tabNavigated, but that lives on the TabActor and in
+    // the Web Console we do not attach to the TabActor. Plus, the tabNavigated
+    // packet is only sent at the end of a page load - for the Web Console we
+    // need it as early as possible. Follow-up bug material?
+    let packet = {
+      from: this.actorID,
+      type: "locationChange",
+      uri: aURI,
+      title: aTitle,
+      state: aState,
+      nativeConsoleAPI: this.hasNativeConsoleAPI(),
+    };
+    this.conn.send(packet);
+  },
+
+  //////////////////
+  // End of event handlers for various listeners.
+  //////////////////
 
   /**
    * Prepare a message from the console API to be sent to the remote Web Console
@@ -604,6 +825,7 @@ WebConsoleActor.prototype.requestTypes =
   evaluateJS: WebConsoleActor.prototype.onEvaluateJS,
   autocomplete: WebConsoleActor.prototype.onAutocomplete,
   clearMessagesCache: WebConsoleActor.prototype.onClearMessagesCache,
+  setPreferences: WebConsoleActor.prototype.onSetPreferences,
 };
 
 /**
@@ -676,5 +898,377 @@ WebConsoleObjectActor.prototype.requestTypes =
 {
   "inspectProperties": WebConsoleObjectActor.prototype.onInspectProperties,
   "release": WebConsoleObjectActor.prototype.onRelease,
+};
+
+
+/**
+ * Creates an actor for a network event.
+ *
+ * @constructor
+ * @param object aNetworkEvent
+ *        The network event you want to use the actor for.
+ * @param object aWebConsoleActor
+ *        The parent WebConsoleActor instance for this object.
+ */
+function NetworkEventActor(aNetworkEvent, aWebConsoleActor)
+{
+  this.parent = aWebConsoleActor;
+  this.conn = this.parent.conn;
+
+  this._startedDateTime = aNetworkEvent.startedDateTime;
+
+  this._request = {
+    method: aNetworkEvent.method,
+    url: aNetworkEvent.url,
+    httpVersion: aNetworkEvent.httpVersion,
+    headers: [],
+    cookies: [],
+    headersSize: aNetworkEvent.headersSize,
+    postData: {},
+  };
+
+  this._response = {
+    headers: [],
+    cookies: [],
+    content: {},
+  };
+
+  this._timings = {};
+
+  this._discardRequestBody = aNetworkEvent.discardRequestBody;
+  this._discardResponseBody = aNetworkEvent.discardResponseBody;
+}
+
+NetworkEventActor.prototype =
+{
+  _request: null,
+  _response: null,
+  _timings: null,
+
+  actorPrefix: "netEvent",
+
+  /**
+   * Returns a grip for this actor for returning in a protocol message.
+   */
+  grip: function NEA_grip()
+  {
+    return {
+      actor: this.actorID,
+      startedDateTime: this._startedDateTime,
+      url: this._request.url,
+      method: this._request.method,
+    };
+  },
+
+  /**
+   * Releases this actor from the pool.
+   */
+  release: function NEA_release()
+  {
+    this.parent.releaseNetworkEvent(this);
+  },
+
+  /**
+   * Handle a protocol request to release a grip.
+   */
+  onRelease: function NEA_onRelease()
+  {
+    this.release();
+    return {};
+  },
+
+  /**
+   * The "getRequestHeaders" packet type handler.
+   *
+   * @return object
+   *         The response packet - network request headers.
+   */
+  onGetRequestHeaders: function NEA_onGetRequestHeaders()
+  {
+    return {
+      from: this.actorID,
+      headers: this._request.headers,
+      headersSize: this._request.headersSize,
+    };
+  },
+
+  /**
+   * The "getRequestCookies" packet type handler.
+   *
+   * @return object
+   *         The response packet - network request cookies.
+   */
+  onGetRequestCookies: function NEA_onGetRequestCookies()
+  {
+    return {
+      from: this.actorID,
+      cookies: this._request.cookies,
+    };
+  },
+
+  /**
+   * The "getRequestPostData" packet type handler.
+   *
+   * @return object
+   *         The response packet - network POST data.
+   */
+  onGetRequestPostData: function NEA_onGetRequestPostData()
+  {
+    return {
+      from: this.actorID,
+      postData: this._request.postData,
+      postDataDiscarded: this._discardRequestBody,
+    };
+  },
+
+  /**
+   * The "getResponseHeaders" packet type handler.
+   *
+   * @return object
+   *         The response packet - network response headers.
+   */
+  onGetResponseHeaders: function NEA_onGetResponseHeaders()
+  {
+    return {
+      from: this.actorID,
+      headers: this._response.headers,
+      headersSize: this._response.headersSize,
+    };
+  },
+
+  /**
+   * The "getResponseCookies" packet type handler.
+   *
+   * @return object
+   *         The response packet - network response cookies.
+   */
+  onGetResponseCookies: function NEA_onGetResponseCookies()
+  {
+    return {
+      from: this.actorID,
+      cookies: this._response.cookies,
+    };
+  },
+
+  /**
+   * The "getResponseContent" packet type handler.
+   *
+   * @return object
+   *         The response packet - network response content.
+   */
+  onGetResponseContent: function NEA_onGetResponseContent()
+  {
+    return {
+      from: this.actorID,
+      content: this._response.content,
+      contentDiscarded: this._discardResponseBody,
+    };
+  },
+
+  /**
+   * The "getEventTimings" packet type handler.
+   *
+   * @return object
+   *         The response packet - network event timings.
+   */
+  onGetEventTimings: function NEA_onGetEventTimings()
+  {
+    return {
+      from: this.actorID,
+      timings: this._timings,
+      totalTime: this._totalTime,
+    };
+  },
+
+  /******************************************************************
+   * Listeners for new network event data coming from NetworkMonitor.
+   ******************************************************************/
+
+  /**
+   * Add network request headers.
+   *
+   * @param array aHeaders
+   *        The request headers array.
+   */
+  addRequestHeaders: function NEA_addRequestHeaders(aHeaders)
+  {
+    this._request.headers = aHeaders;
+
+    let packet = {
+      from: this.actorID,
+      type: "networkEventUpdate",
+      updateType: "requestHeaders",
+      headers: aHeaders.length,
+      headersSize: this._request.headersSize,
+    };
+
+    this.conn.send(packet);
+  },
+
+  /**
+   * Add network request cookies.
+   *
+   * @param array aCookies
+   *        The request cookies array.
+   */
+  addRequestCookies: function NEA_addRequestCookies(aCookies)
+  {
+    this._request.cookies = aCookies;
+
+    let packet = {
+      from: this.actorID,
+      type: "networkEventUpdate",
+      updateType: "requestCookies",
+      cookies: aCookies.length,
+    };
+
+    this.conn.send(packet);
+  },
+
+  /**
+   * Add network request POST data.
+   *
+   * @param object aPostData
+   *        The request POST data.
+   */
+  addRequestPostData: function NEA_addRequestPostData(aPostData)
+  {
+    this._request.postData = aPostData;
+
+    let packet = {
+      from: this.actorID,
+      type: "networkEventUpdate",
+      updateType: "requestPostData",
+      dataSize: aPostData.text.length,
+      discardRequestBody: this._discardRequestBody,
+    };
+
+    this.conn.send(packet);
+  },
+
+  /**
+   * Add the initial network response information.
+   *
+   * @param object aInfo
+   *        The response information.
+   */
+  addResponseStart: function NEA_addResponseStart(aInfo)
+  {
+    this._response.httpVersion = aInfo.httpVersion;
+    this._response.status = aInfo.status;
+    this._response.statusText = aInfo.statusText;
+    this._response.headersSize = aInfo.headersSize;
+    this._discardResponseBody = aInfo.discardResponseBody;
+
+    let packet = {
+      from: this.actorID,
+      type: "networkEventUpdate",
+      updateType: "responseStart",
+      response: aInfo,
+    };
+
+    this.conn.send(packet);
+  },
+
+  /**
+   * Add network response headers.
+   *
+   * @param array aHeaders
+   *        The response headers array.
+   */
+  addResponseHeaders: function NEA_addResponseHeaders(aHeaders)
+  {
+    this._response.headers = aHeaders;
+
+    let packet = {
+      from: this.actorID,
+      type: "networkEventUpdate",
+      updateType: "responseHeaders",
+      headers: aHeaders.length,
+      headersSize: this._response.headersSize,
+    };
+
+    this.conn.send(packet);
+  },
+
+  /**
+   * Add network response cookies.
+   *
+   * @param array aCookies
+   *        The response cookies array.
+   */
+  addResponseCookies: function NEA_addResponseCookies(aCookies)
+  {
+    this._response.cookies = aCookies;
+
+    let packet = {
+      from: this.actorID,
+      type: "networkEventUpdate",
+      updateType: "responseCookies",
+      cookies: aCookies.length,
+    };
+
+    this.conn.send(packet);
+  },
+
+  /**
+   * Add network response content.
+   *
+   * @param object aContent
+   *        The response content.
+   * @param boolean aDiscardedResponseBody
+   *        Tells if the response content was recorded or not.
+   */
+  addResponseContent:
+  function NEA_addResponseContent(aContent, aDiscardedResponseBody)
+  {
+    this._response.content = aContent;
+
+    let packet = {
+      from: this.actorID,
+      type: "networkEventUpdate",
+      updateType: "responseContent",
+      mimeType: aContent.mimeType,
+      contentSize: aContent.text.length,
+      discardResponseBody: aDiscardedResponseBody,
+    };
+
+    this.conn.send(packet);
+  },
+
+  /**
+   * Add network event timing information.
+   *
+   * @param number aTotal
+   *        The total time of the network event.
+   * @param object aTimings
+   *        Timing details about the network event.
+   */
+  addEventTimings: function NEA_addEventTimings(aTotal, aTimings)
+  {
+    this._totalTime = aTotal;
+    this._timings = aTimings;
+
+    let packet = {
+      from: this.actorID,
+      type: "networkEventUpdate",
+      updateType: "eventTimings",
+      totalTime: aTotal,
+    };
+
+    this.conn.send(packet);
+  },
+};
+
+NetworkEventActor.prototype.requestTypes =
+{
+  "release": NetworkEventActor.prototype.onRelease,
+  "getRequestHeaders": NetworkEventActor.prototype.onGetRequestHeaders,
+  "getRequestCookies": NetworkEventActor.prototype.onGetRequestCookies,
+  "getRequestPostData": NetworkEventActor.prototype.onGetRequestPostData,
+  "getResponseHeaders": NetworkEventActor.prototype.onGetResponseHeaders,
+  "getResponseCookies": NetworkEventActor.prototype.onGetResponseCookies,
+  "getResponseContent": NetworkEventActor.prototype.onGetResponseContent,
+  "getEventTimings": NetworkEventActor.prototype.onGetEventTimings,
 };
 
