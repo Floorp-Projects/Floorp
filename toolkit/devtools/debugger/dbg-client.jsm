@@ -943,6 +943,14 @@ ThreadClient.prototype = {
     aPacket.type === ThreadStateTypes.detached && this._clearThreadGrips();
     this._client._eventsEnabled && this.notify(aPacket.type, aPacket);
   },
+
+  /**
+   * Return an instance of SourceClient for the given actor.
+   */
+  source: function TC_source(aActor) {
+    return new SourceClient(this._client, aActor);
+  }
+
 };
 
 eventSource(ThreadClient.prototype);
@@ -1081,6 +1089,32 @@ LongStringClient.prototype = {
                    type: "substring",
                    start: aStart,
                    end: aEnd };
+    this._client.request(packet, aCallback);
+  }
+};
+
+/**
+ * A SourceClient provides a way to access the source text of a script.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aActor String
+ *        The name of the source actor.
+ */
+function SourceClient(aClient, aActor) {
+  this._actor = aActor;
+  this._client = aClient;
+}
+
+SourceClient.prototype = {
+  /**
+   * Get a long string grip for this SourceClient's source.
+   */
+  source: function SC_source(aCallback) {
+    let packet = {
+      to: this._actor,
+      type: "source"
+    };
     this._client.request(packet, aCallback);
   }
 };
