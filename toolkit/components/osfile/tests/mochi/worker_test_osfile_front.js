@@ -351,6 +351,27 @@ function test_copy_existing_file()
   ok(true, "test_copy_existing: Copy complete");
   compare_files("test_copy_existing", src_file_name, tmp_file_name);
 
+  // Create a bogus file with arbitrary content, then attempt to overwrite
+  // it with |copy|.
+  let dest = OS.File.open(tmp_file_name, {trunc: true});
+  let buf = new ArrayBuffer(50);
+  dest.write(buf);
+  dest.close();
+
+  OS.File.copy(src_file_name, tmp_file_name);
+
+  compare_files("test_copy_existing 2", src_file_name, tmp_file_name);
+
+  // Attempt to overwrite with noOverwrite
+  let exn;
+  try {
+    OS.File.copy(src_file_name, tmp_file_name, {noOverwrite: true});
+  } catch(x) {
+    exn = x;
+  }
+  ok(!!exn, "test_copy_existing: noOverwrite prevents overwriting existing files");
+
+
   ok(true, "test_copy_existing: Cleaning up");
   OS.File.remove(tmp_file_name);
 }
