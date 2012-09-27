@@ -5,12 +5,12 @@
 #ifndef GFX_CHROMIUMTYPES_H
 #define GFX_CHROMIUMTYPES_H
 
+#include "prtypes.h"
 #include "mozilla/StandardInteger.h"
 
 typedef uint8_t uint8;
 typedef int8_t int8;
 typedef int16_t int16;
-typedef uint32_t uint32;
 
 // From Chromium build_config.h:
 // Processor architecture detection.  For more info on what's defined, see:

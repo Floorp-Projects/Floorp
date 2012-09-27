@@ -6,6 +6,7 @@
 #ifndef GFX_TYPES_H
 #define GFX_TYPES_H
 
+#include "prtypes.h"
 #include "nsAtomicRefcnt.h"
 
 /**
