@@ -53,6 +53,7 @@ abstract public class BrowserApp extends GeckoApp
     private AboutHomeContent mAboutHomeContent;
     private boolean mAboutHomeShowing;
 
+    private static final int ADDON_MENU_OFFSET = 1000;
     static Vector<MenuItem> sAddonMenuItems = new Vector<MenuItem>();
 
     private PropertyAnimator mMainLayoutAnimator;
@@ -345,7 +346,7 @@ abstract public class BrowserApp extends GeckoApp
         try {
             if (event.equals("Menu:Add")) {
                 final String label = message.getString("name");
-                final int id = message.getInt("id");
+                final int id = message.getInt("id") + ADDON_MENU_OFFSET;
                 String iconRes = null;
                 try { // icon is optional
                     iconRes = message.getString("icon");
@@ -357,7 +358,7 @@ abstract public class BrowserApp extends GeckoApp
                     }
                 });
             } else if (event.equals("Menu:Remove")) {
-                final int id = message.getInt("id");
+                final int id = message.getInt("id") + ADDON_MENU_OFFSET;
                 mMainHandler.post(new Runnable() {
                     public void run() {
                         removeAddonMenuItem(id);
