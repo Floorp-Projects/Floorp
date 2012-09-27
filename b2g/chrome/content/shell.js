@@ -440,6 +440,16 @@ Services.obs.addObserver(function onWebappsReady(subject, topic, data) {
   shell.sendChromeEvent({ type: 'webapps-registry-ready' });
 }, 'webapps-registry-ready', false);
 
+Services.obs.addObserver(function onBluetoothVolumeChange(subject, topic, data) {
+  if (data == 'up') {
+    shell.sendChromeEvent({ type: 'volume-up-button-press' });
+    shell.sendChromeEvent({ type: 'volume-up-button-release' });
+  } else if (data == 'down') {
+    shell.sendChromeEvent({ type: 'volume-down-button-press' });
+    shell.sendChromeEvent({ type: 'volume-down-button-release' });
+  }
+}, 'bluetooth-volume-change', false);
+
 (function Repl() {
   if (!Services.prefs.getBoolPref('b2g.remote-js.enabled')) {
     return;
