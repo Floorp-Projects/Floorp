@@ -55,6 +55,7 @@ namespace docshell {
 //-----------------------------------------------------------------------------
 
 NS_INTERFACE_MAP_BEGIN(OfflineCacheUpdateChild)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIOfflineCacheUpdate)
 NS_INTERFACE_MAP_END
 
