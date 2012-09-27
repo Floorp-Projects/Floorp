@@ -116,28 +116,6 @@ protected:
   bool                      mAddedScrollPositionListener;
 };
 
-class nsDisplayCanvasBackgroundGeometry : public nsDisplayItemGeometry
-{
-public:
-  nsDisplayCanvasBackgroundGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder, const nsRect& aChildBorder)
-    : nsDisplayItemGeometry(aItem, aBuilder)
-    , mChildBorder(aChildBorder)
-    , mPaddingRect(aItem->GetPaddingRect())
-    , mContentRect(aItem->GetContentRect())
-  {}
-
-  virtual void MoveBy(const nsPoint& aOffset)
-  {
-    mBounds.MoveBy(aOffset);
-    mPaddingRect.MoveBy(aOffset);
-    mContentRect.MoveBy(aOffset);
-  }
-
-  nsRect mChildBorder;
-  nsRect mPaddingRect;
-  nsRect mContentRect;
-};
-
 /**
  * Override nsDisplayBackground methods so that we pass aBGClipRect to
  * PaintBackground, covering the whole overflow area.
@@ -191,39 +169,7 @@ public:
     // We need to override so we don't consider border-radius.
     aOutFrames->AppendElement(mFrame);
   }
-  
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder)
-  {
-    nsIFrame *child = mFrame->GetFirstPrincipalChild();
-    return new nsDisplayCanvasBackgroundGeometry(this, aBuilder, 
-                                                 child ? child->GetRect() : nsRect());;
-  }
 
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion)
-  {
-    const nsDisplayCanvasBackgroundGeometry* geometry = static_cast<const nsDisplayCanvasBackgroundGeometry*>(aGeometry);
-    if (ShouldFixToViewport(aBuilder)) {
-      // This is incorrect, We definitely need to check more things here. 
-      return;
-    }
-
-    nsIFrame *child = mFrame->GetFirstPrincipalChild();
-
-    bool snap;
-    if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
-        (child && !geometry->mChildBorder.IsEqualInterior(child->GetRect())) ||
-        !geometry->mPaddingRect.IsEqualInterior(GetPaddingRect()) ||
-        !geometry->mContentRect.IsEqualInterior(GetContentRect())) {
-      if (!RenderingMightDependOnFrameSize() && geometry->mBounds.TopLeft() == GetBounds(aBuilder, &snap).TopLeft()) {
-        aInvalidRegion->Xor(GetBounds(aBuilder, &snap), geometry->mBounds);
-      } else {
-        aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
-      }
-    }
-  }
-  
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) MOZ_OVERRIDE;
 

@@ -45,7 +45,7 @@ fails-if(Android) != spellcheck-input-property-dynamic-override-inherit.html spe
 random-if(Android) != spellcheck-textarea-attr.html spellcheck-textarea-ref.html
 needs-focus == spellcheck-textarea-focused.html spellcheck-textarea-ref.html
 needs-focus == spellcheck-textarea-focused-reframe.html spellcheck-textarea-ref.html
-needs-focus == spellcheck-textarea-focused-notreadonly.html spellcheck-textarea-ref2.html
+needs-focus == spellcheck-textarea-focused-notreadonly.html spellcheck-textarea-ref.html
 random-if(Android) != spellcheck-textarea-nofocus.html spellcheck-textarea-ref.html
 random-if(Android) != spellcheck-textarea-disabled.html spellcheck-textarea-ref.html
 random-if(Android) != spellcheck-textarea-attr-inherit.html spellcheck-textarea-ref.html

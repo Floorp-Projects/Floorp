@@ -14,7 +14,6 @@
 #include "nsSVGFilterFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGTextPathFrame.h"
-#include "nsIReflowCallback.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -239,7 +238,7 @@ InvalidateAllContinuations(nsIFrame* aFrame)
 {
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
-    f->InvalidateFrame();
+    f->InvalidateOverflowRect();
   }
 }
 
@@ -285,32 +284,6 @@ nsSVGMarkerProperty::DoUpdate()
     mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
-class nsAsyncNotifyGlyphMetricsChange MOZ_FINAL : public nsIReflowCallback
-{
-public:
-    nsAsyncNotifyGlyphMetricsChange(nsIFrame* aFrame) : mWeakFrame(aFrame)
-    {
-    }
-
-    virtual bool ReflowFinished()
-    {
-        nsSVGTextPathFrame* frame =
-            static_cast<nsSVGTextPathFrame*>(mWeakFrame.GetFrame());
-        if (frame) {
-            frame->NotifyGlyphMetricsChange();
-        }
-        delete this;
-        return true;
-    }
-
-    virtual void ReflowCallbackCanceled()
-    {
-        delete this;
-    }
-
-    nsWeakFrame mWeakFrame;
-};
-
 void
 nsSVGTextPathProperty::DoUpdate()
 {
@@ -321,13 +294,8 @@ nsSVGTextPathProperty::DoUpdate()
   NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
 
   if (mFrame->GetType() == nsGkAtoms::svgTextPathFrame) {
-    if (mFrame->PresContext()->PresShell()->IsReflowLocked()) {
-      nsIReflowCallback* cb = new nsAsyncNotifyGlyphMetricsChange(mFrame);
-      mFrame->PresContext()->PresShell()->PostReflowCallback(cb);
-    } else {
-      nsSVGTextPathFrame* textPathFrame = static_cast<nsSVGTextPathFrame*>(mFrame);
-      textPathFrame->NotifyGlyphMetricsChange();
-    }
+    nsSVGTextPathFrame* textPathFrame = static_cast<nsSVGTextPathFrame*>(mFrame);
+    textPathFrame->NotifyGlyphMetricsChange();
   }
 }
 
@@ -561,20 +529,6 @@ GatherEnumerator(nsPtrHashKey<nsSVGRenderingObserver>* aEntry, void* aArg)
   return PL_DHASH_REMOVE;
 }
 
-static PLDHashOperator
-GatherEnumeratorForReflow(nsPtrHashKey<nsSVGRenderingObserver>* aEntry, void* aArg)
-{
-  if (!aEntry->GetKey()->ObservesReflow()) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsTArray<nsSVGRenderingObserver*>* array =
-    static_cast<nsTArray<nsSVGRenderingObserver*>*>(aArg);
-  array->AppendElement(aEntry->GetKey());
-          
-  return PL_DHASH_REMOVE;
-}
-
 void
 nsSVGRenderingObserverList::InvalidateAll()
 {
@@ -585,22 +539,6 @@ nsSVGRenderingObserverList::InvalidateAll()
 
   // The PL_DHASH_REMOVE in GatherEnumerator drops all our observers here:
   mObservers.EnumerateEntries(GatherEnumerator, &observers);
-
-  for (uint32_t i = 0; i < observers.Length(); ++i) {
-    observers[i]->InvalidateViaReferencedElement();
-  }
-}
-
-void
-nsSVGRenderingObserverList::InvalidateAllForReflow()
-{
-  if (mObservers.Count() == 0)
-    return;
-
-  nsAutoTArray<nsSVGRenderingObserver*,10> observers;
-
-  // The PL_DHASH_REMOVE in GatherEnumerator drops all our observers here:
-  mObservers.EnumerateEntries(GatherEnumeratorForReflow, &observers);
 
   for (uint32_t i = 0; i < observers.Length(); ++i) {
     observers[i]->InvalidateViaReferencedElement();
@@ -697,24 +635,20 @@ nsSVGEffects::InvalidateRenderingObservers(nsIFrame *aFrame)
 }
 
 void
-nsSVGEffects::InvalidateDirectRenderingObservers(Element *aElement, uint32_t aFlags /* = 0 */)
+nsSVGEffects::InvalidateDirectRenderingObservers(Element *aElement)
 {
   if (aElement->HasRenderingObservers()) {
     nsSVGRenderingObserverList *observerList = GetObserverList(aElement);
     if (observerList) {
-      if (aFlags & INVALIDATE_REFLOW) {
-        observerList->InvalidateAllForReflow();
-      } else {
-        observerList->InvalidateAll();
-      }
+      observerList->InvalidateAll();
     }
   }
 }
 
 void
-nsSVGEffects::InvalidateDirectRenderingObservers(nsIFrame *aFrame, uint32_t aFlags /* = 0 */)
+nsSVGEffects::InvalidateDirectRenderingObservers(nsIFrame *aFrame)
 {
   if (aFrame->GetContent() && aFrame->GetContent()->IsElement()) {
-    InvalidateDirectRenderingObservers(aFrame->GetContent()->AsElement(), aFlags);
+    InvalidateDirectRenderingObservers(aFrame->GetContent()->AsElement());
   }
 }

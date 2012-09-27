@@ -930,6 +930,11 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   aKidFrame->WillReflow(aPresContext);
 
   if (NS_FRAME_NO_MOVE_FRAME != (aFlags & NS_FRAME_NO_MOVE_FRAME)) {
+    if ((aFlags & NS_FRAME_INVALIDATE_ON_MOVE) &&
+        !(aKidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+        aKidFrame->GetPosition() != nsPoint(aX, aY)) {
+      aKidFrame->InvalidateFrameSubtree();
+    }
     aKidFrame->SetPosition(nsPoint(aX, aY));
   }
 
@@ -1038,6 +1043,13 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
       // correctly positioned
       PositionChildViews(aKidFrame);
     }
+
+    // We also need to redraw everything associated with the frame
+    // because if the frame's Reflow issued any invalidates, then they
+    // will be at the wrong offset ... note that this includes
+    // invalidates issued against the frame's children, so we need to
+    // invalidate the overflow area too.
+    aKidFrame->Invalidate(aDesiredSize.VisualOverflow());
   }
 
   return aKidFrame->DidReflow(aPresContext, aReflowState, NS_FRAME_REFLOW_FINISHED);
@@ -1117,6 +1129,10 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
                                    frame, availSpace);
       nsReflowStatus frameStatus = NS_FRAME_COMPLETE;
 
+      // Cache old bounds
+      nsRect oldRect = frame->GetRect();
+      nsRect oldOverflow = frame->GetVisualOverflowRect();
+
       // Reflow
       rv = ReflowChild(frame, aPresContext, desiredSize, frameState,
                        prevRect.x, 0, aFlags, frameStatus, &tracker);
@@ -1126,6 +1142,18 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
       rv = FinishReflowChild(frame, aPresContext, &frameState, desiredSize,
                              prevRect.x, 0, aFlags);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // Invalidate if there was a position or size change
+      nsRect rect = frame->GetRect();
+      if (!rect.IsEqualInterior(oldRect)) {
+        nsRect dirtyRect = oldOverflow;
+        dirtyRect.MoveBy(oldRect.x, oldRect.y);
+        Invalidate(dirtyRect);
+
+        dirtyRect = frame->GetVisualOverflowRect();
+        dirtyRect.MoveBy(rect.x, rect.y);
+        Invalidate(dirtyRect);
+      }
 
       // Handle continuations
       if (!NS_FRAME_IS_FULLY_COMPLETE(frameStatus)) {
@@ -1340,6 +1368,8 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
         ->DeleteNextInFlowChild(aPresContext, delFrame, aDeletingEmptyFrames);
     }
   }
+
+  aNextInFlow->InvalidateFrameSubtree();
 
   // Take the next-in-flow out of the parent's child list
 #ifdef DEBUG

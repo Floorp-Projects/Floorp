@@ -1,19 +1,11 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-  <head>
-    <script>
-      function doTest() {
-        document.getElementById('t').removeAttribute('readonly');
-        document.getElementById('t').value = '';
-        document.documentElement.className='';
-      }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
-    </script>
-  </head>
   <!-- Test: if textarea is no longer readonly and has it's value changed,
              it's affected by :-moz-ui-invalid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
-  <body>
+  <body onload="document.getElementById('t').removeAttribute('readonly');
+                document.getElementById('t').value = '';
+                document.documentElement.className='';">
     <textarea class='invalid' id='t' readonly required></textarea>
   </body>
 </html>

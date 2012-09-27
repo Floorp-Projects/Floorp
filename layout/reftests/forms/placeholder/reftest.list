@@ -17,7 +17,7 @@ needs-focus == placeholder-10.html placeholder-visible-ref.html
 == placeholder-13.html placeholder-visible-ref.html
 == placeholder-14.html placeholder-visible-ref.html
 == placeholder-18.html placeholder-overridden-ref.html
-random-if(winWidget) == placeholder-19.xul  placeholder-overridden-ref.xul
+== placeholder-19.xul  placeholder-overridden-ref.xul
 needs-focus == placeholder-20.html placeholder-focus-ref.html
 needs-focus == placeholder-21.html placeholder-blank-ref.html
 needs-focus == placeholder-22.html placeholder-blank-ref.html

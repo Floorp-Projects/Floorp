@@ -644,7 +644,7 @@ nsTreeBodyFrame::Invalidate()
   if (mUpdateBatchNest)
     return NS_OK;
 
-  InvalidateFrame();
+  InvalidateOverflowRect();
 
   return NS_OK;
 }
@@ -670,7 +670,7 @@ nsTreeBodyFrame::InvalidateColumn(nsITreeColumn* aCol)
 
   // When false then column is out of view
   if (OffsetForHorzScroll(columnRect, true))
-      InvalidateFrameWithRect(columnRect);
+      nsIFrame::Invalidate(columnRect);
 
   return NS_OK;
 }
@@ -691,7 +691,7 @@ nsTreeBodyFrame::InvalidateRow(int32_t aIndex)
     return NS_OK;
 
   nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*aIndex, mInnerBox.width, mRowHeight);
-  InvalidateFrameWithRect(rowRect);
+  nsLeafBoxFrame::Invalidate(rowRect);
 
   return NS_OK;
 }
@@ -721,7 +721,7 @@ nsTreeBodyFrame::InvalidateCell(int32_t aIndex, nsITreeColumn* aCol)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (OffsetForHorzScroll(cellRect, true))
-    InvalidateFrameWithRect(cellRect);
+    nsIFrame::Invalidate(cellRect);
 
   return NS_OK;
 }
@@ -754,7 +754,7 @@ nsTreeBodyFrame::InvalidateRange(int32_t aStart, int32_t aEnd)
 #endif
 
   nsRect rangeRect(mInnerBox.x, mInnerBox.y+mRowHeight*(aStart-mTopRowIndex), mInnerBox.width, mRowHeight*(aEnd-aStart+1));
-  InvalidateFrameWithRect(rangeRect);
+  nsIFrame::Invalidate(rangeRect);
 
   return NS_OK;
 }
@@ -797,7 +797,7 @@ nsTreeBodyFrame::InvalidateColumnRange(int32_t aStart, int32_t aEnd, nsITreeColu
                              &rangeRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  InvalidateFrameWithRect(rangeRect);
+  nsIFrame::Invalidate(rangeRect);
 
   return NS_OK;
 }

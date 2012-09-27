@@ -321,9 +321,6 @@ public:
                            size_t *aPresContextSize);
   size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
 
-  virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver);
-
-
   // This data is stored as a content property (nsGkAtoms::scrolling) on
   // mContentToScrollTo when we have a pending ScrollIntoView.
   struct ScrollIntoViewData {

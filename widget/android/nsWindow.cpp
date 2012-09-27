@@ -2243,10 +2243,6 @@ nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client.CreateFrame(&jniFrame, mLayerRendererFrame)) return;
-    
-    if (!WidgetPaintsBackground())
-        return;
-
     if (!client.ActivateProgram(&jniFrame)) return;
     if (!mLayerRendererFrame.BeginDrawing(&jniFrame)) return;
     if (!mLayerRendererFrame.DrawBackground(&jniFrame)) return;
@@ -2311,22 +2307,6 @@ nsWindow::ScheduleResumeComposition(int width, int height)
     if (sCompositorParent) {
         sCompositorParent->ScheduleResumeOnCompositorThread(width, height);
     }
-}
-
-bool
-nsWindow::WidgetPaintsBackground()
-{
-    static bool sWidgetPaintsBackground = true;
-    static bool sWidgetPaintsBackgroundPrefCached = false;
-
-    if (!sWidgetPaintsBackgroundPrefCached) {
-        sWidgetPaintsBackgroundPrefCached = true;
-        mozilla::Preferences::AddBoolVarCache(&sWidgetPaintsBackground,
-                                              "android.widget_paints_background",
-                                              true);
-    }
-
-    return sWidgetPaintsBackground;
 }
 
 bool
