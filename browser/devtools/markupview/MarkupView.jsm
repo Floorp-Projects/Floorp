@@ -11,12 +11,15 @@ const Ci = Components.interfaces;
 // Page size for pageup/pagedown
 const PAGE_SIZE = 10;
 
+const PREVIEW_AREA = 700;
+
 var EXPORTED_SYMBOLS = ["MarkupView"];
 
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource:///modules/devtools/CssRuleView.jsm");
 Cu.import("resource:///modules/devtools/Templater.jsm");
-Cu.import("resource:///modules/devtools/Undo.jsm")
+Cu.import("resource:///modules/devtools/Undo.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 /**
  * Vocabulary for the purposes of this file:
@@ -59,6 +62,8 @@ function MarkupView(aInspector, aFrame)
 
   this._boundFocus = this._onFocus.bind(this);
   this._frame.addEventListener("focus", this._boundFocus, false);
+
+  this._initPreview();
 }
 
 MarkupView.prototype = {
@@ -473,8 +478,14 @@ MarkupView.prototype = {
     this.undo.destroy();
     delete this.undo;
 
-    this._frame.addEventListener("focus", this._boundFocus, false);
+    this._frame.removeEventListener("focus", this._boundFocus, false);
     delete this._boundFocus;
+
+    this._frame.contentWindow.removeEventListener("scroll", this._boundUpdatePreview, true);
+    this._frame.contentWindow.removeEventListener("resize", this._boundUpdatePreview, true);
+    this._frame.contentWindow.removeEventListener("overflow", this._boundResizePreview, true);
+    this._frame.contentWindow.removeEventListener("underflow", this._boundResizePreview, true);
+    delete this._boundUpdatePreview;
 
     this._frame.removeEventListener("keydown", this._boundKeyDown, true);
     delete this._boundKeyDown;
@@ -487,7 +498,85 @@ MarkupView.prototype = {
     delete this._containers;
     this._observer.disconnect();
     delete this._observer;
-  }
+  },
+
+  /**
+   * Initialize the preview panel.
+   */
+  _initPreview: function MT_initPreview()
+  {
+    if (!Services.prefs.getBoolPref("devtools.inspector.markupPreview")) {
+      return;
+    }
+
+    this._previewBar = this.doc.querySelector("#previewbar");
+    this._preview = this.doc.querySelector("#preview");
+    this._viewbox = this.doc.querySelector("#viewbox");
+
+    this._previewBar.classList.remove("disabled");
+
+    this._previewWidth = this._preview.getBoundingClientRect().width;
+
+    this._boundResizePreview = this._resizePreview.bind(this);
+    this._frame.contentWindow.addEventListener("resize", this._boundResizePreview, true);
+    this._frame.contentWindow.addEventListener("overflow", this._boundResizePreview, true);
+    this._frame.contentWindow.addEventListener("underflow", this._boundResizePreview, true);
+
+    this._boundUpdatePreview = this._updatePreview.bind(this);
+    this._frame.contentWindow.addEventListener("scroll", this._boundUpdatePreview, true);
+    this._updatePreview();
+  },
+
+
+  /**
+   * Move the preview viewbox.
+   */
+  _updatePreview: function MT_updatePreview()
+  {
+    let win = this._frame.contentWindow;
+
+    if (win.scrollMaxY == 0) {
+      this._previewBar.classList.add("disabled");
+      return;
+    }
+
+    this._previewBar.classList.remove("disabled");
+
+    let ratio = this._previewWidth / PREVIEW_AREA;
+    let width = ratio * win.innerWidth;
+
+    let height = ratio * (win.scrollMaxY + win.innerHeight);
+    let scrollTo
+    if (height >= win.innerHeight) {
+      scrollTo = -(height - win.innerHeight) * (win.scrollY / win.scrollMaxY);
+      this._previewBar.setAttribute("style", "height:" + height + "px;transform:translateY(" + scrollTo + "px)");
+    } else {
+      this._previewBar.setAttribute("style", "height:100%");
+    }
+
+    let bgSize = ~~width + "px " + ~~height + "px";
+    this._preview.setAttribute("style", "background-size:" + bgSize);
+
+    let height = ~~(win.innerHeight * ratio) + "px";
+    let top = ~~(win.scrollY * ratio) + "px";
+    this._viewbox.setAttribute("style", "height:" + height + ";transform: translateY(" + top + ")");
+  },
+
+  /**
+   * Hide the preview while resizing, to avoid slowness.
+   */
+  _resizePreview: function MT_resizePreview()
+  {
+    let win = this._frame.contentWindow;
+    this._previewBar.classList.add("hide");
+    win.clearTimeout(this._resizePreviewTimeout);
+
+    win.setTimeout(function() {
+      this._updatePreview();
+      this._previewBar.classList.remove("hide");
+    }.bind(this), 1000);
+  },
+
 };
 
 
