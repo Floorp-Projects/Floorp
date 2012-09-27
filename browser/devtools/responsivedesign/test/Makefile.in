@@ -49,6 +49,7 @@ _BROWSER_FILES = \
 		browser_responsiveruleview.js \
 		browser_responsive_cmd.js \
 		browser_responsivecomputedview.js \
+		browser_responsiveuiaddcustompreset.js \
 		head.js \
 		helpers.js \
 		$(NULL)

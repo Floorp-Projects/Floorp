@@ -105,29 +105,30 @@ function ResponsiveUI(aWindow, aTab)
     }
   }
 
+  this.customPreset = {key: "custom", custom: true};
+
   if (Array.isArray(presets)) {
-    this.presets = [{key: "custom", custom: true}].concat(presets)
+    this.presets = [this.customPreset].concat(presets);
   } else {
     Cu.reportError("Presets value (devtools.responsiveUI.presets) is malformated.");
-    this.presets = [{key: "custom", custom: true}];
+    this.presets = [this.customPreset];
   }
 
   try {
     let width = Services.prefs.getIntPref("devtools.responsiveUI.customWidth");
     let height = Services.prefs.getIntPref("devtools.responsiveUI.customHeight");
-    this.presets[0].width = Math.min(MAX_WIDTH, width);
-    this.presets[0].height = Math.min(MAX_HEIGHT, height);
+    this.customPreset.width = Math.min(MAX_WIDTH, width);
+    this.customPreset.height = Math.min(MAX_HEIGHT, height);
 
-    let key = Services.prefs.getCharPref("devtools.responsiveUI.currentPreset");
-    let idx = this.getPresetIdx(key);
-    this.currentPreset = (idx == -1 ? 0 : idx);
+    this.currentPresetKey = Services.prefs.getCharPref("devtools.responsiveUI.currentPreset");
   } catch(e) {
     // Default size. The first preset (custom) is the one that will be used.
     let bbox = this.stack.getBoundingClientRect();
 
-    this.presets[0].width = bbox.width - 40; // horizontal padding of the container
-    this.presets[0].height = bbox.height - 80; // vertical padding + toolbar height
-    this.currentPreset = 0; // Custom
+    this.customPreset.width = bbox.width - 40; // horizontal padding of the container
+    this.customPreset.height = bbox.height - 80; // vertical padding + toolbar height
+
+    this.currentPresetKey = this.customPreset.key;
   }
 
   this.container.setAttribute("responsivemode", "true");
@@ -135,6 +136,8 @@ function ResponsiveUI(aWindow, aTab)
 
   // Let's bind some callbacks.
   this.bound_presetSelected = this.presetSelected.bind(this);
+  this.bound_addPreset = this.addPreset.bind(this);
+  this.bound_removePreset = this.removePreset.bind(this);
   this.bound_rotate = this.rotate.bind(this);
   this.bound_startResizing = this.startResizing.bind(this);
   this.bound_stopResizing = this.stopResizing.bind(this);
@@ -189,14 +192,14 @@ ResponsiveUI.prototype = {
     if (this.isResizing)
       this.stopResizing();
 
-    this.saveCurrentPreset();
-
     // Remove listeners.
     this.mainWindow.document.removeEventListener("keypress", this.bound_onKeypress, false);
     this.menulist.removeEventListener("select", this.bound_presetSelected, true);
     this.tab.removeEventListener("TabClose", this);
     this.tabContainer.removeEventListener("TabSelect", this);
     this.rotatebutton.removeEventListener("command", this.bound_rotate, true);
+    this.addbutton.removeEventListener("command", this.bound_addPreset, true);
+    this.removebutton.removeEventListener("command", this.bound_removePreset, true);
 
     // Removed elements.
     this.container.removeChild(this.toolbar);
@@ -209,21 +212,6 @@ ResponsiveUI.prototype = {
 
     delete this.tab.__responsiveUI;
   },
-
-  /**
-   * Retrieve a preset from its key.
-   *
-   * @param aKey preset's key.
-   * @returns the index of the preset, -1 if not found.
-   */
-   getPresetIdx: function RUI_getPresetIdx(aKey) {
-     for (let i = 0; i < this.presets.length; i++) {
-       if (this.presets[i].key == aKey) {
-         return i;
-       }
-     }
-     return -1;
-   },
 
   /**
    * Handle keypressed.
@@ -304,9 +292,23 @@ ResponsiveUI.prototype = {
 
     this.menulist.addEventListener("select", this.bound_presetSelected, true);
 
+    this.menuitems = new Map();
+
     let menupopup = this.chromeDoc.createElement("menupopup");
     this.registerPresets(menupopup);
     this.menulist.appendChild(menupopup);
+
+    this.addbutton = this.chromeDoc.createElement("menuitem");
+    this.addbutton.setAttribute("label", this.strings.GetStringFromName("responsiveUI.addPreset"));
+    this.addbutton.addEventListener("command", this.bound_addPreset, true);
+
+    this.removebutton = this.chromeDoc.createElement("menuitem");
+    this.removebutton.setAttribute("label", this.strings.GetStringFromName("responsiveUI.removePreset"));
+    this.removebutton.addEventListener("command", this.bound_removePreset, true);
+
+    menupopup.appendChild(this.chromeDoc.createElement("menuseparator"));
+    menupopup.appendChild(this.addbutton);
+    menupopup.appendChild(this.removebutton);
 
     this.rotatebutton = this.chromeDoc.createElement("toolbarbutton");
     this.rotatebutton.setAttribute("tabindex", "0");
@@ -344,11 +346,20 @@ ResponsiveUI.prototype = {
     let fragment = this.chromeDoc.createDocumentFragment();
     let doc = this.chromeDoc;
 
-    for (let i = 0; i < this.presets.length; i++) {
+    for (let preset of this.presets) {
       let menuitem = doc.createElement("menuitem");
-      if (i == this.currentPreset)
+      menuitem.setAttribute("ispreset", true);
+      this.menuitems.set(menuitem, preset);
+
+      if (preset.key === this.currentPresetKey) {
         menuitem.setAttribute("selected", "true");
-      this.setMenuLabel(menuitem, this.presets[i]);
+        this.selectedItem = menuitem;
+      }
+
+      if (preset.custom)
+        this.customMenuitem = menuitem;
+
+      this.setMenuLabel(menuitem, preset);
       fragment.appendChild(menuitem);
     }
     aParent.appendChild(fragment);
@@ -365,6 +376,9 @@ ResponsiveUI.prototype = {
     if (aPreset.custom) {
       let str = this.strings.formatStringFromName("responsiveUI.customResolution", [size], 1);
       aMenuitem.setAttribute("label", str);
+    } else if (aPreset.name != null && aPreset.name !== "") {
+      let str = this.strings.formatStringFromName("responsiveUI.namedResolution", [size, aPreset.name], 2);
+      aMenuitem.setAttribute("label", str);
     } else {
       aMenuitem.setAttribute("label", size);
     }
@@ -374,10 +388,24 @@ ResponsiveUI.prototype = {
    * When a preset is selected, apply it.
    */
   presetSelected: function RUI_presetSelected() {
-    this.rotateValue = false;
-    this.currentPreset = this.menulist.selectedIndex;
-    let preset = this.presets[this.currentPreset];
-    this.loadPreset(preset);
+    if (this.menulist.selectedItem.getAttribute("ispreset") === "true") {
+      this.selectedItem = this.menulist.selectedItem;
+
+      this.rotateValue = false;
+      let selectedPreset = this.menuitems.get(this.selectedItem);
+      this.loadPreset(selectedPreset);
+      this.currentPresetKey = selectedPreset.key;
+      this.saveCurrentPreset();
+
+      // Update the buttons hidden status according to the new selected preset
+      if (selectedPreset == this.customPreset) {
+        this.addbutton.hidden = false;
+        this.removebutton.hidden = true;
+      } else {
+        this.addbutton.hidden = true;
+        this.removebutton.hidden = false;
+      }
+    }
   },
 
   /**
@@ -390,14 +418,102 @@ ResponsiveUI.prototype = {
   },
 
   /**
+   * Add a preset to the list and the memory
+   */
+  addPreset: function RUI_addPreset() {
+    let w = this.customPreset.width;
+    let h = this.customPreset.height;
+    let newName = {};
+
+    let title = this.strings.GetStringFromName("responsiveUI.customNamePromptTitle");
+    let message = this.strings.formatStringFromName("responsiveUI.customNamePromptMsg", [w, h], 2);
+    Services.prompt.prompt(null, title, message, newName, null, {});
+
+    let newPreset = {
+      key: w + "x" + h,
+      name: newName.value,
+      width: w,
+      height: h
+    };
+
+    this.presets.push(newPreset);
+
+    // Sort the presets according to width/height ascending order
+    this.presets.sort(function RUI_sortPresets(aPresetA, aPresetB) {
+      // We keep custom preset at first
+      if (aPresetA.custom && !aPresetB.custom) {
+        return 1;
+      }
+      if (!aPresetA.custom && aPresetB.custom) {
+        return -1;
+      }
+
+      if (aPresetA.width === aPresetB.width) {
+        if (aPresetA.height === aPresetB.height) {
+          return 0;
+        } else {
+          return aPresetA.height > aPresetB.height;
+        }
+      } else {
+        return aPresetA.width > aPresetB.width;
+      }
+    });
+
+    this.savePresets();
+
+    let newMenuitem = this.chromeDoc.createElement("menuitem");
+    newMenuitem.setAttribute("ispreset", true);
+    this.setMenuLabel(newMenuitem, newPreset);
+
+    this.menuitems.set(newMenuitem, newPreset);
+    let idx = this.presets.indexOf(newPreset);
+    let beforeMenuitem = this.menulist.firstChild.childNodes[idx + 1];
+    this.menulist.firstChild.insertBefore(newMenuitem, beforeMenuitem);
+
+    this.menulist.selectedItem = newMenuitem;
+    this.currentPresetKey = newPreset.key;
+    this.saveCurrentPreset();
+  },
+
+  /**
+   * remove a preset from the list and the memory
+   */
+  removePreset: function RUI_removePreset() {
+    let selectedPreset = this.menuitems.get(this.selectedItem);
+    let w = selectedPreset.width;
+    let h = selectedPreset.height;
+
+    this.presets.splice(this.presets.indexOf(selectedPreset), 1);
+    this.menulist.firstChild.removeChild(this.selectedItem);
+    this.menuitems.delete(this.selectedItem);
+
+    this.customPreset.width = w;
+    this.customPreset.height = h;
+    let menuitem = this.customMenuitem;
+    this.setMenuLabel(menuitem, this.customPreset);
+    this.menulist.selectedItem = menuitem;
+    this.currentPresetKey = this.customPreset.key;
+
+    this.setSize(w, h);
+
+    this.savePresets();
+  },
+
+  /**
    * Swap width and height.
    */
   rotate: function RUI_rotate() {
-    this.setSize(this.currentHeight, this.currentWidth);
-    if (this.currentPreset == 0) {
+    let selectedPreset = this.menuitems.get(this.selectedItem);
+    let width = this.rotateValue ? selectedPreset.height : selectedPreset.width;
+    let height = this.rotateValue ? selectedPreset.width : selectedPreset.height;
+
+    this.setSize(height, width);
+
+    if (selectedPreset.custom) {
       this.saveCustomSize();
     } else {
       this.rotateValue = !this.rotateValue;
+      this.saveCurrentPreset();
     }
   },
 
@@ -408,8 +524,8 @@ ResponsiveUI.prototype = {
    * @param aHeight height of the browser.
    */
   setSize: function RUI_setSize(aWidth, aHeight) {
-    this.currentWidth = Math.min(Math.max(aWidth, MIN_WIDTH), MAX_WIDTH);
-    this.currentHeight = Math.min(Math.max(aHeight, MIN_HEIGHT), MAX_WIDTH);
+    aWidth = Math.min(Math.max(aWidth, MIN_WIDTH), MAX_WIDTH);
+    aHeight = Math.min(Math.max(aHeight, MIN_HEIGHT), MAX_WIDTH);
 
     // We resize the containing stack.
     let style = "max-width: %width;" +
@@ -417,22 +533,22 @@ ResponsiveUI.prototype = {
                 "max-height: %height;" +
                 "min-height: %height;";
 
-    style = style.replace(/%width/g, this.currentWidth + "px");
-    style = style.replace(/%height/g, this.currentHeight + "px");
+    style = style.replace(/%width/g, aWidth + "px");
+    style = style.replace(/%height/g, aHeight + "px");
 
     this.stack.setAttribute("style", style);
 
     if (!this.ignoreY)
-      this.resizeBar.setAttribute("top", Math.round(this.currentHeight / 2));
+      this.resizeBar.setAttribute("top", Math.round(aHeight / 2));
 
-    // We uptate the Custom menuitem if we are not using a preset.
-    if (this.presets[this.currentPreset].custom) {
-      let preset = this.presets[this.currentPreset];
-      preset.width = this.currentWidth;
-      preset.height = this.currentHeight;
+    let selectedPreset = this.menuitems.get(this.selectedItem);
 
-      let menuitem = this.menulist.firstChild.childNodes[this.currentPreset];
-      this.setMenuLabel(menuitem, preset);
+    // We uptate the custom menuitem if we are using it
+    if (selectedPreset.custom) {
+      selectedPreset.width = aWidth;
+      selectedPreset.height = aHeight;
+
+      this.setMenuLabel(this.selectedItem, selectedPreset);
     }
   },
 
@@ -442,15 +558,17 @@ ResponsiveUI.prototype = {
    * @param aEvent
    */
   startResizing: function RUI_startResizing(aEvent) {
-    let preset = this.presets[this.currentPreset];
-    if (!preset.custom) {
-      this.currentPreset = 0;
-      preset = this.presets[0];
-      preset.width = this.currentWidth;
-      preset.height = this.currentHeight;
-      let menuitem = this.menulist.firstChild.childNodes[0];
-      this.setMenuLabel(menuitem, preset);
-      this.menulist.selectedIndex = 0;
+    let selectedPreset = this.menuitems.get(this.selectedItem);
+
+    if (!selectedPreset.custom) {
+      this.customPreset.width = this.rotateValue ? selectedPreset.height : selectedPreset.width;
+      this.customPreset.height = this.rotateValue ? selectedPreset.width : selectedPreset.height;
+
+      let menuitem = this.customMenuitem;
+      this.setMenuLabel(menuitem, this.customPreset);
+
+      this.currentPresetKey = this.customPreset.key;
+      this.menulist.selectedItem = menuitem;
     }
     this.mainWindow.addEventListener("mouseup", this.bound_stopResizing, true);
     this.mainWindow.addEventListener("mousemove", this.bound_onDrag, true);
@@ -479,8 +597,8 @@ ResponsiveUI.prototype = {
     if (this.ignoreY)
       deltaY = 0;
 
-    let width = this.currentWidth + deltaX;
-    let height = this.currentHeight + deltaY;
+    let width = this.customPreset.width + deltaX;
+    let height = this.customPreset.height + deltaY;
 
     if (width < MIN_WIDTH) {
         width = MIN_WIDTH;
@@ -520,18 +638,29 @@ ResponsiveUI.prototype = {
    * Store the custom size as a pref.
    */
    saveCustomSize: function RUI_saveCustomSize() {
-     Services.prefs.setIntPref("devtools.responsiveUI.customWidth", this.currentWidth);
-     Services.prefs.setIntPref("devtools.responsiveUI.customHeight", this.currentHeight);
+     Services.prefs.setIntPref("devtools.responsiveUI.customWidth", this.customPreset.width);
+     Services.prefs.setIntPref("devtools.responsiveUI.customHeight", this.customPreset.height);
    },
 
   /**
    * Store the current preset as a pref.
    */
    saveCurrentPreset: function RUI_saveCurrentPreset() {
-     let key = this.presets[this.currentPreset].key;
-     Services.prefs.setCharPref("devtools.responsiveUI.currentPreset", key);
+     Services.prefs.setCharPref("devtools.responsiveUI.currentPreset", this.currentPresetKey);
      Services.prefs.setBoolPref("devtools.responsiveUI.rotate", this.rotateValue);
    },
+
+  /**
+   * Store the list of all registered presets as a pref.
+   */
+  savePresets: function RUI_savePresets() {
+    // We exclude the custom one
+    let registeredPresets = this.presets.filter(function (aPreset) {
+      return !aPreset.custom;
+    });
+
+    Services.prefs.setCharPref("devtools.responsiveUI.presets", JSON.stringify(registeredPresets));
+  },
 }
 
 XPCOMUtils.defineLazyGetter(ResponsiveUI.prototype, "strings", function () {
