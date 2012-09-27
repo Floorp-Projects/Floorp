@@ -1288,7 +1288,7 @@ nsHttpConnectionMgr::AddToShortestPipeline(nsConnectionEntry *ent,
     // keeping the pipelines to a modest depth during that period limits
     // the damage if something is going to go wrong.
 
-    maxdepth = PR_MIN(maxdepth, depthLimit);
+    maxdepth = NS_MIN<uint32_t>(maxdepth, depthLimit);
 
     if (maxdepth < 2)
         return false;
@@ -2983,8 +2983,10 @@ nsConnectionEntry::OnPipelineFeedbackInfo(
             NS_ABORT_IF_FALSE(0, "Unknown Bad/Red Pipeline Feedback Event");
         }
         
-        mPipeliningPenalty = PR_MIN(mPipeliningPenalty, 25000);
-        mPipeliningClassPenalty[classification] = PR_MIN(mPipeliningClassPenalty[classification], 25000);
+        const int16_t kPenalty = 25000;
+        mPipeliningPenalty = NS_MIN(mPipeliningPenalty, kPenalty);
+        mPipeliningClassPenalty[classification] =
+          NS_MIN(mPipeliningClassPenalty[classification], kPenalty);
             
         LOG(("Assessing red penalty to %s class %d for event %d. "
              "Penalty now %d, throttle[%d] = %d\n", mConnInfo->Host(),
@@ -2995,8 +2997,8 @@ nsConnectionEntry::OnPipelineFeedbackInfo(
         // hand out credits for neutral and good events such as
         // "headers look ok" events
 
-        mPipeliningPenalty = PR_MAX(mPipeliningPenalty - 1, 0);
-        mPipeliningClassPenalty[classification] = PR_MAX(mPipeliningClassPenalty[classification] - 1, 0);
+        mPipeliningPenalty = NS_MAX(mPipeliningPenalty - 1, 0);
+        mPipeliningClassPenalty[classification] = NS_MAX(mPipeliningClassPenalty[classification] - 1, 0);
     }
 
     if (mPipelineState == PS_RED && !mPipeliningPenalty)
@@ -3057,13 +3059,13 @@ nsHttpConnectionMgr::nsConnectionEntry::CreditPenalty()
     bool failed = false;
     if (creditsEarned > 0) {
         mPipeliningPenalty = 
-            PR_MAX(int32_t(mPipeliningPenalty - creditsEarned), 0);
+            NS_MAX(int32_t(mPipeliningPenalty - creditsEarned), 0);
         if (mPipeliningPenalty > 0)
             failed = true;
         
         for (int32_t i = 0; i < nsAHttpTransaction::CLASS_MAX; ++i) {
             mPipeliningClassPenalty[i]  =
-                PR_MAX(int32_t(mPipeliningClassPenalty[i] - creditsEarned), 0);
+                NS_MAX(int32_t(mPipeliningClassPenalty[i] - creditsEarned), 0);
             failed = failed || (mPipeliningClassPenalty[i] > 0);
         }
 

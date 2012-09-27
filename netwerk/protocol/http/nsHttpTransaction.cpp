@@ -844,7 +844,7 @@ nsHttpTransaction::RestartInProgress()
          this, mContentRead, mContentLength));
 
     mRestartInProgressVerifier.SetAlreadyProcessed(
-        PR_MAX(mRestartInProgressVerifier.AlreadyProcessed(), mContentRead));
+        NS_MAX(mRestartInProgressVerifier.AlreadyProcessed(), mContentRead));
 
     if (!mResponseHeadTaken && !mForTakeResponseHead) {
         // TakeResponseHeader() has not been called yet and this
@@ -1332,8 +1332,8 @@ nsHttpTransaction::HandleContent(char *buf,
 
     if (toReadBeforeRestart && *contentRead) {
         uint32_t ignore =
-            PR_MIN(toReadBeforeRestart, PR_UINT32_MAX);
-        ignore = PR_MIN(*contentRead, ignore);
+            static_cast<uint32_t>(NS_MIN<int64_t>(toReadBeforeRestart, PR_UINT32_MAX));
+        ignore = NS_MIN(*contentRead, ignore);
         LOG(("Due To Restart ignoring %d of remaining %ld",
              ignore, toReadBeforeRestart));
         *contentRead -= ignore;
