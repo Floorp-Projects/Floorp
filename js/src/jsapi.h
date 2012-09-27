@@ -2648,6 +2648,7 @@ namespace JS {
 JS_ALWAYS_INLINE bool
 ToNumber(JSContext *cx, const Value &v, double *out)
 {
+    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot root(cx, &v);
@@ -2742,6 +2743,7 @@ namespace JS {
 JS_ALWAYS_INLINE bool
 ToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 {
+    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot skip(cx, &v);
@@ -2758,6 +2760,7 @@ ToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 JS_ALWAYS_INLINE bool
 ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
+    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot root(cx, &v);
@@ -2774,6 +2777,7 @@ ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 JS_ALWAYS_INLINE bool
 ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 {
+    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot root(cx, &v);
@@ -2790,6 +2794,7 @@ ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 JS_ALWAYS_INLINE bool
 ToInt64(JSContext *cx, const js::Value &v, int64_t *out)
 {
+    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot skip(cx, &v);
@@ -2807,6 +2812,7 @@ ToInt64(JSContext *cx, const js::Value &v, int64_t *out)
 JS_ALWAYS_INLINE bool
 ToUint64(JSContext *cx, const js::Value &v, uint64_t *out)
 {
+    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot skip(cx, &v);
