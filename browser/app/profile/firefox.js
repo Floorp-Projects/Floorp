@@ -1181,5 +1181,6 @@ pref("social.manifest.motown", "{\"origin\":\"https://motown-dev.mozillalabs.com
 pref("social.activation.whitelist", "https://motown-dev.mozillalabs.com");
 pref("social.sidebar.open", true);
 pref("social.active", false);
+pref("social.toast-notifications.enabled", true);
 
 pref("dom.identity.enabled", false);

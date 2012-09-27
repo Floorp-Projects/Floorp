@@ -10,6 +10,7 @@ let SocialUI = {
     Services.obs.addObserver(this, "social:profile-changed", false);
 
     Services.prefs.addObserver("social.sidebar.open", this, false);
+    Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler, true, true);
 
@@ -23,6 +24,7 @@ let SocialUI = {
     Services.obs.removeObserver(this, "social:profile-changed");
 
     Services.prefs.removeObserver("social.sidebar.open", this);
+    Services.prefs.removeObserver("social.toast-notifications.enabled", this);
   },
 
   showProfile: function SocialUI_showProfile() {
@@ -57,6 +59,7 @@ let SocialUI = {
         break;
       case "nsPref:changed":
         SocialSidebar.updateSidebar();
+        SocialToolbar.updateButton();
     }
   },
 
@@ -588,6 +591,9 @@ var SocialToolbar = {
     panel.hidden = false;
     let notificationFrames = document.createDocumentFragment();
     let iconContainers = document.createDocumentFragment();
+
+    let command = document.getElementById("Social:ToggleNotifications");
+    command.setAttribute("checked", Services.prefs.getBoolPref("social.toast-notifications.enabled"));
 
     for each(let name in iconNames) {
       let icon = provider.ambientNotificationIcons[name];
