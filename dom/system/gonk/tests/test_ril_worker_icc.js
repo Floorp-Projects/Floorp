@@ -232,3 +232,112 @@ add_test(function test_write_location_info_tlv() {
 
   run_next_test();
 });
+
+/**
+ * Verify Proactive Command : Refresh
+ */
+add_test(function test_stk_proactive_command_refresh() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  let refresh_1 = [
+    0xD0,
+    0x10,
+    0x81, 0x03, 0x01, 0x01, 0x01,
+    0x82, 0x02, 0x81, 0x82,
+    0x92, 0x05, 0x01, 0x3F, 0x00, 0x2F, 0xE2];
+
+  for (let i = 0; i < refresh_1.length; i++) {
+    pduHelper.writeHexOctet(refresh_1[i]);
+  }
+
+  let berTlv = berHelper.decode(refresh_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, 0x01);
+  do_check_eq(tlv.value.commandQualifier, 0x01);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_FILE_LIST, ctlvs);
+  do_check_eq(tlv.value.fileList, "3F002FE2");
+
+  run_next_test();
+});
+
+/**
+ * Verify Proactive Command : Play Tone
+ */
+add_test(function test_stk_proactive_command_play_tone() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  let tone_1 = [
+    0xD0,
+    0x1B,
+    0x81, 0x03, 0x01, 0x20, 0x00,
+    0x82, 0x02, 0x81, 0x03,
+    0x85, 0x09, 0x44, 0x69, 0x61, 0x6C, 0x20, 0x54, 0x6F, 0x6E, 0x65,
+    0x8E, 0x01, 0x01,
+    0x84, 0x02, 0x01, 0x05];
+
+  for (let i = 0; i < tone_1.length; i++) {
+    pduHelper.writeHexOctet(tone_1[i]);
+  }
+
+  let berTlv = berHelper.decode(tone_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, 0x20);
+  do_check_eq(tlv.value.commandQualifier, 0x00);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+  do_check_eq(tlv.value.identifier, "Dial Tone");
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TONE, ctlvs);
+  do_check_eq(tlv.value.tone, STK_TONE_TYPE_DIAL_TONE);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
+  do_check_eq(tlv.value.timeUnit, STK_TIME_UNIT_SECOND);
+  do_check_eq(tlv.value.timeInterval, 5);
+
+  run_next_test();
+});
+
+/**
+ * Verify Proactive Command : Poll Interval
+ */
+add_test(function test_stk_proactive_command_poll_interval() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  let poll_1 = [
+    0xD0,
+    0x0D,
+    0x81, 0x03, 0x01, 0x03, 0x00,
+    0x82, 0x02, 0x81, 0x82,
+    0x84, 0x02, 0x01, 0x14];
+
+  for (let i = 0; i < poll_1.length; i++) {
+    pduHelper.writeHexOctet(poll_1[i]);
+  }
+
+  let berTlv = berHelper.decode(poll_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, 0x03);
+  do_check_eq(tlv.value.commandQualifier, 0x00);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
+  do_check_eq(tlv.value.timeUnit, STK_TIME_UNIT_SECOND);
+  do_check_eq(tlv.value.timeInterval, 0x14);
+
+  run_next_test();
+});
