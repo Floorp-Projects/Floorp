@@ -3507,7 +3507,7 @@ pref("zoom.minPercent", 30);
 pref("zoom.maxPercent", 300);
 pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3");
 
-// Image cache prefs
+// Image-related prefs
 // The maximum size, in bytes, of the decoded images we cache
 pref("image.cache.size", 5242880);
 // A weight, from 0-1000, to place on time when comparing to size.
@@ -3516,6 +3516,18 @@ pref("image.cache.timeweight", 500);
 
 // The default Accept header sent for images loaded over HTTP(S)
 pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
+
+// Whether we do high-quality image downscaling. OS X natively supports
+// high-quality image scaling.
+#ifdef XP_MACOSX
+pref("image.high_quality_downscaling.enabled", false);
+#else
+pref("image.high_quality_downscaling.enabled", true);
+#endif
+
+// The minimum percent downscaling we'll use high-quality downscaling on,
+// interpreted as a floating-point number / 1000.
+pref("image.high_quality_downscaling.min_factor", 1000);
 
 //
 // Image memory management prefs
