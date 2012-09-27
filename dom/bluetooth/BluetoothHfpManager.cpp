@@ -10,12 +10,15 @@
 #include "BluetoothService.h"
 #include "BluetoothServiceUuid.h"
 
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
+
 USING_BLUETOOTH_NAMESPACE
 using namespace mozilla::ipc;
 
 static nsRefPtr<BluetoothHfpManager> sInstance = nullptr;
 
-BluetoothHfpManager::BluetoothHfpManager()
+BluetoothHfpManager::BluetoothHfpManager() : mCurrentVgs(-1)
 {
 }
 
@@ -79,6 +82,31 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
   } else if (!strncmp(msg, "AT+CHLD=", 8)) {
     SendLine("OK");
   } else if (!strncmp(msg, "AT+VGS=", 7)) {
+    // VGS range: [0, 15]
+    int newVgs = msg[7] - '0';
+
+    if (strlen(msg) > 8) {
+      newVgs *= 10;
+      newVgs += (msg[8] - '0');
+    }
+
+#ifdef DEBUG
+    NS_ASSERTION(newVgs >= 0 && newVgs <= 15, "Received invalid VGS value");
+#endif
+
+    // Currently, we send volume up/down commands to represent that
+    // volume has been changed by Bluetooth headset, and that will affect
+    // the main stream volume of our device. In the future, we may want to
+    // be able to set volume by stream.
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (newVgs > mCurrentVgs) {
+      os->NotifyObservers(nullptr, "bluetooth-volume-change", NS_LITERAL_STRING("up").get());
+    } else if (newVgs < mCurrentVgs) {
+      os->NotifyObservers(nullptr, "bluetooth-volume-change", NS_LITERAL_STRING("down").get());
+    }
+
+    mCurrentVgs = newVgs;
+
     SendLine("OK");
   } else {
 #ifdef DEBUG
