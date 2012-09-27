@@ -17,18 +17,26 @@ interface nsIWifi : nsISupports
     void shutdown();
 };
 
-[scriptable, uuid(65286912-141e-4aec-ba48-cb7d74851fd8)]
+[scriptable, uuid(caa76ee3-8ffe-4ea5-bc59-3b53a9df0d07)]
 interface nsIDOMWifiManager : nsISupports
 {
     /**
-     * Returns the list of currently available networks as well as the list of
-     * currently configured networks.
+     * Returns the list of currently available networks.
      * onsuccess: We have obtained the current list of networks. request.value
      *            is an object whose property names are SSIDs and values are
      *            network objects.
      * onerror: We were unable to obtain a list of property names.
      */
     nsIDOMDOMRequest getNetworks();
+
+    /**
+     * Returns the list of networks known to the system that will be
+     * automatically connected to if they're in range.
+     * onsuccess: request.value is an object whose property names are
+     *            SSIDs and values are network objects.
+     * onerror: We were unable to obtain a list of known networks.
+     */
+    nsIDOMDOMRequest getKnownNetworks();
 
     /**
      * Takes one of the networks returned from getNetworks and tries to
