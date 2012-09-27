@@ -34,13 +34,12 @@ getTextCB(AtkText *aText, gint aStartOffset, gint aEndOffset)
   if (!accWrap)
     return nullptr;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nullptr);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return nullptr;
 
     nsAutoString autoStr;
-    nsresult rv = accText->GetText(aStartOffset, aEndOffset, autoStr);
+    nsresult rv = text->GetText(aStartOffset, aEndOffset, autoStr);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     ConvertTexttoAsterisks(accWrap, autoStr);
@@ -59,20 +58,20 @@ getTextAfterOffsetCB(AtkText *aText, gint aOffset,
   if (!accWrap)
     return nullptr;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nullptr);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return nullptr;
 
-    nsAutoString autoStr;
-    int32_t startOffset = 0, endOffset = 0;
-    nsresult rv =
-        accText->GetTextAfterOffset(aOffset, aBoundaryType,
-                                    &startOffset, &endOffset, autoStr);
-    *aStartOffset = startOffset;
-    *aEndOffset = endOffset;
+  nsAutoString autoStr;
+  int32_t startOffset = 0, endOffset = 0;
+  nsresult rv =
+    text->GetTextAfterOffset(aOffset, aBoundaryType,
+                             &startOffset, &endOffset, autoStr);
 
-    NS_ENSURE_SUCCESS(rv, nullptr);
+  *aStartOffset = startOffset;
+  *aEndOffset = endOffset;
+
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
     ConvertTexttoAsterisks(accWrap, autoStr);
     NS_ConvertUTF16toUTF8 cautoStr(autoStr);
@@ -88,16 +87,15 @@ getTextAtOffsetCB(AtkText *aText, gint aOffset,
   if (!accWrap)
     return nullptr;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nullptr);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return nullptr;
 
     nsAutoString autoStr;
     int32_t startOffset = 0, endOffset = 0;
     nsresult rv =
-        accText->GetTextAtOffset(aOffset, aBoundaryType,
-                                 &startOffset, &endOffset, autoStr);
+        text->GetTextAtOffset(aOffset, aBoundaryType,
+                              &startOffset, &endOffset, autoStr);
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
 
@@ -115,15 +113,14 @@ getCharacterAtOffsetCB(AtkText* aText, gint aOffset)
   if (!accWrap)
     return 0;
 
-  nsCOMPtr<nsIAccessibleText> accText;
-  accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                          getter_AddRefs(accText));
-  NS_ENSURE_TRUE(accText, 0);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return 0;
 
   // PRUnichar is unsigned short in Mozilla
   // gnuichar is guint32 in glib
   PRUnichar uniChar = 0;
-  nsresult rv = accText->GetCharacterAtOffset(aOffset, &uniChar);
+  nsresult rv = text->GetCharacterAtOffset(aOffset, &uniChar);
   if (NS_FAILED(rv))
     return 0;
 
@@ -143,16 +140,15 @@ getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
   if (!accWrap)
     return nullptr;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nullptr);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return nullptr;
 
     nsAutoString autoStr;
     int32_t startOffset = 0, endOffset = 0;
     nsresult rv =
-        accText->GetTextBeforeOffset(aOffset, aBoundaryType,
-                                     &startOffset, &endOffset, autoStr);
+        text->GetTextBeforeOffset(aOffset, aBoundaryType,
+                                  &startOffset, &endOffset, autoStr);
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
 
@@ -170,13 +166,12 @@ getCaretOffsetCB(AtkText *aText)
   if (!accWrap)
     return 0;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, 0);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return 0;
 
     int32_t offset;
-    nsresult rv = accText->GetCaretOffset(&offset);
+    nsresult rv = text->GetCaretOffset(&offset);
     return (NS_FAILED(rv)) ? 0 : static_cast<gint>(offset);
 }
 
@@ -192,16 +187,15 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
   if (!accWrap)
     return nullptr;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nullptr);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return nullptr;
 
     nsCOMPtr<nsIPersistentProperties> attributes;
     int32_t startOffset = 0, endOffset = 0;
-    nsresult rv = accText->GetTextAttributes(false, aOffset,
-                                             &startOffset, &endOffset,
-                                             getter_AddRefs(attributes));
+    nsresult rv = text->GetTextAttributes(false, aOffset,
+                                          &startOffset, &endOffset,
+                                          getter_AddRefs(attributes));
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     *aStartOffset = startOffset;
@@ -217,13 +211,12 @@ getDefaultAttributesCB(AtkText *aText)
   if (!accWrap)
     return nullptr;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nullptr);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return nullptr;
 
     nsCOMPtr<nsIPersistentProperties> attributes;
-    nsresult rv = accText->GetDefaultTextAttributes(getter_AddRefs(attributes));
+    nsresult rv = text->GetDefaultTextAttributes(getter_AddRefs(attributes));
     if (NS_FAILED(rv))
         return nullptr;
 
@@ -240,11 +233,9 @@ getCharacterExtentsCB(AtkText *aText, gint aOffset,
   if(!accWrap || !aX || !aY || !aWidth || !aHeight)
     return;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    if (!accText)
-        return;
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return;
 
     int32_t extY = 0, extX = 0;
     int32_t extWidth = 0, extHeight = 0;
@@ -258,9 +249,9 @@ getCharacterExtentsCB(AtkText *aText, gint aOffset,
 #ifdef DEBUG
     nsresult rv =
 #endif
-    accText->GetCharacterExtents(aOffset, &extX, &extY,
-                                 &extWidth, &extHeight,
-                                 geckoCoordType);
+    text->GetCharacterExtents(aOffset, &extX, &extY,
+                              &extWidth, &extHeight,
+                              geckoCoordType);
     *aX = extX;
     *aY = extY;
     *aWidth = extWidth;
@@ -277,11 +268,9 @@ getRangeExtentsCB(AtkText *aText, gint aStartOffset, gint aEndOffset,
   if(!accWrap || !aRect)
     return;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    if (!accText)
-        return;
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return;
 
     int32_t extY = 0, extX = 0;
     int32_t extWidth = 0, extHeight = 0;
@@ -295,10 +284,10 @@ getRangeExtentsCB(AtkText *aText, gint aStartOffset, gint aEndOffset,
 #ifdef DEBUG
     nsresult rv =
 #endif
-    accText->GetRangeExtents(aStartOffset, aEndOffset,
-                             &extX, &extY,
-                             &extWidth, &extHeight,
-                             geckoCoordType);
+    text->GetRangeExtents(aStartOffset, aEndOffset,
+                          &extX, &extY,
+                          &extWidth, &extHeight,
+                          geckoCoordType);
     aRect->x = extX;
     aRect->y = extY;
     aRect->width = extWidth;
@@ -328,10 +317,9 @@ getOffsetAtPointCB(AtkText *aText,
   if (!accWrap)
     return -1;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, -1);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return -1;
 
     int32_t offset = 0;
     uint32_t geckoCoordType;
@@ -340,7 +328,7 @@ getOffsetAtPointCB(AtkText *aText,
     else
         geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
 
-    accText->GetOffsetAtPoint(aX, aY, geckoCoordType, &offset);
+    text->GetOffsetAtPoint(aX, aY, geckoCoordType, &offset);
     return static_cast<gint>(offset);
 }
 
@@ -351,13 +339,12 @@ getTextSelectionCountCB(AtkText *aText)
   if (!accWrap)
     return 0;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, 0);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return 0;
 
     int32_t selectionCount;
-    nsresult rv = accText->GetSelectionCount(&selectionCount);
+    nsresult rv = text->GetSelectionCount(&selectionCount);
  
     return NS_FAILED(rv) ? 0 : selectionCount;
 }
@@ -370,14 +357,13 @@ getTextSelectionCB(AtkText *aText, gint aSelectionNum,
   if (!accWrap)
     return nullptr;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nullptr);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return nullptr;
 
     int32_t startOffset = 0, endOffset = 0;
-    nsresult rv = accText->GetSelectionBounds(aSelectionNum,
-                                              &startOffset, &endOffset);
+    nsresult rv = text->GetSelectionBounds(aSelectionNum,
+                                           &startOffset, &endOffset);
 
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
@@ -397,12 +383,11 @@ addTextSelectionCB(AtkText *aText,
   if (!accWrap)
     return FALSE;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, FALSE);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return false;
 
-    nsresult rv = accText->AddSelection(aStartOffset, aEndOffset);
+    nsresult rv = text->AddSelection(aStartOffset, aEndOffset);
 
     return NS_SUCCEEDED(rv) ? TRUE : FALSE;
 }
@@ -415,12 +400,11 @@ removeTextSelectionCB(AtkText *aText,
   if (!accWrap)
     return FALSE;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, FALSE);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return false;
 
-    nsresult rv = accText->RemoveSelection(aSelectionNum);
+    nsresult rv = text->RemoveSelection(aSelectionNum);
 
     return NS_SUCCEEDED(rv) ? TRUE : FALSE;
 }
@@ -433,13 +417,12 @@ setTextSelectionCB(AtkText *aText, gint aSelectionNum,
   if (!accWrap)
     return FALSE;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, FALSE);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return false;
 
-    nsresult rv = accText->SetSelectionBounds(aSelectionNum,
-                                              aStartOffset, aEndOffset);
+    nsresult rv = text->SetSelectionBounds(aSelectionNum,
+                                           aStartOffset, aEndOffset);
     return NS_SUCCEEDED(rv) ? TRUE : FALSE;
 }
 
@@ -450,12 +433,11 @@ setCaretOffsetCB(AtkText *aText, gint aOffset)
   if (!accWrap)
     return FALSE;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, FALSE);
+  HyperTextAccessible* text = accWrap->AsHyperText();
+  if (!text || !text->IsTextRole())
+    return false;
 
-    nsresult rv = accText->SetCaretOffset(aOffset);
+    nsresult rv = text->SetCaretOffset(aOffset);
     return NS_SUCCEEDED(rv) ? TRUE : FALSE;
 }
 }

@@ -44,7 +44,9 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
         desc->obj = NULL;
 
     // If we found something, were doing a set, or have no proto, we're done.
-    JSObject *wrapperProto = JS_GetPrototype(wrapper);
+    JSObject *wrapperProto;
+    if (!JS_GetPrototype(cx, wrapper, &wrapperProto))
+	return false;
     if (desc->obj || set || !wrapperProto)
         return true;
 
@@ -61,7 +63,9 @@ ChromeObjectWrapper::has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
         return false;
 
     // If we found something or have no prototype, we're done.
-    JSObject *wrapperProto = JS_GetPrototype(wrapper);
+    JSObject *wrapperProto;
+    if (!JS_GetPrototype(cx, wrapper, &wrapperProto))
+	return false;
     if (*bp || !wrapperProto)
         return true;
 
@@ -102,7 +106,9 @@ ChromeObjectWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
     }
 
     // If we have no proto, we're done.
-    JSObject *wrapperProto = JS_GetPrototype(wrapper);
+    JSObject *wrapperProto;
+    if (!JS_GetPrototype(cx, wrapper, &wrapperProto))
+	return false;
     if (!wrapperProto)
         return true;
 

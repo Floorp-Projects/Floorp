@@ -188,7 +188,7 @@ nsWyciwygChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsWyciwygChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
-  if (!CanSetLoadGroup()) {
+  if (!CanSetLoadGroup(aLoadGroup)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -271,7 +271,7 @@ nsWyciwygChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aCallbacks)
 NS_IMETHODIMP
 nsWyciwygChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
-  if (!CanSetCallbacks()) {
+  if (!CanSetCallbacks(aNotificationCallbacks)) {
     return NS_ERROR_FAILURE;
   }
 

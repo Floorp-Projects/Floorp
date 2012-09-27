@@ -32,5 +32,5 @@
   
   <text><textPath xlink:href="#h3"><tspan dx="0,1000,-1000">TES</tspan>T8</textPath></text>
 
-  <text x="150" y="100" rotate="90">A</text>
+  <text x="150" y="100" rotate="45">A</text>
 </svg>

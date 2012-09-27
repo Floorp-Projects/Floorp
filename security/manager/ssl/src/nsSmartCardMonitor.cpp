@@ -98,7 +98,7 @@ SmartCardThreadList::Add(SmartCardMonitoringThread *thread)
 
 
 // We really should have a Unity PL Hash function...
-static PR_CALLBACK PLHashNumber
+static PLHashNumber
 unity(const void *key) { return PLHashNumber(NS_PTR_TO_INT32(key)); }
 
 SmartCardMonitoringThread::SmartCardMonitoringThread(SECMODModule *module_)

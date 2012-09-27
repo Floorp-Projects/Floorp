@@ -24,7 +24,7 @@ bool JSAPITest::init()
     JS_SetGCZeal(cx, 0, 0);
 #endif
     JS_BeginRequest(cx);
-    JS::RootedObject global(cx, createGlobal());
+    js::RootedObject global(cx, createGlobal());
     if (!global)
         return false;
     oldCompartment = JS_EnterCompartment(cx, global);
@@ -33,7 +33,7 @@ bool JSAPITest::init()
 
 bool JSAPITest::exec(const char *bytes, const char *filename, int lineno)
 {
-    JS::RootedValue v(cx);
+    js::RootedValue v(cx);
     JS::HandleObject global = JS::HandleObject::fromMarkedLocation(&this->global);
     return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, v.address()) ||
         fail(bytes, filename, lineno);

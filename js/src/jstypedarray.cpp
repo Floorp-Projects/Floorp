@@ -109,17 +109,6 @@ ToClampedIndex(JSContext *cx, const Value &v, uint32_t length, uint32_t *out)
  * can be created implicitly by constructing a TypedArray with a size.
  */
 
-/**
- * Walks up the prototype chain to find the actual ArrayBuffer data, if any.
- */
-static ArrayBufferObject *
-getArrayBuffer(JSObject *obj)
-{
-    while (obj && !obj->isArrayBuffer())
-        obj = obj->getProto();
-    return obj ? &obj->asArrayBuffer() : NULL;
-}
-
 JS_ALWAYS_INLINE bool
 IsArrayBuffer(const Value &v)
 {
@@ -711,43 +700,31 @@ JSBool
 ArrayBufferObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
                                   HandleId id, MutableHandleValue vp)
 {
-    RootedObject nobj(cx, getArrayBuffer(obj));
-    JS_ASSERT(nobj);
-
-    nobj = ArrayBufferDelegate(cx, nobj);
-    if (!nobj)
+    JS_ASSERT(obj->isArrayBuffer());
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
+    if (!delegate)
         return false;
-    return baseops::GetProperty(cx, nobj, receiver, id, vp);
+    return baseops::GetProperty(cx, delegate, receiver, id, vp);
 }
 
 JSBool
 ArrayBufferObject::obj_getProperty(JSContext *cx, HandleObject obj,
                                    HandleObject receiver, HandlePropertyName name, MutableHandleValue vp)
 {
-    RootedObject nobj(cx, getArrayBuffer(obj));
-
-    if (!nobj) {
-        JSAutoByteString bs(cx, name);
-        if (!bs)
-            return false;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_INCOMPATIBLE_PROTO, "ArrayBuffer", bs.ptr(), "object");
-        return false;
-    }
-
-    nobj = ArrayBufferDelegate(cx, nobj);
-    if (!nobj)
+    JS_ASSERT(obj->isArrayBuffer());
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
+    if (!delegate)
         return false;
     Rooted<jsid> id(cx, NameToId(name));
-    return baseops::GetProperty(cx, nobj, receiver, id, vp);
+    return baseops::GetProperty(cx, delegate, receiver, id, vp);
 }
 
 JSBool
 ArrayBufferObject::obj_getElement(JSContext *cx, HandleObject obj,
                                   HandleObject receiver, uint32_t index, MutableHandleValue vp)
 {
-    RootedObject buffer(cx, getArrayBuffer(obj));
-    RootedObject delegate(cx, ArrayBufferDelegate(cx, buffer));
+    JS_ASSERT(obj->isArrayBuffer());
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::GetElement(cx, delegate, receiver, index, vp);
@@ -757,8 +734,8 @@ JSBool
 ArrayBufferObject::obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
                                            uint32_t index, MutableHandleValue vp, bool *present)
 {
-    RootedObject buffer(cx, getArrayBuffer(obj));
-    RootedObject delegate(cx, ArrayBufferDelegate(cx, buffer));
+    JS_ASSERT(obj->isArrayBuffer());
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return JSObject::getElementIfPresent(cx, delegate, receiver, index, vp, present);

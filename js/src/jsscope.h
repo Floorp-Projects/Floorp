@@ -515,7 +515,7 @@ struct Shape : public js::gc::Cell
 
     /* Replace the base shape of the last shape in a non-dictionary lineage with base. */
     static Shape *replaceLastProperty(JSContext *cx, const StackBaseShape &base,
-                                      JSObject *proto, Shape *shape);
+                                      TaggedProto proto, Shape *shape);
 
     bool hashify(JSContext *cx);
     void handoffTableTo(Shape *newShape);
@@ -600,8 +600,8 @@ struct Shape : public js::gc::Cell
     Class *getObjectClass() const { return base()->clasp; }
     JSObject *getObjectParent() const { return base()->parent; }
 
-    static Shape *setObjectParent(JSContext *cx, JSObject *obj, JSObject *proto, Shape *last);
-    static Shape *setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, Shape *last);
+    static Shape *setObjectParent(JSContext *cx, JSObject *obj, TaggedProto proto, Shape *last);
+    static Shape *setObjectFlag(JSContext *cx, BaseShape::Flag flag, TaggedProto proto, Shape *last);
 
     uint32_t getObjectFlags() const { return base()->getObjectFlags(); }
     bool hasObjectFlag(BaseShape::Flag flag) const {
@@ -906,7 +906,7 @@ struct EmptyShape : public js::Shape
      * Lookup an initial shape matching the given parameters, creating an empty
      * shape if none was found.
      */
-    static Shape *getInitialShape(JSContext *cx, Class *clasp, JSObject *proto,
+    static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
                                   JSObject *parent, gc::AllocKind kind, uint32_t objectFlags = 0);
 
     /*
@@ -934,16 +934,16 @@ struct InitialShapeEntry
      * Matching prototype for the entry. The shape of an object determines its
      * prototype, but the prototype cannot be determined from the shape itself.
      */
-    JSObject *proto;
+    TaggedProto proto;
 
     /* State used to determine a match on an initial shape. */
     struct Lookup {
         Class *clasp;
-        JSObject *proto;
+        TaggedProto proto;
         JSObject *parent;
         uint32_t nfixed;
         uint32_t baseFlags;
-        Lookup(Class *clasp, JSObject *proto, JSObject *parent, uint32_t nfixed,
+        Lookup(Class *clasp, TaggedProto proto, JSObject *parent, uint32_t nfixed,
                uint32_t baseFlags)
             : clasp(clasp), proto(proto), parent(parent),
               nfixed(nfixed), baseFlags(baseFlags)
@@ -951,7 +951,7 @@ struct InitialShapeEntry
     };
 
     inline InitialShapeEntry();
-    inline InitialShapeEntry(const ReadBarriered<Shape> &shape, JSObject *proto);
+    inline InitialShapeEntry(const ReadBarriered<Shape> &shape, TaggedProto proto);
 
     inline Lookup getLookup();
 
@@ -1123,6 +1123,9 @@ Shape::searchNoAllocation(Shape *start, jsid id)
 void
 MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp);
 
+template<> struct RootKind<Shape *> : SpecificRootKind<Shape *, THING_ROOT_SHAPE> {};
+template<> struct RootKind<BaseShape *> : SpecificRootKind<BaseShape *, THING_ROOT_BASE_SHAPE> {};
+
 } // namespace js
 
 #ifdef _MSC_VER
@@ -1131,13 +1134,8 @@ MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp);
 #endif
 
 namespace JS {
-    template<> class AnchorPermitted<js::Shape *> { };
-    template<> class AnchorPermitted<const js::Shape *> { };
-
-    template<>
-    struct RootKind<js::Shape *> : SpecificRootKind<js::Shape *, THING_ROOT_SHAPE> {};
-    template<>
-    struct RootKind<js::BaseShape *> : SpecificRootKind<js::BaseShape *, THING_ROOT_BASE_SHAPE> {};
+template<> class AnchorPermitted<js::Shape *> { };
+template<> class AnchorPermitted<const js::Shape *> { };
 }
 
 #endif /* jsscope_h___ */

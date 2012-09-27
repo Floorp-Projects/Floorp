@@ -22,6 +22,8 @@ import android.net.Uri;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.io.File;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 /* Tests opening the history tab, that items look correct, clicking on an item
    and long tapping on an item
@@ -35,6 +37,7 @@ public class testHistoryTab extends PixelTest {
         "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
     };
     private View mFirstChild;
+    private boolean mNearMidnight;
 
     @Override
     protected int getTestType() {
@@ -43,6 +46,10 @@ public class testHistoryTab extends PixelTest {
 
     public void testHistoryTab() {
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
+        // very approximate date-rollover detection
+        Calendar cal = new GregorianCalendar();
+        mNearMidnight = (cal.get(Calendar.HOUR_OF_DAY) == 23);
 
         // load two pages so there is something in our history
         // bookmark one of them
@@ -89,7 +96,11 @@ public class testHistoryTab extends PixelTest {
                     ArrayList<TextView> views2 = mSolo.getCurrentTextViews(v);
                     TextView t = views2.get(0);
                     String string = t.getText().toString();
-                    mAsserter.ok(string.equals("Today"), "First row has Today header", string);
+                    boolean headerTextOK = string.equals("Today");
+                    if (!headerTextOK && mNearMidnight && string.equals("Yesterday")) {
+                        headerTextOK = true;
+                    }
+                    mAsserter.ok(headerTextOK, "First row has Today header", string);
                     expectedImages = 0;
                 } else if (v instanceof TextView) {
                     TextView t = (TextView)v;

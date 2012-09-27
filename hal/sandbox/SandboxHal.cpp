@@ -184,7 +184,7 @@ GetLight(hal::LightType light, hal::LightConfiguration* aConfig)
 }
 
 void 
-AdjustSystemClock(int32_t aDeltaMilliseconds)
+AdjustSystemClock(int64_t aDeltaMilliseconds)
 {
   Hal()->SendAdjustSystemClock(aDeltaMilliseconds);
 }
@@ -592,7 +592,7 @@ public:
   }
 
   virtual bool
-  RecvAdjustSystemClock(const int32_t &aDeltaMilliseconds) MOZ_OVERRIDE
+  RecvAdjustSystemClock(const int64_t &aDeltaMilliseconds) MOZ_OVERRIDE
   {
     if (!AssertAppProcessPermission(this, "time")) {
       return false;
