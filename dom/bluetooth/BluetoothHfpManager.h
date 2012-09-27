@@ -26,6 +26,8 @@ public:
                BluetoothReplyRunnable* aRunnable);
   void Disconnect();
   bool SendLine(const char* aMessage);
+  void CallStateChanged(int aCallIndex, int aCallState,
+                        const char* aNumber, bool aIsActive);
 
 private:
   BluetoothHfpManager();

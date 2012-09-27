@@ -55,6 +55,10 @@ CPPSRCS += \
   BluetoothHfpManager.cpp \
   $(NULL)
 
+ifdef MOZ_B2G_RIL
+CPPSRCS += BluetoothRilListener.cpp
+endif
+
 XPIDLSRCS = \
   nsIDOMNavigatorBluetooth.idl \
   nsIDOMBluetoothManager.idl \
