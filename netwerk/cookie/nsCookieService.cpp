@@ -1800,11 +1800,11 @@ nsCookieService::Add(const nsACString &aHost,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCookieService::Remove(const nsACString &aHost,
-                        const nsACString &aName,
-                        const nsACString &aPath,
-                        bool             aBlocked)
+
+nsresult
+nsCookieService::Remove(const nsACString& aHost, uint32_t aAppId,
+                        bool aInBrowserElement, const nsACString& aName,
+                        const nsACString& aPath, bool aBlocked)
 {
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
@@ -1822,7 +1822,7 @@ nsCookieService::Remove(const nsACString &aHost,
 
   nsListIter matchIter;
   nsRefPtr<nsCookie> cookie;
-  if (FindCookie(DEFAULT_APP_KEY(baseDomain),
+  if (FindCookie(nsCookieKey(baseDomain, aAppId, aInBrowserElement),
                  host,
                  PromiseFlatCString(aName),
                  PromiseFlatCString(aPath),
@@ -1852,6 +1852,15 @@ nsCookieService::Remove(const nsACString &aHost,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::Remove(const nsACString &aHost,
+                        const nsACString &aName,
+                        const nsACString &aPath,
+                        bool             aBlocked)
+{
+  return Remove(aHost, NECKO_NO_APP_ID, false, aName, aPath, aBlocked);
 }
 
 /******************************************************************************
@@ -3774,6 +3783,50 @@ nsCookieService::GetCookiesForApp(uint32_t aAppId, bool aOnlyBrowserElement,
   mDBState->hostTable.EnumerateEntries(GetCookiesForApp, &data);
 
   return NS_NewArrayEnumerator(aEnumerator, data.cookies);
+}
+
+NS_IMETHODIMP
+nsCookieService::RemoveCookiesForApp(uint32_t aAppId, bool aOnlyBrowserElement)
+{
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  nsresult rv = GetCookiesForApp(aAppId, aOnlyBrowserElement,
+                                 getter_AddRefs(enumerator));
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasMore;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsICookie> cookie;
+    rv = enumerator->GetNext(getter_AddRefs(cookie));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoCString host;
+    cookie->GetHost(host);
+
+    nsAutoCString name;
+    cookie->GetName(name);
+
+    nsAutoCString path;
+    cookie->GetPath(path);
+
+    // nsICookie do not carry the appId/inBrowserElement information.
+    // That means we have to guess. This is easy for appId but not for
+    // inBrowserElement flag.
+    // A simple solution is to always ask to remove the cookie with
+    // inBrowserElement = true and only ask for the other one to be removed if
+    // we happen to be in the case of !aOnlyBrowserElement.
+    // Anyway, with this solution, we will likely be looking for unexistant
+    // cookies.
+    //
+    // NOTE: we could make this better by getting nsCookieEntry objects instead
+    // of plain nsICookie.
+    Remove(host, aAppId, true, name, path, false);
+    if (!aOnlyBrowserElement) {
+      Remove(host, aAppId, false, name, path, false);
+    }
+  }
+
+  return NS_OK;
 }
 
 // find an exact cookie specified by host, name, and path that hasn't expired.

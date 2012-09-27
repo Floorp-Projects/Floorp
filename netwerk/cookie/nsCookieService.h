@@ -289,6 +289,15 @@ class nsCookieService : public nsICookieService
      */
     static PLDHashOperator GetCookiesForApp(nsCookieEntry* entry, void* arg);
 
+    /**
+     * This method is a helper that allows calling nsICookieManager::Remove()
+     * with appId/inBrowserElement parameters.
+     * NOTE: this could be added to a public interface if we happen to need it.
+     */
+    nsresult Remove(const nsACString& aHost, uint32_t aAppId,
+                    bool aInBrowserElement, const nsACString& aName,
+                    const nsACString& aPath, bool aBlocked);
+
   protected:
     // cached members.
     nsCOMPtr<nsIObserverService>     mObserverService;
