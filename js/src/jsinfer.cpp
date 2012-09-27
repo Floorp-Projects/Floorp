@@ -1315,6 +1315,16 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
                 }
             }
 
+            if (native == js_String && callsite->isNew) {
+                // Note that "new String()" returns a String object and "String()"
+                // returns a primitive string.
+                TypeObject *res = TypeScript::StandardType(cx, script, JSProto_String);
+                if (!res)
+                    return;
+
+                callsite->returnTypes->addType(cx, Type::ObjectType(res));
+            }
+
             return;
         }
 
