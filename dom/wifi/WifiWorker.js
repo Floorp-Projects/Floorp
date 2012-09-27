@@ -1408,6 +1408,7 @@ function WifiWorker() {
   this.configuredNetworks = Object.create(null);
 
   this.currentNetwork = null;
+  this.ipAddress = "";
 
   this._lastConnectionInfo = null;
   this._connectionInfoTimer = null;
@@ -1486,6 +1487,7 @@ function WifiWorker() {
     WifiManager.enabled = true;
     self._updateWifiSetting(true);
     WifiManager.getMacAddress(function (mac) {
+      self.macAddress = mac;
       debug("Got mac: " + mac);
     });
 
@@ -1607,6 +1609,7 @@ function WifiWorker() {
       case "DISCONNECTED":
         self._fireEvent("ondisconnect", {});
         self.currentNetwork = null;
+        self.ipAddress = "";
 
         WifiManager.connectionDropped(function() {
           // We've disconnected from a network because of a call to forgetNetwork.
@@ -1656,6 +1659,13 @@ function WifiWorker() {
                                    kNetworkInterfaceStateChangedTopic,
                                    null);
 
+      self.ipAddress = this.info.ipaddr_str;
+
+      // We start the connection information timer when we associate, but
+      // don't have our IP address until here. Make sure that we fire a new
+      // connectionInformation event with the IP address the next time the
+      // timer fires.
+      self._lastConnectionInfo = null;
       self._fireEvent("onconnect", { network: netToDOM(self.currentNetwork) });
     } else {
       WifiManager.reassociate(function(){});
@@ -1824,7 +1834,8 @@ WifiWorker.prototype = {
 
         let info = { signalStrength: rssi,
                      relSignalStrength: calculateSignal(rssi),
-                     linkSpeed: linkspeed };
+                     linkSpeed: linkspeed,
+                     ipAddress: self.ipAddress };
         let last = self._lastConnectionInfo;
 
         // Only fire the event if the link speed changed or the signal
@@ -2016,7 +2027,8 @@ WifiWorker.prototype = {
         return { network: net,
                  connectionInfo: this._lastConnectionInfo,
                  enabled: WifiManager.enabled,
-                 status: translateState(WifiManager.state) };
+                 status: translateState(WifiManager.state),
+                 macAddress: this.macAddress };
       }
       case "WifiManager:managerFinished": {
         for (let i = 0; i < this._domManagers.length; ++i) {
