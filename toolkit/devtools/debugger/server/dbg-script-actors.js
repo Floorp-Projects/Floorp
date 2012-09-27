@@ -787,7 +787,7 @@ ThreadActor.prototype = {
     let type = typeof(aValue);
 
     if (type === "string" && this._stringIsLong(aValue)) {
-      return this.longStringGrip(aValue);
+      return this.longStringGrip(aValue, this._pausePool);
     }
 
     if (type === "boolean" || type === "string" || type === "number") {
@@ -881,24 +881,42 @@ ThreadActor.prototype = {
    *
    * @param aString String
    *        The string we are creating a grip for.
+   * @param aPool ActorPool
+   *        The actor pool where the new actor will be added.
    */
-  longStringGrip: function TA_longStringGrip(aString) {
-    if (!this._pausePool) {
-      throw new Error("LongString grip requested while not paused.");
+  longStringGrip: function TA_longStringGrip(aString, aPool) {
+    if (!aPool.longStringActors) {
+      aPool.longStringActors = {};
     }
 
-    if (!this._pausePool.longStringActors) {
-      this._pausePool.longStringActors = {};
-    }
-
-    if (this._pausePool.longStringActors.hasOwnProperty(aString)) {
-      return this._pausePool.longStringActors[aString].grip();
+    if (aPool.longStringActors.hasOwnProperty(aString)) {
+      return aPool.longStringActors[aString].grip();
     }
 
     let actor = new LongStringActor(aString, this);
-    this._pausePool.addActor(actor);
-    this._pausePool.longStringActors[aString] = actor;
+    aPool.addActor(actor);
+    aPool.longStringActors[aString] = actor;
     return actor.grip();
+  },
+
+  /**
+   * Create a long string grip that is scoped to a pause.
+   *
+   * @param aString String
+   *        The string we are creating a grip for.
+   */
+  pauseLongStringGrip: function TA_pauseLongStringGrip (aString) {
+    return this.longStringGrip(aString, this._pausePool);
+  },
+
+  /**
+   * Create a long string grip that is scoped to a thread.
+   *
+   * @param aString String
+   *        The string we are creating a grip for.
+   */
+  threadLongStringGrip: function TA_pauseLongStringGrip (aString) {
+    return this.longStringGrip(aString, this._threadLifetimePool);
   },
 
   /**
