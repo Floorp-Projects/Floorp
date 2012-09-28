@@ -26,11 +26,16 @@ let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
              .getService(Ci.nsIMessageBroadcaster);
 
 /**
- * Load the example.org app in an <iframe mozbrowser mozapp>
+ * Load the example.org site in an <iframe mozbrowser>
+ *
+ * @param isApp
+ *        If true, the example.org site will be loaded as an app.
  */
-function loadApp(callback) {
+function loadBrowser(isApp, callback) {
   let iframe = document.createElement("iframe");
-  iframe.setAttribute("mozapp", APP_MANIFEST);
+  if (isApp) {
+    iframe.setAttribute("mozapp", APP_MANIFEST);
+  }
   iframe.mozbrowser = true;
   iframe.src = APP_URL;
   document.getElementById("content").appendChild(iframe);
@@ -102,18 +107,15 @@ function expectFrameProcessShutdown(iframe, frameMM, processMM, callback) {
   });
 }
 
-function runTests(callback) {
+function setUp() {
   SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
   SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", true);
   SpecialPowers.addPermission("browser", true, window.document);
+  runNextTest();
+}
 
-  function tearDown() {
-    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
-    SpecialPowers.clearUserPref("dom.ipc.browser_frames.oop_by_default");
-    SimpleTest.finish();
-  }
-
-  loadApp(function (iframe) {
+function makeKillTest(isApp) function testKill() {
+  loadBrowser(isApp, function (iframe) {
     // We want to make sure we get notified on both the frame and
     // process message managers.
     let frameMM = SpecialPowers.getBrowserFrameMessageManager(iframe);
@@ -124,10 +126,31 @@ function runTests(callback) {
          "Content child should not have this permission");
       expectFrameProcessShutdown(iframe, frameMM, processMM, function () {
         iframe.parentNode.removeChild(iframe);
-        tearDown();
+        runNextTest();
       });
     });
   });
+}
+
+function tearDown() {
+  SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
+  SpecialPowers.clearUserPref("dom.ipc.browser_frames.oop_by_default");
+  SimpleTest.finish();
+}
+
+let _tests = [
+  setUp,
+  makeKillTest(false),
+  makeKillTest(true),
+  tearDown
+]
+function runNextTest() {
+  SimpleTest.executeSoon(_tests.shift());
+}
+
+function runTests() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
 }
 
 </script>
