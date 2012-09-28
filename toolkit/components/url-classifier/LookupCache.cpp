@@ -1,41 +1,7 @@
 //* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Url Classifier code
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dave Camp <dcamp@mozilla.com>
- *   Gian-Carlo Pascutto <gpascutto@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LookupCache.h"
 #include "HashStore.h"
@@ -116,7 +82,8 @@ LookupCache::Open()
   rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(CACHE_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(mInputStream), storeFile,
+  nsCOMPtr<nsIInputStream> inputStream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), storeFile,
                                   PR_RDONLY);
 
   if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
@@ -125,23 +92,34 @@ LookupCache::Open()
   }
 
   if (rv == NS_ERROR_FILE_NOT_FOUND) {
+    // Simply lacking a .cache file is a recoverable error,
+    // as unlike the .pset/.sbstore files it is a pure cache.
+    // Just create a new empty one.
     Clear();
     UpdateHeader();
-    return NS_OK;
+  } else {
+    // Read in the .cache file
+    rv = ReadHeader(inputStream);
+    NS_ENSURE_SUCCESS(rv, rv);
+    LOG(("ReadCompletions"));
+    rv = ReadCompletions(inputStream);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = inputStream->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  rv = ReadHeader();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  LOG(("ReadCompletions"));
-  rv = ReadCompletions();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("Loading PrefixSet"));
   rv = LoadPrefixSet();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+nsresult
+LookupCache::UpdateDirHandle(nsIFile* aStoreDirectory)
+{
+  return aStoreDirectory->Clone(getter_AddRefs(mStoreDirectory));
 }
 
 nsresult
@@ -261,13 +239,6 @@ LookupCache::WriteFile()
   rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(CACHE_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Need to close the inputstream here *before* rewriting its file.
-  // Windows will fail if we don't.
-  if (mInputStream) {
-    rv = mInputStream->Close();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<nsIOutputStream> out;
   rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out), storeFile,
                                        PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
@@ -288,11 +259,6 @@ LookupCache::WriteFile()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = EnsureSizeConsistent();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Reopen the file now that we've rewritten it.
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(mInputStream), storeFile,
-                                  PR_RDONLY);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> psFile;
@@ -353,20 +319,20 @@ LookupCache::EnsureSizeConsistent()
 }
 
 nsresult
-LookupCache::ReadHeader()
+LookupCache::ReadHeader(nsIInputStream* aInputStream)
 {
-  if (!mInputStream) {
+  if (!aInputStream) {
     Clear();
     UpdateHeader();
     return NS_OK;
   }
 
-  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(aInputStream);
   nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   void *buffer = &mHeader;
-  rv = NS_ReadInputStreamToBuffer(mInputStream,
+  rv = NS_ReadInputStreamToBuffer(aInputStream,
                                   &buffer,
                                   sizeof(Header));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -385,18 +351,18 @@ LookupCache::ReadHeader()
 }
 
 nsresult
-LookupCache::ReadCompletions()
+LookupCache::ReadCompletions(nsIInputStream* aInputStream)
 {
   if (!mHeader.numCompletions) {
     mCompletions.Clear();
     return NS_OK;
   }
 
-  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(aInputStream);
   nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, sizeof(Header));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = ReadTArray(mInputStream, &mCompletions, mHeader.numCompletions);
+  rv = ReadTArray(aInputStream, &mCompletions, mHeader.numCompletions);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("Read %d completions", mCompletions.Length()));
@@ -763,11 +729,15 @@ LookupCache::LoadPrefixSet()
   if (exists) {
     LOG(("stored PrefixSet exists, loading from disk"));
     rv = mPrefixSet->LoadFromFile(psFile);
-  }
-  if (!exists || NS_FAILED(rv)) {
-    LOG(("no (usable) stored PrefixSet found"));
-  } else {
+    if (NS_FAILED(rv)) {
+      if (rv == NS_ERROR_FILE_CORRUPTED) {
+        Reset();
+      }
+      return rv;
+    }
     mPrimed = true;
+  } else {
+    LOG(("no (usable) stored PrefixSet found"));
   }
 
 #ifdef DEBUG
