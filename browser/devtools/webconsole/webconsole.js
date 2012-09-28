@@ -217,6 +217,13 @@ WebConsoleFrame.prototype = {
   proxy: null,
 
   /**
+   * Tells if the Web Console initialization via message manager completed.
+   * @private
+   * @type boolean
+   */
+  _messageManagerInitComplete: false,
+
+  /**
    * Getter for the xul:popupset that holds any popups we open.
    * @type nsIDOMElement
    */
@@ -284,12 +291,6 @@ WebConsoleFrame.prototype = {
   groupDepth: 0,
 
   /**
-   * The current tab location.
-   * @type string
-   */
-  contentLocation: "",
-
-  /**
    * The JSTerm object that manage the console's input.
    * @see JSTerm
    * @type object
@@ -330,16 +331,16 @@ WebConsoleFrame.prototype = {
    *        The new value you want to set.
    */
   set saveRequestAndResponseBodies(aValue) {
-    let newValue = !!aValue;
-    let preferences = {
-      "NetworkMonitor.saveRequestAndResponseBodies": newValue,
+    this._saveRequestAndResponseBodies = aValue;
+
+    let message = {
+      preferences: {
+        "NetworkMonitor.saveRequestAndResponseBodies":
+          this._saveRequestAndResponseBodies,
+      },
     };
 
-    this.webConsoleClient.setPreferences(preferences, function(aResponse) {
-      if (!aResponse.error) {
-        this._saveRequestAndResponseBodies = newValue;
-      }
-    }.bind(this));
+    this.owner.sendMessageToContent("WebConsole:SetPreferences", message);
   },
 
   /**
@@ -351,8 +352,9 @@ WebConsoleFrame.prototype = {
     this.proxy = new WebConsoleConnectionProxy(this);
     this.proxy.initServer();
     this.proxy.connect(function() {
-      this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
-      this._onInitComplete();
+      if (this._messageManagerInitComplete) {
+        this._onInitComplete();
+      }
     }.bind(this));
   },
 
@@ -648,6 +650,50 @@ WebConsoleFrame.prototype = {
       this.inputNode.style.fontSize = "";
       this.outputNode.style.fontSize = "";
       Services.prefs.clearUserPref("devtools.webconsole.fontSize");
+    }
+  },
+
+  /**
+   * Handler for all of the messages coming from the Web Console content script.
+   *
+   * @private
+   * @param object aMessage
+   *        A MessageManager object that holds the remote message.
+   */
+  receiveMessage: function WCF_receiveMessage(aMessage)
+  {
+    if (!aMessage.json || aMessage.json.hudId != this.hudId) {
+      return;
+    }
+
+    switch (aMessage.name) {
+      case "WebConsole:Initialized":
+        this._onMessageManagerInitComplete();
+        break;
+      case "WebConsole:NetworkActivity":
+        this.handleNetworkActivity(aMessage.json);
+        break;
+      case "WebConsole:FileActivity":
+        this.outputMessage(CATEGORY_NETWORK, this.logFileActivity,
+                           [aMessage.json.uri]);
+        break;
+      case "WebConsole:LocationChange":
+        this.owner.onLocationChange(aMessage.json);
+        break;
+    }
+  },
+
+  /**
+   * Callback method used to track the Web Console initialization via message
+   * manager.
+   *
+   * @private
+   */
+  _onMessageManagerInitComplete: function WCF__onMessageManagerInitComplete()
+  {
+    this._messageManagerInitComplete = true;
+    if (this.proxy.connected) {
+      this._onInitComplete();
     }
   },
 
@@ -1258,21 +1304,22 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Log network event.
+   * Log network activity.
    *
-   * @param object aActorId
-   *        The network event actor ID to log.
+   * @param object aHttpActivity
+   *        The HTTP activity to log.
    * @return nsIDOMElement|undefined
    *         The message element to display in the Web Console output.
    */
-  logNetEvent: function WCF_logNetEvent(aActorId)
+  logNetActivity: function WCF_logNetActivity(aConnectionId)
   {
-    let networkInfo = this._networkRequests[aActorId];
+    let networkInfo = this._networkRequests[aConnectionId];
     if (!networkInfo) {
       return;
     }
 
-    let request = networkInfo.request;
+    let entry = networkInfo.httpActivity.log.entries[0];
+    let request = entry.request;
 
     let msgNode = this.document.createElementNS(XUL_NS, "hbox");
 
@@ -1300,7 +1347,8 @@ WebConsoleFrame.prototype = {
 
     let severity = SEVERITY_LOG;
     let mixedRequest =
-      WebConsoleUtils.isMixedHTTPSRequest(request.url, this.contentLocation);
+      WebConsoleUtils.isMixedHTTPSRequest(request.url,
+                                          this.owner.contentLocation);
     if (mixedRequest) {
       urlNode.classList.add("webconsole-mixed-content");
       this.makeMixedContentNode(linkNode);
@@ -1321,18 +1369,18 @@ WebConsoleFrame.prototype = {
     let messageNode = this.createMessageNode(CATEGORY_NETWORK, severity,
                                              msgNode, null, null, clipboardText);
 
-    messageNode._connectionId = aActorId;
+    messageNode._connectionId = entry.connection;
     messageNode.url = request.url;
 
     this.makeOutputMessageLink(messageNode, function WCF_net_message_link() {
       if (!messageNode._panelOpen) {
-        this.openNetworkPanel(messageNode, networkInfo);
+        this.openNetworkPanel(messageNode, networkInfo.httpActivity);
       }
     }.bind(this));
 
     networkInfo.node = messageNode;
 
-    this._updateNetMessage(aActorId);
+    this._updateNetMessage(entry.connection);
 
     return messageNode;
   },
@@ -1394,17 +1442,6 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Handle the file activity messages coming from the remote Web Console.
-   *
-   * @param string aFileURI
-   *        The file URI that was requested.
-   */
-  handleFileActivity: function WCF_handleFileActivity(aFileURI)
-  {
-    this.outputMessage(CATEGORY_NETWORK, this.logFileActivity, [aFileURI]);
-  },
-
-  /**
    * Inform user that the Web Console API has been replaced by a script
    * in a content page.
    */
@@ -1416,122 +1453,86 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Handle the network events coming from the remote Web Console.
+   * Handle the "WebConsole:NetworkActivity" message coming from the remote Web
+   * Console.
    *
-   * @param object aActor
-   *        The NetworkEventActor grip.
+   * @param object aMessage
+   *        The HTTP activity object. This object needs to hold two properties:
+   *        - meta - some metadata about the request log:
+   *          - stages - the stages the network request went through.
+   *          - discardRequestBody and discardResponseBody - booleans that tell
+   *          if the network request/response body was discarded or not.
+   *        - log - the request and response information. This is a HAR-like
+   *        object. See HUDService-content.js
+   *        NetworkMonitor.createActivityObject().
    */
-  handleNetworkEvent: function WCF_handleNetworkEvent(aActor)
+  handleNetworkActivity: function WCF_handleNetworkActivity(aMessage)
   {
-    let networkInfo = {
-      node: null,
-      actor: aActor.actor,
-      discardRequestBody: true,
-      discardResponseBody: true,
-      startedDateTime: aActor.startedDateTime,
-      request: {
-        url: aActor.url,
-        method: aActor.method,
-      },
-      response: {},
-      timings: {},
-      updates: [], // track the list of network event updates
-    };
+    let stage = aMessage.meta.stages[aMessage.meta.stages.length - 1];
+    let entry = aMessage.log.entries[0];
 
-    this._networkRequests[aActor.actor] = networkInfo;
-    this.outputMessage(CATEGORY_NETWORK, this.logNetEvent, [aActor.actor]);
-  },
+    if (stage == "REQUEST_HEADER") {
+      let networkInfo = {
+        node: null,
+        httpActivity: aMessage,
+      };
 
-  /**
-   * Handle network event updates coming from the server.
-   *
-   * @param string aActorId
-   *        The network event actor ID.
-   * @param string aType
-   *        Update type.
-   * @param object aPacket
-   *        Update details.
-   */
-  handleNetworkEventUpdate:
-  function WCF_handleNetworkEventUpdate(aActorId, aType, aPacket)
-  {
-    let networkInfo = this._networkRequests[aActorId];
-    if (!networkInfo) {
+      this._networkRequests[entry.connection] = networkInfo;
+      this.outputMessage(CATEGORY_NETWORK, this.logNetActivity,
+                         [entry.connection]);
+      return;
+    }
+    else if (!(entry.connection in this._networkRequests)) {
       return;
     }
 
-    networkInfo.updates.push(aType);
-
-    switch (aType) {
-      case "requestHeaders":
-        networkInfo.request.headersSize = aPacket.headersSize;
-        break;
-      case "requestPostData":
-        networkInfo.discardRequestBody = aPacket.discardRequestBody;
-        networkInfo.request.bodySize = aPacket.dataSize;
-        break;
-      case "responseStart":
-        networkInfo.response.httpVersion = aPacket.response.httpVersion;
-        networkInfo.response.status = aPacket.response.status;
-        networkInfo.response.statusText = aPacket.response.statusText;
-        networkInfo.response.headersSize = aPacket.response.headersSize;
-        networkInfo.discardResponseBody = aPacket.response.discardResponseBody;
-        break;
-      case "responseContent":
-        networkInfo.response.content = {
-          mimeType: aPacket.mimeType,
-        };
-        networkInfo.response.bodySize = aPacket.contentSize;
-        networkInfo.discardResponseBody = aPacket.discardResponseBody;
-        break;
-      case "eventTimings":
-        networkInfo.totalTime = aPacket.totalTime;
-        break;
-    }
+    let networkInfo = this._networkRequests[entry.connection];
+    networkInfo.httpActivity = aMessage;
 
     if (networkInfo.node) {
-      this._updateNetMessage(aActorId);
+      this._updateNetMessage(entry.connection);
     }
 
     // For unit tests we pass the HTTP activity object to the test callback,
     // once requests complete.
     if (this.owner.lastFinishedRequestCallback &&
-        networkInfo.updates.indexOf("responseContent") > -1 &&
-        networkInfo.updates.indexOf("eventTimings") > -1) {
-      this.owner.lastFinishedRequestCallback(networkInfo, this);
+        aMessage.meta.stages.indexOf("REQUEST_STOP") > -1 &&
+        aMessage.meta.stages.indexOf("TRANSACTION_CLOSE") > -1) {
+      this.owner.lastFinishedRequestCallback(aMessage);
     }
   },
 
   /**
    * Update an output message to reflect the latest state of a network request,
-   * given a network event actor ID.
+   * given a network connection ID.
    *
    * @private
-   * @param string aActorId
-   *        The network event actor ID for which you want to update the message.
+   * @param string aConnectionId
+   *        The connection ID to update.
    */
-  _updateNetMessage: function WCF__updateNetMessage(aActorId)
+  _updateNetMessage: function WCF__updateNetMessage(aConnectionId)
   {
-    let networkInfo = this._networkRequests[aActorId];
+    let networkInfo = this._networkRequests[aConnectionId];
     if (!networkInfo || !networkInfo.node) {
       return;
     }
 
     let messageNode = networkInfo.node;
-    let updates = networkInfo.updates;
-    let hasEventTimings = updates.indexOf("eventTimings") > -1;
-    let hasResponseStart = updates.indexOf("responseStart") > -1;
-    let request = networkInfo.request;
-    let response = networkInfo.response;
+    let httpActivity = networkInfo.httpActivity;
+    let stages = httpActivity.meta.stages;
+    let hasTransactionClose = stages.indexOf("TRANSACTION_CLOSE") > -1;
+    let hasResponseHeader = stages.indexOf("RESPONSE_HEADER") > -1;
+    let entry = httpActivity.log.entries[0];
+    let request = entry.request;
+    let response = entry.response;
 
-    if (hasEventTimings || hasResponseStart) {
+    if (hasTransactionClose || hasResponseHeader) {
       let status = [];
       if (response.httpVersion && response.status) {
         status = [response.httpVersion, response.status, response.statusText];
       }
-      if (hasEventTimings) {
-        status.push(l10n.getFormatStr("NetworkPanel.durationMS",
-                                      [networkInfo.totalTime]));
+      if (hasTransactionClose) {
+        status.push(l10n.getFormatStr("NetworkPanel.durationMS", [entry.time]));
       }
       let statusText = "[" + status.join(" ") + "]";
 
@@ -1542,7 +1543,7 @@ WebConsoleFrame.prototype = {
       messageNode.clipboardText = [request.method, request.url, statusText]
                                   .join(" ");
 
-      if (hasResponseStart && response.status >= MIN_HTTP_ERROR_CODE &&
+      if (hasResponseHeader && response.status >= MIN_HTTP_ERROR_CODE &&
           response.status <= MAX_HTTP_ERROR_CODE) {
         this.setMessageType(messageNode, CATEGORY_NETWORK, SEVERITY_ERROR);
       }
@@ -1566,136 +1567,25 @@ WebConsoleFrame.prototype = {
    */
   openNetworkPanel: function WCF_openNetworkPanel(aNode, aHttpActivity)
   {
-    let actor = aHttpActivity.actor;
-
-    if (actor) {
-      this.webConsoleClient.getRequestHeaders(actor, function(aResponse) {
-        if (aResponse.error) {
-          Cu.reportError("WCF_openNetworkPanel getRequestHeaders:" +
-                         aResponse.error);
-          return;
-        }
-
-        aHttpActivity.request.headers = aResponse.headers;
-
-        this.webConsoleClient.getRequestCookies(actor, onRequestCookies);
-      }.bind(this));
-    }
-
-    let onRequestCookies = function(aResponse) {
-      if (aResponse.error) {
-        Cu.reportError("WCF_openNetworkPanel getRequestCookies:" +
-                       aResponse.error);
-        return;
-      }
-
-      aHttpActivity.request.cookies = aResponse.cookies;
-
-      this.webConsoleClient.getResponseHeaders(actor, onResponseHeaders);
-    }.bind(this);
-
-    let onResponseHeaders = function(aResponse) {
-      if (aResponse.error) {
-        Cu.reportError("WCF_openNetworkPanel getResponseHeaders:" +
-                       aResponse.error);
-        return;
-      }
-
-      aHttpActivity.response.headers = aResponse.headers;
-
-      this.webConsoleClient.getResponseCookies(actor, onResponseCookies);
-    }.bind(this);
-
-    let onResponseCookies = function(aResponse) {
-      if (aResponse.error) {
-        Cu.reportError("WCF_openNetworkPanel getResponseCookies:" +
-                       aResponse.error);
-        return;
-      }
-
-      aHttpActivity.response.cookies = aResponse.cookies;
-
-      this.webConsoleClient.getRequestPostData(actor, onRequestPostData);
-    }.bind(this);
-
-    let onRequestPostData = function(aResponse) {
-      if (aResponse.error) {
-        Cu.reportError("WCF_openNetworkPanel getRequestPostData:" +
-                       aResponse.error);
-        return;
-      }
-
-      aHttpActivity.request.postData = aResponse.postData;
-      aHttpActivity.discardRequestBody = aResponse.postDataDiscarded;
-
-      this.webConsoleClient.getResponseContent(actor, onResponseContent);
-    }.bind(this);
-
-    let onResponseContent = function(aResponse) {
-      if (aResponse.error) {
-        Cu.reportError("WCF_openNetworkPanel getResponseContent:" +
-                       aResponse.error);
-        return;
-      }
-
-      aHttpActivity.response.content = aResponse.content;
-      aHttpActivity.discardResponseBody = aResponse.contentDiscarded;
-
-      this.webConsoleClient.getEventTimings(actor, onEventTimings);
-    }.bind(this);
-
-    let onEventTimings = function(aResponse) {
-      if (aResponse.error) {
-        Cu.reportError("WCF_openNetworkPanel getEventTimings:" +
-                       aResponse.error);
-        return;
-      }
-
-      aHttpActivity.timings = aResponse.timings;
-
-      openPanel();
-    }.bind(this);
-
-    let openPanel = function() {
-      aNode._netPanel = netPanel;
-
-      let panel = netPanel.panel;
-      panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
-      panel.sizeTo(450, 500);
-      panel.setAttribute("hudId", this.hudId);
-
-      panel.addEventListener("popuphiding", function WCF_netPanel_onHide() {
-        panel.removeEventListener("popuphiding", WCF_netPanel_onHide);
-
-        aNode._panelOpen = false;
-        aNode._netPanel = null;
-      });
-
-      aNode._panelOpen = true;
-    }.bind(this);
-
     let netPanel = new NetworkPanel(this.popupset, aHttpActivity);
     netPanel.linkNode = aNode;
+    aNode._netPanel = netPanel;
 
-    if (!actor) {
-      openPanel();
-    }
+    let panel = netPanel.panel;
+    panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
+    panel.sizeTo(450, 500);
+    panel.setAttribute("hudId", aHttpActivity.hudId);
+
+    panel.addEventListener("popuphiding", function WCF_netPanel_onHide() {
+      panel.removeEventListener("popuphiding", WCF_netPanel_onHide);
+
+      aNode._panelOpen = false;
+      aNode._netPanel = null;
+    });
+
+    aNode._panelOpen = true;
 
     return netPanel;
-  },
-
-  /**
-   * Handler for page location changes.
-   *
-   * @param string aURI
-   *        New page location.
-   * @param string aTitle
-   *        New page title.
-   */
-  onLocationChange: function WCF_onLocationChange(aURI, aTitle)
-  {
-    this.contentLocation = aURI;
-    this.owner.onLocationChange(aURI, aTitle);
   },
 
   /**
@@ -1957,7 +1847,7 @@ WebConsoleFrame.prototype = {
 
     if (category == CATEGORY_NETWORK) {
       let connectionId = null;
-      if (methodOrNode == this.logNetEvent) {
+      if (methodOrNode == this.logNetActivity) {
         connectionId = args[0];
       }
       else if (typeof methodOrNode != "function") {
@@ -1965,7 +1855,6 @@ WebConsoleFrame.prototype = {
       }
       if (connectionId && connectionId in this._networkRequests) {
         delete this._networkRequests[connectionId];
-        this._releaseObject(connectionId);
       }
     }
     else if (category == CATEGORY_WEBDEV &&
@@ -2061,10 +1950,8 @@ WebConsoleFrame.prototype = {
       }
       delete this._cssNodes[desc + location];
     }
-    else if (aNode._connectionId &&
-             aNode.classList.contains("webconsole-msg-network")) {
+    else if (aNode.classList.contains("webconsole-msg-network")) {
       delete this._networkRequests[aNode._connectionId];
-      this._releaseObject(aNode._connectionId);
     }
     else if (aNode.classList.contains("webconsole-msg-inspector")) {
       this.pruneConsoleDirNode(aNode);
@@ -2537,11 +2424,11 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Release an actor.
+   * Release an object actor.
    *
    * @private
    * @param string aActor
-   *        The actor ID you want to release.
+   *        The object actor ID you want to release.
    */
   _releaseObject: function WCF__releaseObject(aActor)
   {
@@ -3814,10 +3701,6 @@ function WebConsoleConnectionProxy(aWebConsole)
 
   this._onPageError = this._onPageError.bind(this);
   this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
-  this._onNetworkEvent = this._onNetworkEvent.bind(this);
-  this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
-  this._onFileActivity = this._onFileActivity.bind(this);
-  this._onLocationChange = this._onLocationChange.bind(this);
 }
 
 WebConsoleConnectionProxy.prototype = {
@@ -3883,19 +3766,13 @@ WebConsoleConnectionProxy.prototype = {
 
     client.addListener("pageError", this._onPageError);
     client.addListener("consoleAPICall", this._onConsoleAPICall);
-    client.addListener("networkEvent", this._onNetworkEvent);
-    client.addListener("networkEventUpdate", this._onNetworkEventUpdate);
-    client.addListener("fileActivity", this._onFileActivity);
-    client.addListener("locationChange", this._onLocationChange);
 
-    let listeners = ["PageError", "ConsoleAPI", "NetworkActivity",
-                     "FileActivity", "LocationChange"];
+    let listeners = ["PageError", "ConsoleAPI"];
 
     client.connect(function(aType, aTraits) {
       client.listTabs(function(aResponse) {
         let tab = aResponse.tabs[aResponse.selected];
         this._consoleActor = tab.consoleActor;
-        this.owner.onLocationChange(tab.url, tab.title);
         client.attachConsole(tab.consoleActor, listeners,
                              this._onAttachConsole.bind(this, aCallback));
       }.bind(this));
@@ -3994,80 +3871,6 @@ WebConsoleConnectionProxy.prototype = {
   },
 
   /**
-   * The "networkEvent" message type handler. We redirect any message to
-   * the UI for displaying.
-   *
-   * @private
-   * @param string aType
-   *        Message type.
-   * @param object aPacket
-   *        The message received from the server.
-   */
-  _onNetworkEvent: function WCCP__onNetworkEvent(aType, aPacket)
-  {
-    if (this.owner && aPacket.from == this._consoleActor) {
-      this.owner.handleNetworkEvent(aPacket.eventActor);
-    }
-  },
-
-  /**
-   * The "networkEventUpdate" message type handler. We redirect any message to
-   * the UI for displaying.
-   *
-   * @private
-   * @param string aType
-   *        Message type.
-   * @param object aPacket
-   *        The message received from the server.
-   */
-  _onNetworkEventUpdate: function WCCP__onNetworkEvenUpdatet(aType, aPacket)
-  {
-    if (this.owner) {
-      this.owner.handleNetworkEventUpdate(aPacket.from, aPacket.updateType,
-                                          aPacket);
-    }
-  },
-
-  /**
-   * The "fileActivity" message type handler. We redirect any message to
-   * the UI for displaying.
-   *
-   * @private
-   * @param string aType
-   *        Message type.
-   * @param object aPacket
-   *        The message received from the server.
-   */
-  _onFileActivity: function WCCP__onFileActivity(aType, aPacket)
-  {
-    if (this.owner && aPacket.from == this._consoleActor) {
-      this.owner.handleFileActivity(aPacket.uri);
-    }
-  },
-
-  /**
-   * The "locationChange" message type handler. We redirect any message to
-   * the UI for displaying.
-   *
-   * @private
-   * @param string aType
-   *        Message type.
-   * @param object aPacket
-   *        The message received from the server.
-   */
-  _onLocationChange: function WCCP__onLocationChange(aType, aPacket)
-  {
-    if (!this.owner || aPacket.from != this._consoleActor) {
-      return;
-    }
-
-    this.owner.onLocationChange(aPacket.uri, aPacket.title);
-    if (aPacket.state == "stop" && !aPacket.nativeConsoleAPI) {
-      this.owner.logWarningAboutReplacedAPI();
-    }
-  },
-
-  /**
    * Release an object actor.
    *
    * @param string aActor
@@ -4095,10 +3898,6 @@ WebConsoleConnectionProxy.prototype = {
 
     this.client.removeListener("pageError", this._onPageError);
     this.client.removeListener("consoleAPICall", this._onConsoleAPICall);
-    this.client.removeListener("networkEvent", this._onNetworkEvent);
-    this.client.removeListener("networkEventUpdate", this._onNetworkEventUpdate);
-    this.client.removeListener("fileActivity", this._onFileActivity);
-    this.client.removeListener("locationChange", this._onLocationChange);
     this.client.close(aOnDisconnect);
 
     this.client = null;

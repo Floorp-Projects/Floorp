@@ -65,36 +65,42 @@ function testGen() {
   let filterBox = hud.ui.filterBox;
 
   let httpActivity = {
-    updates: [],
-    discardRequestBody: true,
-    discardResponseBody: true,
-    startedDateTime: (new Date()).toISOString(),
-    request: {
-      url: "http://www.testpage.com",
-      method: "GET",
-      cookies: [],
-      headers: [
-        { name: "foo", value: "bar" },
-      ],
+    meta: {
+      stages: [],
+      discardRequestBody: true,
+      discardResponseBody: true,
     },
-    response: {
-      headers: [],
-      content: {},
+    log: {
+      entries: [{
+        startedDateTime: (new Date()).toISOString(),
+        request: {
+          url: "http://www.testpage.com",
+          method: "GET",
+          cookies: [],
+          headers: [
+            { name: "foo", value: "bar" },
+          ],
+        },
+        response: {
+          headers: [],
+          content: {},
+        },
+        timings: {},
+      }],
     },
-    timings: {},
   };
+
+  let entry = httpActivity.log.entries[0];
 
   let networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
 
   is(filterBox._netPanel, networkPanel,
      "Network panel stored on the anchor object");
 
-  networkPanel._onUpdate = function() {
-    networkPanel._onUpdate = null;
-    executeSoon(function() {
-      testDriver.next();
-    });
-  };
+  networkPanel.panel.addEventListener("load", function onLoad() {
+    networkPanel.panel.removeEventListener("load", onLoad, true);
+    testDriver.next();
+  }, true);
 
   yield;
 
@@ -117,8 +123,8 @@ function testGen() {
 
   // Test request body.
   info("test 2: request body");
-  httpActivity.discardRequestBody = false;
-  httpActivity.request.postData = { text: "hello world" };
+  httpActivity.meta.discardRequestBody = false;
+  entry.request.postData = { text: "hello world" };
   networkPanel.update();
 
   checkIsVisible(networkPanel, {
@@ -135,12 +141,12 @@ function testGen() {
 
   // Test response header.
   info("test 3: response header");
-  httpActivity.timings.wait = 10;
-  httpActivity.response.httpVersion = "HTTP/3.14";
-  httpActivity.response.status = 999;
-  httpActivity.response.statusText = "earthquake win";
-  httpActivity.response.content.mimeType = "text/html";
-  httpActivity.response.headers.push(
+  entry.timings.wait = 10;
+  entry.response.httpVersion = "HTTP/3.14";
+  entry.response.status = 999;
+  entry.response.statusText = "earthquake win";
+  entry.response.content.mimeType = "text/html";
+  entry.response.headers.push(
     { name: "Content-Type", value: "text/html" },
     { name: "leaveHouses", value: "true" }
   );
@@ -164,8 +170,8 @@ function testGen() {
 
   info("test 4");
 
-  httpActivity.discardResponseBody = false;
-  httpActivity.timings.receive = 2;
+  httpActivity.meta.discardResponseBody = false;
+  entry.timings.receive = 2;
   networkPanel.update();
 
   checkIsVisible(networkPanel, {
@@ -181,7 +187,7 @@ function testGen() {
 
   info("test 5");
 
-  httpActivity.updates.push("responseContent", "eventTimings");
+  httpActivity.meta.stages.push("REQUEST_STOP", "TRANSACTION_CLOSE");
   networkPanel.update();
 
   checkNodeContent(networkPanel, "responseNoBodyInfo", "2ms");
@@ -199,22 +205,20 @@ function testGen() {
 
   // Second run: Test for cookies and response body.
   info("test 6: cookies and response body");
-  httpActivity.request.cookies.push(
+  entry.request.cookies.push(
     { name: "foo", value: "bar" },
     { name: "hello", value: "world" }
   );
-  httpActivity.response.content.text = "get out here";
+  entry.response.content.text = "get out here";
 
   networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
   is(filterBox._netPanel, networkPanel,
      "Network panel stored on httpActivity object");
 
-  networkPanel._onUpdate = function() {
-    networkPanel._onUpdate = null;
-    executeSoon(function() {
-      testDriver.next();
-    });
-  };
+  networkPanel.panel.addEventListener("load", function onLoad() {
+    networkPanel.panel.removeEventListener("load", onLoad, true);
+    testDriver.next();
+  }, true);
 
   yield;
 
@@ -238,17 +242,15 @@ function testGen() {
 
   // Check image request.
   info("test 7: image request");
-  httpActivity.response.headers[1].value = "image/png";
-  httpActivity.response.content.mimeType = "image/png";
-  httpActivity.request.url = TEST_IMG;
+  entry.response.headers[1].value = "image/png";
+  entry.response.content.mimeType = "image/png";
+  entry.request.url = TEST_IMG;
 
   networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
-  networkPanel._onUpdate = function() {
-    networkPanel._onUpdate = null;
-    executeSoon(function() {
-      testDriver.next();
-    });
-  };
+  networkPanel.panel.addEventListener("load", function onLoad() {
+    networkPanel.panel.removeEventListener("load", onLoad, true);
+    testDriver.next();
+  }, true);
 
   yield;
 
@@ -289,17 +291,15 @@ function testGen() {
 
   // Check cached image request.
   info("test 8: cached image request");
-  httpActivity.response.httpVersion = "HTTP/1.1";
-  httpActivity.response.status = 304;
-  httpActivity.response.statusText = "Not Modified";
+  entry.response.httpVersion = "HTTP/1.1";
+  entry.response.status = 304;
+  entry.response.statusText = "Not Modified";
 
   networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
-  networkPanel._onUpdate = function() {
-    networkPanel._onUpdate = null;
-    executeSoon(function() {
-      testDriver.next();
-    });
-  };
+  networkPanel.panel.addEventListener("load", function onLoad() {
+    networkPanel.panel.removeEventListener("load", onLoad, true);
+    testDriver.next();
+  }, true);
 
   yield;
 
@@ -321,19 +321,17 @@ function testGen() {
 
   // Test sent form data.
   info("test 9: sent form data");
-  httpActivity.request.postData.text = [
+  entry.request.postData.text = [
     "Content-Type:      application/x-www-form-urlencoded",
     "Content-Length: 59",
     "name=rob&age=20"
   ].join("\n");
 
   networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
-  networkPanel._onUpdate = function() {
-    networkPanel._onUpdate = null;
-    executeSoon(function() {
-      testDriver.next();
-    });
-  };
+  networkPanel.panel.addEventListener("load", function onLoad() {
+    networkPanel.panel.removeEventListener("load", onLoad, true);
+    testDriver.next();
+  }, true);
 
   yield;
 
@@ -354,15 +352,13 @@ function testGen() {
 
   // Test no space after Content-Type:
   info("test 10: no space after Content-Type header in post data");
-  httpActivity.request.postData.text = "Content-Type:application/x-www-form-urlencoded\n";
+  entry.request.postData.text = "Content-Type:application/x-www-form-urlencoded\n";
 
   networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
-  networkPanel._onUpdate = function() {
-    networkPanel._onUpdate = null;
-    executeSoon(function() {
-      testDriver.next();
-    });
-  };
+  networkPanel.panel.addEventListener("load", function onLoad() {
+    networkPanel.panel.removeEventListener("load", onLoad, true);
+    testDriver.next();
+  }, true);
 
   yield;
 
@@ -383,18 +379,16 @@ function testGen() {
 
   info("test 11: cached data");
 
-  httpActivity.request.url = TEST_ENCODING_ISO_8859_1;
-  httpActivity.response.headers[1].value = "application/json";
-  httpActivity.response.content.mimeType = "application/json";
-  httpActivity.response.content.text = "my cached data is here!";
+  entry.request.url = TEST_ENCODING_ISO_8859_1;
+  entry.response.headers[1].value = "application/json";
+  entry.response.content.mimeType = "application/json";
+  entry.response.content.text = "my cached data is here!";
 
   networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
-  networkPanel._onUpdate = function() {
-    networkPanel._onUpdate = null;
-    executeSoon(function() {
-      testDriver.next();
-    });
-  };
+  networkPanel.panel.addEventListener("load", function onLoad() {
+    networkPanel.panel.removeEventListener("load", onLoad, true);
+    testDriver.next();
+  }, true);
 
   yield;
 
@@ -418,16 +412,14 @@ function testGen() {
   // Test a response with a content type that can't be displayed in the
   // NetworkPanel.
   info("test 12: unknown content type");
-  httpActivity.response.headers[1].value = "application/x-shockwave-flash";
-  httpActivity.response.content.mimeType = "application/x-shockwave-flash";
+  entry.response.headers[1].value = "application/x-shockwave-flash";
+  entry.response.content.mimeType = "application/x-shockwave-flash";
 
   networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
-  networkPanel._onUpdate = function() {
-    networkPanel._onUpdate = null;
-    executeSoon(function() {
-      testDriver.next();
-    });
-  };
+  networkPanel.panel.addEventListener("load", function onLoad() {
+    networkPanel.panel.removeEventListener("load", onLoad, true);
+    testDriver.next();
+  }, true);
 
   yield;
 
