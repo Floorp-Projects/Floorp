@@ -24,7 +24,7 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
 
   for (uint32_t index = 0; index < aSourceArray.Length(); index++) {
     nsCOMPtr<nsISupports> obj;
-    nsresult rv = CallQueryInterface(aSourceArray[index], getter_AddRefs(obj));
+    nsresult rv = aSourceArray[index]->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(obj));
     NS_ENSURE_SUCCESS(rv, rv);
 
     jsval wrappedVal;
