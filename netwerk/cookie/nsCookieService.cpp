@@ -1713,7 +1713,7 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookiePurgeAge, &val))) {
     mCookiePurgeAge =
-      int64_t(LIMIT(val, 0, PR_INT32_MAX, PR_INT32_MAX)) * PR_USEC_PER_SEC;
+      int64_t(LIMIT(val, 0, INT32_MAX, INT32_MAX)) * PR_USEC_PER_SEC;
   }
 
   bool boolval;
@@ -3816,9 +3816,7 @@ nsCookieService::GetCookiesForApp(uint32_t aAppId, bool aOnlyBrowserElement,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // TODO: For the moment NECKO_UNKNOWN_APP_ID isn't working well with Necko.
-  // This should be uncommented with bug 794023.
-  NS_ENSURE_TRUE(aAppId != NECKO_NO_APP_ID /*&& aAppId != NECKO_UNKNOWN_APP_ID*/,
+  NS_ENSURE_TRUE(aAppId != NECKO_NO_APP_ID && aAppId != NECKO_UNKNOWN_APP_ID,
                  NS_ERROR_INVALID_ARG);
 
   GetCookiesForAppStruct data(aAppId, aOnlyBrowserElement);

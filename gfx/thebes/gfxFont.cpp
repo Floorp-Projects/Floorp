@@ -5214,7 +5214,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     }
     if (aLastBreak && charsFit == aMaxLength) {
         if (lastBreak < 0) {
-            *aLastBreak = PR_UINT32_MAX;
+            *aLastBreak = UINT32_MAX;
         } else {
             *aLastBreak = lastBreak - aStart;
         }

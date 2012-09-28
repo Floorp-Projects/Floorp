@@ -95,9 +95,9 @@ static bool test_basic_array(ElementType *data,
     return false;
   if (ary[index] != extra)
     return false;
-  if (ary.IndexOf(extra) == PR_UINT32_MAX)
+  if (ary.IndexOf(extra) == UINT32_MAX)
     return false;
-  if (ary.LastIndexOf(extra) == PR_UINT32_MAX)
+  if (ary.LastIndexOf(extra) == UINT32_MAX)
     return false;
   // ensure proper searching
   if (ary.IndexOf(extra) > ary.LastIndexOf(extra))

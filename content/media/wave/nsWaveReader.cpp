@@ -179,9 +179,9 @@ bool nsWaveReader::DecodeAudioData()
       if (mSampleFormat == nsAudioStream::FORMAT_U8) {
         uint8_t v =  ReadUint8(&d);
 #if defined(MOZ_SAMPLE_TYPE_S16)
-        *s++ = (v * (1.F/PR_UINT8_MAX)) * PR_UINT16_MAX + PR_INT16_MIN;
+        *s++ = (v * (1.F/UINT8_MAX)) * UINT16_MAX + INT16_MIN;
 #elif defined(MOZ_SAMPLE_TYPE_FLOAT32)
-        *s++ = (v * (1.F/PR_UINT8_MAX)) * 2.F - 1.F;
+        *s++ = (v * (1.F/UINT8_MAX)) * 2.F - 1.F;
 #endif
       }
       else if (mSampleFormat == nsAudioStream::FORMAT_S16) {
@@ -189,7 +189,7 @@ bool nsWaveReader::DecodeAudioData()
 #if defined(MOZ_SAMPLE_TYPE_S16)
         *s++ = v;
 #elif defined(MOZ_SAMPLE_TYPE_FLOAT32)
-        *s++ = (int32_t(v) - PR_INT16_MIN) / float(PR_UINT16_MAX) * 2.F - 1.F;
+        *s++ = (int32_t(v) - INT16_MIN) / float(UINT16_MAX) * 2.F - 1.F;
 #endif
       }
     }
@@ -199,7 +199,7 @@ bool nsWaveReader::DecodeAudioData()
   double readSizeTime = BytesToTime(readSize);
   NS_ASSERTION(posTime <= INT64_MAX / USECS_PER_S, "posTime overflow");
   NS_ASSERTION(readSizeTime <= INT64_MAX / USECS_PER_S, "readSizeTime overflow");
-  NS_ASSERTION(frames < PR_INT32_MAX, "frames overflow");
+  NS_ASSERTION(frames < INT32_MAX, "frames overflow");
 
   mAudioQueue.Push(new AudioData(pos,
                                  static_cast<int64_t>(posTime * USECS_PER_S),
@@ -421,7 +421,7 @@ nsWaveReader::LoadFormatChunk()
     extra += extra % 2;
 
     if (extra > 0) {
-      PR_STATIC_ASSERT(PR_UINT16_MAX + (PR_UINT16_MAX % 2) < UINT_MAX / sizeof(char));
+      PR_STATIC_ASSERT(UINT16_MAX + (UINT16_MAX % 2) < UINT_MAX / sizeof(char));
       nsAutoArrayPtr<char> chunkExtension(new char[extra]);
       if (!ReadAll(chunkExtension.get(), extra)) {
         return false;
@@ -473,7 +473,7 @@ nsWaveReader::FindDataOffset()
   }
 
   int64_t offset = mDecoder->GetResource()->Tell();
-  if (offset <= 0 || offset > PR_UINT32_MAX) {
+  if (offset <= 0 || offset > UINT32_MAX) {
     NS_WARNING("PCM data offset out of range");
     return false;
   }

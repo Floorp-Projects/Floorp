@@ -1052,12 +1052,12 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
                     innerOrigin.x, innerOrigin.y, 0);
   innerRS->~nsHTMLReflowState();
 
-  nsTableFrame::InvalidateFrame(InnerTableFrame(), origInnerRect,
-                                origInnerVisualOverflow, innerFirstReflow);
+  nsTableFrame::InvalidateTableFrame(InnerTableFrame(), origInnerRect,
+                                     origInnerVisualOverflow, innerFirstReflow);
   if (mCaptionFrames.NotEmpty()) {
-    nsTableFrame::InvalidateFrame(mCaptionFrames.FirstChild(), origCaptionRect,
-                                  origCaptionVisualOverflow,
-                                  captionFirstReflow);
+    nsTableFrame::InvalidateTableFrame(mCaptionFrames.FirstChild(), origCaptionRect,
+                                       origCaptionVisualOverflow,
+                                       captionFirstReflow);
   }
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, captionMargin);

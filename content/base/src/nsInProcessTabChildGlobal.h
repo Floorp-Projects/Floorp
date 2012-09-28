@@ -24,7 +24,8 @@ class nsInProcessTabChildGlobal : public nsDOMEventTargetHelper,
                                   public nsFrameScriptExecutor,
                                   public nsIInProcessContentFrameMessageManager,
                                   public nsIScriptObjectPrincipal,
-                                  public nsIScriptContextPrincipal
+                                  public nsIScriptContextPrincipal,
+                                  public mozilla::dom::ipc::MessageManagerCallback
 {
 public:
   nsInProcessTabChildGlobal(nsIDocShell* aShell, nsIContent* aOwner,
@@ -58,6 +59,15 @@ public:
                   nsAString& aBinaryData);
 
   NS_DECL_NSIINPROCESSCONTENTFRAMEMESSAGEMANAGER
+
+  /**
+   * MessageManagerCallback methods that we override.
+   */
+  virtual bool DoSendSyncMessage(const nsAString& aMessage,
+                                 const mozilla::dom::StructuredCloneData& aData,
+                                 InfallibleTArray<nsString>* aJSONRetVal);
+  virtual bool DoSendAsyncMessage(const nsAString& aMessage,
+                                  const mozilla::dom::StructuredCloneData& aData);
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   NS_IMETHOD AddEventListener(const nsAString& aType,

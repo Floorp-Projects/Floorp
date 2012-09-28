@@ -1579,13 +1579,6 @@ $(foreach category,$(PP_TARGETS),\
 
 
 #
-# Disallow parallel builds with MSVC < 8
-#
-ifneq (,$(filter 1200 1300 1310,$(_MSC_VER)))
-.NOTPARALLEL:
-endif
-
-#
 # Re-define the list of default suffixes, so gmake won't have to churn through
 # hundreds of built-in suffix rules for stuff we don't need.
 #

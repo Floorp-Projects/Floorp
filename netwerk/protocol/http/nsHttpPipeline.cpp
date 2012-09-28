@@ -855,7 +855,7 @@ nsHttpPipeline::FillSendBuf()
             nsAHttpTransaction *response = Response(0);
             if (response && !response->PipelinePosition())
                 response->SetPipelinePosition(1);
-            rv = trans->ReadSegments(this, (uint32_t)NS_MIN(avail, (uint64_t)PR_UINT32_MAX), &n);
+            rv = trans->ReadSegments(this, (uint32_t)NS_MIN(avail, (uint64_t)UINT32_MAX), &n);
             if (NS_FAILED(rv)) return rv;
             
             if (n == 0) {

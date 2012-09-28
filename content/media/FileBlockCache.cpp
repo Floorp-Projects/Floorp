@@ -238,7 +238,7 @@ nsresult FileBlockCache::Read(int64_t aOffset,
 {
   MonitorAutoLock mon(mDataMonitor);
 
-  if (!mFD || (aOffset / BLOCK_SIZE) > PR_INT32_MAX)
+  if (!mFD || (aOffset / BLOCK_SIZE) > INT32_MAX)
     return NS_ERROR_FAILURE;
 
   int32_t bytesToRead = aLength;

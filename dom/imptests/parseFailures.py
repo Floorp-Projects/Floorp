@@ -5,6 +5,7 @@
 import json
 import os
 import sys
+import collections
 
 import writeMakefile
 
@@ -34,8 +35,8 @@ def dumpFailures(lines):
         jsonpath = 'failures/' + url + '.json'
         files.append(jsonpath)
         ensuredir(jsonpath)
-        obj = json.loads(objstr)
-        formattedobj = json.dumps(obj, sort_keys=True, indent=2, separators=(',', ': '))
+        obj = json.loads(objstr, object_pairs_hook=collections.OrderedDict)
+        formattedobj = json.dumps(obj, indent=2, separators=(',', ': '))
         fp = open(jsonpath, 'w')
         fp.write(formattedobj + '\n')
         fp.close()

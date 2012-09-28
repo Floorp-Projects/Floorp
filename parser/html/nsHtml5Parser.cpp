@@ -198,7 +198,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   if (NS_FAILED(rv = mExecutor->IsBroken())) {
     return rv;
   }
-  if (aSourceBuffer.Length() > PR_INT32_MAX) {
+  if (aSourceBuffer.Length() > INT32_MAX) {
     return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
   }
 

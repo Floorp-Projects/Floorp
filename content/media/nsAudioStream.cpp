@@ -609,7 +609,7 @@ int32_t nsNativeAudioStream::GetMinWriteSize()
                                   &size);
   if (r == SA_ERROR_NOT_SUPPORTED)
     return 1;
-  else if (r != SA_SUCCESS || size > PR_INT32_MAX)
+  else if (r != SA_SUCCESS || size > INT32_MAX)
     return -1;
 
   return static_cast<int32_t>(size / mChannels / sizeof(short));
@@ -1152,7 +1152,7 @@ nsBufferedAudioStream::GetPositionInFramesUnlocked()
   if (position >= mLostFrames) {
     adjustedPosition = position - mLostFrames;
   }
-  return NS_MIN<uint64_t>(adjustedPosition, PR_INT64_MAX);
+  return NS_MIN<uint64_t>(adjustedPosition, INT64_MAX);
 }
 
 bool

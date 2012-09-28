@@ -112,7 +112,7 @@ NS_CancelAsyncCopy(nsISupports *aCopierCtx, nsresult aReason);
  *        The input stream to read.
  * @param aMaxCount
  *        The maximum number of bytes to consume from the stream.  Pass the
- *        value PR_UINT32_MAX to consume the entire stream.  The number of
+ *        value UINT32_MAX to consume the entire stream.  The number of
  *        bytes actually read is given by the length of aBuffer upon return.
  * @param aBuffer
  *        The string object that will contain the stream data upon return.

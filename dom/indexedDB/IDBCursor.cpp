@@ -744,7 +744,7 @@ IDBCursor::Advance(int64_t aCount)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aCount < 1 || aCount > PR_UINT32_MAX) {
+  if (aCount < 1 || aCount > UINT32_MAX) {
     return NS_ERROR_TYPE_ERR;
   }
 

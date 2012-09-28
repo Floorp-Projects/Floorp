@@ -2609,7 +2609,7 @@ public:
      * SetLineBreaks(aStart, result, aLineBreakBefore, result < aMaxLength, aProvider)
      * and the returned metrics and the invariants above reflect this.
      *
-     * @param aMaxLength this can be PR_UINT32_MAX, in which case the length used
+     * @param aMaxLength this can be UINT32_MAX, in which case the length used
      * is up to the end of the string
      * @param aLineBreakBefore set to true if and only if there is an actual
      * line break at the start of this string.
@@ -2633,7 +2633,7 @@ public:
      * the maximal N such that
      *       N < aMaxLength && line break at N && GetAdvanceWidth(aStart, N) <= aWidth
      *   OR  N < aMaxLength && hyphen break at N && GetAdvanceWidth(aStart, N) + GetHyphenWidth() <= aWidth
-     * or PR_UINT32_MAX if no such N exists, where GetAdvanceWidth assumes
+     * or UINT32_MAX if no such N exists, where GetAdvanceWidth assumes
      * the effect of
      * SetLineBreaks(aStart, N, aLineBreakBefore, N < aMaxLength, aProvider)
      *
@@ -3109,7 +3109,7 @@ public:
     // If this group has such "bad" font, each platform's gfxFontGroup initialized mUnderlineOffset.
     // The value should be lower value of first font's metrics and the bad font's metrics.
     // Otherwise, this returns from first font's metrics.
-    enum { UNDERLINE_OFFSET_NOT_SET = PR_INT16_MAX };
+    enum { UNDERLINE_OFFSET_NOT_SET = INT16_MAX };
     virtual gfxFloat GetUnderlineOffset() {
         if (mUnderlineOffset == UNDERLINE_OFFSET_NOT_SET)
             mUnderlineOffset = GetFontAt(0)->GetMetrics().underlineOffset;

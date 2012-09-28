@@ -344,7 +344,7 @@ nsSocketTransportService::PollTimeout()
         return NS_SOCKET_POLL_TIMEOUT;
 
     // compute minimum time before any socket timeout expires.
-    uint32_t minR = PR_UINT16_MAX;
+    uint32_t minR = UINT16_MAX;
     for (uint32_t i=0; i<mActiveCount; ++i) {
         const SocketContext &s = mActiveList[i];
         // mPollTimeout could be less than mElapsedTime if setTimeout
@@ -770,10 +770,10 @@ nsSocketTransportService::DoPollIteration(bool wait)
                 s.mHandler->OnSocketReady(desc.fd, desc.out_flags);
             }
             // check for timeout errors unless disabled...
-            else if (s.mHandler->mPollTimeout != PR_UINT16_MAX) {
+            else if (s.mHandler->mPollTimeout != UINT16_MAX) {
                 // update elapsed time counter
-                if (NS_UNLIKELY(pollInterval > (PR_UINT16_MAX - s.mElapsedTime)))
-                    s.mElapsedTime = PR_UINT16_MAX;
+                if (NS_UNLIKELY(pollInterval > (UINT16_MAX - s.mElapsedTime)))
+                    s.mElapsedTime = UINT16_MAX;
                 else
                     s.mElapsedTime += uint16_t(pollInterval);
                 // check for timeout expiration 

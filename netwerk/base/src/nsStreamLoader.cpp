@@ -118,7 +118,7 @@ nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
 {
   nsStreamLoader *self = (nsStreamLoader *) closure;
 
-  if (count > PR_UINT32_MAX - self->mLength) {
+  if (count > UINT32_MAX - self->mLength) {
     return NS_ERROR_ILLEGAL_VALUE; // is there a better error to use here?
   }
 

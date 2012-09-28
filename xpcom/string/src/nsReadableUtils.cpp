@@ -1054,7 +1054,7 @@ CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
             bool err;
             c8_32 = UTF8CharEnumerator::NextChar(&u8, u8end, &err);
             if (err)
-              return PR_INT32_MIN;
+              return INT32_MIN;
 
             uint32_t c16_32 = UTF16CharEnumerator::NextChar(&u16, u16end);
             // The above UTF16CharEnumerator::NextChar() calls can

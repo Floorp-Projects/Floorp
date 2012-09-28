@@ -757,7 +757,7 @@ nsGonkCameraControl::SetPreviewSize(uint32_t aWidth, uint32_t aHeight)
   Vector<Size> previewSizes;
   uint32_t bestWidth = aWidth;
   uint32_t bestHeight = aHeight;
-  uint32_t minSizeDelta = PR_UINT32_MAX;
+  uint32_t minSizeDelta = UINT32_MAX;
   uint32_t delta;
   Size size;
 

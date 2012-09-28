@@ -235,6 +235,7 @@ static const char kStorageEnabled[] = "dom.storage.enabled";
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::ipc;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
@@ -8768,7 +8769,7 @@ nsGlobalWindow::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
   tmpIdleObserver.mIdleObserver = aIdleObserver;
   rv = aIdleObserver->GetTime(&tmpIdleObserver.mTimeInS);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_ARG_MAX(tmpIdleObserver.mTimeInS, PR_UINT32_MAX / 1000);
+  NS_ENSURE_ARG_MAX(tmpIdleObserver.mTimeInS, UINT32_MAX / 1000);
   NS_ENSURE_ARG_MIN(tmpIdleObserver.mTimeInS, MIN_IDLE_NOTIFICATION_TIME_S);
 
   uint32_t insertAtIndex = FindInsertionIndex(&tmpIdleObserver);
@@ -11004,16 +11005,10 @@ nsGlobalChromeWindow::GetMessageManager(nsIMessageBroadcaster** aManager)
     nsCOMPtr<nsIMessageBroadcaster> globalMM =
       do_GetService("@mozilla.org/globalmessagemanager;1");
     mMessageManager =
-      new nsFrameMessageManager(true, /* aChrome */
-                                nullptr,
-                                nullptr,
-                                nullptr,
-                                nullptr,
+      new nsFrameMessageManager(nullptr,
                                 static_cast<nsFrameMessageManager*>(globalMM.get()),
                                 cx,
-                                false, /* aGlobal */
-                                false, /* aProcessManager */
-                                true /* aBroadcaster */);
+                                MM_CHROME | MM_BROADCASTER);
     NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
   }
   CallQueryInterface(mMessageManager, aManager);

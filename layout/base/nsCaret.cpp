@@ -483,8 +483,9 @@ void nsCaret::InvalidateOutsideCaret()
   nsIFrame *frame = GetCaretFrame();
 
   // Only invalidate if we are not fully contained by our frame's rect.
-  if (frame && !frame->GetVisualOverflowRect().Contains(GetCaretRect()))
-    InvalidateRects(mCaretRect, GetHookRect(), frame);
+  if (frame && !frame->GetVisualOverflowRect().Contains(GetCaretRect())) {
+    frame->SchedulePaint();
+  }
 }
 
 void nsCaret::UpdateCaretPosition()
@@ -613,31 +614,9 @@ nsresult nsCaret::PrimeTimer()
   return NS_OK;
 }
 
-void nsCaret::InvalidateTextOverflowBlock()
-{
-  // If the nearest block has a potential 'text-overflow' marker then
-  // invalidate it.
-  if (mLastContent) {
-    nsIFrame* caretFrame = mLastContent->GetPrimaryFrame();
-    if (caretFrame) {
-      nsIFrame* block = nsLayoutUtils::GetAsBlock(caretFrame) ? caretFrame :
-        nsLayoutUtils::FindNearestBlockAncestor(caretFrame);
-      if (block) {
-        const nsStyleTextReset* style = block->GetStyleTextReset();
-        if (style->mTextOverflow.mLeft.mType != NS_STYLE_TEXT_OVERFLOW_CLIP ||
-            style->mTextOverflow.mRight.mType != NS_STYLE_TEXT_OVERFLOW_CLIP) {
-          block->InvalidateOverflowRect();
-        }
-      }
-    }
-  }
-}
-
 //-----------------------------------------------------------------------------
 void nsCaret::StartBlinking()
 {
-  InvalidateTextOverflowBlock();
-
   if (mReadOnly) {
     // Make sure the one draw command we use for a readonly caret isn't
     // done until the selection is set
@@ -661,8 +640,6 @@ void nsCaret::StartBlinking()
 //-----------------------------------------------------------------------------
 void nsCaret::StopBlinking()
 {
-  InvalidateTextOverflowBlock();
-
   if (mDrawn)     // erase the caret if necessary
     DrawCaret(true);
 
@@ -721,7 +698,7 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   }
 
   if (aInvalidate)
-    InvalidateRects(mCaretRect, mHookRect, theFrame);
+    theFrame->SchedulePaint();
 
   return true;
 }
@@ -1135,16 +1112,6 @@ nsCaret::UpdateCaretRects(nsIFrame* aFrame, int32_t aFrameOffset)
   }
 #endif //IBMBIDI
   return true;
-}
-
-// static
-void nsCaret::InvalidateRects(const nsRect &aRect, const nsRect &aHook,
-                              nsIFrame *aFrame)
-{
-  NS_ASSERTION(aFrame, "Must have a frame to invalidate");
-  nsRect rect;
-  rect.UnionRect(aRect, aHook);
-  aFrame->Invalidate(rect);
 }
 
 //-----------------------------------------------------------------------------

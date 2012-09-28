@@ -50,7 +50,7 @@ nsEmbedStream::OpenStream(nsIURI *aBaseURI, const nsACString& aContentType)
   nsCOMPtr<nsIAsyncOutputStream> outputStream;
   rv = NS_NewPipe2(getter_AddRefs(inputStream),
                    getter_AddRefs(outputStream),
-                   true, false, 0, PR_UINT32_MAX);
+                   true, false, 0, UINT32_MAX);
   if (NS_FAILED(rv))
     return rv;
 

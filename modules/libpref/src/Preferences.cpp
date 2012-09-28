@@ -754,7 +754,7 @@ static nsresult openPrefFile(nsIFile* aFile)
   rv = inStr->Available(&fileSize64);
   if (NS_FAILED(rv))
     return rv;
-  NS_ENSURE_TRUE(fileSize64 <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
+  NS_ENSURE_TRUE(fileSize64 <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   uint32_t fileSize = (uint32_t)fileSize64;
   nsAutoArrayPtr<char> fileBuffer(new char[fileSize]);

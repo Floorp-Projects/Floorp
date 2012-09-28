@@ -605,7 +605,7 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
   uint64_t available64;
   rv = stream->Available(&available64);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (available64 == 0 || available64 > PR_UINT32_MAX / sizeof(uint8_t))
+  if (available64 == 0 || available64 > UINT32_MAX / sizeof(uint8_t))
     return NS_ERROR_FILE_TOO_BIG;
   uint32_t available = (uint32_t)available64;
 
@@ -668,7 +668,7 @@ nsFaviconService::SetFaviconDataFromDataURL(nsIURI* aFaviconURI,
   uint64_t available64;
   rv = stream->Available(&available64);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (available64 == 0 || available64 > PR_UINT32_MAX / sizeof(uint8_t))
+  if (available64 == 0 || available64 > UINT32_MAX / sizeof(uint8_t))
     return NS_ERROR_FAILURE;
   uint32_t available = (uint32_t)available64;
 
@@ -762,7 +762,7 @@ nsFaviconService::GetDefaultFaviconData(nsCString& byteStr)
     rv = NS_OpenURI(getter_AddRefs(istream), defaultFaviconURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_ConsumeStream(istream, PR_UINT32_MAX, mDefaultFaviconData);
+    rv = NS_ConsumeStream(istream, UINT32_MAX, mDefaultFaviconData);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = istream->Close();
@@ -1075,7 +1075,7 @@ nsFaviconService::OptimizeFaviconImage(const uint8_t* aData, uint32_t aDataLen,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Read the stream into a new buffer.
-  rv = NS_ConsumeStream(iconStream, PR_UINT32_MAX, aNewData);
+  rv = NS_ConsumeStream(iconStream, UINT32_MAX, aNewData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

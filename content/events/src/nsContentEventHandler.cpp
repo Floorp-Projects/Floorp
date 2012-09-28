@@ -181,7 +181,7 @@ static uint32_t CountNewlinesInXPLength(nsIContent* aContent,
     return 0;
   // For automated tests, we should abort on debug build.
   NS_ABORT_IF_FALSE(
-    (aXPLength == PR_UINT32_MAX || aXPLength <= text->GetLength()),
+    (aXPLength == UINT32_MAX || aXPLength <= text->GetLength()),
     "aXPLength is out-of-bounds");
   const uint32_t length = NS_MIN(aXPLength, text->GetLength());
   uint32_t newlines = 0;
@@ -204,7 +204,7 @@ static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
   }
   // For automated tests, we should abort on debug build.
   NS_ABORT_IF_FALSE(
-    (aNativeLength == PR_UINT32_MAX || aNativeLength <= text->GetLength() * 2),
+    (aNativeLength == UINT32_MAX || aNativeLength <= text->GetLength() * 2),
     "aNativeLength is unexpected value");
   const uint32_t xpLength = text->GetLength();
   uint32_t newlines = 0;
@@ -222,7 +222,7 @@ static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
 }
 #endif
 
-static uint32_t GetNativeTextLength(nsIContent* aContent, uint32_t aMaxLength = PR_UINT32_MAX)
+static uint32_t GetNativeTextLength(nsIContent* aContent, uint32_t aMaxLength = UINT32_MAX)
 {
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     uint32_t textLengthDifference =

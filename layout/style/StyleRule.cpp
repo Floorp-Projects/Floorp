@@ -309,7 +309,7 @@ nsCSSSelector::nsCSSSelector(void)
     mPseudoType(nsCSSPseudoElements::ePseudo_NotPseudoElement)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
-  MOZ_STATIC_ASSERT(nsCSSPseudoElements::ePseudo_MAX < PR_INT16_MAX,
+  MOZ_STATIC_ASSERT(nsCSSPseudoElements::ePseudo_MAX < INT16_MAX,
                     "nsCSSPseudoElements::Type values overflow mPseudoType");
 }
 

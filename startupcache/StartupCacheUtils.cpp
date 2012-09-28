@@ -40,7 +40,7 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 {
   nsCOMPtr<nsIStorageStream> storageStream;
 
-  nsresult rv = NS_NewStorageStream(256, PR_UINT32_MAX, getter_AddRefs(storageStream));
+  nsresult rv = NS_NewStorageStream(256, UINT32_MAX, getter_AddRefs(storageStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIObjectOutputStream> objectOutput
@@ -82,7 +82,7 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
   uint64_t avail64;
   rv = inputStream->Available(&avail64);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(avail64 <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
+  NS_ENSURE_TRUE(avail64 <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   uint32_t avail = (uint32_t)avail64;
   nsAutoArrayPtr<char> temp (new char[avail]);

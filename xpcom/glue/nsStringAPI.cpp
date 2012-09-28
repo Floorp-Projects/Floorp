@@ -66,7 +66,7 @@ nsAString::char_type*
 nsAString::EndWriting()
 {
   char_type *data;
-  uint32_t len = NS_StringGetMutableData(*this, PR_UINT32_MAX, &data);
+  uint32_t len = NS_StringGetMutableData(*this, UINT32_MAX, &data);
   return data + len;
 }
 
@@ -597,7 +597,7 @@ nsACString::char_type*
 nsACString::EndWriting()
 {
   char_type *data;
-  uint32_t len = NS_CStringGetMutableData(*this, PR_UINT32_MAX, &data);
+  uint32_t len = NS_CStringGetMutableData(*this, UINT32_MAX, &data);
   return data + len;
 }
 
@@ -1061,7 +1061,7 @@ void
 CompressWhitespace(nsAString& aString)
 {
   PRUnichar *start;
-  uint32_t len = NS_StringGetMutableData(aString, PR_UINT32_MAX, &start);
+  uint32_t len = NS_StringGetMutableData(aString, UINT32_MAX, &start);
   PRUnichar *end = start + len;
   PRUnichar *from = start, *to = start;
 
