@@ -157,9 +157,6 @@ private: // data
   int32_t      mTimeout; // -1 means display forever
   int32_t      mDisposalMethod;
 
-  /** Indicates how many readers currently have locked this frame */
-  int32_t mLockCount;
-
   gfxASurface::gfxImageFormat mFormat;
   uint8_t      mPaletteDepth;
   int8_t       mBlendMethod;
@@ -168,6 +165,8 @@ private: // data
   bool mFormatChanged;
   bool mCompositingFailed;
   bool mNonPremult;
+  /** Indicates if the image data is currently locked */
+  bool mLocked;
 
   /** Have we called DiscardTracker::InformAllocation()? */
   bool mInformedDiscardTracker;
@@ -176,34 +175,5 @@ private: // data
   bool mIsDDBSurface;
 #endif
 };
-
-namespace mozilla {
-namespace image {
-  // An RAII class to ensure it's easy to balance locks and unlocks on
-  // imgFrames.
-  class AutoFrameLocker
-  {
-  public:
-    AutoFrameLocker(imgFrame* frame)
-      : mFrame(frame)
-      , mSucceeded(NS_SUCCEEDED(frame->LockImageData()))
-    {}
-
-    ~AutoFrameLocker()
-    {
-      if (mSucceeded) {
-        mFrame->UnlockImageData();
-      }
-    }
-
-    // Whether the lock request succeeded.
-    bool Succeeded() { return mSucceeded; }
-
-  private:
-    imgFrame* mFrame;
-    bool mSucceeded;
-  };
-}
-}
 
 #endif /* imgFrame_h */
