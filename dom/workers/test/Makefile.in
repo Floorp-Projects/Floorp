@@ -100,8 +100,6 @@ MOCHITEST_FILES = \
   test_csp.js \
   test_csp.html^headers^ \
   csp_worker.js \
-  test_transferable.html \
-  transferable_worker.js \
   $(NULL)
 
 _SUBDIRMOCHITEST_FILES = \
