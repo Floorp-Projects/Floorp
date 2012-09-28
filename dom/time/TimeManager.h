@@ -5,19 +5,13 @@
 #ifndef mozilla_dom_time_TimeManager_h
 #define mozilla_dom_time_TimeManager_h
 
-#include "mozilla/HalTypes.h"
 #include "nsIDOMTimeManager.h"
-#include "mozilla/Observer.h"
 #include "mozilla/Attributes.h"
 
-class nsPIDOMWindow;
-
 namespace mozilla {
-
-typedef Observer<hal::SystemTimeChange> SystemTimeObserver;
-
 namespace dom {
 namespace time {
+
 class TimeManager MOZ_FINAL : public nsIDOMMozTimeManager
 {
 public:
