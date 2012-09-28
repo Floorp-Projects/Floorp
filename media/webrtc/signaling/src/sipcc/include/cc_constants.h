@@ -546,6 +546,16 @@ typedef enum {
 } cc_media_type_t;
 
 
+typedef struct {
+  char        *name;
+  char        *value;
+  cc_boolean   mandatory;
+} cc_media_constraint_t;
+
+typedef struct {
+  cc_media_constraint_t**  constraints;
+  cc_uint16_t              constraint_count;
+} cc_media_constraints_t;
 
 #endif /* _CC_CONSTANTS_H_ */
 
