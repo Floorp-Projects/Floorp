@@ -8,5 +8,5 @@ test-hz-gb-2312.js
 test-iso-2022-jp.js
 test-iso-2022-kr.js
 test-shift_jis.js
-tests.html
+test_stringencoding.html
 tests.js

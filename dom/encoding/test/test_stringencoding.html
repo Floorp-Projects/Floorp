@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<script src="http://code.jquery.com/jquery-latest.js"></script>
-<link rel="stylesheet" href="http://code.jquery.com/qunit/git/qunit.css" type="text/css" media="screen" />
-<script type="text/javascript" src="http://code.jquery.com/qunit/git/qunit.js"></script>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+var _test = test;
+test = function(msg, no, func) { _test(func || no, msg); };
+equal = assert_equals;
+ok = assert_true;
+raises = function(func) { assert_throws(null, func); };
+expect = function() {};
+</script>
 
-<h1 id="qunit-header">Encoding Tests</h1>
-<h2 id="qunit-banner"></h2>
-<div id="qunit-testrunner-toolbar"></div>
-<h2 id="qunit-userAgent"></h2>
-<ol id="qunit-tests"></ol>
-<div id="qunit-fixture">test markup, will be hidden</div>
-
-<script type="text/javascript" src="encoding-indexes.js"></script>
-<script type="text/javascript" src="encoding.js"></script>
+<div id="log"></div>
 
 <script type="text/javascript" src="tests.js"></script>
 <!-- TODO: test for all single-byte encoding indexes -->
