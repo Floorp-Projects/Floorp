@@ -2187,7 +2187,7 @@ nsWindow::OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd)
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(event, nullptr);
-    event.InitForQueryTextContent(0, PR_UINT32_MAX);
+    event.InitForQueryTextContent(0, UINT32_MAX);
 
     DispatchEvent(&event);
     if (!event.mSucceeded)
@@ -2243,6 +2243,10 @@ nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client.CreateFrame(&jniFrame, mLayerRendererFrame)) return;
+    
+    if (!WidgetPaintsBackground())
+        return;
+
     if (!client.ActivateProgram(&jniFrame)) return;
     if (!mLayerRendererFrame.BeginDrawing(&jniFrame)) return;
     if (!mLayerRendererFrame.DrawBackground(&jniFrame)) return;
@@ -2307,6 +2311,22 @@ nsWindow::ScheduleResumeComposition(int width, int height)
     if (sCompositorParent) {
         sCompositorParent->ScheduleResumeOnCompositorThread(width, height);
     }
+}
+
+bool
+nsWindow::WidgetPaintsBackground()
+{
+    static bool sWidgetPaintsBackground = true;
+    static bool sWidgetPaintsBackgroundPrefCached = false;
+
+    if (!sWidgetPaintsBackgroundPrefCached) {
+        sWidgetPaintsBackgroundPrefCached = true;
+        mozilla::Preferences::AddBoolVarCache(&sWidgetPaintsBackground,
+                                              "android.widget_paints_background",
+                                              true);
+    }
+
+    return sWidgetPaintsBackground;
 }
 
 bool

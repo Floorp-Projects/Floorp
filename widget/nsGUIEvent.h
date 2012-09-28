@@ -1374,7 +1374,7 @@ public:
   } mReply;
 
   enum {
-    NOT_FOUND = PR_UINT32_MAX
+    NOT_FOUND = UINT32_MAX
   };
 
   // values of mComputedScrollAction

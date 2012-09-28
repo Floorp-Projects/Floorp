@@ -812,6 +812,10 @@ let RIL = {
       case "puk2":
         this.enterICCPUK2(options);
         break;
+      case "nck":
+        options.type = CARD_PERSOSUBSTATE_SIM_NETWORK;
+        this.enterDepersonalization(options);
+        break;
       default:
         options.errorMsg = "Unsupported Card Lock.";
         options.success = false;
@@ -852,6 +856,21 @@ let RIL = {
     if (!RILQUIRKS_V5_LEGACY) {
       Buf.writeString(options.aid ? options.aid : this.aid);
     }
+    Buf.sendParcel();
+  },
+
+  /**
+   * Requests a network personalization be deactivated.
+   *
+   * @param type
+   *        Integer indicating the network personalization be deactivated.
+   * @param pin
+   *        String containing the pin.
+   */
+  enterDepersonalization: function enterDepersonalization(options) {
+    Buf.newParcel(REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE, options);
+    Buf.writeUint32(options.type);
+    Buf.writeString(options.pin);
     Buf.sendParcel();
   },
 
@@ -3699,7 +3718,10 @@ RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN(length, options) {
 RIL[REQUEST_CHANGE_SIM_PIN2] = function REQUEST_CHANGE_SIM_PIN2(length, options) {
   this._processEnterAndChangeICCResponses(length, options);
 };
-RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
+RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE] =
+  function REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE(length, options) {
+  this._processEnterAndChangeICCResponses(length, options);
+};
 RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, options) {
   if (options.rilRequestError) {
     return;
@@ -3828,14 +3850,7 @@ RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length
       this._handleChangedCallState(options);
       this._handleDisconnectedCall(options);
       break;
-    case CALL_FAIL_UNOBTAINABLE_NUMBER:
-    case CALL_FAIL_CONGESTION:
-    case CALL_FAIL_ACM_LIMIT_EXCEEDED:
-    case CALL_FAIL_CALL_BARRED:
-    case CALL_FAIL_FDN_BLOCKED:
-    case CALL_FAIL_IMSI_UNKNOWN_IN_VLR:
-    case CALL_FAIL_IMEI_NOT_ACCEPTED:
-    case CALL_FAIL_ERROR_UNSPECIFIED:
+    default:
       options.rilMessageType = "callError";
       options.error = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];
       this.sendDOMMessage(options);
@@ -4513,22 +4528,24 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() 
   let hours = parseInt(dateString.substr(9, 2), 10);
   let minutes = parseInt(dateString.substr(12, 2), 10);
   let seconds = parseInt(dateString.substr(15, 2), 10);
-  let tz = parseInt(dateString.substr(17, 3), 10); // TZ is in 15 min. units
-  let dst = parseInt(dateString.substr(21, 2), 10); // DST already is in local time
+  // Note that |tz| is in 15-min units.
+  let tz = parseInt(dateString.substr(17, 3), 10);
+  // Note that |dst| is in 1-hour units and is already applied in |tz|.
+  let dst = parseInt(dateString.substr(21, 2), 10);
 
-  let timeInSeconds = Date.UTC(year + PDU_TIMESTAMP_YEAR_OFFSET, month - 1, day,
-                               hours, minutes, seconds) / 1000;
+  let timeInMS = Date.UTC(year + PDU_TIMESTAMP_YEAR_OFFSET, month - 1, day,
+                          hours, minutes, seconds);
 
-  if (isNaN(timeInSeconds)) {
+  if (isNaN(timeInMS)) {
     if (DEBUG) debug("NITZ failed to convert date");
     return;
   }
 
   this.sendDOMMessage({rilMessageType: "nitzTime",
-                       networkTimeInSeconds: timeInSeconds,
-                       networkTimeZoneInMinutes: tz * 15,
-                       dstFlag: dst,
-                       localTimeStampInMS: now});
+                       networkTimeInMS: timeInMS,
+                       networkTimeZoneInMinutes: -(tz * 15),
+                       networkDSTInMinutes: -(dst * 60),
+                       receiveTimeInMS: now});
 };
 
 RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH(length) {

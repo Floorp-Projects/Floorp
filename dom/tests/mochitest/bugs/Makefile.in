@@ -107,7 +107,6 @@ MOCHITEST_FILES	= \
 		test_bug698551.html \
 		test_window_bar.html \
 		file_window_bar.html \
-		test_resize_move_windows.html \
 		test_devicemotion_multiple_listeners.html \
 		devicemotion_outer.html \
 		devicemotion_inner.html \
@@ -131,5 +130,13 @@ MOCHITEST_FILES	= \
 		test_bug755320.html \
 		test_bug777628.html \
 		$(NULL)
+
+ifneq (Linux,$(OS_ARCH))
+MOCHITEST_FILES += \
+		test_resize_move_windows.html \
+		$(NULL)
+else
+$(warning test_resize_move_windows.html is disabled on Linux for timeouts. Bug 677841)
+endif
 
 include $(topsrcdir)/config/rules.mk

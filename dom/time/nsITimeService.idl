@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define NS_TIMESERVICE_CID { 0x80d6f9cc, 0xf16d, 0x40c3, { 0xa5, 0x2e, 0xc4, 0xe6, 0x56, 0xe3, 0x65, 0xb4 } }
+#define TIMESERVICE_CONTRACTID "@mozilla.org/time/timeservice;1"
+%}
+
+[scriptable, builtinclass, uuid(1fc7fde2-0090-11e2-bdd6-0fea4b9f41f8)]
+interface nsITimeService : nsISupports
+{
+  /* Set the system time.
+   *
+   * The |aTimeInMS| argument is the time in milliseconds since the epoch.
+   */
+  void set(in int64_t aTimeInMS);
+};

@@ -401,7 +401,7 @@ bool ReadFromFile(const char *filename, char (&buf)[n])
     return false;
   }
 
-  buf[PR_MIN(numRead, n - 1)] = '\0';
+  buf[NS_MIN(numRead, n - 1)] = '\0';
   return true;
 }
 

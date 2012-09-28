@@ -588,7 +588,7 @@ void nsBuiltinDecoderStateMachine::SendStreamData()
   if (mState == DECODER_STATE_DECODING_METADATA)
     return;
 
-  int64_t minLastAudioPacketTime = PR_INT64_MAX;
+  int64_t minLastAudioPacketTime = INT64_MAX;
   SourceMediaStream* mediaStream = stream->mStream;
   StreamTime endPosition = 0;
 
@@ -1106,7 +1106,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
           // and so that audio will not start playing. Write silence to ensure
           // the last block gets pushed to hardware, so that playback starts.
           int64_t framesToWrite = minWriteFrames - unplayedFrames;
-          if (framesToWrite < PR_UINT32_MAX / channels) {
+          if (framesToWrite < UINT32_MAX / channels) {
             // Write silence manually rather than using PlaySilence(), so that
             // the AudioAPI doesn't get a copy of the audio frames.
             ReentrantMonitorAutoExit exit(mDecoder->GetReentrantMonitor());
@@ -2345,7 +2345,7 @@ void nsBuiltinDecoderStateMachine::Wait(int64_t aUsecs) {
          IsPlaying())
   {
     int64_t ms = static_cast<int64_t>(NS_round((end - now).ToSeconds() * 1000));
-    if (ms == 0 || ms > PR_UINT32_MAX) {
+    if (ms == 0 || ms > UINT32_MAX) {
       break;
     }
     mDecoder->GetReentrantMonitor().Wait(PR_MillisecondsToInterval(static_cast<uint32_t>(ms)));
@@ -2543,7 +2543,7 @@ nsresult nsBuiltinDecoderStateMachine::ScheduleStateMachine(int64_t aUsecs) {
   if (mState == DECODER_STATE_SHUTDOWN) {
     return NS_ERROR_FAILURE;
   }
-  aUsecs = PR_MAX(aUsecs, 0);
+  aUsecs = NS_MAX<int64_t>(aUsecs, 0);
 
   TimeStamp timeout = TimeStamp::Now() + UsecsToDuration(aUsecs);
   if (!mTimeout.IsNull()) {

@@ -66,7 +66,7 @@ public:
   void Destroy();
 
   nsrefcnt AddRef() {
-    if (mRefCnt == PR_UINT32_MAX) {
+    if (mRefCnt == UINT32_MAX) {
       NS_WARNING("refcount overflow, leaking object");
       return mRefCnt;
     }
@@ -76,7 +76,7 @@ public:
   }
 
   nsrefcnt Release() {
-    if (mRefCnt == PR_UINT32_MAX) {
+    if (mRefCnt == UINT32_MAX) {
       NS_WARNING("refcount overflow, leaking object");
       return mRefCnt;
     }

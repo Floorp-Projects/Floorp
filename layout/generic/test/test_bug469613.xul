@@ -43,8 +43,12 @@ function doTest() {
 
   setTimeout(function() {
     // Check if the 10px were scrolled.
-    is(scrollbox.scrollTop, 10, "Starting a 0-delta scroll shouldn't cancel a pending async scroll.");
-
+    const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
+    if (isOSXMtnLion) {
+      todo(false, "Starting a 0-delta scroll shouldn't cancel a pending async scroll is disabled on OS X 10.8, see bug 752786");
+    } else {
+      is(scrollbox.scrollTop, 10, "Starting a 0-delta scroll shouldn't cancel a pending async scroll.");
+    }
 
     // Second test
     scrollbox.scrollTop = 20;

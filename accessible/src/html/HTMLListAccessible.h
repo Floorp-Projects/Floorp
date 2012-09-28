@@ -86,7 +86,7 @@ public:
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
-                            uint32_t aLength = PR_UINT32_MAX);
+                            uint32_t aLength = UINT32_MAX);
 
   // HTMLListBulletAccessible
 

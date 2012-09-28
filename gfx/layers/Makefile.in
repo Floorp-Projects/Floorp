@@ -44,6 +44,7 @@ EXPORTS = \
         LayerManagerOGL.h \
         LayerManagerOGLProgram.h \
         LayerSorter.h \
+        LayerTreeInvalidation.h \
         ReadbackLayer.h \
         ShadowLayersManager.h \
         SharedTextureImage.h \
@@ -76,6 +77,7 @@ CPPSRCS = \
         ReusableTileStoreOGL.cpp \
         LayerManagerOGLProgram.cpp \
         LayerSorter.cpp \
+        LayerTreeInvalidation.cpp \
         ImageLayers.cpp \
         TexturePoolOGL.cpp \
         $(NULL)

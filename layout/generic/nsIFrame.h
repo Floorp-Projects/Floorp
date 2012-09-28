@@ -138,10 +138,6 @@ typedef uint64_t nsFrameState;
 // continuation, e.g. a bidi continuation.
 #define NS_FRAME_IS_FLUID_CONTINUATION              NS_FRAME_STATE_BIT(2)
 
-// This bit is set whenever the frame has one or more associated
-// container layers.
-#define NS_FRAME_HAS_CONTAINER_LAYER                NS_FRAME_STATE_BIT(3)
-
 // If this bit is set, then a reference to the frame is being held
 // elsewhere.  The frame may want to send a notification when it is
 // destroyed to allow these references to be cleared.
@@ -253,10 +249,6 @@ typedef uint64_t nsFrameState;
 // This bit acts as a loop flag for recursive paint server drawing.
 #define NS_FRAME_DRAWING_AS_PAINTSERVER             NS_FRAME_STATE_BIT(33)
 
-// Frame or one of its (cross-doc) descendants may have the
-// NS_FRAME_HAS_CONTAINER_LAYER bit.
-#define NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT     NS_FRAME_STATE_BIT(34)
-
 // Frame's overflow area was clipped by the 'clip' property.
 #define NS_FRAME_HAS_CLIP                           NS_FRAME_STATE_BIT(35)
 
@@ -310,6 +302,26 @@ typedef uint64_t nsFrameState;
 // The frame is a descendant of nsSVGTextFrame2 and is thus used for SVG
 // text layout.
 #define NS_FRAME_IS_SVG_TEXT                        NS_FRAME_STATE_BIT(47)
+
+// Frame is marked as needing painting
+#define NS_FRAME_NEEDS_PAINT                        NS_FRAME_STATE_BIT(48)
+
+// Frame has a descendant frame that needs painting - This includes
+// cross-doc children.
+#define NS_FRAME_DESCENDANT_NEEDS_PAINT             NS_FRAME_STATE_BIT(49)
+
+// Frame is a descendant of a popup
+#define NS_FRAME_IN_POPUP                           NS_FRAME_STATE_BIT(50)
+
+// Frame has only descendant frames that needs painting - This includes
+// cross-doc children. This guarantees that all descendents have 
+// NS_FRAME_NEEDS_PAINT and NS_FRAME_ALL_DESCENDANTS_NEED_PAINT, or they 
+// have no display items.
+#define NS_FRAME_ALL_DESCENDANTS_NEED_PAINT         NS_FRAME_STATE_BIT(51)
+
+// Frame is marked as NS_FRAME_NEEDS_PAINT and also has an explicit
+// rect stored to invalidate.
+#define NS_FRAME_HAS_INVALID_RECT                   NS_FRAME_STATE_BIT(52)
 
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
@@ -947,6 +959,8 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, DestroySurface)
 
+  NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DestroyRect)
+
   /**
    * Return the distance between the border edge of the frame and the
    * margin edge of the frame.  Like GetRect(), returns the dimensions
@@ -1076,6 +1090,13 @@ public:
   virtual const nsFrameList& GetChildList(ChildListID aListID) const = 0;
   const nsFrameList& PrincipalChildList() { return GetChildList(kPrincipalList); }
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const = 0;
+
+  /**
+   * Gets the child lists for this frame, including
+   * ones belong to a child document.
+   */
+  void GetCrossDocChildLists(nsTArray<ChildList>* aLists);
+
   // XXXbz this method should go away
   nsIFrame* GetFirstChild(ChildListID aListID) const {
     return GetChildList(aListID).FirstChild();
@@ -1398,6 +1419,16 @@ public:
    */
   void AddStateBits(nsFrameState aBits) { mState |= aBits; }
   void RemoveStateBits(nsFrameState aBits) { mState &= ~aBits; }
+
+  /**
+   * Checks if the current frame-state includes all of the listed bits
+   */
+  bool HasAllStateBits(nsFrameState aBits) { return (mState & aBits) == aBits; }
+  
+  /**
+   * Checks if the current frame-state includes any of the listed bits
+   */
+  bool HasAnyStateBits(nsFrameState aBits) { return mState & aBits; }
 
   /**
    * This call is invoked on the primary frame for a character data content
@@ -1883,7 +1914,7 @@ public:
                                    gfxSkipChars* aSkipChars = nullptr,
                                    gfxSkipCharsIterator* aSkipIter = nullptr,
                                    uint32_t aSkippedStartOffset = 0,
-                                   uint32_t aSkippedMaxLength = PR_UINT32_MAX)
+                                   uint32_t aSkippedMaxLength = UINT32_MAX)
   { return NS_ERROR_NOT_IMPLEMENTED; }
 
   /**
@@ -2147,141 +2178,105 @@ public:
   bool AreLayersMarkedActive(nsChangeHint aChangeHint);
 
   /**
-   * @param aFlags see InvalidateInternal below
-   */
-  void InvalidateWithFlags(const nsRect& aDamageRect, uint32_t aFlags);
-
-  /**
-   * Invalidate part of the frame by asking the view manager to repaint.
-   * aDamageRect is allowed to extend outside the frame's bounds. We'll do the right
-   * thing.
-   * We deliberately don't have an Invalidate() method that defaults to the frame's bounds.
-   * We want all callers to *think* about what has changed in the frame and what area might
-   * need to be repainted.
+   * Marks all display items created by this frame as needing a repaint,
+   * and calls SchedulePaint() if requested and one is not already pending.
    *
-   * @param aDamageRect is in the frame's local coordinate space
-   */
-  void Invalidate(const nsRect& aDamageRect)
-  { return InvalidateWithFlags(aDamageRect, 0); }
-
-  /**
-   * As Invalidate above, except that this should be called when the
-   * rendering that has changed is performed using layers so we can avoid
-   * updating the contents of ThebesLayers.
-   * If the frame has a dedicated layer rendering this display item, we
-   * return that layer.
-   * @param aDisplayItemKey must not be zero; indicates the kind of display
-   * item that is being invalidated.
-   */
-  Layer* InvalidateLayer(const nsRect& aDamageRect, uint32_t aDisplayItemKey);
-
-  /**
-   * Invalidate the area of the parent that's covered by the transformed
-   * visual overflow rect of this frame. Don't depend on the transform style
-   * for this frame, in case that's changed since this frame was painted.
-   */
-  void InvalidateTransformLayer();
-
-  /**
-   * Helper function that can be overridden by frame classes. The rectangle
-   * (plus aOffsetX/aOffsetY) is relative to this frame.
-   * 
-   * The offset is given as two coords rather than as an nsPoint because
-   * gcc optimizes it better that way, in particular in the default
-   * implementation that passes the area to the parent frame becomes a tail
-   * call.
+   * This includes all display items created by this frame, including
+   * container types.
    *
-   * The default implementation will crash if the frame has no parent so
-   * frames without parents MUST* override.
+   * @param aDisplayItemKey If specified, only issues an invalidate
+   * if this frame painted a display item of that type during the 
+   * previous paint. SVG rendering observers are always notified.
+   */
+  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0);
+
+  /**
+   * Same as InvalidateFrame(), but only mark a fixed rect as needing
+   * repainting.
+   *
+   * @param aRect The rect to invalidate, relative to the TopLeft of the
+   * frame's border box.
+   * @param aDisplayItemKey If specified, only issues an invalidate
+   * if this frame painted a display item of that type during the 
+   * previous paint. SVG rendering observers are always notified.
+   */
+  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0);
+  
+  /**
+   * Calls InvalidateFrame() on all frames descendant frames (including
+   * this one).
    * 
-   * @param aForChild if the invalidation is coming from a child frame, this
-   * is the frame; otherwise, this is null.
-   * @param aFlags INVALIDATE_IMMEDIATE: repaint now if true, repaint later if false.
-   *   In case it's true, pending notifications will be flushed which
-   *   could cause frames to be deleted (including |this|).
-   * @param aFlags INVALIDATE_CROSS_DOC: true if the invalidation
-   *   originated in a subdocument
-   * @param aFlags INVALIDATE_REASON_SCROLL_BLIT: set if the invalidation
-   * was really just the scroll machinery copying pixels from one
-   * part of the window to another
-   * @param aFlags INVALIDATE_REASON_SCROLL_REPAINT: set if the invalidation
-   * was triggered by scrolling
-   * @param aFlags INVALIDATE_NO_THEBES_LAYERS: don't invalidate the
-   * ThebesLayers of any container layer owned by an ancestor. Set this
-   * only if ThebesLayers definitely don't need to be updated.
-   * @param aFlags INVALIDATE_ONLY_THEBES_LAYERS: invalidate only in the
-   * ThebesLayers of the nearest container layer.
-   * @param aFlags INVALIDATE_EXCLUDE_CURRENT_PAINT: if the invalidation
-   * occurs while we're painting (to be precise, while
-   * BeginDeferringInvalidatesForDisplayRoot is active on the display root),
-   * then invalidation in the current paint region is simply discarded.
-   * Use this flag if areas that are being painted do not need
-   * to be invalidated. By default, when this flag is not specified,
-   * areas that are invalidated while currently being painted will be repainted
-   * again.
-   * This flag is useful when, during painting, FrameLayerBuilder discovers that
-   * a region of the window needs to be drawn differently, and that region
-   * may or may not be contained in the currently painted region.
-   * @param aFlags INVALIDATE_NO_UPDATE_LAYER_TREE: display lists and the
-   * layer tree do not need to be updated. This can be used when the layer
-   * tree has already been updated outside a transaction, e.g. via
-   * ImageContainer::SetCurrentImage.
+   * This function doesn't walk through placeholder frames to invalidate
+   * the out-of-flow frames.
+   *
+   * @param aDisplayItemKey If specified, only issues an invalidate
+   * if this frame painted a display item of that type during the 
+   * previous paint. SVG rendering observers are always notified.
+   */
+  void InvalidateFrameSubtree(uint32_t aDisplayItemKey = 0);
+
+  /**
+   * Called when a frame is about to be removed and needs to be invalidated.
+   * Normally does nothing since DLBI handles removed frames.
+   * 
+   */
+  virtual void InvalidateFrameForRemoval() {}
+  
+  /**
+   * Checks if a frame has had InvalidateFrame() called on it since the
+   * last paint.
+   *
+   * If true, then the invalid rect is returned in aRect, with an
+   * empty rect meaning all pixels drawn by this frame should be
+   * invalidated.
+   * If false, aRect is left unchanged.
+   */
+  bool IsInvalid(nsRect& aRect);
+ 
+  /**
+   * Check if any frame within the frame subtree (including this frame) 
+   * returns true for IsInvalid().
+   */
+  bool HasInvalidFrameInSubtree()
+  {
+    return HasAnyStateBits(NS_FRAME_NEEDS_PAINT | NS_FRAME_DESCENDANT_NEEDS_PAINT);
+  }
+
+  /**
+   * Removes the invalid state from the current frame and all
+   * descendant frames.
+   */
+  void ClearInvalidationStateBits();
+
+  /**
+   * Ensures that the refresh driver is running, and schedules a view 
+   * manager flush on the next tick.
+   *
+   * The view manager flush will update the layer tree, repaint any 
+   * invalid areas in the layer tree and schedule a layer tree
+   * composite operation to display the layer tree.
+   *
+   * @param aFlags PAINT_COMPOSITE_ONLY : No changes have been made
+   * that require a layer tree update, so only schedule a layer
+   * tree composite.
    */
   enum {
-    INVALIDATE_IMMEDIATE = 0x01,
-    INVALIDATE_CROSS_DOC = 0x02,
-    INVALIDATE_REASON_SCROLL_BLIT = 0x04,
-    INVALIDATE_REASON_SCROLL_REPAINT = 0x08,
-    INVALIDATE_REASON_MASK = INVALIDATE_REASON_SCROLL_BLIT |
-                             INVALIDATE_REASON_SCROLL_REPAINT,
-    INVALIDATE_NO_THEBES_LAYERS = 0x10,
-    INVALIDATE_ONLY_THEBES_LAYERS = 0x20,
-    INVALIDATE_EXCLUDE_CURRENT_PAINT = 0x40,
-    INVALIDATE_NO_UPDATE_LAYER_TREE = 0x80,
-    INVALIDATE_ALREADY_TRANSFORMED = 0x100
+    PAINT_COMPOSITE_ONLY
   };
-  virtual void InvalidateInternal(const nsRect& aDamageRect,
-                                  nscoord aOffsetX, nscoord aOffsetY,
-                                  nsIFrame* aForChild, uint32_t aFlags);
+  void SchedulePaint(uint32_t aFlags = 0);
 
   /**
-   * Helper function that funnels an InvalidateInternal request up to the
-   * parent.  This function is used so that if MOZ_SVG is not defined, we still
-   * have unified control paths in the InvalidateInternal chain.
+   * Checks if the layer tree includes a dedicated layer for this 
+   * frame/display item key pair, and invalidates at least aDamageRect
+   * area within that layer.
    *
-   * @param aDamageRect The rect to invalidate.
-   * @param aX The x offset from the origin of this frame to the rectangle.
-   * @param aY The y offset from the origin of this frame to the rectangle.
-   * @param aImmediate Whether to redraw immediately.
-   * @return None, though this funnels the request up to the parent frame.
-   */
-  void InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
-                                     nscoord aY, uint32_t aFlags);
-
-  /**
-   * Take two rectangles in the coordinate system of this frame which
-   * have the same origin and invalidate the difference between them.
-   * This is a helper method to be used when a frame is being resized.
+   * If no layer is found, calls InvalidateFrame() instead.
    *
-   * @param aR1 the first rectangle
-   * @param aR2 the second rectangle
+   * @param aDamageRect Area of the layer to invalidate.
+   * @param aDisplayItemKey Display item type.
+   * @return Layer, if found, nullptr otherwise.
    */
-  void InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2);
-
-  /**
-   * Invalidate the entire frame subtree for this frame. Invalidates this
-   * frame's overflow rect, and also ensures that all ThebesLayer children
-   * of ContainerLayers associated with frames in this subtree are
-   * completely invalidated.
-   */
-  void InvalidateFrameSubtree();
-
-  /**
-   * Invalidates this frame's visual overflow rect. Does not necessarily
-   * cause ThebesLayers for descendant frames to be repainted; only this
-   * frame can be relied on to be repainted.
-   */
-  void InvalidateOverflowRect();
+  Layer* InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect = nullptr);
 
   /**
    * Returns a rect that encompasses everything that might be painted by
@@ -2743,7 +2738,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   bool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   bool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
-  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nullptr);
+  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)=0;
   // XXX take this out after we've branched
   virtual bool GetMouseThrough() const { return false; }
@@ -2791,17 +2786,6 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    *         are encountered rummaging through the frame.
    */
   CaretPosition GetExtremeCaretPosition(bool aStart);
-
-  /**
-   * Same thing as nsFrame::CheckInvalidateSizeChange, but more flexible.  The
-   * implementation of this method must not depend on the mRect or
-   * GetVisualOverflowRect() of the frame!  Note that it's safe to
-   * assume in this method that the frame origin didn't change.  If it
-   * did, whoever moved the frame will invalidate as needed anyway.
-   */
-  void CheckInvalidateSizeChange(const nsRect& aOldRect,
-                                 const nsRect& aOldVisualOverflowRect,
-                                 const nsSize& aNewDesiredSize);
 
   /**
    * Get a line iterator for this frame, if supported.
@@ -2965,12 +2949,6 @@ protected:
   } mOverflow;
 
   // Helpers
-  /**
-   * For frames that have top-level windows (top-level viewports,
-   * comboboxes, menupoups) this function will invalidate the window.
-   */
-  void InvalidateRoot(const nsRect& aDamageRect, uint32_t aFlags);
-
   /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?
    * @param  aForward [in] Are we moving forward (or backward) in content order.

@@ -47,7 +47,7 @@ PRUnichar nsHtml5Highlighter::sPi[] =
 
 nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  : mState(NS_HTML5TOKENIZER_DATA)
- , mCStart(PR_INT32_MAX)
+ , mCStart(INT32_MAX)
  , mPos(0)
  , mLineNumber(1)
  , mInlinesOpen(0)
@@ -87,8 +87,8 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
   Push(nsGkAtoms::title, nullptr);
   // XUL will add the "Source of: " prefix.
   uint32_t length = aTitle.Length();
-  if (length > PR_INT32_MAX) {
-    length = PR_INT32_MAX;
+  if (length > INT32_MAX) {
+    length = INT32_MAX;
   }
   AppendCharacters(aTitle.get(), 0, (int32_t)length);
   Pop(); // title

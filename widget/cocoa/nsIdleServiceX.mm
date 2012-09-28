@@ -59,7 +59,7 @@ nsIdleServiceX::PollIdleTime(uint32_t *aIdleTime)
 
   // convert to ms from ns
   time /= 1000000;
-  if (time > PR_UINT32_MAX) // Overflow will occur
+  if (time > UINT32_MAX) // Overflow will occur
     return false;
 
   *aIdleTime = static_cast<uint32_t>(time);

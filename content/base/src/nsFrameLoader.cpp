@@ -76,6 +76,7 @@
 
 #include "Layers.h"
 
+#include "AppProcessPermissions.h"
 #include "ContentParent.h"
 #include "TabParent.h"
 #include "mozilla/GuardObjects.h"
@@ -97,6 +98,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 typedef FrameMetrics::ViewID ViewID;
@@ -119,14 +121,6 @@ public:
   }
   nsRefPtr<nsIDocShell> mDocShell;
 };
-
-static void InvalidateFrame(nsIFrame* aFrame, uint32_t aFlags)
-{
-  if (!aFrame)
-    return;
-  nsRect rect = nsRect(nsPoint(0, 0), aFrame->GetRect().Size());
-  aFrame->InvalidateWithFlags(rect, aFlags);
-}
 
 NS_IMPL_ISUPPORTS1(nsContentView, nsIContentView)
 
@@ -162,13 +156,6 @@ nsContentView::Update(const ViewConfig& aConfig)
     rfp->ContentViewScaleChanged(this);
   }
 
-  // XXX could be clever here and compute a smaller invalidation
-  // rect
-  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep view
-  // semantics the same for both in-process and out-of-process
-  // <browser>.  This is just a transform of the layer subtree in
-  // both.
-  InvalidateFrame(mFrameLoader->GetPrimaryFrameOfOwningContent(), nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
   return NS_OK;
 }
 
@@ -1257,13 +1244,13 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     mMessageManager->RemoveFromParent();
     mMessageManager->SetJSContext(otherCx);
     mMessageManager->SetParentManager(otherParentManager);
-    mMessageManager->SetCallbackData(aOther, false);
+    mMessageManager->SetCallback(aOther, false);
   }
   if (aOther->mMessageManager) {
     aOther->mMessageManager->RemoveFromParent();
     aOther->mMessageManager->SetJSContext(thisCx);
     aOther->mMessageManager->SetParentManager(ourParentManager);
-    aOther->mMessageManager->SetCallbackData(this, false);
+    aOther->mMessageManager->SetCallback(this, false);
   }
   mMessageManager.swap(aOther->mMessageManager);
 
@@ -1831,11 +1818,6 @@ nsFrameLoader::SetRenderMode(uint32_t aRenderMode)
   }
 
   mRenderMode = aRenderMode;
-  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep view
-  // semantics the same for both in-process and out-of-process
-  // <browser>.  This is just a transform of the layer subtree in
-  // both.
-  InvalidateFrame(GetPrimaryFrameOfOwningContent(), nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
   return NS_OK;
 }
 
@@ -1866,7 +1848,7 @@ nsFrameLoader::SetClipSubdocument(bool aClip)
   mClipSubdocument = aClip;
   nsIFrame* frame = GetPrimaryFrameOfOwningContent();
   if (frame) {
-    InvalidateFrame(frame, 0);
+    frame->InvalidateFrame();
     frame->PresContext()->PresShell()->
       FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
     nsSubDocumentFrame* subdocFrame = do_QueryFrame(frame);
@@ -2155,16 +2137,15 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
   return NS_OK;
 }
 
-bool LoadScript(void* aCallbackData, const nsAString& aURL)
+bool
+nsFrameLoader::DoLoadFrameScript(const nsAString& aURL)
 {
-  mozilla::dom::PBrowserParent* tabParent =
-    static_cast<nsFrameLoader*>(aCallbackData)->GetRemoteBrowser();
+  mozilla::dom::PBrowserParent* tabParent = GetRemoteBrowser();
   if (tabParent) {
     return tabParent->SendLoadRemoteScript(nsString(aURL));
   }
-  nsFrameLoader* fl = static_cast<nsFrameLoader*>(aCallbackData);
   nsRefPtr<nsInProcessTabChildGlobal> tabChild =
-    static_cast<nsInProcessTabChildGlobal*>(fl->GetTabChildGlobalAsEventTarget());
+    static_cast<nsInProcessTabChildGlobal*>(GetTabChildGlobalAsEventTarget());
   if (tabChild) {
     tabChild->LoadFrameScript(aURL);
   }
@@ -2175,8 +2156,8 @@ class nsAsyncMessageToChild : public nsRunnable
 {
 public:
   nsAsyncMessageToChild(nsFrameLoader* aFrameLoader,
-                              const nsAString& aMessage,
-                              const StructuredCloneData& aData)
+                        const nsAString& aMessage,
+                        const StructuredCloneData& aData)
     : mFrameLoader(aFrameLoader), mMessage(aMessage)
   {
     if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
@@ -2209,12 +2190,11 @@ public:
   StructuredCloneClosure mClosure;
 };
 
-bool SendAsyncMessageToChild(void* aCallbackData,
-                             const nsAString& aMessage,
-                                   const StructuredCloneData& aData)
+bool
+nsFrameLoader::DoSendAsyncMessage(const nsAString& aMessage,
+                                  const StructuredCloneData& aData)
 {
-  PBrowserParent* tabParent =
-    static_cast<nsFrameLoader*>(aCallbackData)->GetRemoteBrowser();
+  PBrowserParent* tabParent = GetRemoteBrowser();
   if (tabParent) {
     ClonedMessageData data;
 
@@ -2244,16 +2224,21 @@ bool SendAsyncMessageToChild(void* aCallbackData,
     return tabParent->SendAsyncMessage(nsString(aMessage), data);
   }
 
-  if (static_cast<nsFrameLoader*>(aCallbackData)->mChildMessageManager) {
-    nsRefPtr<nsIRunnable> ev =
-      new nsAsyncMessageToChild(static_cast<nsFrameLoader*>(aCallbackData),
-                                aMessage, aData);
+  if (mChildMessageManager) {
+    nsRefPtr<nsIRunnable> ev = new nsAsyncMessageToChild(this, aMessage, aData);
     NS_DispatchToCurrentThread(ev);
     return true;
   }
 
   // We don't have any targets to send our asynchronous message to.
   return false;
+}
+
+bool
+nsFrameLoader::CheckPermission(const nsAString& aPermission)
+{
+  return AssertAppProcessPermission(GetRemoteBrowser(),
+                                    NS_ConvertUTF16toUTF8(aPermission).get());
 }
 
 NS_IMETHODIMP
@@ -2336,7 +2321,7 @@ nsFrameLoader::EnsureMessageManager()
 
   if (mMessageManager) {
     if (ShouldUseRemoteProcess()) {
-      mMessageManager->SetCallbackData(mRemoteBrowserShown ? this : nullptr);
+      mMessageManager->SetCallback(mRemoteBrowserShown ? this : nullptr);
     }
     return NS_OK;
   }
@@ -2355,24 +2340,20 @@ nsFrameLoader::EnsureMessageManager()
   }
 
   if (ShouldUseRemoteProcess()) {
-    mMessageManager = new nsFrameMessageManager(true, /* aChrome */
-                                                nullptr,
-                                                SendAsyncMessageToChild,
-                                                LoadScript,
-                                                mRemoteBrowserShown ? this : nullptr,
+    mMessageManager = new nsFrameMessageManager(mRemoteBrowserShown ? this : nullptr,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
-                                                cx);
+                                                cx,
+                                                MM_CHROME);
   } else {
-    mMessageManager = new nsFrameMessageManager(true, /* aChrome */
-                                                nullptr,
-                                                SendAsyncMessageToChild,
-                                                LoadScript,
-                                                nullptr,
+    mMessageManager = new nsFrameMessageManager(nullptr,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
-                                                cx);
+                                                cx,
+                                                MM_CHROME);
+
     mChildMessageManager =
       new nsInProcessTabChildGlobal(mDocShell, mOwnerContent, mMessageManager);
-    mMessageManager->SetCallbackData(this);
+    // Force pending frame scripts to be loaded.
+    mMessageManager->SetCallback(this);
   }
   return NS_OK;
 }

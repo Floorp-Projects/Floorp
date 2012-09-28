@@ -28,7 +28,7 @@
 
 // Magic namespace id that means "match all namespaces".  This is
 // negative so it won't collide with actual namespace constants.
-#define kNameSpaceID_Wildcard PR_INT32_MIN
+#define kNameSpaceID_Wildcard INT32_MIN
 
 // This is a callback function type that can be used to implement an
 // arbitrary matching algorithm.  aContent is the content that may
