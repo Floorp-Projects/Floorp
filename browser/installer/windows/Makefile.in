@@ -22,6 +22,7 @@ INSTALLER_FILES = \
 	app.tag \
 	nsis/installer.nsi \
 	nsis/uninstaller.nsi \
+	nsis/stub.nsi \
 	nsis/shared.nsh \
 	$(NULL)
 
@@ -30,7 +31,6 @@ INSTALLER_FILES += \
 	nsis/maintenanceservice_installer.nsi \
 	$(NULL)
 endif
-
 
 BRANDING_FILES = \
 	branding.nsi \
