@@ -150,6 +150,28 @@ Classifier::SetupPathNames()
 }
 
 nsresult
+Classifier::CreateStoreDirectory()
+{
+  // Ensure the safebrowsing directory exists.
+  bool storeExists;
+  nsresult rv = mStoreDirectory->Exists(&storeExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!storeExists) {
+    rv = mStoreDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    bool storeIsDir;
+    rv = mStoreDirectory->IsDirectory(&storeIsDir);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!storeIsDir)
+      return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 Classifier::Open(nsIFile& aCacheDirectory)
 {
   // Remember the Local profile directory.
@@ -169,21 +191,9 @@ Classifier::Open(nsIFile& aCacheDirectory)
   rv = RecoverBackups();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Ensure the safebrowsing directory exists.
-  bool storeExists;
-  rv = mStoreDirectory->Exists(&storeExists);
+  // Make sure the main store directory exists.
+  rv = CreateStoreDirectory();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!storeExists) {
-    rv = mStoreDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    bool storeIsDir;
-    rv = mStoreDirectory->IsDirectory(&storeIsDir);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!storeIsDir)
-      return NS_ERROR_FILE_DESTINATION_NOT_DIR;
-  }
 
   mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -218,6 +228,8 @@ Classifier::Reset()
   mStoreDirectory->Remove(true);
   mBackupDirectory->Remove(true);
   mToDeleteDirectory->Remove(true);
+
+  CreateStoreDirectory();
 
   mTableFreshness.Clear();
   RegenActiveTables();
