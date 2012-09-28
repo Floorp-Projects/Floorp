@@ -126,6 +126,14 @@ IonFrameIterator::isOOLNativeGetter() const
 }
 
 bool
+IonFrameIterator::isOOLPropertyOp() const
+{
+    if (type_ != IonFrame_Exit)
+        return false;
+    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_PROPERTY_OP;
+}
+
+bool
 IonFrameIterator::isDOMExit() const
 {
     if (type_ != IonFrame_Exit)
@@ -542,6 +550,14 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         IonOOLNativeGetterExitFrameLayout *oolgetter = frame.exitFrame()->oolNativeGetterExit();
         gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-getter-callee");
         gc::MarkValueRoot(trc, oolgetter->vp() + 1, "ion-ool-getter-this");
+        return;
+    }
+ 
+    if (frame.isOOLPropertyOp()) {
+        IonOOLPropertyOpExitFrameLayout *oolgetter = frame.exitFrame()->oolPropertyOpExit();
+        gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
+        gc::MarkIdRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
+        gc::MarkObjectRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
         return;
     }
 
