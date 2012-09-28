@@ -812,6 +812,10 @@ let RIL = {
       case "puk2":
         this.enterICCPUK2(options);
         break;
+      case "nck":
+        options.type = CARD_PERSOSUBSTATE_SIM_NETWORK;
+        this.enterDepersonalization(options);
+        break;
       default:
         options.errorMsg = "Unsupported Card Lock.";
         options.success = false;
@@ -852,6 +856,21 @@ let RIL = {
     if (!RILQUIRKS_V5_LEGACY) {
       Buf.writeString(options.aid ? options.aid : this.aid);
     }
+    Buf.sendParcel();
+  },
+
+  /**
+   * Requests a network personalization be deactivated.
+   *
+   * @param type
+   *        Integer indicating the network personalization be deactivated.
+   * @param pin
+   *        String containing the pin.
+   */
+  enterDepersonalization: function enterDepersonalization(options) {
+    Buf.newParcel(REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE, options);
+    Buf.writeUint32(options.type);
+    Buf.writeString(options.pin);
     Buf.sendParcel();
   },
 
@@ -3699,7 +3718,10 @@ RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN(length, options) {
 RIL[REQUEST_CHANGE_SIM_PIN2] = function REQUEST_CHANGE_SIM_PIN2(length, options) {
   this._processEnterAndChangeICCResponses(length, options);
 };
-RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
+RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE] =
+  function REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE(length, options) {
+  this._processEnterAndChangeICCResponses(length, options);
+};
 RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, options) {
   if (options.rilRequestError) {
     return;
