@@ -931,7 +931,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         int64_t size;
         aIndex->GetSize(&size);
 
-        if (uint64_t(size) != LL_MAXUINT) {
+        if (uint64_t(size) != UINT64_MAX) {
             pushBuffer.AppendLiteral(" sortable-data=\"");
             pushBuffer.AppendInt(size);
             pushBuffer.AppendLiteral("\">");

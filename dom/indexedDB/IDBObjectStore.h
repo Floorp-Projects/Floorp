@@ -140,7 +140,7 @@ public:
 
   int64_t Id() const
   {
-    NS_ASSERTION(mId != LL_MININT, "Don't ask for this yet!");
+    NS_ASSERTION(mId != INT64_MIN, "Don't ask for this yet!");
     return mId;
   }
 
