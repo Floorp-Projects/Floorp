@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for the nsIPermissionChecker part of Message Managers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests();">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = SpecialPowers.wrap(Components);
+
+const APP_URL = "http://example.org";
+const APP_MANIFEST = "http://example.org/manifest.webapp";
+
+let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+             .getService(Ci.nsIMessageBroadcaster);
+let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+             .getService(Ci.nsISyncMessageSender);
+let gAppsService = Cc["@mozilla.org/AppsService;1"]
+                     .getService(Ci.nsIAppsService);
+
+function setUp() {
+  SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+  SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", true);
+  SpecialPowers.addPermission("browser", true, window.document);
+
+  let appId = gAppsService.getAppLocalIdByManifestURL(APP_MANIFEST);
+  SpecialPowers.addPermission("foobar", true, { url: APP_URL,
+                                                appId: appId,
+                                                isInBrowserElement: false });
+  runNextTest();
+}
+
+/**
+ * Load the example.org app in an <iframe mozbrowser mozapp>
+ */
+function loadApp(callback) {
+  let iframe = document.createElement("iframe");
+  iframe.setAttribute("mozapp", APP_MANIFEST);
+  iframe.mozbrowser = true;
+  iframe.src = APP_URL;
+  document.getElementById("content").appendChild(iframe);
+
+  iframe.addEventListener("mozbrowserloadend", function onloadend() {
+    iframe.removeEventListener("mozbrowserloadend", onloadend);
+    callback(iframe);
+  });
+}
+
+/**
+ * Prepare the child process for an intentional crash. This is to keep
+ * the leak automation tools happy.
+ *
+ * This also allows us to acquire the process message manaager that
+ * corresponds to the process by sending a message to a frame script
+ * in the content process and having it reply to us via the child
+ * process message manager.
+ */
+function prepareProcess(frameMM, callback) {
+  let frameScript = 'data:,\
+    privateNoteIntentionalCrash();\
+    var cpmm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]\
+                         .getService(Components.interfaces.nsISyncMessageSender);\
+    addMessageListener("TestChild:Ohai", function receiveMessage(msg) {\
+      cpmm.sendAsyncMessage("TestChild:Ohai");\
+    });';
+  frameMM.loadFrameScript(frameScript, false);
+  frameMM.sendAsyncMessage("TestChild:Ohai");
+  ppmm.addMessageListener("TestChild:Ohai", function receiveMessage(msg) {
+    ppmm.removeMessageListener("TestChild:Ohai", receiveMessage);
+    msg = SpecialPowers.wrap(msg);
+    callback(msg.target);
+  });
+}
+
+function testSameProcess() {
+  // Assert permissions on the in-process child process message manager.
+  // It always has all permissions, including ones that were never
+  // assigned to anybody.
+
+  cpmm.sendAsyncMessage("TestPermission:InProcess");
+  ppmm.addMessageListener("TestPermission:InProcess", function receiveMessage(msg) {
+    ppmm.removeMessageListener("TestPermission:InProcess", receiveMessage);
+    msg = SpecialPowers.wrap(msg);
+
+    ok(msg.target.assertPermission("frobnaz"), "in-process cpmm always has all capabilities");
+    runNextTest();
+  });
+}
+
+function testFrameMessageManager() {
+  // Assert permissions on the frame message manager.
+
+  loadApp(function (iframe) {
+    let frameMM = SpecialPowers.getBrowserFrameMessageManager(iframe);
+    prepareProcess(frameMM, function (processMM) {
+      ok(frameMM.assertPermission("foobar"),
+         "Frame mm has assigned permission.");
+      ok(!frameMM.assertPermission("frobnaz"),
+         "Frame mm doesn't have non-existing permission.");
+
+      // The last permission check will result in the content process
+      // being killed.
+      iframe.addEventListener("mozbrowsererror", function onerror(event) {
+        iframe.removeEventListener("mozbrowsererror", onerror);
+        is(event.detail.type, "fatal", "Observed fatal error event.");
+
+        iframe.parentNode.removeChild(iframe);
+        runNextTest();
+      });
+    });
+  });
+}
+
+function testChildProcessMessageManager() {
+  // Assert permissions on the child process message manager.
+
+  loadApp(function (iframe) {
+    let frameMM = SpecialPowers.getBrowserFrameMessageManager(iframe);
+    prepareProcess(frameMM, function (processMM) {
+      ok(processMM.assertPermission("foobar"),
+         "Process mm has assigned permission.");
+      ok(!processMM.assertPermission("frobnaz"),
+         "Process mm doesn't have non-existing permission.");
+
+      // The last permission check will result in the content process
+      // being killed.
+      iframe.addEventListener("mozbrowsererror", function onerror(event) {
+        iframe.removeEventListener("mozbrowsererror", onerror);
+        is(event.detail.type, "fatal", "Observed fatal error event.");
+
+        iframe.parentNode.removeChild(iframe);
+        runNextTest();
+      });
+    });
+  });
+}
+
+function tearDown() {
+  SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
+  SpecialPowers.clearUserPref("dom.ipc.browser_frames.oop_by_default");
+  SimpleTest.finish();
+}
+
+let _tests = [
+  setUp,
+  testSameProcess,
+  testFrameMessageManager,
+  testChildProcessMessageManager,
+  tearDown
+]
+function runNextTest() {
+  SimpleTest.executeSoon(_tests.shift());
+}
+
+function runTests() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -38,6 +38,7 @@ namespace mozilla {
 namespace dom {
 class PBrowserParent;
 class TabParent;
+struct StructuredCloneData;
 }
 
 namespace layout {
@@ -140,7 +141,8 @@ private:
 
 class nsFrameLoader MOZ_FINAL : public nsIFrameLoader,
                                 public nsIContentViewManager,
-                                public nsStubMutationObserver
+                                public nsStubMutationObserver,
+                                public mozilla::dom::ipc::MessageManagerCallback
 {
   friend class AutoResetInShow;
   typedef mozilla::dom::PBrowserParent PBrowserParent;
@@ -178,6 +180,15 @@ public:
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
   nsIDOMEventTarget* GetTabChildGlobalAsEventTarget();
   nsresult CreateStaticClone(nsIFrameLoader* aDest);
+
+  /**
+   * MessageManagerCallback methods that we override.
+   */
+  virtual bool DoLoadFrameScript(const nsAString& aURL);
+  virtual bool DoSendAsyncMessage(const nsAString& aMessage,
+                                  const mozilla::dom::StructuredCloneData& aData);
+  virtual bool CheckPermission(const nsAString& aPermission);
+
 
   /**
    * Called from the layout frame associated with this frame loader;
