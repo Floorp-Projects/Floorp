@@ -61,7 +61,6 @@ Var DownloadReset
 Var ExistingTopDir
 Var SpaceAvailableBytes
 Var InitialInstallDir
-Var DownloadDir
 Var HandleDownload
 
 Var HEIGHT_PX
@@ -252,9 +251,8 @@ Function .onUserAbort
   ${NSD_KillTimer} OnDownload
   ${NSD_KillTimer} StartInstall
 
-  Delete "$DownloadDir\download.exe"
-  Delete "$DownloadDir\${CONFIG_INI}"
-  RmDir "$DownloadDir"
+  Delete "$PLUGINSDIR\download.exe"
+  Delete "$PLUGINSDIR\${CONFIG_INI}"
 FunctionEnd
 
 Function createDummy
@@ -560,15 +558,6 @@ Function leaveOptions
 FunctionEnd
 
 Function createInstall
-  ${If} ${FileExists} "$WINDIR\Temp"
-    GetTempFileName $DownloadDir "$WINDIR\Temp"
-    Delete "$DownloadDir"
-    CreateDirectory "$DownloadDir"
-  ${Else}
-    StrCpy $DownloadDir "$PLUGINSDIR"
-  ${EndIf}
-  ${GetLongPath} "$DownloadDir" $DownloadDir
-
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
 
@@ -729,7 +718,7 @@ FunctionEnd
 
 Function StartDownload
   ${NSD_KillTimer} StartDownload
-  InetBgDL::Get "${URLStubDownload}" "$DownloadDir\download.exe" /END
+  InetBgDL::Get "${URLStubDownload}" "$PLUGINSDIR\download.exe" /END
   StrCpy $4 ""
   ${NSD_CreateTimer} OnDownload 500
   ${If} ${FileExists} "$INSTDIR\${TO_BE_DELETED}"
@@ -812,7 +801,7 @@ Function OnDownload
 
       ; Open a handle to prevent modification of the full installer
       StrCpy $R9 "${INVALID_HANDLE_VALUE}"
-      System::Call 'kernel32::CreateFileW(t "$DownloadDir\download.exe", \
+      System::Call 'kernel32::CreateFileW(t "$PLUGINSDIR\download.exe", \
                                           i ${GENERIC_READ}, \
                                           i ${FILE_SHARE_READ}, i 0, \
                                           i ${OPEN_EXISTING}, i 0, i 0) i .R9'
@@ -822,9 +811,9 @@ Function OnDownload
         StrCpy $0 "0"
         StrCpy $1 "0"
       ${Else}
-        CertCheck::VerifyCertTrust "$DownloadDir\download.exe"
+        CertCheck::VerifyCertTrust "$PLUGINSDIR\download.exe"
         Pop $0
-        CertCheck::VerifyCertNameIssuer "$DownloadDir\download.exe" \
+        CertCheck::VerifyCertNameIssuer "$PLUGINSDIR\download.exe" \
                                         "${CertNameDownload}" "${CertIssuerDownload}"
         Pop $1
       ${EndIf}
@@ -843,29 +832,29 @@ Function OnDownload
       ; Instead of extracting the files we use the downloaded installer to
       ; install in case it needs to perform operations that the stub doesn't
       ; know about.
-      WriteINIStr "$DownloadDir\${CONFIG_INI}" "Install" "InstallDirectoryPath" "$INSTDIR"
+      WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "InstallDirectoryPath" "$INSTDIR"
       ; Don't create the QuickLaunch or Taskbar shortcut from the launched installer
-      WriteINIStr "$DownloadDir\${CONFIG_INI}" "Install" "QuickLaunchShortcut" "false"
+      WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "QuickLaunchShortcut" "false"
       ${If} $CheckboxShortcutOnDesktop == 1
-        WriteINIStr "$DownloadDir\${CONFIG_INI}" "Install" "DesktopShortcut" "true"
+        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopShortcut" "true"
       ${Else}
-        WriteINIStr "$DownloadDir\${CONFIG_INI}" "Install" "DesktopShortcut" "false"
+        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopShortcut" "false"
       ${EndIf}
 
       ${If} $CheckboxShortcutInStartMenu == 1
-        WriteINIStr "$DownloadDir\${CONFIG_INI}" "Install" "StartMenuShortcuts" "true"
+        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "StartMenuShortcuts" "true"
       ${Else}
-        WriteINIStr "$DownloadDir\${CONFIG_INI}" "Install" "StartMenuShortcuts" "false"
+        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "StartMenuShortcuts" "false"
       ${EndIf}
 
 !ifdef MOZ_MAINTENANCE_SERVICE
       ${If} $CheckboxInstallMaintSvc == 1
-        WriteINIStr "$DownloadDir\${CONFIG_INI}" "Install" "MaintenanceService" "true"
+        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "MaintenanceService" "true"
       ${Else}
-        WriteINIStr "$DownloadDir\${CONFIG_INI}" "Install" "MaintenanceService" "false"
+        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "MaintenanceService" "false"
       ${EndIf}
 !else
-      WriteINIStr "$DownloadDir\${CONFIG_INI}" "Install" "MaintenanceService" "false"
+      WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "MaintenanceService" "false"
 !endif
 
       ; Write migrated to the shortcuts.ini file to prevent the installer
@@ -893,7 +882,7 @@ Function OnDownload
         Rename "$INSTDIR\AccessibleMarshal.dll" "$INSTDIR\${TO_BE_DELETED}\AccessibleMarshal.dll"
       ${EndIf}
 
-      Exec "$\"$DownloadDir\download.exe$\" /INI=$DownloadDir\${CONFIG_INI}"
+      Exec "$\"$PLUGINSDIR\download.exe$\" /INI=$PLUGINSDIR\${CONFIG_INI}"
       ; Close the handle that prevents modification of the full installer
       System::Call 'kernel32::CloseHandle(i $HandleDownload)'
       ${NSD_CreateTimer} StartInstall 1000
@@ -924,9 +913,8 @@ Function StartInstall
       CopyFiles /SILENT "$INSTDIR\uninstall\uninstall.tmp" "$INSTDIR\uninstall\uninstall.log"
       ${NSD_KillTimer} StartInstall
       Delete "$INSTDIR\uninstall\uninstall.tmp"
-      Delete "$DownloadDir\download.exe"
-      Delete "$DownloadDir\${CONFIG_INI}"
-      RmDir "$DownloadDir"
+      Delete "$PLUGINSDIR\download.exe"
+      Delete "$PLUGINSDIR\${CONFIG_INI}"
       ${If} ${FileExists} "$INSTDIR\${TO_BE_DELETED}"
         RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
       ${EndIf}
