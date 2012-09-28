@@ -42,7 +42,7 @@
    we ask for a specific z-order, we don't assume that widget z-ordering actually works.
 */
 
-#define NSCOORD_NONE      PR_INT32_MIN
+#define NSCOORD_NONE      INT32_MIN
 
 #undef DEBUG_MOUSE_LOCATION
 

@@ -292,7 +292,7 @@ NSCoordGreaterThan(nscoord a,nscoord b)
 /**
  * Convert an nscoord to a int32_t. This *does not* do rounding because
  * coords are never fractional. They can be out of range, so this does
- * clamp out of bounds coord values to PR_INT32_MIN and PR_INT32_MAX.
+ * clamp out of bounds coord values to INT32_MIN and INT32_MAX.
  */
 inline int32_t NSCoordToInt(nscoord aCoord) {
   VERIFY_COORD(aCoord);
@@ -301,11 +301,11 @@ inline int32_t NSCoordToInt(nscoord aCoord) {
   if (aCoord < -2147483648.0f) {
     // -2147483648 is the smallest 32-bit signed integer that can be
     // exactly represented as a float
-    return PR_INT32_MIN;
+    return INT32_MIN;
   } else if (aCoord > 2147483520.0f) {
     // 2147483520 is the largest 32-bit signed integer that can be
     // exactly represented as an IEEE float
-    return PR_INT32_MAX;
+    return INT32_MAX;
   } else {
     return (int32_t)aCoord;
   }

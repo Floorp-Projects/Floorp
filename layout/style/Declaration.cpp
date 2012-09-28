@@ -18,7 +18,7 @@ namespace css {
 
 // check that we can fit all the CSS properties into a uint8_t
 // for the mOrder array - if not, might need to use uint16_t!
-MOZ_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= PR_UINT8_MAX,
+MOZ_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= UINT8_MAX,
                   "CSS longhand property numbers no longer fit in a uint8_t");
 
 Declaration::Declaration()

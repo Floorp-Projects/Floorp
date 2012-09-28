@@ -486,7 +486,7 @@ nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviat
  */
 static uint32_t ComputeScaledDivisor(uint32_t aDivisor)
 {
-  return PR_UINT32_MAX/(255*aDivisor);
+  return UINT32_MAX/(255*aDivisor);
 }
   
 static void

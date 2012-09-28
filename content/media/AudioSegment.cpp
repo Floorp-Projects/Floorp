@@ -161,7 +161,7 @@ AudioSegment::WriteTo(nsAudioStream* aOutput)
   uint32_t frameSize = GetSampleSize(aOutput->GetFormat())*mChannels;
   for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
     AudioChunk& c = *ci;
-    if (frameSize*c.mDuration > PR_UINT32_MAX) {
+    if (frameSize*c.mDuration > UINT32_MAX) {
       NS_ERROR("Buffer overflow");
       return;
     }

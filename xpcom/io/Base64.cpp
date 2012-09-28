@@ -171,7 +171,7 @@ EncodeInputStream(nsIInputStream *aInputStream,
 
   uint64_t countlong =
     (count64 + 2) / 3 * 4; // +2 due to integer math.
-  if (countlong + aOffset > PR_UINT32_MAX)
+  if (countlong + aOffset > UINT32_MAX)
     return NS_ERROR_OUT_OF_MEMORY;
 
   uint32_t count = uint32_t(countlong);
@@ -239,7 +239,7 @@ nsresult
 Base64Encode(const nsACString &aBinaryData, nsACString &aString)
 {
   // Check for overflow.
-  if (aBinaryData.Length() > (PR_UINT32_MAX / 4) * 3) {
+  if (aBinaryData.Length() > (UINT32_MAX / 4) * 3) {
     return NS_ERROR_FAILURE;
   }
 
@@ -283,7 +283,7 @@ nsresult
 Base64Decode(const nsACString &aString, nsACString &aBinaryData)
 {
   // Check for overflow.
-  if (aString.Length() > PR_UINT32_MAX / 3) {
+  if (aString.Length() > UINT32_MAX / 3) {
     return NS_ERROR_FAILURE;
   }
 

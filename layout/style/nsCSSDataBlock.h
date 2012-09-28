@@ -101,7 +101,7 @@ public:
     // enums.  So we manually squeeze nsCSSProperty into 16 bits ourselves.
     // The static assertion below ensures it fits.
     typedef int16_t CompressedCSSProperty;
-    static const size_t MaxCompressedCSSProperty = PR_INT16_MAX;
+    static const size_t MaxCompressedCSSProperty = INT16_MAX;
 
 private:
     static size_t DataSize(uint32_t aNumProps) {

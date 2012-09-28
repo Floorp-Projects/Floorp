@@ -562,8 +562,8 @@ public:
    */
   static int32_t ClampToInt(double aVal)
   {
-    return NS_lround(NS_MAX(double(PR_INT32_MIN),
-                            NS_MIN(double(PR_INT32_MAX), aVal)));
+    return NS_lround(NS_MAX(double(INT32_MIN),
+                            NS_MIN(double(INT32_MAX), aVal)));
   }
 
   static nscolor GetFallbackOrPaintColor(gfxContext *aContext,

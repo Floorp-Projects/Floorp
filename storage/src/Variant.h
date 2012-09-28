@@ -112,7 +112,7 @@ struct variant_integer_traits<int64_t>
   static inline nsresult asInt32(int64_t aValue,
                                  int32_t *_result)
   {
-    if (aValue > PR_INT32_MAX || aValue < PR_INT32_MIN)
+    if (aValue > INT32_MAX || aValue < INT32_MIN)
       return NS_ERROR_CANNOT_CONVERT_DATA;
 
     *_result = static_cast<int32_t>(aValue);

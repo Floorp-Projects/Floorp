@@ -342,7 +342,7 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
         if (NS_FAILED(rv)) {
             chunkSize = 4096;
         }
-        chunkSize = NS_MIN(int32_t(PR_UINT16_MAX), chunkSize);
+        chunkSize = NS_MIN(int32_t(UINT16_MAX), chunkSize);
 
         rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), aIn,
                                        chunkSize);
@@ -366,11 +366,11 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
                 break;
             }
 
-            if (readCount > PR_UINT32_MAX)
-                readCount = PR_UINT32_MAX;
+            if (readCount > UINT32_MAX)
+                readCount = UINT32_MAX;
 
             rv = aListener->OnDataAvailable(aChannel, nullptr, aIn,
-                                            (uint32_t)NS_MIN(sourceOffset, (uint64_t)PR_UINT32_MAX),
+                                            (uint32_t)NS_MIN(sourceOffset, (uint64_t)UINT32_MAX),
                                             (uint32_t)readCount);
             if (NS_FAILED(rv)) {
                 break;

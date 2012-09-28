@@ -385,7 +385,7 @@ KeymapWrapper::InitBySystemSettings()
     int32_t foundLevel[5];
     for (uint32_t i = 0; i < ArrayLength(mod); i++) {
         mod[i] = NOT_MODIFIER;
-        foundLevel[i] = PR_INT32_MAX;
+        foundLevel[i] = INT32_MAX;
     }
     const uint32_t map_size = 8 * xmodmap->max_keypermod;
     for (uint32_t i = 0; i < map_size; i++) {

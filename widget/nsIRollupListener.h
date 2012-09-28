@@ -20,7 +20,7 @@ class nsIRollupListener {
    * was just rolled up.
    *
    * aCount is the number of popups in a chain to close. If this is
-   * PR_UINT32_MAX, then all popups are closed.
+   * UINT32_MAX, then all popups are closed.
    * If aGetLastRolledUp is true, then return the last rolled up popup,
    * if this is supported.
    */

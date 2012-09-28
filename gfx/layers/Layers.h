@@ -388,7 +388,7 @@ public:
   virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) { return true; }
 
   /**
-   * returns the maximum texture size on this layer backend, or PR_INT32_MAX
+   * returns the maximum texture size on this layer backend, or INT32_MAX
    * if there is no maximum
    */
   virtual int32_t GetMaxTextureSize() const = 0;

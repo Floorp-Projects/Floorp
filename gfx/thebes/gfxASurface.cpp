@@ -754,7 +754,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   if (NS_FAILED(rv))
     return;
 
-  if (bufSize64 > PR_UINT32_MAX - 16)
+  if (bufSize64 > UINT32_MAX - 16)
     return;
 
   uint32_t bufSize = (uint32_t)bufSize64;

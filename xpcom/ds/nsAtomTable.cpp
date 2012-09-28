@@ -84,7 +84,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIATOM
 
-  enum { REFCNT_PERMANENT_SENTINEL = PR_UINT32_MAX };
+  enum { REFCNT_PERMANENT_SENTINEL = UINT32_MAX };
 
   virtual bool IsPermanent();
 

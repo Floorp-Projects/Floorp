@@ -149,8 +149,8 @@ extern "C" {
   tdi.version = 0;
   tdi.min = 0;
 
-  tdi.value = PR_INT32_MAX * (mValue / mMax);
-  tdi.max = PR_INT32_MAX;
+  tdi.value = INT32_MAX * (mValue / mMax);
+  tdi.max = INT32_MAX;
   tdi.bounds = NSRectToCGRect(cellFrame);
   tdi.attributes = mIsHorizontal ? kThemeTrackHorizontal : 0;
   tdi.enableState = [self controlTint] == NSClearControlTint ? kThemeTrackInactive

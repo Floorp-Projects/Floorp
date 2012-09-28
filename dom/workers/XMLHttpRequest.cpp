@@ -134,8 +134,8 @@ public:
     mLastUploadLoaded(0), mLastUploadTotal(0), mIsSyncXHR(false),
     mLastLengthComputable(false), mLastUploadLengthComputable(false),
     mSeenLoadStart(false), mSeenUploadLoadStart(false),
-    mSyncQueueKey(PR_UINT32_MAX),
-    mSyncEventResponseSyncQueueKey(PR_UINT32_MAX),
+    mSyncQueueKey(UINT32_MAX),
+    mSyncEventResponseSyncQueueKey(UINT32_MAX),
     mUploadEventListenersAttached(false), mMainThreadSeenLoadStart(false),
     mInOpen(false)
   { }
@@ -201,7 +201,7 @@ public:
   GetSyncQueueKey()
   {
     AssertIsOnMainThread();
-    return mSyncEventResponseSyncQueueKey == PR_UINT32_MAX ?
+    return mSyncEventResponseSyncQueueKey == UINT32_MAX ?
            mSyncQueueKey :
            mSyncEventResponseSyncQueueKey;
   }
@@ -211,8 +211,8 @@ public:
   {
     AssertIsOnMainThread();
 
-    return mSyncQueueKey == PR_UINT32_MAX &&
-           mSyncEventResponseSyncQueueKey == PR_UINT32_MAX;
+    return mSyncQueueKey == UINT32_MAX &&
+           mSyncEventResponseSyncQueueKey == UINT32_MAX;
   }
 };
 
@@ -430,7 +430,7 @@ class LoadStartDetectionRunnable MOZ_FINAL : public nsIRunnable,
         return true;
       }
 
-      if (mSyncQueueKey != PR_UINT32_MAX) {
+      if (mSyncQueueKey != UINT32_MAX) {
         aWorkerPrivate->StopSyncLoop(mSyncQueueKey, true);
       }
 
@@ -1199,7 +1199,7 @@ public:
     NS_ASSERTION(!mProxy->mWorkerPrivate, "Should be null!");
     mProxy->mWorkerPrivate = mWorkerPrivate;
 
-    NS_ASSERTION(mProxy->mSyncQueueKey == PR_UINT32_MAX, "Should be unset!");
+    NS_ASSERTION(mProxy->mSyncQueueKey == UINT32_MAX, "Should be unset!");
     mProxy->mSyncQueueKey = mSyncQueueKey;
 
     if (mHasUploadListeners) {
@@ -1693,7 +1693,7 @@ XMLHttpRequest::SendInternal(const nsAString& aStringBody,
 
   AutoUnpinXHR autoUnpin(this);
 
-  uint32_t syncQueueKey = PR_UINT32_MAX;
+  uint32_t syncQueueKey = UINT32_MAX;
   if (mProxy->mIsSyncXHR) {
     syncQueueKey = mWorkerPrivate->CreateNewSyncLoop();
   }
