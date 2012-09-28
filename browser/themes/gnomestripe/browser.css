@@ -2609,46 +2609,53 @@ html|*#gcli-output-frame {
   -moz-margin-end: 2px;
 }
 
-#social-toolbar-item {
-  -moz-box-orient: horizontal;
-}
-
-#social-toolbar-item > .toolbarbutton-1 {
-  margin: 0;
-  padding: 0;
+#social-toolbar-button {
   -moz-appearance: toolbarbutton;
 }
 
-.social-notification-icon-hbox {
-  pointer-events: none;
+/* favicon for the service */
+#social-provider-image {
+  -moz-appearance: none;
+  border: none;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 2px 5px;
+  margin: 0;
+  background: transparent;
+  list-style-image: url("chrome://browser/skin/social/social.png");
 }
 
-.social-status-button {
-  list-style-image: none;
+#social-provider-image > .button-box > .box-inherit > .button-icon {
+  max-height: 16px;
+  max-width: 16px;
 }
 
-#social-provider-button > image {
-  margin: 5px 3px;
+#social-provider-image > .button-box {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
 }
 
-#social-provider-button > .toolbarbutton-menu-dropmarker {
+#social-provider-image > .button-box > .button-menu-dropmarker {
   display: none;
 }
 
-.social-notification-icon-stack {
+/* hbox that hold notification icons */
+#social-status-iconbox {
+  margin: 0;
   padding: 0;
 }
 
-.social-notification-icon-stack > image {
-  margin: 5px 3px;
-  max-height: 16px;
-}
-
-.social-notification-icon-hbox {
+/* hbox that surrounds an image and its counter */
+.social-notification-icon-container {
   padding: 0;
+  margin: 0;
+  position: relative;
 }
 
-.social-notification-icon-label {
+/* notification counter box */
+.social-notification-icon-counter {
   background-color: rgb(240,61,37);
   border: 1px solid rgb(216,55,34);
   box-shadow: 0px 1px 0px rgba(0,39,121,0.77);
@@ -2657,11 +2664,21 @@ html|*#gcli-output-frame {
   color: white;
   font-size: 9px;
   font-weight: bold;
-  margin: 0;
+  position: absolute;
+  right: -3px;
+  top: -4px;
+  z-index: 1;
+  text-align: center;
 }
 
-.social-notification-icon-label[value=""] {
-  display: none;
+/* notification image */
+.social-notification-icon-image {
+  padding: 2px;
+  margin: 0;
+  min-width: 20px;
+  max-width: 32px;
+  max-height: 20px;
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 /* social toolbar provider menu */
