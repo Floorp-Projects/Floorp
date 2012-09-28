@@ -146,3 +146,12 @@ function checkCanvasColor(aContext, aRed, aGreen, aBlue, aMessage) {
   let [r, g, b] = aContext.getImageData(0, 0, 1, 1).data;
   ok(r == aRed && g == aGreen && b == aBlue, aMessage);
 }
+
+/**
+ * Checks if a thumbnail for the given URL exists.
+ * @param aURL The url associated to the thumbnail.
+ */
+function thumbnailExists(aURL) {
+  let file = PageThumbsStorage.getFileForURL(aURL);
+  return file.exists() && file.fileSize;
+}
