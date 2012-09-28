@@ -71,6 +71,7 @@ public:
                             PrefixArray* aNoiseEntries);
 private:
   void DropStores();
+  nsresult CreateStoreDirectory();
   nsresult SetupPathNames();
   nsresult RecoverBackups();
   nsresult CleanToDelete();
