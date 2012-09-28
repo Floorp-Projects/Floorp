@@ -16,6 +16,16 @@ MOCHITEST_FILES = \
   test_TextDecoder.js \
   test_TextEncoder.html \
   test_TextEncoder.js \
+  test-big5.js \
+  test-euc-jp.js \
+  test-euc-kr.js \
+  test-gbk.js \
+  test-hz-gb-2312.js \
+  test-iso-2022-jp.js \
+  test-iso-2022-kr.js \
+  test-shift_jis.js \
+  test_stringencoding.html \
+  tests.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

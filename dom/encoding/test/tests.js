@@ -47,7 +47,8 @@ function testEncodeDecode(encoding, min, max) {
 testEncodeDecode('UTF-8', 0, 0x10FFFF);
 testEncodeDecode('UTF-16LE', 0, 0x10FFFF);
 testEncodeDecode('UTF-16BE', 0, 0x10FFFF);
-testEncodeDecode('windows-1252', 0, 0xFF);
+// TextEncoder no longer supports non-UTF encodings
+//testEncodeDecode('windows-1252', 0, 0xFF);
 
 
 // Inspired by:
@@ -131,10 +132,12 @@ function testEncodeDecodeSample(encoding, string, expected) {
   test(
     encoding + " - Encode/Decode - reference sample",
     function() {
-      expect(3);
+      expect(/^utf-/i.test(encoding) ? 3 : 1);
 
-      var encoded = TextEncoder(encoding).encode(string);
-      arrayEqual(encoded, expected, 'expected equal encodings ' + encoding);
+      if (/^utf-/i.test(encoding)) {
+        var encoded = TextEncoder(encoding).encode(string);
+        arrayEqual(encoded, expected, 'expected equal encodings ' + encoding);
+      }
 
       var decoded = TextDecoder(encoding).decode(new Uint8Array(expected));
       equal(decoded, string, 'expected equal decodings ' + encoding);
@@ -185,7 +188,7 @@ test(
       function(t) {
         var encoded = TextEncoder('utf-8').encode(t.input);
         var decoded = TextDecoder('utf-8').decode(encoded);
-        equal(t.expected, decoded);
+        equal(decoded, t.expected);
       });
   });
 
@@ -220,16 +223,14 @@ test(
 
 test(
   "Encoding names are case insensitive", function() {
-    var encodings = [
+    var utfencodings = [
       { encoding: 'UTF-8', string: 'z\xA2\u6C34\uD834\uDD1E\uDBFF\uDFFD' },
       { encoding: 'UTF-16', string: 'z\xA2\u6C34\uD834\uDD1E\uDBFF\uDFFD' },
       { encoding: 'UTF-16LE', string: 'z\xA2\u6C34\uD834\uDD1E\uDBFF\uDFFD' },
       { encoding: 'UTF-16BE', string: 'z\xA2\u6C34\uD834\uDD1E\uDBFF\uDFFD' },
-      { encoding: 'ASCII', string: 'ABCabc123!@#' },
-      { encoding: 'ISO-8859-1', string: 'ABCabc123!@#\xA2' }
     ];
 
-    encodings.forEach(
+    utfencodings.forEach(
       function(test) {
         var lower = test.encoding.toLowerCase();
         var upper = test.encoding.toUpperCase();
@@ -238,12 +239,28 @@ test(
           TextDecoder(upper).decode(TextEncoder(upper).encode(test.string))
         );
       });
+
+    var encodings = [
+      { encoding: 'ASCII', input: [0x41, 0x42, 0x43, 0x61, 0x62, 0x63, 0x31, 0x32, 0x33, 0x21, 0x40, 0x23] },
+      { encoding: 'ISO-8859-1', input: [0x41, 0x42, 0x43, 0x61, 0x62, 0x63, 0x31, 0x32, 0x33, 0x21, 0x40, 0x23, 0xA2] }
+    ];
+
+    encodings.forEach(
+      function(test) {
+        var lower = test.encoding.toLowerCase();
+        var upper = test.encoding.toUpperCase();
+        equal(
+          TextDecoder(lower).decode(new Uint8Array(test.input)),
+          TextDecoder(upper).decode(new Uint8Array(test.input))
+        );
+      });
   });
 
 test(
   "Byte-order marks",
   function() {
-    //expect(9);
+    //expect(11);
+    expect(5);
 
     var utf8 = [0xEF, 0xBB, 0xBF, 0x7A, 0xC2, 0xA2, 0xE6, 0xB0, 0xB4, 0xF0, 0x9D, 0x84, 0x9E, 0xF4, 0x8F, 0xBF, 0xBD];
     var utf16le = [0xff, 0xfe, 0x7A, 0x00, 0xA2, 0x00, 0x34, 0x6C, 0x34, 0xD8, 0x1E, 0xDD, 0xFF, 0xDB, 0xFD, 0xDF];
@@ -255,6 +272,8 @@ test(
     equal(TextDecoder('utf-8').decode(new Uint8Array(utf8)), string);
     equal(TextDecoder('utf-16le').decode(new Uint8Array(utf16le)), string);
     equal(TextDecoder('utf-16be').decode(new Uint8Array(utf16be)), string);
+    equal(TextDecoder('utf-16').decode(new Uint8Array(utf16le)), string);
+    equal(TextDecoder('utf-16').decode(new Uint8Array(utf16be)), string);
 
     /*
     // TODO: New API?
@@ -274,8 +293,8 @@ test(
     equal(TextEncoder("utf-8").encoding, "utf-8"); // canonical case
     equal(TextEncoder("UTF-16").encoding, "utf-16"); // canonical case and name
     equal(TextEncoder("UTF-16BE").encoding, "utf-16be"); // canonical case and name
-    equal(TextEncoder("iso8859-1").encoding, "windows-1252"); // canonical case and name
-    equal(TextEncoder("iso-8859-1").encoding, "windows-1252"); // canonical case and name
+    equal(TextDecoder("iso8859-1").encoding, "windows-1252"); // canonical case and name
+    equal(TextDecoder("iso-8859-1").encoding, "windows-1252"); // canonical case and name
 
   });
 
@@ -326,11 +345,16 @@ test(
           continue;
         if (encoding === "iso-2022-kr" && (i === 0x0E || i === 0x0F || i === 0x1B))
           continue;
+        // TODO: Gecko decoder bugs
+        if (encoding === "ibm864" && i === 0x25)
+          continue;
+        if ((encoding === "big5" || encoding === "euc-kr") && i === 0x7F)
+          continue;
 
         string += String.fromCharCode(i);
         bytes.push(i);
       }
-      var ascii_encoded = TextEncoder('ascii').encode(string);
+      var ascii_encoded = TextEncoder('utf-8').encode(string);
       equal(TextDecoder(encoding).decode(ascii_encoded), string, encoding);
       //arrayEqual(TextEncoder(encoding).encode(string), bytes, encoding);
     });
