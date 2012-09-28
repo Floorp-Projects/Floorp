@@ -149,8 +149,8 @@
 
   nsCOMPtr<nsIFile> resDir;
   nsAutoCString resPath;
-  NSString* pathToImage;
-  NSImage* cursorImage;
+  NSString* pathToImage, *pathToHiDpiImage;
+  NSImage* cursorImage, *hiDpiCursorImage;
 
   nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(resDir));
   if (NS_FAILED(rv))
@@ -166,11 +166,27 @@
   if (!pathToImage)
     goto INIT_FAILURE;
   pathToImage = [pathToImage stringByAppendingPathComponent:imageName];
-  pathToImage = [pathToImage stringByAppendingPathExtension:@"png"];
+  pathToHiDpiImage = [pathToImage stringByAppendingString:@"@2x"];
+  // Add same extension to both image paths.
+  pathToImage      = [pathToImage      stringByAppendingPathExtension:@"png"];
+  pathToHiDpiImage = [pathToHiDpiImage stringByAppendingPathExtension:@"png"];
 
   cursorImage = [[[NSImage alloc] initWithContentsOfFile:pathToImage] autorelease];
   if (!cursorImage)
     goto INIT_FAILURE;
+
+  // Note 1: There are a few different ways to get a hidpi image via
+  // initWithContentsOfFile. We let the OS handle this here: when the
+  // file basename ends in "@2x", it will be displayed at native resolution
+  // instead of being pixel-doubled. See bug 784909 comment 7 for alternates ways.
+  //
+  // Note 2: The OS is picky, and will ignore the hidpi representation
+  // unless it is exactly twice the size of the lowdpi image.
+  hiDpiCursorImage = [[[NSImage alloc] initWithContentsOfFile:pathToHiDpiImage] autorelease];
+  if (hiDpiCursorImage) {
+    NSImageRep *imageRep = [[hiDpiCursorImage representations] objectAtIndex:0];
+    [cursorImage addRepresentation: imageRep];
+  }
   return [[[NSCursor alloc] initWithImage:cursorImage hotSpot:aPoint] autorelease];
 
 INIT_FAILURE:
