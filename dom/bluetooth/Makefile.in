@@ -54,6 +54,7 @@ CPPSRCS += \
   BluetoothUnixSocketConnector.cpp \
   BluetoothHfpManager.cpp \
   BluetoothOppManager.cpp \
+  ObexBase.cpp \
   $(NULL)
 
 ifdef MOZ_B2G_RIL
