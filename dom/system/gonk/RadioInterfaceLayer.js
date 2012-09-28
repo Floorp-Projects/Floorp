@@ -40,6 +40,7 @@ const kSmsSentObserverTopic              = "sms-sent";
 const kSmsDeliveredObserverTopic         = "sms-delivered";
 const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
+const kTimeNitzAutomaticUpdateEnabled    = "time.nitz.automatic-update.enabled";
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
 const DOM_SMS_DELIVERY_SENT              = "sent";
 
@@ -101,6 +102,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
 XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gTimeService",
+                                   "@mozilla.org/time/timeservice;1",
+                                   "nsITimeService");
 
 XPCOMUtils.defineLazyGetter(this, "WAP", function () {
   let WAP = {};
@@ -238,6 +243,10 @@ function RadioInterfaceLayer() {
 
   // Read the desired setting of call waiting from the settings DB.
   lock.get("ril.callwaiting.enabled", this);
+
+  // Read the 'time.nitz.automatic-update.enabled' setting to see if
+  // we need to adjust the system clock time and time zone by NITZ.
+  lock.get(kTimeNitzAutomaticUpdateEnabled, this);
 
   this._messageManagerByRequest = {};
 
@@ -469,17 +478,7 @@ RadioInterfaceLayer.prototype = {
         this.handleDataCallList(message);
         break;
       case "nitzTime":
-        // TODO bug 714349
-        // Send information to time manager to decide what to do with it
-        // Message contains networkTimeInSeconds, networkTimeZoneInMinutes,
-        // dstFlag,localTimeStampInMS
-        // indicating the time, daylight savings flag, and timezone
-        // sent from the network and a timestamp of when the message was received
-        // so an offset can be added if/when the time is actually set.
-        debug("nitzTime networkTime=" + message.networkTimeInSeconds +
-              " timezone=" + message.networkTimeZoneInMinutes +
-              " dst=" + message.dstFlag +
-              " timestamp=" + message.localTimeStampInMS);
+        this.handleNitzTime(message);
         break;
       case "iccinfochange":
         this.handleICCInfoChange(message);
@@ -1222,6 +1221,35 @@ RadioInterfaceLayer.prototype = {
                                   [message.datacalls, message.datacalls.length]);
   },
 
+  /**
+   * Handle the NITZ message.
+   */
+  handleNitzTime: function handleNitzTime(message) {
+    if (!this._nitzAutomaticUpdateEnabled) {
+      return;
+    }
+    // To set the system clock time. Note that there could be a time diff
+    // between when the NITZ was received and when the time is actually set.
+    gTimeService.set(
+      message.networkTimeInMS + (Date.now() - message.receiveTimeInMS));
+
+    // To set the sytem timezone. Note that we need to convert the time zone
+    // value to a UTC repesentation string in the format of "UTC(+/-)hh:mm".
+    // Ex, time zone -480 is "UTC-08:00"; time zone 630 is "UTC+10:30".
+    //
+    // We can unapply the DST correction if we want the raw time zone offset:
+    // message.networkTimeZoneInMinutes -= message.networkDSTInMinutes;
+    if (message.networkTimeZoneInMinutes != (new Date()).getTimezoneOffset()) {
+      let absTimeZoneInMinutes = Math.abs(message.networkTimeZoneInMinutes);
+      let timeZoneStr = "UTC";
+      timeZoneStr += (message.networkTimeZoneInMinutes >= 0 ? "+" : "-");
+      timeZoneStr += ("0" + Math.floor(absTimeZoneInMinutes / 60)).slice(-2);
+      timeZoneStr += ":";
+      timeZoneStr += ("0" + absTimeZoneInMinutes % 60).slice(-2);
+      gSettingsService.createLock().set("time.timezone", timeZoneStr, null);
+    }
+  },
+
   handleICCInfoChange: function handleICCInfoChange(message) {
     let oldIcc = this.rilContext.icc;
     this.rilContext.icc = message;
@@ -1318,8 +1346,11 @@ RadioInterfaceLayer.prototype = {
   _dataCallSettingsToRead: [],
   _oldRilDataEnabledState: null,
 
-  // nsISettingsServiceCallback
+  // Flag to determine whether to use NITZ. It corresponds to the
+  // 'time.nitz.automatic-update.enabled' setting from the UI.
+  _nitzAutomaticUpdateEnabled: null,
 
+  // nsISettingsServiceCallback
   handle: function handle(aName, aResult) {
     switch(aName) {
       case "ril.radio.disabled":
@@ -1371,6 +1402,9 @@ RadioInterfaceLayer.prototype = {
       case "ril.callwaiting.enabled":
         this._callWaitingEnabled = aResult;
         this.setCallWaitingEnabled(this._callWaitingEnabled);
+        break;
+      case kTimeNitzAutomaticUpdateEnabled:
+        this._nitzAutomaticUpdateEnabled = aResult;
         break;
     };
   },
