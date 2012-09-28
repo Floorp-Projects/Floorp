@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 770106</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<span id="s">Hello</span>
+<button><div style="pointer-events:none; position:relative; width:100px; background:yellow; left:-100px;">Kitty</div></button>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 770106 **/
+
+var sRect = s.getBoundingClientRect();
+is(document.elementFromPoint(sRect.left + sRect.width/2, sRect.top + sRect.height/2),
+   document.getElementById("s"), "Correct object selected");
+
+</script>
+</pre>
+</body>
+</html>
