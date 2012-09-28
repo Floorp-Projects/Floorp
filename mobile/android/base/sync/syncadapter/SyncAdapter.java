@@ -87,7 +87,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   }
 
   /**
-   * Handle an exception: update stats, invalidate auth token, log errors, etc.
+   * Handle an exception: update stats, log errors, etc.
    * Wakes up sleeping threads by calling notifyMonitor().
    *
    * @param globalSession
@@ -97,9 +97,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
    */
   protected void processException(final GlobalSession globalSession, final Exception e) {
     try {
-      // Just in case, invalidate auth token.
-      SyncAccounts.invalidateAuthToken(AccountManager.get(mContext), localAccount);
-
       if (e instanceof SQLiteConstraintException) {
         Logger.error(LOG_TAG, "Constraint exception. Aborting sync.", e);
         syncResult.stats.numParseExceptions++;       // This is as good as we can do.
