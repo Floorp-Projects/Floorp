@@ -64,9 +64,7 @@ public:
  * The most important API in this class is BuildContainerLayerFor. This
  * method takes a display list as input and constructs a ContainerLayer
  * with child layers that render the contents of the display list. It
- * also updates userdata for the retained layer manager, and
- * DisplayItemDataProperty data for frames, to record the relationship
- * between frames and layers.
+ * records the relationship between frames and layers.
  * 
  * That data enables us to retain layer trees. When constructing a
  * ContainerLayer, we first check to see if there's an existing
@@ -85,7 +83,7 @@ public:
  * FrameLayerBuilder sets up ThebesLayers so that 0,0 in the Thebes layer
  * corresponds to the (pixel-snapped) top-left of the aActiveScrolledRoot.
  * It sets up ContainerLayers so that 0,0 in the container layer
- * corresponds to the snapped top-left of the display list reference frame.
+ * corresponds to the snapped top-left of the display item reference frame.
  *
  * When we construct a container layer, we know the transform that will be
  * applied to the layer. If the transform scales the content, we can get
@@ -266,6 +264,7 @@ public:
    * @param aLayer Layer that the display item will be rendered into
    * @param aItem Display item to be drawn.
    * @param aLayerState What LayerState the item is using.
+   * @param aTopLeft offset from active scrolled root to reference frame
    * @param aManager If the layer is in the LAYER_INACTIVE state,
    * then this is the temporary layer manager to draw with.
    */
@@ -282,6 +281,7 @@ public:
    * aLayer, with aClipRect, where aContainerLayerFrame is the frame
    * for the container layer this ThebesItem belongs to.
    * aItem must have an underlying frame.
+   * @param aTopLeft offset from active scrolled root to reference frame
    */
   void AddThebesDisplayItem(ThebesLayer* aLayer,
                             nsDisplayItem* aItem,
@@ -574,8 +574,9 @@ protected:
 
   /**
    * We accumulate DisplayItemData elements in a hashtable during
-   * the paint process, and store them in the frame property only when
-   * paint is complete. This is the hashentry for that hashtable.
+   * the paint process, one per visible display item.
+   * There is one hashtable per layer manager, and one entry
+   * per frame. This is the hashentry for that hashtable.
    */
   class DisplayItemDataEntry : public nsPtrHashKey<nsIFrame> {
   public:
@@ -640,8 +641,7 @@ protected:
 
   /**
    * A useful hashtable iteration function that removes the
-   * DisplayItemData property for the frame, clears its
-   * NS_FRAME_HAS_CONTAINER_LAYER bit and returns PL_DHASH_REMOVE.
+   * DisplayItemData property for the frame and returns PL_DHASH_REMOVE.
    * aClosure is ignored.
    */
   static PLDHashOperator RemoveDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
