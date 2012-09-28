@@ -29,6 +29,12 @@
 # The value below removes all LSP categories previously set.
 !define LSP_CATEGORIES "0x00000000"
 
+# Due to official and beta using the same branding this is needed to
+# differentiante between the url used by the stub for downloading.
+!if "@MOZ_UPDATE_CHANNEL@" == "beta"
+!define BETA_UPDATE_CHANNEL
+!endif
+
 # NO_INSTDIR_FROM_REG is defined for pre-releases which have a PreReleaseSuffix
 # (e.g. Alpha X, Beta X, etc.) to prevent finding a non-default installation
 # directory in the registry and using that as the default. This prevents
