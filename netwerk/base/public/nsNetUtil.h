@@ -78,6 +78,8 @@
 #include "mozilla/Services.h"
 #include "nsIPrivateBrowsingChannel.h"
 
+#include <limits>
+
 #ifdef MOZILLA_INTERNAL_API
 
 inline already_AddRefed<nsIIOService>
@@ -1308,8 +1310,7 @@ NS_UsePrivateBrowsing(nsIChannel *channel)
 // Constants duplicated from nsIScriptSecurityManager so we avoid having necko
 // know about script security manager.
 #define NECKO_NO_APP_ID 0
-// Note: UNKNOWN also equals PR_UINT32_MAX
-#define NECKO_UNKNOWN_APP_ID 4294967295
+#define NECKO_UNKNOWN_APP_ID std::numeric_limits<uint32_t>::max()
 
 /**
  * Gets AppId and isInBrowserElement from channel's nsILoadContext.
