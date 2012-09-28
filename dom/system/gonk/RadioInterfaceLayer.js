@@ -43,8 +43,7 @@ const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
 const DOM_SMS_DELIVERY_SENT              = "sent";
 
-const RIL_IPC_MSG_NAMES = [
-  "RIL:GetRilContext",
+const RIL_IPC_TELEPHONY_MSG_NAMES = [
   "RIL:EnumerateCalls",
   "RIL:GetMicrophoneMuted",
   "RIL:SetMicrophoneMuted",
@@ -59,6 +58,10 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:RejectCall",
   "RIL:HoldCall",
   "RIL:ResumeCall",
+];
+
+const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
+  "RIL:GetRilContext",
   "RIL:GetAvailableNetworks",
   "RIL:SelectNetwork",
   "RIL:SelectNetworkAuto",
@@ -68,7 +71,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:SendUSSD",
   "RIL:CancelUSSD",
   "RIL:SendStkResponse",
-  "RIL:SendStkMenuSelection"
+  "RIL:SendStkMenuSelection",
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
@@ -238,7 +241,10 @@ function RadioInterfaceLayer() {
 
   this._messageManagerByRequest = {};
 
-  for each (let msgname in RIL_IPC_MSG_NAMES) {
+  for (let msgname of RIL_IPC_TELEPHONY_MSG_NAMES) {
+    ppmm.addMessageListener(msgname, this);
+  }
+  for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
     ppmm.addMessageListener(msgname, this);
   }
   Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -268,6 +274,23 @@ RadioInterfaceLayer.prototype = {
    */
   receiveMessage: function receiveMessage(msg) {
     debug("Received '" + msg.name + "' message from content process");
+    if (RIL_IPC_TELEPHONY_MSG_NAMES.indexOf(msg.name) != -1) {
+      if (!msg.target.assertPermission("telephony")) {
+        debug("Telephony message " + msg.name +
+              " from a content process with no 'telephony' privileges.");
+        return null;
+      }
+    } else if (RIL_IPC_MOBILECONNECTION_MSG_NAMES.indexOf(msg.name) != -1) {
+      if (!msg.target.assertPermission("mobileconnection")) {
+        debug("MobileConnection message " + msg.name +
+              " from a content process with no 'mobileconnection' privileges.");
+        return null;
+      }
+    } else {
+      debug("Ignoring unknown message type: " + msg.name);
+      return null;
+    }
+
     switch (msg.name) {
       case "RIL:GetRilContext":
         // This message is sync.
@@ -1258,7 +1281,10 @@ RadioInterfaceLayer.prototype = {
         this.handle(setting.key, setting.value);
         break;
       case "xpcom-shutdown":
-        for each (let msgname in RIL_IPC_MSG_NAMES) {
+        for (let msgname of RIL_IPC_TELEPHONY_MSG_NAMES) {
+          ppmm.removeMessageListener(msgname, this);
+        }
+        for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
           ppmm.removeMessageListener(msgname, this);
         }
         // Shutdown all RIL network interfaces
