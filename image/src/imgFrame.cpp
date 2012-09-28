@@ -109,7 +109,6 @@ imgFrame::imgFrame() :
   mSinglePixelColor(0),
   mTimeout(100),
   mDisposalMethod(0), /* imgIContainer::kDisposeNotSpecified */
-  mLockCount(0),
   mBlendMethod(1), /* imgIContainer::kBlendOver */
   mSinglePixel(false),
   mNeverUseDeviceSurface(false),
@@ -119,6 +118,7 @@ imgFrame::imgFrame() :
 #ifdef USE_WIN_SURFACE
   mIsDDBSurface(false),
 #endif
+  mLocked(false),
   mInformedDiscardTracker(false)
 {
   static bool hasCheckedOptimize = false;
@@ -578,8 +578,6 @@ uint32_t imgFrame::GetImageDataLength() const
 
 void imgFrame::GetImageData(uint8_t **aData, uint32_t *length) const
 {
-  NS_ABORT_IF_FALSE(mLockCount != 0, "Can't GetImageData unless frame is locked");
-
   if (mImageSurface)
     *aData = mImageSurface->Data();
   else if (mPalettedImageData)
@@ -602,8 +600,6 @@ bool imgFrame::GetHasAlpha() const
 
 void imgFrame::GetPaletteData(uint32_t **aPalette, uint32_t *length) const
 {
-  NS_ABORT_IF_FALSE(mLockCount != 0, "Can't GetPaletteData unless frame is locked");
-
   if (!mPalettedImageData) {
     *aPalette = nullptr;
     *length = 0;
@@ -615,21 +611,14 @@ void imgFrame::GetPaletteData(uint32_t **aPalette, uint32_t *length) const
 
 nsresult imgFrame::LockImageData()
 {
-  NS_ABORT_IF_FALSE(mLockCount >= 0, "Unbalanced locks and unlocks");
-  if (mLockCount < 0) {
+  if (mPalettedImageData)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  NS_ABORT_IF_FALSE(!mLocked, "Trying to lock already locked image data.");
+  if (mLocked) {
     return NS_ERROR_FAILURE;
   }
-
-  mLockCount++;
-
-  // If we are not the first lock, there's nothing to do.
-  if (mLockCount != 1) {
-    return NS_OK;
-  }
-
-  // Paletted images don't have surfaces, so there's nothing to do.
-  if (mPalettedImageData)
-    return NS_OK;
+  mLocked = true;
 
   if ((mOptSurface || mSinglePixel) && !mImageSurface) {
     // Recover the pixels
@@ -670,26 +659,15 @@ nsresult imgFrame::LockImageData()
 
 nsresult imgFrame::UnlockImageData()
 {
-  NS_ABORT_IF_FALSE(mLockCount != 0, "Unlocking an unlocked image!");
-  if (mLockCount == 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mLockCount--;
-
-  NS_ABORT_IF_FALSE(mLockCount >= 0, "Unbalanced locks and unlocks");
-  if (mLockCount < 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // If we are not the last lock, there's nothing to do.
-  if (mLockCount != 0) {
-    return NS_OK;
-  }
-
-  // Paletted images don't have surfaces, so there's nothing to do.
   if (mPalettedImageData)
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
+
+  NS_ABORT_IF_FALSE(mLocked, "Unlocking an unlocked image!");
+  if (!mLocked) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mLocked = false;
 
   // Assume we've been written to.
   if (mImageSurface)
