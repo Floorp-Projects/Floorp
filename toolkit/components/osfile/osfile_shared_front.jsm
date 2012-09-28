@@ -305,5 +305,71 @@ AbstractFile.normalizeOpenMode = function normalizeOpenMode(mode) {
   return result;
 };
 
+/**
+ * Return the contents of a file.
+ *
+ * @param {string} path The path to the file.
+ * @param {number=} bytes Optionally, an upper bound to the number of bytes
+ * to read.
+ *
+ * @return {{buffer: ArrayBuffer, bytes: number}} A buffer holding the bytes
+ * and the number of bytes read from the file.
+ */
+AbstractFile.read = function read(path, bytes) {
+  let file = exports.OS.File.open(path);
+  try {
+    return file.read(bytes);
+  } finally {
+    file.close();
+  }
+};
+
+/**
+ * Write a file, atomically.
+ *
+ * By opposition to a regular |write|, this operation ensures that,
+ * until the contents are fully written, the destination file is
+ * not modified.
+ *
+ * Important note: In the current implementation, option |tmpPath|
+ * is required. This requirement should disappear as part of bug 793660.
+ *
+ * @param {string} path The path of the file to modify.
+ * @param {ArrayByffer} buffer A buffer containing the bytes to write.
+ * @param {*=} options Optionally, an object determining the behavior
+ * of this function. This object may contain the following fields:
+ * - {number} offset The offset in |buffer| at which to start extracting
+ * data. If unspecified, 0.
+ * - {number} bytes The number of bytes to write. If unspecified, all
+ * the bytes in |buffer|.
+ * - {string} tmpPath The path at which to write the temporary file.
+ *
+ * @return {number} The number of bytes actually written.
+ */
+AbstractFile.writeAtomic =
+     function writeAtomic(path, buffer, options) {
+  options = options || noOptions;
+
+  let tmpPath = options.tmpPath;
+
+  if (!tmpPath) {
+    throw new TypeError("Expected option tmpPath");
+  }
+  let tmpFile = OS.File.open(tmpPath, {write: true, truncate: true});
+  let bytesWritten;
+  try {
+    bytesWritten = tmpFile.write(buffer, options);
+    tmpFile.flush();
+  } catch (x) {
+    OS.File.remove(tmpPath);
+    throw x;
+  } finally {
+    tmpFile.close();
+  }
+
+  OS.File.move(tmpPath, path, {noCopy: true});
+  return bytesWritten;
+};
+
    exports.OS.Shared.AbstractFile = AbstractFile;
 })(this);
