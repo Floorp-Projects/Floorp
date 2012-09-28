@@ -57,27 +57,17 @@ function test_source()
         do_check_true(!aResponse.error);
         do_check_true(!!aResponse.source);
 
-        let source = aResponse.source;
-        do_check_eq(source.type, "longString");
+        let f = do_get_file("test_source-01.js", false);
+        let s = Cc["@mozilla.org/network/file-input-stream;1"]
+          .createInstance(Ci.nsIFileInputStream);
+        s.init(f, -1, -1, false);
 
-        let sourceStringClient = gThreadClient.threadLongString(source);
-        let len = sourceStringClient.length;
-        sourceStringClient.substring(0, len, function (aResponse) {
-          do_check_true(!!aResponse);
-          do_check_true(!!aResponse.substring);
+        do_check_eq(NetUtil.readInputStreamToString(s, s.available()),
+                    aResponse.source);
 
-          let f = do_get_file("test_source-01.js", false);
-          let s = Cc["@mozilla.org/network/file-input-stream;1"]
-            .createInstance(Ci.nsIFileInputStream);
-          s.init(f, -1, -1, false);
-
-          do_check_eq(NetUtil.readInputStreamToString(s, s.available()),
-                      aResponse.substring);
-
-          s.close();
-          gThreadClient.resume(function () {
-            finishClient(gClient);
-          });
+        s.close();
+        gThreadClient.resume(function () {
+          finishClient(gClient);
         });
       });
     });

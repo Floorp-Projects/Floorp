@@ -1272,28 +1272,9 @@ SourceScripts.prototype = {
         return this._logError(script.url, -1);
       }
 
-      if (typeof aResponse.source === "string") {
-        // We did not receive a long string, instead we got the source directly.
-        this._onLoadSourceFinished(script.url,
-                                   aResponse.source,
-                                   options);
-        return;
-      }
-
-      if (aResponse.source.type !== "longString") {
-        return this._logError(script.url, -1);
-      }
-
-      let sourceTextClient = this.activeThread.threadLongString(aResponse.source);
-      let length = sourceTextClient.length;
-      sourceTextClient.substring(0, length, function (aResponse) {
-        if (aResponse.error) {
-          return this._logError(script.url, -1);
-        }
-        this._onLoadSourceFinished(script.url,
-                                   aResponse.substring,
-                                   options);
-      }.bind(this));
+      this._onLoadSourceFinished(script.url,
+                                 aResponse.source,
+                                 options);
     }.bind(this));
   },
 
