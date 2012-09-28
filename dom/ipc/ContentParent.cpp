@@ -573,12 +573,6 @@ struct DelayedDeleteContentParentTask : public nsRunnable
 void
 ContentParent::ActorDestroy(ActorDestroyReason why)
 {
-    nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
-    if (ppm) {
-      ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                          CHILD_PROCESS_SHUTDOWN_MESSAGE, false,
-                          nullptr, nullptr, nullptr);
-    }
     nsCOMPtr<nsIThreadObserver>
         kungFuDeathGrip(static_cast<nsIThreadObserver*>(this));
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -1888,38 +1882,6 @@ ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
   }
   return true;
 }
-
-bool
-ContentParent::DoSendAsyncMessage(const nsAString& aMessage,
-                                  const mozilla::dom::StructuredCloneData& aData)
-{
-  ClonedMessageData data;
-  SerializedStructuredCloneBuffer& buffer = data.data();
-  buffer.data = aData.mData;
-  buffer.dataLength = aData.mDataLength;
-  const nsTArray<nsCOMPtr<nsIDOMBlob> >& blobs = aData.mClosure.mBlobs;
-  if (!blobs.IsEmpty()) {
-    InfallibleTArray<PBlobParent*>& blobParents = data.blobsParent();
-    uint32_t length = blobs.Length();
-    blobParents.SetCapacity(length);
-    for (uint32_t i = 0; i < length; ++i) {
-      BlobParent* blobParent = GetOrCreateActorForBlob(blobs[i]);
-      if (!blobParent) {
-        return false;
-      }
-      blobParents.AppendElement(blobParent);
-    }
-  }
-
-  return SendAsyncMessage(nsString(aMessage), data);
-}
-
-bool
-ContentParent::CheckPermission(const nsAString& aPermission)
-{
-  return AssertAppProcessPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
-}
-
 
 } // namespace dom
 } // namespace mozilla

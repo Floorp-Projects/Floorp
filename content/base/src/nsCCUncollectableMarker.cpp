@@ -120,11 +120,11 @@ MarkMessageManagers()
       nsCOMPtr<nsIMessageSender> tabMM = do_QueryInterface(childMM);
       tabMM->MarkForCC();
       //XXX hack warning, but works, since we know that
-      //    callback is frameloader.
-      mozilla::dom::ipc::MessageManagerCallback* cb =
-        static_cast<nsFrameMessageManager*>(tabMM.get())->GetCallback();
-      if (cb) {
-        nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
+      //    callback data is frameloader.
+      void* cb = static_cast<nsFrameMessageManager*>(tabMM.get())->
+        GetCallbackData();
+      nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
+      if (fl) {
         nsIDOMEventTarget* et = fl->GetTabChildGlobalAsEventTarget();
         if (!et) {
           continue;
