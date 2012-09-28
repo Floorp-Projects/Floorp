@@ -7,6 +7,7 @@ let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/PluralForm.jsm");
 
 let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties");
 
@@ -111,6 +112,14 @@ let Downloads = {
         Downloads.cancelDownload(aTarget);
       }
     );
+
+    // Delete All shown when item is finished, canceled, or failed
+    Downloads.deleteAllMenuItem = contextmenus.add(gStrings.GetStringFromName("downloadAction.deleteAll"),
+                                                   contextmenus.SelectorContext("li[state='" + this._dlmgr.DOWNLOAD_FINISHED + "']," +
+                                                                                "li[state='" + this._dlmgr.DOWNLOAD_CANCELED + "']," +
+                                                                                "li[state='" + this._dlmgr.DOWNLOAD_FAILED + "']"),
+                                                   this.deleteAll.bind(this)
+    );
   },
 
   uninit: function dl_uninit() {
@@ -121,6 +130,7 @@ let Downloads = {
     contextmenus.remove(this.resumeMenuItem);
     contextmenus.remove(this.retryMenuItem);
     contextmenus.remove(this.cancelMenuItem);
+    contextmenus.remove(this.deleteAllMenuItem);
 
     Services.obs.removeObserver(this, "dl-start");
     Services.obs.removeObserver(this, "dl-failed");
@@ -408,6 +418,25 @@ let Downloads = {
     try {
       if (f) f.remove(false);
     } catch(ex) { }
+  },
+
+  deleteAll: function dl_deleteAll() {
+    let title = gStrings.GetStringFromName("downloadAction.deleteAll");
+    let messageForm = gStrings.GetStringFromName("downloadMessage.deleteAll");
+    let elements = this._list.querySelectorAll("li[state='" + this._dlmgr.DOWNLOAD_FINISHED + "']," +
+                                               "li[state='" + this._dlmgr.DOWNLOAD_CANCELED + "']," +
+                                               "li[state='" + this._dlmgr.DOWNLOAD_FAILED + "']");
+    let message = PluralForm.get(elements.length, messageForm)
+                            .replace("#1", elements.length);
+    let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_OK +
+                Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL;
+    let choice = Services.prompt.confirmEx(null, title, message, flags,
+                                           null, null, null, null, {});
+    if (choice == 0) {
+      for (let i = 0; i < elements.length; i++) {
+        this.removeDownload(elements[i]);
+      }
+    }
   },
 
   pauseDownload: function dl_pauseDownload(aItem) {
