@@ -571,6 +571,16 @@ MOCHITEST_FILES_B = \
 		test_bug789856.html \
 		$(NULL)
 
+# OOP tests don't work on Windows (bug 763081) or native-fennec
+# (see Bug 774939)
+ifneq ($(OS_ARCH),WINNT)
+ifndef MOZ_JAVA_COMPOSITOR
+MOCHITEST_FILES_B += \
+		test_messagemanager_assertpermission.html \
+		$(NULL)
+endif
+endif
+
 MOCHITEST_CHROME_FILES =	\
 		test_bug357450.js \
 		$(NULL)
