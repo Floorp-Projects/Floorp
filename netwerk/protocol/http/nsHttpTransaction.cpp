@@ -1332,7 +1332,7 @@ nsHttpTransaction::HandleContent(char *buf,
 
     if (toReadBeforeRestart && *contentRead) {
         uint32_t ignore =
-            static_cast<uint32_t>(NS_MIN<int64_t>(toReadBeforeRestart, PR_UINT32_MAX));
+            static_cast<uint32_t>(NS_MIN<int64_t>(toReadBeforeRestart, UINT32_MAX));
         ignore = NS_MIN(*contentRead, ignore);
         LOG(("Due To Restart ignoring %d of remaining %ld",
              ignore, toReadBeforeRestart));

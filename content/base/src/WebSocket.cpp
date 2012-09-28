@@ -1264,7 +1264,7 @@ WebSocket::Send(nsIDOMBlob* aData,
     return;
   }
 
-  if (msgLength > PR_UINT32_MAX) {
+  if (msgLength > UINT32_MAX) {
     aRv.Throw(NS_ERROR_FILE_TOO_BIG);
     return;
   }

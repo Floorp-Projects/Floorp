@@ -901,11 +901,11 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
   nsString dataString;
   uint64_t avail64 = 0;
   if (input && NS_SUCCEEDED(input->Available(&avail64)) && avail64) {
-    if (avail64 > PR_UINT32_MAX) {
+    if (avail64 > UINT32_MAX) {
       return;
     }
     nsCString buffer;
-    uint32_t avail = (uint32_t)NS_MIN(avail64, (uint64_t)PR_UINT32_MAX);
+    uint32_t avail = (uint32_t)NS_MIN(avail64, (uint64_t)UINT32_MAX);
     if (NS_FAILED(NS_ReadInputStreamToString(input, buffer, avail))) {
       return;
     }

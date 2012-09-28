@@ -2443,7 +2443,7 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStorageStream> storStream;
-  rv = NS_NewStorageStream(4096, PR_UINT32_MAX, getter_AddRefs(storStream));
+  rv = NS_NewStorageStream(4096, UINT32_MAX, getter_AddRefs(storStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIOutputStream> output;

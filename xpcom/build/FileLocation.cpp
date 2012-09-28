@@ -128,7 +128,7 @@ FileLocation::Data::GetSize(uint32_t *result)
     if (PR_SUCCESS != PR_GetOpenFileInfo64(mFd, &fileInfo))
       return NS_ErrorAccordingToNSPR();
 
-    if (fileInfo.size > int64_t(PR_UINT32_MAX))
+    if (fileInfo.size > int64_t(UINT32_MAX))
       return NS_ERROR_FILE_TOO_BIG;
 
     *result = fileInfo.size;
@@ -145,7 +145,7 @@ FileLocation::Data::Copy(char *buf, uint32_t len)
 {
   if (mFd) {
     for (uint32_t totalRead = 0; totalRead < len; ) {
-      int32_t read = PR_Read(mFd, buf + totalRead, NS_MIN(len - totalRead, uint32_t(PR_INT32_MAX)));
+      int32_t read = PR_Read(mFd, buf + totalRead, NS_MIN(len - totalRead, uint32_t(INT32_MAX)));
       if (read < 0)
         return NS_ErrorAccordingToNSPR();
       totalRead += read;

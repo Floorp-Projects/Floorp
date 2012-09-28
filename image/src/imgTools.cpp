@@ -83,7 +83,7 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   uint64_t length;
   rv = inStream->Available(&length);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(length <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
+  NS_ENSURE_TRUE(length <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   // Send the source data to the Image. WriteToRasterImage always
   // consumes everything it gets if it doesn't run out of memory.

@@ -51,7 +51,7 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
     rv = NS_NewPipe(getter_AddRefs(bufInStream),
                     getter_AddRefs(bufOutStream),
                     nsIOService::gDefaultSegmentSize,
-                    PR_UINT32_MAX,
+                    UINT32_MAX,
                     async, true);
     if (NS_FAILED(rv))
         return rv;

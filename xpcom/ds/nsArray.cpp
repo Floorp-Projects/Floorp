@@ -77,7 +77,7 @@ nsArray::IndexOf(uint32_t aStartIndex, nsISupports* aElement,
     // optimize for the common case by forwarding to mArray
     if (aStartIndex == 0) {
         uint32_t idx = mArray.IndexOf(aElement);
-        if (idx == PR_UINT32_MAX)
+        if (idx == UINT32_MAX)
             return NS_ERROR_FAILURE;
 
         *aResult = idx;

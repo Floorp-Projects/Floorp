@@ -30,7 +30,7 @@ static bool test_basic_1()
         return false;
       }
 
-    NS_CStringSetData(s, kAsciiData, PR_UINT32_MAX);
+    NS_CStringSetData(s, kAsciiData, UINT32_MAX);
     len = NS_CStringGetData(s, &ptr);
     if (ptr == nullptr || strcmp(ptr, kAsciiData) != 0)
       {
@@ -89,7 +89,7 @@ static bool test_basic_2()
         return false;
       }
 
-    NS_StringSetData(s, kUnicodeData, PR_UINT32_MAX);
+    NS_StringSetData(s, kUnicodeData, UINT32_MAX);
     len = NS_StringGetData(s, &ptr);
     if (len != sizeof(kUnicodeData)/2 - 1)
       {
@@ -361,7 +361,7 @@ static bool test_adopt()
 
     nsCStringContainer s;
     NS_ENSURE_SUCCESS(
-        NS_CStringContainerInit2(s, data, PR_UINT32_MAX,
+        NS_CStringContainerInit2(s, data, UINT32_MAX,
                                  NS_CSTRING_CONTAINER_INIT_ADOPT),
         false); // leaks data on failure *shrug*
 

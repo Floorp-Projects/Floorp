@@ -545,7 +545,7 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   uint64_t count;
   rv = stream->Available(&count);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(count <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
+  NS_ENSURE_TRUE(count <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   return Base64EncodeInputStream(stream, aDataURL, (uint32_t)count, aDataURL.Length());
 }
@@ -585,7 +585,7 @@ nsHTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
   uint64_t imgSize;
   rv = stream->Available(&imgSize);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(imgSize <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
+  NS_ENSURE_TRUE(imgSize <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   void* imgData = nullptr;
   rv = NS_ReadInputStreamToBuffer(stream, &imgData, (uint32_t)imgSize);

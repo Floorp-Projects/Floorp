@@ -22,7 +22,7 @@ using mozilla::layers::PlanarYCbCrImage;
 // can do less integer overflow checking.
 PR_STATIC_ASSERT(MAX_VIDEO_WIDTH < PlanarYCbCrImage::MAX_DIMENSION);
 PR_STATIC_ASSERT(MAX_VIDEO_HEIGHT < PlanarYCbCrImage::MAX_DIMENSION);
-PR_STATIC_ASSERT(PlanarYCbCrImage::MAX_DIMENSION < PR_UINT32_MAX / PlanarYCbCrImage::MAX_DIMENSION);
+PR_STATIC_ASSERT(PlanarYCbCrImage::MAX_DIMENSION < UINT32_MAX / PlanarYCbCrImage::MAX_DIMENSION);
 
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING

@@ -456,7 +456,7 @@ protected:
    * aRoundedRectClipCount rounded rects in aClip
    */
   void SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aClip,
-                      uint32_t aRoundedRectClipCount = PR_UINT32_MAX);
+                      uint32_t aRoundedRectClipCount = UINT32_MAX);
 
   nsDisplayListBuilder*            mBuilder;
   LayerManager*                    mManager;

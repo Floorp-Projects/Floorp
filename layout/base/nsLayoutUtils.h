@@ -1494,7 +1494,7 @@ public:
   /**
    * Adds all font faces used within the specified range of text in aFrame,
    * and optionally its continuations, to the list in aFontFaceList.
-   * Pass 0 and PR_INT32_MAX for aStartOffset and aEndOffset to specify the
+   * Pass 0 and INT32_MAX for aStartOffset and aEndOffset to specify the
    * entire text is to be considered.
    */
   static nsresult GetFontFacesForText(nsIFrame* aFrame,

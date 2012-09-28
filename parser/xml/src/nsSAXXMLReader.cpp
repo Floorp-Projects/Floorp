@@ -516,8 +516,8 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
     if (! available)
       break; // blocking input stream has none available when done
 
-    if (available > PR_UINT32_MAX)
-      available = PR_UINT32_MAX;
+    if (available > UINT32_MAX)
+      available = UINT32_MAX;
 
     rv = mListener->OnDataAvailable(parserChannel, nullptr,
                                     aStream,

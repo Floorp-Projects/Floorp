@@ -341,7 +341,7 @@ nsNavBookmarks::AdjustIndices(int64_t aFolderId,
                               int32_t aEndIndex,
                               int32_t aDelta)
 {
-  NS_ASSERTION(aStartIndex >= 0 && aEndIndex <= PR_INT32_MAX &&
+  NS_ASSERTION(aStartIndex >= 0 && aEndIndex <= INT32_MAX &&
                aStartIndex <= aEndIndex, "Bad indices");
 
   // Expire all cached items for this parent, since all positions are going to
@@ -578,7 +578,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder,
   else {
     index = aIndex;
     // Create space for the insertion.
-    rv = AdjustIndices(aFolder, index, PR_INT32_MAX, 1);
+    rv = AdjustIndices(aFolder, index, INT32_MAX, 1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -689,7 +689,7 @@ nsNavBookmarks::RemoveItem(int64_t aItemId)
   // Fix indices in the parent.
   if (bookmark.position != DEFAULT_INDEX) {
     rv = AdjustIndices(bookmark.parentId,
-                       bookmark.position + 1, PR_INT32_MAX, -1);
+                       bookmark.position + 1, INT32_MAX, -1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -841,7 +841,7 @@ nsNavBookmarks::CreateContainerWithID(int64_t aItemId,
   } else {
     index = *aIndex;
     // Create space for the insertion.
-    rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
+    rv = AdjustIndices(aParent, index, INT32_MAX, 1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -894,7 +894,7 @@ nsNavBookmarks::InsertSeparator(int64_t aParent,
   else {
     index = aIndex;
     // Create space for the insertion.
-    rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
+    rv = AdjustIndices(aParent, index, INT32_MAX, 1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1357,10 +1357,10 @@ nsNavBookmarks::MoveItem(int64_t aItemId, int64_t aNewParent, int32_t aIndex)
   else {
     // We're moving between containers, so this happens in two steps.
     // First, fill the hole from the removal from the old parent.
-    rv = AdjustIndices(bookmark.parentId, bookmark.position + 1, PR_INT32_MAX, -1);
+    rv = AdjustIndices(bookmark.parentId, bookmark.position + 1, INT32_MAX, -1);
     NS_ENSURE_SUCCESS(rv, rv);
     // Now, make room in the new parent for the insertion.
-    rv = AdjustIndices(aNewParent, newIndex, PR_INT32_MAX, 1);
+    rv = AdjustIndices(aNewParent, newIndex, INT32_MAX, 1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

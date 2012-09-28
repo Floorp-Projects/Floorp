@@ -55,7 +55,7 @@ gfxDWriteShaper::ShapeWord(gfxContext *aContext,
 
     UINT32 maxGlyphs = 0;
 trymoreglyphs:
-    if ((PR_UINT32_MAX - 3 * length / 2 + 16) < maxGlyphs) {
+    if ((UINT32_MAX - 3 * length / 2 + 16) < maxGlyphs) {
         // This isn't going to work, we're going to cross the UINT32 upper
         // limit. Give up.
         NS_WARNING("Shaper needs to generate more than 2^32 glyphs?!");

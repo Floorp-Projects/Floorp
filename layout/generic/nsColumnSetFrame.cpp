@@ -415,7 +415,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
   } else {
     // This is the case when the column-fill property is set to 'auto'.
     // No balancing, so don't limit the column count
-    numColumns = PR_INT32_MAX;
+    numColumns = INT32_MAX;
   }
 
 #ifdef DEBUG_roc
@@ -632,7 +632,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
                                        aReflowState.ComputedHeight());
       kidReflowState.mFlags.mIsTopOfPage = true;
       kidReflowState.mFlags.mTableIsSplittable = false;
-      kidReflowState.mFlags.mIsColumnBalancing = aConfig.mBalanceColCount < PR_INT32_MAX;
+      kidReflowState.mFlags.mIsColumnBalancing = aConfig.mBalanceColCount < INT32_MAX;
 
 #ifdef DEBUG_roc
       printf("*** Reflowing child #%d %p: availHeight=%d\n",
@@ -739,7 +739,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
       if ((contentBottom > aReflowState.mComputedMaxHeight ||
           contentBottom > aReflowState.ComputedHeight()) &&
-          aConfig.mBalanceColCount < PR_INT32_MAX) {
+          aConfig.mBalanceColCount < INT32_MAX) {
         // We overflowed vertically, but have not exceeded the number
         // of columns. If we're balancing, then we should try reverting
         // to auto instead.
@@ -909,7 +909,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   //------------ Handle Incremental Reflow -----------------
 
   ReflowConfig config = ChooseColumnStrategy(aReflowState);
-  bool isBalancing = config.mBalanceColCount < PR_INT32_MAX;
+  bool isBalancing = config.mBalanceColCount < INT32_MAX;
   
   // If balancing, then we allow the last column to grow to unbounded
   // height during the first reflow. This gives us a way to estimate
@@ -933,7 +933,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
     if (colData.mShouldRevertToAuto) {
       config = ChooseColumnStrategy(aReflowState);
       isBalancing = false;
-      config.mBalanceColCount = PR_INT32_MAX;
+      config.mBalanceColCount = INT32_MAX;
     }
 
     bool feasible = ReflowChildren(aDesiredSize, aReflowState,
