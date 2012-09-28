@@ -54,7 +54,7 @@
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
 #include "nsSandboxFlags.h"
-#include "TimeChangeObserver.h"
+#include "mozilla/dom/time/TimeChangeObserver.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::hal;
