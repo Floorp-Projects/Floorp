@@ -159,7 +159,8 @@ let test = maketest("Main",
   function main(test) {
     SimpleTest.waitForExplicitFinish();
     let tests = [test_constants, test_path, test_open, test_stat,
-                 test_read_write, test_position, test_copy,
+                 test_read_write, test_read_write_all,
+                 test_position, test_copy,
                  test_iter];
     let current = 0;
     let aux = function aux() {
@@ -450,6 +451,86 @@ let test_read_write = maketest("read_write",
     );
     return promise;
 });
+
+let test_read_write_all = maketest(
+  "read_write_all",
+  function read_write_all(test) {
+    let pathSource;
+    let pathDest = OS.Path.join(OS.Constants.Path.tmpDir,
+       "osfile async test read writeAtomic.tmp");
+    let tmpPath = pathDest + ".tmp";
+
+    let options, optionsBackup;
+
+// Check that read + writeAtomic performs a correct copy
+
+    let promise = OS.File.getCurrentDirectory();
+    promise = promise.then(
+      function obtained_current_directory(path) {
+        test.ok(path, "Obtained current directory");
+        pathSource = OS.Path.join(path, EXISTING_FILE);
+        return OS.File.read(pathSource);
+      }
+    );
+
+    let buffer;
+    let bytes;
+    promise = promise.then(
+      function read_complete(contents) {
+        test.ok(contents, "Obtained contents");
+        buffer = contents.buffer;
+        bytes = contents.bytes;
+        options = {tmpPath: tmpPath};
+        optionsBackup = {tmpPath: tmpPath};
+        return OS.File.writeAtomic(pathDest, buffer, options);
+      }
+    );
+
+// Check that options are not altered
+
+    promise = promise.then(
+      function atomicWrite_complete(bytesWritten) {
+        test.is(bytes, bytesWritten, "Wrote the correct number of bytes");
+        test.is(Object.keys(options).length, Object.keys(optionsBackup).length,
+                "The number of options was not changed");
+        for (let k in options) {
+          test.is(options[k], optionsBackup[k], "Option was not changed");
+        }
+        return reference_compare_files(pathSource, pathDest, test);
+      }
+    );
+
+// Check that temporary file was removed
+
+    promise = promise.then(
+      function compare_complete() {
+        test.info("Compare complete");
+        test.ok(!(new FileUtils.File(tmpPath).exists()), "Temporary file was removed");
+      }
+    );
+
+// Check that writeAtomic fails if there is no tmpPath
+// FIXME: Remove this as part of bug 793660
+
+    promise = promise.then(
+      function check_without_tmpPath() {
+        return OS.File.writeAtomic(pathDest, buffer, {});
+      },
+      function onFailure() {
+        test.info("Resetting failure");
+      }
+    );
+
+    promise = promise.then(
+      function onSuccess() {
+        test.fail("Without a tmpPath, writeAtomic should have failed");
+      },
+      function onFailure() {
+        test.ok("Without a tmpPath, writeAtomic has failed as expected");
+      });
+    return promise;
+  }
+);
 
 let test_position = maketest(
   "position",
