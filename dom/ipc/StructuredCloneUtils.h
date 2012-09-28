@@ -34,7 +34,7 @@ StructuredCloneData
 };
 
 bool
-ReadStructuredClone(JSContext* aCx, uint64_t* aData, size_t aDataLength,
+ReadStructuredClone(JSContext* aCx, const uint64_t* aData, size_t aDataLength,
                     const StructuredCloneClosure& aClosure, JS::Value* aClone);
 
 inline bool

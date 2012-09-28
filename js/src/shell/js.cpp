@@ -3290,7 +3290,7 @@ Serialize(JSContext *cx, unsigned argc, jsval *vp)
     jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     uint64_t *datap;
     size_t nbytes;
-    if (!JS_WriteStructuredClone(cx, v, &datap, &nbytes, NULL, NULL, JSVAL_VOID))
+    if (!JS_WriteStructuredClone(cx, v, &datap, &nbytes, NULL, NULL))
         return false;
 
     JSObject *array = JS_NewUint8Array(cx, nbytes);
@@ -3300,8 +3300,7 @@ Serialize(JSContext *cx, unsigned argc, jsval *vp)
     }
     JS_ASSERT((uintptr_t(TypedArray::viewData(array)) & 7) == 0);
     js_memcpy(TypedArray::viewData(array), datap, nbytes);
-
-    JS_ClearStructuredClone(datap, nbytes);
+    JS_free(cx, datap);
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(array));
     return true;
 }
