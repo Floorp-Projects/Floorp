@@ -89,6 +89,9 @@
 //                                                       + uint32 subChunk
 //    16-byte MD5 of all preceding data
 
+// Name of the SafeBrowsing store
+#define STORE_SUFFIX ".sbstore"
+
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
 extern PRLogModuleInfo *gUrlClassifierDbServiceLog;
 #if defined(PR_LOGGING)
@@ -98,6 +101,18 @@ extern PRLogModuleInfo *gUrlClassifierDbServiceLog;
 #define LOG(args)
 #define LOG_ENABLED() (false)
 #endif
+
+// Either the return was successful or we call the Reset function.
+// Used while reading in the store.
+#define SUCCESS_OR_RESET(res)                                             \
+  do {                                                                    \
+    nsresult __rv = res; /* Don't evaluate |res| more than once */        \
+    if (NS_FAILED(__rv)) {                                                \
+      NS_WARNING("SafeBrowsing store corrupted or out of date.");         \
+      Reset();                                                            \
+      return __rv;                                                        \
+    }                                                                     \
+  } while(0)
 
 namespace mozilla {
 namespace safebrowsing {
@@ -160,7 +175,7 @@ HashStore::Reset()
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(".sbstore"));
+  rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(STORE_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = storeFile->Remove(false);
@@ -222,14 +237,11 @@ HashStore::Open()
   rv = NS_NewLocalFileInputStream(getter_AddRefs(origStream), storeFile,
                                   PR_RDONLY);
 
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
-    Reset();
-    return rv;
-  }
-
   if (rv == NS_ERROR_FILE_NOT_FOUND) {
     UpdateHeader();
     return NS_OK;
+  } else {
+    SUCCESS_OR_RESET(rv);
   }
 
   int64_t fileSize;
@@ -241,49 +253,18 @@ HashStore::Open()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CheckChecksum(storeFile);
-  if (NS_FAILED(rv)) {
-    Reset();
-    return rv;
-  }
+  SUCCESS_OR_RESET(rv);
 
   rv = ReadHeader();
-  if (NS_FAILED(rv)) {
-    Reset();
-    return rv;
-  }
+  SUCCESS_OR_RESET(rv);
 
-  rv = SanityCheck(storeFile);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Safebrowsing file failed sanity check. probably out of date.");
-    Reset();
-    return rv;
-  }
+  rv = SanityCheck();
+  SUCCESS_OR_RESET(rv);
 
   rv = ReadChunkNumbers();
-  if (NS_FAILED(rv)) {
-    Reset();
-    return rv;
-  }
+  SUCCESS_OR_RESET(rv);
 
   return NS_OK;
-}
-
-nsresult
-HashStore::ReadEntireStore()
-{
-  nsresult rv = ReadHeader();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = ReadChunkNumbers();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = ReadHashes();
-  if (NS_FAILED(rv)) {
-    // we are the only one reading this so it's up to us to detect corruption
-    Reset();
-  }
-
-  return rv;
 }
 
 nsresult
@@ -308,7 +289,7 @@ HashStore::ReadHeader()
 }
 
 nsresult
-HashStore::SanityCheck(nsIFile *storeFile)
+HashStore::SanityCheck()
 {
   if (mHeader.magic != STORE_MAGIC || mHeader.version != CURRENT_VERSION) {
     NS_WARNING("Unexpected header data in the store.");
@@ -420,15 +401,18 @@ HashStore::ReadHashes()
 nsresult
 HashStore::BeginUpdate()
 {
-  mInUpdate = true;
+  // Read the rest of the store in memory.
+  nsresult rv = ReadHashes();
+  SUCCESS_OR_RESET(rv);
 
-  nsresult rv = ReadEntireStore();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  // Close input stream, won't be needed any more and
+  // we will rewrite ourselves.
   if (mInputStream) {
     rv = mInputStream->Close();
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  mInUpdate = true;
 
   return NS_OK;
 }
@@ -794,6 +778,8 @@ HashStore::WriteSubPrefixes(nsIOutputStream* aOut)
 nsresult
 HashStore::WriteFile()
 {
+  NS_ASSERTION(mInUpdate, "Must be in update to write database.");
+
   nsCOMPtr<nsIFile> storeFile;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
   NS_ENSURE_SUCCESS(rv, rv);
