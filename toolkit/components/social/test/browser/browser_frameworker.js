@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function makeWorkerUrl(runner) {
-  return "data:application/javascript," + encodeURI("let run=" + runner.toSource()) + ";run();"
+  return "data:application/javascript;charset=utf-8," + encodeURI("let run=" + runner.toSource()) + ";run();"
 }
 
 var getFrameWorkerHandle;
