@@ -533,8 +533,8 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         if (avail == 0)
             break; // eof
 
-        if (avail > PR_UINT32_MAX)
-            avail = PR_UINT32_MAX;
+        if (avail > UINT32_MAX)
+            avail = UINT32_MAX;
 
         rv = aConsumer->OnDataAvailable(channel, nullptr, bufStream, offset, (uint32_t)avail);
         if (NS_SUCCEEDED(rv))

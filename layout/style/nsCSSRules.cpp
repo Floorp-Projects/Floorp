@@ -676,7 +676,7 @@ GroupRule::InsertRule(const nsAString & aRule, uint32_t aIndex, uint32_t* _retva
   if (aIndex > uint32_t(mRules.Count()))
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-  NS_ASSERTION(uint32_t(mRules.Count()) <= PR_INT32_MAX,
+  NS_ASSERTION(uint32_t(mRules.Count()) <= INT32_MAX,
                "Too many style rules!");
 
   return mSheet->InsertRuleIntoGroup(aRule, this, aIndex, _retval);
@@ -690,7 +690,7 @@ GroupRule::DeleteRule(uint32_t aIndex)
   if (aIndex >= uint32_t(mRules.Count()))
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-  NS_ASSERTION(uint32_t(mRules.Count()) <= PR_INT32_MAX,
+  NS_ASSERTION(uint32_t(mRules.Count()) <= INT32_MAX,
                "Too many style rules!");
 
   return mSheet->DeleteRuleFromGroup(this, aIndex);

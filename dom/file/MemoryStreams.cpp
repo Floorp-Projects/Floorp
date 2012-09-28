@@ -16,7 +16,7 @@ MemoryOutputStream::Create(uint64_t aSize)
 {
   NS_ASSERTION(aSize, "Passed zero size!");
 
-  NS_ENSURE_TRUE(aSize <= PR_UINT32_MAX, nullptr);
+  NS_ENSURE_TRUE(aSize <= UINT32_MAX, nullptr);
 
   nsRefPtr<MemoryOutputStream> stream = new MemoryOutputStream();
 

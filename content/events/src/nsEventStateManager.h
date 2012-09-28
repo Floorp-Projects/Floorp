@@ -558,7 +558,7 @@ protected:
       sInstance = nullptr;
     }
 
-    bool IsInTransaction() { return mHandlingDeltaMode != PR_UINT32_MAX; }
+    bool IsInTransaction() { return mHandlingDeltaMode != UINT32_MAX; }
 
     /**
      * InitLineOrPageDelta() stores pixel delta values of WheelEvents which are
@@ -585,7 +585,7 @@ protected:
   private:
     DeltaAccumulator() :
       mX(0.0), mY(0.0), mPendingScrollAmountX(0.0), mPendingScrollAmountY(0.0),
-      mHandlingDeltaMode(PR_UINT32_MAX), mHandlingPixelOnlyDevice(false)
+      mHandlingDeltaMode(UINT32_MAX), mHandlingPixelOnlyDevice(false)
     {
     }
 

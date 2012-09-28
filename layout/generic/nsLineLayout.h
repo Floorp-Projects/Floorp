@@ -205,7 +205,7 @@ public:
    * can call SetLastOptionalBreakPosition to record where a break could
    * have been made, but wasn't because we decided to place more content on
    * the line. For non-text frames, offset 0 means
-   * before the content, offset PR_INT32_MAX means after the content.
+   * before the content, offset INT32_MAX means after the content.
    * 
    * Currently this is used to handle cases where a single word comprises
    * multiple frames, and the first frame fits on the line but the whole word
@@ -388,7 +388,7 @@ protected:
     void SetFlag(uint32_t aFlag, bool aValue)
     {
       NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
-      NS_ASSERTION(aFlag<=PR_UINT8_MAX, "bad flag");
+      NS_ASSERTION(aFlag<=UINT8_MAX, "bad flag");
       NS_ASSERTION(aValue==false || aValue==true, "bad value");
       if (aValue) { // set flag
         mFlags |= aFlag;

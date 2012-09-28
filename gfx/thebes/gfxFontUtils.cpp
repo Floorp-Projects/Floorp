@@ -1347,7 +1347,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const uint8_t *aFontData,
                               nameStrLength +
                               3) & ~3;
                               
-    if (dataLength + nameTableSize > PR_UINT32_MAX)
+    if (dataLength + nameTableSize > UINT32_MAX)
         return NS_ERROR_FAILURE;
         
     // bug 505386 - need to handle unpadded font length

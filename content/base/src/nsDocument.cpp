@@ -8238,7 +8238,7 @@ nsresult
 nsIDocument::ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback,
                                           int32_t *aHandle)
 {
-  if (mFrameRequestCallbackCounter == PR_INT32_MAX) {
+  if (mFrameRequestCallbackCounter == INT32_MAX) {
     // Can't increment without overflowing; bail out
     return NS_ERROR_NOT_AVAILABLE;
   }

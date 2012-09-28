@@ -122,7 +122,7 @@ interface nsIProtocolProxyService : nsISupports
      *        for currently defined flags.
      * @param aFailoverTimeout
      *        Specifies the length of time (in seconds) to ignore this proxy if
-     *        this proxy fails.  Pass PR_UINT32_MAX to specify the default
+     *        this proxy fails.  Pass UINT32_MAX to specify the default
      *        timeout value, causing nsIProxyInfo::failoverTimeout to be
      *        assigned the default value.
      * @param aFailoverProxy

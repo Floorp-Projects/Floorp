@@ -631,7 +631,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   }
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
-    if (height < PR_INT32_MAX / (width * channels))
+    if (height < INT32_MAX / (width * channels))
       decoder->interlacebuf = (uint8_t *)moz_malloc(channels * width * height);
     if (!decoder->interlacebuf) {
       longjmp(png_jmpbuf(decoder->mPNG), 5); // NS_ERROR_OUT_OF_MEMORY

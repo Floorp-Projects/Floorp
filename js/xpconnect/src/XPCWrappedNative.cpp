@@ -2335,8 +2335,8 @@ public:
         , mCallee(ccx.GetTearOff()->GetNative())
         , mVTableIndex(ccx.GetMethodIndex())
         , mIdxValueId(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_VALUE))
-        , mJSContextIndex(PR_UINT8_MAX)
-        , mOptArgcIndex(PR_UINT8_MAX)
+        , mJSContextIndex(UINT8_MAX)
+        , mOptArgcIndex(UINT8_MAX)
         , mArgv(ccx.GetArgv())
         , mArgc(ccx.GetArgc())
 

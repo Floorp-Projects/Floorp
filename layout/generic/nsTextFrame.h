@@ -239,7 +239,7 @@ public:
                                    gfxSkipChars* aSkipChars = nullptr,
                                    gfxSkipCharsIterator* aSkipIter = nullptr,
                                    uint32_t aSkippedStartOffset = 0,
-                                   uint32_t aSkippedMaxLength = PR_UINT32_MAX);
+                                   uint32_t aSkippedMaxLength = UINT32_MAX);
 
   nsOverflowAreas
     RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState);

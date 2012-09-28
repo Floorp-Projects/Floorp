@@ -24,7 +24,7 @@
 #include "mozilla/dom/Element.h"
 
 nsNativeTheme::nsNativeTheme()
-: mAnimatedContentTimeout(PR_UINT32_MAX)
+: mAnimatedContentTimeout(UINT32_MAX)
 {
 }
 
@@ -571,7 +571,7 @@ nsNativeTheme::Notify(nsITimer* aTimer)
   }
 
   mAnimatedContentList.Clear();
-  mAnimatedContentTimeout = PR_UINT32_MAX;
+  mAnimatedContentTimeout = UINT32_MAX;
   return NS_OK;
 }
 

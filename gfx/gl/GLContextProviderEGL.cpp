@@ -346,7 +346,7 @@ public:
         bool ok = InitWithPrefix("gl", true);
 
         PR_STATIC_ASSERT(sizeof(GLint) >= sizeof(int32_t));
-        mMaxTextureImageSize = PR_INT32_MAX;
+        mMaxTextureImageSize = INT32_MAX;
 
         mShareWithEGLImage = sEGLLibrary.HasKHRImageBase() &&
                              sEGLLibrary.HasKHRImageTexture2D() &&

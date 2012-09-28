@@ -132,7 +132,7 @@ ParseVP(PRUnichar *part, VersionPartW &result)
     *dot = '\0';
 
   if (part[0] == '*' && part[1] == '\0') {
-    result.numA = PR_INT32_MAX;
+    result.numA = INT32_MAX;
     result.strB = L"";
   }
   else {

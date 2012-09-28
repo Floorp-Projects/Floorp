@@ -2187,7 +2187,7 @@ nsWindow::OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd)
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(event, nullptr);
-    event.InitForQueryTextContent(0, PR_UINT32_MAX);
+    event.InitForQueryTextContent(0, UINT32_MAX);
 
     DispatchEvent(&event);
     if (!event.mSucceeded)

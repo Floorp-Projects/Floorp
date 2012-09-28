@@ -1222,7 +1222,7 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
     }
 
     nsCString imageData;
-    rv = NS_ConsumeStream(imageStream, PR_UINT32_MAX, imageData);
+    rv = NS_ConsumeStream(imageStream, UINT32_MAX, imageData);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = imageStream->Close();

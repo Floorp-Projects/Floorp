@@ -16,7 +16,7 @@ namespace mozilla {
  */
 typedef int64_t MediaTime;
 const int64_t MEDIA_TIME_FRAC_BITS = 20;
-const int64_t MEDIA_TIME_MAX = PR_INT64_MAX;
+const int64_t MEDIA_TIME_MAX = INT64_MAX;
 
 inline MediaTime MillisecondsToMediaTime(int32_t aMS)
 {
@@ -41,7 +41,7 @@ inline double MediaTimeToSeconds(MediaTime aTime)
  * 2^MEDIA_TIME_FRAC_BITS doesn't overflow, so we set its max accordingly.
  */
 typedef int64_t TrackTicks;
-const int64_t TRACK_TICKS_MAX = PR_INT64_MAX >> MEDIA_TIME_FRAC_BITS;
+const int64_t TRACK_TICKS_MAX = INT64_MAX >> MEDIA_TIME_FRAC_BITS;
 
 /**
  * A MediaSegment is a chunk of media data sequential in time. Different

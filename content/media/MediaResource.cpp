@@ -1069,7 +1069,7 @@ void FileMediaResource::EnsureSizeInitialized()
   // Get the file size and inform the decoder.
   uint64_t size;
   nsresult res = mInput->Available(&size);
-  if (NS_SUCCEEDED(res) && size <= PR_INT64_MAX) {
+  if (NS_SUCCEEDED(res) && size <= INT64_MAX) {
     mSize = (int64_t)size;
     nsCOMPtr<nsIRunnable> event = new LoadedEvent(mDecoder);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);

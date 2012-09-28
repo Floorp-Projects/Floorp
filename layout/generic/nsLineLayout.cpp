@@ -1034,8 +1034,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         if (!psd->mNoWrap && (!LineIsEmpty() || placedFloat)) {
           // record soft break opportunity after this content that can't be
           // part of a text run. This is not a text frame so we know
-          // that offset PR_INT32_MAX means "after the content".
-          if (NotifyOptionalBreakPosition(aFrame->GetContent(), PR_INT32_MAX, optionalBreakAfterFits, eNormalBreak)) {
+          // that offset INT32_MAX means "after the content".
+          if (NotifyOptionalBreakPosition(aFrame->GetContent(), INT32_MAX, optionalBreakAfterFits, eNormalBreak)) {
             // If this returns true then we are being told to actually break here.
             aReflowStatus = NS_INLINE_LINE_BREAK_AFTER(aReflowStatus);
           }

@@ -81,7 +81,7 @@ TestConverter::AsyncConvertData(const char *aFromType,
 static inline uint32_t
 saturated(uint64_t aValue)
 {
-    return (uint32_t) NS_MIN(aValue, (uint64_t) PR_UINT32_MAX);
+    return (uint32_t) NS_MIN(aValue, (uint64_t) UINT32_MAX);
 }
 
 // nsIStreamListener method

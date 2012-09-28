@@ -38,7 +38,7 @@ NS_StringContainerInit2(nsStringContainer &aContainer,
   }
   else
   {
-    if (aDataLength == PR_UINT32_MAX)
+    if (aDataLength == UINT32_MAX)
     {
       NS_ENSURE_ARG(!(aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING));
       aDataLength = nsCharTraits<PRUnichar>::length(aData);
@@ -94,7 +94,7 @@ XPCOM_API(uint32_t)
 NS_StringGetMutableData(nsAString &aStr, uint32_t aDataLength,
                         PRUnichar **aData)
 {
-  if (aDataLength != PR_UINT32_MAX) {
+  if (aDataLength != UINT32_MAX) {
     aStr.SetLength(aDataLength);
     if (aStr.Length() != aDataLength) {
       *aData = nullptr;
@@ -126,7 +126,7 @@ NS_StringSetDataRange(nsAString &aStr,
                       uint32_t aCutOffset, uint32_t aCutLength,
                       const PRUnichar *aData, uint32_t aDataLength)
 {
-  if (aCutOffset == PR_UINT32_MAX)
+  if (aCutOffset == UINT32_MAX)
   {
     // append case
     if (aData)
@@ -134,12 +134,12 @@ NS_StringSetDataRange(nsAString &aStr,
     return NS_OK; // XXX report errors
   }
 
-  if (aCutLength == PR_UINT32_MAX)
+  if (aCutLength == UINT32_MAX)
     aCutLength = aStr.Length() - aCutOffset;
 
   if (aData)
   {
-    if (aDataLength == PR_UINT32_MAX)
+    if (aDataLength == UINT32_MAX)
       aStr.Replace(aCutOffset, aCutLength, nsDependentString(aData));
     else
       aStr.Replace(aCutOffset, aCutLength, Substring(aData, aDataLength));
@@ -198,7 +198,7 @@ NS_CStringContainerInit2(nsCStringContainer &aContainer,
   }
   else
   {
-    if (aDataLength == PR_UINT32_MAX)
+    if (aDataLength == UINT32_MAX)
     {
       NS_ENSURE_ARG(!(aFlags & NS_CSTRING_CONTAINER_INIT_SUBSTRING));
       aDataLength = nsCharTraits<char>::length(aData);
@@ -253,7 +253,7 @@ NS_CStringGetData(const nsACString &aStr, const char **aData,
 XPCOM_API(uint32_t)
 NS_CStringGetMutableData(nsACString &aStr, uint32_t aDataLength, char **aData)
 {
-  if (aDataLength != PR_UINT32_MAX) {
+  if (aDataLength != UINT32_MAX) {
     aStr.SetLength(aDataLength);
     if (aStr.Length() != aDataLength) {
       *aData = nullptr;
@@ -285,7 +285,7 @@ NS_CStringSetDataRange(nsACString &aStr,
                        uint32_t aCutOffset, uint32_t aCutLength,
                        const char *aData, uint32_t aDataLength)
 {
-  if (aCutOffset == PR_UINT32_MAX)
+  if (aCutOffset == UINT32_MAX)
   {
     // append case
     if (aData)
@@ -293,12 +293,12 @@ NS_CStringSetDataRange(nsACString &aStr,
     return NS_OK; // XXX report errors
   }
 
-  if (aCutLength == PR_UINT32_MAX)
+  if (aCutLength == UINT32_MAX)
     aCutLength = aStr.Length() - aCutOffset;
 
   if (aData)
   {
-    if (aDataLength == PR_UINT32_MAX)
+    if (aDataLength == UINT32_MAX)
       aStr.Replace(aCutOffset, aCutLength, nsDependentCString(aData));
     else
       aStr.Replace(aCutOffset, aCutLength, Substring(aData, aDataLength));

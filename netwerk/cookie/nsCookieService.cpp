@@ -1713,7 +1713,7 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookiePurgeAge, &val))) {
     mCookiePurgeAge =
-      int64_t(LIMIT(val, 0, PR_INT32_MAX, PR_INT32_MAX)) * PR_USEC_PER_SEC;
+      int64_t(LIMIT(val, 0, INT32_MAX, INT32_MAX)) * PR_USEC_PER_SEC;
   }
 
   bool boolval;

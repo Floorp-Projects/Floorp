@@ -294,7 +294,7 @@ public:
     {
         // nsTemplateMatch stores the index as a 16-bit value,
         // so check to make sure for overflow
-        if (mRules.Length() == PR_INT16_MAX)
+        if (mRules.Length() == INT16_MAX)
             return nullptr;
 
         return mRules.AppendElement(nsTemplateRule(aRuleNode, aAction,

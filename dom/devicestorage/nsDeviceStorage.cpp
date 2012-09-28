@@ -367,7 +367,7 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
   while (bufSize) {
     uint32_t wrote;
     rv = bufferedOutputStream->WriteFrom(aInputStream,
-                                         static_cast<uint32_t>(NS_MIN<uint64_t>(bufSize, PR_UINT32_MAX)),
+                                         static_cast<uint32_t>(NS_MIN<uint64_t>(bufSize, UINT32_MAX)),
                                          &wrote);
     if (NS_FAILED(rv)) {
       break;

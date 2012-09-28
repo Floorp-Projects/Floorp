@@ -328,7 +328,7 @@ static const uint16_t gPairConservative[MAX_CLASSES] = {
 
 */
 
-#define CLASS_NONE                             PR_INT8_MAX
+#define CLASS_NONE                             INT8_MAX
 
 #define CLASS_OPEN                             0x00
 #define CLASS_CLOSE                            0x01

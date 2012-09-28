@@ -6158,8 +6158,8 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   } else {
     bool nonDecreasingYs = true;
     int32_t lineCount = 0;
-    nscoord lastY = PR_INT32_MIN;
-    nscoord lastYMost = PR_INT32_MIN;
+    nscoord lastY = INT32_MIN;
+    nscoord lastYMost = INT32_MIN;
     for (line_iterator line = begin_lines();
          line != line_end;
          ++line) {

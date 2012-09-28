@@ -342,7 +342,7 @@ ArchiveInputStream::SetEOF()
 NS_IMETHODIMP
 ArchiveZipFile::GetInternalStream(nsIInputStream** aStream)
 {
-  if (mLength > PR_INT32_MAX)
+  if (mLength > INT32_MAX)
     return NS_ERROR_FAILURE;
 
   uint64_t size;

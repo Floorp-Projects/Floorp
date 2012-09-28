@@ -8110,7 +8110,7 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
   uint64_t length64;
   rv = encoder->Available(&length64);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (length64 > PR_UINT32_MAX)
+  if (length64 > UINT32_MAX)
     return NS_ERROR_FILE_TOO_BIG;
 
   uint32_t length = (uint32_t)length64;

@@ -281,7 +281,7 @@ nsHtml5Tokenizer::flushChars(PRUnichar* buf, int32_t pos)
   if (pos > cstart) {
     tokenHandler->characters(buf, cstart, pos - cstart);
   }
-  cstart = PR_INT32_MAX;
+  cstart = INT32_MAX;
 }
 
 void 
@@ -398,7 +398,7 @@ nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer* buffer)
       break;
     }
     default: {
-      cstart = PR_INT32_MAX;
+      cstart = INT32_MAX;
       break;
     }
   }
@@ -3471,7 +3471,7 @@ nsHtml5Tokenizer::emitCarriageReturn(PRUnichar* buf, int32_t pos)
   silentCarriageReturn();
   flushChars(buf, pos);
   tokenHandler->characters(nsHtml5Tokenizer::LF, 0, 1);
-  cstart = PR_INT32_MAX;
+  cstart = INT32_MAX;
 }
 
 void 

@@ -719,13 +719,13 @@ bool test_appendint64()
     str.Truncate();
     str.AppendInt(maxint_plus1);
     if (!str.Equals(maxint_plus1_expected)) {
-      fprintf(stderr, "Error appending PR_UINT32_MAX + 1: Got %s\n", str.get());
+      fprintf(stderr, "Error appending UINT32_MAX + 1: Got %s\n", str.get());
       return false;
     }
     str.Truncate();
     str.AppendInt(maxint_plus1, 16);
     if (!str.Equals(maxint_plus1_expected_x)) {
-      fprintf(stderr, "Error appending PR_UINT32_MAX + 1 (hex): Got %s\n", str.get());
+      fprintf(stderr, "Error appending UINT32_MAX + 1 (hex): Got %s\n", str.get());
       return false;
     }
 

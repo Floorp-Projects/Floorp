@@ -9372,7 +9372,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
     nsAutoCString headersString;
     nsresult rv = aHeadersData->ReadSegments(AppendSegmentToString,
                                              &headersString,
-                                             PR_UINT32_MAX,
+                                             UINT32_MAX,
                                              &numRead);
     NS_ENSURE_SUCCESS(rv, rv);
 

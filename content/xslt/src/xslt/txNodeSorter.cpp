@@ -147,8 +147,8 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
 
     // Limit resource use to something sane.
     uint32_t itemSize = sizeof(uint32_t) + mNKeys * sizeof(txObject*);
-    if (mNKeys > (PR_UINT32_MAX - sizeof(uint32_t)) / sizeof(txObject*) ||
-        len >= PR_UINT32_MAX / itemSize) {
+    if (mNKeys > (UINT32_MAX - sizeof(uint32_t)) / sizeof(txObject*) ||
+        len >= UINT32_MAX / itemSize) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 

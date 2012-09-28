@@ -75,7 +75,7 @@ static char* nsEscapeCount(
     // size_t is likely to be long unsigned int but nsMemory::Alloc(size_t)
     // calls NS_Alloc_P(size_t) which calls PR_Malloc(uint32_t), so there is
     // no chance to allocate more than 4GB using nsMemory::Alloc()
-    if (dstSize > PR_UINT32_MAX)
+    if (dstSize > UINT32_MAX)
         return 0;
 
 	char* result = (char *)nsMemory::Alloc(dstSize);
@@ -193,7 +193,7 @@ nsEscapeHTML(const char * string)
     char *rv = nullptr;
     /* XXX Hardcoded max entity len. The +1 is for the trailing null. */
     uint32_t len = PL_strlen(string);
-    if (len >= (PR_UINT32_MAX / 6))
+    if (len >= (UINT32_MAX / 6))
       return nullptr;
 
     rv = (char *)NS_Alloc( (6 * len) + 1 );
@@ -263,7 +263,7 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer, int32_t aSourceBufferLen)
 
   /* XXX Hardcoded max entity len. */
   if (uint32_t(aSourceBufferLen) >=
-      ((PR_UINT32_MAX - sizeof(PRUnichar)) / (6 * sizeof(PRUnichar))) )
+      ((UINT32_MAX - sizeof(PRUnichar)) / (6 * sizeof(PRUnichar))) )
     return nullptr;
 
   PRUnichar *resultBuffer = (PRUnichar *)nsMemory::Alloc(aSourceBufferLen *

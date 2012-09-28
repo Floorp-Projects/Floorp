@@ -67,10 +67,10 @@ staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CONTENT_TYPE = { CONTENT_TYP
 nsHtml5MetaScanner::nsHtml5MetaScanner()
   : readable(nullptr),
     metaState(NS_HTML5META_SCANNER_NO),
-    contentIndex(PR_INT32_MAX),
-    charsetIndex(PR_INT32_MAX),
-    httpEquivIndex(PR_INT32_MAX),
-    contentTypeIndex(PR_INT32_MAX),
+    contentIndex(INT32_MAX),
+    charsetIndex(INT32_MAX),
+    httpEquivIndex(INT32_MAX),
+    contentTypeIndex(INT32_MAX),
     stateSave(NS_HTML5META_SCANNER_DATA),
     strBufLen(0),
     strBuf(jArray<PRUnichar,int32_t>::newJArray(36)),
@@ -247,25 +247,25 @@ nsHtml5MetaScanner::stateLoop(int32_t state)
             case 'C': {
               contentIndex = 0;
               charsetIndex = 0;
-              httpEquivIndex = PR_INT32_MAX;
-              contentTypeIndex = PR_INT32_MAX;
+              httpEquivIndex = INT32_MAX;
+              contentTypeIndex = INT32_MAX;
               state = NS_HTML5META_SCANNER_ATTRIBUTE_NAME;
               NS_HTML5_BREAK(beforeattributenameloop);
             }
             case 'h':
             case 'H': {
-              contentIndex = PR_INT32_MAX;
-              charsetIndex = PR_INT32_MAX;
+              contentIndex = INT32_MAX;
+              charsetIndex = INT32_MAX;
               httpEquivIndex = 0;
-              contentTypeIndex = PR_INT32_MAX;
+              contentTypeIndex = INT32_MAX;
               state = NS_HTML5META_SCANNER_ATTRIBUTE_NAME;
               NS_HTML5_BREAK(beforeattributenameloop);
             }
             default: {
-              contentIndex = PR_INT32_MAX;
-              charsetIndex = PR_INT32_MAX;
-              httpEquivIndex = PR_INT32_MAX;
-              contentTypeIndex = PR_INT32_MAX;
+              contentIndex = INT32_MAX;
+              charsetIndex = INT32_MAX;
+              httpEquivIndex = INT32_MAX;
+              contentTypeIndex = INT32_MAX;
               state = NS_HTML5META_SCANNER_ATTRIBUTE_NAME;
               NS_HTML5_BREAK(beforeattributenameloop);
             }
@@ -312,17 +312,17 @@ nsHtml5MetaScanner::stateLoop(int32_t state)
                 if (contentIndex < CONTENT.length && c == CONTENT[contentIndex]) {
                   ++contentIndex;
                 } else {
-                  contentIndex = PR_INT32_MAX;
+                  contentIndex = INT32_MAX;
                 }
                 if (charsetIndex < CHARSET.length && c == CHARSET[charsetIndex]) {
                   ++charsetIndex;
                 } else {
-                  charsetIndex = PR_INT32_MAX;
+                  charsetIndex = INT32_MAX;
                 }
                 if (httpEquivIndex < HTTP_EQUIV.length && c == HTTP_EQUIV[httpEquivIndex]) {
                   ++httpEquivIndex;
                 } else {
-                  httpEquivIndex = PR_INT32_MAX;
+                  httpEquivIndex = INT32_MAX;
                 }
               }
               continue;
@@ -520,8 +520,8 @@ nsHtml5MetaScanner::stateLoop(int32_t state)
               NS_HTML5_CONTINUE(stateloop);
             }
             default: {
-              contentIndex = PR_INT32_MAX;
-              charsetIndex = PR_INT32_MAX;
+              contentIndex = INT32_MAX;
+              charsetIndex = INT32_MAX;
               state = NS_HTML5META_SCANNER_ATTRIBUTE_NAME;
               NS_HTML5_CONTINUE(stateloop);
             }
@@ -729,7 +729,7 @@ nsHtml5MetaScanner::handleCharInAttributeValue(int32_t c)
       if (contentTypeIndex < CONTENT_TYPE.length && toAsciiLowerCase(c) == CONTENT_TYPE[contentTypeIndex]) {
         ++contentTypeIndex;
       } else {
-        contentTypeIndex = PR_INT32_MAX;
+        contentTypeIndex = INT32_MAX;
       }
     }
   }

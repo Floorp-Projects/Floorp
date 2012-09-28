@@ -279,7 +279,7 @@ public:
    * @return whether the value could be parsed
    */
   bool ParseIntValue(const nsAString& aString) {
-    return ParseIntWithBounds(aString, PR_INT32_MIN, PR_INT32_MAX);
+    return ParseIntWithBounds(aString, INT32_MIN, INT32_MAX);
   }
 
   /**
@@ -291,7 +291,7 @@ public:
    * @return whether the value could be parsed
    */
   bool ParseIntWithBounds(const nsAString& aString, int32_t aMin,
-                            int32_t aMax = PR_INT32_MAX);
+                            int32_t aMax = INT32_MAX);
 
   /**
    * Parse a string value into a non-negative integer.

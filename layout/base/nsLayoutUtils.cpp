@@ -4464,7 +4464,7 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
   if (aFrame->GetType() == nsGkAtoms::textFrame) {
-    return GetFontFacesForText(aFrame, 0, PR_INT32_MAX, false,
+    return GetFontFacesForText(aFrame, 0, INT32_MAX, false,
                                aFontFaceList);
   }
 
