@@ -6406,7 +6406,7 @@ JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval 
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ReadStructuredClone(JSContext *cx, const uint64_t *buf, size_t nbytes,
+JS_ReadStructuredClone(JSContext *cx, uint64_t *buf, size_t nbytes,
                        uint32_t version, jsval *vp,
                        const JSStructuredCloneCallbacks *optionalCallbacks,
                        void *closure)
@@ -6428,7 +6428,7 @@ JS_ReadStructuredClone(JSContext *cx, const uint64_t *buf, size_t nbytes,
 JS_PUBLIC_API(JSBool)
 JS_WriteStructuredClone(JSContext *cx, jsval valueArg, uint64_t **bufp, size_t *nbytesp,
                         const JSStructuredCloneCallbacks *optionalCallbacks,
-                        void *closure)
+                        void *closure, jsval transferable)
 {
     RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
@@ -6439,7 +6439,26 @@ JS_WriteStructuredClone(JSContext *cx, jsval valueArg, uint64_t **bufp, size_t *
         optionalCallbacks ?
         optionalCallbacks :
         cx->runtime->structuredCloneCallbacks;
-    return WriteStructuredClone(cx, value, (uint64_t **) bufp, nbytesp, callbacks, closure);
+    return WriteStructuredClone(cx, valueArg, (uint64_t **) bufp, nbytesp,
+                                callbacks, closure, transferable);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ClearStructuredClone(const uint64_t *data, size_t nbytes)
+{
+    return ClearStructuredClone(data, nbytes);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_StructuredCloneHasTransferables(const uint64_t *data, size_t nbytes,
+                                   JSBool *hasTransferable)
+{
+    bool transferable;
+    if (!StructuredCloneHasTransferObjects(data, nbytes, &transferable))
+        return false;
+
+    *hasTransferable = transferable;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6465,7 +6484,7 @@ void
 JSAutoStructuredCloneBuffer::clear()
 {
     if (data_) {
-        js_free(data_);
+        ClearStructuredClone(data_, nbytes_);
         data_ = NULL;
         nbytes_ = 0;
         version_ = 0;
@@ -6484,6 +6503,12 @@ JSAutoStructuredCloneBuffer::adopt(uint64_t *data, size_t nbytes, uint32_t versi
 bool
 JSAutoStructuredCloneBuffer::copy(const uint64_t *srcData, size_t nbytes, uint32_t version)
 {
+    // transferable objects cannot be copied
+    bool hasTransferable;
+    if (!StructuredCloneHasTransferObjects(data_, nbytes_, &hasTransferable) ||
+        hasTransferable)
+        return false;
+
     uint64_t *newData = static_cast<uint64_t *>(js_malloc(nbytes));
     if (!newData)
         return false;
@@ -6512,7 +6537,7 @@ JSAutoStructuredCloneBuffer::steal(uint64_t **datap, size_t *nbytesp, uint32_t *
 bool
 JSAutoStructuredCloneBuffer::read(JSContext *cx, jsval *vp,
                                   const JSStructuredCloneCallbacks *optionalCallbacks,
-                                  void *closure) const
+                                  void *closure)
 {
     JS_ASSERT(cx);
     JS_ASSERT(data_);
@@ -6525,10 +6550,21 @@ JSAutoStructuredCloneBuffer::write(JSContext *cx, jsval valueArg,
                                    const JSStructuredCloneCallbacks *optionalCallbacks,
                                    void *closure)
 {
+    jsval transferable = JSVAL_VOID;
+    return write(cx, valueArg, transferable, optionalCallbacks, closure);
+}
+
+bool
+JSAutoStructuredCloneBuffer::write(JSContext *cx, jsval valueArg,
+                                   jsval transferable,
+                                   const JSStructuredCloneCallbacks *optionalCallbacks,
+                                   void *closure)
+{
     RootedValue value(cx, valueArg);
     clear();
     bool ok = !!JS_WriteStructuredClone(cx, value, &data_, &nbytes_,
-                                        optionalCallbacks, closure);
+                                        optionalCallbacks, closure,
+                                        transferable);
     if (!ok) {
         data_ = NULL;
         nbytes_ = 0;

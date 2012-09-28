@@ -16,11 +16,19 @@ namespace js {
 
 bool
 WriteStructuredClone(JSContext *cx, const Value &v, uint64_t **bufp, size_t *nbytesp,
-                     const JSStructuredCloneCallbacks *cb, void *cbClosure);
+                     const JSStructuredCloneCallbacks *cb, void *cbClosure,
+                     jsval transferable);
 
 bool
-ReadStructuredClone(JSContext *cx, const uint64_t *data, size_t nbytes, Value *vp,
+ReadStructuredClone(JSContext *cx, uint64_t *data, size_t nbytes, Value *vp,
                     const JSStructuredCloneCallbacks *cb, void *cbClosure);
+
+bool
+ClearStructuredClone(const uint64_t *data, size_t nbytes);
+
+bool
+StructuredCloneHasTransferObjects(const uint64_t *data, size_t nbytes,
+                                  bool *hasTransferable);
 
 struct SCOutput {
   public:
@@ -33,6 +41,7 @@ struct SCOutput {
     bool writeDouble(double d);
     bool writeBytes(const void *p, size_t nbytes);
     bool writeChars(const jschar *p, size_t nchars);
+    bool writePtr(const void *);
 
     template <class T>
     bool writeArray(const T *p, size_t nbytes);
@@ -48,7 +57,7 @@ struct SCOutput {
 
 struct SCInput {
   public:
-    SCInput(JSContext *cx, const uint64_t *data, size_t nbytes);
+    SCInput(JSContext *cx, uint64_t *data, size_t nbytes);
 
     JSContext *context() const { return cx; }
 
@@ -57,6 +66,13 @@ struct SCInput {
     bool readDouble(double *p);
     bool readBytes(void *p, size_t nbytes);
     bool readChars(jschar *p, size_t nchars);
+    bool readPtr(void **);
+
+    bool get(uint64_t *p);
+    bool getPair(uint32_t *tagp, uint32_t *datap);
+
+    bool replace(uint64_t u);
+    bool replacePair(uint32_t tag, uint32_t data);
 
     template <class T>
     bool readArray(T *p, size_t nelems);
@@ -71,8 +87,8 @@ struct SCInput {
     }
 
     JSContext *cx;
-    const uint64_t *point;
-    const uint64_t *end;
+    uint64_t *point;
+    uint64_t *end;
 };
 
 }
@@ -89,6 +105,8 @@ struct JSStructuredCloneReader {
 
   private:
     JSContext *context() { return in.context(); }
+
+    bool readTransferMap();
 
     bool checkDouble(double d);
     JSString *readString(uint32_t nchars);
@@ -116,12 +134,17 @@ struct JSStructuredCloneReader {
 
 struct JSStructuredCloneWriter {
   public:
-    explicit JSStructuredCloneWriter(js::SCOutput &out, const JSStructuredCloneCallbacks *cb,
-                                     void *cbClosure)
-        : out(out), objs(out.context()), counts(out.context()), ids(out.context()),
-          memory(out.context()), callbacks(cb), closure(cbClosure) { }
+    explicit JSStructuredCloneWriter(js::SCOutput &out,
+                                     const JSStructuredCloneCallbacks *cb,
+                                     void *cbClosure,
+                                     jsval tVal)
+        : out(out), objs(out.context()),
+          counts(out.context()), ids(out.context()),
+          memory(out.context()), callbacks(cb), closure(cbClosure),
+          transferable(tVal), transferableObjects(out.context()) { }
 
-    bool init() { return memory.init(); }
+    bool init() { return transferableObjects.init() && parseTransferable() &&
+                         memory.init() && writeTransferMap(); }
 
     bool write(const js::Value &v);
 
@@ -130,6 +153,8 @@ struct JSStructuredCloneWriter {
   private:
     JSContext *context() { return out.context(); }
 
+    bool writeTransferMap();
+
     bool writeString(uint32_t tag, JSString *str);
     bool writeId(jsid id);
     bool writeArrayBuffer(JSHandleObject obj);
@@ -137,6 +162,9 @@ struct JSStructuredCloneWriter {
     bool startObject(JSHandleObject obj, bool *backref);
     bool startWrite(const js::Value &v);
     bool traverseObject(JSHandleObject obj);
+
+    bool parseTransferable();
+    void reportErrorTransferable();
 
     inline void checkStack();
 
@@ -166,6 +194,10 @@ struct JSStructuredCloneWriter {
 
     // Any value passed to JS_WriteStructuredClone.
     void *closure;
+
+    // List of transferable objects
+    jsval transferable;
+    js::HashSet<JSObject*> transferableObjects;
 
     friend JSBool JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v);
 };
