@@ -9,6 +9,7 @@ import multiprocessing
 import os
 import pymake.parser
 import shlex
+import sys
 import subprocess
 import which
 
@@ -304,6 +305,10 @@ class MozbuildObject(object):
         self.log(logging.INFO, 'process', {'args': args}, ' '.join(args))
 
         def handleLine(line):
+            # Converts str to unicode on Python 2 and bytes to str on Python 3.
+            if isinstance(line, bytes):
+                line = line.decode(sys.stdout.encoding)
+
             if line_handler:
                 line_handler(line)
 
