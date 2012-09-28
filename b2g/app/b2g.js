@@ -553,3 +553,9 @@ pref("ui.mouse.radius.enabled", true);
 
 // Disable native prompt
 pref("browser.prompt.allowNative", false);
+
+// Minimum delay in milliseconds between network activity notifications (0 means
+// no notifications). The delay is the same for both download and upload, though
+// they are handled separately. This pref is only read once at startup:
+// a restart is required to enable a new value.
+pref("network.activity.blipIntervalMilliseconds", 250);
