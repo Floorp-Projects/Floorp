@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TAB_STATE_NEEDS_RESTORE = 1;
-const TAB_STATE_RESTORING = 2;
-
 let stateBackup = ss.getBrowserState();
 
 function cleanup() {
