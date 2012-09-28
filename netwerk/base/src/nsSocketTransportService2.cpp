@@ -18,6 +18,7 @@
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIOService.h"
+#include "NetworkActivityMonitor.h"
 
 
 // XXX: There is no good header file to put these in. :(
@@ -40,6 +41,7 @@ PRThread                 *gSocketThread           = nullptr;
 #define SEND_BUFFER_PREF "network.tcp.sendbuffer"
 #define SOCKET_LIMIT_TARGET 550U
 #define SOCKET_LIMIT_MIN     50U
+#define BLIB_INTERVAL_PREF "network.activity.blipIntervalMilliseconds"
 
 uint32_t nsSocketTransportService::gMaxCount;
 PRCallOnceType nsSocketTransportService::gMaxCountInitOnce;
@@ -455,8 +457,18 @@ nsSocketTransportService::Init()
     }
 
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (tmpPrefService) 
+    if (tmpPrefService) {
         tmpPrefService->AddObserver(SEND_BUFFER_PREF, this, false);
+
+        int32_t blipInterval = 0;
+        rv = tmpPrefService->GetIntPref(BLIB_INTERVAL_PREF, &blipInterval);
+        if (NS_SUCCEEDED(rv) && blipInterval > 0) {
+            rv = mozilla::net::NetworkActivityMonitor::Init(blipInterval);
+            if (NS_FAILED(rv)) {
+                NS_WARNING("Can't initialize NetworkActivityMonitor");
+            }
+        }
+    }
     UpdatePrefs();
 
     mInitialized = true;
@@ -500,6 +512,8 @@ nsSocketTransportService::Shutdown()
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (tmpPrefService) 
         tmpPrefService->RemoveObserver(SEND_BUFFER_PREF, this);
+
+    mozilla::net::NetworkActivityMonitor::Shutdown();
 
     mInitialized = false;
     mShuttingDown = false;
