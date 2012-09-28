@@ -61,7 +61,7 @@ function PrivateBrowsingService() {
   this._obs.addObserver(this, "private-browsing", true);
   this._obs.addObserver(this, "command-line-startup", true);
   this._obs.addObserver(this, "sessionstore-browser-state-restored", true);
-  this._obs.addObserver(this, "domwindowopened", true);
+  this._obs.addObserver(this, "chrome-document-global-created", true);
 
   // List of nsIXULWindows we are going to be closing during the transition
   this._windowsToClose = [];
@@ -497,17 +497,25 @@ PrivateBrowsingService.prototype = {
           this._notifyIfTransitionComplete();
         }
         break;
-      case "domwindowopened":
+      case "chrome-document-global-created":
         let aWindow = aSubject;
-        let self = this;
-        aWindow.addEventListener("load", function PBS__onWindowLoad(aEvent) {
-          aWindow.removeEventListener("load", arguments.callee);
-          if (aWindow.document
-                     .documentElement
-                     .getAttribute("windowtype") == "navigator:browser") {
-            self._setPerWindowPBFlag(aWindow, self._inPrivateBrowsing);
+        let doc = aWindow.document;
+        let onLoad = function PBS__onWindowLoad(aEvent) {
+          if (aEvent) { // If being called from an event handler, aEvent will be non-null
+            aWindow.removeEventListener("load", onLoad);
           }
-        }, false);
+          if (doc.documentElement
+                 .getAttribute("windowtype") == "navigator:browser") {
+            this._setPerWindowPBFlag(aWindow, this._inPrivateBrowsing);
+          }
+        }.bind(this);
+        // Make sure to catch any possible cases where the window's load event
+        // has already been fired by the time that we get here.
+        if (doc.readyState == "complete") {
+          onLoad(null);
+        } else {
+          aWindow.addEventListener("load", onLoad, false);
+        }
         break;
     }
   },
