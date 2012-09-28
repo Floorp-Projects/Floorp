@@ -4095,6 +4095,7 @@ html|*#gcli-output-frame {
   cursor: default;
   font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
   font-size: 12px;
+  cursor: pointer;
 }
 
 #social-statusarea-user-portrait {
@@ -4103,16 +4104,15 @@ html|*#gcli-output-frame {
   margin: 10px;
 }
 
-#social-statusarea-username {
+#social-statusarea-user > vbox > .link {
   -moz-appearance: none;
   color: -moz-nativehyperlinktext;
-  cursor: pointer;
   min-width: 0;
   margin: 0 6px;
   list-style-image: none;
 }
 
-#social-statusarea-username:hover {
+#social-statusarea-user:hover > vbox > .link {
   text-decoration: underline;
 }
 

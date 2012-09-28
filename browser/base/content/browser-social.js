@@ -28,8 +28,12 @@ let SocialUI = {
   },
 
   showProfile: function SocialUI_showProfile() {
-    if (Social.provider)
+    if (this.haveLoggedInUser())
       openUILinkIn(Social.provider.profile.profileURL, "tab");
+    else {
+      // XXX Bug 789585 will implement an API for provider-specified login pages.
+      openUILinkIn(Social.provider.origin, "tab");
+    }
   },
 
   observe: function SocialUI_observe(subject, topic, data) {

@@ -669,13 +669,13 @@
                        class="toolbarbutton-1"
                        type="menu">
           <menupopup id="social-statusarea-popup">
-            <hbox id="social-statusarea-user" pack="left" align="center">
+            <hbox id="social-statusarea-user" pack="start" align="center"
+                  onclick="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
               <image id="social-statusarea-user-portrait"/>
               <vbox>
-                <label id="social-statusarea-notloggedin"
-                       value="&social.notLoggedIn.label;"/>
-                <button id="social-statusarea-username"
-                        oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();"/>
+                <button id="social-statusarea-notloggedin"
+                        class="link" label="&social.notLoggedIn.label;"/>
+                <button id="social-statusarea-username" class="link"/>
               </vbox>
             </hbox>
             <menuitem id="social-toggle-sidebar-menuitem"
