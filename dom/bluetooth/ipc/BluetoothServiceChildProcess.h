@@ -138,6 +138,12 @@ public:
   virtual void
   DisconnectObjectPush(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual bool
+  SendFile(const nsAString& aDeviceAddress,
+           BlobParent* aBlobParent,
+           BlobChild* aBlobChild,
+           BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
 protected:
   BluetoothServiceChildProcess();
   virtual ~BluetoothServiceChildProcess();

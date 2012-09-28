@@ -12,8 +12,8 @@
 #include "BluetoothServiceUuid.h"
 #include "ObexBase.h"
 
-#include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/RefPtr.h"
+#include "nsIDOMFile.h"
 
 USING_BLUETOOTH_NAMESPACE
 using namespace mozilla::ipc;
@@ -79,7 +79,7 @@ BluetoothOppManager::Disconnect()
 }
 
 bool
-BluetoothOppManager::SendFile(BlobParent* aParent,
+BluetoothOppManager::SendFile(BlobParent* aActor,
                               BluetoothReplyRunnable* aRunnable)
 {
   // will implement in another patch.
