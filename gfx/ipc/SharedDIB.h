@@ -7,7 +7,6 @@
 #define gfx_SharedDIB_h__
 
 #include "base/shared_memory.h"
-#include "prtypes.h"
 #include "nscore.h"
 
 namespace mozilla {

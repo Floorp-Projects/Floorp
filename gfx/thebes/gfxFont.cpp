@@ -18,7 +18,6 @@
 #include "gfxPlatform.h"
 #include "nsGkAtoms.h"
 
-#include "prtypes.h"
 #include "gfxTypes.h"
 #include "nsAlgorithm.h"
 #include "gfxContext.h"
