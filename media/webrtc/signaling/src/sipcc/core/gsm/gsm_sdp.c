@@ -166,6 +166,41 @@ static const cc_media_cap_table_t *gsmsdp_get_media_capability (fsmdef_dcb_t *dc
     return (dcb_p->media_cap_tbl);
 }
 
+/*
+ * Process constraints only related to media capabilities. i.e OfferToReceiveAudio, OfferToReceiveVideo
+ */
+void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb, const cc_media_constraints_t* constraints) {
+  int i = 0;
+
+  for (i=0; i<constraints->constraint_count; i++) {
+
+    if (strcmp(constraints_table[OfferToReceiveAudio].name, constraints->constraints[i]->name) == 0) {
+      if (cpr_strcasecmp("FALSE", constraints->constraints[i]->value) == 0) {
+        dcb->media_cap_tbl->cap[CC_AUDIO_1].support_direction = SDP_DIRECTION_SENDONLY;
+      } else if (cpr_strcasecmp("TRUE", constraints->constraints[i]->value) == 0 &&
+                                 TRUE == dcb->media_cap_tbl->cap[CC_AUDIO_1].enabled) {
+        dcb->media_cap_tbl->cap[CC_AUDIO_1].support_direction = SDP_DIRECTION_SENDRECV;
+      } else if (cpr_strcasecmp("TRUE", constraints->constraints[i]->value) == 0 ) {
+        dcb->media_cap_tbl->cap[CC_AUDIO_1].enabled = TRUE;
+        dcb->media_cap_tbl->cap[CC_AUDIO_1].support_direction = SDP_DIRECTION_RECVONLY;
+      }
+    }
+
+    if (strcmp("OfferToReceiveVideo", constraints->constraints[i]->name) == 0) {
+      if (cpr_strcasecmp("FALSE", constraints->constraints[i]->value) == 0) {
+        dcb->media_cap_tbl->cap[CC_VIDEO_1].support_direction = SDP_DIRECTION_SENDONLY;
+      } else if (cpr_strcasecmp("TRUE", constraints->constraints[i]->value) == 0 &&
+                                 TRUE == dcb->media_cap_tbl->cap[CC_VIDEO_1].enabled) {
+        dcb->media_cap_tbl->cap[CC_VIDEO_1].support_direction = SDP_DIRECTION_SENDRECV;
+      } else if (cpr_strcasecmp("TRUE", constraints->constraints[i]->value) == 0 ) {
+        dcb->media_cap_tbl->cap[CC_VIDEO_1].enabled = TRUE;
+        dcb->media_cap_tbl->cap[CC_VIDEO_1].support_direction = SDP_DIRECTION_RECVONLY;
+      }
+    }
+  }
+
+}
+
 /**
  * Sets up the media track table
  *
@@ -2196,6 +2231,7 @@ gsmsdp_update_local_sdp_media (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
     int             dynamic_payload_type;
     uint16_t        level;
     void           *sdp_p;
+    int             sdpmode = 0;
 
     if (!dcb_p || !media)  {
         GSM_ERR_MSG(get_debug_string(FSMDEF_DBG_INVALID_DCB), fname);
@@ -2203,6 +2239,8 @@ gsmsdp_update_local_sdp_media (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
     }
     level = media->level;
     port  = media->src_port;
+
+    config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
     sdp_p = cc_sdp_p ? (void *) cc_sdp_p->src_sdp : NULL;
 
@@ -2295,8 +2333,8 @@ gsmsdp_update_local_sdp_media (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
                             (uint16_t)dynamic_payload_type);
             break;
         case SDP_MEDIA_APPLICATION:
-        	gsmsdp_set_sctp_attributes (sdp_p, level);
-        	break;
+            gsmsdp_set_sctp_attributes (sdp_p, level);
+            break;
         default:
             GSM_ERR_MSG(GSM_L_C_F_PREFIX"SDP ERROR media %d for level %d is not"
                         " supported\n",
@@ -2319,7 +2357,9 @@ gsmsdp_update_local_sdp_media (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
                 (uint16_t) media->avt_payload_type);
         }
     }
-    gsmsdp_set_anat_attr(dcb_p, media);
+
+    if (!sdpmode)
+        gsmsdp_set_anat_attr(dcb_p, media);
 }
 
 /*
@@ -4127,7 +4167,7 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p,
             if (update_local_ret_value == TRUE) {
                 media->previous_sdp.dest_port = media->dest_port;
                 media->dest_port = port;
-                if (media_type == SDP_MEDIA_AUDIO) {
+                if (media_type == SDP_MEDIA_AUDIO || sdpmode) {
                     /* at least found one workable audio media line */
                     media_found = TRUE;
                 }
@@ -4172,9 +4212,8 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p,
                      */
                      int pc_stream_id = 0;
 
-                     lsm_add_remote_stream (dcb_p->line, dcb_p->call_id, media, &pc_stream_id);
-
                      if (SDP_MEDIA_APPLICATION != media_type) {
+                         lsm_add_remote_stream (dcb_p->line, dcb_p->call_id, media, &pc_stream_id);
                          gsmsdp_add_remote_stream(i-1, pc_stream_id, dcb_p, media);
                      } else {
                          /*
@@ -4266,13 +4305,15 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p,
             /*
              * Bubble the stream added event up to the PC UI
              */
-             if (notify_stream_added) {
-
+            if (notify_stream_added) {
                 for (j=0; j < CC_MAX_STREAMS; j++ ) {
-                    // If this stream has been created it should have >0 tracks.
+                    /* If this stream has been created it should have > 0 tracks. */
                     if (dcb_p->remote_media_stream_tbl->streams[j].num_tracks) {
                         ui_on_remote_stream_added(evOnRemoteStreamAdd, dcb_p->line, dcb_p->call_id,
-                               dcb_p->caller_id.call_instance_id, dcb_p->remote_media_stream_tbl->streams[j]);
+                           dcb_p->caller_id.call_instance_id, dcb_p->remote_media_stream_tbl->streams[j]);
+
+                        /* Setting num_tracks == 0 indicates stream not set */
+                        dcb_p->remote_media_stream_tbl->streams[j].num_tracks = 0;
                     }
                 }
             }
@@ -4295,6 +4336,49 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p,
     dcb_p->cur_video_avail |= (uint8_t)video_avail;
 
     lsm_update_video_avail(dcb_p->line, dcb_p->call_id, dcb_p->cur_video_avail);
+
+    return cause;
+}
+
+/*
+ * This function returns boolean parameters indicating what media types
+ * exist in the offered SDP.
+ */
+cc_causes_t
+gsmsdp_get_offered_media_types (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean *has_audio,
+                                boolean *has_video, boolean *has_data)
+{
+    cc_causes_t     cause = CC_CAUSE_OK;
+    uint16_t        num_m_lines = 0;
+    uint16_t        i = 0;
+    sdp_media_e     media_type;
+    fsmdef_dcb_t   *dcb_p = fcb_p->dcb;
+    boolean         result;
+
+    num_m_lines = sdp_get_num_media_lines(sdp_p->dest_sdp);
+    if (num_m_lines == 0) {
+        GSM_DEBUG(DEB_L_C_F_PREFIX"no media lines found.\n",
+                  DEB_L_C_F_PREFIX_ARGS(GSM, dcb_p->line, dcb_p->call_id, __FUNCTION__));
+        return CC_CAUSE_NO_MEDIA;
+    }
+
+    *has_audio = FALSE;
+    *has_video = FALSE;
+    *has_data = FALSE;
+
+    /*
+     * Process each media line in the remote SDP
+     */
+    for (i = 1; i <= num_m_lines; i++) {
+        media_type = sdp_get_media_type(sdp_p->dest_sdp, i);
+
+        if(SDP_MEDIA_AUDIO == media_type)
+            *has_audio = TRUE;
+        else if(SDP_MEDIA_VIDEO == media_type)
+            *has_video = TRUE;
+        else if(SDP_MEDIA_APPLICATION == media_type)
+            *has_data = TRUE;
+    }
 
     return cause;
 }
@@ -4614,7 +4698,8 @@ gsmsdp_add_media_line (fsmdef_dcb_t *dcb_p, const cc_media_cap_t *media_cap,
  *            CC_CAUSE_ERROR - indicates failure
  */
 cc_causes_t
-gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled)
+gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
+                         boolean audio, boolean video, boolean data)
 {
     static const char fname[] = "gsmsdp_create_local_sdp";
     uint16_t        level;
@@ -4625,6 +4710,7 @@ gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled)
     fsmdef_media_t  *media;
     boolean         has_audio;
     int             sdpmode = 0;
+    boolean         media_enabled;
 
     if ( CC_CAUSE_OK != gsmsdp_init_local_sdp(&(dcb_p->sdp)) )
       return CC_CAUSE_ERROR;
@@ -4645,10 +4731,21 @@ gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled)
     media_cap = &media_cap_tbl->cap[0];
     level = 0;
     for (cap_index = 0; cap_index < CC_MAX_MEDIA_CAP; cap_index++) {
+
+        /* Build local m lines based on m lines that were in the offered SDP */
+        media_enabled = TRUE;
+        if (FALSE == audio && SDP_MEDIA_AUDIO == media_cap->type) {
+            media_enabled = FALSE;
+        } else if (FALSE == video && SDP_MEDIA_VIDEO == media_cap->type) {
+            media_enabled = FALSE;
+        } else if (FALSE == data && SDP_MEDIA_APPLICATION == media_cap->type) {
+            media_enabled = FALSE;
+        }
+
         /*
          * Add each enabled media line to the SDP
          */
-        if (media_cap->enabled || force_streams_enabled) {
+        if (media_enabled && ( media_cap->enabled || force_streams_enabled)) {
             level = level + 1;  /* next level */
             ip_mode = platform_get_ip_address_mode();
             if (ip_mode >= CPR_IP_MODE_IPV6) {
@@ -5753,7 +5850,7 @@ gsmsdp_process_offer_sdp (fsm_fcb_t *fcb_p,
          * of a session. Otherwise, we will send what we have.
          */
         if (init) {
-            if ( CC_CAUSE_OK != gsmsdp_create_local_sdp(dcb_p, FALSE)) {
+            if ( CC_CAUSE_OK != gsmsdp_create_local_sdp(dcb_p, FALSE, TRUE, TRUE, TRUE)) {
                 return CC_CAUSE_ERROR;
             }
         } else {
