@@ -244,12 +244,6 @@ struct ImageLayerProperties : public LayerPropertiesBase
     , mScaleToSize(aImage->GetScaleToSize())
     , mScaleMode(aImage->GetScaleMode())
   {
-    AutoLockImage image(mContainer);
-    if (image.GetImage()) {
-      mImageSerial = image.GetImage()->GetSerial();
-    } else {
-      mImageSerial = 0;
-    }
   }
 
   virtual nsIntRect ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback)
@@ -262,17 +256,10 @@ struct ImageLayerProperties : public LayerPropertiesBase
       return result;
     }
 
-    AutoLockImage image(mContainer);
-    int32_t serial = 0;
-    if (image.GetImage()) {
-      serial = image.GetImage()->GetSerial();
-    }
-
     if (mContainer != imageLayer->GetContainer() ||
         mFilter != imageLayer->GetFilter() ||
         mScaleToSize != imageLayer->GetScaleToSize() ||
-        mScaleMode != imageLayer->GetScaleMode() ||
-        mImageSerial != serial) {
+        mScaleMode != imageLayer->GetScaleMode()) {
       return NewTransformedBounds();
     }
 
@@ -284,7 +271,6 @@ struct ImageLayerProperties : public LayerPropertiesBase
   gfxPattern::GraphicsFilter mFilter;
   gfxIntSize mScaleToSize;
   ImageLayer::ScaleMode mScaleMode;
-  int32_t mImageSerial;
 };
 
 LayerPropertiesBase*
