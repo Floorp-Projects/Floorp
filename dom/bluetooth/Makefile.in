@@ -53,6 +53,7 @@ CPPSRCS += \
   BluetoothServiceChildProcess.cpp \
   BluetoothUnixSocketConnector.cpp \
   BluetoothHfpManager.cpp \
+  BluetoothOppManager.cpp \
   $(NULL)
 
 ifdef MOZ_B2G_RIL
