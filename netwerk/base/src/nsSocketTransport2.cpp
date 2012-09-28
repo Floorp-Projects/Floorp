@@ -24,7 +24,6 @@
 #include "prnetdb.h"
 #include "prerror.h"
 #include "prerr.h"
-#include "NetworkActivityMonitor.h"
 
 #include "nsIServiceManager.h"
 #include "nsISocketProviderService.h"
@@ -1095,9 +1094,6 @@ nsSocketTransport::InitiateSocket()
         SOCKET_LOG(("  BuildSocket failed [rv=%x]\n", rv));
         return rv;
     }
-
-    // Attach network activity monitor
-    mozilla::net::NetworkActivityMonitor::AttachIOLayer(fd);
 
     PRStatus status;
 
