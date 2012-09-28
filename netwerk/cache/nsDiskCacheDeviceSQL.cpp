@@ -1215,6 +1215,7 @@ nsOfflineCacheDevice::Init()
                                                      " AND NameSpace <= ?2 AND ?2 GLOB NameSpace || '*'"
                                                      " ORDER BY NameSpace DESC;"),
     StatementSql ( mStatement_InsertNamespaceEntry,  "INSERT INTO moz_cache_namespaces (ClientID, NameSpace, Data, ItemType) VALUES(?, ?, ?, ?);"),
+    StatementSql ( mStatement_EnumerateApps,         "SELECT GroupID, ActiveClientID FROM moz_cache_groups WHERE GroupID LIKE ?1;"),
     StatementSql ( mStatement_EnumerateGroups,       "SELECT GroupID, ActiveClientID FROM moz_cache_groups;"),
     StatementSql ( mStatement_EnumerateGroupsTimeOrder, "SELECT GroupID, ActiveClientID FROM moz_cache_groups ORDER BY ActivateTimeStamp;")
   };
@@ -1246,6 +1247,17 @@ GetGroupForCache(const nsCSubstring &clientID, nsCString &group)
 }
 
 nsresult
+AppendJARIdentifier(nsACString &_result, int32_t appId, bool isInBrowserElement)
+{
+    _result.Append('#');
+    _result.AppendInt(appId);
+    _result.Append('+');
+    _result.Append(isInBrowserElement ? 't' : 'f');
+
+    return NS_OK;
+}
+
+nsresult
 GetJARIdentifier(nsIURI *aURI,
                  nsILoadContext *aLoadContext,
                  nsACString &_result)
@@ -1271,11 +1283,7 @@ GetJARIdentifier(nsIURI *aURI,
         return NS_OK;
 
     // This load context has some special attributes, create a jar identifier
-    _result.AppendInt(appId);
-    _result.Append('+');
-    _result.Append(isInBrowserElement ? 't' : 'f');
-
-    return NS_OK;
+    return AppendJARIdentifier(_result, appId, isInBrowserElement);
 }
 
 } // anon namespace
@@ -1301,10 +1309,8 @@ nsOfflineCacheDevice::BuildApplicationCacheGroupID(nsIURI *aManifestURL,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Include JAR ID, i.e. the extended origin if present.
-  if (!jarid.IsEmpty()) {
-    _result.Append('#');
+  if (!jarid.IsEmpty())
     _result.Append(jarid);
-  }
 
   return NS_OK;
 }
@@ -2357,6 +2363,52 @@ nsOfflineCacheDevice::DeactivateGroup(const nsACString &group)
     mActiveCaches.RemoveEntry(*active);
     mActiveCachesByGroup.Remove(group);
     active = nullptr;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsOfflineCacheDevice::DiscardByAppId(int32_t appID, bool browserEntriesOnly)
+{
+  nsresult rv;
+
+  nsAutoCString jaridsuffix;
+  jaridsuffix.Append('%');
+  rv = AppendJARIdentifier(jaridsuffix, appID, browserEntriesOnly);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoResetStatement statement(mStatement_EnumerateApps);
+  rv = statement->BindUTF8StringByIndex(0, jaridsuffix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasRows;
+  rv = statement->ExecuteStep(&hasRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (hasRows) {
+    nsAutoCString group;
+    rv = statement->GetUTF8String(0, group);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCString clientID;
+    rv = statement->GetUTF8String(1, clientID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIRunnable> ev =
+      new nsOfflineCacheDiscardCache(this, group, clientID);
+
+    rv = nsCacheService::DispatchToCacheIOThread(ev);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->ExecuteStep(&hasRows);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!browserEntriesOnly) {
+    // If deleting app, delete any 'inBrowserElement' entries too
+    rv = DiscardByAppId(appID, true);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
