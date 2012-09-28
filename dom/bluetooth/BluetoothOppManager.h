@@ -8,12 +8,12 @@
 #define mozilla_dom_bluetooth_bluetoothoppmanager_h__
 
 #include "BluetoothCommon.h"
+#include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/ipc/UnixSocket.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothReplyRunnable;
-class BlobParent;
 
 class BluetoothOppManager : public mozilla::ipc::UnixSocketConsumer
 {
