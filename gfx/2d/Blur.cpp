@@ -47,7 +47,7 @@ BoxBlurHorizontal(unsigned char* aInput,
         memcpy(aOutput, aInput, aWidth*aRows);
         return;
     }
-    uint32_t reciprocal = (uint64_t(1) << 32) / boxSize;
+    uint32_t reciprocal = uint32_t((uint64_t(1) << 32) / boxSize);
 
     for (int32_t y = 0; y < aRows; y++) {
         // Check whether the skip rect intersects this row. If the skip
@@ -125,7 +125,7 @@ BoxBlurVertical(unsigned char* aInput,
         memcpy(aOutput, aInput, aWidth*aRows);
         return;
     }
-    uint32_t reciprocal = (uint64_t(1) << 32) / boxSize;
+    uint32_t reciprocal = uint32_t((uint64_t(1) << 32) / boxSize);
 
     for (int32_t x = 0; x < aWidth; x++) {
         bool inSkipRectX = x >= aSkipRect.x &&
@@ -349,7 +349,8 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
     mHasDirtyRect = false;
   }
 
-  mRect = IntRect(rect.x, rect.y, rect.width, rect.height);
+  mRect = IntRect(int32_t(rect.x), int32_t(rect.y),
+                  int32_t(rect.width), int32_t(rect.height));
   if (mRect.IsEmpty()) {
     return;
   }
@@ -361,7 +362,8 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
     Rect skipRect = *aSkipRect;
     skipRect.RoundIn();
     skipRect.Deflate(Size(aBlurRadius + aSpreadRadius));
-    mSkipRect = IntRect(skipRect.x, skipRect.y, skipRect.width, skipRect.height);
+    mSkipRect = IntRect(int32_t(skipRect.x), int32_t(skipRect.y),
+                        int32_t(skipRect.width), int32_t(skipRect.height));
 
     mSkipRect = mSkipRect.Intersect(mRect);
     if (mSkipRect.IsEqualInterior(mRect))
@@ -389,7 +391,8 @@ AlphaBoxBlur::AlphaBoxBlur(uint8_t* aData,
                            const Rect& aRect,
                            int32_t aStride,
                            float aSigma)
-  : mRect(aRect.x, aRect.y, aRect.width, aRect.height),
+  : mRect(int32_t(aRect.x), int32_t(aRect.y),
+          int32_t(aRect.width), int32_t(aRect.height)),
     mSpreadRadius(),
     mBlurRadius(CalculateBlurRadius(Point(aSigma, aSigma))),
     mData(aData),
@@ -502,7 +505,7 @@ AlphaBoxBlur::Blur()
  *   http://www.w3.org/TR/SVG11/filters.html#feGaussianBlurElement
  *   https://bugzilla.mozilla.org/show_bug.cgi?id=590039#c19
  */
-static const Float GAUSSIAN_SCALE_FACTOR = (3 * sqrt(2 * M_PI) / 4) * 1.5;
+static const Float GAUSSIAN_SCALE_FACTOR = Float((3 * sqrt(2 * M_PI) / 4) * 1.5);
 
 IntSize
 AlphaBoxBlur::CalculateBlurRadius(const Point& aStd)
