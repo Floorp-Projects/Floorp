@@ -24,11 +24,13 @@ CUSTOM_NSIS_PLUGINS = \
 	AccessControl.dll \
 	AppAssocReg.dll \
 	ApplicationID.dll \
+	CertCheck.dll \
 	CityHash.dll \
+	InetBgDL.dll \
 	InvokeShellVerb.dll \
+	ServicesHelper.dll \
 	ShellLink.dll \
 	UAC.dll \
-	ServicesHelper.dll \
 	$(NULL)
 
 $(CONFIG_DIR)/setup.exe::
