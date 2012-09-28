@@ -32,7 +32,25 @@
     for (media = GSMSDP_FIRST_MEDIA_ENTRY(dcb); (media != NULL); \
          media = GSMSDP_NEXT_MEDIA_ENTRY(media))
 
-cc_causes_t gsmsdp_create_local_sdp(fsmdef_dcb_t *dcb_p, boolean force_streams_enabled);
+typedef struct {
+    const char *name;
+    int         value;
+} gsmsdp_key_table_entry_t;
+
+typedef enum constraints_ {
+    OfferToReceiveAudio     = 0,
+    OfferToReceiveVideo     = 1,
+    VoiceActivityDetection  = 2
+} constraints;
+
+static const gsmsdp_key_table_entry_t constraints_table[] = {
+    {"OfferToReceiveAudio",         OfferToReceiveAudio},
+    {"OfferToReceiveVideo",         OfferToReceiveVideo},
+    {"VoiceActivityDetection",      VoiceActivityDetection}
+};
+
+cc_causes_t gsmsdp_create_local_sdp(fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
+                                    boolean audio, boolean video, boolean data);
 void gsmsdp_create_options_sdp(cc_sdp_t **sdp_pp);
 void gsmsdp_reset_local_sdp_media(fsmdef_dcb_t *dcb, fsmdef_media_t *media,
                                   boolean hold);
@@ -111,6 +129,9 @@ void gsmsdp_add_remote_stream(uint16_t idx, int pc_stream_id, fsmdef_dcb_t * dcb
 cc_causes_t gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_configure_dtls_data_attributes(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_find_level_from_mid(fsmdef_dcb_t * dcb, const char * mid, uint16_t *level);
+void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb, const cc_media_constraints_t* constraints);
+cc_causes_t
+gsmsdp_get_offered_media_types (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean *has_audio, boolean *has_video, boolean *has_data);
 
 #endif
 
