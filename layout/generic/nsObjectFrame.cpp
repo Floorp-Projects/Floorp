@@ -260,18 +260,15 @@ nsObjectFrame::~nsObjectFrame()
 }
 
 NS_QUERYFRAME_HEAD(nsObjectFrame)
+  NS_QUERYFRAME_ENTRY(nsObjectFrame)
   NS_QUERYFRAME_ENTRY(nsIObjectFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsObjectFrameSuper)
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsObjectFrame::CreateAccessible()
+a11y::AccType
+nsObjectFrame::AccessibleType()
 {
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  return accService ?
-    accService->CreateHTMLObjectFrameAccessible(this, mContent,
-                                                PresContext()->PresShell()) :
-    nullptr;
+  return a11y::eHTMLObjectFrameAccessible;
 }
 
 #ifdef XP_WIN
