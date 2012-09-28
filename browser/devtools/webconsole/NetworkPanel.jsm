@@ -22,10 +22,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
+                                  "resource:///modules/WebConsoleUtils.jsm");
 
-const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
-let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
+XPCOMUtils.defineLazyGetter(this, "l10n", function() {
+  return WebConsoleUtils.l10n;
+});
 
 var EXPORTED_SYMBOLS = ["NetworkPanel"];
 

@@ -81,7 +81,7 @@ function testContextMenuCopy() {
 }
 
 function getExpectedClipboardText(aItem) {
-  return "[" + WCU_l10n.timestampString(aItem.timestamp) + "] " +
+  return "[" + WebConsoleUtils.l10n.timestampString(aItem.timestamp) + "] " +
          aItem.clipboardText;
 }
 

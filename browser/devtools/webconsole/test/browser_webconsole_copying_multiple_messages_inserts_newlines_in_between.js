@@ -52,7 +52,7 @@ function testClipboard() {
   for (let i = 0; i < outputNode.itemCount; i++) {
     let item = outputNode.getItemAtIndex(i);
     clipboardTexts.push("[" +
-                        WCU_l10n.timestampString(item.timestamp) +
+                        WebConsoleUtils.l10n.timestampString(item.timestamp) +
                         "] " + item.clipboardText);
   }
 
