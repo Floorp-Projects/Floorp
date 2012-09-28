@@ -1,0 +1,38 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= @DEPTH@
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+FAIL_ON_WARNINGS := 1
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= dom
+LIBRARY_NAME	= domencoding_s
+LIBXUL_LIBRARY	= 1
+FORCE_STATIC_LIB = 1
+
+DIRS = \
+  test \
+  $(NULL)
+
+EXPORTS_NAMESPACES = mozilla/dom
+EXPORTS_mozilla/dom = \
+  EncodingUtils.h \
+  TextDecoder.h \
+  TextEncoder.h \
+  $(NULL)
+
+CPPSRCS = \
+	EncodingUtils.cpp \
+	TextDecoder.cpp \
+	TextEncoder.cpp \
+	$(NULL)
+
+include $(topsrcdir)/dom/dom-config.mk
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/config/rules.mk
