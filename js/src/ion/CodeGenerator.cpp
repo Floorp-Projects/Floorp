@@ -234,30 +234,6 @@ CodeGenerator::visitRegExp(LRegExp *lir)
 }
 
 bool
-CodeGenerator::visitRegExpTest(LRegExpTest *lir)
-{
-    typedef bool (*pf)(JSContext *cx, RegExpExecType type, HandleObject regexp,
-                       HandleString string, MutableHandleValue rval);
-    static const VMFunction ExecuteRegExpInfo = FunctionInfo<pf>(ExecuteRegExp);
-
-    pushArg(ToRegister(lir->string()));
-    pushArg(ToRegister(lir->regexp()));
-    pushArg(Imm32(RegExpTest));
-    if (!callVM(ExecuteRegExpInfo, lir))
-        return false;
-
-    Register output = ToRegister(lir->output());
-    Label notBool, end;
-    masm.branchTestBoolean(Assembler::NotEqual, JSReturnOperand, &notBool);
-    masm.unboxBoolean(JSReturnOperand, output);
-    masm.jump(&end);
-    masm.bind(&notBool);
-    masm.mov(Imm32(0), output);
-    masm.bind(&end);
-    return true;
-}
-
-bool
 CodeGenerator::visitLambdaForSingleton(LLambdaForSingleton *lir)
 {
     typedef JSObject *(*pf)(JSContext *, HandleFunction, HandleObject);
