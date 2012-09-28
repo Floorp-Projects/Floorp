@@ -141,7 +141,7 @@ BrowserRootActor.prototype = {
     for (let name in aFactories) {
       let actor = this._extraActors[name];
       if (!actor) {
-        actor = aFactories[name].bind(null, this.conn, this);
+        actor = aFactories[name].bind(null, this.conn);
         actor.prototype = aFactories[name].prototype;
         actor.parentID = this.actorID;
         this._extraActors[name] = actor;
