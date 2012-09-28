@@ -60,19 +60,6 @@ const uint32_t SILENCE_BYTES_CHUNK = 32 * 1024;
 // which is at or after the current playback position.
 static const uint32_t LOW_VIDEO_FRAMES = 1;
 
-// If we've got more than AMPLE_VIDEO_FRAMES decoded video frames waiting in
-// the video queue, we will not decode any more video frames until some have
-// been consumed by the play state machine thread.
-#ifdef MOZ_WIDGET_GONK
-// On B2G this is decided by a similar value which varies for each OMX decoder
-// |OMX_PARAM_PORTDEFINITIONTYPE::nBufferCountMin|. This number must be less
-// than the OMX equivalent or gecko will think it is chronically starved of
-// video frames. All decoders seen so far have a value of at least 4.
-static const uint32_t AMPLE_VIDEO_FRAMES = 3;
-#else
-static const uint32_t AMPLE_VIDEO_FRAMES = 10;
-#endif
-
 // Arbitrary "frame duration" when playing only audio.
 static const int AUDIO_DURATION_USECS = 40000;
 
@@ -430,6 +417,22 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
 
   mBufferingWait = mRealTime ? 0 : BUFFERING_WAIT_S;
   mLowDataThresholdUsecs = mRealTime ? 0 : LOW_DATA_THRESHOLD_USECS;
+
+  // If we've got more than mAmpleVideoFrames decoded video frames waiting in
+  // the video queue, we will not decode any more video frames until some have
+  // been consumed by the play state machine thread.
+#ifdef MOZ_WIDGET_GONK
+  // On B2G this is decided by a similar value which varies for each OMX decoder
+  // |OMX_PARAM_PORTDEFINITIONTYPE::nBufferCountMin|. This number must be less
+  // than the OMX equivalent or gecko will think it is chronically starved of
+  // video frames. All decoders seen so far have a value of at least 4.
+  mAmpleVideoFrames = Preferences::GetUint("media.video-queue.default-size", 3);
+#else
+  mAmpleVideoFrames = Preferences::GetUint("media.video-queue.default-size", 10);
+#endif
+  if (mAmpleVideoFrames < 2) {
+    mAmpleVideoFrames = 2;
+  }
 }
 
 nsBuiltinDecoderStateMachine::~nsBuiltinDecoderStateMachine()
@@ -750,7 +753,7 @@ bool nsBuiltinDecoderStateMachine::HaveEnoughDecodedVideo()
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
-  if (static_cast<uint32_t>(mReader->VideoQueue().GetSize()) < AMPLE_VIDEO_FRAMES) {
+  if (static_cast<uint32_t>(mReader->VideoQueue().GetSize()) < mAmpleVideoFrames) {
     return false;
   }
 
@@ -786,7 +789,7 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
 
   // Once we've decoded more than videoPumpThreshold video frames, we'll
   // no longer be considered to be "pumping video".
-  const unsigned videoPumpThreshold = mRealTime ? 0 : AMPLE_VIDEO_FRAMES / 2;
+  const unsigned videoPumpThreshold = mRealTime ? 0 : mAmpleVideoFrames / 2;
 
   // After the audio decode fills with more than audioPumpThreshold usecs
   // of decoded audio, we'll start to check whether the audio or video decode
