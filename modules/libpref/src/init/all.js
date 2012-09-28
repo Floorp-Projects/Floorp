@@ -182,6 +182,10 @@ pref("media.webaudio.enabled", false);
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
 
+// The default number of decoded video frames that are enqueued in
+// nsBuiltinDecoderReader's mVideoQueue.
+pref("media.video-queue.default-size", 10);
+
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
