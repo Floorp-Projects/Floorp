@@ -41,30 +41,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
 // expected results).
 var WifiManager = (function() {
   function getSdkVersionAndDevice() {
-    Cu.import("resource://gre/modules/ctypes.jsm");
-    try {
-      let cutils = ctypes.open("libcutils.so");
-      let cbuf = ctypes.char.array(4096)();
-      let c_property_get = cutils.declare("property_get", ctypes.default_abi,
-                                          ctypes.int,       // return value: length
-                                          ctypes.char.ptr,  // key
-                                          ctypes.char.ptr,  // value
-                                          ctypes.char.ptr); // default
-      let property_get = function (key, defaultValue) {
-        if (defaultValue === undefined) {
-          defaultValue = null;
-        }
-        c_property_get(key, cbuf, defaultValue);
-        return cbuf.readString();
-      }
-      return { sdkVersion: parseInt(property_get("ro.build.version.sdk")),
-               device: property_get("ro.product.device") };
-    } catch(e) {
-      // Eat it.  Hopefully we're on a non-Gonk system ...
-      //
-      // XXX we should check that
-      return 0;
-    }
+    Cu.import("resource://gre/modules/systemlibs.js");
+    let sdkVersion = libcutils.property_get("ro.build.version.sdk");
+    return { sdkVersion: parseInt(sdkVersion, 10),
+               device: libcutils.property_get("ro.product.device") };
   }
 
   let { sdkVersion, device } = getSdkVersionAndDevice();

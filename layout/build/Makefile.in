@@ -303,6 +303,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/netwerk/base/src \
 		   -I$(topsrcdir)/content/svg/content/src \
 		   -I$(topsrcdir)/extensions/cookie \
+		   -I$(topsrcdir)/netwerk/cookie \
 		   $(NULL)
 
 ifdef MOZ_B2G_RIL #{

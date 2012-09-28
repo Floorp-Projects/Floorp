@@ -437,6 +437,7 @@
 @BINPATH@/components/TelemetryPing.manifest
 
 @BINPATH@/components/TCPSocket.js
+@BINPATH@/components/TCPSocketParentIntermediary.js
 @BINPATH@/components/TCPSocket.manifest
 
 ; Modules

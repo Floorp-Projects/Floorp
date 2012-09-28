@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=783408
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests that uninstalling app removes the cookies</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+  <script src="channel_utils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=786296">Mozilla Bug 783408</a>
+<p id="display"></p>
+<div id="content">
+  
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 783408 **/
+
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cu = Components.utils;
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://testing-common/httpd.js");
+var httpserver = new HttpServer();
+
+var cookieSetPath = "/setcookie";
+var cookieCheckPath = "/checkcookie";
+
+var permManager = Cc["@mozilla.org/permissionmanager;1"]
+                    .getService(Ci.nsIPermissionManager);
+var cookieMng = Cc["@mozilla.org/cookiemanager;1"]
+                  .getService(Ci.nsICookieManager2);
+var appsService = Cc['@mozilla.org/AppsService;1']
+                    .getService(Ci.nsIAppsService);
+
+var cookies = [
+  { cookieName: 'LCC_App_BrowF_PrivF',
+    loadContext: null },
+  { cookieName: 'LCC_App_BrowT_PrivF',
+    loadContext: null },
+  { cookieName: 'AppUninstall_Witness',
+    loadContext: new LoadContextCallback(0, false, false, 1) },
+];
+var counter = 0;
+
+function confirmNextInstall() {
+  var panel = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShell)
+                        .chromeEventHandler.ownerDocument.defaultView
+                        .PopupNotifications.panel
+
+  panel.addEventListener("popupshown", function() {
+    panel.removeEventListener("popupshown", arguments.callee, false);
+    this.childNodes[0].button.doCommand();
+  }, false);
+}
+
+// If aAppId = -1, returns permissions count, regardless of app.
+function getPermissionCountForApp(aAppId) {
+  var nbPermissions = 0;
+  var enumerator = permManager.enumerator;
+
+  while (enumerator.hasMoreElements()) {
+    var permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+
+    if (permission.appId == aAppId || aAppId == -1) {
+      nbPermissions++;
+    }
+  }
+
+  return nbPermissions;
+}
+
+function getCookiesCountForApp(aAppId) {
+  var nbCookies = 0;
+  var enumerator = cookieMng.getCookiesForApp(aAppId, false);
+
+  while (enumerator.hasMoreElements()) {
+    enumerator.getNext();
+    nbCookies++;
+  }
+
+  return nbCookies;
+}
+
+function getCookiesCount() {
+  var nbCookies = 0;
+  var enumerator = cookieMng.enumerator;
+
+  while (enumerator.hasMoreElements()) {
+    enumerator.getNext();
+    nbCookies++;
+  }
+
+  return nbCookies;
+}
+
+function cookieSetHandler(metadata, response) {
+  var cookieName = metadata.getHeader("foo-set-cookie");
+
+  response.setStatusLine(metadata.httpVersion, 200, "Ok");
+  response.setHeader("Set-Cookie", cookieName + "=1; Path=/", false);
+  response.setHeader("Content-Type", "text/plain");
+  response.bodyOutputStream.write("Ok", "Ok".length);
+}
+
+function cookieCheckHandler(metadata, response) {
+  var cookies = metadata.getHeader("Cookie");
+
+  response.setStatusLine(metadata.httpVersion, 200, "Ok");
+  response.setHeader("foo-saw-cookies", cookies, false);
+  response.setHeader("Content-Type", "text/plain");
+  response.bodyOutputStream.write("Ok", "Ok".length);
+}
+
+function setupChannel(path) {
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var chan = ios.newChannel("http://localhost:4444" + path, "", null);
+  chan.notificationCallbacks = cookies[counter].loadContext;
+  chan.QueryInterface(Ci.nsIHttpChannel);
+  return chan;
+}
+
+function setCookie() {
+  var channel = setupChannel(cookieSetPath);
+  channel.setRequestHeader("foo-set-cookie", cookies[counter].cookieName, false);
+  channel.asyncOpen(new ChannelListener(setNextCookie, null), null);
+}
+
+function setNextCookie(request, data, context) {
+  if (++counter == cookies.length) {
+    // all cookies set: switch to checking them
+    counter = 0;
+    checkCookie();
+  } else {
+    setCookie();
+  }
+}
+
+var previousDryRunValue = null;
+try {
+  previousDryRunValue = SpecialPowers.getBoolPref('browser.mozApps.installer.dry_run');
+} catch(e) {
+}
+
+SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', true);
+permManager.addFromPrincipal(window.document.nodePrincipal, "webapps-manage",
+                             Ci.nsIPermissionManager.ALLOW_ACTION);
+
+var gManifestURL = "http://www.example.com:80/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+
+confirmNextInstall();
+
+var gTestAppId = 0;
+var gCurrentCookiesCount = 0;
+
+navigator.mozApps.install(gManifestURL, null).onsuccess = function() {
+  gTestAppId = appsService.getAppLocalIdByManifestURL(gManifestURL);
+
+  cookies[0].loadContext = new LoadContextCallback(gTestAppId, false, false, 1);
+  cookies[1].loadContext = new LoadContextCallback(gTestAppId, true, false, 1);
+
+  is(getCookiesCountForApp(gTestAppId), 0, "App should have no cookies");
+
+  httpserver.registerPathHandler(cookieSetPath, cookieSetHandler);
+  httpserver.registerPathHandler(cookieCheckPath, cookieCheckHandler);
+  httpserver.start(4444);
+
+  setCookie();
+};
+
+function checkCookie() {
+  var appCookiesCount = getCookiesCountForApp(gTestAppId);
+  is(appCookiesCount, 2, "App should have two cookies");
+
+  gCurrentCookiesCount = getCookiesCount() - appCookiesCount;
+
+  // Not installed means not installed as native app.
+  navigator.mozApps.mgmt.getNotInstalled().onsuccess = function() {
+    for (i in this.result) {
+      var app = this.result[i];
+      if (app.manifestURL == gManifestURL) {
+        app.uninstall().onsuccess = function() {
+          is(getCookiesCountForApp(gTestAppId), 0, "App should have no cookies");
+
+          is(getCookiesCount(), gCurrentCookiesCount,
+             "Number of cookies should not have changed");
+
+          SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', previousDryRunValue);
+          permManager.removeFromPrincipal(window.document.nodePrincipal, "webapps-manage",
+                                       Ci.nsIPermissionManager.ALLOW_ACTION);
+
+          httpserver.stop(function() {
+            SimpleTest.finish();
+          });
+
+          return;
+        };
+      }
+    }
+  };
+}
+
+</script>
+</pre>
+</body>
+</html>

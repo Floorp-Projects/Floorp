@@ -152,6 +152,7 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
   RegisterSwitchObserver(SWITCH_HEADPHONES, mObserver);
 
   InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
+  NotifyHeadphonesStatus(GetCurrentSwitchState(SWITCH_HEADPHONES));
 }
 
 AudioManager::~AudioManager() {
