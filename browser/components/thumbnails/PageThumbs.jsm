@@ -446,25 +446,11 @@ let PageThumbsExpiration = {
   },
 
   expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep) {
-    let keep = {};
-
-    // Transform all these URLs into file names.
-    for (let url of aURLsToKeep) {
-      keep[PageThumbsStorage.getLeafNameForURL(url)] = true;
-    }
-
-    let numFilesRemoved = 0;
-    let dir = PageThumbsStorage.getDirectory().path;
-    let msg = {type: "getFilesInDirectory", path: dir};
-
-    PageThumbsWorker.postMessage(msg, function (aData) {
-      let files = [file for (file of aData.result) if (!(file in keep))];
-      let maxFilesToRemove = Math.max(EXPIRATION_MIN_CHUNK_SIZE,
-                                      Math.round(files.length / 2));
-
-      let fileNames = files.slice(0, maxFilesToRemove);
-      let filePaths = [dir + "/" + fileName for (fileName of fileNames)];
-      PageThumbsWorker.postMessage({type: "removeFiles", paths: filePaths});
+    PageThumbsWorker.postMessage({
+      type: "expireFilesInDirectory",
+      minChunkSize: EXPIRATION_MIN_CHUNK_SIZE,
+      path: PageThumbsStorage.getDirectory().path,
+      filesToKeep: [PageThumbsStorage.getLeafNameForURL(url) for (url of aURLsToKeep)]
     });
   }
 };
