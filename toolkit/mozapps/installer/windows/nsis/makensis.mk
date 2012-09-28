@@ -14,6 +14,8 @@ SFX_MODULE ?= $(error SFX_MODULE is not defined)
 
 TOOLKIT_NSIS_FILES = \
 	common.nsh \
+	locale.nlf \
+	locale-rtl.nlf \
 	locales.nsi \
 	overrides.nsh \
 	setup.ico \
@@ -33,9 +35,14 @@ CUSTOM_NSIS_PLUGINS = \
 	UAC.dll \
 	$(NULL)
 
+CUSTOM_UI = \
+	nsisui.exe \
+	$(NULL)
+
 $(CONFIG_DIR)/setup.exe::
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/,$(CUSTOM_UI)) $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && $(MAKENSISU) installer.nsi
 # Support for building the uninstaller when repackaging locales
 ifeq ($(CONFIG_DIR),l10ngen)
