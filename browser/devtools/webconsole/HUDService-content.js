@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", tempScope);
 Cu.import("resource://gre/modules/Services.jsm", tempScope);
 Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm", tempScope);
 Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tempScope);
-Cu.import("resource://gre/modules/devtools/NetworkHelper.jsm", tempScope);
+Cu.import("resource:///modules/NetworkHelper.jsm", tempScope);
 Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
 
 let XPCOMUtils = tempScope.XPCOMUtils;
