@@ -787,6 +787,8 @@ RadioInterfaceLayer.prototype = {
   },
 
   handleRadioStateChange: function handleRadioStateChange(message) {
+    this._changingRadioPower = false;
+
     let newState = message.radioState;
     if (this.rilContext.radioState == newState) {
       return;
@@ -813,6 +815,10 @@ RadioInterfaceLayer.prototype = {
     if (this.rilContext.radioState == RIL.GECKO_RADIOSTATE_UNKNOWN) {
       // We haven't received a radio state notification from the RIL
       // yet. Wait for that.
+      return;
+    }
+    if (this._changingRadioPower) {
+      // We're changing the radio power currently, ignore any changes.
       return;
     }
 
@@ -1338,6 +1344,10 @@ RadioInterfaceLayer.prototype = {
   // corresponds to the 'ril.radio.disabled' setting from the UI.
   _radioEnabled: null,
 
+  // Flag to ignore any radio power change requests during We're changing
+  // the radio power.
+  _changingRadioPower: false,
+  
   // Flag to determine whether we reject a waiting call directly or we
   // notify the UI of a waiting call. It corresponds to the
   // 'ril.callwaiting.enbled' setting from the UI.
@@ -1433,6 +1443,7 @@ RadioInterfaceLayer.prototype = {
 
   setRadioEnabled: function setRadioEnabled(value) {
     debug("Setting radio power to " + value);
+    this._changingRadioPower = true;
     this.worker.postMessage({rilMessageType: "setRadioPower", on: value});
   },
 
