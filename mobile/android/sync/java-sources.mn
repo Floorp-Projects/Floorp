@@ -97,6 +97,8 @@ sync/NonObjectJSONException.java
 sync/NullClusterURLException.java
 sync/PersistedMetaGlobal.java
 sync/PrefsSource.java
+sync/receivers/SyncAccountDeletedReceiver.java
+sync/receivers/SyncAccountDeletedService.java
 sync/receivers/UpgradeReceiver.java
 sync/repositories/android/AndroidBrowserBookmarksDataAccessor.java
 sync/repositories/android/AndroidBrowserBookmarksRepository.java
