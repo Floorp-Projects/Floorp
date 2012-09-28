@@ -88,7 +88,15 @@ MOCHITEST_BROWSER_FILES = \
 	browser_581593.js \
 	browser_581937.js \
 	browser_586147.js \
-	browser_586068-cascaded_restore.js \
+	browser_586068-apptabs.js \
+	browser_586068-apptabs_ondemand.js \
+	browser_586068-browser_state_interrupted.js \
+	browser_586068-cascade.js \
+	browser_586068-multi_window.js \
+	browser_586068-reload.js \
+	browser_586068-select.js \
+	browser_586068-window_state.js \
+	browser_586068-window_state_override.js \
 	browser_588426.js \
 	browser_590268.js \
 	browser_590563.js \
