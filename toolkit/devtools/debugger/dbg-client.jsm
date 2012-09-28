@@ -1115,7 +1115,30 @@ SourceClient.prototype = {
       to: this._actor,
       type: "source"
     };
-    this._client.request(packet, aCallback);
+    this._client.request(packet, function (aResponse) {
+      if (aResponse.error) {
+        aCallback(aResponse);
+        return;
+      }
+
+      if (typeof aResponse.source === "string") {
+        aCallback(aResponse);
+        return;
+      }
+
+      let longString = this._client.activeThread.threadLongString(
+        aResponse.source);
+      longString.substring(0, longString.length, function (aResponse) {
+        if (aResponse.error) {
+          aCallback(aResponse);
+          return;
+        }
+
+        aCallback({
+          source: aResponse.substring
+        });
+      });
+    }.bind(this));
   }
 };
 
