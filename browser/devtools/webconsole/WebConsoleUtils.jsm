@@ -15,8 +15,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["WebConsoleUtils", "JSPropertyProvider",
-                        "PageErrorListener"];
+var EXPORTED_SYMBOLS = ["WebConsoleUtils", "JSPropertyProvider"];
+
+const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 
 const TYPES = { OBJECT: 0,
                 FUNCTION: 1,
@@ -644,22 +645,7 @@ var WebConsoleUtils = {
 // Localization
 //////////////////////////////////////////////////////////////////////////
 
-WebConsoleUtils.l10n = function WCU_l10n(aBundleURI)
-{
-  this._bundleUri = aBundleURI;
-};
-
-WebConsoleUtils.l10n.prototype = {
-  _stringBundle: null,
-
-  get stringBundle()
-  {
-    if (!this._stringBundle) {
-      this._stringBundle = Services.strings.createBundle(this._bundleUri);
-    }
-    return this._stringBundle;
-  },
-
+WebConsoleUtils.l10n = {
   /**
    * Generates a formatted timestamp string for displaying in console messages.
    *
@@ -723,6 +709,10 @@ WebConsoleUtils.l10n.prototype = {
     return result;
   },
 };
+
+XPCOMUtils.defineLazyGetter(WebConsoleUtils.l10n, "stringBundle", function() {
+  return Services.strings.createBundle(STRINGS_URI);
+});
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -1022,144 +1012,3 @@ function getMatchedProps(aObj, aOptions = {matchProp: ""})
 
 return JSPropertyProvider;
 })(WebConsoleUtils);
-
-///////////////////////////////////////////////////////////////////////////////
-// The page errors listener
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * The nsIConsoleService listener. This is used to send all the page errors
- * (JavaScript, CSS and more) to the remote Web Console instance.
- *
- * @constructor
- * @param nsIDOMWindow aWindow
- *        The window object for which we are created.
- * @param object aListener
- *        The listener object must have a method: onPageError. This method is
- *        invoked with one argument, the nsIScriptError, whenever a relevant
- *        page error is received.
- */
-function PageErrorListener(aWindow, aListener)
-{
-  this.window = aWindow;
-  this.listener = aListener;
-}
-
-PageErrorListener.prototype =
-{
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener]),
-
-  /**
-   * The content window for which we listen to page errors.
-   * @type nsIDOMWindow
-   */
-  window: null,
-
-  /**
-   * The listener object which is notified of page errors. It must have
-   * a onPageError method which is invoked with one argument: the nsIScriptError.
-   * @type object
-   */
-  listener: null,
-
-  /**
-   * Initialize the nsIConsoleService listener.
-   */
-  init: function PEL_init()
-  {
-    Services.console.registerListener(this);
-  },
-
-  /**
-   * The nsIConsoleService observer. This method takes all the script error
-   * messages belonging to the current window and sends them to the remote Web
-   * Console instance.
-   *
-   * @param nsIScriptError aScriptError
-   *        The script error object coming from the nsIConsoleService.
-   */
-  observe: function PEL_observe(aScriptError)
-  {
-    if (!this.window || !this.listener ||
-        !(aScriptError instanceof Ci.nsIScriptError) ||
-        !aScriptError.outerWindowID) {
-      return;
-    }
-
-    if (!this.isCategoryAllowed(aScriptError.category)) {
-      return;
-    }
-
-    let errorWindow =
-      WebConsoleUtils.getWindowByOuterId(aScriptError.outerWindowID, this.window);
-    if (!errorWindow || errorWindow.top != this.window) {
-      return;
-    }
-
-    this.listener.onPageError(aScriptError);
-  },
-
-  /**
-   * Check if the given script error category is allowed to be tracked or not.
-   * We ignore chrome-originating errors as we only care about content.
-   *
-   * @param string aCategory
-   *        The nsIScriptError category you want to check.
-   * @return boolean
-   *         True if the category is allowed to be logged, false otherwise.
-   */
-  isCategoryAllowed: function PEL_isCategoryAllowed(aCategory)
-  {
-    switch (aCategory) {
-      case "XPConnect JavaScript":
-      case "component javascript":
-      case "chrome javascript":
-      case "chrome registration":
-      case "XBL":
-      case "XBL Prototype Handler":
-      case "XBL Content Sink":
-      case "xbl javascript":
-        return false;
-    }
-
-    return true;
-  },
-
-  /**
-   * Get the cached page errors for the current inner window.
-   *
-   * @return array
-   *         The array of cached messages. Each element is an nsIScriptError
-   *         with an added _type property so the remote Web Console instance can
-   *         tell the difference between various types of cached messages.
-   */
-  getCachedMessages: function PEL_getCachedMessages()
-  {
-    let innerWindowId = WebConsoleUtils.getInnerWindowId(this.window);
-    let result = [];
-    let errors = {};
-    Services.console.getMessageArray(errors, {});
-
-    (errors.value || []).forEach(function(aError) {
-      if (!(aError instanceof Ci.nsIScriptError) ||
-          aError.innerWindowID != innerWindowId ||
-          !this.isCategoryAllowed(aError.category)) {
-        return;
-      }
-
-      let remoteMessage = WebConsoleUtils.cloneObject(aError);
-      result.push(remoteMessage);
-    }, this);
-
-    return result;
-  },
-
-  /**
-   * Remove the nsIConsoleService listener.
-   */
-  destroy: function PEL_destroy()
-  {
-    Services.console.unregisterListener(this);
-    this.listener = this.window = null;
-  },
-};

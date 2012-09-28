@@ -183,8 +183,6 @@ var DebuggerServer = {
    */
   addBrowserActors: function DH_addBrowserActors() {
     this.addActors("chrome://global/content/devtools/dbg-browser-actors.js");
-    this.addActors("chrome://global/content/devtools/dbg-webconsole-actors.js");
-    this.addTabActor(this.WebConsoleActor, "consoleActor");
     if ("nsIProfiler" in Ci)
       this.addActors("chrome://global/content/devtools/dbg-profiler-actors.js");
   },

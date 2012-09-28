@@ -16,6 +16,7 @@ EXTRA_JS_MODULES = \
 		NetworkHelper.jsm \
 		NetworkPanel.jsm \
 		AutocompletePopup.jsm \
+		WebConsoleUtils.jsm \
 		$(NULL)
 
 TEST_DIRS = test

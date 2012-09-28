@@ -15,7 +15,7 @@ function test() {
 
 function consoleOpened(HUD) {
   let tmp = {};
-  Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tmp);
+  Cu.import("resource:///modules/WebConsoleUtils.jsm", tmp);
   let WCU = tmp.WebConsoleUtils;
   let JSPropertyProvider = tmp.JSPropertyProvider;
   tmp = null;
