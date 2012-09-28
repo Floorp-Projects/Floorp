@@ -33,9 +33,6 @@
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsEventListenerManager.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 
 #include "nsInterfaceHashtable.h"
 #include "nsURIHashKey.h"
@@ -54,6 +51,7 @@
 #include "nsIDOMDragEvent.h"
 #include "nsContentList.h"
 
+namespace a11y = mozilla::a11y;
 namespace dom = mozilla::dom;
 
 #define SYNC_TEXT 0x1
@@ -633,16 +631,10 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsFileControlFrame::CreateAccessible()
+a11y::AccType
+nsFileControlFrame::AccessibleType()
 {
-  // Accessible object exists just to hold onto its children, for later shutdown
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (!accService)
-    return nullptr;
-
-  return accService->CreateHTMLFileInputAccessible(mContent,
-                                                   PresContext()->PresShell());
+  return a11y::eHTMLFileInputAccessible;
 }
 #endif
 
