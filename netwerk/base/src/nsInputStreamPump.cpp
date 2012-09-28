@@ -34,7 +34,7 @@ static PRLogModuleInfo *gStreamPumpLog = nullptr;
 nsInputStreamPump::nsInputStreamPump()
     : mState(STATE_IDLE)
     , mStreamOffset(0)
-    , mStreamLength(LL_MaxUint())
+    , mStreamLength(UINT64_MAX)
     , mStatus(NS_OK)
     , mSuspendCount(0)
     , mLoadFlags(LOAD_NORMAL)
