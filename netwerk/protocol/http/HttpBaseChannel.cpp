@@ -27,7 +27,7 @@ namespace mozilla {
 namespace net {
 
 HttpBaseChannel::HttpBaseChannel()
-  : mStartPos(LL_MAXUINT)
+  : mStartPos(UINT64_MAX)
   , mStatus(NS_OK)
   , mLoadFlags(LOAD_NORMAL)
   , mPriority(PRIORITY_NORMAL)
@@ -1361,7 +1361,7 @@ HttpBaseChannel::GetEntityID(nsACString& aEntityID)
     return NS_ERROR_NOT_RESUMABLE;
   }
 
-  uint64_t size = LL_MAXUINT;
+  uint64_t size = UINT64_MAX;
   nsAutoCString etag, lastmod;
   if (mResponseHead) {
     // Don't return an entity if the server sent the following header:

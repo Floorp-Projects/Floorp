@@ -61,7 +61,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     , mIsShuttingDown(false)
     , mNumActiveConns(0)
     , mNumIdleConns(0)
-    , mTimeOfNextWakeUp(LL_MAXUINT)
+    , mTimeOfNextWakeUp(UINT64_MAX)
     , mTimeoutTickArmed(false)
 {
     LOG(("Creating nsHttpConnectionMgr @%x\n", this));
@@ -200,7 +200,7 @@ nsHttpConnectionMgr::ConditionallyStopPruneDeadConnectionsTimer()
     LOG(("nsHttpConnectionMgr::StopPruneDeadConnectionsTimer\n"));
 
     // Reset mTimeOfNextWakeUp so that we can find a new shortest value.
-    mTimeOfNextWakeUp = LL_MAXUINT;
+    mTimeOfNextWakeUp = UINT64_MAX;
     if (mTimer) {
         mTimer->Cancel();
         mTimer = NULL;
@@ -1986,7 +1986,7 @@ nsHttpConnectionMgr::OnMsgPruneDeadConnections(int32_t, void *)
     LOG(("nsHttpConnectionMgr::OnMsgPruneDeadConnections\n"));
 
     // Reset mTimeOfNextWakeUp so that we can find a new shortest value.
-    mTimeOfNextWakeUp = LL_MAXUINT;
+    mTimeOfNextWakeUp = UINT64_MAX;
 
     // check canreuse() for all idle connections plus any active connections on
     // connection entries that are using spdy.

@@ -288,10 +288,10 @@ nsSHistory::CalcMaxTotalViewers()
     return 0;
 
   // Conversion from unsigned int64 to double doesn't work on all platforms.
-  // We need to truncate the value at LL_MAXINT to make sure we don't
+  // We need to truncate the value at INT64_MAX to make sure we don't
   // overflow.
-  if (LL_CMP(bytes, >, LL_MAXINT))
-    bytes = LL_MAXINT;
+  if (LL_CMP(bytes, >, INT64_MAX))
+    bytes = INT64_MAX;
 
   uint64_t kbytes;
   LL_SHR(kbytes, bytes, 10);

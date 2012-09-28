@@ -2660,7 +2660,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
   nsCookieAttributes cookieAttributes;
 
   // init expiryTime such that session cookies won't prematurely expire
-  cookieAttributes.expiryTime = LL_MAXINT;
+  cookieAttributes.expiryTime = INT64_MAX;
 
   // aCookieHeader is an in/out param to point to the next cookie, if
   // there is one. Save the present value for logging purposes
@@ -3437,7 +3437,7 @@ nsCookieService::RemoveAllFromMemory()
   // which releases all their respective children.
   mDBState->hostTable.Clear();
   mDBState->cookieCount = 0;
-  mDBState->cookieOldestTime = LL_MAXINT;
+  mDBState->cookieOldestTime = INT64_MAX;
 }
 
 // stores temporary data for enumerating over the hash entries,
@@ -3453,7 +3453,7 @@ struct nsPurgeData
               mozIStorageBindingParamsArray *aParamsArray)
    : currentTime(aCurrentTime)
    , purgeTime(aPurgeTime)
-   , oldestTime(LL_MAXINT)
+   , oldestTime(INT64_MAX)
    , purgeList(aPurgeList)
    , removedList(aRemovedList)
    , paramsArray(aParamsArray)

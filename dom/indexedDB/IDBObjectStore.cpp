@@ -777,7 +777,7 @@ IDBObjectStore::UpdateIndexes(IDBTransaction* aTransaction,
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv;
 
-  NS_ASSERTION(aObjectDataId != LL_MININT, "Bad objectData id!");
+  NS_ASSERTION(aObjectDataId != INT64_MIN, "Bad objectData id!");
 
   NS_NAMED_LITERAL_CSTRING(objectDataId, "object_data_id");
 
@@ -1455,7 +1455,7 @@ IDBObjectStore::ConvertBlobsToActors(
 }
 
 IDBObjectStore::IDBObjectStore()
-: mId(LL_MININT),
+: mId(INT64_MIN),
   mKeyPath(0),
   mCachedKeyPath(JSVAL_VOID),
   mRooted(false),
