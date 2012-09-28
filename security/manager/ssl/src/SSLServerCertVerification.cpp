@@ -321,7 +321,7 @@ CertErrorRunnable::CheckCertOverrides()
       if (NS_SUCCEEDED(nsrv) && haveOverride) 
       {
        // remove the errors that are already overriden
-        remaining_display_errors &= !overrideBits;
+        remaining_display_errors &= ~overrideBits;
       }
     }
 
