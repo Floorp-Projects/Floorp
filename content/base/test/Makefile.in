@@ -577,6 +577,7 @@ ifneq ($(OS_ARCH),WINNT)
 ifndef MOZ_JAVA_COMPOSITOR
 MOCHITEST_FILES_B += \
 		test_messagemanager_assertpermission.html \
+		test_child_process_shutdown_message.html \
 		$(NULL)
 endif
 endif

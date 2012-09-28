@@ -2,7 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test for the nsIPermissionChecker part of Message Managers</title>
+  <title>Test that processes that are shutdown send a 'process-shutdown'
+         message to their process message manager.</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -23,22 +24,6 @@ const CHILD_PROCESS_SHUTDOWN_MESSAGE = "child-process-shutdown";
 
 let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
              .getService(Ci.nsIMessageBroadcaster);
-let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-             .getService(Ci.nsISyncMessageSender);
-let gAppsService = Cc["@mozilla.org/AppsService;1"]
-                     .getService(Ci.nsIAppsService);
-
-function setUp() {
-  SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
-  SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", true);
-  SpecialPowers.addPermission("browser", true, window.document);
-
-  let appId = gAppsService.getAppLocalIdByManifestURL(APP_MANIFEST);
-  SpecialPowers.addPermission("foobar", true, { url: APP_URL,
-                                                appId: appId,
-                                                isInBrowserElement: false });
-  runNextTest();
-}
 
 /**
  * Load the example.org app in an <iframe mozbrowser mozapp>
@@ -117,77 +102,32 @@ function expectFrameProcessShutdown(iframe, frameMM, processMM, callback) {
   });
 }
 
-function testSameProcess() {
-  // Assert permissions on the in-process child process message manager.
-  // It always has all permissions, including ones that were never
-  // assigned to anybody.
+function runTests(callback) {
+  SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+  SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", true);
+  SpecialPowers.addPermission("browser", true, window.document);
 
-  cpmm.sendAsyncMessage("TestPermission:InProcess");
-  ppmm.addMessageListener("TestPermission:InProcess", function receiveMessage(msg) {
-    ppmm.removeMessageListener("TestPermission:InProcess", receiveMessage);
-    msg = SpecialPowers.wrap(msg);
-
-    ok(msg.target.assertPermission("frobnaz"), "in-process cpmm always has all capabilities");
-    runNextTest();
-  });
-}
-
-function testFrameMessageManager() {
-  // Assert permissions on the frame message manager.
+  function tearDown() {
+    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
+    SpecialPowers.clearUserPref("dom.ipc.browser_frames.oop_by_default");
+    SimpleTest.finish();
+  }
 
   loadApp(function (iframe) {
+    // We want to make sure we get notified on both the frame and
+    // process message managers.
     let frameMM = SpecialPowers.getBrowserFrameMessageManager(iframe);
     prepareProcess(frameMM, function (processMM) {
-      ok(frameMM.assertPermission("foobar"),
-         "Frame mm has assigned permission.");
-      ok(!frameMM.assertPermission("frobnaz"),
-         "Frame mm doesn't have non-existing permission.");
-      expectFrameProcessShutdown(iframe, frameMM, processMM, function () {
-        iframe.parentNode.removeChild(iframe);
-        runNextTest();
-      });
-    });
-  });
-}
-
-function testChildProcessMessageManager() {
-  // Assert permissions on the child process message manager.
-
-  loadApp(function (iframe) {
-    let frameMM = SpecialPowers.getBrowserFrameMessageManager(iframe);
-    prepareProcess(frameMM, function (processMM) {
-      ok(processMM.assertPermission("foobar"),
-         "Process mm has assigned permission.");
+      // Let's kill the content process by asking for a permission
+      // that it doesn't have.
       ok(!processMM.assertPermission("frobnaz"),
-         "Process mm doesn't have non-existing permission.");
+         "Content child should not have this permission");
       expectFrameProcessShutdown(iframe, frameMM, processMM, function () {
         iframe.parentNode.removeChild(iframe);
-        runNextTest();
+        tearDown();
       });
     });
   });
-}
-
-function tearDown() {
-  SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
-  SpecialPowers.clearUserPref("dom.ipc.browser_frames.oop_by_default");
-  SimpleTest.finish();
-}
-
-let _tests = [
-  setUp,
-  testSameProcess,
-  testFrameMessageManager,
-  testChildProcessMessageManager,
-  tearDown
-]
-function runNextTest() {
-  SimpleTest.executeSoon(_tests.shift());
-}
-
-function runTests() {
-  SimpleTest.waitForExplicitFinish();
-  runNextTest();
 }
 
 </script>
