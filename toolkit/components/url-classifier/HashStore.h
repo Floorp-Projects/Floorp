@@ -118,7 +118,7 @@ private:
   // Force the entire store in memory
   nsresult ReadEntireStore();
   nsresult SanityCheck(nsIFile* aStoreFile);
-  nsresult CalculateChecksum(nsAutoCString& aChecksum, bool aChecksumPresent);
+  nsresult CalculateChecksum(nsAutoCString& aChecksum, int64_t aSize, bool aChecksumPresent);
   nsresult CheckChecksum(nsIFile* aStoreFile);
   void UpdateHeader();
 

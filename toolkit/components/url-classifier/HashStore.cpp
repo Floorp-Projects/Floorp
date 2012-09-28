@@ -187,7 +187,7 @@ HashStore::CheckChecksum(nsIFile* aStoreFile)
     return NS_ERROR_FAILURE;
   }
 
-  rv = CalculateChecksum(hash, true);
+  rv = CalculateChecksum(hash, fileSize, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   compareHash.GetMutableData(&data, hash.Length());
@@ -319,34 +319,15 @@ HashStore::SanityCheck(nsIFile *storeFile)
 }
 
 nsresult
-HashStore::CalculateChecksum(nsAutoCString& aChecksum, bool aChecksumPresent)
+HashStore::CalculateChecksum(nsAutoCString& aChecksum,
+                             int64_t aSize,
+                             bool aChecksumPresent)
 {
   aChecksum.Truncate();
 
-  nsCOMPtr<nsIFile> storeFile;
-  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(".sbstore"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIInputStream> hashStream;
-
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(hashStream), storeFile,
-                                  PR_RDONLY);
-
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
-    Reset();
-    return rv;
-  }
-
-  int64_t fileSize;
-  rv = storeFile->GetFileSize(&fileSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (fileSize < 0) {
-    return NS_ERROR_FAILURE;
-  }
+  // Reset mInputStream to start
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
+  nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
 
   nsCOMPtr<nsICryptoHash> hash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -359,10 +340,10 @@ HashStore::CalculateChecksum(nsAutoCString& aChecksum, bool aChecksumPresent)
 
   if (!aChecksumPresent) {
     // Hash entire file
-    rv = hash->UpdateFromStream(hashStream, UINT32_MAX);
+    rv = hash->UpdateFromStream(mInputStream, UINT32_MAX);
   } else {
     // Hash everything but last checksum bytes
-    rv = hash->UpdateFromStream(hashStream, fileSize-CHECKSUM_SIZE);
+    rv = hash->UpdateFromStream(mInputStream, fileSize-CHECKSUM_SIZE);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
