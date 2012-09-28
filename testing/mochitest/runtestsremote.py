@@ -419,7 +419,10 @@ def main():
         mp.read(options.robocop)
         robocop_tests = mp.active_tests(exists=False)
 
-        fHandle = open("robotium.config", "w")
+        fHandle = tempfile.NamedTemporaryFile(suffix='.config',
+                                              prefix='robotium-',
+                                              dir=os.getcwd(),
+                                              delete=False)
         fHandle.write("profile=%s\n" % (mochitest.remoteProfile))
         fHandle.write("logfile=%s\n" % (options.remoteLogFile))
         fHandle.write("host=http://mochi.test:8888/tests\n")
@@ -429,7 +432,8 @@ def main():
       
         dm.removeFile(os.path.join(deviceRoot, "fennec_ids.txt"))
         dm.removeFile(os.path.join(deviceRoot, "robotium.config"))
-        dm.pushFile("robotium.config", os.path.join(deviceRoot, "robotium.config"))
+        dm.pushFile(fHandle.name, os.path.join(deviceRoot, "robotium.config"))
+        os.unlink(fHandle.name)
         fennec_ids = os.path.abspath("fennec_ids.txt")
         if not os.path.exists(fennec_ids) and options.robocopIds:
             fennec_ids = options.robocopIds
