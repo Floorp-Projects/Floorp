@@ -37,14 +37,14 @@ function test() {
 
   let uri = Services.io.newFileURI(dir);
 
-  addTab("data:text/html;charset=utf8,<p>test file URI");
+  addTab(uri.spec);
   browser.addEventListener("load", function tabLoad() {
     browser.removeEventListener("load", tabLoad, true);
     openConsole(null, function(aHud) {
       hud = aHud;
       hud.jsterm.clearOutput();
       browser.addEventListener("load", tabReload, true);
-      content.location = uri.spec;
+      content.location.reload();
     });
   }, true);
 }

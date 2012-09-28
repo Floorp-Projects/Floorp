@@ -8,7 +8,7 @@ function test()
 {
   waitForExplicitFinish();
 
-  addTab("data:text/html;charset=utf8,test for bug 676722 - inspectable objects for window.console");
+  addTab("data:text/html,test for bug 676722 - inspectable objects for window.console");
 
   gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
     gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);

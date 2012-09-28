@@ -8,6 +8,9 @@ const EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 
+const WEBCONSOLE_CONTENT_SCRIPT_URL =
+  "chrome://browser/content/devtools/HUDService-content.js";
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource:///modules/devtools/Commands.jsm");
@@ -22,9 +25,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "gcli",
 
 XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
                                   "resource:///modules/devtools/CmdCmd.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
 /**
  * Due to a number of panel bugs we need a way to check if we are running on
@@ -56,8 +56,7 @@ function DeveloperToolbar(aChromeWindow, aToolbarElement)
   this._lastState = NOTIFICATIONS.HIDE;
   this._pendingShowCallback = undefined;
   this._pendingHide = false;
-  this._errorsCount = Object.create(null);
-  this._errorListeners = Object.create(null);
+  this._errorsCount = {};
   this._webConsoleButton = this._doc
                            .getElementById("developer-toolbar-webconsole");
 
@@ -88,6 +87,9 @@ const NOTIFICATIONS = {
  * use them without needing to import anything
  */
 DeveloperToolbar.prototype.NOTIFICATIONS = NOTIFICATIONS;
+
+DeveloperToolbar.prototype._contentMessageListeners =
+  ["WebConsole:CachedMessages", "WebConsole:PageError"];
 
 /**
  * Is the toolbar open?
@@ -283,18 +285,21 @@ DeveloperToolbar.prototype._initErrorsCount = function DT__initErrorsCount(aTab)
     return;
   }
 
-  let window = aTab.linkedBrowser.contentWindow;
-  let listener = new PageErrorListener(window, {
-    onPageError: this._onPageError.bind(this, tabId),
-  });
-  listener.init();
+  let messageManager = aTab.linkedBrowser.messageManager;
+  messageManager.loadFrameScript(WEBCONSOLE_CONTENT_SCRIPT_URL, true);
 
-  this._errorListeners[tabId] = listener;
   this._errorsCount[tabId] = 0;
 
-  let messages = listener.getCachedMessages();
-  messages.forEach(this._onPageError.bind(this, tabId));
+  this._contentMessageListeners.forEach(function(aName) {
+    messageManager.addMessageListener(aName, this);
+  }, this);
 
+  let message = {
+    features: ["PageError"],
+    cachedMessages: ["PageError"],
+  };
+
+  this.sendMessageToTab(aTab, "WebConsole:Init", message);
   this._updateErrorsCount();
 };
 
@@ -314,10 +319,14 @@ DeveloperToolbar.prototype._stopErrorsCount = function DT__stopErrorsCount(aTab)
     return;
   }
 
-  this._errorListeners[tabId].destroy();
-  delete this._errorListeners[tabId];
-  delete this._errorsCount[tabId];
+  this.sendMessageToTab(aTab, "WebConsole:Destroy", {});
 
+  let messageManager = aTab.linkedBrowser.messageManager;
+  this._contentMessageListeners.forEach(function(aName) {
+    messageManager.removeMessageListener(aName, this);
+  }, this);
+
+  delete this._errorsCount[tabId];
   this._updateErrorsCount();
 };
 
@@ -425,13 +434,61 @@ DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
 };
 
 /**
- * Count a page error received for the currently selected tab. This
- * method counts the JavaScript exceptions received and CSS errors/warnings.
+ * The handler of messages received from the nsIMessageManager.
+ *
+ * @param object aMessage the message received from the content process.
+ */
+DeveloperToolbar.prototype.receiveMessage = function DT_receiveMessage(aMessage)
+{
+  if (!aMessage.json || !(aMessage.json.hudId in this._errorsCount)) {
+    return;
+  }
+
+  let tabId = aMessage.json.hudId;
+  let errors = this._errorsCount[tabId];
+
+  switch (aMessage.name) {
+    case "WebConsole:PageError":
+      this._onPageError(tabId, aMessage.json.pageError);
+      break;
+    case "WebConsole:CachedMessages":
+      aMessage.json.messages.forEach(this._onPageError.bind(this, tabId));
+      break;
+  }
+
+  if (errors != this._errorsCount[tabId]) {
+    this._updateErrorsCount(tabId);
+  }
+};
+
+/**
+ * Send a message to the content process using the nsIMessageManager of the
+ * given tab.
+ *
+ * @param nsIDOMNode aTab the tab you want to send a message to.
+ * @param string aName the name of the message you want to send.
+ * @param object aMessage the message to send.
+ */
+DeveloperToolbar.prototype.sendMessageToTab =
+function DT_sendMessageToTab(aTab, aName, aMessage)
+{
+  let tabId = aTab.linkedPanel;
+  aMessage.hudId = tabId;
+  if (!("id" in aMessage)) {
+    aMessage.id = "DevToolbar-" + this.sequenceId;
+  }
+
+  aTab.linkedBrowser.messageManager.sendAsyncMessage(aName, aMessage);
+};
+
+/**
+ * Process a "WebConsole:PageError" message received from the given tab. This
+ * method counts the JavaScript exceptions received.
  *
  * @private
  * @param string aTabId the ID of the tab from where the page error comes.
- * @param object aPageError the page error object received from the
- * PageErrorListener.
+ * @param object aPageError the page error object received from the content
+ * process.
  */
 DeveloperToolbar.prototype._onPageError =
 function DT__onPageError(aTabId, aPageError)
@@ -444,7 +501,6 @@ function DT__onPageError(aTabId, aPageError)
   }
 
   this._errorsCount[aTabId]++;
-  this._updateErrorsCount(aTabId);
 };
 
 /**
