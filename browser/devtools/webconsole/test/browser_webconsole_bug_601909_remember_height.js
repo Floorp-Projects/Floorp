@@ -16,14 +16,14 @@ const MINIMUM_CONSOLE_HEIGHT = 150;
 const MINIMUM_PAGE_HEIGHT = 50;
 const HEIGHT_PREF = "devtools.hud.height";
 
-let hud, newHeight, height, innerHeight, testDriver;
+let hud, newHeight, height, innerHeight;
 
-function testGen()
+function performTests(aWebConsole)
 {
+  hud = aWebConsole.iframe;
   height = parseInt(hud.style.height);
 
   toggleConsole();
-  yield;
 
   is(newHeight, height, "same height after reopening the console");
   is(Services.prefs.getIntPref(HEIGHT_PREF), HUDService.lastConsoleHeight,
@@ -31,7 +31,6 @@ function testGen()
 
   setHeight(Math.ceil(innerHeight * 0.5));
   toggleConsole();
-  yield;
 
   is(newHeight, height, "same height after reopening the console");
   is(Services.prefs.getIntPref(HEIGHT_PREF), HUDService.lastConsoleHeight,
@@ -39,7 +38,6 @@ function testGen()
 
   setHeight(MINIMUM_CONSOLE_HEIGHT - 1);
   toggleConsole();
-  yield;
 
   is(newHeight, MINIMUM_CONSOLE_HEIGHT, "minimum console height is respected");
   is(Services.prefs.getIntPref(HEIGHT_PREF), HUDService.lastConsoleHeight,
@@ -47,7 +45,6 @@ function testGen()
 
   setHeight(innerHeight - MINIMUM_PAGE_HEIGHT + 1);
   toggleConsole();
-  yield;
 
   is(newHeight, innerHeight - MINIMUM_PAGE_HEIGHT,
     "minimum page height is respected");
@@ -57,7 +54,6 @@ function testGen()
   setHeight(Math.ceil(innerHeight * 0.6));
   Services.prefs.setIntPref(HEIGHT_PREF, -1);
   toggleConsole();
-  yield;
 
   is(newHeight, height, "same height after reopening the console");
   is(Services.prefs.getIntPref(HEIGHT_PREF), -1, "pref is not updated");
@@ -66,23 +62,17 @@ function testGen()
   HUDService.lastConsoleHeight = 0;
   Services.prefs.setIntPref(HEIGHT_PREF, 0);
 
-  hud = testDriver = null;
   executeSoon(finishTest);
-
-  yield;
 }
 
 function toggleConsole()
 {
-  closeConsole(null, function() {
-    openConsole(null, function() {
-      let hudId = HUDService.getHudIdByWindow(content);
-      hud = HUDService.hudReferences[hudId].iframe;
-      newHeight = parseInt(hud.style.height);
+  closeConsole();
+  openConsole();
 
-      testDriver.next();
-    });
-  });
+  let hudId = HUDService.getHudIdByWindow(content);
+  hud = HUDService.hudReferences[hudId].iframe;
+  newHeight = parseInt(hud.style.height);
 }
 
 function setHeight(aHeight)
@@ -97,11 +87,7 @@ function test()
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
     innerHeight = content.innerHeight;
-    openConsole(null, function(aHud) {
-      hud = aHud.iframe;
-      testDriver = testGen();
-      testDriver.next();
-    });
+    openConsole(null, performTests);
   }, true);
 }
 

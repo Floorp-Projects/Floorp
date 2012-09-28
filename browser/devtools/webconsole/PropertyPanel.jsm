@@ -13,7 +13,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
+                                  "resource:///modules/WebConsoleUtils.jsm");
 
 var EXPORTED_SYMBOLS = ["PropertyPanel", "PropertyTreeView"];
 
