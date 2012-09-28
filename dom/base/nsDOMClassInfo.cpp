@@ -4350,6 +4350,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeMessageSender, nsISupports)
+    DOM_CLASSINFO_MAP_ENTRY(nsIPermissionChecker)
     DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
@@ -9206,7 +9207,7 @@ static inline uint32_t
 PrivateToFlags(void *priv)
 {
   uintptr_t intPriv = reinterpret_cast<uintptr_t>(priv);
-  MOZ_ASSERT(intPriv <= PR_UINT32_MAX && (intPriv & 1) == 0);
+  MOZ_ASSERT(intPriv <= UINT32_MAX && (intPriv & 1) == 0);
   return static_cast<uint32_t>(intPriv >> 1);
 }
 

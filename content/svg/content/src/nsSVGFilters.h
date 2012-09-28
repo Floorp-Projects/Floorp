@@ -182,7 +182,7 @@ public:
   static nsIntRect GetMaxRect() {
     // Try to avoid overflow errors dealing with this rect. It will
     // be intersected with some other reasonable-sized rect eventually.
-    return nsIntRect(PR_INT32_MIN/2, PR_INT32_MIN/2, PR_INT32_MAX, PR_INT32_MAX);
+    return nsIntRect(INT32_MIN/2, INT32_MIN/2, INT32_MAX, INT32_MAX);
   }
 
   operator nsISupports*() { return static_cast<nsIContent*>(this); }

@@ -625,7 +625,7 @@ NS_ConsumeStream(nsIInputStream *stream, uint32_t maxCount, nsACString &result)
 
         // resize result buffer
         uint32_t length = result.Length();
-        if (avail > PR_UINT32_MAX - length)
+        if (avail > UINT32_MAX - length)
             return NS_ERROR_FILE_TOO_BIG;
         
         result.SetLength(length + avail);

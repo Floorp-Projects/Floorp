@@ -70,15 +70,15 @@ public:
    * Get the length, begin writing, and optionally set the length of a
    * string all in one operation.
    *
-   * @param   newSize Size the string to this length. Pass PR_UINT32_MAX
+   * @param   newSize Size the string to this length. Pass UINT32_MAX
    *                  to leave the length unchanged.
    * @return  The new length of the string, or 0 if resizing failed.
    */
   NS_HIDDEN_(uint32_t) BeginWriting(char_type **begin,
                                     char_type **end = nullptr,
-                                    uint32_t newSize = PR_UINT32_MAX);
+                                    uint32_t newSize = UINT32_MAX);
 
-  NS_HIDDEN_(char_type*) BeginWriting(uint32_t = PR_UINT32_MAX);
+  NS_HIDDEN_(char_type*) BeginWriting(uint32_t = UINT32_MAX);
   NS_HIDDEN_(char_type*) EndWriting();
 
   NS_HIDDEN_(bool) SetLength(uint32_t aLen);
@@ -107,7 +107,7 @@ public:
   {
     NS_StringCopy(*this, aString);
   }
-  NS_HIDDEN_(void) Assign(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  NS_HIDDEN_(void) Assign(const char_type* aData, size_type aLength = UINT32_MAX)
   {
     NS_StringSetData(*this, aData, aLength);
   }
@@ -416,15 +416,15 @@ public:
    * Get the length, begin writing, and optionally set the length of a
    * string all in one operation.
    *
-   * @param   newSize Size the string to this length. Pass PR_UINT32_MAX
+   * @param   newSize Size the string to this length. Pass UINT32_MAX
    *                  to leave the length unchanged.
    * @return  The new length of the string, or 0 if resizing failed.
    */
   NS_HIDDEN_(uint32_t) BeginWriting(char_type **begin,
                                     char_type **end = nullptr,
-                                    uint32_t newSize = PR_UINT32_MAX);
+                                    uint32_t newSize = UINT32_MAX);
 
-  NS_HIDDEN_(char_type*) BeginWriting(uint32_t aLen = PR_UINT32_MAX);
+  NS_HIDDEN_(char_type*) BeginWriting(uint32_t aLen = UINT32_MAX);
   NS_HIDDEN_(char_type*) EndWriting();
 
   NS_HIDDEN_(bool) SetLength(uint32_t aLen);
@@ -453,7 +453,7 @@ public:
   {
     NS_CStringCopy(*this, aString);
   }
-  NS_HIDDEN_(void) Assign(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  NS_HIDDEN_(void) Assign(const char_type* aData, size_type aLength = UINT32_MAX)
   {
     NS_CStringSetData(*this, aData, aLength);
   }
@@ -803,7 +803,7 @@ public:
   }
 
   explicit
-  nsString(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  nsString(const char_type* aData, size_type aLength = UINT32_MAX)
   {
     NS_StringContainerInit2(*this, aData, aLength, 0);
   }
@@ -823,7 +823,7 @@ public:
   self_type& operator=(const char_type* aPtr)                 { Assign(aPtr);      return *this; }
   self_type& operator=(char_type aChar)                       { Assign(aChar);     return *this; }
 
-  void Adopt(const char_type *aData, size_type aLength = PR_UINT32_MAX)
+  void Adopt(const char_type *aData, size_type aLength = UINT32_MAX)
   {
     NS_StringContainerFinish(*this);
     NS_StringContainerInit2(*this, aData, aLength,
@@ -863,7 +863,7 @@ public:
   }
 
   explicit
-  nsCString(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  nsCString(const char_type* aData, size_type aLength = UINT32_MAX)
   {
     NS_CStringContainerInit(*this);
     NS_CStringSetData(*this, aData, aLength);
@@ -884,7 +884,7 @@ public:
   self_type& operator=(const char_type* aPtr)                 { Assign(aPtr);      return *this; }
   self_type& operator=(char_type aChar)                       { Assign(aChar);     return *this; }
 
-  void Adopt(const char_type *aData, size_type aLength = PR_UINT32_MAX)
+  void Adopt(const char_type *aData, size_type aLength = UINT32_MAX)
   {
     NS_CStringContainerFinish(*this);
     NS_CStringContainerInit2(*this, aData, aLength,
@@ -912,11 +912,11 @@ public:
   nsDependentString() {}
 
   explicit
-  nsDependentString(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  nsDependentString(const char_type* aData, size_type aLength = UINT32_MAX)
     : nsString(aData, aLength, NS_CSTRING_CONTAINER_INIT_DEPEND)
   {}
 
-  void Rebind(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  void Rebind(const char_type* aData, size_type aLength = UINT32_MAX)
   {
     NS_StringContainerFinish(*this);
     NS_StringContainerInit2(*this, aData, aLength,
@@ -935,11 +935,11 @@ public:
   nsDependentCString() {}
 
   explicit
-  nsDependentCString(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  nsDependentCString(const char_type* aData, size_type aLength = UINT32_MAX)
     : nsCString(aData, aLength, NS_CSTRING_CONTAINER_INIT_DEPEND)
   {}
 
-  void Rebind(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  void Rebind(const char_type* aData, size_type aLength = UINT32_MAX)
   {
     NS_CStringContainerFinish(*this);
     NS_CStringContainerInit2(*this, aData, aLength,
@@ -994,7 +994,7 @@ public:
   }
 
   explicit
-  NS_ConvertASCIItoUTF16(const char* aData, uint32_t aLength = PR_UINT32_MAX)
+  NS_ConvertASCIItoUTF16(const char* aData, uint32_t aLength = UINT32_MAX)
   {
     NS_CStringToUTF16(nsDependentCString(aData, aLength),
                       NS_CSTRING_ENCODING_ASCII, *this);
@@ -1016,7 +1016,7 @@ public:
   }
 
   explicit
-  NS_ConvertUTF8toUTF16(const char* aData, uint32_t aLength = PR_UINT32_MAX)
+  NS_ConvertUTF8toUTF16(const char* aData, uint32_t aLength = UINT32_MAX)
   {
     NS_CStringToUTF16(nsDependentCString(aData, aLength),
                       NS_CSTRING_ENCODING_UTF8, *this);
@@ -1038,7 +1038,7 @@ public:
   }
 
   explicit
-  NS_ConvertUTF16toUTF8(const PRUnichar* aData, uint32_t aLength = PR_UINT32_MAX)
+  NS_ConvertUTF16toUTF8(const PRUnichar* aData, uint32_t aLength = UINT32_MAX)
   {
     NS_UTF16ToCString(nsDependentString(aData, aLength),
                       NS_CSTRING_ENCODING_UTF8, *this);
@@ -1060,7 +1060,7 @@ public:
   }
 
   explicit
-  NS_LossyConvertUTF16toASCII(const PRUnichar* aData, uint32_t aLength = PR_UINT32_MAX)
+  NS_LossyConvertUTF16toASCII(const PRUnichar* aData, uint32_t aLength = UINT32_MAX)
   {
     NS_UTF16ToCString(nsDependentString(aData, aLength),
                       NS_CSTRING_ENCODING_ASCII, *this);

@@ -29,7 +29,7 @@ NS_IMETHODIMP
 FileStream::Seek(int32_t aWhence, int64_t aOffset)
 {
   // TODO: Add support for 64 bit file sizes, bug 752431
-  NS_ENSURE_TRUE(aOffset <= PR_INT32_MAX, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aOffset <= INT32_MAX, NS_ERROR_INVALID_ARG);
 
   nsresult rv = DoPendingOpen();
   NS_ENSURE_SUCCESS(rv, rv);

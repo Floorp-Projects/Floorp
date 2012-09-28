@@ -52,7 +52,7 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   if (!mStream)
     return false;
 
-  if (ranges.size() > PR_INT32_MAX)
+  if (ranges.size() > INT32_MAX)
     return false;
 
   nsAutoArrayPtr<NPByteRange> rp(new NPByteRange[ranges.size()]);

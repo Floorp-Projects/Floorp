@@ -81,7 +81,7 @@ CheckValidNodeInfo(uint16_t aNodeType, nsIAtom *aName, int32_t aNamespaceID,
                     aNodeType == nsIDOMNode::DOCUMENT_NODE ||
                     aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||
                     aNodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE ||
-                    aNodeType == PR_UINT16_MAX,
+                    aNodeType == UINT16_MAX,
                     "Invalid nodeType");
   NS_ABORT_IF_FALSE((aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
                      aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==
@@ -89,7 +89,7 @@ CheckValidNodeInfo(uint16_t aNodeType, nsIAtom *aName, int32_t aNamespaceID,
                     "Supply aExtraName for and only for PIs and doctypes");
   NS_ABORT_IF_FALSE(aNodeType == nsIDOMNode::ELEMENT_NODE ||
                     aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||
-                    aNodeType == PR_UINT16_MAX ||
+                    aNodeType == UINT16_MAX ||
                     aNamespaceID == kNameSpaceID_None,
                     "Only attributes and elements can be in a namespace");
   NS_ABORT_IF_FALSE(aName && aName != nsGkAtoms::_empty, "Invalid localName");

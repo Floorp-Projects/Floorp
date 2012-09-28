@@ -23,12 +23,21 @@
   <script type="application/javascript">
     //gA11yEventDumpID = "eventdump"; // debug stuff
     gA11yEventDumpToConsole = true; // debug stuff
+    
+    var winLowerThanVista = navigator.platform.indexOf("Win") == 0;
+    if (winLowerThanVista) {
+      var version = Components.classes["@mozilla.org/system-info;1"]
+                              .getService(Components.interfaces.nsIPropertyBag2)
+                              .getProperty("version");
+      version = parseFloat(version);
+      winLowerThanVista = !(version >= 6.0);
+    }
 
     var gQueue = null;
     function doTests()
     {
       // bug 746183 - Whole file times out on OS X
-      if (MAC) {
+      if (MAC || winLowerThanVista) {
         todo(false, "Reenable on mac after fixing bug 746183!");
         SimpleTest.finish();
         return;

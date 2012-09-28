@@ -133,7 +133,7 @@ inline int32_t
 nsHttpHeaderArray::LookupEntry(nsHttpAtom header, const nsEntry **entry) const
 {
     uint32_t index = mHeaders.IndexOf(header, 0, nsEntry::MatchHeader());
-    if (index != PR_UINT32_MAX)
+    if (index != UINT32_MAX)
         *entry = &mHeaders[index];
     return index;
 }
@@ -142,7 +142,7 @@ inline int32_t
 nsHttpHeaderArray::LookupEntry(nsHttpAtom header, nsEntry **entry)
 {
     uint32_t index = mHeaders.IndexOf(header, 0, nsEntry::MatchHeader());
-    if (index != PR_UINT32_MAX)
+    if (index != UINT32_MAX)
         *entry = &mHeaders[index];
     return index;
 }

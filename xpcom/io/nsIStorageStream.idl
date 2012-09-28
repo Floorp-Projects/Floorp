@@ -28,7 +28,7 @@ interface nsIStorageStream : nsISupports
      *        Size of each segment. Must be a power of two.
      * @param maxSize
      *        Maximum total size of this stream. length will always be less
-     *        than or equal to this value. Passing PR_UINT32_MAX is safe.
+     *        than or equal to this value. Passing UINT32_MAX is safe.
      * @param segmentAllocator
      *        Which allocator to use for the segments. May be null, in which
      *        case a default allocator will be used.

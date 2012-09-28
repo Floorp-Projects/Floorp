@@ -790,7 +790,6 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
     aFloat->SetPosition(origin);
     nsContainerFrame::PositionFrameView(aFloat);
     nsContainerFrame::PositionChildViews(aFloat);
-    FrameLayerBuilder::InvalidateThebesLayersInSubtree(aFloat);
   }
 
   // Update the float combined area state

@@ -125,7 +125,7 @@ public:
     ~Assertion();
 
     void AddRef() {
-        if (mRefCnt == PR_UINT16_MAX) {
+        if (mRefCnt == UINT16_MAX) {
             NS_WARNING("refcount overflow, leaking Assertion");
             return;
         }
@@ -133,7 +133,7 @@ public:
     }
 
     void Release(nsFixedSizeAllocator& aAllocator) {
-        if (mRefCnt == PR_UINT16_MAX) {
+        if (mRefCnt == UINT16_MAX) {
             NS_WARNING("refcount overflow, leaking Assertion");
             return;
         }

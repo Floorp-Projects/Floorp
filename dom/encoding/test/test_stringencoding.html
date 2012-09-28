@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+var _test = test;
+test = function(msg, no, func) { _test(func || no, msg); };
+equal = assert_equals;
+ok = assert_true;
+raises = function(func) { assert_throws(null, func); };
+expect = function() {};
+</script>
+
+<div id="log"></div>
+
+<script type="text/javascript" src="tests.js"></script>
+<!-- TODO: test for all single-byte encoding indexes -->
+
+<script type="text/javascript" src="test-gbk.js"></script>
+<!-- TODO: gb18030 -->
+<script type="text/javascript" src="test-hz-gb-2312.js"></script>
+
+<script type="text/javascript" src="test-big5.js"></script>
+
+<script type="text/javascript" src="test-euc-jp.js"></script>
+<script type="text/javascript" src="test-iso-2022-jp.js"></script>
+<script type="text/javascript" src="test-shift_jis.js"></script>
+
+<script type="text/javascript" src="test-euc-kr.js"></script>
+<script type="text/javascript" src="test-iso-2022-kr.js"></script>

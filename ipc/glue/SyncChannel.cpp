@@ -22,7 +22,7 @@ struct RunnableMethodTraits<mozilla::ipc::SyncChannel>
 namespace mozilla {
 namespace ipc {
 
-const int32_t SyncChannel::kNoTimeout = PR_INT32_MIN;
+const int32_t SyncChannel::kNoTimeout = INT32_MIN;
 
 SyncChannel::SyncChannel(SyncListener* aListener)
   : AsyncChannel(aListener)

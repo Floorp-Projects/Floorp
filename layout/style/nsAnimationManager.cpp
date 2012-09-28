@@ -598,7 +598,7 @@ public:
                       "this hash function assumes PLDHashNumber is uint32_t");
     float key = *aKey;
     NS_ABORT_IF_FALSE(0.0f <= key && key <= 1.0f, "out of range");
-    return PLDHashNumber(key * PR_UINT32_MAX);
+    return PLDHashNumber(key * UINT32_MAX);
   }
   enum { ALLOW_MEMMOVE = true };
 

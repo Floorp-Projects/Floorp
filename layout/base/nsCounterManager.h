@@ -89,7 +89,7 @@ struct nsCounterUseNode : public nsCounterNode {
         , mCounterStyle(aCounterStyle)
         , mAllCounters(aAllCounters)
     {
-        NS_ASSERTION(aContentIndex <= PR_INT32_MAX, "out of range");
+        NS_ASSERTION(aContentIndex <= INT32_MAX, "out of range");
     }
     
     virtual bool InitTextFrame(nsGenConList* aList,
@@ -119,8 +119,8 @@ struct nsCounterChangeNode : public nsCounterNode {
                         // that comes before all the real content, with
                         // the resets first, in order, and then the increments.
                         aPropIndex + (aChangeType == RESET
-                                        ? (PR_INT32_MIN) 
-                                        : (PR_INT32_MIN / 2)),
+                                        ? (INT32_MIN) 
+                                        : (INT32_MIN / 2)),
                         aChangeType)
         , mChangeValue(aChangeValue)
     {

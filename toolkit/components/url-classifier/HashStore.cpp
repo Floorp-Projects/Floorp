@@ -378,7 +378,7 @@ HashStore::CalculateChecksum(nsAutoCString& aChecksum, bool aChecksumPresent)
 
   if (!aChecksumPresent) {
     // Hash entire file
-    rv = hash->UpdateFromStream(hashStream, PR_UINT32_MAX);
+    rv = hash->UpdateFromStream(hashStream, UINT32_MAX);
   } else {
     // Hash everything but last checksum bytes
     rv = hash->UpdateFromStream(hashStream, fileSize-CHECKSUM_SIZE);

@@ -87,20 +87,6 @@ public:
   virtual ~LayerUserData() {}
 };
 
-class LayerManagerLayerBuilder : public LayerUserData {
-public:
-  LayerManagerLayerBuilder(FrameLayerBuilder* aBuilder, bool aDelete = true)
-    : mLayerBuilder(aBuilder)
-    , mDelete(aDelete)
-  {
-    MOZ_COUNT_CTOR(LayerManagerLayerBuilder);
-  }
-  ~LayerManagerLayerBuilder();
-
-  FrameLayerBuilder* mLayerBuilder;
-  bool mDelete;
-};
-
 /*
  * Motivation: For truly smooth animation and video playback, we need to
  * be able to compose frames and render them on a dedicated thread (i.e.
@@ -213,8 +199,7 @@ public:
   };
 
   FrameLayerBuilder* GetLayerBuilder() {
-    LayerManagerLayerBuilder *data = static_cast<LayerManagerLayerBuilder*>(GetUserData(&gLayerManagerLayerBuilder));
-    return data ? data->mLayerBuilder : nullptr;
+    return reinterpret_cast<FrameLayerBuilder*>(GetUserData(&gLayerManagerLayerBuilder));
   }
 
   /**
@@ -403,7 +388,7 @@ public:
   virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) { return true; }
 
   /**
-   * returns the maximum texture size on this layer backend, or PR_INT32_MAX
+   * returns the maximum texture size on this layer backend, or INT32_MAX
    * if there is no maximum
    */
   virtual int32_t GetMaxTextureSize() const = 0;
@@ -972,6 +957,29 @@ public:
 
   static bool IsLogEnabled() { return LayerManager::IsLogEnabled(); }
 
+  /**
+   * Returns the current area of the layer (in layer-space coordinates)
+   * marked as needed to be recomposited.
+   */
+  const nsIntRegion& GetInvalidRegion() { return mInvalidRegion; }
+
+  /**
+   * Mark the entirety of the layer's visible region as being invalid.
+   */
+  void SetInvalidRectToVisibleRegion() { mInvalidRegion = GetVisibleRegion(); }
+
+  /**
+   * Adds to the current invalid rect.
+   */
+  void AddInvalidRect(const nsIntRect& aRect) { mInvalidRegion.Or(mInvalidRegion, aRect); }
+
+  /**
+   * Clear the invalid rect, marking the layer as being identical to what is currently
+   * composited.
+   */
+  void ClearInvalidRect() { mInvalidRegion.SetEmpty(); }
+
+
 #ifdef DEBUG
   void SetDebugColorIndex(uint32_t aIndex) { mDebugColorIndex = aIndex; }
   uint32_t GetDebugColorIndex() { return mDebugColorIndex; }
@@ -1033,6 +1041,7 @@ protected:
   float mOpacity;
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;
+  nsIntRegion mInvalidRegion;
   uint32_t mContentFlags;
   bool mUseClipRect;
   bool mUseTileSourceRect;
@@ -1378,7 +1387,7 @@ public:
    * Notify this CanvasLayer that the canvas surface contents have
    * changed (or will change) before the next transaction.
    */
-  void Updated() { mDirty = true; }
+  void Updated() { mDirty = true; SetInvalidRectToVisibleRegion(); }
 
   /**
    * Register a callback to be called at the end of each transaction.

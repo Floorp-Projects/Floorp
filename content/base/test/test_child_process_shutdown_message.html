@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test that processes that are shutdown send a 'process-shutdown'
+         message to their process message manager.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests();">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = SpecialPowers.wrap(Components);
+
+const APP_URL = "http://example.org";
+const APP_MANIFEST = "http://example.org/manifest.webapp";
+const CHILD_PROCESS_SHUTDOWN_MESSAGE = "child-process-shutdown";
+
+let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+             .getService(Ci.nsIMessageBroadcaster);
+
+/**
+ * Load the example.org app in an <iframe mozbrowser mozapp>
+ */
+function loadApp(callback) {
+  let iframe = document.createElement("iframe");
+  iframe.setAttribute("mozapp", APP_MANIFEST);
+  iframe.mozbrowser = true;
+  iframe.src = APP_URL;
+  document.getElementById("content").appendChild(iframe);
+
+  iframe.addEventListener("mozbrowserloadend", function onloadend() {
+    iframe.removeEventListener("mozbrowserloadend", onloadend);
+    callback(iframe);
+  });
+}
+
+/**
+ * Prepare the child process for an intentional crash. This is to keep
+ * the leak automation tools happy.
+ *
+ * This also allows us to acquire the process message manaager that
+ * corresponds to the process by sending a message to a frame script
+ * in the content process and having it reply to us via the child
+ * process message manager.
+ */
+function prepareProcess(frameMM, callback) {
+  let frameScript = 'data:,\
+    privateNoteIntentionalCrash();\
+    var cpmm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]\
+                         .getService(Components.interfaces.nsISyncMessageSender);\
+    addMessageListener("TestChild:Ohai", function receiveMessage(msg) {\
+      cpmm.sendAsyncMessage("TestChild:Ohai");\
+    });';
+  frameMM.loadFrameScript(frameScript, false);
+  frameMM.sendAsyncMessage("TestChild:Ohai");
+  ppmm.addMessageListener("TestChild:Ohai", function receiveMessage(msg) {
+    ppmm.removeMessageListener("TestChild:Ohai", receiveMessage);
+    msg = SpecialPowers.wrap(msg);
+    callback(msg.target);
+  });
+}
+
+/**
+ * Expects an OOP frame's process to shut down and report three
+ * events/messages: an error event on the browser element, and a
+ * 'child-process-shutdown' message on both the frame and process
+ * message managers.
+ */
+function expectFrameProcessShutdown(iframe, frameMM, processMM, callback) {
+  let msgCount = 0;
+  function countMessage() {
+    msgCount += 1;
+    if (msgCount == 3) {
+      ok(true, "Observed all three expected events.");
+      callback();
+    }
+  };
+
+  iframe.addEventListener("mozbrowsererror", function onerror(event) {
+    iframe.removeEventListener("mozbrowsererror", onerror);
+    is(event.detail.type, "fatal", "Observed expected event.");
+    countMessage();
+  });
+
+  processMM.addMessageListener(CHILD_PROCESS_SHUTDOWN_MESSAGE, function receiveMessage() {
+    processMM.removeMessageListener(CHILD_PROCESS_SHUTDOWN_MESSAGE, receiveMessage);
+    ok(true, "Received 'child-process-shutdown' message from process message manager.");
+    countMessage();
+  });
+
+  frameMM.addMessageListener(CHILD_PROCESS_SHUTDOWN_MESSAGE, function receiveMessage() {
+    frameMM.removeMessageListener(CHILD_PROCESS_SHUTDOWN_MESSAGE, receiveMessage);
+    ok(true, "Received 'child-process-shutdown' message from frame message manager.");
+    countMessage();
+  });
+}
+
+function runTests(callback) {
+  SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+  SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", true);
+  SpecialPowers.addPermission("browser", true, window.document);
+
+  function tearDown() {
+    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
+    SpecialPowers.clearUserPref("dom.ipc.browser_frames.oop_by_default");
+    SimpleTest.finish();
+  }
+
+  loadApp(function (iframe) {
+    // We want to make sure we get notified on both the frame and
+    // process message managers.
+    let frameMM = SpecialPowers.getBrowserFrameMessageManager(iframe);
+    prepareProcess(frameMM, function (processMM) {
+      // Let's kill the content process by asking for a permission
+      // that it doesn't have.
+      ok(!processMM.assertPermission("frobnaz"),
+         "Content child should not have this permission");
+      expectFrameProcessShutdown(iframe, frameMM, processMM, function () {
+        iframe.parentNode.removeChild(iframe);
+        tearDown();
+      });
+    });
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>

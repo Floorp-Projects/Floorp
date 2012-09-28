@@ -51,7 +51,7 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey)
-    { return static_cast<uint32_t>((*aKey) & PR_UINT32_MAX); }
+    { return static_cast<uint32_t>((*aKey) & UINT32_MAX); }
   enum { ALLOW_MEMMOVE = true };
 
 private:

@@ -651,7 +651,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
             uint64_t len64;
             rv = inputStream->Available(&len64);
             if (NS_SUCCEEDED(rv)) {
-              if (len64 <= PR_UINT32_MAX)
+              if (len64 <= UINT32_MAX)
                 len = (uint32_t)len64;
               else
                 rv = NS_ERROR_FILE_TOO_BIG;

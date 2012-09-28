@@ -496,7 +496,7 @@ NS_METHOD nsWindow::Destroy()
   // the rollup widget, rollup and turn off capture.
   if (this == gRollupWidget) {
     if (gRollupListener) {
-      gRollupListener->Rollup(PR_UINT32_MAX);
+      gRollupListener->Rollup(UINT32_MAX);
     }
     CaptureRollupEvents(nullptr, false, true);
   }
@@ -1585,7 +1585,7 @@ bool nsWindow::RollupOnButtonDown(ULONG aMsg)
 
   // See if we're dealing with a menu.  If so, exit if the
   // event was inside a parent of the current submenu.
-  uint32_t popupsToRollup = PR_UINT32_MAX;
+  uint32_t popupsToRollup = UINT32_MAX;
 
   if (gRollupListener) {
     nsAutoTArray<nsIWidget*, 5> widgetChain;
@@ -1635,7 +1635,7 @@ void nsWindow::RollupOnFocusLost(HWND aFocus)
   }
 
   // Rollup all popups.
-  gRollupListener->Rollup(PR_UINT32_MAX);
+  gRollupListener->Rollup(UINT32_MAX);
   return;
 }
 
