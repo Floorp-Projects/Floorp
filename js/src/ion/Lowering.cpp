@@ -139,6 +139,15 @@ LIRGenerator::visitNewCallObject(MNewCallObject *ins)
 }
 
 bool
+LIRGenerator::visitNewStringObject(MNewStringObject *ins)
+{
+    JS_ASSERT(ins->input()->type() == MIRType_String);
+
+    LNewStringObject *lir = new LNewStringObject(useRegister(ins->input()), temp());
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitInitProp(MInitProp *ins)
 {
     LInitProp *lir = new LInitProp(useRegisterAtStart(ins->getObject()));
@@ -1085,9 +1094,9 @@ LIRGenerator::visitToString(MToString *ins)
         break;
 
       case MIRType_Int32: {
-        LIntToString *lir = new LIntToString(useRegisterAtStart(opd));
+        LIntToString *lir = new LIntToString(useRegister(opd));
 
-        if (!defineVMReturn(lir, ins))
+        if (!define(lir, ins))
             return false;
         return assignSafepoint(lir, ins);
       }

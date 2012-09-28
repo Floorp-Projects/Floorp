@@ -706,7 +706,6 @@ class ConstMember(object):
 class Attribute(object):
     kind = 'attribute'
     noscript = False
-    notxpcom = False
     readonly = False
     implicit_jscontext = False
     nostdcall = False
@@ -763,8 +762,6 @@ class Attribute(object):
 
                 if name == 'noscript':
                     self.noscript = True
-                elif name == 'notxpcom':
-                    self.notxpcom = True
                 elif name == 'implicit_jscontext':
                     self.implicit_jscontext = True
                 elif name == 'deprecated':
@@ -805,10 +802,10 @@ class Attribute(object):
         attribs = attlistToIDL(self.attlist)
         readonly = self.readonly and 'readonly ' or ''
         return "%s%sattribute %s %s;" % (attribs, readonly, self.type, self.name)
-        
+
     def isScriptable(self):
         if not self.iface.attributes.scriptable: return False
-        return not (self.noscript or self.notxpcom)
+        return not self.noscript
 
     def __str__(self):
         return "\t%sattribute %s %s\n" % (self.readonly and 'readonly ' or '',

@@ -23,7 +23,7 @@ LOCAL_INCLUDES	= $(MOZ_GIO_CFLAGS)
 
 EXTRA_DSO_LDOPTS = \
 		   $(XPCOM_GLUE_LDOPTS) \
-		   $(NSPR_LIBS) \
+		   $(MOZ_COMPONENT_LIBS) \
 		   $(MOZ_GIO_LIBS) \
 		   $(NULL)
 

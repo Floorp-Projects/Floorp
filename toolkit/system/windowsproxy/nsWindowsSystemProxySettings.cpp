@@ -32,7 +32,15 @@ private:
     bool PatternMatch(const nsACString& aHost, const nsACString& aOverride);
 };
 
-NS_IMPL_ISUPPORTS1(nsWindowsSystemProxySettings, nsISystemProxySettings)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsWindowsSystemProxySettings, nsISystemProxySettings)
+
+NS_IMETHODIMP
+nsWindowsSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)
+{
+  *aMainThreadOnly = false;
+  return NS_OK;
+}
+
 
 nsresult
 nsWindowsSystemProxySettings::Init()
@@ -40,33 +48,12 @@ nsWindowsSystemProxySettings::Init()
     return NS_OK;
 }
 
-static void SetProxyResult(const char* aType, const nsACString& aHost,
-                           int32_t aPort, nsACString& aResult)
-{
-    aResult.AssignASCII(aType);
-    aResult.Append(' ');
-    aResult.Append(aHost);
-    aResult.Append(':');
-    aResult.Append(nsPrintfCString("%d", aPort));
-}
-
 static void SetProxyResult(const char* aType, const nsACString& aHostPort,
                            nsACString& aResult)
 {
-    nsCOMPtr<nsIURI> uri;
-    nsAutoCString host;
-    int32_t port;
-
-    // Try parsing it as a URI.
-    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), aHostPort)) &&
-        NS_SUCCEEDED(uri->GetHost(host)) && !host.IsEmpty() &&
-        NS_SUCCEEDED(uri->GetPort(&port))) {
-        SetProxyResult(aType, host, port, aResult);
-    } else {
-        aResult.AssignASCII(aType);
-        aResult.Append(' ');
-        aResult.Append(aHostPort);
-    }
+    aResult.AssignASCII(aType);
+    aResult.Append(' ');
+    aResult.Append(aHostPort);
 }
 
 static void SetProxyResultDirect(nsACString& aResult)
@@ -222,7 +209,11 @@ nsWindowsSystemProxySettings::GetPACURI(nsACString& aResult)
 }
 
 nsresult
-nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
+nsWindowsSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
+                                             const nsACString & aScheme,
+                                             const nsACString & aHost,
+                                             const int32_t      aPort,
+                                             nsACString & aResult)
 {
     nsresult rv;
     uint32_t flags = 0;
@@ -234,15 +225,7 @@ nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
         return NS_OK;
     }
 
-    nsAutoCString scheme;
-    rv = aURI->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoCString host;
-    rv = aURI->GetHost(host);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (MatchOverride(host)) {
+    if (MatchOverride(aHost)) {
         SetProxyResultDirect(aResult);
         return NS_OK;
     }
@@ -250,7 +233,7 @@ nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
     NS_ConvertUTF16toUTF8 cbuf(buf);
 
     nsAutoCString prefix;
-    ToLowerCase(scheme, prefix);
+    ToLowerCase(aScheme, prefix);
 
     prefix.Append('=');
 

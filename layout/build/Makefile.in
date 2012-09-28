@@ -119,6 +119,13 @@ LOCAL_INCLUDES	+= \
 	$(NULL)
 endif
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
+# include OMX decoder
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/omx/$(LIB_PREFIX)gkconomx_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif #}
+
 ifdef MOZ_B2G_FM #{
 SHARED_LIBRARY_LIBS	+= \
   $(DEPTH)/dom/fm/$(LIB_PREFIX)domfm_s.$(LIB_SUFFIX) \
@@ -181,6 +188,25 @@ ifdef MOZ_MEDIA_PLUGINS
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/plugins/$(LIB_PREFIX)gkconmediaplugins_s.$(LIB_SUFFIX) \
 	$(NULL)
+endif
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+INCLUDES	+= \
+		-I$(srcdir)/../../base/src \
+		-I$(srcdir)/../../html/content/src \
+		-I$(ANDROID_SOURCE)/dalvik/libnativehelper/include/nativehelper \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/ \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
+		-I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS += \
+		-lutils -lstagefright -lmedia -lstagefright_omx -lbinder -lui \
+		-lhardware -lcutils \
+		$(NULL)
 endif
 
 ifdef NS_PRINTING

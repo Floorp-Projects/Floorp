@@ -117,6 +117,15 @@ nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
   NS_ASSERTION(!mCx, "Couldn't release JSContext?!?");
 }
 
+/* [notxpcom] boolean markForCC (); */
+// This method isn't automatically forwarded safely because it's notxpcom, so
+// the IDL binding doesn't know what value to return.
+NS_IMETHODIMP_(bool)
+nsInProcessTabChildGlobal::MarkForCC()
+{
+  return mMessageManager ? mMessageManager->MarkForCC() : false;
+}
+
 nsresult
 nsInProcessTabChildGlobal::Init()
 {
