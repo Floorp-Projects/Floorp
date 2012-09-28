@@ -18,7 +18,6 @@
 
 // for #ifdef CSS_REPORT_PARSE_ERRORS
 #include "nsXPIDLString.h"
-#include "nsThreadUtils.h"
 class nsIURI;
 
 // Token types
@@ -92,8 +91,6 @@ struct nsCSSToken {
   void AppendToString(nsString& aBuffer);
 };
 
-class DeferredCleanupRunnable; 
-
 // CSS Scanner API. Used to tokenize an input stream using the CSS
 // forward compatible tokenization rules. This implementation is
 // private to this package and is only used internally by the css
@@ -123,9 +120,6 @@ class nsCSSScanner {
   }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
-  // Clean up any reclaimable cached resources.
-  void PerformDeferredCleanup();
-
   void AddToError(const nsSubstring& aErrorText);
   void OutputError();
   void ClearError();
@@ -134,8 +128,6 @@ class nsCSSScanner {
   void ReportUnexpected(const char* aMessage);
   
 private:
-  void Reset();
-
   void ReportUnexpectedParams(const char* aMessage,
                               const PRUnichar** aParams,
                               uint32_t aParamsLength);
@@ -219,9 +211,8 @@ protected:
   uint32_t mRecordStartOffset;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
-  nsRevocableEventPtr<DeferredCleanupRunnable> mDeferredCleaner;
-  nsCOMPtr<nsIURI> mCachedURI;  // Used to invalidate the cached filename.
-  nsString mCachedFileName;
+  nsXPIDLCString mFileName;
+  nsCOMPtr<nsIURI> mURI;  // Cached so we know to not refetch mFileName
   uint32_t mErrorLineNumber, mColNumber, mErrorColNumber;
   nsFixedString mError;
   PRUnichar mErrorBuf[200];
