@@ -1,11 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 #include "jsapi.h"
+#include "mozilla/Hal.h"
+#include "nsDOMEvent.h"
+#include "nsDOMEventTargetHelper.h"
 #include "nsIDOMClassInfo.h"
-#include "nsITimeService.h"
+#include "prtime.h"
 #include "TimeManager.h"
+
+using namespace mozilla::hal;
 
 DOMCI_DATA(MozTimeManager, mozilla::dom::time::TimeManager)
 
@@ -24,6 +28,7 @@ NS_IMPL_RELEASE(TimeManager)
 
 nsresult
 TimeManager::Set(const JS::Value& date, JSContext* ctx) {
+  double nowMSec = JS_Now() / 1000;
   double dateMSec;
 
   if (date.isObject()) {
@@ -43,10 +48,7 @@ TimeManager::Set(const JS::Value& date, JSContext* ctx) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsITimeService> timeService = do_GetService(TIMESERVICE_CONTRACTID);
-  if (timeService) {
-    return timeService->Set(dateMSec);
-  }
+  hal::AdjustSystemClock(dateMSec - nowMSec);
   return NS_OK;
 }
 

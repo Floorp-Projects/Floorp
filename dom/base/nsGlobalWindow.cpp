@@ -235,7 +235,6 @@ static const char kStorageEnabled[] = "dom.storage.enabled";
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::ipc;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
@@ -11005,10 +11004,16 @@ nsGlobalChromeWindow::GetMessageManager(nsIMessageBroadcaster** aManager)
     nsCOMPtr<nsIMessageBroadcaster> globalMM =
       do_GetService("@mozilla.org/globalmessagemanager;1");
     mMessageManager =
-      new nsFrameMessageManager(nullptr,
+      new nsFrameMessageManager(true, /* aChrome */
+                                nullptr,
+                                nullptr,
+                                nullptr,
+                                nullptr,
                                 static_cast<nsFrameMessageManager*>(globalMM.get()),
                                 cx,
-                                MM_CHROME | MM_BROADCASTER);
+                                false, /* aGlobal */
+                                false, /* aProcessManager */
+                                true /* aBroadcaster */);
     NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
   }
   CallQueryInterface(mMessageManager, aManager);
