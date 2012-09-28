@@ -75,6 +75,7 @@ namespace ion {
     _(Start)                                                                \
     _(OsrEntry)                                                             \
     _(RegExp)                                                               \
+    _(RegExpTest)                                                           \
     _(Lambda)                                                               \
     _(ImplicitThis)                                                         \
     _(Slots)                                                                \
