@@ -110,13 +110,16 @@ WebappsRegistry.prototype = {
           manifest = JSON.parse(xhr.responseText, installOrigin);
         } catch (e) {
           Services.DOMRequest.fireError(request, "MANIFEST_PARSE_ERROR");
+          Cu.reportError("Error installing app from: " + installOrigin + ": " + "MANIFEST_PARSE_ERROR");
           return;
         }
 
         if (!AppsUtils.checkManifest(manifest, installOrigin)) {
           Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
+          Cu.reportError("Error installing app from: " + installOrigin + ": " + "INVALID_MANIFEST");
         } else if (!this.checkAppStatus(manifest)) {
           Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
+          Cu.reportError("Error installing app, '" + manifest.name + "': " + "INVALID_SECURITY_LEVEL");
         } else {
           let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
           let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
@@ -134,11 +137,13 @@ WebappsRegistry.prototype = {
         }
       } else {
         Services.DOMRequest.fireError(request, "MANIFEST_URL_ERROR");
+        Cu.reportError("Error installing app from: " + installOrigin + ": " + "MANIFEST_URL_ERROR");
       }
     }).bind(this), false);
 
     xhr.addEventListener("error", (function() {
       Services.DOMRequest.fireError(request, "NETWORK_ERROR");
+      Cu.reportError("Error installing app from: " + installOrigin + ": " + "NETWORK_ERROR");
     }).bind(this), false);
 
     xhr.send(null);

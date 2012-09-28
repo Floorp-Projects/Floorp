@@ -22,4 +22,18 @@ MOCHITEST_BROWSER_FILES := \
   browser_bug396843.js \
   $(NULL)
 
+ifeq (Linux,$(OS_ARCH))
+MOCHITEST_BROWSER_FILES += \
+  browser_webapps_permissions.js \
+  test-webapp.webapp \
+  test-webapp-reinstall.webapp \
+  test-webapp-original.webapp \
+  test-webapps-permissions.html \
+  $(NULL)
+endif
+
+
+# TODO: Re-enable permissions tests on Mac and Windows, bug 795334
+# TODO: disabled test browser_webapps_perms_reinstall.js, re-enable when bug 794920 is fixed
+
 include $(topsrcdir)/config/rules.mk
