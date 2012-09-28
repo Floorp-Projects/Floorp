@@ -324,7 +324,7 @@ HashStore::CalculateChecksum(nsAutoCString& aChecksum,
     rv = hash->UpdateFromStream(mInputStream, UINT32_MAX);
   } else {
     // Hash everything but last checksum bytes
-    rv = hash->UpdateFromStream(mInputStream, fileSize-CHECKSUM_SIZE);
+    rv = hash->UpdateFromStream(mInputStream, aSize-CHECKSUM_SIZE);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
