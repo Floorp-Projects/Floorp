@@ -67,6 +67,7 @@ CPPSRCS		= \
 		nsPreloadedStream.cpp \
 		nsStreamListenerWrapper.cpp \
 		ProxyAutoConfig.cpp \
+		NetworkActivityMonitor.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/base
