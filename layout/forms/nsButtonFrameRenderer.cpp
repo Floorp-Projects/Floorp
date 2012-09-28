@@ -126,7 +126,8 @@ private:
 nsRect
 nsDisplayButtonBorderBackground::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
   *aSnap = false;
-  return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+  return aBuilder->IsForEventDelivery() ? nsRect(ToReferenceFrame(), mFrame->GetSize())
+          : mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
 class nsDisplayButtonForeground : public nsDisplayItem {
