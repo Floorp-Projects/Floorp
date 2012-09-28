@@ -6441,8 +6441,10 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             if (!script->hasTrynotes())
                 continue;
 
-            // If we do not follow a goto we look for another mean to continue
-            // at the next PC.
+            /*
+             * If we do not follow a goto we look for another mean to continue
+             * at the next PC.
+             */
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnEnd = tn + script->trynotes()->length;
             for (; tn != tnEnd; tn++) {
@@ -6451,12 +6453,21 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
                 if (start < pc && pc <= end && end <= target)
                     break;
             }
+
             if (tn != tnEnd) {
                 pcdepth = tn->stackDepth;
                 hpcdepth = unsigned(-1);
                 oplen = 0;
                 pc = script->main() + tn->start + tn->length;
+                continue;
             }
+
+            /*
+             * JSOP_THROWING compensates for hidden JSOP_DUP at the start of the
+             * previous guarded catch (see EmitTry in BytecodeEmitter.cpp).
+             */
+            if (JSOp(*(pc + oplen)) == JSOP_THROWING)
+                hpcdepth = pcdepth + 2;
             continue;
         }
 
