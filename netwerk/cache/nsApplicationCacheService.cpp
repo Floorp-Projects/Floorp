@@ -130,6 +130,18 @@ nsApplicationCacheService::CacheOpportunistically(nsIApplicationCache* cache,
 }
 
 NS_IMETHODIMP
+nsApplicationCacheService::DiscardByAppId(int32_t appID, bool isInBrowser)
+{
+    if (!mCacheService)
+        return NS_ERROR_UNEXPECTED;
+
+    nsRefPtr<nsOfflineCacheDevice> device;
+    nsresult rv = mCacheService->GetOfflineDevice(getter_AddRefs(device));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return device->DiscardByAppId(appID, isInBrowser);
+}
+
+NS_IMETHODIMP
 nsApplicationCacheService::GetGroups(uint32_t *count,
                                      char ***keys)
 {
