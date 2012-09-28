@@ -36,9 +36,6 @@
 #include "nsFrameManager.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
-#ifdef ACCESSIBILITY
-#include "nsIAccessible.h"
-#endif
 
 #include "nsIDOMNode.h"
 #include "nsIEditorDocShell.h"
@@ -6727,10 +6724,10 @@ nsFrame::ChildIsDirty(nsIFrame* aChild)
 
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsFrame::CreateAccessible()
+a11y::AccType
+nsFrame::AccessibleType()
 {
-  return nullptr;
+  return a11y::eNoAccessible;
 }
 #endif
 

@@ -8,9 +8,6 @@
 #include "nsFormControlFrame.h"
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsGkAtoms.h"
