@@ -51,6 +51,7 @@ abstract public class BrowserApp extends GeckoApp
 
     public static BrowserToolbar mBrowserToolbar;
     private AboutHomeContent mAboutHomeContent;
+    private Boolean mAboutHomeShowing = null;
 
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
@@ -597,17 +598,29 @@ abstract public class BrowserApp extends GeckoApp
         mAboutHomeContent.update(EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
     }
 
-    public void showAboutHome() {
+    private void showAboutHome() {
+        // Don't create an additional AboutHomeRunnable if about:home
+        // is already visible.
+        if (mAboutHomeShowing != null && mAboutHomeShowing)
+            return;
+
+        mAboutHomeShowing = true;
         Runnable r = new AboutHomeRunnable(true);
         mMainHandler.postAtFrontOfQueue(r);
     }
 
-    public void hideAboutHome() {
+    private void hideAboutHome() {
+        // If hideAboutHome gets called before showAboutHome, we still need
+        // to create an AboutHomeRunnable to hide the about:home content.
+        if (mAboutHomeShowing != null && !mAboutHomeShowing)
+            return;
+
+        mAboutHomeShowing = false;
         Runnable r = new AboutHomeRunnable(false);
         mMainHandler.postAtFrontOfQueue(r);
     }
 
-    public class AboutHomeRunnable implements Runnable {
+    private class AboutHomeRunnable implements Runnable {
         boolean mShow;
         AboutHomeRunnable(boolean show) {
             mShow = show;
