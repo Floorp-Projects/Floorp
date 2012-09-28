@@ -286,13 +286,11 @@ private:
     }
 
     jsval message;
-    jsval transferable = JSVAL_VOID;
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/v",
-                             &message, &transferable)) {
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", &message)) {
       return false;
     }
 
-    return worker->PostMessage(aCx, message, transferable);
+    return worker->PostMessage(aCx, message);
   }
 };
 

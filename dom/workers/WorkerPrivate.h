@@ -294,7 +294,7 @@ public:
   ForgetMainThreadObjects(nsTArray<nsCOMPtr<nsISupports> >& aDoomed);
 
   bool
-  PostMessage(JSContext* aCx, jsval aMessage, jsval aTransferable);
+  PostMessage(JSContext* aCx, jsval aMessage);
 
   uint64_t
   GetInnerWindowId();
@@ -662,8 +662,7 @@ public:
   StopSyncLoop(uint32_t aSyncLoopKey, bool aSyncResult);
 
   bool
-  PostMessageToParent(JSContext* aCx, jsval aMessage,
-                      jsval transferable);
+  PostMessageToParent(JSContext* aCx, jsval aMessage);
 
   bool
   NotifyInternal(JSContext* aCx, Status aStatus);

@@ -839,13 +839,11 @@ private:
     }
 
     jsval message;
-    jsval transferable = JSVAL_VOID;
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/v",
-                             &message, &transferable)) {
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", &message)) {
       return false;
     }
 
-    return scope->mWorker->PostMessageToParent(aCx, message, transferable);
+    return scope->mWorker->PostMessageToParent(aCx, message);
   }
 };
 

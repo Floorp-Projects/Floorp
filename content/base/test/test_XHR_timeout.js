@@ -12,13 +12,6 @@ try {
   inWorker = true;
 }
 
-function message(data) {
-  if (inWorker)
-    self.postMessage(data);
-  else
-    self.postMessage(data, "*");
-}
-
 function is(got, expected, msg) {
   var obj = {};
   obj.type = "is";
@@ -26,7 +19,7 @@ function is(got, expected, msg) {
   obj.expected = expected;
   obj.msg = msg;
 
-  message(obj);
+  self.postMessage(obj, "*");
 }
 
 function ok(bool, msg) {
@@ -35,7 +28,7 @@ function ok(bool, msg) {
   obj.bool = bool;
   obj.msg = msg;
 
-  message(obj);
+  self.postMessage(obj, "*");
 }
 
 /**
@@ -330,7 +323,7 @@ var TestCounter = {
       test.startXHR();
     }
     else {
-      message("done");
+      self.postMessage("done", "*");
     }
   }
 };
