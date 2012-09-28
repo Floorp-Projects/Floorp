@@ -9,11 +9,7 @@ import java.security.NoSuchAlgorithmException;
 
 import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.Logger;
-import org.mozilla.gecko.sync.SyncConfiguration;
-import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.config.AccountPickler;
-import org.mozilla.gecko.sync.config.ClientRecordTerminator;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
 import android.accounts.AbstractAccountAuthenticator;
@@ -24,12 +20,12 @@ import android.accounts.NetworkErrorException;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 
 public class SyncAuthenticatorService extends Service {
   private static final String LOG_TAG = "SyncAuthService";
+
   private SyncAccountAuthenticator sAccountAuthenticator = null;
 
   @Override
@@ -213,10 +209,11 @@ public class SyncAuthenticatorService extends Service {
      * Bug 769745: persist pickled Sync account settings so that we can unpickle
      * after Fennec is moved to the SD card.
      * <p>
-     * This is <b>not</b> called when an Android Account is blown away due to the
-     * SD card being unmounted.
+     * This is <b>not</b> called when an Android Account is blown away due to
+     * the SD card being unmounted.
      * <p>
-     * This is a terrible hack, but it's better than the catching the generic
+     * Broadcasting a Firefox intent to version sharing this Android Account is
+     * a terrible hack, but it's better than the catching the generic
      * "accounts changed" broadcast intent and trying to figure out whether our
      * Account disappeared.
      */
@@ -236,92 +233,21 @@ public class SyncAuthenticatorService extends Service {
         return result;
       }
 
-      final String accountName = account.name;
-
-      // Delete the Account pickle in the background.
-      ThreadPool.run(new Runnable() {
-        @Override
-        public void run() {
-          Logger.info(LOG_TAG, "Account named " + accountName + " being removed; " +
-              "deleting saved pickle file '" + Constants.ACCOUNT_PICKLE_FILENAME + "'.");
-          try {
-            AccountPickler.deletePickle(mContext, Constants.ACCOUNT_PICKLE_FILENAME);
-          } catch (Exception e) {
-            // This should never happen, but we really don't want to die in a background thread.
-            Logger.warn(LOG_TAG, "Got exception deleting saved pickle file; ignoring.", e);
-          }
-        }
-      });
-
-      // Bug 770785: delete the Account's client record in the background. We
-      // want to get the Account's data synchronously, though, since it is
-      // possible the Account object will be invalid by the time the Runnable
-      // executes. We don't need to worry about accessing prefs too early since
-      // deleting the Account doesn't remove them -- at least, not yet. We would
-      // prefer to use SyncAccounts.blockingFromAndroidAccountV0, but that
-      // hangs, possibly because the Account Manager doesn't appreciate giving
-      // out an auth token while deleting the account.
-
-      final AccountManager accountManager = AccountManager.get(mContext);
-      final String password = accountManager.getPassword(account);
-      final String serverURL = accountManager.getUserData(account, Constants.OPTION_SERVER);
-
-      ThreadPool.run(new Runnable() {
-        @Override
-        public void run() {
-          Logger.info(LOG_TAG, "Account named " + accountName + " being removed; " +
-              "deleting client record from server.");
-
-          String encodedUsername;
-          try {
-            encodedUsername = Utils.usernameFromAccount(accountName);
-          } catch (Exception e) {
-            Logger.warn(LOG_TAG, "Got exception deleting client record from server; ignoring.", e);
-            return;
-          }
-
-          if (accountName == null || encodedUsername == null || password == null || serverURL == null) {
-            Logger.warn(LOG_TAG, "Account parameters were null; not deleting client record from server.");
-            return;
-          }
-
-          // This is not exactly modular. We need to get some information about
-          // the account, namely the current clusterURL and client GUID, and we
-          // extract it by hand. We're not worried about the Account being
-          // deleted out from under us since the prefs remain even after Account
-          // deletion.
-          final String product = GlobalConstants.BROWSER_INTENT_PACKAGE;
-          final String profile = Constants.DEFAULT_PROFILE;
-          final long version = SyncConfiguration.CURRENT_PREFS_VERSION;
-
-          SharedPreferences prefs;
-          try {
-            prefs = Utils.getSharedPreferences(mContext, product, encodedUsername, serverURL, profile, version);
-          } catch (Exception e) {
-            Logger.warn(LOG_TAG, "Caught exception fetching preferences; not deleting client record from server.", e);
-            return;
-          }
-
-          final String clientGuid = prefs.getString(SyncConfiguration.PREF_ACCOUNT_GUID, null);
-          final String clusterURL = prefs.getString(SyncConfiguration.PREF_CLUSTER_URL, null);
-
-          if (clientGuid == null) {
-            Logger.warn(LOG_TAG, "Client GUID was null; not deleting client record from server.");
-            return;
-          }
-
-          if (clusterURL == null) {
-            Logger.warn(LOG_TAG, "Cluster URL was null; not deleting client record from server.");
-            return;
-          }
-
-          try {
-            ClientRecordTerminator.deleteClientRecord(encodedUsername, password, clusterURL, clientGuid);
-          } catch (Exception e) {
-            Logger.warn(LOG_TAG, "Got exception deleting client record from server; ignoring.", e);
-          }
-        }
-      });
+      // Bug 790931: Broadcast a message to all Firefox versions sharing this
+      // Android Account type telling that this Sync Account has been deleted.
+      //
+      // We would really prefer to receive Android's
+      // LOGIN_ACCOUNTS_CHANGED_ACTION broadcast, but that
+      // doesn't include enough information about which Accounts changed to
+      // correctly identify whether a Sync account has been removed (when some
+      // Firefox versions are installed on the SD card).
+      //
+      // Broadcast intents protected with permissions are secure, so it's okay
+      // to include password and sync key, etc.
+      final Intent intent = SyncAccounts.makeSyncAccountDeletedIntent(mContext, AccountManager.get(mContext), account);
+      Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
+          "broadcasting secure intent " + intent.getAction() + ".");
+      mContext.sendBroadcast(intent, GlobalConstants.PER_ACCOUNT_TYPE_PERMISSION);
 
       return result;
     }
