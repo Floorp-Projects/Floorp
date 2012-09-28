@@ -13,10 +13,13 @@
 #include "mozilla/net/FTPChannelParent.h"
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/network/TCPSocketParent.h"
 
 #include "nsHTMLDNSPrefetch.h"
 
 using mozilla::dom::TabParent;
+using mozilla::net::PTCPSocketParent;
+using mozilla::dom::TCPSocketParent;
 
 namespace mozilla {
 namespace net {
@@ -104,6 +107,38 @@ bool
 NeckoParent::DeallocPWebSocket(PWebSocketParent* actor)
 {
   WebSocketChannelParent* p = static_cast<WebSocketChannelParent*>(actor);
+  p->Release();
+  return true;
+}
+
+PTCPSocketParent*
+NeckoParent::AllocPTCPSocket(const nsString& aHost,
+                             const uint16_t& aPort,
+                             const bool& useSSL,
+                             const nsString& aBinaryType,
+                             PBrowserParent* aBrowser)
+{
+  TCPSocketParent* p = new TCPSocketParent();
+  p->AddRef();
+  return p;
+}
+
+bool
+NeckoParent::RecvPTCPSocketConstructor(PTCPSocketParent* aActor,
+                                       const nsString& aHost,
+                                       const uint16_t& aPort,
+                                       const bool& useSSL,
+                                       const nsString& aBinaryType,
+                                       PBrowserParent* aBrowser)
+{
+  return static_cast<TCPSocketParent*>(aActor)->
+      Init(aHost, aPort, useSSL, aBinaryType, aBrowser);
+}
+
+bool
+NeckoParent::DeallocPTCPSocket(PTCPSocketParent* actor)
+{
+  TCPSocketParent* p = static_cast<TCPSocketParent*>(actor);
   p->Release();
   return true;
 }

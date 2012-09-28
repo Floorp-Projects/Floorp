@@ -240,6 +240,7 @@ private:
     void     HandleAsyncRedirectChannelToHttps();
     nsresult AsyncRedirectChannelToHttps();
     nsresult ContinueAsyncRedirectChannelToHttps(nsresult rv);
+    nsresult OpenRedirectChannel(nsresult rv);
 
     /**
      * A function that takes care of reading STS headers and enforcing STS 

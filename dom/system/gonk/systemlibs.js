@@ -13,6 +13,13 @@
  * limitations under the License.
  */
 
+let EXPORTED_SYMBOLS;
+if (!this.ctypes) {
+  // We're likely being loaded as a JSM.
+  EXPORTED_SYMBOLS = [ "libcutils", "libnetutils", "netHelpers" ];
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+}
+
 const SYSTEM_PROPERTY_KEY_MAX = 32;
 const SYSTEM_PROPERTY_VALUE_MAX = 92;
 

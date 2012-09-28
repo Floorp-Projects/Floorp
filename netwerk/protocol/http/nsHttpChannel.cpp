@@ -1596,7 +1596,8 @@ nsHttpChannel::AsyncRedirectChannelToHttps()
 nsresult
 nsHttpChannel::ContinueAsyncRedirectChannelToHttps(nsresult rv)
 {
-    AutoRedirectVetoNotifier notifier(this);
+    if (NS_SUCCEEDED(rv))
+        rv = OpenRedirectChannel(rv);
 
     if (NS_FAILED(rv)) {
         // Fill the failure status here, the update to https had been vetoed
@@ -1613,8 +1614,15 @@ nsHttpChannel::ContinueAsyncRedirectChannelToHttps(nsresult rv)
         // that would call our OnStart/StopRequest after resume from waiting for
         // the redirect callback.
         DoNotifyListener();
-        return rv;
     }
+
+    return rv;
+}
+
+nsresult
+nsHttpChannel::OpenRedirectChannel(nsresult rv)
+{
+    AutoRedirectVetoNotifier notifier(this);
 
     // Make sure to do this _after_ calling OnChannelRedirect
     mRedirectChannel->SetOriginalURI(mOriginalURI);
@@ -1627,8 +1635,6 @@ nsHttpChannel::ContinueAsyncRedirectChannelToHttps(nsresult rv)
         // versions.
         rv = httpEventSink->OnRedirect(this, mRedirectChannel);
         if (NS_FAILED(rv)) {
-            mStatus = rv;
-            DoNotifyListener();
             return rv;
         }
     }
@@ -1636,8 +1642,6 @@ nsHttpChannel::ContinueAsyncRedirectChannelToHttps(nsresult rv)
     // open new channel
     rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
     if (NS_FAILED(rv)) {
-        mStatus = rv;
-        DoNotifyListener();
         return rv;
     }
 
@@ -1653,7 +1657,7 @@ nsHttpChannel::ContinueAsyncRedirectChannelToHttps(nsresult rv)
     mCallbacks = nullptr;
     mProgressSink = nullptr;
 
-    return rv;
+    return NS_OK;
 }
 
 nsresult

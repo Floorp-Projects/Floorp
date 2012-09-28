@@ -33,6 +33,18 @@ protected:
   virtual bool DeallocPFTPChannel(PFTPChannelParent*);
   virtual PWebSocketParent* AllocPWebSocket(PBrowserParent* browser);
   virtual bool DeallocPWebSocket(PWebSocketParent*);
+  virtual PTCPSocketParent* AllocPTCPSocket(const nsString& aHost,
+                                            const uint16_t& aPort,
+                                            const bool& useSSL,
+                                            const nsString& aBinaryType,
+                                            PBrowserParent* aBrowser);
+  virtual bool RecvPTCPSocketConstructor(PTCPSocketParent*,
+                                         const nsString& aHost,
+                                         const uint16_t& aPort,
+                                         const bool& useSSL,
+                                         const nsString& aBinaryType,
+                                         PBrowserParent* aBrowser);
+  virtual bool DeallocPTCPSocket(PTCPSocketParent*);
   virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
                                    const uint16_t& flags);
   virtual bool RecvCancelHTMLDNSPrefetch(const nsString& hostname,

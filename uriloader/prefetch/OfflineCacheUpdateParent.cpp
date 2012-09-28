@@ -8,6 +8,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla::ipc;
 
@@ -83,20 +84,30 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
     if (!manifestURI)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIURI> documentURI = DeserializeURI(aDocumentURI);
-    if (!documentURI)
-        return NS_ERROR_FAILURE;
-
     nsOfflineCacheUpdateService* service =
         nsOfflineCacheUpdateService::EnsureService();
     if (!service)
         return NS_ERROR_FAILURE;
 
+    bool offlinePermissionAllowed = false;
+    nsresult rv = service->OfflineAppAllowedForURI(
+        manifestURI, nullptr, &offlinePermissionAllowed);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!offlinePermissionAllowed)
+        return NS_ERROR_DOM_SECURITY_ERR;
+
+    nsCOMPtr<nsIURI> documentURI = DeserializeURI(aDocumentURI);
+    if (!documentURI)
+        return NS_ERROR_FAILURE;
+
+    if (!NS_SecurityCompareURIs(manifestURI, documentURI, false))
+        return NS_ERROR_DOM_SECURITY_ERR;
+
     service->FindUpdate(manifestURI, this, getter_AddRefs(update));
     if (!update) {
         update = new nsOfflineCacheUpdate();
 
-        nsresult rv;
         // Leave aDocument argument null. Only glues and children keep 
         // document instances.
         rv = update->Init(manifestURI, documentURI, nullptr, nullptr, this);

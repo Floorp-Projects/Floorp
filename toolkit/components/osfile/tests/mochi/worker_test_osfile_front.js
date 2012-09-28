@@ -336,6 +336,59 @@ function test_readall_writeall_file()
 
   compare_files("test_readall_writeall_file (auto allocation)", src_file_name, tmp_file_name);
   OS.File.remove(tmp_file_name);
+
+  // File.readAll
+  readResult = OS.File.read(src_file_name);
+  is(readResult.bytes, size, "test_readall_writeall_file: read the right number of bytes (OS.File.readAll)");
+ 
+  // File.writeAtomic on top of nothing
+  OS.File.writeAtomic(tmp_file_name, readResult.buffer,
+    {bytes: readResult.bytes,
+     tmpPath: tmp_file_name + ".tmp"});
+  try {
+    let stat = OS.File.stat(tmp_file_name);
+    ok(true, "readAll + writeAtomic created a file");
+    is(stat.size, size, "readAll + writeAtomic created a file of the right size");
+  } catch (x) {
+    ok(false, "readAll + writeAtomic somehow failed");
+    if(x.becauseNoSuchFile) {
+      ok(false, "readAll + writeAtomic did not create file");
+    }
+  }
+  compare_files("test_readall_writeall_file (OS.File.readAll + writeAtomic)",
+                src_file_name, tmp_file_name);
+  exn = null;
+  try {
+    let stat = OS.File.stat(tmp_file_name + ".tmp");
+  } catch (x) {
+    exn = x;
+  }
+  ok(!!exn, "readAll + writeAtomic cleaned up after itself");
+
+
+  // File.writeAtomic on top of existing file
+  // Remove content and set arbitrary size, to avoid potential false negatives
+  dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
+  dest.setPosition(1234);
+  dest.close();
+
+  OS.File.writeAtomic(tmp_file_name, readResult.buffer,
+    {bytes: readResult.bytes,
+     tmpPath: tmp_file_name + ".tmp"});
+  compare_files("test_readall_writeall_file (OS.File.readAll + writeAtomic 2)",
+                src_file_name, tmp_file_name);
+
+  // Ensure that File.writeAtomic fails if no temporary file name is provided
+  // (FIXME: Remove this test as part of bug 793660)
+
+  exn = null;
+  try {
+    OS.File.writeAtomic(tmp_file_name, readResult.buffer,
+      {bytes: readResult.bytes});
+  } catch (x) {
+    exn = x;
+  }
+  ok(!!exn && exn instanceof TypeError, "wrietAtomic fails if tmpPath is not provided");
 }
 
 /**
