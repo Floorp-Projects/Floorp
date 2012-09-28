@@ -29,7 +29,7 @@ has_cpuid_bit(unsigned int level, CPUIDRegister reg, unsigned int bit)
          (regs[reg] & bit);
 }
 
-#elif defined(_MSC_VER) && _MSC_VER >= 1400 && (defined(_M_IX86) || defined(_M_AMD64))
+#elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
 
 // MSVC 2005 or newer on x86-32 or x86-64
 #include <intrin.h>
