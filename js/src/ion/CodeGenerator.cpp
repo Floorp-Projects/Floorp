@@ -3954,11 +3954,14 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     masm.loadPtr(Address(lhsTmp, JSObject::offsetOfType()), lhsTmp);
     masm.loadPtr(Address(lhsTmp, offsetof(types::TypeObject, proto)), lhsTmp);
 
-    masm.test32(lhsTmp, lhsTmp);
+    // Bail out if we hit a lazy proto
+    masm.branch32(Assembler::Equal, lhsTmp, Imm32(1), call->entry());
+
+    masm.testPtr(lhsTmp, lhsTmp);
     masm.j(Assembler::Zero, &done);
 
     // Check lhs is equal to rhsShape
-    masm.cmp32(lhsTmp, rhsTmp);
+    masm.cmpPtr(lhsTmp, rhsTmp);
     masm.j(Assembler::NotEqual, &loopPrototypeChain);
 
     // return true
