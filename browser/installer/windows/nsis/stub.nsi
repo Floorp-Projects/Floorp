@@ -980,15 +980,7 @@ Function StartInstall
         ${EndIf}
       ${EndIf}
 
-      ${GetParameters} $0
-      ClearErrors
-      ${GetOptions} "$0" "/UAC:" $0
-      ${If} ${Errors} ; Not elevated
-        Call ExecApp
-      ${Else} ; Elevated - execute the function in the unelevated process
-        GetFunctionAddress $0 ExecApp
-        UAC::ExecCodeSegment $0
-      ${EndIf}
+      Call LaunchApp
 
       ; The following will exit the installer
       SetAutoClose true
@@ -1199,8 +1191,36 @@ Function ExecSetAsDefaultAppUser
   Exec "$\"$INSTDIR\uninstall\helper.exe$\" /SetAsDefaultAppUser"
 FunctionEnd
 
-Function ExecApp
-  Exec "$\"$INSTDIR\${FileMainEXE}$\""
+Function LaunchApp
+  ClearErrors
+  ${GetParameters} $0
+  ${GetOptions} "$0" "/UAC:" $1
+  ${If} ${Errors}
+    FindWindow $0 "${WindowClass}"
+    ${If} $0 <> 0 ; integer comparison
+      MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+      Return
+    ${EndIf}
+    Exec "$\"$INSTDIR\${FileMainEXE}$\""
+  ${Else}
+    GetFunctionAddress $0 LaunchAppFromElevatedProcess
+    UAC::ExecCodeSegment $0
+  ${EndIf}
+FunctionEnd
+
+Function LaunchAppFromElevatedProcess
+  FindWindow $0 "${WindowClass}"
+  ${If} $0 <> 0 ; integer comparison
+    MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+    Return
+  ${EndIf}
+
+  ; Find the installation directory when launching using GetFunctionAddress
+  ; from an elevated installer since $INSTDIR will not be set in this installer
+  ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+  ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ${GetPathFromString} "$0" $0
+  Exec "$\"$0$\""
 FunctionEnd
 
 Section
