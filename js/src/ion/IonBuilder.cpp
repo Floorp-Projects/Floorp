@@ -5914,7 +5914,24 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
         return makeCallBarrier(getter, 0, false, types, barrier);
     }
 
-    if (unary.ival == MIRType_Object) {
+    // If the input is guaranteed to be an object, then we want
+    // to specialize it via an slot load or an IC.  If it's
+    // guaranteed to be an object or NULL, then we do the same
+    // thing except prefixed by a fallible unbox.
+    bool targetIsObject = (unary.ival == MIRType_Object);
+
+    if (!targetIsObject) {
+        if (unaryTypes.inTypes->objectOrSentinel()) {
+            // Fallibly unwrap the object before getprop.  Getprop
+            // on null or undefined will cause exception anyway.
+            MUnbox *unbox = MUnbox::New(obj, MIRType_Object, MUnbox::Fallible);
+            current->add(unbox);
+            obj = unbox;
+            targetIsObject = true;
+        }
+    }
+
+    if (targetIsObject) {
         MIRType rvalType = MIRType_Value;
         if (!barrier && !IsNullOrUndefined(unary.rval))
             rvalType = unary.rval;
