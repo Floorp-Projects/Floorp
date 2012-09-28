@@ -63,7 +63,15 @@ static const uint32_t LOW_VIDEO_FRAMES = 1;
 // If we've got more than AMPLE_VIDEO_FRAMES decoded video frames waiting in
 // the video queue, we will not decode any more video frames until some have
 // been consumed by the play state machine thread.
+#ifdef MOZ_WIDGET_GONK
+// On B2G this is decided by a similar value which varies for each OMX decoder
+// |OMX_PARAM_PORTDEFINITIONTYPE::nBufferCountMin|. This number must be less
+// than the OMX equivalent or gecko will think it is chronically starved of
+// video frames. All decoders seen so far have a value of at least 4.
+static const uint32_t AMPLE_VIDEO_FRAMES = 3;
+#else
 static const uint32_t AMPLE_VIDEO_FRAMES = 10;
+#endif
 
 // Arbitrary "frame duration" when playing only audio.
 static const int AUDIO_DURATION_USECS = 40000;

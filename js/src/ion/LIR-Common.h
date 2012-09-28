@@ -292,6 +292,27 @@ class LNewCallObject : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LNewStringObject : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(NewStringObject);
+
+    LNewStringObject(const LAllocation &input, const LDefinition &temp) {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    MNewStringObject *mir() const {
+        return mir_->toNewStringObject();
+    }
+};
+
 // Takes in an Object and a Value.
 class LInitProp : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
 {
@@ -1613,7 +1634,7 @@ class LTruncateDToInt32 : public LInstructionHelper<1, 1, 1>
 
 // Convert a any input type hosted on one definition to a string with a function
 // call.
-class LIntToString : public LCallInstructionHelper<1, 1, 0>
+class LIntToString : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(IntToString);

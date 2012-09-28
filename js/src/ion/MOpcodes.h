@@ -70,6 +70,7 @@ namespace ion {
     _(NewArray)                                                             \
     _(NewObject)                                                            \
     _(NewCallObject)                                                        \
+    _(NewStringObject)                                                      \
     _(InitProp)                                                             \
     _(Start)                                                                \
     _(OsrEntry)                                                             \

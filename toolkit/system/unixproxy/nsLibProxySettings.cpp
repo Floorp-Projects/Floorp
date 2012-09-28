@@ -6,7 +6,6 @@
 #include "nsISystemProxySettings.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
-#include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
@@ -34,7 +33,14 @@ private:
   pxProxyFactory *mProxyFactory;
 };
 
-NS_IMPL_ISUPPORTS1(nsUnixSystemProxySettings, nsISystemProxySettings)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsUnixSystemProxySettings, nsISystemProxySettings)
+
+NS_IMETHODIMP
+nsUnixSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)
+{
+  *aMainThreadOnly = false;
+  return NS_OK;
+}
 
 nsresult
 nsUnixSystemProxySettings::Init()
@@ -51,7 +57,11 @@ nsUnixSystemProxySettings::GetPACURI(nsACString& aResult)
 }
 
 nsresult
-nsUnixSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
+nsUnixSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
+                                          const nsACString & aScheme,
+                                          const nsACString & aHost,
+                                          const int32_t      aPort,
+                                          nsACString & aResult)
 {
   nsresult rv;
 
@@ -60,15 +70,9 @@ nsUnixSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
   }
   NS_ENSURE_TRUE(mProxyFactory, NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString spec;
-  rv = aURI->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   char **proxyArray = nullptr;
-  proxyArray = px_proxy_factory_get_proxies(mProxyFactory, (char*)(spec.get()));
+  proxyArray = px_proxy_factory_get_proxies(mProxyFactory,
+                                            PromiseFlatCString(aSpec).get());
   NS_ENSURE_TRUE(proxyArray, NS_ERROR_NOT_AVAILABLE);
 
   // Translate libproxy's output to PAC string as expected
@@ -78,44 +82,33 @@ nsUnixSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
   // direct://
   //
   // PAC format: "PROXY proxy1.foo.com:8080; PROXY proxy2.foo.com:8080; DIRECT"
+  // but nsISystemProxySettings allows "PROXY http://proxy.foo.com:8080" as well.
+
   int c = 0;
   while (proxyArray[c] != NULL) {
     if (!aResult.IsEmpty()) {
       aResult.AppendLiteral("; ");
     }
 
-    bool isScheme = false;
-    nsXPIDLCString schemeString;
-    nsXPIDLCString hostPortString;
-    nsCOMPtr<nsIURI> proxyURI;
-
-    rv = ios->NewURI(nsDependentCString(proxyArray[c]),
-                                        nullptr,
-                                        nullptr,
-                                        getter_AddRefs(proxyURI));
-    if (NS_FAILED(rv)) {
+    // figure out the scheme, and we can't use nsIIOService::NewURI because
+    // this is not the main thread.
+    char *colon = strchr (proxyArray[c], ':');
+    uint32_t schemelen = colon ? colon - proxyArray[c] : 0;
+    if (schemelen < 1) {
       c++;
       continue;
     }
 
-    proxyURI->GetScheme(schemeString);
-    if (NS_SUCCEEDED(proxyURI->SchemeIs("http", &isScheme)) && isScheme) {
-      schemeString.AssignLiteral("proxy");
+    if (schemelen == 6 && !strncasecmp(proxyArray[c], "direct", 6)) {
+      aResult.AppendLiteral("DIRECT");
     }
-    aResult.Append(schemeString);
-    if (NS_SUCCEEDED(proxyURI->SchemeIs("direct", &isScheme)) && !isScheme) {
-      // Add the proxy URI only if it's not DIRECT
-      proxyURI->GetHostPort(hostPortString);
-      aResult.AppendLiteral(" ");
-      aResult.Append(hostPortString);
+    else {
+      aResult.AppendLiteral("PROXY ");
+      aResult.Append(proxyArray[c]);
     }
 
     c++;
   }
-
-#ifdef DEBUG
-  printf("returned PAC proxy string: %s\n", PromiseFlatCString(aResult).get());
-#endif
 
   PR_Free(proxyArray);
   return NS_OK;

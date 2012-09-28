@@ -193,7 +193,7 @@ def build_interface(iface, ifaces):
         # Write the getter
         methods.append(xpt.Method(a.name, build_nsresult_param(),
                                   [build_attr_param(a, getter=True)],
-                                  getter=True, setter=False, notxpcom=a.notxpcom,
+                                  getter=True, setter=False,
                                   constructor=False, hidden=a.noscript,
                                   optargc=False,
                                   implicit_jscontext=a.implicit_jscontext))
@@ -202,7 +202,7 @@ def build_interface(iface, ifaces):
         if not a.readonly:
             methods.append(xpt.Method(a.name, build_nsresult_param(),
                                       [build_attr_param(a, setter=True)],
-                                      getter=False, setter=True, notxpcom=a.notxpcom,
+                                      getter=False, setter=True,
                                       constructor=False, hidden=a.noscript,
                                       optargc=False,
                                       implicit_jscontext=a.implicit_jscontext))

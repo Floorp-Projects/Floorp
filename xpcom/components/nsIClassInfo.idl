@@ -106,6 +106,6 @@ interface nsIClassInfo : nsISupports
      * exists so C++ callers can avoid allocating and freeing a CID, as would
      * happen if they used classID.
      */
-    [notxpcom] readonly attribute nsCID classIDNoAlloc;
+    [noscript] readonly attribute nsCID classIDNoAlloc;
 
 };

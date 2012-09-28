@@ -72,4 +72,8 @@ public class MenuItemActionBar extends ImageButton
     @Override
     public void setChecked(boolean checked) {
     }
+
+    @Override
+    public void setSubMenuIndicator(boolean hasSubMenu) {
+    }
 }
