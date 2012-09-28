@@ -12,6 +12,7 @@
 #elif defined(XP_UNIX)
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <unistd.h>
 #endif
 
 #include <stdio.h>
@@ -168,6 +169,15 @@ int main(int argc, char* argv[])
     return 255;
 
   strcpy(++lastSlash, XPCOM_DLL);
+
+#if defined(XP_UNIX)
+  // If the b2g app is launched from adb shell, then the shell will wind
+  // up being the process group controller. This means that we can't send
+  // signals to the process group (useful for profiling).
+  // We ignore the return value since setsid() fails if we're already the
+  // process group controller (the normal situation).
+  (void)setsid();
+#endif
 
   int gotCounters;
 #if defined(XP_UNIX)
