@@ -15,7 +15,6 @@
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/Attributes.h"
 
-#include "nsFrameMessageManager.h"
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
 #include "nsNetUtil.h"
@@ -26,9 +25,8 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
-#define CHILD_PROCESS_SHUTDOWN_MESSAGE NS_LITERAL_STRING("child-process-shutdown")
-
 class mozIApplication;
+class nsFrameMessageManager;
 class nsIDOMBlob;
 
 namespace mozilla {
@@ -53,7 +51,6 @@ class ContentParent : public PContentParent
                     , public nsIObserver
                     , public nsIThreadObserver
                     , public nsIDOMGeoPositionCallback
-                    , public mozilla::dom::ipc::MessageManagerCallback
 {
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
@@ -89,13 +86,6 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIDOMGEOPOSITIONCALLBACK
-
-    /**
-     * MessageManagerCallback methods that we override.
-     */
-    virtual bool DoSendAsyncMessage(const nsAString& aMessage,
-                                    const mozilla::dom::StructuredCloneData& aData);
-    virtual bool CheckPermission(const nsAString& aPermission);
 
     /** Notify that a tab was destroyed during normal operation. */
     void NotifyTabDestroyed(PBrowserParent* aTab);

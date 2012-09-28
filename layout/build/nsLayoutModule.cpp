@@ -241,7 +241,6 @@ static void Shutdown();
 
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/alarm/AlarmHalService.h"
-#include "mozilla/dom/time/TimeService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -251,7 +250,7 @@ using mozilla::dom::alarm::AlarmHalService;
 using mozilla::dom::indexedDB::IndexedDatabaseManager;
 using mozilla::dom::power::PowerManagerService;
 using mozilla::dom::TCPSocketChild;
-using mozilla::dom::time::TimeService;
+
 
 // Transformiix
 /* 5d5d92cd-6bf8-11d9-bf4a-000a95dc234c */
@@ -316,8 +315,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPowerManagerService,
 NS_GENERIC_FACTORY_CONSTRUCTOR(SmsRequestManager)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIAlarmHalService,
                                          AlarmHalService::GetInstance)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITimeService,
-                                         TimeService::GetInstance)
 
 //-----------------------------------------------------------------------------
 
@@ -831,7 +828,6 @@ NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
 NS_DEFINE_NAMED_CID(OSFILECONSTANTSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_ALARMHALSERVICE_CID);
 NS_DEFINE_NAMED_CID(TCPSOCKETCHILD_CID);
-NS_DEFINE_NAMED_CID(NS_TIMESERVICE_CID);
 
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
@@ -1111,7 +1107,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kOSFILECONSTANTSSERVICE_CID, true, NULL, OSFileConstantsServiceConstructor },
   { &kNS_ALARMHALSERVICE_CID, false, NULL, nsIAlarmHalServiceConstructor },
   { &kTCPSOCKETCHILD_CID, false, NULL, TCPSocketChildConstructor },
-  { &kNS_TIMESERVICE_CID, false, NULL, nsITimeServiceConstructor },
   { NULL }
 };
 
@@ -1256,7 +1251,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { OSFILECONSTANTSSERVICE_CONTRACTID, &kOSFILECONSTANTSSERVICE_CID },
   { ALARMHALSERVICE_CONTRACTID, &kNS_ALARMHALSERVICE_CID },
   { "@mozilla.org/tcp-socket-child;1", &kTCPSOCKETCHILD_CID },
-  { TIMESERVICE_CONTRACTID, &kNS_TIMESERVICE_CID },
   { NULL }
 };
 

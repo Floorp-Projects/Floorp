@@ -144,8 +144,7 @@ class TabChild : public PBrowserChild,
                  public nsSupportsWeakReference,
                  public nsIDialogCreator,
                  public nsITabChild,
-                 public nsIObserver,
-                 public mozilla::dom::ipc::MessageManagerCallback
+                 public nsIObserver
 {
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
@@ -178,15 +177,6 @@ public:
     NS_DECL_NSIDIALOGCREATOR
     NS_DECL_NSITABCHILD
     NS_DECL_NSIOBSERVER
-
-    /**
-     * MessageManagerCallback methods that we override.
-     */
-    virtual bool DoSendSyncMessage(const nsAString& aMessage,
-                                   const mozilla::dom::StructuredCloneData& aData,
-                                   InfallibleTArray<nsString>* aJSONRetVal);
-    virtual bool DoSendAsyncMessage(const nsAString& aMessage,
-                                    const mozilla::dom::StructuredCloneData& aData);
 
     virtual bool RecvLoadURL(const nsCString& uri);
     virtual bool RecvShow(const nsIntSize& size);

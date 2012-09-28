@@ -4528,24 +4528,22 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() 
   let hours = parseInt(dateString.substr(9, 2), 10);
   let minutes = parseInt(dateString.substr(12, 2), 10);
   let seconds = parseInt(dateString.substr(15, 2), 10);
-  // Note that |tz| is in 15-min units.
-  let tz = parseInt(dateString.substr(17, 3), 10);
-  // Note that |dst| is in 1-hour units and is already applied in |tz|.
-  let dst = parseInt(dateString.substr(21, 2), 10);
+  let tz = parseInt(dateString.substr(17, 3), 10); // TZ is in 15 min. units
+  let dst = parseInt(dateString.substr(21, 2), 10); // DST already is in local time
 
-  let timeInMS = Date.UTC(year + PDU_TIMESTAMP_YEAR_OFFSET, month - 1, day,
-                          hours, minutes, seconds);
+  let timeInSeconds = Date.UTC(year + PDU_TIMESTAMP_YEAR_OFFSET, month - 1, day,
+                               hours, minutes, seconds) / 1000;
 
-  if (isNaN(timeInMS)) {
+  if (isNaN(timeInSeconds)) {
     if (DEBUG) debug("NITZ failed to convert date");
     return;
   }
 
   this.sendDOMMessage({rilMessageType: "nitzTime",
-                       networkTimeInMS: timeInMS,
-                       networkTimeZoneInMinutes: -(tz * 15),
-                       networkDSTInMinutes: -(dst * 60),
-                       receiveTimeInMS: now});
+                       networkTimeInSeconds: timeInSeconds,
+                       networkTimeZoneInMinutes: tz * 15,
+                       dstFlag: dst,
+                       localTimeStampInMS: now});
 };
 
 RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH(length) {
