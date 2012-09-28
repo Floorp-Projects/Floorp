@@ -48,6 +48,20 @@ let Type = OS.Shared.Type;
 // The library of promises.
 Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
 
+/**
+ * Return a shallow clone of the enumerable properties of an object
+ */
+let clone = function clone(object) {
+  let result = {};
+  for (let k in object) {
+    result[k] = object[k];
+  }
+  return result;
+};
+
+/**
+ * A shared constant used to normalize a set of options to nothing.
+ */
 const noOptions = {};
 
 /**
@@ -306,8 +320,8 @@ File.prototype = {
     // we need to extract the |byteLength| now, as it will be lost
     // by communication
     if ("byteLength" in buffer && (!options || !"bytes" in options)) {
-      options = Object.create(options || noOptions,
-        {bytes: {value: buffer.byteLength, enumerable: true}});
+      options = clone(options || noOptions);
+      options.bytes = buffer.byteLength;
     }
     // Note: Classic semantics for ArrayBuffer communication would imply
     // that posting the ArrayBuffer removes ownership from the sender
@@ -335,8 +349,8 @@ File.prototype = {
     // we need to extract the |byteLength| now, as it will be lost
     // by communication
     if ("byteLength" in buffer && (!options || !"bytes" in options)) {
-      options = Object.create(options || noOptions,
-        {bytes: {value: buffer.byteLength, enumerable: true}});
+      options = clone(options || noOptions);
+      options.bytes = buffer.byteLength;
     }
     // Note: Classic semantics for ArrayBuffer communication would imply
     // that posting the ArrayBuffer removes ownership from the sender
@@ -551,6 +565,17 @@ File.removeEmptyDir = function removeEmptyDir(path, options) {
     [Type.path.toMsg(path), options], path);
 };
 
+/**
+ * Remove an existing file.
+ *
+ * @param {string} path The name of the file.
+ */
+File.remove = function remove(path) {
+  return Scheduler.post("remove",
+    [Type.path.toMsg(path)]);
+};
+
+
 
 /**
  * Create a directory.
@@ -567,6 +592,58 @@ File.removeEmptyDir = function removeEmptyDir(path, options) {
 File.makeDir = function makeDir(path, options) {
   return Scheduler.post("makeDir",
     [Type.path.toMsg(path), options], path);
+};
+
+/**
+ * Return the contents of a file
+ *
+ * @param {string} path The path to the file.
+ * @param {number=} bytes Optionally, an upper bound to the number of bytes
+ * to read.
+ *
+ * @resolves {{buffer: ArrayBuffer, bytes: number}} A buffer holding the bytes
+ * and the number of bytes read from the file.
+ */
+File.read = function read(path, bytes) {
+  return Scheduler.post("read",
+    [Type.path.toMsg(path), bytes], path);
+};
+
+/**
+ * Write a file, atomically.
+ *
+ * By opposition to a regular |write|, this operation ensures that,
+ * until the contents are fully written, the destination file is
+ * not modified.
+ *
+ * Important note: In the current implementation, option |tmpPath|
+ * is required. This requirement should disappear as part of bug 793660.
+ *
+ * @param {string} path The path of the file to modify.
+ * @param {ArrayByffer} buffer A buffer containing the bytes to write.
+ * @param {number} bytes The number of bytes to write.
+ * @param {*=} options Optionally, an object determining the behavior
+ * of this function. This object may contain the following fields:
+ * - {number} offset The offset in |buffer| at which to start extracting
+ * data
+ * - {string} tmpPath The path at which to write the temporary file.
+ *
+ * @return {number} The number of bytes actually written.
+ */
+File.writeAtomic = function writeAtomic(path, buffer, options) {
+  // Copy |options| to avoid modifying the original object
+  options = clone(options || noOptions);
+  // As options.tmpPath is a path, we need to encode it as |Type.path| message
+  if ("tmpPath" in options) {
+    options.tmpPath = Type.path.toMsg(options.tmpPath);
+  };
+  if ("byteLength" in buffer && (!("bytes" in options))) {
+    options.bytes = buffer.byteLength;
+  };
+  return Scheduler.post("writeAtomic",
+    [Type.path.toMsg(path),
+    Type.void_t.in_ptr.toMsg(buffer),
+    options], [options, buffer]);
 };
 
 /**

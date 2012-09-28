@@ -200,9 +200,24 @@ if (this.Components) {
        removeEmptyDir: function removeEmptyDir(path, options) {
          return File.removeEmptyDir(Type.path.fromMsg(path), options);
        },
+       remove: function remove(path) {
+         return File.remove(Type.path.fromMsg(path));
+       },
        open: function open(path, mode, options) {
          let file = File.open(Type.path.fromMsg(path), mode, options);
          return OpenedFiles.add(file);
+       },
+       read: function read(path, bytes) {
+         return File.read(Type.path.fromMsg(path), bytes);
+       },
+       writeAtomic: function writeAtomic(path, buffer, options) {
+         if (options.tmpPath) {
+           options.tmpPath = Type.path.fromMsg(options.tmpPath);
+         }
+         return File.writeAtomic(Type.path.fromMsg(path),
+                                 Type.voidptr_t.fromMsg(buffer),
+                                 options
+                                );
        },
        new_DirectoryIterator: function new_DirectoryIterator(path, options) {
          let iterator = new File.DirectoryIterator(Type.path.fromMsg(path), options);

@@ -199,6 +199,9 @@ function RadioInterfaceLayer() {
   let lock = gSettingsService.createLock();
   lock.get("ril.radio.disabled", this);
 
+  // Read preferred network type from the setting DB.
+  lock.get("ril.radio.preferredNetworkType", this);
+
   // Read the APN data from the settings DB.
   lock.get("ril.data.apn", this);
   lock.get("ril.data.user", this);
@@ -494,6 +497,9 @@ RadioInterfaceLayer.prototype = {
       case "stksessionend":
         ppmm.broadcastAsyncMessage("RIL:StkSessionEnd", null);
         break;
+      case "setPreferredNetworkType":
+        this.handleSetPreferredNetworkType(message);
+        break;
       default:
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
@@ -677,6 +683,39 @@ RadioInterfaceLayer.prototype = {
     }
 
     this._deliverDataCallCallback("dataCallError", [message]);
+  },
+
+  _preferredNetworkType: null,
+  setPreferredNetworkType: function setPreferredNetworkType(value) {
+    let networkType = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.indexOf(value);
+    if (networkType < 0) {
+      networkType = (this._preferredNetworkType != null)
+                    ? RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[this._preferredNetworkType]
+                    : RIL.GECKO_PREFERRED_NETWORK_TYPE_DEFAULT;
+      gSettingsService.createLock().set("ril.radio.preferredNetworkType",
+                                        networkType, null);
+      return;
+    }
+
+    if (networkType == this._preferredNetworkType) {
+      return;
+    }
+
+    this.worker.postMessage({rilMessageType: "setPreferredNetworkType",
+                             networkType: networkType});
+  },
+
+  handleSetPreferredNetworkType: function handleSetPreferredNetworkType(message) {
+    if ((this._preferredNetworkType != null) && !message.success) {
+      gSettingsService.createLock().set("ril.radio.preferredNetworkType",
+                                        this._preferredNetworkType,
+                                        null);
+      return;
+    }
+
+    this._preferredNetworkType = message.networkType;
+    debug("_preferredNetworkType is now " +
+          RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[this._preferredNetworkType]);
   },
 
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
@@ -1261,6 +1300,10 @@ RadioInterfaceLayer.prototype = {
         debug("'ril.radio.disabled' is now " + aResult);
         this._radioEnabled = !aResult;
         this._ensureRadioState();
+        break;
+      case "ril.radio.preferredNetworkType":
+        debug("'ril.radio.preferredNetworkType' is now " + aResult);
+        this.setPreferredNetworkType(aResult);
         break;
       case "ril.data.enabled":
         this._oldRilDataEnabledState = this.dataCallSettings["enabled"];

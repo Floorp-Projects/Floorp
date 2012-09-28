@@ -557,15 +557,10 @@ class CallCompiler : public BaseCompiler
     {
         RecompilationMonitor monitor(cx);
 
-        if (f.script()->function()) {
-            f.script()->uninlineable = true;
-            MarkTypeObjectFlags(cx, f.script()->function(), types::OBJECT_FLAG_UNINLINEABLE);
-        }
-
-        /* Don't touch the IC if the call triggered a recompilation. */
-        if (monitor.recompiled())
-            return true;
-
+        /*
+         * When IonMonkey is enabled we never inline in JM. So do not cause any
+         * recompilation by setting the UNINLINEABLE flag.
+         */
         JS_ASSERT(!f.regs.inlined());
 
         Assembler masm;
