@@ -1879,7 +1879,7 @@ struct NS_STACK_CLASS ExceptionArgParser
     }
 
     bool parseResult(JS::Value &v) {
-        return JS_ValueToECMAInt32(cx, v, (int32_t*) &eResult);
+        return JS_ValueToECMAUint32(cx, v, (uint32_t*) &eResult);
     }
 
     bool parseStack(JS::Value &v) {

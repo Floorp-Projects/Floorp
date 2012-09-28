@@ -5288,6 +5288,37 @@ class MNewCallObject : public MUnaryInstruction
     }
 };
 
+class MNewStringObject :
+  public MUnaryInstruction,
+  public StringPolicy
+{
+    CompilerRootObject templateObj_;
+
+    MNewStringObject(MDefinition *input, HandleObject templateObj)
+      : MUnaryInstruction(input),
+        templateObj_(templateObj)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewStringObject);
+
+    static MNewStringObject *New(MDefinition *input, HandleObject templateObj) {
+        return new MNewStringObject(input, templateObj);
+    }
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    StringObject *templateObj() const {
+        return &templateObj_->asString();
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 // Node that represents that a script has begun executing. This comes at the
 // start of the function and is called once per function (including inline
 // ones)

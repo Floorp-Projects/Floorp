@@ -195,6 +195,15 @@ private:
   nsXTFElementWrapper* mWrapper;  
 };
 
+/* [notxpcom,nostdcall] uint32_t getScriptableFlags(); */
+// This method isn't automatically forwarded safely because it's notxpcom, so
+// the IDL binding doesn't know what value to return.
+inline uint32_t
+nsXTFClassInfo::GetScriptableFlags()
+{
+  return mWrapper ? mWrapper->GetScriptableFlags() : 0;
+}
+
 nsresult
 NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement, already_AddRefed<nsINodeInfo> aNodeInfo,
                         nsIContent** aResult);

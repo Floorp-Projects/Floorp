@@ -12,6 +12,8 @@
 #include "MIRGraph.h"
 #include "IonBuilder.h"
 
+#include "vm/StringObject-inl.h"
+
 namespace js {
 namespace ion {
 
@@ -53,6 +55,8 @@ IonBuilder::inlineNativeCall(JSNative native, uint32 argc, bool constructing)
         return inlineMathFunction(MMathFunction::Log, argc, constructing);
 
     // String natives.
+    if (native == js_String)
+        return inlineStringObject(argc, constructing);
     if (native == js_str_charCodeAt)
         return inlineStrCharCodeAt(argc, constructing);
     if (native == js::str_fromCharCode)
@@ -553,6 +557,36 @@ IonBuilder::inlineMathMinMax(bool max, uint32 argc, bool constructing)
     MMinMax *ins = MMinMax::New(argv[1], argv[2], returnType, max);
     current->add(ins);
     current->push(ins);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineStringObject(uint32 argc, bool constructing)
+{
+    if (argc != 1 || !constructing)
+        return InliningStatus_NotInlined;
+
+    // MToString only supports int32 or string values.
+    MIRType type = getInlineArgType(argc, 1);
+    if (type != MIRType_Int32 && type != MIRType_String)
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    RootedString emptyString(cx, cx->runtime->emptyString);
+    RootedObject templateObj(cx, StringObject::create(cx, emptyString));
+    if (!templateObj)
+        return InliningStatus_Error;
+
+    MNewStringObject *ins = MNewStringObject::New(argv[1], templateObj);
+    current->add(ins);
+    current->push(ins);
+
+    if (!resumeAfter(ins))
+        return InliningStatus_Error;
+
     return InliningStatus_Inlined;
 }
 

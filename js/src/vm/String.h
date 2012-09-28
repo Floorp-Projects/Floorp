@@ -682,10 +682,7 @@ class StaticStrings
     static const size_t SMALL_CHAR_LIMIT    = 128U;
     static const size_t NUM_SMALL_CHARS     = 64U;
 
-    static const size_t INT_STATIC_LIMIT    = 256U;
-
     JSAtom *length2StaticTable[NUM_SMALL_CHARS * NUM_SMALL_CHARS];
-    JSAtom *intStaticTable[INT_STATIC_LIMIT];
 
     void clear() {
         PodArrayZero(unitStaticTable);
@@ -694,9 +691,12 @@ class StaticStrings
     }
 
   public:
-    /* We keep these public for the methodjit. */
+    /* We keep these public for the JITs. */
     static const size_t UNIT_STATIC_LIMIT   = 256U;
     JSAtom *unitStaticTable[UNIT_STATIC_LIMIT];
+
+    static const size_t INT_STATIC_LIMIT    = 256U;
+    JSAtom *intStaticTable[INT_STATIC_LIMIT];
 
     StaticStrings() {
         clear();

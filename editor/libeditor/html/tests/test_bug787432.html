@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=787432
+-->
+<title>Test for Bug 787432</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=787432">Mozilla Bug 787432</a>
+<div id="test" contenteditable><span class="insert">%</span><br></div>
+<script>
+var div = document.getElementById("test");
+getSelection().collapse(div.firstChild, 0);
+getSelection().extend(div.firstChild, 1);
+document.execCommand("inserttext", false, "x");
+is(div.innerHTML, '<span class="insert">x</span><br>',
+   "Empty <span> needs to not be removed");
+</script>

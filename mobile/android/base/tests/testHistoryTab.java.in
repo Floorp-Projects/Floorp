@@ -137,10 +137,6 @@ public class testHistoryTab extends PixelTest {
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
-        View child = list.getChildAt(0);
-        mSolo.clickLongOnView(child);
-        mAsserter.is(false, mSolo.waitForText("Open in New Tab"), "Header rows should not show a context menu");
-
         // wait for the history list to be populated
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
@@ -178,6 +174,11 @@ public class testHistoryTab extends PixelTest {
             mAsserter.ok(mSolo.searchText("Add to Home Screen", true), "Context menu has Add to Home Screen option", "Add to Home Screen");
 
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
+            View child = list.getChildAt(0);
+            mSolo.clickLongOnView(child);
+            mAsserter.is(false, mSolo.waitForText("Open in New Tab"), "Header rows should not show a context menu");
+
         } else {
             mAsserter.ok(false, "waiting for history item", "history item available");
         }

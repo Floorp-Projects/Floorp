@@ -20,4 +20,5 @@ dictionary MozWifiConnectionInfoEventInit : EventInit
   short signalStrength;
   short relSignalStrength;
   long linkSpeed;
+  DOMString ipAddress;
 };

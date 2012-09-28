@@ -1001,9 +1001,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     program->SetTextureUnit(0);
     program->LoadMask(GetMaskLayer());
 
-    mOGLManager->BindAndDrawQuadWithTextureRect(program,
-                                                GetVisibleRegion().GetBounds(),
-                                                nsIntSize(mSize.width, mSize.height));
+    mOGLManager->BindAndDrawQuad(program);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, 0);
 #endif
   } else if (mSharedHandle) {

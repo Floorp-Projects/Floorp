@@ -34,7 +34,7 @@ public:
   nsresult GetAutoconfigURL(nsAutoCString& aResult) const;
 
   // Find the SystemConfiguration proxy & port for a given URI
-  nsresult FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost, int32_t& aResultPort, bool& aResultSocksProxy);
+  nsresult FindSCProxyPort(const nsACString &aScheme, nsACString& aResultHost, int32_t& aResultPort, bool& aResultSocksProxy);
 
   // is host:port on the proxy exception list?
   bool IsInExceptionList(const nsACString& aHost) const;
@@ -58,7 +58,14 @@ private:
   static const SchemeMapping gSchemeMappingList[];
 };
 
-NS_IMPL_ISUPPORTS1(nsOSXSystemProxySettings, nsISystemProxySettings)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsOSXSystemProxySettings, nsISystemProxySettings)
+
+NS_IMETHODIMP
+nsOSXSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)
+{
+  *aMainThreadOnly = false;
+  return NS_OK;
+}
 
 // Mapping of URI schemes to SystemConfiguration keys
 const nsOSXSystemProxySettings::SchemeMapping nsOSXSystemProxySettings::gSchemeMappingList[] = {
@@ -156,7 +163,7 @@ nsOSXSystemProxySettings::ProxyHasChanged()
 }
 
 nsresult
-nsOSXSystemProxySettings::FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost, int32_t& aResultPort, bool& aResultSocksProxy)
+nsOSXSystemProxySettings::FindSCProxyPort(const nsACString &aScheme, nsACString& aResultHost, int32_t& aResultPort, bool& aResultSocksProxy)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -164,8 +171,8 @@ nsOSXSystemProxySettings::FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost,
 
   for (const SchemeMapping* keys = gSchemeMappingList; keys->mScheme != NULL; ++keys) {
     // Check for matching scheme (when appropriate)
-    bool res;
-    if ((NS_FAILED(aURI->SchemeIs(keys->mScheme, &res)) || !res) && !keys->mIsSocksProxy)
+    if (strcasecmp(keys->mScheme, PromiseFlatCString(aScheme).get()) &&
+        !keys->mIsSocksProxy)
       continue;
 
     // Check the proxy is enabled
@@ -303,20 +310,20 @@ nsOSXSystemProxySettings::GetPACURI(nsACString& aResult)
 }
 
 nsresult
-nsOSXSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
+nsOSXSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
+                                         const nsACString & aScheme,
+                                         const nsACString & aHost,
+                                         const int32_t      aPort,
+                                         nsACString & aResult)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsAutoCString host;
-  nsresult rv = aURI->GetHost(host);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t proxyPort;
   nsAutoCString proxyHost;
   bool proxySocks;
-  rv = FindSCProxyPort(aURI, proxyHost, proxyPort, proxySocks);
+  nsresult rv = FindSCProxyPort(aScheme, proxyHost, proxyPort, proxySocks);
 
-  if (NS_FAILED(rv) || IsInExceptionList(host)) {
+  if (NS_FAILED(rv) || IsInExceptionList(aHost)) {
     aResult.AssignLiteral("DIRECT");
   } else if (proxySocks) {
     aResult.Assign(NS_LITERAL_CSTRING("SOCKS ") + proxyHost + nsPrintfCString(":%d", proxyPort));

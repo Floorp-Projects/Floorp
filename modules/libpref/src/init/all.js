@@ -1121,6 +1121,9 @@ pref("network.dns.disableIPv6", false);
 // Default to 30 days. (basically forever)
 pref("network.dnsCacheExpirationGracePeriod", 2592000);
 
+// This preference can be used to turn off DNS prefetch.
+pref("network.dns.disablePrefetch", false);
+
 // This preference controls whether or not URLs with UTF-8 characters are
 // escaped.  Set this preference to TRUE for strict RFC2396 conformance.
 pref("network.standard-url.escape-utf8", true);
