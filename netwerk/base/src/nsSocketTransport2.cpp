@@ -882,7 +882,7 @@ nsSocketTransport::SendStatus(nsresult status)
         }
     }
     if (sink)
-        sink->OnTransportStatus(this, status, progress, LL_MAXUINT);
+        sink->OnTransportStatus(this, status, progress, UINT64_MAX);
 }
 
 nsresult

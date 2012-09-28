@@ -1554,7 +1554,7 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
   }
 
   progress->InitProgressEvent(aType, false, false, aLengthComputable,
-                              aLoaded, (aTotal == LL_MAXUINT) ? 0 : aTotal);
+                              aLoaded, (aTotal == UINT64_MAX) ? 0 : aTotal);
 
   if (aUseLSEventWrapper) {
     nsCOMPtr<nsIDOMProgressEvent> xhrprogressEvent =
@@ -3656,7 +3656,7 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, uint64
   bool upload = !!((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState);
   // When uploading, OnProgress reports also headers in aProgress and aProgressMax.
   // So, try to remove the headers, if possible.
-  bool lengthComputable = (aProgressMax != LL_MAXUINT);
+  bool lengthComputable = (aProgressMax != UINT64_MAX);
   if (upload) {
     uint64_t loaded = aProgress;
     uint64_t total = aProgressMax;

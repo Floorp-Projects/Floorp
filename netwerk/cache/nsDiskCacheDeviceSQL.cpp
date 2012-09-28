@@ -126,7 +126,7 @@ class EvictionObserver
     nsRefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
 };
 
-#define DCACHE_HASH_MAX  LL_MAXINT
+#define DCACHE_HASH_MAX  INT64_MAX
 #define DCACHE_HASH_BITS 64
 
 /**

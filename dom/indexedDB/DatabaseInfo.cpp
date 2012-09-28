@@ -69,7 +69,7 @@ ObjectStoreInfo::ObjectStoreInfo(ObjectStoreInfo& aOther)
 #ifdef NS_BUILD_REFCNT_LOGGING
 
 IndexInfo::IndexInfo()
-: id(LL_MININT),
+: id(INT64_MIN),
   keyPath(0),
   unique(false),
   multiEntry(false)
