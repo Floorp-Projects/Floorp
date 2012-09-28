@@ -454,7 +454,7 @@ function run_test()
     testValidForwardMAC,
     testInvalidForwardMAC,
     testNoForwardMAC,
-    testRekey,
+    testRekey
   ]);
 }
 
