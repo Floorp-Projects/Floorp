@@ -117,6 +117,22 @@ define("test/source-map/test-source-node", ["require", "exports", "module"], fun
     });
   };
 
+  exports['test .replaceRight'] = function (assert, util) {
+    var node;
+
+    // Not nested
+    node = new SourceNode(null, null, null, 'hello world');
+    node.replaceRight(/world/, 'universe');
+    assert.equal(node.toString(), 'hello universe');
+
+    // Nested
+    node = new SourceNode(null, null, null,
+                          [new SourceNode(null, null, null, 'hey sexy mama, '),
+                           new SourceNode(null, null, null, 'want to kill all humans?')]);
+    node.replaceRight(/kill all humans/, 'watch Futurama');
+    assert.equal(node.toString(), 'hey sexy mama, want to watch Futurama?');
+  };
+
   exports['test .toStringWithSourceMap()'] = function (assert, util) {
     var node = new SourceNode(null, null, null,
                               ['(function () {\n',
