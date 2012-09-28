@@ -85,9 +85,10 @@ class Marionette(object):
     CONTEXT_CONTENT = 'content'
 
     def __init__(self, host='localhost', port=2828, bin=None, profile=None,
-                 emulator=None, sdcard= None, emulatorBinary=None, emulatorImg=None,
-                 emulator_res='480x800', connectToRunningEmulator=False,
-                 homedir=None, baseurl=None, noWindow=False, logcat_dir=None):
+                 emulator=None, sdcard=None, emulatorBinary=None,
+                 emulatorImg=None, emulator_res='480x800', gecko_path=None,
+                 connectToRunningEmulator=False, homedir=None, baseurl=None,
+                 noWindow=False, logcat_dir=None):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -101,6 +102,7 @@ class Marionette(object):
         self.baseurl = baseurl
         self.noWindow = noWindow
         self.logcat_dir = logcat_dir
+        self.gecko_path = gecko_path
 
         if bin:
             self.instance = GeckoInstance(host=self.host, port=self.port,
@@ -115,13 +117,16 @@ class Marionette(object):
                                      sdcard=sdcard,
                                      emulatorBinary=emulatorBinary,
                                      userdata=emulatorImg,
-                                     res=emulator_res)
+                                     res=emulator_res,
+                                     gecko_path=self.gecko_path)
             self.emulator.start()
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port())
 
         if connectToRunningEmulator:
-            self.emulator = Emulator(homedir=homedir, logcat_dir=self.logcat_dir)
+            self.emulator = Emulator(homedir=homedir,
+                                     logcat_dir=self.logcat_dir,
+                                     gecko_path=self.gecko_path)
             self.emulator.connect()
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port())
@@ -262,7 +267,7 @@ class Marionette(object):
     def current_window_handle(self):
         self.window = self._send_message('getWindow', 'value')
         return self.window
-    
+
     @property
     def title(self):
         response = self._send_message('getTitle', 'value') 
