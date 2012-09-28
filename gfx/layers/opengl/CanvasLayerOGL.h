@@ -27,6 +27,7 @@ public:
   CanvasLayerOGL(LayerManagerOGL *aManager)
     : CanvasLayer(aManager, NULL),
       LayerOGL(aManager),
+      mLayerProgram(gl::RGBALayerProgramType),
       mTexture(0),
       mTextureTarget(LOCAL_GL_TEXTURE_2D),
       mDelayedUpdates(false)
