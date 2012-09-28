@@ -62,6 +62,7 @@ Var ExistingTopDir
 Var SpaceAvailableBytes
 Var InitialInstallDir
 Var HandleDownload
+Var CanSetAsDefault
 
 Var HEIGHT_PX
 Var CTL_RIGHT_PX
@@ -85,17 +86,24 @@ Var CTL_RIGHT_PX
 !include "locales.nsi"
 !include "branding.nsi"
 
-; Override BrandFullNameInternal from branding.nsi
-!undef BrandFullNameInternal
-!define BrandFullNameInternal "Mozilla Firefox"
-
 !include "defines.nsi"
+
+; Workaround to support different urls for Official and Beta since they share
+; the same branding.
+!ifdef BETA_UPDATE_CHANNEL
+!undef URLStubDownload
+!define URLStubDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
+!undef URLManualDownload
+!define URLManualDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
+!endif
+
 !include "common.nsh"
 
 !insertmacro ElevateUAC
 !insertmacro GetLongPath
 !insertmacro GetSingleInstallPath
 !insertmacro GetTextWidthHeight
+!insertmacro IsUserAdmin
 !insertmacro SetBrandNameVars
 !insertmacro UnloadUAC
 
@@ -207,10 +215,18 @@ Function .onInit
   ${EndIf}
 
   StrCpy $InitialInstallDir "$INSTDIR"
-  ${If} ${AtMostWin7}
-    StrCpy $CheckboxSetAsDefault 1
+
+  ClearErrors
+  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
+                   "Write Test"
+
+  ${If} ${Errors}
+  ${OrIf} ${AtLeastWin8}
+    StrCpy $CanSetAsDefault "false"
+    StrCpy $CheckboxSetAsDefault "0"
   ${Else}
-    StrCpy $CheckboxSetAsDefault 0
+    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    StrCpy $CanSetAsDefault "true"
   ${EndIf}
 
   CreateFont $FontBlurb "$(^Font)" "12" "500"
@@ -294,7 +310,7 @@ Function createIntro
     GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
     ; Set as default is not supported in the installer for Win8 and above so
     ; only display it on Windows 7 and below
-    ${If} ${AtMostWin7}
+    ${If} $CanSetAsDefault == "true"
       SendMessage $0 ${WM_SETFONT} $FontNormal 0
       SendMessage $0 ${WM_SETTEXT} 0 "STR:$(MAKE_DEFAULT)"
       SendMessage $0 ${BM_SETCHECK} 1 0
@@ -489,11 +505,29 @@ Function createOptions
   Call UpdateFreeSpaceLabel
 
 !ifdef MOZ_MAINTENANCE_SERVICE
-  ${NSD_CreateCheckbox} ${OPTIONS_ITEM_LEFT_DU} 175u 100% 12u "$(INSTALL_MAINT_SERVICE)"
-  Pop $CheckboxInstallMaintSvc
-  SetCtlColors $CheckboxInstallMaintSvc ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
-  SendMessage $CheckboxInstallMaintSvc ${WM_SETFONT} $FontNormal 0
-  ${NSD_Check} $CheckboxInstallMaintSvc
+  ; Only show the maintenance service checkbox if we have write access to HKLM
+  Call IsUserAdmin
+  Pop $0
+  ClearErrors
+  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
+                   "Write Test"
+  ${If} ${Errors}
+  ${OrIf} $0 != "true"
+    StrCpy $CheckboxInstallMaintSvc "0"
+  ${Else}
+    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    ; Read the registry instead of using ServicesHelper::IsInstalled so the
+    ; plugin isn't included in the stub installer to lessen its size.
+    ClearErrors
+    ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\services\MozillaMaintenance" "ImagePath"
+    ${If} ${Errors}
+      ${NSD_CreateCheckbox} ${OPTIONS_ITEM_LEFT_DU} 175u 100% 12u "$(INSTALL_MAINT_SERVICE)"
+      Pop $CheckboxInstallMaintSvc
+      SetCtlColors $CheckboxInstallMaintSvc ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+      SendMessage $CheckboxInstallMaintSvc ${WM_SETFONT} $FontNormal 0
+      ${NSD_Check} $CheckboxInstallMaintSvc
+    ${EndIf}
+  ${EndIf}
 !endif
 
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
@@ -686,7 +720,7 @@ Function createInstall
   SendMessage $0 ${WM_KILLFOCUS} 0 0
 
   ; Set as default is not supported in the installer for Win8 and above
-  ${If} ${AtMostWin7}
+  ${If} $CanSetAsDefault == "true"
     GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
     SendMessage $0 ${BM_GETCHECK} 0 0 $CheckboxSetAsDefault
     EnableWindow $0 0
