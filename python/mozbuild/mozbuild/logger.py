@@ -97,7 +97,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         elif s.startswith('TEST-UNEXPECTED'):
             result = self.terminal.red(s[0:20]) + s[21:]
 
-        return result.decode('UTF-8', 'ignore')
+        return result
 
 
 class LoggingManager(object):
