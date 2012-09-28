@@ -445,13 +445,13 @@ let PageThumbsExpiration = {
     }
   },
 
-  expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep) {
+  expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep, aCallback) {
     PageThumbsWorker.postMessage({
       type: "expireFilesInDirectory",
       minChunkSize: EXPIRATION_MIN_CHUNK_SIZE,
       path: PageThumbsStorage.getDirectory().path,
       filesToKeep: [PageThumbsStorage.getLeafNameForURL(url) for (url of aURLsToKeep)]
-    });
+    }, aCallback);
   }
 };
 
