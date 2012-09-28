@@ -12,3 +12,10 @@
 !define CompanyName           "mozilla.org"
 !define URLInfoAbout          "http://www.mozilla.org"
 !define URLUpdateInfo         "http://www.mozilla.org/projects/firefox"
+
+!define URLStubDownload "http://download.mozilla.org/?product=firefox-latest&os=win&lang=${AB_CD}"
+!define URLManualDownload "http://download.mozilla.org/?product=firefox-latest&os=win&lang=${AB_CD}"
+
+# The installer's certificate name and issuer expected by the stub installer
+!define CertNameDownload   "Mozilla Corporation"
+!define CertIssuerDownload "Thawte Code Signing CA - G2"
