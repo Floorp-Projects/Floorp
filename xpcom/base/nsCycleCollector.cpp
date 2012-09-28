@@ -170,6 +170,12 @@ PRThread* gCycleCollectorThread = nullptr;
 // If true, always log cycle collector graphs.
 const bool gAlwaysLogCCGraphs = false;
 
+// If true, log the cycle collector graphs during shutdown.
+const bool gLogShutdown = false;
+
+// If true, any logging done at shutdown will be AllTraces.
+const bool gAllTracesAtShutdown = false;
+
 MOZ_NEVER_INLINE void
 CC_AbortIfNull(void *ptr)
 {
@@ -1293,9 +1299,14 @@ public:
     }
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD AllTraces(nsICycleCollectorListener** aListener)
+    void SetAllTraces()
     {
         mWantAllTraces = true;
+    }
+
+    NS_IMETHOD AllTraces(nsICycleCollectorListener** aListener)
+    {
+        SetAllTraces();
         NS_ADDREF(*aListener = this);
         return NS_OK;
     }
@@ -2962,8 +2973,11 @@ nsCycleCollector::Shutdown()
 #endif
     {
         nsCOMPtr<nsCycleCollectorLogger> listener;
-        if (mParams.mLogGraphs) {
+        if (mParams.mLogGraphs || gLogShutdown) {
             listener = new nsCycleCollectorLogger();
+            if (gAllTracesAtShutdown) {
+                listener->SetAllTraces();
+            }
         }
         Collect(false, nullptr,  SHUTDOWN_COLLECTIONS(mParams), listener);
     }
