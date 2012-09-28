@@ -166,8 +166,6 @@ HashStore::Reset()
   rv = storeFile->Remove(false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  Clear();
-
   return NS_OK;
 }
 
@@ -230,7 +228,6 @@ HashStore::Open()
   }
 
   if (rv == NS_ERROR_FILE_NOT_FOUND) {
-    Clear();
     UpdateHeader();
     return NS_OK;
   }
@@ -271,24 +268,9 @@ HashStore::Open()
   return NS_OK;
 }
 
-void
-HashStore::Clear()
-{
-  mAddChunks.Clear();
-  mSubChunks.Clear();
-  mAddExpirations.Clear();
-  mSubExpirations.Clear();
-  mAddPrefixes.Clear();
-  mSubPrefixes.Clear();
-  mAddCompletes.Clear();
-  mSubCompletes.Clear();
-}
-
 nsresult
 HashStore::ReadEntireStore()
 {
-  Clear();
-
   nsresult rv = ReadHeader();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -308,7 +290,6 @@ nsresult
 HashStore::ReadHeader()
 {
   if (!mInputStream) {
-    Clear();
     UpdateHeader();
     return NS_OK;
   }
@@ -409,8 +390,6 @@ nsresult
 HashStore::ReadChunkNumbers()
 {
   if (!mInputStream) {
-    LOG(("Clearing."));
-    Clear();
     return NS_OK;
   }
 
@@ -464,6 +443,11 @@ HashStore::BeginUpdate()
 
   nsresult rv = ReadEntireStore();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mInputStream) {
+    rv = mInputStream->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -835,13 +819,6 @@ HashStore::WriteFile()
   rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(".sbstore"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Need to close the inputstream here *before* rewriting its file.
-  // Windows will fail with an access violation if we don't.
-  if (mInputStream) {
-    rv = mInputStream->Close();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<nsIOutputStream> out;
   rv = NS_NewCheckSummedOutputStream(getter_AddRefs(out), storeFile,
                                      PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
@@ -876,32 +853,6 @@ HashStore::WriteFile()
 
   rv = safeOut->Finish();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  int64_t fileSize;
-  rv = storeFile->GetFileSize(&fileSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Reopen the file now that we've rewritten it.
-  nsCOMPtr<nsIInputStream> origStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(origStream), storeFile,
-                                  PR_RDONLY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = NS_NewBufferedInputStream(getter_AddRefs(mInputStream), origStream,
-                                 fileSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-HashStore::FinishUpdate()
-{
-  // Drop add/sub data, it's only used during updates.
-  mAddPrefixes.Clear();
-  mSubPrefixes.Clear();
-  mAddCompletes.Clear();
-  mSubCompletes.Clear();
 
   return NS_OK;
 }

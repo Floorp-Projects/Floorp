@@ -28,8 +28,8 @@ public:
   ~Classifier();
 
   nsresult Open(nsIFile& aCacheDirectory);
-  nsresult Close();
-  nsresult Reset();
+  void Close();
+  void Reset();
 
   /**
    * Get the list of active tables and their chunks in a format
@@ -71,6 +71,11 @@ public:
                             PrefixArray* aNoiseEntries);
 private:
   void DropStores();
+  nsresult SetupPathNames();
+  nsresult RecoverBackups();
+  nsresult CleanToDelete();
+  nsresult BackupTables();
+  nsresult RemoveBackupTables();
   nsresult RegenActiveTables();
   nsresult ScanStoreDir(nsTArray<nsCString>& aTables);
 
@@ -80,8 +85,14 @@ private:
   LookupCache *GetLookupCache(const nsACString& aTable);
   nsresult InitKey();
 
-  nsCOMPtr<nsICryptoHash> mCryptoHash;
+  // Root dir of the Local profile.
+  nsCOMPtr<nsIFile> mCacheDirectory;
+  // Main directory where to store the databases.
   nsCOMPtr<nsIFile> mStoreDirectory;
+  // Used for atomically updating the other dirs.
+  nsCOMPtr<nsIFile> mBackupDirectory;
+  nsCOMPtr<nsIFile> mToDeleteDirectory;
+  nsCOMPtr<nsICryptoHash> mCryptoHash;
   nsTArray<HashStore*> mHashStores;
   nsTArray<LookupCache*> mLookupCaches;
   nsTArray<nsCString> mActiveTablesCache;
