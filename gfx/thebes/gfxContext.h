@@ -738,8 +738,6 @@ private:
     mozilla::gfx::AntialiasMode aaMode;
     bool patternTransformChanged;
     Matrix patternTransform;
-    // This is used solely for using minimal intermediate surface size.
-    mozilla::gfx::Point deviceOffset;
   };
 
   // This ensures mPath contains a valid path (in user space!)
@@ -750,8 +748,6 @@ private:
   void PushClipsToDT(mozilla::gfx::DrawTarget *aDT);
   CompositionOp GetOp();
   void ChangeTransform(const mozilla::gfx::Matrix &aNewMatrix);
-  Rect GetAzureDeviceSpaceClipBounds();
-  Matrix GetDeviceTransform();
 
   bool mPathIsRect;
   bool mTransformChanged;

@@ -613,9 +613,7 @@ gfxContext::SetMatrix(const gfxMatrix& matrix)
     const cairo_matrix_t& mat = reinterpret_cast<const cairo_matrix_t&>(matrix);
     cairo_set_matrix(mCairo, &mat);
   } else {
-    Matrix mat;
-    mat.Translate(-CurrentState().deviceOffset.x, -CurrentState().deviceOffset.y);
-    ChangeTransform(ToMatrix(matrix) * GetDeviceTransform());
+    ChangeTransform(ToMatrix(matrix));
   }
 }
 
@@ -1190,7 +1188,25 @@ gfxContext::GetClipExtents()
     cairo_clip_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
   } else {
-    Rect rect = GetAzureDeviceSpaceClipBounds();
+    unsigned int lastReset = 0;
+    for (int i = mStateStack.Length() - 1; i > 0; i--) {
+      if (mStateStack[i].clipWasReset) {
+        lastReset = i;
+      }
+    }
+
+    Rect rect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
+    for (unsigned int i = lastReset; i < mStateStack.Length(); i++) {
+      for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
+        AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
+        if (clip.path) {
+          Rect bounds = clip.path->GetBounds(clip.transform);
+          rect.IntersectRect(rect, bounds);
+        } else {
+          rect.IntersectRect(rect, clip.transform.TransformBounds(clip.rect));
+        }
+      }
+    }
 
     if (rect.width == 0 || rect.height == 0) {
       return gfxRect(0, 0, 0, 0);
@@ -1453,23 +1469,15 @@ gfxContext::PushGroup(gfxASurface::gfxContentType content)
   if (mCairo) {
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
   } else {
-    Rect clipBounds = GetAzureDeviceSpaceClipBounds();
-    clipBounds.RoundOut();
-
     RefPtr<DrawTarget> newDT =
-      mDT->CreateSimilarDrawTarget(IntSize(int32_t(clipBounds.width), int32_t(clipBounds.height)),
-                                   gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content));
+      mDT->CreateSimilarDrawTarget(mDT->GetSize(), gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content));
 
     Save();
 
     CurrentState().drawTarget = newDT;
-    CurrentState().deviceOffset = clipBounds.TopLeft();
-
-    Matrix mat;
-    mat.Translate(-clipBounds.x, -clipBounds.y);
 
     PushClipsToDT(newDT);
-    newDT->SetTransform(mDT->GetTransform() * mat);
+    newDT->SetTransform(mDT->GetTransform());
     mDT = newDT;
   }
 }
@@ -1541,7 +1549,7 @@ gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
       PushGroup(content);
       Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
       Matrix oldTransform = mDT->GetTransform();
-      mDT->SetTransform(GetDeviceTransform());
+      mDT->SetTransform(Matrix());
       mDT->DrawSurface(source, surfRect, surfRect); 
       mDT->SetTransform(oldTransform);
       mDT->SetOpaqueRect(oldDT->GetOpaqueRect());
@@ -1567,12 +1575,7 @@ gfxContext::PopGroup()
 
     Matrix mat = mDT->GetTransform();
     mat.Invert();
-
-    Matrix deviceOffsetTranslation;
-    Point deviceOffset = CurrentState().deviceOffset;
-    deviceOffsetTranslation.Translate(deviceOffset.x, deviceOffset.y);
-
-    nsRefPtr<gfxPattern> pat = new gfxPattern(src, mat * deviceOffsetTranslation);
+    nsRefPtr<gfxPattern> pat = new gfxPattern(src, mat);
 
     return pat.forget();
   }
@@ -1585,7 +1588,6 @@ gfxContext::PopGroupToSource()
     cairo_pop_group_to_source(mCairo);
   } else {
     RefPtr<SourceSurface> src = mDT->Snapshot();
-    Point deviceOffset = CurrentState().deviceOffset;
     Restore();
     CurrentState().sourceSurfCairo = NULL;
     CurrentState().sourceSurface = src;
@@ -1594,9 +1596,7 @@ gfxContext::PopGroupToSource()
 
     Matrix mat = mDT->GetTransform();
     mat.Invert();
-    Matrix deviceOffsetTranslation;
-    deviceOffsetTranslation.Translate(deviceOffset.x, deviceOffset.y);
-    CurrentState().surfTransform = mat * deviceOffsetTranslation;
+    CurrentState().surfTransform = mat;
   }
 }
 
@@ -2028,7 +2028,7 @@ gfxContext::PushClipsToDT(DrawTarget *aDT)
   // reset to the clip before ours.
   for (unsigned int i = lastReset; i < mStateStack.Length() - 1; i++) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      aDT->SetTransform(mStateStack[i].pushedClips[c].transform * GetDeviceTransform());
+      aDT->SetTransform(mStateStack[i].pushedClips[c].transform);
       if (mStateStack[i].pushedClips[c].path) {
         aDT->PushClip(mStateStack[i].pushedClips[c].path);
       } else {
@@ -2112,38 +2112,4 @@ gfxContext::ChangeTransform(const Matrix &aNewMatrix)
   }
 
   mDT->SetTransform(aNewMatrix);
-}
-
-Rect
-gfxContext::GetAzureDeviceSpaceClipBounds()
-{
-  unsigned int lastReset = 0;
-  for (int i = mStateStack.Length() - 1; i > 0; i--) {
-    if (mStateStack[i].clipWasReset) {
-      lastReset = i;
-    }
-  }
-
-  Rect rect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
-  for (unsigned int i = lastReset; i < mStateStack.Length(); i++) {
-    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
-      if (clip.path) {
-        Rect bounds = clip.path->GetBounds(clip.transform);
-        rect.IntersectRect(rect, bounds);
-      } else {
-        rect.IntersectRect(rect, clip.transform.TransformBounds(clip.rect));
-      }
-    }
-  }
-
-  return rect;
-}
-
-Matrix
-gfxContext::GetDeviceTransform()
-{
-  Matrix mat;
-  mat.Translate(-CurrentState().deviceOffset.x, -CurrentState().deviceOffset.y);
-  return mat;
 }
