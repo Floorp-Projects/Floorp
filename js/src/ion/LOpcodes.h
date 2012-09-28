@@ -94,7 +94,6 @@
     _(OsrValue)                     \
     _(OsrScopeChain)                \
     _(RegExp)                       \
-    _(RegExpTest)                   \
     _(Lambda)                       \
     _(LambdaForSingleton)           \
     _(ImplicitThis)                 \
