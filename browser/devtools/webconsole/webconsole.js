@@ -49,8 +49,6 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/en/Security/MixedContent";
 
-const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
-
 // The amount of time in milliseconds that must pass between messages to
 // trigger the display of a new group.
 const NEW_GROUP_DELAY = 5000;
@@ -309,12 +307,6 @@ WebConsoleFrame.prototype = {
    */
   filterBox: null,
 
-  /**
-   * Getter for the debugger WebConsoleClient.
-   * @type object
-   */
-  get webConsoleClient() this.proxy ? this.proxy.webConsoleClient : null,
-
   _saveRequestAndResponseBodies: false,
 
   /**
@@ -421,10 +413,8 @@ WebConsoleFrame.prototype = {
                                       this.owner.onCloseButton.bind(this.owner));
 
     let clearButton = doc.getElementsByClassName("webconsole-clear-console-button")[0];
-    clearButton.addEventListener("command", function WCF__onClearButton() {
-      this.owner._onClearButton();
-      this.jsterm.clearOutput(true);
-    }.bind(this));
+    clearButton.addEventListener("command",
+                                 this.owner.onClearButton.bind(this.owner));
   },
 
   /**
@@ -667,8 +657,26 @@ WebConsoleFrame.prototype = {
     }
 
     switch (aMessage.name) {
+      case "JSTerm:EvalResult":
+      case "JSTerm:EvalObject":
+      case "JSTerm:AutocompleteProperties":
+        this.owner._receiveMessageWithCallback(aMessage.json);
+        break;
+      case "JSTerm:ClearOutput":
+        this.jsterm.clearOutput();
+        break;
+      case "JSTerm:InspectObject":
+        this.jsterm.handleInspectObject(aMessage.json);
+        break;
+      case "WebConsole:ConsoleAPI":
+        this.outputMessage(CATEGORY_WEBDEV, this.logConsoleAPIMessage,
+                           [aMessage.json]);
+        break;
       case "WebConsole:Initialized":
         this._onMessageManagerInitComplete();
+        break;
+      case "WebConsole:CachedMessages":
+        this._displayCachedConsoleMessages(aMessage.json.messages);
         break;
       case "WebConsole:NetworkActivity":
         this.handleNetworkActivity(aMessage.json);
@@ -679,6 +687,9 @@ WebConsoleFrame.prototype = {
         break;
       case "WebConsole:LocationChange":
         this.owner.onLocationChange(aMessage.json);
+        break;
+      case "JSTerm:NonNativeConsoleAPI":
+        this.outputMessage(CATEGORY_JS, this.logWarningAboutReplacedAPI);
         break;
     }
   },
@@ -1022,11 +1033,13 @@ WebConsoleFrame.prototype = {
    * Display cached messages that may have been collected before the UI is
    * displayed.
    *
+   * @private
    * @param array aRemoteMessages
    *        Array of cached messages coming from the remote Web Console
    *        content instance.
    */
-  displayCachedMessages: function WCF_displayCachedMessages(aRemoteMessages)
+  _displayCachedConsoleMessages:
+  function WCF__displayCachedConsoleMessages(aRemoteMessages)
   {
     if (!aRemoteMessages.length) {
       return;
@@ -1049,11 +1062,19 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Logs a message to the Web Console that originates from the Web Console
-   * server.
+   * Logs a message to the Web Console that originates from the remote Web
+   * Console instance.
    *
    * @param object aMessage
-   *        The message received from the server.
+   *        The message received from the remote Web Console instance.
+   *        console service. This object needs to hold:
+   *          - hudId - the Web Console ID.
+   *          - apiMessage - a representation of the object sent by the console
+   *          storage service. This object holds the console message level, the
+   *          arguments that were passed to the console method and other
+   *          information.
+   *          - argumentsToString - the array of arguments passed to the console
+   *          method, each converted to a string.
    * @return nsIDOMElement|undefined
    *         The message element to display in the Web Console output.
    */
@@ -1063,9 +1084,9 @@ WebConsoleFrame.prototype = {
     let clipboardText = null;
     let sourceURL = null;
     let sourceLine = 0;
-    let level = aMessage.level;
-    let args = aMessage.arguments;
-    let objectActors = [];
+    let level = aMessage.apiMessage.level;
+    let args = aMessage.apiMessage.arguments;
+    let argsToString = aMessage.argumentsToString;
 
     switch (level) {
       case "log":
@@ -1073,36 +1094,17 @@ WebConsoleFrame.prototype = {
       case "warn":
       case "error":
       case "debug":
-      case "dir":
-      case "groupEnd": {
-        body = { arguments: args };
-        let clipboardArray = [];
-        args.forEach(function(aValue) {
-          clipboardArray.push(WebConsoleUtils.objectActorGripToString(aValue));
-          if (aValue && typeof aValue == "object" && aValue.actor) {
-            objectActors.push(aValue.actor);
-          }
-        }, this);
-        clipboardText = clipboardArray.join(" ");
-        sourceURL = aMessage.filename;
-        sourceLine = aMessage.lineNumber;
-
-        if (level == "dir") {
-          body.objectProperties = aMessage.objectProperties;
-        }
-        else if (level == "groupEnd") {
-          objectActors.forEach(this._releaseObject, this);
-
-          if (this.groupDepth > 0) {
-            this.groupDepth--;
-          }
-          return; // no need to continue
-        }
-
+        body = {
+          cacheId: aMessage.objectsCacheId,
+          remoteObjects: args,
+          argsToString: argsToString,
+        };
+        clipboardText = argsToString.join(" ");
+        sourceURL = aMessage.apiMessage.filename;
+        sourceLine = aMessage.apiMessage.lineNumber;
         break;
-      }
 
-      case "trace": {
+      case "trace":
         let filename = WebConsoleUtils.abbreviateSourceURL(args[0].filename);
         let functionName = args[0].functionName ||
                            l10n.getStr("stacktrace.anonymousFunction");
@@ -1124,15 +1126,33 @@ WebConsoleFrame.prototype = {
 
         clipboardText = clipboardText.trimRight();
         break;
-      }
+
+      case "dir":
+        body = {
+          cacheId: aMessage.objectsCacheId,
+          resultString: argsToString[0],
+          remoteObject: args[0],
+          remoteObjectProvider:
+            this.jsterm.remoteObjectProvider.bind(this.jsterm),
+        };
+        clipboardText = body.resultString;
+        sourceURL = aMessage.apiMessage.filename;
+        sourceLine = aMessage.apiMessage.lineNumber;
+        break;
 
       case "group":
       case "groupCollapsed":
         clipboardText = body = args;
-        sourceURL = aMessage.filename;
-        sourceLine = aMessage.lineNumber;
+        sourceURL = aMessage.apiMessage.filename;
+        sourceLine = aMessage.apiMessage.lineNumber;
         this.groupDepth++;
         break;
+
+      case "groupEnd":
+        if (this.groupDepth > 0) {
+          this.groupDepth--;
+        }
+        return;
 
       case "time":
         if (!args) {
@@ -1144,8 +1164,8 @@ WebConsoleFrame.prototype = {
         }
         body = l10n.getFormatStr("timerStarted", [args.name]);
         clipboardText = body;
-        sourceURL = aMessage.filename;
-        sourceLine = aMessage.lineNumber;
+        sourceURL = aMessage.apiMessage.filename;
+        sourceLine = aMessage.apiMessage.lineNumber;
         break;
 
       case "timeEnd":
@@ -1154,8 +1174,8 @@ WebConsoleFrame.prototype = {
         }
         body = l10n.getFormatStr("timeEnd", [args.name, args.duration]);
         clipboardText = body;
-        sourceURL = aMessage.filename;
-        sourceLine = aMessage.lineNumber;
+        sourceURL = aMessage.apiMessage.filename;
+        sourceLine = aMessage.apiMessage.lineNumber;
         break;
 
       default:
@@ -1166,10 +1186,6 @@ WebConsoleFrame.prototype = {
     let node = this.createMessageNode(CATEGORY_WEBDEV, LEVELS[level], body,
                                       sourceURL, sourceLine, clipboardText,
                                       level, aMessage.timeStamp);
-
-    if (objectActors.length) {
-      node._objectActors = objectActors;
-    }
 
     // Make the node bring up the property panel, to allow the user to inspect
     // the stack trace.
@@ -1192,6 +1208,10 @@ WebConsoleFrame.prototype = {
     }
 
     if (level == "dir") {
+      // Make sure the cached evaluated object will be purged when the node is
+      // removed.
+      node._evalCacheId = aMessage.objectsCacheId;
+
       // Initialize the inspector message node, by setting the PropertyTreeView
       // object on the tree view. This has to be done *after* the node is
       // shown, because the tree binding must be attached first.
@@ -1204,18 +1224,6 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Handle ConsoleAPICall objects received from the server. This method outputs
-   * the window.console API call.
-   *
-   * @param object aMessage
-   *        The console API message received from the server.
-   */
-  handleConsoleAPICall: function WCF_handleConsoleAPICall(aMessage)
-  {
-    this.outputMessage(CATEGORY_WEBDEV, this.logConsoleAPIMessage, [aMessage]);
-  },
-
-  /**
    * The click event handler for objects shown inline coming from the
    * window.console API.
    *
@@ -1225,11 +1233,11 @@ WebConsoleFrame.prototype = {
    * @param nsIDOMNode aAnchor
    *        The object inspector anchor element. This is the clickable element
    *        in the console.log message we display.
-   * @param object aObjectActor
-   *        The object actor grip.
+   * @param array aRemoteObject
+   *        The remote object representation.
    */
   _consoleLogClick:
-  function WCF__consoleLogClick(aMessage, aAnchor, aObjectActor)
+  function WCF__consoleLogClick(aMessage, aAnchor, aRemoteObject)
   {
     if (aAnchor._panelOpen) {
       return;
@@ -1241,28 +1249,29 @@ WebConsoleFrame.prototype = {
 
       // Data to inspect.
       data: {
-        objectPropertiesProvider: this.objectPropertiesProvider.bind(this),
-        releaseObject: this._releaseObject.bind(this),
+        // This is where the resultObject children are cached.
+        rootCacheId: aMessage._evalCacheId,
+        remoteObject: aRemoteObject,
+        // This is where all objects retrieved by the panel will be cached.
+        panelCacheId: "HUDPanel-" + gSequenceId(),
+        remoteObjectProvider: this.jsterm.remoteObjectProvider.bind(this.jsterm),
       },
     };
 
-    let propPanel;
-    let onPopupHide = function _onPopupHide() {
+    let propPanel = this.jsterm.openPropertyPanel(options);
+    propPanel.panel.setAttribute("hudId", this.hudId);
+
+    let onPopupHide = function JST__evalInspectPopupHide() {
       propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
 
-      if (!aMessage.parentNode && aMessage._objectActors) {
-        aMessage._objectActors.forEach(this._releaseObject, this);
-        aMessage._objectActors = null;
+      this.jsterm.clearObjectCache(options.data.panelCacheId);
+
+      if (!aMessage.parentNode && aMessage._evalCacheId) {
+        this.jsterm.clearObjectCache(aMessage._evalCacheId);
       }
     }.bind(this);
 
-    this.objectPropertiesProvider(aObjectActor.actor,
-      function _onObjectProperties(aProperties) {
-        options.data.objectProperties = aProperties;
-        propPanel = this.jsterm.openPropertyPanel(options);
-        propPanel.panel.setAttribute("hudId", this.hudId);
-        propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
-      }.bind(this));
+    propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
   },
 
   /**
@@ -1444,12 +1453,14 @@ WebConsoleFrame.prototype = {
   /**
    * Inform user that the Web Console API has been replaced by a script
    * in a content page.
+   *
+   * @return nsIDOMElement|undefined
+   *         The message element to display in the Web Console output.
    */
   logWarningAboutReplacedAPI: function WCF_logWarningAboutReplacedAPI()
   {
-    let node = this.createMessageNode(CATEGORY_JS, SEVERITY_WARNING,
-                                      l10n.getStr("ConsoleAPIDisabled"));
-    this.outputMessage(CATEGORY_JS, node);
+    return this.createMessageNode(CATEGORY_JS, SEVERITY_WARNING,
+                                  l10n.getStr("ConsoleAPIDisabled"));
   },
 
   /**
@@ -1841,8 +1852,8 @@ WebConsoleFrame.prototype = {
   {
     let [category, methodOrNode, args] = aItem;
     if (typeof methodOrNode != "function" &&
-        methodOrNode._objectActors && !methodOrNode._panelOpen) {
-      methodOrNode._objectActors.forEach(this._releaseObject, this);
+        methodOrNode._evalCacheId && !methodOrNode._panelOpen) {
+      this.jsterm.clearObjectCache(methodOrNode._evalCacheId);
     }
 
     if (category == CATEGORY_NETWORK) {
@@ -1859,29 +1870,9 @@ WebConsoleFrame.prototype = {
     }
     else if (category == CATEGORY_WEBDEV &&
              methodOrNode == this.logConsoleAPIMessage) {
-      let level = args[0].level;
-      let releaseObject = function _releaseObject(aValue) {
-        if (aValue && typeof aValue == "object" && aValue.actor) {
-          this._releaseObject(aValue.actor);
-        }
-      }.bind(this);
-      switch (level) {
-        case "log":
-        case "info":
-        case "warn":
-        case "error":
-        case "debug":
-        case "dir":
-        case "groupEnd": {
-          args[0].arguments.forEach(releaseObject);
-          if (level == "dir") {
-            args[0].objectProperties.forEach(function(aObject) {
-              ["value", "get", "set"].forEach(function(aProp) {
-                releaseObject(aObject[aProp]);
-              });
-            });
-          }
-        }
+      let level = args[0].apiMessage.level;
+      if (level == "dir") {
+        this.jsterm.clearObjectCache(args[0].objectsCacheId);
       }
     }
   },
@@ -1925,8 +1916,10 @@ WebConsoleFrame.prototype = {
 
     let tree = aMessageNode.querySelector("tree");
     tree.parentNode.removeChild(tree);
-    aMessageNode.propertyTreeView.data = null;
     aMessageNode.propertyTreeView = null;
+    if (tree.view) {
+      tree.view.data = null;
+    }
     tree.view = null;
   },
 
@@ -1938,8 +1931,8 @@ WebConsoleFrame.prototype = {
    */
   removeOutputMessage: function WCF_removeOutputMessage(aNode)
   {
-    if (aNode._objectActors && !aNode._panelOpen) {
-      aNode._objectActors.forEach(this._releaseObject, this);
+    if (aNode._evalCacheId && !aNode._panelOpen) {
+      this.jsterm.clearObjectCache(aNode._evalCacheId);
     }
 
     if (aNode.classList.contains("webconsole-msg-cssparser")) {
@@ -2064,7 +2057,7 @@ WebConsoleFrame.prototype = {
     else {
       let str = undefined;
       if (aLevel == "dir") {
-        str = WebConsoleUtils.objectActorGripToString(aBody.arguments[0]);
+        str = aBody.resultString;
       }
       else if (["log", "info", "warn", "error", "debug"].indexOf(aLevel) > -1 &&
                typeof aBody == "object") {
@@ -2139,9 +2132,10 @@ WebConsoleFrame.prototype = {
       let treeView = node.propertyTreeView = new PropertyTreeView();
 
       treeView.data = {
-        objectPropertiesProvider: this.objectPropertiesProvider.bind(this),
-        releaseObject: this._releaseObject.bind(this),
-        objectProperties: body.objectProperties,
+        rootCacheId: body.cacheId,
+        panelCacheId: body.cacheId,
+        remoteObject: Array.isArray(body.remoteObject) ? body.remoteObject : [],
+        remoteObjectProvider: body.remoteObjectProvider,
       };
 
       tree.setAttribute("rows", treeView.rowCount);
@@ -2170,12 +2164,13 @@ WebConsoleFrame.prototype = {
    *        output.
    * @param object aBody
    *        The object given by this.logConsoleAPIMessage(). This object holds
-   *        the call information that we need to display - mainly the arguments
-   *        array of the given API call.
+   *        the call information that we need to display.
    */
   _makeConsoleLogMessageBody:
   function WCF__makeConsoleLogMessageBody(aMessage, aContainer, aBody)
   {
+    aMessage._evalCacheId = aBody.cacheId;
+
     Object.defineProperty(aMessage, "_panelOpen", {
       get: function() {
         let nodes = aContainer.querySelectorAll(".hud-clickable");
@@ -2187,19 +2182,17 @@ WebConsoleFrame.prototype = {
       configurable: false
     });
 
-    aBody.arguments.forEach(function(aItem) {
+    aBody.remoteObjects.forEach(function(aItem, aIndex) {
       if (aContainer.firstChild) {
         aContainer.appendChild(this.document.createTextNode(" "));
       }
 
-      let text = WebConsoleUtils.objectActorGripToString(aItem);
-
-      if (aItem && typeof aItem != "object" || !aItem.inspectable) {
+      let text = aBody.argsToString[aIndex];
+      if (!Array.isArray(aItem)) {
         aContainer.appendChild(this.document.createTextNode(text));
         return;
       }
 
-      // For inspectable objects.
       let elem = this.document.createElement("description");
       elem.classList.add("hud-clickable");
       elem.setAttribute("aria-haspopup", "true");
@@ -2401,41 +2394,6 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Object properties provider. This function gives you the properties of the
-   * remote object you want.
-   *
-   * @param string aActor
-   *        The object actor ID from which you want the properties.
-   * @param function aCallback
-   *        Function you want invoked once the properties are received.
-   */
-  objectPropertiesProvider:
-  function WCF_objectPropertiesProvider(aActor, aCallback)
-  {
-    this.webConsoleClient.inspectObjectProperties(aActor,
-      function(aResponse) {
-        if (aResponse.error) {
-          Cu.reportError("Failed to retrieve the object properties from the " +
-                         "server. Error: " + aResponse.error);
-          return;
-        }
-        aCallback(aResponse.properties);
-      });
-  },
-
-  /**
-   * Release an object actor.
-   *
-   * @private
-   * @param string aActor
-   *        The object actor ID you want to release.
-   */
-  _releaseObject: function WCF__releaseObject(aActor)
-  {
-    this.proxy.releaseActor(aActor);
-  },
-
-  /**
    * Open the selected item's URL in a new tab.
    */
   openSelectedItemInTab: function WCF_openSelectedItemInTab()
@@ -2520,12 +2478,6 @@ JSTerm.prototype = {
    */
   get outputNode() this.hud.outputNode,
 
-  /**
-   * Getter for the debugger WebConsoleClient.
-   * @type object
-   */
-  get webConsoleClient() this.hud.webConsoleClient,
-
   COMPLETE_FORWARD: 0,
   COMPLETE_BACKWARD: 1,
   COMPLETE_HINT_ONLY: 2,
@@ -2547,59 +2499,59 @@ JSTerm.prototype = {
   },
 
   /**
-   * The JavaScript evaluation response handler.
+   * Asynchronously evaluate a string in the content process sandbox.
+   *
+   * @param string aString
+   *        String to evaluate in the content process JavaScript sandbox.
+   * @param function [aCallback]
+   *        Optional function to be invoked when the evaluation result is
+   *        received.
+   */
+  evalInContentSandbox: function JST_evalInContentSandbox(aString, aCallback)
+  {
+    let message = {
+      str: aString,
+      resultCacheId: "HUDEval-" + gSequenceId(),
+    };
+
+    this.hud.owner.sendMessageToContent("JSTerm:EvalRequest", message, aCallback);
+
+    return message;
+  },
+
+  /**
+   * The "JSTerm:EvalResult" message handler. This is the JSTerm execution
+   * result callback which is invoked whenever JavaScript code evaluation
+   * results come from the content process.
    *
    * @private
-   * @param nsIDOMElement [aAfterNode]
-   *        Optional DOM element after which the evaluation result will be
-   *        inserted.
    * @param function [aCallback]
    *        Optional function to invoke when the evaluation result is added to
    *        the output.
    * @param object aResponse
-   *        The message received from the server.
+   *        The JSTerm:EvalResult message received from the content process. See
+   *        JSTerm.handleEvalRequest() in HUDService-content.js for further
+   *        details.
+   * @param object aRequest
+   *        The JSTerm:EvalRequest message we sent to the content process.
+   * @see JSTerm.handleEvalRequest() in HUDService-content.js
    */
   _executeResultCallback:
-  function JST__executeResultCallback(aAfterNode, aCallback, aResponse)
+  function JST__executeResultCallback(aCallback, aResponse, aRequest)
   {
     let errorMessage = aResponse.errorMessage;
-    let result = aResponse.result;
-    let inspectable = result && typeof result == "object" && result.inspectable;
-    let helperResult = aResponse.helperResult;
-    let helperHasRawOutput = !!(helperResult || {}).rawOutput;
-    let resultString =
-      WebConsoleUtils.objectActorGripToString(result,
-                                              !helperHasRawOutput);
-
-    if (helperResult && helperResult.type) {
-      switch (helperResult.type) {
-        case "clearOutput":
-          this.clearOutput();
-          break;
-        case "inspectObject":
-          this.handleInspectObject(helperResult.input, helperResult.object);
-          break;
-        case "error":
-          try {
-            errorMessage = l10n.getStr(helperResult.message);
-          }
-          catch (ex) {
-            errorMessage = helperResult.message;
-          }
-          break;
-        case "help":
-          this.hud.owner.openLink(HELP_URL);
-          break;
-      }
-    }
+    let resultString = aResponse.resultString;
 
     // Hide undefined results coming from JSTerm helper functions.
-    if (!errorMessage && result && typeof result == "object" &&
-        result.type == "undefined" &&
-        helperResult && !helperHasRawOutput) {
-      aCallback && aCallback();
+    if (!errorMessage &&
+        resultString == "undefined" &&
+        aResponse.helperResult &&
+        !aResponse.inspectable &&
+        !aResponse.helperRawOutput) {
       return;
     }
+
+    let afterNode = aRequest.outputNode;
 
     if (aCallback) {
       let oldFlushCallback = this.hud._flushCallback;
@@ -2610,24 +2562,19 @@ JSTerm.prototype = {
       }.bind(this);
     }
 
-    let node;
-
-    if (errorMessage) {
-      node = this.writeOutput(errorMessage, CATEGORY_OUTPUT, SEVERITY_ERROR,
-                              aAfterNode, aResponse.timestamp);
+    if (aResponse.errorMessage) {
+      this.writeOutput(aResponse.errorMessage, CATEGORY_OUTPUT, SEVERITY_ERROR,
+                       afterNode, aResponse.timestamp);
     }
-    else if (inspectable) {
-      node = this.writeOutputJS(resultString,
-                                this._evalOutputClick.bind(this, aResponse),
-                                aAfterNode, aResponse.timestamp);
+    else if (aResponse.inspectable) {
+      let node = this.writeOutputJS(aResponse.resultString,
+                                    this._evalOutputClick.bind(this, aResponse),
+                                    afterNode, aResponse.timestamp);
+      node._evalCacheId = aResponse.childrenCacheId;
     }
     else {
-      node = this.writeOutput(resultString, CATEGORY_OUTPUT, SEVERITY_LOG,
-                              aAfterNode, aResponse.timestamp);
-    }
-
-    if (result && typeof result == "object" && result.actor) {
-      node._objectActors = [result.actor];
+      this.writeOutput(aResponse.resultString, CATEGORY_OUTPUT, SEVERITY_LOG,
+                       afterNode, aResponse.timestamp);
     }
   },
 
@@ -2650,9 +2597,10 @@ JSTerm.prototype = {
     }
 
     let node = this.writeOutput(aExecuteString, CATEGORY_INPUT, SEVERITY_LOG);
-    let onResult = this._executeResultCallback.bind(this, node, aCallback);
 
-    this.webConsoleClient.evaluateJS(aExecuteString, onResult);
+    let onResult = this._executeResultCallback.bind(this, aCallback);
+    let messageToContent = this.evalInContentSandbox(aExecuteString, onResult);
+    messageToContent.outputNode = node;
 
     this.history.push(aExecuteString);
     this.historyIndex++;
@@ -2803,7 +2751,7 @@ JSTerm.prototype = {
     hud._cssNodes = {};
 
     if (aClearStorage) {
-      this.webConsoleClient.clearMessagesCache();
+      hud.owner.sendMessageToContent("ConsoleAPI:ClearCache", {});
     }
   },
 
@@ -3130,30 +3078,25 @@ JSTerm.prototype = {
       return;
     }
 
-    let requestId = gSequenceId();
-    let input = this.inputNode.value;
-    let cursor = this.inputNode.selectionStart;
+    let message = {
+      id: "HUDComplete-" + gSequenceId(),
+      input: this.inputNode.value,
+    };
 
-    // TODO: Bug 787986 - throttle/disable updates, deal with slow/high latency
-    // network connections.
     this.lastCompletion = {
-      requestId: requestId,
+      requestId: message.id,
       completionType: aType,
       value: null,
     };
-
-    let callback = this._receiveAutocompleteProperties.bind(this, requestId,
-                                                            aCallback);
-    this.webConsoleClient.autocomplete(input, cursor, callback);
+    let callback = this._receiveAutocompleteProperties.bind(this, aCallback);
+    this.hud.owner.sendMessageToContent("JSTerm:Autocomplete", message, callback);
   },
 
   /**
-   * Handler for the autocompletion results. This method takes
-   * the completion result received from the server and updates the UI
+   * Handler for the "JSTerm:AutocompleteProperties" message. This method takes
+   * the completion result received from the content process and updates the UI
    * accordingly.
    *
-   * @param number aRequestId
-   *        Request ID.
    * @param function [aCallback=null]
    *        Optional, function to invoke when the completion result is received.
    * @param object aMessage
@@ -3161,12 +3104,13 @@ JSTerm.prototype = {
    *        the content process.
    */
   _receiveAutocompleteProperties:
-  function JST__receiveAutocompleteProperties(aRequestId, aCallback, aMessage)
+  function JST__receiveAutocompleteProperties(aCallback, aMessage)
   {
     let inputNode = this.inputNode;
     let inputValue = inputNode.value;
-    if (this.lastCompletion.value == inputValue ||
-        aRequestId != this.lastCompletion.requestId) {
+    if (aMessage.input != inputValue ||
+        this.lastCompletion.value == inputValue ||
+        aMessage.id != this.lastCompletion.requestId) {
       return;
     }
 
@@ -3322,7 +3266,7 @@ JSTerm.prototype = {
   },
 
   /**
-   * The JSTerm InspectObject remote message handler. This allows the remote
+   * The "JSTerm:InspectObject" remote message handler. This allows the content
    * process to open the Property Panel for a given object.
    *
    * @param object aRequest
@@ -3330,31 +3274,29 @@ JSTerm.prototype = {
    *        the user input string that was evaluated to inspect an object and
    *        the result object which is to be inspected.
    */
-  handleInspectObject: function JST_handleInspectObject(aInput, aActor)
+  handleInspectObject: function JST_handleInspectObject(aRequest)
   {
     let options = {
-      title: aInput,
+      title: aRequest.input,
 
       data: {
-        objectPropertiesProvider: this.hud.objectPropertiesProvider.bind(this.hud),
-        releaseObject: this.hud._releaseObject.bind(this.hud),
+        rootCacheId: aRequest.objectCacheId,
+        panelCacheId: aRequest.objectCacheId,
+        remoteObject: aRequest.resultObject,
+        remoteObjectProvider: this.remoteObjectProvider.bind(this),
       },
     };
 
-    let propPanel;
+    let propPanel = this.openPropertyPanel(options);
+    propPanel.panel.setAttribute("hudId", this.hudId);
 
     let onPopupHide = function JST__onPopupHide() {
       propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
-      this.hud._releaseObject(aActor.actor);
+
+      this.clearObjectCache(options.data.panelCacheId);
     }.bind(this);
 
-    this.hud.objectPropertiesProvider(aActor.actor,
-      function _onObjectProperties(aProperties) {
-        options.data.objectProperties = aProperties;
-        propPanel = this.openPropertyPanel(options);
-        propPanel.panel.setAttribute("hudId", this.hudId);
-        propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
-      }.bind(this));
+    propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
   },
 
   /**
@@ -3362,7 +3304,7 @@ JSTerm.prototype = {
    *
    * @private
    * @param object aResponse
-   *        The JavaScript evaluation response received from the server.
+   *        The JSTerm:EvalResult message received from the content process.
    * @param nsIDOMNode aLink
    *        The message node for which we are handling events.
    */
@@ -3378,36 +3320,35 @@ JSTerm.prototype = {
 
       // Data to inspect.
       data: {
-        objectPropertiesProvider: this.hud.objectPropertiesProvider.bind(this.hud),
-        releaseObject: this.hud._releaseObject.bind(this.hud),
+        // This is where the resultObject children are cached.
+        rootCacheId: aResponse.childrenCacheId,
+        remoteObject: aResponse.resultObject,
+        // This is where all objects retrieved by the panel will be cached.
+        panelCacheId: "HUDPanel-" + gSequenceId(),
+        remoteObjectProvider: this.remoteObjectProvider.bind(this),
       },
     };
 
-    let propPanel;
-
     options.updateButtonCallback = function JST__evalUpdateButton() {
-      let onResult =
+      this.evalInContentSandbox(aResponse.input,
         this._evalOutputUpdatePanelCallback.bind(this, options, propPanel,
-                                                 aResponse);
-      this.webConsoleClient.evaluateJS(aResponse.input, onResult);
+                                                 aResponse));
     }.bind(this);
+
+    let propPanel = this.openPropertyPanel(options);
+    propPanel.panel.setAttribute("hudId", this.hudId);
 
     let onPopupHide = function JST__evalInspectPopupHide() {
       propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
 
-      if (!aLinkNode.parentNode && aLinkNode._objectActors) {
-        aLinkNode._objectActors.forEach(this.hud._releaseObject, this.hud);
-        aLinkNode._objectActors = null;
+      this.clearObjectCache(options.data.panelCacheId);
+
+      if (!aLinkNode.parentNode && aLinkNode._evalCacheId) {
+        this.clearObjectCache(aLinkNode._evalCacheId);
       }
     }.bind(this);
 
-    this.hud.objectPropertiesProvider(aResponse.result.actor,
-      function _onObjectProperties(aProperties) {
-        options.data.objectProperties = aProperties;
-        propPanel = this.openPropertyPanel(options);
-        propPanel.panel.setAttribute("hudId", this.hudId);
-        propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
-      }.bind(this));
+    propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
   },
 
   /**
@@ -3436,40 +3377,32 @@ JSTerm.prototype = {
       return;
     }
 
-    let result = aNewResponse.result;
-    let inspectable = result && typeof result == "object" && result.inspectable;
-    let newActor = result && typeof result == "object" ? result.actor : null;
-
-    let anchor = aOptions.anchor;
-    if (anchor && newActor) {
-      if (!anchor._objectActors) {
-        anchor._objectActors = [];
-      }
-      if (anchor._objectActors.indexOf(newActor) == -1) {
-        anchor._objectActors.push(newActor);
-      }
-    }
-
-    if (!inspectable) {
+    if (!aNewResponse.inspectable) {
       this.writeOutput(l10n.getStr("JSTerm.updateNotInspectable"), CATEGORY_OUTPUT, SEVERITY_ERROR);
       return;
     }
 
+    this.clearObjectCache(aOptions.data.panelCacheId);
+    this.clearObjectCache(aOptions.data.rootCacheId);
+
+    if (aOptions.anchor && aOptions.anchor._evalCacheId) {
+      aOptions.anchor._evalCacheId = aNewResponse.childrenCacheId;
+    }
+
     // Update the old response object such that when the panel is reopen, the
     // user sees the new response.
-    aOldResponse.result = aNewResponse.result;
-    aOldResponse.error = aNewResponse.error;
-    aOldResponse.errorMessage = aNewResponse.errorMessage;
-    aOldResponse.timestamp = aNewResponse.timestamp;
+    aOldResponse.id = aNewResponse.id;
+    aOldResponse.childrenCacheId = aNewResponse.childrenCacheId;
+    aOldResponse.resultObject = aNewResponse.resultObject;
+    aOldResponse.resultString = aNewResponse.resultString;
 
-    this.hud.objectPropertiesProvider(newActor,
-      function _onObjectProperties(aProperties) {
-        aOptions.data.objectProperties = aProperties;
-        // TODO: This updates the value of the tree.
-        // However, the states of open nodes is not saved.
-        // See bug 586246.
-        aPropPanel.treeView.data = aOptions.data;
-      }.bind(this));
+    aOptions.data.rootCacheId = aNewResponse.childrenCacheId;
+    aOptions.data.remoteObject = aNewResponse.resultObject;
+
+    // TODO: This updates the value of the tree.
+    // However, the states of open nodes is not saved.
+    // See bug 586246.
+    aPropPanel.treeView.data = aOptions.data;
   },
 
   /**
@@ -3700,7 +3633,6 @@ function WebConsoleConnectionProxy(aWebConsole)
   this.owner = aWebConsole;
 
   this._onPageError = this._onPageError.bind(this);
-  this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
 }
 
 WebConsoleConnectionProxy.prototype = {
@@ -3735,14 +3667,6 @@ WebConsoleConnectionProxy.prototype = {
   _consoleActor: null,
 
   /**
-   * Tells if the window.console object of the remote web page is the native
-   * object or not.
-   * @private
-   * @type boolean
-   */
-  _hasNativeConsoleAPI: false,
-
-  /**
    * Initialize the debugger server.
    */
   initServer: function WCCP_initServer()
@@ -3765,9 +3689,8 @@ WebConsoleConnectionProxy.prototype = {
     let client = this.client = new DebuggerClient(transport);
 
     client.addListener("pageError", this._onPageError);
-    client.addListener("consoleAPICall", this._onConsoleAPICall);
 
-    let listeners = ["PageError", "ConsoleAPI"];
+    let listeners = ["PageError"];
 
     client.connect(function(aType, aTraits) {
       client.listTabs(function(aResponse) {
@@ -3802,36 +3725,6 @@ WebConsoleConnectionProxy.prototype = {
 
     this.webConsoleClient = aWebConsoleClient;
 
-    this._hasNativeConsoleAPI = aResponse.nativeConsoleAPI;
-
-    let msgs = ["PageError", "ConsoleAPI"];
-    this.webConsoleClient.getCachedMessages(msgs,
-      this._onCachedMessages.bind(this, aCallback));
-  },
-
-  /**
-   * The "cachedMessages" response handler.
-   *
-   * @private
-   * @param function [aCallback]
-   *        Optional function to invoke once the connection is established.
-   * @param object aResponse
-   *        The JSON response object received from the server.
-   */
-  _onCachedMessages: function WCCP__onCachedMessages(aCallback, aResponse)
-  {
-    if (aResponse.error) {
-      Cu.reportError("Web Console getCachedMessages error: " + aResponse.error +
-                     " " + aResponse.message);
-      return;
-    }
-
-    this.owner.displayCachedMessages(aResponse.messages);
-
-    if (!this._hasNativeConsoleAPI) {
-      this.owner.logWarningAboutReplacedAPI();
-    }
-
     this.connected = true;
     aCallback && aCallback();
   },
@@ -3854,36 +3747,6 @@ WebConsoleConnectionProxy.prototype = {
   },
 
   /**
-   * The "consoleAPICall" message type handler. We redirect any message to
-   * the UI for displaying.
-   *
-   * @private
-   * @param string aType
-   *        Message type.
-   * @param object aPacket
-   *        The message received from the server.
-   */
-  _onConsoleAPICall: function WCCP__onConsoleAPICall(aType, aPacket)
-  {
-    if (this.owner && aPacket.from == this._consoleActor) {
-      this.owner.handleConsoleAPICall(aPacket.message);
-    }
-  },
-
-  /**
-   * Release an object actor.
-   *
-   * @param string aActor
-   *        The actor ID to send the request to.
-   */
-  releaseActor: function WCCP_releaseActor(aActor)
-  {
-    if (this.client) {
-      this.client.release(aActor);
-    }
-  },
-
-  /**
    * Disconnect the Web Console from the remote server.
    *
    * @param function [aOnDisconnect]
@@ -3897,7 +3760,6 @@ WebConsoleConnectionProxy.prototype = {
     }
 
     this.client.removeListener("pageError", this._onPageError);
-    this.client.removeListener("consoleAPICall", this._onConsoleAPICall);
     this.client.close(aOnDisconnect);
 
     this.client = null;
