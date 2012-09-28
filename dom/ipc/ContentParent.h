@@ -26,6 +26,8 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
+#define CHILD_PROCESS_SHUTDOWN_MESSAGE NS_LITERAL_STRING("child-process-shutdown")
+
 class mozIApplication;
 class nsIDOMBlob;
 
