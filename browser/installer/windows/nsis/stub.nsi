@@ -101,6 +101,7 @@ Var CTL_RIGHT_PX
 
 !insertmacro ElevateUAC
 !insertmacro GetLongPath
+!insertmacro GetPathFromString
 !insertmacro GetSingleInstallPath
 !insertmacro GetTextWidthHeight
 !insertmacro IsUserAdmin
