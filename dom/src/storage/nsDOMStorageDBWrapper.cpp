@@ -203,6 +203,15 @@ nsDOMStorageDBWrapper::RemoveAll()
 }
 
 nsresult
+nsDOMStorageDBWrapper::RemoveAllForApp(uint32_t aAppId, bool aOnlyBrowserElement)
+{
+  // We only care about removing the permament storage. Temporary storage such
+  // as session storage or private browsing storage will not be re-used anyway
+  // and will be automatically deleted at some point.
+  return mPersistentDB.RemoveAllForApp(aAppId, aOnlyBrowserElement);
+}
+
+nsresult
 nsDOMStorageDBWrapper::GetUsage(DOMStorageImpl* aStorage, int32_t *aUsage)
 {
   IMPL_FORWARDER(GetUsage(aStorage, aUsage));

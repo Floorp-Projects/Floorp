@@ -316,12 +316,10 @@ var DebuggerServer = {
   },
 
   /**
-   * Remove the connection from the debugging server and shut down the server
-   * if no other connections are open.
+   * Remove the connection from the debugging server.
    */
   _connectionClosed: function DH_connectionClosed(aConnection) {
     delete this._connections[aConnection.prefix];
-    this.destroy();
   }
 };
 

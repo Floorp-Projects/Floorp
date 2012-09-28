@@ -1,0 +1,236 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=786301
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests that uninstalling app removes the localStorage data</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=786296">Mozilla Bug 786301</a>
+<p id="display"></p>
+<div id="content">
+  <iframe src="http://example.com/tests/error404"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 786301 **/
+
+/*
+ * This test will check that localStorage data are correctly deleted when an app
+ * is uninstalled.
+ * Here is the big picture of what the test does:
+ * 1. Setup permissions and preferences.
+ * 2. Install a dummy application and embed it in an iframe.
+ * 3. Load a mozbrowser iframe from this application.
+ * 4. Fill storages for the app and the mozbrowser iframe.
+ * 5. Uninstall the application.
+ *
+ * Expected result: all localStorage data from the app and mozbrowser have been
+ * deleted but sessionStorage stays untouched such as non-app/browser data.
+ *
+ * This test is asynchronous and methods are called in a reading order.
+ * Each method has a deeper explanation of what it does
+ */
+
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cu = Components.utils;
+
+SimpleTest.waitForExplicitFinish();
+
+var permManager = Cc["@mozilla.org/permissionmanager;1"]
+                    .getService(Ci.nsIPermissionManager);
+var appsService = Cc['@mozilla.org/AppsService;1']
+                    .getService(Ci.nsIAppsService);
+
+/**
+ * This function will make sure that the next applications we try to install
+ * will be installed. That means it will behave like if the user allowed the app
+ * to be installed in the door hanger.
+ */
+function confirmNextInstall() {
+  var panel = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShell)
+                        .chromeEventHandler.ownerDocument.defaultView
+                        .PopupNotifications.panel
+
+  panel.addEventListener("popupshown", function() {
+    panel.removeEventListener("popupshown", arguments.callee, false);
+    this.childNodes[0].button.doCommand();
+  }, false);
+}
+
+/**
+ * Initialize the |storage| that has been given with "foo" => "bar".
+ * Checks that the storage wasn't initialized and checks that the initialization
+ * was successful.
+ */
+function setupStorage(storage) {
+  is(storage.getItem("foo"), null, "no data");
+
+  storage.setItem("foo", "bar");
+  is(storage.getItem("foo"), "bar", "data written");
+}
+
+permManager.addFromPrincipal(window.document.nodePrincipal, "webapps-manage",
+                             Ci.nsIPermissionManager.ALLOW_ACTION);
+permManager.addFromPrincipal(window.document.nodePrincipal, "browser",
+                             Ci.nsIPermissionManager.ALLOW_ACTION);
+
+var previousPrefs = {
+  mozBrowserFramesEnabled: null,
+  installerDryRun: null,
+};
+
+// Save the prefs we want to change (so we can re-set them later) and set them
+// to the needed value.
+try {
+  previousPrefs.mozBrowserFramesEnabled = SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
+} catch(e)
+{
+}
+SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
+
+try {
+  previousPrefs.installerDryRun = SpecialPowers.getBoolPref('browser.mozApps.installer.dry_run');
+} catch(e) {
+}
+SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', true);
+
+// URL of the manifest of the app we want to install.
+const gManifestURL = "http://www.example.com:80/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+// ID of the installed app.
+var gTestAppId = 0;
+// Cookies currently in the system.
+var gCurrentCookiesCount = 0;
+// Storages from a non-app to make sure we do not remove cookies from everywhere.
+var gWitnessStorage = {};
+// Storages for the app.
+var gAppStorage = {};
+// Storage for a mozbrowser inside the app.
+var gBrowserStorage = {};
+
+addLoadEvent(function() {
+  /*
+   * We are setuping the witness storage (non-app) and will install the
+   * application.
+   * When the application is installed, we will insert it in an iframe and wait
+   * for the load event. to be fired.
+   */
+
+  confirmNextInstall();
+
+  gWitnessStorage.localStorage = window.frames[0].localStorage;
+  gWitnessStorage.sessionStorage = window.frames[0].sessionStorage;
+
+  setupStorage(gWitnessStorage.localStorage);
+  setupStorage(gWitnessStorage.sessionStorage);
+
+  navigator.mozApps.install(gManifestURL, null).onsuccess = function() {
+    gTestAppId = appsService.getAppLocalIdByManifestURL(gManifestURL);
+
+    var frame = document.createElement('iframe');
+    frame.setAttribute('mozbrowser', '');
+    frame.setAttribute('mozapp', gManifestURL);
+    frame.src = 'http://example.com/tests/error404';
+    frame.name = 'app';
+
+    frame.addEventListener('load', appFrameLoadEvent);
+
+    document.body.appendChild(frame);
+  };
+});
+
+function appFrameLoadEvent() {
+  /*
+   * The app frame has been loaded. We can now add permissions for the app to
+   * create browsers and we will load a page in this browser and wait for the
+   * load event.
+   */
+  permManager.addFromPrincipal(window.frames[1].document.nodePrincipal, "browser",
+                               Ci.nsIPermissionManager.ALLOW_ACTION);
+
+  var frame = document.createElement('iframe');
+  frame.setAttribute('mozbrowser', '');
+  frame.src = 'http://example.com/tests/error404_2';
+
+  frame.addEventListener('load', browserLoadEvent);
+
+  document.getElementsByName('app')[0].contentDocument.body.appendChild(frame);
+}
+
+function browserLoadEvent() {
+  /*
+   * The browser inside the app has loaded.
+   * We can now setup the app and browser storages and uninstall the app.
+   */
+
+  gAppStorage.localStorage = window.frames[1].localStorage;
+  gAppStorage.sessionStorage = window.frames[1].sessionStorage;
+
+  gBrowserStorage.localStorage = window.frames[1].frames[0].localStorage;
+  gBrowserStorage.sessionStorage = window.frames[1].frames[0].sessionStorage;
+
+  setupStorage(gAppStorage.localStorage);
+  setupStorage(gAppStorage.sessionStorage);
+  setupStorage(gBrowserStorage.localStorage);
+  setupStorage(gBrowserStorage.sessionStorage);
+
+  navigator.mozApps.mgmt.getNotInstalled().onsuccess = function() {
+    for (i in this.result) {
+      var app = this.result[i];
+      if (app.manifestURL == gManifestURL) {
+        app.uninstall().onsuccess = function() {
+          /*
+           * Now that the app is uninstalled, we should not find any more
+           * localStorage data from the app or its browsers. However,
+           * sessionStorage is expected to stay.
+           * The witness storage (non-app) should not have changed.
+           */
+          is(gAppStorage.localStorage.getItem("foo"), null, "localstorage data have been deleted");
+          is(gBrowserStorage.localStorage.getItem("foo"), null, "localstorage data have been deleted");
+
+          is(gAppStorage.sessionStorage.getItem("foo"), "bar", "sessionstorage data have not been deleted");
+          is(gBrowserStorage.sessionStorage.getItem("foo"), "bar", "sessionstorage data have not been deleted");
+
+          is(gWitnessStorage.localStorage.getItem("foo"), "bar", "data are still there");
+          is(gWitnessStorage.sessionStorage.getItem("foo"), "bar", "data are still there");
+
+          finish();
+
+          return;
+        };
+      }
+    }
+  };
+}
+
+/**
+ * This method will be called when the test will be done. It is going to clear
+ * all storage data, permissions, etc.
+ */
+function finish() {
+  gWitnessStorage.localStorage.clear();
+  gWitnessStorage.sessionStorage.clear();
+
+  permManager.removeFromPrincipal(window.document.nodePrincipal, "webapps-manage",
+                                  Ci.nsIPermissionManager.ALLOW_ACTION);
+  permManager.removeFromPrincipal(window.document.nodePrincipal, "browser",
+                                  Ci.nsIPermissionManager.ALLOW_ACTION);
+
+  SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', previousPrefs.mozBrowserFramesEnabled);
+  SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', previousPrefs.installerDryRun);
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
