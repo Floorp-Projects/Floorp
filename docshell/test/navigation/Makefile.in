@@ -48,10 +48,13 @@ MOCHITEST_FILES = \
 		file_bug534178.html \
 		$(NULL)
 
-ifneq (mobile,$(MOZ_BUILD_APP))
+ifneq (mobile/android,$(MOZ_BUILD_APP))
 MOCHITEST_FILES += \
 		test_bug270414.html \
 		$(NULL)
+endif
+
+ifneq (mobile,$(MOZ_BUILD_APP))
 MOCHITEST_BROWSER_FILES = \
 		browser_bug343515.js \
 		bug343515_pg1.html \
