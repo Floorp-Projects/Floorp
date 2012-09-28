@@ -64,12 +64,6 @@ IonBuilder::inlineNativeCall(JSNative native, uint32 argc, bool constructing)
     if (native == js_str_charAt)
         return inlineStrCharAt(argc, constructing);
 
-    // RegExp natives.
-    if (native == regexp_exec && !CallResultEscapes(pc))
-        return inlineRegExpTest(argc, constructing);
-    if (native == regexp_test)
-        return inlineRegExpTest(argc, constructing);
-
     return InliningStatus_NotInlined;
 }
 
@@ -683,34 +677,6 @@ IonBuilder::inlineStrCharAt(uint32 argc, bool constructing)
     MFromCharCode *string = MFromCharCode::New(charCode);
     current->add(string);
     current->push(string);
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineRegExpTest(uint32 argc, bool constructing)
-{
-    if (argc != 1 || constructing)
-        return InliningStatus_NotInlined;
-
-    // TI can infer a NULL return type of regexp_test with eager compilation.
-    if (CallResultEscapes(pc) && getInlineReturnType() != MIRType_Boolean)
-        return InliningStatus_NotInlined;
-
-    if (getInlineArgType(argc, 0) != MIRType_Object)
-        return InliningStatus_NotInlined;
-    if (getInlineArgType(argc, 1) != MIRType_String)
-        return InliningStatus_NotInlined;
-
-    MDefinitionVector argv;
-    if (!discardCall(argc, argv, current))
-        return InliningStatus_Error;
-
-    MInstruction *match = MRegExpTest::New(argv[0], argv[1]);
-    current->add(match);
-    current->push(match);
-    if (!resumeAfter(match))
-        return InliningStatus_Error;
-
     return InliningStatus_Inlined;
 }
 

@@ -3676,6 +3676,41 @@ IonBuilder::jsop_funapply(uint32 argc)
     return pushTypeBarrier(apply, types, barrier);
 }
 
+// Get the builtin RegExp.prototype.test function.
+static bool
+GetBuiltinRegExpTest(JSContext *cx, JSScript *script, JSFunction **result)
+{
+    JS_ASSERT(*result == NULL);
+
+    // Get the builtin RegExp.prototype object.
+    RootedObject proto(cx, script->global().getOrCreateRegExpPrototype(cx));
+    if (!proto)
+        return false;
+
+    // Get the |test| property. Note that we use lookupProperty, not getProperty,
+    // to avoid calling a getter.
+    RootedShape shape(cx);
+    RootedObject holder(cx);
+    if (!JSObject::lookupProperty(cx, proto, cx->names().test, &holder, &shape))
+        return false;
+
+    if (proto != holder || !shape || !shape->hasDefaultGetter() || !shape->hasSlot())
+        return true;
+
+    // The RegExp.prototype.test property is writable, so we have to ensure
+    // we got the builtin function.
+    Value val = holder->getSlot(shape->slot());
+    if (!val.isObject())
+        return true;
+
+    JSObject *obj = &val.toObject();
+    if (!obj->isFunction() || obj->toFunction()->maybeNative() != regexp_test)
+        return true;
+
+    *result = obj->toFunction();
+    return true;
+}
+
 bool
 IonBuilder::jsop_call(uint32 argc, bool constructing)
 {
@@ -3705,6 +3740,20 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
     }
 
     RootedFunction target(cx, NULL);
+    if (numTargets == 1) {
+        target = targets[0]->toFunction();
+
+        // Call RegExp.test instead of RegExp.exec if the result will not be used
+        // or will only be used to test for existence.
+        if (target->maybeNative() == regexp_exec && !CallResultEscapes(pc)) {
+            JSFunction *newTarget = NULL;
+            if (!GetBuiltinRegExpTest(cx, script_, &newTarget))
+                return false;
+            if (newTarget)
+                target = newTarget;
+        }
+    }
+
     return makeCallBarrier(target, argc, constructing, types, barrier);
 }
 
