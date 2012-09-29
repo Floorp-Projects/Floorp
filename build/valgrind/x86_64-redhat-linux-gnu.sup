@@ -11,14 +11,6 @@
    obj:/usr/lib64/libpango-1.0.so.0.2800.1
    ...
 }
-#{
-#   Bug 713802 now seems fixed, commenting out suppression to verify that bug 793539 is also gone
-#   Bug 793539 which may be fixed or change when bug 713802 is fixed
-#   Memcheck:Leak
-#   ...
-#   obj:/usr/lib64/libgnomevfs-2.so.0.2400.2
-#   ...
-#}
 {
    Bug 793598
    Memcheck:Leak
