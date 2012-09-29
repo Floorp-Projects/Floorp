@@ -429,6 +429,10 @@ class nsIWidget : public nsISupports {
      * both are null the widget isn't parented (e.g. context menus or
      * independent top level windows).
      *
+     * The dimensions given in aRect are specified in the parent's
+     * coordinate system, or for parentless widgets such as top-level
+     * windows, in global CSS pixels.
+     *
      * @param     aParent       parent nsIWidget
      * @param     aNativeParent native parent widget
      * @param     aRect         the widget dimension

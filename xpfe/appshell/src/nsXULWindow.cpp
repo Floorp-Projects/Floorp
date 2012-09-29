@@ -1229,8 +1229,10 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
 void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
                                   int32_t aSpecWidth, int32_t aSpecHeight)
 {
-  const int32_t kOffset = 22;
-  const int32_t kSlop = 4;
+  const int32_t appPerDev = AppUnitsPerDevPixel();
+  const int32_t kOffset = CSSToDevPixels(22, appPerDev);
+  const int32_t kSlop   = CSSToDevPixels(4, appPerDev);
+
   nsresult rv;
   bool     keepTrying;
   int      bouncedX = 0, // bounced off vertical edge of screen
