@@ -4181,6 +4181,7 @@ MOZ_SAMPLE_TYPE_S16=
 MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
+MOZ_DASH=
 MOZ_WEBRTC=1
 MOZ_SRTP=
 MOZ_WEBRTC_SIGNALING=
@@ -5269,6 +5270,24 @@ MOZ_ARG_DISABLE_BOOL(webm,
 if test -n "$MOZ_WEBM"; then
     AC_DEFINE(MOZ_WEBM)
     MOZ_VP8=1
+fi;
+
+dnl ========================================================
+dnl = Enable DASH-WebM support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(dash,
+[  --enable-dash          Enable support for DASH-WebM],
+    MOZ_DASH=1,
+    MOZ_DASH=)
+
+if test -n "$MOZ_DASH"; then
+    if test -n "$MOZ_WEBM"; then
+        AC_DEFINE(MOZ_DASH)
+    else
+        dnl Fail if WebM is not enabled as well as DASH.
+        AC_MSG_ERROR([WebM is currently disabled and must be enabled for DASH
+                     to work.])
+    fi
 fi;
 
 dnl ========================================================
@@ -8523,6 +8542,7 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
+AC_SUBST(MOZ_DASH)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)

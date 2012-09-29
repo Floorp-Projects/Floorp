@@ -191,6 +191,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_DASH
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/content/media/dash/$(LIB_PREFIX)gkcondash_s.$(LIB_SUFFIX) \
+  $(NULL)
+endif
+
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 INCLUDES	+= \
 		-I$(srcdir)/../../base/src \
