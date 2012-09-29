@@ -473,15 +473,17 @@ const SkPMColor* SkGradientShaderBase::getCache32() const {
     }
 
     // Write the clamp colours into the first and last entries of fCache32
-    fCache32[kCache32ClampLower] = SkPackARGB32(fCacheAlpha,
-                                                SkColorGetR(fOrigColors[0]),
-                                                SkColorGetG(fOrigColors[0]),
-                                                SkColorGetB(fOrigColors[0]));
+    fCache32[kCache32ClampLower] = SkPremultiplyARGBInline(SkMulDiv255Round(SkColorGetA(fOrigColors[0]),
+                                                                            fCacheAlpha),
+                                                           SkColorGetR(fOrigColors[0]),
+                                                           SkColorGetG(fOrigColors[0]),
+                                                           SkColorGetB(fOrigColors[0]));
 
-    fCache32[kCache32ClampUpper] = SkPackARGB32(fCacheAlpha,
-                                                SkColorGetR(fOrigColors[fColorCount - 1]),
-                                                SkColorGetG(fOrigColors[fColorCount - 1]),
-                                                SkColorGetB(fOrigColors[fColorCount - 1]));
+    fCache32[kCache32ClampUpper] = SkPremultiplyARGBInline(SkMulDiv255Round(SkColorGetA(fOrigColors[fColorCount - 1]),
+                                                                            fCacheAlpha),
+                                                           SkColorGetR(fOrigColors[fColorCount - 1]),
+                                                           SkColorGetG(fOrigColors[fColorCount - 1]),
+                                                           SkColorGetB(fOrigColors[fColorCount - 1]));
 
     return fCache32;
 }
