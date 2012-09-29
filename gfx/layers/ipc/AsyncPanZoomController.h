@@ -424,25 +424,6 @@ private:
                     prevented the default actions yet. we still need to abort animations. */
   };
 
-  enum ContentPainterStatus {
-    // A paint may be happening, but it is not due to any action taken by this
-    // thread. For example, content could be invalidating itself, but
-    // AsyncPanZoomController has nothing to do with that.
-    CONTENT_IDLE,
-    // Set every time we dispatch a request for a repaint. When a
-    // ShadowLayersUpdate arrives and the metrics of this frame have changed, we
-    // toggle this off and assume that the paint has completed.
-    CONTENT_PAINTING,
-    // Set when we have a new displayport in the pipeline that we want to paint.
-    // When a ShadowLayersUpdate comes in, we dispatch a new repaint using
-    // mFrameMetrics.mDisplayPort (the most recent request) if this is toggled.
-    // This is distinct from CONTENT_PAINTING in that it signals that a repaint
-    // is happening, whereas this signals that we want to repaint as soon as the
-    // previous paint finishes. When the request is eventually made, it will use
-    // the most up-to-date metrics.
-   CONTENT_PAINTING_AND_PAINT_PENDING
-  };
-
   /**
    * Helper to set the current state. Holds the monitor before actually setting
    * it. If the monitor is already held by the current thread, it is safe to
@@ -521,7 +502,7 @@ private:
   // may be triggered by other things (like content doing things), in which case
   // this status will not be updated. It is only changed when this class
   // requests a repaint.
-  ContentPainterStatus mContentPainterStatus;
+  bool mWaitingForContentToPaint;
 
   // Flag used to determine whether or not we should disable handling of the
   // next batch of touch events. This is used for sync scrolling of subframes.
