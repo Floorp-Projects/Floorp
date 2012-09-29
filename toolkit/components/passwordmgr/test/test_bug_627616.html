@@ -15,13 +15,33 @@
     testNum = 1;
 
     var login, login2;
-    function init() {
+
+    var resolveCallback = {
+
+      QueryInterface : function (iid) {
+        const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
+
+        if (!interfaces.some( function(v) { return iid.equals(v) } ))
+          throw Components.results.NS_ERROR_NO_INTERFACE;
+        return this;
+      },
+
+      onProxyAvailable : function (req, uri, pi, status) {
+         init2(SpecialPowers.wrap(pi).host, SpecialPowers.wrap(pi).port);
+      }
+    };
+
+    function init1() {
         var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
         var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
         var uri = ios.newURI("http://example.com", null, null);
-        var pi = pps.resolve(uri, 0);
-        var mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
+        pps.asyncResolve(uri, 0, resolveCallback);
+    }
+
+    function init2(proxyHost, proxyPort) {
+
+        var mozproxy = "moz-proxy://" + proxyHost + ":" + proxyPort;
 
         var pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
         login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
@@ -96,7 +116,7 @@
     var pendingTests = [{expectedDialogs: 2, test: testNonAnonymousCredentials},
                         {expectedDialogs: 1, test: testAnonymousCredentials},
                         {expectedDialogs: 0, test: testAnonymousNoAuth}];
-    init();
+    init1();
     runNextTest();
 
     function handleDialog(doc, testNum)

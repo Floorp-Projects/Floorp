@@ -61,8 +61,11 @@ nsFontInflationData::UpdateFontInflationDataWidthFor(const nsHTMLReflowState& aR
 
   data->UpdateWidth(aReflowState);
 
-  return oldNCAWidth != data->mNCAWidth ||
-         oldInflationEnabled != data->mInflationEnabled;
+  if (oldInflationEnabled != data->mInflationEnabled)
+    return true;
+
+  return oldInflationEnabled &&
+         oldNCAWidth != data->mNCAWidth;
 }
 
 /* static */ void

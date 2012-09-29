@@ -15,13 +15,14 @@ if test "$OS_ARCH" = "WINNT"; then
   fi
 fi
 
+MOZ_STUB_INSTALLER=1
 MOZ_CHROME_FILE_FORMAT=omni
 MOZ_SAFE_BROWSING=1
 MOZ_SERVICES_AITC=1
 MOZ_SERVICES_NOTIFICATIONS=1
 MOZ_SERVICES_SYNC=1
 MOZ_APP_VERSION=$FIREFOX_VERSION
-MOZ_EXTENSIONS_DEFAULT=" gnomevfs"
+MOZ_EXTENSIONS_DEFAULT=" gio"
 # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
 # Changing MOZ_*BRANDING_DIRECTORY requires a clobber to ensure correct results,
 # because branding dependencies are broken.

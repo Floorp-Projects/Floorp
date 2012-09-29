@@ -192,7 +192,7 @@ nsAttrValue::EnumTable nsSMILTimedElement::sRestartModeTable[] = {
       {nullptr, 0}
 };
 
-const nsSMILMilestone nsSMILTimedElement::sMaxMilestone(LL_MAXINT, false);
+const nsSMILMilestone nsSMILTimedElement::sMaxMilestone(INT64_MAX, false);
 
 // The thresholds at which point we start filtering intervals and instance times
 // indiscriminately.
@@ -1630,7 +1630,7 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
     prevIntervalWasZeroDur
       = aPrevInterval->End()->Time() == aPrevInterval->Begin()->Time();
   } else {
-    beginAfter.SetMillis(LL_MININT);
+    beginAfter.SetMillis(INT64_MIN);
   }
 
   nsRefPtr<nsSMILInstanceTime> tempBegin;
@@ -2104,7 +2104,7 @@ nsSMILTimedElement::AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
   double offset = aOffsetSeconds * PR_MSEC_PER_SEC;
 
   // Check we won't overflow the range of nsSMILTime
-  if (aCurrentTime + NS_round(offset) > LL_MAXINT)
+  if (aCurrentTime + NS_round(offset) > INT64_MAX)
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsSMILTimeValue timeVal(aCurrentTime + int64_t(NS_round(offset)));

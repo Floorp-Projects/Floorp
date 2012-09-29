@@ -705,8 +705,8 @@ nsHtml5TreeBuilder::StartPlainTextViewSource(const nsAutoString& aTitle)
 
   // XUL will add the "Source of: " prefix.
   uint32_t length = aTitle.Length();
-  if (length > PR_INT32_MAX) {
-    length = PR_INT32_MAX;
+  if (length > INT32_MAX) {
+    length = INT32_MAX;
   }
   characters(aTitle.get(), 0, (int32_t)length);
   endTag(nsHtml5ElementName::ELT_TITLE);

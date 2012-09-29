@@ -89,6 +89,7 @@ MOCHITEST_CHROME_FILES = 	findbar_window.xul \
 		test_bug557987.xul\
 		test_bug562554.xul \
 		test_bug585946.xul \
+		test_bug792324.xul \
 		test_button.xul \
 		test_closemenu_attribute.xul \
 		test_colorpicker_popup.xul \

@@ -12,7 +12,7 @@
    * nsScannerBufferList
    */
 
-#define MAX_CAPACITY ((PR_UINT32_MAX / sizeof(PRUnichar)) - \
+#define MAX_CAPACITY ((UINT32_MAX / sizeof(PRUnichar)) - \
                       (sizeof(Buffer) + sizeof(PRUnichar)))
 
 nsScannerBufferList::Buffer*

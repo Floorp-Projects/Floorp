@@ -525,7 +525,7 @@ nsSMILAnimationController::DoMilestoneSamples()
   // registered for those times. This way events can fire in the correct order,
   // dependencies can be resolved etc.
 
-  nsSMILTime sampleTime = LL_MININT;
+  nsSMILTime sampleTime = INT64_MIN;
 
   while (true) {
     // We want to find any milestones AT OR BEFORE the current sample time so we

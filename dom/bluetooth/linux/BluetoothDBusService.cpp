@@ -81,11 +81,7 @@ static Properties sDeviceProperties[] = {
   {"Class", DBUS_TYPE_UINT32},
   {"UUIDs", DBUS_TYPE_ARRAY},
   {"Paired", DBUS_TYPE_BOOLEAN},
-#ifdef MOZ_WIDGET_GONK
-  {"Connected", DBUS_TYPE_ARRAY},
-#else
   {"Connected", DBUS_TYPE_BOOLEAN},
-#endif
   {"Trusted", DBUS_TYPE_BOOLEAN},
   {"Blocked", DBUS_TYPE_BOOLEAN},
   {"Alias", DBUS_TYPE_STRING},

@@ -2,3 +2,7 @@
 component {cda91b22-6472-11e1-aa11-834fec09cd0a} TCPSocket.js
 contract @mozilla.org/tcp-socket;1 {cda91b22-6472-11e1-aa11-834fec09cd0a}
 category JavaScript-navigator-property mozTCPSocket @mozilla.org/tcp-socket;1
+
+# TCPSocketParentIntermediary.js
+component {afa42841-a6cb-4a91-912f-93099f6a3d18} TCPSocketParentIntermediary.js
+contract @mozilla.org/tcp-socket-intermediary;1 {afa42841-a6cb-4a91-912f-93099f6a3d18}

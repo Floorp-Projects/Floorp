@@ -4,15 +4,16 @@
              validation and should not be affected by :-moz-ui-invalid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <script>
-    function onLoadHandler()
+    function doTest()
     {
       var e = document.getElementById('t');
       e.setCustomValidity('foo');
       e.disabled = 'true';
       document.documentElement.className='';
     }
+    document.addEventListener("MozReftestInvalidate", doTest, false);
   </script>
-  <body onload="onLoadHandler();">
+  <body>
     <textarea class='notinvalid' id='t'></textarea>
   </body>
 </html>

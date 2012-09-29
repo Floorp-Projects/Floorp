@@ -14,11 +14,11 @@ FileInfo::Create(FileManager* aFileManager, int64_t aId)
 {
   NS_ASSERTION(aId > 0, "Wrong id!");
 
-  if (aId <= PR_INT16_MAX) {
+  if (aId <= INT16_MAX) {
     return new FileInfo16(aFileManager, aId);
   }
 
-  if (aId <= PR_INT32_MAX) {
+  if (aId <= INT32_MAX) {
     return new FileInfo32(aFileManager, aId);
   }
 

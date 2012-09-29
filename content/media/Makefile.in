@@ -90,6 +90,10 @@ endif
 
 PARALLEL_DIRS += webrtc
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+PARALLEL_DIRS += omx
+endif
+
 TEST_DIRS += test
 
 FORCE_STATIC_LIB = 1

@@ -261,8 +261,8 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*         aPresContext,
   FinishReflowChild(aKidFrame, aPresContext, nullptr, aDesiredSize, 0,
                     aReflowState.y, 0);
 
-  nsTableFrame::InvalidateFrame(aKidFrame, aOriginalKidRect,
-                                aOriginalKidVisualOverflow, isFirstReflow);
+  nsTableFrame::InvalidateTableFrame(aKidFrame, aOriginalKidRect,
+                                     aOriginalKidVisualOverflow, isFirstReflow);
 
   // Adjust the running y-offset
   aReflowState.y += aDesiredSize.height;
@@ -396,15 +396,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
             // differently, repaint the entire row
             nsRect kidRect(0, aReflowState.y,
                            desiredSize.width, desiredSize.height);
-            Invalidate(kidRect);
-            
-            // Invalidate the area we're offseting. Note that we only
-            // repaint within our existing frame bounds.
-            if (kidRect.YMost() < mRect.height) {
-              nsRect  dirtyRect(0, kidRect.YMost(),
-                                mRect.width, mRect.height - kidRect.YMost());
-              Invalidate(dirtyRect);
-            }
+            InvalidateFrame();
           }
           else if (oldKidRect.height != desiredSize.height)
             needToCalcRowHeights = true;
@@ -449,11 +441,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
   else if (needToCalcRowHeights) {
     CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState);
     if (!reflowAllKids) {
-      // Because we don't know what changed repaint everything.
-      // XXX We should change CalculateRowHeights() to return the bounding
-      // rect of what changed. Or whether anything moved or changed size...
-      nsRect  dirtyRect(0, 0, mRect.width, mRect.height);
-      Invalidate(dirtyRect);
+      InvalidateFrame();
     }
   }
 
@@ -775,8 +763,8 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*           aPresContext,
       rowFrame->SetRect(nsRect(rowBounds.x, yOrigin, rowBounds.width,
                                rowHeight));
 
-      nsTableFrame::InvalidateFrame(rowFrame, rowBounds, rowVisualOverflow,
-                                    false);
+      nsTableFrame::InvalidateTableFrame(rowFrame, rowBounds, rowVisualOverflow,
+                                         false);
     }
     if (movedFrame) {
       nsTableFrame::RePositionViews(rowFrame);
@@ -840,8 +828,8 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
   overflow.UnionAllWith(nsRect(0, 0, groupRect.width, groupRect.height));
   FinishAndStoreOverflow(overflow, nsSize(groupRect.width, groupRect.height));
   nsTableFrame::RePositionViews(this);
-  nsTableFrame::InvalidateFrame(this, oldGroupRect, oldGroupVisualOverflow,
-                                false);
+  nsTableFrame::InvalidateTableFrame(this, oldGroupRect, oldGroupVisualOverflow,
+                                     false);
 
   return yGroupOffset;
 }
@@ -1092,9 +1080,9 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
         rowFrame->DidReflow(aPresContext, nullptr, NS_FRAME_REFLOW_FINISHED);
         rowFrame->DidResize();
 
-        nsTableFrame::InvalidateFrame(rowFrame, oldRowRect,
-                                      oldRowVisualOverflow,
-                                      false);
+        nsTableFrame::InvalidateTableFrame(rowFrame, oldRowRect,
+                                           oldRowVisualOverflow,
+                                           false);
 
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
           // The row frame is incomplete and all of the rowspan 1 cells' block frames split
@@ -1325,8 +1313,9 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
-  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    CheckInvalidateSizeChange(aDesiredSize);
+  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+      nsSize(aDesiredSize.width, aDesiredSize.height) != mRect.Size()) {
+    InvalidateFrame();
   }
   
   FinishAndStoreOverflow(&aDesiredSize);
@@ -1881,4 +1870,21 @@ nsTableRowGroupFrame::FrameCursorData::AppendFrame(nsIFrame* aFrame)
   mOverflowAbove = NS_MAX(mOverflowAbove, overflowAbove);
   mOverflowBelow = NS_MAX(mOverflowBelow, overflowBelow);
   return mFrames.AppendElement(aFrame) != nullptr;
+}
+  
+void 
+nsTableRowGroupFrame::InvalidateFrame(uint32_t aDisplayItemKey)
+{
+  nsIFrame::InvalidateFrame(aDisplayItemKey);
+  GetParent()->InvalidateFrameWithRect(GetVisualOverflowRect() + GetPosition(), aDisplayItemKey);
+}
+
+void 
+nsTableRowGroupFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
+{
+  nsIFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey);
+  // If we have filters applied that would affects our bounds, then
+  // we get an inactive layer created and this is computed
+  // within FrameLayerBuilder
+  GetParent()->InvalidateFrameWithRect(aRect + GetPosition(), aDisplayItemKey);
 }

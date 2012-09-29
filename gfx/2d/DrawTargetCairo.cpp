@@ -403,9 +403,9 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
     return;
   }
 
-  Float width = aSurface->GetSize().width;
-  Float height = aSurface->GetSize().height;
- 
+  Float width = Float(aSurface->GetSize().width);
+  Float height = Float(aSurface->GetSize().height);
+
   SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
   cairo_surface_t* sourcesurf = source->GetSurface();
   cairo_surface_t* blursurf;

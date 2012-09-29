@@ -38,6 +38,7 @@ EXPORTS		= \
 		nsCompatibility.h \
 		nsDisplayItemTypes.h \
 		nsDisplayList.h \
+		nsDisplayListInvalidation.h \
 		nsFrameManager.h \
 		nsFrameManagerBase.h \
 		nsFrameIterator.h \
@@ -73,6 +74,7 @@ CPPSRCS		= \
 		nsChildIterator.cpp \
 		nsCounterManager.cpp \
 		nsDisplayList.cpp \
+		nsDisplayListInvalidation.cpp \
 		nsDocumentViewer.cpp \
 		nsFrameManager.cpp \
 		nsFrameIterator.cpp \

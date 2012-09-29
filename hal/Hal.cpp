@@ -66,6 +66,12 @@ InSandbox()
   return GeckoProcessType_Content == XRE_GetProcessType();
 }
 
+void
+AssertMainProcess()
+{
+  MOZ_ASSERT(GeckoProcessType_Default == XRE_GetProcessType());
+}
+
 bool
 WindowIsActive(nsIDOMWindow *window)
 {
@@ -561,12 +567,14 @@ NotifyNetworkChange(const NetworkInformation& aInfo)
 
 void Reboot()
 {
+  AssertMainProcess();
   AssertMainThread();
   PROXY_IF_SANDBOXED(Reboot());
 }
 
 void PowerOff()
 {
+  AssertMainProcess();
   AssertMainThread();
   PROXY_IF_SANDBOXED(PowerOff());
 }
@@ -774,12 +782,7 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 void
 SetProcessPriority(int aPid, ProcessPriority aPriority)
 {
-  if (InSandbox()) {
-    hal_sandbox::SetProcessPriority(aPid, aPriority);
-  }
-  else {
-    hal_impl::SetProcessPriority(aPid, aPriority);
-  }
+  PROXY_IF_SANDBOXED(SetProcessPriority(aPid, aPriority));
 }
 
 static StaticAutoPtr<ObserverList<FMRadioOperationInformation> > sFMRadioObservers;

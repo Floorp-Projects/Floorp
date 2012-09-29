@@ -101,7 +101,7 @@ nsEscapeHTML(const char* string)
   /* XXX Hardcoded max entity len. The +1 is for the trailing null. */
   char* escaped = nullptr;
   uint32_t len = strlen(string);
-  if (len >= (PR_UINT32_MAX / 6))
+  if (len >= (UINT32_MAX / 6))
     return nullptr;
 
   escaped = (char*)NS_Alloc((len * 6) + 1);

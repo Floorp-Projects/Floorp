@@ -343,7 +343,7 @@ const nsAFlatCString& NullCString();
    * Returns 0 if the strings are equal, -1 if aUTF8String is less
    * than aUTF16Count, and 1 in the reverse case.  In case of fatal
    * error (eg the strings are not valid UTF8 and UTF16 respectively),
-   * this method will return PR_INT32_MIN.
+   * this method will return INT32_MIN.
    */
 int32_t
 CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,

@@ -13,7 +13,7 @@
  */
 
 Components.utils.import('resource://gre/modules/devtools/Require.jsm');
-Components.utils.import('resource:///modules/devtools/SourceMap.jsm');
+Components.utils.import('resource://gre/modules/devtools/SourceMap.jsm');
 
 let EXPORTED_SYMBOLS = [ "define", "runSourceMapTests" ];
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -109,23 +109,40 @@ define('test/source-map/util', ['require', 'exports', 'module' ], function(requi
   };
 
   function assertMapping(generatedLine, generatedColumn, originalSource,
-                         originalLine, originalColumn, name, map, assert) {
-    var mapping = map.originalPositionFor({
-      line: generatedLine,
-      column: generatedColumn
-    });
-    assert.equal(mapping.name, name,
-                 'Incorrect name, expected ' + JSON.stringify(name)
-                 + ', got ' + JSON.stringify(mapping.name));
-    assert.equal(mapping.line, originalLine,
-                 'Incorrect line, expected ' + JSON.stringify(originalLine)
-                 + ', got ' + JSON.stringify(mapping.line));
-    assert.equal(mapping.column, originalColumn,
-                 'Incorrect column, expected ' + JSON.stringify(originalColumn)
-                 + ', got ' + JSON.stringify(mapping.column));
-    assert.equal(mapping.source, originalSource,
-                 'Incorrect source, expected ' + JSON.stringify(originalSource)
-                 + ', got ' + JSON.stringify(mapping.source));
+                         originalLine, originalColumn, name, map, assert,
+                         dontTestGenerated, dontTestOriginal) {
+    if (!dontTestOriginal) {
+      var origMapping = map.originalPositionFor({
+        line: generatedLine,
+        column: generatedColumn
+      });
+      assert.equal(origMapping.name, name,
+                   'Incorrect name, expected ' + JSON.stringify(name)
+                   + ', got ' + JSON.stringify(origMapping.name));
+      assert.equal(origMapping.line, originalLine,
+                   'Incorrect line, expected ' + JSON.stringify(originalLine)
+                   + ', got ' + JSON.stringify(origMapping.line));
+      assert.equal(origMapping.column, originalColumn,
+                   'Incorrect column, expected ' + JSON.stringify(originalColumn)
+                   + ', got ' + JSON.stringify(origMapping.column));
+      assert.equal(origMapping.source, originalSource,
+                   'Incorrect source, expected ' + JSON.stringify(originalSource)
+                   + ', got ' + JSON.stringify(origMapping.source));
+    }
+
+    if (!dontTestGenerated) {
+      var genMapping = map.generatedPositionFor({
+        source: originalSource,
+        line: originalLine,
+        column: originalColumn
+      });
+      assert.equal(genMapping.line, generatedLine,
+                   'Incorrect line, expected ' + JSON.stringify(generatedLine)
+                   + ', got ' + JSON.stringify(genMapping.line));
+      assert.equal(genMapping.column, generatedColumn,
+                   'Incorrect column, expected ' + JSON.stringify(generatedColumn)
+                   + ', got ' + JSON.stringify(genMapping.column));
+    }
   }
   exports.assertMapping = assertMapping;
 

@@ -22,6 +22,7 @@ INSTALLER_FILES = \
 	app.tag \
 	nsis/installer.nsi \
 	nsis/uninstaller.nsi \
+	nsis/stub.nsi \
 	nsis/shared.nsh \
 	$(NULL)
 
@@ -31,9 +32,15 @@ INSTALLER_FILES += \
 	$(NULL)
 endif
 
-
 BRANDING_FILES = \
 	branding.nsi \
+	appname.bmp \
+	bgintro.bmp \
+	bgplain.bmp \
+	clock.bmp \
+	particles.bmp \
+	pencil.bmp \
+	pencil-rtl.bmp \
 	wizHeader.bmp \
 	wizHeaderRTL.bmp \
 	wizWatermark.bmp \
@@ -97,6 +104,10 @@ $(CONFIG_DIR)/setup.exe::
 	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
 	  --preprocess-locale $(topsrcdir) \
 	  $(PPL_LOCALE_ARGS) $(AB_CD) $(CONFIG_DIR)
+	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+	  --preprocess-single-file $(topsrcdir) \
+	  $(PPL_LOCALE_ARGS) $(CONFIG_DIR) \
+	  nsisstrings.properties nsisstrings.nlf
 
 GARBARGE_DIRS += instgen
 

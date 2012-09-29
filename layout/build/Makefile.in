@@ -65,6 +65,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/contacts/$(LIB_PREFIX)jsdomcontacts_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/alarm/$(LIB_PREFIX)domalarm_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/devicestorage/$(LIB_PREFIX)domdevicestorage_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/encoding/$(LIB_PREFIX)domencoding_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/file/$(LIB_PREFIX)domfile_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/power/$(LIB_PREFIX)dom_power_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/settings/$(LIB_PREFIX)jsdomsettings_s.$(LIB_SUFFIX) \
@@ -118,6 +119,13 @@ LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system \
 	$(NULL)
 endif
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
+# include OMX decoder
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/omx/$(LIB_PREFIX)gkconomx_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif #}
 
 ifdef MOZ_B2G_FM #{
 SHARED_LIBRARY_LIBS	+= \
@@ -181,6 +189,25 @@ ifdef MOZ_MEDIA_PLUGINS
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/plugins/$(LIB_PREFIX)gkconmediaplugins_s.$(LIB_SUFFIX) \
 	$(NULL)
+endif
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+INCLUDES	+= \
+		-I$(srcdir)/../../base/src \
+		-I$(srcdir)/../../html/content/src \
+		-I$(ANDROID_SOURCE)/dalvik/libnativehelper/include/nativehelper \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/ \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
+		-I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
+		-I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS += \
+		-lutils -lstagefright -lmedia -lstagefright_omx -lbinder -lui \
+		-lhardware -lcutils \
+		$(NULL)
 endif
 
 ifdef NS_PRINTING
@@ -277,6 +304,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/netwerk/base/src \
 		   -I$(topsrcdir)/content/svg/content/src \
 		   -I$(topsrcdir)/extensions/cookie \
+		   -I$(topsrcdir)/netwerk/cookie \
 		   $(NULL)
 
 ifdef MOZ_B2G_RIL #{

@@ -175,7 +175,7 @@ nsInputStreamTransport::Read(char *buf, uint32_t count, uint32_t *result)
         mFirstTime = false;
         if (mOffset != 0) {
             // read from current position if offset equal to max
-            if (mOffset != LL_MAXUINT) {
+            if (mOffset != UINT64_MAX) {
                 nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSource);
                 if (seekable)
                     seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
@@ -375,7 +375,7 @@ nsOutputStreamTransport::Write(const char *buf, uint32_t count, uint32_t *result
         mFirstTime = false;
         if (mOffset != 0) {
             // write to current position if offset equal to max
-            if (mOffset != LL_MAXUINT) {
+            if (mOffset != UINT64_MAX) {
                 nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSink);
                 if (seekable)
                     seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);

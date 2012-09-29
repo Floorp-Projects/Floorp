@@ -46,6 +46,17 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   if (!lastPaintTime.IsNull() && !mPaintTarget.IsNull()) {
     mPaintDelay = lastPaintTime - mPaintTarget;
   }
+
+  // When using the OMX decoder, destruction of the current image can indirectly
+  //  block on main thread I/O. If we let this happen while holding onto
+  //  |mImageContainer|'s lock, then when the main thread then tries to
+  //  composite it can then block on |mImageContainer|'s lock, causing a
+  //  deadlock. We use this hack to defer the destruction of the current image
+  //  until it is safe.
+  nsRefPtr<Image> kungFuDeathGrip;
+  kungFuDeathGrip = mImageContainer->LockCurrentImage();
+  mImageContainer->UnlockCurrentImage();
+
   mImageContainer->SetCurrentImage(aImage);
   gfxIntSize newFrameSize = mImageContainer->GetCurrentSize();
   if (oldFrameSize != newFrameSize) {
@@ -53,6 +64,19 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   }
 
   mPaintTarget = aTargetTime;
+}
+
+void VideoFrameContainer::ClearCurrentFrame()
+{
+  MutexAutoLock lock(mMutex);
+
+  // See comment in SetCurrentFrame for the reasoning behind
+  // using a kungFuDeathGrip here.
+  nsRefPtr<Image> kungFuDeathGrip;
+  kungFuDeathGrip = mImageContainer->LockCurrentImage();
+  mImageContainer->UnlockCurrentImage();
+
+  mImageContainer->SetCurrentImage(nullptr);
 }
 
 ImageContainer* VideoFrameContainer::GetImageContainer() {
@@ -107,11 +131,10 @@ void VideoFrameContainer::Invalidate()
   }
 
   if (frame) {
-    nsRect contentRect = frame->GetContentRect() - frame->GetPosition();
     if (invalidateFrame) {
-      frame->Invalidate(contentRect);
+      frame->InvalidateFrame();
     } else {
-      frame->InvalidateLayer(contentRect, nsDisplayItem::TYPE_VIDEO);
+      frame->InvalidateLayer(nsDisplayItem::TYPE_VIDEO);
     }
   }
 

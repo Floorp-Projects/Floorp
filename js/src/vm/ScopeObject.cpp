@@ -1119,7 +1119,7 @@ class DebugScopeProxy : public BaseProxyHandler
         /* Handle unaliased formals, vars, and consts at function scope. */
         if (scope->isCall() && !scope->asCall().isForEval()) {
             CallObject &callobj = scope->asCall();
-            JSScript *script = callobj.callee().script();
+            RootedScript script(cx, callobj.callee().script());
             if (!script->ensureHasTypes(cx))
                 return false;
 

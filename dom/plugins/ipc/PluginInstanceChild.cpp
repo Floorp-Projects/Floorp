@@ -287,14 +287,6 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 
     switch(aVar) {
 
-    case NPNVSupportsWindowless:
-#if defined(OS_LINUX) || defined(MOZ_X11) || defined(OS_WIN)
-        *((NPBool*)aValue) = true;
-#else
-        *((NPBool*)aValue) = false;
-#endif
-        return NPERR_NO_ERROR;
-
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     case NPNVSupportsWindowlessLocal: {
 #ifdef MOZ_WIDGET_QT
@@ -308,10 +300,6 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     }
 #endif
 #if defined(MOZ_X11)
-    case NPNVSupportsXEmbedBool:
-        *((NPBool*)aValue) = true;
-        return NPERR_NO_ERROR;
-
     case NPNVToolkit:
         *((NPNToolkitType*)aValue) = NPNVGtk2;
         return NPERR_NO_ERROR;
@@ -329,26 +317,6 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     case NPNVToolkit:
         return NPERR_GENERIC_ERROR;
 #endif
-    case NPNVjavascriptEnabledBool: {
-        bool v = false;
-        NPError result;
-        if (!CallNPN_GetValue_NPNVjavascriptEnabledBool(&v, &result)) {
-            return NPERR_GENERIC_ERROR;
-        }
-        *static_cast<NPBool*>(aValue) = v;
-        return result;
-    }
-
-    case NPNVisOfflineBool: {
-        bool v = false;
-        NPError result;
-        if (!CallNPN_GetValue_NPNVisOfflineBool(&v, &result)) {
-            return NPERR_GENERIC_ERROR;
-        }
-        *static_cast<NPBool*>(aValue) = v;
-        return result;
-    }
-
     case NPNVprivateModeBool: {
         bool v = false;
         NPError result;
@@ -467,6 +435,15 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     }
 #endif /* NP_NO_QUICKDRAW */
 #endif /* XP_MACOSX */
+
+#ifdef DEBUG
+    case NPNVjavascriptEnabledBool:
+    case NPNVasdEnabledBool:
+    case NPNVisOfflineBool:
+    case NPNVSupportsXEmbedBool:
+    case NPNVSupportsWindowless:
+        NS_NOTREACHED("NPNVariable should be handled in PluginModuleChild.");
+#endif
 
     default:
         PR_LOG(gPluginLog, PR_LOG_WARNING,

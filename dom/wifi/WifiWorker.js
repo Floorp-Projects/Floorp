@@ -41,30 +41,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
 // expected results).
 var WifiManager = (function() {
   function getSdkVersionAndDevice() {
-    Cu.import("resource://gre/modules/ctypes.jsm");
-    try {
-      let cutils = ctypes.open("libcutils.so");
-      let cbuf = ctypes.char.array(4096)();
-      let c_property_get = cutils.declare("property_get", ctypes.default_abi,
-                                          ctypes.int,       // return value: length
-                                          ctypes.char.ptr,  // key
-                                          ctypes.char.ptr,  // value
-                                          ctypes.char.ptr); // default
-      let property_get = function (key, defaultValue) {
-        if (defaultValue === undefined) {
-          defaultValue = null;
-        }
-        c_property_get(key, cbuf, defaultValue);
-        return cbuf.readString();
-      }
-      return { sdkVersion: parseInt(property_get("ro.build.version.sdk")),
-               device: property_get("ro.product.device") };
-    } catch(e) {
-      // Eat it.  Hopefully we're on a non-Gonk system ...
-      //
-      // XXX we should check that
-      return 0;
-    }
+    Cu.import("resource://gre/modules/systemlibs.js");
+    let sdkVersion = libcutils.property_get("ro.build.version.sdk");
+    return { sdkVersion: parseInt(sdkVersion, 10),
+               device: libcutils.property_get("ro.product.device") };
   }
 
   let { sdkVersion, device } = getSdkVersionAndDevice();
@@ -1279,10 +1259,35 @@ function calculateSignal(strength) {
   return Math.floor(((strength - MIN_RSSI) / (MAX_RSSI - MIN_RSSI)) * 100);
 }
 
-function ScanResult(ssid, bssid, flags, signal) {
+function Network(ssid, capabilities, password) {
   this.ssid = ssid;
+  this.capabilities = capabilities;
+
+  if (typeof password !== "undefined")
+    this.password = password;
+  // TODO connected here as well?
+
+  this.__exposedProps__ = Network.api;
+}
+
+Network.api = {
+  ssid: "r",
+  capabilities: "r",
+  known: "r",
+
+  password: "rw",
+  keyManagement: "rw",
+  psk: "rw",
+  identity: "rw",
+  wep: "rw",
+  hidden: "rw"
+};
+
+// Note: We never use ScanResult.prototype, so the fact that it's unrelated to
+// Network.prototype is OK.
+function ScanResult(ssid, bssid, flags, signal) {
+  Network.call(this, ssid, getKeyManagement(flags));
   this.bssid = bssid;
-  this.capabilities = getKeyManagement(flags);
   this.signalStrength = signal;
   this.relSignalStrength = calculateSignal(Number(signal));
 
@@ -1292,19 +1297,15 @@ function ScanResult(ssid, bssid, flags, signal) {
 // XXX This should probably live in the DOM-facing side, but it's hard to do
 // there, so we stick this here.
 ScanResult.api = {
-  ssid: "r",
   bssid: "r",
-  capabilities: "r",
   signalStrength: "r",
   relSignalStrength: "r",
-  connected: "r",
-
-  keyManagement: "rw",
-  psk: "rw",
-  identity: "rw",
-  password: "rw",
-  wep: "rw"
+  connected: "r"
 };
+
+for (let i in Network.api) {
+  ScanResult.api[i] = Network.api[i];
+}
 
 function quote(s) {
   return '"' + s + '"';
@@ -1379,7 +1380,7 @@ function WifiWorker() {
 
   this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
-  const messages = ["WifiManager:getNetworks",
+  const messages = ["WifiManager:getNetworks", "WifiManager:getKnownNetworks",
                     "WifiManager:associate", "WifiManager:forget",
                     "WifiManager:wps", "WifiManager:getState",
                     "WifiManager:setPowerSavingMode",
@@ -1408,6 +1409,7 @@ function WifiWorker() {
   this.configuredNetworks = Object.create(null);
 
   this.currentNetwork = null;
+  this.ipAddress = "";
 
   this._lastConnectionInfo = null;
   this._connectionInfoTimer = null;
@@ -1419,9 +1421,26 @@ function WifiWorker() {
   // Given a connection status network, takes a network from
   // self.configuredNetworks and prepares it for the DOM.
   netToDOM = function(net) {
-    var pub = { ssid: dequote(net.ssid) };
+    var ssid = dequote(net.ssid);
+    var capabilities = (net.key_mgmt === "NONE" && net.wep_key0)
+                       ? ["WEP"]
+                       : (net.key_mgmt && net.key_mgmt !== "NONE")
+                       ? [net.key_mgmt]
+                       : [];
+    var password;
+    if (("psk" in net && net.psk) ||
+        ("password" in net && net.password) ||
+        ("wep_key0" in net && net.wep_key0)) {
+      password = "*";
+    }
+
+    var pub = new Network(ssid, capabilities, password);
+    if (net.identity)
+      pub.identity = dequote(net.identity);
     if (net.netId)
       pub.known = true;
+    if (net.scan_ssid === 1)
+      pub.hidden = true;
     return pub;
   };
 
@@ -1456,6 +1475,11 @@ function WifiWorker() {
       configured.key_mgmt = net.key_mgmt = "NONE";
     }
 
+    if (net.hidden) {
+      configured.scan_ssid = net.scan_ssid = 1;
+      delete net.hidden;
+    }
+
     function checkAssign(name, checkStar) {
       if (name in net) {
         let value = net[name];
@@ -1486,6 +1510,7 @@ function WifiWorker() {
     WifiManager.enabled = true;
     self._updateWifiSetting(true);
     WifiManager.getMacAddress(function (mac) {
+      self.macAddress = mac;
       debug("Got mac: " + mac);
     });
 
@@ -1607,6 +1632,7 @@ function WifiWorker() {
       case "DISCONNECTED":
         self._fireEvent("ondisconnect", {});
         self.currentNetwork = null;
+        self.ipAddress = "";
 
         WifiManager.connectionDropped(function() {
           // We've disconnected from a network because of a call to forgetNetwork.
@@ -1656,6 +1682,13 @@ function WifiWorker() {
                                    kNetworkInterfaceStateChangedTopic,
                                    null);
 
+      self.ipAddress = this.info.ipaddr_str;
+
+      // We start the connection information timer when we associate, but
+      // don't have our IP address until here. Make sure that we fire a new
+      // connectionInformation event with the IP address the next time the
+      // timer fires.
+      self._lastConnectionInfo = null;
       self._fireEvent("onconnect", { network: netToDOM(self.currentNetwork) });
     } else {
       WifiManager.reassociate(function(){});
@@ -1824,7 +1857,8 @@ WifiWorker.prototype = {
 
         let info = { signalStrength: rssi,
                      relSignalStrength: calculateSignal(rssi),
-                     linkSpeed: linkspeed };
+                     linkSpeed: linkspeed,
+                     ipAddress: self.ipAddress };
         let last = self._lastConnectionInfo;
 
         // Only fire the event if the link speed changed or the signal
@@ -1986,6 +2020,9 @@ WifiWorker.prototype = {
       case "WifiManager:getNetworks":
         this.getNetworks(msg);
         break;
+      case "WifiManager:getKnownNetworks":
+        this.getKnownNetworks(msg);
+        break;
       case "WifiManager:associate":
         this.associate(msg);
         break;
@@ -2016,7 +2053,8 @@ WifiWorker.prototype = {
         return { network: net,
                  connectionInfo: this._lastConnectionInfo,
                  enabled: WifiManager.enabled,
-                 status: translateState(WifiManager.state) };
+                 status: translateState(WifiManager.state),
+                 macAddress: this.macAddress };
       }
       case "WifiManager:managerFinished": {
         for (let i = 0; i < this._domManagers.length; ++i) {
@@ -2057,6 +2095,28 @@ WifiWorker.prototype = {
       // Otherwise, let the client know that it failed, it's responsible for
       // trying again in a few seconds.
       this._sendMessage(message, false, "ScanFailed", msg);
+    }).bind(this));
+  },
+
+  getKnownNetworks: function(msg) {
+    const message = "WifiManager:getKnownNetworks:Return";
+    if (!WifiManager.enabled) {
+      this._sendMessage(message, false, "Wifi is disabled", msg);
+      return;
+    }
+
+    this._reloadConfiguredNetworks((function(ok) {
+      if (!ok) {
+        this._sendMessage(message, false, "Failed", msg);
+        return;
+      }
+
+      var networks = {};
+      for (let ssid in this.configuredNetworks) {
+        networks[ssid] = netToDOM(this.configuredNetworks[ssid]);
+      }
+
+      this._sendMessage(message, true, networks, msg);
     }).bind(this));
   },
 

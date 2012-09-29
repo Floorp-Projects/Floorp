@@ -159,6 +159,12 @@ public:
    */
   bool IsBlack();
 
+  /**
+   * Returns true if the object has a black wrapper,
+   * and all the GC things it is keeping alive are black too.
+   */
+  bool IsBlackAndDoesNotNeedTracing(nsISupports* aThis);
+
   // Only meant to be called by code that preserves a wrapper.
   void SetPreservingWrapper(bool aPreserve)
   {

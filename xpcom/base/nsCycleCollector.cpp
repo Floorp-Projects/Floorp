@@ -1786,7 +1786,7 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, const char *objName)
 {
     if (refCount == 0)
         Fault("zero refcount", mCurrPi);
-    if (refCount == PR_UINT32_MAX)
+    if (refCount == UINT32_MAX)
         Fault("overflowing refcount", mCurrPi);
     sCollector->mVisitedRefCounted++;
 
@@ -1801,7 +1801,7 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, const char *objName)
 NS_IMETHODIMP_(void)
 GCGraphBuilder::DescribeGCedNode(bool isMarked, const char *objName)
 {
-    uint32_t refCount = isMarked ? PR_UINT32_MAX : 0;
+    uint32_t refCount = isMarked ? UINT32_MAX : 0;
     sCollector->mVisitedGCed++;
 
     if (mListener) {
@@ -2736,7 +2736,7 @@ nsCycleCollector::BeginCollection(bool aMergeCompartments,
             while (!etor.IsDone()) {
                 PtrInfo *pi = etor.GetNext();
                 if (pi->mColor == black &&
-                    pi->mRefCount > 0 && pi->mRefCount < PR_UINT32_MAX &&
+                    pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
                     pi->mInternalRefs != pi->mRefCount) {
                     aListener->DescribeRoot((uint64_t)pi->mPointer,
                                             pi->mInternalRefs);

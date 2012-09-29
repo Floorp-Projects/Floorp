@@ -482,7 +482,7 @@ mozInlineSpellWordUtil::BuildSoftText()
       }
       break;
     }
-    checkBeforeOffset = PR_INT32_MAX;
+    checkBeforeOffset = INT32_MAX;
     if (IsBreakElement(node)) {
       // Since GetPreviousContent follows tree *preorder*, we're about to traverse
       // up out of 'node'. Since node induces breaks (e.g., it's a block),

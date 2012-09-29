@@ -16,7 +16,7 @@ int main()
   nsresult rv;
   nsCOMPtr<nsIStorageStream> stor;
 
-  rv = NS_NewStorageStream(4096, PR_UINT32_MAX, getter_AddRefs(stor));
+  rv = NS_NewStorageStream(4096, UINT32_MAX, getter_AddRefs(stor));
   if (NS_FAILED(rv))
     return -1;
 

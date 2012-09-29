@@ -20,8 +20,8 @@
 #define NS_COORD_LESS_SENTINEL nscoord_MIN
 #define NS_COORD_GREATER_SENTINEL nscoord_MAX
 #else
-#define NS_COORD_LESS_SENTINEL PR_INT32_MIN
-#define NS_COORD_GREATER_SENTINEL PR_INT32_MAX
+#define NS_COORD_LESS_SENTINEL INT32_MIN
+#define NS_COORD_GREATER_SENTINEL INT32_MAX
 #endif
 
 // Fast inline analogues of nsRect methods for nsRegion::nsRectFast.

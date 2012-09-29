@@ -192,27 +192,6 @@ PluginInstanceParent::DeallocPPluginStream(PPluginStreamParent* stream)
 }
 
 bool
-PluginInstanceParent::AnswerNPN_GetValue_NPNVjavascriptEnabledBool(
-                                                       bool* value,
-                                                       NPError* result)
-{
-    NPBool v;
-    *result = mNPNIface->getvalue(mNPP, NPNVjavascriptEnabledBool, &v);
-    *value = v;
-    return true;
-}
-
-bool
-PluginInstanceParent::AnswerNPN_GetValue_NPNVisOfflineBool(bool* value,
-                                                           NPError* result)
-{
-    NPBool v;
-    *result = mNPNIface->getvalue(mNPP, NPNVisOfflineBool, &v);
-    *value = v;
-    return true;
-}
-
-bool
 PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle* value,
                                                             NPError* result)
 {

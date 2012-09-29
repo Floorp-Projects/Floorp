@@ -1,0 +1,12 @@
+The following files are licensed under Apache License 2.0 <https://www.apache.org/licenses/LICENSE-2.0
+>:
+test-big5.js
+test-euc-jp.js
+test-euc-kr.js
+test-gbk.js
+test-hz-gb-2312.js
+test-iso-2022-jp.js
+test-iso-2022-kr.js
+test-shift_jis.js
+test_stringencoding.html
+tests.js

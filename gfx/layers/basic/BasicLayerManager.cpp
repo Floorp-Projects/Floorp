@@ -1039,7 +1039,7 @@ BasicShadowLayerManager::GetMaxTextureSize() const
     return ShadowLayerForwarder::GetMaxTextureSize();
   }
 
-  return PR_INT32_MAX;
+  return INT32_MAX;
 }
 
 void

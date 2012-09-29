@@ -18,6 +18,7 @@
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIOService.h"
+#include "NetworkActivityMonitor.h"
 
 
 // XXX: There is no good header file to put these in. :(
@@ -40,6 +41,7 @@ PRThread                 *gSocketThread           = nullptr;
 #define SEND_BUFFER_PREF "network.tcp.sendbuffer"
 #define SOCKET_LIMIT_TARGET 550U
 #define SOCKET_LIMIT_MIN     50U
+#define BLIB_INTERVAL_PREF "network.activity.blipIntervalMilliseconds"
 
 uint32_t nsSocketTransportService::gMaxCount;
 PRCallOnceType nsSocketTransportService::gMaxCountInitOnce;
@@ -344,7 +346,7 @@ nsSocketTransportService::PollTimeout()
         return NS_SOCKET_POLL_TIMEOUT;
 
     // compute minimum time before any socket timeout expires.
-    uint32_t minR = PR_UINT16_MAX;
+    uint32_t minR = UINT16_MAX;
     for (uint32_t i=0; i<mActiveCount; ++i) {
         const SocketContext &s = mActiveList[i];
         // mPollTimeout could be less than mElapsedTime if setTimeout
@@ -455,8 +457,18 @@ nsSocketTransportService::Init()
     }
 
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (tmpPrefService) 
+    if (tmpPrefService) {
         tmpPrefService->AddObserver(SEND_BUFFER_PREF, this, false);
+
+        int32_t blipInterval = 0;
+        rv = tmpPrefService->GetIntPref(BLIB_INTERVAL_PREF, &blipInterval);
+        if (NS_SUCCEEDED(rv) && blipInterval > 0) {
+            rv = mozilla::net::NetworkActivityMonitor::Init(blipInterval);
+            if (NS_FAILED(rv)) {
+                NS_WARNING("Can't initialize NetworkActivityMonitor");
+            }
+        }
+    }
     UpdatePrefs();
 
     mInitialized = true;
@@ -500,6 +512,8 @@ nsSocketTransportService::Shutdown()
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (tmpPrefService) 
         tmpPrefService->RemoveObserver(SEND_BUFFER_PREF, this);
+
+    mozilla::net::NetworkActivityMonitor::Shutdown();
 
     mInitialized = false;
     mShuttingDown = false;
@@ -770,10 +784,10 @@ nsSocketTransportService::DoPollIteration(bool wait)
                 s.mHandler->OnSocketReady(desc.fd, desc.out_flags);
             }
             // check for timeout errors unless disabled...
-            else if (s.mHandler->mPollTimeout != PR_UINT16_MAX) {
+            else if (s.mHandler->mPollTimeout != UINT16_MAX) {
                 // update elapsed time counter
-                if (NS_UNLIKELY(pollInterval > (PR_UINT16_MAX - s.mElapsedTime)))
-                    s.mElapsedTime = PR_UINT16_MAX;
+                if (NS_UNLIKELY(pollInterval > (UINT16_MAX - s.mElapsedTime)))
+                    s.mElapsedTime = UINT16_MAX;
                 else
                     s.mElapsedTime += uint16_t(pollInterval);
                 // check for timeout expiration 

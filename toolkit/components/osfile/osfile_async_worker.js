@@ -151,6 +151,18 @@ if (this.Components) {
        return f.call(file);
      };
 
+     let OpenedDirectoryIterators = new ResourceTracker();
+     let withDir = function withDir(fd, f) {
+       let file = OpenedDirectoryIterators.get(fd);
+       if (file == null) {
+         throw new Error("Could not find Directory");
+       }
+       if (!(file instanceof File.DirectoryIterator)) {
+         throw new Error("file is not a directory iterator " + file.__proto__.toSource());
+       }
+       return f.call(file);
+     };
+
      let Type = exports.OS.Shared.Type;
 
      let File = exports.OS.File;
@@ -188,9 +200,28 @@ if (this.Components) {
        removeEmptyDir: function removeEmptyDir(path, options) {
          return File.removeEmptyDir(Type.path.fromMsg(path), options);
        },
+       remove: function remove(path) {
+         return File.remove(Type.path.fromMsg(path));
+       },
        open: function open(path, mode, options) {
          let file = File.open(Type.path.fromMsg(path), mode, options);
          return OpenedFiles.add(file);
+       },
+       read: function read(path, bytes) {
+         return File.read(Type.path.fromMsg(path), bytes);
+       },
+       writeAtomic: function writeAtomic(path, buffer, options) {
+         if (options.tmpPath) {
+           options.tmpPath = Type.path.fromMsg(options.tmpPath);
+         }
+         return File.writeAtomic(Type.path.fromMsg(path),
+                                 Type.voidptr_t.fromMsg(buffer),
+                                 options
+                                );
+       },
+       new_DirectoryIterator: function new_DirectoryIterator(path, options) {
+         let iterator = new File.DirectoryIterator(Type.path.fromMsg(path), options);
+         return OpenedDirectoryIterators.add(iterator);
        },
        // Methods of OS.File
        File_prototype_close: function close(fd) {
@@ -227,19 +258,51 @@ if (this.Components) {
          return withFile(fd,
            function do_setPosition() {
              return this.setPosition(pos, whence);
-           }
-         );
+           });
        },
        File_prototype_getPosition: function getPosition(fd) {
          return withFile(fd,
            function do_getPosition() {
              return this.getPosition();
-           }
-         );
+           });
+       },
+       // Methods of OS.File.DirectoryIterator
+       DirectoryIterator_prototype_next: function next(dir) {
+         return withDir(dir,
+           function do_next() {
+             try {
+               return File.DirectoryIterator.Entry.toMsg(this.next());
+             } catch (x) {
+               if (x == StopIteration) {
+                 OpenedDirectoryIterators.remove(dir);
+               }
+               throw x;
+             }
+           });
+       },
+       DirectoryIterator_prototype_nextBatch: function nextBatch(dir, size) {
+         return withDir(dir,
+           function do_nextBatch() {
+             let result;
+             try {
+               result = this.nextBatch(size);
+             } catch (x) {
+               OpenedDirectoryIterators.remove(dir);
+               throw x;
+             }
+             return result.map(File.DirectoryIterator.Entry.toMsg);
+           });
+       },
+       DirectoryIterator_prototype_close: function close(dir) {
+         return withDir(dir,
+           function do_close() {
+             this.close();
+             OpenedDirectoryIterators.remove(dir);
+           });
        }
      };
   } catch(ex) {
     dump("WORKER ERROR DURING SETUP " + ex + "\n");
-    dump("WORKER ERROR DETAIL " + ex.stack);
+    dump("WORKER ERROR DETAIL " + ex.stack + "\n");
   }
 })(this);

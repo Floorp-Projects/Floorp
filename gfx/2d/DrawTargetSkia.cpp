@@ -32,7 +32,8 @@ namespace gfx {
 SkColor ColorToSkColor(const Color &color, Float aAlpha)
 {
   //XXX: do a better job converting to int
-  return SkColorSetARGB(color.a*aAlpha*255.0, color.r*255.0, color.g*255.0, color.b*255.0);
+  return SkColorSetARGB(U8CPU(color.a*aAlpha*255.0), U8CPU(color.r*255.0),
+                        U8CPU(color.g*255.0), U8CPU(color.b*255.0));
 }
 
 class GradientStopsSkia : public GradientStops
@@ -131,7 +132,8 @@ IntRectToSkRect(const IntRect& aRect)
 SkIRect
 RectToSkIRect(const Rect& aRect)
 {
-  return SkIRect::MakeXYWH(aRect.x, aRect.y, aRect.width, aRect.height);
+  return SkIRect::MakeXYWH(int32_t(aRect.x), int32_t(aRect.y),
+                           int32_t(aRect.width), int32_t(aRect.height));
 }
 
 SkIRect
@@ -309,12 +311,12 @@ struct AutoPaintSetup {
       mPaint.setXfermodeMode(SkXfermode::kSrcOver_Mode);
       SkPaint temp;
       temp.setXfermodeMode(GfxOpToSkiaOp(aOptions.mCompositionOp));
-      temp.setAlpha(aOptions.mAlpha*255);
+      temp.setAlpha(U8CPU(aOptions.mAlpha*255));
       //TODO: Get a rect here
       mCanvas->saveLayer(nullptr, &temp);
       mNeedsRestore = true;
     } else {
-      mPaint.setAlpha(aOptions.mAlpha*255.0);
+      mPaint.setAlpha(U8CPU(aOptions.mAlpha*255.0));
       mAlpha = aOptions.mAlpha;
     }
     mPaint.setFilterBitmap(true);
@@ -425,7 +427,8 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
   paint.setXfermodeMode(GfxOpToSkiaOp(aOperator));
   SkSafeUnref(paint.setLooper(dl));
 
-  SkRect rect = RectToSkRect(Rect(aDest.x, aDest.y, bitmap.width(), bitmap.height()));
+  SkRect rect = RectToSkRect(Rect(Float(aDest.x), Float(aDest.y),
+                                  Float(bitmap.width()), Float(bitmap.height())));
   mCanvas->drawRect(rect, paint);
   mCanvas->restore();
 }
@@ -570,7 +573,7 @@ DrawTargetSkia::Mask(const Pattern &aSource,
   // Take our destination bounds and convert them into user space to use
   // as the path to draw.
   SkPath path;
-  path.addRect(SkRect::MakeWH(mSize.width, mSize.height));
+  path.addRect(SkRect::MakeWH(SkScalar(mSize.width), SkScalar(mSize.height)));
  
   Matrix temp = mTransform;
   temp.Invert();

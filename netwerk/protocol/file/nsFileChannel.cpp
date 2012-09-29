@@ -426,7 +426,7 @@ nsFileChannel::SetUploadStream(nsIInputStream *stream,
       nsresult rv = mUploadStream->Available(&avail);
       if (NS_FAILED(rv))
         return rv;
-      if (avail < PR_INT64_MAX)
+      if (avail < INT64_MAX)
         mUploadLength = avail;
     }
   } else {

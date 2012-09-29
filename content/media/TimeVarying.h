@@ -81,13 +81,13 @@ public:
   /**
    * Returns the final value of the function. If aTime is non-null,
    * sets aTime to the time at which the function changes to that final value.
-   * If there are no changes after the current time, returns PR_INT64_MIN in aTime.
+   * If there are no changes after the current time, returns INT64_MIN in aTime.
    */
   const T& GetLast(Time* aTime = nullptr) const
   {
     if (mChanges.IsEmpty()) {
       if (aTime) {
-        *aTime = PR_INT64_MIN;
+        *aTime = INT64_MIN;
       }
       return mCurrent;
     }
@@ -119,10 +119,10 @@ public:
   /**
    * Returns the value of the function at time aTime.
    * If aEnd is non-null, sets *aEnd to the time at which the function will
-   * change from the returned value to a new value, or PR_INT64_MAX if that
+   * change from the returned value to a new value, or INT64_MAX if that
    * never happens.
    * If aStart is non-null, sets *aStart to the time at which the function
-   * changed to the returned value, or PR_INT64_MIN if that happened at or
+   * changed to the returned value, or INT64_MIN if that happened at or
    * before the current time.
    *
    * Currently uses a linear search, but could use a binary search.
@@ -131,17 +131,17 @@ public:
   {
     if (mChanges.IsEmpty() || aTime < mChanges[0].mTime) {
       if (aStart) {
-        *aStart = PR_INT64_MIN;
+        *aStart = INT64_MIN;
       }
       if (aEnd) {
-        *aEnd = mChanges.IsEmpty() ? PR_INT64_MAX : mChanges[0].mTime;
+        *aEnd = mChanges.IsEmpty() ? INT64_MAX : mChanges[0].mTime;
       }
       return mCurrent;
     }
     int32_t changesLength = mChanges.Length();
     if (mChanges[changesLength - 1].mTime <= aTime) {
       if (aEnd) {
-        *aEnd = PR_INT64_MAX;
+        *aEnd = INT64_MAX;
       }
       if (aStart) {
         *aStart = mChanges[changesLength - 1].mTime;

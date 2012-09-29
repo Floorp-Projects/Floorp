@@ -115,7 +115,12 @@
 
 /*@{*/
 
-typedef enum tag_nsresult {
+typedef enum tag_nsresult
+#if defined(__cplusplus) && defined(_MSC_VER) && defined(_M_X64)
+  /* need underlying type for workaround of Microsoft compiler (Bug 794734) */
+  : uint32_t
+#endif
+{ 
   /* Standard "it worked" return value */
   NS_OK = 0,
 
@@ -656,6 +661,10 @@ typedef enum tag_nsresult {
   /* XXX Should be JavaScript native errors */
   NS_ERROR_TYPE_ERR                        = FAILURE(26),
   NS_ERROR_RANGE_ERR                       = FAILURE(27),
+  /* StringEncoding API errors from http://wiki.whatwg.org/wiki/StringEncoding */
+  NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR  = FAILURE(28),
+  NS_ERROR_DOM_ENCODING_NOT_UTF_ERR        = FAILURE(29),
+  NS_ERROR_DOM_ENCODING_DECODE_ERR         = FAILURE(30),
   /* DOM error codes defined by us */
   NS_ERROR_DOM_SECMAN_ERR                  = FAILURE(1001),
   NS_ERROR_DOM_WRONG_TYPE_ERR              = FAILURE(1002),

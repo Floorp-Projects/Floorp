@@ -373,7 +373,7 @@ nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
             if (entry != &mEvictionList[i]) {
                 entryCost = (uint64_t)
                     (now - entry->LastFetched()) * entry->DataSize() / 
-                    PR_MAX(1, entry->FetchCount());
+                    NS_MAX(1, entry->FetchCount());
                 if (!maxEntry || (entryCost > maxCost)) {
                     maxEntry = entry;
                     maxCost = entryCost;

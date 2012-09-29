@@ -10,7 +10,7 @@ if (DEBUG)
 else
   debug = function (s) {}
 
-const Cu = Components.utils; 
+const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 

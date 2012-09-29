@@ -356,7 +356,7 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
              bool aUnsafe,
              bool aProtect)
 {
-  NS_ASSERTION(aNBytes <= PR_UINT32_MAX, "Will truncate shmem segment size!");
+  NS_ASSERTION(aNBytes <= UINT32_MAX, "Will truncate shmem segment size!");
   NS_ABORT_IF_FALSE(!aProtect || !aUnsafe, "protect => !unsafe");
 
   size_t pageSize = SharedMemory::SystemPageSize();

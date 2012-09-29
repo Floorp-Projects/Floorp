@@ -59,6 +59,7 @@
 #define DEVICESTORAGE_VIDEOS     "videos"
 #define DEVICESTORAGE_MUSIC      "music"
 #define DEVICESTORAGE_APPS       "apps"
+#define DEVICESTORAGE_SDCARD     "sdcard"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -134,8 +135,9 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIDOMBlob* aBlob)
     return StringBeginsWith(mimeType, NS_LITERAL_STRING("audio/"));
   }
 
-  if (aType.EqualsLiteral(DEVICESTORAGE_APPS)) {
-    // Apps have no restriction on mime types
+  if (aType.EqualsLiteral(DEVICESTORAGE_APPS) ||
+      aType.EqualsLiteral(DEVICESTORAGE_SDCARD)) {
+    // Apps and sdcard have no restriction on mime types
     return true;
   }
 
@@ -147,7 +149,8 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
 {
   NS_ASSERTION(aFile, "Calling Check without a file");
 
-  if (aType.EqualsLiteral(DEVICESTORAGE_APPS)) {
+  if (aType.EqualsLiteral(DEVICESTORAGE_APPS) ||
+      aType.EqualsLiteral(DEVICESTORAGE_SDCARD)) {
     // apps have no restrictions on what file extensions used.
     return true;
   }
@@ -186,7 +189,8 @@ DeviceStorageTypeChecker::GetPermissionForType(const nsAString& aType, nsACStrin
   if (!aType.EqualsLiteral(DEVICESTORAGE_PICTURES) &&
       !aType.EqualsLiteral(DEVICESTORAGE_VIDEOS) &&
       !aType.EqualsLiteral(DEVICESTORAGE_MUSIC) &&
-      !aType.EqualsLiteral(DEVICESTORAGE_APPS)) {
+      !aType.EqualsLiteral(DEVICESTORAGE_APPS) &&
+      !aType.EqualsLiteral(DEVICESTORAGE_SDCARD)) {
     // unknown type
     return NS_ERROR_FAILURE;
   }
@@ -367,7 +371,7 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
   while (bufSize) {
     uint32_t wrote;
     rv = bufferedOutputStream->WriteFrom(aInputStream,
-                                         static_cast<uint32_t>(NS_MIN<uint64_t>(bufSize, PR_UINT32_MAX)),
+                                         static_cast<uint32_t>(NS_MIN<uint64_t>(bufSize, UINT32_MAX)),
                                          &wrote);
     if (NS_FAILED(rv)) {
       break;
@@ -674,6 +678,20 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
     dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
     if (f) {
       f->AppendRelativeNativePath(NS_LITERAL_CSTRING("webapps"));
+    }
+#endif
+  }
+
+   // default SDCard
+   else if (aType.EqualsLiteral(DEVICESTORAGE_SDCARD)) {
+ #ifdef MOZ_WIDGET_GONK
+     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
+ #else
+    // Eventually, on desktop, we want to do something smarter -- for example,
+    // detect when an sdcard is inserted, and use that instead of this.
+    dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
+    if (f) {
+      f->AppendRelativeNativePath(NS_LITERAL_CSTRING("fake-sdcard"));
     }
 #endif
   }

@@ -409,6 +409,9 @@
       * @option {bool} noOverwrite - If set, this function will fail if
       * a file already exists at |destPath|. Otherwise, if this file exists,
       * it will be erased silently.
+      * @option {bool} noCopy - If set, this function will fail if the
+      * operation is more sophisticated than a simple renaming, i.e. if
+      * |sourcePath| and |destPath| are not situated on the same drive.
       *
       * @throws {OS.File.Error} In case of any error.
       *
@@ -422,11 +425,12 @@
       */
      File.move = function move(sourcePath, destPath, options) {
        options = options || noOptions;
-       let flags;
-       if (options.noOverwrite) {
+       let flags = 0;
+       if (!options.noCopy) {
          flags = Const.MOVEFILE_COPY_ALLOWED;
-       } else {
-         flags = Const.MOVEFILE_COPY_ALLOWED | Const.MOVEFILE_REPLACE_EXISTING;
+       }
+       if (!options.noOverwrite) {
+         flags = flags | Const.MOVEFILE_REPLACE_EXISTING;
        }
        throw_on_zero("move",
          WinFile.MoveFileEx(sourcePath, destPath, flags)
@@ -816,6 +820,9 @@
        winFlags: OS.Constants.Win.FILE_FLAG_BACKUP_SEMANTICS,
        winDisposition: OS.Constants.Win.OPEN_EXISTING
      };
+
+     File.read = exports.OS.Shared.AbstractFile.read;
+     File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
 
      /**
       * Get/set the current directory.

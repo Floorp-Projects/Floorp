@@ -92,7 +92,7 @@ struct IndexInfo
   ~IndexInfo();
 #else
   IndexInfo()
-  : id(LL_MININT), keyPath(0), unique(false), multiEntry(false) { }
+  : id(INT64_MIN), keyPath(0), unique(false), multiEntry(false) { }
 #endif
 
   bool operator==(const IndexInfo& aOther) const
