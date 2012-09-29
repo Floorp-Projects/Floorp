@@ -251,7 +251,7 @@ float Axis::GetCompositionLength() {
     gfx::Rect(compositionBounds.x, compositionBounds.y,
               compositionBounds.width, compositionBounds.height);
   scaledCompositionBounds.ScaleInverseRoundIn(
-    mAsyncPanZoomController->GetFrameMetrics().mResolution.width);
+    mAsyncPanZoomController->GetFrameMetrics().mZoom.width);
   return GetRectLength(scaledCompositionBounds);
 }
 
@@ -270,7 +270,7 @@ bool Axis::ScaleWillOverscrollBothSides(float aScale) {
 
   gfx::Rect cssContentRect = metrics.mScrollableRect;
 
-  float currentScale = metrics.mResolution.width;
+  float currentScale = metrics.mZoom.width;
   nsIntRect compositionBounds = metrics.mCompositionBounds;
   gfx::Rect scaledCompositionBounds =
     gfx::Rect(compositionBounds.x, compositionBounds.y,
