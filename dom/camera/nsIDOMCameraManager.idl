@@ -5,6 +5,7 @@
 
 
 interface nsIDOMBlob;
+interface nsIDOMDeviceStorage;
 
 /* Used to set the dimensions of a captured picture,
    a preview stream, a video capture stream, etc. */
@@ -108,10 +109,8 @@ interface nsICameraCapabilities : nsISupports
     readonly attribute jsval        videoSizes;
 };
 
-/*
-    These properties only affect the captured image;
-    invalid property settings are ignored.
-*/
+/* These properties only affect the captured image;
+   invalid property settings are ignored. */
 dictionary CameraPictureOptions
 {
     /* an object with a combination of 'height' and 'width' properties
@@ -147,6 +146,14 @@ dictionary CameraPictureOptions
     jsval     position;
 };
 
+/* These properties affect video recording. */
+dictionary CameraRecordingOptions
+{
+    long width;
+    long height;
+    long rotation;
+};
+
 [scriptable, function, uuid(0444a687-4bc9-462c-8246-5423f0fe46a4)]
 interface nsICameraPreviewStreamCallback : nsISupports
 {
@@ -165,10 +172,10 @@ interface nsICameraTakePictureCallback : nsISupports
     void handleEvent(in nsIDOMBlob picture);
 };
 
-[scriptable, function, uuid(ac43f123-529c-48d3-84dd-ad206b7aca9b)]
+[scriptable, function, uuid(89a762f8-581b-410a-ad86-e2bd2113ad82)]
 interface nsICameraStartRecordingCallback : nsISupports
 {
-    void handleEvent(in nsIDOMMediaStream stream);
+    void handleEvent();
 };
 
 [scriptable, function, uuid(fb80db71-e315-42f0-9ea9-dd3dd312ed70)]
@@ -187,7 +194,7 @@ interface nsICameraErrorCallback : nsISupports
     attributes here affect the preview, any pictures taken, and/or
     any video recorded by the camera.
 */
-[scriptable, uuid(b8949e5c-55b0-49dd-99a9-68d11342915a)]
+[scriptable, uuid(469e0462-59e4-4ed5-afa9-aecd1256ee30)]
 interface nsICameraControl : nsISupports
 {
     readonly attribute nsICameraCapabilities capabilities;
@@ -290,15 +297,21 @@ interface nsICameraControl : nsISupports
     [implicit_jscontext]
     void takePicture(in jsval aOptions, in nsICameraTakePictureCallback onSuccess, [optional] in nsICameraErrorCallback onError);
 
-    /* start recording video; 'aOptions' define the frame size of to
-       capture, chosen from capabilities.videoSizes, e.g.:
+    /* get a media stream to be used as a camera viewfinder in video mode; 'aOptions' 
+       define the frame size of the video capture, chosen from capabilities.videoSizes, e.g.:
         {
             width: 640,
-            height: 480
+            height: 480,
+            rotation: 90
         }
     */
     [implicit_jscontext]
-    void startRecording(in jsval aOptions, in nsICameraStartRecordingCallback onSuccess, [optional] in nsICameraErrorCallback onError);
+    void getPreviewStreamVideoMode(in jsval aOptions, in nsICameraPreviewStreamCallback onSuccess, [optional] in nsICameraErrorCallback onError);
+
+    /* start recording video; 
+    */
+    [implicit_jscontext]
+    void startRecording(in nsIDOMDeviceStorage storageArea, in DOMString filename, in nsICameraStartRecordingCallback onSuccess, [optional] in nsICameraErrorCallback onError);
 
     /* stop precording video. */
     void stopRecording();
