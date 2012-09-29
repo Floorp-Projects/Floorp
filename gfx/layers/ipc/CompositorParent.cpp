@@ -945,7 +945,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
   // mWidget doesn't belong to the compositor thread, so it should be set to
   // NULL before returning from this method, to avoid accessing it elsewhere.
   nsIntRect rect;
-  mWidget->GetBounds(rect);
+  mWidget->GetClientBounds(rect);
   mWidgetSize.width = rect.width;
   mWidgetSize.height = rect.height;
 
