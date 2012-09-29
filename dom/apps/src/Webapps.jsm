@@ -507,7 +507,9 @@ let DOMApplicationRegistry = {
       if (!(aMsgName in this.children)) {
         this.children[aMsgName] = [];
       }
-      this.children[aMsgName].push(aMm);
+      if (this.children[aMsgName].indexOf(aMm) === -1) {
+        this.children[aMsgName].push(aMm);
+      }
     }, this);
   },
 
