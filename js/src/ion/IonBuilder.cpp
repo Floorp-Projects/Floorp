@@ -2898,6 +2898,10 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
     //  2. The cost of inlining (in terms of size expansion of the SSA graph),
     //     and size expansion of the ultimately generated code, will be
     //     less significant.
+    //  3. Do not inline functions which are not called as frequently as their
+    //     callers.
+
+    uint32_t callerUses = script_->getUseCount();
 
     uint32_t totalSize = 0;
     uint32_t checkUses = js_IonOptions.usesBeforeInlining;
@@ -2908,12 +2912,18 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
             return false;
 
         JSScript *script = target->script();
+        uint32_t calleeUses = script->getUseCount();
         totalSize += script->length;
         if (totalSize > js_IonOptions.inlineMaxTotalBytecodeLength)
             return false;
 
         if (script->length > js_IonOptions.smallFunctionMaxBytecodeLength)
             allFunctionsAreSmall = false;
+
+        if (calleeUses * js_IonOptions.inlineUseCountRatio < callerUses) {
+            IonSpew(IonSpew_Inlining, "Not inlining, callee is not hot");
+            return false;
+        }
     }
     if (allFunctionsAreSmall)
         checkUses = js_IonOptions.smallFunctionUsesBeforeInlining;
