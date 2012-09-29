@@ -843,27 +843,29 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
     }
 
     nsCString data;
-    data += nsPrintfCString("{ \"x\" : %d", NS_lround(aFrameMetrics.mViewportScrollOffset.x));
-    data += nsPrintfCString(", \"y\" : %d", NS_lround(aFrameMetrics.mViewportScrollOffset.y));
+    data += nsPrintfCString("{ \"x\" : %d", NS_lround(aFrameMetrics.mScrollOffset.x));
+    data += nsPrintfCString(", \"y\" : %d", NS_lround(aFrameMetrics.mScrollOffset.y));
     // We don't treat the x and y scales any differently for this
     // semi-platform-specific code.
     data += nsPrintfCString(", \"zoom\" : %f", aFrameMetrics.mResolution.width);
     data += nsPrintfCString(", \"displayPort\" : ");
-        data += nsPrintfCString("{ \"left\" : %d", aFrameMetrics.mDisplayPort.X());
-        data += nsPrintfCString(", \"top\" : %d", aFrameMetrics.mDisplayPort.Y());
-        data += nsPrintfCString(", \"width\" : %d", aFrameMetrics.mDisplayPort.Width());
-        data += nsPrintfCString(", \"height\" : %d", aFrameMetrics.mDisplayPort.Height());
+        data += nsPrintfCString("{ \"x\" : %f", aFrameMetrics.mDisplayPort.x);
+        data += nsPrintfCString(", \"y\" : %f", aFrameMetrics.mDisplayPort.y);
+        data += nsPrintfCString(", \"width\" : %f", aFrameMetrics.mDisplayPort.width);
+        data += nsPrintfCString(", \"height\" : %f", aFrameMetrics.mDisplayPort.height);
         data += nsPrintfCString(", \"resolution\" : %f", aFrameMetrics.mResolution.width);
         data += nsPrintfCString(" }");
-    data += nsPrintfCString(", \"screenSize\" : ");
-        data += nsPrintfCString("{ \"width\" : %d", aFrameMetrics.mViewport.width);
-        data += nsPrintfCString(", \"height\" : %d", aFrameMetrics.mViewport.height);
+    data += nsPrintfCString(", \"compositionBounds\" : ");
+        data += nsPrintfCString("{ \"x\" : %d", aFrameMetrics.mCompositionBounds.x);
+        data += nsPrintfCString(", \"y\" : %d", aFrameMetrics.mCompositionBounds.y);
+        data += nsPrintfCString(", \"width\" : %d", aFrameMetrics.mCompositionBounds.width);
+        data += nsPrintfCString(", \"height\" : %d", aFrameMetrics.mCompositionBounds.height);
         data += nsPrintfCString(" }");
     data += nsPrintfCString(", \"cssPageRect\" : ");
-        data += nsPrintfCString("{ \"x\" : %f", aFrameMetrics.mCSSContentRect.x);
-        data += nsPrintfCString(", \"y\" : %f", aFrameMetrics.mCSSContentRect.y);
-        data += nsPrintfCString(", \"width\" : %f", aFrameMetrics.mCSSContentRect.width);
-        data += nsPrintfCString(", \"height\" : %f", aFrameMetrics.mCSSContentRect.height);
+        data += nsPrintfCString("{ \"x\" : %f", aFrameMetrics.mScrollableRect.x);
+        data += nsPrintfCString(", \"y\" : %f", aFrameMetrics.mScrollableRect.y);
+        data += nsPrintfCString(", \"width\" : %f", aFrameMetrics.mScrollableRect.width);
+        data += nsPrintfCString(", \"height\" : %f", aFrameMetrics.mScrollableRect.height);
         data += nsPrintfCString(" }");
     data += nsPrintfCString(" }");
 

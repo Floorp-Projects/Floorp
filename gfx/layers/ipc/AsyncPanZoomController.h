@@ -97,17 +97,13 @@ public:
                                   nsInputEvent* aOutEvent);
 
   /**
-   * Updates the viewport size, i.e. the dimensions of the frame (not
-   * necessarily the screen) content will actually be rendered onto in device
-   * pixels for example, a subframe will not take the entire screen, but we
-   * still want to know how big it is in device pixels. Ideally we want to be
-   * using CSS pixels everywhere inside here, but in this case we need to know
-   * how large of a displayport to set so we use these dimensions plus some
-   * extra.
-   *
-   * XXX: Use nsIntRect instead.
+   * Updates the composition bounds, i.e. the dimensions of the final size of
+   * the frame this is tied to during composition onto, in device pixels. In
+   * general, this will just be:
+   * { x = 0, y = 0, width = surface.width, height = surface.height }, however
+   * there is no hard requirement for this.
    */
-  void UpdateViewportSize(int aWidth, int aHeight);
+  void UpdateCompositionBounds(const nsIntRect& aCompositionBounds);
 
   /**
    * We have found a scrollable subframe, so disable our machinery until we hit
@@ -350,7 +346,7 @@ protected:
    * a larger area than the screen so that when you scroll down, you don't
    * checkerboard immediately.
    */
-  const nsIntRect CalculatePendingDisplayPort();
+  const gfx::Rect CalculatePendingDisplayPort();
 
   /**
    * Attempts to enlarge the displayport along a single axis. Returns whether or
@@ -360,7 +356,7 @@ protected:
    * |aDisplayPortLength|. If enlarged, these will be updated with the new
    * metrics.
    */
-  bool EnlargeDisplayPortAlongAxis(float aViewport, float aVelocity,
+  bool EnlargeDisplayPortAlongAxis(float aCompositionBounds, float aVelocity,
                                    float* aDisplayPortOffset, float* aDisplayPortLength);
 
   /**
