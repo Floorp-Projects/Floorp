@@ -789,13 +789,13 @@ nsresult nsSVGPathDataParser::MatchEllipticalArcArg(float* x, float* y,
                                                     float* r1, float* r2, float* angle,
                                                     bool* largeArcFlag, bool* sweepFlag)
 {
-  ENSURE_MATCHED(MatchNonNegativeNumber(r1));
+  ENSURE_MATCHED(MatchNumber(r1));
 
   if (IsTokenCommaWspStarter()) {
     ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  ENSURE_MATCHED(MatchNonNegativeNumber(r2));
+  ENSURE_MATCHED(MatchNumber(r2));
 
   if (IsTokenCommaWspStarter()) {
     ENSURE_MATCHED(MatchCommaWsp());
@@ -827,7 +827,7 @@ nsresult nsSVGPathDataParser::MatchEllipticalArcArg(float* x, float* y,
 
 bool nsSVGPathDataParser::IsTokenEllipticalArcArgStarter()
 {
-  return IsTokenNonNegativeNumberStarter();
+  return IsTokenNumberStarter();
 }
 
 
