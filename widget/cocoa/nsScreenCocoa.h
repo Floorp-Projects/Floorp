@@ -24,6 +24,8 @@ public:
     NSScreen *CocoaScreen() { return mScreen; }
 
 private:
+    CGFloat BackingScaleFactor();
+
     NSScreen *mScreen;
 };
 

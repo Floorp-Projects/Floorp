@@ -95,6 +95,7 @@ nsBaseWidget::nsBaseWidget()
 , mForceLayersAcceleration(false)
 , mTemporarilyUseBasicLayerManager(false)
 , mUseAttachedEvents(false)
+, mContextInitialized(false)
 , mBounds(0,0,0,0)
 , mOriginalBounds(nullptr)
 , mClipRectCount(0)
@@ -928,6 +929,10 @@ BasicLayerManager* nsBaseWidget::CreateBasicLayerManager()
 //-------------------------------------------------------------------------
 nsDeviceContext* nsBaseWidget::GetDeviceContext() 
 {
+  if (!mContextInitialized) {
+    mContext->Init(this);
+    mContextInitialized = true;
+  }
   return mContext; 
 }
 
