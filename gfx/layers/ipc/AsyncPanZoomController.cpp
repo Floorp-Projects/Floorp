@@ -92,7 +92,7 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mLastSampleTime(TimeStamp::Now()),
      mState(NOTHING),
      mDPI(72),
-     mContentPainterStatus(CONTENT_IDLE),
+     mWaitingForContentToPaint(false),
      mDisableNextTouchBatch(false),
      mHandlingTouchQueue(false)
 {
@@ -819,13 +819,12 @@ void AsyncPanZoomController::RequestContentRepaint() {
     return;
   }
 
-  if (mContentPainterStatus == CONTENT_IDLE) {
-    mContentPainterStatus = CONTENT_PAINTING;
-    mLastPaintRequestMetrics = mFrameMetrics;
-    mGeckoContentController->RequestContentRepaint(mFrameMetrics);
-  } else {
-    mContentPainterStatus = CONTENT_PAINTING_AND_PAINT_PENDING;
-  }
+  // This message is compressed, so fire whether or not we already have a paint
+  // queued up. We need to know whether or not a paint was requested anyways,
+  // ofr the purposes of content calling window.scrollTo().
+  mGeckoContentController->RequestContentRepaint(mFrameMetrics);
+  mLastPaintRequestMetrics = mFrameMetrics;
+  mWaitingForContentToPaint = true;
 }
 
 bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
@@ -932,14 +931,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
 
   mLastContentPaintMetrics = aViewportFrame;
 
-  if (mContentPainterStatus != CONTENT_IDLE) {
-    if (mContentPainterStatus == CONTENT_PAINTING_AND_PAINT_PENDING) {
-      mContentPainterStatus = CONTENT_IDLE;
-      RequestContentRepaint();
-    } else {
-      mContentPainterStatus = CONTENT_IDLE;
-    }
-  } else {
+  if (!mWaitingForContentToPaint) {
     // No paint was requested, but we got one anyways. One possible cause of this
     // is that content could have fired a scrollTo(). In this case, we should take
     // the new scroll offset. Document/viewport changes are handled elsewhere.
@@ -959,9 +951,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     }
   }
 
-  if (aIsFirstPaint || mFrameMetrics.IsDefault()) {
-    mContentPainterStatus = CONTENT_IDLE;
+  mWaitingForContentToPaint = false;
 
+  if (aIsFirstPaint || mFrameMetrics.IsDefault()) {
     mX.CancelTouch();
     mY.CancelTouch();
 
