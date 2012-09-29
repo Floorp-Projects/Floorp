@@ -36,9 +36,11 @@
 #include "nsNetUtil.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
+#include "nsIWebProgressListener.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDialogCreator.h"
 #include "nsIDialogParamBlock.h"
+#include "nsIDOMWindowUtils.h"
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -141,6 +143,8 @@ class TabChild : public PBrowserChild,
                  public nsIWebBrowserChromeFocus,
                  public nsIInterfaceRequestor,
                  public nsIWindowProvider,
+                 public nsIDOMEventListener,
+                 public nsIWebProgressListener,
                  public nsSupportsWeakReference,
                  public nsIDialogCreator,
                  public nsITabChild,
@@ -175,6 +179,8 @@ public:
     NS_DECL_NSIWEBBROWSERCHROMEFOCUS
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIWINDOWPROVIDER
+    NS_DECL_NSIDOMEVENTLISTENER
+    NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSIDIALOGCREATOR
     NS_DECL_NSITABCHILD
     NS_DECL_NSIOBSERVER
@@ -328,6 +334,16 @@ private:
     // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
     void DoFakeShow();
 
+    // Wrapper for nsIDOMWindowUtils.setCSSViewport(). This updates some state
+    // variables local to this class before setting it.
+    void SetCSSViewport(float aX, float aY);
+
+    // Recalculates the display state, including the CSS viewport. This should
+    // be called whenever we believe the meta viewport data on a document may
+    // have changed. If it didn't change, this function doesn't do anything.
+    // However, it should not be called all the time as it is fairly expensive.
+    void HandlePossibleMetaViewportChange();
+
     // Wraps up a JSON object as a structured clone and sends it to the browser
     // chrome script.
     //
@@ -347,18 +363,30 @@ private:
                               bool* aWindowIsNew,
                               nsIDOMWindow** aReturn);
 
+    nsIDOMWindowUtils* GetDOMWindowUtils()
+    {
+        nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
+        nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
+        return utils;
+    }
+
     nsCOMPtr<nsIWebNavigation> mWebNav;
     nsCOMPtr<nsIWidget> mWidget;
+    nsCOMPtr<nsIURI> mLastURI;
+    FrameMetrics mLastMetrics;
     RenderFrameChild* mRemoteFrame;
     nsRefPtr<TabChildGlobal> mTabChildGlobal;
     uint32_t mChromeFlags;
     nsIntRect mOuterRect;
+    nsIntSize mInnerSize;
+    float mOldViewportWidth;
     nscolor mLastBackgroundColor;
     ScrollingBehavior mScrolling;
     uint32_t mAppId;
     bool mDidFakeShow;
     bool mIsBrowserElement;
     bool mNotified;
+    bool mContentDocumentIsDisplayed;
     bool mTriedBrowserInit;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);

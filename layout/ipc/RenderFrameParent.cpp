@@ -913,6 +913,14 @@ RenderFrameParent::ContentReceivedTouch(bool aPreventDefault)
   }
 }
 
+void
+RenderFrameParent::UpdateZoomConstraints(bool aAllowZoom, float aMinZoom, float aMaxZoom)
+{
+  if (mPanZoomController) {
+    mPanZoomController->UpdateZoomConstraints(aAllowZoom, aMinZoom, aMaxZoom);
+  }
+}
+
 }  // namespace layout
 }  // namespace mozilla
 

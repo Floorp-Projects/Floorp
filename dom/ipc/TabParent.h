@@ -136,6 +136,9 @@ public:
     virtual bool RecvGetDPI(float* aValue);
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
     virtual bool RecvZoomToRect(const gfxRect& aRect);
+    virtual bool RecvUpdateZoomConstraints(const bool& aAllowZoom,
+                                           const float& aMinZoom,
+                                           const float& aMaxZoom);
     virtual bool RecvContentReceivedTouch(const bool& aPreventDefault);
     virtual PContentDialogParent* AllocPContentDialog(const uint32_t& aType,
                                                       const nsCString& aName,
