@@ -24,4 +24,26 @@ nsWrapperCache::IsBlack()
   return o && !xpc_IsGrayGCThing(o);
 }
 
+static void
+SearchGray(void* aGCThing, const char* aName, void* aClosure)
+{
+  bool* hasGrayObjects = static_cast<bool*>(aClosure);
+  if (!*hasGrayObjects && aGCThing && xpc_IsGrayGCThing(aGCThing)) {
+    *hasGrayObjects = true;
+  }
+}
+
+inline bool
+nsWrapperCache::IsBlackAndDoesNotNeedTracing(nsISupports* aThis)
+{
+  if (IsBlack()) {
+    nsXPCOMCycleCollectionParticipant* participant = nullptr;
+    CallQueryInterface(aThis, &participant);
+    bool hasGrayObjects = false;
+    participant->Trace(aThis, SearchGray, &hasGrayObjects);
+    return !hasGrayObjects;
+  }
+  return false;
+}
+
 #endif /* nsWrapperCache_h___ */
