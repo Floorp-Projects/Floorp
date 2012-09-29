@@ -22,7 +22,7 @@ static bool test_consume_stream() {
   nsCOMPtr<nsIOutputStream> output;
   NS_NewPipe(getter_AddRefs(input),
              getter_AddRefs(output),
-             10, PR_UINT32_MAX);
+             10, UINT32_MAX);
   if (!input || !output)
     return false;
 
@@ -33,7 +33,7 @@ static bool test_consume_stream() {
   output = nullptr;  // close output
 
   nsCString buf;
-  if (NS_FAILED(NS_ConsumeStream(input, PR_UINT32_MAX, buf)))
+  if (NS_FAILED(NS_ConsumeStream(input, UINT32_MAX, buf)))
     return false;
 
   if (!buf.Equals(kData))

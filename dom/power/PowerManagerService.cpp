@@ -6,8 +6,10 @@
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Services.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIDOMWindow.h"
+#include "nsIObserverService.h"
 #include "PowerManagerService.h"
 #include "WakeLock.h"
 
@@ -80,17 +82,37 @@ PowerManagerService::Notify(const hal::WakeLockInformation& aWakeLockInfo)
   }
 }
 
+void
+PowerManagerService::SyncProfile()
+{
+  // FIXME/bug 793970: We need to start a watchdog thread to force gecko
+  // to really power off or reboot if the profile synchronizing hangs.
+  nsCOMPtr<nsIObserverService> obsServ = services::GetObserverService();
+  if (obsServ) {
+    NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
+    obsServ->NotifyObservers(nullptr, "profile-change-net-teardown", context.get());
+    obsServ->NotifyObservers(nullptr, "profile-change-teardown", context.get());
+    obsServ->NotifyObservers(nullptr, "profile-before-change", context.get());
+  }
+}
+
 NS_IMETHODIMP
 PowerManagerService::Reboot()
 {
+  // To synchronize any unsaved user data before rebooting.
+  SyncProfile();
   hal::Reboot();
+  MOZ_NOT_REACHED();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PowerManagerService::PowerOff()
 {
+  // To synchronize any unsaved user data before powering off.
+  SyncProfile();
   hal::PowerOff();
+  MOZ_NOT_REACHED();
   return NS_OK;
 }
 

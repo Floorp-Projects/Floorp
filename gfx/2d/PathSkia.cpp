@@ -137,8 +137,10 @@ PathSkia::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
   }
 
   SkRegion pointRect;
-  pointRect.setRect(SkFloatToScalar(transformed.x - 1), SkFloatToScalar(transformed.y - 1), 
-                    SkFloatToScalar(transformed.x + 1), SkFloatToScalar(transformed.y + 1));
+  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1)),
+                    int32_t(SkFloatToScalar(transformed.y - 1)),
+                    int32_t(SkFloatToScalar(transformed.x + 1)),
+                    int32_t(SkFloatToScalar(transformed.y + 1)));
 
   SkRegion pathRegion;
   

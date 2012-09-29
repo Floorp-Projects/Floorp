@@ -23,6 +23,13 @@ var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                getInterface(Components.interfaces.nsIDOMWindowUtils);
 const isLinux = navigator.platform.indexOf("Linux") >= 0;
 const is64 = navigator.platform.indexOf("x86_64") >= 0;
+var winLowerThanVista = navigator.platform.indexOf("Win") == 0;
+if (winLowerThanVista) {
+  var version = Components.classes["@mozilla.org/system-info;1"]
+                          .getService(Components.interfaces.nsIPropertyBag2)
+                          .getProperty("version");
+  winLowerThanVista = parseFloat(version) < 6.0;
+}
 
 function startTest() {
   // Do a couple of scrolls to ensure we've triggered activity heuristics.
@@ -33,10 +40,10 @@ function startTest() {
       waitForAllPaintsFlushed(function () {
         // Clear paint state now and scroll again.
         utils.checkAndClearPaintedState(e);
-        t.scrollTop = 33;
+        t.scrollTop = 15;
         waitForAllPaintsFlushed(function () {
           var painted = utils.checkAndClearPaintedState(e);
-          if (isLinux && !is64) {
+          if ((isLinux && !is64) || winLowerThanVista) {
             todo(false, "Fully-visible scrolled element should not have been painted (random on Linux-32)");
           } else {
             is(painted, false, "Fully-visible scrolled element should not have been painted");

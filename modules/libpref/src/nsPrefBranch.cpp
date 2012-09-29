@@ -141,6 +141,19 @@ NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, bool aValue)
   return PREF_SetBoolPref(pref, aValue, mIsDefault);
 }
 
+NS_IMETHODIMP nsPrefBranch::GetFloatPref(const char *aPrefName, float *_retval)
+{
+  NS_ENSURE_ARG(aPrefName);
+  const char *pref = getPrefName(aPrefName);
+  nsAutoCString stringVal;
+  nsresult rv = GetCharPref(pref, getter_Copies(stringVal));
+  if (NS_SUCCEEDED(rv)) {
+    *_retval = stringVal.ToFloat(&rv);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP nsPrefBranch::GetCharPref(const char *aPrefName, char **_retval)
 {
   NS_ENSURE_ARG(aPrefName);

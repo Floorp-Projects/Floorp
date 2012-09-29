@@ -34,7 +34,7 @@ static PRLogModuleInfo *gStreamPumpLog = nullptr;
 nsInputStreamPump::nsInputStreamPump()
     : mState(STATE_IDLE)
     , mStreamOffset(0)
-    , mStreamLength(LL_MaxUint())
+    , mStreamLength(UINT64_MAX)
     , mStatus(NS_OK)
     , mSuspendCount(0)
     , mLoadFlags(LOAD_NORMAL)
@@ -105,7 +105,7 @@ nsInputStreamPump::PeekStream(PeekSegmentFun callback, void* closure)
   nsresult rv = mAsyncStream->Available(&dummy64);
   if (NS_FAILED(rv))
     return rv;
-  uint32_t dummy = (uint32_t)NS_MIN(dummy64, (uint64_t)PR_UINT32_MAX);
+  uint32_t dummy = (uint32_t)NS_MIN(dummy64, (uint64_t)UINT32_MAX);
 
   PeekData data(callback, closure);
   return mAsyncStream->ReadSegments(CallPeekFunc,
@@ -292,7 +292,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         // stream case, the stream transport service will take care of seeking
         // for us.
         // 
-        if (mAsyncStream && (mStreamOffset != LL_MAXUINT)) {
+        if (mAsyncStream && (mStreamOffset != UINT64_MAX)) {
             nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream);
             if (seekable)
                 seekable->Seek(nsISeekableStream::NS_SEEK_SET, mStreamOffset);
@@ -473,8 +473,8 @@ nsInputStreamPump::OnStateTransfer()
             }
 
             uint32_t odaAvail =
-                avail > PR_UINT32_MAX ?
-                PR_UINT32_MAX : uint32_t(avail);
+                avail > UINT32_MAX ?
+                UINT32_MAX : uint32_t(avail);
 
             LOG(("  calling OnDataAvailable [offset=%llu count=%llu(%u)]\n",
                 mStreamOffset, avail, odaAvail));

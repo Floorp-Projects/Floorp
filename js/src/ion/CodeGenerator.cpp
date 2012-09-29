@@ -14,6 +14,8 @@
 #include "jsmath.h"
 #include "jsinterpinlines.h"
 
+#include "vm/StringObject-inl.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -197,11 +199,25 @@ CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)
 {
+    Register input = ToRegister(lir->input());
+    Register output = ToRegister(lir->output());
+
     typedef JSFlatString *(*pf)(JSContext *, int);
     static const VMFunction IntToStringInfo = FunctionInfo<pf>(Int32ToString);
 
-    pushArg(ToRegister(lir->input()));
-    return callVM(IntToStringInfo, lir);
+    OutOfLineCode *ool = oolCallVM(IntToStringInfo, lir, (ArgList(), input),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    masm.branch32(Assembler::AboveOrEqual, input, Imm32(StaticStrings::INT_STATIC_LIMIT),
+                  ool->entry());
+
+    masm.movePtr(ImmWord(&gen->compartment->rt->staticStrings.intStaticTable), output);
+    masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
+
+    masm.bind(ool->rejoin());
+    return true;
 }
 
 bool
@@ -1515,6 +1531,35 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
 }
 
 bool
+CodeGenerator::visitNewStringObject(LNewStringObject *lir)
+{
+    Register input = ToRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
+
+    typedef JSObject *(*pf)(JSContext *, HandleString);
+    static const VMFunction NewStringObjectInfo = FunctionInfo<pf>(NewStringObject);
+
+    StringObject *templateObj = lir->mir()->templateObj();
+
+    OutOfLineCode *ool = oolCallVM(NewStringObjectInfo, lir, (ArgList(), input),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    masm.newGCThing(output, templateObj, ool->entry());
+    masm.initGCThing(output, templateObj);
+
+    masm.loadStringLength(input, temp);
+
+    masm.storeValue(JSVAL_TYPE_STRING, input, Address(output, StringObject::offsetOfPrimitiveValue()));
+    masm.storeValue(JSVAL_TYPE_INT32, temp, Address(output, StringObject::offsetOfLength()));
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
 CodeGenerator::visitInitProp(LInitProp *lir)
 {
     Register objReg = ToRegister(lir->getObject());
@@ -1638,11 +1683,10 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements *lir)
 bool
 CodeGenerator::visitStringLength(LStringLength *lir)
 {
-    Address lengthAndFlags(ToRegister(lir->string()), JSString::offsetOfLengthAndFlags());
+    Register input = ToRegister(lir->string());
     Register output = ToRegister(lir->output());
 
-    masm.loadPtr(lengthAndFlags, output);
-    masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), output);
+    masm.loadStringLength(input, output);
     return true;
 }
 
@@ -3910,11 +3954,14 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     masm.loadPtr(Address(lhsTmp, JSObject::offsetOfType()), lhsTmp);
     masm.loadPtr(Address(lhsTmp, offsetof(types::TypeObject, proto)), lhsTmp);
 
-    masm.test32(lhsTmp, lhsTmp);
+    // Bail out if we hit a lazy proto
+    masm.branch32(Assembler::Equal, lhsTmp, Imm32(1), call->entry());
+
+    masm.testPtr(lhsTmp, lhsTmp);
     masm.j(Assembler::Zero, &done);
 
     // Check lhs is equal to rhsShape
-    masm.cmp32(lhsTmp, rhsTmp);
+    masm.cmpPtr(lhsTmp, rhsTmp);
     masm.j(Assembler::NotEqual, &loopPrototypeChain);
 
     // return true

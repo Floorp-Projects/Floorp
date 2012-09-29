@@ -836,7 +836,7 @@ nsStandardURL::AppendToSubstring(uint32_t pos,
     uint32_t tailLen = strlen(tail);
 
     // Check for int overflow for proposed length of combined string
-    if (PR_UINT32_MAX - ((uint32_t)len + 1) < tailLen)
+    if (UINT32_MAX - ((uint32_t)len + 1) < tailLen)
         return NULL;
 
     char *result = (char *) NS_Alloc(len + tailLen + 1);

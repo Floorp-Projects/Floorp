@@ -218,13 +218,13 @@ DisableSystemTimeChangeNotifications()
 void
 Reboot()
 {
-  Hal()->SendReboot();
+  NS_RUNTIMEABORT("Reboot() can't be called from sandboxed contexts.");
 }
 
 void
 PowerOff()
 {
-  Hal()->SendPowerOff();
+  NS_RUNTIMEABORT("PowerOff() can't be called from sandboxed contexts.");
 }
 
 void
@@ -632,26 +632,6 @@ public:
   RecvDisableSystemTimeChangeNotifications() MOZ_OVERRIDE
   {
     hal::UnregisterSystemTimeChangeObserver(this);
-    return true;
-  }
-
-  virtual bool
-  RecvReboot() MOZ_OVERRIDE
-  {
-    if (!AssertAppProcessPermission(this, "power")) {
-      return false;
-    }
-    hal::Reboot();
-    return true;
-  }
-
-  virtual bool
-  RecvPowerOff() MOZ_OVERRIDE
-  {
-    if (!AssertAppProcessPermission(this, "power")) {
-      return false;
-    }
-    hal::PowerOff();
     return true;
   }
 

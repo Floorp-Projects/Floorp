@@ -221,12 +221,6 @@ private:
 
   // Platform specific functions
   /**
-   * Does a breadth-first search to find the first layer in the tree with a
-   * displayport set.
-   */
-  Layer* GetPrimaryScrollableLayer();
-
-  /**
    * Recursively applies the given translation to all top-level fixed position
    * layers that are descendants of the given layer.
    * aScaleDiff is considered to be the scale transformation applied when

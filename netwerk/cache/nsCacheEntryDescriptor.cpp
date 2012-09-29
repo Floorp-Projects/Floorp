@@ -870,7 +870,7 @@ nsOutputStreamWrapper::LazyInit()
 nsresult nsCacheEntryDescriptor::
 nsOutputStreamWrapper::OnWrite(uint32_t count)
 {
-    if (count > PR_INT32_MAX)  return NS_ERROR_UNEXPECTED;
+    if (count > INT32_MAX)  return NS_ERROR_UNEXPECTED;
     return mDescriptor->RequestDataSizeChange((int32_t)count);
 }
 

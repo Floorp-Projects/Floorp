@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=792324
+-->
+<window title="Mozilla Bug 792324"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 792324</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+<body  xmlns="http://www.w3.org/1999/xhtml">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=792324">Mozilla Bug 792324</a>
+
+  <p id="display"></p>
+<div id="content" style="display: none">
+</div>
+</body>
+
+<panel id="panel-1">
+  <button label="just a normal button"/>
+  <button id="button-1"
+          accesskey="X"
+          oncommand="clicked(event)"
+          label="Button in panel 1"
+  />
+</panel>
+
+<panel id="panel-2">
+  <button label="just a normal button"/>
+  <button id="button-2"
+          accesskey="X"
+          oncommand="clicked(event)"
+          label="Button in panel 2"
+  />
+</panel>
+
+<script class="testbody" type="application/javascript;version=1.7"><![CDATA[
+
+/** Test for Bug 792324 **/
+let after_click;
+
+function clicked(event) {
+  after_click(event);
+}
+
+function checkAccessKeyOnPanel(panelid, buttonid, cb) {
+  let panel = document.getElementById(panelid);
+  panel.addEventListener("popupshown", function onpopupshown() {
+    panel.removeEventListener("popupshown", onpopupshown);
+    panel.firstChild.focus();
+    after_click = function(event) {
+      is(event.target.id, buttonid, "Accesskey was directed to the button '" + buttonid + "'");
+      panel.hidePopup();
+      cb();
+    }
+    synthesizeKey("X", {});
+  });
+ panel.openPopup(null, "", 100, 100, false, false);
+}
+
+function test() {
+  checkAccessKeyOnPanel("panel-1", "button-1", function() {
+    checkAccessKeyOnPanel("panel-2", "button-2", function() {
+      SimpleTest.finish();
+    });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(test, window);
+
+]]></script>
+
+</window>

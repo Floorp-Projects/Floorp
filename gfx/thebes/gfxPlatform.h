@@ -6,7 +6,6 @@
 #ifndef GFX_PLATFORM_H
 #define GFX_PLATFORM_H
 
-#include "prtypes.h"
 #include "prlog.h"
 #include "nsTArray.h"
 #include "nsStringGlue.h"

@@ -653,7 +653,7 @@ nsDOMMemoryFile::CreateSlice(uint64_t aStart, uint64_t aLength,
 NS_IMETHODIMP
 nsDOMMemoryFile::GetInternalStream(nsIInputStream **aStream)
 {
-  if (mLength > PR_INT32_MAX)
+  if (mLength > INT32_MAX)
     return NS_ERROR_FAILURE;
 
   return DataOwnerAdapter::Create(mDataOwner, mStart, mLength, aStream);

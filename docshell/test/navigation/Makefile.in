@@ -14,7 +14,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
 		test_bug13871.html \
-		test_bug270414.html \
 		test_bug278916.html \
 		test_bug279495.html \
 		test_bug386782.html \
@@ -48,6 +47,12 @@ MOCHITEST_FILES = \
 		goback.html \
 		file_bug534178.html \
 		$(NULL)
+
+ifneq (mobile/android,$(MOZ_BUILD_APP))
+MOCHITEST_FILES += \
+		test_bug270414.html \
+		$(NULL)
+endif
 
 ifneq (mobile,$(MOZ_BUILD_APP))
 MOCHITEST_BROWSER_FILES = \

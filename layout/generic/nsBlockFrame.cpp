@@ -487,32 +487,6 @@ nsBlockFrame::GetType() const
   return nsGkAtoms::blockFrame;
 }
 
-void
-nsBlockFrame::InvalidateInternal(const nsRect& aDamageRect,
-                                 nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                 uint32_t aFlags)
-{
-  // Optimize by suppressing invalidation of areas that are clipped out
-  // with CSS 'clip'. Don't suppress invalidation of *this* frame directly,
-  // because when 'clip' shrinks we need to invalidate this frame and
-  // be able to invalidate areas outside the 'clip'.
-  if (aForChild) {
-    const nsStyleDisplay* disp = GetStyleDisplay();
-    nsRect clipRect;
-    if (GetClipPropClipRect(disp, &clipRect, GetSize())) {
-      // Restrict the invalidated area to abs-pos clip rect
-      // abs-pos clipping clips everything in the frame
-      nsRect r;
-      if (r.IntersectRect(aDamageRect, clipRect - nsPoint(aX, aY))) {
-        nsBlockFrameSuper::InvalidateInternal(r, aX, aY, this, aFlags);
-      }
-      return;
-    }
-  }
-
-  nsBlockFrameSuper::InvalidateInternal(aDamageRect, aX, aY, this, aFlags);
-}
-
 nscoord
 nsBlockFrame::GetBaseline() const
 {
@@ -1213,9 +1187,6 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       //XXXfr Why isn't this rv (and others in this file) checked/returned?
     }
   }
-
-  // Determine if we need to repaint our border, background or outline
-  CheckInvalidateSizeChange(aMetrics);
 
   FinishAndStoreOverflow(&aMetrics);
 
@@ -2476,18 +2447,6 @@ nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
   }
 }
 
-static void
-InvalidateThebesLayersInLineBox(nsIFrame* aBlock, nsLineBox* aLine)
-{
-  if (aBlock->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT) {
-    int32_t childCount = aLine->GetChildCount();
-    for (nsIFrame* f = aLine->mFirstChild; childCount;
-         --childCount, f = f->GetNextSibling()) {
-      FrameLayerBuilder::InvalidateThebesLayersInSubtree(f);
-    }
-  }
-}
-
 /**
  * Reflow a line. The line will either contain a single block frame
  * or contain 1 or more inline frames. aKeepReflowGoing indicates
@@ -2510,78 +2469,10 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 
   // Now that we know what kind of line we have, reflow it
   if (aLine->IsBlock()) {
-    nsRect oldBounds = aLine->mFirstChild->GetRect();
-    nsRect oldVisOverflow(aLine->GetVisualOverflowArea());
     rv = ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
-    nsRect newBounds = aLine->mFirstChild->GetRect();
-
-    // We expect blocks to damage any area inside their bounds that is
-    // dirty; however, if the frame changes size or position then we
-    // need to do some repainting.
-    // XXX roc --- the above statement is ambiguous about whether 'bounds'
-    // means the frame's bounds or overflowArea, and in fact this is a source
-    // of much confusion and bugs. Thus the following hack considers *both*
-    // overflowArea and bounds. This should be considered a temporary hack
-    // until we decide how it's really supposed to work.
-    // Note that we have a similar hack in nsTableFrame::InvalidateFrame.
-    nsRect visOverflow(aLine->GetVisualOverflowArea());
-    if (oldVisOverflow.TopLeft() != visOverflow.TopLeft() ||
-        oldBounds.TopLeft() != newBounds.TopLeft()) {
-      // The block has moved, and so to be safe we need to repaint
-      // XXX We need to improve on this...
-      nsRect  dirtyRect;
-      dirtyRect.UnionRect(oldVisOverflow, visOverflow);
-#ifdef NOISY_BLOCK_INVALIDATE
-      printf("%p invalidate 6 (%d, %d, %d, %d)\n",
-             this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
-#endif
-      Invalidate(dirtyRect);
-      FrameLayerBuilder::InvalidateThebesLayersInSubtree(aLine->mFirstChild);
-    } else {
-      nsRect combinedAreaHStrip, combinedAreaVStrip;
-      nsRect boundsHStrip, boundsVStrip;
-      nsLayoutUtils::GetRectDifferenceStrips(oldBounds, newBounds,
-                                             &boundsHStrip, &boundsVStrip);
-      nsLayoutUtils::GetRectDifferenceStrips(oldVisOverflow, visOverflow,
-                                             &combinedAreaHStrip,
-                                             &combinedAreaVStrip);
-
-#ifdef NOISY_BLOCK_INVALIDATE
-      printf("%p invalidate boundsVStrip (%d, %d, %d, %d)\n",
-             this, boundsVStrip.x, boundsVStrip.y, boundsVStrip.width, boundsVStrip.height);
-      printf("%p invalidate boundsHStrip (%d, %d, %d, %d)\n",
-             this, boundsHStrip.x, boundsHStrip.y, boundsHStrip.width, boundsHStrip.height);
-      printf("%p invalidate combinedAreaVStrip (%d, %d, %d, %d)\n",
-             this, combinedAreaVStrip.x, combinedAreaVStrip.y, combinedAreaVStrip.width, combinedAreaVStrip.height);
-      printf("%p invalidate combinedAreaHStrip (%d, %d, %d, %d)\n",
-             this, combinedAreaHStrip.x, combinedAreaHStrip.y, combinedAreaHStrip.width, combinedAreaHStrip.height);
-#endif
-      // The first thing Invalidate does is check if the rect is empty, so
-      // don't bother doing that here.
-      Invalidate(boundsVStrip);
-      Invalidate(boundsHStrip);
-      Invalidate(combinedAreaVStrip);
-      Invalidate(combinedAreaHStrip);
-    }
-  }
-  else {
-    nsRect oldVisOverflow(aLine->GetVisualOverflowArea());
+  } else {
     aLine->SetLineWrapped(false);
-
     rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
-
-    // We don't really know what changed in the line, so use the union
-    // of the old and new combined areas
-    nsRect dirtyRect;
-    dirtyRect.UnionRect(oldVisOverflow, aLine->GetVisualOverflowArea());
-#ifdef NOISY_BLOCK_INVALIDATE
-    printf("%p invalidate (%d, %d, %d, %d)\n",
-           this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
-    if (aLine->IsForceInvalidate())
-      printf("  dirty line is %p\n", static_cast<void*>(aLine.get()));
-#endif
-    Invalidate(dirtyRect);
-    InvalidateThebesLayersInLineBox(this, aLine);
   }
 
   return rv;
@@ -2685,9 +2576,6 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
   } else {
     // Free up the fromLine now that it's empty
     // Its bounds might need to be redrawn, though.
-    // XXX WHY do we invalidate the bounds AND the combined area? doesn't
-    // the combined area always enclose the bounds?
-    Invalidate(fromLine->mBounds);
     FrameLines* overflowLines =
       aFromOverflowLine ? aFromContainer->RemoveOverflowLines() : nullptr;
     nsLineList* fromLineList =
@@ -2695,7 +2583,6 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
     if (aFromLine.next() != fromLineList->end())
       aFromLine.next()->MarkPreviousMarginDirty();
 
-    Invalidate(fromLine->GetVisualOverflowArea());
     fromLineList->erase(aFromLine);
     // aFromLine is now invalid
     aFromContainer->FreeLineBox(fromLine);
@@ -2735,11 +2622,8 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 {
   NS_PRECONDITION(aDY != 0, "why slide a line nowhere?");
 
-  Invalidate(aLine->GetVisualOverflowArea());
   // Adjust line state
   aLine->SlideBy(aDY);
-  Invalidate(aLine->GetVisualOverflowArea());
-  InvalidateThebesLayersInLineBox(this, aLine);
 
   // Adjust the frames in the line
   nsIFrame* kid = aLine->mFirstChild;
@@ -3038,9 +2922,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   // its view as needed.
   nsPoint originalPosition = frame->GetPosition();
   while (true) {
-    // Save the frame's current position. We might need it later.
-    nscoord passOriginalY = frame->GetRect().y;
-    
     clearance = 0;
     nscoord topMargin = 0;
     bool mayNeedRetry = false;
@@ -3207,14 +3088,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                          clearance, aState.IsAdjacentWithTop(),
                          aLine.get(), blockHtmlRS, frameReflowStatus, aState);
 
-    // If this was a second-pass reflow and the block's vertical position
-    // changed, invalidates from the first pass might have happened in the
-    // wrong places.  Invalidate the entire overflow rect at the new position.
-    if (!mayNeedRetry && clearanceFrame &&
-        frame->GetRect().y != passOriginalY) {
-      Invalidate(frame->GetVisualOverflowRect() + frame->GetPosition());
-    }
-    
     NS_ENSURE_SUCCESS(rv, rv);
     
     if (mayNeedRetry && clearanceFrame) {
@@ -5540,7 +5413,6 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
                this, visOverflow.x, visOverflow.y,
                visOverflow.width, visOverflow.height);
 #endif
-        Invalidate(visOverflow);
       } else {
         // XXX update searchingOverflowList directly, remove only when empty
         FrameLines* overflowLines = RemoveOverflowLines();
@@ -5999,24 +5871,8 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
     }
 
     if (NS_SUBTREE_DIRTY(f) || aState.mReflowState.ShouldReflowAllKids()) {
-      // Cache old bounds
-      nsRect oldRect = f->GetRect();
-      nsRect oldOverflow = f->GetVisualOverflowRect();
-
       // Reflow
       aState.FlowAndPlaceFloat(f);
-
-      // Invalidate if there was a position or size change
-      nsRect rect = f->GetRect();
-      if (!rect.IsEqualInterior(oldRect)) {
-        nsRect dirtyRect = oldOverflow;
-        dirtyRect.MoveBy(oldRect.x, oldRect.y);
-        Invalidate(dirtyRect);
-
-        dirtyRect = f->GetVisualOverflowRect();
-        dirtyRect.MoveBy(rect.x, rect.y);
-        Invalidate(dirtyRect);
-      }
     }
     else {
       // Just reload the float region into the space manager
@@ -6302,8 +6158,8 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   } else {
     bool nonDecreasingYs = true;
     int32_t lineCount = 0;
-    nscoord lastY = PR_INT32_MIN;
-    nscoord lastYMost = PR_INT32_MIN;
+    nscoord lastY = INT32_MIN;
+    nscoord lastYMost = INT32_MIN;
     for (line_iterator line = begin_lines();
          line != line_end;
          ++line) {

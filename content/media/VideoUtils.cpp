@@ -25,7 +25,7 @@ CheckedInt64 UsecsToFrames(int64_t aUsecs, uint32_t aRate) {
 static int32_t ConditionDimension(float aValue)
 {
   // This will exclude NaNs and too-big values.
-  if (aValue > 1.0 && aValue <= PR_INT32_MAX)
+  if (aValue > 1.0 && aValue <= INT32_MAX)
     return int32_t(NS_round(aValue));
   return 0;
 }

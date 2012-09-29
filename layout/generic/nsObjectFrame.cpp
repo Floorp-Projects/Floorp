@@ -427,7 +427,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
     // plugins are painted through Thebes and we need to ensure
     // the Thebes layer containing the plugin is updated.
     if (parentWidget == GetNearestWidget()) {
-      Invalidate(GetContentRectRelativeToSelf());
+      InvalidateFrame();
     }
 #endif
 
@@ -528,8 +528,8 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
     // exceed the maximum size of X coordinates.  See bug #225357 for
     // more information.  In theory Gtk2 can handle large coordinates,
     // but underlying plugins can't.
-    aMetrics.height = NS_MIN(aPresContext->DevPixelsToAppUnits(PR_INT16_MAX), aMetrics.height);
-    aMetrics.width = NS_MIN(aPresContext->DevPixelsToAppUnits(PR_INT16_MAX), aMetrics.width);
+    aMetrics.height = NS_MIN(aPresContext->DevPixelsToAppUnits(INT16_MAX), aMetrics.height);
+    aMetrics.width = NS_MIN(aPresContext->DevPixelsToAppUnits(INT16_MAX), aMetrics.width);
 #endif
   }
 
@@ -1638,7 +1638,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   // to provide crisper and faster drawing.
   r.Round();
   nsRefPtr<Layer> layer =
-    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
 
   if (aItem->GetType() == nsDisplayItem::TYPE_PLUGIN) {
     if (!layer) {

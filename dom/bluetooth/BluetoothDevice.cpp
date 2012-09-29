@@ -120,15 +120,7 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
   } else if (name.EqualsLiteral("Icon")) {
     mIcon = value.get_nsString();
   } else if (name.EqualsLiteral("Connected")) {
-#ifdef MOZ_WIDGET_GONK
-    // Connected is an 2-byte array
-    // arr[0]: boolean value, true means connected, false means disconnected
-    // arr[1]: disconnection reason
-    InfallibleTArray<uint8_t> arr = value.get_ArrayOfuint8_t();
-    mConnected = (arr[0] == 1);
-#else
     mConnected = value.get_bool();
-#endif
   } else if (name.EqualsLiteral("Paired")) {
     mPaired = value.get_bool();
   } else if (name.EqualsLiteral("UUIDs")) {

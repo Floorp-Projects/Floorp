@@ -237,10 +237,14 @@ SettingsManager.prototype = {
   },
 
   set onsettingchange(aCallback) {
-    if (this.hasPrivileges)
+    if (this.hasPrivileges) {
+      if (!this._onsettingchange) {
+        cpmm.sendAsyncMessage("Settings:RegisterForMessages");
+      }
       this._onsettingchange = aCallback;
-    else
+    } else {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    }
   },
 
   get onsettingchange() {
@@ -294,8 +298,10 @@ SettingsManager.prototype = {
 
   addObserver: function addObserver(aName, aCallback) {
     debug("addObserver " + aName);
-    if (!this._callbacks)
+    if (!this._callbacks) {
+      cpmm.sendAsyncMessage("Settings:RegisterForMessages");
       this._callbacks = {};
+    }
     if (!this._callbacks[aName]) {
       this._callbacks[aName] = [aCallback];
     } else {
@@ -336,6 +342,7 @@ SettingsManager.prototype = {
   observe: function(aSubject, aTopic, aData) {
     debug("Topic: " + aTopic);
     if (aTopic == "inner-window-destroyed") {
+      cpmm.sendAsyncMessage("Settings:UnregisterForMessages");
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == this.innerWindowID) {
         Services.obs.removeObserver(this, "inner-window-destroyed");

@@ -754,7 +754,7 @@ static nsresult openPrefFile(nsIFile* aFile)
   rv = inStr->Available(&fileSize64);
   if (NS_FAILED(rv))
     return rv;
-  NS_ENSURE_TRUE(fileSize64 <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
+  NS_ENSURE_TRUE(fileSize64 <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   uint32_t fileSize = (uint32_t)fileSize64;
   nsAutoArrayPtr<char> fileBuffer(new char[fileSize]);
@@ -1108,6 +1108,21 @@ Preferences::GetInt(const char* aPref, int32_t* aResult)
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_GetIntPref(aPref, aResult, false);
+}
+
+// static
+nsresult
+Preferences::GetFloat(const char* aPref, float* aResult)
+{
+  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  nsAutoCString result;
+  nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), false);
+  if (NS_SUCCEEDED(rv)) {
+    *aResult = result.ToFloat(&rv);
+  }
+
+  return rv;
 }
 
 // static

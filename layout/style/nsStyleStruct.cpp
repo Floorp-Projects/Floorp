@@ -1569,7 +1569,7 @@ ConvertToPixelCoord(const nsStyleCoord& aCoord, int32_t aPercentScale)
       return 0;
   }
   NS_ABORT_IF_FALSE(pixelValue >= 0, "we ensured non-negative while parsing");
-  pixelValue = NS_MIN(pixelValue, double(PR_INT32_MAX)); // avoid overflow
+  pixelValue = NS_MIN(pixelValue, double(INT32_MAX)); // avoid overflow
   return NS_lround(pixelValue);
 }
 

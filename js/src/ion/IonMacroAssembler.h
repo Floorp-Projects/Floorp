@@ -149,6 +149,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadPtr(Address(dest, offsetof(types::TypeObject, proto)), dest);
     }
 
+    void loadStringLength(Register str, Register dest) {
+        loadPtr(Address(str, JSString::offsetOfLengthAndFlags()), dest);
+        rshiftPtr(Imm32(JSString::LENGTH_SHIFT), dest);
+    }
+
     void loadJSContext(const Register &dest) {
         movePtr(ImmWord(GetIonContext()->cx->runtime), dest);
         loadPtr(Address(dest, offsetof(JSRuntime, ionJSContext)), dest);

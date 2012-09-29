@@ -13,7 +13,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIProtocolProxyService2.h"
 #include "nsIProtocolProxyFilter.h"
-#include "nsIProxyAutoConfig.h"
 #include "nsISystemProxySettings.h"
 #include "nsIProxyInfo.h"
 #include "nsIObserver.h"
@@ -271,6 +270,18 @@ protected:
      * @return True if the URI can use the specified proxy.
      */
     NS_HIDDEN_(bool) CanUseProxy(nsIURI *uri, int32_t defaultPort);
+
+    /**
+     * Disable Prefetch in the DNS service if a proxy is in use.
+     *
+     * @param aProxy
+     *        The proxy information
+     */
+    NS_HIDDEN_(void) MaybeDisableDNSPrefetch(nsIProxyInfo *aProxy);
+
+private:
+    nsresult SetupPACThread();
+    nsresult ResetPACThread();
 
 public:
     // The Sun Forte compiler and others implement older versions of the

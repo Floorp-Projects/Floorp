@@ -84,7 +84,7 @@ private:
       const TimeStamp& frame = mFrames[i];
       if (!frame.IsNull() && frame > beginningOfWindow) {
         ++numFramesDrawnInWindow;
-        earliestFrameInWindow = PR_MIN(earliestFrameInWindow, frame);
+        earliestFrameInWindow = NS_MIN(earliestFrameInWindow, frame);
       }
     }
     double realWindowSecs = (aNow - earliestFrameInWindow).ToSeconds();
@@ -1185,7 +1185,7 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
   GLint width = rect.width;
   GLint height = rect.height;
 
-  if ((int64_t(width) * int64_t(height) * int64_t(4)) > PR_INT32_MAX) {
+  if ((int64_t(width) * int64_t(height) * int64_t(4)) > INT32_MAX) {
     NS_ERROR("Widget size too big - integer overflow!");
     return;
   }

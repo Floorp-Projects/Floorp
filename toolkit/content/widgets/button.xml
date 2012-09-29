@@ -89,8 +89,17 @@
         <parameter name="node"/>
         <body>
         <![CDATA[
-          if (node.localName == "button" && node.accessKey &&
-            !node.disabled && !node.collapsed && !node.hidden)
+          // if the node isn't visible, don't descend into it.
+          var cs = node.ownerDocument.defaultView.getComputedStyle(node, null);
+          if (cs.visibility != "visible" || cs.display == "none") {
+            return NodeFilter.FILTER_REJECT;
+          }
+          // but it may be a popup element, in which case we look at "state"...
+          if (cs.display == "-moz-popup" && node.state != "open") {
+            return NodeFilter.FILTER_REJECT;
+          }
+          // OK - the node seems visible, so it is a candidate.
+          if (node.localName == "button" && node.accessKey && !node.disabled)
             return NodeFilter.FILTER_ACCEPT;
           return NodeFilter.FILTER_SKIP;
         ]]>

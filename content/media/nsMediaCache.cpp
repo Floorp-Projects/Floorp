@@ -685,7 +685,7 @@ static int32_t GetMaxBlocks()
   int32_t cacheSize = Preferences::GetInt("media.cache_size", 500*1024);
   int64_t maxBlocks = static_cast<int64_t>(cacheSize)*1024/nsMediaCache::BLOCK_SIZE;
   maxBlocks = NS_MAX<int64_t>(maxBlocks, 1);
-  return int32_t(NS_MIN<int64_t>(maxBlocks, PR_INT32_MAX));
+  return int32_t(NS_MIN<int64_t>(maxBlocks, INT32_MAX));
 }
 
 int32_t
@@ -695,7 +695,7 @@ nsMediaCache::FindBlockForIncomingData(TimeStamp aNow,
   mReentrantMonitor.AssertCurrentThreadIn();
 
   int32_t blockIndex = FindReusableBlock(aNow, aStream,
-      aStream->mChannelOffset/BLOCK_SIZE, PR_INT32_MAX);
+      aStream->mChannelOffset/BLOCK_SIZE, INT32_MAX);
 
   if (blockIndex < 0 || !IsBlockFree(blockIndex)) {
     // The block returned is already allocated.
@@ -989,7 +989,7 @@ nsMediaCache::PredictNextUse(TimeStamp aNow, int32_t aBlock)
       int64_t millisecondsAhead =
         bytesAhead*1000/bo->mStream->mPlaybackBytesPerSecond;
       prediction = TimeDuration::FromMilliseconds(
-          NS_MIN<int64_t>(millisecondsAhead, PR_INT32_MAX));
+          NS_MIN<int64_t>(millisecondsAhead, INT32_MAX));
       break;
     }
     default:
@@ -1017,7 +1017,7 @@ nsMediaCache::PredictNextUseForIncomingData(nsMediaCacheStream* aStream)
     return TimeDuration(0);
   int64_t millisecondsAhead = bytesAhead*1000/aStream->mPlaybackBytesPerSecond;
   return TimeDuration::FromMilliseconds(
-      NS_MIN<int64_t>(millisecondsAhead, PR_INT32_MAX));
+      NS_MIN<int64_t>(millisecondsAhead, INT32_MAX));
 }
 
 enum StreamAction { NONE, SEEK, SEEK_AND_RESUME, RESUME, SUSPEND };
@@ -2098,7 +2098,7 @@ nsMediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
       }
       size = NS_MIN(size, bytesRemaining);
       // Clamp size until 64-bit file size issues (bug 500784) are fixed.
-      size = NS_MIN(size, int64_t(PR_INT32_MAX));
+      size = NS_MIN(size, int64_t(INT32_MAX));
     }
 
     int32_t bytes;
@@ -2153,7 +2153,7 @@ nsMediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
     gMediaCache->NoteBlockUsage(this, cacheBlock, mCurrentMode, TimeStamp::Now());
 
     int64_t offset = cacheBlock*BLOCK_SIZE + offsetInStreamBlock;
-    NS_ABORT_IF_FALSE(size >= 0 && size <= PR_INT32_MAX, "Size out of range.");
+    NS_ABORT_IF_FALSE(size >= 0 && size <= INT32_MAX, "Size out of range.");
     nsresult rv = gMediaCache->ReadCacheFile(offset, aBuffer + count, int32_t(size), &bytes);
     if (NS_FAILED(rv)) {
       if (count == 0)
@@ -2202,7 +2202,7 @@ nsMediaCacheStream::ReadFromCache(char* aBuffer,
       }
       size = NS_MIN(size, bytesRemaining);
       // Clamp size until 64-bit file size issues (bug 500784) are fixed.
-      size = NS_MIN(size, int64_t(PR_INT32_MAX));
+      size = NS_MIN(size, int64_t(INT32_MAX));
     }
 
     int32_t bytes;
@@ -2221,7 +2221,7 @@ nsMediaCacheStream::ReadFromCache(char* aBuffer,
         return NS_ERROR_FAILURE;
       }
       int64_t offset = cacheBlock*BLOCK_SIZE + offsetInStreamBlock;
-      NS_ABORT_IF_FALSE(size >= 0 && size <= PR_INT32_MAX, "Size out of range.");
+      NS_ABORT_IF_FALSE(size >= 0 && size <= INT32_MAX, "Size out of range.");
       nsresult rv = gMediaCache->ReadCacheFile(offset, aBuffer + count, int32_t(size), &bytes);
       if (NS_FAILED(rv)) {
         return rv;

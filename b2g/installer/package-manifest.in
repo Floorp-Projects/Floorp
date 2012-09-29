@@ -372,8 +372,6 @@
 @BINPATH@/components/nsHelperAppDlg.js
 @BINPATH@/components/nsDownloadManagerUI.manifest
 @BINPATH@/components/nsDownloadManagerUI.js
-@BINPATH@/components/nsProxyAutoConfig.manifest
-@BINPATH@/components/nsProxyAutoConfig.js
 @BINPATH@/components/NetworkGeolocationProvider.manifest
 @BINPATH@/components/NetworkGeolocationProvider.js
 @BINPATH@/components/GPSDGeolocationProvider.manifest
@@ -496,6 +494,7 @@
 @BINPATH@/components/ActivityWrapper.js
 
 @BINPATH@/components/TCPSocket.js
+@BINPATH@/components/TCPSocketParentIntermediary.js
 @BINPATH@/components/TCPSocket.manifest
 
 @BINPATH@/components/AppProtocolHandler.js
@@ -709,6 +708,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/ContentHandler.js
 @BINPATH@/components/PaymentGlue.js
 @BINPATH@/components/YoutubeProtocolHandler.js
+@BINPATH@/components/RecoveryService.js
 
 #ifdef XP_MACOSX
 @BINPATH@/@DLL_PREFIX@plugin_child_interpose@DLL_SUFFIX@

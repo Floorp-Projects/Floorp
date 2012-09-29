@@ -1830,7 +1830,7 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
         nsINodeInfo *ni = rulenode->NodeInfo();
 
         // don't allow more queries than can be supported
-        if (*aPriority == PR_INT16_MAX)
+        if (*aPriority == INT16_MAX)
             return NS_ERROR_FAILURE;
 
         // XXXndeakin queryset isn't a good name for this tag since it only

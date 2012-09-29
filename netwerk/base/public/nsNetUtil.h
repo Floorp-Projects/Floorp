@@ -78,6 +78,8 @@
 #include "mozilla/Services.h"
 #include "nsIPrivateBrowsingChannel.h"
 
+#include <limits>
+
 #ifdef MOZILLA_INTERNAL_API
 
 inline already_AddRefed<nsIIOService>
@@ -726,7 +728,7 @@ NS_NewProxyInfo(const nsACString &type,
     nsCOMPtr<nsIProtocolProxyService> pps =
             do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
-        rv = pps->NewProxyInfo(type, host, port, flags, PR_UINT32_MAX, nullptr,
+        rv = pps->NewProxyInfo(type, host, port, flags, UINT32_MAX, nullptr,
                                result);
     return rv; 
 }
@@ -851,40 +853,6 @@ NS_GetReferrerFromChannel(nsIChannel *channel,
     }
     return rv;
 }
-
-#ifdef MOZILLA_INTERNAL_API
-inline nsresult
-NS_ExamineForProxy(const char    *scheme,
-                   const char    *host,
-                   int32_t        port, 
-                   nsIProxyInfo **proxyInfo)
-{
-    nsresult rv;
-    nsCOMPtr<nsIProtocolProxyService> pps =
-            do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        nsAutoCString spec(scheme);
-        spec.Append("://");
-        spec.Append(host);
-        spec.Append(':');
-        spec.AppendInt(port);
-        // XXXXX - Under no circumstances whatsoever should any code which
-        // wants a uri do this. I do this here because I do not, in fact,
-        // actually want a uri (the dummy uris created here may not be 
-        // syntactically valid for the specific protocol), and all we need
-        // is something which has a valid scheme, hostname, and a string
-        // to pass to PAC if needed - bbaetz
-        nsCOMPtr<nsIURI> uri =
-                do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            rv = uri->SetSpec(spec);
-            if (NS_SUCCEEDED(rv))
-                rv = pps->Resolve(uri, 0, proxyInfo);
-        }
-    }
-    return rv;
-}
-#endif
 
 inline nsresult
 NS_ParseContentType(const nsACString &rawContentType,
@@ -1342,8 +1310,7 @@ NS_UsePrivateBrowsing(nsIChannel *channel)
 // Constants duplicated from nsIScriptSecurityManager so we avoid having necko
 // know about script security manager.
 #define NECKO_NO_APP_ID 0
-// Note: UNKNOWN also equals PR_UINT32_MAX
-#define NECKO_UNKNOWN_APP_ID 4294967295
+#define NECKO_UNKNOWN_APP_ID std::numeric_limits<uint32_t>::max()
 
 /**
  * Gets AppId and isInBrowserElement from channel's nsILoadContext.

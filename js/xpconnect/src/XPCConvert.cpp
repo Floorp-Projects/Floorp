@@ -1482,7 +1482,7 @@ failure:
 
 // Check that the tag part of the type matches the type
 // of the array. If the check succeeds, check that the size
-// of the output does not exceed PR_UINT32_MAX bytes. Allocate
+// of the output does not exceed UINT32_MAX bytes. Allocate
 // the memory and copy the elements by memcpy.
 static JSBool
 CheckTargetAndPopulate(JSContext *cx,
@@ -1505,8 +1505,8 @@ CheckTargetAndPopulate(JSContext *cx,
     }
 
     // Calulate the maximum number of elements that can fit in
-    // PR_UINT32_MAX bytes.
-    size_t max = PR_UINT32_MAX / typeSize;
+    // UINT32_MAX bytes.
+    size_t max = UINT32_MAX / typeSize;
 
     // This could overflow on 32-bit systems so check max first.
     size_t byteSize = count * typeSize;
@@ -1690,7 +1690,7 @@ XPCConvert::JSArray2Native(JSContext* cx, void** d, JS::Value s,
 #define POPULATE(_mode, _t)                                                   \
     PR_BEGIN_MACRO                                                            \
         cleanupMode = _mode;                                                  \
-        size_t max = PR_UINT32_MAX / sizeof(_t);                              \
+        size_t max = UINT32_MAX / sizeof(_t);                              \
         if (count > max ||                                                    \
             nullptr == (array = nsMemory::Alloc(count * sizeof(_t)))) {        \
             if (pErr)                                                         \

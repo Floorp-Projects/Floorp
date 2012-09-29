@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test for Bug 764234</title>
+  <script type="text/javascript" src="/resources/testharness.js"></script>
+  <script type="text/javascript" src="/resources/testharnessreport.js"></script>
+  <script type="text/javascript" src="test_TextDecoder.js"></script>
+  <script type="text/javascript" src="test_BOMEncoding.js"></script>
+</head>
+<body>
+<div id="log"></div>
+<script>
+
+runTest();
+
+function runTest()
+{
+  runTextDecoderOptions();
+  runTextDecoderBOMEnoding();
+}
+
+</script>
+</body>
+</html>

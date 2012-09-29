@@ -1,41 +1,7 @@
 //* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Url Classifier code
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dave Camp <dcamp@mozilla.com>
- *   Gian-Carlo Pascutto <gpascutto@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Classifier.h"
 #include "nsIPrefBranch.h"
@@ -58,6 +24,10 @@ extern PRLogModuleInfo *gUrlClassifierDbServiceLog;
 #define LOG(args)
 #define LOG_ENABLED() (false)
 #endif
+
+#define STORE_DIRECTORY      NS_LITERAL_CSTRING("safebrowsing")
+#define TO_DELETE_DIR_SUFFIX NS_LITERAL_CSTRING("-to_delete")
+#define BACKUP_DIR_SUFFIX    NS_LITERAL_CSTRING("-backup")
 
 namespace mozilla {
 namespace safebrowsing {
@@ -145,22 +115,46 @@ Classifier::InitKey()
 }
 
 nsresult
-Classifier::Open(nsIFile& aCacheDirectory)
+Classifier::SetupPathNames()
 {
-  nsresult rv;
-
-  mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  // Get the root directory where to store all the databases.
+  nsresult rv = mCacheDirectory->Clone(getter_AddRefs(mStoreDirectory));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = mStoreDirectory->AppendNative(STORE_DIRECTORY);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Make sure LookupCaches (which are persistent and survive updates)
+  // are reading/writing in the right place. We will be moving their
+  // files "underneath" them during backup/restore.
+  for (uint32 i = 0; i < mLookupCaches.Length(); i++) {
+    mLookupCaches[i]->UpdateDirHandle(mStoreDirectory);
+  }
+
+  // Directory where to move a backup before an update.
+  rv = mCacheDirectory->Clone(getter_AddRefs(mBackupDirectory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mBackupDirectory->AppendNative(STORE_DIRECTORY + BACKUP_DIR_SUFFIX);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Directory where to move the backup so we can atomically
+  // delete (really move) it.
+  rv = mCacheDirectory->Clone(getter_AddRefs(mToDeleteDirectory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mToDeleteDirectory->AppendNative(STORE_DIRECTORY + TO_DELETE_DIR_SUFFIX);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Classifier::CreateStoreDirectory()
+{
   // Ensure the safebrowsing directory exists.
-  rv = aCacheDirectory.Clone(getter_AddRefs(mStoreDirectory));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mStoreDirectory->AppendNative(NS_LITERAL_CSTRING("safebrowsing"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   bool storeExists;
-  rv = mStoreDirectory->Exists(&storeExists);
+  nsresult rv = mStoreDirectory->Exists(&storeExists);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!storeExists) {
@@ -174,6 +168,36 @@ Classifier::Open(nsIFile& aCacheDirectory)
       return NS_ERROR_FILE_DESTINATION_NOT_DIR;
   }
 
+  return NS_OK;
+}
+
+nsresult
+Classifier::Open(nsIFile& aCacheDirectory)
+{
+  // Remember the Local profile directory.
+  nsresult rv = aCacheDirectory.Clone(getter_AddRefs(mCacheDirectory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create the handles to the update and backup directories.
+  rv = SetupPathNames();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clean up any to-delete directories that haven't been deleted yet.
+  rv = CleanToDelete();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check whether we have an incomplete update and recover from the
+  // backup if so.
+  rv = RecoverBackups();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Make sure the main store directory exists.
+  rv = CreateStoreDirectory();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = InitKey();
   if (NS_FAILED(rv)) {
     // Without a usable key the database is useless
@@ -182,44 +206,33 @@ Classifier::Open(nsIFile& aCacheDirectory)
   }
 
   mTableFreshness.Init();
+
+  // Build the list of know urlclassifier lists
   // XXX: Disk IO potentially on the main thread during startup
   RegenActiveTables();
 
   return NS_OK;
 }
 
-nsresult
+void
 Classifier::Close()
 {
   DropStores();
-
-  return NS_OK;
 }
 
-nsresult
+void
 Classifier::Reset()
 {
   DropStores();
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
-  nsresult rv = mStoreDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  NS_ENSURE_SUCCESS(rv, rv);
+  mStoreDirectory->Remove(true);
+  mBackupDirectory->Remove(true);
+  mToDeleteDirectory->Remove(true);
 
-  bool hasMore;
-  while (NS_SUCCEEDED(rv = entries->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsIFile> file;
-    rv = entries->GetNext(getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = file->Remove(false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
+  CreateStoreDirectory();
 
   mTableFreshness.Clear();
   RegenActiveTables();
-
-  return NS_OK;
 }
 
 void
@@ -356,15 +369,19 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
   }
 #endif
 
-  LOG(("Applying table updates."));
+  LOG(("Backup before update."));
 
-  nsresult rv;
+  nsresult rv = BackupTables();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LOG(("Applying table updates."));
 
   for (uint32 i = 0; i < aUpdates->Length(); i++) {
     // Previous ApplyTableUpdates() may have consumed this update..
     if ((*aUpdates)[i]) {
       // Run all updates for one table
-      rv = ApplyTableUpdates(aUpdates, aUpdates->ElementAt(i)->TableName());
+      nsCString updateTable(aUpdates->ElementAt(i)->TableName());
+      rv = ApplyTableUpdates(aUpdates, updateTable);
       if (NS_FAILED(rv)) {
         Reset();
         return rv;
@@ -372,7 +389,21 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
     }
   }
   aUpdates->Clear();
-  RegenActiveTables();
+
+  rv = RegenActiveTables();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LOG(("Cleaning up backups."));
+
+  // Move the backup directory away (signaling the transaction finished
+  // successfully). This is atomic.
+  rv = RemoveBackupTables();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Do the actual deletion of the backup files.
+  rv = CleanToDelete();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   LOG(("Done applying updates."));
 
 #if defined(PR_LOGGING)
@@ -432,6 +463,9 @@ Classifier::RegenActiveTables()
       continue;
     }
 
+    if (!lookupCache->IsPrimed())
+      continue;
+
     const ChunkSet &adds = store->AddChunks();
     const ChunkSet &subs = store->SubChunks();
 
@@ -479,6 +513,102 @@ nsresult
 Classifier::ActiveTables(nsTArray<nsCString>& aTables)
 {
   aTables = mActiveTablesCache;
+  return NS_OK;
+}
+
+nsresult
+Classifier::CleanToDelete()
+{
+  bool exists;
+  nsresult rv = mToDeleteDirectory->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (exists) {
+    rv = mToDeleteDirectory->Remove(true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+Classifier::BackupTables()
+{
+  // We have to work in reverse here: first move the normal directory
+  // away to be the backup directory, then copy the files over
+  // to the normal directory. This ensures that if we crash the backup
+  // dir always has a valid, complete copy, instead of a partial one,
+  // because that's the one we will copy over the normal store dir.
+
+  nsCString backupDirName;
+  nsresult rv = mBackupDirectory->GetNativeLeafName(backupDirName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString storeDirName;
+  rv = mStoreDirectory->GetNativeLeafName(storeDirName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mStoreDirectory->MoveToNative(nullptr, backupDirName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mStoreDirectory->CopyToNative(nullptr, storeDirName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We moved some things to new places, so move the handles around, too.
+  rv = SetupPathNames();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Classifier::RemoveBackupTables()
+{
+  nsCString toDeleteName;
+  nsresult rv = mToDeleteDirectory->GetNativeLeafName(toDeleteName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mBackupDirectory->MoveToNative(nullptr, toDeleteName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mBackupDirectory now points to toDelete, fix that up.
+  rv = SetupPathNames();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Classifier::RecoverBackups()
+{
+  bool backupExists;
+  nsresult rv = mBackupDirectory->Exists(&backupExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (backupExists) {
+    // Remove the safebrowsing dir if it exists
+    nsCString storeDirName;
+    rv = mStoreDirectory->GetNativeLeafName(storeDirName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool storeExists;
+    rv = mStoreDirectory->Exists(&storeExists);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (storeExists) {
+      rv = mStoreDirectory->Remove(true);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Move the backup to the store location
+    rv = mBackupDirectory->MoveToNative(nullptr, storeDirName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // mBackupDirectory now points to storeDir, fix up.
+    rv = SetupPathNames();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -590,10 +720,6 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
   prefixSet->Dump();
 #endif
   rv = prefixSet->WriteFile();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // This will drop all the temporary storage used during the update.
-  rv = store->FinishUpdate();
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (updateFreshness) {

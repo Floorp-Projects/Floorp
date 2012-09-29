@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const TAB_STATE_NEEDS_RESTORE = 1;
+const TAB_STATE_RESTORING = 2;
+
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 // Some tests here assume that all restored tabs are loaded without waiting for
@@ -199,4 +202,78 @@ function whenWindowLoaded(aWindow, aCallback) {
 var gUniqueCounter = 0;
 function r() {
   return Date.now() + "-" + (++gUniqueCounter);
+}
+
+function BrowserWindowIterator() {
+  let windowsEnum = Services.wm.getEnumerator("navigator:browser");
+  while (windowsEnum.hasMoreElements()) {
+    let currentWindow = windowsEnum.getNext();
+    if (!currentWindow.closed) {
+      yield currentWindow;
+    }
+  }
+}
+
+let gProgressListener = {
+  _callback: null,
+  _checkRestoreState: true,
+
+  setCallback: function gProgressListener_setCallback(aCallback, aCheckRestoreState = true) {
+    if (!this._callback) {
+      window.gBrowser.addTabsProgressListener(this);
+    }
+    this._callback = aCallback;
+    this._checkRestoreState = aCheckRestoreState;
+  },
+
+  unsetCallback: function gProgressListener_unsetCallback() {
+    if (this._callback) {
+      this._callback = null;
+      window.gBrowser.removeTabsProgressListener(this);
+    }
+  },
+
+  onStateChange:
+  function gProgressListener_onStateChange(aBrowser, aWebProgress, aRequest,
+                                           aStateFlags, aStatus) {
+    if ((!this._checkRestoreState ||
+         aBrowser.__SS_restoreState == TAB_STATE_RESTORING) &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
+      let args = [aBrowser].concat(this._countTabs());
+      this._callback.apply(this, args);
+    }
+  },
+
+  _countTabs: function gProgressListener_countTabs() {
+    let needsRestore = 0, isRestoring = 0, wasRestored = 0;
+
+    for (let win in BrowserWindowIterator()) {
+      for (let i = 0; i < win.gBrowser.tabs.length; i++) {
+        let browser = win.gBrowser.tabs[i].linkedBrowser;
+        if (browser.__SS_restoreState == TAB_STATE_RESTORING)
+          isRestoring++;
+        else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
+          needsRestore++;
+        else
+          wasRestored++;
+      }
+    }
+    return [needsRestore, isRestoring, wasRestored];
+  }
+};
+
+registerCleanupFunction(function () {
+  gProgressListener.unsetCallback();
+});
+
+// Close everything but our primary window. We can't use waitForFocus()
+// because apparently it's buggy. See bug 599253.
+function closeAllButPrimaryWindow() {
+  for (let win in BrowserWindowIterator()) {
+    if (win != window) {
+      win.close();
+    }
+  }
 }

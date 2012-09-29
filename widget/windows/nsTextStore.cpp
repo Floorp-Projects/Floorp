@@ -342,7 +342,7 @@ nsTextStore::nsTextStore()
   mWindow = nullptr;
   mLock = 0;
   mLockQueued = 0;
-  mTextChange.acpStart = PR_INT32_MAX;
+  mTextChange.acpStart = INT32_MAX;
   mTextChange.acpOldEnd = mTextChange.acpNewEnd = 0;
   mLastDispatchedTextEvent = nullptr;
 }
@@ -1391,7 +1391,7 @@ nsTextStore::GetText(LONG acpStart,
     prgRunInfo->uCount = 0;
     prgRunInfo->type = TS_RT_PLAIN;
   }
-  uint32_t length = -1 == acpEnd ? PR_UINT32_MAX : uint32_t(acpEnd - acpStart);
+  uint32_t length = -1 == acpEnd ? UINT32_MAX : uint32_t(acpEnd - acpStart);
   if (cchPlainReq && cchPlainReq - 1 < length) {
     length = cchPlainReq - 1;
   }
@@ -1696,7 +1696,7 @@ nsTextStore::GetEndACP(LONG *pacp)
   nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, mWindow);
   mWindow->InitEvent(event);
   // Return entire text
-  event.InitForQueryTextContent(0, PR_INT32_MAX);
+  event.InitForQueryTextContent(0, INT32_MAX);
   mWindow->DispatchWindowEvent(&event);
   if (!event.mSucceeded) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2599,14 +2599,14 @@ nsTextStore::OnTextChangeMsgInternal(void)
           mTextChange.acpOldEnd, mTextChange.acpNewEnd));
 
   if (!mLock && mSink && 0 != (mSinkMask & TS_AS_TEXT_CHANGE) &&
-      PR_INT32_MAX > mTextChange.acpStart) {
+      INT32_MAX > mTextChange.acpStart) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::OnTextChangeMsgInternal(), calling"
             "mSink->OnTextChange(0, { acpStart=%ld, acpOldEnd=%ld, "
             "acpNewEnd=%ld })...", this, mTextChange.acpStart,
             mTextChange.acpOldEnd, mTextChange.acpNewEnd));
     mSink->OnTextChange(0, &mTextChange);
-    mTextChange.acpStart = PR_INT32_MAX;
+    mTextChange.acpStart = INT32_MAX;
     mTextChange.acpOldEnd = mTextChange.acpNewEnd = 0;
   }
 }

@@ -294,7 +294,7 @@ nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
     NS_ASSERTION(mResult.Length() == aOffset,
                  "unexpected mResult length");
     uint32_t oldLen = mResult.Length();
-    if (uint64_t(oldLen) + aCount > PR_UINT32_MAX)
+    if (uint64_t(oldLen) + aCount > UINT32_MAX)
       return NS_ERROR_OUT_OF_MEMORY;
 
     PRUnichar *buf = nullptr;
@@ -314,7 +314,7 @@ nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
   }
   else {
     //Update memory buffer to reflect the contents of the file
-    if (aOffset + aCount > PR_UINT32_MAX) {
+    if (aOffset + aCount > UINT32_MAX) {
       // PR_Realloc doesn't support over 4GB memory size even if 64-bit OS
       return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -24,7 +24,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsCookiePermission()
-    : mCookiesLifetimeSec(LL_MAXINT)
+    : mCookiesLifetimeSec(INT64_MAX)
     , mCookiesLifetimePolicy(0) // ACCEPT_NORMALLY
     , mCookiesAlwaysAcceptSession(false)
     {}

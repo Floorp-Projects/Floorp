@@ -5252,7 +5252,7 @@ nsEventStateManager::DeltaAccumulator::Reset()
 {
   mX = mY = 0.0;
   mPendingScrollAmountX = mPendingScrollAmountY = 0.0;
-  mHandlingDeltaMode = PR_UINT32_MAX;
+  mHandlingDeltaMode = UINT32_MAX;
   mHandlingPixelOnlyDevice = false;
 }
 

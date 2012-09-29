@@ -452,7 +452,7 @@ public:
    *                        then text form start offset till the end is appended
    */
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
-                            uint32_t aLength = PR_UINT32_MAX);
+                            uint32_t aLength = UINT32_MAX);
 
   /**
    * Assert if child not in parent's cache if the cache was initialized at this

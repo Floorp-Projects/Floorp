@@ -584,7 +584,6 @@ pref("plugins.hide_infobar_for_missing_plugin", false);
 pref("plugins.hide_infobar_for_outdated_plugin", false);
 
 #ifdef XP_MACOSX
-pref("plugins.use_layers", true);
 pref("plugins.hide_infobar_for_carbon_failure_plugin", false);
 #endif
 
@@ -1015,6 +1014,7 @@ pref("devtools.inspector.htmlHeight", 112);
 pref("devtools.inspector.htmlPanelOpen", false);
 pref("devtools.inspector.sidebarOpen", false);
 pref("devtools.inspector.activeSidebar", "ruleview");
+pref("devtools.inspector.markupPreview", true);
 
 // Enable the Layout View
 pref("devtools.layoutview.enabled", true);
@@ -1182,5 +1182,6 @@ pref("social.manifest.motown", "{\"origin\":\"https://motown-dev.mozillalabs.com
 pref("social.activation.whitelist", "https://motown-dev.mozillalabs.com");
 pref("social.sidebar.open", true);
 pref("social.active", false);
+pref("social.toast-notifications.enabled", true);
 
 pref("dom.identity.enabled", false);

@@ -36,6 +36,12 @@ protected:
   virtual bool DeallocPFTPChannel(PFTPChannelChild*);
   virtual PWebSocketChild* AllocPWebSocket(PBrowserChild*);
   virtual bool DeallocPWebSocket(PWebSocketChild*);
+  virtual PTCPSocketChild* AllocPTCPSocket(const nsString& aHost,
+                                           const uint16_t& aPort,
+                                           const bool& useSSL,
+                                           const nsString& aBinaryType,
+                                           PBrowserChild* aBrowser);
+  virtual bool DeallocPTCPSocket(PTCPSocketChild*);
 };
 
 /**

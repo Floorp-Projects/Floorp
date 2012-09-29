@@ -1074,7 +1074,7 @@ NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt,
       // so update mMaxSelfProgress...  Otherwise, set it to -1 to indicate
       // that the content-length is no longer known.
       //
-      if (uint64_t(aProgressMax) != LL_MAXUINT) {
+      if (uint64_t(aProgressMax) != UINT64_MAX) {
         mMaxSelfProgress  += int64_t(aProgressMax);
         info->mMaxProgress = int64_t(aProgressMax);
       } else {

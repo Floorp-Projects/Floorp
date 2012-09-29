@@ -665,6 +665,39 @@ nsDOMStoragePersistentDB::RemoveAll()
 }
 
 nsresult
+nsDOMStoragePersistentDB::RemoveAllForApp(uint32_t aAppId, bool aOnlyBrowserElement)
+{
+  nsresult rv;
+
+  rv = MaybeCommitInsertTransaction();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> stmt = mStatements.GetCachedStatement(
+    "DELETE FROM webappsstore2_view "
+    "WHERE scope LIKE :scope"
+  );
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scopeStmt(stmt);
+
+  nsAutoCString scope;
+  scope.AppendInt(aAppId);
+  if (aOnlyBrowserElement) {
+    scope.Append(NS_LITERAL_CSTRING(":t:%"));
+  } else {
+    scope.Append(NS_LITERAL_CSTRING(":_:%"));
+  }
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), scope);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MarkAllScopesDirty();
+
+  return NS_OK;
+}
+
+nsresult
 nsDOMStoragePersistentDB::GetUsage(DOMStorageImpl* aStorage,
                                    int32_t *aUsage)
 {

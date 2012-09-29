@@ -138,7 +138,7 @@ nsSMILInstanceTime::UnmarkShouldPreserve()
 void
 nsSMILInstanceTime::AddRefFixedEndpoint()
 {
-  NS_ABORT_IF_FALSE(mFixedEndpointRefCnt < PR_UINT16_MAX,
+  NS_ABORT_IF_FALSE(mFixedEndpointRefCnt < UINT16_MAX,
       "Fixed endpoint reference count upper limit reached");
   ++mFixedEndpointRefCnt;
   mFlags &= ~kMayUpdate; // Once fixed, always fixed

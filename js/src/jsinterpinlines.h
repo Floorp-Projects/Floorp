@@ -686,6 +686,19 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
     }
 #endif
 
+    bool updateAnalysis = false;
+    RootedScript script(cx, NULL);
+    jsbytecode *pc = NULL;
+    if (!cx->fp()->beginsIonActivation()) {
+        // Don't call GetPcScript from inside Ion since it's expensive.
+        types::TypeScript::GetPcScript(cx, &script, &pc);
+        if (script->hasAnalysis())
+            updateAnalysis = true;
+    }
+
+    if (updateAnalysis && !obj->isNative())
+        script->analysis()->getCode(pc).nonNativeGetElement = true;
+
     uint32_t index;
     if (IsDefinitelyIndex(rref, &index)) {
         do {
@@ -703,16 +716,8 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
                 return false;
         } while(0);
     } else {
-        if (!cx->fp()->beginsIonActivation()) {
-            // Don't update getStringElement if called from Ion code, since
-            // ion::GetPcScript is expensive.
-            JSScript *script;
-            jsbytecode *pc;
-            types::TypeScript::GetPcScript(cx, &script, &pc);
-
-            if (script->hasAnalysis())
-                script->analysis()->getCode(pc).getStringElement = true;
-        }
+        if (updateAnalysis)
+            script->analysis()->getCode(pc).getStringElement = true;
 
         SpecialId special;
         res.set(rref);
@@ -809,7 +814,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
                 return true;
             } else {
                 if (!cx->fp()->beginsIonActivation()) {
-                    JSScript *script;
+                    RootedScript script(cx);
                     jsbytecode *pc;
                     types::TypeScript::GetPcScript(cx, &script, &pc);
 

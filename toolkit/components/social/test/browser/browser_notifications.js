@@ -74,7 +74,7 @@ function ensureProvider(workerFunction, cb) {
   let manifest = {
     origin: TEST_PROVIDER_ORIGIN,
     name: "Example Provider",
-    workerURL: "data:application/javascript," + encodeURI("let run=" + workerFunction.toSource()) + ";run();"
+    workerURL: "data:application/javascript;charset=utf-8," + encodeURI("let run=" + workerFunction.toSource()) + ";run();"
   };
 
   ensureSocialEnabled();

@@ -115,7 +115,7 @@ nsAboutCacheEntry::GetContentStream(nsIURI *uri, nsIInputStream **result)
     rv = NS_NewPipe2(getter_AddRefs(inputStream),
                      getter_AddRefs(mOutputStream),
                      true, false,
-                     256, PR_UINT32_MAX);
+                     256, UINT32_MAX);
     if (NS_FAILED(rv)) return rv;
 
     NS_NAMED_LITERAL_CSTRING(

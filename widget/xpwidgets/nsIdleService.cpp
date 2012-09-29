@@ -320,7 +320,7 @@ nsIdleService::GetInstance()
 
 nsIdleService::nsIdleService() : mCurrentlySetToTimeoutAtInPR(0),
                                  mAnyObserverIdle(false),
-                                 mDeltaToNextIdleSwitchInS(PR_UINT32_MAX),
+                                 mDeltaToNextIdleSwitchInS(UINT32_MAX),
                                  mLastUserInteractionInPR(PR_Now())
 {
 #ifdef PR_LOGGING
@@ -360,7 +360,7 @@ nsIdleService::AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS)
   NS_ENSURE_ARG_POINTER(aObserver);
   // We don't accept idle time at 0, and we can't handle idle time that are too
   // high either - no more than ~136 years.
-  NS_ENSURE_ARG_RANGE(aIdleTimeInS, 1, (PR_UINT32_MAX / 10) - 1);
+  NS_ENSURE_ARG_RANGE(aIdleTimeInS, 1, (UINT32_MAX / 10) - 1);
 
   // Put the time + observer in a struct we can keep:
   IdleListener listener(aObserver, aIdleTimeInS);
@@ -455,7 +455,7 @@ nsIdleService::ResetIdleTimeOut(uint32_t idleDeltaInMS)
   // Mark all idle services as non-idle, and calculate the next idle timeout.
   Telemetry::AutoTimer<Telemetry::IDLE_NOTIFY_BACK_MS> timer;
   nsCOMArray<nsIObserver> notifyList;
-  mDeltaToNextIdleSwitchInS = PR_UINT32_MAX;
+  mDeltaToNextIdleSwitchInS = UINT32_MAX;
 
   // Loop through all listeners, and find any that have detected idle.
   for (uint32_t i = 0; i < mArrayListeners.Length(); i++) {
@@ -468,7 +468,7 @@ nsIdleService::ResetIdleTimeOut(uint32_t idleDeltaInMS)
     }
 
     // Check if the listener is the next one to timeout.
-    mDeltaToNextIdleSwitchInS = PR_MIN(mDeltaToNextIdleSwitchInS,
+    mDeltaToNextIdleSwitchInS = NS_MIN(mDeltaToNextIdleSwitchInS,
                                        curListener.reqIdleTime);
   }
 
@@ -632,7 +632,7 @@ nsIdleService::IdleTimerCallback(void)
   Telemetry::AutoTimer<Telemetry::IDLE_NOTIFY_IDLE_MS> timer;
 
   // We need to initialise the time to the next idle switch.
-  mDeltaToNextIdleSwitchInS = PR_UINT32_MAX;
+  mDeltaToNextIdleSwitchInS = UINT32_MAX;
 
   // Create list of observers that should be notified.
   nsCOMArray<nsIObserver> notifyList;
@@ -653,7 +653,7 @@ nsIdleService::IdleTimerCallback(void)
         mAnyObserverIdle = true;
       } else {
         // Listeners that are not timed out yet are candidates for timing out.
-        mDeltaToNextIdleSwitchInS = PR_MIN(mDeltaToNextIdleSwitchInS,
+        mDeltaToNextIdleSwitchInS = NS_MIN(mDeltaToNextIdleSwitchInS,
                                            curListener.reqIdleTime);
       }
     }
@@ -756,7 +756,7 @@ void
 nsIdleService::ReconfigureTimer(void)
 {
   // Check if either someone is idle, or someone will become idle.
-  if (!mAnyObserverIdle && PR_UINT32_MAX == mDeltaToNextIdleSwitchInS) {
+  if (!mAnyObserverIdle && UINT32_MAX == mDeltaToNextIdleSwitchInS) {
     // If not, just let any existing timers run to completion
     // And bail out.
     PR_LOG(sLog, PR_LOG_DEBUG,

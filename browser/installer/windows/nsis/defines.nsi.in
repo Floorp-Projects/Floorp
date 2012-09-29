@@ -29,6 +29,12 @@
 # The value below removes all LSP categories previously set.
 !define LSP_CATEGORIES "0x00000000"
 
+# Due to official and beta using the same branding this is needed to
+# differentiante between the url used by the stub for downloading.
+!if "@MOZ_UPDATE_CHANNEL@" == "beta"
+!define BETA_UPDATE_CHANNEL
+!endif
+
 # NO_INSTDIR_FROM_REG is defined for pre-releases which have a PreReleaseSuffix
 # (e.g. Alpha X, Beta X, etc.) to prevent finding a non-default installation
 # directory in the registry and using that as the default. This prevents
@@ -69,3 +75,20 @@ VIAddVersionKey "FileVersion"     "${AppVersion}"
 VIAddVersionKey "ProductVersion"  "${AppVersion}"
 # Comments is not used but left below commented out for future reference
 # VIAddVersionKey "Comments"        "Comments"
+
+!define TO_BE_DELETED "to_be_deleted"
+
+# It isn't possible to get the size of the installation prior to downloading
+# so the stub installer uses an estimate.
+!define APPROXIMATE_REQUIRED_SPACE_MB "42.2"
+
+# UI colors
+!define BOTTOM_BKGRD_COLOR 0xFFFFFF
+!define OPTIONS_BKGRD_COLOR 0xF0F0F0
+!define CONTROL_TEXT_COLOR 0x000000
+!define BLURB_TEXT_COLOR 0x666666
+!define FADED_TEXT_COLOR 0x999999
+# Control positions in Dialog Units
+!define OPTIONS_ITEM_LEFT_DU 90u
+!define OPTIONS_SUBITEM_LEFT_DU 119u
+!define INSTALL_BLURB_TOP_DU 78u

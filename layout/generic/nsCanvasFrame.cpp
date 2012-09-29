@@ -156,12 +156,6 @@ nsCanvasFrame::RemoveFrame(ChildListID     aListID,
   if (aOldFrame != mFrames.FirstChild())
     return NS_ERROR_FAILURE;
 
-  // It's our one and only child frame
-  // Damage the area occupied by the deleted frame
-  // The child of the canvas probably can't have an outline, but why bother
-  // thinking about that?
-  Invalidate(aOldFrame->GetVisualOverflowRect() + aOldFrame->GetPosition());
-
   // Remove the frame and destroy it
   mFrames.DestroyFrame(aOldFrame);
 
@@ -507,15 +501,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       // could also include overflow to our top and left (out of the viewport)
       // which doesn't need to be painted.
       nsIFrame* viewport = PresContext()->GetPresShell()->GetRootFrame();
-      viewport->Invalidate(nsRect(nsPoint(0, 0), viewport->GetSize()));
-    } else {
-      nsRect newKidRect = kidFrame->GetRect();
-      if (newKidRect.TopLeft() == oldKidRect.TopLeft()) {
-        InvalidateRectDifference(oldKidRect, kidFrame->GetRect());
-      } else {
-        Invalidate(oldKidRect);
-        Invalidate(newKidRect);
-      }
+      viewport->InvalidateFrame();
     }
     
     // Return our desired size. Normally it's what we're told, but
@@ -559,7 +545,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
           const nsStyleBackground::Layer& layer = bg->mLayers[i];
           if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
               layer.RenderingMightDependOnFrameSize()) {
-            Invalidate(nsRect(nsPoint(0, 0), GetSize()));
+            InvalidateFrame();
             break;
           }
         }
