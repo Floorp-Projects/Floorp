@@ -118,6 +118,10 @@ ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 STATIC_LIBS += moznetd_s
 endif
 
+ifdef MOZ_B2G_CAMERA #{
+OS_LIBS += -lstagefright -lstagefright_omx
+endif #}
+
 ifdef MOZ_IPDL_TESTS
 STATIC_LIBS += ipdlunittest_s
 endif
