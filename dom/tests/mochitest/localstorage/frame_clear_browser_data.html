@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <script>
+    addEventListener('message', function(e) {
+      if (e.data == 'clear') {
+        navigator.mozApps.getSelf().onsuccess = function() {
+          this.result.clearBrowserData();
+        };
+      }
+    });
+  </script>
+</html>
