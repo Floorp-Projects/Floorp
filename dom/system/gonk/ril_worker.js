@@ -4213,7 +4213,7 @@ RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = null;
 RIL[REQUEST_SET_CALL_FORWARD] = null;
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
 RIL[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, options) {
-  options.success = options.rilRequestError == 0 ? true : false;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
 };
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
