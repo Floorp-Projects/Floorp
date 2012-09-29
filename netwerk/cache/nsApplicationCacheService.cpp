@@ -6,17 +6,12 @@
 #include "nsDiskCacheDeviceSQL.h"
 #include "nsCacheService.h"
 #include "nsApplicationCacheService.h"
-#include "nsCRT.h"
+
 #include "nsNetUtil.h"
-#include "nsIObserverService.h"
 
 using namespace mozilla;
 
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
-
-//-----------------------------------------------------------------------------
-// nsApplicationCacheService
-//-----------------------------------------------------------------------------
 
 NS_IMPL_ISUPPORTS1(nsApplicationCacheService, nsIApplicationCacheService)
 
@@ -135,18 +130,6 @@ nsApplicationCacheService::CacheOpportunistically(nsIApplicationCache* cache,
 }
 
 NS_IMETHODIMP
-nsApplicationCacheService::DiscardByAppId(int32_t appID, bool isInBrowser)
-{
-    if (!mCacheService)
-        return NS_ERROR_UNEXPECTED;
-
-    nsRefPtr<nsOfflineCacheDevice> device;
-    nsresult rv = mCacheService->GetOfflineDevice(getter_AddRefs(device));
-    NS_ENSURE_SUCCESS(rv, rv);
-    return device->DiscardByAppId(appID, isInBrowser);
-}
-
-NS_IMETHODIMP
 nsApplicationCacheService::GetGroups(uint32_t *count,
                                      char ***keys)
 {
@@ -171,53 +154,3 @@ nsApplicationCacheService::GetGroupsTimeOrdered(uint32_t *count,
     NS_ENSURE_SUCCESS(rv, rv);
     return device->GetGroupsTimeOrdered(count, keys);
 }
-
-//-----------------------------------------------------------------------------
-// AppCacheClearDataObserver: handles clearing appcache data for app uninstall
-// and clearing user data events.
-//-----------------------------------------------------------------------------
-
-namespace {
-
-class AppCacheClearDataObserver MOZ_FINAL : public nsIObserver {
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsIObserver implementation.
-    NS_IMETHODIMP
-    Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
-    {
-        MOZ_ASSERT(!nsCRT::strcmp(aTopic, TOPIC_WEB_APP_CLEAR_DATA));
-
-        uint32_t appId = NECKO_UNKNOWN_APP_ID;
-        bool browserOnly = false;
-        nsresult rv = NS_GetAppInfoFromClearDataNotification(aSubject, &appId,
-                                                             &browserOnly);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCOMPtr<nsIApplicationCacheService> cacheService =
-            do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        return cacheService->DiscardByAppId(appId, browserOnly);
-    }
-};
-
-NS_IMPL_ISUPPORTS1(AppCacheClearDataObserver, nsIObserver)
-
-} // anonymous namespace
-
-// Instantiates and registers AppCacheClearDataObserver for notifications
-void
-nsApplicationCacheService::AppClearDataObserverInit()
-{
-    nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1");
-    if (observerService) {
-        nsRefPtr<AppCacheClearDataObserver> obs
-            = new AppCacheClearDataObserver();
-        observerService->AddObserver(obs, TOPIC_WEB_APP_CLEAR_DATA,
-                                     /*holdsWeak=*/ false);
-    }
-}
-

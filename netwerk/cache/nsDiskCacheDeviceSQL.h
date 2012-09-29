@@ -158,8 +158,6 @@ public:
   nsresult                CacheOpportunistically(nsIApplicationCache* cache,
                                                  const nsACString &key);
 
-  nsresult                DiscardByAppId(int32_t appID, bool isInBrowser);
-
   nsresult                GetGroups(uint32_t *count,char ***keys);
 
   nsresult                GetGroupsTimeOrdered(uint32_t *count,
@@ -259,7 +257,6 @@ private:
   nsCOMPtr<mozIStorageStatement>  mStatement_DeactivateGroup;
   nsCOMPtr<mozIStorageStatement>  mStatement_FindClient;
   nsCOMPtr<mozIStorageStatement>  mStatement_FindClientByNamespace;
-  nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateApps;
   nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateGroups;
   nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateGroupsTimeOrder;
 
