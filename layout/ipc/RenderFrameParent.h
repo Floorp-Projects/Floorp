@@ -101,6 +101,8 @@ public:
 
   void ContentReceivedTouch(bool aPreventDefault);
 
+  void UpdateZoomConstraints(bool aAllowZoom, float aMinZoom, float aMaxZoom);
+
 protected:
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 

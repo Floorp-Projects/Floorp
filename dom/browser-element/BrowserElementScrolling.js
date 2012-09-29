@@ -220,28 +220,6 @@ const ContentPanning = {
                                  metrics.cssPageRect.y,
                                  metrics.cssPageRect.width,
                                  metrics.cssPageRect.height);
-
-    let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    if (this._compositionWidth != compositionWidth || this._compositionHeight != compositionHeight) {
-      cwu.setCSSViewport(compositionWidth, compositionHeight);
-      this._compositionWidth = compositionWidth;
-      this._compositionHeight = compositionHeight;
-    }
-
-    // Set scroll position
-    cwu.setScrollPositionClampingScrollPortSize(
-      compositionWidth / metrics.zoom, compositionHeight / metrics.zoom);
-    content.scrollTo(x, y);
-    cwu.setResolution(displayPort.resolution, displayPort.resolution);
-
-    let element = null;
-    if (content.document && (element = content.document.documentElement)) {
-      cwu.setDisplayPortForElement(displayPort.x,
-                                   displayPort.y,
-                                   displayPort.width,
-                                   displayPort.height,
-                                   element);
-    }
   },
 
   _recvDoubleTap: function(data) {

@@ -14,6 +14,7 @@
 #include "mozilla/TimeStamp.h"
 #include "InputData.h"
 #include "Axis.h"
+#include "nsContentUtils.h"
 
 #include "base/message_loop.h"
 
@@ -130,6 +131,13 @@ public:
    */
   void ContentReceivedTouch(bool aPreventDefault);
 
+  /**
+   * Updates any zoom constraints contained in the <meta name="viewport"> tag.
+   * We try to obey everything it asks us elsewhere, but here we only handle
+   * minimum-scale, maximum-scale, and user-scalable.
+   */
+  void UpdateZoomConstraints(bool aAllowZoom, float aMinScale, float aMaxScale);
+
   // --------------------------------------------------------------------------
   // These methods must only be called on the compositor thread.
   //
@@ -188,6 +196,16 @@ public:
    * It defaults to 72 if not set using SetDPI() at any point.
    */
   int GetDPI();
+
+  /**
+   * Recalculates the displayport. Ideally, this should paint an area bigger
+   * than the composite-to dimensions so that when you scroll down, you don't
+   * checkerboard immediately. This includes a bunch of logic, including
+   * algorithms to bias painting in the direction of the velocity.
+   */
+  static const gfx::Rect CalculatePendingDisplayPort(
+    const FrameMetrics& aFrameMetrics,
+    const gfx::Point& aVelocity);
 
 protected:
   /**
@@ -340,15 +358,6 @@ protected:
   void TrackTouch(const MultiTouchInput& aEvent);
 
   /**
-   * Recalculates the displayport. Ideally, this should paint an area bigger
-   * than the actual screen. The viewport refers to the size of the screen,
-   * while the displayport is the area actually painted by Gecko. We paint
-   * a larger area than the screen so that when you scroll down, you don't
-   * checkerboard immediately.
-   */
-  const gfx::Rect CalculatePendingDisplayPort();
-
-  /**
    * Attempts to enlarge the displayport along a single axis. Returns whether or
    * not the displayport was enlarged. This will fail in circumstances where the
    * velocity along that axis is not high enough to need any changes. The
@@ -356,8 +365,10 @@ protected:
    * |aDisplayPortLength|. If enlarged, these will be updated with the new
    * metrics.
    */
-  bool EnlargeDisplayPortAlongAxis(float aCompositionBounds, float aVelocity,
-                                   float* aDisplayPortOffset, float* aDisplayPortLength);
+  static bool EnlargeDisplayPortAlongAxis(float aCompositionBounds,
+                                          float aVelocity,
+                                          float* aDisplayPortOffset,
+                                          float* aDisplayPortLength);
 
   /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
@@ -471,10 +482,19 @@ private:
   AxisX mX;
   AxisY mY;
 
-  // Protects |mFrameMetrics|, |mLastContentPaintMetrics| and |mState|. Before
-  // manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the monitor
-  // should be held. When setting |mState|, either the SetState() function can
-  // be used, or the monitor can be held and then |mState| updated.
+  // Most up-to-date constraints on zooming. These should always be reasonable
+  // values; for example, allowing a min zoom of 0.0 can cause very bad things
+  // to happen.
+  bool mAllowZoom;
+  float mMinZoom;
+  float mMaxZoom;
+
+  // Protects |mFrameMetrics|, |mLastContentPaintMetrics|, |mState| and
+  // |mMetaViewportInfo|. Before manipulating |mFrameMetrics| or
+  // |mLastContentPaintMetrics|, the monitor should be held. When setting
+  // |mState|, either the SetState() function can be used, or the monitor can be
+  // held and then |mState| updated.  |mMetaViewportInfo| should be updated
+  // using UpdateMetaViewport().
   Monitor mMonitor;
 
   // The last time the compositor has sampled the content transform for this
