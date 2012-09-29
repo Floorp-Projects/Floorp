@@ -14,6 +14,12 @@
 #include "nsEvent.h"
 #include "npapi.h"
 
+// Declare the backingScaleFactor method that we want to call
+// on NSView/Window/Screen objects, if they recognize it.
+@interface NSObject (BackingScaleFactorCategory)
+- (CGFloat)backingScaleFactor;
+@end
+
 class nsIWidget;
 
 // Used to retain a Cocoa object for the remainder of a method's execution.
@@ -73,24 +79,94 @@ private:
 class nsCocoaUtils
 {
   public:
-  // Returns the height of the primary screen (the one with the menu bar, which
-  // is documented to be the first in the |screens| array).
-  static float MenuBarScreenHeight();
+
+  // Get the backing scale factor from an object that supports this selector
+  // (NSView/Window/Screen, on 10.7 or later), returning 1.0 if not supported
+  static CGFloat
+  GetBackingScaleFactor(id aObject)
+  {
+    if (HiDPIEnabled() &&
+        [aObject respondsToSelector:@selector(backingScaleFactor)]) {
+      return [aObject backingScaleFactor];
+    }
+    return 1.0;
+  }
+
+  // Conversions between Cocoa points and device pixels, given the backing
+  // scale factor from a view/window/screen.
+  static int32_t
+  CocoaPointsToDevPixels(CGFloat aPts, CGFloat aBackingScale)
+  {
+    return NSToIntRound(aPts * aBackingScale);
+  }
+
+  static nsIntPoint
+  CocoaPointsToDevPixels(const NSPoint& aPt, CGFloat aBackingScale)
+  {
+    return nsIntPoint(NSToIntRound(aPt.x * aBackingScale),
+                      NSToIntRound(aPt.y * aBackingScale));
+  }
+
+  static nsIntRect
+  CocoaPointsToDevPixels(const NSRect& aRect, CGFloat aBackingScale)
+  {
+    return nsIntRect(NSToIntRound(aRect.origin.x * aBackingScale),
+                     NSToIntRound(aRect.origin.y * aBackingScale),
+                     NSToIntRound(aRect.size.width * aBackingScale),
+                     NSToIntRound(aRect.size.height * aBackingScale));
+  }
+
+  static CGFloat
+  DevPixelsToCocoaPoints(int32_t aPixels, CGFloat aBackingScale)
+  {
+    return (CGFloat)aPixels / aBackingScale;
+  }
+
+  static NSPoint
+  DevPixelsToCocoaPoints(const nsIntPoint& aPt, CGFloat aBackingScale)
+  {
+    return NSMakePoint((CGFloat)aPt.x / aBackingScale,
+                       (CGFloat)aPt.y / aBackingScale);
+  }
+
+  static NSRect
+  DevPixelsToCocoaPoints(const nsIntRect& aRect, CGFloat aBackingScale)
+  {
+    return NSMakeRect((CGFloat)aRect.x / aBackingScale,
+                      (CGFloat)aRect.y / aBackingScale,
+                      (CGFloat)aRect.width / aBackingScale,
+                      (CGFloat)aRect.height / aBackingScale);
+  }
 
   // Returns the given y coordinate, which must be in screen coordinates,
   // flipped from Gecko to Cocoa or Cocoa to Gecko.
   static float FlippedScreenY(float y);
-  
+
+  // The following functions come in "DevPix" variants that work with
+  // backing-store (device pixel) coordinates, as well as the original
+  // versions that expect coordinates in Cocoa points/CSS pixels.
+  // The difference becomes important in HiDPI display modes, where Cocoa
+  // points and backing-store pixels are no longer 1:1.
+
   // Gecko rects (nsRect) contain an origin (x,y) in a coordinate
   // system with (0,0) in the top-left of the primary screen. Cocoa rects
   // (NSRect) contain an origin (x,y) in a coordinate system with (0,0)
   // in the bottom-left of the primary screen. Both nsRect and NSRect
   // contain width/height info, with no difference in their use.
+  // This function does no scaling, so the Gecko coordinates are
+  // expected to be CSS pixels, which we treat as equal to Cocoa points.
   static NSRect GeckoRectToCocoaRect(const nsIntRect &geckoRect);
-  
+
+  // Converts aGeckoRect in dev pixels to points in Cocoa coordinates
+  static NSRect GeckoRectToCocoaRectDevPix(const nsIntRect &aGeckoRect,
+                                           CGFloat aBackingScale);
+
   // See explanation for geckoRectToCocoaRect, guess what this does...
   static nsIntRect CocoaRectToGeckoRect(const NSRect &cocoaRect);
-  
+
+  static nsIntRect CocoaRectToGeckoRectDevPix(const NSRect &aCocoaRect,
+                                              CGFloat aBackingScale);
+
   // Gives the location for the event in screen coordinates. Do not call this
   // unless the window the event was originally targeted at is still alive!
   // anEvent may be nil -- in that case the current mouse location is returned.
@@ -158,9 +234,19 @@ class nsCocoaUtils
 
   /**
    * Returns NSRect for aGeckoRect.
+   * Just copies values between the two types; it does no coordinate-system
+   * conversion, so both rects must have the same coordinate origin/direction.
    */
   static void GeckoRectToNSRect(const nsIntRect& aGeckoRect,
-                                       NSRect& aOutCocoaRect);
+                                NSRect& aOutCocoaRect);
+
+  /**
+   * Returns Gecko rect for aCocoaRect.
+   * Just copies values between the two types; it does no coordinate-system
+   * conversion, so both rects must have the same coordinate origin/direction.
+   */
+  static void NSRectToGeckoRect(const NSRect& aCocoaRect,
+                                nsIntRect& aOutGeckoRect);
 
   /**
    * Makes NSEvent instance for aEventTytpe and aEvent.
@@ -190,6 +276,12 @@ class nsCocoaUtils
    * GetCurrentModifiers() returns Cocoa modifier flags for current state.
    */
   static NSUInteger GetCurrentModifiers();
+
+  /**
+   * Whether to support HiDPI rendering. For testing purposes, to be removed
+   * once we're comfortable with the HiDPI behavior.
+   */
+  static bool HiDPIEnabled();
 };
 
 #endif // nsCocoaUtils_h_

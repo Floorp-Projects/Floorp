@@ -206,42 +206,20 @@ const ContentPanning = {
     let metrics = data.json;
     let displayPort = metrics.displayPort;
 
-    let screenWidth = metrics.screenSize.width;
-    let screenHeight = metrics.screenSize.height;
+    let compositionWidth = metrics.compositionBounds.width;
+    let compositionHeight = metrics.compositionBounds.height;
 
     let x = metrics.x;
     let y = metrics.y;
 
     this._zoom = metrics.zoom;
     this._viewport = new Rect(x, y,
-                              screenWidth / metrics.zoom,
-                              screenHeight / metrics.zoom);
+                              compositionWidth / metrics.zoom,
+                              compositionHeight / metrics.zoom);
     this._cssPageRect = new Rect(metrics.cssPageRect.x,
                                  metrics.cssPageRect.y,
                                  metrics.cssPageRect.width,
                                  metrics.cssPageRect.height);
-
-    let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    if (this._screenWidth != screenWidth || this._screenHeight != screenHeight) {
-      cwu.setCSSViewport(screenWidth, screenHeight);
-      this._screenWidth = screenWidth;
-      this._screenHeight = screenHeight;
-    }
-
-    // Set scroll position
-    cwu.setScrollPositionClampingScrollPortSize(
-      screenWidth / metrics.zoom, screenHeight / metrics.zoom);
-    content.scrollTo(x, y);
-    cwu.setResolution(displayPort.resolution, displayPort.resolution);
-
-    let element = null;
-    if (content.document && (element = content.document.documentElement)) {
-      cwu.setDisplayPortForElement(displayPort.left,
-                                   displayPort.top,
-                                   displayPort.width,
-                                   displayPort.height,
-                                   element);
-    }
   },
 
   _recvDoubleTap: function(data) {
@@ -272,7 +250,7 @@ const ContentPanning = {
 
       let cssPageRect = this._cssPageRect;
       let viewport = this._viewport;
-      let bRect = new Rect(Math.max(cssPageRect.left, rect.x - margin),
+      let bRect = new Rect(Math.max(cssPageRect.x, rect.x - margin),
                            rect.y,
                            rect.w + 2 * margin,
                            rect.h);

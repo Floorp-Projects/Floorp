@@ -712,9 +712,11 @@ LookAndFeel::GetFloat(FloatID aID, float* aResult)
 
 // static
 bool
-LookAndFeel::GetFont(FontID aID, nsString& aName, gfxFontStyle& aStyle)
+LookAndFeel::GetFont(FontID aID, nsString& aName, gfxFontStyle& aStyle,
+                     float aDevPixPerCSSPixel)
 {
-  return nsLookAndFeel::GetInstance()->GetFontImpl(aID, aName, aStyle);
+  return nsLookAndFeel::GetInstance()->GetFontImpl(aID, aName, aStyle,
+                                                   aDevPixPerCSSPixel);
 }
 
 // static

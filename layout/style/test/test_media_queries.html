@@ -25,7 +25,7 @@ SimpleTest.waitForExplicitFinish();
 
 var iframe;
 
-function getZoomRatio() {
+function getScreenPixelsPerCSSPixel() {
   return SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixel;
 }
 
@@ -357,9 +357,9 @@ function run() {
   should_apply("not all and (max-device-aspect-ratio: " + low_dar_2 + ")");
   expression_should_not_be_parseable("max-device-aspect-ratio");
 
-  var real_dpr = 1.0 * getZoomRatio();
-  var high_dpr = 1.1 * getZoomRatio();
-  var low_dpr = 0.9 * getZoomRatio();
+  var real_dpr = 1.0 * getScreenPixelsPerCSSPixel();
+  var high_dpr = 1.1 * getScreenPixelsPerCSSPixel();
+  var low_dpr = 0.9 * getScreenPixelsPerCSSPixel();
   should_apply("all and (max--moz-device-pixel-ratio: " + real_dpr + ")");
   should_apply("all and (min--moz-device-pixel-ratio: " + real_dpr + ")");
   should_not_apply("not all and (max--moz-device-pixel-ratio: " + real_dpr + ")");

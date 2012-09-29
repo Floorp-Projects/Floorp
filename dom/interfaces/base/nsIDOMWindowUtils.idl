@@ -40,7 +40,7 @@ interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 
-[scriptable, uuid(90d8e97b-2c61-4c05-9f1c-e568d22f5bdc)]
+[scriptable, uuid(47405734-D827-44AE-AC01-EF10E80F5D04)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -696,6 +696,14 @@ interface nsIDOMWindowUtils : nsISupports {
    * Get the number of screen pixels per CSS pixel.
    */
   readonly attribute float screenPixelsPerCSSPixel;
+
+  /**
+   * Get the current zoom factor.
+   * This is _approximately_ the same as nsIMarkupDocumentViewer.fullZoom,
+   * but takes into account Gecko's quantization of the zoom factor, which is
+   * implemented by adjusting the (integer) number of appUnits per devPixel.
+   */
+  readonly attribute float fullZoom;
 
   /**
    * Dispatches aEvent via the nsIPresShell object of the window's document.

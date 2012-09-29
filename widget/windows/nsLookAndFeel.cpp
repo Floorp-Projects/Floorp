@@ -600,7 +600,8 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
 
 bool
 nsLookAndFeel::GetFontImpl(FontID anID, nsString &aFontName,
-                           gfxFontStyle &aFontStyle)
+                           gfxFontStyle &aFontStyle,
+                           float aDevPixPerCSSPixel)
 {
   HDC tdc = GetDC(NULL);
   bool status = GetSysFontInfo(tdc, anID, aFontName, aFontStyle);

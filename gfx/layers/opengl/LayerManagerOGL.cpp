@@ -945,7 +945,7 @@ LayerManagerOGL::Render()
     if (mIsRenderingToEGLSurface) {
       rect = nsIntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
     } else {
-      mWidget->GetBounds(rect);
+      mWidget->GetClientBounds(rect);
     }
     nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(rect.Size(), gfxASurface::CONTENT_COLOR_ALPHA);
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
@@ -1180,7 +1180,7 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
   if (mIsRenderingToEGLSurface) {
     rect = nsIntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
   } else {
-    mWidget->GetBounds(rect);
+    mWidget->GetClientBounds(rect);
   }
   GLint width = rect.width;
   GLint height = rect.height;
