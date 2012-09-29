@@ -201,6 +201,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == path-04.svg pass.svg
 == path-05.svg pass.svg
 == path-06.svg path-06-ref.svg
+== path-07.svg path-07-ref.svg
 == pathLength-01.svg pass.svg
 == pathLength-02.svg pass.svg
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg

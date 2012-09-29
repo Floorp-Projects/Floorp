@@ -2898,6 +2898,10 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
     //  2. The cost of inlining (in terms of size expansion of the SSA graph),
     //     and size expansion of the ultimately generated code, will be
     //     less significant.
+    //  3. Do not inline functions which are not called as frequently as their
+    //     callers.
+
+    uint32_t callerUses = script_->getUseCount();
 
     uint32_t totalSize = 0;
     uint32_t checkUses = js_IonOptions.usesBeforeInlining;
@@ -2908,12 +2912,18 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
             return false;
 
         JSScript *script = target->script();
+        uint32_t calleeUses = script->getUseCount();
         totalSize += script->length;
         if (totalSize > js_IonOptions.inlineMaxTotalBytecodeLength)
             return false;
 
         if (script->length > js_IonOptions.smallFunctionMaxBytecodeLength)
             allFunctionsAreSmall = false;
+
+        if (calleeUses * js_IonOptions.inlineUseCountRatio < callerUses) {
+            IonSpew(IonSpew_Inlining, "Not inlining, callee is not hot");
+            return false;
+        }
     }
     if (allFunctionsAreSmall)
         checkUses = js_IonOptions.smallFunctionUsesBeforeInlining;
@@ -5914,24 +5924,7 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
         return makeCallBarrier(getter, 0, false, types, barrier);
     }
 
-    // If the input is guaranteed to be an object, then we want
-    // to specialize it via an slot load or an IC.  If it's
-    // guaranteed to be an object or NULL, then we do the same
-    // thing except prefixed by a fallible unbox.
-    bool targetIsObject = (unary.ival == MIRType_Object);
-
-    if (!targetIsObject) {
-        if (unaryTypes.inTypes->objectOrSentinel()) {
-            // Fallibly unwrap the object before getprop.  Getprop
-            // on null or undefined will cause exception anyway.
-            MUnbox *unbox = MUnbox::New(obj, MIRType_Object, MUnbox::Fallible);
-            current->add(unbox);
-            obj = unbox;
-            targetIsObject = true;
-        }
-    }
-
-    if (targetIsObject) {
+    if (unary.ival == MIRType_Object) {
         MIRType rvalType = MIRType_Value;
         if (!barrier && !IsNullOrUndefined(unary.rval))
             rvalType = unary.rval;

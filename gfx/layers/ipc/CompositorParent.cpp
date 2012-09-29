@@ -467,8 +467,8 @@ private:
     }
     const FrameMetrics& fm = c->GetFrameMetrics();
     gfx3DMatrix m(aContainer->GetTransform());
-    m.Translate(gfxPoint3D(-fm.mViewportScrollOffset.x,
-                           -fm.mViewportScrollOffset.y, 0));
+    m.Translate(gfxPoint3D(-fm.GetScrollOffsetInLayerPixels().x,
+                           -fm.GetScrollOffsetInLayerPixels().y, 0));
 
     // The transform already takes the resolution scale into account.  Since we
     // will apply the resolution scale again when computing the effective
@@ -787,30 +787,43 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 
     float rootScaleX = rootTransform.GetXScale(),
           rootScaleY = rootTransform.GetYScale();
+    // The ratio of layers pixels to device pixels.  The Java
+    // compositor wants to see values in units of device pixels, so we
+    // map our FrameMetrics values to that space.  This is not exposed
+    // as a FrameMetrics helper because it's a deprecated conversion.
+    float devPixelRatioX = 1 / rootScaleX, devPixelRatioY = 1 / rootScaleY;
+
+    gfx::Point scrollOffsetLayersPixels(metrics.GetScrollOffsetInLayerPixels());
+    nsIntPoint scrollOffsetDevPixels(
+      NS_lround(scrollOffsetLayersPixels.x * devPixelRatioX),
+      NS_lround(scrollOffsetLayersPixels.y * devPixelRatioY));
 
     if (mIsFirstPaint) {
       mContentRect = metrics.mContentRect;
-      const gfx::Point& scrollOffset = metrics.mViewportScrollOffset;
-      SetFirstPaintViewport(nsIntPoint(NS_lround(scrollOffset.x),
-                                       NS_lround(scrollOffset.y)),
+      SetFirstPaintViewport(scrollOffsetDevPixels,
                             1/rootScaleX,
                             mContentRect,
-                            metrics.mCSSContentRect);
+                            metrics.mScrollableRect);
       mIsFirstPaint = false;
     } else if (!metrics.mContentRect.IsEqualEdges(mContentRect)) {
       mContentRect = metrics.mContentRect;
-      SetPageRect(metrics.mCSSContentRect);
+      SetPageRect(metrics.mScrollableRect);
     }
 
     // We synchronise the viewport information with Java after sending the above
     // notifications, so that Java can take these into account in its response.
     // Calculate the absolute display port to send to Java
-    nsIntRect displayPort = metrics.mDisplayPort;
-    gfx::Point scrollOffset = metrics.mViewportScrollOffset;
-    displayPort.x += NS_lround(scrollOffset.x);
-    displayPort.y += NS_lround(scrollOffset.y);
+    gfx::Rect displayPortLayersPixels(metrics.mDisplayPort);
+    nsIntRect displayPortDevPixels(
+      NS_lround(displayPortLayersPixels.x * devPixelRatioX),
+      NS_lround(displayPortLayersPixels.y * devPixelRatioY),
+      NS_lround(displayPortLayersPixels.width * devPixelRatioX),
+      NS_lround(displayPortLayersPixels.height * devPixelRatioY));
 
-    SyncViewportInfo(displayPort, 1/rootScaleX, mLayersUpdated,
+    displayPortDevPixels.x += scrollOffsetDevPixels.x;
+    displayPortDevPixels.y += scrollOffsetDevPixels.y;
+
+    SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
                      mScrollOffset, mXScale, mYScale);
     mLayersUpdated = false;
 
@@ -825,8 +838,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 
     nsIntPoint metricsScrollOffset(0, 0);
     if (metrics.IsScrollable()) {
-      metricsScrollOffset =
-        nsIntPoint(NS_lround(scrollOffset.x), NS_lround(scrollOffset.y));
+      metricsScrollOffset = scrollOffsetDevPixels;
     }
 
     nsIntPoint scrollCompensation(
@@ -933,7 +945,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
   // mWidget doesn't belong to the compositor thread, so it should be set to
   // NULL before returning from this method, to avoid accessing it elsewhere.
   nsIntRect rect;
-  mWidget->GetBounds(rect);
+  mWidget->GetClientBounds(rect);
   mWidgetSize.width = rect.width;
   mWidgetSize.height = rect.height;
 

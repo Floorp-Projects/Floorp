@@ -73,6 +73,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:CancelUSSD",
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
+  "RIL:SendStkEventDownload",
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
@@ -383,6 +384,9 @@ RadioInterfaceLayer.prototype = {
         break;
       case "RIL:SendStkMenuSelection":
         this.sendStkMenuSelection(msg.json);
+        break;
+      case "RIL:SendStkEventDownload":
+        this.sendStkEventDownload(msg.json);
         break;
     }
   },
@@ -1527,6 +1531,11 @@ RadioInterfaceLayer.prototype = {
 
   sendStkMenuSelection: function sendStkMenuSelection(message) {
     message.rilMessageType = "sendStkMenuSelection";
+    this.worker.postMessage(message);
+  },
+
+  sendStkEventDownload: function sendStkEventDownload(message) {
+    message.rilMessageType = "sendStkEventDownload";
     this.worker.postMessage(message);
   },
 
