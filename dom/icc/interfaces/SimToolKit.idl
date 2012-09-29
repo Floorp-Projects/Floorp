@@ -255,6 +255,94 @@ dictionary MozStkSetUpEventList
    jsval eventList; // unsigned short []
 };
 
+dictionary MozStkLocationInfo
+{
+  /**
+   * Mobile Country Code (MCC) of the current serving operator.
+   */
+  unsigned short mcc;
+
+  /**
+   * Mobile Network Code (MNC) of the current serving operator.
+   */
+  unsigned short mnc;
+
+  /**
+   * Mobile Location Area Code (LAC) for the current serving operator.
+   */
+  unsigned short gsmLocationAreaCode;
+
+  /**
+   * Mobile Cell ID for the current serving operator.
+   */
+  unsigned long gsmCellId;
+};
+
+dictionary MozStkDuration
+{
+  /**
+   * Time unit used, should be one of STK_TIME_UNIT_*.
+   */
+  unsigned short timeUnit;
+
+  /**
+   * The length of time required, expressed in timeUnit.
+   */
+  octet timeInterval;
+};
+
+dictionary MozStkPlayTone
+{
+  /**
+   * Text String.
+   */
+  DOMString text;
+
+  /**
+   * One of STK_TONE_TYPE_*.
+   */
+  unsigned short tone;
+
+  /**
+   * The length of time for which the ME shall generate the tone.
+   *
+   * @see MozStkDuration
+   */
+  jsval duration;
+
+  /**
+   * Need to vibrate or not.
+   * true: vibrate alert, if available, with the tone.
+   * false: use of vibrate alert is up to the ME.
+   */
+  boolean isVibrate;
+};
+
+dictionary MozStkLocationEvent
+{
+  /**
+   * The type of this event.
+   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_LOCATION_STATUS;
+   */
+  unsigned short eventType;
+
+  /**
+   * Indicate current service state of the MS with one of the values listed
+   * below:
+   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_NORMAL
+   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_LIMITED
+   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_UNAVAILABLE
+   */
+  unsigned short locationStatus;
+
+  /**
+   * See MozStkLocationInfo.
+   * This value shall only be provided if the locationStatus indicates
+   * 'STK_SERVICE_STATE_NORMAL'.
+   */
+  jsval locationInfo;
+};
+
 dictionary MozStkCommand
 {
   /**
@@ -306,6 +394,22 @@ dictionary MozStkCommand
    * When typeOfCommand is
    * - STK_CMD_SET_UP_EVENT_LIST
    * options is MozStkSetUpEventList.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_PLAY_TONE
+   * options is MozStkPlayTone.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_POLL_INTERVAL
+   * options is MozStkDuration.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_POLL_OFF
+   * options is null.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_REFRESH
+   * options is null.
    */
   jsval options;
 };
