@@ -1914,6 +1914,17 @@ nsDOMDeviceStorage::Stat(nsIDOMDOMRequest** aRetval)
 }
 
 NS_IMETHODIMP
+nsDOMDeviceStorage::GetRootDirectory(nsIFile** aRootDirectory)
+{
+  if (!mRootDirectory) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIFile> file;
+  return mRootDirectory->Clone(aRootDirectory);
+}
+
+NS_IMETHODIMP
 nsDOMDeviceStorage::Enumerate(const JS::Value & aName,
                              const JS::Value & aOptions,
                              JSContext* aCx,
