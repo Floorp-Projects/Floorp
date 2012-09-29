@@ -392,6 +392,14 @@ protected:
    */
   void TimeoutTouchListeners();
 
+  /**
+   * Utility function that sets the zoom and resolution simultaneously. This is
+   * useful when we want to repaint at the current zoom level.
+   *
+   * *** The monitor must be held while calling this.
+   */
+  void SetZoomAndResolution(float aScale);
+
 private:
   enum PanZoomState {
     NOTHING,        /* no touch-start events received */
