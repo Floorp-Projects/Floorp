@@ -178,6 +178,8 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
         ;;
     esac
 
+    AC_SUBST(ANDROID_CPU_ARCH)
+
     if test -z "$STLPORT_CPPFLAGS$STLPORT_LDFLAGS$STLPORT_LIBS"; then
         if test -e "$android_ndk/sources/cxx-stl/stlport/src/iostream.cpp" ; then
             if test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a"; then
