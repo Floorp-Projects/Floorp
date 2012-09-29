@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
+#include "base/basictypes.h" 
+
 #include "BluetoothHfpManager.h"
 
 #include "BluetoothReplyRunnable.h"
+#include "BluetoothScoManager.h"
 #include "BluetoothService.h"
 #include "BluetoothServiceUuid.h"
 
@@ -56,6 +58,37 @@ public:
     return NS_OK;
   }
 };
+
+void
+OpenScoSocket(const nsAString& aDevicePath)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothScoManager* sco = BluetoothScoManager::Get();
+  if (!sco) {
+    NS_WARNING("BluetoothScoManager is not available!");
+    return;
+  }
+
+  if (!sco->Connect(aDevicePath)) {
+    NS_WARNING("Failed to create a sco socket!");
+  }
+}
+
+void
+CloseScoSocket()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothScoManager* sco = BluetoothScoManager::Get();
+  if (!sco) {
+    NS_WARNING("BluetoothScoManager is not available!");
+    return;
+  }
+
+  if (sco->GetConnected())
+    sco->Disconnect();
+}
 
 BluetoothHfpManager::BluetoothHfpManager()
   : mCurrentVgs(-1)
@@ -355,6 +388,7 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceObjectPath,
     NS_WARNING("BluetoothService not available!");
     return false;
   }
+  mDevicePath = aDeviceObjectPath;
 
   nsString serviceUuidStr =
     NS_ConvertUTF8toUTF16(mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree);
@@ -447,7 +481,7 @@ BluetoothHfpManager::CallStateChanged(int aCallIndex, int aCallState,
 #endif
           break;
       }
-
+      OpenScoSocket(mDevicePath);
       break;
     case nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED:
       switch (mCurrentCallState) {
@@ -469,6 +503,7 @@ BluetoothHfpManager::CallStateChanged(int aCallIndex, int aCallState,
 #endif
           break;
       }
+      CloseScoSocket();
       break;
 
     default:

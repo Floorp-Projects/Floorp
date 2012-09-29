@@ -68,6 +68,12 @@ public:
                                  const nsTArray<uint32_t>& aServiceHandles);
 
   virtual nsresult
+  GetScoSocket(const nsAString& aObjectPath,
+               bool aAuth,
+               bool aEncrypt,
+               mozilla::ipc::UnixSocketConsumer* aConsumer);
+
+  virtual nsresult
   GetSocketViaService(const nsAString& aObjectPath,
                       const nsAString& aService,
                       BluetoothSocketType aType,
