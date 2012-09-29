@@ -96,8 +96,7 @@ function createThumbnail() {
 
 function whenFileExists(aCallback) {
   let callback;
-  let file = PageThumbsStorage.getFileForURL(URL);
-  if (file.exists() && file.fileSize) {
+  if (thumbnailExists(URL)) {
     callback = aCallback;
   } else {
     callback = function () whenFileExists(aCallback);

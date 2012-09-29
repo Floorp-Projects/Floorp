@@ -61,12 +61,24 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
     util.assertMapping(2, 28, '/the/root/two.js', 2, 10, 'n', map, assert);
   };
 
-  exports['test mapping tokens back fuzzy'] = function (assert, util) {
+  exports['test mapping tokens fuzzy'] = function (assert, util) {
     var map = new SourceMapConsumer(util.testMap);
 
-    util.assertMapping(1, 20, '/the/root/one.js', 1, 21, 'bar', map, assert);
-    util.assertMapping(1, 30, '/the/root/one.js', 2, 10, 'baz', map, assert);
-    util.assertMapping(2, 12, '/the/root/two.js', 1, 11, null, map, assert);
+    // Finding original positions
+    util.assertMapping(1, 20, '/the/root/one.js', 1, 21, 'bar', map, assert, true);
+    util.assertMapping(1, 30, '/the/root/one.js', 2, 10, 'baz', map, assert, true);
+    util.assertMapping(2, 12, '/the/root/two.js', 1, 11, null, map, assert, true);
+
+    // Finding generated positions
+    util.assertMapping(1, 18, '/the/root/one.js', 1, 22, 'bar', map, assert, null, true);
+    util.assertMapping(1, 28, '/the/root/one.js', 2, 13, 'baz', map, assert, null, true);
+    util.assertMapping(2, 9, '/the/root/two.js', 1, 16, null, map, assert, null, true);
+  };
+
+  exports['test creating source map consumers with )]}\' prefix'] = function (assert, util) {
+    assert.doesNotThrow(function () {
+      var map = new SourceMapConsumer(")]}'" + JSON.stringify(util.testMap));
+    });
   };
 
 });

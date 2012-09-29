@@ -22,11 +22,8 @@ let PageThumbsWorker = {
       case "removeFile":
         data.result = this.removeFile(msg);
         break;
-      case "removeFiles":
-        data.result = this.removeFiles(msg);
-        break;
-      case "getFilesInDirectory":
-        data.result = this.getFilesInDirectory(msg);
+      case "expireFilesInDirectory":
+        data.result = this.expireFilesInDirectory(msg);
         break;
       default:
         data.result = false;
@@ -35,20 +32,6 @@ let PageThumbsWorker = {
     }
 
     self.postMessage(data);
-  },
-
-  getFilesInDirectory: function Worker_getFilesInDirectory(msg) {
-    let iter = new OS.File.DirectoryIterator(msg.path);
-    let entries = [];
-
-    for (let entry in iter) {
-      if (!entry.isDir && !entry.isSymLink) {
-        entries.push(entry.name);
-      }
-    }
-
-    iter.close();
-    return entries;
   },
 
   removeFile: function Worker_removeFile(msg) {
@@ -60,16 +43,30 @@ let PageThumbsWorker = {
     }
   },
 
-  removeFiles: function Worker_removeFiles(msg) {
-    for (let file of msg.paths) {
-      try {
-        OS.File.remove(file);
-      } catch (e) {
-        // We couldn't remove the file for some reason.
-        // Let's just continue with the next one.
+  expireFilesInDirectory: function Worker_expireFilesInDirectory(msg) {
+    let entries = this.getFileEntriesInDirectory(msg.path, msg.filesToKeep);
+    let limit = Math.max(msg.minChunkSize, Math.round(entries.length / 2));
+
+    for (let entry of entries) {
+      this.removeFile(entry);
+
+      // Check if we reached the limit of files to remove.
+      if (--limit <= 0) {
+        break;
       }
     }
+
     return true;
+  },
+
+  getFileEntriesInDirectory:
+  function Worker_getFileEntriesInDirectory(aPath, aSkipFiles) {
+    let skip = new Set(aSkipFiles);
+    let iter = new OS.File.DirectoryIterator(aPath);
+
+    return [entry
+            for (entry in iter)
+            if (!entry.isDir && !entry.isSymLink && !skip.has(entry.name))];
   }
 };
 
