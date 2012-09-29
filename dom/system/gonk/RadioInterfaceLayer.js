@@ -829,12 +829,11 @@ RadioInterfaceLayer.prototype = {
   handleCallWaitingStatusChange: function handleCallWaitingStatusChange(message) {
     let newStatus = message.enabled;
 
-    // RIL fails in setting call waiting status. Reset "ril.callwaiting.enabled"
-    // in the settings DB.
-    if (!message.success) {
-      newStatus = !newStatus;
+    // RIL fails in setting call waiting status. Set "ril.callwaiting.enabled"
+    // to null and set the error message.
+    if (message.errorMsg) {
       let lock = gSettingsService.createLock();
-      lock.set("ril.callwaiting.enabled", newStatus, null);
+      lock.set("ril.callwaiting.enabled", null, null, message.errorMsg);
       return;
     }
 
