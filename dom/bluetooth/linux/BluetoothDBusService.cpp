@@ -19,9 +19,10 @@
 #include "base/basictypes.h"
 #include "BluetoothDBusService.h"
 #include "BluetoothHfpManager.h"
+#include "BluetoothOppManager.h"
+#include "BluetoothReplyRunnable.h"
 #include "BluetoothScoManager.h"
 #include "BluetoothServiceUuid.h"
-#include "BluetoothReplyRunnable.h"
 #include "BluetoothUnixSocketConnector.h"
 
 #include <cstdio>
@@ -2203,13 +2204,23 @@ BluetoothDBusService::ConnectHeadset(const nsAString& aDeviceAddress,
                                      const nsAString& aAdapterPath,
                                      BluetoothReplyRunnable* aRunnable)
 {
-  return true;
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  return hfp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
+                      aRunnable);
 }
 
 void
 BluetoothDBusService::DisconnectHeadset(BluetoothReplyRunnable* aRunnable)
 {
-  return;
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  hfp->Disconnect();
+
+  // Currently, just fire success because Disconnect() doesn't fail, 
+  // but we still make aRunnable pass into this function for future
+  // once Disconnect will fail.
+  nsString replyError;
+  BluetoothValue v = true;
+  DispatchBluetoothReply(aRunnable, v, replyError);
 }
 
 bool
@@ -2217,13 +2228,23 @@ BluetoothDBusService::ConnectObjectPush(const nsAString& aDeviceAddress,
                                         const nsAString& aAdapterPath,
                                         BluetoothReplyRunnable* aRunnable)
 {
-  return true;
+  BluetoothOppManager* opp = BluetoothOppManager::Get();
+  return opp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
+                      aRunnable);
 }
 
 void
 BluetoothDBusService::DisconnectObjectPush(BluetoothReplyRunnable* aRunnable)
 {
-  return;
+  BluetoothOppManager* opp = BluetoothOppManager::Get();
+  opp->Disconnect();
+  
+  // Currently, just fire success because Disconnect() doesn't fail, 
+  // but we still make aRunnable pass into this function for future
+  // once Disconnect will fail.
+  nsString replyError;
+  BluetoothValue v = true;
+  DispatchBluetoothReply(aRunnable, v, replyError);
 }
 class CreateBluetoothScoSocket : public nsRunnable
 {
