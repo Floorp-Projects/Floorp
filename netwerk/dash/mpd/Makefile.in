@@ -6,23 +6,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 # Contributor(s):
-#     Steve Workman <sworkman@mozilla.com
+#     Steve Workman <sworkman@mozilla.com>
 
-DEPTH     = ../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+DEPTH     := @DEPTH@
+topsrcdir := @top_srcdir@
+srcdir    := @srcdir@
+VPATH     := @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = necko
-LIBRARY_NAME   = nkdashmpd_s
-LIBXUL_LIBRARY = 1
-XPIDL_MODULE   = necko_dashmpd
-GRE_MODULE     = 1
-FORCE_STATIC_LIB = 1
+MODULE         := necko
+LIBRARY_NAME   := nkdashmpd_s
+LIBXUL_LIBRARY := 1
+FORCE_STATIC_LIB := 1
 
-CPPSRCS = \
+CPPSRCS := \
   nsDASHMPDParser.cpp \
   IMPDManager.cpp \
   nsDASHWebMODManager.cpp \
@@ -34,22 +32,13 @@ CPPSRCS = \
   SegmentBase.cpp \
   $(NULL)
 
-EXPORTS = \
-  IMPDManager.h \
-  nsDASHMPDParser.h \
-  $(NULL)
 
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../manager/ \
+LOCAL_INCLUDES := \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/html/content/public \
   -I$(topsrcdir)/content/html/content/src \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
-include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET
-
-
