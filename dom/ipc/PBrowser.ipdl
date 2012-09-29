@@ -266,6 +266,12 @@ parent:
      */
     ContentReceivedTouch(bool aPreventDefault);
 
+    /**
+     * Updates any zoom constraints on the parent and anything tied to it. This
+     * is useful for control logic that resides outside of the remote browser.
+     */
+    UpdateZoomConstraints(bool aAllowZoom, float aMinZoom, float aMaxZoom);
+
     __delete__();
 
 child:
