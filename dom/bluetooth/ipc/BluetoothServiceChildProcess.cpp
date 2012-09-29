@@ -287,6 +287,38 @@ BluetoothServiceChildProcess::PrepareAdapterInternal(const nsAString& aPath)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+bool
+BluetoothServiceChildProcess::ConnectHeadset(
+  const nsAString& aDeviceAddress,
+  const nsAString& aAdapterPath,
+  BluetoothReplyRunnable* aRunnable)
+{
+  return true;
+}
+
+void
+BluetoothServiceChildProcess::DisconnectHeadset(
+  BluetoothReplyRunnable* aRunnable)
+{
+  return;
+}
+
+bool
+BluetoothServiceChildProcess::ConnectObjectPush(
+  const nsAString& aDeviceAddress,
+  const nsAString& aAdapterPath,
+  BluetoothReplyRunnable* aRunnable)
+{
+  return true;
+}
+
+void
+BluetoothServiceChildProcess::DisconnectObjectPush(
+  BluetoothReplyRunnable* aRunnable)
+{
+  return;
+}
+
 nsresult
 BluetoothServiceChildProcess::HandleStartup()
 {

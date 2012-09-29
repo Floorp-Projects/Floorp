@@ -2198,6 +2198,33 @@ BluetoothDBusService::PrepareAdapterInternal(const nsAString& aPath)
   return NS_OK;
 }
 
+bool
+BluetoothDBusService::ConnectHeadset(const nsAString& aDeviceAddress,
+                                     const nsAString& aAdapterPath,
+                                     BluetoothReplyRunnable* aRunnable)
+{
+  return true;
+}
+
+void
+BluetoothDBusService::DisconnectHeadset(BluetoothReplyRunnable* aRunnable)
+{
+  return;
+}
+
+bool
+BluetoothDBusService::ConnectObjectPush(const nsAString& aDeviceAddress,
+                                        const nsAString& aAdapterPath,
+                                        BluetoothReplyRunnable* aRunnable)
+{
+  return true;
+}
+
+void
+BluetoothDBusService::DisconnectObjectPush(BluetoothReplyRunnable* aRunnable)
+{
+  return;
+}
 class CreateBluetoothScoSocket : public nsRunnable
 {
 public: 
