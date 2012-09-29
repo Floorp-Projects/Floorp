@@ -7,9 +7,10 @@
 #include "nsIDOMEventTarget.idl"
 
 interface nsIDOMDOMRequest;
+interface nsIDOMBlob;
 interface nsIDOMBluetoothDevice;
 
-[scriptable, builtinclass, uuid(df1465c6-00b7-49ab-bd20-1b63721d118f)]
+[scriptable, builtinclass, uuid(ad42ba9f-4c30-4ed5-80c2-8b8520a50e0b)]
 interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 {
   readonly attribute DOMString address;
@@ -40,6 +41,21 @@ interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
   nsIDOMDOMRequest setPasskey(in DOMString aDeviceAddress, in unsigned long aPasskey);
   nsIDOMDOMRequest setPairingConfirmation(in DOMString aDeviceAddress, in bool aConfirmation);
   nsIDOMDOMRequest setAuthorization(in DOMString aDeviceAddress, in bool aAllow);
+
+  /** 
+   * Connect/Disconnect to a specific service of a target remote device. 
+   * To check the value of service UUIDs, please check "Bluetooth Assigned 
+   * Numbers" / "Service Discovery Protocol" for more information.
+   *  
+   * @param aDeviceAddress Remote device address
+   * @param aProfile 2-octets service UUID
+   */
+  nsIDOMDOMRequest connect(in DOMString aDeviceAddress, in unsigned short aProfile);
+  nsIDOMDOMRequest disconnect(in unsigned short aProfile);
+
+  // One device can only send one file at a time
+  nsIDOMDOMRequest sendFile(in DOMString aDeviceAddress, in nsIDOMBlob aBlob);
+  nsIDOMDOMRequest stopSendingFile(in DOMString aDeviceAddress);
 
   // Fired when discoverying and any device is discovered.
   [implicit_jscontext] attribute jsval ondevicefound;
