@@ -14,7 +14,7 @@ interface nsIDOMWindow;
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(63787ba1-5091-450b-8810-d321a8b4f77a)]
+[scriptable, uuid(bc1a82aa-2a1f-4a27-a5e7-614d06b72e0a)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   readonly attribute DOMString cardState;
@@ -40,4 +40,6 @@ interface nsIMobileConnectionProvider : nsISupports
   void sendStkMenuSelection(in nsIDOMWindow   window,
                             in unsigned short itemIdentifier,
                             in boolean        helpRequested);
+  void sendStkEventDownload(in nsIDOMWindow window,
+                            in jsval        event);
 };

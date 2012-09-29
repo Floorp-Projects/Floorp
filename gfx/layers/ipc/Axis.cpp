@@ -18,7 +18,7 @@ static const float EPSILON = 0.0001f;
  * or we get a touch point very far away from the previous position for some
  * reason.
  */
-static const float MAX_EVENT_ACCELERATION = 0.5f;
+static const float MAX_EVENT_ACCELERATION = 999.0f;
 
 /**
  * Amount of friction applied during flings.
@@ -95,15 +95,19 @@ void Axis::StartTouch(int32_t aPos) {
 }
 
 float Axis::GetDisplacementForDuration(float aScale, const TimeDuration& aDelta) {
-  float velocityFactor = powf(ACCELERATION_MULTIPLIER,
-                              NS_MAX(0, (mAcceleration - 4) * 3));
-  float displacement = mVelocity * aScale * aDelta.ToMilliseconds() * velocityFactor;
+  if (fabsf(mVelocity) < VELOCITY_THRESHOLD) {
+    mAcceleration = 0;
+  }
+
+  float accelerationFactor = GetAccelerationFactor();
+  float displacement = mVelocity * aScale * aDelta.ToMilliseconds() * accelerationFactor;
   // If this displacement will cause an overscroll, throttle it. Can potentially
   // bring it to 0 even if the velocity is high.
   if (DisplacementWillOverscroll(displacement) != OVERSCROLL_NONE) {
     // No need to have a velocity along this axis anymore; it won't take us
     // anywhere, so we're just spinning needlessly.
     mVelocity = 0.0f;
+    mAcceleration = 0;
     displacement -= DisplacementWillOverscrollAmount(displacement);
   }
   return displacement;
@@ -140,12 +144,12 @@ bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
 }
 
 Axis::Overscroll Axis::GetOverscroll() {
-  // If the current pan takes the viewport to the left of or above the current
+  // If the current pan takes the window to the left of or above the current
   // page rect.
   bool minus = GetOrigin() < GetPageStart();
-  // If the current pan takes the viewport to the right of or below the current
+  // If the current pan takes the window to the right of or below the current
   // page rect.
-  bool plus = GetViewportEnd() > GetPageEnd();
+  bool plus = GetCompositionEnd() > GetPageEnd();
   if (minus && plus) {
     return OVERSCROLL_BOTH;
   }
@@ -161,19 +165,20 @@ Axis::Overscroll Axis::GetOverscroll() {
 float Axis::GetExcess() {
   switch (GetOverscroll()) {
   case OVERSCROLL_MINUS: return GetOrigin() - GetPageStart();
-  case OVERSCROLL_PLUS: return GetViewportEnd() - GetPageEnd();
-  case OVERSCROLL_BOTH: return (GetViewportEnd() - GetPageEnd()) + (GetPageStart() - GetOrigin());
+  case OVERSCROLL_PLUS: return GetCompositionEnd() - GetPageEnd();
+  case OVERSCROLL_BOTH: return (GetCompositionEnd() - GetPageEnd()) +
+                               (GetPageStart() - GetOrigin());
   default: return 0;
   }
 }
 
 Axis::Overscroll Axis::DisplacementWillOverscroll(int32_t aDisplacement) {
-  // If the current pan plus a displacement takes the viewport to the left of or
+  // If the current pan plus a displacement takes the window to the left of or
   // above the current page rect.
   bool minus = GetOrigin() + aDisplacement < GetPageStart();
-  // If the current pan plus a displacement takes the viewport to the right of or
+  // If the current pan plus a displacement takes the window to the right of or
   // below the current page rect.
-  bool plus = GetViewportEnd() + aDisplacement > GetPageEnd();
+  bool plus = GetCompositionEnd() + aDisplacement > GetPageEnd();
   if (minus && plus) {
     return OVERSCROLL_BOTH;
   }
@@ -189,7 +194,7 @@ Axis::Overscroll Axis::DisplacementWillOverscroll(int32_t aDisplacement) {
 float Axis::DisplacementWillOverscrollAmount(int32_t aDisplacement) {
   switch (DisplacementWillOverscroll(aDisplacement)) {
   case OVERSCROLL_MINUS: return (GetOrigin() + aDisplacement) - GetPageStart();
-  case OVERSCROLL_PLUS: return (GetViewportEnd() + aDisplacement) - GetPageEnd();
+  case OVERSCROLL_PLUS: return (GetCompositionEnd() + aDisplacement) - GetPageEnd();
   // Don't handle overscrolled in both directions; a displacement can't cause
   // this, it must have already been zoomed out too far.
   default: return 0;
@@ -201,7 +206,7 @@ Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, int32_t aFocus) {
 
   bool both = ScaleWillOverscrollBothSides(aScale);
   bool minus = originAfterScale < GetPageStart() * aScale;
-  bool plus = (originAfterScale + GetViewportLength()) > GetPageEnd() * aScale;
+  bool plus = (originAfterScale + GetCompositionLength()) > GetPageEnd() * aScale;
 
   if ((minus && plus) || both) {
     return OVERSCROLL_BOTH;
@@ -219,7 +224,8 @@ float Axis::ScaleWillOverscrollAmount(float aScale, int32_t aFocus) {
   float originAfterScale = (GetOrigin() + aFocus) * aScale - aFocus;
   switch (ScaleWillOverscroll(aScale, aFocus)) {
   case OVERSCROLL_MINUS: return originAfterScale - GetPageStart() * aScale;
-  case OVERSCROLL_PLUS: return (originAfterScale + GetViewportLength()) - GetPageEnd() * aScale;
+  case OVERSCROLL_PLUS: return (originAfterScale + GetCompositionLength()) -
+                               NS_lround(GetPageEnd() * aScale);
   // Don't handle OVERSCROLL_BOTH. Client code is expected to deal with it.
   default: return 0;
   }
@@ -229,8 +235,12 @@ float Axis::GetVelocity() {
   return mVelocity;
 }
 
-float Axis::GetViewportEnd() {
-  return GetOrigin() + GetViewportLength();
+float Axis::GetAccelerationFactor() {
+  return powf(ACCELERATION_MULTIPLIER, NS_MAX(0, (mAcceleration - 4) * 3));
+}
+
+float Axis::GetCompositionEnd() {
+  return GetOrigin() + GetCompositionLength();
 }
 
 float Axis::GetPageEnd() {
@@ -238,40 +248,44 @@ float Axis::GetPageEnd() {
 }
 
 float Axis::GetOrigin() {
-  gfx::Point origin = mAsyncPanZoomController->GetFrameMetrics().mViewportScrollOffset;
+  gfx::Point origin = mAsyncPanZoomController->GetFrameMetrics().mScrollOffset;
   return GetPointOffset(origin);
 }
 
-float Axis::GetViewportLength() {
-  nsIntRect viewport = mAsyncPanZoomController->GetFrameMetrics().mViewport;
-  gfx::Rect scaledViewport = gfx::Rect(viewport.x, viewport.y, viewport.width, viewport.height);
-  scaledViewport.ScaleRoundIn(1 / mAsyncPanZoomController->GetFrameMetrics().mResolution.width);
-  return GetRectLength(scaledViewport);
+float Axis::GetCompositionLength() {
+  nsIntRect compositionBounds =
+    mAsyncPanZoomController->GetFrameMetrics().mCompositionBounds;
+  gfx::Rect scaledCompositionBounds =
+    gfx::Rect(compositionBounds.x, compositionBounds.y,
+              compositionBounds.width, compositionBounds.height);
+  scaledCompositionBounds.ScaleInverseRoundIn(
+    mAsyncPanZoomController->GetFrameMetrics().mZoom.width);
+  return GetRectLength(scaledCompositionBounds);
 }
 
 float Axis::GetPageStart() {
-  gfx::Rect pageRect = mAsyncPanZoomController->GetFrameMetrics().mCSSContentRect;
+  gfx::Rect pageRect = mAsyncPanZoomController->GetFrameMetrics().mScrollableRect;
   return GetRectOffset(pageRect);
 }
 
 float Axis::GetPageLength() {
-  gfx::Rect pageRect = mAsyncPanZoomController->GetFrameMetrics().mCSSContentRect;
+  gfx::Rect pageRect = mAsyncPanZoomController->GetFrameMetrics().mScrollableRect;
   return GetRectLength(pageRect);
 }
 
 bool Axis::ScaleWillOverscrollBothSides(float aScale) {
   const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
 
-  gfx::Rect cssContentRect = metrics.mCSSContentRect;
+  gfx::Rect cssContentRect = metrics.mScrollableRect;
 
-  float currentScale = metrics.mResolution.width;
-  gfx::Rect viewport = gfx::Rect(metrics.mViewport.x,
-                                 metrics.mViewport.y,
-                                 metrics.mViewport.width,
-                                 metrics.mViewport.height);
-  viewport.ScaleRoundIn(1 / (currentScale * aScale));
+  float currentScale = metrics.mZoom.width;
+  nsIntRect compositionBounds = metrics.mCompositionBounds;
+  gfx::Rect scaledCompositionBounds =
+    gfx::Rect(compositionBounds.x, compositionBounds.y,
+              compositionBounds.width, compositionBounds.height);
+  scaledCompositionBounds.ScaleInverseRoundIn(currentScale * aScale);
 
-  return GetRectLength(cssContentRect) < GetRectLength(viewport);
+  return GetRectLength(cssContentRect) < GetRectLength(scaledCompositionBounds);
 }
 
 AxisX::AxisX(AsyncPanZoomController* aAsyncPanZoomController)

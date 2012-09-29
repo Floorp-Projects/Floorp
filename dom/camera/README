@@ -1,0 +1,28 @@
+This README file details from where some of the camcorder source files were derived from and how to apply the provided patch file to get the updated files for B2G.
+---------------------------------
+
+Following is the list of B2G files which were derived from an android ics_chocolate build. It also shows the corresponding locations where the original source files can be found:
+
+GonkRecoder.cpp:
+https://www.codeaurora.org/gitweb/quic/la/?p=platform/frameworks/base.git;a=blob;f=media/libmediaplayerservice/StagefrightRecorder.cpp;hb=ef1672482a9c2b88d8017927df68144fee42626c
+
+GonkRecorder.h:
+https://www.codeaurora.org/gitweb/quic/la/?p=platform/frameworks/base.git;a=blob;f=media/libmediaplayerservice/StagefrightRecorder.h;hb=e3682213bcd3fe43b059e00f0fe4dbebc3f3c35d
+
+GonkCameraSource.cpp:
+https://www.codeaurora.org/gitweb/quic/la/?p=platform/frameworks/base.git;a=blob;f=media/libstagefright/CameraSource.cpp;hb=7fa677babfee9c241a131b22c9c1c5ab512ef2d2
+
+GonkCameraSource.h:
+https://www.codeaurora.org/gitweb/quic/la/?p=platform/frameworks/base.git;a=blob;f=include/media/stagefright/CameraSource.h;hb=96af14d9b013496accf40a85a66fefcba3ac0111
+
+AudioParameter.cpp:
+https://www.codeaurora.org/gitweb/quic/la/?p=platform/frameworks/base.git;a=blob;f=media/libmedia/AudioParameter.cpp;hb=4dc22e77cfd2a1c3671e5646ee87c5e4c15596a0
+
+GonkCameraListener.h:
+https://www.codeaurora.org/gitweb/quic/la/?p=platform/frameworks/base.git;a=blob;f=include/camera/Camera.h;hb=796f35e408d9dca386f90d8fbde80471ac011fa6
+
+There were quite a few changes done to the above listed sources to support camcorder on B2G platform.
+update.patch lists the changes on top of the original files.
+update.sh shell script copies the files from an android tree and applies the patch to get updated files for B2G.
+
+

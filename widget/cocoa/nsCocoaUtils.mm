@@ -17,39 +17,49 @@
 #include "nsMenuUtilsX.h"
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::widget;
 
-float nsCocoaUtils::MenuBarScreenHeight()
+static float
+MenuBarScreenHeight()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   NSArray* allScreens = [NSScreen screens];
-  if ([allScreens count])
+  if ([allScreens count]) {
     return [[allScreens objectAtIndex:0] frame].size.height;
-  else
-    return 0.0; // If there are no screens, there's not much we can say.
+  }
+
+  return 0.0;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0.0);
 }
 
-float nsCocoaUtils::FlippedScreenY(float y)
+float
+nsCocoaUtils::FlippedScreenY(float y)
 {
   return MenuBarScreenHeight() - y;
 }
 
 NSRect nsCocoaUtils::GeckoRectToCocoaRect(const nsIntRect &geckoRect)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
   // We only need to change the Y coordinate by starting with the primary screen
-  // height, subtracting the gecko Y coordinate, and subtracting the height.
+  // height and subtracting the gecko Y coordinate of the bottom of the rect.
   return NSMakeRect(geckoRect.x,
-                    MenuBarScreenHeight() - (geckoRect.y + geckoRect.height),
+                    MenuBarScreenHeight() - geckoRect.YMost(),
                     geckoRect.width,
                     geckoRect.height);
+}
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRect(0.0, 0.0, 0.0, 0.0));
+NSRect nsCocoaUtils::GeckoRectToCocoaRectDevPix(const nsIntRect &aGeckoRect,
+                                                CGFloat aBackingScale)
+{
+  return NSMakeRect(aGeckoRect.x / aBackingScale,
+                    MenuBarScreenHeight() - aGeckoRect.YMost() / aBackingScale,
+                    aGeckoRect.width / aBackingScale,
+                    aGeckoRect.height / aBackingScale);
 }
 
 nsIntRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
@@ -62,6 +72,17 @@ nsIntRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
   rect.y = NSToIntRound(FlippedScreenY(cocoaRect.origin.y + cocoaRect.size.height));
   rect.width = NSToIntRound(cocoaRect.origin.x + cocoaRect.size.width) - rect.x;
   rect.height = NSToIntRound(FlippedScreenY(cocoaRect.origin.y)) - rect.y;
+  return rect;
+}
+
+nsIntRect nsCocoaUtils::CocoaRectToGeckoRectDevPix(const NSRect &aCocoaRect,
+                                                   CGFloat aBackingScale)
+{
+  nsIntRect rect;
+  rect.x = NSToIntRound(aCocoaRect.origin.x * aBackingScale);
+  rect.y = NSToIntRound(FlippedScreenY(aCocoaRect.origin.y + aCocoaRect.size.height) * aBackingScale);
+  rect.width = NSToIntRound((aCocoaRect.origin.x + aCocoaRect.size.width) * aBackingScale) - rect.x;
+  rect.height = NSToIntRound(FlippedScreenY(aCocoaRect.origin.y) * aBackingScale) - rect.y;
   return rect;
 }
 
@@ -352,6 +373,17 @@ nsCocoaUtils::GeckoRectToNSRect(const nsIntRect& aGeckoRect,
 }
 
 // static
+void
+nsCocoaUtils::NSRectToGeckoRect(const NSRect& aCocoaRect,
+                                nsIntRect& aOutGeckoRect)
+{
+  aOutGeckoRect.x = NSToIntRound(aCocoaRect.origin.x);
+  aOutGeckoRect.y = NSToIntRound(aCocoaRect.origin.y);
+  aOutGeckoRect.width = NSToIntRound(aCocoaRect.origin.x + aCocoaRect.size.width) - aOutGeckoRect.x;
+  aOutGeckoRect.height = NSToIntRound(aCocoaRect.origin.y + aCocoaRect.size.height) - aOutGeckoRect.y;
+}
+
+// static
 NSEvent*
 nsCocoaUtils::MakeNewCocoaEventWithType(NSEventType aEventType, NSEvent *aEvent)
 {
@@ -487,4 +519,119 @@ nsCocoaUtils::GetCurrentModifiers()
   }
 
   return cocoaModifiers;
+}
+
+// While HiDPI support is not 100% complete and tested, we'll have a pref
+// to allow it to be turned off in case of problems (or for testing purposes).
+
+// gfx.hidpi.enabled is an integer with the meaning:
+//    <= 0 : HiDPI support is disabled
+//       1 : HiDPI enabled provided all screens have the same backing resolution
+//     > 1 : HiDPI enabled even if there are a mixture of screen modes
+
+// All the following code is to be removed once HiDPI work is more complete.
+
+static bool sHiDPIEnabled = false;
+static bool sHiDPIPrefInitialized = false;
+
+@interface ScreenParamChangeWatcher : NSObject
+- (id)init;
+@end
+
+@implementation ScreenParamChangeWatcher
+- (id)init
+{
+  [super init];
+  [[NSNotificationCenter defaultCenter]
+    addObserver:self
+       selector:@selector(applicationDidChangeScreenParameters:)
+           name:NSApplicationDidChangeScreenParametersNotification
+         object:NSApp];
+  return self;
+}
+
+- (void)applicationDidChangeScreenParameters:(NSNotification *)notification
+{
+  // reset flags so that the next call to HiDPIEnabled() will re-evaluate
+  sHiDPIEnabled = false;
+  sHiDPIPrefInitialized = false;
+}
+@end
+
+class HiDPIPrefObserver MOZ_FINAL : public nsIObserver {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(HiDPIPrefObserver, nsIObserver)
+
+NS_IMETHODIMP
+HiDPIPrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                           const PRUnichar* aData)
+{
+  // reset flags so that the next call to HiDPIEnabled() will re-evaluate
+  sHiDPIEnabled = false;
+  sHiDPIPrefInitialized = false;
+  return NS_OK;
+}
+
+// static
+bool
+nsCocoaUtils::HiDPIEnabled()
+{
+  static ScreenParamChangeWatcher* sChangeWatcher = nil;
+
+  if (!sHiDPIPrefInitialized) {
+    sHiDPIPrefInitialized = true;
+
+    if (!sChangeWatcher) {
+      // Create an object to watch for changes in screen configuration.
+      // Note that we'll leak this object at shutdown;
+      // this is all a temporary hack until we have multi-screen HiDPI working
+      // properly and can dispense with this code.
+      sChangeWatcher = [[ScreenParamChangeWatcher alloc] init];
+
+      // And create an observer for changes to the preference.
+      nsCOMPtr<nsIObserver> obs(new HiDPIPrefObserver());
+      Preferences::AddStrongObserver(obs, "gfx.hidpi.enabled");
+    }
+
+    int prefSetting = Preferences::GetInt("gfx.hidpi.enabled", 1);
+    if (prefSetting <= 0) {
+      return false;
+    }
+
+    // prefSetting is at least 1, need to check attached screens...
+
+    int scaleFactors = 0; // used as a bitset to track the screen types found
+    NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
+    while (NSScreen *screen = [screenEnum nextObject]) {
+      NSDictionary *desc = [screen deviceDescription];
+      if ([desc objectForKey:NSDeviceIsScreen] == nil) {
+        continue;
+      }
+      CGFloat scale =
+        [screen respondsToSelector:@selector(backingScaleFactor)] ?
+          [screen backingScaleFactor] : 1.0;
+      // Currently, we only care about differentiating "1.0" and "2.0",
+      // so we set one of the two low bits to record which.
+      if (scale > 1.0) {
+        scaleFactors |= 2;
+      } else {
+        scaleFactors |= 1;
+      }
+    }
+
+    // Now scaleFactors will be:
+    //   0 if no screens (supporting backingScaleFactor) found
+    //   1 if only lo-DPI screens
+    //   2 if only hi-DPI screens
+    //   3 if both lo- and hi-DPI screens
+    // We'll enable HiDPI support if there's only a single screen type,
+    // OR if the pref setting is explicitly greater than 1.
+    sHiDPIEnabled = (scaleFactors <= 2) || (prefSetting > 1);
+  }
+
+  return sHiDPIEnabled;
 }

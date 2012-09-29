@@ -721,7 +721,8 @@ GetSystemFontInfo(LookAndFeel::FontID /*unused */,
 
 bool
 nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
-                           gfxFontStyle& aFontStyle)
+                           gfxFontStyle& aFontStyle,
+                           float aDevPixPerCSSPixel)
 {
   nsString *cachedFontName = NULL;
   gfxFontStyle *cachedFontStyle = NULL;
