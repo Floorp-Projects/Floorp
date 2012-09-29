@@ -288,9 +288,9 @@ child:
 
     LoadURL(nsCString uri);
 
-    UpdateDimensions(nsRect rect, nsIntSize size);
+    UpdateDimensions(nsRect rect, nsIntSize size) compress;
 
-    UpdateFrame(FrameMetrics frame);
+    UpdateFrame(FrameMetrics frame) compress;
 
     /**
      * Requests handling of a double tap. |point| is in CSS pixels, relative to
