@@ -42,28 +42,26 @@ var tests = {
     };
     Social.provider.setAmbientNotification(ambience);
 
-    let statusIcon = document.querySelector("#social-toolbar-item > box");
-    waitForCondition(function() {
-      statusIcon = document.querySelector("#social-toolbar-item > box");
-      return !!statusIcon;
-    }, function () {
-      let statusIconLabel = statusIcon.querySelector("label");
-      is(statusIconLabel.value, "42", "status value is correct");
+    let statusIcons = document.getElementById("social-status-iconbox");
+    ok(!statusIcons.firstChild.collapsed, "status icon is visible");
+    ok(!statusIcons.firstChild.lastChild.collapsed, "status value is visible");
+    is(statusIcons.firstChild.lastChild.textContent, "42", "status value is correct");
 
-      ambience.counter = 0;
-      Social.provider.setAmbientNotification(ambience);
-      is(statusIconLabel.value, "", "status value is correct");
-      next();
-    }, "statusIcon was never found");
+    ambience.counter = 0;
+    Social.provider.setAmbientNotification(ambience);
+    ok(statusIcons.firstChild.lastChild.collapsed, "status value is not visible");
+    is(statusIcons.firstChild.lastChild.textContent, "", "status value is correct");
+    next();
   },
   testProfileUnset: function(next) {
     Social.provider.updateUserProfile({});
     // check dom values
     let userButton = document.getElementById("social-statusarea-username");
     ok(userButton.hidden, "username is not visible");
-    let ambientIcons = document.querySelectorAll("#social-toolbar-item > box");
-    for (let ambientIcon of ambientIcons) {
-      ok(ambientIcon.collapsed, "ambient icon (" + ambientIcon.id + ") is collapsed");
+    let ambience = document.getElementById("social-status-iconbox").firstChild;
+    while (ambience) {
+      ok(ambience.collapsed, "ambient icon (" + ambience.id + ") is collapsed");
+      ambience = ambience.nextSibling;
     }
     
     next();
