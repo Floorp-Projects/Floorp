@@ -83,6 +83,7 @@ TabParent::TabParent(mozIApplication* aApp, bool aIsBrowserElement)
   , mIMECompositionStart(0)
   , mIMESeqno(0)
   , mEventCaptureDepth(0)
+  , mDimensions(0, 0)
   , mDPI(0)
   , mIsBrowserElement(aIsBrowserElement)
   , mShown(false)
@@ -229,6 +230,7 @@ TabParent::Show(const nsIntSize& size)
 {
     // sigh
     mShown = true;
+    mDimensions = size;
     unused << SendShow(size);
 }
 
@@ -239,6 +241,7 @@ TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
   if (RenderFrameParent* rfp = GetRenderFrame()) {
     rfp->NotifyDimensionsChanged(size.width, size.height);
   }
+  mDimensions = size;
 }
 
 void
@@ -1169,6 +1172,21 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
   *aOutWindowOpened =
     BrowserElementParent::OpenWindowOOP(static_cast<TabParent*>(aOpener),
                                         this, aURL, aName, aFeatures);
+  return true;
+}
+
+bool
+TabParent::RecvPRenderFrameConstructor(PRenderFrameParent* actor,
+                                       ScrollingBehavior* scrolling,
+                                       LayersBackend* backend,
+                                       int32_t* maxTextureSize,
+                                       uint64_t* layersId)
+{
+  RenderFrameParent* rfp = GetRenderFrame();
+  if (mDimensions != nsIntSize() && rfp) {
+    rfp->NotifyDimensionsChanged(mDimensions.width, mDimensions.height);
+  }
+
   return true;
 }
 

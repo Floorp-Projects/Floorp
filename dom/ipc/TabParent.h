@@ -94,6 +94,11 @@ public:
 
     virtual bool RecvMoveFocus(const bool& aForward);
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
+    virtual bool RecvPRenderFrameConstructor(PRenderFrameParent* actor,
+                                             ScrollingBehavior* scrolling,
+                                             LayersBackend* backend,
+                                             int32_t* maxTextureSize,
+                                             uint64_t* layersId);
     virtual bool RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                             const nsString& aURL,
                                             const nsString& aName,
@@ -269,6 +274,7 @@ protected:
     // The number of event series we're currently capturing.
     int32_t mEventCaptureDepth;
 
+    nsIntSize mDimensions;
     float mDPI;
     bool mIsBrowserElement;
     bool mShown;
