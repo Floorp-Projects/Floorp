@@ -196,9 +196,9 @@ CameraControlImpl::TakePicture(CameraSize aSize, int32_t aRotation, const nsAStr
 }
 
 nsresult
-CameraControlImpl::StartRecording(CameraSize aSize, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError)
+CameraControlImpl::StartRecording(nsIDOMDeviceStorage* aStorageArea, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError)
 {
-  nsCOMPtr<nsIRunnable> startRecordingTask = new StartRecordingTask(this, aSize, onSuccess, onError);
+  nsCOMPtr<nsIRunnable> startRecordingTask = new StartRecordingTask(this, aStorageArea, aFilename, onSuccess, onError);
   return mCameraThread->Dispatch(startRecordingTask, NS_DISPATCH_NORMAL);
 }
 
@@ -221,6 +221,13 @@ CameraControlImpl::StopPreview()
 {
   nsCOMPtr<nsIRunnable> stopPreviewTask = new StopPreviewTask(this);
   mCameraThread->Dispatch(stopPreviewTask, NS_DISPATCH_NORMAL);
+}
+
+nsresult
+CameraControlImpl::GetPreviewStreamVideoMode(CameraRecordingOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
+{
+  nsCOMPtr<nsIRunnable> getPreviewStreamVideoModeTask = new GetPreviewStreamVideoModeTask(this, *aOptions, onSuccess, onError);
+  return mCameraThread->Dispatch(getPreviewStreamVideoModeTask, NS_DISPATCH_NORMAL);
 }
 
 bool
