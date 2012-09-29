@@ -37,7 +37,9 @@ ReusableTileStoreOGL::InvalidateTiles(TiledThebesLayerOGL* aLayer,
           // This will be incorrect when the transform involves rotation, but
           // it'd be quite hard to retain invalid tiles correctly in this
           // situation anyway.
-          renderBounds = parent->GetEffectiveTransform().TransformBounds(gfxRect(metrics.mDisplayPort));
+          renderBounds = parent->GetEffectiveTransform().TransformBounds(
+              gfxRect(metrics.mDisplayPort.x, metrics.mDisplayPort.y,
+                      metrics.mDisplayPort.width, metrics.mDisplayPort.height));
           break;
       }
   }
@@ -217,10 +219,14 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
         scrollableLayer = parent;
       if (!parentMetrics.mDisplayPort.IsEmpty() && scrollableLayer) {
           displayPort = parent->GetEffectiveTransform().
-            TransformBounds(gfxRect(parentMetrics.mDisplayPort));
+            TransformBounds(gfxRect(
+              parentMetrics.mDisplayPort.x, parentMetrics.mDisplayPort.y,
+              parentMetrics.mDisplayPort.width, parentMetrics.mDisplayPort.height));
           const FrameMetrics& metrics = scrollableLayer->GetFrameMetrics();
           const nsIntSize& contentSize = metrics.mContentRect.Size();
-          const gfx::Point& scrollOffset = metrics.mViewportScrollOffset;
+          gfx::Point scrollOffset =
+            gfx::Point(metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().width,
+                       metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().height);
           const nsIntPoint& contentOrigin = metrics.mContentRect.TopLeft() -
             nsIntPoint(NS_lround(scrollOffset.x), NS_lround(scrollOffset.y));
           gfxRect contentRect = gfxRect(contentOrigin.x, contentOrigin.y,

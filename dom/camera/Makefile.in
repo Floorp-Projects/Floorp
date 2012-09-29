@@ -32,6 +32,9 @@ CPPSRCS += \
   GonkCameraControl.cpp \
   GonkCameraHwMgr.cpp \
   GonkNativeWindow.cpp \
+  GonkRecorder.cpp \
+  GonkCameraSource.cpp \
+  AudioParameter.cpp \
   $(NULL)
 else ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \

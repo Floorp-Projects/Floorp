@@ -14,6 +14,7 @@
 #include "mozilla/TimeStamp.h"
 #include "InputData.h"
 #include "Axis.h"
+#include "nsContentUtils.h"
 
 #include "base/message_loop.h"
 
@@ -97,17 +98,13 @@ public:
                                   nsInputEvent* aOutEvent);
 
   /**
-   * Updates the viewport size, i.e. the dimensions of the frame (not
-   * necessarily the screen) content will actually be rendered onto in device
-   * pixels for example, a subframe will not take the entire screen, but we
-   * still want to know how big it is in device pixels. Ideally we want to be
-   * using CSS pixels everywhere inside here, but in this case we need to know
-   * how large of a displayport to set so we use these dimensions plus some
-   * extra.
-   *
-   * XXX: Use nsIntRect instead.
+   * Updates the composition bounds, i.e. the dimensions of the final size of
+   * the frame this is tied to during composition onto, in device pixels. In
+   * general, this will just be:
+   * { x = 0, y = 0, width = surface.width, height = surface.height }, however
+   * there is no hard requirement for this.
    */
-  void UpdateViewportSize(int aWidth, int aHeight);
+  void UpdateCompositionBounds(const nsIntRect& aCompositionBounds);
 
   /**
    * We have found a scrollable subframe, so disable our machinery until we hit
@@ -133,6 +130,13 @@ public:
    * queue will be discarded.
    */
   void ContentReceivedTouch(bool aPreventDefault);
+
+  /**
+   * Updates any zoom constraints contained in the <meta name="viewport"> tag.
+   * We try to obey everything it asks us elsewhere, but here we only handle
+   * minimum-scale, maximum-scale, and user-scalable.
+   */
+  void UpdateZoomConstraints(bool aAllowZoom, float aMinScale, float aMaxScale);
 
   // --------------------------------------------------------------------------
   // These methods must only be called on the compositor thread.
@@ -192,6 +196,18 @@ public:
    * It defaults to 72 if not set using SetDPI() at any point.
    */
   int GetDPI();
+
+  /**
+   * Recalculates the displayport. Ideally, this should paint an area bigger
+   * than the composite-to dimensions so that when you scroll down, you don't
+   * checkerboard immediately. This includes a bunch of logic, including
+   * algorithms to bias painting in the direction of the velocity.
+   */
+  static const gfx::Rect CalculatePendingDisplayPort(
+    const FrameMetrics& aFrameMetrics,
+    const gfx::Point& aVelocity,
+    const gfx::Point& aAcceleration,
+    double aEstimatedPaintDuration);
 
 protected:
   /**
@@ -320,6 +336,11 @@ protected:
   const gfx::Point GetVelocityVector();
 
   /**
+   * Gets a vector of the acceleration factors of each axis.
+   */
+  const gfx::Point GetAccelerationVector();
+
+  /**
    * Gets a reference to the first SingleTouchData from a MultiTouchInput.  This
    * gets only the first one and assumes the rest are either missing or not
    * relevant.
@@ -344,15 +365,6 @@ protected:
   void TrackTouch(const MultiTouchInput& aEvent);
 
   /**
-   * Recalculates the displayport. Ideally, this should paint an area bigger
-   * than the actual screen. The viewport refers to the size of the screen,
-   * while the displayport is the area actually painted by Gecko. We paint
-   * a larger area than the screen so that when you scroll down, you don't
-   * checkerboard immediately.
-   */
-  const nsIntRect CalculatePendingDisplayPort();
-
-  /**
    * Attempts to enlarge the displayport along a single axis. Returns whether or
    * not the displayport was enlarged. This will fail in circumstances where the
    * velocity along that axis is not high enough to need any changes. The
@@ -360,8 +372,13 @@ protected:
    * |aDisplayPortLength|. If enlarged, these will be updated with the new
    * metrics.
    */
-  bool EnlargeDisplayPortAlongAxis(float aViewport, float aVelocity,
-                                   float* aDisplayPortOffset, float* aDisplayPortLength);
+  static bool EnlargeDisplayPortAlongAxis(float aSkateSizeMultiplier,
+                                          double aEstimatedPaintDuration,
+                                          float aCompositionBounds,
+                                          float aVelocity,
+                                          float aAcceleration,
+                                          float* aDisplayPortOffset,
+                                          float* aDisplayPortLength);
 
   /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
@@ -396,6 +413,14 @@ protected:
    */
   void TimeoutTouchListeners();
 
+  /**
+   * Utility function that sets the zoom and resolution simultaneously. This is
+   * useful when we want to repaint at the current zoom level.
+   *
+   * *** The monitor must be held while calling this.
+   */
+  void SetZoomAndResolution(float aScale);
+
 private:
   enum PanZoomState {
     NOTHING,        /* no touch-start events received */
@@ -407,25 +432,6 @@ private:
     WAITING_LISTENERS, /* a state halfway between NOTHING and TOUCHING - the user has
                     put a finger down, but we don't yet know if a touch listener has
                     prevented the default actions yet. we still need to abort animations. */
-  };
-
-  enum ContentPainterStatus {
-    // A paint may be happening, but it is not due to any action taken by this
-    // thread. For example, content could be invalidating itself, but
-    // AsyncPanZoomController has nothing to do with that.
-    CONTENT_IDLE,
-    // Set every time we dispatch a request for a repaint. When a
-    // ShadowLayersUpdate arrives and the metrics of this frame have changed, we
-    // toggle this off and assume that the paint has completed.
-    CONTENT_PAINTING,
-    // Set when we have a new displayport in the pipeline that we want to paint.
-    // When a ShadowLayersUpdate comes in, we dispatch a new repaint using
-    // mFrameMetrics.mDisplayPort (the most recent request) if this is toggled.
-    // This is distinct from CONTENT_PAINTING in that it signals that a repaint
-    // is happening, whereas this signals that we want to repaint as soon as the
-    // previous paint finishes. When the request is eventually made, it will use
-    // the most up-to-date metrics.
-   CONTENT_PAINTING_AND_PAINT_PENDING
   };
 
   /**
@@ -467,10 +473,19 @@ private:
   AxisX mX;
   AxisY mY;
 
-  // Protects |mFrameMetrics|, |mLastContentPaintMetrics| and |mState|. Before
-  // manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the monitor
-  // should be held. When setting |mState|, either the SetState() function can
-  // be used, or the monitor can be held and then |mState| updated.
+  // Most up-to-date constraints on zooming. These should always be reasonable
+  // values; for example, allowing a min zoom of 0.0 can cause very bad things
+  // to happen.
+  bool mAllowZoom;
+  float mMinZoom;
+  float mMaxZoom;
+
+  // Protects |mFrameMetrics|, |mLastContentPaintMetrics|, |mState| and
+  // |mMetaViewportInfo|. Before manipulating |mFrameMetrics| or
+  // |mLastContentPaintMetrics|, the monitor should be held. When setting
+  // |mState|, either the SetState() function can be used, or the monitor can be
+  // held and then |mState| updated.  |mMetaViewportInfo| should be updated
+  // using UpdateMetaViewport().
   Monitor mMonitor;
 
   // The last time the compositor has sampled the content transform for this
@@ -491,13 +506,20 @@ private:
   // |mMonitor|; that is, it should be held whenever this is updated.
   PanZoomState mState;
 
+  // How long it took in the past to paint after a series of previous requests.
+  nsTArray<TimeDuration> mPreviousPaintDurations;
+
+  // When the last paint request started. Used to determine the duration of
+  // previous paints.
+  TimeStamp mPreviousPaintStartTime;
+
   int mDPI;
 
   // Stores the current paint status of the frame that we're managing. Repaints
   // may be triggered by other things (like content doing things), in which case
   // this status will not be updated. It is only changed when this class
   // requests a repaint.
-  ContentPainterStatus mContentPainterStatus;
+  bool mWaitingForContentToPaint;
 
   // Flag used to determine whether or not we should disable handling of the
   // next batch of touch events. This is used for sync scrolling of subframes.
