@@ -160,8 +160,7 @@ let DOMApplicationRegistry = {
                      "Webapps:InstallPackage", "Webapps:GetBasePath",
                      "Webapps:GetList", "Webapps:RegisterForMessages",
                      "Webapps:UnregisterForMessages",
-                     "Webapps:CancelDownload", "Webapps:CheckForUpdate",
-                     "Webapps::Download", "Webapps::ApplyDownload"];
+                     "Webapps:CancelDownload", "Webapps:CheckForUpdate"];
 
     this.frameMessages = ["Webapps:ClearBrowserData"];
 
@@ -508,9 +507,7 @@ let DOMApplicationRegistry = {
       if (!(aMsgName in this.children)) {
         this.children[aMsgName] = [];
       }
-      if (this.children[aMsgName].indexOf(aMm) === -1) {
-        this.children[aMsgName].push(aMm);
-      }
+      this.children[aMsgName].push(aMm);
     }, this);
   },
 
@@ -581,17 +578,11 @@ let DOMApplicationRegistry = {
       case "Webapps:GetList":
         this.addMessageListener(["Webapps:AddApp", "Webapps:RemoveApp"], mm);
         return this.webapps;
-      case "Webapps:Download":
-        this.startDownload(msg.manifestURL);
-        break;
       case "Webapps:CancelDownload":
-        this.cancelDownload(msg.manifestURL);
+        this.cancelDowload(msg.manifestURL);
         break;
       case "Webapps:CheckForUpdate":
         this.checkForUpdate(msg, mm);
-        break;
-      case "Webapps::ApplyDownload":
-        this.ApplyDownload(msg.manifestURL);
         break;
       case "Activities:Register:OK":
         this.activitiesRegistered++;
@@ -667,20 +658,20 @@ let DOMApplicationRegistry = {
     Services.obs.notifyObservers(aMm, "webapps-launch", JSON.stringify(aData));
   },
 
-  cancelDownload: function cancelDownload(aManifestURL) {
-    // We can't cancel appcache downloads for now.
+  cancelDownload: function cancelDowload(aManifestURL) {
+    // We can't cancel appcache dowloads for now.
     if (!this.downloads[aManifestURL]) {
       return;
     }
     // This is a HTTP channel.
     let download = this.downloads[aManifestURL]
     download.channel.cancel(Cr.NS_BINDING_ABORTED);
-    let app = this.webapps[download.appId];
+    let app = this.webapps[dowload.appId];
 
     app.progress = 0;
     app.installState = app.previousState;
-    app.downloading = false;
-    app.downloadavailable = false;
+    app.dowloading = false;
+    app.dowloadavailable = false;
     app.downloadSize = 0;
     this._saveApps((function() {
       this.broadcastMessage("Webapps:PackageEvent",
@@ -689,87 +680,6 @@ let DOMApplicationRegistry = {
                                app: app,
                                error: "DOWNLOAD_CANCELED" });
     }).bind(this));
-  },
-
-  startDownload: function cancelDownload(aManifestURL) {
-    let app = this.getAppByManifestURL(manifestURL);
-    if (!app) {
-      return;
-    }
-
-    let id = this._appIdForManifestURL(manifestURL);
-
-    // We need to get the update manifest here, not the webapp manifest.
-    let file = FileUtils.getFile(DIRECTORY_NAME,
-                                 ["webapps", id, "update.webapp"], true);
-
-    this._loadJSONAsync(file, (function(aJSON) {
-      if (!aJSON) {
-        return;
-      }
-
-      let manifest = new DOMApplicationManifest(aJSON, app.origin);
-      this.downloadPackage(manifest, { manifestURL: aManifestURL,
-                                       origin: app.origin }, true,
-        function(aId, aManifest) {
-          // Success! Keep the zip in of TmpD, we'll move it out when
-          // applyDownload() will be called.
-          let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);
-
-          // Save the manifest in TmpD also
-          let manFile = tmpDir.clone();
-          manFile.append("manifest.webapp");
-          DOMApplicationRegistry._writeFile(manFile,
-                                            JSON.stringify(aManifest),
-                                            function() { });
-          // Set state and fire events.
-          app.downloading = false;
-          app.downloadavailable = false;
-          app.readyToApplyDownload = true;
-          DOMApplicationRegistry._saveApps(function() {
-            debug("About to fire Webapps:PackageEvent");
-            DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
-                                                    { type: "downloaded",
-                                                      manifestURL: manifestURL,
-                                                      app: app,
-                                                      manifest: aManifest });
-          });
-        });
-    }).bind(this));
-  },
-
-  applyDownload: function applyDownload(aManifestURL) {
-    let app = this.getAppByManifestURL(manifestURL);
-    if (!app || (app && !app.readyToApplyDownload)) {
-      return;
-    }
-
-    let id = this._appIdForManifestURL(aApp.manifestURL);
-
-    // Move the application.zip and manifest.webapp files out of TmpD
-    let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);
-    let manFile = tmpDir.clone();
-    manFile.append("manifest.webapp");
-    let appFile = tmpDir.clone();
-    appFile.append("application.zip");
-
-    let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
-    appFile.moveTo(dir, "application.zip");
-    manFile.moveTo(dir, "manifest.webapp");
-
-    try {
-      tmpDir.remove(true);
-    } catch(e) { }
-
-    // Get the manifest, and set properties.
-    this.getManifestFor(app.origin, function(aData) {
-      app.readyToApplyDownload = false;
-      this.broadcastMessage("Webapps:PackageEvent",
-                            { type: "applied",
-                              manifestURL: aApp.manifestURL,
-                              app: app,
-                              manifest: aData });
-    });
   },
 
   startOfflineCacheDownload: function startOfflineCacheDownload(aManifest, aApp, aProfileDir) {
@@ -904,19 +814,6 @@ let DOMApplicationRegistry = {
 
     function updatePackagedApp(aManifest) {
       debug("updatePackagedApp");
-      let manifest = new DOMApplicationManifest(aManifest, app.manifestURL);
-      // A package is available: set downloadAvailable to fire the matching
-      // event.
-      app.downloadAvailable = true;
-      app.downloadSize = manifest.size;
-      aData.event = "downloadavailable";
-      aData.app = {
-        downloadAvailable: true,
-        downloadSize: manifest.size
-      }
-      DOMApplicationRegistry._saveApps(function() {
-        aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
-      });
     }
 
     function updateHostedApp(aManifest) {
@@ -988,7 +885,7 @@ let DOMApplicationRegistry = {
         } else {
           app.etag = xhr.getResponseHeader("Etag");
           app.lastCheckedUpdate = Date.now();
-          if (manifest.package_path) {
+          if (package_path in manifest) {
             updatePackagedApp(manifest);
           } else {
             updateHostedApp(manifest);
@@ -1125,39 +1022,7 @@ let DOMApplicationRegistry = {
 
     this.startOfflineCacheDownload(manifest, appObject, aProfileDir);
     if (manifest.package_path) {
-      // origin for install apps is meaningless here, since it's app:// and this
-      // can't be used to resolve package paths.
-      manifest = new DOMApplicationManifest(jsonManifest, app.manifestURL);
-      this.downloadPackage(manifest, appObject, false, function(aId, aManifest) {
-        // Success! Move the zip out of TmpD.
-        let app = DOMApplicationRegistry.webapps[id];
-        let zipFile = FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
-        let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
-        zipFile.moveTo(dir, "application.zip");
-        let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);
-        try {
-          tmpDir.remove(true);
-        } catch(e) { }
-
-        // Save the manifest
-        let manFile = dir.clone();
-        manFile.append("manifest.webapp");
-        DOMApplicationRegistry._writeFile(manFile,
-                                          JSON.stringify(aManifest),
-                                          function() { });
-        // Set state and fire events.
-        app.installState = "installed";
-        app.downloading = false;
-        app.downloadavailable = false;
-        DOMApplicationRegistry._saveApps(function() {
-          debug("About to fire Webapps:PackageEvent");
-          DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
-                                                  { type: "installed",
-                                                    manifestURL: appObject.manifestURL,
-                                                    app: app,
-                                                    manifest: aManifest });
-        });
-      });
+      this.downloadPackage(manifest, appObject);
     }
   },
 
@@ -1226,7 +1091,7 @@ let DOMApplicationRegistry = {
     }).bind(this));
   },
 
-  downloadPackage: function(aManifest, aApp, aIsUpdate, aOnSuccess) {
+  downloadPackage: function(aManifest, aApp) {
     // Here are the steps when installing a package:
     // - create a temp directory where to store the app.
     // - download the zip in this directory.
@@ -1282,7 +1147,7 @@ let DOMApplicationRegistry = {
     this.downloads[aApp.manifestURL] =
       { channel:requestChannel,
         appId: id,
-        previousState: aIsUpdate ? "installed" : "pending"
+        previousState: "pending"
       };
     requestChannel.notificationCallbacks = {
       QueryInterface: function notifQI(aIID) {
@@ -1351,10 +1216,33 @@ let DOMApplicationRegistry = {
             throw "INVALID_SECURITY_LEVEL";
           }
 
-          if (aOnSuccess) {
-            aOnSuccess(id, manifest);
-          }
-          delete DOMApplicationRegistry.downloads[aApp.manifestURL];
+          // Success! Move the zip out of TmpD.
+          let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
+          zipFile.moveTo(dir, "application.zip");
+          let tmpDir = FileUtils.getDir("TmpD", ["webapps", id], true, true);
+          try {
+            tmpDir.remove(true);
+          } catch(e) { }
+
+          // Save the manifest
+          let manFile = dir.clone();
+          manFile.append("manifest.webapp");
+          DOMApplicationRegistry._writeFile(manFile,
+                                            JSON.stringify(manifest),
+                                            function() { });
+          // Set state and fire events.
+          app.installState = "installed";
+          app.dowloading = false;
+          app.dowloadavailable = false;
+          DOMApplicationRegistry._saveApps(function() {
+            debug("About to fire Webapps:PackageEvent");
+            DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
+                                                    { type: "installed",
+                                                      manifestURL: aApp.manifestURL,
+                                                      app: app,
+                                                      manifest: manifest });
+            delete DOMApplicationRegistry.downloads[aApp.manifestURL]
+          });
         } catch (e) {
           // XXX we may need new error messages.
           cleanup(e);

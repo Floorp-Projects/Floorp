@@ -438,8 +438,7 @@ WebappsApplication.prototype = {
   },
 
   download: function() {
-    cpmm.sendAsyncMessage("Webapps:Download",
-                          { manifestURL: this.manifestURL });
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   cancelDownload: function() {
@@ -539,9 +538,6 @@ WebappsApplication.prototype = {
             if (msg.event == "downloadapplied") {
               Services.DOMRequest.fireSuccess(req, this.manifestURL);
               this._fireEvent("downloadapplied", this._ondownloadapplied);
-            } else if (msg.event == "downloadavailable") {
-              Services.DOMRequest.fireSuccess(req, this.manifestURL);
-              this._fireEvent("downloadavailable", this._ondownloadavailable);
             }
           }
           break;
@@ -582,18 +578,6 @@ WebappsApplication.prototype = {
               this.installState = app.installState;
               this._downloadError = msg.error;
               this._fireEvent("downloaderror", this._ondownloaderror);
-              break;
-            case "downloaded":
-              app = msg.app;
-              this.downloading = app.downloading;
-              this.downloadavailable = app.downloadavailable;
-              this.readyToApplyDownload = app.readyToApplyDownload;
-              this._fireEvent("downloaded", this._ondownloaded);
-              break;
-            case "applied":
-              app = msg.app;
-              this.readyToApplyDownload = app.readyToApplyDownload;
-              this._fireEvent("downloadapplied", this._ondownloadapplied);
               break;
           }
           break;
@@ -654,12 +638,7 @@ WebappsApplicationMgmt.prototype = {
   },
 
   applyDownload: function(aApp) {
-    if (!aApp.readyToApplyDownload) {
-      return;
-    }
-
-    cpmm.sendAsyncMessage("Webapps::ApplyDownload",
-                          { manifestURL: aApp.manifestURL });
+    return Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   getAll: function() {
