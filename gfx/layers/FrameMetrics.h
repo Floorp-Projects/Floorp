@@ -184,9 +184,32 @@ public:
   // This is valid on any layer unless it has no content.
   gfx::Rect mScrollableRect;
 
-  // This represents the resolution at which the associated layer
-  // will been rendered.
+  // ---------------------------------------------------------------------------
+  // The following metrics are dimensionless.
+  //
+
+  // The resolution, along both axes, that the current frame has been painted
+  // at.
+  //
+  // Every time this frame is composited and the compositor samples its
+  // transform, this metric is used to create a transform which is
+  // post-multiplied into the parent's transform. Since this only happens when
+  // we walk the layer tree, the resulting transform isn't stored here. Thus the
+  // resolution of parent layers is opaque to this metric.
   gfxSize mResolution;
+
+  // The amount we are currently zooming the frame. This is distinct from
+  // |mResolution| as we can paint a frame at a different resolution than we
+  // zoom it at. This is useful in situations where we want to zoom a frame
+  // without forcing a repaint. At steady state, this and |mResolution| will be
+  // equal.
+  //
+  // Every time this frame is composited and the compositor samples its
+  // transform, this metric is used to create a transform which is
+  // post-multiplied into the parent's transform. Since this only happens when
+  // we walk the layer tree, the resulting transform isn't stored here. Thus the
+  // zoom of parent layers is opaque to this metric.
+  gfxSize mZoom;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
   // This can vary based on a variety of things, such as reflowing-zoom. The

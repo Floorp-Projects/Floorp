@@ -847,7 +847,7 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
     data += nsPrintfCString(", \"y\" : %d", NS_lround(aFrameMetrics.mScrollOffset.y));
     // We don't treat the x and y scales any differently for this
     // semi-platform-specific code.
-    data += nsPrintfCString(", \"zoom\" : %f", aFrameMetrics.mResolution.width);
+    data += nsPrintfCString(", \"zoom\" : %f", aFrameMetrics.mZoom.width);
     data += nsPrintfCString(", \"displayPort\" : ");
         data += nsPrintfCString("{ \"x\" : %f", aFrameMetrics.mDisplayPort.x);
         data += nsPrintfCString(", \"y\" : %f", aFrameMetrics.mDisplayPort.y);
