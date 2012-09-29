@@ -122,6 +122,22 @@ public:
                            bool aAllow,
                            BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual bool
+  ConnectHeadset(const nsAString& aDeviceAddress,
+                 const nsAString& aAdapterPath,
+                 BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  DisconnectHeadset(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual bool
+  ConnectObjectPush(const nsAString& aDeviceAddress,
+                    const nsAString& aAdapterPath,
+                    BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  DisconnectObjectPush(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
 protected:
   BluetoothServiceChildProcess();
   virtual ~BluetoothServiceChildProcess();
