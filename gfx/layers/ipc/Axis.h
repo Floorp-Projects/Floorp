@@ -165,10 +165,10 @@ public:
   bool ScaleWillOverscrollBothSides(float aScale);
 
   float GetOrigin();
-  float GetViewportLength();
+  float GetCompositionLength();
   float GetPageStart();
   float GetPageLength();
-  float GetViewportEnd();
+  float GetCompositionEnd();
   float GetPageEnd();
 
   virtual float GetPointOffset(const gfx::Point& aPoint) = 0;
