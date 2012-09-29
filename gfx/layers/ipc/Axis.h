@@ -117,6 +117,12 @@ public:
   float GetExcess();
 
   /**
+   * Gets the factor of acceleration applied to the velocity, based on the
+   * amount of flings that have been done successively.
+   */
+  float GetAccelerationFactor();
+
+  /**
    * Gets the raw velocity of this axis at this moment.
    */
   float GetVelocity();

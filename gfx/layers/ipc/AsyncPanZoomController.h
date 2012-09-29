@@ -205,7 +205,9 @@ public:
    */
   static const gfx::Rect CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
-    const gfx::Point& aVelocity);
+    const gfx::Point& aVelocity,
+    const gfx::Point& aAcceleration,
+    double aEstimatedPaintDuration);
 
 protected:
   /**
@@ -334,6 +336,11 @@ protected:
   const gfx::Point GetVelocityVector();
 
   /**
+   * Gets a vector of the acceleration factors of each axis.
+   */
+  const gfx::Point GetAccelerationVector();
+
+  /**
    * Gets a reference to the first SingleTouchData from a MultiTouchInput.  This
    * gets only the first one and assumes the rest are either missing or not
    * relevant.
@@ -365,8 +372,11 @@ protected:
    * |aDisplayPortLength|. If enlarged, these will be updated with the new
    * metrics.
    */
-  static bool EnlargeDisplayPortAlongAxis(float aCompositionBounds,
+  static bool EnlargeDisplayPortAlongAxis(float aSkateSizeMultiplier,
+                                          double aEstimatedPaintDuration,
+                                          float aCompositionBounds,
                                           float aVelocity,
+                                          float aAcceleration,
                                           float* aDisplayPortOffset,
                                           float* aDisplayPortLength);
 
@@ -495,6 +505,13 @@ private:
   // Stores the state of panning and zooming this frame. This is protected by
   // |mMonitor|; that is, it should be held whenever this is updated.
   PanZoomState mState;
+
+  // How long it took in the past to paint after a series of previous requests.
+  nsTArray<TimeDuration> mPreviousPaintDurations;
+
+  // When the last paint request started. Used to determine the duration of
+  // previous paints.
+  TimeStamp mPreviousPaintStartTime;
 
   int mDPI;
 

@@ -459,8 +459,10 @@ TabChild::HandlePossibleMetaViewportChange()
   metrics.mZoom.width = metrics.mZoom.height =
     metrics.mResolution.width = metrics.mResolution.height = zoom;
   metrics.mDisplayPort = AsyncPanZoomController::CalculatePendingDisplayPort(
-    metrics,
-    gfx::Point(0.0f, 0.0f));
+    // The page must have been refreshed in some way such as a new document or
+    // new CSS viewport, so we know that there's no velocity, acceleration, and
+    // we have no idea how long painting will take.
+    metrics, gfx::Point(0.0f, 0.0f), gfx::Point(0.0f, 0.0f), 0.0);
   // Force a repaint with these metrics. This, among other things, sets the
   // displayport, so we start with async painting.
   RecvUpdateFrame(metrics);
