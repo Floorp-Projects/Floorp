@@ -1044,13 +1044,6 @@ nsIntPoint nsBaseWidget::GetClientOffset()
   return nsIntPoint(0, 0);
 }
 
-NS_METHOD nsBaseWidget::SetBounds(const nsIntRect &aRect)
-{
-  mBounds = aRect;
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsBaseWidget::GetNonClientMargins(nsIntMargin &margins)
 {
