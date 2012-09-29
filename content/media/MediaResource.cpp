@@ -981,7 +981,6 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
 
   if (mByteRangeDownloads) {
     // Query decoder for chunk containing desired offset.
-    // XXX Implement |nsDASHRepDecoder|::|GetByteRange| in future patch.
     nsresult rv;
     {
       ReentrantMonitorAutoEnter mon(mSeekOffsetMonitor);

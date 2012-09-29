@@ -711,7 +711,7 @@ public:
    virtual void NotifyAudioAvailableListener();
 
   // Notifies the element that decoding has failed.
-  void DecodeError();
+  virtual void DecodeError();
 
   // Schedules the state machine to run one cycle on the shared state
   // machine thread. Main thread only.

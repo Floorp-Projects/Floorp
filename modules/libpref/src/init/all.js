@@ -165,6 +165,9 @@ pref("media.wave.enabled", true);
 #ifdef MOZ_WEBM
 pref("media.webm.enabled", true);
 #endif
+#ifdef MOZ_DASH
+pref("media.dash.enabled", true);
+#endif
 #ifdef MOZ_GSTREAMER
 pref("media.h264.enabled", true);
 #endif
