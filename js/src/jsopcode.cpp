@@ -6431,6 +6431,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             if (0 < jmpoff && pc + jmpoff <= target) {
                 pc += jmpoff;
                 oplen = 0;
+                /* Use the Hidden pc count if we follow the goto */
                 if (hpcdepth != unsigned(-1)) {
                     pcdepth = hpcdepth;
                     hpcdepth = unsigned(-1);
@@ -6438,8 +6439,11 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
                 continue;
             }
 
-            if (!script->hasTrynotes())
+            if (!script->hasTrynotes()) {
+                /* Use the normal pc count if continue after the goto */
+                hpcdepth = unsigned(-1);
                 continue;
+            }
 
             /*
              * If we do not follow a goto we look for another mean to continue
