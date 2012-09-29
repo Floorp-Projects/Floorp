@@ -223,6 +223,11 @@ public:
     bool SetPixelScale(float aScale);
 
     /**
+     * Returns the pixel scaling factor (page zoom factor) applied.
+     */
+    float GetPixelScale() const { return mPixelScale; }
+
+    /**
      * True if this device context was created for printing.
      */
     bool IsPrinterSurface();
