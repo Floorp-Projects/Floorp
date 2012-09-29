@@ -245,7 +245,7 @@ class nsCookieService : public nsICookieService
    * (thus instantiating it, if necessary) and clear all the cookies for that
    * app.
    */
-  static void AppUninstallObserverInit();
+  static void AppClearDataObserverInit();
 
   protected:
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
