@@ -15,7 +15,7 @@ interface nsILoadContext;
  * The application cache service manages the set of application cache
  * groups.
  */
-[scriptable, uuid(1750F671-0170-4d3f-A836-455501141E32)]
+[scriptable, uuid(F94DB1CC-AB56-480b-8F86-40748878557E)]
 interface nsIApplicationCacheService : nsISupports
 {
     /**
@@ -61,20 +61,6 @@ interface nsIApplicationCacheService : nsISupports
      * Deactivate the currently-active cache object for a cache group.
      */
     void deactivateGroup(in ACString group);
-
-    /**
-     * Deletes some or all of an application's cache entries.  
-     *
-     * @param appId
-     *    The mozIApplication.localId of the application.
-     * 
-     * @param discardOnlyBrowserEntries 
-     *    If true, only entries marked as 'inBrowserElement' are deleted 
-     *    (this is used by browser applications to delete user browsing 
-     *    data/history.).  If false, *all* entries for the given appId are
-     *    deleted (this is used for application uninstallation).
-     */
-    void discardByAppId(in int32_t appID, in boolean discardOnlyBrowserEntries);
 
     /**
      * Try to find the best application cache to serve a resource.
