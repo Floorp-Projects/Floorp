@@ -19,6 +19,7 @@
 #include "mozilla/Observer.h"
 #include "nsAutoPtr.h"
 #include "nsIAudioManager.h"
+#include "nsIObserver.h"
 
 // {b2b51423-502d-4d77-89b3-7786b562b084}
 #define NS_AUDIOMANAGER_CID {0x94f6fd70, 0x7615, 0x4af9, \
@@ -36,10 +37,12 @@ namespace dom {
 namespace gonk {
 
 class AudioManager : public nsIAudioManager
+                   , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUDIOMANAGER
+  NS_DECL_NSIOBSERVER
 
   AudioManager();
   ~AudioManager();
