@@ -18,7 +18,7 @@ static const float EPSILON = 0.0001f;
  * or we get a touch point very far away from the previous position for some
  * reason.
  */
-static const float MAX_EVENT_ACCELERATION = 0.5f;
+static const float MAX_EVENT_ACCELERATION = 999.0f;
 
 /**
  * Amount of friction applied during flings.
@@ -95,15 +95,19 @@ void Axis::StartTouch(int32_t aPos) {
 }
 
 float Axis::GetDisplacementForDuration(float aScale, const TimeDuration& aDelta) {
-  float velocityFactor = powf(ACCELERATION_MULTIPLIER,
-                              NS_MAX(0, (mAcceleration - 4) * 3));
-  float displacement = mVelocity * aScale * aDelta.ToMilliseconds() * velocityFactor;
+  if (fabsf(mVelocity) < VELOCITY_THRESHOLD) {
+    mAcceleration = 0;
+  }
+
+  float accelerationFactor = GetAccelerationFactor();
+  float displacement = mVelocity * aScale * aDelta.ToMilliseconds() * accelerationFactor;
   // If this displacement will cause an overscroll, throttle it. Can potentially
   // bring it to 0 even if the velocity is high.
   if (DisplacementWillOverscroll(displacement) != OVERSCROLL_NONE) {
     // No need to have a velocity along this axis anymore; it won't take us
     // anywhere, so we're just spinning needlessly.
     mVelocity = 0.0f;
+    mAcceleration = 0;
     displacement -= DisplacementWillOverscrollAmount(displacement);
   }
   return displacement;
@@ -229,6 +233,10 @@ float Axis::ScaleWillOverscrollAmount(float aScale, int32_t aFocus) {
 
 float Axis::GetVelocity() {
   return mVelocity;
+}
+
+float Axis::GetAccelerationFactor() {
+  return powf(ACCELERATION_MULTIPLIER, NS_MAX(0, (mAcceleration - 4) * 3));
 }
 
 float Axis::GetCompositionEnd() {
