@@ -105,7 +105,7 @@ nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret)
     return rv;
 
   int64_t size = PR_Available64(fd);
-  if (size >= PR_INT32_MAX)
+  if (size >= INT32_MAX)
     return NS_ERROR_FILE_TOO_BIG;
 
   PRFileMap *map = PR_CreateFileMap(fd, size, PR_PROT_READONLY);

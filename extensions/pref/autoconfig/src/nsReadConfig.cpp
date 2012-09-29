@@ -284,7 +284,7 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, int32_t obsc
     if (NS_FAILED(rv))
         return rv;
     // PR_Malloc dones't support over 4GB
-    if (fs64 > PR_UINT32_MAX)
+    if (fs64 > UINT32_MAX)
       return NS_ERROR_FILE_TOO_BIG;
     uint32_t fs = (uint32_t)fs64;
 

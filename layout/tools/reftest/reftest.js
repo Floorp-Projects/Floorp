@@ -278,6 +278,10 @@ function InitAndStartRefTests()
         gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + e + "\n");
     }
 
+    try {
+      prefs.setBoolPref("android.widget_paints_background", false);
+    } catch (e) {}
+
     /* set the gLoadTimeout */
     try {
         gLoadTimeout = prefs.getIntPref("reftest.timeout");

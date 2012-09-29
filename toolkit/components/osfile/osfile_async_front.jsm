@@ -48,6 +48,20 @@ let Type = OS.Shared.Type;
 // The library of promises.
 Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
 
+/**
+ * Return a shallow clone of the enumerable properties of an object
+ */
+let clone = function clone(object) {
+  let result = {};
+  for (let k in object) {
+    result[k] = object[k];
+  }
+  return result;
+};
+
+/**
+ * A shared constant used to normalize a set of options to nothing.
+ */
 const noOptions = {};
 
 /**
@@ -306,8 +320,8 @@ File.prototype = {
     // we need to extract the |byteLength| now, as it will be lost
     // by communication
     if ("byteLength" in buffer && (!options || !"bytes" in options)) {
-      options = Object.create(options || noOptions,
-        {bytes: {value: buffer.byteLength, enumerable: true}});
+      options = clone(options || noOptions);
+      options.bytes = buffer.byteLength;
     }
     // Note: Classic semantics for ArrayBuffer communication would imply
     // that posting the ArrayBuffer removes ownership from the sender
@@ -335,8 +349,8 @@ File.prototype = {
     // we need to extract the |byteLength| now, as it will be lost
     // by communication
     if ("byteLength" in buffer && (!options || !"bytes" in options)) {
-      options = Object.create(options || noOptions,
-        {bytes: {value: buffer.byteLength, enumerable: true}});
+      options = clone(options || noOptions);
+      options.bytes = buffer.byteLength;
     }
     // Note: Classic semantics for ArrayBuffer communication would imply
     // that posting the ArrayBuffer removes ownership from the sender
@@ -551,6 +565,17 @@ File.removeEmptyDir = function removeEmptyDir(path, options) {
     [Type.path.toMsg(path), options], path);
 };
 
+/**
+ * Remove an existing file.
+ *
+ * @param {string} path The name of the file.
+ */
+File.remove = function remove(path) {
+  return Scheduler.post("remove",
+    [Type.path.toMsg(path)]);
+};
+
+
 
 /**
  * Create a directory.
@@ -570,6 +595,58 @@ File.makeDir = function makeDir(path, options) {
 };
 
 /**
+ * Return the contents of a file
+ *
+ * @param {string} path The path to the file.
+ * @param {number=} bytes Optionally, an upper bound to the number of bytes
+ * to read.
+ *
+ * @resolves {{buffer: ArrayBuffer, bytes: number}} A buffer holding the bytes
+ * and the number of bytes read from the file.
+ */
+File.read = function read(path, bytes) {
+  return Scheduler.post("read",
+    [Type.path.toMsg(path), bytes], path);
+};
+
+/**
+ * Write a file, atomically.
+ *
+ * By opposition to a regular |write|, this operation ensures that,
+ * until the contents are fully written, the destination file is
+ * not modified.
+ *
+ * Important note: In the current implementation, option |tmpPath|
+ * is required. This requirement should disappear as part of bug 793660.
+ *
+ * @param {string} path The path of the file to modify.
+ * @param {ArrayByffer} buffer A buffer containing the bytes to write.
+ * @param {number} bytes The number of bytes to write.
+ * @param {*=} options Optionally, an object determining the behavior
+ * of this function. This object may contain the following fields:
+ * - {number} offset The offset in |buffer| at which to start extracting
+ * data
+ * - {string} tmpPath The path at which to write the temporary file.
+ *
+ * @return {number} The number of bytes actually written.
+ */
+File.writeAtomic = function writeAtomic(path, buffer, options) {
+  // Copy |options| to avoid modifying the original object
+  options = clone(options || noOptions);
+  // As options.tmpPath is a path, we need to encode it as |Type.path| message
+  if ("tmpPath" in options) {
+    options.tmpPath = Type.path.toMsg(options.tmpPath);
+  };
+  if ("byteLength" in buffer && (!("bytes" in options))) {
+    options.bytes = buffer.byteLength;
+  };
+  return Scheduler.post("writeAtomic",
+    [Type.path.toMsg(path),
+    Type.void_t.in_ptr.toMsg(buffer),
+    options], [options, buffer]);
+};
+
+/**
  * Information on a file, as returned by OS.File.stat or
  * OS.File.prototype.stat
  *
@@ -582,6 +659,173 @@ File.Info.fromMsg = function fromMsg(value) {
   return new File.Info(value);
 };
 
+/**
+ * Iterate asynchronously through a directory
+ *
+ * @constructor
+ */
+let DirectoryIterator = function DirectoryIterator(path, options) {
+  /**
+   * Open the iterator on the worker thread
+   *
+   * @type {Promise}
+   * @resolves {*} A message accepted by the methods of DirectoryIterator
+   * in the worker thread
+   * @rejects {StopIteration} If all entries have already been visited
+   * or the iterator has been closed.
+   */
+  this._itmsg = Scheduler.post(
+    "new_DirectoryIterator", [Type.path.toMsg(path), options],
+    path
+  );
+  this._isClosed = false;
+};
+DirectoryIterator.prototype = {
+  /**
+   * Get the next entry in the directory.
+   *
+   * @return {Promise}
+   * @resolves {OS.File.Entry}
+   * @rejects {StopIteration} If all entries have already been visited.
+   */
+  next: function next() {
+    let self = this;
+    let promise = this._itmsg;
+
+    // Get the iterator, call _next
+    promise = promise.then(
+      function withIterator(iterator) {
+        return self._next(iterator);
+      });
+
+    return promise;
+  },
+  /**
+   * Get several entries at once.
+   *
+   * @param {number=} length If specified, the number of entries
+   * to return. If unspecified, return all remaining entries.
+   * @return {Promise}
+   * @resolves {Array} An array containing the |length| next entries.
+   */
+  nextBatch: function nextBatch(size) {
+    if (this._isClosed) {
+      return Promise.resolve([]);
+    }
+    let promise = this._itmsg;
+    promise = promise.then(
+      function withIterator(iterator) {
+        return Scheduler.post("DirectoryIterator_prototype_nextBatch", [iterator, size]);
+      });
+    promise = promise.then(
+      function withEntries(array) {
+        return array.map(DirectoryIterator.Entry.fromMsg);
+      });
+    return promise;
+  },
+  /**
+   * Apply a function to all elements of the directory sequentially.
+   *
+   * @param {Function} cb This function will be applied to all entries
+   * of the directory. It receives as arguments
+   *  - the OS.File.Entry corresponding to the entry;
+   *  - the index of the entry in the enumeration;
+   *  - the iterator itself - return |iterator.close()| to stop the loop.
+   *
+   * If the callback returns a promise, iteration waits until the
+   * promise is resolved before proceeding.
+   *
+   * @return {Promise} A promise resolved once the loop has reached
+   * its end.
+   */
+  forEach: function forEach(cb, options) {
+    if (this._isClosed) {
+      return Promise.resolve();
+    }
+
+    let self = this;
+    let position = 0;
+    let iterator;
+
+    // Grab iterator
+    let promise = this._itmsg.then(
+      function(aIterator) {
+        iterator = aIterator;
+      }
+    );
+
+    // Then iterate
+    let loop = function loop() {
+      if (self._isClosed) {
+        return Promise.resolve();
+      }
+      return self._next(iterator).then(
+        function onSuccess(value) {
+          return Promise.resolve(cb(value, position++, self)).then(loop);
+        },
+        function onFailure(reason) {
+          if (reason == StopIteration) {
+            return;
+          }
+          throw reason;
+        }
+      );
+    };
+
+    return promise.then(loop);
+  },
+  /**
+   * Auxiliary method: fetch the next item
+   *
+   * @rejects {StopIteration} If all entries have already been visited
+   * or the iterator has been closed.
+   */
+  _next: function _next(iterator) {
+    if (this._isClosed) {
+      LOG("DirectoryIterator._next", "closed");
+      return this._itmsg;
+    }
+    let self = this;
+    let promise = Scheduler.post("DirectoryIterator_prototype_next", [iterator]);
+    promise = promise.then(
+      DirectoryIterator.Entry.fromMsg,
+      function onReject(reason) {
+        // If the exception is |StopIteration| (which we may determine only
+        // from its message...) we need to stop the iteration.
+        if (!(reason instanceof WorkerErrorEvent && reason.message == "uncaught exception: [object StopIteration]")) {
+          // Any exception other than StopIteration should be propagated as such
+          throw reason;
+        }
+        self.close();
+        throw StopIteration;
+      });
+    return promise;
+  },
+  /**
+   * Close the iterator
+   */
+  close: function close() {
+    if (this._isClosed) {
+      return;
+    }
+    this._isClosed = true;
+    let self = this;
+    this._itmsg.then(
+      function withIterator(iterator) {
+        self._itmsg = Promise.reject(StopIteration);
+        return Scheduler.post("DirectoryIterator_prototype_close", [iterator]);
+      }
+    );
+  }
+};
+
+DirectoryIterator.Entry = function Entry(value) {
+  return value;
+};
+DirectoryIterator.Entry.fromMsg = function fromMsg(value) {
+  return new DirectoryIterator.Entry(value);
+};
+
 // Constants
 Object.defineProperty(File, "POS_START", {value: OS.Shared.POS_START});
 Object.defineProperty(File, "POS_CURRENT", {value: OS.Shared.POS_CURRENT});
@@ -589,4 +833,4 @@ Object.defineProperty(File, "POS_END", {value: OS.Shared.POS_END});
 
 OS.File = File;
 OS.File.Error = OSError;
-
+OS.File.DirectoryIterator = DirectoryIterator;

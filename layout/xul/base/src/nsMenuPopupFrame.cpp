@@ -170,6 +170,8 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
     }
   }
 
+  AddStateBits(NS_FRAME_IN_POPUP);
+
   return rv;
 }
 
@@ -810,14 +812,6 @@ nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState)
   if (menuFrame) {
     menuFrame->PopupClosed(aDeselectMenu);
   }
-}
-
-void
-nsMenuPopupFrame::InvalidateInternal(const nsRect& aDamageRect,
-                                     nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                     uint32_t aFlags)
-{
-  InvalidateRoot(aDamageRect + nsPoint(aX, aY), aFlags);
 }
 
 void
@@ -1908,7 +1902,7 @@ nsMenuPopupFrame::CreatePopupView()
   // Create a view
   nsIView* parentView = viewManager->GetRootView();
   nsViewVisibility visibility = nsViewVisibility_kHide;
-  int32_t zIndex = PR_INT32_MAX;
+  int32_t zIndex = INT32_MAX;
   bool    autoZIndex = false;
 
   NS_ASSERTION(parentView, "no parent view");

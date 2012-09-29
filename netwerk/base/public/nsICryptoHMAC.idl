@@ -68,7 +68,7 @@ interface nsICryptoHMAC : nsISupports
      * @param aStream an input stream to read from.
      *
      * @param aLen how much to read from the given |aStream|.  Passing
-     *        PR_UINT32_MAX indicates that all data available will be used 
+     *        UINT32_MAX indicates that all data available will be used 
      *        to update the hash. 
      *
      * @throws NS_ERROR_NOT_INITIALIZED if |init| has not been 

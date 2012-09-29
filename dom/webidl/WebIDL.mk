@@ -39,6 +39,8 @@ webidl_files = \
   SVGPathSegList.webidl \
   SVGPointList.webidl \
   SVGTransformList.webidl \
+  TextDecoder.webidl \
+  TextEncoder.webidl \
   WebSocket.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \

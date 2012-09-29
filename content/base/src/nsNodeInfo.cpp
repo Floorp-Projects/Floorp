@@ -134,7 +134,7 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
       SetDOMStringToNull(mLocalName);
       break;
     default:
-      NS_ABORT_IF_FALSE(aNodeType == PR_UINT16_MAX,
+      NS_ABORT_IF_FALSE(aNodeType == UINT16_MAX,
                         "Unknown node type");
   }
 }

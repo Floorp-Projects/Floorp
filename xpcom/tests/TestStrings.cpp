@@ -686,9 +686,9 @@ bool test_appendint64()
   {
     nsCString str;
 
-    int64_t max = LL_MaxInt();
+    int64_t max = INT64_MAX;
     static const char max_expected[] = "9223372036854775807";
-    int64_t min = LL_MinInt();
+    int64_t min = INT64_MIN;
     static const char min_expected[] = "-9223372036854775808";
     static const char min_expected_oct[] = "1000000000000000000000";
     int64_t maxint_plus1 = LL_INIT(1, 0);
@@ -698,20 +698,20 @@ bool test_appendint64()
     str.AppendInt(max);
 
     if (!str.Equals(max_expected)) {
-      fprintf(stderr, "Error appending LL_MaxInt(): Got %s\n", str.get());
+      fprintf(stderr, "Error appending INT64_MAX: Got %s\n", str.get());
       return false;
     }
 
     str.Truncate();
     str.AppendInt(min);
     if (!str.Equals(min_expected)) {
-      fprintf(stderr, "Error appending LL_MinInt(): Got %s\n", str.get());
+      fprintf(stderr, "Error appending INT64_MIN: Got %s\n", str.get());
       return false;
     }
     str.Truncate();
     str.AppendInt(min, 8);
     if (!str.Equals(min_expected_oct)) {
-      fprintf(stderr, "Error appending LL_MinInt() (oct): Got %s\n", str.get());
+      fprintf(stderr, "Error appending INT64_MIN (oct): Got %s\n", str.get());
       return false;
     }
 
@@ -719,13 +719,13 @@ bool test_appendint64()
     str.Truncate();
     str.AppendInt(maxint_plus1);
     if (!str.Equals(maxint_plus1_expected)) {
-      fprintf(stderr, "Error appending PR_UINT32_MAX + 1: Got %s\n", str.get());
+      fprintf(stderr, "Error appending UINT32_MAX + 1: Got %s\n", str.get());
       return false;
     }
     str.Truncate();
     str.AppendInt(maxint_plus1, 16);
     if (!str.Equals(maxint_plus1_expected_x)) {
-      fprintf(stderr, "Error appending PR_UINT32_MAX + 1 (hex): Got %s\n", str.get());
+      fprintf(stderr, "Error appending UINT32_MAX + 1 (hex): Got %s\n", str.get());
       return false;
     }
 

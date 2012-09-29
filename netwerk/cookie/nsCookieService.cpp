@@ -48,6 +48,8 @@
 #include "mozilla/storage.h"
 #include "mozilla/Util.h" // for DebugOnly
 #include "mozilla/Attributes.h"
+#include "nsIAppsService.h"
+#include "mozIApplication.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -541,6 +543,37 @@ public:
 
 NS_IMPL_ISUPPORTS1(CloseCookieDBListener, mozIStorageCompletionCallback)
 
+namespace {
+
+class AppUninstallObserver MOZ_FINAL : public nsIObserver {
+public:
+  NS_DECL_ISUPPORTS
+
+  // nsIObserver implementation.
+  NS_IMETHODIMP
+  Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *data)
+  {
+    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "webapps-uninstall"));
+
+    nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
+    nsCOMPtr<mozIApplication> app;
+
+    appsService->GetAppFromObserverMessage(nsAutoString(data), getter_AddRefs(app));
+    NS_ENSURE_TRUE(app, NS_ERROR_UNEXPECTED);
+
+    uint32_t appId;
+    app->GetLocalId(&appId);
+    MOZ_ASSERT(appId != NECKO_NO_APP_ID);
+
+    nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID);
+    return cookieManager->RemoveCookiesForApp(appId, false);
+  }
+};
+
+NS_IMPL_ISUPPORTS1(AppUninstallObserver, nsIObserver)
+
+} // anonymous namespace
+
 /******************************************************************************
  * nsCookieService impl:
  * singleton instance ctor/dtor methods
@@ -580,6 +613,13 @@ nsCookieService::GetSingleton()
   }
 
   return gCookieService;
+}
+
+/* static */ void
+nsCookieService::AppUninstallObserverInit()
+{
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  observerService->AddObserver(new AppUninstallObserver(), "webapps-uninstall", /* holdsWeak= */ false);
 }
 
 /******************************************************************************
@@ -1673,7 +1713,7 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookiePurgeAge, &val))) {
     mCookiePurgeAge =
-      int64_t(LIMIT(val, 0, PR_INT32_MAX, PR_INT32_MAX)) * PR_USEC_PER_SEC;
+      int64_t(LIMIT(val, 0, INT32_MAX, INT32_MAX)) * PR_USEC_PER_SEC;
   }
 
   bool boolval;
@@ -1800,11 +1840,11 @@ nsCookieService::Add(const nsACString &aHost,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCookieService::Remove(const nsACString &aHost,
-                        const nsACString &aName,
-                        const nsACString &aPath,
-                        bool             aBlocked)
+
+nsresult
+nsCookieService::Remove(const nsACString& aHost, uint32_t aAppId,
+                        bool aInBrowserElement, const nsACString& aName,
+                        const nsACString& aPath, bool aBlocked)
 {
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
@@ -1822,7 +1862,7 @@ nsCookieService::Remove(const nsACString &aHost,
 
   nsListIter matchIter;
   nsRefPtr<nsCookie> cookie;
-  if (FindCookie(DEFAULT_APP_KEY(baseDomain),
+  if (FindCookie(nsCookieKey(baseDomain, aAppId, aInBrowserElement),
                  host,
                  PromiseFlatCString(aName),
                  PromiseFlatCString(aPath),
@@ -1852,6 +1892,15 @@ nsCookieService::Remove(const nsACString &aHost,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::Remove(const nsACString &aHost,
+                        const nsACString &aName,
+                        const nsACString &aPath,
+                        bool             aBlocked)
+{
+  return Remove(aHost, NECKO_NO_APP_ID, false, aName, aPath, aBlocked);
 }
 
 /******************************************************************************
@@ -2611,7 +2660,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
   nsCookieAttributes cookieAttributes;
 
   // init expiryTime such that session cookies won't prematurely expire
-  cookieAttributes.expiryTime = LL_MAXINT;
+  cookieAttributes.expiryTime = INT64_MAX;
 
   // aCookieHeader is an in/out param to point to the next cookie, if
   // there is one. Save the present value for logging purposes
@@ -3388,7 +3437,7 @@ nsCookieService::RemoveAllFromMemory()
   // which releases all their respective children.
   mDBState->hostTable.Clear();
   mDBState->cookieCount = 0;
-  mDBState->cookieOldestTime = LL_MAXINT;
+  mDBState->cookieOldestTime = INT64_MAX;
 }
 
 // stores temporary data for enumerating over the hash entries,
@@ -3404,7 +3453,7 @@ struct nsPurgeData
               mozIStorageBindingParamsArray *aParamsArray)
    : currentTime(aCurrentTime)
    , purgeTime(aPurgeTime)
-   , oldestTime(LL_MAXINT)
+   , oldestTime(INT64_MAX)
    , purgeList(aPurgeList)
    , removedList(aRemovedList)
    , paramsArray(aParamsArray)
@@ -3715,6 +3764,109 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
   }
 
   return NS_NewArrayEnumerator(aEnumerator, cookieList);
+}
+
+namespace {
+
+/**
+ * This structure is used as a in/out parameter when enumerating the cookies
+ * for an app.
+ * It will contain the app id and onlyBrowserElement flag information as input
+ * and will contain the array of matching cookies as output.
+ */
+struct GetCookiesForAppStruct {
+  uint32_t              appId;
+  bool                  onlyBrowserElement;
+  nsCOMArray<nsICookie> cookies;
+
+  GetCookiesForAppStruct() MOZ_DELETE;
+  GetCookiesForAppStruct(uint32_t aAppId, bool aOnlyBrowserElement)
+    : appId(aAppId)
+    , onlyBrowserElement(aOnlyBrowserElement)
+  {}
+};
+
+} // anonymous namespace
+
+/* static */ PLDHashOperator
+nsCookieService::GetCookiesForApp(nsCookieEntry* entry, void* arg)
+{
+  GetCookiesForAppStruct* data = static_cast<GetCookiesForAppStruct*>(arg);
+
+  if (entry->mAppId != data->appId ||
+      (data->onlyBrowserElement && !entry->mInBrowserElement)) {
+    return PL_DHASH_NEXT;
+  }
+
+  const nsCookieEntry::ArrayType& cookies = entry->GetCookies();
+
+  for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
+    data->cookies.AppendObject(cookies[i]);
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+nsCookieService::GetCookiesForApp(uint32_t aAppId, bool aOnlyBrowserElement,
+                                  nsISimpleEnumerator** aEnumerator)
+{
+  if (!mDBState) {
+    NS_WARNING("No DBState! Profile already closed?");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_ENSURE_TRUE(aAppId != NECKO_NO_APP_ID && aAppId != NECKO_UNKNOWN_APP_ID,
+                 NS_ERROR_INVALID_ARG);
+
+  GetCookiesForAppStruct data(aAppId, aOnlyBrowserElement);
+  mDBState->hostTable.EnumerateEntries(GetCookiesForApp, &data);
+
+  return NS_NewArrayEnumerator(aEnumerator, data.cookies);
+}
+
+NS_IMETHODIMP
+nsCookieService::RemoveCookiesForApp(uint32_t aAppId, bool aOnlyBrowserElement)
+{
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  nsresult rv = GetCookiesForApp(aAppId, aOnlyBrowserElement,
+                                 getter_AddRefs(enumerator));
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasMore;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsICookie> cookie;
+    rv = enumerator->GetNext(getter_AddRefs(cookie));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoCString host;
+    cookie->GetHost(host);
+
+    nsAutoCString name;
+    cookie->GetName(name);
+
+    nsAutoCString path;
+    cookie->GetPath(path);
+
+    // nsICookie do not carry the appId/inBrowserElement information.
+    // That means we have to guess. This is easy for appId but not for
+    // inBrowserElement flag.
+    // A simple solution is to always ask to remove the cookie with
+    // inBrowserElement = true and only ask for the other one to be removed if
+    // we happen to be in the case of !aOnlyBrowserElement.
+    // Anyway, with this solution, we will likely be looking for unexistant
+    // cookies.
+    //
+    // NOTE: we could make this better by getting nsCookieEntry objects instead
+    // of plain nsICookie.
+    Remove(host, aAppId, true, name, path, false);
+    if (!aOnlyBrowserElement) {
+      Remove(host, aAppId, false, name, path, false);
+    }
+  }
+
+  return NS_OK;
 }
 
 // find an exact cookie specified by host, name, and path that hasn't expired.

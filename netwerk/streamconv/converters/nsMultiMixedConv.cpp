@@ -40,7 +40,7 @@ nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel, uint32_t aPartID,
   mMultipartChannel(aMultipartChannel),
   mListener(aListener),
   mStatus(NS_OK),
-  mContentLength(LL_MAXUINT),
+  mContentLength(UINT64_MAX),
   mIsByteRangeRequest(false),
   mByteRangeStart(0),
   mByteRangeEnd(0),
@@ -592,7 +592,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             mNewPart = true;
             // Reset state so we don't carry it over from part to part
             mContentType.Truncate();
-            mContentLength = LL_MAXUINT;
+            mContentLength = UINT64_MAX;
             mContentDisposition.Truncate();
             mIsByteRangeRequest = false;
             mByteRangeStart = 0;
@@ -738,7 +738,7 @@ nsMultiMixedConv::nsMultiMixedConv() :
 {
     mTokenLen           = 0;
     mNewPart            = true;
-    mContentLength      = LL_MAXUINT;
+    mContentLength      = UINT64_MAX;
     mBuffer             = nullptr;
     mBufLen             = 0;
     mProcessingHeaders  = false;
@@ -865,7 +865,7 @@ nsMultiMixedConv::SendData(char *aBuffer, uint32_t aLen) {
     
     if (!mPartChannel) return NS_ERROR_FAILURE; // something went wrong w/ processing
 
-    if (mContentLength != LL_MAXUINT) {
+    if (mContentLength != UINT64_MAX) {
         // make sure that we don't send more than the mContentLength
         // XXX why? perhaps the Content-Length header was actually wrong!!
         if ((uint64_t(aLen) + mTotalSent) > mContentLength)
@@ -917,7 +917,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
     bool done = false;
     uint32_t lineFeedIncrement = 1;
     
-    mContentLength = LL_MAXUINT; // XXX what if we were already called?
+    mContentLength = UINT64_MAX; // XXX what if we were already called?
     while (cursorLen && (newLine = (char *) memchr(cursor, nsCRT::LF, cursorLen))) {
         // adjust for linefeeds
         if ((newLine > cursor) && (newLine[-1] == nsCRT::CR) ) { // CRLF
@@ -994,7 +994,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                 }
 
                 mIsByteRangeRequest = true;
-                if (mContentLength == LL_MAXUINT)
+                if (mContentLength == UINT64_MAX)
                     mContentLength = uint64_t(mByteRangeEnd - mByteRangeStart + 1);
             }
         }

@@ -307,7 +307,7 @@ ExternalHelperAppParent::GetContentDispositionHeader(nsACString& aContentDisposi
 NS_IMETHODIMP
 ExternalHelperAppParent::GetContentLength(int32_t *aContentLength)
 {
-  if (mContentLength > PR_INT32_MAX || mContentLength < 0)
+  if (mContentLength > INT32_MAX || mContentLength < 0)
     *aContentLength = -1;
   else
     *aContentLength = (int32_t)mContentLength;

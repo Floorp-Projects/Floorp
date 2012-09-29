@@ -27,6 +27,7 @@ EXTRA_PP_COMPONENTS = \
         ProcessGlobal.js \
         PaymentGlue.js \
         YoutubeProtocolHandler.js \
+        RecoveryService.js \
         $(NULL)
 
 ifdef MOZ_UPDATER

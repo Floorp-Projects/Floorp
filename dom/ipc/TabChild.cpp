@@ -75,6 +75,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::ipc;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
@@ -1458,14 +1459,12 @@ TabChild::DeallocPIndexedDB(PIndexedDBChild* aActor)
   return true;
 }
 
-static bool
-SendSyncMessageToParent(void* aCallbackData,
-                        const nsAString& aMessage,
-                        const StructuredCloneData& aData,
-                        InfallibleTArray<nsString>* aJSONRetVal)
+bool
+TabChild::DoSendSyncMessage(const nsAString& aMessage,
+                            const StructuredCloneData& aData,
+                            InfallibleTArray<nsString>* aJSONRetVal)
 {
-  TabChild* tabChild = static_cast<TabChild*>(aCallbackData);
-  ContentChild* cc = static_cast<ContentChild*>(tabChild->Manager());
+  ContentChild* cc = static_cast<ContentChild*>(Manager());
   ClonedMessageData data;
   SerializedStructuredCloneBuffer& buffer = data.data();
   buffer.data = aData.mData;
@@ -1484,16 +1483,14 @@ SendSyncMessageToParent(void* aCallbackData,
       blobChildList.AppendElement(blobChild);
     }
   }
-  return tabChild->SendSyncMessage(nsString(aMessage), data, aJSONRetVal);
+  return SendSyncMessage(nsString(aMessage), data, aJSONRetVal);
 }
 
-static bool
-SendAsyncMessageToParent(void* aCallbackData,
-                         const nsAString& aMessage,
-                         const StructuredCloneData& aData)
+bool
+TabChild::DoSendAsyncMessage(const nsAString& aMessage,
+                             const StructuredCloneData& aData)
 {
-  TabChild* tabChild = static_cast<TabChild*>(aCallbackData);
-  ContentChild* cc = static_cast<ContentChild*>(tabChild->Manager());
+  ContentChild* cc = static_cast<ContentChild*>(Manager());
   ClonedMessageData data;
   SerializedStructuredCloneBuffer& buffer = data.data();
   buffer.data = aData.mData;
@@ -1513,7 +1510,7 @@ SendAsyncMessageToParent(void* aCallbackData,
     }
   }
 
-  return tabChild->SendAsyncMessage(nsString(aMessage), data);
+  return SendAsyncMessage(nsString(aMessage), data);
 }
 
 
@@ -1526,13 +1523,10 @@ void
 TabChildGlobal::Init()
 {
   NS_ASSERTION(!mMessageManager, "Re-initializing?!?");
-  mMessageManager = new nsFrameMessageManager(false, /* aChrome */
-                                              SendSyncMessageToParent,
-                                              SendAsyncMessageToParent,
+  mMessageManager = new nsFrameMessageManager(mTabChild,
                                               nullptr,
-                                              mTabChild,
-                                              nullptr,
-                                              mTabChild->GetJSContext());
+                                              mTabChild->GetJSContext(),
+                                              MM_CHILD);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(TabChildGlobal)
@@ -1559,6 +1553,15 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(TabChildGlobal, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TabChildGlobal, nsDOMEventTargetHelper)
+
+/* [notxpcom] boolean markForCC (); */
+// This method isn't automatically forwarded safely because it's notxpcom, so
+// the IDL binding doesn't know what value to return.
+NS_IMETHODIMP_(bool)
+TabChildGlobal::MarkForCC()
+{
+  return mMessageManager ? mMessageManager->MarkForCC() : false;
+}
 
 NS_IMETHODIMP
 TabChildGlobal::GetContent(nsIDOMWindow** aContent)

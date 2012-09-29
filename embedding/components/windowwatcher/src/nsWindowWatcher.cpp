@@ -1861,18 +1861,18 @@ nsWindowWatcher::CalcSizeSpec(const char* aFeatures, SizeSpec& aResult)
   aResult.mTopSpecified = present;
 
   // Parse size spec, if any. Chrome size overrides content size.
-  if ((temp = WinHasOption(aFeatures, "outerWidth", PR_INT32_MIN, nullptr))) {
-    if (temp == PR_INT32_MIN) {
+  if ((temp = WinHasOption(aFeatures, "outerWidth", INT32_MIN, nullptr))) {
+    if (temp == INT32_MIN) {
       aResult.mUseDefaultWidth = true;
     }
     else {
       aResult.mOuterWidth = temp;
     }
     aResult.mOuterWidthSpecified = true;
-  } else if ((temp = WinHasOption(aFeatures, "width", PR_INT32_MIN, nullptr)) ||
-             (temp = WinHasOption(aFeatures, "innerWidth", PR_INT32_MIN,
+  } else if ((temp = WinHasOption(aFeatures, "width", INT32_MIN, nullptr)) ||
+             (temp = WinHasOption(aFeatures, "innerWidth", INT32_MIN,
                                   nullptr))) {
-    if (temp == PR_INT32_MIN) {
+    if (temp == INT32_MIN) {
       aResult.mUseDefaultWidth = true;
     } else {
       aResult.mInnerWidth = temp;
@@ -1880,19 +1880,19 @@ nsWindowWatcher::CalcSizeSpec(const char* aFeatures, SizeSpec& aResult)
     aResult.mInnerWidthSpecified = true;
   }
 
-  if ((temp = WinHasOption(aFeatures, "outerHeight", PR_INT32_MIN, nullptr))) {
-    if (temp == PR_INT32_MIN) {
+  if ((temp = WinHasOption(aFeatures, "outerHeight", INT32_MIN, nullptr))) {
+    if (temp == INT32_MIN) {
       aResult.mUseDefaultHeight = true;
     }
     else {
       aResult.mOuterHeight = temp;
     }
     aResult.mOuterHeightSpecified = true;
-  } else if ((temp = WinHasOption(aFeatures, "height", PR_INT32_MIN,
+  } else if ((temp = WinHasOption(aFeatures, "height", INT32_MIN,
                                   nullptr)) ||
-             (temp = WinHasOption(aFeatures, "innerHeight", PR_INT32_MIN,
+             (temp = WinHasOption(aFeatures, "innerHeight", INT32_MIN,
                                   nullptr))) {
-    if (temp == PR_INT32_MIN) {
+    if (temp == INT32_MIN) {
       aResult.mUseDefaultHeight = true;
     } else {
       aResult.mInnerHeight = temp;

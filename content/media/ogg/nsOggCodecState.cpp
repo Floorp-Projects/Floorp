@@ -933,7 +933,7 @@ bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
       mGain = static_cast<float>(pow(10,0.05*gain_dB));
 #else
       mGain_Q16 = static_cast<int32_t>(NS_MIN(65536*pow(10,0.05*gain_dB)+0.5,
-                                              static_cast<double>(PR_INT32_MAX)));
+                                              static_cast<double>(INT32_MAX)));
 #endif
       mChannelMapping = aPacket->packet[18];
 
@@ -1141,7 +1141,7 @@ bool nsOpusState::ReconstructOpusGranulepos(void)
         ogg_packet* packet = mUnstamped[i];
         int offset = GetOpusDeltaGP(packet);
         // Check for error (negative offset) and overflow.
-        if (offset >= 0 && gp <= PR_INT64_MAX - offset) {
+        if (offset >= 0 && gp <= INT64_MAX - offset) {
           gp += offset;
           if (gp >= last_gp) {
             NS_WARNING("Opus end trimming removed more than a full packet.");

@@ -182,6 +182,10 @@ pref("media.webaudio.enabled", false);
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
 
+// The default number of decoded video frames that are enqueued in
+// nsBuiltinDecoderReader's mVideoQueue.
+pref("media.video-queue.default-size", 10);
+
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
@@ -1120,6 +1124,9 @@ pref("network.dns.disableIPv6", false);
 // a revalidation in the background. In seconds, but rounded to minutes in gecko.
 // Default to 30 days. (basically forever)
 pref("network.dnsCacheExpirationGracePeriod", 2592000);
+
+// This preference can be used to turn off DNS prefetch.
+pref("network.dns.disablePrefetch", false);
 
 // This preference controls whether or not URLs with UTF-8 characters are
 // escaped.  Set this preference to TRUE for strict RFC2396 conformance.
@@ -3742,3 +3749,9 @@ pref("dom.mozApps.maxLocalId", 1000);
 // Let us know wether we should run the permissions update algorithm.
 // See Bug 787439
 pref("dom.mozApps.runUpdate", true);
+
+// Minimum delay in milliseconds between network activity notifications (0 means
+// no notifications). The delay is the same for both download and upload, though
+// they are handled separately. This pref is only read once at startup:
+// a restart is required to enable a new value.
+pref("network.activity.blipIntervalMilliseconds", 0);

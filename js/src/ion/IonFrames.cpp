@@ -126,6 +126,14 @@ IonFrameIterator::isOOLNativeGetter() const
 }
 
 bool
+IonFrameIterator::isOOLPropertyOp() const
+{
+    if (type_ != IonFrame_Exit)
+        return false;
+    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_PROPERTY_OP;
+}
+
+bool
 IonFrameIterator::isDOMExit() const
 {
     if (type_ != IonFrame_Exit)
@@ -544,6 +552,14 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         gc::MarkValueRoot(trc, oolgetter->vp() + 1, "ion-ool-getter-this");
         return;
     }
+ 
+    if (frame.isOOLPropertyOp()) {
+        IonOOLPropertyOpExitFrameLayout *oolgetter = frame.exitFrame()->oolPropertyOpExit();
+        gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
+        gc::MarkIdRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
+        gc::MarkObjectRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
+        return;
+    }
 
     if (frame.isDOMExit()) {
         IonDOMExitFrameLayout *dom = frame.exitFrame()->DOMExit();
@@ -657,7 +673,7 @@ ion::AutoTempAllocatorRooter::trace(JSTracer *trc)
 }
 
 void
-ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
+ion::GetPcScript(JSContext *cx, MutableHandleScript scriptRes, jsbytecode **pcRes)
 {
     JS_ASSERT(cx->fp()->beginsIonActivation());
     IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
@@ -668,7 +684,7 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     InlineFrameIterator ifi(&it);
 
     // Set the result.
-    *scriptRes = ifi.script();
+    scriptRes.set(ifi.script());
     if (pcRes)
         *pcRes = ifi.pc();
 }

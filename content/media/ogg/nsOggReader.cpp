@@ -874,7 +874,7 @@ int64_t nsOggReader::RangeEndTime(int64_t aStartOffset,
         readHead = NS_MAX(aStartOffset, readStartOffset);
       }
 
-      int64_t limit = NS_MIN(static_cast<int64_t>(PR_UINT32_MAX),
+      int64_t limit = NS_MIN(static_cast<int64_t>(UINT32_MAX),
                              aEndOffset - readHead);
       limit = NS_MAX(static_cast<int64_t>(0), limit);
       limit = NS_MIN(limit, static_cast<int64_t>(step));
@@ -1292,7 +1292,7 @@ PageSync(MediaResource* aResource,
       // Read from the file into the buffer
       int64_t bytesToRead = NS_MIN(static_cast<int64_t>(PAGE_STEP),
                                    aEndOffset - readHead);
-      NS_ASSERTION(bytesToRead <= PR_UINT32_MAX, "bytesToRead range check");
+      NS_ASSERTION(bytesToRead <= UINT32_MAX, "bytesToRead range check");
       if (bytesToRead <= 0) {
         return PAGE_SYNC_END_OF_RANGE;
       }
@@ -1366,7 +1366,7 @@ nsresult nsOggReader::SeekBisection(int64_t aTarget,
   DebugOnly<ogg_int64_t> previousGuess = -1;
   int backsteps = 0;
   const int maxBackStep = 10;
-  NS_ASSERTION(static_cast<uint64_t>(PAGE_STEP) * pow(2.0, maxBackStep) < PR_INT32_MAX,
+  NS_ASSERTION(static_cast<uint64_t>(PAGE_STEP) * pow(2.0, maxBackStep) < INT32_MAX,
                "Backstep calculation must not overflow");
 
   // Seek via bisection search. Loop until we find the offset where the page

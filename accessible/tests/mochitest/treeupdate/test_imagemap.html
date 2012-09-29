@@ -324,6 +324,10 @@
         map.appendChild(area);
 
         this.containerNode.appendChild(map);
+        
+        // force repainting of the image
+        // XXX this is a hack. Fix bug 745788.
+        document.getElementById(aImageID).style.opacity = 0.8;
       }
 
       this.finalCheck = function insertMap_finalCheck()

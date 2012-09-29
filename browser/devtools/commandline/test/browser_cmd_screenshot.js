@@ -10,6 +10,8 @@ let tempScope = {};
 Cu.import("resource://gre/modules/FileUtils.jsm", tempScope);
 let FileUtils = tempScope.FileUtils;
 
+let pb = Cc["@mozilla.org/privatebrowsing;1"]
+           .getService(Ci.nsIPrivateBrowsingService);
 function test() {
   DeveloperToolbarTest.test(TEST_URI, [ testInput, testCapture ]);
 }
@@ -79,37 +81,60 @@ function testCapture() {
     }
   }
 
-  function clearClipboard() {
-    let clipid = Ci.nsIClipboard;
-    let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(clipid);
-    clip.emptyClipboard(clipid.kGlobalClipboard);
-  }
-
   function checkClipboard() {
     try {
       let clipid = Ci.nsIClipboard;
       let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(clipid);
       let trans = Cc["@mozilla.org/widget/transferable;1"]
                     .createInstance(Ci.nsITransferable);
-      if ("init" in trans) {
-        trans.init(null);
-      }
-      let io = Cc["@mozilla.org/network/io-service;1"]
-                 .getService(Ci.nsIIOService);
-      let contentType = io.newChannel("", null, null).contentType;
-      trans.addDataFlavor(contentType);
+      trans.init(null);
+      trans.addDataFlavor("image/png");
       clip.getData(trans, clipid.kGlobalClipboard);
       let str = new Object();
       let strLength = new Object();
-      trans.getTransferData(contentType, str, strLength);
-      if (str && strLength > 0) {
-        clip.emptyClipboard(clipid.kGlobalClipboard);
+      trans.getTransferData("image/png", str, strLength);
+      if (str.value && strLength.value > 0) {
         return true;
       }
     }
     catch (ex) {}
     return false;
   }
+
+  let PBEntered = DeveloperToolbarTest.checkCalled(function() {
+    Services.obs.removeObserver(PBEntered,
+                                "private-browsing-transition-complete",
+                                false);
+
+    Services.obs.addObserver(PBLeft, "last-pb-context-exited", false);
+
+    DeveloperToolbarTest.exec({
+      typed: "screenshot --clipboard",
+      args: {
+        delay: 0,
+        filename: " ",
+        fullpage: false,
+        clipboard: true,
+        node: null,
+        chrome: false,
+      },
+      outputMatch: new RegExp("^Copied to clipboard.$"),
+    });
+
+    ok(checkClipboard(), "Screenshot present in clipboard in private browsing");
+
+    pb.privateBrowsingEnabled = false;
+  });
+
+  let PBLeft = DeveloperToolbarTest.checkCalled(function() {
+    Services.obs.removeObserver(PBLeft, "last-pb-context-exited", false);
+    executeSoon(function() {
+      ok(!checkClipboard(), "Screenshot taken in private browsing mode is not" +
+                            " present outside of it in the clipboard");
+      Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
+      pb = null;
+    });
+  });
 
   let path = FileUtils.getFile("TmpD", ["TestScreenshotFile.png"]).path;
 
@@ -126,23 +151,29 @@ function testCapture() {
     outputMatch: new RegExp("^Saved to "),
   });
 
-  ok(checkTemporaryFile, "Screenshot got created");
+  Services.obs.addObserver(PBEntered, "private-browsing-transition-complete",
+                           false);
 
-  clearClipboard();
+  executeSoon(function() {
+    ok(checkTemporaryFile(), "Screenshot got created");
 
-  DeveloperToolbarTest.exec({
-    typed: "screenshot --fullpage --clipboard",
-    args: {
-      delay: 0,
-      filename: " ",
-      fullpage: true,
-      clipboard: true,
-      node: null,
-      chrome: false,
-    },
-    outputMatch: new RegExp("^Copied to clipboard.$"),
+    DeveloperToolbarTest.exec({
+      typed: "screenshot --fullpage --clipboard",
+      args: {
+        delay: 0,
+        filename: " ",
+        fullpage: true,
+        clipboard: true,
+        node: null,
+        chrome: false,
+      },
+      outputMatch: new RegExp("^Copied to clipboard.$"),
+    });
+
+    ok(checkClipboard(), "Screenshot got created and copied");
+
+    Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+
+    pb.privateBrowsingEnabled = true;
   });
-
-  ok(checkClipboard, "Screenshot got created and copied");
 }
-

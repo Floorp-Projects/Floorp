@@ -59,6 +59,38 @@ let TelemetryStopwatch = {
   },
 
   /**
+   * Deletes the timer associated with a telemetry histogram. The timer can be
+   * directly associated with a histogram, or with a pair of a histogram and
+   * an object. Important: Only use this method when a legitimate cancellation
+   * should be done.
+   *
+   * @param aHistogram a string which must be a valid histogram name
+   *                   from TelemetryHistograms.json
+   *
+   * @param aObj Optional parameter. If specified, the timer is associated
+   *             with this object, meaning that multiple timers for a same
+   *             histogram may be run concurrently, as long as they are
+   *             associated with different objects.
+   *
+   * @return true if the timer exist and it was cleared, false otherwise.
+   */
+  cancel: function ts_cancel(aHistogram, aObj) {
+    if (!validTypes(aHistogram, aObj))
+      return false;
+
+    let timers = aObj
+                 ? objectTimers.get(aObj, {})
+                 : simpleTimers;
+
+    if (timers.hasOwnProperty(aHistogram)) {
+      delete timers[aHistogram];
+      return true;
+    }
+
+    return false;
+  },
+
+  /**
    * Stops the timer associated with the given histogram (and object),
    * calculates the time delta between start and finish, and adds the value
    * to the histogram.

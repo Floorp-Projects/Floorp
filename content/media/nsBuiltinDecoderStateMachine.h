@@ -605,6 +605,10 @@ protected:
   uint32_t mBufferingWait;
   int64_t  mLowDataThresholdUsecs;
 
+  // If we've got more than mAmpleVideoFrames decoded video frames waiting in
+  // the video queue, we will not decode any more video frames until some have
+  // been consumed by the play state machine thread.
+  uint32_t mAmpleVideoFrames;
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams).
   bool mAudioCaptured;

@@ -509,7 +509,7 @@ NS_IMETHODIMP
 nsBaseChannel::GetContentLength(int32_t *aContentLength)
 {
   int64_t len = ContentLength64();
-  if (len > PR_INT32_MAX || len < 0)
+  if (len > INT32_MAX || len < 0)
     *aContentLength = -1;
   else
     *aContentLength = (int32_t) len;
@@ -701,7 +701,9 @@ nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   SUSPEND_PUMP_FOR_SCOPE();
 
-  return mListener->OnStartRequest(this, mListenerContext);
+  if (mListener) // null in case of redirect
+      return mListener->OnStartRequest(this, mListenerContext);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -716,7 +718,8 @@ nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   // Cause IsPending to return false.
   mPump = nullptr;
 
-  mListener->OnStopRequest(this, mListenerContext, mStatus);
+  if (mListener) // null in case of redirect
+      mListener->OnStopRequest(this, mListenerContext, mStatus);
   mListener = nullptr;
   mListenerContext = nullptr;
 

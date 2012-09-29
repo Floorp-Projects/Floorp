@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+interface nsIDOMTCPSocket;
+
+// Interface required to allow the TCP socket object in the parent process
+// to talk to the parent IPC actor
+[scriptable, uuid(4e7246c6-a8b3-426d-9c17-76dab1e1e14a)]
+interface nsITCPSocketParent : nsISupports
+{
+  [implicit_jscontext] void initJS(in jsval intermediary);
+
+  // Trigger a callback in the content process for |type|, providing a serialized
+  // argument of |data|, and update the child's readyState and bufferedAmount values
+  // with the given values.
+  [implicit_jscontext] void sendCallback(in DOMString type,
+                                         in jsval data,
+                                         in DOMString readyState,
+                                         in uint32_t bufferedAmount);
+};
+
+// Intermediate class to handle sending multiple possible data types
+// and kicking off the chrome process socket object's connection.
+[scriptable, uuid(afa42841-a6cb-4a91-912f-93099f6a3d18)]
+interface nsITCPSocketIntermediary : nsISupports {
+  // Open the connection to the server with the given parameters
+  nsIDOMTCPSocket open(in nsITCPSocketParent parent,
+                       in DOMString host, in unsigned short port,
+                       in boolean useSSL, in DOMString binaryType);
+
+  // Send a basic string along the connection
+  void sendString(in DOMString data);
+
+  // Send a typed array
+  void sendArrayBuffer(in jsval data);
+};

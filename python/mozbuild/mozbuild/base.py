@@ -9,6 +9,7 @@ import multiprocessing
 import os
 import pymake.parser
 import shlex
+import sys
 import subprocess
 import which
 
@@ -103,14 +104,20 @@ class MozbuildObject(object):
         # files are tightly coupled with the environment by definition. In the
         # future, perhaps we'll have a more sanitized environment for mozconfig
         # execution.
+        #
+        # The force of str is required because subprocess on Python <2.7.3
+        # does not like unicode in environment keys or values. At the time this
+        # was written, Mozilla shipped Python 2.7.2 with MozillaBuild.
         env = dict(os.environ)
         if path is not None:
-            env['MOZCONFIG'] = path
+            env[str('MOZCONFIG')] = path
 
-        env['CONFIG_GUESS'] = self._config_guess
+        env[str('CONFIG_GUESS')] = self._config_guess
 
-        output = subprocess.check_output([loader, self.topsrcdir],
-            stderr=subprocess.PIPE, cwd=self.topsrcdir, env=env)
+        args = self._normalize_command([loader, self.topsrcdir], True)
+
+        output = subprocess.check_output(args, stderr=subprocess.PIPE,
+            cwd=self.topsrcdir, env=env)
 
         # The output is make syntax. We parse this in a specialized make
         # context.
@@ -147,7 +154,8 @@ class MozbuildObject(object):
         if self._config_guess_output is None:
             p = os.path.join(self.topsrcdir, 'build', 'autoconf',
                 'config.guess')
-            self._config_guess_output = subprocess.check_output([p],
+            args = self._normalize_command([p], True)
+            self._config_guess_output = subprocess.check_output(args,
                 cwd=self.topsrcdir).strip()
 
         return self._config_guess_output
@@ -292,24 +300,15 @@ class MozbuildObject(object):
         within a UNIX environment. Basically, if we are on Windows, it will
         execute the command via an appropriate UNIX-like shell.
         """
-        assert isinstance(args, list) and len(args)
-
-        if require_unix_environment and _in_msys:
-            # Always munge Windows-style into Unix style for the command.
-            prog = args[0].replace('\\', '/')
-
-            # PyMake removes the C: prefix. But, things seem to work here
-            # without it. Not sure what that's about.
-
-            # We run everything through the msys shell. We need to use
-            # '-c' and pass all the arguments as one argument because that is
-            # how sh works.
-            cline = subprocess.list2cmdline([prog] + args[1:])
-            args = [_current_shell, '-c', cline]
+        args = self._normalize_command(args, require_unix_environment)
 
         self.log(logging.INFO, 'process', {'args': args}, ' '.join(args))
 
         def handleLine(line):
+            # Converts str to unicode on Python 2 and bytes to str on Python 3.
+            if isinstance(line, bytes):
+                line = line.decode(sys.stdout.encoding)
+
             if line_handler:
                 line_handler(line)
 
@@ -335,6 +334,32 @@ class MozbuildObject(object):
 
         if status != 0 and not ignore_errors:
             raise Exception('Process executed with non-0 exit code: %s' % args)
+
+    def _normalize_command(self, args, require_unix_environment):
+        """Adjust command arguments to run in the necessary environment.
+
+        This exists mainly to facilitate execution of programs requiring a *NIX
+        shell when running on Windows. The caller specifies whether a shell
+        environment is required. If it is and we are running on Windows but
+        aren't running in the UNIX-like msys environment, then we rewrite the
+        command to execute via a shell.
+        """
+        assert isinstance(args, list) and len(args)
+
+        if not require_unix_environment or not _in_msys:
+            return args
+
+        # Always munge Windows-style into Unix style for the command.
+        prog = args[0].replace('\\', '/')
+
+        # PyMake removes the C: prefix. But, things seem to work here
+        # without it. Not sure what that's about.
+
+        # We run everything through the msys shell. We need to use
+        # '-c' and pass all the arguments as one argument because that is
+        # how sh works.
+        cline = subprocess.list2cmdline([prog] + args[1:])
+        return [_current_shell, '-c', cline]
 
     def _is_windows(self):
         return os.name in ('nt', 'ce')

@@ -5,7 +5,7 @@
 
 #include "nsSMILTimeValue.h"
 
-nsSMILTime nsSMILTimeValue::kUnresolvedMillis = LL_MAXINT;
+nsSMILTime nsSMILTimeValue::kUnresolvedMillis = INT64_MAX;
 
 //----------------------------------------------------------------------
 // nsSMILTimeValue methods:

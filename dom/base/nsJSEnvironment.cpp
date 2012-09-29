@@ -162,14 +162,14 @@ static bool sPostGCEventsToConsole;
 static bool sPostGCEventsToObserver;
 static bool sDisableExplicitCompartmentGC;
 static uint32_t sCCTimerFireCount = 0;
-static uint32_t sMinForgetSkippableTime = PR_UINT32_MAX;
+static uint32_t sMinForgetSkippableTime = UINT32_MAX;
 static uint32_t sMaxForgetSkippableTime = 0;
 static uint32_t sTotalForgetSkippableTime = 0;
 static uint32_t sRemovedPurples = 0;
 static uint32_t sForgetSkippableBeforeCC = 0;
 static uint32_t sPreviousSuspectedCount = 0;
 static uint32_t sCompartmentGCCount = NS_MAX_COMPARTMENT_GC_COUNT;
-static uint32_t sCleanupsSinceLastGC = PR_UINT32_MAX;
+static uint32_t sCleanupsSinceLastGC = UINT32_MAX;
 static bool sNeedsFullCC = false;
 static nsJSContext *sContextList = nullptr;
 
@@ -3095,7 +3095,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   PRTime delta = GetCollectionTimeDelta();
 
   uint32_t cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
-  uint32_t minForgetSkippableTime = (sMinForgetSkippableTime == PR_UINT32_MAX)
+  uint32_t minForgetSkippableTime = (sMinForgetSkippableTime == UINT32_MAX)
     ? 0 : sMinForgetSkippableTime;
 
   if (sPostGCEventsToConsole) {
@@ -3172,7 +3172,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       observerService->NotifyObservers(nullptr, "cycle-collection-statistics", json.get());
     }
   }
-  sMinForgetSkippableTime = PR_UINT32_MAX;
+  sMinForgetSkippableTime = UINT32_MAX;
   sMaxForgetSkippableTime = 0;
   sTotalForgetSkippableTime = 0;
   sRemovedPurples = 0;
@@ -3892,7 +3892,7 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, uint32
   NS_ENSURE_SUCCESS(rv, rv);
   if (!rawLen)
     return NS_ERROR_FAILURE;
-  if (rawLen > PR_UINT32_MAX)
+  if (rawLen > UINT32_MAX)
     return NS_ERROR_FILE_TOO_BIG;
 
   // Allocate an internal buf the size of the file.

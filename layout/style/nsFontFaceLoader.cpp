@@ -877,7 +877,7 @@ nsUserFontSet::SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
   if (bufferLength64 == 0) {
     return NS_ERROR_FAILURE;
   }
-  if (bufferLength64 > PR_UINT32_MAX) {
+  if (bufferLength64 > UINT32_MAX) {
     return NS_ERROR_FILE_TOO_BIG;
   }
   aBufferLength = static_cast<uint32_t>(bufferLength64);

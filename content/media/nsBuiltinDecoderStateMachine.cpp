@@ -60,11 +60,6 @@ const uint32_t SILENCE_BYTES_CHUNK = 32 * 1024;
 // which is at or after the current playback position.
 static const uint32_t LOW_VIDEO_FRAMES = 1;
 
-// If we've got more than AMPLE_VIDEO_FRAMES decoded video frames waiting in
-// the video queue, we will not decode any more video frames until some have
-// been consumed by the play state machine thread.
-static const uint32_t AMPLE_VIDEO_FRAMES = 10;
-
 // Arbitrary "frame duration" when playing only audio.
 static const int AUDIO_DURATION_USECS = 40000;
 
@@ -422,6 +417,22 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
 
   mBufferingWait = mRealTime ? 0 : BUFFERING_WAIT_S;
   mLowDataThresholdUsecs = mRealTime ? 0 : LOW_DATA_THRESHOLD_USECS;
+
+  // If we've got more than mAmpleVideoFrames decoded video frames waiting in
+  // the video queue, we will not decode any more video frames until some have
+  // been consumed by the play state machine thread.
+#ifdef MOZ_WIDGET_GONK
+  // On B2G this is decided by a similar value which varies for each OMX decoder
+  // |OMX_PARAM_PORTDEFINITIONTYPE::nBufferCountMin|. This number must be less
+  // than the OMX equivalent or gecko will think it is chronically starved of
+  // video frames. All decoders seen so far have a value of at least 4.
+  mAmpleVideoFrames = Preferences::GetUint("media.video-queue.default-size", 3);
+#else
+  mAmpleVideoFrames = Preferences::GetUint("media.video-queue.default-size", 10);
+#endif
+  if (mAmpleVideoFrames < 2) {
+    mAmpleVideoFrames = 2;
+  }
 }
 
 nsBuiltinDecoderStateMachine::~nsBuiltinDecoderStateMachine()
@@ -580,7 +591,7 @@ void nsBuiltinDecoderStateMachine::SendStreamData()
   if (mState == DECODER_STATE_DECODING_METADATA)
     return;
 
-  int64_t minLastAudioPacketTime = PR_INT64_MAX;
+  int64_t minLastAudioPacketTime = INT64_MAX;
   SourceMediaStream* mediaStream = stream->mStream;
   StreamTime endPosition = 0;
 
@@ -742,7 +753,7 @@ bool nsBuiltinDecoderStateMachine::HaveEnoughDecodedVideo()
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
-  if (static_cast<uint32_t>(mReader->VideoQueue().GetSize()) < AMPLE_VIDEO_FRAMES) {
+  if (static_cast<uint32_t>(mReader->VideoQueue().GetSize()) < mAmpleVideoFrames) {
     return false;
   }
 
@@ -778,7 +789,7 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
 
   // Once we've decoded more than videoPumpThreshold video frames, we'll
   // no longer be considered to be "pumping video".
-  const unsigned videoPumpThreshold = mRealTime ? 0 : AMPLE_VIDEO_FRAMES / 2;
+  const unsigned videoPumpThreshold = mRealTime ? 0 : mAmpleVideoFrames / 2;
 
   // After the audio decode fills with more than audioPumpThreshold usecs
   // of decoded audio, we'll start to check whether the audio or video decode
@@ -1098,7 +1109,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
           // and so that audio will not start playing. Write silence to ensure
           // the last block gets pushed to hardware, so that playback starts.
           int64_t framesToWrite = minWriteFrames - unplayedFrames;
-          if (framesToWrite < PR_UINT32_MAX / channels) {
+          if (framesToWrite < UINT32_MAX / channels) {
             // Write silence manually rather than using PlaySilence(), so that
             // the AudioAPI doesn't get a copy of the audio frames.
             ReentrantMonitorAutoExit exit(mDecoder->GetReentrantMonitor());
@@ -2337,7 +2348,7 @@ void nsBuiltinDecoderStateMachine::Wait(int64_t aUsecs) {
          IsPlaying())
   {
     int64_t ms = static_cast<int64_t>(NS_round((end - now).ToSeconds() * 1000));
-    if (ms == 0 || ms > PR_UINT32_MAX) {
+    if (ms == 0 || ms > UINT32_MAX) {
       break;
     }
     mDecoder->GetReentrantMonitor().Wait(PR_MillisecondsToInterval(static_cast<uint32_t>(ms)));
@@ -2535,7 +2546,7 @@ nsresult nsBuiltinDecoderStateMachine::ScheduleStateMachine(int64_t aUsecs) {
   if (mState == DECODER_STATE_SHUTDOWN) {
     return NS_ERROR_FAILURE;
   }
-  aUsecs = PR_MAX(aUsecs, 0);
+  aUsecs = NS_MAX<int64_t>(aUsecs, 0);
 
   TimeStamp timeout = TimeStamp::Now() + UsecsToDuration(aUsecs);
   if (!mTimeout.IsNull()) {

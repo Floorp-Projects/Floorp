@@ -25,24 +25,21 @@
 using mozilla::dom::StructuredCloneData;
 using mozilla::dom::StructuredCloneClosure;
 
-bool SendSyncMessageToParent(void* aCallbackData,
-                             const nsAString& aMessage,
-                             const StructuredCloneData& aData,
-                             InfallibleTArray<nsString>* aJSONRetVal)
+bool
+nsInProcessTabChildGlobal::DoSendSyncMessage(const nsAString& aMessage,
+                                             const StructuredCloneData& aData,
+                                             InfallibleTArray<nsString>* aJSONRetVal)
 {
-  nsInProcessTabChildGlobal* tabChild =
-    static_cast<nsInProcessTabChildGlobal*>(aCallbackData);
-  nsCOMPtr<nsIContent> owner = tabChild->mOwner;
   nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
-  asyncMessages.SwapElements(tabChild->mASyncMessages);
+  asyncMessages.SwapElements(mASyncMessages);
   uint32_t len = asyncMessages.Length();
   for (uint32_t i = 0; i < len; ++i) {
     nsCOMPtr<nsIRunnable> async = asyncMessages[i];
     async->Run();
   }
-  if (tabChild->mChromeMessageManager) {
-    nsRefPtr<nsFrameMessageManager> mm = tabChild->mChromeMessageManager;
-    mm->ReceiveMessage(owner, aMessage, true, &aData, nullptr, aJSONRetVal);
+  if (mChromeMessageManager) {
+    nsRefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
+    mm->ReceiveMessage(mOwner, aMessage, true, &aData, nullptr, aJSONRetVal);
   }
   return true;
 }
@@ -82,15 +79,13 @@ public:
   StructuredCloneClosure mClosure;
 };
 
-bool SendAsyncMessageToParent(void* aCallbackData,
-                              const nsAString& aMessage,
-                              const StructuredCloneData& aData)
+bool
+nsInProcessTabChildGlobal::DoSendAsyncMessage(const nsAString& aMessage,
+                                              const StructuredCloneData& aData)
 {
-  nsInProcessTabChildGlobal* tabChild =
-    static_cast<nsInProcessTabChildGlobal*>(aCallbackData);
   nsCOMPtr<nsIRunnable> ev =
-    new nsAsyncMessageToParent(tabChild, aMessage, aData);
-  tabChild->mASyncMessages.AppendElement(ev);
+    new nsAsyncMessageToParent(this, aMessage, aData);
+  mASyncMessages.AppendElement(ev);
   NS_DispatchToCurrentThread(ev);
   return true;
 }
@@ -117,6 +112,15 @@ nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
   NS_ASSERTION(!mCx, "Couldn't release JSContext?!?");
 }
 
+/* [notxpcom] boolean markForCC (); */
+// This method isn't automatically forwarded safely because it's notxpcom, so
+// the IDL binding doesn't know what value to return.
+NS_IMETHODIMP_(bool)
+nsInProcessTabChildGlobal::MarkForCC()
+{
+  return mMessageManager ? mMessageManager->MarkForCC() : false;
+}
+
 nsresult
 nsInProcessTabChildGlobal::Init()
 {
@@ -126,13 +130,10 @@ nsInProcessTabChildGlobal::Init()
   InitTabChildGlobal();
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                    "Couldn't initialize nsInProcessTabChildGlobal");
-  mMessageManager = new nsFrameMessageManager(false, /* aChrome */
-                                              SendSyncMessageToParent,
-                                              SendAsyncMessageToParent,
+  mMessageManager = new nsFrameMessageManager(this,
                                               nullptr,
-                                              this,
-                                              nullptr,
-                                              mCx);
+                                              mCx,
+                                              mozilla::dom::ipc::MM_CHILD);
 
   // Set the location information for the new global, so that tools like
   // about:memory may use that information.

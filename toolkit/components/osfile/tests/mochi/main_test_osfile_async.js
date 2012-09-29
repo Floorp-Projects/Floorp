@@ -159,7 +159,9 @@ let test = maketest("Main",
   function main(test) {
     SimpleTest.waitForExplicitFinish();
     let tests = [test_constants, test_path, test_open, test_stat,
-                 test_read_write, test_position, test_copy];
+                 test_read_write, test_read_write_all,
+                 test_position, test_copy,
+                 test_iter];
     let current = 0;
     let aux = function aux() {
       if (current >= tests.length) {
@@ -450,6 +452,86 @@ let test_read_write = maketest("read_write",
     return promise;
 });
 
+let test_read_write_all = maketest(
+  "read_write_all",
+  function read_write_all(test) {
+    let pathSource;
+    let pathDest = OS.Path.join(OS.Constants.Path.tmpDir,
+       "osfile async test read writeAtomic.tmp");
+    let tmpPath = pathDest + ".tmp";
+
+    let options, optionsBackup;
+
+// Check that read + writeAtomic performs a correct copy
+
+    let promise = OS.File.getCurrentDirectory();
+    promise = promise.then(
+      function obtained_current_directory(path) {
+        test.ok(path, "Obtained current directory");
+        pathSource = OS.Path.join(path, EXISTING_FILE);
+        return OS.File.read(pathSource);
+      }
+    );
+
+    let buffer;
+    let bytes;
+    promise = promise.then(
+      function read_complete(contents) {
+        test.ok(contents, "Obtained contents");
+        buffer = contents.buffer;
+        bytes = contents.bytes;
+        options = {tmpPath: tmpPath};
+        optionsBackup = {tmpPath: tmpPath};
+        return OS.File.writeAtomic(pathDest, buffer, options);
+      }
+    );
+
+// Check that options are not altered
+
+    promise = promise.then(
+      function atomicWrite_complete(bytesWritten) {
+        test.is(bytes, bytesWritten, "Wrote the correct number of bytes");
+        test.is(Object.keys(options).length, Object.keys(optionsBackup).length,
+                "The number of options was not changed");
+        for (let k in options) {
+          test.is(options[k], optionsBackup[k], "Option was not changed");
+        }
+        return reference_compare_files(pathSource, pathDest, test);
+      }
+    );
+
+// Check that temporary file was removed
+
+    promise = promise.then(
+      function compare_complete() {
+        test.info("Compare complete");
+        test.ok(!(new FileUtils.File(tmpPath).exists()), "Temporary file was removed");
+      }
+    );
+
+// Check that writeAtomic fails if there is no tmpPath
+// FIXME: Remove this as part of bug 793660
+
+    promise = promise.then(
+      function check_without_tmpPath() {
+        return OS.File.writeAtomic(pathDest, buffer, {});
+      },
+      function onFailure() {
+        test.info("Resetting failure");
+      }
+    );
+
+    promise = promise.then(
+      function onSuccess() {
+        test.fail("Without a tmpPath, writeAtomic should have failed");
+      },
+      function onFailure() {
+        test.ok("Without a tmpPath, writeAtomic has failed as expected");
+      });
+    return promise;
+  }
+);
+
 let test_position = maketest(
   "position",
   function position(test){
@@ -674,3 +756,136 @@ let test_mkdir = maketest("mkdir",
 
     return promise;
   });
+
+let test_iter = maketest("iter",
+  function iter(test) {
+    let path;
+    let promise = OS.File.getCurrentDirectory();
+    let temporary_file_name;
+    let iterator;
+
+    // Trivial walks through the directory
+    promise = promise.then(
+      function obtained_current_directory(aPath) {
+        test.info("Preparing iteration");
+        path = aPath;
+        iterator = new OS.File.DirectoryIterator(aPath);
+        temporary_file_name = OS.Path.join(path, "empty-temporary-file.tmp");
+        return OS.File.remove(temporary_file_name);
+      }
+    );
+
+    // Ignore errors removing file
+    promise = promise.then(null, function() {});
+
+    promise = promise.then(
+      function removed_temporary_file() {
+        return iterator.nextBatch();
+      }
+    );
+
+    let allfiles1;
+    promise = promise.then(
+      function obtained_allfiles1(aAllFiles) {
+        test.info("Obtained all files through nextBatch");
+        allfiles1 = aAllFiles;
+        test.isnot(allfiles1.length, 0, "There is at least one file");
+        test.isnot(allfiles1[0].path, null, "Files have a path");
+        return iterator.close();
+      });
+
+    let allfiles2 = [];
+    let i = 0;
+    promise = promise.then(
+      function closed_iterator() {
+        test.info("Closed iterator");
+        iterator = new OS.File.DirectoryIterator(path);
+        return iterator.forEach(function(entry, index) {
+          is(i++, index, "Getting the correct index");
+          allfiles2.push(entry);
+        });
+      }
+    );
+
+    promise = promise.then(
+      function obtained_allfiles2() {
+        test.info("Obtained all files through forEach");
+        is(allfiles1.length, allfiles2.length, "Both runs returned the same number of files");
+        for (let i = 0; i < allfiles1.length; ++i) {
+          if (allfiles1[i].path != allfiles2[i].path) {
+            test.is(allfiles1[i].path, allfiles2[i].path, "Both runs return the same files");
+            break;
+          }
+        }
+      }
+    );
+
+    // Testing batch iteration + whether an iteration can be stopped early
+    let BATCH_LENGTH = 10;
+    promise = promise.then(
+      function compared_allfiles() {
+        test.info("Getting some files through nextBatch");
+        iterator.close();
+        iterator = new OS.File.DirectoryIterator(path);
+        return iterator.nextBatch(BATCH_LENGTH);
+      }
+    );
+    let somefiles1;
+    promise = promise.then(
+      function obtained_somefiles1(aFiles) {
+        somefiles1 = aFiles;
+        return iterator.nextBatch(BATCH_LENGTH);
+      }
+    );
+    let somefiles2;
+    promise = promise.then(
+      function obtained_somefiles2(aFiles) {
+        somefiles2 = aFiles;
+        iterator.close();
+        iterator = new OS.File.DirectoryIterator(path);
+        return iterator.forEach(
+          function cb(entry, index, iterator) {
+            if (index < BATCH_LENGTH) {
+              test.is(entry.path, somefiles1[index].path, "Both runs return the same files (part 1)");
+            } else if (index < 2*BATCH_LENGTH) {
+              test.is(entry.path, somefiles2[index - BATCH_LENGTH].path, "Both runs return the same files (part 2)");
+            } else if (index == 2 * BATCH_LENGTH) {
+              test.info("Attempting to stop asynchronous forEach");
+              return iterator.close();
+            } else {
+              test.fail("Can we stop an asynchronous forEach? " + index);
+            }
+            return null;
+          });
+      }
+    );
+
+    // Ensuring that we find new files if they appear
+    promise = promise.then(
+      function create_temporary_file() {
+        return OS.File.open(temporary_file_name, { write: true } );
+      }
+    );
+    promise = promise.then(
+      function with_temporary_file(file) {
+        file.close();
+        iterator = new OS.File.DirectoryIterator(path);
+        return iterator.nextBatch();
+      }
+    );
+    promise = promise.then(
+      function with_new_list(aFiles) {
+        is(aFiles.length, allfiles1.length + 1, "The directory iterator has noticed the new file");
+      }
+    );
+
+    promise = always(promise,
+      function cleanup() {
+        if (iterator) {
+          iterator.close();
+        }
+      }
+    );
+
+    return promise;
+});

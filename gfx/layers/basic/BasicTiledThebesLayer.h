@@ -161,6 +161,7 @@ class BasicTiledThebesLayer : public ThebesLayer,
 public:
   BasicTiledThebesLayer(BasicShadowLayerManager* const aManager)
     : ThebesLayer(aManager, static_cast<BasicImplData*>(this))
+    , mLastScrollOffset(0, 0)
   {
     MOZ_COUNT_CTOR(BasicTiledThebesLayer);
   }
@@ -174,6 +175,7 @@ public:
   // Thebes Layer
   virtual Layer* AsLayer() { return this; }
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {
+    mInvalidRegion.Or(mInvalidRegion, aRegion);
     mValidRegion.Sub(mValidRegion, aRegion);
   }
 
@@ -211,6 +213,7 @@ private:
 
   // Members
   BasicTiledLayerBuffer mTiledBuffer;
+  gfx::Point mLastScrollOffset;
 };
 
 } // layers

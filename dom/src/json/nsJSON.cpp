@@ -450,8 +450,8 @@ nsJSON::DecodeInternal(JSContext* cx,
     if (!available)
       break; // blocking input stream has none available when done
 
-    if (available > PR_UINT32_MAX)
-      available = PR_UINT32_MAX;
+    if (available > UINT32_MAX)
+      available = UINT32_MAX;
 
     rv = jsonListener->OnDataAvailable(jsonChannel, nullptr,
                                        aStream,

@@ -1,0 +1,56 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+
+include "mozilla/net/NeckoMessageUtils.h";
+
+using mozilla::void_t;
+
+struct JSError {
+  nsString message;
+  nsString filename;
+  uint32_t lineNumber;
+  uint32_t columnNumber;
+};
+
+union SendableData {
+  uint8_t[];
+  nsString;
+};
+
+union CallbackData {
+  void_t;
+  SendableData;
+  JSError;
+};
+
+namespace mozilla {
+namespace net {
+
+//-------------------------------------------------------------------
+protocol PTCPSocket
+{
+  manager PNecko;
+
+parent:
+  Data(SendableData data);
+  Suspend();
+  Resume();
+  Close();
+  RequestDelete();
+
+child:
+  Callback(nsString type, CallbackData data,
+           nsString readyState, uint32_t bufferedAmount);
+  __delete__();
+};
+
+
+} // namespace net
+} // namespace mozilla
+

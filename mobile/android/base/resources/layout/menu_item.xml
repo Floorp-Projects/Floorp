@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-     <View android:layout_width="14dp"
+     <View android:layout_width="10dp"
            android:layout_height="fill_parent"
            android:layout_gravity="center_vertical"/>
 
      <ImageView android:id="@+id/icon"
-                android:layout_width="24dp"
-                android:layout_height="18dp"
+                android:layout_width="27dp"
+                android:layout_height="21dp"
                 android:paddingRight="6dp"
                 android:layout_gravity="center_vertical"
                 android:visibility="gone"/>
@@ -22,16 +22,28 @@
                android:ellipsize="middle"
                android:layout_gravity="center_vertical"/>
 
-     <CheckBox android:id="@+id/check"
-               android:layout_width="18dp"
-               android:layout_height="18dp"
-               android:layout_gravity="center_vertical"
-               android:button="@drawable/menu_item_checkmark"
-               android:focusable="false"
-               android:clickable="false"
-               android:visibility="gone"/>
+     <FrameLayout android:layout_width="18dp"
+                  android:layout_height="18dp"
+                  android:layout_marginBottom="2dp"
+                  android:layout_gravity="center_vertical">
 
-     <View android:layout_width="14dp"
+         <CheckBox android:id="@+id/check"
+                   android:layout_width="18dp"
+                   android:layout_height="18dp"
+                   android:button="@drawable/menu_item_checkmark"
+                   android:focusable="false"
+                   android:clickable="false"
+                   android:visibility="gone"/>
+
+         <ImageView android:id="@+id/more"
+                   android:layout_width="18dp"
+                   android:layout_height="18dp"
+                   android:src="@drawable/menu_item_more"
+                   android:visibility="gone"/>
+
+     </FrameLayout>
+
+     <View android:layout_width="10dp"
            android:layout_height="fill_parent"
            android:layout_gravity="center_vertical"/>
 

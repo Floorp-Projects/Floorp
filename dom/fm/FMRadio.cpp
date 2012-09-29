@@ -96,7 +96,7 @@ NS_IMETHODIMP FMRadio::GetIsAntennaAvailable(bool *aIsAvailable)
   if (mHasInternalAntenna) {
     *aIsAvailable = true;
   } else {
-    *aIsAvailable = mHeadphoneState == SWITCH_STATE_ON;
+    *aIsAvailable = mHeadphoneState != SWITCH_STATE_OFF;
   }
   return NS_OK;
 }

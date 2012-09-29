@@ -324,25 +324,8 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet)
   for (FrameSet::size_type i = 0; i < length; i++) {
     nsIFrame* frame = aFrameSet->ElementAt(i);
 
-    // NOTE: It is not sufficient to invalidate only the size of the image:
-    //       the image may be tiled! 
-    //       The best option is to call into the frame, however lacking this
-    //       we have to at least invalidate the frame's bounds, hence
-    //       as long as we have a frame we'll use its size.
-    //
-
-    // Invalidate the entire frame
-    // XXX We really only need to invalidate the client area of the frame...    
-
-    nsRect bounds(nsPoint(0, 0), frame->GetSize());
-
-    if (frame->GetType() == nsGkAtoms::canvasFrame) {
-      // The canvas's background covers the whole viewport.
-      bounds = frame->GetVisualOverflowRect();
-    }
-
     if (frame->GetStyleVisibility()->IsVisible()) {
-      frame->Invalidate(bounds);
+      frame->InvalidateFrame();
     }
   }
 }

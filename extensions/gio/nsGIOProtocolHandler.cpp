@@ -145,7 +145,7 @@ class nsGIOInputStream : public nsIInputStream
       , mChannel(nullptr)
       , mHandle(nullptr)
       , mStream(nullptr)
-      , mBytesRemaining(PR_UINT64_MAX)
+      , mBytesRemaining(UINT64_MAX)
       , mStatus(NS_OK)
       , mDirList(nullptr)
       , mDirListPtr(nullptr)

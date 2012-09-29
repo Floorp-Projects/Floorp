@@ -196,7 +196,7 @@ PathBuilderCairo::CurrentPoint() const
   CairoTempMatrix tempMatrix(*mPathContext, mTransform);
   double x, y;
   cairo_get_current_point(*mPathContext, &x, &y);
-  return Point(x, y);
+  return Point((Float)x, (Float)y);
 }
 
 TemporaryRef<Path>
@@ -271,7 +271,7 @@ PathCairo::GetBounds(const Matrix &aTransform) const
   double x1, y1, x2, y2;
 
   cairo_path_extents(*mPathContext, &x1, &y1, &x2, &y2);
-  Rect bounds(x1, y1, x2 - x1, y2 - y1);
+  Rect bounds(Float(x1), Float(y1), Float(x2 - x1), Float(y2 - y1));
   return aTransform.TransformBounds(bounds);
 }
 
@@ -286,7 +286,7 @@ PathCairo::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
   SetCairoStrokeOptions(*mPathContext, aStrokeOptions);
 
   cairo_stroke_extents(*mPathContext, &x1, &y1, &x2, &y2);
-  Rect bounds(x1, y1, x2 - x1, y2 - y1);
+  Rect bounds((Float)x1, (Float)y1, (Float)(x2 - x1), (Float)(y2 - y1));
   return aTransform.TransformBounds(bounds);
 }
 

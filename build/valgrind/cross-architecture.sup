@@ -1,3 +1,5 @@
+# Full list is tracked through meta bug 793882
+
 ####################
 #  Intended leaks  #
 ####################
@@ -159,14 +161,7 @@
    ...
 }
 {
-   Bug 793615
-   Memcheck:Leak
-   fun:malloc
-   fun:sqlite3MemMalloc
-   ...
-}
-{
-   Bug 793616
+   Bug 793608 variant 2
    Memcheck:Leak
    fun:malloc
    fun:make_request
@@ -177,6 +172,13 @@
    fun:_pt_root
    fun:start_thread
    fun:clone
+}
+{
+   Bug 793615
+   Memcheck:Leak
+   fun:malloc
+   fun:sqlite3MemMalloc
+   ...
 }
 {
    Bug 794350
@@ -218,13 +220,6 @@
    ...
 }
 {
-   Bug 794365
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN14JSInlineString8uninlineEP9JSContext
-   ...
-}
-{
    Bug 794369
    Memcheck:Leak
    fun:malloc
@@ -254,5 +249,14 @@
    fun:malloc
    fun:moz_xmalloc
    fun:_ZN22nsComponentManagerImpl17ManifestComponentERNS_25ManifestProcessingContextEiPKPc
+   ...
+}
+{
+   Bug 795395
+   Memcheck:Addr4
+   fun:PR_UnloadLibrary
+   fun:_ZN18nsGSettingsServiceD1Ev
+   fun:_ZN18nsGSettingsService7ReleaseEv
+   fun:_ZL29nsGSettingsServiceConstructorP11nsISupportsRK4nsIDPPv
    ...
 }

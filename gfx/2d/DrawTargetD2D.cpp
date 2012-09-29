@@ -954,7 +954,7 @@ DrawTargetD2D::Mask(const Pattern &aSource,
                                       1.0f, maskBrush),
                 layer);
 
-  Rect rect(0, 0, mSize.width, mSize.height);
+  Rect rect(0, 0, (Float)mSize.width, (Float)mSize.height);
   Matrix mat = mTransform;
   mat.Invert();
   
@@ -1678,7 +1678,7 @@ DrawTargetD2D::GetClippedGeometry(IntRect *aClipBounds)
     // Do nothing but add it to the current clip bounds.
     if (!iter->mPath && iter->mIsPixelAligned) {
       mCurrentClipBounds.IntersectRect(mCurrentClipBounds,
-        IntRect(iter->mBounds.left, iter->mBounds.top,
+        IntRect(int32_t(iter->mBounds.left), int32_t(iter->mBounds.top),
                 int32_t(iter->mBounds.right - iter->mBounds.left),
                 int32_t(iter->mBounds.bottom - iter->mBounds.top)));
       continue;
@@ -1687,7 +1687,7 @@ DrawTargetD2D::GetClippedGeometry(IntRect *aClipBounds)
     if (!pathGeom) {
       if (pathRectIsAxisAligned) {
         mCurrentClipBounds.IntersectRect(mCurrentClipBounds,
-          IntRect(pathRect.left, pathRect.top,
+          IntRect(int32_t(pathRect.left), int32_t(pathRect.top),
                   int32_t(pathRect.right - pathRect.left),
                   int32_t(pathRect.bottom - pathRect.top)));
       }
@@ -2027,9 +2027,10 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
     RefPtr<ID2D1Geometry> geom = GetClippedGeometry(clipBounds);
 
     RefPtr<ID2D1RectangleGeometry> rectGeom;
-    factory()->CreateRectangleGeometry(D2D1::RectF(rectBounds.x, rectBounds.y,
-                                                   rectBounds.width + rectBounds.x,
-                                                   rectBounds.height + rectBounds.y),
+    factory()->CreateRectangleGeometry(D2D1::RectF(Float(rectBounds.x),
+                                                   Float(rectBounds.y),
+                                                   Float(rectBounds.width + rectBounds.x),
+                                                   Float(rectBounds.height + rectBounds.y)),
                                        byRef(rectGeom));
 
     D2D1_GEOMETRY_RELATION relation;
@@ -2432,7 +2433,7 @@ DrawTargetD2D::CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix
     return nullptr;
   }
 
-  Rect rect(0, 0, mSize.width, mSize.height);
+  Rect rect(0, 0, Float(mSize.width), Float(mSize.height));
 
   // Calculate the rectangle of the source mapped to our surface.
   rect = invTransform.TransformBounds(rect);
@@ -2440,7 +2441,7 @@ DrawTargetD2D::CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix
 
   IntSize size = aSurface->GetSize();
 
-  Rect uploadRect(0, 0, size.width, size.height);
+  Rect uploadRect(0, 0, Float(size.width), Float(size.height));
 
   // Limit the uploadRect as much as possible without supporting discontiguous uploads 
   //
@@ -2503,15 +2504,17 @@ DrawTargetD2D::CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix
     ImageHalfScaler scaler(aSurface->GetData(), stride, size);
 
     // Calculate the maximum width/height of the image post transform.
-    Point topRight = transform * Point(size.width, 0);
+    Point topRight = transform * Point(Float(size.width), 0);
     Point topLeft = transform * Point(0, 0);
-    Point bottomRight = transform * Point(size.width, size.height);
-    Point bottomLeft = transform * Point(0, size.height);
+    Point bottomRight = transform * Point(Float(size.width), Float(size.height));
+    Point bottomLeft = transform * Point(0, Float(size.height));
     
     IntSize scaleSize;
 
-    scaleSize.width = max(Distance(topRight, topLeft), Distance(bottomRight, bottomLeft));
-    scaleSize.height = max(Distance(topRight, bottomRight), Distance(topLeft, bottomLeft));
+    scaleSize.width = int32_t(max(Distance(topRight, topLeft),
+                                  Distance(bottomRight, bottomLeft)));
+    scaleSize.height = int32_t(max(Distance(topRight, bottomRight),
+                                   Distance(topLeft, bottomLeft)));
 
     if (unsigned(scaleSize.width) > mRT->GetMaximumBitmapSize()) {
       // Ok, in this case we'd really want a downscale of a part of the bitmap,
@@ -2532,7 +2535,8 @@ DrawTargetD2D::CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix
                       D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
                       byRef(bitmap));
 
-    aMatrix.Scale(size.width / newSize.width, size.height / newSize.height);
+    aMatrix.Scale(Float(size.width / newSize.width),
+                  Float(size.height / newSize.height));
     return bitmap;
   }
 }

@@ -148,7 +148,7 @@ struct CookieDomainTuple
 // conveniently switch state when entering or exiting private browsing.
 struct DBState
 {
-  DBState() : cookieCount(0), cookieOldestTime(LL_MAXINT), corruptFlag(OK)
+  DBState() : cookieCount(0), cookieOldestTime(INT64_MAX), corruptFlag(OK)
   {
     hostTable.Init();
   }
@@ -239,6 +239,14 @@ class nsCookieService : public nsICookieService
     static nsICookieService*      GetXPCOMSingleton();
     nsresult                      Init();
 
+  /**
+   * Start watching the observer service for messages indicating that an app has
+   * been uninstalled.  When an app is uninstalled, we get the cookie service
+   * (thus instantiating it, if necessary) and clear all the cookies for that
+   * app.
+   */
+  static void AppUninstallObserverInit();
+
   protected:
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
     void                          InitDBStates();
@@ -282,6 +290,21 @@ class nsCookieService : public nsICookieService
     void                          NotifyChanged(nsISupports *aSubject, const PRUnichar *aData);
     void                          NotifyPurged(nsICookie2* aCookie);
     already_AddRefed<nsIArray>    CreatePurgeList(nsICookie2* aCookie);
+
+    /**
+     * This method is used to iterate the cookie hash table and select the ones
+     * that are part of a specific app.
+     */
+    static PLDHashOperator GetCookiesForApp(nsCookieEntry* entry, void* arg);
+
+    /**
+     * This method is a helper that allows calling nsICookieManager::Remove()
+     * with appId/inBrowserElement parameters.
+     * NOTE: this could be added to a public interface if we happen to need it.
+     */
+    nsresult Remove(const nsACString& aHost, uint32_t aAppId,
+                    bool aInBrowserElement, const nsACString& aName,
+                    const nsACString& aPath, bool aBlocked);
 
   protected:
     // cached members.

@@ -465,10 +465,13 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_menu_back.xml \
   res/drawable/ic_menu_bookmark_add.png \
   res/drawable/ic_menu_bookmark_remove.png \
+  res/drawable/ic_menu_desktop_mode_off.xml \
+  res/drawable/ic_menu_desktop_mode_on.xml \
+  res/drawable/ic_menu_forward.png \
   res/drawable/ic_menu_reload.png \
   res/drawable/ic_menu_save_as_pdf.png \
   res/drawable/ic_menu_share.png \
-  res/drawable/ic_menu_forward.png \
+  res/drawable/ic_menu_quit.xml \
   res/drawable/remote_tabs_off.png \
   res/drawable/remote_tabs_on.png \
   res/drawable/tab_new.png \
@@ -641,20 +644,28 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/alert_addon.png \
   res/drawable-mdpi-v11/alert_app.png \
   res/drawable-mdpi-v11/alert_download.png \
+  res/drawable-mdpi-v11/ic_menu_addons.png \
+  res/drawable-mdpi-v11/ic_menu_apps.png \
   res/drawable-mdpi-v11/ic_menu_back.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-mdpi-v11/ic_menu_desktop_mode.png \
+  res/drawable-mdpi-v11/ic_menu_desktop_mode_off.png \
+  res/drawable-mdpi-v11/ic_menu_desktop_mode_on.png \
+  res/drawable-mdpi-v11/ic_menu_downloads.png \
   res/drawable-mdpi-v11/ic_menu_find_in_page.png \
   res/drawable-mdpi-v11/ic_menu_forward.png \
   res/drawable-mdpi-v11/ic_menu_reload.png \
   res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
+  res/drawable-mdpi-v11/ic_menu_settings.png \
   res/drawable-mdpi-v11/ic_menu_share.png \
+  res/drawable-mdpi-v11/ic_menu_tools.png \
+  res/drawable-mdpi-v11/ic_menu_quit.png \
   res/drawable-mdpi-v11/menu.png \
   res/drawable-mdpi-v11/menu_panel_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_arrow.png \
   res/drawable-mdpi-v11/menu_item_check.png \
+  res/drawable-mdpi-v11/menu_item_more.png \
   res/drawable-mdpi-v11/menu_item_uncheck.png \
   $(NULL)
 
@@ -662,20 +673,28 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/alert_addon.png \
   res/drawable-hdpi-v11/alert_app.png \
   res/drawable-hdpi-v11/alert_download.png \
+  res/drawable-hdpi-v11/ic_menu_addons.png \
+  res/drawable-hdpi-v11/ic_menu_apps.png \
   res/drawable-hdpi-v11/ic_menu_back.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-hdpi-v11/ic_menu_desktop_mode.png \
+  res/drawable-hdpi-v11/ic_menu_desktop_mode_off.png \
+  res/drawable-hdpi-v11/ic_menu_desktop_mode_on.png \
+  res/drawable-hdpi-v11/ic_menu_downloads.png \
   res/drawable-hdpi-v11/ic_menu_find_in_page.png \
   res/drawable-hdpi-v11/ic_menu_forward.png \
   res/drawable-hdpi-v11/ic_menu_reload.png \
   res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
+  res/drawable-hdpi-v11/ic_menu_settings.png \
   res/drawable-hdpi-v11/ic_menu_share.png \
+  res/drawable-hdpi-v11/ic_menu_tools.png \
+  res/drawable-hdpi-v11/ic_menu_quit.png \
   res/drawable-hdpi-v11/menu.png \
   res/drawable-hdpi-v11/menu_panel_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_arrow.png \
   res/drawable-hdpi-v11/menu_item_check.png \
+  res/drawable-hdpi-v11/menu_item_more.png \
   res/drawable-hdpi-v11/menu_item_uncheck.png \
   $(NULL)
 
@@ -683,20 +702,28 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/alert_addon.png \
   res/drawable-xhdpi-v11/alert_app.png \
   res/drawable-xhdpi-v11/alert_download.png \
+  res/drawable-xhdpi-v11/ic_menu_addons.png \
+  res/drawable-xhdpi-v11/ic_menu_apps.png \
   res/drawable-xhdpi-v11/ic_menu_back.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-xhdpi-v11/ic_menu_desktop_mode.png \
+  res/drawable-xhdpi-v11/ic_menu_desktop_mode_off.png \
+  res/drawable-xhdpi-v11/ic_menu_desktop_mode_on.png \
+  res/drawable-xhdpi-v11/ic_menu_downloads.png \
   res/drawable-xhdpi-v11/ic_menu_find_in_page.png \
   res/drawable-xhdpi-v11/ic_menu_forward.png \
   res/drawable-xhdpi-v11/ic_menu_reload.png \
   res/drawable-xhdpi-v11/ic_menu_save_as_pdf.png \
+  res/drawable-xhdpi-v11/ic_menu_settings.png \
   res/drawable-xhdpi-v11/ic_menu_share.png \
+  res/drawable-xhdpi-v11/ic_menu_tools.png \
+  res/drawable-xhdpi-v11/ic_menu_quit.png \
   res/drawable-xhdpi-v11/menu.png \
   res/drawable-xhdpi-v11/menu_panel_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_arrow.png \
   res/drawable-xhdpi-v11/menu_item_check.png \
+  res/drawable-xhdpi-v11/menu_item_more.png \
   res/drawable-xhdpi-v11/menu_item_uncheck.png \
   $(NULL)
 
