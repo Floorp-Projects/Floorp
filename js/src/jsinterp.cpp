@@ -2587,7 +2587,7 @@ BEGIN_CASE(JSOP_CALLINTRINSIC)
 {
     RootedValue &rval = rootValue0;
 
-    if (!IntrinsicNameOperation(cx, script, regs.pc, rval.address()))
+    if (!IntrinsicNameOperation(cx, script, regs.pc, &rval))
         goto error;
 
     PUSH_COPY(rval);
