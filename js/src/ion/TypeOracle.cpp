@@ -373,6 +373,12 @@ TypeInferenceOracle::elementReadGeneric(JSScript *script, jsbytecode *pc, bool *
 
     *cacheable = (obj == MIRType_Object &&
                   (id == MIRType_Value || id == MIRType_Int32 || id == MIRType_String));
+
+    // Turn off cacheing if the element is int32 and we've seen non-native objects as the target
+    // of this getelem.
+    if (*cacheable && id == MIRType_Int32 && script->analysis()->getCode(pc).nonNativeGetElement)
+        *cacheable = false;
+
     if (*cacheable)
         *monitorResult = (id == MIRType_String || script->analysis()->getCode(pc).getStringElement);
     else
