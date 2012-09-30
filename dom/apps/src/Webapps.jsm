@@ -530,6 +530,18 @@ let DOMApplicationRegistry = {
     // the pref instead of first checking if it is false.
     Services.prefs.setBoolPref("dom.mozApps.used", true);
 
+    // We need to check permissions for calls coming from mozApps.mgmt.
+    // These are: getAll(), getNotInstalled() and applyDownload()
+    if (["Webapps:GetAll",
+         "Webapps:GetNotInstalled",
+         "Webapps::ApplyDownload"].indexOf(aMessage.name) != -1) {
+      if (!aMessage.target.assertPermission("webapps-manage")) {
+        debug("mozApps message " + aMessage.name +
+        " from a content process with no 'webapps-manage' privileges.");
+        return null;
+      }
+    }
+
     let msg = aMessage.json;
     let mm = aMessage.target;
     msg.mm = mm;
