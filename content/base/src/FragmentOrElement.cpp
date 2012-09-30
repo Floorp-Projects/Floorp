@@ -598,6 +598,30 @@ FragmentOrElement::nsDOMSlots::Unlink(bool aIsXUL)
   }
 }
 
+size_t
+FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+
+  if (mAttributeMap) {
+    n += mAttributeMap->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - Superclass members (nsINode::nsSlots)
+  // - mStyle
+  // - mDataSet
+  // - mSMILOverrideStyle
+  // - mSMILOverrideStyleRule
+  // - mChildrenList
+  // - mClassList
+
+  // The following members are not measured:
+  // - mBindingParent / mControllers: because they're   non-owning
+  return n;
+}
+
 FragmentOrElement::FragmentOrElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsIContent(aNodeInfo)
 {
@@ -1938,6 +1962,14 @@ FragmentOrElement::FireNodeRemovedForChildren()
 size_t
 FragmentOrElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  return nsIContent::SizeOfExcludingThis(aMallocSizeOf) +
-         mAttrsAndChildren.SizeOfExcludingThis(aMallocSizeOf);
+  size_t n = 0;
+  n += nsIContent::SizeOfExcludingThis(aMallocSizeOf);
+  n += mAttrsAndChildren.SizeOfExcludingThis(aMallocSizeOf);
+
+  nsDOMSlots* slots = GetExistingDOMSlots();
+  if (slots) {
+    n += slots->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return n;
 }
