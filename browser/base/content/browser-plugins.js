@@ -435,8 +435,29 @@ var gPluginHandler = {
 
     let centerActions = [];
     for (let pluginName in pluginsDictionary) {
+      let plugin = pluginsDictionary[pluginName][0];
+      let warn = false;
+      let warningText = "";
+      let updateLink = Services.urlFormatter.formatURLPref("plugins.update.url");
+      if (plugin.pluginFallbackType) {
+        if (plugin.pluginFallbackType ==
+              Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE) {
+          warn = true;
+          warningText = gNavigatorBundle.getString("vulnerableUpdatablePluginWarning");
+        }
+        else if (plugin.pluginFallbackType ==
+                   Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE) {
+          warn = true;
+          warningText = gNavigatorBundle.getString("vulnerableNoUpdatePluginWarning");
+          updateLink = "";
+        }
+      }
+
       let action = {
         message: pluginName,
+        warn: warn,
+        warningText: warningText,
+        updateLink: updateLink,
         label: gNavigatorBundle.getString("activateSinglePlugin"),
         callback: function() {
           let plugins = gPluginHandler._getPluginsByName(cwu, this.message);
@@ -468,6 +489,17 @@ var gPluginHandler = {
       callback: function() { gPluginHandler.activatePlugins(contentWindow); }
     };
     let centerActions = gPluginHandler._makeCenterActions(aBrowser);
+    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+    let haveVulnerablePlugin = cwu.plugins.some(function(plugin) {
+      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      return (gPluginHandler.canActivatePlugin(objLoadingContent) &&
+              (objLoadingContent.pluginFallbackType == Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE ||
+               objLoadingContent.pluginFallbackType == Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE));
+    });
+    if (haveVulnerablePlugin) {
+      messageString = gNavigatorBundle.getString("vulnerablePluginsMessage");
+    }
     let secondaryActions = [{
       label: gNavigatorBundle.getString("activatePluginsMessage.always"),
       accessKey: gNavigatorBundle.getString("activatePluginsMessage.always.accesskey"),
