@@ -4004,7 +4004,11 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   result.width = NS_MAX(minWidth, result.width);
 
   // Compute height
-  if (!nsLayoutUtils::IsAutoHeight(*heightStyleCoord, aCBSize.height)) {
+  // (but not if we're auto-height or if we recieved the "eUseAutoHeight"
+  // flag -- then, we'll just stick with the height that we already calculated
+  // in the initial ComputeAutoSize() call.)
+  if (!nsLayoutUtils::IsAutoHeight(*heightStyleCoord, aCBSize.height) &&
+      !(aFlags & nsIFrame::eUseAutoHeight)) {
     result.height =
       nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
                                         boxSizingAdjust.height,
