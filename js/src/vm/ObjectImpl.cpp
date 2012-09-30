@@ -414,7 +414,7 @@ DenseElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint3
      * If the element doesn't exist, we can only add it if the object is
      * extensible.
      */
-    if (!obj->asObjectPtr()->isExtensible()) {
+    if (!obj->isExtensible()) {
         *succeeded = false;
         if (!shouldThrow)
             return true;
