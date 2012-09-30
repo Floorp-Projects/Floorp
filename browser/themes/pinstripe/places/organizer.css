@@ -108,6 +108,16 @@
   -moz-margin-end: 2px;
 }
 
+@media (min-resolution: 2dppx) {
+  #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
+    list-style-image: url(chrome://browser/skin/toolbarbutton-dropmarker@2x.png);
+  }
+
+  #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker > .dropmarker-icon {
+    width: 7px;
+  }
+}
+
 @media (-moz-mac-lion-theme) {
   #placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon,
   #placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive > .toolbarbutton-icon,

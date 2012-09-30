@@ -80,5 +80,6 @@ toolkit.jar:
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (extensions/xpinstallConfirm.css)
 #ifdef MOZ_PLACES
   skin/classic/mozapps/places/defaultFavicon.png                  (places/defaultFavicon.png)
+  skin/classic/mozapps/places/defaultFavicon@2x.png               (places/defaultFavicon@2x.png)
 #endif
   skin/classic/mozapps/handling/handling.css                      (handling/handling.css)
