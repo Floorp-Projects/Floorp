@@ -16,6 +16,7 @@
 #include "nsFontMetrics.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
+#include "nsFlexContainerFrame.h"
 #include "nsImageFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
@@ -687,6 +688,9 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_TABLE:
     case NS_STYLE_DISPLAY_TABLE_CAPTION:
+#ifdef MOZ_FLEXBOX
+    case NS_STYLE_DISPLAY_FLEX:
+#endif // MOZ_FLEXBOX
       frameType = NS_CSS_FRAME_TYPE_BLOCK;
       break;
 
@@ -696,6 +700,9 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
     case NS_STYLE_DISPLAY_INLINE_BOX:
     case NS_STYLE_DISPLAY_INLINE_GRID:
     case NS_STYLE_DISPLAY_INLINE_STACK:
+#ifdef MOZ_FLEXBOX
+    case NS_STYLE_DISPLAY_INLINE_FLEX:
+#endif // MOZ_FLEXBOX
       frameType = NS_CSS_FRAME_TYPE_INLINE;
       break;
 
@@ -1799,6 +1806,20 @@ IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay)
          captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
 }
 
+#ifdef MOZ_FLEXBOX
+static nsFlexContainerFrame*
+GetFlexContainer(nsIFrame* aFrame)
+{
+  nsIFrame* parent = aFrame->GetParent();
+  if (!parent ||
+      parent->GetType() != nsGkAtoms::flexContainerFrame) {
+    return nullptr;
+  }
+
+  return static_cast<nsFlexContainerFrame*>(parent);
+}
+#endif // MOZ_FLEXBOX
+
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
@@ -2010,11 +2031,22 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
         computeSizeFlags |= nsIFrame::eShrinkWrap;
       }
 
-      // If we're inside of a flexbox that needs to measure our auto height,
-      // pass that information along to ComputeSize().
-      if (mFlags.mIsFlexContainerMeasuringHeight) {
-        computeSizeFlags |= nsIFrame::eUseAutoHeight;
+#ifdef MOZ_FLEXBOX
+      const nsFlexContainerFrame* flexContainerFrame = GetFlexContainer(frame);
+      if (flexContainerFrame) {
+        computeSizeFlags |= nsIFrame::eShrinkWrap;
+
+        // If we're inside of a flex container that needs to measure our
+        // auto height, pass that information along to ComputeSize().
+        if (mFlags.mIsFlexContainerMeasuringHeight) {
+          computeSizeFlags |= nsIFrame::eUseAutoHeight;
+        }
+      } else {
+        MOZ_ASSERT(!mFlags.mIsFlexContainerMeasuringHeight,
+                   "We're not in a flex container, so the flag "
+                   "'mIsFlexContainerMeasuringHeight' shouldn't be set");
       }
+#endif // MOZ_FLEXBOX
 
       nsSize size =
         frame->ComputeSize(rendContext,
@@ -2037,9 +2069,14 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       NS_ASSERTION(mComputedHeight == NS_UNCONSTRAINEDSIZE ||
                    mComputedHeight >= 0, "Bogus height");
 
-      // Exclude inline tables from the block margin calculations
-      if (isBlock && !IsSideCaption(frame, mStyleDisplay) &&
-          frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE)
+      // Exclude inline tables and flex items from the block margin calculations
+      if (isBlock &&
+          !IsSideCaption(frame, mStyleDisplay) &&
+          mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE
+#ifdef MOZ_FLEXBOX
+          && !flexContainerFrame
+#endif // MOZ_FLEXBOX
+          )
         CalculateBlockSideMargins(availableWidth, mComputedWidth, aFrameType);
     }
   }
