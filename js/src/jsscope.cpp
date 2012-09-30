@@ -1029,20 +1029,11 @@ Shape::setObjectParent(JSContext *cx, JSObject *parent, TaggedProto proto, Shape
 }
 
 bool
-JSObject::isExtensible() const
-{
-    if (isProxy())
-        return Proxy::isExtensible(const_cast<JSObject *>(this));
-    return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
-}
-
-bool
 JSObject::preventExtensions(JSContext *cx)
 {
     JS_ASSERT(isExtensible());
+
     RootedObject self(cx, this);
-    if (self->isProxy())
-        return Proxy::preventExtensions(cx, self);
 
     /*
      * Force lazy properties to be resolved by iterating over the objects' own
@@ -1056,38 +1047,6 @@ JSObject::preventExtensions(JSContext *cx)
         self->makeDenseArraySlow(cx, self);
 
     return self->setFlag(cx, BaseShape::NOT_EXTENSIBLE, GENERATE_SHAPE);
-}
-
-/*
- * Per spec, preventExtensions should be a fundamental trap. We don't want to
- * force consumers of BaseProxyHandler (i.e. DOM bindings) to implement yet
- * another fundamental trap, however, so we provide a default implementation
- * here. We cannot simply forward the operation to the target object, since
- * BaseProxyHandler is not guaranteed to have one. Instead, we use the proxy's
- * shape tree (as we would for normal objects) to store a flag indicating that
- * the proxy is not extensible.
- */
-bool
-BaseProxyHandler::isExtensible(JSObject *proxy)
-{
-    return !proxy->lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
-}
-
-bool
-BaseProxyHandler::preventExtensions(JSContext *cx, JSObject *proxy_)
-{
-    JS_ASSERT(isExtensible());
-    RootedObject proxy(cx, proxy_);
-
-    /*
-     * Force lazy properties to be resolved by iterating over the objects' own
-     * properties.
-     */
-    AutoIdVector props(cx);
-    if (!js::GetPropertyNames(cx, proxy, JSITER_HIDDEN | JSITER_OWNONLY, &props))
-        return false;
-    JS_ASSERT(!proxy->isDenseArray());
-    return proxy_->setFlag(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE);
 }
 
 bool

@@ -1016,6 +1016,8 @@ class ObjectImpl : public gc::Cell
         return type_->proto;
     }
 
+    inline bool isExtensible() const;
+
     /*
      * XXX Once the property/element split of bug 586842 is complete, these
      *     methods should move back to JSObject.

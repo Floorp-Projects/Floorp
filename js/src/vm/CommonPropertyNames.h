@@ -106,7 +106,6 @@
     macro(of, of, "of") \
     macro(parseFloat, parseFloat, "parseFloat") \
     macro(parseInt, parseInt, "parseInt") \
-    macro(preventExtensions, preventExtensions, "preventExtensions") \
     macro(propertyIsEnumerable, propertyIsEnumerable, "propertyIsEnumerable") \
     macro(proto, proto, "__proto__") \
     macro(return, return_, "return") \
