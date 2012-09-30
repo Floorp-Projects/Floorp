@@ -4770,9 +4770,16 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
   }
   nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
   nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+  bool needsSchedulePaint = false;
   while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
     if (aHasDisplayItem) {
       parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
+    }
+    // If we're inside a popup, then we need to make sure that we
+    // call schedule paint so that the NS_FRAME_UPDATE_LAYER_TREE
+    // flag gets added to the popup display root frame.
+    if (nsLayoutUtils::IsPopup(parent)) {
+      needsSchedulePaint = true;
     }
     nsSVGEffects::InvalidateDirectRenderingObservers(parent);
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
@@ -4780,7 +4787,7 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
   if (!aHasDisplayItem) {
     return;
   }
-  if (!parent) {
+  if (!parent || needsSchedulePaint) {
     aFrame->SchedulePaint();
   }
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
