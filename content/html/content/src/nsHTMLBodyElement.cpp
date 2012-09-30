@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsGenericHTMLElement.h"
+#include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -21,7 +22,7 @@
 #include "nsIDocShell.h"
 #include "nsIEditorDocShell.h"
 #include "nsRuleWalker.h"
-#include "jsapi.h"
+#include "jspubtd.h"
 
 //----------------------------------------------------------------------
 

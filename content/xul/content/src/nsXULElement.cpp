@@ -87,6 +87,7 @@
 #include "rdf.h"
 #include "nsIControllers.h"
 #include "nsAttrValueOrString.h"
+#include "nsAttrValueInlines.h"
 #include "mozilla/Attributes.h"
 
 // The XUL doc interface
