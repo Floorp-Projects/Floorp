@@ -304,6 +304,7 @@ protected:
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsIAtom* aName);
   nsPIDOMWindow* GetInnerWindowForTarget();
+  already_AddRefed<nsPIDOMWindow> GetTargetAsInnerWindow() const;
 
   uint32_t mMayHavePaintEventListener : 1;
   uint32_t mMayHaveMutationListeners : 1;

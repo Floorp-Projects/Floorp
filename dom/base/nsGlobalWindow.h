@@ -537,6 +537,9 @@ public:
   virtual void EnableTimeChangeNotifications();
   virtual void DisableTimeChangeNotifications();
 
+  virtual void EnableNetworkEvent(uint32_t aType);
+  virtual void DisableNetworkEvent(uint32_t aType);
+
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
 
   static bool DOMWindowDumpEnabled();
@@ -1083,6 +1086,11 @@ protected:
   // window (e.g. when we are closing the tab and therefore are guaranteed to be
   // destroying this window).
   bool                          mDialogsPermanentlyDisabled;
+
+  // Temporary booleans to know if we are currently observing network blips.
+  // Will be hopefully removed after bug 795703.
+  bool mObservingNetworkUpload;
+  bool mObservingNetworkDownload;
 
   nsRefPtr<nsDOMMozURLProperty> mURLProperty;
 
