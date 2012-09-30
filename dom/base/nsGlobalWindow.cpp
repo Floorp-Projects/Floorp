@@ -11136,6 +11136,21 @@ nsGlobalWindow::EnableNetworkEvent(uint32_t aType)
     return;
   }
 
+  nsCOMPtr<nsIPermissionManager> permMgr =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permMgr) {
+    NS_ERROR("No PermissionManager available!");
+    return;
+  }
+
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
+  permMgr->TestExactPermissionFromPrincipal(GetPrincipal(), "network-events",
+                                            &permission);
+
+  if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    return;
+  }
+
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (!os) {
     NS_ERROR("ObserverService should be available!");

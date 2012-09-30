@@ -90,6 +90,11 @@ systemclock
 Time/Clock API, 714358
 Set current time. Timezone will go in the Settings API.
 
+network-events
+{}
+Network Events, 795136
+Receive events when a packet is downloaded or uploaded from the device.
+
 network-http
 {}
 old name: systemXHR
