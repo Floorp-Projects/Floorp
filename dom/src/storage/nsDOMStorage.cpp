@@ -37,8 +37,7 @@ using mozilla::dom::ContentChild;
 #include "mozilla/Telemetry.h"
 #include "DictionaryHelpers.h"
 #include "GeneratedEvents.h"
-#include "nsIAppsService.h"
-#include "mozIApplication.h"
+#include "mozIApplicationClearPrivateDataParams.h"
 
 // calls FlushAndDeleteTemporaryTables(false)
 #define NS_DOMSTORAGE_FLUSH_TIMER_TOPIC "domstorage-flush-timer"
@@ -164,7 +163,7 @@ nsDOMStorageManager::Initialize()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = os->AddObserver(gStorageManager, "last-pb-context-exited", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(gStorageManager, "webapps-uninstall", true);
+  rv = os->AddObserver(gStorageManager, "webapps-clear-data", true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -311,23 +310,30 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     if (DOMStorageImpl::gStorageDB) {
       return DOMStorageImpl::gStorageDB->DropPrivateBrowsingStorages();
     }
-  } else if (!strcmp(aTopic, "webapps-uninstall")) {
+  } else if (!strcmp(aTopic, "webapps-clear-data")) {
     if (!DOMStorageImpl::gStorageDB) {
       return NS_OK;
     }
 
-    nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
-    nsCOMPtr<mozIApplication> app;
-
-    appsService->GetAppFromObserverMessage(nsAutoString(aData), getter_AddRefs(app));
-    NS_ENSURE_TRUE(app, NS_ERROR_UNEXPECTED);
+    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
+      do_QueryInterface(aSubject);
+    if (!params) {
+      NS_ERROR("'webapps-clear-data' notification's subject should be a mozIApplicationClearPrivateDataParams");
+      return NS_ERROR_UNEXPECTED;
+    }
 
     uint32_t appId;
-    app->GetLocalId(&appId);
+    bool browserOnly;
+
+    nsresult rv = params->GetAppId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = params->GetBrowserOnly(&browserOnly);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     MOZ_ASSERT(appId != nsIScriptSecurityManager::NO_APP_ID);
 
-    return DOMStorageImpl::gStorageDB->RemoveAllForApp(appId,
-                                                       /* onlyBrowserElements */ false);
+    return DOMStorageImpl::gStorageDB->RemoveAllForApp(appId, browserOnly);
   }
 
   return NS_OK;
