@@ -2469,6 +2469,7 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
     data->AddFrame(aItem->GetUnderlyingFrame());
   }
 
+#if 0
   nsAutoTArray<nsIFrame*,4> mergedFrames;
   aItem->GetMergedFrames(&mergedFrames);
   for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
@@ -2479,6 +2480,7 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
       data->AddFrame(mergedFrames[i]);
     }
   }
+#endif
   
   DisplayItemData* oldData = GetDisplayItemDataForManager(aItem, mRetainingManager);
   if (oldData && oldData->FrameListMatches(aItem)) {

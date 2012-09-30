@@ -260,3 +260,10 @@
    fun:_ZL29nsGSettingsServiceConstructorP11nsISupportsRK4nsIDPPv
    ...
 }
+{
+   Bug 795631
+   Memcheck:Cond
+   fun:_ZN7mozilla17FrameLayerBuilder18ClippedDisplayItemD1Ev
+   fun:_ZN12nsTHashtableIN7mozilla17FrameLayerBuilder21ThebesLayerItemsEntryEE12s_ClearEntryEP12PLDHashTableP15PLDHashEntryHdr
+   ...
+}
