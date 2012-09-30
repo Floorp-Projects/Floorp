@@ -548,6 +548,9 @@ struct JSObject : public js::ObjectImpl
     static inline unsigned getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it);
 
   public:
+    friend class js::BaseProxyHandler;
+
+    bool isExtensible() const;
     bool preventExtensions(JSContext *cx);
 
     /* ES5 15.2.3.8: non-extensible, all props non-configurable */

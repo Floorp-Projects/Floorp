@@ -413,6 +413,12 @@ IndirectProxyHandler::defineProperty(JSContext *cx, JSObject *proxy, jsid id_,
 }
 
 bool
+IndirectProxyHandler::preventExtensions(JSContext *cx, JSObject *proxy)
+{
+    return GetProxyTargetObject(proxy)->preventExtensions(cx);
+}
+
+bool
 IndirectProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy,
                                           AutoIdVector &props)
 {
@@ -440,6 +446,12 @@ IndirectProxyHandler::enumerate(JSContext *cx, JSObject *proxy,
 {
     RootedObject target(cx, GetProxyTargetObject(proxy));
     return GetPropertyNames(cx, target, 0, &props);
+}
+
+bool
+IndirectProxyHandler::isExtensible(JSObject *proxy)
+{
+    return GetProxyTargetObject(proxy)->isExtensible();
 }
 
 bool
@@ -1031,6 +1043,7 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
                                           PropertyDescriptor *desc) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE;
@@ -1652,6 +1665,47 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, JSObject *proxy_, jsid
 
     // step 2
     return TrapDefineOwnProperty(cx, proxy, id, &v);
+}
+
+bool
+ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, JSObject *proxy_)
+{
+    RootedObject proxy(cx, proxy_);
+
+    // step a
+    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+
+    // step b
+    RootedObject target(cx, GetProxyTargetObject(proxy));
+
+    // step c
+    RootedValue trap(cx);
+    if (!JSObject::getProperty(cx, handler, handler, cx->names().preventExtensions, &trap))
+        return false;
+
+    // step d
+    if (trap.isUndefined())
+        return DirectProxyHandler::preventExtensions(cx, proxy_);
+
+    // step e
+    Value argv[] = {
+        ObjectValue(*target)
+    };
+    RootedValue trapResult(cx);
+    if (!Invoke(cx, ObjectValue(*handler), trap, 1, argv, trapResult.address()))
+        return false;
+
+    // steps f-h
+    if (ToBoolean(trapResult)) {
+        if (target->isExtensible()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REPORT_NON_EXT);
+            return false;
+        }
+        return true;
+    } else {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_MAKE_NON_EXT);
+        return false;
+    }
 }
 
 bool
@@ -2287,6 +2341,14 @@ Proxy::defineProperty(JSContext *cx, JSObject *proxy_, jsid id_, const Value &v)
 }
 
 bool
+Proxy::preventExtensions(JSContext *cx, JSObject *proxy_)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    RootedObject proxy(cx, proxy_);
+    return GetProxyHandler(proxy)->preventExtensions(cx, proxy);
+}
+
+bool
 Proxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy_, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -2451,6 +2513,12 @@ Proxy::iterate(JSContext *cx, HandleObject proxy_, unsigned flags, MutableHandle
         return false;
     }
     return EnumeratedIdVectorToIterator(cx, proxy, flags, props, vp);
+}
+
+bool
+Proxy::isExtensible(JSObject *proxy)
+{
+    return GetProxyHandler(proxy)->isExtensible(proxy);
 }
 
 bool
