@@ -763,7 +763,7 @@ BluetoothService::Notify(const BluetoothSignal& aData)
     type.AssignLiteral("bluetooth-cancel");
   } else if (aData.name().EqualsLiteral("PairedStatusChanged")) {
     NS_ASSERTION(arr.Length() == 1, "PairedStatusChagned: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-pairingstatuschanged");
+    type.AssignLiteral("bluetooth-pairedstatuschanged");
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
