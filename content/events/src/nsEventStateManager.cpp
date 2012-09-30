@@ -111,6 +111,8 @@ using namespace mozilla::dom;
 
 #define NS_USER_INTERACTION_INTERVAL 5000 // ms
 
+static const nsIntPoint kInvalidRefPoint = nsIntPoint(-1,-1);
+
 static bool sLeftClickOnly = true;
 static bool sKeyCausesActivation = true;
 static uint32_t sESMInstanceCount = 0;
@@ -120,9 +122,9 @@ bool nsEventStateManager::sNormalLMouseEventInProcess = false;
 nsEventStateManager* nsEventStateManager::sActiveESM = nullptr;
 nsIDocument* nsEventStateManager::sMouseOverDocument = nullptr;
 nsWeakFrame nsEventStateManager::sLastDragOverFrame = nullptr;
-nsIntPoint nsEventStateManager::sLastRefPoint = nsIntPoint(0,0);
+nsIntPoint nsEventStateManager::sLastRefPoint = kInvalidRefPoint;
 nsIntPoint nsEventStateManager::sLastScreenPoint = nsIntPoint(0,0);
-nsIntPoint nsEventStateManager::sSynthCenteringPoint = nsIntPoint(-1,-1);
+nsIntPoint nsEventStateManager::sSynthCenteringPoint = kInvalidRefPoint;
 nsIntPoint nsEventStateManager::sLastClientPoint = nsIntPoint(0,0);
 bool nsEventStateManager::sIsPointerLocked = false;
 // Reference to the pointer locked element.
@@ -4162,8 +4164,14 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
           aEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
           // Clear sSynthCenteringPoint so we don't cancel other events
           // targeted at the center.
-          sSynthCenteringPoint = nsIntPoint(-1,-1);
+          sSynthCenteringPoint = kInvalidRefPoint;
         }
+      } else if (sLastRefPoint == kInvalidRefPoint) {
+        // We don't have a valid previous mousemove refPoint. This is either
+        // the first move we've encountered, or the mouse has just re-entered
+        // the application window. We should report (0,0) movement for this
+        // case, so make the current and previous refPoints the same.
+        aEvent->lastRefPoint = aEvent->refPoint;
       } else {
         aEvent->lastRefPoint = sLastRefPoint;
       }
@@ -4196,6 +4204,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
         // mLastMouseOverFrame, it's a spurious event for mLastMouseOverFrame
         break;
       }
+
+      // Reset sLastRefPoint, so that we'll know not to report any
+      // movement the next time we re-enter the window.
+      sLastRefPoint = kInvalidRefPoint;
 
       NotifyMouseOut(aEvent, nullptr);
     }
