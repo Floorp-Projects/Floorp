@@ -20,6 +20,7 @@ class nsITimer;
 
 namespace mozilla {
 class MediaResource;
+class MediaByteRange;
 }
 
 // The size to use for audio data frames in MozAudioAvailable events.
@@ -39,6 +40,7 @@ class nsMediaDecoder : public nsIObserver
 {
 public:
   typedef mozilla::MediaResource MediaResource;
+  typedef mozilla::MediaByteRange MediaByteRange;
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
   typedef mozilla::SourceMediaStream SourceMediaStream;
   typedef mozilla::ProcessedMediaStream ProcessedMediaStream;
@@ -72,6 +74,14 @@ public:
 
   // Seek to the time position in (seconds) from the start of the video.
   virtual nsresult Seek(double aTime) = 0;
+
+  // Enables decoders to supply an enclosing byte range for a seek offset.
+  // E.g. used by ChannelMediaResource to download a whole cluster for
+  // DASH-WebM.
+  virtual nsresult GetByteRangeForSeek(int64_t const aOffset,
+                                       MediaByteRange &aByteRange) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // Called by the element when the playback rate has been changed.
   // Adjust the speed of the playback, optionally with pitch correction,

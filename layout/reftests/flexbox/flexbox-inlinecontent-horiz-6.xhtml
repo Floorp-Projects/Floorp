@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!--
+     This test has a block inside an inline inside a flexbox.  This is like one
+     of the examples in the flexbox spec, and the desired behavior is that
+     the entire inline (including the block inside of it) gets wrapped in an
+     anonymous flex item.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style>
+      div.flexbox {
+        width: 200px;
+        height: 100px;
+        display: -moz-flex;
+        -moz-justify-content: space-around;
+        border: 1px dotted black;
+      }
+      div.a {
+        width: 30px;
+        height: 50px;
+        background: lightgreen;
+      }
+      div.b {
+        width: 40px;
+        height: 50px;
+        background: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flexbox">
+      <span>abc<div class="a"/>def</span>
+      <div class="b"/>
+    </div>
+  </body>
+</html>

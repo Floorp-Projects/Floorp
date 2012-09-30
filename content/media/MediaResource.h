@@ -8,7 +8,9 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/XPCOM.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "nsIChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
@@ -109,6 +111,12 @@ public:
 
   bool IsNull() const {
     return mStart == 0 && mEnd == 0;
+  }
+
+  // Clears byte range values.
+  void Clear() {
+    mStart = 0;
+    mEnd = 0;
   }
 
   int64_t mStart, mEnd;
@@ -283,6 +291,17 @@ public:
   virtual nsresult Open(nsIStreamListener** aStreamListener) = 0;
 
   /**
+   * Open the stream using a specific byte range only. Creates a stream
+   * listener and returns it in aStreamListener; this listener needs to be
+   * notified of incoming data. Byte range is specified in aByteRange.
+   */
+  virtual nsresult OpenByteRange(nsIStreamListener** aStreamListener,
+                                 MediaByteRange const &aByteRange)
+  {
+    return Open(aStreamListener);
+  }
+
+  /**
    * Fills aRanges with MediaByteRanges representing the data which is cached
    * in the media cache. Stream should be pinned during call and while
    * aRanges is being used.
@@ -364,6 +383,8 @@ public:
 
   // Main thread
   virtual nsresult Open(nsIStreamListener** aStreamListener);
+  virtual nsresult OpenByteRange(nsIStreamListener** aStreamListener,
+                                 MediaByteRange const & aByteRange);
   virtual nsresult Close();
   virtual void     Suspend(bool aCloseImmediately);
   virtual void     Resume();
@@ -435,6 +456,14 @@ protected:
   // Closes the channel. Main thread only.
   void CloseChannel();
 
+  // Parses 'Content-Range' header and returns results via parameters.
+  // Returns error if header is not available, values are not parse-able or
+  // values are out of range.
+  nsresult ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
+                                   int64_t& aRangeStart,
+                                   int64_t& aRangeEnd,
+                                   int64_t& aRangeTotal);
+
   void DoNotifyDataReceived();
 
   static NS_METHOD CopySegmentToCache(nsIInputStream *aInStream,
@@ -480,6 +509,21 @@ protected:
 
   // True if we are seeking to get the real duration of the file.
   bool mSeekingForMetadata;
+
+  // Start and end offset of the bytes to be requested.
+  MediaByteRange mByteRange;
+
+  // True if resource was opened with a byte rage request.
+  bool mByteRangeDownloads;
+
+  // Set to false once first byte range request has been made.
+  bool mByteRangeFirstOpen;
+
+  // For byte range requests, set to the offset requested in |Seek|.
+  // Used in |CacheClientSeek| to find the originally requested byte range.
+  // Read/Write on multiple threads; use |mSeekMonitor|.
+  ReentrantMonitor mSeekOffsetMonitor;
+  int64_t mSeekOffset;
 };
 
 }
