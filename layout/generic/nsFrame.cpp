@@ -4801,7 +4801,7 @@ nsIFrame::InvalidateFrameSubtree(uint32_t aDisplayItemKey)
 {
   bool hasDisplayItem = 
     !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
-  InvalidateFrameInternal(this, hasDisplayItem);
+  InvalidateFrame(aDisplayItemKey);
 
   if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT) || !hasDisplayItem) {
     return;
