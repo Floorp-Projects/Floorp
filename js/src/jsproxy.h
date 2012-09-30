@@ -49,6 +49,7 @@ class JS_FRIEND_API(Wrapper);
 class JS_FRIEND_API(BaseProxyHandler) {
     void *mFamily;
     bool mHasPrototype;
+
   protected:
     // Subclasses may set this in their constructor.
     void setHasPrototype(bool hasPrototype) { mHasPrototype = hasPrototype; }
@@ -91,6 +92,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
                                           PropertyDescriptor *desc) = 0;
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 PropertyDescriptor *desc) = 0;
+    virtual bool preventExtensions(JSContext *cx, JSObject *proxy);
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
                                      AutoIdVector &props) = 0;
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) = 0;
@@ -109,6 +111,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
                          Value *vp);
 
     /* Spidermonkey extensions. */
+    virtual bool isExtensible(JSObject *proxy);
     virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
     virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
@@ -148,6 +151,7 @@ class JS_PUBLIC_API(IndirectProxyHandler) : public BaseProxyHandler {
                                           PropertyDescriptor *desc) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
                                      AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id,
@@ -156,6 +160,7 @@ class JS_PUBLIC_API(IndirectProxyHandler) : public BaseProxyHandler {
                            AutoIdVector &props) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
+    virtual bool isExtensible(JSObject *proxy);
     virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc,
                       Value *vp) MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc,
@@ -218,6 +223,7 @@ class Proxy {
                                          Value *vp);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, const Value &v);
+    static bool preventExtensions(JSContext *cx, JSObject *proxy);
     static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
     static bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props);
@@ -234,6 +240,7 @@ class Proxy {
     static bool iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
+    static bool isExtensible(JSObject *proxy);
     static bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
     static bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
     static bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
