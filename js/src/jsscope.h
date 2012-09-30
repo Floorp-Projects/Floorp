@@ -15,6 +15,7 @@
 #endif
 
 #include "jsobj.h"
+#include "jsproxy.h"
 #include "jspropertytree.h"
 #include "jstypes.h"
 

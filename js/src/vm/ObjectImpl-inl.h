@@ -101,12 +101,6 @@ js::ObjectImpl::nativeContainsNoAllocation(Shape &shape)
 }
 
 inline bool
-js::ObjectImpl::isExtensible() const
-{
-    return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
-}
-
-inline bool
 js::ObjectImpl::isDenseArray() const
 {
     bool result = hasClass(&ArrayClass);
