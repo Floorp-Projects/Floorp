@@ -13,6 +13,7 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
+#include "nsAttrValueInlines.h"
 #include "nsRuleData.h"
 #include "nsCSSProps.h"
 

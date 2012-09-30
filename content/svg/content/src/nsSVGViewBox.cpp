@@ -11,6 +11,7 @@
 #include "nsSMILValue.h"
 #include "SVGContentUtils.h"
 #include "SVGViewBoxSMILType.h"
+#include "nsAttrValueInlines.h"
 
 #define NUM_VIEWBOX_COMPONENTS 4
 using namespace mozilla;

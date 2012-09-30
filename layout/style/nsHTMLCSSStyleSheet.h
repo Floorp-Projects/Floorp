@@ -15,10 +15,13 @@
 #include "nsIStyleSheet.h"
 #include "nsIStyleRuleProcessor.h"
 
+struct MiscContainer;
+
 class nsHTMLCSSStyleSheet MOZ_FINAL : public nsIStyleSheet,
                                       public nsIStyleRuleProcessor {
 public:
   nsHTMLCSSStyleSheet();
+  ~nsHTMLCSSStyleSheet();
 
   NS_DECL_ISUPPORTS
 
@@ -59,6 +62,10 @@ public:
   virtual NS_MUST_OVERRIDE size_t
     SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE;
 
+  void CacheStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);
+  void EvictStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);
+  MiscContainer* LookupStyleAttr(const nsAString& aSerialized);
+
 private: 
   nsHTMLCSSStyleSheet(const nsHTMLCSSStyleSheet& aCopy) MOZ_DELETE;
   nsHTMLCSSStyleSheet& operator=(const nsHTMLCSSStyleSheet& aCopy) MOZ_DELETE;
@@ -66,6 +73,7 @@ private:
 protected:
   nsCOMPtr<nsIURI> mURL;
   nsIDocument*     mDocument;
+  nsDataHashtable<nsStringHashKey, MiscContainer*> mCachedStyleAttrs;
 };
 
 #endif /* !defined(nsHTMLCSSStyleSheet_h_) */

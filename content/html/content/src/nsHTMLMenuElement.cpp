@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHTMLMenuElement.h"
-
+#include "nsAttrValueInlines.h"
 #include "nsIDOMHTMLMenuItemElement.h"
 #include "nsXULContextMenuBuilder.h"
 #include "nsGUIEvent.h"

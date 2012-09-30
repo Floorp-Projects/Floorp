@@ -6,6 +6,7 @@
 #include "mozilla/Util.h"
 
 #include "nsHTMLInputElement.h"
+#include "nsAttrValueInlines.h"
 
 #include "nsIDOMHTMLInputElement.h"
 #include "nsITextControlElement.h"

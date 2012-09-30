@@ -22,13 +22,39 @@
 #include "nsRuleData.h"
 #include "nsRuleProcessorData.h"
 #include "mozilla/dom/Element.h"
+#include "nsAttrValue.h"
+#include "nsAttrValueInlines.h"
 
 using namespace mozilla::dom;
 namespace css = mozilla::css;
 
+namespace {
+
+PLDHashOperator
+ClearAttrCache(const nsAString& aKey, MiscContainer*& aValue, void*)
+{
+  // Ideally we'd just call MiscContainer::Evict, but we can't do that since
+  // we're iterating the hashtable.
+  MOZ_ASSERT(aValue->mType == nsAttrValue::eCSSStyleRule);
+
+  aValue->mValue.mCSSStyleRule->SetHTMLCSSStyleSheet(nullptr);
+  aValue->mValue.mCached = 0;
+
+  return PL_DHASH_REMOVE;
+}
+
+} // anonymous namespace
+
 nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet()
   : mDocument(nullptr)
 {
+}
+
+nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
+{
+  // We may go away before all of our cached style attributes do,
+  // so clean up any that are left.
+  mCachedStyleAttrs.Enumerate(ClearAttrCache, nullptr);
 }
 
 NS_IMPL_ISUPPORTS2(nsHTMLCSSStyleSheet,
@@ -94,6 +120,7 @@ nsHTMLCSSStyleSheet::Init(nsIURI* aURL, nsIDocument* aDocument)
 
   mDocument = aDocument; // not refcounted!
   mURL = aURL;
+  mCachedStyleAttrs.Init();
   return NS_OK;
 }
 
@@ -139,6 +166,32 @@ nsHTMLCSSStyleSheet::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 nsHTMLCSSStyleSheet::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
+void
+nsHTMLCSSStyleSheet::CacheStyleAttr(const nsAString& aSerialized,
+                                    MiscContainer* aValue)
+{
+  mCachedStyleAttrs.Put(aSerialized, aValue);
+}
+
+void
+nsHTMLCSSStyleSheet::EvictStyleAttr(const nsAString& aSerialized,
+                                    MiscContainer* aValue)
+{
+#ifdef DEBUG
+  {
+    NS_ASSERTION(aValue = mCachedStyleAttrs.Get(aSerialized),
+                 "Cached value does not match?!");
+  }
+#endif
+  mCachedStyleAttrs.Remove(aSerialized);
+}
+
+MiscContainer*
+nsHTMLCSSStyleSheet::LookupStyleAttr(const nsAString& aSerialized)
+{
+  return mCachedStyleAttrs.Get(aSerialized);
 }
 
 void
