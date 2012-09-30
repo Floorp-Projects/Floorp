@@ -47,6 +47,25 @@ label.findbar-find-fast:-moz-lwtheme,
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
+@media (min-resolution: 2dppx) {
+  .findbar-closebutton {
+    list-style-image: url("chrome://global/skin/icons/close@2x.png");
+    -moz-image-region: rect(0, 32px, 32px, 0);
+  }
+
+  .findbar-closebutton:hover {
+    -moz-image-region: rect(0, 64px, 32px, 32px);
+  }
+
+  .findbar-closebutton:hover:active {
+    -moz-image-region: rect(0, 96px, 32px, 64px);
+  }
+
+  .findbar-closebutton > .toolbarbutton-icon {
+    width: 16px;
+  }
+}
+
 .findbar-find-next,
 .findbar-find-previous,
 .findbar-highlight {
