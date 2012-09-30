@@ -323,6 +323,9 @@ function createTextForElement(elem) {
 }
 
 function generateTextForElement(elem, indent, textFragmentAccumulator) {
+  if (elem.classList.contains("no-copy"))
+    return;
+
   // Add a little extra spacing around most elements.
   if (elem.tagName != "td")
     textFragmentAccumulator.push("\n");

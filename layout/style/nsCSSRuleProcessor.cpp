@@ -2029,8 +2029,8 @@ static bool SelectorMatches(Element* aElement,
           //    aElement->StyleState().HasState(NS_EVENT_STATE_RTL)
           //
           // However, in markup languages where there is no direction attribute
-          // we have to consider the possibility that neither dir(rtl) nor
-          // dir(ltr) matches.
+          // we have to consider the possibility that neither -moz-dir(rtl) nor
+          // -moz-dir(ltr) matches.
           nsEventStates state = aElement->StyleState();
           bool elementIsRTL = state.HasState(NS_EVENT_STATE_RTL);
           bool elementIsLTR = state.HasState(NS_EVENT_STATE_LTR);
