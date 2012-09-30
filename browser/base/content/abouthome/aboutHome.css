@@ -81,7 +81,7 @@ a {
   border-radius: 2.5px 0 0 2.5px;
 }
 
-#searchText:dir(rtl) {
+#searchText:-moz-dir(rtl) {
   border-radius: 0 2.5px 2.5px 0;
 }
 
@@ -105,7 +105,7 @@ a {
   transition-duration: 150ms;
 }
 
-#searchSubmit:dir(rtl) {
+#searchSubmit:-moz-dir(rtl) {
   border-radius: 2.5px 0 0 2.5px;
 }
 
@@ -147,8 +147,8 @@ a {
   -moz-padding-start: 79px;
 }
 
-#defaultSnippet1:dir(rtl),
-#defaultSnippet2:dir(rtl) {
+#defaultSnippet1:-moz-dir(rtl),
+#defaultSnippet2:-moz-dir(rtl) {
   background-position: right 30px center;
 }
 
@@ -312,7 +312,7 @@ body[narrow] #restorePreviousSession {
   -moz-margin-end: 8px;
 }
 
-#restorePreviousSession:dir(rtl)::before {
+#restorePreviousSession:-moz-dir(rtl)::before {
   transform: scaleX(-1);
 }
 
