@@ -9,6 +9,7 @@
 #include "nsSMILNullType.h"
 #include "nsISMILAnimationElement.h"
 #include "nsSMILTimedElement.h"
+#include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"

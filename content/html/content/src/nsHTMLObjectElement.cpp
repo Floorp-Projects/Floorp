@@ -8,6 +8,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsGenericHTMLElement.h"
+#include "nsAttrValueInlines.h"
 #include "nsObjectLoadingContent.h"
 #include "nsGkAtoms.h"
 #include "nsError.h"
