@@ -349,6 +349,9 @@ public:
     uint16_t mHeightDependsOnAncestorCell:1;   // Does frame height depend on
                                                // an ancestor table-cell?
     uint16_t mIsColumnBalancing:1;   // nsColumnSetFrame is balancing columns
+    uint16_t mIsFlexContainerMeasuringHeight:1; // nsFlexContainerFrame is
+                                                // reflowing this child to
+                                                // measure its intrinsic height.
     uint16_t mDummyParentReflowState:1; // a "fake" reflow state made
                                         // in order to be the parent
                                         // of a real one
