@@ -685,9 +685,20 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
         return js_GetXMLMethod(cx, obj, id, res);
     }
 #endif
+    // Don't call GetPcScript (needed for analysis) from inside Ion since it's expensive.
+    bool analyze = !cx->fp()->beginsIonActivation();
 
     uint32_t index;
     if (IsDefinitelyIndex(rref, &index)) {
+        if (analyze && !obj->isNative() && !obj->isArray()) {
+            RootedScript script(cx, NULL);
+            jsbytecode *pc = NULL;
+            types::TypeScript::GetPcScript(cx, &script, &pc);
+
+            if (script->hasAnalysis())
+                script->analysis()->getCode(pc).nonNativeGetElement = true;
+        }
+
         do {
             if (obj->isDenseArray()) {
                 if (index < obj->getDenseArrayInitializedLength()) {
@@ -703,15 +714,17 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
                 return false;
         } while(0);
     } else {
-        if (!cx->fp()->beginsIonActivation()) {
-            // Don't update getStringElement if called from Ion code, since
-            // ion::GetPcScript is expensive.
-            RootedScript script(cx);
-            jsbytecode *pc;
+        if (analyze) {
+            RootedScript script(cx, NULL);
+            jsbytecode *pc = NULL;
             types::TypeScript::GetPcScript(cx, &script, &pc);
 
-            if (script->hasAnalysis())
+            if (script->hasAnalysis()) {
                 script->analysis()->getCode(pc).getStringElement = true;
+
+                if (!obj->isArray() && !obj->isNative())
+                    script->analysis()->getCode(pc).nonNativeGetElement = true;
+            }
         }
 
         SpecialId special;
