@@ -375,5 +375,3 @@ MSG_DEF(JSMSG_MUST_REPORT_UNDEFINED,  321, 0, JSEXN_TYPEERR, "proxy must report 
 MSG_DEF(JSMSG_CANT_SET_NW_NC,         322, 0, JSEXN_TYPEERR, "proxy can't successfully set a non-writable, non-configurable property")
 MSG_DEF(JSMSG_CANT_SET_WO_SETTER,     323, 0, JSEXN_TYPEERR, "proxy can't succesfully set an accessor property without a setter")
 MSG_DEF(JSMSG_DEBUG_BAD_REFERENT,     324, 2, JSEXN_TYPEERR, "{0} does not refer to {1}")
-MSG_DEF(JSMSG_CANT_REPORT_NON_EXT,    325, 0, JSEXN_TYPEERR, "proxy can't report extensible object as non-extensible")
-MSG_DEF(JSMSG_CANT_MAKE_NON_EXT,      326, 0, JSEXN_TYPEERR, "can't prevent extensions on object")
