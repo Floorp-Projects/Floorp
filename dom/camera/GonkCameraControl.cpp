@@ -107,7 +107,7 @@ static const char* getKeyText(uint32_t aKey)
 }
 
 // nsDOMCameraControl implementation-specific constructor
-nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
+nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError)
   : mDOMCapabilities(nullptr)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -124,7 +124,7 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThr
    * nsDOMCameraControl or memory will leak!
    */
   NS_ADDREF_THIS();
-  mCameraControl = new nsGonkCameraControl(aCameraId, aCameraThread, this, onSuccess, onError, aWindowId);
+  mCameraControl = new nsGonkCameraControl(aCameraId, aCameraThread, this, onSuccess, onError);
 }
 
 // Gonk-specific CameraControl implementation.
@@ -133,12 +133,11 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThr
 class InitGonkCameraControl : public nsRunnable
 {
 public:
-  InitGonkCameraControl(nsGonkCameraControl* aCameraControl, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
+  InitGonkCameraControl(nsGonkCameraControl* aCameraControl, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
     , mDOMCameraControl(aDOMCameraControl)
     , mOnSuccessCb(onSuccess)
     , mOnErrorCb(onError)
-    , mWindowId(aWindowId)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   }
@@ -151,7 +150,7 @@ public:
   NS_IMETHOD Run()
   {
     nsresult rv = mCameraControl->Init();
-    return mDOMCameraControl->Result(rv, mOnSuccessCb, mOnErrorCb, mWindowId);
+    return mDOMCameraControl->Result(rv, mOnSuccessCb, mOnErrorCb);
   }
 
   nsRefPtr<nsGonkCameraControl> mCameraControl;
@@ -159,12 +158,11 @@ public:
   nsDOMCameraControl* mDOMCameraControl;
   nsCOMPtr<nsICameraGetCameraCallback> mOnSuccessCb;
   nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
-  uint64_t mWindowId;
 };
 
 // Construct nsGonkCameraControl on the main thread.
-nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
-  : CameraControlImpl(aCameraId, aCameraThread, aWindowId)
+nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError)
+  : CameraControlImpl(aCameraId, aCameraThread)
   , mHwHandle(0)
   , mExposureCompensationMin(0.0)
   , mExposureCompensationStep(0.0)
@@ -179,7 +177,7 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraT
   mRwLock = PR_NewRWLock(PR_RWLOCK_RANK_NONE, "GonkCameraControl.Parameters.Lock");
 
   // ...but initialization is carried out on the camera thread.
-  nsCOMPtr<nsIRunnable> init = new InitGonkCameraControl(this, aDOMCameraControl, onSuccess, onError, aWindowId);
+  nsCOMPtr<nsIRunnable> init = new InitGonkCameraControl(this, aDOMCameraControl, onSuccess, onError);
   mCameraThread->Dispatch(init, NS_DISPATCH_NORMAL);
 }
 
@@ -521,7 +519,7 @@ nsGonkCameraControl::GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStrea
 
   DOM_CAMERA_LOGI("config preview: wated %d x %d, got %d x %d (%d fps, format %d)\n", aGetPreviewStream->mSize.width, aGetPreviewStream->mSize.height, mWidth, mHeight, mFps, mFormat);
 
-  nsCOMPtr<GetPreviewStreamResult> getPreviewStreamResult = new GetPreviewStreamResult(this, mWidth, mHeight, mFps, aGetPreviewStream->mOnSuccessCb, mWindowId);
+  nsCOMPtr<GetPreviewStreamResult> getPreviewStreamResult = new GetPreviewStreamResult(this, mWidth, mHeight, mFps, aGetPreviewStream->mOnSuccessCb);
   return NS_DispatchToMainThread(getPreviewStreamResult);
 }
 
@@ -790,7 +788,7 @@ nsGonkCameraControl::AutoFocusComplete(bool aSuccess)
    * to the onSuccess callback to determine how to handle the case
    * where the camera wasn't actually able to acquire focus.
    */
-  nsCOMPtr<nsIRunnable> autoFocusResult = new AutoFocusResult(aSuccess, mAutoFocusOnSuccessCb, mWindowId);
+  nsCOMPtr<nsIRunnable> autoFocusResult = new AutoFocusResult(aSuccess, mAutoFocusOnSuccessCb);
   /**
    * Remember to set these to null so that we don't hold any extra
    * references to our document's window.
@@ -812,7 +810,7 @@ nsGonkCameraControl::TakePictureComplete(uint8_t* aData, uint32_t aLength)
 
   // TODO: see bug 779144.
   nsIDOMBlob* blob = new nsDOMMemoryFile(static_cast<void*>(data), static_cast<uint64_t>(aLength), NS_LITERAL_STRING("image/jpeg"));
-  nsCOMPtr<nsIRunnable> takePictureResult = new TakePictureResult(blob, mTakePictureOnSuccessCb, mWindowId);
+  nsCOMPtr<nsIRunnable> takePictureResult = new TakePictureResult(blob, mTakePictureOnSuccessCb);
   /**
    * Remember to set these to null so that we don't hold any extra
    * references to our document's window.
@@ -1064,18 +1062,6 @@ ReceiveFrame(nsGonkCameraControl* gc, layers::GraphicBufferLocked* aBuffer)
   if (!gc->ReceiveFrame(aBuffer, ImageFormat::GONK_IO_SURFACE, GonkFrameBuilder)) {
     aBuffer->Unlock();
   }
-}
-
-void
-OnShutter(nsGonkCameraControl* gc)
-{
-  gc->OnShutter();
-}
-
-void
-OnClosed(nsGonkCameraControl* gc)
-{
-  gc->OnClosed();
 }
 
 } // namespace mozilla
