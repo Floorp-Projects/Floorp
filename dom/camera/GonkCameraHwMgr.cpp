@@ -134,7 +134,7 @@ GonkCameraHardware::NotifyCallback(int32_t aMsgType, int32_t ext1, int32_t ext2,
       break;
 
     case CAMERA_MSG_SHUTTER:
-      DOM_CAMERA_LOGW("Shutter event not handled yet\n");
+      OnShutter(camera);
       break;
 
     default:
@@ -198,6 +198,14 @@ GonkCameraHardware::~GonkCameraHardware()
 {
   DOM_CAMERA_LOGT( "%s:%d : this=%p\n", __func__, __LINE__, (void*)this );
   sHw = nullptr;
+
+  /**
+   * Trigger the OnClosed event; the upper layers can't do anything
+   * with the hardware layer once they receive this event.
+   */
+  if (mTarget) {
+    OnClosed(mTarget);
+  }
 }
 
 GonkCameraHardware* GonkCameraHardware::sHw         = nullptr;
