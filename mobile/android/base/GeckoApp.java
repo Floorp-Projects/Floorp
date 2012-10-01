@@ -176,6 +176,9 @@ abstract public class GeckoApp
 
     protected int mRestoreMode = GeckoAppShell.RESTORE_NONE;
     protected boolean mInitialized = false;
+    protected Telemetry.Timer mAboutHomeStartupTimer;
+    private Telemetry.Timer mJavaUiStartupTimer;
+    private Telemetry.Timer mGeckoReadyStartupTimer;
 
     public enum LaunchState {Launching, WaitForDebugger,
                              Launched, GeckoRunning, GeckoExiting};
@@ -970,6 +973,7 @@ abstract public class GeckoApp
                 final int tabId = message.getInt("tabID");
                 handlePageShow(tabId);
             } else if (event.equals("Gecko:Ready")) {
+                mGeckoReadyStartupTimer.stop();
                 sIsGeckoReady = true;
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
@@ -1439,8 +1443,14 @@ abstract public class GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-        ((GeckoApplication)getApplication()).initialize();
         GeckoAppShell.registerGlobalExceptionHandler();
+
+        // The clock starts...now. Better hurry!
+        mJavaUiStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_JAVACHROME");
+        mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
+        mGeckoReadyStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_GECKOREADY");
+
+        ((GeckoApplication)getApplication()).initialize();
 
         mAppContext = this;
         Tabs.getInstance().attachToActivity(this);
@@ -1689,6 +1699,9 @@ abstract public class GeckoApp
         UpdateServiceHelper.registerForUpdates(this);
 
         final GeckoApp self = this;
+
+        // End of the startup of our Java App
+        mJavaUiStartupTimer.stop();
 
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
