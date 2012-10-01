@@ -1087,7 +1087,7 @@ Function OnClick_ButtonBrowse
     StrCpy $0 "$INSTDIR"
   ${EndIf}
 
-  nsDialogs::SelectFolderDialog /NOUNLOAD "$(SELECT_FOLDER)" $0
+  nsDialogs::SelectFolderDialog /NOUNLOAD "$(SELECT_FOLDER_TEXT)" $0
   Pop $0
   ${If} $0 == "error" ; returns 'error' if 'cancel' was pressed?
     Return

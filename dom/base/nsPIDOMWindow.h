@@ -48,8 +48,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x0c5763c6, 0x5e87, 0x4f6f, \
-  { 0xa2, 0xef, 0xcf, 0x4d, 0xeb, 0xd1, 0xbc, 0xc3 } }
+{ 0x54fd92bd, 0xda33, 0x4451, \
+  { 0x8f, 0xb5, 0x11, 0x20, 0x5c, 0x03, 0xce, 0xaa } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -573,6 +573,18 @@ public:
 
   virtual void EnableTimeChangeNotifications() = 0;
   virtual void DisableTimeChangeNotifications() = 0;
+
+  /**
+   * Tell the window that it should start to listen to the network event of the
+   * given aType.
+   */
+  virtual void EnableNetworkEvent(uint32_t aType) = 0;
+
+  /**
+   * Tell the window that it should stop to listen to the network event of the
+   * given aType.
+   */
+  virtual void DisableNetworkEvent(uint32_t aType) = 0;
 
   /**
    * Set a arguments for this window. This will be set on the window

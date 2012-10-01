@@ -36,6 +36,12 @@
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
+@media (min-resolution: 2dppx) {
+  .site-favicon {
+    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
+  }
+}
+
 #all-sites-item > .site-container > .site-favicon {
   list-style-image: none;
 }
@@ -100,6 +106,12 @@
 }
 .pref-icon[type="fullscreen"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+
+@media (min-resolution: 2dppx) {
+  .pref-icon[type="geo"] {
+    list-style-image: url(chrome://browser/skin/Geolocation-64@2x.png);
+  }
 }
 
 .pref-title {

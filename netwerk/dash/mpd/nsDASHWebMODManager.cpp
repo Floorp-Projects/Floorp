@@ -46,9 +46,12 @@ namespace net {
 static PRLogModuleInfo* gnsDASHWebMODManagerLog = nullptr;
 #define LOG(msg, ...) \
         PR_LOG(gnsDASHWebMODManagerLog, PR_LOG_DEBUG, \
-               ("%p [nsDASHWebMODManager] " msg, this, ##__VA_ARGS__))
+               ("%p [nsDASHWebMODManager] " msg, this, __VA_ARGS__))
+#define LOG1(msg) PR_LOG(gDASHMPDParserLog, PR_LOG_DEBUG, \
+                         ("%p [nsDASHWebMODManager] " msg, this))
 #else
 #define LOG(msg, ...)
+#define LOG1(msg)
 #endif
 
 nsDASHWebMODManager::nsDASHWebMODManager(MPD* aMpd)

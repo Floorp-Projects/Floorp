@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=795136
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for moznetworkupload and moznetworkdownload</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=795136">Mozilla Bug 795136</a>
+<p id="display"></p>
+<div id="content">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 795136 **/
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.addPermission("network-events", true, document);
+
+var gNetworkUpload = false;
+var gNetworkDownload = false;
+
+function isFinished() {
+  return gNetworkUpload && gNetworkDownload;
+}
+
+function finish() {
+  removeEventListener('moznetworkupload', uploadHandler);
+  removeEventListener('moznetworkdownload', downloadHandler);
+
+  SpecialPowers.removePermission("network-events", document);
+
+  SimpleTest.finish();
+}
+
+function uploadHandler() {
+  ok(true, 'got a network upload event');
+  gNetworkUpload = true;
+
+  if (isFinished()) {
+    finish();
+  }
+}
+
+function downloadHandler() {
+  ok(true, 'got a network download event');
+  gNetworkDownload = true;
+
+  if (isFinished()) {
+    finish();
+  }
+}
+
+addEventListener('moznetworkupload', uploadHandler);
+addEventListener('moznetworkdownload', downloadHandler);
+
+var iframe = document.createElement('iframe');
+iframe.src = 'http://mozilla.org';
+
+document.getElementById('content').appendChild(iframe);
+
+</script>
+</pre>
+</body>
+</html>

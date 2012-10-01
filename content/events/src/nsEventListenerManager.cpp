@@ -182,6 +182,18 @@ nsEventListenerManager::GetInnerWindowForTarget()
   return nullptr;
 }
 
+already_AddRefed<nsPIDOMWindow>
+nsEventListenerManager::GetTargetAsInnerWindow() const
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
+  if (!window) {
+    return nullptr;
+  }
+
+  NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
+  return window.forget();
+}
+
 void
 nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                          uint32_t aType,
@@ -279,6 +291,16 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     EnableDevice(NS_DEVICE_MOTION);
   } else if (aTypeAtom == nsGkAtoms::onmoztimechange) {
     EnableTimeChangeNotifications();
+  } else if (aTypeAtom == nsGkAtoms::onmoznetworkupload) {
+    nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
+    if (window) {
+      window->EnableNetworkEvent(NS_NETWORK_UPLOAD_EVENT);
+    }
+  } else if (aTypeAtom == nsGkAtoms::onmoznetworkdownload) {
+    nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
+    if (window) {
+      window->EnableNetworkEvent(NS_NETWORK_DOWNLOAD_EVENT);
+    }
   } else if (aTypeAtom == nsGkAtoms::ontouchstart ||
              aTypeAtom == nsGkAtoms::ontouchend ||
              aTypeAtom == nsGkAtoms::ontouchmove ||
@@ -404,6 +426,8 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   uint32_t typeCount = 0;
   bool deviceType = IsDeviceType(aType);
   bool timeChangeEvent = (aType == NS_MOZ_TIME_CHANGE_EVENT);
+  bool networkEvent = (aType == NS_NETWORK_UPLOAD_EVENT ||
+                       aType == NS_NETWORK_DOWNLOAD_EVENT);
 
   for (uint32_t i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
@@ -417,7 +441,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
         mNoListenerForEvent = NS_EVENT_TYPE_NULL;
         mNoListenerForEventAtom = nullptr;
 
-        if (!deviceType && !timeChangeEvent) {
+        if (!deviceType && !timeChangeEvent && !networkEvent) {
           return;
         }
         --typeCount;
@@ -429,6 +453,11 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
     DisableDevice(aType);
   } else if (timeChangeEvent && typeCount == 0) {
     DisableTimeChangeNotifications();
+  } else if (networkEvent && typeCount == 0) {
+    nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
+    if (window) {
+      window->DisableNetworkEvent(aType);
+    }
   }
 }
 

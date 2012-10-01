@@ -38,11 +38,11 @@ function run() {
     return window.getComputedStyle(document.getElementById(divName), null).visibility == "visible";
   }
 
-  function getZoomRatio() {
+  function getScreenPixelsPerCSSPixel() {
     return SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixel;
   }
 
-  var screenPixelsPerCSSPixel = getZoomRatio();
+  var screenPixelsPerCSSPixel = getScreenPixelsPerCSSPixel();
   var baseRatio = 1.0 * screenPixelsPerCSSPixel;
   var doubleRatio = 2.0 * screenPixelsPerCSSPixel;
   var halfRatio = 0.5 * screenPixelsPerCSSPixel;
@@ -61,10 +61,10 @@ function run() {
 
   ok(isVisible("zoom1"), "Base ratio rule should apply at base zoom level");
   ok(!isVisible("zoom2") && !isVisible("zoom3"), "no other rules should apply");
-  var origZoom = zoom(2 * screenPixelsPerCSSPixel);
+  var origZoom = zoom(2);
   ok(isVisible("zoom2"), "Double ratio rule should apply at double zoom level");
   ok(!isVisible("zoom1") && !isVisible("zoom3"), "no other rules should apply");
-  zoom(0.5 * screenPixelsPerCSSPixel);
+  zoom(0.5);
   ok(isVisible("zoom3"), "Half ratio rule should apply at half zoom level");
   ok(!isVisible("zoom1") && !isVisible("zoom2"), "no other rules should apply");
   zoom(origZoom);

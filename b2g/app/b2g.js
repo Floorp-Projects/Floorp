@@ -27,6 +27,7 @@ pref("browser.cache.memory.capacity", 1024); // kilobytes
 
 /* image cache prefs */
 pref("image.cache.size", 1048576); // bytes
+pref("image.high_quality_downscaling.enabled", false);
 
 /* offline cache prefs */
 pref("browser.offline-apps.notify", false);
@@ -554,8 +555,17 @@ pref("dom.disable_window_open_dialog_feature", true);
 pref("accessibility.accessfu.activate", 2);
 
 // Enable hit-target fluffing
-pref("ui.touch.radius.enabled", true);
-pref("ui.mouse.radius.enabled", true);
+pref("ui.touch.radius.enabled", false);
+pref("ui.touch.radius.leftmm", 3);
+pref("ui.touch.radius.topmm", 5);
+pref("ui.touch.radius.rightmm", 3);
+pref("ui.touch.radius.bottommm", 2);
+
+pref("ui.mouse.radius.enabled", false);
+pref("ui.mouse.radius.leftmm", 3);
+pref("ui.mouse.radius.topmm", 5);
+pref("ui.mouse.radius.rightmm", 3);
+pref("ui.mouse.radius.bottommm", 2);
 
 // Disable native prompt
 pref("browser.prompt.allowNative", false);

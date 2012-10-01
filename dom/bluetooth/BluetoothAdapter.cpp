@@ -8,23 +8,24 @@
 #include "BluetoothAdapter.h"
 #include "BluetoothDevice.h"
 #include "BluetoothPropertyEvent.h"
-#include "BluetoothService.h"
 #include "BluetoothReplyRunnable.h"
+#include "BluetoothService.h"
+#include "BluetoothServiceUuid.h"
 #include "BluetoothUtils.h"
 #include "GeneratedEvents.h"
 
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
-#include "nsIDOMBluetoothDeviceEvent.h"
 #include "nsIDOMBluetoothDeviceAddressEvent.h"
+#include "nsIDOMBluetoothDeviceEvent.h"
 #include "nsIDOMDOMRequest.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Util.h"
-#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 using namespace mozilla;
 
@@ -723,6 +724,108 @@ BluetoothAdapter::SetAuthorization(const nsAString& aDeviceAddress, bool aAllow,
 
   req.forget(aRequest);
   return NS_OK;  
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::Connect(const nsAString& aDeviceAddress,
+                          uint16_t aProfileId,
+                          nsIDOMDOMRequest** aRequest)
+{
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMRequestService> rs = do_GetService("@mozilla.org/dom/dom-request-service;1");
+  if (!rs) {
+    NS_WARNING("No DOMRequest Service!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = rs->CreateRequest(GetOwner(), getter_AddRefs(req));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Can't create DOMRequest!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<BluetoothVoidReplyRunnable> result = new BluetoothVoidReplyRunnable(req);
+
+  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)) {
+    if (!bs->ConnectHeadset(aDeviceAddress, mPath, result)) {
+      NS_WARNING("Creating RFCOMM socket failed.");
+      return NS_ERROR_FAILURE;
+    }
+  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
+    if (!bs->ConnectObjectPush(aDeviceAddress, mPath, result)) {
+      NS_WARNING("Creating RFCOMM socket failed");
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    NS_WARNING("Unknown profile");
+    return NS_ERROR_FAILURE;
+  }
+
+  req.forget(aRequest);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::Disconnect(uint16_t aProfileId,
+                             nsIDOMDOMRequest** aRequest)
+{
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMRequestService> rs = do_GetService("@mozilla.org/dom/dom-request-service;1");
+  if (!rs) {
+    NS_WARNING("No DOMRequest Service!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = rs->CreateRequest(GetOwner(), getter_AddRefs(req));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Can't create DOMRequest!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<BluetoothVoidReplyRunnable> result = new BluetoothVoidReplyRunnable(req);
+
+  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)) {
+    bs->DisconnectHeadset(result);
+  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
+    bs->DisconnectObjectPush(result);
+  } else {
+    NS_WARNING("Unknown profile");
+    return NS_ERROR_FAILURE;
+  }
+
+  req.forget(aRequest);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
+                           nsIDOMBlob* aBlob,
+                           nsIDOMDOMRequest** aRequest)
+{
+  // Will implement in another patch
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::StopSendingFile(const nsAString& aDeviceAddress,
+                                  nsIDOMDOMRequest** aRequest)
+{
+  // Will implement in another patch
+  return NS_OK;
 }
 
 NS_IMPL_EVENT_HANDLER(BluetoothAdapter, propertychanged)

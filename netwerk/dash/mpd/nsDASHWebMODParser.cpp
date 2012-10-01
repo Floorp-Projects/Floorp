@@ -43,9 +43,13 @@
 static PRLogModuleInfo* gnsDASHWebMODParserLog = nullptr;
 #define LOG(msg, ...) \
         PR_LOG(gnsDASHWebMODParserLog, PR_LOG_DEBUG, \
-               ("%p [nsDASHWebMODParser] " msg, this, ##__VA_ARGS__))
+               ("%p [nsDASHWebMODParser] " msg, this, __VA_ARGS__))
+#define LOG1(msg) \
+        PR_LOG(gnsDASHWebMODParserLog, PR_LOG_DEBUG, \
+               ("%p [nsDASHWebMODParser] " msg, this))
 #else
 #define LOG(msg, ...)
+#define LOG1(msg)
 #endif
 
 namespace mozilla {
@@ -59,7 +63,7 @@ nsDASHWebMODParser::nsDASHWebMODParser(nsIDOMElement* aRoot) :
   if(!gnsDASHWebMODParserLog)
     gnsDASHWebMODParserLog = PR_NewLogModule("nsDASHWebMODParser");
 #endif
-  LOG("Created nsDASHWebMODParser");
+  LOG1("Created nsDASHWebMODParser");
 }
 
 nsDASHWebMODParser::~nsDASHWebMODParser()
@@ -70,7 +74,7 @@ nsDASHWebMODParser::~nsDASHWebMODParser()
 MPD*
 nsDASHWebMODParser::Parse()
 {
-  LOG("Parsing DOM into MPD objects");
+  LOG1("Parsing DOM into MPD objects");
   nsAutoPtr<MPD> mpd(new MPD());
 
   nsresult rv = VerifyMPDAttributes();
@@ -219,7 +223,7 @@ nsDASHWebMODParser::SetPeriods(MPD* aMpd)
 
       // |Period| should be ignored if its child elems are invalid
       if (bIgnoreThisPeriod) {
-        LOG("Ignoring period");
+        LOG1("Ignoring period");
       } else {
         aMpd->AddPeriod(period.forget());
         LOG("Period #%d: added to MPD", i++);
@@ -250,7 +254,7 @@ nsDASHWebMODParser::ValidateAdaptationSetAttributes(nsIDOMElement* aChild,
     NS_ENSURE_SUCCESS(rv, rv);
     bAttributesValid = !mimeType.IsEmpty();
     if (!bAttributesValid)
-      LOG("mimeType not present!");
+      LOG1("mimeType not present!");
   }
   // Validate attributes for video.
   if (bAttributesValid && mimeType.EqualsLiteral(VIDEO_WEBM)) {
@@ -260,7 +264,7 @@ nsDASHWebMODParser::ValidateAdaptationSetAttributes(nsIDOMElement* aChild,
       NS_ENSURE_SUCCESS(rv, rv);
       bAttributesValid = (value.IsEmpty() || value.EqualsLiteral("true"));
       if (!bAttributesValid)
-        LOG("segmentAlignment not present or invalid!");
+        LOG1("segmentAlignment not present or invalid!");
     }
     if (bAttributesValid) {
       rv = GetAttribute(aChild, NS_LITERAL_STRING("subsegmentAlignment"),
@@ -268,7 +272,7 @@ nsDASHWebMODParser::ValidateAdaptationSetAttributes(nsIDOMElement* aChild,
       NS_ENSURE_SUCCESS(rv, rv);
       bAttributesValid = (!value.IsEmpty() && value.EqualsLiteral("true"));
       if (!bAttributesValid)
-        LOG("subsegmentAlignment not present or invalid!");
+        LOG1("subsegmentAlignment not present or invalid!");
     }
     if (bAttributesValid) {
       rv = GetAttribute(aChild, NS_LITERAL_STRING("bitstreamSwitching"),
@@ -276,7 +280,7 @@ nsDASHWebMODParser::ValidateAdaptationSetAttributes(nsIDOMElement* aChild,
       NS_ENSURE_SUCCESS(rv, rv);
       bAttributesValid = (!value.IsEmpty() && value.EqualsLiteral("true"));
       if (!bAttributesValid)
-        LOG("bitstreamSwitching not present or invalid!");
+        LOG1("bitstreamSwitching not present or invalid!");
     }
   } else if (bAttributesValid && mimeType.EqualsLiteral(AUDIO_WEBM)) {
   // Validate attributes for audio.
