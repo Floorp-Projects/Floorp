@@ -2267,6 +2267,12 @@
     "description": "Time for the Gecko:Ready message to arrive (ms)",
     "cpp_guard": "ANDROID"
   },
+  "FENNEC_STARTUP_GECKOAPP_ACTION": {
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, Redirector)",
+    "cpp_guard": "ANDROID"
+  },
   "OUT_OF_MEMORY_KILLED": {
     "kind": "flag",
     "description": "Killed due to an OOM condition",
