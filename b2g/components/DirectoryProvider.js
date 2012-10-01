@@ -10,7 +10,12 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+const XRE_OS_UPDATE_APPLY_TO_DIR = "OSUpdApplyToD"
 const LOCAL_DIR = "/data/local";
+
+XPCOMUtils.defineLazyServiceGetter(Services, "env",
+                                   "@mozilla.org/process/environment;1",
+                                   "nsIEnvironment");
 
 function DirectoryProvider() {
 }
@@ -35,10 +40,40 @@ DirectoryProvider.prototype = {
       file.initWithPath("/system/b2g");
       persistent.value = true;
       return file;
+    } else if (prop == XRE_OS_UPDATE_APPLY_TO_DIR) {
+      return this.getOSUpdateApplyToDir(persistent);
     }
 #endif
 
     return null;
+  },
+
+  getOSUpdateApplyToDir: function dp_getOSUpdateApplyToDir(persistent) {
+    // TODO add logic to check available storage space,
+    // and iterate through pref(s) to find alternative dirs if
+    // necessary.
+
+    let path = Services.env.get("EXTERNAL_STORAGE");
+    if (!path) {
+      path = LOCAL_PATH;
+    }
+
+    let dir = Cc["@mozilla.org/file/local;1"]
+                 .createInstance(Ci.nsILocalFile)
+    dir.initWithPath(path);
+
+    if (!dir.exists() && path != LOCAL_PATH) {
+      // Fallback to LOCAL_PATH if we didn't fallback earlier
+      dir.initWithPath(LOCAL_PATH);
+
+      if (!dir.exists()) {
+        throw Cr.NS_ERROR_FILE_NOT_FOUND;
+      }
+    }
+
+    dir.appendRelativePath("updates");
+    persistent.value = false;
+    return dir;
   }
 };
 
