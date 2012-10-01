@@ -19,6 +19,8 @@
 #include "nsIObserverService.h"
 #include "nsIRadioInterfaceLayer.h"
 #include "nsISystemMessagesInternal.h"
+#include "BluetoothUtils.h"
+
 #include "nsVariant.h"
 
 #include <unistd.h> /* usleep() */
@@ -144,12 +146,9 @@ BluetoothHfpManager::Get()
 }
 
 bool
-BluetoothHfpManager::BroadcastSystemMessage(const char* aCommand,
-                                            const int aCommandLength)
+BluetoothHfpManager::BroadcastSystemMessage(const nsAString& aType,
+                                            const InfallibleTArray<BluetoothNamedValue>& aData)
 {
-  nsString type;
-  type.AssignLiteral("bluetooth-dialer-command");
-
   JSContext* cx = nsContentUtils::GetSafeJSContext();
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
                "Shouldn't get here when an exception is pending!");
@@ -161,14 +160,7 @@ BluetoothHfpManager::BroadcastSystemMessage(const char* aCommand,
     return false;
   }
 
-  JSString* JsData = JS_NewStringCopyN(cx, aCommand, aCommandLength);
-  if (!JsData) {
-    NS_WARNING("JS_NewStringCopyN is out of memory");
-    return false;
-  }
-
-  jsval v = STRING_TO_JSVAL(JsData);
-  if (!JS_SetProperty(cx, obj, "command", &v)) {
+  if (!SetJsObject(cx, obj, aData)) {
     NS_WARNING("Failed to set properties of system message!");
     return false;
   }
@@ -181,9 +173,48 @@ BluetoothHfpManager::BroadcastSystemMessage(const char* aCommand,
     return false;
   }
 
-  systemMessenger->BroadcastMessage(type, OBJECT_TO_JSVAL(obj));
+  systemMessenger->BroadcastMessage(aType, OBJECT_TO_JSVAL(obj));
 
   return true;
+}
+
+void
+BluetoothHfpManager::NotifySettings(const bool aConnected)
+{
+  nsString type, name;
+  BluetoothValue v;
+  InfallibleTArray<BluetoothNamedValue> parameters;
+  type.AssignLiteral("bluetooth-hfp-status-changed");
+
+  name.AssignLiteral("connected");
+  v = aConnected;
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  name.AssignLiteral("address");
+  v = GetAddressFromObjectPath(mDevicePath);
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  if (!BroadcastSystemMessage(type, parameters)) {
+    NS_WARNING("Failed to broadcast system message to dialer");
+    return;
+  }
+}
+
+void
+BluetoothHfpManager::NotifyDialer(const nsAString& aCommand)
+{
+  nsString type, name, command;
+  command = aCommand;
+  InfallibleTArray<BluetoothNamedValue> parameters;
+  type.AssignLiteral("bluetooth-dialer-command");
+
+  BluetoothValue v(command);
+  parameters.AppendElement(BluetoothNamedValue(type, v));
+
+  if (!BroadcastSystemMessage(type, parameters)) {
+    NS_WARNING("Failed to broadcast system message to dialer");
+    return;
+  }
 }
 
 nsresult
@@ -315,6 +346,8 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
     SendLine("+CIND: 5,5,1,0,0,0,0");
     SendLine("OK");
   } else if (!strncmp(msg, "AT+CMER=", 8)) {
+    // SLC establishment
+    NotifySettings(true);
     SendLine("OK");
   } else if (!strncmp(msg, "AT+CHLD=?", 9)) {
     SendLine("+CHLD: (0,1,2,3)");
@@ -349,22 +382,13 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
 
     SendLine("OK");
   } else if (!strncmp(msg, "AT+BLDN", 7)) {
-    if (!BroadcastSystemMessage("BLDN", 4)) {
-      NS_WARNING("Failed to broadcast system message to dialer");
-      return;
-    }
+    NotifyDialer(NS_LITERAL_STRING("BLDN"));
     SendLine("OK");
   } else if (!strncmp(msg, "ATA", 3)) {
-    if (!BroadcastSystemMessage("ATA", 3)) {
-      NS_WARNING("Failed to broadcast system message to dialer");
-      return;
-    }
+    NotifyDialer(NS_LITERAL_STRING("ATA"));
     SendLine("OK");
   } else if (!strncmp(msg, "AT+CHUP", 7)) {
-    if (!BroadcastSystemMessage("CHUP", 4)) {
-      NS_WARNING("Failed to broadcast system message to dialer");
-      return;
-    }
+    NotifyDialer(NS_LITERAL_STRING("CHUP"));
     SendLine("OK");
   } else {
 #ifdef DEBUG
@@ -429,6 +453,7 @@ BluetoothHfpManager::Listen()
 void
 BluetoothHfpManager::Disconnect()
 {
+  NotifySettings(false);
   CloseSocket();
 }
 
