@@ -209,14 +209,24 @@ nsDOMCameraControl::GetExposureCompensation(double* aExposureCompensation)
 NS_IMETHODIMP
 nsDOMCameraControl::GetOnShutter(nsICameraShutterCallback** aOnShutter)
 {
-  // TODO: see bug 779138.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mCameraControl->Get(aOnShutter);
 }
 NS_IMETHODIMP
 nsDOMCameraControl::SetOnShutter(nsICameraShutterCallback* aOnShutter)
 {
-  // TODO: see bug 779138.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mCameraControl->Set(aOnShutter);
+}
+
+/* attribute nsICameraClosedCallback onClosed; */
+NS_IMETHODIMP
+nsDOMCameraControl::GetOnClosed(nsICameraClosedCallback** aOnClosed)
+{
+  return mCameraControl->Get(aOnClosed);
+}
+NS_IMETHODIMP
+nsDOMCameraControl::SetOnClosed(nsICameraClosedCallback* aOnClosed)
+{
+  return mCameraControl->Set(aOnClosed);
 }
 
 /* [implicit_jscontext] void startRecording (in nsIDOMDeviceStorage storageArea, in DOMString filename, in nsICameraStartRecordingCallback onSuccess, [optional] in nsICameraErrorCallback onError); */
@@ -329,28 +339,31 @@ nsDOMCameraControl::GetPreviewStreamVideoMode(const JS::Value& aOptions, nsICame
 class GetCameraResult : public nsRunnable
 {
 public:
-  GetCameraResult(nsDOMCameraControl* aDOMCameraControl, nsresult aResult, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError)
+  GetCameraResult(nsDOMCameraControl* aDOMCameraControl, nsresult aResult, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
     : mDOMCameraControl(aDOMCameraControl)
     , mResult(aResult)
     , mOnSuccessCb(onSuccess)
     , mOnErrorCb(onError)
+    , mWindowId(aWindowId)
   { }
 
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    DOM_CAMERA_LOGT("%s : this=%p -- BEFORE CALLBACK\n", __func__, this);
-    if (NS_FAILED(mResult)) {
-      if (mOnErrorCb) {
-        mOnErrorCb->HandleEvent(NS_LITERAL_STRING("FAILURE"));
+    if (nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+      DOM_CAMERA_LOGT("%s : this=%p -- BEFORE CALLBACK\n", __func__, this);
+      if (NS_FAILED(mResult)) {
+        if (mOnErrorCb) {
+          mOnErrorCb->HandleEvent(NS_LITERAL_STRING("FAILURE"));
+        }
+      } else {
+        if (mOnSuccessCb) {
+          mOnSuccessCb->HandleEvent(mDOMCameraControl);
+        }
       }
-    } else {
-      if (mOnSuccessCb) {
-        mOnSuccessCb->HandleEvent(mDOMCameraControl);
-      }
+      DOM_CAMERA_LOGT("%s : this=%p -- AFTER CALLBACK\n", __func__, this);
     }
-    DOM_CAMERA_LOGT("%s : this=%p -- AFTER CALLBACK\n", __func__, this);
 
     /**
      * Finally, release the extra reference to the DOM-facing camera control.
@@ -370,11 +383,19 @@ protected:
   nsresult mResult;
   nsCOMPtr<nsICameraGetCameraCallback> mOnSuccessCb;
   nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
+  uint64_t mWindowId;
 };
 
 nsresult
-nsDOMCameraControl::Result(nsresult aResult, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError)
+nsDOMCameraControl::Result(nsresult aResult, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
 {
-  nsCOMPtr<GetCameraResult> getCameraResult = new GetCameraResult(this, aResult, onSuccess, onError);
+  nsCOMPtr<GetCameraResult> getCameraResult = new GetCameraResult(this, aResult, onSuccess, onError, aWindowId);
   return NS_DispatchToMainThread(getCameraResult);
+}
+
+void
+nsDOMCameraControl::Shutdown()
+{
+  DOM_CAMERA_LOGI("%s:%d\n", __func__, __LINE__);
+  mCameraControl->Shutdown();
 }
