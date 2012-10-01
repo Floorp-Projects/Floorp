@@ -297,7 +297,7 @@ public:
     , mError(aError)
     , mListeners(aListeners)
     , mWindowID(aWindowID)
-    , mDeviceChosen(true)
+    , mDeviceChosen(false)
     , mBackendChosen(false) {}
 
   /**
