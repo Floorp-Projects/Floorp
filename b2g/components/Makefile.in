@@ -23,12 +23,23 @@ EXTRA_PP_COMPONENTS = \
         ContentHandler.js \
         ContentPermissionPrompt.js \
         DirectoryProvider.js \
+        MailtoProtocolHandler.js \
         MozKeyboard.js \
         ProcessGlobal.js \
         PaymentGlue.js \
+        SmsProtocolHandler.js \
+        TelProtocolHandler.js \
         YoutubeProtocolHandler.js \
         RecoveryService.js \
         $(NULL)
+
+EXTRA_JS_MODULES = \
+	TelURIParser.jsm \
+	$(NULL)
+
+TEST_DIRS = \
+	test \
+	$(NULL)
 
 ifdef MOZ_UPDATER
 EXTRA_PP_COMPONENTS += UpdatePrompt.js
