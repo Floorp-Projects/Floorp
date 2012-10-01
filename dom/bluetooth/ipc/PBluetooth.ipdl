@@ -97,6 +97,24 @@ struct DevicePropertiesRequest
   nsString[] addresses;
 };
 
+struct ConnectHeadsetRequest
+{
+  nsString address;
+  nsString adapterPath;
+};
+
+struct ConnectObjectPushRequest
+{
+  nsString address;
+  nsString adapterPath;
+};
+
+struct DisconnectHeadsetRequest
+{};
+
+struct DisconnectObjectPushRequest
+{};
+
 union Request
 {
   DefaultAdapterPathRequest;
@@ -113,6 +131,10 @@ union Request
   ConfirmAuthorizationRequest;
   DenyAuthorizationRequest;
   DevicePropertiesRequest;
+  ConnectHeadsetRequest;
+  ConnectObjectPushRequest;
+  DisconnectHeadsetRequest;
+  DisconnectObjectPushRequest;
 };
 
 protocol PBluetooth

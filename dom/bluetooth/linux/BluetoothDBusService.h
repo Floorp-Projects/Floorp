@@ -68,6 +68,12 @@ public:
                                  const nsTArray<uint32_t>& aServiceHandles);
 
   virtual nsresult
+  GetScoSocket(const nsAString& aObjectPath,
+               bool aAuth,
+               bool aEncrypt,
+               mozilla::ipc::UnixSocketConsumer* aConsumer);
+
+  virtual nsresult
   GetSocketViaService(const nsAString& aObjectPath,
                       const nsAString& aService,
                       BluetoothSocketType aType,
@@ -105,6 +111,22 @@ public:
 
   virtual nsresult
   PrepareAdapterInternal(const nsAString& aPath);
+
+  virtual bool
+  ConnectHeadset(const nsAString& aDeviceAddress,
+                 const nsAString& aAdapterPath,
+                 BluetoothReplyRunnable* aRunnable);
+
+  virtual void
+  DisconnectHeadset(BluetoothReplyRunnable* aRunnable);
+
+  virtual bool
+  ConnectObjectPush(const nsAString& aDeviceAddress,
+                    const nsAString& aAdapterPath,
+                    BluetoothReplyRunnable* aRunnable);
+
+  virtual void
+  DisconnectObjectPush(BluetoothReplyRunnable* aRunnable);
 
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,

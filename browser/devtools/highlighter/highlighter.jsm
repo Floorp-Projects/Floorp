@@ -694,7 +694,7 @@ Highlighter.prototype = {
     this.zoom =
       this.win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils)
-      .screenPixelsPerCSSPixel;
+      .fullZoom;
   },
 
   /////////////////////////////////////////////////////////////////////////

@@ -30,6 +30,18 @@
 #include "nsContentUtils.h"
 #include "nsBlobProtocolHandler.h"
 
+#ifdef PR_LOGGING
+PRLogModuleInfo* gMediaResourceLog;
+#define LOG(msg, ...) PR_LOG(gMediaResourceLog, PR_LOG_DEBUG, \
+                             (msg, ##__VA_ARGS__))
+// Debug logging macro with object pointer and class name.
+#define CMLOG(msg, ...) \
+        LOG("%p [ChannelMediaResource]: " msg, this, ##__VA_ARGS__)
+#else
+#define LOG(msg, ...)
+#define CMLOG(msg, ...)
+#endif
+
 static const uint32_t HTTP_OK_CODE = 200;
 static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
 
@@ -43,8 +55,17 @@ ChannelMediaResource::ChannelMediaResource(nsMediaDecoder* aDecoder,
     mCacheStream(this),
     mLock("ChannelMediaResource.mLock"),
     mIgnoreResume(false),
-    mSeekingForMetadata(false)
+    mSeekingForMetadata(false),
+    mByteRangeDownloads(false),
+    mByteRangeFirstOpen(true),
+    mSeekOffsetMonitor("media.dashseekmonitor"),
+    mSeekOffset(-1)
 {
+#ifdef PR_LOGGING
+  if (!gMediaResourceLog) {
+    gMediaResourceLog = PR_NewLogModule("MediaResource");
+  }
+#endif
 }
 
 ChannelMediaResource::~ChannelMediaResource()
@@ -201,10 +222,57 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       }
     }
 
-    if (mOffset > 0 && responseStatus == HTTP_OK_CODE) {
-      // If we get an OK response but we were seeking, we have to assume
-      // that seeking doesn't work. We also need to tell the cache that
-      // it's getting data for the start of the stream.
+    // Check response code for byte-range requests (seeking, chunk requests).
+    if (!mByteRange.IsNull() && (responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
+      // Byte range requests should get partial response codes and should
+      // accept ranges.
+      if (!acceptsRanges) {
+        CMLOG("Error! HTTP_PARTIAL_RESPONSE_CODE received but server says "
+              "range requests are not accepted! Channel[%p]", hc.get());
+        mDecoder->NetworkError();
+        CloseChannel();
+        return NS_OK;
+      }
+
+      // Parse Content-Range header.
+      int64_t rangeStart = 0;
+      int64_t rangeEnd = 0;
+      int64_t rangeTotal = 0;
+      rv = ParseContentRangeHeader(hc, rangeStart, rangeEnd, rangeTotal);
+      if (NS_FAILED(rv)) {
+        // Content-Range header text should be parse-able.
+        CMLOG("Error processing \'Content-Range' for "
+              "HTTP_PARTIAL_RESPONSE_CODE: rv[%x]channel [%p]", rv, hc.get());
+        mDecoder->NetworkError();
+        CloseChannel();
+        return NS_OK;
+      }
+
+      // Give some warnings if the ranges are unexpected.
+      // XXX These could be error conditions.
+      NS_WARN_IF_FALSE(mByteRange.mStart == rangeStart,
+                       "response range start does not match request");
+      NS_WARN_IF_FALSE(mOffset == rangeStart,
+                       "response range start does not match current offset");
+      NS_WARN_IF_FALSE(mByteRange.mEnd == rangeEnd,
+                       "response range end does not match request");
+      // Notify media cache about the length and start offset of data received.
+      // Note: If aRangeTotal == -1, then the total bytes is unknown at this stage.
+      //       For now, tell the decoder that the stream is infinite.
+      if (rangeTotal != -1) {
+        mCacheStream.NotifyDataLength(rangeTotal);
+      } else {
+        mDecoder->SetInfinite(true);
+      }
+      mCacheStream.NotifyDataStarted(rangeStart);
+
+      mOffset = rangeStart;
+      acceptsRanges = true;
+    } else if (((mOffset > 0) || !mByteRange.IsNull())
+               && (responseStatus == HTTP_OK_CODE)) {
+      // If we get an OK response but we were seeking, or requesting a byte
+      // range, then we have to assume that seeking doesn't work. We also need
+      // to tell the cache that it's getting data for the start of the stream.
       mCacheStream.NotifyDataStarted(0);
       mOffset = 0;
 
@@ -285,6 +353,53 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
 }
 
 nsresult
+ChannelMediaResource::ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
+                                              int64_t& aRangeStart,
+                                              int64_t& aRangeEnd,
+                                              int64_t& aRangeTotal)
+{
+  NS_ENSURE_ARG(aHttpChan);
+
+  nsAutoCString rangeStr;
+  nsresult rv = aHttpChan->GetResponseHeader(NS_LITERAL_CSTRING("Content-Range"),
+                                             rangeStr);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_FALSE(rangeStr.IsEmpty(), NS_ERROR_ILLEGAL_VALUE);
+
+  // Parse the range header: e.g. Content-Range: bytes 7000-7999/8000.
+  int32_t spacePos = rangeStr.Find(NS_LITERAL_CSTRING(" "));
+  int32_t dashPos = rangeStr.Find(NS_LITERAL_CSTRING("-"), true, spacePos);
+  int32_t slashPos = rangeStr.Find(NS_LITERAL_CSTRING("/"), true, dashPos);
+
+  nsAutoCString aRangeStartText;
+  rangeStr.Mid(aRangeStartText, spacePos+1, dashPos-(spacePos+1));
+  aRangeStart = aRangeStartText.ToInteger64(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(0 <= aRangeStart, NS_ERROR_ILLEGAL_VALUE);
+
+  nsAutoCString aRangeEndText;
+  rangeStr.Mid(aRangeEndText, dashPos+1, slashPos-(dashPos+1));
+  aRangeEnd = aRangeEndText.ToInteger64(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(aRangeStart < aRangeEnd, NS_ERROR_ILLEGAL_VALUE);
+
+  nsAutoCString aRangeTotalText;
+  rangeStr.Right(aRangeTotalText, rangeStr.Length()-(slashPos+1));
+  if (aRangeTotalText[0] == '*') {
+    aRangeTotal = -1;
+  } else {
+    aRangeTotal = aRangeTotalText.ToInteger64(&rv);
+    NS_ENSURE_TRUE(aRangeEnd < aRangeTotal, NS_ERROR_ILLEGAL_VALUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  CMLOG("Received bytes [%d] to [%d] of [%d]",
+        aRangeStart, aRangeEnd, aRangeTotal);
+
+  return NS_OK;
+}
+
+nsresult
 ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
 {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
@@ -294,6 +409,14 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
   {
     MutexAutoLock lock(mLock);
     mChannelStatistics.Stop(TimeStamp::Now());
+  }
+
+  // If we were loading a byte range, notify decoder and return.
+  // Skip this for unterminated byte range requests, e.g. seeking for whole
+  // file downloads.
+  if (mByteRangeDownloads) {
+    mDecoder->NotifyDownloadEnded(aStatus);
+    return NS_OK;
   }
 
   // Note that aStatus might have succeeded --- this might be a normal close
@@ -361,6 +484,8 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream *aInStream,
 
   // Keep track of where we're up to
   closure->mResource->mOffset += aCount;
+  LOG("%p [ChannelMediaResource]: CopySegmentToCache new mOffset = %d",
+      closure->mResource, closure->mResource->mOffset);
   closure->mResource->mCacheStream.NotifyDataReceived(aCount, aFromSegment,
                                                       closure->mPrincipal);
   *aWriteCount = aCount;
@@ -398,6 +523,37 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
   }
 
   return NS_OK;
+}
+
+/* |OpenByteRange|
+ * For terminated byte range requests, use this function.
+ * Callback is |nsBuiltinDecoder|::|NotifyByteRangeDownloaded|().
+ * See |CacheClientSeek| also.
+ */
+
+nsresult
+ChannelMediaResource::OpenByteRange(nsIStreamListener** aStreamListener,
+                                    MediaByteRange const & aByteRange)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  mByteRangeDownloads = true;
+  mByteRange = aByteRange;
+
+  // OpenByteRange may be called multiple times; same URL, different ranges.
+  // For the first call using this URL, forward to Open for some init.
+  if (mByteRangeFirstOpen) {
+    mByteRangeFirstOpen = false;
+    return Open(aStreamListener);
+  }
+
+  // For subsequent calls, ensure channel is recreated with correct byte range.
+  CloseChannel();
+
+  nsresult rv = RecreateChannel();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return OpenChannel(aStreamListener);
 }
 
 nsresult ChannelMediaResource::Open(nsIStreamListener **aStreamListener)
@@ -481,9 +637,19 @@ void ChannelMediaResource::SetupChannelHeaders()
   // requests, and therefore seeking, early.
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
   if (hc) {
+    // Use |mByteRange| for a specific chunk, or |mOffset| if seeking in a
+    // complete file download.
     nsAutoCString rangeString("bytes=");
-    rangeString.AppendInt(mOffset);
+    if (!mByteRange.IsNull()) {
+      rangeString.AppendInt(mByteRange.mStart);
+      mOffset = mByteRange.mStart;
+    } else {
+      rangeString.AppendInt(mOffset);
+    }
     rangeString.Append("-");
+    if (!mByteRange.IsNull()) {
+      rangeString.AppendInt(mByteRange.mEnd);
+    }
     hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, false);
 
     // Send Accept header for video and audio types only (Bug 489071)
@@ -591,6 +757,12 @@ nsresult ChannelMediaResource::Read(char* aBuffer,
 nsresult ChannelMediaResource::Seek(int32_t aWhence, int64_t aOffset)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+
+  // Remember |aOffset|, because Media Cache may request a diff offset later.
+  if (mByteRangeDownloads) {
+    ReentrantMonitorAutoEnter mon(mSeekOffsetMonitor);
+    mSeekOffset = aOffset;
+  }
 
   return mCacheStream.Seek(aWhence, aOffset);
 }
@@ -788,6 +960,50 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
     NS_ASSERTION(mSuspendCount > 0, "Too many resumes!");
     // No need to mess with the channel, since we're making a new one
     --mSuspendCount;
+  }
+
+  // Note: For chunked downloads, e.g. DASH, we need to determine which chunk
+  // contains the requested offset, |mOffset|. This is either previously
+  // requested in |Seek| or updated to the most recent bytes downloaded.
+  // So the process below is:
+  //   1 - Query decoder for chunk containing desired offset, |mOffset|.
+  //       Return silently if the offset is not available; suggests decoder is
+  //         yet to get range information.
+  //       Return with NetworkError for all other errors.
+  //
+  //   2 - Adjust |mByteRange|.mStart to |aOffset|, requested by media cache.
+  //       For seeking, the media cache always requests the start of the cache
+  //       block, so we need to adjust the first chunk of a seek.
+  //       E.g. For "DASH-WebM On Demand" this means the first chunk after
+  //       seeking will most likely be larger than the subsegment (cluster).
+  //
+  //   3 - Call |OpenByteRange| requesting |mByteRange| bytes.
+
+  if (mByteRangeDownloads) {
+    // Query decoder for chunk containing desired offset.
+    nsresult rv;
+    {
+      ReentrantMonitorAutoEnter mon(mSeekOffsetMonitor);
+      // Ensure that media cache can only request an equal or smaller offset;
+      // it may be trying to include the start of a cache block.
+      NS_ENSURE_TRUE(aOffset <= mSeekOffset, NS_ERROR_ILLEGAL_VALUE);
+      rv = mDecoder->GetByteRangeForSeek(mSeekOffset, mByteRange);
+      mSeekOffset = -1;
+    }
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      // Assume decoder will request correct bytes when range information
+      // becomes available. Return silently.
+      return NS_OK;
+    } else if (NS_FAILED(rv) || mByteRange.IsNull()) {
+      // Decoder reported an error we don't want to handle here; just return.
+      mDecoder->NetworkError();
+      CloseChannel();
+      return rv;
+    }
+    // Media cache may decrease offset to start of cache data block.
+    // Adjust start of byte range accordingly.
+    mByteRange.mStart = mOffset = aOffset;
+    return OpenByteRange(nullptr, mByteRange);
   }
 
   mOffset = aOffset;

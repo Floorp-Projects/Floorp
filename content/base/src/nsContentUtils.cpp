@@ -99,6 +99,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsDOMJSUtils.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValue.h"
+#include "nsAttrValueInlines.h"
 #include "nsReferencedElement.h"
 #include "nsIDragService.h"
 #include "nsIChannelEventSink.h"

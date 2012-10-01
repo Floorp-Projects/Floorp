@@ -73,6 +73,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:CancelUSSD",
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
+  "RIL:SendStkEventDownload",
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
@@ -383,6 +384,9 @@ RadioInterfaceLayer.prototype = {
         break;
       case "RIL:SendStkMenuSelection":
         this.sendStkMenuSelection(msg.json);
+        break;
+      case "RIL:SendStkEventDownload":
+        this.sendStkEventDownload(msg.json);
         break;
     }
   },
@@ -936,9 +940,10 @@ RadioInterfaceLayer.prototype = {
       case nsIRadioInterfaceLayer.CALL_STATE_DIALING: // Fall through...
       case nsIRadioInterfaceLayer.CALL_STATE_CONNECTED:
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
-        let force = this.speakerEnabled ? nsIAudioManager.FORCE_SPEAKER
-                                        : nsIAudioManager.FORCE_NONE;
-        gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION, force);
+        if (this.speakerEnabled) {
+          gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
+                                       nsIAudioManager.FORCE_SPEAKER);
+        }
         debug("Active call, put audio system into PHONE_STATE_IN_CALL: "
               + gAudioManager.phoneState);
         break;
@@ -1527,6 +1532,11 @@ RadioInterfaceLayer.prototype = {
 
   sendStkMenuSelection: function sendStkMenuSelection(message) {
     message.rilMessageType = "sendStkMenuSelection";
+    this.worker.postMessage(message);
+  },
+
+  sendStkEventDownload: function sendStkEventDownload(message) {
+    message.rilMessageType = "sendStkEventDownload";
     this.worker.postMessage(message);
   },
 

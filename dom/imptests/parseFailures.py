@@ -32,11 +32,17 @@ def dumpFailures(lines):
         if objstr == '{}\n':
             continue
 
+        # Avoid overly large diffs.
+        if '/editing/' in url:
+            sep = ':'
+        else:
+            sep = ': '
+
         jsonpath = 'failures/' + url + '.json'
         files.append(jsonpath)
         ensuredir(jsonpath)
         obj = json.loads(objstr, object_pairs_hook=collections.OrderedDict)
-        formattedobj = json.dumps(obj, indent=2, separators=(',', ': '))
+        formattedobj = json.dumps(obj, indent=2, separators=(',', sep))
         fp = open(jsonpath, 'w')
         fp.write(formattedobj + '\n')
         fp.close()

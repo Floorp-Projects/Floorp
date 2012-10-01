@@ -491,8 +491,10 @@ public:
    * @param aID    Which system-theme font is wanted.
    * @param aName  The name of the font to use.
    * @param aStyle Styling to apply to the font.
+   * @param aDevPixPerCSSPixel  Ratio of device pixels to CSS pixels
    */
-  static bool GetFont(FontID aID, nsString& aName, gfxFontStyle& aStyle);
+  static bool GetFont(FontID aID, nsString& aName, gfxFontStyle& aStyle,
+                      float aDevPixPerCSSPixel);
 
   /**
    * GetPasswordCharacter() returns a unicode character which should be used

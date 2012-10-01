@@ -148,7 +148,8 @@ public final class GeckoProfile {
         try {
             // Check for old profiles that may need migration.
             ProfileMigrator profileMigrator = new ProfileMigrator(mContext);
-            if (!profileMigrator.isProfileMoved()) {
+            if (!GeckoApp.sIsUsingCustomProfile &&
+                !profileMigrator.isProfileMoved()) {
                 Log.i(LOGTAG, "New installation or update, checking for old profiles.");
                 profileMigrator.launchMoveProfile();
             }

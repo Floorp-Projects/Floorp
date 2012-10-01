@@ -120,9 +120,9 @@ BasicCanvasLayer::Initialize(const Data& aData)
 void
 BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
 {
-  if (!mDirty)
+  if (!IsDirty())
     return;
-  mDirty = false;
+  Painted();
 
   if (mDrawTarget) {
     mDrawTarget->Flush();
@@ -393,7 +393,7 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     return;
   }
 
-  if (!mDirty)
+  if (!IsDirty())
     return;
 
   if (mGLContext &&

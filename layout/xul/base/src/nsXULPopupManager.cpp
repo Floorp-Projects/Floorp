@@ -316,6 +316,11 @@ nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt)
   if (!menuPopupFrame)
     return;
 
+  // Convert desired point to CSS pixels for comparison
+  nsPresContext* presContext = menuPopupFrame->PresContext();
+  aPnt.x = presContext->DevPixelsToIntCSSPixels(aPnt.x);
+  aPnt.y = presContext->DevPixelsToIntCSSPixels(aPnt.y);
+
   // Don't do anything if the popup is already at the specified location. This
   // prevents recursive calls when a popup is positioned.
   nsIntPoint currentPnt = menuPopupFrame->ScreenPosition();
@@ -346,13 +351,20 @@ nsXULPopupManager::PopupResized(nsIFrame* aFrame, nsIntSize aSize)
   nsPresContext* presContext = menuPopupFrame->PresContext();
 
   nsSize currentSize = menuPopupFrame->GetSize();
-  if (aSize.width != presContext->AppUnitsToDevPixels(currentSize.width) ||
-      aSize.height != presContext->AppUnitsToDevPixels(currentSize.height)) {
+
+  // convert both current and new sizes to integer CSS pixels for comparison;
+  // we won't set attributes if there is only a sub-CSS-pixel discrepancy
+  nsIntSize currCSS(nsPresContext::AppUnitsToIntCSSPixels(currentSize.width),
+                    nsPresContext::AppUnitsToIntCSSPixels(currentSize.height));
+  nsIntSize newCSS(presContext->DevPixelsToIntCSSPixels(aSize.width),
+                   presContext->DevPixelsToIntCSSPixels(aSize.height));
+
+  if (newCSS.width != currCSS.width || newCSS.height != currCSS.height) {
     // for resizes, we just set the width and height attributes
     nsIContent* popup = menuPopupFrame->GetContent();
     nsAutoString width, height;
-    width.AppendInt(aSize.width);
-    height.AppendInt(aSize.height);
+    width.AppendInt(newCSS.width);
+    height.AppendInt(newCSS.height);
     popup->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, false);
     popup->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, true);
   }

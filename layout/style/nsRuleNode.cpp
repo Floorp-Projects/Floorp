@@ -2981,7 +2981,9 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     gfxFontStyle fontStyle;
     LookAndFeel::FontID fontID =
       (LookAndFeel::FontID)systemFontValue->GetIntValue();
-    if (LookAndFeel::GetFont(fontID, systemFont.name, fontStyle)) {
+    float devPerCSS = (float)nsPresContext::AppUnitsPerCSSPixel() /
+                      aPresContext->AppUnitsPerDevPixel();
+    if (LookAndFeel::GetFont(fontID, systemFont.name, fontStyle, devPerCSS)) {
       systemFont.style = fontStyle.style;
       systemFont.systemFont = fontStyle.systemFont;
       systemFont.variant = NS_FONT_VARIANT_NORMAL;
