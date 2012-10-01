@@ -671,7 +671,7 @@ abstract public class BrowserApp extends GeckoApp
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 Log.i(LOGTAG, "menu item clicked");
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(id)));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(id - ADDON_MENU_OFFSET)));
                 return true;
             }
         });
