@@ -131,8 +131,8 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void clearStackBackTo(int32_t eltPos);
     void resetTheInsertionMode();
     void implicitlyCloseP();
-    bool clearLastStackSlot();
-    bool clearLastListSlot();
+    bool debugOnlyClearLastStackSlot();
+    bool debugOnlyClearLastListSlot();
     void push(nsHtml5StackNode* node);
     void silentPush(nsHtml5StackNode* node);
     void append(nsHtml5StackNode* node);

@@ -798,10 +798,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     if (!"http://www.w3.org/TR/html4/strict.dtd".equals(systemIdentifier)) {
                                         warn("The doctype did not contain the system identifier prescribed by the HTML 4.01 specification. Expected \u201C<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\u201D.");
                                     }
-                                } else {
-                                    if (!(publicIdentifier == null && systemIdentifier == null)) {
-                                        err("Legacy doctype. Expected e.g. \u201C<!DOCTYPE html>\u201D.");
-                                    }
+                                } else if (!((systemIdentifier == null || Portability.literalEqualsString(
+                                        "about:legacy-compat", systemIdentifier)) && publicIdentifier == null)) {
+                                    err("Legacy doctype. Expected e.g. \u201C<!DOCTYPE html>\u201D.");
                                 }
                                 documentModeInternal(
                                         DocumentMode.STANDARDS_MODE,
@@ -4182,12 +4181,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         }
     }
 
-    private boolean clearLastStackSlot() {
+    private boolean debugOnlyClearLastStackSlot() {
         stack[currentPtr] = null;
         return true;
     }
 
-    private boolean clearLastListSlot() {
+    private boolean debugOnlyClearLastListSlot() {
         listOfActiveFormattingElements[listPtr] = null;
         return true;
     }
@@ -4250,7 +4249,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             fatal();
             stack[pos].release();
             System.arraycopy(stack, pos + 1, stack, pos, currentPtr - pos);
-            assert clearLastStackSlot();
+            assert debugOnlyClearLastStackSlot();
             currentPtr--;
         }
     }
@@ -4278,14 +4277,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         assert listOfActiveFormattingElements[pos] != null;
         listOfActiveFormattingElements[pos].release();
         if (pos == listPtr) {
-            assert clearLastListSlot();
+            assert debugOnlyClearLastListSlot();
             listPtr--;
             return;
         }
         assert pos < listPtr;
         System.arraycopy(listOfActiveFormattingElements, pos + 1,
                 listOfActiveFormattingElements, pos, listPtr - pos);
-        assert clearLastListSlot();
+        assert debugOnlyClearLastListSlot();
         listPtr--;
     }
 
@@ -4655,7 +4654,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private void pop() throws SAXException {
         StackNode<T> node = stack[currentPtr];
-        assert clearLastStackSlot();
+        assert debugOnlyClearLastStackSlot();
         currentPtr--;
         elementPopped(node.ns, node.popName, node.node);
         node.release();
@@ -4663,14 +4662,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private void silentPop() throws SAXException {
         StackNode<T> node = stack[currentPtr];
-        assert clearLastStackSlot();
+        assert debugOnlyClearLastStackSlot();
         currentPtr--;
         node.release();
     }
 
     private void popOnEof() throws SAXException {
         StackNode<T> node = stack[currentPtr];
-        assert clearLastStackSlot();
+        assert debugOnlyClearLastStackSlot();
         currentPtr--;
         markMalformedIfScript(node.node);
         elementPopped(node.ns, node.popName, node.node);

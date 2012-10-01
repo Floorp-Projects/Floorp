@@ -104,35 +104,35 @@ nsHtml5HtmlAttributes::getLength()
 nsIAtom* 
 nsHtml5HtmlAttributes::getLocalNameNoBoundsCheck(int32_t index)
 {
-
+  MOZ_ASSERT(index < length && index >= 0, "Index out of bounds");
   return names[index]->getLocal(mode);
 }
 
 int32_t 
 nsHtml5HtmlAttributes::getURINoBoundsCheck(int32_t index)
 {
-
+  MOZ_ASSERT(index < length && index >= 0, "Index out of bounds");
   return names[index]->getUri(mode);
 }
 
 nsIAtom* 
 nsHtml5HtmlAttributes::getPrefixNoBoundsCheck(int32_t index)
 {
-
+  MOZ_ASSERT(index < length && index >= 0, "Index out of bounds");
   return names[index]->getPrefix(mode);
 }
 
 nsString* 
 nsHtml5HtmlAttributes::getValueNoBoundsCheck(int32_t index)
 {
-
+  MOZ_ASSERT(index < length && index >= 0, "Index out of bounds");
   return values[index];
 }
 
 nsHtml5AttributeName* 
 nsHtml5HtmlAttributes::getAttributeNameNoBoundsCheck(int32_t index)
 {
-
+  MOZ_ASSERT(index < length && index >= 0, "Index out of bounds");
   return names[index];
 }
 
@@ -208,7 +208,7 @@ nsHtml5HtmlAttributes::adjustForSvg()
 nsHtml5HtmlAttributes* 
 nsHtml5HtmlAttributes::cloneAttributes(nsHtml5AtomTable* interner)
 {
-
+  MOZ_ASSERT((!length) || !mode || mode == 3);
   nsHtml5HtmlAttributes* clone = new nsHtml5HtmlAttributes(0);
   for (int32_t i = 0; i < length; i++) {
     clone->addAttribute(names[i]->cloneAttributeName(interner), nsHtml5Portability::newStringFromString(values[i]));
@@ -219,7 +219,7 @@ nsHtml5HtmlAttributes::cloneAttributes(nsHtml5AtomTable* interner)
 bool 
 nsHtml5HtmlAttributes::equalsAnother(nsHtml5HtmlAttributes* other)
 {
-
+  MOZ_ASSERT(!mode || mode == 3, "Trying to compare attributes in foreign content.");
   int32_t otherLength = other->getLength();
   if (length != otherLength) {
     return false;
