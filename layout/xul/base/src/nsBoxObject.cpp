@@ -21,7 +21,6 @@
 #endif
 #include "nsLayoutUtils.h"
 #include "nsISupportsPrimitives.h"
-#include "prtypes.h"
 #include "nsSupportsPrimitives.h"
 #include "mozilla/dom/Element.h"
 

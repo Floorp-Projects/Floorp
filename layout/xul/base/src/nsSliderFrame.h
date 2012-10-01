@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "nsRepeatService.h"
 #include "nsBoxFrame.h"
-#include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"

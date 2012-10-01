@@ -11,7 +11,6 @@
 #define nsMenuPopupFrame_h__
 
 #include "mozilla/Attributes.h"
-#include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"

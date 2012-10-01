@@ -6,7 +6,6 @@
 #include "nsFileControlFrame.h"
 
 #include "nsIContent.h"
-#include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
