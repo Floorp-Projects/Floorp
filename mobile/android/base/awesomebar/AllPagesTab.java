@@ -167,7 +167,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                     Log.i(LOGTAG, "Got cursor in " + time + "ms");
 
                     if (!mTelemetrySent && TextUtils.isEmpty(constraint)) {
-                        Telemetry.HistogramAdd("AWESOMEBAR_ALLPAGES_EMPTY_TIME", time);
+                        Telemetry.HistogramAdd("FENNEC_AWESOMEBAR_ALLPAGES_EMPTY_TIME", time);
                         mTelemetrySent = true;
                     }
                     return c;
