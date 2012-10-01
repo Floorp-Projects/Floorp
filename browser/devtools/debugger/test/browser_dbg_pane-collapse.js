@@ -19,30 +19,10 @@ function test() {
     gDebugger = gPane.contentWindow;
     gView = gDebugger.DebuggerView;
 
-    testPanesState();
-
-    gView.toggleStackframesAndBreakpointsPane({ visible: true });
-    gView.toggleVariablesPane({ visible: true });
     testPaneCollapse1();
     testPaneCollapse2();
-
     closeDebuggerAndFinish();
   });
-}
-
-function testPanesState() {
-  let togglePanesButton =
-    gDebugger.document.getElementById("toggle-panes");
-
-  ok(togglePanesButton.getAttribute("stackframesAndBreakpointsHidden"),
-    "The stackframes and breakpoints pane should initially be invisible.");
-  is(gDebugger.Prefs.stackframesPaneVisible, true,
-    "The stackframes and breakpoints pane should initially be preffed as visible.");
-
-  ok(togglePanesButton.getAttribute("variablesHidden"),
-    "The stackframes and breakpoints pane should initially be invisible.");
-  is(gDebugger.Prefs.variablesPaneVisible, true,
-    "The stackframes and breakpoints pane should initially be preffed as visible.");
 }
 
 function testPaneCollapse1() {
@@ -55,16 +35,16 @@ function testPaneCollapse1() {
   is(width, gDebugger.Prefs.stackframesWidth,
     "The stackframes and breakpoints pane has an incorrect width.");
   is(stackframesAndBrekpoints.style.marginLeft, "0px",
-    "The stackframes and breakpoints pane has an incorrect left margin.");
+    "The stackframes and breakpoints pane has an incorrect initial left margin.");
   ok(!stackframesAndBrekpoints.hasAttribute("animated"),
-    "The stackframes and breakpoints pane has an incorrect animated attribute.");
+    "The stackframes and breakpoints pane has an incorrect initial animated attribute.");
   ok(!togglePanesButton.getAttribute("stackframesAndBreakpointsHidden"),
-    "The stackframes and breakpoints pane should at this point be visible.");
+    "The stackframes and breakpoints pane should initially be visible.");
 
   is(gDebugger.Prefs.stackframesPaneVisible, true,
-    "The stackframes and breakpoints pane should at this point be visible.");
+    "The stackframes and breakpoints pane should initially be visible.");
 
-  gView.toggleStackframesAndBreakpointsPane({ visible: false, animated: true });
+  gView.showStackframesAndBreakpointsPane(false, true);
 
   is(gDebugger.Prefs.stackframesPaneVisible, false,
     "The stackframes and breakpoints pane should be hidden after collapsing.");
@@ -82,7 +62,7 @@ function testPaneCollapse1() {
   is(gDebugger.Prefs.stackframesPaneVisible, false,
     "The stackframes and breakpoints pane should be hidden before uncollapsing.");
 
-  gView.toggleStackframesAndBreakpointsPane({ visible: true, animated: false });
+  gView.showStackframesAndBreakpointsPane(true, false);
 
   is(gDebugger.Prefs.stackframesPaneVisible, true,
     "The stackframes and breakpoints pane should be visible after uncollapsing.");
@@ -107,16 +87,16 @@ function testPaneCollapse2() {
   is(width, gDebugger.Prefs.variablesWidth,
     "The variables pane has an incorrect width.");
   is(variables.style.marginRight, "0px",
-    "The variables pane has an incorrect right margin.");
+    "The variables pane has an incorrect initial right margin.");
   ok(!variables.hasAttribute("animated"),
-    "The variables pane has an incorrect animated attribute.");
+    "The variables pane has an incorrect initial animated attribute.");
   ok(!togglePanesButton.getAttribute("variablesHidden"),
-    "The variables pane should at this point be visible.");
+    "The variables pane should initially be visible.");
 
   is(gDebugger.Prefs.variablesPaneVisible, true,
-    "The variables pane should at this point be visible.");
+    "The variables pane should initially be visible.");
 
-  gView.toggleVariablesPane({ visible: false, animated: true });
+  gView.showVariablesPane(false, true);
 
   is(gDebugger.Prefs.variablesPaneVisible, false,
     "The variables pane should be hidden after collapsing.");
@@ -134,7 +114,7 @@ function testPaneCollapse2() {
   is(gDebugger.Prefs.variablesPaneVisible, false,
     "The variables pane should be hidden before uncollapsing.");
 
-  gView.toggleVariablesPane({ visible: true, animated: false });
+  gView.showVariablesPane(true, false);
 
   is(gDebugger.Prefs.variablesPaneVisible, true,
     "The variables pane should be visible after uncollapsing.");
