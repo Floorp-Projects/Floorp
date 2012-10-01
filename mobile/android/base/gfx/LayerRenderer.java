@@ -46,7 +46,7 @@ public class LayerRenderer {
 
     private final LayerView mView;
     private final SingleTileLayer mBackgroundLayer;
-    private final ScreenshotLayer mCheckerboardLayer;
+    private final ScreenshotLayer mScreenshotLayer;
     private final NinePatchTileLayer mShadowLayer;
     private TextLayer mFrameRateLayer;
     private final ScrollbarLayer mHorizScrollLayer;
@@ -125,21 +125,21 @@ public class LayerRenderer {
 
     public void setCheckerboardBitmap(ByteBuffer data, int width, int height, RectF pageRect, Rect copyRect) {
         try {
-            mCheckerboardLayer.setBitmap(data, width, height, copyRect);
+            mScreenshotLayer.setBitmap(data, width, height, copyRect);
         } catch (IllegalArgumentException ex) {
             Log.e(LOGTAG, "error setting bitmap: ", ex);
         }
-        mCheckerboardLayer.beginTransaction();
+        mScreenshotLayer.beginTransaction();
         try {
-            mCheckerboardLayer.setPosition(RectUtils.round(pageRect));
-            mCheckerboardLayer.invalidate();
+            mScreenshotLayer.setPosition(RectUtils.round(pageRect));
+            mScreenshotLayer.invalidate();
         } finally {
-            mCheckerboardLayer.endTransaction();
+            mScreenshotLayer.endTransaction();
         }
     }
 
     public void resetCheckerboard() {
-        mCheckerboardLayer.reset();
+        mScreenshotLayer.reset();
     }
 
     public LayerRenderer(LayerView view) {
@@ -148,7 +148,7 @@ public class LayerRenderer {
         CairoImage backgroundImage = new BufferedCairoImage(view.getBackgroundPattern());
         mBackgroundLayer = new SingleTileLayer(true, backgroundImage);
 
-        mCheckerboardLayer = ScreenshotLayer.create();
+        mScreenshotLayer = ScreenshotLayer.create();
 
         CairoImage shadowImage = new BufferedCairoImage(view.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
@@ -465,7 +465,7 @@ public class LayerRenderer {
             if (rootLayer != null) mUpdated &= rootLayer.update(mPageContext);  // called on compositor thread
             mUpdated &= mBackgroundLayer.update(mScreenContext);    // called on compositor thread
             mUpdated &= mShadowLayer.update(mPageContext);  // called on compositor thread
-            mUpdated &= mCheckerboardLayer.update(mPageContext);   // called on compositor thread
+            mUpdated &= mScreenshotLayer.update(mPageContext);   // called on compositor thread
             if (mFrameRateLayer != null) mUpdated &= mFrameRateLayer.update(mScreenContext); // called on compositor thread
             mUpdated &= mVertScrollLayer.update(mPageContext);  // called on compositor thread
             mUpdated &= mHorizScrollLayer.update(mPageContext); // called on compositor thread
@@ -546,13 +546,13 @@ public class LayerRenderer {
             if (mView.checkerboardShouldShowChecks()) {
                 /* Find the area the root layer will render into, to mask the checkerboard layer */
                 Rect rootMask = getMaskForLayer(mView.getLayerClient().getRoot());
-                mCheckerboardLayer.setMask(rootMask);
+                mScreenshotLayer.setMask(rootMask);
 
                 /* Scissor around the page-rect, in case the page has shrunk
                  * since the screenshot layer was last updated.
                  */
                 setScissorRect(); // Calls glEnable(GL_SCISSOR_TEST))
-                mCheckerboardLayer.draw(mPageContext);
+                mScreenshotLayer.draw(mPageContext);
             }
         }
 
