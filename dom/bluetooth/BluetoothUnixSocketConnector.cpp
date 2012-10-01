@@ -35,15 +35,6 @@
 #include "BluetoothUnixSocketConnector.h"
 #include "nsThreadUtils.h"
 
-#undef LOG
-#if defined(MOZ_WIDGET_GONK)
-#include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GonkDBus", args);
-#else
-#define BTDEBUG true
-#define LOG(args...) if (BTDEBUG) printf(args);
-#endif
-
 USING_BLUETOOTH_NAMESPACE
 
 static const int RFCOMM_SO_SNDBUF = 70 * 1024; // 70 KB send buffer
@@ -71,11 +62,33 @@ BluetoothUnixSocketConnector::BluetoothUnixSocketConnector(
 {
 }
 
-bool
-BluetoothUnixSocketConnector::Setup(int aFd)
+int
+BluetoothUnixSocketConnector::Create()
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   int lm = 0;
+  int fd = -1;
   int sndbuf;
+
+  switch (mType) {
+  case BluetoothSocketType::RFCOMM:
+    fd = socket(PF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+    break;
+  case BluetoothSocketType::SCO:
+    fd = socket(PF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_SCO);
+    break;
+  case BluetoothSocketType::L2CAP:
+    fd = socket(PF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+    break;
+  default:
+    return -1;
+  }
+
+  if (fd < 0) {
+    NS_WARNING("Could not open bluetooth socket!");
+    return -1;
+  }
+
   /* kernel does not yet support LM for SCO */
   switch (mType) {
   case BluetoothSocketType::RFCOMM:
@@ -91,91 +104,72 @@ BluetoothUnixSocketConnector::Setup(int aFd)
   }
 
   if (lm) {
-    if (setsockopt(aFd, SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm))) {
+    if (setsockopt(fd, SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm))) {
       NS_WARNING("setsockopt(RFCOMM_LM) failed, throwing");
-      return false;
+      return -1;
     }
   }
 
   if (mType == BluetoothSocketType::RFCOMM) {
     sndbuf = RFCOMM_SO_SNDBUF;
-    if (setsockopt(aFd, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf))) {
+    if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf))) {
       NS_WARNING("setsockopt(SO_SNDBUF) failed, throwing");
-      return false;
+      return -1;
     }
   }
 
-  return true;
-}
-
-int
-BluetoothUnixSocketConnector::Create()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  int fd = -1;
-
-  switch (mType) {
-  case BluetoothSocketType::RFCOMM:
-    fd = socket(PF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
-    break;
-  case BluetoothSocketType::SCO:
-    fd = socket(PF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_SCO);
-    break;
-  case BluetoothSocketType::L2CAP:
-    fd = socket(PF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
-    break;
-  default:
-    MOZ_NOT_REACHED();
-  }
-
-  if (fd < 0) {
-    NS_WARNING("Could not open bluetooth socket!");
-    return -1;
-  }
-
-  if (!Setup(fd)) {
-    NS_WARNING("Could not set up socket!");
-  }
   return fd;
 }
 
-void
-BluetoothUnixSocketConnector::CreateAddr(bool aIsServer,
-                                         socklen_t& aAddrSize,
-                                         struct sockaddr* aAddr,
-                                         const char* aAddress)
+bool
+BluetoothUnixSocketConnector::ConnectInternal(int aFd, const char* aAddress)
 {
-  // Set to BDADDR_ANY, if it's not a server, we'll reset.
-  bdaddr_t bd_address_obj = {{0, 0, 0, 0, 0, 0}};
+  int n = 1;
+  setsockopt(aFd, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n));
+  
+  socklen_t addr_sz;
+  struct sockaddr *addr;
+  bdaddr_t bd_address_obj;
 
-  if (!aIsServer && aAddress && strlen(aAddress) > 0) {
-    if (get_bdaddr(aAddress, &bd_address_obj)) {
-      NS_WARNING("Can't get bluetooth address!");
-      return;
-    }
+  if (get_bdaddr(aAddress, &bd_address_obj)) {
+    NS_WARNING("Can't get bluetooth address!");
+    return false;
   }
 
   switch (mType) {
   case BluetoothSocketType::RFCOMM:
     struct sockaddr_rc addr_rc;
-    aAddrSize = sizeof(addr_rc);
-    memset(aAddr, 0, aAddrSize);
+    addr = (struct sockaddr *)&addr_rc;
+    addr_sz = sizeof(addr_rc);
+
+    memset(addr, 0, addr_sz);
     addr_rc.rc_family = AF_BLUETOOTH;
     addr_rc.rc_channel = mChannel;
     memcpy(&addr_rc.rc_bdaddr, &bd_address_obj, sizeof(bdaddr_t));
-    memcpy(aAddr, &addr_rc, sizeof(addr_rc));
     break;
   case BluetoothSocketType::SCO:
     struct sockaddr_sco addr_sco;
-    aAddrSize = sizeof(addr_sco);
+    addr = (struct sockaddr *)&addr_sco;
+    addr_sz = sizeof(addr_sco);
 
-    memset(aAddr, 0, aAddrSize);
+    memset(addr, 0, addr_sz);
     addr_sco.sco_family = AF_BLUETOOTH;
     memcpy(&addr_sco.sco_bdaddr, &bd_address_obj, sizeof(bdaddr_t));
-    memcpy(aAddr, &addr_sco, sizeof(addr_sco));
     break;
   default:
     NS_WARNING("Socket type unknown!");
+    return false;
   }
-}
 
+  int ret = connect(aFd, addr, addr_sz);
+
+  if (ret) {
+#if DEBUG
+    //LOG("Socket connect errno=%d\n", errno);
+#endif
+    NS_WARNING("Socket connect error!");
+    return false;
+  }
+
+  return true;
+}
