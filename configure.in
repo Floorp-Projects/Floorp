@@ -4213,7 +4213,7 @@ MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
-MOZ_JAVA_COMPOSITOR=
+MOZ_ANDROID_OMTC=
 MOZ_ONLY_TOUCH_EVENTS=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -5042,9 +5042,9 @@ fi
 dnl ========================================================
 dnl = Build with the Android Java compositor
 dnl ========================================================
-if test -n "$MOZ_JAVA_COMPOSITOR"; then
+if test -n "$MOZ_ANDROID_OMTC"; then
      dnl Do this if defined in confvars.sh
-     AC_DEFINE(MOZ_JAVA_COMPOSITOR)
+     AC_DEFINE(MOZ_ANDROID_OMTC)
 fi
 
 dnl ========================================================
@@ -8253,7 +8253,7 @@ AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
-AC_SUBST(MOZ_JAVA_COMPOSITOR)
+AC_SUBST(MOZ_ANDROID_OMTC)
 AC_SUBST(MOZ_ONLY_TOUCH_EVENTS)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)

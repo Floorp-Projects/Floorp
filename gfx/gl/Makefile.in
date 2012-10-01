@@ -110,8 +110,8 @@ CPPSRCS += \
 	GLLibraryEGL.cpp
 endif
 
-ifdef MOZ_JAVA_COMPOSITOR
-DEFINES += -DMOZ_JAVA_COMPOSITOR
+ifdef MOZ_ANDROID_OMTC
+DEFINES += -DMOZ_ANDROID_OMTC
 endif
 
 include $(topsrcdir)/config/rules.mk

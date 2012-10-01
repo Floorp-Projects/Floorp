@@ -146,7 +146,7 @@ static GLLibraryEGL sEGLLibrary;
     (_array).AppendElement(_k);                 \
 } while (0)
 
-#ifndef MOZ_JAVA_COMPOSITOR
+#ifndef MOZ_ANDROID_OMTC
 static EGLSurface
 CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config);
 #endif
@@ -533,7 +533,7 @@ public:
         sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE,
                                  EGL_NO_CONTEXT);
         if (!mSurface) {
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
             mSurface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
 #else
             EGLConfig config;
@@ -2122,9 +2122,9 @@ CreateConfig(EGLConfig* aConfig)
     }
 }
 
-// When MOZ_JAVA_COMPOSITOR is defined,
+// When MOZ_ANDROID_OMTC is defined,
 // use mozilla::AndroidBridge::Bridge()->ProvideEGLSurface() instead.
-#ifndef MOZ_JAVA_COMPOSITOR
+#ifndef MOZ_ANDROID_OMTC
 static EGLSurface
 CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
 {
@@ -2216,7 +2216,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         return nullptr;
     }
 
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
     mozilla::AndroidBridge::Bridge()->RegisterCompositor();
     EGLSurface surface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
 #else
@@ -2646,7 +2646,7 @@ GLContextProviderEGL::GetGlobalContext(const ContextFlags)
 {
 // Don't want a global context on Android as 1) share groups across 2 threads fail on many Tegra drivers (bug 759225)
 // and 2) some mobile devices have a very strict limit on global number of GL contexts (bug 754257)
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
     return nullptr;
 #endif
 

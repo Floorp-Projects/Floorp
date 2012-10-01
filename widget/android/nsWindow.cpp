@@ -60,7 +60,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 static gfxIntSize gAndroidBounds = gfxIntSize(0, 0);
 static gfxIntSize gAndroidScreenBounds;
 
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/Mutex.h"
@@ -172,7 +172,7 @@ nsWindow::~nsWindow()
     if (top->mFocus == this)
         top->mFocus = nullptr;
     ALOG("nsWindow %p destructor", (void*)this);
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
     SetCompositor(NULL, NULL);
 #endif
 }
@@ -697,7 +697,7 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
 
     mUseAcceleratedRendering = GetShouldAccelerate();
 
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
     bool useCompositor = UseOffMainThreadCompositing();
 
     if (useCompositor) {
@@ -909,7 +909,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             sValidSurface = false;
             break;
 
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
         case AndroidGeckoEvent::COMPOSITOR_PAUSE:
             // The compositor gets paused when the app is about to go into the
             // background. While the compositor is paused, we need to ensure that
@@ -1086,7 +1086,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     AutoLocalJNIFrame jniFrame;
 
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
     // We're paused, or we haven't been given a window-size yet, so do nothing
     if (sCompositorPaused || gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0) {
         return;
@@ -2230,7 +2230,7 @@ nsWindow::GetIMEUpdatePreference()
     return nsIMEUpdatePreference(true, true);
 }
 
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
 void
 nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
 {
