@@ -87,7 +87,7 @@ interface nsIUpdatePatch : nsISupports
  * that the front end and other application services can use to learn more
  * about what is going on.
  */
-[scriptable, uuid(2379e2e1-8eab-4084-8d8c-94ffeee56804)]
+[scriptable, uuid(b10bbf29-5a54-4e1e-aa64-c4e4e5819a52)]
 interface nsIUpdate : nsISupports
 {
   /**
@@ -196,6 +196,12 @@ interface nsIUpdate : nsISupports
    * user.
    */
   attribute boolean isSecurityUpdate;
+
+  /**
+   * Whether or not the update being downloaded is an OS update. This is
+   * generally only possible in Gonk right now.
+   */
+  attribute boolean isOSUpdate;
 
   /**
    * When the update was installed.

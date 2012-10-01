@@ -14,7 +14,7 @@ using namespace mozilla;
 class nsFallbackCameraControl : public CameraControlImpl
 {
 public:
-  nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError);
+  nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId);
 
   const char* GetParameter(const char* aKey);
   const char* GetParameterConstChar(uint32_t aKey);
@@ -52,7 +52,7 @@ private:
  * store a reference in the 'mCameraControl' member (which is why it is
  * defined here).
  */
-nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError)
+nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
 {
 }
 
@@ -62,8 +62,8 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThr
  * None of these should ever get called--they exist to keep the linker happy,
  * and may be used as templates for new camera support classes.
  */
-nsFallbackCameraControl::nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError)
-  : CameraControlImpl(aCameraId, aCameraThread)
+nsFallbackCameraControl::nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
+  : CameraControlImpl(aCameraId, aCameraThread, aWindowId)
 {
 }
 

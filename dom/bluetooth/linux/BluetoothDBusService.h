@@ -128,6 +128,12 @@ public:
   virtual void
   DisconnectObjectPush(BluetoothReplyRunnable* aRunnable);
 
+  virtual bool
+  SendFile(const nsAString& aDeviceAddress,
+           BlobParent* aBlobParent,
+           BlobChild* aBlobChild,
+           BluetoothReplyRunnable* aRunnable);
+
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,
