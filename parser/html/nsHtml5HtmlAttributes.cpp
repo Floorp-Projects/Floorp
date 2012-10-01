@@ -84,62 +84,6 @@ nsHtml5HtmlAttributes::getIndex(nsHtml5AttributeName* name)
   return -1;
 }
 
-int32_t 
-nsHtml5HtmlAttributes::getLength()
-{
-  return length;
-}
-
-nsIAtom* 
-nsHtml5HtmlAttributes::getLocalName(int32_t index)
-{
-  if (index < length && index >= 0) {
-    return names[index]->getLocal(mode);
-  } else {
-    return nullptr;
-  }
-}
-
-nsHtml5AttributeName* 
-nsHtml5HtmlAttributes::getAttributeName(int32_t index)
-{
-  if (index < length && index >= 0) {
-    return names[index];
-  } else {
-    return nullptr;
-  }
-}
-
-int32_t 
-nsHtml5HtmlAttributes::getURI(int32_t index)
-{
-  if (index < length && index >= 0) {
-    return names[index]->getUri(mode);
-  } else {
-    return 0;
-  }
-}
-
-nsIAtom* 
-nsHtml5HtmlAttributes::getPrefix(int32_t index)
-{
-  if (index < length && index >= 0) {
-    return names[index]->getPrefix(mode);
-  } else {
-    return nullptr;
-  }
-}
-
-nsString* 
-nsHtml5HtmlAttributes::getValue(int32_t index)
-{
-  if (index < length && index >= 0) {
-    return values[index];
-  } else {
-    return nullptr;
-  }
-}
-
 nsString* 
 nsHtml5HtmlAttributes::getValue(nsHtml5AttributeName* name)
 {
@@ -147,8 +91,49 @@ nsHtml5HtmlAttributes::getValue(nsHtml5AttributeName* name)
   if (index == -1) {
     return nullptr;
   } else {
-    return getValue(index);
+    return getValueNoBoundsCheck(index);
   }
+}
+
+int32_t 
+nsHtml5HtmlAttributes::getLength()
+{
+  return length;
+}
+
+nsIAtom* 
+nsHtml5HtmlAttributes::getLocalNameNoBoundsCheck(int32_t index)
+{
+
+  return names[index]->getLocal(mode);
+}
+
+int32_t 
+nsHtml5HtmlAttributes::getURINoBoundsCheck(int32_t index)
+{
+
+  return names[index]->getUri(mode);
+}
+
+nsIAtom* 
+nsHtml5HtmlAttributes::getPrefixNoBoundsCheck(int32_t index)
+{
+
+  return names[index]->getPrefix(mode);
+}
+
+nsString* 
+nsHtml5HtmlAttributes::getValueNoBoundsCheck(int32_t index)
+{
+
+  return values[index];
+}
+
+nsHtml5AttributeName* 
+nsHtml5HtmlAttributes::getAttributeNameNoBoundsCheck(int32_t index)
+{
+
+  return names[index];
 }
 
 void 
