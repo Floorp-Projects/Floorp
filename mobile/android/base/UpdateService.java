@@ -168,7 +168,7 @@ public class UpdateService extends IntentService {
         if (manager == null)
             return;
 
-        PendingIntent pending = PendingIntent.getService(this, 0, new Intent(UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE, null, this, UpdateService.class), 0);
+        PendingIntent pending = PendingIntent.getService(this, 0, new Intent(UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE, null, this, UpdateService.class), PendingIntent.FLAG_UPDATE_CURRENT);
         manager.cancel(pending);
 
         lastAttempt.setTimeInMillis(lastAttempt.getTimeInMillis() + interval);
