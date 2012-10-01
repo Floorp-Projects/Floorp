@@ -261,7 +261,6 @@ public:
       NS_WARNING("prepare adapter failed");
       return NS_ERROR_FAILURE;
     }
-
     return NS_OK;
   }
 
@@ -725,29 +724,6 @@ ExtractHandles(DBusMessage *aReply, nsTArray<uint32_t>& aOutHandles)
   } else {
     LOG_AND_FREE_DBUS_ERROR(&err);
   }
-}
-
-// static
-bool
-BluetoothDBusService::AddServiceRecords(const nsAString& aAdapterPath,
-                                        const char* serviceName,
-                                        unsigned long long uuidMsb,
-                                        unsigned long long uuidLsb,
-                                        int channel)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  DBusMessage *reply;
-  reply = dbus_func_args(gThreadConnection->GetConnection(),
-                         NS_ConvertUTF16toUTF8(aAdapterPath).get(),
-                         DBUS_ADAPTER_IFACE, "AddRfcommServiceRecord",
-                         DBUS_TYPE_STRING, &serviceName,
-                         DBUS_TYPE_UINT64, &uuidMsb,
-                         DBUS_TYPE_UINT64, &uuidLsb,
-                         DBUS_TYPE_UINT16, &channel,
-                         DBUS_TYPE_INVALID);
-
-  return reply ? dbus_returns_uint32(reply) : -1;
 }
 
 // static
@@ -2301,9 +2277,7 @@ public:
 
     nsString address = GetAddressFromObjectPath(mObjectPath);
     nsString replyError;
-    BluetoothUnixSocketConnector* c =
-      new BluetoothUnixSocketConnector(BluetoothSocketType::SCO, -1,
-                                       mAuth, mEncrypt);
+    BluetoothUnixSocketConnector c(BluetoothSocketType::SCO, -1, mAuth, mEncrypt);
 
     BluetoothScoManager* sco = BluetoothScoManager::Get();
     if (!mConsumer->ConnectSocket(c, NS_ConvertUTF16toUTF8(address).get())) {
@@ -2328,16 +2302,16 @@ private:
   bool mEncrypt;
 };
 
-class ConnectBluetoothSocketRunnable : public nsRunnable
+class CreateBluetoothSocketRunnable : public nsRunnable
 {
 public:
-  ConnectBluetoothSocketRunnable(BluetoothReplyRunnable* aRunnable,
-                                 UnixSocketConsumer* aConsumer,
-                                 const nsAString& aObjectPath,
-                                 const nsAString& aServiceUUID,
-                                 BluetoothSocketType aType,
-                                 bool aAuth,
-                                 bool aEncrypt)
+  CreateBluetoothSocketRunnable(BluetoothReplyRunnable* aRunnable,
+                                UnixSocketConsumer* aConsumer,
+                                const nsAString& aObjectPath,
+                                const nsAString& aServiceUUID,
+                                BluetoothSocketType aType,
+                                bool aAuth,
+                                bool aEncrypt)
     : mRunnable(dont_AddRef(aRunnable)),
       mConsumer(aConsumer),
       mObjectPath(aObjectPath),
@@ -2351,14 +2325,14 @@ public:
   nsresult
   Run()
   {
+    NS_WARNING("Running create socket!\n");
     MOZ_ASSERT(!NS_IsMainThread());
 
     nsString address = GetAddressFromObjectPath(mObjectPath);
     int channel = GetDeviceServiceChannel(mObjectPath, mServiceUUID, 0x0004);
     BluetoothValue v;
     nsString replyError;
-    BluetoothUnixSocketConnector* c =
-      new BluetoothUnixSocketConnector(mType, channel, mAuth, mEncrypt);
+    BluetoothUnixSocketConnector c(mType, channel, mAuth, mEncrypt);
     if (!mConsumer->ConnectSocket(c, NS_ConvertUTF16toUTF8(address).get())) {
       replyError.AssignLiteral("SocketConnectionError");
       DispatchBluetoothReply(mRunnable, v, replyError);
@@ -2421,7 +2395,7 @@ BluetoothDBusService::GetSocketViaService(const nsAString& aObjectPath,
   }
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
 
-  nsRefPtr<nsRunnable> func(new ConnectBluetoothSocketRunnable(runnable,
+  nsRefPtr<nsRunnable> func(new CreateBluetoothSocketRunnable(runnable,
                                                               aConsumer,
                                                               aObjectPath,
                                                               aService, aType,
@@ -2435,63 +2409,3 @@ BluetoothDBusService::GetSocketViaService(const nsAString& aObjectPath,
   return NS_OK;
 }
 
-class ListenBluetoothSocketRunnable : public nsRunnable
-{
-public:
-  ListenBluetoothSocketRunnable(UnixSocketConsumer* aConsumer,
-                                int aChannel,
-                                BluetoothSocketType aType,
-                                bool aAuth,
-                                bool aEncrypt)
-    : mConsumer(aConsumer)
-    , mChannel(aChannel)
-    , mType(aType)
-    , mAuth(aAuth)
-    , mEncrypt(aEncrypt)
-  {
-  }
-
-  nsresult
-  Run()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    BluetoothUnixSocketConnector* c =
-      new BluetoothUnixSocketConnector(mType, mChannel, mAuth, mEncrypt);
-    if (!mConsumer->ListenSocket(c)) {
-      NS_WARNING("Can't listen on socket!");
-      return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<UnixSocketConsumer> mConsumer;
-  int mChannel;
-  BluetoothSocketType mType;
-  bool mAuth;
-  bool mEncrypt;
-};
-
-nsresult
-BluetoothDBusService::ListenSocketViaService(int aChannel,
-                                             BluetoothSocketType aType,
-                                             bool aAuth,
-                                             bool aEncrypt,
-                                             mozilla::ipc::UnixSocketConsumer* aConsumer)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
-  if (!mConnection || !gThreadConnection) {
-    NS_ERROR("Bluetooth service not started yet!");
-    return NS_ERROR_FAILURE;
-  }
-  nsRefPtr<nsRunnable> func(new ListenBluetoothSocketRunnable(aConsumer,
-                                                              aChannel, aType,
-                                                              aAuth,
-                                                              aEncrypt));
-  if (NS_FAILED(mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Cannot dispatch firmware loading task!");
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
