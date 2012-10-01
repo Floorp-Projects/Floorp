@@ -20,11 +20,8 @@ public:
   virtual ~BluetoothUnixSocketConnector()
   {}
   virtual int Create() MOZ_OVERRIDE;
-  virtual void CreateAddr(bool aIsServer,
-                          socklen_t& aAddrSize,
-                          struct sockaddr* aAddr,
-                          const char* aAddress) MOZ_OVERRIDE;
-  virtual bool Setup(int aFd) MOZ_OVERRIDE;
+  virtual bool ConnectInternal(int aFd, const char* aAddress) MOZ_OVERRIDE;
+
 private:
   BluetoothSocketType mType;
   int mChannel;
