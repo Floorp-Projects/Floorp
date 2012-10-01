@@ -8,6 +8,7 @@
 from __future__ import unicode_literals
 
 import argparse
+import codecs
 import logging
 import os
 import sys
@@ -122,6 +123,33 @@ To see more help for a specific command, run:
 
     def run(self, argv):
         """Runs mach with arguments provided from the command line."""
+
+        # If no encoding is defined, we default to UTF-8 because without this
+        # Python 2.7 will assume the default encoding of ASCII. This will blow
+        # up with UnicodeEncodeError as soon as it encounters a non-ASCII
+        # character in a unicode instance. We simply install a wrapper around
+        # the streams and restore once we have finished.
+        orig_stdin = sys.stdin
+        orig_stdout = sys.stdout
+        orig_stderr = sys.stderr
+
+        try:
+            if sys.stdin.encoding is None:
+                sys.stdin = codecs.getreader('utf-8')(sys.stdin)
+
+            if sys.stdout.encoding is None:
+                sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
+
+            if sys.stderr.encoding is None:
+                sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
+
+            self._run(argv)
+        finally:
+            sys.stdin = orig_stdin
+            sys.stdout = orig_stdout
+            sys.stderr = orig_stderr
+
+    def _run(self, argv):
         parser = self.get_argument_parser()
 
         if not len(argv):
