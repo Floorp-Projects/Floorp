@@ -130,6 +130,8 @@
 #define _PT_PTHREAD_ATTR_DESTROY         pthread_attr_delete
 #define _PT_PTHREAD_CREATE(t, a, f, r)   pthread_create(t, a, f, r) 
 #define _PT_PTHREAD_KEY_CREATE           pthread_keycreate
+#define _PT_PTHREAD_KEY_DELETE           pthread_keydelete
+/* Set _PT_PTHREAD_KEY_DELETE to empty if pthread_keydelete isn't available */
 #define _PT_PTHREAD_ATTR_SETSCHEDPOLICY  pthread_attr_setsched
 #define _PT_PTHREAD_ATTR_GETSTACKSIZE(a, s) \
                                      (*(s) = pthread_attr_getstacksize(*(a)), 0)
@@ -140,6 +142,7 @@
 #define _PT_PTHREAD_ATTR_DESTROY         pthread_attr_destroy
 #define _PT_PTHREAD_CREATE(t, a, f, r)   pthread_create(t, &a, f, r) 
 #define _PT_PTHREAD_KEY_CREATE           pthread_key_create
+#define _PT_PTHREAD_KEY_DELETE           pthread_key_delete
 #define _PT_PTHREAD_ATTR_SETSCHEDPOLICY  pthread_attr_setschedpolicy
 #define _PT_PTHREAD_ATTR_GETSTACKSIZE(a, s) pthread_attr_getstacksize(a, s)
 #define _PT_PTHREAD_GETSPECIFIC(k, r)    (r) = pthread_getspecific(k)
