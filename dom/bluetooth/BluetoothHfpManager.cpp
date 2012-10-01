@@ -407,6 +407,25 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceObjectPath,
   return NS_FAILED(rv) ? false : true;
 }
 
+bool
+BluetoothHfpManager::Listen()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return false;
+  }
+
+  nsresult rv = bs->ListenSocketViaService(BluetoothReservedChannels::HANDSFREE_AG,
+                                           BluetoothSocketType::RFCOMM,
+                                           true,
+                                           false,
+                                           this);
+  return NS_FAILED(rv) ? false : true;
+}
+
 void
 BluetoothHfpManager::Disconnect()
 {
