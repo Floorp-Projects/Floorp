@@ -251,12 +251,3 @@
    fun:_ZN22nsComponentManagerImpl17ManifestComponentERNS_25ManifestProcessingContextEiPKPc
    ...
 }
-{
-   Bug 795395
-   Memcheck:Addr4
-   fun:PR_UnloadLibrary
-   fun:_ZN18nsGSettingsServiceD1Ev
-   fun:_ZN18nsGSettingsService7ReleaseEv
-   fun:_ZL29nsGSettingsServiceConstructorP11nsISupportsRK4nsIDPPv
-   ...
-}

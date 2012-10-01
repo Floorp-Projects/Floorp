@@ -242,6 +242,9 @@ public:
     NS_IMETHOD              SetCursor(nsCursor aCursor);
     NS_IMETHOD              SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY);
 
+    CGFloat                 BackingScaleFactor();
+    virtual double          GetDefaultScale();
+
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
     NS_IMETHOD Invalidate(const nsIntRect &aRect);
@@ -327,6 +330,8 @@ protected:
   nsChildView*         mPopupContentView; // if this is a popup, this is its content widget
   int32_t              mShadowStyle;
   NSUInteger           mWindowFilter;
+
+  CGFloat              mBackingScaleFactor;
 
   WindowAnimationType  mAnimationType;
 

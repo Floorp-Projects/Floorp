@@ -253,7 +253,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
   if (primaryScrollable) {
     const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
-    scrollOffset = metrics.mViewportScrollOffset;
+    scrollOffset = metrics.mScrollOffset;
   }
   int32_t scrollDiffX = scrollOffset.x - mLastScrollOffset.x;
   int32_t scrollDiffY = scrollOffset.y - mLastScrollOffset.y;

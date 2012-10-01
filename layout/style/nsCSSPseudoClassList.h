@@ -108,9 +108,9 @@ CSS_PSEUDO_CLASS(mozTableBorderNonzero, ":-moz-table-border-nonzero")
 // it doesn't actually get directly matched on in SelectorMatches.
 CSS_PSEUDO_CLASS(notPseudo, ":not")
 
-// :dir(ltr) and :dir(rtl) match elements whose resolved directionality
-// in the markup language is ltr or rtl respectively
-CSS_STATE_DEPENDENT_PSEUDO_CLASS(dir, ":dir",
+// :-moz-dir(ltr) and :-moz-dir(rtl) match elements whose resolved
+// directionality in the markup language is ltr or rtl respectively
+CSS_STATE_DEPENDENT_PSEUDO_CLASS(dir, ":-moz-dir",
                                  NS_EVENT_STATE_LTR | NS_EVENT_STATE_RTL)
 
 CSS_STATE_PSEUDO_CLASS(link, ":link", NS_EVENT_STATE_UNVISITED)

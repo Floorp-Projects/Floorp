@@ -446,7 +446,8 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 /*virtual*/
 bool
 nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
-                           gfxFontStyle& aFontStyle)
+                           gfxFontStyle& aFontStyle,
+                           float aDevPixPerCSSPixel)
 {
     aFontName.AssignLiteral("\"Droid Sans\"");
     aFontStyle.style = NS_FONT_STYLE_NORMAL;

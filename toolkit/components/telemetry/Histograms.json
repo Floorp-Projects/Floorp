@@ -2260,5 +2260,10 @@
   "READ_SAVED_PING_SUCCESS": {
     "kind": "boolean",
     "description": "Sucessful reading a saved ping file"
+  },
+  "TOUCH_ENABLED_DEVICE": {
+    "kind": "boolean",
+    "description": "The device supports touch input",
+    "cpp_guard": "XP_WIN"
   }
 }

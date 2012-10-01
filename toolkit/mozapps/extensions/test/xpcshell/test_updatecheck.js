@@ -18,7 +18,6 @@ function run_test() {
   testserver.start(4444);
 
   do_test_pending();
-  startupManager();
   run_test_1();
 }
 

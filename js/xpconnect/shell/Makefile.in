@@ -16,6 +16,10 @@ SDK_BINARY	= $(PROGRAM)
 
 CPPSRCS		= xpcshell.cpp
 
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/toolkit/xre \
+  $(NULL)
+
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS += xpcshellMacUtils.mm
 endif
@@ -63,6 +67,13 @@ ifeq ($(OS_TEST),ia64)
 LIBS += $(JEMALLOC_LIBS)
 endif
 include $(topsrcdir)/config/config.mk
+
+ifdef _MSC_VER
+# Always enter a Windows program through wmain, whether or not we're
+# a console application.
+WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
+
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 

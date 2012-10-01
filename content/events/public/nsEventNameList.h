@@ -467,6 +467,14 @@ WINDOW_ONLY_EVENT(moztimechange,
                   NS_MOZ_TIME_CHANGE_EVENT,
                   EventNameType_None,
                   NS_EVENT)
+WINDOW_ONLY_EVENT(moznetworkupload,
+                  NS_NETWORK_UPLOAD_EVENT,
+                  EventNameType_None,
+                  NS_EVENT)
+WINDOW_ONLY_EVENT(moznetworkdownload,
+                  NS_NETWORK_DOWNLOAD_EVENT,
+                  EventNameType_None,
+                  NS_EVENT)
 
 TOUCH_EVENT(touchstart,
             NS_TOUCH_START,

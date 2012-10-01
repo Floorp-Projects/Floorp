@@ -62,7 +62,7 @@ function runTest() {
 
       let [ctrlKey, isMomentum] = outstandingTests.shift();
       let scrollTopBefore = scrollbox.scrollTop;
-      let zoomFactorBefore = winUtils.screenPixelsPerCSSPixel;
+      let zoomFactorBefore = winUtils.fullZoom;
       sendTouchpadScrollMotion(scrollbox, 1, ctrlKey, isMomentum);
 
       setTimeout(function () {
@@ -70,14 +70,14 @@ function runTest() {
         if (!ctrlKey) {
           let postfix = isMomentum ? ", even after releasing the touchpad" : "";
           // Normal scroll: scroll
-          is(winUtils.screenPixelsPerCSSPixel, zoomFactorBefore, "Normal scrolling shouldn't change zoom" + postfix);
+          is(winUtils.fullZoom, zoomFactorBefore, "Normal scrolling shouldn't change zoom" + postfix);
           isnot(scrollbox.scrollTop, scrollTopBefore, "Normal scrolling should scroll" + postfix);
         } else {
           if (!isMomentum) {
-            isnot(winUtils.screenPixelsPerCSSPixel, zoomFactorBefore, "Ctrl-scrolling should zoom while the user is touching the touchpad");
+            isnot(winUtils.fullZoom, zoomFactorBefore, "Ctrl-scrolling should zoom while the user is touching the touchpad");
             is(scrollbox.scrollTop, scrollTopBefore, "Ctrl-scrolling shouldn't scroll while the user is touching the touchpad");
           } else {
-            is(winUtils.screenPixelsPerCSSPixel, zoomFactorBefore, "Momentum scrolling shouldn't zoom, even when pressing Ctrl");
+            is(winUtils.fullZoom, zoomFactorBefore, "Momentum scrolling shouldn't zoom, even when pressing Ctrl");
             isnot(scrollbox.scrollTop, scrollTopBefore, "Momentum scrolling should scroll, even when pressing Ctrl");
           }
         }

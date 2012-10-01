@@ -46,6 +46,7 @@ private:
   int mCurrentCallIndex;
   int mCurrentCallState;
   nsAutoPtr<BluetoothRilListener> mListener;
+  nsString mDevicePath;
 };
 
 END_BLUETOOTH_NAMESPACE

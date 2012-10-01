@@ -571,19 +571,6 @@ class StackTypeSet : public TypeSet
     /* Whether this value may be an object. */
     bool maybeObject() { return unknownObject() || baseObjectCount() > 0; }
 
-    /*
-     * Whether this typeset represents a potentially sentineled object value:
-     * where the value may be an object, but maybe potentially null or undefined.
-     * This returns false in situations where the value cannot ever be an object.
-     */
-    bool objectOrSentinel() {
-        TypeFlags flags = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL | TYPE_FLAG_ANYOBJECT;
-        if (baseFlags() & (~flags & TYPE_FLAG_BASE_MASK))
-            return false;
-
-        return hasAnyFlag(TYPE_FLAG_ANYOBJECT) || baseObjectCount() > 0;
-    }
-
     /* Whether the type set contains objects with any of a set of flags. */
     bool hasObjectFlags(JSContext *cx, TypeObjectFlags flags);
 

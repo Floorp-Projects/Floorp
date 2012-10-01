@@ -12,7 +12,6 @@ Note: removes both source and destination directory before starting. Do not
 
 import os
 import shutil
-import string
 import subprocess
 import sys
 
@@ -59,8 +58,6 @@ def copy(thissrcdir, dest, directories):
   """
   print "Copying %s..." % (directories, )
   for d in directories:
-    dirtocreate = dest
-
     subdirs, mochitests, supportfiles = parseManifestFile(dest, d)
     sourcedir = makePath("hg-%s" % dest, d)
     destdir = makePath(dest, d)

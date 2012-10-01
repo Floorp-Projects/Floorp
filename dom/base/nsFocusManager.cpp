@@ -24,7 +24,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIHTMLDocument.h"
-#include "nsGenericHTMLElement.h"
 #include "nsIDocShell.h"
 #include "nsIEditorDocShell.h"
 #include "nsIDocShellTreeItem.h"

@@ -54,6 +54,7 @@ enum SwitchState {
   SWITCH_STATE_OFF,
   SWITCH_STATE_HEADSET,          // Headphone with microphone
   SWITCH_STATE_HEADPHONE,        // without microphone
+  SWITCH_STATE_BLUETOOTH_SCO,
   NUM_SWITCH_STATE
 };
 

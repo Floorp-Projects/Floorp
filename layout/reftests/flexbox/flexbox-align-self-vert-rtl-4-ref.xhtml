@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- Reference case for align-items / align-self behavior in a vertical
+     "direction: rtl" flex container, using blocks in place of flex items and
+     using float and width keywords to emulate the align-items / align-self
+     properties. -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style>
+      .flexbox {
+        border: 1px dashed blue;
+        width: 4px;
+        float: left;
+        direction: rtl;
+        font-family: sans-serif;
+        font-size: 10px;
+        margin-left: 80px;
+      }
+
+      .flex-start, .flex-end, .center, .baseline, .stretch {
+        clear: both;
+        margin:       1px 2px 3px 4px;
+        border-width: 2px 3px 4px 5px;
+        padding:      3px 4px 5px 6px;
+        border-style: dotted;
+      }
+
+      div.big {
+        font-size: 18px;
+        width: 50px;
+      }
+
+      /* Classes for each of the various align-self values */
+      .flex-start {
+        background: lime;
+        width: -moz-max-content;
+      }
+      .flex-end {
+        background: orange;
+        width: -moz-max-content;
+        float: left;
+      }
+      .center {
+        background: lightblue;
+        width: -moz-max-content;
+      }
+      .baseline {
+        background: teal;
+        width: -moz-max-content;
+      }
+      .stretch {
+        background: pink;
+        width: auto;
+      }
+   </style>
+  </head>
+  <body>
+    <!-- NOTE: I'm not using floats in this flex container, since floating
+         makes it harder to emulate the "stretch" behavior.
+         (We need to use width: auto - not width:100% - because we need to
+         allow space for our margins/borders/padding. And width:auto doesn't do
+         what we want if we're floated.)
+
+         However, since our children aren't floated, their adjacent vertical
+         margins will collapse by default (which doesn't match what happens in
+         the testcase, since margins don't collapse in a flexbox).  So, we
+         compensate for that by bumping up the margin-top value on every
+         collapsed top-margin to "4px", which is the total amount of vertical
+         margin we're expecting between consecutive flex items in the testcase.
+         (4px = 3px margin-bottom + 1px margin-top)
+      -->
+    <div class="flexbox">
+      <div class="flex-start">start</div>
+      <div class="flex-start big" style="margin-top: 4px">a b</div>
+      <div class="stretch"  style="margin-top: 4px">stretch</div>
+      <div class="stretch big" style="margin-top: 4px">a b</div>
+      <!-- We're using auto margins as references for "align-self:center", but
+           auto margins only work if we've got extra space available, and we
+           don't have extra space available in this case.  So, we create a
+           wide wrapper-div that _will_ have space available.  We position
+           that wrapper-div using a negative margin, so that centering in it
+           is equivalent to centering in our reference for the flex container.
+        -->
+      <div style="width: 100px; margin-right: -48px">
+        <div style="margin: auto; width: -moz-max-content">
+          <div class="center" style="margin-top: 4px">center</div>
+        </div>
+        <div style="margin: auto; width: -moz-max-content">
+          <div class="center big" style="margin-top: 4px">a b</div>
+        </div>
+      </div>
+    </div>
+    <div class="flexbox">
+      <div class="baseline">base</div>
+      <div class="baseline big" style="margin-top: 4px">abc</div>
+      <div class="flex-end">end</div>
+      <div class="flex-end big">a b</div>
+    </div>
+  </body>
+</html>

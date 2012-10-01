@@ -137,6 +137,17 @@ IccManager::SendStkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+IccManager::SendStkEventDownload(const JS::Value& aEvent)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mProvider->SendStkEventDownload(GetOwner(), aEvent);
+  return NS_OK;
+}
+
 nsresult
 IccManager::InternalDispatchEvent(const nsAString& aType)
 {
