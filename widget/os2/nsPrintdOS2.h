@@ -11,7 +11,9 @@
 
 #include <limits.h>
 
-PR_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* stolen from nsPostScriptObj.h. needs to be put somewhere else that
    both ps and gtk can see easily */
@@ -39,6 +41,8 @@ typedef struct OS2prdata {
         bool cancel;		     /* If true, user cancelled */
 } OS2PrData;
 
-PR_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* nsPrintdOS2_h___ */
