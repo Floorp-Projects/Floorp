@@ -1863,7 +1863,7 @@ GSNCache::purge()
 } /* namespace js */
 
 jssrcnote *
-js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
+js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     size_t target = pc - script->code;
     if (target >= size_t(script->length))

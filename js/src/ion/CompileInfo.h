@@ -84,7 +84,7 @@ class CompileInfo
         return script_->getConst(GET_UINT32_INDEX(pc));
     }
     jssrcnote *getNote(JSContext *cx, jsbytecode *pc) const {
-        return js_GetSrcNoteCached(cx, script(), pc);
+        return js_GetSrcNote(cx, script(), pc);
     }
 
     // Total number of slots: args, locals, and stack.
