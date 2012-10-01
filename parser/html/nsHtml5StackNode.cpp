@@ -109,7 +109,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent**
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
-
+  MOZ_ASSERT(!elementName->isCustom(), "Don't use this constructor for custom elements.");
 }
 
 
@@ -123,7 +123,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent**
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
-
+  MOZ_ASSERT(!elementName->isCustom(), "Don't use this constructor for custom elements.");
 }
 
 

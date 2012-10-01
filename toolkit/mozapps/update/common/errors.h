@@ -62,6 +62,8 @@
 #define UNEXPECTED_BSPATCH_ERROR 41
 #define UNEXPECTED_FILE_OPERATION_ERROR 42
 #define FILESYSTEM_MOUNT_READWRITE_ERROR 43
+#define FOTA_GENERAL_ERROR 44
+#define FOTA_UNKNOWN_ERROR 45
 
 // The following error codes are only used by updater.exe
 // when a fallback key exists and XPCShell tests are being run.

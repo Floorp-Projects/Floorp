@@ -103,13 +103,9 @@ public final class ElementName
         return flags & GROUP_MASK;
     }
     
-    // [NOCPP[
-    
     public boolean isCustom() {
         return (flags & CUSTOM) != 0;
     }
-    
-    // ]NOCPP]
 
     static ElementName elementNameByBuffer(@NoLength char[] buf, int offset, int length, Interner interner) {
         int hash = ElementName.bufToHash(buf, length);

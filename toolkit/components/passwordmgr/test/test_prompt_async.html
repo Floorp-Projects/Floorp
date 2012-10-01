@@ -81,7 +81,7 @@
 
             var mozproxy = "moz-proxy://" +
                            SpecialPowers.wrap(pi).host + ":" +
-	                   SpecialPowers.wrap(pi).port;
+                           SpecialPowers.wrap(pi).port;
 
             addLogin(mozproxy, "proxy_realm",
                      "proxy_user", "proxy_pass");
@@ -125,7 +125,7 @@
 	const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
         if (!interfaces.some( function(v) { return iid.equals(v) } ))
-	  throw Components.results.NS_ERROR_NO_INTERFACE;
+          throw Components.results.NS_ERROR_NO_INTERFACE;
 	  return this;
 	},
 

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!--
+     This test verifies that we don't drop whitespace between consecutive
+     inline boxes inside of an anonymous flex item. In other words, it
+     verifies that "<span>abc</span> <span>def</span>" renders like "abc def",
+     and more variants on that theme.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <link rel="stylesheet" type="text/css" href="ahem.css" />
+    <style>
+      div.flexbox {
+        border: 1px dashed blue;
+        display: -moz-flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flexbox">abc def</div>
+    <div class="flexbox">abc <span>def</span></div>
+    <div class="flexbox"><span>abc</span> def</div>
+    <div class="flexbox"><span>abc</span> <span>def</span></div>
+
+    <!-- ...and now with whitespace just inside the <span> elements, for extra
+         fun. (Shouldn't be visible.) -->
+    <div class="flexbox">abc def</div>
+    <div class="flexbox">abc <span>  def  </span></div>
+    <div class="flexbox"><span> abc </span> def</div>
+    <div class="flexbox"><span> abc </span> <span> def </span></div>
+  </body>
+</html>
+

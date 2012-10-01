@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSMILTimedElement.h"
+#include "nsAttrValueInlines.h"
 #include "nsSMILAnimationFunction.h"
 #include "nsSMILTimeValue.h"
 #include "nsSMILTimeValueSpec.h"

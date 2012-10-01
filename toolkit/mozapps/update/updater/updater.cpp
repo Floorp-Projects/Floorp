@@ -272,6 +272,7 @@ static bool gSucceeded = false;
 static bool sBackgroundUpdate = false;
 static bool sReplaceRequest = false;
 static bool sUsingService = false;
+static bool sIsOSUpdate = false;
 
 #ifdef XP_WIN
 // The current working directory specified in the command line.
@@ -2092,7 +2093,7 @@ UpdateThreadFunc(void *param)
     }
 #endif
 
-    if (rv == OK && sBackgroundUpdate) {
+    if (rv == OK && sBackgroundUpdate && !sIsOSUpdate) {
       rv = CopyInstallDirToDestDir();
     }
 
@@ -2255,6 +2256,11 @@ int NS_main(int argc, NS_tchar **argv)
       // with an updated version applied in the background.
       sReplaceRequest = true;
     }
+  }
+
+  if (getenv("MOZ_OS_UPDATE")) {
+    sIsOSUpdate = true;
+    putenv(const_cast<char*>("MOZ_OS_UPDATE="));
   }
 
   if (sReplaceRequest) {
@@ -3385,6 +3391,10 @@ GetManifestContents(const NS_tchar *manifest)
 
 int AddPreCompleteActions(ActionList *list)
 {
+  if (sIsOSUpdate) {
+    return OK;
+  }
+
   NS_tchar *rb = GetManifestContents(NS_T("precomplete"));
   if (rb == NULL) {
     LOG(("AddPreCompleteActions: error getting contents of precomplete " \

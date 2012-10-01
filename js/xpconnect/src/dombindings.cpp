@@ -323,10 +323,8 @@ js::Class sInterfacePrototypeClass = {
 
 template<class LC>
 JSObject *
-ListBase<LC>::getPrototype(JSContext *cx, JSObject *receiver, bool *enabled)
+ListBase<LC>::getPrototype(JSContext *cx, JSObject *receiver)
 {
-    *enabled = true;
-
     XPCWrappedNativeScope *scope =
         XPCWrappedNativeScope::FindInJSObjectScope(cx, receiver);
     if (!scope)
@@ -405,10 +403,8 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope,
 template<class LC>
 JSObject *
 ListBase<LC>::create(JSContext *cx, JSObject *scope, ListType *aList,
-                     nsWrapperCache* aWrapperCache, bool *triedToWrap)
+                     nsWrapperCache* aWrapperCache)
 {
-    *triedToWrap = true;
-
     JSObject *parent = WrapNativeParent(cx, scope, aList->GetParentObject());
     if (!parent)
         return NULL;
@@ -416,9 +412,7 @@ ListBase<LC>::create(JSContext *cx, JSObject *scope, ListType *aList,
     JSObject *global = js::GetGlobalForObjectCrossCompartment(parent);
     JSAutoCompartment ac(cx, global);
 
-    JSObject *proto = getPrototype(cx, global, triedToWrap);
-    if (!proto && !*triedToWrap)
-        aWrapperCache->ClearIsDOMBinding();
+    JSObject *proto = getPrototype(cx, global);
     if (!proto)
         return NULL;
     JSObject *obj = NewProxyObject(cx, &ListBase<LC>::instance,

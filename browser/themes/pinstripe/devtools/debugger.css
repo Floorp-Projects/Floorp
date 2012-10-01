@@ -299,6 +299,14 @@
   opacity: 0.5;
 }
 
+@media (min-resolution: 2dppx) {
+  .variable[non-writable] > .title:after,
+  .property[non-writable] > .title:after {
+    background-image: url("chrome://browser/skin/identity-icons-https@2x.png");
+    background-size: 32px;
+  }
+}
+
 #element-tooltip > label {
   margin: 0 2px 0 2px;
 }

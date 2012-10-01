@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/SVGPointListBinding.h"
 #include "dombindings.h"
 
 // See the comment in this file's header.
@@ -102,8 +103,14 @@ DOMSVGPointList::~DOMSVGPointList()
 JSObject*
 DOMSVGPointList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
-  return mozilla::dom::oldproxybindings::SVGPointList::create(cx, scope, this,
-                                                     triedToWrap);
+  JSObject* obj = mozilla::dom::SVGPointListBinding::Wrap(cx, scope, this,
+                                                          triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return mozilla::dom::oldproxybindings::SVGPointList::create(cx, scope, this);
 }
 
 nsIDOMSVGPoint*
