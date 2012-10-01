@@ -9,7 +9,6 @@
 #ifndef nsIntervalSet_h___
 #define nsIntervalSet_h___
 
-#include "prtypes.h"
 #include "nsCoord.h"
 #include "nsDebug.h"
 
