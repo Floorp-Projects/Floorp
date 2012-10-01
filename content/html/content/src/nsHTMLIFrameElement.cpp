@@ -8,6 +8,7 @@
 #include "nsHTMLIFrameElement.h"
 #include "nsIDOMSVGDocument.h"
 #include "nsMappedAttributes.h"
+#include "nsAttrValueInlines.h"
 #include "nsError.h"
 #include "nsRuleData.h"
 #include "nsStyleConsts.h"

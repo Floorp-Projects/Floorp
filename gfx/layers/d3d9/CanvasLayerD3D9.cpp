@@ -58,9 +58,9 @@ CanvasLayerD3D9::Initialize(const Data& aData)
 void
 CanvasLayerD3D9::UpdateSurface()
 {
-  if (!mDirty && mTexture)
+  if (!IsDirty() && mTexture)
     return;
-  mDirty = false;
+  Painted();
 
   if (!mTexture) {
     CreateTexture();

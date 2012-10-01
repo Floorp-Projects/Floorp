@@ -206,6 +206,17 @@ richlistitem[type="download"][state="1"]:hover {
                                     14, 34, 34, 14);
 }
 
+@media (min-resolution: 2dppx) {
+  #downloads-indicator-icon:not(:-moz-lwtheme-brighttext) {
+    background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 0, 280, 40, 240);
+    background-size: 20px;
+  }
+
+  #downloads-indicator:not([counter]) #downloads-indicator-counter {
+    background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 0, 280, 40, 240);
+  }
+}
+
 /*** Event notification ***/
 
 #downloads-indicator-notification {

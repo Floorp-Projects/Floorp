@@ -88,6 +88,25 @@ notification[type="critical"] {
               0 0 0 2px -moz-mac-focusring inset;
 }
 
+@media (min-resolution: 2dppx) {
+  .messageCloseButton {
+    list-style-image: url("chrome://global/skin/icons/close@2x.png");
+    -moz-image-region: rect(0, 32px, 32px, 0);
+  }
+
+  .messageCloseButton:hover {
+    -moz-image-region: rect(0, 64px, 32px, 32px);
+  }
+
+  .messageCloseButton:hover:active {
+    -moz-image-region: rect(0, 96px, 32px, 64px);
+  }
+
+  .messageCloseButton > .toolbarbutton-icon {
+    width: 16px;
+  }
+}
+
 /* Popup notification */
 
 .popup-notification-description {

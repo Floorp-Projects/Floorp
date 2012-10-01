@@ -251,19 +251,3 @@
    fun:_ZN22nsComponentManagerImpl17ManifestComponentERNS_25ManifestProcessingContextEiPKPc
    ...
 }
-{
-   Bug 795395
-   Memcheck:Addr4
-   fun:PR_UnloadLibrary
-   fun:_ZN18nsGSettingsServiceD1Ev
-   fun:_ZN18nsGSettingsService7ReleaseEv
-   fun:_ZL29nsGSettingsServiceConstructorP11nsISupportsRK4nsIDPPv
-   ...
-}
-{
-   Bug 795631
-   Memcheck:Cond
-   fun:_ZN7mozilla17FrameLayerBuilder18ClippedDisplayItemD1Ev
-   fun:_ZN12nsTHashtableIN7mozilla17FrameLayerBuilder21ThebesLayerItemsEntryEE12s_ClearEntryEP12PLDHashTableP15PLDHashEntryHdr
-   ...
-}

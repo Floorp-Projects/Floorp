@@ -7,6 +7,7 @@
 #include "nsStyledElement.h"
 #include "nsGkAtoms.h"
 #include "nsAttrValue.h"
+#include "nsAttrValueInlines.h"
 #include "nsGenericElement.h"
 #include "nsMutationEvent.h"
 #include "nsDOMCSSDeclaration.h"
@@ -251,21 +252,8 @@ nsStyledElementNotElementCSSInlineStyle::ParseStyleAttribute(const nsAString& aV
       }
     }
 
-    if (isCSS) {
-      css::Loader* cssLoader = doc->CSSLoader();
-      nsCSSParser cssParser(cssLoader);
-
-      nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-
-      nsRefPtr<css::StyleRule> rule;
-      cssParser.ParseStyleAttribute(aValue, doc->GetDocumentURI(),
-                                    baseURI,
-                                    NodePrincipal(),
-                                    getter_AddRefs(rule));
-      if (rule) {
-        aResult.SetTo(rule, &aValue);
-        return;
-      }
+    if (isCSS && aResult.ParseStyleAttribute(aValue, this)) {
+      return;
     }
   }
 

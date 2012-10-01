@@ -6,7 +6,6 @@ DEPTH            = @DEPTH@
 topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
-FAIL_ON_WARNINGS := 1
 
 MODULE           = dom
 LIBRARY_NAME     = dombindings_s
@@ -59,6 +58,7 @@ EXPORTS_$(binding_include_path) = \
   DOMJSClass.h \
   DOMJSProxyHandler.h \
   Errors.msg \
+  NonRefcountedDOMObject.h \
   Nullable.h \
   PrimitiveConversions.h \
   PrototypeList.h \

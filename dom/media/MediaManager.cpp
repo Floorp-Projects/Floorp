@@ -475,7 +475,7 @@ public:
   {
     NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-    uint32_t audioCount, videoCount, total, i;
+    uint32_t audioCount, videoCount, i;
     MediaManager* manager = MediaManager::Get();
 
     nsTArray<nsRefPtr<MediaEngineVideoSource> > videoSources;
@@ -485,8 +485,6 @@ public:
     nsTArray<nsRefPtr<MediaEngineAudioSource> > audioSources;
     manager->GetBackend()->EnumerateAudioDevices(&audioSources);
     audioCount = videoSources.Length();
-
-    total = videoCount + audioCount;
 
     nsTArray<nsCOMPtr<nsIMediaDevice> > *devices =
       new nsTArray<nsCOMPtr<nsIMediaDevice> >;

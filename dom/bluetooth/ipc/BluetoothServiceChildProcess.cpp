@@ -226,6 +226,19 @@ BluetoothServiceChildProcess::GetSocketViaService(
   return NS_ERROR_FAILURE;
 }
 
+
+nsresult
+BluetoothServiceChildProcess::ListenSocketViaService(
+  int aChannel,
+  BluetoothSocketType aType,
+  bool aAuth,
+  bool aEncrypt,
+  mozilla::ipc::UnixSocketConsumer* aConsumer)
+{
+  MOZ_NOT_REACHED("This should never be called!");
+  return NS_ERROR_FAILURE;
+}
+
 bool
 BluetoothServiceChildProcess::SetPinCodeInternal(
                                                 const nsAString& aDeviceAddress,
@@ -324,6 +337,18 @@ BluetoothServiceChildProcess::DisconnectObjectPush(
   BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, DisconnectObjectPushRequest());
+}
+
+bool
+BluetoothServiceChildProcess::SendFile(
+  const nsAString& aDeviceAddress,
+  BlobParent* aBlobParent,
+  BlobChild* aBlobChild,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+              SendFileRequest(nsString(aDeviceAddress), nullptr, aBlobChild));
+  return true;
 }
 
 nsresult

@@ -1390,6 +1390,26 @@ public:
   void Updated() { mDirty = true; SetInvalidRectToVisibleRegion(); }
 
   /**
+   * Notify this CanvasLayer that the canvas surface contents have
+   * been painted since the last change.
+   */
+  void Painted() { mDirty = false; }
+
+  /**
+   * Returns true if the canvas surface contents have changed since the
+   * last paint.
+   */
+  bool IsDirty() 
+  { 
+    // We can only tell if we are dirty if we're part of the
+    // widget's retained layer tree.
+    if (!mManager || !mManager->IsWidgetLayerManager()) {
+      return true;
+    }
+    return mDirty; 
+  }
+
+  /**
    * Register a callback to be called at the end of each transaction.
    */
   typedef void (* DidTransactionCallback)(void* aClosureData);
@@ -1443,6 +1463,8 @@ protected:
   DidTransactionCallback mCallback;
   void* mCallbackData;
   gfxPattern::GraphicsFilter mFilter;
+
+private:
   /**
    * Set to true in Updated(), cleared during a transaction.
    */

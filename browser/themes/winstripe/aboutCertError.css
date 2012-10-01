@@ -37,7 +37,7 @@ h2 {
   background-origin: content-box;
 }
 
-#errorPageContainer:dir(rtl) {
+#errorPageContainer:-moz-dir(rtl) {
   background-position: right 0;
 }
 
@@ -59,7 +59,7 @@ h2 {
   cursor: pointer;
 }
 
-.expander > button:dir(rtl) {
+.expander > button:-moz-dir(rtl) {
   background-position: right center;
 }
 
@@ -67,6 +67,6 @@ h2 {
   background-image: url("chrome://browser/skin/aboutCertError_sectionCollapsed.png");
 }
 
-.expander[collapsed] > button:dir(rtl) {
+.expander[collapsed] > button:-moz-dir(rtl) {
   background-image: url("chrome://browser/skin/aboutCertError_sectionCollapsed-rtl.png");
 }

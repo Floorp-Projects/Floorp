@@ -206,11 +206,13 @@ class Configuration:
         if 'list_classes' not in config:
             raise UserError(filename + ": `%s` was not defined." % name)
         self.list_classes = {}
+        self.newBindingHeaders = []
         for clazz in config['list_classes']:
             self.list_classes[clazz['name']] = \
                 DOMClass(name = clazz['name'],
                          nativeClass = clazz['nativeClass'],
                          prefable = False)
+            self.newBindingHeaders.append(clazz.get('newBindingHeader', "mozilla/dom/" + clazz['name'] + "Binding.h"))
 
         # optional settings
         if 'prefableClasses' in config:
@@ -329,16 +331,16 @@ listDefinitionTemplate = (
 "class ${name} {\n"
 "public:\n"
 "    template<typename I>\n"
-"    static JSObject *create(JSContext *cx, JSObject *scope, I *list, bool *triedToWrap)\n"
+"    static JSObject *create(JSContext *cx, JSObject *scope, I *list)\n"
 "    {\n"
-"        return create(cx, scope, list, list, triedToWrap);\n"
+"        return create(cx, scope, list, list);\n"
 "    }\n"
 "\n"
 "    static bool objIsWrapper(JSObject *obj);\n"
 "    static ${nativeClass} *getNative(JSObject *obj);\n"
 "\n"
 "private:\n"
-"    static JSObject *create(JSContext *cx, JSObject *scope, ${nativeClass} *list, nsWrapperCache *cache, bool *triedToWrap);\n"
+"    static JSObject *create(JSContext *cx, JSObject *scope, ${nativeClass} *list, nsWrapperCache *cache);\n"
 "};"
 "\n"
 "\n")
@@ -434,6 +436,18 @@ listTemplate = (
 "    interface_hasInstance,\n"
 "    NULL                    /* construct   */\n"
 "};\n"
+"\n"
+"// static\n"
+"template<>\n"
+"bool\n"
+"${name}Wrapper::DefineDOMInterface(JSContext *cx, JSObject *receiver, bool *enabled)\n"
+"{\n"
+"  bool ok = mozilla::dom::${name}Binding::DefineDOMInterface(cx, receiver, enabled);\n"
+"  if (ok || *enabled) {\n"
+"    return ok;\n"
+"  }\n"
+"  return getPrototype(cx, receiver);\n"
+"}\n"
 "\n")
 
 derivedClassTemplate = (
@@ -554,9 +568,9 @@ listTemplateFooter = (
 "template class ListBase<${name}Class>;\n"
 "\n"
 "JSObject*\n"
-"${name}::create(JSContext *cx, JSObject *scope, ${nativeClass} *list, nsWrapperCache *cache, bool *triedToWrap)\n"
+"${name}::create(JSContext *cx, JSObject *scope, ${nativeClass} *list, nsWrapperCache *cache)\n"
 "{\n"
-"    return ${name}Wrapper::create(cx, scope, list, cache, triedToWrap);\n"
+"    return ${name}Wrapper::create(cx, scope, list, cache);\n"
 "}\n"
 "\n"
 "bool\n"
@@ -634,6 +648,8 @@ def writeStubFile(filename, config, interfaces):
                         addType(types, p.realtype, config.irregularFilenames)
 
         f.write("".join([("#include \"%s.h\"\n" % re.sub(r'(([^:]+::)*)', '', type)) for type in sorted(types)]))
+        for newBindingHeader in config.newBindingHeaders:
+            f.write("#include \"" + newBindingHeader + "\"\n")
         f.write("\n")
 
         f.write("namespace mozilla {\n"

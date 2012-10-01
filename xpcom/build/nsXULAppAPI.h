@@ -125,6 +125,13 @@
 #define XRE_UPDATE_ROOT_DIR "UpdRootD"
 
 /**
+ * A directory service key which provides the directory where an OS update is
+*  applied.
+ * At present this is supported only in Gonk.
+ */
+#define XRE_OS_UPDATE_APPLY_TO_DIR "OSUpdApplyToD"
+
+/**
  * Platform flag values for XRE_main.
  *
  * XRE_MAIN_FLAG_USE_METRO - On Windows, use the winrt backend. Defaults

@@ -305,12 +305,17 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
         --i;
         // prefix doesn't need regetting. it is always null or a static atom
         // local name is never null
-        nsCOMPtr<nsIAtom> localName = Reget(attributes->getLocalName(i));
-        int32_t nsuri = attributes->getURI(i);
+        nsCOMPtr<nsIAtom> localName =
+          Reget(attributes->getLocalNameNoBoundsCheck(i));
+        int32_t nsuri = attributes->getURINoBoundsCheck(i);
         if (!node->HasAttr(nsuri, localName)) {
           // prefix doesn't need regetting. it is always null or a static atom
           // local name is never null
-          node->SetAttr(nsuri, localName, attributes->getPrefix(i), *(attributes->getValue(i)), true);
+          node->SetAttr(nsuri,
+                        localName,
+                        attributes->getPrefixNoBoundsCheck(i),
+                        *(attributes->getValueNoBoundsCheck(i)),
+                        true);
           // XXX what to do with nsresult?
         }
       }
@@ -404,19 +409,26 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
         --i;
         // prefix doesn't need regetting. it is always null or a static atom
         // local name is never null
-        nsCOMPtr<nsIAtom> localName = Reget(attributes->getLocalName(i));
+        nsCOMPtr<nsIAtom> localName =
+          Reget(attributes->getLocalNameNoBoundsCheck(i));
         if (ns == kNameSpaceID_XHTML &&
             nsHtml5Atoms::a == name &&
             nsHtml5Atoms::name == localName) {
           // This is an HTML5-incompliant Geckoism.
           // Remove when fixing bug 582361
-          NS_ConvertUTF16toUTF8 cname(*(attributes->getValue(i)));
+          NS_ConvertUTF16toUTF8 cname(*(attributes->getValueNoBoundsCheck(i)));
           NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
-          newContent->SetAttr(attributes->getURI(i), localName,
-              attributes->getPrefix(i), uv, false);
+          newContent->SetAttr(attributes->getURINoBoundsCheck(i),
+                              localName,
+                              attributes->getPrefixNoBoundsCheck(i),
+                              uv,
+                              false);
         } else {
-          newContent->SetAttr(attributes->getURI(i), localName,
-              attributes->getPrefix(i), *(attributes->getValue(i)), false);
+          newContent->SetAttr(attributes->getURINoBoundsCheck(i),
+                              localName,
+                              attributes->getPrefixNoBoundsCheck(i),
+                              *(attributes->getValueNoBoundsCheck(i)),
+                              false);
         }
       }
 

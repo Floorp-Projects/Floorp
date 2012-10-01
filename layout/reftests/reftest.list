@@ -141,6 +141,10 @@ skip-if(Android||B2G) include first-letter/reftest.list
 # first-line/
 include first-line/reftest.list
 
+# flexbox (display: flex, display: inline-flex)
+# XXXdholbert Uncomment if MOZ_FLEXBOX is enabled:
+# include flexbox/reftest.list
+
 # floats/
 include floats/reftest.list
 

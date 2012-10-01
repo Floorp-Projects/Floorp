@@ -1738,7 +1738,11 @@ public:
     /* Set if the frame is in a context where non-replaced blocks should
      * shrink-wrap (e.g., it's floating, absolutely positioned, or
      * inline-block). */
-    eShrinkWrap =        1 << 0
+    eShrinkWrap =        1 << 0,
+    /* Set if we'd like to compute our 'auto' height, regardless of our actual
+     * computed value of 'height'. (e.g. to get an intrinsic height for flex
+     * items with "min-height: auto" to use during flexbox layout.) */
+    eUseAutoHeight =     1 << 1
   };
 
   /**
