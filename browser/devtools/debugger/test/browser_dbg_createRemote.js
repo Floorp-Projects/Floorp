@@ -7,7 +7,9 @@
 
 var gWindow = null;
 var gTab = null;
+var gRemoteHost = null;
 var gRemotePort = null;
+var gRemoteTimeout = null;
 var gAutoConnect = null;
 
 const TEST_URL = EXAMPLE_URL + "browser_dbg_iframes.html";
@@ -18,8 +20,12 @@ function test() {
     gWindow = aWindow;
     let gDebugger = gWindow.contentWindow;
 
+    info("Current remote host: " +
+      Services.prefs.getCharPref("devtools.debugger.remote-host"));
     info("Current remote port: " +
       Services.prefs.getIntPref("devtools.debugger.remote-port"));
+    info("Current remote timeout: " +
+      Services.prefs.getIntPref("devtools.debugger.remote-timeout"));
     info("Current autoconnect flag: " +
       Services.prefs.getBoolPref("devtools.debugger.remote-autoconnect"));
 
@@ -66,18 +72,22 @@ function test() {
     }
     DebuggerServer.closeListener();
 
+    gRemoteHost = Services.prefs.getCharPref("devtools.debugger.remote-host");
     gRemotePort = Services.prefs.getIntPref("devtools.debugger.remote-port");
+    gRemoteTimeout = Services.prefs.getIntPref("devtools.debugger.remote-timeout");
     gAutoConnect = Services.prefs.getBoolPref("devtools.debugger.remote-autoconnect");
 
     // Open the listener at some point in the future to test automatic reconnect.
-    openListener(gRemotePort + 1);
+    openListener(gRemoteHost, gRemotePort + 1, gRemoteTimeout / 10);
   });
 }
 
 let attempts = 0;
 
-function openListener(port) {
+function openListener(host, port, timeout) {
+  Services.prefs.setCharPref("devtools.debugger.remote-host", host);
   Services.prefs.setIntPref("devtools.debugger.remote-port", port);
+  Services.prefs.setIntPref("devtools.debugger.remote-timeout", timeout);
   Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", true);
 
   info("Attempting to open a new listener on port " + port);
@@ -101,11 +111,15 @@ function openListener(port) {
 }
 
 registerCleanupFunction(function() {
+  Services.prefs.setCharPref("devtools.debugger.remote-host", gRemoteHost);
   Services.prefs.setIntPref("devtools.debugger.remote-port", gRemotePort);
+  Services.prefs.setIntPref("devtools.debugger.remote-timeout", gRemoteTimeout);
   Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", gAutoConnect);
   removeTab(gTab);
   gWindow = null;
   gTab = null;
+  gRemoteHost = null;
   gRemotePort = null;
+  gRemoteTimeout = null;
   gAutoConnect = null;
 });
