@@ -11,7 +11,6 @@
 #ifndef nsQuickSort_h___
 #define nsQuickSort_h___
 
-#include "prtypes.h"
 #include "nscore.h"
 
 #ifdef __cplusplus

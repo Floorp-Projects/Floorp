@@ -10,7 +10,6 @@
 #include <ctype.h>
 #include "plstr.h"
 #include "nscore.h"
-#include "prtypes.h"
 #include "nsCppSharedAllocator.h"
 #include "nsCRTGlue.h"
 
