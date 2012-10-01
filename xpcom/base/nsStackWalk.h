@@ -12,7 +12,6 @@
 
 #include "nscore.h"
 #include <mozilla/StandardInteger.h>
-#include "prtypes.h"
 
 #ifdef __cplusplus
 extern "C" {

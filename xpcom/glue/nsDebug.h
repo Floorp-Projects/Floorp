@@ -21,8 +21,6 @@
 #include "prprf.h"
 #endif
 
-#include "prtypes.h"
-
 #ifdef DEBUG
 
 /**
