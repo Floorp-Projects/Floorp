@@ -751,7 +751,7 @@ nsresult nsPluginHost::FindProxyForURL(const char* url, char* *result)
     return res;
 
   proxyService2 = do_QueryInterface(proxyService, &res);
-  if (NS_FAILED(res) || !proxyService)
+  if (NS_FAILED(res) || !proxyService2)
     return res;
 
   ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &res);
