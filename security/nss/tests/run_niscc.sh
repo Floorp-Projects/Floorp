@@ -1,657 +1,978 @@
 #!/bin/bash
 #
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is the Netscape security libraries.
-#
-# The Initial Developer of the Original Code is
-# Sun Microsystems, Inc..
-# Portions created by the Initial Developer are Copyright (C) 2004-2009
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This script runs NSS against test data provided by the United Kingdom
-# National Infrastructure Security Co-ordination Centre (NISCC).
-# The test data is not public and is not provided with this script.
-########################################################################
-# Base location to work from
-NISCC_HOME=${NISCC_HOME:-/niscc}
-export NISCC_HOME
-# Set to where special NSS version exists. 
-NSS_HACK=${NSS_HACK:-${NISCC_HOME}/nss_hack}; export NSS_HACK
-# NSS version to test
-LOCALDIST=${LOCALDIST:-/share/builds/sbstools/nsstools}
-export LOCALDIST
-# If true, do not rebuild client and server directories
-NO_SETUP=${NO_SETUP:-"false"}; export NO_SETUP
-# location of NISCC SSL testcases
-TEST=${TEST:-"${NISCC_HOME}/NISCC_SSL_testcases"}; export TEST
-# build the fully qualified domain name
-# NOTE: domainname(1) may return the wrong domain in NIS environments
-DOMSUF=${DOMSUF:-`domainname`}
-if [ -z "$HOST" ]; then
-	HOST=`uname -n`
-fi
-HOSTNAME=$HOST.$DOMSUF; export HOSTNAME
-# Who and how to mail the output to
-QA_LIST=${QA_LIST:-"nobody@localhost"}; export QA_LIST
-MAIL_COMMAND=${MAIL_COMMAND:-/bin/mail}; export MAIL_COMMAND
-# Whether or not to archive the logs
-LOG_STORE=${LOG_STORE:-"false"}; export LOG_STORE
+#
+# PRIOR TO RUNNING THIS SCRIPT
+# you should adjust MAIL_COMMAND and QA_LIST
+#
+# External dependencies:
+# - install the NISCC test files, e.g. at /niscc (readonly OK)
+# - libfaketimeMT because the test certificates have expired
+# - build environment for building NSS
+# - gdb to analyze core files
+# - a command line mail tool (e.g. mailx)
+# - openssl to combine input PEM files into pkcs#12
+# - curl for obtaining version information from the web
+#
 
+################################################################################
+# Print script usage
+################################################################################
+usage()
+{
+    cat << EOF
+Usage: $0 [options]
 
-##############################################################
-# set build dir, bin and lib directories
-##############################################################
+Test NSS library against NISCC SMIME and TLS testcases.
+
+Options:
+ -h, --help           print this help message and exit
+ -v, --verbose        enable extra verbose output
+     --niscc-home DIR use NISCC testcases from directory DIR (default /niscc)
+     --host HOST      use host HOST (default '127.0.0.1')
+     --threads X      set thread number to X (max. 10, default 10)
+     --out DIR        set DIR as output directory (default '/out')
+     --mail ADDRESS   send mail with test result to ADDRESS
+     --nss DIR        set NSS directory to DIR (default '~/cvs/nss')
+     --nss-hack DIR   set hacked NSS directory to DIR (default '~/cvs/nss_hack')
+     --log-store      store all the logs (only summary by default)
+     --no-build-test  don't pull and build tested NSS
+     --no-build-hack  don't pull and build hacked NSS
+     --test-system    test system installed NSS
+     --date DATE      use DATE in log archive name and outgoing email
+     --libfaketime path.so  use faketime library with LD_PRELOAD=path.so
+     --smallset       test only a very small subset
+
+All options are optional.
+All options (and possibly more) can be also set through environment variables.
+Commandline options have higher priority than environment variables.
+For more information please refer to the source code of this script.
+
+For a successfull run the script NEEDS the core file pattern to be 'core.*',
+e.g. 'core.%t'. You can check the current pattern in
+'/proc/sys/kernel/core_pattern'. Otherwise the test will be unable to detect
+any failures and will pass every time.
+
+It is recommended to use hacked and tested binaries in a location, where their
+absolute path is max. 80 characters. If their path is longer and a core file is
+generated, its properties may be incomplete.
+
+Return value of the script indicates how many failures it experienced.
+
+EOF
+    exit $1
+}
+
+################################################################################
+# Process command-line arguments
+################################################################################
+process_args()
+{
+    HELP="false"
+    args=`getopt -u -l "niscc-home:,host:,threads:,out:,verbose,mail:,nss:,nss-hack:,log-store,no-build-test,no-build-hack,help,test-system,date:,libfaketime:,smallset" -- "hv" $*`
+    [ "$?" != "0" ] && usage 1
+    set -- $args
+    for i; do
+        case "$i" in
+            -v|--verbose)
+                shift
+                VERBOSE="-v"
+                ;;
+            --niscc-home)
+                shift
+                NISCC_HOME="$1"
+                shift
+                ;;
+            --host)
+                shift
+                HOST="$1"
+                shift
+                ;;
+            --threads)
+                shift
+                THREADS="$1"
+                shift
+                ;;
+            --out)
+                shift
+                TEST_OUTPUT="$1"
+                shift
+                ;;
+            --mail)
+                shift
+                USE_MAIL="true"
+                QA_LIST="$1"
+                shift
+                ;;
+            --nss)
+                shift
+                LOCALDIST="$1"
+                shift
+                ;;
+            --nss-hack)
+                shift
+                NSS_HACK="$1"
+                shift
+                ;;
+            --log-store)
+                shift
+                LOG_STORE="true"
+                ;;
+            --no-build-test)
+                shift
+                NO_BUILD_TEST="true"
+                ;;
+            --no-build-hack)
+                shift
+                NO_BUILD_HACK="true"
+                ;;
+            -h|--help)
+                shift
+                HELP="true"
+                ;;
+            --test-system)
+                shift
+                TEST_SYSTEM="true"
+                ;;
+            --date)
+                shift
+                DATE="$1"
+                shift
+                ;;
+            --libfaketime)
+                shift
+                FAKETIMELIB="$1"
+                shift
+                ;;
+            --smallset)
+                shift
+                SMALLSET="true"
+                ;;
+            --)
+                ;;
+            *)
+                ;;
+        esac
+    done
+    [ $HELP = "true" ] && usage 0
+}
+
+################################################################################
+# Create and set needed and useful environment variables
+################################################################################
+create_environment()
+{
+    # Base location of NISCC testcases
+    export NISCC_HOME=${NISCC_HOME:-/niscc}
+
+    # Base location of NSS
+    export CVS=${CVS:-"$HOME/cvs"}
+
+    # NSS being tested
+    export LOCALDIST=${LOCALDIST:-"${CVS}/nss"}
+
+    # Hacked NSS - built with "NISCC_TEST=1"
+    export NSS_HACK=${NSS_HACK:-"${CVS}/nss_hack"}
+
+    # Hostname of the testmachine
+    export HOST=${HOST:-127.0.0.1}
+
+    # Whether to store logfiles
+    export LOG_STORE=${LOG_STORE:-"false"}
+
+    # Whether to mail the summary
+    export USE_MAIL=${USE_MAIL:-"false"}
+
+    # How to mail summary
+    export MAIL_COMMAND=${MAIL_COMMAND:-"mailx -S smtp=smtp://your.smtp.server:25 -r your+niscc@email.address"}
+
+    # List of mail addresses where to send summary
+    export QA_LIST=${QA_LIST:-"result@recipient.address"}
+
+    # Whether to use 64b build
+    export USE_64=${USE_64:-1}
+
+    # Directory where to write all the output data (around 650MiB for each run)
+    export TEST_OUTPUT=${TEST_OUTPUT:-"$HOME/out"}
+
+    # How many threads to use in selfserv and strsclnt (max. 10)
+    export THREADS=${THREADS:-10}
+
+    # If true, do not build tthe tested version of NSS
+    export NO_BUILD_TEST=${NO_BUILD_TEST:-"false"}
+
+    # If true, do not build the special NSS version for NISCC
+    export NO_BUILD_HACK=${NO_BUILD_HACK:-"false"}
+
+    # If true, do not rebuild client and server directories
+    export NO_SETUP=${NO_SETUP:-"false"}
+
+    # Location of NISCC SSL/TLS testcases
+    export TEST=${TEST:-"${NISCC_HOME}/NISCC_SSL_testcases"}
+
+    # If true, then be extra verbose
+    export VERBOSE=${VERBOSE:-""}
+
+    # If true, test the system installed NSS
+    export TEST_SYSTEM=${TEST_SYSTEM:-"false"}
+    [ "$TEST_SYSTEM" = "true" ] && export NO_BUILD_TEST="true"
+
+    [ ! -z "$VERBOSE" ] && set -xv
+
+    # Real date for naming of archives (system date must be 2002-11-18 .. 2007-11-18 due to certificate validity
+    DATE=${DATE:-`date`}
+    export DATE=`date -d "$DATE" +%Y%m%d`
+
+    FAKETIMELIB=${FAKETIMELIB:-""}
+    export DATE=`date -d "$DATE" +%Y%m%d`
+
+    # Whether to test only a very small subset
+    export SMALLSET=${SMALLSET:-"false"}
+
+    # Create output dir if it doesn't exist
+    mkdir -p ${TEST_OUTPUT}
+}
+
+################################################################################
+# Do a cvs pull of NSS
+################################################################################
+cvs_pull()
+{
+    # Tested NSS - by default using current CVS HEAD
+    if [ "$NO_BUILD_TEST" = "false" ]; then
+        echo "cloning NSS sources to be tested from CVS"
+        [ ! -d "$LOCALDIST" ] && mkdir -p "$LOCALDIST"
+        cd "$LOCALDIST"
+        cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r HEAD NSPR &>> $TEST_OUTPUT/nisccBuildLog
+        cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r HEAD NSS &>> $TEST_OUTPUT/nisccBuildLog
+        #find . -exec touch {} \;
+    fi
+
+    # Hacked NSS - by default using some RTM version.
+    # Do not use HEAD for hacked NSS - it needs to be stable and bug-free
+    if [ "$NO_BUILD_HACK" = "false" ]; then
+        echo "cloning NSS sources for a hacked build from CVS"
+        [ ! -d "$NSS_HACK" ] && mkdir -p "$NSS_HACK"
+        cd "$NSS_HACK"
+        NSPR_TAG=`curl http://hg.mozilla.org/releases/mozilla-aurora/raw-file/default/nsprpub/TAG-INFO | head -1 | awk '{print $1}'`
+        NSS_TAG=`curl http://hg.mozilla.org/releases/mozilla-aurora/raw-file/default/security/nss/TAG-INFO | head -1 | awk '{print $1}'`
+        cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r $NSPR_TAG NSPR &>> $TEST_OUTPUT/nisccBuildLogHack
+        cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r $NSS_TAG NSS &>> $TEST_OUTPUT/nisccBuildLogHack
+        #find . -exec touch {} \;
+    fi
+}
+
+################################################################################
+# Build NSS after setting make variable NISCC_TEST
+################################################################################
+build_NSS()
+{
+    # Tested NSS
+    if [ "$NO_BUILD_TEST" = "false" ]; then
+        echo "building NSS to be tested"
+        cd "$LOCALDIST"
+        unset NISCC_TEST
+        cd mozilla/security/nss
+        gmake nss_clean_all &>> $TEST_OUTPUT/nisccBuildLog
+        gmake nss_build_all &>> $TEST_OUTPUT/nisccBuildLog
+    fi
+
+    # Hacked NSS
+    if [ "$NO_BUILD_HACK" = "false" ]; then
+        echo "building hacked NSS"
+        cd "$NSS_HACK"
+        export NISCC_TEST=1
+        cd mozilla/security/nss
+        gmake nss_clean_all &>> $TEST_OUTPUT/nisccBuildLogHack
+        gmake nss_build_all &>> $TEST_OUTPUT/nisccBuildLogHack
+    fi
+
+    unset NISCC_TEST
+}
+
+################################################################################
+# Set build dir, bin and lib directories
+################################################################################
 init()
 {
-  #enable useful core files to be generated in case of crash
-  ulimit -c unlimited
+    # Enable useful core files to be generated in case of crash
+    ulimit -c unlimited
 
-# gmake is needed in the path for this suite to run
-  PATH=/usr/bin:/usr/sbin:/usr/local/bin:/tools/ns/bin; export PATH
-  echo "PATH $PATH" >> $NISCC_HOME/nisccLog00
+    # Pattern of core files, they should be created in current directory
+    echo "core_pattern $(cat /proc/sys/kernel/core_pattern)" > "$TEST_OUTPUT/nisccLog00"
 
-  DISTTYPE=`cd ${NSS_HACK}/mozilla/security/nss/tests/common; gmake objdir_name`
-  echo "DISTTYPE ${DISTTYPE}" >> $NISCC_HOME/nisccLog00
-  HACKBIN=${NSS_HACK}/mozilla/dist/${DISTTYPE}/bin; export HACKBIN
-  HACKLIB=${NSS_HACK}/mozilla/dist/${DISTTYPE}/lib; export HACKLIB
+    # gmake is needed in the path for this suite to run
+    echo "PATH $PATH" >> "$TEST_OUTPUT/nisccLog00"
 
-  TESTBIN=${LOCALDIST}/mozilla/dist/${DISTTYPE}/bin; export TESTBIN
-  TESTLIB=${LOCALDIST}/mozilla/dist/${DISTTYPE}/lib; export TESTLIB
+    # Find out hacked NSS version
+    DISTTYPE=`cd "$NSS_HACK/mozilla/security/nss/tests/common"; gmake objdir_name`
+    echo "NSS_HACK DISTTYPE $DISTTYPE" >> "$TEST_OUTPUT/nisccLog00"
+    export HACKBIN="$NSS_HACK/mozilla/dist/$DISTTYPE/bin"
+    export HACKLIB="$NSS_HACK/mozilla/dist/$DISTTYPE/lib"
 
-# Verify NISCC_TEST was set in the proper library
-	if strings ${HACKLIB}/libssl3.so | grep NISCC_TEST > /dev/null 2>&1; then
-		echo "${HACKLIB}/libssl3.so contains NISCC_TEST" >> \
-$NISCC_HOME/nisccLog00
-	else
-		echo "${HACKLIB}/libssl3.so does NOT contain NISCC_TEST" >> \
-$NISCC_HOME/nisccLog00
-	fi
+    if [ "$TEST_SYSTEM" = "false" ]; then
+        # Find out nss version
+        DISTTYPE=`cd "$LOCALDIST/mozilla/security/nss/tests/common"; gmake objdir_name`
+        echo "NSS DISTTYPE $DISTTYPE" >> "$TEST_OUTPUT/nisccLog00"
+        export TESTBIN="$LOCALDIST/mozilla/dist/$DISTTYPE/bin"
+        export TESTLIB="$LOCALDIST/mozilla/dist/$DISTTYPE/lib"
+        export TESTTOOLS="$TESTBIN"
+    else
+        # Using system installed NSS
+        echo "USING SYSTEM NSS" >> "$TEST_OUTPUT/nisccLog00"
+        export TESTBIN="/usr/bin"
+        if [ `uname -m` = "x86_64" ]; then
+            export TESTLIB="/usr/lib64"
+            export TESTTOOLS="/usr/lib64/nss/unsupported-tools"
+        else
+            export TESTLIB="/usr/lib"
+            export TESTTOOLS="/usr/lib/nss/unsupported-tools"
+        fi
+    fi
 
-	if strings ${TESTLIB}/libssl3.so | grep NISCC_TEST > /dev/null 2>&1; then
-		echo "${TESTLIB}/libssl3.so contains NISCC_TEST" >> \
-$NISCC_HOME/nisccLog00
-	else
-		echo "${TESTLIB}/libssl3.so does NOT contain NISCC_TEST" >> \
-$NISCC_HOME/nisccLog00
-	fi
+    # Verify NISCC_TEST was set in the proper library
+    if strings "$HACKLIB/libssl3.so" | grep NISCC_TEST > /dev/null 2>&1; then
+        echo "$HACKLIB/libssl3.so contains NISCC_TEST" >> "$TEST_OUTPUT/nisccLog00"
+    else
+        echo "$HACKLIB/libssl3.so does NOT contain NISCC_TEST" >> "$TEST_OUTPUT/nisccLog00"
+    fi
+
+    if strings "$TESTLIB/libssl3.so" | grep NISCC_TEST > /dev/null 2>&1; then
+        echo "$TESTLIB/libssl3.so contains NISCC_TEST" >> "$TEST_OUTPUT/nisccLog00"
+    else
+        echo "$TESTLIB/libssl3.so does NOT contain NISCC_TEST" >> "$TEST_OUTPUT/nisccLog00"
+    fi
 }
-#end of init section
 
-
-##############################################################
+################################################################################
 # Setup simple client and server directory
-##############################################################
+################################################################################
 ssl_setup_dirs_simple()
 {
-  [ "$NO_SETUP" = "true" ] && return
+    [ "$NO_SETUP" = "true" ] && return
 
-  CLIENT=${NISCC_HOME}/niscc_ssl/simple_client
-  SERVER=${NISCC_HOME}/niscc_ssl/simple_server
+    echo "Setting up working directories for SSL simple tests"
 
-#
-# Setup simple client directory
-#
-  rm -rf $CLIENT
-  mkdir -p $CLIENT
-  echo test > $CLIENT/password-is-test.txt
-  LD_LIBRARY_PATH=${TESTLIB}; export LD_LIBRARY_PATH
-  ${TESTBIN}/certutil -N -d $CLIENT -f $CLIENT/password-is-test.txt >> \
-$NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/certutil -A -d $CLIENT -n rootca -i $TEST/rootca.crt -t \
-"C,C," >> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/pk12util -i $TEST/client_crt.p12 -d $CLIENT -k \
-$CLIENT/password-is-test.txt -W testtest1 >> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/certutil -L -d $CLIENT >> $NISCC_HOME/nisccLog00 2>&1
+    CLIENT="$TEST_OUTPUT/niscc_ssl/simple_client"
+    SERVER="$TEST_OUTPUT/niscc_ssl/simple_server"
 
-  echo "GET /stop HTTP/1.0" > $CLIENT/stop.txt
-  echo ""                  >> $CLIENT/stop.txt
+    # Generate .p12 files
+    openssl pkcs12 -export -inkey "$TEST/client_key.pem" -in "$TEST/client_crt.pem" -out "$TEST_OUTPUT/client_crt.p12" -passout pass:testtest1 -name "client_crt"
+    openssl pkcs12 -export -inkey "$TEST/server_key.pem" -in "$TEST/server_crt.pem" -out "$TEST_OUTPUT/server_crt.p12" -passout pass:testtest1 -name "server_crt"
 
-#
-# Setup simple server directory
-#
-  rm -rf $SERVER
-  mkdir -p $SERVER
-  echo test > $SERVER/password-is-test.txt
-  ${TESTBIN}/certutil -N -d $SERVER -f $SERVER/password-is-test.txt \
->> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/certutil -A -d $SERVER -n rootca -i $TEST/rootca.crt -t \
-"TC,C," >> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/pk12util -i $TEST/server_crt.p12 -d $SERVER -k \
-$SERVER/password-is-test.txt -W testtest1 >> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/certutil -L -d $SERVER >> $NISCC_HOME/nisccLog00 2>&1
+    # Setup simple client directory
+    rm -rf "$CLIENT"
+    mkdir -p "$CLIENT"
+    echo test > "$CLIENT/password-is-test.txt"
+    export LD_LIBRARY_PATH="$TESTLIB"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -N -d "$CLIENT" -f "$CLIENT/password-is-test.txt" >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -A -d "$CLIENT" -n rootca -i "$TEST/rootca.crt" -t "C,C," >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/pk12util" -i "$TEST_OUTPUT/client_crt.p12" -d "$CLIENT" -k "$CLIENT/password-is-test.txt" -W testtest1 >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -L -d "$CLIENT" >> "$TEST_OUTPUT/nisccLog00" 2>&1
 
-  unset LD_LIBRARY_PATH
+    # File containg message used for terminating the server
+    echo "GET /stop HTTP/1.0" > "$CLIENT/stop.txt"
+    echo ""                  >> "$CLIENT/stop.txt"
+
+    # Setup simple server directory
+    rm -rf "$SERVER"
+    mkdir -p "$SERVER"
+    echo test > "$SERVER/password-is-test.txt"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -N -d "$SERVER" -f "$SERVER/password-is-test.txt" >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -A -d "$SERVER" -n rootca -i "$TEST/rootca.crt" -t "TC,C," >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/pk12util" -i "$TEST_OUTPUT/server_crt.p12" -d "$SERVER" -k "$SERVER/password-is-test.txt" -W testtest1 >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -L -d "$SERVER" >> "$TEST_OUTPUT/nisccLog00" 2>&1
+
+    unset LD_LIBRARY_PATH
 }
 
-
-##############################################################
+################################################################################
 # Setup resigned client and server directory
-###############################################################
+################################################################################
 ssl_setup_dirs_resigned()
 {
-  [ "$NO_SETUP" = "true" ] && return
+    [ "$NO_SETUP" = "true" ] && return
 
-  CLIENT=${NISCC_HOME}/niscc_ssl/resigned_client
-  SERVER=${NISCC_HOME}/niscc_ssl/resigned_server
+    echo "Setting up working directories for SSL resigned tests"
 
-#
-# Setup resigned client directory
-#
-  rm -rf $CLIENT
-  mkdir -p $CLIENT
-  echo test > $CLIENT/password-is-test.txt
-  LD_LIBRARY_PATH=${TESTLIB}; export LD_LIBRARY_PATH
-  ${TESTBIN}/certutil -N -d $CLIENT -f $CLIENT/password-is-test.txt \
->> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/certutil -A -d $CLIENT -n rootca -i $TEST/rootca.crt -t \
-"C,C," >> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/pk12util -i $TEST/client_crt.p12 -d $CLIENT -k \
-$CLIENT/password-is-test.txt -W testtest1 >> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/certutil -L -d $CLIENT  >> $NISCC_HOME/nisccLog00 2>&1
+    CLIENT="$TEST_OUTPUT/niscc_ssl/resigned_client"
+    SERVER="$TEST_OUTPUT/niscc_ssl/resigned_server"
 
-  echo "GET /stop HTTP/1.0" > $CLIENT/stop.txt
-  echo ""                  >> $CLIENT/stop.txt
+    # Setup resigned client directory
+    rm -rf "$CLIENT"
+    mkdir -p "$CLIENT"
+    echo test > "$CLIENT/password-is-test.txt"
+    export LD_LIBRARY_PATH="$TESTLIB"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -N -d "$CLIENT" -f "$CLIENT/password-is-test.txt" >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -A -d "$CLIENT" -n rootca -i "$TEST/rootca.crt" -t "C,C," >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/pk12util" -i "$TEST_OUTPUT/client_crt.p12" -d "$CLIENT" -k "$CLIENT/password-is-test.txt" -W testtest1 >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -L -d "$CLIENT" >> "$TEST_OUTPUT/nisccLog00" 2>&1
 
-#
-# Setup resigned server directory
-#
-  rm -rf $SERVER
-  mkdir -p $SERVER
-  echo test > $SERVER/password-is-test.txt
-  ${TESTBIN}/certutil -N -d $SERVER -f $SERVER/password-is-test.txt \
->> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/certutil -A -d $SERVER -n rootca -i $TEST/rootca.crt -t \
-"TC,C," >> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/pk12util -i $TEST/server_crt.p12 -d $SERVER -k \
-$SERVER/password-is-test.txt -W testtest1 >> $NISCC_HOME/nisccLog00 2>&1
-  ${TESTBIN}/certutil -L -d $SERVER >> $NISCC_HOME/nisccLog00 2>&1
+    echo "GET /stop HTTP/1.0" > "$CLIENT/stop.txt"
+    echo ""                  >> "$CLIENT/stop.txt"
 
-  unset LD_LIBRARY_PATH
+    # Setup resigned server directory
+    rm -rf "$SERVER"
+    mkdir -p "$SERVER"
+    echo test > "$SERVER/password-is-test.txt"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -N -d "$SERVER" -f "$SERVER/password-is-test.txt" >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -A -d "$SERVER" -n rootca -i "$TEST/rootca.crt" -t "TC,C," >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/pk12util" -i "$TEST_OUTPUT/server_crt.p12" -d "$SERVER" -k "$SERVER/password-is-test.txt" -W testtest1 >> "$TEST_OUTPUT/nisccLog00" 2>&1
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/certutil" -L -d "$SERVER" >> "$TEST_OUTPUT/nisccLog00" 2>&1
+
+    unset LD_LIBRARY_PATH
 }
 
-
-##############################################################
+################################################################################
 # NISCC SMIME tests
-##############################################################
+################################################################################
 niscc_smime()
 {
-  cd ${NISCC_HOME}/NISCC_SMIME_testcases
+    cd "$TEST_OUTPUT"
+    DATA="$NISCC_HOME/NISCC_SMIME_testcases"
 
-  if [ ! -d ${NISCC_HOME}/niscc_smime ]; then
-	mkdir -p ${NISCC_HOME}/niscc_smime
-  fi
+    [ ! -d niscc_smime ] && mkdir -p niscc_smime
 
-  SMIME_CERT_DB_DIR=envDB; export SMIME_CERT_DB_DIR
-  NSS_STRICT_SHUTDOWN=1; export NSS_STRICT_SHUTDOWN
-  NSS_DISABLE_ARENA_FREE_LIST=1; export NSS_DISABLE_ARENA_FREE_LIST
-  LD_LIBRARY_PATH=${TESTLIB}; export LD_LIBRARY_PATH
+    export SMIME_CERT_DB_DIR=envDB
+    export NSS_STRICT_SHUTDOWN=1
+    export NSS_DISABLE_ARENA_FREE_LIST=1
+    export LD_LIBRARY_PATH="$TESTLIB"
 
-# Generate envDB if needed
-  if [ ! -d $SMIME_CERT_DB_DIR ]; then
-	mkdir -p $SMIME_CERT_DB_DIR
- 	echo testtest1 > password-is-testtest1.txt
-	${TESTBIN}/certutil -N -d ./${SMIME_CERT_DB_DIR} -f \
-password-is-testtest1.txt > /dev/null 2>&1
-	${TESTBIN}/certutil -A -d $SMIME_CERT_DB_DIR -i CA.crt -n CA -t "TC,C,"
-	${TESTBIN}/certutil -A -d $SMIME_CERT_DB_DIR -i Client.crt -n Client \
--t "TC,C,"
-	${TESTBIN}/pk12util -i ./CA.p12 -d $SMIME_CERT_DB_DIR -k \
-./password-is-test.txt -W testtest1 
-	${TESTBIN}/pk12util -i ./Client.p12 -d $SMIME_CERT_DB_DIR -k \
-./password-is-test.txt -W testtest1 
-  fi
+    # Generate .p12 files
+    openssl pkcs12 -export -inkey "$DATA/Client.key" -in "$DATA/Client.crt" -out Client.p12 -passout pass:testtest1 &>/dev/null
+    openssl pkcs12 -export -inkey "$DATA/CA.key" -in "$DATA/CA.crt" -out CA.p12 -passout pass:testtest1 &>/dev/null
 
-# if p7m-ed-m-files.txt does not exist, then generate it.
-  if [ ! -f p7m-ed-m-files.txt ]; then
-	find ./p7m-ed-m-0* -type f -print >> p7m-ed-m-files.txt
-  fi
+    # Generate envDB if needed
+    if [ ! -d "$SMIME_CERT_DB_DIR" ]; then
+        mkdir -p "$SMIME_CERT_DB_DIR"
+        echo testtest1 > password-is-testtest1.txt
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTBIN}/certutil" -N -d "./$SMIME_CERT_DB_DIR" -f password-is-testtest1.txt > /dev/null 2>&1
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTBIN}/certutil" -A -d "$SMIME_CERT_DB_DIR" -f password-is-testtest1.txt -i "$DATA/CA.crt" -n CA -t "TC,C,"
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTBIN}/certutil" -A -d "$SMIME_CERT_DB_DIR" -f password-is-testtest1.txt -i "$DATA/Client.crt" -n Client -t "TC,C,"
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTBIN}/pk12util" -i ./CA.p12 -d "$SMIME_CERT_DB_DIR" -k password-is-testtest1.txt -W testtest1
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTBIN}/pk12util" -i ./Client.p12 -d "$SMIME_CERT_DB_DIR" -k password-is-testtest1.txt -W testtest1
+    fi
 
-  ${TESTBIN}/cmsutil -D -d $SMIME_CERT_DB_DIR -p testtest1 -b -i \
-p7m-ed-m-files.txt > $NISCC_HOME/niscc_smime/p7m-ed-m-results.txt 2>&1 
- 
-  SMIME_CERT_DB_DIR=sigDB; export SMIME_CERT_DB_DIR
-# Generate sigDB if needed
-  if [ ! -d $SMIME_CERT_DB_DIR ]; then
-	mkdir -p $SMIME_CERT_DB_DIR
-	${TESTBIN}/certutil -N -d $SMIME_CERT_DB_DIR -f password-is-testtest1.txt
-	${TESTBIN}/certutil -A -d $SMIME_CERT_DB_DIR -i CA.crt -n CA -t "TC,C,"
-	${TESTBIN}/certutil -A -d $SMIME_CERT_DB_DIR -i Client.crt -n Client \
--t "TC,C,"
-  fi
+    # if p7m-ed-m-files.txt does not exist, then generate it.
+    [ -f "$DATA/p7m-ed-m-files.txt" ] && sed "s|^|$DATA/|" "$DATA/p7m-ed-m-files.txt" > p7m-ed-m-files.txt
+    export P7M_ED_M_FILES=p7m-ed-m-files.txt
+    if [ "$SMALLSET" = "true" ]; then
+        [ ! -f "$P7M_ED_M_FILES" ] && find "$DATA"/p7m-ed-m-0* -type f -print | head -10 >> "$P7M_ED_M_FILES"
+    else
+        [ ! -f "$P7M_ED_M_FILES" ] && find "$DATA"/p7m-ed-m-0* -type f -print >> "$P7M_ED_M_FILES"
+    fi
 
-# if p7m-sd-dt-files.txt does not exist, then generate it.
-  if [ ! -f p7m-sd-dt-files.txt ]; then
-	find ./p7m-sd-dt-[cm]-* -type f -print >> p7m-sd-dt-files.txt
-  fi
+    # Test "p7m-ed-m*" testcases
+    echo "Testing SMIME enveloped data testcases"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/cmsutil" $VERBOSE -D -d "$SMIME_CERT_DB_DIR" -p testtest1 -b -i "$P7M_ED_M_FILES" > niscc_smime/p7m-ed-m-results.txt 2>&1
 
-  if [ ! -f detached.txt ]; then
-	touch detached.txt
-  fi
+    export SMIME_CERT_DB_DIR=sigDB
+    # Generate sigDB if needed
+    if [ ! -d "$SMIME_CERT_DB_DIR" ]; then
+        mkdir -p "$SMIME_CERT_DB_DIR"
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTBIN}/certutil" -N -d "$SMIME_CERT_DB_DIR" -f password-is-testtest1.txt
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTBIN}/certutil" -A -d "$SMIME_CERT_DB_DIR" -i "$DATA/CA.crt" -n CA -t "TC,C,"
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTBIN}/certutil" -A -d "$SMIME_CERT_DB_DIR" -i "$DATA/Client.crt" -n Client -t "TC,C,"
+    fi
 
-  ${TESTBIN}/cmsutil -D -d $SMIME_CERT_DB_DIR -c detached.txt -b -i \
-p7m-sd-dt-files.txt > $NISCC_HOME/niscc_smime/p7m-sd-dt-results.txt 2>&1 
+    # if p7m-sd-dt-files.txt does not exist, then generate it.
+    [ -f "$DATA/p7m-sd-dt-files.txt" ] && sed "s|^|$DATA/|" "$DATA/p7m-sd-dt-files.txt" > p7m-sd-dt-files.txt
+    export P7M_SD_DT_FILES=p7m-sd-dt-files.txt
+    if [ "$SMALLSET" = "true" ]; then
+        [ ! -f "$P7M_SD_DT_FILES" ] && find "$DATA"/p7m-sd-dt-[cm]-* -type f -print | head -10 >> "$P7M_SD_DT_FILES"
+    else
+        [ ! -f "$P7M_SD_DT_FILES" ] && find "$DATA"/p7m-sd-dt-[cm]-* -type f -print >> "$P7M_SD_DT_FILES"
+    fi
 
-# if p7m-sd-op-files.txt does not exist, then generate it.
-  if [ ! -f p7m-sd-op-files.txt ]; then
-	find ./p7m-sd-op-[cm]-* -type f -print >> p7m-sd-op-files.txt
-  fi
+    [ ! -f detached.txt ] && touch detached.txt
 
-  ${TESTBIN}/cmsutil -D -d $SMIME_CERT_DB_DIR -b -i p7m-sd-op-files.txt > \
-$NISCC_HOME/niscc_smime/p7m-sd-op-results.txt 2>&1 
+    # Test "p7m-sd-dt*" testcases
+    echo "Testing SMIME detached signed data testcases"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/cmsutil" $VERBOSE -D -d "$SMIME_CERT_DB_DIR" -c detached.txt -b -i "$P7M_SD_DT_FILES" > niscc_smime/p7m-sd-dt-results.txt 2>&1
 
-  unset LD_LIBRARY_PATH
+    # if p7m-sd-op-files.txt does not exist, then generate it.
+    [ -f "$DATA/p7m-sd-op-files.txt" ] && sed "s|^|$DATA/|" "$DATA/p7m-sd-op-files.txt" > p7m-sd-op-files.txt
+    export P7M_SD_OP_FILES=p7m-sd-op-files.txt
+    if [ "$SMALLSET" = "true" ]; then
+        [ ! -f "$P7M_SD_OP_FILES" ] && find "$DATA"/p7m-sd-op-[cm]-* -type f -print | head -10 >> "$P7M_SD_OP_FILES"
+    else
+        [ ! -f "$P7M_SD_OP_FILES" ] && find "$DATA"/p7m-sd-op-[cm]-* -type f -print >> "$P7M_SD_OP_FILES"
+    fi
 
-  find_core
+    # Test "p7m-sd-op*" testcases
+    echo "Testing SMIME opaque signed data testcases"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTBIN}/cmsutil" $VERBOSE -D -d "$SMIME_CERT_DB_DIR" -b -i "$P7M_SD_OP_FILES" > niscc_smime/p7m-sd-op-results.txt 2>&1
+
+    unset LD_LIBRARY_PATH
 }
-#end of smime section
 
-##############################################################
-# set env variables for NISCC SSL tests
-##############################################################
+################################################################################
+# Set env variables for NISCC SSL tests
+################################################################################
 niscc_ssl_init()
 {
-  NSS_STRICT_SHUTDOWN=1; export NSS_STRICT_SHUTDOWN
-  NSS_DISABLE_ARENA_FREE_LIST=1; export NSS_DISABLE_ARENA_FREE_LIST
-  cd $NISCC_HOME
+    export NSS_STRICT_SHUTDOWN=1
+    export NSS_DISABLE_ARENA_FREE_LIST=1
+    cd "$TEST_OUTPUT"
 }
 
+force_crash()
+{
+    echo "int main(int argc, char *argv[]) { int *i; i = (int*)(void*)1; *i = 1; }" > "$TEST_OUTPUT/crashme.c"
+    gcc -g -o "$TEST_OUTPUT/crashme" "$TEST_OUTPUT/crashme.c"
+    "$TEST_OUTPUT/crashme"
+}
 
-##############################################################
-# do simple client auth tests
+################################################################################
+# Do simple client auth tests
 # Use an altered client against the server
-##############################################################
+################################################################################
 ssl_simple_client_auth()
 {
-  CLIENT=${NISCC_HOME}/niscc_ssl/simple_client; export CLIENT
-  SERVER=${NISCC_HOME}/niscc_ssl/simple_server; export SERVER
-  PORT=8443; export PORT
-  START_AT=1; export START_AT
-  STOP_AT=106160; export STOP_AT
-  unset NISCC_TEST; export NISCC_TEST
-  LD_LIBRARY_PATH=${TESTLIB}; export LD_LIBRARY_PATH
-  ${TESTBIN}/selfserv -p $PORT -d $SERVER -n server_crt -rr -t 5 -w test > \
-$NISCC_HOME/nisccLog01 2>&1 &
-  sleep 10
+    echo "Testing SSL simple client auth testcases"
+    export CLIENT="$TEST_OUTPUT/niscc_ssl/simple_client"
+    export SERVER="$TEST_OUTPUT/niscc_ssl/simple_server"
+    export PORT=8443
+    export START_AT=1
+    if [ "$SMALLSET" = "true" ]; then
+        export STOP_AT=10
+    else
+        export STOP_AT=106160
+    fi
+    unset NISCC_TEST
+    export LD_LIBRARY_PATH="$TESTLIB"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTTOOLS}/selfserv" $VERBOSE -p $PORT -d "$SERVER" -n server_crt -rr -t $THREADS -w test > "$TEST_OUTPUT/nisccLog01" 2>&1 &
 
-  NISCC_TEST=$TEST/simple_client; export NISCC_TEST
-  LD_LIBRARY_PATH=${HACKLIB}; export LD_LIBRARY_PATH
-  ${HACKBIN}/strsclnt -d $CLIENT -n client_crt -p $PORT -t 4 -c 106160 -o -N \
--w test $HOSTNAME > $NISCC_HOME/nisccLog02 2>&1
+    export NISCC_TEST="$TEST/simple_client"
+    export LD_LIBRARY_PATH="$HACKLIB"
 
-  unset NISCC_TEST; export NISCC_TEST
-  echo "starting tstclnt to shutdown simple client selfserv process"
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w \
-test < $CLIENT/stop.txt >> nisccLog02 2>&1
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w \
-test < $CLIENT/stop.txt >> nisccLog02 2>&1
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w \
-test < $CLIENT/stop.txt >> nisccLog02 2>&1
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w \
-test < $CLIENT/stop.txt >> nisccLog02 2>&1
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w \
-test < $CLIENT/stop.txt >> nisccLog02 2>&1
+    for START in `seq $START_AT $THREADS $STOP_AT`; do
+        START_AT=$START \
+        STOP_AT=$(($START+$THREADS)) \
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${HACKBIN}/strsclnt" $VERBOSE -d "$CLIENT" -n client_crt -p $PORT -t $THREADS -c $THREADS -o -N -w test $HOST >> "$TEST_OUTPUT/nisccLog02" 2>&1
+    done
 
-  unset LD_LIBRARY_PATH
+    unset NISCC_TEST
+    echo "starting tstclnt to shutdown simple client selfserv process"
+    for i in `seq 5`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${HACKBIN}/tstclnt" -h $HOST -p $PORT -d "$CLIENT" -n client_crt -o -f -w test < "$CLIENT/stop.txt" >> "$TEST_OUTPUT/nisccLog02" 2>&1
+    done
 
-  sleep 10
+    unset LD_LIBRARY_PATH
 
-  find_core
+    sleep 1
 }
 
-##############################################################
-# do simple server auth tests
+################################################################################
+# Do simple server auth tests
 # Use an altered server against the client
-##############################################################
+################################################################################
 ssl_simple_server_auth()
 {
-  CLIENT=${NISCC_HOME}/niscc_ssl/simple_client; export CLIENT
-  SERVER=${NISCC_HOME}/niscc_ssl/simple_server; export SERVER
-  PORT=8444; export PORT
-  START_AT=1; export START_AT
-  STOP_AT=106167; export STOP_AT
-  LD_LIBRARY_PATH=${HACKLIB}; export LD_LIBRARY_PATH
-  NISCC_TEST=$TEST/simple_server; export NISCC_TEST
-  ${HACKBIN}/selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > \
-$NISCC_HOME/nisccLog03 2>&1 &
+    echo "Testing SSL simple server auth testcases"
+    export CLIENT="$TEST_OUTPUT/niscc_ssl/simple_client"
+    export SERVER="$TEST_OUTPUT/niscc_ssl/simple_server"
+    export PORT=8444
+    export START_AT=00000001
+    if [ "$SMALLSET" = "true" ]; then
+        export STOP_AT=00000010
+    else
+        export STOP_AT=00106167
+    fi
+    export LD_LIBRARY_PATH="$HACKLIB"
+    export NISCC_TEST="$TEST/simple_server"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${HACKBIN}/selfserv" $VERBOSE -p $PORT -d "$SERVER" -n server_crt -t $THREADS -w test > "$TEST_OUTPUT/nisccLog03" 2>&1 &
 
-  unset NISCC_TEST; export NISCC_TEST
-  LD_LIBRARY_PATH=${TESTLIB}; export LD_LIBRARY_PATH
-  ${TESTBIN}/strsclnt -d $CLIENT -p $PORT -t 4 -c 106167 -o -N $HOSTNAME > \
-$NISCC_HOME/nisccLog04 2>&1 
+    unset NISCC_TEST
+    export LD_LIBRARY_PATH="$TESTLIB"
+    for START in `seq $START_AT $THREADS $STOP_AT`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTTOOLS}/strsclnt" $VERBOSE -d "$CLIENT" -p $PORT -t $THREADS -c $THREADS -o -N $HOST >> "$TEST_OUTPUT/nisccLog04" 2>&1
+    done
 
-  echo "starting tstclnt to shutdown simple server selfserv process"
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog04 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog04 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog04 2>&1 
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog04 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog04 2>&1
+    echo "starting tstclnt to shutdown simple server selfserv process"
+    for i in `seq 5`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTTOOLS}/tstclnt" -h $HOST -p $PORT -d "$CLIENT" -n client_crt -o -f -w test < "$CLIENT/stop.txt" >> "$TEST_OUTPUT/nisccLog04" 2>&1
+    done
 
-  unset LD_LIBRARY_PATH
+    unset LD_LIBRARY_PATH
 
-  sleep 10
-
-  find_core
+    sleep 1
 }
 
-##############################################################
-# do simple rootCA tests
+################################################################################
+# Do simple rootCA tests
 # Use an altered server against the client
-##############################################################
+################################################################################
 ssl_simple_rootca()
 {
-  CLIENT=${NISCC_HOME}/niscc_ssl/simple_client; export CLIENT
-  SERVER=${NISCC_HOME}/niscc_ssl/simple_server; export SERVER
-  PORT=8445; export PORT
-  START_AT=1; export START_AT
-  STOP_AT=106190; export STOP_AT
-  LD_LIBRARY_PATH=${HACKLIB}; export LD_LIBRARY_PATH
-  NISCC_TEST=$TEST/simple_rootca; export NISCC_TEST
-  ${HACKBIN}/selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > \
-$NISCC_HOME/nisccLog05 2>&1 &
+    echo "Testing SSL simple rootCA testcases"
+    export CLIENT="$TEST_OUTPUT/niscc_ssl/simple_client"
+    export SERVER="$TEST_OUTPUT/niscc_ssl/simple_server"
+    export PORT=8445
+    export START_AT=1
+    if [ "$SMALLSET" = "true" ]; then
+        export STOP_AT=10
+    else
+        export STOP_AT=106190
+    fi
+    export LD_LIBRARY_PATH="$HACKLIB"
+    export NISCC_TEST="$TEST/simple_rootca"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${HACKBIN}/selfserv" $VERBOSE -p $PORT -d "$SERVER" -n server_crt -t $THREADS -w test > "$TEST_OUTPUT/nisccLog05" 2>&1 &
 
-  unset NISCC_TEST; export NISCC_TEST
-  LD_LIBRARY_PATH=${TESTLIB}; export LD_LIBRARY_PATH
-  ${TESTBIN}/strsclnt -d $CLIENT -p $PORT -t 4 -c 106190 -o -N $HOSTNAME > \
-$NISCC_HOME/nisccLog06 2>&1
+    unset NISCC_TEST
+    export LD_LIBRARY_PATH="$TESTLIB"
+    for START in `seq $START_AT $THREADS $STOP_AT`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTTOOLS}/strsclnt" $VERBOSE -d "$CLIENT" -p $PORT -t $THREADS -c $THREADS -o -N $HOST >> "$TEST_OUTPUT/nisccLog06" 2>&1
+    done
 
-  echo "starting tstclnt to shutdown simple rootca selfserv process"
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog06 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog06 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog06 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog06 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog06 2>&1
+    echo "starting tstclnt to shutdown simple rootca selfserv process"
+    for i in `seq 5`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTTOOLS}/tstclnt" -h $HOST -p $PORT -d "$CLIENT" -n client_crt -o -f -w test < "$CLIENT/stop.txt" >> "$TEST_OUTPUT/nisccLog06" 2>&1
+    done
 
-  unset LD_LIBRARY_PATH
-  sleep 10
+    unset LD_LIBRARY_PATH
 
-  find_core
+    sleep 1
 }
 
-##############################################################
-# do resigned client auth tests
+################################################################################
+# Do resigned client auth tests
 # Use an altered client against the server
-##############################################################
+################################################################################
 ssl_resigned_client_auth()
 {
-  CLIENT=${NISCC_HOME}/niscc_ssl/resigned_client; export CLIENT
-  SERVER=${NISCC_HOME}/niscc_ssl/resigned_server; export SERVER
-  PORT=8446; export PORT
-  START_AT=0; export START_AT
-  STOP_AT=99981; export STOP_AT
-  unset NISCC_TEST; export NISCC_TEST
-  LD_LIBRARY_PATH=${TESTLIB}; export LD_LIBRARY_PATH
-  ${TESTBIN}/selfserv -p $PORT -d $SERVER -n server_crt -rr -t 5 -w test > \
-$NISCC_HOME/nisccLog07 2>&1 &
+    echo "Testing SSL resigned client auth testcases"
+    export CLIENT="$TEST_OUTPUT/niscc_ssl/resigned_client"
+    export SERVER="$TEST_OUTPUT/niscc_ssl/resigned_server"
+    export PORT=8446
+    export START_AT=0
+    if [ "$SMALLSET" = "true" ]; then
+        export STOP_AT=9
+    else
+        export STOP_AT=99981
+    fi
+    unset NISCC_TEST
+    export LD_LIBRARY_PATH="$TESTLIB"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${TESTTOOLS}/selfserv" $VERBOSE -p $PORT -d "$SERVER" -n server_crt -rr -t $THREADS -w test > "$TEST_OUTPUT/nisccLog07" 2>&1 &
 
-  NISCC_TEST=$TEST/resigned_client; export NISCC_TEST
-  LD_LIBRARY_PATH=${HACKLIB}; export LD_LIBRARY_PATH
-  ${HACKBIN}/strsclnt -d $CLIENT -n client_crt -p $PORT -t 4 -c 99982 -o -N \
--w test $HOSTNAME > $NISCC_HOME/nisccLog08 2>&1 
+    export NISCC_TEST="$TEST/resigned_client"
+    export LD_LIBRARY_PATH="$HACKLIB"
 
-  unset NISCC_TEST; export NISCC_TEST
-  echo "starting tstclnt to shutdown resigned client selfserv process"
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog08 2>&1
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog08 2>&1
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog08 2>&1
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog08 2>&1
-  ${HACKBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog08 2>&1
+    for START in `seq $START_AT $THREADS $STOP_AT`; do
+        START_AT=$START \
+        STOP_AT=$(($START+$THREADS)) \
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${HACKBIN}/strsclnt" $VERBOSE -d "$CLIENT" -n client_crt -p $PORT -t $THREADS -c $THREADS -o -N -w test $HOST >> "$TEST_OUTPUT/nisccLog08" 2>&1
+    done
 
-  unset LD_LIBRARY_PATH
+    unset NISCC_TEST
+    echo "starting tstclnt to shutdown resigned client selfserv process"
+    for i in `seq 5`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${HACKBIN}/tstclnt" -h $HOST -p $PORT -d "$CLIENT" -n client_crt -o -f -w test < "$CLIENT/stop.txt" >> "$TEST_OUTPUT/nisccLog08" 2>&1
+    done
 
-  sleep 10
+    unset LD_LIBRARY_PATH
 
-  find_core
+    sleep 1
 }
 
-##############################################################
-# do resigned server auth tests
+################################################################################
+# Do resigned server auth tests
 # Use an altered server against the client
-##############################################################
+################################################################################
 ssl_resigned_server_auth()
 {
-  CLIENT=${NISCC_HOME}/niscc_ssl/resigned_client; export CLIENT
-  SERVER=${NISCC_HOME}/niscc_ssl/resigned_server; export SERVER
-  PORT=8447; export PORT
-  START_AT=0; export START_AT
-  STOP_AT=100068; export STOP_AT
-  LD_LIBRARY_PATH=${HACKLIB}; export LD_LIBRARY_PATH
-  NISCC_TEST=$TEST/resigned_server; export NISCC_TEST
-  ${HACKBIN}/selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > \
-$NISCC_HOME/nisccLog09 2>&1 &
+    echo "Testing SSL resigned server auth testcases"
+    export CLIENT="$TEST_OUTPUT/niscc_ssl/resigned_client"
+    export SERVER="$TEST_OUTPUT/niscc_ssl/resigned_server"
+    export PORT=8447
+    export START_AT=0
+    if [ "$SMALLSET" = "true" ]; then
+        export STOP_AT=9
+    else
+        export STOP_AT=100068
+    fi
+    export LD_LIBRARY_PATH="$HACKLIB"
+    export NISCC_TEST="$TEST/resigned_server"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${HACKBIN}/selfserv" $VERBOSE -p $PORT -d "$SERVER" -n server_crt -t $THREADS -w test > "$TEST_OUTPUT/nisccLog09" 2>&1 &
 
-  unset NISCC_TEST; export NISCC_TEST
-  LD_LIBRARY_PATH=${TESTLIB}; export LD_LIBRARY_PATH
-  ${TESTBIN}/strsclnt -d $CLIENT -p $PORT -t 4 -c 100069 -o -N $HOSTNAME > \
-$NISCC_HOME/nisccLog10 2>&1 
+    unset NISCC_TEST
+    export LD_LIBRARY_PATH="$TESTLIB"
+    for START in `seq $START_AT $THREADS $STOP_AT`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTTOOLS}/strsclnt" $VERBOSE -d "$CLIENT" -p $PORT -t $THREADS -c $THREADS -o -N $HOST >> "$TEST_OUTPUT/nisccLog10" 2>&1
+    done
 
-  echo "starting tstclnt to shutdown resigned server selfserv process"
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog10 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog10 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog10 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog10 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog10 2>&1
+    echo "starting tstclnt to shutdown resigned server selfserv process"
+    for i in `seq 5`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTTOOLS}/tstclnt" -h $HOST -p $PORT -d "$CLIENT" -n client_crt -o -f -w test < "$CLIENT/stop.txt" >> "$TEST_OUTPUT/nisccLog10" 2>&1
+    done
 
-  unset LD_LIBRARY_PATH
+    unset LD_LIBRARY_PATH
 
-  sleep 10
-
-  find_core
+    sleep 1
 }
 
-##############################################################
-# do resigned rootCA tests
+################################################################################
+# Do resigned rootCA tests
 # Use an altered server against the client
-##############################################################
+################################################################################
 ssl_resigned_rootca()
 {
-  CLIENT=${NISCC_HOME}/niscc_ssl/resigned_client; export CLIENT
-  SERVER=${NISCC_HOME}/niscc_ssl/resigned_server; export SERVER
-  PORT=8448; export PORT
-  START_AT=0; export START_AT
-  STOP_AT=99959; export STOP_AT
-  LD_LIBRARY_PATH=${HACKLIB}; export LD_LIBRARY_PATH
-  NISCC_TEST=$TEST/resigned_rootca; export NISCC_TEST
-  ${HACKBIN}/selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > \
-$NISCC_HOME/nisccLog11 2>&1 &
+    echo "Testing SSL resigned rootCA testcases"
+    export CLIENT="$TEST_OUTPUT/niscc_ssl/resigned_client"
+    export SERVER="$TEST_OUTPUT/niscc_ssl/resigned_server"
+    export PORT=8448
+    export START_AT=0
+    if [ "$SMALLSET" = "true" ]; then
+        export STOP_AT=9
+    else
+        export STOP_AT=99959
+    fi
+    export LD_LIBRARY_PATH="$HACKLIB"
+    export NISCC_TEST="$TEST/resigned_rootca"
+    LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+    "${HACKBIN}/selfserv" $VERBOSE -p $PORT -d "$SERVER" -n server_crt -t $THREADS -w test > "$TEST_OUTPUT/nisccLog11" 2>&1 &
 
-  unset NISCC_TEST; export NISCC_TEST
-  LD_LIBRARY_PATH=${TESTLIB}; export LD_LIBRARY_PATH
-  ${TESTBIN}/strsclnt -d $CLIENT -p $PORT -t 4 -c 99960 -o -N $HOSTNAME > \
-$NISCC_HOME/nisccLog12 2>&1 
+    unset NISCC_TEST
+    export LD_LIBRARY_PATH="$TESTLIB"
+    for START in `seq $START_AT $THREADS $STOP_AT`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTTOOLS}/strsclnt" $VERBOSE -d "$CLIENT" -p $PORT -t $THREADS -c $THREADS -o -N $HOST >> "$TEST_OUTPUT/nisccLog12" 2>&1
+    done
 
-  echo "starting tstclnt to shutdown resigned rootca selfserv process"
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog12 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog12 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog12 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog12 2>&1
-  ${TESTBIN}/tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f \
--w test < $CLIENT/stop.txt >> nisccLog12 2>&1
+    echo "starting tstclnt to shutdown resigned rootca selfserv process"
+    for i in `seq 5`; do
+        LD_PRELOAD=${FAKETIMELIB} NO_FAKE_STAT=1 FAKETIME="@2004-03-29 14:14:14" \
+        "${TESTTOOLS}/tstclnt" -h $HOST -p $PORT -d "$CLIENT" -n client_crt -o -f -w test < "$CLIENT/stop.txt" >> "$TEST_OUTPUT/nisccLog12" 2>&1
+    done
 
-  unset LD_LIBRARY_PATH
+    unset LD_LIBRARY_PATH
 
-  sleep 10
-
-  find_core
+    sleep 1
 }
 
-###############################################################
-# find core file and email if found, move core file to save it
-###############################################################
-find_core()
-{
-  for w in `find $NISCC_HOME -name "core" -print`
-  do
-      mv $w $w.`date +%H%M%S`
-  done
-}
-
-
-###############################################################
-# NISCC tests result in a failure only if a core file is produced
-# Mail out the status - the log summary is not mailed due to its 
-# size of about one hundred megabytes.
-###############################################################
+################################################################################
+# Email the test logfile, and if core found, notify of failure
+################################################################################
 mail_testLog()
 {
-  # remove mozilla nss build false positives and core stored in previous runs
-  find $NISCC_HOME -name "core*" -print | grep -v coreconf | grep -v \
-core_watch | grep -v archive >> $NISCC_HOME/crashLog
-  SIZE=`cat $NISCC_HOME/crashLog | wc -l`
-  if [ "$SIZE" -gt 0 ]; then
-      cat $NISCC_HOME/crashLog >> $NISCC_HOME/nisccLogSummary
-      $MAIL_COMMAND -s "WEEKLY NISCC TESTS FAILED: check end of logfile" \
-        $QA_LIST < /dev/null
-  else
-      $MAIL_COMMAND -s "PASSED: weekly NISCC tests completed" \
-        $QA_LIST < /dev/null
-  fi
+    pushd "$TEST_OUTPUT"
+
+    # remove mozilla nss build false positives and core stored in previous runs
+    find . -name "core*" -print | grep -v coreconf | grep -v core_watch | grep -v archive >> crashLog
+    export SIZE=`cat crashLog | wc -l`
+
+    [ "$USE_MAIL" = "false" ] && return
+
+    # mail text
+    MT=mailText
+    rm -f $MT
+
+    if [ "$SIZE" -ne 1 ]; then
+        echo "### FAILED ###" >> $MT
+        echo "### Exactly one crash is expected." >> $MT
+        echo "### Zero means: crash detection is broken, fix the script!" >> $MT
+        echo "### > 1 means: robustness test failure, fix the bug! (check the logs)" >> $MT
+        cat crashLog >> nisccLogSummary
+        SUBJ="FAILED: NISCC TESTS (check file: crashLog)"
+    else
+        echo ":) PASSED :)" >> $MT
+        SUBJ="PASSED: NISCC tests"
+    fi
+
+    echo "Date used during test run: $DATE" >> $MT
+
+    echo "Count of lines in files:" >> $MT
+    wc -l crashLog nisccBuildLog nisccBuildLogHack nisccLog[0-9]* p7m-* |grep -vw total >> $MT
+    NUM=`cat nisccLog0[123456789] nisccLog1[12] | egrep -ic "success/passed"`
+    echo "Number of times the SSL tests reported success/passed (low expected): $NUM" >> $MT
+    NUM=`cat nisccLog0[123456789] nisccLog1[12] | egrep -ic "problem|failed|error"`
+    echo "Number of times the SSL tests reported problem/failed/error (high expected): $NUM" >> $MT
+    NUM=`cat niscc_smime/p7m*results.txt | egrep -ic "success/passed"`
+    echo "Number of times the S/MIME tests reported success/passed (low expected): $NUM" >> $MT
+    NUM=`cat niscc_smime/p7m*results.txt | egrep -ic "problem|failed|error"`
+    echo "Number of times the S/MIME tests reported problem/failed/error (high expected): $NUM" >> $MT
+    echo "==== tail of nisccBuildLog ====" >> $MT
+    tail -20 nisccBuildLog >> $MT
+    echo "===============================" >> $MT
+    echo "==== tail of nisccBuildLogHack ====" >> $MT
+    tail -20 nisccBuildLogHack >> $MT
+    echo "===================================" >> $MT
+
+    #NUM=``
+    #echo "Number of : $NUM" >> $MT
+
+    cat $MT | $MAIL_COMMAND -s "$SUBJ" $QA_LIST
+
+    popd
 }
 
-
-###############################################################
-# summarise all logs
-###############################################################
+################################################################################
+# Summarize all logs
+################################################################################
 log_summary()
 {
+    echo "Summarizing all logs"
+    # Move old logs
+    [ -f "$TEST_OUTPUT/nisccLogSummary" ] && mv nisccLogSummary nisccLogSummary.old
+    [ -f "$TEST_OUTPUT/crashLog" ] && mv crashLog crashLog.old
 
-  for a in $NISCC_HOME/nisccLog[0-9]*
-      do echo ================================== $a
-      grep -v using $a | sort | uniq -c | sort -b -n +0 -1
-      done | tee $NISCC_HOME/nisccLogSummary
+    for a in $TEST_OUTPUT/nisccLog[0-9]*; do
+        echo ================================== "$a"
+        grep -v using "$a" | sort | uniq -c | sort -b -n +0 -1
+    done > $TEST_OUTPUT/nisccLogSummary
 
-  for a in $NISCC_HOME/niscc_smime/p7m-*-results.txt
-      do echo ================================== $a
-      grep -v using $a | sort | uniq -c | sort -b -n +0 -1
-      done | tee -a $NISCC_HOME/nisccLogSummary
+    for a in $TEST_OUTPUT/niscc_smime/p7m-*-results.txt; do
+        echo ================================== "$a"
+        grep -v using "$a" | sort | uniq -c | sort -b -n +0 -1
+    done >> $TEST_OUTPUT/nisccLogSummary
 }
 
+################################################################################
+# Process core files
+################################################################################
+core_process()
+{
+    echo "Processing core files"
+    cd "$TEST_OUTPUT"
 
-###############################################################
-# move the old mozilla and log files to save them, delete extra
-# log files
-###############################################################
+    for CORE in `cat crashLog`; do
+        FILE=`file "$CORE" | sed "s/.* from '//" | sed "s/'.*//"`
+        BINARY=`strings "$CORE" | grep "^${FILE}" | tail -1`
+        gdb "$BINARY" "$CORE" << EOF_GDB > "$CORE.details"
+where
+quit
+EOF_GDB
+    done
+}
+
+################################################################################
+# Move the old log files to save them, delete extra log files
+################################################################################
 move_files()
 {
+    echo "Moving and deleting log files"
+    cd "$TEST_OUTPUT"
 
-  cd $NISCC_HOME
+    rm -rf TRASH
+    mkdir TRASH
 
-  if [ "$LOG_STORE" = "true" ]; then
-	# Check for archive directory
-	if [ ! -d $NISCC_HOME/archive ]; then
-		mkdir -p $NISCC_HOME/archive
-	fi
-	# Determine next log storage point
-	DATE=`date +%Y%m%d`
-	SLOT=`ls -1 $NISCC_HOME/archive | grep ${DATE} | wc -l`
-	SLOT=`expr $SLOT + 1`
-	LOCATION=$NISCC_HOME/archive/${DATE}.${SLOT}
-	mkdir -p ${LOCATION}
-	# Archive the logs
-	mv nisccBuildLog ${LOCATION} 2> /dev/null
-	mv nisccLogSummary ${LOCATION}
-	mv nisccLog00 ${LOCATION}
-	mv nisccLog01 ${LOCATION}
-	mv nisccLog02 ${LOCATION}
-	mv nisccLog03 ${LOCATION}
-	mv nisccLog04 ${LOCATION}
-	mv nisccLog05 ${LOCATION}
-	mv nisccLog06 ${LOCATION}
-	mv nisccLog07 ${LOCATION}
-	mv nisccLog08 ${LOCATION}
-	mv nisccLog09 ${LOCATION}
-	mv nisccLog10 ${LOCATION}
-	mv nisccLog11 ${LOCATION}
-	mv nisccLog12 ${LOCATION}
-	mv niscc_smime/p7m-ed-m-results.txt ${LOCATION}
-	mv niscc_smime/p7m-sd-dt-results.txt ${LOCATION}
-	mv niscc_smime/p7m-sd-op-results.txt ${LOCATION}
-	# Archive any core files produced
-	for CORE in `cat $NISCC_HOME/crashLog`
-	do
-		mv $CORE ${LOCATION}
-	done
-	mv crashLog ${LOCATION}
-	return
-  fi
+    if [ "$LOG_STORE" = "true" ]; then
+        BRANCH=`echo $LOCALDIST | sed "s:.*/\(security.*\)/builds/.*:\1:"`
+        if [ "$BRANCH" = "$LOCALDIST" ]; then
+            ARCHIVE="$TEST_OUTPUT/archive"
+        else
+            ARCHIVE="$TEST_OUTPUT/archive/$BRANCH"
+        fi
 
-  if [ -d ../mozilla ]; then
-	mv -f ../mozilla ../mozilla.old
-  	mv nisccBuildLog nisccBuildLog.old
-  fi
-  mv nisccLogSummary nisccLogSummary.old
-  mv crashLog crashLog.old
+        # Check for archive directory
+        if [ ! -d "$ARCHIVE" ]; then
+            mkdir -p "$ARCHIVE"
+        fi
 
-  rm -f nisccLog00 nisccLog01 nisccLog02 nisccLog03 nisccLog04 nisccLog05 \
-nisccLog06 nisccLog07 nisccLog08 nisccLog09 nisccLog10 nisccLog11 nisccLog12
-  rm -f niscc_smime/p7m-ed-m-results.txt \
-      niscc_smime/p7m-sd-dt-results.txt \
-      niscc_smime/p7m-sd-op-results.txt
+        # Determine next log storage point
+        slot=`ls -1 "$ARCHIVE" | grep $DATE | wc -l`
+        slot=`expr $slot + 1`
+        location="$ARCHIVE/$DATE.$slot"
+        mkdir -p "$location"
+
+        # Archive the logs
+        mv nisccBuildLog "$location" 2> /dev/null
+        mv nisccBuildLogHack "$location" 2> /dev/null
+        mv nisccLogSummary "$location"
+        mv nisccLog* "$location"
+        mv niscc_smime/p7m-ed-m-results.txt "$location"
+        mv niscc_smime/p7m-sd-dt-results.txt "$location"
+        mv niscc_smime/p7m-sd-op-results.txt "$location"
+
+        # Archive any core files produced
+        for core in `cat "$TEST_OUTPUT/crashLog"`; do
+            mv "$core" "$location"
+            mv "$core.details" "$location"
+        done
+        mv crashLog "$location"
+    else
+        # Logs not stored => summaries, crashlog and corefiles not moved, other logs deleted
+        mv nisccLog00 nisccLog01 nisccLog02 nisccLog03 nisccLog04 nisccLog05 nisccLog06 nisccLog07 nisccLog08 nisccLog09 nisccLog10 nisccLog11 nisccLog12 TRASH/
+        mv niscc_smime/p7m-ed-m-results.txt niscc_smime/p7m-sd-dt-results.txt niscc_smime/p7m-sd-op-results.txt TRASH/
+    fi
+    mv envDB sigDB niscc_smime niscc_ssl TRASH/
+    mv CA.p12 Client.p12 client_crt.p12 server_crt.p12 TRASH/
+    mv p7m-ed-m-files.txt p7m-sd-dt-files.txt p7m-sd-op-files.txt password-is-testtest1.txt detached.txt TRASH/
+    mv crashme.c crashme TRASH/
 }
 
-############################## main ##############################
+################################################################################
+# Main
+################################################################################
+process_args $*
+create_environment
+cvs_pull
+build_NSS
 init
 niscc_smime
 niscc_ssl_init
+force_crash
 ssl_setup_dirs_simple
-  ssl_simple_client_auth
-  ssl_simple_server_auth
-  ssl_simple_rootca
+    ssl_simple_client_auth
+    ssl_simple_server_auth
+    ssl_simple_rootca
 ssl_setup_dirs_resigned
-  ssl_resigned_client_auth
-  ssl_resigned_server_auth
-  ssl_resigned_rootca
+    ssl_resigned_client_auth
+    ssl_resigned_server_auth
+    ssl_resigned_rootca
+# no idea what these commented-out lines are supposed to be!
+#ssl_setup_dirs_update
+#    ssl_update_server_auth der
+#    ssl_update_client_auth der
+#    ssl_update_server_auth resigned-der
+#    ssl_update_client_auth resigned-der
 log_summary
 mail_testLog
+core_process
 move_files
+exit $SIZE

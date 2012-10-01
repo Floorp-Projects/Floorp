@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 =head1 NAME
 
  invmod - compute modular inverse of an integer
@@ -29,5 +33,5 @@ gcd(1), isprime(1), lap(1)
  Michael J. Fromberger <sting@linguist.dartmouth.edu>
  Thayer School of Engineering, Hanover, New Hampshire, USA
  
- $Date: 2000/07/14 00:44:33 $
+ $Date: 2012/04/25 14:49:52 $
 

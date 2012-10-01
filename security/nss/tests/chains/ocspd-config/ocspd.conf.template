@@ -42,4 +42,5 @@ next_update_mins = 5
 
 crl_url = file:///@DIR@/@CA_CRL@
 ca_url  = file:///@DIR@/@CA_CERT@
+server_cert  = file:///@DIR@/@CA_CERT@
 
