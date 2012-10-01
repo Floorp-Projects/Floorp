@@ -286,6 +286,13 @@ public:
            BlobChild* aBlobChild,
            BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual nsresult
+  ListenSocketViaService(int aChannel,
+                         BluetoothSocketType aType,
+                         bool aAuth,
+                         bool aEncrypt,
+                         mozilla::ipc::UnixSocketConsumer* aConsumer) = 0;
+
   bool
   IsEnabled() const
   {
