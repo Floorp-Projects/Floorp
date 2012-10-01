@@ -168,6 +168,86 @@ CameraControlImpl::Get(JSContext* aCx, uint32_t aKey, JS::Value* aValue)
 }
 
 nsresult
+CameraControlImpl::Set(nsICameraShutterCallback* aOnShutter)
+{
+  mOnShutterCb = aOnShutter;
+  return NS_OK;
+}
+
+nsresult
+CameraControlImpl::Get(nsICameraShutterCallback** aOnShutter)
+{
+  *aOnShutter = mOnShutterCb;
+  return NS_OK;
+}
+
+nsresult
+CameraControlImpl::Set(nsICameraClosedCallback* aOnClosed)
+{
+  mOnClosedCb = aOnClosed;
+  return NS_OK;
+}
+
+nsresult
+CameraControlImpl::Get(nsICameraClosedCallback** aOnClosed)
+{
+  *aOnClosed = mOnClosedCb;
+  return NS_OK;
+}
+
+void
+CameraControlImpl::Shutdown()
+{
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  mAutoFocusOnSuccessCb = nullptr;
+  mAutoFocusOnErrorCb = nullptr;
+  mTakePictureOnSuccessCb = nullptr;
+  mTakePictureOnErrorCb = nullptr;
+  mStartRecordingOnSuccessCb = nullptr;
+  mStartRecordingOnErrorCb = nullptr;
+  mOnShutterCb = nullptr;
+  mOnClosedCb = nullptr;
+}
+
+void
+CameraControlImpl::OnShutterInternal()
+{
+  DOM_CAMERA_LOGI("** SNAP **\n");
+  if (mOnShutterCb) {
+    mOnShutterCb->HandleEvent();
+  }
+}
+
+void
+CameraControlImpl::OnShutter()
+{
+  nsCOMPtr<nsIRunnable> onShutter = NS_NewRunnableMethod(this, &CameraControlImpl::OnShutterInternal);
+  nsresult rv = NS_DispatchToMainThread(onShutter);
+  if (NS_FAILED(rv)) {
+    DOM_CAMERA_LOGW("Failed to dispatch onShutter event to main thread (%d)\n", rv);
+  }
+}
+
+void
+CameraControlImpl::OnClosedInternal()
+{
+  DOM_CAMERA_LOGI("Camera hardware was closed\n");
+  if (mOnClosedCb) {
+    mOnClosedCb->HandleEvent();
+  }
+}
+
+void
+CameraControlImpl::OnClosed()
+{
+  nsCOMPtr<nsIRunnable> onClosed = NS_NewRunnableMethod(this, &CameraControlImpl::OnClosedInternal);
+  nsresult rv = NS_DispatchToMainThread(onClosed);
+  if (NS_FAILED(rv)) {
+    DOM_CAMERA_LOGW("Failed to dispatch onClosed event to main thread (%d)\n", rv);
+  }
+}
+
+nsresult
 CameraControlImpl::GetPreviewStream(CameraSize aSize, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
 {
   /**
@@ -245,7 +325,7 @@ GetPreviewStreamResult::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mOnSuccessCb) {
+  if (mOnSuccessCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
     nsCOMPtr<nsIDOMMediaStream> stream = new DOMCameraPreview(mCameraControl, mWidth, mHeight, mFramesPerSecond);
     mOnSuccessCb->HandleEvent(stream);
   }

@@ -2409,3 +2409,18 @@ BluetoothDBusService::GetSocketViaService(const nsAString& aObjectPath,
   return NS_OK;
 }
 
+bool
+BluetoothDBusService::SendFile(const nsAString& aDeviceAddress,
+                               BlobParent* aBlobParent,
+                               BlobChild* aBlobChild,
+                               BluetoothReplyRunnable* aRunnable)
+{
+  // Currently we only support one device sending one file at a time,
+  // so we don't need aDeviceAddress here because the target device
+  // has been determined when calling 'Connect()'. Nevertheless, keep
+  // it for future use.
+  BluetoothOppManager* opp = BluetoothOppManager::Get();
+  opp->SendFile(aBlobParent, aRunnable);
+
+  return true;
+}
