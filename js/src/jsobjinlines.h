@@ -1541,20 +1541,6 @@ GuessArrayGCKind(size_t numSlots)
 }
 
 /*
- * Get the GC kind to use for scripted 'new' on the given class.
- * FIXME bug 547327: estimate the size from the allocation site.
- */
-static inline gc::AllocKind
-NewObjectGCKind(JSContext *cx, js::Class *clasp)
-{
-    if (clasp == &ArrayClass || clasp == &SlowArrayClass)
-        return gc::FINALIZE_OBJECT8;
-    if (clasp == &FunctionClass)
-        return gc::FINALIZE_OBJECT2;
-    return gc::FINALIZE_OBJECT4;
-}
-
-/*
  * Fill slots with the initial slot array to use for a newborn object which
  * may or may not need dynamic slots.
  */

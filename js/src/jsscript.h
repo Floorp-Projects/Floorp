@@ -580,7 +580,7 @@ struct JSScript : public js::gc::Cell
         return scriptSource_;
     }
 
-    void setScriptSource(JSContext *cx, js::ScriptSource *ss);
+    void setScriptSource(js::ScriptSource *ss);
 
   public:
 

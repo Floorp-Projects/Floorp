@@ -439,7 +439,7 @@ class TypeSet
         : flags(0), objectSet(NULL), constraintList(NULL)
     {}
 
-    void print(JSContext *cx);
+    void print();
 
     inline void sweep(JSCompartment *compartment);
     inline size_t computedSizeOfExcludingThis();
@@ -1007,7 +1007,7 @@ struct TypeObject : gc::Cell
     void clearNewScript(JSContext *cx);
     void getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force = false);
 
-    void print(JSContext *cx);
+    void print();
 
     inline void clearProperties();
     inline void sweep(FreeOp *fop);
