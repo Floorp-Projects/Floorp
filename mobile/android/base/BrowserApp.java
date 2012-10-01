@@ -639,16 +639,12 @@ abstract public class BrowserApp extends GeckoApp
                             loadUrl(url, AwesomeBar.Target.CURRENT_TAB);
                         }
                     });
-                    mAboutHomeContent.setLoadCompleteCallback(new AboutHomeContent.VoidCallback() {
-                         public void callback() {
-                             mAboutHomeStartupTimer.stop();
-                         }
-                    });
                     mAboutHomeContent.setOnInterceptTouchListener(new ContentTouchListener());
                 } else {
                     mAboutHomeContent.update(EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,
                                                         AboutHomeContent.UpdateFlags.REMOTE_TABS));
                 }
+            
                 mAboutHomeContent.setVisibility(View.VISIBLE);
             } else {
                 findViewById(R.id.abouthome_content).setVisibility(View.GONE);
