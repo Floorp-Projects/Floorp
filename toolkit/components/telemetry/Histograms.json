@@ -26,6 +26,14 @@
     "n_buckets": 50,
     "description": "time spent updating accessibility (ms)"
   },
+  "AWESOMEBAR_ALLPAGES_EMPTY_TIME": {
+    "kind": "exponential",
+    "low": 10,
+    "high": "20000",
+    "n_buckets": 20,
+    "description": "Time for the Awesomebar Top Sites query to return with no filter set (ms)",
+    "cpp_guard": "ANDROID"
+  },
   "CYCLE_COLLECTOR": {
     "kind": "exponential",
     "high": "10000",
