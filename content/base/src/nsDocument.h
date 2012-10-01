@@ -915,7 +915,7 @@ public:
   virtual Element *LookupImageElement(const nsAString& aElementId);
 
   virtual NS_HIDDEN_(nsresult) AddImage(imgIRequest* aImage);
-  virtual NS_HIDDEN_(nsresult) RemoveImage(imgIRequest* aImage);
+  virtual NS_HIDDEN_(nsresult) RemoveImage(imgIRequest* aImage, uint32_t aFlags);
   virtual NS_HIDDEN_(nsresult) SetImageLockingState(bool aLocked);
 
   // AddPlugin adds a plugin-related element to mPlugins when the element is
