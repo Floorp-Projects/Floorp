@@ -263,8 +263,7 @@ Bindings::trace(JSTracer *trc)
 bool
 js::FillBindingVector(HandleScript fromScript, BindingVector *vec)
 {
-    InternalBindingsHandle bindings(fromScript, &fromScript->bindings);
-    for (BindingIter bi(bindings); bi; bi++) {
+    for (BindingIter bi(fromScript); bi; bi++) {
         if (!vec->append(*bi))
             return false;
     }
