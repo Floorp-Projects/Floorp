@@ -187,8 +187,6 @@ WebappsRegistry.prototype = {
 
   uninit: function() {
     this._mgmt = null;
-    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
-                          ["Webapps:Install:Return:OK"]);
   },
 
   // mozIDOMApplicationRegistry2 implementation
@@ -484,9 +482,6 @@ WebappsApplication.prototype = {
 
   uninit: function() {
     this._onprogress = null;
-    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
-                          ["Webapps:Uninstall:Return:OK", "Webapps:OfflineCache",
-                           "Webapps:PackageEvent"]);
   },
 
   _fireEvent: function(aName, aHandler) {
@@ -649,8 +644,6 @@ WebappsApplicationMgmt.prototype = {
   uninit: function() {
     this._oninstall = null;
     this._onuninstall = null;
-    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
-                          ["Webapps:Install:Return:OK", "Webapps:Uninstall:Return:OK"]);
   },
 
   applyDownload: function(aApp) {
