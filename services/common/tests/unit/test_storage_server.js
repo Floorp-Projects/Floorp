@@ -635,3 +635,46 @@ add_test(function test_put_delete_put() {
 
   server.stop(run_next_test);
 });
+
+add_test(function test_collection_get_newer() {
+  _("Ensure get with newer argument on collection works.");
+
+  let server = new StorageServer();
+  server.registerUser("123", "password");
+  server.startSynchronous(PORT);
+
+  let coll = server.user("123").createCollection("test");
+  let bso1 = coll.insert("001", {foo: "bar"});
+  let bso2 = coll.insert("002", {bar: "foo"});
+
+  // Don't want both records to have the same timestamp.
+  bso2.modified = bso1.modified + 1000;
+
+  function newerRequest(newer) {
+    return localRequest("/2.0/123/storage/test?newer=" + newer,
+                        "123", "password");
+  }
+
+  let request1 = newerRequest(0);
+  let error1 = doGetRequest(request1);
+  do_check_null(error1);
+  do_check_eq(request1.response.status, 200);
+  let items1 = JSON.parse(request1.response.body).items;
+  do_check_attribute_count(items1, 2);
+
+  let request2 = newerRequest(bso1.modified + 1);
+  let error2 = doGetRequest(request2);
+  do_check_null(error2);
+  do_check_eq(request2.response.status, 200);
+  let items2 = JSON.parse(request2.response.body).items;
+  do_check_attribute_count(items2, 1);
+
+  let request3 = newerRequest(bso2.modified + 1);
+  let error3 = doGetRequest(request3);
+  do_check_null(error3);
+  do_check_eq(request3.response.status, 200);
+  let items3 = JSON.parse(request3.response.body).items;
+  do_check_attribute_count(items3, 0);
+
+  server.stop(run_next_test);
+});
