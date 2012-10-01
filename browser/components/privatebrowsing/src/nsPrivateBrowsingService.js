@@ -61,7 +61,6 @@ function PrivateBrowsingService() {
   this._obs.addObserver(this, "private-browsing", true);
   this._obs.addObserver(this, "command-line-startup", true);
   this._obs.addObserver(this, "sessionstore-browser-state-restored", true);
-  this._obs.addObserver(this, "domwindowopened", true);
 
   // List of nsIXULWindows we are going to be closing during the transition
   this._windowsToClose = [];
@@ -496,18 +495,6 @@ PrivateBrowsingService.prototype = {
           this._currentStatus = STATE_RESTORE_FINISHED;
           this._notifyIfTransitionComplete();
         }
-        break;
-      case "domwindowopened":
-        let aWindow = aSubject;
-        let self = this;
-        aWindow.addEventListener("load", function PBS__onWindowLoad(aEvent) {
-          aWindow.removeEventListener("load", arguments.callee);
-          if (aWindow.document
-                     .documentElement
-                     .getAttribute("windowtype") == "navigator:browser") {
-            self._setPerWindowPBFlag(aWindow, self._inPrivateBrowsing);
-          }
-        }, false);
         break;
     }
   },
