@@ -1,38 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -3020,13 +2988,13 @@ rng_vst(char *reqfn)
     FILE *rngreq;       /* input stream from the REQUEST file */
     FILE *rngresp;      /* output stream to the RESPONSE file */
     unsigned int i, j;
-    unsigned char Q[DSA_SUBPRIME_LEN];
+    unsigned char Q[DSA1_SUBPRIME_LEN];
     PRBool hasQ = PR_FALSE;
     unsigned int b;  /* 160 <= b <= 512, b is a multiple of 8 */
     unsigned char XKey[512/8];
     unsigned char XSeed[512/8];
-    unsigned char GENX[2*SHA1_LENGTH];
-    unsigned char DSAX[DSA_SUBPRIME_LEN];
+    unsigned char GENX[DSA1_SIGNATURE_LEN];
+    unsigned char DSAX[DSA1_SUBPRIME_LEN];
     SECStatus rv;
 
     rngreq = fopen(reqfn, "r");
@@ -3143,13 +3111,13 @@ rng_mct(char *reqfn)
     FILE *rngreq;       /* input stream from the REQUEST file */
     FILE *rngresp;      /* output stream to the RESPONSE file */
     unsigned int i, j;
-    unsigned char Q[DSA_SUBPRIME_LEN];
+    unsigned char Q[DSA1_SUBPRIME_LEN];
     PRBool hasQ = PR_FALSE;
     unsigned int b;  /* 160 <= b <= 512, b is a multiple of 8 */
     unsigned char XKey[512/8];
     unsigned char XSeed[512/8];
     unsigned char GENX[2*SHA1_LENGTH];
-    unsigned char DSAX[DSA_SUBPRIME_LEN];
+    unsigned char DSAX[DSA1_SUBPRIME_LEN];
     SECStatus rv;
 
     rngreq = fopen(reqfn, "r");
@@ -3250,6 +3218,121 @@ loser:
 }
 
 /*
+ * HASH_ functions are available to full NSS apps and internally inside
+ * freebl, but not exported to users of freebl. Create short stubs to
+ * replace the functionality for fipstest.
+ */
+SECStatus
+fips_hashBuf(HASH_HashType type, unsigned char *hashBuf, 
+					unsigned char *msg, int len)
+{
+    SECStatus rv = SECFailure;
+
+    switch (type) {
+    case HASH_AlgSHA1:
+	rv = SHA1_HashBuf(hashBuf, msg, len);
+	break;
+    case HASH_AlgSHA224:
+	rv = SHA224_HashBuf(hashBuf, msg, len);
+	break;
+    case HASH_AlgSHA256:
+	rv = SHA256_HashBuf(hashBuf, msg, len);
+	break;
+    case HASH_AlgSHA384:
+	rv = SHA384_HashBuf(hashBuf, msg, len);
+	break;
+    case HASH_AlgSHA512:
+	rv = SHA512_HashBuf(hashBuf, msg, len);
+	break;
+    default:
+	break;
+    }
+    return rv;
+}
+
+int
+fips_hashLen(HASH_HashType type)
+{
+    int len = 0;
+
+    switch (type) {
+    case HASH_AlgSHA1:
+	len = SHA1_LENGTH;
+	break;
+    case HASH_AlgSHA224:
+	len = SHA224_LENGTH;
+	break;
+    case HASH_AlgSHA256:
+	len = SHA256_LENGTH;
+	break;
+    case HASH_AlgSHA384:
+	len = SHA384_LENGTH;
+	break;
+    case HASH_AlgSHA512:
+	len = SHA512_LENGTH;
+	break;
+    default:
+	break;
+    }
+    return len;
+}
+
+SECOidTag
+fips_hashOid(HASH_HashType type)
+{
+    SECOidTag oid = SEC_OID_UNKNOWN;
+
+    switch (type) {
+    case HASH_AlgSHA1:
+	oid = SEC_OID_SHA1;
+	break;
+    case HASH_AlgSHA224:
+	oid = SEC_OID_SHA224;
+	break;
+    case HASH_AlgSHA256:
+	oid = SEC_OID_SHA256;
+	break;
+    case HASH_AlgSHA384:
+	oid = SEC_OID_SHA384;
+	break;
+    case HASH_AlgSHA512:
+	oid = SEC_OID_SHA512;
+	break;
+    default:
+	break;
+    }
+    return oid;
+}
+
+HASH_HashType
+sha_get_hashType(int hashbits)
+{
+    HASH_HashType hashType = HASH_AlgNULL;
+
+    switch (hashbits) {
+    case 1:
+    case (SHA1_LENGTH*BITS_PER_BYTE): 
+	hashType = HASH_AlgSHA1;
+	break;
+    case (SHA224_LENGTH*BITS_PER_BYTE): 
+	hashType = HASH_AlgSHA224;
+	break;
+    case (SHA256_LENGTH*BITS_PER_BYTE): 
+	hashType = HASH_AlgSHA256;
+	break;
+    case (SHA384_LENGTH*BITS_PER_BYTE): 
+	hashType = HASH_AlgSHA384;
+	break;
+    case (SHA512_LENGTH*BITS_PER_BYTE): 
+	hashType = HASH_AlgSHA512;
+	break;
+    default:
+	break;
+    }
+    return hashType;
+}
+
+/*
  * Calculate the SHA Message Digest 
  *
  * MD = Message digest 
@@ -3259,19 +3342,9 @@ loser:
  */
 SECStatus sha_calcMD(unsigned char *MD, unsigned int MDLen, unsigned char *msg, unsigned int msgLen) 
 {    
-    SECStatus   sha_status = SECFailure;
+    HASH_HashType  hashType = sha_get_hashType(MDLen*BITS_PER_BYTE);
 
-    if (MDLen == SHA1_LENGTH) {
-        sha_status = SHA1_HashBuf(MD, msg, msgLen);
-    } else if (MDLen == SHA256_LENGTH) {
-        sha_status = SHA256_HashBuf(MD, msg, msgLen);
-    } else if (MDLen == SHA384_LENGTH) {
-        sha_status = SHA384_HashBuf(MD, msg, msgLen);
-    } else if (MDLen == SHA512_LENGTH) {
-        sha_status = SHA512_HashBuf(MD, msg, msgLen);
-    }
-
-    return sha_status;
+    return fips_hashBuf(hashType, MD, msg, msgLen);
 }
 
 /*
@@ -3588,18 +3661,10 @@ void hmac_test(char *reqfn)
                 }
                 /* HMACLen will get reused for Tlen */
                 HMACLen = atoi(&buf[i]);
-                /* set the HASH algorithm for HMAC */
-                if (HMACLen == SHA1_LENGTH) {
-                    hash_alg = HASH_AlgSHA1;
-                } else if (HMACLen == SHA256_LENGTH) {
-                    hash_alg = HASH_AlgSHA256;
-                } else if (HMACLen == SHA384_LENGTH) {
-                    hash_alg = HASH_AlgSHA384;
-                } else if (HMACLen == SHA512_LENGTH) {
-                    hash_alg = HASH_AlgSHA512;
-                } else {
-                    goto loser;
-                }
+		hash_alg = sha_get_hashType(HMACLen*BITS_PER_BYTE);
+		if (hash_alg == HASH_AlgNULL) {
+		    goto loser;
+		}
                 fputs(buf, resp);
                 continue;
             }
@@ -3691,17 +3756,19 @@ loser:
 void
 dsa_keypair_test(char *reqfn)
 {
-    char buf[260];       /* holds one line from the input REQUEST file
+    char buf[800];       /* holds one line from the input REQUEST file
                          * or to the output RESPONSE file.
-                         * 257 to hold (128 public key (x2 for HEX) + 1'\n'
+                         * 800 to hold (384 public key (x2 for HEX) + 1'\n'
                          */
     FILE *dsareq;     /* input stream from the REQUEST file */
     FILE *dsaresp;    /* output stream to the RESPONSE file */
-    int N;            /* number of time to generate key pair */
-    int modulus;
+    int count;
+    int N;
+    int L;
     int i;
     PQGParams *pqg = NULL;
     PQGVerify *vfy = NULL;
+    PRBool use_dsa1 = PR_FALSE;
     int keySizeIndex;   /* index for valid key sizes */
 
     dsareq = fopen(reqfn, "r");
@@ -3724,29 +3791,41 @@ dsa_keypair_test(char *reqfn)
                 vfy = NULL;
             }
 
-            if (sscanf(buf, "[mod = %d]", &modulus) != 1) {
-                goto loser;
+            if (sscanf(buf, "[mod = L=%d, N=%d]", &L, &N) != 2) {
+		use_dsa1 = PR_TRUE;
+                if (sscanf(buf, "[mod = %d]", &L) != 1) {
+                    goto loser;
+		}
             }
             fputs(buf, dsaresp);
             fputc('\n', dsaresp);
 
-            /*****************************************************************
-             * PQG_ParamGenSeedLen doesn't take a key size, it takes an index
-             * that points to a valid key size.
-             */
-            keySizeIndex = PQG_PBITS_TO_INDEX(modulus);
-            if(keySizeIndex == -1 || modulus<512 || modulus>1024) {
-               fprintf(dsaresp,
-                    "DSA key size must be a multiple of 64 between 512 "
-                    "and 1024, inclusive");
-                goto loser;
-            }
+	    if (use_dsa1) {
+                /*************************************************************
+                 * PQG_ParamGenSeedLen doesn't take a key size, it takes an 
+		 * index that points to a valid key size.
+                 */
+                keySizeIndex = PQG_PBITS_TO_INDEX(L);
+                if(keySizeIndex == -1 || L<512 || L>1024) {
+                   fprintf(dsaresp,
+                        "DSA key size must be a multiple of 64 between 512 "
+                        "and 1024, inclusive");
+                    goto loser;
+                }
 
-            /* Generate the parameters P, Q, and G */
-            if (PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
-                &pqg, &vfy) != SECSuccess) {
-                fprintf(dsaresp, "ERROR: Unable to generate PQG parameters");
-                goto loser;
+                /* Generate the parameters P, Q, and G */
+                if (PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
+                    &pqg, &vfy) != SECSuccess) {
+                    fprintf(dsaresp, 
+				"ERROR: Unable to generate PQG parameters");
+                    goto loser;
+                }
+	    } else {
+                if (PQG_ParamGenV2(L, N, N, &pqg, &vfy) != SECSuccess) {
+                    fprintf(dsaresp, 
+				"ERROR: Unable to generate PQG parameters");
+                    goto loser;
+                }
             }
 
             /* output P, Q, and G */
@@ -3761,11 +3840,11 @@ dsa_keypair_test(char *reqfn)
         /* N = ...*/
         if (buf[0] == 'N') {
 
-            if (sscanf(buf, "N = %d", &N) != 1) {
+            if (sscanf(buf, "N = %d", &count) != 1) {
                 goto loser;
             }
             /* Generate a DSA key, and output the key pair for N times */
-            for (i = 0; i < N; i++) {
+            for (i = 0; i < count; i++) {
                 DSAPrivateKey *dsakey = NULL;
                 if (DSA_NewKey(pqg, &dsakey) != SECSuccess) {
                     fprintf(dsaresp, "ERROR: Unable to generate DSA key");
@@ -3789,6 +3868,20 @@ loser:
 }
 
 /*
+ * pqg generation type
+ */
+typedef enum {
+    FIPS186_1,/* Generate/Verify P,Q & G  according to FIPS 186-1 */
+    A_1_1_2, /* Generate Probable P & Q */
+    A_1_1_3, /* Verify Probable P & Q */
+    A_1_2_2, /* Verify Provable P & Q */
+    A_2_1,   /* Generate Unverifiable G */
+    A_2_2,   /* Assure Unverifiable G */
+    A_2_3,   /* Generate Verifiable G */
+    A_2_4    /* Verify Verifiable G */
+} dsa_pqg_type;
+
+/*
  * Perform the DSA Domain Parameter Validation Test.
  *
  * reqfn is the pathname of the REQUEST file.
@@ -3798,17 +3891,19 @@ loser:
 void
 dsa_pqgver_test(char *reqfn)
 {
-    char buf[263];      /* holds one line from the input REQUEST file
+    char buf[800];      /* holds one line from the input REQUEST file
                          * or to the output RESPONSE file.
-                         * 260 to hold (128 public key (x2 for HEX) + P = ...
+                         * 800 to hold (384 public key (x2 for HEX) + P = ...
                          */
     FILE *dsareq;     /* input stream from the REQUEST file */
     FILE *dsaresp;    /* output stream to the RESPONSE file */
-    int modulus; 
+    int N;
+    int L;
     unsigned int i, j;
     PQGParams pqg;
     PQGVerify vfy;
     unsigned int pghSize;        /* size for p, g, and h */
+    dsa_pqg_type type = FIPS186_1;
 
     dsareq = fopen(reqfn, "r");
     dsaresp = stdout;
@@ -3822,11 +3917,40 @@ dsa_pqgver_test(char *reqfn)
             continue;
         }
 
+        /* [A.xxxxx ] */
+        if (buf[0] == '['  && buf[1] == 'A') {
+
+	    if (strncmp(&buf[1],"A.1.1.3",7) == 0) {
+		type = A_1_1_3;
+	    } else if (strncmp(&buf[1],"A.2.2",5) == 0) {
+		type = A_2_2;
+	    } else if (strncmp(&buf[1],"A.2.4",5) == 0) {
+		type = A_2_4;
+	    } else if (strncmp(&buf[1],"A.1.2.2",7) == 0) {
+		type = A_1_2_2;
+	    /* validate our output from PQGGEN */
+	    } else if (strncmp(&buf[1],"A.1.1.2",7) == 0) {
+		type = A_2_4; /* validate PQ and G together */
+	    } else {
+		fprintf(stderr, "Unknown dsa ver test %s\n", &buf[1]);
+		exit(1);
+	    }
+		
+            fputs(buf, dsaresp);
+            continue;
+        }
+	
+
         /* [Mod = x] */
         if (buf[0] == '[') {
 
-            if (sscanf(buf, "[mod = %d]", &modulus) != 1) {
-                goto loser;
+	    if (type == FIPS186_1) {
+                N=160;
+                if (sscanf(buf, "[mod = %d]", &L) != 1) {
+                    goto loser;
+		}
+	    } else if (sscanf(buf, "[mod = L=%d, N=%d", &L, &N) != 2) {
+		goto loser;
             }
 
             if (pqg.prime.data) { /* P */
@@ -3848,16 +3972,24 @@ dsa_pqgver_test(char *reqfn)
             fputs(buf, dsaresp);
 
             /*calculate the size of p, g, and h then allocate items  */
-            pghSize = modulus/8;
+            pghSize = L/8;
+
+	    pqg.base.data = vfy.h.data = NULL;
+	    vfy.seed.len = pqg.base.len = vfy.h.len = 0;
             SECITEM_AllocItem(NULL, &pqg.prime, pghSize);
-            SECITEM_AllocItem(NULL, &pqg.base, pghSize);
-            SECITEM_AllocItem(NULL, &vfy.h, pghSize);
-            pqg.prime.len = pqg.base.len = vfy.h.len = pghSize;
-            /* seed and q are always 20 bytes */
-            SECITEM_AllocItem(NULL, &vfy.seed, 20);
-            SECITEM_AllocItem(NULL, &pqg.subPrime, 20);
-            vfy.seed.len = pqg.subPrime.len = 20;
-            vfy.counter = 0;
+            SECITEM_AllocItem(NULL, &vfy.seed, pghSize*3);
+	    if (type == A_2_2) {
+		SECITEM_AllocItem(NULL, &vfy.h, pghSize);
+	    	vfy.h.len = pghSize;
+	    } else if (type == A_2_4) {
+		SECITEM_AllocItem(NULL, &vfy.h, 1);
+	    	vfy.h.len = 1;
+	    }
+            pqg.prime.len = pghSize;
+            /* q is always N bits */
+            SECITEM_AllocItem(NULL, &pqg.subPrime, N/8);
+            pqg.subPrime.len = N/8;
+            vfy.counter = -1;
 
             continue;
         }
@@ -3892,6 +4024,10 @@ dsa_pqgver_test(char *reqfn)
         /* G = ... */
         if (buf[0] == 'G') {
             i = 1;
+            if (pqg.base.data) {
+                SECITEM_ZfreeItem(&pqg.base, PR_FALSE);
+            }
+            SECITEM_AllocItem(NULL, &pqg.base, pghSize);
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
@@ -3903,31 +4039,121 @@ dsa_pqgver_test(char *reqfn)
             continue;
         }
 
-        /* Seed = ... */
+        /* Seed = ...  or domain_parameter_seed = ... */
         if (strncmp(buf, "Seed", 4) == 0) {
             i = 4;
+        } else if (strncmp(buf, "domain_parameter_seed", 21) == 0) {
+	    i = 21;
+	} else if (strncmp(buf,"firstseed",9) == 0) {
+	    i = 9;
+	} else {
+	    i = 0;
+	}
+	if (i) {
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-            for (j=0; j< vfy.seed.len; i+=2,j++) {
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
                 hex_to_byteval(&buf[i], &vfy.seed.data[j]);
             }
+	    vfy.seed.len = j;
 
             fputs(buf, dsaresp);
+	    if (type == A_2_4) {
+		SECStatus result;
+
+                /* Verify the Parameters */
+                SECStatus rv = PQG_VerifyParams(&pqg, &vfy, &result);
+                if (rv != SECSuccess) {
+                    goto loser;
+                }
+                if (result == SECSuccess) {
+                    fprintf(dsaresp, "Result = P\n");
+                } else {
+                    fprintf(dsaresp, "Result = F\n");
+                }
+	    }
             continue;
         }
+	if ((strncmp(buf,"pseed",5) == 0) ||
+	    (strncmp(buf,"qseed",5) == 0))
+	{
+	    i = 5;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=vfy.seed.len; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &vfy.seed.data[j]);
+            }
+	    vfy.seed.len = j;
+            fputs(buf, dsaresp);
 
-        /* c = ... */
-        if (buf[0] == 'c') {
+            continue;
+	}
+        if (strncmp(buf, "index", 4) == 0) {
+	    i=5;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+	    hex_to_byteval(&buf[i], &vfy.h.data[0]);
+	    vfy.h.len = 1;
+            fputs(buf, dsaresp);
+	}
 
-            if (sscanf(buf, "c = %u", &vfy.counter) != 1) {
-                goto loser;
+        /* c = ...  or counter=*/
+        if (buf[0] == 'c')  {
+	    if (strncmp(buf,"counter", 7) == 0) {
+                if (sscanf(buf, "counter = %u", &vfy.counter) != 1) {
+                    goto loser;
+		}
+	    } else {
+                if (sscanf(buf, "c = %u", &vfy.counter) != 1) {
+                    goto loser;
+		}
             }
 
             fputs(buf, dsaresp);
+            if (type == A_1_1_3) {
+		SECStatus result;
+                /* only verify P and Q, we have everything now. do it */
+                SECStatus rv = PQG_VerifyParams(&pqg, &vfy, &result);
+                if (rv != SECSuccess) {
+                    goto loser;
+                }
+                if (result == SECSuccess) {
+                    fprintf(dsaresp, "Result = P\n");
+                } else {
+                    fprintf(dsaresp, "Result = F\n");
+                }
+                fprintf(dsaresp, "\n");
+            }
             continue;
         }
-
+	if (strncmp(buf,"pgen_counter", 12) == 0) {
+            if (sscanf(buf, "pgen_counter = %u", &vfy.counter) != 1) {
+                goto loser;
+            }	
+            fputs(buf, dsaresp);
+	    continue;
+	}
+	if (strncmp(buf,"qgen_counter", 12) == 0) {
+            fputs(buf, dsaresp);
+            if (type == A_1_2_2) {
+		SECStatus result;
+                /* only verify P and Q, we have everything now. do it */
+                SECStatus rv = PQG_VerifyParams(&pqg, &vfy, &result);
+                if (rv != SECSuccess) {
+                    goto loser;
+                }
+                if (result == SECSuccess) {
+                    fprintf(dsaresp, "Result = P\n");
+                } else {
+                    fprintf(dsaresp, "Result = F\n");
+                }
+                fprintf(dsaresp, "\n");
+            } 
+	    continue;
+	}
         /* H = ... */
         if (buf[0] == 'H') {
             SECStatus rv, result = SECFailure;
@@ -3936,10 +4162,21 @@ dsa_pqgver_test(char *reqfn)
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-            for (j=0; j< vfy.h.len; i+=2,j++) {
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
                 hex_to_byteval(&buf[i], &vfy.h.data[j]);
             }
+	    vfy.h.len = j;
             fputs(buf, dsaresp);
+
+	    /* this should be a byte value. Remove the leading zeros. If
+	     * it doesn't reduce to a byte, PQG_VerifyParams will catch it 
+	    if (type == A_2_2) {
+		data_save = vfy.h.data;
+		while(vfy.h.data[0] && (vfy.h.len > 1)) {
+			vfy.h.data++;
+			vfy.h.len--;
+		}
+	    } */
 
             /* Verify the Parameters */
             rv = PQG_VerifyParams(&pqg, &vfy, &result);
@@ -3951,6 +4188,7 @@ dsa_pqgver_test(char *reqfn)
             } else {
                 fprintf(dsaresp, "Result = F\n");
             }
+            fprintf(dsaresp, "\n");
             continue;
         }
     }
@@ -3984,19 +4222,21 @@ loser:
 void
 dsa_pqggen_test(char *reqfn)
 {
-    char buf[263];      /* holds one line from the input REQUEST file
+    char buf[800];      /* holds one line from the input REQUEST file
                          * or to the output RESPONSE file.
-                         * 263 to hold seed = (128 public key (x2 for HEX)
+                         * 800 to hold seed = (384 public key (x2 for HEX)
                          */
     FILE *dsareq;     /* input stream from the REQUEST file */
     FILE *dsaresp;    /* output stream to the RESPONSE file */
-    int N;            /* number of times to generate parameters */
-    int modulus; 
+    int count;            /* number of times to generate parameters */
+    int N;
+    int L;
     int i;
     unsigned int j;
     PQGParams *pqg = NULL;
     PQGVerify *vfy = NULL;
     unsigned int keySizeIndex;
+    dsa_pqg_type type = FIPS186_1;
 
     dsareq = fopen(reqfn, "r");
     dsaresp = stdout;
@@ -4007,39 +4247,72 @@ dsa_pqggen_test(char *reqfn)
             continue;
         }
 
+        /* [A.xxxxx ] */
+        if (buf[0] == '['  && buf[1] == 'A') {
+	    if (strncmp(&buf[1],"A.1.1.2",7) == 0) {
+		type = A_1_1_2;
+	    } else if (strncmp(&buf[1],"A.2.1",5) == 0) {
+		fprintf(stderr, "NSS only Generates G with P&Q\n");
+		exit(1);
+	    } else if (strncmp(&buf[1],"A.2.3",5) == 0) {
+		fprintf(stderr, "NSS only Generates G with P&Q\n");
+		exit(1);
+	    } else if (strncmp(&buf[1],"A.1.2.1",7) == 0) {
+		fprintf(stderr, "NSS does not support Shawe-Taylor Primes\n");
+		exit(1);
+	    } else {
+		fprintf(stderr, "Unknown dsa ver test %s\n", &buf[1]);
+		exit(1);
+	    }
+            fputs(buf, dsaresp);
+            continue;
+        }
+
         /* [Mod = ... ] */
         if (buf[0] == '[') {
 
-            if (sscanf(buf, "[mod = %d]", &modulus) != 1) {
-                goto loser;
+	    if (type == FIPS186_1) {
+                N=160;
+                if (sscanf(buf, "[mod = %d]", &L) != 1) {
+                    goto loser;
+		}
+	    } else if (sscanf(buf, "[mod = L=%d, N=%d", &L, &N) != 2) {
+		goto loser;
             }
 
             fputs(buf, dsaresp);
             fputc('\n', dsaresp);
 
-            /****************************************************************
-             * PQG_ParamGenSeedLen doesn't take a key size, it takes an index
-             * that points to a valid key size.
-             */
-            keySizeIndex = PQG_PBITS_TO_INDEX(modulus);
-            if(keySizeIndex == -1 || modulus<512 || modulus>1024) {
-               fprintf(dsaresp,
-                    "DSA key size must be a multiple of 64 between 512 "
-                    "and 1024, inclusive");
-                goto loser;
+	    if (type == FIPS186_1) {
+                /************************************************************
+                 * PQG_ParamGenSeedLen doesn't take a key size, it takes an
+                 * index that points to a valid key size.
+                 */
+                keySizeIndex = PQG_PBITS_TO_INDEX(L);
+                if(keySizeIndex == -1 || L<512 || L>1024) {
+                   fprintf(dsaresp,
+                        "DSA key size must be a multiple of 64 between 512 "
+                        "and 1024, inclusive");
+                    goto loser;
+                }
             }
-
             continue;
         }
         /* N = ... */
         if (buf[0] == 'N') {
-
-            if (sscanf(buf, "N = %d", &N) != 1) {
+            if (sscanf(buf, "N = %d", &count) != 1) {
                 goto loser;
             }
-            for (i = 0; i < N; i++) {
-                if (PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
-                    &pqg, &vfy) != SECSuccess) {
+            for (i = 0; i < count; i++) {
+                SECStatus rv;
+
+                if (type == FIPS186_1) {
+                    rv = PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
+                         &pqg, &vfy);
+                } else {
+                    rv = PQG_ParamGenV2(L, N, N, &pqg, &vfy);
+                }
+                if (rv != SECSuccess) {
                     fprintf(dsaresp,
                             "ERROR: Unable to generate PQG parameters");
                     goto loser;
@@ -4050,15 +4323,22 @@ dsa_pqggen_test(char *reqfn)
                 fprintf(dsaresp, "Q = %s\n", buf);
                 to_hex_str(buf, pqg->base.data, pqg->base.len);
                 fprintf(dsaresp, "G = %s\n", buf);
-                to_hex_str(buf, vfy->seed.data, vfy->seed.len);
-                fprintf(dsaresp, "Seed = %s\n", buf);
-                fprintf(dsaresp, "c = %d\n", vfy->counter);
-                to_hex_str(buf, vfy->h.data, vfy->h.len);
-                fputs("H = ", dsaresp);
-                for (j=vfy->h.len; j<pqg->prime.len; j++) {
-                    fprintf(dsaresp, "00");
-                }
-                fprintf(dsaresp, "%s\n", buf);
+		if (type == FIPS186_1) {
+                    to_hex_str(buf, vfy->seed.data, vfy->seed.len);
+                    fprintf(dsaresp, "Seed = %s\n", buf);
+                    fprintf(dsaresp, "c = %d\n", vfy->counter);
+                    to_hex_str(buf, vfy->h.data, vfy->h.len);
+                    fputs("H = ", dsaresp);
+                    for (j=vfy->h.len; j< pqg->prime.len; j++) {
+                	fprintf(dsaresp, "00");
+                    }
+                    fprintf(dsaresp, "%s\n", buf);
+		} else {
+                    fprintf(dsaresp, "counter = %d\n", vfy->counter);
+		    fprintf(dsaresp, "index = %02x\n", vfy->h.data[0]);
+                    to_hex_str(buf, vfy->seed.data, vfy->seed.len);
+                    fprintf(dsaresp, "domain_parameter_seed = %s\n", buf);
+		}
                 fputc('\n', dsaresp);
                 if(pqg!=NULL) {
                     PQG_DestroyParams(pqg);
@@ -4084,6 +4364,7 @@ loser:
     }
 }
 
+
 /*
  * Perform the DSA Signature Generation Test.
  *
@@ -4094,21 +4375,26 @@ loser:
 void
 dsa_siggen_test(char *reqfn)
 {
-    char buf[263];       /* holds one line from the input REQUEST file
+    char buf[800];      /* holds one line from the input REQUEST file
                          * or to the output RESPONSE file.
                          * max for Msg = ....
                          */
     FILE *dsareq;     /* input stream from the REQUEST file */
     FILE *dsaresp;    /* output stream to the RESPONSE file */
-    int modulus;          
+    int modulus;
+    int L;
+    int N;
     int i, j;
+    PRBool use_dsa1 = PR_FALSE;
     PQGParams *pqg = NULL;
     PQGVerify *vfy = NULL;
     DSAPrivateKey *dsakey = NULL;
     int keySizeIndex;     /* index for valid key sizes */
-    unsigned char sha1[20];  /* SHA-1 hash (160 bits) */
-    unsigned char sig[DSA_SIGNATURE_LEN];
+    unsigned char hashBuf[HASH_LENGTH_MAX];  /* SHA-x hash (160-512 bits) */
+    unsigned char sig[DSA_MAX_SIGNATURE_LEN];
     SECItem digest, signature;
+    HASH_HashType hashType = HASH_AlgNULL;
+    int hashNum = 0;
 
     dsareq = fopen(reqfn, "r");
     dsaresp = stdout;
@@ -4135,8 +4421,13 @@ dsa_siggen_test(char *reqfn)
                     dsakey = NULL;
             }
 
-            if (sscanf(buf, "[mod = %d]", &modulus) != 1) {
-                goto loser;
+            if (sscanf(buf, "[mod = L=%d,  N=%d, SHA-%d]", &L, & N,
+                &hashNum) != 3) {
+                use_dsa1 = PR_TRUE;
+		hashNum = 1;
+                if (sscanf(buf, "[mod = %d]", &modulus) != 1) {
+                    goto loser;
+                }
             }
             fputs(buf, dsaresp);
             fputc('\n', dsaresp);
@@ -4145,19 +4436,27 @@ dsa_siggen_test(char *reqfn)
             * PQG_ParamGenSeedLen doesn't take a key size, it takes an index
             * that points to a valid key size.
             */
-            keySizeIndex = PQG_PBITS_TO_INDEX(modulus);
-            if(keySizeIndex == -1 || modulus<512 || modulus>1024) {
-                fprintf(dsaresp,
-                    "DSA key size must be a multiple of 64 between 512 "
-                    "and 1024, inclusive");
-                goto loser;
-            }
-
-            /* Generate PQG and output PQG */
-            if (PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
-                &pqg, &vfy) != SECSuccess) {
-                fprintf(dsaresp, "ERROR: Unable to generate PQG parameters");
-                goto loser;
+            if (use_dsa1) {
+                keySizeIndex = PQG_PBITS_TO_INDEX(modulus);
+                if(keySizeIndex == -1 || modulus<512 || modulus>1024) {
+                    fprintf(dsaresp,
+                        "DSA key size must be a multiple of 64 between 512 "
+                        "and 1024, inclusive");
+                    goto loser;
+                }
+                /* Generate PQG and output PQG */
+                if (PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
+                    &pqg, &vfy) != SECSuccess) {
+                    fprintf(dsaresp, 
+                            "ERROR: Unable to generate PQG parameters");
+                    goto loser;
+                }
+            } else {
+                if (PQG_ParamGenV2(L, N, N, &pqg, &vfy) != SECSuccess) {
+                    fprintf(dsaresp, 
+                            "ERROR: Unable to generate PQG parameters");
+                    goto loser;
+                }
             }
             to_hex_str(buf, pqg->prime.data, pqg->prime.len);
             fprintf(dsaresp, "P = %s\n", buf);
@@ -4171,6 +4470,12 @@ dsa_siggen_test(char *reqfn)
                 fprintf(dsaresp, "ERROR: Unable to generate DSA key");
                 goto loser;
             }
+ 
+	    hashType = sha_get_hashType(hashNum);
+	    if (hashType == HASH_AlgNULL) {
+		fprintf(dsaresp, "ERROR: invalid hash (SHA-%d)",hashNum);
+		goto loser;
+	    }
             continue;
         }
 
@@ -4179,7 +4484,12 @@ dsa_siggen_test(char *reqfn)
             unsigned char msg[128]; /* MAX msg 128 */
             unsigned int len = 0;
 
-            memset(sha1, 0, sizeof sha1);
+	    if (hashType == HASH_AlgNULL) {
+		fprintf(dsaresp, "ERROR: Hash Alg not set");
+		goto loser;
+	    }
+
+            memset(hashBuf, 0, sizeof hashBuf);
             memset(sig,  0, sizeof sig);
 
             i = 3;
@@ -4189,14 +4499,16 @@ dsa_siggen_test(char *reqfn)
             for (j=0; isxdigit(buf[i]); i+=2,j++) {
                 hex_to_byteval(&buf[i], &msg[j]);
             }
-            if (SHA1_HashBuf(sha1, msg, j) != SECSuccess) {
-                 fprintf(dsaresp, "ERROR: Unable to generate SHA1 digest");
+            if (fips_hashBuf(hashType, hashBuf, msg, j) != SECSuccess) {
+                 fprintf(dsaresp, "ERROR: Unable to generate SHA% digest", 
+			 hashNum);
                  goto loser;
             }
 
+
             digest.type = siBuffer;
-            digest.data = sha1;
-            digest.len = sizeof sha1;
+            digest.data = hashBuf;
+            digest.len = fips_hashLen(hashType);
             signature.type = siBuffer;
             signature.data = sig;
             signature.len = sizeof sig;
@@ -4213,7 +4525,6 @@ dsa_siggen_test(char *reqfn)
 
             /* output the orginal Msg, and generated Y, R, and S */
             fputs(buf, dsaresp);
-            fputc('\n', dsaresp);
             to_hex_str(buf, dsakey->publicValue.data,
                        dsakey->publicValue.len);
             fprintf(dsaresp, "Y = %s\n", buf);
@@ -4221,6 +4532,7 @@ dsa_siggen_test(char *reqfn)
             fprintf(dsaresp, "R = %s\n", buf);
             to_hex_str(buf, &signature.data[len], len);
             fprintf(dsaresp, "S = %s\n", buf);
+            fputc('\n', dsaresp);
             continue;
         }
 
@@ -4251,19 +4563,22 @@ loser:
 void
 dsa_sigver_test(char *reqfn)
 {
-    char buf[263];       /* holds one line from the input REQUEST file
+    char buf[800];       /* holds one line from the input REQUEST file
                          * or to the output RESPONSE file.
                          * max for Msg = ....
                          */
     FILE *dsareq;     /* input stream from the REQUEST file */
     FILE *dsaresp;    /* output stream to the RESPONSE file */
-    int modulus;  
+    int L;
+    int N;
     unsigned int i, j;
     SECItem digest, signature;
     DSAPublicKey pubkey;
     unsigned int pgySize;        /* size for p, g, and y */
-    unsigned char sha1[20];  /* SHA-1 hash (160 bits) */
-    unsigned char sig[DSA_SIGNATURE_LEN];
+    unsigned char hashBuf[HASH_LENGTH_MAX];  /* SHA-x hash (160-512 bits) */
+    unsigned char sig[DSA_MAX_SIGNATURE_LEN];
+    HASH_HashType hashType = HASH_AlgNULL;
+    int hashNum = 0;
 
     dsareq = fopen(reqfn, "r");
     dsaresp = stdout;
@@ -4279,8 +4594,13 @@ dsa_sigver_test(char *reqfn)
         /* [Mod = x] */
         if (buf[0] == '[') {
 
-            if (sscanf(buf, "[mod = %d]", &modulus) != 1) {
-                goto loser;
+            if (sscanf(buf, "[mod = L=%d,  N=%d, SHA-%d]", &L, & N,
+                &hashNum) != 3) {
+		N=160;
+		hashNum = 1;
+                if (sscanf(buf, "[mod = %d]", &L) != 1) {
+                    goto loser;
+                }
             }
 
             if (pubkey.params.prime.data) { /* P */
@@ -4298,16 +4618,22 @@ dsa_sigver_test(char *reqfn)
             fputs(buf, dsaresp);
 
             /* calculate the size of p, g, and y then allocate items */
-            pgySize = modulus/8;
+            pgySize = L/8;
             SECITEM_AllocItem(NULL, &pubkey.params.prime, pgySize);
             SECITEM_AllocItem(NULL, &pubkey.params.base, pgySize);
             SECITEM_AllocItem(NULL, &pubkey.publicValue, pgySize);
             pubkey.params.prime.len = pubkey.params.base.len = pgySize;
             pubkey.publicValue.len = pgySize;
 
-            /* q always 20 bytes */
-            SECITEM_AllocItem(NULL, &pubkey.params.subPrime, 20);
-            pubkey.params.subPrime.len = 20;
+            /* q always N/8 bytes */
+            SECITEM_AllocItem(NULL, &pubkey.params.subPrime, N/8);
+            pubkey.params.subPrime.len = N/8;
+
+	    hashType = sha_get_hashType(hashNum);
+	    if (hashType == HASH_AlgNULL) {
+		fprintf(dsaresp, "ERROR: invalid hash (SHA-%d)",hashNum);
+		goto loser;
+	    }
 
             continue;
         }
@@ -4359,7 +4685,12 @@ dsa_sigver_test(char *reqfn)
         /* Msg = ... */
         if (strncmp(buf, "Msg", 3) == 0) {
             unsigned char msg[128]; /* MAX msg 128 */
-            memset(sha1, 0, sizeof sha1);
+            memset(hashBuf, 0, sizeof hashBuf);
+
+	    if (hashType == HASH_AlgNULL) {
+		fprintf(dsaresp, "ERROR: Hash Alg not set");
+		goto loser;
+	    }
 
             i = 3;
             while (isspace(buf[i]) || buf[i] == '=') {
@@ -4368,8 +4699,9 @@ dsa_sigver_test(char *reqfn)
             for (j=0; isxdigit(buf[i]); i+=2,j++) {
                 hex_to_byteval(&buf[i], &msg[j]);
             }
-            if (SHA1_HashBuf(sha1, msg, j) != SECSuccess) {
-                fprintf(dsaresp, "ERROR: Unable to generate SHA1 digest");
+            if (fips_hashBuf(hashType, hashBuf, msg, j) != SECSuccess) {
+                fprintf(dsaresp, "ERROR: Unable to generate SHA-%d digest",
+								hashNum);
                 goto loser;
             }
 
@@ -4399,7 +4731,7 @@ dsa_sigver_test(char *reqfn)
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-            for (j=0; j< DSA_SUBPRIME_LEN; i+=2,j++) {
+            for (j=0; j< pubkey.params.subPrime.len; i+=2,j++) {
                 hex_to_byteval(&buf[i], &sig[j]);
             }
 
@@ -4409,27 +4741,34 @@ dsa_sigver_test(char *reqfn)
 
         /* S = ... */
         if (buf[0] == 'S') {
+	    if (hashType == HASH_AlgNULL) {
+		fprintf(dsaresp, "ERROR: Hash Alg not set");
+		goto loser;
+	    }
+
             i = 1;
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-            for (j=DSA_SUBPRIME_LEN; j< DSA_SIGNATURE_LEN; i+=2,j++) {
+            for (j=pubkey.params.subPrime.len; 
+				j< pubkey.params.subPrime.len*2; i+=2,j++) {
                 hex_to_byteval(&buf[i], &sig[j]);
             }
             fputs(buf, dsaresp);
 
             digest.type = siBuffer;
-            digest.data = sha1;
-            digest.len = sizeof sha1;
+            digest.data = hashBuf;
+            digest.len = fips_hashLen(hashType);
             signature.type = siBuffer;
             signature.data = sig;
-            signature.len = sizeof sig;
+            signature.len = pubkey.params.subPrime.len*2;
 
             if (DSA_VerifyDigest(&pubkey, &signature, &digest) == SECSuccess) {
                 fprintf(dsaresp, "Result = P\n");
             } else {
                 fprintf(dsaresp, "Result = F\n");
             }
+	    fprintf(dsaresp, "\n");
             continue;
         }
     }
@@ -4559,6 +4898,8 @@ rsa_siggen_test(char *reqfn)
            /* set the SHA Algorithm */
            if (strncmp(&buf[i], "SHA1", 4) == 0) {
                 shaAlg = HASH_AlgSHA1;
+           } else if (strncmp(&buf[i], "SHA224", 6) == 0) {
+                shaAlg = HASH_AlgSHA224;
            } else if (strncmp(&buf[i], "SHA256", 6) == 0) {
                 shaAlg = HASH_AlgSHA256;
            } else if (strncmp(&buf[i], "SHA384", 6)== 0) {
@@ -4605,39 +4946,16 @@ rsa_siggen_test(char *reqfn)
             for (j=0; isxdigit(buf[i]) && j < sizeof(msg); i+=2,j++) {
                 hex_to_byteval(&buf[i], &msg[j]);
             }
-
-            if (shaAlg == HASH_AlgSHA1) {
-                if (SHA1_HashBuf(sha, msg, j) != SECSuccess) {
-                     fprintf(rsaresp, "ERROR: Unable to generate SHA1");
-                     goto loser;
-                }
-                shaLength = SHA1_LENGTH;
-                shaOid = SEC_OID_SHA1;
-            } else if (shaAlg == HASH_AlgSHA256) {
-                if (SHA256_HashBuf(sha, msg, j) != SECSuccess) {
-                     fprintf(rsaresp, "ERROR: Unable to generate SHA256");
-                     goto loser;
-                }
-                shaLength = SHA256_LENGTH;
-                shaOid = SEC_OID_SHA256;
-            } else if (shaAlg == HASH_AlgSHA384) {
-                if (SHA384_HashBuf(sha, msg, j) != SECSuccess) {
-                     fprintf(rsaresp, "ERROR: Unable to generate SHA384");
-                     goto loser;
-                }
-                shaLength = SHA384_LENGTH;
-                shaOid = SEC_OID_SHA384;
-            } else if (shaAlg == HASH_AlgSHA512) {
-                if (SHA512_HashBuf(sha, msg, j) != SECSuccess) {
-                     fprintf(rsaresp, "ERROR: Unable to generate SHA512");
-                     goto loser;
-                }
-                shaLength = SHA512_LENGTH;
-                shaOid = SEC_OID_SHA512;
-            } else {
-                fprintf(rsaresp, "ERROR: SHAAlg not defined.");
+	    shaLength = fips_hashLen(shaAlg);
+	    if (fips_hashBuf(shaAlg,sha,msg,j) != SECSuccess) {
+		if (shaLength == 0) {
+            	    fprintf(rsaresp, "ERROR: SHAAlg not defined.");
+		}
+                fprintf(rsaresp, "ERROR: Unable to generate SHA%x",
+			shaLength == 160 ? 1 : shaLength);
                 goto loser;
             }
+	    shaOid = fips_hashOid(shaAlg);
 
             /* Perform RSA signature with the RSA private key. */
             rv = RSA_HashSign( shaOid,
@@ -4777,6 +5095,8 @@ rsa_sigver_test(char *reqfn)
            /* set the SHA Algorithm */
            if (strncmp(&buf[i], "SHA1", 4) == 0) {
                 shaAlg = HASH_AlgSHA1;
+           } else if (strncmp(&buf[i], "SHA224", 6) == 0) {
+                shaAlg = HASH_AlgSHA224;
            } else if (strncmp(&buf[i], "SHA256", 6) == 0) {
                 shaAlg = HASH_AlgSHA256;
            } else if (strncmp(&buf[i], "SHA384", 6) == 0) {
@@ -4850,36 +5170,13 @@ rsa_sigver_test(char *reqfn)
                 hex_to_byteval(&buf[i], &msg[j]);
             }
 
-            if (shaAlg == HASH_AlgSHA1) {
-                if (SHA1_HashBuf(sha, msg, j) != SECSuccess) {
-                     fprintf(rsaresp, "ERROR: Unable to generate SHA1");
-                     goto loser;
-                }
-                shaLength = SHA1_LENGTH;
-                shaOid = SEC_OID_SHA1;
-            } else if (shaAlg == HASH_AlgSHA256) {
-                if (SHA256_HashBuf(sha, msg, j) != SECSuccess) {
-                     fprintf(rsaresp, "ERROR: Unable to generate SHA256");
-                     goto loser;
-                }
-                shaLength = SHA256_LENGTH;
-                shaOid = SEC_OID_SHA256;
-            } else if (shaAlg == HASH_AlgSHA384) {
-                if (SHA384_HashBuf(sha, msg, j) != SECSuccess) {
-                     fprintf(rsaresp, "ERROR: Unable to generate SHA384");
-                     goto loser;
-                }
-                shaLength = SHA384_LENGTH;
-                shaOid = SEC_OID_SHA384;
-            } else if (shaAlg == HASH_AlgSHA512) {
-                if (SHA512_HashBuf(sha, msg, j) != SECSuccess) {
-                     fprintf(rsaresp, "ERROR: Unable to generate SHA512");
-                     goto loser;
-                }
-                shaLength = SHA512_LENGTH;
-                shaOid = SEC_OID_SHA512;
-            } else {
-                fprintf(rsaresp, "ERROR: SHAAlg not defined.");
+	    shaLength = fips_hashLen(shaAlg);
+	    if (fips_hashBuf(shaAlg,sha,msg,j) != SECSuccess) {
+		if (shaLength == 0) {
+            	    fprintf(rsaresp, "ERROR: SHAAlg not defined.");
+		}
+                fprintf(rsaresp, "ERROR: Unable to generate SHA%x",
+			shaLength == 160 ? 1 : shaLength);
                 goto loser;
             }
 
@@ -4940,6 +5237,9 @@ loser:
 int main(int argc, char **argv)
 {
     if (argc < 2) exit (-1);
+
+    RNG_RNGInit();
+    SECOID_Init();
 
     /*************/
     /*   TDEA    */
