@@ -15,7 +15,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsIComponentManager.h"
-#include "prtypes.h"
 #include "prio.h"
 
 #include "nsReadableUtils.h"
