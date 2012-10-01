@@ -15,6 +15,7 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothReplyRunnable;
+class BluetoothNamedValue;
 
 class BluetoothHfpManager : public mozilla::ipc::UnixSocketConsumer
                           , public nsIObserver
@@ -38,9 +39,11 @@ public:
 private:
   BluetoothHfpManager();
 
-  bool BroadcastSystemMessage(const char* aCommand,
-                              const int aCommandLength);
   nsresult HandleVolumeChanged(const nsAString& aData);
+  bool BroadcastSystemMessage(const nsAString& aType,
+                              const InfallibleTArray<BluetoothNamedValue>& aData);
+  void NotifyDialer(const nsAString& aCommand);
+  void NotifySettings(const bool aConnected);
 
   int mCurrentVgs;
   int mCurrentCallIndex;
