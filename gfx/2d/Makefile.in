@@ -29,7 +29,6 @@ EXPORTS_mozilla/gfx	= \
         Point.h \
         Matrix.h \
         Rect.h \
-        Scale.h \
         Types.h \
         Tools.h \
         UserData.h \
@@ -47,7 +46,6 @@ CPPSRCS	= \
         RecordedEvent.cpp \
         DrawEventRecorder.cpp \
         Blur.cpp \
-        Scale.cpp \
         ScaledFontBase.cpp \
         DrawTargetDual.cpp \
         ImageScaling.cpp \
@@ -78,8 +76,6 @@ CPPSRCS	+= \
         SourceSurfaceSkia.cpp \
         DrawTargetSkia.cpp \
         PathSkia.cpp \
-        convolver.cpp \
-        image_operations.cpp \
         $(NULL)
 
 DEFINES += -DUSE_SKIA
