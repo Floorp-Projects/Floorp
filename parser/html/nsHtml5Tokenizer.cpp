@@ -3906,8 +3906,8 @@ nsHtml5Tokenizer::emitOrAppendOne(const PRUnichar* val, int32_t returnState)
 void 
 nsHtml5Tokenizer::end()
 {
-  strBuf = 0;
-  longStrBuf = 0;
+  strBuf = nullptr;
+  longStrBuf = nullptr;
   doctypeName = nullptr;
   if (systemIdentifier) {
     nsHtml5Portability::releaseString(systemIdentifier);
