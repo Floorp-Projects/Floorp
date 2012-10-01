@@ -59,20 +59,6 @@ public:
                 nsAString& aDevicePath);
 
   static bool
-  AddServiceRecords(const nsAString& aAdapterPath,
-                    const char* serviceName,
-                    unsigned long long uuidMsb,
-                    unsigned long long uuidLsb,
-                    int channel);
-
-  static bool
-  RemoveServiceRecords(const nsAString& aAdapterPath,
-                       const char* serviceName,
-                       unsigned long long uuidMsb,
-                       unsigned long long uuidLsb,
-                       int channel);
-
-  static bool
   AddReservedServicesInternal(const nsAString& aAdapterPath,
                               const nsTArray<uint32_t>& aServices,
                               nsTArray<uint32_t>& aServiceHandlesContainer);
@@ -95,13 +81,6 @@ public:
                       bool aEncrypt,
                       mozilla::ipc::UnixSocketConsumer* aConsumer,
                       BluetoothReplyRunnable* aRunnable);
-
-  virtual nsresult
-  ListenSocketViaService(int aChannel,
-                         BluetoothSocketType aType,
-                         bool aAuth,
-                         bool aEncrypt,
-                         mozilla::ipc::UnixSocketConsumer* aConsumer);
 
   virtual nsresult
   CreatePairedDeviceInternal(const nsAString& aAdapterPath,
