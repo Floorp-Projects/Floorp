@@ -1030,7 +1030,7 @@ SourceCompressorThread::abort(SourceCompressionToken *userTok)
 #endif /* JS_THREADSAFE */
 
 void
-JSScript::setScriptSource(JSContext *cx, ScriptSource *ss)
+JSScript::setScriptSource(ScriptSource *ss)
 {
     JS_ASSERT(ss);
     ss->incref();
@@ -1523,7 +1523,7 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     }
     script->staticLevel = uint16_t(staticLevel);
 
-    script->setScriptSource(cx, ss);
+    script->setScriptSource(ss);
     script->sourceStart = bufStart;
     script->sourceEnd = bufEnd;
 

@@ -1342,8 +1342,7 @@ CopyDecompiledTextForDecomposedOp(JSPrinter *jp, jsbytecode *pc)
  * assert in a debug build.
  */
 static int
-ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
-                   jsbytecode **pcstack);
+ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc, jsbytecode **pcstack);
 
 #define FAILED_EXPRESSION_DECOMPILER ((char *) 1)
 
@@ -2352,7 +2351,7 @@ GetBlockNames(JSContext *cx, StaticBlockObject &blockObj, AtomVector *atoms)
 }
 
 static bool
-PushBlockNames(JSContext *cx, SprintStack *ss, const AtomVector &atoms)
+PushBlockNames(SprintStack *ss, const AtomVector &atoms)
 {
     for (size_t i = 0; i < atoms.length(); i++) {
         const char *name = QuoteString(&ss->sprinter, atoms[i], 0);
@@ -2368,13 +2367,13 @@ PushBlockNames(JSContext *cx, SprintStack *ss, const AtomVector &atoms)
  * with the N variable names stored in 'atoms'.
  */
 static bool
-AssignBlockNamesToPushedSlots(JSContext *cx, SprintStack *ss, const AtomVector &atoms)
+AssignBlockNamesToPushedSlots(SprintStack *ss, const AtomVector &atoms)
 {
     /* For simplicity, just pop and push. */
     LOCAL_ASSERT(atoms.length() <= (unsigned)ss->top);
     for (size_t i = 0; i < atoms.length(); ++i)
         PopStr(ss, JSOP_NOP);
-    return PushBlockNames(cx, ss, atoms);
+    return PushBlockNames(ss, atoms);
 }
 
 static const char SkipString[] = "/*skip*/";
@@ -2382,7 +2381,7 @@ static const char DestructuredString[] = "/*destructured*/";
 static const unsigned DestructuredStringLength = ArrayLength(DestructuredString) - 1;
 
 static ptrdiff_t
-SprintLetBody(JSContext *cx, JSPrinter *jp, SprintStack *ss, jsbytecode *pc, ptrdiff_t bodyLength,
+SprintLetBody(JSPrinter *jp, SprintStack *ss, jsbytecode *pc, ptrdiff_t bodyLength,
               const char *headChars)
 {
     if (pc[bodyLength] == JSOP_LEAVEBLOCK) {
@@ -3266,7 +3265,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 AtomVector atoms(cx);
                 StaticBlockObject &blockObj = obj->asStaticBlock();
 
-                if (!GetBlockNames(cx, blockObj, &atoms) || !PushBlockNames(cx, ss, atoms))
+                if (!GetBlockNames(cx, blockObj, &atoms) || !PushBlockNames(ss, atoms))
                     return NULL;
 
                 sn = js_GetSrcNote(jp->script, pc);
@@ -3489,7 +3488,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 DupBuffer head(cx);
                 if (!Dup(ss->sprinter.stringAt(headBegin), &head))
                     return NULL;
-                if (!AssignBlockNamesToPushedSlots(cx, ss, atoms))
+                if (!AssignBlockNamesToPushedSlots(ss, atoms))
                     return NULL;
 
                 /* Detect 'for (let ...)' desugared into 'let (...) {for}'. */
@@ -3507,7 +3506,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 len = LetDataToOffset(letData);
                 pc = nextpc;
                 saveop = (JSOp) pc[len];
-                todo = SprintLetBody(cx, jp, ss, pc, len, head.begin());
+                todo = SprintLetBody(jp, ss, pc, len, head.begin());
                 break;
               }
 
@@ -3547,7 +3546,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 DupBuffer rhs(cx);
                 if (!Dup(PopStr(ss, JSOP_NOP), &rhs))
                     return NULL;
-                if (!AssignBlockNamesToPushedSlots(cx, ss, atoms))
+                if (!AssignBlockNamesToPushedSlots(ss, atoms))
                     return NULL;
                 if (!PushStr(ss, rhs.begin(), op))
                     return NULL;
@@ -6239,8 +6238,7 @@ js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
 }
 
 static char *
-DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
-                    jsbytecode *pc)
+DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *pc)
 {
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
@@ -6346,7 +6344,7 @@ js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc)
 #define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
 
 static int
-SimulateOp(JSContext *cx, JSScript *script, JSOp op, const JSCodeSpec *cs,
+SimulateOp(JSScript *script, JSOp op, const JSCodeSpec *cs,
            jsbytecode *pc, jsbytecode **pcstack, unsigned &pcdepth)
 {
     unsigned nuses = StackUses(script, pc);
@@ -6401,8 +6399,7 @@ SimulateOp(JSContext *cx, JSScript *script, JSOp op, const JSCodeSpec *cs,
 }
 
 static int
-ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
-                   jsbytecode **pcstack)
+ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbytecode **pcstack)
 {
     /*
      * Walk forward from script->main and compute the stack depth and stack of
@@ -6517,11 +6514,11 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
         if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
             if (hpcdepth == unsigned(-1))
                 hpcdepth = pcdepth;
-            if (SimulateOp(cx, script, op, cs, pc, pcstack, hpcdepth) < 0)
+            if (SimulateOp(script, op, cs, pc, pcstack, hpcdepth) < 0)
                 return -1;
         } else {
             hpcdepth = unsigned(-1);
-            if (SimulateOp(cx, script, op, cs, pc, pcstack, pcdepth) < 0)
+            if (SimulateOp(script, op, cs, pc, pcstack, pcdepth) < 0)
                 return -1;
         }
 

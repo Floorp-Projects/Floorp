@@ -725,7 +725,7 @@ struct JSObject : public js::ObjectImpl
      * logic across the object vs. shape module wall.
      */
     bool allocSlot(JSContext *cx, uint32_t *slotp);
-    void freeSlot(JSContext *cx, uint32_t slot);
+    void freeSlot(uint32_t slot);
 
   public:
     static bool reportReadOnly(JSContext *cx, jsid id, unsigned report = JSREPORT_ERROR);
