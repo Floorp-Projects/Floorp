@@ -1540,11 +1540,17 @@ gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
         mDT->GetOpaqueRect().Contains(clipExtents)) {
       DrawTarget *oldDT = mDT;
       RefPtr<SourceSurface> source = mDT->Snapshot();
+      Point oldDeviceOffset = CurrentState().deviceOffset;
       PushGroup(content);
+
+      Point offset = CurrentState().deviceOffset - oldDeviceOffset;
       Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
+      Rect sourceRect = surfRect;
+      sourceRect.x += offset.x;
+      sourceRect.y += offset.y;
       Matrix oldTransform = mDT->GetTransform();
-      mDT->SetTransform(GetDeviceTransform());
-      mDT->DrawSurface(source, surfRect, surfRect); 
+      mDT->SetTransform(Matrix());
+      mDT->DrawSurface(source, surfRect, sourceRect); 
       mDT->SetTransform(oldTransform);
       mDT->SetOpaqueRect(oldDT->GetOpaqueRect());
       return;
