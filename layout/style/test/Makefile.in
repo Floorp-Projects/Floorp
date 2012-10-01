@@ -87,6 +87,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		file_bug645998-2.css \
 		test_bug716226.html \
 		test_bug765590.html \
+		test_bug798567.html \
 		test_cascade.html \
 		test_ch_ex_no_infloops.html \
 		test_compute_data_with_start_struct.html \
