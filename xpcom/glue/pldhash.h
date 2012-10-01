@@ -31,7 +31,7 @@ extern "C" {
 
 /* Table size limit, do not equal or exceed (see min&maxAlphaFrac, below). */
 #undef PL_DHASH_SIZE_LIMIT
-#define PL_DHASH_SIZE_LIMIT     PR_BIT(24)
+#define PL_DHASH_SIZE_LIMIT     ((uint32_t)1 << 24)
 
 /* Minimum table size, or gross entry count (net is at most .75 loaded). */
 #ifndef PL_DHASH_MIN_SIZE
@@ -202,7 +202,8 @@ struct PLDHashTable {
  * We store hashShift rather than sizeLog2 to optimize the collision-free case
  * in SearchTable.
  */
-#define PL_DHASH_TABLE_SIZE(table)  PR_BIT(PL_DHASH_BITS - (table)->hashShift)
+#define PL_DHASH_TABLE_SIZE(table) \
+    ((uint32_t)1 << (PL_DHASH_BITS - (table)->hashShift))
 
 /*
  * Table space at entryStore is allocated and freed using these callbacks.
