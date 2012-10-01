@@ -64,7 +64,7 @@ struct LayerPropertiesBase : public LayerProperties
   LayerPropertiesBase(Layer* aLayer)
     : mLayer(aLayer)
     , mMaskLayer(nullptr)
-    , mVisibleBounds(aLayer->GetVisibleRegion().GetBounds())
+    , mVisibleRegion(aLayer->GetVisibleRegion())
     , mTransform(aLayer->GetTransform())
     , mOpacity(aLayer->GetOpacity())
     , mUseClipRect(!!aLayer->GetClipRect())
@@ -118,6 +118,10 @@ struct LayerPropertiesBase : public LayerProperties
       }
     }
 
+    nsIntRegion visible;
+    visible.Xor(mVisibleRegion, mLayer->GetVisibleRegion());
+    result = result.Union(TransformRect(visible.GetBounds(), mTransform));
+
     result = result.Union(ComputeChangeInternal(aCallback));
     result = result.Union(TransformRect(mLayer->GetInvalidRegion().GetBounds(), mTransform));
 
@@ -145,14 +149,14 @@ struct LayerPropertiesBase : public LayerProperties
 
   nsIntRect OldTransformedBounds()
   {
-    return TransformRect(mVisibleBounds, mTransform);
+    return TransformRect(mVisibleRegion.GetBounds(), mTransform);
   }
 
   virtual nsIntRect ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback) { return nsIntRect(); }
 
   nsRefPtr<Layer> mLayer;
   nsAutoPtr<LayerPropertiesBase> mMaskLayer;
-  nsIntRect mVisibleBounds;
+  nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
   float mOpacity;
   nsIntRect mClipRect;
