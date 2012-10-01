@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "nsIDOMCSSConditionRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
@@ -183,8 +184,12 @@ class nsCSSFontFaceStyleDecl : public nsICSSDeclaration
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMCSSSTYLEDECLARATION
+  NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
   NS_DECL_NSICSSDECLARATION
+  virtual already_AddRefed<mozilla::dom::CSSValue>
+  GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv)
+    MOZ_OVERRIDE;
+  using nsICSSDeclaration::GetPropertyCSSValue;
 
   nsCSSFontFaceStyleDecl()
   {

@@ -19,7 +19,7 @@ MODULE		= layout
 LIBRARY_NAME	= gkstyle_s
 LIBXUL_LIBRARY	= 1
 
-EXPORTS_NAMESPACES = mozilla/css
+EXPORTS_NAMESPACES = mozilla/css mozilla/dom
 
 EXPORTS		= \
 		AnimationCommon.h \
@@ -80,6 +80,10 @@ EXPORTS_mozilla/css = \
 		Rule.h \
 		StyleRule.h \
 		$(NULL)
+
+EXPORTS_mozilla/dom = \
+  CSSValue.h \
+  $(null)
 
 CPPSRCS		= \
 		AnimationCommon.cpp \
