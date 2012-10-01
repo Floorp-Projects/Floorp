@@ -2458,7 +2458,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   // ----- Figure out if we need to apply an app default CSP
   bool applyAppDefaultCSP = false;
   nsIPrincipal* principal = NodePrincipal();
-  PRUint16 appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
   bool unknownAppId;
   if (NS_SUCCEEDED(principal->GetUnknownAppId(&unknownAppId)) &&
       !unknownAppId &&

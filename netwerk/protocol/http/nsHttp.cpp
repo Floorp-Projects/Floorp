@@ -288,13 +288,13 @@ nsHttp::ParseInt64(const char *input, const char **next, int64_t *r)
 }
 
 bool
-nsHttp::IsPermanentRedirect(PRUint32 httpStatus)
+nsHttp::IsPermanentRedirect(uint32_t httpStatus)
 {
   return httpStatus == 301 || httpStatus == 308;
 }
 
 bool
-nsHttp::ShouldRewriteRedirectToGET(PRUint32 httpStatus, nsHttpAtom method)
+nsHttp::ShouldRewriteRedirectToGET(uint32_t httpStatus, nsHttpAtom method)
 {
   // for 301 and 302, only rewrite POST
   if (httpStatus == 301 || httpStatus == 302)
