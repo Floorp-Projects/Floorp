@@ -2143,7 +2143,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 if (actionIndex > -1) {
                                     formAttrs.addAttribute(
                                             AttributeName.ACTION,
-                                            attributes.getValue(actionIndex)
+                                            attributes.getValueNoBoundsCheck(actionIndex)
                                             // [NOCPP[
                                             , XmlViolationPolicy.ALLOW
                                     // ]NOCPP]
@@ -2158,7 +2158,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         HtmlAttributes.EMPTY_ATTRIBUTES);
                                 int promptIndex = attributes.getIndex(AttributeName.PROMPT);
                                 if (promptIndex > -1) {
-                                    @Auto char[] prompt = Portability.newCharArrayFromString(attributes.getValue(promptIndex));
+                                    @Auto char[] prompt = Portability.newCharArrayFromString(attributes.getValueNoBoundsCheck(promptIndex));
                                     appendCharacters(stack[currentPtr].node,
                                             prompt, 0, prompt.length);
                                 } else {
@@ -2174,14 +2174,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 // ]NOCPP]
                                 );
                                 for (int i = 0; i < attributes.getLength(); i++) {
-                                    AttributeName attributeQName = attributes.getAttributeName(i);
+                                    AttributeName attributeQName = attributes.getAttributeNameNoBoundsCheck(i);
                                     if (AttributeName.NAME == attributeQName
                                             || AttributeName.PROMPT == attributeQName) {
                                         attributes.releaseValue(i);
                                     } else if (AttributeName.ACTION != attributeQName) {
                                         inputAttributes.addAttribute(
                                                 attributeQName,
-                                                attributes.getValue(i)
+                                                attributes.getValueNoBoundsCheck(i)
                                                 // [NOCPP[
                                                 , XmlViolationPolicy.ALLOW
                                         // ]NOCPP]
