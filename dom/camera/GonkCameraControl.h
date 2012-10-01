@@ -93,9 +93,9 @@ protected:
   android::MediaProfiles*   mMediaProfiles;
   android::GonkRecorder*    mRecorder;
 
-  PRUint32                  mVideoRotation;
-  PRUint32                  mVideoWidth;
-  PRUint32                  mVideoHeight;
+  uint32_t                  mVideoRotation;
+  uint32_t                  mVideoWidth;
+  uint32_t                  mVideoHeight;
   nsString                  mVideoFile;
 
   // camcorder profile settings for the desired quality level

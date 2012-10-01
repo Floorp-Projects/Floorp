@@ -25,8 +25,8 @@ public:
 NS_IMPL_ISUPPORTS1(BluetoothRILTelephonyCallback, nsIRILTelephonyCallback)
 
 NS_IMETHODIMP
-BluetoothRILTelephonyCallback::CallStateChanged(PRUint32 aCallIndex,
-                                                PRUint16 aCallState,
+BluetoothRILTelephonyCallback::CallStateChanged(uint32_t aCallIndex,
+                                                uint16_t aCallState,
                                                 const nsAString& aNumber,
                                                 bool aIsActive)
 {
@@ -38,8 +38,8 @@ BluetoothRILTelephonyCallback::CallStateChanged(PRUint32 aCallIndex,
 }
 
 NS_IMETHODIMP
-BluetoothRILTelephonyCallback::EnumerateCallState(PRUint32 aCallIndex,
-                                                  PRUint16 aCallState,
+BluetoothRILTelephonyCallback::EnumerateCallState(uint32_t aCallIndex,
+                                                  uint16_t aCallState,
                                                   const nsAString_internal& aNumber,
                                                   bool aIsActive,
                                                   bool* aResult)
@@ -49,7 +49,7 @@ BluetoothRILTelephonyCallback::EnumerateCallState(PRUint32 aCallIndex,
 }
 
 NS_IMETHODIMP
-BluetoothRILTelephonyCallback::NotifyError(PRInt32 aCallIndex,
+BluetoothRILTelephonyCallback::NotifyError(int32_t aCallIndex,
                                            const nsAString& aError)
 {
   return NS_OK;
