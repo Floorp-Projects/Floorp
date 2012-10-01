@@ -37,13 +37,22 @@ public class Telemetry {
     public static class Timer {
         private long mStartTime;
         private String mName;
+        private boolean mHasFinished;
 
         public Timer(String name) {
             mName = name;
             mStartTime = SystemClock.uptimeMillis();
+            mHasFinished = false;
         }
 
         public void stop() {
+            // Only the first stop counts.
+            if (mHasFinished) {
+                return;
+            } else {
+                mHasFinished = true;
+            }
+
             long elapsed = SystemClock.uptimeMillis() - mStartTime;
             if (elapsed < Integer.MAX_VALUE) {
                 HistogramAdd(mName, (int)(elapsed));
