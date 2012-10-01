@@ -469,6 +469,11 @@ class nsHashKey;
 //System time is changed
 #define NS_MOZ_TIME_CHANGE_EVENT     5500
 
+// Network packet events.
+#define NS_NETWORK_EVENT_START       5600
+#define NS_NETWORK_UPLOAD_EVENT      (NS_NETWORK_EVENT_START + 1)
+#define NS_NETWORK_DOWNLOAD_EVENT    (NS_NETWORK_EVENT_START + 2)
+
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.

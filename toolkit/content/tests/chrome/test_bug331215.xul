@@ -29,13 +29,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=331215
 <![CDATA[
 
 /** Test for Bug 331215 **/
-todo(false, "disabled - to be fixed in bug 443763");
-/*
-XXX disabled - to be fixed in bug 443763
+
 SimpleTest.waitForExplicitFinish();
 window.open("bug331215_window.xul", "331215test", 
             "chrome,width=600,height=600");
-*/
 
 ]]>
 </script>

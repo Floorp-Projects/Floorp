@@ -17,38 +17,55 @@ browser.jar:
   skin/classic/browser/aboutSyncTabs.css
 #endif
   skin/classic/browser/actionicon-tab.png
+  skin/classic/browser/actionicon-tab@2x.png
 * skin/classic/browser/browser.css                          (browser.css)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/Geolocation-16.png
+  skin/classic/browser/Geolocation-16@2x.png
   skin/classic/browser/Geolocation-64.png
+  skin/classic/browser/Geolocation-64@2x.png
   skin/classic/browser/home.png
   skin/classic/browser/identity.png
+  skin/classic/browser/identity@2x.png
   skin/classic/browser/identity-icons-generic.png
+  skin/classic/browser/identity-icons-generic@2x.png
   skin/classic/browser/identity-icons-https.png
+  skin/classic/browser/identity-icons-https@2x.png
   skin/classic/browser/identity-icons-https-ev.png
+  skin/classic/browser/identity-icons-https-ev@2x.png
   skin/classic/browser/Info.png
   skin/classic/browser/KUI-background.png
   skin/classic/browser/KUI-close.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
   skin/classic/browser/panel-expander-closed.png
+  skin/classic/browser/panel-expander-closed@2x.png
   skin/classic/browser/panel-expander-open.png
+  skin/classic/browser/panel-expander-open@2x.png
   skin/classic/browser/panel-plus-sign.png
   skin/classic/browser/page-livemarks.png
+  skin/classic/browser/page-livemarks@2x.png
   skin/classic/browser/pageInfo.css
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/Privacy-48.png
   skin/classic/browser/reload-stop-go.png
+  skin/classic/browser/reload-stop-go@2x.png
   skin/classic/browser/searchbar-dropmarker.png
+  skin/classic/browser/searchbar-dropmarker@2x.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/Search.png
+  skin/classic/browser/Search@2x.png
   skin/classic/browser/Secure-Glyph.png
+  skin/classic/browser/Secure-Glyph@2x.png
   skin/classic/browser/keyhole-circle.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/toolbarbutton-dropmarker.png
   skin/classic/browser/urlbar-history-dropmarker.png
+  skin/classic/browser/urlbar-history-dropmarker@2x.png
   skin/classic/browser/urlbar-arrow.png
+  skin/classic/browser/urlbar-arrow@2x.png
   skin/classic/browser/urlbar-popup-blocked.png
+  skin/classic/browser/urlbar-popup-blocked@2x.png
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
   skin/classic/browser/downloads/download-glow.png          (downloads/download-glow.png)
   skin/classic/browser/downloads/download-notification.png  (downloads/download-notification.png)
@@ -63,6 +80,7 @@ browser.jar:
   skin/classic/browser/feeds/audioFeedIcon16.png            (feeds/feedIcon16.png)
   skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
   skin/classic/browser/newtab/controls.png                  (newtab/controls.png)
+  skin/classic/browser/newtab/controls@2x.png               (newtab/controls@2x.png)
   skin/classic/browser/newtab/noise.png                     (newtab/noise.png)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
@@ -71,13 +89,18 @@ browser.jar:
 * skin/classic/browser/places/places.css                    (places/places.css)
 * skin/classic/browser/places/organizer.css                 (places/organizer.css)
   skin/classic/browser/places/query.png                     (places/query.png)
+  skin/classic/browser/places/query@2x.png                  (places/query@2x.png)
   skin/classic/browser/places/bookmarksMenu.png             (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png          (places/bookmarksToolbar.png)
+  skin/classic/browser/places/bookmarksToolbar@2x.png       (places/bookmarksToolbar@2x.png)
   skin/classic/browser/places/history.png                   (places/history.png)
+  skin/classic/browser/places/history@2x.png                (places/history@2x.png)
   skin/classic/browser/places/star-icons.png                (places/star-icons.png)
+  skin/classic/browser/places/star-icons@2x.png             (places/star-icons@2x.png)
   skin/classic/browser/places/toolbar.png                   (places/toolbar.png)
   skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
   skin/classic/browser/places/folderDropArrow.png           (places/folderDropArrow.png)
+  skin/classic/browser/places/folderDropArrow@2x.png        (places/folderDropArrow@2x.png)
   skin/classic/browser/places/editBookmarkOverlay.css       (places/editBookmarkOverlay.css)
   skin/classic/browser/places/minus.png                     (places/minus.png)
   skin/classic/browser/places/minus-active.png              (places/minus-active.png)
@@ -86,9 +109,11 @@ browser.jar:
   skin/classic/browser/places/starred48.png                 (places/starred48.png)
   skin/classic/browser/places/unstarred48.png               (places/unstarred48.png)
   skin/classic/browser/places/unfiledBookmarks.png          (places/unfiledBookmarks.png)
+  skin/classic/browser/places/unfiledBookmarks@2x.png       (places/unfiledBookmarks@2x.png)
   skin/classic/browser/places/twisty-open.gif               (places/twisty-open.gif)
   skin/classic/browser/places/twisty-closed.gif             (places/twisty-closed.gif)
   skin/classic/browser/places/tag.png                       (places/tag.png)
+  skin/classic/browser/places/tag@2x.png                    (places/tag@2x.png)
   skin/classic/browser/places/downloads.png                 (places/downloads.png)
   skin/classic/browser/places/expander-closed-active.png    (places/expander-closed-active.png)
   skin/classic/browser/places/expander-closed.png           (places/expander-closed.png)
@@ -110,10 +135,15 @@ browser.jar:
   skin/classic/browser/social/chat-close.png                             (social/chat-close.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
+  skin/classic/browser/tabbrowser/newtab@2x.png                          (tabbrowser/newtab@2x.png)
   skin/classic/browser/tabbrowser/connecting.png                         (tabbrowser/connecting.png)
+  skin/classic/browser/tabbrowser/connecting@2x.png                      (tabbrowser/connecting@2x.png)
   skin/classic/browser/tabbrowser/loading.png                            (tabbrowser/loading.png)
+  skin/classic/browser/tabbrowser/loading@2x.png                         (tabbrowser/loading@2x.png)
   skin/classic/browser/tabbrowser/tab-arrow-left.png                     (tabbrowser/tab-arrow-left.png)
+  skin/classic/browser/tabbrowser/tab-arrow-left@2x.png                  (tabbrowser/tab-arrow-left@2x.png)
   skin/classic/browser/tabbrowser/tab-arrow-right.png                    (tabbrowser/tab-arrow-right.png)
+  skin/classic/browser/tabbrowser/tab-arrow-right@2x.png                 (tabbrowser/tab-arrow-right@2x.png)
   skin/classic/browser/tabbrowser/tabbar-bottom-bg-active.png            (tabbrowser/tabbar-bottom-bg-active.png)
   skin/classic/browser/tabbrowser/tabbar-bottom-bg-inactive.png          (tabbrowser/tabbar-bottom-bg-inactive.png)
   skin/classic/browser/tabbrowser/tab-bottom-normal-active.png           (tabbrowser/tab-bottom-normal-active.png)
@@ -122,10 +152,14 @@ browser.jar:
   skin/classic/browser/tabbrowser/tabbar-top-bg-active.png               (tabbrowser/tabbar-top-bg-active.png)
   skin/classic/browser/tabbrowser/tabbar-top-bg-inactive.png             (tabbrowser/tabbar-top-bg-inactive.png)
   skin/classic/browser/tabbrowser/tab-top-normal-active.png              (tabbrowser/tab-top-normal-active.png)
+  skin/classic/browser/tabbrowser/tab-top-normal-active@2x.png           (tabbrowser/tab-top-normal-active@2x.png)
   skin/classic/browser/tabbrowser/tab-top-hover-active.png               (tabbrowser/tab-top-hover-active.png)
+  skin/classic/browser/tabbrowser/tab-top-hover-active@2x.png            (tabbrowser/tab-top-hover-active@2x.png)
   skin/classic/browser/tabbrowser/tab-top-selected-active.png            (tabbrowser/tab-top-selected-active.png)
+  skin/classic/browser/tabbrowser/tab-top-selected-active@2x.png         (tabbrowser/tab-top-selected-active@2x.png)
   skin/classic/browser/tabbrowser/tab-overflow-border.png                (tabbrowser/tab-overflow-border.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
+  skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabview/close.png                    (tabview/close.png)
   skin/classic/browser/tabview/edit-light.png               (tabview/edit-light.png)
   skin/classic/browser/tabview/search.png                   (tabview/search.png)
@@ -216,12 +250,17 @@ browser.jar:
   skin/classic/browser/syncProgress.css
 #endif
   skin/classic/browser/lion/keyhole-circle.png              (keyhole-circle-lion.png)
+  skin/classic/browser/keyhole-circle@2x.png                (keyhole-circle-lion@2x.png)
   skin/classic/browser/lion/Toolbar.png                     (Toolbar-lion.png)
+  skin/classic/browser/Toolbar@2x.png                       (Toolbar-lion@2x.png)
   skin/classic/browser/lion/toolbarbutton-dropmarker.png    (toolbarbutton-dropmarker-lion.png)
+  skin/classic/browser/toolbarbutton-dropmarker@2x.png      (toolbarbutton-dropmarker-lion@2x.png)
   skin/classic/browser/lion/tabbrowser/alltabs-box-bkgnd-icon.png      (tabbrowser/alltabs-box-bkgnd-icon-lion.png)
+  skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon@2x.png        (tabbrowser/alltabs-box-bkgnd-icon-lion@2x.png)
   skin/classic/browser/lion/tabview/tabview.png                        (tabview/tabview-lion.png)
   skin/classic/browser/lion/places/toolbar.png              (places/toolbar-lion.png)
   skin/classic/browser/webapps-16.png
+  skin/classic/browser/webapps-16@2x.png
   skin/classic/browser/webapps-64.png
 
 % override chrome://browser/skin/keyhole-circle.png                        chrome://browser/skin/lion/keyhole-circle.png                           os=Darwin osversion>=10.7

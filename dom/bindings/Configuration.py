@@ -227,7 +227,18 @@ class Descriptor(DescriptorProvider):
                             self.interface.identifier.name)
         self.prefable = desc.get('prefable', False)
 
-        self.nativeIsISupports = not self.workers
+        if self.workers:
+            if desc.get('nativeOwnership', 'worker') != 'worker':
+                raise TypeError("Worker descriptor for %s should have 'worker' "
+                                "as value for nativeOwnership" %
+                                self.interface.identifier.name)
+            self.nativeOwnership = "worker"
+        else:
+            self.nativeOwnership = desc.get('nativeOwnership', 'nsisupports')
+            if not self.nativeOwnership in ['owned', 'refcounted', 'nsisupports']:
+                raise TypeError("Descriptor for %s has unrecognized value (%s) "
+                                "for nativeOwnership" %
+                                (self.interface.identifier.name, self.nativeOwnership))
         self.customTrace = desc.get('customTrace', self.workers)
         self.customFinalize = desc.get('customFinalize', self.workers)
         self.wrapperCache = self.workers or desc.get('wrapperCache', True)

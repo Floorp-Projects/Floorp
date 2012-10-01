@@ -221,6 +221,8 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DisconnectHeadsetRequest());
     case Request::TDisconnectObjectPushRequest:
       return actor->DoRequest(aRequest.get_DisconnectObjectPushRequest());
+    case Request::TSendFileRequest:
+      return actor->DoRequest(aRequest.get_SendFileRequest());
     default:
       MOZ_NOT_REACHED("Unknown type!");
       return false;
@@ -537,4 +539,16 @@ BluetoothRequestParent::DoRequest(const DisconnectObjectPushRequest& aRequest)
   mService->DisconnectObjectPush(mReplyRunnable.get());
 
   return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const SendFileRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TSendFileRequest);
+
+  return mService->SendFile(aRequest.devicePath(),
+                            (BlobParent*)aRequest.blobParent(),
+                            (BlobChild*)aRequest.blobChild(),
+                            mReplyRunnable.get());
 }

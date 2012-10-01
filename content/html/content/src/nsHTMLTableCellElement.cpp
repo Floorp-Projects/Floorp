@@ -12,6 +12,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
+#include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"

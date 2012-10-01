@@ -168,7 +168,7 @@ UpdatePrompt.prototype = {
         this._applyWaitTimer = this.createTimer(APPLY_WAIT_TIMEOUT);
         break;
       case "restart":
-        this.restartProcess();
+        this.finishUpdate();
         break;
     }
   },
@@ -176,6 +176,34 @@ UpdatePrompt.prototype = {
   downloadUpdate: function UP_downloadUpdate(aUpdate) {
     Services.aus.downloadUpdate(aUpdate, true);
     Services.aus.addDownloadListener(this);
+  },
+
+  finishUpdate: function UP_finishUpdate() {
+    if (!this._update.isOSUpdate) {
+      // Standard gecko+gaia updates will just need to restart the process
+      this.restartProcess();
+      return;
+    }
+
+    let osApplyToDir;
+    try {
+      this._update.QueryInterface(Ci.nsIWritablePropertyBag);
+      osApplyToDir = this._update.getProperty("osApplyToDir");
+    } catch (e) {}
+
+    if (!osApplyToDir) {
+      log("Error: Update has no osApplyToDir");
+      return;
+    }
+
+    let updateFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    updateFile.initWithPath(osApplyToDir + "/update.zip");
+    if (!updateFile.exists()) {
+      log("Error: FOTA update not found at " + updateFile.path);
+      return;
+    }
+
+    this.finishOSUpdate(updateFile.path);
   },
 
   restartProcess: function UP_restartProcess() {
@@ -194,11 +222,25 @@ UpdatePrompt.prototype = {
       );
   },
 
+  finishOSUpdate: function UP_finishOSUpdate(aOsUpdatePath) {
+    let recoveryService = Cc["@mozilla.org/recovery-service;1"]
+                            .getService(Ci.nsIRecoveryService);
+
+    log("Rebooting into recovery to apply FOTA update: " + aOsUpdatePath);
+
+    try {
+      recoveryService.installFotaUpdate(aOsUpdatePath);
+    } catch(e) {
+      log("Error: Couldn't reboot into recovery to apply FOTA update " +
+          aOsUpdatePath);
+    }
+  },
+
   notify: function UP_notify(aTimer) {
     if (aTimer == this._applyPromptTimer) {
       log("Timed out waiting for result, restarting");
       this._applyPromptTimer = null;
-      this.restartProcess();
+      this.finishUpdate();
     } else if (aTimer == this._applyWaitTimer) {
       this._applyWaitTimer = null;
       this.showUpdatePrompt();

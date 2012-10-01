@@ -96,7 +96,7 @@ def DOMClass(descriptor):
         return """{
   { %s },
   %s, %s
-}""" % (prototypeChainString, toStringBool(descriptor.nativeIsISupports),
+}""" % (prototypeChainString, toStringBool(descriptor.nativeOwnership == 'nsisupports'),
           nativeHooks)
 
 class CGDOMJSClass(CGThing):
@@ -634,9 +634,57 @@ class CGAddPropertyHook(CGAbstractClassHook):
         # FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=774279
         # Using a real trace hook might enable us to deal with non-nsISupports
         # wrappercached things here.
-        assert self.descriptor.nativeIsISupports
+        assert self.descriptor.nativeOwnership == 'nsisupports'
         return """  nsContentUtils::PreserveWrapper(reinterpret_cast<nsISupports*>(self), self);
   return true;"""
+
+def DeferredFinalizeSmartPtr(descriptor):
+    if descriptor.nativeOwnership == 'owned':
+        smartPtr = 'nsAutoPtr<%s>'
+    else:
+        assert descriptor.nativeOwnership == 'refcounted'
+        smartPtr = 'nsRefPtr<%s>'
+    return smartPtr % descriptor.nativeType
+
+class CGDeferredFinalizePointers(CGThing):
+    def __init__(self, descriptor):
+        CGThing.__init__(self)
+        self.descriptor = descriptor
+
+    def declare(self):
+        return ""
+
+    def define(self):
+        return """nsTArray<%s >* sDeferredFinalizePointers;
+""" % DeferredFinalizeSmartPtr(self.descriptor)
+
+class CGGetDeferredFinalizePointers(CGAbstractStaticMethod):
+    def __init__(self, descriptor):
+        CGAbstractStaticMethod.__init__(self, descriptor, "GetDeferredFinalizePointers", "void*", [])
+
+    def definition_body(self):
+        return """  nsTArray<%s >* pointers = sDeferredFinalizePointers;
+  sDeferredFinalizePointers = nullptr;
+  return pointers;""" % DeferredFinalizeSmartPtr(self.descriptor)
+
+class CGDeferredFinalize(CGAbstractStaticMethod):
+    def __init__(self, descriptor):
+        CGAbstractStaticMethod.__init__(self, descriptor, "DeferredFinalize", "bool", [Argument('int32_t', 'slice'), Argument('void*', 'data')])
+
+    def definition_body(self):
+        smartPtr = DeferredFinalizeSmartPtr(self.descriptor)
+        return """  nsTArray<%(smartPtr)s >* pointers = static_cast<nsTArray<%(smartPtr)s >*>(data);
+  uint32_t oldLen = pointers->Length();
+  if (slice == -1 || slice > oldLen) {
+    slice = oldLen;
+  }
+  uint32_t newLen = oldLen - slice;
+  pointers->RemoveElementsAt(newLen, slice);
+  if (newLen == 0) {
+    delete pointers;
+    return true;
+  }
+  return false;""" % { 'smartPtr': smartPtr }
 
 def finalizeHook(descriptor, hookName, context):
     if descriptor.customFinalize:
@@ -646,14 +694,36 @@ def finalizeHook(descriptor, hookName, context):
     clearWrapper = "ClearWrapper(self, self);\n" if descriptor.wrapperCache else ""
     if descriptor.workers:
         release = "self->Release();"
-    else:
-        assert descriptor.nativeIsISupports
+    elif descriptor.nativeOwnership == 'nsisupports':
         release = """XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
 if (rt) {
   rt->DeferredRelease(reinterpret_cast<nsISupports*>(self));
 } else {
   NS_RELEASE(self);
 }"""
+    else:
+        smartPtr = DeferredFinalizeSmartPtr(descriptor)
+        release = """static bool registered = false;
+if (!registered) {
+  XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
+  if (!rt) {
+    %(smartPtr)s dying;
+    Take(dying, self);
+    return;
+  }
+  rt->RegisterDeferredFinalize(GetDeferredFinalizePointers, DeferredFinalize);
+  registered = true;
+}
+if (!sDeferredFinalizePointers) {
+  sDeferredFinalizePointers = new nsAutoTArray<%(smartPtr)s, 16>();
+}
+%(smartPtr)s* defer = sDeferredFinalizePointers->AppendElement();
+if (!defer) {
+  %(smartPtr)s dying;
+  Take(dying, self);
+  return;
+}
+Take(*defer, self);""" % { 'smartPtr': smartPtr }
     return clearWrapper + release
 
 class CGClassFinalizeHook(CGAbstractClassHook):
@@ -743,6 +813,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
         return self.generate_code()
 
     def generate_code(self):
+        assert self.descriptor.nativeOwnership == 'nsisupports'
         return """  if (!vp.isObject()) {
     *bp = false;
     return true;
@@ -961,7 +1032,7 @@ class MethodDefiner(PropertyDefiner):
                                  "flags": "JSPROP_ENUMERATE",
                                  "pref": None })
 
-        if not descriptor.interface.parent and not static and not descriptor.workers:
+        if not descriptor.interface.parent and not static and descriptor.nativeOwnership == 'nsisupports':
             self.chrome.append({"name": 'QueryInterface',
                                 "methodInfo": False,
                                 "length": 1,
@@ -1386,6 +1457,15 @@ def CreateBindingJSObject(descriptor, parent):
 
   js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
 """
+    if descriptor.nativeOwnership in ['refcounted', 'nsisupports']:
+        create += """  NS_ADDREF(aObject);
+"""
+    else:
+        assert descriptor.nativeOwnership == 'owned'
+        create += """  // Make sure the native objects inherit from NonRefcountedDOMObject so that we
+  // log their ctor and dtor.
+  MustInheritFromNonRefcountedDOMObject(aObject);
+"""
     return create % parent
 
 class CGWrapWithCacheMethod(CGAbstractMethod):
@@ -1418,7 +1498,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
   }
 
 %s
-  NS_ADDREF(aObject);
 
   aCache->SetWrapper(obj);
 
@@ -1453,7 +1532,6 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
   }
 
 %s
-  NS_ADDREF(aObject);
 
   return obj;""" % CreateBindingJSObject(self.descriptor, "global")
 
@@ -3902,10 +3980,7 @@ class CGUnionStruct(CGThing):
   ${externalType} GetAs${name}() const
   {
     MOZ_ASSERT(Is${name}(), "Wrong type!");
-    // The cast to ${externalType} is needed to work around a bug in Apple's
-    // clang compiler, for some reason it doesn't call |S::operator T&| when
-    // casting S<T> to T& and T is forward declared.
-    return (${externalType})mValue.m${name}.Value();
+    return const_cast<${structType}&>(mValue.m${name}.Value());
   }
   ${structType}& SetAs${name}()
   {
@@ -4787,7 +4862,6 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "  if (found) {\n"
                     "    return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n" +
                     "  }\n" +
-                    "  return true;\n"
                     "}\n") % (self.descriptor.nativeType, self.descriptor.name)
         return set + """return mozilla::dom::DOMProxyHandler::defineProperty(%s);""" % ", ".join(a.name for a in self.args)
 
@@ -5105,17 +5179,23 @@ class CGDescriptor(CGThing):
             if hasLenientSetter: cgThings.append(CGGenericSetter(descriptor,
                                                                  lenientThis=True))
 
-        if descriptor.concrete and not descriptor.proxy:
-            if not descriptor.workers and descriptor.wrapperCache:
-                cgThings.append(CGAddPropertyHook(descriptor))
+        if descriptor.concrete:
+            if descriptor.nativeOwnership == 'owned' or descriptor.nativeOwnership == 'refcounted':
+                cgThings.append(CGDeferredFinalizePointers(descriptor))
+                cgThings.append(CGGetDeferredFinalizePointers(descriptor))
+                cgThings.append(CGDeferredFinalize(descriptor))
 
-            # Always have a finalize hook, regardless of whether the class wants a
-            # custom hook.
-            cgThings.append(CGClassFinalizeHook(descriptor))
+            if not descriptor.proxy:
+                if not descriptor.workers and descriptor.wrapperCache:
+                    cgThings.append(CGAddPropertyHook(descriptor))
 
-            # Only generate a trace hook if the class wants a custom hook.
-            if (descriptor.customTrace):
-                cgThings.append(CGClassTraceHook(descriptor))
+                # Always have a finalize hook, regardless of whether the class
+                # wants a custom hook.
+                cgThings.append(CGClassFinalizeHook(descriptor))
+
+                # Only generate a trace hook if the class wants a custom hook.
+                if (descriptor.customTrace):
+                    cgThings.append(CGClassTraceHook(descriptor))
 
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGClassConstructHook(descriptor))
@@ -5608,7 +5688,8 @@ class CGBindingRoot(CGThing):
                          ['mozilla/dom/BindingUtils.h',
                           'mozilla/dom/DOMJSClass.h',
                           'mozilla/dom/DOMJSProxyHandler.h'],
-                         ['mozilla/dom/Nullable.h',
+                         ['mozilla/dom/NonRefcountedDOMObject.h',
+                          'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
                           'XPCQuickStubs.h',
                           'nsDOMQS.h',

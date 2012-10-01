@@ -224,6 +224,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * @param event
    *        one of events below:
    *        - MozStkLocationEvent
+   *        - MozStkCallEvent
    */
   void sendStkEventDownload(in jsval event);
 

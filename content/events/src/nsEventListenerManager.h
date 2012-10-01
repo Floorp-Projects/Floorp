@@ -269,9 +269,6 @@ protected:
   void EnableDevice(uint32_t aType);
   void DisableDevice(uint32_t aType);
 
-  void EnableTimeChangeNotifications();
-  void DisableTimeChangeNotifications();
-
 public:
   /**
    * Set the "inline" event listener for aEventName to |v|.  This
@@ -304,6 +301,7 @@ protected:
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsIAtom* aName);
   nsPIDOMWindow* GetInnerWindowForTarget();
+  already_AddRefed<nsPIDOMWindow> GetTargetAsInnerWindow() const;
 
   uint32_t mMayHavePaintEventListener : 1;
   uint32_t mMayHaveMutationListeners : 1;

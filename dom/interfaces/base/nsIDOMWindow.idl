@@ -32,7 +32,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(AB4ED3B8-84F8-4585-B413-0996A7F96D20)]
+[scriptable, uuid(25404a1b-6c73-4850-af95-69aa095c8ad0)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -501,6 +501,9 @@ interface nsIDOMWindow : nsISupports
 
   [implicit_jscontext] attribute jsval onmouseenter;
   [implicit_jscontext] attribute jsval onmouseleave;
+
+  [implicit_jscontext] attribute jsval onmoznetworkupload;
+  [implicit_jscontext] attribute jsval onmoznetworkdownload;
 };
 
 [scriptable, uuid(2146c906-57f7-486c-a1b4-8cdb57ef577f)]

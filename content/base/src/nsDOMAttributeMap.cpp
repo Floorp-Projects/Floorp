@@ -501,3 +501,23 @@ nsDOMAttributeMap::Enumerate(AttrCache::EnumReadFunction aFunc,
 {
   return mAttributeCache.EnumerateRead(aFunc, aUserArg);
 }
+
+size_t
+AttrCacheSizeEnumerator(const nsAttrKey& aKey,
+                        const nsRefPtr<nsDOMAttribute>& aValue,
+                        nsMallocSizeOfFun aMallocSizeOf,
+                        void* aUserArg)
+{
+  return aMallocSizeOf(aValue.get());
+}
+
+size_t
+nsDOMAttributeMap::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mAttributeCache.SizeOfExcludingThis(AttrCacheSizeEnumerator,
+                                           aMallocSizeOf);
+
+  // NB: mContent is non-owning and thus not counted.
+  return n;
+}

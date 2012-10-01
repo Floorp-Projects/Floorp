@@ -449,6 +449,9 @@ user_pref("extensions.getAddons.search.url", "http://%(server)s/extensions-dummy
 
 // Make enablePrivilege continue to work for test code. :-(
 user_pref("security.enablePrivilege.enable_for_tests", true);
+
+// Get network events.
+user_pref("network.activity.blipIntervalMilliseconds", 250);
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!--
+     This test has a few inline elements in a flex container, for comparison
+     against the "b" & "c" variants of this test (which use dynamic tweaks).
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <link rel="stylesheet" type="text/css" href="ahem.css" />
+    <style>
+      div#flexbox {
+        width: 100px;
+        display: -moz-flex;
+        font: 10px Ahem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="flexbox"><u>abc def ghi</u> jkl <i>mno pqr stu</i></div>
+  </body>
+</html>

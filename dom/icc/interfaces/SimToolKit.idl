@@ -460,3 +460,37 @@ dictionary MozStkResponse
    */
   boolean hasConfirmed;
 };
+
+dictionary MozStkCallEvent
+{
+  /**
+   * The type of this event.
+   * It shall be one of following:
+   *     - nsIDOMMozIccManager.STK_EVENT_TYPE_MT_CALL,
+   *     - nsIDOMMozIccManager.STK_EVENT_TYPE_CALL_CONNECTED,
+   *     - nsIDOMMozIccManager.STK_EVENT_TYPE_CALL_DISCONNECTED.
+   */
+  unsigned short eventType;
+
+  /**
+   * Remote party number.
+   */
+  DOMString number;
+
+  /**
+   * This field is available in 'STK_EVENT_TYPE_CALL_CONNECTED' and
+   * 'STK_EVENT_TYPE_CALL_DISCONNECTED' events.
+   * For STK_EVENT_TYPE_CALL_DISCONNECTED event, setting this to true means the
+   * connection is answered by remote end, that is, this is an outgoing call.
+   * For STK_EVENT_TYPE_CALL_DISCONNECTED event, setting this to true indicates
+   * the connection is hung up by remote.
+   */
+  boolean isIssuedByRemote;
+
+  /**
+   * This field is available in Call Disconnected event to indicate the cause
+   * of disconnection. The cause string is passed to gaia through the error
+   * listener of nsIDOMCallEvent. Null if there's no error.
+   */
+  DOMString error;
+};

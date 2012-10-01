@@ -28,6 +28,13 @@
   background-position: -232px 0;
 }
 
+@media (min-resolution: 2dppx) {
+  #newtab-toggle {
+    background-image: url(chrome://browser/skin/newtab/controls@2x.png);
+    background-size: 248px;
+  }
+}
+
 /* ROWS */
 .newtab-row {
   margin-bottom: 20px;
@@ -100,6 +107,13 @@
   padding: 1px 2px 3px;
   border: none;
   background: transparent url(chrome://browser/skin/newtab/controls.png);
+}
+
+@media (min-resolution: 2dppx) {
+  .newtab-control {
+    background-image: url(chrome://browser/skin/newtab/controls@2x.png);
+    background-size: 248px;
+  }
 }
 
 .newtab-control-pin:hover {
