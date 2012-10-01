@@ -143,7 +143,6 @@ SystemMessageManager.prototype = {
   },
 
   uninit: function sysMessMgr_uninit()  {
-    cpmm.sendAsyncMessage("SystemMessageManager:Unregister", { });
     this._handlers = null;
     this._pendings =  null;
   },
