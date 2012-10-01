@@ -1222,11 +1222,10 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         return;
     }
     struct FreeSSAValues {
-        JSContext *cx;
         SSAValueInfo *values;
-        FreeSSAValues(JSContext *cx, SSAValueInfo *values) : cx(cx), values(values) {}
+        FreeSSAValues(SSAValueInfo *values) : values(values) {}
         ~FreeSSAValues() { js_free(values); }
-    } free(cx, values);
+    } free(values);
 
     SSAValueInfo *stack = values + numSlots;
     uint32_t stackDepth = 0;
