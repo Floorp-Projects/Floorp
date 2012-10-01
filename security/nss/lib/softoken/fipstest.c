@@ -1,42 +1,10 @@
 /*
  * PKCS #11 FIPS Power-Up Self Test.
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
-/* $Id: fipstest.c,v 1.29 2011/03/29 15:12:43 wtc%google.com Exp $ */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* $Id: fipstest.c,v 1.31 2012/06/28 17:55:06 rrelyea%redhat.com Exp $ */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
                         /*              DES-CBC, DES3-ECB, DES3-CBC, RSA */
@@ -1968,43 +1936,6 @@ sftk_fips_DSA_PowerUpSelfTest( void )
 static CK_RV
 sftk_fips_RNG_PowerUpSelfTest( void )
 {
-   static const PRUint8 entropy[] = {
-			0x8e,0x9c,0x0d,0x25,0x75,0x22,0x04,0xf9,
-			0xc5,0x79,0x10,0x8b,0x23,0x79,0x37,0x14,
-			0x9f,0x2c,0xc7,0x0b,0x39,0xf8,0xee,0xef,
-			0x95,0x0c,0x97,0x59,0xfc,0x0a,0x85,0x41,
-			0x76,0x9d,0x6d,0x67,0x00,0x4e,0x19,0x12,
-			0x02,0x16,0x53,0xea,0xf2,0x73,0xd7,0xd6,
-			0x7f,0x7e,0xc8,0xae,0x9c,0x09,0x99,0x7d,
-			0xbb,0x9e,0x48,0x7f,0xbb,0x96,0x46,0xb3,
-			0x03,0x75,0xf8,0xc8,0x69,0x45,0x3f,0x97,
-			0x5e,0x2e,0x48,0xe1,0x5d,0x58,0x97,0x4c };
-   static const PRUint8 rng_known_result[] = {
-			0x16,0xe1,0x8c,0x57,0x21,0xd8,0xf1,0x7e,
-			0x5a,0xa0,0x16,0x0b,0x7e,0xa6,0x25,0xb4,
-			0x24,0x19,0xdb,0x54,0xfa,0x35,0x13,0x66,
-			0xbb,0xaa,0x2a,0x1b,0x22,0x33,0x2e,0x4a,
-			0x14,0x07,0x9d,0x52,0xfc,0x73,0x61,0x48,
-			0xac,0xc1,0x22,0xfc,0xa4,0xfc,0xac,0xa4,
-			0xdb,0xda,0x5b,0x27,0x33,0xc4,0xb3 };
-   static const PRUint8 reseed_entropy[] = {
-			0xc6,0x0b,0x0a,0x30,0x67,0x07,0xf4,0xe2,
-			0x24,0xa7,0x51,0x6f,0x5f,0x85,0x3e,0x5d,
-			0x67,0x97,0xb8,0x3b,0x30,0x9c,0x7a,0xb1,
-			0x52,0xc6,0x1b,0xc9,0x46,0xa8,0x62,0x79 };
-   static const PRUint8 additional_input[] = {
-			0x86,0x82,0x28,0x98,0xe7,0xcb,0x01,0x14,
-			0xae,0x87,0x4b,0x1d,0x99,0x1b,0xc7,0x41,
-			0x33,0xff,0x33,0x66,0x40,0x95,0x54,0xc6,
-			0x67,0x4d,0x40,0x2a,0x1f,0xf9,0xeb,0x65 };
-   static const PRUint8 rng_reseed_result[] = {
-			0x02,0x0c,0xc6,0x17,0x86,0x49,0xba,0xc4,
-			0x7b,0x71,0x35,0x05,0xf0,0xdb,0x4a,0xc2,
-			0x2c,0x38,0xc1,0xa4,0x42,0xe5,0x46,0x4a,
-			0x7d,0xf0,0xbe,0x47,0x88,0xb8,0x0e,0xc6,
-			0x25,0x2b,0x1d,0x13,0xef,0xa6,0x87,0x96,
-			0xa3,0x7d,0x5b,0x80,0xc2,0x38,0x76,0x61,
-			0xc7,0x80,0x5d,0x0f,0x05,0x76,0x85 };
    static const PRUint8 Q[] = {
 			0x85,0x89,0x9c,0x77,0xa3,0x79,0xff,0x1a,
 			0x86,0x6f,0x2f,0x3e,0x2e,0xf9,0x8c,0x9c,
@@ -2023,41 +1954,14 @@ sftk_fips_RNG_PowerUpSelfTest( void )
 
 
    SECStatus rng_status = SECSuccess;
-   PR_STATIC_ASSERT(sizeof(rng_known_result) >= sizeof(rng_reseed_result));
-   PRUint8 result[sizeof(rng_known_result)];
    PRUint8 DSAX[FIPS_DSA_SUBPRIME_LENGTH];
 
-   /********************************************/
-   /* Generate random bytes with a known seed. */
-   /********************************************/
-   rng_status = PRNGTEST_Instantiate(entropy, sizeof entropy, 
-				     NULL, 0, NULL, 0);
+   /*******************************************/
+   /*   Run the SP 800-90 Health tests        */
+   /*******************************************/
+   rng_status = PRNGTEST_RunHealthTests();
    if (rng_status != SECSuccess) {
-	return ( CKR_DEVICE_ERROR );
-   }
-   rng_status = PRNGTEST_Generate(result, sizeof rng_known_result, NULL, 0);
-   if ( ( rng_status != SECSuccess)  ||
-        ( PORT_Memcmp( result, rng_known_result,
-                       sizeof rng_known_result ) != 0 ) ) {
-	PRNGTEST_Uninstantiate();
-	return ( CKR_DEVICE_ERROR );
-   }
-   rng_status = PRNGTEST_Reseed(reseed_entropy, sizeof reseed_entropy,
-				additional_input, sizeof additional_input);
-   if (rng_status != SECSuccess) {
-	PRNGTEST_Uninstantiate();
-	return ( CKR_DEVICE_ERROR );
-   }
-   rng_status = PRNGTEST_Generate(result, sizeof rng_reseed_result, NULL, 0);
-   if ( ( rng_status != SECSuccess)  ||
-        ( PORT_Memcmp( result, rng_reseed_result,
-                       sizeof rng_reseed_result ) != 0 ) ) {
-	PRNGTEST_Uninstantiate();
-	return ( CKR_DEVICE_ERROR );
-   }
-   rng_status = PRNGTEST_Uninstantiate();
-   if (rng_status != SECSuccess) {
-	return ( CKR_DEVICE_ERROR );
+	return (CKR_DEVICE_ERROR);
    }
   
    /*******************************************/

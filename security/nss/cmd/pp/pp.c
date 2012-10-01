@@ -1,44 +1,12 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * Pretty-print some well-known BER or DER encoded data (e.g. certificates,
  * keys, pkcs7)
  *
- * $Id: pp.c,v 1.10 2010/09/03 19:25:02 nelson%bolyard.com Exp $
+ * $Id: pp.c,v 1.12 2012/08/16 06:57:24 kaie%kuix.de Exp $
  */
 
 #include "secutil.h"
@@ -62,8 +30,8 @@ static void Usage(char *progName)
 	    "-t type", SEC_CT_PRIVATE_KEY);
     fprintf(stderr, "%-20s %s, %s, %s,\n", "", SEC_CT_PUBLIC_KEY,
 	    SEC_CT_CERTIFICATE, SEC_CT_CERTIFICATE_REQUEST);
-    fprintf(stderr, "%-20s %s, %s or %s)\n", "", SEC_CT_PKCS7, SEC_CT_CRL,
-            SEC_CT_NAME);    
+    fprintf(stderr, "%-20s %s, %s, %s or %s)\n", "", SEC_CT_CERTIFICATE_ID,
+            SEC_CT_PKCS7, SEC_CT_CRL, SEC_CT_NAME);
     fprintf(stderr, "%-20s Input is in ascii encoded form (RFC1113)\n",
 	    "-a");
     fprintf(stderr, "%-20s Define an input file to use (default is stdin)\n",
@@ -153,6 +121,12 @@ int main(int argc, char **argv)
     if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE) == 0) {
 	rv = SECU_PrintSignedData(outFile, &data, "Certificate", 0,
 			     SECU_PrintCertificate);
+    } else if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE_ID) == 0) {
+        PRBool saveWrapeState = SECU_GetWrapEnabled();
+        SECU_EnableWrap(PR_FALSE);
+        rv = SECU_PrintSignedContent(outFile, &data, 0, 0,
+                                     SECU_PrintDumpDerIssuerAndSerial);
+        SECU_EnableWrap(saveWrapeState);
     } else if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE_REQUEST) == 0) {
 	rv = SECU_PrintSignedData(outFile, &data, "Certificate Request", 0,
 			     SECU_PrintCertificateRequest);
