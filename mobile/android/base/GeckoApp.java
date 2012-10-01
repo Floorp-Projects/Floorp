@@ -124,6 +124,13 @@ abstract public class GeckoApp
         NEW_PROFILE
     }
 
+    private static enum StartupAction {
+        NORMAL,     /* normal application start */
+        URL,        /* launched with a passed URL */
+        PREFETCH,   /* launched with a passed URL that we prefetch */
+        REDIRECTOR  /* launched with a passed URL in our redirect list */
+    }
+
     public static final String ACTION_ALERT_CLICK   = "org.mozilla.gecko.ACTION_ALERT_CLICK";
     public static final String ACTION_ALERT_CLEAR   = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
     public static final String ACTION_ALERT_CALLBACK = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
@@ -1588,6 +1595,13 @@ abstract public class GeckoApp
         boolean isExternalURL = passedUri != null && !passedUri.equals("about:home");
         initializeChrome(uri, isExternalURL);
 
+        StartupAction startupAction;
+        if (isExternalURL) {
+            startupAction = StartupAction.URL;
+        } else {
+            startupAction = StartupAction.NORMAL;
+        }
+
         // Start migrating as early as possible, can do this in
         // parallel with Gecko load.
         checkMigrateProfile();
@@ -1597,6 +1611,7 @@ abstract public class GeckoApp
             Intent copy = new Intent(intent);
             copy.setAction(ACTION_LOAD);
             if (isHostOnRedirectWhitelist(data.getHost())) {
+                startupAction = StartupAction.REDIRECTOR;
                 GeckoAppShell.getHandler().post(new RedirectorRunnable(copy));
                 // We're going to handle this uri with the redirector, so setting
                 // the action to MAIN and clearing the uri data prevents us from
@@ -1605,9 +1620,12 @@ abstract public class GeckoApp
                 intent.setData(null);
                 passedUri = "about:empty";
             } else {
+                startupAction = StartupAction.PREFETCH;
                 GeckoAppShell.getHandler().post(new PrefetchRunnable(copy));
             }
         }
+
+        Telemetry.HistogramAdd("FENNEC_STARTUP_GECKOAPP_ACTION", startupAction.ordinal());
 
         if (!mIsRestoringActivity) {
             sGeckoThread = new GeckoThread(intent, passedUri, mRestoreMode);
