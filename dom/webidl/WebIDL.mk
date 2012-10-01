@@ -21,7 +21,10 @@ webidl_files = \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
   ClientRectList.webidl \
+  CSSPrimitiveValue.webidl \
   CSSStyleDeclaration.webidl \
+  CSSValue.webidl \
+  CSSValueList.webidl \
   DelayNode.webidl \
   DOMImplementation.webidl \
   DOMParser.webidl \

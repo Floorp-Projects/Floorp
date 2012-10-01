@@ -8,21 +8,28 @@
 #ifndef nsROCSSPrimitiveValue_h___
 #define nsROCSSPrimitiveValue_h___
 
+#include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSPrimitiveValue.h"
-#include "nsCoord.h"
 #include "nsCSSKeywords.h"
+#include "CSSValue.h"
+#include "nsAutoPtr.h"
+#include "nsCoord.h"
+#include "nsWrapperCache.h"
 
 class nsIURI;
+class nsComputedDOMStyle;
 class nsDOMCSSRGBColor;
 
 /**
  * Read-only CSS primitive value - a DOM object representing values in DOM
  * computed style.
  */
-class nsROCSSPrimitiveValue : public nsIDOMCSSPrimitiveValue
+class nsROCSSPrimitiveValue MOZ_FINAL : public mozilla::dom::CSSValue,
+  public nsIDOMCSSPrimitiveValue
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsROCSSPrimitiveValue, mozilla::dom::CSSValue)
 
   // nsIDOMCSSPrimitiveValue
   NS_DECL_NSIDOMCSSPRIMITIVEVALUE
@@ -30,9 +37,29 @@ public:
   // nsIDOMCSSValue
   NS_DECL_NSIDOMCSSVALUE
 
+  // CSSValue
+  virtual void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) MOZ_OVERRIDE MOZ_FINAL;
+  virtual void SetCssText(const nsAString& aText, mozilla::ErrorResult& aRv) MOZ_OVERRIDE MOZ_FINAL;
+  virtual uint16_t CssValueType() const MOZ_OVERRIDE MOZ_FINAL;
+
+  // CSSPrimitiveValue
+  uint16_t PrimitiveType()
+  {
+    return mType;
+  }
+  void SetFloatValue(uint16_t aUnitType, float aValue,
+                     mozilla::ErrorResult& aRv);
+  float GetFloatValue(uint16_t aUnitType, mozilla::ErrorResult& aRv);
+  void GetStringValue(nsString& aString, mozilla::ErrorResult& aRv);
+  void SetStringValue(uint16_t aUnitType, const nsAString& aString,
+                      mozilla::ErrorResult& aRv);
+  already_AddRefed<nsIDOMCounter> GetCounterValue(mozilla::ErrorResult& aRv);
+  already_AddRefed<nsIDOMRect> GetRectValue(mozilla::ErrorResult& aRv);
+  already_AddRefed<nsIDOMRGBColor> GetRGBColorValue(mozilla::ErrorResult& aRv);
+
   // nsROCSSPrimitiveValue
   nsROCSSPrimitiveValue();
-  virtual ~nsROCSSPrimitiveValue();
+  ~nsROCSSPrimitiveValue();
 
   void SetNumber(float aValue);
   void SetNumber(int32_t aValue);
@@ -50,6 +77,13 @@ public:
   void SetRect(nsIDOMRect* aRect);
   void SetTime(float aValue);
   void Reset();
+
+  nsISupports* GetParentObject() const
+  {
+    return nullptr;
+  }
+
+  virtual JSObject *WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
 
 private:
   uint16_t mType;

@@ -21,6 +21,7 @@
 
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsCSSProperty.h"
+#include "CSSValue.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsString.h"
@@ -64,8 +65,21 @@ public:
   NS_IMETHOD SetCssText(const nsAString& aCssText) = 0;
   NS_IMETHOD GetPropertyValue(const nsAString& aPropName,
                               nsAString& aValue) = 0;
-  NS_IMETHOD GetPropertyCSSValue(const nsAString& aPropertyName,
-                                 nsIDOMCSSValue** aReturn) = 0;
+  virtual already_AddRefed<mozilla::dom::CSSValue>
+    GetPropertyCSSValue(const nsAString& aPropertyName,
+                        mozilla::ErrorResult& aRv) = 0;
+  NS_IMETHOD GetPropertyCSSValue(const nsAString& aProp, nsIDOMCSSValue** aVal)
+  {
+    mozilla::ErrorResult error;
+    nsRefPtr<mozilla::dom::CSSValue> val = GetPropertyCSSValue(aProp, error);
+    if (error.Failed()) {
+      return error.ErrorCode();
+  }
+
+    nsCOMPtr<nsIDOMCSSValue> xpVal = do_QueryInterface(val);
+    xpVal.forget(aVal);
+    return NS_OK;
+  }
   NS_IMETHOD RemoveProperty(const nsAString& aPropertyName,
                             nsAString& aReturn) = 0;
   NS_IMETHOD GetPropertyPriority(const nsAString& aPropertyName,
@@ -110,12 +124,6 @@ public:
                         mozilla::ErrorResult& rv) {
     rv = GetPropertyValue(aPropName, aValue);
   }
-  already_AddRefed<nsIDOMCSSValue>
-    GetPropertyCSSValue(const nsAString& aPropName, mozilla::ErrorResult& rv) {
-    nsCOMPtr<nsIDOMCSSValue> val;
-    rv = GetPropertyCSSValue(aPropName, getter_AddRefs(val));
-    return val.forget();
-  }
   void GetPropertyPriority(const nsAString& aPropName, nsString& aPriority) {
     GetPropertyPriority(aPropName, static_cast<nsAString&>(aPriority));
   }
@@ -147,5 +155,16 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
                               nsAString& aValue);               \
   NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,    \
                               const nsAString& aValue);
+
+#define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER \
+  NS_IMETHOD GetCssText(nsAString & aCssText); \
+  NS_IMETHOD SetCssText(const nsAString & aCssText); \
+  NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval); \
+  NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval); \
+  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval); \
+  NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority); \
+  NS_IMETHOD GetLength(uint32_t *aLength); \
+  NS_IMETHOD Item(uint32_t index, nsAString & _retval); \
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule);
 
 #endif // nsICSSDeclaration_h__
