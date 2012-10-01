@@ -15,7 +15,7 @@ public class Telemetry {
     private static final String LOGTAG = "Telemetry";
 
     // Define new histograms in:
-    // toolkit/components/telemetry/TelemetryHistograms.h
+    // toolkit/components/telemetry/Histograms.json
     public static void HistogramAdd(String name,
                                     int value) {
         try {
