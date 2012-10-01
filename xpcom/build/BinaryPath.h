@@ -6,7 +6,6 @@
 #define mozilla_BinaryPath_h
 
 #include "nsXPCOMPrivate.h" // for MAXPATHLEN
-#include "prtypes.h"
 #ifdef XP_WIN
 #include <windows.h>
 #elif defined(XP_MACOSX)
