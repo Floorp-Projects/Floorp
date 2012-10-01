@@ -146,8 +146,11 @@ class Descriptor(DescriptorProvider):
         if self.nativeType == "JSObject":
             headerDefault = "jsapi.h"
         else:
-            headerDefault = self.nativeType
-            headerDefault = headerDefault.replace("::", "/") + ".h"
+            if self.workers:
+                headerDefault = "mozilla/dom/workers/bindings/%s.h" % ifaceName
+            else:
+                headerDefault = self.nativeType
+                headerDefault = headerDefault.replace("::", "/") + ".h"
         self.headerFile = desc.get('headerFile', headerDefault)
 
         if self.interface.isCallback() or self.interface.isExternal():
