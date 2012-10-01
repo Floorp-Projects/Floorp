@@ -33,6 +33,8 @@
 #include "vm/Stack.h"
 #include "vm/SPSProfiler.h"
 
+#include "ion/PcScriptCache.h"
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
@@ -946,6 +948,9 @@ struct JSRuntime : js::RuntimeFriendFields
 
     // This points to the most recent Ion activation running on the thread.
     js::ion::IonActivation  *ionActivation;
+
+    // Cache for ion::GetPcScript().
+    js::ion::PcScriptCache *ionPcScriptCache;
 
   private:
     // In certain cases, we want to optimize certain opcodes to typed instructions,
