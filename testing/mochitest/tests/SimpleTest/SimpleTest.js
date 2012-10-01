@@ -663,6 +663,12 @@ SimpleTest.executeSoon = function(aFunc) {
  * SimpleTest.waitForExplicitFinish() has been invoked.
 **/
 SimpleTest.finish = function () {
+    if (SimpleTest._alreadyFinished) {
+        SimpleTest.ok(false, "[SimpleTest.finish()] this test already called finish!");
+    }
+
+    SimpleTest._alreadyFinished = true;
+
     if (SimpleTest._expectingUncaughtException) {
         SimpleTest.ok(false, "expectUncaughtException was called but no uncaught exception was detected!");
     }
