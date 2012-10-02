@@ -305,4 +305,32 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         AssetManager assets = getInstrumentation().getContext().getAssets();
         return assets.open(filename);
     }
+
+    public final void selectMenuItem(String menuItemName) {
+        //build the item name ready to be used
+        String itemName = "^" + menuItemName + "$";
+        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+
+        // Look for the 'More' menu if this device/OS uses it
+        if (mSolo.waitForText("^More$")) {
+            mSolo.clickOnText("^More$");
+        }
+
+        mSolo.waitForText(itemName);
+        mSolo.clickOnText(itemName);
+    }
+
+    public final void verifyPageTitle(String title) {
+	Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
+        mAsserter.isnot(awesomebar, null, "Got the awesomebar");
+        assertMatches(awesomebar.getText(), title, "Page title match");
+    }
+
+    public final void verifyTabCount(int expectedTabCount) {
+        Activity activity = getActivity();
+        Element tabCount = mDriver.findElement(activity, "tabs_count");
+        String tabCountText = tabCount.getText();
+        int tabCountInt = Integer.parseInt(tabCountText);
+        mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
+    }
 }
