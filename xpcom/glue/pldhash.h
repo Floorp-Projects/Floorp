@@ -10,6 +10,7 @@
  *
  * Try to keep this file in sync with js/src/jsdhash.h.
  */
+#include "mozilla/Types.h"
 #include "nscore.h"
 
 #ifdef __cplusplus
