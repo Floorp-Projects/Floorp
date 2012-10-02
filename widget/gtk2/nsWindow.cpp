@@ -3877,6 +3877,8 @@ nsWindow::NativeShow(bool aAction)
         if (mIsTopLevel) {
             gtk_widget_hide(GTK_WIDGET(mShell));
             gtk_widget_hide(GTK_WIDGET(mContainer));
+
+            ClearTransparencyBitmap(); // Release some resources
         }
         else if (mContainer) {
             gtk_widget_hide(GTK_WIDGET(mContainer));
@@ -3993,17 +3995,7 @@ nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
         return;
 
     if (!isTransparent) {
-        if (mTransparencyBitmap) {
-            delete[] mTransparencyBitmap;
-            mTransparencyBitmap = nullptr;
-            mTransparencyBitmapWidth = 0;
-            mTransparencyBitmapHeight = 0;
-#if defined(MOZ_WIDGET_GTK2)
-            gtk_widget_reset_shapes(mShell);
-#else
-            // GTK3 TODO
-#endif
-        }
+        ClearTransparencyBitmap();
     } // else the new default alpha values are "all 1", so we don't
     // need to change anything yet
 
@@ -4301,6 +4293,32 @@ nsWindow::ApplyTransparencyBitmap()
     cairo_surface_destroy(maskBitmap);
 #endif // MOZ_WIDGET_GTK2
 #endif // MOZ_X11
+}
+
+void
+nsWindow::ClearTransparencyBitmap()
+{
+    if (!mTransparencyBitmap)
+        return;
+
+    delete[] mTransparencyBitmap;
+    mTransparencyBitmap = nullptr;
+    mTransparencyBitmapWidth = 0;
+    mTransparencyBitmapHeight = 0;
+
+    if (!mShell)
+        return;
+
+#ifdef MOZ_X11
+    GdkWindow *window = gtk_widget_get_window(mShell);
+    if (!window)
+        return;
+
+    Display* xDisplay = GDK_WINDOW_XDISPLAY(window);
+    Window xWindow = gdk_x11_window_get_xid(window);
+
+    XShapeCombineMask(xDisplay, xWindow, ShapeBounding, 0, 0, None, ShapeSet);
+#endif
 }
 
 nsresult
