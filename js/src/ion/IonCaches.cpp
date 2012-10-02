@@ -199,8 +199,7 @@ struct GetNativePropertyStub
 };
 
 bool
-IonCacheGetProperty::attachNative(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                                  const Shape *shape)
+IonCacheGetProperty::attachNative(JSContext *cx, JSObject *obj, JSObject *holder, const Shape *shape)
 {
     MacroAssembler masm;
     RepatchLabel failures;
@@ -215,9 +214,6 @@ IonCacheGetProperty::attachNative(JSContext *cx, IonScript *ion, JSObject *obj, 
 
     getprop.rejoinOffset.fixup(&masm);
     getprop.exitOffset.fixup(&masm);
-
-    if (ion->invalidated())
-        return true;
 
     CodeLocationJump rejoinJump(code, getprop.rejoinOffset);
     CodeLocationJump exitJump(code, getprop.exitOffset);
@@ -260,8 +256,7 @@ IsCacheableGetProp(JSObject *obj, JSObject *holder, const Shape *shape)
 }
 
 static bool
-TryAttachNativeStub(JSContext *cx, IonScript *ion,
-                    IonCacheGetProperty &cache, HandleObject obj,
+TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, HandleObject obj,
                     HandlePropertyName name, bool *isCacheableNative)
 {
     JS_ASSERT(!*isCacheableNative);
@@ -300,7 +295,7 @@ TryAttachNativeStub(JSContext *cx, IonScript *ion,
     if (cache.stubCount() < MAX_STUBS) {
         cache.incrementStubCount();
 
-        if (!cache.attachNative(cx, ion, obj, holder, shape))
+        if (!cache.attachNative(cx, obj, holder, shape))
             return false;
     }
 
@@ -332,7 +327,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Mu
     // limit. Once we can make calls from within generated stubs, a new call
     // stub will be generated instead and the previous stubs unlinked.
     bool isCacheableNative = false;
-    if (!TryAttachNativeStub(cx, ion, cache, obj, name, &isCacheableNative))
+    if (!TryAttachNativeStub(cx, cache, obj, name, &isCacheableNative))
         return false;
 
     if (cache.idempotent() && !isCacheableNative) {
@@ -400,7 +395,7 @@ IonCache::reset()
 }
 
 bool
-IonCacheSetProperty::attachNativeExisting(JSContext *cx, IonScript *ion, JSObject *obj, const Shape *shape)
+IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Shape *shape)
 {
     MacroAssembler masm;
 
@@ -443,9 +438,6 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, IonScript *ion, JSObjec
     rejoinOffset.fixup(&masm);
     exitOffset.fixup(&masm);
 
-    if (ion->invalidated())
-        return true;
-
     CodeLocationJump rejoinJump(code, rejoinOffset);
     CodeLocationJump exitJump(code, exitOffset);
     CodeLocationJump lastJump_ = lastJump();
@@ -460,8 +452,7 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, IonScript *ion, JSObjec
 }
 
 bool
-IonCacheSetProperty::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj,
-                                        const Shape *oldShape, const Shape *newShape,
+IonCacheSetProperty::attachNativeAdding(JSContext *cx, JSObject *obj, const Shape *oldShape, const Shape *newShape,
                                         const Shape *propShape)
 {
     MacroAssembler masm;
@@ -533,9 +524,6 @@ IonCacheSetProperty::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject 
 
     rejoinOffset.fixup(&masm);
     exitOffset.fixup(&masm);
-
-    if (ion->invalidated())
-        return true;
 
     CodeLocationJump rejoinJump(code, rejoinOffset);
     CodeLocationJump exitJump(code, exitOffset);
@@ -651,7 +639,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
     bool inlinable = IsPropertyInlineable(obj, cache);
     if (inlinable && IsPropertySetInlineable(cx, obj, name, &id, &shape)) {
         cache.incrementStubCount();
-        if (!cache.attachNativeExisting(cx, ion, obj, shape))
+        if (!cache.attachNativeExisting(cx, obj, shape))
             return false;
     }
 
@@ -667,7 +655,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
     if (inlinable && IsPropertyAddInlineable(cx, obj, id, oldSlots, &shape)) {
         const Shape *newShape = obj->lastProperty();
         cache.incrementStubCount();
-        if (!cache.attachNativeAdding(cx, ion, obj, oldShape, newShape, shape))
+        if (!cache.attachNativeAdding(cx, obj, oldShape, newShape, shape))
             return false;
     }
 
@@ -675,8 +663,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
 }
 
 bool
-IonCacheGetElement::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
-                                  const Value &idval, PropertyName *name)
+IonCacheGetElement::attachGetProp(JSContext *cx, HandleObject obj, const Value &idval, PropertyName *name)
 {
     RootedObject holder(cx);
     RootedShape shape(cx);
@@ -709,9 +696,6 @@ IonCacheGetElement::attachGetProp(JSContext *cx, IonScript *ion, HandleObject ob
     getprop.rejoinOffset.fixup(&masm);
     getprop.exitOffset.fixup(&masm);
 
-    if (ion->invalidated())
-        return true;
-
     CodeLocationJump rejoinJump(code, getprop.rejoinOffset);
     CodeLocationJump exitJump(code, getprop.exitOffset);
     CodeLocationJump lastJump_ = lastJump();
@@ -737,7 +721,7 @@ GetDenseArrayShape(JSContext *cx, JSObject *globalObj)
 }
 
 bool
-IonCacheGetElement::attachDenseArray(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval)
+IonCacheGetElement::attachDenseArray(JSContext *cx, JSObject *obj, const Value &idval)
 {
     JS_ASSERT(obj->isDenseArray());
     JS_ASSERT(idval.isInt32());
@@ -798,9 +782,6 @@ IonCacheGetElement::attachDenseArray(JSContext *cx, IonScript *ion, JSObject *ob
     rejoinOffset.fixup(&masm);
     exitOffset.fixup(&masm);
 
-    if (ion->invalidated())
-        return true;
-
     CodeLocationJump rejoinJump(code, rejoinOffset);
     CodeLocationJump exitJump(code, exitOffset);
     CodeLocationJump lastJump_ = lastJump();
@@ -838,14 +819,14 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
 
             uint32_t dummy;
             if (idval.isString() && JSID_IS_ATOM(id) && !JSID_TO_ATOM(id)->isIndex(&dummy)) {
-                if (!cache.attachGetProp(cx, ion, obj, idval, JSID_TO_ATOM(id)->asPropertyName()))
+                if (!cache.attachGetProp(cx, obj, idval, JSID_TO_ATOM(id)->asPropertyName()))
                     return false;
             }
         } else if (!cache.hasDenseArrayStub() && obj->isDenseArray() && idval.isInt32()) {
             // Generate at most one dense array stub.
             cache.incrementStubCount();
 
-            if (!cache.attachDenseArray(cx, ion, obj, idval))
+            if (!cache.attachDenseArray(cx, obj, idval))
                 return false;
         }
     }
@@ -863,7 +844,7 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
 }
 
 bool
-IonCacheBindName::attachGlobal(JSContext *cx, IonScript *ion, JSObject *scopeChain)
+IonCacheBindName::attachGlobal(JSContext *cx, JSObject *scopeChain)
 {
     JS_ASSERT(scopeChain->isGlobal());
 
@@ -887,9 +868,6 @@ IonCacheBindName::attachGlobal(JSContext *cx, IonScript *ion, JSObject *scopeCha
 
     rejoinOffset.fixup(&masm);
     exitOffset.fixup(&masm);
-
-    if (ion->invalidated())
-        return true;
 
     CodeLocationJump rejoinJump(code, rejoinOffset);
     CodeLocationJump exitJump(code, exitOffset);
@@ -952,7 +930,7 @@ GenerateScopeChainGuards(MacroAssembler &masm, JSObject *scopeChain, JSObject *h
 }
 
 bool
-IonCacheBindName::attachNonGlobal(JSContext *cx, IonScript *ion, JSObject *scopeChain, JSObject *holder)
+IonCacheBindName::attachNonGlobal(JSContext *cx, JSObject *scopeChain, JSObject *holder)
 {
     JS_ASSERT(IsCacheableNonGlobalScope(scopeChain));
 
@@ -998,9 +976,6 @@ IonCacheBindName::attachNonGlobal(JSContext *cx, IonScript *ion, JSObject *scope
 
     rejoinOffset.fixup(&masm);
     exitOffset.fixup(&masm);
-
-    if (ion->invalidated())
-        return true;
 
     CodeLocationJump rejoinJump(code, rejoinOffset);
     CodeLocationJump exitJump(code, exitOffset);
@@ -1060,10 +1035,10 @@ js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain
         cache.incrementStubCount();
 
         if (scopeChain->isGlobal()) {
-            if (!cache.attachGlobal(cx, ion, scopeChain))
+            if (!cache.attachGlobal(cx, scopeChain))
                 return NULL;
         } else if (IsCacheableScopeChain(scopeChain, holder)) {
-            if (!cache.attachNonGlobal(cx, ion, scopeChain, holder))
+            if (!cache.attachNonGlobal(cx, scopeChain, holder))
                 return NULL;
         } else {
             IonSpew(IonSpew_InlineCaches, "BINDNAME uncacheable scope chain");
@@ -1074,7 +1049,7 @@ js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain
 }
 
 bool
-IonCacheName::attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject holder, Shape *shape)
+IonCacheName::attach(JSContext *cx, HandleObject scopeChain, HandleObject holder, Shape *shape)
 {
     MacroAssembler masm;
     Label failures;
@@ -1117,9 +1092,6 @@ IonCacheName::attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, Han
     rejoinOffset.fixup(&masm);
     if (failures.bound())
         exitOffset.fixup(&masm);
-
-    if (ion->invalidated())
-        return true;
 
     CodeLocationJump rejoinJump(code, rejoinOffset);
     CodeLocationJump lastJump_ = lastJump();
@@ -1196,7 +1168,7 @@ js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
     if (cache.stubCount() < MAX_STUBS &&
         IsCacheableName(cx, scopeChain, obj, holder, shape))
     {
-        if (!cache.attach(cx, ion, scopeChain, obj, shape))
+        if (!cache.attach(cx, scopeChain, obj, shape))
             return false;
         cache.incrementStubCount();
     }
