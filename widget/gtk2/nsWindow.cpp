@@ -3851,21 +3851,9 @@ nsWindow::NativeResize(int32_t aX, int32_t aY,
 }
 
 void
-nsWindow::NativeShow (bool    aAction)
+nsWindow::NativeShow(bool aAction)
 {
     if (aAction) {
-        // GTK wants us to set the window mask before we show the window
-        // for the first time, or setting the mask later won't work.
-        // GTK also wants us to NOT set the window mask if we're not really
-        // going to need it, because GTK won't let us unset the mask properly
-        // later.
-        // So, we delay setting the mask until the last moment: when the window
-        // is shown.
-        // XXX that may or may not be true for GTK+ 2.x
-        if (mTransparencyBitmap) {
-            ApplyTransparencyBitmap();
-        }
-
         // unset our flag now that our window has been shown
         mNeedsShow = false;
 
