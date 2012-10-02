@@ -41,8 +41,14 @@ EnableSensorNotifications(SensorType aSensor)
   if (sUpdateTimer)
     return;
 
-  smsStartup(nil, nil);
-  smsLoadCalibration();
+  int result = smsStartup(nil, nil);
+  if (result != SMS_SUCCESS) {
+    return;
+  }
+
+  if (!smsLoadCalibration()) {
+    return;
+  }
 
   CallCreateInstance("@mozilla.org/timer;1", &sUpdateTimer);
   if (sUpdateTimer)
