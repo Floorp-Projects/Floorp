@@ -511,6 +511,15 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             ReadCharactersField(jenv);
             break;
 
+        case NATIVE_GESTURE_EVENT:
+            mTime = jenv->GetLongField(jobj, jTimeField);
+            mMetaState = jenv->GetIntField(jobj, jMetaStateField);
+            mCount = jenv->GetIntField(jobj, jCountField);
+            ReadPointArray(mPoints, jenv, jPoints, mCount);
+            mX = jenv->GetDoubleField(jobj, jXField);
+
+            break;
+
         case MOTION_EVENT:
             mTime = jenv->GetLongField(jobj, jTimeField);
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
