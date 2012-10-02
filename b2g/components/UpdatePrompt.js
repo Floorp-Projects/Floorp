@@ -248,17 +248,16 @@ UpdatePrompt.prototype = {
   restartProcess: function UP_restartProcess() {
     log("Update downloaded, restarting to apply it");
 
+#ifndef MOZ_WIDGET_GONK
     let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
-                       .getService(Ci.nsIAppStartup);
-    // NB: on Gonk, we rely on the system process manager to restart
-    // us.  Trying to restart here would conflict with the process
-    // manager.  We should be using a runtime check to detect Gonk
-    // instead of this gross ifdef, but the ifdef works for now.
-    appStartup.quit(appStartup.eForceQuit
-#ifndef ANDROID
-                    | appStartup.eRestart
+                     .getService(Ci.nsIAppStartup);
+    appStartup.quit(appStartup.eForceQuit | appStartup.eRestart);
+#else
+    // NB: on Gonk, we rely on the system process manager to restart us.
+    let pmService = Cc["@mozilla.org/power/powermanagerservice;1"]
+                    .getService(Ci.nsIPowerManagerService);
+    pmService.restart();
 #endif
-      );
   },
 
   finishOSUpdate: function UP_finishOSUpdate(aOsUpdatePath) {

@@ -579,6 +579,13 @@ void PowerOff()
   PROXY_IF_SANDBOXED(PowerOff());
 }
 
+void StartForceQuitWatchdog(ShutdownMode aMode, int32_t aTimeoutSecs)
+{
+  AssertMainProcess();
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(StartForceQuitWatchdog(aMode, aTimeoutSecs));
+}
+
 void
 RegisterWakeLockObserver(WakeLockObserver* aObserver)
 {
