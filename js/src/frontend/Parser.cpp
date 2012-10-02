@@ -318,7 +318,7 @@ ParseContext::generateFunctionBindings(JSContext *cx, InternalHandle<Bindings*> 
 
     FunctionBox *funbox = sc->asFunbox();
     if (bindings->hasAnyAliasedBindings() || funbox->hasExtensibleScope())
-        funbox->fun()->flags |= JSFUN_HEAVYWEIGHT;
+        funbox->function()->flags |= JSFUN_HEAVYWEIGHT;
 
     return true;
 }
@@ -359,22 +359,6 @@ Parser::~Parser()
     cx->activeCompilations--;
 }
 
-ObjectBox::ObjectBox(ObjectBox* traceLink, JSObject *obj)
-  : traceLink(traceLink),
-    emitLink(NULL),
-    object(obj),
-    funbox(NULL)
-{
-}
-
-ObjectBox::ObjectBox(ObjectBox* traceLink, JSFunction *fun, FunctionBox *funbox)
-  : traceLink(traceLink),
-    emitLink(NULL),
-    object(fun),
-    funbox(funbox)
-{
-}
-
 ObjectBox *
 Parser::newObjectBox(JSObject *obj)
 {
@@ -388,7 +372,7 @@ Parser::newObjectBox(JSObject *obj)
      * function.
      */
 
-    ObjectBox *objbox = context->tempLifoAlloc().new_<ObjectBox>(traceListHead, obj);
+    ObjectBox *objbox = context->tempLifoAlloc().new_<ObjectBox>(obj, traceListHead);
     if (!objbox) {
         js_ReportOutOfMemory(context);
         return NULL;
@@ -401,8 +385,8 @@ Parser::newObjectBox(JSObject *obj)
 
 FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fun,
                          ParseContext *outerpc, StrictMode sms)
-  : SharedContext(cx, /* isFunction = */ true, sms),
-    objbox(traceListHead, fun, this),
+  : ObjectBox(fun, traceListHead),
+    SharedContext(cx, /* isFunction = */ true, sms),
     bindings(),
     bufStart(0),
     bufEnd(0),
@@ -473,7 +457,7 @@ Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, StrictMode sms)
         return NULL;
     }
 
-    traceListHead = &funbox->objbox;
+    traceListHead = funbox;
 
     return funbox;
 }
@@ -481,13 +465,7 @@ Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, StrictMode sms)
 void
 Parser::trace(JSTracer *trc)
 {
-    ObjectBox *objbox = traceListHead;
-    while (objbox) {
-        MarkObjectRoot(trc, &objbox->object, "parser.object");
-        if (objbox->funbox)
-            objbox->funbox->bindings.trace(trc);
-        objbox = objbox->traceLink;
-    }
+    traceListHead->trace(trc);
 }
 
 static bool
@@ -664,7 +642,7 @@ ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, Parser::Reporter r
                 unsigned errnum, unsigned anonerrnum)
 {
     JSAutoByteString name;
-    JSAtom *atom = parser->pc->sc->asFunbox()->fun()->atom();
+    JSAtom *atom = parser->pc->sc->asFunbox()->function()->atom();
     if (atom) {
         if (!js_AtomToPrintableString(cx, atom, &name))
             return false;
@@ -827,7 +805,7 @@ Parser::functionBody(FunctionBodyType type)
     Definition *maybeArgDef = pc->decls().lookupFirst(arguments);
     bool argumentsHasBinding = !!maybeArgDef;
     bool argumentsHasLocalBinding = maybeArgDef && maybeArgDef->kind() != Definition::ARG;
-    bool hasRest = pc->sc->asFunbox()->fun()->hasRest();
+    bool hasRest = pc->sc->asFunbox()->function()->hasRest();
     if (hasRest && argumentsHasLocalBinding) {
         reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
         return NULL;
@@ -1178,7 +1156,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
                  * produce an error (in strict mode).
                  */
                 if (dn->isClosed() || dn->isAssigned())
-                    funbox->fun()->flags |= JSFUN_HEAVYWEIGHT;
+                    funbox->function()->flags |= JSFUN_HEAVYWEIGHT;
                 continue;
             }
 
