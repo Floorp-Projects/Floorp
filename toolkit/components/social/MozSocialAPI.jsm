@@ -174,6 +174,30 @@ function attachToWindow(provider, targetWindow) {
     // set a timer which will fire after the unload events have all fired.
     schedule(function () { port.close(); });
   });
+  targetWindow.addEventListener("DOMWindowClose", function _mozSocialDOMWindowClose(evt) {
+    let elt = targetWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIWebNavigation)
+                .QueryInterface(Ci.nsIDocShell)
+                .chromeEventHandler;
+    while (elt) {
+      if (elt.nodeName == "panel") {
+        elt.hidePopup();
+        break;
+      } else if (elt.nodeName == "chatbox") {
+        elt.close();
+        break;
+      }
+      elt = elt.parentNode;
+    }
+    // preventDefault stops the default window.close() function being called,
+    // which doesn't actually close anything but causes things to get into
+    // a bad state (an internal 'closed' flag is set and debug builds start
+    // asserting as the window is used.).
+    // None of the windows we inject this API into are suitable for this
+    // default close behaviour, so even if we took no action above, we avoid
+    // the default close from doing anything.
+    evt.preventDefault();
+  }, true);
 }
 
 function schedule(callback) {
