@@ -405,10 +405,6 @@ ContentParent::GetAll(nsTArray<ContentParent*>& aArray)
     if (gAppContentParents) {
         gAppContentParents->EnumerateRead(&AppendToTArray, &aArray);
     }
-
-    if (sPreallocatedAppProcess) {
-        aArray.AppendElement(sPreallocatedAppProcess);
-    }
 }
 
 void
