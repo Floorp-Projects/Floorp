@@ -859,6 +859,7 @@ JSRuntime::JSRuntime()
     ionJSContext(NULL),
     ionStackLimit(0),
     ionActivation(NULL),
+    ionPcScriptCache(NULL),
     ionReturnOverride_(MagicValue(JS_ARG_POISON))
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
@@ -1006,6 +1007,9 @@ JSRuntime::~JSRuntime()
     js_delete(jaegerRuntime_);
 #endif
     js_delete(execAlloc_);  /* Delete after jaegerRuntime_. */
+
+    if (ionPcScriptCache)
+        js_delete(ionPcScriptCache);
 }
 
 #ifdef JS_THREADSAFE

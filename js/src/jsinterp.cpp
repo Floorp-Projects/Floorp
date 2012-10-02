@@ -505,9 +505,9 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, cons
         return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
-    Probes::startExecution(cx, script);
+    Probes::startExecution(script);
     bool ok = RunScript(cx, script, efg.fp());
-    Probes::stopExecution(cx, script);
+    Probes::stopExecution(script);
 
     /* Propgate the return value out. */
     if (result)

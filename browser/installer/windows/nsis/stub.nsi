@@ -1048,18 +1048,20 @@ Function UpdateFreeSpaceLabel
         StrCpy $1 "$(GIGA)$(BYTE)"
       ${EndIf}
     ${EndIf}
-    StrCpy $4 "$0"
     StrLen $3 "$0"
-    ${If} $3 > 2
-      StrCpy $2 "$0" 2
-      StrCpy $0 "$0" 1 2
-      StrCpy $0 "$2.$0"
-    ${ElseIf} $3 == 2
-      StrCpy $2 "$0" 1
-      StrCpy $0 "$0" -1
-      StrCpy $0 "$2.$0"
+    ${If} $3 > 1
+      StrCpy $2 "$0" -1 ; All characters except the last one
+      StrCpy $0 "$0" "" -1 ; The last character
+      ${If} "$0" == "0"
+        StrCpy $0 "$2" ; Don't display the decimal if it is 0
+      ${Else}
+        StrCpy $0 "$2.$0"
+      ${EndIf}
+    ${ElseIf} $3 == 1
+      StrCpy $0 "0.$0"
     ${Else}
-      System::Int64Op $4 / 10
+      ; This should never happen
+      System::Int64Op $0 / 10
       Pop $0
     ${EndIf}
   ${EndIf}

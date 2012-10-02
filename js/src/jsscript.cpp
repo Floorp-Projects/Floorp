@@ -50,18 +50,18 @@ using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
 
-unsigned
-Bindings::argumentsVarIndex(JSContext *cx) const
+/* static */ unsigned
+Bindings::argumentsVarIndex(JSContext *cx, InternalBindingsHandle bindings)
 {
     HandlePropertyName arguments = cx->names().arguments;
-    BindingIter bi(*this);
+    BindingIter bi(bindings);
     while (bi->name() != arguments)
         bi++;
     return bi.frameIndex();
 }
 
 bool
-Bindings::initWithTemporaryStorage(JSContext *cx, InternalHandle<Bindings*> self,
+Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
                                    unsigned numArgs, unsigned numVars,
                                    Binding *bindingArray)
 {
@@ -106,7 +106,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalHandle<Bindings*> self
         return false;
 #endif
 
-    BindingIter bi(*self);
+    BindingIter bi(self);
     unsigned slot = CallObject::RESERVED_SLOTS;
     for (unsigned i = 0, n = self->count(); i < n; i++, bi++) {
         if (!bi->aliased())
@@ -151,7 +151,7 @@ Bindings::switchToScriptStorage(Binding *newBindingArray)
 }
 
 bool
-Bindings::clone(JSContext *cx, InternalHandle<Bindings*> self,
+Bindings::clone(JSContext *cx, InternalBindingsHandle self,
                 uint8_t *dstScriptData,
                 HandleScript srcScript)
 {
@@ -186,13 +186,13 @@ XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, un
     JSContext *cx = xdr->cx();
 
     if (mode == XDR_ENCODE) {
-        for (BindingIter bi(script->bindings); bi; bi++) {
+        for (BindingIter bi(script); bi; bi++) {
             JSAtom *atom = bi->name();
             if (!XDRAtom(xdr, &atom))
                 return false;
         }
 
-        for (BindingIter bi(script->bindings); bi; bi++) {
+        for (BindingIter bi(script); bi; bi++) {
             uint8_t u8 = (uint8_t(bi->kind()) << 1) | uint8_t(bi->aliased());
             if (!xdr->codeUint8(&u8))
                 return false;
@@ -225,7 +225,7 @@ XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, un
             bindingArray[i] = Binding(name, kind, aliased);
         }
 
-        InternalHandle<Bindings*> bindings(script, &script->bindings);
+        InternalBindingsHandle bindings(script, &script->bindings);
         if (!Bindings::initWithTemporaryStorage(cx, bindings, numArgs, numVars, bindingArray))
             return false;
     }
@@ -261,9 +261,9 @@ Bindings::trace(JSTracer *trc)
 }
 
 bool
-js::FillBindingVector(Bindings &bindings, BindingVector *vec)
+js::FillBindingVector(HandleScript fromScript, BindingVector *vec)
 {
-    for (BindingIter bi(bindings); bi; bi++) {
+    for (BindingIter bi(fromScript); bi; bi++) {
         if (!vec->append(*bi))
             return false;
     }
@@ -1030,7 +1030,7 @@ SourceCompressorThread::abort(SourceCompressionToken *userTok)
 #endif /* JS_THREADSAFE */
 
 void
-JSScript::setScriptSource(JSContext *cx, ScriptSource *ss)
+JSScript::setScriptSource(ScriptSource *ss)
 {
     JS_ASSERT(ss);
     ss->incref();
@@ -1523,7 +1523,7 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     }
     script->staticLevel = uint16_t(staticLevel);
 
-    script->setScriptSource(cx, ss);
+    script->setScriptSource(ss);
     script->sourceStart = bufStart;
     script->sourceEnd = bufEnd;
 
@@ -1863,7 +1863,7 @@ GSNCache::purge()
 } /* namespace js */
 
 jssrcnote *
-js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
+js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     size_t target = pc - script->code;
     if (target >= size_t(script->length))
@@ -2552,7 +2552,8 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, JSScript *script_)
 
     script->needsArgsObj_ = true;
 
-    const unsigned var = script->bindings.argumentsVarIndex(cx);
+    InternalBindingsHandle bindings(script, &script->bindings);
+    const unsigned var = Bindings::argumentsVarIndex(cx, bindings);
 
     /*
      * By design, the apply-arguments optimization is only made when there

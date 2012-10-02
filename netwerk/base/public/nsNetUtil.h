@@ -1310,7 +1310,7 @@ NS_UsePrivateBrowsing(nsIChannel *channel)
 // Constants duplicated from nsIScriptSecurityManager so we avoid having necko
 // know about script security manager.
 #define NECKO_NO_APP_ID 0
-#define NECKO_UNKNOWN_APP_ID std::numeric_limits<uint32_t>::max()
+#define NECKO_UNKNOWN_APP_ID UINT32_MAX
 
 /**
  * Gets AppId and isInBrowserElement from channel's nsILoadContext.

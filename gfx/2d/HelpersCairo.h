@@ -225,7 +225,7 @@ public:
 
   ~CairoTempMatrix()
   {
-    cairo_get_matrix(mCtx, &mSaveMatrix);
+    cairo_set_matrix(mCtx, &mSaveMatrix);
   }
 
 private:

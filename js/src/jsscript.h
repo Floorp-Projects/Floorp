@@ -126,6 +126,9 @@ class Binding
 
 JS_STATIC_ASSERT(sizeof(Binding) == sizeof(uintptr_t));
 
+class Bindings;
+typedef InternalHandle<Bindings *> InternalBindingsHandle;
+
 /*
  * Formal parameters and local variables are stored in a shape tree
  * path encapsulated within this class.  This class represents bindings for
@@ -168,7 +171,7 @@ class Bindings
      * storage is release, switchToScriptStorage must be called, providing a
      * pointer into the Binding array stored in script->data.
      */
-    static bool initWithTemporaryStorage(JSContext *cx, InternalHandle<Bindings*> self,
+    static bool initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
                                          unsigned numArgs, unsigned numVars,
                                          Binding *bindingArray);
 
@@ -178,7 +181,8 @@ class Bindings
      * Clone srcScript's bindings (as part of js::CloneScript). dstScriptData
      * is the pointer to what will eventually be dstScript->data.
      */
-    static bool clone(JSContext *cx, InternalHandle<Bindings*> self, uint8_t *dstScriptData, HandleScript srcScript);
+    static bool clone(JSContext *cx, InternalBindingsHandle self, uint8_t *dstScriptData,
+                      HandleScript srcScript);
 
     unsigned numArgs() const { return numArgs_; }
     unsigned numVars() const { return numVars_; }
@@ -188,7 +192,7 @@ class Bindings
     Shape *callObjShape() const { return callObjShape_; }
 
     /* Convenience method to get the var index of 'arguments'. */
-    unsigned argumentsVarIndex(JSContext *cx) const;
+    static unsigned argumentsVarIndex(JSContext *cx, InternalBindingsHandle);
 
     /* Return whether the binding at bindingIndex is aliased. */
     bool bindingIsAliased(unsigned bindingIndex);
@@ -576,7 +580,7 @@ struct JSScript : public js::gc::Cell
         return scriptSource_;
     }
 
-    void setScriptSource(JSContext *cx, js::ScriptSource *ss);
+    void setScriptSource(js::ScriptSource *ss);
 
   public:
 
@@ -900,14 +904,14 @@ namespace js {
  */
 class BindingIter
 {
-    const Bindings *bindings_;
+    const InternalBindingsHandle bindings_;
     unsigned i_;
 
     friend class Bindings;
-    BindingIter(const Bindings &bindings, unsigned i) : bindings_(&bindings), i_(i) {}
 
   public:
-    explicit BindingIter(const Bindings &bindings) : bindings_(&bindings), i_(0) {}
+    explicit BindingIter(const InternalBindingsHandle &bindings) : bindings_(bindings), i_(0) {}
+    explicit BindingIter(const HandleScript &script) : bindings_(script, &script->bindings), i_(0) {}
 
     bool done() const { return i_ == bindings_->count(); }
     operator bool() const { return !done(); }
@@ -931,7 +935,7 @@ class BindingIter
 typedef Vector<Binding, 32> BindingVector;
 
 extern bool
-FillBindingVector(Bindings &bindings, BindingVector *vec);
+FillBindingVector(HandleScript fromScript, BindingVector *vec);
 
 /*
  * Iterator over the aliased formal bindings in ascending index order. This can
@@ -1204,15 +1208,8 @@ struct ScriptAndCounts
 
 } /* namespace js */
 
-/*
- * To perturb as little code as possible, we introduce a js_GetSrcNote lookup
- * cache without adding an explicit cx parameter.  Thus js_GetSrcNote becomes
- * a macro that uses cx from its calls' lexical environments.
- */
-#define js_GetSrcNote(script,pc) js_GetSrcNoteCached(cx, script, pc)
-
 extern jssrcnote *
-js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc);
+js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 extern jsbytecode *
 js_LineNumberToPC(JSScript *script, unsigned lineno);

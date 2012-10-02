@@ -522,7 +522,7 @@ function test17() {
   ok(!missingNotification, "Test 17, Should not have a missing plugin notification");
 
   registerFakeBlocklistService(Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
-  prepareTest(test18a, gTestRoot + "plugin_test.html");
+  prepareTest(test18a, gHttpTestRoot + "plugin_test.html");
 }
 
 const Cr = Components.results;
@@ -609,7 +609,7 @@ function test18b() {
 
   unregisterFakeBlocklistService();
   registerFakeBlocklistService(Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
-  prepareTest(test18c, gTestRoot + "plugin_test.html");
+  prepareTest(test18c, gHttpTestRoot + "plugin_test.html");
 }
 
 // Tests a vulnerable plugin with no update
@@ -627,9 +627,35 @@ function test18c() {
   var updateLink = doc.getAnonymousElementByAttribute(plugin, "class", "checkForUpdatesLink");
   ok(updateLink.style.display != "block", "Test 18c, Plugin should not have an update link");
 
+  // check that click "Always allow" works with blocklisted plugins (for now)
+  clickToPlayNotification.secondaryActions[0].callback();
+  var condition = function() objLoadingContent.activated;
+  waitForCondition(condition, test18d, "Test 18d, Waited too long for plugin to activate");
+}
+
+// continue testing "Always allow"
+function test18d() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!popupNotification, "Test 18d, Should not have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 18d, Plugin should be activated");
+
+  prepareTest(test18e, gHttpTestRoot + "plugin_test.html");
+}
+
+// continue testing "Always allow"
+function test18e() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!popupNotification, "Test 18e, Should not have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 18e, Plugin should be activated");
+
   unregisterFakeBlocklistService();
   var plugin = getTestPlugin();
   plugin.clicktoplay = false;
+  Services.perms.removeAll();
 
   prepareTest(test19a, gTestRoot + "plugin_test.html");
 }
