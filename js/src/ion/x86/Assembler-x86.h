@@ -13,6 +13,8 @@
 #include "ion/CompactBuffer.h"
 #include "ion/IonCode.h"
 
+#include "jsscriptinlines.h"
+
 namespace js {
 namespace ion {
 
