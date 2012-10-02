@@ -8,14 +8,12 @@ import logging
 import multiprocessing
 import os
 import pymake.parser
-import shlex
 import sys
 import subprocess
 import which
 
 from mozprocess.processhandler import ProcessHandlerMixin
 from pymake.data import Makefile
-from tempfile import TemporaryFile
 
 from mozbuild.config import ConfigProvider
 from mozbuild.config import PositiveIntegerType
@@ -324,7 +322,7 @@ class MozbuildObject(object):
             use_env.update(os.environ)
 
             if append_env:
-                use_env.update(env)
+                use_env.update(append_env)
 
         p = ProcessHandlerMixin(args, cwd=cwd, env=use_env,
             processOutputLine=[handleLine], universal_newlines=True)
