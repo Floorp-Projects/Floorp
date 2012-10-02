@@ -1546,7 +1546,7 @@ gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
         mDT->GetOpaqueRect().Contains(clipExtents)) {
       DrawTarget *oldDT = mDT;
       RefPtr<SourceSurface> source = mDT->Snapshot();
-      PushGroup(content);
+      PushGroup(gfxASurface::CONTENT_COLOR);
       Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
       Matrix oldTransform = mDT->GetTransform();
       mDT->SetTransform(Matrix());
