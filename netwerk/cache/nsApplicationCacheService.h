@@ -21,10 +21,6 @@ public:
     static void AppClearDataObserverInit();
 
 private:
-    nsresult GetJARIdentifier(nsIURI *aURI,
-                              nsILoadContext *aLoadContext,
-                              nsACString &_result);
-
     nsRefPtr<nsCacheService> mCacheService;
 };
 

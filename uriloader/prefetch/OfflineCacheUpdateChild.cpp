@@ -241,6 +241,17 @@ OfflineCacheUpdateChild::InitPartial(nsIURI *aManifestURI,
 }
 
 NS_IMETHODIMP
+OfflineCacheUpdateChild::InitForUpdateCheck(nsIURI *aManifestURI,
+                                            uint32_t aAppID,
+                                            bool aInBrowser,
+                                            nsIObserver *aObserver)
+{
+    NS_NOTREACHED("Not expected to do only update checks"
+                  " from the child process");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 OfflineCacheUpdateChild::GetUpdateDomain(nsACString &aUpdateDomain)
 {
     NS_ENSURE_TRUE(mState >= STATE_INITIALIZED, NS_ERROR_NOT_INITIALIZED);
