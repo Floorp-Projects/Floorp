@@ -10648,23 +10648,14 @@ NS_IMPL_RELEASE(nsEventListenerThisTranslator)
 
 NS_IMETHODIMP
 nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
-                                             nsIInterfaceInfo *aInterfaceInfo,
-                                             uint16_t aMethodIndex,
-                                             bool *aHideFirstParamFromJS,
-                                             nsIID * *aIIDOfResult,
                                              nsISupports **_retval)
 {
-  *aHideFirstParamFromJS = false;
-  *aIIDOfResult = nullptr;
-
   nsCOMPtr<nsIDOMEvent> event(do_QueryInterface(aInitialThis));
   NS_ENSURE_TRUE(event, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIDOMEventTarget> target;
   event->GetCurrentTarget(getter_AddRefs(target));
-
-  *_retval = target.forget().get();
-
+  target.forget(_retval);
   return NS_OK;
 }
 
@@ -10678,14 +10669,8 @@ NS_IMPL_RELEASE(nsMutationCallbackThisTranslator)
 
 NS_IMETHODIMP
 nsMutationCallbackThisTranslator::TranslateThis(nsISupports *aInitialThis,
-                                                nsIInterfaceInfo *aInterfaceInfo,
-                                                uint16_t aMethodIndex,
-                                                bool *aHideFirstParamFromJS,
-                                                nsIID * *aIIDOfResult,
                                                 nsISupports **_retval)
 {
-  *aHideFirstParamFromJS = false;
-  *aIIDOfResult = nullptr;
   NS_IF_ADDREF(*_retval = nsDOMMutationObserver::CurrentObserver());
   return NS_OK;
 }
