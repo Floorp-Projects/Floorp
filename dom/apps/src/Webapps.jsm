@@ -154,7 +154,7 @@ let DOMApplicationRegistry = {
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
-                     "Webapps:GetSelf", "Webapps:IsInstalled",
+                     "Webapps:GetSelf", "Webapps:CheckInstalled",
                      "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                      "Webapps:Launch", "Webapps:GetAll",
                      "Webapps:InstallPackage", "Webapps:GetBasePath",
@@ -561,8 +561,8 @@ let DOMApplicationRegistry = {
       case "Webapps:Launch":
         this.launchApp(msg, mm);
         break;
-      case "Webapps:IsInstalled":
-        this.isInstalled(msg, mm);
+      case "Webapps:CheckInstalled":
+        this.checkInstalled(msg, mm);
         break;
       case "Webapps:GetInstalled":
         this.getInstalled(msg, mm);
@@ -1454,17 +1454,25 @@ let DOMApplicationRegistry = {
     }).bind(this));
   },
 
-  isInstalled: function(aData, aMm) {
-    aData.installed = false;
+  checkInstalled: function(aData, aMm) {
+    aData.app = null;
+    let tmp = [];
 
     for (let appId in this.webapps) {
       if (this.webapps[appId].manifestURL == aData.manifestURL) {
-        aData.installed = true;
+        aData.app = AppsUtils.cloneAppObject(this.webapps[appId]);
+        tmp.push({ id: appId });
         break;
       }
     }
 
-    aMm.sendAsyncMessage("Webapps:IsInstalled:Return:OK", aData);
+    this._readManifests(tmp, (function(aResult) {
+      for (let i = 0; i < aResult.length; i++) {
+        aData.app.manifest = aResult[i].manifest;
+        break;
+      }
+      aMm.sendAsyncMessage("Webapps:CheckInstalled:Return:OK", aData);
+    }).bind(this));
   },
 
   getInstalled: function(aData, aMm) {
