@@ -188,6 +188,8 @@ MOCHITEST_FILES_A = \
 		file_XHR_binary1.bin \
 		file_XHR_binary1.bin^headers^ \
 		file_XHR_binary2.bin \
+		file_XHR_header.sjs \
+		test_XHR_header.html \
 		test_bug428847.html \
 		file_bug428847-1.xhtml \
 		file_bug428847-2.xhtml \
