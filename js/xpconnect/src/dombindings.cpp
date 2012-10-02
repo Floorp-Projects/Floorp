@@ -150,17 +150,6 @@ size_t ListBase<LC>::sProtoMethodsCount = 0;
 template<class LC>
 ListBase<LC> ListBase<LC>::instance;
 
-bool
-DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine, nsresult *aResult)
-{
-    bool enabled;
-    bool defined = aDefine(cx, obj, &enabled);
-    NS_ASSERTION(!defined || enabled,
-                 "We defined a constructor but the new bindings are disabled?");
-    *aResult = defined ? NS_OK : NS_ERROR_FAILURE;
-    return enabled;
-}
-
 template<class LC>
 typename ListBase<LC>::ListType*
 ListBase<LC>::getNative(JSObject *obj)

@@ -146,7 +146,7 @@
 }
 
 .ruleview-rule-source {
-  color: hsl(121,42%,43%); /* green */
+  color: hsl(90,2%,46%); /* grey */
   -moz-padding-start: 5px;
   cursor: pointer;
   text-align: right;
@@ -233,7 +233,7 @@
 
 .ruleview-propertyname {
   padding: 1px 0;
-  color: hsl(210,100%,38%); /* blue */
+  color: hsl(276,44%,45%); /* purple */
 }
 
 .ruleview-propertyvalue {

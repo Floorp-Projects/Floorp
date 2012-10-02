@@ -564,7 +564,7 @@ nsAttrValue::SetTo(const nsSVGViewBox& aValue, const nsAString* aSerialized)
 void
 nsAttrValue::SwapValueWith(nsAttrValue& aOther)
 {
-  PtrBits tmp = aOther.mBits;
+  uintptr_t tmp = aOther.mBits;
   aOther.mBits = mBits;
   mBits = tmp;
 }
@@ -1536,7 +1536,7 @@ nsAttrValue::SetColorValue(nscolor aColor, const nsAString& aString)
   cont->mType = eColor;
 
   // Save the literal string we were passed for round-tripping.
-  cont->mStringBits = reinterpret_cast<PtrBits>(buf) | eStringBase;
+  cont->mStringBits = reinterpret_cast<uintptr_t>(buf) | eStringBase;
 }
 
 bool
@@ -1713,12 +1713,12 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
       nsIAtom* atom = NS_NewAtom(*aValue);
       if (atom) {
-        cont->mStringBits = reinterpret_cast<PtrBits>(atom) | eAtomBase;
+        cont->mStringBits = reinterpret_cast<uintptr_t>(atom) | eAtomBase;
       }
     } else {
       nsStringBuffer* buf = GetStringBuffer(*aValue);
       if (buf) {
-        cont->mStringBits = reinterpret_cast<PtrBits>(buf) | eStringBase;
+        cont->mStringBits = reinterpret_cast<uintptr_t>(buf) | eStringBase;
       }
     }
   }
