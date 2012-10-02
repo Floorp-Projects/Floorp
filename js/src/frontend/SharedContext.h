@@ -190,10 +190,9 @@ class GlobalSharedContext : public SharedContext
     JSObject *scopeChain() const { return scopeChain_; }
 };
 
-class FunctionBox : public SharedContext
+class FunctionBox : public ObjectBox, public SharedContext
 {
   public:
-    ObjectBox       objbox;
     Bindings        bindings;               /* bindings for this function */
     size_t          bufStart;
     size_t          bufEnd;
@@ -207,7 +206,7 @@ class FunctionBox : public SharedContext
     FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fun, ParseContext *pc,
                 StrictMode sms);
 
-    JSFunction *fun() const { return objbox.object->toFunction(); }
+    JSFunction *function() const { return object->toFunction(); }
 
     bool isGenerator()              const { return funCxFlags.isGenerator; }
     bool mightAliasLocals()         const { return funCxFlags.mightAliasLocals; }

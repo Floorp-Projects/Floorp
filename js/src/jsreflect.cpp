@@ -3213,7 +3213,7 @@ ASTSerializer::identifier(ParseNode *pn, MutableHandleValue dst)
 bool
 ASTSerializer::function(ParseNode *pn, ASTType type, MutableHandleValue dst)
 {
-    RootedFunction func(cx, pn->pn_funbox->fun());
+    RootedFunction func(cx, pn->pn_funbox->function());
 
     bool isGenerator =
 #if JS_HAS_GENERATORS
