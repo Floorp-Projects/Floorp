@@ -4,12 +4,10 @@
 
 from __future__ import unicode_literals
 
-import os
-
-from mozbuild.base import MozbuildObject
+from mozbuild.testing.test import TestRunner
 
 
-class MochitestRunner(MozbuildObject):
+class MochitestRunner(TestRunner):
     """Easily run mochitests.
 
     This currently contains just the basics for running mochitests. We may want
@@ -54,6 +52,8 @@ class MochitestRunner(MozbuildObject):
             target = 'mochitest-chrome'
         elif suite == 'browser':
             target = 'mochitest-browser-chrome'
+        elif suite == 'a11y':
+            target = 'mochitest-a11y'
         else:
             raise Exception('None or unrecognized mochitest suite type.')
 
@@ -66,19 +66,3 @@ class MochitestRunner(MozbuildObject):
             env = {}
 
         self._run_make(directory='.', target=target, append_env=env)
-
-    def _parse_test_path(self, test_path):
-        is_dir = os.path.isdir(test_path)
-
-        if is_dir and not test_path.endswith(os.path.sep):
-            test_path += os.path.sep
-
-        normalized = test_path
-
-        if test_path.startswith(self.topsrcdir):
-            normalized = test_path[len(self.topsrcdir):]
-
-        return {
-            'normalized': normalized,
-            'is_dir': is_dir,
-        }
