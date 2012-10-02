@@ -49,6 +49,10 @@
 
 SimpleTest.waitForFocus(runTests, window);
 
+var winUtils = SpecialPowers.getDOMWindowUtils(window);
+// grab refresh driver
+winUtils.advanceTimeAndRefresh(100);
+
 var gScrollableElement = document.getElementById("scrollable");
 var gScrolledElement = document.getElementById("scrolled");
 var gSpacerForBodyElement = document.getElementById("spacerForBody");
@@ -65,6 +69,8 @@ function ok()
 
 function hitEventLoop(aFunc, aTimes)
 {
+  winUtils.advanceTimeAndRefresh(100);
+
   if (--aTimes) {
     setTimeout(hitEventLoop, 0, aFunc, aTimes);
   } else {
@@ -882,6 +888,7 @@ function doTestScroll(aSettings, aCallback)
       if (currentTest.cleanup) {
         currentTest.cleanup();
       }
+      winUtils.advanceTimeAndRefresh(100);
       doNextTest();
     }, 10);
   }
