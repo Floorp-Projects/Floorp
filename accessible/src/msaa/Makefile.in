@@ -52,13 +52,13 @@ CPPSRCS += \
 endif
 
 EXPORTS = \
-  				CAccessibleValue.h \
-  				ia2AccessibleAction.h \
-  				ia2AccessibleComponent.h \
-  				ia2AccessibleEditableText.h \
-  				ia2AccessibleHyperlink.h \
-  				ia2AccessibleHypertext.h \
-  				ia2AccessibleText.h \
+  CAccessibleValue.h \
+  ia2AccessibleAction.h \
+  ia2AccessibleComponent.h \
+  ia2AccessibleEditableText.h \
+  ia2AccessibleHyperlink.h \
+  ia2AccessibleHypertext.h \
+  ia2AccessibleText.h \
   nsAccessNodeWrap.h \
   $(NULL)
 
@@ -66,6 +66,7 @@ EXPORTS_NAMESPACES = mozilla/a11y \
 
 EXPORTS_mozilla/a11y = \
   AccessibleWrap.h \
+  Compatibility.h \
   HyperTextAccessibleWrap.h \
   $(null)
 
