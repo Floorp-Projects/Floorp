@@ -43,7 +43,7 @@ static unsigned int _gdb_sleep_duration = 300;
 // ipc/chromium/chrome/common/ipc_channel_posix.cc
 static const int kClientChannelFd = 3;
 
-#if (defined(LINUX) || defined(XP_MACOSX)) && \
+#if defined(LINUX) && defined(DEBUG) && \
       (defined(__i386) || defined(__x86_64) || defined(PPC))
 #define CRAWL_STACK_ON_SIGSEGV
 #endif
@@ -225,8 +225,7 @@ void InstallSignalHandlers(const char *ProgramName)
   }
 
 #if defined(CRAWL_STACK_ON_SIGSEGV)
-  if (!getenv("XRE_NO_WINDOWS_CRASH_DIALOG") &&
-      !getenv("MOZ_CRASHREPORTER")) {
+  if (!getenv("XRE_NO_WINDOWS_CRASH_DIALOG")) {
     void (*crap_handler)(int) =
       GeckoProcessType_Default != XRE_GetProcessType() ?
           child_ah_crap_handler :
