@@ -114,15 +114,21 @@ protected:
   virtual void SetItemValueText(const nsAString& text);
 };
 
-// Indicates that a DNS Prefetch has been requested from this Anchor elem
-#define HTML_ANCHOR_DNS_PREFETCH_REQUESTED \
-  (1 << ELEMENT_TYPE_SPECIFIC_BITS_OFFSET)
-// Indicates that a DNS Prefetch was added to the deferral queue
-#define HTML_ANCHOR_DNS_PREFETCH_DEFERRED \
-  (1 << (ELEMENT_TYPE_SPECIFIC_BITS_OFFSET+1))
+#define ANCHOR_ELEMENT_FLAG_BIT(n_) NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
+
+// Anchor element specific bits
+enum {
+  // Indicates that a DNS Prefetch has been requested from this Anchor elem
+  HTML_ANCHOR_DNS_PREFETCH_REQUESTED =    ANCHOR_ELEMENT_FLAG_BIT(0),
+
+  // Indicates that a DNS Prefetch was added to the deferral queue
+  HTML_ANCHOR_DNS_PREFETCH_DEFERRED =     ANCHOR_ELEMENT_FLAG_BIT(1)
+};
 
 // Make sure we have enough space for those bits
-PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET+1 < 32);
+PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
+
+#undef ANCHOR_ELEMENT_FLAG_BIT
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
