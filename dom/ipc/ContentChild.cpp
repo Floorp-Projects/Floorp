@@ -428,6 +428,20 @@ ContentChild::DeallocPMemoryReportRequest(PMemoryReportRequestChild* actor)
     return true;
 }
 
+bool
+ContentChild::RecvDumpMemoryReportsToFile(const nsString& aIdentifier,
+                                          const bool& aMinimizeMemoryUsage,
+                                          const bool& aDumpChildProcesses)
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr =
+        do_GetService("@mozilla.org/memory-reporter-manager;1");
+    NS_ENSURE_TRUE(mgr, true);
+    mgr->DumpMemoryReportsToFile(aIdentifier,
+                                 aMinimizeMemoryUsage,
+                                 aDumpChildProcesses);
+    return true;
+}
+
 PCompositorChild*
 ContentChild::AllocPCompositor(mozilla::ipc::Transport* aTransport,
                                base::ProcessId aOtherProcess)
