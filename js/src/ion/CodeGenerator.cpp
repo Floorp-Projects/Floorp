@@ -3141,6 +3141,13 @@ CodeGenerator::visitCache(LInstruction *ins)
     if (!addOutOfLineCode(ool))
         return false;
 
+#if 0
+    // NOTE: This is currently disabled. OSI and IC interaction are  protected
+    // through other means in ICs, since the nops incur significant overhead.
+    //
+    // ensureOsiSpace();
+#endif
+
     CodeOffsetJump jump = masm.jumpWithPatch(ool->repatchEntry());
     CodeOffsetLabel label = masm.labelForPatch();
     masm.bind(ool->rejoin());
@@ -3944,6 +3951,10 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     OutOfLineCache *ool = new OutOfLineCache(ins);
     if (!addOutOfLineCode(ool))
         return false;
+
+    // If the IC code wants to patch, make sure there is enough space to that
+    // the patching does not overwrite an invalidation marker.
+    ensureOsiSpace();
 
     CodeOffsetJump jump = masm.jumpWithPatch(ool->repatchEntry());
     CodeOffsetLabel label = masm.labelForPatch();
