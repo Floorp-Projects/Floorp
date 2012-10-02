@@ -885,6 +885,9 @@ class GeckoInputConnection
     }
 
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+        if (hasBuggyHardwareKeyboardLayout())
+            return false;
+
         switch (event.getAction()) {
             case KeyEvent.ACTION_DOWN:
                 return processKeyDown(keyCode, event);
@@ -904,9 +907,6 @@ class GeckoInputConnection
         if (DEBUG) {
             Log.d(LOGTAG, "IME: processKeyDown(keyCode=" + keyCode + ", event=" + event + ")");
         }
-
-        if (hasBuggyHardwareKeyboardLayout())
-            return false;
 
         if (keyCode > KeyEvent.getMaxKeyCode())
             return false;
@@ -962,9 +962,6 @@ class GeckoInputConnection
             Log.d(LOGTAG, "IME: processKeyUp(keyCode=" + keyCode + ", event=" + event + ")");
         }
 
-        if (hasBuggyHardwareKeyboardLayout())
-            return false;
-
         if (keyCode > KeyEvent.getMaxKeyCode())
             return false;
 
@@ -992,8 +989,6 @@ class GeckoInputConnection
     }
 
     public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
-        if (hasBuggyHardwareKeyboardLayout())
-            return false;
         GeckoAppShell.sendEventToGecko(GeckoEvent.createKeyEvent(event));
         return true;
     }

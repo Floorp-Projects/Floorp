@@ -672,16 +672,8 @@ Navigator::AddIdleObserver(nsIIdleObserver* aIdleObserver)
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  nsIPrincipal* principal = doc->NodePrincipal();
-  if (!nsContentUtils::IsSystemPrincipal(principal)) {
-    uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-    principal->GetAppStatus(&appStatus);
-    if (appStatus != nsIPrincipal::APP_STATUS_CERTIFIED) {
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
+  if (!CheckPermission("idle")) {
+    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   if (NS_FAILED(win->RegisterIdleObserver(aIdleObserver))) {
@@ -1166,14 +1158,7 @@ Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window, NS_OK);
 
-    nsCOMPtr<nsIPermissionManager> permMgr =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-    NS_ENSURE_TRUE(permMgr, NS_OK);
-
-    uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestPermissionFromWindow(window, "voicemail", &permission);
-
-    if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    if (!CheckPermission("voicemail")) {
       return NS_OK;
     }
 
@@ -1221,14 +1206,7 @@ Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window, NS_OK);
 
-    nsCOMPtr<nsIPermissionManager> permMgr =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-    NS_ENSURE_TRUE(permMgr, NS_OK);
-
-    uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestPermissionFromWindow(window, "mobileconnection", &permission);
-
-    if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    if (!CheckPermission("mobileconnection")) {
       return NS_OK;
     }
 
@@ -1334,20 +1312,8 @@ NS_IMETHODIMP
 Navigator::GetMozTime(nsIDOMMozTimeManager** aTime)
 {
   *aTime = nullptr;
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_OK);
 
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDocument());
-  NS_ENSURE_TRUE(document, NS_OK);
-  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
-  nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, NS_OK);
-  
-  uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  permMgr->TestPermissionFromPrincipal(principal, "time", &permission);
-
-  if (permission != nsIPermissionManager::ALLOW_ACTION) {
+  if (!CheckPermission("time")) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -1421,6 +1387,21 @@ Navigator::OnNavigation()
   if (mCameraManager) {
     mCameraManager->OnNavigation(win->WindowID());
   }
+}
+
+bool
+Navigator::CheckPermission(const char* type)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, false);
+
+  nsCOMPtr<nsIPermissionManager> permMgr =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(permMgr, false);
+
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
+  permMgr->TestPermissionFromWindow(window, type, &permission);
+  return permission == nsIPermissionManager::ALLOW_ACTION;
 }
 
 } // namespace dom

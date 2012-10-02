@@ -139,7 +139,7 @@ class BinaryDigitReader
  * rounds to 0x1000000000000000 instead of 0x1000000000000100.
  */
 static double
-ComputeAccurateBinaryBaseInteger(JSContext *cx, const jschar *start, const jschar *end, int base)
+ComputeAccurateBinaryBaseInteger(const jschar *start, const jschar *end, int base)
 {
     BinaryDigitReader bdr(base, start, end);
 
@@ -220,7 +220,7 @@ GetPrefixInteger(JSContext *cx, const jschar *start, const jschar *end, int base
     if (base == 10)
         return ComputeAccurateDecimalInteger(cx, start, s, dp);
     if ((base & (base - 1)) == 0)
-        *dp = ComputeAccurateBinaryBaseInteger(cx, start, s, base);
+        *dp = ComputeAccurateBinaryBaseInteger(start, s, base);
 
     return true;
 }
@@ -1344,7 +1344,6 @@ NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
 JS_PUBLIC_API(bool)
 ToNumberSlow(JSContext *cx, Value v, double *out)
 {
-    AutoAssertCanGC cangc;
 #ifdef DEBUG
     /*
      * MSVC bizarrely miscompiles this, complaining about the first brace below
