@@ -305,7 +305,7 @@ class MDefinition : public MNode
     virtual void analyzeEdgeCasesForward();
     virtual void analyzeEdgeCasesBackward();
     virtual void analyzeTruncateBackward();
-
+    bool earlyAbortCheck();
     // Propagate a range. Return true if the range changed.
     virtual bool recomputeRange() {
         return false;
@@ -2794,10 +2794,7 @@ class MBeta : public MUnaryInstruction
         return AliasSet::None();
     }
 
-    bool recomputeRange() {
-        return range()->update(
-            Range::intersect(val_->range(), &comparison_));
-    }
+    bool recomputeRange();
 };
 
 // MIR representation of a Value on the OSR StackFrame.
