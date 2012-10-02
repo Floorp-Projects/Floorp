@@ -1056,7 +1056,6 @@ namespace js {
 inline Shape *
 Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 {
-    AutoAssertCanGC cangc;
 #ifdef DEBUG
     {
         SkipRoot skip0(cx, &start);
