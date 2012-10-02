@@ -1349,7 +1349,9 @@ private:
   // __attribute__((aligned(foo))).
   union {
     char mAutoBuf[sizeof(nsTArrayHeader) + N * sizeof(elem_type)];
-    mozilla::AlignedElem<PR_MAX(MOZ_ALIGNOF(Header), MOZ_ALIGNOF(elem_type))> mAlign;
+    // Do the max operation inline to ensure that it is a compile-time constant.
+    mozilla::AlignedElem<(MOZ_ALIGNOF(Header) > MOZ_ALIGNOF(elem_type))
+                         ? MOZ_ALIGNOF(Header) : MOZ_ALIGNOF(elem_type)> mAlign;
   };
 };
 
