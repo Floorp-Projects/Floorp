@@ -2403,8 +2403,7 @@ class MAdd : public MBinaryArithInstruction
             return false;
         Range *left = getOperand(0)->range();
         Range *right = getOperand(1)->range();
-        Range next = isTruncated() ? Range::addTruncate(left,right) : Range::add(left, right);
-        return range()->update(next);
+        return range()->update(Range::add(left, right));
     }
 };
 
@@ -2446,8 +2445,7 @@ class MSub : public MBinaryArithInstruction
             return false;
         Range *left = getOperand(0)->range();
         Range *right = getOperand(1)->range();
-        Range next = isTruncated() ? Range::subTruncate(left,right) : Range::sub(left, right);
-        return range()->update(next);
+        return range()->update(Range::sub(left, right));
     }
 };
 
