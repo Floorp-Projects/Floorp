@@ -79,8 +79,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x57fe44ae, 0x6656, 0x44b8, \
-  { 0x8d, 0xc0, 0xfc, 0xa7, 0x43, 0x28, 0xbe, 0x86 } }
+{ 0x0e1324c9, 0xc997, 0x447e, \
+  { 0xbc, 0xd9, 0xa6, 0x57, 0x80, 0x29, 0x91, 0xe4 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1621,7 +1621,10 @@ public:
 
   // Add/Remove images from the document image tracker
   virtual nsresult AddImage(imgIRequest* aImage) = 0;
-  virtual nsresult RemoveImage(imgIRequest* aImage) = 0;
+  // If the REQUEST_DISCARD flag is passed then if the lock count is zero we
+  // will request the image be discarded now (instead of waiting).
+  enum { REQUEST_DISCARD = 0x1 };
+  virtual nsresult RemoveImage(imgIRequest* aImage, uint32_t aFlags = 0) = 0;
 
   // Makes the images on this document locked/unlocked. By default, the locking
   // state is unlocked/false.

@@ -42,9 +42,9 @@ bool
 LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
 {
     this->lifetime = outerAnalysis->getLoop(head);
-    JS_ASSERT(lifetime &&
-              lifetime->head == uint32_t(head - outerScript->code) &&
-              lifetime->entry == uint32_t(entryTarget - outerScript->code));
+    JS_ASSERT(lifetime);
+    JS_ASSERT(lifetime->head == uint32_t(head - outerScript->code));
+    JS_ASSERT(lifetime->entry == uint32_t(entryTarget - outerScript->code));
 
     this->entry = entry;
 

@@ -27,7 +27,7 @@ try {
 
 const kMessages =["SystemMessageManager:GetPending",
                   "SystemMessageManager:Register",
-                  "SystemMessageManager:Unregister"]
+                  "child-process-shutdown"]
 
 function debug(aMsg) {
   //dump("-- SystemMessageInternal " + Date.now() + " : " + aMsg + "\n");
@@ -50,24 +50,12 @@ SystemMessageInternal.prototype = {
   sendMessage: function sendMessage(aType, aMessage, aPageURI, aManifestURI) {
     debug("Broadcasting " + aType + " " + JSON.stringify(aMessage));
     if (this._listeners[aManifestURI.spec]) {
-      let i;
-      let listener;
-      for (i = this._listeners[aManifestURI.spec].length - 1; i >= 0; i -= 1) {
-        listener = this._listeners[aManifestURI.spec][i];
-        try {
-          listener.sendAsyncMessage("SystemMessageManager:Message",
-                                     { type: aType,
-                                       msg: aMessage,
-                                       manifest: aManifestURI.spec })
-        } catch (e) {
-          // Remove once 777508 lands.
-          let index;
-          if ((index = this._listeners[aManifestURI.spec].indexOf(listener)) != -1) {
-            this._listeners[aManifestURI.spec].splice(index, 1);
-            dump("Remove dead MessageManager!\n");
-          }
-        }
-      };
+      this._listeners[aManifestURI.spec].forEach(function sendMsg(aListener) {
+        aListener.sendAsyncMessage("SystemMessageManager:Message",
+                                   { type: aType,
+                                     msg: aMessage,
+                                     manifest: aManifestURI.spec })
+      });
     }
 
     this._pages.forEach(function sendMess_openPage(aPage) {
@@ -87,23 +75,12 @@ SystemMessageInternal.prototype = {
     this._pages.forEach(function(aPage) {
       if (aPage.type == aType) {
         if (this._listeners[aPage.manifest]) {
-          let i;
-          for (i = this._listeners[aPage.manifest].length - 1; i >= 0; i -= 1) {
-            let listener = this._listeners[aPage.manifest][i];
-            try {
-              listener.sendAsyncMessage("SystemMessageManager:Message",
-                                         { type: aType,
-                                           msg: aMessage,
-                                           manifest: aPage.manifest})
-            } catch (e) {
-              // Remove once 777508 lands.
-              let index;
-              if ((index = this._listeners[aPage.manifest].indexOf(listener)) != -1) {
-                this._listeners[aPage.manifest].splice(index, 1);
-                dump("Remove dead MessageManager!\n");
-              }
-            }
-          };
+          this._listeners[aPage.manifest].forEach(function sendMsg(aListener) {
+            aListener.sendAsyncMessage("SystemMessageManager:Message",
+                                       { type: aType,
+                                         msg: aMessage,
+                                         manifest: aPage.manifest})
+          });
         }
         this._processPage(aPage, aMessage);
       }
@@ -133,7 +110,7 @@ SystemMessageInternal.prototype = {
         this._listeners[manifest].push(aMessage.target);
         debug("listeners for " + manifest + " : " + this._listeners[manifest].length);
         break;
-      case "SystemMessageManager:Unregister":
+      case "child-process-shutdown":
         debug("Got Unregister from " + aMessage.target);
         let mm = aMessage.target;
         for (let manifest in this._listeners) {

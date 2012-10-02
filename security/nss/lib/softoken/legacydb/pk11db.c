@@ -1,59 +1,27 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* 
  *  The following code handles the storage of PKCS 11 modules used by the
  * NSS. This file is written to abstract away how the modules are
  * stored so we can deside that later.
  */
 
-#include "pk11pars.h"
 #include "lgdb.h"
 #include "mcom_db.h"
 #include "secerr.h"
+#include "utilpars.h"
 
 #define FREE_CLEAR(p) if (p) { PORT_Free(p); p = NULL; }
 
 /* Construct a database key for a given module */
-static SECStatus secmod_MakeKey(DBT *key, char * module) {
+static SECStatus lgdb_MakeKey(DBT *key, char * module) {
     int len = 0;
     char *commonName;
 
-    commonName = secmod_argGetParamValue("name",module);
+    commonName = NSSUTIL_ArgGetParamValue("name",module);
     if (commonName == NULL) {
-	commonName = secmod_argGetParamValue("library",module);
+	commonName = NSSUTIL_ArgGetParamValue("library",module);
     }
     if (commonName == NULL) return SECFailure;
     len = PORT_Strlen(commonName);
@@ -64,7 +32,7 @@ static SECStatus secmod_MakeKey(DBT *key, char * module) {
 
 /* free out constructed database key */
 static void 
-secmod_FreeKey(DBT *key) 
+lgdb_FreeKey(DBT *key) 
 {
     if (key->data) {
 	PORT_Free(key->data);
@@ -73,9 +41,9 @@ secmod_FreeKey(DBT *key)
     key->size = 0;
 }
 
-typedef struct secmodDataStr secmodData;
-typedef struct secmodSlotDataStr secmodSlotData;
-struct secmodDataStr {
+typedef struct lgdbDataStr lgdbData;
+typedef struct lgdbSlotDataStr lgdbSlotData;
+struct lgdbDataStr {
     unsigned char major;
     unsigned char minor;
     unsigned char nameStart[2];
@@ -93,7 +61,7 @@ struct secmodDataStr {
     unsigned char names[6];	/* enough space for the length fields */
 };
 
-struct secmodSlotDataStr {
+struct lgdbSlotDataStr {
     unsigned char slotID[4];
     unsigned char defaultFlags[4];
     unsigned char timeout[4];
@@ -102,24 +70,24 @@ struct secmodSlotDataStr {
     unsigned char reserved[18]; /* this makes it a round 32 bytes */
 };
 
-#define SECMOD_DB_VERSION_MAJOR 0
-#define SECMOD_DB_VERSION_MINOR 6
-#define SECMOD_DB_EXT1_VERSION_MAJOR 0
-#define SECMOD_DB_EXT1_VERSION_MINOR 6
-#define SECMOD_DB_NOUI_VERSION_MAJOR 0
-#define SECMOD_DB_NOUI_VERSION_MINOR 4
+#define LGDB_DB_VERSION_MAJOR 0
+#define LGDB_DB_VERSION_MINOR 6
+#define LGDB_DB_EXT1_VERSION_MAJOR 0
+#define LGDB_DB_EXT1_VERSION_MINOR 6
+#define LGDB_DB_NOUI_VERSION_MAJOR 0
+#define LGDB_DB_NOUI_VERSION_MINOR 4
 
-#define SECMOD_PUTSHORT(dest,src) \
+#define LGDB_PUTSHORT(dest,src) \
 	(dest)[1] = (unsigned char) ((src)&0xff); \
 	(dest)[0] = (unsigned char) (((src) >> 8) & 0xff);
-#define SECMOD_PUTLONG(dest,src) \
+#define LGDB_PUTLONG(dest,src) \
 	(dest)[3] = (unsigned char) ((src)&0xff); \
 	(dest)[2] = (unsigned char) (((src) >> 8) & 0xff); \
 	(dest)[1] = (unsigned char) (((src) >> 16) & 0xff); \
 	(dest)[0] = (unsigned char) (((src) >> 24) & 0xff);
-#define SECMOD_GETSHORT(src) \
+#define LGDB_GETSHORT(src) \
 	((unsigned short) (((src)[0] << 8) | (src)[1]))
-#define SECMOD_GETLONG(src) \
+#define LGDB_GETLONG(src) \
 	((unsigned long) (( (unsigned long) (src)[0] << 24) | \
 			( (unsigned long) (src)[1] << 16)  | \
 			( (unsigned long) (src)[2] << 8) | \
@@ -129,10 +97,10 @@ struct secmodSlotDataStr {
  * build a data base entry from a module 
  */
 static SECStatus 
-secmod_EncodeData(DBT *data, char * module) 
+lgdb_EncodeData(DBT *data, char * module) 
 {
-    secmodData *encoded = NULL;
-    secmodSlotData *slot;
+    lgdbData *encoded = NULL;
+    lgdbSlotData *slot;
     unsigned char *dataPtr;
     unsigned short len, len2 = 0, len3 = 0;
     int count = 0;
@@ -142,10 +110,10 @@ secmod_EncodeData(DBT *data, char * module)
     unsigned long  ssl[2];
     char *commonName = NULL , *dllName = NULL, *param = NULL, *nss = NULL;
     char *slotParams, *ciphers;
-    PK11PreSlotInfo *slotInfo = NULL;
+    struct NSSUTILPreSlotInfoStr *slotInfo = NULL;
     SECStatus rv = SECFailure;
 
-    rv = secmod_argParseModuleSpec(module,&dllName,&commonName,&param,&nss);
+    rv = NSSUTIL_ArgParseModuleSpec(module,&dllName,&commonName,&param,&nss);
     if (rv != SECSuccess) return rv;
     rv = SECFailure;
 
@@ -162,8 +130,8 @@ secmod_EncodeData(DBT *data, char * module)
 	len3 = PORT_Strlen(param);
     }
 
-    slotParams = secmod_argGetParamValue("slotParams",nss); 
-    slotInfo = secmod_argParseSlotInfo(NULL,slotParams,&count);
+    slotParams = NSSUTIL_ArgGetParamValue("slotParams",nss); 
+    slotInfo = NSSUTIL_ArgParseSlotInfo(NULL,slotParams,&count);
     if (slotParams) PORT_Free(slotParams);
 
     if (count && slotInfo == NULL) {
@@ -171,11 +139,11 @@ secmod_EncodeData(DBT *data, char * module)
 	goto loser;
     }
 
-    dataLen = sizeof(secmodData) + len + len2 + len3 + sizeof(unsigned short) +
-				 count*sizeof(secmodSlotData);
+    dataLen = sizeof(lgdbData) + len + len2 + len3 + sizeof(unsigned short) +
+				 count*sizeof(lgdbSlotData);
 
     data->data = (unsigned char *) PORT_ZAlloc(dataLen);
-    encoded = (secmodData *)data->data;
+    encoded = (lgdbData *)data->data;
     dataPtr = (unsigned char *) data->data;
     data->size = dataLen;
 
@@ -184,65 +152,65 @@ secmod_EncodeData(DBT *data, char * module)
 	goto loser;
     }
 
-    encoded->major = SECMOD_DB_VERSION_MAJOR;
-    encoded->minor = SECMOD_DB_VERSION_MINOR;
+    encoded->major = LGDB_DB_VERSION_MAJOR;
+    encoded->minor = LGDB_DB_VERSION_MINOR;
     encoded->internal = (unsigned char) 
-			(secmod_argHasFlag("flags","internal",nss) ? 1 : 0);
+			(NSSUTIL_ArgHasFlag("flags","internal",nss) ? 1 : 0);
     encoded->fips = (unsigned char) 
-			(secmod_argHasFlag("flags","FIPS",nss) ? 1 : 0);
+			(NSSUTIL_ArgHasFlag("flags","FIPS",nss) ? 1 : 0);
     encoded->isModuleDB = (unsigned char) 
-			(secmod_argHasFlag("flags","isModuleDB",nss) ? 1 : 0);
+			(NSSUTIL_ArgHasFlag("flags","isModuleDB",nss) ? 1 : 0);
     encoded->isModuleDBOnly = (unsigned char) 
-		    (secmod_argHasFlag("flags","isModuleDBOnly",nss) ? 1 : 0);
+		    (NSSUTIL_ArgHasFlag("flags","isModuleDBOnly",nss) ? 1 : 0);
     encoded->isCritical = (unsigned char) 
-			(secmod_argHasFlag("flags","critical",nss) ? 1 : 0);
+			(NSSUTIL_ArgHasFlag("flags","critical",nss) ? 1 : 0);
 
-    order = secmod_argReadLong("trustOrder", nss, SECMOD_DEFAULT_TRUST_ORDER, 
-                               NULL);
-    SECMOD_PUTLONG(encoded->trustOrder,order);
-    order = secmod_argReadLong("cipherOrder", nss, SECMOD_DEFAULT_CIPHER_ORDER, 
-                               NULL);
-    SECMOD_PUTLONG(encoded->cipherOrder,order);
+    order = NSSUTIL_ArgReadLong("trustOrder", nss,
+				 NSSUTIL_DEFAULT_TRUST_ORDER, NULL);
+    LGDB_PUTLONG(encoded->trustOrder,order);
+    order = NSSUTIL_ArgReadLong("cipherOrder", nss, 
+				NSSUTIL_DEFAULT_CIPHER_ORDER, NULL);
+    LGDB_PUTLONG(encoded->cipherOrder,order);
 
    
-    ciphers = secmod_argGetParamValue("ciphers",nss); 
-    secmod_argSetNewCipherFlags(&ssl[0], ciphers);
-    SECMOD_PUTLONG(encoded->ssl,ssl[0]);
-    SECMOD_PUTLONG(&encoded->ssl[4],ssl[1]);
+    ciphers = NSSUTIL_ArgGetParamValue("ciphers",nss); 
+    NSSUTIL_ArgParseCipherFlags(&ssl[0], ciphers);
+    LGDB_PUTLONG(encoded->ssl,ssl[0]);
+    LGDB_PUTLONG(&encoded->ssl[4],ssl[1]);
     if (ciphers) PORT_Free(ciphers);
 
-    offset = (unsigned short) offsetof(secmodData, names);
-    SECMOD_PUTSHORT(encoded->nameStart,offset);
+    offset = (unsigned short) offsetof(lgdbData, names);
+    LGDB_PUTSHORT(encoded->nameStart,offset);
     offset = offset + len + len2 + len3 + 3*sizeof(unsigned short);
-    SECMOD_PUTSHORT(encoded->slotOffset,offset);
+    LGDB_PUTSHORT(encoded->slotOffset,offset);
 
 
-    SECMOD_PUTSHORT(&dataPtr[offset],((unsigned short)count));
-    slot = (secmodSlotData *)(dataPtr+offset+sizeof(unsigned short));
+    LGDB_PUTSHORT(&dataPtr[offset],((unsigned short)count));
+    slot = (lgdbSlotData *)(dataPtr+offset+sizeof(unsigned short));
 
     offset = 0;
-    SECMOD_PUTSHORT(encoded->names,len);
+    LGDB_PUTSHORT(encoded->names,len);
     offset += sizeof(unsigned short);
     PORT_Memcpy(&encoded->names[offset],commonName,len);
     offset += len;
 
 
-    SECMOD_PUTSHORT(&encoded->names[offset],len2);
+    LGDB_PUTSHORT(&encoded->names[offset],len2);
     offset += sizeof(unsigned short);
     if (len2) PORT_Memcpy(&encoded->names[offset],dllName,len2);
     offset += len2;
 
-    SECMOD_PUTSHORT(&encoded->names[offset],len3);
+    LGDB_PUTSHORT(&encoded->names[offset],len3);
     offset += sizeof(unsigned short);
     if (len3) PORT_Memcpy(&encoded->names[offset],param,len3);
     offset += len3;
 
     if (count) {
 	for (i=0; i < count; i++) {
-	    SECMOD_PUTLONG(slot[i].slotID, slotInfo[i].slotID);
-	    SECMOD_PUTLONG(slot[i].defaultFlags,
+	    LGDB_PUTLONG(slot[i].slotID, slotInfo[i].slotID);
+	    LGDB_PUTLONG(slot[i].defaultFlags,
 					slotInfo[i].defaultFlags);
-	    SECMOD_PUTLONG(slot[i].timeout,slotInfo[i].timeout);
+	    LGDB_PUTLONG(slot[i].timeout,slotInfo[i].timeout);
 	    slot[i].askpw = slotInfo[i].askpw;
 	    slot[i].hasRootCerts = slotInfo[i].hasRootCerts;
 	    PORT_Memset(slot[i].reserved, 0, sizeof(slot[i].reserved));
@@ -261,7 +229,7 @@ loser:
 }
 
 static void 
-secmod_FreeData(DBT *data)
+lgdb_FreeData(DBT *data)
 {
     if (data->data) {
 	PORT_Free(data->data);
@@ -269,7 +237,7 @@ secmod_FreeData(DBT *data)
 }
 
 static void
-secmod_FreeSlotStrings(char **slotStrings, int count)
+lgdb_FreeSlotStrings(char **slotStrings, int count)
 {
     int i;
 
@@ -285,10 +253,10 @@ secmod_FreeSlotStrings(char **slotStrings, int count)
  * build a module from the data base entry.
  */
 static char *
-secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
+lgdb_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 {
-    secmodData *encoded;
-    secmodSlotData *slots;
+    lgdbData *encoded;
+    lgdbSlotData *slots;
     PLArenaPool *arena;
     char *commonName 		= NULL;
     char *dllName    		= NULL;
@@ -303,8 +271,8 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     unsigned long slotID;
     unsigned long defaultFlags;
     unsigned long timeout;
-    unsigned long trustOrder	=SECMOD_DEFAULT_TRUST_ORDER;
-    unsigned long cipherOrder	=SECMOD_DEFAULT_CIPHER_ORDER;
+    unsigned long trustOrder	= NSSUTIL_DEFAULT_TRUST_ORDER;
+    unsigned long cipherOrder	= NSSUTIL_DEFAULT_CIPHER_ORDER;
     unsigned short len;
     unsigned short namesOffset  = 0;	/* start of the names block */
     unsigned long namesRunningOffset;	/* offset to name we are 
@@ -327,13 +295,13 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     if ((unsigned int) data->size < (unsigned int)(x)) goto db_loser
 
     /* -------------------------------------------------------------
-    ** Process the buffer header, which is the secmodData struct. 
+    ** Process the buffer header, which is the lgdbData struct. 
     ** It may be an old or new version.  Check the length for each. 
     */
 
-    CHECK_SIZE( offsetof(secmodData, trustOrder[0]) );
+    CHECK_SIZE( offsetof(lgdbData, trustOrder[0]) );
 
-    encoded = (secmodData *)data->data;
+    encoded = (lgdbData *)data->data;
 
     internal = (encoded->internal != 0) ? PR_TRUE: PR_FALSE;
     isFIPS   = (encoded->fips     != 0) ? PR_TRUE: PR_FALSE;
@@ -345,15 +313,15 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	if (parameters == NULL) 
 	    goto loser;
     }
-    if (internal && (encoded->major == SECMOD_DB_NOUI_VERSION_MAJOR) &&
- 	(encoded->minor <= SECMOD_DB_NOUI_VERSION_MINOR)) {
+    if (internal && (encoded->major == LGDB_DB_NOUI_VERSION_MAJOR) &&
+ 	(encoded->minor <= LGDB_DB_NOUI_VERSION_MINOR)) {
 	isOldVersion = PR_TRUE;
     }
-    if ((encoded->major == SECMOD_DB_EXT1_VERSION_MAJOR) &&
-	(encoded->minor >= SECMOD_DB_EXT1_VERSION_MINOR)) {
-	CHECK_SIZE( sizeof(secmodData));
-	trustOrder     = SECMOD_GETLONG(encoded->trustOrder);
-	cipherOrder    = SECMOD_GETLONG(encoded->cipherOrder);
+    if ((encoded->major == LGDB_DB_EXT1_VERSION_MAJOR) &&
+	(encoded->minor >= LGDB_DB_EXT1_VERSION_MINOR)) {
+	CHECK_SIZE( sizeof(lgdbData));
+	trustOrder     = LGDB_GETLONG(encoded->trustOrder);
+	cipherOrder    = LGDB_GETLONG(encoded->cipherOrder);
 	isModuleDB     = (encoded->isModuleDB != 0) ? PR_TRUE: PR_FALSE;
 	isModuleDBOnly = (encoded->isModuleDBOnly != 0) ? PR_TRUE: PR_FALSE;
 	extended       = PR_TRUE;
@@ -363,11 +331,11 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	cipherOrder = 100;
     }
     /* decode SSL cipher enable flags */
-    ssl0 = SECMOD_GETLONG(encoded->ssl);
-    ssl1 = SECMOD_GETLONG(encoded->ssl + 4);
+    ssl0 = LGDB_GETLONG(encoded->ssl);
+    ssl1 = LGDB_GETLONG(encoded->ssl + 4);
 
-    slotOffset  = SECMOD_GETSHORT(encoded->slotOffset);
-    namesOffset = SECMOD_GETSHORT(encoded->nameStart);
+    slotOffset  = LGDB_GETSHORT(encoded->slotOffset);
+    namesOffset = LGDB_GETSHORT(encoded->nameStart);
 
 
     /*--------------------------------------------------------------
@@ -388,7 +356,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     /* copy the module's common name */
     CHECK_SIZE( namesRunningOffset + 2);
     names = (unsigned char *)data->data;
-    len   = SECMOD_GETSHORT(names+namesRunningOffset);
+    len   = LGDB_GETSHORT(names+namesRunningOffset);
 
     CHECK_SIZE( namesRunningOffset + 2 + len);
     commonName = (char*)PORT_ArenaAlloc(arena,len+1);
@@ -400,7 +368,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 
     /* copy the module's shared library file name. */
     CHECK_SIZE( namesRunningOffset + 2);
-    len = SECMOD_GETSHORT(names + namesRunningOffset);
+    len = LGDB_GETSHORT(names + namesRunningOffset);
     if (len) {
 	CHECK_SIZE( namesRunningOffset + 2 + len);
 	dllName = (char*)PORT_ArenaAlloc(arena,len + 1);
@@ -414,7 +382,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     /* copy the module's initialization string, if present. */
     if (!internal && extended) {
 	CHECK_SIZE( namesRunningOffset + 2);
-	len = SECMOD_GETSHORT(names+namesRunningOffset);
+	len = LGDB_GETSHORT(names+namesRunningOffset);
 	if (len) {
 	    CHECK_SIZE( namesRunningOffset + 2 + len );
 	    parameters = (char*)PORT_ArenaAlloc(arena,len + 1);
@@ -447,25 +415,25 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     ** This part has this structure:
     ** struct {
     **     BYTE slotCount [ 2 ];
-    **     secmodSlotData [ slotCount ];
+    **     lgdbSlotData [ slotCount ];
     ** {
     */
 
     CHECK_SIZE( slotOffset + 2 );
-    slotCount = SECMOD_GETSHORT((unsigned char *)data->data + slotOffset);
+    slotCount = LGDB_GETSHORT((unsigned char *)data->data + slotOffset);
 
     /* 
      * Consistency check: Part 2. We now have the slot block length, we can 
      * check the case where the slotblock procedes the name block.
      */
     if (slotOffset < namesOffset) { /* slot block starts before name block */
-	if (namesOffset < slotOffset + 2 + slotCount*sizeof(secmodSlotData)) {
+	if (namesOffset < slotOffset + 2 + slotCount*sizeof(lgdbSlotData)) {
 	    goto db_loser;
 	}
     }
 
-    CHECK_SIZE( (slotOffset + 2 + slotCount * sizeof(secmodSlotData)));
-    slots = (secmodSlotData *) ((unsigned char *)data->data + slotOffset + 2);
+    CHECK_SIZE( (slotOffset + 2 + slotCount * sizeof(lgdbSlotData)));
+    slots = (lgdbSlotData *) ((unsigned char *)data->data + slotOffset + 2);
 
     /*  slotCount; */
     slotStrings = (char **)PORT_ArenaZAlloc(arena, slotCount * sizeof(char *));
@@ -474,35 +442,36 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     for (i=0; i < (int) slotCount; i++, slots++) {
 	PRBool hasRootCerts	=PR_FALSE;
 	PRBool hasRootTrust	=PR_FALSE;
-	slotID       = SECMOD_GETLONG(slots->slotID);
-	defaultFlags = SECMOD_GETLONG(slots->defaultFlags);
-	timeout      = SECMOD_GETLONG(slots->timeout);
+	slotID       = LGDB_GETLONG(slots->slotID);
+	defaultFlags = LGDB_GETLONG(slots->defaultFlags);
+	timeout      = LGDB_GETLONG(slots->timeout);
 	hasRootCerts = slots->hasRootCerts;
 	if (isOldVersion && internal && (slotID != 2)) {
-		unsigned long internalFlags=
-			secmod_argSlotFlags("slotFlags",SECMOD_SLOT_FLAGS);
-		defaultFlags |= internalFlags;
+	    unsigned long internalFlags=
+	         NSSUTIL_ArgParseSlotFlags("slotFlags", 
+					NSSUTIL_DEFAULT_SFTKN_FLAGS);
+	    defaultFlags |= internalFlags;
 	}
 	if (hasRootCerts && !extended) {
 	    trustOrder = 100;
 	}
 
-	slotStrings[i] = secmod_mkSlotString(slotID, defaultFlags, timeout, 
+	slotStrings[i] = NSSUTIL_MkSlotString(slotID, defaultFlags, timeout, 
 	                                   (unsigned char)slots->askpw, 
 	                                   hasRootCerts, hasRootTrust);
 	if (slotStrings[i] == NULL) {
-	    secmod_FreeSlotStrings(slotStrings,i);
+	    lgdb_FreeSlotStrings(slotStrings,i);
 	    goto loser;
 	}
     }
 
-    nss = secmod_mkNSS(slotStrings, slotCount, internal, isFIPS, isModuleDB, 
-		     isModuleDBOnly, internal, trustOrder, cipherOrder, 
-		     ssl0, ssl1);
-    secmod_FreeSlotStrings(slotStrings,slotCount);
+    nss = NSSUTIL_MkNSSString(slotStrings, slotCount, internal, isFIPS, 
+		     isModuleDB, isModuleDBOnly, internal, trustOrder, 
+		     cipherOrder, ssl0, ssl1);
+    lgdb_FreeSlotStrings(slotStrings,slotCount);
     /* it's permissible (and normal) for nss to be NULL. it simply means
      * there are no NSS specific parameters in the database */
-    moduleSpec = secmod_mkNewModuleSpec(dllName,commonName,parameters,nss);
+    moduleSpec = NSSUTIL_MkModuleSpec(dllName,commonName,parameters,nss);
     PR_smprintf_free(nss);
     PORT_FreeArena(arena,PR_TRUE);
     return moduleSpec;
@@ -515,7 +484,7 @@ loser:
 }
 
 static DB *
-secmod_OpenDB(const char *appName, const char *filename, const char *dbName, 
+lgdb_OpenDB(const char *appName, const char *filename, const char *dbName, 
 				PRBool readOnly, PRBool update)
 {
     DB *pkcs11db = NULL;
@@ -573,44 +542,16 @@ secmod_OpenDB(const char *appName, const char *filename, const char *dbName,
 }
 
 static void 
-secmod_CloseDB(DB *pkcs11db) 
+lgdb_CloseDB(DB *pkcs11db) 
 {
      (*pkcs11db->close)(pkcs11db);
 }
 
-static char *
-secmod_addEscape(const char *string, char quote)
-{
-    char *newString = 0;
-    int escapes = 0, size = 0;
-    const char *src;
-    char *dest;
-
-    for (src=string; *src ; src++) {
-	if ((*src == quote) || (*src == '\\')) escapes++;
-	size++;
-    }
-
-    newString = PORT_ZAlloc(escapes+size+1); 
-    if (newString == NULL) {
-	return NULL;
-    }
-
-    for (src=string, dest=newString; *src; src++,dest++) {
-	if ((*src == '\\') || (*src == quote)) {
-	    *dest++ = '\\';
-	}
-	*dest = *src;
-    }
-
-    return newString;
-}
 
 SECStatus legacy_AddSecmodDB(const char *appName, const char *filename, 
 			const char *dbname, char *module, PRBool rw);
 
-#define SECMOD_STEP 10
-#define SFTK_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical trustOrder=75 cipherOrder=100 slotParams=(1={%s askpw=any timeout=30})\""
+#define LGDB_STEP 10
 /*
  * Read all the existing modules in
  */
@@ -623,12 +564,12 @@ legacy_ReadSecmodDB(const char *appName, const char *filename,
     DB *pkcs11db = NULL;
     char **moduleList = NULL, **newModuleList = NULL;
     int moduleCount = 1;
-    int useCount = SECMOD_STEP;
+    int useCount = LGDB_STEP;
 
     moduleList = (char **) PORT_ZAlloc(useCount*sizeof(char **));
     if (moduleList == NULL) return NULL;
 
-    pkcs11db = secmod_OpenDB(appName,filename,dbname,PR_TRUE,rw);
+    pkcs11db = lgdb_OpenDB(appName,filename,dbname,PR_TRUE,rw);
     if (pkcs11db == NULL) goto done;
 
     /* read and parse the file or data base */
@@ -640,15 +581,15 @@ legacy_ReadSecmodDB(const char *appName, const char *filename,
 	char *moduleString;
 	PRBool internal = PR_FALSE;
 	if ((moduleCount+1) >= useCount) {
-	    useCount += SECMOD_STEP;
+	    useCount += LGDB_STEP;
 	    newModuleList =
 		(char **)PORT_Realloc(moduleList,useCount*sizeof(char *));
 	    if (newModuleList == NULL) goto done;
 	    moduleList = newModuleList;
 	    PORT_Memset(&moduleList[moduleCount+1],0,
-						sizeof(char *)*SECMOD_STEP);
+						sizeof(char *)*LGDB_STEP);
 	}
-	moduleString = secmod_DecodeData(params,&data,&internal);
+	moduleString = lgdb_DecodeData(params,&data,&internal);
 	if (internal) {
 	    moduleList[0] = moduleString;
 	} else {
@@ -659,17 +600,20 @@ legacy_ReadSecmodDB(const char *appName, const char *filename,
 
 done:
     if (!moduleList[0]) {
-	char * newparams = secmod_addEscape(params,'"');
+	char * newparams = NSSUTIL_Quote(params,'"');
 	if (newparams) {
-	    moduleList[0] = PR_smprintf(SFTK_DEFAULT_INTERNAL_INIT,newparams,
-						SECMOD_SLOT_FLAGS);
+	    moduleList[0] = PR_smprintf(
+		NSSUTIL_DEFAULT_INTERNAL_INIT1 "%s" 
+		NSSUTIL_DEFAULT_INTERNAL_INIT2 "%s"
+		NSSUTIL_DEFAULT_INTERNAL_INIT3,
+		newparams, NSSUTIL_DEFAULT_SFTKN_FLAGS);
 	    PORT_Free(newparams);
 	}
     }
     /* deal with trust cert db here */
 
     if (pkcs11db) {
-	secmod_CloseDB(pkcs11db);
+	lgdb_CloseDB(pkcs11db);
     } else if (moduleList[0] && rw) {
 	legacy_AddSecmodDB(appName,filename,dbname,moduleList[0], rw) ;
     }
@@ -709,16 +653,16 @@ legacy_DeleteSecmodDB(const char *appName, const char *filename,
     if (!rw) return SECFailure;
 
     /* make sure we have a db handle */
-    pkcs11db = secmod_OpenDB(appName,filename,dbname,PR_FALSE,PR_FALSE);
+    pkcs11db = lgdb_OpenDB(appName,filename,dbname,PR_FALSE,PR_FALSE);
     if (pkcs11db == NULL) {
 	return SECFailure;
     }
 
-    rv = secmod_MakeKey(&key,args);
+    rv = lgdb_MakeKey(&key,args);
     if (rv != SECSuccess) goto done;
     rv = SECFailure;
     ret = (*pkcs11db->del)(pkcs11db, &key, 0);
-    secmod_FreeKey(&key);
+    lgdb_FreeKey(&key);
     if (ret != 0) goto done;
 
 
@@ -726,7 +670,7 @@ legacy_DeleteSecmodDB(const char *appName, const char *filename,
     if (ret == 0) rv = SECSuccess;
 
 done:
-    secmod_CloseDB(pkcs11db);
+    lgdb_CloseDB(pkcs11db);
     return rv;
 }
 
@@ -746,28 +690,28 @@ legacy_AddSecmodDB(const char *appName, const char *filename,
     if (!rw) return SECFailure;
 
     /* make sure we have a db handle */
-    pkcs11db = secmod_OpenDB(appName,filename,dbname,PR_FALSE,PR_FALSE);
+    pkcs11db = lgdb_OpenDB(appName,filename,dbname,PR_FALSE,PR_FALSE);
     if (pkcs11db == NULL) {
 	return SECFailure;
     }
 
-    rv = secmod_MakeKey(&key,module);
+    rv = lgdb_MakeKey(&key,module);
     if (rv != SECSuccess) goto done;
-    rv = secmod_EncodeData(&data,module);
+    rv = lgdb_EncodeData(&data,module);
     if (rv != SECSuccess) {
-	secmod_FreeKey(&key);
+	lgdb_FreeKey(&key);
 	goto done;
     }
     rv = SECFailure;
     ret = (*pkcs11db->put)(pkcs11db, &key, &data, 0);
-    secmod_FreeKey(&key);
-    secmod_FreeData(&data);
+    lgdb_FreeKey(&key);
+    lgdb_FreeData(&data);
     if (ret != 0) goto done;
 
     ret = (*pkcs11db->sync)(pkcs11db, 0);
     if (ret == 0) rv = SECSuccess;
 
 done:
-    secmod_CloseDB(pkcs11db);
+    lgdb_CloseDB(pkcs11db);
     return rv;
 }

@@ -4,3 +4,4 @@
 
 toolkit.jar:
     content/global/accessibility/AccessFu.css (AccessFu.css)
+    content/global/accessibility/content-script.js (content-script.js)

@@ -54,11 +54,6 @@ public:
 
 private:
   /**
-   * Dispatch a trusted non-cancellable and non-bubbling event to itself.
-   */
-  nsresult DispatchTrustedEventToSelf(const nsAString& aEventName);
-
-  /**
    * Update the battery information stored in the battery manager object using
    * a battery information object.
    */

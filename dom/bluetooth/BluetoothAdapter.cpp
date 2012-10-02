@@ -24,6 +24,7 @@
 #include "nsXPCOMCIDInternal.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Util.h"
 
@@ -276,9 +277,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsCOMPtr<nsIDOMBluetoothDeviceEvent> e = do_QueryInterface(event);
     e->InitBluetoothDeviceEvent(NS_LITERAL_STRING("devicefound"),
                                 false, false, device);
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
+    DispatchTrustedEvent(event);
   } else if (aData.name().EqualsLiteral("DeviceDisappeared")) {
     const nsAString& deviceAddress = aData.value().get_nsString();
 
@@ -288,9 +287,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsCOMPtr<nsIDOMBluetoothDeviceAddressEvent> e = do_QueryInterface(event);
     e->InitBluetoothDeviceAddressEvent(NS_LITERAL_STRING("devicedisappeared"),
                                        false, false, deviceAddress);
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
+    DispatchTrustedEvent(e);
   } else if (aData.name().EqualsLiteral("DeviceCreated")) {
     NS_ASSERTION(aData.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue,
                  "DeviceCreated: Invalid value type");
@@ -304,9 +301,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsCOMPtr<nsIDOMBluetoothDeviceEvent> e = do_QueryInterface(event);
     e->InitBluetoothDeviceEvent(NS_LITERAL_STRING("devicecreated"),
                                 false, false, device);
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
+    DispatchTrustedEvent(e);
   } else if (aData.name().EqualsLiteral("PropertyChanged")) {
     NS_ASSERTION(aData.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue,
                  "PropertyChanged: Invalid value type");
@@ -816,7 +811,37 @@ BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
                            nsIDOMBlob* aBlob,
                            nsIDOMDOMRequest** aRequest)
 {
-  // Will implement in another patch
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMRequestService> rs = do_GetService("@mozilla.org/dom/dom-request-service;1");
+  if (!rs) {
+    NS_WARNING("No DOMRequest Service!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = rs->CreateRequest(GetOwner(), getter_AddRefs(req));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Can't create DOMRequest!");
+    return NS_ERROR_FAILURE;
+  }
+
+  BlobChild* actor =
+      mozilla::dom::ContentChild::GetSingleton()->GetOrCreateActorForBlob(aBlob);
+
+  if (!actor) {
+    NS_WARNING("Can't create actor");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<BluetoothVoidReplyRunnable> result = new BluetoothVoidReplyRunnable(req);
+  bs->SendFile(aDeviceAddress, nullptr, actor, result);
+  req.forget(aRequest);
+
   return NS_OK;
 }
 

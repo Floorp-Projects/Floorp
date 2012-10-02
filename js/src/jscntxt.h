@@ -473,7 +473,8 @@ struct JSRuntime : js::RuntimeFriendFields
     bool initSelfHosting(JSContext *cx);
     void markSelfHostedGlobal(JSTracer *trc);
     JSFunction *getSelfHostedFunction(JSContext *cx, const char *name);
-    bool cloneSelfHostedValueById(JSContext *cx, jsid id, js::HandleObject holder, js::Value *vp);
+    bool cloneSelfHostedValueById(JSContext *cx, js::HandleId id, js::HandleObject holder,
+                                  js::MutableHandleValue vp);
 
     /* Base address of the native stack for the current thread. */
     uintptr_t           nativeStackBase;

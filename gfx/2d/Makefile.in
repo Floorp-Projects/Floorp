@@ -139,6 +139,12 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
+# Due to bug 796023, we can't have -DUNICODE and -D_UNICODE; defining those
+# macros changes the type of LOGFONT to LOGFONTW instead of LOGFONTA. This
+# changes the symbol names of exported C++ functions that use LOGFONT.
+DEFINES := $(filter-out -DUNICODE -D_UNICODE,$(DEFINES))
 
 #ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 #CPPSRCS	+= \

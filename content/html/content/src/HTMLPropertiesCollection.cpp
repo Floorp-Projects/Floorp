@@ -12,8 +12,8 @@
 #include "nsVariant.h"
 #include "nsDOMSettableTokenList.h"
 #include "nsAttrValue.h"
-#include "mozilla/ErrorResult.h"
 #include "nsWrapperCacheInlines.h"
+#include "mozilla/dom/HTMLPropertiesCollectionBinding.h"
 
 DOMCI_DATA(HTMLPropertiesCollection, mozilla::dom::HTMLPropertiesCollection)
 DOMCI_DATA(PropertyNodeList, mozilla::dom::PropertyNodeList)
@@ -110,8 +110,14 @@ JSObject*
 HTMLPropertiesCollection::WrapObject(JSContext* cx, JSObject* scope,
                                      bool* triedToWrap)
 {
-  return mozilla::dom::oldproxybindings::HTMLPropertiesCollection::create(cx, scope, this,
-                                                                 triedToWrap);
+  JSObject* obj = HTMLPropertiesCollectionBinding::Wrap(cx, scope, this,
+                                                        triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return oldproxybindings::HTMLPropertiesCollection::create(cx, scope, this);
 }
 
 NS_IMETHODIMP
@@ -446,8 +452,13 @@ JSObject*
 PropertyNodeList::WrapObject(JSContext *cx, JSObject *scope,
                              bool *triedToWrap)
 {
-  return mozilla::dom::oldproxybindings::PropertyNodeList::create(cx, scope, this,
-                                                         triedToWrap);
+  JSObject* obj = PropertyNodeListBinding::Wrap(cx, scope, this, triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return oldproxybindings::PropertyNodeList::create(cx, scope, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PropertyNodeList)

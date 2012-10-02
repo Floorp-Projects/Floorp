@@ -173,13 +173,8 @@ nsEventListenerManager::GetInnerWindowForTarget()
     return node->OwnerDoc()->GetInnerWindow();
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
-  if (window) {
-    NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
-    return window;
-  }
-
-  return nullptr;
+  nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
+  return window;
 }
 
 already_AddRefed<nsPIDOMWindow>
@@ -290,7 +285,10 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   } else if (aTypeAtom == nsGkAtoms::ondevicemotion) {
     EnableDevice(NS_DEVICE_MOTION);
   } else if (aTypeAtom == nsGkAtoms::onmoztimechange) {
-    EnableTimeChangeNotifications();
+    nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
+    if (window) {
+      window->EnableTimeChangeNotifications();
+    }
   } else if (aTypeAtom == nsGkAtoms::onmoznetworkupload) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
     if (window) {
@@ -348,12 +346,10 @@ nsEventListenerManager::IsDeviceType(uint32_t aType)
 void
 nsEventListenerManager::EnableDevice(uint32_t aType)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
+  nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
   if (!window) {
     return;
   }
-
-  NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
 
   switch (aType) {
     case NS_DEVICE_ORIENTATION:
@@ -380,12 +376,10 @@ nsEventListenerManager::EnableDevice(uint32_t aType)
 void
 nsEventListenerManager::DisableDevice(uint32_t aType)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
+  nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
   if (!window) {
     return;
   }
-
-  NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
 
   switch (aType) {
     case NS_DEVICE_ORIENTATION:
@@ -452,7 +446,10 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   if (deviceType && typeCount == 0) {
     DisableDevice(aType);
   } else if (timeChangeEvent && typeCount == 0) {
-    DisableTimeChangeNotifications();
+    nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
+    if (window) {
+      window->DisableTimeChangeNotifications();
+    }
   } else if (networkEvent && typeCount == 0) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
     if (window) {
@@ -624,11 +621,8 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
     doc = node->OwnerDoc();
     global = doc->GetScriptGlobalObject();
   } else {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mTarget));
+    nsCOMPtr<nsPIDOMWindow> win = GetTargetAsInnerWindow();
     if (win) {
-      NS_ASSERTION(win->IsInnerWindow(),
-                   "Event listener added to outer window!");
-
       nsCOMPtr<nsIDOMDocument> domdoc;
       win->GetDocument(getter_AddRefs(domdoc));
       doc = do_QueryInterface(domdoc);
@@ -1198,28 +1192,4 @@ nsEventListenerManager::UnmarkGrayJSListeners()
       xpc_TryUnmarkWrappedGrayObject(ls.mListener);
     }
   }
-}
-
-void
-nsEventListenerManager::EnableTimeChangeNotifications()
-{
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
-  if (!window) {
-    return;
-  }
-
-  NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
-  window->EnableTimeChangeNotifications();
-}
-
-void
-nsEventListenerManager::DisableTimeChangeNotifications()
-{
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
-  if (!window) {
-    return;
-  }
-
-  NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
-  window->DisableTimeChangeNotifications();
 }

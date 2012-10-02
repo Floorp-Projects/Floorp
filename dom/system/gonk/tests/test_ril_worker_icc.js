@@ -234,6 +234,27 @@ add_test(function test_write_location_info_tlv() {
 });
 
 /**
+ * Verify ComprehensionTlvHelper.writeErrorNumber
+ */
+add_test(function test_write_disconnecting_cause() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let tlvHelper = worker.ComprehensionTlvHelper;
+
+  tlvHelper.writeCauseTlv(RIL_ERROR_TO_GECKO_ERROR[ERROR_GENERIC_FAILURE]);
+  let tag = pduHelper.readHexOctet();
+  do_check_eq(tag, COMPREHENSIONTLV_TAG_CAUSE | COMPREHENSIONTLV_FLAG_CR);
+  let len = pduHelper.readHexOctet();
+  do_check_eq(len, 2);  // We have one cause.
+  let standard = pduHelper.readHexOctet();
+  do_check_eq(standard, 0x60);
+  let cause = pduHelper.readHexOctet();
+  do_check_eq(cause, 0x80 | ERROR_GENERIC_FAILURE);
+
+  run_next_test();
+});
+
+/**
  * Verify Proactive Command : Refresh
  */
 add_test(function test_stk_proactive_command_refresh() {
@@ -338,6 +359,61 @@ add_test(function test_stk_proactive_command_poll_interval() {
   tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
   do_check_eq(tlv.value.timeUnit, STK_TIME_UNIT_SECOND);
   do_check_eq(tlv.value.timeInterval, 0x14);
+
+  run_next_test();
+});
+
+/**
+ * Verify ComprehensionTlvHelper.getSizeOfLengthOctets
+ */
+add_test(function test_get_size_of_length_octets() {
+  let worker = newUint8Worker();
+  let tlvHelper = worker.ComprehensionTlvHelper;
+
+  let length = 0x70;
+  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 1);
+
+  length = 0x80;
+  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 2);
+
+  length = 0x180;
+  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 3);
+
+  length = 0x18000;
+  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 4);
+
+  run_next_test();
+});
+
+/**
+ * Verify ComprehensionTlvHelper.writeLength
+ */
+add_test(function test_write_length() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let tlvHelper = worker.ComprehensionTlvHelper;
+
+  let length = 0x70;
+  tlvHelper.writeLength(length);
+  do_check_eq(pduHelper.readHexOctet(), length);
+
+  length = 0x80;
+  tlvHelper.writeLength(length);
+  do_check_eq(pduHelper.readHexOctet(), 0x81);
+  do_check_eq(pduHelper.readHexOctet(), length);
+
+  length = 0x180;
+  tlvHelper.writeLength(length);
+  do_check_eq(pduHelper.readHexOctet(), 0x82);
+  do_check_eq(pduHelper.readHexOctet(), (length >> 8) & 0xff);
+  do_check_eq(pduHelper.readHexOctet(), length & 0xff);
+
+  length = 0x18000;
+  tlvHelper.writeLength(length);
+  do_check_eq(pduHelper.readHexOctet(), 0x83);
+  do_check_eq(pduHelper.readHexOctet(), (length >> 16) & 0xff);
+  do_check_eq(pduHelper.readHexOctet(), (length >> 8) & 0xff);
+  do_check_eq(pduHelper.readHexOctet(), length & 0xff);
 
   run_next_test();
 });

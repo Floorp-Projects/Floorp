@@ -366,8 +366,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             case CLOSED:
             case ADDED:
                 updateTabCountAndAnimate(Tabs.getInstance().getCount());
-                updateBackButton(false);
-                updateForwardButton(false);
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    updateBackButton(tab.canDoBack());
+                    updateForwardButton(tab.canDoForward());
+                }
                 break;
         }
     }

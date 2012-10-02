@@ -4243,7 +4243,7 @@ public class Tokenizer implements Locator {
                             break stateloop;
                         }
                         c = checkChar(buf, pos);
-                        assert (index > 0);
+                        assert index > 0;
                         if (index < 6) { // SCRIPT_ARR.length
                             char folded = c;
                             if (c >= 'A' && c <= 'Z') {

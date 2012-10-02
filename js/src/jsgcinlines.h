@@ -25,6 +25,7 @@ namespace gc {
 inline JSGCTraceKind
 GetGCThingTraceKind(const void *thing)
 {
+    JS::AutoAssertNoGC nogc;
     JS_ASSERT(thing);
     const Cell *cell = reinterpret_cast<const Cell *>(thing);
     return MapAllocToTraceKind(cell->getAllocKind());
@@ -39,6 +40,7 @@ GetGCObjectKind(size_t numSlots)
 {
     extern AllocKind slotsToThingKind[];
 
+    JS::AutoAssertNoGC nogc;
     if (numSlots >= SLOTS_TO_THING_KIND_LIMIT)
         return FINALIZE_OBJECT16;
     return slotsToThingKind[numSlots];
@@ -47,6 +49,7 @@ GetGCObjectKind(size_t numSlots)
 static inline AllocKind
 GetGCObjectKind(Class *clasp)
 {
+    JS::AutoAssertNoGC nogc;
     if (clasp == &FunctionClass)
         return JSFunction::FinalizeKind;
     uint32_t nslots = JSCLASS_RESERVED_SLOTS(clasp);
@@ -67,6 +70,7 @@ GetGCArrayKind(size_t numSlots)
      * maximum number of fixed slots is needed then the fixed slots will be
      * unused.
      */
+    JS::AutoAssertNoGC nogc;
     JS_STATIC_ASSERT(ObjectElements::VALUES_PER_HEADER == 2);
     if (numSlots > JSObject::NELEMENTS_LIMIT || numSlots + 2 >= SLOTS_TO_THING_KIND_LIMIT)
         return FINALIZE_OBJECT2;
@@ -78,6 +82,7 @@ GetGCObjectFixedSlotsKind(size_t numFixedSlots)
 {
     extern AllocKind slotsToThingKind[];
 
+    JS::AutoAssertNoGC nogc;
     JS_ASSERT(numFixedSlots < SLOTS_TO_THING_KIND_LIMIT);
     return slotsToThingKind[numFixedSlots];
 }
@@ -85,6 +90,7 @@ GetGCObjectFixedSlotsKind(size_t numFixedSlots)
 static inline AllocKind
 GetBackgroundAllocKind(AllocKind kind)
 {
+    JS::AutoAssertNoGC nogc;
     JS_ASSERT(!IsBackgroundFinalized(kind));
     JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
     return (AllocKind) (kind + 1);
@@ -97,6 +103,7 @@ GetBackgroundAllocKind(AllocKind kind)
 static inline bool
 TryIncrementAllocKind(AllocKind *kindp)
 {
+    JS::AutoAssertNoGC nogc;
     size_t next = size_t(*kindp) + 2;
     if (next >= size_t(FINALIZE_OBJECT_LIMIT))
         return false;
@@ -108,6 +115,7 @@ TryIncrementAllocKind(AllocKind *kindp)
 static inline size_t
 GetGCKindSlots(AllocKind thingKind)
 {
+    JS::AutoAssertNoGC nogc;
     /* Using a switch in hopes that thingKind will usually be a compile-time constant. */
     switch (thingKind) {
       case FINALIZE_OBJECT0:
@@ -137,6 +145,7 @@ GetGCKindSlots(AllocKind thingKind)
 static inline size_t
 GetGCKindSlots(AllocKind thingKind, Class *clasp)
 {
+    JS::AutoAssertNoGC nogc;
     size_t nslots = GetGCKindSlots(thingKind);
 
     /* An object's private data uses the space taken by its last fixed slot. */
@@ -158,6 +167,8 @@ GetGCKindSlots(AllocKind thingKind, Class *clasp)
 static inline void
 GCPoke(JSRuntime *rt, Value oldval)
 {
+    JS::AutoAssertNoGC nogc;
+
     /*
      * Since we're forcing a GC from JS_GC anyway, don't bother wasting cycles
      * loading oldval.  XXX remove implied force, fix jsinterp.c's "second arg
@@ -426,6 +437,7 @@ template <typename T>
 inline T *
 NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
 {
+    JS::AutoAssertCanGC cangc;
     JS_ASSERT(thingSize == js::gc::Arena::thingSize(kind));
     JS_ASSERT_IF(cx->compartment == cx->runtime->atomsCompartment,
                  kind == js::gc::FINALIZE_STRING || kind == js::gc::FINALIZE_SHORT_STRING);
@@ -462,6 +474,7 @@ template <typename T>
 inline T *
 TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
 {
+    JS::AutoAssertCanGC cangc;
     JS_ASSERT(thingSize == js::gc::Arena::thingSize(kind));
     JS_ASSERT_IF(cx->compartment == cx->runtime->atomsCompartment,
                  kind == js::gc::FINALIZE_STRING || kind == js::gc::FINALIZE_SHORT_STRING);
@@ -491,6 +504,7 @@ TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
 inline JSObject *
 js_NewGCObject(JSContext *cx, js::gc::AllocKind kind)
 {
+    JS::AutoAssertCanGC cangc;
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     return js::gc::NewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
 }
@@ -498,6 +512,7 @@ js_NewGCObject(JSContext *cx, js::gc::AllocKind kind)
 inline JSObject *
 js_TryNewGCObject(JSContext *cx, js::gc::AllocKind kind)
 {
+    JS::AutoAssertCanGC cangc;
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     return js::gc::TryNewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
 }
@@ -505,18 +520,21 @@ js_TryNewGCObject(JSContext *cx, js::gc::AllocKind kind)
 inline JSString *
 js_NewGCString(JSContext *cx)
 {
+    JS::AutoAssertCanGC cangc;
     return js::gc::NewGCThing<JSString>(cx, js::gc::FINALIZE_STRING, sizeof(JSString));
 }
 
 inline JSShortString *
 js_NewGCShortString(JSContext *cx)
 {
+    JS::AutoAssertCanGC cangc;
     return js::gc::NewGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING, sizeof(JSShortString));
 }
 
 inline JSExternalString *
 js_NewGCExternalString(JSContext *cx)
 {
+    JS::AutoAssertCanGC cangc;
     return js::gc::NewGCThing<JSExternalString>(cx, js::gc::FINALIZE_EXTERNAL_STRING,
                                                 sizeof(JSExternalString));
 }
@@ -524,18 +542,21 @@ js_NewGCExternalString(JSContext *cx)
 inline JSScript *
 js_NewGCScript(JSContext *cx)
 {
+    JS::AutoAssertCanGC cangc;
     return js::gc::NewGCThing<JSScript>(cx, js::gc::FINALIZE_SCRIPT, sizeof(JSScript));
 }
 
 inline js::Shape *
 js_NewGCShape(JSContext *cx)
 {
+    JS::AutoAssertCanGC cangc;
     return js::gc::NewGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
 }
 
 inline js::BaseShape *
 js_NewGCBaseShape(JSContext *cx)
 {
+    JS::AutoAssertCanGC cangc;
     return js::gc::NewGCThing<js::BaseShape>(cx, js::gc::FINALIZE_BASE_SHAPE, sizeof(js::BaseShape));
 }
 

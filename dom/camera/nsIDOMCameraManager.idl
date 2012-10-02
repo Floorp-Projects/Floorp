@@ -184,6 +184,12 @@ interface nsICameraShutterCallback : nsISupports
     void handleEvent();
 };
 
+[scriptable, function, uuid(0ef0f01e-ce74-4741-9bba-54376adfb7a2)]
+interface nsICameraClosedCallback : nsISupports
+{
+    void handleEvent();
+};
+
 [scriptable, function, uuid(a302c6c9-3776-4d1d-a395-f4105d47c3d3)]
 interface nsICameraErrorCallback : nsISupports
 {
@@ -194,7 +200,7 @@ interface nsICameraErrorCallback : nsISupports
     attributes here affect the preview, any pictures taken, and/or
     any video recorded by the camera.
 */
-[scriptable, uuid(469e0462-59e4-4ed5-afa9-aecd1256ee30)]
+[scriptable, uuid(0f206acd-196b-4bdf-8198-44c1a0cd1998)]
 interface nsICameraControl : nsISupports
 {
     readonly attribute nsICameraCapabilities capabilities;
@@ -284,6 +290,11 @@ interface nsICameraControl : nsISupports
     /* the function to call on the camera's shutter event, to trigger
        a shutter sound and/or a visual shutter indicator. */
     attribute nsICameraShutterCallback onShutter;
+
+    /* the function to call when the camera hardware is closed
+       by the underlying framework, e.g. when another app makes a more
+       recent call to get the camera. */
+    attribute nsICameraClosedCallback onClosed;
 
     /* tell the camera to attempt to focus the image */
     void autoFocus(in nsICameraAutoFocusCallback onSuccess, [optional] in nsICameraErrorCallback onError);

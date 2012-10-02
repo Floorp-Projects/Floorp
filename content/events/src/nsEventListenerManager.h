@@ -40,8 +40,8 @@ typedef enum
 struct nsListenerStruct
 {
   nsRefPtr<nsIDOMEventListener> mListener;
-  uint32_t                      mEventType;
   nsCOMPtr<nsIAtom>             mTypeAtom;
+  uint32_t                      mEventType;
   uint16_t                      mFlags;
   uint8_t                       mListenerType;
   bool                          mListenerIsHandler : 1;
@@ -268,9 +268,6 @@ protected:
   bool IsDeviceType(uint32_t aType);
   void EnableDevice(uint32_t aType);
   void DisableDevice(uint32_t aType);
-
-  void EnableTimeChangeNotifications();
-  void DisableTimeChangeNotifications();
 
 public:
   /**
