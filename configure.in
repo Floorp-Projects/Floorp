@@ -5083,7 +5083,7 @@ fi
 
 
 dnl ========================================================
-dnl = Build with the Android Java compositor
+dnl = Build with the Android compositor
 dnl ========================================================
 if test -n "$MOZ_ANDROID_OMTC"; then
      dnl Do this if defined in confvars.sh
