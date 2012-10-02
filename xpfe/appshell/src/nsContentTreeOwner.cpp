@@ -312,9 +312,8 @@ nsContentTreeOwner::SetPersistence(bool aPersistPosition,
                                    bool aPersistSizeMode)
 {
   NS_ENSURE_STATE(mXULWindow);
-  nsCOMPtr<nsIDOMElement> docShellElement;
-  mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
-  if(!docShellElement)
+  nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
+  if (!docShellElement)
     return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
@@ -381,9 +380,8 @@ nsContentTreeOwner::GetPersistence(bool* aPersistPosition,
                                    bool* aPersistSizeMode)
 {
   NS_ENSURE_STATE(mXULWindow);
-  nsCOMPtr<nsIDOMElement> docShellElement;
-  mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
-  if(!docShellElement) 
+  nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
+  if (!docShellElement)
     return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
@@ -725,8 +723,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
   // if there is no location bar we modify the title to display at least
   // the scheme and host (if any) as an anti-spoofing measure.
   //
-  nsCOMPtr<nsIDOMElement> docShellElement;
-  mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
+  nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
 
   if (docShellElement) {
     nsAutoString chromeString;
@@ -956,11 +953,9 @@ private:
 void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
 {
    mXULWindow = aXULWindow;
-   if(mXULWindow && mPrimary)
-      {
+   if (mXULWindow && mPrimary) {
       // Get the window title modifiers
-      nsCOMPtr<nsIDOMElement> docShellElement;
-      mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
+      nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
 
       nsAutoString   contentTitleSetting;
 
