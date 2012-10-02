@@ -1831,42 +1831,16 @@ nsXPConnect::SyncJSContexts(void)
     return NS_OK;
 }
 
-/* nsIXPCFunctionThisTranslator setFunctionThisTranslator (in nsIIDRef aIID, in nsIXPCFunctionThisTranslator aTranslator); */
+/* void setFunctionThisTranslator (in nsIIDRef aIID, in nsIXPCFunctionThisTranslator aTranslator); */
 NS_IMETHODIMP
 nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
-                                       nsIXPCFunctionThisTranslator *aTranslator,
-                                       nsIXPCFunctionThisTranslator **_retval)
+                                       nsIXPCFunctionThisTranslator *aTranslator)
 {
     XPCJSRuntime* rt = GetRuntime();
-    nsIXPCFunctionThisTranslator* old;
     IID2ThisTranslatorMap* map = rt->GetThisTranslatorMap();
-
     {
         XPCAutoLock lock(rt->GetMapLock()); // scoped lock
-        if (_retval) {
-            old = map->Find(aIID);
-            NS_IF_ADDREF(old);
-            *_retval = old;
-        }
         map->Add(aIID, aTranslator);
-    }
-    return NS_OK;
-}
-
-/* nsIXPCFunctionThisTranslator getFunctionThisTranslator (in nsIIDRef aIID); */
-NS_IMETHODIMP
-nsXPConnect::GetFunctionThisTranslator(const nsIID & aIID,
-                                       nsIXPCFunctionThisTranslator **_retval)
-{
-    XPCJSRuntime* rt = GetRuntime();
-    nsIXPCFunctionThisTranslator* old;
-    IID2ThisTranslatorMap* map = rt->GetThisTranslatorMap();
-
-    {
-        XPCAutoLock lock(rt->GetMapLock()); // scoped lock
-        old = map->Find(aIID);
-        NS_IF_ADDREF(old);
-        *_retval = old;
     }
     return NS_OK;
 }
