@@ -21,7 +21,6 @@
   <string name="awesomebar_all_pages_title">&awesomebar_all_pages_title;</string>
   <string name="awesomebar_bookmarks_title">&awesomebar_bookmarks_title;</string>
   <string name="awesomebar_history_title">&awesomebar_history_title;</string>
-  <string name="awesomebar_search_engine">&awesomebar_search_engine;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
   <string name="crash_message">&crash_message;</string>
@@ -170,6 +169,8 @@
   <string name="button_clear_data">&button_clear_data;</string>
   <string name="button_set">&button_set;</string>
   <string name="button_clear">&button_clear;</string>
+  <string name="button_yes">&button_yes;</string>
+  <string name="button_no">&button_no;</string>
 
   <string name="abouthome_addons_title">&abouthome_addons_title;</string>
   <string name="abouthome_addons_browse">&abouthome_addons_browse;</string>
@@ -231,5 +232,8 @@
   
   <string name="updater_apply_title">&updater_apply_title;</string>
   <string name="updater_apply_select">&updater_apply_select;</string>
+
+  <!-- Search suggestions opt-in -->
+  <string name="suggestions_prompt">&suggestions_prompt;</string>
 
 </resources>
