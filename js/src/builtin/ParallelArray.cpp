@@ -53,6 +53,42 @@ ParallelArrayObject::IndexInfo::isInitialized() const
             partialProducts.length() == dimensions.length());
 }
 
+static inline bool
+OpenDelimiters(const IndexInfo &iv, StringBuffer &sb)
+{
+    JS_ASSERT(iv.isInitialized());
+
+    uint32_t d = iv.dimensions.length() - 1;
+    do {
+        if (iv.indices[d] != 0)
+            break;
+        if (!sb.append('<'))
+            return false;
+    } while (d-- > 0);
+
+    return true;
+}
+
+static inline bool
+CloseDelimiters(const IndexInfo &iv, StringBuffer &sb)
+{
+    JS_ASSERT(iv.isInitialized());
+
+    uint32_t d = iv.dimensions.length() - 1;
+    do {
+        if (iv.indices[d] != iv.dimensions[d] - 1) {
+            if (!sb.append(','))
+                return false;
+            break;
+        }
+
+        if (!sb.append('>'))
+            return false;
+    } while (d-- > 0);
+
+    return true;
+}
+
 // Check if obj is a parallel array, and if so, cast to pa and initialize
 // the IndexInfo accordingly.
 //
@@ -333,12 +369,11 @@ ParallelArrayObject::SequentialMode::build(JSContext *cx, IndexInfo &iv,
     if (!cx->stack.pushInvokeArgs(cx, iv.dimensions.length(), &args))
         return ExecutionFailed;
 
-    for (uint32_t i = 0; i < length; i++) {
+    for (uint32_t i = 0; i < length; i++, iv.bump()) {
         args.setCallee(ObjectValue(*elementalFun));
         args.setThis(UndefinedValue());
 
         // Compute and set indices.
-        iv.fromScalar(i);
         for (size_t j = 0; j < iv.indices.length(); j++)
             args[j].setNumber(iv.indices[j]);
 
@@ -1107,7 +1142,8 @@ ParallelArrayObject::construct(JSContext *cx, unsigned argc, Value *vp)
     if (iv.dimensions.length() == 0 && !iv.dimensions.append(0))
         return false;
 
-    if (!iv.initialize(0))
+    // Initialize with every dimension packed.
+    if (!iv.initialize(iv.dimensions.length()))
         return false;
 
     // Extract second argument, the elemental function.
@@ -1465,66 +1501,32 @@ ParallelArrayObject::lengthGetter(JSContext *cx, CallArgs args)
 }
 
 bool
-ParallelArrayObject::toStringBufferImpl(JSContext *cx, IndexInfo &iv, bool useLocale,
-                                        HandleObject buffer, StringBuffer &sb)
+ParallelArrayObject::toStringBuffer(JSContext *cx, bool useLocale, StringBuffer &sb)
 {
-    JS_ASSERT(iv.isInitialized());
-
-    // The dimension we're printing out.
-    uint32_t d = iv.indices.length() + 1;
-
-    // If we still have more dimensions to go.
-    if (d < iv.dimensions.length()) {
-        if (!sb.append('<'))
-            return false;
-
-        iv.indices.infallibleAppend(0);
-        uint32_t length = iv.dimensions[d - 1];
-        for (size_t i = 0; i < length; i++) {
-            iv.indices[d - 1] = i;
-            if (!toStringBufferImpl(cx, iv, useLocale, buffer, sb) ||
-                (i + 1 != length && !sb.append(',')))
-            {
-                return false;
-            }
-        }
-        iv.indices.shrinkBy(1);
-
-        if (!sb.append('>'))
-            return false;
-
-        return true;
-    }
-
-    // We're on the last dimension.
-    if (!sb.append('<'))
+    if (!JS_CHECK_OPERATION_LIMIT(cx))
         return false;
 
-    uint32_t offset;
-    uint32_t length;
+    RootedParallelArrayObject self(cx, this);
+    IndexInfo iv(cx);
 
-    // If the array is flat, we can just use the entire extent.
-    if (d == 1) {
-        offset = bufferOffset();
-        length = iv.dimensions[0];
-    } else {
-        offset = bufferOffset() + iv.toScalar();
-        length = iv.partialProducts[d - 2];
-    }
+    if (!self->getDimensions(cx, iv.dimensions) || !iv.initialize(iv.dimensions.length()))
+        return false;
+
+    uint32_t length = iv.scalarLengthOfDimensions();
 
     RootedValue tmp(cx);
     RootedValue localeElem(cx);
     RootedId id(cx);
 
-    const Value *start = buffer->getDenseArrayElements() + offset;
+    const Value *start = buffer()->getDenseArrayElements() + bufferOffset();
     const Value *end = start + length;
     const Value *elem;
 
-    for (elem = start; elem < end; elem++) {
+    for (elem = start; elem < end; elem++, iv.bump()) {
         // All holes in parallel arrays are eagerly filled with undefined.
         JS_ASSERT(!elem->isMagic(JS_ARRAY_HOLE));
 
-        if (!JS_CHECK_OPERATION_LIMIT(cx))
+        if (!OpenDelimiters(iv, sb))
             return false;
 
         if (!elem->isNullOrUndefined()) {
@@ -1546,25 +1548,11 @@ ParallelArrayObject::toStringBufferImpl(JSContext *cx, IndexInfo &iv, bool useLo
             }
         }
 
-        if (elem + 1 != end && !sb.append(','))
+        if (!CloseDelimiters(iv, sb))
             return false;
     }
 
-    if (!sb.append('>'))
-        return false;
-
     return true;
-}
-
-bool
-ParallelArrayObject::toStringBuffer(JSContext *cx, bool useLocale, StringBuffer &sb)
-{
-    RootedParallelArrayObject self(cx, this);
-    IndexInfo iv(cx);
-    if (!iv.initialize(cx, self, 0))
-        return false;
-    RootedObject buffer(cx, this->buffer());
-    return toStringBufferImpl(cx, iv, useLocale, buffer, sb);
 }
 
 bool
