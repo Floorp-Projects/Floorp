@@ -2143,6 +2143,14 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     *(NPBool*)result = true;
     return NPERR_NO_ERROR;
   }
+
+  case NPNVcontentsScaleFactor: {
+    nsNPAPIPluginInstance *inst =
+      (nsNPAPIPluginInstance *) (npp ? npp->ndata : nullptr);
+    double scaleFactor = inst ? inst->GetContentsScaleFactor() : 1.0;
+    *(double*)result = scaleFactor;
+    return NPERR_NO_ERROR;
+  }
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID

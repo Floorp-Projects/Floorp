@@ -57,6 +57,9 @@ NPRemoteWindow::NPRemoteWindow() :
 #if defined(XP_WIN)
   ,surfaceHandle(0)
 #endif
+#if defined(XP_MACOSX)
+  ,contentsScaleFactor(1.0)
+#endif
 {
   clipRect.top = 0;
   clipRect.left = 0;
