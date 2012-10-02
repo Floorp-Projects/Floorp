@@ -326,9 +326,11 @@ RES_LAYOUT = \
   res/layout/awesomebar_expandable_list.xml \
   res/layout/awesomebar_folder_row.xml \
   res/layout/awesomebar_header_row.xml \
+  res/layout/awesomebar_allpages_list.xml \
   res/layout/awesomebar_list.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_suggestion_item.xml \
+  res/layout/awesomebar_suggestion_prompt.xml \
   res/layout/awesomebar_suggestion_row.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_tab_indicator.xml \
