@@ -2631,7 +2631,7 @@ public:
 
     void raw_fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
         BEFORE_GL_CALL;
-        mSymbols.fReadPixels(x, y, width, height, format, type, pixels);
+        mSymbols.fReadPixels(x, FixYValue(y, height), width, height, format, type, pixels);
         AFTER_GL_CALL;
     }
 
