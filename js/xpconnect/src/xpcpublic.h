@@ -67,14 +67,6 @@ static inline bool IS_WRAPPER_CLASS(js::Class* clazz)
     return clazz->ext.isWrappedNative;
 }
 
-inline JSBool
-DebugCheckWrapperClass(JSObject* obj)
-{
-    NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(obj)),
-                 "Forgot to check if this is a wrapper?");
-    return true;
-}
-
 // If IS_WRAPPER_CLASS for the JSClass of an object is true, the object can be
 // a slim wrapper, holding a native in its private slot, or a wrappednative
 // wrapper, holding the XPCWrappedNative in its private slot. A slim wrapper
@@ -89,19 +81,27 @@ DebugCheckWrapperClass(JSObject* obj)
 // JS engine never uses that slot. This still needs fixing though. See bug 760095.
 #define WRAPPER_MULTISLOT 0
 
-// Only use these macros if IS_WRAPPER_CLASS(GetObjectClass(obj)) is true.
-#define IS_WN_WRAPPER_OBJECT(obj)                                             \
-    (DebugCheckWrapperClass(obj) && !js::GetReservedSlot(obj, WRAPPER_MULTISLOT).isDouble())
-#define IS_SLIM_WRAPPER_OBJECT(obj)                                           \
-    (DebugCheckWrapperClass(obj) && js::GetReservedSlot(obj, WRAPPER_MULTISLOT).isDouble())
+static inline bool IS_WN_WRAPPER_OBJECT(JSObject *obj)
+{
+    MOZ_ASSERT(IS_WRAPPER_CLASS(js::GetObjectClass(obj)));
+    return !js::GetReservedSlot(obj, WRAPPER_MULTISLOT).isDouble();
+}
+static inline bool IS_SLIM_WRAPPER_OBJECT(JSObject *obj)
+{
+    return !IS_WN_WRAPPER_OBJECT(obj);
+}
 
-// Use these macros if IS_WRAPPER_CLASS(GetObjectClass(obj)) might be false.
+// Use these functions if IS_WRAPPER_CLASS(GetObjectClass(obj)) might be false.
 // Avoid calling them if IS_WRAPPER_CLASS(GetObjectClass(obj)) can only be
 // true, as we'd do a redundant call to IS_WRAPPER_CLASS.
-#define IS_WN_WRAPPER(obj)                                                    \
-    (IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && IS_WN_WRAPPER_OBJECT(obj))
-#define IS_SLIM_WRAPPER(obj)                                                  \
-    (IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && IS_SLIM_WRAPPER_OBJECT(obj))
+static inline bool IS_WN_WRAPPER(JSObject *obj)
+{
+    return IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && IS_WN_WRAPPER_OBJECT(obj);
+}
+static inline bool IS_SLIM_WRAPPER(JSObject *obj)
+{
+    return IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && IS_SLIM_WRAPPER_OBJECT(obj);
+}
 
 inline JSObject *
 xpc_GetGlobalForObject(JSObject *obj)
