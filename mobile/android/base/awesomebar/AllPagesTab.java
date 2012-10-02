@@ -54,6 +54,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private String mSearchTerm;
     private ArrayList<SearchEngine> mSearchEngines;
     private SuggestClient mSuggestClient;
+    private boolean mSuggestionsEnabled;
     private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
     private AwesomeBarCursorAdapter mCursorAdapter = null;
     private boolean mTelemetrySent = false;
@@ -136,15 +137,15 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             mSuggestTask.cancel(true);
         }
 
-        if (mSuggestClient != null) {
+        if (mSuggestClient != null && mSuggestionsEnabled) {
             mSuggestTask = new AsyncTask<String, Void, ArrayList<String>>() {
-                 protected ArrayList<String> doInBackground(String... query) {
-                     return mSuggestClient.query(query[0]);
-                 }
+                protected ArrayList<String> doInBackground(String... query) {
+                    return mSuggestClient.query(query[0]);
+                }
 
-                 protected void onPostExecute(ArrayList<String> suggestions) {
-                     setSuggestions(suggestions);
-                 }
+                protected void onPostExecute(ArrayList<String> suggestions) {
+                    setSuggestions(suggestions);
+                }
             };
             mSuggestTask.execute(searchTerm);
         }
@@ -250,7 +251,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         }
 
         private int getSuggestEngineCount() {
-            return (mSearchTerm.length() == 0 || mSuggestClient == null) ? 0 : 1;
+            return (mSearchTerm.length() == 0 || mSuggestClient == null || !mSuggestionsEnabled) ? 0 : 1;
         }
 
         // Add the search engines to the number of reported results.
@@ -469,6 +470,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             String suggestEngine = data.isNull("suggestEngine") ? null : data.getString("suggestEngine");
             String suggestTemplate = data.isNull("suggestTemplate") ? null : data.getString("suggestTemplate");
             JSONArray engines = data.getJSONArray("searchEngines");
+            mSuggestionsEnabled = data.getBoolean("suggestEnabled");
 
             mSearchEngines = new ArrayList<SearchEngine>();
             for (int i = 0; i < engines.length(); i++) {
