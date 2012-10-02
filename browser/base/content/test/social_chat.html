@@ -14,6 +14,9 @@
         var port = navigator.mozSocial.getWorker().port;
         port.postMessage({topic: "chatbox-visibility", result: "hidden"});
       }, false);
+      window.addEventListener("socialTest-CloseSelf", function(e) {
+        window.close();
+      }, false);
     </script>
   </head>
   <body onload="pingWorker();">
