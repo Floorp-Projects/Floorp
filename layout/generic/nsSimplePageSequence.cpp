@@ -112,6 +112,7 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
 nsSimplePageSequenceFrame::~nsSimplePageSequenceFrame()
 {
   delete mPageData;
+  ResetPrintCanvasList();
 }
 
 NS_QUERYFRAME_HEAD(nsSimplePageSequenceFrame)
