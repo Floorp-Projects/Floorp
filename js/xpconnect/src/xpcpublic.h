@@ -352,9 +352,6 @@ extern bool
 DefineStaticJSVals(JSContext *cx);
 void
 Register(nsScriptNameSpaceManager* aNameSpaceManager);
-extern bool
-DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine,
-                  nsresult *aResult);
 
 namespace oldproxybindings {
 
