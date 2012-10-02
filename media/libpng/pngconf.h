@@ -1,7 +1,7 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.5.11 - June 14, 2012
+ * libpng version 1.5.13 - September 27, 2012
  *
  * Copyright (c) 1998-2012 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -344,21 +344,23 @@
 #    ifndef PNG_NORETURN
 #      define PNG_NORETURN   __attribute__((__noreturn__))
 #    endif
-#    ifndef PNG_ALLOCATED
-#      define PNG_ALLOCATED  __attribute__((__malloc__))
-#    endif
-#    ifndef PNG_DEPRECATED
-#      define PNG_DEPRECATED __attribute__((__deprecated__))
-#    endif
-#    ifndef PNG_PRIVATE
-#      if 0 /* Doesn't work so we use deprecated instead*/
-#        define PNG_PRIVATE \
-          __attribute__((warning("This function is not exported by libpng.")))
-#      else
-#        define PNG_PRIVATE \
-          __attribute__((__deprecated__))
+#    if __GNUC__ >= 3
+#      ifndef PNG_ALLOCATED
+#        define PNG_ALLOCATED  __attribute__((__malloc__))
 #      endif
-#    endif
+#      ifndef PNG_DEPRECATED
+#        define PNG_DEPRECATED __attribute__((__deprecated__))
+#      endif
+#      ifndef PNG_PRIVATE
+#        if 0 /* Doesn't work so we use deprecated instead*/
+#          define PNG_PRIVATE \
+            __attribute__((warning("This function is not exported by libpng.")))
+#        else
+#          define PNG_PRIVATE \
+            __attribute__((__deprecated__))
+#        endif
+#      endif
+#    endif /*  __GNUC__ >= 3 */
 #  endif /* __GNUC__ */
 
 #  if defined(_MSC_VER)  && (_MSC_VER >= 1300)
@@ -400,7 +402,7 @@
 #ifndef PNG_FP_EXPORT     /* A floating point API. */
 #  ifdef PNG_FLOATING_POINT_SUPPORTED
 #     define PNG_FP_EXPORT(ordinal, type, name, args)\
-         PNG_EXPORT(ordinal, type, name, args)
+         PNG_EXPORT(ordinal, type, name, args);
 #  else                   /* No floating point APIs */
 #     define PNG_FP_EXPORT(ordinal, type, name, args)
 #  endif
@@ -408,7 +410,7 @@
 #ifndef PNG_FIXED_EXPORT  /* A fixed point API. */
 #  ifdef PNG_FIXED_POINT_SUPPORTED
 #     define PNG_FIXED_EXPORT(ordinal, type, name, args)\
-         PNG_EXPORT(ordinal, type, name, args)
+         PNG_EXPORT(ordinal, type, name, args);
 #  else                   /* No fixed point APIs */
 #     define PNG_FIXED_EXPORT(ordinal, type, name, args)
 #  endif
