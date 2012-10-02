@@ -2013,6 +2013,10 @@ WifiWorker.prototype = {
   },
 
   receiveMessage: function MessageManager_receiveMessage(aMessage) {
+    if (!aMessage.target.assertPermission("wifi-manage")) {
+      return;
+    }
+
     let msg = aMessage.json || {};
     msg.manager = aMessage.target;
 
