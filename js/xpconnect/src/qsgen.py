@@ -741,10 +741,26 @@ def validateParam(member, param):
     if param.const or param.array or param.shared:
         pfail("I am a simple caveman.")
 
+def setOptimizationForMSVC(f, b):
+    """ Write a pragma that turns optimizations off (if b is False) or
+    on (if b is True) for MSVC.
+    """
+    if b:
+        pragmaParam = "on"
+    else:
+        pragmaParam = "off"
+    f.write("#ifdef _MSC_VER\n")
+    f.write('# pragma optimize("", %s)\n'%pragmaParam)
+    f.write("#endif\n")
+
 def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     """ Write a single quick stub (a custom SpiderMonkey getter/setter/method)
     for the specified XPCOM interface-member. 
     """
+    # Workaround for suspected compiler bug.
+    # See https://bugzilla.mozilla.org/show_bug.cgi?id=750019
+    disableOptimizationForMSVC = (stubName == 'nsIDOMHTMLDocument_Write')
+
     isAttr = (member.kind == 'attribute')
     isMethod = (member.kind == 'method')
     assert isAttr or isMethod
@@ -829,6 +845,8 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         additionalArguments = ''
     else:
         additionalArguments = " %s," % customMethodCall['additionalArguments']
+    if disableOptimizationForMSVC:
+        setOptimizationForMSVC(f, False)
     f.write(signature % (stubName, additionalArguments))
     f.write("{\n")
     f.write("    XPC_QS_ASSERT_CONTEXT_OK(cx);\n")
@@ -1001,7 +1019,10 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         f.write("    return JS_TRUE;\n")
 
     # Epilog.
-    f.write("}\n\n")
+    f.write("}\n")
+    if disableOptimizationForMSVC:
+        setOptimizationForMSVC(f, True)
+    f.write("\n")
 
     # Now write out the call to the template function.
     if customMethodCall is not None:
