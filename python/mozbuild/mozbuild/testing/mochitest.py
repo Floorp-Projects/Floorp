@@ -63,7 +63,7 @@ class MochitestRunner(MozbuildObject):
 
         env = {'TEST_PATH': parsed['normalized']}
 
-        self._run_make(directory='.', target=target, env=env)
+        self._run_make(directory='.', target=target, append_env=env)
 
     def _parse_test_path(self, test_path):
         is_dir = os.path.isdir(test_path)
