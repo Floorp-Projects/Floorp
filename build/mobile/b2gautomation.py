@@ -85,7 +85,7 @@ class B2GRemoteAutomation(Automation):
         active = False
         time_out = 0
         while not active and time_out < 40:
-            data = self._devicemanager.runCmd(['shell', '/system/bin/netcfg']).stdout.readlines()
+            data = self._devicemanager._runCmd(['shell', '/system/bin/netcfg']).stdout.readlines()
             data.pop(0)
             for line in data:
                 if (re.search(r'UP\s+(?:[0-9]{1,3}\.){3}[0-9]{1,3}', line)):
@@ -156,7 +156,7 @@ class B2GRemoteAutomation(Automation):
         serial = serial or self._devicemanager.deviceSerial
         status = 'unknown'
 
-        for line in self._devicemanager.runCmd(['devices']).stdout.readlines():
+        for line in self._devicemanager._runCmd(['devices']).stdout.readlines():
             result =  re.match('(.*?)\t(.*)', line)
             if result:
                 thisSerial = result.group(1)
@@ -181,7 +181,7 @@ class B2GRemoteAutomation(Automation):
         serial, status = self.getDeviceStatus()
 
         # reboot!
-        self._devicemanager.runCmd(['shell', '/system/bin/reboot'])
+        self._devicemanager._runCmd(['shell', '/system/bin/reboot'])
 
         # The above command can return while adb still thinks the device is
         # connected, so wait a little bit for it to disconnect from adb.
@@ -221,7 +221,7 @@ class B2GRemoteAutomation(Automation):
                                 " prior to running before running the automation framework")
 
         # stop b2g
-        self._devicemanager.runCmd(['shell', 'stop', 'b2g'])
+        self._devicemanager._runCmd(['shell', 'stop', 'b2g'])
         time.sleep(5)
 
         # relaunch b2g inside b2g instance
