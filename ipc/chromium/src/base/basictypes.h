@@ -12,18 +12,6 @@
 #error You_must_include_basictypes.h_before_prtypes.h!
 #endif
 
-#ifndef NO_NSPR_10_SUPPORT
-#define NO_NSPR_10_SUPPORT
-#define NO_NSPR_10_SUPPORT_SAVE
-#endif
-
-#include "prtypes.h"
-
-#ifdef NO_NSPR_10_SUPPORT_SAVE
-#undef NO_NSPR_10_SUPPORT_SAVE
-#undef NO_NSPR_10_SUPPORT
-#endif
-
 #include <limits.h>         // So we can set the bounds of our types
 #include <stddef.h>         // For size_t
 #include <string.h>         // for memcpy
