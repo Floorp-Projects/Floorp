@@ -34,6 +34,23 @@ MDefinition::PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
         fprintf(fp, "%c", tolower(name[i]));
 }
 
+// If one of the inputs to any non-phi are in a block that will abort, then there is
+// no point in processing this instruction, since control flow cannot reach here.
+bool
+MDefinition::earlyAbortCheck()
+{
+    if (isPhi())
+        return false;
+    for (int i = 0; i < numOperands(); i++) {
+        if (getOperand(i)->block()->earlyAbort()) {
+            block()->setEarlyAbort();
+            IonSpew(IonSpew_Range, "Ignoring value from block %d because instruction %d is in a block that aborts", block()->id(), getOperand(i)->id());
+            return true;
+        }
+    }
+    return false;
+}
+
 static inline bool
 EqualValues(bool useGVN, MDefinition *left, MDefinition *right)
 {
@@ -469,12 +486,11 @@ MPhi::recomputeRange()
     JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
     bool updated = false;
     for (size_t i = 0; i < numOperands(); i++) {
-#if 0
         if (getOperand(i)->block()->earlyAbort()) {
             IonSpew(IonSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
             continue;
         }
-#endif
+
         if (!isOSRLikeValue(getOperand(i))) {
             if (block()->isLoopHeader())
                 changeCounts_[i].updateRange(getOperand(i)->range());
@@ -487,8 +503,25 @@ MPhi::recomputeRange()
                 r.update(getOperand(0)->range());
                 updated = true;
             }
+#ifdef DEBUG
+            if (IonSpewEnabled(IonSpew_Range)) {
+                fprintf(IonSpewFile, "    %d:", getOperand(i)->id());
+                getOperand(i)->range()->printRange(IonSpewFile);
+                fprintf(IonSpewFile, " => ");
+                r.printRange(IonSpewFile);
+                fprintf(IonSpewFile, "\n");
+            }
+#endif
+
+
         }
-    }
+     }
+     if (!updated) {
+         IonSpew(IonSpew_Range, "My block is unreachable %d", id());
+         block()->setEarlyAbort();
+         return false;
+     }
+
      return range()->update(&r);
 }
 
@@ -1496,4 +1529,16 @@ MBeta::printOpcode(FILE *fp)
     getOperand(0)->printName(fp);
     fprintf(fp, " ");
     comparison_.printRange(fp);
+}
+
+bool
+MBeta::recomputeRange()
+{
+    bool nullRange = false;
+    bool ret = range()->update(Range::intersect(val_->range(), &comparison_, &nullRange));
+    if (nullRange) {
+            IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
+            block()->setEarlyAbort();
+    }
+    return ret;
 }
