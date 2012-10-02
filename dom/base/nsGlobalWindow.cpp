@@ -3263,21 +3263,24 @@ nsGlobalWindow::GetClosed(bool* aClosed)
   return NS_OK;
 }
 
+nsDOMWindowList*
+nsGlobalWindow::GetWindowList()
+{
+  MOZ_ASSERT(IsOuterWindow());
+
+  if (!mFrames && mDocShell) {
+    mFrames = new nsDOMWindowList(mDocShell);
+  }
+
+  return mFrames;
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::GetFrames(nsIDOMWindowCollection** aFrames)
 {
   FORWARD_TO_OUTER(GetFrames, (aFrames), NS_ERROR_NOT_INITIALIZED);
 
-  *aFrames = nullptr;
-
-  if (!mFrames && mDocShell) {
-    mFrames = new nsDOMWindowList(mDocShell);
-    if (!mFrames) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  *aFrames = static_cast<nsIDOMWindowCollection *>(mFrames);
+  *aFrames = GetWindowList();
   NS_IF_ADDREF(*aFrames);
   return NS_OK;
 }
@@ -4355,14 +4358,22 @@ nsGlobalWindow::GetScrollY(int32_t* aScrollY)
   return GetScrollXY(nullptr, aScrollY, false);
 }
 
+uint32_t
+nsGlobalWindow::GetLength()
+{
+  FORWARD_TO_OUTER(GetLength, (), 0);
+
+  nsDOMWindowList* windows = GetWindowList();
+  NS_ENSURE_TRUE(windows, 0);
+
+  return windows->GetLength();
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::GetLength(uint32_t* aLength)
 {
-  nsCOMPtr<nsIDOMWindowCollection> frames;
-  if (NS_SUCCEEDED(GetFrames(getter_AddRefs(frames))) && frames) {
-    return frames->GetLength(aLength);
-  }
-  return NS_ERROR_FAILURE;
+  *aLength = GetLength();
+  return NS_OK;
 }
 
 bool

@@ -64,23 +64,25 @@ nsDOMWindowList::EnsureFresh()
   }
 }
 
+uint32_t
+nsDOMWindowList::GetLength()
+{
+  EnsureFresh();
+
+  NS_ENSURE_TRUE(mDocShellNode, 0);
+
+  int32_t length;
+  nsresult rv = mDocShellNode->GetChildCount(&length);
+  NS_ENSURE_SUCCESS(rv, 0);
+
+  return uint32_t(length);
+}
+
 NS_IMETHODIMP 
 nsDOMWindowList::GetLength(uint32_t* aLength)
 {
-  nsresult rv = NS_OK;
-
-  *aLength = 0;
-
-  EnsureFresh();
-
-  if (mDocShellNode) {
-    int32_t length;
-    rv = mDocShellNode->GetChildCount(&length);
-
-    *aLength = length;
-  }
-
-  return rv;
+  *aLength = GetLength();
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
