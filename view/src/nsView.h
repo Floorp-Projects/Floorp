@@ -138,7 +138,11 @@ public:
   void RemoveChild(nsView *aChild);
 
   void SetParent(nsView *aParent) { mParent = aParent; }
-  void SetNextSibling(nsView *aSibling) { mNextSibling = aSibling; }
+  void SetNextSibling(nsView *aSibling)
+  {
+    NS_ASSERTION(aSibling != this, "Can't be our own sibling!");
+    mNextSibling = aSibling;
+  }
 
   uint32_t GetViewFlags() const { return mVFlags; }
   void SetViewFlags(uint32_t aFlags) { mVFlags = aFlags; }
