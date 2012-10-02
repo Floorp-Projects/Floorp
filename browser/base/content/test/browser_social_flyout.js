@@ -67,6 +67,7 @@ var tests = {
             cs = iframe.contentWindow.getComputedStyle(iframe.contentDocument.body);
             is(cs.width, "500px", "should now be 500px wide");
             panel.hidePopup();
+            port.close();
             next();
           }, false);
           SocialFlyout.dispatchPanelEvent("socialTest-MakeWider");
@@ -74,6 +75,31 @@ var tests = {
       }
     }
     port.postMessage({topic: "test-init"});
+  },
+
+  testCloseSelf: function(next) {
+    let panel = document.getElementById("social-flyout-panel");
+    let port = Social.provider.getWorkerPort();
+    ok(port, "provider has a port");
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "test-init-done":
+          port.postMessage({topic: "test-flyout-open"});
+          break;
+        case "got-flyout-visibility":
+          let iframe = panel.firstChild;
+          iframe.contentDocument.addEventListener("SocialTest-DoneCloseSelf", function _doneHandler() {
+            iframe.contentDocument.removeEventListener("SocialTest-DoneCloseSelf", _doneHandler, false);
+            is(panel.state, "closed", "flyout should have closed itself");
+            next();
+          }, false);
+          is(panel.state, "open", "flyout should be open");
+          port.close(); // so we don't get the -visibility message as it hides...
+          SocialFlyout.dispatchPanelEvent("socialTest-CloseSelf");
+          break;
+      }
+    }
+    port.postMessage({topic: "test-init"});
   }
 }
-
