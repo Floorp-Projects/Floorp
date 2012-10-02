@@ -3285,6 +3285,19 @@ nsGlobalWindow::GetFrames(nsIDOMWindowCollection** aFrames)
   return NS_OK;
 }
 
+already_AddRefed<nsIDOMWindow>
+nsGlobalWindow::IndexedGetter(uint32_t aIndex, bool& aFound)
+{
+  aFound = false;
+
+  FORWARD_TO_OUTER(IndexedGetter, (aIndex, aFound), nullptr);
+
+  nsDOMWindowList* windows = GetWindowList();
+  NS_ENSURE_TRUE(windows, nullptr);
+
+  return windows->IndexedGetter(aIndex, aFound);
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCache)
 {
