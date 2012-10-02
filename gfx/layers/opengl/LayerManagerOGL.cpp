@@ -1276,10 +1276,16 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
                                   0);
     } else {
       // Curses, incompatible formats.  Take a slow path.
-      //
-      // XXX Technically CopyTexSubImage2D also has the requirement of
-      // matching formats, but it doesn't seem to affect us in the
-      // real world.
+
+      // RGBA
+      size_t bufferSize = aRect.width * aRect.height * 4;
+      nsAutoArrayPtr<uint8_t> buf(new uint8_t[bufferSize]);
+
+      mGLContext->fReadPixels(aRect.x, aRect.y,
+                              aRect.width, aRect.height,
+                              LOCAL_GL_RGBA,
+                              LOCAL_GL_UNSIGNED_BYTE,
+                              buf);
       mGLContext->fTexImage2D(mFBOTextureTarget,
                               0,
                               LOCAL_GL_RGBA,
@@ -1287,12 +1293,7 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
                               0,
                               LOCAL_GL_RGBA,
                               LOCAL_GL_UNSIGNED_BYTE,
-                              NULL);
-      mGLContext->fCopyTexSubImage2D(mFBOTextureTarget,
-                                     0,    // level
-                                     0, 0, // offset
-                                     aRect.x, aRect.y,
-                                     aRect.width, aRect.height);
+                              buf);
     }
   } else {
     mGLContext->fTexImage2D(mFBOTextureTarget,
