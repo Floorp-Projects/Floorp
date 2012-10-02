@@ -688,10 +688,10 @@ class CallCompiler : public BaseCompiler
         for (size_t i = 0; i < argc + 1; i++) {
             /* Copy the argument onto the native stack. */
 #ifdef JS_NUNBOX32
-            masm.push(Address(t0, -((i + 1) * sizeof(Value)) + 4));
-            masm.push(Address(t0, -((i + 1) * sizeof(Value))));
+            masm.push(Address(t0, -int32_t((i + 1) * sizeof(Value)) + 4));
+            masm.push(Address(t0, -int32_t((i + 1) * sizeof(Value))));
 #elif defined JS_PUNBOX64
-            masm.push(Address(t0, -((i + 1) * sizeof(Value))));
+            masm.push(Address(t0, -int32_t((i + 1) * sizeof(Value))));
 #endif
         }
 
