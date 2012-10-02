@@ -47,6 +47,8 @@ function test_init() {
 function test_OpenClose() {
   ok(true, "Starting test_OpenClose");
   is(typeof OS.Win.File.CreateFile, "function", "OS.Win.File.CreateFile is a function");
+  is(OS.Win.File.CloseHandle(OS.Constants.Win.INVALID_HANDLE_VALUE), true, "CloseHandle returns true given the invalid handle");
+  is(OS.Win.File.FindClose(OS.Constants.Win.INVALID_HANDLE_VALUE), true, "FindClose returns true given the invalid handle");
   isnot(OS.Constants.Win.GENERIC_READ, undefined, "GENERIC_READ exists");
   isnot(OS.Constants.Win.FILE_SHARE_READ, undefined, "FILE_SHARE_READ exists");
   isnot(OS.Constants.Win.FILE_ATTRIBUTE_NORMAL, undefined, "FILE_ATTRIBUTE_NORMAL exists");
