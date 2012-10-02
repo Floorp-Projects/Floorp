@@ -1,0 +1,59 @@
+This is a generic media transport system for WebRTC.
+
+The basic model is that you have a TransportFlow which contains a
+series of TransportLayers, each of which gets an opportunity to
+manipulate data up and down the stack (think SysV STREAMS or a
+standard networking stack). You can also address individual
+sublayers to manipulate them or to bypass reading and writing
+at an upper layer; WebRTC uses this to implement DTLS-SRTP.
+
+
+DATAFLOW MODEL
+Unlike the existing nsSocket I/O system, this is a push rather
+than a pull system. Clients of the interface do writes downward
+with SendPacket() and receive notification of incoming packets
+via callbacks registed via sigslot.h. It is the responsibility
+of the bottom layer (or any other layer which needs to reference
+external events) to arrange for that somehow; typically by
+using nsITimer or the SocketTansportService.
+
+This sort of push model is a much better fit for the demands
+of WebRTC, expecially because ICE contexts span multiple
+network transports.
+
+
+THREADING MODEL
+There are no thread locks. It is the responsibility of the caller to
+arrange that any given TransportLayer/TransportFlow is only
+manipulated in one thread at once. One good way to do this is to run
+everything on the STS thread. Many of the existing layer implementations
+(TransportLayerPrsock, TransportLayerIce, TransportLayerLoopback)
+already run on STS so in those cases you must run on STS, though
+you can do setup on the main thread and then activate them on the
+STS.
+
+
+EXISTING TRANSPORT LAYERS
+The following transport layers are currently implemented:
+
+* DTLS -- a wrapper around NSS's DTLS [RFC 6347] stack
+* ICE  -- a wrapper around the nICEr ICE [RFC 5245] stack.
+* Prsock -- a wrapper around NSPR sockets
+* Loopback -- a loopback IO mechanism
+* Logging -- a passthrough that just logs its data
+
+The last three are primarily for debugging.
+
+
+
+
+
+
+
+
+
+
+
+
+
+

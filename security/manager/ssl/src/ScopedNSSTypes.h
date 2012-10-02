@@ -8,14 +8,21 @@
 #define mozilla_ScopedNSSTypes_h
 
 #include "mozilla/Scoped.h"
+
+extern "C" {
+#include "prio.h"
 #include "cert.h"
 #include "cms.h"
 #include "keyhi.h"
 #include "pk11pub.h"
 #include "sechash.h"
+} // extern "C"
+
 
 // Alphabetical order by NSS type
-
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc,
+                                          PRFileDesc,
+                                          PR_Close)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertificate,
                                           CERTCertificate,
                                           CERT_DestroyCertificate)
@@ -28,6 +35,9 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertificateRequest,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertList,
                                           CERTCertList,
                                           CERT_DestroyCertList)
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTName,
+                                          CERTName,
+                                          CERT_DestroyName)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertNicknames,
                                           CERTCertNicknames,
                                           CERT_FreeNicknames)
@@ -66,5 +76,6 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPrivateKey,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPublicKey,
                                           SECKEYPublicKey,
                                           SECKEY_DestroyPublicKey)
+
 
 #endif // mozilla_ScopedNSSTypes_h

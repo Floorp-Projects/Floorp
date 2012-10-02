@@ -135,10 +135,9 @@ ifdef MOZ_WEBRTC
 tier_platform_dirs += \
   media/webrtc \
   media/mtransport/third_party \
+  media/mtransport/build \
+  media/mtransport/standalone \
   $(NULL)
-#  media/mtransport/build \
-#  media/mtransport/standalone \
-#
 endif
 
 ifdef MOZ_SPEEX_RESAMPLER

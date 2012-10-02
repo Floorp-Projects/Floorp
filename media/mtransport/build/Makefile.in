@@ -1,0 +1,64 @@
+# -*- Mode: makefile; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- #
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+DEPTH = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+EXTRA_DEPS += $(srcdir)/../objs.mk
+
+MODULE = mtransport
+LIBRARY_NAME = mtransport
+FORCE_STATIC_LIB= 1
+ifeq (WINNT,$(OS_TARGET))
+VISIBILITY_FLAGS =
+endif
+
+LIBXUL_LIBRARY=1
+
+SRCS_IN_OBJDIR	= 1
+
+EXPORTS_NAMESPACES = mtransport
+
+EXPORTS_mtransport = \
+  ../dtlsidentity.h \
+  ../nricectx.h \
+  ../nricemediastream.h \
+  ../transportflow.h \
+  ../transportlayer.h \
+  ../transportlayerdtls.h \
+  ../transportlayerice.h \
+  ../transportlayerlog.h \
+  ../transportlayerloopback.h \
+  ../transportlayerprsock.h \
+  ../m_cpp_utils.h \
+  ../runnable_utils.h \
+  ../sigslot.h \
+  $(NULL)
+
+CPPSRCS = \
+	$(MTRANSPORT_LCPPSRCS) \
+	$(NULL)
+
+include $(srcdir)/../objs.mk
+
+
+# Make a copy into the local directory for dual compilation
+export:: $(MTRANSPORT_CPPSRCS)
+	$(INSTALL) $^ .
+
+# for stun.h
+ifeq (WINNT,$(OS_TARGET))
+DEFINES += \
+  -DWIN32 \
+  -DNOMINMAX \
+  $(NULL)
+else ifeq (Linux,$(OS_TARGET))
+DEFINES += -DLINUX
+endif
+
+include $(topsrcdir)/config/rules.mk

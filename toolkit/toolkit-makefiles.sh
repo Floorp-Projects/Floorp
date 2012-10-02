@@ -1715,12 +1715,12 @@ fi
 if [ "$MOZ_WEBRTC" ]; then
  add_makefiles "
    media/webrtc/Makefile
+   media/mtransport/test/Makefile 
+   media/mtransport/build/Makefile
+   media/mtransport/standalone/Makefile
+   media/webrtc/signaling/test/Makefile
  "
 fi
-#   media/mtransport/build/Makefile
-#   media/mtransport/standalone/Makefile
-#   media/webrtc/signaling/test/Makefile
-#   media/mtransport/test/Makefile 
 
 if [ "$MOZ_SPEEX_RESAMPLER" ]; then
   add_makefiles "

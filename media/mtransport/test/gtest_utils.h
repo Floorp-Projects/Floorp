@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Utilities to wrap gtest, modeled on libjingle's gunit
+
+// Original author: ekr@rtfm.com
+#ifndef gtest_utils_h__
+#define gtest_utils_h__
+
+#include <iostream>
+
+#include "nspr.h"
+#include "prinrval.h"
+#include "prthread.h"
+
+#define GTEST_HAS_RTTI 0
+#include "gtest/gtest.h"
+
+// Wait up to timeout seconds for expression to be true
+#define WAIT(expression, timeout) \
+  do { \
+  for (PRIntervalTime start = PR_IntervalNow(); !(expression) &&        \
+           ! ((PR_IntervalNow() - start) > PR_MillisecondsToInterval(timeout));) \
+    PR_Sleep(200); \
+  } while(0)
+
+// Same as GTEST_WAIT, but stores the result in res. Used when
+// you also want the result of expression but wish to avoid
+// double evaluation.
+#define WAIT_(expression, timeout, res)                      \
+  do { \
+  for (PRIntervalTime start = PR_IntervalNow(); !(res = (expression)) && \
+           ! ((PR_IntervalNow() - start) > PR_MillisecondsToInterval(timeout));) \
+    PR_Sleep(200); \
+  } while(0)
+
+#define ASSERT_TRUE_WAIT(expression, timeout) \
+  do { \
+  bool res; \
+  WAIT_(expression, timeout, res); \
+  ASSERT_TRUE(res); \
+  } while(0);
+
+#define EXPECT_TRUE_WAIT(expression, timeout) \
+  do { \
+  bool res; \
+  WAIT_(expression, timeout, res); \
+  EXPECT_TRUE(res); \
+  } while(0);
+
+#endif
+
+
+
