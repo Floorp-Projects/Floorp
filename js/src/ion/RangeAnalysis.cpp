@@ -162,10 +162,10 @@ RangeAnalysis::addBetaNobes()
             }
             if (smaller && greater) {
                 MBeta *beta;
-                beta = MBeta::New(smaller, JSVAL_INT_MIN, JSVAL_INT_MAX-1);
+                beta = MBeta::New(smaller, Range(JSVAL_INT_MIN, JSVAL_INT_MAX-1));
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(smaller, beta, block);
-                beta = MBeta::New(greater, JSVAL_INT_MIN+1, JSVAL_INT_MAX);
+                beta = MBeta::New(greater, Range(JSVAL_INT_MIN+1, JSVAL_INT_MAX));
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(greater, beta, block);
             }
@@ -175,35 +175,34 @@ RangeAnalysis::addBetaNobes()
         JS_ASSERT(val);
 
 
-        int32 low = JSVAL_INT_MIN;
-        int32 high = JSVAL_INT_MAX;
+        Range comp;
         switch (jsop) {
           case JSOP_LE:
-            high = bound;
+            comp.setUpper(bound);
             break;
           case JSOP_LT:
             if (!SafeSub(bound, 1, &bound))
                 break;
-            high = bound;
+            comp.setUpper(bound);
             break;
           case JSOP_GE:
-            low = bound;
+            comp.setLower(bound);
             break;
           case JSOP_GT:
             if (!SafeAdd(bound, 1, &bound))
                 break;
-            low = bound;
+            comp.setLower(bound);
             break;
           case JSOP_EQ:
-            low = bound;
-            high = bound;
+            comp.setLower(bound);
+            comp.setUpper(bound);
           default:
             break; // well, for neq we could have
                    // [-\inf, bound-1] U [bound+1, \inf] but we only use contiguous ranges.
         }
 
         IonSpew(IonSpew_Range, "Adding beta node for %d", val->id());
-        MBeta *beta = MBeta::New(val, low, high);
+        MBeta *beta = MBeta::New(val, comp);
         block->insertBefore(*block->begin(), beta);
         replaceDominatedUsesWith(val, beta, block);
     }
@@ -290,17 +289,20 @@ Range::unionWith(const Range *other)
 Range
 Range::add(const Range *lhs, const Range *rhs)
 {
-    return Range(
+    Range ret(
         (int64_t)lhs->lower_ + (int64_t)rhs->lower_,
         (int64_t)lhs->upper_ + (int64_t)rhs->upper_);
+    return ret;
 }
 
 Range
 Range::sub(const Range *lhs, const Range *rhs)
 {
-    return Range(
+    Range ret(
         (int64_t)lhs->lower_ - (int64_t)rhs->upper_,
         (int64_t)lhs->upper_ - (int64_t)rhs->lower_);
+    return ret;
+
 }
 
 Range
@@ -310,27 +312,30 @@ Range::mul(const Range *lhs, const Range *rhs)
     int64_t b = (int64_t)lhs->lower_ * (int64_t)rhs->upper_;
     int64_t c = (int64_t)lhs->upper_ * (int64_t)rhs->lower_;
     int64_t d = (int64_t)lhs->upper_ * (int64_t)rhs->upper_;
-    return Range(
+    Range ret(
         Min( Min(a, b), Min(c, d) ),
         Max( Max(a, b), Max(c, d) ));
+    return ret;
 }
 
 Range
 Range::shl(const Range *lhs, int32 c)
 {
     int32 shift = c & 0x1f;
-    return Range(
+    Range ret(
         (int64_t)lhs->lower_ << shift,
         (int64_t)lhs->upper_ << shift);
+    return ret;
 }
 
 Range
 Range::shr(const Range *lhs, int32 c)
 {
     int32 shift = c & 0x1f;
-    return Range(
+    Range ret(
         (int64_t)lhs->lower_ >> shift,
         (int64_t)lhs->upper_ >> shift);
+    return ret;
 }
 
 bool

@@ -2755,9 +2755,9 @@ class MBeta : public MUnaryInstruction
   private:
     Range comparison_;
     MDefinition *val_;
-    MBeta(MDefinition *val, int32 low, int32 high)
+    MBeta(MDefinition *val, const Range &comp)
         : MUnaryInstruction(val),
-          comparison_(low, high),
+          comparison_(comp),
           val_(val)
     {
     }
@@ -2765,9 +2765,9 @@ class MBeta : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(Beta);
     void printOpcode(FILE *fp);
-    static MBeta *New(MDefinition *val, int32 low, int32 high)
+    static MBeta *New(MDefinition *val, const Range &comp)
     {
-        return new MBeta(val, low, high);
+        return new MBeta(val, comp);
     }
 
     AliasSet getAliasSet() const {
