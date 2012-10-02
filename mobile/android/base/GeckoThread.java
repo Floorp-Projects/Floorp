@@ -72,10 +72,8 @@ public class GeckoThread extends Thread {
         String args = mIntent.getStringExtra("args");
 
         // if this isn't the default BrowserApp, send the apps default profile to gecko
-        if (!(app instanceof BrowserApp)) {
-            String profile = app.getDefaultProfileName();
-            args = (args != null ? args : "") + "-P " + profile;
-        }
+        String profile = app.getDefaultProfileName();
+        args = (args != null ? args : "") + "-P " + profile;
 
         // and then fire us up
         Log.i(LOGTAG, "RunGecko - args = " + args);
