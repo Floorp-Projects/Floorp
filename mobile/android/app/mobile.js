@@ -250,6 +250,7 @@ pref("browser.search.updateinterval", 6);
 
 // disable search suggestions by default
 pref("browser.search.suggest.enabled", false);
+pref("browser.search.suggest.prompted", false);
 
 // Tell the search service to load search plugins from the locale JAR
 pref("browser.search.loadFromJars", true);
