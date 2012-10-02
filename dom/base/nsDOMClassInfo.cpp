@@ -6817,10 +6817,12 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
         return NS_OK;
       }
 
-      if (mozilla::dom::DefineConstructor(cx, obj, define, &rv)) {
-        *did_resolve = NS_SUCCEEDED(rv);
-
-        return rv;
+      bool enabled;
+      bool defined = define(cx, obj, &enabled);
+      MOZ_ASSERT_IF(defined, enabled);
+      if (enabled) {
+        *did_resolve = defined;
+        return defined ? NS_OK : NS_ERROR_FAILURE;
       }
     }
   }
