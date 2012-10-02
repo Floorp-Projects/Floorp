@@ -664,6 +664,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
                  invalidRect->top,
                  invalidRect->right - invalidRect->left,
                  invalidRect->bottom - invalidRect->top);
+  // invalidRect is in "display pixels".  In non-HiDPI modes "display pixels"
+  // are device pixels.  But in HiDPI modes each display pixel corresponds
+  // to more than one device pixel.
+  double scaleFactor = 1.0;
+  GetContentsScaleFactor(&scaleFactor);
+  rect.ScaleRoundOut(scaleFactor);
   mObjectFrame->InvalidateLayer(nsDisplayItem::TYPE_PLUGIN, &rect);
   return NS_OK;
 }
@@ -1497,16 +1503,24 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     mCARenderer = new nsCARenderer();
   }
 
+  // aWidth and aHeight are in "display pixels".  In non-HiDPI modes
+  // "display pixels" are device pixels.  But in HiDPI modes each
+  // display pixel corresponds to more than one device pixel.
+  double scaleFactor = 1.0;
+  GetContentsScaleFactor(&scaleFactor);
+
   if (!mIOSurface ||
       (mIOSurface->GetWidth() != (size_t)aWidth ||
-       mIOSurface->GetHeight() != (size_t)aHeight)) {
+       mIOSurface->GetHeight() != (size_t)aHeight ||
+       mIOSurface->GetContentsScaleFactor() != scaleFactor)) {
     mIOSurface = nullptr;
 
     // If the renderer is backed by an IOSurface, resize it as required.
-    mIOSurface = MacIOSurface::CreateIOSurface(aWidth, aHeight);
+    mIOSurface = MacIOSurface::CreateIOSurface(aWidth, aHeight, scaleFactor);
     if (mIOSurface) {
       RefPtr<MacIOSurface> attachSurface = MacIOSurface::LookupSurface(
-                                              mIOSurface->GetIOSurfaceID());
+                                              mIOSurface->GetIOSurfaceID(),
+                                              scaleFactor);
       if (attachSurface) {
         mCARenderer->AttachIOSurface(attachSurface);
       } else {
@@ -1529,7 +1543,8 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
 
     // We don't run Flash in-process so we can unconditionally disallow
     // the offliner renderer.
-    mCARenderer->SetupRenderer(caLayer, aWidth, aHeight, DISALLOW_OFFLINE_RENDERER);
+    mCARenderer->SetupRenderer(caLayer, aWidth, aHeight, scaleFactor,
+                               DISALLOW_OFFLINE_RENDERER);
 
     // Setting up the CALayer requires resetting the painting otherwise we
     // get garbage for the first few frames.
@@ -1538,15 +1553,15 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
   }
 
   CGImageRef caImage = NULL;
-  nsresult rt = mCARenderer->Render(aWidth, aHeight, &caImage);
+  nsresult rt = mCARenderer->Render(aWidth, aHeight, scaleFactor, &caImage);
   if (rt == NS_OK && mIOSurface && mColorProfile) {
     nsCARenderer::DrawSurfaceToCGContext(aCGContext, mIOSurface, mColorProfile,
                                          0, 0, aWidth, aHeight);
   } else if (rt == NS_OK && caImage != NULL) {
     // Significant speed up by resetting the scaling
     ::CGContextSetInterpolationQuality(aCGContext, kCGInterpolationNone );
-    ::CGContextTranslateCTM(aCGContext, 0, aHeight);
-    ::CGContextScaleCTM(aCGContext, 1.0, -1.0);
+    ::CGContextTranslateCTM(aCGContext, 0, (double) aHeight * scaleFactor);
+    ::CGContextScaleCTM(aCGContext, scaleFactor, -scaleFactor);
 
     ::CGContextDrawImage(aCGContext, CGRectMake(0,0,aWidth,aHeight), caImage);
   } else {
@@ -2151,12 +2166,17 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
   mObjectFrame->GetContentRectRelativeToSelf().TopLeft();
   nsPresContext* presContext = mObjectFrame->PresContext();
-  nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
-                  presContext->AppUnitsToDevPixels(pt.y));
+  // Plugin event coordinates need to be translated from device pixels
+  // into "display pixels" in HiDPI modes.
+  double scaleFactor = 1.0;
+  GetContentsScaleFactor(&scaleFactor);
+  size_t intScaleFactor = ceil(scaleFactor);
+  nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x) / intScaleFactor,
+                  presContext->AppUnitsToDevPixels(pt.y) / intScaleFactor);
 #ifndef NP_NO_CARBON
   nsIntPoint geckoScreenCoords = mWidget->WidgetToScreenOffset();
-  ::Point carbonPt = { static_cast<short>(ptPx.y + geckoScreenCoords.y),
-                       static_cast<short>(ptPx.x + geckoScreenCoords.x) };
+  ::Point carbonPt = { static_cast<short>(ptPx.y + geckoScreenCoords.y / intScaleFactor),
+                       static_cast<short>(ptPx.x + geckoScreenCoords.x / intScaleFactor) };
   if (eventModel == NPEventModelCarbon) {
     if (event && anEvent.eventStructType == NS_MOUSE_EVENT) {
       static_cast<EventRecord*>(event)->where = carbonPt;
@@ -2807,7 +2827,17 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect, CGContextRef cgCont
 {
   if (!mInstance || !mObjectFrame)
     return;
- 
+
+  gfxRect dirtyRectCopy = aDirtyRect; 
+  double scaleFactor = 1.0;
+  GetContentsScaleFactor(&scaleFactor);
+  if (scaleFactor != 1.0) {
+    ::CGContextScaleCTM(cgContext, scaleFactor, scaleFactor);
+    // Convert aDirtyRect from device pixels to "display pixels"
+    // for HiDPI modes
+    dirtyRectCopy.ScaleRoundOut(1.0 / scaleFactor);
+  }
+
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
   if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
 #ifndef NP_NO_CARBON
@@ -2822,7 +2852,7 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect, CGContextRef cgCont
     } else if (GetEventModel() == NPEventModelCocoa)
 #endif
     {
-      DoCocoaEventDrawRect(aDirtyRect, cgContext);
+      DoCocoaEventDrawRect(dirtyRectCopy, cgContext);
     }
     pluginWidget->EndDrawPlugin();
   }
@@ -3470,8 +3500,14 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
     NS_NPAPI_CocoaWindowFrame(cocoaTopLevelWindow, windowRect);
   }
 
-  mPluginWindow->x = geckoScreenCoords.x - windowRect.x;
-  mPluginWindow->y = geckoScreenCoords.y - windowRect.y;
+  double scaleFactor = 1.0;
+  GetContentsScaleFactor(&scaleFactor);
+  int intScaleFactor = ceil(scaleFactor);
+
+  // Convert geckoScreenCoords from device pixels to "display pixels"
+  // for HiDPI modes.
+  mPluginWindow->x = geckoScreenCoords.x/intScaleFactor - windowRect.x;
+  mPluginWindow->y = geckoScreenCoords.y/intScaleFactor - windowRect.y;
 
   NPRect oldClipRect = mPluginWindow->clipRect;
   
@@ -3688,6 +3724,34 @@ void nsPluginInstanceOwner::RemoveScrollPositionListener()
   }
 }
 #endif
+
+NS_IMETHODIMP
+nsPluginInstanceOwner::GetContentsScaleFactor(double *result)
+{
+  NS_ENSURE_ARG_POINTER(result);
+  double scaleFactor = 1.0;
+  if (mWidget) {
+    scaleFactor = mWidget->GetDefaultScale();
+  } else {
+    nsCOMPtr<nsIScreenManager> screenMgr =
+      do_GetService("@mozilla.org/gfx/screenmanager;1");
+    if (screenMgr) {
+      nsCOMPtr<nsIScreen> screen;
+      nsIntRect screenRect = mObjectFrame->GetScreenRect();
+      screenMgr->ScreenForRect(screenRect.x, screenRect.y,
+                               screenRect.width, screenRect.height,
+                               getter_AddRefs(screen));
+      if (screen) {
+        nsresult rv = screen->GetContentsScaleFactor(&scaleFactor);
+        if (NS_FAILED(rv)) {
+          scaleFactor = 1.0;
+        }
+      }
+    }
+  }
+  *result = scaleFactor;
+  return NS_OK;
+}
 
 void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
 {
