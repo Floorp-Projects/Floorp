@@ -9,6 +9,7 @@
 #include "SVGAnimatedTransformList.h"
 #include "nsSVGElement.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/SVGTransformListBinding.h"
 #include "dombindings.h"
 #include "nsError.h"
 
@@ -77,8 +78,15 @@ JSObject*
 DOMSVGTransformList::WrapObject(JSContext *cx, JSObject *scope,
                                 bool *triedToWrap)
 {
-  return mozilla::dom::oldproxybindings::SVGTransformList::create(cx, scope, this,
-                                                         triedToWrap);
+  JSObject* obj = mozilla::dom::SVGTransformListBinding::Wrap(cx, scope, this,
+                                                              triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return mozilla::dom::oldproxybindings::SVGTransformList::create(cx, scope,
+                                                                  this);
 }
 
 nsIDOMSVGTransform*

@@ -79,6 +79,13 @@ class RefTest(object):
                                                   profileDir,
                                                   "reftest@mozilla.org")
 
+    # I would prefer to use "--install-extension reftest/specialpowers", but that requires tight coordination with
+    # release engineering and landing on multiple branches at once.
+    if manifest.endswith('crashtests.list'):
+      self.automation.installExtension(os.path.join(SCRIPT_DIRECTORY, "specialpowers"),
+                                                    profileDir,
+                                                    "special-powers@mozilla.org")
+
   def buildBrowserEnv(self, options, profileDir):
     browserEnv = self.automation.environment(xrePath = options.xrePath)
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack"

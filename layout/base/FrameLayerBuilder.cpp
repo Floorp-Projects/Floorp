@@ -23,6 +23,7 @@
 
 #include "mozilla/Preferences.h"
 #include "sampler.h"
+#include "mozilla/gfx/Tools.h"
 
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
@@ -33,6 +34,7 @@
 #endif
 
 using namespace mozilla::layers;
+using namespace mozilla::gfx;
 
 namespace mozilla {
 
@@ -1400,8 +1402,8 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
     // transform. See nsGfxScrollFrame::InvalidateInternal, where
     // we ensure that mInvalidThebesContent is updated according to the
     // scroll position as of the most recent paint.
-    if (data->mXScale != mParameters.mXScale ||
-        data->mYScale != mParameters.mYScale) {
+    if (!FuzzyEqual(data->mXScale, mParameters.mXScale, 0.00001) ||
+        !FuzzyEqual(data->mYScale, mParameters.mYScale, 0.00001)) {
       InvalidateEntireThebesLayer(layer, aActiveScrolledRoot);
       didResetScrollPositionForLayerPixelAlignment = true;
     }

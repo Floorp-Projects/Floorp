@@ -21,6 +21,7 @@ import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -55,6 +56,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private SuggestClient mSuggestClient;
     private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
     private AwesomeBarCursorAdapter mCursorAdapter = null;
+    private boolean mTelemetrySent = false;
 
     private class SearchEntryViewHolder {
         public FlowLayout suggestionView;
@@ -156,13 +158,18 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             mCursorAdapter.setFilterQueryProvider(new FilterQueryProvider() {
                 public Cursor runQuery(CharSequence constraint) {
                     long start = SystemClock.uptimeMillis();
-    
+
                     Cursor c = BrowserDB.filter(getContentResolver(), constraint, MAX_RESULTS);
                     c.getCount();
-    
+
                     long end = SystemClock.uptimeMillis();
-                    Log.i(LOGTAG, "Got cursor in " + (end - start) + "ms");
-    
+                    int time = (int)(end - start);
+                    Log.i(LOGTAG, "Got cursor in " + time + "ms");
+
+                    if (!mTelemetrySent && TextUtils.isEmpty(constraint)) {
+                        Telemetry.HistogramAdd("FENNEC_AWESOMEBAR_ALLPAGES_EMPTY_TIME", time);
+                        mTelemetrySent = true;
+                    }
                     return c;
                 }
             });

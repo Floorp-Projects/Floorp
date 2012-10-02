@@ -410,12 +410,12 @@ TabChild::HandlePossibleMetaViewportChange()
   nsCOMPtr<nsIDOMElement> htmlDOMElement = do_QueryInterface(document->GetHtmlElement());
   nsCOMPtr<nsIDOMElement> bodyDOMElement = do_QueryInterface(document->GetBodyElement());
 
-  PRInt32 htmlWidth = 0, htmlHeight = 0;
+  int32_t htmlWidth = 0, htmlHeight = 0;
   if (htmlDOMElement) {
     htmlDOMElement->GetScrollWidth(&htmlWidth);
     htmlDOMElement->GetScrollHeight(&htmlHeight);
   }
-  PRInt32 bodyWidth = 0, bodyHeight = 0;
+  int32_t bodyWidth = 0, bodyHeight = 0;
   if (bodyDOMElement) {
     bodyDOMElement->GetScrollWidth(&bodyWidth);
     bodyDOMElement->GetScrollHeight(&bodyHeight);

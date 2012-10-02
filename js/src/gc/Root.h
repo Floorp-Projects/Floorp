@@ -65,7 +65,7 @@ namespace js {
 template <typename T> class Rooted;
 
 template <typename T>
-struct RootMethods { };
+struct RootMethods {};
 
 template <typename T>
 class HandleBase {};
@@ -578,6 +578,21 @@ public:
     }
 };
 
+/*
+ * The scoped guard object AutoAssertCanGC will assert if its live region
+ * crosses the live region of an AutoAssertNoGC guard object.
+ */
+class AutoAssertCanGC
+{
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+  public:
+    AutoAssertCanGC(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(!InNoGCScope());
+    }
+};
+
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 extern void
 CheckStackRoots(JSContext *cx);
@@ -595,13 +610,11 @@ namespace js {
  */
 inline void MaybeCheckStackRoots(JSContext *cx, bool relax = true)
 {
-#ifdef DEBUG
-    JS_ASSERT(!InNoGCScope());
-# if defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+    AutoAssertCanGC cangc;
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     if (relax && NeedRelaxedRootChecks())
         return;
     CheckStackRoots(cx);
-# endif
 #endif
 }
 

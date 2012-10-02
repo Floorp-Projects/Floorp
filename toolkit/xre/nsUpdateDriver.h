@@ -53,6 +53,8 @@ NS_HIDDEN_(nsresult) ProcessUpdates(nsIFile *greDir, nsIFile *appDir,
                                     int argc, char **argv,
                                     const char *appVersion,
                                     bool restart = true,
+                                    bool isOSUpdate = false,
+                                    nsIFile *osApplyToDir = nullptr,
                                     ProcessType *pid = nullptr);
 
 #ifdef MOZ_UPDATER
@@ -72,7 +74,8 @@ private:
   struct BackgroundUpdateInfo {
     BackgroundUpdateInfo()
       : mArgc(0),
-        mArgv(nullptr)
+        mArgv(nullptr),
+        mIsOSUpdate(false)
     {}
     ~BackgroundUpdateInfo() {
       for (int i = 0; i < mArgc; ++i) {
@@ -84,9 +87,11 @@ private:
     nsCOMPtr<nsIFile> mGREDir;
     nsCOMPtr<nsIFile> mAppDir;
     nsCOMPtr<nsIFile> mUpdateRoot;
+    nsCOMPtr<nsIFile> mOSApplyToDir;
     int mArgc;
     char **mArgv;
     nsAutoCString mAppVersion;
+    bool mIsOSUpdate;
   };
 
 private:

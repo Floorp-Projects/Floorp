@@ -44,11 +44,6 @@ public:
 
 private:
   /**
-   * Dispatch a trusted non-cancellable and non-bubbling event to itself.
-   */
-  nsresult DispatchTrustedEventToSelf(const nsAString& aEventName);
-
-  /**
    * Update the connection information stored in the object using a
    * NetworkInformation object.
    */

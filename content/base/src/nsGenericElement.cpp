@@ -102,7 +102,6 @@
 #include "nsRuleProcessorData.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsTextNode.h"
-#include "dombindings.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"

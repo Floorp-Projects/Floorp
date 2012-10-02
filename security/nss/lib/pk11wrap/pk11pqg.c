@@ -1,38 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2001
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* Thse functions are stub functions which will get replaced with calls through
  * PKCS #11.
  */
@@ -47,13 +15,33 @@
 
 
 /* Generate PQGParams and PQGVerify structs.
- * Length of P specified by j.  Length of h will match length of P.
+ * Length of P specified by L.
+ *   if L is greater than 1024 then the resulting verify parameters will be
+ *   DSA2.
+ * Length of Q specified by N. If zero, The PKCS #11 module will
+ *   pick an appropriately sized Q for P. If N is specified and L = 1024, then
+ *   the resulting verify parameters will be DSA2, Otherwise DSA1 parameters 
+ *   will be returned.
  * Length of SEED in bytes specified in seedBytes.
- * seedBbytes must be in the range [20..255] or an error will result.
+ *
+ * The underlying PKCS #11 module will check the values for L, N, 
+ * and seedBytes. The rules for softoken are:
+ * 
+ * If L <= 1024, then L must be between 512 and 1024 in increments of 64 bits.
+ * If L <= 1024, then N must be 0 or 160.
+ * If L >= 1024, then L and N must match the following table:
+ *   L=1024   N=0 or 160
+ *   L=2048   N=0 or 224
+ *   L=2048   N=256
+ *   L=3072   N=0 or 256
+ * if L <= 1024
+ *   seedBbytes must be in the range [20..256].
+ * if L >= 1024
+ *   seedBbytes must be in the range [20..L/16].
  */
 extern SECStatus
-PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
-				 PQGParams **pParams, PQGVerify **pVfy)
+PK11_PQG_ParamGenV2(unsigned int L, unsigned int N,
+	 unsigned int seedBytes, PQGParams **pParams, PQGVerify **pVfy)
 {
     PK11SlotInfo *slot = NULL;
     CK_ATTRIBUTE genTemplate[5];
@@ -72,13 +60,14 @@ PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
 	{ CKA_NETSCAPE_PQG_SEED, NULL, 0 },
 	{ CKA_NETSCAPE_PQG_H, NULL, 0 },
     };
+    CK_ULONG primeBits = L;
+    CK_ULONG subPrimeBits = N;
     int pTemplateCount = sizeof(pTemplate)/sizeof(pTemplate[0]);
     int vTemplateCount = sizeof(vTemplate)/sizeof(vTemplate[0]);
     PRArenaPool *parena = NULL;
     PRArenaPool *varena = NULL;
     PQGParams *params = NULL;
     PQGVerify *verify = NULL;
-    CK_ULONG primeBits = PQG_INDEX_TO_PBITS(j);
     CK_ULONG seedBits = seedBytes*8;
 
     *pParams = NULL;
@@ -89,6 +78,10 @@ PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
 	goto loser;
     }
     PK11_SETATTRS(attrs, CKA_PRIME_BITS,&primeBits,sizeof(primeBits)); attrs++;
+    if (subPrimeBits != 0) {
+    	PK11_SETATTRS(attrs, CKA_SUB_PRIME_BITS, 
+				&subPrimeBits, sizeof(subPrimeBits)); attrs++;
+    }
     if (seedBits != 0) {
     	PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_SEED_BITS, 
 					&seedBits, sizeof(seedBits)); attrs++;
@@ -99,7 +92,35 @@ PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
     slot = PK11_GetInternalSlot();
     if (slot == NULL) {
 	/* set error */
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);/* shouldn't happen */
 	goto loser;
+    }
+
+    /* make sure the internal slot can handle DSA2 type parameters. */
+    if (primeBits > 1024) {
+	CK_MECHANISM_INFO mechanism_info;
+
+	if (!slot->isThreadSafe) PK11_EnterSlotMonitor(slot);
+	crv = PK11_GETTAB(slot)->C_GetMechanismInfo(slot->slotID,
+			CKM_DSA_PARAMETER_GEN, &mechanism_info);
+	if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
+	/* a bug in the old softoken left CKM_DSA_PARAMETER_GEN off of the
+	 * mechanism List. If we get a failure asking for this value, we know
+	 * it can't handle DSA2 */
+	if ((crv != CKR_OK) || (mechanism_info.ulMaxKeySize < primeBits)) {
+	    PK11_FreeSlot(slot);
+	    slot = PK11_GetBestSlotWithAttributes(CKM_DSA_PARAMETER_GEN, 0,
+						primeBits, NULL);
+	    if (slot == NULL) {
+		PORT_SetError(SEC_ERROR_NO_TOKEN); /* can happen */
+		goto loser;
+	    }
+	    /* ditch seedBits in this case, they are NSS specific and at
+	     * this point we have a token that claims to handle DSA2 */
+	    if (seedBits) {
+		attrs--;
+	    }
+	}
     }
 
     /* Initialize the Key Gen Mechanism */
@@ -198,13 +219,27 @@ loser:
 }
 
 /* Generate PQGParams and PQGVerify structs.
+ * Length of P specified by j.  Length of h will match length of P.
+ * Length of SEED in bytes specified in seedBytes.
+ * seedBbytes must be in the range [20..255] or an error will result.
+ */
+extern SECStatus
+PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
+				 PQGParams **pParams, PQGVerify **pVfy)
+{
+    unsigned int primeBits = PQG_INDEX_TO_PBITS(j);
+    return PK11_PQG_ParamGenV2(primeBits, 0, seedBytes, pParams, pVfy);
+}
+
+/* Generate PQGParams and PQGVerify structs.
  * Length of seed and length of h both equal length of P. 
  * All lengths are specified by "j", according to the table above.
  */
 extern SECStatus
 PK11_PQG_ParamGen(unsigned int j, PQGParams **pParams, PQGVerify **pVfy)
 {
-    return PK11_PQG_ParamGenSeedLen(j, 0, pParams, pVfy);
+    unsigned int primeBits = PQG_INDEX_TO_PBITS(j);
+    return PK11_PQG_ParamGenV2(primeBits, 0, 0, pParams, pVfy);
 }
 
 /*  Test PQGParams for validity as DSS PQG values.
@@ -251,16 +286,23 @@ PK11_PQG_VerifyParams(const PQGParams *params, const PQGVerify *vfy,
 						params->prime.len); attrs++;
     PK11_SETATTRS(attrs, CKA_SUBPRIME, params->subPrime.data, 
 						params->subPrime.len); attrs++;
-    PK11_SETATTRS(attrs, CKA_BASE,params->base.data,params->base.len); attrs++;
+    if (params->base.len) {
+        PK11_SETATTRS(attrs, CKA_BASE,params->base.data,params->base.len);
+	 attrs++;
+    }
     PK11_SETATTRS(attrs, CKA_TOKEN, &ckfalse, sizeof(ckfalse)); attrs++;
     if (vfy) {
-	counter = vfy->counter;
-	PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_COUNTER, 
+	if (vfy->counter != -1) {
+	    counter = vfy->counter;
+	    PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_COUNTER, 
 			&counter, sizeof(counter)); attrs++;
+	}
 	PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_SEED, 
 			vfy->seed.data, vfy->seed.len); attrs++;
-	PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_H, 
+	if (vfy->h.len) {
+	    PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_H, 
 			vfy->h.data, vfy->h.len); attrs++;
+	}
     }
 
     keyCount = attrs - keyTempl;

@@ -1,39 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
  * This file manages PKCS #11 instances of certificates.
  */
@@ -1805,20 +1772,29 @@ CK_OBJECT_HANDLE
 PK11_FindObjectForCert(CERTCertificate *cert, void *wincx, PK11SlotInfo **pSlot)
 {
     CK_OBJECT_HANDLE certHandle;
-    CK_ATTRIBUTE searchTemplate	= { CKA_VALUE, NULL, 0 };
-    
-    PK11_SETATTRS(&searchTemplate, CKA_VALUE, cert->derCert.data,
-		  cert->derCert.len);
+    CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
+    CK_ATTRIBUTE *attr;
+    CK_ATTRIBUTE searchTemplate[]= {
+	{ CKA_CLASS, NULL, 0 },
+	{ CKA_VALUE, NULL, 0 },
+    };
+    int templateSize = sizeof(searchTemplate)/sizeof(searchTemplate[0]);
+
+    attr = searchTemplate;
+    PK11_SETATTRS(attr, CKA_CLASS, &certClass, sizeof(certClass)); attr++;
+    PK11_SETATTRS(attr, CKA_VALUE, cert->derCert.data, cert->derCert.len);
 
     if (cert->slot) {
-	certHandle = pk11_getcerthandle(cert->slot,cert,&searchTemplate,1);
+	certHandle = pk11_getcerthandle(cert->slot, cert, searchTemplate,
+	                                templateSize);
 	if (certHandle != CK_INVALID_HANDLE) {
 	    *pSlot = PK11_ReferenceSlot(cert->slot);
 	    return certHandle;
 	}
     }
 
-    certHandle = pk11_FindCertObjectByTemplate(pSlot,&searchTemplate,1,wincx);
+    certHandle = pk11_FindCertObjectByTemplate(pSlot, searchTemplate,
+                                               templateSize, wincx);
     if (certHandle != CK_INVALID_HANDLE) {
 	if (cert->slot == NULL) {
 	    cert->slot = PK11_ReferenceSlot(*pSlot);
@@ -2539,6 +2515,7 @@ SECItem *
 PK11_GetLowLevelKeyIDForCert(PK11SlotInfo *slot,
 					CERTCertificate *cert, void *wincx)
 {
+    CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
     CK_ATTRIBUTE theTemplate[] = {
 	{ CKA_VALUE, NULL, 0 },
 	{ CKA_CLASS, NULL, 0 }
@@ -2554,6 +2531,7 @@ PK11_GetLowLevelKeyIDForCert(PK11SlotInfo *slot,
     if (slot) {
 	PK11_SETATTRS(attrs, CKA_VALUE, cert->derCert.data, 
 						cert->derCert.len); attrs++;
+	PK11_SETATTRS(attrs, CKA_CLASS, &certClass, sizeof(certClass));
  
 	rv = pk11_AuthenticateUnfriendly(slot, PR_TRUE, wincx);
 	if (rv != SECSuccess) {

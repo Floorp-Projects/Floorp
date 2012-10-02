@@ -29,6 +29,10 @@ var Utils = {
     return this._AccRetrieval;
   },
 
+  set MozBuildApp(value) {
+    this._buildApp = value;
+  },
+
   get MozBuildApp() {
     if (!this._buildApp)
       this._buildApp = this._buildAppMap[Services.appinfo.ID];
@@ -39,6 +43,13 @@ var Utils = {
     if (!this._OS)
       this._OS = Services.appinfo.OS;
     return this._OS;
+  },
+
+  get ScriptName() {
+    if (!this._ScriptName)
+      this._ScriptName =
+        (Services.appinfo.processType == 2) ? 'AccessFuContent' : 'AccessFu';
+    return this._ScriptName;
   },
 
   get AndroidSdkVersion() {
@@ -71,24 +82,41 @@ var Utils = {
     }
   },
 
-  getCurrentContentDoc: function getCurrentContentDoc(aWindow) {
-    if (this.MozBuildApp == "b2g")
-      return this.getBrowserApp(aWindow).contentBrowser.contentDocument;
-    return this.getBrowserApp(aWindow).selectedBrowser.contentDocument;
+  getCurrentBrowser: function getCurrentBrowser(aWindow) {
+    if (this.MozBuildApp == 'b2g')
+      return this.getBrowserApp(aWindow).contentBrowser;
+    return this.getBrowserApp(aWindow).selectedBrowser;
   },
 
-  getAllDocuments: function getAllDocuments(aWindow) {
-    let doc = this.AccRetrieval.
-      getAccessibleFor(this.getCurrentContentDoc(aWindow)).
-      QueryInterface(Ci.nsIAccessibleDocument);
-    let docs = [];
-    function getAllDocuments(aDocument) {
-      docs.push(aDocument.DOMDocument);
-      for (let i = 0; i < aDocument.childDocumentCount; i++)
-        getAllDocuments(aDocument.getChildDocumentAt(i));
+  getCurrentContentDoc: function getCurrentContentDoc(aWindow) {
+    return this.getCurrentBrowser(aWindow).contentDocument;
+  },
+
+  getMessageManager: function getMessageManager(aBrowser) {
+    try {
+      return aBrowser.QueryInterface(Ci.nsIFrameLoaderOwner).
+         frameLoader.messageManager;
+    } catch (x) {
+      Logger.error(x);
+      return null;
     }
-    getAllDocuments(doc);
-    return docs;
+  },
+
+  getAllMessageManagers: function getAllMessageManagers(aWindow) {
+    let messageManagers = [];
+
+    for (let i = 0; i < aWindow.messageManager.childCount; i++)
+      messageManagers.push(aWindow.messageManager.getChildAt(i));
+
+    let remoteframes = this.getCurrentContentDoc(aWindow).
+      querySelectorAll('iframe[remote=true]');
+
+    for (let i = 0; i < remoteframes.length; ++i)
+      messageManagers.push(this.getMessageManager(remoteframes[i]));
+
+    Logger.info(messageManagers.length);
+
+    return messageManagers;
   },
 
   getViewport: function getViewport(aWindow) {
@@ -123,83 +151,6 @@ var Utils = {
     }
 
     return null;
-  },
-
-  scroll: function scroll(aWindow, aPage, aHorizontal) {
-    for each (let doc in this.getAllDocuments(aWindow)) {
-      // First see if we could scroll a window.
-      let win = doc.defaultView;
-      if (!aHorizontal && win.scrollMaxY &&
-          ((aPage > 0 && win.scrollY < win.scrollMaxY) ||
-           (aPage < 0 && win.scrollY > 0))) {
-        win.scroll(0, win.innerHeight);
-        return true;
-      } else if (aHorizontal && win.scrollMaxX &&
-                 ((aPage > 0 && win.scrollX < win.scrollMaxX) ||
-                  (aPage < 0 && win.scrollX > 0))) {
-        win.scroll(win.innerWidth, 0);
-        return true;
-      }
-
-      // Second, try to scroll main section or current target if there is no
-      // main section.
-      let main = doc.querySelector('[role=main]') ||
-        doc.querySelector(':target');
-
-      if (main) {
-        if ((!aHorizontal && main.clientHeight < main.scrollHeight) ||
-          (aHorizontal && main.clientWidth < main.scrollWidth)) {
-          let s = win.getComputedStyle(main);
-          if (!aHorizontal) {
-            if (s.overflowY == 'scroll' || s.overflowY == 'auto') {
-              main.scrollTop += aPage * main.clientHeight;
-              return true;
-            }
-          } else {
-            if (s.overflowX == 'scroll' || s.overflowX == 'auto') {
-              main.scrollLeft += aPage * main.clientWidth;
-              return true;
-            }
-          }
-        }
-      }
-    }
-
-    return false;
-  },
-
-  changePage: function changePage(aWindow, aPage) {
-    for each (let doc in this.getAllDocuments(aWindow)) {
-      // Get current main section or active target.
-      let main = doc.querySelector('[role=main]') ||
-        doc.querySelector(':target');
-      if (!main)
-        continue;
-
-      let mainAcc = this.AccRetrieval.getAccessibleFor(main);
-      if (!mainAcc)
-        continue;
-
-      let controllers = mainAcc.
-        getRelationByType(Ci.nsIAccessibleRelation.RELATION_CONTROLLED_BY);
-
-      for (var i=0; controllers.targetsCount > i; i++) {
-        let controller = controllers.getTarget(i);
-        // If the section has a controlling slider, it should be considered
-        // the page-turner.
-        if (controller.role == Ci.nsIAccessibleRole.ROLE_SLIDER) {
-          // Sliders are controlled with ctrl+right/left. I just decided :)
-          let evt = doc.createEvent("KeyboardEvent");
-          evt.initKeyEvent('keypress', true, true, null,
-                           true, false, false, false,
-                           (aPage > 0) ? evt.DOM_VK_RIGHT : evt.DOM_VK_LEFT, 0);
-          controller.DOMNode.dispatchEvent(evt);
-          return true;
-        }
-      }
-    }
-
-    return false;
   }
 };
 
@@ -217,7 +168,8 @@ var Logger = {
       return;
 
     let message = Array.prototype.slice.call(arguments, 1).join(' ');
-    dump('[AccessFu] ' + this._LEVEL_NAMES[aLogLevel] + ' ' + message + '\n');
+    dump('[' + Utils.ScriptName + '] ' +
+         this._LEVEL_NAMES[aLogLevel] +' ' + message + '\n');
   },
 
   info: function info() {

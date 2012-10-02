@@ -554,6 +554,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "WebGLContext.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/HTMLCollectionBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

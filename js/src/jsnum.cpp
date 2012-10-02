@@ -1344,6 +1344,7 @@ NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
 JS_PUBLIC_API(bool)
 ToNumberSlow(JSContext *cx, Value v, double *out)
 {
+    AutoAssertCanGC cangc;
 #ifdef DEBUG
     /*
      * MSVC bizarrely miscompiles this, complaining about the first brace below

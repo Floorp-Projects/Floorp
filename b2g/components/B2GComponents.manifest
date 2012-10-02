@@ -42,6 +42,18 @@ contract @mozilla.org/uriloader/content-handler;1?type=application/pdf {d18d0216
 component {8b83eabc-7929-47f4-8b48-4dea8d887e4b} PaymentGlue.js
 contract @mozilla.org/payment/ui-glue;1 {8b83eabc-7929-47f4-8b48-4dea8d887e4b}
 
+# TelProtocolHandler.js
+component {782775dd-7351-45ea-aff1-0ffa872cfdd2} TelProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=tel {782775dd-7351-45ea-aff1-0ffa872cfdd2}
+
+# SmsProtocolHandler.js
+component {81ca20cb-0dad-4e32-8566-979c8998bd73} SmsProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=sms {81ca20cb-0dad-4e32-8566-979c8998bd73}
+
+# MailtoProtocolHandler.js
+component {50777e53-0331-4366-a191-900999be386c} MailtoProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=mailto {50777e53-0331-4366-a191-900999be386c}
+
 # YoutubeProtocolHandler.js
 component {c3f1b945-7e71-49c8-95c7-5ae9cc9e2bad} YoutubeProtocolHandler.js
 contract @mozilla.org/network/protocol;1?name=vnd.youtube {c3f1b945-7e71-49c8-95c7-5ae9cc9e2bad}

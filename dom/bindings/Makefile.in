@@ -58,6 +58,7 @@ EXPORTS_$(binding_include_path) = \
   DOMJSClass.h \
   DOMJSProxyHandler.h \
   Errors.msg \
+  NonRefcountedDOMObject.h \
   Nullable.h \
   PrimitiveConversions.h \
   PrototypeList.h \

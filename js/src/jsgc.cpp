@@ -4670,12 +4670,14 @@ namespace js {
 void
 GC(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
+    AutoAssertCanGC cangc;
     Collect(rt, false, SliceBudget::Unlimited, gckind, reason);
 }
 
 void
 GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason, int64_t millis)
 {
+    AutoAssertCanGC cangc;
     int64_t sliceBudget;
     if (millis)
         sliceBudget = SliceBudget::TimeBudget(millis);
@@ -4690,12 +4692,14 @@ GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason, int64
 void
 GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
+    AutoAssertCanGC cangc;
     Collect(rt, true, SliceBudget::Unlimited, gckind, reason);
 }
 
 void
 GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
 {
+    AutoAssertCanGC cangc;
     int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
     PrepareForDebugGC(rt);
     Collect(rt, true, budget, GC_NORMAL, gcreason::API);
