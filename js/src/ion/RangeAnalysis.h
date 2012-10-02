@@ -88,6 +88,14 @@ class Range {
       upper_(other.upper_),
       upper_infinite_(other.upper_infinite_)
     {}
+    static Range Truncate(int64_t l, int64_t h) {
+        Range ret(l,h);
+        if (!ret.isFinite()) {
+            ret.makeLowerInfinite();
+            ret.makeUpperInfinite();
+        }
+        return ret;
+    }
 
     static int64_t abs64(int64_t x) {
 #ifdef WTF_OS_WINDOWS
@@ -110,6 +118,8 @@ class Range {
     void unionWith(const Range *other);
     void unionWith(RangeChangeCount *other);
     static Range intersect(const Range *lhs, const Range *rhs, bool *nullRange);
+    static Range addTruncate(const Range *lhs, const Range *rhs);
+    static Range subTruncate(const Range *lhs, const Range *rhs);
     static Range add(const Range *lhs, const Range *rhs);
     static Range sub(const Range *lhs, const Range *rhs);
     static Range mul(const Range *lhs, const Range *rhs);
