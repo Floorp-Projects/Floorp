@@ -165,7 +165,7 @@ struct IonOptions
         lsra(true),
         inlining(true),
         edgeCaseAnalysis(true),
-        rangeAnalysis(false),
+        rangeAnalysis(true),
         parallelCompilation(false),
         usesBeforeCompile(10240),
         usesBeforeCompileNoJaeger(40),
