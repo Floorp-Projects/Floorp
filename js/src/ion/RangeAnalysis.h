@@ -69,8 +69,8 @@ class Range {
         bool upper_infinite_;
 
     public:
-        Range() :
-            lower_(JSVAL_INT_MIN),
+        Range()
+          : lower_(JSVAL_INT_MIN),
             lower_infinite_(true),
             upper_(JSVAL_INT_MAX),
             upper_infinite_(true)
@@ -80,6 +80,13 @@ class Range {
             setLower(l);
             setUpper(h);
         }
+
+        Range(const Range &other)
+          : lower_(other.lower_),
+            lower_infinite_(other.lower_infinite_),
+            upper_(other.upper_),
+            upper_infinite_(other.upper_infinite_)
+        {}
 
         static int64_t abs64(int64_t x) {
 #ifdef WTF_OS_WINDOWS
