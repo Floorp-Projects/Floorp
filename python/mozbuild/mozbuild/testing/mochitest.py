@@ -45,10 +45,6 @@ class MochitestRunner(MozbuildObject):
         suite is the type of mochitest to run. It can be one of ('plain',
         'chrome', 'browser').
         """
-        if test_file is None:
-            raise Exception('test_file must be defined.')
-
-        parsed = self._parse_test_path(test_file)
 
         # TODO hook up harness via native Python
         target = None
@@ -61,7 +57,13 @@ class MochitestRunner(MozbuildObject):
         else:
             raise Exception('None or unrecognized mochitest suite type.')
 
-        env = {'TEST_PATH': parsed['normalized']}
+        if test_file:
+            path = self._parse_test_path(test_file)['normalized']
+            if not os.path.exists(path):
+                raise Exception('No manifest file was found at %s.' % path)
+            env = {'TEST_PATH': path}
+        else:
+            env = {}
 
         self._run_make(directory='.', target=target, append_env=env)
 
