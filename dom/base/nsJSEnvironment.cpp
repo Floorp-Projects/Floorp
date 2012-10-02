@@ -3145,7 +3145,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     }
   }
 
-  if (sPostGCEventsToConsole || sPostGCEventsToObserver) {
+  if (sPostGCEventsToObserver) {
     NS_NAMED_MULTILINE_LITERAL_STRING(kJSONFmt,
        NS_LL("{ \"timestamp\": %llu, ")
          NS_LL("\"duration\": %llu, ")
@@ -3506,7 +3506,7 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
       }
     }
 
-    if (sPostGCEventsToConsole || sPostGCEventsToObserver) {
+    if (sPostGCEventsToObserver) {
       nsString json;
       json.Adopt(aDesc.formatJSON(aRt, PR_Now()));
       nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
