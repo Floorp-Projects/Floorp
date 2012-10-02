@@ -19,7 +19,7 @@ class nsPluginEvent;
 
 // Do not make this interface scriptable, because the virtual functions in C++
 // blocks will make script call the wrong functions.
-[uuid(23bd0a76-a5dc-4a1d-be76-13d7a0dfd9ff)]
+[uuid(CE1EE148-B201-4DC7-8A65-311143EA01BF)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -119,4 +119,10 @@ interface nsIPluginInstanceOwner : nsISupports
    * Call NPP_SetWindow on the plugin.
    */
   void callSetWindow();
+
+  /**
+   * Get the contents scale factor for the screen the plugin is
+   * drawn on.
+   */
+  double getContentsScaleFactor();
 };
