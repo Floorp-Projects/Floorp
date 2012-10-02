@@ -121,6 +121,11 @@ class LoggingManager(object):
         self.root_logger = logging.getLogger()
         self.root_logger.setLevel(logging.DEBUG)
 
+        # Installing NullHandler on the root logger ensures that *all* log
+        # messages have at least one handler. This prevents Python from
+        # complaining about "no handlers could be found for logger XXX."
+        self.root_logger.addHandler(logging.NullHandler())
+
         self.mozbuild_logger = logging.getLogger('mozbuild')
         self.mozbuild_logger.setLevel(logging.DEBUG)
 
