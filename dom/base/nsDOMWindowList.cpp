@@ -85,26 +85,34 @@ nsDOMWindowList::GetLength(uint32_t* aLength)
   return NS_OK;
 }
 
+already_AddRefed<nsIDOMWindow>
+nsDOMWindowList::IndexedGetter(uint32_t aIndex, bool& aFound)
+{
+  EnsureFresh();
+
+  aFound = false;
+  NS_ENSURE_TRUE(mDocShellNode, nullptr);
+
+  nsCOMPtr<nsIDocShellTreeItem> item;
+  mDocShellNode->GetChildAt(aIndex, getter_AddRefs(item));
+
+  if (!item) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(item);
+  MOZ_ASSERT(window);
+
+  aFound = true;
+  return window.forget();
+}
+
 NS_IMETHODIMP 
 nsDOMWindowList::Item(uint32_t aIndex, nsIDOMWindow** aReturn)
 {
-  nsCOMPtr<nsIDocShellTreeItem> item;
-
-  *aReturn = nullptr;
-
-  EnsureFresh();
-
-  if (mDocShellNode) {
-    mDocShellNode->GetChildAt(aIndex, getter_AddRefs(item));
-
-    nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
-    NS_ASSERTION(!item || (item && globalObject),
-                 "Couldn't get to the globalObject");
-
-    if (globalObject) {
-      CallQueryInterface(globalObject, aReturn);
-    }
-  }
+  bool found;
+  nsCOMPtr<nsIDOMWindow> window = IndexedGetter(aIndex, found);
+  window.forget(aReturn);
   return NS_OK;
 }
 

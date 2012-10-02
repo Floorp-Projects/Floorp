@@ -392,6 +392,7 @@ public:
 
   // WebIDL interface.
   uint32_t GetLength();
+  already_AddRefed<nsIDOMWindow> IndexedGetter(uint32_t aIndex, bool& aFound);
 
   // Object Management
   nsGlobalWindow(nsGlobalWindow *aOuterWindow);
