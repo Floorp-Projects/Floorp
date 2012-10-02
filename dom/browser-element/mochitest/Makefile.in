@@ -93,9 +93,6 @@ MOCHITEST_FILES = \
 		browserElement_CloseFromOpener.js \
 		test_browserElement_inproc_CloseFromOpener.html \
 		file_browserElement_CloseFromOpener.html \
-		browserElement_CloseApp.js \
-		test_browserElement_inproc_CloseApp.html \
-		file_browserElement_CloseApp.html \
 		browserElement_OpenWindow.js \
 		test_browserElement_inproc_OpenWindow.html \
 		file_browserElement_Open1.html \
@@ -181,7 +178,6 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_PromptConfirm.html \
 		test_browserElement_oop_Close.html \
 		test_browserElement_oop_CloseFromOpener.html \
-		test_browserElement_oop_CloseApp.html \
 		test_browserElement_oop_OpenWindow.html \
 		test_browserElement_oop_OpenWindowInFrame.html \
 		test_browserElement_oop_OpenWindowRejected.html \
