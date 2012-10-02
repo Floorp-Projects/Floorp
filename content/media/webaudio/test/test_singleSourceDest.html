@@ -41,9 +41,9 @@ addLoadEvent(function() {
   is(destination.numberOfInputs, 1, "Destination node has 0 inputs");
   is(destination.numberOfOutputs, 0, "Destination node has 0 outputs");
 
-  source.noteOn(0);
+  source.start(0);
   SimpleTest.executeSoon(function() {
-    source.noteOff(0);
+    source.stop(0);
     source.disconnect();
 
     SpecialPowers.clearUserPref("media.webaudio.enabled");
