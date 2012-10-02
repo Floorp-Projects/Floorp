@@ -1,40 +1,8 @@
 #! gmake
 #
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is the Netscape security libraries.
-#
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1994-2000
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #######################################################################
 # (1) Include initial platform-independent assignments (MANDATORY).   #
@@ -183,3 +151,32 @@ nss_RelEng_bld: build_coreconf import build_dbm all
 
 package:
 	$(MAKE) -C pkg publish
+
+TESTPACKAGE="nss-$(OS_TARGET)$(CPU_TAG).tgz"
+package_for_testing:
+	echo "export OBJDIR=$(OBJDIR_NAME)"     > $(DIST)/platform.cfg
+	echo "export OS_ARCH=$(ANDROID)"       >> $(DIST)/platform.cfg
+	echo "export DLL_PREFIX=$(DLL_PREFIX)" >> $(DIST)/platform.cfg
+	echo "export DLL_SUFFIX=$(DLL_SUFFIX)" >> $(DIST)/platform.cfg
+ifeq ($(OS_TARGET),Android)
+	# Android doesn't support FIPS tests, so don't run them
+	echo "export NSS_TEST_DISABLE_FIPS=1"  >> $(DIST)/platform.cfg
+endif
+	echo 'echo "set HOST and DOMSUF if your system is not registered in DNS"; sleep 5' > $(DIST)/../../runtests.sh
+	echo 'export NSS_TESTS=$(NSS_TESTS)'         >> $(DIST)/../../runtests.sh
+	echo 'export NSS_SSL_TESTS=$(NSS_SSL_TESTS)' >> $(DIST)/../../runtests.sh
+	echo 'export NSS_SSL_RUN=$(NSS_SSL_RUN)'     >> $(DIST)/../../runtests.sh
+	echo 'export NSS_CYCLES=$(NSS_CYCLES)'       >> $(DIST)/../../runtests.sh
+	echo 'export OBJDIR=$(OBJDIR_NAME)'          >> $(DIST)/../../runtests.sh
+	echo 'export USE_64=$(USE_64)'               >> $(DIST)/../../runtests.sh
+	echo 'export BUILD_OPT=$(BUILD_OPT)'         >> $(DIST)/../../runtests.sh
+	echo 'rm -rf test_results'                   >> $(DIST)/../../runtests.sh
+	echo 'echo "running tests"'                  >> $(DIST)/../../runtests.sh
+	echo 'cd security/nss/tests; ./all.sh > ../../../logfile 2>&1 ; cd ../../../' >> $(DIST)/../../runtests.sh
+	echo 'tar czf tests_results.tgz tests_results' >> $(DIST)/../../runtests.sh
+	echo 'echo "created tests_results.tgz"' >> $(DIST)/../../runtests.sh
+	echo 'echo "results are in directory: "`ls -1d tests_results/security/*.1`' >> $(DIST)/../../runtests.sh
+	echo 'echo -n "number of PASSED tests: "; grep -cw PASSED logfile;'  >> $(DIST)/../../runtests.sh
+	echo 'echo -n "number of FAILED tests: "; grep -cw FAILED logfile;'  >> $(DIST)/../../runtests.sh
+	rm -f $(TESTPACKAGE)
+	(cd $(DIST)/../.. ; tar czhf dist/$(TESTPACKAGE) runtests.sh dist/$(OBJDIR_NAME) dist/public security/nss/tests security/nss/cmd/bltest/tests; echo "created "`pwd`"/dist/$(TESTPACKAGE)")

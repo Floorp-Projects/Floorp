@@ -1,42 +1,8 @@
 #! /bin/bash
 #
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is the Netscape security libraries.
-#
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1994-2009
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
-#   Slavomir Katuscak <slavomir.katuscak@sun.com>, Sun Microsystems
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ########################################################################
 #
@@ -300,9 +266,12 @@ ssl_cov()
 
   mixed=0
   start_selfserv # Launch the server
+
+  VMIN="ssl2"
+  VMAX="tls1.1"
                
   exec < ${SSLCOV}
-  while read ectype tls param testname
+  while read ectype testmax param testname
   do
       echo "${testname}" | grep "EXPORT" > /dev/null 
       EXP=$?
@@ -312,11 +281,13 @@ ssl_cov()
       if [ "${SSL2}" -eq 0 ] ; then
           # We cannot use asynchronous cert verification with SSL2
           SSL2_FLAGS=-O
+          VMIN="ssl2"
       else
           # Do not enable SSL2 for non-SSL2-specific tests. SSL2 is disabled by
           # default in libssl but it is enabled by default in tstclnt; we want
           # to test the libssl default whenever possible.
-          SSL2_FLAGS=-2
+          SSL2_FLAGS=
+          VMIN="ssl3"
       fi
       
       if [ "$NORM_EXT" = "Extended Test" -a "${SSL2}" -eq 0 ] ; then
@@ -327,9 +298,12 @@ ssl_cov()
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
       elif [ "`echo $ectype | cut -b 1`" != "#" ] ; then
           echo "$SCRIPTNAME: running $testname ----------------------------"
-          TLS_FLAG=-T
-          if [ "$tls" = "TLS" ]; then
-              TLS_FLAG=""
+          VMAX="ssl3"
+          if [ "$testmax" = "TLS" ]; then
+              VMAX="tls1.0"
+          fi
+          if [ "$testmax" = "TLS11" ]; then
+              VMAX="tls1.1"
           fi
 
 # These five tests need an EC cert signed with RSA
@@ -360,11 +334,11 @@ ssl_cov()
             fi
           fi
 
-          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${SSL2_FLAGS} ${CLIENT_OPTIONS} \\"
+          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${SSL2_FLAGS} ${CLIENT_OPTIONS} \\"
           echo "        -f -d ${P_R_CLIENTDIR} -v -w nss < ${REQUEST_FILE}"
 
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${SSL2_FLAGS} ${CLIENT_OPTIONS} -f \
+          ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${SSL2_FLAGS} ${CLIENT_OPTIONS} -f \
                   -d ${P_R_CLIENTDIR} -v -w nss < ${REQUEST_FILE} \
                   >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?
@@ -651,13 +625,13 @@ load_group_crl() {
         echo "================= Reloading ${eccomment}CRL for group $grpBegin - $grpEnd ============="
 
         echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} -v \\"
-        echo "          -2 -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix}"
+        echo "          -V ssl3: -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix}"
         echo "Request:"
         echo "GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}${ecsuffix}"
         echo ""
         echo "RELOAD time $i"
         ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f  \
-            -d ${R_CLIENTDIR} -v -2 -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix} \
+            -d ${R_CLIENTDIR} -v -V ssl3: -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix} \
 	    >${OUTFILE_TMP}  2>&1 <<_EOF_REQUEST_
 GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}${ecsuffix}
 
@@ -890,7 +864,7 @@ ssl_set_fips()
     if [ ${CLTSRV} = "server" ]; then
         DBDIRS="${SERVERDIR} ${EXT_SERVERDIR}"
     else
-        DBDIRS="${CLIETNDIR} ${EXT_CLIENTDIR}"
+        DBDIRS="${CLIENTDIR} ${EXT_CLIENTDIR}"
     fi
     
     if [ "${ONOFF}" = "on" ]; then

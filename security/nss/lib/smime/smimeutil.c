@@ -1,43 +1,11 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.23 2012/03/01 18:33:11 kaie%kuix.de Exp $
+ * $Id: smimeutil.c,v 1.25 2012/05/17 17:55:52 kaie%kuix.de Exp $
  */
 
 #include "secmime.h"
@@ -393,10 +361,14 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
     int *cipher_votes;
     int weak_mapi;
     int strong_mapi;
+    int aes128_mapi;
+    int aes256_mapi;
     int rcount, mapi, max, i;
 
     chosen_cipher = SMIME_RC2_CBC_40;		/* the default, LCD */
     weak_mapi = smime_mapi_by_cipher(chosen_cipher);
+    aes128_mapi = smime_mapi_by_cipher(SMIME_AES_CBC_128);
+    aes256_mapi = smime_mapi_by_cipher(SMIME_AES_CBC_256);
 
     poolp = PORT_NewArena (1024);		/* XXX what is right value? */
     if (poolp == NULL)
@@ -446,9 +418,13 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
 	    }
 	} else {
 	    /* no profile found - so we can only assume that the user can do
-	     * the mandatory algorithms which is RC2-40 (weak crypto) and 3DES (strong crypto) */
+	     * the mandatory algorithms which are RC2-40 (weak crypto) and
+	     * 3DES (strong crypto), unless the user has an elliptic curve
+	     * key.  For elliptic curve keys, RFC 5753 mandates support
+	     * for AES 128 CBC. */
 	    SECKEYPublicKey *key;
 	    unsigned int pklen_bits;
+	    KeyType key_type;
 
 	    /*
 	     * if recipient's public key length is > 512, vote for a strong cipher
@@ -464,20 +440,41 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
 	    key = CERT_ExtractPublicKey(rcerts[rcount]);
 	    pklen_bits = 0;
 	    if (key != NULL) {
-		pklen_bits = SECKEY_PublicKeyStrength (key) * 8;
+		pklen_bits = SECKEY_PublicKeyStrengthInBits (key);
+		key_type = SECKEY_GetPublicKeyType(key);
 		SECKEY_DestroyPublicKey (key);
 	    }
 
-	    if (pklen_bits > 512) {
-		/* cast votes for the strong algorithm */
+	    if (key_type == ecKey) {
+		/* While RFC 5753 mandates support for AES-128 CBC, should use
+		 * AES 256 if user's key provides more than 128 bits of
+		 * security strength so that symmetric key is not weak link. */
+
+		/* RC2-40 is not compatible with elliptic curve keys. */
+		chosen_cipher = SMIME_DES_EDE3_168;
+		if (pklen_bits > 256) {
+		    cipher_abilities[aes256_mapi]++;
+		    cipher_votes[aes256_mapi] += pref;
+		    pref--;
+		}
+		cipher_abilities[aes128_mapi]++;
+		cipher_votes[aes128_mapi] += pref;
+		pref--;
 		cipher_abilities[strong_mapi]++;
 		cipher_votes[strong_mapi] += pref;
 		pref--;
-	    } 
+	    } else {
+		if (pklen_bits > 512) {
+		    /* cast votes for the strong algorithm */
+		    cipher_abilities[strong_mapi]++;
+		    cipher_votes[strong_mapi] += pref;
+		    pref--;
+		}
 
-	    /* always cast (possibly less) votes for the weak algorithm */
-	    cipher_abilities[weak_mapi]++;
-	    cipher_votes[weak_mapi] += pref;
+		/* always cast (possibly less) votes for the weak algorithm */
+		cipher_abilities[weak_mapi]++;
+		cipher_votes[weak_mapi] += pref;
+	    } 
 	}
 	if (profile != NULL)
 	    SECITEM_FreeItem(profile, PR_TRUE);
