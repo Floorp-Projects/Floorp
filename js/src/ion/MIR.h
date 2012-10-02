@@ -61,6 +61,8 @@ class MUse;
 class MIRGraph;
 class MResumePoint;
 
+static inline bool isOSRLikeValue (MDefinition *def);
+
 // Represents a use of a node.
 class MUse : public TempObject, public InlineForwardListNode<MUse>
 {
@@ -1919,6 +1921,12 @@ class MBitAnd : public MBinaryBitwiseInstruction
     MDefinition *foldIfEqual() {
         return getOperand(0); // x & x => x;
     }
+    bool recomputeRange() {
+        Range *left = getOperand(0)->range();
+        Range *right = getOperand(1)->range();
+        return range()->update(Range::and_(left, right));
+    }
+
 };
 
 class MBitOr : public MBinaryBitwiseInstruction
@@ -2752,16 +2760,17 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-
     bool recomputeRange() {
         if (type() != MIRType_Int32)
             return false;
 
         Range r;
         r.update(getOperand(0)->range());
-
-        for (size_t i = 0; i < numOperands(); i++)
-            r.unionWith(getOperand(i)->range());
+        JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
+        for (size_t i = 0; i < numOperands(); i++) {
+            if (!isOSRLikeValue(getOperand(i)))
+                r.unionWith(getOperand(i)->range(), true);
+        }
 
         return range()->update(&r);
     }
@@ -5623,6 +5632,16 @@ void MNode::initOperand(size_t index, MDefinition *ins)
 {
     setOperand(index, ins);
     ins->addUse(this, index);
+}
+static inline bool isOSRLikeValue (MDefinition *def) {
+    if (def->isOsrValue())
+        return true;
+
+    if (def->isUnbox())
+        if (def->getOperand(0)->isOsrValue())
+            return true;
+
+    return false;
 }
 
 typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
