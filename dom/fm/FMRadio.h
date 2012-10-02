@@ -43,10 +43,6 @@ private:
   ~FMRadio();
   bool mHasInternalAntenna;
   hal::SwitchState mHeadphoneState;
-  /**
-   * Dispatch a trusted non-cancellable and no-bubbling event to itself
-   */
-  nsresult DispatchTrustedEventToSelf(const nsAString& aEventName);
 };
 
 } // namespace fm

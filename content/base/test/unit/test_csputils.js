@@ -159,29 +159,29 @@ test(
     function test_CSPSource_fromString() {
     // can't do these tests because "self" is not defined.
       //"basic source should not be null.");
-      do_check_neq(null, CSPSource.fromString("a.com", "http://abc.com"));
+      do_check_neq(null, CSPSource.fromString("a.com", undefined, "http://abc.com"));
 
       //"ldh characters should all work for host.");
-      do_check_neq(null, CSPSource.fromString("a2-c.com", "https://a.com"));
+      do_check_neq(null, CSPSource.fromString("a2-c.com", undefined, "https://a.com"));
 
       //"wildcard should work in first token for host.");
-      do_check_neq(null, CSPSource.fromString("*.a.com", "http://abc.com"));
+      do_check_neq(null, CSPSource.fromString("*.a.com", undefined, "http://abc.com"));
 
       //print(" --- Ignore the following two errors if they print ---");
       //"wildcard should not work in non-first token for host.");
-      do_check_eq(null, CSPSource.fromString("x.*.a.com", "http://a.com"));
+      do_check_eq(null, CSPSource.fromString("x.*.a.com", undefined, "http://a.com"));
 
       //"funny characters (#) should not work for host.");
-      do_check_eq(null, CSPSource.fromString("a#2-c.com", "http://a.com"));
+      do_check_eq(null, CSPSource.fromString("a#2-c.com", undefined, "http://a.com"));
 
       //print(" --- Stop ignoring errors that print ---\n");
 
       //"failed to parse host with port.");
-      do_check_neq(null, CSPSource.create("a.com:23", "http://a.com"));
+      do_check_neq(null, CSPSource.create("a.com:23", undefined, "http://a.com"));
       //"failed to parse host with scheme.");
-      do_check_neq(null, CSPSource.create("https://a.com", "http://a.com"));
+      do_check_neq(null, CSPSource.create("https://a.com", undefined, "http://a.com"));
       //"failed to parse host with scheme and port.");
-      do_check_neq(null, CSPSource.create("https://a.com:200", "http://a.com"));
+      do_check_neq(null, CSPSource.create("https://a.com:200", undefined, "http://a.com"));
 
       //Check to make sure we don't match multiple instances with regex
       do_check_eq(null, CSPSource.create("http://foo.com:bar.com:23"));
@@ -193,7 +193,7 @@ test(
 test(
     function test_CSPSource_fromString_withSelf() {
       var src;
-      src = CSPSource.create("a.com", "https://foobar.com:443");
+      src = CSPSource.create("a.com", undefined, "https://foobar.com:443");
       //"src should inherit port *
       do_check_true(src.permits("https://a.com:443"));
       //"src should inherit and require https scheme
@@ -201,7 +201,7 @@ test(
       //"src should inherit scheme 'https'"
       do_check_true(src.permits("https://a.com"));
 
-      src = CSPSource.create("http://a.com", "https://foobar.com:443");
+      src = CSPSource.create("http://a.com", undefined, "https://foobar.com:443");
       //"src should inherit and require http scheme"
       do_check_false(src.permits("https://a.com"));
       //"src should inherit scheme 'http'"
@@ -210,7 +210,7 @@ test(
       //"src should inherit default port for 'http'"
       do_check_true(src.permits("http://a.com:80"));
 
-      src = CSPSource.create("'self'", "https://foobar.com:443");
+      src = CSPSource.create("'self'", undefined, "https://foobar.com:443");
       //"src should inherit port *
       do_check_true(src.permits("https://foobar.com:443"));
       //"src should inherit and require https scheme
@@ -220,7 +220,7 @@ test(
       //"src should reject other hosts"
       do_check_false(src.permits("https://a.com"));
 
-      src = CSPSource.create("javascript:", "https://foobar.com:443");
+      src = CSPSource.create("javascript:", undefined, "https://foobar.com:443");
       //"hostless schemes should be parseable."
       var aUri = NetUtil.newURI("javascript:alert('foo');");
       do_check_true(src.permits(aUri));
@@ -260,7 +260,7 @@ test(
     function test_CSPSourceList_fromString_twohost() {
       var str = "foo.bar:21 https://ras.bar";
       var parsed = "http://foo.bar:21 https://ras.bar:443";
-      var sd = CSPSourceList.fromString(str, URI("http://self.com:80"));
+      var sd = CSPSourceList.fromString(str, undefined, URI("http://self.com:80"));
       //"two-host list should parse"
       do_check_neq(null,sd);
       //"two-host list should parse to two hosts"
@@ -272,8 +272,9 @@ test(
 test(
     function test_CSPSourceList_permits() {
       var nullSourceList = CSPSourceList.fromString("'none'");
-      var simpleSourceList = CSPSourceList.fromString("a.com", URI("http://self.com"));
+      var simpleSourceList = CSPSourceList.fromString("a.com", undefined, URI("http://self.com"));
       var doubleSourceList = CSPSourceList.fromString("https://foo.com http://bar.com:88",
+                                                      undefined,
                                                       URI("http://self.com:88"));
       var allSourceList = CSPSourceList.fromString("*");
       var allAndMoreSourceList = CSPSourceList.fromString("* https://bar.com 'none'");
@@ -680,7 +681,7 @@ test(
        */
 
       var src;
-      src = CSPSource.create("a.com", "https://foobar.com:4443");
+      src = CSPSource.create("a.com", undefined, "https://foobar.com:4443");
       //"src should inherit and require https scheme
       do_check_false(src.permits("http://a.com"));
       //"src should inherit scheme 'https'"
@@ -688,7 +689,7 @@ test(
       //"src should get default port
       do_check_true(src.permits("https://a.com:443"));
 
-      src = CSPSource.create("http://a.com", "https://foobar.com:4443");
+      src = CSPSource.create("http://a.com", undefined, "https://foobar.com:4443");
       //"src should require http scheme"
       do_check_false(src.permits("https://a.com"));
       //"src should keep scheme 'http'"
@@ -696,7 +697,7 @@ test(
       //"src should inherit default port for 'http'"
       do_check_true(src.permits("http://a.com:80"));
 
-      src = CSPSource.create("'self'", "https://foobar.com:4443");
+      src = CSPSource.create("'self'", undefined, "https://foobar.com:4443");
       //"src should inherit nonstandard port from self
       do_check_true(src.permits("https://foobar.com:4443"));
       do_check_false(src.permits("https://foobar.com"));
@@ -716,9 +717,9 @@ test(
        * doesn't happen.
        */
 
-      var p_none = CSPSourceList.fromString("'none'", "http://foo.com", false);
-      var p_all = CSPSourceList.fromString("*", "http://foo.com", false);
-      var p_one = CSPSourceList.fromString("bar.com", "http://foo.com", false);
+      var p_none = CSPSourceList.fromString("'none'", undefined, "http://foo.com", false);
+      var p_all = CSPSourceList.fromString("*", undefined, "http://foo.com", false);
+      var p_one = CSPSourceList.fromString("bar.com", undefined, "http://foo.com", false);
 
       do_check_false(p_none.equals(p_all));
       do_check_false(p_none.equals(p_one));

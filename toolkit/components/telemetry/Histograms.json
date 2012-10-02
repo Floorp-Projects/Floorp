@@ -2235,6 +2235,44 @@
     "description": "Number of history entries in the original XUL places database",
     "cpp_guard": "ANDROID"
   },
+  "FENNEC_AWESOMEBAR_ALLPAGES_EMPTY_TIME": {
+    "kind": "exponential",
+    "low": 10,
+    "high": "20000",
+    "n_buckets": 20,
+    "description": "Fennec: Time for the Awesomebar Top Sites query to return with no filter set (ms)",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_STARTUP_TIME_JAVAUI": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "5000",
+    "n_buckets": 20,
+    "description": "Time for the Java UI to load (ms)",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_STARTUP_TIME_ABOUTHOME": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "10000",
+    "n_buckets": 20,
+    "description": "Time for the about:home page to be displayed (ms)",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_STARTUP_TIME_GECKOREADY": {
+    "kind": "exponential",
+    "low": 500,
+    "high": "20000",
+    "n_buckets": 20,
+    "description": "Time for the Gecko:Ready message to arrive (ms)",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_STARTUP_GECKOAPP_ACTION": {
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, Redirector)",
+    "cpp_guard": "ANDROID"
+  },
   "OUT_OF_MEMORY_KILLED": {
     "kind": "flag",
     "description": "Killed due to an OOM condition",

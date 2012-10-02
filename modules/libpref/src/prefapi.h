@@ -12,7 +12,9 @@
 #include "nscore.h"
 #include "pldhash.h"
 
-PR_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef union
 {
@@ -178,5 +180,7 @@ void PREF_ReaderCallback( void *closure,
                           PrefType    type,
                           bool        isDefault);
 
-PR_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif

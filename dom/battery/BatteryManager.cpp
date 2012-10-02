@@ -118,23 +118,6 @@ BatteryManager::GetChargingTime(double* aChargingTime)
   return NS_OK;
 }
 
-nsresult
-BatteryManager::DispatchTrustedEventToSelf(const nsAString& aEventName)
-{
-  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
-  nsresult rv = event->InitEvent(aEventName, false, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool dummy;
-  rv = DispatchEvent(event, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 void
 BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInfo)
 {
@@ -161,11 +144,11 @@ BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
   UpdateFromBatteryInfo(aBatteryInfo);
 
   if (previousCharging != mCharging) {
-    DispatchTrustedEventToSelf(CHARGINGCHANGE_EVENT_NAME);
+    DispatchTrustedEvent(CHARGINGCHANGE_EVENT_NAME);
   }
 
   if (previousLevel != mLevel) {
-    DispatchTrustedEventToSelf(LEVELCHANGE_EVENT_NAME);
+    DispatchTrustedEvent(LEVELCHANGE_EVENT_NAME);
   }
 
   /*
@@ -179,16 +162,16 @@ BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
    */
   if (mCharging != previousCharging) {
     if (previousRemainingTime != kUnknownRemainingTime) {
-      DispatchTrustedEventToSelf(previousCharging ? CHARGINGTIMECHANGE_EVENT_NAME
-                                                  : DISCHARGINGTIMECHANGE_EVENT_NAME);
+      DispatchTrustedEvent(previousCharging ? CHARGINGTIMECHANGE_EVENT_NAME
+                                            : DISCHARGINGTIMECHANGE_EVENT_NAME);
     }
     if (mRemainingTime != kUnknownRemainingTime) {
-      DispatchTrustedEventToSelf(mCharging ? CHARGINGTIMECHANGE_EVENT_NAME
-                                           : DISCHARGINGTIMECHANGE_EVENT_NAME);
+      DispatchTrustedEvent(mCharging ? CHARGINGTIMECHANGE_EVENT_NAME
+                                     : DISCHARGINGTIMECHANGE_EVENT_NAME);
     }
   } else if (previousRemainingTime != mRemainingTime) {
-    DispatchTrustedEventToSelf(mCharging ? CHARGINGTIMECHANGE_EVENT_NAME
-                                         : DISCHARGINGTIMECHANGE_EVENT_NAME);
+    DispatchTrustedEvent(mCharging ? CHARGINGTIMECHANGE_EVENT_NAME
+                                   : DISCHARGINGTIMECHANGE_EVENT_NAME);
   }
 }
 

@@ -266,6 +266,7 @@ Shape::matchesParamsAfterId(BaseShape *base, uint32_t aslot,
 inline bool
 Shape::getUserId(JSContext *cx, jsid *idp) const
 {
+    AutoAssertCanGC cangc;
     const Shape *self = this;
 #ifdef DEBUG
     {

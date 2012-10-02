@@ -12,10 +12,9 @@ const Cr = Components.results;
 var EXPORTED_SYMBOLS = ['AccessFu'];
 
 Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/Geometry.jsm');
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
-Cu.import('resource://gre/modules/accessibility/Presenters.jsm');
-Cu.import('resource://gre/modules/accessibility/VirtualCursorController.jsm');
 Cu.import('resource://gre/modules/accessibility/TouchAdapter.jsm');
 
 const ACCESSFU_DISABLE = 0;
@@ -24,12 +23,9 @@ const ACCESSFU_AUTO = 2;
 
 var AccessFu = {
   /**
-   * Attach chrome-layer accessibility functionality to the given chrome window.
-   * If accessibility is enabled on the platform (currently Android-only), then
-   * a special accessibility mode is started (see startup()).
-   * @param {ChromeWindow} aWindow Chrome window to attach to.
-   * @param {boolean} aForceEnabled Skip platform accessibility check and enable
-   *  AccessFu.
+   * Initialize chrome-layer accessibility functionality.
+   * If accessibility is enabled on the platform, then a special accessibility
+   * mode is started.
    */
   attach: function attach(aWindow) {
     if (this.chromeWin)
@@ -38,21 +34,19 @@ var AccessFu = {
 
     Logger.info('attach');
     this.chromeWin = aWindow;
-    this.presenters = [];
 
     this.prefsBranch = Cc['@mozilla.org/preferences-service;1']
       .getService(Ci.nsIPrefService).getBranch('accessibility.accessfu.');
     this.prefsBranch.addObserver('activate', this, false);
-    this.prefsBranch.addObserver('explorebytouch', this, false);
 
     this.touchAdapter = TouchAdapter;
 
-    switch(Utils.MozBuildApp) {
+    switch (Utils.MozBuildApp) {
       case 'mobile/android':
         Services.obs.addObserver(this, 'Accessibility:Settings', false);
-        Services.obs.addObserver(this, 'Accessibility:NextObject', false);
-        Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
-        Services.obs.addObserver(this, 'Accessibility:CurrentObject', false);
+        Cc['@mozilla.org/android/bridge;1'].
+          getService(Ci.nsIAndroidBridge).handleGeckoMessage(
+            JSON.stringify({ gecko: { type: 'Accessibility:Ready' } }));
         this.touchAdapter = AndroidTouchAdapter;
         break;
       case 'b2g':
@@ -67,7 +61,13 @@ var AccessFu = {
         break;
     }
 
-    this._processPreferences();
+    try {
+      this._activatePref = this.prefsBranch.getIntPref('activate');
+    } catch (x) {
+      this._activatePref = ACCESSFU_DISABLE;
+    }
+
+    this._enableOrDisable();
   },
 
   /**
@@ -81,30 +81,24 @@ var AccessFu = {
 
     Logger.info('enable');
 
+    for each (let mm in Utils.getAllMessageManagers(this.chromeWin))
+      this._loadFrameScript(mm);
+
     // Add stylesheet
     let stylesheetURL = 'chrome://global/content/accessibility/AccessFu.css';
     this.stylesheet = this.chromeWin.document.createProcessingInstruction(
       'xml-stylesheet', 'href="' + stylesheetURL + '" type="text/css"');
-    this.chromeWin.document.insertBefore(this.stylesheet, this.chromeWin.document.firstChild);
+    this.chromeWin.document.insertBefore(this.stylesheet,
+                                         this.chromeWin.document.firstChild);
 
-    this.addPresenter(new VisualPresenter());
+    Input.attach(this.chromeWin);
+    Output.attach(this.chromeWin);
+    this.touchAdapter.attach(this.chromeWin);
 
-    // Implicitly add the Android presenter on Android.
-    if (Utils.MozBuildApp == 'mobile/android') {
-      this._androidPresenter = new AndroidPresenter();
-      this.addPresenter(this._androidPresenter);
-    } else if (Utils.MozBuildApp == 'b2g') {
-      this.addPresenter(new SpeechPresenter());
-    }
-
-    VirtualCursorController.attach(this.chromeWin);
-
-    Services.obs.addObserver(this, 'accessible-event', false);
-    this.chromeWin.addEventListener('DOMActivate', this, true);
-    this.chromeWin.addEventListener('resize', this, true);
-    this.chromeWin.addEventListener('scroll', this, true);
-    this.chromeWin.addEventListener('TabOpen', this, true);
-    this.chromeWin.addEventListener('focus', this, true);
+    Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
+    Services.obs.addObserver(this, 'Accessibility:NextObject', false);
+    Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
+    Services.obs.addObserver(this, 'Accessibility:CurrentObject', false);
   },
 
   /**
@@ -113,380 +107,377 @@ var AccessFu = {
   _disable: function _disable() {
     if (!this._enabled)
       return;
+
     this._enabled = false;
 
     Logger.info('disable');
 
     this.chromeWin.document.removeChild(this.stylesheet);
+    for each (let mm in Utils.getAllMessageManagers(this.chromeWin))
+      mm.sendAsyncMessage('AccessFu:Stop');
 
-    this.presenters.forEach(function(p) { p.detach(); });
-    this.presenters = [];
+    Input.detach();
 
-    VirtualCursorController.detach();
-
-    Services.obs.removeObserver(this, 'accessible-event');
-    this.chromeWin.removeEventListener('DOMActivate', this, true);
-    this.chromeWin.removeEventListener('resize', this, true);
-    this.chromeWin.removeEventListener('scroll', this, true);
-    this.chromeWin.removeEventListener('TabOpen', this, true);
-    this.chromeWin.removeEventListener('focus', this, true);
+    Services.obs.removeObserver(this, 'remote-browser-frame-shown');
+    Services.obs.removeObserver(this, 'Accessibility:NextObject');
+    Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
+    Services.obs.removeObserver(this, 'Accessibility:CurrentObject');
   },
 
-  _processPreferences: function _processPreferences(aEnabled, aTouchEnabled) {
-    let accessPref = ACCESSFU_DISABLE;
+  _enableOrDisable: function _enableOrDisable() {
     try {
-      accessPref = (aEnabled == undefined) ?
-        this.prefsBranch.getIntPref('activate') : aEnabled;
+      if (this._activatePref == ACCESSFU_ENABLE ||
+          this._systemPref && this._activatePref == ACCESSFU_AUTO)
+        this._enable();
+      else
+        this._disable();
     } catch (x) {
+      Logger.error(x);
     }
-
-    let ebtPref = ACCESSFU_DISABLE;
-    try {
-      ebtPref = (aTouchEnabled == undefined) ?
-        this.prefsBranch.getIntPref('explorebytouch') : aTouchEnabled;
-    } catch (x) {
-    }
-
-    if (Utils.MozBuildApp == 'mobile/android') {
-      if (accessPref == ACCESSFU_AUTO) {
-        Cc['@mozilla.org/android/bridge;1'].
-          getService(Ci.nsIAndroidBridge).handleGeckoMessage(
-            JSON.stringify({ gecko: { type: 'Accessibility:Ready' } }));
-        return;
-      }
-    }
-
-    if (accessPref == ACCESSFU_ENABLE)
-      this._enable();
-    else
-      this._disable();
-
-    if (ebtPref == ACCESSFU_ENABLE)
-      this.touchAdapter.attach(this.chromeWin);
-    else
-      this.touchAdapter.detach(this.chromeWin);
   },
 
-  addPresenter: function addPresenter(presenter) {
-    this.presenters.push(presenter);
-    presenter.attach(this.chromeWin);
+  receiveMessage: function receiveMessage(aMessage) {
+    if (Logger.logLevel >= Logger.DEBUG)
+      Logger.debug('Recieved', aMessage.name, JSON.stringify(aMessage.json));
+
+    switch (aMessage.name) {
+      case 'AccessFu:Ready':
+      let mm = Utils.getMessageManager(aMessage.target);
+      mm.sendAsyncMessage('AccessFu:Start',
+                          {method: 'start', buildApp: Utils.MozBuildApp});
+      break;
+      case 'AccessFu:Present':
+      try {
+        for each (let presenter in aMessage.json) {
+          Output[presenter.type](presenter.details, aMessage.target);
+        }
+      } catch (x) {
+        Logger.error(x);
+      }
+      break;
+      case 'AccessFu:Input':
+      Input.setEditState(aMessage.json);
+      break;
+    }
   },
 
-  handleEvent: function handleEvent(aEvent) {
-    switch (aEvent.type) {
-      case 'focus':
-      {
-        if (aEvent.target instanceof Ci.nsIDOMWindow) {
-          let docAcc = getAccessible(aEvent.target.document);
-          let docContext = new PresenterContext(docAcc, null);
-          let cursorable = docAcc.QueryInterface(Ci.nsIAccessibleCursorable);
-          let vcContext = new PresenterContext(
-            (cursorable) ? cursorable.virtualCursor.position : null, null);
-          this.presenters.forEach(
-            function(p) { p.tabSelected(docContext, vcContext); });
-        }
-        break;
-      }
-      case 'TabOpen':
-      {
-        let browser = aEvent.target.linkedBrowser || aEvent.target;
-        // Store the new browser node. We will need to check later when a new
-        // content document is attached if it has been attached to this new tab.
-        // If it has, than we will need to send a 'loading' message along with
-        // the usual 'newdoc' to presenters.
-        this._pendingDocuments[browser] = true;
-        this.presenters.forEach(
-          function(p) {
-            p.tabStateChanged(null, 'newtab');
-          }
-        );
-        break;
-      }
-      case 'DOMActivate':
-      {
-        let activatedAcc = getAccessible(aEvent.originalTarget);
-        let state = {};
-        activatedAcc.getState(state, {});
-
-        // Checkable objects will have a state changed event that we will use
-        // instead of this hackish DOMActivate. We will also know the true
-        // action that was taken.
-        if (state.value & Ci.nsIAccessibleStates.STATE_CHECKABLE)
-          return;
-
-        this.presenters.forEach(function(p) {
-                                  p.actionInvoked(activatedAcc, 'click');
-                                });
-        break;
-      }
-      case 'scroll':
-      case 'resize':
-      {
-        this.presenters.forEach(function(p) { p.viewportChanged(); });
-        break;
-      }
-      case 'mozContentEvent':
-      {
-        if (aEvent.detail.type == 'accessibility-screenreader') {
-          let pref = aEvent.detail.enabled + 0;
-          this._processPreferences(pref, pref);
-        }
-        break;
-      }
-    }
+  _loadFrameScript: function _loadFrameScript(aMessageManager) {
+    aMessageManager.addMessageListener('AccessFu:Present', this);
+    aMessageManager.addMessageListener('AccessFu:Input', this);
+    aMessageManager.addMessageListener('AccessFu:Ready', this);
+    aMessageManager.
+      loadFrameScript(
+        'chrome://global/content/accessibility/content-script.js', true);
   },
 
   observe: function observe(aSubject, aTopic, aData) {
+    Logger.debug('observe', aTopic);
     switch (aTopic) {
       case 'Accessibility:Settings':
-        this._processPreferences(JSON.parse(aData).enabled + 0,
-                                 JSON.parse(aData).exploreByTouch + 0);
+        this._systemPref = JSON.parse(aData).enabled;
+        this._enableOrDisable();
         break;
       case 'Accessibility:NextObject':
-        VirtualCursorController.
-          moveForward(Utils.getCurrentContentDoc(this.chromeWin));
+        Input.moveCursor('moveNext', 'Simple', 'gesture');
         break;
       case 'Accessibility:PreviousObject':
-        VirtualCursorController.
-          moveBackward(Utils.getCurrentContentDoc(this.chromeWin));
+        Input.moveCursor('movePrevious', 'Simple', 'gesture');
         break;
       case 'Accessibility:CurrentObject':
-        this._androidPresenter.accessibilityFocus();
+        let mm = Utils.getCurrentBrowser(this.chromeWin).
+          frameLoader.messageManager;
+        mm.sendAsyncMessage('AccessFu:VirtualCursor',
+                            {action: 'presentLastPivot'});
         break;
       case 'nsPref:changed':
-        this._processPreferences(this.prefsBranch.getIntPref('activate'),
-                                 this.prefsBranch.getIntPref('explorebytouch'));
-        break;
-      case 'accessible-event':
-        let event;
-        try {
-          event = aSubject.QueryInterface(Ci.nsIAccessibleEvent);
-          this._handleAccEvent(event);
-        } catch (ex) {
-          Logger.error(ex);
-          return;
+        if (aData == 'activate') {
+          this._activatePref = this.prefsBranch.getIntPref('activate');
+          this._enableOrDisable();
         }
+        break;
+      case 'remote-browser-frame-shown':
+      {
+        this._loadFrameScript(
+          aSubject.QueryInterface(Ci.nsIFrameLoader).messageManager);
+        break;
+      }
     }
   },
 
-  _handleAccEvent: function _handleAccEvent(aEvent) {
-    if (Logger.logLevel <= Logger.DEBUG)
-      Logger.debug(Logger.eventToString(aEvent),
-                   Logger.accessibleToString(aEvent.accessible));
-
-    switch (aEvent.eventType) {
-      case Ci.nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED:
-        {
-          let pivot = aEvent.accessible.
-            QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
-          let event = aEvent.
-            QueryInterface(Ci.nsIAccessibleVirtualCursorChangeEvent);
-          let position = pivot.position;
-          let doc = aEvent.DOMNode;
-
-          let presenterContext =
-            new PresenterContext(position, event.oldAccessible);
-          let reason = event.reason;
-          this.presenters.forEach(
-            function(p) { p.pivotChanged(presenterContext, reason); });
-
-          break;
-        }
-      case Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE:
-        {
-          let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
-          if (event.state == Ci.nsIAccessibleStates.STATE_CHECKED &&
-              !(event.isExtraState())) {
-            this.presenters.forEach(
-              function(p) {
-                p.actionInvoked(aEvent.accessible,
-                                event.isEnabled() ? 'check' : 'uncheck');
-              }
-            );
-          }
-          else if (event.state == Ci.nsIAccessibleStates.STATE_BUSY &&
-                   !(event.isExtraState()) && event.isEnabled()) {
-            let role = event.accessible.role;
-            if ((role == Ci.nsIAccessibleRole.ROLE_DOCUMENT ||
-                 role == Ci.nsIAccessibleRole.ROLE_APPLICATION)) {
-              // An existing document has changed to state "busy", this means
-              // something is loading. Send a 'loading' message to presenters.
-              this.presenters.forEach(
-                function(p) {
-                  p.tabStateChanged(event.accessible, 'loading');
-                }
-              );
-            }
-          }
-          break;
-        }
-      case Ci.nsIAccessibleEvent.EVENT_REORDER:
-        {
-          let acc = aEvent.accessible;
-          if (acc.childCount) {
-            let docAcc = acc.getChildAt(0);
-            if (this._pendingDocuments[aEvent.DOMNode]) {
-              // This is a document in a new tab. Check if it is
-              // in a BUSY state (i.e. loading), and inform presenters.
-              // We need to do this because a state change event will not be
-              // fired when an object is created with the BUSY state.
-              // If this is not a new tab, don't bother because we sent
-              // 'loading' when the previous doc changed its state to BUSY.
-              let state = {};
-              docAcc.getState(state, {});
-              if (state.value & Ci.nsIAccessibleStates.STATE_BUSY &&
-                  this._isNotChromeDoc(docAcc))
-                this.presenters.forEach(
-                  function(p) { p.tabStateChanged(docAcc, 'loading'); }
-                );
-              delete this._pendingDocuments[aEvent.DOMNode];
-            }
-            if (this._isBrowserDoc(docAcc))
-              // A new top-level content document has been attached
-              this.presenters.forEach(
-                function(p) { p.tabStateChanged(docAcc, 'newdoc'); }
-              );
-          }
-          break;
-        }
-      case Ci.nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_COMPLETE:
-        {
-          if (this._isNotChromeDoc(aEvent.accessible)) {
-            this.presenters.forEach(
-              function(p) {
-                p.tabStateChanged(aEvent.accessible, 'loaded');
-              }
-            );
-          }
-          break;
-        }
-      case Ci.nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_STOPPED:
-        {
-          this.presenters.forEach(
-            function(p) {
-              p.tabStateChanged(aEvent.accessible, 'loadstopped');
-            }
-          );
-          break;
-        }
-      case Ci.nsIAccessibleEvent.EVENT_DOCUMENT_RELOAD:
-        {
-          this.presenters.forEach(
-            function(p) {
-              p.tabStateChanged(aEvent.accessible, 'reload');
-            }
-          );
-          break;
-        }
-      case Ci.nsIAccessibleEvent.EVENT_TEXT_INSERTED:
-      case Ci.nsIAccessibleEvent.EVENT_TEXT_REMOVED:
-      {
-        if (aEvent.isFromUserInput) {
-          // XXX support live regions as well.
-          let event = aEvent.QueryInterface(Ci.nsIAccessibleTextChangeEvent);
-          let isInserted = event.isInserted();
-          let txtIface = aEvent.accessible.QueryInterface(Ci.nsIAccessibleText);
-
-          let text = '';
-          try {
-            text = txtIface.
-              getText(0, Ci.nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT);
-          } catch (x) {
-            // XXX we might have gotten an exception with of a
-            // zero-length text. If we did, ignore it (bug #749810).
-            if (txtIface.characterCount)
-              throw x;
-          }
-
-          this.presenters.forEach(
-            function(p) {
-              p.textChanged(isInserted, event.start, event.length,
-                            text, event.modifiedText);
-            }
-          );
-        }
-        break;
-      }
-      case Ci.nsIAccessibleEvent.EVENT_SCROLLING_START:
-      {
-        VirtualCursorController.moveCursorToObject(
-          Utils.getVirtualCursor(aEvent.accessibleDocument), aEvent.accessible);
-        break;
-      }
-      case Ci.nsIAccessibleEvent.EVENT_FOCUS:
-      {
-        let acc = aEvent.accessible;
-        let doc = aEvent.accessibleDocument;
-        if (acc.role != Ci.nsIAccessibleRole.ROLE_DOCUMENT &&
-            doc.role != Ci.nsIAccessibleRole.ROLE_CHROME_WINDOW)
-          VirtualCursorController.moveCursorToObject(
-            Utils.getVirtualCursor(doc), acc);
-
-        let [,extState] = Utils.getStates(acc);
-        let editableState = extState &
-          (Ci.nsIAccessibleStates.EXT_STATE_EDITABLE |
-           Ci.nsIAccessibleStates.EXT_STATE_MULTI_LINE);
-
-        if (editableState != VirtualCursorController.editableState) {
-          if (!VirtualCursorController.editableState)
-            this.presenters.forEach(
-              function(p) {
-                p.editingModeChanged(true);
-              }
-            );
-        }
-        VirtualCursorController.editableState = editableState;
-        break;
-      }
-      default:
-        break;
+  handleEvent: function handleEvent(aEvent) {
+    if (aEvent.type == 'mozContentEvent' &&
+        aEvent.detail.type == 'accessibility-screenreader') {
+      this._systemPref = aEvent.detail.enabled;
+      this._enableOrDisable();
     }
   },
-
-  /**
-   * Check if accessible is a top-level content document (i.e. a child of a XUL
-   * browser node).
-   * @param {nsIAccessible} aDocAcc the accessible to check.
-   * @return {boolean} true if this is a top-level content document.
-   */
-  _isBrowserDoc: function _isBrowserDoc(aDocAcc) {
-    let parent = aDocAcc.parent;
-    if (!parent)
-      return false;
-
-    let domNode = parent.DOMNode;
-    if (!domNode)
-      return false;
-
-    const ns = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
-    return (domNode.localName == 'browser' && domNode.namespaceURI == ns);
-  },
-
-  /**
-   * Check if document is not a local "chrome" document, like about:home.
-   * @param {nsIDOMDocument} aDocument the document to check.
-   * @return {boolean} true if this is not a chrome document.
-   */
-  _isNotChromeDoc: function _isNotChromeDoc(aDocument) {
-    let location = aDocument.DOMNode.location;
-    if (!location)
-      return false;
-
-    return location.protocol != 'about:';
-  },
-
-  // A hash of documents that don't yet have an accessible tree.
-  _pendingDocuments: {},
 
   // So we don't enable/disable twice
   _enabled: false
 };
 
-function getAccessible(aNode) {
-  try {
-    return Cc['@mozilla.org/accessibleRetrieval;1'].
-      getService(Ci.nsIAccessibleRetrieval).getAccessibleFor(aNode);
-  } catch (e) {
-    return null;
+var Output = {
+  attach: function attach(aWindow) {
+    this.chromeWin = aWindow;
+  },
+
+  Speech: function Speech(aDetails, aBrowser) {
+    for each (let action in aDetails.actions)
+      Logger.info('tts.' + action.method, '"' + action.data + '"', JSON.stringify(action.options));
+  },
+
+  Visual: function Visual(aDetails, aBrowser) {
+    if (!this.highlightBox) {
+      // Add highlight box
+      this.highlightBox = this.chromeWin.document.
+        createElementNS('http://www.w3.org/1999/xhtml', 'div');
+      this.chromeWin.document.documentElement.appendChild(this.highlightBox);
+      this.highlightBox.id = 'virtual-cursor-box';
+
+      // Add highlight inset for inner shadow
+      let inset = this.chromeWin.document.
+        createElementNS('http://www.w3.org/1999/xhtml', 'div');
+      inset.id = 'virtual-cursor-inset';
+
+      this.highlightBox.appendChild(inset);
+    }
+
+    if (aDetails.method == 'show') {
+      let padding = aDetails.padding;
+      let r = this._adjustBounds(aDetails.bounds, aBrowser);
+
+      // First hide it to avoid flickering when changing the style.
+      this.highlightBox.style.display = 'none';
+      this.highlightBox.style.top = (r.top - padding) + 'px';
+      this.highlightBox.style.left = (r.left - padding) + 'px';
+      this.highlightBox.style.width = (r.width + padding*2) + 'px';
+      this.highlightBox.style.height = (r.height + padding*2) + 'px';
+      this.highlightBox.style.display = 'block';
+    } else if (aDetails.method == 'hide') {
+      this.highlightBox.style.display = 'none';
+    }
+  },
+
+  Android: function Android(aDetails, aBrowser) {
+    if (!this._bridge)
+      this._bridge = Cc['@mozilla.org/android/bridge;1'].getService(Ci.nsIAndroidBridge);
+
+    for each (let androidEvent in aDetails) {
+      androidEvent.type = 'Accessibility:Event';
+      if (androidEvent.bounds)
+        androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser);
+      this._bridge.handleGeckoMessage(JSON.stringify({gecko: androidEvent}));
+    }
+  },
+
+  _adjustBounds: function(aJsonBounds, aBrowser) {
+    let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
+                          aJsonBounds.right - aJsonBounds.left,
+                          aJsonBounds.bottom - aJsonBounds.top);
+    let vp = Utils.getViewport(this.chromeWin) || { zoom: 1.0, offsetY: 0 };
+    let browserOffset = aBrowser.getBoundingClientRect();
+
+    return bounds.translate(browserOffset.left, browserOffset.top).
+      scale(vp.zoom, vp.zoom).expandToIntegers();
   }
-}
+};
+
+var Input = {
+  editState: {},
+
+  attach: function attach(aWindow) {
+    this.chromeWin = aWindow;
+    this.chromeWin.document.addEventListener('keypress', this, true);
+    this.chromeWin.addEventListener('mozAccessFuGesture', this, true);
+  },
+
+  detach: function detach() {
+    this.chromeWin.document.removeEventListener('keypress', this, true);
+    this.chromeWin.removeEventListener('mozAccessFuGesture', this, true);
+  },
+
+  handleEvent: function Input_handleEvent(aEvent) {
+    try {
+      switch (aEvent.type) {
+      case 'keypress':
+        this._handleKeypress(aEvent);
+        break;
+      case 'mozAccessFuGesture':
+        this._handleGesture(aEvent);
+        break;
+      }
+    } catch (x) {
+      Logger.error(x);
+    }
+  },
+
+  _handleGesture: function _handleGesture(aEvent) {
+    let detail = aEvent.detail;
+    Logger.info('Gesture', detail.type,
+                '(fingers: ' + detail.touches.length + ')');
+
+    if (detail.touches.length == 1) {
+      switch (detail.type) {
+        case 'swiperight':
+          this.moveCursor('moveNext', 'Simple', 'gestures');
+          break;
+        case 'swipeleft':
+          this.moveCursor('movePrevious', 'Simple', 'gesture');
+          break;
+        case 'doubletap':
+          this.activateCurrent();
+          break;
+        case 'explore':
+          this.moveCursor('moveToPoint', 'Simple', 'gesture',
+                          detail.x, detail.y);
+          break;
+      }
+    }
+
+    if (detail.touches.length == 3) {
+      switch (detail.type) {
+        case 'swiperight':
+          this.scroll(-1, true);
+          break;
+        case 'swipedown':
+          this.scroll(-1);
+          break;
+        case 'swipeleft':
+          this.scroll(1, true);
+          break;
+        case 'swipeup':
+          this.scroll(1);
+          break;
+      }
+    }
+  },
+
+  _handleKeypress: function _handleKeypress(aEvent) {
+    let target = aEvent.target;
+
+    // Ignore keys with modifiers so the content could take advantage of them.
+    if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey)
+      return;
+
+    switch (aEvent.keyCode) {
+      case 0:
+        // an alphanumeric key was pressed, handle it separately.
+        // If it was pressed with either alt or ctrl, just pass through.
+        // If it was pressed with meta, pass the key on without the meta.
+        if (this.editState.editing)
+          return;
+
+        let key = String.fromCharCode(aEvent.charCode);
+        try {
+          let [methodName, rule] = this.keyMap[key];
+          this.moveCursor(methodName, rule, 'keyboard');
+        } catch (x) {
+          return;
+        }
+        break;
+      case aEvent.DOM_VK_RIGHT:
+        if (this.editState.editing) {
+          if (!this.editState.atEnd)
+            // Don't move forward if caret is not at end of entry.
+            // XXX: Fix for rtl
+            return;
+          else
+            target.blur();
+        }
+        this.moveCursor(aEvent.shiftKey ? 'moveLast' : 'moveNext', 'Simple', 'keyboard');
+        break;
+      case aEvent.DOM_VK_LEFT:
+        if (this.editState.editing) {
+          if (!this.editState.atStart)
+            // Don't move backward if caret is not at start of entry.
+            // XXX: Fix for rtl
+            return;
+          else
+            target.blur();
+        }
+        this.moveCursor(aEvent.shiftKey ? 'moveFirst' : 'movePrevious', 'Simple', 'keyboard');
+        break;
+      case aEvent.DOM_VK_UP:
+        if (this.editState.multiline) {
+          if (!this.editState.atStart)
+            // Don't blur content if caret is not at start of text area.
+            return;
+          else
+            target.blur();
+        }
+
+        if (Utils.MozBuildApp == 'mobile/android')
+          // Return focus to native Android browser chrome.
+          Cc['@mozilla.org/android/bridge;1'].
+            getService(Ci.nsIAndroidBridge).handleGeckoMessage(
+              JSON.stringify({ gecko: { type: 'ToggleChrome:Focus' } }));
+        break;
+      case aEvent.DOM_VK_RETURN:
+      case aEvent.DOM_VK_ENTER:
+        if (this.editState.editing)
+          return;
+        this.activateCurrent();
+        break;
+    default:
+      return;
+    }
+
+    aEvent.preventDefault();
+    aEvent.stopPropagation();
+  },
+
+  moveCursor: function moveCursor(aAction, aRule, aInputType, aX, aY) {
+    let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+    mm.sendAsyncMessage('AccessFu:VirtualCursor',
+                        {action: aAction, rule: aRule,
+                         x: aX, y: aY, origin: 'top',
+                         inputType: aInputType});
+  },
+
+  activateCurrent: function activateCurrent() {
+    let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+    mm.sendAsyncMessage('AccessFu:Activate', {});
+  },
+
+  setEditState: function setEditState(aEditState) {
+    this.editState = aEditState;
+  },
+
+  scroll: function scroll(aPage, aHorizontal) {
+    let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+    mm.sendAsyncMessage('AccessFu:Scroll', {page: aPage, horizontal: aHorizontal, origin: 'top'});
+  },
+
+  keyMap: {
+    a: ['moveNext', 'Anchor'],
+    A: ['movePrevious', 'Anchor'],
+    b: ['moveNext', 'Button'],
+    B: ['movePrevious', 'Button'],
+    c: ['moveNext', 'Combobox'],
+    C: ['movePrevious', 'Combobox'],
+    e: ['moveNext', 'Entry'],
+    E: ['movePrevious', 'Entry'],
+    f: ['moveNext', 'FormElement'],
+    F: ['movePrevious', 'FormElement'],
+    g: ['moveNext', 'Graphic'],
+    G: ['movePrevious', 'Graphic'],
+    h: ['moveNext', 'Heading'],
+    H: ['movePrevious', 'Heading'],
+    i: ['moveNext', 'ListItem'],
+    I: ['movePrevious', 'ListItem'],
+    k: ['moveNext', 'Link'],
+    K: ['movePrevious', 'Link'],
+    l: ['moveNext', 'List'],
+    L: ['movePrevious', 'List'],
+    p: ['moveNext', 'PageTab'],
+    P: ['movePrevious', 'PageTab'],
+    r: ['moveNext', 'RadioButton'],
+    R: ['movePrevious', 'RadioButton'],
+    s: ['moveNext', 'Separator'],
+    S: ['movePrevious', 'Separator'],
+    t: ['moveNext', 'Table'],
+    T: ['movePrevious', 'Table'],
+    x: ['moveNext', 'Checkbox'],
+    X: ['movePrevious', 'Checkbox']
+  }
+};

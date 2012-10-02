@@ -127,26 +127,8 @@ private:
 nsresult
 BluetoothManager::FireEnabledDisabledEvent(bool aEnabled)
 {
-  nsString eventName;
-
-  if (aEnabled) {
-    eventName.AssignLiteral("enabled");
-  } else {
-    eventName.AssignLiteral("disabled");
-  }
-
-  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
-  nsresult rv = event->InitEvent(eventName, false, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool dummy;
-  rv = DispatchEvent(event, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return DispatchTrustedEvent(aEnabled ? NS_LITERAL_STRING("enabled")
+                              : NS_LITERAL_STRING("disabled"));
 }
 
 BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
@@ -273,17 +255,7 @@ void
 BluetoothManager::Notify(const BluetoothSignal& aData)
 {
   if (aData.name().EqualsLiteral("AdapterAdded")) {
-    nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
-    nsresult rv = event->InitEvent(NS_LITERAL_STRING("adapteradded"), false, false);
-
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to init the adapteradded event!!!");
-      return;
-    }
-
-    event->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
+    DispatchTrustedEvent(NS_LITERAL_STRING("adapteradded"));
   } else {
 #ifdef DEBUG
     nsCString warningMsg;

@@ -12,7 +12,9 @@
 
 #include "xpt_struct.h"
 
-PR_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct XPTState         XPTState;
 typedef struct XPTDatapool      XPTDatapool;
@@ -174,6 +176,8 @@ XPT_GetAddrForOffset(XPTCursor *cursor, uint32_t offset);
     return PR_FALSE;
 
 
-PR_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __xpt_xdr_h__ */

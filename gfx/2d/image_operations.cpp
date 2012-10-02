@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "basictypes.h"
+#include "base/basictypes.h"
 
 #define _USE_MATH_DEFINES
 #include <algorithm>
@@ -12,7 +12,7 @@
 #include "image_operations.h"
 
 #include "nsAlgorithm.h"
-#include "stack_container.h"
+#include "base/stack_container.h"
 #include "convolver.h"
 #include "skia/SkColorPriv.h"
 #include "skia/SkBitmap.h"

@@ -23,6 +23,7 @@
 #ifndef jArray_h_
 #define jArray_h_
 
+#include "mozilla/NullPtr.h"
 #include "nsDebug.h"
 
 template<class T, class L>
@@ -99,11 +100,24 @@ class autoJArray {
       arr = other.arr;
       length = other.length;
     }
-    void operator=(L zero) {
+#if defined(__clang__)
+    // clang on OS X 10.7 does not have std::nullptr_t
+    typedef decltype(nullptr) jArray_nullptr_t;
+#elif defined(MOZ_HAVE_CXX11_NULLPTR)
+    // decltype(nullptr) does not evaluate to std::nullptr_t on GCC 4.6.3
+    typedef std::nullptr_t jArray_nullptr_t;
+#elif defined(__GNUC__)
+    typedef void* jArray_nullptr_t;
+#elif defined(_WIN64)
+    typedef uint64_t jArray_nullptr_t;
+#else
+    typedef uint32_t jArray_nullptr_t;
+#endif
+    void operator=(jArray_nullptr_t zero) {
       // Make assigning null to an array in Java delete the buffer in C++
-      NS_ASSERTION(!zero, "Non-zero integer assigned to jArray.");
+      // MSVC10 does not allow asserting that zero is null.
       delete[] arr;
-      arr = 0;
+      arr = nullptr;
       length = 0;
     }
 };

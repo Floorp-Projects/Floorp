@@ -104,34 +104,6 @@ ContentSecurityPolicy.prototype = {
     return this._reportOnlyMode || this._policy.allowsEvalInScripts;
   },
 
-  get innerWindowID() {
-    let win = null;
-    let loadContext = null;
-
-    try {
-      loadContext = this._docRequest
-                        .notificationCallbacks.getInterface(Ci.nsILoadContext);
-    } catch (ex) {
-      try {
-        loadContext = this._docRequest.loadGroup
-                          .notificationCallbacks.getInterface(Ci.nsILoadContext);
-      } catch (ex) {
-      }
-    }
-
-    if (loadContext) {
-      win = loadContext.associatedWindow;
-    }
-    if (win) {
-      try {
-         let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-         return winUtils.currentInnerWindowID;
-      } catch (ex) {
-      }
-    }
-    return null;
-  },
-
   /**
    * Log policy violation on the Error Console and send a report if a report-uri
    * is present in the policy
@@ -302,16 +274,15 @@ ContentSecurityPolicy.prototype = {
       CSPdebug("Constructed violation report:\n" + reportString);
 
       var violationMessage = null;
-      if(blockedUri["asciiSpec"]){
+      if (blockedUri["asciiSpec"]) {
          violationMessage = CSPLocalizer.getFormatStr("directiveViolatedWithURI", [violatedDirective, blockedUri.asciiSpec]);
       } else {
          violationMessage = CSPLocalizer.getFormatStr("directiveViolated", [violatedDirective]);
       }
-      CSPWarning(violationMessage,
-                 this.innerWindowID,
-                 (aSourceFile) ? aSourceFile : null,
-                 (aScriptSample) ? decodeURIComponent(aScriptSample) : null,
-                 (aLineNum) ? aLineNum : null);
+      this._policy.warn(violationMessage,
+                        (aSourceFile) ? aSourceFile : null,
+                        (aScriptSample) ? decodeURIComponent(aScriptSample) : null,
+                        (aLineNum) ? aLineNum : null);
 
       // For each URI in the report list, send out a report.
       // We make the assumption that all of the URIs are absolute URIs; this
@@ -323,7 +294,7 @@ ContentSecurityPolicy.prototype = {
 
         try {
           var chan = Services.io.newChannel(uris[i], null, null);
-          if(!chan) {
+          if (!chan) {
             CSPdebug("Error creating channel for " + uris[i]);
             continue;
           }
@@ -338,7 +309,7 @@ ContentSecurityPolicy.prototype = {
 
           // we need to set an nsIChannelEventSink on the channel object
           // so we can tell it to not follow redirects when posting the reports
-          chan.notificationCallbacks = new CSPReportRedirectSink();
+          chan.notificationCallbacks = new CSPReportRedirectSink(this._policy);
 
           chan.QueryInterface(Ci.nsIUploadChannel)
               .setUploadStream(content, "application/json", content.available());
@@ -369,8 +340,8 @@ ContentSecurityPolicy.prototype = {
         } catch(e) {
           // it's possible that the URI was invalid, just log a
           // warning and skip over that.
-          CSPWarning(CSPLocalizer.getFormatStr("triedToSendReport", [uris[i]]), this.innerWindowID);
-          CSPWarning(CSPLocalizer.getFormatStr("errorWas", [e.toString()]), this.innerWindowID);
+          this._policy.warn(CSPLocalizer.getFormatStr("triedToSendReport", [uris[i]]));
+          this._policy.warn(CSPLocalizer.getFormatStr("errorWas", [e.toString()]));
         }
       }
     }
@@ -552,7 +523,8 @@ ContentSecurityPolicy.prototype = {
 // The POST of the violation report (if it happens) should not follow
 // redirects, per the spec. hence, we implement an nsIChannelEventSink
 // with an object so we can tell XHR to abort if a redirect happens.
-function CSPReportRedirectSink() {
+function CSPReportRedirectSink(policy) {
+  this._policy = policy;
 }
 
 CSPReportRedirectSink.prototype = {
@@ -575,7 +547,7 @@ CSPReportRedirectSink.prototype = {
   // nsIChannelEventSink
   asyncOnChannelRedirect: function channel_redirect(oldChannel, newChannel,
                                                     flags, callback) {
-    CSPWarning(CSPLocalizer.getFormatStr("reportPostRedirect", [oldChannel.URI.asciiSpec]));
+    this._policy.warn(CSPLocalizer.getFormatStr("reportPostRedirect", [oldChannel.URI.asciiSpec]));
 
     // cancel the old channel so XHR failure callback happens
     oldChannel.cancel(Cr.NS_ERROR_ABORT);

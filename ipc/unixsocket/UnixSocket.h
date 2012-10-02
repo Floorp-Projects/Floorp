@@ -7,6 +7,7 @@
 #ifndef mozilla_ipc_UnixSocket_h
 #define mozilla_ipc_UnixSocket_h
 
+#include <sys/socket.h>
 #include <stdlib.h>
 #include "nsString.h"
 #include "nsAutoPtr.h"
@@ -24,7 +25,7 @@ struct UnixSocketRawData
   size_t mSize;
   size_t mCurrentWriteOffset;
 
-  /** 
+  /**
    * Constructor for situations where size is not known beforehand. (for
    * example, when reading a packet)
    *
@@ -35,7 +36,7 @@ struct UnixSocketRawData
   {
   }
 
-  /** 
+  /**
    * Constructor for situations where size is known beforehand (for example,
    * when being assigned strings)
    *
@@ -50,7 +51,7 @@ struct UnixSocketRawData
 
 class UnixSocketImpl;
 
-/** 
+/**
  * UnixSocketConnector defines the socket creation and connection/listening
  * functions for a UnixSocketConsumer. Due to the fact that socket setup can
  * vary between protocols (unix sockets, tcp sockets, bluetooth sockets, etc),
@@ -70,7 +71,7 @@ public:
   virtual ~UnixSocketConnector()
   {}
 
-  /** 
+  /**
    * Establishs a file descriptor for a socket.
    *
    * @return File descriptor for socket
@@ -78,28 +79,28 @@ public:
   virtual int Create() = 0;
 
   /** 
-   * Runs connect function on a file descriptor for the address specified. Makes
-   * sure socket is marked with flags expected by the UnixSocket handler
-   * (non-block, etc...)
+   * Since most socket specifics are related to address formation into a
+   * sockaddr struct, this function is defined by subclasses and fills in the
+   * structure as needed for whatever connection it is trying to build
    *
-   * @param aFd File descriptor created by Create() function
-   * @param aAddress Address to connect to
-   *
-   * @return true if connected, false otherwise
+   * @param aIsServer True is we are acting as a server socket
+   * @param aAddrSize Size of the struct 
+   * @param aAddr Struct to fill
+   * @param aAddress If aIsServer is false, Address to connect to. nullptr otherwise.
    */
-  bool Connect(int aFd, const char* aAddress);
-  
-protected:
+  virtual void CreateAddr(bool aIsServer,
+                          socklen_t& aAddrSize,
+                          struct sockaddr *aAddr,
+                          const char* aAddress) = 0;
+
   /** 
-   * Internal type-specific connection function to be overridden by child
-   * classes.
+   * Does any socket type specific setup that may be needed
    *
-   * @param aFd File descriptor created by Create() function
-   * @param aAddress Address to connect to
+   * @param aFd File descriptor for opened socket
    *
-   * @return true if connected, false otherwise
+   * @return true is successful, false otherwise
    */
-  virtual bool ConnectInternal(int aFd, const char* aAddress) = 0;
+  virtual bool Setup(int aFd) = 0;  
 };
 
 class UnixSocketConsumer : public RefCounted<UnixSocketConsumer>
@@ -110,8 +111,8 @@ public:
   {}
 
   virtual ~UnixSocketConsumer();
-  
-  /** 
+
+  /**
    * Function to be called whenever data is received. This is only called on the
    * main thread.
    *
@@ -119,7 +120,7 @@ public:
    */
   virtual void ReceiveSocketData(UnixSocketRawData* aMessage) = 0;
 
-  /** 
+  /**
    * Queue data to be sent to the socket on the IO thread. Can only be called on
    * originating thread.
    *
@@ -129,7 +130,7 @@ public:
    */
   bool SendSocketData(UnixSocketRawData* aMessage);
 
-  /** 
+  /**
    * Convenience function for sending strings to the socket (common in bluetooth
    * profile usage). Converts to a UnixSocketRawData struct. Can only be called
    * on originating thread.
@@ -140,26 +141,37 @@ public:
    */
   bool SendSocketData(const nsACString& aMessage);
 
-  /** 
-   * Connects to a socket. Due to the fact that this is a blocking connect (and
-   * for things such as bluetooth, it /will/ block), it is expected to be run on
-   * a thread provided by the user. It cannot run on the main thread. Runs the
-   * Create() and Connect() functions in the UnixSocketConnector.
+  /**
+   * Starts a task on the socket that will try to connect to a socket in a
+   * non-blocking manner.
    *
    * @param aConnector Connector object for socket type specific functions
    * @param aAddress Address to connect to.
    *
-   * @return true on connection, false otherwise.
+   * @return true on connect task started, false otherwise.
    */
-  bool ConnectSocket(UnixSocketConnector& aConnector, const char* aAddress);
+  bool ConnectSocket(UnixSocketConnector* aConnector, const char* aAddress);
 
   /** 
+   * Starts a task on the socket that will try to accept a new connection in a
+   * non-blocking manner.
+   *
+   * @param aConnector Connector object for socket type specific functions
+   *
+   * @return true on listen started, false otherwise
+   */
+  bool ListenSocket(UnixSocketConnector* aConnector);
+
+  /**
    * Queues the internal representation of socket for deletion. Can be called
    * from main thread.
-   *
    */
   void CloseSocket();
 
+  /** 
+   * Cancels connect/accept task loop, if one is currently running.
+   */
+  void CancelSocketTask();
 private:
   nsAutoPtr<UnixSocketImpl> mImpl;
 };
