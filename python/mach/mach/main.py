@@ -8,6 +8,7 @@
 from __future__ import unicode_literals
 
 import argparse
+import codecs
 import logging
 import os
 import sys
@@ -45,26 +46,67 @@ CONSUMED_ARGUMENTS = [
     'verbose',
     'logfile',
     'log_interval',
-    'action',
+    'command',
     'cls',
     'method',
     'func',
 ]
 
+
+class ArgumentParser(argparse.ArgumentParser):
+    """Custom implementation argument parser to make things look pretty."""
+
+    def error(self, message):
+        """Custom error reporter to give more helpful text on bad commands."""
+        if not message.startswith('argument command: invalid choice'):
+            argparse.ArgumentParser.error(self, message)
+            assert False
+
+        print('Invalid command specified. The list of commands is below.\n')
+        self.print_help()
+        sys.exit(1)
+
+    def format_help(self):
+        text = argparse.ArgumentParser.format_help(self)
+
+        # Strip out the silly command list that would preceed the pretty list.
+        #
+        # Commands:
+        #   {foo,bar}
+        #     foo  Do foo.
+        #     bar  Do bar.
+        search = 'Commands:\n  {'
+        start = text.find(search)
+
+        if start != -1:
+            end = text.find('}\n', start)
+            assert end != -1
+
+            real_start = start + len('Commands:\n')
+            real_end = end + len('}\n')
+
+            text = text[0:real_start] + text[real_end:]
+
+        return text
+
+
 class Mach(object):
     """Contains code for the command-line `mach` interface."""
 
-    USAGE = """%(prog)s subcommand [arguments]
+    USAGE = """%(prog)s [global arguments] command [command arguments]
 
-mach provides an interface to performing common developer tasks. You specify
-an action/sub-command and it performs it.
+mach (German for "do") is the main interface to the Mozilla build system and
+common developer tasks.
 
-Some common actions are:
+You tell mach the command you want to perform and it does it for you.
 
-    %(prog)s help      Show full help, including the list of all commands.
+Some common commands are:
+
+    %(prog)s build     Build/compile the source tree.
     %(prog)s test      Run tests.
+    %(prog)s help      Show full help, including the list of all commands.
 
-To see more help for a specific action, run:
+To see more help for a specific command, run:
 
   %(prog)s <command> --help
 """
@@ -81,6 +123,33 @@ To see more help for a specific action, run:
 
     def run(self, argv):
         """Runs mach with arguments provided from the command line."""
+
+        # If no encoding is defined, we default to UTF-8 because without this
+        # Python 2.7 will assume the default encoding of ASCII. This will blow
+        # up with UnicodeEncodeError as soon as it encounters a non-ASCII
+        # character in a unicode instance. We simply install a wrapper around
+        # the streams and restore once we have finished.
+        orig_stdin = sys.stdin
+        orig_stdout = sys.stdout
+        orig_stderr = sys.stderr
+
+        try:
+            if sys.stdin.encoding is None:
+                sys.stdin = codecs.getreader('utf-8')(sys.stdin)
+
+            if sys.stdout.encoding is None:
+                sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
+
+            if sys.stderr.encoding is None:
+                sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
+
+            self._run(argv)
+        finally:
+            sys.stdin = orig_stdin
+            sys.stdout = orig_stdout
+            sys.stderr = orig_stderr
+
+    def _run(self, argv):
         parser = self.get_argument_parser()
 
         if not len(argv):
@@ -117,14 +186,14 @@ To see more help for a specific action, run:
         stripped = {k: getattr(args, k) for k in vars(args) if k not in
             CONSUMED_ARGUMENTS}
 
-        # If the action is associated with a class, instantiate and run it.
+        # If the command is associated with a class, instantiate and run it.
         # All classes must be Base-derived and take the expected argument list.
         if hasattr(args, 'cls'):
             cls = getattr(args, 'cls')
             instance = cls(self.cwd, self.settings, self.log_manager)
             fn = getattr(instance, getattr(args, 'method'))
 
-        # If the action is associated with a function, call it.
+        # If the command is associated with a function, call it.
         elif hasattr(args, 'func'):
             fn = getattr(args, 'func')
         else:
@@ -173,26 +242,33 @@ To see more help for a specific action, run:
     def get_argument_parser(self):
         """Returns an argument parser for the command-line interface."""
 
-        parser = argparse.ArgumentParser()
+        parser = ArgumentParser(add_help=False,
+            usage='%(prog)s [global arguments] command [command arguments]')
 
-        settings_group = parser.add_argument_group('Settings')
-        settings_group.add_argument('--settings', dest='settings_file',
+        # Order is important here as it dictates the order the auto-generated
+        # help messages are printed.
+        subparser = parser.add_subparsers(dest='command', title='Commands')
+        parser.set_defaults(command='help')
+
+        global_group = parser.add_argument_group('Global Arguments')
+
+        global_group.add_argument('-h', '--help', action='help',
+            help='Show this help message and exit.')
+
+        global_group.add_argument('--settings', dest='settings_file',
             metavar='FILENAME', help='Path to settings file.')
 
-        logging_group = parser.add_argument_group('Logging')
-        logging_group.add_argument('-v', '--verbose', dest='verbose',
+        global_group.add_argument('-v', '--verbose', dest='verbose',
             action='store_true', default=False,
             help='Print verbose output.')
-        logging_group.add_argument('-l', '--log-file', dest='logfile',
+        global_group.add_argument('-l', '--log-file', dest='logfile',
             metavar='FILENAME', type=argparse.FileType('ab'),
             help='Filename to write log data to.')
-        logging_group.add_argument('--log-interval', dest='log_interval',
+        global_group.add_argument('--log-interval', dest='log_interval',
             action='store_true', default=False,
             help='Prefix log line with interval from last message rather '
                 'than relative time. Note that this is NOT execution time '
                 'if there are parallel operations.')
-
-        subparser = parser.add_subparsers(dest='action')
 
         # Register argument action providers with us.
         for cls in HANDLERS:
