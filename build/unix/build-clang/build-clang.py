@@ -107,6 +107,7 @@ def build_one_stage_aux(stage_dir, is_stage_one):
     inst_dir = stage_dir + "/clang"
 
     configure_opts = ["--enable-optimized",
+                      "--enable-targets=x86,x86_64,arm",
                       "--disable-assertions",
                       "--prefix=%s" % inst_dir,
                       "--with-gcc-toolchain=/tools/gcc-4.5-0moz3"]
@@ -129,6 +130,8 @@ if not os.path.exists(source_dir):
     os.symlink("../../clang", llvm_source_dir + "/tools/clang")
     os.symlink("../../compiler-rt", llvm_source_dir + "/projects/compiler-rt")
     patch("llvm-debug-frame.patch", 1, llvm_source_dir)
+    patch("llvm-deterministic.patch", 1, llvm_source_dir)
+    patch("clang-deterministic.patch", 1, clang_source_dir)
     if not isDarwin:
         patch("old-ld-hack.patch", 1, llvm_source_dir)
         patch("compiler-rt-gnu89-inline.patch", 0, compiler_rt_source_dir)

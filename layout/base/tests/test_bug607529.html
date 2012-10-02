@@ -25,6 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
   var doneOneLoad = false;
 
   /** Test for Bug 607529 **/
+  var done = false;
   window.onmessage = function(e) {
     isnot(e.data, "notcached", "Should never end up not being cached");
   
@@ -39,8 +40,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
       w.postMessage("report", "*");
     }
     else if (e.data == "callbackHappened") {
-      w.close();
-      SimpleTest.finish();
+      // We might get this message more than once, if the other page queues up
+      // more than one callbackHappened message before we manage to close it.
+      // Protect against calling SimpleTest.finish() more than once.
+      if (!done) {
+	w.close();
+	SimpleTest.finish();
+	done = true;
+      }
     } else {
       var msg = JSON.parse(e.data);
       if (msg.error) {

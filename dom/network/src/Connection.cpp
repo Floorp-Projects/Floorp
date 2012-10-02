@@ -97,23 +97,6 @@ Connection::GetMetered(bool* aMetered)
   return NS_OK;
 }
 
-nsresult
-Connection::DispatchTrustedEventToSelf(const nsAString& aEventName)
-{
-  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
-  nsresult rv = event->InitEvent(aEventName, false, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool dummy;
-  rv = DispatchEvent(event, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 void
 Connection::UpdateFromNetworkInfo(const hal::NetworkInformation& aNetworkInfo)
 {
@@ -134,7 +117,7 @@ Connection::Notify(const hal::NetworkInformation& aNetworkInfo)
     return;
   }
 
-  DispatchTrustedEventToSelf(CHANGE_EVENT_NAME);
+  DispatchTrustedEvent(CHANGE_EVENT_NAME);
 }
 
 } // namespace network

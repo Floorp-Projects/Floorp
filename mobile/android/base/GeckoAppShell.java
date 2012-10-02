@@ -1188,7 +1188,16 @@ public class GeckoAppShell
             intent.setDataAndType(Uri.parse(aUriSpec), aMimeType);
         } else {
             Uri uri = Uri.parse(aUriSpec);
-            if ("sms".equals(uri.getScheme())) {
+            final String scheme = uri.getScheme();
+            if ("tel".equals(scheme)) {
+                // Bug 794034 - We don't want to pass MWI or USSD codes to the
+                // dialer, and ensure the Uri class doesn't parse a tel: URI as
+                // containing a fragment ('#')
+                final String number = uri.getSchemeSpecificPart();
+                if (number.contains("#") || number.contains("*") || uri.getFragment() != null) {
+                    return false;
+                }
+            } else if ("sms".equals(scheme)) {
                 // Have a apecial handling for the SMS, as the message body
                 // is not extracted from the URI automatically
                 final String query = uri.getEncodedQuery();

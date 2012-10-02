@@ -19,9 +19,9 @@
 #include "nsContentUtils.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsGkAtoms.h"
-
+#include "mozilla/dom/HTMLCollectionBinding.h"
+#include "mozilla/dom/NodeListBinding.h"
 #include "dombindings.h"
-#include "mozilla/dom/BindingUtils.h"
 
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
@@ -163,7 +163,13 @@ JSObject*
 nsSimpleContentList::WrapObject(JSContext *cx, JSObject *scope,
                                 bool *triedToWrap)
 {
-  return mozilla::dom::oldproxybindings::NodeList::create(cx, scope, this, triedToWrap);
+  JSObject* obj = NodeListBinding::Wrap(cx, scope, this, triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return oldproxybindings::NodeList::create(cx, scope, this);
 }
 
 // nsFormContentList
@@ -297,7 +303,13 @@ JSObject*
 nsCacheableFuncStringNodeList::WrapObject(JSContext *cx, JSObject *scope,
                                           bool *triedToWrap)
 {
-  return oldproxybindings::NodeList::create(cx, scope, this, triedToWrap);
+  JSObject* obj = NodeListBinding::Wrap(cx, scope, this, triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return oldproxybindings::NodeList::create(cx, scope, this);
 }
 
 
@@ -305,7 +317,13 @@ JSObject*
 nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx, JSObject *scope,
                                                 bool *triedToWrap)
 {
-  return oldproxybindings::HTMLCollection::create(cx, scope, this, triedToWrap);
+  JSObject* obj = HTMLCollectionBinding::Wrap(cx, scope, this, triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return oldproxybindings::HTMLCollection::create(cx, scope, this);
 }
 
 // Hashtable for storing nsCacheableFuncStringContentList
@@ -534,8 +552,13 @@ nsContentList::~nsContentList()
 JSObject*
 nsContentList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
-  return mozilla::dom::oldproxybindings::HTMLCollection::create(cx, scope, this,
-                                                       triedToWrap);
+  JSObject* obj = HTMLCollectionBinding::Wrap(cx, scope, this, triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return oldproxybindings::HTMLCollection::create(cx, scope, this);
 }
 
 DOMCI_DATA(ContentList, nsContentList)

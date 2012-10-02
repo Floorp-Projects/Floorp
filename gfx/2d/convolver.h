@@ -8,9 +8,9 @@
 #include <cmath>
 #include <vector>
 
-#include "basictypes.h"
+#include "base/basictypes.h"
 #include "prtypes.h"
-#include "cpu.h"
+#include "base/cpu.h"
 #include "skia/SkTypes.h"
 
 // avoid confusion with Mac OS X's math library (Carbon)

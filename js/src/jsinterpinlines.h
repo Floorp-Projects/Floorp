@@ -393,7 +393,7 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
 }
 
 inline bool
-IntrinsicNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
+IntrinsicNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHandleValue vp)
 {
     JSOp op = JSOp(*pc);
     RootedPropertyName name(cx);

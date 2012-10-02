@@ -14,7 +14,9 @@
 #include <mozilla/StandardInteger.h>
 #include "prtypes.h"
 
-PR_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // aSP will be the best approximation possible of what the stack pointer will be
 // pointing to when the execution returns to executing that at that PC.
@@ -103,6 +105,8 @@ XPCOM_API(nsresult)
 NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
                             char *aBuffer, uint32_t aBufferSize);
 
-PR_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !defined(nsStackWalk_h_) */

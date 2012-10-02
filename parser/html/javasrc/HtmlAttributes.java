@@ -131,8 +131,94 @@ public final class HtmlAttributes implements Attributes {
         return -1;
     }
 
+    /**
+     * Only use with static argument.
+     * 
+     * @see org.xml.sax.Attributes#getValue(java.lang.String)
+     */
+    public String getValue(AttributeName name) {
+        int index = getIndex(name);
+        if (index == -1) {
+            return null;
+        } else {
+            return getValueNoBoundsCheck(index);
+        }
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    /**
+     * Variant of <code>getLocalName(int index)</code> without bounds check.
+     * @param index a valid attribute index
+     * @return the local name at index
+     */
+    public @Local String getLocalNameNoBoundsCheck(int index) {
+        // CPPONLY: assert index < length && index >= 0: "Index out of bounds";
+        return names[index].getLocal(mode);
+    }
+
+    /**
+     * Variant of <code>getURI(int index)</code> without bounds check.
+     * @param index a valid attribute index
+     * @return the namespace URI at index
+     */
+    public @NsUri String getURINoBoundsCheck(int index) {
+        // CPPONLY: assert index < length && index >= 0: "Index out of bounds";
+        return names[index].getUri(mode);
+    }
+
+    /**
+     * Variant of <code>getPrefix(int index)</code> without bounds check.
+     * @param index a valid attribute index
+     * @return the namespace prefix at index
+     */
+    public @Prefix String getPrefixNoBoundsCheck(int index) {
+        // CPPONLY: assert index < length && index >= 0: "Index out of bounds";
+        return names[index].getPrefix(mode);
+    }
+
+    /**
+     * Variant of <code>getValue(int index)</code> without bounds check.
+     * @param index a valid attribute index
+     * @return the attribute value at index
+     */
+    public String getValueNoBoundsCheck(int index) {
+        // CPPONLY: assert index < length && index >= 0: "Index out of bounds";
+        return values[index];
+    }
+
+    /**
+     * Variant of <code>getAttributeName(int index)</code> without bounds check.
+     * @param index a valid attribute index
+     * @return the attribute name at index
+     */
+    public AttributeName getAttributeNameNoBoundsCheck(int index) {
+        // CPPONLY: assert index < length && index >= 0: "Index out of bounds";
+        return names[index];
+    }
+
     // [NOCPP[
     
+    /**
+     * Variant of <code>getQName(int index)</code> without bounds check.
+     * @param index a valid attribute index
+     * @return the QName at index
+     */
+    public @QName String getQNameNoBoundsCheck(int index) {
+        return names[index].getQName(mode);
+    }
+
+    /**
+     * Variant of <code>getType(int index)</code> without bounds check.
+     * @param index a valid attribute index
+     * @return the attribute type at index
+     */
+    public @IdType String getTypeNoBoundsCheck(int index) {
+        return (names[index] == AttributeName.ID) ? "ID" : "CDATA";
+    }
+
     public int getIndex(String qName) {
         for (int i = 0; i < length; i++) {
             if (names[i].getQName(mode).equals(qName)) {
@@ -188,12 +274,6 @@ public final class HtmlAttributes implements Attributes {
         }
     }
     
-    // ]NOCPP]
-    
-    public int getLength() {
-        return length;
-    }
-
     public @Local String getLocalName(int index) {
         if (index < length && index >= 0) {
             return names[index].getLocal(mode);
@@ -201,8 +281,6 @@ public final class HtmlAttributes implements Attributes {
             return null;
         }
     }
-
-    // [NOCPP[
     
     public @QName String getQName(int index) {
         if (index < length && index >= 0) {
@@ -220,8 +298,6 @@ public final class HtmlAttributes implements Attributes {
         }
     }
 
-    // ]NOCPP]
-    
     public AttributeName getAttributeName(int index) {
         if (index < length && index >= 0) {
             return names[index];
@@ -253,22 +329,6 @@ public final class HtmlAttributes implements Attributes {
             return null;
         }
     }
-
-    /**
-     * Only use with static argument.
-     * 
-     * @see org.xml.sax.Attributes#getValue(java.lang.String)
-     */
-    public String getValue(AttributeName name) {
-        int index = getIndex(name);
-        if (index == -1) {
-            return null;
-        } else {
-            return getValue(index);
-        }
-    }
-    
-    // [NOCPP[
 
     public String getId() {
         return idValue;
@@ -445,25 +505,32 @@ public final class HtmlAttributes implements Attributes {
         mode = AttributeName.SVG;
     }
 
-    public HtmlAttributes cloneAttributes(Interner interner) throws SAXException {
-        assert (length == 0 && xmlnsLength == 0) || mode == 0 || mode == 3;
+    public HtmlAttributes cloneAttributes(Interner interner)
+            throws SAXException {
+        assert (length == 0
+                // [NOCPP[
+                && xmlnsLength == 0
+                // ]NOCPP]
+                )
+                || mode == 0 || mode == 3;
         HtmlAttributes clone = new HtmlAttributes(0);
         for (int i = 0; i < length; i++) {
-            clone.addAttribute(names[i].cloneAttributeName(interner), Portability.newStringFromString(values[i])
-            // [NOCPP[
-                   , XmlViolationPolicy.ALLOW
-            // ]NOCPP]
+            clone.addAttribute(names[i].cloneAttributeName(interner),
+                    Portability.newStringFromString(values[i])
+                    // [NOCPP[
+                    , XmlViolationPolicy.ALLOW
+                    // ]NOCPP]
             );
         }
         // [NOCPP[
         for (int i = 0; i < xmlnsLength; i++) {
-            clone.addAttribute(xmlnsNames[i],
-                    xmlnsValues[i], XmlViolationPolicy.ALLOW);
+            clone.addAttribute(xmlnsNames[i], xmlnsValues[i],
+                    XmlViolationPolicy.ALLOW);
         }
         // ]NOCPP]
         return clone; // XXX!!!
     }
-    
+
     public boolean equalsAnother(HtmlAttributes other) {
         assert mode == 0 || mode == 3 : "Trying to compare attributes in foreign content.";
         int otherLength = other.getLength();
@@ -518,9 +585,9 @@ public final class HtmlAttributes implements Attributes {
     public void merge(HtmlAttributes attributes) throws SAXException {
         int len = attributes.getLength();
         for (int i = 0; i < len; i++) {
-            AttributeName name = attributes.getAttributeName(i);
+            AttributeName name = attributes.getAttributeNameNoBoundsCheck(i);
             if (!contains(name)) {
-                addAttribute(name, attributes.getValue(i), XmlViolationPolicy.ALLOW);
+                addAttribute(name, attributes.getValueNoBoundsCheck(i), XmlViolationPolicy.ALLOW);
             }
         }
     }

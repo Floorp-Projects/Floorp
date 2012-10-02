@@ -342,7 +342,6 @@ SettingsManager.prototype = {
   observe: function(aSubject, aTopic, aData) {
     debug("Topic: " + aTopic);
     if (aTopic == "inner-window-destroyed") {
-      cpmm.sendAsyncMessage("Settings:UnregisterForMessages");
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == this.innerWindowID) {
         Services.obs.removeObserver(this, "inner-window-destroyed");
