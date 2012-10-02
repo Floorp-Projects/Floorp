@@ -51,9 +51,9 @@
 #include "nsIConstraintValidation.h"
 
 #include "nsIDOMHTMLButtonElement.h"
+#include "mozilla/dom/HTMLCollectionBinding.h"
 #include "dombindings.h"
 #include "nsSandboxFlags.h"
-#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla::dom;
 
@@ -125,8 +125,13 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::oldproxybindings::HTMLCollection::create(cx, scope, this,
-                                                         triedToWrap);
+    JSObject* obj = HTMLCollectionBinding::Wrap(cx, scope, this, triedToWrap);
+    if (obj || *triedToWrap) {
+      return obj;
+    }
+
+    *triedToWrap = true;
+    return oldproxybindings::HTMLCollection::create(cx, scope, this);
   }
 
   nsHTMLFormElement* mForm;  // WEAK - the form owns me

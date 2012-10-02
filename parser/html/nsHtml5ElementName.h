@@ -68,6 +68,7 @@ class nsHtml5ElementName
     }
 
     int32_t getGroup();
+    bool isCustom();
     static nsHtml5ElementName* elementNameByBuffer(PRUnichar* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
   private:
     static int32_t bufToHash(PRUnichar* buf, int32_t len);

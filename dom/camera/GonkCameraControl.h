@@ -35,7 +35,7 @@ class GraphicBufferLocked;
 class nsGonkCameraControl : public CameraControlImpl
 {
 public:
-  nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError);
+  nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId);
   nsresult Init();
 
   const char* GetParameter(const char* aKey);
@@ -93,9 +93,9 @@ protected:
   android::MediaProfiles*   mMediaProfiles;
   android::GonkRecorder*    mRecorder;
 
-  PRUint32                  mVideoRotation;
-  PRUint32                  mVideoWidth;
-  PRUint32                  mVideoHeight;
+  uint32_t                  mVideoRotation;
+  uint32_t                  mVideoWidth;
+  uint32_t                  mVideoHeight;
   nsString                  mVideoFile;
 
   // camcorder profile settings for the desired quality level
@@ -120,6 +120,8 @@ private:
 void ReceiveImage(nsGonkCameraControl* gc, uint8_t* aData, uint32_t aLength);
 void AutoFocusComplete(nsGonkCameraControl* gc, bool aSuccess);
 void ReceiveFrame(nsGonkCameraControl* gc, layers::GraphicBufferLocked* aBuffer);
+void OnShutter(nsGonkCameraControl* gc);
+void OnClosed(nsGonkCameraControl* gc);
 
 } // namespace mozilla
 

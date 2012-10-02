@@ -9,6 +9,8 @@
 #include "nsClientRect.h"
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/PaintRequestListBinding.h"
+#include "dombindings.h"
 
 DOMCI_DATA(PaintRequest, nsPaintRequest)
 
@@ -52,6 +54,21 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPaintRequestList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPaintRequestList)
+
+JSObject*
+nsPaintRequestList::WrapObject(JSContext *cx, JSObject *scope,
+                               bool *triedToWrap)
+{
+  JSObject* obj = mozilla::dom::PaintRequestListBinding::Wrap(cx, scope, this,
+                                                              triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return mozilla::dom::oldproxybindings::PaintRequestList::create(cx, scope,
+                                                                  this);
+}
 
 NS_IMETHODIMP    
 nsPaintRequestList::GetLength(uint32_t* aLength)

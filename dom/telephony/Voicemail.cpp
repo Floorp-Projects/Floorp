@@ -100,14 +100,7 @@ Voicemail::VoicemailNotification(nsIDOMMozVoicemailStatus* aStatus)
                                           false, false, aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool dummy;
-  rv = DispatchEvent(static_cast<nsIDOMMozVoicemailEvent*>(event), &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return DispatchTrustedEvent(static_cast<nsIDOMMozVoicemailEvent*>(event));
 }
 
 nsresult

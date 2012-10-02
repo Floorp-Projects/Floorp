@@ -10,8 +10,8 @@
 #include "nsIDOMPaintRequestList.h"
 #include "nsPresContext.h"
 #include "nsIDOMEvent.h"
-#include "dombindings.h"
 #include "mozilla/Attributes.h"
+#include "nsWrapperCache.h"
 
 class nsPaintRequest MOZ_FINAL : public nsIDOMPaintRequest
 {
@@ -44,12 +44,7 @@ public:
   NS_DECL_NSIDOMPAINTREQUESTLIST
   
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
-                               bool *triedToWrap)
-  {
-    return mozilla::dom::oldproxybindings::PaintRequestList::create(cx, scope, this,
-                                                           triedToWrap);
-  }
-
+                               bool *triedToWrap);
   nsISupports* GetParentObject()
   {
     return mParent;

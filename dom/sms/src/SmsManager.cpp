@@ -352,14 +352,7 @@ SmsManager::DispatchTrustedSmsEventToSelf(const nsAString& aEventName, nsIDOMMoz
                                                           false, aMessage);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool dummy;
-  rv = DispatchEvent(event, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return DispatchTrustedEvent(event);
 }
 
 NS_IMETHODIMP

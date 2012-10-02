@@ -159,9 +159,9 @@ let DOMApplicationRegistry = {
                      "Webapps:Launch", "Webapps:GetAll",
                      "Webapps:InstallPackage", "Webapps:GetBasePath",
                      "Webapps:GetList", "Webapps:RegisterForMessages",
-                     "Webapps:UnregisterForMessages",
                      "Webapps:CancelDownload", "Webapps:CheckForUpdate",
-                     "Webapps::Download", "Webapps::ApplyDownload"];
+                     "Webapps::Download", "Webapps::ApplyDownload",
+                     "child-process-shutdown"];
 
     this.frameMessages = ["Webapps:ClearBrowserData"];
 
@@ -512,17 +512,17 @@ let DOMApplicationRegistry = {
     }, this);
   },
 
-  removeMessageListener: function(aMsgNames, aMm) {
-    aMsgNames.forEach(function (aMsgName) {
-      if (!(aMsgName in this.children)) {
-        return;
-      }
+
+  removeMessageListener: function(aMm) {
+    for (let i = this.children.length - 1; i >= 0; i -= 1) {
+      msg = this.children[i];
 
       let index;
-      if ((index = this.children[aMsgName].indexOf(aMm)) != -1) {
-        this.children[aMsgName].splice(index, 1);
+      if ((index = msg.indexOf(aMm)) != -1) {
+         debug("Remove dead mm at index " + index);
+         msg.splice(index, 1);
       }
-    }, this);
+    };
   },
 
   receiveMessage: function(aMessage) {
@@ -542,7 +542,7 @@ let DOMApplicationRegistry = {
       }
     }
 
-    let msg = aMessage.json;
+    let msg = aMessage.data || {};
     let mm = aMessage.target;
     msg.mm = mm;
 
@@ -585,9 +585,6 @@ let DOMApplicationRegistry = {
       case "Webapps:RegisterForMessages":
         this.addMessageListener(msg, mm);
         break;
-      case "Webapps:UnregisterForMessages":
-        this.removeMessageListener(msg, mm);
-        break;
       case "Webapps:GetList":
         this.addMessageListener(["Webapps:AddApp", "Webapps:RemoveApp"], mm);
         return this.webapps;
@@ -609,6 +606,9 @@ let DOMApplicationRegistry = {
             this.activitiesRegistered === this.activitiesToRegister) {
           this.onInitDone();
         }
+        break;
+      case "child-process-shutdown":
+        this.removeMessageListener(mm);
         break;
     }
   },

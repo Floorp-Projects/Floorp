@@ -141,6 +141,8 @@ const UNEXPECTED_MAR_ERROR             = 40;
 const UNEXPECTED_BSPATCH_ERROR         = 41;
 const UNEXPECTED_FILE_OPERATION_ERROR  = 42;
 const FILESYSTEM_MOUNT_READWRITE_ERROR = 43;
+const FOTA_GENERAL_ERROR               = 44;
+const FOTA_UNKNOWN_ERROR               = 45;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -958,7 +960,9 @@ function handleUpdateFailure(update, errorCode) {
       update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
       update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
       update.errorCode == WRITE_ERROR_CALLBACK_APP ||
-      update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR) {
+      update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
+      update.errorCode == FOTA_GENERAL_ERROR ||
+      update.errorCode == FOTA_UNKNOWN_ERROR) {
     Cc["@mozilla.org/updates/update-prompt;1"].
       createInstance(Ci.nsIUpdatePrompt).
       showUpdateError(update);
@@ -1172,6 +1176,7 @@ function Update(update) {
   this._properties = {};
   this._patches = [];
   this.isCompleteUpdate = false;
+  this.isOSUpdate = false;
   this.showPrompt = false;
   this.showSurvey = false;
   this.showNeverForVersion = false;
@@ -1232,6 +1237,8 @@ function Update(update) {
       this.isCompleteUpdate = attr.value == "true";
     else if (attr.name == "isSecurityUpdate")
       this.isSecurityUpdate = attr.value == "true";
+    else if (attr.name == "isOSUpdate")
+      this.isOSUpdate = attr.value == "true";
     else if (attr.name == "showNeverForVersion")
       this.showNeverForVersion = attr.value == "true";
     else if (attr.name == "showPrompt")
@@ -1370,6 +1377,7 @@ Update.prototype = {
     update.setAttribute("extensionVersion", this.appVersion);
     update.setAttribute("installDate", this.installDate);
     update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
+    update.setAttribute("isOSUpdate", this.isOSUpdate);
     update.setAttribute("name", this.name);
     update.setAttribute("serviceURL", this.serviceURL);
     update.setAttribute("showNeverForVersion", this.showNeverForVersion);
@@ -1581,6 +1589,29 @@ UpdateService.prototype = {
       }
       return;
     }
+
+#ifdef MOZ_WIDGET_GONK
+    if (status == STATE_APPLIED && update && update.isOSUpdate) {
+      // In gonk, we need to check for OS update status after startup, since
+      // the recovery partition won't write to update.status for us
+      var recoveryService = Cc["@mozilla.org/recovery-service;1"].
+                            getService(Ci.nsIRecoveryService);
+
+      var fotaStatus = recoveryService.getFotaUpdateStatus();
+      switch (fotaStatus) {
+        case Ci.nsIRecoveryService.FOTA_UPDATE_SUCCESS:
+          status = STATE_SUCCEEDED;
+          break;
+        case Ci.nsIRecoveryService.FOTA_UPDATE_FAIL:
+          status = STATE_FAILED + ": " + FOTA_GENERAL_ERROR;
+          break;
+        case Ci.nsIRecoveryService.FOTA_UPDATE_UNKNOWN:
+        default:
+          status = STATE_FAILED + ": " + FOTA_UNKNOWN_ERROR;
+          break;
+      }
+    }
+#endif
 
     if (!update)
       update = new Update(null);
@@ -3477,7 +3508,9 @@ UpdatePrompt.prototype = {
          update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
          update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
          update.errorCode == WRITE_ERROR_CALLBACK_APP ||
-         update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR)) {
+         update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
+         update.errorCode == FOTA_GENERAL_ERROR ||
+         update.errorCode == FOTA_UNKNOWN_ERROR)) {
       var title = gUpdateBundle.GetStringFromName("updaterIOErrorTitle");
       var text = gUpdateBundle.formatStringFromName("updaterIOErrorMsg",
                                                     [Services.appinfo.name,

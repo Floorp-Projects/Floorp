@@ -96,29 +96,6 @@ enum {
   CAMERA_PARAM_SUPPORTED_ZOOMRATIOS
 };
 
-class CameraErrorResult : public nsRunnable
-{
-public:
-  CameraErrorResult(nsICameraErrorCallback* onError, const nsString& aErrorMsg)
-    : mOnErrorCb(onError)
-    , mErrorMsg(aErrorMsg)
-  { }
-
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (mOnErrorCb) {
-      mOnErrorCb->HandleEvent(mErrorMsg);
-    }
-    return NS_OK;
-  }
-
-protected:
-  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
-  const nsString mErrorMsg;
-};
-
 #ifdef PR_LOGGING
 
 static inline void nsLogAddRefCamera(const char *file, uint32_t line, void* p, uint32_t count, const char *clazz, uint32_t size)

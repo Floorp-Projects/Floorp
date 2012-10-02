@@ -35,8 +35,8 @@
 #include "nsEventDispatcher.h"
 #include "mozilla/dom/Element.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/dom/HTMLOptionsCollectionBinding.h"
 #include "dombindings.h"
-#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2009,8 +2009,13 @@ JSObject*
 nsHTMLOptionCollection::WrapObject(JSContext *cx, JSObject *scope,
                                    bool *triedToWrap)
 {
-  return mozilla::dom::oldproxybindings::HTMLOptionsCollection::create(cx, scope, this,
-                                                              triedToWrap);
+  JSObject* obj = HTMLOptionsCollectionBinding::Wrap(cx, scope, this, triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return oldproxybindings::HTMLOptionsCollection::create(cx, scope, this);
 }
 
 NS_IMETHODIMP

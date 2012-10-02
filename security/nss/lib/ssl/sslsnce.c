@@ -1,42 +1,10 @@
 /* This file implements the SERVER Session ID cache. 
  * NOTE:  The contents of this file are NOT used by the client.
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.59 2011/10/22 16:45:40 emaldona%redhat.com Exp $ */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* $Id: sslsnce.c,v 1.63 2012/06/14 19:04:59 wtc%google.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -86,7 +54,12 @@
 #include "pk11func.h"
 #include "base64.h"
 #include "keyhi.h"
+#ifdef NO_PKCS11_BYPASS
+#include "blapit.h"
+#include "sechash.h"
+#else
 #include "blapi.h"
+#endif
 
 #include <stdio.h>
 
@@ -148,17 +121,17 @@ struct sidCacheEntryStr {
 /*  2 */    ssl3CipherSuite  cipherSuite;
 /*  2 */    PRUint16    compression; 	/* SSLCompressionMethod */
 
-/*100 */    ssl3SidKeys keys;	/* keys and ivs, wrapped as needed. */
+/* 52 */    ssl3SidKeys keys;	/* keys, wrapped as needed. */
 
 /*  4 */    PRUint32    masterWrapMech; 
 /*  4 */    SSL3KEAType exchKeyType;
 /*  4 */    PRInt32     certIndex;
 /*  4 */    PRInt32     srvNameIndex;
 /* 32 */    PRUint8     srvNameHash[SHA256_LENGTH]; /* SHA256 name hash */
-/*152 */} ssl3;
+/*104 */} ssl3;
 /* force sizeof(sidCacheEntry) to be a multiple of cache line size */
         struct {
-/*152 */    PRUint8     filler[120]; /* 72+152==224, a multiple of 16 */
+/*120 */    PRUint8     filler[120]; /* 72+120==192, a multiple of 16 */
 	} forceSize;
     } u;
 };
@@ -448,8 +421,12 @@ CacheSrvName(cacheDesc * cache, SECItem *name, sidCacheEntry *sce)
     snce.type = name->type;
     snce.nameLen = name->len;
     PORT_Memcpy(snce.name, name->data, snce.nameLen);
+#ifdef NO_PKCS11_BYPASS
+    HASH_HashBuf(HASH_AlgSHA256, snce.nameHash, name->data, name->len);
+#else
     SHA256_HashBuf(snce.nameHash, (unsigned char*)name->data,
                    name->len);
+#endif
     /* get index of the next name */
     ndx = Get32BitNameHash(name);
     /* get lock on cert cache */
@@ -557,7 +534,7 @@ ConvertToSID(sidCacheEntry *    from,
     sslSessionID *to;
     uint16 version = from->version;
 
-    to = (sslSessionID*) PORT_ZAlloc(sizeof(sslSessionID));
+    to = PORT_ZNew(sslSessionID);
     if (!to) {
 	return 0;
     }
@@ -1328,7 +1305,7 @@ ssl_ConfigServerSessionIDCacheInstanceWithOpt(cacheDesc *cache,
 {
     SECStatus rv;
 
-    PORT_Assert(sizeof(sidCacheEntry) == 224);
+    PORT_Assert(sizeof(sidCacheEntry) == 192);
     PORT_Assert(sizeof(certCacheEntry) == 4096);
     PORT_Assert(sizeof(srvNameCacheEntry) == 1072);
 

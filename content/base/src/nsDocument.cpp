@@ -2458,7 +2458,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   // ----- Figure out if we need to apply an app default CSP
   bool applyAppDefaultCSP = false;
   nsIPrincipal* principal = NodePrincipal();
-  PRUint16 appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
   bool unknownAppId;
   if (NS_SUCCEEDED(principal->GetUnknownAppId(&unknownAppId)) &&
       !unknownAppId &&
@@ -8424,7 +8424,7 @@ nsDocument::NotifyAudioAvailableListener()
 }
 
 nsresult
-nsDocument::RemoveImage(imgIRequest* aImage)
+nsDocument::RemoveImage(imgIRequest* aImage, uint32_t aFlags)
 {
   NS_ENSURE_ARG_POINTER(aImage);
 
@@ -8460,10 +8460,12 @@ nsDocument::RemoveImage(imgIRequest* aImage)
     rv = NS_SUCCEEDED(rv) ? rv2 : rv;
   }
 
-  // Request that the image be discarded if nobody else holds a lock on it.
-  // Do this even if !mLockingImages, because even if we didn't just unlock
-  // this image, it might still be a candidate for discarding.
-  aImage->RequestDiscard();
+  if (aFlags & REQUEST_DISCARD) {
+    // Request that the image be discarded if nobody else holds a lock on it.
+    // Do this even if !mLockingImages, because even if we didn't just unlock
+    // this image, it might still be a candidate for discarding.
+    aImage->RequestDiscard();
+  }
 
   return rv;
 }

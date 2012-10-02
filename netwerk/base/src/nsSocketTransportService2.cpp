@@ -19,6 +19,9 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIOService.h"
 #include "NetworkActivityMonitor.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
 
 
 // XXX: There is no good header file to put these in. :(
@@ -459,17 +462,13 @@ nsSocketTransportService::Init()
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (tmpPrefService) {
         tmpPrefService->AddObserver(SEND_BUFFER_PREF, this, false);
-
-        int32_t blipInterval = 0;
-        rv = tmpPrefService->GetIntPref(BLIB_INTERVAL_PREF, &blipInterval);
-        if (NS_SUCCEEDED(rv) && blipInterval > 0) {
-            rv = mozilla::net::NetworkActivityMonitor::Init(blipInterval);
-            if (NS_FAILED(rv)) {
-                NS_WARNING("Can't initialize NetworkActivityMonitor");
-            }
-        }
     }
     UpdatePrefs();
+
+    nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
+    if (obsSvc) {
+        obsSvc->AddObserver(this, "profile-initial-state", false);
+    }
 
     mInitialized = true;
     return NS_OK;
@@ -512,6 +511,11 @@ nsSocketTransportService::Shutdown()
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (tmpPrefService) 
         tmpPrefService->RemoveObserver(SEND_BUFFER_PREF, this);
+
+    nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
+    if (obsSvc) {
+        obsSvc->RemoveObserver(this, "profile-initial-state");
+    }
 
     mozilla::net::NetworkActivityMonitor::Shutdown();
 
@@ -861,6 +865,16 @@ nsSocketTransportService::Observe(nsISupports *subject,
 {
     if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         UpdatePrefs();
+        return NS_OK;
+    }
+
+    if (!strcmp(topic, "profile-initial-state")) {
+        int32_t blipInterval = Preferences::GetInt(BLIB_INTERVAL_PREF, 0);
+        if (blipInterval <= 0) {
+            return NS_OK;
+        }
+
+        return net::NetworkActivityMonitor::Init(blipInterval);
     }
     return NS_OK;
 }

@@ -91,6 +91,7 @@ DEFINES += \
 
 EXPORTS += \
   nsNSSShutDown.h \
+  ScopedNSSTypes.h \
   $(NULL)
 
 # Use local includes because they are inserted before INCLUDES

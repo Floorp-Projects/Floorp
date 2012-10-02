@@ -264,11 +264,27 @@ DBusMessage * dbus_func_args_error(DBusConnection *conn,
 int dbus_returns_int32(DBusMessage *reply) 
 {
   DBusError err;
-  int ret = -1;
+  int32_t ret = -1;
 
   dbus_error_init(&err);
   if (!dbus_message_get_args(reply, &err,
                              DBUS_TYPE_INT32, &ret,
+                             DBUS_TYPE_INVALID)) {
+    LOG_AND_FREE_DBUS_ERROR_WITH_MSG(&err, reply);
+  }
+
+  dbus_message_unref(reply);
+  return ret;
+}
+
+int dbus_returns_uint32(DBusMessage *reply)
+{
+  DBusError err;
+  uint32_t ret = -1;
+
+  dbus_error_init(&err);
+  if (!dbus_message_get_args(reply, &err,
+                             DBUS_TYPE_UINT32, &ret,
                              DBUS_TYPE_INVALID)) {
     LOG_AND_FREE_DBUS_ERROR_WITH_MSG(&err, reply);
   }

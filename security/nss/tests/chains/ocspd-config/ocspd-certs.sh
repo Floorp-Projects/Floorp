@@ -31,9 +31,9 @@ convert_key()
 
     STATUS=0
     cat ${DATA_DIR}/${KEY_NAME}.key.tmp | while read LINE; do
-        echo "${LINE}" | grep "BEGIN RSA PRIVATE KEY" > /dev/null && STATUS=1
+        echo "${LINE}" | grep "BEGIN ENCRYPTED PRIVATE KEY" > /dev/null && STATUS=1
         [ ${STATUS} -eq 1 ] && echo "${LINE}"
-        echo "${LINE}" | grep "END RSA PRIVATE KEY" > /dev/null && break
+        echo "${LINE}" | grep "END ENCRYPTED PRIVATE KEY" > /dev/null && break
     done > ${DATA_DIR}/${KEY_NAME}.key
     
     rm ${DATA_DIR}/${KEY_NAME}.key.tmp
