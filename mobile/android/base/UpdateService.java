@@ -208,7 +208,7 @@ public class UpdateService extends IntentService {
             Log.i(LOGTAG, "not connected via wifi or ethernet");
 
             // We aren't autodownloading here, so prompt to start the update
-            Notification notification = new Notification(R.drawable.icon, getResources().getString(R.string.updater_start_ticker), System.currentTimeMillis());
+            Notification notification = new Notification(R.drawable.ic_status_logo, null, System.currentTimeMillis());
 
             Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE);
             notificationIntent.setClass(this, UpdateService.class);
@@ -238,7 +238,7 @@ public class UpdateService extends IntentService {
             applyUpdate(pkg);
         } else {
             // Prompt to apply the update
-            Notification notification = new Notification(R.drawable.icon, getResources().getString(R.string.updater_apply_ticker), System.currentTimeMillis());
+            Notification notification = new Notification(R.drawable.ic_status_logo, null, System.currentTimeMillis());
 
             Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_APPLY_UPDATE);
             notificationIntent.setClass(this, UpdateService.class);
@@ -336,7 +336,7 @@ public class UpdateService extends IntentService {
     }
 
     private void showDownloadNotification(File downloadFile) {
-        Notification notification = new Notification(android.R.drawable.stat_sys_download, getResources().getString(R.string.updater_downloading_ticker), System.currentTimeMillis());
+        Notification notification = new Notification(android.R.drawable.stat_sys_download, null, System.currentTimeMillis());
 
         Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_APPLY_UPDATE);
         notificationIntent.setClass(this, UpdateService.class);
@@ -347,22 +347,21 @@ public class UpdateService extends IntentService {
         PendingIntent contentIntent = PendingIntent.getService(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         notification.setLatestEventInfo(this, getResources().getString(R.string.updater_downloading_title),
-                                        mApplyImmediately ? getResources().getString(R.string.updater_downloading_willapply) :
-                                            getResources().getString(R.string.updater_downloading_select),
+                                        mApplyImmediately ? "" : getResources().getString(R.string.updater_downloading_select),
                                         contentIntent);
         
         mNotificationManager.notify(NOTIFICATION_ID, notification);
     }
 
     private void showDownloadFailure() {
-        Notification notification = new Notification(android.R.drawable.stat_sys_warning, getResources().getString(R.string.updater_downloading_ticker_failed), System.currentTimeMillis());
+        Notification notification = new Notification(R.drawable.ic_status_logo, null, System.currentTimeMillis());
 
         Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE);
         notificationIntent.setClass(this, UpdateService.class);
 
         PendingIntent contentIntent = PendingIntent.getService(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        notification.setLatestEventInfo(this, getResources().getString(R.string.updater_downloading_title),
+        notification.setLatestEventInfo(this, getResources().getString(R.string.updater_downloading_title_failed),
                                         getResources().getString(R.string.updater_downloading_retry),
                                         contentIntent);
         
