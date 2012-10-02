@@ -1,0 +1,86 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs">
+<head>
+<title>Cache update test</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * The test is checking nsIOfflineCacheUpdateService.checkForUpdate API:
+ * - cache a manifest
+ * - check for an update of it, expected is "no update avail"
+ * - modify the manifest on the server
+ * - check for an update again, expected is "update avail"
+ * - check for an update ones again, expected is "update avail" (secondary check to probe
+ *   we didn't screw state of the manifest in the current cache with the first check)
+ * - cache the modified manifest, new version is now in the cache
+ * - last check for an update, expected is "no update avail" again
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+var manifest = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs";
+var manifestURI = Cc["@mozilla.org/network/io-service;1"]
+                  .getService(Ci.nsIIOService)
+                  .newURI(manifest, null, null);
+var updateService = Cc['@mozilla.org/offlinecacheupdate-service;1']
+                    .getService(Ci.nsIOfflineCacheUpdateService);
+
+function manifestCached()
+{
+  // Run first check for an update
+  updateService.checkForUpdate(manifestURI, 0, false, {
+    observe: function(subject, topic, data) {
+      OfflineTest.is(topic, "offline-cache-update-unavailable", "No update avail");
+
+      // Change the manifest content
+      OfflineTest.setSJSState(manifest, "second");
+
+      // Check we now get notification on update ready
+      updateService.checkForUpdate(manifestURI, 0, false, {
+        observe: function(subject, topic, data) {
+          OfflineTest.is(topic, "offline-cache-update-available", "Update avail (1)");
+
+          // Do the check again.  We must get the same result.  Double check is here
+          // to make sure we don't overwrite any data in the cache by the check it self.
+          updateService.checkForUpdate(manifestURI, 0, false, {
+            observe: function(subject, topic, data) {
+              OfflineTest.is(topic, "offline-cache-update-available", "Update avail (2)");
+
+              // Update the manifest, invokes manifestUpdated()
+              applicationCache.onupdateready = OfflineTest.priv(manifestUpdated);
+              applicationCache.update();
+            }
+          });
+        }
+      });
+    }
+  });
+}
+
+function manifestUpdated()
+{
+  // Check for an update after manifest has been updated
+  updateService.checkForUpdate(manifestURI, 0, false, {
+    observe: function(subject, topic, data) {
+      OfflineTest.is(topic, "offline-cache-update-unavailable", "No update avail (2)");
+
+      OfflineTest.teardown();
+      OfflineTest.finish();
+    }
+  });
+}
+
+if (OfflineTest.setup()) {
+  applicationCache.onerror = OfflineTest.failEvent;
+  applicationCache.oncached = OfflineTest.priv(manifestCached);
+}
+
+</script>
+</head>
+<body>
+</body>
+</html>
