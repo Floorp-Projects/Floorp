@@ -426,11 +426,13 @@ IonScript::IonScript()
     scriptList_(0),
     scriptEntries_(0),
     refcount_(0),
-    slowCallCount(0),
-    recompileInfo_()
+    recompileInfo_(),
+    slowCallCount(0)
 {
 }
+
 static const int DataAlignment = 4;
+
 IonScript *
 IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
