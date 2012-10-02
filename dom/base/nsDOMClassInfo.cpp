@@ -7294,19 +7294,13 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (!ObjectIsNativeWrapper(cx, obj) ||
       xpc::WrapperFactory::XrayWrapperNotShadowing(obj, id)) {
-    nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(win->GetDocShell()));
-
-    int32_t count = 0;
-
-    if (dsn) {
-      dsn->GetChildCount(&count);
-    }
-
-    if (count > 0) {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-
+    if (win->GetLength() > 0) {
       const jschar *chars = ::JS_GetInternedStringChars(JSID_TO_STRING(id));
 
+      nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(win->GetDocShell()));
+      MOZ_ASSERT(dsn);
+
+      nsCOMPtr<nsIDocShellTreeItem> child;
       dsn->FindChildWithName(reinterpret_cast<const PRUnichar*>(chars),
                              false, true, nullptr, nullptr,
                              getter_AddRefs(child));
