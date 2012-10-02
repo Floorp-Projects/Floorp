@@ -1,40 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dr Vipul Gupta <vipul.gupta@sun.com>, and
- *   Douglas Stebila <douglas@stebila.ca>, Sun Microsystems Laboratories
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
  * This file manages object type indepentent functions.
  */
@@ -553,8 +519,8 @@ int
 PK11_SignatureLen(SECKEYPrivateKey *key)
 {
     int val;
-    CK_ATTRIBUTE theTemplate = { CKA_EC_PARAMS, NULL, 0 };
-    SECItem params = {siBuffer, NULL, 0};
+    SECItem attributeItem = {siBuffer, NULL, 0};
+    SECStatus rv;
     int length; 
 
     switch (key->keyType) {
@@ -566,24 +532,33 @@ PK11_SignatureLen(SECKEYPrivateKey *key)
 	return (unsigned long) val;
 	
     case fortezzaKey:
-    case dsaKey:
 	return 40;
+
+    case dsaKey:
+        rv = PK11_ReadAttribute(key->pkcs11Slot, key->pkcs11ID, CKA_SUBPRIME, 
+				NULL, &attributeItem);
+        if (rv == SECSuccess) {
+	    length = attributeItem.len;
+	    if ((length > 0) && attributeItem.data[0] == 0) {
+		length--;
+	    }
+	    PORT_Free(attributeItem.data);
+	    return length*2;
+	}
+	return pk11_backupGetSignLength(key);
+
     case ecKey:
-	if (PK11_GetAttributes(NULL, key->pkcs11Slot, key->pkcs11ID,
-			       &theTemplate, 1) == CKR_OK) {
-	    if (theTemplate.pValue != NULL) {
-	        params.len = theTemplate.ulValueLen;
-		params.data = (unsigned char *) theTemplate.pValue;
-	        length = SECKEY_ECParamsToBasePointOrderLen(&params);
-	        PORT_Free(theTemplate.pValue);
-		if (length == 0) {
-		    return pk11_backupGetSignLength(key);
-		}
+        rv = PK11_ReadAttribute(key->pkcs11Slot, key->pkcs11ID, CKA_EC_PARAMS, 
+				NULL, &attributeItem);
+	if (rv == SECSuccess) {
+	    length = SECKEY_ECParamsToBasePointOrderLen(&attributeItem);
+	    PORT_Free(attributeItem.data);
+	    if (length != 0) {
 		length = ((length + 7)/8) * 2;
 		return length;
 	    }
 	}
-	break;
+	return pk11_backupGetSignLength(key);
     default:
 	break;
     }
@@ -639,7 +614,8 @@ PK11_VerifyRecover(SECKEYPublicKey *key,
     mech.mechanism = PK11_MapSignKeyType(key->keyType);
 
     if (slot == NULL) {
-	slot = PK11_GetBestSlot(mech.mechanism,wincx);
+	slot = PK11_GetBestSlotWithAttributes(mech.mechanism,
+				CKF_VERIFY_RECOVER,0,wincx);
 	if (slot == NULL) {
 	    	PORT_SetError( SEC_ERROR_NO_MODULE );
 		return SECFailure;
@@ -696,8 +672,21 @@ PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
     mech.mechanism = PK11_MapSignKeyType(key->keyType);
 
     if (slot == NULL) {
-	slot = PK11_GetBestSlot(mech.mechanism,wincx);
-       
+	unsigned int length =  0;
+	if ((mech.mechanism == CKM_DSA) && 
+				/* 129 is 1024 bits translated to bytes and
+				 * padded with an optional '0' to maintain a
+				 * positive sign */
+				(key->u.dsa.params.prime.len > 129)) {
+	    /* we need to get a slot that not only can do DSA, but can do DSA2
+	     * key lengths */
+	    length = key->u.dsa.params.prime.len;
+	    if (key->u.dsa.params.prime.data[0] == 0) {
+		length --;
+	    }
+	}
+	slot = PK11_GetBestSlotWithAttributes(mech.mechanism,
+						CKF_VERIFY,length,wincx);
 	if (slot == NULL) {
 	    PORT_SetError( SEC_ERROR_NO_MODULE );
 	    return SECFailure;
@@ -764,6 +753,12 @@ PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, SECItem *hash)
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
     }
+	/* PKCS11 2.20 says if CKA_ALWAYS_AUTHENTICATE then 
+	 * do C_Login with CKU_CONTEXT_SPECIFIC 
+	 * between C_SignInit and C_Sign */
+	if (SECKEY_HAS_ATTRIBUTE_SET(key,CKA_ALWAYS_AUTHENTICATE)) {
+		PK11_DoPassword(slot, PR_FALSE, key->wincx, PR_TRUE);
+	}
     len = sig->len;
     crv = PK11_GETTAB(slot)->C_Sign(session,hash->data,
 					hash->len, sig->data, &len);
@@ -816,6 +811,13 @@ pk11_PrivDecryptRaw(SECKEYPrivateKey *key, unsigned char *data,
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
     }
+	/* PKCS11 2.20 says if CKA_ALWAYS_AUTHENTICATE then 
+	 * do C_Login with CKU_CONTEXT_SPECIFIC 
+	 * between C_DecryptInit and C_Decrypt */
+	/* But see note above about servers */
+	if (SECKEY_HAS_ATTRIBUTE_SET(key,CKA_ALWAYS_AUTHENTICATE)) {
+		PK11_DoPassword(slot, PR_FALSE, key->wincx, PR_TRUE);
+	}
     crv = PK11_GETTAB(slot)->C_Decrypt(session,enc, encLen, data, &out);
     if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot,session,owner);
@@ -863,7 +865,7 @@ pk11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
     }
     out = SECKEY_PublicKeyStrength(key);
 
-    slot = PK11_GetBestSlot(mech->mechanism, wincx);
+    slot = PK11_GetBestSlotWithAttributes(mech->mechanism,CKF_ENCRYPT,0,wincx);
     if (slot == NULL) {
 	PORT_SetError( SEC_ERROR_NO_MODULE );
 	return SECFailure;

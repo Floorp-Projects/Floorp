@@ -1,38 +1,6 @@
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is the Netscape security libraries.
-#
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1994-2009
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 # This file defines the tests for client auth.
 #
@@ -46,24 +14,30 @@
   noECC    254      -r_-r        -w_nss_-n_none           TLS Require client auth (client does not provide auth)
   noECC    254      -r_-r        -w_bogus_-n_TestUser     TLS Require client auth (bad password)
   noECC     0       -r_-r        -w_nss_-n_TestUser_      TLS Require client auth (client auth)
-  noECC     0       -r           -T_-w_nss_-n_none        SSL3 Request don't require client auth (client does not provide auth)
-  noECC     0       -r           -T_-n_TestUser_-w_bogus  SSL3 Request don't require client auth (bad password)
-  noECC     0       -r           -T_-n_TestUser_-w_nss    SSL3 Request don't require client auth (client auth)
-  noECC    254      -r_-r        -T_-w_nss_-n_none        SSL3 Require client auth (client does not provide auth)
-  noECC    254      -r_-r        -T_-n_TestUser_-w_bogus  SSL3 Require client auth (bad password)
-  noECC     0       -r_-r        -T_-n_TestUser_-w_nss    SSL3 Require client auth (client auth)
-  noECC     0       -r_-r_-r     -2_-w_nss_-n_none        TLS Request don't require client auth on 2nd hs (client does not provide auth)
-  noECC     0       -r_-r_-r     -2_-w_bogus_-n_TestUser  TLS Request don't require client auth on 2nd hs (bad password)
-  noECC     0       -r_-r_-r     -2_-w_nss_-n_TestUser    TLS Request don't require client auth on 2nd hs (client auth)
-  noECC     1       -r_-r_-r_-r  -2_-w_nss_-n_none        TLS Require client auth on 2nd hs (client does not provide auth)
-  noECC     1       -r_-r_-r_-r  -2_-w_bogus_-n_TestUser  TLS Require client auth on 2nd hs (bad password)
-  noECC     0       -r_-r_-r_-r  -2_-w_nss_-n_TestUser    TLS Require client auth on 2nd hs (client auth)
-  noECC     0       -r_-r_-r     -2_-T_-w_nss_-n_none     SSL3 Request don't require client auth on 2nd hs (client does not provide auth)
-  noECC     0       -r_-r_-r     -2_-T_-n_TestUser_-w_bogus SSL3 Request don't require client auth on 2nd hs (bad password)
-  noECC     0       -r_-r_-r     -2_-T_-n_TestUser_-w_nss SSL3 Request don't require client auth on 2nd hs (client auth)
-  noECC     1       -r_-r_-r_-r  -2_-T_-w_nss_-n_none     SSL3 Require client auth on 2nd hs (client does not provide auth)
-  noECC     1       -r_-r_-r_-r  -2_-T_-n_TestUser_-w_bogus SSL3 Require client auth on 2nd hs (bad password)
-  noECC     0       -r_-r_-r_-r  -2_-T_-n_TestUser_-w_nss SSL3 Require client auth on 2nd hs (client auth)
+  noECC     0       -r           -V_:ssl3_-w_nss_-n_none        SSL3 Request don't require client auth (client does not provide auth)
+  noECC     0       -r           -V_:ssl3_-n_TestUser_-w_bogus  SSL3 Request don't require client auth (bad password)
+  noECC     0       -r           -V_:ssl3_-n_TestUser_-w_nss    SSL3 Request don't require client auth (client auth)
+  noECC    254      -r_-r        -V_:ssl3_-w_nss_-n_none        SSL3 Require client auth (client does not provide auth)
+  noECC    254      -r_-r        -V_:ssl3_-n_TestUser_-w_bogus  SSL3 Require client auth (bad password)
+  noECC     0       -r_-r        -V_:ssl3_-n_TestUser_-w_nss    SSL3 Require client auth (client auth)
+  noECC     0       -r_-r_-r     -V_ssl3:_-w_nss_-n_none        TLS Request don't require client auth on 2nd hs (client does not provide auth)
+  noECC     0       -r_-r_-r     -V_ssl3:_-w_bogus_-n_TestUser  TLS Request don't require client auth on 2nd hs (bad password)
+  noECC     0       -r_-r_-r     -V_ssl3:_-w_nss_-n_TestUser    TLS Request don't require client auth on 2nd hs (client auth)
+  noECC     1       -r_-r_-r_-r  -V_ssl3:_-w_nss_-n_none        TLS Require client auth on 2nd hs (client does not provide auth)
+  noECC     1       -r_-r_-r_-r  -V_ssl3:_-w_bogus_-n_TestUser  TLS Require client auth on 2nd hs (bad password)
+  noECC     0       -r_-r_-r_-r  -V_ssl3:_-w_nss_-n_TestUser    TLS Require client auth on 2nd hs (client auth)
+  noECC     0       -r_-r_-r     -V_ssl3:tls1.0_-w_nss_-n_none        TLS 1.0 Request don't require client auth on 2nd hs (client does not provide auth)
+  noECC     0       -r_-r_-r     -V_ssl3:tls1.0_-w_bogus_-n_TestUser  TLS 1.0 Request don't require client auth on 2nd hs (bad password)
+  noECC     0       -r_-r_-r     -V_ssl3:tls1.0_-w_nss_-n_TestUser    TLS 1.0 Request don't require client auth on 2nd hs (client auth)
+  noECC     1       -r_-r_-r_-r  -V_ssl3:tls1.0_-w_nss_-n_none        TLS 1.0 Require client auth on 2nd hs (client does not provide auth)
+  noECC     1       -r_-r_-r_-r  -V_ssl3:tls1.0_-w_bogus_-n_TestUser  TLS 1.0 Require client auth on 2nd hs (bad password)
+  noECC     0       -r_-r_-r_-r  -V_ssl3:tls1.0_-w_nss_-n_TestUser    TLS 1.0 Require client auth on 2nd hs (client auth)
+  noECC     0       -r_-r_-r     -V_ssl3:ssl3_-w_nss_-n_none     SSL3 Request don't require client auth on 2nd hs (client does not provide auth)
+  noECC     0       -r_-r_-r     -V_ssl3:ssl3_-n_TestUser_-w_bogus SSL3 Request don't require client auth on 2nd hs (bad password)
+  noECC     0       -r_-r_-r     -V_ssl3:ssl3_-n_TestUser_-w_nss SSL3 Request don't require client auth on 2nd hs (client auth)
+  noECC     1       -r_-r_-r_-r  -V_ssl3:ssl3_-w_nss_-n_none     SSL3 Require client auth on 2nd hs (client does not provide auth)
+  noECC     1       -r_-r_-r_-r  -V_ssl3:ssl3_-n_TestUser_-w_bogus SSL3 Require client auth on 2nd hs (bad password)
+  noECC     0       -r_-r_-r_-r  -V_ssl3:ssl3_-n_TestUser_-w_nss SSL3 Require client auth on 2nd hs (client auth)
 #
 # Use EC cert for client authentication
 #
@@ -71,28 +45,32 @@
    ECC      0       -r           -w_nss_-n_TestUser-ec       TLS Request don't require client auth (EC) (client auth)
    ECC     254      -r_-r        -w_bogus_-n_TestUser-ec     TLS Require client auth (EC) (bad password)
    ECC      0       -r_-r        -w_nss_-n_TestUser-ec_      TLS Require client auth (EC) (client auth)
-   ECC      0       -r           -T_-n_TestUser-ec_-w_bogus  SSL3 Request don't require client auth (EC) (bad password)
-   ECC      0       -r           -T_-n_TestUser-ec_-w_nss    SSL3 Request don't require client auth (EC) (client auth)
-   ECC     254      -r_-r        -T_-n_TestUser-ec_-w_bogus  SSL3 Require client auth (EC) (bad password)
-   ECC      0       -r_-r        -T_-n_TestUser-ec_-w_nss    SSL3 Require client auth (EC) (client auth)
-   ECC      0       -r_-r_-r     -2_-w_bogus_-n_TestUser-ec  TLS Request don't require client auth on 2nd hs (EC) (bad password)
-   ECC      0       -r_-r_-r     -2_-w_nss_-n_TestUser-ec    TLS Request don't require client auth on 2nd hs (EC) (client auth)
-   ECC      1       -r_-r_-r_-r  -2_-w_bogus_-n_TestUser-ec  TLS Require client auth on 2nd hs (EC) (bad password)
-   ECC      0       -r_-r_-r_-r  -2_-w_nss_-n_TestUser-ec_   TLS Require client auth on 2nd hs (EC) (client auth)
-   ECC      0       -r_-r_-r     -2_-T_-n_TestUser-ec_-w_bogus SSL3 Request don't require client auth on 2nd hs (EC) (bad password)
-   ECC      0       -r_-r_-r     -2_-T_-n_TestUser-ec_-w_nss SSL3 Request don't require client auth on 2nd hs (EC) (client auth)
-   ECC      1       -r_-r_-r_-r  -2_-T_-n_TestUser-ec_-w_bogus SSL3 Require client auth on 2nd hs (EC) (bad password)
-   ECC      0       -r_-r_-r_-r  -2_-T_-n_TestUser-ec_-w_nss SSL3 Require client auth on 2nd hs (EC) (client auth)
+   ECC      0       -r           -V_:ssl3_-n_TestUser-ec_-w_bogus  SSL3 Request don't require client auth (EC) (bad password)
+   ECC      0       -r           -V_:ssl3_-n_TestUser-ec_-w_nss    SSL3 Request don't require client auth (EC) (client auth)
+   ECC     254      -r_-r        -V_:ssl3_-n_TestUser-ec_-w_bogus  SSL3 Require client auth (EC) (bad password)
+   ECC      0       -r_-r        -V_:ssl3_-n_TestUser-ec_-w_nss    SSL3 Require client auth (EC) (client auth)
+   ECC      0       -r_-r_-r     -V_ssl3:_-w_bogus_-n_TestUser-ec  TLS Request don't require client auth on 2nd hs (EC) (bad password)
+   ECC      0       -r_-r_-r     -V_ssl3:_-w_nss_-n_TestUser-ec    TLS Request don't require client auth on 2nd hs (EC) (client auth)
+   ECC      1       -r_-r_-r_-r  -V_ssl3:_-w_bogus_-n_TestUser-ec  TLS Require client auth on 2nd hs (EC) (bad password)
+   ECC      0       -r_-r_-r_-r  -V_ssl3:_-w_nss_-n_TestUser-ec_   TLS Require client auth on 2nd hs (EC) (client auth)
+   ECC      0       -r_-r_-r     -V_ssl3:tls1.0_-w_bogus_-n_TestUser-ec  TLS 1.0 Request don't require client auth on 2nd hs (EC) (bad password)
+   ECC      0       -r_-r_-r     -V_ssl3:tls1.0_-w_nss_-n_TestUser-ec    TLS 1.0 Request don't require client auth on 2nd hs (EC) (client auth)
+   ECC      1       -r_-r_-r_-r  -V_ssl3:tls1.0_-w_bogus_-n_TestUser-ec  TLS 1.0 Require client auth on 2nd hs (EC) (bad password)
+   ECC      0       -r_-r_-r_-r  -V_ssl3:tls1.0_-w_nss_-n_TestUser-ec_   TLS 1.0 Require client auth on 2nd hs (EC) (client auth)
+   ECC      0       -r_-r_-r     -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus SSL3 Request don't require client auth on 2nd hs (EC) (bad password)
+   ECC      0       -r_-r_-r     -V_ssl3:ssl3_-n_TestUser-ec_-w_nss SSL3 Request don't require client auth on 2nd hs (EC) (client auth)
+   ECC      1       -r_-r_-r_-r  -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus SSL3 Require client auth on 2nd hs (EC) (bad password)
+   ECC      0       -r_-r_-r_-r  -V_ssl3:ssl3_-n_TestUser-ec_-w_nss SSL3 Require client auth on 2nd hs (EC) (client auth)
 #
 # SNI Tests
 #
-  SNI     0       -r_-a_Host-sni.Dom       -2_-w_nss_-n_TestUser                     TLS Server hello response without SNI 
-  SNI     0       -r_-a_Host-sni.Dom       -2_-w_nss_-n_TestUser_-a_Host-sni.Dom     TLS Server hello response with SNI 
-  SNI     1       -r_-a_Host-sni.Dom       -2_-w_nss_-n_TestUser_-a_Host-sni1.Dom    TLS Server response with alert
-  SNI     0       -r_-a_Host-sni.Dom       -2_-T_-w_nss_-n_TestUser                  SSL3 Server hello response without SNI 
-  SNI     1       -r_-a_Host-sni.Dom       -2_-T_-w_nss_-n_TestUser_-a_Host-sni.Dom  SSL3 Server hello response with SNI: SSL don't have SH extensions
-  SNI     0       -r_-r_-r_-a_Host-sni.Dom -2_-w_nss_-n_TestUser                     TLS Server hello response without SNI 
-  SNI     0       -r_-r_-r_-a_Host-sni.Dom -2_-w_nss_-n_TestUser_-a_Host-sni.Dom     TLS Server hello response with SNI 
-  SNI     1       -r_-r_-r_-a_Host-sni.Dom -2_-w_nss_-n_TestUser_-a_Host-sni.Dom_-a_Host.Dom TLS Server hello response with SNI: Change name on 2d HS 
-  SNI     1       -r_-r_-r_-a_Host-sni.Dom -2_-w_nss_-n_TestUser_-a_Host-sni.Dom_-a_Host-sni1.Dom TLS Server hello response with SNI: Change name to invalid 2d HS 
-  SNI     1       -r_-r_-r_-a_Host-sni.Dom -2_-w_nss_-n_TestUser_-a_Host-sni1.Dom    TLS Server response with alert
+  SNI     0       -r_-a_Host-sni.Dom       -V_ssl3:_-w_nss_-n_TestUser                     TLS Server hello response without SNI
+  SNI     0       -r_-a_Host-sni.Dom       -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni.Dom     TLS Server hello response with SNI
+  SNI     1       -r_-a_Host-sni.Dom       -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni1.Dom    TLS Server response with alert
+  SNI     0       -r_-a_Host-sni.Dom       -V_ssl3:ssl3_-w_nss_-n_TestUser                  SSL3 Server hello response without SNI
+  SNI     1       -r_-a_Host-sni.Dom       -V_ssl3:ssl3_-w_nss_-n_TestUser_-a_Host-sni.Dom  SSL3 Server hello response with SNI: SSL don't have SH extensions
+  SNI     0       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser                     TLS Server hello response without SNI
+  SNI     0       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni.Dom     TLS Server hello response with SNI
+  SNI     1       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni.Dom_-a_Host.Dom TLS Server hello response with SNI: Change name on 2d HS
+  SNI     1       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni.Dom_-a_Host-sni1.Dom TLS Server hello response with SNI: Change name to invalid 2d HS
+  SNI     1       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni1.Dom    TLS Server response with alert

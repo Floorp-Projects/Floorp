@@ -1,40 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dr Stephen Henson <stephen.henson@gemplus.com>
- *   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
  * This file implements PKCS 11 on top of our existing security modules
  *
@@ -58,7 +24,6 @@
 #include "pkcs11.h"
 #include "pkcs11i.h"
 #include "lowkeyi.h"
-#include "sechash.h"
 #include "secder.h"
 #include "secdig.h"
 #include "lowpbe.h"	/* We do PBE below */
@@ -471,6 +436,25 @@ sftk_InitGeneric(SFTKSession *session,SFTKSessionContext **contextPtr,
     return CKR_OK;
 }
 
+static int
+sftk_aes_mode(CK_MECHANISM_TYPE mechanism)
+{
+    switch (mechanism) {
+    case CKM_AES_CBC_PAD:
+    case CKM_AES_CBC:
+	return NSS_AES_CBC;
+    case CKM_AES_ECB:
+	return NSS_AES;
+    case CKM_AES_CTS:
+	return NSS_AES_CTS;
+    case CKM_AES_CTR:
+	return NSS_AES_CTR;
+    case CKM_AES_GCM:
+	return NSS_AES_GCM;
+    }
+    return -1;
+}
+
 /** NSC_CryptInit initializes an encryption/Decryption operation.
  *
  * Always called by NSC_EncryptInit, NSC_DecryptInit, NSC_WrapKey,NSC_UnwrapKey.
@@ -785,6 +769,9 @@ finish_des:
     case CKM_AES_ECB:
     case CKM_AES_CBC:
 	context->blockSize = 16;
+    case CKM_AES_CTS:
+    case CKM_AES_CTR:
+    case CKM_AES_GCM:
 	if (key_type != CKK_AES) {
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
@@ -797,7 +784,7 @@ finish_des:
 	context->cipherInfo = AES_CreateContext(
 	    (unsigned char*)att->attrib.pValue,
 	    (unsigned char*)pMechanism->pParameter,
-	    pMechanism->mechanism == CKM_AES_ECB ? NSS_AES : NSS_AES_CBC,
+	    sftk_aes_mode(pMechanism->mechanism),
 	    isEncrypt, att->attrib.ulValueLen, 16);
 	sftk_FreeAttribute(att);
 	if (context->cipherInfo == NULL) {
@@ -2091,7 +2078,7 @@ finish_rsa:
 	context->update     = (SFTKCipher) nsc_DSA_Sign_Stub;
 	context->destroy    = (privKey == key->objectInfo) ?
 		(SFTKDestroy) sftk_Null:(SFTKDestroy)sftk_FreePrivKey;
-	context->maxLen     = DSA_SIGNATURE_LEN;
+	context->maxLen     = DSA_MAX_SIGNATURE_LEN;
 
 	break;
 
@@ -2939,14 +2926,36 @@ nsc_pbe_key_gen(NSSPKCS5PBEParameter *pkcs5_pbe, CK_MECHANISM_PTR pMechanism,
 
     return CKR_OK;
 }
+
+/* 
+ * this is coded for "full" support. These selections will be limitted to
+ * the official subset by freebl.
+ */
+static unsigned int
+sftk_GetSubPrimeFromPrime(unsigned int primeBits)
+{
+   if (primeBits <= 1024) {
+	return 160;
+   } else if (primeBits <= 2048) {
+	return 224;
+   } else if (primeBits <= 3072) {
+	return 256;
+   } else if (primeBits <= 7680) {
+	return 384;
+   } else {
+	return 512;
+   }
+}
+
 static CK_RV
 nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
 {
     SFTKAttribute *attribute;
     CK_ULONG counter;
     unsigned int seedBits = 0;
+    unsigned int subprimeBits = 0;
     unsigned int primeBits;
-    unsigned int j;
+    unsigned int j = 8; /* default to 1024 bits */
     CK_RV crv = CKR_OK;
     PQGParams *params = NULL;
     PQGVerify *vfy = NULL;
@@ -2958,9 +2967,11 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
     }
     primeBits = (unsigned int) *(CK_ULONG *)attribute->attrib.pValue;
     sftk_FreeAttribute(attribute);
-    j = PQG_PBITS_TO_INDEX(primeBits);
-    if (j == (unsigned int)-1) {
-	return CKR_ATTRIBUTE_VALUE_INVALID;
+    if (primeBits < 1024) {
+	j = PQG_PBITS_TO_INDEX(primeBits);
+	if (j == (unsigned int)-1) {
+	    return CKR_ATTRIBUTE_VALUE_INVALID;
+	}
     }
 
     attribute = sftk_FindAttribute(key, CKA_NETSCAPE_PQG_SEED_BITS);
@@ -2969,14 +2980,34 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
 	sftk_FreeAttribute(attribute);
     }
 
+    attribute = sftk_FindAttribute(key, CKA_SUBPRIME_BITS);
+    if (attribute != NULL) {
+	subprimeBits = (unsigned int) *(CK_ULONG *)attribute->attrib.pValue;
+	sftk_FreeAttribute(attribute);
+    }
+
     sftk_DeleteAttributeType(key,CKA_PRIME_BITS);
+    sftk_DeleteAttributeType(key,CKA_SUBPRIME_BITS);
     sftk_DeleteAttributeType(key,CKA_NETSCAPE_PQG_SEED_BITS);
 
-    if (seedBits == 0) {
-	rv = PQG_ParamGen(j, &params, &vfy);
+    /* use the old PQG interface if we have old input data */
+    if ((primeBits < 1024) || ((primeBits == 1024) && (subprimeBits == 0))) {
+	if (seedBits == 0) {
+	    rv = PQG_ParamGen(j, &params, &vfy);
+	} else {
+	    rv = PQG_ParamGenSeedLen(j,seedBits/8, &params, &vfy);
+	}
     } else {
-	rv = PQG_ParamGenSeedLen(j,seedBits/8, &params, &vfy);
+	if (subprimeBits == 0) {
+	    subprimeBits = sftk_GetSubPrimeFromPrime(primeBits);
+        }
+	if (seedBits == 0) {
+	    seedBits = primeBits;
+	}
+	rv = PQG_ParamGenV2(primeBits, subprimeBits, seedBits/8, &params, &vfy);
     }
+	
+
 
     if (rv != SECSuccess) {
 	if (PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
@@ -3493,6 +3524,7 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
     CK_MECHANISM mech = {0, NULL, 0};
 
     CK_ULONG modulusLen;
+    CK_ULONG subPrimeLen;
     PRBool isEncryptable = PR_FALSE;
     PRBool canSignVerify = PR_FALSE;
     PRBool isDerivable = PR_FALSE;
@@ -3506,10 +3538,12 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
     unsigned char *text_compared;
     CK_ULONG bytes_encrypted;
     CK_ULONG bytes_compared;
+    CK_ULONG pairwise_digest_length = PAIRWISE_DIGEST_LENGTH;
 
     /* Variables used for Signature/Verification functions. */
-    /* always uses SHA-1 digest */
-    unsigned char *known_digest = (unsigned char *)"Mozilla Rules World!";
+    /* Must be at least 256 bits for DSA2 digest */
+    unsigned char *known_digest = (unsigned char *)
+				"Mozilla Rules the World through NSS!";
     unsigned char *signature;
     CK_ULONG signature_length;
 
@@ -3524,6 +3558,19 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
 	modulusLen = attribute->attrib.ulValueLen;
 	if (*(unsigned char *)attribute->attrib.pValue == 0) {
 	    modulusLen--;
+	}
+	sftk_FreeAttribute(attribute);
+    } else if (keyType == CKK_DSA) {
+	SFTKAttribute *attribute;
+
+	/* Get subprime length of private key. */
+	attribute = sftk_FindAttribute(privateKey, CKA_SUBPRIME);
+	if (attribute == NULL) {
+	    return CKR_DEVICE_ERROR;
+	}
+	subPrimeLen = attribute->attrib.ulValueLen;
+	if (subPrimeLen > 1 && *(unsigned char *)attribute->attrib.pValue == 0) {
+	    subPrimeLen--;
 	}
 	sftk_FreeAttribute(attribute);
     }
@@ -3651,7 +3698,8 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
 	    mech.mechanism = CKM_RSA_PKCS;
 	    break;
 	case CKK_DSA:
-	    signature_length = DSA_SIGNATURE_LEN;
+	    signature_length = DSA_MAX_SIGNATURE_LEN;
+	    pairwise_digest_length = subPrimeLen;
 	    mech.mechanism = CKM_DSA;
 	    break;
 #ifdef NSS_ENABLE_ECC
@@ -3679,7 +3727,7 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
 
 	crv = NSC_Sign(hSession,
 		       known_digest,
-		       PAIRWISE_DIGEST_LENGTH,
+		       pairwise_digest_length,
 		       signature,
 		       &signature_length);
 	if (crv != CKR_OK) {
@@ -3696,7 +3744,7 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
 
 	crv = NSC_Verify(hSession,
 			 known_digest,
-			 PAIRWISE_DIGEST_LENGTH,
+			 pairwise_digest_length,
 			 signature,
 			 signature_length);
 
@@ -3979,9 +4027,12 @@ kpg_done:
 	    break;
 	}
 
+	/*
+	 * these are checked by DSA_NewKey
+	 */
         bitSize = sftk_GetLengthInBits(pqgParam.subPrime.data, 
 							pqgParam.subPrime.len);
-        if (bitSize != DSA_Q_BITS)  {
+        if ((bitSize < DSA_MIN_Q_BITS) || (bitSize > DSA_MAX_Q_BITS))  {
 	    crv = CKR_TEMPLATE_INCOMPLETE;
 	    PORT_Free(pqgParam.prime.data);
 	    PORT_Free(pqgParam.subPrime.data);
@@ -3997,7 +4048,7 @@ kpg_done:
 	    break;
 	}
         bitSize = sftk_GetLengthInBits(pqgParam.base.data,pqgParam.base.len);
-        if ((bitSize <  1) || (bitSize > DSA_MAX_P_BITS)) {
+        if ((bitSize <  2) || (bitSize > DSA_MAX_P_BITS)) {
 	    crv = CKR_TEMPLATE_INCOMPLETE;
 	    PORT_Free(pqgParam.prime.data);
 	    PORT_Free(pqgParam.subPrime.data);
@@ -5099,6 +5150,113 @@ sftk_MapKeySize(CK_KEY_TYPE keyType)
     return 0;
 }
 
+/* Inputs:
+ *  key_len: Length of derived key to be generated.
+ *  SharedSecret: a shared secret that is the output of a key agreement primitive.
+ *  SharedInfo: (Optional) some data shared by the entities computing the secret key.
+ *  SharedInfoLen: the length in octets of SharedInfo
+ *  Hash: The hash function to be used in the KDF
+ *  HashLen: the length in octets of the output of Hash
+ * Output:
+ *  key: Pointer to a buffer containing derived key, if return value is SECSuccess.
+ */
+static CK_RV sftk_compute_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len, SECItem *SharedSecret,
+		CK_BYTE_PTR SharedInfo, CK_ULONG SharedInfoLen,
+		SECStatus Hash(unsigned char *, const unsigned char *, uint32),
+		CK_ULONG HashLen)
+{
+    unsigned char *buffer = NULL, *output_buffer = NULL;
+    uint32 buffer_len, max_counter, i;
+    SECStatus rv;
+
+    /* Check that key_len isn't too long.  The maximum key length could be
+     * greatly increased if the code below did not limit the 4-byte counter
+     * to a maximum value of 255. */
+    if (key_len > 254 * HashLen)
+	return SEC_ERROR_INVALID_ARGS;
+
+    if (SharedInfo == NULL)
+	SharedInfoLen = 0;
+
+    buffer_len = SharedSecret->len + 4 + SharedInfoLen;
+    buffer = (CK_BYTE *)PORT_Alloc(buffer_len);
+    if (buffer == NULL) {
+	rv = SEC_ERROR_NO_MEMORY;
+	goto loser;
+    }
+
+    max_counter = key_len/HashLen;
+    if (key_len > max_counter * HashLen)
+	max_counter++;
+
+    output_buffer = (CK_BYTE *)PORT_Alloc(max_counter * HashLen);
+    if (output_buffer == NULL) {
+	rv = SEC_ERROR_NO_MEMORY;
+	goto loser;
+    }
+
+    /* Populate buffer with SharedSecret || Counter || [SharedInfo]
+     * where Counter is 0x00000001 */
+    PORT_Memcpy(buffer, SharedSecret->data, SharedSecret->len);
+    buffer[SharedSecret->len] = 0;
+    buffer[SharedSecret->len + 1] = 0;
+    buffer[SharedSecret->len + 2] = 0;
+    buffer[SharedSecret->len + 3] = 1;
+    if (SharedInfo) {
+	PORT_Memcpy(&buffer[SharedSecret->len + 4], SharedInfo, SharedInfoLen);
+    }
+
+    for(i=0; i < max_counter; i++) {
+	rv = Hash(&output_buffer[i * HashLen], buffer, buffer_len);
+	if (rv != SECSuccess)
+	    goto loser;
+
+	/* Increment counter (assumes max_counter < 255) */
+	buffer[SharedSecret->len + 3]++;
+    }
+
+    PORT_ZFree(buffer, buffer_len);
+    if (key_len < max_counter * HashLen) {
+	PORT_Memset(output_buffer + key_len, 0, max_counter * HashLen - key_len);
+    }
+    *key = output_buffer;
+
+    return SECSuccess;
+
+    loser:
+	if (buffer) {
+	    PORT_ZFree(buffer, buffer_len);
+	}
+	if (output_buffer) {
+	    PORT_ZFree(output_buffer, max_counter * HashLen);
+	}
+	return rv;
+}
+
+static CK_RV sftk_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len,
+		SECItem *SharedSecret,
+		CK_BYTE_PTR SharedInfo, CK_ULONG SharedInfoLen,
+		CK_EC_KDF_TYPE kdf)
+{
+    if (kdf == CKD_SHA1_KDF)
+	return sftk_compute_ANSI_X9_63_kdf(key, key_len, SharedSecret, SharedInfo,
+		   		 SharedInfoLen, SHA1_HashBuf, SHA1_LENGTH);
+    else if (kdf == CKD_SHA224_KDF)
+	return sftk_compute_ANSI_X9_63_kdf(key, key_len, SharedSecret, SharedInfo,
+		   		 SharedInfoLen, SHA224_HashBuf, SHA224_LENGTH);
+    else if (kdf == CKD_SHA256_KDF)
+	return sftk_compute_ANSI_X9_63_kdf(key, key_len, SharedSecret, SharedInfo,
+		   		 SharedInfoLen, SHA256_HashBuf, SHA256_LENGTH);
+    else if (kdf == CKD_SHA384_KDF)
+	return sftk_compute_ANSI_X9_63_kdf(key, key_len, SharedSecret, SharedInfo,
+		   		 SharedInfoLen, SHA384_HashBuf, SHA384_LENGTH);
+    else if (kdf == CKD_SHA512_KDF)
+	return sftk_compute_ANSI_X9_63_kdf(key, key_len, SharedSecret, SharedInfo,
+		   		 SharedInfoLen, SHA512_HashBuf, SHA512_LENGTH);
+    else
+	return SEC_ERROR_INVALID_ALGORITHM;
+}
+
 /*
  * SSL Key generation given pre master secret
  */
@@ -5927,17 +6085,8 @@ key_and_mac_derive_fail:
 	    crv = CKR_TEMPLATE_INCONSISTENT;
 	    break;
 	}
-	/* now allocate the hash contexts */
-	md5 = MD5_NewContext();
-	if (md5 == NULL) { 
-	    crv = CKR_HOST_MEMORY;
-	    break;
-	}
-	MD5_Begin(md5);
-	MD5_Update(md5,(const unsigned char*)att->attrib.pValue,
+	MD5_HashBuf(key_block,(const unsigned char*)att->attrib.pValue,
 		   att->attrib.ulValueLen);
-	MD5_End(md5,key_block,&outLen,MD5_LENGTH);
-	MD5_DestroyContext(md5, PR_TRUE);
 
 	crv = sftk_forceAttribute (key,CKA_VALUE,key_block,keySize);
 	break;
@@ -5947,17 +6096,56 @@ key_and_mac_derive_fail:
 	    crv = CKR_TEMPLATE_INCONSISTENT;
 	    break;
 	}
-	/* now allocate the hash contexts */
-	sha = SHA1_NewContext();
-	if (sha == NULL) { 
-	    crv = CKR_HOST_MEMORY;
+	SHA1_HashBuf(key_block,(const unsigned char*)att->attrib.pValue,
+		    att->attrib.ulValueLen);
+
+	crv = sftk_forceAttribute(key,CKA_VALUE,key_block,keySize);
+	break;
+
+     case CKM_SHA224_KEY_DERIVATION:
+	if (keySize == 0) keySize = SHA224_LENGTH;
+	if (keySize > SHA224_LENGTH) {
+	    crv = CKR_TEMPLATE_INCONSISTENT;
 	    break;
 	}
-	SHA1_Begin(sha);
-	SHA1_Update(sha,(const unsigned char*)att->attrib.pValue,
+	SHA224_HashBuf(key_block,(const unsigned char*)att->attrib.pValue,
 		    att->attrib.ulValueLen);
-	SHA1_End(sha,key_block,&outLen,SHA1_LENGTH);
-	SHA1_DestroyContext(sha, PR_TRUE);
+
+	crv = sftk_forceAttribute(key,CKA_VALUE,key_block,keySize);
+	break;
+
+     case CKM_SHA256_KEY_DERIVATION:
+	if (keySize == 0) keySize = SHA256_LENGTH;
+	if (keySize > SHA256_LENGTH) {
+	    crv = CKR_TEMPLATE_INCONSISTENT;
+	    break;
+	}
+	SHA256_HashBuf(key_block,(const unsigned char*)att->attrib.pValue,
+		    att->attrib.ulValueLen);
+
+	crv = sftk_forceAttribute(key,CKA_VALUE,key_block,keySize);
+	break;
+
+     case CKM_SHA384_KEY_DERIVATION:
+	if (keySize == 0) keySize = SHA384_LENGTH;
+	if (keySize > SHA384_LENGTH) {
+	    crv = CKR_TEMPLATE_INCONSISTENT;
+	    break;
+	}
+	SHA384_HashBuf(key_block,(const unsigned char*)att->attrib.pValue,
+		    att->attrib.ulValueLen);
+
+	crv = sftk_forceAttribute(key,CKA_VALUE,key_block,keySize);
+	break;
+
+     case CKM_SHA512_KEY_DERIVATION:
+	if (keySize == 0) keySize = SHA512_LENGTH;
+	if (keySize > SHA512_LENGTH) {
+	    crv = CKR_TEMPLATE_INCONSISTENT;
+	    break;
+	}
+	SHA512_HashBuf(key_block,(const unsigned char*)att->attrib.pValue,
+		    att->attrib.ulValueLen);
 
 	crv = sftk_forceAttribute(key,CKA_VALUE,key_block,keySize);
 	break;
@@ -6001,7 +6189,6 @@ key_and_mac_derive_fail:
 	SECItem  ecScalar, ecPoint;
 	SECItem  tmp;
 	PRBool   withCofactor = PR_FALSE;
-	unsigned char secret_hash[20];
 	unsigned char *secret;
 	unsigned char *keyData = NULL;
 	int secretlen, curveLen, pubKeyLen;
@@ -6087,28 +6274,30 @@ key_and_mac_derive_fail:
 	    break;
 	}
 
-	/*
-	 * tmp is the raw data created by ECDH_Derive,
-	 * secret and secretlen are the values we will eventually pass as our
-	 * generated key.
-	 */
-	secret = tmp.data;
-	secretlen = tmp.len;
 
 	/*
 	 * apply the kdf function.
 	 */
-	if (mechParams->kdf == CKD_SHA1_KDF) {
-	    /* Compute SHA1 hash */
-	    PORT_Memset(secret_hash, 0, 20);
-	    rv = SHA1_HashBuf(secret_hash, tmp.data, tmp.len);
+	if (mechParams->kdf == CKD_NULL) {
+	    /*
+	     * tmp is the raw data created by ECDH_Derive,
+	     * secret and secretlen are the values we will
+	     * eventually pass as our generated key.
+	     */
+	    secret = tmp.data;
+	    secretlen = tmp.len;
+	} else {
+	    secretlen = keySize;
+	    rv = sftk_ANSI_X9_63_kdf(&secret, keySize,
+			&tmp, mechParams->pSharedData,
+			mechParams->ulSharedDataLen, mechParams->kdf);
+	    PORT_ZFree(tmp.data, tmp.len);
 	    if (rv != SECSuccess) {
-		PORT_ZFree(tmp.data, tmp.len);
 		crv = CKR_HOST_MEMORY;
 		break;
-	    } 
-	    secret = secret_hash;
-	    secretlen = 20;
+	    }
+	    tmp.data = secret;
+	    tmp.len = secretlen;
 	}
 
 	/*
@@ -6139,8 +6328,6 @@ key_and_mac_derive_fail:
 	if (keyData) {
 	    PORT_ZFree(keyData, keySize);
 	}
-	PORT_Memset(secret_hash, 0, 20);
-	    
 	break;
 
 ec_loser:
@@ -6167,9 +6354,9 @@ hkdf: {
         const SECHashObject * rawHash;
         unsigned hashLen;
         CK_BYTE buf[HASH_LENGTH_MAX];
-        /* const */ CK_BYTE * prk;  /* psuedo-random key */
+        CK_BYTE * prk;  /* psuedo-random key */
         CK_ULONG prkLen;
-        const CK_BYTE * okm;        /* output keying material */
+        CK_BYTE * okm;  /* output keying material */
 
         rawHash = HASH_GetRawHashObject(hashType);
         if (rawHash == NULL || rawHash->length > sizeof buf) {

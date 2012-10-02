@@ -1,38 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2007
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* 
  *  The following code handles the storage of PKCS 11 modules used by the
  * NSS. For the rest of NSS, only one kind of database handle exists:
@@ -55,10 +23,9 @@
 #include "pkcs11i.h"
 #include "sdb.h"
 #include "prprf.h" 
-#include "secmodt.h"
 #include "pratom.h"
 #include "lgglue.h"
-#include "sftkpars.h"
+#include "utilpars.h"
 #include "secerr.h"
 #include "softoken.h"
 
@@ -2607,7 +2574,7 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
                 SFTKDBHandle **certDB, SFTKDBHandle **keyDB)
 {
     const char *confdir;
-    SDBType dbType;
+    NSSDBType dbType = NSS_DB_TYPE_NONE;
     char *appName = NULL;
     SDB *keySDB, *certSDB;
     CK_RV crv = CKR_OK;
@@ -2625,22 +2592,22 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
     if (noKeyDB && noCertDB) {
 	return CKR_OK;
     }
-    confdir = sftk_EvaluateConfigDir(configdir, &dbType, &appName);
+    confdir = _NSSUTIL_EvaluateConfigDir(configdir, &dbType, &appName);
 
     /*
      * now initialize the appropriate database
      */
     switch (dbType) {
-    case SDB_LEGACY:
+    case NSS_DB_TYPE_LEGACY:
 	crv = sftkdbCall_open(confdir, certPrefix, keyPrefix, 8, 3, flags,
 		 isFIPS, noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
 	break;
-    case SDB_MULTIACCESS:
+    case NSS_DB_TYPE_MULTIACCESS:
 	crv = sftkdbCall_open(configdir, certPrefix, keyPrefix, 8, 3, flags,
 		isFIPS, noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
 	break;
-    case SDB_SQL:
-    case SDB_EXTERN: /* SHOULD open a loadable db */
+    case NSS_DB_TYPE_SQL:
+    case NSS_DB_TYPE_EXTERN: /* SHOULD open a loadable db */
 	crv = s_open(confdir, certPrefix, keyPrefix, 9, 4, flags, 
 		noCertDB? NULL : &certSDB, noKeyDB ? NULL : &keySDB, &newInit);
 

@@ -1,42 +1,11 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include <stdio.h>
 #include <string.h>
 
 #include "secutil.h"
+#include "basicutil.h"
 
 #if defined(XP_UNIX)
 #include <unistd.h>
@@ -154,9 +123,8 @@ static PRInt32 numUsed;
 static SSL3Statistics * ssl3stats;
 
 static int failed_already = 0;
-static PRBool disableSSL2     = PR_FALSE;
-static PRBool disableSSL3     = PR_FALSE;
-static PRBool disableTLS      = PR_FALSE;
+static SSLVersionRange enabledVersions;
+static PRBool enableSSL2      = PR_TRUE;
 static PRBool bypassPKCS11    = PR_FALSE;
 static PRBool disableLocking  = PR_FALSE;
 static PRBool ignoreErrors    = PR_FALSE;
@@ -167,6 +135,8 @@ static PRBool enableFalseStart     = PR_FALSE;
 PRIntervalTime maxInterval    = PR_INTERVAL_NO_TIMEOUT;
 
 char * progName;
+
+secuPWData pwdata = { PW_NONE, 0 };
 
 int	stopping;
 int	verbose;
@@ -180,9 +150,9 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
     	"Usage: %s [-n nickname] [-p port] [-d dbdir] [-c connections]\n"
- 	"          [-23BDNTovqs] [-f filename] [-N | -P percentage]\n"
+ 	"          [-BDNovqs] [-f filename] [-N | -P percentage]\n"
 	"          [-w dbpasswd] [-C cipher(s)] [-t threads] [-W pwfile]\n"
-        "          [-a sniHostName] hostname\n"
+        "          [-V [min-version]:[max-version]] [-a sniHostName] hostname\n"
 	" where -v means verbose\n"
         "       -o flag is interpreted as follows:\n"
         "          1 -o   means override the result of server certificate validation.\n"
@@ -192,9 +162,10 @@ Usage(const char *progName)
 	"       -s means disable SSL socket locking\n"
 	"       -N means no session reuse\n"
 	"       -P means do a specified percentage of full handshakes (0-100)\n"
-        "       -2 means disable SSL2\n"
-        "       -3 means disable SSL3\n"
-        "       -T means disable TLS\n"
+        "       -V [min]:[max] restricts the set of enabled SSL/TLS protocols versions.\n"
+        "          All versions are enabled by default.\n"
+        "          Possible values for min/max: ssl2 ssl3 tls1.0 tls1.1\n"
+        "          Example: \"-V ssl3:\" enables SSL 3 and newer.\n"
         "       -U means enable throttling up threads\n"
 	"       -B bypasses the PKCS11 layer for SSL encryption and MACing\n"
 	"       -u enable TLS Session Ticket extension\n"
@@ -1185,29 +1156,24 @@ client_main(
     /* do SSL configuration. */
 
     rv = SSL_OptionSet(model_sock, SSL_SECURITY,
-        !(disableSSL2 && disableSSL3 && disableTLS));
+                       enableSSL2 || enabledVersions.min != 0);
     if (rv < 0) {
 	errExit("SSL_OptionSet SSL_SECURITY");
     }
 
-    rv = SSL_OptionSet(model_sock, SSL_ENABLE_SSL2, !disableSSL2);
+    rv = SSL_VersionRangeSet(model_sock, &enabledVersions);
     if (rv != SECSuccess) {
-	errExit("error enabling SSLv2 ");
+        errExit("error setting SSL/TLS version range ");
     }
 
-    rv = SSL_OptionSet(model_sock, SSL_V2_COMPATIBLE_HELLO, !disableSSL2);
+    rv = SSL_OptionSet(model_sock, SSL_ENABLE_SSL2, enableSSL2);
     if (rv != SECSuccess) {
-	errExit("error enabling SSLv2 compatible hellos ");
+       errExit("error enabling SSLv2 ");
     }
 
-    rv = SSL_OptionSet(model_sock, SSL_ENABLE_SSL3, !disableSSL3);
+    rv = SSL_OptionSet(model_sock, SSL_V2_COMPATIBLE_HELLO, enableSSL2);
     if (rv != SECSuccess) {
-	errExit("error enabling SSLv3 ");
-    }
-
-    rv = SSL_OptionSet(model_sock, SSL_ENABLE_TLS, !disableTLS);
-    if (rv != SECSuccess) {
-	errExit("error enabling TLS ");
+        errExit("error enabling SSLv2 compatible hellos ");
     }
 
     if (bigBuf.data) { /* doing FDX */
@@ -1255,6 +1221,8 @@ client_main(
 	if (rv != SECSuccess)
 	    errExit("SSL_OptionSet SSL_ENABLE_FALSE_START");
     }
+
+    SSL_SetPKCS11PinArg(model_sock, &pwdata);
 
     SSL_SetURL(model_sock, hostName);
 
@@ -1353,11 +1321,11 @@ main(int argc, char **argv)
     PLOptState *         optstate;
     PLOptStatus          status;
     cert_and_key         Cert_And_Key;
-    secuPWData           pwdata  = { PW_NONE, 0 };
     char *               sniHostName = NULL;
 
     /* Call the NSPR initialization routines */
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
+    SSL_VersionRangeGetSupported(ssl_variant_stream, &enabledVersions);
 
     tmp      = strrchr(argv[0], '/');
     tmp      = tmp ? tmp + 1 : argv[0];
@@ -1366,14 +1334,9 @@ main(int argc, char **argv)
  
 
     optstate = PL_CreateOptState(argc, argv,
-                                 "23BC:DNP:TUW:a:c:d:f:gin:op:qst:uvw:z");
+                                 "BC:DNP:UV:W:a:c:d:f:gin:op:qst:uvw:z");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
-
-	case '2': disableSSL2 = PR_TRUE; break;
-
-	case '3': disableSSL3 = PR_TRUE; break;
-
 	case 'B': bypassPKCS11 = PR_TRUE; break;
 
 	case 'C': cipherString = optstate->value; break;
@@ -1384,9 +1347,14 @@ main(int argc, char **argv)
         
 	case 'P': fullhs = PORT_Atoi(optstate->value); break;
 
-	case 'T': disableTLS = PR_TRUE; break;
-            
 	case 'U': ThrottleUp = PR_TRUE; break;
+        
+        case 'V': if (SECU_ParseSSLVersionRangeString(optstate->value,
+                          enabledVersions, enableSSL2,
+                          &enabledVersions, &enableSSL2) != SECSuccess) {
+                      Usage(progName);
+                  }
+                  break;
 
 	case 'a': sniHostName = PL_strdup(optstate->value); break;
 

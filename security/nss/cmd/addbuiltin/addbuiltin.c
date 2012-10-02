@@ -1,43 +1,11 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.17 2012/03/10 12:10:44 kaie%kuix.de Exp $
+ * $Id: addbuiltin.c,v 1.19 2012/07/04 15:21:47 gerv%gerv.net Exp $
  */
 
 #include "nssrenam.h"
@@ -294,43 +262,11 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust,
 
 void printheader() {
     printf("# \n"
-"# ***** BEGIN LICENSE BLOCK *****\n"
-"# Version: MPL 1.1/GPL 2.0/LGPL 2.1\n"
-"#\n"
-"# The contents of this file are subject to the Mozilla Public License Version\n"
-"# 1.1 (the \"License\"); you may not use this file except in compliance with\n"
-"# the License. You may obtain a copy of the License at\n"
-"# http://www.mozilla.org/MPL/\n"
-"#\n"
-"# Software distributed under the License is distributed on an \"AS IS\" basis,\n"
-"# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License\n"
-"# for the specific language governing rights and limitations under the\n"
-"# License.\n"
-"#\n"
-"# The Original Code is the Netscape security libraries..\n"
-"#\n"
-"# The Initial Developer of the Original Code is\n"
-"# Netscape Communications Corporation.\n"
-"# Portions created by the Initial Developer are Copyright (C) 1994-2000\n"
-"# the Initial Developer. All Rights Reserved.\n"
-"#\n"
-"# Contributor(s):\n"
-"#\n"
-"# Alternatively, the contents of this file may be used under the terms of\n"
-"# either the GNU General Public License Version 2 or later (the \"GPL\"), or\n"
-"# the GNU Lesser General Public License Version 2.1 or later (the \"LGPL\"),\n"
-"# in which case the provisions of the GPL or the LGPL are applicable instead\n"
-"# of those above. If you wish to allow use of your version of this file only\n"
-"# under the terms of either the GPL or the LGPL, and not to allow others to\n"
-"# use your version of this file under the terms of the MPL, indicate your\n"
-"# decision by deleting the provisions above and replace them with the notice\n"
-"# and other provisions required by the GPL or the LGPL. If you do not delete\n"
-"# the provisions above, a recipient may use your version of this file under\n"
-"# the terms of any one of the MPL, the GPL or the LGPL.\n"
-"#\n"
-"# ***** END LICENSE BLOCK *****\n"
+"# This Source Code Form is subject to the terms of the Mozilla Public\n"
+"# License, v. 2.0. If a copy of the MPL was not distributed with this\n"
+"# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.17 $ $Date: 2012/03/10 12:10:44 $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.19 $ $Date: 2012/07/04 15:21:47 $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"

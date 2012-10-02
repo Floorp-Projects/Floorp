@@ -1,40 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
-/* $Id: sslinfo.c,v 1.25 2012/03/06 00:26:31 wtc%google.com Exp $ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* $Id: sslinfo.c,v 1.31 2012/08/03 23:54:31 wtc%google.com Exp $ */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
@@ -96,11 +63,11 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
 	} else if (ss->ssl3.initialized) { 	/* SSL3 and TLS */
 	    ssl_GetSpecReadLock(ss);
 	    /* XXX  The cipher suite should be in the specs and this
-	     * function should get it from crSpec rather than from the "hs".
-	     * See bug 275744 comment 69.
+	     * function should get it from cwSpec rather than from the "hs".
+	     * See bug 275744 comment 69 and bug 766137.
 	     */
 	    inf.cipherSuite           = ss->ssl3.hs.cipher_suite;
-	    inf.compressionMethod     = ss->ssl3.crSpec->compression_method;
+	    inf.compressionMethod     = ss->ssl3.cwSpec->compression_method;
 	    ssl_ReleaseSpecReadLock(ss);
 	    inf.compressionMethodName =
 		ssl_GetCompressionMethodName(inf.compressionMethod);
@@ -335,7 +302,7 @@ SSL_GetNegotiatedHostInfo(PRFileDesc *fd)
             ss->ssl3.initialized) { /* TLS */
             SECItem *crsName;
             ssl_GetSpecReadLock(ss); /*********************************/
-            crsName = &ss->ssl3.crSpec->srvVirtName;
+            crsName = &ss->ssl3.cwSpec->srvVirtName;
             if (crsName->data) {
                 sniName = SECITEM_DupItem(crsName);
             }
@@ -354,4 +321,67 @@ SSL_GetNegotiatedHostInfo(PRFileDesc *fd)
         sniName->len  = PORT_Strlen(name);
     }
     return sniName;
+}
+
+SECStatus
+SSL_ExportKeyingMaterial(PRFileDesc *fd,
+                         const char *label, unsigned int labelLen,
+                         PRBool hasContext,
+                         const unsigned char *context, unsigned int contextLen,
+                         unsigned char *out, unsigned int outLen)
+{
+    sslSocket *ss;
+    unsigned char *val = NULL;
+    unsigned int valLen, i;
+    SECStatus rv = SECFailure;
+
+    ss = ssl_FindSocket(fd);
+    if (!ss) {
+	SSL_DBG(("%d: SSL[%d]: bad socket in ExportKeyingMaterial",
+		 SSL_GETPID(), fd));
+	return SECFailure;
+    }
+
+    if (ss->version < SSL_LIBRARY_VERSION_3_1_TLS) {
+	PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_VERSION);
+	return SECFailure;
+    }
+
+    /* construct PRF arguments */
+    valLen = SSL3_RANDOM_LENGTH * 2;
+    if (hasContext) {
+	valLen += 2 /* uint16 length */ + contextLen;
+    }
+    val = PORT_Alloc(valLen);
+    if (!val) {
+	return SECFailure;
+    }
+    i = 0;
+    PORT_Memcpy(val + i, &ss->ssl3.hs.client_random.rand, SSL3_RANDOM_LENGTH);
+    i += SSL3_RANDOM_LENGTH;
+    PORT_Memcpy(val + i, &ss->ssl3.hs.server_random.rand, SSL3_RANDOM_LENGTH);
+    i += SSL3_RANDOM_LENGTH;
+    if (hasContext) {
+	val[i++] = contextLen >> 8;
+	val[i++] = contextLen;
+	PORT_Memcpy(val + i, context, contextLen);
+	i += contextLen;
+    }
+    PORT_Assert(i == valLen);
+
+    /* Allow TLS keying material to be exported sooner, when the master
+     * secret is available and we have sent ChangeCipherSpec.
+     */
+    ssl_GetSpecReadLock(ss);
+    if (!ss->ssl3.cwSpec->master_secret && !ss->ssl3.cwSpec->msItem.len) {
+	PORT_SetError(SSL_ERROR_HANDSHAKE_NOT_COMPLETED);
+	rv = SECFailure;
+    } else {
+	rv = ssl3_TLSPRFWithMasterSecret(ss->ssl3.cwSpec, label, labelLen, val,
+					 valLen, out, outLen);
+    }
+    ssl_ReleaseSpecReadLock(ss);
+
+    PORT_ZFree(val, valLen);
+    return rv;
 }

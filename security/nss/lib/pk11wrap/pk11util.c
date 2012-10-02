@@ -1,38 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
  * Initialize the PCKS 11 subsystem
  */
@@ -46,6 +14,7 @@
 #include "secerr.h"
 #include "dev.h"
 #include "pkcs11ni.h"
+#include "utilpars.h"
 
 /* these are for displaying error messages */
 
@@ -1114,7 +1083,7 @@ secmod_HandleWaitForSlotEvent(SECMODModule *mod,  unsigned long flags,
 	}
 	SECMOD_ReleaseReadLock(moduleLock);
 	/* if everything was perm modules, don't lock up forever */
-	if (!removableSlotsFound) {
+	if ((mod->slotCount !=0) && !removableSlotsFound) {
 	    error =SEC_ERROR_NO_SLOT_SELECTED;
 	    PZ_Lock(mod->refLock);
 	    break;
@@ -1283,6 +1252,9 @@ SECMOD_HasRemovableSlots(SECMODModule *mod)
 	ret = PR_TRUE;
 	break;
     }
+    if (mod->slotCount == 0 ) {
+	ret = PR_TRUE;
+    }
     SECMOD_ReleaseReadLock(moduleLock);
     return ret;
 }
@@ -1400,7 +1372,7 @@ SECMOD_OpenNewSlot(SECMODModule *mod, const char *moduleSpec)
     }
 
     /* we've found the slot, now build the moduleSpec */
-    escSpec = secmod_DoubleEscape(moduleSpec, '>', ']');
+    escSpec = NSSUTIL_DoubleEscape(moduleSpec, '>', ']');
     if (escSpec == NULL) {
 	PK11_FreeSlot(slot);
 	return NULL;
@@ -1421,7 +1393,17 @@ SECMOD_OpenNewSlot(SECMODModule *mod, const char *moduleSpec)
 	return NULL;
     }
 
-    return SECMOD_FindSlotByID(mod, slotID);
+    slot = SECMOD_FindSlotByID(mod, slotID);
+    if (slot) {
+	/* if we are in the delay period for the "isPresent" call, reset
+	 * the delay since we know things have probably changed... */
+	if (slot->nssToken && slot->nssToken->slot) {
+	    nssSlot_ResetDelay(slot->nssToken->slot);
+	}
+	/* force the slot info structures to properly reset */
+	(void)PK11_IsPresent(slot);
+    }
+    return slot;
 }
 
 /*

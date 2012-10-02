@@ -1,38 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * ssltap.c
@@ -66,7 +34,7 @@
 #include "cert.h"
 #include "sslproto.h"
 
-#define VERSIONSTRING "$Revision: 1.20 $ ($Date: 2011/11/05 23:09:28 $) $Author: wtc%google.com $"
+#define VERSIONSTRING "$Revision: 1.22 $ ($Date: 2012/06/14 18:16:05 $) $Author: wtc%google.com $"
 
 
 struct _DataBufferList;
@@ -384,7 +352,11 @@ const char * V2CipherString(int cs_int)
   case 0x000065:    cs_str = "TLS/DHE-DSS_EXPORT1024/RC4-56/SHA";  break;
   case 0x000066:    cs_str = "TLS/DHE-DSS/RC4-128/SHA";		   break;
 
+  case 0x000067:    cs_str = "TLS/DHE-RSA/AES128-CBC/SHA256";   break;
+  case 0x000068:    cs_str = "TLS/DH-DSS/AES256-CBC/SHA256";    break;
+  case 0x000069:    cs_str = "TLS/DH-RSA/AES256-CBC/SHA256";    break;
   case 0x00006A:    cs_str = "TLS/DHE-DSS/AES256-CBC/SHA256";	break;
+  case 0x00006B:    cs_str = "TLS/DHE-RSA/AES256-CBC/SHA256";	break;
 
   case 0x000072:    cs_str = "TLS/DHE-DSS/3DESEDE-CBC/RMD160"; break;
   case 0x000073:    cs_str = "TLS/DHE-DSS/AES128-CBC/RMD160";  break;
@@ -456,8 +428,12 @@ const char * V2CipherString(int cs_int)
 
   case 0x00C023:    cs_str = "TLS/ECDHE-ECDSA/AES128-CBC/SHA256"; break;
   case 0x00C024:    cs_str = "TLS/ECDHE-ECDSA/AES256-CBC/SHA384"; break;
+  case 0x00C025:    cs_str = "TLS/ECDH-ECDSA/AES128-CBC/SHA256"; break;
+  case 0x00C026:    cs_str = "TLS/ECDH-ECDSA/AES256-CBC/SHA384"; break;
   case 0x00C027:    cs_str = "TLS/ECDHE-RSA/AES128-CBC/SHA256"; break;
   case 0x00C028:    cs_str = "TLS/ECDHE-RSA/AES256-CBC/SHA384"; break;
+  case 0x00C029:    cs_str = "TLS/ECDH-RSA/AES128-CBC/SHA256"; break;
+  case 0x00C02A:    cs_str = "TLS/ECDH-RSA/AES256-CBC/SHA384"; break;
   case 0x00C02B:    cs_str = "TLS/ECDHE-ECDSA/AES128-GCM/SHA256"; break;
   case 0x00C02C:    cs_str = "TLS/ECDHE-ECDSA/AES256-GCM/SHA384"; break;
 
