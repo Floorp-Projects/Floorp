@@ -710,7 +710,7 @@ class CallCompiler : public BaseCompiler
         masm.loadPtr(Address(t0, ion::IonCode::offsetOfCode()), t0);
         masm.call(t0);
 #elif defined(JS_CPU_ARM)
-        masm.loadPtr(Address(t0, ion::IonCode::OffsetOfCode()), JSC::ARMRegisters::ip);
+        masm.loadPtr(Address(t0, ion::IonCode::offsetOfCode()), JSC::ARMRegisters::ip);
         masm.callAddress(JS_FUNC_TO_DATA_PTR(void *, IonVeneer));
 #endif
 
