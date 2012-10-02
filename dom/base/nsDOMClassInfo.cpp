@@ -2446,19 +2446,12 @@ nsDOMClassInfo::Init()
   nsresult rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIXPCFunctionThisTranslator> old;
-
   nsCOMPtr<nsIXPCFunctionThisTranslator> elt = new nsEventListenerThisTranslator();
-  NS_ENSURE_TRUE(elt, NS_ERROR_OUT_OF_MEMORY);
-
-  sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener),
-                                        elt, getter_AddRefs(old));
+  sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener), elt);
 
   nsCOMPtr<nsIXPCFunctionThisTranslator> mctl = new nsMutationCallbackThisTranslator();
-  NS_ENSURE_TRUE(elt, NS_ERROR_OUT_OF_MEMORY);
-
   sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIMutationObserverCallback),
-                                        mctl, getter_AddRefs(old));
+                                        mctl);
 
   nsCOMPtr<nsIScriptSecurityManager> sm =
     do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);

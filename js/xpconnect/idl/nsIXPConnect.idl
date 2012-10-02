@@ -288,7 +288,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(bd300b18-1c34-4589-8285-23a12cc580ea)]
+[uuid(d94c13ae-7585-4e7b-b7ad-482976bc6f1b)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -514,10 +514,7 @@ interface nsIXPConnect : nsISupports
                                    in nsISupports  aCOMObj,
                                    in nsIIDRef     aIID);
 
-    nsIXPCFunctionThisTranslator
-    getFunctionThisTranslator(in nsIIDRef aIID);
-
-    nsIXPCFunctionThisTranslator
+    void
     setFunctionThisTranslator(in nsIIDRef aIID,
                               in nsIXPCFunctionThisTranslator aTranslator);
 
