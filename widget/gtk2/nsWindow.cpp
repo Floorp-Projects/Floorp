@@ -4229,7 +4229,7 @@ ChangedMaskBits(gchar* aMaskBits, int32_t aMaskWidth, int32_t aMaskHeight,
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
         uint8_t* alphas = aAlphas;
         for (x = aRect.x; x < xMax; x++) {
-            bool newBit = *alphas > 0;
+            bool newBit = *alphas > 0x7f;
             alphas++;
 
             gchar maskByte = maskBytes[x >> 3];
@@ -4255,7 +4255,7 @@ void UpdateMaskBits(gchar* aMaskBits, int32_t aMaskWidth, int32_t aMaskHeight,
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
         uint8_t* alphas = aAlphas;
         for (x = aRect.x; x < xMax; x++) {
-            bool newBit = *alphas > 0;
+            bool newBit = *alphas > 0x7f;
             alphas++;
 
             gchar mask = 1 << (x & 7);
