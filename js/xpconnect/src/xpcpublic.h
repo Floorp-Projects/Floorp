@@ -40,18 +40,12 @@ JSObject *
 TransplantObjectWithWrapper(JSContext *cx,
                             JSObject *origobj, JSObject *origwrapper,
                             JSObject *targetobj, JSObject *targetwrapper);
+
+nsresult
+CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
+                   bool wantXrays, JSObject **global,
+                   JSCompartment **compartment);
 } /* namespace xpc */
-
-nsresult
-xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
-                       nsIPrincipal *principal, nsISupports *ptr,
-                       bool wantXrays, JSObject **global,
-                       JSCompartment **compartment);
-
-nsresult
-xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
-                         nsISupports *ptr, JSObject **global,
-                         JSCompartment **compartment);
 
 #define XPCONNECT_GLOBAL_FLAGS                                                \
     JSCLASS_DOM_GLOBAL | JSCLASS_XPCONNECT_GLOBAL | JSCLASS_HAS_PRIVATE |     \
