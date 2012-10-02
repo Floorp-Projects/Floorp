@@ -8,14 +8,12 @@ import logging
 import multiprocessing
 import os
 import pymake.parser
-import shlex
 import sys
 import subprocess
 import which
 
 from mozprocess.processhandler import ProcessHandlerMixin
 from pymake.data import Makefile
-from tempfile import TemporaryFile
 
 from mozbuild.config import ConfigProvider
 from mozbuild.config import PositiveIntegerType
@@ -191,8 +189,9 @@ class MozbuildObject(object):
         return os.path.join(self.topobjdir, path)
 
     def _run_make(self, directory=None, filename=None, target=None, log=True,
-            srcdir=False, allow_parallel=True, line_handler=None, env=None,
-            ignore_errors=False, silent=True, print_directory=True):
+            srcdir=False, allow_parallel=True, line_handler=None,
+            append_env=None, explicit_env=None, ignore_errors=False,
+            silent=True, print_directory=True):
         """Invoke make.
 
         directory -- Relative directory to look for Makefile in.
@@ -244,7 +243,8 @@ class MozbuildObject(object):
         params = {
             'args': args,
             'line_handler': line_handler,
-            'explicit_env': env,
+            'append_env': append_env,
+            'explicit_env': explicit_env,
             'log_level': logging.INFO,
             'require_unix_environment': True,
             'ignore_errors': ignore_errors,
@@ -324,7 +324,9 @@ class MozbuildObject(object):
             use_env.update(os.environ)
 
             if append_env:
-                use_env.update(env)
+                use_env.update(append_env)
+
+        self.log(logging.DEBUG, 'process', {'env': use_env}, 'Environment: {env}')
 
         p = ProcessHandlerMixin(args, cwd=cwd, env=use_env,
             processOutputLine=[handleLine], universal_newlines=True)

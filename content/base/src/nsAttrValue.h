@@ -20,7 +20,6 @@
 #include "nsCOMPtr.h"
 #include "SVGAttrValueWrapper.h"
 
-typedef uintptr_t PtrBits;
 class nsAString;
 class nsIAtom;
 class nsIDocument;
@@ -39,11 +38,11 @@ struct ImageValue;
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
 
-#define NS_ATTRVALUE_BASETYPE_MASK (PtrBits(3))
+#define NS_ATTRVALUE_BASETYPE_MASK (uintptr_t(3))
 #define NS_ATTRVALUE_POINTERVALUE_MASK (~NS_ATTRVALUE_BASETYPE_MASK)
 
 #define NS_ATTRVALUE_INTEGERTYPE_BITS 4
-#define NS_ATTRVALUE_INTEGERTYPE_MASK (PtrBits((1 << NS_ATTRVALUE_INTEGERTYPE_BITS) - 1))
+#define NS_ATTRVALUE_INTEGERTYPE_MASK (uintptr_t((1 << NS_ATTRVALUE_INTEGERTYPE_BITS) - 1))
 #define NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER (1 << NS_ATTRVALUE_INTEGERTYPE_BITS)
 #define NS_ATTRVALUE_INTEGERTYPE_MAXVALUE ((1 << (31 - NS_ATTRVALUE_INTEGERTYPE_BITS)) - 1)
 #define NS_ATTRVALUE_INTEGERTYPE_MINVALUE (-NS_ATTRVALUE_INTEGERTYPE_MAXVALUE - 1)
@@ -52,7 +51,7 @@ struct ImageValue;
 #define NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER (1 << (NS_ATTRVALUE_ENUMTABLEINDEX_BITS - 1))
 #define NS_ATTRVALUE_ENUMTABLEINDEX_MAXVALUE (NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER - 1)
 #define NS_ATTRVALUE_ENUMTABLEINDEX_MASK \
-  (PtrBits((((1 << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) - 1) &~ NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER)))
+  (uintptr_t((((1 << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) - 1) &~ NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER)))
 
 /**
  * A class used to construct a nsString from a nsStringBuffer (we might
@@ -428,7 +427,7 @@ private:
 
   static nsTArray<const EnumTable*, nsTArrayDefaultAllocator>* sEnumTableArray;
 
-  PtrBits mBits;
+  uintptr_t mBits;
 };
 
 inline const nsAttrValue&

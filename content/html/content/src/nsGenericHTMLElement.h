@@ -645,7 +645,10 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Boolean value of attribute.
    */
-  NS_HIDDEN_(nsresult) GetBoolAttr(nsIAtom* aAttr, bool* aValue) const;
+  NS_HIDDEN_(bool) GetBoolAttr(nsIAtom* aAttr) const
+  {
+    return HasAttr(kNameSpaceID_None, aAttr);
+  }
 
   /**
    * Helper method for NS_IMPL_BOOL_ATTR macro.
@@ -665,9 +668,8 @@ protected:
    *
    * @param aAttr    name of attribute.
    * @param aDefault default-value to return if attribute isn't set.
-   * @param aResult  result value [out]
    */
-  NS_HIDDEN_(nsresult) GetIntAttr(nsIAtom* aAttr, int32_t aDefault, int32_t* aValue);
+  NS_HIDDEN_(int32_t) GetIntAttr(nsIAtom* aAttr, int32_t aDefault) const;
 
   /**
    * Helper method for NS_IMPL_INT_ATTR macro.
@@ -1024,7 +1026,8 @@ protected:
   NS_IMETHODIMP                                                       \
   _class::Get##_method(bool* aValue)                                \
   {                                                                   \
-    return GetBoolAttr(nsGkAtoms::_atom, aValue);                   \
+    *aValue = GetBoolAttr(nsGkAtoms::_atom);                          \
+    return NS_OK;                                                     \
   }                                                                   \
   NS_IMETHODIMP                                                       \
   _class::Set##_method(bool aValue)                                 \
@@ -1044,12 +1047,13 @@ protected:
   NS_IMETHODIMP                                                           \
   _class::Get##_method(int32_t* aValue)                                   \
   {                                                                       \
-    return GetIntAttr(nsGkAtoms::_atom, _default, aValue);              \
+    *aValue = GetIntAttr(nsGkAtoms::_atom, _default);                     \
+    return NS_OK;                                                         \
   }                                                                       \
   NS_IMETHODIMP                                                           \
   _class::Set##_method(int32_t aValue)                                    \
   {                                                                       \
-    return SetIntAttr(nsGkAtoms::_atom, aValue);                        \
+    return SetIntAttr(nsGkAtoms::_atom, aValue);                          \
   }
 
 /**
@@ -1162,7 +1166,8 @@ protected:
   NS_IMETHODIMP                                                           \
   _class::Get##_method(int32_t* aValue)                                   \
   {                                                                       \
-    return GetIntAttr(nsGkAtoms::_atom, _default, aValue);                \
+    *aValue = GetIntAttr(nsGkAtoms::_atom, _default);                     \
+    return NS_OK;                                                         \
   }                                                                       \
   NS_IMETHODIMP                                                           \
   _class::Set##_method(int32_t aValue)                                    \

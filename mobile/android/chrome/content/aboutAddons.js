@@ -286,7 +286,9 @@ var Addons = {
 
         // Also send a notification to match the behavior of desktop Firefox
         let id = aListItem.getAttribute("addonID");
-        Services.obs.notifyObservers(document, "addon-options-displayed", id);
+        Services.obs.notifyObservers(document,
+                                     AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+                                     id);
       }
     } catch (e) {
       Cu.reportError(e)

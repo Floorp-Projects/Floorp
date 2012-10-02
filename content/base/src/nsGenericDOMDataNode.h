@@ -274,9 +274,9 @@ protected:
   // Override from nsINode
   virtual nsINode::nsSlots* CreateSlots();
 
-  nsDataSlots *GetDataSlots()
+  nsDataSlots* DataSlots()
   {
-    return static_cast<nsDataSlots*>(GetSlots());
+    return static_cast<nsDataSlots*>(Slots());
   }
 
   nsDataSlots *GetExistingDataSlots() const

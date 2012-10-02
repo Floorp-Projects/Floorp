@@ -11,7 +11,7 @@ const Cu = Components.utils;
 
 const DBG_XUL = "chrome://browser/content/debugger.xul";
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
-const REMOTE_PROFILE_NAME = "_remote-debug";
+const CHROME_DEBUGGER_PROFILE_NAME = "_chrome-debugger-profile";
 const TAB_SWITCH_NOTIFICATION = "debugger-tab-switch";
 
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
@@ -489,9 +489,9 @@ ChromeDebuggerProcess.prototype = {
 
     let dbgProfileName;
     try {
-      dbgProfileName = profileService.selectedProfile.name + REMOTE_PROFILE_NAME;
+      dbgProfileName = profileService.selectedProfile.name + CHROME_DEBUGGER_PROFILE_NAME;
     } catch(e) {
-      dbgProfileName = REMOTE_PROFILE_NAME;
+      dbgProfileName = CHROME_DEBUGGER_PROFILE_NAME;
       Cu.reportError(e);
     }
 

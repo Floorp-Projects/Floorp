@@ -410,7 +410,7 @@ protected:
 
   nsDOMSlots *DOMSlots()
   {
-    return static_cast<nsDOMSlots*>(GetSlots());
+    return static_cast<nsDOMSlots*>(Slots());
   }
 
   nsDOMSlots *GetExistingDOMSlots() const

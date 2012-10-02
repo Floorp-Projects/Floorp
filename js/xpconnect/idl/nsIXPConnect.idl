@@ -270,27 +270,12 @@ interface nsIXPCWrappedJSObjectGetter : nsISupports
  *
  * If a null interface pointer is returned then xpconnect will use the default
  * 'this' - the same JSObject as the function object it is calling.
- *
- * The translator can also return a non-null aIIDOfResult to tell xpconnect what
- * type of wrapper to build. If that is null then xpconnect will assume the
- * wrapper should be for nsISupports. For objects that support flattening -
- * i.e. expose nsIClassInfo and that interface's getInterfaces method - then
- * a flattened wrapper will be created and no iid was really necessary.
- *
- * XXX aHideFirstParamFromJS is intended to allow the trimming of that first
- * param (used to indicate 'this') from the actual call to the JS code. The JS
- * DOM does not require this functionality and it is **NOT YET IMPLEMENTED**
- *
  */
 
-[uuid(039ef260-2a0d-11d5-90a7-0010a4e73d9a)]
+[uuid(f5f84b70-92eb-41f1-a1dd-2eaac0ed564c)]
 interface nsIXPCFunctionThisTranslator : nsISupports
 {
-    nsISupports TranslateThis(in nsISupports        aInitialThis,
-                              in nsIInterfaceInfo   aInterfaceInfo,
-                              in uint16_t           aMethodIndex,
-                              out boolean            aHideFirstParamFromJS,
-                              out nsIIDPtr          aIIDOfResult);
+    nsISupports TranslateThis(in nsISupports aInitialThis);
 };
 
 /***************************************************************************/
@@ -303,7 +288,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(bd300b18-1c34-4589-8285-23a12cc580ea)]
+[uuid(d94c13ae-7585-4e7b-b7ad-482976bc6f1b)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -529,10 +514,7 @@ interface nsIXPConnect : nsISupports
                                    in nsISupports  aCOMObj,
                                    in nsIIDRef     aIID);
 
-    nsIXPCFunctionThisTranslator
-    getFunctionThisTranslator(in nsIIDRef aIID);
-
-    nsIXPCFunctionThisTranslator
+    void
     setFunctionThisTranslator(in nsIIDRef aIID,
                               in nsIXPCFunctionThisTranslator aTranslator);
 
