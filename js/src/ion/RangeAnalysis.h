@@ -35,6 +35,7 @@ class RangeAnalysis
     bool removeBetaNobes();
 };
 
+struct RangeChangeCount;
 class Range {
     private:
         // :TODO: we should do symbolic range evaluation, where we have
@@ -106,7 +107,8 @@ class Range {
         // modification. This is to avoid a bunch of useless extra
         // copying when chaining together unions when handling Phi
         // nodes.
-    void unionWith(const Range *other, bool useNarrowing = false);
+    void unionWith(const Range *other);
+    void unionWith(RangeChangeCount *other);
 
         static Range intersect(const Range *lhs, const Range *rhs);
         static Range add(const Range *lhs, const Range *rhs);
@@ -172,6 +174,22 @@ class Range {
             setLower(l);
             setUpper(h);
         }
+};
+
+struct RangeChangeCount {
+    Range oldRange;
+    unsigned char lowerCount_ : 4;
+    unsigned char upperCount_ : 4;
+
+    void updateRange(Range *newRange) {
+        JS_ASSERT(newRange->lower() >= oldRange.lower());
+        if (newRange->lower() != oldRange.lower())
+            lowerCount_ = lowerCount_ < 15 ? lowerCount_ + 1 : lowerCount_;
+        JS_ASSERT(newRange->upper() <= oldRange.upper());
+        if (newRange->upper() != oldRange.upper())
+            upperCount_ = upperCount_ < 15 ? upperCount_ + 1 : upperCount_;
+        oldRange = *newRange;
+    }
 };
 
 } // namespace ion

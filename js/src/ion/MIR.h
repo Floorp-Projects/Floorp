@@ -2703,7 +2703,9 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     bool triedToSpecialize_;
     bool hasBytecodeUses_;
     bool isIterator_;
-
+    // For every input to the phi, track how many times it has changed
+    // Only used in loop headers, so it defaults to 0 elements to conserve space
+    js::Vector<RangeChangeCount, 0, IonAllocPolicy> changeCounts_;
     MPhi(uint32 slot)
       : slot_(slot),
         triedToSpecialize_(false),
@@ -2760,19 +2762,9 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    bool recomputeRange() {
-        if (type() != MIRType_Int32)
-            return false;
-
-        Range r;
-        r.update(getOperand(0)->range());
-        JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
-        for (size_t i = 0; i < numOperands(); i++) {
-            if (!isOSRLikeValue(getOperand(i)))
-                r.unionWith(getOperand(i)->range(), true);
-        }
-
-        return range()->update(&r);
+    bool recomputeRange();
+    bool initCounts() {
+        return changeCounts_.resize(inputs_.length());
     }
 };
 
