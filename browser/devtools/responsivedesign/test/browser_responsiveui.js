@@ -31,9 +31,25 @@ function test() {
     instance = gBrowser.selectedTab.__responsiveUI;
     ok(instance, "instance of the module is attached to the tab.");
 
+    ensureScrollbarsAreFloating();
+
     instance.transitionsEnabled = false;
 
     testPresets();
+  }
+
+  function ensureScrollbarsAreFloating() {
+    let body = gBrowser.contentDocument.body;
+    let html = gBrowser.contentDocument.documentElement;
+
+    let originalWidth = body.getBoundingClientRect().width;
+
+    html.style.overflowY = "scroll"; // Force scrollbars
+    // Flush. Should not be needed as getBoundingClientRect() should flush,
+    // but just in case.
+    gBrowser.contentWindow.getComputedStyle(html).overflowY;
+    let newWidth = body.getBoundingClientRect().width;
+    is(originalWidth, newWidth, "Floating scrollbars are presents");
   }
 
   function testPresets() {
