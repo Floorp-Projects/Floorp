@@ -27,9 +27,9 @@ interface AudioBufferSourceNode : AudioSourceNode {
     //attribute AudioParam playbackRate;
     //attribute boolean loop;
 
-    void noteOn(double when);
-    //void noteGrainOn(double when, double grainOffset, double grainDuration);
-    void noteOff(double when);
+    void start(double when);
+    //void start(double when, double grainOffset, double grainDuration);
+    void stop(double when);
 
 };
 
