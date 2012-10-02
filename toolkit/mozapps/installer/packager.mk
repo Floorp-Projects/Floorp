@@ -455,18 +455,16 @@ _ABS_RUN_TEST_PROGRAM = $(call core_abspath,$(RUN_TEST_PROGRAM))
 endif
 
 ifdef LIBXUL_SDK
-PRECOMPILE_DIR=XCurProcD
 PRECOMPILE_RESOURCE=app
 PRECOMPILE_GRE=$(LIBXUL_DIST)/bin
 else
-PRECOMPILE_DIR=GreD
 PRECOMPILE_RESOURCE=gre
 PRECOMPILE_GRE=$$PWD
 endif
 
 # Silence the unzip step so we don't print any binary data from the comment field.
 GENERATE_CACHE = \
-  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('$(PRECOMPILE_DIR)', '$(OMNIJAR_NAME)', 'startupCache.zip');" && \
+  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('startupCache.zip');" && \
   rm -rf jsloader jssubloader && \
   $(UNZIP) -q startupCache.zip && \
   rm startupCache.zip && \
