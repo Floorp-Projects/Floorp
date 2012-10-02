@@ -32,7 +32,7 @@ var observer = {
     is(this.lastHidden, null, "'addon-options-hidden' notification should not have fired");
   },
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "addon-options-displayed") {
+    if (aTopic == AddonManager.OPTIONS_NOTIFICATION_DISPLAYED) {
       this.lastDisplayed = aData;
       // Test if the binding has applied before the observers are notified. We test the second setting here,
       // because the code operates on the first setting and we want to check it applies to all.
@@ -48,7 +48,7 @@ var observer = {
         this.callback = null;
         tempCallback();
       }
-    } else if (aTopic == "addon-options-hidden") {
+    } else if (aTopic == AddonManager.OPTIONS_NOTIFICATION_HIDDEN) {
       this.lastHidden = aData;
     }
   }
@@ -108,8 +108,12 @@ function test() {
       gManagerWindow = aWindow;
       gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-      Services.obs.addObserver(observer, "addon-options-displayed", false);
-      Services.obs.addObserver(observer, "addon-options-hidden", false);
+      Services.obs.addObserver(observer,
+                               AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+                               false);
+      Services.obs.addObserver(observer,
+                               AddonManager.OPTIONS_NOTIFICATION_HIDDEN,
+                               false);
 
       run_next_test();
     });
@@ -117,7 +121,8 @@ function test() {
 }
 
 function end_test() {
-  Services.obs.removeObserver(observer, "addon-options-displayed");
+  Services.obs.removeObserver(observer,
+                              AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
 
   Services.prefs.clearUserPref("extensions.inlinesettings1.bool");
   Services.prefs.clearUserPref("extensions.inlinesettings1.boolint");
@@ -135,7 +140,8 @@ function end_test() {
 
   close_manager(gManagerWindow, function() {
     observer.checkHidden("inlinesettings2@tests.mozilla.org");
-    Services.obs.removeObserver(observer, "addon-options-hidden");
+    Services.obs.removeObserver(observer,
+                                AddonManager.OPTIONS_NOTIFICATION_HIDDEN);
 
     AddonManager.getAddonByID("inlinesettings1@tests.mozilla.org", function(aAddon) {
       aAddon.uninstall();
