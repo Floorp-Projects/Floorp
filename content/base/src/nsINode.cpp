@@ -1123,11 +1123,11 @@ nsINode::Trace(nsINode *tmp, TraceCallback cb, void *closure)
 bool
 nsINode::UnoptimizableCCNode() const
 {
-  const PtrBits problematicFlags = (NODE_IS_ANONYMOUS |
-                                    NODE_IS_IN_ANONYMOUS_SUBTREE |
-                                    NODE_IS_NATIVE_ANONYMOUS_ROOT |
-                                    NODE_MAY_BE_IN_BINDING_MNGR |
-                                    NODE_IS_INSERTION_PARENT);
+  const uintptr_t problematicFlags = (NODE_IS_ANONYMOUS |
+                                      NODE_IS_IN_ANONYMOUS_SUBTREE |
+                                      NODE_IS_NATIVE_ANONYMOUS_ROOT |
+                                      NODE_MAY_BE_IN_BINDING_MNGR |
+                                      NODE_IS_INSERTION_PARENT);
   return HasFlag(problematicFlags) ||
          NodeType() == nsIDOMNode::ATTRIBUTE_NODE ||
          // For strange cases like xbl:content/xbl:children
