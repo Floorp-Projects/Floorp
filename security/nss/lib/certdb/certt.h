@@ -1,42 +1,10 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.55 2011/07/28 21:38:14 wtc%google.com Exp $
+ * $Id: certt.h,v 1.57 2012/09/28 23:40:14 rrelyea%redhat.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -887,6 +855,40 @@ typedef struct {
     SECItem inhibitMappingSkipCerts;
 } CERTCertificatePolicyConstraints;
 
+/*
+ * These types are for the validate chain callback param.
+ *
+ * CERTChainVerifyCallback is an application-supplied callback that can be used
+ * to augment libpkix's certificate chain validation with additional
+ * application-specific checks. It may be called multiple times if there are
+ * multiple potentially-valid paths for the certificate being validated. This
+ * callback is called before revocation checking is done on the certificates in
+ * the given chain.
+ *
+ * - isValidChainArg contains the application-provided opaque argument
+ * - currentChain is the currently validated chain. It is ordered with the leaf
+ *   certificate at the head and the trust anchor at the tail.
+ *
+ * The callback should set *chainOK = PR_TRUE and return SECSuccess if the
+ * certificate chain is acceptable. It should set *chainOK = PR_FALSE and
+ * return SECSuccess if the chain is unacceptable, to indicate that the given
+ * chain is bad and path building should continue. It should return SECFailure
+ * to indicate an fatal error that will cause path validation to fail
+ * immediately.
+ */
+typedef SECStatus (*CERTChainVerifyCallbackFunc)
+                                             (void *isChainValidArg,
+                                              const CERTCertList *currentChain,
+                                              PRBool *chainOK);
+
+/*
+ * Note: If extending this structure, it will be necessary to change the
+ * associated CERTValParamInType
+ */
+typedef struct {
+    CERTChainVerifyCallbackFunc isChainValid;
+    void *isChainValidArg;
+} CERTChainVerifyCallback;
 
 /*
  * these types are for the CERT_PKIX* Verification functions
@@ -957,6 +959,10 @@ typedef enum {
    cert_pi_useAIACertFetch = 12, /* Enables cert fetching using AIA extension.
 				 * In NSS 3.12.1 or later. Default is off.
 				 * Value is in value.scalar.b */
+   cert_pi_chainVerifyCallback = 13,
+                                /* The callback container for doing extra
+                                 * validation on the currently calculated chain.
+                                 * Value is in value.pointer.chainVerifyCallback */
    cert_pi_max                  /* SPECIAL: signifies maximum allowed value,
 				 *  can increase in future releases */
 } CERTValParamInType;
@@ -1198,6 +1204,7 @@ typedef struct CERTValParamInValueStr {
         const CERTCertificate* cert;
         const CERTCertList *chain;
         const CERTRevocationFlags *revocation;
+        const CERTChainVerifyCallback *chainVerifyCallback;
     } pointer;
     union {
         const PRInt32  *pi;

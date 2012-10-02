@@ -1,37 +1,6 @@
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is the Netscape security libraries.
-#
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1994-2009
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 # This file defines the stress tests for SSL/TLS.
 #
@@ -40,44 +9,44 @@
 #  ECC    value   params     params
 # ------- ------  ------     ------                         ---------------
   noECC     0      _         -c_1000_-C_A                  Stress SSL2 RC4 128 with MD5
-  noECC     0      _         -c_1000_-C_c_-T               Stress SSL3 RC4 128 with MD5
+  noECC     0      _         -c_1000_-C_c_-V_:ssl3               Stress SSL3 RC4 128 with MD5
   noECC     0      _         -c_1000_-C_c                  Stress TLS  RC4 128 with MD5
   noECC     0      _         -c_1000_-C_c_-g               Stress TLS  RC4 128 with MD5 (false start)
-  noECC     0      -u        -2_-c_1000_-C_c_-u            Stress TLS  RC4 128 with MD5 (session ticket)
-  noECC     0      -z        -2_-c_1000_-C_c_-z            Stress TLS  RC4 128 with MD5 (compression)
-  noECC     0      -u_-z     -2_-c_1000_-C_c_-u_-z         Stress TLS  RC4 128 with MD5 (session ticket, compression)
-  noECC     0      -u_-z     -2_-c_1000_-C_c_-u_-z_-g      Stress TLS  RC4 128 with MD5 (session ticket, compression, false start)
-  SNI       0      -u_-a_Host-sni.Dom -2_-3_-c_1000_-C_c_-u Stress TLS RC4 128 with MD5 (session ticket, SNI)
+  noECC     0      -u        -V_ssl3:_-c_1000_-C_c_-u            Stress TLS  RC4 128 with MD5 (session ticket)
+  noECC     0      -z        -V_ssl3:_-c_1000_-C_c_-z            Stress TLS  RC4 128 with MD5 (compression)
+  noECC     0      -u_-z     -V_ssl3:_-c_1000_-C_c_-u_-z         Stress TLS  RC4 128 with MD5 (session ticket, compression)
+  noECC     0      -u_-z     -V_ssl3:_-c_1000_-C_c_-u_-z_-g      Stress TLS  RC4 128 with MD5 (session ticket, compression, false start)
+  SNI       0      -u_-a_Host-sni.Dom -V_tls1.0:_-c_1000_-C_c_-u Stress TLS RC4 128 with MD5 (session ticket, SNI)
 
 #
 # add client auth versions here...
 #
   noECC     0      -r_-r     -c_100_-C_A_-N_-n_TestUser    Stress SSL2 RC4 128 with MD5 (no reuse, client auth)
-  noECC     0      -r_-r     -c_100_-C_c_-T_-N_-n_TestUser Stress SSL3 RC4 128 with MD5 (no reuse, client auth)
+  noECC     0      -r_-r     -c_100_-C_c_-V_:ssl3_-N_-n_TestUser Stress SSL3 RC4 128 with MD5 (no reuse, client auth)
   noECC     0      -r_-r     -c_100_-C_c_-N_-n_TestUser    Stress TLS RC4 128 with MD5 (no reuse, client auth)
-  noECC     0      -r_-r_-u  -2_-c_100_-C_c_-n_TestUser_-u Stress TLS RC4 128 with MD5 (session ticket, client auth)
-  noECC     0      -r_-r_-z  -2_-c_100_-C_c_-n_TestUser_-z Stress TLS RC4 128 with MD5 (compression, client auth)
-  noECC     0      -r_-r_-z  -2_-c_100_-C_c_-n_TestUser_-z_-g Stress TLS RC4 128 with MD5 (compression, client auth, false start)
-  noECC     0   -r_-r_-u_-z  -2_-c_100_-C_c_-n_TestUser_-u_-z Stress TLS RC4 128 with MD5 (session ticket, compression, client auth)
-  noECC     0   -r_-r_-u_-z  -2_-c_100_-C_c_-n_TestUser_-u_-z_-g Stress TLS RC4 128 with MD5 (session ticket, compression, client auth, false start)
-  SNI       0   -r_-r_-u_-a_Host-sni.Dom -2_-3_-c_1000_-C_c_-u Stress TLS RC4 128 with MD5 (session ticket, SNI, client auth, default virt host)
-  SNI       0   -r_-r_-u_-a_Host-sni.Dom_-k_Host-sni.Dom -2_-3_-c_1000_-C_c_-u_-a_Host-sni.Dom Stress TLS RC4 128 with MD5 (session ticket, SNI, client auth, change virt host)
+  noECC     0      -r_-r_-u  -V_ssl3:_-c_100_-C_c_-n_TestUser_-u Stress TLS RC4 128 with MD5 (session ticket, client auth)
+  noECC     0      -r_-r_-z  -V_ssl3:_-c_100_-C_c_-n_TestUser_-z Stress TLS RC4 128 with MD5 (compression, client auth)
+  noECC     0      -r_-r_-z  -V_ssl3:_-c_100_-C_c_-n_TestUser_-z_-g Stress TLS RC4 128 with MD5 (compression, client auth, false start)
+  noECC     0   -r_-r_-u_-z  -V_ssl3:_-c_100_-C_c_-n_TestUser_-u_-z Stress TLS RC4 128 with MD5 (session ticket, compression, client auth)
+  noECC     0   -r_-r_-u_-z  -V_ssl3:_-c_100_-C_c_-n_TestUser_-u_-z_-g Stress TLS RC4 128 with MD5 (session ticket, compression, client auth, false start)
+  SNI       0   -r_-r_-u_-a_Host-sni.Dom -V_tls1.0:_-c_1000_-C_c_-u Stress TLS RC4 128 with MD5 (session ticket, SNI, client auth, default virt host)
+  SNI       0   -r_-r_-u_-a_Host-sni.Dom_-k_Host-sni.Dom -V_tls1.0:_-c_1000_-C_c_-u_-a_Host-sni.Dom Stress TLS RC4 128 with MD5 (session ticket, SNI, client auth, change virt host)
 
 #
 # ############################ ECC ciphers ############################
 #
-   ECC      0      -c_:C009  -c_100_-C_:C009_-N_-T  Stress SSL3 ECDHE-ECDSA AES 128 CBC with SHA (no reuse)
-   ECC      0      -c_:C013  -c_1000_-C_:C013_-T    Stress SSL3 ECDHE-RSA   AES 128 CBC with SHA
-   ECC      0      -c_:C004  -2_-c_100_-C_:C004_-N  Stress TLS  ECDH-ECDSA  AES 128 CBC with SHA (no reuse)
-   ECC      0      -c_:C00E  -2_-c_100_-C_:C00E_-N  Stress TLS  ECDH-RSA    AES 128 CBC with SHA (no reuse)
-   ECC      0      -c_:C013  -2_-c_1000_-C_:C013    Stress TLS  ECDHE-RSA   AES 128 CBC with SHA
-   ECC      0   -c_:C004_-u  -2_-c_1000_-C_:C004_-u Stress TLS  ECDH-ECDSA  AES 128 CBC with SHA (session ticket)
+   ECC      0      -c_:C009  -c_100_-C_:C009_-N_-V_:ssl3  Stress SSL3 ECDHE-ECDSA AES 128 CBC with SHA (no reuse)
+   ECC      0      -c_:C013  -c_1000_-C_:C013_-V_:ssl3    Stress SSL3 ECDHE-RSA   AES 128 CBC with SHA
+   ECC      0      -c_:C004  -V_ssl3:_-c_100_-C_:C004_-N  Stress TLS  ECDH-ECDSA  AES 128 CBC with SHA (no reuse)
+   ECC      0      -c_:C00E  -V_ssl3:_-c_100_-C_:C00E_-N  Stress TLS  ECDH-RSA    AES 128 CBC with SHA (no reuse)
+   ECC      0      -c_:C013  -V_ssl3:_-c_1000_-C_:C013    Stress TLS  ECDHE-RSA   AES 128 CBC with SHA
+   ECC      0   -c_:C004_-u  -V_ssl3:_-c_1000_-C_:C004_-u Stress TLS  ECDH-ECDSA  AES 128 CBC with SHA (session ticket)
 #
 # add client auth versions here...
 #
-   ECC      0      -r_-r_-c_:C009  -c_10_-C_:C009_-N_-T_-n_TestUser-ec Stress SSL3 ECDHE-ECDSA AES 128 CBC with SHA (no reuse, client auth)
-   ECC      0      -r_-r_-c_:C013  -c_100_-C_:C013_-T_-n_TestUser-ec Stress SSL3 ECDHE-RSA AES 128 CBC with SHA (client auth)
+   ECC      0      -r_-r_-c_:C009  -c_10_-C_:C009_-N_-V_:ssl3_-n_TestUser-ec Stress SSL3 ECDHE-ECDSA AES 128 CBC with SHA (no reuse, client auth)
+   ECC      0      -r_-r_-c_:C013  -c_100_-C_:C013_-V_:ssl3_-n_TestUser-ec Stress SSL3 ECDHE-RSA AES 128 CBC with SHA (client auth)
    ECC      0      -r_-r_-c_:C004  -c_10_-C_:C004_-N_-n_TestUser-ec Stress TLS ECDH-ECDSA AES 128 CBC with SHA (no reuse, client auth)
    ECC      0      -r_-r_-c_:C00E  -c_10_-C_:C00E_-N_-n_TestUser-ecmixed Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse, client auth)
    ECC      0      -r_-r_-c_:C013  -c_100_-C_:C013_-n_TestUser-ec Stress TLS ECDHE-RSA AES 128 CBC with SHA(client auth)
-   ECC      0      -r_-r_-c_:C013_-u -2_-c_100_-C_:C013_-n_TestUser-ec_-u Stress TLS ECDHE-RSA AES 128 CBC with SHA(session ticket, client auth)
+   ECC      0      -r_-r_-c_:C013_-u -V_ssl3:_-c_100_-C_:C013_-n_TestUser-ec_-u Stress TLS ECDHE-RSA AES 128 CBC with SHA(session ticket, client auth)

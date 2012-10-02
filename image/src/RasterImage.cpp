@@ -943,6 +943,10 @@ RasterImage::GetCurrentImage()
   nsresult rv = GetFrame(FRAME_CURRENT, FLAG_SYNC_DECODE, getter_AddRefs(imageSurface));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
+  if (!mImageContainer) {
+    mImageContainer = LayerManager::CreateImageContainer();
+  }
+
   CairoImage::Data cairoData;
   cairoData.mSurface = imageSurface;
   GetWidth(&cairoData.mSize.width);
@@ -967,8 +971,6 @@ RasterImage::GetImageContainer(ImageContainer **_retval)
     NS_ADDREF(*_retval);
     return NS_OK;
   }
-  
-  mImageContainer = LayerManager::CreateImageContainer();
   
   nsRefPtr<layers::Image> image = GetCurrentImage();
   if (!image) {
@@ -1292,9 +1294,9 @@ RasterImage::FrameUpdated(uint32_t aFrameNum, nsIntRect &aUpdatedRect)
 
   frame->ImageUpdated(aUpdatedRect);
     
-  if (aFrameNum == GetCurrentImgFrameIndex()) {
-    // The image has changed, so we need to invalidate our cached ImageContainer.
-    UpdateImageContainer();
+  if (aFrameNum == GetCurrentImgFrameIndex() &&
+      !IsInUpdateImageContainer()) {
+    mImageContainer = nullptr;
   }
 }
 

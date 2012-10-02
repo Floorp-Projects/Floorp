@@ -1,40 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dr Stephen Henson <stephen.henson@gemplus.com>
- *   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
  * This file implements PKCS 11 on top of our existing security modules
  *
@@ -66,9 +32,11 @@
 #include "softkver.h"
 #include "secoid.h"
 #include "sftkdb.h"
-#include "sftkpars.h"
+#include "utilpars.h" 
 #include "ec.h"
 #include "secasn1.h"
+#include "secerr.h"
+#include "lgglue.h"
 
 PRBool parentForkedAfterC_Initialize;
 
@@ -324,6 +292,8 @@ static const struct mechanismList mechanisms[] = {
 				 CKF_GENERATE_KEY_PAIR}, PR_TRUE},
      {CKM_DSA,			{DSA_MIN_P_BITS, DSA_MAX_P_BITS, 
 				 CKF_SN_VR},              PR_TRUE},
+     {CKM_DSA_PARAMETER_GEN,	{DSA_MIN_P_BITS, DSA_MAX_P_BITS, 
+				 CKF_GENERATE},           PR_TRUE},
      {CKM_DSA_SHA1,		{DSA_MIN_P_BITS, DSA_MAX_P_BITS,
 				 CKF_SN_VR},              PR_TRUE},
      /* -------------------- Diffie Hellman Operations --------------------- */
@@ -377,6 +347,9 @@ static const struct mechanismList mechanisms[] = {
      {CKM_AES_MAC,		{16, 32, CKF_SN_VR},		PR_TRUE},
      {CKM_AES_MAC_GENERAL,	{16, 32, CKF_SN_VR},		PR_TRUE},
      {CKM_AES_CBC_PAD,		{16, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_AES_CTS,		{16, 32, CKF_EN_DE},		PR_TRUE},
+     {CKM_AES_CTR,		{16, 32, CKF_EN_DE},		PR_TRUE},
+     {CKM_AES_GCM,		{16, 32, CKF_EN_DE},		PR_TRUE},
      /* ------------------------- Camellia Operations --------------------- */
      {CKM_CAMELLIA_KEY_GEN,	{16, 32, CKF_GENERATE},         PR_TRUE},
      {CKM_CAMELLIA_ECB,  	{16, 32, CKF_EN_DE_WR_UN},      PR_TRUE},
@@ -476,6 +449,10 @@ static const struct mechanismList mechanisms[] = {
      {CKM_MD5_KEY_DERIVATION,		{ 0, 16, CKF_DERIVE},   PR_FALSE}, 
      {CKM_MD2_KEY_DERIVATION,		{ 0, 16, CKF_DERIVE},   PR_FALSE}, 
      {CKM_SHA1_KEY_DERIVATION,		{ 0, 20, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_SHA224_KEY_DERIVATION,	{ 0, 28, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_SHA256_KEY_DERIVATION,	{ 0, 32, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_SHA384_KEY_DERIVATION,	{ 0, 48, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_SHA512_KEY_DERIVATION,	{ 0, 64, CKF_DERIVE},   PR_FALSE}, 
      {CKM_TLS_MASTER_KEY_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
      {CKM_TLS_MASTER_KEY_DERIVE_DH,	{8, 128, CKF_DERIVE},   PR_FALSE}, 
      {CKM_TLS_KEY_AND_MAC_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
@@ -637,8 +614,8 @@ sftk_hasNullPassword(SFTKSlot *slot, SFTKDBHandle *keydb)
  * value and len
  */
 CK_RV
-sftk_defaultAttribute(SFTKObject *object,CK_ATTRIBUTE_TYPE type,void *value,
-							unsigned int len)
+sftk_defaultAttribute(SFTKObject *object,CK_ATTRIBUTE_TYPE type,
+					const void *value, unsigned int len)
 {
     if ( !sftk_hasAttribute(object, type)) {
 	return sftk_AddAttributeType(object,type,value,len);
@@ -894,7 +871,7 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
 	break;
     case CKK_DSA:
 	crv = sftk_ConstrainAttribute(object, CKA_SUBPRIME, 
-						DSA_Q_BITS, DSA_Q_BITS, 0);
+					DSA_MIN_Q_BITS, DSA_MAX_Q_BITS, 0);
 	if (crv != CKR_OK) {
 	    return crv;
 	}
@@ -903,11 +880,11 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
 	if (crv != CKR_OK) {
 	    return crv;
 	}
-	crv = sftk_ConstrainAttribute(object, CKA_BASE, 1, DSA_MAX_P_BITS, 0);
+	crv = sftk_ConstrainAttribute(object, CKA_BASE, 2, DSA_MAX_P_BITS, 0);
 	if (crv != CKR_OK) {
 	    return crv;
 	}
-	crv = sftk_ConstrainAttribute(object, CKA_VALUE, 1, DSA_MAX_P_BITS, 0);
+	crv = sftk_ConstrainAttribute(object, CKA_VALUE, 2, DSA_MAX_P_BITS, 0);
 	if (crv != CKR_OK) {
 	    return crv;
 	}
@@ -921,11 +898,11 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
 	if (crv != CKR_OK) {
 	    return crv;
 	}
-	crv = sftk_ConstrainAttribute(object, CKA_BASE, 1, DH_MAX_P_BITS, 0);
+	crv = sftk_ConstrainAttribute(object, CKA_BASE, 2, DH_MAX_P_BITS, 0);
 	if (crv != CKR_OK) {
 	    return crv;
 	}
-	crv = sftk_ConstrainAttribute(object, CKA_VALUE, 1, DH_MAX_P_BITS, 0);
+	crv = sftk_ConstrainAttribute(object, CKA_VALUE, 2, DH_MAX_P_BITS, 0);
 	if (crv != CKR_OK) {
 	    return crv;
 	}
@@ -1383,6 +1360,23 @@ sftk_handleDSAParameterObject(SFTKSession *session, SFTKObject *object)
     PQGParams params;
     PQGVerify vfy, *verify = NULL;
     SECStatus result,rv;
+    /* This bool keeps track of whether or not we need verify parameters.
+     * If a P, Q and G or supplied, we dont' need verify parameters, as we
+     * have PQ and G. 
+     *   - If G is not supplied, the presumption is that we want to
+     * verify P and Q only.
+     *   - If counter is supplied, it is presumed we want to verify PQ because
+     * the counter is only used in verification.
+     *   - If H is supplied, is is presumed we want to verify G because H is
+     * only used to verify G.
+     *   - Any verification step must have the SEED (counter or H could be 
+     * missing depending on exactly what we want to verify). If SEED is supplied,
+     * the code just goes ahead and runs verify (other errors are parameter
+     * errors are detected by the PQG_VerifyParams function). If SEED is not
+     * supplied, but we determined that we are trying to verify (because needVfy
+     * is set, go ahead and return CKR_TEMPLATE_INCOMPLETE.
+     */
+    PRBool needVfy = PR_FALSE;      
 
     primeAttr = sftk_FindAttribute(object,CKA_PRIME);
     if (primeAttr == NULL) goto loser;
@@ -1395,26 +1389,43 @@ sftk_handleDSAParameterObject(SFTKSession *session, SFTKObject *object)
     params.subPrime.len = subPrimeAttr->attrib.ulValueLen;
 
     baseAttr = sftk_FindAttribute(object,CKA_BASE);
-    if (baseAttr == NULL) goto loser;
-    params.base.data = baseAttr->attrib.pValue;
-    params.base.len = baseAttr->attrib.ulValueLen;
+    if (baseAttr != NULL) {
+	params.base.data = baseAttr->attrib.pValue;
+	params.base.len = baseAttr->attrib.ulValueLen;
+    } else {
+	params.base.data = NULL;
+	params.base.len = 0;
+	needVfy = PR_TRUE; /* presumably only including PQ so we can verify
+			    * them. */
+    }
 
     attribute = sftk_FindAttribute(object, CKA_NETSCAPE_PQG_COUNTER);
     if (attribute != NULL) {
 	vfy.counter = *(CK_ULONG *) attribute->attrib.pValue;
 	sftk_FreeAttribute(attribute);
+	needVfy = PR_TRUE; /* included a count so we can verify PQ */
+    } else {
+	vfy.counter = -1;
+    }
 
-	seedAttr = sftk_FindAttribute(object, CKA_NETSCAPE_PQG_SEED);
-	if (seedAttr == NULL) goto loser;
+    hAttr = sftk_FindAttribute(object, CKA_NETSCAPE_PQG_H);
+    if (hAttr != NULL) {
+	vfy.h.data = hAttr->attrib.pValue;
+	vfy.h.len = hAttr->attrib.ulValueLen;
+	needVfy = PR_TRUE; /* included H so we can verify G */
+    } else {
+	vfy.h.data = NULL;
+	vfy.h.len = 0;
+    }
+    seedAttr = sftk_FindAttribute(object, CKA_NETSCAPE_PQG_SEED);
+    if (seedAttr != NULL) {
 	vfy.seed.data = seedAttr->attrib.pValue;
 	vfy.seed.len = seedAttr->attrib.ulValueLen;
 
-	hAttr = sftk_FindAttribute(object, CKA_NETSCAPE_PQG_H);
-	if (hAttr == NULL) goto loser;
-	vfy.h.data = hAttr->attrib.pValue;
-	vfy.h.len = hAttr->attrib.ulValueLen;
-
 	verify = &vfy;
+    } else if (needVfy) {
+	goto loser; /* Verify always needs seed, if we need verify and not seed
+		     * then fail */
     }
 
     crv = CKR_FUNCTION_FAILED;
@@ -2624,16 +2635,6 @@ SFTK_DestroySlotData(SFTKSlot *slot)
     return CKR_OK;
 }
 
-#ifndef NO_FORK_CHECK
-
-static CK_RV ForkCheck(void)
-{
-    CHECK_FORK();
-    return CKR_OK;
-}
-
-#endif
-
 /*
  * handle the SECMOD.db
  */
@@ -2643,35 +2644,88 @@ NSC_ModuleDBFunc(unsigned long function,char *parameters, void *args)
     char *secmod = NULL;
     char *appName = NULL;
     char *filename = NULL;
-#ifdef NSS_DISABLE_DBM
-    SDBType dbType = SDB_SQL;
-#else
-    SDBType dbType = SDB_LEGACY;
-#endif
+    NSSDBType dbType = NSS_DB_TYPE_NONE;
     PRBool rw;
     static char *success="Success";
     char **rvstr = NULL;
 
-#ifndef NO_FORK_CHECK
-    if (CKR_OK != ForkCheck()) return NULL;
-#endif
+    rvstr = NSSUTIL_DoModuleDBFunction(function, parameters, args);
+    if (rvstr != NULL) {
+	return rvstr;
+    }
 
-    secmod = sftk_getSecmodName(parameters, &dbType, &appName,&filename, &rw);
+    if (PORT_GetError() != SEC_ERROR_LEGACY_DATABASE) {
+	return NULL;
+    }
+
+   /* The legacy database uses the old dbm, which is only linked with the 
+    * legacy DB handler, which is only callable from softoken */
+
+    secmod = _NSSUTIL_GetSecmodName(parameters, &dbType, &appName,
+				    &filename, &rw);
 
     switch (function) {
     case SECMOD_MODULE_DB_FUNCTION_FIND:
-	rvstr = sftkdb_ReadSecmodDB(dbType,appName,filename,secmod,(char *)parameters,rw);
+	if (secmod == NULL) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    return NULL;
+	}
+	if (rw && (dbType != NSS_DB_TYPE_LEGACY) && 
+	    (dbType != NSS_DB_TYPE_MULTIACCESS)) {
+	    /* if we get here, we are trying to update the local database */
+	    /* force data from the legacy DB */
+	    char *oldSecmod = NULL;
+	    char *oldAppName = NULL;
+	    char *oldFilename = NULL;
+	    PRBool oldrw;
+	    char **strings = NULL;
+	    int i;
+
+	    dbType = NSS_DB_TYPE_LEGACY;
+	    oldSecmod = _NSSUTIL_GetSecmodName(parameters,&dbType, &oldAppName,
+					    &oldFilename, &oldrw);
+	    strings = sftkdbCall_ReadSecmodDB(appName, oldFilename, oldSecmod,
+					(char *)parameters, oldrw);
+	    if (strings) {
+		/* write out the strings */
+		for (i=0; strings[i]; i++) {
+		    NSSUTIL_DoModuleDBFunction(SECMOD_MODULE_DB_FUNCTION_ADD,
+				parameters, strings[i]);
+		}
+		sftkdbCall_ReleaseSecmodDBData(oldAppName,oldFilename,oldSecmod,
+			(char **)strings,oldrw);
+	    } else {
+		/* write out a dummy record */
+		NSSUTIL_DoModuleDBFunction(SECMOD_MODULE_DB_FUNCTION_ADD,
+				parameters, " ");
+	    }
+	    if (oldSecmod) { PR_smprintf_free(oldSecmod); }
+	    if (oldAppName) { PORT_Free(oldAppName); }
+	    if (oldFilename) { PORT_Free(oldFilename); }
+	    rvstr = NSSUTIL_DoModuleDBFunction(function, parameters, args);
+	    break;
+	}
+	rvstr = sftkdbCall_ReadSecmodDB(appName,filename,secmod,
+					(char *)parameters,rw);
 	break;
     case SECMOD_MODULE_DB_FUNCTION_ADD:
-	rvstr = (sftkdb_AddSecmodDB(dbType,appName,filename,secmod,(char *)args,rw) 
-				== SECSuccess) ? &success: NULL;
+	if (secmod == NULL) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    return NULL;
+	}
+	rvstr = (sftkdbCall_AddSecmodDB(appName,filename,secmod,
+			(char *)args,rw) == SECSuccess) ? &success: NULL;
 	break;
     case SECMOD_MODULE_DB_FUNCTION_DEL:
-	rvstr = (sftkdb_DeleteSecmodDB(dbType,appName,filename,secmod,(char *)args,rw)
-				 == SECSuccess) ? &success: NULL;
+	if (secmod == NULL) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    return NULL;
+	}
+	rvstr = (sftkdbCall_DeleteSecmodDB(appName,filename,secmod,
+			(char *)args,rw) == SECSuccess) ? &success: NULL;
 	break;
     case SECMOD_MODULE_DB_FUNCTION_RELEASE:
-	rvstr = (sftkdb_ReleaseSecmodDBData(dbType, appName,filename,secmod,
+	rvstr = (sftkdbCall_ReleaseSecmodDBData(appName,filename,secmod,
 			(char **)args,rw) == SECSuccess) ? &success: NULL;
 	break;
     }
@@ -3850,16 +3904,19 @@ CK_RV NSC_Logout(CK_SESSION_HANDLE hSession)
 }
 
 /*
- * Create a new slot on the fly. The slot that is passed in is the
- * slot the request came from. Only the crypto or FIPS slots can
- * be used. The resulting slot will live in the same module as
- * the slot the request was passed to. object is the creation object
- * that specifies the module spec for the new slot.
+ * Create or remove a new slot on the fly.
+ * When creating a slot, "slot" is the slot that the request came from. The
+ * resulting slot will live in the same module as "slot".
+ * When removing a slot, "slot" is the slot to be removed.
+ * "object" is the creation object that specifies the module spec for the slot
+ * to add or remove.
  */
 static CK_RV sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
                                 SFTKObject *object)
 {
-    CK_SLOT_ID idMin, idMax;
+    PRBool isValidUserSlot = PR_FALSE;
+    PRBool isValidFIPSUserSlot = PR_FALSE;
+    PRBool isValidSlot = PR_FALSE;
     PRBool isFIPS = PR_FALSE;
     unsigned long moduleIndex;
     SFTKAttribute *attribute;
@@ -3869,21 +3926,13 @@ static CK_RV sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
     SFTKSlot *newSlot = NULL;
     CK_RV crv = CKR_OK;
 
-    /* only the crypto or FIPS slots can create new slot objects */
-    if (slot->slotID == NETSCAPE_SLOT_ID) {
-	idMin = SFTK_MIN_USER_SLOT_ID;
-	idMax = SFTK_MAX_USER_SLOT_ID;
-	moduleIndex = NSC_NON_FIPS_MODULE;
-	isFIPS = PR_FALSE;
-    } else if (slot->slotID == FIPS_SLOT_ID) {
-	idMin = SFTK_MIN_FIPS_USER_SLOT_ID;
-	idMax = SFTK_MAX_FIPS_USER_SLOT_ID;
-	moduleIndex = NSC_FIPS_MODULE;
-	isFIPS = PR_TRUE;
-    } else {
+    if (class != CKO_NETSCAPE_DELSLOT && class != CKO_NETSCAPE_NEWSLOT) {
 	return CKR_ATTRIBUTE_VALUE_INVALID;
     }
-    attribute = sftk_FindAttribute(object,CKA_NETSCAPE_MODULE_SPEC);
+    if (class == CKO_NETSCAPE_NEWSLOT && slot->slotID == FIPS_SLOT_ID) {
+	isFIPS = PR_TRUE;
+    }
+    attribute = sftk_FindAttribute(object, CKA_NETSCAPE_MODULE_SPEC);
     if (attribute == NULL) {
 	return CKR_TEMPLATE_INCOMPLETE;
     }
@@ -3902,7 +3951,27 @@ static CK_RV sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
     slotID = paramStrings.tokens[0].slotID;
 
     /* stay within the valid ID space */
-    if ((slotID < idMin) || (slotID > idMax)) {
+    isValidUserSlot = (slotID >= SFTK_MIN_USER_SLOT_ID &&
+                       slotID <= SFTK_MAX_USER_SLOT_ID);
+    isValidFIPSUserSlot = (slotID >= SFTK_MIN_FIPS_USER_SLOT_ID &&
+                           slotID <= SFTK_MAX_FIPS_USER_SLOT_ID);
+
+    if (class == CKO_NETSCAPE_DELSLOT) {
+	if (slot->slotID == slotID) {
+	    isValidSlot = isValidUserSlot || isValidFIPSUserSlot;
+	}
+    } else {
+	/* only the crypto or FIPS slots can create new slot objects */
+	if (slot->slotID == NETSCAPE_SLOT_ID) {
+	    isValidSlot = isValidUserSlot;
+	    moduleIndex = NSC_NON_FIPS_MODULE;
+	} else if (slot->slotID == FIPS_SLOT_ID) {
+	    isValidSlot = isValidFIPSUserSlot;
+	    moduleIndex = NSC_FIPS_MODULE;
+	}
+    }
+
+    if (!isValidSlot) {
 	crv = CKR_ATTRIBUTE_VALUE_INVALID;
 	goto loser;
     }
@@ -3919,7 +3988,7 @@ static CK_RV sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
     /* if we were just planning on deleting the slot, then do so now */
     if (class == CKO_NETSCAPE_DELSLOT) {
 	/* sort of a unconventional use of this error code, be we are
-         * overusing CKR_ATTRIBUTE_VALUE_INVALID, and it does apply */
+	 * overusing CKR_ATTRIBUTE_VALUE_INVALID, and it does apply */
 	crv = newSlot ? CKR_OK : CKR_SLOT_ID_INVALID;
 	goto loser; /* really exit */
     }
@@ -3933,9 +4002,7 @@ static CK_RV sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
 			paramStrings.updatedir, paramStrings.updateID,
 			&paramStrings.tokens[0], moduleIndex);
     }
-    if (crv != CKR_OK) {
-	goto loser;
-    }
+
 loser:
     sftk_freeParams(&paramStrings);
     sftk_FreeAttribute(attribute);

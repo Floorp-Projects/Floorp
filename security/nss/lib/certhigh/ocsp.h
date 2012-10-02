@@ -1,43 +1,11 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Netscape security libraries.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.19 2011/01/15 19:47:11 nelson%bolyard.com Exp $
+ * $Id: ocsp.h,v 1.22 2012/09/22 13:41:58 wtc%google.com Exp $
  */
 
 #ifndef _OCSP_H_
@@ -153,11 +121,11 @@ CERT_DisableOCSPChecking(CERTCertDBHandle *handle);
  * INPUTS:
  *   CERTCertDBHandle *handle
  *     Cert database on which OCSP checking should use the default responder.
- *   char *url
+ *   const char *url
  *     The location of the default responder (e.g. "http://foo.com:80/ocsp")
  *     Note that the location will not be tested until the first attempt
  *     to send a request there.
- *   char *name
+ *   const char *name
  *     The nickname of the cert to trust (expected) to sign the OCSP responses.
  *     If the corresponding cert cannot be found, SECFailure is returned.
  * RETURN:
@@ -304,7 +272,7 @@ CERT_EncodeOCSPRequest(PLArenaPool *arena, CERTOCSPRequest *request,
  *   (SEC_ERROR_OCSP_MALFORMED_REQUEST), or low-level problem (no memory).
  */
 extern CERTOCSPRequest *
-CERT_DecodeOCSPRequest(SECItem *src);
+CERT_DecodeOCSPRequest(const SECItem *src);
 
 /*
  * FUNCTION: CERT_DestroyOCSPRequest
@@ -363,7 +331,7 @@ CERT_DestroyOCSPResponse(CERTOCSPResponse *response);
  *     must be handled by the caller (and thus by having multiple calls
  *     to this routine), who knows about where the request(s) are being
  *     sent and whether there are any trusted responders in place.
- *   char *location
+ *   const char *location
  *     The location of the OCSP responder (a URL).
  *   PRTime time
  *     Indicates the time for which the certificate status is to be 
@@ -394,7 +362,7 @@ CERT_DestroyOCSPResponse(CERTOCSPResponse *response);
  */
 extern SECItem *
 CERT_GetEncodedOCSPResponse(PLArenaPool *arena, CERTCertList *certList,
-			    char *location, PRTime time,
+			    const char *location, PRTime time,
 			    PRBool addServiceLocator,
 			    CERTCertificate *signerCert, void *pwArg,
 			    CERTOCSPRequest **pRequest);
@@ -482,12 +450,12 @@ CERT_RegisterAlternateOCSPAIAInfoCallBack(
  *   const char *url
  *     The URI to be parsed
  * OUTPUTS:
- *   char *pHostname
+ *   char **pHostname
  *     Pointer to store the hostname obtained from the URI.
  *     This result should be freed (via PORT_Free) when no longer in use.
  *   PRUint16 *pPort
  *     Pointer to store the port number obtained from the URI.
- *   char *pPath
+ *   char **pPath
  *     Pointer to store the path obtained from the URI.
  *     This result should be freed (via PORT_Free) when no longer in use.
  * RETURN:

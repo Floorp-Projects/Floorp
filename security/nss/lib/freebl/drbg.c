@@ -1,42 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Network Security Services libraries.
- *
- * The Initial Developer of the Original Code is Red Hat, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2009
- * the Initial Developer. All Rights Reserved.
- *
- * Portions created by Netscape Communications Corporation
- * are Copyright (C) 1994-2000 Netscape Communications Corporation.
- * All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
-/* $Id: drbg.c,v 1.9 2009/06/10 03:24:01 rrelyea%redhat.com Exp $ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* $Id: drbg.c,v 1.11 2012/06/28 17:55:05 rrelyea%redhat.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -66,7 +31,6 @@ static const PRInt64 PRNG_MAX_ADDITIONAL_BYTES = LL_INIT(0x1, 0x0);
 #define PRNG_ADDITONAL_DATA_CACHE_SIZE (8*1024) /* must be less than
 						 *  PRNG_MAX_ADDITIONAL_BYTES
 						 */
-
 
 /* RESEED_COUNT is how many calls to the prng before we need to reseed 
  * under normal NIST rules, you must return an error. In the NSS case, we
@@ -192,8 +156,14 @@ prng_Hash_df(PRUint8 *requested_bytes, unsigned int no_of_bytes_to_return,
  * normal operation, NSS calculates them all together in a single call.
  */
 static SECStatus
-prng_instantiate(RNGContext *rng, PRUint8 *bytes, unsigned int len)
+prng_instantiate(RNGContext *rng, const PRUint8 *bytes, unsigned int len)
 {
+    if (len < PRNG_SEEDLEN) {
+	/* if the seedlen is to small, it's probably because we failed to get
+	 * enough random data */
+	PORT_SetError(SEC_ERROR_NEED_RANDOM);
+	return SECFailure;
+    }
     prng_Hash_df(V(rng), VSize(rng), bytes, len, NULL, 0);
     rng->V_type = prngCGenerateType;
     prng_Hash_df(rng->C,sizeof rng->C,rng->V_Data,sizeof rng->V_Data,NULL,0);
@@ -209,8 +179,7 @@ prng_instantiate(RNGContext *rng, PRUint8 *bytes, unsigned int len)
  *
  * If entropy is NULL, it is fetched from the noise generator.
  */
-static
-SECStatus
+static SECStatus
 prng_reseed(RNGContext *rng, const PRUint8 *entropy, unsigned int entropy_len,
 	const PRUint8 *additional_input, unsigned int additional_input_len)
 {
@@ -233,6 +202,12 @@ prng_reseed(RNGContext *rng, const PRUint8 *entropy, unsigned int entropy_len,
 	PORT_Memcpy(&noise[sizeof rng->V_Data],entropy, entropy_len);
     }
 
+    if (entropy_len < 256/PR_BITS_PER_BYTE) {
+	/* noise == &noiseData[0] at this point, so nothing to free */
+	PORT_SetError(SEC_ERROR_NEED_RANDOM);
+	return SECFailure;
+    }
+
     rng->V_type = prngReseedType;
     PORT_Memcpy(noise, rng->V_Data, sizeof rng->V_Data);
     prng_Hash_df(V(rng), VSize(rng), noise, (sizeof rng->V_Data) + entropy_len,
@@ -247,6 +222,27 @@ prng_reseed(RNGContext *rng, const PRUint8 *entropy, unsigned int entropy_len,
 	PORT_Free(noise);
     }
     return SECSuccess;
+}
+
+/*
+ * SP 800-90 requires we rerun our health tests on reseed
+ */
+static SECStatus
+prng_reseed_test(RNGContext *rng, const PRUint8 *entropy, 
+	unsigned int entropy_len, const PRUint8 *additional_input, 
+	unsigned int additional_input_len)
+{
+    SECStatus rv;
+
+    /* do health checks in FIPS mode */
+    rv = PRNGTEST_RunHealthTests();
+    if (rv != SECSuccess) {
+	/* error set by PRNGTEST_RunHealTests() */
+	rng->isValid = PR_FALSE;
+	return SECFailure;
+    }
+    return prng_reseed(rng, entropy, entropy_len, 
+				additional_input, additional_input_len);
 }
 
 /*
@@ -380,6 +376,8 @@ static PRStatus rng_init(void)
 {
     PRUint8 bytes[PRNG_SEEDLEN*2]; /* entropy + nonce */
     unsigned int numBytes;
+    SECStatus rv = SECSuccess;
+
     if (globalrng == NULL) {
 	/* bytes needs to have enough space to hold
 	 * a SHA256 hash value. Blow up at compile time if this isn't true */
@@ -403,15 +401,19 @@ static PRStatus rng_init(void)
 	     * prng_instantiate gets a new clean state, we want to mix
 	     * any previous entropy we may have collected */
 	    if (V(globalrng)[0] == 0) {
-		prng_instantiate(globalrng, bytes, numBytes);
+		rv = prng_instantiate(globalrng, bytes, numBytes);
 	    } else {
-		prng_reseed(globalrng, bytes, numBytes, NULL, 0);
+		rv = prng_reseed_test(globalrng, bytes, numBytes, NULL, 0);
 	    }
 	    memset(bytes, 0, numBytes);
 	} else {
 	    PZ_DestroyLock(globalrng->lock);
 	    globalrng->lock = NULL;
 	    globalrng = NULL;
+	    return PR_FAILURE;
+	}
+ 
+	if (rv != SECSuccess) {
 	    return PR_FAILURE;
 	}
 	/* the RNG is in a valid state */
@@ -520,7 +522,7 @@ RNG_RandomUpdate(const void *data, size_t bytes)
     /* if we're passed more than our additionalDataCache, simply
      * call reseed with that data */
     if (bytes > sizeof (globalrng->additionalDataCache)) {
-	rv = prng_reseed(globalrng, NULL, 0, data, (unsigned int) bytes);
+	rv = prng_reseed_test(globalrng, NULL, 0, data, (unsigned int) bytes);
     /* if we aren't going to fill or overflow the buffer, just cache it */
     } else if (bytes < ((sizeof globalrng->additionalDataCache)
 				- globalrng->additionalAvail)) {
@@ -545,7 +547,8 @@ RNG_RandomUpdate(const void *data, size_t bytes)
 	    bytes -= bufRemain;
 	}
 	/* reseed from buffer */
-	rv = prng_reseed(globalrng, NULL, 0, globalrng->additionalDataCache, 
+	rv = prng_reseed_test(globalrng, NULL, 0, 
+				        globalrng->additionalDataCache, 
 					sizeof globalrng->additionalDataCache);
 
 	/* copy the rest into the cache */
@@ -584,7 +587,7 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
      * don't produce any data.
      */
     if (rng->reseed_counter[0] >= RESEED_VALUE) {
-	rv = prng_reseed(rng, NULL, 0, NULL, 0);
+	rv = prng_reseed_test(rng, NULL, 0, NULL, 0);
 	PZ_Unlock(rng->lock);
 	if (rv != SECSuccess) {
 	    return rv;
@@ -641,7 +644,7 @@ RNG_RNGShutdown(void)
     PORT_Assert(globalrng != NULL);
     if (globalrng == NULL) {
 	/* Should set a "not initialized" error code. */
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return;
     }
     /* clear */
@@ -669,9 +672,17 @@ PRNGTEST_Instantiate(const PRUint8 *entropy, unsigned int entropy_len,
 		const PRUint8 *personal_string, unsigned int ps_len)
 {
    int bytes_len = entropy_len + nonce_len + ps_len;
-   PRUint8 *bytes = PORT_Alloc(bytes_len);
+   PRUint8 *bytes = NULL;
+   SECStatus rv;
 
+   if (entropy_len < 256/PR_BITS_PER_BYTE) {
+	PORT_SetError(SEC_ERROR_NEED_RANDOM);
+	return SECFailure;
+   }
+
+   bytes = PORT_Alloc(bytes_len);
    if (bytes == NULL) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
    }
    /* concatenate the various inputs, internally NSS only instantiates with
@@ -687,9 +698,12 @@ PRNGTEST_Instantiate(const PRUint8 *entropy, unsigned int entropy_len,
    } else {
 	PORT_Assert(ps_len == 0);
    }
-   prng_instantiate(&testContext, bytes, bytes_len);
-   testContext.isValid = PR_TRUE;
+   rv = prng_instantiate(&testContext, bytes, bytes_len);
    PORT_ZFree(bytes, bytes_len);
+   if (rv == SECFailure) {
+	return SECFailure;
+   }
+   testContext.isValid = PR_TRUE;
    return SECSuccess;
 }
 
@@ -701,6 +715,13 @@ PRNGTEST_Reseed(const PRUint8 *entropy, unsigned int entropy_len,
 	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	return SECFailure;
     }
+   /* This magic input tells us to set the reseed count to it's max count, 
+    * so we can simulate PRNGTEST_Generate reaching max reseed count */
+    if ((entropy == NULL) && (entropy_len == 0) && 
+		(additional == NULL) && (additional_len == 0)) {
+	testContext.reseed_counter[0] = RESEED_VALUE;
+	return SECSuccess;
+    }
     return prng_reseed(&testContext, entropy, entropy_len, additional,
 			additional_len);
 
@@ -710,9 +731,17 @@ SECStatus
 PRNGTEST_Generate(PRUint8 *bytes, unsigned int bytes_len, 
 		  const PRUint8 *additional, unsigned int additional_len)
 {
+    SECStatus rv;
     if (!testContext.isValid) {
 	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	return SECFailure;
+    }
+    /* replicate reseed test from prng_GenerateGlobalRandomBytes */
+    if (testContext.reseed_counter[0] >= RESEED_VALUE) {
+	rv = prng_reseed(&testContext, NULL, 0, NULL, 0);
+	if (rv != SECSuccess) {
+	    return rv;
+	}
     }
     return prng_generateNewBytes(&testContext, bytes, bytes_len,
 			additional, additional_len);
@@ -722,8 +751,165 @@ PRNGTEST_Generate(PRUint8 *bytes, unsigned int bytes_len,
 SECStatus
 PRNGTEST_Uninstantiate()
 {
+    if (!testContext.isValid) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+    }
    PORT_Memset(&testContext, 0, sizeof testContext);
    return SECSuccess;
 }
 
+SECStatus
+PRNGTEST_RunHealthTests()
+{
+   static const PRUint8 entropy[] = {
+			0x8e,0x9c,0x0d,0x25,0x75,0x22,0x04,0xf9,
+			0xc5,0x79,0x10,0x8b,0x23,0x79,0x37,0x14,
+			0x9f,0x2c,0xc7,0x0b,0x39,0xf8,0xee,0xef,
+			0x95,0x0c,0x97,0x59,0xfc,0x0a,0x85,0x41,
+			0x76,0x9d,0x6d,0x67,0x00,0x4e,0x19,0x12,
+			0x02,0x16,0x53,0xea,0xf2,0x73,0xd7,0xd6,
+			0x7f,0x7e,0xc8,0xae,0x9c,0x09,0x99,0x7d,
+			0xbb,0x9e,0x48,0x7f,0xbb,0x96,0x46,0xb3,
+			0x03,0x75,0xf8,0xc8,0x69,0x45,0x3f,0x97,
+			0x5e,0x2e,0x48,0xe1,0x5d,0x58,0x97,0x4c };
+   static const PRUint8 rng_known_result[] = {
+			0x16,0xe1,0x8c,0x57,0x21,0xd8,0xf1,0x7e,
+			0x5a,0xa0,0x16,0x0b,0x7e,0xa6,0x25,0xb4,
+			0x24,0x19,0xdb,0x54,0xfa,0x35,0x13,0x66,
+			0xbb,0xaa,0x2a,0x1b,0x22,0x33,0x2e,0x4a,
+			0x14,0x07,0x9d,0x52,0xfc,0x73,0x61,0x48,
+			0xac,0xc1,0x22,0xfc,0xa4,0xfc,0xac,0xa4,
+			0xdb,0xda,0x5b,0x27,0x33,0xc4,0xb3 };
+   static const PRUint8 reseed_entropy[] = {
+			0xc6,0x0b,0x0a,0x30,0x67,0x07,0xf4,0xe2,
+			0x24,0xa7,0x51,0x6f,0x5f,0x85,0x3e,0x5d,
+			0x67,0x97,0xb8,0x3b,0x30,0x9c,0x7a,0xb1,
+			0x52,0xc6,0x1b,0xc9,0x46,0xa8,0x62,0x79 };
+   static const PRUint8 additional_input[] = {
+			0x86,0x82,0x28,0x98,0xe7,0xcb,0x01,0x14,
+			0xae,0x87,0x4b,0x1d,0x99,0x1b,0xc7,0x41,
+			0x33,0xff,0x33,0x66,0x40,0x95,0x54,0xc6,
+			0x67,0x4d,0x40,0x2a,0x1f,0xf9,0xeb,0x65 };
+   static const PRUint8 rng_reseed_result[] = {
+			0x02,0x0c,0xc6,0x17,0x86,0x49,0xba,0xc4,
+			0x7b,0x71,0x35,0x05,0xf0,0xdb,0x4a,0xc2,
+			0x2c,0x38,0xc1,0xa4,0x42,0xe5,0x46,0x4a,
+			0x7d,0xf0,0xbe,0x47,0x88,0xb8,0x0e,0xc6,
+			0x25,0x2b,0x1d,0x13,0xef,0xa6,0x87,0x96,
+			0xa3,0x7d,0x5b,0x80,0xc2,0x38,0x76,0x61,
+			0xc7,0x80,0x5d,0x0f,0x05,0x76,0x85 };
+   static const PRUint8 rng_no_reseed_result[] = {
+			0xc4,0x40,0x41,0x8c,0xbf,0x2f,0x70,0x23,
+			0x88,0xf2,0x7b,0x30,0xc3,0xca,0x1e,0xf3,
+			0xef,0x53,0x81,0x5d,0x30,0xed,0x4c,0xf1,
+			0xff,0x89,0xa5,0xee,0x92,0xf8,0xc0,0x0f,
+			0x88,0x53,0xdf,0xb6,0x76,0xf0,0xaa,0xd3,
+			0x2e,0x1d,0x64,0x37,0x3e,0xe8,0x4a,0x02,
+			0xff,0x0a,0x7f,0xe5,0xe9,0x2b,0x6d };
 
+   SECStatus rng_status = SECSuccess;
+   PR_STATIC_ASSERT(sizeof(rng_known_result) >= sizeof(rng_reseed_result));
+   PRUint8 result[sizeof(rng_known_result)];
+
+   /********************************************/
+   /*   First test instantiate error path.     */
+   /*   In this case we supply enough entropy, */
+   /*   but not enough seed. This will trigger */
+   /*   the code that checks for a entropy     */
+   /*   source failure.                        */
+   /********************************************/
+   rng_status = PRNGTEST_Instantiate(entropy, 256/PR_BITS_PER_BYTE, 
+				     NULL, 0, NULL, 0);
+   if (rng_status == SECSuccess) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+   }
+   if (PORT_GetError() != SEC_ERROR_NEED_RANDOM) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+   }
+   /* we failed with the proper error code, we can continue */
+
+   /********************************************/
+   /* Generate random bytes with a known seed. */
+   /********************************************/
+   rng_status = PRNGTEST_Instantiate(entropy, sizeof entropy, 
+				     NULL, 0, NULL, 0);
+   if (rng_status != SECSuccess) {
+	/* Error set by PRNGTEST_Instantiate */
+	return SECFailure;
+   }
+   rng_status = PRNGTEST_Generate(result, sizeof rng_known_result, NULL, 0);
+   if ( ( rng_status != SECSuccess)  ||
+        ( PORT_Memcmp( result, rng_known_result,
+                       sizeof rng_known_result ) != 0 ) ) {
+	PRNGTEST_Uninstantiate();
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+   }
+   rng_status = PRNGTEST_Reseed(reseed_entropy, sizeof reseed_entropy,
+				additional_input, sizeof additional_input);
+   if (rng_status != SECSuccess) {
+	/* Error set by PRNG_Reseed */
+	PRNGTEST_Uninstantiate();
+	return SECFailure;
+   }
+   rng_status = PRNGTEST_Generate(result, sizeof rng_reseed_result, NULL, 0);
+   if ( ( rng_status != SECSuccess)  ||
+        ( PORT_Memcmp( result, rng_reseed_result,
+                       sizeof rng_reseed_result ) != 0 ) ) {
+	PRNGTEST_Uninstantiate();
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+   }
+   /* This magic forces the reseed count to it's max count, so we can see if
+    * PRNGTEST_Generate will actually when it reaches it's count */
+   rng_status = PRNGTEST_Reseed(NULL, 0, NULL, 0);
+   if (rng_status != SECSuccess) {
+	PRNGTEST_Uninstantiate();
+	/* Error set by PRNG_Reseed */
+	return SECFailure;
+   }
+   /* This generate should now reseed */
+   rng_status = PRNGTEST_Generate(result, sizeof rng_reseed_result, NULL, 0);
+   if ( ( rng_status != SECSuccess)  ||
+	/* NOTE we fail if the result is equal to the no_reseed_result. 
+         * no_reseed_result is the value we would have gotten if we didn't
+	 * do an automatic reseed in PRNGTEST_Generate */
+        ( PORT_Memcmp( result, rng_no_reseed_result,
+                       sizeof rng_no_reseed_result ) == 0 ) ) {
+	PRNGTEST_Uninstantiate();
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+   }
+   /* make sure reseed fails when we don't supply enough entropy */
+   rng_status = PRNGTEST_Reseed(reseed_entropy, 4, NULL, 0);
+   if (rng_status == SECSuccess) {
+	PRNGTEST_Uninstantiate();
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+   }
+   if (PORT_GetError() != SEC_ERROR_NEED_RANDOM) {
+	PRNGTEST_Uninstantiate();
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+   }
+   rng_status = PRNGTEST_Uninstantiate();
+   if (rng_status != SECSuccess) {
+	/* Error set by PRNG_Uninstantiate */
+	return rng_status;
+   }
+   /* make sure uninstantiate fails if the contest is not initiated (also tests
+    * if the context was cleared in the previous Uninstantiate) */
+   rng_status = PRNGTEST_Uninstantiate();
+   if (rng_status == SECSuccess) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+   }
+   if (PORT_GetError() != SEC_ERROR_LIBRARY_FAILURE) {
+	return rng_status;
+   }
+  
+   return SECSuccess;
+}

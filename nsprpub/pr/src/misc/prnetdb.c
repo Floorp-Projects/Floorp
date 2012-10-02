@@ -1998,7 +1998,7 @@ PR_IMPLEMENT(PRAddrInfo *) PR_GetAddrInfoByName(const char  *hostname,
 #endif
     {
         PRADDRINFO *res, hints;
-        PRStatus rv;
+        int rv;
 
         /*
          * we assume a RFC 2553 compliant getaddrinfo.  this may at some
