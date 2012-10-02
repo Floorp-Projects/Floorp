@@ -58,6 +58,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
     private AwesomeBarCursorAdapter mCursorAdapter = null;
     private boolean mTelemetrySent = false;
+    private LinearLayout mAllPagesView;
+    private View mSuggestionsOptInPrompt;
 
     private class SearchEntryViewHolder {
         public FlowLayout suggestionView;
@@ -81,13 +83,12 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     public TabContentFactory getFactory() {
         return new TabContentFactory() {
            public View createTabContent(String tag) {
-               final ListView list = getListView();
-               list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+               getListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         handleItemClick(parent, view, position, id);
                    }
                });
-               return list;
+               return getAllPagesView();
            }
       };
     }
@@ -100,9 +101,16 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         return TAG;
     }
 
+    private LinearLayout getAllPagesView() {
+        if (mAllPagesView == null) {
+            mAllPagesView = (LinearLayout) (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_allpages_list, null));
+        }
+        return mAllPagesView;
+    }
+
     public ListView getListView() {
         if (mView == null) {
-            mView = (ListView) (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_list, null));
+            mView = getAllPagesView().findViewById(R.id.awesomebar_list);
             ((Activity)mContext).registerForContextMenu(mView);
             mView.setTag(TAG);
             AwesomeBarCursorAdapter adapter = getCursorAdapter();
@@ -129,6 +137,12 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         adapter.filter(searchTerm);
 
         filterSuggestions(searchTerm);
+        if (mSuggestionsOptInPrompt != null) {
+            int visibility = searchTerm.isEmpty() ? View.GONE : View.VISIBLE;
+            if (mSuggestionsOptInPrompt.getVisibility() != visibility) {
+                mSuggestionsOptInPrompt.setVisibility(visibility);
+            }
+        }
     }
 
     private void filterSuggestions(String searchTerm) {
@@ -408,8 +422,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             // add additional suggestions given by this engine
             int recycledSuggestionCount = suggestionView.getChildCount();
             int suggestionCount = engine.suggestions.size();
-            int i = 0;
-            for (i = 0; i < suggestionCount; i++) {
+            for (int i = 0; i < suggestionCount; i++) {
                 String suggestion = engine.suggestions.get(i);
                 View suggestionItem = null;
 
@@ -429,7 +442,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             }
             
             // hide extra suggestions that have been recycled
-            for (++i; i < recycledSuggestionCount; i++) {
+            for (int i = suggestionCount + 1; i < recycledSuggestionCount; i++) {
                 suggestionView.getChildAt(i).setVisibility(View.GONE);
             }
         }
@@ -455,7 +468,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
      * Sets suggestions associated with the current suggest engine.
      * If there is no suggest engine, this does nothing.
      */
-    public void setSuggestions(final ArrayList<String> suggestions) {
+    private void setSuggestions(final ArrayList<String> suggestions) {
         if (mSuggestClient != null) {
             mSearchEngines.get(0).suggestions = suggestions;
             getCursorAdapter().notifyDataSetChanged();
@@ -465,12 +478,14 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     /**
      * Sets search engines to be shown for user-entered queries.
      */
-    public void setSearchEngines(JSONObject data) {
+    private void setSearchEngines(JSONObject data) {
         try {
-            String suggestEngine = data.isNull("suggestEngine") ? null : data.getString("suggestEngine");
-            String suggestTemplate = data.isNull("suggestTemplate") ? null : data.getString("suggestTemplate");
+            JSONObject suggest = data.getJSONObject("suggest");
+            String suggestEngine = suggest.isNull("engine") ? null : suggest.getString("engine");
+            String suggestTemplate = suggest.isNull("template") ? null : suggest.getString("template");
+            mSuggestionsEnabled = suggest.getBoolean("enabled");
+            boolean suggestionsPrompted = suggest.getBoolean("prompted");
             JSONArray engines = data.getJSONArray("searchEngines");
-            mSuggestionsEnabled = data.getBoolean("suggestEnabled");
 
             mSearchEngines = new ArrayList<SearchEngine>();
             for (int i = 0; i < engines.length(); i++) {
@@ -485,6 +500,11 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 } else {
                     mSearchEngines.add(new SearchEngine(name, icon));
                 }
+            }
+
+            // show suggestions opt-in if user hasn't been prompted
+            if (!suggestionsPrompted && mSuggestClient != null) {
+                showSuggestionsOptIn();
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error getting search engine JSON", e);
@@ -505,6 +525,42 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             Log.i(LOGTAG, "exception while decoding drawable: " + base64, e);
         } catch (IOException e) { }
         return drawable;
+    }
+
+    private void showSuggestionsOptIn() {
+        mSuggestionsOptInPrompt = LayoutInflater.from(mContext).inflate(R.layout.awesomebar_suggestion_prompt, getAllPagesView(), false);
+        ((TextView) mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_title))
+                .setText(getResources().getString(R.string.suggestions_prompt, mSearchEngines.get(0).name));
+        mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_yes).setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                setSuggestionsEnabled(true);
+            }
+        });
+        mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_no).setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                setSuggestionsEnabled(false);
+            }
+        });
+        mSuggestionsOptInPrompt.setVisibility(View.GONE);
+        getAllPagesView().addView(mSuggestionsOptInPrompt, 0);
+    }
+
+    private void setSuggestionsEnabled(final boolean enabled) {
+        // Pref observer in gecko will also set prompted = true
+        PrefsHelper.setPref("browser.search.suggest.enabled", enabled);
+
+        getAllPagesView().post(new Runnable() {
+            public void run() {
+                getAllPagesView().removeView(mSuggestionsOptInPrompt);
+                mSuggestionsOptInPrompt = null;
+
+                if (enabled) {
+                    mSuggestionsEnabled = enabled;
+                    getCursorAdapter().notifyDataSetChanged();
+                    filterSuggestions(mSearchTerm);
+                }
+            }
+        });
     }
 
     public void handleMessage(String event, final JSONObject message) {
