@@ -48,21 +48,21 @@ class Testing(MozbuildObject, ArgumentProvider):
 
         mochitest_plain = parser.add_parser('mochitest-plain',
             help='Run a plain mochitest.')
-        mochitest_plain.add_argument('test_file', default='all', nargs='?',
+        mochitest_plain.add_argument('test_file', default=None, nargs='?',
             metavar='TEST', help=generic_help)
         mochitest_plain.set_defaults(cls=Testing, method='run_mochitest',
             flavor='plain')
 
         mochitest_chrome = parser.add_parser('mochitest-chrome',
             help='Run a chrome mochitest.')
-        mochitest_chrome.add_argument('test_file', default='all', nargs='?',
+        mochitest_chrome.add_argument('test_file', default=None, nargs='?',
             metavar='TEST', help=generic_help)
         mochitest_chrome.set_defaults(cls=Testing, method='run_mochitest',
             flavor='chrome')
 
         mochitest_browser = parser.add_parser('mochitest-browser',
             help='Run a mochitest with browser chrome.')
-        mochitest_browser.add_argument('test_file', default='all', nargs='?',
+        mochitest_browser.add_argument('test_file', default=None, nargs='?',
             metavar='TEST', help=generic_help)
         mochitest_browser.set_defaults(cls=Testing, method='run_mochitest',
             flavor='browser')
