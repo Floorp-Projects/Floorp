@@ -897,7 +897,7 @@ public:
   }
 #endif
 
-  bool HasFlag(PtrBits aFlag) const
+  bool HasFlag(uintptr_t aFlag) const
   {
     return !!(GetFlags() & aFlag);
   }
