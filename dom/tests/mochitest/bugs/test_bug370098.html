@@ -17,11 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=370098
 <pre id="test">
 <script class="testbody" type="text/javascript">
 /** Test for Bug 370098 **/
-var dom_protos =
-    [ "Document", "Element", "Image", "DOMParser", "XMLSerializer",
-      "XMLHttpRequest", "XPathEvaluator", "XSLTProcessor" ];
-for each (var dom_proto in dom_protos) {
-    var shouldthrow = typeof window[dom_proto] != "function";
+function test_constructor(dom_proto, shouldthrow) {
     var threw = false;
     try {
         window[dom_proto]();
@@ -38,6 +34,13 @@ for each (var dom_proto in dom_protos) {
     }
     is(threw, shouldthrow, "Calling |new " + dom_proto + "()| should" + (shouldthrow ? " " : " not ") + "throw");
 }
+var dom_protos = [ "Document", "Element" ];
+var dom_constructors = [ "Image", "DOMParser", "XMLSerializer",
+  "XMLHttpRequest", "XPathEvaluator", "XSLTProcessor" ];
+dom_protos.forEach(
+  function(p) { test_constructor(p, true); });
+dom_constructors.forEach(
+  function(p) { test_constructor(p, false); });
 </script>
 </pre>
 </body>
