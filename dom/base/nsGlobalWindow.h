@@ -390,6 +390,9 @@ public:
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
 
+  // WebIDL interface.
+  uint32_t GetLength();
+
   // Object Management
   nsGlobalWindow(nsGlobalWindow *aOuterWindow);
 
@@ -920,6 +923,9 @@ protected:
 
   // Helper for creating performance objects.
   void CreatePerformanceObjectIfNeeded();
+
+  // Outer windows only.
+  nsDOMWindowList* GetWindowList();
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable

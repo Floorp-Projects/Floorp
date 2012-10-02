@@ -22,6 +22,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMWINDOWCOLLECTION
 
+  uint32_t GetLength();
+
   //local methods
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
 
