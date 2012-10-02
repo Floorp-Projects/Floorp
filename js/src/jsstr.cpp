@@ -3609,7 +3609,6 @@ namespace js {
 jschar *
 InflateString(JSContext *cx, const char *bytes, size_t *lengthp, FlationCoding fc)
 {
-    AutoAssertCanGC cangc;
     size_t nchars;
     jschar *chars;
     size_t nbytes = *lengthp;
