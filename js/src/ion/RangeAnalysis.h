@@ -106,13 +106,13 @@ class Range {
         // modification. This is to avoid a bunch of useless extra
         // copying when chaining together unions when handling Phi
         // nodes.
-        void unionWith(const Range *other);
+    void unionWith(const Range *other, bool useNarrowing = false);
 
         static Range intersect(const Range *lhs, const Range *rhs);
         static Range add(const Range *lhs, const Range *rhs);
         static Range sub(const Range *lhs, const Range *rhs);
         static Range mul(const Range *lhs, const Range *rhs);
-
+        static Range and_(const Range *lhs, const Range *rhs);
         static Range shl(const Range *lhs, int32 c);
         static Range shr(const Range *lhs, int32 c);
 
