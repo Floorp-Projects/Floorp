@@ -3990,7 +3990,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
     masm.checkStackAlignment();
 
     /* Make Space for the outparam */
-    masm.adjustStack((int)-sizeof(Value));
+    masm.adjustStack(-int32_t(sizeof(Value)));
     masm.movePtr(StackPointer, ValueReg);
 
     masm.Push(ObjectReg);

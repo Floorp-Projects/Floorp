@@ -145,9 +145,11 @@ class NodeBuilder
 
   public:
     NodeBuilder(JSContext *c, bool l, char const *s)
-        : cx(c), saveLoc(l), src(s), srcval(c), callbacks(),
+        : cx(c), saveLoc(l), src(s), srcval(c),
           callbacksRoots(c, callbacks, AST_LIMIT), userv(c), undefinedVal(c, UndefinedValue())
-    { }
+    {
+        MakeRangeGCSafe(callbacks, mozilla::ArrayLength(callbacks));
+    }
 
     bool init(HandleObject userobj = NullPtr()) {
         if (src) {
