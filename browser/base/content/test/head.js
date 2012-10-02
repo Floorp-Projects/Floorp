@@ -133,6 +133,10 @@ function runSocialTestWithProvider(manifest, callback) {
     // Now that we've set the UI's provider, enable the social functionality
     Services.prefs.setBoolPref("social.enabled", true);
 
+    // Need to re-call providerReady since it is actually called before the test
+    // framework is loaded and the provider state won't be set in the browser yet.
+    SocialUI._providerReady();
+
     registerCleanupFunction(function () {
       // if one test happens to fail, it is likely finishSocialTest will not
       // be called, causing most future social tests to also fail as they

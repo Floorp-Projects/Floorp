@@ -125,7 +125,6 @@ GetPrefixInteger(JSContext *cx, const jschar *start, const jschar *end, int base
 JS_ALWAYS_INLINE bool
 ToNumber(JSContext *cx, Value *vp)
 {
-    AutoAssertCanGC cangc;
 #ifdef DEBUG
     {
         SkipRoot skip(cx, vp);
@@ -208,7 +207,6 @@ IsDefinitelyIndex(const Value &v, uint32_t *indexp)
 static inline bool
 ToInteger(JSContext *cx, const js::Value &v, double *dp)
 {
-    AutoAssertCanGC cangc;
 #ifdef DEBUG
     {
         SkipRoot skip(cx, &v);

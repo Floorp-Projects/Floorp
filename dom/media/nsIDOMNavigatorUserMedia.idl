@@ -35,9 +35,10 @@ interface nsIDOMGetUserMediaErrorCallback : nsISupports
   void onError(in DOMString error);
 };
 
-[scriptable, uuid(92a19f9e-9fed-40d1-aeeb-b07fa7f191e8)]
+[scriptable, uuid(36d9c3b7-7594-4035-8a7e-92c2cecdb2c5)]
 interface nsIMediaStreamOptions : nsISupports
 {
+  readonly attribute boolean fake;
   readonly attribute boolean audio;
   readonly attribute boolean video;
   readonly attribute boolean picture;

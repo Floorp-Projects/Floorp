@@ -2522,12 +2522,22 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
     return true;
   }
 
+  // set the fallback reason
   aReason = eFallbackClickToPlay;
+  // (if it's click-to-play, it might be because of the blocklist)
+  uint32_t state;
+  nsresult rv = pluginHost->GetBlocklistStateForType(mContentType.get(), &state);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (state == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
+    aReason = eFallbackVulnerableUpdatable;
+  }
+  else if (state == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
+    aReason = eFallbackVulnerableNoUpdate;
+  }
 
   // If plugin type is click-to-play and we have not been explicitly clicked.
   // check if permissions lets this page bypass - (e.g. user selected 'Always
   // play plugins on this page')
-  nsresult rv = NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
   MOZ_ASSERT(thisContent);
@@ -2561,20 +2571,6 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
                                                         &permission);
     NS_ENSURE_SUCCESS(rv, false);
     allowPerm = permission == nsIPermissionManager::ALLOW_ACTION;
-  }
-
-  uint32_t state;
-  rv = pluginHost->GetBlocklistStateForType(mContentType.get(), &state);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  // Always c2p vulnerable plugins, regardless of permissions
-  if (state == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
-    aReason = eFallbackVulnerableUpdatable;
-    return false;
-  }
-  if (state == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
-    aReason = eFallbackVulnerableNoUpdate;
-    return false;
   }
 
   return allowPerm;

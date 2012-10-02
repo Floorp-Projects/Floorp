@@ -93,7 +93,7 @@ GetElementFromArrayLikeObject(JSContext *cx, HandleObject obj, HandleParallelArr
         return true;
 
     if (obj->isDenseArray() && i < obj->getDenseArrayInitializedLength() &&
-        !js_PrototypeHasIndexedProperties(cx, obj))
+        !js_PrototypeHasIndexedProperties(obj))
     {
         vp.set(obj->getDenseArrayElement(i));
         if (vp.isMagic(JS_ARRAY_HOLE))
@@ -135,7 +135,7 @@ NewDenseCopiedArrayWithType(JSContext *cx, uint32_t length, HandleObject source)
     uint32_t srclen;
     uint32_t copyUpTo;
 
-    if (source->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, source)) {
+    if (source->isDenseArray() && !js_PrototypeHasIndexedProperties(source)) {
         // Optimize for the common case: if we have a dense array source, copy
         // whatever we can, truncating to length. This path doesn't trigger
         // GC, so we don't need to initialize all the array's slots before

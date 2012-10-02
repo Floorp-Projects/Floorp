@@ -257,7 +257,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     // Verify that the private slot is at the expected place
     JS_ASSERT(dvobj.numFixedSlots() == DATA_SLOT);
 
-    arrayBuffer->asArrayBuffer().addView(cx, &dvobj);
+    arrayBuffer->asArrayBuffer().addView(&dvobj);
 
     return &dvobj;
 }

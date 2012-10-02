@@ -16,6 +16,8 @@
 #include "Safepoints.h"
 #include "IonSpewer.h"
 #include "IonMacroAssembler.h"
+#include "PcScriptCache.h"
+#include "PcScriptCache-inl.h"
 #include "gc/Marking.h"
 #include "SnapshotReader.h"
 #include "Safepoints.h"
@@ -678,15 +680,37 @@ ion::GetPcScript(JSContext *cx, MutableHandleScript scriptRes, jsbytecode **pcRe
     JS_ASSERT(cx->fp()->beginsIonActivation());
     IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
 
-    // Recover the innermost inlined frame.
-    IonFrameIterator it(cx->runtime->ionTop);
-    ++it;
+    JSRuntime *rt = cx->runtime;
+
+    // Recover the return address.
+    IonFrameIterator it(rt->ionTop);
+    uint8_t *retAddr = it.returnAddress();
+    uint32_t hash = PcScriptCache::Hash(retAddr);
+    JS_ASSERT(retAddr != NULL);
+
+    // Lazily initialize the cache. The allocation may safely fail and will not GC.
+    if (JS_UNLIKELY(rt->ionPcScriptCache == NULL)) {
+        rt->ionPcScriptCache = (PcScriptCache *)js_malloc(sizeof(struct PcScriptCache));
+        if (rt->ionPcScriptCache)
+            rt->ionPcScriptCache->clear(rt->gcNumber);
+    }
+
+    // Attempt to lookup address in cache.
+    if (rt->ionPcScriptCache && rt->ionPcScriptCache->get(rt, hash, retAddr, scriptRes, pcRes))
+        return;
+
+    // Lookup failed: undertake expensive process to recover the innermost inlined frame.
+    ++it; // Skip exit frame.
     InlineFrameIterator ifi(&it);
 
     // Set the result.
     scriptRes.set(ifi.script());
     if (pcRes)
         *pcRes = ifi.pc();
+
+    // Add entry to cache.
+    if (rt->ionPcScriptCache)
+        rt->ionPcScriptCache->add(hash, retAddr, ifi.pc(), ifi.script());
 }
 
 void

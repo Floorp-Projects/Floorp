@@ -886,14 +886,14 @@ ClonedBlockDepth(BytecodeEmitter *bce)
 }
 
 static uint16_t
-AliasedNameToSlot(JSScript *script, PropertyName *name)
+AliasedNameToSlot(HandleScript script, PropertyName *name)
 {
     /*
      * Beware: BindingIter may contain more than one Binding for a given name
      * (in the case of |function f(x,x) {}|) but only one will be aliased.
      */
     unsigned slot = CallObject::RESERVED_SLOTS;
-    for (BindingIter bi(script->bindings); ; bi++) {
+    for (BindingIter bi(script); ; bi++) {
         if (bi->aliased()) {
             if (bi->name() == name)
                 return slot;
@@ -2621,7 +2621,8 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToProlog();
         if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0)
             return false;
-        unsigned varIndex = bce->script->bindings.argumentsVarIndex(cx);
+        InternalBindingsHandle bindings(bce->script, &bce->script->bindings);
+        unsigned varIndex = Bindings::argumentsVarIndex(cx, bindings);
         if (bce->script->varIsAliased(varIndex)) {
             ScopeCoordinate sc;
             sc.hops = 0;
@@ -4925,7 +4926,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
     } else {
 #ifdef DEBUG
-        BindingIter bi(bce->script->bindings);
+        BindingIter bi(bce->script);
         while (bi->name() != fun->atom())
             bi++;
         JS_ASSERT(bi->kind() == VARIABLE || bi->kind() == CONSTANT || bi->kind() == ARGUMENT);

@@ -99,7 +99,7 @@ BluetoothHfpManager::BluetoothHfpManager()
 {
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
 
-  if (obs && NS_FAILED(obs->AddObserver(sInstance, MOZSETTINGS_CHANGED_ID, false))) {
+  if (obs && NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
     NS_WARNING("Failed to add settings change observer!");
   }
 

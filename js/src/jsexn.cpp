@@ -248,7 +248,7 @@ struct SuppressErrorsGuard
 };
 
 static void
-SetExnPrivate(JSContext *cx, JSObject *exnObject, JSExnPrivate *priv);
+SetExnPrivate(JSObject *exnObject, JSExnPrivate *priv);
 
 static bool
 InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
@@ -336,7 +336,7 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
         priv->stackElems[i].ulineno = frames[i].ulineno;
     }
 
-    SetExnPrivate(cx, exnObject, priv);
+    SetExnPrivate(exnObject, priv);
     return true;
 }
 
@@ -368,7 +368,7 @@ exn_trace(JSTracer *trc, JSObject *obj)
 
 /* NB: An error object's private must be set through this function. */
 static void
-SetExnPrivate(JSContext *cx, JSObject *exnObject, JSExnPrivate *priv)
+SetExnPrivate(JSObject *exnObject, JSExnPrivate *priv)
 {
     JS_ASSERT(!exnObject->getPrivate());
     JS_ASSERT(exnObject->isError());
@@ -1206,7 +1206,7 @@ js_CopyErrorObject(JSContext *cx, HandleObject errobj, HandleObject scope)
     JSObject *copyobj = NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL);
     if (!copyobj)
         return NULL;
-    SetExnPrivate(cx, copyobj, copy);
+    SetExnPrivate(copyobj, copy);
     autoFreePrivate.forget();
     autoFreeErrorReport.forget();
     return copyobj;

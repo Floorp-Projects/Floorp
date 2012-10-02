@@ -8,7 +8,7 @@
 #define TILEDLAYERBUFFER_TILE_SIZE 256
 
 // Debug defines
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
   // This needs to go away as we enabled tiled
   // layers everywhere.
   #define FORCE_BASICTILEDTHEBESLAYER
