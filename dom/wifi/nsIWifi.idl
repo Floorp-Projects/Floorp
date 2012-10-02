@@ -8,13 +8,55 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(335ff8a0-fb18-11e1-a21f-0800200c9a66)]
+[scriptable, uuid(cf1ac02b-1f39-446e-815b-651ac78d2233)]
+interface nsIWifiScanResult : nsISupports {
+    readonly attribute DOMString ssid;
+    readonly attribute DOMString bssid;
+
+    const int32_t WPA_PSK = 0x01;
+    const int32_t WPA_EAP = 0x02;
+    const int32_t WEP = 0x04;
+    readonly attribute uint32_t capabilities;
+
+    /**
+     * Strength of the signal to network.
+     */
+    readonly attribute uint32_t signalStrength;
+
+    readonly attribute uint32_t relSignalStrength;
+    readonly attribute boolean connected;
+};
+
+[scriptable, uuid(a6931ebf-8493-4014-90e2-99f406999982)]
+interface nsIWifiScanResultsReady : nsISupports {
+
+    /**
+     * Callback with list of networks.
+     */
+    void onready(in uint32_t count, [array, size_is(count)] in nsIWifiScanResult results);
+
+    /**
+     * Callback if scanning for networks failed after 3 retry attempts.
+     */
+    void onfailure();
+};
+
+[scriptable, uuid(08dfefed-5c5d-4468-8c5d-2c65c24692d9)]
 interface nsIWifi : nsISupports
 {
     /**
      * Shutdown the wifi system.
      */
     void shutdown();
+
+    /**
+     * Returns the list of currently available networks as well as the list of
+     * currently configured networks.
+     *
+     * On success a callback is notified with the list of networks.
+     * On failure after 3 scan retry attempts a callback is notified of failure.
+     */
+    void getWifiScanResults(in nsIWifiScanResultsReady callback);
 };
 
 [scriptable, uuid(caa76ee3-8ffe-4ea5-bc59-3b53a9df0d07)]
