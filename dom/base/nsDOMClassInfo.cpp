@@ -8629,12 +8629,8 @@ nsDOMStringMapSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_SUCCESS_I_DID_SOMETHING;
   }
 
-  nsStringBuffer* valBuf;
-  *vp = XPCStringConvert::ReadableToJSVal(cx, propVal, &valBuf);
-  if (valBuf) {
-    propVal.ForgetSharedBuffer();
-  }
-
+  NS_ENSURE_TRUE(xpc::NonVoidStringToJsval(cx, propVal, vp),
+                 NS_ERROR_OUT_OF_MEMORY);
   return NS_SUCCESS_I_DID_SOMETHING;
 }
 
@@ -10212,14 +10208,11 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (DOMStringIsNull(val)) {
     *vp = JSVAL_VOID;
-  } else {
-    nsStringBuffer* sharedBuffer = nullptr;
-    *vp = XPCStringConvert::ReadableToJSVal(cx, val, &sharedBuffer);
-    if (sharedBuffer) {
-      val.ForgetSharedBuffer();
-    }
+    return NS_SUCCESS_I_DID_SOMETHING;
   }
 
+  NS_ENSURE_TRUE(xpc::NonVoidStringToJsval(cx, val, vp),
+                 NS_ERROR_OUT_OF_MEMORY);
   return NS_SUCCESS_I_DID_SOMETHING;
 }
 
