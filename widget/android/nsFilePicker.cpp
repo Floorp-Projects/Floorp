@@ -21,17 +21,17 @@ NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *parent, const nsAString& title,
 
 NS_IMETHODIMP nsFilePicker::AppendFilters(int32_t aFilterMask)
 {
-  if (aFilterMask == (filterAudio | filterAll)) {
+  if (aFilterMask & filterAudio) {
     mMimeTypeFilter.AssignLiteral("audio/*");
     return NS_OK;
   }
 
-  if (aFilterMask == (filterImages | filterAll)) {
+  if (aFilterMask & filterImages) {
     mMimeTypeFilter.AssignLiteral("image/*");
     return NS_OK;
   }
 
-  if (aFilterMask == (filterVideo | filterAll)) {
+  if (aFilterMask & filterVideo) {
     mMimeTypeFilter.AssignLiteral("video/*");
     return NS_OK;
   }
