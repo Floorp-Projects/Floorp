@@ -278,11 +278,11 @@ Range::intersect(const Range *lhs, const Range *rhs)
 }
 
 void
-Range::unionWith(const Range *other)
+Range::unionWith(const Range *other, bool useNarrowing)
 {
     setLower(Min(lower_, other->lower_));
-    setUpper(Max(upper_, other->upper_));
     lower_infinite_ |= other->lower_infinite_;
+    setUpper(Max(upper_, other->upper_));
     upper_infinite_ |= other->upper_infinite_;
 }
 
@@ -304,7 +304,20 @@ Range::sub(const Range *lhs, const Range *rhs)
     return ret;
 
 }
+Range
+Range::and_(const Range *lhs, const Range *rhs)
+{
+    uint64_t lower = 0;
+    // If both numbers can be negative, issues can be had.
+    if (lhs->lower_ < 0 && rhs->lower_ < 0)
+        lower = INT_MIN;
+    uint64_t upper = lhs->upper_;
+    if (rhs->upper_ < lhs->upper_)
+        upper = rhs->upper_;
+    Range ret(lower, upper);
+    return ret;
 
+}
 Range
 Range::mul(const Range *lhs, const Range *rhs)
 {
@@ -346,7 +359,6 @@ Range::update(const Range *other)
         lower_infinite_ != other->lower_infinite_ ||
         upper_ != other->upper_ ||
         upper_infinite_ != other->upper_infinite_;
-
     if (changed) {
         lower_ = other->lower_;
         lower_infinite_ = other->lower_infinite_;
@@ -386,20 +398,13 @@ RangeAnalysis::analyze()
         for (MDefinitionIterator iter(*block); iter; iter++) {
             MDefinition *def = *iter;
 
-            if (!def->isPhi() && !def->isBeta())
-                continue;
             AddToWorklist(worklist, def);
 
         }
     }
     size_t iters = 0;
-#define MAX_ITERS 4096
-    // XXX: hack: range analysis iloops on jit-test/tests/basic/fannkuch.js
-    // To circumvent this and land the pass, we just run for a fixed number of
-    // iterations.
-    //
-    // (Bug 765119)
-    while (!worklist.empty() /* && iters < MAX_ITERS*/) {
+
+    while (!worklist.empty()) {
         MDefinition *def = PopFromWorklist(worklist);
         IonSpew(IonSpew_Range, "recomputing range on %d", def->id());
         SpewRange(def);
@@ -417,7 +422,6 @@ RangeAnalysis::analyze()
     for(size_t i = 0; i < worklist.length(); i++)
         worklist[i]->setNotInWorklist();
 
-#undef MAX_ITERS
 
 #ifdef DEBUG
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
