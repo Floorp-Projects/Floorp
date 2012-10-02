@@ -200,12 +200,6 @@ namespace layers {
 Layer*
 LayerManager::GetPrimaryScrollableLayer()
 {
-  // AsyncPanZoomController handles multiple scrollable layers, so there is no
-  // "primary" scrollable layer.
-#ifndef MOZ_WIDGET_ANDROID
-  return nullptr;
-#endif
-
   if (!mRoot) {
     return nullptr;
   }
