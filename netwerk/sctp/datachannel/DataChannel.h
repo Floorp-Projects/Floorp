@@ -7,6 +7,10 @@
 #ifndef NETWERK_SCTP_DATACHANNEL_DATACHANNEL_H_
 #define NETWERK_SCTP_DATACHANNEL_DATACHANNEL_H_
 
+#ifdef MOZ_WEBRTC_SIGNALING
+#define SCTP_DTLS_SUPPORTED 1
+#endif
+
 #include <string>
 #include <errno.h>
 #include "nsISupports.h"
@@ -20,7 +24,7 @@
 #include "mozilla/Mutex.h"
 #include "DataChannelProtocol.h"
 #ifdef SCTP_DTLS_SUPPORTED
-#include "talk/base/sigslot.h"
+#include "mtransport/sigslot.h"
 #include "mtransport/transportflow.h"
 #include "mtransport/transportlayer.h"
 #include "mtransport/transportlayerprsock.h"
