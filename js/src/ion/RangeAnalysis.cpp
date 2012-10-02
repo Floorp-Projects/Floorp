@@ -278,12 +278,29 @@ Range::intersect(const Range *lhs, const Range *rhs)
 }
 
 void
-Range::unionWith(const Range *other, bool useNarrowing)
+Range::unionWith(const Range *other)
 {
-    setLower(Min(lower_, other->lower_));
-    lower_infinite_ |= other->lower_infinite_;
-    setUpper(Max(upper_, other->upper_));
-    upper_infinite_ |= other->upper_infinite_;
+   setLower(Min(lower_, other->lower_));
+   lower_infinite_ |= other->lower_infinite_;
+   setUpper(Max(upper_, other->upper_));
+   upper_infinite_ |= other->upper_infinite_;
+}
+
+void
+Range::unionWith(RangeChangeCount *other)
+{
+    if (other->lowerCount_ <= 2) {
+        setLower(Min(lower_, other->oldRange.lower_));
+        lower_infinite_ |= other->oldRange.lower_infinite_;
+    } else {
+        other->lowerCount_ = 0;
+    }
+    if (other->upperCount_ <= 2) {
+        setUpper(Max(upper_, other->oldRange.upper_));
+        upper_infinite_ |= other->oldRange.upper_infinite_;
+    } else {
+        other->upperCount_ = 0;
+    }
 }
 
 Range
@@ -391,6 +408,15 @@ PopFromWorklist(MDefinitionVector &worklist)
 bool
 RangeAnalysis::analyze()
 {
+    for (PostorderIterator i(graph_.poBegin()); i != graph_.poEnd(); i++) {
+        MBasicBlock *curBlock = *i;
+        if (!curBlock->isLoopHeader())
+            continue;
+        for (MPhiIterator pi(curBlock->phisBegin()); pi != curBlock->phisEnd(); pi++)
+            if (!pi->initCounts())
+                return false;
+    }
+
     IonSpew(IonSpew_Range, "Doing range propagation");
     MDefinitionVector worklist;
 
