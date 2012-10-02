@@ -6218,12 +6218,10 @@ var SearchEngines = {
 
     let suggestTemplate = null;
     let suggestEngine = null;
-    if (Services.prefs.getBoolPref("browser.search.suggest.enabled")) {
-      let engine = this.getSuggestionEngine();
-      if (engine != null) {
-        suggestEngine = engine.name;
-        suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
-      }
+    let engine = this.getSuggestionEngine();
+    if (engine != null) {
+      suggestEngine = engine.name;
+      suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
     }
 
     sendMessageToJava({
@@ -6231,7 +6229,8 @@ var SearchEngines = {
         type: "SearchEngines:Data",
         searchEngines: searchEngines,
         suggestEngine: suggestEngine,
-        suggestTemplate: suggestTemplate
+        suggestTemplate: suggestTemplate,
+        suggestEnabled: Services.prefs.getBoolPref("browser.search.suggest.enabled")
       }
     });
   },
