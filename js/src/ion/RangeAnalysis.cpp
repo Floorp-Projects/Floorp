@@ -249,7 +249,7 @@ Range::printRange(FILE *fp)
 }
 
 Range
-Range::intersect(const Range *lhs, const Range *rhs)
+Range::intersect(const Range *lhs, const Range *rhs, bool *nullRange)
 {
     Range r(
         Max(lhs->lower_, rhs->lower_),
@@ -434,7 +434,7 @@ RangeAnalysis::analyze()
         MDefinition *def = PopFromWorklist(worklist);
         IonSpew(IonSpew_Range, "recomputing range on %d", def->id());
         SpewRange(def);
-        if (def->recomputeRange()) {
+        if (!def->earlyAbortCheck() && def->recomputeRange()) {
             JS_ASSERT(def->range()->lower() <= def->range()->upper());
             IonSpew(IonSpew_Range, "Range changed; adding consumers");
             for (MUseDefIterator use(def); use; use++) {
