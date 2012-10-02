@@ -922,6 +922,9 @@ var BrowserApp = {
       else
         MasterPassword.setPassword(json.value);
       return;
+    } else if (json.name == SearchEngines.PREF_SUGGEST_ENABLED) {
+      // Enabling or disabling suggestions will prevent future prompts
+      Services.prefs.setBoolPref(SearchEngines.PREF_SUGGEST_PROMPTED, true);
     }
 
     // when sending to java, we normalized special preferences that use
@@ -6102,6 +6105,8 @@ OverscrollController.prototype = {
 
 var SearchEngines = {
   _contextMenuId: null,
+  PREF_SUGGEST_ENABLED: "browser.search.suggest.enabled",
+  PREF_SUGGEST_PROMPTED: "browser.search.suggest.prompted",
 
   init: function init() {
     Services.obs.addObserver(this, "SearchEngines:Get", false);
@@ -6115,7 +6120,7 @@ var SearchEngines = {
   },
 
   uninit: function uninit() {
-    Services.obs.removeObserver(this, "SearchEngines:Get", false);
+    Services.obs.removeObserver(this, "SearchEngines:Get");
     if (this._contextMenuId != null)
       NativeWindow.contextmenus.remove(this._contextMenuId);
   },
@@ -6145,9 +6150,12 @@ var SearchEngines = {
       gecko: {
         type: "SearchEngines:Data",
         searchEngines: searchEngines,
-        suggestEngine: suggestEngine,
-        suggestTemplate: suggestTemplate,
-        suggestEnabled: Services.prefs.getBoolPref("browser.search.suggest.enabled")
+        suggest: {
+          engine: suggestEngine,
+          template: suggestTemplate,
+          enabled: Services.prefs.getBoolPref(this.PREF_SUGGEST_ENABLED),
+          prompted: Services.prefs.getBoolPref(this.PREF_SUGGEST_PROMPTED)
+        }
       }
     });
   },
