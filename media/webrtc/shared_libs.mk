@@ -41,6 +41,8 @@ WEBRTC_LIBS = \
   $(call EXPAND_LIBNAME_PATH,ns,$(DEPTH)/media/webrtc/trunk/src/modules/modules_ns) \
   $(call EXPAND_LIBNAME_PATH,yuv,$(DEPTH)/media/webrtc/trunk/third_party/libyuv/libyuv_libyuv) \
   $(call EXPAND_LIBNAME_PATH,webrtc_jpeg,$(DEPTH)/media/webrtc/trunk/src/common_video/common_video_webrtc_jpeg) \
+  $(call EXPAND_LIBNAME_PATH,nicer,$(DEPTH)/media/mtransport/third_party/nICEr/nicer_nicer) \
+  $(call EXPAND_LIBNAME_PATH,nrappkit,$(DEPTH)/media/mtransport/third_party/nrappkit/nrappkit_nrappkit) \
   $(NULL)
 
 # If you enable one of these codecs in webrtc_config.gypi, you'll need to re-add the
@@ -50,8 +52,4 @@ WEBRTC_LIBS = \
 #  $(call EXPAND_LIBNAME_PATH,iLBC,$(DEPTH)/media/webrtc/trunk/src/modules/modules_iLBC) \
 #  $(call EXPAND_LIBNAME_PATH,iSAC,$(DEPTH)/media/webrtc/trunk/src/modules/modules_iSAC) \
 #  $(call EXPAND_LIBNAME_PATH,iSACFix,$(DEPTH)/media/webrtc/trunk/src/modules/modules_iSACFix) \
-#
-
-#  $(call EXPAND_LIBNAME_PATH,nicer,$(DEPTH)/media/mtransport/third_party/nICEr/nicer_nicer) \
-#  $(call EXPAND_LIBNAME_PATH,nrappkit,$(DEPTH)/media/mtransport/third_party/nrappkit/nrappkit_nrappkit) \
 #

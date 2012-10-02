@@ -22,6 +22,7 @@
 	      '../nrappkit/src/stats',
 	      '../nrappkit/src/util',
 	      '../nrappkit/src/util/libekr',
+ 	      '../nrappkit/src/port/generic/include',
 
               # INTERNAL
               "./src/crypto",
