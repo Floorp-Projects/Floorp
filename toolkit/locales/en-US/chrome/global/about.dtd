@@ -1,3 +1,6 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!ENTITY about.version                "version">
 
 <!-- LOCALIZATION NOTE (about.credits.beforeLink): note that there is no space between this phrase and the linked about.credits.linkTitle phrase, so if your locale needs a space between words, add it at the end of this entity. -->
