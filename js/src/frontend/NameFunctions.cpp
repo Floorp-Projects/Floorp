@@ -175,7 +175,7 @@ class NameResolver
      */
     JSAtom *resolveFun(ParseNode *pn, HandleAtom prefix) {
         JS_ASSERT(pn != NULL && pn->isKind(PNK_FUNCTION));
-        RootedFunction fun(cx, pn->pn_funbox->fun());
+        RootedFunction fun(cx, pn->pn_funbox->function());
         if (nparents == 0)
             return NULL;
 
