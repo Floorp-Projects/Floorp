@@ -399,9 +399,14 @@ case "$target" in
         CFLAGS="$CFLAGS -TC -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
         # MSVC warning C4345 warns of newly conformant behavior as of VS2003.
+        # MSVC warning C4351 warns of newly conformant behavior as of VS2005.
+        # MSVC warning C4800 warns when a value is implicitly cast to bool,
+        # because this also forces narrowing to a single byte, which can be a
+        # perf hit.  But this matters so little in practice (and often we want
+        # that behavior) that it's better to turn it off.
         # _CRT_SECURE_NO_WARNINGS disables warnings about using MSVC-specific
         # secure CRT functions.
-        CXXFLAGS="$CXXFLAGS -wd4345 -D_CRT_SECURE_NO_WARNINGS"
+        CXXFLAGS="$CXXFLAGS -wd4345 -wd4351 -wd4800 -D_CRT_SECURE_NO_WARNINGS"
         AC_LANG_SAVE
         AC_LANG_C
         AC_TRY_COMPILE([#include <stdio.h>],
@@ -1762,8 +1767,8 @@ ia64*-hpux*)
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
-        # MSVC warnings C4244 and C4800 are ubiquitous, useless, and annoying.
-        CXXFLAGS="$CXXFLAGS -wd4244 -wd4800"
+        # MSVC warning C4244 is ubiquitous, useless, and annoying.
+        CXXFLAGS="$CXXFLAGS -wd4244"
         # make 'foo == bar;' error out
         CFLAGS="$CFLAGS -we4553"
         CXXFLAGS="$CXXFLAGS -we4553"
