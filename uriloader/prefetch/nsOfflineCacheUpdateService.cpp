@@ -499,6 +499,29 @@ nsOfflineCacheUpdateService::ScheduleCustomProfileUpdate(nsIURI *aManifestURI,
     return Schedule(aManifestURI, aDocumentURI, nullptr, nullptr, aProfileDir, aUpdate);
 }
 
+NS_IMETHODIMP nsOfflineCacheUpdateService::CheckForUpdate(nsIURI *aManifestURI,
+                                                          uint32_t aAppID,
+                                                          bool aInBrowser,
+                                                          nsIObserver *aObserver)
+{
+    if (GeckoProcessType_Default != XRE_GetProcessType()) {
+        // Not intended to support this on child processes
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    nsCOMPtr<nsIOfflineCacheUpdate> update = new OfflineCacheUpdateGlue();
+
+    nsresult rv;
+
+    rv = update->InitForUpdateCheck(aManifestURI, aAppID, aInBrowser, aObserver);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = update->Schedule();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsOfflineCacheUpdateService::nsIObserver
 //-----------------------------------------------------------------------------

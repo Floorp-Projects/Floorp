@@ -218,6 +218,7 @@ protected:
     void OnByteProgress(uint64_t byteIncrement);
 
 private:
+    nsresult InitInternal(nsIURI *aManifestURI);
     nsresult HandleManifest(bool *aDoUpdate);
     nsresult AddURI(nsIURI *aURI, uint32_t aItemType);
 
@@ -230,6 +231,8 @@ private:
                               nsTArray<nsCString>* namespaceFilter = nullptr);
     nsresult ScheduleImplicit();
     void AssociateDocuments(nsIApplicationCache* cache);
+    bool CheckUpdateAvailability();
+    void NotifyUpdateAvailability(bool updateAvailable);
 
     void GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
     void NotifyState(uint32_t state);
@@ -252,6 +255,7 @@ private:
 
     bool mAddedItems;
     bool mPartialUpdate;
+    bool mOnlyCheckUpdate;
     bool mSucceeded;
     bool mObsolete;
 
@@ -261,6 +265,7 @@ private:
     nsCOMPtr<nsIURI> mDocumentURI;
     nsCOMPtr<nsIFile> mCustomProfileDir;
     nsCOMPtr<nsILoadContext> mLoadContext;
+    nsCOMPtr<nsIObserver> mUpdateAvailableObserver;
 
     nsCOMPtr<nsIApplicationCache> mApplicationCache;
     nsCOMPtr<nsIApplicationCache> mPreviousApplicationCache;
