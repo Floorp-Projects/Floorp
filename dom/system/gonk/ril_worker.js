@@ -4443,7 +4443,12 @@ RIL[REQUEST_STK_GET_PROFILE] = null;
 RIL[REQUEST_STK_SET_PROFILE] = null;
 RIL[REQUEST_STK_SEND_ENVELOPE_COMMAND] = null;
 RIL[REQUEST_STK_SEND_TERMINAL_RESPONSE] = null;
-RIL[REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM] = null;
+RIL[REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM] = function REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM(length, options) {
+  if (!options.rilRequestError && options.hasConfirmed) {
+    options.rilMessageType = "stkcallsetup";
+    this.sendDOMMessage(options);
+  }
+};
 RIL[REQUEST_EXPLICIT_CALL_TRANSFER] = null;
 RIL[REQUEST_SET_PREFERRED_NETWORK_TYPE] = function REQUEST_SET_PREFERRED_NETWORK_TYPE(length, options) {
   if (options.networkType == null) {
