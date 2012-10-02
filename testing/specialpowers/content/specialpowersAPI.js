@@ -476,17 +476,30 @@ SpecialPowersAPI.prototype = {
   },
 
   /*
-   * Take in a list of prefs and put the original value on the _prefEnvUndoStack so we can undo
-   * preferences that we set.  Note, that this is a stack of values to revert to, not
-   * what we have set.
+   * Take in a list of pref changes to make, and invoke |callback| once those
+   * changes have taken effect.  When the test finishes, these changes are
+   * reverted.
    *
-   * prefs: {set|clear: [[pref, value], [pref, value, Iid], ...], set|clear: [[pref, value], ...], ...}
-   * ex: {'set': [['foo.bar', 2], ['browser.magic', '0xfeedface']], 'clear': [['bad.pref']] }
+   * |inPrefs| must be an object with up to two properties: "set" and "clear".
+   * pushPrefEnv will set prefs as indicated in |inPrefs.set| and will unset
+   * the prefs indicated in |inPrefs.clear|.
    *
-   * In the scenario where our prefs specify the same pref more than once, we do not guarantee
-   * the behavior.  
+   * For example, you might pass |inPrefs| as:
    *
-   * If a preference is not changing a value, we will ignore it.
+   *  inPrefs = {'set': [['foo.bar', 2], ['magic.pref', 'baz']],
+   *             'clear': [['clear.this'], ['also.this']] };
+   *
+   * Notice that |set| and |clear| are both an array of arrays.  In |set|, each
+   * of the inner arrays must have the form [pref_name, value] or [pref_name,
+   * value, iid].  (The latter form is used for prefs with "complex" values.)
+   *
+   * In |clear|, each inner array should have the form [pref_name].
+   *
+   * If you set the same pref more than once (or both set and clear a pref),
+   * the behavior of this method is undefined.
+   *
+   * (Implementation note: _prefEnvUndoStack is a stack of values to revert to,
+   * not values which have been set!)
    *
    * TODO: complex values for original cleanup?
    *
