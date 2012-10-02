@@ -103,14 +103,6 @@ static inline bool IS_SLIM_WRAPPER(JSObject *obj)
     return IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && IS_SLIM_WRAPPER_OBJECT(obj);
 }
 
-inline JSObject *
-xpc_GetGlobalForObject(JSObject *obj)
-{
-    while (JSObject *parent = js::GetObjectParent(obj))
-        obj = parent;
-    return obj;
-}
-
 extern bool
 xpc_OkToHandOutWrapper(nsWrapperCache *cache);
 
