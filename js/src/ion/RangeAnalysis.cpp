@@ -156,7 +156,7 @@ RangeAnalysis::addBetaNobes()
             if (jsop == JSOP_LT) {
                 smaller = left;
                 greater = right;
-            } else if (JSOP_GT) {
+            } else if (jsop == JSOP_GT) {
                 smaller = right;
                 greater = left;
             }
@@ -321,6 +321,22 @@ Range::sub(const Range *lhs, const Range *rhs)
     return ret;
 
 }
+Range
+Range::addTruncate(const Range *lhs, const Range *rhs)
+{
+    Range ret = Truncate((int64_t)lhs->lower_ + (int64_t)rhs->lower_,
+                         (int64_t)lhs->upper_ + (int64_t)rhs->upper_);
+    return ret;
+}
+
+Range
+Range::subTruncate(const Range *lhs, const Range *rhs)
+{
+    Range ret = Truncate((int64_t)lhs->lower_ - (int64_t)rhs->upper_,
+                         (int64_t)lhs->upper_ - (int64_t)rhs->lower_);
+    return ret;
+}
+
 Range
 Range::and_(const Range *lhs, const Range *rhs)
 {
