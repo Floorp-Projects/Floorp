@@ -10,6 +10,7 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "EdgeCaseAnalysis.h"
+#include "IonSpewer.h"
 #include "jsnum.h"
 #include "jsstr.h"
 #include "jsatominlines.h"
@@ -456,6 +457,39 @@ MPhi::addInput(MDefinition *ins)
 {
     ins->addUse(this, inputs_.length());
     return inputs_.append(ins);
+}
+
+bool
+MPhi::recomputeRange()
+{
+    if (type() != MIRType_Int32)
+        return false;
+
+    Range r;
+    JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
+    bool updated = false;
+    for (size_t i = 0; i < numOperands(); i++) {
+#if 0
+        if (getOperand(i)->block()->earlyAbort()) {
+            IonSpew(IonSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
+            continue;
+        }
+#endif
+        if (!isOSRLikeValue(getOperand(i))) {
+            if (block()->isLoopHeader())
+                changeCounts_[i].updateRange(getOperand(i)->range());
+            if (updated) {
+                if (block()->isLoopHeader())
+                    r.unionWith(&changeCounts_[i]);
+                else
+                    r.unionWith(getOperand(i)->range());
+            } else {
+                r.update(getOperand(0)->range());
+                updated = true;
+            }
+        }
+    }
+     return range()->update(&r);
 }
 
 uint32
