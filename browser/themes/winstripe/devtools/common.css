@@ -195,3 +195,33 @@
   -moz-margin-end: -3px;
   position: relative;
 }
+
+/* Theme */
+
+.devtools-theme-background {
+  background-color: white;
+}
+
+.devtools-theme-comment {
+  color: hsl(90,2%,46%); /* grey */
+}
+
+.devtools-theme-keyword {
+  color: hsl(276,44%,45%); /* purple */
+}
+
+.devtools-theme-string {
+  color: hsl(72,100%,27%); /* green */
+}
+
+.devtools-theme-tagname {
+  color: hsl(208,81%,21%); /* dark blue */
+}
+
+.devtools-theme-attrname {
+  color: hsl(208,56%,40%); /* blue */
+}
+
+.devtools-theme-attrvalue {
+  color: hsl(24,85%,39%); /* orange */
+}
