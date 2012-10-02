@@ -1025,7 +1025,7 @@ js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain
     if (scopeChain->isGlobal()) {
         holder = scopeChain;
     } else {
-        if (!LookupNameForSet(cx, name, scopeChain, &holder))
+        if (!LookupNameWithGlobalDefault(cx, name, scopeChain, &holder))
             return NULL;
     }
 

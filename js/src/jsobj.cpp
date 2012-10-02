@@ -4176,8 +4176,8 @@ js::LookupName(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
 }
 
 bool
-js::LookupNameForSet(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
-                     MutableHandleObject objp)
+js::LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
+                                MutableHandleObject objp)
 {
     RootedId id(cx, NameToId(name));
 
