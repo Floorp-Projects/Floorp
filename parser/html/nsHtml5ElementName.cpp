@@ -62,6 +62,12 @@ nsHtml5ElementName::getGroup()
   return flags & NS_HTML5ELEMENT_NAME_GROUP_MASK;
 }
 
+bool 
+nsHtml5ElementName::isCustom()
+{
+  return (flags & NS_HTML5ELEMENT_NAME_CUSTOM);
+}
+
 nsHtml5ElementName* 
 nsHtml5ElementName::elementNameByBuffer(PRUnichar* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
 {

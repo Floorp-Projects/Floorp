@@ -158,8 +158,8 @@ nsDOMCameraManager::Shutdown(uint64_t aWindowId)
     return;
   }
 
-  PRUint32 length = controls->Length();
-  for (PRUint32 i = 0; i < length; i++) {
+  uint32_t length = controls->Length();
+  for (uint32_t i = 0; i < length; i++) {
     nsRefPtr<nsDOMCameraControl> cameraControl = controls->ElementAt(i);
     cameraControl->Shutdown();
   }

@@ -190,6 +190,9 @@ var shell = {
     this.isHomeLoaded = false;
 
     ppmm.addMessageListener("content-handler", this);
+    ppmm.addMessageListener("dial-handler", this);
+    ppmm.addMessageListener("sms-handler", this);
+    ppmm.addMessageListener("mail-handler", this);
   },
 
   stop: function shell_stop() {
@@ -394,17 +397,18 @@ var shell = {
   },
 
   receiveMessage: function shell_receiveMessage(message) {
-    if (message.name != 'content-handler') {
+    var names = { 'content-handler': 'view',
+                  'dial-handler'   : 'dial',
+                  'mail-handler'   : 'new',
+                  'sms-handler'    : 'new' }
+
+    if (!(message.name in names))
       return;
-    }
-    let handler = message.json;
+
+    let data = message.data;
     new MozActivity({
-      name: 'view',
-      data: {
-        type: handler.type,
-        url: handler.url,
-        extras: handler.extras
-      }
+      name: names[message.name],
+      data: data
     });
   }
 };

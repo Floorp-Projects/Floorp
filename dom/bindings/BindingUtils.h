@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ErrorResult.h"
 
@@ -1144,6 +1145,27 @@ XrayEnumerateProperties(JS::AutoIdVector& props,
                         jsid* constantIds,
                         ConstantSpec* constantSpecs,
                         size_t constantCount);
+
+// Transfer reference in ptr to smartPtr.
+template<class T>
+inline void
+Take(nsRefPtr<T>& smartPtr, T* ptr)
+{
+  smartPtr = dont_AddRef(ptr);
+}
+
+// Transfer ownership of ptr to smartPtr.
+template<class T>
+inline void
+Take(nsAutoPtr<T>& smartPtr, T* ptr)
+{
+  smartPtr = ptr;
+}
+
+inline void
+MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
+{
+}
 
 } // namespace dom
 } // namespace mozilla

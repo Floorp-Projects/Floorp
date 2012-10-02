@@ -25,9 +25,8 @@
 #include "nsIDOMElement.h"
 #include "nsIHTMLCollection.h"
 #include "nsHTMLStyleSheet.h"
+#include "mozilla/dom/HTMLCollectionBinding.h"
 #include "dombindings.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 
@@ -62,8 +61,15 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::oldproxybindings::HTMLCollection::create(cx, scope, this,
-                                                         triedToWrap);
+    JSObject* obj = mozilla::dom::HTMLCollectionBinding::Wrap(cx, scope, this,
+                                                              triedToWrap);
+    if (obj || *triedToWrap) {
+      return obj;
+    }
+
+    *triedToWrap = true;
+    return mozilla::dom::oldproxybindings::HTMLCollection::create(cx, scope,
+                                                                  this);
   }
 
 protected:

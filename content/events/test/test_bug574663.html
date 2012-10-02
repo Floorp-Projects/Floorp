@@ -51,6 +51,11 @@ function runTest() {
       [true, false],
       [true, true],
     ];
+
+    // grab the refresh driver, since we want to make sure
+    // async scrolls happen in deterministic time
+    winUtils.advanceTimeAndRefresh(1000);
+
     function nextTest() {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       if (!outstandingTests.length) {
@@ -63,7 +68,9 @@ function runTest() {
       let [ctrlKey, isMomentum] = outstandingTests.shift();
       let scrollTopBefore = scrollbox.scrollTop;
       let zoomFactorBefore = winUtils.fullZoom;
+
       sendTouchpadScrollMotion(scrollbox, 1, ctrlKey, isMomentum);
+      winUtils.advanceTimeAndRefresh(1000); // force scrolling to happen
 
       setTimeout(function () {
         netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -83,6 +90,8 @@ function runTest() {
         }
         // Revert the effect.
         sendTouchpadScrollMotion(scrollbox, -1, ctrlKey, isMomentum);
+        winUtils.advanceTimeAndRefresh(1000); // force scrolling to happen
+
         setTimeout(nextTest, 20);
       }, 20);
     }

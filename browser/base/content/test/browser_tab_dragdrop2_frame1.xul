@@ -52,7 +52,6 @@ function nextTest()
 {
   ok(true,"popuphidden " + i)
   if (i == tests.length) {
-    SimpleTest.finish();
     return i;
   }
 

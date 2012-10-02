@@ -528,10 +528,18 @@ DoDeferredRelease(nsTArray<T> &array)
     }
 }
 
+struct DeferredFinalizeFunction
+{
+  XPCJSRuntime::DeferredFinalizeFunction run;
+  void* data;
+};
+
 class XPCIncrementalReleaseRunnable : public nsRunnable
 {
     XPCJSRuntime *runtime;
     nsTArray<nsISupports *> items;
+    nsAutoTArray<DeferredFinalizeFunction, 16> deferredFinalizeFunctions;
+    uint32_t finalizeFunctionToRun;
 
     static const PRTime SliceMillis = 10; /* ms */
 
@@ -544,12 +552,50 @@ class XPCIncrementalReleaseRunnable : public nsRunnable
     NS_DECL_NSIRUNNABLE
 };
 
+bool
+ReleaseSliceNow(int32_t slice, void* data)
+{
+    nsTArray<nsISupports *>* items =
+        static_cast<nsTArray<nsISupports *>*>(data);
+    uint32_t counter = 0;
+    while (1) {
+        uint32_t count = items->Length();
+        if (!count) {
+            break;
+        }
+
+        nsISupports *wrapper = items->ElementAt(count - 1);
+        items->RemoveElementAt(count - 1);
+        NS_RELEASE(wrapper);
+
+        if (slice > 0 && ++counter == slice) {
+            return items->IsEmpty();
+        }
+    }
+
+    return true;
+}
+
+
 XPCIncrementalReleaseRunnable::XPCIncrementalReleaseRunnable(XPCJSRuntime *rt,
                                                              nsTArray<nsISupports *> &items)
-  : runtime(rt)
+  : runtime(rt),
+    finalizeFunctionToRun(0)
 {
     nsLayoutStatics::AddRef();
     this->items.SwapElements(items);
+    DeferredFinalizeFunction* function =
+        deferredFinalizeFunctions.AppendElement();
+    function->run = ReleaseSliceNow;
+    function->data = &this->items;
+    for (uint32_t i = 0; i < rt->mDeferredFinalizeFunctions.Length(); ++i) {
+        void* data = (rt->mDeferredFinalizeFunctions[i].start)();
+        if (data) {
+            function = deferredFinalizeFunctions.AppendElement();
+            function->run = rt->mDeferredFinalizeFunctions[i].run;
+            function->data = data;
+        }
+    }
 }
 
 XPCIncrementalReleaseRunnable::~XPCIncrementalReleaseRunnable()
@@ -562,33 +608,39 @@ void
 XPCIncrementalReleaseRunnable::ReleaseNow(bool limited)
 {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(deferredFinalizeFunctions.Length() != 0,
+               "We should have at least ReleaseSliceNow to run");
+    MOZ_ASSERT(finalizeFunctionToRun < deferredFinalizeFunctions.Length(),
+               "No more finalizers to run?");
 
     TimeDuration sliceTime = TimeDuration::FromMilliseconds(SliceMillis);
     TimeStamp started = TimeStamp::Now();
-    uint32_t counter = 0;
-    while (1) {
-        uint32_t count = items.Length();
-        if (!count)
-            break;
-
-        nsISupports *wrapper = items[count - 1];
-        items.RemoveElementAt(count - 1);
-        NS_RELEASE(wrapper);
-
+    bool timeout = false;
+    do {
+        const DeferredFinalizeFunction& function =
+            deferredFinalizeFunctions[finalizeFunctionToRun];
         if (limited) {
-            /* We don't want to read the clock too often. */
-            counter++;
-            if (counter == 100) {
-                counter = 0;
-                if (TimeStamp::Now() - started >= sliceTime)
-                    break;
+            bool done = false;
+            while (!timeout && !done) {
+                /* We don't want to read the clock too often, so we try to
+                   release slices of 100 items. */
+                done = function.run(100, function.data);
+                timeout = TimeStamp::Now() - started >= sliceTime;
             }
+            if (done) {
+                ++finalizeFunctionToRun;
+            }
+            if (timeout) {
+                break;
+            }
+        } else {
+            function.run(-1, function.data);
+            MOZ_ASSERT(!items.Length());
+            ++finalizeFunctionToRun;
         }
-    }
+    } while (finalizeFunctionToRun < deferredFinalizeFunctions.Length());
 
-    MOZ_ASSERT_IF(items.Length(), limited);
-
-    if (!items.Length()) {
+    if (finalizeFunctionToRun == deferredFinalizeFunctions.Length()) {
         MOZ_ASSERT(runtime->mReleaseRunnable == this);
         runtime->mReleaseRunnable = nullptr;
     }
@@ -675,11 +727,17 @@ XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
                 self->mReleaseRunnable->ReleaseNow(false);
 
             // Do any deferred releases of native objects.
-            if (js::WasIncrementalGC(rt))
+            if (js::WasIncrementalGC(rt)) {
                 self->ReleaseIncrementally(self->mNativesToReleaseArray);
-            else
+            } else {
                 DoDeferredRelease(self->mNativesToReleaseArray);
-
+                for (uint32_t i = 0; i < self->mDeferredFinalizeFunctions.Length(); ++i) {
+                    void* data = self->mDeferredFinalizeFunctions[i].start();
+                    if (data) {
+                        self->mDeferredFinalizeFunctions[i].run(-1, data);
+                    }
+                }
+            }
             self->GetXPConnect()->ClearGCBeforeCC();
             break;
         }

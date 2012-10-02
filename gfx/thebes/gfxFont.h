@@ -2080,7 +2080,7 @@ public:
     }
 
     float GetDirection() const {
-        return IsRightToLeft() ? -1.0 : 1.0;
+        return IsRightToLeft() ? -1.0f : 1.0f;
     }
 
     bool DisableLigatures() const {
