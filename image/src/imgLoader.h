@@ -226,6 +226,7 @@ public:
   nsresult Init();
 
   static nsresult GetMimeTypeFromContent(const char* aContents, uint32_t aLength, nsACString& aContentType);
+  static nsresult SupportImageWithMimeType(const char* aMimeType, bool *_retval);
 
   static void GlobalInit(); // for use by the factory
   static void Shutdown(); // for use by the factory

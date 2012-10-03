@@ -11,7 +11,7 @@
  */
 
 // Interface headers
-#include "imgILoader.h"
+#include "imgLoader.h"
 #include "nsEventDispatcher.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
@@ -477,13 +477,8 @@ URIEquals(nsIURI *a, nsIURI *b)
 static bool
 IsSupportedImage(const nsCString& aMimeType)
 {
-  nsCOMPtr<imgILoader> loader = nsContentUtils::GetImgLoaderForChannel(nullptr);
-  if (!loader) {
-    return false;
-  }
-
   bool supported;
-  nsresult rv = loader->SupportImageWithMimeType(aMimeType.get(), &supported);
+  nsresult rv = imgLoader::SupportImageWithMimeType(aMimeType.get(), &supported);
   return NS_SUCCEEDED(rv) && supported;
 }
 
