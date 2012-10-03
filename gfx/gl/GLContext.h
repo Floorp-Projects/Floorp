@@ -1675,7 +1675,7 @@ public:
         Extensions_Max
     };
 
-    bool IsExtensionSupported(GLExtensions aKnownExtension) {
+    bool IsExtensionSupported(GLExtensions aKnownExtension) const {
         return mAvailableExtensions[aKnownExtension];
     }
 
@@ -1733,6 +1733,11 @@ public:
         }
 
         bool& operator[](size_t index) {
+            MOZ_ASSERT(index < Size, "out of range");
+            return extensions[index];
+        }
+
+        const bool& operator[](size_t index) const {
             MOZ_ASSERT(index < Size, "out of range");
             return extensions[index];
         }
