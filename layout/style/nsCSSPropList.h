@@ -1541,7 +1541,7 @@ CSS_PROP_POSITION(
     align_items,
     CSS_PROP_DOMPROP_PREFIXED(AlignItems),
     CSS_PROPERTY_PARSE_VALUE,
-    "",
+    "layout.css.flexbox.enabled",
     VARIANT_HK,
     kAlignItemsKTable,
     offsetof(nsStylePosition, mAlignItems),
@@ -1551,7 +1551,7 @@ CSS_PROP_POSITION(
     align_self,
     CSS_PROP_DOMPROP_PREFIXED(AlignSelf),
     CSS_PROPERTY_PARSE_VALUE,
-    "",
+    "layout.css.flexbox.enabled",
     VARIANT_HK,
     kAlignSelfKTable,
     offsetof(nsStylePosition, mAlignSelf),
@@ -1561,7 +1561,7 @@ CSS_PROP_SHORTHAND(
     flex,
     CSS_PROP_DOMPROP_PREFIXED(Flex),
     CSS_PROPERTY_PARSE_FUNCTION,
-    "")
+    "layout.css.flexbox.enabled")
 CSS_PROP_POSITION(
     -moz-flex-basis,
     flex_basis,
@@ -1569,7 +1569,7 @@ CSS_PROP_POSITION(
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
-    "",
+    "layout.css.flexbox.enabled",
     // NOTE: The parsing implementation for the 'flex' shorthand property has
     // its own code to parse each subproperty. It does not depend on the
     // longhand parsing defined here.
@@ -1582,7 +1582,7 @@ CSS_PROP_POSITION(
     flex_direction,
     CSS_PROP_DOMPROP_PREFIXED(FlexDirection),
     CSS_PROPERTY_PARSE_VALUE,
-    "",
+    "layout.css.flexbox.enabled",
     VARIANT_HK,
     kFlexDirectionKTable,
     offsetof(nsStylePosition, mFlexDirection),
@@ -1593,7 +1593,7 @@ CSS_PROP_POSITION(
     CSS_PROP_DOMPROP_PREFIXED(FlexGrow),
     CSS_PROPERTY_PARSE_VALUE |
       CSS_PROPERTY_VALUE_NONNEGATIVE,
-    "",
+    "layout.css.flexbox.enabled",
     // NOTE: The parsing implementation for the 'flex' shorthand property has
     // its own code to parse each subproperty. It does not depend on the
     // longhand parsing defined here.
@@ -1607,7 +1607,7 @@ CSS_PROP_POSITION(
     CSS_PROP_DOMPROP_PREFIXED(FlexShrink),
     CSS_PROPERTY_PARSE_VALUE |
       CSS_PROPERTY_VALUE_NONNEGATIVE,
-    "",
+    "layout.css.flexbox.enabled",
     // NOTE: The parsing implementation for the 'flex' shorthand property has
     // its own code to parse each subproperty. It does not depend on the
     // longhand parsing defined here.
@@ -1620,7 +1620,7 @@ CSS_PROP_POSITION(
     order,
     CSS_PROP_DOMPROP_PREFIXED(Order),
     CSS_PROPERTY_PARSE_VALUE,
-    "",
+    "layout.css.flexbox.enabled",
     VARIANT_HI,
     nullptr,
     offsetof(nsStylePosition, mOrder),
@@ -1630,7 +1630,7 @@ CSS_PROP_POSITION(
     justify_content,
     CSS_PROP_DOMPROP_PREFIXED(JustifyContent),
     CSS_PROPERTY_PARSE_VALUE,
-    "",
+    "layout.css.flexbox.enabled",
     VARIANT_HK,
     kJustifyContentKTable,
     offsetof(nsStylePosition, mJustifyContent),
