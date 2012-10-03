@@ -152,7 +152,7 @@ class MemoryMonitor extends BroadcastReceiver {
             if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
                 GeckoAppShell.onLowMemory();
             }
-            ScreenshotHandler.disableScreenshot();
+            ScreenshotHandler.disableScreenshot(false);
             GeckoAppShell.geckoEventSync();
         }
     }
@@ -169,7 +169,7 @@ class MemoryMonitor extends BroadcastReceiver {
         Log.d(LOGTAG, "Decreased memory pressure to " + newLevel);
 
         if (newLevel == MEMORY_PRESSURE_NONE) {
-            ScreenshotHandler.enableScreenshot();
+            ScreenshotHandler.enableScreenshot(false);
         }
 
         return true;
