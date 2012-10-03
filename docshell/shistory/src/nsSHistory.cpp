@@ -284,7 +284,7 @@ nsSHistory::CalcMaxTotalViewers()
   // 4096 Mb       8
   uint64_t bytes = PR_GetPhysicalMemorySize();
 
-  if (LL_IS_ZERO(bytes))
+  if (bytes == 0)
     return 0;
 
   // Conversion from unsigned int64 to double doesn't work on all platforms.
