@@ -35,7 +35,7 @@ MOCHITEST_CHROME_FILES =	test_bug343416.xul \
 		window_bug429954.xul \
 		test_bug444800.xul \
 		test_bug462106.xul \
-		test_bug478536.xul \
+		$(warning test_bug478536.xul is disabled for intermittent timeouts. Bug 561929) \
 		window_bug478536.xul \
 		test_bug517396.xul \
 		test_bug538242.xul \
