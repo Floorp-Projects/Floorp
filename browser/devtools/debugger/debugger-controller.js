@@ -9,6 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const NEW_SCRIPT_DISPLAY_DELAY = 100; // ms
 const FRAME_STEP_CACHE_DURATION = 100; // ms
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const SCRIPTS_URL_MAX_LENGTH = 64; // chars
@@ -941,15 +942,21 @@ SourceScripts.prototype = {
     if (aPacket.url === DebuggerView.Scripts.preferredScriptUrl) {
       DebuggerView.Scripts.selectScript(aPacket.url);
     }
-    // ..or the first entry if there's not one selected yet.
-    else if (!DebuggerView.Scripts.selected) {
-      DebuggerView.Scripts.selectIndex(0);
-      // Selecting a script would make it "preferred", which is a lie here,
-      // because we're only displaying a script to make sure there's always
-      // something available in the SourceEditor and the scripts menulist.
-      // Hence the need revert back to the initial preferred script, just
-      // in case it will be available soon.
-      DebuggerView.Scripts.preferredScriptUrl = preferredScriptUrl;
+    // ..or the first entry if there's none selected yet after a while
+    else {
+      window.setTimeout(function() {
+        // If after a certain delay the preferred script still wasn't received,
+        // just give up on waiting and display the first entry.
+        if (!DebuggerView.Scripts.selected) {
+          DebuggerView.Scripts.selectIndex(0);
+          // Selecting a script would make it "preferred", which is a lie here,
+          // because we're only displaying a script to make sure there's always
+          // something available in the SourceEditor and the scripts menulist.
+          // Hence the need revert back to the initial preferred script, just
+          // in case it will be available soon.
+          DebuggerView.Scripts.preferredScriptUrl = preferredScriptUrl;
+        }
+      }, NEW_SCRIPT_DISPLAY_DELAY);
     }
 
     // If there are any stored breakpoints for this script, display them again,
@@ -1210,7 +1217,11 @@ SourceScripts.prototype = {
    */
   showScript: function SS_showScript(aScript, aOptions = {}) {
     if (aScript.loaded) {
-      this._onShowScript(aScript, aOptions);
+      // Scripts may take a longer time to load than expected, therefore the
+      // required one may change at any time after a previous request was made.
+      if (aScript.url === DebuggerView.Scripts.selected) {
+        this._onShowScript(aScript, aOptions);
+      }
       return;
     }
 
