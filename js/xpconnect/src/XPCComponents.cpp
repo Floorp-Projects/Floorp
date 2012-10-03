@@ -34,6 +34,7 @@
 #include "nsIScriptContext.h"
 #include "nsJSEnvironment.h"
 #include "nsXMLHttpRequest.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 using namespace js;
@@ -4782,6 +4783,9 @@ ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
     // If the caller is XBL, this is ok.
     if (AccessCheck::callerIsXBL(cx))
         return true;
+
+    // Do Telemetry on how often this happens.
+    Telemetry::Accumulate(Telemetry::COMPONENTS_OBJECT_ACCESSED_BY_CONTENT, true);
 
     // Warn once. Note that if somebody does window.Components we may have an
     // outer window here.
