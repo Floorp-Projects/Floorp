@@ -2837,20 +2837,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       data->AddFrame(aContainerFrame);
       entry->mContainerLayerGeneration = mContainerLayerGeneration;
     }
-
-    nsAutoTArray<nsIFrame*,4> mergedFrames;
-    if (aContainerItem) {
-      aContainerItem->GetMergedFrames(&mergedFrames);
-    }
-    for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
-      nsIFrame* mergedFrame = mergedFrames[i];
-      entry = mNewDisplayItemData.PutEntry(mergedFrame);
-      if (entry) {
-        entry->mContainerLayerGeneration = mContainerLayerGeneration;
-        entry->mData.AppendElement(data);
-        data->AddFrame(mergedFrame);
-      }
-    }
   }
 
   nsRect bounds;
