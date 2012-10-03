@@ -944,10 +944,21 @@ gfxFT2FontList::FindFonts()
         NS_RUNTIMEABORT("Could not read the system fonts directory");
     }
 
-    // look for locally-added fonts in the profile
+    // look for fonts shipped with the product
     nsCOMPtr<nsIFile> localDir;
-    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_RES_DIR,
                                          getter_AddRefs(localDir));
+    if (NS_SUCCEEDED(rv)) {
+        nsCString localPath;
+        rv = localDir->GetNativePath(localPath);
+        if (NS_SUCCEEDED(rv)) {
+            FindFontsInDir(localPath, &fnc);
+        }
+    }
+
+    // look for locally-added fonts in the profile
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
+                                getter_AddRefs(localDir));
     if (NS_SUCCEEDED(rv)) {
         nsCString localPath;
         rv = localDir->GetNativePath(localPath);
