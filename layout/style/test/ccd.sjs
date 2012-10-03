@@ -61,17 +61,13 @@ function handleRequest(request, response)
 	response.write(selector + '{}\n');
     } else {
 	// Normal operation.
-        let contentType = responseCSS ? 'text/css' : 'text/html';
-        let responseBody = (leader + selector +
-	                    '{background-color:' + color + '}' +
-		            trailer + '\n');
-        dump("TEST-INFO | ccd.sjs | " + request.queryString + " | " +
-             contentType + " | " + (httpError ? '500' : '200') + " | " +
-             responseBody);
 	if (httpError)
 	    response.setStatusLine(request.httpVersion, 500,
 				   "Internal Server Error");
-        response.setHeader('Content-Type', contentType);
-	response.write(responseBody);
+	response.setHeader('Content-Type',
+			   responseCSS ? 'text/css' : 'text/html');
+	response.write(leader + selector +
+		       '{background-color:' + color + '}' +
+		       trailer + '\n');
     }
 }
