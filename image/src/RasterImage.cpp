@@ -2802,6 +2802,19 @@ RasterImage::ScaleRequest::Stop(RasterImage* aImg)
   request->stopped = true;
 }
 
+static inline bool
+IsDownscale(const gfxSize& scale)
+{
+  if (scale.width > 1.0)
+    return false;
+  if (scale.height > 1.0)
+    return false;
+  if (scale.width == 1.0 && scale.height == 1.0)
+    return false;
+
+  return true;
+}
+
 bool
 RasterImage::CanScale(gfxPattern::GraphicsFilter aFilter,
                       gfxSize aScale)
@@ -2809,8 +2822,7 @@ RasterImage::CanScale(gfxPattern::GraphicsFilter aFilter,
 // The high-quality scaler requires Skia.
 #ifdef MOZ_ENABLE_SKIA
   if (gHQDownscaling && aFilter == gfxPattern::FILTER_GOOD &&
-      !mAnim && mDecoded &&
-      (aScale.width <= 1.0 && aScale.height <= 1.0)) {
+      !mAnim && mDecoded && IsDownscale(aScale)) {
     gfxFloat factor = gHQDownscalingMinFactor / 1000.0;
     return (aScale.width < factor || aScale.height < factor);
   }
