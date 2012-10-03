@@ -49,8 +49,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_456342.js \
 	browser_456342_sample.xhtml \
 	browser_461634.js \
-	browser_461743.js \
-	browser_461743_sample.html \
 	browser_463205.js \
 	browser_463205_helper.html \
 	browser_463205_sample.html \
@@ -139,6 +137,8 @@ MOCHITEST_BROWSER_FILES = \
 $(warning browser_459906.js is disabled for intermittent failures. Bug 766044)
 #	browser_459906_empty.html \
 #	browser_459906_sample.html \
+$(warning browser_461743.js is disabled for intermittent failures. Bug 765389)
+#	browser_461743_sample.html \
 
 # Disabled on Windows for frequent intermittent failures
 ifneq ($(OS_ARCH), WINNT)
