@@ -176,7 +176,7 @@ bool imgRequest::HasCacheEntry() const
   return mCacheEntry != nullptr;
 }
 
-nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
+void imgRequest::AddProxy(imgRequestProxy *proxy)
 {
   NS_PRECONDITION(proxy, "null imgRequestProxy passed in");
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::AddProxy", "proxy", proxy);
@@ -197,8 +197,7 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
 
   proxy->SetPrincipal(mPrincipal);
 
-  return mObservers.AppendElementUnlessExists(proxy) ?
-    NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  mObservers.AppendElementUnlessExists(proxy);
 }
 
 nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool aNotify)
