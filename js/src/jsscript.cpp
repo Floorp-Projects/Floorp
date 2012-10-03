@@ -2205,6 +2205,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     dst->hasSingletons = src->hasSingletons;
     dst->isGenerator = src->isGenerator;
     dst->isGeneratorExp = src->isGeneratorExp;
+    dst->userBit = src->userBit;
 
     /*
      * initScriptCounts updates scriptCountsMap if necessary. The other script

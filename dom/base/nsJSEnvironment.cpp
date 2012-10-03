@@ -58,6 +58,7 @@
 #include "mozilla/dom/ImageData.h"
 
 #include "nsJSPrincipals.h"
+#include "jsdbgapi.h"
 
 #ifdef XP_MACOSX
 // AssertMacros.h defines 'check' and conflicts with AccessCheck.h
@@ -1730,6 +1731,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
                                  const nsAString& aBody,
                                  const char *aURL, uint32_t aLineNo,
                                  uint32_t aVersion,
+                                 bool aIsXBL,
                                  nsScriptObjectHolder<JSObject>& aHandler)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
@@ -1773,6 +1775,11 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  // If this is an XBL function, make a note to that effect on its script.
+  if (aIsXBL) {
+    JS_SetScriptUserBit(JS_GetFunctionScript(mContext, fun), true);
+  }
+
   JSObject *handler = ::JS_GetFunctionObject(fun);
   return aHandler.set(handler);
 }
@@ -1789,6 +1796,7 @@ nsJSContext::CompileFunction(JSObject* aTarget,
                              uint32_t aLineNo,
                              uint32_t aVersion,
                              bool aShared,
+                             bool aIsXBL,
                              JSObject** aFunctionObject)
 {
   NS_ABORT_IF_FALSE(aFunctionObject,
@@ -1831,6 +1839,11 @@ nsJSContext::CompileFunction(JSObject* aTarget,
 
   if (!fun)
     return NS_ERROR_FAILURE;
+
+  // If this is an XBL function, make a note to that effect on its script.
+  if (aIsXBL) {
+    JS_SetScriptUserBit(JS_GetFunctionScript(mContext, fun), true);
+  }
 
   *aFunctionObject = JS_GetFunctionObject(fun);
   return NS_OK;
