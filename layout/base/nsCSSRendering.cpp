@@ -2283,7 +2283,6 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   gfxRect areaToFill =
     nsLayoutUtils::RectToGfxRect(aFillArea, appUnitsPerPixel);
   gfxMatrix ctm = ctx->CurrentMatrix();
-  bool isCTMPreservingAxisAlignedRectangles = ctm.PreservesAxisAlignedRectangles();
 
   // xStart/yStart are the top-left corner of the top-left tile.
   nscoord xStart = FindTileStart(dirty.x, aOneCellArea.x, aOneCellArea.width);
@@ -2303,30 +2302,27 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       gfxRect fillRect =
         pattern->mCoversTile ? areaToFill : tileRect.Intersect(areaToFill);
       ctx->NewPath();
-      // Try snapping the fill rect. Snap its top-left and bottom-right
-      // independently to preserve the orientation.
-      gfxPoint snappedFillRectTopLeft = fillRect.TopLeft();
-      gfxPoint snappedFillRectBottomRight = fillRect.BottomRight();
-      if (isCTMPreservingAxisAlignedRectangles &&
-          ctx->UserToDevicePixelSnapped(snappedFillRectTopLeft, true) &&
-          ctx->UserToDevicePixelSnapped(snappedFillRectBottomRight, true)) {
-        if (snappedFillRectTopLeft.x == snappedFillRectBottomRight.x ||
-            snappedFillRectTopLeft.y == snappedFillRectBottomRight.y) {
-          // Nothing to draw; avoid scaling by zero and other weirdness that
-          // could put the context in an error state.
-          continue;
-        }
-        // Set the context's transform to the transform that maps fillRect to
-        // snappedFillRect. The part of the gradient that was going to
-        // exactly fill fillRect will fill snappedFillRect instead.
+      // If we can snap the gradient tile and fill rects, do so, but make sure
+      // that the gradient is scaled precisely to the tile rect.
+      gfxRect fillRectSnapped = fillRect;
+      // Don't snap the tileRect directly since that would lose information
+      // about the orientation of the current transform (i.e. vertical or
+      // horizontal flipping). Instead snap the corners independently so if
+      // the CTM has a flip, our Scale() below preserves the flip.
+      gfxPoint tileRectSnappedTopLeft = tileRect.TopLeft();
+      gfxPoint tileRectSnappedBottomRight = tileRect.BottomRight();
+      if (ctx->UserToDevicePixelSnapped(fillRectSnapped, true) &&
+          ctx->UserToDevicePixelSnapped(tileRectSnappedTopLeft, true) &&
+          ctx->UserToDevicePixelSnapped(tileRectSnappedBottomRight, true)) {
         ctx->IdentityMatrix();
-        ctx->Translate(snappedFillRectTopLeft);
-        ctx->Scale((snappedFillRectBottomRight.x - snappedFillRectTopLeft.x)/fillRect.width,
-                   (snappedFillRectBottomRight.y - snappedFillRectTopLeft.y)/fillRect.height);
-        ctx->Translate(-fillRect.TopLeft());
+        ctx->Rectangle(fillRectSnapped);
+        ctx->Translate(tileRectSnappedTopLeft);
+        ctx->Scale((tileRectSnappedBottomRight.x - tileRectSnappedTopLeft.x)/tileRect.width,
+                   (tileRectSnappedBottomRight.y - tileRectSnappedTopLeft.y)/tileRect.height);
+      } else {
+        ctx->Rectangle(fillRect);
+        ctx->Translate(tileRect.TopLeft());
       }
-      ctx->Rectangle(fillRect);
-      ctx->Translate(tileRect.TopLeft());
       ctx->SetPattern(pattern->mPattern);
       ctx->Fill();
       ctx->SetMatrix(ctm);
