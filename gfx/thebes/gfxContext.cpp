@@ -207,7 +207,7 @@ gfxContext::Restore()
 
     mStateStack.RemoveElementAt(mStateStack.Length() - 1);
 
-    if (mPathBuilder || mPath || mPathIsRect) {
+    if ((mPathBuilder || mPath || mPathIsRect) && !mTransformChanged) {
       // Support here isn't fully correct if the path is continued -after-
       // the restore. We don't currently have users that do this and we should
       // make sure there will not be any. Sadly we can't assert this easily.
