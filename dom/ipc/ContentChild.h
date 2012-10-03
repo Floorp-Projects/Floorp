@@ -108,6 +108,11 @@ public:
     virtual bool
     RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* child);
 
+    virtual bool
+    RecvDumpMemoryReportsToFile(const nsString& identifier,
+                                const bool& aMinimizeMemoryUsage,
+                                const bool& aDumpChildProcesses);
+
     virtual PTestShellChild* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellChild*);
     virtual bool RecvPTestShellConstructor(PTestShellChild*);
