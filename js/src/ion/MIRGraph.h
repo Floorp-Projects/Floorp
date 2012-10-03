@@ -53,10 +53,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool inheritResumePoint(MBasicBlock *pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
-    // Does this block do something that forces it to terminate early?
-    bool earlyAbort_;
-
-
     // Sets a slot, taking care to rewrite copies.
     void setSlot(uint32 slot, MDefinition *ins);
 
@@ -88,15 +84,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void setId(uint32 id) {
         id_ = id;
     }
-    void setEarlyAbort() {
-        earlyAbort_ = true;
-    }
-    void clearEarlyAbort() {
-        earlyAbort_ = false;
-    }
-    bool earlyAbort() {
-        return earlyAbort_;
-    }
+
     // Move the definition to the top of the stack.
     void pick(int32 depth);
 
