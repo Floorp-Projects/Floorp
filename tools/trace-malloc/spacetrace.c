@@ -966,8 +966,8 @@ harvestRun(const STRun * aInRun, STRun * aOutRun,
                 LL_UI2L(bytesize64, bytesize);
                 LL_UI2L(lifetime64, lifetime);
                 LL_MUL(weight64, bytesize64, lifetime64);
-                if (LL_UCMP(weight64, <, aOptions->mWeightMin64) ||
-                    LL_UCMP(weight64, >, aOptions->mWeightMax64)) {
+                if (weight64 < aOptions->mWeightMin64 ||
+                    weight64 > aOptions->mWeightMax64) {
                     continue;
                 }
 
@@ -1109,10 +1109,10 @@ compareAllocations(const void *aAlloc1, const void *aAlloc2, void *aContext)
                             (alloc2->mMaxTimeval - alloc2->mMinTimeval));
                     LL_MUL(weight264, bytesize264, timeval264);
 
-                    if (LL_UCMP(weight164, <, weight264)) {
+                    if (weight164 < weight264) {
                         retval = __LINE__;
                     }
-                    else if (LL_UCMP(weight164, >, weight264)) {
+                    else if (weight164 > weight264) {
                         retval = -__LINE__;
                     }
                 }
@@ -3267,10 +3267,10 @@ compareCallsites(const void *aSite1, const void *aSite2, void *aContext)
                         uint64_t weight164 = stats1->mWeight64;
                         uint64_t weight264 = stats2->mWeight64;
 
-                        if (LL_UCMP(weight164, <, weight264)) {
+                        if (weight164 < weight264) {
                             retval = __LINE__;
                         }
-                        else if (LL_UCMP(weight164, >, weight264)) {
+                        else if (weight164 > weight264) {
                             retval = -__LINE__;
                         }
                     }
@@ -3295,10 +3295,10 @@ compareCallsites(const void *aSite1, const void *aSite2, void *aContext)
                         uint64_t timeval164 = stats1->mTimeval64;
                         uint64_t timeval264 = stats2->mTimeval64;
 
-                        if (LL_UCMP(timeval164, <, timeval264)) {
+                        if (timeval164 < timeval264) {
                             retval = __LINE__;
                         }
-                        else if (LL_UCMP(timeval164, >, timeval264)) {
+                        else if (timeval164 > timeval264) {
                             retval = -__LINE__;
                         }
                     }
@@ -4465,10 +4465,10 @@ graphWeight(STRequest * inRequest, STRun * aRun)
              ** Go through and find the minimum and maximum weights.
              */
             for (traverse = 0; traverse < STGD_SPACE_X; traverse++) {
-                if (LL_UCMP(YData64[traverse], <, minWeight64)) {
+                if (YData64[traverse] < minWeight64) {
                     minWeight64 = YData64[traverse];
                 }
-                if (LL_UCMP(YData64[traverse], >, maxWeight64)) {
+                if (YData64[traverse] > maxWeight64) {
                     maxWeight64 = YData64[traverse];
                 }
             }
