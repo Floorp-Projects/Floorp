@@ -498,6 +498,15 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
   Mutated();
 }
 
+void
+Layer::ApplyPendingUpdatesToSubtree()
+{
+  ApplyPendingUpdatesForThisTransaction();
+  for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
+    child->ApplyPendingUpdatesToSubtree();
+  }
+}
+
 bool
 Layer::CanUseOpaqueSurface()
 {
@@ -663,6 +672,16 @@ Layer::GetLocalTransform()
   }
   transform.ScalePost(mPostXScale, mPostYScale, 1.0f);
   return transform;
+}
+
+void
+Layer::ApplyPendingUpdatesForThisTransaction()
+{
+  if (mPendingTransform && *mPendingTransform != mTransform) {
+    mTransform = *mPendingTransform;
+    Mutated();
+  }
+  mPendingTransform = nullptr;
 }
 
 const float

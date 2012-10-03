@@ -552,6 +552,12 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       clipRect = ToOutsideIntRect(mTarget->GetClipExtents());
     }
 
+    if (aFlags & END_NO_COMPOSITE) {
+      // Apply pending tree updates before recomputing effective
+      // properties.
+      aLayer->ApplyPendingUpdatesToSubtree();
+    }
+
     // Need to do this before we call ApplyDoubleBuffering,
     // which depends on correct effective transforms
     mSnapEffectiveTransforms =
