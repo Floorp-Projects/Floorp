@@ -290,7 +290,7 @@ falling back to not using job objects for managing child processes"""
 
                 if MOZPROCESS_DEBUG:
                     print "DBG::MOZPROC Self.pid value is: %s" % self.pid
-                
+
                 while True:
                     msgid = c_ulong(0)
                     compkey = c_ulong(0)
@@ -311,8 +311,9 @@ falling back to not using job objects for managing child processes"""
                         # don't want to mistake that situation for the situation of an unexpected
                         # parent abort (which is what we're looking for here).
                         if diff.seconds > self.MAX_IOCOMPLETION_PORT_NOTIFICATION_DELAY:
-                            print >> sys.stderr, "Parent process exited without \
-                                                  killing children, attempting to kill children"
+                            print >> sys.stderr, "Parent process %s exited with children alive:" % self.pid
+                            print >> sys.stderr, "PIDS: %s" %  ', '.join(self._spawned_procs.keys())
+                            print >> sys.stderr, "Attempting to kill them..."
                             self.kill()
                             self._process_events.put({self.pid: 'FINISHED'})
 
