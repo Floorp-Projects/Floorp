@@ -2714,10 +2714,6 @@ RasterImage::ScaleWorker::RequestScale(RasterImage* aImg)
   if (request->isInList())
     return;
 
-  // While the request is outstanding, we hold a reference to it so it won't be
-  // deleted from under us (and, since it owns us, so we won't be deleted).
-  request->kungFuDeathGrip = request->image;
-
   mScaleRequests.insertBack(request);
 
   if (!sScaleWorkerThread) {
@@ -2762,10 +2758,6 @@ RasterImage::DrawWorker::Run()
       nsIntRect frameRect = request->srcFrame->GetRect();
       observer->FrameChanged(nullptr, request->image, &frameRect);
     }
-    if (request->done) {
-      // We are now done with this image, so we can release our reference.
-      // THIS CAN DELETE THE REQUEST!
-      request->kungFuDeathGrip = nullptr;
   }
 
   return NS_OK;
