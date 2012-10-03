@@ -210,12 +210,10 @@ function compare_files(test, sourcePath, destPath, prefix)
       sourceResult = source.read();
       destResult = dest.read();
     }
-    is(sourceResult.bytes, destResult.bytes, test + ": Both files have the same size");
-    let sourceView = new Uint8Array(sourceResult.buffer);
-    let destView = new Uint8Array(destResult.buffer);
-    for (let i = 0; i < sourceResult.bytes; ++i) {
-      if (sourceView[i] != destView[i]) {
-        is(sourceView[i] != destView[i], test + ": Comparing char " + i);
+    is(sourceResult.length, destResult.length, test + ": Both files have the same size");
+    for (let i = 0; i < sourceResult.length; ++i) {
+      if (sourceResult[i] != destResult[i]) {
+        is(sourceResult[i] != destResult[i], test + ": Comparing char " + i);
         break;
       }
     }
@@ -238,7 +236,7 @@ function test_readall_writeall_file()
   let dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
   let size = source.stat().size;
 
-  let buf = new ArrayBuffer(size);
+  let buf = new Uint8Array(size);
   let readResult = source.readTo(buf);
   is(readResult, size, "test_readall_writeall_file: read the right number of bytes");
 
@@ -284,33 +282,14 @@ function test_readall_writeall_file()
   let OFFSET = 12;
   let LEFT = size - OFFSET;
   buf = new ArrayBuffer(size);
+  let offset_view = new Uint8Array(buf, OFFSET);
   source = OS.File.open(src_file_name);
   dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
 
-  readResult = source.readTo(buf, {offset: OFFSET});
+  readResult = source.readTo(offset_view);
   is(readResult, LEFT, "test_readall_writeall_file: read the right number of bytes (with offset)");
 
-  dest.write(buf, {offset: OFFSET});
-  is(dest.stat().size, LEFT, "test_readall_writeall_file: wrote the right number of bytes (with offset)");
-
-  ok(true, "test_readall_writeall_file: copy complete (with offset)");
-  source.close();
-  dest.close();
-
-  compare_files("test_readall_writeall_file (with offset)", src_file_name, tmp_file_name, LEFT);
-  OS.File.remove(tmp_file_name);
-
-  // readTo, C buffer + offset
-  buf = new ArrayBuffer(size);
-  ptr = OS.Shared.Type.voidptr_t.implementation(buf);
-
-  source = OS.File.open(src_file_name);
-  dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
-
-  readResult = source.readTo(ptr, {bytes: LEFT, offset: OFFSET});
-  is(readResult, LEFT, "test_readall_writeall_file: read the right number of bytes (with offset)");
-
-  dest.write(ptr, {bytes: LEFT, offset: OFFSET});
+  dest.write(offset_view);
   is(dest.stat().size, LEFT, "test_readall_writeall_file: wrote the right number of bytes (with offset)");
 
   ok(true, "test_readall_writeall_file: copy complete (with offset)");
@@ -321,14 +300,14 @@ function test_readall_writeall_file()
   OS.File.remove(tmp_file_name);
 
   // read
-  buf = new ArrayBuffer(size);
+  buf = new Uint8Array(size);
   source = OS.File.open(src_file_name);
   dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
 
   readResult = source.read();
-  is(readResult.bytes, size, "test_readall_writeall_file: read the right number of bytes (auto allocation)");
+  is(readResult.length, size, "test_readall_writeall_file: read the right number of bytes (auto allocation)");
 
-  dest.write(readResult.buffer, {bytes: readResult.bytes});
+  dest.write(readResult);
 
   ok(true, "test_readall_writeall_file: copy complete (auto allocation)");
   source.close();
@@ -339,12 +318,11 @@ function test_readall_writeall_file()
 
   // File.readAll
   readResult = OS.File.read(src_file_name);
-  is(readResult.bytes, size, "test_readall_writeall_file: read the right number of bytes (OS.File.readAll)");
+  is(readResult.length, size, "test_readall_writeall_file: read the right number of bytes (OS.File.readAll)");
  
   // File.writeAtomic on top of nothing
-  OS.File.writeAtomic(tmp_file_name, readResult.buffer,
-    {bytes: readResult.bytes,
-     tmpPath: tmp_file_name + ".tmp"});
+  OS.File.writeAtomic(tmp_file_name, readResult,
+    {tmpPath: tmp_file_name + ".tmp"});
   try {
     let stat = OS.File.stat(tmp_file_name);
     ok(true, "readAll + writeAtomic created a file");
@@ -372,9 +350,8 @@ function test_readall_writeall_file()
   dest.setPosition(1234);
   dest.close();
 
-  OS.File.writeAtomic(tmp_file_name, readResult.buffer,
-    {bytes: readResult.bytes,
-     tmpPath: tmp_file_name + ".tmp"});
+  OS.File.writeAtomic(tmp_file_name, readResult,
+    {tmpPath: tmp_file_name + ".tmp"});
   compare_files("test_readall_writeall_file (OS.File.readAll + writeAtomic 2)",
                 src_file_name, tmp_file_name);
 
@@ -384,7 +361,7 @@ function test_readall_writeall_file()
   exn = null;
   try {
     OS.File.writeAtomic(tmp_file_name, readResult.buffer,
-      {bytes: readResult.bytes});
+      {bytes: readResult.length});
   } catch (x) {
     exn = x;
   }
@@ -407,7 +384,7 @@ function test_copy_existing_file()
   // Create a bogus file with arbitrary content, then attempt to overwrite
   // it with |copy|.
   let dest = OS.File.open(tmp_file_name, {trunc: true});
-  let buf = new ArrayBuffer(50);
+  let buf = new Uint8Array(50);
   dest.write(buf);
   dest.close();
 

@@ -18,6 +18,7 @@ let LOG = exports.OS.Shared.LOG.bind(OS.Shared, "Shared front-end");
 
 const noOptions = {};
 
+
 /**
  * Code shared by implementations of File.
  *
@@ -46,20 +47,19 @@ AbstractFile.prototype = {
    * @param {number=} bytes If unspecified, read all the remaining bytes from
    * this file. If specified, read |bytes| bytes, or less if the file does not
    * contain that many bytes.
-   * @return {buffer: ArrayBuffer, bytes: bytes} A buffer containing the
-   * bytes read and the number of bytes read. Note that |buffer| may be
-   * larger than the number of bytes actually read.
+   * @return {Uint8Array} An array containing the bytes read.
    */
   read: function read(bytes) {
     if (bytes == null) {
       bytes = this.stat().size;
     }
-    let buffer = new ArrayBuffer(bytes);
+    let buffer = new Uint8Array(bytes);
     let size = this.readTo(buffer, bytes);
-    return {
-      buffer: buffer,
-      bytes: size
-    };
+    if (size == bytes) {
+      return buffer;
+    } else {
+      return buffer.subarray(0, size);
+    }
   },
 
   /**
@@ -68,14 +68,11 @@ AbstractFile.prototype = {
    * Note that, by default, this function may perform several I/O
    * operations to ensure that the buffer is as full as possible.
    *
-   * @param {ArrayBuffer | C pointer} buffer The buffer in which to
-   * store the bytes. If options.offset is not given, bytes are stored
-   * from the start of the array. The buffer must be large enough to
+   * @param {Typed Array | C pointer} buffer The buffer in which to
+   * store the bytes. The buffer must be large enough to
    * accomodate |bytes| bytes.
    * @param {*=} options Optionally, an object that may contain the
    * following fields:
-   * - {number} offset The offset in |buffer| at which to start placing
-   * data
    * - {number} bytes The number of |bytes| to write from the buffer. If
    * unspecified, this is |buffer.byteLength|. Note that |bytes| is required
    * if |buffer| is a C pointer.
@@ -85,9 +82,7 @@ AbstractFile.prototype = {
    */
   readTo: function readTo(buffer, options) {
     options = options || noOptions;
-
-    let {ptr, bytes} = AbstractFile.normalizeToPointer(buffer, options.bytes,
-      options.offset);
+    let {ptr, bytes} = AbstractFile.normalizeToPointer(buffer, options.bytes);
     let pos = 0;
     while (pos < bytes) {
       let chunkSize = this._read(ptr, bytes - pos, options);
@@ -107,14 +102,11 @@ AbstractFile.prototype = {
    * Note that, by default, this function may perform several I/O
    * operations to ensure that the buffer is fully written.
    *
-   * @param {ArrayBuffer | C pointer} buffer The buffer in which the
-   * the bytes are stored. If options.offset is not given, bytes are stored
-   * from the start of the array. The buffer must be large enough to
+   * @param {Typed array | C pointer} buffer The buffer in which the
+   * the bytes are stored. The buffer must be large enough to
    * accomodate |bytes| bytes.
    * @param {*=} options Optionally, an object that may contain the
    * following fields:
-   * - {number} offset The offset in |buffer| at which to start extracting
-   * data
    * - {number} bytes The number of |bytes| to write from the buffer. If
    * unspecified, this is |buffer.byteLength|. Note that |bytes| is required
    * if |buffer| is a C pointer.
@@ -124,8 +116,7 @@ AbstractFile.prototype = {
   write: function write(buffer, options) {
     options = options || noOptions;
 
-    let {ptr, bytes} = AbstractFile.normalizeToPointer(buffer, options.bytes,
-      options.offset);
+    let {ptr, bytes} = AbstractFile.normalizeToPointer(buffer, options.bytes);
 
     let pos = 0;
     while (pos < bytes) {
@@ -138,27 +129,22 @@ AbstractFile.prototype = {
 };
 
 /**
- * Utility function used to normalize a ArrayBuffer or C pointer into a uint8_t
- * C pointer.
+ * Utility function used to normalize a Typed Array or C
+ * pointer into a uint8_t C pointer.
  *
  * Future versions might extend this to other data structures.
  *
- * @param {ArrayBuffer|C pointer} candidate Either an ArrayBuffer or a
- * non-null C pointer.
+ * @param {Typed array | C pointer} candidate The buffer. If
+ * a C pointer, it must be non-null.
  * @param {number} bytes The number of bytes that |candidate| should contain.
  * Used for sanity checking if the size of |candidate| can be determined.
- * @param {number=} offset Optionally, a number of bytes by which to shift
- * |candidate|.
  *
  * @return {ptr:{C pointer}, bytes:number} A C pointer of type uint8_t,
- * corresponding to the start of |candidate| + |offset| bytes.
+ * corresponding to the start of |candidate|.
  */
-AbstractFile.normalizeToPointer = function normalizeToPointer(candidate, bytes, offset) {
+AbstractFile.normalizeToPointer = function normalizeToPointer(candidate, bytes) {
   if (!candidate) {
-    throw new TypeError("Expecting a C pointer or an ArrayBuffer");
-  }
-  if (offset == null) {
-    offset = 0;
+    throw new TypeError("Expecting  a Typed Array or a C pointer");
   }
   let ptr;
   if ("isNull" in candidate) {
@@ -169,23 +155,20 @@ AbstractFile.normalizeToPointer = function normalizeToPointer(candidate, bytes, 
     if (bytes == null) {
       throw new TypeError("C pointer missing bytes indication.");
     }
-  } else if ("byteLength" in candidate) {
-    ptr = exports.OS.Shared.Type.uint8_t.out_ptr.implementation(candidate);
+  } else if (exports.OS.Shared.isTypedArray(candidate)) {
+    // Typed Array
+    ptr = exports.OS.Shared.Type.uint8_t.out_ptr.implementation(candidate.buffer);
     if (bytes == null) {
-      bytes = candidate.byteLength - offset;
-    }
-    if (candidate.byteLength < offset + bytes) {
+      bytes = candidate.byteLength;
+    } else if (candidate.byteLength < bytes) {
       throw new TypeError("Buffer is too short. I need at least " +
-                         (offset + bytes) +
+                         bytes +
                          " bytes but I have only " +
-                         buffer.byteLength +
+                         candidate.byteLength +
                           "bytes");
     }
   } else {
-    throw new TypeError("Expecting a C pointer or an ArrayBuffer");
-  }
-  if (offset != 0) {
-    ptr = exports.OS.Shared.offsetBy(ptr, offset);
+    throw new TypeError("Expecting  a Typed Array or a C pointer");
   }
   return {ptr: ptr, bytes: bytes};
 };
@@ -312,7 +295,7 @@ AbstractFile.normalizeOpenMode = function normalizeOpenMode(mode) {
  * @param {number=} bytes Optionally, an upper bound to the number of bytes
  * to read.
  *
- * @return {{buffer: ArrayBuffer, bytes: number}} A buffer holding the bytes
+ * @return {Uint8Array} A buffer holding the bytes
  * and the number of bytes read from the file.
  */
 AbstractFile.read = function read(path, bytes) {
@@ -335,13 +318,11 @@ AbstractFile.read = function read(path, bytes) {
  * is required. This requirement should disappear as part of bug 793660.
  *
  * @param {string} path The path of the file to modify.
- * @param {ArrayByffer} buffer A buffer containing the bytes to write.
+ * @param {Typed Array | C pointer} buffer A buffer containing the bytes to write.
  * @param {*=} options Optionally, an object determining the behavior
  * of this function. This object may contain the following fields:
- * - {number} offset The offset in |buffer| at which to start extracting
- * data. If unspecified, 0.
- * - {number} bytes The number of bytes to write. If unspecified, all
- * the bytes in |buffer|.
+ * - {number} bytes The number of bytes to write. If unspecified,
+ * |buffer.byteLength|. Required if |buffer| is a C pointer.
  * - {string} tmpPath The path at which to write the temporary file.
  *
  * @return {number} The number of bytes actually written.
@@ -351,7 +332,6 @@ AbstractFile.writeAtomic =
   options = options || noOptions;
 
   let tmpPath = options.tmpPath;
-
   if (!tmpPath) {
     throw new TypeError("Expected option tmpPath");
   }
