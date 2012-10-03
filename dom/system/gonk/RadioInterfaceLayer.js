@@ -1627,16 +1627,24 @@ RadioInterfaceLayer.prototype = {
    *        locking shift table string.
    * @param langShiftTable
    *        single shift table string.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
    *
    * @return encoded length in septets.
    *
    * @note that the algorithm used in this function must match exactly with
    * GsmPDUHelper#writeStringAsSeptets.
    */
-  _countGsm7BitSeptets: function _countGsm7BitSeptets(message, langTable, langShiftTable) {
+  _countGsm7BitSeptets: function _countGsm7BitSeptets(message, langTable, langShiftTable, strict7BitEncoding) {
     let length = 0;
     for (let msgIndex = 0; msgIndex < message.length; msgIndex++) {
-      let septet = langTable.indexOf(message.charAt(msgIndex));
+      let c = message.charAt(msgIndex);
+      if (strict7BitEncoding) {
+        c = RIL.GSM_SMS_STRICT_7BIT_CHARMAP[c] || c;
+      }
+
+      let septet = langTable.indexOf(c);
 
       // According to 3GPP TS 23.038, section 6.1.1 General notes, "The
       // characters marked '1)' are not used but are displayed as a space."
@@ -1649,7 +1657,7 @@ RadioInterfaceLayer.prototype = {
         continue;
       }
 
-      septet = langShiftTable.indexOf(message.charAt(msgIndex));
+      septet = langShiftTable.indexOf(c);
       if (septet < 0) {
         return -1;
       }
@@ -1678,6 +1686,9 @@ RadioInterfaceLayer.prototype = {
    *
    * @param message
    *        a message string to be encoded.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
    *
    * @return null or an options object with attributes `dcs`,
    *         `userDataHeaderLength`, `encodedFullBodyLength`, `langIndex`,
@@ -1685,7 +1696,7 @@ RadioInterfaceLayer.prototype = {
    *
    * @see #_calculateUserDataLength().
    */
-  _calculateUserDataLength7Bit: function _calculateUserDataLength7Bit(message) {
+  _calculateUserDataLength7Bit: function _calculateUserDataLength7Bit(message, strict7BitEncoding) {
     let options = null;
     let minUserDataSeptets = Number.MAX_VALUE;
     for (let i = 0; i < this.enabledGsmTableTuples.length; i++) {
@@ -1696,7 +1707,8 @@ RadioInterfaceLayer.prototype = {
 
       let bodySeptets = this._countGsm7BitSeptets(message,
                                                   langTable,
-                                                  langShiftTable);
+                                                  langShiftTable,
+                                                  strict7BitEncoding);
       if (bodySeptets < 0) {
         continue;
       }
@@ -1739,6 +1751,7 @@ RadioInterfaceLayer.prototype = {
         langIndex: langIndex,
         langShiftIndex: langShiftIndex,
         segmentMaxSeq: segments,
+        strict7BitEncoding: strict7BitEncoding
       };
     }
 
@@ -1786,6 +1799,9 @@ RadioInterfaceLayer.prototype = {
    *
    * @param message
    *        a message string to be encoded.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
    *
    * @return an options object with some or all of following attributes set:
    *
@@ -1809,8 +1825,8 @@ RadioInterfaceLayer.prototype = {
    *        This number might not be accurate for a multi-part message until
    *        it's processed by #_fragmentText() again.
    */
-  _calculateUserDataLength: function _calculateUserDataLength(message) {
-    let options = this._calculateUserDataLength7Bit(message);
+  _calculateUserDataLength: function _calculateUserDataLength(message, strict7BitEncoding) {
+    let options = this._calculateUserDataLength7Bit(message, strict7BitEncoding);
     if (!options) {
       options = this._calculateUserDataLengthUCS2(message);
     }
@@ -1834,16 +1850,24 @@ RadioInterfaceLayer.prototype = {
    *        single shift table string.
    * @param headerLen
    *        Length of prepended user data header.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
    *
    * @return an array of objects. See #_fragmentText() for detailed definition.
    */
-  _fragmentText7Bit: function _fragmentText7Bit(text, langTable, langShiftTable, headerLen) {
+  _fragmentText7Bit: function _fragmentText7Bit(text, langTable, langShiftTable, headerLen, strict7BitEncoding) {
     const headerSeptets = Math.ceil((headerLen ? headerLen + 1 : 0) * 8 / 7);
     const segmentSeptets = RIL.PDU_MAX_USER_DATA_7BIT - headerSeptets;
     let ret = [];
     let begin = 0, len = 0;
     for (let i = 0, inc = 0; i < text.length; i++) {
-      let septet = langTable.indexOf(text.charAt(i));
+      let c = text.charAt(i);
+      if (strict7BitEncoding) {
+        c = RIL.GSM_SMS_STRICT_7BIT_CHARMAP[c] || c;
+      }
+
+      let septet = langTable.indexOf(c);
       if (septet == RIL.PDU_NL_EXTENDED_ESCAPE) {
         continue;
       }
@@ -1851,7 +1875,7 @@ RadioInterfaceLayer.prototype = {
       if (septet >= 0) {
         inc = 1;
       } else {
-        septet = langShiftTable.indexOf(text.charAt(i));
+        septet = langShiftTable.indexOf(c);
         if (septet < 0) {
           throw new Error("Given text cannot be encoded with GSM 7-bit Alphabet!");
         }
@@ -1922,12 +1946,15 @@ RadioInterfaceLayer.prototype = {
    * @param options
    *        Optional pre-calculated option object. The output array will be
    *        stored at options.segments if there are multiple segments.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
    *
    * @return Populated options object.
    */
-  _fragmentText: function _fragmentText(text, options) {
+  _fragmentText: function _fragmentText(text, options, strict7BitEncoding) {
     if (!options) {
-      options = this._calculateUserDataLength(text);
+      options = this._calculateUserDataLength(text, strict7BitEncoding);
     }
 
     if (options.segmentMaxSeq <= 1) {
@@ -1940,7 +1967,8 @@ RadioInterfaceLayer.prototype = {
       const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[options.langShiftIndex];
       options.segments = this._fragmentText7Bit(options.fullBody,
                                                 langTable, langShiftTable,
-                                                options.userDataHeaderLength);
+                                                options.userDataHeaderLength,
+                                                options.strict7BitEncodingEncoding);
     } else {
       options.segments = this._fragmentTextUCS2(options.fullBody,
                                                 options.userDataHeaderLength);
@@ -1953,18 +1981,31 @@ RadioInterfaceLayer.prototype = {
   },
 
   getNumberOfMessagesForText: function getNumberOfMessagesForText(text) {
-    return this._fragmentText(text).segmentMaxSeq;
+    let strict7BitEncoding;
+    try {
+      strict7BitEncoding = Services.prefs.getBoolPref("dom.sms.strict7BitEncoding");
+    } catch (e) {
+      strict7BitEncoding = false;
+    }
+    return this._fragmentText(text, null, strict7BitEncoding).segmentMaxSeq;
   },
 
   sendSMS: function sendSMS(number, message, requestId, processId) {
-    let options = this._calculateUserDataLength(message);
+    let strict7BitEncoding;
+    try {
+      strict7BitEncoding = Services.prefs.getBoolPref("dom.sms.strict7BitEncoding");
+    } catch (e) {
+      strict7BitEncoding = false;
+    }
+
+    let options = this._calculateUserDataLength(message, strict7BitEncoding);
     options.rilMessageType = "sendSMS";
     options.number = number;
     options.requestId = requestId;
     options.processId = processId;
     options.requestStatusReport = true;
 
-    this._fragmentText(message, options);
+    this._fragmentText(message, options, strict7BitEncoding);
     if (options.segmentMaxSeq > 1) {
       options.segmentRef16Bit = this.segmentRef16Bit;
       options.segmentRef = this.nextSegmentRef;
