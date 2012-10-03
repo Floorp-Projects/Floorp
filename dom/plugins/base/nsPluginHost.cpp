@@ -2063,7 +2063,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
     if (pluginTag) {
       seenBefore = true;
       // If plugin changed, delete cachedPluginTag and don't use cache
-      if (LL_NE(fileModTime, pluginTag->mLastModifiedTime)) {
+      if (fileModTime != pluginTag->mLastModifiedTime) {
         // Plugins has changed. Don't use cached plugin info.
         enabled = (pluginTag->Flags() & NS_PLUGIN_FLAG_ENABLED) != 0;
         pluginTag = nullptr;
