@@ -1113,6 +1113,17 @@ LIRGenerator::visitRegExp(MRegExp *ins)
 }
 
 bool
+LIRGenerator::visitRegExpTest(MRegExpTest *ins)
+{
+    JS_ASSERT(ins->regexp()->type() == MIRType_Object);
+    JS_ASSERT(ins->string()->type() == MIRType_String);
+
+    LRegExpTest *lir = new LRegExpTest(useRegisterAtStart(ins->regexp()),
+                                       useRegisterAtStart(ins->string()));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitLambda(MLambda *ins)
 {
     if (ins->fun()->hasSingletonType() || types::UseNewTypeForClone(ins->fun())) {

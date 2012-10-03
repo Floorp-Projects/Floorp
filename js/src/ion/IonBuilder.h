@@ -387,6 +387,9 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineStrFromCharCode(uint32 argc, bool constructing);
     InliningStatus inlineStrCharAt(uint32 argc, bool constructing);
 
+    // RegExp natives.
+    InliningStatus inlineRegExpTest(uint32 argc, bool constructing);
+
     InliningStatus inlineNativeCall(JSNative native, uint32 argc, bool constructing);
 
     bool jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
