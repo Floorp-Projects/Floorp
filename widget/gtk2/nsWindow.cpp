@@ -2067,8 +2067,22 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     // window.
     region.And(region, nsIntRect(0, 0, mBounds.width, mBounds.height));
 
-    bool translucent = eTransparencyTransparent == GetTransparencyMode();
-    if (!translucent) {
+    bool shaped = false;
+    if (eTransparencyTransparent == GetTransparencyMode()) {
+        GdkScreen *screen = gdk_window_get_screen(mGdkWindow);
+        if (gdk_screen_is_composited(screen) &&
+            gdk_window_get_visual(mGdkWindow) ==
+            gdk_screen_get_rgba_visual(screen)) {
+            // Remove possible shape mask from when window manger was not
+            // previously compositing.
+            static_cast<nsWindow*>(GetTopLevelWidget())->
+                ClearTransparencyBitmap();
+        } else {
+            shaped = true;
+        }
+    }
+
+    if (!shaped) {
         GList *children =
             gdk_window_peek_children(mGdkWindow);
         while (children) {
@@ -2138,10 +2152,10 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 #endif
 
 #ifdef MOZ_X11
-    nsIntRect boundsRect; // for translucent only
+    nsIntRect boundsRect; // for shaped only
 
     ctx->NewPath();
-    if (translucent) {
+    if (shaped) {
         // Collapse update area to the bounding box. This is so we only have to
         // call UpdateTranslucentWindowAlpha once. After we have dropped
         // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
@@ -2155,7 +2169,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     ctx->Clip();
 
     BufferMode layerBuffering;
-    if (translucent) {
+    if (shaped) {
         // The double buffering is done here to extract the shape mask.
         // (The shape mask won't be necessary when a visual with an alpha
         // channel is used on compositing window managers.)
@@ -2195,7 +2209,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 #ifdef MOZ_X11
     // PaintWindow can Destroy us (bug 378273), avoid doing any paint
     // operations below if that happened - it will lead to XError and exit().
-    if (translucent) {
+    if (shaped) {
         if (NS_LIKELY(!mIsDestroyed)) {
             if (painted) {
                 nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
