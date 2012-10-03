@@ -142,38 +142,6 @@ function onUnload()
   }
 }
 
-// For maximum effect, this returns to the event loop between each
-// notification.  See bug 610166 comment 12 for an explanation.
-// Ideally a single notification would be enough.
-function minimizeMemoryUsage3x(fAfter)
-{
-  let i = 0;
-
-  function runSoon(f)
-  {
-    let tm = Cc["@mozilla.org/thread-manager;1"]
-              .getService(Ci.nsIThreadManager);
-
-    tm.mainThread.dispatch({ run: f }, Ci.nsIThread.DISPATCH_NORMAL);
-  }
-
-  function sendHeapMinNotificationsInner()
-  {
-    let os = Cc["@mozilla.org/observer-service;1"]
-             .getService(Ci.nsIObserverService);
-    os.notifyObservers(null, "memory-pressure", "heap-minimize");
-
-    if (++i < 3) {
-      runSoon(sendHeapMinNotificationsInner);
-    } else {
-      os.notifyObservers(null, "after-minimize-memory-usage", "about:memory");
-      runSoon(fAfter);
-    }
-  }
-
-  sendHeapMinNotificationsInner();
-}
-
 //---------------------------------------------------------------------------
 
 /**
@@ -545,7 +513,7 @@ function appendAboutMemoryFooter(aBody)
   appendButton(div1, GCDesc, doGlobalGC,        "GC");
   appendButton(div1, CCDesc, doCC,              "CC");
   appendButton(div1, MPDesc,
-               function() { minimizeMemoryUsage3x(updateAboutMemory); },
+               function() { gMgr.minimizeMemoryUsage(updateAboutMemory); },
                "Minimize memory usage");
 
   // The standard file input element is ugly.  So we hide it, and add a button
@@ -1499,7 +1467,7 @@ function onLoadAboutCompartments()
   // is loaded, which makes test_aboutcompartments.xul more reliable (see bug
   // 729018 for details).
   updateAboutCompartments();
-  minimizeMemoryUsage3x(
+  gMgr.minimizeMemoryUsage(
     function() { addChildObserversAndUpdate(updateAboutCompartments); });
 }
 
