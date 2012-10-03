@@ -2505,7 +2505,7 @@ class MMul : public MBinaryArithInstruction
     }
 
     bool canBeNegativeZero() {
-        if (range()->lower() >= 0 && range()->upper() >= 0)
+        if (range()->lower() > 0 || range()->upper() < 0)
             return false;
         return canBeNegativeZero_;
     }
@@ -2608,11 +2608,16 @@ class MMod : public MBinaryArithInstruction
     bool recomputeRange() {
         if (specialization() != MIRType_Int32)
             return false;
-        Range *other = getOperand(0)->range();
-        int64_t a = Range::abs64((int64_t)other->lower());
-        int64_t b = Range::abs64((int64_t)other->upper());
-        Range r(Min(-a+1, -b+1),
-                Max( a-1,  b-1));
+        Range *rhs = getOperand(1)->range();
+        int64_t a = Range::abs64((int64_t)rhs->lower());
+        int64_t b = Range::abs64((int64_t)rhs->upper());
+        if (a ==0 && b == 0) {
+            // We should never take something % 0.
+            Range r(INT_MIN, INT_MAX);
+            return range()->update(r);
+        }
+        int64_t bound = Max(1-a, b-1);
+        Range r(-bound, bound);
         return range()->update(r);
     }
 };
