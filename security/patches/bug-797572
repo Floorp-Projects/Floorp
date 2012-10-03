@@ -1,0 +1,17 @@
+diff --git a/security/nss/lib/ssl/ssl.def b/security/nss/lib/ssl/ssl.def
+--- a/security/nss/lib/ssl/ssl.def
++++ b/security/nss/lib/ssl/ssl.def
+@@ -146,11 +146,13 @@ SSL_AuthCertificateComplete;
+ DTLS_GetHandshakeTimeout;
+ DTLS_ImportFD;
+ SSL_ExportKeyingMaterial;
+ SSL_VersionRangeGet;
+ SSL_VersionRangeGetDefault;
+ SSL_VersionRangeGetSupported;
+ SSL_VersionRangeSet;
+ SSL_VersionRangeSetDefault;
++SSL_GetSRTPCipher;
++SSL_SetSRTPCiphers;
+ ;+    local:
+ ;+*;
+ ;+};
