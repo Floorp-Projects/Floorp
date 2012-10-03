@@ -10,6 +10,7 @@ const Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 function ContentPermissionPrompt() {}
 
@@ -72,7 +73,7 @@ ContentPermissionPrompt.prototype = {
     // When it's an app, get the manifest to add the l10n application name.
     let app = DOMApplicationRegistry.getAppByLocalId(principal.appId);
     DOMApplicationRegistry.getManifestFor(app.origin, function getManifest(aManifest) {
-      let helper = new DOMApplicationManifest(aManifest, app.origin);
+      let helper = new ManifestHelper(aManifest, app.origin);
       details.appName = helper.name;
       browser.shell.sendChromeEvent(details);
     });

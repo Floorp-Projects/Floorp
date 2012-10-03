@@ -9,7 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-let EXPORTED_SYMBOLS = ["DOMApplicationRegistry", "DOMApplicationManifest"];
+let EXPORTED_SYMBOLS = ["DOMApplicationRegistry"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -327,7 +327,7 @@ let DOMApplicationRegistry = {
       return;
     }
 
-    let manifest = new DOMApplicationManifest(aManifest, aApp.origin);
+    let manifest = new ManifestHelper(aManifest, aApp.origin);
     let launchPath = Services.io.newURI(manifest.fullLaunchPath(aEntryPoint), null, null);
     let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
     root.messages.forEach(function registerPages(aMessage) {
@@ -367,7 +367,7 @@ let DOMApplicationRegistry = {
       return;
     }
 
-    let manifest = new DOMApplicationManifest(aManifest, aApp.origin);
+    let manifest = new ManifestHelper(aManifest, aApp.origin);
     for (let activity in root.activities) {
       let description = root.activities[activity];
       if (!description.href) {
@@ -719,7 +719,7 @@ let DOMApplicationRegistry = {
         return;
       }
 
-      let manifest = new DOMApplicationManifest(aJSON, app.origin);
+      let manifest = new ManifestHelper(aJSON, app.origin);
       this.downloadPackage(manifest, { manifestURL: aManifestURL,
                                        origin: app.origin }, true,
         function(aId, aManifest) {
@@ -813,8 +813,7 @@ let DOMApplicationRegistry = {
   function installPermissions(aAppObject, aData, aIsReinstall)
   {
     try {
-      let newManifest = new DOMApplicationManifest(aData.app.manifest,
-                                                   aData.app.origin);
+      let newManifest = new ManifestHelper(aData.app.manifest, aData.app.origin);
       if (!newManifest.permissions && !aIsReinstall) {
         return;
       }
@@ -915,7 +914,7 @@ let DOMApplicationRegistry = {
 
     function updatePackagedApp(aManifest) {
       debug("updatePackagedApp");
-      let manifest = new DOMApplicationManifest(aManifest, app.manifestURL);
+      let manifest = new ManifestHelper(aManifest, app.manifestURL);
       // A package is available: set downloadAvailable to fire the matching
       // event.
       app.downloadAvailable = true;
@@ -949,7 +948,7 @@ let DOMApplicationRegistry = {
       manFile.append("manifest.webapp");
       this._writeFile(manFile, JSON.stringify(aManifest), function() { });
 
-      let manifest = new DOMApplicationManifest(aManifest, app.origin);
+      let manifest = new ManifestHelper(aManifest, app.origin);
 
       if (manifest.appcache_path) {
         app.installState = "updating";
@@ -1090,7 +1089,7 @@ let DOMApplicationRegistry = {
     let jsonManifest = aData.isPackage ? app.updateManifest : app.manifest;
     this._writeFile(manFile, JSON.stringify(jsonManifest), function() { });
 
-    let manifest = new DOMApplicationManifest(jsonManifest, app.origin);
+    let manifest = new ManifestHelper(jsonManifest, app.origin);
 
     if (manifest.appcache_path) {
       appObject.installState = "pending";
@@ -1138,7 +1137,7 @@ let DOMApplicationRegistry = {
     if (manifest.package_path) {
       // origin for install apps is meaningless here, since it's app:// and this
       // can't be used to resolve package paths.
-      manifest = new DOMApplicationManifest(jsonManifest, app.manifestURL);
+      manifest = new ManifestHelper(jsonManifest, app.manifestURL);
       this.downloadPackage(manifest, appObject, false, function(aId, aManifest) {
         // Success! Move the zip out of TmpD.
         let app = DOMApplicationRegistry.webapps[id];
@@ -1833,133 +1832,6 @@ AppcacheObserver.prototype = {
 
   applicationCacheAvailable: function appObs_CacheAvail(aApplicationCache) {
     // Nothing to do.
-  }
-};
-
-/**
- * Helper object to access manifest information with locale support
- */
-let DOMApplicationManifest = function(aManifest, aOrigin) {
-  this._origin = Services.io.newURI(aOrigin, null, null);
-  this._manifest = aManifest;
-  let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry)
-                                                          .QueryInterface(Ci.nsIToolkitChromeRegistry);
-  let locale = chrome.getSelectedLocale("browser").toLowerCase();
-  this._localeRoot = this._manifest;
-
-  if (this._manifest.locales && this._manifest.locales[locale]) {
-    this._localeRoot = this._manifest.locales[locale];
-  }
-  else if (this._manifest.locales) {
-    // try with the language part of the locale ("en" for en-GB) only
-    let lang = locale.split('-')[0];
-    if (lang != locale && this._manifest.locales[lang])
-      this._localeRoot = this._manifest.locales[lang];
-  }
-};
-
-DOMApplicationManifest.prototype = {
-  _localeProp: function(aProp) {
-    if (this._localeRoot[aProp] != undefined)
-      return this._localeRoot[aProp];
-    return this._manifest[aProp];
-  },
-
-  get name() {
-    return this._localeProp("name");
-  },
-
-  get description() {
-    return this._localeProp("description");
-  },
-
-  get version() {
-    return this._localeProp("version");
-  },
-
-  get launch_path() {
-    return this._localeProp("launch_path");
-  },
-
-  get developer() {
-    return this._localeProp("developer");
-  },
-
-  get icons() {
-    return this._localeProp("icons");
-  },
-
-  get appcache_path() {
-    return this._localeProp("appcache_path");
-  },
-
-  get orientation() {
-    return this._localeProp("orientation");
-  },
-
-  get package_path() {
-    return this._localeProp("package_path");
-  },
-
-  get size() {
-    return this._manifest["size"] || 0;
-  },
-
-  get permissions() {
-    if (this._manifest.permissions) {
-      return this._manifest.permissions;
-    }
-    return {};
-  },
-
-  iconURLForSize: function(aSize) {
-    let icons = this._localeProp("icons");
-    if (!icons)
-      return null;
-    let dist = 100000;
-    let icon = null;
-    for (let size in icons) {
-      let iSize = parseInt(size);
-      if (Math.abs(iSize - aSize) < dist) {
-        icon = this._origin.resolve(icons[size]);
-        dist = Math.abs(iSize - aSize);
-      }
-    }
-    return icon;
-  },
-
-  fullLaunchPath: function(aStartPoint) {
-    // If no start point is specified, we use the root launch path.
-    // In all error cases, we just return null.
-    if ((aStartPoint || "") === "") {
-      return this._origin.resolve(this._localeProp("launch_path") || "");
-    }
-
-    // Search for the l10n entry_points property.
-    let entryPoints = this._localeProp("entry_points");
-    if (!entryPoints) {
-      return null;
-    }
-
-    if (entryPoints[aStartPoint]) {
-      return this._origin.resolve(entryPoints[aStartPoint].launch_path || "");
-    }
-
-    return null;
-  },
-
-  resolveFromOrigin: function(aURI) {
-    return this._origin.resolve(aURI);
-  },
-
-  fullAppcachePath: function() {
-    let appcachePath = this._localeProp("appcache_path");
-    return this._origin.resolve(appcachePath ? appcachePath : "");
-  },
-
-  fullPackagePath: function() {
-    let packagePath = this._localeProp("package_path");
-    return this._origin.resolve(packagePath ? packagePath : "");
   }
 };
 
