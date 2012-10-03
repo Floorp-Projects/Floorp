@@ -59,7 +59,7 @@ function testLocationChange()
       ok(true, "tabNavigated event was fired.");
       info("Still attached to the tab.");
 
-      gDebugger.addEventListener("Debugger:AfterNewScript", function _onEvent(aEvent) {
+      gDebugger.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
         gDebugger.removeEventListener(aEvent.type, _onEvent);
 
         isnot(gDebugger.DebuggerView.Scripts.selected, null,
