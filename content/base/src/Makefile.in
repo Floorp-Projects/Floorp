@@ -137,6 +137,14 @@ CPPSRCS		= \
 		nsMixedContentBlocker.cpp \
 		$(NULL)
 
+ifdef MOZ_WEBRTC
+EXPORTS += nsDOMDataChannel.h
+CPPSRCS += nsDOMDataChannel.cpp
+LOCAL_INCLUDES += \
+		-I$(topsrcdir)/netwerk/sctp/datachannel \
+		$(NULL)
+endif
+
 # Are we targeting x86-32 or x86-64?  If so, we want to include SSE2 code for
 # nsTextFragment.cpp
 ifneq (,$(INTEL_ARCHITECTURE))
