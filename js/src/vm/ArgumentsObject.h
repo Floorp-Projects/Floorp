@@ -190,7 +190,7 @@ class ArgumentsObject : public JSObject
      */
     inline size_t sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const;
 
-    static void finalize(FreeOp *fop, JSObject *obj);
+    static void finalize(FreeOp *fop, RawObject obj);
     static void trace(JSTracer *trc, RawObject obj);
 
     /* For jit use: */

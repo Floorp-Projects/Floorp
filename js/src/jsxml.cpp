@@ -7844,7 +7844,7 @@ xmlfilter_trace(JSTracer *trc, RawObject obj)
 }
 
 static void
-xmlfilter_finalize(FreeOp *fop, JSObject *obj)
+xmlfilter_finalize(FreeOp *fop, RawObject obj)
 {
     JSXMLFilter *filter = (JSXMLFilter *) obj->getPrivate();
     if (!filter)

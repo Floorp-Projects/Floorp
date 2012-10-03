@@ -1479,7 +1479,7 @@ Debugger::detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
 }
 
 void
-Debugger::finalize(FreeOp *fop, JSObject *obj)
+Debugger::finalize(FreeOp *fop, RawObject obj)
 {
     Debugger *dbg = fromJSObject(obj);
     if (!dbg)

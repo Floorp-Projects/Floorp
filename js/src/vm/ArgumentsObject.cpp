@@ -394,7 +394,7 @@ strictargs_enumerate(JSContext *cx, HandleObject obj)
 }
 
 void
-ArgumentsObject::finalize(FreeOp *fop, JSObject *obj)
+ArgumentsObject::finalize(FreeOp *fop, RawObject obj)
 {
     fop->free_(reinterpret_cast<void *>(obj->asArguments().data()));
 }

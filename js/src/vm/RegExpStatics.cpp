@@ -21,7 +21,7 @@ using namespace js;
  */
 
 static void
-resc_finalize(FreeOp *fop, JSObject *obj)
+resc_finalize(FreeOp *fop, RawObject obj)
 {
     RegExpStatics *res = static_cast<RegExpStatics *>(obj->getPrivate());
     fop->delete_(res);
