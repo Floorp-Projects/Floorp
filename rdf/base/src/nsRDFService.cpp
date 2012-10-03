@@ -257,7 +257,7 @@ struct DateHashEntry : public PLDHashEntryHdr {
         const DateHashEntry *entry =
             static_cast<const DateHashEntry *>(hdr);
 
-        return LL_EQ(*static_cast<const PRTime *>(key), entry->mKey);
+        return *static_cast<const PRTime *>(key) == entry->mKey;
     }
 };
 
