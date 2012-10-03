@@ -1605,6 +1605,9 @@ pref("layout.css.devPixelsPerPx", "-1.0");
 // Is support for the the @supports rule enabled?
 pref("layout.css.supports-rule.enabled", true);
 
+// Is support for CSS Flexbox enabled?
+pref("layout.css.flexbox.enabled", false);
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
