@@ -13,6 +13,12 @@
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
+struct SharedImageInfo {
+    PRInt32 width;
+    PRInt32 height;
+    PRInt32 format;
+};
+
 class THEBES_API gfxSharedImageSurface : public gfxImageSurface {
     typedef mozilla::ipc::SharedMemory SharedMemory;
     typedef mozilla::ipc::Shmem Shmem;
@@ -61,6 +67,8 @@ public:
     Shmem& GetShmem() { return mShmem; }
 
     static bool IsSharedImage(gfxASurface *aSurface);
+
+    static SharedImageInfo* GetShmInfoPtr(const Shmem& aShmem);
 
 private:
     gfxSharedImageSurface(const gfxIntSize&, gfxImageFormat, const Shmem&);

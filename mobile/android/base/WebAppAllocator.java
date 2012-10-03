@@ -123,10 +123,14 @@ public class WebAppAllocator {
         return index;
     }
 
-    public synchronized void releaseIndex(int index) {
-        mPrefs.edit()
-            .remove(appKey(index))
-            .remove(iconKey(index))
-            .apply();
+    public synchronized void releaseIndex(final int index) {
+        GeckoBackgroundThread.getHandler().post(new Runnable() {
+            public void run() {
+                mPrefs.edit()
+                    .remove(appKey(index))
+                    .remove(iconKey(index))
+                    .commit();
+            }
+        });
     }
 }

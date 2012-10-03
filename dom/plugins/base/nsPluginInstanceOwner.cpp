@@ -22,9 +22,6 @@
 #include "gfxXlibSurface.h"
 /* X headers suck */
 enum { XKeyPress = KeyPress };
-#ifdef KeyPress
-#undef KeyPress
-#endif
 #include "mozilla/X11Util.h"
 using mozilla::DefaultXDisplay;
 #endif
@@ -395,7 +392,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 #endif
 
   if (mInstance) {
-    mInstance->InvalidateOwner();
+    mInstance->SetOwner(nullptr);
   }
 }
 
@@ -412,10 +409,10 @@ nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
   NS_ASSERTION(!mInstance || !aInstance, "mInstance should only be set or unset!");
 
   // If we're going to null out mInstance after use, be sure to call
-  // mInstance->InvalidateOwner() here, since it now won't be called
+  // mInstance->SetOwner(nullptr) here, since it now won't be called
   // from our destructor.  This fixes bug 613376.
   if (mInstance && !aInstance) {
-    mInstance->InvalidateOwner();
+    mInstance->SetOwner(nullptr);
 
 #ifdef MOZ_WIDGET_ANDROID
     RemovePluginView();
@@ -1939,7 +1936,7 @@ nsresult nsPluginInstanceOwner::Text(nsIDOMEvent* aTextEvent)
 }
 #endif
 
-nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
+nsresult nsPluginInstanceOwner::ProcessKeyPress(nsIDOMEvent* aKeyEvent)
 {
 #ifdef XP_MACOSX
 #ifndef NP_NO_CARBON
@@ -2009,7 +2006,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 }    
 
 nsresult
-nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
+nsPluginInstanceOwner::ProcessMouseDown(nsIDOMEvent* aMouseEvent)
 {
 #if !defined(XP_MACOSX)
   if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow))
@@ -2076,7 +2073,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
     return DispatchFocusToPlugin(aEvent);
   }
   if (eventType.EqualsLiteral("mousedown")) {
-    return MouseDown(aEvent);
+    return ProcessMouseDown(aEvent);
   }
   if (eventType.EqualsLiteral("mouseup")) {
     // Don't send a mouse-up event to the plugin if it isn't focused.  This can
@@ -2101,7 +2098,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
     return DispatchKeyToPlugin(aEvent);
   }
   if (eventType.EqualsLiteral("keypress")) {
-    return KeyPress(aEvent);
+    return ProcessKeyPress(aEvent);
   }
 #if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
   if (eventType.EqualsLiteral("text")) {

@@ -3482,36 +3482,42 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
   // Let all our features know the new status.
   NotifyFeatures(aCx, aStatus);
 
-  // There's nothing to do here if we never succeeded in running the worker
-  // script or if the close handler has already run.
-  if (!JS_GetGlobalObject(aCx) || mCloseHandlerFinished) {
+  // If this is the first time our status has changed then we need to clear the
+  // main event queue.
+  if (previousStatus == Running) {
+    MutexAutoLock lock(mMutex);
+    ClearQueue(&mQueue);
+  }
+
+  // If we've run the close handler, we don't need to do anything else.
+  if (mCloseHandlerFinished) {
     return true;
   }
 
-  // If this is the first time our status has changed then we need to clear the
-  // main event queue. We also need to schedule the close handler unless we're
-  // being shut down.
-  if (previousStatus == Running) {
+  // If the worker script never ran, or failed to compile, we don't need to do
+  // anything else, except pretend that we ran the close handler.
+  if (!JS_GetGlobalObject(aCx)) {
+    mCloseHandlerStarted = true;
+    mCloseHandlerFinished = true;
+    return true;
+  }
+
+  // If this is the first time our status has changed we also need to schedule
+  // the close handler unless we're being shut down.
+  if (previousStatus == Running && aStatus != Killing) {
     NS_ASSERTION(!mCloseHandlerStarted && !mCloseHandlerFinished,
                  "This is impossible!");
 
-    {
-      MutexAutoLock lock(mMutex);
-      ClearQueue(&mQueue);
+    nsRefPtr<CloseEventRunnable> closeRunnable = new CloseEventRunnable(this);
+
+    MutexAutoLock lock(mMutex);
+
+    if (!mQueue.Push(closeRunnable)) {
+      NS_WARNING("Failed to push closeRunnable!");
+      return false;
     }
 
-    if (aStatus != Killing) {
-      nsRefPtr<CloseEventRunnable> closeRunnable = new CloseEventRunnable(this);
-
-      MutexAutoLock lock(mMutex);
-
-      if (!mQueue.Push(closeRunnable)) {
-        NS_WARNING("Failed to push closeRunnable!");
-        return false;
-      }
-
-      closeRunnable.forget();
-    }
+    closeRunnable.forget();
   }
 
   if (aStatus == Closing) {

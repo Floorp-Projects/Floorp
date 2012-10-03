@@ -1489,8 +1489,6 @@ namespace mozilla {
     }
 
     void CleanUpWidgetTracing() {
-        if (sTracerRunnable)
-            delete sTracerRunnable;
         sTracerRunnable = nullptr;
     }
 
