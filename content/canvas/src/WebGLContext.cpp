@@ -41,11 +41,13 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "mozilla/dom/BindingUtils.h"
 
 #include "Layers.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 NS_IMPL_ISUPPORTS1(WebGLMemoryPressureObserver, nsIObserver)
@@ -89,7 +91,6 @@ WebGLContext::WebGLContext()
     : gl(nullptr)
 {
     SetIsDOMBinding();
-    mExtensions.SetLength(WebGLExtensionID_number_of_extensions);
 
     mGeneration = 0;
     mInvalidated = false;
@@ -914,6 +915,11 @@ WebGLContext::GetContextAttributes(ErrorResult &rv)
     return obj;
 }
 
+bool
+WebGLContext::IsExtensionEnabled(WebGLExtensionID ext) {
+    return mExtensions.SafeElementAt(ext);
+}
+
 /* [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname); */
 NS_IMETHODIMP
 WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
@@ -999,8 +1005,8 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext)
     return isSupported;
 }
 
-nsIWebGLExtension*
-WebGLContext::GetExtension(const nsAString& aName)
+JSObject*
+WebGLContext::GetExtension(JSContext *cx, const nsAString& aName)
 {
     if (!IsContextStable())
         return nullptr;
@@ -1011,93 +1017,100 @@ WebGLContext::GetExtension(const nsAString& aName)
 
     WebGLExtensionID ext = WebGLExtensionID_unknown_extension;
 
+    // step 1: figure what extension is wanted
     if (aName.Equals(NS_LITERAL_STRING("OES_texture_float"),
         nsCaseInsensitiveStringComparator()))
     {
-        if (IsExtensionSupported(OES_texture_float))
-            ext = OES_texture_float;
+        ext = OES_texture_float;
     }
     else if (aName.Equals(NS_LITERAL_STRING("OES_standard_derivatives"),
              nsCaseInsensitiveStringComparator()))
     {
-        if (IsExtensionSupported(OES_standard_derivatives))
-            ext = OES_standard_derivatives;
+        ext = OES_standard_derivatives;
     }
     else if (aName.Equals(NS_LITERAL_STRING("EXT_texture_filter_anisotropic"),
              nsCaseInsensitiveStringComparator()))
     {
-        if (IsExtensionSupported(EXT_texture_filter_anisotropic))
-            ext = EXT_texture_filter_anisotropic;
+        ext = EXT_texture_filter_anisotropic;
     }
     else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"),
              nsCaseInsensitiveStringComparator()))
     {
-        if (IsExtensionSupported(WEBGL_lose_context))
-            ext = WEBGL_lose_context;
+        ext = WEBGL_lose_context;
     }
     else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_s3tc"),
              nsCaseInsensitiveStringComparator()))
     {
-        if (IsExtensionSupported(WEBGL_compressed_texture_s3tc))
-            ext = WEBGL_compressed_texture_s3tc;
+        ext = WEBGL_compressed_texture_s3tc;
     }
     else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_atc"),
              nsCaseInsensitiveStringComparator()))
     {
-        if (IsExtensionSupported(WEBGL_compressed_texture_atc))
-            ext = WEBGL_compressed_texture_atc;
+        ext = WEBGL_compressed_texture_atc;
     }
     else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_pvrtc"),
              nsCaseInsensitiveStringComparator()))
     {
-        if (IsExtensionSupported(WEBGL_compressed_texture_pvrtc))
-            ext = WEBGL_compressed_texture_pvrtc;
+        ext = WEBGL_compressed_texture_pvrtc;
     }
     else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"),
              nsCaseInsensitiveStringComparator()))
     {
-        if (IsExtensionSupported(WEBGL_depth_texture))
-            ext = WEBGL_depth_texture;
+        ext = WEBGL_depth_texture;
     }
 
     if (ext == WebGLExtensionID_unknown_extension) {
       return nullptr;
     }
 
-    if (!mExtensions[ext]) {
-        switch (ext) {
-            case OES_standard_derivatives:
-                mExtensions[ext] = new WebGLExtensionStandardDerivatives(this);
-                break;
-            case EXT_texture_filter_anisotropic:
-                mExtensions[ext] = new WebGLExtensionTextureFilterAnisotropic(this);
-                break;
-            case WEBGL_lose_context:
-                mExtensions[ext] = new WebGLExtensionLoseContext(this);
-                break;
-            case WEBGL_compressed_texture_s3tc:
-                mExtensions[ext] = new WebGLExtensionCompressedTextureS3TC(this);
-                break;
-            case WEBGL_compressed_texture_atc:
-                mExtensions[ext] = new WebGLExtensionCompressedTextureATC(this);
-                break;
-            case WEBGL_compressed_texture_pvrtc:
-                mExtensions[ext] = new WebGLExtensionCompressedTexturePVRTC(this);
-                break;
-            case WEBGL_depth_texture:
-                mExtensions[ext] = new WebGLExtensionDepthTexture(this);
-                break;
-            default:
-                // create a generic WebGLExtension object for any extensions that don't
-                // have any additional tokens or methods. We still need these to be separate
-                // objects in case the user might extend the corresponding JS objects with custom
-                // properties.
-                mExtensions[ext] = new WebGLExtension(this);
-                break;
-        }
+    // step 2: check if the extension is supported
+    if (!IsExtensionSupported(ext)) {
+        return nullptr;
     }
 
-    return mExtensions[ext];
+    // step 3: if the extension hadn't been previously been created, create it now, thus enabling it
+    if (!IsExtensionEnabled(ext)) {
+        WebGLExtensionBase *obj = nullptr;
+        switch (ext) {
+            case OES_standard_derivatives:
+                obj = new WebGLExtensionStandardDerivatives(this);
+                break;
+            case EXT_texture_filter_anisotropic:
+                obj = new WebGLExtensionTextureFilterAnisotropic(this);
+                break;
+            case WEBGL_lose_context:
+                obj = new WebGLExtensionLoseContext(this);
+                break;
+            case WEBGL_compressed_texture_s3tc:
+                obj = new WebGLExtensionCompressedTextureS3TC(this);
+                break;
+            case WEBGL_compressed_texture_atc:
+                obj = new WebGLExtensionCompressedTextureATC(this);
+                break;
+            case WEBGL_compressed_texture_pvrtc:
+                obj = new WebGLExtensionCompressedTexturePVRTC(this);
+                break;
+            case WEBGL_depth_texture:
+                obj = new WebGLExtensionDepthTexture(this);
+                break;
+            case OES_texture_float:
+                obj = new WebGLExtensionTextureFloat(this);
+                break;
+            default:
+                MOZ_ASSERT(false, "should not get there.");
+        }
+        mExtensions.EnsureLengthAtLeast(ext + 1);
+        mExtensions[ext] = obj;
+    }
+
+    // step 4: return the extension as a JS object
+    JS::Value v;
+    JSObject* wrapper = GetWrapper();
+    JSAutoCompartment ac(cx, wrapper);
+    if (!WrapNewBindingObject(cx, wrapper, mExtensions[ext], &v)) {
+        return nullptr;
+    }
+    return &v.toObject();
 }
 
 void
@@ -1506,22 +1519,6 @@ NAME_NOT_SUPPORTED(WebGLProgram)
 NAME_NOT_SUPPORTED(WebGLShader)
 NAME_NOT_SUPPORTED(WebGLFramebuffer)
 NAME_NOT_SUPPORTED(WebGLRenderbuffer)
-
-// WebGLExtension
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLExtension)
-  
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLExtension)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtension)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtension)
-NS_INTERFACE_MAP_END 
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLExtension)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLExtension)
-
-DOMCI_DATA(WebGLExtension, WebGLExtension)
 
 /* readonly attribute WebGLint size; */
 NS_IMETHODIMP
