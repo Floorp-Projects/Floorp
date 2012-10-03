@@ -5,6 +5,7 @@
 
 
 #include "nsStringEnumerator.h"
+#include "prtypes.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
