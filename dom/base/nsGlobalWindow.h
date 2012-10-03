@@ -1094,11 +1094,6 @@ protected:
   // destroying this window).
   bool                          mDialogsPermanentlyDisabled;
 
-  // Temporary booleans to know if we are currently observing network blips.
-  // Will be hopefully removed after bug 795703.
-  bool mObservingNetworkUpload;
-  bool mObservingNetworkDownload;
-
   nsRefPtr<nsDOMMozURLProperty> mURLProperty;
 
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
