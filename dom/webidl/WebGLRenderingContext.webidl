@@ -70,7 +70,11 @@ interface WebGLUniformLocation {
 
 interface WebGLActiveInfo;
 
-interface WebGLShaderPrecisionFormat;
+interface WebGLShaderPrecisionFormat {
+    readonly attribute GLint rangeMin;
+    readonly attribute GLint rangeMax;
+    readonly attribute GLint precision;
+};
 
 interface WebGLRenderingContext {
 
@@ -602,7 +606,10 @@ interface WebGLRenderingContext {
     DOMString? getProgramInfoLog(WebGLProgram? program);
     any getRenderbufferParameter(GLenum target, GLenum pname);
     any getShaderParameter(WebGLShader? shader, GLenum pname);
+
+    [Creator]
     WebGLShaderPrecisionFormat? getShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype);
+
     DOMString? getShaderInfoLog(WebGLShader? shader);
 
     DOMString? getShaderSource(WebGLShader? shader);
