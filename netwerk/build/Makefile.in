@@ -45,6 +45,7 @@ endif
 ifdef MOZ_SCTP
 SHARED_LIBRARY_LIBS += \
   ../sctp/src/$(LIB_PREFIX)nksctp_s.$(LIB_SUFFIX) \
+  ../sctp/datachannel/$(LIB_PREFIX)nkdatachan_s.$(LIB_SUFFIX) \
   $(NULL)
 endif
 
