@@ -3440,19 +3440,39 @@ nsWindow::Create(nsIWidget        *aParent,
 
             // Popups that are not noautohide are only temporary. The are used
             // for menus and the like and disappear when another window is used.
+            // For most popups, use the standard GtkWindowType GTK_WINDOW_POPUP,
+            // which will use a Window with the override-redirect attribute
+            // (for temporary windows).
+            // For long-lived windows, their stacking order is managed by the
+            // window manager, as indicated by GTK_WINDOW_TOPLEVEL ...
+            GtkWindowType type = aInitData->mNoAutoHide ?
+                                     GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
+            mShell = gtk_window_new(type);
+            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup",
+                                   gdk_get_program_class());
+            
             if (!aInitData->mNoAutoHide) {
-                // For most popups, use the standard GtkWindowType
-                // GTK_WINDOW_POPUP, which will use a Window with the
-                // override-redirect attribute (for temporary windows).
-                mShell = gtk_window_new(GTK_WINDOW_POPUP);
-                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", 
-                                       gdk_get_program_class());
+                GdkScreen *screen = gtk_widget_get_screen(mShell);
+                // Use an RGBA visual for all short-lived popup windows if
+                // we are on a compositing window manager. We don't do this in
+                // SetTransparencyMode() because it has to be done before the
+                // widget is realized.
+                // Normally we would need to hook up to the screen's
+                // "composited-changed" signal, but we don't do that because
+                // we are only changing the visual on short-lived windows,
+                // so it doesn't matter too much if the screens compositor
+                // goes away
+                if (gdk_screen_is_composited(screen)) {
+#if defined(MOZ_WIDGET_GTK2)
+                    GdkColormap *colormap =
+                        gdk_screen_get_rgba_colormap(screen);
+                    gtk_widget_set_colormap(mShell, colormap);
+#else
+                    GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
+                    gtk_widget_set_visual(mShell, visual);
+#endif
+                }
             } else {
-                // For long-lived windows, their stacking order is managed by
-                // the window manager, as indicated by GTK_WINDOW_TOPLEVEL ...
-                mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", 
-                                       gdk_get_program_class());
                 // ... but the window manager does not decorate this window,
                 // nor provide a separate taskbar icon.
                 if (mBorderStyle == eBorderStyle_default) {
