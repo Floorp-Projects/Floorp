@@ -387,6 +387,7 @@ pref("dom.ipc.browser_frames.oop_by_default", false);
 
 // Temporary permission hack for WebSMS
 pref("dom.sms.enabled", true);
+pref("dom.sms.strict7BitEncoding", false); // Disabled by default.
 
 // Temporary permission hack for WebContacts
 pref("dom.mozContacts.enabled", true);
