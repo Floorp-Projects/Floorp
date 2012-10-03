@@ -511,7 +511,6 @@ private:
     static void Stop(RasterImage* aImg);
 
     RasterImage* const image;
-    nsRefPtr<RasterImage> kungFuDeathGrip;
     imgFrame *srcFrame;
     nsAutoPtr<imgFrame> dstFrame;
     gfxSize scale;
