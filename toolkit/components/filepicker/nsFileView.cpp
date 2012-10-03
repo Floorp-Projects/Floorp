@@ -934,7 +934,7 @@ SortSizeCallback(const void* aElement1, const void* aElement2, void* aContext)
   file1->GetFileSize(&size1);
   file2->GetFileSize(&size2);
 
-  if (LL_EQ(size1, size2))
+  if (size1 == size2)
     return 0;
 
   return (LL_CMP(size1, <, size2) ? -1 : 1);
@@ -950,7 +950,7 @@ SortDateCallback(const void* aElement1, const void* aElement2, void* aContext)
   file1->GetLastModifiedTime(&time1);
   file2->GetLastModifiedTime(&time2);
 
-  if (LL_EQ(time1, time2))
+  if (time1 == time2)
     return 0;
 
   return (LL_CMP(time1, <, time2) ? -1 : 1);

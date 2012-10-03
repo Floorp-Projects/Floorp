@@ -1989,7 +1989,7 @@ struct CompareFilesByTime
   bool
   Equals(const nsCOMPtr<nsIFile>& a, const nsCOMPtr<nsIFile>& b) const
   {
-    return LL_EQ(GetPluginLastModifiedTime(a), GetPluginLastModifiedTime(b));
+    return GetPluginLastModifiedTime(a) == GetPluginLastModifiedTime(b);
   }
 };
 
@@ -2194,7 +2194,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
     
     // Don't add the same plugin again if it hasn't changed
     if (nsPluginTag* duplicate = FirstPluginWithPath(pluginTag->mFullPath)) {
-      if (LL_EQ(pluginTag->mLastModifiedTime, duplicate->mLastModifiedTime)) {
+      if (pluginTag->mLastModifiedTime == duplicate->mLastModifiedTime) {
         continue;
       }
     }
