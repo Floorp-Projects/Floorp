@@ -909,24 +909,6 @@ static struct exnname { char *name; char *exception; } errortoexnname[] = {
 };
 #endif /* DEBUG */
 
-struct AutoSetGeneratingError
-{
-    JSContext *cx;
-
-    AutoSetGeneratingError(JSContext *cx)
-        : cx(cx)
-    {
-        JS_ASSERT(!cx->generatingError);
-        cx->generatingError = true;
-    }
-
-    ~AutoSetGeneratingError()
-    {
-        JS_ASSERT(cx->generatingError);
-        cx->generatingError = false;
-    }
-};
-
 JSBool
 js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
                     JSErrorCallback callback, void *userRef)
