@@ -34,3 +34,6 @@
   direction: ltr;
 }
 
+.gcli-row-out .nowrap {
+  white-space: nowrap;
+}
