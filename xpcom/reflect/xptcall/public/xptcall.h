@@ -14,6 +14,7 @@
 # define NS_InvokeByIndex      NS_InvokeByIndex_P
 #endif
 
+#include "prtypes.h"
 #include "nscore.h"
 #include "nsISupports.h"
 #include "xpt_struct.h"

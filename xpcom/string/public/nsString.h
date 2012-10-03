@@ -21,9 +21,6 @@
 #include "nsReadableUtils.h"
 #endif
 
-// For PRUnichar
-#include "prtypes.h"
-
 #include NEW_H
 
   // enable support for the obsolete string API if not explicitly disabled
