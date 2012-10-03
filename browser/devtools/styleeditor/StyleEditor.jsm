@@ -375,6 +375,10 @@ StyleEditor.prototype = {
       this._friendlyName = (sheetURI.indexOf(contentURI) == 0)
                            ? sheetURI.substring(contentURI.length)
                            : sheetURI;
+      try {
+        this._friendlyName = decodeURI(this._friendlyName);
+      } catch (ex) {
+      }
     }
     return this._friendlyName;
   },
