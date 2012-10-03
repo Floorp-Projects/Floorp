@@ -30,6 +30,7 @@ XPIDLSRCS = \
 
 EXPORTS = \
   nsCacheService.h \
+  nsApplicationCacheService.h \
   $(NULL)
 
 CPPSRCS = \
