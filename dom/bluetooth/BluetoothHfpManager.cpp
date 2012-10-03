@@ -15,6 +15,7 @@
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
 #include "nsIAudioManager.h"
 #include "nsIObserverService.h"
@@ -30,14 +31,18 @@
 #define BLUETOOTH_SCO_STATUS_CHANGED "bluetooth-sco-status-changed"
 #define AUDIO_VOLUME_MASTER "audio.volume.master"
 
-USING_BLUETOOTH_NAMESPACE
+using namespace mozilla;
 using namespace mozilla::ipc;
+USING_BLUETOOTH_NAMESPACE
 
-static nsRefPtr<BluetoothHfpManager> sInstance = nullptr;
-static nsCOMPtr<nsIThread> sHfpCommandThread;
-static bool sStopSendingRingFlag = true;
+namespace {
+  StaticRefPtr<BluetoothHfpManager> gBluetoothHfpManager;
+  bool gInShutdown = false;
+  static nsCOMPtr<nsIThread> sHfpCommandThread;
+  static bool sStopSendingRingFlag = true;
 
-static int kRingInterval = 3000000;  //unit: us
+  static int kRingInterval = 3000000;  //unit: us
+} // anonymous namespace
 
 NS_IMPL_ISUPPORTS1(BluetoothHfpManager, nsIObserver)
 
@@ -54,7 +59,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
 
     while (!sStopSendingRingFlag) {
-      sInstance->SendLine("RING");
+      gBluetoothHfpManager->SendLine("RING");
 
       usleep(kRingInterval);
     }
@@ -114,25 +119,46 @@ BluetoothHfpManager::BluetoothHfpManager()
   , mCurrentCallIndex(0)
   , mCurrentCallState(nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED)
 {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+}
 
-  if (obs && NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
+bool
+BluetoothHfpManager::Init()
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE(obs, false);
+
+  if (NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
     NS_WARNING("Failed to add settings change observer!");
+  }
+
+  if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
+    NS_WARNING("Failed to add shutdown observer!");
+    return false;
   }
 
   mListener = new BluetoothRilListener();
   if (!mListener->StartListening()) {
     NS_WARNING("Failed to start listening RIL");
+    return false;
   }
 
   if (!sHfpCommandThread) {
     if (NS_FAILED(NS_NewThread(getter_AddRefs(sHfpCommandThread)))) {
       NS_ERROR("Failed to new thread for sHfpCommandThread");
+      return false;
     }
   }
+
+  return true;
 }
 
 BluetoothHfpManager::~BluetoothHfpManager()
+{
+  Cleanup();
+}
+
+void
+BluetoothHfpManager::Cleanup()
 {
   if (!mListener->StopListening()) {
     NS_WARNING("Failed to stop listening RIL");
@@ -147,6 +173,13 @@ BluetoothHfpManager::~BluetoothHfpManager()
       NS_WARNING("Failed to shut down the bluetooth hfpmanager command thread!");
     }
   }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs &&
+      (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
+       NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)))) {
+    NS_WARNING("Can't unregister observers!");
+  }
 }
 
 //static
@@ -155,11 +188,28 @@ BluetoothHfpManager::Get()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (sInstance == nullptr) {
-    sInstance = new BluetoothHfpManager();
+  // If we already exist, exit early
+  if (gBluetoothHfpManager) {
+    return gBluetoothHfpManager;
   }
 
-  return sInstance;
+  // If we're in shutdown, don't create a new instance
+  if (gInShutdown) {
+    NS_WARNING("BluetoothHfpManager can't be created during shutdown");
+    return nullptr;
+  }
+
+  // Create new instance, register, return
+  nsRefPtr<BluetoothHfpManager> manager = new BluetoothHfpManager();
+  NS_ENSURE_TRUE(manager, nullptr);
+
+  if (!manager->Init()) {
+    manager->Cleanup();
+    return nullptr;
+  }
+
+  gBluetoothHfpManager = manager;
+  return gBluetoothHfpManager;
 }
 
 bool
@@ -315,15 +365,27 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
 }
 
 nsresult
+BluetoothHfpManager::HandleShutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  gInShutdown = true;
+  Cleanup();
+  gBluetoothHfpManager = nullptr;
+  return NS_OK;
+}
+
+nsresult
 BluetoothHfpManager::Observe(nsISupports* aSubject,
                              const char* aTopic,
                              const PRUnichar* aData)
 {
   if (!strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
     return HandleVolumeChanged(nsDependentString(aData));
-  } else {
-    MOZ_ASSERT(false, "BluetoothHfpManager got unexpected topic!");
+  } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    return HandleShutdown();
   }
+
+  MOZ_ASSERT(false, "BluetoothHfpManager got unexpected topic!");
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -424,6 +486,11 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceObjectPath,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (gInShutdown) {
+    MOZ_ASSERT(false, "Connect called while in shutdown!");
+    return false;
+  }
+
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
     NS_WARNING("BluetoothService not available!");
@@ -452,6 +519,11 @@ bool
 BluetoothHfpManager::Listen()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (gInShutdown) {
+    MOZ_ASSERT(false, "Listen called while in shutdown!");
+    return false;
+  }
 
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
