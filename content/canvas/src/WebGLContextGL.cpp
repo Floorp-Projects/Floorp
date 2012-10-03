@@ -4491,7 +4491,7 @@ WebGLContext::GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precision
     gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
 
     WebGLShaderPrecisionFormat *retShaderPrecisionFormat
-        = new WebGLShaderPrecisionFormat(range[0], range[1], precision);
+        = new WebGLShaderPrecisionFormat(this, range[0], range[1], precision);
     NS_ADDREF(retShaderPrecisionFormat);
     return retShaderPrecisionFormat;
 }

@@ -3063,19 +3063,32 @@ protected:
 };
 
 class WebGLShaderPrecisionFormat MOZ_FINAL
-    : public nsIWebGLShaderPrecisionFormat
+    : public nsISupports
+    , public WebGLContextBoundObject
 {
 public:
-    WebGLShaderPrecisionFormat(WebGLint rangeMin, WebGLint rangeMax, WebGLint precision) :
+    WebGLShaderPrecisionFormat(WebGLContext *context, WebGLint rangeMin, WebGLint rangeMax, WebGLint precision) :
+        WebGLContextBoundObject(context),
         mRangeMin(rangeMin),
         mRangeMax(rangeMax),
         mPrecision(precision)
     {
-    
     }
 
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
+
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLSHADERPRECISIONFORMAT
+
+    // WebIDL WebGLShaderPrecisionFormat API
+    WebGLint RangeMin() const {
+        return mRangeMin;
+    }
+    WebGLint RangeMax() const {
+        return mRangeMax;
+    }
+    WebGLint Precision() const {
+        return mPrecision;
+    }
 
 protected:
     WebGLint mRangeMin;
