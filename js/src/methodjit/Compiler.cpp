@@ -866,6 +866,22 @@ MakeJITScript(JSContext *cx, JSScript *script)
                     }
                 }
                 currentEdges.clear();
+
+                /*
+                 * A loop's LOOPHEAD instruction is usually marked as safepoint if
+                 * either:
+                 *   (1) The whole loop is contained in a single chunk and tracked
+                 *       in the compiler (see shouldStartLoop).
+                 *   (2) The loop's backedge and LOOPHEAD are in different chunks.
+                 *
+                 * If a while loop follows an unreachable op, we may insert a chunk
+                 * boundary between the loop's initial GOTO and LOOPHEAD. In this
+                 * case we have to explicitly mark the LOOPHEAD as safepoint since
+                 * both of these conditions don't apply.
+                 */
+                jsbytecode *nextpc = script->code + nextOffset;
+                if (JSOp(*nextpc) == JSOP_LOOPHEAD)
+                    analysis->getCode(chunkStart).safePoint = true;
             }
         }
 
@@ -2031,9 +2047,6 @@ mjit::Compiler::generateMethod()
 {
     SrcNoteLineScanner scanner(script_->notes(), script_->lineno);
 
-    /* For join points, whether there was fallthrough from the previous opcode. */
-    bool fallthrough = true;
-
     /* Last bytecode processed. */
     jsbytecode *lastPC = NULL;
 
@@ -2081,6 +2094,9 @@ mjit::Compiler::generateMethod()
                 frame.pushSynced(JSVAL_TYPE_UNKNOWN);
         }
     }
+
+    /* For join points, whether there was fallthrough from the previous opcode. */
+    bool fallthrough = (chunkIndex == 0 || analysis->maybeCode(PC)->fallthrough);
 
     for (;;) {
         JSOp op = JSOp(*PC);
@@ -7098,6 +7114,18 @@ mjit::Compiler::finishLoop(jsbytecode *head)
 {
     if (!cx->typeInferenceEnabled() || !bytecodeInChunk(head))
         return true;
+
+    /*
+     * Edge case: for a while loop, the initial GOTO and LOOPHEAD following it
+     * may be in different chunks. In that case bytecodeInChunk(head) may be
+     * true, but we didn't track this loop, since the GOTO is in the previous
+     * chunk.
+     */
+    if (!loop) {
+        JS_ASSERT(chunkIndex > 0);
+        JS_ASSERT(head - outerScript->code == outerChunk.begin);
+        return true;
+    }
 
     /*
      * We're done processing the current loop. Every loop has exactly one backedge
