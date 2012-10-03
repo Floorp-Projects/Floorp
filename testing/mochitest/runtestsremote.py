@@ -199,6 +199,7 @@ class MochiRemote(Mochitest):
         self.remoteProfile = options.remoteTestRoot + "/profile"
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
+        self.localLog = options.logFile
 
     def cleanup(self, manifest, options):
         self._dm.getFile(self.remoteLog, self.localLog)
@@ -441,7 +442,7 @@ def main():
         options.extraPrefs.append('robocop.logfile="%s/robocop.log"' % deviceRoot)
 
         if (options.dm_trans == 'adb' and options.robocopPath):
-          dm.checkCmd(["install", "-r", os.path.join(options.robocopPath, "robocop.apk")])
+          dm._checkCmd(["install", "-r", os.path.join(options.robocopPath, "robocop.apk")])
 
         appname = options.app
         retVal = None
