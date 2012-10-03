@@ -659,7 +659,15 @@ DrawTargetCairo::Mask(const Pattern &aSource,
                       const DrawOptions &aOptions /* = DrawOptions() */)
 {
   AutoPrepareForDrawing prep(this, mContext);
-  // TODO
+
+  cairo_pattern_t* source = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
+  cairo_set_source(mContext, source);
+
+  cairo_pattern_t* mask = GfxPatternToCairoPattern(aMask, aOptions.mAlpha);
+  cairo_mask(mContext, mask);
+
+  cairo_pattern_destroy(mask);
+  cairo_pattern_destroy(source);
 }
 
 void
