@@ -288,6 +288,7 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mUseClipRect(false),
   mUseTileSourceRect(false),
   mIsFixedPosition(false),
+  mHasPendingMutationForNextTransaction(false),
   mDebugColorIndex(0)
 {}
 
