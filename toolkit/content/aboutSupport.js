@@ -178,6 +178,28 @@ let snapshotFormatters = {
     );
     $.append($("libversions-tbody"), trs);
   },
+
+  syncService: function syncService(data) {
+    if (data.isEnabled) {
+      let contents = document.getElementById("contents");
+      let disabledTable = document.getElementById("sync-disabled-table");
+      contents.removeChild(disabledTable);
+
+      let trs = [];
+      for (let [name, val] of sortedArrayFromObject(data.prefs)) {
+          trs.push($.new("tr", [
+            $.new("td", name),
+            $.new("td", val),
+          ]));
+      }
+      $.append($("sync-tbody"), trs);
+    }
+    else {
+      let contents = document.getElementById("contents");
+      let enabledTable = document.getElementById("sync-enabled-table");
+      contents.removeChild(enabledTable);
+    }
+  }
 };
 
 let $ = document.getElementById.bind(document);
