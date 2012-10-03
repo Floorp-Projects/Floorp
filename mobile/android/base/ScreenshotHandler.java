@@ -83,8 +83,15 @@ public final class ScreenshotHandler implements Runnable {
     }
 
     private void cleanup() {
-        discardPendingScreenshots();
-        mBuffer = DirectBufferAllocator.free(mBuffer);
+        synchronized (mPendingScreenshots) {
+            if (mPendingScreenshots.isEmpty()) {
+                // no screenshots are pending, its safe to free the buffer
+                mBuffer = DirectBufferAllocator.free(mBuffer);
+            } else {
+                discardPendingScreenshots();
+                mBuffer = null;
+            }
+        }
     }
 
     // Invoked via reflection from robocop test
@@ -294,7 +301,7 @@ public final class ScreenshotHandler implements Runnable {
     }
 
     // Called from native code by JNI
-    public static void notifyScreenShot(final ByteBuffer data, final int tabId,
+    synchronized public static void notifyScreenShot(final ByteBuffer data, final int tabId,
                                         final int left, final int top,
                                         final int right, final int bottom,
                                         final int bufferWidth, final int bufferHeight, final int token) {
@@ -305,6 +312,8 @@ public final class ScreenshotHandler implements Runnable {
                     {
                         ScreenshotHandler handler = getInstance();
                         if (handler == null) {
+                            // if the handler is null, we have a stale reference to the buffer, free it
+                            DirectBufferAllocator.free(data);
                             break;
                         }
                         if (Tabs.getInstance().getSelectedTab().getId() == tabId) {
