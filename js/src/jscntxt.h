@@ -1355,9 +1355,6 @@ struct JSContext : js::ContextFriendFields
     /* State for object and array toSource conversion. */
     js::ObjectSet       cycleDetectorSet;
 
-    /* Last message string and log file for debugging. */
-    char                *lastMessage;
-
     /* Per-context optional error reporter. */
     JSErrorReporter     errorReporter;
 
