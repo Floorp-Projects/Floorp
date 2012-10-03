@@ -4554,7 +4554,7 @@ prop_iter_finalize(FreeOp *fop, JSObject *obj)
 }
 
 static void
-prop_iter_trace(JSTracer *trc, JSObject *obj)
+prop_iter_trace(JSTracer *trc, RawObject obj)
 {
     void *pdata = obj->getPrivate();
     if (!pdata)

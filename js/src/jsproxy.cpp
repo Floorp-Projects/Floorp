@@ -2818,7 +2818,7 @@ proxy_DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 }
 
 static void
-proxy_TraceObject(JSTracer *trc, JSObject *obj)
+proxy_TraceObject(JSTracer *trc, RawObject obj)
 {
 #ifdef DEBUG
     if (!trc->runtime->gcDisableStrictProxyCheckingCount && obj->isWrapper()) {
@@ -2843,7 +2843,7 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 }
 
 static void
-proxy_TraceFunction(JSTracer *trc, JSObject *obj)
+proxy_TraceFunction(JSTracer *trc, RawObject obj)
 {
     // NB: If you add new slots here, make sure to change
     // js::NukeChromeCrossCompartmentWrappers to cope.
