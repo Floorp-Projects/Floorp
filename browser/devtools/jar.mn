@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-    content/browser/inspector.html                (highlighter/inspector.html)
     content/browser/devtools/markup-view.xhtml    (markupview/markup-view.xhtml)
     content/browser/devtools/markup-view.css      (markupview/markup-view.css)
     content/browser/NetworkPanel.xhtml            (webconsole/NetworkPanel.xhtml)
