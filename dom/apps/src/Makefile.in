@@ -21,12 +21,12 @@ EXTRA_PP_COMPONENTS = \
 
 EXTRA_PP_JS_MODULES += \
   Webapps.jsm \
-  AppsServiceChild.jsm \
-  AppsUtils.jsm \
   $(NULL)
 
 EXTRA_JS_MODULES += \
-  PermissionsTable.jsm \
+  AppsServiceChild.jsm \
+  AppsUtils.jsm \
+  PermissionsInstaller.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

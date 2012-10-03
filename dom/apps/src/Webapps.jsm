@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import("resource://gre/modules/AppsUtils.jsm");
-Cu.import("resource://gre/modules/PermissionsTable.jsm");
+Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 
 function debug(aMsg) {
   //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
@@ -24,28 +24,10 @@ function debug(aMsg) {
 
 const WEBAPP_RUNTIME = Services.appinfo.ID == "webapprt@mozilla.org";
 
-// Permission access flags
-const READONLY = "readonly";
-const CREATEONLY = "createonly";
-const READCREATE = "readcreate";
-const READWRITE = "readwrite";
-
-const PERM_TO_STRING = ["unknown", "allow", "deny", "prompt"];
-
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "PermSettings",
-                                   "@mozilla.org/permissionSettings;1",
-                                   "nsIDOMPermissionSettings");
-
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
   return NetUtil;
 });
-
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "permissionManager",
-                                   "@mozilla.org/permissionmanager;1",
-                                   "nsIPermissionManager");
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
@@ -70,80 +52,6 @@ XPCOMUtils.defineLazyGetter(this, "msgmgr", function() {
   // the webapp); otherwise, they're in the current profile.
   const DIRECTORY_NAME = WEBAPP_RUNTIME ? "WebappRegD" : "ProfD";
 #endif
-
-/**
- * Determine the type of app (app, privileged, certified)
- * that is installed by the manifest
- * @param object aManifest
- * @returns integer
- **/
-function getAppManifestStatus(aManifest)
-{
-  let type = aManifest.type || "web";
-
-  switch(type) {
-  case "web":
-    return Ci.nsIPrincipal.APP_STATUS_INSTALLED;
-  case "privileged":
-    return Ci.nsIPrincipal.APP_STATUS_PRIVILEGED;
-  case "certified":
-    return Ci.nsIPrincipal.APP_STATUS_CERTIFIED;
-  default:
-    throw new Error("Webapps.jsm: Undetermined app manifest type");
-  }
-}
-
-/**
- * Expand an access string into multiple permission names,
- *   e.g: perm 'contacts' with 'readwrite' =
- *   ['contacts-read', 'contacts-create', contacts-write']
- * @param string aPermName
- * @param string aAccess
- * @returns Array
- **/
-function expandPermissions(aPermName, aAccess)
-{
-  if (!PermissionsTable[aPermName]) {
-    Cu.reportError("Unknown permission: " + aPermName);
-    throw new Error("Webapps.jsm: App install failed, Unknown Permission: " + aPermName);
-  }
-  if (!aAccess && PermissionsTable[aPermName].access ||
-      aAccess && !PermissionsTable[aPermName].access) {
-    Cu.reportError("Webapps.jsm: installPermissions: Invalid Manifest");
-    throw new Error("Webapps.jsm: App install failed, Invalid Manifest");
-  }
-  if (!PermissionsTable[aPermName].access) {
-    return [aPermName];
-  }
-
-  let requestedSuffixes = [];
-  switch(aAccess) {
-  case READONLY:
-    requestedSuffixes.push("read");
-    break;
-  case CREATEONLY:
-    requestedSuffixes.push("create");
-    break;
-  case READCREATE:
-    requestedSuffixes.push("read", "create");
-    break;
-  case READWRITE:
-    requestedSuffixes.push("read", "create", "write");
-    break;
-  default:
-    return [];
-  }
-
-  let permArr = mapSuffixes(aPermName, requestedSuffixes);
-
-  let expandedPerms = [];
-  for (let idx in permArr) {
-    if (PermissionsTable[aPermName].access.indexOf(requestedSuffixes[idx]) != -1) {
-      expandedPerms.push(permArr[idx]);
-    }
-  }
-  return expandedPerms;
-}
 
 let DOMApplicationRegistry = {
   appsFile: null,
@@ -799,106 +707,6 @@ let DOMApplicationRegistry = {
     }
   },
 
-  /**
-   * Install permissisions or remove deprecated permissions upon re-install
-   * @param object aAppObject
-   *        The just installed AppUtils cloned appObject
-   * @param object aData
-   *        The just-installed app configuration
-   * @param boolean aIsReinstall
-   *        Indicates the app was just re-installed
-   * @returns void
-   **/
-  installPermissions:
-  function installPermissions(aAppObject, aData, aIsReinstall)
-  {
-    try {
-      let newManifest = new ManifestHelper(aData.app.manifest, aData.app.origin);
-      if (!newManifest.permissions && !aIsReinstall) {
-        return;
-      }
-
-      if (aIsReinstall) {
-        // Compare the original permissions against the new permissions
-        // Remove any deprecated Permissions
-
-        if (newManifest.permissions) {
-          // Expand perms
-          let newPerms = [];
-          for (let perm in newManifest.permissions) {
-            let _perms = expandPermissions(perm,
-                                           newManifest.permissions[perm].access);
-            newPerms = newPerms.concat(_perms);
-          }
-
-          for (let idx in AllPossiblePermissions) {
-            let index = newPerms.indexOf(AllPossiblePermissions[idx]);
-            if (index == -1) {
-              // See if the permission was installed previously
-              let _perm = PermSettings.get(AllPossiblePermissions[idx],
-                                           aData.app.manifestURL,
-                                           aData.app.origin,
-                                           false);
-              if (_perm == "unknown" || _perm == "deny") {
-                // All 'deny' permissions should be preserved
-                continue;
-              }
-              // Remove the deprecated permission
-              // TODO: use PermSettings.remove, see bug 793204
-              PermSettings.set(AllPossiblePermissions[idx],
-                               "unknown",
-                               aData.app.manifestURL,
-                               aData.app.origin,
-                               false);
-            }
-          }
-        }
-      }
-
-      let installPermType;
-      // Check to see if the 'webapp' is app/priv/certified
-      switch (getAppManifestStatus(newManifest)) {
-      case Ci.nsIPrincipal.APP_STATUS_CERTIFIED:
-        installPermType = "certified";
-        break;
-      case Ci.nsIPrincipal.APP_STATUS_PRIVILEGED:
-        installPermType = "privileged";
-        break;
-      case Ci.nsIPrincipal.APP_STATUS_INSTALLED:
-        installPermType = "app";
-        break;
-      default:
-        // Cannot determine app type, abort install by throwing an error
-        throw new Error("Webapps.jsm: Cannot determine app type, install cancelled");
-      }
-
-      for (let permName in newManifest.permissions) {
-        if (!PermissionsTable[permName]) {
-          throw new Error("Webapps.jsm: '" + permName + "'" +
-                         " is not a valid Webapps permission type. Aborting Webapp installation");
-          return;
-        }
-
-        let perms = expandPermissions(permName,
-                                      newManifest.permissions[permName].access);
-        for (let idx in perms) {
-          let perm = PermissionsTable[permName][installPermType];
-          let permValue = PERM_TO_STRING[perm];
-          PermSettings.set(perms[idx],
-                           permValue,
-                           aData.app.manifestURL,
-                           aData.app.origin,
-                           false);
-        }
-      }
-    }
-    catch (ex) {
-      debug("Caught webapps install permissions error");
-      Cu.reportError(ex);
-      this.uninstall(aData);
-    }
-   },
-
   checkForUpdate: function(aData, aMm) {
     let app = this.getAppByManifestURL(aData.manifestURL);
     if (!app) {
@@ -1113,7 +921,11 @@ let DOMApplicationRegistry = {
     appObject.name = manifest.name;
 
     this.webapps[id] = appObject;
-    this.installPermissions(appObject, aData, isReinstall);
+
+    PermissionsInstaller.installPermissions(aData.app, isReinstall, (function() {
+      this.uninstall(aData, aData.mm);
+    }).bind(this));
+
     ["installState", "downloadAvailable",
      "downloading", "downloadSize", "readyToApplyDownload"].forEach(function(aProp) {
       aData.app[aProp] = appObject[aProp];
@@ -1269,7 +1081,7 @@ let DOMApplicationRegistry = {
     }
 
     function getAppStatus(aManifest) {
-      let manifestStatus = getAppManifestStatus(aManifest);
+      let manifestStatus = AppsUtils.getAppManifestStatus(aManifest);
       let inferedStatus = getInferedStatus();
 
       return (Services.prefs.getBoolPref("dom.mozApps.dev_mode") ? manifestStatus
@@ -1282,7 +1094,7 @@ let DOMApplicationRegistry = {
         return true;
       }
 
-      return (getAppManifestStatus(aManifest) <= getInferedStatus());
+      return (AppsUtils.getAppManifestStatus(aManifest) <= getInferedStatus());
     }
 
     debug("About to download " + aManifest.fullPackagePath());
