@@ -260,40 +260,18 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
 bool
 AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
 {
-    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    if (!ssm) {
+    MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
+    if (callerIsChrome())
         return true;
-    }
-
-    JSStackFrame *fp;
-    nsIPrincipal *principal = ssm->GetCxSubjectPrincipalAndFrame(cx, &fp);
-    if (!principal) {
-        return false;
-    }
-
-    JSScript *script = nullptr;
-    if (fp) {
-      script = JS_GetFrameScript(cx, fp);
-    } else {
-        if (!JS_DescribeScriptedCaller(cx, &script, nullptr)) {
-            // No code at all is running. So we must be arriving here as the result
-            // of C++ code asking us to do something. Allow access.
-            return true;
-        }
-    }
-
-    bool privileged;
-    if (NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &privileged)) &&
-        privileged) {
-        return true;
-    }
 
     // Allow any code loaded from chrome://global/ to touch us, even if it was
     // cloned into a less privileged context.
+    JSScript *script;
+    if (!JS_DescribeScriptedCaller(cx, &script, nullptr) || !script)
+        return false;
     static const char prefix[] = "chrome://global/";
     const char *filename;
-    if (script &&
-        (filename = JS_GetScriptFilename(cx, script)) &&
+    if ((filename = JS_GetScriptFilename(cx, script)) &&
         !strncmp(filename, prefix, ArrayLength(prefix) - 1)) {
         return true;
     }
