@@ -1264,15 +1264,14 @@ LookupName(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
 
 /*
  * Like LookupName except returns the global object if 'name' is not found in
- * any preceding non-global scope. This is because assigning to an undeclared
- * name will add a property to the global object.
+ * any preceding non-global scope.
  *
  * Additionally, pobjp and propp are not needed by callers so they are not
  * returned.
  */
 extern bool
-LookupNameForSet(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
-                 MutableHandleObject objp);
+LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
+                            MutableHandleObject objp);
 
 }
 

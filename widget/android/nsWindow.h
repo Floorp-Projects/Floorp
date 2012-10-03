@@ -50,7 +50,7 @@ public:
     void OnAndroidEvent(mozilla::AndroidGeckoEvent *ae);
     void OnDraw(mozilla::AndroidGeckoEvent *ae);
     bool OnMultitouchEvent(mozilla::AndroidGeckoEvent *ae);
-    void OnGestureEvent(mozilla::AndroidGeckoEvent *ae);
+    void OnNativeGestureEvent(mozilla::AndroidGeckoEvent *ae);
     void OnMouseEvent(mozilla::AndroidGeckoEvent *ae);
     void OnKeyEvent(mozilla::AndroidGeckoEvent *ae);
     void OnIMEEvent(mozilla::AndroidGeckoEvent *ae);
@@ -177,14 +177,8 @@ protected:
     nsWindow* mParent;
     nsWindow* mFocus;
 
-    bool mGestureFinished;
     double mStartDist;
     double mLastDist;
-    nsAutoPtr<nsIntPoint> mStartPoint;
-
-    // Multitouch swipe thresholds in screen pixels
-    double mSwipeMaxPinchDelta;
-    double mSwipeMinDistance;
 
     nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 

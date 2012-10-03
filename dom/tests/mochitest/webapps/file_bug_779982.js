@@ -46,17 +46,17 @@ var gData = [
   },
   {
     app: 'http://example.org/manifest.webapp',
-    action: 'isInstalled',
+    action: 'checkInstalled',
     isnull: false,
     src: fileTestOnCurrentOrigin,
-    message: 'isInstalled() for app should return true'
+    message: 'checkInstalled() for app should return true'
   },
   {
     app: 'http://example.org/manifest.webapp',
-    action: 'isInstalledWrong',
+    action: 'checkInstalledWrong',
     isnull: true,
     src: fileTestOnCurrentOrigin,
-    message: 'isInstalled() for browser should return true'
+    message: 'checkInstalled() for browser should return true'
   },
   // Browser
   {
@@ -68,17 +68,17 @@ var gData = [
   },
   {
     browser: true,
-    action: 'isInstalled',
+    action: 'checkInstalled',
     isnull: false,
     src: fileTestOnCurrentOrigin,
-    message: 'isInstalled() for browser should return true'
+    message: 'checkInstalled() for browser should return true'
   },
   {
     browser: true,
-    action: 'isInstalledWrong',
+    action: 'checkInstalledWrong',
     isnull: true,
     src: fileTestOnCurrentOrigin,
-    message: 'isInstalled() for browser should return true'
+    message: 'checkInstalled() for browser should return true'
   },
 ];
 

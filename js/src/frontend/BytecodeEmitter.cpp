@@ -701,7 +701,7 @@ EnclosingStaticScope(BytecodeEmitter *bce)
         return NULL;
     }
 
-    return bce->sc->asFunbox()->fun();
+    return bce->sc->asFunbox()->function();
 }
 
 // Push a block scope statement and link blockObj into bce->blockChain.
@@ -917,7 +917,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
          */
         for (unsigned i = pn->pn_cookie.level(); i; i--) {
             skippedScopes += ClonedBlockDepth(bceOfDef);
-            JSFunction *funOfDef = bceOfDef->sc->asFunbox()->fun();
+            JSFunction *funOfDef = bceOfDef->sc->asFunbox()->function();
             if (funOfDef->isHeavyweight()) {
                 skippedScopes++;
                 if (funOfDef->isNamedLambda())
@@ -1378,7 +1378,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (dn->pn_cookie.level() != bce->script->staticLevel)
             return true;
 
-        RootedFunction fun(cx, bce->sc->asFunbox()->fun());
+        RootedFunction fun(cx, bce->sc->asFunbox()->function());
         JS_ASSERT(fun->flags & JSFUN_LAMBDA);
         JS_ASSERT(pn->pn_atom == fun->atom());
 
@@ -2692,7 +2692,7 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
     }
 
     if (JOF_OPTYPE(pn->getOp()) == JOF_ATOM &&
-        (!bce->sc->isFunction || bce->sc->asFunbox()->fun()->isHeavyweight()))
+        (!bce->sc->isFunction || bce->sc->asFunbox()->function()->isHeavyweight()))
     {
         bce->switchToProlog();
         if (!UpdateSourceCoordNotes(cx, bce, pn->pn_pos.begin))
@@ -4835,7 +4835,7 @@ EmitFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 static JS_NEVER_INLINE bool
 EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    RootedFunction fun(cx, pn->pn_funbox->fun());
+    RootedFunction fun(cx, pn->pn_funbox->function());
     JS_ASSERT(fun->isInterpreted());
     if (fun->script()) {
         /*
@@ -4891,7 +4891,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     /* Make the function object a literal in the outer script's pool. */
-    unsigned index = bce->objectList.add(&pn->pn_funbox->objbox);
+    unsigned index = bce->objectList.add(pn->pn_funbox);
 
     /* Non-hoisted functions simply emit their respective op. */
     if (!pn->functionIsHoisted()) {
@@ -6019,7 +6019,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_ARGSBODY:
       {
-        RootedFunction fun(cx, bce->sc->asFunbox()->fun());
+        RootedFunction fun(cx, bce->sc->asFunbox()->function());
         ParseNode *pnlast = pn->last();
 
         // Carefully emit everything in the right order:

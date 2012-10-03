@@ -217,18 +217,14 @@
 
   <!-- Updater notifications -->
   <string name="updater_start_title">&updater_start_title;</string>
-  <string name="updater_start_ticker">&updater_start_ticker;</string>
   <string name="updater_start_select">&updater_start_select;</string>
 
   <string name="updater_downloading_title">&updater_downloading_title;</string>
-  <string name="updater_downloading_ticker">&updater_downloading_ticker;</string>
-  <string name="updater_downloading_ticker_failed">&updater_downloading_ticker_failed;</string>
+  <string name="updater_downloading_title_failed">&updater_downloading_title_failed;</string>
   <string name="updater_downloading_select">&updater_downloading_select;</string>
   <string name="updater_downloading_retry">&updater_downloading_retry;</string>
-  <string name="updater_downloading_willapply">&updater_downloading_willapply;</string>
   
   <string name="updater_apply_title">&updater_apply_title;</string>
-  <string name="updater_apply_ticker">&updater_apply_ticker;</string>
   <string name="updater_apply_select">&updater_apply_select;</string>
 
 </resources>

@@ -241,6 +241,7 @@ class IonNativeExitFrameLayout
 
 class IonOOLNativeGetterExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
 
@@ -272,6 +273,7 @@ class IonOOLNativeGetterExitFrameLayout
 
 class IonOOLPropertyOpExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
 
