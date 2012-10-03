@@ -24,7 +24,7 @@ interface nsIMIMEInfo;
  *       nsIDownloadManager::DOWNLOAD_DIRTY 
  *       nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY 
  */
-[scriptable, uuid(c891111e-92a6-47b8-bc46-874ebb61ac9d)]
+[scriptable, uuid(b9879a64-36c3-4b96-baab-dd4b328b5bff)]
 interface nsIDownload : nsITransfer {
     
     /**
@@ -110,10 +110,16 @@ interface nsIDownload : nsITransfer {
      * server supports it.
      */
     readonly attribute boolean resumable;
+
+    /**
+     * Indicates if the download was initiated from a context marked as private,
+     * controlling whether it should be stored in a permanent manner or not.
+     */
+    readonly attribute boolean isPrivate;
 };
 
 %{C++
-// {E3FA9D0A-1DD1-11B2-BDEF-8C720B597445}
+// {b9879a64-36c3-4b96-baab-dd4b328b5bff}
 #define NS_DOWNLOAD_CID \
-    { 0xe3fa9d0a, 0x1dd1, 0x11b2, { 0xbd, 0xef, 0x8c, 0x72, 0x0b, 0x59, 0x74, 0x45 } }
+  { 0xb9879a64, 0x36c3, 0x4b96, { 0xba, 0xab, 0xdd, 0x4b, 0x32, 0x8b, 0x5b, 0x9d } }
 %}

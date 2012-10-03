@@ -101,7 +101,7 @@ var stringBundle;
         // displays a download dialog (remove these 3 lines for silent download)
         let xfer = Components.classes["@mozilla.org/transfer;1"].
                    createInstance(Components.interfaces.nsITransfer);
-        xfer.init(source, target, "", null, null, null, persist);
+        xfer.init(source, target, "", null, null, null, persist, false);
         persist.progressListener = xfer;
 
         // save the canvas data to the file
