@@ -3745,6 +3745,12 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
 
   AddAnimationsAndTransitionsToLayer(container, aBuilder,
                                      this, eCSSProperty_transform);
+  if (ShouldPrerenderTransformedContent(aBuilder, mFrame, false)) {
+    container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
+                           /*the value is irrelevant*/nullptr);
+  } else {
+    container->RemoveUserData(nsIFrame::LayerIsPrerenderedDataKey());
+  }
   return container.forget();
 }
 

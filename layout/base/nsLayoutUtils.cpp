@@ -1342,7 +1342,7 @@ nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
 
   *aTransform =
     item->GetTransform(aFrame->PresContext()->AppUnitsPerDevPixel());
-  list.DeleteAll();
+  item->~nsDisplayTransform();
 
   return true;
 }

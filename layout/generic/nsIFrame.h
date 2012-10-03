@@ -2232,6 +2232,23 @@ public:
   virtual void InvalidateFrameForRemoval() {}
 
   /**
+   * When HasUserData(frame->LayerIsPrerenderedDataKey()), then the
+   * entire overflow area of this frame has been rendered in its
+   * layer(s).
+   */
+  static void* LayerIsPrerenderedDataKey() { 
+    return &sLayerIsPrerenderedDataKey;
+  }
+  static uint8_t sLayerIsPrerenderedDataKey;
+
+   /**
+   * Try to update this frame's transform without invalidating any
+   * content.  Return true iff successful.  If unsuccessful, the
+   * caller is responsible for scheduling an invalidating paint.
+   */
+  bool TryUpdateTransformOnly();
+
+  /**
    * Checks if a frame has had InvalidateFrame() called on it since the
    * last paint.
    *
