@@ -5280,17 +5280,17 @@ PresShell::Paint(nsIView*           aViewToPaint,
         } else {
           LayerProperties::ClearInvalidations(layerManager->GetRoot());
         }
-        if (!invalid.IsEmpty()) {
-          if (props) {
+        if (props) {
+          if (!invalid.IsEmpty()) {
             nsRect rect(presContext->DevPixelsToAppUnits(invalid.x),
                         presContext->DevPixelsToAppUnits(invalid.y),
                         presContext->DevPixelsToAppUnits(invalid.width),
                         presContext->DevPixelsToAppUnits(invalid.height));
             aViewToPaint->GetViewManager()->InvalidateViewNoSuppression(aViewToPaint, rect);
             presContext->NotifyInvalidation(invalid, 0);
-          } else {
-            aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
           }
+        } else {
+          aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
         }
 
         frame->UpdatePaintCountForPaintedPresShells();
