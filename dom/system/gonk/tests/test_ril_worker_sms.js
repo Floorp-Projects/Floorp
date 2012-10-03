@@ -54,6 +54,23 @@ add_test(function test_nl_single_shift_tables_validity() {
   run_next_test();
 });
 
+add_test(function test_gsm_sms_strict_7bit_charmap_validity() {
+  let defaultTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+  for (let from in GSM_SMS_STRICT_7BIT_CHARMAP) {
+    let to = GSM_SMS_STRICT_7BIT_CHARMAP[from];
+    do_print("Verifying GSM_SMS_STRICT_7BIT_CHARMAP[\"\\u0x"
+             + from.charCodeAt(0).toString(16) + "\"] => \"\\u"
+             + to.charCodeAt(0).toString(16) + "\"");
+
+    // Make sure "from" is not in default table
+    do_check_eq(defaultTable.indexOf(from), -1);
+    // Make sure "to" is in default table
+    do_check_eq(defaultTable.indexOf(to) >= 0, true);
+  }
+
+  run_next_test();
+});
+
 /**
  * Verify GsmPDUHelper#readDataCodingScheme.
  */
@@ -183,14 +200,15 @@ add_test(function test_RadioInterfaceLayer__countGsm7BitSeptets() {
     helper.octetsWritten++;
   };
 
-  function do_check_calc(str, expectedCalcLen, lst, sst) {
+  function do_check_calc(str, expectedCalcLen, lst, sst, strict7BitEncoding) {
     do_check_eq(expectedCalcLen,
                 ril._countGsm7BitSeptets(str,
                                          PDU_NL_LOCKING_SHIFT_TABLES[lst],
-                                         PDU_NL_SINGLE_SHIFT_TABLES[sst]));
+                                         PDU_NL_SINGLE_SHIFT_TABLES[sst],
+                                         strict7BitEncoding));
 
     helper.resetOctetWritten();
-    helper.writeStringAsSeptets(str, 0, lst, sst);
+    helper.writeStringAsSeptets(str, 0, lst, sst, strict7BitEncoding);
     do_check_eq(Math.ceil(expectedCalcLen * 7 / 8), helper.octetsWritten);
   }
 
@@ -234,6 +252,10 @@ add_test(function test_RadioInterfaceLayer__countGsm7BitSeptets() {
     }
   }
 
+  // Bug 790192: support strict GSM SMS 7-Bit encoding
+  let str = "\u00c1\u00e1\u00cd\u00ed\u00d3\u00f3\u00da\u00fa\u00e7";
+  do_check_calc(str, str.length, PDU_NL_IDENTIFIER_DEFAULT, PDU_NL_IDENTIFIER_DEFAULT, true);
+
   run_next_test();
 });
 
@@ -246,13 +268,15 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
 
   function test_calc(str, expected, enabledGsmTableTuples) {
     ril.enabledGsmTableTuples = enabledGsmTableTuples;
-    let options = ril._calculateUserDataLength(str);
+    let options = ril._calculateUserDataLength(str, expected[5]);
 
+    do_check_eq(str, options.fullBody);
     do_check_eq(expected[0], options.dcs);
     do_check_eq(expected[1], options.encodedFullBodyLength);
     do_check_eq(expected[2], options.userDataHeaderLength);
     do_check_eq(expected[3], options.langIndex);
     do_check_eq(expected[4], options.langShiftIndex);
+    do_check_eq(expected[5], options.strict7BitEncoding);
   }
 
   // Test UCS fallback
@@ -305,6 +329,11 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
   test_calc(ESCAPE + ESCAPE + ESCAPE + ESCAPE + ESCAPE + "\\",
             [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 0, 0, 0], [[3, 0], [0, 0]]);
 
+  // Test Bug 790192: support strict GSM SMS 7-Bit encoding
+  let str = "\u00c1\u00e1\u00cd\u00ed\u00d3\u00f3\u00da\u00fa\u00e7";
+  test_calc(str, [PDU_DCS_MSG_CODING_7BITS_ALPHABET, str.length, 0, 0, 0, true], [[0, 0]]);
+  test_calc(str, [PDU_DCS_MSG_CODING_16BITS_ALPHABET, str.length * 2, 0], [[0, 0]]);
+
   run_next_test();
 });
 
@@ -343,13 +372,13 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength7Bit_multipar
 });
 
 /**
- * Verify RadioInterfaceLayer#_fragmentText7Bit().
+ * Verify RadioInterfaceLayer#_fragmentText().
  */
 add_test(function test_RadioInterfaceLayer__fragmentText7Bit() {
   let ril = newRadioInterfaceLayer();
 
-  function test_calc(str, expected) {
-    let options = ril._fragmentText(str);
+  function test_calc(str, strict7BitEncoding, expected) {
+    let options = ril._fragmentText(str, null, strict7BitEncoding);
     if (expected) {
       do_check_eq(expected, options.segments.length);
     } else {
@@ -357,48 +386,48 @@ add_test(function test_RadioInterfaceLayer__fragmentText7Bit() {
     }
   }
 
+  // 7-Bit
+
   // Boundary checks
-  test_calc("");
-  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT));
-  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT + 1), 2);
+  test_calc("", false);
+  test_calc("", true);
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT), false);
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT), true);
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT + 1), false, 2);
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT + 1), true, 2);
 
   // Escaped character
-  test_calc(generateStringOfLength("{", PDU_MAX_USER_DATA_7BIT / 2));
-  test_calc(generateStringOfLength("{", PDU_MAX_USER_DATA_7BIT / 2 + 1), 2);
+  test_calc(generateStringOfLength("{", PDU_MAX_USER_DATA_7BIT / 2), false);
+  test_calc(generateStringOfLength("{", PDU_MAX_USER_DATA_7BIT / 2 + 1), false, 2);
   // Escaped character cannot be separated
-  test_calc(generateStringOfLength("{", (PDU_MAX_USER_DATA_7BIT - 7) * 2 / 2), 3);
+  test_calc(generateStringOfLength("{", (PDU_MAX_USER_DATA_7BIT - 7) * 2 / 2), false, 3);
 
   // Test headerLen, 7 = Math.ceil(6 * 8 / 7), 6 = headerLen + 1
   test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT - 7));
-  test_calc(generateStringOfLength("A", (PDU_MAX_USER_DATA_7BIT - 7) * 2), 2);
-  test_calc(generateStringOfLength("A", (PDU_MAX_USER_DATA_7BIT - 7) * 3), 3);
+  test_calc(generateStringOfLength("A", (PDU_MAX_USER_DATA_7BIT - 7) * 2), false, 2);
+  test_calc(generateStringOfLength("A", (PDU_MAX_USER_DATA_7BIT - 7) * 3), false, 3);
 
-  run_next_test();
-});
-
-/**
- * Verify RadioInterfaceLayer#_fragmentTextUCS2().
- */
-add_test(function test_RadioInterfaceLayer__fragmentTextUCS2() {
-  let ril = newRadioInterfaceLayer();
-
-  function test_calc(str, expected) {
-    let options = ril._fragmentText(str);
-    if (expected) {
-      do_check_eq(expected, options.segments.length);
-    } else {
-      do_check_eq(null, options.segments);
-    }
-  }
+  // UCS-2
 
   // Boundary checks
   test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2));
-  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2 + 1), 2);
+  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2), true);
+  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2 + 1), false, 2);
+  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2 + 1), true, 2);
 
   // UCS2 character cannot be separated
   ril.segmentRef16Bit = true;
-  test_calc(generateStringOfLength("\ua2db", (PDU_MAX_USER_DATA_UCS2 * 2 - 7) * 2 / 2), 3);
+  test_calc(generateStringOfLength("\ua2db", (PDU_MAX_USER_DATA_UCS2 * 2 - 7) * 2 / 2), false, 3);
   ril.segmentRef16Bit = false;
+
+  // Test Bug 790192: support strict GSM SMS 7-Bit encoding
+  let str = "\u00c1\u00e1\u00cd\u00ed\u00d3\u00f3\u00da\u00fa\u00e7";
+  for (let i = 0; i < str.length; i++) {
+    let c = str.charAt(i);
+    test_calc(generateStringOfLength(c, PDU_MAX_USER_DATA_7BIT), false, 3);
+    test_calc(generateStringOfLength(c, PDU_MAX_USER_DATA_7BIT), true);
+    test_calc(generateStringOfLength(c, PDU_MAX_USER_DATA_UCS2), false);
+  }
 
   run_next_test();
 });
@@ -438,6 +467,13 @@ add_test(function test_GsmPDUHelper_writeStringAsSeptets() {
                   helper.octetsWritten);
     }
   }
+
+  // Test Bug 790192: support strict GSM SMS 7-Bit encoding
+  let str = "\u00c1\u00e1\u00cd\u00ed\u00d3\u00f3\u00da\u00fa\u00e7";
+  helper.resetOctetWritten();
+  do_print("Verifying GsmPDUHelper.writeStringAsSeptets(" + str + ", 0, <default>, <default>, true)");
+  helper.writeStringAsSeptets(str, 0, PDU_NL_IDENTIFIER_DEFAULT, PDU_NL_IDENTIFIER_DEFAULT, true);
+  do_check_eq(Math.ceil(str.length * 7 / 8), helper.octetsWritten);
 
   run_next_test();
 });
