@@ -272,8 +272,10 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *nullRange)
     //
     // Instead, we should use it to eliminate the dead block.
     // (Bug 765127)
-    if (r.upper_ < r.lower_)
+    if (r.upper_ < r.lower_) {
+        *nullRange = true;
         r.makeRangeInfinite();
+    }
     return r;
 }
 
