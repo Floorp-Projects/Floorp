@@ -95,10 +95,10 @@ void qcms_transform_data_rgb_out_lut_sse1(qcms_transform *transform,
         src += 3;
 
         /* use calc'd indices to output RGB values */
-        dest[0] = otdata_r[output[0]];
-        dest[1] = otdata_g[output[1]];
-        dest[2] = otdata_b[output[2]];
-        dest += 3;
+        dest[OUTPUT_R_INDEX] = otdata_r[output[0]];
+        dest[OUTPUT_G_INDEX] = otdata_g[output[1]];
+        dest[OUTPUT_B_INDEX] = otdata_b[output[2]];
+        dest += RGB_OUTPUT_COMPONENTS;
     }
 
     /* handle final (maybe only) pixel */
@@ -120,9 +120,9 @@ void qcms_transform_data_rgb_out_lut_sse1(qcms_transform *transform,
     result = _mm_movehl_ps(result, result);
     *((__m64 *)&output[2]) = _mm_cvtps_pi32(result);
 
-    dest[0] = otdata_r[output[0]];
-    dest[1] = otdata_g[output[1]];
-    dest[2] = otdata_b[output[2]];
+    dest[OUTPUT_R_INDEX] = otdata_r[output[0]];
+    dest[OUTPUT_G_INDEX] = otdata_g[output[1]];
+    dest[OUTPUT_B_INDEX] = otdata_b[output[2]];
 
     _mm_empty();
 }
@@ -197,7 +197,7 @@ void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
         vec_b = _mm_mul_ps(vec_b, mat2);
 
         /* store alpha for this pixel; load alpha for next */
-        dest[3] = alpha;
+        dest[OUTPUT_A_INDEX] = alpha;
         alpha   = src[3];
 
         /* crunch, crunch, crunch */
@@ -218,9 +218,9 @@ void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
         src += 4;
 
         /* use calc'd indices to output RGB values */
-        dest[0] = otdata_r[output[0]];
-        dest[1] = otdata_g[output[1]];
-        dest[2] = otdata_b[output[2]];
+        dest[OUTPUT_R_INDEX] = otdata_r[output[0]];
+        dest[OUTPUT_G_INDEX] = otdata_g[output[1]];
+        dest[OUTPUT_B_INDEX] = otdata_b[output[2]];
         dest += 4;
     }
 
@@ -234,7 +234,7 @@ void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
     vec_g = _mm_mul_ps(vec_g, mat1);
     vec_b = _mm_mul_ps(vec_b, mat2);
 
-    dest[3] = alpha;
+    dest[OUTPUT_A_INDEX] = alpha;
 
     vec_r  = _mm_add_ps(vec_r, _mm_add_ps(vec_g, vec_b));
     vec_r  = _mm_max_ps(min, vec_r);
@@ -245,9 +245,9 @@ void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
     result = _mm_movehl_ps(result, result);
     *((__m64 *)&output[2]) = _mm_cvtps_pi32(result);
 
-    dest[0] = otdata_r[output[0]];
-    dest[1] = otdata_g[output[1]];
-    dest[2] = otdata_b[output[2]];
+    dest[OUTPUT_R_INDEX] = otdata_r[output[0]];
+    dest[OUTPUT_G_INDEX] = otdata_g[output[1]];
+    dest[OUTPUT_B_INDEX] = otdata_b[output[2]];
 
     _mm_empty();
 }

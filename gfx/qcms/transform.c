@@ -251,9 +251,10 @@ static void qcms_transform_data_rgb_out_pow(qcms_transform *transform, unsigned 
 		float out_device_g = pow(out_linear_g, transform->out_gamma_g);
 		float out_device_b = pow(out_linear_b, transform->out_gamma_b);
 
-		*dest++ = clamp_u8(255*out_device_r);
-		*dest++ = clamp_u8(255*out_device_g);
-		*dest++ = clamp_u8(255*out_device_b);
+		dest[OUTPUT_R_INDEX] = clamp_u8(255*out_device_r);
+		dest[OUTPUT_G_INDEX] = clamp_u8(255*out_device_g);
+		dest[OUTPUT_B_INDEX] = clamp_u8(255*out_device_b);
+		dest += RGB_OUTPUT_COMPONENTS;
 	}
 }
 #endif
@@ -271,9 +272,10 @@ static void qcms_transform_data_gray_out_lut(qcms_transform *transform, unsigned
 		out_device_g = lut_interp_linear(linear, transform->output_gamma_lut_g, transform->output_gamma_lut_g_length);
 		out_device_b = lut_interp_linear(linear, transform->output_gamma_lut_b, transform->output_gamma_lut_b_length);
 
-		*dest++ = clamp_u8(out_device_r*255);
-		*dest++ = clamp_u8(out_device_g*255);
-		*dest++ = clamp_u8(out_device_b*255);
+		dest[OUTPUT_R_INDEX] = clamp_u8(out_device_r*255);
+		dest[OUTPUT_G_INDEX] = clamp_u8(out_device_g*255);
+		dest[OUTPUT_B_INDEX] = clamp_u8(out_device_b*255);
+		dest += RGB_OUTPUT_COMPONENTS;
 	}
 }
 
@@ -297,10 +299,11 @@ static void qcms_transform_data_graya_out_lut(qcms_transform *transform, unsigne
 		out_device_g = lut_interp_linear(linear, transform->output_gamma_lut_g, transform->output_gamma_lut_g_length);
 		out_device_b = lut_interp_linear(linear, transform->output_gamma_lut_b, transform->output_gamma_lut_b_length);
 
-		*dest++ = clamp_u8(out_device_r*255);
-		*dest++ = clamp_u8(out_device_g*255);
-		*dest++ = clamp_u8(out_device_b*255);
-		*dest++ = alpha;
+		dest[OUTPUT_R_INDEX] = clamp_u8(out_device_r*255);
+		dest[OUTPUT_G_INDEX] = clamp_u8(out_device_g*255);
+		dest[OUTPUT_B_INDEX] = clamp_u8(out_device_b*255);
+		dest[OUTPUT_A_INDEX] = alpha;
+		dest += RGBA_OUTPUT_COMPONENTS;
 	}
 }
 
@@ -317,9 +320,10 @@ static void qcms_transform_data_gray_out_precache(qcms_transform *transform, uns
 		/* we could round here... */
 		gray = linear * PRECACHE_OUTPUT_MAX;
 
-		*dest++ = transform->output_table_r->data[gray];
-		*dest++ = transform->output_table_g->data[gray];
-		*dest++ = transform->output_table_b->data[gray];
+		dest[OUTPUT_R_INDEX] = transform->output_table_r->data[gray];
+		dest[OUTPUT_G_INDEX] = transform->output_table_g->data[gray];
+		dest[OUTPUT_B_INDEX] = transform->output_table_b->data[gray];
+		dest += RGB_OUTPUT_COMPONENTS;
 	}
 }
 
@@ -336,10 +340,11 @@ static void qcms_transform_data_graya_out_precache(qcms_transform *transform, un
 		/* we could round here... */
 		gray = linear * PRECACHE_OUTPUT_MAX;
 
-		*dest++ = transform->output_table_r->data[gray];
-		*dest++ = transform->output_table_g->data[gray];
-		*dest++ = transform->output_table_b->data[gray];
-		*dest++ = alpha;
+		dest[OUTPUT_R_INDEX] = transform->output_table_r->data[gray];
+		dest[OUTPUT_G_INDEX] = transform->output_table_g->data[gray];
+		dest[OUTPUT_B_INDEX] = transform->output_table_b->data[gray];
+		dest[OUTPUT_A_INDEX] = alpha;
+		dest += RGBA_OUTPUT_COMPONENTS;
 	}
 }
 
@@ -370,9 +375,10 @@ static void qcms_transform_data_rgb_out_lut_precache(qcms_transform *transform, 
 		g = out_linear_g * PRECACHE_OUTPUT_MAX;
 		b = out_linear_b * PRECACHE_OUTPUT_MAX;
 
-		*dest++ = transform->output_table_r->data[r];
-		*dest++ = transform->output_table_g->data[g];
-		*dest++ = transform->output_table_b->data[b];
+		dest[OUTPUT_R_INDEX] = transform->output_table_r->data[r];
+		dest[OUTPUT_G_INDEX] = transform->output_table_g->data[g];
+		dest[OUTPUT_A_INDEX] = transform->output_table_b->data[b];
+		dest += RGB_OUTPUT_COMPONENTS;
 	}
 }
 
@@ -404,10 +410,11 @@ static void qcms_transform_data_rgba_out_lut_precache(qcms_transform *transform,
 		g = out_linear_g * PRECACHE_OUTPUT_MAX;
 		b = out_linear_b * PRECACHE_OUTPUT_MAX;
 
-		*dest++ = transform->output_table_r->data[r];
-		*dest++ = transform->output_table_g->data[g];
-		*dest++ = transform->output_table_b->data[b];
-		*dest++ = alpha;
+		dest[OUTPUT_R_INDEX] = transform->output_table_r->data[r];
+		dest[OUTPUT_G_INDEX] = transform->output_table_g->data[g];
+		dest[OUTPUT_B_INDEX] = transform->output_table_b->data[b];
+		dest[OUTPUT_A_INDEX] = alpha;
+		dest += RGBA_OUTPUT_COMPONENTS;
 	}
 }
 
@@ -577,10 +584,11 @@ static void qcms_transform_data_tetra_clut_rgba(qcms_transform *transform, unsig
 		clut_g = c0_g + c1_g*rx + c2_g*ry + c3_g*rz;
 		clut_b = c0_b + c1_b*rx + c2_b*ry + c3_b*rz;
 
-		*dest++ = clamp_u8(clut_r*255.0f);
-		*dest++ = clamp_u8(clut_g*255.0f);
-		*dest++ = clamp_u8(clut_b*255.0f);
-		*dest++ = in_a;
+		dest[OUTPUT_R_INDEX] = clamp_u8(clut_r*255.0f);
+		dest[OUTPUT_G_INDEX] = clamp_u8(clut_g*255.0f);
+		dest[OUTPUT_B_INDEX] = clamp_u8(clut_b*255.0f);
+		dest[OUTPUT_A_INDEX] = in_a;
+		dest += RGBA_OUTPUT_COMPONENTS;
 	}	
 }
 
@@ -691,9 +699,10 @@ static void qcms_transform_data_tetra_clut(qcms_transform *transform, unsigned c
 		clut_g = c0_g + c1_g*rx + c2_g*ry + c3_g*rz;
 		clut_b = c0_b + c1_b*rx + c2_b*ry + c3_b*rz;
 
-		*dest++ = clamp_u8(clut_r*255.0f);
-		*dest++ = clamp_u8(clut_g*255.0f);
-		*dest++ = clamp_u8(clut_b*255.0f);
+		dest[OUTPUT_R_INDEX] = clamp_u8(clut_r*255.0f);
+		dest[OUTPUT_G_INDEX] = clamp_u8(clut_g*255.0f);
+		dest[OUTPUT_B_INDEX] = clamp_u8(clut_b*255.0f);
+		dest += RGB_OUTPUT_COMPONENTS;
 	}	
 }
 
@@ -726,9 +735,10 @@ static void qcms_transform_data_rgb_out_lut(qcms_transform *transform, unsigned 
 		out_device_b = lut_interp_linear(out_linear_b, 
 				transform->output_gamma_lut_b, transform->output_gamma_lut_b_length);
 
-		*dest++ = clamp_u8(out_device_r*255);
-		*dest++ = clamp_u8(out_device_g*255);
-		*dest++ = clamp_u8(out_device_b*255);
+		dest[OUTPUT_R_INDEX] = clamp_u8(out_device_r*255);
+		dest[OUTPUT_G_INDEX] = clamp_u8(out_device_g*255);
+		dest[OUTPUT_B_INDEX] = clamp_u8(out_device_b*255);
+		dest += RGB_OUTPUT_COMPONENTS;
 	}
 }
 
@@ -762,10 +772,11 @@ static void qcms_transform_data_rgba_out_lut(qcms_transform *transform, unsigned
 		out_device_b = lut_interp_linear(out_linear_b, 
 				transform->output_gamma_lut_b, transform->output_gamma_lut_b_length);
 
-		*dest++ = clamp_u8(out_device_r*255);
-		*dest++ = clamp_u8(out_device_g*255);
-		*dest++ = clamp_u8(out_device_b*255);
-		*dest++ = alpha;
+		dest[OUTPUT_R_INDEX] = clamp_u8(out_device_r*255);
+		dest[OUTPUT_G_INDEX] = clamp_u8(out_device_g*255);
+		dest[OUTPUT_B_INDEX] = clamp_u8(out_device_b*255);
+		dest[OUTPUT_A_INDEX] = alpha;
+		dest += RGBA_OUTPUT_COMPONENTS;
 	}
 }
 
