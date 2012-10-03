@@ -46,6 +46,8 @@ enum {
 // Make sure we have enough space for those bits
 PR_STATIC_ASSERT(NODE_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
 
+#undef DATA_NODE_FLAG_BIT
+
 class nsGenericDOMDataNode : public nsIContent
 {
 public:
