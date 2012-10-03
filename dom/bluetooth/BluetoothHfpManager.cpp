@@ -12,6 +12,7 @@
 #include "BluetoothScoManager.h"
 #include "BluetoothService.h"
 #include "BluetoothServiceUuid.h"
+#include "BluetoothUtils.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Services.h"
@@ -20,9 +21,6 @@
 #include "nsIAudioManager.h"
 #include "nsIObserverService.h"
 #include "nsIRadioInterfaceLayer.h"
-#include "nsISystemMessagesInternal.h"
-#include "BluetoothUtils.h"
-
 #include "nsVariant.h"
 
 #include <unistd.h> /* usleep() */
@@ -210,39 +208,6 @@ BluetoothHfpManager::Get()
 
   gBluetoothHfpManager = manager;
   return gBluetoothHfpManager;
-}
-
-bool
-BluetoothHfpManager::BroadcastSystemMessage(const nsAString& aType,
-                                            const InfallibleTArray<BluetoothNamedValue>& aData)
-{
-  JSContext* cx = nsContentUtils::GetSafeJSContext();
-  NS_ASSERTION(!::JS_IsExceptionPending(cx),
-               "Shouldn't get here when an exception is pending!");
-
-  JSAutoRequest jsar(cx);
-  JSObject* obj = JS_NewObject(cx, NULL, NULL, NULL);
-  if (!obj) {
-    NS_WARNING("Failed to new JSObject for system message!");
-    return false;
-  }
-
-  if (!SetJsObject(cx, obj, aData)) {
-    NS_WARNING("Failed to set properties of system message!");
-    return false;
-  }
-
-  nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
-    do_GetService("@mozilla.org/system-message-internal;1");
-
-  if (!systemMessenger) {
-    NS_WARNING("Failed to get SystemMessenger service!");
-    return false;
-  }
-
-  systemMessenger->BroadcastMessage(aType, OBJECT_TO_JSVAL(obj));
-
-  return true;
 }
 
 void
