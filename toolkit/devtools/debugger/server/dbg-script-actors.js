@@ -1274,14 +1274,10 @@ SourceActor.prototype = {
     try {
       scheme = Services.io.extractScheme(url);
     } catch (e) {
-      // XXX: In the xpcshell tests, the script url is the absolute path of the
-      // test file, which will make a malformed URI error be thrown. Add the
-      // file scheme prefix ourselves.
-      let prefix = "file://";
-      if ("nsILocalFileWin" in Ci && url instanceof Ci.nsILocalFileWin) {
-        prefix += '/'
-      }
-      url = prefix + url;
+      // In the xpcshell tests, the script url is the absolute path of the test
+      // file, which will make a malformed URI error be thrown. Add the file
+      // scheme prefix ourselves.
+      url = "file://" + url;
       scheme = Services.io.extractScheme(url);
     }
 
@@ -1306,7 +1302,15 @@ SourceActor.prototype = {
         break;
 
       default:
-        let channel = Services.io.newChannel(url, null, null);
+        let channel;
+        try {
+          channel = Services.io.newChannel(url, null, null);
+        } catch (e if e.name == "NS_ERROR_UNKNOWN_PROTOCOL") {
+          // On Windows xpcshell tests, c:/foo/bar can pass as a valid URL, but
+          // newChannel won't be able to handle it.
+          url = "file:///" + url;
+          channel = Services.io.newChannel(url, null, null);
+        }
         let chunks = [];
         let streamListener = {
           onStartRequest: function(aRequest, aContext, aStatusCode) {
