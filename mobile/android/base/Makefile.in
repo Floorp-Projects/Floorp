@@ -172,6 +172,7 @@ FENNEC_JAVA_FILES = \
   GeckoScreenOrientationListener.java \
   UpdateService.java \
   GeckoUpdateReceiver.java \
+  ReferrerReceiver.java \
   $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
