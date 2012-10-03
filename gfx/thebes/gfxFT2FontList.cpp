@@ -937,6 +937,36 @@ gfxFT2FontList::FindFonts()
     }
     root.Append("/fonts");
 
+    FindFontsInDir(root, &fnc);
+
+    if (mFontFamilies.Count() == 0) {
+        // if we can't find/read the font directory, we are doomed!
+        NS_RUNTIMEABORT("Could not read the system fonts directory");
+    }
+
+    // look for locally-added fonts in the profile
+    nsCOMPtr<nsIFile> localDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
+                                         getter_AddRefs(localDir));
+    if (NS_SUCCEEDED(rv)) {
+        nsCString localPath;
+        rv = localDir->GetNativePath(localPath);
+        if (NS_SUCCEEDED(rv)) {
+            FindFontsInDir(localPath, &fnc);
+        }
+    }
+
+    // Finalize the families by sorting faces into standard order
+    // and marking "simple" families.
+    // Passing non-null userData here says that we want faces to be sorted.
+    mFontFamilies.Enumerate(FinalizeFamilyMemberList, this);
+#endif // XP_WIN && ANDROID
+}
+
+#ifdef ANDROID
+void
+gfxFT2FontList::FindFontsInDir(const nsCString& aDir, FontNameCache *aFNC)
+{
     static const char* sStandardFonts[] = {
         "DroidSans.ttf",
         "DroidSans-Bold.ttf",
@@ -954,10 +984,9 @@ gfxFT2FontList::FindFonts()
         "DroidSansFallback.ttf"
     };
 
-    DIR *d = opendir(root.get());
+    DIR *d = opendir(aDir.get());
     if (!d) {
-        // if we can't find/read the font directory, we are doomed!
-        NS_RUNTIMEABORT("Could not read the system fonts directory");
+        return;
     }
 
     struct dirent *ent = NULL;
@@ -970,16 +999,14 @@ gfxFT2FontList::FindFonts()
         const char *ext = ent->d_name + namelen - 4;
         if (strcasecmp(ext, ".ttf") == 0 ||
             strcasecmp(ext, ".otf") == 0 ||
-            strcasecmp(ext, ".ttc") == 0)
-        {
+            strcasecmp(ext, ".ttc") == 0) {
             bool isStdFont = false;
             for (unsigned int i = 0;
-                 i < ArrayLength(sStandardFonts) && !isStdFont; i++)
-            {
+                 i < ArrayLength(sStandardFonts) && !isStdFont; i++) {
                 isStdFont = strcmp(sStandardFonts[i], ent->d_name) == 0;
             }
 
-            nsCString s(root);
+            nsCString s(aDir);
             s.Append('/');
             s.Append(ent->d_name, namelen);
 
@@ -987,17 +1014,13 @@ gfxFT2FontList::FindFonts()
             // note that if we have cached info for this file in fnc,
             // and the file is unchanged, we won't actually need to read it.
             // If the file is new/changed, this will update the FontNameCache.
-            AppendFacesFromFontFile(s, isStdFont, &fnc);
+            AppendFacesFromFontFile(s, isStdFont, aFNC);
         }
     }
-    closedir(d);
 
-    // Finalize the families by sorting faces into standard order
-    // and marking "simple" families.
-    // Passing non-null userData here says that we want faces to be sorted.
-    mFontFamilies.Enumerate(FinalizeFamilyMemberList, this);
-#endif // XP_WIN && ANDROID
+    closedir(d);
 }
+#endif
 
 void
 gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
