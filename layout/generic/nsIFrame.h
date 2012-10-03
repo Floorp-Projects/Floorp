@@ -1271,6 +1271,11 @@ public:
   
   bool HasOpacity() const;
 
+   /**
+   * Return true if this frame might be using a transform getter.
+   */
+  virtual bool HasTransformGetter() const { return false; }
+
   /**
    * Returns true if this frame is an SVG frame that has SVG transforms applied
    * to it, or if its parent frame is an SVG frame that has children-only
@@ -2225,7 +2230,7 @@ public:
    * 
    */
   virtual void InvalidateFrameForRemoval() {}
-  
+
   /**
    * Checks if a frame has had InvalidateFrame() called on it since the
    * last paint.
