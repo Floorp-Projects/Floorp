@@ -228,9 +228,6 @@ protected:
   nsresult CreateAndDispatchCloseEvent(bool aWasClean,
                                        uint16_t aCode,
                                        const nsString& aReason);
-  nsresult CreateResponseBlob(const nsACString& aData,
-                              JSContext* aCx,
-                              jsval& jsData);
 
   // if there are "strong event listeners" (see comment in WebSocket.cpp) or
   // outgoing not sent messages then this method keeps the object alive
