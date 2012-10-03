@@ -6,6 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsISimpleEnumerator;
+interface nsIRunnable;
 
 /*
  * Memory reporters measure Firefox's memory usage.  They are mainly used to
@@ -225,7 +226,7 @@ interface nsIMemoryMultiReporter : nsISupports
   readonly attribute int64_t explicitNonHeap;
 };
 
-[scriptable, uuid(46a09443-ec1d-4aa8-ae40-28642f138a04)]
+[scriptable, uuid(7aa2fcfc-eb8f-4bc8-95cc-2bc5e3374df7)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -293,9 +294,36 @@ interface nsIMemoryReporterManager : nsISupports
   readonly attribute boolean hasMozMallocUsableSize;
 
   /*
-   * This dumps the memory reports for this process to a file in the tmp
-   * directory called memory-reports-<pid>.json (or something similar, such as
-   * memory-reports-<pid>-1.json;  no existing file will be overwritten).
+   * Run a series of GC/CC's in an attempt to minimize the application's memory
+   * usage.  When we're finished, we invoke the given runnable.
+   */
+  void minimizeMemoryUsage(in nsIRunnable callback);
+
+  /*
+   * This dumps the memory reports for this process and possibly all our child
+   * processes (and all their children, recursively) to a file in the tmp
+   * directory called memory-reports-<identifier>-<pid>.json.gz (or something
+   * similar, such as memory-reports-<identifier>-<pid>-1.json.gz;  no existing
+   * file will be overwritten).
+   *
+   * @param identifier this identifier will appear in the filename of our
+   *   about:memory dump and those of our children (if dumpChildProcesses is
+   *   true).
+   *
+   *   If the identifier is empty, the dumpMemoryReportsToFile implementation
+   *   may set it arbitrarily and use that new value for its own dump and the
+   *   dumps of its child processes.  For example, the dumpMemoryReportsToFile
+   *   implementation may set |identifier| to the number of seconds since the
+   *   epoch.
+   *
+   * @param minimizeMemoryUsage indicates whether we should run a series of
+   *   gc/cc's in an attempt to reduce our memory usage before collecting our
+   *   memory report.
+   *
+   * @param dumpChildProcesses indicates whether we should call
+   *   dumpMemoryReportsToFile in our child processes.  If so, the child
+   *   processes will also dump their children, and so on.
+   *
    *
    * Sample output:
    *
@@ -365,7 +393,9 @@ interface nsIMemoryReporterManager : nsISupports
    *   }
    * }
    */
-  void dumpReports ();
+  void dumpMemoryReportsToFile (in AString identifier,
+                                in bool minimizeMemoryUsage,
+                                in bool dumpChildProcesses);
 };
 
 %{C++
