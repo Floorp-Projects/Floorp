@@ -302,7 +302,7 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret)
 }
 
 static void
-WeakMap_mark(JSTracer *trc, JSObject *obj)
+WeakMap_mark(JSTracer *trc, RawObject obj)
 {
     if (ObjectValueMap *map = GetObjectMap(obj))
         map->trace(trc);

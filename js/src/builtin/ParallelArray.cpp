@@ -1711,7 +1711,7 @@ ParallelArrayObject::toLocaleString(JSContext *cx, CallArgs args)
 }
 
 void
-ParallelArrayObject::mark(JSTracer *trc, JSObject *obj)
+ParallelArrayObject::mark(JSTracer *trc, RawObject obj)
 {
     gc::MarkSlot(trc, &obj->getSlotRef(SLOT_DIMENSIONS), "parallelarray.shape");
     gc::MarkSlot(trc, &obj->getSlotRef(SLOT_BUFFER), "parallelarray.buffer");

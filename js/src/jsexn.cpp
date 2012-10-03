@@ -50,7 +50,7 @@ static JSBool
 Exception(JSContext *cx, unsigned argc, Value *vp);
 
 static void
-exn_trace(JSTracer *trc, JSObject *obj);
+exn_trace(JSTracer *trc, RawObject obj);
 
 static void
 exn_finalize(FreeOp *fop, JSObject *obj);
@@ -348,7 +348,7 @@ GetExnPrivate(JSObject *obj)
 }
 
 static void
-exn_trace(JSTracer *trc, JSObject *obj)
+exn_trace(JSTracer *trc, RawObject obj)
 {
     if (JSExnPrivate *priv = GetExnPrivate(obj)) {
         if (priv->message)

@@ -1127,7 +1127,7 @@ array_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 }
 
 static void
-array_trace(JSTracer *trc, JSObject *obj)
+array_trace(JSTracer *trc, RawObject obj)
 {
     JS_ASSERT(obj->isDenseArray());
 

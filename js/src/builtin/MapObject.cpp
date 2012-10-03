@@ -962,7 +962,7 @@ MarkKey(Range &r, const HashableValue &key, JSTracer *trc)
 }
 
 void
-MapObject::mark(JSTracer *trc, JSObject *obj)
+MapObject::mark(JSTracer *trc, RawObject obj)
 {
     if (ValueMap *map = obj->asMap().getData()) {
         for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
@@ -1355,7 +1355,7 @@ SetObject::initClass(JSContext *cx, JSObject *obj)
 }
 
 void
-SetObject::mark(JSTracer *trc, JSObject *obj)
+SetObject::mark(JSTracer *trc, RawObject obj)
 {
     SetObject *setobj = static_cast<SetObject *>(obj);
     if (ValueSet *set = setobj->getData()) {

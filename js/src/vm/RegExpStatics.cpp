@@ -28,7 +28,7 @@ resc_finalize(FreeOp *fop, JSObject *obj)
 }
 
 static void
-resc_trace(JSTracer *trc, JSObject *obj)
+resc_trace(JSTracer *trc, RawObject obj)
 {
     void *pdata = obj->getPrivate();
     JS_ASSERT(pdata);
