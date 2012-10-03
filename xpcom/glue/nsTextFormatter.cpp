@@ -1020,7 +1020,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 
             case TYPE_INT64:
 		u.ll = va_arg(ap, int64_t);
-		if (!LL_GE_ZERO(u.ll)) {
+		if (u.ll < 0) {
 		    LL_NEG(u.ll, u.ll);
 		    flags |= _NEG;
 		}

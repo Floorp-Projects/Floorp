@@ -696,7 +696,7 @@ nsXULTemplateQueryProcessorRDF::CompareResults(nsIXULTemplateResult* aLeft,
 
                 if (delta == 0)
                     *aResult = 0;
-                else if (LL_GE_ZERO(delta))
+                else if (delta >= 0)
                     *aResult = 1;
                 else
                     *aResult = -1;
