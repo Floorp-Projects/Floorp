@@ -11,9 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXTRA_JS_MODULES = \
-	domplate.jsm \
-	InsideOutBox.jsm \
-	TreePanel.jsm \
 	highlighter.jsm \
 	$(NULL)
 
