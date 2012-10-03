@@ -1569,30 +1569,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLActiveInfo, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtension, WebGLExtensionSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionStandardDerivatives, WebGLExtensionSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionTextureFilterAnisotropic, WebGLExtensionSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionLoseContext, WebGLExtensionSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionCompressedTextureS3TC, WebGLExtensionSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionCompressedTextureATC, WebGLExtensionSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionCompressedTexturePVRTC, WebGLExtensionSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionDepthTexture, WebGLExtensionSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
 
   NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -4257,38 +4233,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLActiveInfo, nsIWebGLActiveInfo)
     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLActiveInfo)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLExtension, nsIWebGLExtension)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtension)
-  DOM_CLASSINFO_MAP_END
-  
-  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionStandardDerivatives, nsIWebGLExtensionStandardDerivatives)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionStandardDerivatives)
-  DOM_CLASSINFO_MAP_END
-  
-  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionTextureFilterAnisotropic, nsIWebGLExtensionTextureFilterAnisotropic)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionTextureFilterAnisotropic)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionLoseContext, nsIWebGLExtensionLoseContext)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionLoseContext)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionCompressedTextureS3TC, nsIWebGLExtensionCompressedTextureS3TC)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionCompressedTextureS3TC)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionCompressedTextureATC, nsIWebGLExtensionCompressedTextureATC)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionCompressedTextureATC)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionCompressedTexturePVRTC, nsIWebGLExtensionCompressedTexturePVRTC)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionCompressedTexturePVRTC)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionDepthTexture, nsIWebGLExtensionDepthTexture)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionDepthTexture)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(PaintRequest, nsIDOMPaintRequest)
@@ -10834,35 +10778,6 @@ nsSVGStringListSH::GetStringAt(nsISupports *aNative, int32_t aIndex,
     rv = NS_OK;
   }
   return rv;
-}
-
-NS_IMETHODIMP
-WebGLExtensionSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                              JSObject *obj, jsid id, jsval *vp, bool *_retval)
-{
-  WebGLExtensionSH::PreserveWrapper(GetNative(wrapper, obj));
-
-  return NS_OK;
-}
-
-void
-WebGLExtensionSH::PreserveWrapper(nsISupports *aNative)
-{
-  WebGLExtension* ext = static_cast<WebGLExtension*>(aNative);
-  nsContentUtils::PreserveWrapper(aNative, ext);
-}
-
-nsresult
-WebGLExtensionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                            JSObject *globalObj, JSObject **parentObj)
-{
-  *parentObj = globalObj;
-
-  WebGLExtension *ext = static_cast<WebGLExtension*>(nativeObj);
-  WebGLContext *webgl = ext->Context();
-  nsINode *node = webgl->GetParentObject();
-
-  return WrapNativeParent(cx, globalObj, node, parentObj);
 }
 
 nsresult
