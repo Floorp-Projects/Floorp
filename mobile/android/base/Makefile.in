@@ -359,6 +359,7 @@ RES_LAYOUT = \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
+  res/layout/select_dialog_multichoice.xml \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
   res/layout/abouthome_promo_box.xml \
@@ -889,6 +890,7 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
 
 RES_COLOR = \
   res/color/menu_item_title.xml \
+  res/color/select_item_multichoice.xml \
   $(NULL)
 
 RES_MENU = \
