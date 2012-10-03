@@ -3928,7 +3928,14 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   *aSnap = false;
   nsRect untransformedVisible;
   float factor = nsPresContext::AppUnitsPerCSSPixel();
-  if (!UntransformRectMatrix(mVisibleRect, GetTransform(factor), factor, &untransformedVisible)) {
+  // If we're going to prerender all our content, pretend like we
+  // don't have opqaue content so that everything under us is rendered
+  // as well.  That will increase graphics memory usage if our frame
+  // covers the entire window, but it allows our transform to be
+  // updated extremely cheaply, without invalidating any other
+  // content.
+  if (ShouldPrerenderTransformedContent(aBuilder, mFrame) ||
+      !UntransformRectMatrix(mVisibleRect, GetTransform(factor), factor, &untransformedVisible)) {
       return nsRegion();
   }
 
