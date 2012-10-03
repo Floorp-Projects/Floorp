@@ -1,12 +1,8 @@
-/* Copied from https://github.com/rentzsch/mach_star at revision
- * 498e0ba31461ac6bada7fa75ce1a7009734d5a4c */
-
-/*******************************************************************************
-	mach_override.c
-		Copyright (c) 2003-2009 Jonathan 'Wolf' Rentzsch: <http://rentzsch.com>
-		Some rights reserved: <http://opensource.org/licenses/mit-license.php>
-
-	***************************************************************************/
+// Copied from upstream at revision 195c13743fe0ebc658714e2a9567d86529f20443.
+// mach_override.c semver:1.2.0
+//   Copyright (c) 2003-2012 Jonathan 'Wolf' Rentzsch: http://rentzsch.com
+//   Some rights reserved: http://opensource.org/licenses/mit
+//   https://github.com/rentzsch/mach_override
 
 #include "mach_override.h"
 
@@ -47,8 +43,11 @@ long kIslandTemplate[] = {
 #elif defined(__i386__) 
 
 #define kOriginalInstructionsSize 16
+// On X86 we migh need to instert an add with a 32 bit immediate after the
+// original instructions.
+#define kMaxFixupSizeIncrease 5
 
-char kIslandTemplate[] = {
+unsigned char kIslandTemplate[] = {
 	// kOriginalInstructionsSize nop instructions so that we 
 	// should have enough space to host original instructions 
 	0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 
@@ -62,10 +61,12 @@ char kIslandTemplate[] = {
 #elif defined(__x86_64__)
 
 #define kOriginalInstructionsSize 32
+// On X86-64 we never need to instert a new instruction.
+#define kMaxFixupSizeIncrease 0
 
 #define kJumpAddress    kOriginalInstructionsSize + 6
 
-char kIslandTemplate[] = {
+unsigned char kIslandTemplate[] = {
 	// kOriginalInstructionsSize nop instructions so that we 
 	// should have enough space to host original instructions 
 	0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 
@@ -100,7 +101,7 @@ typedef	struct	{
 #pragma mark	-
 #pragma mark	(Funky Protos)
 
-	mach_error_t
+static mach_error_t
 allocateBranchIsland(
 		BranchIsland	**island,
 		void *originalFunctionAddress);
@@ -139,8 +140,7 @@ eatKnownInstructions(
 
 	static void
 fixupInstructions(
-    void		*originalFunction,
-    void		*escapeIsland,
+    uint32_t		offset,
     void		*instructionsToFix,
 	int			instructionCount,
 	uint8_t		*instructionSizes );
@@ -215,7 +215,7 @@ mach_override_ptr(
 										&jumpRelativeInstruction, &eatenCount, 
 										originalInstructions, &originalInstructionCount, 
 										originalInstructionSizes );
-	if (eatenCount > kOriginalInstructionsSize) {
+	if (eatenCount + kMaxFixupSizeIncrease > kOriginalInstructionsSize) {
 		//printf ("Too many instructions eaten\n");
 		overridePossible = false;
 	}
@@ -323,7 +323,8 @@ mach_override_ptr(
 	//
 	// Note that on i386, we do not support someone else changing the code under our feet
 	if ( !err ) {
-		fixupInstructions(originalFunctionPtr, reentryIsland, originalInstructions,
+		uint32_t offset = (uintptr_t)originalFunctionPtr - (uintptr_t)reentryIsland;
+		fixupInstructions(offset, originalInstructions,
 					originalInstructionCount, originalInstructionSizes );
 	
 		if( reentryIsland )
@@ -360,7 +361,13 @@ mach_override_ptr(
 #pragma mark	-
 #pragma mark	(Implementation)
 
-/***************************************************************************//**
+static bool jump_in_range(intptr_t from, intptr_t to) {
+  intptr_t field_value = to - from - 5;
+  int32_t field_value_32 = field_value;
+  return field_value == field_value_32;
+}
+
+/*******************************************************************************
 	Implementation: Allocates memory for a branch island.
 	
 	@param	island			<-	The allocated island.
@@ -368,26 +375,25 @@ mach_override_ptr(
 
 	***************************************************************************/
 
-	mach_error_t
-allocateBranchIsland(
+static mach_error_t
+allocateBranchIslandAux(
 		BranchIsland	**island,
-		void *originalFunctionAddress)
+		void *originalFunctionAddress,
+		bool forward)
 {
 	assert( island );
 	assert( sizeof( BranchIsland ) <= kPageSize );
 
 	vm_map_t task_self = mach_task_self();
 	vm_address_t original_address = (vm_address_t) originalFunctionAddress;
-	static vm_address_t last_allocated = 0;
-	vm_address_t address =
-		last_allocated ? last_allocated : original_address;
+	vm_address_t address = original_address;
 
 	for (;;) {
 		vm_size_t vmsize = 0;
 		memory_object_name_t object = 0;
 		kern_return_t kr = 0;
 		vm_region_flavor_t flavor = VM_REGION_BASIC_INFO;
-		// Find the page the address is in.
+		// Find the region the address is in.
 #if __WORDSIZE == 32
 		vm_region_basic_info_data_t info;
 		mach_msg_type_number_t info_count = VM_REGION_BASIC_INFO_COUNT;
@@ -401,17 +407,12 @@ allocateBranchIsland(
 #endif
 		if (kr != KERN_SUCCESS)
 			return kr;
-
-		// Don't underflow. This could be made to work, but this is a
-		// convenient place to give up.
 		assert((address & (kPageSize - 1)) == 0);
-		if (address == 0)
-			break;
 
-		// Go back one page.
-		vm_address_t new_address = address - kPageSize;
+		// Go to the first page before or after this region
+		vm_address_t new_address = forward ? address + vmsize : address - kPageSize;
 #if __WORDSIZE == 64
-		if(original_address - new_address - 5 > INT32_MAX)
+		if(!jump_in_range(original_address, new_address))
 			break;
 #endif
 		address = new_address;
@@ -420,7 +421,6 @@ allocateBranchIsland(
 		kr = vm_allocate(task_self, &address, kPageSize, 0);
 		if (kr == KERN_SUCCESS) {
 			*island = (BranchIsland*) address;
-			last_allocated = address;
 			return err_none;
 		}
 		if (kr != KERN_NO_SPACE)
@@ -430,7 +430,20 @@ allocateBranchIsland(
 	return KERN_NO_SPACE;
 }
 
-/***************************************************************************//**
+static mach_error_t
+allocateBranchIsland(
+		BranchIsland	**island,
+		void *originalFunctionAddress)
+{
+  mach_error_t err =
+    allocateBranchIslandAux(island, originalFunctionAddress, true);
+  if (!err)
+    return err;
+  return allocateBranchIslandAux(island, originalFunctionAddress, false);
+}
+
+
+/*******************************************************************************
 	Implementation: Deallocates memory for a branch island.
 	
 	@param	island	->	The island to deallocate.
@@ -449,7 +462,7 @@ freeBranchIsland(
 			      kPageSize );
 }
 
-/***************************************************************************//**
+/*******************************************************************************
 	Implementation: Sets the branch island's target, with an optional
 	instruction.
 	
@@ -563,6 +576,7 @@ static AsmInstructionMatch possibleInstructions[] = {
 	{ 0x3, {0xFF, 0x4C, 0x00}, {0x8B, 0x40, 0x00} },  // mov $imm(%eax-%edx), %reg
 	{ 0x4, {0xFF, 0xFF, 0xFF, 0x00}, {0x8B, 0x4C, 0x24, 0x00} },  // mov $imm(%esp), %ecx
 	{ 0x5, {0xFF, 0x00, 0x00, 0x00, 0x00}, {0xB8, 0x00, 0x00, 0x00, 0x00} },	// mov $imm, %eax
+	{ 0x6, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, {0xE8, 0x00, 0x00, 0x00, 0x00, 0x58} },	// call $imm; pop %eax
 	{ 0x0 }
 };
 #elif defined(__x86_64__)
@@ -573,12 +587,17 @@ static AsmInstructionMatch possibleInstructions[] = {
 	{ 0x3, {0xFF, 0xFF, 0xFF}, {0x48, 0x89, 0xE5} },				// mov %rsp,%rbp
 	{ 0x4, {0xFF, 0xFF, 0xFF, 0x00}, {0x48, 0x83, 0xEC, 0x00} },	                // sub 0x??, %rsp
 	{ 0x4, {0xFB, 0xFF, 0x00, 0x00}, {0x48, 0x89, 0x00, 0x00} },	                // move onto rbp
+	{ 0x4, {0xFF, 0xFF, 0xFF, 0xFF}, {0x40, 0x0f, 0xbe, 0xce} },			// movsbl %sil, %ecx
 	{ 0x2, {0xFF, 0x00}, {0x41, 0x00} },						// push %rXX
 	{ 0x2, {0xFF, 0x00}, {0x85, 0x00} },						// test %rX,%rX
 	{ 0x5, {0xF8, 0x00, 0x00, 0x00, 0x00}, {0xB8, 0x00, 0x00, 0x00, 0x00} },   // mov $imm, %reg
 	{ 0x3, {0xFF, 0xFF, 0x00}, {0xFF, 0x77, 0x00} },  // pushq $imm(%rdi)
 	{ 0x2, {0xFF, 0xFF}, {0x31, 0xC0} },						// xor %eax, %eax
-    { 0x2, {0xFF, 0xFF}, {0x89, 0xF8} },			// mov %edi, %eax
+	{ 0x2, {0xFF, 0xFF}, {0x89, 0xF8} },			// mov %edi, %eax
+
+	//leaq offset(%rip),%rax
+	{ 0x7, {0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00}, {0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00} },
+
 	{ 0x0 }
 };
 #endif
@@ -677,24 +696,48 @@ eatKnownInstructions(
 
 	static void
 fixupInstructions(
-    void		*originalFunction,
-    void		*escapeIsland,
+	uint32_t	offset,
     void		*instructionsToFix,
 	int			instructionCount,
 	uint8_t		*instructionSizes )
 {
+	// The start of "leaq offset(%rip),%rax"
+	static const uint8_t LeaqHeader[] = {0x48, 0x8d, 0x05};
+
 	int	index;
 	for (index = 0;index < instructionCount;index += 1)
 	{
 		if (*(uint8_t*)instructionsToFix == 0xE9) // 32-bit jump relative
 		{
-			uint32_t offset = (uintptr_t)originalFunction - (uintptr_t)escapeIsland;
 			uint32_t *jumpOffsetPtr = (uint32_t*)((uintptr_t)instructionsToFix + 1);
 			*jumpOffsetPtr += offset;
 		}
-		
-		originalFunction = (void*)((uintptr_t)originalFunction + instructionSizes[index]);
-		escapeIsland = (void*)((uintptr_t)escapeIsland + instructionSizes[index]);
+
+		// leaq offset(%rip),%rax
+		if (memcmp(instructionsToFix, LeaqHeader, 3) == 0) {
+			uint32_t *LeaqOffsetPtr = (uint32_t*)((uintptr_t)instructionsToFix + 3);
+			*LeaqOffsetPtr += offset;
+		}
+
+		// 32-bit call relative to the next addr; pop %eax
+		if (*(uint8_t*)instructionsToFix == 0xE8)
+		{
+			// Just this call is larger than the jump we use, so we
+			// know this is the last instruction.
+			assert(index == (instructionCount - 1));
+			assert(instructionSizes[index] == 6);
+
+                        // Insert "addl $offset, %eax" in the end so that when
+                        // we jump to the rest of the function %eax has the
+                        // value it would have if eip had been pushed by the
+                        // call in its original position.
+			uint8_t *op = instructionsToFix;
+			op += 6;
+			*op = 0x05; // addl
+			uint32_t *addImmPtr = (uint32_t*)(op + 1);
+			*addImmPtr = offset;
+		}
+
 		instructionsToFix = (void*)((uintptr_t)instructionsToFix + instructionSizes[index]);
     }
 }
