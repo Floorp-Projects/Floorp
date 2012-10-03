@@ -2695,11 +2695,7 @@ nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
     }
   } else {
     nsCOMPtr<nsIChannel> channel = aDoc->GetChannel();
-    if (channel) {
-      nsCOMPtr<nsILoadContext> context;
-      NS_QueryNotificationCallbacks(channel, context);
-      isPrivate = context && context->UsePrivateBrowsing();
-    }
+    isPrivate = channel && NS_UsePrivateBrowsing(channel);
   }
   return isPrivate ? sPrivateImgLoader : sImgLoader;
 }
