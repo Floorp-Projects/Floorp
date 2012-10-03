@@ -53,7 +53,7 @@ static void
 exn_trace(JSTracer *trc, RawObject obj);
 
 static void
-exn_finalize(FreeOp *fop, JSObject *obj);
+exn_finalize(FreeOp *fop, RawObject obj);
 
 static JSBool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
@@ -380,7 +380,7 @@ SetExnPrivate(JSObject *exnObject, JSExnPrivate *priv)
 }
 
 static void
-exn_finalize(FreeOp *fop, JSObject *obj)
+exn_finalize(FreeOp *fop, RawObject obj)
 {
     if (JSExnPrivate *priv = GetExnPrivate(obj)) {
         if (JSErrorReport *report = priv->errorReport) {
