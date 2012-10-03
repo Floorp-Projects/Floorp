@@ -190,6 +190,13 @@ class CodeGeneratorShared : public LInstructionVisitor
     // |returnPointOffset|.
     bool markOsiPoint(LOsiPoint *ins, uint32 *returnPointOffset);
 
+    // Ensure that there is enough room between the last OSI point and the
+    // current instruction, such that:
+    //  (1) Invalidation will not overwrite the current instruction, and
+    //  (2) Overwriting the current instruction will not overwrite
+    //      an invalidation marker.
+    void ensureOsiSpace();
+
     bool emitTruncateDouble(const FloatRegister &src, const Register &dest);
 
     void emitPreBarrier(Register base, const LAllocation *index, MIRType type);

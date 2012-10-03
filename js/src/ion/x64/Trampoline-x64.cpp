@@ -277,8 +277,8 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     // Note that this code assumes the function is JITted.
     masm.movq(Operand(rax, offsetof(JSFunction, u.i.script_)), rax);
     masm.movq(Operand(rax, offsetof(JSScript, ion)), rax);
-    masm.movq(Operand(rax, offsetof(IonScript, method_)), rax);
-    masm.movq(Operand(rax, IonCode::OffsetOfCode()), rax);
+    masm.movq(Operand(rax, IonScript::offsetOfMethod()), rax);
+    masm.movq(Operand(rax, IonCode::offsetOfCode()), rax);
     masm.call(rax);
 
     // Remove the rectifier frame.
