@@ -707,10 +707,10 @@ class CallCompiler : public BaseCompiler
         /* Call into Ion. */
         masm.loadPtr(Address(ionScript, ion::IonScript::offsetOfMethod()), t0);
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-        masm.loadPtr(Address(t0, ion::IonCode::OffsetOfCode()), t0);
+        masm.loadPtr(Address(t0, ion::IonCode::offsetOfCode()), t0);
         masm.call(t0);
 #elif defined(JS_CPU_ARM)
-        masm.loadPtr(Address(t0, ion::IonCode::OffsetOfCode()), JSC::ARMRegisters::ip);
+        masm.loadPtr(Address(t0, ion::IonCode::offsetOfCode()), JSC::ARMRegisters::ip);
         masm.callAddress(JS_FUNC_TO_DATA_PTR(void *, IonVeneer));
 #endif
 

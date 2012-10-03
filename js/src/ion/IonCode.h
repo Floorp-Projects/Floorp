@@ -105,7 +105,7 @@ class IonCode : public gc::Cell
         return code;
     }
 
-    static size_t OffsetOfCode() {
+    static size_t offsetOfCode() {
         return offsetof(IonCode, code_);
     }
 
@@ -133,6 +133,7 @@ class IonCache;
 // An IonScript attaches Ion-generated information to a JSScript.
 struct IonScript
 {
+  private:
     // Code pointer containing the actual method.
     HeapPtr<IonCode> method_;
 
@@ -205,10 +206,11 @@ struct IonScript
     // Number of references from invalidation records.
     size_t refcount_;
 
+    types::RecompileInfo recompileInfo_;
+
+  public:
     // Number of times this function has tried to call a non-IM compileable function
     uint32 slowCallCount;
-
-    types::RecompileInfo recompileInfo_;
 
     SnapshotOffset *bailoutTable() {
         return (SnapshotOffset *)(reinterpret_cast<uint8 *>(this) + bailoutTable_);
