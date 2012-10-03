@@ -239,12 +239,12 @@ ContentParent::StartUp()
     }
 
     sKeepAppProcessPreallocated =
-        Preferences::GetBool("dom.ipc.processPrelauch.enabled", false);
+        Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false);
     if (sKeepAppProcessPreallocated) {
         ClearOnShutdown(&sPreallocatedAppProcess);
 
         sPreallocateDelayMs = Preferences::GetUint(
-            "dom.ipc.processPrelauch.delayMs", 1000);
+            "dom.ipc.processPrelaunch.delayMs", 1000);
 
         MOZ_ASSERT(!sPreallocateAppProcessTask);
         ScheduleDelayedPreallocateAppProcess();
