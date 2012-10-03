@@ -33,6 +33,7 @@
 #include "nsIContent.h"
 
 #include "mozilla/Preferences.h"
+#include "nsVersionComparator.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "ANPBase.h"
@@ -176,6 +177,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
 #ifdef MOZ_WIDGET_ANDROID
   , mOnScreen(true)
 #endif
+  , mHaveJavaC2PJSObjectQuirk(false)
 {
   mNPP.pdata = NULL;
   mNPP.ndata = this;
@@ -438,6 +440,8 @@ nsNPAPIPluginInstance::Start()
 
   GetMode(&mode);
   GetMIMEType(&mimetype);
+
+  CheckJavaC2PJSObjectQuirk(count, names, values);
 
   // Some older versions of Flash have a bug in them
   // that causes the stack to become currupt if we
@@ -1080,6 +1084,10 @@ nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(bool* aDrawing)
 nsresult
 nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 {
+  if (mHaveJavaC2PJSObjectQuirk) {
+    return NS_ERROR_FAILURE;
+  }
+
   NPObject *npobj = nullptr;
   nsresult rv = GetValueFromPlugin(NPPVpluginScriptableNPObject, &npobj);
   if (NS_FAILED(rv) || !npobj)
@@ -1688,6 +1696,98 @@ nsNPAPIPluginInstance::CarbonNPAPIFailure()
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch CarbonEventModelFailureEvent.");
   }
+}
+
+static bool
+GetJavaVersionFromMimetype(nsPluginTag* pluginTag, nsCString& version)
+{
+  for (uint32_t i = 0; i < pluginTag->mMimeTypes.Length(); ++i) {
+    nsCString type = pluginTag->mMimeTypes[i];
+    nsAutoCString jpi("application/x-java-applet;jpi-version=");
+
+    int32_t idx = type.Find(jpi, false, 0, -1);
+    if (idx != 0) {
+      continue;
+    }
+
+    type.Cut(0, jpi.Length());
+    if (type.IsEmpty()) {
+      continue;
+    }
+
+    type.ReplaceChar('_', '.');
+    version = type;
+    return true;
+  }
+
+  return false;
+}
+
+void
+nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
+                                                 const char* const* paramNames,
+                                                 const char* const* paramValues)
+{
+  if (!mMIMEType || !mPlugin) {
+    return;
+  }
+
+  nsPluginTagType tagtype;
+  nsresult rv = GetTagType(&tagtype);
+  if (NS_FAILED(rv) ||
+      (tagtype != nsPluginTagType_Applet)) {
+    return;
+  }
+
+  nsRefPtr<nsPluginHost> pluginHost =
+    already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+  if (!pluginHost ||
+      !pluginHost->IsPluginClickToPlayForType(mMIMEType)) {
+    return;
+  }
+
+  nsPluginTag* pluginTag = pluginHost->TagForPlugin(mPlugin);
+  if (!pluginTag ||
+      !pluginTag->mIsJavaPlugin) {
+    return;
+  }
+
+  // check the params for "code" being present and non-empty
+  bool haveCodeParam = false;
+  bool isCodeParamEmpty = true;
+
+  for (uint16_t i = 0; i < paramCount; ++i) {
+    if (PL_strcasecmp(paramNames[i], "code") == 0) {
+      haveCodeParam = true;
+      if (PL_strlen(paramValues[i]) > 0) {
+        isCodeParamEmpty = false;
+      }
+      break;
+    }
+  }
+
+  // Due to the Java version being specified inconsistently across platforms
+  // check the version via the mimetype for choosing specific Java versions
+  nsCString javaVersion;
+  if (!GetJavaVersionFromMimetype(pluginTag, javaVersion)) {
+    return;
+  }
+
+  mozilla::Version version = javaVersion.get();
+
+  if (version >= "1.7.0.4") {
+    return;
+  }
+
+  if (!haveCodeParam && version >= "1.6.0.34" && version < "1.7") {
+    return;
+  }
+
+  if (haveCodeParam && !isCodeParamEmpty) {
+    return;
+  }
+
+  mHaveJavaC2PJSObjectQuirk = true;
 }
 
 double
