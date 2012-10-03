@@ -193,6 +193,9 @@ protected:
   void     DoNotifyListener();
   virtual void DoNotifyListenerCleanup() = 0;
 
+  // drop reference to listener, its callbacks, and the progress sink
+  void ReleaseListeners();
+
   nsresult ApplyContentConversions();
 
   void AddCookiesToRequest();
