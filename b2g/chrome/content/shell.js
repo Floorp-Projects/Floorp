@@ -23,6 +23,7 @@ Cu.import('resource://gre/modules/PermissionSettings.jsm');
 Cu.import('resource://gre/modules/ObjectWrapper.jsm');
 Cu.import('resource://gre/modules/accessibility/AccessFu.jsm');
 Cu.import('resource://gre/modules/Payment.jsm');
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
@@ -651,7 +652,7 @@ var WebappsHelper = {
           if (!aManifest)
             return;
 
-          let manifest = new DOMApplicationManifest(aManifest, json.origin);
+          let manifest = new ManifestHelper(aManifest, json.origin);
           shell.sendChromeEvent({
             "type": "webapps-launch",
             "url": manifest.fullLaunchPath(json.startPoint),
