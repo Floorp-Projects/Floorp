@@ -42,8 +42,6 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              uint32_t aFlags) MOZ_OVERRIDE;
 
-  virtual bool HasTransformGetter() const MOZ_OVERRIDE { return true; }
-
   /**
    * Get the "type" of the frame
    *
