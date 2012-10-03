@@ -55,11 +55,11 @@
    ...
 }
 {
-   Bug 793533
+   Bug 793533 (all 64-bit systems)
    Memcheck:Leak
    fun:malloc
    fun:moz_xmalloc
-   fun:_Z22xpc_CreateGlobalObjectP9JSContextP7JSClassP12nsIPrincipalP11nsISupportsbPP8JSObjectPP13JSCompartment
+   fun:_ZN3xpc18CreateGlobalObjectEP9JSContextP7JSClassP12nsIPrincipalbPP8JSObjectPP13JSCompartment
    ...
 }
 {

@@ -5,14 +5,6 @@
 ####################################
 
 {
-   Bug 793533
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_ZN3xpc18CreateGlobalObjectEP9JSContextP7JSClassP12nsIPrincipalbPP8JSObjectPP13JSCompartment
-   ...
-}
-{
    Bug 793537
    Memcheck:Leak
    ...
