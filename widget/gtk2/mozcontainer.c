@@ -171,13 +171,6 @@ moz_container_init (MozContainer *container)
     gtk_widget_set_can_focus(GTK_WIDGET(container), TRUE);
     gtk_container_set_resize_mode(GTK_CONTAINER(container), GTK_RESIZE_IMMEDIATE);
     gtk_widget_set_redraw_on_allocate(GTK_WIDGET(container), FALSE);
-
-#if defined(MOZ_WIDGET_GTK2)
-    /* Mozilla uses the the gdbrgb colormap and visual throughout the
-       backend so for widgets we just use that colormap instead of the
-       default one. */
-    gtk_widget_set_colormap(GTK_WIDGET(container), gdk_rgb_get_colormap());
-#endif
 }
 
 void
