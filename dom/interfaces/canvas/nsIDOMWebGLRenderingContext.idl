@@ -95,12 +95,6 @@ interface nsIWebGLActiveInfo : nsISupports
     readonly attribute DOMString name;
 };
 
-[scriptable, builtinclass, uuid(d38b0467-623e-4c82-9140-5f14a3bd1bad)]
-interface nsIWebGLUniformLocation : nsISupports
-{
-    [noscript] attribute WebGLint location;
-};
-
 /* Base class for all WebGL extensions, and for those without
  * any additional tokens/methods.
  */
