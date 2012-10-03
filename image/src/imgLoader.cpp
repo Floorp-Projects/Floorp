@@ -1921,7 +1921,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   return rv;
 }
 
-NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, bool *_retval)
+nsresult imgLoader::SupportImageWithMimeType(const char* aMimeType, bool *_retval)
 {
   *_retval = false;
   nsAutoCString mimeType(aMimeType);

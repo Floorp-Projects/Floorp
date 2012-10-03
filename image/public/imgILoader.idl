@@ -27,7 +27,7 @@ interface nsIChannelPolicy;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, uuid(20a5e3e9-0d5b-482c-9f41-942b5f19e5a3)]
+[scriptable, uuid(f5a7c016-8caf-460a-b1a1-3fe5534d5c9e)]
 interface imgILoader : nsISupports
 {
   // Extra flags to pass to loadImage if you want a load to use CORS
@@ -89,11 +89,4 @@ interface imgILoader : nsISupports
                         in imgIDecoderObserver aObserver,
                         in nsISupports cx,
                         out nsIStreamListener aListener);
-
-  /**
-   * Checks if a decoder for the an image with the given mime type is available
-   * @param mimeType The type to find a decoder for
-   * @return true if a decoder is available, false otherwise
-   */
-  boolean supportImageWithMimeType(in string mimeType);
 };
