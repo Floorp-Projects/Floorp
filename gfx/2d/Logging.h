@@ -45,7 +45,7 @@ inline PRLogModuleLevel PRLogLevelForLevel(int aLevel) {
 
 extern int sGfxLogLevel;
 
-static void OutputMessage(const std::string &aString, int aLevel) {
+static inline void OutputMessage(const std::string &aString, int aLevel) {
 #if defined(WIN32) && !defined(PR_LOGGING)
   if (aLevel >= sGfxLogLevel) {
     ::OutputDebugStringA(aString.c_str());
