@@ -28,7 +28,7 @@ static void DrawDebugOverlay(gfxImageSurface* imgSurf, int x, int y)
 
   // Draw text using cairo toy text API
   cairo_t* cr = c.GetCairo();
-  cairo_set_font_size(cr, 10);
+  cairo_set_font_size(cr, 25);
   cairo_text_extents_t extents;
   cairo_text_extents(cr, ss.str().c_str(), &extents);
 
@@ -36,16 +36,16 @@ static void DrawDebugOverlay(gfxImageSurface* imgSurf, int x, int y)
 
   c.NewPath();
   c.SetDeviceColor(gfxRGBA(0.0, 0.0, 0.0, 1.0));
-  c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 15)));
+  c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 30)));
   c.Fill();
 
   c.NewPath();
   c.SetDeviceColor(gfxRGBA(1.0, 0.0, 0.0, 1.0));
-  c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 15)));
+  c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 30)));
   c.Stroke();
 
   c.NewPath();
-  cairo_move_to(cr, 4, 13);
+  cairo_move_to(cr, 4, 28);
   cairo_show_text(cr, ss.str().c_str());
 
 }
