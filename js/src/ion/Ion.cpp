@@ -426,11 +426,13 @@ IonScript::IonScript()
     scriptList_(0),
     scriptEntries_(0),
     refcount_(0),
-    slowCallCount(0),
-    recompileInfo_()
+    recompileInfo_(),
+    slowCallCount(0)
 {
 }
+
 static const int DataAlignment = 4;
+
 IonScript *
 IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
@@ -724,6 +726,14 @@ IonScript::toggleBarriers(bool enabled)
 void
 IonScript::purgeCaches(JSCompartment *c)
 {
+    // Don't reset any ICs if we're invalidated, otherwise, repointing the
+    // inline jump could overwrite an invalidation marker. These ICs can
+    // no longer run, however, the IC slow paths may be active on the stack.
+    // ICs therefore are required to check for invalidation before patching,
+    // to ensure the same invariant.
+    if (invalidated())
+        return;
+
     // This is necessary because AutoFlushCache::updateTop()
     // looks up the current flusher in the IonContext.  Without one
     // it cannot work.
@@ -1479,6 +1489,13 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
         if (!invalidateAll && !script->ion->invalidated())
             continue;
 
+        IonScript *ionScript = script->ion;
+
+        // Purge ICs before we mark this script as invalidated. This will
+        // prevent lastJump_ from appearing to be a bogus pointer, just
+        // in case anyone tries to read it.
+        ionScript->purgeCaches(script->compartment());
+
         // This frame needs to be invalidated. We do the following:
         //
         // 1. Increment the reference counter to keep the ionScript alive
@@ -1500,7 +1517,6 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
         // instructions after the call) in to capture an appropriate
         // snapshot after the call occurs.
 
-        IonScript *ionScript = script->ion;
         ionScript->incref();
 
         const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
