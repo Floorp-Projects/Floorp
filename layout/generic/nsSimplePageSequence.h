@@ -91,6 +91,8 @@ public:
   // user's settings
   virtual bool HonorPrintBackgroundSettings() { return false; }
 
+  virtual bool HasTransformGetter() const MOZ_OVERRIDE { return true; }
+
   /**
    * Get the "type" of the frame
    *
