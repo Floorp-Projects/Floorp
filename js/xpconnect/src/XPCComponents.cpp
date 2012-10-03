@@ -4770,6 +4770,13 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN;
 }
 
+static JSBool
+ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
+                          JSMutableHandleValue vp)
+{
+    return true;
+}
+
 // static
 JSBool
 nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
@@ -4786,9 +4793,10 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
         aTarget = global;
 
     jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
+    JSPropertyOp getter = AccessCheck::isChrome(global) ? nullptr
+                                                        : &ContentComponentsGetterOp;
     return JS_DefinePropertyById(ccx, aTarget, id, js::ObjectValue(*components),
-                                 nullptr, nullptr,
-                                 JSPROP_PERMANENT | JSPROP_READONLY);
+                                 getter, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 /* void lookupMethod (); */
