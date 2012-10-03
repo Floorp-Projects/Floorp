@@ -346,7 +346,7 @@ class ParallelArrayObject : public JSObject {
     static bool toLocaleString(JSContext *cx, CallArgs args);
     static bool toSource(JSContext *cx, CallArgs args);
 
-    static void mark(JSTracer *trc, JSObject *obj);
+    static void mark(JSTracer *trc, RawObject obj);
     static JSBool lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                 MutableHandleObject objp, MutableHandleShape propp);
     static JSBool lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,

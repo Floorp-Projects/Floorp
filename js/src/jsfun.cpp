@@ -524,7 +524,7 @@ JSFunction::trace(JSTracer *trc)
 }
 
 static void
-fun_trace(JSTracer *trc, JSObject *obj)
+fun_trace(JSTracer *trc, RawObject obj)
 {
     obj->toFunction()->trace(trc);
 }

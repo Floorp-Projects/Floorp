@@ -494,7 +494,7 @@ ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents)
 }
 
 void
-ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
+ArrayBufferObject::obj_trace(JSTracer *trc, RawObject obj)
 {
     /*
      * If this object changes, it will get marked via the private data barrier,
@@ -1150,7 +1150,7 @@ class TypedArrayTemplate
     }
 
     static void
-    obj_trace(JSTracer *trc, JSObject *obj)
+    obj_trace(JSTracer *trc, RawObject obj)
     {
         MarkSlot(trc, &obj->getFixedSlotRef(BUFFER_SLOT), "typedarray.buffer");
     }

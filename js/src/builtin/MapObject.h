@@ -87,7 +87,7 @@ class MapObject : public JSObject {
     static JSFunctionSpec methods[];
     ValueMap *getData() { return static_cast<ValueMap *>(getPrivate()); }
     static ValueMap & extract(CallReceiver call);
-    static void mark(JSTracer *trc, JSObject *obj);
+    static void mark(JSTracer *trc, RawObject obj);
     static void finalize(FreeOp *fop, JSObject *obj);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
 
@@ -115,7 +115,7 @@ class SetObject : public JSObject {
     static JSFunctionSpec methods[];
     ValueSet *getData() { return static_cast<ValueSet *>(getPrivate()); }
     static ValueSet & extract(CallReceiver call);
-    static void mark(JSTracer *trc, JSObject *obj);
+    static void mark(JSTracer *trc, RawObject obj);
     static void finalize(FreeOp *fop, JSObject *obj);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
 
