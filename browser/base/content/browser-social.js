@@ -18,6 +18,9 @@ let SocialUI = {
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler, true, true);
 
+    // Called when we enter DOM full-screen mode.
+    window.addEventListener("mozfullscreenchange", function () SocialSidebar.updateSidebar());
+
     Social.init(this._providerReady.bind(this));
   },
 
@@ -188,7 +191,7 @@ let SocialChatBar = {
     let docElem = document.documentElement;
     let chromeless = docElem.getAttribute("disablechrome") ||
                      docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
-    return Social.uiVisible && !chromeless;
+    return Social.uiVisible && !chromeless && !document.mozFullScreen;
   },
   openChat: function(aProvider, aURL, aCallback, aMode) {
     if (this.canShow)
@@ -753,8 +756,8 @@ var SocialSidebar = {
   },
 
   // Whether the user has toggled the sidebar on (for windows where it can appear)
-  get enabled() {
-    return Services.prefs.getBoolPref("social.sidebar.open");
+  get opened() {
+    return Services.prefs.getBoolPref("social.sidebar.open") && !document.mozFullScreen;
   },
 
   dispatchEvent: function(aType, aDetail) {
@@ -771,7 +774,7 @@ var SocialSidebar = {
 
     // Hide the sidebar if it cannot appear, or has been toggled off.
     // Also set the command "checked" state accordingly.
-    let hideSidebar = !this.canShow || !this.enabled;
+    let hideSidebar = !this.canShow || !this.opened;
     let broadcaster = document.getElementById("socialSidebarBroadcaster");
     broadcaster.hidden = hideSidebar;
     command.setAttribute("checked", !hideSidebar);
