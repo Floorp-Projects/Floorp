@@ -37,7 +37,7 @@ void
 nsHttpResponseHead::SetContentLength(int64_t len)
 {
     mContentLength = len;
-    if (!LL_GE_ZERO(len)) // < 0
+    if (len < 0)
         mHeaders.ClearHeader(nsHttp::Content_Length);
     else
         mHeaders.SetHeader(nsHttp::Content_Length, nsPrintfCString("%lld", len));
