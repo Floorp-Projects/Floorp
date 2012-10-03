@@ -690,9 +690,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mCallCleanUpAfterModalDialogCloses(false),
     mDialogAbuseCount(0),
     mStopAbuseDialogs(false),
-    mDialogsPermanentlyDisabled(false),
-    mObservingNetworkUpload(false),
-    mObservingNetworkDownload(false)
+    mDialogsPermanentlyDisabled(false)
 {
   nsLayoutStatics::AddRef();
 
@@ -11153,11 +11151,6 @@ nsGlobalWindow::SetHasAudioAvailableEventListeners()
 void
 nsGlobalWindow::EnableNetworkEvent(uint32_t aType)
 {
-  if ((mObservingNetworkUpload && aType == NS_NETWORK_UPLOAD_EVENT) ||
-      (mObservingNetworkDownload && aType == NS_NETWORK_DOWNLOAD_EVENT)) {
-    return;
-  }
-
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   if (!permMgr) {
@@ -11182,11 +11175,9 @@ nsGlobalWindow::EnableNetworkEvent(uint32_t aType)
   switch (aType) {
     case NS_NETWORK_UPLOAD_EVENT:
       os->AddObserver(mObserver, NS_NETWORK_ACTIVITY_BLIP_UPLOAD_TOPIC, false);
-      mObservingNetworkUpload = true;
       break;
     case NS_NETWORK_DOWNLOAD_EVENT:
       os->AddObserver(mObserver, NS_NETWORK_ACTIVITY_BLIP_DOWNLOAD_TOPIC, false);
-      mObservingNetworkDownload = true;
       break;
   }
 }
@@ -11194,25 +11185,17 @@ nsGlobalWindow::EnableNetworkEvent(uint32_t aType)
 void
 nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 {
-  if ((!mObservingNetworkUpload && aType == NS_NETWORK_UPLOAD_EVENT) ||
-      (!mObservingNetworkDownload && aType == NS_NETWORK_DOWNLOAD_EVENT)) {
-    return;
-  }
-
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (!os) {
-    NS_ERROR("ObserverService should be available!");
     return;
   }
 
   switch (aType) {
     case NS_NETWORK_UPLOAD_EVENT:
       os->RemoveObserver(mObserver, NS_NETWORK_ACTIVITY_BLIP_UPLOAD_TOPIC);
-      mObservingNetworkUpload = false;
       break;
     case NS_NETWORK_DOWNLOAD_EVENT:
       os->RemoveObserver(mObserver, NS_NETWORK_ACTIVITY_BLIP_DOWNLOAD_TOPIC);
-      mObservingNetworkDownload = false;
       break;
   }
 }
