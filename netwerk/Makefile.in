@@ -34,6 +34,7 @@ endif
 ifdef MOZ_SCTP
 PARALLEL_DIRS += \
   sctp/src \
+  sctp/datachannel \
   $(NULL)
 endif
 
