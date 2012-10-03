@@ -190,6 +190,9 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     nsCOMPtr<nsIAudioManager> am = do_GetService("@mozilla.org/telephony/audiomanager;1");
+    if (!am) {
+      NS_WARNING("Failed to get AudioManager service!");
+    }
     am->SetForceForUse(am->USE_COMMUNICATION, am->FORCE_BT_SCO);
 
     nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
