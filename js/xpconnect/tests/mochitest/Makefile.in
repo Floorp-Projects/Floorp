@@ -67,6 +67,8 @@ MOCHITEST_FILES =	bug500931_helper.html \
 		test_bug781476.html \
 		file_bug781476.html \
 		test_bug789713.html \
+		file_bug795275.html \
+		file_bug795275.xml \
 		file_nodelists.html \
 		file_exnstack.html \
 		file_expandosharing.html \
