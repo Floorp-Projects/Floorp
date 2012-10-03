@@ -55,7 +55,7 @@ LIRGenerator::visitCallee(MCallee *callee)
     if (!define(ins, callee, LDefinition::PRESET))
         return false;
 
-    ins->getDef(0)->setOutput(LArgument(-sizeof(IonJSFrameLayout)
+    ins->getDef(0)->setOutput(LArgument(-int32_t(sizeof(IonJSFrameLayout))
                                         + IonJSFrameLayout::offsetOfCalleeToken()));
 
     return true;

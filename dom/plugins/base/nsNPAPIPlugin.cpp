@@ -94,6 +94,9 @@ using mozilla::plugins::PluginModuleParent;
 #ifdef XP_WIN
 #include <windows.h>
 #include "nsWindowsHelpers.h"
+#ifdef ACCESSIBILITY
+#include "mozilla/a11y/Compatibility.h"
+#endif
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -254,11 +257,24 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
     return false;
   }
 
+#ifdef ACCESSIBILITY
+  // Certain assistive technologies don't want oop Flash, thus we have a special
+  // pref for them to disable oop Flash (refer to bug 785047 for details).
+  bool useA11yPref = false;
+#endif
+
 #ifdef XP_WIN
+  useA11yPref =  a11y::Compatibility::IsJAWS();
+
   // On Windows Vista+, we force Flash to run in OOPP mode because Adobe
   // doesn't test Flash in-process and there are known stability bugs.
   if (aPluginTag->mIsFlashPlugin && IsVistaOrLater()) {
+#ifdef ACCESSIBILITY
+    if (!useA11yPref)
+      return true;
+#else
     return true;
+#endif
   }
 #endif
 
@@ -289,6 +305,11 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 #endif
 #else
   nsAutoCString prefGroupKey("dom.ipc.plugins.enabled.");
+#endif
+
+#ifdef ACCESSIBILITY
+  if (useA11yPref)
+    prefGroupKey.AssignLiteral("dom.ipc.plugins.enabled.a11y.");
 #endif
 
   // Java plugins include a number of different file names,
@@ -345,6 +366,9 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
     Preferences::GetBool("dom.ipc.plugins.enabled.ppc", false);
 #endif
 #else
+#ifdef ACCESSIBILITY
+    useA11yPref ? Preferences::GetBool("dom.ipc.plugins.enabled.a11y", false) :
+#endif
     Preferences::GetBool("dom.ipc.plugins.enabled", false);
 #endif
   }
@@ -2117,6 +2141,14 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
   case NPNVsupportsUpdatedCocoaTextInputBool: {
     *(NPBool*)result = true;
+    return NPERR_NO_ERROR;
+  }
+
+  case NPNVcontentsScaleFactor: {
+    nsNPAPIPluginInstance *inst =
+      (nsNPAPIPluginInstance *) (npp ? npp->ndata : nullptr);
+    double scaleFactor = inst ? inst->GetContentsScaleFactor() : 1.0;
+    *(double*)result = scaleFactor;
     return NPERR_NO_ERROR;
   }
 #endif

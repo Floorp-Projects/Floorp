@@ -266,6 +266,9 @@ public:
   // event model is not supported.
   void CarbonNPAPIFailure();
 
+  // Returns the contents scale factor of the screen the plugin is drawn on.
+  double GetContentsScaleFactor();
+
 protected:
 
   nsresult GetTagType(nsPluginTagType *result);

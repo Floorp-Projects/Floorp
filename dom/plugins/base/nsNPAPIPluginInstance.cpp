@@ -1716,3 +1716,13 @@ nsNPAPIPluginInstance::CarbonNPAPIFailure()
     NS_WARNING("Failed to dispatch CarbonEventModelFailureEvent.");
   }
 }
+
+double
+nsNPAPIPluginInstance::GetContentsScaleFactor()
+{
+  double scaleFactor = 1.0;
+  if (mOwner) {
+    mOwner->GetContentsScaleFactor(&scaleFactor);
+  }
+  return scaleFactor;
+}

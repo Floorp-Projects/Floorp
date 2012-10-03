@@ -67,6 +67,7 @@ public class GeckoEvent {
     private static final int COMPOSITOR_PAUSE = 28;
     private static final int COMPOSITOR_RESUME = 29;
     private static final int PAINT_LISTEN_START_EVENT = 30;
+    private static final int NATIVE_GESTURE_EVENT = 31;
 
     /**
      * These DOM_KEY_LOCATION constants mirror the DOM KeyboardEvent's constants.
@@ -97,6 +98,10 @@ public class GeckoEvent {
     public static final int IME_RANGE_UNDERLINE = 1;
     public static final int IME_RANGE_FORECOLOR = 2;
     public static final int IME_RANGE_BACKCOLOR = 4;
+
+    public static final int ACTION_MAGNIFY_START = 11;
+    public static final int ACTION_MAGNIFY = 12;
+    public static final int ACTION_MAGNIFY_END = 13;
 
     final public int mType;
     public int mAction;
@@ -258,6 +263,21 @@ public class GeckoEvent {
             default:
                 return false;
         }
+    }
+
+    public static GeckoEvent createNativeGestureEvent(int action, PointF pt, double size) {
+        GeckoEvent event = new GeckoEvent(NATIVE_GESTURE_EVENT);
+        event.mAction = action;
+        event.mCount = 1;
+        event.mPoints = new Point[1];
+
+        PointF geckoPoint = new PointF(pt.x, pt.y);
+        geckoPoint = GeckoApp.mAppContext.getLayerView().convertViewPointToLayerPoint(geckoPoint);
+        event.mPoints[0] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
+
+        event.mX = size;
+        event.mTime = System.currentTimeMillis();
+        return event;
     }
 
     public static GeckoEvent createMotionEvent(MotionEvent m) {

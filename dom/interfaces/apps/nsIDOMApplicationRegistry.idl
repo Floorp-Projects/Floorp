@@ -122,7 +122,7 @@ interface mozIDOMApplicationMgmt : nsISupports
   void applyDownload(in mozIDOMApplication app);
 };
 
-[scriptable, uuid(7ca34d3e-d855-4d0a-a3b3-58c0acad9ec3)]
+[scriptable, uuid(abfc6c15-8b92-4b9a-b892-52e6ae76f379)]
 interface mozIDOMApplicationRegistry : nsISupports
 {
   /**
@@ -144,9 +144,9 @@ interface mozIDOMApplicationRegistry : nsISupports
   nsIDOMDOMRequest getSelf();
 
   /**
-   * the request will return true if the app from that origin is installed
+   * the request will return the application if the app from that origin is installed
    */
-  nsIDOMDOMRequest isInstalled(in DOMString manifestUrl);
+  nsIDOMDOMRequest checkInstalled(in DOMString manifestUrl);
 
   /**
    * the request will return the applications installed from this origin, or null.

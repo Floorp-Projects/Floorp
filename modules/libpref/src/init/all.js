@@ -1014,6 +1014,7 @@ pref("network.IDN.whitelist.ac", true);
 pref("network.IDN.whitelist.ar", true);
 pref("network.IDN.whitelist.at", true);
 pref("network.IDN.whitelist.br", true);
+pref("network.IDN.whitelist.ca", true);
 pref("network.IDN.whitelist.ch", true);
 pref("network.IDN.whitelist.cl", true);
 pref("network.IDN.whitelist.cn", true);
