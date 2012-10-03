@@ -15,7 +15,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
 #include "nsStringStream.h"
-#include "prmem.h"
 #include "prenv.h"
 #include "ImageContainer.h"
 #include "Layers.h"
