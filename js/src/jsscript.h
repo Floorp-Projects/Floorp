@@ -482,6 +482,7 @@ struct JSScript : public js::gc::Cell
                                          JSCompartment::debugScriptMap */
     bool            hasFreezeConstraints:1; /* freeze constraints for stack
                                              * type sets have been generated */
+    bool            userBit:1; /* Opaque, used by the embedding. */
 
   private:
     /* See comments below. */
