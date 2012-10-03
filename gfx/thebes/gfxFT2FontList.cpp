@@ -18,6 +18,9 @@
 #elif defined(ANDROID)
 #include "mozilla/dom/ContentChild.h"
 #include "gfxAndroidPlatform.h"
+#include "mozilla/Omnijar.h"
+#include "nsIInputStream.h"
+#include "nsNetUtil.h"
 #define gfxToolkitPlatform gfxAndroidPlatform
 #endif
 
@@ -851,6 +854,131 @@ FinalizeFamilyMemberList(nsStringHashKey::KeyType aKey,
     return PL_DHASH_NEXT;
 }
 
+#ifdef ANDROID
+
+#define JAR_READ_BUFFER_SIZE 1024
+
+nsresult
+CopyFromUriToFile(nsCString aSpec, nsIFile* aLocalFile)
+{
+    nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIInputStream> inputStream;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_OpenURI(getter_AddRefs(inputStream), uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIOutputStream> outputStream;
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), aLocalFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    char buf[JAR_READ_BUFFER_SIZE];
+    while (true) {
+        PRUint32 read;
+        PRUint32 written;
+
+        rv = inputStream->Read(buf, JAR_READ_BUFFER_SIZE, &read);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = outputStream->Write(buf, read, &written);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (written != read) {
+            return NS_ERROR_FAILURE;
+        }
+
+        if (read != JAR_READ_BUFFER_SIZE) {
+            break;
+        }
+    }
+    return NS_OK;
+}
+
+#define JAR_LAST_MODIFED_TIME "jar-last-modified-time"
+
+void ExtractFontsFromJar(nsIFile* aLocalDir)
+{
+    bool exists;
+    bool allFontsExtracted = true;
+    nsCString jarPath;
+    int64_t jarModifiedTime;
+    uint32_t longSize;
+    char* cachedModifiedTimeBuf;
+    nsZipFind* find;
+
+    nsRefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
+    nsCOMPtr<nsIFile> jarFile = Omnijar::GetPath(Omnijar::Type::GRE);
+
+    Omnijar::GetURIString(Omnijar::Type::GRE, jarPath);
+    jarFile->GetLastModifiedTime(&jarModifiedTime);
+
+    mozilla::scache::StartupCache* cache = mozilla::scache::StartupCache::GetSingleton();
+    if (NS_SUCCEEDED(cache->GetBuffer(JAR_LAST_MODIFED_TIME, &cachedModifiedTimeBuf, &longSize))
+        && longSize == sizeof(int64_t)) {
+        if (jarModifiedTime < *((int64_t*) cachedModifiedTimeBuf)) {
+            return;
+        }
+    }
+
+    aLocalDir->Exists(&exists);
+    if (!exists) {
+        aLocalDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    }
+
+    static const char* sJarSearchPaths[] = {
+        "res/fonts/*.ttf$",
+    };
+
+    for (int i = 0; i < ArrayLength(sJarSearchPaths); i++) {
+        reader->FindInit(sJarSearchPaths[i], &find);
+        while (true) {
+            const char* tmpPath;
+            uint16_t len;
+            find->FindNext(&tmpPath, &len);
+            if (!tmpPath) {
+                break;
+            }
+
+            nsCString path(tmpPath, len);
+            nsCOMPtr<nsIFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+            if (NS_FAILED(localFile->InitWithFile(aLocalDir))) {
+                allFontsExtracted = false;
+                continue;
+            }
+
+            PRInt32 lastSlash = path.RFindChar('/');
+            nsCString fileName;
+            if (lastSlash == kNotFound) {
+                fileName = path;
+            } else {
+                fileName = Substring(path, lastSlash + 1);
+            }
+            if (NS_FAILED(localFile->AppendNative(fileName))) {
+                allFontsExtracted = false;
+                continue;
+            }
+            int64_t lastModifiedTime;
+            localFile->Exists(&exists);
+            localFile->GetLastModifiedTime(&lastModifiedTime);
+            if (!exists || lastModifiedTime < jarModifiedTime) {
+                nsCString spec;
+                spec.Append(jarPath);
+                spec.Append(path);
+                if (NS_FAILED(CopyFromUriToFile(spec, localFile))) {
+                    localFile->Remove(true);
+                    allFontsExtracted = false;
+                }
+            }
+        }
+    }
+    if (allFontsExtracted) {
+        cache->PutBuffer(JAR_LAST_MODIFED_TIME, (char*)&jarModifiedTime, sizeof(int64_t));
+    }
+}
+
+#endif
+
 void
 gfxFT2FontList::FindFonts()
 {
@@ -948,7 +1076,8 @@ gfxFT2FontList::FindFonts()
     nsCOMPtr<nsIFile> localDir;
     nsresult rv = NS_GetSpecialDirectory(NS_APP_RES_DIR,
                                          getter_AddRefs(localDir));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(localDir->Append(NS_LITERAL_STRING("fonts")))) {
+        ExtractFontsFromJar(localDir);
         nsCString localPath;
         rv = localDir->GetNativePath(localPath);
         if (NS_SUCCEEDED(rv)) {
