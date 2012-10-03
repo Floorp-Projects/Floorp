@@ -1634,7 +1634,13 @@ function doGetPlacesControllerForCommand(aCommand)
 {
   // A context menu may be built for non-focusable views.  Thus, we first try
   // to look for a view associated with document.popupNode
-  let popupNode = document.popupNode;
+  let popupNode; 
+  try {
+    popupNode = document.popupNode;
+  } catch (e) {
+    // The document went away (bug 797307).
+    return null;
+  }
   if (popupNode) {
     let view = PlacesUIUtils.getViewForNode(popupNode);
     if (view && view._contextMenuShown)
