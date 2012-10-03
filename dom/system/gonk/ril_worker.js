@@ -5027,14 +5027,19 @@ let GsmPDUHelper = {
     return ret;
   },
 
-  writeStringAsSeptets: function writeStringAsSeptets(message, paddingBits, langIndex, langShiftIndex) {
+  writeStringAsSeptets: function writeStringAsSeptets(message, paddingBits, langIndex, langShiftIndex, strict7BitEncoding) {
     const langTable = PDU_NL_LOCKING_SHIFT_TABLES[langIndex];
     const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[langShiftIndex];
 
     let dataBits = paddingBits;
     let data = 0;
     for (let i = 0; i < message.length; i++) {
-      let septet = langTable.indexOf(message[i]);
+      let c = message.charAt(i);
+      if (strict7BitEncoding) {
+        c = GSM_SMS_STRICT_7BIT_CHARMAP[c] || c;
+      }
+
+      let septet = langTable.indexOf(c);
       if (septet == PDU_NL_EXTENDED_ESCAPE) {
         continue;
       }
@@ -5043,9 +5048,9 @@ let GsmPDUHelper = {
         data |= septet << dataBits;
         dataBits += 7;
       } else {
-        septet = langShiftTable.indexOf(message[i]);
+        septet = langShiftTable.indexOf(c);
         if (septet == -1) {
-          throw new Error(message[i] + " not in 7 bit alphabet "
+          throw new Error("'" + c + "' is not in 7 bit alphabet "
                           + langIndex + ":" + langShiftIndex + "!");
         }
 
@@ -5990,6 +5995,7 @@ let GsmPDUHelper = {
     let encodedBodyLength = options.encodedBodyLength;
     let langIndex = options.langIndex;
     let langShiftIndex = options.langShiftIndex;
+    let strict7BitEncoding = options.strict7BitEncoding;
 
     // SMS-SUBMIT Format:
     //
@@ -6112,7 +6118,8 @@ let GsmPDUHelper = {
 
     switch (dcs) {
       case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
-        this.writeStringAsSeptets(body, paddingBits, langIndex, langShiftIndex);
+        this.writeStringAsSeptets(body, paddingBits, langIndex, langShiftIndex,
+                                  strict7BitEncoding);
         break;
       case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
         // Unsupported.
