@@ -920,7 +920,7 @@ const int32_t nsCSSProps::kDirectionKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const int32_t nsCSSProps::kDisplayKTable[] = {
+int32_t nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword_none,               NS_STYLE_DISPLAY_NONE,
   eCSSKeyword_inline,             NS_STYLE_DISPLAY_INLINE,
   eCSSKeyword_block,              NS_STYLE_DISPLAY_BLOCK,
@@ -952,6 +952,9 @@ const int32_t nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword__moz_groupbox,      NS_STYLE_DISPLAY_GROUPBOX,
 #endif
 #ifdef MOZ_FLEXBOX
+  // XXXdholbert NOTE: These currently need to be the last entries in the
+  // table, because the "is flexbox enabled" pref that disables these will
+  // disable all the entries after them, too.
   eCSSKeyword__moz_flex,          NS_STYLE_DISPLAY_FLEX,
   eCSSKeyword__moz_inline_flex,   NS_STYLE_DISPLAY_INLINE_FLEX,
 #endif // MOZ_FLEXBOX
@@ -1639,16 +1642,27 @@ const int32_t nsCSSProps::kColumnFillKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
-bool
-nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const int32_t aTable[], int32_t& aResult)
+int32_t
+nsCSSProps::FindIndexOfKeyword(nsCSSKeyword aKeyword, const int32_t aTable[])
 {
   int32_t index = 0;
   while (eCSSKeyword_UNKNOWN != nsCSSKeyword(aTable[index])) {
     if (aKeyword == nsCSSKeyword(aTable[index])) {
-      aResult = aTable[index+1];
-      return true;
+      return index;
     }
     index += 2;
+  }
+  return -1;
+}
+
+bool
+nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const int32_t aTable[],
+                        int32_t& aResult)
+{
+  int32_t index = FindIndexOfKeyword(aKeyword, aTable);
+  if (index >= 0) {
+    aResult = aTable[index + 1];
+    return true;
   }
   return false;
 }
