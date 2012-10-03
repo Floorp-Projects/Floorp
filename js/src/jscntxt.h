@@ -868,12 +868,6 @@ struct JSRuntime : js::RuntimeFriendFields
     const char          *decimalSeparator;
     const char          *numGrouping;
 
-    /*
-     * Flag indicating that we are waiving any soft limits on the GC heap
-     * because we want allocations to be infallible (except when we hit OOM).
-     */
-    bool                waiveGCQuota;
-
   private:
     js::MathCache *mathCache_;
     js::MathCache *createMathCache(JSContext *cx);
