@@ -477,9 +477,7 @@ URIEquals(nsIURI *a, nsIURI *b)
 static bool
 IsSupportedImage(const nsCString& aMimeType)
 {
-  bool supported;
-  nsresult rv = imgLoader::SupportImageWithMimeType(aMimeType.get(), &supported);
-  return NS_SUCCEEDED(rv) && supported;
+  return imgLoader::SupportImageWithMimeType(aMimeType.get());
 }
 
 static void
