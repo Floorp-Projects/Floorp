@@ -231,7 +231,7 @@ done:
         //with the next update date. We will not reschedule this crl in this
         //session anymore - or else, we land into a loop. It would anyway be
         //imported once the browser is restarted.
-        if(LL_CMP(updateTime, > , PR_Now())){
+        if(int64_t(updateTime) > int64_t(PR_Now())){
           toBeRescheduled = true;
         }
         nsMemory::Free(updateTime);
@@ -433,8 +433,8 @@ nsCRLManager::ComputeNextAutoUpdateTime(nsICRLInfo *info,
 
   //Now, a basic constraing is that the next auto update date can never be after
   //next update, if one is defined
-  if(LL_CMP(nextUpdate , > , 0 )) {
-    if(LL_CMP(tempTime , > , nextUpdate)) {
+  if(nextUpdate > 0) {
+    if(tempTime > nextUpdate) {
       tempTime = nextUpdate;
     }
   }

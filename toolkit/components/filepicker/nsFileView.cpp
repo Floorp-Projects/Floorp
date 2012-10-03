@@ -937,7 +937,7 @@ SortSizeCallback(const void* aElement1, const void* aElement2, void* aContext)
   if (size1 == size2)
     return 0;
 
-  return (LL_CMP(size1, <, size2) ? -1 : 1);
+  return size1 < size2 ? -1 : 1;
 }
 
 static int
@@ -953,7 +953,7 @@ SortDateCallback(const void* aElement1, const void* aElement2, void* aContext)
   if (time1 == time2)
     return 0;
 
-  return (LL_CMP(time1, <, time2) ? -1 : 1);
+  return time1 < time2 ? -1 : 1;
 }
 
 void
