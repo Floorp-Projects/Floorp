@@ -401,6 +401,7 @@ private:
   double mSpeed;
 
   bool mHasMultipleFiles;
+  bool mPrivate;
 
   /**
    * Track various states of the download trying to auto-resume when starting

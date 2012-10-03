@@ -807,14 +807,14 @@ function saveMedia()
       else if (item instanceof HTMLAudioElement)
         titleKey = "SaveAudioTitle";
 
-      saveURL(url, null, titleKey, false, false, makeURI(item.baseURI));
+      saveURL(url, null, titleKey, false, false, makeURI(item.baseURI), gDocument);
     }
   } else {
     selectSaveFolder(function(aDirectory) {
       if (aDirectory) {
         var saveAnImage = function(aURIString, aChosenData, aBaseURI) {
           internalSave(aURIString, null, null, null, null, false, "SaveImageTitle",
-                       aChosenData, aBaseURI);
+                       aChosenData, aBaseURI, gDocument);
         };
       
         for (var i = 0; i < rowArray.length; i++) {

@@ -124,7 +124,7 @@ function run_test()
   var dl = dm.addDownload(nsIDM.DOWNLOAD_TYPE_DOWNLOAD,
                           createURI("http://localhost:4444/resume"),
                           createURI(destFile), null, null,
-                          Math.round(Date.now() * 1000), null, persist);
+                          Math.round(Date.now() * 1000), null, persist, false);
   persist.progressListener = dl.QueryInterface(nsIWPL);
   persist.saveURI(dl.source, null, null, null, null, dl.targetFile);
 

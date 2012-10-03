@@ -78,7 +78,7 @@ function test() {
     internalSave(docToSave.location.href, docToSave, null, null,
                  docToSave.contentType, false, null, null,
                  docToSave.referrer ? makeURI(docToSave.referrer) : null,
-                 false, null);
+                 docToSave, false, null);
   }
 
   function onTransferComplete(downloadSuccess) {

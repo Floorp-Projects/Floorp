@@ -29,6 +29,7 @@ function test() {
 
   // Add a new download
   let [file, persist] = addDownload(dm, {
+    isPrivate: window.gPrivateBrowsingUI.privateWindow,
     resultFileName: "pbtest-1",
     downloadName: "PB Test 1"
   });
@@ -51,6 +52,7 @@ function test() {
 
     // Add a new download
     let [file2, persist2] = addDownload(dm, {
+      isPrivate: window.gPrivateBrowsingUI.privateWindow,
       resultFileName: "pbtest-2",
       downloadName: "PB Test 2"
     });
@@ -98,6 +100,7 @@ function test() {
  *                              sourceURI: the download source URI
  *                              downloadName: the display name of the download
  *                              runBeforeStart: a function to run before starting the download
+ *                              isPrivate: whether the download is private
  */
 function addDownload(dm, aParams)
 {
@@ -128,7 +131,7 @@ function addDownload(dm, aParams)
   let dl = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                           createURI(aParams.sourceURI),
                           createURI(aParams.targetFile), aParams.downloadName, null,
-                          Math.round(Date.now() * 1000), null, persist);
+                          Math.round(Date.now() * 1000), null, persist, aParams.isPrivate);
 
   // This will throw if it isn't found, and that would mean test failure, so no
   // try catch block
