@@ -1455,24 +1455,10 @@ gfxContext::PushGroup(gfxASurface::gfxContentType content)
   if (mCairo) {
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
   } else {
-    Rect clipBounds = GetAzureDeviceSpaceClipBounds();
-    clipBounds.RoundOut();
+    PushNewDT(content);
 
-    clipBounds.width = NS_MAX(1.0f, clipBounds.width);
-    clipBounds.height = NS_MAX(1.0f, clipBounds.height);
-
-    RefPtr<DrawTarget> newDT =
-      mDT->CreateSimilarDrawTarget(IntSize(int32_t(clipBounds.width), int32_t(clipBounds.height)),
-                                   gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content));
-
-    Save();
-
-    CurrentState().drawTarget = newDT;
-    CurrentState().deviceOffset = clipBounds.TopLeft();
-
-    PushClipsToDT(newDT);
-    newDT->SetTransform(GetDTTransform());
-    mDT = newDT;
+    PushClipsToDT(mDT);
+    mDT->SetTransform(GetDTTransform());
   }
 }
 
@@ -1541,19 +1527,20 @@ gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
       DrawTarget *oldDT = mDT;
       RefPtr<SourceSurface> source = mDT->Snapshot();
       Point oldDeviceOffset = CurrentState().deviceOffset;
-      PushGroup(content);
 
       Point offset = CurrentState().deviceOffset - oldDeviceOffset;
-      PushGroup(gfxASurface::CONTENT_COLOR);
+      PushNewDT(gfxASurface::CONTENT_COLOR);
       Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
       Rect sourceRect = surfRect;
       sourceRect.x += offset.x;
       sourceRect.y += offset.y;
-      Matrix oldTransform = mDT->GetTransform();
+
       mDT->SetTransform(Matrix());
       mDT->DrawSurface(source, surfRect, sourceRect);
-      mDT->SetTransform(oldTransform);
       mDT->SetOpaqueRect(oldDT->GetOpaqueRect());
+
+      PushClipsToDT(mDT);
+      mDT->SetTransform(GetDTTransform());
       return;
     }
   }
@@ -2168,4 +2155,25 @@ gfxContext::GetDTTransform() const
   mat._31 -= CurrentState().deviceOffset.x;
   mat._32 -= CurrentState().deviceOffset.y;
   return mat;
+}
+
+void
+gfxContext::PushNewDT(gfxASurface::gfxContentType content)
+{
+  Rect clipBounds = GetAzureDeviceSpaceClipBounds();
+  clipBounds.RoundOut();
+
+  clipBounds.width = NS_MAX(1.0f, clipBounds.width);
+  clipBounds.height = NS_MAX(1.0f, clipBounds.height);
+
+  RefPtr<DrawTarget> newDT =
+    mDT->CreateSimilarDrawTarget(IntSize(int32_t(clipBounds.width), int32_t(clipBounds.height)),
+                                  gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content));
+
+  Save();
+
+  CurrentState().drawTarget = newDT;
+  CurrentState().deviceOffset = clipBounds.TopLeft();
+
+  mDT = newDT;
 }
