@@ -16,6 +16,7 @@
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"
+#include "nsIAudioManager.h"
 #include "nsIObserverService.h"
 #include "nsIRadioInterfaceLayer.h"
 #include "nsISystemMessagesInternal.h"
@@ -26,6 +27,7 @@
 #include <unistd.h> /* usleep() */
 
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
+#define BLUETOOTH_SCO_STATUS_CHANGED "bluetooth-sco-status-changed"
 #define AUDIO_VOLUME_MASTER "audio.volume.master"
 
 USING_BLUETOOTH_NAMESPACE
@@ -82,14 +84,29 @@ CloseScoSocket()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsCOMPtr<nsIAudioManager> am = do_GetService("@mozilla.org/telephony/audiomanager;1");
+  if (!am) {
+    NS_WARNING("Failed to get AudioManager Service!");
+    return;
+  }
+  am->SetForceForUse(am->USE_COMMUNICATION, am->FORCE_NONE);
+
   BluetoothScoManager* sco = BluetoothScoManager::Get();
   if (!sco) {
     NS_WARNING("BluetoothScoManager is not available!");
     return;
   }
 
-  if (sco->GetConnected())
+  if (sco->GetConnected()) {
+    nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
+    if (obs) {
+      if (NS_FAILED(obs->NotifyObservers(nullptr, BLUETOOTH_SCO_STATUS_CHANGED, nullptr))) {
+        NS_WARNING("Failed to notify bluetooth-sco-status-changed observsers!");
+        return;
+      }
+    }
     sco->Disconnect();
+  }
 }
 
 BluetoothHfpManager::BluetoothHfpManager()
