@@ -251,8 +251,11 @@ class IonOOLNativeGetterExitFrameLayout
     uint32_t hiCalleeResult_;
 
     // The frame includes the object argument.
-    uint32_t loThisResult_;
-    uint32_t hiThisResult_;
+    uint32_t loThis_;
+    uint32_t hiThis_;
+
+    // pointer to root the stub's IonCode
+    IonCode *stubCode_;
 
   public:
     static inline size_t Size() {
@@ -263,9 +266,16 @@ class IonOOLNativeGetterExitFrameLayout
         return offsetof(IonOOLNativeGetterExitFrameLayout, loCalleeResult_);
     }
 
+    inline IonCode **stubCode() {
+        return &stubCode_;
+    }
     inline Value *vp() {
         return reinterpret_cast<Value*>(&loCalleeResult_);
     }
+    inline Value *thisp() {
+        return reinterpret_cast<Value*>(&loThis_);
+    }
+
     inline uintptr_t argc() const {
         return 0;
     }
@@ -288,6 +298,9 @@ class IonOOLPropertyOpExitFrameLayout
     uint32_t vp0_;
     uint32_t vp1_;
 
+    // pointer to root the stub's IonCode
+    IonCode *stubCode_;
+
   public:
     static inline size_t Size() {
         return sizeof(IonOOLPropertyOpExitFrameLayout);
@@ -297,6 +310,9 @@ class IonOOLPropertyOpExitFrameLayout
         return offsetof(IonOOLPropertyOpExitFrameLayout, vp0_);
     }
 
+    inline IonCode **stubCode() {
+        return &stubCode_;
+    }
     inline Value *vp() {
         return reinterpret_cast<Value*>(&vp0_);
     }
