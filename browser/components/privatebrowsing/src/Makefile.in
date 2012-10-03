@@ -29,4 +29,8 @@ EXTRA_PP_COMPONENTS = \
 	nsPrivateBrowsingService.js \
 	$(NULL)
 
+EXTRA_JS_MODULES = \
+	ClearRecentHistory.jsm \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk

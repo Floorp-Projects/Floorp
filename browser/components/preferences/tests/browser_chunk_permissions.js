@@ -3,6 +3,7 @@
 
 Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/ClearRecentHistory.jsm");
 
 const ABOUT_PERMISSIONS_SPEC = "about:permissions";
 
@@ -115,9 +116,7 @@ var tests = [
   {
     desc: "test removing from sites-list before it is fully constructed.",
     preInit: function() {
-      let pb = Cc["@mozilla.org/privatebrowsing;1"].
-                 getService(Ci.nsIPrivateBrowsingService);
-      pb.removeDataFromDomain(TEST_URI_2.host);
+      ClearRecentHistory.removeDataFromDomain(TEST_URI_2.host);
     },
     run: function() {
       let testSite1 = getSiteItem(TEST_URI_1.host);

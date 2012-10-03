@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/ClearRecentHistory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
@@ -226,7 +227,7 @@ PlacesController.prototype = {
       }
       else
         host = NetUtil.newURI(this._view.selectedNode.uri).host;
-      PlacesUIUtils.privateBrowsing.removeDataFromDomain(host);
+      ClearRecentHistory.removeDataFromDomain(host);
       break;
     case "cmd_selectAll":
       this.selectAll();
