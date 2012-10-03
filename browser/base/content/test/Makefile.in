@@ -193,9 +193,6 @@ _BROWSER_FILES = \
                  bug564387.html \
                  bug564387_video1.ogv \
                  bug564387_video1.ogv^headers^ \
-                 browser_save_link.js \
-                 bug792517-2.html \
-                 bug792517.sjs \
                  browser_scope.js \
                  browser_selectTabAtIndex.js \
                  browser_tab_dragdrop.js \
