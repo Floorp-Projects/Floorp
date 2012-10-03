@@ -2303,5 +2303,9 @@
     "kind": "boolean",
     "description": "The device supports touch input",
     "cpp_guard": "XP_WIN"
+  },
+  "COMPONENTS_OBJECT_ACCESSED_BY_CONTENT": {
+    "kind": "flag",
+    "description": "Whether content ever accesed the Components object in this session"
   }
 }
