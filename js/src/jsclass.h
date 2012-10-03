@@ -210,7 +210,7 @@ typedef JSType
 typedef JSObject *
 (* ObjectOp)(JSContext *cx, HandleObject obj);
 typedef void
-(* FinalizeOp)(FreeOp *fop, JSObject *obj);
+(* FinalizeOp)(FreeOp *fop, RawObject obj);
 
 #define JS_CLASS_MEMBERS                                                      \
     const char          *name;                                                \

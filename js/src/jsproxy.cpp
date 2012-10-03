@@ -2860,7 +2860,7 @@ proxy_Convert(JSContext *cx, HandleObject proxy, JSType hint, MutableHandleValue
 }
 
 static void
-proxy_Finalize(FreeOp *fop, JSObject *obj)
+proxy_Finalize(FreeOp *fop, RawObject obj)
 {
     JS_ASSERT(obj->isProxy());
     if (!obj->getSlot(JSSLOT_PROXY_HANDLER).isUndefined())
