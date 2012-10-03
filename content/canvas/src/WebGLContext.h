@@ -3000,7 +3000,7 @@ public:
 };
 
 class WebGLUniformLocation MOZ_FINAL
-    : public nsIWebGLUniformLocation
+    : public nsISupports
     , public WebGLContextBoundObject
 {
 public:
@@ -3031,7 +3031,6 @@ public:
     virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLUNIFORMLOCATION
 protected:
     // nsRefPtr, not WebGLRefPtr, so that we don't prevent the program from being explicitly deleted.
     // we just want to avoid having a dangling pointer.

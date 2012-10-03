@@ -1451,15 +1451,13 @@ NS_INTERFACE_MAP_BEGIN(WebGLRenderbuffer)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLRenderbuffer)
 NS_INTERFACE_MAP_END
 
+// WebGLUniformLocation
+
 NS_IMPL_ADDREF(WebGLUniformLocation)
 NS_IMPL_RELEASE(WebGLUniformLocation)
 
-DOMCI_DATA(WebGLUniformLocation, WebGLUniformLocation)
-
 NS_INTERFACE_MAP_BEGIN(WebGLUniformLocation)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLUniformLocation)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLUniformLocation)
 NS_INTERFACE_MAP_END
 
 JSObject*
@@ -1524,19 +1522,6 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLExtension)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLExtension)
 
 DOMCI_DATA(WebGLExtension, WebGLExtension)
-
-/* [noscript] attribute WebGLint location; */
-NS_IMETHODIMP
-WebGLUniformLocation::GetLocation(WebGLint *aLocation)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-WebGLUniformLocation::SetLocation(WebGLint aLocation)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 /* readonly attribute WebGLint size; */
 NS_IMETHODIMP
