@@ -450,8 +450,8 @@ pref("marionette.defaultPrefs.port", 2828);
 pref("shutdown.watchdog.timeoutSecs", 5);
 // Timeout before the update prompt automatically installs the update
 pref("b2g.update.apply-prompt-timeout", 60000); // milliseconds
-// Optional timeout the user can wait before getting another update prompt
-pref("b2g.update.apply-wait-timeout", 1800000); // milliseconds
+// Amount of time to wait after the user is idle before prompting to apply an update
+pref("b2g.update.apply-idle-timeout", 600000); // milliseconds
 // Amount of time the updater waits for the process to exit cleanly before
 // forcefully exiting the process
 pref("b2g.update.self-destruct-timeout", 5000); // milliseconds
@@ -543,9 +543,9 @@ pref("hal.processPriorityManager.gonk.backgroundNice", 10);
 #ifndef DEBUG
 // Enable pre-launching content processes for improved startup time
 // (hiding latency).
-pref("dom.ipc.processPrelauch.enabled", true);
+pref("dom.ipc.processPrelaunch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
-pref("dom.ipc.processPrelauch.delayMs", 1000);
+pref("dom.ipc.processPrelaunch.delayMs", 1000);
 #endif
 
 // Ignore the "dialog=1" feature in window.open.

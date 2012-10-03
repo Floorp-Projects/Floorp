@@ -14,6 +14,8 @@
 #include "ion/Bailouts.h"
 #include "ion/VMFunctions.h"
 
+#include "jsscriptinlines.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -292,7 +294,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.pop(edi);            // Discard number of actual arguments.
 
     // Discard pushed arguments, but not the pushed frame pointer.
-    BaseIndex unwind = BaseIndex(esp, ebx, TimesOne, -sizeof(void*));
+    BaseIndex unwind = BaseIndex(esp, ebx, TimesOne, -int32_t(sizeof(void*)));
     masm.lea(Operand(unwind), esp);
 
     masm.pop(FramePointer);

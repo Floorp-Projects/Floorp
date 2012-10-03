@@ -28,6 +28,22 @@ ParallelArrayObject::IndexInfo::inBounds() const
     return true;
 }
 
+inline bool
+ParallelArrayObject::IndexInfo::bump()
+{
+    JS_ASSERT(isInitialized());
+    JS_ASSERT(indices.length() > 0);
+
+    uint32_t d = indices.length() - 1;
+    while (++indices[d] == dimensions[d]) {
+        if (d == 0)
+            return false;
+        indices[d--] = 0;
+    }
+
+    return true;
+}
+
 inline uint32_t
 ParallelArrayObject::IndexInfo::scalarLengthOfDimensions()
 {

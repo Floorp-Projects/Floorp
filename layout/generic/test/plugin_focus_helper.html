@@ -33,8 +33,8 @@ function activatePlugin(id) {
 
     var element = document.getElementById(id);
     var bounds = element.getBoundingClientRect();
-    var x = (bounds.left + window.mozInnerScreenX + 10)*gWindowUtils.screenPixelsPerCSSPixel;
-    var y = (bounds.top + window.mozInnerScreenY + 10)*gWindowUtils.screenPixelsPerCSSPixel;
+    var x = (bounds.left + window.mozInnerScreenX + 10);
+    var y = (bounds.top + window.mozInnerScreenY + 10);
 
     gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseDown, 0, element);
     gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseUp, 0, element);

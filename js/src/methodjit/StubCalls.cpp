@@ -60,7 +60,7 @@ stubs::BindName(VMFrame &f, PropertyName *name_)
 {
     RootedPropertyName name(f.cx, name_);
     RootedObject scope(f.cx);
-    if (!LookupNameForSet(f.cx, name, f.fp()->scopeChain(), &scope))
+    if (!LookupNameWithGlobalDefault(f.cx, name, f.fp()->scopeChain(), &scope))
         THROW();
     f.regs.sp[0].setObject(*scope);
 }
@@ -187,9 +187,8 @@ stubs::ImplicitThis(VMFrame &f, PropertyName *name_)
     RootedObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
     RootedPropertyName name(f.cx, name_);
 
-    RootedObject obj(f.cx), obj2(f.cx);
-    RootedShape prop(f.cx);
-    if (!LookupName(f.cx, name, scopeObj, &obj, &obj2, &prop))
+    RootedObject obj(f.cx);
+    if (!LookupNameWithGlobalDefault(f.cx, name, scopeObj, &obj))
         THROW();
 
     if (!ComputeImplicitThis(f.cx, obj, &f.regs.sp[0]))

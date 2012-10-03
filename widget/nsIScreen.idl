@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(d961f76e-8437-4bc6-9ada-a1c98ace9560)]
+[scriptable, uuid(D6F13AF4-8ACA-4A10-8687-3F99C3692AC0)]
 interface nsIScreen : nsISupports
 {
   /**
@@ -57,4 +57,10 @@ interface nsIScreen : nsISupports
    * screen rotation.
    */
   attribute unsigned long rotation;
+
+  /**
+   * The number of device pixels per screen point in HiDPI mode.
+   * Returns 1.0 if HiDPI mode is disabled or unsupported.
+   */
+  readonly attribute double contentsScaleFactor;
 };
