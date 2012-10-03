@@ -10,6 +10,9 @@ relativesrcdir 	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# browser_tilt* disabled on Linux due to:
+# bug 759157, bug 795308, bug 761007, bug 795952, bug 795621
+ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 MOCHITEST_BROWSER_FILES = \
 	head.js \
 	browser_tilt_01_lazy_getter.js \
@@ -57,5 +60,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_tilt_visualizer.js \
 	browser_tilt_zoom.js \
 	$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
