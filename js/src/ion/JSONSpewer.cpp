@@ -255,8 +255,7 @@ JSONSpewer::spewMDef(MDefinition *def)
         integerValue(use.def()->id());
     endList();
 
-    stringProperty("type", "%s : [%d, %d]", StringFromMIRType(def->type()),
-                   def->range()->lower(), def->range()->upper());
+    stringProperty("type", StringFromMIRType(def->type()));
 
     if (def->isInstruction()) {
         if (MResumePoint *rp = def->toInstruction()->resumePoint())

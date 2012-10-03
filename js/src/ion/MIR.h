@@ -61,8 +61,6 @@ class MUse;
 class MIRGraph;
 class MResumePoint;
 
-static inline bool isOSRLikeValue (MDefinition *def);
-
 // Represents a use of a node.
 class MUse : public TempObject, public InlineForwardListNode<MUse>
 {
@@ -305,7 +303,7 @@ class MDefinition : public MNode
     virtual void analyzeEdgeCasesForward();
     virtual void analyzeEdgeCasesBackward();
     virtual void analyzeTruncateBackward();
-    bool earlyAbortCheck();
+
     // Propagate a range. Return true if the range changed.
     virtual bool recomputeRange() {
         return false;
@@ -1921,12 +1919,6 @@ class MBitAnd : public MBinaryBitwiseInstruction
     MDefinition *foldIfEqual() {
         return getOperand(0); // x & x => x;
     }
-    bool recomputeRange() {
-        Range *left = getOperand(0)->range();
-        Range *right = getOperand(1)->range();
-        return range()->update(Range::and_(left, right));
-    }
-
 };
 
 class MBitOr : public MBinaryBitwiseInstruction
@@ -2403,8 +2395,7 @@ class MAdd : public MBinaryArithInstruction
             return false;
         Range *left = getOperand(0)->range();
         Range *right = getOperand(1)->range();
-        Range next = isTruncated() ? Range::addTruncate(left,right) : Range::add(left, right);
-        return range()->update(next);
+        return range()->update(Range::add(left, right));
     }
 };
 
@@ -2446,8 +2437,7 @@ class MSub : public MBinaryArithInstruction
             return false;
         Range *left = getOperand(0)->range();
         Range *right = getOperand(1)->range();
-        Range next = isTruncated() ? Range::subTruncate(left,right) : Range::sub(left, right);
-        return range()->update(next);
+        return range()->update(Range::sub(left, right));
     }
 };
 
@@ -2486,7 +2476,7 @@ class MMul : public MBinaryArithInstruction
     }
 
     bool canBeNegativeZero() {
-        if (range()->lower() > 0 || range()->upper() < 0)
+        if (range()->lower() >= 0 && range()->upper() >= 0)
             return false;
         return canBeNegativeZero_;
     }
@@ -2589,16 +2579,11 @@ class MMod : public MBinaryArithInstruction
     bool recomputeRange() {
         if (specialization() != MIRType_Int32)
             return false;
-        Range *rhs = getOperand(1)->range();
-        int64_t a = Range::abs64((int64_t)rhs->lower());
-        int64_t b = Range::abs64((int64_t)rhs->upper());
-        if (a ==0 && b == 0) {
-            // We should never take something % 0.
-            Range r(INT_MIN, INT_MAX);
-            return range()->update(r);
-        }
-        int64_t bound = Max(1-a, b-1);
-        Range r(-bound, bound);
+        Range *other = getOperand(0)->range();
+        int64_t a = Range::abs64((int64_t)other->lower());
+        int64_t b = Range::abs64((int64_t)other->upper());
+        Range r(Min(-a+1, -b+1),
+                Max( a-1,  b-1));
         return range()->update(r);
     }
 };
@@ -2691,9 +2676,7 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     bool triedToSpecialize_;
     bool hasBytecodeUses_;
     bool isIterator_;
-    // For every input to the phi, track how many times it has changed
-    // Only used in loop headers, so it defaults to 0 elements to conserve space
-    js::Vector<RangeChangeCount, 0, IonAllocPolicy> changeCounts_;
+
     MPhi(uint32 slot)
       : slot_(slot),
         triedToSpecialize_(false),
@@ -2750,9 +2733,18 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    bool recomputeRange();
-    bool initCounts() {
-        return changeCounts_.resize(inputs_.length());
+
+    bool recomputeRange() {
+        if (type() != MIRType_Int32)
+            return false;
+
+        Range r;
+        r.update(getOperand(0)->range());
+
+        for (size_t i = 0; i < numOperands(); i++)
+            r.unionWith(getOperand(i)->range());
+
+        return range()->update(&r);
     }
 };
 
@@ -2763,9 +2755,9 @@ class MBeta : public MUnaryInstruction
   private:
     Range comparison_;
     MDefinition *val_;
-    MBeta(MDefinition *val, const Range &comp)
+    MBeta(MDefinition *val, int32 low, int32 high)
         : MUnaryInstruction(val),
-          comparison_(comp),
+          comparison_(low, high),
           val_(val)
     {
     }
@@ -2773,16 +2765,19 @@ class MBeta : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(Beta);
     void printOpcode(FILE *fp);
-    static MBeta *New(MDefinition *val, const Range &comp)
+    static MBeta *New(MDefinition *val, int32 low, int32 high)
     {
-        return new MBeta(val, comp);
+        return new MBeta(val, low, high);
     }
 
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
 
-    bool recomputeRange();
+    bool recomputeRange() {
+        return range()->update(
+            Range::intersect(val_->range(), &comparison_));
+    }
 };
 
 // MIR representation of a Value on the OSR StackFrame.
@@ -5538,16 +5533,6 @@ void MNode::initOperand(size_t index, MDefinition *ins)
 {
     setOperand(index, ins);
     ins->addUse(this, index);
-}
-static inline bool isOSRLikeValue (MDefinition *def) {
-    if (def->isOsrValue())
-        return true;
-
-    if (def->isUnbox())
-        if (def->getOperand(0)->isOsrValue())
-            return true;
-
-    return false;
 }
 
 typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;

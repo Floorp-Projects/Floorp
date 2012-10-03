@@ -156,16 +156,16 @@ RangeAnalysis::addBetaNobes()
             if (jsop == JSOP_LT) {
                 smaller = left;
                 greater = right;
-            } else if (jsop == JSOP_GT) {
+            } else if (JSOP_GT) {
                 smaller = right;
                 greater = left;
             }
             if (smaller && greater) {
                 MBeta *beta;
-                beta = MBeta::New(smaller, Range(JSVAL_INT_MIN, JSVAL_INT_MAX-1));
+                beta = MBeta::New(smaller, JSVAL_INT_MIN, JSVAL_INT_MAX-1);
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(smaller, beta, block);
-                beta = MBeta::New(greater, Range(JSVAL_INT_MIN+1, JSVAL_INT_MAX));
+                beta = MBeta::New(greater, JSVAL_INT_MIN+1, JSVAL_INT_MAX);
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(greater, beta, block);
             }
@@ -175,34 +175,35 @@ RangeAnalysis::addBetaNobes()
         JS_ASSERT(val);
 
 
-        Range comp;
+        int32 low = JSVAL_INT_MIN;
+        int32 high = JSVAL_INT_MAX;
         switch (jsop) {
           case JSOP_LE:
-            comp.setUpper(bound);
+            high = bound;
             break;
           case JSOP_LT:
             if (!SafeSub(bound, 1, &bound))
                 break;
-            comp.setUpper(bound);
+            high = bound;
             break;
           case JSOP_GE:
-            comp.setLower(bound);
+            low = bound;
             break;
           case JSOP_GT:
             if (!SafeAdd(bound, 1, &bound))
                 break;
-            comp.setLower(bound);
+            low = bound;
             break;
           case JSOP_EQ:
-            comp.setLower(bound);
-            comp.setUpper(bound);
+            low = bound;
+            high = bound;
           default:
             break; // well, for neq we could have
                    // [-\inf, bound-1] U [bound+1, \inf] but we only use contiguous ranges.
         }
 
         IonSpew(IonSpew_Range, "Adding beta node for %d", val->id());
-        MBeta *beta = MBeta::New(val, comp);
+        MBeta *beta = MBeta::New(val, low, high);
         block->insertBefore(*block->begin(), beta);
         replaceDominatedUsesWith(val, beta, block);
     }
@@ -249,7 +250,7 @@ Range::printRange(FILE *fp)
 }
 
 Range
-Range::intersect(const Range *lhs, const Range *rhs, bool *nullRange)
+Range::intersect(const Range *lhs, const Range *rhs)
 {
     Range r(
         Max(lhs->lower_, rhs->lower_),
@@ -272,87 +273,36 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *nullRange)
     //
     // Instead, we should use it to eliminate the dead block.
     // (Bug 765127)
-    if (r.upper_ < r.lower_) {
-        *nullRange = true;
+    if (r.upper_ < r.lower_)
         r.makeRangeInfinite();
-    }
     return r;
 }
 
 void
 Range::unionWith(const Range *other)
 {
-   setLower(Min(lower_, other->lower_));
-   lower_infinite_ |= other->lower_infinite_;
-   setUpper(Max(upper_, other->upper_));
-   upper_infinite_ |= other->upper_infinite_;
-}
-
-void
-Range::unionWith(RangeChangeCount *other)
-{
-    if (other->lowerCount_ <= 2) {
-        setLower(Min(lower_, other->oldRange.lower_));
-        lower_infinite_ |= other->oldRange.lower_infinite_;
-    } else {
-        other->lowerCount_ = 0;
-    }
-    if (other->upperCount_ <= 2) {
-        setUpper(Max(upper_, other->oldRange.upper_));
-        upper_infinite_ |= other->oldRange.upper_infinite_;
-    } else {
-        other->upperCount_ = 0;
-    }
+    setLower(Min(lower_, other->lower_));
+    setUpper(Max(upper_, other->upper_));
+    lower_infinite_ |= other->lower_infinite_;
+    upper_infinite_ |= other->upper_infinite_;
 }
 
 Range
 Range::add(const Range *lhs, const Range *rhs)
 {
-    Range ret(
+    return Range(
         (int64_t)lhs->lower_ + (int64_t)rhs->lower_,
         (int64_t)lhs->upper_ + (int64_t)rhs->upper_);
-    return ret;
 }
 
 Range
 Range::sub(const Range *lhs, const Range *rhs)
 {
-    Range ret(
+    return Range(
         (int64_t)lhs->lower_ - (int64_t)rhs->upper_,
         (int64_t)lhs->upper_ - (int64_t)rhs->lower_);
-    return ret;
-
-}
-Range
-Range::addTruncate(const Range *lhs, const Range *rhs)
-{
-    Range ret = Truncate((int64_t)lhs->lower_ + (int64_t)rhs->lower_,
-                         (int64_t)lhs->upper_ + (int64_t)rhs->upper_);
-    return ret;
 }
 
-Range
-Range::subTruncate(const Range *lhs, const Range *rhs)
-{
-    Range ret = Truncate((int64_t)lhs->lower_ - (int64_t)rhs->upper_,
-                         (int64_t)lhs->upper_ - (int64_t)rhs->lower_);
-    return ret;
-}
-
-Range
-Range::and_(const Range *lhs, const Range *rhs)
-{
-    uint64_t lower = 0;
-    // If both numbers can be negative, issues can be had.
-    if (lhs->lower_ < 0 && rhs->lower_ < 0)
-        lower = INT_MIN;
-    uint64_t upper = lhs->upper_;
-    if (rhs->upper_ < lhs->upper_)
-        upper = rhs->upper_;
-    Range ret(lower, upper);
-    return ret;
-
-}
 Range
 Range::mul(const Range *lhs, const Range *rhs)
 {
@@ -360,30 +310,27 @@ Range::mul(const Range *lhs, const Range *rhs)
     int64_t b = (int64_t)lhs->lower_ * (int64_t)rhs->upper_;
     int64_t c = (int64_t)lhs->upper_ * (int64_t)rhs->lower_;
     int64_t d = (int64_t)lhs->upper_ * (int64_t)rhs->upper_;
-    Range ret(
+    return Range(
         Min( Min(a, b), Min(c, d) ),
         Max( Max(a, b), Max(c, d) ));
-    return ret;
 }
 
 Range
 Range::shl(const Range *lhs, int32 c)
 {
     int32 shift = c & 0x1f;
-    Range ret(
+    return Range(
         (int64_t)lhs->lower_ << shift,
         (int64_t)lhs->upper_ << shift);
-    return ret;
 }
 
 Range
 Range::shr(const Range *lhs, int32 c)
 {
     int32 shift = c & 0x1f;
-    Range ret(
+    return Range(
         (int64_t)lhs->lower_ >> shift,
         (int64_t)lhs->upper_ >> shift);
-    return ret;
 }
 
 bool
@@ -394,6 +341,7 @@ Range::update(const Range *other)
         lower_infinite_ != other->lower_infinite_ ||
         upper_ != other->upper_ ||
         upper_infinite_ != other->upper_infinite_;
+
     if (changed) {
         lower_ = other->lower_;
         lower_infinite_ = other->lower_infinite_;
@@ -426,15 +374,6 @@ PopFromWorklist(MDefinitionVector &worklist)
 bool
 RangeAnalysis::analyze()
 {
-    for (PostorderIterator i(graph_.poBegin()); i != graph_.poEnd(); i++) {
-        MBasicBlock *curBlock = *i;
-        if (!curBlock->isLoopHeader())
-            continue;
-        for (MPhiIterator pi(curBlock->phisBegin()); pi != curBlock->phisEnd(); pi++)
-            if (!pi->initCounts())
-                return false;
-    }
-
     IonSpew(IonSpew_Range, "Doing range propagation");
     MDefinitionVector worklist;
 
@@ -442,17 +381,24 @@ RangeAnalysis::analyze()
         for (MDefinitionIterator iter(*block); iter; iter++) {
             MDefinition *def = *iter;
 
+            if (!def->isPhi() && !def->isBeta())
+                continue;
             AddToWorklist(worklist, def);
 
         }
     }
     size_t iters = 0;
-
-    while (!worklist.empty()) {
+#define MAX_ITERS 4096
+    // XXX: hack: range analysis iloops on jit-test/tests/basic/fannkuch.js
+    // To circumvent this and land the pass, we just run for a fixed number of
+    // iterations.
+    //
+    // (Bug 765119)
+    while (!worklist.empty() /* && iters < MAX_ITERS*/) {
         MDefinition *def = PopFromWorklist(worklist);
         IonSpew(IonSpew_Range, "recomputing range on %d", def->id());
         SpewRange(def);
-        if (!def->earlyAbortCheck() && def->recomputeRange()) {
+        if (def->recomputeRange()) {
             JS_ASSERT(def->range()->lower() <= def->range()->upper());
             IonSpew(IonSpew_Range, "Range changed; adding consumers");
             for (MUseDefIterator use(def); use; use++) {
@@ -466,6 +412,7 @@ RangeAnalysis::analyze()
     for(size_t i = 0; i < worklist.length(); i++)
         worklist[i]->setNotInWorklist();
 
+#undef MAX_ITERS
 
 #ifdef DEBUG
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
