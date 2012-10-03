@@ -402,6 +402,12 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
   };
   JS_SetSecurityCallbacks(runtime, &securityCallbacks);
 
+  // DOM helpers:
+  static js::DOMCallbacks DOMCallbacks = {
+    InstanceClassHasProtoAtDepth
+  };
+  SetDOMCallbacks(runtime, &DOMCallbacks);
+
   JSContext* workerCx = JS_NewContext(runtime, 0);
   if (!workerCx) {
     JS_DestroyRuntime(runtime);
