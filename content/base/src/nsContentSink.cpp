@@ -1275,7 +1275,7 @@ nsContentSink::IsTimeToNotify()
   LL_I2L(interval, GetNotificationInterval());
   LL_SUB(diff, now, mLastNotificationTime);
 
-  if (LL_CMP(diff, >, interval)) {
+  if (diff > interval) {
     mBackoffCount--;
     return true;
   }

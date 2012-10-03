@@ -930,7 +930,7 @@ GetDateBoundary(nsIX509Cert* ix509,
     return;
 
   PRTime now = PR_Now();
-  if (LL_CMP(now, >, notAfter)) {
+  if (now > notAfter) {
     timeToUse = notAfter;
   } else {
     timeToUse = notBefore;

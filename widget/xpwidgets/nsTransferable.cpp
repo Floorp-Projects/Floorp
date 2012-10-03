@@ -178,7 +178,7 @@ DataStruct::ReadCache(nsISupports** aData, uint32_t* aDataLen)
     int64_t fileSize;
     int64_t max32(LL_INIT(0, 0xFFFFFFFF));
     cacheFile->GetFileSize(&fileSize);
-    if (LL_CMP(fileSize, >, max32))
+    if (fileSize > max32)
       return NS_ERROR_OUT_OF_MEMORY;
     uint32_t size;
     LL_L2UI(size, fileSize);

@@ -1983,7 +1983,7 @@ struct CompareFilesByTime
   bool 
   LessThan(const nsCOMPtr<nsIFile>& a, const nsCOMPtr<nsIFile>& b) const 
   {
-    return LL_CMP(GetPluginLastModifiedTime(a), <, GetPluginLastModifiedTime(b));
+    return GetPluginLastModifiedTime(a) < GetPluginLastModifiedTime(b);
   }
 
   bool
