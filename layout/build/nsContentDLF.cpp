@@ -462,7 +462,5 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
 }
 
 bool nsContentDLF::IsImageContentType(const char* aContentType) {
-  bool isDecoderAvailable = false;
-  imgLoader::SupportImageWithMimeType(aContentType, &isDecoderAvailable);
-  return isDecoderAvailable;
+  return imgLoader::SupportImageWithMimeType(aContentType);
 }
