@@ -617,7 +617,10 @@ var SocialToolbar = {
         let box = document.createElement("box");
         box.classList.add("toolbarbutton-1");
         box.setAttribute("id", iconId);
-        box.addEventListener("mousedown", function (e) { SocialToolbar.showAmbientPopup(box); }, false);
+        box.addEventListener("mousedown", function (e) {
+          if (e.button == 0)
+            SocialToolbar.showAmbientPopup(box);
+        }, false);
         box.setAttribute("notificationFrameId", notificationFrameId);
         stack = document.createElement("stack");
         stack.setAttribute("id", stackId);
