@@ -57,6 +57,7 @@ public:
   void SendPutRequest(uint8_t* aFileBody, int aFileBodyLength,
                       bool aFinal);
   void SendDisconnectRequest();
+  void SendAbortRequest();
 
 private:
   BluetoothOppManager();
@@ -67,8 +68,10 @@ private:
   uint8_t mRemoteObexVersion;
   uint8_t mRemoteConnectionFlags;
   int mRemoteMaxPacketLength;
+  bool mAbortFlag;
 
   nsCOMPtr<nsIDOMBlob> mBlob;
+  nsCOMPtr<nsIThread> mReadFileThread;
 };
 
 END_BLUETOOTH_NAMESPACE
