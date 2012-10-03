@@ -1,0 +1,31 @@
+<html>
+<head>
+<style>
+  .bound {
+    -moz-binding: url(file_bug795275.xml#xbltest);
+  }
+</style>
+<script type="application/javascript">
+  function touchComponents() {
+    Components;
+  }
+  function touchInterfaces() {
+    Components.interfaces;
+  }
+  function touchLookupMethod() {
+    Components.lookupMethod(document, 'getElementById');
+  }
+
+  function touchViaXBL() {
+    // Make sure none of this warns.
+    var div = document.getElementById('dummy');
+    div.testProp;
+    div.testMethod();
+  }
+
+</script>
+</head>
+<body>
+<div id="dummy" class="bound"></div>
+</body>
+</html>

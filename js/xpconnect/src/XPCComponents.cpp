@@ -4774,6 +4774,28 @@ static JSBool
 ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
                           JSMutableHandleValue vp)
 {
+    // If chrome is accessing the Components object of content, allow.
+    MOZ_ASSERT(nsContentUtils::GetCurrentJSContext() == cx);
+    if (nsContentUtils::IsCallerChrome())
+        return true;
+
+    // If the caller is XBL, this is ok.
+    if (AccessCheck::callerIsXBL(cx))
+        return true;
+
+    // Warn once. Note that if somebody does window.Components we may have an
+    // outer window here.
+    MOZ_ASSERT(JS_GetGlobalForObject(cx, obj) == JS_ObjectToInnerObject(cx, obj));
+    JSAutoCompartment ac(cx, obj);
+    nsCOMPtr<nsPIDOMWindow> win =
+        do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
+    if (win) {
+        nsCOMPtr<nsIDocument> doc =
+            do_QueryInterface(win->GetExtantDocument());
+        if (doc)
+            doc->WarnOnceAbout(nsIDocument::eComponents, /* asError = */ true);
+    }
+
     return true;
 }
 
