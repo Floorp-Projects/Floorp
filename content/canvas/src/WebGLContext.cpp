@@ -916,7 +916,7 @@ WebGLContext::GetContextAttributes(ErrorResult &rv)
 }
 
 bool
-WebGLContext::IsExtensionEnabled(WebGLExtensionID ext) {
+WebGLContext::IsExtensionEnabled(WebGLExtensionID ext) const {
     return mExtensions.SafeElementAt(ext);
 }
 
@@ -949,60 +949,68 @@ WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
     return NS_OK;
 }
 
-bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext)
+bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
 {
-    bool isSupported = false;
+    if (mDisableExtensions) {
+        return false;
+    }
 
     switch (ext) {
         case OES_standard_derivatives:
         case WEBGL_lose_context:
             // We always support these extensions.
-            isSupported = true;
-            break;
+            return true;
         case OES_texture_float:
-            isSupported = gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float 
-                                                                 : GLContext::ARB_texture_float);
-            break;
+            return gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float
+                                                          : GLContext::ARB_texture_float);
         case EXT_texture_filter_anisotropic:
-            isSupported = gl->IsExtensionSupported(GLContext::EXT_texture_filter_anisotropic);
-            break;
+            return gl->IsExtensionSupported(GLContext::EXT_texture_filter_anisotropic);
         case WEBGL_compressed_texture_s3tc:
             if (gl->IsExtensionSupported(GLContext::EXT_texture_compression_s3tc)) {
-                isSupported = true;
-            } else if (gl->IsExtensionSupported(GLContext::EXT_texture_compression_dxt1) &&
+                return true;
+            }
+            else if (gl->IsExtensionSupported(GLContext::EXT_texture_compression_dxt1) &&
                        gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt3) &&
                        gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt5))
             {
-                isSupported = true;
+                return true;
             }
-            break;
+            else
+            {
+                return false;
+            }
         case WEBGL_compressed_texture_atc:
-            if (gl->IsExtensionSupported(GLContext::AMD_compressed_ATC_texture)) {
-                isSupported = true;
-            }
-            break;
+            return gl->IsExtensionSupported(GLContext::AMD_compressed_ATC_texture);
         case WEBGL_compressed_texture_pvrtc:
-            if (gl->IsExtensionSupported(GLContext::IMG_texture_compression_pvrtc)) {
-                isSupported = true;
-            }
-            break;
+            return gl->IsExtensionSupported(GLContext::IMG_texture_compression_pvrtc);
         case WEBGL_depth_texture:
             if (gl->IsGLES2() && 
                 gl->IsExtensionSupported(GLContext::OES_packed_depth_stencil) &&
                 gl->IsExtensionSupported(GLContext::OES_depth_texture)) 
             {
-                isSupported = true;
-            } else if (!gl->IsGLES2() &&
-                       gl->IsExtensionSupported(GLContext::EXT_packed_depth_stencil)) 
-            {
-                isSupported = true;
+                return true;
             }
-            break;
+            else if (!gl->IsGLES2() &&
+                     gl->IsExtensionSupported(GLContext::EXT_packed_depth_stencil))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         default:
             MOZ_ASSERT(false, "should not get there.");
     }
 
-    return isSupported;
+    MOZ_ASSERT(false, "should not get there.");
+    return false;
+}
+
+static bool
+CompareWebGLExtensionName(const nsACString& name, const char *other)
+{
+    return name.Equals(other, nsCaseInsensitiveCStringComparator());
 }
 
 JSObject*
@@ -1011,50 +1019,40 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName)
     if (!IsContextStable())
         return nullptr;
 
-    if (mDisableExtensions) {
-        return nullptr;
-    }
+    NS_LossyConvertUTF16toASCII name(aName);
 
     WebGLExtensionID ext = WebGLExtensionID_unknown_extension;
 
     // step 1: figure what extension is wanted
-    if (aName.Equals(NS_LITERAL_STRING("OES_texture_float"),
-        nsCaseInsensitiveStringComparator()))
+    if (CompareWebGLExtensionName(name, "OES_texture_float"))
     {
         ext = OES_texture_float;
     }
-    else if (aName.Equals(NS_LITERAL_STRING("OES_standard_derivatives"),
-             nsCaseInsensitiveStringComparator()))
+    else if (CompareWebGLExtensionName(name, "OES_standard_derivatives"))
     {
         ext = OES_standard_derivatives;
     }
-    else if (aName.Equals(NS_LITERAL_STRING("EXT_texture_filter_anisotropic"),
-             nsCaseInsensitiveStringComparator()))
+    else if (CompareWebGLExtensionName(name, "EXT_texture_filter_anisotropic"))
     {
         ext = EXT_texture_filter_anisotropic;
     }
-    else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"),
-             nsCaseInsensitiveStringComparator()))
+    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_lose_context"))
     {
         ext = WEBGL_lose_context;
     }
-    else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_s3tc"),
-             nsCaseInsensitiveStringComparator()))
+    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_s3tc"))
     {
         ext = WEBGL_compressed_texture_s3tc;
     }
-    else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_atc"),
-             nsCaseInsensitiveStringComparator()))
+    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_atc"))
     {
         ext = WEBGL_compressed_texture_atc;
     }
-    else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_pvrtc"),
-             nsCaseInsensitiveStringComparator()))
+    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_pvrtc"))
     {
         ext = WEBGL_compressed_texture_pvrtc;
     }
-    else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"),
-             nsCaseInsensitiveStringComparator()))
+    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_depth_texture"))
     {
         ext = WEBGL_depth_texture;
     }
@@ -1550,10 +1548,6 @@ WebGLContext::GetSupportedExtensions(Nullable< nsTArray<nsString> > &retval)
     retval.SetNull();
     if (!IsContextStable())
         return;
-    
-    if (mDisableExtensions) {
-        return;
-    }
 
     nsTArray<nsString>& arr = retval.SetValue();
     
@@ -1561,9 +1555,8 @@ WebGLContext::GetSupportedExtensions(Nullable< nsTArray<nsString> > &retval)
         arr.AppendElement(NS_LITERAL_STRING("OES_texture_float"));
     if (IsExtensionSupported(OES_standard_derivatives))
         arr.AppendElement(NS_LITERAL_STRING("OES_standard_derivatives"));
-    if (IsExtensionSupported(EXT_texture_filter_anisotropic)) {
+    if (IsExtensionSupported(EXT_texture_filter_anisotropic))
         arr.AppendElement(NS_LITERAL_STRING("EXT_texture_filter_anisotropic"));
-    }
     if (IsExtensionSupported(WEBGL_lose_context))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"));
     if (IsExtensionSupported(WEBGL_compressed_texture_s3tc))
