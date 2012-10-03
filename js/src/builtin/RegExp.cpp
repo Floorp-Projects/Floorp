@@ -561,17 +561,12 @@ GetSharedForGreedyStar(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGu
     return cx->compartment->regExps.getHack(cx, source, hackedSource, flags, g);
 }
 
-/*
- * ES5 15.10.6.2 (and 15.10.6.3, which calls 15.10.6.2).
- *
- * RegExp.prototype.test doesn't need to create a results array, and we use
- * |execType| to perform this optimization.
- */
-static bool
-ExecuteRegExp(JSContext *cx, RegExpExecType execType, CallArgs args)
+bool
+js::ExecuteRegExp(JSContext *cx, RegExpExecType execType, HandleObject regexp,
+                  HandleString string, MutableHandleValue rval)
 {
-    /* Step 1 was performed by CallNonGenericMethod. */
-    Rooted<RegExpObject*> reobj(cx, &args.thisv().toObject().asRegExp());
+    /* Step 1 (b) was performed by CallNonGenericMethod. */
+    Rooted<RegExpObject*> reobj(cx, &regexp->asRegExp());
 
     RegExpGuard re;
     if (StartsWithGreedyStar(reobj->getSource())) {
@@ -584,13 +579,8 @@ ExecuteRegExp(JSContext *cx, RegExpExecType execType, CallArgs args)
 
     RegExpStatics *res = cx->regExpStatics();
 
-    /* Step 2. */
-    JSString *input = ToString(cx, (args.length() > 0) ? args[0] : UndefinedValue());
-    if (!input)
-        return false;
-
     /* Step 3. */
-    Rooted<JSLinearString*> linearInput(cx, input->ensureLinear(cx));
+    Rooted<JSLinearString*> linearInput(cx, string->ensureLinear(cx));
     if (!linearInput)
         return false;
 
@@ -612,26 +602,46 @@ ExecuteRegExp(JSContext *cx, RegExpExecType execType, CallArgs args)
     /* Step 9a. */
     if (i < 0 || i > length) {
         reobj->zeroLastIndex();
-        args.rval().setNull();
+        rval.setNull();
         return true;
     }
 
     /* Steps 8-21. */
     size_t lastIndexInt(i);
-    if (!ExecuteRegExp(cx, res, *re, linearInput, chars, length, &lastIndexInt, execType,
-                       args.rval().address())) {
+    if (!ExecuteRegExp(cx, res, *re, linearInput.get(), chars, length, &lastIndexInt, execType,
+                       rval.address())) {
         return false;
     }
 
     /* Step 11 (with sticky extension). */
-    if (re->global() || (!args.rval().isNull() && re->sticky())) {
-        if (args.rval().isNull())
+    if (re->global() || (!rval.isNull() && re->sticky())) {
+        if (rval.isNull())
             reobj->zeroLastIndex();
         else
             reobj->setLastIndex(lastIndexInt);
     }
 
     return true;
+}
+
+/*
+ * ES5 15.10.6.2 (and 15.10.6.3, which calls 15.10.6.2).
+ *
+ * RegExp.prototype.test doesn't need to create a results array, and we use
+ * |execType| to perform this optimization.
+ */
+static bool
+ExecuteRegExp(JSContext *cx, RegExpExecType execType, CallArgs args)
+{
+    /* Step 1 (a) was performed by CallNonGenericMethod. */
+    RootedObject regexp(cx, &args.thisv().toObject());
+
+    /* Step 2. */
+    RootedString string(cx, ToString(cx, (args.length() > 0) ? args[0] : UndefinedValue()));
+    if (!string)
+        return false;
+
+    return ExecuteRegExp(cx, execType, regexp, string, args.rval());
 }
 
 /* ES5 15.10.6.2. */
