@@ -405,7 +405,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
 
     if (!xdr->codeUint32(&firstword))
         return false;
-    if ((firstword & 1U) && !XDRAtom(xdr, atom.address()))
+    if ((firstword & 1U) && !XDRAtom(xdr, &atom))
         return false;
     if (!xdr->codeUint32(&flagsword))
         return false;

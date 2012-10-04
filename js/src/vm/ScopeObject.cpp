@@ -741,7 +741,7 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope, Handl
          * properties to XDR, stored as id/shortid pairs.
          */
         for (unsigned i = 0; i < count; i++) {
-            JSAtom *atom;
+            RootedAtom atom(cx);
             if (!XDRAtom(xdr, &atom))
                 return false;
 
@@ -786,10 +786,9 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope, Handl
             JS_ASSERT(JSID_IS_ATOM(propid) || JSID_IS_INT(propid));
 
             /* The empty string indicates an int id. */
-            JSAtom *atom = JSID_IS_ATOM(propid)
-                           ? JSID_TO_ATOM(propid)
-                           : cx->runtime->emptyString;
-
+            RootedAtom atom(cx, JSID_IS_ATOM(propid)
+                                ? JSID_TO_ATOM(propid)
+                                : cx->runtime->emptyString);
             if (!XDRAtom(xdr, &atom))
                 return false;
 
