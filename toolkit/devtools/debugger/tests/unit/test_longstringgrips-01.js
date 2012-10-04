@@ -48,7 +48,7 @@ function test_longstring_grip()
       do_check_eq(grip.length, longString.length);
       do_check_eq(grip.initial, longString.substr(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
 
-      let longStringClient = gThreadClient.longString(grip);
+      let longStringClient = gThreadClient.pauseLongString(grip);
       longStringClient.substring(22, 28, function (aResponse) {
         try {
           do_check_eq(aResponse.substring, "monkey");
