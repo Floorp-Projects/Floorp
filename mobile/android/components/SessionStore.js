@@ -862,11 +862,7 @@ SessionStore.prototype = {
 
       let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
       persist.persistFlags = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES | Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-      let privacyContext = browser.contentWindow
-                                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIWebNavigation)
-                                  .QueryInterface(Ci.nsILoadContext);
-      persist.saveURI(source, null, null, null, null, file, privacyContext);
+      persist.saveURI(source, null, null, null, null, file);
 
       aStringValue = target.spec;
     }

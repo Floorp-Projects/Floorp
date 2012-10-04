@@ -6511,7 +6511,7 @@ var WebappsUI = {
               persist.persistFlags |= Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
   
               let source = Services.io.newURI(fullsizeIcon, "UTF8", null);
-              persist.saveURI(source, null, null, null, null, iconFile, null);
+              persist.saveURI(source, null, null, null, null, iconFile);
             } catch(ex) {
               console.log(ex);
             }

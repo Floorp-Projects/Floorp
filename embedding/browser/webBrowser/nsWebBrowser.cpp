@@ -916,18 +916,10 @@ NS_IMETHODIMP nsWebBrowser::SetProgressListener(nsIWebProgressListener * aProgre
 
 /* void saveURI (in nsIURI aURI, in nsIURI aReferrer,
    in nsISupports aCacheKey, in nsIInputStream aPostData, in wstring aExtraHeaders,
-   in nsISupports aFile, in nsILoadContext aPrivacyContext); */
+   in nsISupports aFile); */
 NS_IMETHODIMP nsWebBrowser::SaveURI(
     nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer, nsIInputStream *aPostData,
-    const char *aExtraHeaders, nsISupports *aFile, nsILoadContext* aPrivacyContext)
-{
-    return SavePrivacyAwareURI(aURI, aCacheKey, aReferrer, aPostData, aExtraHeaders,
-                               aFile, aPrivacyContext && aPrivacyContext->UsePrivateBrowsing());
-}
-
-NS_IMETHODIMP nsWebBrowser::SavePrivacyAwareURI(
-    nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer, nsIInputStream *aPostData,
-    const char *aExtraHeaders, nsISupports *aFile, bool aIsPrivate)
+    const char *aExtraHeaders, nsISupports *aFile)
 {
     if (mPersist)
     {
@@ -965,8 +957,7 @@ NS_IMETHODIMP nsWebBrowser::SavePrivacyAwareURI(
     mPersist->SetProgressListener(this);
     mPersist->SetPersistFlags(mPersistFlags);
     mPersist->GetCurrentState(&mPersistCurrentState);
-    rv = mPersist->SavePrivacyAwareURI(uri, aCacheKey, aReferrer, aPostData,
-                                       aExtraHeaders, aFile, aIsPrivate);
+    rv = mPersist->SaveURI(uri, aCacheKey, aReferrer, aPostData, aExtraHeaders, aFile);
     if (NS_FAILED(rv))
     {
         mPersist = nullptr;

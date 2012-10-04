@@ -770,7 +770,7 @@ function _persistImage(sourceURL, localFileName, successCallback) {
 
   persist.progressListener = new _persistProgressListener(successCallback);
 
-  persist.saveURI(sourceURI, null, null, null, null, targetURI, null);
+  persist.saveURI(sourceURI, null, null, null, null, targetURI);
 }
 
 function _persistProgressListener(successCallback) {

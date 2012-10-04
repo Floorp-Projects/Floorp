@@ -63,7 +63,7 @@ protected:
     nsresult SaveURIInternal(
         nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer,
         nsIInputStream *aPostData, const char *aExtraHeaders, nsIURI *aFile,
-        bool aCalcFileExt, bool aIsPrivate);
+        bool aCalcFileExt);
     nsresult SaveChannelInternal(
         nsIChannel *aChannel, nsIURI *aFile, bool aCalcFileExt);
     nsresult SaveDocumentInternal(
@@ -202,7 +202,6 @@ private:
     bool                      mStartSaving;
     bool                      mReplaceExisting;
     bool                      mSerializingOutput;
-    bool                      mIsPrivate;
     uint32_t                  mPersistFlags;
     nsresult                  mPersistResult;
     int64_t                   mTotalCurrentProgress;
