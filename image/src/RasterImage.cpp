@@ -204,11 +204,10 @@ namespace image {
 static nsCOMPtr<nsIThread> sScaleWorkerThread = nullptr;
 
 #ifndef DEBUG
-NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS2(RasterImage, imgIContainer, nsIProperties)
 #else
-NS_IMPL_ISUPPORTS4(RasterImage, imgIContainer, nsIProperties,
-                   imgIContainerDebug, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
+                   imgIContainerDebug)
 #endif
 
 //******************************************************************************
@@ -2557,7 +2556,7 @@ RasterImage::RequestDecode()
   // RequestDecode() is an asynchronous function this works fine (though it's
   // a little slower).
   if (mInDecoder) {
-    nsRefPtr<imgDecodeRequestor> requestor = new imgDecodeRequestor(this);
+    nsRefPtr<imgDecodeRequestor> requestor = new imgDecodeRequestor(*this);
     return NS_DispatchToCurrentThread(requestor);
   }
 
