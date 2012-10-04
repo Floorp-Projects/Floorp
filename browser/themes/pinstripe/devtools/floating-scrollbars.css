@@ -1,0 +1,30 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+scrollbar {
+  -moz-appearance: none;
+  position: relative;
+  background-color: transparent;
+  background-image: none;
+  border: 0px solid transparent;
+  z-index: 2147483647;
+  -moz-box-align: start;
+  padding: 2px;
+}
+
+scrollbar[orient="vertical"] {
+  -moz-margin-start: -8px;
+  min-width: 8px;
+  max-width: 8px;
+}
+
+scrollbar[orient="horizontal"] {
+  margin-top: -8px;
+  min-height: 8px;
+  max-height: 8px;
+}
+
+thumb {
+  -moz-appearance: none !important;
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}

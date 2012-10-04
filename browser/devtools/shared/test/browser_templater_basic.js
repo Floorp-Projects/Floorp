@@ -11,7 +11,7 @@
 
 var imports = {};
 Cu.import("resource:///modules/devtools/Templater.jsm", imports);
-Cu.import("resource:///modules/devtools/Promise.jsm", imports);
+Cu.import("resource://gre/modules/devtools/_Promise.jsm", imports);
 
 function test() {
   addTab("http://example.com/browser/browser/devtools/shared/test/browser_templater_basic.html", function() {
