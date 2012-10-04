@@ -356,7 +356,7 @@ var BrowserApp = {
 
 #ifdef MOZ_SAFE_BROWSING
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
-    setTimeout(function() { SafeBrowsing.init(); }, 2000);
+    setTimeout(function() { SafeBrowsing.init(); }, 5000);
 #endif
   },
 
