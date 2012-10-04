@@ -213,6 +213,7 @@ FENNEC_PP_XML_FILES = \
   res/layout-xlarge-v11/awesomebar_search.xml \
   res/layout-xlarge-v11/gecko_app.xml \
   res/xml/preferences.xml \
+  res/xml/searchable.xml \
   res/menu/browser_app_menu.xml \
   res/menu-v11/browser_app_menu.xml \
   res/menu-large-v11/browser_app_menu.xml \

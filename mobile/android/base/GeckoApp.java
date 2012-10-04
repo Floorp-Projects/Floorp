@@ -1941,6 +1941,10 @@ abstract public class GeckoApp
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
         }
+        else if (Intent.ACTION_SEARCH.equals(action)) {
+            String uri = getURIFromIntent(intent);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
+        }
         else if (ACTION_ALERT_CALLBACK.equals(action)) {
             String alertName = "";
             String alertCookie = "";

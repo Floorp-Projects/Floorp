@@ -11,6 +11,7 @@
 ]>
 #includesubst @BOOKMARKSPATH@
 <resources>
+  <string name="moz_app_displayname">@MOZ_APP_DISPLAYNAME@</string>
 #include ../sync/strings.xml.in
   <string name="splash_settingup">&splash_settingup;</string>
   <string name="splash_bookmarks_history">&splash_bookmarks_history;</string>
@@ -216,6 +217,8 @@
   <string name="bookmarkhistory_import_wait">&bookmarkhistory_import_wait;</string>
 
   <string name="webapp_generic_name">&webapp_generic_name;</string>
+
+  <string name="searchable_description">&searchable_description;</string>
 
   <!-- Updater notifications -->
   <string name="updater_start_title">&updater_start_title;</string>
