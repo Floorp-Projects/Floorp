@@ -364,7 +364,7 @@ bool
 GetElements(JSContext *cx, HandleObject aobj, uint32_t length, Value *vp)
 {
     if (aobj->isDenseArray() && length <= aobj->getDenseArrayInitializedLength() &&
-        !js_PrototypeHasIndexedProperties(cx, aobj)) {
+        !js_PrototypeHasIndexedProperties(aobj)) {
         /* The prototype does not have indexed properties so hole = undefined */
         const Value *srcbeg = aobj->getDenseArrayElements();
         const Value *srcend = srcbeg + length;
@@ -820,7 +820,7 @@ array_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
         uint32_t i;
         if (!js_IdIsIndex(id, &i))
             break;
-        if (js_PrototypeHasIndexedProperties(cx, obj))
+        if (js_PrototypeHasIndexedProperties(obj))
             break;
 
         JSObject::EnsureDenseResult result = obj->ensureDenseArrayElements(cx, i, 1);
@@ -868,7 +868,7 @@ array_setElement(JSContext *cx, HandleObject obj, uint32_t index,
          */
         if (index == UINT32_MAX)
             break;
-        if (js_PrototypeHasIndexedProperties(cx, obj))
+        if (js_PrototypeHasIndexedProperties(obj))
             break;
 
         JSObject::EnsureDenseResult result = obj->ensureDenseArrayElements(cx, index, 1);
@@ -899,7 +899,7 @@ array_setSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 }
 
 JSBool
-js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
+js_PrototypeHasIndexedProperties(JSObject *obj)
 {
     JS_ASSERT(obj->isDenseArray());
 
@@ -1127,7 +1127,7 @@ array_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 }
 
 static void
-array_trace(JSTracer *trc, JSObject *obj)
+array_trace(JSTracer *trc, RawObject obj)
 {
     JS_ASSERT(obj->isDenseArray());
 
@@ -1495,7 +1495,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
     StringBuffer sb(cx);
 
     // Various optimized versions of steps 7-10
-    if (!locale && !seplen && obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj)) {
+    if (!locale && !seplen && obj->isDenseArray() && !js_PrototypeHasIndexedProperties(obj)) {
         const Value *start = obj->getDenseArrayElements();
         const Value *end = start + obj->getDenseArrayInitializedLength();
         const Value *elem;
@@ -1671,7 +1671,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     do {
         if (!obj->isDenseArray())
             break;
-        if (js_PrototypeHasIndexedProperties(cx, obj))
+        if (js_PrototypeHasIndexedProperties(obj))
             break;
 
         JSObject::EnsureDenseResult result = obj->ensureDenseArrayElements(cx, start, count);
@@ -1737,7 +1737,7 @@ array_reverse(JSContext *cx, unsigned argc, Value *vp)
     do {
         if (!obj->isDenseArray())
             break;
-        if (js_PrototypeHasIndexedProperties(cx, obj))
+        if (js_PrototypeHasIndexedProperties(obj))
             break;
 
         /* An empty array or an array with no elements is already reversed. */
@@ -2399,7 +2399,7 @@ js::array_shift(JSContext *cx, unsigned argc, Value *vp)
     } else {
         length--;
 
-        if (obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj) &&
+        if (obj->isDenseArray() && !js_PrototypeHasIndexedProperties(obj) &&
             length < obj->getDenseArrayCapacity() &&
             0 < obj->getDenseArrayInitializedLength()) {
             args.rval().set(obj->getDenseArrayElement(0));
@@ -2454,7 +2454,7 @@ array_unshift(JSContext *cx, unsigned argc, Value *vp)
             do {
                 if (!obj->isDenseArray())
                     break;
-                if (js_PrototypeHasIndexedProperties(cx, obj))
+                if (js_PrototypeHasIndexedProperties(obj))
                     break;
                 JSObject::EnsureDenseResult result = obj->ensureDenseArrayElements(cx, length, args.length());
                 if (result != JSObject::ED_OK) {
@@ -2549,7 +2549,7 @@ CanOptimizeForDenseStorage(JSObject *arr, uint32_t startingIndex, uint32_t count
         return false;
 
     /* Now just watch out for getters and setters along the prototype chain. */
-    return !js_PrototypeHasIndexedProperties(cx, arr) &&
+    return !js_PrototypeHasIndexedProperties(arr) &&
            startingIndex + count <= arr->getDenseArrayInitializedLength();
 }
 
@@ -2900,7 +2900,7 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
     RootedObject nobj(cx);
 
     if (obj->isDenseArray() && end <= obj->getDenseArrayInitializedLength() &&
-        !js_PrototypeHasIndexedProperties(cx, obj)) {
+        !js_PrototypeHasIndexedProperties(obj)) {
         nobj = NewDenseCopiedArray(cx, end - begin, obj->getDenseArrayElements() + begin);
         if (!nobj)
             return JS_FALSE;

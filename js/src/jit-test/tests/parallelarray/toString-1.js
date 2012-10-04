@@ -1,6 +1,6 @@
 function testToString() {
   var p = new ParallelArray();
-  assertEq(p.toString(), "<>");
+  assertEq(p.toString(), "");
 }
 
 testToString();

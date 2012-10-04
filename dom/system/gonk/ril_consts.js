@@ -1649,6 +1649,18 @@ const PDU_MWI_STORE_TYPE_BIT     = 0x80;
 const PDU_MWI_STORE_TYPE_DISCARD = 0x00;
 const PDU_MWI_STORE_TYPE_STORE   = 0x80;
 
+const GSM_SMS_STRICT_7BIT_CHARMAP = {
+  "\u00C1": "\u0041", // Á(\u00C1) => A(\u0041)
+  "\u00E1": "\u0061", // á(\u00E1) => a(\u0061)
+  "\u00CD": "\u0049", // Í(\u00CD) => I(\u0049)
+  "\u00ED": "\u0069", // í(\u00ED) => i(\u0069)
+  "\u00D3": "\u004F", // Ó(\u00D3) => O(\u004F)
+  "\u00F3": "\u006F", // ó(\u00F3) => o(\u006F)
+  "\u00DA": "\u0055", // Ú(\u00DA) => U(\u0055)
+  "\u00FA": "\u0075", // ú(\u00FA) => u(\u0075)
+  "\u00E7": "\u00C7"  // ç(\u00E7) => Ç(\u00C7)
+};
+
 const RADIOTECH_FAMILY_3GPP = 1;  // GSM, WCDMA, LTE
 const RADIOTECH_FAMILY_3GPP2 = 2; // CDMA, EVDO
 

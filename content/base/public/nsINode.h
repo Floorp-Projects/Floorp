@@ -56,19 +56,21 @@ class Value;
 
 inline void SetDOMStringToNull(nsAString& aString);
 
+#define NODE_FLAG_BIT(n_) (1U << (n_))
+
 enum {
   // This bit will be set if the node has a listener manager.
-  NODE_HAS_LISTENERMANAGER =     0x00000001U,
+  NODE_HAS_LISTENERMANAGER =              NODE_FLAG_BIT(0),
 
   // Whether this node has had any properties set on it
-  NODE_HAS_PROPERTIES =          0x00000002U,
+  NODE_HAS_PROPERTIES =                   NODE_FLAG_BIT(1),
 
   // Whether this node is the root of an anonymous subtree.  Note that this
   // need not be a native anonymous subtree.  Any anonymous subtree, including
   // XBL-generated ones, will do.  This flag is set-once: once a node has it,
   // it must not be removed.
   // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_ANONYMOUS =            0x00000004U,
+  NODE_IS_ANONYMOUS =                     NODE_FLAG_BIT(2),
 
   // Whether the node has some ancestor, possibly itself, that is native
   // anonymous.  This includes ancestors crossing XBL scopes, in cases when an
@@ -76,39 +78,39 @@ enum {
   // ancestor.  This flag is set-once: once a node has it, it must not be
   // removed.
   // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_IN_ANONYMOUS_SUBTREE = 0x00000008U,
+  NODE_IS_IN_ANONYMOUS_SUBTREE =          NODE_FLAG_BIT(3),
 
   // Whether this node is the root of a native anonymous (from the perspective
   // of its parent) subtree.  This flag is set-once: once a node has it, it
   // must not be removed.
   // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_NATIVE_ANONYMOUS_ROOT = 0x00000010U,
+  NODE_IS_NATIVE_ANONYMOUS_ROOT =         NODE_FLAG_BIT(4),
 
   // Forces the XBL code to treat this node as if it were
   // in the document and therefore should get bindings attached.
-  NODE_FORCE_XBL_BINDINGS =      0x00000020U,
+  NODE_FORCE_XBL_BINDINGS =               NODE_FLAG_BIT(5),
 
   // Whether a binding manager may have a pointer to this
-  NODE_MAY_BE_IN_BINDING_MNGR =  0x00000040U,
+  NODE_MAY_BE_IN_BINDING_MNGR =           NODE_FLAG_BIT(6),
 
-  NODE_IS_EDITABLE =             0x00000080U,
+  NODE_IS_EDITABLE =                      NODE_FLAG_BIT(7),
 
   // For all Element nodes, NODE_MAY_HAVE_CLASS is guaranteed to be set if the
   // node in fact has a class, but may be set even if it doesn't.
-  NODE_MAY_HAVE_CLASS =          0x00000100U,
+  NODE_MAY_HAVE_CLASS =                   NODE_FLAG_BIT(8),
 
-  NODE_IS_INSERTION_PARENT =     0x00000200U,
+  NODE_IS_INSERTION_PARENT =              NODE_FLAG_BIT(9),
 
   // Node has an :empty or :-moz-only-whitespace selector
-  NODE_HAS_EMPTY_SELECTOR =      0x00000400U,
+  NODE_HAS_EMPTY_SELECTOR =               NODE_FLAG_BIT(10),
 
   // A child of the node has a selector such that any insertion,
   // removal, or appending of children requires restyling the parent.
-  NODE_HAS_SLOW_SELECTOR =       0x00000800U,
+  NODE_HAS_SLOW_SELECTOR =                NODE_FLAG_BIT(11),
 
   // A child of the node has a :first-child, :-moz-first-node,
   // :only-child, :last-child or :-moz-last-node selector.
-  NODE_HAS_EDGE_CHILD_SELECTOR = 0x00001000U,
+  NODE_HAS_EDGE_CHILD_SELECTOR =          NODE_FLAG_BIT(12),
 
   // A child of the node has a selector such that any insertion or
   // removal of children requires restyling later siblings of that
@@ -117,42 +119,41 @@ enum {
   // other content tree changes (e.g., the child changes to or from
   // matching :empty due to a grandchild insertion or removal), the
   // child's later siblings must also be restyled.
-  NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS
-                               = 0x00002000U,
+  NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS = NODE_FLAG_BIT(13),
 
-  NODE_ALL_SELECTOR_FLAGS =      NODE_HAS_EMPTY_SELECTOR |
-                                 NODE_HAS_SLOW_SELECTOR |
-                                 NODE_HAS_EDGE_CHILD_SELECTOR |
-                                 NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS,
+  NODE_ALL_SELECTOR_FLAGS =               NODE_HAS_EMPTY_SELECTOR |
+                                          NODE_HAS_SLOW_SELECTOR |
+                                          NODE_HAS_EDGE_CHILD_SELECTOR |
+                                          NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS,
 
-  NODE_ATTACH_BINDING_ON_POSTCREATE
-                               = 0x00004000U,
+  NODE_ATTACH_BINDING_ON_POSTCREATE =     NODE_FLAG_BIT(14),
 
   // This node needs to go through frame construction to get a frame (or
   // undisplayed entry).
-  NODE_NEEDS_FRAME =             0x00008000U,
+  NODE_NEEDS_FRAME =                      NODE_FLAG_BIT(15),
 
   // At least one descendant in the flattened tree has NODE_NEEDS_FRAME set.
   // This should be set on every node on the flattened tree path between the
   // node(s) with NODE_NEEDS_FRAME and the root content.
-  NODE_DESCENDANTS_NEED_FRAMES = 0x00010000U,
+  NODE_DESCENDANTS_NEED_FRAMES =          NODE_FLAG_BIT(16),
 
   // Set if the node has the accesskey attribute set.
-  NODE_HAS_ACCESSKEY           = 0x00020000U,
+  NODE_HAS_ACCESSKEY =                    NODE_FLAG_BIT(17),
 
   // Set if the node is handling a click.
-  NODE_HANDLING_CLICK          = 0x00040000U,
+  NODE_HANDLING_CLICK =                   NODE_FLAG_BIT(18),
 
   // Set if the node has had :hover selectors matched against it
-  NODE_HAS_RELEVANT_HOVER_RULES = 0x00080000U,
+  NODE_HAS_RELEVANT_HOVER_RULES =         NODE_FLAG_BIT(19),
 
   // Set if the node has right-to-left directionality
-  NODE_HAS_DIRECTION_RTL        = 0x00100000U,
+  NODE_HAS_DIRECTION_RTL =                NODE_FLAG_BIT(20),
 
   // Set if the node has left-to-right directionality
-  NODE_HAS_DIRECTION_LTR        = 0x00200000U,
+  NODE_HAS_DIRECTION_LTR =                NODE_FLAG_BIT(21),
 
-  NODE_ALL_DIRECTION_FLAGS      = NODE_HAS_DIRECTION_LTR | NODE_HAS_DIRECTION_RTL,
+  NODE_ALL_DIRECTION_FLAGS =              NODE_HAS_DIRECTION_LTR |
+                                          NODE_HAS_DIRECTION_RTL,
 
   // Remaining bits are node type specific.
   NODE_TYPE_SPECIFIC_BITS_OFFSET =        22
@@ -789,13 +790,11 @@ public:
    */
   void AddMutationObserver(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* s = GetSlots();
-    if (s) {
-      NS_ASSERTION(s->mMutationObservers.IndexOf(aMutationObserver) ==
-                   nsTArray<int>::NoIndex,
-                   "Observer already in the list");
-      s->mMutationObservers.AppendElement(aMutationObserver);
-    }
+    nsSlots* s = Slots();
+    NS_ASSERTION(s->mMutationObservers.IndexOf(aMutationObserver) ==
+                 nsTArray<int>::NoIndex,
+                 "Observer already in the list");
+    s->mMutationObservers.AppendElement(aMutationObserver);
   }
 
   /**
@@ -804,10 +803,8 @@ public:
    */
   void AddMutationObserverUnlessExists(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* s = GetSlots();
-    if (s) {
-      s->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
-    }
+    nsSlots* s = Slots();
+    s->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
   }
 
   /**
@@ -893,11 +890,11 @@ public:
 #ifdef DEBUG
   nsSlots* DebugGetSlots()
   {
-    return GetSlots();
+    return Slots();
   }
 #endif
 
-  bool HasFlag(PtrBits aFlag) const
+  bool HasFlag(uintptr_t aFlag) const
   {
     return !!(GetFlags() & aFlag);
   }
@@ -1419,6 +1416,7 @@ public:
 protected:
 
   // Override this function to create a custom slots class.
+  // Must not return null.
   virtual nsINode::nsSlots* CreateSlots();
 
   bool HasSlots() const
@@ -1431,10 +1429,11 @@ protected:
     return mSlots;
   }
 
-  nsSlots* GetSlots()
+  nsSlots* Slots()
   {
     if (!HasSlots()) {
       mSlots = CreateSlots();
+      MOZ_ASSERT(mSlots);
     }
     return GetExistingSlots();
   }

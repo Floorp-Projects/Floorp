@@ -40,6 +40,7 @@ CPPSRCS		= \
 		ClearOnShutdown.cpp \
 		VisualEventTracer.cpp \
 		nsErrorAsserts.cpp \
+		nsGZFileWriter.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH),Linux)
@@ -64,6 +65,7 @@ EXPORTS		= \
 		nsWeakPtr.h \
 		nsInterfaceRequestorAgg.h \
 		dmd.h \
+		nsGZFileWriter.h \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla
@@ -130,6 +132,7 @@ XPIDLSRCS	= \
 		nsIUUIDGenerator.idl \
 		nsIMutable.idl \
 		nsIMemoryReporter.idl \
+		nsIGZFileWriter.idl \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

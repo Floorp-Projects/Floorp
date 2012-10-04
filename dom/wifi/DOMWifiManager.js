@@ -112,8 +112,6 @@ DOMWifiManager.prototype = {
     this._onConnectionInfoUpdate = null;
     this._onEnabled = null;
     this._onDisabled = null;
-
-    this._mm.sendAsyncMessage("WifiManager:managerFinished");
   },
 
   _sendMessageForRequest: function(name, data, request) {

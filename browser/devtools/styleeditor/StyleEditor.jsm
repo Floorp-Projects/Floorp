@@ -909,6 +909,13 @@ StyleEditor.prototype = {
       }.bind(this)
     };
 
+    if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
+      let contentWin = this.contentDocument.defaultView;
+      let loadContext = contentWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsILoadContext);
+      channel.setPrivate(loadContext.usePrivateBrowsing);
+    }
     channel.loadFlags = channel.LOAD_FROM_CACHE;
     channel.asyncOpen(streamListener, null);
   },

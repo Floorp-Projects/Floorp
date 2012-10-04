@@ -415,11 +415,8 @@ public:
       aResult.SetIsVoid(true);
     }
     else {
-      // We use UTF8ToNewUnicode here because it truncates after invalid UTF-8
-      // characters, CopyUTF8toUTF16 just doesn't copy in that case.
-      uint32_t length;
-      PRUnichar* chars = UTF8ToNewUnicode(result, &length);
-      aResult.Adopt(chars, length);
+      // The result value should be inflated:
+      CopyASCIItoUTF16(result, aResult);
     }
   }
   void GetAllResponseHeaders(nsString& aResponseHeaders);

@@ -20,6 +20,7 @@
 #include "nsPluginSafety.h"
 #include "nsPluginLogging.h"
 #include "nsContentUtils.h"
+#include "nsPluginInstanceOwner.h"
 
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
@@ -221,7 +222,7 @@ nsNPAPIPluginInstance::StopTime()
   return mStopTime;
 }
 
-nsresult nsNPAPIPluginInstance::Initialize(nsNPAPIPlugin *aPlugin, nsIPluginInstanceOwner* aOwner, const char* aMIMEType)
+nsresult nsNPAPIPluginInstance::Initialize(nsNPAPIPlugin *aPlugin, nsPluginInstanceOwner* aOwner, const char* aMIMEType)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::Initialize this=%p\n",this));
 
@@ -320,13 +321,13 @@ nsresult nsNPAPIPluginInstance::Stop()
 already_AddRefed<nsPIDOMWindow>
 nsNPAPIPluginInstance::GetDOMWindow()
 {
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  GetOwner(getter_AddRefs(owner));
-  if (!owner)
+  if (!mOwner)
     return nullptr;
 
+  nsRefPtr<nsPluginInstanceOwner> deathGrip(mOwner);
+
   nsCOMPtr<nsIDocument> doc;
-  owner->GetDocument(getter_AddRefs(doc));
+  mOwner->GetDocument(getter_AddRefs(doc));
   if (!doc)
     return nullptr;
 
@@ -339,39 +340,33 @@ nsNPAPIPluginInstance::GetDOMWindow()
 nsresult
 nsNPAPIPluginInstance::GetTagType(nsPluginTagType *result)
 {
-  if (mOwner) {
-    nsCOMPtr<nsIPluginTagInfo> tinfo(do_QueryInterface(mOwner));
-    if (tinfo)
-      return tinfo->GetTagType(result);
+  if (!mOwner) {
+    return NS_ERROR_FAILURE;
   }
 
-  return NS_ERROR_FAILURE;
+  return mOwner->GetTagType(result);
 }
 
 nsresult
 nsNPAPIPluginInstance::GetAttributes(uint16_t& n, const char*const*& names,
                                      const char*const*& values)
 {
-  if (mOwner) {
-    nsCOMPtr<nsIPluginTagInfo> tinfo(do_QueryInterface(mOwner));
-    if (tinfo)
-      return tinfo->GetAttributes(n, names, values);
+  if (!mOwner) {
+    return NS_ERROR_FAILURE;
   }
 
-  return NS_ERROR_FAILURE;
+  return mOwner->GetAttributes(n, names, values);
 }
 
 nsresult
 nsNPAPIPluginInstance::GetParameters(uint16_t& n, const char*const*& names,
                                      const char*const*& values)
 {
-  if (mOwner) {
-    nsCOMPtr<nsIPluginTagInfo> tinfo(do_QueryInterface(mOwner));
-    if (tinfo)
-      return tinfo->GetParameters(n, names, values);
+  if (!mOwner) {
+    return NS_ERROR_FAILURE;
   }
 
-  return NS_ERROR_FAILURE;
+  return mOwner->GetParameters(n, names, values);
 }
 
 nsresult
@@ -791,14 +786,12 @@ void nsNPAPIPluginInstance::RedrawPlugin()
 void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 {
   // the event model needs to be set for the object frame immediately
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  GetOwner(getter_AddRefs(owner));
-  if (!owner) {
+  if (!mOwner) {
     NS_WARNING("Trying to set event model without a plugin instance owner!");
     return;
   }
 
-  owner->SetEventModel(aModel);
+  mOwner->SetEventModel(aModel);
 }
 #endif
 
@@ -1519,11 +1512,7 @@ nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPluginTagInfo> tinfo(do_QueryInterface(mOwner));
-  if (tinfo)
-    return tinfo->GetDOMElement(result);
-
-  return NS_ERROR_FAILURE;
+  return mOwner->GetDOMElement(result);
 }
 
 nsresult
@@ -1532,12 +1521,10 @@ nsNPAPIPluginInstance::InvalidateRect(NPRect *invalidRect)
   if (RUNNING != mRunning)
     return NS_OK;
 
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  GetOwner(getter_AddRefs(owner));
-  if (!owner)
+  if (!mOwner)
     return NS_ERROR_FAILURE;
 
-  return owner->InvalidateRect(invalidRect);
+  return mOwner->InvalidateRect(invalidRect);
 }
 
 nsresult
@@ -1546,12 +1533,10 @@ nsNPAPIPluginInstance::InvalidateRegion(NPRegion invalidRegion)
   if (RUNNING != mRunning)
     return NS_OK;
 
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  GetOwner(getter_AddRefs(owner));
-  if (!owner)
+  if (!mOwner)
     return NS_ERROR_FAILURE;
 
-  return owner->InvalidateRegion(invalidRegion);
+  return mOwner->InvalidateRegion(invalidRegion);
 }
 
 nsresult
@@ -1568,15 +1553,15 @@ nsNPAPIPluginInstance::GetMIMEType(const char* *result)
 nsresult
 nsNPAPIPluginInstance::GetJSContext(JSContext* *outContext)
 {
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  GetOwner(getter_AddRefs(owner));
-  if (!owner)
+  if (!mOwner)
     return NS_ERROR_FAILURE;
+
+  nsRefPtr<nsPluginInstanceOwner> deathGrip(mOwner);
 
   *outContext = NULL;
   nsCOMPtr<nsIDocument> document;
 
-  nsresult rv = owner->GetDocument(getter_AddRefs(document));
+  nsresult rv = mOwner->GetDocument(getter_AddRefs(document));
 
   if (NS_SUCCEEDED(rv) && document) {
     nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
@@ -1593,20 +1578,16 @@ nsNPAPIPluginInstance::GetJSContext(JSContext* *outContext)
   return rv;
 }
 
-nsresult
-nsNPAPIPluginInstance::GetOwner(nsIPluginInstanceOwner **aOwner)
+nsPluginInstanceOwner*
+nsNPAPIPluginInstance::GetOwner()
 {
-  NS_ENSURE_ARG_POINTER(aOwner);
-  *aOwner = mOwner;
-  NS_IF_ADDREF(mOwner);
-  return (mOwner ? NS_OK : NS_ERROR_FAILURE);
+  return mOwner;
 }
 
-nsresult
-nsNPAPIPluginInstance::SetOwner(nsIPluginInstanceOwner *aOwner)
+void
+nsNPAPIPluginInstance::SetOwner(nsPluginInstanceOwner *aOwner)
 {
   mOwner = aOwner;
-  return NS_OK;
 }
 
 nsresult
@@ -1616,14 +1597,6 @@ nsNPAPIPluginInstance::ShowStatus(const char* message)
     return mOwner->ShowStatus(message);
 
   return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsNPAPIPluginInstance::InvalidateOwner()
-{
-  mOwner = nullptr;
-
-  return NS_OK;
 }
 
 nsresult
@@ -1715,4 +1688,14 @@ nsNPAPIPluginInstance::CarbonNPAPIFailure()
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch CarbonEventModelFailureEvent.");
   }
+}
+
+double
+nsNPAPIPluginInstance::GetContentsScaleFactor()
+{
+  double scaleFactor = 1.0;
+  if (mOwner) {
+    mOwner->GetContentsScaleFactor(&scaleFactor);
+  }
+  return scaleFactor;
 }

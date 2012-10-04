@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test whether we can create an AudioContext interface</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function expectException(func, exceptionCode) {
+  var threw = false;
+  try {
+    func();
+  } catch (ex) {
+    threw = true;
+    ok(ex instanceof DOMException, "Expect a DOM exception");
+    ok(ex.code, exceptionCode, "Expect the correct exception code");
+  }
+  ok(threw, "The exception was thrown");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context1 = new mozAudioContext();
+  var context2 = new mozAudioContext();
+
+  var destination1 = context1.destination;
+  var destination2 = context2.destination;
+
+  isnot(destination1, destination2, "Destination nodes should not be the same");
+  isnot(destination1.context, destination2.context, "Destination nodes should not have the same context");
+
+  var source1 = context1.createBufferSource();
+
+  expectException(function() {
+    source1.connect(destination1, 1);
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    source1.connect(destination1, 0, 1);
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    source1.connect(destination2);
+  }, DOMException.SYNTAX_ERR);
+
+  source1.connect(destination1);
+
+  expectException(function() {
+    source1.disconnect(1);
+  }, DOMException.INDEX_SIZE_ERR);
+
+  SpecialPowers.clearUserPref("media.webaudio.enabled");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -107,6 +107,9 @@ struct NPRemoteWindow
 #if defined(XP_WIN)
   base::SharedMemoryHandle surfaceHandle;
 #endif
+#if defined(XP_MACOSX)
+  double contentsScaleFactor;
+#endif
 };
 
 #ifdef XP_WIN
@@ -382,6 +385,9 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
 #if defined(XP_WIN)
     WriteParam(aMsg, aParam.surfaceHandle);
 #endif
+#if defined(XP_MACOSX)
+    aMsg->WriteDouble(aParam.contentsScaleFactor);
+#endif
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -414,6 +420,12 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
       return false;
 #endif
 
+#if defined(XP_MACOSX)
+    double contentsScaleFactor;
+    if (!aMsg->ReadDouble(aIter, &contentsScaleFactor))
+      return false;
+#endif
+
     aResult->window = window;
     aResult->x = x;
     aResult->y = y;
@@ -427,6 +439,9 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
 #endif
 #if defined(XP_WIN)
     aResult->surfaceHandle = surfaceHandle;
+#endif
+#if defined(XP_MACOSX)
+    aResult->contentsScaleFactor = contentsScaleFactor;
 #endif
     return true;
   }

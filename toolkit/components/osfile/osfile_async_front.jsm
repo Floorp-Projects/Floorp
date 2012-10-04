@@ -24,11 +24,12 @@ let EXPORTED_SYMBOLS = ["OS"];
 Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 
 let LOG = OS.Shared.LOG.bind(OS.Shared, "Controller");
+let isTypedArray = OS.Shared.isTypedArray;
 
 // A simple flag used to control debugging messages.
 // FIXME: Once this library has been battle-tested, this flag will
 // either be removed or replaced with a preference.
-const DEBUG = true;
+const DEBUG = false;
 
 // The constructor for file errors.
 let OSError;
@@ -306,9 +307,9 @@ File.prototype = {
   /**
    * Read a number of bytes from the file and into a buffer.
    *
-   * @param {ArrayBuffer|C void*} buffer This buffer will be modified
-   * by another thread. Using this buffer before the |read| operation
-   * has completed is a BAD IDEA.
+   * @param {Typed array | C pointer} buffer This buffer will be
+   * modified by another thread. Using this buffer before the |read|
+   * operation has completed is a BAD IDEA.
    * @param {JSON} options
    *
    * @return {promise}
@@ -316,51 +317,58 @@ File.prototype = {
    * @rejects {OS.File.Error}
    */
   readTo: function readTo(buffer, options) {
-    // If |buffer| is an ArrayBuffer and there is no |bytes| options,
-    // we need to extract the |byteLength| now, as it will be lost
-    // by communication
-    if ("byteLength" in buffer && (!options || !"bytes" in options)) {
+    // If |buffer| is a typed array and there is no |bytes| options, we
+    // need to extract the |byteLength| now, as it will be lost by
+    // communication
+    if (isTypedArray(buffer) && (!options || !"bytes" in options)) {
       options = clone(options || noOptions);
       options.bytes = buffer.byteLength;
     }
-    // Note: Classic semantics for ArrayBuffer communication would imply
-    // that posting the ArrayBuffer removes ownership from the sender
-    // thread. Here, we use Type.voidptr_t.toMsg to ensure that these
-    // semantics do not apply.
+    // Note: Type.void_t.out_ptr.toMsg ensures that
+    // - the buffer is effectively shared (not neutered) between both
+    //   threads;
+    // - we take care of any |byteOffset|.
     return Scheduler.post("File_prototype_readTo",
       [this._fdmsg,
-      Type.void_t.out_ptr.toMsg(buffer),
-      options],
-      buffer/*Ensure that |buffer| is not gc-ed*/);
+       Type.void_t.out_ptr.toMsg(buffer),
+       options],
+       buffer/*Ensure that |buffer| is not gc-ed*/);
   },
   /**
-   * Write a number of bytes from the file and into a buffer.
+   * Write bytes from a buffer to this file.
    *
-   * @param {ArrayBuffer|C void*} buffer This buffer will be accessed
-   * by another thread. Using this buffer before the |write| operation
-   * has completed is a BAD IDEA.
+   * Note that, by default, this function may perform several I/O
+   * operations to ensure that the buffer is fully written.
    *
-   * @return {promise}
-   * @resolves {number} The number of bytes effectively written.
-   * @rejects {OS.File.Error}
+   * @param {Typed array | C pointer} buffer The buffer in which the
+   * the bytes are stored. The buffer must be large enough to
+   * accomodate |bytes| bytes. Using the buffer before the operation
+   * is complete is a BAD IDEA.
+   * @param {*=} options Optionally, an object that may contain the
+   * following fields:
+   * - {number} bytes The number of |bytes| to write from the buffer. If
+   * unspecified, this is |buffer.byteLength|. Note that |bytes| is required
+   * if |buffer| is a C pointer.
+   *
+   * @return {number} The number of bytes actually written.
    */
   write: function write(buffer, options) {
-    // If |buffer| is an ArrayBuffer and there is no |bytes| options,
+    // If |buffer| is a typed array and there is no |bytes| options,
     // we need to extract the |byteLength| now, as it will be lost
     // by communication
-    if ("byteLength" in buffer && (!options || !"bytes" in options)) {
+    if (isTypedArray(buffer) && (!options || !"bytes" in options)) {
       options = clone(options || noOptions);
       options.bytes = buffer.byteLength;
     }
-    // Note: Classic semantics for ArrayBuffer communication would imply
-    // that posting the ArrayBuffer removes ownership from the sender
-    // thread. Here, we use Type.voidptr_t.toMsg to ensure that these
-    // semantics do not apply.
+    // Note: Type.void_t.out_ptr.toMsg ensures that
+    // - the buffer is effectively shared (not neutered) between both
+    //   threads;
+    // - we take care of any |byteOffset|.
     return Scheduler.post("File_prototype_write",
       [this._fdmsg,
-      Type.void_t.in_ptr.toMsg(buffer),
-      options],
-      buffer/*Ensure that |buffer| is not gc-ed*/);
+       Type.void_t.in_ptr.toMsg(buffer),
+       options],
+       buffer/*Ensure that |buffer| is not gc-ed*/);
   },
 
   /**
@@ -370,13 +378,11 @@ File.prototype = {
    * this file. If specified, read |bytes| bytes, or less if the file does not
    * contain that many bytes.
    * @return {promise}
-   * @resolves {buffer: ArrayBuffer, bytes: bytes} A buffer containing the
-   * bytes read and the number of bytes read. Note that |buffer| may be
-   * larger than the number of bytes actually read.
+   * @resolves {Uint8Array} An array containing the bytes read.
    */
   read: function read(nbytes) {
-    // FIXME: Once bug 720949 has landed, we should be able to simplify
-    // considerably the implementation of |readAll|
+    // FIXME: Once bug 720949 has landed, we might be able to simplify
+    // the implementation of |readAll|
     let self = this;
     let promise;
     if (nbytes != null) {
@@ -387,19 +393,22 @@ File.prototype = {
         return stat.size;
       });
     }
-    let buffer;
+    let array;
+    let size;
     promise = promise.then(
-      function withSize(size) {
-        buffer = new ArrayBuffer(size);
-        return self.readTo(buffer);
+      function withSize(aSize) {
+        size = aSize;
+        array = new Uint8Array(size);
+        return self.readTo(array);
       }
     );
     promise = promise.then(
       function afterReadTo(bytes) {
-        return {
-          bytes: bytes,
-          buffer: buffer
-        };
+        if (bytes == size) {
+          return array;
+        } else {
+          return array.subarray(0, bytes);
+        }
       }
     );
     return promise;
@@ -601,8 +610,8 @@ File.makeDir = function makeDir(path, options) {
  * @param {number=} bytes Optionally, an upper bound to the number of bytes
  * to read.
  *
- * @resolves {{buffer: ArrayBuffer, bytes: number}} A buffer holding the bytes
- * and the number of bytes read from the file.
+ * @resolves {Uint8Array} A buffer holding the bytes
+ * read from the file.
  */
 File.read = function read(path, bytes) {
   return Scheduler.post("read",
@@ -620,15 +629,15 @@ File.read = function read(path, bytes) {
  * is required. This requirement should disappear as part of bug 793660.
  *
  * @param {string} path The path of the file to modify.
- * @param {ArrayByffer} buffer A buffer containing the bytes to write.
- * @param {number} bytes The number of bytes to write.
+ * @param {Typed Array | C pointer} buffer A buffer containing the bytes to write.
  * @param {*=} options Optionally, an object determining the behavior
  * of this function. This object may contain the following fields:
- * - {number} offset The offset in |buffer| at which to start extracting
- * data
+ * - {number} bytes The number of bytes to write. If unspecified,
+ * |buffer.byteLength|. Required if |buffer| is a C pointer.
  * - {string} tmpPath The path at which to write the temporary file.
  *
- * @return {number} The number of bytes actually written.
+ * @return {promise}
+ * @resolves {number} The number of bytes actually written.
  */
 File.writeAtomic = function writeAtomic(path, buffer, options) {
   // Copy |options| to avoid modifying the original object
@@ -637,13 +646,17 @@ File.writeAtomic = function writeAtomic(path, buffer, options) {
   if ("tmpPath" in options) {
     options.tmpPath = Type.path.toMsg(options.tmpPath);
   };
-  if ("byteLength" in buffer && (!("bytes" in options))) {
+  if (isTypedArray(buffer) && (!("bytes" in options))) {
     options.bytes = buffer.byteLength;
   };
+  // Note: Type.void_t.out_ptr.toMsg ensures that
+  // - the buffer is effectively shared (not neutered) between both
+  //   threads;
+  // - we take care of any |byteOffset|.
   return Scheduler.post("writeAtomic",
     [Type.path.toMsg(path),
-    Type.void_t.in_ptr.toMsg(buffer),
-    options], [options, buffer]);
+     Type.void_t.in_ptr.toMsg(buffer),
+     options], [options, buffer]);
 };
 
 /**

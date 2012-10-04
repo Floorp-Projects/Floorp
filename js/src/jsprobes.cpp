@@ -213,7 +213,7 @@ current_location(JSContext *cx, int* lineno, char const **filename)
  * windows.h in a header.
  */
 bool
-Probes::ETWCallTrackingActive(JSContext *cx)
+Probes::ETWCallTrackingActive()
 {
     return MCGEN_ENABLE_CHECK(MozillaSpiderMonkey_Context, EvtFunctionEntry);
 }
@@ -425,14 +425,14 @@ Probes::ETWCustomMark(int marker)
 }
 
 bool
-Probes::ETWStartExecution(JSContext *cx, JSScript *script)
+Probes::ETWStartExecution(JSScript *script)
 {
     int lineno = script ? script->lineno : -1;
     return EventWriteEvtExecuteStart(ScriptFilename(script), lineno) == ERROR_SUCCESS;
 }
 
 bool
-Probes::ETWStopExecution(JSContext *cx, JSScript *script)
+Probes::ETWStopExecution(JSScript *script)
 {
     int lineno = script ? script->lineno : -1;
     return EventWriteEvtExecuteDone(ScriptFilename(script), lineno) == ERROR_SUCCESS;

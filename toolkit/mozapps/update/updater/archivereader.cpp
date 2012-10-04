@@ -10,8 +10,8 @@
 #include "bzlib.h"
 #include "archivereader.h"
 #include "errors.h"
-#include "nsAlgorithm.h"
 #ifdef XP_WIN
+#include "nsAlgorithm.h" // Needed by nsVersionComparator.cpp
 #include "updatehelper.h"
 #endif
 

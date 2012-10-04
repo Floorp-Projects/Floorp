@@ -2024,6 +2024,7 @@ WaitForServiceFinishThread(void *param)
 }
 #endif
 
+#ifdef MOZ_VERIFY_MAR_SIGNATURE
 /**
  * This function reads in the ACCEPTED_MAR_CHANNEL_IDS from update-settings.ini
  *
@@ -2046,6 +2047,7 @@ ReadMARChannelIDs(const NS_tchar *path, MARChannelStringTable *results)
 
   return result;
 }
+#endif
 
 static void
 UpdateThreadFunc(void *param)
@@ -2129,7 +2131,8 @@ UpdateThreadFunc(void *param)
 
       ensure_remove_recursive(stageDir);
       WriteStatusFile(sUsingService ? "pending-service" : "pending");
-      putenv("MOZ_PROCESS_UPDATES="); // We need to use -process-updates again in the tests
+      char processUpdates[] = "MOZ_PROCESS_UPDATES=";
+      putenv(processUpdates); // We need to use -process-updates again in the tests
       reportRealResults = false; // pretend success
     }
   }

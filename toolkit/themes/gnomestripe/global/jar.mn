@@ -47,6 +47,7 @@ toolkit.jar:
 +  skin/classic/global/icons/notloading_16.png                 (icons/notloading_16.png)
 +  skin/classic/global/icons/panelarrow-horizontal.svg         (icons/panelarrow-horizontal.svg)
 +  skin/classic/global/icons/panelarrow-vertical.svg           (icons/panelarrow-vertical.svg)
++  skin/classic/global/icons/panelarrow-light-vertical.svg   (icons/panelarrow-light-vertical.svg)
 +  skin/classic/global/icons/resizer.png                       (icons/resizer.png)
 +  skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)

@@ -745,7 +745,7 @@ IonBuilder::markPhiBytecodeUses(jsbytecode *pc)
 {
     unsigned nuses = analyze::GetUseCount(script_, pc - script_->code);
     for (unsigned i = 0; i < nuses; i++) {
-        MDefinition *def = current->peek(-(i + 1));
+        MDefinition *def = current->peek(-int32_t(i + 1));
         if (def->isPassArg())
             def = def->toPassArg()->getArgument();
         if (def->isPhi())

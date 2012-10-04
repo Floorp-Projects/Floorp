@@ -17,11 +17,24 @@ interface nsIDOMWindow;
 /**
  * For use with non-content code.
  */
-[scriptable, builtinclass, uuid(235ca1a1-d0c8-41f3-9b4a-dbaa4437d69c)]
+[scriptable, builtinclass, uuid(a232e826-07bd-11e2-8a8f-236186ff1a14)]
 interface nsIPowerManagerService : nsISupports
 {
+  /**
+   * This API will power off the machine.
+   */
   void              powerOff();
+
+  /**
+   * This API will completely shut down and boot the machine.
+   */
   void              reboot();
+
+  /**
+   * This API will restart the Gecko processes without powering off the machine.
+   */
+  void              restart();
+
   void              addWakeLockListener(in nsIDOMMozWakeLockListener aListener);
   void              removeWakeLockListener(in nsIDOMMozWakeLockListener aListener);
   DOMString         getWakeLockState(in DOMString aTopic);

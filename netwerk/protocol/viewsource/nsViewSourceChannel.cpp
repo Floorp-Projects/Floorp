@@ -348,11 +348,27 @@ nsViewSourceChannel::GetContentDisposition(uint32_t *aContentDisposition)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::SetContentDisposition(uint32_t aContentDisposition)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->SetContentDisposition(aContentDisposition);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetContentDispositionFilename(nsAString &aContentDispositionFilename)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
     return mChannel->GetContentDispositionFilename(aContentDispositionFilename);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetContentDispositionFilename(const nsAString &aContentDispositionFilename)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->SetContentDispositionFilename(aContentDispositionFilename);
 }
 
 NS_IMETHODIMP

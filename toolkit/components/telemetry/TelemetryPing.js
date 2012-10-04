@@ -203,6 +203,7 @@ TelemetryPing.prototype = {
   // duplicate submissions.
   _uuid: generateUUID(),
   // Regex that matches histograms we care about during startup.
+  // Keep this in sync with gen-histogram-bucket-ranges.py.
   _startupHistogramRegex: /SQLITE|HTTP|SPDY|CACHE|DNS/,
   _slowSQLStartup: {},
   _prevSession: null,

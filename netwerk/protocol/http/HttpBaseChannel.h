@@ -88,7 +88,9 @@ public:
   NS_IMETHOD GetContentCharset(nsACString& aContentCharset);
   NS_IMETHOD SetContentCharset(const nsACString& aContentCharset);
   NS_IMETHOD GetContentDisposition(uint32_t *aContentDisposition);
+  NS_IMETHOD SetContentDisposition(uint32_t aContentDisposition);
   NS_IMETHOD GetContentDispositionFilename(nsAString& aContentDispositionFilename);
+  NS_IMETHOD SetContentDispositionFilename(const nsAString& aContentDispositionFilename);
   NS_IMETHOD GetContentDispositionHeader(nsACString& aContentDispositionHeader);
   NS_IMETHOD GetContentLength(int32_t *aContentLength);
   NS_IMETHOD SetContentLength(int32_t aContentLength);
@@ -193,6 +195,9 @@ protected:
   void     DoNotifyListener();
   virtual void DoNotifyListenerCleanup() = 0;
 
+  // drop reference to listener, its callbacks, and the progress sink
+  void ReleaseListeners();
+
   nsresult ApplyContentConversions();
 
   void AddCookiesToRequest();
@@ -275,6 +280,9 @@ protected:
 
   uint32_t                          mProxyResolveFlags;
   nsCOMPtr<nsIURI>                  mProxyURI;
+
+  uint32_t                          mContentDispositionHint;
+  nsAutoPtr<nsString>               mContentDispositionFilename;
 };
 
 // Share some code while working around C++'s absurd inability to handle casting

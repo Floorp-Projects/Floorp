@@ -525,7 +525,19 @@ WyciwygChannelChild::GetContentDisposition(uint32_t *aContentDisposition)
 }
 
 NS_IMETHODIMP
+WyciwygChannelChild::SetContentDisposition(uint32_t aContentDisposition)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 WyciwygChannelChild::GetContentDispositionFilename(nsAString &aContentDispositionFilename)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+WyciwygChannelChild::SetContentDispositionFilename(const nsAString &aContentDispositionFilename)
 {
   return NS_ERROR_NOT_AVAILABLE;
 }

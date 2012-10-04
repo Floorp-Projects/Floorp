@@ -177,7 +177,7 @@ namespace frontend {
 struct BytecodeEmitter;
 struct Definition;
 class FunctionBox;
-struct ObjectBox;
+class ObjectBox;
 struct Token;
 struct TokenPos;
 struct TokenPtr;

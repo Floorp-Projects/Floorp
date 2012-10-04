@@ -267,6 +267,8 @@ protected:
   nsCOMPtr<nsIStreamListener>         mListener;
   nsCOMPtr<nsISupports>               mListenerContext;
   nsresult                            mStatus;
+  uint32_t                            mContentDispositionHint;
+  nsAutoPtr<nsString>                 mContentDispositionFilename;
 };
 
 #endif // !nsBaseChannel_h__

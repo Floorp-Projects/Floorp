@@ -3121,7 +3121,9 @@ let RIL = {
     // can be removed if is the same as the current one.
     for each (let newDataCall in datacalls) {
       if (newDataCall.status != DATACALL_FAIL_NONE) {
-        newDataCall.apn = newDataCallOptions.apn;
+        if (newDataCallOptions) {
+          newDataCall.apn = newDataCallOptions.apn;
+        }
         this._sendDataCallError(newDataCall, newDataCall.status);
       }
     }
@@ -3758,7 +3760,7 @@ let RIL = {
    * Send messages to the main thread.
    */
   sendDOMMessage: function sendDOMMessage(message) {
-    postMessage(message, "*");
+    postMessage(message);
   },
 
   /**
@@ -4213,7 +4215,7 @@ RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = null;
 RIL[REQUEST_SET_CALL_FORWARD] = null;
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
 RIL[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, options) {
-  options.success = options.rilRequestError == 0 ? true : false;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
 };
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
@@ -4441,7 +4443,12 @@ RIL[REQUEST_STK_GET_PROFILE] = null;
 RIL[REQUEST_STK_SET_PROFILE] = null;
 RIL[REQUEST_STK_SEND_ENVELOPE_COMMAND] = null;
 RIL[REQUEST_STK_SEND_TERMINAL_RESPONSE] = null;
-RIL[REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM] = null;
+RIL[REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM] = function REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM(length, options) {
+  if (!options.rilRequestError && options.hasConfirmed) {
+    options.rilMessageType = "stkcallsetup";
+    this.sendDOMMessage(options);
+  }
+};
 RIL[REQUEST_EXPLICIT_CALL_TRANSFER] = null;
 RIL[REQUEST_SET_PREFERRED_NETWORK_TYPE] = function REQUEST_SET_PREFERRED_NETWORK_TYPE(length, options) {
   if (options.networkType == null) {
@@ -5020,14 +5027,19 @@ let GsmPDUHelper = {
     return ret;
   },
 
-  writeStringAsSeptets: function writeStringAsSeptets(message, paddingBits, langIndex, langShiftIndex) {
+  writeStringAsSeptets: function writeStringAsSeptets(message, paddingBits, langIndex, langShiftIndex, strict7BitEncoding) {
     const langTable = PDU_NL_LOCKING_SHIFT_TABLES[langIndex];
     const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[langShiftIndex];
 
     let dataBits = paddingBits;
     let data = 0;
     for (let i = 0; i < message.length; i++) {
-      let septet = langTable.indexOf(message[i]);
+      let c = message.charAt(i);
+      if (strict7BitEncoding) {
+        c = GSM_SMS_STRICT_7BIT_CHARMAP[c] || c;
+      }
+
+      let septet = langTable.indexOf(c);
       if (septet == PDU_NL_EXTENDED_ESCAPE) {
         continue;
       }
@@ -5036,9 +5048,9 @@ let GsmPDUHelper = {
         data |= septet << dataBits;
         dataBits += 7;
       } else {
-        septet = langShiftTable.indexOf(message[i]);
+        septet = langShiftTable.indexOf(c);
         if (septet == -1) {
-          throw new Error(message[i] + " not in 7 bit alphabet "
+          throw new Error("'" + c + "' is not in 7 bit alphabet "
                           + langIndex + ":" + langShiftIndex + "!");
         }
 
@@ -5983,6 +5995,7 @@ let GsmPDUHelper = {
     let encodedBodyLength = options.encodedBodyLength;
     let langIndex = options.langIndex;
     let langShiftIndex = options.langShiftIndex;
+    let strict7BitEncoding = options.strict7BitEncoding;
 
     // SMS-SUBMIT Format:
     //
@@ -6105,7 +6118,8 @@ let GsmPDUHelper = {
 
     switch (dcs) {
       case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
-        this.writeStringAsSeptets(body, paddingBits, langIndex, langShiftIndex);
+        this.writeStringAsSeptets(body, paddingBits, langIndex, langShiftIndex,
+                                  strict7BitEncoding);
         break;
       case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
         // Unsupported.

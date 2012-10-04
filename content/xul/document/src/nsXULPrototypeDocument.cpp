@@ -756,8 +756,8 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
     JSObject *newGlob;
     JSCompartment *compartment;
 
-    rv = xpc_CreateGlobalObject(cx, &gSharedGlobalClass, principal, nullptr,
-                                false, &newGlob, &compartment);
+    rv = xpc::CreateGlobalObject(cx, &gSharedGlobalClass, principal, false,
+                                 &newGlob, &compartment);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     ::JS_SetGlobalObject(cx, newGlob);

@@ -82,14 +82,12 @@ struct nsExternalDOMClassInfoData : public nsDOMClassInfoData
 };
 
 
-typedef uintptr_t PtrBits;
-
 // To be used with the nsDOMClassInfoData::mCachedClassInfo pointer.
 // The low bit is set when we created a generic helper for an external
 // (which holds on to the nsDOMClassInfoData).
-#define GET_CLEAN_CI_PTR(_ptr) (nsIClassInfo*)(PtrBits(_ptr) & ~0x1)
-#define MARK_EXTERNAL(_ptr) (nsIClassInfo*)(PtrBits(_ptr) | 0x1)
-#define IS_EXTERNAL(_ptr) (PtrBits(_ptr) & 0x1)
+#define GET_CLEAN_CI_PTR(_ptr) (nsIClassInfo*)(uintptr_t(_ptr) & ~0x1)
+#define MARK_EXTERNAL(_ptr) (nsIClassInfo*)(uintptr_t(_ptr) | 0x1)
+#define IS_EXTERNAL(_ptr) (uintptr_t(_ptr) & 0x1)
 
 
 class nsDOMClassInfo : public nsXPCClassInfo
@@ -480,32 +478,6 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsNavigatorSH(aData);
-  }
-};
-
-// WebGLExtension scriptable helper
-
-class WebGLExtensionSH : public nsDOMGenericSH
-{
-protected:
-  WebGLExtensionSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
-  {
-  }
-
-  virtual ~WebGLExtensionSH()
-  {
-  }
-
-public:
-  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *globalObj, JSObject **parentObj);
-  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
-  virtual void PreserveWrapper(nsISupports *aNative);
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new WebGLExtensionSH(aData);
   }
 };
 

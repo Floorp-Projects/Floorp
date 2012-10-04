@@ -23,19 +23,19 @@
         }
         break;
 
-      case "isInstalled":
-        navigator.mozApps.isInstalled('http://example.org/manifest.webapp').onsuccess = function onIsInstalled() {
+      case "checkInstalled":
+        navigator.mozApps.checkInstalled('http://example.org/manifest.webapp').onsuccess = function onCheckInstalled() {
           if (data[1] == 'true') {
-            finish(this.result == false);
+            finish(!this.result);
           } else {
-            finish(this.result == true);
+            finish(!!this.result);
           }
         }
         break;
 
-      case "isInstalledWrong":
+      case "checkInstalledWrong":
         try {
-          navigator.mozApps.isInstalled('http://something.org/manifest.webapp');
+          navigator.mozApps.checkInstalled('http://something.org/manifest.webapp');
           finish(false);
         } catch (e) {
           finish(true);

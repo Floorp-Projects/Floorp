@@ -1838,7 +1838,7 @@ typedef JSBool
  * marking its native structures.
  */
 typedef void
-(* JSTraceOp)(JSTracer *trc, JSObject *obj);
+(* JSTraceOp)(JSTracer *trc, JSRawObject obj);
 
 /*
  * DEBUG only callback that JSTraceOp implementation can provide to return
@@ -2043,9 +2043,9 @@ typedef JSBool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter 
                                          JSObject *obj, void *closure);
 
 /*
- * This is called when JS_WriteStructuredClone finds that the object to be
- * written is recursive. To follow HTML5, the application must throw a
- * DATA_CLONE_ERR DOMException. errorid is always JS_SCERR_RECURSION.
+ * This is called when JS_WriteStructuredClone is given an invalid transferable.
+ * To follow HTML5, the application must throw a DATA_CLONE_ERR DOMException
+ * with error set to one of the JS_SCERR_* values.
  */
 typedef void (*StructuredCloneErrorOp)(JSContext *cx, uint32_t errorid);
 
@@ -2648,7 +2648,6 @@ namespace JS {
 JS_ALWAYS_INLINE bool
 ToNumber(JSContext *cx, const Value &v, double *out)
 {
-    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot root(cx, &v);
@@ -2743,7 +2742,6 @@ namespace JS {
 JS_ALWAYS_INLINE bool
 ToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 {
-    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot skip(cx, &v);
@@ -2760,7 +2758,6 @@ ToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 JS_ALWAYS_INLINE bool
 ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
-    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot root(cx, &v);
@@ -2777,7 +2774,6 @@ ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 JS_ALWAYS_INLINE bool
 ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 {
-    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot root(cx, &v);
@@ -2794,7 +2790,6 @@ ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 JS_ALWAYS_INLINE bool
 ToInt64(JSContext *cx, const js::Value &v, int64_t *out)
 {
-    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot skip(cx, &v);
@@ -2812,7 +2807,6 @@ ToInt64(JSContext *cx, const js::Value &v, int64_t *out)
 JS_ALWAYS_INLINE bool
 ToUint64(JSContext *cx, const js::Value &v, uint64_t *out)
 {
-    AutoAssertCanGC cangc;
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot skip(cx, &v);
@@ -5711,17 +5705,27 @@ struct JSStructuredCloneCallbacks {
     StructuredCloneErrorOp reportError;
 };
 
+/* Note: if the *data contains transferable objects, it can be read
+ * only once */
 JS_PUBLIC_API(JSBool)
-JS_ReadStructuredClone(JSContext *cx, const uint64_t *data, size_t nbytes,
+JS_ReadStructuredClone(JSContext *cx, uint64_t *data, size_t nbytes,
                        uint32_t version, jsval *vp,
                        const JSStructuredCloneCallbacks *optionalCallbacks,
                        void *closure);
 
-/* Note: On success, the caller is responsible for calling js::Foreground::free(*datap). */
+/* Note: On success, the caller is responsible for calling
+ * JS_ClearStructuredClone(*datap, nbytesp). */
 JS_PUBLIC_API(JSBool)
 JS_WriteStructuredClone(JSContext *cx, jsval v, uint64_t **datap, size_t *nbytesp,
                         const JSStructuredCloneCallbacks *optionalCallbacks,
-                        void *closure);
+                        void *closure, jsval transferable);
+
+JS_PUBLIC_API(JSBool)
+JS_ClearStructuredClone(const uint64_t *data, size_t nbytes);
+
+JS_PUBLIC_API(JSBool)
+JS_StructuredCloneHasTransferables(const uint64_t *data, size_t nbytes,
+                                   JSBool *hasTransferable);
 
 JS_PUBLIC_API(JSBool)
 JS_StructuredClone(JSContext *cx, jsval v, jsval *vp,
@@ -5767,9 +5771,14 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
 
     bool read(JSContext *cx, jsval *vp,
               const JSStructuredCloneCallbacks *optionalCallbacks=NULL,
-              void *closure=NULL) const;
+              void *closure=NULL);
 
     bool write(JSContext *cx, jsval v,
+               const JSStructuredCloneCallbacks *optionalCallbacks=NULL,
+               void *closure=NULL);
+
+    bool write(JSContext *cx, jsval v,
+               jsval transferable,
                const JSStructuredCloneCallbacks *optionalCallbacks=NULL,
                void *closure=NULL);
 
@@ -5794,6 +5803,7 @@ JS_BEGIN_EXTERN_C
 #define JS_SCTAG_USER_MAX  ((uint32_t) 0xFFFFFFFF)
 
 #define JS_SCERR_RECURSION 0
+#define JS_SCERR_TRANSFERABLE 1
 
 JS_PUBLIC_API(void)
 JS_SetStructuredCloneCallbacks(JSRuntime *rt, const JSStructuredCloneCallbacks *callbacks);

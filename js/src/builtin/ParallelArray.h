@@ -119,6 +119,10 @@ class ParallelArrayObject : public JSObject {
         inline bool initialize(JSContext *cx, HandleParallelArrayObject source,
                                uint32_t space);
 
+        // Bump the index by 1, wrapping over if necessary. Returns false when
+        // the increment would go out of bounds.
+        inline bool bump();
+
         // Get the scalar length according to the dimensions vector, i.e. the
         // product of the dimensions vector.
         inline uint32_t scalarLengthOfDimensions();
@@ -322,9 +326,6 @@ class ParallelArrayObject : public JSObject {
     static inline bool DenseArrayToIndexVector(JSContext *cx, HandleObject obj,
                                                IndexVector &indices);
 
-    bool toStringBufferImpl(JSContext *cx, IndexInfo &iv, bool useLocale,
-                            HandleObject buffer, StringBuffer &sb);
-
     static bool create(JSContext *cx, MutableHandleValue vp);
     static bool create(JSContext *cx, HandleObject buffer, MutableHandleValue vp);
     static bool create(JSContext *cx, HandleObject buffer, uint32_t offset,
@@ -345,7 +346,7 @@ class ParallelArrayObject : public JSObject {
     static bool toLocaleString(JSContext *cx, CallArgs args);
     static bool toSource(JSContext *cx, CallArgs args);
 
-    static void mark(JSTracer *trc, JSObject *obj);
+    static void mark(JSTracer *trc, RawObject obj);
     static JSBool lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                 MutableHandleObject objp, MutableHandleShape propp);
     static JSBool lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,

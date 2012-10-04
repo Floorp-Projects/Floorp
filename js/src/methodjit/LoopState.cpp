@@ -922,7 +922,7 @@ LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
     jsbytecode *PC = ssa->getFrame(pushed.frame).script->code + pushed.v.pushedOffset();
     ScriptAnalysis *analysis = ssa->getFrame(pushed.frame).script->analysis();
 
-    if (!analysis->integerOperation(cx, PC))
+    if (!analysis->integerOperation(PC))
         return false;
 
     uint32_t baseSlot = UNASSIGNED;
@@ -1467,7 +1467,7 @@ LoopState::getLoopTestAccess(const SSAValue &v, uint32_t *pslot, int32_t *pconst
       case JSOP_DECARG:
       case JSOP_ARGINC:
       case JSOP_ARGDEC: {
-        if (!outerAnalysis->integerOperation(cx, pc))
+        if (!outerAnalysis->integerOperation(pc))
             return false;
         uint32_t slot = GetBytecodeSlot(outerScript, pc);
         if (outerAnalysis->slotEscapes(slot))
@@ -1610,7 +1610,7 @@ LoopState::analyzeLoopIncrements()
         JSOp op = JSOp(*pc);
         const JSCodeSpec *cs = &js_CodeSpec[op];
         if (cs->format & (JOF_INC | JOF_DEC)) {
-            if (!outerAnalysis->integerOperation(cx, pc))
+            if (!outerAnalysis->integerOperation(pc))
                 continue;
 
             Increment inc;
@@ -2071,7 +2071,7 @@ LoopState::getEntryValue(const CrossSSAValue &iv, uint32_t *pslot, int32_t *pcon
       case JSOP_GETARG:
       case JSOP_ARGINC:
       case JSOP_INCARG: {
-        if (cv.frame != CrossScriptSSA::OUTER_FRAME || !analysis->integerOperation(cx, pc))
+        if (cv.frame != CrossScriptSSA::OUTER_FRAME || !analysis->integerOperation(pc))
             return false;
         uint32_t slot = GetBytecodeSlot(outerScript, pc);
         if (outerAnalysis->slotEscapes(slot))

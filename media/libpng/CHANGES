@@ -3852,7 +3852,7 @@ Version 1.5.10beta05 [March 10, 2012]
 Version 1.5.10 [March 29, 2012]
   Prevent PNG_EXPAND+PNG_SHIFT doing the shift twice.
   Revised png_set_text_2() to avoid potential memory corruption (fixes
-    CVE-2011-3048).
+    CVE-2011-3048, also known as CVE-2012-3425).
 
 Version 1.5.11beta01 [April 28, 2012]
   Revised scripts/makefile.darwin: use system zlib; remove quotes around
@@ -3890,6 +3890,34 @@ Version 1.5.11rc05 [June 7, 2012]
 
 Version 1.5.11 [June 14, 2012]
   Include zlib.h in contrib/gregbook and contrib/visupng examples.
+
+Version 1.5.12 [July 11, 2012]
+  Removed scripts/makefile.cegcc from the *.zip and *.7z distributions; it
+    depends on configure, which is not included in those archives.
+  Changed "a+w" to "u+w" in Makefile.in to fix CVE-2012-3386.
+
+Version 1.5.13beta01 [August 8, 2012]
+  Do not compile PNG_DEPRECATED, PNG_ALLOC and PNG_PRIVATE when __GNUC__ < 3.
+  Removed references to png_zalloc() and png_zfree() from the manual.
+  Revised PNG_FP_EXPORT and PNG_FIXED_EXPORT macros to avoid generating
+    lone semicolons (patch ported from libpng-1.6.0beta11).
+
+Version 1.5.13beta02 [September 10, 2012]
+  Corrected handling of the image array and the row_pointers array in example.c
+  When png_set_filler is used to strip a filler channel during write, the
+    code prior to 1.5 would ignore the case where the output required an
+    alpha channel or when the output was a palettized PNG.  In libpng-1.5 the
+    ignorance was lost and libpng proceeded to strip the channel resulting
+    in a bad (potential memory overwrite) failure later.  This reverts
+    the behavior to the pre-1.5 state but issues a warning. libpng-1.6 is
+    expected to issue an error on the erroneous png_set_filler call.
+  Use png_memset() consistently (pngmem.c contained some bare "memset" calls).
+
+Version 1.5.13rc01 [September 17, 2012]
+  No changes.
+
+Version 1.5.13 [September 27, 2012]
+  No changes.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

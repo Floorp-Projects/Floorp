@@ -9,7 +9,6 @@
 #include <android/log.h>
 #include "AndroidBridge.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIPluginInstanceOwner.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsWindow.h"
 #include "mozilla/dom/ScreenOrientation.h"
@@ -21,12 +20,6 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 using namespace mozilla::dom;
-
-static nsresult GetOwner(NPP instance, nsPluginInstanceOwner** owner) {
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
-
-  return pinst->GetOwner((nsIPluginInstanceOwner**)owner);
-}
 
 void
 anp_window_setVisibleRects(NPP instance, const ANPRectI rects[], int32_t count)
@@ -64,8 +57,10 @@ anp_window_showKeyboard(NPP instance, bool value)
 void
 anp_window_requestFullScreen(NPP instance)
 {
-  nsRefPtr<nsPluginInstanceOwner> owner;
-  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner)))) {
+  nsNPAPIPluginInstance* inst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+
+  nsRefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
+  if (!owner) {
     return;
   }
 
@@ -75,8 +70,10 @@ anp_window_requestFullScreen(NPP instance)
 void
 anp_window_exitFullScreen(NPP instance)
 {
-  nsRefPtr<nsPluginInstanceOwner> owner;
-  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner)))) {
+  nsNPAPIPluginInstance* inst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+
+  nsRefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
+  if (!owner) {
     return;
   }
 

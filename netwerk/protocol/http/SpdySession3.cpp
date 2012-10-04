@@ -1459,12 +1459,6 @@ SpdySession3::ReadSegments(nsAHttpSegmentReader *reader,
 
   LOG3(("SpdySession3::ReadSegments %p", this));
 
-  NS_ABORT_IF_FALSE(!mSegmentReader || !reader || (mSegmentReader == reader),
-                    "Inconsistent Write Function Callback");
-
-  if (reader)
-    mSegmentReader = reader;
-
   SpdyStream3 *stream = static_cast<SpdyStream3 *>(mReadyForWrite.PopFront());
   if (!stream) {
     LOG3(("SpdySession3 %p could not identify a stream to write; suspending.",

@@ -9,6 +9,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <link rel="stylesheet" href="chrome://browser/content/devtools/markup-view.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://browser/skin/devtools/markup-view.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://browser/skin/devtools/common.css" type="text/css"/>
 </head>
 <body role="application">
   <div id="root"></div>
@@ -17,19 +18,19 @@
       <li id="template-container" save="${elt}" class="container"><span save="${expander}" class="expander"></span><span save="${codeBox}" class="codebox"><ul save="${children}" class="children"></ul></span></li>
     </ul>
 
-    <span id="template-element" save="${elt}" class="editor"><span>&lt;</span><span save="${tag}" class="tagname"></span><span save="${attrList}"></span><span save="${newAttr}" class="newattr" tabindex="0"></span>&gt;</span>
+    <span id="template-element" save="${elt}" class="editor"><span>&lt;</span><span save="${tag}" class="tagname devtools-theme-tagname"></span><span save="${attrList}"></span><span save="${newAttr}" class="newattr" tabindex="0"></span>&gt;</span>
 
-    <span id="template-attribute" save="${attr}" data-attr="${attrName}" class="attreditor" style="display:none"> <span class="editable" save="${inner}" tabindex="0"><span save="${name}" class="attrname"></span>=&quot;<span save="${val}" class="attrvalue"></span>&quot;</span></span>
+    <span id="template-attribute" save="${attr}" data-attr="${attrName}" class="attreditor" style="display:none"> <span class="editable" save="${inner}" tabindex="0"><span save="${name}" class="attrname devtools-theme-attrname"></span>=&quot;<span save="${val}" class="attrvalue devtools-theme-attrvalue"></span>&quot;</span></span>
 
-    <span id="template-text" save="${elt}" class="editor">
+    <span id="template-text" save="${elt}" class="editor text">
       <pre save="${value}" style="display:inline-block;" tabindex="0"></pre>
     </span>
 
-    <span id="template-comment" save="${elt}" class="editor comment">
+    <span id="template-comment" save="${elt}" class="editor comment devtools-theme-comment">
       <span>&lt;!--</span><pre save="${value}" style="display:inline-block;" tabindex="0"></pre><span>--&gt;</span>
     </span>
 
-    <span id="template-elementClose" save="${closeElt}">&lt;/<span save="${closeTag}" class="tagname"></span>&gt;</span>
+    <span id="template-elementClose" save="${closeElt}">&lt;/<span save="${closeTag}" class="tagname devtools-theme-tagname"></span>&gt;</span>
    </div>
    <div id="previewbar" class="disabled">
      <div id="preview"/>

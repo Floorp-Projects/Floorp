@@ -41,10 +41,20 @@ bool SetProcessName(const char* aProcessName);
  */
 class THEBES_API nsDoubleBufferCARenderer {
 public:
-  nsDoubleBufferCARenderer() : mCALayer(nullptr) {}
+  nsDoubleBufferCARenderer() : mCALayer(nullptr), mContentsScaleFactor(1.0) {}
+  // Returns width in "display pixels".  A "display pixel" is the smallest
+  // fully addressable part of a display.  But in HiDPI modes each "display
+  // pixel" corresponds to more than one device pixel.  Multiply display pixels
+  // by mContentsScaleFactor to get device pixels.
   size_t GetFrontSurfaceWidth();
+  // Returns height in "display pixels".  Multiply by
+  // mContentsScaleFactor to get device pixels.
   size_t GetFrontSurfaceHeight();
+  // Returns width in "display pixels".  Multiply by
+  // mContentsScaleFactor to get device pixels.
   size_t GetBackSurfaceWidth();
+  // Returns height in "display pixels".  Multiply by
+  // mContentsScaleFactor to get device pixels.
   size_t GetBackSurfaceHeight();
   IOSurfaceID GetFrontSurfaceID();
 
@@ -53,17 +63,24 @@ public:
   bool HasCALayer();
 
   void SetCALayer(void *aCALayer);
-  bool InitFrontSurface(size_t aWidth, size_t aHeight, AllowOfflineRendererEnum aAllowOfflineRenderer);
+  // aWidth and aHeight are in "display pixels".  Multiply by
+  // aContentsScaleFactor to get device pixels.
+  bool InitFrontSurface(size_t aWidth, size_t aHeight,
+                        double aContentsScaleFactor,
+                        AllowOfflineRendererEnum aAllowOfflineRenderer);
   void Render();
   void SwapSurfaces();
   void ClearFrontSurface();
   void ClearBackSurface();
+
+  double GetContentsScaleFactor() { return mContentsScaleFactor; }
 
 private:
   void *mCALayer;
   RefPtr<nsCARenderer> mCARenderer;
   RefPtr<MacIOSurface> mFrontSurface;
   RefPtr<MacIOSurface> mBackSurface;
+  double mContentsScaleFactor;
 };
 
 } // namespace PluginUtilsOSX

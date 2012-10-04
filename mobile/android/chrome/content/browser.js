@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+
 #ifdef ACCESSIBILITY
 Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
 #endif
@@ -501,7 +502,8 @@ var BrowserApp = {
            contentDisposition = "";
            type = "";
         }
-        ContentAreaUtils.internalSave(aTarget.currentURI.spec, null, null, contentDisposition, type, false, "SaveImageTitle", null, aTarget.ownerDocument.documentURIObject, true, null);
+        ContentAreaUtils.internalSave(aTarget.currentURI.spec, null, null, contentDisposition, type, false, "SaveImageTitle", null,
+                                      aTarget.ownerDocument.documentURIObject, aTarget.ownerDocument, true, null);
       });
   },
 
@@ -6285,6 +6287,7 @@ var ActivityObserver = {
 var WebappsUI = {
   init: function init() {
     Cu.import("resource://gre/modules/Webapps.jsm");
+    Cu.import("resource://gre/modules/AppsUtils.jsm");
     DOMApplicationRegistry.allAppsLaunchable = true;
 
     Services.obs.addObserver(this, "webapps-ask-install", false);
@@ -6294,7 +6297,7 @@ var WebappsUI = {
     Services.obs.addObserver(this, "webapps-install-error", false);
     Services.obs.addObserver(this, "WebApps:InstallMarketplace", false);
   },
-  
+
   uninit: function unint() {
     Services.obs.removeObserver(this, "webapps-ask-install");
     Services.obs.removeObserver(this, "webapps-launch");
@@ -6337,7 +6340,7 @@ var WebappsUI = {
         DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
           if (!aManifest)
             return;
-          let manifest = new DOMApplicationManifest(aManifest, data.origin);
+          let manifest = new ManifestHelper(aManifest, data.origin);
           this.openURL(manifest.fullLaunchPath(), data.origin);
         }).bind(this));
         break;
@@ -6346,7 +6349,7 @@ var WebappsUI = {
         DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
           if (!aManifest)
             return;
-          let manifest = new DOMApplicationManifest(aManifest, data.origin);
+          let manifest = new ManifestHelper(aManifest, data.origin);
 
           let observer = {
             observe: function (aSubject, aTopic) {
@@ -6460,7 +6463,7 @@ var WebappsUI = {
   },
 
   doInstall: function doInstall(aData) {
-    let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
+    let manifest = new ManifestHelper(aData.app.manifest, aData.app.origin);
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
     let showPrompt = true;
 
@@ -6482,7 +6485,7 @@ var WebappsUI = {
               uniqueURI: aData.app.origin
             }
           });
-  
+
           // if java returned a profile path to us, try to use it to pre-populate the app cache
           let file = null;
           if (profilePath) {

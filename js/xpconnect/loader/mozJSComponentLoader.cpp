@@ -744,7 +744,7 @@ mozJSComponentLoader::GlobalForLocation(nsIFile *aComponentFile,
 
             int64_t maxSize;
             LL_UI2L(maxSize, UINT32_MAX);
-            if (LL_CMP(fileSize, >, maxSize)) {
+            if (fileSize > maxSize) {
                 NS_ERROR("file too large");
                 JS_SetOptions(cx, oldopts);
                 return NS_ERROR_FAILURE;

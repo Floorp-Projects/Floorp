@@ -790,7 +790,13 @@ nsSocketTransportService::DoPollIteration(bool wait)
             // check for timeout errors unless disabled...
             else if (s.mHandler->mPollTimeout != UINT16_MAX) {
                 // update elapsed time counter
-                if (NS_UNLIKELY(pollInterval > (UINT16_MAX - s.mElapsedTime)))
+                // (NOTE: We explicitly cast UINT16_MAX to be an unsigned value
+                // here -- otherwise, some compilers will treat it as signed,
+                // which makes them fire signed/unsigned-comparison build
+                // warnings for the comparison against 'pollInterval'.)
+                if (NS_UNLIKELY(pollInterval >
+                                static_cast<uint32_t>(UINT16_MAX) -
+                                s.mElapsedTime))
                     s.mElapsedTime = UINT16_MAX;
                 else
                     s.mElapsedTime += uint16_t(pollInterval);

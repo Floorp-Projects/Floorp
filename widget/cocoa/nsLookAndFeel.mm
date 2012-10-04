@@ -32,6 +32,8 @@ static nscolor GetColorFromNSColor(NSColor* aColor)
 nsresult
 nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult res = NS_OK;
   
   switch (aID) {
@@ -272,6 +274,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
     }
   
   return res;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult
@@ -451,6 +455,8 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
                            gfxFontStyle &aFontStyle,
                            float aDevPixPerCSSPixel)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
     // hack for now
     if (aID == eFont_Window || aID == eFont_Document) {
         aFontStyle.style      = NS_FONT_STYLE_NORMAL;
@@ -559,4 +565,6 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
 
     GetStringForNSString([font familyName], aFontName);
     return true;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }

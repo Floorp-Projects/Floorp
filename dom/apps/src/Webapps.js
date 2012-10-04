@@ -65,8 +65,8 @@ WebappsRegistry.prototype = {
           Services.DOMRequest.fireSuccess(req, null);
         }
         break;
-      case "Webapps:IsInstalled:Return:OK":
-        Services.DOMRequest.fireSuccess(req, msg.installed);
+      case "Webapps:CheckInstalled:Return:OK":
+        Services.DOMRequest.fireSuccess(req, msg.app);
         break;
       case "Webapps:GetInstalled:Return:OK":
         Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
@@ -159,15 +159,15 @@ WebappsRegistry.prototype = {
     return request;
   },
 
-  isInstalled: function(aManifestURL) {
+  checkInstalled: function(aManifestURL) {
     let manifestURL = Services.io.newURI(aManifestURL, null, this._window.document.baseURIObject);
     this._window.document.nodePrincipal.checkMayLoad(manifestURL, true, false);
 
     let request = this.createRequest();
-    cpmm.sendAsyncMessage("Webapps:IsInstalled", { origin: this._getOrigin(this._window.location.href),
-                                                   manifestURL: manifestURL.spec,
-                                                   oid: this._id,
-                                                   requestID: this.getRequestId(request) });
+    cpmm.sendAsyncMessage("Webapps:CheckInstalled", { origin: this._getOrigin(this._window.location.href),
+                                                      manifestURL: manifestURL.spec,
+                                                      oid: this._id,
+                                                      requestID: this.getRequestId(request) });
     return request;
   },
 
@@ -259,7 +259,7 @@ WebappsRegistry.prototype = {
     this.initHelper(aWindow, ["Webapps:Install:Return:OK", "Webapps:Install:Return:KO",
                               "Webapps:GetInstalled:Return:OK",
                               "Webapps:GetSelf:Return:OK",
-                              "Webapps:IsInstalled:Return:OK" ]);
+                              "Webapps:CheckInstalled:Return:OK" ]);
 
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this._id = util.outerWindowID;

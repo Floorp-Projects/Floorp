@@ -21,6 +21,12 @@
         evt.initCustomEvent("SocialTest-DoneMakeWider", true, true, {});
         document.documentElement.dispatchEvent(evt);
       }, false);
+      window.addEventListener("socialTest-CloseSelf", function(e) {
+        window.close();
+        var evt = document.createEvent("CustomEvent");
+        evt.initCustomEvent("SocialTest-DoneCloseSelf", true, true, {});
+        document.documentElement.dispatchEvent(evt);
+      }, false);
     </script>
   </head>
   <body style="max-width: 250px;" onload="pingWorker();">

@@ -434,7 +434,7 @@ CloneParseTree(ParseNode *opn, Parser *parser)
 
       case PN_FUNC:
         NULLCHECK(pn->pn_funbox =
-                  parser->newFunctionBox(opn->pn_funbox->fun(), pc, opn->pn_funbox->strictModeState));
+                  parser->newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strictModeState));
         NULLCHECK(pn->pn_body = CloneParseTree(opn->pn_body, parser));
         pn->pn_cookie = opn->pn_cookie;
         pn->pn_dflags = opn->pn_dflags;
@@ -791,3 +791,22 @@ NameNode::dump(int indent)
     }
 }
 #endif
+
+ObjectBox::ObjectBox(JSObject *object, ObjectBox* traceLink)
+  : object(object),
+    traceLink(traceLink),
+    emitLink(NULL)
+{
+}
+
+void
+ObjectBox::trace(JSTracer *trc)
+{
+    ObjectBox *box = this;
+    while (box) {
+        MarkObjectRoot(trc, &box->object, "parser.object");
+        if (box->isFunctionBox())
+            box->asFunctionBox()->bindings.trace(trc);
+        box = box->traceLink;
+    }
+}
