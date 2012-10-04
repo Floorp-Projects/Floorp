@@ -18,6 +18,47 @@ gcli.addCommand({
   manual: gcli.lookup("dbgManual")
 });
 
+/**
+ * 'dbg open' command
+ */
+gcli.addCommand({
+  name: "dbg open",
+  description: gcli.lookup("dbgOpen"),
+  params: [],
+  exec: function (args, context) {
+    let win = context.environment.chromeDocument.defaultView;
+    let tab = win.gBrowser.selectedTab;
+    let dbg = win.DebuggerUI.findDebugger();
+
+    if (dbg) {
+      if (dbg.ownerTab !== tab) {
+        win.DebuggerUI.toggleDebugger();
+      }
+
+      return;
+    }
+
+    win.DebuggerUI.toggleDebugger();
+  }
+});
+
+/**
+ * 'dbg close' command
+ */
+gcli.addCommand({
+  name: "dbg close",
+  description: gcli.lookup("dbgClose"),
+  params: [],
+  exec: function (args, context) {
+    let win = context.environment.chromeDocument.defaultView;
+    let tab = win.gBrowser.selectedTab;
+    let dbg = win.DebuggerUI.findDebugger();
+
+    if (dbg) {
+      dbg.close();
+    }
+  }
+});
 
 /**
  * 'dbg interrupt' command

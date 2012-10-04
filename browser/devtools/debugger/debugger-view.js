@@ -468,7 +468,7 @@ GlobalSearchView.prototype = {
         continue;
       }
       DebuggerController.dispatchEvent("Debugger:LoadSource", {
-        url: url,
+        script: DebuggerView.Scripts.getScriptByLocation(url).getUserData("sourceScript"),
         options: {
           silent: true,
           callback: aFetchCallback
