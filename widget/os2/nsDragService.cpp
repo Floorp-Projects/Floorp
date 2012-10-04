@@ -504,14 +504,9 @@ nsresult nsDragService::SaveAsContents(PCSZ pszDest, nsIURL* aURL)
   if (NS_FAILED(file->OpenANSIFileDesc("wb+", &fp)))
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  GetSourceDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
-
   fwrite("", 0, 1, fp);
   fclose(fp);
-  webPersist->SaveURI(linkURI, nullptr, nullptr, nullptr, nullptr, file,
-                     document->GetLoadContext());
+  webPersist->SaveURI(linkURI, nullptr, nullptr, nullptr, nullptr, file);
 
   return NS_OK;
 }

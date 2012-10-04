@@ -12,12 +12,11 @@ interface nsIDOMDocument;
 interface nsIWebProgressListener;
 interface nsIFile;
 interface nsIChannel;
-interface nsILoadContext;
 
 /**
  * Interface for persisting DOM documents and URIs to local or remote storage.
  */
-[scriptable, uuid(35c1f231-582b-4315-a26c-a1227e3539b4)]
+[scriptable, uuid(dd4e0a6a-210f-419a-ad85-40e8543b9465)]
 interface nsIWebBrowserPersist : nsICancelable
 {
   /** No special persistence behaviour. */
@@ -131,11 +130,6 @@ interface nsIWebBrowserPersist : nsICancelable
    * @param aFile      Target file. This may be a nsIFile object or an
    *                   nsIURI object with a file scheme or a scheme that
    *                   supports uploading (e.g. ftp).
-   * @param aPrivacyContext A context from which the privacy status of this
-   *                   save operation can be determined. Must only be null
-   *                   in situations in which no such context is available
-   *                   (eg. the operation has no logical association with any
-   *                   window or document)
    *
    * @see nsIFile
    * @see nsIURI
@@ -146,19 +140,7 @@ interface nsIWebBrowserPersist : nsICancelable
    */
   void saveURI(in nsIURI aURI, in nsISupports aCacheKey,
       in nsIURI aReferrer, in nsIInputStream aPostData,
-      in string aExtraHeaders, in nsISupports aFile,
-      in nsILoadContext aPrivacyContext);
-
-  /**
-   * @param aIsPrivate Treat the save operation as private (ie. with
-   *                   regards to networking operations and persistence
-   *                   of intermediate data, etc.)
-   * @see saveURI for all other parameter descriptions
-   */
-  void savePrivacyAwareURI(in nsIURI aURI, in nsISupports aCacheKey,
-      in nsIURI aReferrer, in nsIInputStream aPostData,
-      in string aExtraHeaders, in nsISupports aFile,
-      in boolean aIsPrivate);
+      in string aExtraHeaders, in nsISupports aFile);
 
   /**
    * Save a channel to a file. It must not be opened yet.
