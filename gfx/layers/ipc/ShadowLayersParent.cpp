@@ -481,30 +481,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   return true;
 }
 
-bool
-ShadowLayersParent::RecvDrawToSurface(const SurfaceDescriptor& surfaceIn,
-                                      SurfaceDescriptor* surfaceOut)
-{
-  *surfaceOut = surfaceIn;
-  if (mDestroyed || layer_manager()->IsDestroyed()) {
-    return true;
-  }
-
-  AutoOpenSurface sharedSurface(OPEN_READ_WRITE, surfaceIn);
-
-  nsRefPtr<gfxASurface> localSurface =
-    gfxPlatform::GetPlatform()->CreateOffscreenSurface(sharedSurface.Size(),
-                                                       sharedSurface.ContentType());
-  nsRefPtr<gfxContext> context = new gfxContext(localSurface);
-
-  layer_manager()->BeginTransactionWithTarget(context);
-  layer_manager()->EndTransaction(NULL, NULL);
-  nsRefPtr<gfxContext> contextForCopy = new gfxContext(sharedSurface.Get());
-  contextForCopy->SetOperator(gfxContext::OPERATOR_SOURCE);
-  contextForCopy->DrawSurface(localSurface, localSurface->GetSize());
-  return true;
-}
-
 PGrallocBufferParent*
 ShadowLayersParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
                                         const gfxContentType& aContent,

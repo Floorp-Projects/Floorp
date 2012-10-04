@@ -226,11 +226,6 @@ public:
   bool EndTransaction(InfallibleTArray<EditReply>* aReplies);
 
   /**
-   * Composite ShadowLayerManager's layer tree into aTarget.
-   */
-  bool ShadowDrawToTarget(gfxContext* aTarget);
-
-  /**
    * Set an actor through which layer updates will be pushed.
    */
   void SetShadowManager(PLayersChild* aShadowManager)

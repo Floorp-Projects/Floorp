@@ -52,9 +52,6 @@ protected:
                           const bool& isFirstPaint,
                           EditReplyArray* reply) MOZ_OVERRIDE;
 
-  virtual bool RecvDrawToSurface(const SurfaceDescriptor& surfaceIn,
-                                 SurfaceDescriptor* surfaceOut) MOZ_OVERRIDE;
-
   virtual bool RecvUpdateNoSwap(const EditArray& cset,
                                 const TargetConfig& targetConfig,
                                 const bool& isFirstPaint) MOZ_OVERRIDE;
