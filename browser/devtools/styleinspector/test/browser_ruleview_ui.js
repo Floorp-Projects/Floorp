@@ -170,6 +170,8 @@ function testEditProperty()
 
       for each (let ch in "red;") {
         EventUtils.sendChar(ch, ruleDialog);
+        is(propEditor.warning.hidden, ch == "d" || ch == ";",
+          "warning triangle is hidden or shown as appropriate");
       }
     });
     for each (let ch in "border-color:") {
@@ -201,7 +203,6 @@ function testDisableProperty()
 
 function finishTest()
 {
-  ruleView.element.removeEventListener("CssRuleViewChanged", ruleViewChanged, false);
   ruleView.clear();
   ruleDialog.close();
   ruleDialog = ruleView = null;

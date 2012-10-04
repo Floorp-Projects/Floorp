@@ -4,7 +4,7 @@
 // Tests that our Promise implementation works properly
 
 let tempScope = {};
-Cu.import("resource:///modules/devtools/Promise.jsm", tempScope);
+Cu.import("resource://gre/modules/devtools/_Promise.jsm", tempScope);
 let Promise = tempScope.Promise;
 
 function test() {
