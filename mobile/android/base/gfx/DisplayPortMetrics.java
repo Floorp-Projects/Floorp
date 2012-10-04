@@ -18,16 +18,32 @@ import android.graphics.RectF;
  * subsection of that with compositor scaling.
  */
 public final class DisplayPortMetrics {
+    public final float resolution;
     private final RectF mPosition;
-    private final float mResolution;
 
     public DisplayPortMetrics() {
         this(0, 0, 0, 0, 1);
     }
 
     public DisplayPortMetrics(float left, float top, float right, float bottom, float resolution) {
+        this.resolution = resolution;
         mPosition = new RectF(left, top, right, bottom);
-        mResolution = resolution;
+    }
+
+    public float getLeft() {
+        return mPosition.left;
+    }
+
+    public float getTop() {
+        return mPosition.top;
+    }
+
+    public float getRight() {
+        return mPosition.right;
+    }
+
+    public float getBottom() {
+        return mPosition.bottom;
     }
 
     public boolean contains(RectF rect) {
@@ -36,7 +52,7 @@ public final class DisplayPortMetrics {
 
     public boolean fuzzyEquals(DisplayPortMetrics metrics) {
         return RectUtils.fuzzyEquals(mPosition, metrics.mPosition)
-            && FloatUtils.fuzzyEquals(mResolution, metrics.mResolution);
+            && FloatUtils.fuzzyEquals(resolution, metrics.resolution);
     }
 
     public String toJSON() {
@@ -45,15 +61,14 @@ public final class DisplayPortMetrics {
           .append(", \"top\": ").append(mPosition.top)
           .append(", \"right\": ").append(mPosition.right)
           .append(", \"bottom\": ").append(mPosition.bottom)
-          .append(", \"resolution\": ").append(mResolution)
+          .append(", \"resolution\": ").append(resolution)
           .append('}');
         return sb.toString();
     }
 
     @Override
     public String toString() {
-        return "DisplayPortMetrics v=(" + mPosition.left + ","
-                + mPosition.top + "," + mPosition.right + ","
-                + mPosition.bottom + ") z=" + mResolution;
+        return "DisplayPortMetrics v=(" + mPosition.left + "," + mPosition.top + "," + mPosition.right + ","
+                + mPosition.bottom + ") z=" + resolution;
     }
 }
