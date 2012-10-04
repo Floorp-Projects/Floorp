@@ -395,6 +395,9 @@ pref("dom.mozContacts.enabled", true);
 // WebAlarms
 pref("dom.mozAlarms.enabled", true);
 
+// NetworkStats
+pref("dom.mozNetworkStats.enabled", true);
+
 // WebSettings
 pref("dom.mozSettings.enabled", true);
 pref("dom.mozPermissionSettings.enabled", true);

@@ -455,6 +455,8 @@
 @BINPATH@/components/WifiWorker.manifest
 @BINPATH@/components/DOMWifiManager.js
 @BINPATH@/components/DOMWifiManager.manifest
+@BINPATH@/components/NetworkStatsManager.js
+@BINPATH@/components/NetworkStatsManager.manifest
 #endif
 #ifdef MOZ_B2G_FM
 @BINPATH@/components/DOMFMRadioChild.js
