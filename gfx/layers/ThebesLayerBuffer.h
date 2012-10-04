@@ -8,7 +8,6 @@
 
 #include "gfxContext.h"
 #include "gfxASurface.h"
-#include "gfxPlatform.h"
 #include "nsRegion.h"
 
 namespace mozilla {
@@ -70,7 +69,6 @@ public:
   void Clear()
   {
     mBuffer = nullptr;
-    mDTBuffer = nullptr;
     mBufferProvider = nullptr;
     mBufferRect.SetEmpty();
   }
@@ -130,31 +128,10 @@ public:
   CreateBuffer(ContentType aType, const nsIntSize& aSize, uint32_t aFlags) = 0;
 
   /**
-   * Return a new DrawTarget of |aSize| with SurfaceFormat |aFormat|.
-   */
-  virtual TemporaryRef<gfx::DrawTarget>
-  CreateDrawTarget(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat)
-  {
-    return gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(aSize, aFormat);
-  }
-
-  /**
-   * Return a new DrawTarget of |aSize| with ContentType |aContent|.
-   */
-  TemporaryRef<gfx::DrawTarget>
-  CreateDrawTarget(const nsIntSize& aSize, ContentType aContent) 
-  {
-    gfx::SurfaceFormat format = gfx::SurfaceFormatForImageFormat(
-      gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent));
-    return CreateDrawTarget(gfx::IntSize(aSize.width, aSize.height), format);
-  }
-
-  /**
    * Get the underlying buffer, if any. This is useful because we can pass
    * in the buffer as the default "reference surface" if there is one.
    * Don't use it for anything else!
    */
-  gfx::DrawTarget* GetDT() { return mDTBuffer; }
   gfxASurface* GetBuffer() { return mBuffer; }
 
 protected:
@@ -197,17 +174,6 @@ protected:
     return tmp.forget();
   }
 
-  TemporaryRef<gfx::DrawTarget>
-  SetDT(gfx::DrawTarget* aBuffer,
-            const nsIntRect& aBufferRect, const nsIntPoint& aBufferRotation)
-  {
-    RefPtr<gfx::DrawTarget> tmp = mDTBuffer.forget();
-    mDTBuffer = aBuffer;
-    mBufferRect = aBufferRect;
-    mBufferRotation = aBufferRotation;
-    return tmp.forget();
-  }
-
   /**
    * Set the buffer provider only.  This is used with surfaces that
    * require explicit map/unmap, which |aProvider| is used to do on
@@ -224,7 +190,6 @@ protected:
     mBufferProvider = aProvider;
     if (!mBufferProvider) {
       mBuffer = nullptr;
-      mDTBuffer = nullptr;
     } else {
       // Only this buffer provider can give us a buffer.  If we
       // already have one, something has gone wrong.
@@ -250,24 +215,15 @@ private:
   gfxASurface::gfxContentType BufferContentType();
   bool BufferSizeOkFor(const nsIntSize& aSize);
   /**
-   * If the buffer hasn't been mapped, map it.
+   * If the buffer hasn't been mapped, map it and return it.
    */
-  void EnsureBuffer();
-
-  /**
-   * Check if the buffer is valid
-   */
-  bool BufferValid() {
-    return mBuffer || mDTBuffer;
-  }
-
+  gfxASurface* EnsureBuffer();
   /**
    * True if we have a buffer where we can get it (but not necessarily
    * mapped currently).
    */
   bool HaveBuffer();
 
-  RefPtr<gfx::DrawTarget> mDTBuffer;
   nsRefPtr<gfxASurface> mBuffer;
   /**
    * This member is only set transiently.  It's used to map mBuffer
