@@ -1260,16 +1260,6 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
       signalName = NS_LITERAL_STRING("PairedStatusChanged");
       signalPath = NS_LITERAL_STRING(LOCAL_AGENT_PATH);
       v.get_ArrayOfBluetoothNamedValue()[0].name() = NS_LITERAL_STRING("paired");
-    } else {
-     /*
-      * This is a workaround for Bug 795458. We avoid sending events whose
-      * signalPath is "device object path" (formatted as "/org/bluez/
-      * [pid]/hci0/dev_xx_xx_xx_xx_xx_xx". It's because those corresponding
-      * BluetoothDevice objects may have been garbage-collected. Since we
-      * don't need to know any propert changed except 'paired', this should
-      * work for now.
-      */
-      return DBUS_HANDLER_RESULT_HANDLED;
     }
   } else if (dbus_message_is_signal(aMsg, DBUS_MANAGER_IFACE, "AdapterAdded")) {
     const char* str;
@@ -1642,7 +1632,8 @@ public:
       }
       NS_ASSERTION(i != properties.Length(), "failed to get device name");
     } else {
-      // Return all device properties for event "DeviceCreated"
+      // Return all device properties for event "DeviceCreated", including device path
+      properties.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("Path"), mSignal.value()));
       mSignal.value() = properties;
     }
 
