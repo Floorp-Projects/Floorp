@@ -8,7 +8,6 @@
 #include "nsHttpBasicAuth.h"
 #include "plbase64.h"
 #include "plstr.h"
-#include "prmem.h"
 #include "nsString.h"
 
 //-----------------------------------------------------------------------------

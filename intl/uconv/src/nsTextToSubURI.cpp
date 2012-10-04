@@ -9,7 +9,6 @@
 #include "nsITextToSubURI.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
-#include "prmem.h"
 #include "nsTextToSubURI.h"
 #include "nsCRT.h"
 

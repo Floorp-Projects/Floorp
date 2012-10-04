@@ -10,7 +10,6 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "prmem.h"
 #include "prprf.h"
 #include "nsURLHelper.h"
 #include "nsNetCID.h"

@@ -9,7 +9,6 @@
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "nsNetUtil.h"
-#include "prmem.h"
 #include "nsDOMFile.h"
 
 #include "nsICanvasRenderingContextInternal.h"
