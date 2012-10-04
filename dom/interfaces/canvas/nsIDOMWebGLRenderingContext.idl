@@ -63,18 +63,6 @@ interface nsIWebGLShaderArray : nsISupports
     nsIWebGLShader item(in unsigned long index);
 };
 
-[scriptable, builtinclass, uuid(bce8be60-8305-11de-9f3c-000c29206271)]
-interface nsIWebGLFramebuffer : nsISupports
-{
-  [noscript] attribute WebGLuint name;
-};
-
-[scriptable, builtinclass, uuid(c82eacd0-8305-11de-9de9-000c29206271)]
-interface nsIWebGLRenderbuffer : nsISupports
-{
-  [noscript] attribute WebGLuint name;
-};
-
 [scriptable, builtinclass, uuid(a85d4fd0-5b9f-4cb8-aeee-5a2c5c5bad76)]
 interface nsIWebGLActiveInfo : nsISupports
 {
