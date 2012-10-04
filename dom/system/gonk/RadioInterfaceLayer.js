@@ -621,10 +621,10 @@ RadioInterfaceLayer.prototype = {
       return;
     }
 
-    let spn = icc.spn;
+    let spn = icc.spn && icc.spn.toLowerCase();
     let operator = registration.network;
-    let longName = operator.longName;
-    let shortName = operator.shortName;
+    let longName = operator.longName && operator.longName.toLowerCase();
+    let shortName = operator.shortName && operator.shortName.toLowerCase();
 
     let equalsLongName = longName && (spn == longName);
     let equalsShortName = shortName && (spn == shortName);
