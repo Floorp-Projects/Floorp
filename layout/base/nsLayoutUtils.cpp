@@ -110,12 +110,14 @@ typedef FrameMetrics::ViewID ViewID;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
+#ifdef MOZ_FLEXBOX
 // These are indices into kDisplayKTable.  They'll be initialized
 // the first time that FlexboxEnabledPrefChangeCallback() is invoked.
 static int32_t sIndexOfFlexInDisplayTable;
 static int32_t sIndexOfInlineFlexInDisplayTable;
 // This tracks whether those ^^ indices have been initialized
 static bool sAreFlexKeywordIndicesInitialized = false;
+#endif // MOZ_FLEXBOX
 
 typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
 static ContentMap* sContentMap = nullptr;
@@ -1308,6 +1310,41 @@ nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncesto
     ctm = ctm * parent->GetTransformMatrix(aAncestor, &parent);
   }
   return ctm;
+}
+
+bool
+nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
+                                         gfx3DMatrix* aTransform)
+{
+  // FIXME/bug 796690: we can sometimes compute a transform in these
+  // cases, it just increases complexity considerably.  Punt for now.
+  if (aFrame->Preserves3DChildren() || aFrame->HasTransformGetter()) {
+    return false;
+  }
+
+  nsIFrame* root = nsLayoutUtils::GetDisplayRootFrame(aFrame);
+  if (root->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE)) {
+    // Content may have been invalidated, so we can't reliably compute
+    // the "layer transform" in general.
+    return false;
+  }
+  // If the caller doesn't care about the value, early-return to skip
+  // overhead below.
+  if (!aTransform) {
+    return true;
+  }
+
+  nsDisplayListBuilder builder(root, nsDisplayListBuilder::OTHER,
+                               false/*don't build caret*/);
+  nsDisplayList list;  
+  nsDisplayTransform* item =
+    new (&builder) nsDisplayTransform(&builder, aFrame, &list);
+
+  *aTransform =
+    item->GetTransform(aFrame->PresContext()->AppUnitsPerDevPixel());
+  item->~nsDisplayTransform();
+
+  return true;
 }
 
 static gfxPoint

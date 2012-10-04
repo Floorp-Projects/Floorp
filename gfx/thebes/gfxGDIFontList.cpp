@@ -109,7 +109,7 @@ public:
             }
 #endif
         } else {
-            BOOL success;
+            DebugOnly<BOOL> success;
             success = RemoveFontMemResourceEx(mFontRef);
 #if DEBUG
             if (!success) {
@@ -279,8 +279,8 @@ GDIFontEntry::GetFontTable(uint32_t aTableTag,
     AutoDC dc;
     AutoSelectFont font(dc.GetDC(), &mLogFont);
     if (font.IsValid()) {
-        int32_t tableSize =
-            ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, NULL);
+        uint32_t tableSize =
+            ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, 0);
         if (tableSize != GDI_ERROR) {
             if (aBuffer.SetLength(tableSize)) {
                 ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0,
@@ -333,7 +333,7 @@ bool
 GDIFontEntry::TestCharacterMap(uint32_t aCh)
 {
     if (!mCharacterMap) {
-        nsresult rv = ReadCMAP();
+        ReadCMAP();
         NS_ASSERTION(mCharacterMap, "failed to initialize a character map");
     }
 

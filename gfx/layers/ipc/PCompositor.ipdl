@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include LayersSurfaces;
+include protocol PGrallocBuffer;
 include protocol PLayers;
 
 using mozilla::layers::LayersBackend;
@@ -22,6 +24,7 @@ namespace layers {
 // for Bug 716631.
 rpc protocol PCompositor
 {
+  manages PGrallocBuffer;
   // A Compositor manages a single Layer Manager (PLayers)
   manages PLayers;
 
@@ -38,8 +41,22 @@ parent:
   sync Pause();
   sync Resume();
 
+  // Make a snapshot of the content that would have been drawn to our
+  // render target at the time this message is received.  If the size
+  // or format of |inSnapshot| doesn't match our render target,
+  // results are undefined.
+  //
+  // NB: this message will result in animations, transforms, effects,
+  // and so forth being interpolated.  That's what we want to happen.
+  sync MakeSnapshot(SurfaceDescriptor inSnapshot)
+    returns (SurfaceDescriptor outSnapshot);
+
   sync PLayers(LayersBackend backendHint, uint64_t id)
     returns (LayersBackend backend, int32_t maxTextureSize);
+
+  // FIXME/bug 783451
+  sync PGrallocBuffer(gfxIntSize size, uint32_t format, uint32_t usage)
+    returns (MaybeMagicGrallocBufferHandle handle);
 };
 
 } // layers

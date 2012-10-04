@@ -774,8 +774,12 @@ ContentParent::~ContentParent()
         MOZ_ASSERT(!gNonAppContentParents ||
                    !gNonAppContentParents->Contains(this));
     } else {
+        // In general, we expect gAppContentParents->Get(mAppManifestURL) to be
+        // NULL.  But it could be that we created another ContentParent for this
+        // app after we did this->ActorDestroy(), so the right check is that
+        // gAppContentParent->Get(mAppManifestURL) != this.
         MOZ_ASSERT(!gAppContentParents ||
-                   !gAppContentParents->Get(mAppManifestURL));
+                   gAppContentParents->Get(mAppManifestURL) != this);
     }
 }
 

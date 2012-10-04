@@ -14,6 +14,7 @@
 #endif
 
 #include "AsyncPanZoomController.h"
+#include "AutoOpenSurface.h"
 #include "BasicLayers.h"
 #include "CompositorParent.h"
 #include "LayerManagerOGL.h"
@@ -250,6 +251,17 @@ bool
 CompositorParent::RecvResume()
 {
   ResumeComposition();
+  return true;
+}
+
+bool
+CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
+                                   SurfaceDescriptor* aOutSnapshot)
+{
+  AutoOpenSurface opener(OPEN_READ_WRITE, aInSnapshot);
+  nsRefPtr<gfxContext> target = new gfxContext(opener.Get());
+  ComposeToTarget(target);
+  *aOutSnapshot = aInSnapshot;
   return true;
 }
 
@@ -493,11 +505,11 @@ CompositorParent::Composite()
 {
   NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "Composite can only be called on the compositor thread");
-  mCurrentCompositeTask = NULL;
+  mCurrentCompositeTask = nullptr;
 
   mLastCompose = TimeStamp::Now();
 
-  if (mPaused || !mLayerManager || !mLayerManager->GetRoot()) {
+  if (!CanComposite()) {
     return;
   }
 
@@ -526,6 +538,24 @@ CompositorParent::Composite()
                   15 + (int)(TimeStamp::Now() - mExpectedComposeTime).ToMilliseconds());
   }
 #endif
+}
+
+void
+CompositorParent::ComposeToTarget(gfxContext* aTarget)
+{
+  if (!CanComposite()) {
+    return;
+  }
+  mLayerManager->BeginTransactionWithTarget(aTarget);
+  // Since CanComposite() is true, Composite() must end the layers txn
+  // we opened above.
+  Composite();
+}
+
+bool
+CompositorParent::CanComposite()
+{
+  return !(mPaused || !mLayerManager || !mLayerManager->GetRoot());
 }
 
 // Do a breadth-first search to find the first layer in the tree that is
@@ -1118,6 +1148,9 @@ public:
   virtual bool RecvStop() MOZ_OVERRIDE { return true; }
   virtual bool RecvPause() MOZ_OVERRIDE { return true; }
   virtual bool RecvResume() MOZ_OVERRIDE { return true; }
+  virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
+                                SurfaceDescriptor* aOutSnapshot)
+  { return true; }
 
   virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendType,
                                       const uint64_t& aId,
@@ -1128,6 +1161,13 @@ public:
   virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
                                    const TargetConfig& aTargetConfig,
                                    bool isFirstPaint) MOZ_OVERRIDE;
+
+  virtual PGrallocBufferParent* AllocPGrallocBuffer(
+    const gfxIntSize&, const uint32_t&, const uint32_t&,
+    MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE
+  { return nullptr; }
+  virtual bool DeallocPGrallocBuffer(PGrallocBufferParent*)
+  { return false; }
 
 private:
   void DeferredDestroy();

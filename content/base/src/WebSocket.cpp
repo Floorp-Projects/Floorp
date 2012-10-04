@@ -900,7 +900,7 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
     JSAutoRequest ar(cx);
     if (isBinary) {
       if (mBinaryType == BinaryTypeValues::Blob) {
-        rv = CreateResponseBlob(aData, cx, jsData);
+        rv = nsContentUtils::CreateBlobBuffer(cx, aData, jsData);
         NS_ENSURE_SUCCESS(rv, rv);
       } else if (mBinaryType == BinaryTypeValues::Arraybuffer) {
         JSObject* arrayBuf;
@@ -941,26 +941,6 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
-}
-
-// Initial implementation: only stores to RAM, not file
-// TODO: bug 704447: large file support
-nsresult
-WebSocket::CreateResponseBlob(const nsACString& aData,
-                              JSContext *aCx,
-                              jsval &jsData)
-{
-  uint32_t blobLen = aData.Length();
-  void* blobData = PR_Malloc(blobLen);
-  nsCOMPtr<nsIDOMBlob> blob;
-  if (blobData) {
-    memcpy(blobData, aData.BeginReading(), blobLen);
-    blob = new nsDOMMemoryFile(blobData, blobLen, EmptyString());
-  } else {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  JSObject* scope = JS_GetGlobalForScopeChain(aCx);
-  return nsContentUtils::WrapNative(aCx, scope, blob, &jsData, nullptr, true);
 }
 
 nsresult

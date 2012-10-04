@@ -10,57 +10,87 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-function setenv(name, val) {
-  try {
-    var environment = Components.classes["@mozilla.org/process/environment;1"].
-      getService(Components.interfaces.nsIEnvironment);
-    environment.set(name, val);
-  } catch(e) {
-    displayError("setenv", e);
+Cu.import("resource://gre/modules/Services.jsm");
+
+const rph = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
+
+function endsWith(str, end) {
+  return str.slice(-end.length) == end;
+}
+
+function jar_entries(jarReader, pattern) {
+  var entries = [];
+  var enumerator = jarReader.findEntries(pattern);
+  while (enumerator.hasMore()) {
+    entries.push(enumerator.getNext());
+  }
+  return entries;
+}
+
+function dir_entries(baseDir, subpath, ext) {
+  var dir = baseDir.clone();
+  dir.append(subpath);
+  var enumerator = dir.directoryEntries;
+  var entries = [];
+  while (enumerator.hasMoreElements()) {
+    var file = enumerator.getNext().QueryInterface(Ci.nsIFile);
+    if (file.isDirectory()) {
+      entries = entries.concat(dir_entries(dir, file.leafName, ext).map(function(p) subpath + "/" + p));
+    } else if (endsWith(file.leafName, ext)) {
+      entries.push(subpath + "/" + file.leafName);
+    }
+  }
+  return entries;
+}
+
+function get_modules_under(uri) {
+  if (uri instanceof Ci.nsIJARURI) {
+    var jar = uri.QueryInterface(Ci.nsIJARURI);
+    var jarReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+    var file = jar.JARFile.QueryInterface(Ci.nsIFileURL);
+    jarReader.open(file.file);
+    var entries = jar_entries(jarReader, "components/*.js")
+                  .concat(jar_entries(jarReader, "modules/*.js"))
+                  .concat(jar_entries(jarReader, "modules/*.jsm"));
+    jarReader.close();
+    return entries;
+  } else if (uri instanceof Ci.nsIFileURL){
+    var file = uri.QueryInterface(Ci.nsIFileURL);
+    return dir_entries(file.file, "components", ".js")
+           .concat(dir_entries(file.file, "modules", ".js"))
+           .concat(dir_entries(file.file, "modules", ".jsm"));
+  } else {
+    throw "Expected a nsIJARURI or nsIFileURL";
   }
 }
 
-function load(url) {
-  print(url);
-  try {
-    Cu.import(url, null);
-  } catch(e) {
-    dump("Failed to import " + url + ":" + e + "\n");
+function load_modules_under(spec, uri) {
+  var entries = get_modules_under(uri);
+  for each (let entry in entries) {
+    try {
+      dump(spec + entry + "\n");
+      Cu.import(spec + entry, null);
+    } catch(e) {}
   }
 }
 
-function load_entries(entries, prefix) {
-  while (entries.hasMore()) {
-    var c = entries.getNext();
-    load(prefix + c);
-  }
+function resolveResource(spec) {
+  var uri = Services.io.newURI(spec, null, null);
+  return Services.io.newURI(rph.resolveURI(uri), null, null);
 }
 
-function getDir(prop) {
-  return Cc["@mozilla.org/file/directory_service;1"].
-    getService(Ci.nsIProperties).get(prop, Ci.nsIFile);
-}
-
-function openJar(file) {
-  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
-    createInstance(Ci.nsIZipReader);
-  zipreader.open(file);
-  return zipreader;
-}
-
-function populate_startupcache(prop, omnijarName, startupcacheName) {
-  var file = getDir(prop);
-  file.append(omnijarName);
-  zipreader = openJar(file);
-
-  var scFile = getDir(prop);
+function populate_startupcache(startupcacheName) {
+  var scFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   scFile.append(startupcacheName);
-  setenv("MOZ_STARTUP_CACHE", scFile.path);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  env.set('MOZ_STARTUP_CACHE', scFile.path);
 
-  let prefix = "resource:///";
+  var greURI = resolveResource("resource://gre/");
+  var appURI = resolveResource("resource://app/");
 
-  load_entries(zipreader.findEntries("components/*js"), prefix);
-  load_entries(zipreader.findEntries("modules/*js"), prefix);
-  load_entries(zipreader.findEntries("modules/*jsm"), prefix);
-  zipreader.close();
+  load_modules_under("resource://gre/", greURI);
+  if (!appURI.equals(greURI))
+    load_modules_under("resource://app/", appURI);
 }
+
+

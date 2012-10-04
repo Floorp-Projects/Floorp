@@ -1765,6 +1765,10 @@ public:
   static nsresult CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
                                     JSObject** aResult);
 
+  static nsresult CreateBlobBuffer(JSContext* aCx,
+                                   const nsACString& aData,
+                                   jsval& aBlob);
+
   static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
 
   /**

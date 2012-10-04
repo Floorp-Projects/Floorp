@@ -27,14 +27,14 @@ const int32_t SyncChannel::kNoTimeout = INT32_MIN;
 
 SyncChannel::SyncChannel(SyncListener* aListener)
   : AsyncChannel(aListener)
+#ifdef OS_WIN
+  , mTopFrame(NULL)
+#endif
   , mPendingReply(0)
   , mProcessingSyncMessage(false)
   , mNextSeqno(0)
   , mInTimeoutSecondHalf(false)
   , mTimeoutMs(kNoTimeout)
-#ifdef OS_WIN
-  , mTopFrame(NULL)
-#endif
 {
     MOZ_COUNT_CTOR(SyncChannel);
 #ifdef OS_WIN
