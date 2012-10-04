@@ -701,6 +701,11 @@ public:
   */
   bool IsPrimaryForNode() const { return !(mFlags & eSharedNode); }
 
+  /**
+  * Return true if the accessible has a numeric value.
+  */
+  bool HasNumericValue() const;
+
 protected:
 
   //////////////////////////////////////////////////////////////////////////////
@@ -751,7 +756,8 @@ protected:
   enum StateFlags {
     eIsDefunct = 1 << 2, // accessible is defunct
     eIsNotInDocument = 1 << 3, // accessible is not in document
-    eSharedNode = 1 << 4 // accessible shares DOM node from another accessible
+    eSharedNode = 1 << 4, // accessible shares DOM node from another accessible
+    eHasNumericValue = 1 << 5 // accessible has a numeric value
   };
 
   /**
@@ -759,23 +765,23 @@ protected:
    * @note keep these flags in sync with ChildrenFlags and StateFlags
    */
   enum AccessibleTypes {
-    eApplicationAccessible = 1 << 5,
-    eAutoCompleteAccessible = 1 << 6,
-    eAutoCompletePopupAccessible = 1 << 7,
-    eComboboxAccessible = 1 << 8,
-    eDocAccessible = 1 << 9,
-    eHyperTextAccessible = 1 << 10,
-    eHTMLFileInputAccessible = 1 << 11,
-    eHTMLListItemAccessible = 1 << 12,
-    eImageAccessible = 1 << 13,
-    eImageMapAccessible = 1 << 14,
-    eListControlAccessible = 1 << 15,
-    eMenuButtonAccessible = 1 << 16,
-    eMenuPopupAccessible = 1 << 17,
-    eRootAccessible = 1 << 18,
-    eTextLeafAccessible = 1 << 19,
-    eXULDeckAccessible = 1 << 20,
-    eXULTreeAccessible = 1 << 21
+    eApplicationAccessible = 1 << 6,
+    eAutoCompleteAccessible = 1 << 7,
+    eAutoCompletePopupAccessible = 1 << 8,
+    eComboboxAccessible = 1 << 9,
+    eDocAccessible = 1 << 10,
+    eHyperTextAccessible = 1 << 11,
+    eHTMLFileInputAccessible = 1 << 12,
+    eHTMLListItemAccessible = 1 << 13,
+    eImageAccessible = 1 << 14,
+    eImageMapAccessible = 1 << 15,
+    eListControlAccessible = 1 << 16,
+    eMenuButtonAccessible = 1 << 17,
+    eMenuPopupAccessible = 1 << 18,
+    eRootAccessible = 1 << 19,
+    eTextLeafAccessible = 1 << 20,
+    eXULDeckAccessible = 1 << 21,
+    eXULTreeAccessible = 1 << 22
   };
 
   //////////////////////////////////////////////////////////////////////////////
