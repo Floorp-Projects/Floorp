@@ -3056,7 +3056,10 @@ exports.setContents = function(elem, contents) {
     return;
   }
 
-  if (exports.isXmlDocument(elem.ownerDocument)) {
+  if ('innerHTML' in elem) {
+    elem.innerHTML = contents;
+  }
+  else {
     try {
       var ns = elem.ownerDocument.documentElement.namespaceURI;
       if (!ns) {
@@ -3075,9 +3078,6 @@ exports.setContents = function(elem, contents) {
       console.trace();
       throw ex;
     }
-  }
-  else {
-    elem.innerHTML = contents;
   }
 };
 
