@@ -2710,11 +2710,11 @@ JProfSaveCircularJS(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSFunctionSpec JProfFunctions[] = {
-    {"JProfStartProfiling",        JProfStartProfilingJS,      0, 0},
-    {"JProfStopProfiling",         JProfStopProfilingJS,       0, 0},
-    {"JProfClearCircular",         JProfClearCircularJS,       0, 0},
-    {"JProfSaveCircular",          JProfSaveCircularJS,        0, 0},
-    {nullptr,                       nullptr,                     0, 0}
+    JS_FS("JProfStartProfiling",        JProfStartProfilingJS,      0, 0),
+    JS_FS("JProfStopProfiling",         JProfStopProfilingJS,       0, 0),
+    JS_FS("JProfClearCircular",         JProfClearCircularJS,       0, 0),
+    JS_FS("JProfSaveCircular",          JProfSaveCircularJS,        0, 0),
+    JS_FS_END
 };
 
 #endif /* defined(MOZ_JPROF) */
@@ -2732,8 +2732,8 @@ DMDCheckJS(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSFunctionSpec DMDFunctions[] = {
-    {"DMD",                        DMDCheckJS,                 0, 0},
-    {nullptr,                       nullptr,                     0, 0}
+    JS_FS("DMD",                        DMDCheckJS,                 0, 0),
+    JS_FS_END
 };
 
 #endif /* defined(MOZ_DMD) */
