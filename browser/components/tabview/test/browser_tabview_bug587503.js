@@ -49,13 +49,18 @@ function test() {
     is(getTabNumbers(aGroup), "0,6,2,3,5,1", "Validate tab positions in test 3.");
     is(aCW.GroupItems.groupItems.length, 3, "Validate group count in test 3.");
 
-    // Test 4: Move the fifth tab back into the group, on the second row.
-    waitForTransition(tab, function() {
-      moveTabInGroup(tab, 4, aGroup, aCW);
-      is(getTabNumbers(aGroup), "0,6,2,3,4,5,1", "Validate tab positions in test 4.");
-      is(aCW.GroupItems.groupItems.length, 2, "Validate group count in test 4.");
+    // This test is disabled because it is fragile -- see bug 797975
+    if (false) {
+      // Test 4: Move the fifth tab back into the group, on the second row.
+      waitForTransition(tab, function() {
+	moveTabInGroup(tab, 4, aGroup, aCW);
+	is(getTabNumbers(aGroup), "0,6,2,3,4,5,1", "Validate tab positions in test 4.");
+	is(aCW.GroupItems.groupItems.length, 2, "Validate group count in test 4.");
+	closeGroupItem(aGroup, function() { hideTabView(finish) });
+      });
+    } else {
       closeGroupItem(aGroup, function() { hideTabView(finish) });
-    });
+    }
   }
 
   function createGroup(win) {
