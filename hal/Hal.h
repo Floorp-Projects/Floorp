@@ -517,6 +517,11 @@ hal::FMRadioSettings GetFMBandSettings(hal::FMRadioCountry aCountry);
  */
 void StartForceQuitWatchdog(hal::ShutdownMode aMode, int32_t aTimeoutSecs);
 
+/**
+ * Perform Factory Reset to wipe out all user data.
+ */
+void FactoryReset();
+
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 

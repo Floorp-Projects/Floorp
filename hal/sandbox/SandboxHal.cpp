@@ -381,6 +381,12 @@ CancelFMRadioSeek()
   Hal()->SendCancelFMRadioSeek();
 }
 
+void
+FactoryReset()
+{
+  Hal()->SendFactoryReset();
+}
+
 class HalParent : public PHalParent
                 , public BatteryObserver
                 , public NetworkObserver
@@ -840,6 +846,16 @@ public:
       return false;
     }
     hal::CancelFMRadioSeek();
+    return true;
+  }
+
+  virtual bool
+  RecvFactoryReset()
+  {
+    if (!AssertAppProcessPermission(this, "power")) {
+      return false;
+    }
+    hal::FactoryReset();
     return true;
   }
 };
