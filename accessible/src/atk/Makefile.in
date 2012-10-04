@@ -68,3 +68,7 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../xul \
   -I$(topsrcdir)/other-licenses/atk-1.0 \
   $(NULL)
+
+ifneq ($(A11Y_LOG),0)
+  DEFINES += -DA11Y_LOG
+endif
