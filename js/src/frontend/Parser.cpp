@@ -1035,7 +1035,7 @@ struct frontend::BindData {
 };
 
 JSFunction *
-Parser::newFunction(ParseContext *pc, JSAtom *atom, FunctionSyntaxKind kind)
+Parser::newFunction(ParseContext *pc, HandleAtom atom, FunctionSyntaxKind kind)
 {
     JS_ASSERT_IF(kind == Statement, atom != NULL);
 
@@ -1055,7 +1055,7 @@ Parser::newFunction(ParseContext *pc, JSAtom *atom, FunctionSyntaxKind kind)
     uint32_t flags = JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0);
     if (selfHostingMode)
         flags |= JSFUN_SELF_HOSTED;
-    fun = js_NewFunction(context, NULL, NULL, 0, flags, parent, atom);
+    fun = js_NewFunction(context, NullPtr(), NULL, 0, flags, parent, atom);
     if (fun && !compileAndGo) {
         if (!JSObject::clearParent(context, fun))
             return NULL;
@@ -5308,7 +5308,7 @@ Parser::generatorExpr(ParseNode *kid)
     {
         ParseContext *outerpc = pc;
 
-        RootedFunction fun(context, newFunction(outerpc, /* atom = */ NULL, Expression));
+        RootedFunction fun(context, newFunction(outerpc, /* atom = */ NullPtr(), Expression));
         if (!fun)
             return NULL;
 

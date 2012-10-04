@@ -392,7 +392,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
         script = fun->script();
     } else {
         RootedObject parent(cx, NULL);
-        fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, parent, NULL);
+        fun = js_NewFunction(cx, NullPtr(), NULL, 0, JSFUN_INTERPRETED, parent, NullPtr());
         if (!fun)
             return false;
         if (!JSObject::clearParent(cx, fun))
@@ -441,7 +441,8 @@ js::CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleF
     /* NB: Keep this in sync with XDRInterpretedFunction. */
 
     RootedObject parent(cx, NULL);
-    RootedFunction clone(cx, js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, parent, NULL));
+    RootedFunction
+        clone(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFUN_INTERPRETED, parent, NullPtr()));
     if (!clone)
         return NULL;
     if (!JSObject::clearParent(cx, clone))
@@ -1163,7 +1164,7 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
     /* Step 4-6, 10-11. */
     RootedAtom name(cx, target->isFunction() ? target->toFunction()->atom() : NULL);
 
-    RootedObject funobj(cx, js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
+    RootedObject funobj(cx, js_NewFunction(cx, NullPtr(), CallOrConstructBoundFunction, length,
                                            JSFUN_CONSTRUCTOR, target, name));
     if (!funobj)
         return NULL;
@@ -1393,8 +1394,9 @@ Function(JSContext *cx, unsigned argc, Value *vp)
      * Thus 'var x = 42; f = new Function("return x"); print(f())' prints 42,
      * and so would a call to f from another top-level's script or function.
      */
-    RootedFunction fun(cx, js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                          global, cx->names().anonymous));
+    RootedAtom anonymousAtom(cx, cx->names().anonymous);
+    RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
+                                          global, anonymousAtom));
     if (!fun)
         return false;
 
@@ -1415,15 +1417,14 @@ IsBuiltinFunctionConstructor(JSFunction *fun)
 } /* namespace js */
 
 JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
-               unsigned flags, HandleObject parent, JSAtom *atom_, js::gc::AllocKind kind)
+js_NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned nargs,
+               unsigned flags, HandleObject parent, HandleAtom atom, js::gc::AllocKind kind)
 {
     JS_ASSERT(kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
     JS_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));
     JS_ASSERT(sizeof(FunctionExtended) <= gc::Arena::thingSize(JSFunction::ExtendedFinalizeKind));
 
-    RootedAtom atom(cx, atom_);
-
+    RootedObject funobj(cx, funobjArg);
     if (funobj) {
         JS_ASSERT(funobj->isFunction());
         JS_ASSERT(funobj->getParent() == parent);
@@ -1432,7 +1433,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
         if (!funobj)
             return NULL;
     }
-    RootedFunction fun(cx, static_cast<JSFunction *>(funobj));
+    RootedFunction fun(cx, funobj->toFunction());
 
     /* Initialize all function members. */
     fun->nargs = uint16_t(nargs);
@@ -1565,11 +1566,10 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
      */
     if (native) {
         JS_ASSERT(!selfHostedName);
-        fun = js_NewFunction(cx, NULL, native, nargs,
+        RootedAtom atom(cx, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
+        fun = js_NewFunction(cx, NullPtr(), native, nargs,
                              attrs & (JSFUN_FLAGS_MASK),
-                             obj,
-                             JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL,
-                             kind);
+                             obj, atom, kind);
     } else {
         JS_ASSERT(attrs & JSFUN_INTERPRETED);
         fun = cx->runtime->getSelfHostedFunction(cx, selfHostedName);
