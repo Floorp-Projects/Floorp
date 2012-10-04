@@ -4,152 +4,42 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=666041
 -->
 <head>
+  <meta charset="utf-8">
   <title>Test for Bug 666041</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="flexbox_layout_testcases.js"></script>
-  <script type="text/javascript" src="property_database.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=666041">Mozilla Bug 666041</a>
-<p id="display"></p>
-<div id="content">
+<div id="display">
+  <iframe id="iframe"></iframe>
 </div>
 <pre id="test">
-<script type="application/javascript;version=1.7">
+<script type="application/javascript">
 "use strict";
 
 /** Test for Bug 666041 **/
 
-/* Flexbox Layout Tests
- * --------------------
- * This mochitest exercises our implementation of the flexbox layout algorithm
- * by creating a flex container, inserting some flexible children, and then
- * verifying that the computed width of those children is what we expect.
+/*
+ * This mochitest runs in an iframe so that we can selectively turn on the
+ * flexbox about:config pref before its document is instantiated.
  *
- * See flexbox_layout_testcases.js for the actual testcases & testcase format.
+ * See the iframe's source ("file_flexbox_layout.html") for the actual
+ * test code and for more documentation.
  */
 
 SimpleTest.waitForExplicitFinish();
 
-function getComputedStyleWrapper(elem, prop)
-{
-  return window.getComputedStyle(elem, null).getPropertyValue(prop);
-}
+ok(!SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
+   "expecting flexbox pref to be disabled by default");
 
-function setPossiblyAliasedProperty(aElem, aPropertyName, aPropertyValue,
-                                    aPropertyMapping)
-{
-  let actualPropertyName = (aPropertyName in aPropertyMapping ?
-                            aPropertyMapping[aPropertyName] : aPropertyName);
+SpecialPowers.setBoolPref("layout.css.flexbox.enabled", true);
+document.getElementById("iframe").src = "file_flexbox_layout.html";
 
-  if (!gCSSProperties[actualPropertyName]) {
-    ok(false, "Bug in test: property '" + actualPropertyName +
-              "' doesn't exist in gCSSProperties");
-  } else {
-    let domPropertyName = gCSSProperties[actualPropertyName].domProp;
-    aElem.style[domPropertyName] = aPropertyValue;
-  }
-}
-
-// The main test function.
-// aFlexboxTestcase is an entry from the list in flexbox_layout_testcases.js
-function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
-{
-  let content = document.getElementById("content");
-
-  // Create flex container
-  let flexContainer = document.createElement("div");
-  flexContainer.style.display = "-moz-flex";
-  flexContainer.style.MozFlexDirection = aFlexDirection;
-  setPossiblyAliasedProperty(flexContainer, "_main-size", gDefaultFlexContainerSize, aPropertyMapping);
-
-  // Apply testcase's customizations for flex container (if any).
-  if (aFlexboxTestcase.container_properties) {
-    for (let propName in aFlexboxTestcase.container_properties) {
-      let propValue = aFlexboxTestcase.container_properties[propName];
-      setPossiblyAliasedProperty(flexContainer, propName, propValue,
-                                 aPropertyMapping);
-    }
-  }
-
-  // Create & append flex items
-  aFlexboxTestcase.items.forEach(function(aChildSpec) {
-    // Create an element for our item
-    let child = document.createElement("div");
-
-    // Set all the specified properties on our item
-    for (let propName in aChildSpec) {
-      // aChildSpec[propName] is either a specified value,
-      // or an array of [specifiedValue, computedValue]
-      let specifiedValue = Array.isArray(aChildSpec[propName]) ?
-        aChildSpec[propName][0] :
-        aChildSpec[propName];
-
-      // SANITY CHECK:
-      if (Array.isArray(aChildSpec[propName])) {
-        is(aChildSpec[propName].length, 2,
-           "unexpected number of elements in array within child spec");
-      }
-
-      if (specifiedValue !== null) {
-        setPossiblyAliasedProperty(child, propName, specifiedValue,
-                                   aPropertyMapping);
-      }
-    }
-
-    // Append the item to the flex container
-    flexContainer.appendChild(child);
-  });
-
-  // Append the flex container
-  content.appendChild(flexContainer);
-
-  // NOW: Test the computed style on the flex items
-  let child = flexContainer.firstChild;
-  for (let i = 0; i < aFlexboxTestcase.items.length; i++) {
-    if (!child) { // sanity
-      ok(false, "should have created a child for each child-spec");
-    }
-
-    let childSpec = aFlexboxTestcase.items[i];
-    for (let propName in childSpec) {
-      if (Array.isArray(childSpec[propName])) {
-        let expectedVal = childSpec[propName][1];
-        let actualPropName = (propName in aPropertyMapping ?
-                              aPropertyMapping[propName] : propName);
-        is(getComputedStyleWrapper(child, actualPropName), expectedVal,
-           "computed value of '" + actualPropName + "' should match expected");
-      }
-    }
-
-    child = child.nextSibling;
-  }
-
-  // Clean up: drop the flex container.
-  content.removeChild(flexContainer);
-}
-
-function main()
-{
-  gFlexboxTestcases.forEach(
-    function(aTestcase) {
-      testFlexboxTestcase(aTestcase, "",
-                          gRowPropertyMapping);
-      testFlexboxTestcase(aTestcase, "row",
-                          gRowPropertyMapping);
-      testFlexboxTestcase(aTestcase, "row-reverse",
-                          gRowReversePropertyMapping);
-      testFlexboxTestcase(aTestcase, "column",
-                          gColumnPropertyMapping);
-      testFlexboxTestcase(aTestcase, "column-reverse",
-                          gColumnReversePropertyMapping);
-    }
-  );
+function finish() {
+  SpecialPowers.clearUserPref("layout.css.flexbox.enabled");
   SimpleTest.finish();
 }
-
-window.addEventListener("load", main, false);
 </script>
 </pre>
 </body>
