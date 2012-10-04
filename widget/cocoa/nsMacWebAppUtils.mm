@@ -46,7 +46,7 @@ NS_IMETHODIMP nsMacWebAppUtils::LaunchAppWithIdentifier(const nsAString& bundleI
   // Note this might return false, meaning the app wasnt launched for some reason. 
   BOOL success = [[NSWorkspace sharedWorkspace] launchAppWithBundleIdentifier:
                         [NSString stringWithCharacters:((nsString)bundleIdentifier).get() length:((nsString)bundleIdentifier).Length()]
-                        options: nil
+                        options: (NSWorkspaceLaunchOptions)0
                         additionalEventParamDescriptor: nil
                         launchIdentifier: NULL];
 
