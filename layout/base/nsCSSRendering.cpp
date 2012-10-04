@@ -2081,6 +2081,13 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
         position = lineLength < 1e-6 ? 0.0 :
             stop.mLocation.GetCoordValue() / appUnitsPerPixel / lineLength;
         break;
+      case eStyleUnit_Calc:
+        nsStyleCoord::Calc *calc;
+        calc = stop.mLocation.GetCalcValue();
+        position = calc->mPercent +
+            ((lineLength < 1e-6) ? 0.0 :
+            (NSAppUnitsToFloatPixels(calc->mLength, appUnitsPerPixel) / lineLength));
+        break;
       default:
         NS_ABORT_IF_FALSE(false, "Unknown stop position type");
       }
