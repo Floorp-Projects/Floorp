@@ -59,15 +59,15 @@ fails pref(layout.css.flexbox.enabled,true) == flexbox-basic-video-vert-2.xhtml 
 # inserted adjacent to that existing content.)
 pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
 pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-fails-if(Android) pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
 pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
 pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml
-fails-if(Android) pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundText-3-ref.xhtml
+pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundText-3-ref.xhtml
 
 pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
 pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml
-fails-if(Android) pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundText-3.xhtml flexbox-dyn-insertAroundText-3-ref.xhtml
+pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundText-3.xhtml flexbox-dyn-insertAroundText-3-ref.xhtml
 
 # Variant of one of the above tests, to regression-test an invalidation issue
 pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertEmptySpan-1.xhtml flexbox-dyn-insertEmptySpan-1-ref.xhtml
@@ -118,7 +118,7 @@ test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-hor
 pref(layout.css.flexbox.enabled,true) == flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
 fails-if(Android) test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+fails-if(Android) test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) == flexbox-inlinecontent-horiz-4.xhtml  flexbox-inlinecontent-horiz-4-ref.xhtml
 pref(layout.css.flexbox.enabled,true) == flexbox-inlinecontent-horiz-5.xhtml  flexbox-inlinecontent-horiz-5-ref.xhtml
 pref(layout.css.flexbox.enabled,true) == flexbox-inlinecontent-horiz-6.xhtml  flexbox-inlinecontent-horiz-6-ref.xhtml
