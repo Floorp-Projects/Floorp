@@ -1039,7 +1039,7 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
             if (k.kind != CrossCompartmentKey::ObjectWrapper)
                 continue;
 
-            JSObject *wobj = &e.front().value.get().toObject();
+            AutoWrapperRooter wobj(cx, WrapperValue(e));
             JSObject *wrapped = UnwrapObject(wobj);
 
             if (nukeReferencesToWindow == DontNukeWindowReferences &&
@@ -1078,7 +1078,7 @@ js::RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget)
 
     // The old value should still be in the cross-compartment wrapper map, and
     // the lookup should return wobj.
-    JS_ASSERT(&pmap.lookup(origv)->value.toObject() == wobj);
+    JS_ASSERT(&pmap.lookup(origv)->value.unsafeGet()->toObject() == wobj);
     pmap.remove(origv);
 
     // When we remove origv from the wrapper map, its wrapper, wobj, must
@@ -1123,7 +1123,7 @@ js::RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
 {
     Value origv = ObjectValue(*oldTarget);
 
-    AutoValueVector toTransplant(cx);
+    AutoWrapperVector toTransplant(cx);
     if (!toTransplant.reserve(cx->runtime->compartments.length()))
         return false;
 
@@ -1131,11 +1131,11 @@ js::RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
         WrapperMap &pmap = c->crossCompartmentWrappers;
         if (WrapperMap::Ptr wp = pmap.lookup(origv)) {
             // We found a wrapper. Remember and root it.
-            toTransplant.infallibleAppend(wp->value);
+            toTransplant.infallibleAppend(WrapperValue(wp));
         }
     }
 
-    for (Value *begin = toTransplant.begin(), *end = toTransplant.end();
+    for (WrapperValue *begin = toTransplant.begin(), *end = toTransplant.end();
          begin != end; ++begin)
     {
         if (!RemapWrapper(cx, &begin->toObject(), newTarget))
@@ -1149,7 +1149,7 @@ JS_FRIEND_API(bool)
 js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
                       const CompartmentFilter &targetFilter)
 {
-    AutoValueVector toRecompute(cx);
+    AutoWrapperVector toRecompute(cx);
 
     for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
         // Filter by source compartment.
@@ -1165,18 +1165,17 @@ js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
                 continue;
 
             // Filter by target compartment.
-            Value wrapper = e.front().value.get();
             if (!targetFilter.match(k.wrapped->compartment()))
                 continue;
 
             // Add it to the list.
-            if (!toRecompute.append(wrapper))
+            if (!toRecompute.append(WrapperValue(e)))
                 return false;
         }
     }
 
     // Recompute all the wrappers in the list.
-    for (Value *begin = toRecompute.begin(), *end = toRecompute.end(); begin != end; ++begin)
+    for (WrapperValue *begin = toRecompute.begin(), *end = toRecompute.end(); begin != end; ++begin)
     {
         JSObject *wrapper = &begin->toObject();
         JSObject *wrapped = Wrapper::wrappedObject(wrapper);

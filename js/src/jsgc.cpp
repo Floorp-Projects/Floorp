@@ -2382,6 +2382,29 @@ AutoGCRooter::trace(JSTracer *trc)
 #endif
         return;
       }
+
+      case WRAPPER: {
+        /*
+         * We need to use MarkValueUnbarriered here because we mark wrapper
+         * roots in every slice. This is because of some rule-breaking in
+         * RemapAllWrappersForObject; see comment there.
+         */
+          MarkValueUnbarriered(trc, &static_cast<AutoWrapperRooter *>(this)->value.get(),
+                               "JS::AutoWrapperRooter.value");
+        return;
+      }
+
+      case WRAPVECTOR: {
+        AutoWrapperVector::VectorImpl &vector = static_cast<AutoWrapperVector *>(this)->vector;
+        /*
+         * We need to use MarkValueUnbarriered here because we mark wrapper
+         * roots in every slice. This is because of some rule-breaking in
+         * RemapAllWrappersForObject; see comment there.
+         */
+        for (WrapperValue *p = vector.begin(); p < vector.end(); p++)
+            MarkValueUnbarriered(trc, &p->get(), "js::AutoWrapperVector.vector");
+        return;
+      }
     }
 
     JS_ASSERT(tag >= 0);
@@ -2394,6 +2417,15 @@ AutoGCRooter::traceAll(JSTracer *trc)
 {
     for (js::AutoGCRooter *gcr = trc->runtime->autoGCRooters; gcr; gcr = gcr->down)
         gcr->trace(trc);
+}
+
+/* static */ void
+AutoGCRooter::traceAllWrappers(JSTracer *trc)
+{
+    for (js::AutoGCRooter *gcr = trc->runtime->autoGCRooters; gcr; gcr = gcr->down) {
+        if (gcr->tag == WRAPVECTOR || gcr->tag == WRAPPER)
+            gcr->trace(trc);
+    }
 }
 
 void
@@ -4228,6 +4260,9 @@ IncrementalCollectSlice(JSRuntime *rt,
         rt->gcIncrementalState = MARK_ROOTS;
         rt->gcLastMarkSlice = false;
     }
+
+    if (rt->gcIncrementalState == MARK)
+        AutoGCRooter::traceAllWrappers(&rt->gcMarker);
 
     switch (rt->gcIncrementalState) {
 
