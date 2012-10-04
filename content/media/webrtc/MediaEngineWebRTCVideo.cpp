@@ -14,9 +14,28 @@ namespace mozilla {
  */
 NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineWebRTCVideoSource, nsIRunnable)
 
-// Static variables to hold device names and UUIDs.
-const unsigned int MediaEngineWebRTCVideoSource::KMaxDeviceNameLength = 128;
-const unsigned int MediaEngineWebRTCVideoSource::KMaxUniqueIdLength = 256;
+MediaEngineWebRTCVideoSource::MediaEngineWebRTCVideoSource(webrtc::VideoEngine* aVideoEnginePtr,
+                                                           int aIndex, int aMinFps)
+  : mVideoEngine(aVideoEnginePtr)
+  , mCaptureIndex(aIndex)
+  , mCapabilityChosen(false)
+  , mWidth(640)
+  , mHeight(480)
+  , mState(kReleased)
+  , mMonitor("WebRTCCamera.Monitor")
+  , mFps(DEFAULT_VIDEO_FPS)
+  , mMinFps(aMinFps)
+  , mInitDone(false)
+  , mInSnapshotMode(false)
+  , mSnapshotPath(NULL)
+{
+  Init();
+}
+
+MediaEngineWebRTCVideoSource::~MediaEngineWebRTCVideoSource()
+{
+  Shutdown();
+}
 
 // ViEExternalRenderer Callback.
 int
@@ -81,37 +100,71 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 }
 
 void
+MediaEngineWebRTCVideoSource::ChooseCapability(uint32_t aWidth, uint32_t aHeight, uint32_t aMinFPS)
+{
+  int num = mViECapture->NumberOfCapabilities(mUniqueId, KMaxUniqueIdLength);
+
+  NS_WARN_IF_FALSE(!mCapabilityChosen,"Shouldn't select capability of a device twice");
+
+  if (num <= 0) {
+    // Set to default values
+    mCapability.width  = mOpts.mWidth  = aWidth;
+    mCapability.height = mOpts.mHeight = aHeight;
+    mCapability.maxFPS = mOpts.mMaxFPS = DEFAULT_VIDEO_FPS;
+    mOpts.codecType = kVideoCodecI420;
+
+    // Mac doesn't support capabilities.
+    mCapabilityChosen = true;
+    return;
+  }
+
+  // Default is closest to available capability but equal to or below;
+  // otherwise closest above.  Since we handle the num=0 case above and
+  // take the first entry always, we can never exit uninitialized.
+  webrtc::CaptureCapability cap;
+  bool higher = true;
+  for (int i = 0; i < num; i++) {
+    mViECapture->GetCaptureCapability(mUniqueId, KMaxUniqueIdLength, i, cap);
+    if (higher) {
+      if (i == 0 ||
+          (mOpts.mWidth > cap.width && mOpts.mHeight > cap.height)) {
+        mOpts.mWidth = cap.width;
+        mOpts.mHeight = cap.height;
+        mOpts.mMaxFPS = cap.maxFPS;
+        mCapability = cap;
+        // FIXME: expose expected capture delay?
+      }
+      if (cap.width <= aWidth && cap.height <= aHeight) {
+        higher = false;
+      }
+    } else {
+      if (cap.width > aWidth || cap.height > aHeight || cap.maxFPS < aMinFPS) {
+        continue;
+      }
+      if (mOpts.mWidth < cap.width && mOpts.mHeight < cap.height) {
+        mOpts.mWidth = cap.width;
+        mOpts.mHeight = cap.height;
+        mOpts.mMaxFPS = cap.maxFPS;
+        mCapability = cap;
+        // FIXME: expose expected capture delay?
+      }
+    }
+  }
+  mCapabilityChosen = true;
+}
+
+void
 MediaEngineWebRTCVideoSource::GetName(nsAString& aName)
 {
-  char deviceName[KMaxDeviceNameLength];
-  memset(deviceName, 0, KMaxDeviceNameLength);
-
-  char uniqueId[KMaxUniqueIdLength];
-  memset(uniqueId, 0, KMaxUniqueIdLength);
-
-  if (mInitDone) {
-    mViECapture->GetCaptureDevice(
-      mCapIndex, deviceName, KMaxDeviceNameLength, uniqueId, KMaxUniqueIdLength
-    );
-    aName.Assign(NS_ConvertASCIItoUTF16(deviceName));
-  }
+  // mDeviceName is UTF8
+  CopyUTF8toUTF16(mDeviceName, aName);
 }
 
 void
 MediaEngineWebRTCVideoSource::GetUUID(nsAString& aUUID)
 {
-  char deviceName[KMaxDeviceNameLength];
-  memset(deviceName, 0, KMaxDeviceNameLength);
-
-  char uniqueId[KMaxUniqueIdLength];
-  memset(uniqueId, 0, KMaxUniqueIdLength);
-
-  if (mInitDone) {
-    mViECapture->GetCaptureDevice(
-      mCapIndex, deviceName, KMaxDeviceNameLength, uniqueId, KMaxUniqueIdLength
-    );
-    aUUID.Assign(NS_ConvertASCIItoUTF16(uniqueId));
-  }
+  // mUniqueId is UTF8
+  CopyUTF8toUTF16(mUniqueId, aUUID);
 }
 
 nsresult
@@ -121,21 +174,16 @@ MediaEngineWebRTCVideoSource::Allocate()
     return NS_ERROR_FAILURE;
   }
 
-  char deviceName[KMaxDeviceNameLength];
-  memset(deviceName, 0, KMaxDeviceNameLength);
+  if (!mCapabilityChosen) {
+    // XXX these should come from constraints
+    ChooseCapability(mWidth, mHeight, mMinFps);
+  }
 
-  char uniqueId[KMaxUniqueIdLength];
-  memset(uniqueId, 0, KMaxUniqueIdLength);
-
-  mViECapture->GetCaptureDevice(
-    mCapIndex, deviceName, KMaxDeviceNameLength, uniqueId, KMaxUniqueIdLength
-  );
-
-  if (mViECapture->AllocateCaptureDevice(uniqueId, KMaxUniqueIdLength, mCapIndex)) {
+  if (mViECapture->AllocateCaptureDevice(mUniqueId, KMaxUniqueIdLength, mCaptureIndex)) {
     return NS_ERROR_FAILURE;
   }
 
-  if (mViECapture->StartCapture(mCapIndex) < 0) {
+  if (mViECapture->StartCapture(mCaptureIndex, mCapability) < 0) {
     return NS_ERROR_FAILURE;
   }
 
@@ -150,21 +198,19 @@ MediaEngineWebRTCVideoSource::Deallocate()
     return NS_ERROR_FAILURE;
   }
 
-  mViECapture->StopCapture(mCapIndex);
-  mViECapture->ReleaseCaptureDevice(mCapIndex);
+  mViECapture->StopCapture(mCaptureIndex);
+  mViECapture->ReleaseCaptureDevice(mCaptureIndex);
   mState = kReleased;
   return NS_OK;
 }
 
-MediaEngineVideoOptions
+const MediaEngineVideoOptions*
 MediaEngineWebRTCVideoSource::GetOptions()
 {
-  MediaEngineVideoOptions aOpts;
-  aOpts.mWidth = mWidth;
-  aOpts.mHeight = mHeight;
-  aOpts.mMaxFPS = mFps;
-  aOpts.codecType = kVideoCodecI420;
-  return aOpts;
+  if (!mCapabilityChosen) {
+    ChooseCapability(mWidth, mHeight, mMinFps);
+  }
+  return &mOpts;
 }
 
 nsresult
@@ -190,12 +236,12 @@ MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mSource->AddTrack(aID, mFps, 0, new VideoSegment());
   mSource->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
-  error = mViERender->AddRenderer(mCapIndex, webrtc::kVideoI420, (webrtc::ExternalRenderer*)this);
+  error = mViERender->AddRenderer(mCaptureIndex, webrtc::kVideoI420, (webrtc::ExternalRenderer*)this);
   if (error == -1) {
     return NS_ERROR_FAILURE;
   }
 
-  error = mViERender->StartRender(mCapIndex);
+  error = mViERender->StartRender(mCaptureIndex);
   if (error == -1) {
     return NS_ERROR_FAILURE;
   }
@@ -214,8 +260,8 @@ MediaEngineWebRTCVideoSource::Stop()
   mSource->EndTrack(mTrackID);
   mSource->Finish();
 
-  mViERender->StopRender(mCapIndex);
-  mViERender->RemoveRenderer(mCapIndex);
+  mViERender->StopRender(mCaptureIndex);
+  mViERender->RemoveRenderer(mCaptureIndex);
 
   mState = kStopped;
   return NS_OK;
@@ -256,11 +302,11 @@ MediaEngineWebRTCVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
   if (!mInitDone || mState != kAllocated) {
     return NS_ERROR_FAILURE;
   }
-  error = mViERender->AddRenderer(mCapIndex, webrtc::kVideoI420, (webrtc::ExternalRenderer*)this);
+  error = mViERender->AddRenderer(mCaptureIndex, webrtc::kVideoI420, (webrtc::ExternalRenderer*)this);
   if (error == -1) {
     return NS_ERROR_FAILURE;
   }
-  error = mViERender->StartRender(mCapIndex);
+  error = mViERender->StartRender(mCaptureIndex);
   if (error == -1) {
     return NS_ERROR_FAILURE;
   }
@@ -291,15 +337,15 @@ MediaEngineWebRTCVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
   }
 
   NS_ConvertUTF16toUTF8 path(*mSnapshotPath);
-  if (vieFile->GetCaptureDeviceSnapshot(mCapIndex, path.get()) < 0) {
+  if (vieFile->GetCaptureDeviceSnapshot(mCaptureIndex, path.get()) < 0) {
     delete mSnapshotPath;
     mSnapshotPath = NULL;
     return NS_ERROR_FAILURE;
   }
 
   // Stop the camera.
-  mViERender->StopRender(mCapIndex);
-  mViERender->RemoveRenderer(mCapIndex);
+  mViERender->StopRender(mCaptureIndex);
+  mViERender->RemoveRenderer(mCaptureIndex);
 
   nsCOMPtr<nsIFile> file;
   nsresult rv = NS_NewLocalFile(*mSnapshotPath, false, getter_AddRefs(file));
@@ -322,6 +368,9 @@ MediaEngineWebRTCVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
 void
 MediaEngineWebRTCVideoSource::Init()
 {
+  mDeviceName[0] = '\0'; // paranoia
+  mUniqueId[0] = '\0';
+
   if (mVideoEngine == NULL) {
     return;
   }
@@ -339,6 +388,12 @@ MediaEngineWebRTCVideoSource::Init()
     return;
   }
 
+  if (mViECapture->GetCaptureDevice(mCaptureIndex,
+                                    mDeviceName, sizeof(mDeviceName),
+                                    mUniqueId, sizeof(mUniqueId))) {
+    return;
+  }
+
   mInitDone = true;
 }
 
@@ -352,14 +407,14 @@ MediaEngineWebRTCVideoSource::Shutdown()
   }
 
   if (mState == kStarted) {
-    mViERender->StopRender(mCapIndex);
-    mViERender->RemoveRenderer(mCapIndex);
+    mViERender->StopRender(mCaptureIndex);
+    mViERender->RemoveRenderer(mCaptureIndex);
     continueShutdown = true;
   }
 
   if (mState == kAllocated || continueShutdown) {
-    mViECapture->StopCapture(mCapIndex);
-    mViECapture->ReleaseCaptureDevice(mCapIndex);
+    mViECapture->StopCapture(mCaptureIndex);
+    mViECapture->ReleaseCaptureDevice(mCaptureIndex);
     continueShutdown = false;
   }
 
