@@ -1042,6 +1042,7 @@ class JS_PUBLIC_API(AutoGCRooter) {
     /* Implemented in jsgc.cpp. */
     inline void trace(JSTracer *trc);
     static void traceAll(JSTracer *trc);
+    static void traceAllWrappers(JSTracer *trc);
 
   protected:
     AutoGCRooter * const down;
@@ -1082,7 +1083,9 @@ class JS_PUBLIC_API(AutoGCRooter) {
         NAMEVECTOR =  -26, /* js::AutoNameVector */
         HASHABLEVALUE=-27,
         IONMASM =     -28, /* js::ion::MacroAssembler */
-        IONALLOC =    -29  /* js::ion::AutoTempAllocatorRooter */
+        IONALLOC =    -29, /* js::ion::AutoTempAllocatorRooter */
+        WRAPVECTOR =  -30, /* js::AutoWrapperVector */
+        WRAPPER =     -31  /* js::AutoWrapperRooter */
     };
 
   private:
