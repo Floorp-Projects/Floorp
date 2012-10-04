@@ -120,9 +120,6 @@ struct GSNCache {
     void purge();
 };
 
-inline GSNCache *
-GetGSNCache(JSContext *cx);
-
 typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
 
 struct ConservativeGCData
