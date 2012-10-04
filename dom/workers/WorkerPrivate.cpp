@@ -2231,7 +2231,8 @@ WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
 
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::PostMessage(JSContext* aCx, jsval aMessage)
+WorkerPrivateParent<Derived>::PostMessage(JSContext* aCx, jsval aMessage,
+                                          jsval aTransferable)
 {
   AssertIsOnParentThread();
 
@@ -2265,7 +2266,7 @@ WorkerPrivateParent<Derived>::PostMessage(JSContext* aCx, jsval aMessage)
   nsTArray<nsCOMPtr<nsISupports> > clonedObjects;
 
   JSAutoStructuredCloneBuffer buffer;
-  if (!buffer.write(aCx, aMessage, callbacks, &clonedObjects)) {
+  if (!buffer.write(aCx, aMessage, aTransferable, callbacks, &clonedObjects)) {
     return false;
   }
 
@@ -3422,7 +3423,8 @@ WorkerPrivate::StopSyncLoop(uint32_t aSyncLoopKey, bool aSyncResult)
 }
 
 bool
-WorkerPrivate::PostMessageToParent(JSContext* aCx, jsval aMessage)
+WorkerPrivate::PostMessageToParent(JSContext* aCx, jsval aMessage,
+                                   jsval aTransferable)
 {
   AssertIsOnWorkerThread();
 
@@ -3434,7 +3436,7 @@ WorkerPrivate::PostMessageToParent(JSContext* aCx, jsval aMessage)
   nsTArray<nsCOMPtr<nsISupports> > clonedObjects;
 
   JSAutoStructuredCloneBuffer buffer;
-  if (!buffer.write(aCx, aMessage, callbacks, &clonedObjects)) {
+  if (!buffer.write(aCx, aMessage, aTransferable, callbacks, &clonedObjects)) {
     return false;
   }
 

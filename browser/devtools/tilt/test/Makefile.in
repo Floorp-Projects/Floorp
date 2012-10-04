@@ -60,6 +60,8 @@ MOCHITEST_BROWSER_FILES = \
 	browser_tilt_visualizer.js \
 	browser_tilt_zoom.js \
 	$(NULL)
+else
+$(warning browser_tilt_* disabled on Linux for intermittent failures. Bug 759157 and friends)
 endif
 
 include $(topsrcdir)/config/rules.mk

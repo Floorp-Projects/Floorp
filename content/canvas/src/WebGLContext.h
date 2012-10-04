@@ -72,7 +72,6 @@ class WebGLShader;
 class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLUniformLocation;
-class WebGLExtension;
 class WebGLContext;
 struct WebGLVertexAttribData;
 class WebGLMemoryPressureObserver;
@@ -80,6 +79,7 @@ class WebGLRectangleObject;
 class WebGLContextBoundObject;
 class WebGLActiveInfo;
 class WebGLShaderPrecisionFormat;
+class WebGLExtensionBase;
 
 enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
 
@@ -631,7 +631,7 @@ public:
     JSObject *GetContextAttributes(ErrorResult &rv);
     bool IsContextLost() const { return !IsContextStable(); }
     void GetSupportedExtensions(dom::Nullable< nsTArray<nsString> > &retval);
-    nsIWebGLExtension* GetExtension(const nsAString& aName);
+    JSObject* GetExtension(JSContext* ctx, const nsAString& aName);
     void ActiveTexture(WebGLenum texture);
     void AttachShader(WebGLProgram* program, WebGLShader* shader);
     void BindAttribLocation(WebGLProgram* program, WebGLuint location,
@@ -1175,18 +1175,15 @@ protected:
         WEBGL_compressed_texture_atc,
         WEBGL_compressed_texture_pvrtc,
         WEBGL_depth_texture,
-        WebGLExtensionID_number_of_extensions,
         WebGLExtensionID_unknown_extension
     };
-    nsAutoTArray<nsRefPtr<WebGLExtension>, WebGLExtensionID_number_of_extensions> mExtensions;
+    nsTArray<nsRefPtr<WebGLExtensionBase> > mExtensions;
 
     // returns true if the extension has been enabled by calling getExtension.
-    bool IsExtensionEnabled(WebGLExtensionID ext) {
-        return mExtensions[ext];
-    }
+    bool IsExtensionEnabled(WebGLExtensionID ext) const;
 
     // returns true if the extension is supported (as returned by getSupportedExtensions)
-    bool IsExtensionSupported(WebGLExtensionID ext);
+    bool IsExtensionSupported(WebGLExtensionID ext) const;
 
     nsTArray<WebGLenum> mCompressedTextureFormats;
 
@@ -1419,6 +1416,13 @@ public:
     friend class WebGLShader;
     friend class WebGLUniformLocation;
 };
+
+// used by DOM bindings in conjunction with GetParentObject
+inline nsISupports*
+ToSupports(WebGLContext* context)
+{
+  return static_cast<nsICanvasRenderingContextInternal*>(context);
+}
 
 // This class is a mixin for objects that are tied to a specific
 // context (which is to say, all of them).  They provide initialization
@@ -3000,7 +3004,7 @@ public:
 };
 
 class WebGLUniformLocation MOZ_FINAL
-    : public nsIWebGLUniformLocation
+    : public nsISupports
     , public WebGLContextBoundObject
 {
 public:
@@ -3031,7 +3035,6 @@ public:
     virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLUNIFORMLOCATION
 protected:
     // nsRefPtr, not WebGLRefPtr, so that we don't prevent the program from being explicitly deleted.
     // we just want to avoid having a dangling pointer.
@@ -3063,41 +3066,37 @@ protected:
 };
 
 class WebGLShaderPrecisionFormat MOZ_FINAL
-    : public nsIWebGLShaderPrecisionFormat
+    : public nsISupports
+    , public WebGLContextBoundObject
 {
 public:
-    WebGLShaderPrecisionFormat(WebGLint rangeMin, WebGLint rangeMax, WebGLint precision) :
+    WebGLShaderPrecisionFormat(WebGLContext *context, WebGLint rangeMin, WebGLint rangeMax, WebGLint precision) :
+        WebGLContextBoundObject(context),
         mRangeMin(rangeMin),
         mRangeMax(rangeMax),
         mPrecision(precision)
     {
-    
     }
 
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
+
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLSHADERPRECISIONFORMAT
+
+    // WebIDL WebGLShaderPrecisionFormat API
+    WebGLint RangeMin() const {
+        return mRangeMin;
+    }
+    WebGLint RangeMax() const {
+        return mRangeMax;
+    }
+    WebGLint Precision() const {
+        return mPrecision;
+    }
 
 protected:
     WebGLint mRangeMin;
     WebGLint mRangeMax;
     WebGLint mPrecision;
-};
-
-class WebGLExtension
-    : public nsIWebGLExtension
-    , public WebGLContextBoundObject
-    , public nsWrapperCache
-{
-public:
-    WebGLExtension(WebGLContext *baseContext)
-        : WebGLContextBoundObject(baseContext)
-    {}
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLExtension)
-    NS_DECL_NSIWEBGLEXTENSION
-
-    virtual ~WebGLExtension() {}
 };
 
 inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {

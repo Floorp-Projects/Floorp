@@ -921,7 +921,7 @@ LayerManagerOGL::Render()
 
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
-  // If the Java compositor is being used, this clear will be done in
+  // If the Android compositor is being used, this clear will be done in
   // DrawWindowUnderlay. Make sure the bits used here match up with those used
   // in mobile/android/base/gfx/LayerRenderer.java
 #ifndef MOZ_ANDROID_OMTC
