@@ -130,7 +130,6 @@
  "dom/browser-element/mochitest/test_browserElement_inproc_AppFramePermission.html": "",
  "dom/browser-element/mochitest/test_browserElement_inproc_AppWindowNamespace.html": "TIMED_OUT, bug 783509",
  "dom/browser-element/mochitest/test_browserElement_inproc_SecurityChange.html": "TIMED_OUT, bug 766586",
- "dom/browser-element/mochitest/test_browserElement_inproc_CloseApp.html": "FAILS, bug 796982",
  "dom/devicestorage": "bug 781789 & bug 782275",
  "dom/imptests/editing/conformancetest/test_event.html": "",
  "dom/imptests/editing/conformancetest/test_runtest.html": "",
