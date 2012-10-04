@@ -56,6 +56,20 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 #if defined(_WIN64)
     masm.push(rdi);
     masm.push(rsi);
+
+    // 16-byte aligment for movdqa
+    masm.subq(Imm32(16 * 10 + 8), rsp);
+
+    masm.movdqa(xmm6, Operand(rsp, 16 * 0));
+    masm.movdqa(xmm7, Operand(rsp, 16 * 1));
+    masm.movdqa(xmm8, Operand(rsp, 16 * 2));
+    masm.movdqa(xmm9, Operand(rsp, 16 * 3));
+    masm.movdqa(xmm10, Operand(rsp, 16 * 4));
+    masm.movdqa(xmm11, Operand(rsp, 16 * 5));
+    masm.movdqa(xmm12, Operand(rsp, 16 * 6));
+    masm.movdqa(xmm13, Operand(rsp, 16 * 7));
+    masm.movdqa(xmm14, Operand(rsp, 16 * 8));
+    masm.movdqa(xmm15, Operand(rsp, 16 * 9));
 #endif
 
     // Save arguments passed in registers needed after function call.
@@ -135,6 +149,19 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 
     // Restore non-volatile registers.
 #if defined(_WIN64)
+    masm.movdqa(Operand(rsp, 16 * 0), xmm6);
+    masm.movdqa(Operand(rsp, 16 * 1), xmm7);
+    masm.movdqa(Operand(rsp, 16 * 2), xmm8);
+    masm.movdqa(Operand(rsp, 16 * 3), xmm9);
+    masm.movdqa(Operand(rsp, 16 * 4), xmm10);
+    masm.movdqa(Operand(rsp, 16 * 5), xmm11);
+    masm.movdqa(Operand(rsp, 16 * 6), xmm12);
+    masm.movdqa(Operand(rsp, 16 * 7), xmm13);
+    masm.movdqa(Operand(rsp, 16 * 8), xmm14);
+    masm.movdqa(Operand(rsp, 16 * 9), xmm15);
+
+    masm.addq(Imm32(16 * 10 + 8), rsp);
+
     masm.pop(rsi);
     masm.pop(rdi);
 #endif

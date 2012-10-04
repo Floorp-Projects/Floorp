@@ -1559,9 +1559,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel) {
-    nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(channel, loadContext);
-    isPrivate = loadContext && loadContext->UsePrivateBrowsing();
+    isPrivate = NS_UsePrivateBrowsing(channel);
   } else if (aLoadGroup) {
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
@@ -1664,11 +1662,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 
-#ifdef DEBUG
-    nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(newChannel, loadContext);
-    MOZ_ASSERT_IF(loadContext, loadContext->UsePrivateBrowsing() == mRespectPrivacy);
-#endif
+    MOZ_ASSERT(NS_UsePrivateBrowsing(newChannel) == mRespectPrivacy);
 
     NewRequestAndEntry(forcePrincipalCheck, this, getter_AddRefs(request), getter_AddRefs(entry));
 
@@ -1795,11 +1789,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 {
   NS_ASSERTION(channel, "imgLoader::LoadImageWithChannel -- NULL channel pointer");
 
-#ifdef DEBUG
-  nsCOMPtr<nsILoadContext> loadContext;
-  NS_QueryNotificationCallbacks(channel, loadContext);
-  MOZ_ASSERT_IF(loadContext, loadContext->UsePrivateBrowsing() == mRespectPrivacy);
-#endif
+  MOZ_ASSERT(NS_UsePrivateBrowsing(channel) == mRespectPrivacy);
 
   nsRefPtr<imgRequest> request;
 

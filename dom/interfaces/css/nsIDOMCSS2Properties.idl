@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(243898eb-0e13-416d-9a2e-33af084985ed)]
+[builtinclass, scriptable, uuid(2ae61565-1a66-4e6e-960d-b999c631e5c6)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -803,10 +803,6 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozBorderImage;
                                         // raises(DOMException) on setting
 
-/* XXXdholbert NOTE: Flexbox properties are commented out here, until our
-   layout engine responds to them.  In builds with MOZ_FLEXBOX enabled, this
-   block should be uncommented (and this interface's uuid should be revved).
-   (This would be #ifdef MOZ_FLEXBOX, if that worked in IDL files.)
            attribute DOMString        MozAlignItems;
                                         // raises(DOMException) on setting
 
@@ -833,5 +829,4 @@ interface nsIDOMCSS2Properties : nsISupports
 
            attribute DOMString        MozJustifyContent;
                                         // raises(DOMException) on setting
-*/
 };

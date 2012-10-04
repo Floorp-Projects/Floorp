@@ -13,7 +13,7 @@
 #include "RootAccessibleWrap.h"
 #include "States.h"
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
 #include "Logging.h"
 #endif
 
@@ -145,7 +145,7 @@ nsAccDocManager::OnStateChange(nsIWebProgress *aWebProgress,
 
   // Document was loaded.
   if (aStateFlags & STATE_STOP) {
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocLoad))
       logging::DocLoad("document loaded", aWebProgress, aRequest, aStateFlags);
 #endif
@@ -174,7 +174,7 @@ nsAccDocManager::OnStateChange(nsIWebProgress *aWebProgress,
   }
 
   // Document loading was started.
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocLoad))
     logging::DocLoad("start document loading", aWebProgress, aRequest, aStateFlags);
 #endif
@@ -263,7 +263,7 @@ nsAccDocManager::HandleEvent(nsIDOMEvent *aEvent)
     // accessible and all its sub document accessible are shutdown as result of
     // processing.
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocDestroy))
       logging::DocDestroy("received 'pagehide' event", document);
 #endif
@@ -289,7 +289,7 @@ nsAccDocManager::HandleEvent(nsIDOMEvent *aEvent)
   // webprogress notifications nor 'pageshow' event.
   if (type.EqualsLiteral("DOMContentLoaded") &&
       nsCoreUtils::IsErrorPage(document)) {
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocLoad))
       logging::DocLoad("handled 'DOMContentLoaded' event", document);
 #endif
@@ -330,7 +330,7 @@ nsAccDocManager::AddListeners(nsIDocument *aDocument,
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
                               NS_EVENT_FLAG_CAPTURE);
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocCreate))
     logging::Text("added 'pagehide' listener");
 #endif
@@ -338,7 +338,7 @@ nsAccDocManager::AddListeners(nsIDocument *aDocument,
   if (aAddDOMContentLoadedListener) {
     elm->AddEventListenerByType(this, NS_LITERAL_STRING("DOMContentLoaded"),
                                 NS_EVENT_FLAG_CAPTURE);
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocCreate))
       logging::Text("added 'DOMContentLoaded' listener");
 #endif
@@ -411,7 +411,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
     parentDocAcc->BindChildDocument(docAcc);
   }
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocCreate)) {
     logging::DocCreate("document creation finished", aDocument);
     logging::Stack();

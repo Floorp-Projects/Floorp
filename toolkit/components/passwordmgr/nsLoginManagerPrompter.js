@@ -820,7 +820,7 @@ LoginManagerPrompter.prototype = {
             var notifyWin = this._getNotifyWindow();
             var chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
             var browser = chromeWin.gBrowser.
-                                    getBrowserForDocument(this._window.top.document);
+                                    getBrowserForDocument(notifyWin.top.document);
 
             aNotifyObj.show(browser, "password-save", notificationText,
                             "password-notification-icon", mainAction,
@@ -1018,7 +1018,7 @@ LoginManagerPrompter.prototype = {
             var notifyWin = this._getNotifyWindow();
             var chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
             var browser = chromeWin.gBrowser.
-                                    getBrowserForDocument(this._window.top.document);
+                                    getBrowserForDocument(notifyWin.top.document);
 
             aNotifyObj.show(browser, "password-change", notificationText,
                             "password-notification-icon", mainAction,
@@ -1190,7 +1190,7 @@ LoginManagerPrompter.prototype = {
                 // disabled, and if so use the opener window. But if the window
                 // has been used to visit other pages (ie, has a history),
                 // assume it'll stick around and *don't* use the opener.
-                if (chromeDoc.hasAttribute("chromehidden") &&
+                if (chromeDoc.getAttribute("chromehidden") &&
                     webnav.sessionHistory.count == 1) {
                     this.log("Using opener window for notification bar.");
                     notifyWin = notifyWin.opener;

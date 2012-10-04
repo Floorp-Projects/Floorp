@@ -2970,6 +2970,37 @@ class MRegExp : public MNullaryInstruction
     }
 };
 
+class MRegExpTest
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<1>, StringPolicy >
+{
+  private:
+
+    MRegExpTest(MDefinition *regexp, MDefinition *string)
+      : MBinaryInstruction(string, regexp)
+    {
+        setResultType(MIRType_Boolean);
+    }
+
+  public:
+    INSTRUCTION_HEADER(RegExpTest)
+
+    static MRegExpTest *New(MDefinition *regexp, MDefinition *string) {
+        return new MRegExpTest(regexp, string);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    MDefinition *regexp() const {
+        return getOperand(1);
+    }
+    MDefinition *string() const {
+        return getOperand(0);
+    }
+};
+
 class MLambda
   : public MUnaryInstruction,
     public SingleObjectPolicy
@@ -4047,6 +4078,7 @@ class MGetPropertyCache
 {
     CompilerRootPropertyName name_;
     bool idempotent_;
+    bool allowGetters_;
 
     InlinePropertyTable *inlinePropertyTable_;
 
@@ -4054,6 +4086,7 @@ class MGetPropertyCache
       : MUnaryInstruction(obj),
         name_(name),
         idempotent_(false),
+        allowGetters_(false),
         inlinePropertyTable_(NULL)
     {
         setResultType(MIRType_Value);
@@ -4097,6 +4130,12 @@ class MGetPropertyCache
     void setIdempotent() {
         idempotent_ = true;
         setMovable();
+    }
+    bool allowGetters() const {
+        return allowGetters_;
+    }
+    void setAllowGetters() {
+        allowGetters_ = true;
     }
     TypePolicy *typePolicy() { return this; }
 

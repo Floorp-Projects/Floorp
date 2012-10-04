@@ -3745,6 +3745,12 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
 
   AddAnimationsAndTransitionsToLayer(container, aBuilder,
                                      this, eCSSProperty_transform);
+  if (ShouldPrerenderTransformedContent(aBuilder, mFrame, false)) {
+    container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
+                           /*the value is irrelevant*/nullptr);
+  } else {
+    container->RemoveUserData(nsIFrame::LayerIsPrerenderedDataKey());
+  }
   return container.forget();
 }
 
@@ -3928,7 +3934,14 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   *aSnap = false;
   nsRect untransformedVisible;
   float factor = nsPresContext::AppUnitsPerCSSPixel();
-  if (!UntransformRectMatrix(mVisibleRect, GetTransform(factor), factor, &untransformedVisible)) {
+  // If we're going to prerender all our content, pretend like we
+  // don't have opqaue content so that everything under us is rendered
+  // as well.  That will increase graphics memory usage if our frame
+  // covers the entire window, but it allows our transform to be
+  // updated extremely cheaply, without invalidating any other
+  // content.
+  if (ShouldPrerenderTransformedContent(aBuilder, mFrame) ||
+      !UntransformRectMatrix(mVisibleRect, GetTransform(factor), factor, &untransformedVisible)) {
       return nsRegion();
   }
 

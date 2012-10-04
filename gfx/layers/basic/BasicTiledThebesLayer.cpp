@@ -301,7 +301,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       rect = it.Next();
     } else {
       const nsIntRect* lastRect;
-      while (lastRect = it.Next()) {
+      while ((lastRect = it.Next())) {
         rect = lastRect;
       }
     }

@@ -1343,6 +1343,21 @@ MacroAssemblerARMCompat::buildFakeExitFrame(const Register &scratch, uint32 *off
     return true;
 }
 
+bool
+MacroAssemblerARMCompat::buildOOLFakeExitFrame(void *fakeReturnAddr)
+{
+    DebugOnly<uint32> initialDepth = framePushed();
+    uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
+
+    Push(Imm32(descriptor)); // descriptor_
+
+    enterNoPool();
+    push(Imm32((uint32) fakeReturnAddr));
+    leaveNoPool();
+
+    return true;
+}
+
 void
 MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
 {

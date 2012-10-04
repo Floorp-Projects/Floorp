@@ -853,8 +853,6 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         for (int poolIdx = 0; poolIdx < numPoolKinds; poolIdx++) {
             bool beforePool = true;
             Pool *p = &pools[poolIdx];
-            // align the pool offset to the alignment of this pool
-            poolOffset = p->align(poolOffset);
             // Any entries that happened to be after the place we put our pool will need to be
             // switched from the forward-referenced pool to the backward-refrenced pool.
             int idx = 0;
@@ -875,6 +873,10 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                     beforePool = false;
                 } else {
                     JS_ASSERT(beforePool);
+                    // align the pool offset to the alignment of this pool
+                    // it already only aligns when the pool has data in it, but we want to not
+                    // align when all entries will end up in the backwards half of the pool
+                    poolOffset = p->align(poolOffset);
                     IonSpew(IonSpew_Pools, "[%d] Entry %d in pool %d is before the pool.", id, idx, poolIdx);
                     // Everything here is known, we can safely do the necessary substitutions
                     Inst * inst = this->getInst(*iter);
