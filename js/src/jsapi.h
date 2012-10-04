@@ -1625,7 +1625,12 @@ typedef JS::Handle<jsid> JSHandleId;
 typedef JS::MutableHandle<JSObject*> JSMutableHandleObject;
 typedef JS::MutableHandle<JS::Value> JSMutableHandleValue;
 typedef JS::MutableHandle<jsid> JSMutableHandleId;
-typedef JS::RawObject JSRawObject;
+typedef JS::RawObject   JSRawObject;
+typedef JS::RawFunction JSRawFunction;
+typedef JS::RawScript   JSRawScript;
+typedef JS::RawString   JSRawString;
+typedef JS::RawId       JSRawId;
+typedef JS::RawValue    JSRawValue;
 
 #else
 
@@ -1641,7 +1646,12 @@ typedef struct { jsid *_; } JSHandleId;
 typedef struct { JSObject **_; } JSMutableHandleObject;
 typedef struct { jsval *_; } JSMutableHandleValue;
 typedef struct { jsid *_; } JSMutableHandleId;
-typedef JSObject *JSRawObject;
+typedef JSObject   *JSRawObject;
+typedef JSFunction *JSRawFunction;
+typedef JSScript   *JSRawScript;
+typedef JSString   *JSRawString;
+typedef jsid       *JSRawId;
+typedef jsval      *JSRawValue;
 
 JSBool JS_CreateHandleObject(JSContext *cx, JSObject *obj, JSHandleObject *phandle);
 void JS_DestroyHandleObject(JSContext *cx, JSHandleObject handle);
@@ -5593,7 +5603,7 @@ JS_DecodeUTF8(JSContext *cx, const char *src, size_t srclen, jschar *dst,
  * returned that you are expected to call JS_free on when done.
  */
 JS_PUBLIC_API(char *)
-JS_EncodeString(JSContext *cx, JSString *str);
+JS_EncodeString(JSContext *cx, JSRawString str);
 
 /*
  * Get number of bytes in the string encoding (without accounting for a
