@@ -537,7 +537,3 @@ DOMCI_CLASS(LockedFile)
 DOMCI_CLASS(MozActivity)
 
 DOMCI_CLASS(MozTimeManager)
-
-#ifdef MOZ_WEBRTC
-DOMCI_CLASS(DataChannel)
-#endif

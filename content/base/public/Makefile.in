@@ -65,7 +65,6 @@ SDK_XPIDLSRCS   = \
 XPIDLSRCS	= \
 		nsIContentPolicy.idl        \
 		nsIDocumentEncoder.idl      \
-	        nsIDOMDataChannel.idl \
 		nsIDOMFile.idl \
 		nsIDOMFileReader.idl \
 		nsIDOMFileList.idl \
