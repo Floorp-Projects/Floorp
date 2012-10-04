@@ -631,7 +631,7 @@ public:
     JSObject *GetContextAttributes(ErrorResult &rv);
     bool IsContextLost() const { return !IsContextStable(); }
     void GetSupportedExtensions(dom::Nullable< nsTArray<nsString> > &retval);
-    JSObject* GetExtension(JSContext* ctx, const nsAString& aName);
+    JSObject* GetExtension(JSContext* ctx, const nsAString& aName, ErrorResult& rv);
     void ActiveTexture(WebGLenum texture);
     void AttachShader(WebGLProgram* program, WebGLShader* shader);
     void BindAttribLocation(WebGLProgram* program, WebGLuint location,
@@ -1392,6 +1392,11 @@ protected:
     void LoseOldestWebGLContextIfLimitExceeded();
     void UpdateLastUseIndex();
 
+    template <typename WebGLObjectType>
+    JS::Value WebGLObjectAsJSValue(JSContext *cx, const WebGLObjectType *, ErrorResult& rv) const;
+    template <typename WebGLObjectType>
+    JSObject* WebGLObjectAsJSObject(JSContext *cx, const WebGLObjectType *, ErrorResult& rv) const;
+
 #ifdef XP_MACOSX
     // see bug 713305. This RAII helper guarantees that we're on the discrete GPU, during its lifetime
     // Debouncing note: we don't want to switch GPUs too frequently, so try to not create and destroy
@@ -1574,10 +1579,11 @@ protected:
 // NOTE: When this class is switched to new DOM bindings, update the (then-slow)
 // WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
 class WebGLTexture MOZ_FINAL
-    : public nsIWebGLTexture
+    : public nsISupports
     , public WebGLRefCountedObject<WebGLTexture>
     , public LinkedListElement<WebGLTexture>
     , public WebGLContextBoundObject
+    , public nsWrapperCache
 {
 public:
     WebGLTexture(WebGLContext *context)
@@ -1593,6 +1599,7 @@ public:
         , mHaveGeneratedMipmap(false)
         , mFakeBlackStatus(DoNotNeedFakeBlack)
     {
+        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mContext->gl->fGenTextures(1, &mGLName);
         mContext->mTextures.insertBack(this);
@@ -1614,8 +1621,14 @@ public:
     WebGLuint GLName() { return mGLName; }
     GLenum Target() const { return mTarget; }
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLTEXTURE
+    WebGLContext *GetParentObject() const {
+        return Context();
+    }
+
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLTexture)
 
 protected:
 
