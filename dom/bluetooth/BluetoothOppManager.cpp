@@ -10,8 +10,10 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothServiceUuid.h"
+#include "BluetoothUtils.h"
 #include "ObexBase.h"
 
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/RefPtr.h"
 #include "nsIInputStream.h"
 
@@ -20,7 +22,8 @@ using namespace mozilla::ipc;
 
 static mozilla::RefPtr<BluetoothOppManager> sInstance;
 static nsCOMPtr<nsIInputStream> stream = nullptr;
-static uint64_t sSentFileSize = 0;
+static uint32_t sSentFileSize = 0;
+static nsString sFileName;
 
 class ReadFileTask : public nsRunnable
 {
@@ -207,13 +210,12 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
          */
         nsresult rv;
         nsCOMPtr<nsIDOMFile> file = do_QueryInterface(mBlob);
-        nsString fileName;
         if (file) {
-          rv = file->GetName(fileName);
+          rv = file->GetName(sFileName);
         }
 
-        if (!file || fileName.IsEmpty()) {
-          fileName.AssignLiteral("Unknown");
+        if (!file || sFileName.IsEmpty()) {
+          sFileName.AssignLiteral("Unknown");
         }
 
         uint64_t fileSize;
@@ -231,7 +233,7 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
 
         sSentFileSize = 0;
         mAbortFlag = false;
-        sInstance->SendPutHeaderRequest(fileName, fileSize);
+        sInstance->SendPutHeaderRequest(sFileName, fileSize);
       }
     }
   } else if (mLastCommand == ObexRequestCode::Disconnect) {
@@ -263,6 +265,7 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
       // FIXME: Needs error handling here
       NS_WARNING("[OPP] PutFinal failed");
     } else {
+      FileTransferComplete(true, false, sFileName, sSentFileSize);
       SendDisconnectRequest();
     }
   } else if (mLastCommand == ObexRequestCode::Abort) {
@@ -270,6 +273,7 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
       NS_WARNING("[OPP] Abort failed");
     }
 
+    FileTransferComplete(false, false, sFileName, sSentFileSize);
     SendDisconnectRequest();
   }
 }
@@ -396,4 +400,37 @@ BluetoothOppManager::SendAbortRequest()
   UnixSocketRawData* s = new UnixSocketRawData(index);
   memcpy(s->mData, req, s->mSize);
   SendSocketData(s);
+}
+
+void
+BluetoothOppManager::FileTransferComplete(bool aSuccess,
+                                          bool aReceived,
+                                          const nsString& aFileName,
+                                          uint32_t aFileLength)
+{
+  nsString type, name;
+  BluetoothValue v;
+  InfallibleTArray<BluetoothNamedValue> parameters;
+  type.AssignLiteral("bluetooth-opp-transfer-complete");
+
+  name.AssignLiteral("success");
+  v = aSuccess;
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  name.AssignLiteral("received");
+  v = aReceived;
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  name.AssignLiteral("filename");
+  v = aFileName;
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  name.AssignLiteral("filelength");
+  v = aFileLength;
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  if (!BroadcastSystemMessage(type, parameters)) {
+    NS_WARNING("Failed to broadcast [bluetooth-opp-transfer-complete]");
+    return;
+  }
 }

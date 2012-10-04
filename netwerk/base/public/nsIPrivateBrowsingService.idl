@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(4b731983-9542-49f4-b16b-de68ad1c2068)]
+[scriptable, uuid(b5a148a4-b422-478d-b475-194a126bbab1)]
 interface nsIPrivateBrowsingService : nsISupports
 {
     // When read, determines whether the private browsing mode is currently
@@ -22,15 +22,6 @@ interface nsIPrivateBrowsingService : nsISupports
     // Determine whether the last private browsing transition was performed through
     // the command line (using either the -private or -private-toggle switches).
     readonly attribute boolean lastChangedByCommandLine;
-
-    /**
-     * Removes all data stored for a given domain.  This includes all data for
-     * subdomains of the given domain.
-     *
-     * @param aDomain
-     *        The domain that will have its data removed.
-     */
-    void removeDataFromDomain(in AUTF8String aDomain);
 };
 
 %{C++

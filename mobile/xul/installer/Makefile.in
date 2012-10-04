@@ -76,34 +76,6 @@ endif
 GARBAGE += $(MOZ_PKG_MANIFEST)
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-PACKAGE_XULRUNNER =
-UNPACKAGE =
-else
-PACKAGE_XULRUNNER = package-xulrunner
-UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
-endif
-
-ifdef LIBXUL_SDK
-MOZ_GRE_PKG_DIR=$(MOZ_PKG_DIR)/xulrunner
-else
-MOZ_GRE_PKG_DIR=$(MOZ_PKG_DIR)
-endif
-
-package-xulrunner:
-ifdef LIBXUL_SDK
-ifndef SYSTEM_LIBXUL
-	@echo "Packaging xulrunner..."
-	@rm -rf $(LIBXUL_DIST)/xulrunner*
-	@$(MAKE) -C $(LIBXUL_DIST)/.. package || echo "Perhaps you're trying to package a prebuilt SDK. See 'https://wiki.mozilla.org/Mobile/Build/Fennec#Build' for more information."
-	@cd $(DIST)/$(MOZ_PKG_DIR); $(UNMAKE_PACKAGE)
-	@echo "Removing unpackaged files... (the ones xulrunner/installer keeps)"
-	@cd $(DIST)/$(MOZ_PKG_DIR)/xulrunner; rm -rf $(NO_PKG_FILES)
-else
-	@echo "Using system xulrunner..."
-endif
-endif
-
 ifeq ($(OS_TARGET),Linux)
 GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
 GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)

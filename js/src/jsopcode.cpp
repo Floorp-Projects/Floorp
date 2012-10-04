@@ -6166,6 +6166,15 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, Valu
 
     *res = NULL;
 
+#ifdef JS_MORE_DETERMINISTIC
+    /*
+     * Give up if we need deterministic behavior for differential testing.
+     * IonMonkey doesn't use StackFrames and this ensures we get the same
+     * error messages.
+     */
+    return true;
+#endif
+
     ScriptFrameIter frameIter(cx);
 
     if (frameIter.done())

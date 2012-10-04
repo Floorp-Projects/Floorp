@@ -1480,7 +1480,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
     list-style-image: url("chrome://browser/skin/actionicon-tab@2x.png");
     -moz-image-region: rect(0, 32px, 22px, 0);
-    width: 16px;
+    width: 22px;
   }
 
   richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {

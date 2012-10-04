@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
-  let pb = Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
+Components.utils.import("resource://gre/modules/ClearRecentHistory.jsm");
 
+function test() {
   // utility functions
   function countClosedTabsByTitle(aClosedTabList, aTitle)
     aClosedTabList.filter(function (aData) aData.title == aTitle).length;
@@ -79,7 +79,7 @@ function test() {
   ss.setBrowserState(JSON.stringify(testState));
 
   // purge domain & check that we purged correctly for closed windows
-  pb.removeDataFromDomain("mozilla.org");
+  ClearRecentHistory.removeDataFromDomain("mozilla.org");
 
   let closedWindowData = JSON.parse(ss.getClosedWindowData());
 

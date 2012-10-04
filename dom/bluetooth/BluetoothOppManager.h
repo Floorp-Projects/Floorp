@@ -61,6 +61,9 @@ public:
 
 private:
   BluetoothOppManager();
+  void UpdateProgress(uint32_t aTotalBytes, uint32_t aSentBytes);
+  void FileTransferComplete(bool aSuccess, bool aReceived,
+                            const nsString& aFileName, uint32_t aFileLength);
 
   bool mConnected;
   int mConnectionId;

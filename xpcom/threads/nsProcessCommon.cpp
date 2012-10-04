@@ -565,7 +565,7 @@ nsProcess::Kill()
     {
         MutexAutoLock lock(mLock);
 #if defined(PROCESSMODEL_WINAPI)
-        if (TerminateProcess(mProcess, NULL) == 0)
+        if (TerminateProcess(mProcess, 0) == 0)
             return NS_ERROR_FAILURE;
 #elif defined(XP_MACOSX)
         if (kill(mPid, SIGKILL) != 0)

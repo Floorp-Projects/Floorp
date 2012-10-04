@@ -98,7 +98,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
 
             default:
                 // RegisterWindowMessage events should be passed.
-                if (paramCopy.event.event >= 0xC000 && paramCopy.event.event <= 0xFFFF)
+                if (paramCopy.event.event >= 0xC000)
                     break;
 
                 // FIXME/bug 567465: temporarily work around unhandled

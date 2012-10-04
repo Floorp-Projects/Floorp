@@ -12,6 +12,7 @@
 
 .alertBox {
   border: 1px solid threedshadow;
+  border-radius: 3px;
   background-color: -moz-Dialog;
   min-height: 50px;
   padding: 8px;
@@ -21,30 +22,6 @@
   .alertBox {
     background-image: linear-gradient(to bottom, white 1px, rgba(255,255,255,0) 15px);
   }
-}
-
-.alertBox[origin="top"] {
-  border-top: none;
-  border-bottom-left-radius: 3px;
-  border-bottom-right-radius: 3px;
-}
-
-.alertBox[origin="right"] {
-  border-right: none;
-  border-bottom-left-radius: 3px;
-  border-top-left-radius: 3px;
-}
-
-.alertBox[origin="bottom"] {
-  border-bottom: none;
-  border-top-left-radius: 3px;
-  border-top-right-radius: 3px;
-}
-
-.alertBox[origin="left"] {
-  border-left: none;
-  border-bottom-right-radius: 3px;
-  border-top-right-radius: 3px;
 }
 
 .alertBox[orient="horizontal"] > .alertImageBox {
@@ -87,4 +64,19 @@ label {
 
 .alertBox[orient="vertical"] > .alertTextBox {
   -moz-box-align: center;
+}
+
+@keyframes alert-animation {
+  from {
+    opacity: 0;
+  }
+  6.25% {
+    opacity: 1;
+  }
+  93.75% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }

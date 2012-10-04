@@ -84,13 +84,6 @@ nsPrivateBrowsingServiceWrapper::GetLastChangedByCommandLine(bool *aReason)
 }
 
 NS_IMETHODIMP
-nsPrivateBrowsingServiceWrapper::RemoveDataFromDomain(const nsACString & aDomain)
-{
-  JSStackGuard guard;
-  return mPBService->RemoveDataFromDomain(aDomain);
-}
-
-NS_IMETHODIMP
 nsPrivateBrowsingServiceWrapper::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
   JSStackGuard guard;
