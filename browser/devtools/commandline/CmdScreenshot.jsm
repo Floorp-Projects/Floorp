@@ -128,6 +128,11 @@ gcli.addCommand({
     ctx.drawWindow(window, left, top, width, height, "#fff");
     let data = canvas.toDataURL("image/png", "");
 
+    let loadContext = document.defaultView
+                              .QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebNavigation)
+                              .QueryInterface(Ci.nsILoadContext);
+
     try {
       if (clipboard) {
         let io = Cc["@mozilla.org/network/io-service;1"]
@@ -146,10 +151,6 @@ gcli.addCommand({
 
         let trans = Cc["@mozilla.org/widget/transferable;1"]
                       .createInstance(Ci.nsITransferable);
-        let loadContext = document.defaultView
-                                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIWebNavigation)
-                                  .QueryInterface(Ci.nsILoadContext);
         trans.init(loadContext);
         trans.addDataFlavor(channel.contentType);
         trans.setTransferData(channel.contentType, wrapped, -1);
@@ -214,7 +215,7 @@ gcli.addCommand({
                            Persist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
     let source = ioService.newURI(data, "UTF8", null);
-    persist.saveURI(source, null, null, null, null, file);
+    persist.saveURI(source, null, null, null, null, file, loadContext);
 
     div.textContent = gcli.lookup("screenshotSavedToFile") + " \"" + filename +
                       "\"";
