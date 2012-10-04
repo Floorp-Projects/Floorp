@@ -2099,10 +2099,11 @@ struct WebGLUniformInfo {
 };
 
 class WebGLShader MOZ_FINAL
-    : public nsIWebGLShader
+    : public nsISupports
     , public WebGLRefCountedObject<WebGLShader>
     , public LinkedListElement<WebGLShader>
     , public WebGLContextBoundObject
+    , public nsWrapperCache
 {
     friend class WebGLContext;
     friend class WebGLProgram;
@@ -2115,6 +2116,7 @@ public:
         , mAttribMaxNameLength(0)
         , mCompileStatus(false)
     {
+        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mGLName = mContext->gl->fCreateShader(mType);
         mContext->mShaders.insertBack(this);
@@ -2170,8 +2172,14 @@ public:
 
     const nsCString& TranslationLog() const { return mTranslationLog; }
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLSHADER
+    WebGLContext *GetParentObject() const {
+        return Context();
+    }
+
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLShader)
 
 protected:
 
@@ -2223,13 +2231,12 @@ static bool SplitLastSquareBracket(nsACString& string, nsCString& bracketPart)
 typedef nsDataHashtable<nsCStringHashKey, nsCString> CStringMap;
 typedef nsDataHashtable<nsCStringHashKey, WebGLUniformInfo> CStringToUniformInfoMap;
 
-// NOTE: When this class is switched to new DOM bindings, update the
-// (then-slow) WrapObject call in GetParameter.
 class WebGLProgram MOZ_FINAL
-    : public nsIWebGLProgram
+    : public nsISupports
     , public WebGLRefCountedObject<WebGLProgram>
     , public LinkedListElement<WebGLProgram>
     , public WebGLContextBoundObject
+    , public nsWrapperCache
 {
 public:
     WebGLProgram(WebGLContext *context)
@@ -2238,6 +2245,7 @@ public:
         , mGeneration(0)
         , mAttribMaxNameLength(0)
     {
+        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mGLName = mContext->gl->fCreateProgram();
         mContext->mPrograms.insertBack(this);
@@ -2481,8 +2489,14 @@ public:
         return info;
     }
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLPROGRAM
+    WebGLContext *GetParentObject() const {
+        return Context();
+    }
+
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLProgram)
 
 protected:
 

@@ -60,7 +60,9 @@ CPPSRCS += \
 	WebGLExtensionTextureFilterAnisotropic.cpp \
 	WebGLExtensionTextureFloat.cpp \
 	WebGLFramebuffer.cpp \
+	WebGLProgram.cpp \
 	WebGLRenderbuffer.cpp \
+	WebGLShader.cpp \
 	WebGLTexelConversions.cpp \
 	WebGLTexture.cpp \
 	$(NULL)
