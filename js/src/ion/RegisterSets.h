@@ -449,6 +449,15 @@ class RegisterSet {
     Register takeGeneral() {
         return gpr_.takeAny();
     }
+    ValueOperand takeValueOperand() {
+#if defined(JS_NUNBOX32)
+        return ValueOperand(takeGeneral(), takeGeneral());
+#elif defined(JS_PUNBOX64)
+        return ValueOperand(takeGeneral());
+#else
+#error "Bad architecture"
+#endif
+    }
     void take(const AnyRegister &reg) {
         if (reg.isFloat())
             fpu_.take(reg.fpu());

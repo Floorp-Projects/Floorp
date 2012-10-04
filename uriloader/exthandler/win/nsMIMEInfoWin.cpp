@@ -96,7 +96,7 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile)
         SHELLEXECUTEINFOW seinfo;
         memset(&seinfo, 0, sizeof(seinfo));
         seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-        seinfo.fMask  = NULL;
+        seinfo.fMask  = 0;
         seinfo.hwnd   = NULL;
         seinfo.lpVerb = NULL;
         seinfo.lpFile = rundll32Path;
@@ -644,7 +644,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray **_retval)
     }
 
 
-    // 2) list HKEY_CLASSES_ROOT\.ext\OpenWithList\ 
+    // 2) list HKEY_CLASSES_ROOT\.ext\OpenWithList
     
     workingRegistryPath = fileExtToUse;
     workingRegistryPath.AppendLiteral("\\OpenWithList");
@@ -707,8 +707,8 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray **_retval)
 
     // 4) Add any non configured applications located in the MRU list
 
-    // HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\
-    // Explorer\FileExts\.ext\OpenWithList
+    // HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion
+    // \Explorer\FileExts\.ext\OpenWithList
     workingRegistryPath =
       NS_LITERAL_STRING("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\");
     workingRegistryPath += fileExtToUse;
@@ -745,8 +745,8 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray **_retval)
     // 5) Add any non configured progids in the MRU list, with the
     // different step of resolving the progids for the command handler.
     
-    // HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\
-    // Explorer\FileExts\.ext\OpenWithProgids
+    // HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion
+    // \Explorer\FileExts\.ext\OpenWithProgids
     workingRegistryPath =
       NS_LITERAL_STRING("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\");
     workingRegistryPath += fileExtToUse;
@@ -820,7 +820,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray **_retval)
   } // extKnown == false
 
 
-  // 7) list global HKEY_CLASSES_ROOT\*\OpenWithList\
+  // 7) list global HKEY_CLASSES_ROOT\*\OpenWithList
   // Listing general purpose handlers, not specific to a mime type or file extension
 
   workingRegistryPath = NS_LITERAL_STRING("*\\OpenWithList");

@@ -20,7 +20,7 @@
 #include "States.h"
 #include "uiaRawElmProvider.h"
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
 #include "Logging.h"
 #endif
 
@@ -1577,7 +1577,7 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
       aid->ToUTF8String(id);
   }
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::ePlatforms)) {
     printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
            eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),

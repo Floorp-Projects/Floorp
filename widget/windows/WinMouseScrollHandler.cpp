@@ -261,7 +261,7 @@ MouseScrollHandler::SynthesizeNativeMouseScrollEvent(nsWindow* aWindow,
     case WM_HSCROLL:
       lParam = (aAdditionalFlags &
                   nsIDOMWindowUtils::MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL) ?
-        reinterpret_cast<LPARAM>(target) : NULL;
+        reinterpret_cast<LPARAM>(target) : 0;
       wParam = aDelta;
       break;
     default:
@@ -1371,7 +1371,7 @@ MouseScrollHandler::Device::UltraNav::IsObsoleteDriverInstalled()
     ("MouseScroll::Device::UltraNav::IsObsoleteDriverInstalled(): "
      "found driver version = %d.%d",
      majorVersion, minorVersion));
-  return majorVersion < 15 || majorVersion == 15 && minorVersion == 0;
+  return majorVersion < 15 || (majorVersion == 15 && minorVersion == 0);
 }
 
 /******************************************************************************

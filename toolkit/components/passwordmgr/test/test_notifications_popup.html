@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Test for Login Manager in popup Windows</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="notification_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: notifications in popup windows
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: notifications in popup windows.
+
+Test flow:
+  1) runNextTest starts the sub-tests by loading them into the iframe.
+  2) The subtests trigger a PopupNotification which trigger checkTest (from the
+     panel event listener).
+  3) An action is taken on the notification which triggers the
+     passwordmgr-storage-changed observer that calls runNextTest (from step 1).
+**/
+
+
+var subtests = [
+                // query arguments are: username, password, features, auto-close (delimited by '|')
+                "subtst_notifications_11.html?notifyu1|notifyp1|menubar=no,toolbar=no,location=no|autoclose",  // 1
+                "subtst_notifications_11.html?notifyu1|pass2|menubar=no,toolbar=no,location=no|autoclose",     // 2
+                "subtst_notifications_11.html?notifyu2|notifyp2||",  // 3
+                "subtst_notifications_11.html?notifyu2|pass2||",     // 4
+               ];
+
+function runNextTest() {
+    testNum++;
+    ok(true, "Starting test #" + testNum);
+    if (testNum <= subtests.length) {
+        iframe.src = subtests[testNum-1];
+    } else {
+        // final check which will call finish
+        checkTest();
+    }
+}
+
+PasswordMgrObserver = {
+  observe: function passwordMgrObserver_observe(subject, topic, data) {
+      // Only run the next test for actions triggered from a doorhanger (rather
+      // than cleanup with removeLogin)
+      if (data == "removeLogin")
+          return;
+      runNextTest();
+  },
+};
+
+// Remember, Never for This Site, Not Now
+function checkTest() {
+    var popup, login, logins;
+
+    switch(testNum) {
+
+      case 1:
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
+        // Sanity check, no logins should exist yet.
+        logins = pwmgr.getAllLogins();
+        is(logins.length, 0, "Should not have any logins yet");
+
+        // password-save with chrome hidden
+        clickPopupButton(popup, kRememberButton);
+        break;
+
+      case 2:
+        // Check result of clicking kRememberButton
+        logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should only have 1 login");
+        login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+        ok(login.timesUsed, 1, "Check times used on new entry");
+
+        // password-change with chrome hidden
+        popup = getPopup(popupNotifications, "password-change");
+        ok(popup, "got notification popup");
+        clickPopupButton(popup, kChangeButton);
+        break;
+
+      case 3:
+        // Check to make sure we updated the password, timestamps and use count for
+        // the login being changed with this form.
+        logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should only have 1 login");
+        login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+        is(login.password, "pass2", "Check password changed");
+        is(login.timesUsed, 2, "check .timesUsed incremented on change");
+        ok(login.timeCreated < login.timeLastUsed, "timeLastUsed bumped");
+        ok(login.timeLastUsed == login.timePasswordChanged, "timeUsed == timeChanged");
+
+        login1.password = "pass2";
+        pwmgr.removeLogin(login1);
+        login1.password = "notifyp1";
+
+        // password-save with chrome visible
+        var popupWin = iframe.contentWindow.popupWin;
+        ok(popupWin, "Check popupWin is accessible");
+        var popupNotificationsInPopup = getPopupNotifications(popupWin);
+        ok(popupNotificationsInPopup, "Got popupNotificationsInPopup");
+        popup = getPopup(popupNotificationsInPopup, "password-save");
+        ok(popup, "got notification popup");
+        clickPopupButton(popup, kRememberButton);
+        popupWin.close();
+        break;
+
+      case 4:
+        // Check result of clicking kRememberButton
+        logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should only have 1 login now");
+        login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+        ok(login.timesUsed, 1, "Check times used on new entry");
+
+        // password-change with chrome visible
+        var popupWin = iframe.contentWindow.popupWin;
+        ok(popupWin, "Check popupWin is accessible");
+        var popupNotificationsInPopup = getPopupNotifications(popupWin);
+        ok(popupNotificationsInPopup, "Got popupNotificationsInPopup");
+        popup = getPopup(popupNotificationsInPopup, "password-change");
+        ok(popup, "got notification popup");
+        clickPopupButton(popup, kChangeButton);
+        popupWin.close();
+        break;
+
+      case 5:
+        // Check to make sure we updated the password, timestamps and use count for
+        // the login being changed with this form.
+        logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should have 1 login");
+        login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+        is(login.password, "pass2", "Check password changed");
+        is(login.timesUsed, 2, "check .timesUsed incremented on change");
+        ok(login.timeCreated < login.timeLastUsed, "timeLastUsed bumped");
+        ok(login.timeLastUsed == login.timePasswordChanged, "timeUsed == timeChanged");
+
+        // cleanup
+        observerService.removeObserver(PasswordMgrObserver, "passwordmgr-storage-changed");
+        popupNotifications.panel.removeEventListener("popupshown", checkTest, false);
+
+        login2.password = "pass2";
+        pwmgr.removeLogin(login2);
+        login2.password = "notifyp2";
+
+        ok(true, "notification tests finished.");
+        SimpleTest.finish();
+
+        break;
+
+      default:
+        ok(false, "Unexpected call to checkTest for test #" + testNum);
+
+    }
+}
+
+const Ci = Components.interfaces;
+const Cc = SpecialPowers.wrap(Components).classes;
+ok(Ci != null, "Access Ci");
+ok(Cc != null, "Access Cc");
+
+var pwmgr = Cc["@mozilla.org/login-manager;1"].
+            getService(Ci.nsILoginManager);
+ok(pwmgr != null, "Access pwmgr");
+
+pwmgr.removeAllLogins();
+
+var nsLoginInfo = new SpecialPowers.wrap(Components).
+                      Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                  Ci.nsILoginInfo, "init");
+var login1 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+                             "notifyu1", "notifyp1", "user", "pass");
+var login2 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+                             "notifyu2", "notifyp2", "user", "pass");
+
+var observerService = Cc["@mozilla.org/observer-service;1"].
+                      getService(Ci.nsIObserverService);
+
+observerService.addObserver(PasswordMgrObserver, "passwordmgr-storage-changed", false);
+
+// popupNotifications (not *popup*) is a constant, per-tab container. So, we
+// only need to fetch it once.
+var popupNotifications = getPopupNotifications(window.top);
+ok(popupNotifications, "Got popupNotifications");
+
+popupNotifications.panel.addEventListener("popupshown", checkTest, false);
+
+var iframe = document.getElementById("iframe");
+var testNum = 0;
+
+SimpleTest.waitForFocus(runNextTest);
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
