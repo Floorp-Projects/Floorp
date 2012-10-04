@@ -8,20 +8,12 @@ import os
 import re
 import StringIO
 
-class FileError(Exception):
-    " Signifies an error which occurs while doing a file operation."
-
-    def __init__(self, msg = ''):
-        self.msg = msg
-
-    def __str__(self):
-        return self.msg
-
 class DMError(Exception):
     "generic devicemanager exception."
 
-    def __init__(self, msg= ''):
+    def __init__(self, msg= '', fatal = False):
         self.msg = msg
+        self.fatal = fatal
 
     def __str__(self):
         return self.msg
@@ -40,7 +32,7 @@ class DeviceManager:
     @abstractmethod
     def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None, root=False):
         """
-        Executes shell command on device.
+        Executes shell command on device and returns exit code
 
         cmd - Command string to execute
         outputfile - File to store output
@@ -48,29 +40,21 @@ class DeviceManager:
         cwd - Directory to execute command from
         timeout - specified in seconds, defaults to 'default_timeout'
         root - Specifies whether command requires root privileges
-
-        returns:
-          success: Return code from command
-          failure: None
         """
 
     def shellCheckOutput(self, cmd, env=None, cwd=None, timeout=None, root=False):
         """
-        executes shell command on device (with root privileges if
-        specified)  and returns the the output
+        executes shell command on device and returns the the output
 
-        timeout is specified in seconds, and if no timeout is given,
-        we will run until the script returns
-        returns:
-        success: Returns output of shell command
-        failure: DMError will be raised
+        env - Environment to pass to exec command
+        cwd - Directory to execute command from
+        timeout - specified in seconds, defaults to 'default_timeout'
+        root - Specifies whether command requires root privileges
         """
         buf = StringIO.StringIO()
         retval = self.shell(cmd, buf, env=env, cwd=cwd, timeout=timeout, root=root)
         output = str(buf.getvalue()[0:-1]).rstrip()
         buf.close()
-        if retval is None:
-            raise DMError("Did not successfully run command %s (output: '%s', retval: 'None')" % (cmd, output))
         if retval != 0:
             raise DMError("Non-zero return code for command: %s (output: '%s', retval: '%i')" % (cmd, output, retval))
         return output
@@ -79,30 +63,18 @@ class DeviceManager:
     def pushFile(self, localname, destname):
         """
         Copies localname from the host to destname on the device
-
-        returns:
-          success: True
-          failure: False
         """
 
     @abstractmethod
     def mkDir(self, name):
         """
         Creates a single directory on the device file system
-
-        returns:
-          success: directory name
-          failure: None
         """
 
     def mkDirs(self, filename):
         """
         Make directory structure on the device
         WARNING: does not create last part of the path
-
-        returns:
-          success: directory structure that we created
-          failure: None
         """
         parts = filename.split('/')
         name = ""
@@ -111,38 +83,18 @@ class DeviceManager:
                 break
             if (part != ""):
                 name += '/' + part
-                if (not self.dirExists(name)):
-                    if (self.mkDir(name) == None):
-                        print "Automation Error: failed making directory: " + str(name)
-                        return None
-        return name
+                self.mkDir(name) # mkDir will check previous existence
 
     @abstractmethod
     def pushDir(self, localDir, remoteDir):
         """
         Push localDir from host to remoteDir on the device
-
-        returns:
-          success: remoteDir
-          failure: None
-        """
-
-    @abstractmethod
-    def dirExists(self, dirname):
-        """
-        Checks if dirname exists and is a directory
-        on the device file system
-
-        returns:
-          success: True
-          failure: False
         """
 
     @abstractmethod
     def fileExists(self, filepath):
         """
-        Checks if filepath exists and is a file on
-        the device file system
+        Checks if filepath exists and is a file on the device file system
 
         returns:
           success: True
@@ -486,9 +438,7 @@ class DeviceManager:
           power - power status (charge, battery temp)
           all - all of them - or call it with no parameters to get all the information
 
-        returns:
-          success: dict of info strings by directive name
-          failure: None
+        returns: dict of info strings by directive name
         """
 
     @abstractmethod
@@ -497,10 +447,6 @@ class DeviceManager:
         Installs an application onto the device
         appBundlePath - path to the application bundle on the device
         destPath - destination directory of where application should be installed to (optional)
-
-        returns:
-          success: None
-          failure: error string
         """
 
     @abstractmethod
@@ -509,10 +455,6 @@ class DeviceManager:
         Uninstalls the named application from device and DOES NOT cause a reboot
         appName - the name of the application (e.g org.mozilla.fennec)
         installPath - the path to where the application was installed (optional)
-
-        returns:
-          success: None
-          failure: DMError exception thrown
         """
 
     @abstractmethod
@@ -521,10 +463,6 @@ class DeviceManager:
         Uninstalls the named application from device and causes a reboot
         appName - the name of the application (e.g org.mozilla.fennec)
         installPath - the path to where the application was installed (optional)
-
-        returns:
-          success: None
-          failure: DMError exception thrown
         """
 
     @abstractmethod
@@ -538,10 +476,6 @@ class DeviceManager:
                  properly - defaults to current IP.
         port - port to await a callback ping to let us know that the device has updated properly
                defaults to 30000, and counts up from there if it finds a conflict
-
-        returns:
-          success: text status from command or callback server
-          failure: None
         """
 
     @abstractmethod
