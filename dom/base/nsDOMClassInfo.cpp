@@ -4531,8 +4531,8 @@ nsDOMClassInfo::Init()
     uint32_t i = ArrayLength(sClassInfoData);
 
     if (i != eDOMClassInfoIDCount) {
-      NS_ERROR("The number of items in sClassInfoData doesn't match the "
-               "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
+      MOZ_NOT_REACHED("The number of items in sClassInfoData doesn't match the "
+                      "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
 
       return NS_ERROR_NOT_INITIALIZED;
     }
@@ -4540,9 +4540,9 @@ nsDOMClassInfo::Init()
     for (i = 0; i < eDOMClassInfoIDCount; i++) {
       if (!sClassInfoData[i].u.mConstructorFptr ||
           sClassInfoData[i].mDebugID != i) {
-        NS_ERROR("Class info data out of sync, you forgot to update "
-                 "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
-                 "mozilla will not work without this fixed!");
+        MOZ_NOT_REACHED("Class info data out of sync, you forgot to update "
+                        "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
+                        "mozilla will not work without this fixed!");
 
         return NS_ERROR_NOT_INITIALIZED;
       }
@@ -4550,8 +4550,8 @@ nsDOMClassInfo::Init()
 
     for (i = 0; i < eDOMClassInfoIDCount; i++) {
       if (!sClassInfoData[i].mInterfaces) {
-        NS_ERROR("Class info data without an interface list! Fix this, "
-                 "mozilla will not work without this fixed!");
+        MOZ_NOT_REACHED("Class info data without an interface list! Fix this, "
+                        "mozilla will not work without this fixed!");
 
         return NS_ERROR_NOT_INITIALIZED;
       }
