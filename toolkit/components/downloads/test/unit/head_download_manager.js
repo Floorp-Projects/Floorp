@@ -123,7 +123,8 @@ function addDownload(aParams)
   aParams.runBeforeStart.call(undefined, dl);
 
   persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
-  persist.saveURI(dl.source, null, null, null, null, dl.targetFile);
+  persist.savePrivacyAwareURI(dl.source, null, null, null, null, dl.targetFile,
+                              aParams.isPrivate);
 
   return dl;
 }
