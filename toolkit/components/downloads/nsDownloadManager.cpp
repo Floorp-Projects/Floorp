@@ -2989,6 +2989,11 @@ nsDownload::Resume()
   rv = NS_NewChannel(getter_AddRefs(channel), mSource, nullptr, nullptr, ir);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
+  if (pbChannel) {
+    pbChannel->SetPrivate(mDownloadManager->mInPrivateBrowsing);
+  }
+
   // Make sure we can get a file, either the temporary or the real target, for
   // both purposes of file size and a target to write to
   nsCOMPtr<nsIFile> targetLocalFile(mTempFile);
