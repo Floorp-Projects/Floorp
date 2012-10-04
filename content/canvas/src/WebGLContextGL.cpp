@@ -2147,24 +2147,12 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
 
         case LOCAL_GL_RENDERBUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBoundRenderbuffer.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBoundRenderbuffer.get(), rv);
         }
 
         case LOCAL_GL_FRAMEBUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBoundFramebuffer.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBoundFramebuffer.get(), rv);
         }
 
         case LOCAL_GL_CURRENT_PROGRAM:
@@ -2271,14 +2259,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
             {
-                JS::Value v;
-                if (!dom::WrapObject(cx, GetWrapper(),
-                                     const_cast<WebGLRenderbuffer*>(fba.Renderbuffer()),
-                                     &v)) {
-                    rv.Throw(NS_ERROR_FAILURE);
-                    return JS::NullValue();
-                }
-                return v;
+                return WebGLObjectAsJSValue(cx, fba.Renderbuffer(), rv);
             }
 
             default:

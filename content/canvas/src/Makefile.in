@@ -49,8 +49,6 @@ CPPSRCS += \
 	WebGLContextUtils.cpp \
 	WebGLContextReporter.cpp \
 	WebGLContextValidate.cpp \
-	WebGLTexelConversions.cpp \
-	WebGLTexture.cpp \
 	WebGLElementArrayCache.cpp \
 	WebGLExtensionBase.cpp \
 	WebGLExtensionCompressedTextureATC.cpp \
@@ -61,6 +59,10 @@ CPPSRCS += \
 	WebGLExtensionStandardDerivatives.cpp \
 	WebGLExtensionTextureFilterAnisotropic.cpp \
 	WebGLExtensionTextureFloat.cpp \
+	WebGLFramebuffer.cpp \
+	WebGLRenderbuffer.cpp \
+	WebGLTexelConversions.cpp \
+	WebGLTexture.cpp \
 	$(NULL)
 
 DEFINES += -DUSE_ANGLE

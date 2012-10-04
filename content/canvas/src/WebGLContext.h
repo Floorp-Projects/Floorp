@@ -2499,14 +2499,13 @@ protected:
     int mAttribMaxNameLength;
 };
 
-// NOTE: When this class is switched to new DOM bindings, update the (then-slow)
-// WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
 class WebGLRenderbuffer MOZ_FINAL
-    : public nsIWebGLRenderbuffer
+    : public nsISupports
     , public WebGLRefCountedObject<WebGLRenderbuffer>
     , public LinkedListElement<WebGLRenderbuffer>
     , public WebGLRectangleObject
     , public WebGLContextBoundObject
+    , public nsWrapperCache
 {
 public:
     WebGLRenderbuffer(WebGLContext *context)
@@ -2516,7 +2515,7 @@ public:
         , mHasEverBeenBound(false)
         , mInitialized(false)
     {
-
+        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mContext->gl->fGenRenderbuffers(1, &mGLName);
         mContext->mRenderbuffers.insertBack(this);
@@ -2574,8 +2573,14 @@ public:
         return 0;
     }
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLRENDERBUFFER
+    WebGLContext *GetParentObject() const {
+        return Context();
+    }
+
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLRenderbuffer)
 
 protected:
 
@@ -2733,13 +2738,12 @@ public:
     }
 };
 
-// NOTE: When this class is switched to new DOM bindings, update the
-// (then-slow) WrapObject call in GetParameter.
 class WebGLFramebuffer MOZ_FINAL
-    : public nsIWebGLFramebuffer
+    : public nsISupports
     , public WebGLRefCountedObject<WebGLFramebuffer>
     , public LinkedListElement<WebGLFramebuffer>
     , public WebGLContextBoundObject
+    , public nsWrapperCache
 {
 public:
     WebGLFramebuffer(WebGLContext *context)
@@ -2750,6 +2754,7 @@ public:
         , mStencilAttachment(LOCAL_GL_STENCIL_ATTACHMENT)
         , mDepthStencilAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
     {
+        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mContext->gl->fGenFramebuffers(1, &mGLName);
         mContext->mFramebuffers.insertBack(this);
@@ -2945,8 +2950,14 @@ public:
         return mColorAttachment.RectangleObject();
     }
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLFRAMEBUFFER
+    WebGLContext *GetParentObject() const {
+        return Context();
+    }
+
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLFramebuffer)
 
     bool CheckAndInitializeRenderbuffers()
     {
