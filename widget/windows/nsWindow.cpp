@@ -6405,7 +6405,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
         keyinput.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
       }
       keyinput.ki.time = 0;
-      keyinput.ki.dwExtraInfo = NULL;
+      keyinput.ki.dwExtraInfo = 0;
 
       sRedirectedKeyDownEventPreventedDefault = noDefault;
       sRedirectedKeyDown = aMsg;
