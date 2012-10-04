@@ -278,7 +278,7 @@ static int cvt_ll(SprintfState *ss, int64_t num, int width, int prec,
     int64_t rad;
 
     /* according to the man page this needs to happen */
-    if ((prec == 0) && (LL_IS_ZERO(num))) {
+    if (prec == 0 && num == 0) {
 	return 0;
     }
 
@@ -290,7 +290,7 @@ static int cvt_ll(SprintfState *ss, int64_t num, int width, int prec,
     LL_I2L(rad, radix);
     cvt = &cvtbuf[0] + ELEMENTS_OF(cvtbuf);
     digits = 0;
-    while (!LL_IS_ZERO(num)) {
+    while (num != 0) {
 	int32_t digit;
 	int64_t quot, rem;
 	LL_UDIVMOD(&quot, &rem, num, rad);
@@ -1020,7 +1020,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 
             case TYPE_INT64:
 		u.ll = va_arg(ap, int64_t);
-		if (!LL_GE_ZERO(u.ll)) {
+		if (u.ll < 0) {
 		    LL_NEG(u.ll, u.ll);
 		    flags |= _NEG;
 		}

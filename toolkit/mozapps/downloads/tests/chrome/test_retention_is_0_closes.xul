@@ -133,7 +133,7 @@ function test()
     let target = createURI(destFile);
     let tr = Cc["@mozilla.org/transfer;1"].createInstance(Ci.nsITransfer);
     tr.init(src, target, "test download", null, Math.round(Date.now() * 1000),
-            null, persist);
+            null, persist, false);
     persist.progressListener = tr;
     persist.saveURI(src, null, null, null, null, destFile);
   }

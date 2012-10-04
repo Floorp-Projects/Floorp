@@ -119,7 +119,7 @@ public:
 
   ~GetHelper()
   {
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
+    IDBObjectStore::ClearCloneReadInfo(mCloneReadInfo);
   }
 
   virtual nsresult DoDatabaseWork(mozIStorageConnection* aConnection)
@@ -190,8 +190,7 @@ public:
   ~GetAllHelper()
   {
     for (uint32_t index = 0; index < mCloneReadInfos.Length(); index++) {
-      IDBObjectStore::ClearStructuredCloneBuffer(
-        mCloneReadInfos[index].mCloneBuffer);
+      IDBObjectStore::ClearCloneReadInfo(mCloneReadInfos[index]);
     }
   }
 
@@ -284,7 +283,7 @@ public:
 
   ~OpenCursorHelper()
   {
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
+    IDBObjectStore::ClearCloneReadInfo(mCloneReadInfo);
   }
 
   virtual nsresult DoDatabaseWork(mozIStorageConnection* aConnection)
@@ -1215,7 +1214,7 @@ GetHelper::GetSuccessResult(JSContext* aCx,
 void
 GetHelper::ReleaseMainThreadObjects()
 {
-  IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
+  IDBObjectStore::ClearCloneReadInfo(mCloneReadInfo);
   GetKeyHelper::ReleaseMainThreadObjects();
 }
 
@@ -1556,8 +1555,7 @@ void
 GetAllHelper::ReleaseMainThreadObjects()
 {
   for (uint32_t index = 0; index < mCloneReadInfos.Length(); index++) {
-    IDBObjectStore::ClearStructuredCloneBuffer(
-      mCloneReadInfos[index].mCloneBuffer);
+    IDBObjectStore::ClearCloneReadInfo(mCloneReadInfos[index]);
   }
   GetKeyHelper::ReleaseMainThreadObjects();
 }
@@ -2217,7 +2215,7 @@ OpenCursorHelper::EnsureCursor()
 void
 OpenCursorHelper::ReleaseMainThreadObjects()
 {
-  IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
+  IDBObjectStore::ClearCloneReadInfo(mCloneReadInfo);
 
   // These don't need to be released on the main thread but they're only valid
   // as long as mCursor is set.

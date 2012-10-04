@@ -11,11 +11,6 @@
   // for |nsCharSourceTraits|, |nsCharSinkTraits|
 #endif
 
-#ifndef prtypes_h___
-#include "prtypes.h"
-  // for |uint32_t|...
-#endif
-
 #ifndef nsDebug_h___
 #include "nsDebug.h"
   // for NS_ASSERTION

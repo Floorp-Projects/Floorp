@@ -3760,7 +3760,7 @@ let RIL = {
    * Send messages to the main thread.
    */
   sendDOMMessage: function sendDOMMessage(message) {
-    postMessage(message, "*");
+    postMessage(message);
   },
 
   /**

@@ -199,7 +199,7 @@ nsMIMEInputStream::Seek(int32_t whence, int64_t offset)
 {
     nsresult rv;
     nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStream);
-    if (whence == NS_SEEK_SET && LL_EQ(offset, LL_Zero())) {
+    if (whence == NS_SEEK_SET && offset == LL_Zero()) {
         rv = stream->Seek(whence, offset);
         if (NS_SUCCEEDED(rv))
             mStartedReading = false;

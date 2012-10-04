@@ -29,7 +29,7 @@ let isTypedArray = OS.Shared.isTypedArray;
 // A simple flag used to control debugging messages.
 // FIXME: Once this library has been battle-tested, this flag will
 // either be removed or replaced with a preference.
-const DEBUG = true;
+const DEBUG = false;
 
 // The constructor for file errors.
 let OSError;
