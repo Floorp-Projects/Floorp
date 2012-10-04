@@ -1471,6 +1471,13 @@ var gCSSProperties = {
 		"-moz-linear-gradient(1turn 20px, red, blue)",
 		"-moz-linear-gradient(.414rad bottom, red, blue)",
 
+		"-moz-linear-gradient(blue calc(0px) ,green calc(25%) ,red calc(40px) ,blue calc(60px) , yellow  calc(100px))",
+		"-moz-linear-gradient(-33deg, blue calc(-25%) ,red 40px)",
+		"-moz-linear-gradient(10deg, blue calc(100px + -25%),red calc(40px))",
+		"-moz-linear-gradient(10deg, blue calc(-25px),red calc(100%))",
+		"-moz-linear-gradient(.414rad, blue calc(100px + -25px) ,green calc(100px + -25px) ,red calc(100px + -25%) ,blue calc(-25px) , yellow  calc(-25px))",
+		"-moz-linear-gradient(1turn, blue calc(-25%) ,green calc(25px) ,red calc(25%),blue calc(0px),white 50px, yellow  calc(-25px))",
+
 		"radial-gradient(red, blue)",
 		"radial-gradient(red, yellow, blue)",
 		"radial-gradient(red 1px, yellow 20%, blue 24em, green)",

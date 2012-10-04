@@ -113,7 +113,7 @@ public:
 };
 
 struct nsStyleGradientStop {
-  nsStyleCoord mLocation; // percent, coord, none
+  nsStyleCoord mLocation; // percent, coord, calc, none
   nscolor mColor;
 };
 
