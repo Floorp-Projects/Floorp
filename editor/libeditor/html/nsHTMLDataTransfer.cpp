@@ -6,6 +6,7 @@
 
 #include <string.h>
 
+#include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Selection.h"
 #include "mozilla/Util.h"
@@ -89,8 +90,6 @@
 #include "nsWSRunObject.h"
 #include "nsXPCOM.h"
 #include "nscore.h"
-#include "plbase64.h"
-#include "prmem.h"
 
 class nsIAtom;
 class nsILoadContext;
@@ -1228,14 +1227,15 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
     rv = imageStream->Close();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    char * base64 = PL_Base64Encode(imageData.get(), imageData.Length(), nullptr);
-    NS_ENSURE_TRUE(base64, NS_ERROR_OUT_OF_MEMORY);
+    nsAutoCString data64;
+    rv = Base64Encode(imageData, data64);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString stuffToPaste;
     stuffToPaste.AssignLiteral("<IMG src=\"data:");
     AppendUTF8toUTF16(type, stuffToPaste);
     stuffToPaste.AppendLiteral(";base64,");
-    AppendUTF8toUTF16(base64, stuffToPaste);
+    AppendUTF8toUTF16(data64, stuffToPaste);
     stuffToPaste.AppendLiteral("\" alt=\"\" >");
     nsAutoEditBatch beginBatching(this);
     rv = DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(), 
@@ -1244,7 +1244,6 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
                                  aDestinationNode, aDestOffset,
                                  aDoDeleteSelection,
                                  aIsSafe);
-    PR_Free(base64);
   }
 
   return NS_OK;
