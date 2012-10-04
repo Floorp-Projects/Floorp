@@ -1770,7 +1770,7 @@ Parser::setStrictMode(bool strictMode)
         // Strict mode was inherited.
         JS_ASSERT(pc->sc->strictModeState == StrictMode::STRICT);
         if (pc->sc->isFunction) {
-            JS_ASSERT(pc->parent->sc->strictModeState == StrictMode::STRICT);
+            JS_ASSERT_IF(pc->parent, pc->parent->sc->strictModeState == StrictMode::STRICT);
         } else {
             JS_ASSERT_IF(pc->staticLevel == 0,
                          StrictModeFromContext(context) == StrictMode::STRICT);
