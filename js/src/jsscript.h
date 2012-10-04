@@ -1258,7 +1258,7 @@ CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, Hand
 template<XDRMode mode>
 bool
 XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
-          HandleFunction fun, JSScript **scriptp);
+          HandleFunction fun, MutableHandleScript scriptp);
 
 } /* namespace js */
 
