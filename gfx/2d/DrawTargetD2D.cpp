@@ -2711,8 +2711,8 @@ DrawTargetD2D::SetScissorToRect(IntRect *aRect)
     rect.top = aRect->y;
     rect.bottom = aRect->YMost();
   } else {
-    rect.left = rect.left = INT32_MIN;
-    rect.right = rect.top = INT32_MAX;
+    rect.left = rect.top = INT32_MIN;
+    rect.right = rect.bottom = INT32_MAX;
   }
 
   mDevice->RSSetScissorRects(1, &rect);

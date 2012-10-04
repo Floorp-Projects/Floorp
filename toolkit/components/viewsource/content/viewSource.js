@@ -327,7 +327,7 @@ function ViewSourceSavePage()
 {
   internalSave(window.content.location.href.substring(12), 
                null, null, null, null, null,
-               "SaveLinkTitle", null, null, null, gPageLoader);
+               "SaveLinkTitle", null, null, gDocument, null, gPageLoader);
 }
 
 var PrintPreviewListener = {

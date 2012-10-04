@@ -15,7 +15,7 @@ if (this.Components) {
   // A simple flag used to control debugging messages.
   // FIXME: Once this library has been battle-tested, this flag will
   // either be removed or replaced with a pref.
-  const DEBUG = true;
+  const DEBUG = false;
 
    try {
      importScripts("resource://gre/modules/osfile.jsm");

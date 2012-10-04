@@ -115,13 +115,13 @@ MOCHITEST_FILES = \
 		file_browserElement_SecurityChange.html \
 		browserElement_BackForward.js \
 		test_browserElement_inproc_BackForward.html \
-	        file_bug741717.sjs \
+		file_bug741717.sjs \
 		browserElement_Reload.js \
-	        file_bug709759.sjs \
+		file_bug709759.sjs \
 		browserElement_Stop.js \
-                test_browserElement_inproc_Stop.html \
-                browserElement_ContextmenuEvents.js \
-                test_browserElement_inproc_ContextmenuEvents.html \
+		test_browserElement_inproc_Stop.html \
+		browserElement_ContextmenuEvents.js \
+		test_browserElement_inproc_ContextmenuEvents.html \
 		browserElement_SendEvent.js \
 		test_browserElement_inproc_SendEvent.html \
 		browserElement_ScrollEvent.js \
@@ -133,6 +133,9 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_RemoveBrowserElement.html \
 		browserElement_DOMRequestError.js \
 		test_browserElement_inproc_DOMRequestError.html \
+		file_browserElement_AppFramePermission.html \
+		browserElement_AppFramePermission.js \
+		test_browserElement_inproc_AppFramePermission.html \
 		$(NULL)
 
 # Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
@@ -187,12 +190,13 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_BackForward.html \
 		test_browserElement_oop_Reload.html \
 		test_browserElement_oop_Stop.html \
-                test_browserElement_oop_ContextmenuEvents.html \
+		test_browserElement_oop_ContextmenuEvents.html \
 		test_browserElement_oop_SendEvent.html \
 		test_browserElement_oop_ScrollEvent.html \
 		test_browserElement_oop_Auth.html \
 		test_browserElement_oop_RemoveBrowserElement.html \
 		test_browserElement_oop_DOMRequestError.html \
+		test_browserElement_oop_AppFramePermission.html \
 		$(NULL)
 endif #}
 endif #}

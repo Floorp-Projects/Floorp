@@ -85,6 +85,10 @@ enum {
   eCSSAliasCount
 };
 
+// Use a macro in the definitions below to ensure compile-time constants
+// in all the necessary places.
+#define CSS_MAX(x, y) ((x) > (y) ? (x) : (y))
+
 enum {
   // We want the largest sizeof(#aliasname_).  To find that, we use the
   // auto-incrementing behavior of C++ enums (a value without an
@@ -98,7 +102,7 @@ enum {
 #define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)              \
   eMaxCSSAliasNameSizeBefore_##aliasmethod_,                                  \
   eMaxCSSAliasNameSizeWith_##aliasmethod_ =                                   \
-    PR_MAX(sizeof(#aliasname_), eMaxCSSAliasNameSizeBefore_##aliasmethod_) - 1,
+    CSS_MAX(sizeof(#aliasname_), eMaxCSSAliasNameSizeBefore_##aliasmethod_) - 1,
 #include "nsCSSPropAliasList.h"
 #undef CSS_PROP_ALIAS
 
@@ -106,17 +110,19 @@ enum {
 };
 
 struct CSSPropertyAlias {
-  const char name[PR_MAX(eMaxCSSAliasNameSize, 1)];
+  const char name[CSS_MAX(eMaxCSSAliasNameSize, 1)];
   const nsCSSProperty id;
   bool enabled;
 };
 
-static CSSPropertyAlias gAliases[PR_MAX(eCSSAliasCount, 1)] = {
+static CSSPropertyAlias gAliases[CSS_MAX(eCSSAliasCount, 1)] = {
 #define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)  \
   { #aliasname_, eCSSProperty_##propid_, true },
 #include "nsCSSPropAliasList.h"
 #undef CSS_PROP_ALIAS
 };
+
+#undef CSS_MAX
 
 void
 nsCSSProps::AddRefTable(void)

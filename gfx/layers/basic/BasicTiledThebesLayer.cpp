@@ -28,7 +28,7 @@ static void DrawDebugOverlay(gfxImageSurface* imgSurf, int x, int y)
 
   // Draw text using cairo toy text API
   cairo_t* cr = c.GetCairo();
-  cairo_set_font_size(cr, 10);
+  cairo_set_font_size(cr, 25);
   cairo_text_extents_t extents;
   cairo_text_extents(cr, ss.str().c_str(), &extents);
 
@@ -36,16 +36,16 @@ static void DrawDebugOverlay(gfxImageSurface* imgSurf, int x, int y)
 
   c.NewPath();
   c.SetDeviceColor(gfxRGBA(0.0, 0.0, 0.0, 1.0));
-  c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 15)));
+  c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 30)));
   c.Fill();
 
   c.NewPath();
   c.SetDeviceColor(gfxRGBA(1.0, 0.0, 0.0, 1.0));
-  c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 15)));
+  c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 30)));
   c.Stroke();
 
   c.NewPath();
-  cairo_move_to(cr, 4, 13);
+  cairo_move_to(cr, 4, 28);
   cairo_show_text(cr, ss.str().c_str());
 
 }
@@ -86,7 +86,22 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   long start = PR_IntervalNow();
 #endif
-  if (UseSinglePaintBuffer()) {
+
+  // If this region is empty XMost() - 1 will give us a negative value.
+  NS_ASSERTION(!aPaintRegion.GetBounds().IsEmpty(), "Empty paint region\n");
+
+  bool useSinglePaintBuffer = UseSinglePaintBuffer();
+  if (useSinglePaintBuffer) {
+    // Check if the paint only spans a single tile. If that's
+    // the case there's no point in using a single paint buffer.
+    nsIntRect paintBounds = aPaintRegion.GetBounds();
+    useSinglePaintBuffer = GetTileStart(paintBounds.x) !=
+                           GetTileStart(paintBounds.XMost() - 1) ||
+                           GetTileStart(paintBounds.y) !=
+                           GetTileStart(paintBounds.YMost() - 1);
+  }
+
+  if (useSinglePaintBuffer) {
     const nsIntRect bounds = aPaintRegion.GetBounds();
     {
       SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
@@ -161,8 +176,8 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
 
   // Bug 742100, this gfxContext really should live on the stack.
   nsRefPtr<gfxContext> ctxt = new gfxContext(writableSurface);
-  ctxt->SetOperator(gfxContext::OPERATOR_SOURCE);
   if (mSinglePaintBuffer) {
+    ctxt->SetOperator(gfxContext::OPERATOR_SOURCE);
     ctxt->NewPath();
     ctxt->SetSource(mSinglePaintBuffer.get(),
                     gfxPoint(mSinglePaintBufferOffset.x - aDirtyRect.x + drawRect.x,
@@ -173,7 +188,7 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
     ctxt->NewPath();
     ctxt->Translate(gfxPoint(-aTileOrigin.x, -aTileOrigin.y));
     nsIntPoint a = aTileOrigin;
-    mCallback(mThebesLayer, ctxt, nsIntRegion(nsIntRect(a, nsIntSize(GetTileLength(), GetTileLength()))), aDirtyRect, mCallbackData);
+    mCallback(mThebesLayer, ctxt, nsIntRegion(nsIntRect(a, nsIntSize(GetTileLength(), GetTileLength()))), nsIntRegion(), mCallbackData);
   }
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY

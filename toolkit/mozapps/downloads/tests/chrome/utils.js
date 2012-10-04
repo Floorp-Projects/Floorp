@@ -66,11 +66,11 @@ function addDownload(aName) {
     dmFile.append(aName || ("dm-test-file-" + randomString()));
     if (dmFile.exists())
       throw "Download file already exists";
-
+  
     let dl = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                             createURI("http://example.com/httpd.js"),
                             createURI(dmFile), null, null,
-                            Math.round(Date.now() * 1000), null, persist);
+                            Math.round(Date.now() * 1000), null, persist, false);
 
     persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
     persist.saveURI(dl.source, null, null, null, null, dl.targetFile);

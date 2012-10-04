@@ -51,7 +51,7 @@ nsStructuredCloneContainer::InitFromVariant(nsIVariant *aData, JSContext *aCx)
 
   // Make sure that we serialize in the right context.
   JSAutoRequest ar(aCx);
- JSAutoCompartment ac(aCx, JS_GetGlobalObject(aCx));
+  JSAutoCompartment ac(aCx, JS_GetGlobalObject(aCx));
   JS_WrapValue(aCx, &jsData);
 
   nsCxPusher cxPusher;
@@ -59,7 +59,7 @@ nsStructuredCloneContainer::InitFromVariant(nsIVariant *aData, JSContext *aCx)
 
   uint64_t* jsBytes = nullptr;
   bool success = JS_WriteStructuredClone(aCx, jsData, &jsBytes, &mSize,
-                                           nullptr, nullptr);
+                                           nullptr, nullptr, JSVAL_VOID);
   NS_ENSURE_STATE(success);
   NS_ENSURE_STATE(jsBytes);
 
@@ -69,9 +69,7 @@ nsStructuredCloneContainer::InitFromVariant(nsIVariant *aData, JSContext *aCx)
     mSize = 0;
     mVersion = 0;
 
-    // FIXME This should really be js::Foreground::Free, but that's not public.
-    JS_free(aCx, jsBytes);
-
+    JS_ClearStructuredClone(jsBytes, mSize);
     return NS_ERROR_FAILURE;
   }
   else {
@@ -80,8 +78,7 @@ nsStructuredCloneContainer::InitFromVariant(nsIVariant *aData, JSContext *aCx)
 
   memcpy(mData, jsBytes, mSize);
 
-  // FIXME Similarly, this should be js::Foreground::free.
-  JS_free(aCx, jsBytes);
+  JS_ClearStructuredClone(jsBytes, mSize);
   return NS_OK;
 }
 
@@ -119,9 +116,14 @@ nsStructuredCloneContainer::DeserializeToVariant(JSContext *aCx,
 
   // Deserialize to a jsval.
   jsval jsStateObj;
+  JSBool hasTransferable;
   bool success = JS_ReadStructuredClone(aCx, mData, mSize, mVersion,
-                                          &jsStateObj, nullptr, nullptr);
-  NS_ENSURE_STATE(success);
+                                          &jsStateObj, nullptr, nullptr) &&
+                 JS_StructuredCloneHasTransferables(mData, mSize,
+                                                    &hasTransferable);
+  // We want to be sure that mData doesn't contain transferable objects
+  MOZ_ASSERT(!hasTransferable);
+  NS_ENSURE_STATE(success && !hasTransferable);
 
   // Now wrap the jsval as an nsIVariant.
   nsCOMPtr<nsIVariant> varStateObj;
