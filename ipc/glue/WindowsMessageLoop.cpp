@@ -92,7 +92,6 @@ HHOOK gDeferredGetMsgHook = NULL;
 HHOOK gDeferredCallWndProcHook = NULL;
 
 DWORD gUIThreadId = 0;
-int gEventLoopDepth = 0;
 static UINT sAppShellGeckoMsgId;
 
 LRESULT CALLBACK
@@ -463,7 +462,7 @@ RestoreWindowProcedure(HWND hWnd)
     NS_ASSERTION(oldWndProc != (LONG_PTR)NeuteredWindowProc,
                  "This shouldn't be possible!");
 
-    LONG_PTR currentWndProc =
+    DebugOnly<LONG_PTR> currentWndProc =
       SetWindowLongPtr(hWnd, GWLP_WNDPROC, oldWndProc);
     NS_ASSERTION(currentWndProc == (LONG_PTR)NeuteredWindowProc,
                  "This should never be switched out from under us!");
@@ -710,7 +709,7 @@ SyncChannel::WaitForNotify()
 
   bool timedout = false;
 
-  UINT_PTR timerId = NULL;
+  UINT_PTR timerId = 0;
   TimeoutData timeoutData = { 0 };
 
   if (mTimeoutMs != kNoTimeout) {
@@ -837,7 +836,7 @@ RPCChannel::WaitForNotify()
 
   bool timedout = false;
 
-  UINT_PTR timerId = NULL;
+  UINT_PTR timerId = 0;
   TimeoutData timeoutData = { 0 };
 
   // windowHook is used as a flag variable for the loop below: if it is set
@@ -857,7 +856,7 @@ RPCChannel::WaitForNotify()
 
         if (timerId) {
           KillTimer(NULL, timerId);
-          timerId = NULL;
+          timerId = 0;
         }
 
         // Used by widget to assert on incoming native events
@@ -1042,7 +1041,7 @@ DeferredSettingChangeMessage::DeferredSettingChangeMessage(HWND aHWnd,
   }
   else {
     lParamString = NULL;
-    lParam = NULL;
+    lParam = 0;
   }
 }
 
