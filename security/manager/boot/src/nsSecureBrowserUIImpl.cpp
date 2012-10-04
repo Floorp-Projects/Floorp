@@ -9,7 +9,6 @@
 
 #include "nspr.h"
 #include "prlog.h"
-#include "prmem.h"
 
 #include "nsISecureBrowserUI.h"
 #include "nsSecureBrowserUIImpl.h"

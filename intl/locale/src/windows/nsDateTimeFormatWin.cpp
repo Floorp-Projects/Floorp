@@ -12,7 +12,6 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
-#include "prmem.h"
 
 
 #define NSDATETIMEFORMAT_BUFFER_LEN  80
