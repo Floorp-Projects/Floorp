@@ -173,6 +173,11 @@ ifdef ENABLE_TESTS
 tier_platform_dirs += testing/specialpowers
 endif
 
+# b2g headers need to be built before dom headers
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+tier_platform_dirs += b2g
+endif
+
 tier_platform_dirs	+= \
 		uriloader \
 		caps \
