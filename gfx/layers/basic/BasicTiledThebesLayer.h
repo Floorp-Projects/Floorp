@@ -80,6 +80,7 @@ class BasicTiledLayerBuffer : public TiledLayerBuffer<BasicTiledLayerBuffer, Bas
 
 public:
   BasicTiledLayerBuffer()
+    : mLastPaintOpaque(false)
   {}
 
   void PaintThebes(BasicTiledThebesLayer* aLayer,

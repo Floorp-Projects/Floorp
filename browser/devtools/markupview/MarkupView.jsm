@@ -99,7 +99,7 @@ MarkupView.prototype = {
   _onSelect: function MT__onSelect()
   {
     if (this._inspector.selection) {
-      this.showNode(this._inspector.selection);
+      this.showNode(this._inspector.selection, true);
     }
     this.selectNode(this._inspector.selection);
   },
@@ -254,7 +254,7 @@ MarkupView.prototype = {
     }
 
     let node = aContainer.node;
-    this.showNode(node);
+    this.showNode(node, false);
     this.selectNode(node);
 
     if (this._inspector._IUI.highlighter.isNodeHighlightable(node)) {
@@ -343,7 +343,7 @@ MarkupView.prototype = {
    * Make sure the given node's parents are expanded and the
    * node is scrolled on to screen.
    */
-  showNode: function MT_showNode(aNode)
+  showNode: function MT_showNode(aNode, centered)
   {
     this.importNode(aNode);
     let walker = documentWalker(aNode);
@@ -351,7 +351,7 @@ MarkupView.prototype = {
     while (parent = walker.parentNode()) {
       this.expandNode(parent);
     }
-    LayoutHelpers.scrollIntoViewIfNeeded(this._containers.get(aNode).editor.elt, false);
+    LayoutHelpers.scrollIntoViewIfNeeded(this._containers.get(aNode).editor.elt, centered);
   },
 
   /**

@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 // Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
-let EXPORTED_SYMBOLS = ["AppsUtils"];
+let EXPORTED_SYMBOLS = ["AppsUtils", "ManifestHelper"];
 
 function debug(s) {
   //dump("-*- AppsUtils.jsm: " + s + "\n");
@@ -176,5 +176,153 @@ let AppsUtils = {
     }
 
     return true;
+  },
+
+  /**
+ * Determine the type of app (app, privileged, certified)
+ * that is installed by the manifest
+ * @param object aManifest
+ * @returns integer
+ **/
+  getAppManifestStatus: function getAppManifestStatus(aManifest) {
+    let type = aManifest.type || "web";
+
+    switch(type) {
+    case "web":
+      return Ci.nsIPrincipal.APP_STATUS_INSTALLED;
+    case "privileged":
+      return Ci.nsIPrincipal.APP_STATUS_PRIVILEGED;
+    case "certified":
+      return Ci.nsIPrincipal.APP_STATUS_CERTIFIED;
+    default:
+      throw new Error("Webapps.jsm: Undetermined app manifest type");
+    }
+  }
+}
+
+/**
+ * Helper object to access manifest information with locale support
+ */
+let ManifestHelper = function(aManifest, aOrigin) {
+  this._origin = Services.io.newURI(aOrigin, null, null);
+  this._manifest = aManifest;
+  let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry)
+                                                          .QueryInterface(Ci.nsIToolkitChromeRegistry);
+  let locale = chrome.getSelectedLocale("browser").toLowerCase();
+  this._localeRoot = this._manifest;
+
+  if (this._manifest.locales && this._manifest.locales[locale]) {
+    this._localeRoot = this._manifest.locales[locale];
+  }
+  else if (this._manifest.locales) {
+    // try with the language part of the locale ("en" for en-GB) only
+    let lang = locale.split('-')[0];
+    if (lang != locale && this._manifest.locales[lang])
+      this._localeRoot = this._manifest.locales[lang];
+  }
+};
+
+ManifestHelper.prototype = {
+  _localeProp: function(aProp) {
+    if (this._localeRoot[aProp] != undefined)
+      return this._localeRoot[aProp];
+    return this._manifest[aProp];
+  },
+
+  get name() {
+    return this._localeProp("name");
+  },
+
+  get description() {
+    return this._localeProp("description");
+  },
+
+  get version() {
+    return this._localeProp("version");
+  },
+
+  get launch_path() {
+    return this._localeProp("launch_path");
+  },
+
+  get developer() {
+    return this._localeProp("developer");
+  },
+
+  get icons() {
+    return this._localeProp("icons");
+  },
+
+  get appcache_path() {
+    return this._localeProp("appcache_path");
+  },
+
+  get orientation() {
+    return this._localeProp("orientation");
+  },
+
+  get package_path() {
+    return this._localeProp("package_path");
+  },
+
+  get size() {
+    return this._manifest["size"] || 0;
+  },
+
+  get permissions() {
+    if (this._manifest.permissions) {
+      return this._manifest.permissions;
+    }
+    return {};
+  },
+
+  iconURLForSize: function(aSize) {
+    let icons = this._localeProp("icons");
+    if (!icons)
+      return null;
+    let dist = 100000;
+    let icon = null;
+    for (let size in icons) {
+      let iSize = parseInt(size);
+      if (Math.abs(iSize - aSize) < dist) {
+        icon = this._origin.resolve(icons[size]);
+        dist = Math.abs(iSize - aSize);
+      }
+    }
+    return icon;
+  },
+
+  fullLaunchPath: function(aStartPoint) {
+    // If no start point is specified, we use the root launch path.
+    // In all error cases, we just return null.
+    if ((aStartPoint || "") === "") {
+      return this._origin.resolve(this._localeProp("launch_path") || "");
+    }
+
+    // Search for the l10n entry_points property.
+    let entryPoints = this._localeProp("entry_points");
+    if (!entryPoints) {
+      return null;
+    }
+
+    if (entryPoints[aStartPoint]) {
+      return this._origin.resolve(entryPoints[aStartPoint].launch_path || "");
+    }
+
+    return null;
+  },
+
+  resolveFromOrigin: function(aURI) {
+    return this._origin.resolve(aURI);
+  },
+
+  fullAppcachePath: function() {
+    let appcachePath = this._localeProp("appcache_path");
+    return this._origin.resolve(appcachePath ? appcachePath : "");
+  },
+
+  fullPackagePath: function() {
+    let packagePath = this._localeProp("package_path");
+    return this._origin.resolve(packagePath ? packagePath : "");
   }
 }

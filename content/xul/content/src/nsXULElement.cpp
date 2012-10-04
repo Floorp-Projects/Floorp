@@ -1376,8 +1376,7 @@ nsXULElement::LoadSrc()
             NodeInfo()->Equals(nsGkAtoms::overlay, kNameSpaceID_XUL)) {
         return NS_OK;
     }
-    nsXULSlots* slots = static_cast<nsXULSlots*>(GetSlots());
-    NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+    nsXULSlots* slots = static_cast<nsXULSlots*>(Slots());
     if (!slots->mFrameLoader) {
         // false as the last parameter so that xul:iframe/browser/editor
         // session history handling works like dynamic html:iframes.

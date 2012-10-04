@@ -1227,12 +1227,8 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 #endif
         return NS_ERROR_FAILURE;
     }
-    /* 
-     * The number of bytes free == The number of free blocks available to
-     * a non-superuser, minus one as a fudge factor, multiplied by the size
-     * of the aforementioned blocks.
-     */
-    *aDiskSpaceAvailable = (int64_t)fs_buf.F_BSIZE * (fs_buf.f_bavail - 1);
+
+    *aDiskSpaceAvailable = (int64_t) fs_buf.F_BSIZE * fs_buf.f_bavail;
 
 #ifdef DEBUG_DISK_SPACE
     printf("DiskSpaceAvailable: %lu bytes\n",

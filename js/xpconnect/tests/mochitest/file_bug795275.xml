@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<bindings id="xbltestBindings" xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml">
+<binding id="xbltest">
+<implementation>
+<method name="testMethod">
+<body>
+  Components.interfaces;
+</body>
+</method>
+<property name="testProp" readonly="true"
+          onget="Components; return 3;" />
+<constructor>
+  var foo = Components;
+</constructor>
+</implementation>
+</binding>
+</bindings>

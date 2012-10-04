@@ -159,6 +159,7 @@ function run_test() {
 
             // Create Download-E
             dlE = addDownload({
+              isPrivate: pb.privateBrowsingEnabled,
               targetFile: fileE,
               sourceURI: downloadESource,
               downloadName: downloadEName
@@ -176,6 +177,7 @@ function run_test() {
 
             // Create Download-F
             dlF = addDownload({
+              isPrivate: pb.privateBrowsingEnabled,
               targetFile: fileF,
               sourceURI: downloadFSource,
               downloadName: downloadFName
@@ -248,6 +250,7 @@ function run_test() {
 
   // Create Download-D
   let dlD = addDownload({
+    isPrivate: pb.privateBrowsingEnabled,
     targetFile: fileD,
     sourceURI: downloadDSource,
     downloadName: downloadDName

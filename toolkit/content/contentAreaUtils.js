@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+
 var ContentAreaUtils = {
   get ioService() {
     delete this.ioService;
@@ -91,10 +93,11 @@ function isContentFrame(aFocusedWindow)
 // - A linked document using Alt-click Save Link As...
 //
 function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
-                 aSkipPrompt, aReferrer)
+                 aSkipPrompt, aReferrer, aSourceDocument)
 {
   internalSave(aURL, null, aFileName, null, null, aShouldBypassCache,
-               aFilePickerTitleKey, null, aReferrer, aSkipPrompt, null);
+               aFilePickerTitleKey, null, aReferrer, aSourceDocument,
+               aSkipPrompt, null);
 }
 
 // Just like saveURL, but will get some info off the image before
@@ -127,7 +130,7 @@ function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
   }
   internalSave(aURL, null, aFileName, contentDisposition, contentType,
                aShouldBypassCache, aFilePickerTitleKey, null, aReferrer,
-               aSkipPrompt, null);
+               aDoc, aSkipPrompt, null);
 }
 
 function saveDocument(aDocument, aSkipPrompt)
@@ -161,7 +164,7 @@ function saveDocument(aDocument, aSkipPrompt)
   internalSave(aDocument.location.href, aDocument, null, contentDisposition,
                aDocument.contentType, false, null, null,
                aDocument.referrer ? makeURI(aDocument.referrer) : null,
-               aSkipPrompt, cacheKey);
+               aDocument, aSkipPrompt, cacheKey);
 }
 
 function DownloadListener(win, transfer) {
@@ -257,6 +260,8 @@ const kSaveAsType_Text     = 2; // Save document, converting to plain text.
  * @param aReferrer
  *        the referrer URI object (not URL string) to use, or null
  *        if no referrer should be sent.
+ * @param aInitiatingDocument
+ *        The document from which the save was initiated.
  * @param aSkipPrompt [optional]
  *        If set to true, we will attempt to save the file to the
  *        default downloads folder without prompting.
@@ -266,7 +271,8 @@ const kSaveAsType_Text     = 2; // Save document, converting to plain text.
  */
 function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
                       aContentType, aShouldBypassCache, aFilePickerTitleKey,
-                      aChosenData, aReferrer, aSkipPrompt, aCacheKey)
+                      aChosenData, aReferrer, aInitiatingDocument, aSkipPrompt,
+                      aCacheKey)
 {
   if (aSkipPrompt == undefined)
     aSkipPrompt = false;
@@ -333,7 +339,8 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     targetFile        : file,
     sourceCacheKey    : aCacheKey,
     sourcePostData    : aDocument ? getPostData(aDocument) : null,
-    bypassCache       : aShouldBypassCache
+    bypassCache       : aShouldBypassCache,
+    initiatingWindow  : aInitiatingDocument.defaultView
   };
 
   // Start the actual save process
@@ -367,6 +374,8 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
  *        "text/plain" is meaningful.
  * @param persistArgs.bypassCache
  *        If true, the document will always be refetched from the server
+ * @param persistArgs.initiatingWindow
+ *        The window from which the save operation was initiated.
  */
 function internalPersist(persistArgs)
 {
@@ -387,10 +396,12 @@ function internalPersist(persistArgs)
   // Find the URI associated with the target file
   var targetFileURL = makeFileURI(persistArgs.targetFile);
 
+  var isPrivate = PrivateBrowsingUtils.isWindowPrivate(persistArgs.initiatingWindow);
+
   // Create download and initiate it (below)
   var tr = Components.classes["@mozilla.org/transfer;1"].createInstance(Components.interfaces.nsITransfer);
   tr.init(persistArgs.sourceURI,
-          targetFileURL, "", null, null, null, persist);
+          targetFileURL, "", null, null, null, persist, isPrivate);
   persist.progressListener = new DownloadListener(window, tr);
 
   if (persistArgs.sourceDocument) {

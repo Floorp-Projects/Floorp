@@ -1014,6 +1014,7 @@ pref("network.IDN.whitelist.ac", true);
 pref("network.IDN.whitelist.ar", true);
 pref("network.IDN.whitelist.at", true);
 pref("network.IDN.whitelist.br", true);
+pref("network.IDN.whitelist.ca", true);
 pref("network.IDN.whitelist.ch", true);
 pref("network.IDN.whitelist.cl", true);
 pref("network.IDN.whitelist.cn", true);
@@ -1603,6 +1604,9 @@ pref("layout.css.devPixelsPerPx", "-1.0");
 
 // Is support for the the @supports rule enabled?
 pref("layout.css.supports-rule.enabled", true);
+
+// Is support for CSS Flexbox enabled?
+pref("layout.css.flexbox.enabled", false);
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
@@ -3535,7 +3539,7 @@ pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
 #ifdef XP_MACOSX
 pref("image.high_quality_downscaling.enabled", false);
 #else
-pref("image.high_quality_downscaling.enabled", true);
+pref("image.high_quality_downscaling.enabled", false);
 #endif
 
 // The minimum percent downscaling we'll use high-quality downscaling on,
@@ -3700,6 +3704,9 @@ pref("dom.battery.enabled", true);
 
 // WebSMS
 pref("dom.sms.enabled", false);
+// Enable Latin characters replacement with corresponding ones in GSM SMS
+// 7-bit default alphabet.
+pref("dom.sms.strict7BitEncoding", false);
 
 // WebContacts
 pref("dom.mozContacts.enabled", false);

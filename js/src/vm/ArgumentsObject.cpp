@@ -394,13 +394,13 @@ strictargs_enumerate(JSContext *cx, HandleObject obj)
 }
 
 void
-ArgumentsObject::finalize(FreeOp *fop, JSObject *obj)
+ArgumentsObject::finalize(FreeOp *fop, RawObject obj)
 {
     fop->free_(reinterpret_cast<void *>(obj->asArguments().data()));
 }
 
 void
-ArgumentsObject::trace(JSTracer *trc, JSObject *obj)
+ArgumentsObject::trace(JSTracer *trc, RawObject obj)
 {
     ArgumentsObject &argsobj = obj->asArguments();
     ArgumentsData *data = argsobj.data();

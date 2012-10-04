@@ -198,6 +198,16 @@ both:
 child:
     PMemoryReportRequest();
 
+    /**
+     * Dump the contents of about:memory to a file in our temp directory.
+     *
+     * For documentation on the args, see
+     * nsIMemoryReporterManager::dumpMemoryReportsToFile.
+     */
+    async DumpMemoryReportsToFile(nsString identifier,
+                                  bool minimizeMemoryUsage,
+                                  bool dumpChildProcesses);
+
     PTestShell();
 
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,

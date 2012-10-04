@@ -4,6 +4,7 @@
 MARIONETTE_TIMEOUT = 20000;
 
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
+SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding", false);
 SpecialPowers.addPermission("sms", true, document);
 SpecialPowers.addPermission("mobileconnection", true, document);
 
@@ -130,6 +131,8 @@ function testSendMessageToMultipleRecipients() {
 function cleanUp() {
   SpecialPowers.removePermission("sms", document);
   SpecialPowers.removePermission("mobileconnection", document);
+  SpecialPowers.clearUserPref("dom.sms.enabled");
+  SpecialPowers.clearUserPref("dom.sms.strict7BitEncoding");
   finish();
 }
 

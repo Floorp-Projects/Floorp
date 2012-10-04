@@ -145,9 +145,11 @@ class NodeBuilder
 
   public:
     NodeBuilder(JSContext *c, bool l, char const *s)
-        : cx(c), saveLoc(l), src(s), srcval(c), callbacks(),
+        : cx(c), saveLoc(l), src(s), srcval(c),
           callbacksRoots(c, callbacks, AST_LIMIT), userv(c), undefinedVal(c, UndefinedValue())
-    { }
+    {
+        MakeRangeGCSafe(callbacks, mozilla::ArrayLength(callbacks));
+    }
 
     bool init(HandleObject userobj = NullPtr()) {
         if (src) {
@@ -3213,7 +3215,7 @@ ASTSerializer::identifier(ParseNode *pn, MutableHandleValue dst)
 bool
 ASTSerializer::function(ParseNode *pn, ASTType type, MutableHandleValue dst)
 {
-    RootedFunction func(cx, pn->pn_funbox->fun());
+    RootedFunction func(cx, pn->pn_funbox->function());
 
     bool isGenerator =
 #if JS_HAS_GENERATORS

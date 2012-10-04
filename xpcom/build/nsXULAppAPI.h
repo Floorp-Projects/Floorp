@@ -6,7 +6,6 @@
 #ifndef _nsXULAppAPI_h__
 #define _nsXULAppAPI_h__
 
-#include "prtypes.h"
 #include "nsID.h"
 #include "xrecore.h"
 #include "nsXPCOM.h"

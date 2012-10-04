@@ -156,16 +156,6 @@ let dataProviders = {
   },
 
   modifiedPreferences: function modifiedPreferences(done) {
-    function getPref(name) {
-      let table = {};
-      table[Ci.nsIPrefBranch.PREF_STRING] = "getCharPref";
-      table[Ci.nsIPrefBranch.PREF_INT] = "getIntPref";
-      table[Ci.nsIPrefBranch.PREF_BOOL] = "getBoolPref";
-      let type = Services.prefs.getPrefType(name);
-      if (!(type in table))
-        throw new Error("Unknown preference type " + type + " for " + name);
-      return Services.prefs[table[type]](name);
-    }
     done(PREFS_WHITELIST.reduce(function (prefs, branch) {
       Services.prefs.getChildList(branch).forEach(function (name) {
         if (Services.prefs.prefHasUserValue(name) &&
@@ -366,4 +356,49 @@ let dataProviders = {
     }
     done(data);
   },
+
+  syncService: function syncService(done) {
+    let data = {};
+    data.prefs = {};
+    let main = {};
+    Cu.import("resource://services-sync/main.js", main);
+    if (main.Weave.Status.checkSetup() != main.Weave.CLIENT_NOT_CONFIGURED) {
+      data.isEnabled = true;
+      let syncWhiteList = [
+        "services.sync.account",
+        "services.sync.username",
+        "services.sync.clusterURL",
+        "services.sync.jpake.serverURL",
+        /^services\.sync\.engine\.[^.]+$/,
+        /^services\.sync\.[^.]+\.(lastSync|lastSyncLocal)$/,
+      ];
+      let allprefs = Services.prefs.getChildList("services.sync");
+      for (let entry of syncWhiteList) {
+        if (entry instanceof RegExp) {
+          for (let pref of allprefs) {
+            if (entry.test(pref))
+              data.prefs[pref] = getPref(pref);
+          }
+        }
+        else {
+            data.prefs[entry] = getPref(entry);
+        }
+      }
+    }
+    else {
+      data.isEnabled = false;
+    }
+    done(data);
+  },
 };
+
+function getPref(name) {
+  let table = {};
+  table[Ci.nsIPrefBranch.PREF_STRING] = "getCharPref";
+  table[Ci.nsIPrefBranch.PREF_INT] = "getIntPref";
+  table[Ci.nsIPrefBranch.PREF_BOOL] = "getBoolPref";
+  let type = Services.prefs.getPrefType(name);
+  if (!(type in table))
+    throw new Error("Unknown preference type " + type + " for " + name);
+  return Services.prefs[table[type]](name);
+}

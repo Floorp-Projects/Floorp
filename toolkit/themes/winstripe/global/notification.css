@@ -76,7 +76,7 @@ notification[type="critical"] {
 XXX: apply styles to all themes until bug 509642 is fixed
 @media (-moz-windows-default-theme) {
 */
-  .popup-notification-menubutton[type="menu-button"] {
+  .popup-notification-menubutton {
     -moz-appearance: none;
     border-radius: 3px;
     padding: 0;
@@ -85,10 +85,11 @@ XXX: apply styles to all themes until bug 509642 is fixed
 %endif    
   }
 
-  .popup-notification-menubutton[type="menu-button"]:hover:active {
+  .popup-notification-menubutton:hover:active {
     border-color: rgba(0,0,0,.5);
   }
 
+  .popup-notification-menubutton:not([type="menu-button"]),
   .popup-notification-menubutton > .button-menubutton-button,
   .popup-notification-menubutton > .button-menubutton-dropmarker {
     -moz-appearance: none;
@@ -111,6 +112,7 @@ XXX: apply styles to all themes until bug 509642 is fixed
     -moz-border-end: none;
   }
 
+  .popup-notification-menubutton:not([type="menu-button"]),
   .popup-notification-menubutton > .button-menubutton-button > .button-box {
     -moz-padding-start: 8px;
     -moz-padding-end: 5px;
@@ -140,6 +142,7 @@ XXX: apply styles to all themes until bug 509642 is fixed
   }
 %endif
 
+  .popup-notification-menubutton:not([type="menu-button"]):hover,
   .popup-notification-menubutton > .button-menubutton-button:hover,
   .popup-notification-menubutton > .button-menubutton-dropmarker:hover {
 %ifdef WINSTRIPE_AERO
@@ -151,6 +154,7 @@ XXX: apply styles to all themes until bug 509642 is fixed
 %endif
   }
 
+  .popup-notification-menubutton:not([type="menu-button"]):hover:active,
   .popup-notification-menubutton > .button-menubutton-button:hover:active,
   .popup-notification-menubutton > .button-menubutton-dropmarker:hover:active,
   .popup-notification-menubutton[open="true"] > .button-menubutton-dropmarker {

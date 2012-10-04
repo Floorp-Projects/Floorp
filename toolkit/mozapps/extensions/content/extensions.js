@@ -2729,7 +2729,7 @@ var gDetailView = {
     if (this._addon) {
       if (this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
         Services.obs.notifyObservers(document,
-                                     "addon-options-hidden",
+                                     AddonManager.OPTIONS_NOTIFICATION_HIDDEN,
                                      this._addon.id);
       }
 
@@ -2907,14 +2907,18 @@ var gDetailView = {
             gDetailView.node.removeEventListener("ViewChanged", viewChangedEventListener, false);
             if (firstSetting)
               firstSetting.clientTop;
-            Services.obs.notifyObservers(document, "addon-options-displayed", gDetailView._addon.id);
+            Services.obs.notifyObservers(document,
+                                         AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+                                         gDetailView._addon.id);
             if (aScrollToPreferences)
               gDetailView.scrollToPreferencesRows();
           }, false);
         } else {
           if (firstSetting)
             firstSetting.clientTop;
-          Services.obs.notifyObservers(document, "addon-options-displayed", this._addon.id);
+          Services.obs.notifyObservers(document,
+                                       AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+                                       this._addon.id);
           if (aScrollToPreferences)
             gDetailView.scrollToPreferencesRows();
         }
@@ -2969,7 +2973,7 @@ var gDetailView = {
     if (!aNeedsRestart &&
         this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
       Services.obs.notifyObservers(document,
-                                   "addon-options-hidden",
+                                   AddonManager.OPTIONS_NOTIFICATION_HIDDEN,
                                    this._addon.id);
     }
   },

@@ -26,11 +26,10 @@
 #include "nsWeakReference.h"
 #include "nsError.h"
 #include "imgIRequest.h"
-#include "imgStatusTracker.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
 class imgCacheValidator;
-
+class imgStatusTracker;
 class imgLoader;
 class imgRequestProxy;
 class imgCacheEntry;

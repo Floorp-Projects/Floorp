@@ -24,7 +24,7 @@ interface nsIStreamListener;
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(06f6ada3-7729-4e72-8d3f-bf8ba630ff9b)]
+[scriptable, uuid(98f3b51b-bb55-4276-a43c-db636f8d77e3)]
 interface nsIChannel : nsIRequest
 {
     /**
@@ -254,11 +254,16 @@ interface nsIChannel : nsIRequest
      * if available and if applicable. This allows determining inline versus
      * attachment.
      *
+     * Setting contentDisposition provides a hint to the channel about the
+     * disposition.  If a normal Content-Disposition header is present its
+     * value will always be used.  If it is missing the hinted value will
+     * be used if set.
+     *
      * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header either
-     * doesn't exist for this type of channel or is empty, and
+     * doesn't exist for this type of channel or is empty, and return
      * DISPOSITION_ATTACHMENT if an invalid/noncompliant value is present.
      */
-    readonly attribute unsigned long contentDisposition;
+    attribute unsigned long contentDisposition;
     const unsigned long DISPOSITION_INLINE = 0;
     const unsigned long DISPOSITION_ATTACHMENT = 1;
 
@@ -267,12 +272,17 @@ interface nsIChannel : nsIRequest
      * available and if applicable. This allows getting the preferred filename
      * without having to parse it out yourself.
      *
+     * Setting contentDispositionFilename provides a hint to the channel about
+     * the disposition.  If a normal Content-Disposition header is present its
+     * value will always be used.  If it is missing the hinted value will be
+     * used if set.
+     *
      * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header doesn't
      * exist for this type of channel, if the header is empty, if the header
      * doesn't contain a filename portion, or the value of the filename
      * attribute is empty/missing.
      */
-    readonly attribute AString contentDispositionFilename;
+    attribute AString contentDispositionFilename;
 
     /**
      * Access to the raw Content-Disposition header if available and applicable.

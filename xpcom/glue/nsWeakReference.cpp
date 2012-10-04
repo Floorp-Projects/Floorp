@@ -74,7 +74,6 @@ NS_GetWeakReference( nsISupports* aInstancePtr, nsresult* aErrorPtr )
     if ( aInstancePtr )
       {
         nsCOMPtr<nsISupportsWeakReference> factoryPtr = do_QueryInterface(aInstancePtr, &status);
-        NS_ASSERTION(factoryPtr, "Oops!  You're asking for a weak reference to an object that doesn't support that.");
         if ( factoryPtr )
           {
             status = factoryPtr->GetWeakReference(&result);

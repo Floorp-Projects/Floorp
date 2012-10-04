@@ -16,7 +16,7 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(bacca1ac-1b01-4a6f-9e91-c2ead1f7d2c0)]
+[scriptable, uuid(9b6b2f21-affb-4e8f-907a-fd5bd7a2d562)]
 interface nsIDownloadManager : nsISupports {
   /**
    * Download type for generic file download.
@@ -107,6 +107,10 @@ interface nsIDownloadManager : nsISupports {
    * @param aCancelable An object that can be used to abort the download.
    *                    Must not be null.
    *
+   * @param aIsPrivate Used to determine the privacy status of the new download.
+   *                   If true, the download is stored in a manner that leaves
+   *                   no permanent trace outside of the current private session.
+   *
    * @return The newly created download item with the passed-in properties.
    *
    * @note This does not actually start a download.  If you want to add and
@@ -121,7 +125,8 @@ interface nsIDownloadManager : nsISupports {
                           in nsIMIMEInfo aMIMEInfo,
                           in PRTime aStartTime,
                           in nsIFile aTempFile,
-                          in nsICancelable aCancelable);
+                          in nsICancelable aCancelable,
+                          in boolean aIsPrivate);
 
   /**
    * Retrieves a download managed by the download manager.  This can be one that

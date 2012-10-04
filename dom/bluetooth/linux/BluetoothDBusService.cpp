@@ -190,6 +190,9 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     nsCOMPtr<nsIAudioManager> am = do_GetService("@mozilla.org/telephony/audiomanager;1");
+    if (!am) {
+      NS_WARNING("Failed to get AudioManager service!");
+    }
     am->SetForceForUse(am->USE_COMMUNICATION, am->FORCE_BT_SCO);
 
     nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
@@ -2416,6 +2419,20 @@ BluetoothDBusService::SendFile(const nsAString& aDeviceAddress,
   // it for future use.
   BluetoothOppManager* opp = BluetoothOppManager::Get();
   opp->SendFile(aBlobParent, aRunnable);
+
+  return true;
+}
+
+bool
+BluetoothDBusService::StopSendingFile(const nsAString& aDeviceAddress,
+                                      BluetoothReplyRunnable* aRunnable)
+{
+  // Currently we only support one device sending one file at a time,
+  // so we don't need aDeviceAddress here because the target device
+  // has been determined when calling 'Connect()'. Nevertheless, keep
+  // it for future use.
+  BluetoothOppManager* opp = BluetoothOppManager::Get();
+  opp->StopSendingFile(aRunnable);
 
   return true;
 }

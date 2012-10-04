@@ -40,7 +40,12 @@ function SystemMessageInternal() {
   // list of pending messages for each page here also.
   this._pages = [];
   this._listeners = {};
+
+  this._webappsRegistryReady = false;
+  this._bufferedSysMsgs = [];
+
   Services.obs.addObserver(this, "xpcom-shutdown", false);
+  Services.obs.addObserver(this, "webapps-registry-ready", false);
   kMessages.forEach((function(aMsg) {
     ppmm.addMessageListener(aMsg, this);
   }).bind(this));
@@ -48,6 +53,17 @@ function SystemMessageInternal() {
 
 SystemMessageInternal.prototype = {
   sendMessage: function sendMessage(aType, aMessage, aPageURI, aManifestURI) {
+    // Buffer system messages until the webapps' registration is ready,
+    // so that we can know the correct pages registered to be sent.
+    if (!this._webappsRegistryReady) {
+      this._bufferedSysMsgs.push({ how: "send",
+                                   type: aType,
+                                   msg: aMessage,
+                                   pageURI: aPageURI,
+                                   manifestURI: aManifestURI });
+      return;
+    }
+
     debug("Broadcasting " + aType + " " + JSON.stringify(aMessage));
     if (this._listeners[aManifestURI.spec]) {
       this._listeners[aManifestURI.spec].forEach(function sendMsg(aListener) {
@@ -70,6 +86,15 @@ SystemMessageInternal.prototype = {
   },
 
   broadcastMessage: function broadcastMessage(aType, aMessage) {
+    // Buffer system messages until the webapps' registration is ready,
+    // so that we can know the correct pages registered to be broadcasted.
+    if (!this._webappsRegistryReady) {
+      this._bufferedSysMsgs.push({ how: "broadcast",
+                                   type: aType,
+                                   msg: aMessage });
+      return;
+    }
+
     debug("Broadcasting " + aType + " " + JSON.stringify(aMessage));
     // Find pages that registered an handler for this type.
     this._pages.forEach(function(aPage) {
@@ -152,13 +177,34 @@ SystemMessageInternal.prototype = {
   },
 
   observe: function observe(aSubject, aTopic, aData) {
-    if (aTopic == "xpcom-shutdown") {
-      kMessages.forEach((function(aMsg) {
-        ppmm.removeMessageListener(aMsg, this);
-      }).bind(this));
-      Services.obs.removeObserver(this, "xpcom-shutdown");
-      ppmm = null;
-      this._pages = null;
+    switch (aTopic) {
+      case "xpcom-shutdown":
+        kMessages.forEach((function(aMsg) {
+          ppmm.removeMessageListener(aMsg, this);
+        }).bind(this));
+        Services.obs.removeObserver(this, "xpcom-shutdown");
+        Services.obs.removeObserver(this, "webapps-registry-ready");
+        ppmm = null;
+        this._pages = null;
+        this._bufferedSysMsgs = null;
+        break;
+      case "webapps-registry-ready":
+        // After the webapps' registration has been done for sure,
+        // re-fire the buffered system messages if there is any.
+        this._webappsRegistryReady = true;
+        this._bufferedSysMsgs.forEach((function(aSysMsg) {
+          switch (aSysMsg.how) {
+            case "send":
+              this.sendMessage(
+                aSysMsg.type, aSysMsg.msg, aSysMsg.pageURI, aSysMsg.manifestURI);
+              break;
+            case "broadcast":
+              this.broadcastMessage(aSysMsg.type, aSysMsg.msg);
+              break;
+          }
+        }).bind(this));
+        this._bufferedSysMsgs = null;
+        break;
     }
   },
 

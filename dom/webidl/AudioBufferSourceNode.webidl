@@ -22,14 +22,14 @@ interface AudioBufferSourceNode : AudioSourceNode {
 
     // Playback this in-memory audio asset  
     // Many sources can share the same buffer  
-    //attribute AudioBuffer buffer;
+    attribute AudioBuffer? buffer;
 
     //attribute AudioParam playbackRate;
     //attribute boolean loop;
 
-    void noteOn(double when);
-    //void noteGrainOn(double when, double grainOffset, double grainDuration);
-    void noteOff(double when);
+    void start(double when);
+    //void start(double when, double grainOffset, double grainDuration);
+    void stop(double when);
 
 };
 

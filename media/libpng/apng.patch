@@ -1,14 +1,14 @@
 diff -up8 png.h png.h
---- png.h	2012-06-14 07:28:00 -0400
-+++ png.h	2012-07-07 10:21:31 -0400
-@@ -423,24 +423,18 @@
+--- png.h	2012-09-27 07:21:20 -0400
++++ png.h	2012-09-29 11:47:33 -0400
+@@ -427,24 +427,18 @@
  /* Careful here.  At one time, Guy wanted to use 082, but that would be octal.
   * We must not include leading zeros.
   * Versions 0.7 through 1.0.0 were in the range 0 to 100 here (only
   * version 1.0.0 was mis-numbered 100 instead of 10000).  From
   * version 1.0.1 it's    xxyyzz, where x=major, y=minor, z=release
   */
- #define PNG_LIBPNG_VER 10511 /* 1.5.11 */
+ #define PNG_LIBPNG_VER 10513 /* 1.5.13 */
  
 -/* Library configuration: these options cannot be changed after
 - * the library has been built.
@@ -28,7 +28,7 @@ diff -up8 png.h png.h
     *   Standard header files (not needed for the version info or while
     *   building symbol table -- see scripts/pnglibconf.dfa)
     */
-@@ -540,16 +534,27 @@ extern "C" {
+@@ -544,16 +538,27 @@ extern "C" {
   * Otherwise the calls are mapped to png_error.
   */
  
@@ -51,12 +51,12 @@ diff -up8 png.h png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
- typedef char* png_libpng_version_1_5_11;
+ typedef char* png_libpng_version_1_5_13;
  
  /* Three color definitions.  The order of the red, green, and blue, (and the
   * exact size) is not important, although the size of the fields need to
   * be png_byte or png_uint_16 (as defined below).
-@@ -823,16 +828,20 @@ typedef png_info FAR * FAR * png_infopp;
+@@ -827,16 +832,20 @@ typedef png_info FAR * FAR * png_infopp;
  #define PNG_INFO_oFFs 0x0100
  #define PNG_INFO_tIME 0x0200
  #define PNG_INFO_pCAL 0x0400
@@ -77,7 +77,7 @@ diff -up8 png.h png.h
  typedef struct png_row_info_struct
  {
     png_uint_32 width;    /* width of row */
-@@ -868,16 +877,20 @@ typedef PNG_CALLBACK(void, *png_flush_pt
+@@ -872,16 +881,20 @@ typedef PNG_CALLBACK(void, *png_flush_pt
  typedef PNG_CALLBACK(void, *png_read_status_ptr, (png_structp, png_uint_32,
      int));
  typedef PNG_CALLBACK(void, *png_write_status_ptr, (png_structp, png_uint_32,
@@ -98,7 +98,7 @@ diff -up8 png.h png.h
   * then reset to 0 for the next pass.
   *
   * Use PNG_ROW_FROM_PASS_ROW(row, pass) and PNG_COL_FROM_PASS_COL(col, pass) to
-@@ -2644,26 +2657,99 @@ PNG_EXPORT(207, void, png_save_uint_16, 
+@@ -2648,26 +2661,99 @@ PNG_EXPORT(207, void, png_save_uint_16, 
  #endif
  
  #if defined(PNG_READ_CHECK_FOR_INVALID_INDEX_SUPPORTED) || \
@@ -199,8 +199,8 @@ diff -up8 png.h png.h
  #endif /* PNG_VERSION_INFO_ONLY */
  /* Do not put anything past this line */
 diff -up8 pngget.c pngget.c
---- pngget.c	2012-06-14 07:28:00 -0400
-+++ pngget.c	2012-04-24 20:51:09 -0400
+--- pngget.c	2012-09-27 07:21:20 -0400
++++ pngget.c	2012-07-04 16:27:29 -0400
 @@ -1116,9 +1116,171 @@ png_get_io_chunk_type (png_const_structp
  png_const_bytep PNGAPI
  png_get_io_chunk_name (png_structp png_ptr)
@@ -374,8 +374,8 @@ diff -up8 pngget.c pngget.c
 +#endif /* PNG_APNG_SUPPORTED */
  #endif /* PNG_READ_SUPPORTED || PNG_WRITE_SUPPORTED */
 diff -up8 pnginfo.h pnginfo.h
---- pnginfo.h	2012-06-14 07:28:00 -0400
-+++ pnginfo.h	2012-03-03 22:17:56 -0500
+--- pnginfo.h	2012-09-27 07:21:20 -0400
++++ pnginfo.h	2012-07-04 16:27:29 -0400
 @@ -260,10 +260,23 @@ defined(PNG_READ_BACKGROUND_SUPPORTED)
  
  #ifdef PNG_INFO_IMAGE_SUPPORTED
@@ -401,8 +401,8 @@ diff -up8 pnginfo.h pnginfo.h
  };
  #endif /* PNGINFO_H */
 diff -up8 pngpread.c pngpread.c
---- pngpread.c	2012-06-14 07:28:00 -0400
-+++ pngpread.c	2012-07-16 20:05:38 -0400
+--- pngpread.c	2012-09-27 07:21:20 -0400
++++ pngpread.c	2012-07-17 19:54:14 -0400
 @@ -210,16 +210,119 @@ png_push_read_chunk(png_structp png_ptr,
        png_crc_read(png_ptr, chunk_tag, 4);
        png_ptr->chunk_name = PNG_CHUNK_FROM_STRING(chunk_tag);
@@ -731,8 +731,8 @@ diff -up8 pngpread.c pngpread.c
     return png_ptr->io_ptr;
  }
 diff -up8 pngpriv.h pngpriv.h
---- pngpriv.h	2012-06-14 07:28:00 -0400
-+++ pngpriv.h	2012-07-16 20:05:38 -0400
+--- pngpriv.h	2012-09-27 07:21:20 -0400
++++ pngpriv.h	2012-09-29 11:36:24 -0400
 @@ -462,16 +462,20 @@ typedef PNG_CONST png_uint_16p FAR * png
  #define PNG_HAVE_sRGB               0x80
  #define PNG_HAVE_CHUNK_HEADER      0x100
@@ -838,8 +838,8 @@ diff -up8 pngpriv.h pngpriv.h
      png_fixed_point int_blue_y));
  #endif
 diff -up8 pngread.c pngread.c
---- pngread.c	2012-06-14 07:28:00 -0400
-+++ pngread.c	2012-07-16 20:05:38 -0400
+--- pngread.c	2012-09-27 07:21:20 -0400
++++ pngread.c	2012-07-17 19:54:14 -0400
 @@ -235,16 +235,19 @@ png_read_info(png_structp png_ptr, png_i
        {
           if (!(png_ptr->mode & PNG_HAVE_IHDR))
@@ -1040,8 +1040,8 @@ diff -up8 pngread.c pngread.c
  
     } while (png_ptr->zstream.avail_out);
 diff -up8 pngrutil.c pngrutil.c
---- pngrutil.c	2012-06-14 07:28:00 -0400
-+++ pngrutil.c	2012-04-24 20:51:09 -0400
+--- pngrutil.c	2012-09-27 07:21:20 -0400
++++ pngrutil.c	2012-09-29 11:36:24 -0400
 @@ -542,16 +542,21 @@ png_handle_IHDR(png_structp png_ptr, png
     width = png_get_uint_31(png_ptr, buf);
     height = png_get_uint_31(png_ptr, buf + 4);
@@ -1342,8 +1342,8 @@ diff -up8 pngrutil.c pngrutil.c
 +#endif /* PNG_READ_APNG_SUPPORTED */
  #endif /* PNG_READ_SUPPORTED */
 diff -up8 pngset.c pngset.c
---- pngset.c	2012-06-14 07:28:00 -0400
-+++ pngset.c	2012-07-07 10:21:31 -0400
+--- pngset.c	2012-09-27 07:21:20 -0400
++++ pngset.c	2012-07-07 14:54:14 -0400
 @@ -257,16 +257,21 @@ png_set_IHDR(png_structp png_ptr, png_in
         (PNG_UINT_32_MAX >> 3)      /* 8-byte RRGGBBAA pixels */
         - 48       /* bigrowbuf hack */
@@ -1525,8 +1525,8 @@ diff -up8 pngset.c pngset.c
     int i;
  
 diff -up8 pngstruct.h pngstruct.h
---- pngstruct.h	2012-06-14 07:28:00 -0400
-+++ pngstruct.h	2012-07-07 10:21:31 -0400
+--- pngstruct.h	2012-09-27 07:21:20 -0400
++++ pngstruct.h	2012-07-07 14:54:14 -0400
 @@ -288,16 +288,37 @@ struct png_struct_def
     png_uint_32 mng_features_permitted;
  #endif
@@ -1566,8 +1566,8 @@ diff -up8 pngstruct.h pngstruct.h
     png_free_ptr free_fn;          /* function for freeing memory */
  #endif
 diff -up8 pngwrite.c pngwrite.c
---- pngwrite.c	2012-06-14 07:28:00 -0400
-+++ pngwrite.c	2012-07-07 10:21:31 -0400
+--- pngwrite.c	2012-09-27 07:21:20 -0400
++++ pngwrite.c	2012-07-07 14:54:14 -0400
 @@ -53,16 +53,20 @@ png_write_info_before_PLTE(png_structp p
  #ifdef PNG_WRITE_INTERLACING_SUPPORTED
         info_ptr->interlace_type);
@@ -1661,8 +1661,8 @@ diff -up8 pngwrite.c pngwrite.c
 +#endif /* PNG_WRITE_APNG_SUPPORTED */
  #endif /* PNG_WRITE_SUPPORTED */
 diff -up8 pngwutil.c pngwutil.c
---- pngwutil.c	2012-06-14 07:28:00 -0400
-+++ pngwutil.c	2012-04-24 20:51:09 -0400
+--- pngwutil.c	2012-09-27 07:21:20 -0400
++++ pngwutil.c	2012-09-29 11:36:24 -0400
 @@ -816,16 +816,21 @@ png_write_IHDR(png_structp png_ptr, png_
     buf[9] = (png_byte)color_type;
     buf[10] = (png_byte)compression_type;
@@ -1724,7 +1724,7 @@ diff -up8 pngwutil.c pngwutil.c
      */
     png_ptr->zstream.next_out = png_ptr->zbuf;
     png_ptr->zstream.avail_out = (uInt)png_ptr->zbuf_size;
-@@ -1992,16 +2018,74 @@ png_write_tIME(png_structp png_ptr, png_
+@@ -1993,16 +2019,74 @@ png_write_tIME(png_structp png_ptr, png_
     buf[4] = mod_time->hour;
     buf[5] = mod_time->minute;
     buf[6] = mod_time->second;
@@ -1799,7 +1799,7 @@ diff -up8 pngwutil.c pngwutil.c
     /* Arrays to facilitate easy interlacing - use pass (0 - 6) as index */
  
     /* Start of interlace block */
-@@ -3171,9 +3255,44 @@ png_write_filtered_row(png_structp png_p
+@@ -3172,9 +3256,44 @@ png_write_filtered_row(png_structp png_p
  
     if (png_ptr->flush_dist > 0 &&
         png_ptr->flush_rows >= png_ptr->flush_dist)

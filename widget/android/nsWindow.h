@@ -11,7 +11,7 @@
 #include "nsIIdleServiceInternal.h"
 #include "nsTArray.h"
 
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
 #include "AndroidJavaWrappers.h"
 #endif
 
@@ -50,7 +50,7 @@ public:
     void OnAndroidEvent(mozilla::AndroidGeckoEvent *ae);
     void OnDraw(mozilla::AndroidGeckoEvent *ae);
     bool OnMultitouchEvent(mozilla::AndroidGeckoEvent *ae);
-    void OnGestureEvent(mozilla::AndroidGeckoEvent *ae);
+    void OnNativeGestureEvent(mozilla::AndroidGeckoEvent *ae);
     void OnMouseEvent(mozilla::AndroidGeckoEvent *ae);
     void OnKeyEvent(mozilla::AndroidGeckoEvent *ae);
     void OnIMEEvent(mozilla::AndroidGeckoEvent *ae);
@@ -146,7 +146,7 @@ public:
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
     virtual bool NeedsPaint();
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
@@ -177,14 +177,8 @@ protected:
     nsWindow* mParent;
     nsWindow* mFocus;
 
-    bool mGestureFinished;
     double mStartDist;
     double mLastDist;
-    nsAutoPtr<nsIntPoint> mStartPoint;
-
-    // Multitouch swipe thresholds in screen pixels
-    double mSwipeMaxPinchDelta;
-    double mSwipeMinDistance;
 
     nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
@@ -212,7 +206,7 @@ private:
     void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
     void RedrawAll();
 
-#ifdef MOZ_JAVA_COMPOSITOR
+#ifdef MOZ_ANDROID_OMTC
     mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
 
     static nsRefPtr<mozilla::layers::CompositorParent> sCompositorParent;

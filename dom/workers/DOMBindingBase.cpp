@@ -89,7 +89,7 @@ DOMBindingBase::SetJSObject(JSObject* aObject)
   // method.
   SetWrapper(aObject);
 
-  PtrBits oldWrapperPtrBits = mWrapperPtrBits;
+  uintptr_t oldWrapperPtrBits = mWrapperPtrBits;
 
   SetWrapperBits(aObject);
 

@@ -1,0 +1,75 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker transferable objects
+-->
+<head>
+  <title>Test for DOM Worker transferable objects</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+  function test1(sizes) {
+    if (!sizes.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var size = sizes.pop();
+
+    var worker = new Worker("transferable_worker.js");
+    worker.onmessage = function(event) {
+      ok(event.data.status, event.data.event);
+      if (!event.data.status) {
+        SimpleTest.finish();
+        return;
+      }
+
+      if (!event.data.last)
+        return;
+
+      test1(sizes);
+    }
+    worker.onerror = function(event) {
+      ok(false, "No errors!");
+    }
+
+    try {
+      worker.postMessage(42, true);
+      ok(false, "P: PostMessage - Exception for wrong type");
+    } catch(e) {
+      ok(true, "P: PostMessage - Exception for wrong type");
+    }
+
+    try {
+      ab = new ArrayBuffer(size);
+      worker.postMessage(42,[ab, ab]);
+      ok(false, "P: PostMessage - Exception for duplicate");
+    } catch(e) {
+      ok(true, "P: PostMessage - Exception for duplicate");
+    }
+
+    ab = new ArrayBuffer(size);
+    ok(ab.byteLength == size, "P: The size is: " + size + " == " + ab.byteLength);
+    worker.postMessage({ data: 0, timeout: 0, ab: ab, cb: ab, size: size }, [ab]);
+    ok(ab.byteLength == 0, "P: PostMessage - The size is: 0 == " + ab.byteLength)
+  }
+
+  test1([1024 * 1024 * 32, 128, 4]);
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

@@ -780,8 +780,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.j(Assembler::Above, &thunk);
 
     // No argument fixup needed. Load the start of the target IonCode.
-    masm.movePtr(Address(objreg, offsetof(IonScript, method_)), objreg);
-    masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
+    masm.movePtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
+    masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
     masm.jump(&makeCall);
 
     // Argument fixed needed. Load the ArgumentsRectifier.
@@ -789,7 +789,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     {
         JS_ASSERT(ArgumentsRectifierReg != objreg);
         masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
-        masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
+        masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
         masm.move32(Imm32(call->numStackArgs()), ArgumentsRectifierReg);
     }
 
@@ -855,8 +855,8 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
 
     // Load the start of the target IonCode.
-    masm.movePtr(Address(objreg, offsetof(IonScript, method_)), objreg);
-    masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
+    masm.movePtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
+    masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -1098,8 +1098,8 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
         // No argument fixup needed. Load the start of the target IonCode.
         {
-            masm.movePtr(Address(objreg, offsetof(IonScript, method_)), objreg);
-            masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
+            masm.movePtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
+            masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
 
             // Skip the construction of the rectifier frame because we have no
             // underflow.
@@ -1118,7 +1118,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
             JS_ASSERT(ArgumentsRectifierReg != objreg);
             masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
-            masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
+            masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
             masm.movePtr(argcreg, ArgumentsRectifierReg);
         }
 
@@ -3141,6 +3141,13 @@ CodeGenerator::visitCache(LInstruction *ins)
     if (!addOutOfLineCode(ool))
         return false;
 
+#if 0
+    // NOTE: This is currently disabled. OSI and IC interaction are  protected
+    // through other means in ICs, since the nops incur significant overhead.
+    //
+    // ensureOsiSpace();
+#endif
+
     CodeOffsetJump jump = masm.jumpWithPatch(ool->repatchEntry());
     CodeOffsetLabel label = masm.labelForPatch();
     masm.bind(ool->rejoin());
@@ -3945,6 +3952,10 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     if (!addOutOfLineCode(ool))
         return false;
 
+    // If the IC code wants to patch, make sure there is enough space to that
+    // the patching does not overwrite an invalidation marker.
+    ensureOsiSpace();
+
     CodeOffsetJump jump = masm.jumpWithPatch(ool->repatchEntry());
     CodeOffsetLabel label = masm.labelForPatch();
     masm.bind(ool->rejoin());
@@ -3990,7 +4001,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
     masm.checkStackAlignment();
 
     /* Make Space for the outparam */
-    masm.adjustStack((int)-sizeof(Value));
+    masm.adjustStack(-int32_t(sizeof(Value)));
     masm.movePtr(StackPointer, ValueReg);
 
     masm.Push(ObjectReg);

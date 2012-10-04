@@ -340,7 +340,6 @@ Database::Database()
   , mMainThreadAsyncStatements(mMainConn)
   , mAsyncThreadStatements(mMainConn)
   , mDBPageSize(0)
-  , mCurrentJournalMode(JOURNAL_DELETE)
   , mDatabaseStatus(nsINavHistoryService::DATABASE_STATUS_OK)
   , mShuttingDown(false)
 {

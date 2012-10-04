@@ -106,9 +106,7 @@ nsArray::AppendElement(nsISupports* aElement, bool aWeak)
 {
     bool result;
     if (aWeak) {
-        nsCOMPtr<nsISupports> elementRef =
-            getter_AddRefs(static_cast<nsISupports*>
-                                      (NS_GetWeakReference(aElement)));
+        nsCOMPtr<nsIWeakReference> elementRef = do_GetWeakReference(aElement);
         NS_ASSERTION(elementRef, "AppendElement: Trying to use weak references on an object that doesn't support it");
         if (!elementRef)
             return NS_ERROR_FAILURE;
@@ -134,9 +132,7 @@ nsArray::InsertElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
 {
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {
-        elementRef =
-            getter_AddRefs(static_cast<nsISupports*>
-                                      (NS_GetWeakReference(aElement)));
+        elementRef = do_GetWeakReference(aElement);
         NS_ASSERTION(elementRef, "InsertElementAt: Trying to use weak references on an object that doesn't support it");
         if (!elementRef)
             return NS_ERROR_FAILURE;
@@ -152,9 +148,7 @@ nsArray::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
 {
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {
-        elementRef =
-            getter_AddRefs(static_cast<nsISupports*>
-                                      (NS_GetWeakReference(aElement)));
+        elementRef = do_GetWeakReference(aElement);
         NS_ASSERTION(elementRef, "ReplaceElementAt: Trying to use weak references on an object that doesn't support it");
         if (!elementRef)
             return NS_ERROR_FAILURE;

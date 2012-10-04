@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
     
     <!--
         Only overriden styles for Honeycomb/Ice cream sandwich are specified here.
@@ -20,6 +20,17 @@
         <item name="android:dividerHeight">1dp</item>
         <item name="android:cacheColorHint">#EEF1F5</item>
         <item name="android:listSelector">@drawable/action_bar_button</item>
+    </style>
+
+    <style name="GeckoList.ListItem">
+        <item name="android:textColor">@color/select_item_multichoice</item>
+        <item name="android:minHeight">?android:attr/listPreferredItemHeight</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceLarge</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">12dip</item>
+        <item name="android:paddingRight">7dip</item>
+        <item name="android:checkMark">?android:attr/listChoiceIndicatorMultiple</item>
+        <item name="android:ellipsize">marquee</item>
     </style>
 
     <!-- AwesomeBar -->

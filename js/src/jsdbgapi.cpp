@@ -411,7 +411,7 @@ extern JS_PUBLIC_API(uintptr_t *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
     BindingVector bindings(cx);
-    if (!FillBindingVector(fun->script()->bindings, &bindings))
+    if (!FillBindingVector(fun->script(), &bindings))
         return NULL;
 
     /* Munge data into the API this method implements.  Avert your eyes! */
@@ -697,6 +697,18 @@ JS_PUBLIC_API(JSVersion)
 JS_GetScriptVersion(JSContext *cx, JSScript *script)
 {
     return VersionNumber(script->getVersion());
+}
+
+JS_PUBLIC_API(bool)
+JS_GetScriptUserBit(JSScript *script)
+{
+    return script->userBit;
+}
+
+JS_PUBLIC_API(void)
+JS_SetScriptUserBit(JSScript *script, bool b)
+{
+    script->userBit = b;
 }
 
 /***************************************************************************/

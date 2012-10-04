@@ -468,17 +468,7 @@ irregularFilenames = {
     'nsIWebGLShaderArray': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLFramebuffer': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLRenderbuffer': 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLShaderPrecisionFormat' : 'nsIDOMWebGLRenderingContext',
     'nsIWebGLActiveInfo': 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLUniformLocation': 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLExtension': 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLExtensionStandardDerivatives' : 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLExtensionTextureFilterAnisotropic' : 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLExtensionLoseContext' : 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLExtensionCompressedTextureS3TC' : 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLExtensionCompressedTextureATC' : 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLExtensionCompressedTexturePVRTC' : 'nsIDOMWebGLRenderingContext',
-    'nsIWebGLExtensionDepthTexture' : 'nsIDOMWebGLRenderingContext',
 
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
 

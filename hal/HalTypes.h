@@ -17,26 +17,34 @@ namespace hal {
  * If these change and are exposed to JS, make sure nsIHal.idl is updated as well.
  */
 enum LightType {
-    eHalLightID_Backlight = 0,
-    eHalLightID_Keyboard = 1,
-    eHalLightID_Buttons = 2,
-    eHalLightID_Battery = 3,
-    eHalLightID_Notifications = 4,
-    eHalLightID_Attention = 5,
-    eHalLightID_Bluetooth = 6,
-    eHalLightID_Wifi = 7,
-    eHalLightID_Count = 8         // This should stay at the end
+  eHalLightID_Backlight     = 0,
+  eHalLightID_Keyboard      = 1,
+  eHalLightID_Buttons       = 2,
+  eHalLightID_Battery       = 3,
+  eHalLightID_Notifications = 4,
+  eHalLightID_Attention     = 5,
+  eHalLightID_Bluetooth     = 6,
+  eHalLightID_Wifi          = 7,
+  eHalLightID_Count         = 8  // This should stay at the end
 };
 enum LightMode {
-    eHalLightMode_User = 0,       // brightness is managed by user setting
-    eHalLightMode_Sensor = 1,     // brightness is managed by a light sensor
-    eHalLightMode_Count
+  eHalLightMode_User   = 0,  // brightness is managed by user setting
+  eHalLightMode_Sensor = 1,  // brightness is managed by a light sensor
+  eHalLightMode_Count
 };
 enum FlashMode {
-    eHalLightFlash_None = 0,
-    eHalLightFlash_Timed = 1,     // timed flashing.  Use flashOnMS and flashOffMS for timing
-    eHalLightFlash_Hardware = 2,  // hardware assisted flashing
-    eHalLightFlash_Count
+  eHalLightFlash_None     = 0,
+  eHalLightFlash_Timed    = 1,  // timed flashing.  Use flashOnMS and flashOffMS for timing
+  eHalLightFlash_Hardware = 2,  // hardware assisted flashing
+  eHalLightFlash_Count
+};
+
+enum ShutdownMode {
+  eHalShutdownMode_Unknown  = -1,
+  eHalShutdownMode_PowerOff = 0,
+  eHalShutdownMode_Reboot   = 1,
+  eHalShutdownMode_Restart  = 2,
+  eHalShutdownMode_Count    = 3
 };
 
 class SwitchEvent;
@@ -54,7 +62,6 @@ enum SwitchState {
   SWITCH_STATE_OFF,
   SWITCH_STATE_HEADSET,          // Headphone with microphone
   SWITCH_STATE_HEADPHONE,        // without microphone
-  SWITCH_STATE_BLUETOOTH_SCO,
   NUM_SWITCH_STATE
 };
 
@@ -193,6 +200,16 @@ struct ParamTraits<mozilla::hal::FlashMode>
   : public EnumSerializer<mozilla::hal::FlashMode,
                           mozilla::hal::eHalLightFlash_None,
                           mozilla::hal::eHalLightFlash_Count>
+{};
+
+/**
+ * Serializer for ShutdownMode.
+ */
+template <>
+struct ParamTraits<mozilla::hal::ShutdownMode>
+  : public EnumSerializer<mozilla::hal::ShutdownMode,
+                          mozilla::hal::eHalShutdownMode_Unknown,
+                          mozilla::hal::eHalShutdownMode_Count>
 {};
 
 /**

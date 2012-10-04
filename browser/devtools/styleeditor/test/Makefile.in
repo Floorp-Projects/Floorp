@@ -22,6 +22,7 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_new.js \
                  browser_styleeditor_passedinsheet.js \
                  browser_styleeditor_pretty.js \
+                 browser_styleeditor_private.js \
                  browser_styleeditor_readonly.js \
                  browser_styleeditor_reopen.js \
                  browser_styleeditor_sv_keynav.js \
@@ -40,6 +41,8 @@ _BROWSER_TEST_FILES = \
                  simple.css.gz^headers^ \
                  simple.gz.html \
                  simple.html \
+                 test_private.html \
+                 test_private.css \
                  $(NULL)
 
 libs::	$(_BROWSER_TEST_FILES)

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "AudioSourceNode.h"
+#include "AudioBuffer.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,13 +18,22 @@ public:
   explicit AudioBufferSourceNode(AudioContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  void NoteOn(double) { /* no-op for now */ }
-  void NoteOff(double) { /* no-op for now */ }
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode, AudioSourceNode)
 
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
                                bool* aTriedToWrap);
 
+  void Start(double) { /* no-op for now */ }
+  void Stop(double) { /* no-op for now */ }
+
+  AudioBuffer* GetBuffer() const
+  {
+    return mBuffer;
+  }
+  void SetBuffer(AudioBuffer* aBuffer);
+
+private:
+  nsRefPtr<AudioBuffer> mBuffer;
 };
 
 }

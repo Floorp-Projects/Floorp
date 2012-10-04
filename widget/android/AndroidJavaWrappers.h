@@ -555,6 +555,9 @@ public:
         ACTION_HOVER_MOVE = 7,
         ACTION_HOVER_ENTER = 9,
         ACTION_HOVER_EXIT = 10,
+        ACTION_MAGNIFY_START = 11,
+        ACTION_MAGNIFY = 12,
+        ACTION_MAGNIFY_END = 13,
         ACTION_POINTER_ID_MASK = 0xff00,
         ACTION_POINTER_ID_SHIFT = 8,
         EDGE_TOP = 0x00000001,
@@ -761,6 +764,7 @@ public:
         COMPOSITOR_PAUSE = 28,
         COMPOSITOR_RESUME = 29,
         PAINT_LISTEN_START_EVENT = 30,
+        NATIVE_GESTURE_EVENT = 31,
         dummy_java_enum_list_end
     };
 

@@ -481,7 +481,7 @@ MacroAssembler::performOsr()
     // Get ionScript->method->code, and scoot to the osrEntry.
     const Register code = ionScript;
     loadPtr(Address(ionScript, IonScript::offsetOfMethod()), code);
-    loadPtr(Address(code, IonCode::OffsetOfCode()), code);
+    loadPtr(Address(code, IonCode::offsetOfCode()), code);
     addPtr(osrEntry, code);
 
     // To simplify stack handling, we create an intermediate OSR frame, that

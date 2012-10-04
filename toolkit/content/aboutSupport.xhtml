@@ -8,6 +8,7 @@
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
   <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
+  <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd"> %syncBrandDTD;
   <!ENTITY % aboutSupportDTD SYSTEM "chrome://global/locale/aboutSupport.dtd"> %aboutSupportDTD;
   <!ENTITY % resetProfileDTD SYSTEM "chrome://global/locale/resetProfile.dtd"> %resetProfileDTD;
 ]>
@@ -241,6 +242,28 @@
             </td>
           </tr>
         </tbody>
+      </table>
+
+      <!-- - - - - - - - - - - - - - - - - - - - - -->
+      <h2 class="major-section">
+        &syncBrand.fullName.label;
+      </h2>
+      <table id="sync-enabled-table">
+        <thead>
+          <th>
+            &aboutSupport.syncPrefsName;
+          </th>
+          <th>
+            &aboutSupport.syncPrefsValue;
+          </th>
+        </thead>
+        <tbody id="sync-tbody">
+        </tbody>
+      </table>
+      <table id="sync-disabled-table">
+        <td>
+          &aboutSupport.syncNotSupported;
+        </td>
       </table>
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->

@@ -193,28 +193,30 @@ function browserLoadEvent() {
 
   frames[1].postMessage("clear", "http://www.example.com");
 
-  navigator.mozApps.mgmt.getAll().onsuccess = function() {
-    for (i in this.result) {
-      var app = this.result[i];
-      if (app.manifestURL == gManifestURL) {
-        is(gBrowserStorage.localStorage.getItem("foo"), null, "localstorage data have been deleted");
-        is(gBrowserStorage.sessionStorage.getItem("foo"), "bar", "sessionstorage data have not been deleted");
+  SimpleTest.executeSoon(function() {
+    navigator.mozApps.mgmt.getAll().onsuccess = function() {
+      for (i in this.result) {
+        var app = this.result[i];
+        if (app.manifestURL == gManifestURL) {
+          is(gBrowserStorage.localStorage.getItem("foo"), null, "localstorage data have been deleted");
+          is(gBrowserStorage.sessionStorage.getItem("foo"), "bar", "sessionstorage data have not been deleted");
 
-        is(gAppStorage.localStorage.getItem("foo"), "bar", "data are still there");
-        is(gAppStorage.sessionStorage.getItem("foo"), "bar", "data are still there");
+          is(gAppStorage.localStorage.getItem("foo"), "bar", "data are still there");
+          is(gAppStorage.sessionStorage.getItem("foo"), "bar", "data are still there");
 
-        is(gWitnessStorage.localStorage.getItem("foo"), "bar", "data are still there");
-        is(gWitnessStorage.sessionStorage.getItem("foo"), "bar", "data are still there");
+          is(gWitnessStorage.localStorage.getItem("foo"), "bar", "data are still there");
+          is(gWitnessStorage.sessionStorage.getItem("foo"), "bar", "data are still there");
 
-        Webapps.DOMApplicationRegistry.allAppsLaunchable = gPreviousLaunchableValue;
+          Webapps.DOMApplicationRegistry.allAppsLaunchable = gPreviousLaunchableValue;
 
-        // Now we uninstall the app and make sure everything is clean.
-        app.uninstall().onsuccess = function() {
-          finish();
-        };
+          // Now we uninstall the app and make sure everything is clean.
+          app.uninstall().onsuccess = function() {
+            finish();
+          };
+        }
       }
-    }
-  };
+    };
+  });
 }
 
 /**

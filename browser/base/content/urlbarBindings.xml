@@ -1418,6 +1418,123 @@
     </implementation>
   </binding>
 
+  <binding id="center-item">
+    <content align="center">
+      <xul:vbox flex="1" class="center-item-box"
+                xbl:inherits="warn,showseparator,padbottom">
+        <xul:hbox flex="1" align="center">
+          <xul:image class="center-item-icon"
+                     xbl:inherits="src=itemicon"/>
+          <xul:description class="center-item-label"
+                           xbl:inherits="xbl:text=itemtext"/>
+          <xul:spacer flex="1"/>
+          <xul:button class="popup-notification-menubutton center-item-button"
+                      oncommand="document.getBindingParent(this).runCallback();"
+                      xbl:inherits="label=buttonlabel"/>
+        </xul:hbox>
+        <xul:hbox flex="1" align="center" class="center-item-warning">
+          <xul:image class="center-item-warning-icon"/>
+          <xul:label class="center-item-warning-description" xbl:inherits="xbl:text=warningText"/>
+          <xul:label xbl:inherits="href=updateLink" value="&checkForUpdates;" class="text-link"/>
+          <xul:spacer flex="1"/>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+    <resources>
+      <stylesheet src="chrome://global/skin/notification.css"/>
+    </resources>
+    <implementation>
+      <field name="action"></field>
+      <method name="runCallback">
+        <body><![CDATA[
+          let action = this.action;
+          action.callback();
+          let cas = action.popupnotification.notification.options.centerActions;
+          cas.splice(cas.indexOf(action), 1);
+          PopupNotifications._dismiss();
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="click-to-play-plugins-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
+    <content align="start" class="click-to-play-plugins-notification-content">
+      <xul:hbox flex="1">
+        <xul:vbox class="click-to-play-plugins-notification-icon-box" flex="1">
+          <xul:image class="popup-notification-icon"
+                     xbl:inherits="popupid,src=icon"/>
+          <xul:spacer flex="1"/>
+        </xul:vbox>
+        <xul:spacer class="click-to-play-plugins-notification-separator"/>
+        <xul:vbox flex="1" class="popup-notification-main-box"
+                  xbl:inherits="popupid">
+          <xul:box class="click-to-play-plugins-notification-description-box" flex="1">
+            <xul:description xbl:inherits="xbl:text=label"/>
+          </xul:box>
+          <xul:spacer class="click-to-play-plugins-notification-separator"/>
+          <xul:vbox class="click-to-play-plugins-notification-center-box">
+            <children includes="popupnotification-centeritem"/>
+          </xul:vbox>
+          <xul:spacer class="click-to-play-plugins-notification-separator"/>
+          <xul:hbox class="click-to-play-plugins-notification-button-container"
+                    pack="end" align="center">
+            <xul:button anonid="button"
+                        class="popup-notification-menubutton"
+                        type="menu-button"
+                        xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey">
+              <xul:menupopup anonid="menupopup"
+                             xbl:inherits="oncommand=menucommand">
+                <children/>
+                <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
+                              label="&closeNotificationItem.label;"
+                              xbl:inherits="oncommand=closeitemcommand"/>
+              </xul:menupopup>
+            </xul:button>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+    <resources>
+      <stylesheet src="chrome://global/skin/notification.css"/>
+    </resources>
+    <implementation>
+      <field name="button" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "button");
+      </field>
+      <field name="menupopup" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "menupopup");
+      </field>
+      <constructor><![CDATA[
+        const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        let popupnotification = this;
+        let item = null;
+        let prev = null;
+        this.notification.options.centerActions.forEach(function(action) {
+          action.popupnotification = popupnotification;
+          item = document.createElementNS(XUL_NS, "popupnotification-centeritem");
+          item.action = action;
+          item.setAttribute("itemtext", action.message);
+          item.setAttribute("buttonlabel", action.label);
+          item.setAttribute("warn", action.warn);
+          item.setAttribute("warningText", action.warningText);
+          item.setAttribute("updateLink", action.updateLink);
+          if (prev &&
+              (prev.getAttribute("warn") == "true" ||
+               item.getAttribute("warn") == "true")) {
+            item.setAttribute("showseparator", true);
+            if (prev.getAttribute("warn") != "true") {
+              prev.setAttribute("padbottom", true);
+            }
+          }
+          popupnotification.appendChild(item);
+          prev = item;
+        });
+        if (item != null) {
+          item.setAttribute("padbottom", "true");
+        }
+      ]]></constructor>
+    </implementation>
+  </binding>
 
   <binding id="splitmenu">
     <content>

@@ -60,7 +60,7 @@ stubs::BindName(VMFrame &f, PropertyName *name_)
 {
     RootedPropertyName name(f.cx, name_);
     RootedObject scope(f.cx);
-    if (!LookupNameForSet(f.cx, name, f.fp()->scopeChain(), &scope))
+    if (!LookupNameWithGlobalDefault(f.cx, name, f.fp()->scopeChain(), &scope))
         THROW();
     f.regs.sp[0].setObject(*scope);
 }
@@ -135,7 +135,7 @@ stubs::SetElem(VMFrame &f)
             int32_t i = JSID_TO_INT(id);
             if ((uint32_t)i < length) {
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
-                    if (js_PrototypeHasIndexedProperties(cx, obj))
+                    if (js_PrototypeHasIndexedProperties(obj))
                         break;
                     if ((uint32_t)i >= obj->getArrayLength())
                         JSObject::setArrayLength(cx, obj, i + 1);
@@ -187,9 +187,8 @@ stubs::ImplicitThis(VMFrame &f, PropertyName *name_)
     RootedObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
     RootedPropertyName name(f.cx, name_);
 
-    RootedObject obj(f.cx), obj2(f.cx);
-    RootedShape prop(f.cx);
-    if (!LookupName(f.cx, name, scopeObj, &obj, &obj2, &prop))
+    RootedObject obj(f.cx);
+    if (!LookupNameWithGlobalDefault(f.cx, name, scopeObj, &obj))
         THROW();
 
     if (!ComputeImplicitThis(f.cx, obj, &f.regs.sp[0]))

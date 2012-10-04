@@ -308,15 +308,24 @@ CodeGeneratorShared::markSafepointAt(uint32 offset, LInstruction *ins)
     return safepointIndices_.append(SafepointIndex(offset, ins->safepoint()));
 }
 
-bool
-CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32 *callPointOffset)
+void
+CodeGeneratorShared::ensureOsiSpace()
 {
-    if (!encode(ins->snapshot()))
-        return false;
-
-    // We need to ensure that two OSI point patches don't overlap with
-    // each other, so we check that there's enough space for the near
-    // call between any two OSI points.
+    // For a refresher, an invalidation point is of the form:
+    // 1: call <target>
+    // 2: ...
+    // 3: <osipoint>
+    //
+    // The four bytes *before* instruction 2 are overwritten with an offset.
+    // Callers must ensure that the instruction itself has enough bytes to
+    // support this.
+    //
+    // The bytes *at* instruction 3 are overwritten with an invalidation jump.
+    // jump. These bytes may be in a completely different IR sequence, but
+    // represent the join point of the call out of the function.
+    //
+    // At points where we want to ensure that invalidation won't corrupt an
+    // important instruction, we make sure to pad with nops.
     if (masm.currentOffset() - lastOsiPointOffset_ < Assembler::patchWrite_NearCallSize()) {
         int32 paddingSize = Assembler::patchWrite_NearCallSize();
         paddingSize -= masm.currentOffset() - lastOsiPointOffset_;
@@ -325,6 +334,15 @@ CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32 *callPointOffset)
     }
     JS_ASSERT(masm.currentOffset() - lastOsiPointOffset_ >= Assembler::patchWrite_NearCallSize());
     lastOsiPointOffset_ = masm.currentOffset();
+}
+
+bool
+CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32 *callPointOffset)
+{
+    if (!encode(ins->snapshot()))
+        return false;
+
+    ensureOsiSpace();
 
     *callPointOffset = masm.currentOffset();
     SnapshotOffset so = ins->snapshot()->snapshotOffset();

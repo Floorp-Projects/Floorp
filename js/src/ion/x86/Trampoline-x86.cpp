@@ -14,6 +14,8 @@
 #include "ion/Bailouts.h"
 #include "ion/VMFunctions.h"
 
+#include "jsscriptinlines.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -281,8 +283,8 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     // Note that this assumes the function is JITted.
     masm.movl(Operand(eax, offsetof(JSFunction, u.i.script_)), eax);
     masm.movl(Operand(eax, offsetof(JSScript, ion)), eax);
-    masm.movl(Operand(eax, offsetof(IonScript, method_)), eax);
-    masm.movl(Operand(eax, IonCode::OffsetOfCode()), eax);
+    masm.movl(Operand(eax, IonScript::offsetOfMethod()), eax);
+    masm.movl(Operand(eax, IonCode::offsetOfCode()), eax);
     masm.call(eax);
 
     // Remove the rectifier frame.
@@ -292,7 +294,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.pop(edi);            // Discard number of actual arguments.
 
     // Discard pushed arguments, but not the pushed frame pointer.
-    BaseIndex unwind = BaseIndex(esp, ebx, TimesOne, -sizeof(void*));
+    BaseIndex unwind = BaseIndex(esp, ebx, TimesOne, -int32_t(sizeof(void*)));
     masm.lea(Operand(unwind), esp);
 
     masm.pop(FramePointer);

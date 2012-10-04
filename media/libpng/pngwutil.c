@@ -1396,7 +1396,8 @@ png_write_tRNS(png_structp png_ptr, png_const_bytep trans_alpha,
       }
 
       /* Write the chunk out as it is */
-      png_write_complete_chunk(png_ptr, png_tRNS, trans_alpha, (png_size_t)num_trans);
+      png_write_complete_chunk(png_ptr, png_tRNS, trans_alpha,
+         (png_size_t)num_trans);
    }
 
    else if (color_type == PNG_COLOR_TYPE_GRAY)

@@ -172,6 +172,7 @@ FENNEC_JAVA_FILES = \
   GeckoScreenOrientationListener.java \
   UpdateService.java \
   GeckoUpdateReceiver.java \
+  ReferrerReceiver.java \
   $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
@@ -243,12 +244,14 @@ UA_BUILDID=$(shell echo $(ANDROID_VERSION_CODE) | cut -c1-8)
 DEFINES += \
   -DMANGLED_ANDROID_PACKAGE_NAME=$(subst fennec,f3nn3c,$(ANDROID_PACKAGE_NAME)) \
   -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
+  -DANDROID_CPU_ARCH=$(ANDROID_CPU_ARCH) \
   -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
   -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
   -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
   -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME) \
   -DMOZ_MIN_CPU_VERSION=$(MIN_CPU_VERSION) \
   -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
+  -DMOZ_UPDATE_CHANNEL=$(MOZ_UPDATE_CHANNEL) \
   -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
   -DMOZILLA_OFFICIAL=$(MOZILLA_OFFICIAL) \
   -DUA_BUILDID=$(UA_BUILDID) \
@@ -359,6 +362,7 @@ RES_LAYOUT = \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
+  res/layout/select_dialog_multichoice.xml \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
   res/layout/abouthome_promo_box.xml \
@@ -472,6 +476,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_menu_save_as_pdf.png \
   res/drawable/ic_menu_share.png \
   res/drawable/ic_menu_quit.xml \
+  res/drawable/ic_status_logo.png \
   res/drawable/remote_tabs_off.png \
   res/drawable/remote_tabs_on.png \
   res/drawable/tab_new.png \
@@ -547,6 +552,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_menu_reload.png \
   res/drawable-hdpi/ic_menu_save_as_pdf.png \
   res/drawable-hdpi/ic_menu_share.png \
+  res/drawable-hdpi/ic_status_logo.png \
   res/drawable-hdpi/remote_tabs_off.png \
   res/drawable-hdpi/remote_tabs_on.png \
   res/drawable-hdpi/tab_new.png \
@@ -611,6 +617,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_menu_reload.png \
   res/drawable-xhdpi/ic_menu_save_as_pdf.png \
   res/drawable-xhdpi/ic_menu_share.png \
+  res/drawable-xhdpi/ic_status_logo.png \
   res/drawable-xhdpi/tab_new.png \
   res/drawable-xhdpi/tab_close.png \
   res/drawable-xhdpi/tab_thumbnail_default.png \
@@ -660,6 +667,7 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_share.png \
   res/drawable-mdpi-v11/ic_menu_tools.png \
   res/drawable-mdpi-v11/ic_menu_quit.png \
+  res/drawable-mdpi-v11/ic_status_logo.png \
   res/drawable-mdpi-v11/menu.png \
   res/drawable-mdpi-v11/menu_panel_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_bg.9.png \
@@ -689,6 +697,7 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_share.png \
   res/drawable-hdpi-v11/ic_menu_tools.png \
   res/drawable-hdpi-v11/ic_menu_quit.png \
+  res/drawable-hdpi-v11/ic_status_logo.png \
   res/drawable-hdpi-v11/menu.png \
   res/drawable-hdpi-v11/menu_panel_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_bg.9.png \
@@ -718,6 +727,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_share.png \
   res/drawable-xhdpi-v11/ic_menu_tools.png \
   res/drawable-xhdpi-v11/ic_menu_quit.png \
+  res/drawable-xhdpi-v11/ic_status_logo.png \
   res/drawable-xhdpi-v11/menu.png \
   res/drawable-xhdpi-v11/menu_panel_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_bg.9.png \
@@ -883,6 +893,7 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
 
 RES_COLOR = \
   res/color/menu_item_title.xml \
+  res/color/select_item_multichoice.xml \
   $(NULL)
 
 RES_MENU = \

@@ -1066,7 +1066,7 @@ class ScriptAnalysis
     }
 
     /* Whether an arithmetic operation is operating on integers, with an integer result. */
-    bool integerOperation(JSContext *cx, jsbytecode *pc);
+    bool integerOperation(jsbytecode *pc);
 
     bool trackUseChain(const SSAValue &v) {
         JS_ASSERT_IF(v.kind() == SSAValue::VAR, trackSlot(v.varSlot()));
