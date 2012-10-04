@@ -39,7 +39,7 @@ public:
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
 
-  virtual MediaEngineVideoOptions GetOptions();
+  virtual const MediaEngineVideoOptions *GetOptions();
   virtual nsresult Allocate();
 
   virtual nsresult Deallocate();
@@ -50,6 +50,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
+  // Need something better...
+  static const int DEFAULT_WIDTH=640;
+  static const int DEFAULT_HEIGHT=480;
+  static const int DEFAULT_FPS=30;
+
 protected:
   TrackID mTrackID;
   nsCOMPtr<nsITimer> mTimer;
@@ -58,6 +63,7 @@ protected:
   MediaEngineState mState;
   SourceMediaStream* mSource;
   layers::PlanarYCbCrImage* mImage;
+  static const MediaEngineVideoOptions mOpts;
 };
 
 class MediaEngineDefaultAudioSource : public nsITimerCallback,
