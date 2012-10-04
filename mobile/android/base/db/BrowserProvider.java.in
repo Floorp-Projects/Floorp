@@ -39,6 +39,7 @@ import org.mozilla.gecko.ProfileMigrator;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
 
+import android.app.SearchManager;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -117,6 +118,9 @@ public class BrowserProvider extends ContentProvider {
     // Control matches
     static final int CONTROL = 600;
 
+    // Search Suggest matches
+    static final int SEARCH_SUGGEST = 700;
+
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
             + " ASC";
@@ -138,6 +142,7 @@ public class BrowserProvider extends ContentProvider {
     static final Map<String, String> IMAGES_PROJECTION_MAP;
     static final Map<String, String> COMBINED_PROJECTION_MAP;
     static final Map<String, String> SCHEMA_PROJECTION_MAP;
+    static final Map<String, String> SEARCH_SUGGEST_PROJECTION_MAP;
 
     static {
         // We will reuse this.
@@ -228,6 +233,18 @@ public class BrowserProvider extends ContentProvider {
 
         // Control
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "control", CONTROL);
+
+        // Search Suggest
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, SearchManager.SUGGEST_URI_PATH_QUERY + "/*", SEARCH_SUGGEST);
+
+        map = new HashMap<String, String>();
+        map.put(SearchManager.SUGGEST_COLUMN_TEXT_1,
+                Combined.TITLE + " AS " + SearchManager.SUGGEST_COLUMN_TEXT_1);
+        map.put(SearchManager.SUGGEST_COLUMN_TEXT_2_URL,
+                Combined.URL + " AS " + SearchManager.SUGGEST_COLUMN_TEXT_2_URL);
+        map.put(SearchManager.SUGGEST_COLUMN_INTENT_DATA,
+                Combined.URL + " AS " + SearchManager.SUGGEST_COLUMN_INTENT_DATA);
+        SEARCH_SUGGEST_PROJECTION_MAP = Collections.unmodifiableMap(map);
     }
 
     private HashMap<String, DatabaseHelper> mDatabasePerProfile;
@@ -1374,6 +1391,9 @@ public class BrowserProvider extends ContentProvider {
             case HISTORY_ID:
                 trace("URI is HISTORY_ID: " + uri);
                 return History.CONTENT_ITEM_TYPE;
+            case SEARCH_SUGGEST:
+                trace("URI is SEARCH_SUGGEST: " + uri);
+                return SearchManager.SUGGEST_MIME_TYPE;
         }
 
         debug("URI has unrecognized type: " + uri);
@@ -1859,6 +1879,28 @@ public class BrowserProvider extends ContentProvider {
                     controlQuery(uri, projection, selection, selectionArgs, sortOrder);
 
                 return controlCursor;
+            }
+
+            case SEARCH_SUGGEST: {
+                debug("Query is on search suggest: " + uri);
+                selection = DBUtils.concatenateWhere(selection, "(" + Combined.URL + " LIKE ? OR " +
+                                                                      Combined.TITLE + " LIKE ?)");
+
+                String keyword = uri.getLastPathSegment();
+                if (keyword == null)
+                    keyword = "";
+
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                        new String[] { "%" + keyword + "%",
+                                       "%" + keyword + "%" });
+
+                if (TextUtils.isEmpty(sortOrder))
+                    sortOrder = DEFAULT_HISTORY_SORT_ORDER;
+
+                qb.setProjectionMap(SEARCH_SUGGEST_PROJECTION_MAP);
+                qb.setTables(VIEW_COMBINED_WITH_IMAGES);
+
+                break;
             }
 
             default:
