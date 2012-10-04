@@ -88,3 +88,7 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../../../content/base/src \
   -I$(srcdir)/../../../content/events/src \
   $(NULL)
+
+ifneq ($(A11Y_LOG),0)
+  DEFINES += -DA11Y_LOG
+endif

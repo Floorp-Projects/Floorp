@@ -57,3 +57,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/layout/generic \
   $(NULL)
 
+ifneq ($(A11Y_LOG),0)
+  DEFINES += -DA11Y_LOG
+endif

@@ -40,7 +40,7 @@ CPPSRCS = \
   TextUpdater.cpp \
   $(NULL)
 
-ifdef MOZ_DEBUG
+ifneq ($(A11Y_LOG),0)
 CPPSRCS += \
   Logging.cpp \
   $(NULL)
@@ -105,4 +105,8 @@ LOCAL_INCLUDES += \
   $(NULL)
 endif
 endif
+endif
+
+ifneq ($(A11Y_LOG),0)
+  DEFINES += -DA11Y_LOG
 endif
