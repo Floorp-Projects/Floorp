@@ -52,11 +52,13 @@ typedef float          GLclampf;
 interface WebGLBuffer {
 };
 
-interface WebGLFramebuffer;
+interface WebGLFramebuffer {
+};
 
 interface WebGLProgram;
 
-interface WebGLRenderbuffer;
+interface WebGLRenderbuffer {
+};
 
 interface WebGLShader;
 

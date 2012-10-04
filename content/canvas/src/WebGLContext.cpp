@@ -1414,28 +1414,6 @@ NS_INTERFACE_MAP_BEGIN(WebGLShader)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLShader)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(WebGLFramebuffer)
-NS_IMPL_RELEASE(WebGLFramebuffer)
-
-DOMCI_DATA(WebGLFramebuffer, WebGLFramebuffer)
-
-NS_INTERFACE_MAP_BEGIN(WebGLFramebuffer)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLFramebuffer)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLFramebuffer)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(WebGLRenderbuffer)
-NS_IMPL_RELEASE(WebGLRenderbuffer)
-
-DOMCI_DATA(WebGLRenderbuffer, WebGLRenderbuffer)
-
-NS_INTERFACE_MAP_BEGIN(WebGLRenderbuffer)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLRenderbuffer)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLRenderbuffer)
-NS_INTERFACE_MAP_END
-
 // WebGLUniformLocation
 
 NS_IMPL_ADDREF(WebGLUniformLocation)
@@ -1487,8 +1465,6 @@ NS_IMETHODIMP base::SetName(WebGLuint aName) \
 
 NAME_NOT_SUPPORTED(WebGLProgram)
 NAME_NOT_SUPPORTED(WebGLShader)
-NAME_NOT_SUPPORTED(WebGLFramebuffer)
-NAME_NOT_SUPPORTED(WebGLRenderbuffer)
 
 /* readonly attribute WebGLint size; */
 NS_IMETHODIMP
