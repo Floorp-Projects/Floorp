@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -10,7 +10,7 @@
 
 #include "video_engine/vie_render_manager.h"
 
-#include "engine_configurations.h"
+#include "engine_configurations.h"  // NOLINT
 #include "modules/video_render/main/interface/video_render.h"
 #include "modules/video_render/main/interface/video_render_defines.h"
 #include "system_wrappers/interface/critical_section_wrapper.h"
@@ -55,28 +55,28 @@ ViERenderManager::~ViERenderManager() {
 }
 
 WebRtc_Word32 ViERenderManager::RegisterVideoRenderModule(
-    VideoRender& render_module) {
+    VideoRender* render_module) {
   // See if there is already a render module registered for the window that
   // the registrant render module is associated with.
-  VideoRender* current_module = FindRenderModule(render_module.Window());
+  VideoRender* current_module = FindRenderModule(render_module->Window());
   if (current_module) {
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, ViEId(engine_id_),
                  "A module is already registered for this window (window=%p, "
                  "current module=%p, registrant module=%p.",
-                 render_module.Window(), current_module, &render_module);
+                 render_module->Window(), current_module, render_module);
     return -1;
   }
 
   // Register module.
-  render_list_.PushBack(static_cast<void*>(&render_module));
+  render_list_.PushBack(static_cast<void*>(render_module));
   use_external_render_module_ = true;
   return 0;
 }
 
 WebRtc_Word32 ViERenderManager::DeRegisterVideoRenderModule(
-    VideoRender& render_module) {
+    VideoRender* render_module) {
   // Check if there are streams in the module.
-  WebRtc_UWord32 n_streams = render_module.GetNumIncomingRenderStreams();
+  WebRtc_UWord32 n_streams = render_module->GetNumIncomingRenderStreams();
   if (n_streams != 0) {
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, ViEId(engine_id_),
                  "There are still %d streams in this module, cannot "
@@ -89,7 +89,7 @@ WebRtc_Word32 ViERenderManager::DeRegisterVideoRenderModule(
   bool found = false;
   for (list_item = render_list_.First(); list_item != NULL;
        list_item = render_list_.Next(list_item)) {
-    if (&render_module == static_cast<VideoRender*>(list_item->GetItem())) {
+    if (render_module == static_cast<VideoRender*>(list_item->GetItem())) {
       // We've found our renderer.
       render_list_.Erase(list_item);
       found = true;
@@ -154,7 +154,7 @@ WebRtc_Word32 ViERenderManager::RemoveRenderStream(
     const WebRtc_Word32 render_id) {
   // We need exclusive right to the items in the render manager to delete a
   // stream.
-  ViEManagerWriteScoped(*this);
+  ViEManagerWriteScoped scope(this);
 
   CriticalSectionScoped cs(list_cs_.get());
   MapItem* map_item = stream_to_vie_renderer_.Find(render_id);

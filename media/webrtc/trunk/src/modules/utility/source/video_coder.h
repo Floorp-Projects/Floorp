@@ -51,15 +51,15 @@ private:
     // VCMPacketizationCallback function.
     // Note: called by VideoCodingModule when encoding finished.
     WebRtc_Word32 SendData(
-        const FrameType /*frameType*/,
-        const WebRtc_UWord8 /*payloadType*/,
-        const WebRtc_UWord32 /*timeStamp*/,
+        FrameType /*frameType*/,
+        WebRtc_UWord8 /*payloadType*/,
+        WebRtc_UWord32 /*timeStamp*/,
+        int64_t capture_time_ms,
         const WebRtc_UWord8* payloadData,
-        const WebRtc_UWord32 payloadSize,
+        WebRtc_UWord32 payloadSize,
         const RTPFragmentationHeader& /* fragmentationHeader*/,
         const RTPVideoHeader* rtpTypeHdr);
 
-    WebRtc_UWord32 _instanceID;
     VideoCodingModule* _vcm;
     VideoFrame* _decodedVideo;
     EncodedVideoData* _videoEncodedData;

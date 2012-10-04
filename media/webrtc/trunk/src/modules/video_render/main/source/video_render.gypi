@@ -165,7 +165,7 @@
         'WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER',
       ],
     }],
-    ['build_with_chromium==0', {
+    ['include_tests==1', {
       'targets': [
         {
           'target_name': 'video_render_module_test',
@@ -208,7 +208,7 @@
           ] # conditions
         }, # video_render_module_test
       ], # targets
-    }], # build_with_chromium==0
+    }], # include_tests==0
   ], # conditions
 }
 

@@ -83,76 +83,55 @@ void WebRtc_FreeBinaryDelayEstimator(BinaryDelayEstimator* handle) {
   free(handle);
 }
 
-int WebRtc_CreateBinaryDelayEstimator(BinaryDelayEstimator** handle,
-                                      int max_delay,
-                                      int lookahead) {
+BinaryDelayEstimator* WebRtc_CreateBinaryDelayEstimator(int max_delay,
+                                                        int lookahead) {
   BinaryDelayEstimator* self = NULL;
-  int history_size = max_delay + lookahead;
-  int return_value = 0;
+  int history_size = max_delay + lookahead;  // Must be > 1 for buffer shifting.
 
-  if (handle == NULL) {
-    return -1;
-  }
-  *handle = NULL;
-
-  if (max_delay < 0) {
-    return -1;
-  }
-  if (lookahead < 0) {
-    return -1;
-  }
-  if (history_size < 2) {
-    // Must be this large for buffer shifting.
-    return -1;
+  if ((max_delay >= 0) && (lookahead >= 0) && (history_size > 1)) {
+    // Sanity conditions fulfilled.
+    self = malloc(sizeof(BinaryDelayEstimator));
   }
 
-  self = malloc(sizeof(BinaryDelayEstimator));
-  *handle = self;
-  if (self == NULL) {
-    return -1;
+  if (self != NULL) {
+    int malloc_fail = 0;
+
+    self->mean_bit_counts = NULL;
+    self->bit_counts = NULL;
+    self->binary_far_history = NULL;
+    self->far_bit_counts = NULL;
+    self->binary_near_history = NULL;
+
+    self->history_size = history_size;
+    self->near_history_size = lookahead + 1;
+
+    // Allocate memory for spectrum buffers.
+    self->mean_bit_counts = malloc(history_size * sizeof(int32_t));
+    malloc_fail |= (self->mean_bit_counts == NULL);
+
+    self->bit_counts = malloc(history_size * sizeof(int32_t));
+    malloc_fail |= (self->bit_counts == NULL);
+
+    // Allocate memory for history buffers.
+    self->binary_far_history = malloc(history_size * sizeof(uint32_t));
+    malloc_fail |= (self->binary_far_history == NULL);
+
+    self->binary_near_history = malloc((lookahead + 1) * sizeof(uint32_t));
+    malloc_fail |= (self->binary_near_history == NULL);
+
+    self->far_bit_counts = malloc(history_size * sizeof(int));
+    malloc_fail |= (self->far_bit_counts == NULL);
+
+    if (malloc_fail) {
+      WebRtc_FreeBinaryDelayEstimator(self);
+      self = NULL;
+    }
   }
 
-  self->mean_bit_counts = NULL;
-  self->bit_counts = NULL;
-  self->binary_far_history = NULL;
-  self->far_bit_counts = NULL;
-  self->binary_near_history = NULL;
-
-  self->history_size = history_size;
-  self->near_history_size = lookahead + 1;
-
-  // Allocate memory for spectrum buffers.
-  self->mean_bit_counts = malloc(history_size * sizeof(int32_t));
-  if (self->mean_bit_counts == NULL) {
-    return_value = -1;
-  }
-  self->bit_counts = malloc(history_size * sizeof(int32_t));
-  if (self->bit_counts == NULL) {
-    return_value = -1;
-  }
-  // Allocate memory for history buffers.
-  self->binary_far_history = malloc(history_size * sizeof(uint32_t));
-  if (self->binary_far_history == NULL) {
-    return_value = -1;
-  }
-  self->binary_near_history = malloc(self->near_history_size *
-      sizeof(uint32_t));
-  if (self->binary_near_history == NULL) {
-    return_value = -1;
-  }
-  self->far_bit_counts = malloc(history_size * sizeof(int));
-  if (self->far_bit_counts == NULL) {
-    return_value = -1;
-  }
-
-  if (return_value == -1) {
-    WebRtc_FreeBinaryDelayEstimator(self);
-    *handle = NULL;
-  }
-  return return_value;
+  return self;
 }
 
-int WebRtc_InitBinaryDelayEstimator(BinaryDelayEstimator* handle) {
+void WebRtc_InitBinaryDelayEstimator(BinaryDelayEstimator* handle) {
   int i = 0;
   assert(handle != NULL);
 
@@ -170,8 +149,6 @@ int WebRtc_InitBinaryDelayEstimator(BinaryDelayEstimator* handle) {
 
   // Default return value if we're unable to estimate. -1 is used for errors.
   handle->last_delay = -2;
-
-  return 0;
 }
 
 int WebRtc_ProcessBinarySpectrum(BinaryDelayEstimator* handle,
@@ -290,11 +267,6 @@ int WebRtc_ProcessBinarySpectrum(BinaryDelayEstimator* handle,
 int WebRtc_binary_last_delay(BinaryDelayEstimator* handle) {
   assert(handle != NULL);
   return handle->last_delay;
-}
-
-int WebRtc_history_size(BinaryDelayEstimator* handle) {
-  assert(handle != NULL);
-  return handle->history_size;
 }
 
 void WebRtc_MeanEstimatorFix(int32_t new_value,

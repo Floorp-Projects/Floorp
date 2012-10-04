@@ -112,7 +112,7 @@ LOCAL_CPP_EXTENSION := .cc
 LOCAL_SRC_FILES:= \
     $(call all-proto-files-under, test) \
     test/unit_test.cc \
-    ../../../test/testsupport/fileutils.cc
+    ../../test/testsupport/fileutils.cc
 
 # Flags passed to both C and C++ files.
 LOCAL_CFLAGS := \

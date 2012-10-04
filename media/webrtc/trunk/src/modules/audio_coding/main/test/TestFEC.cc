@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -59,9 +59,9 @@ void TestFEC::Perform()
         WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
                      "---------- TestFEC ----------");
     }
-    char fileName[] = "./test/data/audio_coding/testfile32kHz.pcm";
-    _inFileA.Open(fileName, 32000, "rb");
-
+    const std::string file_name =
+        webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
+    _inFileA.Open(file_name, 32000, "rb");
 
     bool fecEnabled;
 
@@ -553,7 +553,8 @@ WebRtc_Word16 TestFEC::RegisterSendCodec(char side, char* codecName, WebRtc_Word
     }
     CodecInst myCodecParam;
 
-    CHECK_ERROR(AudioCodingModule::Codec(codecName, myCodecParam, samplingFreqHz));
+    CHECK_ERROR(AudioCodingModule::Codec(codecName, myCodecParam,
+                                         samplingFreqHz, 1));
 
     CHECK_ERROR(myACM->RegisterSendCodec(myCodecParam));
 
@@ -575,7 +576,7 @@ void TestFEC::Run()
         CHECK_ERROR(_acmA->Add10MsData(audioFrame));
         CHECK_ERROR(_acmA->Process());
         CHECK_ERROR(_acmB->PlayoutData10Ms(outFreqHzB, audioFrame));
-        _outFileB.Write10MsData(audioFrame._payloadData, audioFrame._payloadDataLengthInSamples);
+        _outFileB.Write10MsData(audioFrame.data_, audioFrame.samples_per_channel_);
         msecPassed += 10;
         if(msecPassed >= 1000)
         {
@@ -598,21 +599,18 @@ void TestFEC::Run()
     _inFileA.Rewind();
 }
 
-void TestFEC::OpenOutFile(WebRtc_Word16 testNumber)
-{
-    char fileName[500];
-
-    if(_testMode == 0)
-    {
-        sprintf(fileName, "%s/TestFEC_autoFile_%02d.pcm",
-                webrtc::test::OutputPath().c_str(), testNumber);
-    }
-    else
-    {
-        sprintf(fileName, "%s/TestFEC_outFile_%02d.pcm",
-                webrtc::test::OutputPath().c_str(), testNumber);
-    }
-    _outFileB.Open(fileName, 32000, "wb");
+void TestFEC::OpenOutFile(WebRtc_Word16 test_number) {
+  std::string file_name;
+  std::stringstream file_stream;
+  file_stream << webrtc::test::OutputPath();
+  if (_testMode == 0) {
+    file_stream << "TestFEC_autoFile_";
+  } else {
+    file_stream << "TestFEC_outFile_";
+  }
+  file_stream << test_number << ".pcm";
+  file_name = file_stream.str();
+  _outFileB.Open(file_name, 16000, "wb");
 }
 
 void TestFEC::DisplaySendReceiveCodec()

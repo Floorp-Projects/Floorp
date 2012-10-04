@@ -8,23 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "vie_receiver.h"
+#include "video_engine/vie_receiver.h"
 
-#include "critical_section_wrapper.h"
-#include "rtp_dump.h"
-#include "rtp_rtcp.h"
-#include "video_coding.h"
-#include "trace.h"
+#include "modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "modules/utility/interface/rtp_dump.h"
+#include "modules/video_coding/main/interface/video_coding.h"
+#include "system_wrappers/interface/critical_section_wrapper.h"
+#include "system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
-ViEReceiver::ViEReceiver(int engine_id, int channel_id,
-                         RtpRtcp& rtp_rtcp,
-                         VideoCodingModule& module_vcm)
+ViEReceiver::ViEReceiver(const int32_t channel_id,
+                         VideoCodingModule* module_vcm)
     : receive_cs_(CriticalSectionWrapper::CreateCriticalSection()),
-      engine_id_(engine_id),
       channel_id_(channel_id),
-      rtp_rtcp_(rtp_rtcp),
+      rtp_rtcp_(NULL),
       vcm_(module_vcm),
       external_decryption_(NULL),
       decryption_buffer_(NULL),
@@ -64,6 +62,10 @@ int ViEReceiver::DeregisterExternalDecryption() {
   }
   external_decryption_ = NULL;
   return 0;
+}
+
+void ViEReceiver::SetRtpRtcpModule(RtpRtcp* module) {
+  rtp_rtcp_ = module;
 }
 
 void ViEReceiver::RegisterSimulcastRtpRtcpModules(
@@ -116,7 +118,7 @@ WebRtc_Word32 ViEReceiver::OnReceivedPayloadData(
     return 0;
   }
 
-  if (vcm_.IncomingPacket(payload_data, payload_size, *rtp_header) != 0) {
+  if (vcm_->IncomingPacket(payload_data, payload_size, *rtp_header) != 0) {
     // Check this...
     return -1;
   }
@@ -139,12 +141,11 @@ int ViEReceiver::InsertRTPPacket(const WebRtc_Word8* rtp_packet,
                                     decryption_buffer_, received_packet_length,
                                     &decrypted_length);
       if (decrypted_length <= 0) {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                     ViEId(engine_id_, channel_id_), "RTP decryption failed");
+        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
+                     "RTP decryption failed");
         return -1;
       } else if (decrypted_length > kViEMaxMtu) {
-        WEBRTC_TRACE(webrtc::kTraceCritical, webrtc::kTraceVideo,
-                     ViEId(engine_id_, channel_id_),
+        WEBRTC_TRACE(webrtc::kTraceCritical, webrtc::kTraceVideo, channel_id_,
                      "InsertRTPPacket: %d bytes is allocated as RTP decrytption"
                      " output, external decryption used %d bytes. => memory is "
                      " now corrupted", kViEMaxMtu, decrypted_length);
@@ -159,14 +160,15 @@ int ViEReceiver::InsertRTPPacket(const WebRtc_Word8* rtp_packet,
                            static_cast<WebRtc_UWord16>(received_packet_length));
     }
   }
-  return rtp_rtcp_.IncomingPacket(received_packet, received_packet_length);
+  assert(rtp_rtcp_);  // Should be set by owner at construction time.
+  return rtp_rtcp_->IncomingPacket(received_packet, received_packet_length);
 }
 
 int ViEReceiver::InsertRTCPPacket(const WebRtc_Word8* rtcp_packet,
                                   int rtcp_packet_length) {
   // TODO(mflodman) Change decrypt to get rid of this cast.
-    WebRtc_Word8* tmp_ptr = const_cast<WebRtc_Word8*>(rtcp_packet);
-    unsigned char* received_packet = reinterpret_cast<unsigned char*>(tmp_ptr);
+  WebRtc_Word8* tmp_ptr = const_cast<WebRtc_Word8*>(rtcp_packet);
+  unsigned char* received_packet = reinterpret_cast<unsigned char*>(tmp_ptr);
   int received_packet_length = rtcp_packet_length;
   {
     CriticalSectionScoped cs(receive_cs_.get());
@@ -178,12 +180,11 @@ int ViEReceiver::InsertRTCPPacket(const WebRtc_Word8* rtcp_packet,
                                          received_packet_length,
                                          &decrypted_length);
       if (decrypted_length <= 0) {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                     ViEId(engine_id_, channel_id_), "RTP decryption failed");
+        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
+                     "RTP decryption failed");
         return -1;
       } else if (decrypted_length > kViEMaxMtu) {
-        WEBRTC_TRACE(webrtc::kTraceCritical, webrtc::kTraceVideo,
-                     ViEId(engine_id_, channel_id_),
+        WEBRTC_TRACE(webrtc::kTraceCritical, webrtc::kTraceVideo, channel_id_,
                      "InsertRTCPPacket: %d bytes is allocated as RTP "
                      " decrytption output, external decryption used %d bytes. "
                      " => memory is now corrupted",
@@ -207,7 +208,8 @@ int ViEReceiver::InsertRTCPPacket(const WebRtc_Word8* rtcp_packet,
       rtp_rtcp->IncomingPacket(received_packet, received_packet_length);
     }
   }
-  return rtp_rtcp_.IncomingPacket(received_packet, received_packet_length);
+  assert(rtp_rtcp_);  // Should be set by owner at construction time.
+  return rtp_rtcp_->IncomingPacket(received_packet, received_packet_length);
 }
 
 void ViEReceiver::StartReceive() {
@@ -226,8 +228,7 @@ int ViEReceiver::StartRTPDump(const char file_nameUTF8[1024]) {
   } else {
     rtp_dump_ = RtpDump::CreateRtpDump();
     if (rtp_dump_ == NULL) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                   ViEId(engine_id_, channel_id_),
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
                    "StartRTPDump: Failed to create RTP dump");
       return -1;
     }
@@ -235,8 +236,7 @@ int ViEReceiver::StartRTPDump(const char file_nameUTF8[1024]) {
   if (rtp_dump_->Start(file_nameUTF8) != 0) {
     RtpDump::DestroyRtpDump(rtp_dump_);
     rtp_dump_ = NULL;
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                 ViEId(engine_id_, channel_id_),
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
                  "StartRTPDump: Failed to start RTP dump");
     return -1;
   }
@@ -249,15 +249,13 @@ int ViEReceiver::StopRTPDump() {
     if (rtp_dump_->IsActive()) {
       rtp_dump_->Stop();
     } else {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                   ViEId(engine_id_, channel_id_),
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
                    "StopRTPDump: Dump not active");
     }
     RtpDump::DestroyRtpDump(rtp_dump_);
     rtp_dump_ = NULL;
   } else {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                 ViEId(engine_id_, channel_id_),
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
                  "StopRTPDump: RTP dump not started");
     return -1;
   }

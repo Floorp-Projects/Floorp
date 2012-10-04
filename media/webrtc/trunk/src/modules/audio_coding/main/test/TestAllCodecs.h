@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,89 +8,72 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef TEST_ALL_CODECS_H
-#define TEST_ALL_CODECS_H
+#ifndef WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TEST_ALL_CODECS_H_
+#define WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TEST_ALL_CODECS_H_
 
 #include "ACMTest.h"
 #include "Channel.h"
 #include "PCMFile.h"
+#include "typedefs.h"
 
 namespace webrtc {
 
-class TestPack : public AudioPacketizationCallback
-{
-public:
-    TestPack();
-    ~TestPack();
-    
-    void RegisterReceiverACM(AudioCodingModule* acm);
-    
-    virtual WebRtc_Word32 SendData(const FrameType frameType,
-        const WebRtc_UWord8 payloadType,
-        const WebRtc_UWord32 timeStamp,
-        const WebRtc_UWord8* payloadData, 
-        const WebRtc_UWord16 payloadSize,
-        const RTPFragmentationHeader* fragmentation);
+class TestPack : public AudioPacketizationCallback {
+ public:
+  TestPack();
+  ~TestPack();
 
-    WebRtc_UWord16 GetPayloadSize();
-    WebRtc_UWord32 GetTimeStampDiff();
-    void ResetPayloadSize();
+  void RegisterReceiverACM(AudioCodingModule* acm);
 
-private:
-    AudioCodingModule* _receiverACM;
-    WebRtc_Word16            _seqNo;
-    WebRtc_UWord8            _payloadData[60 * 32 * 2 * 2]; 
-    WebRtc_UWord32           _timeStampDiff;
-    WebRtc_UWord32           _lastInTimestamp;
-    WebRtc_UWord64           _totalBytes;
-    WebRtc_UWord16           _payloadSize;
+  int32_t SendData(FrameType frame_type, uint8_t payload_type,
+                   uint32_t timestamp, const uint8_t* payload_data,
+                   uint16_t payload_size,
+                   const RTPFragmentationHeader* fragmentation);
+
+  uint16_t payload_size();
+  uint32_t timestamp_diff();
+  void reset_payload_size();
+
+ private:
+  AudioCodingModule*  receiver_acm_;
+  uint16_t sequence_number_;
+  uint8_t payload_data_[60 * 32 * 2 * 2];
+  uint32_t timestamp_diff_;
+  uint32_t last_in_timestamp_;
+  uint64_t total_bytes_;
+  uint16_t payload_size_;
 };
 
-class TestAllCodecs : public ACMTest
-{
-public:
-    TestAllCodecs(int testMode);
-    ~TestAllCodecs();
+class TestAllCodecs : public ACMTest {
+ public:
+  TestAllCodecs(int test_mode);
+  ~TestAllCodecs();
 
-    void Perform();
-private:
-    // The default value of '-1' indicates that the registration is based only on codec name
-    // and a sampling frequncy matching is not required. This is useful for codecs which support
-    // several sampling frequency.
-    WebRtc_Word16 RegisterSendCodec(char side, 
-        char* codecName, 
-        WebRtc_Word32 sampFreqHz,
-        int rate,
-        int packSize,
-        int extraByte);
+  void Perform();
 
-    void Run(TestPack* channel);
-    void OpenOutFile(WebRtc_Word16 testNumber);
-    void DisplaySendReceiveCodec();
+ private:
+  // The default value of '-1' indicates that the registration is based only on
+  // codec name, and a sampling frequency matching is not required.
+  // This is useful for codecs which support several sampling frequency.
+  // Note! Only mono mode is tested in this test.
+  void RegisterSendCodec(char side, char* codec_name, int32_t sampling_freq_hz,
+                         int rate, int packet_size, int extra_byte);
 
-    WebRtc_Word32 SendData(
-        const FrameType       frameType,
-        const WebRtc_UWord8   payloadType,
-        const WebRtc_UWord32  timeStamp,
-        const WebRtc_UWord8*  payloadData, 
-        const WebRtc_UWord16  payloadSize,
-        const RTPFragmentationHeader* fragmentation);
+  void Run(TestPack* channel);
+  void OpenOutFile(int test_number);
+  void DisplaySendReceiveCodec();
 
-    int                     _testMode;
-
-    AudioCodingModule*      _acmA;
-    AudioCodingModule*      _acmB;
-
-    TestPack*               _channelA2B;
-
-    PCMFile                _inFileA;
-    PCMFile                _outFileB;
-    WebRtc_Word16          _testCntr;
-    WebRtc_UWord16         _packSizeSamp;
-    WebRtc_UWord16         _packSizeBytes;
-    int                    _counter;
+  int test_mode_;
+  AudioCodingModule* acm_a_;
+  AudioCodingModule* acm_b_;
+  TestPack* channel_a_to_b_;
+  PCMFile infile_a_;
+  PCMFile outfile_b_;
+  int test_count_;
+  uint16_t packet_size_samples_;
+  uint16_t packet_size_bytes_;
 };
 
-#endif // TEST_ALL_CODECS_H
+}  // namespace webrtc
 
-} // namespace webrtc
+#endif  // WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TEST_ALL_CODECS_H_

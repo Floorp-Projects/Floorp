@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -12,15 +12,20 @@
 
 #include <string>
 
-#include "common_video/libyuv/include/libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "system_wrappers/interface/tick_util.h"
 #include "testsupport/fileutils.h"
 
 namespace webrtc {
 
-void TestSize(VideoFrame& sourceFrame,
-              WebRtc_UWord32 targetWidth, WebRtc_UWord32 targetHeight,
-              WebRtc_UWord32 mode, VideoProcessingModule *vpm);
+// The |sourceFrame| is scaled to |target_width|,|target_height|, using the
+// filter mode set to |mode|. The |expected_psnr| is used to verify basic
+// quality when the resampled frame is scaled back up/down to the
+// original/source size. |expected_psnr| is set to be  ~0.1/0.05dB lower than
+// actual PSNR verified under the same conditions.
+void TestSize(const VideoFrame& sourceFrame, int target_width,
+              int target_height, int mode, double expected_psnr,
+              VideoProcessingModule* vpm);
 
 VideoProcessingModuleTest::VideoProcessingModuleTest() :
   _vpm(NULL),
@@ -275,26 +280,22 @@ TEST_F(VideoProcessingModuleTest, Resampler)
     // initiate test timer
     t0 = TickTime::Now();
 
-    // kFastRescaling
-    _vpm->SetInputFrameResampleMode(kFastRescaling);
-    // TESTING DIFFERENT SIZES
-    TestSize(sourceFrame, 100, 50, 1, _vpm);  // Cut, decimation 1x, interpolate
-    TestSize(sourceFrame, 352/2, 288/2, 1, _vpm);  // Even decimation
-    TestSize(sourceFrame, 352, 288, 1, _vpm);      // No resampling
-    TestSize(sourceFrame, 2*352, 2*288,1,  _vpm);  // Even upsampling
-    TestSize(sourceFrame, 400, 256, 1, _vpm);      // Upsampling 1.5x and cut
-    TestSize(sourceFrame, 960, 720, 1, _vpm);      // Upsampling 3.5x and cut
-    TestSize(sourceFrame, 1280, 720, 1, _vpm);     // Upsampling 4x and cut
+    // Test scaling to different sizes: source is of |width|/|height| = 352/288.
+    // Scaling mode in VPM is currently fixed to kScaleBox (mode = 3).
+    TestSize(sourceFrame, 100, 50, 3, 24.0, _vpm);
+    TestSize(sourceFrame, 352/4, 288/4, 3, 25.2, _vpm);
+    TestSize(sourceFrame, 352/2, 288/2, 3, 28.1, _vpm);
+    TestSize(sourceFrame, 352, 288, 3, -1, _vpm);  // no resampling.
+    TestSize(sourceFrame, 2*352, 2*288, 3, 32.2, _vpm);
+    TestSize(sourceFrame, 400, 256, 3, 31.3, _vpm);
+    TestSize(sourceFrame, 480, 640, 3, 32.15, _vpm);
+    TestSize(sourceFrame, 960, 720, 3, 32.2, _vpm);
+    TestSize(sourceFrame, 1280, 720, 3, 32.15, _vpm);
+    // Upsampling to odd size.
+    TestSize(sourceFrame, 501, 333, 3, 32.05, _vpm);
+    // Downsample to odd size.
+    TestSize(sourceFrame, 281, 175, 3, 29.3, _vpm);
 
-    // kBiLinear
-    _vpm->SetInputFrameResampleMode(kBiLinear);
-    // TESTING DIFFERENT SIZES
-    TestSize(sourceFrame, 352/4, 288/4, 2, _vpm);
-    TestSize(sourceFrame, 352/2, 288/2, 2, _vpm);
-    TestSize(sourceFrame, 2*352, 2*288,2, _vpm);
-    TestSize(sourceFrame, 480, 640, 2, _vpm);
-    TestSize(sourceFrame, 960, 720, 2, _vpm);
-    TestSize(sourceFrame, 1280, 720, 2, _vpm);
     // stop timer
     t1 = TickTime::Now();
     accTicks += t1 - t0;
@@ -315,29 +316,81 @@ TEST_F(VideoProcessingModuleTest, Resampler)
          static_cast<int>(minRuntime));
 }
 
-void TestSize(VideoFrame& sourceFrame, WebRtc_UWord32 targetWidth,
-              WebRtc_UWord32 targetHeight,
-              WebRtc_UWord32 mode, VideoProcessingModule *vpm)
-{
-    VideoFrame *outFrame = NULL;
-  std::ostringstream filename;
-  filename << webrtc::test::OutputPath() << "Resampler_"<< mode << "_" <<
-      targetWidth << "x" << targetHeight << "_30Hz_P420.yuv";
-  // TODO(kjellander): Add automatic verification of these output files:
-  std::cout << "Watch " << filename.str() << " and verify that it is okay."
-            << std::endl;
-  FILE* standAloneFile = fopen(filename.str().c_str(), "wb");
-  ASSERT_EQ(VPM_OK, vpm->SetTargetResolution(targetWidth, targetHeight, 30));
-  ASSERT_EQ(VPM_OK, vpm->PreprocessFrame(&sourceFrame, &outFrame));
-  // Length should be updated only if frame was resampled
-  if (targetWidth != sourceFrame.Width() ||
-      targetHeight != sourceFrame.Height())  {
-    ASSERT_EQ((targetWidth * targetHeight * 3 / 2), outFrame->Length());
-    // Write to file for visual inspection
-    fwrite(outFrame->Buffer(), 1, outFrame->Length(), standAloneFile);
-    outFrame->Free();
+void TestSize(const VideoFrame& source_frame, int target_width,
+              int target_height, int mode, double expected_psnr,
+              VideoProcessingModule* vpm) {
+  int source_width = source_frame.Width();
+  int source_height = source_frame.Height();
+  VideoFrame* out_frame = NULL;
+
+  ASSERT_EQ(VPM_OK, vpm->SetTargetResolution(target_width, target_height, 30));
+  ASSERT_EQ(VPM_OK, vpm->PreprocessFrame(&source_frame, &out_frame));
+
+  // If the frame was resampled (scale changed) then:
+  // (1) verify the new size and write out processed frame for viewing.
+  // (2) scale the resampled frame (|out_frame|) back to the original size and
+  // compute PSNR relative to |source_frame| (for automatic verification).
+  // (3) write out the processed frame for viewing.
+  if (target_width != static_cast<int>(source_width) ||
+      target_height != static_cast<int>(source_height))  {
+    int target_half_width = (target_width + 1) >> 1;
+    int target_half_height = (target_height + 1) >> 1;
+    int required_size_resampled = target_width * target_height +
+        2 * (target_half_width * target_half_height);
+    ASSERT_EQ(required_size_resampled, static_cast<int>(out_frame->Length()));
+
+    // Write the processed frame to file for visual inspection.
+    std::ostringstream filename;
+    filename << webrtc::test::OutputPath() << "Resampler_"<< mode << "_" <<
+        "from_" << source_width << "x" << source_height << "_to_" <<
+        target_width << "x" << target_height << "_30Hz_P420.yuv";
+    std::cout << "Watch " << filename.str() << " and verify that it is okay."
+        << std::endl;
+    FILE* stand_alone_file = fopen(filename.str().c_str(), "wb");
+    if (fwrite(out_frame->Buffer(), 1,
+               out_frame->Length(), stand_alone_file) != out_frame->Length()) {
+      fprintf(stderr, "Failed to write frame for scaling to width/height: "
+          " %d %d \n", target_width, target_height);
+      return;
+    }
+    fclose(stand_alone_file);
+
+    VideoFrame resampled_source_frame;
+    resampled_source_frame.CopyFrame(*out_frame);
+
+    // Scale |resampled_source_frame| back to original/source size.
+    ASSERT_EQ(VPM_OK, vpm->SetTargetResolution(source_width,
+                                               source_height,
+                                               30));
+    ASSERT_EQ(VPM_OK, vpm->PreprocessFrame(&resampled_source_frame,
+                                           &out_frame));
+
+    // Write the processed frame to file for visual inspection.
+    std::ostringstream filename2;
+    filename2 << webrtc::test::OutputPath() << "Resampler_"<< mode << "_" <<
+          "from_" << target_width << "x" << target_height << "_to_" <<
+          source_width << "x" << source_height << "_30Hz_P420.yuv";
+    std::cout << "Watch " << filename2.str() << " and verify that it is okay."
+                << std::endl;
+    stand_alone_file = fopen(filename2.str().c_str(), "wb");
+    if (fwrite(out_frame->Buffer(), 1,
+               out_frame->Length(), stand_alone_file) != out_frame->Length()) {
+      fprintf(stderr, "Failed to write frame for scaling to width/height "
+          "%d %d \n", source_width, source_height);
+      return;
+    }
+    fclose(stand_alone_file);
+
+    // Compute the PSNR and check expectation.
+    double psnr = I420PSNR(source_frame.Buffer(), out_frame->Buffer(),
+                           source_width, source_height);
+    EXPECT_GT(psnr, expected_psnr);
+    printf("PSNR: %f. PSNR is between source of size %d %d, and a modified "
+        "source which is scaled down/up to: %d %d, and back to source size \n",
+        psnr, source_width, source_height, target_width, target_height);
+
+    resampled_source_frame.Free();
   }
-  fclose(standAloneFile);
 }
 
 }  // namespace webrtc

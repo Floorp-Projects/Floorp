@@ -150,7 +150,7 @@ class AudioProcessing : public Module {
   // must be called prior to processing the current frame. Any getter function
   // with the stream_ tag which is needed should be called after processing.
   //
-  // The |_frequencyInHz|, |_audioChannel|, and |_payloadDataLengthInSamples|
+  // The |sample_rate_hz_|, |num_channels_|, and |samples_per_channel_|
   // members of |frame| must be valid, and correspond to settings supplied
   // to APM.
   virtual int ProcessStream(AudioFrame* frame) = 0;
@@ -165,7 +165,7 @@ class AudioProcessing : public Module {
   // typically will not be used. If you're not sure what to pass in here,
   // chances are you don't need to use it.
   //
-  // The |_frequencyInHz|, |_audioChannel|, and |_payloadDataLengthInSamples|
+  // The |sample_rate_hz_|, |num_channels_|, and |samples_per_channel_|
   // members of |frame| must be valid.
   //
   // TODO(ajm): add const to input; requires an implementation fix.
@@ -545,6 +545,11 @@ class NoiseSuppression {
   virtual int set_level(Level level) = 0;
   virtual Level level() const = 0;
 
+  // Returns the internally computed prior speech probability of current frame
+  // averaged over output channels. This is not supported in fixed point, for
+  // which |kUnsupportedFunctionError| is returned.
+  virtual float speech_probability() const = 0;
+
  protected:
   virtual ~NoiseSuppression() {};
 };
@@ -554,7 +559,7 @@ class NoiseSuppression {
 // external VAD decision.
 //
 // In addition to |stream_has_voice()| the VAD decision is provided through the
-// |AudioFrame| passed to |ProcessStream()|. The |_vadActivity| member will be
+// |AudioFrame| passed to |ProcessStream()|. The |vad_activity_| member will be
 // modified to reflect the current decision.
 class VoiceDetection {
  public:

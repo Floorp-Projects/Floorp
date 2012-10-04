@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -13,7 +13,7 @@
 
 #include "typedefs.h"
 #include "i_video_render_win.h"
-#include "common_video/libyuv/include/libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 
 #include "ddraw.h"
 #include <Map>
@@ -295,7 +295,7 @@ public:
     bool DeliverInScreenType();
     int GetChannels(std::list<int>& channelList);
 
-    // code for getting graphics settings    
+    // code for getting graphics settings
     int GetScreenResolution(int& screenWidth, int& screenHeight);
     int UpdateSystemCPUUsage(int systemCPU);
 

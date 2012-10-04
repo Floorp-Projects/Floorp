@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -151,13 +151,13 @@ int main(int /*argc*/, char** /*argv*/)
                 }
             }
              WebRtc_UWord32 decodedDataLengthInSamples;
-            if( 0 !=  filePlayer.Get10msAudioFromFile( audioFrame._payloadData, decodedDataLengthInSamples, audioCodec.plfreq))
+            if( 0 !=  filePlayer.Get10msAudioFromFile( audioFrame.data_, decodedDataLengthInSamples, audioCodec.plfreq))
             {
                 audioNotDone = false;
             } else
             {
-                audioFrame._frequencyInHz = filePlayer.Frequency();
-                audioFrame._payloadDataLengthInSamples = (WebRtc_UWord16)decodedDataLengthInSamples;
+                audioFrame.sample_rate_hz_ = filePlayer.Frequency();
+                audioFrame.samples_per_channel_ = (WebRtc_UWord16)decodedDataLengthInSamples;
                 fileRecorder.RecordAudioToFile(audioFrame, &TickTime::Now());
             }
        }
@@ -214,9 +214,9 @@ int main(int /*argc*/, char** /*argv*/)
 
         // 10 ms
         AudioFrame audioFrame;
-        audioFrame._payloadDataLengthInSamples = audioCodec.plfreq/100;
-        memset(audioFrame._payloadData, 0, 2*audioFrame._payloadDataLengthInSamples);
-        audioFrame._frequencyInHz = 8000;
+        audioFrame.samples_per_channel_ = audioCodec.plfreq/100;
+        memset(audioFrame.data_, 0, 2*audioFrame.samples_per_channel_);
+        audioFrame.sample_rate_hz_ = 8000;
 
         // prepare the video frame
         videoFrame.VerifyAndAllocate(KVideoWriteSize);
@@ -338,15 +338,15 @@ int main(int /*argc*/, char** /*argv*/)
             }
 
             WebRtc_UWord32 decodedDataLengthInSamples;
-            if( 0 != filePlayer.Get10msAudioFromFile( audioFrame._payloadData, decodedDataLengthInSamples, audioCodec.plfreq))
+            if( 0 != filePlayer.Get10msAudioFromFile( audioFrame.data_, decodedDataLengthInSamples, audioCodec.plfreq))
             {
                 audioNotDone = false;
 
             } else
             {
                 ::Sleep(5);
-                audioFrame._frequencyInHz = filePlayer.Frequency();
-                audioFrame._payloadDataLengthInSamples = (WebRtc_UWord16)decodedDataLengthInSamples;
+                audioFrame.sample_rate_hz_ = filePlayer.Frequency();
+                audioFrame.samples_per_channel_ = (WebRtc_UWord16)decodedDataLengthInSamples;
                 assert(0 == fileRecorder.RecordAudioToFile(audioFrame));
 
                 audioFrameCount++;

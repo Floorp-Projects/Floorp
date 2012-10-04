@@ -93,61 +93,68 @@ class RtpFecTest : public ::testing::Test {
   void TearDown();
 };
 
+// TODO(marpan): Consider adding table for input/output to simplify tests.
+
 TEST_F(RtpFecTest, HandleIncorrectInputs) {
-  int num_important_packets = 0;
-  bool use_unequal_protection =  false;
-  uint8_t protection_factor = 60;
+  int kNumImportantPackets = 0;
+  bool kUseUnequalProtection =  false;
+  uint8_t kProtectionFactor = 60;
 
   // Media packet list is empty.
   EXPECT_EQ(-1, fec_->GenerateFEC(media_packet_list_,
-                                  protection_factor,
-                                  num_important_packets,
-                                  use_unequal_protection,
+                                  kProtectionFactor,
+                                  kNumImportantPackets,
+                                  kUseUnequalProtection,
+                                  webrtc::kFecMaskBursty,
                                   &fec_packet_list_));
 
   int num_media_packets = 10;
   ConstructMediaPackets(num_media_packets);
 
-  num_important_packets = -1;
+  kNumImportantPackets = -1;
   // Number of important packets below 0.
   EXPECT_EQ(-1, fec_->GenerateFEC(media_packet_list_,
-                                  protection_factor,
-                                  num_important_packets,
-                                  use_unequal_protection,
+                                  kProtectionFactor,
+                                  kNumImportantPackets,
+                                  kUseUnequalProtection,
+                                  webrtc::kFecMaskBursty,
                                   &fec_packet_list_));
 
-  num_important_packets = 12;
+  kNumImportantPackets = 12;
   // Number of important packets greater than number of media packets.
   EXPECT_EQ(-1, fec_->GenerateFEC(media_packet_list_,
-                                  protection_factor,
-                                  num_important_packets,
-                                  use_unequal_protection,
+                                  kProtectionFactor,
+                                  kNumImportantPackets,
+                                  kUseUnequalProtection,
+                                  webrtc::kFecMaskBursty,
                                   &fec_packet_list_));
 
   num_media_packets = kMaxNumberMediaPackets + 1;
   ConstructMediaPackets(num_media_packets);
 
-  num_important_packets = 0;
+  kNumImportantPackets = 0;
   // Number of media packet is above maximum allowed (kMaxNumberMediaPackets).
   EXPECT_EQ(-1, fec_->GenerateFEC(media_packet_list_,
-                                  protection_factor,
-                                  num_important_packets,
-                                  use_unequal_protection,
+                                  kProtectionFactor,
+                                  kNumImportantPackets,
+                                  kUseUnequalProtection,
+                                  webrtc::kFecMaskBursty,
                                   &fec_packet_list_));
 }
 
 TEST_F(RtpFecTest, FecRecoveryNoLoss) {
-  const int num_important_packets = 0;
-  const bool use_unequal_protection =  false;
-  const int num_media_packets = 4;
-  uint8_t protection_factor = 60;
+  const int kNumImportantPackets = 0;
+  const bool kUseUnequalProtection =  false;
+  const int kNumMediaPackets = 4;
+  uint8_t kProtectionFactor = 60;
 
-  fec_seq_num_ = ConstructMediaPackets(num_media_packets);
+  fec_seq_num_ = ConstructMediaPackets(kNumMediaPackets);
 
   EXPECT_EQ(0, fec_->GenerateFEC(media_packet_list_,
-                                 protection_factor,
-                                 num_important_packets,
-                                 use_unequal_protection,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskBursty,
                                  &fec_packet_list_));
 
   // Expect 1 FEC packet.
@@ -166,17 +173,18 @@ TEST_F(RtpFecTest, FecRecoveryNoLoss) {
 }
 
 TEST_F(RtpFecTest, FecRecoveryWithLoss) {
-  const int num_important_packets = 0;
-  const bool use_unequal_protection = false;
-  const int num_media_packets = 4;
-  uint8_t protection_factor = 60;
+  const int kNumImportantPackets = 0;
+  const bool kUseUnequalProtection = false;
+  const int kNumMediaPackets = 4;
+  uint8_t kProtectionFactor = 60;
 
-  fec_seq_num_ = ConstructMediaPackets(num_media_packets);
+  fec_seq_num_ = ConstructMediaPackets(kNumMediaPackets);
 
   EXPECT_EQ(0, fec_->GenerateFEC(media_packet_list_,
-                                 protection_factor,
-                                 num_important_packets,
-                                 use_unequal_protection,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskBursty,
                                  &fec_packet_list_));
 
   // Expect 1 FEC packet.
@@ -209,56 +217,138 @@ TEST_F(RtpFecTest, FecRecoveryWithLoss) {
   EXPECT_FALSE(IsRecoveryComplete());
 }
 
-TEST_F(RtpFecTest, FecRecoveryWithLoss50perc) {
-  const int num_important_packets = 0;
-  const bool use_unequal_protection =  false;
-  const int num_media_packets = 4;
-  const uint8_t protection_factor = 255;
+// Test 50% protection with random mask type: Two cases are considered:
+// a 50% non-consecutive loss which can be fully recovered, and a 50%
+// consecutive loss which cannot be fully recovered.
+TEST_F(RtpFecTest, FecRecoveryWithLoss50percRandomMask) {
+  const int kNumImportantPackets = 0;
+  const bool kUseUnequalProtection =  false;
+  const int kNumMediaPackets = 4;
+  const uint8_t kProtectionFactor = 255;
 
-  // Packet Mask for (4,4,0) code:
-  // (num_media_packets = 4; num_fec_packets = 4, num_important_packets = 0)
+  // Packet Mask for (4,4,0) code, from random mask table.
+  // (kNumMediaPackets = 4; num_fec_packets = 4, kNumImportantPackets = 0)
 
   //         media#0   media#1  media#2    media#3
   // fec#0:    1          1        0          0
   // fec#1:    1          0        1          0
-  // fec#2:    0          1        0          1
-  // fec#3:    0          0        1          1
+  // fec#2:    0          0        1          1
+  // fec#3:    0          1        0          1
   //
 
-  fec_seq_num_ = ConstructMediaPackets(num_media_packets);
+  fec_seq_num_ = ConstructMediaPackets(kNumMediaPackets);
 
   EXPECT_EQ(0, fec_->GenerateFEC(media_packet_list_,
-                                 protection_factor,
-                                 num_important_packets,
-                                 use_unequal_protection,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskRandom,
                                  &fec_packet_list_));
 
   // Expect 4 FEC packets.
   EXPECT_EQ(4, static_cast<int>(fec_packet_list_.size()));
 
-  // 4 packets lost: 3 media packets and one FEC packet#2 lost.
+  // 4 packets lost: 3 media packets (0, 2, 3), and one FEC packet (0) lost.
   memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
   memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
-  fec_loss_mask_[2] = 1;
+  fec_loss_mask_[0] = 1;
   media_loss_mask_[0] = 1;
   media_loss_mask_[2] = 1;
   media_loss_mask_[3] = 1;
-
   NetworkReceivedPackets();
 
   EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,
                                &recovered_packet_list_));
 
-  // With media packet#1 and FEC packets #0, #1, #3, expect complete recovery.
+  // With media packet#1 and FEC packets #1, #2, #3, expect complete recovery.
   EXPECT_TRUE(IsRecoveryComplete());
   FreeRecoveredPacketList();
 
-  // 4 packets lost: all media packets
+  // 4 consecutive packets lost: media packets 0, 1, 2, 3.
   memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
-  memset(fec_loss_mask_, 1, sizeof(fec_loss_mask_));
+  memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
   media_loss_mask_[0] = 1;
   media_loss_mask_[1] = 1;
   media_loss_mask_[2] = 1;
+  media_loss_mask_[3] = 1;
+  NetworkReceivedPackets();
+
+  EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,
+                               &recovered_packet_list_));
+
+  // Cannot get complete recovery for this loss configuration with random mask.
+  EXPECT_FALSE(IsRecoveryComplete());
+}
+
+// Test 50% protection with bursty type: Three cases are considered:
+// two 50% consecutive losses which can be fully recovered, and one
+// non-consecutive which cannot be fully recovered.
+TEST_F(RtpFecTest, FecRecoveryWithLoss50percBurstyMask) {
+  const int kNumImportantPackets = 0;
+  const bool kUseUnequalProtection =  false;
+  const int kNumMediaPackets = 4;
+  const uint8_t kProtectionFactor = 255;
+
+  // Packet Mask for (4,4,0) code, from bursty mask table.
+  // (kNumMediaPackets = 4; num_fec_packets = 4, kNumImportantPackets = 0)
+
+  //         media#0   media#1  media#2    media#3
+  // fec#0:    1          0        0          0
+  // fec#1:    1          1        0          0
+  // fec#2:    0          1        1          0
+  // fec#3:    0          0        1          1
+  //
+
+  fec_seq_num_ = ConstructMediaPackets(kNumMediaPackets);
+
+  EXPECT_EQ(0, fec_->GenerateFEC(media_packet_list_,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskBursty,
+                                 &fec_packet_list_));
+
+  // Expect 4 FEC packets.
+  EXPECT_EQ(4, static_cast<int>(fec_packet_list_.size()));
+
+  // 4 consecutive packets lost: media packets 0,1,2,3.
+  memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
+  memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
+  media_loss_mask_[0] = 1;
+  media_loss_mask_[1] = 1;
+  media_loss_mask_[2] = 1;
+  media_loss_mask_[3] = 1;
+  NetworkReceivedPackets();
+
+  EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_,
+                               &recovered_packet_list_));
+
+  // Expect complete recovery for consecutive packet loss <= 50%.
+  EXPECT_TRUE(IsRecoveryComplete());
+  FreeRecoveredPacketList();
+
+  // 4 consecutive packets lost: media packets 1,2, 3, and FEC packet 0.
+  memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
+  memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
+  fec_loss_mask_[0] = 1;
+  media_loss_mask_[1] = 1;
+  media_loss_mask_[2] = 1;
+  media_loss_mask_[3] = 1;
+  NetworkReceivedPackets();
+
+  EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,
+                               &recovered_packet_list_));
+
+  // Expect complete recovery for consecutive packet loss <= 50%.
+  EXPECT_TRUE(IsRecoveryComplete());
+  FreeRecoveredPacketList();
+
+  // 4 packets lost (non-consecutive loss): media packets 0, 3, and FEC# 0, 3.
+  memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
+  memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
+  fec_loss_mask_[0] = 1;
+  fec_loss_mask_[3] = 1;
+  media_loss_mask_[0] = 1;
   media_loss_mask_[3] = 1;
   NetworkReceivedPackets();
 
@@ -270,17 +360,18 @@ TEST_F(RtpFecTest, FecRecoveryWithLoss50perc) {
 }
 
 TEST_F(RtpFecTest, FecRecoveryNoLossUep) {
-  const int num_important_packets = 2;
-  const bool use_unequal_protection =  true;
-  const int num_media_packets = 4;
-  const uint8_t protection_factor = 60;
+  const int kNumImportantPackets = 2;
+  const bool kUseUnequalProtection =  true;
+  const int kNumMediaPackets = 4;
+  const uint8_t kProtectionFactor = 60;
 
-  fec_seq_num_ = ConstructMediaPackets(num_media_packets);
+  fec_seq_num_ = ConstructMediaPackets(kNumMediaPackets);
 
   EXPECT_EQ(0, fec_->GenerateFEC(media_packet_list_,
-                                 protection_factor,
-                                 num_important_packets,
-                                 use_unequal_protection,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskBursty,
                                  &fec_packet_list_));
 
   // Expect 1 FEC packet.
@@ -299,17 +390,18 @@ TEST_F(RtpFecTest, FecRecoveryNoLossUep) {
 }
 
 TEST_F(RtpFecTest, FecRecoveryWithLossUep) {
-  const int num_important_packets = 2;
-  const bool use_unequal_protection =  true;
-  const int num_media_packets = 4;
-  const uint8_t protection_factor = 60;
+  const int kNumImportantPackets = 2;
+  const bool kUseUnequalProtection =  true;
+  const int kNumMediaPackets = 4;
+  const uint8_t kProtectionFactor = 60;
 
-  fec_seq_num_ = ConstructMediaPackets(num_media_packets);
+  fec_seq_num_ = ConstructMediaPackets(kNumMediaPackets);
 
   EXPECT_EQ(0, fec_->GenerateFEC(media_packet_list_,
-                                 protection_factor,
-                                 num_important_packets,
-                                 use_unequal_protection,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskBursty,
                                  &fec_packet_list_));
 
   // Expect 1 FEC packet.
@@ -342,14 +434,15 @@ TEST_F(RtpFecTest, FecRecoveryWithLossUep) {
   EXPECT_FALSE(IsRecoveryComplete());
 }
 
-TEST_F(RtpFecTest, FecRecoveryWithLoss50percUep) {
-  const int num_important_packets = 1;
-  const bool use_unequal_protection =  true;
-  const int num_media_packets = 4;
-  const uint8_t protection_factor = 255;
+// Test 50% protection with random mask type for UEP on.
+TEST_F(RtpFecTest, FecRecoveryWithLoss50percUepRandomMask) {
+  const int kNumImportantPackets = 1;
+  const bool kUseUnequalProtection =  true;
+  const int kNumMediaPackets = 4;
+  const uint8_t kProtectionFactor = 255;
 
-  // Packet Mask for (4,4,1) code:
-  // (num_media_packets = 4; num_fec_packets = 4, num_important_packets = 2)
+  // Packet Mask for (4,4,1) code, from random mask table.
+  // (kNumMediaPackets = 4; num_fec_packets = 4, kNumImportantPackets = 1)
 
   //         media#0   media#1  media#2    media#3
   // fec#0:    1          0        0          0
@@ -358,12 +451,13 @@ TEST_F(RtpFecTest, FecRecoveryWithLoss50percUep) {
   // fec#3:    0          1        1          0
   //
 
-  fec_seq_num_ = ConstructMediaPackets(num_media_packets);
+  fec_seq_num_ = ConstructMediaPackets(kNumMediaPackets);
 
   EXPECT_EQ(0, fec_->GenerateFEC(media_packet_list_,
-                                 protection_factor,
-                                 num_important_packets,
-                                 use_unequal_protection,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskRandom,
                                  &fec_packet_list_));
 
   // Expect 4 FEC packets.
@@ -381,15 +475,16 @@ TEST_F(RtpFecTest, FecRecoveryWithLoss50percUep) {
   EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,
                                &recovered_packet_list_));
 
-  // With media packet#1 and FEC packets #0, #2, #3, expect complete recovery.
+  // With media packet#3 and FEC packets #0, #1, #3, expect complete recovery.
   EXPECT_TRUE(IsRecoveryComplete());
   FreeRecoveredPacketList();
 
-  // 4 packets lost: 3 media packets and one FEC packet#2 lost.
+  // 5 packets lost: 4 media packets and one FEC packet#2 lost.
   memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
   memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
   fec_loss_mask_[2] = 1;
   media_loss_mask_[0] = 1;
+  media_loss_mask_[1] = 1;
   media_loss_mask_[2] = 1;
   media_loss_mask_[3] = 1;
   NetworkReceivedPackets();
@@ -402,12 +497,12 @@ TEST_F(RtpFecTest, FecRecoveryWithLoss50percUep) {
 }
 
 TEST_F(RtpFecTest, FecRecoveryNonConsecutivePackets) {
-  const int num_important_packets = 0;
-  const bool use_unequal_protection = false;
-  const int num_media_packets = 5;
-  uint8_t protection_factor = 60;
+  const int kNumImportantPackets = 0;
+  const bool kUseUnequalProtection = false;
+  const int kNumMediaPackets = 5;
+  uint8_t kProtectionFactor = 60;
 
-  fec_seq_num_ = ConstructMediaPackets(num_media_packets);
+  fec_seq_num_ = ConstructMediaPackets(kNumMediaPackets);
 
   // Create a new temporary packet list for generating FEC packets.
   // This list should have every other packet removed.
@@ -420,9 +515,10 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePackets) {
   }
 
   EXPECT_EQ(0, fec_->GenerateFEC(protected_media_packets,
-                                 protection_factor,
-                                 num_important_packets,
-                                 use_unequal_protection,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskBursty,
                                  &fec_packet_list_));
 
   // Expect 1 FEC packet.
@@ -469,12 +565,12 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePackets) {
 }
 
 TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsExtension) {
-  const int num_important_packets = 0;
-  const bool use_unequal_protection = false;
-  const int num_media_packets = 21;
-  uint8_t protection_factor = 127;
+  const int kNumImportantPackets = 0;
+  const bool kUseUnequalProtection = false;
+  const int kNumMediaPackets = 21;
+  uint8_t kProtectionFactor = 127;
 
-  fec_seq_num_ = ConstructMediaPackets(num_media_packets);
+  fec_seq_num_ = ConstructMediaPackets(kNumMediaPackets);
 
   // Create a new temporary packet list for generating FEC packets.
   // This list should have every other packet removed.
@@ -490,9 +586,10 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsExtension) {
   // mask since the number of actual packets are 21, while the number
   // of protected packets are 11.
   EXPECT_EQ(0, fec_->GenerateFEC(protected_media_packets,
-                                 protection_factor,
-                                 num_important_packets,
-                                 use_unequal_protection,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskBursty,
                                  &fec_packet_list_));
 
   // Expect 5 FEC packet.
@@ -501,7 +598,7 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsExtension) {
   // Last protected media packet lost
   memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
   memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
-  media_loss_mask_[num_media_packets - 1] = 1;
+  media_loss_mask_[kNumMediaPackets - 1] = 1;
   NetworkReceivedPackets();
 
   EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,
@@ -514,7 +611,7 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsExtension) {
   // Last unprotected packet lost.
   memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
   memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
-  media_loss_mask_[num_media_packets - 2] = 1;
+  media_loss_mask_[kNumMediaPackets - 2] = 1;
   NetworkReceivedPackets();
 
   EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,
@@ -527,12 +624,12 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsExtension) {
   // 6 media packets lost.
   memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
   memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
-  media_loss_mask_[num_media_packets - 11] = 1;
-  media_loss_mask_[num_media_packets - 9] = 1;
-  media_loss_mask_[num_media_packets - 7] = 1;
-  media_loss_mask_[num_media_packets - 5] = 1;
-  media_loss_mask_[num_media_packets - 3] = 1;
-  media_loss_mask_[num_media_packets - 1] = 1;
+  media_loss_mask_[kNumMediaPackets - 11] = 1;
+  media_loss_mask_[kNumMediaPackets - 9] = 1;
+  media_loss_mask_[kNumMediaPackets - 7] = 1;
+  media_loss_mask_[kNumMediaPackets - 5] = 1;
+  media_loss_mask_[kNumMediaPackets - 3] = 1;
+  media_loss_mask_[kNumMediaPackets - 1] = 1;
   NetworkReceivedPackets();
 
   EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,
@@ -543,12 +640,12 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsExtension) {
 }
 
 TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsWrap) {
-  const int num_important_packets = 0;
-  const bool use_unequal_protection = false;
-  const int num_media_packets = 21;
-  uint8_t protection_factor = 127;
+  const int kNumImportantPackets = 0;
+  const bool kUseUnequalProtection = false;
+  const int kNumMediaPackets = 21;
+  uint8_t kProtectionFactor = 127;
 
-  fec_seq_num_ = ConstructMediaPacketsSeqNum(num_media_packets, 0xFFFF - 5);
+  fec_seq_num_ = ConstructMediaPacketsSeqNum(kNumMediaPackets, 0xFFFF - 5);
 
   // Create a new temporary packet list for generating FEC packets.
   // This list should have every other packet removed.
@@ -564,9 +661,10 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsWrap) {
   // mask since the number of actual packets are 21, while the number
   // of protected packets are 11.
   EXPECT_EQ(0, fec_->GenerateFEC(protected_media_packets,
-                                 protection_factor,
-                                 num_important_packets,
-                                 use_unequal_protection,
+                                 kProtectionFactor,
+                                 kNumImportantPackets,
+                                 kUseUnequalProtection,
+                                 webrtc::kFecMaskBursty,
                                  &fec_packet_list_));
 
   // Expect 5 FEC packet.
@@ -575,7 +673,7 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsWrap) {
   // Last protected media packet lost
   memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
   memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
-  media_loss_mask_[num_media_packets - 1] = 1;
+  media_loss_mask_[kNumMediaPackets - 1] = 1;
   NetworkReceivedPackets();
 
   EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,
@@ -588,7 +686,7 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsWrap) {
   // Last unprotected packet lost.
   memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
   memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
-  media_loss_mask_[num_media_packets - 2] = 1;
+  media_loss_mask_[kNumMediaPackets - 2] = 1;
   NetworkReceivedPackets();
 
   EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,
@@ -601,12 +699,12 @@ TEST_F(RtpFecTest, FecRecoveryNonConsecutivePacketsWrap) {
   // 6 media packets lost.
   memset(media_loss_mask_, 0, sizeof(media_loss_mask_));
   memset(fec_loss_mask_, 0, sizeof(fec_loss_mask_));
-  media_loss_mask_[num_media_packets - 11] = 1;
-  media_loss_mask_[num_media_packets - 9] = 1;
-  media_loss_mask_[num_media_packets - 7] = 1;
-  media_loss_mask_[num_media_packets - 5] = 1;
-  media_loss_mask_[num_media_packets - 3] = 1;
-  media_loss_mask_[num_media_packets - 1] = 1;
+  media_loss_mask_[kNumMediaPackets - 11] = 1;
+  media_loss_mask_[kNumMediaPackets - 9] = 1;
+  media_loss_mask_[kNumMediaPackets - 7] = 1;
+  media_loss_mask_[kNumMediaPackets - 5] = 1;
+  media_loss_mask_[kNumMediaPackets - 3] = 1;
+  media_loss_mask_[kNumMediaPackets - 1] = 1;
   NetworkReceivedPackets();
 
   EXPECT_EQ(0, fec_->DecodeFEC(&received_packet_list_ ,

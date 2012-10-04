@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -41,41 +41,41 @@ const int rampSize = sizeof(rampArray)/sizeof(rampArray[0]);
 namespace webrtc {
 void CalculateEnergy(AudioFrame& audioFrame)
 {
-    if(audioFrame._energy != 0xffffffff)
+    if(audioFrame.energy_ != 0xffffffff)
     {
         return;
     }
-    audioFrame._energy = 0;
-    for(int position = 0; position < audioFrame._payloadDataLengthInSamples;
+    audioFrame.energy_ = 0;
+    for(int position = 0; position < audioFrame.samples_per_channel_;
         position++)
     {
         // TODO(andrew): this can easily overflow.
-        audioFrame._energy += audioFrame._payloadData[position] *
-                              audioFrame._payloadData[position];
+        audioFrame.energy_ += audioFrame.data_[position] *
+                              audioFrame.data_[position];
     }
 }
 
 void RampIn(AudioFrame& audioFrame)
 {
-    assert(rampSize <= audioFrame._payloadDataLengthInSamples);
+    assert(rampSize <= audioFrame.samples_per_channel_);
     for(int i = 0; i < rampSize; i++)
     {
-        audioFrame._payloadData[i] = static_cast<WebRtc_Word16>
-            (rampArray[i] * audioFrame._payloadData[i]);
+        audioFrame.data_[i] = static_cast<WebRtc_Word16>
+            (rampArray[i] * audioFrame.data_[i]);
     }
 }
 
 void RampOut(AudioFrame& audioFrame)
 {
-    assert(rampSize <= audioFrame._payloadDataLengthInSamples);
+    assert(rampSize <= audioFrame.samples_per_channel_);
     for(int i = 0; i < rampSize; i++)
     {
         const int rampPos = rampSize - 1 - i;
-        audioFrame._payloadData[i] = static_cast<WebRtc_Word16>
-            (rampArray[rampPos] * audioFrame._payloadData[i]);
+        audioFrame.data_[i] = static_cast<WebRtc_Word16>
+            (rampArray[rampPos] * audioFrame.data_[i]);
     }
-    memset(&audioFrame._payloadData[rampSize], 0,
-           (audioFrame._payloadDataLengthInSamples - rampSize) *
-           sizeof(audioFrame._payloadData[0]));
+    memset(&audioFrame.data_[rampSize], 0,
+           (audioFrame.samples_per_channel_ - rampSize) *
+           sizeof(audioFrame.data_[0]));
 }
 } // namespace webrtc

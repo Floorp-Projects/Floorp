@@ -1,0 +1,8 @@
+================================================================
+WEBRTC MANUAL TESTS
+================================================================
+
+You will need to serve these files off some kind of web server. Currently,
+GetUserMedia does not work when run off a file:// URL.
+
+Contact person: phoglund@webrtc.org

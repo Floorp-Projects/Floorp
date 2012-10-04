@@ -1,6 +1,6 @@
 #!/bin/echo Use sanitize-win-build-log.sh or sed -f
 
-# Copyright (c) 2010 The Chromium Authors. All rights reserved.
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -12,3 +12,6 @@
 
 # Drop parallelization indicators on lines.
 s/^[0-9]\+>//
+
+# Shorten bindings generation lines
+s/^.*"perl".*generate-bindings.pl".*\("[^"]\+\.idl"\).*$/  generate-bindings \1/

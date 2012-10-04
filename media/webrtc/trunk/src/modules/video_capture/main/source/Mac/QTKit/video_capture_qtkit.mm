@@ -170,6 +170,7 @@ WebRtc_Word32 VideoCaptureMacQTKit::StartCapture(
     _captureWidth = capability.width;
     _captureHeight = capability.height;
     _captureFrameRate = capability.maxFPS;
+    _captureDelay = 120;
 
     if(-1 == [[_captureDevice setCaptureHeight:_captureHeight
                AndWidth:_captureWidth AndFrameRate:_captureFrameRate]intValue])

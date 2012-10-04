@@ -1,15 +1,11 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
- */
-
-/*
- * Class for storing RTP packets.
  */
 
 #include "rtp_packet_history.h"
@@ -112,6 +108,7 @@ void RTPPacketHistory::VerifyAndAllocatePacketLength(uint16_t packet_length) {
 int32_t RTPPacketHistory::PutRTPPacket(const uint8_t* packet,
                                        uint16_t packet_length,
                                        uint16_t max_packet_length,
+                                       int64_t capture_time_ms,
                                        StorageType type) {
   if (type == kDontStore) {
     return 0;
@@ -142,7 +139,7 @@ int32_t RTPPacketHistory::PutRTPPacket(const uint8_t* packet,
 
   stored_seq_nums_[prev_index_] = seq_num;
   stored_lengths_[prev_index_] = packet_length;
-  stored_times_[prev_index_] = clock_.GetTimeInMS();
+  stored_times_[prev_index_] = capture_time_ms;
   stored_resend_times_[prev_index_] = 0;  // packet not resent
   stored_types_[prev_index_] = type;
 
@@ -177,7 +174,7 @@ bool RTPPacketHistory::GetRTPPacket(uint16_t sequence_number,
                                     uint32_t min_elapsed_time_ms,
                                     uint8_t* packet,
                                     uint16_t* packet_length,
-                                    uint32_t* stored_time_ms,
+                                    int64_t* stored_time_ms,
                                     StorageType* type) const {
   webrtc::CriticalSectionScoped cs(*critsect_);
   if (!store_) {
@@ -206,7 +203,7 @@ bool RTPPacketHistory::GetRTPPacket(uint16_t sequence_number,
  }
 
   // Verify elapsed time since last retrieve. 
-  uint32_t now = clock_.GetTimeInMS();
+  int64_t now = clock_.GetTimeInMS();
   if (min_elapsed_time_ms > 0 &&
       ((now - stored_resend_times_.at(index)) < min_elapsed_time_ms)) {
     WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1, 

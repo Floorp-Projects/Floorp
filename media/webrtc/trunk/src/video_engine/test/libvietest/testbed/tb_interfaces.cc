@@ -13,7 +13,17 @@
 #include "gtest/gtest.h"
 #include "testsupport/fileutils.h"
 
-TbInterfaces::TbInterfaces(std::string test_name) {
+TbInterfaces::TbInterfaces(const std::string& test_name) :
+    video_engine(NULL),
+    base(NULL),
+    capture(NULL),
+    render(NULL),
+    rtp_rtcp(NULL),
+    codec(NULL),
+    network(NULL),
+    image_process(NULL),
+    encryption(NULL)
+{
     std::string complete_path =
         webrtc::test::OutputPath() + test_name + "_trace.txt";
 
@@ -53,15 +63,23 @@ TbInterfaces::TbInterfaces(std::string test_name) {
 TbInterfaces::~TbInterfaces(void)
 {
     EXPECT_EQ(0, encryption->Release());
+    encryption = NULL;
     EXPECT_EQ(0, image_process->Release());
+    image_process = NULL;
     EXPECT_EQ(0, codec->Release());
+    codec = NULL;
     EXPECT_EQ(0, capture->Release());
+    capture = NULL;
     EXPECT_EQ(0, render->Release());
+    render = NULL;
     EXPECT_EQ(0, rtp_rtcp->Release());
+    rtp_rtcp = NULL;
     EXPECT_EQ(0, network->Release());
+    network = NULL;
     EXPECT_EQ(0, base->Release());
+    base = NULL;
     EXPECT_TRUE(webrtc::VideoEngine::Delete(video_engine)) <<
         "Since we have released all interfaces at this point, deletion "
         "should be successful.";
-
+    video_engine = NULL;
 }

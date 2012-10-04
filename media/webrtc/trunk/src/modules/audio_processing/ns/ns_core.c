@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -737,7 +737,8 @@ int WebRtcNs_ProcessCore(NSinst_t* inst,
   float   magn[HALF_ANAL_BLOCKL], noise[HALF_ANAL_BLOCKL];
   float   theFilter[HALF_ANAL_BLOCKL], theFilterTmp[HALF_ANAL_BLOCKL];
   float   snrLocPost[HALF_ANAL_BLOCKL], snrLocPrior[HALF_ANAL_BLOCKL];
-  float   probSpeechFinal[HALF_ANAL_BLOCKL], previousEstimateStsa[HALF_ANAL_BLOCKL];
+  float   probSpeechFinal[HALF_ANAL_BLOCKL] = { 0 };
+  float   previousEstimateStsa[HALF_ANAL_BLOCKL];
   float   real[ANAL_BLOCKL_MAX], imag[HALF_ANAL_BLOCKL];
   // Variables during startup
   float   sum_log_i = 0.0;

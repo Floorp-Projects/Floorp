@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -11,6 +11,14 @@ import subprocess
 import sys
 import tempfile
 
+def run_quiet(*args):
+  """Run 'expand' supressing noisy output. Returns returncode from process."""
+  popen = subprocess.Popen(args, stdout=subprocess.PIPE)
+  out, _ = popen.communicate()
+  if popen.returncode:
+    # expand emits errors to stdout, so if we fail, then print that out.
+    print out
+  return popen.returncode
 
 def main():
   if len(sys.argv) != 4:
@@ -27,8 +35,7 @@ def main():
 
   try:
     # Invoke the Windows expand utility to extract the file.
-    level = subprocess.call(
-        ['expand', cab_path, '-F:' + archived_file, temp_dir])
+    level = run_quiet('expand', cab_path, '-F:' + archived_file, temp_dir)
     if level == 0:
       # Move the output file into place, preserving expand.exe's behavior of
       # paving over any preexisting file.

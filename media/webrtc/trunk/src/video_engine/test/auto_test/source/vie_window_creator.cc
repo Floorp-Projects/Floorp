@@ -14,7 +14,7 @@
 #include "video_engine/test/auto_test/interface/vie_autotest_main.h"
 #include "video_engine/test/auto_test/interface/vie_autotest_window_manager_interface.h"
 #include "video_engine/test/auto_test/interface/vie_window_manager_factory.h"
-#include "voice_engine/main/interface/voe_codec.h"
+#include "voice_engine/include/voe_codec.h"
 
 #if defined(WIN32)
 #include <tchar.h>

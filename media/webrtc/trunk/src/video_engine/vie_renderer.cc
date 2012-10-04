@@ -10,7 +10,7 @@
 
 #include "video_engine/vie_renderer.h"
 
-#include "common_video/libyuv/include/libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/video_render/main/interface/video_render.h"
 #include "modules/video_render/main/interface/video_render_defines.h"
 #include "video_engine/vie_render_manager.h"
@@ -104,7 +104,6 @@ ViERenderer::ViERenderer(const WebRtc_Word32 render_id,
                          VideoRender& render_module,
                          ViERenderManager& render_manager)
     : render_id_(render_id),
-      engine_id_(engine_id),
       render_module_(render_module),
       render_manager_(render_manager),
       render_callback_(NULL),
@@ -127,17 +126,17 @@ WebRtc_Word32 ViERenderer::Init(const WebRtc_UWord32 z_order,
 }
 
 void ViERenderer::DeliverFrame(int id,
-                               VideoFrame& video_frame,
+                               VideoFrame* video_frame,
                                int num_csrcs,
                                const WebRtc_UWord32 CSRC[kRtpCsrcSize]) {
-  render_callback_->RenderFrame(render_id_, video_frame);
+  render_callback_->RenderFrame(render_id_, *video_frame);
 }
 
 void ViERenderer::DelayChanged(int id, int frame_delay) {}
 
-int ViERenderer::GetPreferedFrameSettings(int& width,
-                                          int& height,
-                                          int& frame_rate) {
+int ViERenderer::GetPreferedFrameSettings(int* width,
+                                          int* height,
+                                          int* frame_rate) {
     return -1;
 }
 
@@ -151,7 +150,7 @@ ViEExternalRendererImpl::ViEExternalRendererImpl()
       external_renderer_format_(kVideoUnknown),
       external_renderer_width_(0),
       external_renderer_height_(0),
-      converted_frame_(new VideoFrame()){
+      converted_frame_(new VideoFrame()) {
 }
 
 int ViEExternalRendererImpl::SetViEExternalRenderer(
@@ -188,6 +187,9 @@ WebRtc_Word32 ViEExternalRendererImpl::RenderFrame(
     case kVideoUYVY:
     case kVideoARGB:
     case kVideoRGB24:
+    case kVideoRGB565:
+    case kVideoARGB4444:
+    case kVideoARGB1555 :
       {
         ConvertFromI420(video_frame.Buffer(), video_frame.Width(), type, 0,
                         video_frame.Width(), video_frame.Height(),
@@ -196,18 +198,6 @@ WebRtc_Word32 ViEExternalRendererImpl::RenderFrame(
       break;
     case kVideoIYUV:
       // no conversion available
-      break;
-    case kVideoRGB565:
-      ConvertI420ToRGB565(video_frame.Buffer(), converted_frame_->Buffer(),
-                          video_frame.Width(), video_frame.Height());
-      break;
-    case kVideoARGB4444:
-      ConvertI420ToARGB4444(video_frame.Buffer(), converted_frame_->Buffer(),
-                            video_frame.Width(), video_frame.Height(), 0);
-      break;
-    case kVideoARGB1555 :
-      ConvertI420ToARGB1555(video_frame.Buffer(), converted_frame_->Buffer(),
-                            video_frame.Width(), video_frame.Height(), 0);
       break;
     default:
       assert(false);

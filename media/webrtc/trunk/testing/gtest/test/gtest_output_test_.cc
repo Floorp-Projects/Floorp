@@ -27,8 +27,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// A unit test for Google Test itself.  This verifies that the basic
-// constructs of Google Test work.
+// The purpose of this file is to generate Google Test output under
+// various conditions.  The output will then be verified by
+// gtest_output_test.py to ensure that Google Test generates the
+// desired messages.  Therefore, most tests in this file are MEANT TO
+// FAIL.
 //
 // Author: wan@google.com (Zhanyong Wan)
 
@@ -100,6 +103,16 @@ TEST_P(FailingParamTest, Fails) {
 INSTANTIATE_TEST_CASE_P(PrintingFailingParams,
                         FailingParamTest,
                         testing::Values(2));
+
+static const char kGoldenString[] = "\"Line\0 1\"\nLine 2";
+
+TEST(NonfatalFailureTest, EscapesStringOperands) {
+  std::string actual = "actual \"string\"";
+  EXPECT_EQ(kGoldenString, actual);
+
+  const char* golden = kGoldenString;
+  EXPECT_EQ(golden, actual);
+}
 
 // Tests catching a fatal failure in a subroutine.
 TEST(FatalFailureTest, FatalFailureInSubroutine) {
@@ -221,13 +234,13 @@ TEST(SCOPED_TRACETest, CanBeRepeated) {
 
   {
     SCOPED_TRACE("C");
-    ADD_FAILURE() << "This failure is expected, and should contain "
-                  << "trace point A, B, and C.";
+    ADD_FAILURE() << "This failure is expected, and should "
+                  << "contain trace point A, B, and C.";
   }
 
   SCOPED_TRACE("D");
-  ADD_FAILURE() << "This failure is expected, and should contain "
-                << "trace point A, B, and D.";
+  ADD_FAILURE() << "This failure is expected, and should "
+                << "contain trace point A, B, and D.";
 }
 
 #if GTEST_IS_THREADSAFE
@@ -378,6 +391,7 @@ class FatalFailureInFixtureConstructorTest : public testing::Test {
                   << "We should never get here, as the test fixture c'tor "
                   << "had a fatal failure.";
   }
+
  private:
   void Init() {
     FAIL() << "Expected failure #1, in the test fixture c'tor.";

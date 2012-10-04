@@ -11,9 +11,9 @@
       'target_name': 'video_coding_test',
       'type': 'executable',
       'dependencies': [
-         '<(webrtc_root)/../testing/gtest.gyp:gtest',
-         '<(webrtc_root)/../test/test.gyp:test_support',
-         '<(webrtc_root)/../test/metrics.gyp:metrics',
+         '<(DEPTH)/testing/gtest.gyp:gtest',
+         '<(webrtc_root)/test/test.gyp:test_support',
+         '<(webrtc_root)/test/metrics.gyp:metrics',
          'webrtc_video_coding',
          'rtp_rtcp',
          'webrtc_utility',
@@ -22,7 +22,7 @@
       ],
       'include_dirs': [
          '../../../interface',
-         '../../codecs/vp8/main/interface',
+         '../../codecs/vp8/include',
          '../../../../system_wrappers/interface',
           '../../../../common_video/interface',
          '../source',
@@ -68,9 +68,9 @@
       'type': 'executable',
       'dependencies': [
         'webrtc_video_coding',
-        '<(webrtc_root)/../test/test.gyp:test_support_main',
-        '<(webrtc_root)/../testing/gtest.gyp:gtest',
-        '<(webrtc_root)/../testing/gmock.gyp:gmock',
+        '<(webrtc_root)/test/test.gyp:test_support_main',
+        '<(DEPTH)/testing/gtest.gyp:gtest',
+        '<(DEPTH)/testing/gmock.gyp:gmock',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
       'include_dirs': [

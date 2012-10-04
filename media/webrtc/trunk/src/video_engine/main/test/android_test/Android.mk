@@ -13,7 +13,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := tests
 
 LOCAL_SRC_FILES := \
-    src/org/webrtc/videoengineapp/ViEAndroidDemo.java \
+    src/org/webrtc/videoengineapp/WebRTCDemo.java \
     src/org/webrtc/videoengineapp/ViEAndroidJavaAPI.java \
     src/org/webrtc/videoengineapp/IViEAndroidCallback.java \
     src/org/webrtc/videoengine/CaptureCapabilityAndroid.java \

@@ -172,7 +172,6 @@ private:
 
     VCMFrameDropper*                  _frameDropper;
     VCMLossProtectionLogic*           _lossProtLogic;
-    WebRtc_UWord8                     _packetLossEnc;
     WebRtc_UWord8                     _fractionLost;
 
 

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!--
+  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+
+  Use of this source code is governed by a BSD-style license
+  that can be found in the LICENSE file in the root of the source
+  tree. An additional intellectual property rights grant can be found
+  in the file PATENTS.  All contributing project authors may
+  be found in the AUTHORS file in the root of the source tree.
+-->
+<html>
+<head>
+  <title>Multiple Local Preview (Audio Only)</title>
+  <script type="text/javascript">
+  function requestAudio() {
+    navigator.webkitGetUserMedia({video: false, audio: true},
+                                 getUserMediaOkCallback,
+                                 getUserMediaFailedCallback);
+  }
+
+  function getUserMediaFailedCallback(error) {
+    alert("User media request denied with error code " + error.code);
+  }
+
+  function getUserMediaOkCallback(stream) {
+    var streamUrl = webkitURL.createObjectURL(stream);
+    for (var i = 1; i <= 10; i++) {
+      document.getElementById("audio" + i).src = streamUrl;
+    }
+  }
+  </script>
+</head>
+<body onload="requestAudio();">
+  <table border="0">
+    <tr>
+      <td>Sound test</td>
+    </tr>
+    <tr>
+      <td><audio id="audio1" autoplay="autoplay"></audio></td>
+      <td><audio id="audio2" autoplay="autoplay"></audio></td>
+      <td><audio id="audio3" autoplay="autoplay"></audio></td>
+      <td><audio id="audio4" autoplay="autoplay"></audio></td>
+      <td><audio id="audio5" autoplay="autoplay"></audio></td>
+      <td><audio id="audio6" autoplay="autoplay"></audio></td>
+      <td><audio id="audio7" autoplay="autoplay"></audio></td>
+      <td><audio id="audio8" autoplay="autoplay"></audio></td>
+      <td><audio id="audio9" autoplay="autoplay"></audio></td>
+      <td><audio id="audio10" autoplay="autoplay"></audio></td>
+    </tr>
+  </table>
+</body>
+</html>

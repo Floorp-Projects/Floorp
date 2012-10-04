@@ -11,12 +11,14 @@
 #include "aecm_core.h"
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdlib.h>
 
 #include "cpu_features_wrapper.h"
 #include "delay_estimator_wrapper.h"
 #include "echo_control_mobile.h"
 #include "ring_buffer.h"
+#include "system_wrappers/interface/compile_assert.h"
 #include "typedefs.h"
 
 #ifdef ARM_WINM_LOG
@@ -312,10 +314,9 @@ int WebRtcAecm_CreateCore(AecmCore_t **aecmInst)
         return -1;
     }
 
-    if (WebRtc_CreateDelayEstimator(&aecm->delay_estimator,
-                                    PART_LEN1,
-                                    MAX_DELAY,
-                                    0) == -1) {
+    aecm->delay_estimator = WebRtc_CreateDelayEstimator(PART_LEN1, MAX_DELAY,
+                                                        0);
+    if (aecm->delay_estimator == NULL) {
       WebRtcAecm_FreeCore(aecm);
       aecm = NULL;
       return -1;
@@ -395,6 +396,18 @@ static void WindowAndFFTC(WebRtc_Word16* fft,
         freq_signal[i].imag = - fft[j+1];
     }
 }
+
+// Initialize function pointers for ARM Neon platform.
+#if (defined WEBRTC_DETECT_ARM_NEON || defined WEBRTC_ARCH_ARM_NEON)
+static void WebRtcAecm_InitNeon(void)
+{
+  WebRtcAecm_WindowAndFFT = WebRtcAecm_WindowAndFFTNeon;
+  WebRtcAecm_InverseFFTAndWindow = WebRtcAecm_InverseFFTAndWindowNeon;
+  WebRtcAecm_CalcLinearEnergies = WebRtcAecm_CalcLinearEnergiesNeon;
+  WebRtcAecm_StoreAdaptiveChannel = WebRtcAecm_StoreAdaptiveChannelNeon;
+  WebRtcAecm_ResetAdaptiveChannel = WebRtcAecm_ResetAdaptiveChannelNeon;
+}
+#endif
 
 static void InverseFFTAndWindowC(AecmCore_t* aecm,
                                  WebRtc_Word16* fft,
@@ -661,7 +674,9 @@ int WebRtcAecm_InitCore(AecmCore_t * const aecm, int samplingFreq)
     aecm->supGainErrParamDiffAB = SUPGAIN_ERROR_PARAM_A - SUPGAIN_ERROR_PARAM_B;
     aecm->supGainErrParamDiffBD = SUPGAIN_ERROR_PARAM_B - SUPGAIN_ERROR_PARAM_D;
 
-    assert(PART_LEN % 16 == 0);
+    // Assert a preprocessor definition at compile-time. It's an assumption
+    // used in assembly code, so check the assembly files before any change.
+    COMPILE_ASSERT(PART_LEN % 16 == 0);
 
     // Initialize function pointers.
     WebRtcAecm_WindowAndFFT = WindowAndFFTC;
@@ -674,7 +689,7 @@ int WebRtcAecm_InitCore(AecmCore_t * const aecm, int samplingFreq)
     uint64_t features = WebRtc_GetCPUFeaturesARM();
     if ((features & kCPUFeatureNEON) != 0)
     {
-        WebRtcAecm_InitNeon();
+      WebRtcAecm_InitNeon();
     }
 #elif defined(WEBRTC_ARCH_ARM_NEON)
     WebRtcAecm_InitNeon();
@@ -1394,7 +1409,9 @@ static int TimeToFrequencyDomain(const WebRtc_Word16* time_signal,
     WebRtc_Word16 *fft = (WebRtc_Word16 *) (((uintptr_t) fft_buf + 31) & ~31);
 
     WebRtc_Word16 tmp16no1;
+#ifndef WEBRTC_ARCH_ARM_V7
     WebRtc_Word16 tmp16no2;
+#endif
 #ifdef AECM_WITH_ABS_APPROX
     WebRtc_Word16 max_value = 0;
     WebRtc_Word16 min_value = 0;
@@ -1477,7 +1494,7 @@ static int TimeToFrequencyDomain(const WebRtc_Word16* time_signal,
             freq_signal_abs[i] = (WebRtc_UWord16)tmp16no1 +
                 (WebRtc_UWord16)tmp16no2;
 #else
-#ifdef WEBRTC_ARCH_ARM_V7A
+#ifdef WEBRTC_ARCH_ARM_V7
             __asm __volatile(
               "smulbb %[tmp32no1], %[real], %[real]\n\t"
               "smlabb %[tmp32no2], %[imag], %[imag], %[tmp32no1]\n\t"
@@ -1492,7 +1509,7 @@ static int TimeToFrequencyDomain(const WebRtc_Word16* time_signal,
             tmp32no1 = WEBRTC_SPL_MUL_16_16(tmp16no1, tmp16no1);
             tmp32no2 = WEBRTC_SPL_MUL_16_16(tmp16no2, tmp16no2);
             tmp32no2 = WEBRTC_SPL_ADD_SAT_W32(tmp32no1, tmp32no2);
-#endif // WEBRTC_ARCH_ARM_V7A
+#endif // WEBRTC_ARCH_ARM_V7
             tmp32no1 = WebRtcSpl_SqrtFloor(tmp32no2);
 
             freq_signal_abs[i] = (WebRtc_UWord16)tmp32no1;
@@ -1851,7 +1868,7 @@ int WebRtcAecm_ProcessBlock(AecmCore_t * aecm,
             {
                 hnl[i] = 0;
             }
-    
+
             // Remove outliers
             if (numPosCoef < 3)
             {

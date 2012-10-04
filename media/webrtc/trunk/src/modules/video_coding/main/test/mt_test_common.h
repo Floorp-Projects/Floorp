@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -47,8 +47,7 @@ class TransportCallback:public RTPSendCompleteCallback
 {
  public:
     // constructor input: (receive side) rtp module to send encoded data to
-    TransportCallback(webrtc::RtpRtcp* rtp, TickTimeBase* clock,
-                      const char* filename = NULL);
+    TransportCallback(TickTimeBase* clock, const char* filename = NULL);
     virtual ~TransportCallback();
     // Add packets to list
     // Incorporate network conditions - delay and packet loss

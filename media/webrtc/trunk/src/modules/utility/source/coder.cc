@@ -21,8 +21,7 @@
 
 namespace webrtc {
 AudioCoder::AudioCoder(WebRtc_UWord32 instanceID)
-    : _instanceID(instanceID),
-      _acm(AudioCodingModule::Create(instanceID)),
+    : _acm(AudioCodingModule::Create(instanceID)),
       _receiveCodec(),
       _encodeTimestamp(0),
       _encodedData(NULL),
@@ -94,8 +93,8 @@ WebRtc_Word32 AudioCoder::Encode(const AudioFrame& audio,
     // Fake a timestamp in case audio doesn't contain a correct timestamp.
     // Make a local copy of the audio frame since audio is const
     AudioFrame audioFrame = audio;
-    audioFrame._timeStamp = _encodeTimestamp;
-    _encodeTimestamp += audioFrame._payloadDataLengthInSamples;
+    audioFrame.timestamp_ = _encodeTimestamp;
+    _encodeTimestamp += audioFrame.samples_per_channel_;
 
     // For any codec with a frame size that is longer than 10 ms the encoded
     // length in bytes should be zero until a a full frame has been encoded.

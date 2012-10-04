@@ -23,16 +23,16 @@ namespace webrtc {
 // PARAMETERS FOR RESOLUTION ADAPTATION
 //
 
-// Optimal level of buffer in secs: should corresponds to wrapper settings.
-const float kOptBufferLevel = 0.5f;
+// Initial level of buffer in secs.
+const float kInitBufferLevel = 0.5f;
 
 // Threshold of (max) buffer size below which we consider too low (underflow).
 const float kPercBufferThr = 0.10f;
 
 // Threshold on the occurrences of low buffer levels.
-const float kMaxBufferLow = 0.5f;
+const float kMaxBufferLow = 0.30f;
 
-// Threshold on rate mismatch
+// Threshold on rate mismatch.
 const float kMaxRateMisMatch = 0.5f;
 
 // Threshold on amount of under/over encoder shooting.
@@ -50,21 +50,21 @@ const float kTransRateScaleUpSpatialTemp = 1.25f;
 // Threshold on packet loss rate, above which favor resolution reduction.
 const float kPacketLossThr = 0.1f;
 
-// Factor for reducing transitonal bitrate under packet loss.
+// Factor for reducing transitional bitrate under packet loss.
 const float kPacketLossRateFac = 1.0f;
 
 // Maximum possible transitional rate for down-sampling:
 // (units in kbps), for 30fps.
 const uint16_t kMaxRateQm[9] = {
-    50,    // QCIF
-    100,   // kHCIF
-    175,   // kQVGA
-    250,   // CIF
-    350,   // HVGA
-    500,   // VGA
-    1000,  // QFULLHD
-    1500,  // WHD
-    2000   // FULLHD
+    0,     // QCIF
+    50,    // kHCIF
+    125,   // kQVGA
+    200,   // CIF
+    280,   // HVGA
+    400,   // VGA
+    700,   // QFULLHD
+    1000,  // WHD
+    1500   // FULLHD
 };
 
 // Frame rate scale for maximum transition rate.
@@ -79,30 +79,30 @@ const float kFrameRateFac[4] = {
 // motion=L/H/D,spatial==L/H/D: for low, high, middle levels
 const float kScaleTransRateQm[18] = {
     // VGA and lower
-    0.50f,       // L, L
+    0.40f,       // L, L
     0.50f,       // L, H
-    0.50f,       // L, D
-    0.50f,       // H ,L
-    0.35f,       // H, H
-    0.35f,       // H, D
+    0.40f,       // L, D
+    0.60f,       // H ,L
+    0.60f,       // H, H
+    0.60f,       // H, D
     0.50f,       // D, L
     0.50f,       // D, D
-    0.35f,       // D, H
+    0.50f,       // D, H
 
     // over VGA
-    0.50f,       // L, L
+    0.40f,       // L, L
     0.50f,       // L, H
-    0.50f,       // L, D
-    0.50f,       // H ,L
-    0.35f,       // H, H
-    0.35f,       // H, D
+    0.40f,       // L, D
+    0.60f,       // H ,L
+    0.60f,       // H, H
+    0.60f,       // H, D
     0.50f,       // D, L
     0.50f,       // D, D
-    0.35f,       // D, H
+    0.50f,       // D, H
 };
 
 // Threshold on the target rate relative to transitional rate.
-const float kFacLowRate = 0.75f;
+const float kFacLowRate = 0.5f;
 
 // Action for down-sampling:
 // motion=L/H/D,spatial==L/H/D, for low, high, middle levels;
@@ -123,7 +123,7 @@ const uint8_t kSpatialAction[27] = {
     1,       // L, L
     1,       // L, H
     1,       // L, D
-    4,       // H ,L
+    2,       // H ,L
     1,       // H, H
     2,       // H, D
     2,       // D, L
@@ -156,7 +156,7 @@ const uint8_t kTemporalAction[27] = {
 
 // rateClass = 1:
     3,       // L, L
-    2,       // L, H
+    3,       // L, H
     3,       // L, D
     1,       // H ,L
     3,       // H, H
@@ -179,14 +179,14 @@ const uint8_t kTemporalAction[27] = {
 
 // Control the total amount of down-sampling allowed.
 const float kMaxSpatialDown = 8.0f;
-const float kMaxTempDown = 4.0f;
-const float kMaxDownSample = 12.0f;
+const float kMaxTempDown = 3.0f;
+const float kMaxTotalDown = 9.0f;
 
 // Minimum image size for a spatial down-sampling.
-const int kMinImageSize= 176 * 144;
+const int kMinImageSize = 176 * 144;
 
 // Minimum frame rate for temporal down-sampling:
-// no frame rate reduction if incomingFrameRate <= MIN_FRAME_RATE
+// no frame rate reduction if incomingFrameRate <= MIN_FRAME_RATE.
 const int kMinFrameRate = 8;
 
 //
@@ -202,20 +202,20 @@ const int kLowFrameRate = 10;
 const int kMiddleFrameRate = 15;
 const int kHighFrameRate = 25;
 
-// Thresholds for motion: motion level is from NFD
+// Thresholds for motion: motion level is from NFD.
 const float kHighMotionNfd = 0.075f;
-const float kLowMotionNfd = 0.04f;
+const float kLowMotionNfd = 0.03f;
 
 // Thresholds for spatial prediction error:
-// this is applied on the min(2x2,1x2,2x1)
+// this is applied on the average of (2x2,1x2,2x1).
 const float kHighTexture = 0.035f;
-const float kLowTexture = 0.025f;
+const float kLowTexture = 0.020f;
 
 // Used to reduce thresholds for larger/HD scenes: correction factor since
 // higher correlation in HD scenes means lower spatial prediction error.
 const float kScaleTexture = 0.9f;
 
-// percentage reduction in transitional bitrate for 2x2 selected over 1x2/2x1
+// Percentage reduction in transitional bitrate for 2x2 selected over 1x2/2x1.
 const float kRateRedSpatial2X2 = 0.6f;
 
 const float kSpatialErr2x2VsHoriz = 0.1f;   // percentage to favor 2x2 over H

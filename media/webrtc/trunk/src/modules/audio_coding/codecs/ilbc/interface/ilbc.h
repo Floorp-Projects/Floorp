@@ -136,9 +136,9 @@ extern "C" {
    */
 
   WebRtc_Word16 WebRtcIlbcfix_Encode(iLBC_encinst_t *iLBCenc_inst,
-				     WebRtc_Word16 *speechIn,
-				     WebRtc_Word16 len,
-				     WebRtc_Word16 *encoded);
+                                     const WebRtc_Word16 *speechIn,
+                                     WebRtc_Word16 len,
+                                     WebRtc_Word16 *encoded);
 
   /****************************************************************************
    * WebRtcIlbcfix_DecoderInit(...)
@@ -182,20 +182,20 @@ extern "C" {
    */
 
   WebRtc_Word16 WebRtcIlbcfix_Decode(iLBC_decinst_t *iLBCdec_inst,
-				     WebRtc_Word16* encoded,
-				     WebRtc_Word16 len,
-				     WebRtc_Word16 *decoded,
-				     WebRtc_Word16 *speechType);
+                                     const WebRtc_Word16* encoded,
+                                     WebRtc_Word16 len,
+                                     WebRtc_Word16 *decoded,
+                                     WebRtc_Word16 *speechType);
   WebRtc_Word16 WebRtcIlbcfix_Decode20Ms(iLBC_decinst_t *iLBCdec_inst,
-					 WebRtc_Word16 *encoded,
-					 WebRtc_Word16 len,
-					 WebRtc_Word16 *decoded,
-					 WebRtc_Word16 *speechType);
+                                         const WebRtc_Word16 *encoded,
+                                         WebRtc_Word16 len,
+                                         WebRtc_Word16 *decoded,
+                                         WebRtc_Word16 *speechType);
   WebRtc_Word16 WebRtcIlbcfix_Decode30Ms(iLBC_decinst_t *iLBCdec_inst,
-					 WebRtc_Word16 *encoded,
-					 WebRtc_Word16 len,
-					 WebRtc_Word16 *decoded,
-					 WebRtc_Word16 *speechType);
+                                         const WebRtc_Word16 *encoded,
+                                         WebRtc_Word16 len,
+                                         WebRtc_Word16 *decoded,
+                                         WebRtc_Word16 *speechType);
 
   /****************************************************************************
    * WebRtcIlbcfix_DecodePlc(...)

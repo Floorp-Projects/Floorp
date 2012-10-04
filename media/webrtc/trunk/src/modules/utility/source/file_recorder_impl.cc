@@ -65,7 +65,6 @@ FileRecorderImpl::FileRecorderImpl(WebRtc_UWord32 instanceID,
     : _instanceID(instanceID),
       _fileFormat(fileFormat),
       _moduleFile(MediaFile::CreateMediaFile(_instanceID)),
-      _stream(NULL),
       codec_info_(),
       _amrFormat(AMRFileStorage),
       _audioBuffer(),
@@ -201,46 +200,46 @@ WebRtc_Word32 FileRecorderImpl::RecordAudioToFile(
         return -1;
     }
     AudioFrame tempAudioFrame;
-    tempAudioFrame._payloadDataLengthInSamples = 0;
-    if( incomingAudioFrame._audioChannel == 2 &&
+    tempAudioFrame.samples_per_channel_ = 0;
+    if( incomingAudioFrame.num_channels_ == 2 &&
         !_moduleFile->IsStereo())
     {
         // Recording mono but incoming audio is (interleaved) stereo.
-        tempAudioFrame._audioChannel = 1;
-        tempAudioFrame._frequencyInHz = incomingAudioFrame._frequencyInHz;
-        tempAudioFrame._payloadDataLengthInSamples =
-          incomingAudioFrame._payloadDataLengthInSamples;
+        tempAudioFrame.num_channels_ = 1;
+        tempAudioFrame.sample_rate_hz_ = incomingAudioFrame.sample_rate_hz_;
+        tempAudioFrame.samples_per_channel_ =
+          incomingAudioFrame.samples_per_channel_;
         for (WebRtc_UWord16 i = 0;
-             i < (incomingAudioFrame._payloadDataLengthInSamples); i++)
+             i < (incomingAudioFrame.samples_per_channel_); i++)
         {
             // Sample value is the average of left and right buffer rounded to
             // closest integer value. Note samples can be either 1 or 2 byte.
-             tempAudioFrame._payloadData[i] =
-                 ((incomingAudioFrame._payloadData[2 * i] +
-                   incomingAudioFrame._payloadData[(2 * i) + 1] + 1) >> 1);
+             tempAudioFrame.data_[i] =
+                 ((incomingAudioFrame.data_[2 * i] +
+                   incomingAudioFrame.data_[(2 * i) + 1] + 1) >> 1);
         }
     }
-    else if( incomingAudioFrame._audioChannel == 1 &&
+    else if( incomingAudioFrame.num_channels_ == 1 &&
         _moduleFile->IsStereo())
     {
         // Recording stereo but incoming audio is mono.
-        tempAudioFrame._audioChannel = 2;
-        tempAudioFrame._frequencyInHz = incomingAudioFrame._frequencyInHz;
-        tempAudioFrame._payloadDataLengthInSamples =
-          incomingAudioFrame._payloadDataLengthInSamples;
+        tempAudioFrame.num_channels_ = 2;
+        tempAudioFrame.sample_rate_hz_ = incomingAudioFrame.sample_rate_hz_;
+        tempAudioFrame.samples_per_channel_ =
+          incomingAudioFrame.samples_per_channel_;
         for (WebRtc_UWord16 i = 0;
-             i < (incomingAudioFrame._payloadDataLengthInSamples); i++)
+             i < (incomingAudioFrame.samples_per_channel_); i++)
         {
             // Duplicate sample to both channels
-             tempAudioFrame._payloadData[2*i] =
-               incomingAudioFrame._payloadData[i];
-             tempAudioFrame._payloadData[2*i+1] =
-               incomingAudioFrame._payloadData[i];
+             tempAudioFrame.data_[2*i] =
+               incomingAudioFrame.data_[i];
+             tempAudioFrame.data_[2*i+1] =
+               incomingAudioFrame.data_[i];
         }
     }
 
     const AudioFrame* ptrAudioFrame = &incomingAudioFrame;
-    if(tempAudioFrame._payloadDataLengthInSamples != 0)
+    if(tempAudioFrame.samples_per_channel_ != 0)
     {
         // If ptrAudioFrame is not empty it contains the audio to be recorded.
         ptrAudioFrame = &tempAudioFrame;
@@ -269,23 +268,23 @@ WebRtc_Word32 FileRecorderImpl::RecordAudioToFile(
         }
     } else {
         int outLen = 0;
-        if(ptrAudioFrame->_audioChannel == 2)
+        if(ptrAudioFrame->num_channels_ == 2)
         {
             // ptrAudioFrame contains interleaved stereo audio.
-            _audioResampler.ResetIfNeeded(ptrAudioFrame->_frequencyInHz,
+            _audioResampler.ResetIfNeeded(ptrAudioFrame->sample_rate_hz_,
                                           codec_info_.plfreq,
                                           kResamplerSynchronousStereo);
-            _audioResampler.Push(ptrAudioFrame->_payloadData,
-                                 ptrAudioFrame->_payloadDataLengthInSamples *
-                                 ptrAudioFrame->_audioChannel,
+            _audioResampler.Push(ptrAudioFrame->data_,
+                                 ptrAudioFrame->samples_per_channel_ *
+                                 ptrAudioFrame->num_channels_,
                                  (WebRtc_Word16*)_audioBuffer,
                                  MAX_AUDIO_BUFFER_IN_BYTES, outLen);
         } else {
-            _audioResampler.ResetIfNeeded(ptrAudioFrame->_frequencyInHz,
+            _audioResampler.ResetIfNeeded(ptrAudioFrame->sample_rate_hz_,
                                           codec_info_.plfreq,
                                           kResamplerSynchronous);
-            _audioResampler.Push(ptrAudioFrame->_payloadData,
-                                 ptrAudioFrame->_payloadDataLengthInSamples,
+            _audioResampler.Push(ptrAudioFrame->data_,
+                                 ptrAudioFrame->samples_per_channel_,
                                  (WebRtc_Word16*)_audioBuffer,
                                  MAX_AUDIO_BUFFER_IN_BYTES, outLen);
         }
@@ -298,8 +297,8 @@ WebRtc_Word32 FileRecorderImpl::RecordAudioToFile(
     if (encodedLenInBytes)
     {
         WebRtc_UWord16 msOfData =
-            ptrAudioFrame->_payloadDataLengthInSamples /
-            WebRtc_UWord16(ptrAudioFrame->_frequencyInHz / 1000);
+            ptrAudioFrame->samples_per_channel_ /
+            WebRtc_UWord16(ptrAudioFrame->sample_rate_hz_ / 1000);
         if (WriteEncodedAudioData(_audioBuffer,
                                   (WebRtc_UWord16)encodedLenInBytes,
                                   msOfData, playoutTS) == -1)

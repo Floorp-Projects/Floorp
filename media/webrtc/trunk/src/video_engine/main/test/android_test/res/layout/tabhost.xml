@@ -19,7 +19,6 @@
       <include android:id="@+id/tab_config" layout="@layout/main" />
       <include android:id="@+id/tab_vconfig" layout="@layout/vconfig" />
       <include android:id="@+id/tab_aconfig" layout="@layout/aconfig" />
-      <include android:id="@+id/tab_stats" layout="@layout/stats" />		  
     </FrameLayout>
   </LinearLayout>
 </TabHost>

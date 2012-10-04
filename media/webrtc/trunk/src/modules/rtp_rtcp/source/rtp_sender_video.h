@@ -37,10 +37,6 @@ public:
                    RTPSenderInterface* rtpSender);
     virtual ~RTPSenderVideo();
 
-    WebRtc_Word32 Init();
-
-    virtual void ChangeUniqueId(const WebRtc_Word32 id);
-
     virtual RtpVideoCodecTypes VideoCodecType() const;
 
     WebRtc_UWord16 FECPacketOverhead() const;
@@ -54,7 +50,8 @@ public:
     WebRtc_Word32 SendVideo(const RtpVideoCodecTypes videoType,
                           const FrameType frameType,
                           const WebRtc_Word8 payloadType,
-                          const WebRtc_UWord32 captureTimeStamp,
+                          const uint32_t captureTimeStamp,
+                          int64_t capture_time_ms,
                           const WebRtc_UWord8* payloadData,
                           const WebRtc_UWord32 payloadSize,
                           const RTPFragmentationHeader* fragmentation,
@@ -92,21 +89,24 @@ public:
     int SetSelectiveRetransmissions(uint8_t settings);
 
 protected:
-    virtual WebRtc_Word32 SendVideoPacket(const WebRtc_UWord8* dataBuffer,
+    virtual WebRtc_Word32 SendVideoPacket(WebRtc_UWord8* dataBuffer,
                                           const WebRtc_UWord16 payloadLength,
                                           const WebRtc_UWord16 rtpHeaderLength,
+                                          int64_t capture_time_ms,
                                           StorageType storage,
                                           bool protect);
 
 private:
     WebRtc_Word32 SendGeneric(const WebRtc_Word8 payloadType,
-                            const WebRtc_UWord32 captureTimeStamp,
+                            const uint32_t captureTimeStamp,
+                            int64_t capture_time_ms,
                             const WebRtc_UWord8* payloadData,
                             const WebRtc_UWord32 payloadSize);
 
     WebRtc_Word32 SendVP8(const FrameType frameType,
                         const WebRtc_Word8 payloadType,
-                        const WebRtc_UWord32 captureTimeStamp,
+                        const uint32_t captureTimeStamp,
+                        int64_t capture_time_ms,
                         const WebRtc_UWord8* payloadData,
                         const WebRtc_UWord32 payloadSize,
                         const RTPFragmentationHeader* fragmentation,

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -19,8 +19,6 @@
 #include <vector>
 
 #include "../source/event.h"
-#include "receiver_tests.h" // receive side callbacks
-#include "test_callbacks.h"
 #include "test_macros.h"
 #include "test_util.h" // send side callback
 #include "testsupport/metrics/video_metrics.h"
@@ -67,35 +65,34 @@ int MediaOptTest::RunTest(int testNum, CmdArgs& args)
 }
 
 
-MediaOptTest::MediaOptTest(VideoCodingModule* vcm, TickTimeBase* clock):
-_vcm(vcm),
-_clock(clock),
-_width(0),
-_height(0),
-_lengthSourceFrame(0),
-_timeStamp(0),
-_frameRate(30.0f),
-_nackEnabled(false),
-_fecEnabled(false),
-_rttMS(0),
-_bitRate(300.0f),
-_lossRate(0.0f),
-_renderDelayMs(0),
-_frameCnt(0),
-_sumEncBytes(0),
-_numFramesDropped(0),
-_numberOfCores(4)
-{
-    _rtp = RtpRtcp::CreateRtpRtcp(1, false);
+MediaOptTest::MediaOptTest(VideoCodingModule* vcm, TickTimeBase* clock)
+    : _vcm(vcm),
+      _rtp(NULL),
+      _outgoingTransport(NULL),
+      _dataCallback(NULL),
+      _clock(clock),
+      _width(0),
+      _height(0),
+      _lengthSourceFrame(0),
+      _timeStamp(0),
+      _frameRate(30.0f),
+      _nackEnabled(false),
+      _fecEnabled(false),
+      _rttMS(0),
+      _bitRate(300.0f),
+      _lossRate(0.0f),
+      _renderDelayMs(0),
+      _frameCnt(0),
+      _sumEncBytes(0),
+      _numFramesDropped(0),
+      _numberOfCores(4) {
 }
 
-MediaOptTest::~MediaOptTest()
-{
-    RtpRtcp::DestroyRtpRtcp(_rtp);
+MediaOptTest::~MediaOptTest() {
+  delete _rtp;
 }
-void
-MediaOptTest::Setup(int testType, CmdArgs& args)
-{
+
+void MediaOptTest::Setup(int testType, CmdArgs& args) {
     /*TEST USER SETTINGS*/
     // test parameters
     _inname = args.inputFile;
@@ -168,7 +165,6 @@ MediaOptTest::Setup(int testType, CmdArgs& args)
    _lengthSourceFrame  = 3*_width*_height/2;
     _log.open((test::OutputPath() + "VCM_MediaOptLog.txt").c_str(),
               std::fstream::out | std::fstream::app);
-    return;
 }
 
 void
@@ -193,15 +189,6 @@ MediaOptTest::GeneralSetup()
         printf("Cannot read file %s.\n", _actualSourcename.c_str());
         exit(1);
     }
-
-    if (_rtp->InitReceiver() < 0)
-    {
-        exit(1);
-    }
-    if (_rtp->InitSender() < 0)
-    {
-        exit(1);
-    }
     if (_vcm->InitializeReceiver() < 0)
     {
         exit(1);
@@ -210,6 +197,17 @@ MediaOptTest::GeneralSetup()
     {
         exit(1);
     }
+    _outgoingTransport = new RTPSendCompleteCallback(_clock);
+    _dataCallback = new RtpDataCallback(_vcm);
+
+    RtpRtcp::Configuration configuration;
+    configuration.id = 1;
+    configuration.audio = false;
+    configuration.incoming_data = _dataCallback;
+    configuration.outgoing_transport = _outgoingTransport;
+    _rtp = RtpRtcp::CreateRtpRtcp(configuration);
+
+    _outgoingTransport->SetRtpModule(_rtp);
 
     // Registering codecs for the RTP module
 
@@ -262,8 +260,6 @@ MediaOptTest::GeneralSetup()
 
     _vcm->SetRenderDelay(_renderDelayMs);
     _vcm->SetMinimumPlayoutDelay(minPlayoutDelayMs);
-
-    return;
 }
 // The following test shall be conducted under release tests
 
@@ -272,33 +268,23 @@ MediaOptTest::GeneralSetup()
 WebRtc_Word32
 MediaOptTest::Perform()
 {
-    //Setup();
-    EventWrapper* waitEvent = EventWrapper::Create();
+    VCMDecodeCompleteCallback receiveCallback(_decodedFile);
 
-    // callback settings
     VCMRTPEncodeCompleteCallback* encodeCompleteCallback = new VCMRTPEncodeCompleteCallback(_rtp);
     _vcm->RegisterTransportCallback(encodeCompleteCallback);
     encodeCompleteCallback->SetCodecType(ConvertCodecType(_codecName.c_str()));
     encodeCompleteCallback->SetFrameDimensions(_width, _height);
-    // frame ready to be sent to network
-    RTPSendCompleteCallback* outgoingTransport =
-        new RTPSendCompleteCallback(_rtp, _clock);
-    _rtp->RegisterSendTransport(outgoingTransport);
-    //FrameReceiveCallback
-    VCMDecodeCompleteCallback receiveCallback(_decodedFile);
-    RtpDataCallback dataCallback(_vcm);
-    _rtp->RegisterIncomingDataCallback(&dataCallback);
 
+    // callback settings
     VideoProtectionCallback  protectionCallback;
     protectionCallback.RegisterRtpModule(_rtp);
     _vcm->RegisterProtectionCallback(&protectionCallback);
 
     // set error resilience / test parameters:
-    outgoingTransport->SetLossPct(_lossRate);
-    if (_nackFecEnabled == 1)
+    _outgoingTransport->SetLossPct(_lossRate);
+    if (_nackFecEnabled == 1) {
         _vcm->SetVideoProtection(kProtectionNackFEC, _nackFecEnabled);
-    else
-    {
+    } else {
         _vcm->SetVideoProtection(kProtectionNack, _nackEnabled);
         _vcm->SetVideoProtection(kProtectionFEC, _fecEnabled);
     }
@@ -344,18 +330,18 @@ MediaOptTest::Perform()
         }
         else
         {
-            // write frame to file
-            fwrite(sourceFrame.Buffer(), 1, sourceFrame.Length(), _actualSourceFile);
+          // write frame to file
+          if (fwrite(sourceFrame.Buffer(), 1, sourceFrame.Length(),
+                     _actualSourceFile) !=  sourceFrame.Length()) {
+            return -1;
+          }
         }
 
         _sumEncBytes += encBytes;
-         //waitEvent->Wait(33);
     }
 
     //END TEST
-    delete waitEvent;
     delete encodeCompleteCallback;
-    delete outgoingTransport;
     delete tmpBuffer;
 
 return 0;
@@ -441,17 +427,10 @@ MediaOptTest::RTTest()
 
                 printf("**FOR RUN: **%d %d %d %d \n",_nackEnabled,_fecEnabled,int(lossPctVec[j]),int(_bitRate));
                */
-                 if (_rtp != NULL)
-                 {
-                     RtpRtcp::DestroyRtpRtcp(_rtp);
-                 }
-                 _rtp = RtpRtcp::CreateRtpRtcp(1, false);
                  GeneralSetup();
                  Perform();
                  Print(1);
                  TearDown();
-                 RtpRtcp::DestroyRtpRtcp(_rtp);
-                 _rtp = NULL;
 
                  printf("\n");
                   //printf("**DONE WITH RUN: **%d %d %f %d \n",_nackEnabled,_fecEnabled,lossPctVec[j],int(_bitRate));
@@ -549,12 +528,15 @@ MediaOptTest::Print(int mode)
     TEST(psnr.average > 10); // low becuase of possible frame dropping (need to verify that OK for all packet loss values/ rates)
 }
 
-void
-MediaOptTest::TearDown()
-{
-    _log.close();
-    fclose(_sourceFile);
-    fclose(_decodedFile);
-    fclose(_actualSourceFile);
-    return;
+void MediaOptTest::TearDown() {
+  delete _rtp;
+  _rtp = NULL;
+  delete _outgoingTransport;
+  _outgoingTransport = NULL;
+  delete _dataCallback;
+  _dataCallback = NULL;
+  _log.close();
+  fclose(_sourceFile);
+  fclose(_decodedFile);
+  fclose(_actualSourceFile);
 }

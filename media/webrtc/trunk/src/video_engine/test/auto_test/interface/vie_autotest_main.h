@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -29,7 +29,7 @@ class ViEAutoTestMain {
   static const int kInvalidChoice = -1;
 
   // Starts interactive mode.
-  bool RunInteractiveMode();
+  int RunInteractiveMode();
   // Prompts the user for a specific test method in the provided test case.
   // Returns 0 on success, nonzero otherwise.
   int RunSpecificTestCaseIn(const std::string test_case_name);

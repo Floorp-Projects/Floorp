@@ -122,7 +122,7 @@ VideoCaptureModuleV4L2::~VideoCaptureModuleV4L2()
 }
 
 WebRtc_Word32 VideoCaptureModuleV4L2::StartCapture(
-                                        const VideoCaptureCapability& capability)
+    const VideoCaptureCapability& capability)
 {
     if (_captureStarted)
     {
@@ -212,11 +212,43 @@ WebRtc_Word32 VideoCaptureModuleV4L2::StartCapture(
     _currentWidth = video_fmt.fmt.pix.width;
     _currentHeight = video_fmt.fmt.pix.height;
     _captureDelay = 120;
-    // No way of knowing frame rate, make a guess.
-    if(_currentWidth >= 800 && _captureVideoType != kVideoMJPEG)
-      _currentFrameRate = 15;
-    else
-      _currentFrameRate = 30;
+
+    // Trying to set frame rate, before check driver capability.
+    bool driver_framerate_support = true;
+    struct v4l2_streamparm streamparms;
+    memset(&streamparms, 0, sizeof(streamparms));
+    streamparms.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    if (ioctl(_deviceFd, VIDIOC_G_PARM, &streamparms) < 0) {
+        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
+                   "error in VIDIOC_G_PARM errno = %d", errno);
+        driver_framerate_support = false;
+      // continue
+    } else {
+      // check the capability flag is set to V4L2_CAP_TIMEPERFRAME.
+      if (streamparms.parm.capture.capability == V4L2_CAP_TIMEPERFRAME) {
+        // driver supports the feature. Set required framerate.
+        memset(&streamparms, 0, sizeof(streamparms));
+        streamparms.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        streamparms.parm.capture.timeperframe.numerator = 1;
+        streamparms.parm.capture.timeperframe.denominator = capability.maxFPS;
+        if (ioctl(_deviceFd, VIDIOC_S_PARM, &streamparms) < 0) {
+          WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
+                   "Failed to set the framerate. errno=%d", errno);
+          driver_framerate_support = false;
+        } else {
+          _currentFrameRate = capability.maxFPS;
+        }
+      }
+    }
+    // If driver doesn't support framerate control, need to hardcode.
+    // Hardcoding the value based on the frame size.
+    if (!driver_framerate_support) {
+      if(_currentWidth >= 800 && _captureVideoType != kVideoMJPEG) {
+        _currentFrameRate = 15;
+      } else {
+        _currentFrameRate = 30;
+      }
+    }
 
     if (!AllocateVideoBuffers())
     {
@@ -250,39 +282,31 @@ WebRtc_Word32 VideoCaptureModuleV4L2::StartCapture(
 
 WebRtc_Word32 VideoCaptureModuleV4L2::StopCapture()
 {
-    if (_captureThread)
-        _captureThread->SetNotAlive();// Make sure the capture thread stop stop using the critsect.
-
-
-    CriticalSectionScoped cs(_captureCritSect);
-
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, -1, "StopCapture(), was running: %d",
-               _captureStarted);
-
-    if (!_captureStarted)
-    {
-        // we were not capturing!
-        return 0;
-    }
-
-    _captureStarted = false;
-
-    // stop the capture thread
-    // Delete capture update thread and event
-    if (_captureThread)
-    {
-        ThreadWrapper* temp = _captureThread;
-        _captureThread = NULL;
-        temp->SetNotAlive();
-        if (temp->Stop())
+    if (_captureThread) {
+        // Make sure the capture thread stop stop using the critsect.
+        _captureThread->SetNotAlive();
+        if (_captureThread->Stop()) {
+            delete _captureThread;
+            _captureThread = NULL;
+        } else
         {
-            delete temp;
+            // Couldn't stop the thread, leak instead of crash.
+            WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                         "%s: could not stop capture thread", __FUNCTION__);
+            assert(!"could not stop capture thread");
         }
     }
 
-    DeAllocateVideoBuffers();
-    close(_deviceFd);
-    _deviceFd = -1;
+    CriticalSectionScoped cs(_captureCritSect);
+    if (_captureStarted)
+    {
+        _captureStarted = false;
+        _captureThread = NULL;
+
+        DeAllocateVideoBuffers();
+        close(_deviceFd);
+        _deviceFd = -1;
+    }
 
     return 0;
 }
@@ -382,12 +406,6 @@ bool VideoCaptureModuleV4L2::CaptureProcess()
     struct timeval timeout;
 
     _captureCritSect->Enter();
-    if (!_captureThread)
-    {
-        // terminating
-        _captureCritSect->Leave();
-        return false;
-    }
 
     FD_ZERO(&rSet);
     FD_SET(_deviceFd, &rSet);

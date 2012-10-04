@@ -1,4 +1,0 @@
-#!/usr/bin/python
-
-from buildbot.scripts import runner
-runner.run()

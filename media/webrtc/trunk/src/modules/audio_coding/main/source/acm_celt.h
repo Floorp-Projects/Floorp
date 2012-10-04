@@ -55,8 +55,6 @@ class ACMCELT : public ACMGenericCodec {
 
   void InternalDestructEncoderInst(void* ptrInst);
 
-  int16_t UnregisterFromNetEqSafe(ACMNetEQ* netEq, int16_t payloadType);
-
   bool IsTrueStereoCodec();
 
   int16_t SetBitRateSafe(const int32_t rate);

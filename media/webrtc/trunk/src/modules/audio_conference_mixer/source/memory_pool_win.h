@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -15,7 +15,7 @@
 #include <windows.h>
 
 #include "aligned_malloc.h"
-#include "atomic32_wrapper.h"
+#include "atomic32.h"
 #include "typedefs.h"
 
 namespace webrtc {
@@ -66,8 +66,8 @@ private:
     // Atomic single linked list head.
     PSLIST_HEADER _pListHead;
 
-    Atomic32Wrapper _createdMemory;
-    Atomic32Wrapper _outstandingMemory;
+    Atomic32 _createdMemory;
+    Atomic32 _outstandingMemory;
 };
 
 template<class MemoryType>

@@ -180,7 +180,7 @@ WebRtc_Word16 WebRtcCng_AssignDec(CNG_dec_inst **inst, void *CNG_inst_Addr)
 WebRtc_Word16 WebRtcCng_CreateEnc(CNG_enc_inst **cng_inst)
 {
     *cng_inst=(CNG_enc_inst*)malloc(sizeof(WebRtcCngEncInst_t));
-    if(cng_inst!=NULL) {
+    if(*cng_inst!=NULL) {
         (*(WebRtcCngEncInst_t**) cng_inst)->errorcode = 0;
         (*(WebRtcCngEncInst_t**) cng_inst)->initflag = 0;
         return(0);
@@ -194,7 +194,7 @@ WebRtc_Word16 WebRtcCng_CreateEnc(CNG_enc_inst **cng_inst)
 WebRtc_Word16 WebRtcCng_CreateDec(CNG_dec_inst **cng_inst)
 {
     *cng_inst=(CNG_dec_inst*)malloc(sizeof(WebRtcCngDecInst_t));
-    if(cng_inst!=NULL) {
+    if(*cng_inst!=NULL) {
         (*(WebRtcCngDecInst_t**) cng_inst)->errorcode = 0;
         (*(WebRtcCngDecInst_t**) cng_inst)->initflag = 0;
         return(0);

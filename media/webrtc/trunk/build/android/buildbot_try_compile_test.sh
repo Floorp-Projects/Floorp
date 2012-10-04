@@ -14,4 +14,6 @@ ROOT=$(cd "$(dirname $0)"; pwd)
 
 bb_baseline_setup "${ROOT}"/../..
 bb_compile
+bb_reboot_phones
 bb_run_tests
+bb_run_content_shell_instrumentation_test

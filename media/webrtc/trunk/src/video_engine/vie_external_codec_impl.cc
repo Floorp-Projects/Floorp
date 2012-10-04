@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -10,7 +10,7 @@
 
 #include "video_engine/vie_external_codec_impl.h"
 
-#include "engine_configurations.h"
+#include "engine_configurations.h"  // NOLINT
 #include "system_wrappers/interface/trace.h"
 #include "video_engine/include/vie_errors.h"
 #include "video_engine/vie_channel.h"
