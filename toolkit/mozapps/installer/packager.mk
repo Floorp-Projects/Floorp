@@ -853,7 +853,7 @@ endif # LIBXUL_SDK
 prepare-package: stage-package
 	cd $(DIST) && $(PREPARE_PACKAGE)
 
-make-package-internal: prepare-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
+make-package-internal: prepare-package make-sourcestamp-file
 	@echo "Compressing..."
 	cd $(DIST) && $(MAKE_PACKAGE)
 
