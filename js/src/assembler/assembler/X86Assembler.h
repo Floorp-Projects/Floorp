@@ -287,9 +287,11 @@ private:
         OP2_ORPD_VpdWpd     = 0x56,
         OP2_XORPD_VpdWpd    = 0x57,
         OP2_MOVD_VdEd       = 0x6E,
+        OP2_MOVDQA_VsdWsd   = 0x6F,
         OP2_PSRLDQ_Vd       = 0x73,
         OP2_PCMPEQW         = 0x75,
         OP2_MOVD_EdVd       = 0x7E,
+        OP2_MOVDQA_WsdVsd   = 0x7F,
         OP2_JCC_rel32       = 0x80,
         OP_SETCC            = 0x90,
         OP2_IMUL_GvEv       = 0xAF,
@@ -2364,6 +2366,42 @@ public:
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, address);
     }
 #endif
+
+    void movdqa_rm(XMMRegisterID src, int offset, RegisterID base)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movdqa     %s, %s0x%x(%s)\n", MAYBE_PAD,
+                       nameFPReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVDQA_WsdVsd, (RegisterID)src, base, offset);
+    }
+
+    void movdqa_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movdqa      %s, %d(%s,%s,%d)\n", MAYBE_PAD, 
+                       nameFPReg(src), offset, nameIReg(base), nameIReg(index), scale);
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVDQA_WsdVsd, (RegisterID)src, base, index, scale, offset);
+    }
+
+    void movdqa_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movdqa     %s0x%x(%s), %s\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVDQA_VsdWsd, (RegisterID)dst, base, offset);
+    }
+
+    void movdqa_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movdqa     %d(%s,%s,%d), %s\n", MAYBE_PAD,
+                       offset, nameIReg(base), nameIReg(index), scale, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVDQA_VsdWsd, (RegisterID)dst, base, index, scale, offset);
+    }
 
     void mulsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
