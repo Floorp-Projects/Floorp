@@ -5,7 +5,6 @@
 
 #include "WebGLContext.h"
 #include "WebGLExtensions.h"
-#include "WebGLContextUtils.h"
 
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
@@ -1015,7 +1014,7 @@ CompareWebGLExtensionName(const nsACString& name, const char *other)
 }
 
 JSObject*
-WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& rv)
+WebGLContext::GetExtension(JSContext *cx, const nsAString& aName)
 {
     if (!IsContextStable())
         return nullptr;
@@ -1102,7 +1101,14 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
         mExtensions[ext] = obj;
     }
 
-    return WebGLObjectAsJSObject(cx, mExtensions[ext].get(), rv);
+    // step 4: return the extension as a JS object
+    JS::Value v;
+    JSObject* wrapper = GetWrapper();
+    JSAutoCompartment ac(cx, wrapper);
+    if (!WrapNewBindingObject(cx, wrapper, mExtensions[ext], &v)) {
+        return nullptr;
+    }
+    return &v.toObject();
 }
 
 void
@@ -1390,6 +1396,72 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLContext)
                                    nsICanvasRenderingContextInternal)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLBuffer)
+NS_IMPL_RELEASE(WebGLBuffer)
+
+DOMCI_DATA(WebGLBuffer, WebGLBuffer)
+
+NS_INTERFACE_MAP_BEGIN(WebGLBuffer)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLBuffer)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLBuffer)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(WebGLTexture)
+NS_IMPL_RELEASE(WebGLTexture)
+
+DOMCI_DATA(WebGLTexture, WebGLTexture)
+
+NS_INTERFACE_MAP_BEGIN(WebGLTexture)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLTexture)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLTexture)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(WebGLProgram)
+NS_IMPL_RELEASE(WebGLProgram)
+
+DOMCI_DATA(WebGLProgram, WebGLProgram)
+
+NS_INTERFACE_MAP_BEGIN(WebGLProgram)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLProgram)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLProgram)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(WebGLShader)
+NS_IMPL_RELEASE(WebGLShader)
+
+DOMCI_DATA(WebGLShader, WebGLShader)
+
+NS_INTERFACE_MAP_BEGIN(WebGLShader)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLShader)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLShader)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(WebGLFramebuffer)
+NS_IMPL_RELEASE(WebGLFramebuffer)
+
+DOMCI_DATA(WebGLFramebuffer, WebGLFramebuffer)
+
+NS_INTERFACE_MAP_BEGIN(WebGLFramebuffer)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLFramebuffer)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLFramebuffer)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(WebGLRenderbuffer)
+NS_IMPL_RELEASE(WebGLRenderbuffer)
+
+DOMCI_DATA(WebGLRenderbuffer, WebGLRenderbuffer)
+
+NS_INTERFACE_MAP_BEGIN(WebGLRenderbuffer)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLRenderbuffer)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLRenderbuffer)
+NS_INTERFACE_MAP_END
+
 // WebGLUniformLocation
 
 NS_IMPL_ADDREF(WebGLUniformLocation)
@@ -1432,6 +1504,19 @@ NS_INTERFACE_MAP_BEGIN(WebGLActiveInfo)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLActiveInfo)
 NS_INTERFACE_MAP_END
+
+#define NAME_NOT_SUPPORTED(base) \
+NS_IMETHODIMP base::GetName(WebGLuint *aName) \
+{ return NS_ERROR_NOT_IMPLEMENTED; } \
+NS_IMETHODIMP base::SetName(WebGLuint aName) \
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NAME_NOT_SUPPORTED(WebGLTexture)
+NAME_NOT_SUPPORTED(WebGLBuffer)
+NAME_NOT_SUPPORTED(WebGLProgram)
+NAME_NOT_SUPPORTED(WebGLShader)
+NAME_NOT_SUPPORTED(WebGLFramebuffer)
+NAME_NOT_SUPPORTED(WebGLRenderbuffer)
 
 /* readonly attribute WebGLint size; */
 NS_IMETHODIMP

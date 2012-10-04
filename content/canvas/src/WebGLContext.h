@@ -631,7 +631,7 @@ public:
     JSObject *GetContextAttributes(ErrorResult &rv);
     bool IsContextLost() const { return !IsContextStable(); }
     void GetSupportedExtensions(dom::Nullable< nsTArray<nsString> > &retval);
-    JSObject* GetExtension(JSContext* ctx, const nsAString& aName, ErrorResult& rv);
+    JSObject* GetExtension(JSContext* ctx, const nsAString& aName);
     void ActiveTexture(WebGLenum texture);
     void AttachShader(WebGLProgram* program, WebGLShader* shader);
     void BindAttribLocation(WebGLProgram* program, WebGLuint location,
@@ -1392,11 +1392,6 @@ protected:
     void LoseOldestWebGLContextIfLimitExceeded();
     void UpdateLastUseIndex();
 
-    template <typename WebGLObjectType>
-    JS::Value WebGLObjectAsJSValue(JSContext *cx, const WebGLObjectType *, ErrorResult& rv) const;
-    template <typename WebGLObjectType>
-    JSObject* WebGLObjectAsJSObject(JSContext *cx, const WebGLObjectType *, ErrorResult& rv) const;
-
 #ifdef XP_MACOSX
     // see bug 713305. This RAII helper guarantees that we're on the discrete GPU, during its lifetime
     // Debouncing note: we don't want to switch GPUs too frequently, so try to not create and destroy
@@ -1497,12 +1492,13 @@ struct WebGLVertexAttribData {
     }
 };
 
+// NOTE: When this class is switched to new DOM bindings, update the
+// (then-slow) WrapObject calls in GetParameter and GetVertexAttrib.
 class WebGLBuffer MOZ_FINAL
-    : public nsISupports
+    : public nsIWebGLBuffer
     , public WebGLRefCountedObject<WebGLBuffer>
     , public LinkedListElement<WebGLBuffer>
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
 public:
     WebGLBuffer(WebGLContext *context)
@@ -1511,7 +1507,6 @@ public:
         , mByteLength(0)
         , mTarget(LOCAL_GL_NONE)
     {
-        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mContext->gl->fGenBuffers(1, &mGLName);
         mContext->mBuffers.insertBack(this);
@@ -1563,14 +1558,8 @@ public:
         return mCache->Validate(type, max_allowed, first, count);
     }
 
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLBuffer)
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLBUFFER
 
 protected:
 
@@ -1585,11 +1574,10 @@ protected:
 // NOTE: When this class is switched to new DOM bindings, update the (then-slow)
 // WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
 class WebGLTexture MOZ_FINAL
-    : public nsISupports
+    : public nsIWebGLTexture
     , public WebGLRefCountedObject<WebGLTexture>
     , public LinkedListElement<WebGLTexture>
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
 public:
     WebGLTexture(WebGLContext *context)
@@ -1605,7 +1593,6 @@ public:
         , mHaveGeneratedMipmap(false)
         , mFakeBlackStatus(DoNotNeedFakeBlack)
     {
-        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mContext->gl->fGenTextures(1, &mGLName);
         mContext->mTextures.insertBack(this);
@@ -1627,14 +1614,8 @@ public:
     WebGLuint GLName() { return mGLName; }
     GLenum Target() const { return mTarget; }
 
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLTexture)
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLTEXTURE
 
 protected:
 
@@ -2099,11 +2080,10 @@ struct WebGLUniformInfo {
 };
 
 class WebGLShader MOZ_FINAL
-    : public nsISupports
+    : public nsIWebGLShader
     , public WebGLRefCountedObject<WebGLShader>
     , public LinkedListElement<WebGLShader>
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
     friend class WebGLContext;
     friend class WebGLProgram;
@@ -2116,7 +2096,6 @@ public:
         , mAttribMaxNameLength(0)
         , mCompileStatus(false)
     {
-        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mGLName = mContext->gl->fCreateShader(mType);
         mContext->mShaders.insertBack(this);
@@ -2172,14 +2151,8 @@ public:
 
     const nsCString& TranslationLog() const { return mTranslationLog; }
 
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLShader)
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLSHADER
 
 protected:
 
@@ -2231,12 +2204,13 @@ static bool SplitLastSquareBracket(nsACString& string, nsCString& bracketPart)
 typedef nsDataHashtable<nsCStringHashKey, nsCString> CStringMap;
 typedef nsDataHashtable<nsCStringHashKey, WebGLUniformInfo> CStringToUniformInfoMap;
 
+// NOTE: When this class is switched to new DOM bindings, update the
+// (then-slow) WrapObject call in GetParameter.
 class WebGLProgram MOZ_FINAL
-    : public nsISupports
+    : public nsIWebGLProgram
     , public WebGLRefCountedObject<WebGLProgram>
     , public LinkedListElement<WebGLProgram>
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
 public:
     WebGLProgram(WebGLContext *context)
@@ -2245,7 +2219,6 @@ public:
         , mGeneration(0)
         , mAttribMaxNameLength(0)
     {
-        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mGLName = mContext->gl->fCreateProgram();
         mContext->mPrograms.insertBack(this);
@@ -2489,14 +2462,8 @@ public:
         return info;
     }
 
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLProgram)
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLPROGRAM
 
 protected:
 
@@ -2513,13 +2480,14 @@ protected:
     int mAttribMaxNameLength;
 };
 
+// NOTE: When this class is switched to new DOM bindings, update the (then-slow)
+// WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
 class WebGLRenderbuffer MOZ_FINAL
-    : public nsISupports
+    : public nsIWebGLRenderbuffer
     , public WebGLRefCountedObject<WebGLRenderbuffer>
     , public LinkedListElement<WebGLRenderbuffer>
     , public WebGLRectangleObject
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
 public:
     WebGLRenderbuffer(WebGLContext *context)
@@ -2529,7 +2497,7 @@ public:
         , mHasEverBeenBound(false)
         , mInitialized(false)
     {
-        SetIsDOMBinding();
+
         mContext->MakeContextCurrent();
         mContext->gl->fGenRenderbuffers(1, &mGLName);
         mContext->mRenderbuffers.insertBack(this);
@@ -2587,14 +2555,8 @@ public:
         return 0;
     }
 
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLRenderbuffer)
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLRENDERBUFFER
 
 protected:
 
@@ -2752,12 +2714,13 @@ public:
     }
 };
 
+// NOTE: When this class is switched to new DOM bindings, update the
+// (then-slow) WrapObject call in GetParameter.
 class WebGLFramebuffer MOZ_FINAL
-    : public nsISupports
+    : public nsIWebGLFramebuffer
     , public WebGLRefCountedObject<WebGLFramebuffer>
     , public LinkedListElement<WebGLFramebuffer>
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
 public:
     WebGLFramebuffer(WebGLContext *context)
@@ -2768,7 +2731,6 @@ public:
         , mStencilAttachment(LOCAL_GL_STENCIL_ATTACHMENT)
         , mDepthStencilAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
     {
-        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mContext->gl->fGenFramebuffers(1, &mGLName);
         mContext->mFramebuffers.insertBack(this);
@@ -2964,14 +2926,8 @@ public:
         return mColorAttachment.RectangleObject();
     }
 
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLFramebuffer)
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLFRAMEBUFFER
 
     bool CheckAndInitializeRenderbuffers()
     {

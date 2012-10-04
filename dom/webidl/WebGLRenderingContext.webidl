@@ -49,23 +49,17 @@ typedef float          GLclampf;
     boolean preserveDrawingBuffer = false;
     };*/
 
-interface WebGLBuffer {
-};
+interface WebGLBuffer;
 
-interface WebGLFramebuffer {
-};
+interface WebGLFramebuffer;
 
-interface WebGLProgram {
-};
+interface WebGLProgram;
 
-interface WebGLRenderbuffer {
-};
+interface WebGLRenderbuffer;
 
-interface WebGLShader {
-};
+interface WebGLShader;
 
-interface WebGLTexture {
-};
+interface WebGLTexture;
 
 interface WebGLUniformLocation {
 };
@@ -505,7 +499,6 @@ interface WebGLRenderingContext {
 
     sequence<DOMString>? getSupportedExtensions();
 
-    [Throws]
     object? getExtension(DOMString name);
 
     void activeTexture(GLenum texture);
