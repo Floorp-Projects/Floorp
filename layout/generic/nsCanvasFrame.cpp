@@ -22,7 +22,6 @@
 #include "nsDisplayList.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsFrameManager.h"
-#include "gfxPlatform.h"
 
 // for focus
 #include "nsIScrollableFrame.h"
@@ -211,32 +210,12 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
   if (IsSingleFixedPositionImage(aBuilder, bgClipRect) && aBuilder->IsPaintingToWindow() && !aBuilder->IsCompositingCheap()) {
     surf = static_cast<gfxASurface*>(GetUnderlyingFrame()->Properties().Get(nsIFrame::CachedBackgroundImage()));
-    if (dest->IsCairo()) {
-      nsRefPtr<gfxASurface> destSurf = dest->CurrentSurface();
-      if (surf && surf->GetType() == destSurf->GetType()) {
-        BlitSurface(dest, mDestRect, surf);
-        return;
-      }
-      surf = destSurf->CreateSimilarSurface(
-          gfxASurface::CONTENT_COLOR_ALPHA,
-          gfxIntSize(ceil(mDestRect.width), ceil(mDestRect.height)));
-    } else {
-      if (surf) {
-        mozilla::gfx::DrawTarget* dt = dest->GetDrawTarget();
-        mozilla::RefPtr<mozilla::gfx::SourceSurface> source =
-            gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, surf);
-        if (source) {
-          // Could be non-integer pixel alignment
-          dt->DrawSurface(source,
-                          mozilla::gfx::Rect(mDestRect.x, mDestRect.y, mDestRect.width, mDestRect.height),
-                          mozilla::gfx::Rect(0, 0, mDestRect.width, mDestRect.height));
-          return;
-        }
-      }
-      surf = gfxPlatform::GetPlatform()->CreateOffscreenImageSurface(
-          gfxIntSize(ceil(mDestRect.width), ceil(mDestRect.height)),
-          gfxASurface::CONTENT_COLOR_ALPHA);
+    nsRefPtr<gfxASurface> destSurf = dest->CurrentSurface();
+    if (surf && surf->GetType() == destSurf->GetType()) {
+      BlitSurface(dest, mDestRect, surf);
+      return;
     }
+    surf = destSurf->CreateSimilarSurface(gfxASurface::CONTENT_COLOR_ALPHA, gfxIntSize(ceil(mDestRect.width), ceil(mDestRect.height)));
     if (surf) {
       ctx = new gfxContext(surf);
       ctx->Translate(-gfxPoint(mDestRect.x, mDestRect.y));

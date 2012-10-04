@@ -11,7 +11,6 @@
 #include "base/basictypes.h"
 
 #include "gfxASurface.h"
-#include "mozilla/gfx/2D.h"
 #include "mozilla/layers/PLayers.h"
 #include "ShadowLayers.h"
 
@@ -45,8 +44,6 @@ public:
   /** This can't escape the scope of AutoOpenSurface. */
   gfxASurface* Get();
 
-  mozilla::gfx::DrawTarget* GetDrawTarget();
-
   /**
    * This can't escape the scope of AutoOpenSurface.
    *
@@ -63,7 +60,6 @@ public:
 private:
   SurfaceDescriptor mDescriptor;
   nsRefPtr<gfxASurface> mSurface;
-  RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
   nsRefPtr<gfxImageSurface> mSurfaceAsImage;
   OpenMode mMode;
 
