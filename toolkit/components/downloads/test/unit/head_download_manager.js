@@ -111,6 +111,7 @@ function addDownload(aParams)
   // it is part of the active downloads the moment addDownload is called
   gDownloadCount++;
 
+  let dm = downloadUtils.downloadManager;
   var dl = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                           createURI(aParams.sourceURI),
                           createURI(aParams.targetFile), aParams.downloadName, null,
