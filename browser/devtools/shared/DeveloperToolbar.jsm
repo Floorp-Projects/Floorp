@@ -7,6 +7,7 @@
 const EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const WEBCONSOLE_CONTENT_SCRIPT_URL =
   "chrome://browser/content/devtools/HUDService-content.js";
@@ -638,7 +639,6 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
   this._frame = aChromeDoc.createElementNS(NS_XHTML, "iframe");
   this._frame.id = "gcli-output-frame";
   this._frame.setAttribute("src", "chrome://browser/content/devtools/commandlineoutput.xhtml");
-  this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 
   this.displayedOutput = undefined;
@@ -675,6 +675,33 @@ OutputPanel.prototype._onload = function OP_onload()
 };
 
 /**
+ * Determine the scrollbar width in the current document.
+ *
+ * @private
+ */
+Object.defineProperty(OutputPanel.prototype, 'scrollbarWidth', {
+  get: function() {
+    if (this.__scrollbarWidth) {
+      return this.__scrollbarWidth;
+    }
+
+    let hbox = this.document.createElementNS(XUL_NS, "hbox");
+    hbox.setAttribute("style", "height: 0%; overflow: hidden");
+
+    let scrollbar = this.document.createElementNS(XUL_NS, "scrollbar");
+    scrollbar.setAttribute("orient", "vertical");
+    hbox.appendChild(scrollbar);
+
+    this.document.documentElement.appendChild(hbox);
+    this.__scrollbarWidth = scrollbar.clientWidth;
+    this.document.documentElement.removeChild(hbox);
+
+    return this.__scrollbarWidth;
+  },
+  enumerable: true
+};
+
+/**
  * Prevent the popup from hiding if it is not permitted via this.canHide.
  */
 OutputPanel.prototype._onpopuphiding = function OP_onpopuphiding(aEvent)
@@ -691,16 +718,14 @@ OutputPanel.prototype._onpopuphiding = function OP_onpopuphiding(aEvent)
  */
 OutputPanel.prototype.show = function OP_show()
 {
-  // This is nasty, but displaying the panel causes it to re-flow, which can
-  // change the size it should be, so we need to resize the iframe after the
-  // panel has displayed
-  this._panel.ownerDocument.defaultView.setTimeout(function() {
-    this._resize();
-  }.bind(this), 0);
-
   if (isLinux) {
     this.canHide = false;
   }
+
+  // We need to reset the iframe size in order for future size calculations to
+  // be correct
+  this._frame.style.minHeight = this._frame.style.maxHeight = 0;
+  this._frame.style.minWidth = 0;
 
   this._panel.openPopup(this._input, "before_start", 0, 0, false, false, null);
   this._resize();
@@ -718,8 +743,38 @@ OutputPanel.prototype._resize = function CLP_resize()
     return
   }
 
-  this._frame.height = this.document.body.scrollHeight;
-  this._frame.width = this._input.clientWidth + 2;
+  // Set max panel width to match any content with a max of the width of the
+  // browser window.
+  let maxWidth = this._panel.ownerDocument.documentElement.clientWidth;
+  let width = Math.min(maxWidth, this.document.documentElement.scrollWidth);
+
+  // Add scrollbar width to content size in case a scrollbar is needed.
+  width += this.scrollbarWidth;
+
+  // Set the width of the iframe.
+  this._frame.style.minWidth = width + "px";
+
+  // browserAdjustment is used to correct the panel height according to the
+  // browsers borders etc.
+  const browserAdjustment = 15;
+
+  // Set max panel height to match any content with a max of the height of the
+  // browser window.
+  let maxHeight =
+    this._panel.ownerDocument.documentElement.clientHeight - browserAdjustment;
+  let height = Math.min(maxHeight, this.document.documentElement.scrollHeight);
+
+  // Set the height of the iframe. Setting iframe.height does not work.
+  this._frame.style.minHeight = this._frame.style.maxHeight = height + "px";
+
+  // Set the height and width of the panel to match the iframe.
+  this._panel.sizeTo(width, height);
+
+  // Move the panel to the correct position in the case that it has been
+  // positioned incorrectly.
+  let screenX = this._input.boxObject.screenX;
+  let screenY = this._toolbar.boxObject.screenY;
+  this._panel.moveTo(screenX, screenY - height);
 };
 
 /**
