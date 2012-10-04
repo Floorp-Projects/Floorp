@@ -9,6 +9,9 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Services.prefs.setIntPref("extensions.enabledScopes",
                           AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER);
 
+// The test extension uses an insecure update url.
+Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
+
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
 const profileDir = gProfD.clone();
@@ -100,6 +103,7 @@ function run_test() {
 
   // Create and configure the HTTP server.
   testserver = new HttpServer();
+  testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.start(4444);
 
@@ -564,7 +568,7 @@ function check_test_23() {
           b1.uninstall();
           restartManager();
 
-          testserver.stop(run_test_25);
+          run_test_25();
         });
       });
     });
@@ -632,10 +636,155 @@ function run_test_26() {
         do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
 
         HunspellEngine.deactivate();
-
-        do_test_finished();
+        b1.uninstall();
+        restartManager();
+        run_test_27();
       });
     });
   });
 }
 
+// Tests that an update check from a normal add-on to a bootstrappable add-on works
+function run_test_27() {
+  writeInstallRDFForExtension({
+    id: "ab-CD@dictionaries.addons.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_dictionary.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Dictionary",
+  }, profileDir);
+  restartManager();
+
+  prepare_test({
+    "ab-CD@dictionaries.addons.mozilla.org": [
+      "onInstalling"
+    ]
+  }, [
+    "onNewInstall",
+    "onDownloadStarted",
+    "onDownloadEnded",
+    "onInstallStarted",
+    "onInstallEnded"
+  ], check_test_27);
+
+  AddonManagerPrivate.backgroundUpdateCheck();
+}
+
+function check_test_27(install) {
+  do_check_eq(install.existingAddon.pendingUpgrade.install, install);
+
+  restartManager();
+  AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "2.0");
+    do_check_eq(b1.type, "dictionary");
+    b1.uninstall();
+    restartManager();
+
+    run_test_28();
+  });
+}
+
+// Tests that an update check from a bootstrappable add-on to a normal add-on works
+function run_test_28() {
+  writeInstallRDFForExtension({
+    id: "ef@dictionaries.addons.mozilla.org",
+    version: "1.0",
+    type: "64",
+    updateURL: "http://localhost:4444/data/test_dictionary.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Dictionary ef",
+  }, profileDir);
+  restartManager();
+
+  prepare_test({
+    "ef@dictionaries.addons.mozilla.org": [
+      "onInstalling"
+    ]
+  }, [
+    "onNewInstall",
+    "onDownloadStarted",
+    "onDownloadEnded",
+    "onInstallStarted",
+    "onInstallEnded"
+  ], check_test_28);
+
+  AddonManagerPrivate.backgroundUpdateCheck();
+}
+
+function check_test_28(install) {
+  do_check_eq(install.existingAddon.pendingUpgrade.install, install);
+
+  restartManager();
+  AddonManager.getAddonByID("ef@dictionaries.addons.mozilla.org", function(b2) {
+    do_check_neq(b2, null);
+    do_check_eq(b2.version, "2.0");
+    do_check_eq(b2.type, "extension");
+    b2.uninstall();
+    restartManager();
+
+    run_test_29();
+  });
+}
+
+// Tests that an update check from a bootstrappable add-on to a bootstrappable add-on works
+function run_test_29() {
+  writeInstallRDFForExtension({
+    id: "gh@dictionaries.addons.mozilla.org",
+    version: "1.0",
+    type: "64",
+    updateURL: "http://localhost:4444/data/test_dictionary.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Dictionary gh",
+  }, profileDir);
+  restartManager();
+
+  prepare_test({
+    "gh@dictionaries.addons.mozilla.org": [
+      ["onInstalling", false /* = no restart */],
+      ["onInstalled", false]
+    ]
+  }, [
+    "onNewInstall",
+    "onDownloadStarted",
+    "onDownloadEnded",
+    "onInstallStarted",
+    "onInstallEnded"
+  ], check_test_29);
+
+  AddonManagerPrivate.backgroundUpdateCheck();
+}
+
+function check_test_29(install) {
+  AddonManager.getAddonByID("gh@dictionaries.addons.mozilla.org", function(b2) {
+    do_check_neq(b2, null);
+    do_check_eq(b2.version, "2.0");
+    do_check_eq(b2.type, "dictionary");
+
+    prepare_test({
+      "gh@dictionaries.addons.mozilla.org": [
+        ["onUninstalling", false],
+        ["onUninstalled", false],
+      ]
+    }, [
+    ], finish_test_29);
+
+    b2.uninstall();
+  });
+}
+
+function finish_test_29() {
+  testserver.stop(do_test_finished);
+}
