@@ -854,8 +854,10 @@ nsObjectLoadingContent::OnStopRequest(nsIRequest *aRequest,
   mChannel = nullptr;
 
   if (mFinalListener) {
-    mFinalListener->OnStopRequest(aRequest, aContext, aStatusCode);
+    // This may re-enter in the case of plugin listeners
+    nsCOMPtr<nsIStreamListener> listenerGrip(mFinalListener);
     mFinalListener = nullptr;
+    listenerGrip->OnStopRequest(aRequest, aContext, aStatusCode);
   }
 
   // Return value doesn't matter
@@ -877,8 +879,10 @@ nsObjectLoadingContent::OnDataAvailable(nsIRequest *aRequest,
   }
 
   if (mFinalListener) {
-    return mFinalListener->OnDataAvailable(aRequest, aContext, aInputStream,
-                                           aOffset, aCount);
+    // This may re-enter in the case of plugin listeners
+    nsCOMPtr<nsIStreamListener> listenerGrip(mFinalListener);
+    return listenerGrip->OnDataAvailable(aRequest, aContext, aInputStream,
+                                         aOffset, aCount);
   }
 
   // We shouldn't have a connected channel with no final listener
@@ -1678,10 +1682,10 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   ///
   /// Attempt to load new type
   ///
-  
-  // Remove blocker on entering into instantiate
-  mIsLoading = false;
-  
+
+  // We don't set mFinalListener until OnStartRequest has been called, to
+  // prevent re-entry ugliness with CloseChannel()
+  nsCOMPtr<nsIStreamListener> finalListener;
   switch (mType) {
     case eType_Image:
       if (!mChannel) {
@@ -1691,14 +1695,8 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         rv = NS_ERROR_UNEXPECTED;
         break;
       }
-      rv = LoadImageWithChannel(mChannel, getter_AddRefs(mFinalListener));
-      if (mFinalListener) {
-        // Note that LoadObject is called from mChannel's OnStartRequest
-        // when loading with a channel
-        mSrcStreamLoading = true;
-        rv = mFinalListener->OnStartRequest(mChannel, nullptr);
-        mSrcStreamLoading = false;
-      }
+      rv = LoadImageWithChannel(mChannel, getter_AddRefs(finalListener));
+      // finalListener will receive OnStartRequest below
     break;
     case eType_Plugin:
     {
@@ -1725,18 +1723,8 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         }
         
         rv = pluginHost->NewEmbeddedPluginStreamListener(mURI, this, nullptr,
-                                                         getter_AddRefs(mFinalListener));
-        if (NS_SUCCEEDED(rv)) {
-          // Note that LoadObject is called from mChannel's OnStartRequest
-          // when loading with a channel
-
-          mSrcStreamLoading = true;
-          rv = mFinalListener->OnStartRequest(mChannel, nullptr);
-          mSrcStreamLoading = false;
-          if (NS_SUCCEEDED(rv)) {
-            NotifyContentObjectWrapper();
-          }
-        }
+                                                         getter_AddRefs(finalListener));
+        // finalListener will receive OnStartRequest below
       } else {
         rv = AsyncStartPluginInstance();
       }
@@ -1792,14 +1780,8 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         break;
       }
       rv = uriLoader->OpenChannel(mChannel, nsIURILoader::DONT_RETARGET, req,
-                                  getter_AddRefs(mFinalListener));
-      if (NS_SUCCEEDED(rv)) {
-        // Note that LoadObject is called from mChannel's OnStartRequest
-        // when loading with a channel
-        mSrcStreamLoading = true;
-        rv = mFinalListener->OnStartRequest(mChannel, nullptr);
-        mSrcStreamLoading = false;
-      }
+                                  getter_AddRefs(finalListener));
+      // finalListener will receive OnStartRequest below
     }
     break;
     case eType_Loading:
@@ -1814,13 +1796,16 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     break;
   };
 
+  //
+  // Loaded, handle notifications and fallback
+  //
   if (NS_FAILED(rv)) {
     // If we failed in the loading hunk above, switch to fallback
     LOG(("OBJLC [%p]: Loading failed, switching to fallback", this));
     mType = eType_Null;
   }
 
-  // Switching to fallback state
+  // If we didn't load anything, handle switching to fallback state
   if (mType == eType_Null) {
     LOG(("OBJLC [%p]: Loading fallback, type %u", this, fallbackType));
     NS_ASSERTION(!mFrameLoader && !mInstanceOwner,
@@ -1828,7 +1813,6 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
 
     if (mChannel) {
       // If we were loading with a channel but then failed over, throw it away
-      // (this also closes mFinalListener)
       CloseChannel();
     }
 
@@ -1839,7 +1823,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
 
   // Notify of our final state if we haven't already
   NotifyStateChanged(oldType, oldState, false, aNotify);
-
+  
   if (mType == eType_Null && !mContentType.IsEmpty() &&
       mFallbackType != eFallbackAlternate) {
     // if we have a content type and are not showing alternate
@@ -1848,26 +1832,48 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     FirePluginError(mFallbackType);
   }
 
+  //
+  // Pass load on to finalListener if loading with a channel
+  //
+
+  // If we re-entered and loaded something else, that load will have cleaned up
+  // our our listener.
+  if (!mIsLoading) {
+    LOG(("OBJLC [%p]: Re-entered before dispatching to final listener", this));
+  } else if (finalListener) {
+    NS_ASSERTION(mType != eType_Null && mType != eType_Loading,
+                 "We should not have a final listener with a non-loaded type");
+    // Note that we always enter into LoadObject() from ::OnStartRequest when
+    // loading with a channel.
+    mSrcStreamLoading = true;
+    // Remove blocker on entering into instantiate
+    // (this is otherwise unset by the stack class)
+    mIsLoading = false;
+    mFinalListener = finalListener;
+    finalListener->OnStartRequest(mChannel, nullptr);
+    mSrcStreamLoading = false;
+  }
+
   return NS_OK;
 }
 
+// This call can re-enter when dealing with plugin listeners
 nsresult
 nsObjectLoadingContent::CloseChannel()
 {
   if (mChannel) {
     LOG(("OBJLC [%p]: Closing channel\n", this));
-    // These three statements are carefully ordered:
-    // - onStopRequest should get a channel whose status is the same as the
-    //   status argument
-    // - onStopRequest must get a non-null channel
-    mChannel->Cancel(NS_BINDING_ABORTED);
-    if (mFinalListener) {
-      // NOTE mFinalListener is only created when we load with a channel, which
-      //      LoadObject() requires come from a OnStartRequest call
-      mFinalListener->OnStopRequest(mChannel, nullptr, NS_BINDING_ABORTED);
-      mFinalListener = nullptr;
-    }
+    // Null the values before potentially-reentering, and ensure they survive
+    // the call
+    nsCOMPtr<nsIChannel> channelGrip(mChannel);
+    nsCOMPtr<nsIStreamListener> listenerGrip(mFinalListener);
     mChannel = nullptr;
+    mFinalListener = nullptr;
+    channelGrip->Cancel(NS_BINDING_ABORTED);
+    if (listenerGrip) {
+      // mFinalListener is only set by LoadObject after OnStartRequest
+      listenerGrip->OnStopRequest(channelGrip, nullptr, NS_BINDING_ABORTED);
+    }
   }
   return NS_OK;
 }
@@ -1973,7 +1979,11 @@ nsObjectLoadingContent::UnloadObject(bool aResetState)
   }
 
   if (aResetState) {
-    CloseChannel();
+    if (mType != eType_Plugin) {
+      // This can re-enter when dealing with plugins, and StopPluginInstance
+      // will handle it
+      CloseChannel();
+    }
     mChannelLoaded = false;
     mType = eType_Loading;
     mURI = mOriginalURI = mBaseURI = nullptr;
