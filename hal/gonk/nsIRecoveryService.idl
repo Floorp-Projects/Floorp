@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(acb93ff8-aa6d-4bc8-bedd-2a6a3b802a74)]
+interface nsIRecoveryService : nsISupports
+{
+  /**
+   * Possible values of fotaStatus.result. These should stay in sync with
+   * librecovery/librecovery.h
+   */
+  const long FOTA_UPDATE_UNKNOWN = 0;
+  const long FOTA_UPDATE_FAIL    = 1;
+  const long FOTA_UPDATE_SUCCESS = 2;
+
+  /**
+   * Uses recovery to wipe the data and cache partitions. If this call is
+   * successful, the device should reboot before the function call ever returns.
+   *
+   * @throws NS_ERROR_FAILURE when rebooting into recovery fails for some reason.
+   */
+  void factoryReset();
+
+  /**
+   * Use recovery to install an OTA update.zip. If this call is
+   * successful, the device should reboot before the function call ever returns.
+   *
+   * @throws NS_ERROR_FAILURE when rebooting into recovery fails for some reason.
+   */
+  void installFotaUpdate(in string updatePath);
+
+  /**
+   * @return The status of the last FOTA update. One of FOTA_UPDATE_UNKNOWN,
+   *         FOTA_UPDATE_FAIL, FOTA_UPDATE_SUCCESS.
+   */
+  long getFotaUpdateStatus();
+};

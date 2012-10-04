@@ -46,6 +46,7 @@
 #include "nsPrintfCString.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsIRecoveryService.h"
 #include "nsIRunnable.h"
 #include "nsScreenManagerGonk.h"
 #include "nsThreadUtils.h"
@@ -950,6 +951,19 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
       HAL_LOG(("Failed to set nice for pid %d to %d", aPid, nice));
     }
   }
+}
+
+void
+FactoryReset()
+{
+  nsCOMPtr<nsIRecoveryService> recoveryService =
+    do_GetService("@mozilla.org/recovery-service;1");
+  if (!recoveryService) {
+    NS_WARNING("Could not get recovery service!");
+    return;
+  }
+
+  recoveryService->FactoryReset();
 }
 
 } // hal_impl
