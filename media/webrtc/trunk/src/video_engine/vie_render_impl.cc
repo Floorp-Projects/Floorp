@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -10,7 +10,7 @@
 
 #include "video_engine/vie_render_impl.h"
 
-#include "engine_configurations.h"
+#include "engine_configurations.h"  // NOLINT
 #include "modules/video_render/main/interface/video_render.h"
 #include "modules/video_render/main/interface/video_render_defines.h"
 #include "system_wrappers/interface/trace.h"
@@ -75,7 +75,7 @@ int ViERenderImpl::RegisterVideoRenderModule(
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, ViEId(shared_data_->instance_id()),
                "%s (&render_module: %p)", __FUNCTION__, &render_module);
   if (shared_data_->render_manager()->RegisterVideoRenderModule(
-      render_module) != 0) {
+      &render_module) != 0) {
     shared_data_->SetLastError(kViERenderUnknownError);
     return -1;
   }
@@ -87,7 +87,7 @@ int ViERenderImpl::DeRegisterVideoRenderModule(
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, ViEId(shared_data_->instance_id()),
                "%s (&render_module: %p)", __FUNCTION__, &render_module);
   if (shared_data_->render_manager()->DeRegisterVideoRenderModule(
-      render_module) != 0) {
+      &render_module) != 0) {
     // Error logging is done in ViERenderManager::DeRegisterVideoRenderModule.
     shared_data_->SetLastError(kViERenderUnknownError);
     return -1;

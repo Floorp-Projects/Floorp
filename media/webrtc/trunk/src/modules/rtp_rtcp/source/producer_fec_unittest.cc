@@ -55,8 +55,14 @@ class ProducerFecTest : public ::testing::Test {
 };
 
 TEST_F(ProducerFecTest, OneFrameFec) {
+  // The number of media packets (|kNumPackets|), number of frames (one for
+  // this test), and the protection factor (|params->fec_rate|) are set to make
+  // sure the conditions for generating FEC are satisfied. This means:
+  // (1) protection factor is high enough so that actual overhead over 1 frame
+  // of packets is within |kMaxExcessOverhead|, and (2) the total number of
+  // media packets for 1 frame is at least |minimum_media_packets_fec_|.
   const int kNumPackets = 4;
-  FecProtectionParams params = {5, false, 3};
+  FecProtectionParams params = {15, false, 3};
   std::list<RtpPacket*> rtp_packets;
   generator_->NewFrame(kNumPackets);
   producer_->SetFecParameters(&params, 0);  // Expecting one FEC packet.
@@ -73,7 +79,8 @@ TEST_F(ProducerFecTest, OneFrameFec) {
   uint16_t seq_num = generator_->NextSeqNum();
   RedPacket* packet = producer_->GetFecPacket(kRedPayloadType,
                                               kFecPayloadType,
-                                              seq_num);
+                                              seq_num,
+                                              kRtpHeaderSize);
   EXPECT_FALSE(producer_->FecAvailable());
   ASSERT_TRUE(packet != NULL);
   VerifyHeader(seq_num, last_timestamp,
@@ -86,9 +93,17 @@ TEST_F(ProducerFecTest, OneFrameFec) {
 }
 
 TEST_F(ProducerFecTest, TwoFrameFec) {
+  // The number of media packets/frame (|kNumPackets|), the number of frames
+  // (|kNumFrames|), and the protection factor (|params->fec_rate|) are set to
+  // make sure the conditions for generating FEC are satisfied. This means:
+  // (1) protection factor is high enough so that actual overhead over
+  // |kNumFrames| is within |kMaxExcessOverhead|, and (2) the total number of
+  // media packets for |kNumFrames| frames is at least
+  // |minimum_media_packets_fec_|.
   const int kNumPackets = 2;
   const int kNumFrames = 2;
-  FecProtectionParams params = {5, 0, 3};
+
+  FecProtectionParams params = {15, 0, 3};
   std::list<RtpPacket*> rtp_packets;
   producer_->SetFecParameters(&params, 0);  // Expecting one FEC packet.
   uint32_t last_timestamp = 0;
@@ -107,7 +122,8 @@ TEST_F(ProducerFecTest, TwoFrameFec) {
   uint16_t seq_num = generator_->NextSeqNum();
   RedPacket* packet = producer_->GetFecPacket(kRedPayloadType,
                                               kFecPayloadType,
-                                              seq_num);
+                                              seq_num,
+                                              kRtpHeaderSize);
   EXPECT_FALSE(producer_->FecAvailable());
   EXPECT_TRUE(packet != NULL);
   VerifyHeader(seq_num, last_timestamp,

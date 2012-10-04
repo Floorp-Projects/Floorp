@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The LibYuv project authors. All Rights Reserved.
+ *  Copyright 2011 The LibYuv Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -11,30 +11,25 @@
 #include "libyuv/rotate.h"
 
 #include "libyuv/cpu_id.h"
+#include "libyuv/convert.h"
 #include "libyuv/planar_functions.h"
-#include "rotate_priv.h"
-#include "row.h"
+#include "source/rotate_priv.h"
+#include "source/row.h"
 
 #ifdef __cplusplus
 namespace libyuv {
 extern "C" {
 #endif
 
-#if (defined(_M_IX86) || defined(__x86_64__) || defined(__i386__)) && \
-    !defined(YUV_DISABLE_ASM)
-// Note static const preferred, but gives internal compiler error on gcc 4.2
-// Shuffle table for reversing the bytes of UV channels.
-uvec8 kShuffleReverseUV = {
-  14u, 12u, 10u, 8u, 6u, 4u, 2u, 0u, 15u, 13u, 11u, 9u, 7u, 5u, 3u, 1u
-};
-
+#if !defined(YUV_DISABLE_ASM) && \
+    (defined(_M_IX86) || defined(__x86_64__) || defined(__i386__))
 #if defined(__APPLE__) && defined(__i386__)
 #define DECLARE_FUNCTION(name)                                                 \
     ".text                                     \n"                             \
     ".private_extern _" #name "                \n"                             \
     ".align 4,0x90                             \n"                             \
 "_" #name ":                                   \n"
-#elif (defined(__MINGW32__) || defined(__CYGWIN__)) && defined(__i386__)
+#elif defined(__MINGW32__) || defined(__CYGWIN__) && defined(__i386__)
 #define DECLARE_FUNCTION(name)                                                 \
     ".text                                     \n"                             \
     ".align 4,0x90                             \n"                             \
@@ -47,21 +42,11 @@ uvec8 kShuffleReverseUV = {
 #endif
 #endif
 
-typedef void (*reverse_uv_func)(const uint8*, uint8*, uint8*, int);
-typedef void (*rotate_uv_wx8_func)(const uint8*, int,
-                                   uint8*, int,
-                                   uint8*, int, int);
-typedef void (*rotate_uv_wxh_func)(const uint8*, int,
-                                   uint8*, int,
-                                   uint8*, int, int, int);
-typedef void (*rotate_wx8_func)(const uint8*, int, uint8*, int, int);
-typedef void (*rotate_wxh_func)(const uint8*, int, uint8*, int, int, int);
-
 #ifdef __ARM_NEON__
-#define HAS_REVERSE_ROW_NEON
-void ReverseRow_NEON(const uint8* src, uint8* dst, int width);
-#define HAS_REVERSE_ROW_UV_NEON
-void ReverseRowUV_NEON(const uint8* src,
+#define HAS_MIRRORROW_NEON
+void MirrorRow_NEON(const uint8* src, uint8* dst, int width);
+#define HAS_MIRRORROW_UV_NEON
+void MirrorRowUV_NEON(const uint8* src,
                         uint8* dst_a, uint8* dst_b,
                         int width);
 #define HAS_TRANSPOSE_WX8_NEON
@@ -74,12 +59,12 @@ void TransposeUVWx8_NEON(const uint8* src, int src_stride,
                          int width);
 #endif
 
-#if defined(_M_IX86) && !defined(YUV_DISABLE_ASM)
+#if !defined(YUV_DISABLE_ASM) && defined(_M_IX86)
 #define HAS_TRANSPOSE_WX8_SSSE3
-__declspec(naked)
+__declspec(naked) __declspec(align(16))
 static void TransposeWx8_SSSE3(const uint8* src, int src_stride,
                                uint8* dst, int dst_stride, int width) {
-__asm {
+  __asm {
     push      edi
     push      esi
     push      ebp
@@ -88,9 +73,11 @@ __asm {
     mov       edx, [esp + 12 + 12]  // dst
     mov       esi, [esp + 12 + 16]  // dst_stride
     mov       ecx, [esp + 12 + 20]  // width
- convertloop:
+
     // Read in the data from the source pointer.
     // First round of bit swap.
+    align      16
+ convertloop:
     movq      xmm0, qword ptr [eax]
     lea       ebp, [eax + 8]
     movq      xmm1, qword ptr [eax + edi]
@@ -153,10 +140,10 @@ __asm {
     movq      qword ptr [edx], xmm3
     movdqa    xmm7, xmm3
     palignr   xmm7, xmm7, 8
+    sub       ecx, 8
     movq      qword ptr [edx + esi], xmm7
     lea       edx, [edx + 2 * esi]
-    sub       ecx, 8
-    ja        convertloop
+    jg        convertloop
 
     pop       ebp
     pop       esi
@@ -166,12 +153,12 @@ __asm {
 }
 
 #define HAS_TRANSPOSE_UVWX8_SSE2
-__declspec(naked)
+__declspec(naked) __declspec(align(16))
 static void TransposeUVWx8_SSE2(const uint8* src, int src_stride,
                                 uint8* dst_a, int dst_stride_a,
                                 uint8* dst_b, int dst_stride_b,
                                 int w) {
-__asm {
+  __asm {
     push      ebx
     push      esi
     push      edi
@@ -187,6 +174,8 @@ __asm {
     and       esp, ~15
     mov       [esp + 16], ecx
     mov       ecx, [ecx + 16 + 28]  // w
+
+    align      16
  convertloop:
     // Read in the data from the source pointer.
     // First round of bit swap.
@@ -277,12 +266,12 @@ __asm {
     movlpd    qword ptr [edx], xmm3
     movhpd    qword ptr [ebx], xmm3
     punpckhdq xmm0, xmm7
+    sub       ecx, 8
     movlpd    qword ptr [edx + esi], xmm0
     lea       edx, [edx + 2 * esi]
     movhpd    qword ptr [ebx + ebp], xmm0
     lea       ebx, [ebx + 2 * ebp]
-    sub       ecx, 8
-    ja        convertloop
+    jg        convertloop
 
     mov       esp, [esp + 16]
     pop       ebp
@@ -292,95 +281,96 @@ __asm {
     ret
   }
 }
-#elif (defined(__i386__) || defined(__x86_64__)) && !defined(YUV_DISABLE_ASM)
+#elif !defined(YUV_DISABLE_ASM) && (defined(__i386__) || defined(__x86_64__))
 #define HAS_TRANSPOSE_WX8_SSSE3
 static void TransposeWx8_SSSE3(const uint8* src, int src_stride,
                                uint8* dst, int dst_stride, int width) {
   asm volatile (
-  // Read in the data from the source pointer.
-  // First round of bit swap.
-"1:                                            \n"
-  "movq       (%0),%%xmm0                      \n"
-  "movq       (%0,%3),%%xmm1                   \n"
-  "lea        (%0,%3,2),%0                     \n"
-  "punpcklbw  %%xmm1,%%xmm0                    \n"
-  "movq       (%0),%%xmm2                      \n"
-  "movdqa     %%xmm0,%%xmm1                    \n"
-  "palignr    $0x8,%%xmm1,%%xmm1               \n"
-  "movq       (%0,%3),%%xmm3                   \n"
-  "lea        (%0,%3,2),%0                     \n"
-  "punpcklbw  %%xmm3,%%xmm2                    \n"
-  "movdqa     %%xmm2,%%xmm3                    \n"
-  "movq       (%0),%%xmm4                      \n"
-  "palignr    $0x8,%%xmm3,%%xmm3               \n"
-  "movq       (%0,%3),%%xmm5                   \n"
-  "lea        (%0,%3,2),%0                     \n"
-  "punpcklbw  %%xmm5,%%xmm4                    \n"
-  "movdqa     %%xmm4,%%xmm5                    \n"
-  "movq       (%0),%%xmm6                      \n"
-  "palignr    $0x8,%%xmm5,%%xmm5               \n"
-  "movq       (%0,%3),%%xmm7                   \n"
-  "lea        (%0,%3,2),%0                     \n"
-  "punpcklbw  %%xmm7,%%xmm6                    \n"
-  "neg        %3                               \n"
-  "movdqa     %%xmm6,%%xmm7                    \n"
-  "lea        0x8(%0,%3,8),%0                  \n"
-  "palignr    $0x8,%%xmm7,%%xmm7               \n"
-  "neg        %3                               \n"
-   // Second round of bit swap.
-  "punpcklwd  %%xmm2,%%xmm0                    \n"
-  "punpcklwd  %%xmm3,%%xmm1                    \n"
-  "movdqa     %%xmm0,%%xmm2                    \n"
-  "movdqa     %%xmm1,%%xmm3                    \n"
-  "palignr    $0x8,%%xmm2,%%xmm2               \n"
-  "palignr    $0x8,%%xmm3,%%xmm3               \n"
-  "punpcklwd  %%xmm6,%%xmm4                    \n"
-  "punpcklwd  %%xmm7,%%xmm5                    \n"
-  "movdqa     %%xmm4,%%xmm6                    \n"
-  "movdqa     %%xmm5,%%xmm7                    \n"
-  "palignr    $0x8,%%xmm6,%%xmm6               \n"
-  "palignr    $0x8,%%xmm7,%%xmm7               \n"
-  // Third round of bit swap.
-  // Write to the destination pointer.
-  "punpckldq  %%xmm4,%%xmm0                    \n"
-  "movq       %%xmm0,(%1)                      \n"
-  "movdqa     %%xmm0,%%xmm4                    \n"
-  "palignr    $0x8,%%xmm4,%%xmm4               \n"
-  "movq       %%xmm4,(%1,%4)                   \n"
-  "lea        (%1,%4,2),%1                     \n"
-  "punpckldq  %%xmm6,%%xmm2                    \n"
-  "movdqa     %%xmm2,%%xmm6                    \n"
-  "movq       %%xmm2,(%1)                      \n"
-  "palignr    $0x8,%%xmm6,%%xmm6               \n"
-  "punpckldq  %%xmm5,%%xmm1                    \n"
-  "movq       %%xmm6,(%1,%4)                   \n"
-  "lea        (%1,%4,2),%1                     \n"
-  "movdqa     %%xmm1,%%xmm5                    \n"
-  "movq       %%xmm1,(%1)                      \n"
-  "palignr    $0x8,%%xmm5,%%xmm5               \n"
-  "movq       %%xmm5,(%1,%4)                   \n"
-  "lea        (%1,%4,2),%1                     \n"
-  "punpckldq  %%xmm7,%%xmm3                    \n"
-  "movq       %%xmm3,(%1)                      \n"
-  "movdqa     %%xmm3,%%xmm7                    \n"
-  "palignr    $0x8,%%xmm7,%%xmm7               \n"
-  "movq       %%xmm7,(%1,%4)                   \n"
-  "lea        (%1,%4,2),%1                     \n"
-  "sub        $0x8,%2                          \n"
-  "ja         1b                               \n"
-  : "+r"(src),    // %0
-    "+r"(dst),    // %1
-    "+r"(width)   // %2
-  : "r"(static_cast<intptr_t>(src_stride)),  // %3
-    "r"(static_cast<intptr_t>(dst_stride))   // %4
-  : "memory", "cc"
-#if defined(__SSE2__)
-    , "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"
-#endif
-);
+    // Read in the data from the source pointer.
+    // First round of bit swap.
+    ".p2align  4                                 \n"
+  "1:                                            \n"
+    "movq       (%0),%%xmm0                      \n"
+    "movq       (%0,%3),%%xmm1                   \n"
+    "lea        (%0,%3,2),%0                     \n"
+    "punpcklbw  %%xmm1,%%xmm0                    \n"
+    "movq       (%0),%%xmm2                      \n"
+    "movdqa     %%xmm0,%%xmm1                    \n"
+    "palignr    $0x8,%%xmm1,%%xmm1               \n"
+    "movq       (%0,%3),%%xmm3                   \n"
+    "lea        (%0,%3,2),%0                     \n"
+    "punpcklbw  %%xmm3,%%xmm2                    \n"
+    "movdqa     %%xmm2,%%xmm3                    \n"
+    "movq       (%0),%%xmm4                      \n"
+    "palignr    $0x8,%%xmm3,%%xmm3               \n"
+    "movq       (%0,%3),%%xmm5                   \n"
+    "lea        (%0,%3,2),%0                     \n"
+    "punpcklbw  %%xmm5,%%xmm4                    \n"
+    "movdqa     %%xmm4,%%xmm5                    \n"
+    "movq       (%0),%%xmm6                      \n"
+    "palignr    $0x8,%%xmm5,%%xmm5               \n"
+    "movq       (%0,%3),%%xmm7                   \n"
+    "lea        (%0,%3,2),%0                     \n"
+    "punpcklbw  %%xmm7,%%xmm6                    \n"
+    "neg        %3                               \n"
+    "movdqa     %%xmm6,%%xmm7                    \n"
+    "lea        0x8(%0,%3,8),%0                  \n"
+    "palignr    $0x8,%%xmm7,%%xmm7               \n"
+    "neg        %3                               \n"
+     // Second round of bit swap.
+    "punpcklwd  %%xmm2,%%xmm0                    \n"
+    "punpcklwd  %%xmm3,%%xmm1                    \n"
+    "movdqa     %%xmm0,%%xmm2                    \n"
+    "movdqa     %%xmm1,%%xmm3                    \n"
+    "palignr    $0x8,%%xmm2,%%xmm2               \n"
+    "palignr    $0x8,%%xmm3,%%xmm3               \n"
+    "punpcklwd  %%xmm6,%%xmm4                    \n"
+    "punpcklwd  %%xmm7,%%xmm5                    \n"
+    "movdqa     %%xmm4,%%xmm6                    \n"
+    "movdqa     %%xmm5,%%xmm7                    \n"
+    "palignr    $0x8,%%xmm6,%%xmm6               \n"
+    "palignr    $0x8,%%xmm7,%%xmm7               \n"
+    // Third round of bit swap.
+    // Write to the destination pointer.
+    "punpckldq  %%xmm4,%%xmm0                    \n"
+    "movq       %%xmm0,(%1)                      \n"
+    "movdqa     %%xmm0,%%xmm4                    \n"
+    "palignr    $0x8,%%xmm4,%%xmm4               \n"
+    "movq       %%xmm4,(%1,%4)                   \n"
+    "lea        (%1,%4,2),%1                     \n"
+    "punpckldq  %%xmm6,%%xmm2                    \n"
+    "movdqa     %%xmm2,%%xmm6                    \n"
+    "movq       %%xmm2,(%1)                      \n"
+    "palignr    $0x8,%%xmm6,%%xmm6               \n"
+    "punpckldq  %%xmm5,%%xmm1                    \n"
+    "movq       %%xmm6,(%1,%4)                   \n"
+    "lea        (%1,%4,2),%1                     \n"
+    "movdqa     %%xmm1,%%xmm5                    \n"
+    "movq       %%xmm1,(%1)                      \n"
+    "palignr    $0x8,%%xmm5,%%xmm5               \n"
+    "movq       %%xmm5,(%1,%4)                   \n"
+    "lea        (%1,%4,2),%1                     \n"
+    "punpckldq  %%xmm7,%%xmm3                    \n"
+    "movq       %%xmm3,(%1)                      \n"
+    "movdqa     %%xmm3,%%xmm7                    \n"
+    "palignr    $0x8,%%xmm7,%%xmm7               \n"
+    "sub        $0x8,%2                          \n"
+    "movq       %%xmm7,(%1,%4)                   \n"
+    "lea        (%1,%4,2),%1                     \n"
+    "jg         1b                               \n"
+    : "+r"(src),    // %0
+      "+r"(dst),    // %1
+      "+r"(width)   // %2
+    : "r"(static_cast<intptr_t>(src_stride)),  // %3
+      "r"(static_cast<intptr_t>(dst_stride))   // %4
+    : "memory", "cc"
+  #if defined(__SSE2__)
+      , "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"
+  #endif
+  );
 }
 
-#if defined (__i386__)
+#if !defined(YUV_DISABLE_ASM) && defined (__i386__)
 #define HAS_TRANSPOSE_UVWX8_SSE2
 extern "C" void TransposeUVWx8_SSE2(const uint8* src, int src_stride,
                                     uint8* dst_a, int dst_stride_a,
@@ -489,12 +479,12 @@ extern "C" void TransposeUVWx8_SSE2(const uint8* src, int src_stride,
     "movlpd %xmm3,(%edx)                       \n"
     "movhpd %xmm3,(%ebx)                       \n"
     "punpckhdq %xmm7,%xmm0                     \n"
+    "sub    $0x8,%ecx                          \n"
     "movlpd %xmm0,(%edx,%esi,1)                \n"
     "lea    (%edx,%esi,2),%edx                 \n"
     "movhpd %xmm0,(%ebx,%ebp,1)                \n"
     "lea    (%ebx,%ebp,2),%ebx                 \n"
-    "sub    $0x8,%ecx                          \n"
-    "ja     1b                                 \n"
+    "jg     1b                                 \n"
     "mov    0x10(%esp),%esp                    \n"
     "pop    %ebp                               \n"
     "pop    %edi                               \n"
@@ -502,7 +492,7 @@ extern "C" void TransposeUVWx8_SSE2(const uint8* src, int src_stride,
     "pop    %ebx                               \n"
     "ret                                       \n"
 );
-#elif defined (__x86_64__)
+#elif !defined(YUV_DISABLE_ASM) && defined(__x86_64__)
 // 64 bit version has enough registers to do 16x8 to 8x16 at a time.
 #define HAS_TRANSPOSE_WX8_FAST_SSSE3
 static void TransposeWx8_FAST_SSSE3(const uint8* src, int src_stride,
@@ -510,6 +500,7 @@ static void TransposeWx8_FAST_SSSE3(const uint8* src, int src_stride,
   asm volatile (
   // Read in the data from the source pointer.
   // First round of bit swap.
+  ".p2align  4                                 \n"
 "1:                                            \n"
   "movdqa     (%0),%%xmm0                      \n"
   "movdqa     (%0,%3),%%xmm1                   \n"
@@ -627,10 +618,10 @@ static void TransposeWx8_FAST_SSSE3(const uint8* src, int src_stride,
   "movq       %%xmm11,(%1)                     \n"
   "movdqa     %%xmm11,%%xmm15                  \n"
   "palignr    $0x8,%%xmm15,%%xmm15             \n"
+  "sub        $0x10,%2                         \n"
   "movq       %%xmm15,(%1,%4)                  \n"
   "lea        (%1,%4,2),%1                     \n"
-  "sub        $0x10,%2                         \n"
-  "ja         1b                               \n"
+  "jg         1b                               \n"
   : "+r"(src),    // %0
     "+r"(dst),    // %1
     "+r"(width)   // %2
@@ -650,6 +641,7 @@ static void TransposeUVWx8_SSE2(const uint8* src, int src_stride,
   asm volatile (
   // Read in the data from the source pointer.
   // First round of bit swap.
+  ".p2align  4                                 \n"
 "1:                                            \n"
   "movdqa     (%0),%%xmm0                      \n"
   "movdqa     (%0,%4),%%xmm1                   \n"
@@ -733,12 +725,12 @@ static void TransposeUVWx8_SSE2(const uint8* src, int src_stride,
   "movlpd     %%xmm3,(%1)                      \n"
   "movhpd     %%xmm3,(%2)                      \n"
   "punpckhdq  %%xmm7,%%xmm8                    \n"
+  "sub        $0x8,%3                          \n"
   "movlpd     %%xmm8,(%1,%5)                   \n"
   "lea        (%1,%5,2),%1                     \n"
   "movhpd     %%xmm8,(%2,%6)                   \n"
   "lea        (%2,%6,2),%2                     \n"
-  "sub        $0x8,%3                          \n"
-  "ja         1b                               \n"
+  "jg         1b                               \n"
   : "+r"(src),    // %0
     "+r"(dst_a),  // %1
     "+r"(dst_b),  // %2
@@ -756,9 +748,8 @@ static void TransposeUVWx8_SSE2(const uint8* src, int src_stride,
 
 static void TransposeWx8_C(const uint8* src, int src_stride,
                            uint8* dst, int dst_stride,
-                           int w) {
-  int i;
-  for (i = 0; i < w; ++i) {
+                           int width) {
+  for (int i = 0; i < width; ++i) {
     dst[0] = src[0 * src_stride];
     dst[1] = src[1 * src_stride];
     dst[2] = src[2 * src_stride];
@@ -775,58 +766,47 @@ static void TransposeWx8_C(const uint8* src, int src_stride,
 static void TransposeWxH_C(const uint8* src, int src_stride,
                            uint8* dst, int dst_stride,
                            int width, int height) {
-  int i, j;
-  for (i = 0; i < width; ++i)
-    for (j = 0; j < height; ++j)
+  for (int i = 0; i < width; ++i) {
+    for (int j = 0; j < height; ++j) {
       dst[i * dst_stride + j] = src[j * src_stride + i];
+    }
+  }
 }
 
 void TransposePlane(const uint8* src, int src_stride,
                     uint8* dst, int dst_stride,
                     int width, int height) {
-  int i = height;
-  rotate_wx8_func TransposeWx8;
-  rotate_wxh_func TransposeWxH;
-
+  void (*TransposeWx8)(const uint8* src, int src_stride,
+                       uint8* dst, int dst_stride,
+                       int width) = TransposeWx8_C;
 #if defined(HAS_TRANSPOSE_WX8_NEON)
   if (TestCpuFlag(kCpuHasNEON)) {
     TransposeWx8 = TransposeWx8_NEON;
-    TransposeWxH = TransposeWxH_C;
-  } else
+  }
+#endif
+#if defined(HAS_TRANSPOSE_WX8_SSSE3)
+  if (TestCpuFlag(kCpuHasSSSE3) && IS_ALIGNED(width, 8)) {
+    TransposeWx8 = TransposeWx8_SSSE3;
+  }
 #endif
 #if defined(HAS_TRANSPOSE_WX8_FAST_SSSE3)
   if (TestCpuFlag(kCpuHasSSSE3) &&
       IS_ALIGNED(width, 16) &&
-      IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16) &&
-      IS_ALIGNED(dst, 8) && IS_ALIGNED(dst_stride, 8)) {
+      IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16)) {
     TransposeWx8 = TransposeWx8_FAST_SSSE3;
-    TransposeWxH = TransposeWxH_C;
-  } else
-#endif
-#if defined(HAS_TRANSPOSE_WX8_SSSE3)
-  if (TestCpuFlag(kCpuHasSSSE3) &&
-      IS_ALIGNED(width, 8) &&
-      IS_ALIGNED(src, 8) && IS_ALIGNED(src_stride, 8) &&
-      IS_ALIGNED(dst, 8) && IS_ALIGNED(dst_stride, 8)) {
-    TransposeWx8 = TransposeWx8_SSSE3;
-    TransposeWxH = TransposeWxH_C;
-  } else
-#endif
-  {
-    TransposeWx8 = TransposeWx8_C;
-    TransposeWxH = TransposeWxH_C;
   }
+#endif
 
-  // work across the source in 8x8 tiles
+  // Work across the source in 8x8 tiles
+  int i = height;
   while (i >= 8) {
     TransposeWx8(src, src_stride, dst, dst_stride, width);
-
-    src += 8 * src_stride;    // go down 8 rows
-    dst += 8;                 // move over 8 columns
-    i   -= 8;
+    src += 8 * src_stride;    // Go down 8 rows.
+    dst += 8;                 // Move over 8 columns.
+    i -= 8;
   }
 
-  TransposeWxH(src, src_stride, dst, dst_stride, width, i);
+  TransposeWxH_C(src, src_stride, dst, dst_stride, width, i);
 }
 
 void RotatePlane90(const uint8* src, int src_stride,
@@ -837,7 +817,6 @@ void RotatePlane90(const uint8* src, int src_stride,
   // of the buffer and flip the sign of the source stride.
   src += src_stride * (height - 1);
   src_stride = -src_stride;
-
   TransposePlane(src, src_stride, dst, dst_stride, width, height);
 }
 
@@ -849,55 +828,77 @@ void RotatePlane270(const uint8* src, int src_stride,
   // of the buffer and flip the sign of the destination stride.
   dst += dst_stride * (width - 1);
   dst_stride = -dst_stride;
-
   TransposePlane(src, src_stride, dst, dst_stride, width, height);
 }
 
 void RotatePlane180(const uint8* src, int src_stride,
                     uint8* dst, int dst_stride,
                     int width, int height) {
-  void (*ReverseRow)(const uint8* src, uint8* dst, int width);
-#if defined(HAS_REVERSE_ROW_NEON)
+  void (*MirrorRow)(const uint8* src, uint8* dst, int width) = MirrorRow_C;
+#if defined(HAS_MIRRORROW_NEON)
   if (TestCpuFlag(kCpuHasNEON)) {
-    ReverseRow = ReverseRow_NEON;
-  } else
+    MirrorRow = MirrorRow_NEON;
+  }
 #endif
-#if defined(HAS_REVERSE_ROW_SSSE3)
-  if (TestCpuFlag(kCpuHasSSSE3) &&
-      IS_ALIGNED(width, 16) &&
-      IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16) &&
-      IS_ALIGNED(dst, 16) && IS_ALIGNED(dst_stride, 16)) {
-    ReverseRow = ReverseRow_SSSE3;
-  } else
-#endif
-#if defined(HAS_REVERSE_ROW_SSE2)
+#if defined(HAS_MIRRORROW_SSE2)
   if (TestCpuFlag(kCpuHasSSE2) &&
       IS_ALIGNED(width, 16) &&
       IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16) &&
       IS_ALIGNED(dst, 16) && IS_ALIGNED(dst_stride, 16)) {
-    ReverseRow = ReverseRow_SSE2;
-  } else
-#endif
-  {
-    ReverseRow = ReverseRow_C;
+    MirrorRow = MirrorRow_SSE2;
   }
-
-  // Rotate by 180 is a mirror and vertical flip
-  src += src_stride * (height - 1);
-
-  for (int y = 0; y < height; ++y) {
-    ReverseRow(src, dst, width);
-    src -= src_stride;
+#endif
+#if defined(HAS_MIRRORROW_SSSE3)
+  if (TestCpuFlag(kCpuHasSSSE3) &&
+      IS_ALIGNED(width, 16) &&
+      IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16) &&
+      IS_ALIGNED(dst, 16) && IS_ALIGNED(dst_stride, 16)) {
+    MirrorRow = MirrorRow_SSSE3;
+  }
+#endif
+  void (*CopyRow)(const uint8* src, uint8* dst, int width) = CopyRow_C;
+#if defined(HAS_COPYROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON) && IS_ALIGNED(width, 64)) {
+    CopyRow = CopyRow_NEON;
+  }
+#endif
+#if defined(HAS_COPYROW_X86)
+  if (TestCpuFlag(kCpuHasX86) && IS_ALIGNED(width, 4)) {
+    CopyRow = CopyRow_X86;
+  }
+#endif
+#if defined(HAS_COPYROW_SSE2)
+  if (TestCpuFlag(kCpuHasSSE2) && IS_ALIGNED(width, 32) &&
+      IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16) &&
+      IS_ALIGNED(dst, 16) && IS_ALIGNED(dst_stride, 16)) {
+    CopyRow = CopyRow_SSE2;
+  }
+#endif
+  if (width > kMaxStride) {
+    return;
+  }
+  // Swap first and last row and mirror the content.  Uses a temporary row.
+  SIMD_ALIGNED(uint8 row[kMaxStride]);
+  const uint8* src_bot = src + src_stride * (height - 1);
+  uint8* dst_bot = dst + dst_stride * (height - 1);
+  int half_height = (height + 1) >> 1;
+  // Odd height will harmlessly mirror the middle row twice.
+  for (int y = 0; y < half_height; ++y) {
+    MirrorRow(src, row, width);  // Mirror first row into a buffer
+    src += src_stride;
+    MirrorRow(src_bot, dst, width);  // Mirror last row into first row
     dst += dst_stride;
+    CopyRow(row, dst_bot, width);  // Copy first mirrored row into last
+    src_bot -= src_stride;
+    dst_bot -= dst_stride;
   }
 }
 
 static void TransposeUVWx8_C(const uint8* src, int src_stride,
                              uint8* dst_a, int dst_stride_a,
                              uint8* dst_b, int dst_stride_b,
-                             int w) {
-  int i;
-  for (i = 0; i < w; ++i) {
+                             int width) {
+  for (int i = 0; i < width; ++i) {
     dst_a[0] = src[0 * src_stride + 0];
     dst_b[0] = src[0 * src_stride + 1];
     dst_a[1] = src[1 * src_stride + 0];
@@ -923,10 +924,9 @@ static void TransposeUVWx8_C(const uint8* src, int src_stride,
 static void TransposeUVWxH_C(const uint8* src, int src_stride,
                              uint8* dst_a, int dst_stride_a,
                              uint8* dst_b, int dst_stride_b,
-                             int w, int h) {
-  int i, j;
-  for (i = 0; i < w * 2; i += 2)
-    for (j = 0; j < h; ++j) {
+                             int width, int height) {
+  for (int i = 0; i < width * 2; i += 2)
+    for (int j = 0; j < height; ++j) {
       dst_a[j + ((i >> 1) * dst_stride_a)] = src[i + (j * src_stride)];
       dst_b[j + ((i >> 1) * dst_stride_b)] = src[i + (j * src_stride) + 1];
     }
@@ -936,49 +936,39 @@ void TransposeUV(const uint8* src, int src_stride,
                  uint8* dst_a, int dst_stride_a,
                  uint8* dst_b, int dst_stride_b,
                  int width, int height) {
-  int i = height;
-  rotate_uv_wx8_func TransposeWx8;
-  rotate_uv_wxh_func TransposeWxH;
-
+  void (*TransposeUVWx8)(const uint8* src, int src_stride,
+                         uint8* dst_a, int dst_stride_a,
+                         uint8* dst_b, int dst_stride_b,
+                         int width) = TransposeUVWx8_C;
 #if defined(HAS_TRANSPOSE_UVWX8_NEON)
   if (TestCpuFlag(kCpuHasNEON)) {
-    TransposeWx8 = TransposeUVWx8_NEON;
-    TransposeWxH = TransposeUVWxH_C;
-  } else
-#endif
-#if defined(HAS_TRANSPOSE_UVWX8_SSE2)
+    TransposeUVWx8 = TransposeUVWx8_NEON;
+  }
+#elif defined(HAS_TRANSPOSE_UVWX8_SSE2)
   if (TestCpuFlag(kCpuHasSSE2) &&
       IS_ALIGNED(width, 8) &&
-      IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16) &&
-      IS_ALIGNED(dst_a, 8) && IS_ALIGNED(dst_stride_a, 8) &&
-      IS_ALIGNED(dst_b, 8) && IS_ALIGNED(dst_stride_b, 8)) {
-    TransposeWx8 = TransposeUVWx8_SSE2;
-    TransposeWxH = TransposeUVWxH_C;
-  } else
+      IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16)) {
+    TransposeUVWx8 = TransposeUVWx8_SSE2;
+  }
 #endif
-  {
-    TransposeWx8 = TransposeUVWx8_C;
-    TransposeWxH = TransposeUVWxH_C;
-  }
 
-  // work through the source in 8x8 tiles
+  // Work through the source in 8x8 tiles.
+  int i = height;
   while (i >= 8) {
-    TransposeWx8(src, src_stride,
-                 dst_a, dst_stride_a,
-                 dst_b, dst_stride_b,
-                 width);
-
-    src   += 8 * src_stride;    // go down 8 rows
-    dst_a += 8;                 // move over 8 columns
-    dst_b += 8;                 // move over 8 columns
-    i     -= 8;
+    TransposeUVWx8(src, src_stride,
+                   dst_a, dst_stride_a,
+                   dst_b, dst_stride_b,
+                   width);
+    src += 8 * src_stride;    // Go down 8 rows.
+    dst_a += 8;               // Move over 8 columns.
+    dst_b += 8;               // Move over 8 columns.
+    i -= 8;
   }
 
-  TransposeWxH(src, src_stride,
-               dst_a, dst_stride_a,
-               dst_b, dst_stride_b,
-               width, i);
-
+  TransposeUVWxH_C(src, src_stride,
+                   dst_a, dst_stride_a,
+                   dst_b, dst_stride_b,
+                   width, i);
 }
 
 void RotateUV90(const uint8* src, int src_stride,
@@ -1009,115 +999,33 @@ void RotateUV270(const uint8* src, int src_stride,
               width, height);
 }
 
-#if defined(_M_IX86) && !defined(YUV_DISABLE_ASM)
-#define HAS_REVERSE_ROW_UV_SSSE3
-__declspec(naked)
-void ReverseRowUV_SSSE3(const uint8* src,
-                         uint8* dst_a, uint8* dst_b,
-                         int width) {
-__asm {
-    push      edi
-    mov       eax, [esp + 4 + 4]   // src
-    mov       edx, [esp + 4 + 8]   // dst_a
-    mov       edi, [esp + 4 + 12]  // dst_b
-    mov       ecx, [esp + 4 + 16]  // width
-    movdqa    xmm5, kShuffleReverseUV
-    lea       eax, [eax + ecx * 2 - 16]
-
- convertloop:
-    movdqa    xmm0, [eax]
-    lea       eax, [eax - 16]
-    pshufb    xmm0, xmm5
-    movlpd    qword ptr [edx], xmm0
-    movhpd    qword ptr [edi], xmm0
-    lea       edx, [edx + 8]
-    lea       edi, [edi + 8]
-    sub       ecx, 8
-    ja        convertloop
-    pop       edi
-    ret
-  }
-}
-
-#elif (defined(__i386__) || defined(__x86_64__)) && \
-    !defined(YUV_DISABLE_ASM)
-#define HAS_REVERSE_ROW_UV_SSSE3
-void ReverseRowUV_SSSE3(const uint8* src,
-                        uint8* dst_a, uint8* dst_b,
-                        int width) {
-  intptr_t temp_width = static_cast<intptr_t>(width);
-  asm volatile (
-  "movdqa     %4,%%xmm5                        \n"
-  "lea        -16(%0,%3,2),%0                  \n"
-"1:                                            \n"
-  "movdqa     (%0),%%xmm0                      \n"
-  "lea        -16(%0),%0                       \n"
-  "pshufb     %%xmm5,%%xmm0                    \n"
-  "movlpd     %%xmm0,(%1)                      \n"
-  "movhpd     %%xmm0,(%2)                      \n"
-  "lea        8(%1),%1                         \n"
-  "lea        8(%2),%2                         \n"
-  "sub        $8,%3                            \n"
-  "ja         1b                               \n"
-  : "+r"(src),      // %0
-    "+r"(dst_a),    // %1
-    "+r"(dst_b),    // %2
-    "+r"(temp_width)  // %3
-  : "m"(kShuffleReverseUV) // %4
-  : "memory", "cc"
-#if defined(__SSE2__)
-    , "xmm0", "xmm5"
-#endif
-  );
-}
-#endif
-
-static void ReverseRowUV_C(const uint8* src,
-                            uint8* dst_a, uint8* dst_b,
-                            int width) {
-  int i;
-  src += width << 1;
-  for (i = 0; i < width; ++i) {
-    src -= 2;
-    dst_a[i] = src[0];
-    dst_b[i] = src[1];
-  }
-}
-
+// Rotate 180 is a horizontal and vertical flip.
 void RotateUV180(const uint8* src, int src_stride,
                  uint8* dst_a, int dst_stride_a,
                  uint8* dst_b, int dst_stride_b,
                  int width, int height) {
-  int i;
-  reverse_uv_func ReverseRow;
-
-#if defined(HAS_REVERSE_ROW_UV_NEON)
+  void (*MirrorRowUV)(const uint8* src, uint8* dst_u, uint8* dst_v, int width) =
+      MirrorRowUV_C;
+#if defined(HAS_MIRRORROW_UV_NEON)
   if (TestCpuFlag(kCpuHasNEON)) {
-    ReverseRow = ReverseRowUV_NEON;
-  } else
-#endif
-#if defined(HAS_REVERSE_ROW_UV_SSSE3)
+    MirrorRowUV = MirrorRowUV_NEON;
+  }
+#elif defined(HAS_MIRRORROW_UV_SSSE3)
   if (TestCpuFlag(kCpuHasSSSE3) &&
       IS_ALIGNED(width, 16) &&
-      IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16) &&
-      IS_ALIGNED(dst_a, 8) && IS_ALIGNED(dst_stride_a, 8) &&
-      IS_ALIGNED(dst_b, 8) && IS_ALIGNED(dst_stride_b, 8) ) {
-    ReverseRow = ReverseRowUV_SSSE3;
-  } else
-#endif
-  {
-    ReverseRow = ReverseRowUV_C;
+      IS_ALIGNED(src, 16) && IS_ALIGNED(src_stride, 16)) {
+    MirrorRowUV = MirrorRowUV_SSSE3;
   }
+#endif
 
   dst_a += dst_stride_a * (height - 1);
   dst_b += dst_stride_b * (height - 1);
 
-  for (i = 0; i < height; ++i) {
-    ReverseRow(src, dst_a, dst_b, width);
-
-    src   += src_stride;      // down one line at a time
-    dst_a -= dst_stride_a;    // nominally up one line at a time
-    dst_b -= dst_stride_b;    // nominally up one line at a time
+  for (int i = 0; i < height; ++i) {
+    MirrorRowUV(src, dst_a, dst_b, width);
+    src += src_stride;
+    dst_a -= dst_stride_a;
+    dst_b -= dst_stride_b;
   }
 }
 
@@ -1129,6 +1037,10 @@ int I420Rotate(const uint8* src_y, int src_stride_y,
                uint8* dst_v, int dst_stride_v,
                int width, int height,
                RotationMode mode) {
+  if (!src_y || !src_u || !src_v || width <= 0 || height == 0 ||
+      !dst_y || !dst_u || !dst_v) {
+    return -1;
+  }
   int halfwidth = (width + 1) >> 1;
   int halfheight = (height + 1) >> 1;
 
@@ -1200,6 +1112,10 @@ int NV12ToI420Rotate(const uint8* src_y, int src_stride_y,
                      uint8* dst_v, int dst_stride_v,
                      int width, int height,
                      RotationMode mode) {
+  if (!src_y || !src_uv || width <= 0 || height == 0 ||
+      !dst_y || !dst_u || !dst_v) {
+    return -1;
+  }
   int halfwidth = (width + 1) >> 1;
   int halfheight = (height + 1) >> 1;
 

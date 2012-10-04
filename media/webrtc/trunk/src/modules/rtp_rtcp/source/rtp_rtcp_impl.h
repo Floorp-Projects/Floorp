@@ -13,12 +13,12 @@
 
 #include <list>
 
-#include "bandwidth_management.h"
-#include "rtcp_receiver.h"
-#include "rtcp_sender.h"
-#include "rtp_receiver.h"
-#include "rtp_rtcp.h"
-#include "rtp_sender.h"
+#include "modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "modules/rtp_rtcp/source/rtcp_receiver.h"
+#include "modules/rtp_rtcp/source/rtcp_sender.h"
+#include "modules/rtp_rtcp/source/rtp_receiver.h"
+#include "modules/rtp_rtcp/source/rtp_sender.h"
+#include "system_wrappers/interface/scoped_ptr.h"
 
 #ifdef MATLAB
 class MatlabPlot;
@@ -26,33 +26,11 @@ class MatlabPlot;
 
 namespace webrtc {
 
-class ModuleRtpRtcpImpl : public RtpRtcp
-{
-public:
-    ModuleRtpRtcpImpl(const WebRtc_Word32 id,
-                      const bool audio,
-                      RtpRtcpClock* clock);
+class ModuleRtpRtcpImpl : public RtpRtcp {
+ public:
+    explicit ModuleRtpRtcpImpl(const RtpRtcp::Configuration& configuration);
 
     virtual ~ModuleRtpRtcpImpl();
-
-    // get Module ID
-    WebRtc_Word32 Id()   {return _id;}
-
-    virtual WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id);
-
-    // De-muxing functionality for
-    virtual WebRtc_Word32 RegisterDefaultModule(RtpRtcp* module);
-    virtual WebRtc_Word32 DeRegisterDefaultModule();
-    virtual bool DefaultModuleRegistered();
-
-    virtual WebRtc_UWord32 NumberChildModules();
-
-    // Lip-sync between voice-video
-    virtual WebRtc_Word32 RegisterSyncModule(RtpRtcp* module);
-    virtual WebRtc_Word32 DeRegisterSyncModule();
-
-    virtual WebRtc_Word32 RegisterVideoModule(RtpRtcp* videoModule);
-    virtual void DeRegisterVideoModule();
 
     // returns the number of milliseconds until the module want a worker thread to call Process
     virtual WebRtc_Word32 TimeUntilNextProcess();
@@ -63,8 +41,6 @@ public:
     /**
     *   Receiver
     */
-    virtual WebRtc_Word32 InitReceiver();
-
     // configure a timeout value
     virtual WebRtc_Word32 SetPacketTimeout(const WebRtc_UWord32 RTPtimeoutMS,
                                            const WebRtc_UWord32 RTCPtimeoutMS);
@@ -126,28 +102,9 @@ public:
     virtual WebRtc_Word32 IncomingPacket( const WebRtc_UWord8* incomingPacket,
                                         const WebRtc_UWord16 packetLength);
 
-    virtual WebRtc_Word32 IncomingAudioNTP(const WebRtc_UWord32 audioReceivedNTPsecs,
-                                         const WebRtc_UWord32 audioReceivedNTPfrac,
-                                         const WebRtc_UWord32 audioRTCPArrivalTimeSecs,
-                                         const WebRtc_UWord32 audioRTCPArrivalTimeFrac);
-
-    // Used by the module to deliver the incoming data to the codec module
-    virtual WebRtc_Word32 RegisterIncomingDataCallback(RtpData* incomingDataCallback);
-
-    // Used by the module to deliver messages to the codec module/appliation
-    virtual WebRtc_Word32 RegisterIncomingRTPCallback(RtpFeedback* incomingMessagesCallback);
-
-    virtual WebRtc_Word32 RegisterIncomingRTCPCallback(RtcpFeedback* incomingMessagesCallback);
-
-    virtual WebRtc_Word32 RegisterIncomingVideoCallback(RtpVideoFeedback* incomingMessagesCallback);
-
-    virtual WebRtc_Word32 RegisterAudioCallback(RtpAudioFeedback* messagesCallback);
-
     /**
     *   Sender
     */
-    virtual WebRtc_Word32 InitSender();
-
     virtual WebRtc_Word32 RegisterSendPayload(const CodecInst& voiceCodec);
 
     virtual WebRtc_Word32 RegisterSendPayload(const VideoCodec& videoCodec);
@@ -214,14 +171,12 @@ public:
 
     virtual bool SendingMedia() const;
 
-    // Used by the module to send RTP and RTCP packet to the network module
-    virtual WebRtc_Word32 RegisterSendTransport(Transport* outgoingTransport);
-
     // Used by the codec module to deliver a video or audio frame for packetization
     virtual WebRtc_Word32 SendOutgoingData(
         const FrameType frameType,
         const WebRtc_Word8 payloadType,
         const WebRtc_UWord32 timeStamp,
+        int64_t capture_time_ms,
         const WebRtc_UWord8* payloadData,
         const WebRtc_UWord32 payloadSize,
         const RTPFragmentationHeader* fragmentation = NULL,
@@ -323,10 +278,6 @@ public:
                                       const WebRtc_UWord8 numberOfSSRC,
                                       const WebRtc_UWord32* SSRC);
 
-    virtual WebRtc_Word32 SetMaximumBitrateEstimate(
-        const WebRtc_UWord32 bitrate);
-
-    virtual bool SetRemoteBitrateObserver(RtpRemoteBitrateObserver* observer);
     /*
     *   (IJ) Extended jitter report.
     */
@@ -445,9 +396,7 @@ public:
 
     virtual WebRtc_Word32 SetCameraDelay(const WebRtc_Word32 delayMS);
 
-    virtual void SetSendBitrate(const WebRtc_UWord32 startBitrate,
-                                const WebRtc_UWord16 minBitrateKbit,
-                                const WebRtc_UWord16 maxBitrateKbit);
+    virtual void SetTargetSendBitrate(const WebRtc_UWord32 bitrate);
 
     virtual WebRtc_Word32 SetGenericFECStatus(const bool enable,
                                             const WebRtc_UWord8 payloadTypeRED,
@@ -473,39 +422,20 @@ public:
                              WebRtc_UWord32* fecRate,
                              WebRtc_UWord32* nackRate) const;
 
-    virtual int EstimatedSendBandwidth(
-        WebRtc_UWord32* available_bandwidth) const;
-
     virtual int EstimatedReceiveBandwidth(
         WebRtc_UWord32* available_bandwidth) const;
 
     virtual void SetRemoteSSRC(const WebRtc_UWord32 SSRC);
-    
-    virtual WebRtc_UWord32 SendTimeOfSendReport(const WebRtc_UWord32 sendReport);
 
-    virtual RateControlRegion OnOverUseStateUpdate(const RateControlInput& rateControlInput);
+    virtual WebRtc_UWord32 SendTimeOfSendReport(const WebRtc_UWord32 sendReport);
 
     // good state of RTP receiver inform sender
     virtual WebRtc_Word32 SendRTCPReferencePictureSelection(const WebRtc_UWord64 pictureID);
 
-    void OnReceivedNTP() ;
-
-    // bw estimation
-    void OnPacketLossStatisticsUpdate(
-        const WebRtc_UWord8 fractionLost,
-        const WebRtc_UWord16 roundTripTime,
-        const WebRtc_UWord32 lastReceivedExtendedHighSeqNum);
-
     void OnReceivedTMMBR();
-
-    void OnReceivedEstimatedMaxBitrate(const WebRtc_UWord32 maxBitrate);
-
-    void OnReceivedBandwidthEstimateUpdate(const WebRtc_UWord16 bwEstimateKbit);
 
     // bad state of RTP receiver request a keyframe
     void OnRequestIntraFrame();
-
-    void OnReceivedIntraFrameRequest(const RtpRtcp* caller);
 
     // received a request for a new SLI
     void OnReceivedSliceLossIndication(const WebRtc_UWord8 pictureID);
@@ -549,37 +479,23 @@ protected:
     bool                      _owns_clock;
     RtpRtcpClock&             _clock;
 private:
-    void SendKeyFrame();
-    void ProcessDefaultModuleBandwidth();
-
     WebRtc_Word32             _id;
     const bool                _audio;
     bool                      _collisionDetected;
-    WebRtc_UWord32            _lastProcessTime;
-    WebRtc_UWord32            _lastBitrateProcessTime;
-    WebRtc_UWord32            _lastPacketTimeoutProcessTime;
+    WebRtc_Word64             _lastProcessTime;
+    WebRtc_Word64             _lastBitrateProcessTime;
+    WebRtc_Word64             _lastPacketTimeoutProcessTime;
     WebRtc_UWord16            _packetOverHead;
 
-    CriticalSectionWrapper*       _criticalSectionModulePtrs;
-    CriticalSectionWrapper*       _criticalSectionModulePtrsFeedback;
+    scoped_ptr<CriticalSectionWrapper> _criticalSectionModulePtrs;
+    scoped_ptr<CriticalSectionWrapper> _criticalSectionModulePtrsFeedback;
     ModuleRtpRtcpImpl*            _defaultModule;
-    ModuleRtpRtcpImpl*            _audioModule;
-    ModuleRtpRtcpImpl*            _videoModule;
     std::list<ModuleRtpRtcpImpl*> _childModules;
 
     // Dead or alive
     bool                  _deadOrAliveActive;
     WebRtc_UWord32        _deadOrAliveTimeoutMS;
-    WebRtc_UWord32        _deadOrAliveLastTimer;
-
-    // receive side
-    BandwidthManagement   _bandwidthManagement;
-
-    WebRtc_UWord32        _receivedNTPsecsAudio;
-    WebRtc_UWord32        _receivedNTPfracAudio;
-    WebRtc_UWord32        _RTCPArrivalTimeSecsAudio;
-    WebRtc_UWord32        _RTCPArrivalTimeFracAudio;
-
+    WebRtc_Word64        _deadOrAliveLastTimer;
     // send side
     NACKMethod            _nackMethod;
     WebRtc_UWord32        _nackLastTimeSent;
@@ -588,6 +504,8 @@ private:
     bool                  _simulcast;
     VideoCodec            _sendVideoCodec;
     KeyFrameRequestMethod _keyFrameReqMethod;
+
+    RemoteBitrateEstimator* remote_bitrate_;
 
 #ifdef MATLAB
     MatlabPlot*           _plot1;

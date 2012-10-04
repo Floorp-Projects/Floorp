@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -12,7 +12,7 @@
 #define WEBRTC_VIDEO_ENGINE_VIE_RENDER_IMPL_H_
 
 #include "modules/video_render/main/interface/video_render_defines.h"
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
 #include "video_engine/include/vie_render.h"
 #include "video_engine/vie_ref_count.h"
 
@@ -26,8 +26,9 @@ class ViERenderImpl
  public:
   // Implements ViERender
   virtual int Release();
-  virtual int RegisterVideoRenderModule(VideoRender& render_module);
-  virtual int DeRegisterVideoRenderModule(VideoRender& render_module);
+  virtual int RegisterVideoRenderModule(VideoRender& render_module);  // NOLINT
+  virtual int DeRegisterVideoRenderModule(
+      VideoRender& render_module);  // NOLINT
   virtual int AddRenderer(const int render_id, void* window,
                           const unsigned int z_order, const float left,
                           const float top, const float right,
@@ -45,7 +46,7 @@ class ViERenderImpl
                           ExternalRenderer* renderer);
 
  protected:
-  ViERenderImpl(ViESharedData* shared_data);
+  explicit ViERenderImpl(ViESharedData* shared_data);
   virtual ~ViERenderImpl();
 
  private:

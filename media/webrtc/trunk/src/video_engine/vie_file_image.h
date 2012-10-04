@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -12,7 +12,7 @@
 #define WEBRTC_VIDEO_ENGINE_VIE_FILE_IMAGE_H_
 
 #include "modules/interface/module_common_types.h"
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
 #include "video_engine/include/vie_file.h"
 
 namespace webrtc {
@@ -21,10 +21,10 @@ class ViEFileImage {
  public:
   static int ConvertJPEGToVideoFrame(int engine_id,
                                      const char* file_nameUTF8,
-                                     VideoFrame& video_frame);
+                                     VideoFrame* video_frame);
   static int ConvertPictureToVideoFrame(int engine_id,
                                         const ViEPicture& picture,
-                                        VideoFrame& video_frame);
+                                        VideoFrame* video_frame);
 };
 
 }  // namespace webrtc

@@ -13,7 +13,7 @@
       'type': 'executable',
       'dependencies': [
         'rtp_rtcp',
-        '<(webrtc_root)/../test/test.gyp:test_support_main',
+        '<(webrtc_root)/test/test.gyp:test_support_main',
       ],
       
       'include_dirs': [

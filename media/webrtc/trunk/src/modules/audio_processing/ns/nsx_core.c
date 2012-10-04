@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -434,6 +434,18 @@ SynthesisUpdate WebRtcNsx_SynthesisUpdate;
 AnalysisUpdate WebRtcNsx_AnalysisUpdate;
 Denormalize WebRtcNsx_Denormalize;
 CreateComplexBuffer WebRtcNsx_CreateComplexBuffer;
+
+#if (defined WEBRTC_DETECT_ARM_NEON || defined WEBRTC_ARCH_ARM_NEON)
+// Initialize function pointers for ARM Neon platform.
+static void WebRtcNsx_InitNeon(void) {
+  WebRtcNsx_NoiseEstimation = WebRtcNsx_NoiseEstimationNeon;
+  WebRtcNsx_PrepareSpectrum = WebRtcNsx_PrepareSpectrumNeon;
+  WebRtcNsx_SynthesisUpdate = WebRtcNsx_SynthesisUpdateNeon;
+  WebRtcNsx_AnalysisUpdate = WebRtcNsx_AnalysisUpdateNeon;
+  WebRtcNsx_Denormalize = WebRtcNsx_DenormalizeNeon;
+  WebRtcNsx_CreateComplexBuffer = WebRtcNsx_CreateComplexBufferNeon;
+}
+#endif
 
 // Update the noise estimation information.
 static void UpdateNoiseEstimate(NsxInst_t* inst, int offset) {
@@ -1881,13 +1893,19 @@ int WebRtcNsx_ProcessCore(NsxInst_t* inst, short* speechFrame, short* speechFram
   int q_domain_to_use = 0;
 
   // Code for ARMv7-Neon platform assumes the following:
+  assert(inst->anaLen > 0);
+  assert(inst->anaLen2 > 0);
   assert(inst->anaLen % 16 == 0);
   assert(inst->anaLen2 % 8 == 0);
+  assert(inst->blockLen10ms > 0);
   assert(inst->blockLen10ms % 16 == 0);
   assert(inst->magnLen == inst->anaLen2 + 1);
 
 #ifdef NS_FILEDEBUG
-  fwrite(spframe, sizeof(short), inst->blockLen10ms, inst->infile);
+  if (fwrite(spframe, sizeof(short),
+             inst->blockLen10ms, inst->infile) != inst->blockLen10ms) {
+    return -1;
+  }
 #endif
 
   // Check that initialization has been done
@@ -2364,7 +2382,10 @@ int WebRtcNsx_ProcessCore(NsxInst_t* inst, short* speechFrame, short* speechFram
 
   WebRtcNsx_DataSynthesis(inst, outFrame);
 #ifdef NS_FILEDEBUG
-  fwrite(outframe, sizeof(short), inst->blockLen10ms, inst->outfile);
+  if (fwrite(outframe, sizeof(short),
+             inst->blockLen10ms, inst->outfile) != inst->blockLen10ms) {
+    return -1;
+  }
 #endif
 
   //for H band:
@@ -2440,5 +2461,3 @@ int WebRtcNsx_ProcessCore(NsxInst_t* inst, short* speechFrame, short* speechFram
 
   return 0;
 }
-
-

@@ -29,7 +29,7 @@ public:
     //  extractContentFeature
     // Inputs:         width, height
     // Return value:   0 if OK, negative value upon error
-    WebRtc_Word32 Initialize(WebRtc_UWord16 width, WebRtc_UWord16 height);
+    WebRtc_Word32 Initialize(int width, int height);
 
     // Extract content Feature - main function of ContentAnalysis
     // Input:           new frame
@@ -67,10 +67,10 @@ private:
 
     const WebRtc_UWord8*       _origFrame;
     WebRtc_UWord8*             _prevFrame;
-    WebRtc_UWord16             _width;
-    WebRtc_UWord16             _height;
-    WebRtc_UWord32             _skipNum;
-    WebRtc_Word32              _border;
+    int                        _width;
+    int                        _height;
+    int                        _skipNum;
+    int                        _border;
 
     // Content Metrics:
     // stores the local average of the metrics

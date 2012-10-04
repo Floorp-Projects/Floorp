@@ -14,7 +14,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_INTERFACE_VIDEO_CAPTURE_FACTORY_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_INTERFACE_VIDEO_CAPTURE_FACTORY_H_
 
-#include "video_capture.h"
+#include "modules/video_capture/main/interface/video_capture.h"
 
 namespace webrtc {
 

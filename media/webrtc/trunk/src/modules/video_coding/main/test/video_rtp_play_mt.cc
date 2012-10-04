@@ -53,7 +53,8 @@ bool DecodeThread(void* obj)
 {
     SharedState* state = static_cast<SharedState*>(obj);
     state->_vcm.Decode(10000);
-    while (state->_vcm.DecodeDualFrame(0) == 1);
+    while (state->_vcm.DecodeDualFrame(0) == 1) {
+    }
     return true;
 }
 

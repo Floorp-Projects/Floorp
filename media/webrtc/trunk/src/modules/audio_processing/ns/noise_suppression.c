@@ -46,3 +46,14 @@ int WebRtcNs_Process(NsHandle* NS_inst, short* spframe, short* spframe_H,
   return WebRtcNs_ProcessCore(
       (NSinst_t*) NS_inst, spframe, spframe_H, outframe, outframe_H);
 }
+
+float WebRtcNs_prior_speech_probability(NsHandle* handle) {
+  NSinst_t* self = (NSinst_t*) handle;
+  if (handle == NULL) {
+    return -1;
+  }
+  if (self->initFlag == 0) {
+    return -1;
+  }
+  return self->priorSpeechProb;
+}

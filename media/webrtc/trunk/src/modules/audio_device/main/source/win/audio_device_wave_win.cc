@@ -2627,7 +2627,7 @@ void AudioDeviceWindowsWave::TraceSupportFlags(DWORD dwSupport) const
         StringCchCat(buf, 256, TEXT("(SAMPLEACCURATE)"));
     }
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s", buf);
+    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%S", buf);
 }
 
 // ----------------------------------------------------------------------------
@@ -2642,7 +2642,7 @@ void AudioDeviceWindowsWave::TraceWaveInError(MMRESULT error) const
     StringCchPrintf(buf, MAXERRORLENGTH, TEXT("Error details: "));
     waveInGetErrorText(error, msg, MAXERRORLENGTH);
     StringCchCat(buf, MAXERRORLENGTH, msg);
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s", buf);
+    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%S", buf);
 }
 
 // ----------------------------------------------------------------------------
@@ -2657,7 +2657,7 @@ void AudioDeviceWindowsWave::TraceWaveOutError(MMRESULT error) const
     StringCchPrintf(buf, MAXERRORLENGTH, TEXT("Error details: "));
     waveOutGetErrorText(error, msg, MAXERRORLENGTH);
     StringCchCat(buf, MAXERRORLENGTH, msg);
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s", buf);
+    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%S", buf);
 }
 
 // ----------------------------------------------------------------------------
@@ -2964,7 +2964,7 @@ WebRtc_Word32 AudioDeviceWindowsWave::GetPlayoutBufferDelay(WebRtc_UWord32& writ
         if (_no_of_msecleft_warnings%20==0)
         {
             StringCchPrintf(infoStr, 300, TEXT("writtenSamples=%i, playedSamples=%i, msecInPlayoutBuffer=%i, ms_Header=%i"), writtenSamples, playedSamples, msecInPlayoutBuffer, ms_Header);
-            WEBRTC_TRACE(kTraceWarning, kTraceUtility, _id, (const char*)infoStr);
+            WEBRTC_TRACE(kTraceWarning, kTraceUtility, _id, "%S", infoStr);
         }
         _no_of_msecleft_warnings++;
     }
@@ -2983,7 +2983,7 @@ WebRtc_Word32 AudioDeviceWindowsWave::GetPlayoutBufferDelay(WebRtc_UWord32& writ
             TCHAR str[300];
             StringCchPrintf(str, 300, TEXT("_no_of_msecleft_warnings=%i, msecInPlayoutBuffer=%i ms_Header=%i (minBuffer=%i buffersize=%i writtenSamples=%i playedSamples=%i)"),
                 _no_of_msecleft_warnings, msecInPlayoutBuffer, ms_Header, _minPlayBufDelay, _playBufDelay, writtenSamples, playedSamples);
-            WEBRTC_TRACE(kTraceWarning, kTraceUtility, _id, (const char*)str);
+            WEBRTC_TRACE(kTraceWarning, kTraceUtility, _id, "%S", str);
         }
         _no_of_msecleft_warnings++;
         ms_Header -= 6; // Round off as we only have 10ms resolution + Header info is usually slightly delayed compared to GetPosition

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -11,7 +11,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_CAPTURE_IMPL_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_CAPTURE_IMPL_H_
 
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
 #include "video_engine/include/vie_capture.h"
 #include "video_engine/vie_defines.h"
 #include "video_engine/vie_ref_count.h"
@@ -34,8 +34,8 @@ class ViECaptureImpl
   virtual int AllocateCaptureDevice(const char* unique_idUTF8,
                                     const unsigned int unique_idUTF8Length,
                                     int& capture_id);
-  virtual int AllocateCaptureDevice(VideoCaptureModule& capture_module,
-                                    int& capture_id);
+  virtual int AllocateCaptureDevice(
+      VideoCaptureModule& capture_module, int& capture_id);  // NOLINT
   virtual int AllocateExternalCaptureDevice(
       int& capture_id, ViEExternalCapture *&external_capture);
   virtual int ReleaseCaptureDevice(const int capture_id);
@@ -69,7 +69,7 @@ class ViECaptureImpl
   virtual int DeregisterObserver(const int capture_id);
 
  protected:
-  ViECaptureImpl(ViESharedData* shared_data);
+  explicit ViECaptureImpl(ViESharedData* shared_data);
   virtual ~ViECaptureImpl();
 
  private:

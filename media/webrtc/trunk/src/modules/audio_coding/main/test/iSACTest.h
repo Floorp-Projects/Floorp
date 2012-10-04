@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -10,6 +10,8 @@
 
 #ifndef ACM_ISAC_TEST_H
 #define ACM_ISAC_TEST_H
+
+#include <string.h>
 
 #include "ACMTest.h"
 #include "Channel.h"
@@ -81,8 +83,7 @@ private:
     CodecInst _paramISAC16kHz;
     CodecInst _paramISAC32kHz;
 
-    char _fileNameWB[MAX_FILE_NAME_LENGTH_BYTE];
-    char _fileNameSWB[MAX_FILE_NAME_LENGTH_BYTE];
+    std::string file_name_swb_;
 
     ACMTestTimer _myTimer;
     int _testMode;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -19,7 +19,7 @@ using namespace webrtc;
 
 long filesize(const char *filename); // local function defined at end of file
 
-Test::Test(std::string name, std::string description)
+CodecTest::CodecTest(std::string name, std::string description)
 :
 _bitRate(0),
 _inname(""),
@@ -33,7 +33,8 @@ _description(description)
     std::srand(seed);
 }
 
-Test::Test(std::string name, std::string description, WebRtc_UWord32 bitRate)
+CodecTest::CodecTest(std::string name, std::string description,
+                     WebRtc_UWord32 bitRate)
 :
 _bitRate(bitRate),
 _inname(""),
@@ -48,7 +49,7 @@ _description(description)
 }
 
 void
-Test::Print()
+CodecTest::Print()
 {
     std::cout << _name << " completed!" << std::endl;
     (*_log) << _name << std::endl;
@@ -70,7 +71,7 @@ Test::Print()
 }
 
 void
-Test::Setup()
+CodecTest::Setup()
 {
     int widhei          = _inst.width*_inst.height;
     _lengthSourceFrame  = 3*widhei/2;
@@ -78,7 +79,9 @@ Test::Setup()
 }
 
 void
-Test::CodecSettings(int width, int height, WebRtc_UWord32 frameRate /*=30*/, WebRtc_UWord32 bitRate /*=0*/)
+CodecTest::CodecSettings(int width, int height,
+                         WebRtc_UWord32 frameRate /*=30*/,
+                         WebRtc_UWord32 bitRate /*=0*/)
 {
     if (bitRate > 0)
     {
@@ -98,51 +101,52 @@ Test::CodecSettings(int width, int height, WebRtc_UWord32 frameRate /*=30*/, Web
 }
 
 void
-Test::Teardown()
+CodecTest::Teardown()
 {
     delete [] _sourceBuffer;
 }
 
 void
-Test::SetEncoder(webrtc::VideoEncoder*encoder)
+CodecTest::SetEncoder(webrtc::VideoEncoder*encoder)
 {
     _encoder = encoder;
 }
 
 void
-Test::SetDecoder(VideoDecoder*decoder)
+CodecTest::SetDecoder(VideoDecoder*decoder)
 {
     _decoder = decoder;
 }
 
 void
-Test::SetLog(std::fstream* log)
+CodecTest::SetLog(std::fstream* log)
 {
     _log = log;
 }
 
-double Test::ActualBitRate(int nFrames)
+double CodecTest::ActualBitRate(int nFrames)
 {
     return 8.0 * _sumEncBytes / (nFrames / _inst.maxFramerate);
 }
 
-bool Test::PacketLoss(double lossRate, int /*thrown*/)
+bool CodecTest::PacketLoss(double lossRate, int /*thrown*/)
 {
     return RandUniform() < lossRate;
 }
 
 void
-Test::VideoBufferToRawImage(TestVideoBuffer& videoBuffer, RawImage &image)
+CodecTest::VideoBufferToRawImage(TestVideoBuffer& videoBuffer,
+                                 VideoFrame &image)
 {
-    image._buffer = videoBuffer.GetBuffer();
-    image._size = videoBuffer.GetSize();
-    image._length = videoBuffer.GetLength();
-    image._width = videoBuffer.GetWidth();
-    image._height = videoBuffer.GetHeight();
-    image._timeStamp = videoBuffer.GetTimeStamp();
+  // TODO(mikhal): Use videoBuffer in lieu of TestVideoBuffer.
+  image.CopyFrame(videoBuffer.GetLength(), videoBuffer.GetBuffer());
+  image.SetWidth(videoBuffer.GetWidth());
+  image.SetHeight(videoBuffer.GetHeight());
+  image.SetTimeStamp(videoBuffer.GetTimeStamp());
 }
 void
-Test::VideoEncodedBufferToEncodedImage(TestVideoEncodedBuffer& videoBuffer, EncodedImage &image)
+CodecTest::VideoEncodedBufferToEncodedImage(TestVideoEncodedBuffer& videoBuffer,
+                                            EncodedImage &image)
 {
     image._buffer = videoBuffer.GetBuffer();
     image._length = videoBuffer.GetLength();

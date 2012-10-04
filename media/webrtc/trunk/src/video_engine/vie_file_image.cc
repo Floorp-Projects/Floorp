@@ -9,13 +9,13 @@
  */
 
 // Placed first to get WEBRTC_VIDEO_ENGINE_FILE_API.
-#include "engine_configurations.h"
+#include "engine_configurations.h"  // NOLINT
 
 #ifdef WEBRTC_VIDEO_ENGINE_FILE_API
 
 #include "video_engine/vie_file_image.h"
 
-#include <stdio.h>
+#include <stdio.h>  // NOLINT
 
 #include "common_video/interface/video_image.h"
 #include "common_video/jpeg/include/jpeg.h"
@@ -25,7 +25,7 @@ namespace webrtc {
 
 int ViEFileImage::ConvertJPEGToVideoFrame(int engine_id,
                                           const char* file_nameUTF8,
-                                          VideoFrame& video_frame) {
+                                          VideoFrame* video_frame) {
   // Read jpeg file into temporary buffer.
   EncodedImage image_buffer;
 
@@ -70,8 +70,7 @@ int ViEFileImage::ConvertJPEGToVideoFrame(int engine_id,
   fclose(image_file);
 
   JpegDecoder decoder;
-  RawImage decoded_image;
-  int ret = decoder.Decode(image_buffer, decoded_image);
+  int ret = decoder.Decode(image_buffer, *video_frame);
 
   delete [] image_buffer._buffer;
   image_buffer._buffer = NULL;
@@ -86,37 +85,18 @@ int ViEFileImage::ConvertJPEGToVideoFrame(int engine_id,
                  "%s could not convert jpeg's data to i420 format",
                  __FUNCTION__, file_nameUTF8);
   }
-
-  // Image length in I420.
-  WebRtc_UWord32 image_length = (WebRtc_UWord32)(decoded_image._width *
-                                                 decoded_image._height * 1.5);
-  if (-1 == video_frame.Swap(decoded_image._buffer, image_length,
-                             image_length)) {
-    WEBRTC_TRACE(kTraceDebug, kTraceVideo, engine_id,
-                 "%s could not copy frame image_decoded_buffer to video_frame ",
-                 __FUNCTION__, file_nameUTF8);
-    return -1;
-  }
-
-  if (decoded_image._buffer) {
-    delete [] decoded_image._buffer;
-    decoded_image._buffer = NULL;
-  }
-
-  video_frame.SetWidth(decoded_image._width);
-  video_frame.SetHeight(decoded_image._height);
   return 0;
 }
 
 int ViEFileImage::ConvertPictureToVideoFrame(int engine_id,
                                              const ViEPicture& picture,
-                                             VideoFrame& video_frame) {
+                                             VideoFrame* video_frame) {
   WebRtc_UWord32 picture_length = (WebRtc_UWord32)(picture.width *
                                                    picture.height * 1.5);
-  video_frame.CopyFrame(picture_length, picture.data);
-  video_frame.SetWidth(picture.width);
-  video_frame.SetHeight(picture.height);
-  video_frame.SetLength(picture_length);
+  video_frame->CopyFrame(picture_length, picture.data);
+  video_frame->SetWidth(picture.width);
+  video_frame->SetHeight(picture.height);
+  video_frame->SetLength(picture_length);
   return 0;
 }
 

@@ -1,0 +1,16 @@
+# List of suppressions
+
+# crbug.com/138848
+AudioOutputControllerTest.CreateAndClose
+AudioOutputControllerTest.PlayPauseClose
+AudioOutputControllerTest.PlayPausePlayClose
+
+# crbug.com/136720
+CrossProcessNotificationMultiProcessTest.Basic
+
+# Death tests are not supported on APK
+# http://crbug.com/138855
+CompositeFilterDeathTest.*
+
+# http://crbug.com/138833
+AesDecryptorTest.*

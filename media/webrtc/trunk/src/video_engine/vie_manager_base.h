@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -16,15 +16,15 @@ namespace webrtc {
 class RWLockWrapper;
 
 class ViEManagerBase {
-  friend class ViEManagerScopedBase;
   friend class ViEManagedItemScopedBase;
+  friend class ViEManagerScopedBase;
   friend class ViEManagerWriteScoped;
  public:
   ViEManagerBase();
   ~ViEManagerBase();
 
  private:
-  // Exclusive lock, used by ViEManagerWriteScoped
+  // Exclusive lock, used by ViEManagerWriteScoped.
   void WriteLockManager();
 
   // Releases exclusive lock, used by ViEManagerWriteScoped.
@@ -41,7 +41,7 @@ class ViEManagerBase {
 
 class ViEManagerWriteScoped {
  public:
-  explicit ViEManagerWriteScoped(ViEManagerBase& vie_manager);
+  explicit ViEManagerWriteScoped(ViEManagerBase* vie_manager);
   ~ViEManagerWriteScoped();
 
  private:
@@ -63,10 +63,11 @@ class ViEManagerScopedBase {
 
 class ViEManagedItemScopedBase {
  public:
-  explicit ViEManagedItemScopedBase(ViEManagerScopedBase& vie_scoped_manager);
+  explicit ViEManagedItemScopedBase(ViEManagerScopedBase* vie_scoped_manager);
   ~ViEManagedItemScopedBase();
+
  protected:
-  ViEManagerScopedBase& vie_scoped_manager_;
+  ViEManagerScopedBase* vie_scoped_manager_;
 };
 
 }  // namespace webrtc

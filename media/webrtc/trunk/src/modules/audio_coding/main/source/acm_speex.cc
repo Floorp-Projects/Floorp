@@ -45,14 +45,13 @@
     //                            int16_t *encoded, int16_t len,
     //                            int16_t *decoded, int16_t *speechType);
     // int16_t WebRtcSpeex_DecoderInit(SPEEX_decinst_t *SPEEXdec_inst);
-    // void WebRtcSpeex_Version(char *versionStr, short len);
     #include "speex_interface.h"
 #endif
 
 namespace webrtc {
 
 #ifndef WEBRTC_CODEC_SPEEX
-ACMSPEEX::ACMSPEEX(WebRtc_Word16 /* codecID*/)
+ACMSPEEX::ACMSPEEX(WebRtc_Word16 /* codecID */)
     : _encoderInstPtr(NULL),
       _decoderInstPtr(NULL),
       _complMode(0),
@@ -164,14 +163,6 @@ ACMSPEEX::InternalDestructEncoderInst(
     void* /* ptrInst */)
 {
     return;
-}
-
-WebRtc_Word16
-ACMSPEEX::UnregisterFromNetEqSafe(
-    ACMNetEQ*     /* netEq       */,
-    WebRtc_Word16 /* payloadType */)
-{
-    return -1;
 }
 
 #ifdef UNUSEDSPEEX
@@ -426,7 +417,7 @@ ACMSPEEX::CodecDef(
 
     // Fill up the structure by calling
     // "SET_CODEC_PAR" & "SET_SPEEX_FUNCTION."
-    // Then call NetEQ to add the codec to it's
+    // Then call NetEQ to add the codec to its
     // database.
 
     switch(_samplingFrequency)
@@ -533,44 +524,6 @@ ACMSPEEX::InternalDestructEncoderInst(
     }
     return;
 }
-
-
-WebRtc_Word16
-ACMSPEEX::UnregisterFromNetEqSafe(
-    ACMNetEQ*     netEq,
-    WebRtc_Word16 payloadType)
-{
-    if(payloadType != _decoderParams.codecInstant.pltype)
-    {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, _uniqueID,
-            "Cannot unregister codec %s given payload-type %d does not match \
-the stored payload type",
-            _decoderParams.codecInstant.plname,
-            payloadType,
-            _decoderParams.codecInstant.pltype);
-        return -1;
-    }
-
-
-    switch(_samplingFrequency)
-    {
-    case 8000:
-        {
-            return netEq->RemoveCodec(kDecoderSPEEX_8);
-        }
-    case 16000:
-        {
-            return netEq->RemoveCodec(kDecoderSPEEX_16);
-        }
-    default:
-        {
-            WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, _uniqueID,
-            "Could not unregister Speex from NetEQ. Sampling frequency doesn't match");
-            return -1;
-        }
-    }
-}
-
 
 #ifdef UNUSEDSPEEX
 

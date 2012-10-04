@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -32,7 +32,7 @@ struct ACMTestFrameSizeStats
     WebRtc_UWord64 totalEncodedSamples;
     double         rateBitPerSec;
     double         usageLenSec;
-           
+
 };
 
 struct ACMTestPayloadStats
@@ -56,36 +56,36 @@ public:
         const FrameType       frameType,
         const WebRtc_UWord8   payloadType,
         const WebRtc_UWord32  timeStamp,
-        const WebRtc_UWord8*  payloadData, 
+        const WebRtc_UWord8*  payloadData,
         const WebRtc_UWord16  payloadSize,
         const RTPFragmentationHeader* fragmentation);
 
     void RegisterReceiverACM(
         AudioCodingModule *acm);
-    
+
     void ResetStats();
-    
+
     WebRtc_Word16 Stats(
         CodecInst&           codecInst,
         ACMTestPayloadStats& payloadStats);
-    
+
     void Stats(
         WebRtc_UWord32* numPackets);
-    
+
     void Stats(
-        WebRtc_UWord8*  payloadLenByte, 
+        WebRtc_UWord8*  payloadLenByte,
         WebRtc_UWord32* payloadType);
-    
+
     void PrintStats(
         CodecInst& codecInst);
-    
+
     void SetIsStereo(bool isStereo)
     {
         _isStereo = isStereo;
     }
 
     WebRtc_UWord32 LastInTimestamp();
-    
+
     void SetFECTestWithPacketLoss(bool usePacketLoss)
     {
         _useFECTestWithPacketLoss = usePacketLoss;
@@ -115,7 +115,6 @@ private:
     // FEC Test variables
     WebRtc_Word16           _packetLoss;
     bool                    _useFECTestWithPacketLoss;
-    WebRtc_Word16           _chID;
     WebRtc_UWord64          _beginTime;
     WebRtc_UWord64          _totalBytes;
 };

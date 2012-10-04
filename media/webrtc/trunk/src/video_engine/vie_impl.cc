@@ -210,15 +210,15 @@ int VideoEngine::SetAndroidObjects(void* javaVM, void* javaContext) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, g_vie_active_instance_counter,
                "SetAndroidObjects()");
 
-#ifdef WEBRTC_ANDROID
-  if (VideoCaptureFactory::SetAndroidObjects(javaVM, javaContext) != 0) {
+#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
+  if (SetCaptureAndroidVM(javaVM, javaContext) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, g_vie_active_instance_counter,
-                 "Could not set capture module Android objects");
+                 "Could not set capture Android VM");
     return -1;
   }
-  if (VideoRender::SetAndroidObjects(javaVM) != 0) {
+  if (SetRenderAndroidVM(javaVM) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, g_vie_active_instance_counter,
-                 "Could not set render module Android objects");
+                 "Could not set render Android VM");
     return -1;
   }
   return 0;

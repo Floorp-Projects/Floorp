@@ -47,9 +47,9 @@
 #endif
 
 #include <string.h>
-#include "gtest/internal/gtest-port.h"
-
 #include <string>
+
+#include "gtest/internal/gtest-port.h"
 
 namespace testing {
 namespace internal {
@@ -81,15 +81,6 @@ namespace internal {
 class GTEST_API_ String {
  public:
   // Static utility methods
-
-  // Returns the input enclosed in double quotes if it's not NULL;
-  // otherwise returns "(null)".  For example, "\"Hello\"" is returned
-  // for input "Hello".
-  //
-  // This is useful for printing a C string in the syntax of a literal.
-  //
-  // Known issue: escape sequences are not handled yet.
-  static String ShowCStringQuoted(const char* c_str);
 
   // Clones a 0-terminated C string, allocating memory using new.  The
   // caller is responsible for deleting the return value using
@@ -138,10 +129,6 @@ class GTEST_API_ String {
   // the conversion, "(failed to convert from wide string)" is
   // returned.
   static String ShowWideCString(const wchar_t* wide_c_str);
-
-  // Similar to ShowWideCString(), except that this function encloses
-  // the converted string in double quotes.
-  static String ShowWideCStringQuoted(const wchar_t* wide_c_str);
 
   // Compares two wide C strings.  Returns true iff they have the same
   // content.
@@ -223,14 +210,14 @@ class GTEST_API_ String {
   // Converting a ::std::string or ::string containing an embedded NUL
   // character to a String will result in the prefix up to the first
   // NUL character.
-  String(const ::std::string& str) {
+  String(const ::std::string& str) {  // NOLINT
     ConstructNonNull(str.c_str(), str.length());
   }
 
   operator ::std::string() const { return ::std::string(c_str(), length()); }
 
 #if GTEST_HAS_GLOBAL_STRING
-  String(const ::string& str) {
+  String(const ::string& str) {  // NOLINT
     ConstructNonNull(str.c_str(), str.length());
   }
 

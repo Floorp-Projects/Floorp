@@ -46,7 +46,7 @@ int ViEFrameProviderBase::Id() {
 }
 
 void ViEFrameProviderBase::DeliverFrame(
-    VideoFrame& video_frame,
+    VideoFrame* video_frame,
     int num_csrcs,
     const WebRtc_UWord32 CSRC[kRtpCsrcSize]) {
 #ifdef DEBUG_
@@ -66,8 +66,8 @@ void ViEFrameProviderBase::DeliverFrame(
         if (!extra_frame_.get()) {
           extra_frame_.reset(new VideoFrame());
         }
-        extra_frame_->CopyFrame(video_frame);
-        (*it)->DeliverFrame(id_, *(extra_frame_.get()), num_csrcs, CSRC);
+        extra_frame_->CopyFrame(*video_frame);
+        (*it)->DeliverFrame(id_, extra_frame_.get(), num_csrcs, CSRC);
       }
     }
   }
@@ -96,9 +96,9 @@ int ViEFrameProviderBase::FrameDelay() {
   return frame_delay_;
 }
 
-int ViEFrameProviderBase::GetBestFormat(int& best_width,
-                                        int& best_height,
-                                        int& best_frame_rate) {
+int ViEFrameProviderBase::GetBestFormat(int* best_width,
+                                        int* best_height,
+                                        int* best_frame_rate) {
   int largest_width = 0;
   int largest_height = 0;
   int highest_frame_rate = 0;
@@ -109,8 +109,8 @@ int ViEFrameProviderBase::GetBestFormat(int& best_width,
     int prefered_width = 0;
     int prefered_height = 0;
     int prefered_frame_rate = 0;
-    if ((*it)->GetPreferedFrameSettings(prefered_width, prefered_height,
-                                        prefered_frame_rate) == 0) {
+    if ((*it)->GetPreferedFrameSettings(&prefered_width, &prefered_height,
+                                        &prefered_frame_rate) == 0) {
       if (prefered_width > largest_width) {
         largest_width = prefered_width;
       }
@@ -122,9 +122,9 @@ int ViEFrameProviderBase::GetBestFormat(int& best_width,
       }
     }
   }
-  best_width = largest_width;
-  best_height = largest_height;
-  best_frame_rate = highest_frame_rate;
+  *best_width = largest_width;
+  *best_height = largest_height;
+  *best_frame_rate = highest_frame_rate;
   return 0;
 }
 
@@ -193,5 +193,4 @@ int ViEFrameProviderBase::NumberOfRegisteredFrameCallbacks() {
   CriticalSectionScoped cs(provider_cs_.get());
   return frame_callbacks_.size();
 }
-
 }  // namespac webrtc

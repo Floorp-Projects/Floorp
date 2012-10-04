@@ -255,7 +255,8 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitSpeaker() {
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneIsAvailable(bool& available) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneIsAvailable(
+    bool& available) {
 
     // We always assume it's available
     available = true;
@@ -297,7 +298,7 @@ bool AudioDeviceAndroidOpenSLES::MicrophoneIsInitialized() const {
 }
 
 WebRtc_Word32 AudioDeviceAndroidOpenSLES::SpeakerVolumeIsAvailable(
-                                                                 bool& available) {
+    bool& available) {
 
     available = true; // We assume we are always be able to set/get volume
 
@@ -329,134 +330,11 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetSpeakerVolume(
             return -1;
         }
     }
-    /*    if (_slOutputMixObject == NULL && _slEngine != NULL)
-     {
-     // Set arrays required[] and iidArray[] for VOLUME interface
-     const SLInterfaceID ids[1] = {SL_IID_VOLUME};
-     const SLboolean req[1] = {SL_BOOLEAN_TRUE};
-     // Create Output Mix object to be used by player
-     if ((*_slEngine)->CreateOutputMix(_slEngine, &_slOutputMixObject, 1, ids,
-     req) != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to create Output Mix object");
-     return -1;
-     }
-
-     // Realizing the Output Mix object in synchronous mode.
-     if ((*_slOutputMixObject)->Realize(_slOutputMixObject,
-     SL_BOOLEAN_FALSE) != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to realize the output mix object");
-     return -1;
-     }
-     }
-     if (_slSpeakerVolume == NULL && _slOutputMixObject != NULL)
-     {
-     if ((*_slOutputMixObject)->GetInterface(_slOutputMixObject,
-     SL_IID_VOLUME, (void*)&_slSpeakerVolume) != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get interface for Speaker Volume");
-     return -1;
-     }
-     }
-
-     WebRtc_Word32 vol(0);
-     vol = ((volume*(_maxSpeakerVolume-_minSpeakerVolume) + (int)(255/2))
-     / (255)) + _minSpeakerVolume;
-     if (_slSpeakerVolume != NULL)
-     {
-     if ((*_slSpeakerVolume)->SetVolumeLevel(_slSpeakerVolume, vol)
-     != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to set speaker volume");
-     return -1;
-     }
-     }
-     */
     return 0;
 }
 
 WebRtc_Word32 AudioDeviceAndroidOpenSLES::SpeakerVolume(
     WebRtc_UWord32& volume) const {
-
-    /*    if (!_speakerIsInitialized)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  Speaker not initialized");
-     return -1;
-     }
-
-     if (_slEngineObject == NULL)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "SetSpeakerVolume, SL Engine object doesnt exist");
-     return -1;
-     }
-
-     if (_slEngine == NULL && _slEngineObject != NULL)
-     {
-     // Get the SL Engine Interface which is implicit
-     if ((*_slEngineObject)->GetInterface(_slEngineObject,
-     SL_IID_ENGINE, (void*)&_slEngine) != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get SL Engine interface");
-     return -1;
-     }
-     }
-     if (_slOutputMixObject == NULL && _slEngine != NULL)
-     {
-     // Set arrays required[] and iidArray[] for VOLUME interface
-     const SLInterfaceID ids[1] = {SL_IID_VOLUME};
-     const SLboolean req[1] = {SL_BOOLEAN_TRUE};
-     // Create Output Mix object to be used by player
-     if ((*_slEngine)->CreateOutputMix(_slEngine,
-     &_slOutputMixObject, 1, ids, req) != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to create Output Mixer object");
-     return -1;
-     }
-     // Realizing the Output Mix object in synchronous mode.
-     if ((*_slOutputMixObject)->Realize(_slOutputMixObject,
-     SL_BOOLEAN_FALSE) != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to realize Output Mix object");
-     return -1;
-     }
-     }
-     if (_slSpeakerVolume == NULL && _slOutputMixObject != NULL)
-     {
-     if ((*_slOutputMixObject)->GetInterface(_slOutputMixObject,
-     SL_IID_VOLUME, (void*)&_slSpeakerVolume) != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get speaker volume interface");
-     return -1;
-     }
-     }
-
-     SLmillibel vol(0);
-     if (_slSpeakerVolume != NULL)
-     {
-     if ((*_slSpeakerVolume)->GetVolumeLevel(_slSpeakerVolume, &vol)
-     != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get speaker volume");
-     return -1;
-     }
-     }
-     // volume has to be mapped from millibel to [0, 255]
-     //    volume = (WebRtc_UWord32) (((vol - _minSpeakerVolume) * 255 +
-     * (int)((_maxSpeakerVolume - _minSpeakerVolume)/2)) /
-     *  (_maxSpeakerVolume - _minSpeakerVolume));
-     */
     return 0;
 }
 
@@ -577,7 +455,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneMute(
 }
 
 WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneBoostIsAvailable(
-                                                                   bool& available) {
+    bool& available) {
 
     available = false; // Mic boost not supported on Android
 
@@ -710,8 +588,8 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetMicrophoneVolume(
 
     if (_slMicVolume != NULL) {
         WebRtc_Word32 vol(0);
-        vol = ((volume * (_maxSpeakerVolume - _minSpeakerVolume) + (int) (255
-                / 2)) / (255)) + _minSpeakerVolume;
+        vol = ((volume * (_maxSpeakerVolume - _minSpeakerVolume) +
+                (int) (255 / 2)) / (255)) + _minSpeakerVolume;
         if ((*_slMicVolume)->SetVolume(_slMicVolume, _micDeviceId, vol)
                 != SL_RESULT_SUCCESS) {
             WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
@@ -724,41 +602,6 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetMicrophoneVolume(
 
 WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneVolume(
     WebRtc_UWord32& /*volume*/) const {
-
-    /*    if (_slEngineObject == NULL)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "MicrophoneVolume, SL Engine Object doesnt exist");
-     return -1;
-     }
-
-     // Get the optional DEVICE VOLUME interface from the engine
-     if (_slMicVolume == NULL)
-     {
-     // Get the optional DEVICE VOLUME interface from the engine
-     if ((*_slEngineObject)->GetInterface(_slEngineObject,
-     SL_IID_DEVICEVOLUME, (void*)&_slMicVolume)  != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get Microphone Volume interface");
-     }
-     }
-
-     SLint32 vol(0);
-     if (_slMicVolume != NULL)
-     {
-     if ((*_slMicVolume)->GetVolume(_slMicVolume, _micDeviceId, &vol)
-     != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get Microphone Volume");
-     }
-     }
-     // volume has to be mapped from millibel to [0, 255]
-     //    volume = (WebRtc_UWord32) (((vol - _minSpeakerVolume) * 255 +
-     * (int)((_maxSpeakerVolume - _minSpeakerVolume)/2)) /
-     *  (_maxSpeakerVolume - _minSpeakerVolume));
-     */
     return -1;
 }
 
@@ -786,7 +629,8 @@ WebRtc_Word16 AudioDeviceAndroidOpenSLES::PlayoutDevices() {
     return 1;
 }
 
-WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetPlayoutDevice(WebRtc_UWord16 index) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetPlayoutDevice(
+    WebRtc_UWord16 index) {
 
     if (_playIsInitialized) {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
@@ -909,7 +753,8 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::PlayoutIsAvailable(bool& available) {
     return res;
 }
 
-WebRtc_Word32 AudioDeviceAndroidOpenSLES::RecordingIsAvailable(bool& available) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::RecordingIsAvailable(
+    bool& available) {
 
     available = false;
 
@@ -994,16 +839,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitPlayout() {
                      "  failed to realize SL Output Mix object");
         return -1;
     }
-    // Get the speaker mixer
-    /*    res = (*_slOutputMixObject)->GetInterface(_slOutputMixObject,
-     * SL_IID_VOLUME, (void*)&_slSpeakerVolume);
-     if ( res != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get Speaker Mixer");
-     return -1;
-     }
-     */
+
     // The code below can be moved to startplayout instead
     /* Setup the data source structure for the buffer queue */
     simpleBufferQueue.locatorType = SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE;
@@ -1042,14 +878,14 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitPlayout() {
         return -1;
     }
 
-    // Realizing the player in synchronous mode. 
+    // Realizing the player in synchronous mode.
     res = (*_slPlayer)->Realize(_slPlayer, SL_BOOLEAN_FALSE);
     if (res != SL_RESULT_SUCCESS) {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
                      "  failed to realize the player");
         return -1;
     }
-    // Get seek and play interfaces 
+    // Get seek and play interfaces
     res = (*_slPlayer)->GetInterface(_slPlayer, SL_IID_PLAY,
                                      (void*) &_slPlayerPlay);
     if (res != SL_RESULT_SUCCESS) {
@@ -1121,84 +957,6 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitRecording() {
                      "  Recording object is NULL");
         return -1;
     }
-
-    // TODO(leozwang) clean up following commented out code
-    // WebRtc_Word32 numInputs(0);
-    // WebRtc_UWord32 inputDeviceIDs[N_MAX_INPUT_DEVICES];
-    // SLAudioInputDescriptor audioInputDescriptor;
-    // bool micAvailable(false);
-    // WebRtc_UWord32 micDeviceID(0);
-
-    /*    // Get the Audio IO DEVICE CAPABILITIES interface, which is also implicit
-     res = (*_slEngineObject)->GetInterface(_slEngineObject,
-     SL_IID_AUDIOIODEVICECAPABILITIES, (void*)&_slAudioIODeviceCapabilities);
-     if ( res != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get Audio IO device Capacilities interface");
-     return -1;
-     }
-     numInputs = N_MAX_OUTPUT_DEVICES;
-
-     res = (*_slAudioIODeviceCapabilities)->GetAvailableAudioInputs(
-     _slAudioIODeviceCapabilities, &numInputs, inputDeviceIDs);
-     if ( res != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get the number of Input Devices");
-     return -1;
-     }
-
-     // Search for either earpiece microphone or headset microphone input
-     // device - with a preference for the latter
-     for (int i=0;i<numInputs; i++)
-     {
-     res = (*_slAudioIODeviceCapabilities)->QueryAudioInputCapabilities(
-     _slAudioIODeviceCapabilities, inputDeviceIDs[i], &audioInputDescriptor);
-     if ( res != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to query info for the Input Devices");
-     return -1;
-     }
-     if((audioInputDescriptor.deviceConnection ==
-     SL_DEVCONNECTION_ATTACHED_WIRED)
-     && (audioInputDescriptor.deviceScope == SL_DEVSCOPE_USER)
-     && (audioInputDescriptor.deviceLocation == SL_DEVLOCATION_HEADSET))
-     {
-     micDeviceID = inputDeviceIDs[i];
-     micAvailable = true;
-     break;
-     }
-     else if((audioInputDescriptor.deviceConnection ==
-     SL_DEVCONNECTION_INTEGRATED)
-     && (audioInputDescriptor.deviceScope == SL_DEVSCOPE_USER)
-     && (audioInputDescriptor.deviceLocation == SL_DEVLOCATION_HANDSET))
-     {
-     micDeviceID = inputDeviceIDs[i];
-     micAvailable = true;
-     break;
-     }
-     }
-     // If neither of the preferred input audio devices is available,
-     // no point in continuing
-     if (!micAvailable)
-     {
-     return -1;
-     }
-     */
-
-    // Get the optional DEVICE VOLUME interface from the engine,
-    // should this be done somewhere else
-    /*    res = (*_slEngineObject)->GetInterface(_slEngineObject,
-     * SL_IID_DEVICEVOLUME, (void*)&_slMicVolume);
-     if ( res != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get Microphone Volume interface");
-     return -1;
-     }
-     */
 
     WebRtc_Word32 res(-1);
     SLDataSource audioSource;
@@ -1300,7 +1058,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::StartRecording() {
     }
 
     if (_slRecorderRecord == NULL) {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "  RecordITF is NULL");
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "  RecordITF is NULL");
         return -1;
     }
 
@@ -1417,7 +1175,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::StopRecording() {
             return -1;
         }
 
-        // Destroy the recorder object 
+        // Destroy the recorder object
         (*_slRecorder)->Destroy(_slRecorder);
         _slRecorder = NULL;
         _slRecorderRecord = NULL;
@@ -1481,14 +1239,6 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::StartPlayout() {
     WebRtc_UWord32 nSample10ms = _adbSampleRate / 100;
     WebRtc_Word8 playBuffer[2 * nSample10ms];
     WebRtc_UWord32 noSamplesOut(0);
-    /*    res = (*_slPlayerSimpleBufferQueue)->Clear(_slPlayerSimpleBufferQueue);
-     if (res != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-     "  player simpler buffer queue clean failed");
-     //return ; dong return
-     }
-     *///    for (int i = 0; i<(N_PLAY_QUEUE_BUFFERS -1); i++)
     {
         noSamplesOut = _ptrAudioBuffer->RequestPlayoutData(nSample10ms);
         //Lock();
@@ -1653,58 +1403,7 @@ void AudioDeviceAndroidOpenSLES::ClearRecordingError() {
 }
 
 WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetLoudspeakerStatus(bool enable) {
-
-    //  if (!_javaContext)
-    //  {
-    //        WEBRTC_TRACE(kTraceError, kTraceUtility, -1, "  Context is not set");
-    //        return -1;
-    //  }
-
-    //  get the JNI env for this thread
-    //   JNIEnv *env;
-    //   bool isAttached = false;
-
-    //  if (_javaVM->GetEnv((void**)&env, JNI_VERSION_1_4) != JNI_OK)
-    //  {
-    // try to attach the thread and get the env
-    // Attach this thread to JVMslPlayoutCallback
-    //       jint res = _javaVM->AttachCurrentThread(&env, NULL);
-
-    // Get the JNI env for this thread
-    //       if ((res < 0) || !env)
-    //      {
-    //           WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
-    // "  Could not attach thread to JVM (%d, %p)", res, env);
-    //           return -1;
-    //       }
-    //       isAttached = true;
-    //   }
-
-    // get the method ID
-    //   jmethodID setPlayoutSpeakerID = env->GetMethodID(_javaScClass,
-    // "SetPlayoutSpeaker", "(Z)I");
-
-    // call java sc object method
-    //    jint res = env->CallIntMethod(_javaScObj, setPlayoutSpeakerID, enable);
-    //   if (res < 0)
-    //  {
-    //    WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
-    // "  SetPlayoutSpeaker failed (%d)", res);
-    //      return -1;
-    //  }
-
     _loudSpeakerOn = enable;
-
-    //  Detach this thread if it was attached
-    //    if (isAttached)
-    //    {
-    //        if (_javaVM->DetachCurrentThread() < 0)
-    //       {
-    //            WEBRTC_TRACE(kTraceWarning, kTraceUtility, -1,
-    // "  Could not detach thread from JVM");
-    //       }
-    //    }
-
     return 0;
 }
 
@@ -1770,11 +1469,10 @@ void AudioDeviceAndroidOpenSLES::PlayerSimpleBufferQueueCallbackHandler(
         //WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
         //"_playQueueSeq (%u)  noSamplesOut (%d)", _playQueueSeq, noSamplesOut);
         // write the buffer data we got from VoE into the device
-        res
-                = (*_slPlayerSimpleBufferQueue)->Enqueue(
-                                                         _slPlayerSimpleBufferQueue,
-                                                         _playQueueBuffer[_playQueueSeq],
-                                                         2 * noSamplesOut);
+        res = (*_slPlayerSimpleBufferQueue)->Enqueue(
+            _slPlayerSimpleBufferQueue,
+            _playQueueBuffer[_playQueueSeq],
+            2 * noSamplesOut);
         if (res != SL_RESULT_SUCCESS) {
             WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
                          "  player simpler buffer queue Enqueue failed, %d",
@@ -1906,7 +1604,8 @@ void AudioDeviceAndroidOpenSLES::CheckErr(SLresult res) {
     }
 }
 
-void AudioDeviceAndroidOpenSLES::UpdatePlayoutDelay(WebRtc_UWord32 nSamplePlayed) {
+void AudioDeviceAndroidOpenSLES::UpdatePlayoutDelay(
+    WebRtc_UWord32 nSamplePlayed) {
     // currently just do some simple calculation, should we setup a timer for
     // the callback to have a more accurate delay
     // Android CCD asks for 10ms as the maximum warm output latency, so we
@@ -1929,150 +1628,11 @@ void AudioDeviceAndroidOpenSLES::UpdateRecordingDelay() {
 }
 
 WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitSampleRate() {
-
-    // TODO(leozwang) clean up following commented out code
-    // WebRtc_Word32 res(-1);
-    // WebRtc_Word32 numOutputs(0);
-    // WebRtc_UWord32 headsetDeviceID(0);
-    // WebRtc_UWord32 earpieceDeviceID(0);
-    // bool headsetAvailable(false);
-    // bool earpieceAvailable(false);
-    // bool foundSampleRate(false);
-    // WebRtc_UWord32 outputDeviceIDs[N_MAX_OUTPUT_DEVICES];
-    // SLAudioOutputDescriptor audioOutputDescriptor;
-
     if (_slEngineObject == NULL) {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "  SL Object is NULL");
-        return -1;
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "  SL Object is NULL");
+      return -1;
     }
 
-    /*    // Get the Audio IO DEVICE CAPABILITIES interface
-     res = (*_slEngineObject)->GetInterface(_slEngineObject,
-     SL_IID_AUDIOIODEVICECAPABILITIES, (void*)&_slAudioIODeviceCapabilities);
-     if ( res != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get Device Capabilities interface");
-     return -1;
-     }
-     numOutputs = N_MAX_OUTPUT_DEVICES;
-     res = (*_slAudioIODeviceCapabilities)->GetAvailableAudioOutputs(
-     _slAudioIODeviceCapabilities, &numOutputs, outputDeviceIDs);
-     if ( res != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to get number of Output Devices");
-     return -1;
-     }
-
-     // Search for headset output and phone handsfree speaker device,
-     // we prefer headset to earpiece
-     for (int i=0;i<numOutputs; i++)
-     {
-     res = (*_slAudioIODeviceCapabilities)->QueryAudioOutputCapabilities(
-     _slAudioIODeviceCapabilities, outputDeviceIDs[i], &audioOutputDescriptor);
-     if ( res != SL_RESULT_SUCCESS)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  failed to query Output Devices info");
-     return -1;
-     }
-     if((audioOutputDescriptor.deviceConnection ==
-     SL_DEVCONNECTION_ATTACHED_WIRED)&&
-     (audioOutputDescriptor.deviceScope == SL_DEVSCOPE_USER)&&
-     (audioOutputDescriptor.deviceLocation == SL_DEVLOCATION_HEADSET))
-     {
-     headsetDeviceID = outputDeviceIDs[i];
-     headsetAvailable = true;
-     break;
-     }
-     else if((audioOutputDescriptor.deviceConnection ==
-     SL_DEVCONNECTION_INTEGRATED)&&
-     (audioOutputDescriptor.deviceScope == SL_DEVSCOPE_ENVIRONMENT)&&
-     (audioOutputDescriptor.deviceLocation == SL_DEVLOCATION_HANDSET))
-     {
-     earpieceDeviceID = outputDeviceIDs[i];
-     earpieceAvailable = true;
-     break;
-     }
-     }
-     // Neither headset output nor phone handsfree speaker is available
-     if (headsetAvailable == false && earpieceAvailable == false)
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "  No playout device");
-     return -1;
-     }
-
-     _sampleRateInMilliHz = SL_SAMPLINGRATE_16;
-     if (audioOutputDescriptor.isFreqRangeContinuous == SL_BOOLEAN_FALSE)
-     {
-     while (!foundSampleRate)
-     {
-     for (int i=0; i<audioOutputDescriptor.numOfSamplingRatesSupported; i++)
-     {
-     if (audioOutputDescriptor.samplingRatesSupported[i]
-     == _sampleRateInMilliHz) // supported sampling rate in milliHertz
-     {
-     switch (_sampleRateInMilliHz)
-     {
-     case SL_SAMPLINGRATE_44_1:
-     _adbSampleRate = 44000;
-     break;
-     case SL_SAMPLINGRATE_16:
-     _adbSampleRate = 16000;
-     break;
-     case SL_SAMPLINGRATE_8:
-     _adbSampleRate = 8000;
-     break;
-     default: // error
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  SampleRate(%d) is not supported", _sampleRateInMilliHz);
-     return -1;
-     } // switch
-     foundSampleRate = true;
-     break;
-     } //if(audioOutputDescriptor.samplingRatesSupported[i] == _sampleRate
-     } //for (int i=0; i<audioOutputDescriptor.numOfSamplingRatesSupported; i++)
-     switch (_sampleRateInMilliHz)
-     {
-     case SL_SAMPLINGRATE_16:
-     _sampleRateInMilliHz = SL_SAMPLINGRATE_44_1;
-     break;
-     case SL_SAMPLINGRATE_44_1:
-     _sampleRateInMilliHz = SL_SAMPLINGRATE_8;
-     break;
-     default:
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "  SampleRate is not supported");
-     return -1;
-     } // switch
-     } // while (!foundSampleRate)
-     }
-     else //audioOutputDescriptor.isFreqRangeContinuous == SL_BOOLEAN_TRUE
-     {
-     // minSampleRate < SL_SAMPLINGRATE_16 < maxSampleRate
-     if ((audioOutputDescriptor.minSampleRate < SL_SAMPLINGRATE_16) &&
-     (SL_SAMPLINGRATE_16 < audioOutputDescriptor.maxSampleRate))
-     {
-     _adbSampleRate = 16000;
-     } // minSampleRate < SL_SAMPLINGRATE_44_1 < maxSampleRate
-     else if((audioOutputDescriptor.minSampleRate < SL_SAMPLINGRATE_44_1) &&
-     (SL_SAMPLINGRATE_44_1 < audioOutputDescriptor.maxSampleRate))
-     {
-     _adbSampleRate = 44000;
-     } // minSampleRate < SL_SAMPLINGRATE_8 < maxSampleRate
-     else if ((audioOutputDescriptor.minSampleRate < SL_SAMPLINGRATE_8) &&
-     (SL_SAMPLINGRATE_8 < audioOutputDescriptor.maxSampleRate))
-     {
-     _adbSampleRate = 8000;
-     }
-     else
-     {
-     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-     "  SampleRate is not supported");
-     return -1;
-     }
-     } // else
-     */
     _samplingRateIn = SL_SAMPLINGRATE_16;
     _samplingRateOut = SL_SAMPLINGRATE_16;
     _adbSampleRate = 16000;
@@ -2088,7 +1648,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitSampleRate() {
 // ============================================================================
 
 bool AudioDeviceAndroidOpenSLES::RecThreadFunc(void* pThis) {
-    return (static_cast<AudioDeviceAndroidOpenSLES*> (pThis)->RecThreadProcess());
+  return (static_cast<AudioDeviceAndroidOpenSLES*>(pThis)->RecThreadProcess());
 }
 
 bool AudioDeviceAndroidOpenSLES::RecThreadProcess() {

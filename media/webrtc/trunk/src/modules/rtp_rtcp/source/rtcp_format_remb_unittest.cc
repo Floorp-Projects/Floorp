@@ -16,7 +16,8 @@
 #include "rtcp_sender.h"
 #include "rtcp_receiver.h"
 #include "rtp_rtcp_impl.h"
-#include "bwe_defines.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
+#include "modules/remote_bitrate_estimator/include/mock/mock_remote_bitrate_observer.h"
 
 namespace {
 
@@ -57,20 +58,32 @@ class TestTransport : public Transport {
 
 class RtcpFormatRembTest : public ::testing::Test {
  protected:
-  RtcpFormatRembTest() {};
+  RtcpFormatRembTest()
+      : over_use_detector_options_(),
+        remote_bitrate_observer_(),
+        remote_bitrate_estimator_(&remote_bitrate_observer_,
+                                  over_use_detector_options_) {}
   virtual void SetUp();
   virtual void TearDown();
 
+  OverUseDetectorOptions over_use_detector_options_;
   RtpRtcpClock* system_clock_;
   ModuleRtpRtcpImpl* dummy_rtp_rtcp_impl_;
   RTCPSender* rtcp_sender_;
   RTCPReceiver* rtcp_receiver_;
   TestTransport* test_transport_;
+  MockRemoteBitrateObserver remote_bitrate_observer_;
+  RemoteBitrateEstimator remote_bitrate_estimator_;
 };
 
 void RtcpFormatRembTest::SetUp() {
   system_clock_ = ModuleRTPUtility::GetSystemClock();
-  dummy_rtp_rtcp_impl_ = new ModuleRtpRtcpImpl(0, false, system_clock_);
+  RtpRtcp::Configuration configuration;
+  configuration.id = 0;
+  configuration.audio = false;
+  configuration.clock = system_clock_;
+  configuration.remote_bitrate_estimator = &remote_bitrate_estimator_;
+  dummy_rtp_rtcp_impl_ = new ModuleRtpRtcpImpl(configuration);
   rtcp_sender_ = new RTCPSender(0, false, system_clock_, dummy_rtp_rtcp_impl_);
   rtcp_receiver_ = new RTCPReceiver(0, system_clock_, dummy_rtp_rtcp_impl_);
   test_transport_ = new TestTransport(rtcp_receiver_);

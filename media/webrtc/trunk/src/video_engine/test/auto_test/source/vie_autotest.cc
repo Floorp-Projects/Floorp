@@ -151,5 +151,5 @@ void ViEAutoTest::RenderCaptureDeviceAndOutputStream(
   RenderInWindow(
       video_engine->render, capture_device->captureId, _window1, 0);
   RenderInWindow(
-      video_engine->render, video_channel->videoChannel, _window1, 1);
+      video_engine->render, video_channel->videoChannel, _window2, 1);
 }

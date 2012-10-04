@@ -4,38 +4,32 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Sets up environment for building Chromium on Android. Only Android NDK,
-# Revision 6b on Linux or Mac is offically supported.
-#
-# To run this script, the system environment ANDROID_NDK_ROOT must be set
-# to Android NDK's root path.
-#
-# TODO(michaelbai): Develop a standard for NDK/SDK integration.
-#
-# If current path isn't the Chrome's src directory, CHROME_SRC must be set
-# to the Chrome's src directory.
+# Sets up environment for building Chromium on Android.  It can either be
+# compiled with the Android tree or using the Android SDK/NDK. To build with
+# NDK/SDK: ". build/android/envsetup.sh --sdk".  Environment variable
+# ANDROID_SDK_BUILD=1 will then be defined and used in the rest of the setup to
+# specifiy build type.
 
-if [ ! -d "${ANDROID_NDK_ROOT}" ]; then
-  echo "ANDROID_NDK_ROOT must be set to the path of Android NDK, Revision 6b." \
-    >& 2
-  echo "which could be installed by" >& 2
-  echo "<chromium_tree>/src/build/install-build-deps-android.sh" >& 2
-  return 1
-fi
+# NOTE(yfriedman): This looks unnecessary but downstream the default value
+# should be 0 until all builds switch to SDK/NDK.
+export ANDROID_SDK_BUILD=1
+# Loop over args in case we add more arguments in the future.
+while [ "$1" != "" ]; do
+  case $1 in
+    -s | --sdk  ) export ANDROID_SDK_BUILD=1 ; shift ;;
+    *  )          shift ; break ;;
+  esac
+done
 
-if [ ! -d "${ANDROID_SDK_ROOT}" ]; then
-  echo "ANDROID_SDK_ROOT must be set to the path of Android SDK, Android 3.2." \
-    >& 2
-  echo "which could be installed by" >& 2
-  echo "<chromium_tree>/src/build/install-build-deps-android.sh" >& 2
-  return 1
+if [[ "${ANDROID_SDK_BUILD}" -eq 1 ]]; then
+  echo "Using SDK build"
 fi
 
 host_os=$(uname -s | sed -e 's/Linux/linux/;s/Darwin/mac/')
 
 case "${host_os}" in
   "linux")
-    toolchain_dir="linux-x86"
+    toolchain_dir="linux-x86_64"
     ;;
   "mac")
     toolchain_dir="darwin-x86"
@@ -45,111 +39,73 @@ case "${host_os}" in
     return 1
 esac
 
-export ANDROID_TOOLCHAIN="${ANDROID_NDK_ROOT}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/${toolchain_dir}/bin/"
-
-# Add Android SDK's platform-tools to system path.
-export PATH="${PATH}:${ANDROID_SDK_ROOT}/platform-tools/"
-
-if [ ! -d "${ANDROID_TOOLCHAIN}" ]; then
-  echo "Can not find Android toolchain in ${ANDROID_TOOLCHAIN}." >& 2
-  echo "The NDK version might be wrong." >& 2
-  return 1
-fi
-
+CURRENT_DIR="$(readlink -f "$(dirname $BASH_SOURCE)/../../")"
 if [ -z "${CHROME_SRC}" ]; then
-  # if $CHROME_SRC was not set, assume current directory is CHROME_SRC.
-  export CHROME_SRC=$(pwd)
+  # If $CHROME_SRC was not set, assume current directory is CHROME_SRC.
+  export CHROME_SRC="${CURRENT_DIR}"
 fi
 
-if [ ! -d "${CHROME_SRC}" ]; then
-  echo "CHROME_SRC must be set to the path of Chrome source code." >& 2
+if [ "${CURRENT_DIR/"${CHROME_SRC}"/}" == "${CURRENT_DIR}" ]; then
+  # If current directory is not in $CHROME_SRC, it might be set for other
+  # source tree. If $CHROME_SRC was set correctly and we are in the correct
+  # directory, "${CURRENT_DIR/"${CHROME_SRC}"/}" will be "".
+  # Otherwise, it will equal to "${CURRENT_DIR}"
+  echo "Warning: Current directory is out of CHROME_SRC, it may not be \
+the one you want."
+  echo "${CHROME_SRC}"
+fi
+
+# Android sdk platform version to use
+export ANDROID_SDK_VERSION=16
+
+# Source functions script.  The file is in the same directory as this script.
+. "$(dirname $BASH_SOURCE)"/envsetup_functions.sh
+
+if [ "${ANDROID_SDK_BUILD}" -eq 1 ]; then
+  sdk_build_init
+# Sets up environment for building Chromium for Android with source. Expects
+# android environment setup and lunch.
+elif [ -z "$ANDROID_BUILD_TOP" -o -z "$ANDROID_TOOLCHAIN" -o \
+  -z "$ANDROID_PRODUCT_OUT" ]; then
+  echo "Android build environment variables must be set."
+  echo "Please cd to the root of your Android tree and do: "
+  echo "  . build/envsetup.sh"
+  echo "  lunch"
+  echo "Then try this again."
+  echo "Or did you mean NDK/SDK build. Run envsetup.sh with --sdk argument."
   return 1
+else
+  non_sdk_build_init
 fi
 
-make() {
-  # TODO(michaelbai): how to use ccache in NDK.
-  if [ -n "${USE_CCACHE}" ]; then
-    if [ -e "${PREBUILT_CCACHE_PATH}" ]; then
-      use_ccache_var="$PREBUILT_CCACHE_PATH "
-    else
-      use_ccache_var=""
-    fi
-  fi
-  # Only cross-compile if the build is being done either from Chromium's src/
-  # directory, or through WebKit, in which case the WEBKIT_ANDROID_BUILD
-  # environment variable will be defined. WebKit uses a different directory.
-  if [ -f "$PWD/build/android/envsetup.sh" ] ||
-     [ -n "${WEBKIT_ANDROID_BUILD}" ]; then
-    CC="${use_ccache_var}${CROSS_CC}" CXX="${use_ccache_var}${CROSS_CXX}" \
-    LINK="${CROSS_LINK}" AR="${CROSS_AR}" RANLIB="${CROSS_RANLIB}" \
-      command make $*
-  else
-    command make $*
-  fi
-}
+# Workaround for valgrind build
+if [ -n "$CHROME_ANDROID_VALGRIND_BUILD" ]; then
+# arm_thumb=0 is a workaround for https://bugs.kde.org/show_bug.cgi?id=270709
+  DEFINES+=" arm_thumb=0 release_extra_cflags='-fno-inline\
+ -fno-omit-frame-pointer -fno-builtin' release_valgrind_build=1\
+ release_optimize=1"
+fi
+
+# Source a bunch of helper functions
+. ${CHROME_SRC}/build/android/adb_device_functions.sh
+
+ANDROID_GOMA_WRAPPER=""
+if [[ -d $GOMA_DIR ]]; then
+  ANDROID_GOMA_WRAPPER="$GOMA_DIR/gomacc"
+fi
+export ANDROID_GOMA_WRAPPER
+
+export CC_target="${ANDROID_GOMA_WRAPPER} $(echo -n ${ANDROID_TOOLCHAIN}/*-gcc)"
+export CXX_target="${ANDROID_GOMA_WRAPPER} \
+  $(echo -n ${ANDROID_TOOLCHAIN}/*-g++)"
+export LINK_target=$(echo -n ${ANDROID_TOOLCHAIN}/*-gcc)
+export AR_target=$(echo -n ${ANDROID_TOOLCHAIN}/*-ar)
 
 # Performs a gyp_chromium run to convert gyp->Makefile for android code.
 android_gyp() {
-  "${CHROME_SRC}/build/gyp_chromium" --depth="${CHROME_SRC}"
+  echo "GYP_GENERATORS set to '$GYP_GENERATORS'"
+  "${CHROME_SRC}/build/gyp_chromium" --depth="${CHROME_SRC}" --check "$@"
 }
 
-firstword() {
-  echo "${1}"
-}
-
-export CROSS_AR="$(firstword "${ANDROID_TOOLCHAIN}"/*-ar)"
-export CROSS_CC="$(firstword "${ANDROID_TOOLCHAIN}"/*-gcc)"
-export CROSS_CXX="$(firstword "${ANDROID_TOOLCHAIN}"/*-g++)"
-export CROSS_LINK="$(firstword "${ANDROID_TOOLCHAIN}"/*-gcc)"
-export CROSS_RANLIB="$(firstword "${ANDROID_TOOLCHAIN}"/*-ranlib)"
-export OBJCOPY="$(firstword "${ANDROID_TOOLCHAIN}"/*-objcopy)"
-export STRIP="$(firstword "${ANDROID_TOOLCHAIN}"/*-strip)"
-
-# The set of GYP_DEFINES to pass to gyp. Use 'readlink -e' on directories
-# to canonicalize them (remove double '/', remove trailing '/', etc).
-DEFINES="OS=android"
-DEFINES+=" android_build_type=0"  # Currently, Only '0' is supportted.
-DEFINES+=" host_os=${host_os}"
-DEFINES+=" linux_fpic=1"
-DEFINES+=" release_optimize=s"
-DEFINES+=" linux_use_tcmalloc=0"
-DEFINES+=" disable_nacl=1"
-DEFINES+=" remoting=0"
-DEFINES+=" p2p_apis=0"
-DEFINES+=" enable_touch_events=1"
-DEFINES+=" build_ffmpegsumo=0"
-# TODO(bulach): use "shared_libraries" once the transition from executable
-# is over.
-DEFINES+=" gtest_target_type=executable"
-DEFINES+=" branding=Chromium"
-
-# If the TARGET_PRODUCT wasn't set, use 'full' by default.
-if [ -z "${TARGET_PRODUCT}" ]; then
-  TARGET_PRODUCT="full"
-fi
-
-# The following defines will affect ARM code generation of both C/C++ compiler
-# and V8 mksnapshot.
-case "${TARGET_PRODUCT}" in
-  "full")
-    DEFINES+=" target_arch=arm"
-    DEFINES+=" arm_neon=0 armv7=1 arm_thumb=1 arm_fpu=vfpv3-d16"
-    ;;
-  *x86*)
-    DEFINES+=" target_arch=ia32 use_libffmpeg=0"
-    ;;
-  *)
-    echo "TARGET_PRODUCT: ${TARGET_PRODUCT} is not supported." >& 2
-    return 1
-esac
-
-export GYP_DEFINES="${DEFINES}"
-
-# Use the "android" flavor of the Makefile generator for both Linux and OS X.
-export GYP_GENERATORS="make-android"
-
-# Use our All target as the default
-export GYP_GENERATOR_FLAGS="${GYP_GENERATOR_FLAGS} default_target=All"
-
-# We want to use our version of "all" targets.
-export CHROMIUM_GYP_FILE="${CHROME_SRC}/build/all_android.gyp"
+# FLOCK needs to be null on system that has no flock
+which flock > /dev/null || export FLOCK=

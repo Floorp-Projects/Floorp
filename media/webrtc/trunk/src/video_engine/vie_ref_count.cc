@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "vie_ref_count.h"
+#include "video_engine/vie_ref_count.h"
 
-#include "critical_section_wrapper.h"
+#include "system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 
@@ -22,13 +22,13 @@ ViERefCount::ViERefCount()
 ViERefCount::~ViERefCount() {
 }
 
-ViERefCount& ViERefCount::operator++(int) {
+ViERefCount& ViERefCount::operator++(int) {  // NOLINT
   CriticalSectionScoped lock(crit_.get());
   count_++;
   return *this;
 }
 
-ViERefCount& ViERefCount::operator--(int) {
+ViERefCount& ViERefCount::operator--(int) {  // NOLINT
   CriticalSectionScoped lock(crit_.get());
   count_--;
   return *this;

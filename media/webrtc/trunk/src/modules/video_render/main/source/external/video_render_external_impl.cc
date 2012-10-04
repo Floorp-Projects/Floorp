@@ -18,7 +18,7 @@ VideoRenderExternalImpl::VideoRenderExternalImpl(
                                                  void* window,
                                                  const bool fullscreen) :
     _id(id), _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
-            _window(window), _fullscreen(fullscreen)
+            _fullscreen(fullscreen)
 {
 }
 

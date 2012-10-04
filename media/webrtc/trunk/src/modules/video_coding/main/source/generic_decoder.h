@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -38,7 +38,7 @@ public:
     virtual ~VCMDecodedFrameCallback();
     void SetUserReceiveCallback(VCMReceiveCallback* receiveCallback);
 
-    virtual WebRtc_Word32 Decoded(RawImage& decodedImage);
+    virtual WebRtc_Word32 Decoded(VideoFrame& decodedImage);
     virtual WebRtc_Word32 ReceivedDecodedReferenceFrame(const WebRtc_UWord64 pictureId);
     virtual WebRtc_Word32 ReceivedDecodedFrame(const WebRtc_UWord64 pictureId);
 

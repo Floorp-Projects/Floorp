@@ -16,6 +16,10 @@
 
 namespace webrtc {
 
+#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
+WebRtc_Word32 SetCaptureAndroidVM(void* javaVM, void* javaContext);
+#endif
+
 class VideoCaptureModule: public RefCountedModule {
  public:
   // Interface for receiving information about available camera devices.

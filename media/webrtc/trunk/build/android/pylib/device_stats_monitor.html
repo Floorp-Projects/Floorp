@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--
+ * Copyright (c) 2012 The Chromium Authors. All rights reserved.  Use of this
+ * source code is governed by a BSD-style license that can be found in the
+ * LICENSE file.
+-->
+<html>
+<head>
+  <title>Device Stats Monitor</title>
+  <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+  <style>
+  body {
+    font-family: sans-serif
+  }
+  </style>
+</head>
+<body>
+<h2>Device Stats Monitor</h2>
+<ul>
+<li>Pass path to trace data via the <code>results</code> querystring param.
+<li>Combine charts with the <code>combine</code> querystring param (e.g. <code>&combine=sectors_read,sectors_written</code>).
+<li>Use <code>stacked=true</code> to stack combined charts instead of overlaying (default).
+</ul>
+</body>
+<script>
+google.load("visualization", "1", {packages:["corechart"]});
+
+/**
+ * @returns The querystring param value for |name| or an empty string.
+ */
+function getQuerystringParam(name) {
+  name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+  var regexS = "[\\?&]" + name + "=([^&#]*)";
+  var regex = new RegExp(regexS);
+  var results = regex.exec(window.location.search);
+  if (results == null)
+    return "";
+  else
+    return decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+/**
+ * @returns An array of keys in |obj| sorted by value.
+ */
+function sortedKeys(obj) {
+  var keys = [];
+  for (var key in obj) {
+    keys.push(key);
+  }
+  keys.sort();
+  return keys;
+}
+
+/**
+ * Removes by value all params from array.
+ */
+Array.prototype.remove = function() {
+  var what, a = arguments, l = a.length, ax;
+  while (l && this.length) {
+    what = a[--l];
+    while ((ax = this.indexOf(what)) != -1) {
+      this.splice(ax, 1);
+    }
+  }
+  return this;
+}
+
+/**
+ * Displays a new chart.
+ *
+ * @param {Number} hz Number of sample per second of the data.
+ * @param {String} name Name to display on top of chart.
+ * @param {Number[][]} values Array of value arrays to display.
+ * @param {Boolean} stacked Whether to display values as stacked.
+ */
+function displayChart(hz, name, values, units, stacked) {
+  var data = new google.visualization.DataTable();
+  data.addColumn('number', 'ms');
+  var names = name.split(',');
+  for (var i = 0; i < names.length; i++) {
+    data.addColumn('number', names[i]);
+  }
+
+  var rows = [];
+  var interval = 1000.0 / hz;
+  for (var i = 0; i < values[0].length; i++) {
+    var row = [i*interval];
+    for (var j = 0; j < values.length; j++) {
+      row.push(values[j][i]);
+    }
+    rows.push(row);
+  }
+  data.addRows(rows);
+
+  var options = {
+    hAxis: {title: 'ms (' + hz + 'hz)'},
+    isStacked: stacked,
+    legend: {position: 'top'},
+    vAxis: {title: units},
+  };
+
+  var elem = document.createElement('DIV');
+  elem.style = 'width:100%;height:500px';
+  document.body.appendChild(elem);
+  var chart = new google.visualization.AreaChart(elem);
+  chart.draw(data, options);
+}
+
+/**
+ * Displays all charts.
+ *
+ * Invoked by the results script. JSONP is used to avoid security
+ * restrictions on XHRs for file:// URLs.
+ */
+function display(hz, results, units) {
+  var combine = getQuerystringParam('combine');
+  var keys = sortedKeys(results);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var name = key;
+    var values = [results[key]];
+    var unit = units[key];
+    if (combine.indexOf(key) >= 0) {
+      i--;
+      name = combine;
+      values = [];
+      var combined_keys = combine.split(',');
+      for (var j = 0; j < combined_keys.length; j++) {
+        values.push(results[combined_keys[j]]);
+        keys.remove(combined_keys[j]);
+      }
+    }
+    displayChart(hz, name, values, unit, !!getQuerystringParam('stacked'));
+  }
+}
+
+var resultsPath = getQuerystringParam('results');
+if (resultsPath)
+  document.write("<script src='" + resultsPath + "'></"+"script>");
+else
+  document.write("Please specify results querystring param.");
+</script>
+</html>

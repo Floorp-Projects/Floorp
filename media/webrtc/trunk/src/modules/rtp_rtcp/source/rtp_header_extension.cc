@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -48,7 +48,7 @@ int32_t RtpHeaderExtensionMap::Register(const RTPExtensionType type,
 int32_t RtpHeaderExtensionMap::Deregister(const RTPExtensionType type) {
   uint8_t id;
   if (GetId(type, &id) != 0) {
-    return -1;
+    return 0;
   }
   std::map<uint8_t, HeaderExtension*>::iterator it =
       extensionMap_.find(id);

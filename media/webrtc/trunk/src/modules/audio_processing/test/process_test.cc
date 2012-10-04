@@ -115,6 +115,7 @@ void usage() {
   printf("  --ns_moderate\n");
   printf("  --ns_high\n");
   printf("  --ns_very_high\n");
+  printf("  --ns_prob_file FILE\n");
   printf("\n  -vad     Voice activity detection\n");
   printf("  --vad_out_file FILE\n");
   printf("\n Level metrics (enabled by default)\n");
@@ -149,6 +150,7 @@ void void_main(int argc, char* argv[]) {
   const char* near_filename = NULL;
   const char* out_filename = NULL;
   const char* vad_out_filename = NULL;
+  const char* ns_prob_filename = NULL;
   const char* aecm_echo_path_in_filename = NULL;
   const char* aecm_echo_path_out_filename = NULL;
 
@@ -336,6 +338,11 @@ void void_main(int argc, char* argv[]) {
       ASSERT_EQ(apm->kNoError,
           apm->noise_suppression()->set_level(NoiseSuppression::kVeryHigh));
 
+    } else if (strcmp(argv[i], "--ns_prob_file") == 0) {
+      i++;
+      ASSERT_LT(i, argc) << "Specify filename after --ns_prob_file";
+      ns_prob_filename = argv[i];
+
     } else if (strcmp(argv[i], "-vad") == 0) {
       ASSERT_EQ(apm->kNoError, apm->voice_detection()->Enable(true));
 
@@ -390,6 +397,7 @@ void void_main(int argc, char* argv[]) {
   const char delay_filename[] = "apm_delay.dat";
   const char drift_filename[] = "apm_drift.dat";
   const char vad_file_default[] = "vad_out.dat";
+  const char ns_prob_file_default[] = "ns_prob.dat";
 
   if (!simulating) {
     far_filename = far_file_default;
@@ -404,6 +412,10 @@ void void_main(int argc, char* argv[]) {
     vad_out_filename = vad_file_default;
   }
 
+  if (!ns_prob_filename) {
+    ns_prob_filename = ns_prob_file_default;
+  }
+
   FILE* pb_file = NULL;
   FILE* far_file = NULL;
   FILE* near_file = NULL;
@@ -412,6 +424,7 @@ void void_main(int argc, char* argv[]) {
   FILE* delay_file = NULL;
   FILE* drift_file = NULL;
   FILE* vad_out_file = NULL;
+  FILE* ns_prob_file = NULL;
   FILE* aecm_echo_path_in_file = NULL;
   FILE* aecm_echo_path_out_file = NULL;
 
@@ -466,6 +479,12 @@ void void_main(int argc, char* argv[]) {
                                       << vad_out_file;
   }
 
+  if (apm->noise_suppression()->is_enabled()) {
+    ns_prob_file = fopen(ns_prob_filename, "wb");
+    ASSERT_TRUE(NULL != ns_prob_file) << "Unable to open NS output file "
+                                      << ns_prob_file;
+  }
+
   if (aecm_echo_path_in_filename != NULL) {
     aecm_echo_path_in_file = fopen(aecm_echo_path_in_filename, "rb");
     ASSERT_TRUE(NULL != aecm_echo_path_in_file) << "Unable to open file "
@@ -504,6 +523,7 @@ void void_main(int argc, char* argv[]) {
   int drift_samples = 0;
   int capture_level = 127;
   int8_t stream_has_voice = 0;
+  float ns_speech_prob = 0.0f;
 
   TickTime t0 = TickTime::Now();
   TickTime t1 = t0;
@@ -546,11 +566,11 @@ void void_main(int argc, char* argv[]) {
             apm->set_num_reverse_channels(msg.num_reverse_channels()));
 
         samples_per_channel = msg.sample_rate() / 100;
-        far_frame._frequencyInHz = msg.sample_rate();
-        far_frame._payloadDataLengthInSamples = samples_per_channel;
-        far_frame._audioChannel = msg.num_reverse_channels();
-        near_frame._frequencyInHz = msg.sample_rate();
-        near_frame._payloadDataLengthInSamples = samples_per_channel;
+        far_frame.sample_rate_hz_ = msg.sample_rate();
+        far_frame.samples_per_channel_ = samples_per_channel;
+        far_frame.num_channels_ = msg.num_reverse_channels();
+        near_frame.sample_rate_hz_ = msg.sample_rate();
+        near_frame.samples_per_channel_ = samples_per_channel;
 
         if (verbose) {
           printf("Init at frame: %d (primary), %d (reverse)\n",
@@ -569,8 +589,8 @@ void void_main(int argc, char* argv[]) {
 
         ASSERT_TRUE(msg.has_data());
         ASSERT_EQ(sizeof(int16_t) * samples_per_channel *
-            far_frame._audioChannel, msg.data().size());
-        memcpy(far_frame._payloadData, msg.data().data(), msg.data().size());
+            far_frame.num_channels_, msg.data().size());
+        memcpy(far_frame.data_, msg.data().data(), msg.data().size());
 
         if (perf_testing) {
           t0 = TickTime::Now();
@@ -597,12 +617,12 @@ void void_main(int argc, char* argv[]) {
         primary_count++;
 
         // ProcessStream could have changed this for the output frame.
-        near_frame._audioChannel = apm->num_input_channels();
+        near_frame.num_channels_ = apm->num_input_channels();
 
         ASSERT_TRUE(msg.has_input_data());
         ASSERT_EQ(sizeof(int16_t) * samples_per_channel *
-            near_frame._audioChannel, msg.input_data().size());
-        memcpy(near_frame._payloadData,
+            near_frame.num_channels_, msg.input_data().size());
+        memcpy(near_frame.data_,
                msg.input_data().data(),
                msg.input_data().size());
 
@@ -630,7 +650,7 @@ void void_main(int argc, char* argv[]) {
         }
         ASSERT_TRUE(err == apm->kNoError ||
                     err == apm->kBadStreamParameterWarning);
-        ASSERT_TRUE(near_frame._audioChannel == apm->num_output_channels());
+        ASSERT_TRUE(near_frame.num_channels_ == apm->num_output_channels());
 
         capture_level = apm->gain_control()->stream_analog_level();
 
@@ -641,6 +661,14 @@ void void_main(int argc, char* argv[]) {
                                sizeof(stream_has_voice),
                                1,
                                vad_out_file));
+        }
+
+        if (ns_prob_file != NULL) {
+          ns_speech_prob = apm->noise_suppression()->speech_probability();
+          ASSERT_EQ(1u, fwrite(&ns_speech_prob,
+                               sizeof(ns_speech_prob),
+                               1,
+                               ns_prob_file));
         }
 
         if (apm->gain_control()->mode() != GainControl::kAdaptiveAnalog) {
@@ -659,8 +687,8 @@ void void_main(int argc, char* argv[]) {
           }
         }
 
-        size_t size = samples_per_channel * near_frame._audioChannel;
-        ASSERT_EQ(size, fwrite(near_frame._payloadData,
+        size_t size = samples_per_channel * near_frame.num_channels_;
+        ASSERT_EQ(size, fwrite(near_frame.data_,
                                sizeof(int16_t),
                                size,
                                out_file));
@@ -700,11 +728,11 @@ void void_main(int argc, char* argv[]) {
         }
       }
 
-      far_frame._frequencyInHz = sample_rate_hz;
-      far_frame._payloadDataLengthInSamples = samples_per_channel;
-      far_frame._audioChannel = num_render_channels;
-      near_frame._frequencyInHz = sample_rate_hz;
-      near_frame._payloadDataLengthInSamples = samples_per_channel;
+      far_frame.sample_rate_hz_ = sample_rate_hz;
+      far_frame.samples_per_channel_ = samples_per_channel;
+      far_frame.num_channels_ = num_render_channels;
+      near_frame.sample_rate_hz_ = sample_rate_hz;
+      near_frame.samples_per_channel_ = samples_per_channel;
 
       if (event == kInitializeEvent || event == kResetEventDeprecated) {
         ASSERT_EQ(1u,
@@ -724,11 +752,11 @@ void void_main(int argc, char* argv[]) {
                   apm->echo_cancellation()->set_device_sample_rate_hz(
                       device_sample_rate_hz));
 
-        far_frame._frequencyInHz = sample_rate_hz;
-        far_frame._payloadDataLengthInSamples = samples_per_channel;
-        far_frame._audioChannel = num_render_channels;
-        near_frame._frequencyInHz = sample_rate_hz;
-        near_frame._payloadDataLengthInSamples = samples_per_channel;
+        far_frame.sample_rate_hz_ = sample_rate_hz;
+        far_frame.samples_per_channel_ = samples_per_channel;
+        far_frame.num_channels_ = num_render_channels;
+        near_frame.sample_rate_hz_ = sample_rate_hz;
+        near_frame.samples_per_channel_ = samples_per_channel;
 
         if (verbose) {
           printf("Init at frame: %d (primary), %d (reverse)\n",
@@ -740,7 +768,7 @@ void void_main(int argc, char* argv[]) {
         reverse_count++;
 
         size_t size = samples_per_channel * num_render_channels;
-        read_count = fread(far_frame._payloadData,
+        read_count = fread(far_frame.data_,
                            sizeof(int16_t),
                            size,
                            far_file);
@@ -778,10 +806,10 @@ void void_main(int argc, char* argv[]) {
 
       } else if (event == kCaptureEvent) {
         primary_count++;
-        near_frame._audioChannel = num_capture_input_channels;
+        near_frame.num_channels_ = num_capture_input_channels;
 
         size_t size = samples_per_channel * num_capture_input_channels;
-        read_count = fread(near_frame._payloadData,
+        read_count = fread(near_frame.data_,
                            sizeof(int16_t),
                            size,
                            near_file);
@@ -829,7 +857,7 @@ void void_main(int argc, char* argv[]) {
         }
         ASSERT_TRUE(err == apm->kNoError ||
                     err == apm->kBadStreamParameterWarning);
-        ASSERT_TRUE(near_frame._audioChannel == apm->num_output_channels());
+        ASSERT_TRUE(near_frame.num_channels_ == apm->num_output_channels());
 
         capture_level = apm->gain_control()->stream_analog_level();
 
@@ -840,6 +868,14 @@ void void_main(int argc, char* argv[]) {
                                sizeof(stream_has_voice),
                                1,
                                vad_out_file));
+        }
+
+        if (ns_prob_file != NULL) {
+          ns_speech_prob = apm->noise_suppression()->speech_probability();
+          ASSERT_EQ(1u, fwrite(&ns_speech_prob,
+                               sizeof(ns_speech_prob),
+                               1,
+                               ns_prob_file));
         }
 
         if (apm->gain_control()->mode() != GainControl::kAdaptiveAnalog) {
@@ -858,8 +894,8 @@ void void_main(int argc, char* argv[]) {
           }
         }
 
-        size = samples_per_channel * near_frame._audioChannel;
-        ASSERT_EQ(size, fwrite(near_frame._payloadData,
+        size = samples_per_channel * near_frame.num_channels_;
+        ASSERT_EQ(size, fwrite(near_frame.data_,
                                sizeof(int16_t),
                                size,
                                out_file));

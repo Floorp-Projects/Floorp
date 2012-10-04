@@ -12,8 +12,8 @@
       'type': '<(library)',
       'dependencies': [
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
-        '<(webrtc_root)/../testing/gtest.gyp:gtest',
-        '<(webrtc_root)/../test/test.gyp:test_support',
+        '<(DEPTH)/testing/gtest.gyp:gtest',
+        '<(webrtc_root)/test/test.gyp:test_support',
         'video_engine_core',
       ],
       'direct_dependent_settings': {
@@ -27,14 +27,10 @@
       ],
       'sources': [
         # Helper classes
-        'include/bit_flip_encryption.h',
-        'include/random_encryption.h',
         'include/vie_fake_camera.h',
         'include/vie_file_capture_device.h',
         'include/vie_to_file_renderer.h',
 
-        'helpers/bit_flip_encryption.cc',
-        'helpers/random_encryption.cc',
         'helpers/vie_fake_camera.cc',
         'helpers/vie_file_capture_device.cc',
         'helpers/vie_to_file_renderer.cc',

@@ -69,9 +69,12 @@ struct VCMFrameCount {
 class VCMPacketizationCallback {
  public:
   virtual WebRtc_Word32 SendData(
-      const FrameType frameType, const WebRtc_UWord8 payloadType,
-      const WebRtc_UWord32 timeStamp, const WebRtc_UWord8* payloadData,
-      const WebRtc_UWord32 payloadSize,
+      FrameType frameType,
+      WebRtc_UWord8 payloadType,
+      WebRtc_UWord32 timeStamp,
+      int64_t capture_time_ms,
+      const WebRtc_UWord8* payloadData,
+      WebRtc_UWord32 payloadSize,
       const RTPFragmentationHeader& fragmentationHeader,
       const RTPVideoHeader* rtpVideoHdr) = 0;
  protected:

@@ -10,12 +10,6 @@
   'includes': [
     '../build/common.gypi',
     'audio_coding/codecs/cng/cng.gypi',
-    'audio_coding/codecs/g711/g711.gypi',
-    'audio_coding/codecs/g722/g722.gypi',
-    'audio_coding/codecs/ilbc/ilbc.gypi',
-    'audio_coding/codecs/iSAC/main/source/isac.gypi',
-    'audio_coding/codecs/iSAC/fix/source/isacfix.gypi',
-    'audio_coding/codecs/pcm16b/pcm16b.gypi',
     'audio_coding/main/source/audio_coding_module.gypi',
     'audio_coding/neteq/neteq.gypi',
     'audio_conference_mixer/source/audio_conference_mixer.gypi',
@@ -26,12 +20,12 @@
     'audio_processing/agc/agc.gypi',
     'audio_processing/ns/ns.gypi',
     'audio_processing/utility/util.gypi',
+    'bitrate_controller/bitrate_controller.gypi',
     'media_file/source/media_file.gypi',
+    'remote_bitrate_estimator/remote_bitrate_estimator.gypi',
     'udp_transport/source/udp_transport.gypi',
     'utility/source/utility.gypi',
     'video_coding/codecs/i420/main/source/i420.gypi',
-    'video_coding/codecs/test_framework/test_framework.gypi',
-    'video_coding/codecs/vp8/main/source/vp8.gypi',
     'video_coding/main/source/video_coding.gypi',
     'video_capture/main/source/video_capture.gypi',
     'video_processing/main/source/video_processing.gypi',
@@ -39,15 +33,44 @@
     'rtp_rtcp/source/rtp_rtcp.gypi',
   ],
 
-  # Test targets, excluded when building with Chromium.
   'conditions': [
-    ['build_with_chromium==0 and build_with_mozilla==0', {
+    ['codec_g711_enable!=0', {
       'includes': [
-        'audio_coding/codecs/iSAC/isac_test.gypi',
-        'audio_coding/codecs/iSAC/isacfix_test.gypi',
+        'audio_coding/codecs/g711/g711.gypi',
+      ],
+    }],
+    ['codec_g722_enable!=0', {
+      'includes': [
+        'audio_coding/codecs/g722/g722.gypi',
+      ],
+    }],
+    ['codec_ilbc_enable!=0', {
+      'includes': [
+        'audio_coding/codecs/ilbc/ilbc.gypi',
+      ],
+    }],
+    ['codec_isac_enable!=0', {
+      'includes': [
+        'audio_coding/codecs/isac/main/source/isac.gypi',
+        'audio_coding/codecs/isac/fix/source/isacfix.gypi',
+      ],
+    }],
+    ['codec_opus_enable!=0', {
+      'includes': [
+        'audio_coding/codecs/opus/opus.gypi',
+      ],
+    }],
+    ['codec_pcm16b_enable!=0', {
+      'includes': [
+        'audio_coding/codecs/pcm16b/pcm16b.gypi',
+      ],
+    }],
+    ['include_tests==1', {
+      'includes': [
+        'audio_coding/codecs/isac/isac_test.gypi',
+        'audio_coding/codecs/isac/isacfix_test.gypi',
         'audio_processing/apm_tests.gypi',
         'rtp_rtcp/source/rtp_rtcp_tests.gypi',
-        'rtp_rtcp/test/test_bwe/test_bwe.gypi',
         'rtp_rtcp/test/testFec/test_fec.gypi',
         'rtp_rtcp/test/testAPI/test_api.gypi',
         'video_coding/main/source/video_coding_test.gypi',
@@ -55,6 +78,6 @@
         'video_coding/codecs/tools/video_codecs_tools.gypi',
         'video_processing/main/test/vpm_tests.gypi',
       ], # includes
-    }], # build_with_chromium
+    }], # include_tests
   ], # conditions
 }

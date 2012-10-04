@@ -23,7 +23,7 @@ LOCAL_SRC_FILES := \
     nsx_core.c
 
 # Files for floating point.
-# noise_suppression.c ns_core.c 
+# noise_suppression.c ns_core.c
 
 # Flags passed to both C and C++ files.
 LOCAL_CFLAGS := $(MY_WEBRTC_COMMON_DEFS)
@@ -57,8 +57,20 @@ LOCAL_ARM_MODE := arm
 LOCAL_MODULE_CLASS := STATIC_LIBRARIES
 LOCAL_MODULE := libwebrtc_ns_neon
 LOCAL_MODULE_TAGS := optional
+GEN := $(LOCAL_PATH)/nsx_core_neon_offsets.h
 
-LOCAL_SRC_FILES := nsx_core_neon.c
+# Generate a header file nsx_core_neon_offsets.h which will be included in
+# assembly file nsx_core_neon.S, from file nsx_core_neon_offsets.c.
+$(GEN): $(LOCAL_PATH)/../../../../src/build/generate_asm_header.py \
+            $(intermediates)/nsx_core_neon_offsets.S
+	@python $^ $@ offset_nsx_
+
+$(intermediates)/nsx_core_neon_offsets.S: $(LOCAL_PATH)/nsx_core_neon_offsets.c
+	@$(TARGET_CC) $(addprefix -I, $(LOCAL_INCLUDES)) $(addprefix -isystem ,\
+            $(TARGET_C_INCLUDES)) -S -o $@ $^
+
+LOCAL_GENERATED_SOURCES := $(GEN)
+LOCAL_SRC_FILES := nsx_core_neon.S
 
 # Flags passed to both C and C++ files.
 LOCAL_CFLAGS := \
@@ -71,6 +83,8 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/include \
     $(LOCAL_PATH)/../../.. \
     $(LOCAL_PATH)/../../../common_audio/signal_processing/include
+
+LOCAL_INCLUDES := $(LOCAL_C_INCLUDES)
 
 ifndef NDK_ROOT
 include external/stlport/libstlport.mk

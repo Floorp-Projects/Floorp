@@ -8,12 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_COMMONT_AUDIO_VAD_VAD_UNIT_TESTS_H
-#define WEBRTC_COMMONT_AUDIO_VAD_VAD_UNIT_TESTS_H
+#ifndef WEBRTC_COMMON_AUDIO_VAD_VAD_UNITTEST_H
+#define WEBRTC_COMMON_AUDIO_VAD_VAD_UNITTEST_H
 
 #include <stddef.h>  // size_t
 
 #include "gtest/gtest.h"
+
 #include "typedefs.h"
 
 namespace {
@@ -23,12 +24,12 @@ const int kModes[] = { 0, 1, 2, 3 };
 const size_t kModesSize = sizeof(kModes) / sizeof(*kModes);
 
 // Rates we support.
-const int16_t kRates[] = { 8000, 12000, 16000, 24000, 32000 };
+const int kRates[] = { 8000, 12000, 16000, 24000, 32000 };
 const size_t kRatesSize = sizeof(kRates) / sizeof(*kRates);
 
 // Frame lengths we support.
-const int16_t kMaxFrameLength = 960;
-const int16_t kFrameLengths[] = { 80, 120, 160, 240, 320, 480, 640,
+const int kMaxFrameLength = 960;
+const int kFrameLengths[] = { 80, 120, 160, 240, 320, 480, 640,
     kMaxFrameLength };
 const size_t kFrameLengthsSize = sizeof(kFrameLengths) / sizeof(*kFrameLengths);
 
@@ -41,7 +42,7 @@ class VadTest : public ::testing::Test {
   virtual void TearDown();
 
   // Returns true if the rate and frame length combination is valid.
-  bool ValidRatesAndFrameLengths(int16_t rate, int16_t frame_length);
+  bool ValidRatesAndFrameLengths(int rate, int frame_length);
 };
 
-#endif  // WEBRTC_COMMONT_AUDIO_VAD_VAD_UNIT_TESTS_H
+#endif  // WEBRTC_COMMON_AUDIO_VAD_VAD_UNITTEST_H

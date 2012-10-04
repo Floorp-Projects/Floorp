@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -13,7 +13,7 @@ import shlex
 import subprocess
 import sys
 
-script_dir = os.path.dirname(__file__)
+script_dir = os.path.dirname(os.path.realpath(__file__))
 chrome_src = os.path.abspath(os.path.join(script_dir, os.pardir))
 
 sys.path.insert(0, os.path.join(chrome_src, 'tools', 'gyp', 'pylib'))
@@ -22,6 +22,7 @@ import gyp
 # Add paths so that pymod_do_main(...) can import files.
 sys.path.insert(1, os.path.join(chrome_src, 'tools', 'grit'))
 sys.path.insert(1, os.path.join(chrome_src, 'chrome', 'tools', 'build'))
+sys.path.insert(1, os.path.join(chrome_src, 'native_client', 'build'))
 
 
 # On Windows, Psyco shortens warm runs of build/gyp_chromium by about
@@ -55,11 +56,14 @@ def apply_gyp_environment(file_path=None):
   except SyntaxError, e:
     e.filename = os.path.abspath(file_path)
     raise
-  supported_vars = ( 'CHROMIUM_GYP_FILE',
+  supported_vars = ( 'CC',
+                     'CHROMIUM_GYP_FILE',
                      'CHROMIUM_GYP_SYNTAX_CHECK',
+                     'CXX',
                      'GYP_DEFINES',
                      'GYP_GENERATOR_FLAGS',
-                     'GYP_GENERATOR_OUTPUT', )
+                     'GYP_GENERATOR_OUTPUT',
+                     'GYP_GENERATORS', )
   for var in supported_vars:
     val = file_data.get(var)
     if val:
