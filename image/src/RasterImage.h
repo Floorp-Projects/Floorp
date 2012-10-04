@@ -33,6 +33,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/WeakPtr.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -136,7 +137,7 @@ class Decoder;
 
 class RasterImage : public Image
                   , public nsIProperties
-                  , public nsSupportsWeakReference
+                  , public SupportsWeakPtr<RasterImage>
 #ifdef DEBUG
                   , public imgIContainerDebug
 #endif
@@ -811,18 +812,17 @@ protected:
 class imgDecodeRequestor : public nsRunnable
 {
   public:
-    imgDecodeRequestor(imgIContainer *aContainer) {
-      mContainer = do_GetWeakReference(aContainer);
+    imgDecodeRequestor(RasterImage &aContainer) {
+      mContainer = aContainer.asWeakPtr();
     }
     NS_IMETHOD Run() {
-      nsCOMPtr<imgIContainer> con = do_QueryReferent(mContainer);
-      if (con)
-        con->RequestDecode();
+      if (mContainer)
+        mContainer->RequestDecode();
       return NS_OK;
     }
 
   private:
-    nsWeakPtr mContainer;
+    WeakPtr<RasterImage> mContainer;
 };
 
 } // namespace image
