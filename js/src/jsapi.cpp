@@ -7266,9 +7266,10 @@ AssertArgumentsAreSane(JSContext *cx, const JS::Value &value)
 } // namespace JS
 
 JS_PUBLIC_API(void *)
-JS_EncodeScript(JSContext *cx, JSScript *script, uint32_t *lengthp)
+JS_EncodeScript(JSContext *cx, JSRawScript scriptArg, uint32_t *lengthp)
 {
     XDREncoder encoder(cx);
+    RootedScript script(cx, scriptArg);
     if (!encoder.codeScript(&script))
         return NULL;
     return encoder.forgetData(lengthp);
@@ -7289,7 +7290,7 @@ JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,
                 JSPrincipals *principals, JSPrincipals *originPrincipals)
 {
     XDRDecoder decoder(cx, data, length, principals, originPrincipals);
-    JSScript *script;
+    RootedScript script(cx);
     if (!decoder.codeScript(&script))
         return NULL;
     return script;
