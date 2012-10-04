@@ -1,0 +1,27 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <title>Test for gradients being positioned correctly within filters</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=797708 -->
+
+  <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="100" y1="0" x2="200" y2="0">
+    <stop offset="0" stop-color="red"/>
+    <stop offset="0.5" stop-color="red"/>
+    <stop offset="0.5" stop-color="blue"/>
+    <stop offset="1" stop-color="blue"/>
+  </linearGradient>
+
+  <filter id="f">
+    <feMerge>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+
+  <g style="font: bold 32px sans-serif; fill: url(#g); text-anchor: middle; filter: url(#f)">
+    <text x="125" y="100">hi</text>
+    <text x="175" y="100">hi</text>
+  </g>
+</svg>
