@@ -98,6 +98,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/gfx/Tools.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -4882,7 +4883,49 @@ nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 
   *rect = rect->Union(aRect);
 }
-  
+
+/*static*/ uint8_t nsIFrame::sLayerIsPrerenderedDataKey;
+
+bool
+nsIFrame::TryUpdateTransformOnly()
+{
+  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(
+    this, nsDisplayItem::TYPE_TRANSFORM);
+  if (!layer || !layer->HasUserData(LayerIsPrerenderedDataKey())) {
+    // If this layer isn't prerendered or we clip composites to our OS
+    // window, then we can't correctly optimize to an empty
+    // transaction in general.
+    return false;
+  }
+
+  gfx3DMatrix transform3d;
+  if (!nsLayoutUtils::GetLayerTransformForFrame(this, &transform3d)) {
+    // We're not able to compute a layer transform that we know would
+    // be used at the next layers transaction, so we can't only update
+    // the transform and will need to schedule an invalidating paint.
+    return false;
+  }
+  gfxMatrix transform, previousTransform;
+  // FIXME/bug 796690 and 796705: in general, changes to 3D
+  // transforms, or transform changes to properties other than
+  // translation, may lead us to choose a different rendering
+  // resolution for our layer.  So if the transform is 3D or has a
+  // non-translation change, bail and schedule an invalidating paint.
+  // (We can often do better than this, for example for scale-down
+  // changes.)
+ static const gfx::Float kError = 0.0001;
+  if (!transform3d.Is2D(&transform) ||
+      !layer->GetTransform().Is2D(&previousTransform) ||
+      !gfx::FuzzyEqual(transform.xx, previousTransform.xx, kError) ||
+      !gfx::FuzzyEqual(transform.yy, previousTransform.yy, kError) ||
+      !gfx::FuzzyEqual(transform.xy, previousTransform.xy, kError) ||
+      !gfx::FuzzyEqual(transform.yx, previousTransform.yx, kError)) {
+    return false;
+  }
+  layer->SetBaseTransformForNextTransaction(transform3d);
+  return true;
+}
+
 bool 
 nsIFrame::IsInvalid(nsRect& aRect)
 {

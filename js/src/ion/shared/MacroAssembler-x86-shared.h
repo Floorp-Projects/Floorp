@@ -375,6 +375,13 @@ class MacroAssemblerX86Shared : public Assembler
         return true;
     }
 
+    bool buildOOLFakeExitFrame(void *fakeReturnAddr) {
+        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
+        Push(Imm32(descriptor));
+        Push(ImmWord(fakeReturnAddr));
+        return true;
+    }
+
     void callWithExitFrame(IonCode *target) {
         uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
         Push(Imm32(descriptor));

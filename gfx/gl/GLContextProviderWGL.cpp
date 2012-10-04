@@ -219,7 +219,7 @@ WGLLibrary::EnsureInitialized(bool aUseMesaLlvmPipe)
         int attribs[] = {
             LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
             LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
-            NULL
+            0
         };
 
         mWindowGLContext = fCreateContextAttribs(mWindowDC, NULL, attribs);
@@ -503,10 +503,8 @@ GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         if (!newbuf)
             return false;
 
-        bool isCurrent = false;
         if (sWGLLib[mLibType].fGetCurrentContext() == mContext) {
             sWGLLib[mLibType].fMakeCurrent(NULL, NULL);
-            isCurrent = true;
         }
 
         sWGLLib[mLibType].fDestroyPbuffer(mPBuffer);
@@ -558,7 +556,7 @@ GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
         int attribs[] = {
             LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
             LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
-            NULL
+            0
         };
 
         context = sWGLLib[libToUse].fCreateContextAttribs(dc,
@@ -678,7 +676,7 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
         int attribs[] = {
             LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
             LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
-            NULL
+            0
         };
 
         context = sWGLLib[aLibToUse].fCreateContextAttribs(pbdc, nullptr, attribs);
@@ -688,7 +686,7 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
 
     if (!context) {
         sWGLLib[aLibToUse].fDestroyPbuffer(pbuffer);
-        return false;
+        return nullptr;
     }
 
     nsRefPtr<GLContextWGL> glContext = new GLContextWGL(aFormat,
@@ -724,7 +722,7 @@ CreateWindowOffscreenContext(const ContextFormat& aFormat,
         int attribs[] = {
             LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
             LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
-            NULL
+            0
         };
 
         context = sWGLLib[libToUse].fCreateContextAttribs(dc, shareContext->Context(), attribs);
@@ -821,7 +819,7 @@ GLContextProviderWGL::GetGlobalContext(const ContextFlags aFlags)
         if (!gGlobalContext[libToUse]->Init()) {
             NS_WARNING("Global context GLContext initialization failed?");
             gGlobalContext[libToUse] = nullptr;
-            return false;
+            return nullptr;
         }
 
         gGlobalContext[libToUse]->SetIsGlobalSharedContext(true);

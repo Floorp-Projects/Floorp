@@ -67,37 +67,6 @@ const SEARCH_ENGINES = {
            "7GUnpHbrbG8EzsfWfwgwAEfC/ToQIhkhAAAAAElFTkSuQmCC"
   , params: "source=hp&channel=np"
   }
-
-, "Яндекс":
-  {
-    image: "data:image/png;base64," +
-           "iVBORw0KGgoAAAANSUhEUgAAAEYAAAAcCAYAAADcO8kVAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ" +
-           "bWFnZVJlYWR5ccllPAAABWFJREFUeNrsWWtsVEUUnltLH7tbaeuDbfCBojUoBTGmooLE+Igx+gON" +
-           "RvEJhEQNUdEYA0Ji4xNf2Bg1iBJJrGBC+CEBNYoxxmh94CMKRE2MitBqoZRi6bbdZT3TfhM/TmZ2" +
-           "u5jGsOEkX8/0ztzp3HPP4zu3UTabNUfEI9YwgzAxjUbBGkG7IAv0CwYE53rWC+KChFloRh329igN" +
-           "zD8keJR+P2DvEbgnrjp4eWT65GerSZuU6FWii9Fj5pGHvC6ow/WpdP1C7SV3Bm18eNpDG2a0oA0P" +
-           "v0qFSn3IMPOKxChsmBJ1/TpBEuNn1NxRB8XOoJSYRabfrCiG0FGiDXMZ9HeC73PfGpkOST0vmYGi" +
-           "LEraMCdB/5jP46xhnhaj7C3Sal2qjFSDcU8eb4m2m4xpHvKWYwSTBd2Cr1HBrIwVnCXYIdiiNrDh" +
-           "Wi8YQLVzZ+mDt/ar9acK5gqOE6wTvKvmE4JzsN83ghSu1+AMMcGngr/pnnHYM4nzrRX8EapKm5Fc" +
-           "3/bwlAn/Jt/EtJdNmdvidjxcpyrjT+D6Fx7LPoA5jf3ktU5metY9rtZcRHNn0vV3cO0rtf6GwN9v" +
-           "DCXfX6AbVLL1hJJOxIM6UtwnJG7ORuIaMl5W7W297g2MmwR3YLxQcDmty3jOdongCrrXyRTBaoyf" +
-           "x5qdgjZ4qzfHbCQ3mzXcChcYH8hhIGf0zwQ3Ch6k8/Ae9yEM3hc8LFguWIm5uwIvwYXhPdA2RNbT" +
-           "/BLoFsECwXsw1gUIZa9h7NvZivGLgkk010eHjv5jbitXD1HiWVMhuB7jDXR9E/R0Qa3nPvvmTxZc" +
-           "7fGWyQhNK6/R9b8Ev4aSr0HyunWQ3Q/li8/hdh8JTiOD+DpPa7jegHtriUN35zDMRMEJGH9J17dB" +
-           "18KzO9V9NvndjbH1sB9objp0u+CT4VYlJ5txKLvpDMFsIJ/EwYOs9bsEp+RYeyz0nx7y6ORsGu8K" +
-           "EM2kx1ts7rkXL+YxNd8I/TOcoCDDOB5jY/Fj/P4cEmVTjr0SlKNCOcjJ8fQgodAcQ/d/i/BLK8Oo" +
-           "ZtYcLVgGD1wq2K7mx0LvKITHaFlCbny/oI4M43uQDJJkL3KH5RWnB/auh96ax9AGnKQdoZNAyO4T" +
-           "VHv4VobC+XzPntWUMgpivtwzufbgWbVpSHYh4V0DnrA6YETrCWdgvGUYIboX9KEahqlFcq0GT2HZ" +
-           "jwrXBW4zJ/C8FYdqmEWUb94aZniUUbXJVbmm0N6/5zjbPnohcfKePiDlSfBJeO0r9Bx8pi7oEw/F" +
-           "MPMp8S0roARHar+QYS6FXp9nv230dicVcA7LaZoxHo/ncfIbEdi6Qgxje4vFRL5aRqA/uxn6Vc9c" +
-           "muK/lXqeuQXsPwZMdi0RPedxH1AFva0QwyygavDkCBjlFuy/HJWhksLQgOVyxWqh3mYx7RND2Pi8" +
-           "0n1+baawmU9e2o6x/XR7raIQVb4mskGQQaO4ydNENlATeTE1kXOQc/agXDpZqhq42dQL2US9G1Wl" +
-           "G5XEzaWJbyTBddzcTuSmAYTMOKybQWsmeppIbk5nqcbxJ1RHO37B10TeRL3KU543kUKF0J8leqgq" +
-           "8ae8PdAd6ltPL954LXQV/m4HEbgaYqjT6KNZHWhAKd5+mzpDN4WflUdw5koweitv4lldX2QpxQSc" +
-           "/UOfx9jvvTHBKP+/RmKRoHwIiYg8pgQJsszTKFYSV2qC0VcShyqnqlEKRpolqsAyFfnpKmLOnOgr" +
-           "VAVirhYnYzsZLbgSe57nwtL375N8H+Oy3H2qKpAKEL5eVc65E04rD2NW66uWrUDobKnAnPs7PR5+" +
-           "tLFQHjMS0knhEZLdim/8bxId+RetX/4RYACXlwEEPBQycwAAAABJRU5ErkJggg=="
-  }
 };
 
 // The process of adding a new default snippet involves:

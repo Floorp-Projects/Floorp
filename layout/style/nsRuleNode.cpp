@@ -913,7 +913,7 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
     const nsCSSValueGradientStop &valueStop = gradient->mStops[i];
 
     if (!SetCoord(valueStop.mLocation, stop.mLocation,
-                  nsStyleCoord(), SETCOORD_LPO,
+                  nsStyleCoord(), SETCOORD_LPO | SETCOORD_STORE_CALC,
                   aContext, aPresContext, aCanStoreInRuleTree)) {
       NS_NOTREACHED("unexpected unit for gradient stop location");
     }

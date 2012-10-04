@@ -17,13 +17,14 @@
 #include "nsIFaviconService.h" 
 #include "nsIDownloader.h"
 
+#include "mozilla/Attributes.h"
 
 class nsWindow;
 
 namespace mozilla {
 namespace widget {
 
-class myDownloadObserver: public nsIDownloadObserver
+class myDownloadObserver MOZ_FINAL : public nsIDownloadObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -216,7 +217,7 @@ private:
   static bool VistaCreateItemFromParsingNameInit();
 };
 
-class AsyncFaviconDataReady : public nsIFaviconDataCallback
+class AsyncFaviconDataReady MOZ_FINAL : public nsIFaviconDataCallback
 {
 public:
   NS_DECL_ISUPPORTS

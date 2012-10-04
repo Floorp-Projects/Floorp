@@ -114,7 +114,7 @@ FocusManager::IsInOrContainsFocus(const Accessible* aAccessible) const
 void
 FocusManager::NotifyOfDOMFocus(nsISupports* aTarget)
 {
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
     logging::FocusNotificationTarget("DOM focus", "Target", aTarget);
 #endif
@@ -142,7 +142,7 @@ FocusManager::NotifyOfDOMFocus(nsISupports* aTarget)
 void
 FocusManager::NotifyOfDOMBlur(nsISupports* aTarget)
 {
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
     logging::FocusNotificationTarget("DOM blur", "Target", aTarget);
 #endif
@@ -166,7 +166,7 @@ FocusManager::NotifyOfDOMBlur(nsISupports* aTarget)
 void
 FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive)
 {
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
     logging::FocusNotificationTarget("active item changed", "Item", aItem);
 #endif
@@ -179,7 +179,7 @@ FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive)
 
   if (aItem && aCheckIfActive) {
     Accessible* widget = aItem->ContainerWidget();
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eFocus))
       logging::ActiveWidget(widget);
 #endif
@@ -221,7 +221,7 @@ FocusManager::DispatchFocusEvent(DocAccessible* aDocument,
                    eAutoDetect, AccEvent::eCoalesceOfSameType);
     aDocument->FireDelayedAccessibleEvent(event);
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eFocus))
       logging::FocusDispatched(aTarget);
 #endif
@@ -231,7 +231,7 @@ FocusManager::DispatchFocusEvent(DocAccessible* aDocument,
 void
 FocusManager::ProcessDOMFocus(nsINode* aTarget)
 {
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
     logging::FocusNotificationTarget("process DOM focus", "Target", aTarget);
 #endif
@@ -322,7 +322,7 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
     mActiveARIAMenubar = nullptr;
   }
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
     logging::FocusNotificationTarget("fire focus event", "Target", target);
 #endif

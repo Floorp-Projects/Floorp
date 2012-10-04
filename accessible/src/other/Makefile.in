@@ -44,3 +44,6 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../xul \
   $(NULL)
 
+ifneq ($(A11Y_LOG),0)
+  DEFINES += -DA11Y_LOG
+endif
