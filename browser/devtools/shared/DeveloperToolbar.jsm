@@ -699,7 +699,7 @@ Object.defineProperty(OutputPanel.prototype, 'scrollbarWidth', {
     return this.__scrollbarWidth;
   },
   enumerable: true
-};
+});
 
 /**
  * Prevent the popup from hiding if it is not permitted via this.canHide.
