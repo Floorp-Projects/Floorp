@@ -49,6 +49,7 @@ CPPSRCS += \
 	WebGLContextReporter.cpp \
 	WebGLContextValidate.cpp \
 	WebGLTexelConversions.cpp \
+	WebGLTexture.cpp \
 	WebGLElementArrayCache.cpp \
 	WebGLExtensionBase.cpp \
 	WebGLExtensionCompressedTextureATC.cpp \

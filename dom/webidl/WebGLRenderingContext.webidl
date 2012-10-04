@@ -59,7 +59,8 @@ interface WebGLRenderbuffer;
 
 interface WebGLShader;
 
-interface WebGLTexture;
+interface WebGLTexture {
+};
 
 interface WebGLUniformLocation {
 };
@@ -499,6 +500,7 @@ interface WebGLRenderingContext {
 
     sequence<DOMString>? getSupportedExtensions();
 
+    [Throws]
     object? getExtension(DOMString name);
 
     void activeTexture(GLenum texture);
