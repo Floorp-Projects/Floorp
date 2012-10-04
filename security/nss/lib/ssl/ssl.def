@@ -151,6 +151,8 @@ SSL_VersionRangeGetDefault;
 SSL_VersionRangeGetSupported;
 SSL_VersionRangeSet;
 SSL_VersionRangeSetDefault;
+SSL_GetSRTPCipher;
+SSL_SetSRTPCiphers;
 ;+    local:
 ;+*;
 ;+};

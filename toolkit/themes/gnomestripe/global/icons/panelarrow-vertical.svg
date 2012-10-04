@@ -6,6 +6,8 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      width="20"
      height="10">
-  <path d="M 0,10 L 10,0 20,10 z"
+  <path d="M -0.2,10 L 10,-0.2 20.2,10 z"
+        fill="ThreeDShadow"/>
+  <path d="M 1.2,10 L 10,1.2 18.8,10 z"
         fill="-moz-Dialog"/>
 </svg>

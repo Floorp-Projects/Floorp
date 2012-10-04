@@ -794,8 +794,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   // mPluginInstance->Stop calls mPStreamListener->CleanUpStream(), so stream will be properly clean up
   mPluginInstance->Stop();
   mPluginInstance->Start();
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  mPluginInstance->GetOwner(getter_AddRefs(owner));
+  nsRefPtr<nsPluginInstanceOwner> owner = mPluginInstance->GetOwner();
   if (owner) {
     NPWindow* window = nullptr;
     owner->GetWindow(window);
@@ -1252,8 +1251,7 @@ nsPluginStreamListenerPeer::GetInterfaceGlobal(const nsIID& aIID, void** result)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  mPluginInstance->GetOwner(getter_AddRefs(owner));
+  nsRefPtr<nsPluginInstanceOwner> owner = mPluginInstance->GetOwner();
   if (owner) {
     nsCOMPtr<nsIDocument> doc;
     nsresult rv = owner->GetDocument(getter_AddRefs(doc));

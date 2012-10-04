@@ -1533,11 +1533,18 @@ MarionetteDriverActor.prototype = {
         break;
       case "Marionette:switchToFrame":
         // Switch to a remote frame.
+        let thisWin = this.getCurrentWindow();
+        let frameWindow = thisWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindowUtils)
+                                 .getOuterWindowWithId(message.json.win);
+        let thisFrame = frameWindow.document.getElementsByTagName("iframe")[message.json.frame];
+        let mm = thisFrame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager
 
+        // See if this frame already has our frame script loaded in it; if so,
+        // just wake it up.
         for (let i = 0; i < remoteFrames.length; i++) {
           let frame = remoteFrames[i];
-          if ((frame.windowId == message.json.win) && (frame.frameId == message.json.frame)) {
-            // The frame script has already been loaded in this frame, so just wake it up.
+          if ((frame.messageManager == mm)) {
             this.currentRemoteFrame = frame;
             this.messageManager = frame.messageManager;
             this.addMessageManagerListeners(this.messageManager);
@@ -1548,12 +1555,6 @@ MarionetteDriverActor.prototype = {
 
         // Load the frame script in this frame, and set the frame's ChromeMessageSender
         // as the active message manager.
-        let thisWin = this.getCurrentWindow();
-        let frameWindow = thisWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindowUtils)
-                                 .getOuterWindowWithId(message.json.win);
-        let thisFrame = frameWindow.document.getElementsByTagName("iframe")[message.json.frame];
-        let mm = thisFrame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager
         this.addMessageManagerListeners(mm);
         mm.loadFrameScript(FRAME_SCRIPT, true);
         this.messageManager = mm;
@@ -1571,7 +1572,8 @@ MarionetteDriverActor.prototype = {
                                    .getInterface(Ci.nsIDOMWindowUtils)
                                    .getOuterWindowWithId(message.json.value);
 
-        if (listenerWindow.location.href != message.json.href) {
+        if ((listenerWindow.location.href != message.json.href) &&
+            (this.currentRemoteFrame !== null)) {
           // If there is a mismatch between the calculated href and the one
           // sent from the frame script, it means that the frame script is
           // running in a separate process.  Currently this only happens

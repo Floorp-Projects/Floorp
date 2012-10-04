@@ -621,7 +621,7 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj_,
 }
 
 void
-GlobalDebuggees_finalize(FreeOp *fop, JSObject *obj)
+GlobalDebuggees_finalize(FreeOp *fop, RawObject obj)
 {
     fop->delete_((GlobalObject::DebuggerVector *) obj->getPrivate());
 }

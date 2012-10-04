@@ -387,6 +387,7 @@ pref("dom.ipc.browser_frames.oop_by_default", false);
 
 // Temporary permission hack for WebSMS
 pref("dom.sms.enabled", true);
+pref("dom.sms.strict7BitEncoding", false); // Disabled by default.
 
 // Temporary permission hack for WebContacts
 pref("dom.mozContacts.enabled", true);
@@ -450,8 +451,8 @@ pref("marionette.defaultPrefs.port", 2828);
 pref("shutdown.watchdog.timeoutSecs", 5);
 // Timeout before the update prompt automatically installs the update
 pref("b2g.update.apply-prompt-timeout", 60000); // milliseconds
-// Optional timeout the user can wait before getting another update prompt
-pref("b2g.update.apply-wait-timeout", 1800000); // milliseconds
+// Amount of time to wait after the user is idle before prompting to apply an update
+pref("b2g.update.apply-idle-timeout", 600000); // milliseconds
 // Amount of time the updater waits for the process to exit cleanly before
 // forcefully exiting the process
 pref("b2g.update.self-destruct-timeout", 5000); // milliseconds
@@ -543,9 +544,9 @@ pref("hal.processPriorityManager.gonk.backgroundNice", 10);
 #ifndef DEBUG
 // Enable pre-launching content processes for improved startup time
 // (hiding latency).
-pref("dom.ipc.processPrelauch.enabled", true);
+pref("dom.ipc.processPrelaunch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
-pref("dom.ipc.processPrelauch.delayMs", 1000);
+pref("dom.ipc.processPrelaunch.delayMs", 1000);
 #endif
 
 // Ignore the "dialog=1" feature in window.open.
@@ -575,3 +576,7 @@ pref("browser.prompt.allowNative", false);
 // they are handled separately. This pref is only read once at startup:
 // a restart is required to enable a new value.
 pref("network.activity.blipIntervalMilliseconds", 250);
+
+// Send some sites a custom user-agent.
+pref("general.useragent.override.facebook.com", "\(Mobile#(Android; Mobile");
+pref("general.useragent.override.youtube.com", "\(Mobile#(Android; Mobile");

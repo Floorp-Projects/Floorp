@@ -1063,7 +1063,6 @@ private:
         float x, y, width, height;
     };
 
-    typedef uintptr_t PtrBits;
     enum { BLOCK_SIZE_BITS = 7, BLOCK_SIZE = 1 << BLOCK_SIZE_BITS }; // 128-glyph blocks
 
     class GlyphWidths {
@@ -1073,7 +1072,7 @@ private:
             uint32_t block = aIndex >> BLOCK_SIZE_BITS;
             if (block >= mBlocks.Length())
                 return INVALID_WIDTH;
-            PtrBits bits = mBlocks[block];
+            uintptr_t bits = mBlocks[block];
             if (!bits)
                 return INVALID_WIDTH;
             uint32_t indexInBlock = aIndex & (BLOCK_SIZE - 1);
@@ -1091,19 +1090,19 @@ private:
         ~GlyphWidths();
 
     private:
-        static uint32_t GetGlyphOffset(PtrBits aBits) {
+        static uint32_t GetGlyphOffset(uintptr_t aBits) {
             NS_ASSERTION(aBits & 0x1, "This is really a pointer...");
             return (aBits >> 1) & ((1 << BLOCK_SIZE_BITS) - 1);
         }
-        static uint32_t GetWidth(PtrBits aBits) {
+        static uint32_t GetWidth(uintptr_t aBits) {
             NS_ASSERTION(aBits & 0x1, "This is really a pointer...");
             return aBits >> (1 + BLOCK_SIZE_BITS);
         }
-        static PtrBits MakeSingle(uint32_t aGlyphOffset, uint16_t aWidth) {
+        static uintptr_t MakeSingle(uint32_t aGlyphOffset, uint16_t aWidth) {
             return (aWidth << (1 + BLOCK_SIZE_BITS)) + (aGlyphOffset << 1) + 1;
         }
 
-        nsTArray<PtrBits> mBlocks;
+        nsTArray<uintptr_t> mBlocks;
     };
 
     GlyphWidths             mContainedGlyphWidths;

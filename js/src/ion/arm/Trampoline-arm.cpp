@@ -324,8 +324,8 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     // Note that this code assumes the function is JITted.
     masm.ma_ldr(DTRAddr(r1, DtrOffImm(offsetof(JSFunction, u.i.script_))), r3);
     masm.ma_ldr(DTRAddr(r3, DtrOffImm(offsetof(JSScript, ion))), r3);
-    masm.ma_ldr(DTRAddr(r3, DtrOffImm(offsetof(IonScript, method_))), r3);
-    masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonCode::OffsetOfCode())), r3);
+    masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonScript::offsetOfMethod())), r3);
+    masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonCode::offsetOfCode())), r3);
     masm.ma_callIonHalfPush(r3);
 
     // arg1

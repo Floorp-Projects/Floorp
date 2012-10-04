@@ -1008,9 +1008,21 @@ nsJSChannel::GetContentDisposition(uint32_t *aContentDisposition)
 }
 
 NS_IMETHODIMP
+nsJSChannel::SetContentDisposition(uint32_t aContentDisposition)
+{
+    return mStreamChannel->SetContentDisposition(aContentDisposition);
+}
+
+NS_IMETHODIMP
 nsJSChannel::GetContentDispositionFilename(nsAString &aContentDispositionFilename)
 {
     return mStreamChannel->GetContentDispositionFilename(aContentDispositionFilename);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetContentDispositionFilename(const nsAString &aContentDispositionFilename)
+{
+    return mStreamChannel->SetContentDispositionFilename(aContentDispositionFilename);
 }
 
 NS_IMETHODIMP

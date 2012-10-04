@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99:
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef pcscriptcache_inl_h__
+#define pcscriptcache_inl_h__
+
+#include "PcScriptCache.h"
+
+namespace js {
+namespace ion {
+
+// Get a value from the cache. May perform lazy allocation.
+bool
+PcScriptCache::get(JSRuntime *rt, uint32_t hash, uint8_t *addr,
+                   MutableHandleScript scriptRes, jsbytecode **pcRes)
+{
+    // If a GC occurred, lazily clear the cache now.
+    if (gcNumber != rt->gcNumber) {
+        clear(rt->gcNumber);
+        return false;
+    }
+
+    if (entries[hash].returnAddress != addr)
+        return false;
+
+    scriptRes.set(entries[hash].script);
+    if (pcRes)
+        *pcRes = entries[hash].pc;
+
+    return true;
+}
+
+} // namespace ion
+} // namespace js
+
+#endif // pcscriptcache_inl_h__

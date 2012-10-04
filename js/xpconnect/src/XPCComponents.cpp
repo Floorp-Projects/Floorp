@@ -34,6 +34,7 @@
 #include "nsIScriptContext.h"
 #include "nsJSEnvironment.h"
 #include "nsXMLHttpRequest.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 using namespace js;
@@ -3056,15 +3057,6 @@ WrapForSandbox(JSContext *cx, bool wantXrays, jsval *vp)
            : xpc::WrapperFactory::WaiveXrayAndWrap(cx, vp);
 }
 
-// Needed to distinguish multiple compartments with the same origin from each
-// other. The only thing we need out of identity objects are unique addresses.
-class Identity MOZ_FINAL : public nsISupports
-{
-    NS_DECL_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS0(Identity)
-
 xpc::SandboxProxyHandler xpc::sandboxProxyHandler;
 
 // A proxy handler that lets us wrap callables and invoke them with
@@ -3270,9 +3262,8 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
     JSCompartment *compartment;
     JSObject *sandbox;
 
-    nsRefPtr<Identity> identity = new Identity();
-    rv = xpc_CreateGlobalObject(cx, &SandboxClass, principal, identity,
-                                options.wantXrays, &sandbox, &compartment);
+    rv = xpc::CreateGlobalObject(cx, &SandboxClass, principal,
+                                 options.wantXrays, &sandbox, &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::AutoObjectRooter tvr(cx, sandbox);
@@ -4780,6 +4771,38 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN;
 }
 
+static JSBool
+ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
+                          JSMutableHandleValue vp)
+{
+    // If chrome is accessing the Components object of content, allow.
+    MOZ_ASSERT(nsContentUtils::GetCurrentJSContext() == cx);
+    if (nsContentUtils::IsCallerChrome())
+        return true;
+
+    // If the caller is XBL, this is ok.
+    if (AccessCheck::callerIsXBL(cx))
+        return true;
+
+    // Do Telemetry on how often this happens.
+    Telemetry::Accumulate(Telemetry::COMPONENTS_OBJECT_ACCESSED_BY_CONTENT, true);
+
+    // Warn once. Note that if somebody does window.Components we may have an
+    // outer window here.
+    MOZ_ASSERT(JS_GetGlobalForObject(cx, obj) == JS_ObjectToInnerObject(cx, obj));
+    JSAutoCompartment ac(cx, obj);
+    nsCOMPtr<nsPIDOMWindow> win =
+        do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
+    if (win) {
+        nsCOMPtr<nsIDocument> doc =
+            do_QueryInterface(win->GetExtantDocument());
+        if (doc)
+            doc->WarnOnceAbout(nsIDocument::eComponents, /* asError = */ true);
+    }
+
+    return true;
+}
+
 // static
 JSBool
 nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
@@ -4796,9 +4819,10 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
         aTarget = global;
 
     jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
+    JSPropertyOp getter = AccessCheck::isChrome(global) ? nullptr
+                                                        : &ContentComponentsGetterOp;
     return JS_DefinePropertyById(ccx, aTarget, id, js::ObjectValue(*components),
-                                 nullptr, nullptr,
-                                 JSPROP_PERMANENT | JSPROP_READONLY);
+                                 getter, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 /* void lookupMethod (); */

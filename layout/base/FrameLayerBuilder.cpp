@@ -1461,7 +1461,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
   layer->SetBaseTransform(gfx3DMatrix::From2D(matrix));
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
-#ifndef MOZ_JAVA_COMPOSITOR
+#ifndef MOZ_ANDROID_OMTC
   // Calculate exact position of the top-left of the active scrolled root.
   // This might not be 0,0 due to the snapping in ScaleToNearestPixels.
   gfxPoint activeScrolledRootTopLeft = scaledOffset - matrix.GetTranslation();
@@ -2836,20 +2836,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       entry->mData.AppendElement(data);
       data->AddFrame(aContainerFrame);
       entry->mContainerLayerGeneration = mContainerLayerGeneration;
-    }
-
-    nsAutoTArray<nsIFrame*,4> mergedFrames;
-    if (aContainerItem) {
-      aContainerItem->GetMergedFrames(&mergedFrames);
-    }
-    for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
-      nsIFrame* mergedFrame = mergedFrames[i];
-      entry = mNewDisplayItemData.PutEntry(mergedFrame);
-      if (entry) {
-        entry->mContainerLayerGeneration = mContainerLayerGeneration;
-        entry->mData.AppendElement(data);
-        data->AddFrame(mergedFrame);
-      }
     }
   }
 

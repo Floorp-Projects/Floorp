@@ -822,6 +822,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
                                           *body,
                                           url.get(), lineNo,
                                           SCRIPTVERSION_DEFAULT, // for now?
+                                          /* aIsXBL = */ false,
                                           handler);
     if (result == NS_ERROR_ILLEGAL_VALUE) {
       NS_WARNING("Probably a syntax error in the event handler!");

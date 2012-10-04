@@ -16,8 +16,6 @@
 #include "nsIAtom.h"
 #include "nsDOMString.h"
 
-typedef uintptr_t PtrBits;
-
 #define NS_ATTRNAME_NODEINFO_BIT 1
 class nsAttrName
 {
@@ -29,7 +27,7 @@ public:
   }
 
   explicit nsAttrName(nsIAtom* aAtom)
-    : mBits(reinterpret_cast<PtrBits>(aAtom))
+    : mBits(reinterpret_cast<uintptr_t>(aAtom))
   {
     NS_ASSERTION(aAtom, "null atom-name in nsAttrName");
     NS_ADDREF(aAtom);
@@ -39,11 +37,11 @@ public:
   {
     NS_ASSERTION(aNodeInfo, "null nodeinfo-name in nsAttrName");
     if (aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
-      mBits = reinterpret_cast<PtrBits>(aNodeInfo->NameAtom());
+      mBits = reinterpret_cast<uintptr_t>(aNodeInfo->NameAtom());
       NS_ADDREF(aNodeInfo->NameAtom());
     }
     else {
-      mBits = reinterpret_cast<PtrBits>(aNodeInfo) |
+      mBits = reinterpret_cast<uintptr_t>(aNodeInfo) |
               NS_ATTRNAME_NODEINFO_BIT;
       NS_ADDREF(aNodeInfo);
     }
@@ -60,11 +58,11 @@ public:
 
     ReleaseInternalName();
     if (aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
-      mBits = reinterpret_cast<PtrBits>(aNodeInfo->NameAtom());
+      mBits = reinterpret_cast<uintptr_t>(aNodeInfo->NameAtom());
       NS_ADDREF(aNodeInfo->NameAtom());
     }
     else {
-      mBits = reinterpret_cast<PtrBits>(aNodeInfo) |
+      mBits = reinterpret_cast<uintptr_t>(aNodeInfo) |
               NS_ATTRNAME_NODEINFO_BIT;
       NS_ADDREF(aNodeInfo);
     }
@@ -75,7 +73,7 @@ public:
     NS_ASSERTION(aAtom, "null atom-name in nsAttrName");
 
     ReleaseInternalName();
-    mBits = reinterpret_cast<PtrBits>(aAtom);
+    mBits = reinterpret_cast<uintptr_t>(aAtom);
     NS_ADDREF(aAtom);
   }
 
@@ -104,7 +102,7 @@ public:
   // Faster comparison in the case we know the namespace is null
   bool Equals(nsIAtom* aAtom) const
   {
-    return reinterpret_cast<PtrBits>(aAtom) == mBits;
+    return reinterpret_cast<uintptr_t>(aAtom) == mBits;
   }
 
   bool Equals(nsIAtom* aLocalName, int32_t aNamespaceID) const
@@ -180,7 +178,7 @@ public:
 
   bool IsSmaller(nsIAtom* aOther) const
   {
-    return mBits < reinterpret_cast<PtrBits>(aOther);
+    return mBits < reinterpret_cast<uintptr_t>(aOther);
   }
 
 private:
@@ -205,7 +203,7 @@ private:
     NS_RELEASE(name);
   }
 
-  PtrBits mBits;
+  uintptr_t mBits;
 };
 
 #endif

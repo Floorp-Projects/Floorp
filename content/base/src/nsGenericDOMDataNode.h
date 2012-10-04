@@ -21,18 +21,6 @@
 
 #include "nsISMILAttr.h"
 
-// This bit is set to indicate that if the text node changes to
-// non-whitespace, we may need to create a frame for it. This bit must
-// not be set on nodes that already have a frame.
-#define NS_CREATE_FRAME_IF_NON_WHITESPACE (1 << NODE_TYPE_SPECIFIC_BITS_OFFSET)
-
-// This bit is set to indicate that if the text node changes to
-// whitespace, we may need to reframe it (or its ancestors).
-#define NS_REFRAME_IF_WHITESPACE (1 << (NODE_TYPE_SPECIFIC_BITS_OFFSET + 1))
-
-// Make sure we have enough space for those bits
-PR_STATIC_ASSERT(NODE_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
-
 class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;
@@ -40,6 +28,25 @@ class nsIFrame;
 class nsIDOMText;
 class nsINodeInfo;
 class nsURI;
+
+#define DATA_NODE_FLAG_BIT(n_) NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
+
+// Data node specific flags
+enum {
+  // This bit is set to indicate that if the text node changes to
+  // non-whitespace, we may need to create a frame for it. This bit must
+  // not be set on nodes that already have a frame.
+  NS_CREATE_FRAME_IF_NON_WHITESPACE =     DATA_NODE_FLAG_BIT(0),
+
+  // This bit is set to indicate that if the text node changes to
+  // whitespace, we may need to reframe it (or its ancestors).
+  NS_REFRAME_IF_WHITESPACE =              DATA_NODE_FLAG_BIT(1)
+};
+
+// Make sure we have enough space for those bits
+PR_STATIC_ASSERT(NODE_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
+
+#undef DATA_NODE_FLAG_BIT
 
 class nsGenericDOMDataNode : public nsIContent
 {
@@ -269,9 +276,9 @@ protected:
   // Override from nsINode
   virtual nsINode::nsSlots* CreateSlots();
 
-  nsDataSlots *GetDataSlots()
+  nsDataSlots* DataSlots()
   {
-    return static_cast<nsDataSlots*>(GetSlots());
+    return static_cast<nsDataSlots*>(Slots());
   }
 
   nsDataSlots *GetExistingDataSlots() const

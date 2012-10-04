@@ -18,6 +18,10 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY  = 1
 
 
+EXPORTS		=  imgLoader.h \
+		   imgRequest.h \
+		   $(NULL)
+
 CPPSRCS		= \
 			Image.cpp \
 			Decoder.cpp \

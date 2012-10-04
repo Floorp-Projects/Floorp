@@ -1249,21 +1249,6 @@ gfxPlatform::UseProgressiveTilePainting()
 }
 
 bool
-gfxPlatform::UseAzureContentDrawing()
-{
-  static bool sAzureContentDrawingEnabled;
-  static bool sAzureContentDrawingPrefCached = false;
-
-  if (!sAzureContentDrawingPrefCached) {
-    sAzureContentDrawingPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(&sAzureContentDrawingEnabled,
-                                          "gfx.content.azure.enabled");
-  }
-
-  return sAzureContentDrawingEnabled;
-}
-
-bool
 gfxPlatform::OffMainThreadCompositingEnabled()
 {
   return XRE_GetProcessType() == GeckoProcessType_Default ?

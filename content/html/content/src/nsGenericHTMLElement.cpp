@@ -2874,24 +2874,14 @@ nsGenericHTMLElement::SetBoolAttr(nsIAtom* aAttr, bool aValue)
   return UnsetAttr(kNameSpaceID_None, aAttr, true);
 }
 
-nsresult
-nsGenericHTMLElement::GetBoolAttr(nsIAtom* aAttr, bool* aValue) const
-{
-  *aValue = HasAttr(kNameSpaceID_None, aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetIntAttr(nsIAtom* aAttr, int32_t aDefault, int32_t* aResult)
+int32_t
+nsGenericHTMLElement::GetIntAttr(nsIAtom* aAttr, int32_t aDefault) const
 {
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
   if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
-    *aResult = attrVal->GetIntegerValue();
+    return attrVal->GetIntegerValue();
   }
-  else {
-    *aResult = aDefault;
-  }
-  return NS_OK;
+  return aDefault;
 }
 
 nsresult
@@ -3555,8 +3545,7 @@ nsGenericHTMLFormElement::IntrinsicState() const
   // Make the text controls read-write
   if (!state.HasState(NS_EVENT_STATE_MOZ_READWRITE) &&
       IsTextControl(false)) {
-    bool roState;
-    GetBoolAttr(nsGkAtoms::readonly, &roState);
+    bool roState = GetBoolAttr(nsGkAtoms::readonly);
 
     if (!roState) {
       state |= NS_EVENT_STATE_MOZ_READWRITE;

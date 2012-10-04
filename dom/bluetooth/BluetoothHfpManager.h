@@ -25,10 +25,8 @@ public:
   NS_DECL_NSIOBSERVER
 
   ~BluetoothHfpManager();
-
   static BluetoothHfpManager* Get();
   void ReceiveSocketData(mozilla::ipc::UnixSocketRawData* aMessage);
-
   bool Connect(const nsAString& aDeviceObjectPath,
                BluetoothReplyRunnable* aRunnable);
   void Disconnect();
@@ -36,10 +34,13 @@ public:
   void CallStateChanged(int aCallIndex, int aCallState,
                         const char* aNumber, bool aIsActive);
   bool Listen();
+
 private:
   BluetoothHfpManager();
-
+  bool Init();
+  void Cleanup();
   nsresult HandleVolumeChanged(const nsAString& aData);
+  nsresult HandleShutdown();
   bool BroadcastSystemMessage(const nsAString& aType,
                               const InfallibleTArray<BluetoothNamedValue>& aData);
   void NotifyDialer(const nsAString& aCommand);

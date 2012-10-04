@@ -351,6 +351,16 @@ BluetoothServiceChildProcess::SendFile(
   return true;
 }
 
+bool
+BluetoothServiceChildProcess::StopSendingFile(
+  const nsAString& aDeviceAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+              StopSendingFileRequest(nsString(aDeviceAddress)));
+  return true;
+}
+
 nsresult
 BluetoothServiceChildProcess::HandleStartup()
 {

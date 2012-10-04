@@ -53,8 +53,7 @@ InsertTransactionSorted(nsTArray<nsHttpTransaction*> &pendingQ, nsHttpTransactio
 //-----------------------------------------------------------------------------
 
 nsHttpConnectionMgr::nsHttpConnectionMgr()
-    : mRef(0)
-    , mReentrantMonitor("nsHttpConnectionMgr.mReentrantMonitor")
+    : mReentrantMonitor("nsHttpConnectionMgr.mReentrantMonitor")
     , mMaxConns(0)
     , mMaxPersistConnsPerHost(0)
     , mMaxPersistConnsPerProxy(0)

@@ -3870,7 +3870,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
 }
 
 static void
-SetFlagsOnSubtree(nsIContent *aNode, PtrBits aFlagsToSet)
+SetFlagsOnSubtree(nsIContent *aNode, uintptr_t aFlagsToSet)
 {
 #ifdef DEBUG
   // Make sure that the node passed to us doesn't have any XBL children

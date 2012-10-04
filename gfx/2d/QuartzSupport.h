@@ -29,11 +29,21 @@ public:
                    mCGImage(nullptr), mCGData(nullptr), mIOSurface(nullptr), mFBO(0),
                    mIOTexture(0),
                    mUnsupportedWidth(UINT32_MAX), mUnsupportedHeight(UINT32_MAX),
-                   mAllowOfflineRenderer(DISALLOW_OFFLINE_RENDERER) {}
+                   mAllowOfflineRenderer(DISALLOW_OFFLINE_RENDERER),
+                   mContentsScaleFactor(1.0) {}
   ~nsCARenderer();
+  // aWidth and aHeight are in "display pixels".  A "display pixel" is the
+  // smallest fully addressable part of a display.  But in HiDPI modes each
+  // "display pixel" corresponds to more than one device pixel.  Multiply
+  // display pixels by aContentsScaleFactor to get device pixels.
   nsresult SetupRenderer(void* aCALayer, int aWidth, int aHeight,
+                         double aContentsScaleFactor,
                          AllowOfflineRendererEnum aAllowOfflineRenderer);
-  nsresult Render(int aWidth, int aHeight, CGImageRef *aOutCAImage);
+  // aWidth and aHeight are in "display pixels".  Multiply by
+  // aContentsScaleFactor to get device pixels.
+  nsresult Render(int aWidth, int aHeight,
+                  double aContentsScaleFactor,
+                  CGImageRef *aOutCAImage);
   bool isInit() { return mCARenderer != nullptr; }
   /*
    * Render the CALayer to an IOSurface. If no IOSurface
@@ -42,6 +52,8 @@ public:
    */
   void AttachIOSurface(mozilla::RefPtr<MacIOSurface> aSurface);
   IOSurfaceID GetIOSurfaceID();
+  // aX, aY, aWidth and aHeight are in "display pixels".  Multiply by
+  // surf->GetContentsScaleFactor() to get device pixels.
   static nsresult DrawSurfaceToCGContext(CGContextRef aContext,
                                          MacIOSurface *surf,
                                          CGColorSpaceRef aColorSpace,
@@ -56,7 +68,11 @@ public:
   static void SaveToDisk(MacIOSurface *surf);
 #endif
 private:
+  // aWidth and aHeight are in "display pixels".  Multiply by
+  // mContentsScaleFactor to get device pixels.
   void SetBounds(int aWidth, int aHeight);
+  // aWidth and aHeight are in "display pixels".  Multiply by
+  // mContentsScaleFactor to get device pixels.
   void SetViewport(int aWidth, int aHeight);
   void Destroy();
 
@@ -71,6 +87,7 @@ private:
   uint32_t                  mUnsupportedWidth;
   uint32_t                  mUnsupportedHeight;
   AllowOfflineRendererEnum  mAllowOfflineRenderer;
+  double                    mContentsScaleFactor;
 };
 
 enum CGContextType {

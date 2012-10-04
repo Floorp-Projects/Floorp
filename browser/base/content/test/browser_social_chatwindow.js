@@ -116,6 +116,33 @@ var tests = {
     }
     port.postMessage({topic: "test-worker-chat", data: chatUrl});
   },
+  testCloseSelf: function(next) {
+    let chats = document.getElementById("pinnedchats");
+    let port = Social.provider.getWorkerPort();
+    ok(port, "provider has a port");
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "test-init-done":
+          port.postMessage({topic: "test-chatbox-open"});
+          break;
+        case "got-chatbox-visibility":
+          is(e.data.result, "shown", "chatbox shown");
+          port.close(); // don't want any more visibility messages.
+          let chat = chats.selectedChat;
+          ok(chat.parentNode, "chat has a parent node before it is closed");
+          // ask it to close itself.
+          let doc = chat.iframe.contentDocument;
+          let evt = doc.createEvent("CustomEvent");
+          evt.initCustomEvent("socialTest-CloseSelf", true, true, {});
+          doc.documentElement.dispatchEvent(evt);
+          ok(!chat.parentNode, "chat is now closed");
+          next();
+          break;
+      }
+    }
+    port.postMessage({topic: "test-init", data: { id: 1 }});
+  },
   testCloseOnLogout: function(next) {
     const chatUrl = "https://example.com/browser/browser/base/content/test/social_chat.html";
     let port = Social.provider.getWorkerPort();

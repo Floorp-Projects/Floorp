@@ -141,9 +141,9 @@ class Debugger {
 
     JSObject *unwrapDebuggeeArgument(JSContext *cx, const Value &v);
 
-    static void traceObject(JSTracer *trc, JSObject *obj);
+    static void traceObject(JSTracer *trc, RawObject obj);
     void trace(JSTracer *trc);
-    static void finalize(FreeOp *fop, JSObject *obj);
+    static void finalize(FreeOp *fop, RawObject obj);
     void markKeysInCompartment(JSTracer *tracer);
 
     static Class jsclass;

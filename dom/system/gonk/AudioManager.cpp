@@ -36,7 +36,6 @@ using namespace mozilla;
 
 // A bitwise variable for recording what kind of headset is attached.
 static int sHeadsetState;
-static const char* sDeviceAddress;
 static int kBtSampleRate = 8000;
 
 static bool
@@ -80,10 +79,6 @@ InternalSetAudioRoutesICS(SwitchState aState)
     AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADPHONE,
                                           AUDIO_POLICY_DEVICE_STATE_AVAILABLE, "");
     sHeadsetState |= AUDIO_DEVICE_OUT_WIRED_HEADPHONE;
-  } else if (aState == SWITCH_STATE_BLUETOOTH_SCO) {
-    AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET,
-                                          AUDIO_POLICY_DEVICE_STATE_AVAILABLE, sDeviceAddress);
-    sHeadsetState |= AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET;
   } else if (aState == SWITCH_STATE_OFF) {
     AudioSystem::setDeviceConnectionState(static_cast<audio_devices_t>(sHeadsetState),
                                           AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
@@ -135,12 +130,22 @@ AudioManager::Observe(nsISupports* aSubject,
                       const PRUnichar* aData)
 {
   if (!strcmp(aTopic, BLUETOOTH_SCO_STATUS_CHANGED)) {
-    String8 cmd;
-    cmd.appendFormat("bt_samplerate=%d", kBtSampleRate);
-    AudioSystem::setParameters(0, cmd);
+    if (aData) {
+      String8 cmd;
+      cmd.appendFormat("bt_samplerate=%d", kBtSampleRate);
+      AudioSystem::setParameters(0, cmd);
+      const char* address = NS_ConvertUTF16toUTF8(nsDependentString(aData)).get();
+      AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET,
+                                            AUDIO_POLICY_DEVICE_STATE_AVAILABLE, address);
+      AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET,
+                                            AUDIO_POLICY_DEVICE_STATE_AVAILABLE, address);
+    } else {
+      AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET,
+                                            AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
+      AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET,
+                                            AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
+    }
 
-    sDeviceAddress = NS_ConvertUTF16toUTF8(nsDependentString(aData)).get();
-    InternalSetAudioRoutes(SwitchState::SWITCH_STATE_BLUETOOTH_SCO);
     return NS_OK;
   }
   return NS_ERROR_UNEXPECTED;

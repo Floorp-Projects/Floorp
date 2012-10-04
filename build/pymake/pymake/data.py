@@ -447,7 +447,7 @@ class Variables(object):
 
     def readfromenvironment(self, env):
         for k, v in env.iteritems():
-            self.set(k, self.FLAVOR_SIMPLE, self.SOURCE_ENVIRONMENT, v)
+            self.set(k, self.FLAVOR_RECURSIVE, self.SOURCE_ENVIRONMENT, v)
 
     def get(self, name, expand=True):
         """

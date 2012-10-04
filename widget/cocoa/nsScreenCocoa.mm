@@ -83,6 +83,17 @@ nsScreenCocoa::GetColorDepth(int32_t *aColorDepth)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+NS_IMETHODIMP
+nsScreenCocoa::GetContentsScaleFactor(double *aContentsScaleFactor)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  *aContentsScaleFactor = (double) BackingScaleFactor();
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 CGFloat
 nsScreenCocoa::BackingScaleFactor()
 {

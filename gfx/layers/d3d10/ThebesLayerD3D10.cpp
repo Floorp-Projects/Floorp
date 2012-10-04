@@ -403,7 +403,7 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
   
   if (aMode == SURFACE_COMPONENT_ALPHA) {
     FillTexturesBlackWhite(aRegion, visibleRect.TopLeft());
-    if (!gfxPlatform::UseAzureContentDrawing()) {
+    if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
       gfxASurface* surfaces[2] = { mD2DSurface.get(), mD2DSurfaceOnWhite.get() };
       destinationSurface = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
       // Using this surface as a source will likely go horribly wrong, since
@@ -477,7 +477,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
       NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");
     }
 
-    if (!gfxPlatform::UseAzureContentDrawing()) {
+    if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
       mD2DSurface = new gfxD2DSurface(mTexture, aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
                                                 gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA);
 
@@ -505,7 +505,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
       NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");
     }
 
-    if (!gfxPlatform::UseAzureContentDrawing()) {
+    if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
       mD2DSurfaceOnWhite = new gfxD2DSurface(mTextureOnWhite, gfxASurface::CONTENT_COLOR);
 
       if (!mD2DSurfaceOnWhite || mD2DSurfaceOnWhite->CairoStatus()) {
@@ -518,7 +518,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
     }
   }
 
-  if (gfxPlatform::UseAzureContentDrawing() && !mDrawTarget) {
+  if (gfxPlatform::GetPlatform()->SupportsAzureContent() && !mDrawTarget) {
     if (aMode == SURFACE_COMPONENT_ALPHA) {
       mDrawTarget = Factory::CreateDualDrawTargetForD3D10Textures(mTexture, mTextureOnWhite, FORMAT_B8G8R8X8);
     } else {

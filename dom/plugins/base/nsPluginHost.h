@@ -82,7 +82,7 @@ public:
 
   nsresult SetUpPluginInstance(const char *aMimeType,
                                nsIURI *aURL,
-                               nsIPluginInstanceOwner *aOwner);
+                               nsPluginInstanceOwner *aOwner);
   nsresult IsPluginEnabledForType(const char* aMimeType);
   nsresult IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
   bool     IsPluginClickToPlayForType(const char *aMimeType);
@@ -214,7 +214,7 @@ public:
 
 private:
   nsresult
-  TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
+  TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsPluginInstanceOwner *aOwner);
 
   nsresult
   NewEmbeddedPluginStream(nsIURI* aURL, nsObjectLoadingContent *aContent, nsNPAPIPluginInstance* aInstance);

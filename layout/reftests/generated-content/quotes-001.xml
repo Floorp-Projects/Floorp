@@ -1,9 +1,13 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+   
 <!--
 
 Test originally from
-http://www.hixie.ch/tests/adhoc/css/quotes/001.xml
-and relicensed to MPL/LGPL/GPL tri-license per Hixie's permission on IRC,
-March 5, 2009.
+http://www.hixie.ch/tests/adhoc/css/quotes/001.xml ,
+relicensed to MPL/LGPL/GPL tri-license per Hixie's permission on IRC,
+March 5, 2009, and upgraded to MPL 2.
 
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">

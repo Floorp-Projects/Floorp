@@ -1943,7 +1943,7 @@ class BindNameCompiler : public PICStubCompiler
         RecompilationMonitor monitor(cx);
 
         RootedObject scope(cx);
-        if (!LookupNameForSet(cx, name, scopeChain, &scope))
+        if (!LookupNameWithGlobalDefault(cx, name, scopeChain, &scope))
             return NULL;
 
         if (monitor.recompiled())
@@ -2727,7 +2727,7 @@ SetElementIC::attachHoleStub(VMFrame &f, JSObject *obj, int32_t keyval)
     // However we should still build the IC in this case, since it could
     // be in a loop that is filling in the array.
 
-    if (js_PrototypeHasIndexedProperties(cx, obj))
+    if (js_PrototypeHasIndexedProperties(obj))
         return disable(f, "prototype has indexed properties");
 
     MJITInstrumentation sps(&f.cx->runtime->spsProfiler);

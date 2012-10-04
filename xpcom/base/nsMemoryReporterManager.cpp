@@ -16,17 +16,29 @@
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsPrintfCString.h"
+#include "nsThreadUtils.h"
+#include "nsIObserverService.h"
+#include "nsThread.h"
+#include "nsGZFileWriter.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Services.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/FileUtils.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/unused.h"
 
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
 #else
 #include <unistd.h>
+#include <fcntl.h>
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 #if defined(MOZ_MEMORY)
 #  define HAVE_JEMALLOC_STATS 1
@@ -626,6 +638,201 @@ NS_MEMORY_REPORTER_IMPLEMENT(AtomTable,
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMemoryReporterManager, nsIMemoryReporterManager)
 
+namespace {
+
+class DumpMemoryReportsRunnable : public nsRunnable
+{
+public:
+  DumpMemoryReportsRunnable(const nsAString& aIdentifier,
+                            bool aMinimizeMemoryUsage,
+                            bool aDumpChildProcesses)
+
+      : mIdentifier(aIdentifier)
+      , mMinimizeMemoryUsage(aMinimizeMemoryUsage)
+      , mDumpChildProcesses(aDumpChildProcesses)
+  {}
+
+  NS_IMETHOD Run()
+  {
+      nsCOMPtr<nsIMemoryReporterManager> mgr =
+          do_GetService("@mozilla.org/memory-reporter-manager;1");
+      NS_ENSURE_STATE(mgr);
+      mgr->DumpMemoryReportsToFile(mIdentifier,
+                                   mMinimizeMemoryUsage,
+                                   mDumpChildProcesses);
+      return NS_OK;
+  }
+
+private:
+  const nsString mIdentifier;
+  const bool mMinimizeMemoryUsage;
+  const bool mDumpChildProcesses;
+};
+
+} // anonymous namespace
+
+#ifdef XP_LINUX // {
+namespace {
+
+/*
+ * The following code supports dumping about:memory upon receiving a signal.
+ *
+ * We listen for the signals SIGRTMIN and SIGRTMIN +1.  (The latter causes us
+ * to minimize memory usage before dumping about:memory.)
+ *
+ * When we receive one of these signals, we write the signal number to a pipe.
+ * The IO thread then notices that the pipe has been written to, and kicks off
+ * a DumpMemoryReports task on the main thread.
+ *
+ * This scheme is similar to using signalfd(), except it's portable and it
+ * doesn't require the use of sigprocmask, which is problematic because it
+ * masks signals received by child processes.
+ *
+ * In theory, we could use Chromium's MessageLoopForIO::CatchSignal() for this.
+ * But that uses libevent, which does not handle the realtime signals (bug
+ * 794074).
+ */
+
+// It turns out that at least on some systems, SIGRTMIN is not a compile-time
+// constant, so these have to be set at runtime.
+static int sDumpAboutMemorySignum;         // SIGRTMIN
+static int sDumpAboutMemoryAfterMMUSignum; // SIGRTMIN + 1
+
+// This is the write-end of a pipe that we use to notice when a
+// dump-about-memory signal occurs.
+static int sDumpAboutMemoryPipeWriteFd;
+
+void
+DumpAboutMemorySignalHandler(int aSignum)
+{
+  // This is a signal handler, so everything in here needs to be
+  // async-signal-safe.  Be careful!
+
+  if (sDumpAboutMemoryPipeWriteFd != 0) {
+    uint8_t signum = static_cast<int>(aSignum);
+    write(sDumpAboutMemoryPipeWriteFd, &signum, sizeof(signum));
+  }
+}
+
+class SignalPipeWatcher : public MessageLoopForIO::Watcher
+{
+public:
+  SignalPipeWatcher()
+  {}
+
+  ~SignalPipeWatcher()
+  {
+    // This is somewhat paranoid, but we want to avoid the race condition where
+    // we close sDumpAboutMemoryPipeWriteFd before setting it to 0, then we
+    // reuse that fd for some other file, and then the signal handler runs.
+    int pipeWriteFd = sDumpAboutMemoryPipeWriteFd;
+    PR_ATOMIC_SET(&sDumpAboutMemoryPipeWriteFd, 0);
+
+    // Stop watching the pipe's file descriptor /before/ we close it!
+    mReadWatcher.StopWatchingFileDescriptor();
+
+    close(pipeWriteFd);
+    close(mPipeReadFd);
+  }
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SignalPipeWatcher)
+
+  bool Start()
+  {
+    MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
+
+    sDumpAboutMemorySignum = SIGRTMIN;
+    sDumpAboutMemoryAfterMMUSignum = SIGRTMIN + 1;
+
+    // Create a pipe.  When we receive a signal in our signal handler, we'll
+    // write the signum to the write-end of this pipe.
+    int pipeFds[2];
+    if (pipe(pipeFds)) {
+        NS_WARNING("Failed to create pipe.");
+        return false;
+    }
+
+    // Close this pipe on calls to exec().
+    fcntl(pipeFds[0], F_SETFD, FD_CLOEXEC);
+    fcntl(pipeFds[1], F_SETFD, FD_CLOEXEC);
+
+    mPipeReadFd = pipeFds[0];
+    sDumpAboutMemoryPipeWriteFd = pipeFds[1];
+
+    struct sigaction action;
+    memset(&action, 0, sizeof(action));
+    sigemptyset(&action.sa_mask);
+    action.sa_handler = DumpAboutMemorySignalHandler;
+
+    if (sigaction(sDumpAboutMemorySignum, &action, nullptr)) {
+      NS_WARNING("Failed to register about:memory dump signal handler.");
+    }
+    if (sigaction(sDumpAboutMemoryAfterMMUSignum, &action, nullptr)) {
+      NS_WARNING("Failed to register about:memory dump after MMU signal handler.");
+    }
+
+    // Start watching the read end of the pipe on the IO thread.
+    return MessageLoopForIO::current()->WatchFileDescriptor(
+        mPipeReadFd, /* persistent = */ true,
+        MessageLoopForIO::WATCH_READ,
+        &mReadWatcher, this);
+  }
+
+  virtual void OnFileCanReadWithoutBlocking(int aFd)
+  {
+    MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
+
+    uint8_t signum;
+    ssize_t numReceived = read(aFd, &signum, sizeof(signum));
+    if (numReceived != sizeof(signum)) {
+      NS_WARNING("Error reading from buffer in "
+                 "SignalPipeWatcher::OnFileCanReadWithoutBlocking.");
+      return;
+    }
+
+    if (signum != sDumpAboutMemorySignum &&
+        signum != sDumpAboutMemoryAfterMMUSignum) {
+      NS_WARNING("Got unexpected signum.");
+      return;
+    }
+
+    // Dump about:memory (but run this on the main thread!).
+    nsRefPtr<DumpMemoryReportsRunnable> runnable =
+      new DumpMemoryReportsRunnable(
+          /* identifier = */ EmptyString(),
+          signum == sDumpAboutMemoryAfterMMUSignum,
+          /* dumpChildProcesses = */ true);
+    NS_DispatchToMainThread(runnable);
+  }
+
+  virtual void OnFileCanWriteWithoutBlocking(int aFd)
+  {}
+
+private:
+  int mPipeReadFd;
+  MessageLoopForIO::FileDescriptorWatcher mReadWatcher;
+};
+
+StaticRefPtr<SignalPipeWatcher> sSignalPipeWatcher;
+
+void
+InitializeDumpAboutMemoryWatcher()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!sSignalPipeWatcher);
+
+  sSignalPipeWatcher = new SignalPipeWatcher();
+  ClearOnShutdown(&sSignalPipeWatcher);
+
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableMethod(sSignalPipeWatcher.get(),
+                        &SignalPipeWatcher::Start));
+}
+
+} // anonymous namespace
+#endif // } XP_LINUX
+
 NS_IMETHODIMP
 nsMemoryReporterManager::Init()
 {
@@ -670,6 +877,10 @@ nsMemoryReporterManager::Init()
 #endif
 
     REGISTER(AtomTable);
+
+#if defined(XP_LINUX)
+    InitializeDumpAboutMemoryWatcher();
+#endif
 
     return NS_OK;
 }
@@ -900,12 +1111,10 @@ nsMemoryReporterManager::GetExplicit(int64_t *aExplicit)
     // NS_ASSERTION but they occasionally don't match due to races (bug
     // 728990).
     if (explicitNonHeapMultiSize != explicitNonHeapMultiSize2) {
-        char *msg = PR_smprintf("The two measurements of 'explicit' memory "
-                                "usage don't match (%lld vs %lld)",
-                                explicitNonHeapMultiSize,
-                                explicitNonHeapMultiSize2);
-        NS_WARNING(msg);
-        PR_smprintf_free(msg);
+        NS_WARNING(nsPrintfCString("The two measurements of 'explicit' memory "
+                                   "usage don't match (%lld vs %lld)",
+                                   explicitNonHeapMultiSize,
+                                   explicitNonHeapMultiSize2).get());
     }
 #endif  // DEBUG
 
@@ -927,54 +1136,92 @@ nsMemoryReporterManager::GetHasMozMallocUsableSize(bool *aHas)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMemoryReporterManager::DumpMemoryReportsToFile(
+    const nsAString& aIdentifier,
+    bool aMinimizeMemoryUsage,
+    bool aDumpChildProcesses)
+{
+    // If the identifier is empty, set it to the number of whole seconds since
+    // the epoch.  This identifier will appear in our memory report as well as
+    // our children's, allowing us to identify which files are from the same
+    // memory report request.
+    nsString identifier(aIdentifier);
+    if (identifier.IsEmpty()) {
+        identifier.AppendInt(PR_Now() / 1000000);
+    }
+
+    // Kick off memory report dumps in our child processes, if applicable.  We
+    // do this before doing our own report because writing a report may be I/O
+    // bound, in which case we want to busy the CPU with other reports while we
+    // work on our own.
+    if (aDumpChildProcesses) {
+        nsTArray<ContentParent*> children;
+        ContentParent::GetAll(children);
+        for (uint32_t i = 0; i < children.Length(); i++) {
+            unused << children[i]->SendDumpMemoryReportsToFile(
+                identifier, aMinimizeMemoryUsage, aDumpChildProcesses);
+        }
+    }
+
+    if (aMinimizeMemoryUsage) {
+        // Minimize memory usage, then run DumpMemoryReportsToFile again.
+        nsRefPtr<DumpMemoryReportsRunnable> callback =
+            new DumpMemoryReportsRunnable(identifier,
+                                          /* minimizeMemoryUsage = */ false,
+                                          /* dumpChildProcesses = */ false);
+        return MinimizeMemoryUsage(callback);
+    }
+
+    return DumpMemoryReportsToFileImpl(identifier);
+}
+
 #define DUMP(o, s) \
     do { \
-        const char* s2 = (s); \
-        uint32_t dummy; \
-        nsresult rv = (o)->Write((s2), strlen(s2), &dummy); \
+        nsresult rv = (o)->Write(s); \
         NS_ENSURE_SUCCESS(rv, rv); \
     } while (0)
 
 static nsresult
-DumpReport(nsIFileOutputStream *aOStream, bool isFirst,
+DumpReport(nsIGZFileWriter *aWriter, bool aIsFirst,
            const nsACString &aProcess, const nsACString &aPath, int32_t aKind,
            int32_t aUnits, int64_t aAmount, const nsACString &aDescription)
 {
-    DUMP(aOStream, isFirst ? "[" : ",");
+    DUMP(aWriter, aIsFirst ? "[" : ",");
 
     // We only want to dump reports for this process.  If |aProcess| is
     // non-NULL that means we've received it from another process in response
     // to a "child-memory-reporter-request" event;  ignore such reports.
     if (!aProcess.IsEmpty()) {
-        return NS_OK;    
+        return NS_OK;
     }
 
     unsigned pid = getpid();
     nsPrintfCString pidStr("Process %u", pid);
-    DUMP(aOStream, "\n    {\"process\": \"");
-    DUMP(aOStream, pidStr.get());
+    DUMP(aWriter, "\n    {\"process\": \"");
+    DUMP(aWriter, pidStr);
 
-    DUMP(aOStream, "\", \"path\": \"");
+    DUMP(aWriter, "\", \"path\": \"");
     nsCString path(aPath);
     path.ReplaceSubstring("\\", "\\\\");    // escape backslashes for JSON
-    DUMP(aOStream, path.get());
+    DUMP(aWriter, path);
 
-    DUMP(aOStream, "\", \"kind\": ");
-    DUMP(aOStream, nsPrintfCString("%d", aKind).get());
+    DUMP(aWriter, "\", \"kind\": ");
+    DUMP(aWriter, nsPrintfCString("%d", aKind));
 
-    DUMP(aOStream, ", \"units\": ");
-    DUMP(aOStream, nsPrintfCString("%d", aUnits).get());
+    DUMP(aWriter, ", \"units\": ");
+    DUMP(aWriter, nsPrintfCString("%d", aUnits));
 
-    DUMP(aOStream, ", \"amount\": ");
-    DUMP(aOStream, nsPrintfCString("%lld", aAmount).get());
+    DUMP(aWriter, ", \"amount\": ");
+    DUMP(aWriter, nsPrintfCString("%lld", aAmount));
 
     nsCString description(aDescription);
     description.ReplaceSubstring("\\", "\\\\");    /* <backslash> --> \\ */
     description.ReplaceSubstring("\"", "\\\"");    // " --> \"
     description.ReplaceSubstring("\n", "\\n");     // <newline> --> \n
-    DUMP(aOStream, ", \"description\": \"");
-    DUMP(aOStream, description.get());
-    DUMP(aOStream, "\"}");
+    DUMP(aWriter, ", \"description\": \"");
+    DUMP(aWriter, description);
+    DUMP(aWriter, "\"}");
 
     return NS_OK;
 }
@@ -989,14 +1236,15 @@ public:
                         const nsACString &aDescription,
                         nsISupports *aData)
     {
-        nsCOMPtr<nsIFileOutputStream> ostream = do_QueryInterface(aData);
-        if (!ostream)
-            return NS_ERROR_FAILURE;
+        nsCOMPtr<nsIGZFileWriter> writer = do_QueryInterface(aData);
+        NS_ENSURE_TRUE(writer, NS_ERROR_FAILURE);
 
         // The |isFirst = false| assumes that at least one single reporter is
-        // present and so will have been processed in DumpReports() below.
-        return DumpReport(ostream, /* isFirst = */ false, aProcess, aPath,
+        // present and so will have been processed in
+        // DumpMemoryReportsToFileImpl() below.
+        return DumpReport(writer, /* isFirst = */ false, aProcess, aPath,
                           aKind, aUnits, aAmount, aDescription);
+        return NS_OK;
     }
 };
 
@@ -1005,43 +1253,60 @@ NS_IMPL_ISUPPORTS1(
 , nsIMemoryMultiReporterCallback
 )
 
-NS_IMETHODIMP
-nsMemoryReporterManager::DumpReports()
+nsresult
+nsMemoryReporterManager::DumpMemoryReportsToFileImpl(
+    const nsAString& aIdentifier)
 {
-    // Open a file in NS_OS_TEMP_DIR for writing.
+    // Open a new file named something like
+    //
+    //   incomplete-memory-report-<-identifier>-<pid>-42.json.gz
+    //
+    // in NS_OS_TEMP_DIR for writing.  When we're finished writing the report,
+    // we'll rename this file and get rid of the "incomplete-" prefix.
+    //
+    // We do this because we don't want scripts which poll the filesystem
+    // looking for memory report dumps to grab a file before we're finished
+    // writing to it.
 
     nsCOMPtr<nsIFile> tmpFile;
     nsresult rv =
         NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile));
     NS_ENSURE_SUCCESS(rv, rv);
-   
-    // Basic filename form: "memory-reports-<pid>.json".
-    nsCString filename("memory-reports-");
+
+    // Note that |filename| is missing the "incomplete-" prefix; we'll tack
+    // that on in a moment.
+    nsAutoCString filename;
+    filename.AppendLiteral("memory-report");
+    if (!aIdentifier.IsEmpty()) {
+        filename.AppendLiteral("-");
+        filename.Append(NS_ConvertUTF16toUTF8(aIdentifier));
+    }
+    filename.AppendLiteral("-");
     filename.AppendInt(getpid());
-    filename.AppendLiteral(".json");
-    rv = tmpFile->AppendNative(filename);
+    filename.AppendLiteral(".json.gz");
+
+    rv = tmpFile->AppendNative(NS_LITERAL_CSTRING("incomplete-") + filename);
     NS_ENSURE_SUCCESS(rv, rv);
    
-    rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600); 
+    rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
     NS_ENSURE_SUCCESS(rv, rv);
-   
-    nsCOMPtr<nsIFileOutputStream> ostream =
-        do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-    rv = ostream->Init(tmpFile, -1, -1, 0);
+
+    nsRefPtr<nsGZFileWriter> writer = new nsGZFileWriter();
+    rv = writer->Init(tmpFile);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Dump the memory reports to the file.
 
     // Increment this number if the format changes.
-    DUMP(ostream, "{\n  \"version\": 1,\n");
+    DUMP(writer, "{\n  \"version\": 1,\n");
 
-    DUMP(ostream, "  \"hasMozMallocUsableSize\": ");
+    DUMP(writer, "  \"hasMozMallocUsableSize\": ");
 
     bool hasMozMallocUsableSize;
     GetHasMozMallocUsableSize(&hasMozMallocUsableSize);
-    DUMP(ostream, hasMozMallocUsableSize ? "true" : "false");
-    DUMP(ostream, ",\n");
-    DUMP(ostream, "  \"reports\": ");
+    DUMP(writer, hasMozMallocUsableSize ? "true" : "false");
+    DUMP(writer, ",\n");
+    DUMP(writer, "  \"reports\": ");
 
     // Process single reporters.
     bool isFirst = true;
@@ -1076,7 +1341,7 @@ nsMemoryReporterManager::DumpReports()
         rv = r->GetDescription(description);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = DumpReport(ostream, isFirst, process, path, kind, units, amount,
+        rv = DumpReport(writer, isFirst, process, path, kind, units, amount,
                         description);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1090,12 +1355,32 @@ nsMemoryReporterManager::DumpReports()
     while (NS_SUCCEEDED(e2->HasMoreElements(&more)) && more) {
       nsCOMPtr<nsIMemoryMultiReporter> r;
       e2->GetNext(getter_AddRefs(r));
-      r->CollectReports(cb, ostream);
+      r->CollectReports(cb, writer);
     }
 
-    DUMP(ostream, "\n  ]\n}");
+    DUMP(writer, "\n  ]\n}");
 
-    rv = ostream->Close();
+    rv = writer->Finish();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Rename the file, now that we're done dumping the report.  The file's
+    // ultimate destination is "memory-report<-identifier>-<pid>.json.gz".
+
+    nsCOMPtr<nsIFile> dstFile;
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dstFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = dstFile->AppendNative(filename);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = dstFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString dstFileName;
+    rv = dstFile->GetLeafName(dstFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = tmpFile->MoveTo(/* directory */ nullptr, dstFileName);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIConsoleService> cs =
@@ -1113,6 +1398,68 @@ nsMemoryReporterManager::DumpReports()
 }
 
 #undef DUMP
+
+namespace {
+
+/**
+ * This runnable lets us implement nsIMemoryReporterManager::MinimizeMemoryUsage().
+ * We fire a heap-minimize notification, spin the event loop, and repeat this
+ * process a few times.
+ *
+ * When this sequence finishes, we invoke the callback function passed to the
+ * runnable's constructor.
+ */
+class MinimizeMemoryUsageRunnable : public nsRunnable
+{
+public:
+  MinimizeMemoryUsageRunnable(nsIRunnable* aCallback)
+    : mCallback(aCallback)
+    , mRemainingIters(sNumIters)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (!os) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (mRemainingIters == 0) {
+      os->NotifyObservers(nullptr, "after-minimize-memory-usage",
+                          NS_LITERAL_STRING("MinimizeMemoryUsageRunnable").get());
+      if (mCallback) {
+        mCallback->Run();
+      }
+      return NS_OK;
+    }
+
+    os->NotifyObservers(nullptr, "memory-pressure",
+                        NS_LITERAL_STRING("heap-minimize").get());
+    mRemainingIters--;
+    NS_DispatchToMainThread(this);
+
+    return NS_OK;
+  }
+
+private:
+  // Send sNumIters heap-minimize notifications, spinning the event
+  // loop after each notification (see bug 610166 comment 12 for an
+  // explanation), because one notification doesn't cut it.
+  static const uint32_t sNumIters = 3;
+
+  nsCOMPtr<nsIRunnable> mCallback;
+  uint32_t mRemainingIters;
+};
+
+} // anonymous namespace
+
+NS_IMETHODIMP
+nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback)
+{
+  nsRefPtr<MinimizeMemoryUsageRunnable> runnable =
+    new MinimizeMemoryUsageRunnable(aCallback);
+  return NS_DispatchToMainThread(runnable);
+}
 
 NS_IMPL_ISUPPORTS1(nsMemoryReporter, nsIMemoryReporter)
 

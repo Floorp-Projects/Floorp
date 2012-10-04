@@ -471,6 +471,9 @@ PopupNotifications.prototype = {
 
     this._currentAnchorElement = anchorElement;
 
+    // On OS X and Linux we need a different panel arrow color for
+    // click-to-play plugins, so copy the popupid and use css.
+    this.panel.setAttribute("popupid", this.panel.firstChild.getAttribute("popupid"));
     this.panel.openPopup(anchorElement, "bottomcenter topleft");
     notificationsToShow.forEach(function (n) {
       this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);

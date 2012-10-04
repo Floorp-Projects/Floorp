@@ -3055,9 +3055,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .popup-notification-icon[popupid="click-to-play-plugins"] {
-  list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
-  width: 32px;
-  height: 32px;
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked-64.png);
 }
 
 .addon-progress-description {
@@ -4028,48 +4026,59 @@ html|*#gcli-output-frame {
 /* === social toolbar button === */
 
 /* button icon for the service */
-#social-provider-image {
-  -moz-appearance: none;
-  margin: 0;
-  padding: 2px;
-  min-width: 0;
-  max-height: 20px;
-  list-style-image: url("chrome://browser/skin/social/social.png");
+#social-toolbar-item {
+  -moz-box-orient: horizontal;
 }
 
-/* hbox that surrounds an image and its counter */
-.social-notification-icon-container {
-  cursor: pointer;
-  padding: 0px;
+#social-toolbar-item > .toolbarbutton-1 {
   margin: 0px;
-  position: relative;
 }
 
-/* notification counter box */
-.social-notification-icon-counter {
-  background-color: rgb(240,61,37);
-  border: 1px solid rgb(216,55,34);
-  box-shadow: 0px 1px 0px rgba(0,39,121,0.77);
-  padding-right: 1px;
-  padding-left: 1px;
-  color: white;
+.social-notification-icon-hbox {
+  pointer-events: none;
+}
+
+.social-status-button {
+  list-style-image: none;
+}
+
+#social-provider-button > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+.social-notification-icon-stack {
+  padding: 0;
+}
+
+.social-notification-icon-stack > image {
+  max-height: 16px;
+}
+
+.social-notification-icon-hbox {
+  padding: 0;
+}
+.social-notification-icon-label {
+  text-align: end;
   font-size: 9px;
   font-weight: bold;
-  position: absolute;
-  right: -3px;
-  top: -4px;
-  z-index: 1;
-  text-align: center;
+  padding: 0 1px;
+  color: white;
+  margin: 0;
+  background-color: rgb(240,61,37);
+  border: 1px solid rgb(216,55,34);
+  box-shadow: 0 1px 0 rgba(0,39,121,0.77);
+  -moz-margin-end: -4px;
+  margin-top: -4px;
 }
 
-/* notification image */
-.social-notification-icon-image {
-  padding: 2px;
-  margin: 0px;
-  min-width: 20px;
-  max-width: 32px;
-  max-height: 20px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+.social-notification-icon-label[value=""] {
+  display: none;
+}
+
+@media (-moz-mac-lion-theme) {
+  .social-notification-icon-stack > image:-moz-window-inactive {
+    opacity: .5;
+  }
 }
 
 @media (min-resolution: 2dppx) {
@@ -4086,6 +4095,7 @@ html|*#gcli-output-frame {
   cursor: default;
   font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
   font-size: 12px;
+  cursor: pointer;
 }
 
 #social-statusarea-user-portrait {
@@ -4094,16 +4104,15 @@ html|*#gcli-output-frame {
   margin: 10px;
 }
 
-#social-statusarea-username {
+#social-statusarea-user > vbox > .link {
   -moz-appearance: none;
   color: -moz-nativehyperlinktext;
-  cursor: pointer;
   min-width: 0;
   margin: 0 6px;
   list-style-image: none;
 }
 
-#social-statusarea-username:hover {
+#social-statusarea-user:hover > vbox > .link {
   text-decoration: underline;
 }
 
@@ -4239,4 +4248,123 @@ chatbox {
 chatbox[minimized="true"] {
   width: 160px;
   height: 20px;
+}
+
+panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
+panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical.png");
+}
+
+.click-to-play-plugins-notification-content {
+  margin: -16px;
+  border-radius: 5px;
+}
+
+.click-to-play-plugins-notification-icon-box {
+  background: hsla(0,0%,100%,.4);
+  -moz-border-end: 1px solid hsla(0,0%,100%,.2);
+  padding-top: 16px;
+  -moz-padding-end: 12px;
+  -moz-padding-start: 20px;
+}
+
+.click-to-play-plugins-notification-icon-box:-moz-locale-dir(ltr) {
+  border-bottom-left-radius: 5px;
+  border-top-left-radius: 5px;
+}
+
+.click-to-play-plugins-notification-icon-box:-moz-locale-dir(rtl) {
+  border-bottom-right-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
+.click-to-play-plugins-notification-separator {
+  -moz-border-start: 1px solid hsla(211,79%,6%,.1);
+  border-top: 1px solid hsla(211,79%,6%,.1);
+}
+
+.click-to-play-plugins-notification-description-box {
+  border-bottom: 1px solid hsla(0,0%,100%,.2);
+  -moz-border-start: 1px solid hsla(0,0%,100%,.2);
+  max-width: 28em;
+  padding: 14px 16px 9px 16px;
+}
+
+.click-to-play-plugins-notification-center-box {
+  border-top: 1px solid hsla(0,0%,100%,.2);
+  border-bottom: 1px solid hsla(0,0%,100%,.2);
+  background-color: hsla(211,79%,6%,.05);
+}
+
+.click-to-play-plugins-notification-button-container {
+  border-top: 1px solid hsla(0,0%,100%,.2);
+  -moz-border-start: 1px solid hsla(0,0%,100%,.2);
+  margin: 0px;
+  padding: 16px 16px 17px 16px;
+}
+
+.center-item-box {
+  -moz-border-start: 1px solid hsla(0,0%,100%,.2);
+  padding-top: 7px;
+  -moz-padding-end: 11px;
+  -moz-padding-start: 16px;
+  margin-bottom: -3px;
+}
+
+.center-item-box[padbottom="true"] {
+  padding-bottom: 12px;
+}
+
+.center-item-icon {
+  background-image: url("chrome://mozapps/skin/plugins/pluginGeneric-16.png");
+  background-repeat: no-repeat;
+  height: 16px;
+  width: 16px;
+  margin-bottom: 4px;
+  -moz-margin-end: 6px;
+}
+
+.center-item-box[warn="true"] {
+  background-image: url("chrome://mozapps/skin/extensions/stripes-info-negative-small.png");
+  background-repeat: repeat-x;
+  padding-top: 3px;
+  -moz-padding-end: 11px;
+  padding-bottom: 9px;
+  -moz-padding-start: 16px;
+}
+
+.center-item-box[padbottom="true"][warn="true"] {
+  padding-bottom: 7px;
+}
+
+.center-item-box[showseparator="true"] {
+  border-top: 1px solid hsla(211,79%,6%,.1);
+}
+
+.center-item-box[warn="false"] > .center-item-warning {
+  display: none;
+}
+
+.center-item-warning > .text-link {
+  color: #3d8cd7;
+}
+
+.center-item-warning > .text-link[href=""] {
+  display: none;
+}
+
+.center-item-warning-icon {
+  background-image: url("chrome://mozapps/skin/extensions/alerticon-info-negative.png");
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 15px;
+  margin-bottom: 4px;
+}
+
+.center-item-warning-description {
+  color: #828282;
+}
+
+.center-item-button {
+  min-width: 0;
 }

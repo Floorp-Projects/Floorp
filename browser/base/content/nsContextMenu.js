@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+
 function nsContextMenu(aXulMenu, aBrowser, aIsShift) {
   this.shouldDisplay = true;
   this.initMenu(aBrowser, aXulMenu, aIsShift);
@@ -961,7 +963,7 @@ nsContextMenu.prototype = {
         if (aStatusCode == NS_ERROR_SAVE_LINK_AS_TIMEOUT) {
           // do it the old fashioned way, which will pick the best filename
           // it can without waiting.
-          saveURL(linkURL, linkText, dialogTitle, bypassCache, false, doc.documentURIObject);
+          saveURL(linkURL, linkText, dialogTitle, bypassCache, false, doc.documentURIObject, doc);
         }
         if (this.extListener)
           this.extListener.onStopRequest(aRequest, aContext, aStatusCode);
@@ -1006,6 +1008,10 @@ nsContextMenu.prototype = {
     var ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
     var channel = ioService.newChannelFromURI(makeURI(linkURL));
+    if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
+      let docIsPrivate = PrivateBrowsingUtils.isWindowPrivate(doc.defaultView);
+      channel.setPrivate(docIsPrivate);
+    }
     channel.notificationCallbacks = new callbacks();
 
     let flags = Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS;

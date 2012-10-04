@@ -166,7 +166,7 @@ namespace mozilla {
 namespace dom {
 
 bool
-ReadStructuredClone(JSContext* aCx, const uint64_t* aData, size_t aDataLength,
+ReadStructuredClone(JSContext* aCx, uint64_t* aData, size_t aDataLength,
                     const StructuredCloneClosure& aClosure, JS::Value* aClone)
 {
   void* closure = &const_cast<StructuredCloneClosure&>(aClosure);

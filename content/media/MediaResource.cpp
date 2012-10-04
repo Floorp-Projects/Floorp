@@ -602,7 +602,7 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
     nsHTMLMediaElement* element = mDecoder->GetMediaElement();
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
     if (element->ShouldCheckAllowOrigin()) {
-      nsCORSListenerProxy* crossSiteListener =
+      nsRefPtr<nsCORSListenerProxy> crossSiteListener =
         new nsCORSListenerProxy(mListener,
                                 element->NodePrincipal(),
                                 false);

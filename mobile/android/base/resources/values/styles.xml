@@ -11,6 +11,19 @@
         <item name="android:layout_height">fill_parent</item>
     </style>
 
+    <style name="GeckoList" parent="android:style/Widget.ListView">
+    </style>
+
+    <style name="GeckoList.ListItem">
+        <item name="android:minHeight">?android:attr/listPreferredItemHeight</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceLargeInverse</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">12dip</item>
+        <item name="android:paddingRight">7dip</item>
+        <item name="android:checkMark">?android:attr/listChoiceIndicatorMultiple</item>
+        <item name="android:ellipsize">marquee</item>
+    </style>
+
     <!-- Horizontal Layout -->
     <style name="Layout.Horizontal">
         <item name="android:orientation">horizontal</item>

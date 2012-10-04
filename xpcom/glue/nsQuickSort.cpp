@@ -34,7 +34,6 @@
  */
 
 #include <stdlib.h>
-#include "prtypes.h"
 #include "nsAlgorithm.h"
 #include "nsQuickSort.h"
 

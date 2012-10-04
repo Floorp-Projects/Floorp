@@ -286,6 +286,10 @@ public:
            BlobChild* aBlobChild,
            BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual bool
+  StopSendingFile(const nsAString& aDeviceAddress,
+                  BluetoothReplyRunnable* aRunnable) = 0;
+
   virtual nsresult
   ListenSocketViaService(int aChannel,
                          BluetoothSocketType aType,

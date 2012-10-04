@@ -151,6 +151,10 @@ public:
            BlobChild* aBlobChild,
            BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual bool
+  StopSendingFile(const nsAString& aDeviceAddress,
+                  BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
 protected:
   BluetoothServiceChildProcess();
   virtual ~BluetoothServiceChildProcess();

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url(http://www.w3.org/2000/svg);
+@namespace xml url(http://www.w3.org/XML/1998/namespace);
 
 style, script, symbol {
  display: none;
@@ -59,4 +60,8 @@ foreignObject {
 
 *|*::-moz-svg-text {
   unicode-bidi: inherit;
+}
+
+*[xml|space=preserve] {
+  white-space: -moz-pre-discard-newlines;
 }

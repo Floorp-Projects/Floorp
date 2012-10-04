@@ -80,7 +80,7 @@
      /**
       * Read some bytes from a file.
       *
-      * @param {ArrayBuffer} buffer A buffer for holding the data
+      * @param {C pointer} buffer A buffer for holding the data
       * once it is read.
       * @param {number} nbytes The number of bytes to read. It must not
       * exceed the size of |buffer| in bytes but it may exceed the number
@@ -101,7 +101,7 @@
      /**
       * Write some bytes to a file.
       *
-      * @param {ArrayBuffer} buffer A buffer holding the data that must be
+      * @param {C pointer} buffer A buffer holding the data that must be
       * written.
       * @param {number} nbytes The number of bytes to write. It must not
       * exceed the size of |buffer| in bytes.

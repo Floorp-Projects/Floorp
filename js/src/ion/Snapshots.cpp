@@ -18,6 +18,8 @@
 #include "LIR.h"
 #endif
 
+#include "jsscriptinlines.h"
+
 using namespace js;
 using namespace js::ion;
 

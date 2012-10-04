@@ -1069,7 +1069,7 @@ public class GeckoAppShell
 
     static String getMimeTypeFromExtensions(String aFileExt) {
         MimeTypeMap mtm = MimeTypeMap.getSingleton();
-        StringTokenizer st = new StringTokenizer(aFileExt, "., ");
+        StringTokenizer st = new StringTokenizer(aFileExt, ".,; ");
         String type = null;
         String subType = null;
         while (st.hasMoreElements()) {

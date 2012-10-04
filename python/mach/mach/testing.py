@@ -27,6 +27,12 @@ class Testing(MozbuildObject, ArgumentProvider):
         mochitest = self._spawn(MochitestRunner)
         mochitest.run_mochitest_test(test_file, flavor)
 
+    def run_reftest(self, test_file, flavor):
+        from mozbuild.testing.reftest import ReftestRunner
+
+        reftest = self._spawn(ReftestRunner)
+        reftest.run_reftest_test(test_file, flavor)
+
     def run_xpcshell_test(self, **params):
         from mozbuild.testing.xpcshell import XPCShellRunner
 
@@ -46,27 +52,51 @@ class Testing(MozbuildObject, ArgumentProvider):
 
         group.set_defaults(cls=Testing, method='run_suite', suite='all')
 
+        # Mochitest-style
         mochitest_plain = parser.add_parser('mochitest-plain',
             help='Run a plain mochitest.')
-        mochitest_plain.add_argument('test_file', default='all', nargs='?',
+        mochitest_plain.add_argument('test_file', default=None, nargs='?',
             metavar='TEST', help=generic_help)
         mochitest_plain.set_defaults(cls=Testing, method='run_mochitest',
             flavor='plain')
 
         mochitest_chrome = parser.add_parser('mochitest-chrome',
             help='Run a chrome mochitest.')
-        mochitest_chrome.add_argument('test_file', default='all', nargs='?',
+        mochitest_chrome.add_argument('test_file', default=None, nargs='?',
             metavar='TEST', help=generic_help)
         mochitest_chrome.set_defaults(cls=Testing, method='run_mochitest',
             flavor='chrome')
 
         mochitest_browser = parser.add_parser('mochitest-browser',
             help='Run a mochitest with browser chrome.')
-        mochitest_browser.add_argument('test_file', default='all', nargs='?',
+        mochitest_browser.add_argument('test_file', default=None, nargs='?',
             metavar='TEST', help=generic_help)
         mochitest_browser.set_defaults(cls=Testing, method='run_mochitest',
             flavor='browser')
 
+        mochitest_a11y = parser.add_parser('mochitest-a11y',
+            help='Run an a11y mochitest.')
+        mochitest_a11y.add_argument('test_file', default=None, nargs='?',
+            metavar='TEST', help=generic_help)
+        mochitest_a11y.set_defaults(cls=Testing, method='run_mochitest',
+            flavor='a11y')
+
+        # Reftest-style
+        reftest = parser.add_parser('reftest',
+            help='Run a reftest.')
+        reftest.add_argument('test_file', default=None, nargs='?',
+            metavar='TEST', help=generic_help)
+        reftest.set_defaults(cls=Testing, method='run_reftest',
+            flavor='reftest')
+
+        crashtest = parser.add_parser('crashtest',
+            help='Run a crashtest.')
+        crashtest.add_argument('test_file', default=None, nargs='?',
+            metavar='TEST', help=generic_help)
+        crashtest.set_defaults(cls=Testing, method='run_reftest',
+            flavor='crashtest')
+
+        # XPCShell-style
         xpcshell = parser.add_parser('xpcshell-test',
             help="Run an individual xpcshell test.")
 

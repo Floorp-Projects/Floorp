@@ -13,15 +13,18 @@
 [PrefControlled]
 interface AudioNode {
 
+    [Throws]
     void connect(AudioNode destination, optional unsigned long output = 0, optional unsigned long input = 0);
 
-    //void connect(AudioParam destination, optional unsigned long output = 0);
+    // [Throws]
+    // void connect(AudioParam destination, optional unsigned long output = 0);
 
+    [Throws]
     void disconnect(optional unsigned long output = 0);
 
     readonly attribute AudioContext context;
-    //readonly attribute unsigned long numberOfInputs;
-    //readonly attribute unsigned long numberOfOutputs;
+    readonly attribute unsigned long numberOfInputs;
+    readonly attribute unsigned long numberOfOutputs;
 
 };
 

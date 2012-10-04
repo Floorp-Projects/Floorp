@@ -10,7 +10,7 @@ let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Webapps.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutApps.properties");
 
@@ -98,7 +98,7 @@ function updateList() {
 
 function addApplication(aApp) {
   let list = document.getElementById("appgrid");
-  let manifest = new DOMApplicationManifest(aApp.manifest, aApp.origin);
+  let manifest = new ManifestHelper(aApp.manifest, aApp.origin);
 
   let container = document.createElement("div");
   container.className = "app";

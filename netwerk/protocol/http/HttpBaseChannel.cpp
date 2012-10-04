@@ -50,6 +50,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mAllowSpdy(true)
   , mSuspendCount(0)
   , mProxyResolveFlags(0)
+  , mContentDispositionHint(UINT32_MAX)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
 
@@ -365,11 +366,22 @@ HttpBaseChannel::GetContentDisposition(uint32_t *aContentDisposition)
   nsCString header;
 
   rv = GetContentDispositionHeader(header);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) {
+    if (mContentDispositionHint == UINT32_MAX)
+      return rv;
+
+    *aContentDisposition = mContentDispositionHint;
+    return NS_OK;
+  }
 
   *aContentDisposition = NS_GetContentDispositionFromHeader(header, this);
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+HttpBaseChannel::SetContentDisposition(uint32_t aContentDisposition)
+{
+  mContentDispositionHint = aContentDisposition;
   return NS_OK;
 }
 
@@ -377,16 +389,27 @@ NS_IMETHODIMP
 HttpBaseChannel::GetContentDispositionFilename(nsAString& aContentDispositionFilename)
 {
   aContentDispositionFilename.Truncate();
-
   nsresult rv;
   nsCString header;
 
   rv = GetContentDispositionHeader(header);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) {
+    if (!mContentDispositionFilename)
+      return rv;
+
+    aContentDispositionFilename = *mContentDispositionFilename;
+    return NS_OK;
+  }
 
   return NS_GetFilenameFromDisposition(aContentDispositionFilename,
                                        header, mURI);
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetContentDispositionFilename(const nsAString& aContentDispositionFilename)
+{
+  mContentDispositionFilename = new nsString(aContentDispositionFilename);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1421,6 +1444,15 @@ HttpBaseChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener 
 //-----------------------------------------------------------------------------
 
 void
+HttpBaseChannel::ReleaseListeners()
+{
+  mListener = nullptr;
+  mListenerContext = nullptr;
+  mCallbacks = nullptr;
+  mProgressSink = nullptr;
+}
+
+void
 HttpBaseChannel::DoNotifyListener()
 {
   // Make sure mIsPending is set to false. At this moment we are done from
@@ -1430,14 +1462,12 @@ HttpBaseChannel::DoNotifyListener()
     mListener->OnStartRequest(this, mListenerContext);
     mIsPending = false;
     mListener->OnStopRequest(this, mListenerContext, mStatus);
-    mListener = 0;
-    mListenerContext = 0;
   } else {
     mIsPending = false;
   }
-  // We have to make sure to drop the reference to the callbacks too
-  mCallbacks = nullptr;
-  mProgressSink = nullptr;
+  // We have to make sure to drop the references to listeners and callbacks
+  // no longer  needed
+  ReleaseListeners();
 
   DoNotifyListenerCleanup();
 }
