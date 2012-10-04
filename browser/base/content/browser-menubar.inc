@@ -522,7 +522,7 @@
                   <menuitem id="webConsole" observes="devtoolsMenuBroadcaster_WebConsole" accesskey="&webConsoleCmd.accesskey;"/>
                   <menuitem id="menu_pageinspect" observes="devtoolsMenuBroadcaster_Inspect" accesskey="&inspectMenu.accesskey;"/>
                   <menuitem id="menu_responsiveUI" observes="devtoolsMenuBroadcaster_ResponsiveUI" accesskey="&responsiveDesignTool.accesskey;"/>
-                  <menuitem id="menu_debugger" observes="devtoolsMenuBroadcaster_Debugger"/>
+                  <menuitem id="menu_debugger" observes="devtoolsMenuBroadcaster_Debugger" accesskey="&debuggerMenu.accesskey;"/>
                   <menuitem id="menu_remoteDebugger" observes="devtoolsMenuBroadcaster_RemoteDebugger"/>
                   <menuitem id="menu_chromeDebugger" observes="devtoolsMenuBroadcaster_ChromeDebugger"/>
                   <menuitem id="menu_scratchpad" observes="devtoolsMenuBroadcaster_Scratchpad" accesskey="&scratchpad.accesskey;"/>
