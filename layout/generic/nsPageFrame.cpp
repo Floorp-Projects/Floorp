@@ -487,8 +487,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayList content;
   nsIFrame *child = mFrames.FirstChild();
-  rv = child->BuildDisplayListForStackingContext(aBuilder,
-      child->GetVisualOverflowRectRelativeToSelf(), &content);
+  rv = child->BuildDisplayListForStackingContext(aBuilder, aDirtyRect - child->GetOffsetTo(this), &content);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We may need to paint out-of-flow frames whose placeholders are
