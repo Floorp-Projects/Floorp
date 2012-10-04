@@ -889,6 +889,9 @@
       <method name="toggleHighlight">
         <parameter name="aHighlight"/>
         <body><![CDATA[
+          if (!this._dispatchFindEvent("highlightallchange"))
+            return;
+
           var word = this._findField.value;
 
           // Bug 429723. Don't attempt to highlight ""
@@ -1080,6 +1083,8 @@
           // Just set the pref; our observer will change the find bar behavior
           prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive",
                              aCaseSensitive ? 1 : 0);
+
+          this._dispatchFindEvent("casesensitivitychange");
         ]]></body>
       </method>
 
@@ -1512,6 +1517,9 @@
       <method name="_find">
         <parameter name="aValue"/>
         <body><![CDATA[
+          if (!this._dispatchFindEvent(""))
+            return this.nsITypeAheadFind.FIND_PENDING;
+
           var val = aValue || this._findField.value;
           var res = this.nsITypeAheadFind.FIND_NOTFOUND;
 
@@ -1618,6 +1626,11 @@
               this._findStatusDesc.textContent = this._notFoundStr;
               this._findField.setAttribute("status", "notfound");
               break;
+            case this.nsITypeAheadFind.FIND_PENDING:
+              this._findStatusIcon.setAttribute("status", "pending");
+              this._findStatusDesc.textContent = "";
+              this._findField.removeAttribute("status");
+              break;
             case this.nsITypeAheadFind.FIND_FOUND:
             default:
               this._findStatusIcon.removeAttribute("status");
@@ -1627,6 +1640,16 @@
           }
         ]]></body>
       </method>
+
+      <method name="updateControlState">
+        <parameter name="aResult"/>
+        <parameter name="aFindPrevious"/>
+        <body><![CDATA[
+          this._updateStatusUI(aResult, aFindPrevious);
+          this._enableFindButtons(aResult !== this.nsITypeAheadFind.FIND_NOTFOUND);
+        ]]></body>
+      </method>
+
 
       <method name="_getInitialSelection">
         <body><![CDATA[
@@ -1664,6 +1687,22 @@
                         .substr(0, this._selectionMaxLen);
         ]]></body>
       </method>
+
+      <method name="_dispatchFindEvent">
+        <parameter name="aType"/>
+        <parameter name="aFindPrevious"/>
+        <body><![CDATA[
+          let event = document.createEvent("CustomEvent");
+          event.initCustomEvent("find" + aType, true, true, {
+            query: this._findField.value,
+            caseSensitive: !!this._typeAheadCaseSensitive,
+            highlightAll: this.getElement("highlight").checked,
+            findPrevious: aFindPrevious
+          });
+          return this.dispatchEvent(event);
+        ]]></body>
+      </method>
+
 
       <!--
         - Opens the findbar, focuses the findfield and selects its contents.
@@ -1732,6 +1771,13 @@
             this.startFind();
             return;
           }
+
+          // We dispatch the findAgain event here instead of in _findAgain since
+          // if there is a find event handler that prevents the default then
+          // fastFind.searchString will never get updated which in turn means
+          // there would never be findAgain events because of the logic below.
+          if (!this._dispatchFindEvent("again", aFindPrevious))
+            return;
 
           // user explicitly requested another search, so do it even if we think it'll fail
           this._findFailedString = null;
