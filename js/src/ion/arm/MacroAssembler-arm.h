@@ -602,6 +602,15 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtr(Condition cond, const Address &lhs, Register rhs, Label *label) {
         branch32(cond, lhs, rhs, label);
     }
+
+    void branchPrivatePtr(Condition cond, const Address &lhs, ImmWord ptr, Label *label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
+    void branchPrivatePtr(Condition cond, Register lhs, ImmWord ptr, Label *label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
     template<typename T>
     void branchTestDouble(Condition cond, const T & t, Label *label) {
         Condition c = testDouble(cond, t);
@@ -870,6 +879,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Builds an exit frame on the stack, with a return address to an internal
     // non-function. Returns offset to be passed to markSafepointAt().
     bool buildFakeExitFrame(const Register &scratch, uint32 *offset);
+    bool buildOOLFakeExitFrame(void *fakeReturnAddr);
 
     void callWithExitFrame(IonCode *target);
     void callWithExitFrame(IonCode *target, Register dynStack);
