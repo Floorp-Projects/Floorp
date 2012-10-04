@@ -24,7 +24,7 @@ DWORD __stdcall ThreadFunc(void* closure) {
   PlatformThread::Delegate* delegate =
       static_cast<PlatformThread::Delegate*>(closure);
   delegate->ThreadMain();
-  return NULL;
+  return 0;
 }
 
 }  // namespace
