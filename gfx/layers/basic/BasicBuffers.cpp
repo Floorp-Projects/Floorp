@@ -64,37 +64,10 @@ BasicThebesLayerBuffer::CreateBuffer(ContentType aType,
   return mLayer->CreateBuffer(aType, aSize);
 }
 
-TemporaryRef<DrawTarget>
-BasicThebesLayerBuffer::CreateDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
-{
-  return mLayer->CreateDrawTarget(aSize, aFormat);
-}
-
 void
 BasicThebesLayerBuffer::SetBackingBufferAndUpdateFrom(
   gfxASurface* aBuffer,
   gfxASurface* aSource, const nsIntRect& aRect, const nsIntPoint& aRotation,
-  const nsIntRegion& aUpdateRegion)
-{
-  SetBackingBuffer(aBuffer, aRect, aRotation);
-  nsRefPtr<gfxContext> destCtx =
-    GetContextForQuadrantUpdate(aUpdateRegion.GetBounds());
-  if (!destCtx) {
-    return;
-  }
-  destCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  if (IsClippingCheap(destCtx, aUpdateRegion)) {
-    gfxUtils::ClipToRegion(destCtx, aUpdateRegion);
-  }
-
-  BasicThebesLayerBuffer srcBuffer(aSource, aRect, aRotation);
-  srcBuffer.DrawBufferWithRotation(destCtx, 1.0);
-}
-
-void
-BasicThebesLayerBuffer::SetBackingBufferAndUpdateFrom(
-  DrawTarget* aBuffer,
-  DrawTarget* aSource, const nsIntRect& aRect, const nsIntPoint& aRotation,
   const nsIntRegion& aUpdateRegion)
 {
   SetBackingBuffer(aBuffer, aRect, aRotation);
