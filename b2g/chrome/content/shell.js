@@ -59,6 +59,13 @@ XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
          .getService(Ci.nsIMessageListenerManager);
 });
 
+#ifdef MOZ_WIDGET_GONK
+XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
+  Cu.import("resource://gre/modules/systemlibs.js");
+  return libcutils;
+});
+#endif
+
 function getContentWindow() {
   return shell.contentBrowser.contentWindow;
 }
@@ -113,17 +120,38 @@ var shell = {
 
   start: function shell_start() {
 
+    let cr = Cc["@mozilla.org/xre/app-info;1"]
+               .getService(Ci.nsICrashReporter);
     // Dogfood id. We might want to remove it in the future.
     // see bug 789466
     try {
       let dogfoodId = Services.prefs.getCharPref('prerelease.dogfood.id');
       if (dogfoodId != "") {
-        let cr = Cc["@mozilla.org/xre/app-info;1"]
-                   .getService(Ci.nsICrashReporter);
         cr.annotateCrashReport("Email", dogfoodId);
       }
     }
     catch (e) { }
+
+#ifdef MOZ_WIDGET_GONK
+    // Annotate crash report
+    let annotations = [ [ "Android_Hardware",     "ro.hardware" ],
+                        [ "Android_Device",       "ro.product.device" ],
+                        [ "Android_CPU_ABI2",     "ro.product.cpu.abi2" ],
+                        [ "Android_CPU_ABI",      "ro.product.cpu.abi" ],
+                        [ "Android_Manufacturer", "ro.product.manufacturer" ],
+                        [ "Android_Brand",        "ro.product.brand" ],
+                        [ "Android_Model",        "ro.product.model" ],
+                        [ "Android_Board",        "ro.product.board" ],
+      ];
+
+    annotations.forEach(function (element) {
+        cr.annotateCrashReport(element[0], libcutils.property_get(element[1]));
+      });
+
+    let androidVersion = libcutils.property_get("ro.build.version.sdk") +
+                         "(" + libcutils.property_get("ro.build.version.codename") + ")";
+    cr.annotateCrashReport("Android_Version", androidVersion);
+#endif
 
     let homeURL = this.homeURL;
     if (!homeURL) {
