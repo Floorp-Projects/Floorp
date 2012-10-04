@@ -535,9 +535,13 @@ let SocialShareButton = {
 var SocialToolbar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialToolbar_init() {
-    document.getElementById("social-provider-button").setAttribute("image", Social.provider.iconURL);
+    this.button.setAttribute("image", Social.provider.iconURL);
     this.updateButton();
     this.updateProfile();
+  },
+
+  get button() {
+    return document.getElementById("social-provider-button");
   },
 
   updateButtonHiddenState: function SocialToolbar_updateButtonHiddenState() {
