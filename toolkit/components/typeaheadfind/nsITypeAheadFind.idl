@@ -76,6 +76,8 @@ interface nsITypeAheadFind : nsISupports
                                         // Unsuccessful find
   const unsigned short FIND_WRAPPED  = 2;
                                         // Successful find, but wrapped around
+  const unsigned short FIND_PENDING  = 3;
+                                        // Unknown status, find has not finished
 
 
   /*************************************************************************/

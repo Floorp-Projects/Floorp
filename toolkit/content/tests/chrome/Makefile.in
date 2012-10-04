@@ -16,6 +16,8 @@ DIRS = rtltest rtlchrome
 
 MOCHITEST_CHROME_FILES = 	findbar_window.xul \
 		test_findbar.xul \
+		findbar_events_window.xul \
+		test_findbar_events.xul \
 		test_bug253481.xul \
 		bug263683_window.xul \
 		test_bug263683.xul \

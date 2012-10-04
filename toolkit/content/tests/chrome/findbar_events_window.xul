@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="FindbarTest"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="SimpleTest.executeSoon(startTest);"
+        title="findbar events test">
+
+  <script type="application/javascript"><![CDATA[
+    const Ci = Components.interfaces;
+    const Cc = Components.classes;
+    const Cr = Components.results;
+
+    var gFindBar = null;
+    var gBrowser;
+
+    var imports = ["SimpleTest", "ok"];
+    for each (var name in imports) {
+      window[name] = window.opener.wrappedJSObject[name];
+    }
+
+    function finish() {
+      window.close();
+      SimpleTest.finish();
+    }
+
+    function startTest() {
+      gFindBar = document.getElementById("FindToolbar");
+      gBrowser = document.getElementById("content");
+      gBrowser.addEventListener("pageshow", onPageShow, false);
+      gBrowser.loadURI('data:text/html,hello there');
+    }
+
+    var tests = [
+      testFind,
+      testFindAgain,
+      testCaseSensitivity,
+      testHighlight,
+      finish
+    ];
+
+    // Iterates through the above tests and takes care of passing the done
+    // callback for any async tests.
+    function nextTest() {
+      if (!tests.length) {
+        return;
+      }
+      var func = tests.shift();
+      if (!func.length) {
+        // Test isn't async advance to the next test here.
+        func();
+        SimpleTest.executeSoon(nextTest);
+      } else {
+        func(nextTest);
+      }
+    }
+
+    function onPageShow() {
+      gFindBar.open();
+      gFindBar.onFindCommand();
+      nextTest();
+    }
+
+    function checkSelection(done) {
+      SimpleTest.executeSoon(function() {
+        var selected = gBrowser.contentWindow.getSelection();
+        ok(selected == "", "No text is selected");
+
+        var controller = gFindBar.browser.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISelectionDisplay)
+                                 .QueryInterface(Ci.nsISelectionController);
+        var selection = controller.getSelection(controller.SELECTION_FIND);
+        ok(selection.rangeCount == 0, "No text is highlighted");
+        done();
+      });
+    }
+
+    function testFind(done) {
+      var findTriggered = false;
+      var query = "t";
+      gFindBar.addEventListener("find", function(e) {
+        eventTriggered = true;
+        ok(e.detail.query === query, "find event query should match '" + query + "'");
+        e.preventDefault();
+        // Since we're preventing the default make sure nothing was selected.
+        checkSelection(done);
+      });
+
+      // Put some text in the find box.
+      var event = document.createEvent("KeyEvents");
+      event.initKeyEvent("keypress", true, true, null, false, false,
+                         false, false, 0, query.charCodeAt(0));
+      gFindBar._findField.inputField.dispatchEvent(event);
+      ok(eventTriggered, "find event should be triggered");
+    }
+
+    function testFindAgain(done) {
+      var eventTriggered = false;
+      gFindBar.addEventListener("findagain", function(e) {
+        eventTriggered = true;
+        e.preventDefault();
+        // Since we're preventing the default make sure nothing was selected.
+        checkSelection(done);
+      });
+
+      gFindBar.onFindAgainCommand();
+      ok(eventTriggered, "findagain event should be triggered");
+    }
+
+    function testCaseSensitivity() {
+      var eventTriggered = false;
+      gFindBar.addEventListener("findcasesensitivitychange", function(e) {
+        eventTriggered = true;
+        ok(e.detail.caseSensitive, "find should be case sensitive");
+      });
+
+      var matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
+      matchCaseCheckbox.click();
+      ok(eventTriggered, "findcasesensitivitychange should be triggered");
+    }
+
+    function testHighlight(done) {
+      // Update the find state so the highlight button is clickable.
+      gFindBar.updateControlState(Ci.nsITypeAheadFind.FIND_FOUND, false);
+      var eventTriggered = false;
+      gFindBar.addEventListener("findhighlightallchange", function(e) {
+        eventTriggered = true;
+        ok(e.detail.highlightAll, "find event should have highlight all set");
+        e.preventDefault();
+        // Since we're preventing the default make sure nothing was highlighted.
+        SimpleTest.executeSoon(function() {
+          checkSelection(done);
+        });
+      });
+
+      var highlightButton = gFindBar.getElement("highlight");
+      if (!highlightButton.checked) {
+        highlightButton.click();
+      }
+      ok(eventTriggered, "findhighlightallchange should be triggered");
+    }
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+  <findbar id="FindToolbar" browserid="content"/>
+</window>
