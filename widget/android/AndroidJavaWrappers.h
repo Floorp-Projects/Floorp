@@ -237,6 +237,7 @@ public:
     bool ActivateProgram(AutoLocalJNIFrame *jniFrame);
     bool DeactivateProgram(AutoLocalJNIFrame *jniFrame);
     void GetDisplayPort(AutoLocalJNIFrame *jniFrame, bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort);
+    bool ShouldAbortProgressiveUpdate(AutoLocalJNIFrame *jniFrame, bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution);
 
 protected:
     static jclass jGeckoLayerClientClass;
@@ -247,6 +248,7 @@ protected:
     static jmethodID jActivateProgramMethod;
     static jmethodID jDeactivateProgramMethod;
     static jmethodID jGetDisplayPort;
+    static jmethodID jShouldAbortProgressiveUpdate;
 
 public:
     static jclass jViewportClass;
