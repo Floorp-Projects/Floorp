@@ -6308,8 +6308,10 @@ JS_DecodeUTF8(JSContext *cx, const char *src, size_t srclen, jschar *dst,
 }
 
 JS_PUBLIC_API(char *)
-JS_EncodeString(JSContext *cx, JSString *str)
+JS_EncodeString(JSContext *cx, JSRawString strArg)
 {
+    RootedString str(cx, strArg);
+
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
@@ -7054,7 +7056,7 @@ JS_ErrorFromException(JSContext *cx, jsval valueArg)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
-    return js_ErrorFromException(cx, value);
+    return js_ErrorFromException(value);
 }
 
 JS_PUBLIC_API(JSBool)
