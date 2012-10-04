@@ -33,7 +33,7 @@
 #include "TaskbarWindowPreview.h"
 
 #ifdef ACCESSIBILITY
-#include "OLEACC.H"
+#include "oleacc.h"
 #include "mozilla/a11y/Accessible.h"
 #endif
 

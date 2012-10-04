@@ -16,8 +16,8 @@ extern PRLogModuleInfo* gWindowsLog;
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT) || 1
 
 typedef struct {
-  char * mStr;
-  long   mId;
+  const char * mStr;
+  long         mId;
 } EventMsgInfo;
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
