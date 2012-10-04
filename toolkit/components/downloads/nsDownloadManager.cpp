@@ -1587,7 +1587,8 @@ nsDownloadManager::RetryDownload(uint32_t aID)
   dl->mCancelable = wbp;
   (void)wbp->SetProgressListener(dl);
 
-  rv = wbp->SaveURI(dl->mSource, nullptr, nullptr, nullptr, nullptr, dl->mTarget);
+  rv = wbp->SavePrivacyAwareURI(dl->mSource, nullptr, nullptr, nullptr, nullptr,
+                                dl->mTarget, dl->mPrivate);
   if (NS_FAILED(rv)) {
     dl->mCancelable = nullptr;
     (void)wbp->SetProgressListener(nullptr);
