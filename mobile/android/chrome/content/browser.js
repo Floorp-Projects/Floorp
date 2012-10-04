@@ -2661,6 +2661,19 @@ Tab.prototype = {
 
     this.setScrollClampingSize(aViewport.zoom);
 
+    // Adjust the max line box width to be no more than the viewport width, but
+    // only if the reflow-on-zoom preference is enabled.
+    if (BrowserEventHandler.mReflozPref && BrowserEventHandler._mLastPinchData) {
+      let webNav = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+      let docShell = webNav.QueryInterface(Ci.nsIDocShell);
+      let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+      let viewportWidth = gScreenWidth / aViewport.zoom;
+      // We add in a bit of fudge just so that the end characters don't accidentally
+      // get clipped. 15px is an arbitrary choice.
+      docViewer.changeMaxLineBoxWidth(viewportWidth - 15);
+      BrowserEventHandler._mLastPinchData = null;
+    }
+
     let win = this.browser.contentWindow;
     win.scrollTo(x, y);
 
@@ -3512,9 +3525,25 @@ var BrowserEventHandler = {
     BrowserApp.deck.addEventListener("touchstart", this, true);
     BrowserApp.deck.addEventListener("click", InputWidgetHelper, true);
     BrowserApp.deck.addEventListener("click", SelectHelper, true);
+    document.addEventListener("MozMagnifyGestureStart", this, true);
+    document.addEventListener("MozMagnifyGestureUpdate", this, true);
+    document.addEventListener("MozMagnifyGesture", this, true);
+
+    Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
+  },
+
+  updateReflozPref: function() {
+     this.mReflozPref = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
   },
 
   handleEvent: function(aEvent) {
+    if (aEvent.type && (aEvent.type === "MozMagnifyGesture" ||
+                        aEvent.type === "MozMagnifyGestureUpdate" ||
+                        aEvent.type === "MozMagnifyGestureStart")) {
+      this.observe(this, aEvent.type, JSON.stringify({x: aEvent.screenX, y: aEvent.screenY}));
+      return;
+    }
+
     if (!BrowserApp.isBrowserContentDocumentDisplayed() || aEvent.touches.length > 1 || aEvent.defaultPrevented)
       return;
 
@@ -3653,9 +3682,20 @@ var BrowserEventHandler = {
     } else if (aTopic == "Gesture:DoubleTap") {
       this._cancelTapHighlight();
       this.onDoubleTap(aData);
+    } else if (aTopic == "MozMagnifyGestureStart" ||
+               aTopic == "MozMagnifyGestureUpdate") {
+      this.onPinch(aData);
+    } else if (aTopic == "MozMagnifyGesture") {
+      this.onPinchFinish(aData,
+                         this._mLastPinchPoint.x,
+                         this._mLastPinchPoint.y);
+    } else if (aTopic == "nsPref:changed") {
+      if (aData == "browser.zoom.reflowOnZoom") {
+        this.updateReflozPref();
+      }
     }
   },
- 
+
   _zoomOut: function() {
     sendMessageToJava({ gecko: { type: "Browser:ZoomToPageWidth"} });
   },
@@ -3745,6 +3785,43 @@ var BrowserEventHandler = {
     }
   },
 
+  _zoomInAndSnapToElement: function(aX, aY, aElement) {
+    let viewport = BrowserApp.selectedTab.getViewport();
+    if (viewport.zoom < 1.0) {
+      // We don't want to do this on zoom out.
+      return;
+    }
+
+    let fudge = 15; // Add a bit of fudge.
+    let win = BrowserApp.selectedBrowser.contentWindow;
+
+    let rect = ElementTouchHelper.getBoundingContentRect(aElement);
+
+    rect.type = "Browser:ZoomToRect";
+    rect.x = Math.max(viewport.cssPageLeft, rect.x  - fudge);
+    rect.y = viewport.cssY;
+    rect.w = viewport.cssWidth;
+    rect.h = viewport.cssHeight;
+
+    sendMessageToJava({ gecko: rect });
+   },
+
+   onPinch: function(aData) {
+     let data = JSON.parse(aData);
+     this._mLastPinchPoint = {x: data.x, y: data.y};
+   },
+
+   onPinchFinish: function(aData, aX, aY) {
+     if (this.mReflozPref) {
+       let data = JSON.parse(aData);
+       let pinchElement = ElementTouchHelper.anyElementFromPoint(aX, aY);
+       data.element = pinchElement;
+       BrowserApp.selectedTab._mLastPinchElement = pinchElement;
+       this._mLastPinchData = data;
+       this._zoomInAndSnapToElement(data.x, data.y, data.element);
+     }
+   },
+
   _shouldZoomToElement: function(aElement) {
     let win = aElement.ownerDocument.defaultView;
     if (win.getComputedStyle(aElement, null).display == "inline")
@@ -3761,6 +3838,8 @@ var BrowserEventHandler = {
   _scrollableElement: null,
 
   _highlightElement: null,
+
+  _mLastPinchData: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
     DOMUtils.setContentState(aElement, kStateActive);
