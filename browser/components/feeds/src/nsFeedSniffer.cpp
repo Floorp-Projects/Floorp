@@ -5,7 +5,6 @@
 
 #include "nsFeedSniffer.h"
 
-#include "prmem.h"
 
 #include "nsNetCID.h"
 #include "nsXPCOM.h"

@@ -27,7 +27,6 @@
 #include "nsTArray.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "prmem.h"
 #include "nsIServiceManager.h"
 #include "nsParserConstants.h"
 

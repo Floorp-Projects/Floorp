@@ -20,7 +20,6 @@ WIN_LIBS=                                       \
 
 ---------------------------------------------------------------------- */
 
-#include "prmem.h"
 #include "plstr.h"
 #include <windows.h>
 #include <tchar.h>

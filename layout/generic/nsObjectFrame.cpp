@@ -20,7 +20,6 @@
 #include "nsPluginHost.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "prmem.h"
 #include "nsGkAtoms.h"
 #include "nsIAppShell.h"
 #include "nsIDocument.h"

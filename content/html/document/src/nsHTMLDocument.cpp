@@ -110,7 +110,6 @@ using namespace mozilla::dom;
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
 
-#include "prmem.h"
 #include "prtime.h"
 
 // Find/Search Includes
