@@ -566,22 +566,34 @@ void MediaPipelineTransmit::ProcessVideoChunk(VideoSessionConduit *conduit,
     const_cast<layers::PlanarYCbCrImage *>(
       static_cast<const layers::PlanarYCbCrImage *>(img));
 
-  // TODO(ekr@rtfm.com): Is this really how we get the length?
-  // It's the inverse of the code in MediaEngineDefault
-  unsigned int length = ((yuv->GetSize().width * yuv->GetSize().height) * 3 / 2);
-
   // Big-time assumption here that this is all contiguous data coming
-  // from Anant's version of gUM. This code here is an attempt to double-check
-  // that
-  PR_ASSERT(length == yuv->GetDataSize());
-  if (length != yuv->GetDataSize())
-    return;
+  // from getUserMedia or other sources. 
+  const layers::PlanarYCbCrImage::Data *data = yuv->GetData();
+
+  uint8_t *y = data->mYChannel;
+#ifdef DEBUG
+  uint8_t *cb = data->mCbChannel;
+  uint8_t *cr = data->mCrChannel;
+#endif
+  uint32_t width = yuv->GetSize().width;
+  uint32_t height = yuv->GetSize().height;
+  uint32_t length = yuv->GetDataSize();
+
+  // SendVideoFrame only supports contiguous YCrCb 4:2:0 buffers
+  // Verify it's contiguous and in the right order
+  MOZ_ASSERT(cb == (y + width*height) &&
+             cr == (cb + width*height/4));
+  // XXX Consider making this a non-debug-only check if we ever implement
+  // any subclasses of PlanarYCbCrImage that allow disjoint buffers such
+  // that y+3(width*height)/2 might go outside the allocation.
+  // GrallocPlanarYCbCrImage can have wider strides, and so in some cases
+  // would encode as garbage.  If we need to encode it we'll either want to
+  // modify SendVideoFrame or copy/move the data in the buffer.
 
   // OK, pass it on to the conduit
-  // TODO(ekr@rtfm.com): Check return value
   MOZ_MTLOG(PR_LOG_DEBUG, "Sending a video frame");
-  conduit->SendVideoFrame(yuv->mBuffer.get(), yuv->GetDataSize(),
-    yuv->GetSize().width, yuv->GetSize().height, kVideoI420, 0);
+  // Not much for us to do with an error
+  conduit->SendVideoFrame(y, length, width, height, mozilla::kVideoI420, 0);
 }
 #endif
 
