@@ -34,3 +34,7 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../../xpcom \
   -I$(srcdir)/../../xul \
   $(NULL)
+
+ifdef A11Y_LOG
+  DEFINES += -DA11Y_LOG
+endif

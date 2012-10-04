@@ -16,7 +16,7 @@
 #include "TextLeafAccessible.h"
 #include "TextUpdater.h"
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
 #include "Logging.h"
 #endif
 
@@ -198,7 +198,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       return;
     }
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eTree)) {
       logging::MsgBegin("TREE", "initial tree created");
       logging::Address("document", mDocument);
@@ -303,7 +303,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   events.SwapElements(mEvents);
 
   uint32_t eventCount = events.Length();
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (eventCount > 0 && logging::IsEnabled(logging::eEvents)) {
     logging::MsgBegin("EVENTS", "events processing");
     logging::Address("document", mDocument);
@@ -728,7 +728,7 @@ NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
   // Remove text accessible if rendered text is empty.
   if (textAcc) {
     if (text.IsEmpty()) {
-#ifdef DEBUG
+#ifdef A11Y_LOG
       if (logging::IsEnabled(logging::eTree | logging::eText)) {
         logging::MsgBegin("TREE", "text node lost its content");
         logging::Node("container", containerElm);
@@ -742,7 +742,7 @@ NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
     }
 
     // Update text of the accessible and fire text change events.
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eText)) {
       logging::MsgBegin("TEXT", "text may be changed");
       logging::Node("container", containerElm);
@@ -761,7 +761,7 @@ NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
 
   // Append an accessible if rendered text is not empty.
   if (!text.IsEmpty()) {
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eTree | logging::eText)) {
       logging::MsgBegin("TREE", "text node gains new content");
       logging::Node("container", containerElm);

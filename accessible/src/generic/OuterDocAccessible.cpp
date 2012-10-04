@@ -10,7 +10,7 @@
 #include "Role.h"
 #include "States.h"
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
 #include "Logging.h"
 #endif
 
@@ -123,14 +123,14 @@ OuterDocAccessible::Shutdown()
   // change however the presshell of underlying document isn't destroyed and
   // the document doesn't get pagehide events. Shutdown underlying document if
   // any to avoid hanging document accessible.
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocDestroy))
     logging::OuterDocDestroy(this);
 #endif
 
   Accessible* childAcc = mChildren.SafeElementAt(0, nullptr);
   if (childAcc) {
-#ifdef DEBUG
+#ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocDestroy)) {
       logging::DocDestroy("outerdoc's child document shutdown",
                           childAcc->GetDocumentNode());
@@ -174,7 +174,7 @@ OuterDocAccessible::AppendChild(Accessible* aAccessible)
   if (!AccessibleWrap::AppendChild(aAccessible))
     return false;
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocCreate)) {
     logging::DocCreate("append document to outerdoc",
                        aAccessible->GetDocumentNode());
@@ -194,7 +194,7 @@ OuterDocAccessible::RemoveChild(Accessible* aAccessible)
     return false;
   }
 
-#ifdef DEBUG
+#ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocDestroy)) {
     logging::DocDestroy("remove document from outerdoc", child->GetDocumentNode(),
                         child->AsDoc());
