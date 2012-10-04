@@ -319,6 +319,8 @@ NotifyActivity(ActivityType activityType)
                                                      gTimestamp);
     }
     break;
+  default:
+    break;
   }
 
   // This is not a locked activity because PRTimeStamp is a 32-bit quantity

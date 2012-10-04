@@ -41,9 +41,9 @@ MyEventRegister gEventRegister = NULL;
 MyEventUnregister gEventUnregister = NULL;
 
 nsParentalControlsServiceWin::nsParentalControlsServiceWin() :
-  mPC(nullptr)
-, mEnabled(false)
-, mProvider(NULL)
+  mEnabled(false)
+, mProvider(0)
+, mPC(nullptr)
 {
   HRESULT hr;
   CoInitialize(NULL);

@@ -65,7 +65,7 @@ public:
                 int32_t aCORSMode);
 
   // Callers must call imgRequestProxy::Notify later.
-  nsresult AddProxy(imgRequestProxy *proxy);
+  void AddProxy(imgRequestProxy *proxy);
 
   // aNotify==false still sends OnStopRequest.
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool aNotify);

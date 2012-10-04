@@ -63,7 +63,7 @@ private:
   void Init();
   void SetupAGPS();
   void StartGPS();
-  void ShutdownNow();
+  void ShutdownGPS();
   void RequestDataConnection();
   void ReleaseDataConnection();
   void RequestSetID(uint32_t flags);

@@ -35,6 +35,10 @@ ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpShared &shared,
               JSLinearString *input, const jschar *chars, size_t length,
               size_t *lastIndex, RegExpExecType type, Value *rval);
 
+bool
+ExecuteRegExp(JSContext *cx, RegExpExecType execType, HandleObject regexp,
+              HandleString string, MutableHandleValue rval);
+
 extern JSBool
 regexp_exec(JSContext *cx, unsigned argc, Value *vp);
 

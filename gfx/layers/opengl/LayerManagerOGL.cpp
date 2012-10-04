@@ -641,6 +641,12 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
   }
 
   if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
+    if (aFlags & END_NO_COMPOSITE) {
+      // Apply pending tree updates before recomputing effective
+      // properties.
+      mRoot->ApplyPendingUpdatesToSubtree();
+    }
+
     // The results of our drawing always go directly into a pixel buffer,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
@@ -865,6 +871,9 @@ LayerManagerOGL::Render()
   if (mIsRenderingToEGLSurface) {
     rect = nsIntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
   } else {
+    // FIXME/bug XXXXXX this races with rotation changes on the main
+    // thread, and undoes all the care we take with layers txns being
+    // sent atomically with rotation changes
     mWidget->GetClientBounds(rect);
   }
   WorldTransformRect(rect);
@@ -1180,7 +1189,7 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
   if (mIsRenderingToEGLSurface) {
     rect = nsIntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
   } else {
-    mWidget->GetClientBounds(rect);
+    rect = nsIntRect(0, 0, mWidgetSize.width, mWidgetSize.height);
   }
   GLint width = rect.width;
   GLint height = rect.height;
@@ -1213,9 +1222,15 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
 
   mGLContext->ReadPixelsIntoImageSurface(imageSurface);
 
+  // Map from GL space to Cairo space and reverse the world transform.
+  gfxMatrix glToCairoTransform = mWorldMatrix;
+  glToCairoTransform.Invert();
+  glToCairoTransform.Scale(1.0, -1.0);
+  glToCairoTransform.Translate(-gfxPoint(0.0, height));
+
+  gfxContextAutoSaveRestore restore(aTarget);
   aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
-  aTarget->Scale(1.0, -1.0);
-  aTarget->Translate(-gfxPoint(0.0, height));
+  aTarget->SetMatrix(glToCairoTransform);
   aTarget->SetSource(imageSurface);
   aTarget->Paint();
 }

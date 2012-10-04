@@ -330,7 +330,14 @@ BasicShadowableThebesLayer::SetBackBufferAndAttrs(const OptionalThebesBuffer& aB
   mFrontAndBackBufferDiffer = true;
   mROFrontBuffer = aReadOnlyFrontBuffer;
   mFrontUpdatedRegion = aFrontUpdatedRegion;
-  mFrontValidRegion = aValidRegion;
+
+  if (OptionalThebesBuffer::Tnull_t == mROFrontBuffer.type()) {
+    // We didn't get back a read-only ref to our old back buffer (the
+    // parent's new front buffer).  If the parent is pushing updates
+    // to a texture it owns, then we probably got back the same buffer
+    // we pushed in the update and all is well.  If not, ...
+    mValidRegion = aValidRegion;
+  }
 }
 
 void
@@ -360,11 +367,6 @@ BasicShadowableThebesLayer::SyncFrontBufferToBackBuffer()
   }
 
   if (OptionalThebesBuffer::Tnull_t == mROFrontBuffer.type()) {
-    // We didn't get back a read-only ref to our old back buffer (the
-    // parent's new front buffer).  If the parent is pushing updates
-    // to a texture it owns, then we probably got back the same buffer
-    // we pushed in the update and all is well.  If not, ...
-    mValidRegion = mFrontValidRegion;
     mBuffer.SetBackingBuffer(backBuffer, mBackBufferRect, mBackBufferRectRotation);
     return;
   }

@@ -73,10 +73,10 @@ WinUtils::GetRegistryKey(HKEY aRoot,
 
   HKEY key;
   LONG result =
-    ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ | KEY_WOW64_32KEY, &key);
+    ::RegOpenKeyExW(aRoot, aKeyName, 0, KEY_READ | KEY_WOW64_32KEY, &key);
   if (result != ERROR_SUCCESS) {
     result =
-      ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ | KEY_WOW64_64KEY, &key);
+      ::RegOpenKeyExW(aRoot, aKeyName, 0, KEY_READ | KEY_WOW64_64KEY, &key);
     if (result != ERROR_SUCCESS) {
       return false;
     }
@@ -496,11 +496,11 @@ AsyncWriteIconToDisk::AsyncWriteIconToDisk(const nsAString &aIconPath,
                                            uint8_t *aBuffer, 
                                            uint32_t aBufferLength,
                                            const bool aURLShortcut): 
+  mURLShortcut(aURLShortcut),
   mIconPath(aIconPath),
   mMimeTypeOfInputData(aMimeTypeOfInputData),
   mBuffer(aBuffer),
-  mBufferLength(aBufferLength),
-  mURLShortcut(aURLShortcut)
+  mBufferLength(aBufferLength)
 
 {
 }
@@ -692,7 +692,6 @@ NS_IMETHODIMP AsyncDeleteAllFaviconsFromDisk::Run()
     if (NS_FAILED(currFile->GetPath(path)))
       continue;
 
-    int32_t len = path.Length();
     if (StringTail(path, 4).LowerCaseEqualsASCII(".ico")) {
       // Check if the cached ICO file exists
       bool exists;
