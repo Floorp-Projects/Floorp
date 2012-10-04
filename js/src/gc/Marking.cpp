@@ -132,7 +132,6 @@ MarkInternal(JSTracer *trc, T **thingp)
                  trc->runtime->gcIncrementalState == NO_INCREMENTAL ||  \
                  trc->runtime->gcIncrementalState == MARK_ROOTS);
 
-
 template <typename T>
 static void
 MarkUnbarriered(JSTracer *trc, T **thingp, const char *name)
