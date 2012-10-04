@@ -294,6 +294,7 @@
  "toolkit/components/passwordmgr/test/test_bug_627616.html": "TIMED_OUT",
  "toolkit/components/passwordmgr/test/test_master_password_cleanup.html": "",
  "toolkit/components/passwordmgr/test/test_notifications.html": "",
+ "toolkit/components/passwordmgr/test/test_notifications_popup.html": "",
  "toolkit/components/passwordmgr/test/test_prompt.html": "TIMED_OUT",
  "toolkit/components/passwordmgr/test/test_prompt_async.html": "TIMED_OUT",
  "toolkit/components/passwordmgr/test/test_xhr.html": "TIMED_OUT",
