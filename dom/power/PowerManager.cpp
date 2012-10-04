@@ -16,6 +16,10 @@
 #include "nsServiceManagerUtils.h"
 #include "nsError.h"
 
+#ifdef MOZ_WIDGET_GONK
+#include "b2g.h"
+#endif
+
 DOMCI_DATA(MozPowerManager, mozilla::dom::power::PowerManager)
 
 namespace mozilla {
@@ -68,6 +72,21 @@ PowerManager::Reboot()
   pmService->Reboot();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PowerManager::FactoryReset()
+{
+#ifdef MOZ_WIDGET_GONK
+  nsCOMPtr<nsIRecoveryService> recoveryService =
+    do_GetService("@mozilla.org/recovery-service;1");
+  NS_ENSURE_STATE(recoveryService);
+
+  recoveryService->FactoryReset();
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP

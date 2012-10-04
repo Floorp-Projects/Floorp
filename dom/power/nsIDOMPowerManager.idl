@@ -10,11 +10,12 @@ interface nsIDOMMozWakeLockListener;
 /**
  * This interface implements navigator.mozPower
  */
-[scriptable, uuid(256a3287-f528-45b5-9ba8-2b3650c056e6)]
+[scriptable, uuid(7b181fef-2757-4198-89a0-8c426b8439ea)]
 interface nsIDOMMozPowerManager : nsISupports
 {
     void    powerOff();
     void    reboot();
+    void    factoryReset();
 
     /**
      * The listeners are notified when a resource changes its lock state to:
