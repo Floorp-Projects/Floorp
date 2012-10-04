@@ -1091,7 +1091,11 @@ function run_test_17() {
       do_check_eq(aInstall.version, "3.0");
     },
     onDownloadFailed: function(aInstall) {
-      do_execute_soon(run_test_18);
+      AddonManager.getAddonByID("addon9@tests.mozilla.org", function(a9) {
+        a9.uninstall();
+        restartManager();
+        do_execute_soon(run_test_18);
+      });
     }
   });
 
@@ -1131,6 +1135,8 @@ function run_test_18() {
       },
 
       onUpdateFinished: function() {
+        a10.uninstall();
+        restartManager();
         run_test_19();
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -1166,8 +1172,64 @@ function run_test_19() {
       },
 
       onUpdateFinished: function() {
-        end_test();
+        a11.uninstall();
+        restartManager();
+        run_test_20();
       }
    }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  });
+}
+
+// Test that the update succeeds when the update.rdf URN contains a type prefix
+// different from the add-on type
+function run_test_20() {
+  writeInstallRDFForExtension({
+    id: "addon12@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 12",
+  }, profileDir);
+  restartManager();
+
+  prepare_test({}, [
+    "onNewInstall",
+    "onDownloadStarted",
+    "onDownloadEnded"
+  ], continue_test_20);
+
+  AddonManagerPrivate.backgroundUpdateCheck();
+}
+
+function continue_test_20(install) {
+  do_check_neq(install.existingAddon, null);
+  do_check_eq(install.existingAddon.id, "addon12@tests.mozilla.org");
+
+  prepare_test({
+    "addon12@tests.mozilla.org": [
+      "onInstalling"
+    ]
+  }, [
+    "onInstallStarted",
+    "onInstallEnded",
+  ], check_test_20);
+}
+
+function check_test_20(install) {
+  do_check_eq(install.existingAddon.pendingUpgrade.install, install);
+
+  restartManager();
+  AddonManager.getAddonByID("addon12@tests.mozilla.org", function(a12) {
+    do_check_neq(a12, null);
+    do_check_eq(a12.version, "2.0");
+    do_check_eq(a12.type, "extension");
+    a12.uninstall();
+    restartManager();
+
+    end_test();
   });
 }
