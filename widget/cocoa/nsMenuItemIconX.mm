@@ -311,7 +311,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   if (NS_FAILED(rv)) return rv;
 
   // We need to request the icon be decoded (bug 573583, bug 705516).
-  mIconRequest->RequestDecode();
+  mIconRequest->StartDecoding();
 
   return NS_OK;
 

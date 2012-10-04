@@ -268,7 +268,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
   if (shell && shell->IsVisible() &&
       (!shell->DidInitialize() || shell->IsPaintingSuppressed())) {
 
-    mCurrentRequest->RequestDecode();
+    mCurrentRequest->StartDecoding();
   }
 
   // Fire the appropriate DOM event.

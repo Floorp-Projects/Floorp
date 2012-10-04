@@ -262,7 +262,7 @@ nsImageBoxFrame::UpdateImage()
     mIntrinsicSize.SizeTo(0, 0);
   } else {
     // We don't want discarding or decode-on-draw for xul images.
-    mImageRequest->RequestDecode();
+    mImageRequest->StartDecoding();
     mImageRequest->LockImage();
   }
 }

@@ -146,6 +146,7 @@ interface imgIRequest : nsIRequest
    * container does not yet exist.
    */
   void requestDecode();
+  void startDecoding();
 
   /**
    * Locks an image. If the image does not exist yet, locks it once it becomes
