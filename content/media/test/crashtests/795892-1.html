@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  var a = document.getElementById("a");
+  a.play();
+  a.onplaying = function () { document.documentElement.className = ""; }
+}
+</script>
+</head>
+
+<body>
+<video id="a" src="cors.webm" crossorigin onloadedmetadata="boom();">
+</body>
+</html>
