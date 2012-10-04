@@ -5878,6 +5878,7 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
         return makeCallBarrier(getter, 0, false, types, barrier);
     }
 
+    bool accessGetter = oracle->propertyReadAccessGetter(script_, pc);
     if (unary.ival == MIRType_Object) {
         MIRType rvalType = MIRType_Value;
         if (!barrier && !IsNullOrUndefined(unary.rval))
@@ -5918,11 +5919,19 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
                 load->setIdempotent();
         }
 
-        ins = load;
         if (JSOp(*pc) == JSOP_CALLPROP) {
             if (!annotateGetPropertyCache(cx, obj, load, unaryTypes.inTypes, types))
                 return false;
         }
+
+        // If the cache is known to access getters, then enable generation of
+        // getter stubs and set its result type to value.
+        if (accessGetter) {
+            load->setResultType(MIRType_Value);
+            load->setAllowGetters();
+        }
+
+        ins = load;
     } else {
         ins = MCallGetProperty::New(obj, name);
     }
@@ -5933,7 +5942,7 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
     if (ins->isEffectful() && !resumeAfter(ins))
         return false;
 
-    if (ins->isCallGetProperty())
+    if (ins->isCallGetProperty() || accessGetter)
         monitorResult(ins, types);
     return pushTypeBarrier(ins, types, barrier);
 }

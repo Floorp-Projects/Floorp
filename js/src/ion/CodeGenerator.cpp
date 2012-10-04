@@ -674,7 +674,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     uint32 safepointOffset;
     if (!masm.buildFakeExitFrame(argJSContext, &safepointOffset))
         return false;
-    masm.enterFakeDOMFrame(ION_FRAME_DOMMETHOD);
+    masm.enterFakeExitFrame(ION_FRAME_DOMMETHOD);
 
     if (!markSafepointAt(safepointOffset, call))
         return false;
@@ -3222,7 +3222,7 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
     RegisterSet liveRegs = ool->cache()->safepoint()->liveRegs();
 
     LInstruction *ins = ool->cache();
-    const MInstruction *mir = ins->mirRaw()->toInstruction();
+    MInstruction *mir = ins->mirRaw()->toInstruction();
 
     TypedOrValueRegister output;
 
@@ -3233,6 +3233,7 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
     // Note: because all registers are saved, the output register should be
     //       a def register, else the result will be overriden by restoreLive(ins)
     PropertyName *name = NULL;
+    bool allowGetters = false;
     switch (ins->op()) {
       case LInstruction::LOp_InstanceOfO:
       case LInstruction::LOp_InstanceOfV:
@@ -3244,11 +3245,15 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
         name = ((LGetPropertyCacheT *) ins)->mir()->name();
         objReg = ToRegister(ins->getOperand(0));
         output = TypedOrValueRegister(mir->type(), ToAnyRegister(ins->getDef(0)));
+        JS_ASSERT(mir->isGetPropertyCache());
+        allowGetters = mir->toGetPropertyCache()->allowGetters();
         break;
       case LInstruction::LOp_GetPropertyCacheV:
         name = ((LGetPropertyCacheV *) ins)->mir()->name();
         objReg = ToRegister(ins->getOperand(0));
         output = TypedOrValueRegister(GetValueOutput(ins));
+        JS_ASSERT(mir->isGetPropertyCache());
+        allowGetters = mir->toGetPropertyCache()->allowGetters();
         break;
       default:
         JS_NOT_REACHED("Bad instruction");
@@ -3257,7 +3262,7 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
 
     IonCacheGetProperty cache(ool->getInlineJump(), ool->getInlineLabel(),
                               masm.labelForPatch(), liveRegs,
-                              objReg, name, output);
+                              objReg, name, output, allowGetters);
 
     if (mir->resumePoint())
         cache.setScriptedLocation(mir->block()->info().script(), mir->resumePoint()->pc());
@@ -4039,7 +4044,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
     uint32 safepointOffset;
     if (!masm.buildFakeExitFrame(JSContextReg, &safepointOffset))
         return false;
-    masm.enterFakeDOMFrame(ION_FRAME_DOMGETTER);
+    masm.enterFakeExitFrame(ION_FRAME_DOMGETTER);
 
     if (!markSafepointAt(safepointOffset, ins))
         return false;
@@ -4105,7 +4110,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     uint32 safepointOffset;
     if (!masm.buildFakeExitFrame(JSContextReg, &safepointOffset))
         return false;
-    masm.enterFakeDOMFrame(ION_FRAME_DOMSETTER);
+    masm.enterFakeExitFrame(ION_FRAME_DOMSETTER);
 
     if (!markSafepointAt(safepointOffset, ins))
         return false;

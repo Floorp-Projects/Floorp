@@ -4078,6 +4078,7 @@ class MGetPropertyCache
 {
     CompilerRootPropertyName name_;
     bool idempotent_;
+    bool allowGetters_;
 
     InlinePropertyTable *inlinePropertyTable_;
 
@@ -4085,6 +4086,7 @@ class MGetPropertyCache
       : MUnaryInstruction(obj),
         name_(name),
         idempotent_(false),
+        allowGetters_(false),
         inlinePropertyTable_(NULL)
     {
         setResultType(MIRType_Value);
@@ -4128,6 +4130,12 @@ class MGetPropertyCache
     void setIdempotent() {
         idempotent_ = true;
         setMovable();
+    }
+    bool allowGetters() const {
+        return allowGetters_;
+    }
+    void setAllowGetters() {
+        allowGetters_ = true;
     }
     TypePolicy *typePolicy() { return this; }
 
