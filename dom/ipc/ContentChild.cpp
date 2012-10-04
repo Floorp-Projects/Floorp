@@ -102,6 +102,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
+#include "nsDeviceStorage.h"
 
 using namespace base;
 using namespace mozilla::docshell;
