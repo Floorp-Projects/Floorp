@@ -1622,9 +1622,14 @@ typedef JS::Handle<JSObject*> JSHandleObject;
 typedef JS::Handle<JSString*> JSHandleString;
 typedef JS::Handle<JS::Value> JSHandleValue;
 typedef JS::Handle<jsid> JSHandleId;
-typedef JS::MutableHandle<JSObject*> JSMutableHandleObject;
-typedef JS::MutableHandle<JS::Value> JSMutableHandleValue;
-typedef JS::MutableHandle<jsid> JSMutableHandleId;
+
+typedef JS::MutableHandle<JSObject*>   JSMutableHandleObject;
+typedef JS::MutableHandle<JSFunction*> JSMutableHandleFunction;
+typedef JS::MutableHandle<JSScript*>   JSMutableHandleScript;
+typedef JS::MutableHandle<JSString*>   JSMutableHandleString;
+typedef JS::MutableHandle<JS::Value>   JSMutableHandleValue;
+typedef JS::MutableHandle<jsid>        JSMutableHandleId;
+
 typedef JS::RawObject   JSRawObject;
 typedef JS::RawFunction JSRawFunction;
 typedef JS::RawScript   JSRawScript;
@@ -1641,11 +1646,16 @@ typedef JS::RawValue    JSRawValue;
 
 typedef struct { JSObject **_; } JSHandleObject;
 typedef struct { JSString **_; } JSHandleString;
-typedef struct { jsval *_; } JSHandleValue;
-typedef struct { jsid *_; } JSHandleId;
-typedef struct { JSObject **_; } JSMutableHandleObject;
-typedef struct { jsval *_; } JSMutableHandleValue;
-typedef struct { jsid *_; } JSMutableHandleId;
+typedef struct { jsval     *_; } JSHandleValue;
+typedef struct { jsid      *_; } JSHandleId;
+
+typedef struct { JSObject   **_; } JSMutableHandleObject;
+typedef struct { JSFunction **_; } JSMutableHandleFunction;
+typedef struct { JSScript   **_; } JSMutableHandleScript;
+typedef struct { JSString   **_; } JSMutableHandleString;
+typedef struct { jsval       *_; } JSMutableHandleValue;
+typedef struct { jsid        *_; } JSMutableHandleId;
+
 typedef JSObject   *JSRawObject;
 typedef JSFunction *JSRawFunction;
 typedef JSScript   *JSRawScript;
