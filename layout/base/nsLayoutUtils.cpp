@@ -110,12 +110,14 @@ typedef FrameMetrics::ViewID ViewID;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
+#ifdef MOZ_FLEXBOX
 // These are indices into kDisplayKTable.  They'll be initialized
 // the first time that FlexboxEnabledPrefChangeCallback() is invoked.
 static int32_t sIndexOfFlexInDisplayTable;
 static int32_t sIndexOfInlineFlexInDisplayTable;
 // This tracks whether those ^^ indices have been initialized
 static bool sAreFlexKeywordIndicesInitialized = false;
+#endif // MOZ_FLEXBOX
 
 typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
 static ContentMap* sContentMap = nullptr;
