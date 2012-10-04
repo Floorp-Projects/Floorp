@@ -44,12 +44,6 @@ class Element;
 // OpenGL object wrappers
 //
 
-[scriptable, builtinclass, uuid(0df9f4ed-f5ff-4e51-a6ff-2bd9785a7639)]
-interface nsIWebGLTexture : nsISupports
-{
-  [noscript] attribute WebGLuint name;
-};
-
 [scriptable, builtinclass, uuid(9eca9c32-8305-11de-b89b-000c29206271)]
 interface nsIWebGLBuffer : nsISupports
 {

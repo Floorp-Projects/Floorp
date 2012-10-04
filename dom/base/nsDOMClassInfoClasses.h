@@ -448,7 +448,6 @@ DOMCI_CLASS(MathMLElement)
 
 // WebGL
 DOMCI_CLASS(WebGLBuffer)
-DOMCI_CLASS(WebGLTexture)
 DOMCI_CLASS(WebGLProgram)
 DOMCI_CLASS(WebGLShader)
 DOMCI_CLASS(WebGLFramebuffer)
