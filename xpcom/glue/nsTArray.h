@@ -657,9 +657,8 @@ public:
   template<class Item, class Comparator>
   index_type LastIndexOf(const Item& item, index_type start,
                          const Comparator& comp) const {
-    if (start >= Length())
-      start = Length() - 1;
-    const elem_type* end = Elements() - 1, *iter = end + start + 1;
+    size_type endOffset = start >= Length() ? Length() : start + 1;
+    const elem_type* end = Elements() - 1, *iter = end + endOffset;
     for (; iter != end; --iter) {
       if (comp.Equals(*iter, item))
         return index_type(iter - Elements());
