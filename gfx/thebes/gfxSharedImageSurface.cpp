@@ -14,8 +14,14 @@ using namespace mozilla::ipc;
 
 static const cairo_user_data_key_t SHM_KEY = {0};
 
-/*static*/ SharedImageInfo*
-gfxSharedImageSurface::GetShmInfoPtr(const Shmem& aShmem)
+struct SharedImageInfo {
+    int32_t width;
+    int32_t height;
+    int32_t format;
+};
+
+static SharedImageInfo*
+GetShmInfoPtr(const Shmem& aShmem)
 {
     return reinterpret_cast<SharedImageInfo*>
         (aShmem.get<char>() + aShmem.Size<char>() - sizeof(SharedImageInfo));
