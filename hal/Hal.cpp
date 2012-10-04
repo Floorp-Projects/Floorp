@@ -1000,5 +1000,11 @@ GetFMBandSettings(FMRadioCountry aCountry) {
     return settings;
 }
 
+void FactoryReset()
+{
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(FactoryReset());
+}
+
 } // namespace hal
 } // namespace mozilla

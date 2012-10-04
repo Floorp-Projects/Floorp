@@ -178,6 +178,8 @@ parent:
       returns (uint32_t strength);
     CancelFMRadioSeek();
 
+    FactoryReset();
+
 child:
     NotifySensorChange(SensorData aSensorData);
 

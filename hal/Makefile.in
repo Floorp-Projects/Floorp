@@ -21,6 +21,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE         = hal
 LIBRARY_NAME   = hal_s
+XPIDL_MODULE   = hal
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
@@ -34,6 +35,10 @@ EXPORTS_mozilla = \
   HalSensor.h \
   HalTypes.h \
   HalWakeLock.h \
+  $(NULL)
+
+XPIDLSRCS = \
+  nsIRecoveryService.idl \
   $(NULL)
 
 CPPSRCS = \
@@ -127,6 +132,7 @@ CPPSRCS += \
   FallbackScreenPower.cpp \
   FallbackProcessPriority.cpp \
   FallbackFMRadio.cpp \
+  FallbackFactoryReset.cpp \
   $(NULL)
 endif #}
 
