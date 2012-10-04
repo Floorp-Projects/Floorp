@@ -44,6 +44,49 @@ class Element;
 // OpenGL object wrappers
 //
 
+[scriptable, builtinclass, uuid(0df9f4ed-f5ff-4e51-a6ff-2bd9785a7639)]
+interface nsIWebGLTexture : nsISupports
+{
+  [noscript] attribute WebGLuint name;
+};
+
+[scriptable, builtinclass, uuid(9eca9c32-8305-11de-b89b-000c29206271)]
+interface nsIWebGLBuffer : nsISupports
+{
+  [noscript] attribute WebGLuint name;
+};
+
+[scriptable, builtinclass, uuid(a6a19e74-8305-11de-9ce9-000c29206271)]
+interface nsIWebGLProgram : nsISupports
+{
+  [noscript] attribute WebGLuint name;
+};
+
+[scriptable, builtinclass, uuid(ac7440a4-8305-11de-807b-000c29206271)]
+interface nsIWebGLShader : nsISupports
+{
+  [noscript] attribute WebGLuint name;
+};
+
+[scriptable, builtinclass, uuid(beea4b38-3094-4e8d-b6e6-8b21d07e8994)]
+interface nsIWebGLShaderArray : nsISupports
+{
+    readonly attribute unsigned long length;
+    nsIWebGLShader item(in unsigned long index);
+};
+
+[scriptable, builtinclass, uuid(bce8be60-8305-11de-9f3c-000c29206271)]
+interface nsIWebGLFramebuffer : nsISupports
+{
+  [noscript] attribute WebGLuint name;
+};
+
+[scriptable, builtinclass, uuid(c82eacd0-8305-11de-9de9-000c29206271)]
+interface nsIWebGLRenderbuffer : nsISupports
+{
+  [noscript] attribute WebGLuint name;
+};
+
 [scriptable, builtinclass, uuid(a85d4fd0-5b9f-4cb8-aeee-5a2c5c5bad76)]
 interface nsIWebGLActiveInfo : nsISupports
 {
