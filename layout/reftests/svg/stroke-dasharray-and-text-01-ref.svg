@@ -4,7 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg">
   <title>Test stroke-dasharray with text and zooming</title>
-  <g fill="none" stroke-width="2" stroke="black" stroke-dasharray="20">
-    <text font-size="100" x="100" y="100">|</text>
+  <g fill="none" stroke-width="2" stroke="black" stroke-dasharray="64" stroke-linejoin="round" stroke-linecap="round">
+    <text font-size="128" x="128" y="128">|</text>
   </g>
 </svg>
