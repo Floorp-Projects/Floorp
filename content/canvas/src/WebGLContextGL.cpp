@@ -2157,12 +2157,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
 
         case LOCAL_GL_CURRENT_PROGRAM:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(), mCurrentProgram.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mCurrentProgram.get(), rv);
         }
 
         case LOCAL_GL_TEXTURE_BINDING_2D:

@@ -55,12 +55,14 @@ interface WebGLBuffer {
 interface WebGLFramebuffer {
 };
 
-interface WebGLProgram;
+interface WebGLProgram {
+};
 
 interface WebGLRenderbuffer {
 };
 
-interface WebGLShader;
+interface WebGLShader {
+};
 
 interface WebGLTexture {
 };
