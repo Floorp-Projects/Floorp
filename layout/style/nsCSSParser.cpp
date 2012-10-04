@@ -5245,7 +5245,7 @@ CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
 
   // Stop positions do not have to fall between the starting-point and
   // ending-point, so we don't use ParseNonNegativeVariant.
-  if (!ParseVariant(stop->mLocation, VARIANT_LP, nullptr)) {
+  if (!ParseVariant(stop->mLocation, VARIANT_LP | VARIANT_CALC, nullptr)) {
     stop->mLocation.SetNoneValue();
   }
   return true;
