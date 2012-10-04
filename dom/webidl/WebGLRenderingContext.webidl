@@ -49,7 +49,8 @@ typedef float          GLclampf;
     boolean preserveDrawingBuffer = false;
     };*/
 
-interface WebGLBuffer;
+interface WebGLBuffer {
+};
 
 interface WebGLFramebuffer;
 

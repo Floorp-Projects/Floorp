@@ -1497,13 +1497,12 @@ struct WebGLVertexAttribData {
     }
 };
 
-// NOTE: When this class is switched to new DOM bindings, update the
-// (then-slow) WrapObject calls in GetParameter and GetVertexAttrib.
 class WebGLBuffer MOZ_FINAL
-    : public nsIWebGLBuffer
+    : public nsISupports
     , public WebGLRefCountedObject<WebGLBuffer>
     , public LinkedListElement<WebGLBuffer>
     , public WebGLContextBoundObject
+    , public nsWrapperCache
 {
 public:
     WebGLBuffer(WebGLContext *context)
@@ -1512,6 +1511,7 @@ public:
         , mByteLength(0)
         , mTarget(LOCAL_GL_NONE)
     {
+        SetIsDOMBinding();
         mContext->MakeContextCurrent();
         mContext->gl->fGenBuffers(1, &mGLName);
         mContext->mBuffers.insertBack(this);
@@ -1563,8 +1563,14 @@ public:
         return mCache->Validate(type, max_allowed, first, count);
     }
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLBUFFER
+    WebGLContext *GetParentObject() const {
+        return Context();
+    }
+
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLBuffer)
 
 protected:
 

@@ -2137,24 +2137,12 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
 
         case LOCAL_GL_ARRAY_BUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBoundArrayBuffer.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBoundArrayBuffer.get(), rv);
         }
 
         case LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBoundElementArrayBuffer.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBoundElementArrayBuffer.get(), rv);
         }
 
         case LOCAL_GL_RENDERBUFFER_BINDING:
@@ -2840,13 +2828,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
     switch (pname) {
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mAttribBuffers[index].buf.get(), &v)) {
-                rv.Throw(NS_ERROR_FAILURE);
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mAttribBuffers[index].buf.get(), rv);
         }
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:

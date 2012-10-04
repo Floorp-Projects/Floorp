@@ -447,7 +447,6 @@ DOMCI_CLASS(SimpleGestureEvent)
 DOMCI_CLASS(MathMLElement)
 
 // WebGL
-DOMCI_CLASS(WebGLBuffer)
 DOMCI_CLASS(WebGLProgram)
 DOMCI_CLASS(WebGLShader)
 DOMCI_CLASS(WebGLFramebuffer)

@@ -461,7 +461,6 @@ irregularFilenames = {
 
     'nsIDOMBlob': 'nsIDOMFile',
 
-    'nsIWebGLBuffer': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLProgram': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLShader': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLShaderArray': 'nsIDOMWebGLRenderingContext',
