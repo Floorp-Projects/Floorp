@@ -16,7 +16,7 @@
 #include <limits.h>
 
 #include "modules/interface/module_common_types.h"
-#include "modules/video_coding/codecs/vp8/main/interface/vp8_common_types.h"
+#include "modules/video_coding/codecs/vp8/include/vp8_common_types.h"
 #include "modules/video_coding/main/interface/video_coding_defines.h"
 #include "modules/video_coding/main/source/er_tables_xor.h"
 #include "modules/video_coding/main/source/fec_tables_xor.h"
@@ -141,6 +141,31 @@ int VCMNackFecMethod::MaxFramesFec() const {
   return _maxFramesFec;
 }
 
+bool VCMNackFecMethod::BitRateTooLowForFec(
+    const VCMProtectionParameters* parameters) {
+  // Bitrate below which we turn off FEC, regardless of reported packet loss.
+  // The condition should depend on resolution and content. For now, use
+  // threshold on bytes per frame, with some effect for the frame size.
+  // The condition for turning off FEC is also based on other factors,
+  // such as |_numLayers|, |_maxFramesFec|, and |_rtt|.
+  int estimate_bytes_per_frame = 1000 * BitsPerFrame(parameters) / 8;
+  int max_bytes_per_frame = kMaxBytesPerFrameForFec;
+  int num_pixels = parameters->codecWidth * parameters->codecHeight;
+  if (num_pixels <= 352 * 288) {
+    max_bytes_per_frame = kMaxBytesPerFrameForFecLow;
+  } else if (num_pixels > 640 * 480) {
+    max_bytes_per_frame = kMaxBytesPerFrameForFecHigh;
+  }
+  // TODO (marpan): add condition based on maximum frames used for FEC,
+  // and expand condition based on frame size.
+  if (estimate_bytes_per_frame < max_bytes_per_frame &&
+      parameters->numLayers < 3 &&
+      parameters->rtt < kMaxRttTurnOffFec) {
+    return true;
+  }
+  return false;
+}
+
 bool
 VCMNackFecMethod::EffectivePacketLoss(const VCMProtectionParameters* parameters)
 {
@@ -156,6 +181,10 @@ VCMNackFecMethod::UpdateParameters(const VCMProtectionParameters* parameters)
     ProtectionFactor(parameters);
     EffectivePacketLoss(parameters);
     _maxFramesFec = ComputeMaxFramesFec(parameters);
+    if (BitRateTooLowForFec(parameters)) {
+      _protectionFactorK = 0;
+      _protectionFactorD = 0;
+    }
 
     // Efficiency computation is based on FEC and NACK
 
@@ -536,7 +565,7 @@ int VCMFecMethod::BitsPerFrame(const VCMProtectionParameters* parameters) {
   // layer.
   const float bitRateRatio =
     kVp8LayerRateAlloction[parameters->numLayers - 1][0];
-  float frameRateRatio = powf(1 / 2, parameters->numLayers - 1);
+  float frameRateRatio = powf(1 / 2.0, parameters->numLayers - 1);
   float bitRate = parameters->bitRate * bitRateRatio;
   float frameRate = parameters->frameRate * frameRateRatio;
 
@@ -624,7 +653,6 @@ _shortMaxLossPr255(0),
 _packetsPerFrame(0.9999f),
 _packetsPerFrameKey(0.9999f),
 _residualPacketLossFec(0),
-_boostRateKey(2),
 _codecWidth(0),
 _codecHeight(0),
 _numLayers(1)

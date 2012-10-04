@@ -25,8 +25,7 @@ VideoRenderLinuxImpl::VideoRenderLinuxImpl(
             _id(id),
             _renderLinuxCritsect(
                                  *CriticalSectionWrapper::CreateCriticalSection()),
-            _ptrWindow(window), _fullscreen(fullscreen), _ptrX11Render(NULL),
-            _renderType(videoRenderType)
+            _ptrWindow(window), _ptrX11Render(NULL)
 {
 }
 

@@ -650,10 +650,12 @@ WebRtc_Word32 WebRtcAecm_InitEchoPath(void* aecmInst,
     aecmob_t *aecm = aecmInst;
     const WebRtc_Word16* echo_path_ptr = echo_path;
 
-    if ((aecm == NULL) || (echo_path == NULL))
-    {
-        aecm->lastError = AECM_NULL_POINTER_ERROR;
-        return -1;
+    if (aecmInst == NULL) {
+      return -1;
+    }
+    if (echo_path == NULL) {
+      aecm->lastError = AECM_NULL_POINTER_ERROR;
+      return -1;
     }
     if (size_bytes != WebRtcAecm_echo_path_size_bytes())
     {
@@ -679,10 +681,12 @@ WebRtc_Word32 WebRtcAecm_GetEchoPath(void* aecmInst,
     aecmob_t *aecm = aecmInst;
     WebRtc_Word16* echo_path_ptr = echo_path;
 
-    if ((aecm == NULL) || (echo_path == NULL))
-    {
-        aecm->lastError = AECM_NULL_POINTER_ERROR;
-        return -1;
+    if (aecmInst == NULL) {
+      return -1;
+    }
+    if (echo_path == NULL) {
+      aecm->lastError = AECM_NULL_POINTER_ERROR;
+      return -1;
     }
     if (size_bytes != WebRtcAecm_echo_path_size_bytes())
     {

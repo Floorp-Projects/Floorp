@@ -33,10 +33,13 @@ public:
 
     static void DestroyFilePlayer(FilePlayer* player);
 
-    virtual WebRtc_Word32 Get10msAudioFromFile(
-        WebRtc_Word16* decodedDataBuffer,
-        WebRtc_UWord32& decodedDataLengthInSamples,
-        const WebRtc_UWord32 frequencyInHz) = 0;
+    // Read 10 ms of audio at |frequencyInHz| to |outBuffer|. |lengthInSamples|
+    // will be set to the number of samples read (not the number of samples per
+    // channel).
+    virtual int Get10msAudioFromFile(
+        int16_t* outBuffer,
+        int& lengthInSamples,
+        int frequencyInHz) = 0;
 
     // Register callback for receiving file playing notifications.
     virtual WebRtc_Word32 RegisterModuleFileCallback(

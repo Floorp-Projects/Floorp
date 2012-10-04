@@ -60,9 +60,6 @@ class ACMG722: public ACMGenericCodec {
 
   void InternalDestructEncoderInst(void* ptrInst);
 
-  WebRtc_Word16 UnregisterFromNetEqSafe(ACMNetEQ* netEq,
-                                        WebRtc_Word16 payloadType);
-
   void SplitStereoPacket(uint8_t* payload, int32_t* payload_length);
 
   ACMG722EncStr* _ptrEncStr;

@@ -10,11 +10,8 @@
 
 #include "video_render_android_surface_view.h"
 #include "critical_section_wrapper.h"
-#include "common_video/libyuv/include/libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "tick_util.h"
-#ifdef ANDROID_NDK_8_OR_ABOVE
-    #include <android/bitmap.h>
-#endif
 
 #ifdef ANDROID_LOG
 #include <stdio.h>
@@ -235,6 +232,10 @@ AndroidSurfaceViewChannel::AndroidSurfaceViewChannel(
     _renderer(renderer),
     _jvm(jvm),
     _javaRenderObj(javaRenderObj),
+#ifndef ANDROID_NDK_8_OR_ABOVE
+    _javaByteBufferObj(NULL),
+    _directBuffer(NULL),
+#endif
     _bitmapWidth(0),
     _bitmapHeight(0) {
 }
@@ -270,11 +271,7 @@ AndroidSurfaceViewChannel::~AndroidSurfaceViewChannel() {
       }
     }
 
-#ifdef ANDROID_NDK_8_OR_ABOVE
-    env->DeleteGlobalRef(_javaBitmapObj);
-#else
     env->DeleteGlobalRef(_javaByteBufferObj);
-#endif
     if (isAttached) {
       if (_jvm->DetachCurrentThread() < 0) {
         WEBRTC_TRACE(kTraceWarning,
@@ -349,31 +346,7 @@ WebRtc_Word32 AndroidSurfaceViewChannel::Init(
                  __FUNCTION__);
     return -1;
   }
-#ifdef ANDROID_NDK_8_OR_ABOVE
-  // get the method ID for the CreateBitmap
-  _createBitmapCid =
-      env->GetMethodID(_javaRenderClass,
-                       "CreateBitmap",
-                       "(II)Landroid/graphics/Bitmap;");
-  if (_createBitmapCid == NULL) {
-    WEBRTC_TRACE(kTraceError,
-                 kTraceVideoRenderer,
-                 _id,
-                 "%s: could not get CreateBitmap ID",
-                 __FUNCTION__);
-    return -1; /* exception thrown */
-  }
-  // get the method ID for the DrawBitmap function
-  _drawBitmapCid = env->GetMethodID(_javaRenderClass, "DrawBitmap", "()V");
-  if (_drawBitmapCid == NULL) {
-    WEBRTC_TRACE(kTraceError,
-                 kTraceVideoRenderer,
-                 _id,
-                 "%s: could not get DrawBitmap ID",
-                 __FUNCTION__);
-    return -1; /* exception thrown */
-  }
-#else
+
   // get the method ID for the CreateIntArray
   _createByteBufferCid =
       env->GetMethodID(javaRenderClass,
@@ -400,7 +373,6 @@ WebRtc_Word32 AndroidSurfaceViewChannel::Init(
                  __FUNCTION__);
     return -1; /* exception thrown */
   }
-#endif
 
   // get the method ID for the SetCoordinates function
   _setCoordinatesCid = env->GetMethodID(javaRenderClass,
@@ -456,60 +428,6 @@ WebRtc_Word32 AndroidSurfaceViewChannel::RenderFrame(
 void AndroidSurfaceViewChannel::DeliverFrame(JNIEnv* jniEnv) {
   _renderCritSect.Enter();
 
-#ifdef ANDROID_NDK_8_OR_ABOVE
-  if (_bitmapWidth != _bufferToRender.Width() ||
-      _bitmapHeight != _bufferToRender.Height()) {
-    // Create the bitmap to write to
-    WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s: Creating bitmap %u "
-                 "%u", __FUNCTION__, _bufferToRender.Width(),
-                 _bufferToRender.Height());
-    if (_javaBitmapObj) {
-      jniEnv->DeleteGlobalRef(_javaBitmapObj);
-      _javaBitmapObj = NULL;
-    }
-    jobject javaBitmap = jniEnv->CallObjectMethod(_javaRenderObj,
-                                                  _createBitmapCid,
-                                                  videoFrame.Width(),
-                                                  videoFrame.Height());
-    _javaBitmapObj = jniEnv->NewGlobalRef(javaBitmap);
-    if (!_javaBitmapObj) {
-      WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id, "%s: could not "
-                   "create Java Bitmap object reference", __FUNCTION__);
-      _renderCritSect.Leave();
-      return;
-    } else {
-      _bitmapWidth = _bufferToRender.Width();
-      _bitmapHeight = _bufferToRender.Height();
-    }
-  }
-  void* pixels;
-  if (_javaBitmapObj &&
-      AndroidBitmap_lockPixels(jniEnv, _javaBitmapObj, &pixels) >= 0) {
-    WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s: Locked bitmap",
-                 __FUNCTION__);
-    // Convert I420 straight into the Java bitmap.
-    int ret = ConvertI420ToRGB565((unsigned char*)_bufferToRender.Buffer(),
-                                  (unsigned char*) pixels,
-                                  _bitmapWidth, _bitmapHeight);
-    if (ret < 0) {
-      WEBRTC_TRACE(kTraceError,
-                   kTraceVideoRenderer,
-                   _id,
-                   "%s: Color conversion failed.",
-                   __FUNCTION__);
-    }
-
-    AndroidBitmap_unlockPixels(jniEnv, _javaBitmapObj);
-    // Draw the Surface.
-    jniEnv->CallVoidMethod(_javaRenderObj,_drawCid);
-
-  } else {
-    WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id, "%s: Could not lock "
-                 "bitmap", __FUNCTION__);
-  }
-  _renderCritSect.Leave();
-
-#else
   if (_bitmapWidth != _bufferToRender.Width() ||
       _bitmapHeight != _bufferToRender.Height()) {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s: New render size %d "
@@ -520,6 +438,7 @@ void AndroidSurfaceViewChannel::DeliverFrame(JNIEnv* jniEnv) {
       _javaByteBufferObj = NULL;
       _directBuffer = NULL;
     }
+
     jobject javaByteBufferObj =
         jniEnv->CallObjectMethod(_javaRenderObj, _createByteBufferCid,
                                  _bufferToRender.Width(),
@@ -539,11 +458,10 @@ void AndroidSurfaceViewChannel::DeliverFrame(JNIEnv* jniEnv) {
   }
 
   if(_javaByteBufferObj && _bitmapWidth && _bitmapHeight) {
-    // Android requires a vertically flipped image compared to std convert.
-    // This is done by giving a negative height input.
     const int conversionResult =
-        ConvertI420ToRGB565((unsigned char* )_bufferToRender.Buffer(),
-                            _directBuffer, _bitmapWidth, -_bitmapHeight);
+        ConvertFromI420((unsigned char* )_bufferToRender.Buffer(), _bitmapWidth,
+                        kRGB565, 0, _bitmapWidth, _bitmapHeight, _directBuffer);
+
     if (conversionResult < 0)  {
       WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id, "%s: Color conversion"
                    " failed.", __FUNCTION__);
@@ -554,7 +472,6 @@ void AndroidSurfaceViewChannel::DeliverFrame(JNIEnv* jniEnv) {
   _renderCritSect.Leave();
   // Draw the Surface
   jniEnv->CallVoidMethod(_javaRenderObj, _drawByteBufferCid);
-#endif
 }
 
 }  // namespace webrtc

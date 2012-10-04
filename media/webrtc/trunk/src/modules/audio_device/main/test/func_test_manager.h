@@ -32,12 +32,10 @@
 #define DEFAULT_PAUSE_TIME 5000
 
 #if defined(USE_SLEEP_AS_PAUSE)
-#define PAUSE(a) AudioDeviceUtility::Sleep(a);
+#define PAUSE(a) SleepMs(a);
 #else
 #define PAUSE(a) AudioDeviceUtility::WaitForKey();
 #endif
-
-#define SLEEP(a) AudioDeviceUtility::Sleep(a);
 
 #define ADM_AUDIO_LAYER AudioDeviceModule::kPlatformDefaultAudio
 //#define ADM_AUDIO_LAYER AudioDeviceModule::kLinuxPulseAudio
@@ -85,8 +83,6 @@ public:
 public:
     ErrorCode _error;
     WarningCode _warning;
-private:
-    AudioDeviceModule* _audioDevice;
 };
 
 // ----------------------------------------------------------------------------
@@ -210,7 +206,6 @@ private:
     WebRtc_Word32 TestAdvancedMBAPI();
 private:
     // Paths to where the resource files to be used for this test are located.
-    std::string _resourcePath;
     std::string _playoutFile48;
     std::string _playoutFile44;
     std::string _playoutFile16;

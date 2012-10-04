@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -133,10 +133,16 @@ int main(int argc, char* argv[])
             /* exit if returned with error */
             printf("Error in encoder/decoder\n");
         } else {
-            /* Write coded bits to file */
-            fwrite(streamdata,sizeof(short),stream_len/2,outbitp);
-            /* Write coded speech to file */
-            fwrite(decoded,sizeof(short),framelength,outp);
+          /* Write coded bits to file */
+          if (fwrite(streamdata, sizeof(short), stream_len/2,
+                     outbitp) != static_cast<size_t>(stream_len/2)) {
+            return -1;
+          }
+          /* Write coded speech to file */
+          if (fwrite(decoded, sizeof(short), framelength,
+                     outp) != static_cast<size_t>(framelength)) {
+            return -1;
+          }
         }
     }
 
@@ -154,4 +160,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-

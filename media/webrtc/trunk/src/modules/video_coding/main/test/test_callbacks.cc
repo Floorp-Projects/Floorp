@@ -51,6 +51,7 @@ VCMEncodeCompleteCallback::SendData(
         const FrameType frameType,
         const WebRtc_UWord8  payloadType,
         const WebRtc_UWord32 timeStamp,
+        int64_t capture_time_ms,
         const WebRtc_UWord8* payloadData,
         const WebRtc_UWord32 payloadSize,
         const RTPFragmentationHeader& fragmentationHeader,
@@ -59,7 +60,9 @@ VCMEncodeCompleteCallback::SendData(
     // will call the VCMReceiver input packet
     _frameType = frameType;
     // writing encodedData into file
-    fwrite(payloadData, 1, payloadSize, _encodedFile);
+    if (fwrite(payloadData, 1, payloadSize, _encodedFile) !=  payloadSize) {
+      return -1;
+    }
     WebRtcRTPHeader rtpInfo;
     rtpInfo.header.markerBit = true; // end of frame
     rtpInfo.type.Video.isFirstPacket = true;
@@ -142,6 +145,7 @@ VCMRTPEncodeCompleteCallback::SendData(
         const FrameType frameType,
         const WebRtc_UWord8  payloadType,
         const WebRtc_UWord32 timeStamp,
+        int64_t capture_time_ms,
         const WebRtc_UWord8* payloadData,
         const WebRtc_UWord32 payloadSize,
         const RTPFragmentationHeader& fragmentationHeader,
@@ -153,6 +157,7 @@ VCMRTPEncodeCompleteCallback::SendData(
     return _RTPModule->SendOutgoingData(frameType,
                                         payloadType,
                                         timeStamp,
+                                        capture_time_ms,
                                         payloadData,
                                         payloadSize,
                                         &fragmentationHeader,
@@ -184,9 +189,12 @@ VCMRTPEncodeCompleteCallback::EncodeComplete()
 WebRtc_Word32
 VCMDecodeCompleteCallback::FrameToRender(VideoFrame& videoFrame)
 {
-    fwrite(videoFrame.Buffer(), 1, videoFrame.Length(), _decodedFile);
-    _decodedBytes+= videoFrame.Length();
-    return VCM_OK;
+  if (fwrite(videoFrame.Buffer(), 1, videoFrame.Length(),
+             _decodedFile) !=  videoFrame.Length()) {
+    return -1;
+  }
+  _decodedBytes+= videoFrame.Length();
+  return VCM_OK;
  }
 
 WebRtc_Word32
@@ -195,12 +203,11 @@ VCMDecodeCompleteCallback::DecodedBytes()
     return _decodedBytes;
 }
 
-RTPSendCompleteCallback::RTPSendCompleteCallback(RtpRtcp* rtp,
-                                                 TickTimeBase* clock,
+RTPSendCompleteCallback::RTPSendCompleteCallback(TickTimeBase* clock,
                                                  const char* filename):
     _clock(clock),
     _sendCount(0),
-    _rtp(rtp),
+    _rtp(NULL),
     _lossPct(0),
     _burstLength(0),
     _networkDelayMs(0),
@@ -282,6 +289,7 @@ RTPSendCompleteCallback::SendPacket(int channel, const void *data, int len)
         }
 
         _rtpPackets.pop_front();
+        assert(_rtp);  // We must have a configured RTP module for this test.
         // Send to receive side
         if (_rtp->IncomingPacket((const WebRtc_UWord8*)packet->data,
                                  packet->length) < 0)
@@ -456,16 +464,4 @@ FecProtectionParams VideoProtectionCallback::KeyFecParameters() const
 {
     return key_fec_params_;
 }
-
-void
-RTPFeedbackCallback::OnNetworkChanged(const WebRtc_Word32 id,
-                                      const WebRtc_UWord32 bitrateBps,
-                                      const WebRtc_UWord8 fractionLost,
-                                      const WebRtc_UWord16 roundTripTimeMs)
-{
-
-    _vcm->SetChannelParameters(bitrateBps / 1000, fractionLost,
-                               (WebRtc_UWord8)roundTripTimeMs);
-}
-
 }  // namespace webrtc

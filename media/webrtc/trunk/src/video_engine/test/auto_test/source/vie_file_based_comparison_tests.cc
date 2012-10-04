@@ -87,7 +87,7 @@ bool ViEFileBasedComparisonTests::TestCodecs(
     ViEToFileRenderer* local_file_renderer,
     ViEToFileRenderer* remote_file_renderer) {
 
-  TbInterfaces interfaces = TbInterfaces("TestCodecs");
+  TbInterfaces interfaces("TestCodecs");
 
   ViEFakeCamera fake_camera(interfaces.capture);
   if (!fake_camera.StartCameraInNewThread(i420_video_file, width, height)) {
@@ -127,7 +127,7 @@ void ViEFileBasedComparisonTests::TestFullStack(
     ViEToFileRenderer* local_file_renderer,
     ViEToFileRenderer* remote_file_renderer,
     FrameDropDetector* frame_drop_detector) {
-  TbInterfaces interfaces = TbInterfaces("TestFullStack");
+  TbInterfaces interfaces("TestFullStack");
 
   // Setup camera capturing from file.
   ViEFakeCamera fake_camera(interfaces.capture);

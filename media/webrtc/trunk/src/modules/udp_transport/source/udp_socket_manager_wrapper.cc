@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -14,7 +14,6 @@
 
 #ifdef _WIN32
 #include "fix_interlocked_exchange_pointer_win.h"
-#include "udp_socket_manager_windows.h"
 #include "udp_socket2_manager_windows.h"
 #else
 #include "udp_socket_manager_posix.h"
@@ -24,14 +23,7 @@ namespace webrtc {
 UdpSocketManager* UdpSocketManager::CreateInstance()
 {
 #if defined(_WIN32)
-    #if (defined(USE_WINSOCK2))
-        return static_cast<UdpSocketManager*>(
-            new UdpSocket2ManagerWindows());
-    #else
-        numOfWorkThreads = 1;
-        return static_cast<UdpSocketManager*>(
-            new UdpSocketManagerWindows());
-    #endif
+  return static_cast<UdpSocketManager*>(new UdpSocket2ManagerWindows());
 #else
     return new UdpSocketManagerPosix();
 #endif

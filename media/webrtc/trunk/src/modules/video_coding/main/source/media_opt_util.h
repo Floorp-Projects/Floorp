@@ -203,6 +203,16 @@ public:
 
 protected:
     enum { kUpperLimitFramesFec = 6 };
+    // Thresholds values for the bytes/frame and round trip time, below which we
+    // may turn off FEC, depending on |_numLayers| and |_maxFramesFec|.
+    // Max bytes/frame for VGA, corresponds to ~140k at 25fps.
+    enum { kMaxBytesPerFrameForFec = 700 };
+    // Max bytes/frame for CIF and lower: corresponds to ~80k at 25fps.
+    enum { kMaxBytesPerFrameForFecLow = 400 };
+    // Max bytes/frame for frame size larger than VGA, ~200k at 25fps.
+    enum { kMaxBytesPerFrameForFecHigh = 1000 };
+    // Max round trip time threshold in ms.
+    enum { kMaxRttTurnOffFec = 200 };
 };
 
 
@@ -219,7 +229,8 @@ public:
     bool ProtectionFactor(const VCMProtectionParameters* parameters);
     // Get the max number of frames the FEC is allowed to be based on.
     int MaxFramesFec() const;
-
+    // Turn off the FEC based on low bitrate and other factors.
+    bool BitRateTooLowForFec(const VCMProtectionParameters* parameters);
 private:
     int ComputeMaxFramesFec(const VCMProtectionParameters* parameters);
 
@@ -374,7 +385,6 @@ private:
     VCMExpFilter              _packetsPerFrame;
     VCMExpFilter              _packetsPerFrameKey;
     float                     _residualPacketLossFec;
-    WebRtc_UWord8             _boostRateKey;
     WebRtc_UWord16            _codecWidth;
     WebRtc_UWord16            _codecHeight;
     int                       _numLayers;

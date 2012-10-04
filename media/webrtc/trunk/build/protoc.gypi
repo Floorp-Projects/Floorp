@@ -1,8 +1,8 @@
-# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# This file is meant to be included into an target to provide a rule
+# This file is meant to be included into a target to provide a rule
 # to invoke protoc in a consistent manner.
 #
 # To use this, create a gyp target with the following form:
@@ -58,13 +58,16 @@
       ],
       'action': [
         '<(protoc)',
-        '--proto_path=<(proto_in_dir)',
+        # Using the --arg val form (instead of --arg=val) allows gyp's msvs rule
+        # generation to correct 'val' which is a path.
+        '--proto_path','<(proto_in_dir)',
         # Naively you'd use <(RULE_INPUT_PATH) here, but protoc requires
         # --proto_path is a strict prefix of the path given as an argument.
         '<(proto_in_dir)/<(RULE_INPUT_ROOT)<(RULE_INPUT_EXT)',
-        '--cpp_out=<(cc_dir)',
-        '--python_out=<(py_dir)',
+        '--cpp_out','<(cc_dir)',
+        '--python_out','<(py_dir)',
         ],
+      'msvs_cygwin_shell': 0,
       'message': 'Generating C++ and Python code from <(RULE_INPUT_PATH)',
       'process_outputs_as_sources': 1,
     },

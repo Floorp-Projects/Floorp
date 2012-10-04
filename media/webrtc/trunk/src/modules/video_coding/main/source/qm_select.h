@@ -278,8 +278,9 @@ class VCMQmResolution : public VCMQmMethod {
   // Covert 2 stages of 3/4 (=9/16) spatial decimation to 1/2.
   void ConvertSpatialFractionalToWhole();
 
-  // Check if the new frame sizes are still divisible by 2.
-  void CheckForEvenFrameSize();
+  // Returns true if the new frame sizes, under the selected spatial action,
+  // are of even size.
+  bool EvenFrameSize();
 
   // Insert latest down-sampling action into the history list.
   void InsertLatestDownAction();

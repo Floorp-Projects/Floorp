@@ -38,6 +38,7 @@
 #include "video_render.h"
 #include "tick_util.h"
 #include "trace.h"
+#include "system_wrappers/interface/sleep.h"
 
 using namespace webrtc;
 
@@ -61,21 +62,9 @@ int TestExternalRender(VideoRender* renderModule);
 #define TEST_STREAM2_START_COLOR 128
 #define TEST_STREAM3_START_COLOR 192
 
-#if defined(_WIN32) && defined(_DEBUG)
-//    #include "vld.h"
-#define SLEEP(x) ::Sleep(x)
-#elif defined(WEBRTC_LINUX)
+#if defined(WEBRTC_LINUX)
 
 #define GET_TIME_IN_MS timeGetTime()
-#define SLEEP(x) Sleep(x)
-
-void Sleep(unsigned long x)
-{
-    timespec t;
-    t.tv_sec = x/1000;
-    t.tv_nsec = (x-(x/1000)*1000)*1000000;
-    nanosleep(&t,NULL);
-}
 
 unsigned long timeGetTime()
 {
@@ -93,7 +82,6 @@ unsigned long timeGetTime()
 #include <unistd.h>
 
 #define GET_TIME_IN_MS timeGetTime()
-#define SLEEP(x) usleep(x * 1000)
 
 unsigned long timeGetTime()
 {
@@ -103,7 +91,6 @@ unsigned long timeGetTime()
 #else
 
 #define GET_TIME_IN_MS ::timeGetTime()
-#define SLEEP(x) ::Sleep(x)
 
 #endif
 
@@ -357,7 +344,7 @@ int TestSingleStream(VideoRender* renderModule) {
         videoFrame0.SetHeight(height);
         videoFrame0.SetLength(numBytes);
         renderCallback0->RenderFrame(streamId0, videoFrame0);
-        SLEEP(1000/TEST_FRAME_RATE);
+        SleepMs(1000/TEST_FRAME_RATE);
     }
 
     videoFrame0.Free();
@@ -433,11 +420,11 @@ int TestBitmapText(VideoRender* renderModule) {
         videoFrame0.SetHeight(height);
         videoFrame0.SetLength(numBytes);
         renderCallback0->RenderFrame(streamId0, videoFrame0);
-        SLEEP(1000/TEST_FRAME_RATE);
+        SleepMs(1000/TEST_FRAME_RATE);
     }
     videoFrame0.Free();
     // Sleep and let all frames be rendered before closing
-    SLEEP(renderDelayMs*2);
+    SleepMs(renderDelayMs*2);
 
 
     // Shut down
@@ -530,7 +517,7 @@ int TestMultipleStreams(VideoRender* renderModule) {
         videoFrame3.SetLength(numBytes);
         renderCallback3->RenderFrame(streamId3, videoFrame3);
 
-        SLEEP(1000/TEST_FRAME_RATE);
+        SleepMs(1000/TEST_FRAME_RATE);
     }
 
     videoFrame0.Free();
@@ -578,11 +565,11 @@ int TestExternalRender(VideoRender* renderModule) {
         videoFrame0.SetWidth(width);
         videoFrame0.SetHeight(height);
         renderCallback0->RenderFrame(streamId0, videoFrame0);
-        SLEEP(33);
+        SleepMs(33);
     }
 
     // Sleep and let all frames be rendered before closing
-    SLEEP(2*renderDelayMs);
+    SleepMs(2*renderDelayMs);
     videoFrame0.Free();
 
     assert(renderModule->StopRender(streamId0) == 0);

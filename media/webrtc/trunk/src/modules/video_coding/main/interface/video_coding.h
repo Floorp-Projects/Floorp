@@ -544,6 +544,12 @@ public:
     //                     < 0, on error.
     virtual int SetReceiverRobustnessMode(ReceiverRobustness robustnessMode,
                                           DecodeErrors errorMode) = 0;
+
+    // Enables recording of debugging information.
+    virtual int StartDebugRecording(const char* file_name_utf8) = 0;
+
+    // Disables recording of debugging information.
+    virtual int StopDebugRecording() = 0;
 };
 
 } // namespace webrtc

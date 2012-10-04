@@ -85,9 +85,10 @@ class AudioProcessingImpl : public AudioProcessing {
   virtual WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id);
 
  private:
-  bool stream_data_changed() const;
-  bool synthesis_needed(bool stream_data_changed) const;
-  bool analysis_needed(bool stream_data_changed) const;
+  bool is_data_processed() const;
+  bool interleave_needed(bool is_data_processed) const;
+  bool synthesis_needed(bool is_data_processed) const;
+  bool analysis_needed(bool is_data_processed) const;
 
   int id_;
 

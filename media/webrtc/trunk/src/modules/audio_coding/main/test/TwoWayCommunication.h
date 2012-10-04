@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -28,7 +28,6 @@ public:
     void Perform();
 private:
     WebRtc_UWord8 ChooseCodec(WebRtc_UWord8* codecID_A, WebRtc_UWord8* codecID_B);
-    WebRtc_Word16 ChooseFile(char* fileName, WebRtc_Word16 maxLen, WebRtc_UWord16* frequencyHz);
     WebRtc_Word16 SetUp();
     WebRtc_Word16 SetUpAutotest();
 
@@ -52,9 +51,6 @@ private:
 
     PCMFile _outFileRefA;
     PCMFile _outFileRefB;
-
-    DTMFDetector* _dtmfDetectorA;
-    DTMFDetector* _dtmfDetectorB;
 
     int _testMode;
 };

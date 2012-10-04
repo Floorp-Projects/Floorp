@@ -31,7 +31,8 @@
 // TODO(bjorn/kma): Consolidate function pairs (e.g. combine
 // WebRtcSpl_MaxAbsValueW16 and WebRtcSpl_MaxAbsIndexW16 into a single one.)
 
-#if !(defined(WEBRTC_ANDROID) && defined(WEBRTC_ARCH_ARM_NEON))
+// TODO(kma): Move the code in the #ifndef block into min_max_operations_c.c.
+#ifndef WEBRTC_ARCH_ARM_NEON
 
 // Maximum absolute value of word16 vector.
 int16_t WebRtcSpl_MaxAbsValueW16(const int16_t* vector, int length) {
@@ -144,7 +145,7 @@ int32_t WebRtcSpl_MinValueW32(const int32_t* vector, int length) {
   }
   return minimum;
 }
-#endif
+#endif  // WEBRTC_ARCH_ARM_NEON
 
 
 // Index of maximum absolute value in a word16 vector.

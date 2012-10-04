@@ -140,8 +140,8 @@ int WebRtcNetEQ_GetRawFrameWaitingTimes(void *inst,
  */
 typedef int (*WebRtcNetEQ_VADInitFunction)(void *VAD_inst);
 typedef int (*WebRtcNetEQ_VADSetmodeFunction)(void *VAD_inst, int mode);
-typedef WebRtc_Word16 (*WebRtcNetEQ_VADFunction)(void *VAD_inst, WebRtc_Word16 fs,
-                                                 WebRtc_Word16 *frame, WebRtc_Word16 frameLen);
+typedef int (*WebRtcNetEQ_VADFunction)(void *VAD_inst, int fs,
+    WebRtc_Word16 *frame, int frameLen);
 
 /****************************************************************************
  * WebRtcNetEQ_SetVADInstance(...)

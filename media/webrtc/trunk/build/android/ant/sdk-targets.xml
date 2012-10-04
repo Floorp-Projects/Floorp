@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2012 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<project name="chrome_sdk_overrides" >
+  <!--
+    Redefinition of targets used by SDK tools.
+    Supported version: SDK tools revision 20.
+
+    SDK tools do not allow easy way of extending classpaths
+    for aidl and javac. This file defines targets which can be used to
+    override targets used by tools.
+  -->
+
+  <!--
+    Override the -compile target.
+    This target requires 'javac.custom.classpath' to be set to reference
+    of classpath to be used for javac. Also accepts custom path for
+    sources: 'javac.custom.sourcepath'.
+  -->
+  <target
+      name="-compile"
+      depends="-build-setup, -pre-build, -code-gen, -pre-compile">
+    <do-only-if-manifest-hasCode elseText="hasCode = false. Skipping..." >
+      <!-- If souce path is not set, then use the default value -->
+      <if>
+        <condition>
+          <not>
+            <isreference refid="javac.custom.sourcepath"/>
+          </not>
+        </condition>
+        <then>
+          <path id="javac.custom.sourcepath">
+            <pathelement path="${source.absolute.dir}"/>
+            <pathelement path="${gen.absolute.dir}"/>
+          </path>
+        </then>
+      </if>
+      <javac
+          bootclasspathref="project.target.class.path"
+          classpathref="javac.custom.classpath"
+          debug="true"
+          destdir="${out.classes.absolute.dir}"
+          encoding="${java.encoding}"
+          extdirs=""
+          fork="${need.javac.fork}"
+          includeantruntime="false"
+          source="${java.source}"
+          target="${java.target}"
+          verbose="${verbose}">
+        <src path="${source.absolute.dir}"/>
+        <src path="${gen.absolute.dir}"/>
+        <src>
+          <path refid="javac.custom.sourcepath"/>
+        </src>
+        <compilerarg line="${java.compilerargs}"/>
+      </javac>
+      <!--
+        If the project is instrumented, then instrument the classes
+        TODO(shashishekhar): Add option to override emma filter.
+      -->
+      <if condition="${build.is.instrumented}">
+        <then>
+          <echo level="info">
+            Instrumenting classes from ${out.absolute.dir}/classes...
+          </echo>
+          <!-- build the default filter to remove R, Manifest, BuildConfig -->
+          <getemmafilter
+              appPackage="${project.app.package}"
+              filterOut="emma.default.filter"
+              libraryPackagesRefId="project.library.packages"/>
+          <!--
+            Define where the .em file is output.
+            This may have been setup already if this is a library.
+          -->
+          <property name="emma.coverage.absolute.file"
+              location="${out.absolute.dir}/coverage.em"/>
+          <!-- It only instruments class files, not any external libs -->
+
+          <emma enabled="true">
+            <instr
+                instrpath="${out.absolute.dir}/classes"
+                metadatafile="${emma.coverage.absolute.file}"
+                mode="overwrite"
+                outdir="${out.absolute.dir}/classes"
+                verbosity="${verbosity}">
+              <filter excludes="${emma.default.filter}"/>
+              <filter value="${emma.filter}"/>
+            </instr>
+          </emma>
+        </then>
+      </if>
+    </do-only-if-manifest-hasCode>
+  </target>
+</project>

@@ -66,7 +66,10 @@ FrameReceiveCallback::FrameToRender(VideoFrame& videoFrame)
     fprintf(_timingFile, "%u, %u\n",
             videoFrame.TimeStamp(),
             MaskWord64ToUWord32(videoFrame.RenderTimeMs()));
-    fwrite(videoFrame.Buffer(), 1, videoFrame.Length(), _outFile);
+    if (fwrite(videoFrame.Buffer(), 1, videoFrame.Length(),
+               _outFile) !=  videoFrame.Length()) {
+      return -1;
+    }
     return 0;
 }
 
@@ -161,7 +164,8 @@ int RtpPlay(CmdArgs& args)
                 return -1;
             }
         }
-        while (vcm->DecodeDualFrame(0) == 1);
+        while (vcm->DecodeDualFrame(0) == 1) {
+        }
         if (vcm->TimeUntilNextProcess() <= 0)
         {
             vcm->Process();

@@ -38,8 +38,6 @@ class AndroidStream : public VideoRenderCallback {
 
 class VideoRenderAndroid: IVideoRender {
  public:
-  static WebRtc_Word32 SetAndroidEnvVariables(void* javaVM);
-
   VideoRenderAndroid(const WebRtc_Word32 id,
                      const VideoRenderType videoRenderType,
                      void* window,
@@ -118,6 +116,7 @@ class VideoRenderAndroid: IVideoRender {
                                   const void* colorKey, const float left,
                                   const float top, const float right,
                                   const float bottom);
+  static JavaVM* g_jvm;
 
  protected:
   virtual AndroidStream* CreateAndroidRenderChannel(
@@ -133,8 +132,6 @@ class VideoRenderAndroid: IVideoRender {
   CriticalSectionWrapper& _critSect;
   VideoRenderType _renderType;
   jobject _ptrWindow;
-
-  static JavaVM* g_jvm;
 
  private:
   static bool JavaRenderThreadFun(void* obj);

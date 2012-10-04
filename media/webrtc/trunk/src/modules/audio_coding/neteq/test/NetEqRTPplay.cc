@@ -10,9 +10,11 @@
 
 //TODO(hlundin): Reformat file to meet style guide.
 
+#include <assert.h>
+#include <stdio.h>
+
 /* header includes */
 #include "typedefs.h"
-#include "stdio.h"
 #include "webrtc_neteq.h"
 #include "webrtc_neteq_internal.h"
 #include "webrtc_neteq_help_macros.h"
@@ -355,6 +357,8 @@ int main(int argc, char* argv[])
 #ifdef WIN32
     _splitpath(argv[0],outdrive,outpath,outfile,outext);
     _makepath(ptypesfile,outdrive,outpath,"ptypes","txt");
+#elif defined(WEBRTC_ANDROID)
+  strcpy(ptypesfile, "/sdcard/ptypes.txt");
 #else
     // TODO(hlundin): Include path to ptypes, as for WIN32 above.
   strcpy(ptypesfile, "ptypes.txt");
@@ -559,8 +563,12 @@ int main(int argc, char* argv[])
 #ifdef NETEQ_DELAY_LOGGING
         temp_var = NETEQ_DELAY_LOGGING_SIGNAL_CLOCK;
         clock_float = (float) simClock;
-        fwrite(&temp_var,sizeof(int),1,delay_fid2);
-        fwrite(&clock_float, sizeof(float),1,delay_fid2);
+        if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+          return -1;
+        }
+        if (fwrite(&clock_float, sizeof(float), 1, delay_fid2) != 1) {
+          return -1;
+        }
 #endif
         /* time to set extra delay */
         if (extraDelay > -1 && simClock >= nextExtraDelayTime) {
@@ -638,7 +646,7 @@ int main(int argc, char* argv[])
             if (stereoMode > stereoModeMono)
             {
                 // stereo
-                WebRtc_Word16 tempLen; 
+                WebRtc_Word16 tempLen;
                 tempLen = NetEQvector[0]->recOut( out_data, msInfo ); // master
                 outLen = NetEQvector[1]->recOut( &out_data[tempLen], msInfo ); // slave
 
@@ -655,7 +663,9 @@ int main(int argc, char* argv[])
             }
 
             // write to file
-            fwrite(out_data,writeLen,2,out_file);
+            if (fwrite(out_data, writeLen, 2, out_file) != 2) {
+              return -1;
+            }
             writtenSamples += writeLen;
 
 
@@ -676,8 +686,13 @@ int main(int argc, char* argv[])
 
 #ifdef NETEQ_DELAY_LOGGING
     temp_var = NETEQ_DELAY_LOGGING_SIGNAL_EOF;
-    fwrite(&temp_var,sizeof(int),1,delay_fid2);
-    fwrite(&tot_received_packets,sizeof(WebRtc_UWord32),1,delay_fid2);
+    if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+      return -1;
+    }
+    if (fwrite(&tot_received_packets, sizeof(WebRtc_UWord32),
+               1, delay_fid2) != 1) {
+      return -1;
+    }
     fprintf(delay_fid2,"End of file\n");
     fclose(delay_fid2);
 #endif
@@ -702,8 +717,9 @@ int main(int argc, char* argv[])
  //   }
     free(msInfo);
 
-    for (std::vector<NETEQTEST_NetEQClass *>::iterator it = NetEQvector.begin(); 
-        it < NetEQvector.end(); delete *it++);
+    for (std::vector<NETEQTEST_NetEQClass *>::iterator it = NetEQvector.begin();
+        it < NetEQvector.end(); delete *it++) {
+    }
 
     printf("\nSimulation done!\n");
 
@@ -872,7 +888,7 @@ void parsePtypeFile(FILE *ptypeFile, std::map<WebRtc_UWord8, decoderStruct>* dec
             bool isStereo = false;
 
             if (codec[L-1] == '*') {
-                // stereo codec 
+                // stereo codec
                 isStereo = true;
 
                 // remove '*'
@@ -1174,7 +1190,7 @@ void parsePtypeFile(FILE *ptypeFile, std::map<WebRtc_UWord8, decoderStruct>* dec
             else if(isStereo)
             {
                 switch(tempDecoder.codec) {
-                    // sample based codecs 
+                    // sample based codecs
                     case kDecoderPCMu:
                     case kDecoderPCMa:
                     case kDecoderG722:
@@ -1579,7 +1595,7 @@ int doAPItest() {
     printf("NetEq version: %s\n\n", version);
 
     /* test that API functions return -1 if instance is NULL */
-#define CHECK_MINUS_ONE(x) {int errCode = x; if((errCode)!=-1){printf("\n API test failed at line %d: %s. Function did not return -1 as expected\n",__LINE__,#x); return(-1);}} 
+#define CHECK_MINUS_ONE(x) {int errCode = x; if((errCode)!=-1){printf("\n API test failed at line %d: %s. Function did not return -1 as expected\n",__LINE__,#x); return(-1);}}
 //#define RESET_ERROR(x) ((MainInst_t*) x)->ErrorCode = 0;
     inst = NULL;
 

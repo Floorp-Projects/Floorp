@@ -19,12 +19,12 @@
 
 namespace webrtc {
 
-WebRtc_Word32 
+WebRtc_Word32
 Channel::SendData(
         const FrameType       frameType,
         const WebRtc_UWord8   payloadType,
         const WebRtc_UWord32  timeStamp,
-        const WebRtc_UWord8*  payloadData, 
+        const WebRtc_UWord8*  payloadData,
         const WebRtc_UWord16  payloadSize,
         const RTPFragmentationHeader* fragmentation)
 {
@@ -104,7 +104,7 @@ Channel::SendData(
             }
         }
     }
-    
+
     _channelCritSect->Enter();
     if(_saveBitStream)
     {
@@ -135,9 +135,9 @@ Channel::SendData(
     return status;
 }
 
-void 
+void
 Channel::CalcStatistics(
-    WebRtcRTPHeader& rtpInfo, 
+    WebRtcRTPHeader& rtpInfo,
     WebRtc_UWord16   payloadSize)
 {
     int n;
@@ -146,7 +146,7 @@ Channel::CalcStatistics(
     {
         // payload-type is changed.
         // we have to terminate the calculations on the previous payload type
-        // we ignore the last packet in that payload type just to make things 
+        // we ignore the last packet in that payload type just to make things
         // easier.
         for(n = 0; n < MAX_NUM_PAYLOADS; n++)
         {
@@ -180,12 +180,12 @@ Channel::CalcStatistics(
             assert(lastFrameSizeSample > 0);
             int k = 0;
             while((currentPayloadStr->frameSizeStats[k].frameSizeSample !=
-                lastFrameSizeSample) && 
+                lastFrameSizeSample) &&
                 (currentPayloadStr->frameSizeStats[k].frameSizeSample != 0))
             {
                 k++;
             }
-            ACMTestFrameSizeStats* currentFrameSizeStats = 
+            ACMTestFrameSizeStats* currentFrameSizeStats =
                 &(currentPayloadStr->frameSizeStats[k]);
             currentFrameSizeStats->frameSizeSample = (WebRtc_Word16)lastFrameSizeSample;
 
@@ -197,15 +197,15 @@ Channel::CalcStatistics(
             // increment the total number of bytes (this is based on
             // the previous payload we don't know the frame-size of
             // the current payload.
-            currentFrameSizeStats->totalPayloadLenByte += 
+            currentFrameSizeStats->totalPayloadLenByte +=
                 currentPayloadStr->lastPayloadLenByte;
             // store the maximum payload-size (this is based on
             // the previous payload we don't know the frame-size of
             // the current payload.
-            if(currentFrameSizeStats->maxPayloadLen < 
+            if(currentFrameSizeStats->maxPayloadLen <
                 currentPayloadStr->lastPayloadLenByte)
             {
-                currentFrameSizeStats->maxPayloadLen = 
+                currentFrameSizeStats->maxPayloadLen =
                     currentPayloadStr->lastPayloadLenByte;
             }
             // store the current values for the next time
@@ -247,7 +247,6 @@ _leftChannel(true),
 _lastInTimestamp(0),
 _packetLoss(0),
 _useFECTestWithPacketLoss(false),
-_chID(chID),
 _beginTime(TickTime::MillisecondTimestamp()),
 _totalBytes(0)
 {
@@ -270,7 +269,7 @@ _totalBytes(0)
     {
         _saveBitStream = true;
         char bitStreamFileName[500];
-        sprintf(bitStreamFileName, "bitStream_%d.dat", chID); 
+        sprintf(bitStreamFileName, "bitStream_%d.dat", chID);
         _bitStreamFile = fopen(bitStreamFileName, "wb");
     }
     else
@@ -284,14 +283,14 @@ Channel::~Channel()
     delete _channelCritSect;
 }
 
-void 
+void
 Channel::RegisterReceiverACM(AudioCodingModule* acm)
 {
     _receiverACM = acm;
     return;
 }
 
-void 
+void
 Channel::ResetStats()
 {
     int n;
@@ -316,7 +315,7 @@ Channel::ResetStats()
     _channelCritSect->Leave();
 }
 
-WebRtc_Word16 
+WebRtc_Word16
 Channel::Stats(CodecInst& codecInst, ACMTestPayloadStats& payloadStats)
 {
     _channelCritSect->Enter();
@@ -342,12 +341,12 @@ Channel::Stats(CodecInst& codecInst, ACMTestPayloadStats& payloadStats)
             _channelCritSect->Leave();
             return 0;
         }
-        payloadStats.frameSizeStats[n].usageLenSec = 
+        payloadStats.frameSizeStats[n].usageLenSec =
             (double)payloadStats.frameSizeStats[n].totalEncodedSamples
             / (double)codecInst.plfreq;
 
-        payloadStats.frameSizeStats[n].rateBitPerSec = 
-            payloadStats.frameSizeStats[n].totalPayloadLenByte * 8 / 
+        payloadStats.frameSizeStats[n].rateBitPerSec =
+            payloadStats.frameSizeStats[n].totalPayloadLenByte * 8 /
             payloadStats.frameSizeStats[n].usageLenSec;
 
     }
@@ -355,7 +354,7 @@ Channel::Stats(CodecInst& codecInst, ACMTestPayloadStats& payloadStats)
     return 0;
 }
 
-void 
+void
 Channel::Stats(WebRtc_UWord32* numPackets)
 {
     _channelCritSect->Enter();
@@ -375,18 +374,18 @@ Channel::Stats(WebRtc_UWord32* numPackets)
             {
                 break;
             }
-            numPackets[k] += 
+            numPackets[k] +=
                 _payloadStats[k].frameSizeStats[n].numPackets;
         }
     }
     _channelCritSect->Leave();
 }
 
-void 
+void
 Channel::Stats(WebRtc_UWord8* payloadType, WebRtc_UWord32* payloadLenByte)
 {
     _channelCritSect->Enter();
-    
+
     int k;
     int n;
     memset(payloadLenByte, 0, MAX_NUM_PAYLOADS * sizeof(WebRtc_UWord32));
@@ -418,7 +417,7 @@ Channel::PrintStats(CodecInst& codecInst)
 {
     ACMTestPayloadStats payloadStats;
     Stats(codecInst, payloadStats);
-    printf("%s %d kHz\n", 
+    printf("%s %d kHz\n",
         codecInst.plname,
         codecInst.plfreq / 1000);
     printf("=====================================================\n");
@@ -435,19 +434,19 @@ Channel::PrintStats(CodecInst& codecInst)
         {
             break;
         }
-        printf("Frame-size.................... %d samples\n", 
+        printf("Frame-size.................... %d samples\n",
             payloadStats.frameSizeStats[k].frameSizeSample);
-        printf("Average Rate.................. %.0f bits/sec\n", 
+        printf("Average Rate.................. %.0f bits/sec\n",
             payloadStats.frameSizeStats[k].rateBitPerSec);
         printf("Maximum Payload-Size.......... %d Bytes\n",
             payloadStats.frameSizeStats[k].maxPayloadLen);
         printf("Maximum Instantaneous Rate.... %.0f bits/sec\n",
-            ((double)payloadStats.frameSizeStats[k].maxPayloadLen * 8.0 * 
-            (double)codecInst.plfreq) / 
+            ((double)payloadStats.frameSizeStats[k].maxPayloadLen * 8.0 *
+            (double)codecInst.plfreq) /
             (double)payloadStats.frameSizeStats[k].frameSizeSample);
         printf("Number of Packets............. %u\n",
                (unsigned int)payloadStats.frameSizeStats[k].numPackets);
-        printf("Duration...................... %0.3f sec\n\n", 
+        printf("Duration...................... %0.3f sec\n\n",
             payloadStats.frameSizeStats[k].usageLenSec);
 
     }
@@ -473,6 +472,6 @@ Channel::BitRate()
     rate =   ((double)_totalBytes * 8.0)/ (double)(currTime - _beginTime);
     _channelCritSect->Leave();
     return rate;
-}   
+}
 
 } // namespace webrtc

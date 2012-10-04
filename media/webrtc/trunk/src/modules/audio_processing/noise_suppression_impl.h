@@ -28,6 +28,7 @@ class NoiseSuppressionImpl : public NoiseSuppression,
 
   // NoiseSuppression implementation.
   virtual bool is_enabled() const;
+  float speech_probability() const;
 
  private:
   // NoiseSuppression implementation.

@@ -3,16 +3,16 @@
 # found in the LICENSE file.
 
 {
-  'conditions': [
-    ['sysroot!=""', {
-      'variables': {
-        'pkg-config': './pkg-config-wrapper "<(sysroot)"',
-      },
-    }, {
-      'variables': {
+  'variables': {
+    'conditions': [
+      ['sysroot!=""', {
+        'pkg-config': './pkg-config-wrapper "<(sysroot)" "<(target_arch)"',
+      }, {
         'pkg-config': 'pkg-config'
-      },
-    }],
+      }]
+    ],
+  },
+  'conditions': [
     [ 'os_posix==1 and OS!="mac"', {
       'variables': {
         # We use our own copy of libssl3, although we still need to link against
@@ -24,72 +24,97 @@
         'use_system_ssl%': 1,
       },
     }],
-  ],
-
-
+    [ 'chromeos==0', {
+      # Hide GTK and related dependencies for Chrome OS, so they won't get
+      # added back to Chrome OS. Don't try to use GTK on Chrome OS.
+      'targets': [
+        {
+          'target_name': 'gtk',
+          'type': 'none',
+          'toolsets': ['host', 'target'],
+          'variables': {
+            # gtk requires gmodule, but it does not list it as a dependency
+            # in some misconfigured systems.
+            'gtk_packages': 'gmodule-2.0 gtk+-2.0 gthread-2.0',
+          },
+          'conditions': [
+            ['_toolset=="target"', {
+              'direct_dependent_settings': {
+                'cflags': [
+                  '<!@(<(pkg-config) --cflags <(gtk_packages))',
+                ],
+              },
+              'link_settings': {
+                'ldflags': [
+                  '<!@(<(pkg-config) --libs-only-L --libs-only-other <(gtk_packages))',
+                ],
+                'libraries': [
+                  '<!@(<(pkg-config) --libs-only-l <(gtk_packages))',
+                ],
+              },
+            }, {
+              'direct_dependent_settings': {
+                'cflags': [
+                  '<!@(pkg-config --cflags <(gtk_packages))',
+                ],
+              },
+              'link_settings': {
+                'ldflags': [
+                  '<!@(pkg-config --libs-only-L --libs-only-other <(gtk_packages))',
+                ],
+                'libraries': [
+                  '<!@(pkg-config --libs-only-l <(gtk_packages))',
+                ],
+              },
+            }],
+          ],
+        },
+        {
+          'target_name': 'gtkprint',
+          'type': 'none',
+          'conditions': [
+            ['_toolset=="target"', {
+              'direct_dependent_settings': {
+                'cflags': [
+                  '<!@(<(pkg-config) --cflags gtk+-unix-print-2.0)',
+                ],
+              },
+              'link_settings': {
+                'ldflags': [
+                  '<!@(<(pkg-config) --libs-only-L --libs-only-other gtk+-unix-print-2.0)',
+                ],
+                'libraries': [
+                  '<!@(<(pkg-config) --libs-only-l gtk+-unix-print-2.0)',
+                ],
+              },
+            }],
+          ],
+        },
+        {
+          'target_name': 'gdk',
+          'type': 'none',
+          'conditions': [
+            ['_toolset=="target"', {
+              'direct_dependent_settings': {
+                'cflags': [
+                  '<!@(<(pkg-config) --cflags gdk-2.0)',
+                ],
+              },
+              'link_settings': {
+                'ldflags': [
+                  '<!@(<(pkg-config) --libs-only-L --libs-only-other gdk-2.0)',
+                ],
+                'libraries': [
+                  '<!@(<(pkg-config) --libs-only-l gdk-2.0)',
+                ],
+              },
+            }],
+          ],
+        },
+      ],  # targets
+    }]  # chromeos==0
+  ],  # conditions
   'targets': [
-    {
-      'target_name': 'gtk',
-      'type': 'none',
-      'toolsets': ['host', 'target'],
-      'conditions': [
-        ['_toolset=="target"', {
-          'direct_dependent_settings': {
-            'cflags': [
-              '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
-            ],
-          },
-          'link_settings': {
-            'ldflags': [
-              '<!@(<(pkg-config) --libs-only-L --libs-only-other gtk+-2.0 gthread-2.0)',
-            ],
-            'libraries': [
-              '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
-            ],
-          },
-        }, {
-          'direct_dependent_settings': {
-            'cflags': [
-              '<!@(pkg-config --cflags gtk+-2.0 gthread-2.0)',
-            ],
-          },
-          'link_settings': {
-            'ldflags': [
-              '<!@(pkg-config --libs-only-L --libs-only-other gtk+-2.0 gthread-2.0)',
-            ],
-            'libraries': [
-              '<!@(pkg-config --libs-only-l gtk+-2.0 gthread-2.0)',
-            ],
-          },
-        }],
-        ['chromeos==1', {
-          'link_settings': {
-            'libraries': [ '-lXtst' ]
-          }
-        }],
-      ],
-    },
-    {
-      'target_name': 'gtkprint',
-      'type': 'none',
-      'conditions': [
-        ['_toolset=="target"', {
-          'direct_dependent_settings': {
-            'cflags': [
-              '<!@(<(pkg-config) --cflags gtk+-unix-print-2.0)',
-            ],
-          },
-          'link_settings': {
-            'ldflags': [
-              '<!@(<(pkg-config) --libs-only-L --libs-only-other gtk+-unix-print-2.0)',
-            ],
-            'libraries': [
-              '<!@(<(pkg-config) --libs-only-l gtk+-unix-print-2.0)',
-            ],
-          },
-        }],
-      ],
-    },
     {
       'target_name': 'ssl',
       'type': 'none',
@@ -184,27 +209,6 @@
             ],
             'libraries': [
               '<!@(<(pkg-config) --libs-only-l fontconfig)',
-            ],
-          },
-        }],
-      ],
-    },
-    {
-      'target_name': 'gdk',
-      'type': 'none',
-      'conditions': [
-        ['_toolset=="target"', {
-          'direct_dependent_settings': {
-            'cflags': [
-              '<!@(<(pkg-config) --cflags gdk-2.0)',
-            ],
-          },
-          'link_settings': {
-            'ldflags': [
-              '<!@(<(pkg-config) --libs-only-L --libs-only-other gdk-2.0)',
-            ],
-            'libraries': [
-              '<!@(<(pkg-config) --libs-only-l gdk-2.0)',
             ],
           },
         }],
@@ -494,33 +498,36 @@
       'target_name': 'glib',
       'type': 'none',
       'toolsets': ['host', 'target'],
+      'variables': {
+        'glib_packages': 'glib-2.0 gmodule-2.0 gobject-2.0 gthread-2.0',
+      },
       'conditions': [
         ['_toolset=="target"', {
           'direct_dependent_settings': {
             'cflags': [
-              '<!@(<(pkg-config) --cflags glib-2.0 gobject-2.0 gthread-2.0)',
+              '<!@(<(pkg-config) --cflags <(glib_packages))',
             ],
           },
           'link_settings': {
             'ldflags': [
-              '<!@(<(pkg-config) --libs-only-L --libs-only-other glib-2.0 gobject-2.0 gthread-2.0)',
+              '<!@(<(pkg-config) --libs-only-L --libs-only-other <(glib_packages))',
             ],
             'libraries': [
-              '<!@(<(pkg-config) --libs-only-l glib-2.0 gobject-2.0 gthread-2.0)',
+              '<!@(<(pkg-config) --libs-only-l <(glib_packages))',
             ],
           },
         }, {
           'direct_dependent_settings': {
             'cflags': [
-              '<!@(pkg-config --cflags glib-2.0 gobject-2.0 gthread-2.0)',
+              '<!@(pkg-config --cflags <(glib_packages))',
             ],
           },
           'link_settings': {
             'ldflags': [
-              '<!@(pkg-config --libs-only-L --libs-only-other glib-2.0 gobject-2.0 gthread-2.0)',
+              '<!@(pkg-config --libs-only-L --libs-only-other <(glib_packages))',
             ],
             'libraries': [
-              '<!@(pkg-config --libs-only-l glib-2.0 gobject-2.0 gthread-2.0)',
+              '<!@(pkg-config --libs-only-l <(glib_packages))',
             ],
           },
         }],
@@ -596,30 +603,6 @@
             ],
             'libraries': [
               '<!@(<(pkg-config) --libs-only-l "ibus-1.0 >= <(ibus_min_version)")',
-            ],
-          },
-        }],
-      ],
-    },
-    {
-      'target_name': 'wayland',
-      'type': 'none',
-      'conditions': [
-        ['use_wayland == 1', {
-          'cflags': [
-            '<!@(<(pkg-config) --cflags cairo wayland-client wayland-egl xkbcommon)',
-          ],
-          'direct_dependent_settings': {
-            'cflags': [
-              '<!@(<(pkg-config) --cflags cairo wayland-client wayland-egl xkbcommon)',
-            ],
-          },
-          'link_settings': {
-            'ldflags': [
-              '<!@(<(pkg-config) --libs-only-L --libs-only-other wayland-client wayland-egl xkbcommon)',
-            ],
-            'libraries': [
-              '<!@(<(pkg-config) --libs-only-l wayland-client wayland-egl xkbcommon)',
             ],
           },
         }],

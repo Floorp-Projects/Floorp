@@ -124,7 +124,6 @@ public:
 private:
     WebRtc_Word32 _id;
     CriticalSectionWrapper& _critSect;
-    void* _window;
     bool _fullscreen;
 };
 

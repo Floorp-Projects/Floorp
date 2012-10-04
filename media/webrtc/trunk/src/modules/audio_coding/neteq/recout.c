@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -41,8 +41,8 @@
 /* Scratch usage:
 
  Type           Name                            size             startpos      endpos
- WebRtc_Word16  pw16_NetEqAlgorithm_buffer      600*fs/8000      0             600*fs/8000-1
- struct         dspInfo                         6                600*fs/8000   605*fs/8000
+ WebRtc_Word16  pw16_NetEqAlgorithm_buffer      1080*fs/8000     0             1080*fs/8000-1
+ struct         dspInfo                         6                1080*fs/8000  1085*fs/8000
 
  func           WebRtcNetEQ_Normal              40+495*fs/8000   0             39+495*fs/8000
  func           WebRtcNetEQ_Merge               40+496*fs/8000   0             39+496*fs/8000
@@ -50,7 +50,7 @@
  func           WebRtcNetEQ_Accelerate          210              240*fs/8000   209+240*fs/8000
  func           WebRtcNetEQ_BGNUpdate           69               480*fs/8000   68+480*fs/8000
 
- Total:  605*fs/8000
+ Total:  1086*fs/8000
  */
 
 #define SCRATCH_ALGORITHM_BUFFER            0
@@ -58,35 +58,35 @@
 #define SCRATCH_NETEQ_MERGE                 0
 
 #if (defined(NETEQ_48KHZ_WIDEBAND)) 
-#define SCRATCH_DSP_INFO                     3600
+#define SCRATCH_DSP_INFO                     6480
 #define SCRATCH_NETEQ_ACCELERATE            1440
 #define SCRATCH_NETEQ_BGN_UPDATE            2880
 #define SCRATCH_NETEQ_EXPAND                756
 #elif (defined(NETEQ_32KHZ_WIDEBAND)) 
-#define SCRATCH_DSP_INFO                     2400
+#define SCRATCH_DSP_INFO                     4320
 #define SCRATCH_NETEQ_ACCELERATE            960
 #define SCRATCH_NETEQ_BGN_UPDATE            1920
 #define SCRATCH_NETEQ_EXPAND                504
 #elif (defined(NETEQ_WIDEBAND)) 
-#define SCRATCH_DSP_INFO                     1200
+#define SCRATCH_DSP_INFO                     2160
 #define SCRATCH_NETEQ_ACCELERATE            480
 #define SCRATCH_NETEQ_BGN_UPDATE            960
 #define SCRATCH_NETEQ_EXPAND                252
 #else    /* NB */
-#define SCRATCH_DSP_INFO                     600
+#define SCRATCH_DSP_INFO                     1080
 #define SCRATCH_NETEQ_ACCELERATE            240
 #define SCRATCH_NETEQ_BGN_UPDATE            480
 #define SCRATCH_NETEQ_EXPAND                126
 #endif
 
 #if (defined(NETEQ_48KHZ_WIDEBAND)) 
-#define SIZE_SCRATCH_BUFFER                 3636
+#define SIZE_SCRATCH_BUFFER                 6516
 #elif (defined(NETEQ_32KHZ_WIDEBAND)) 
-#define SIZE_SCRATCH_BUFFER                 2424
+#define SIZE_SCRATCH_BUFFER                 4344
 #elif (defined(NETEQ_WIDEBAND)) 
-#define SIZE_SCRATCH_BUFFER                 1212
+#define SIZE_SCRATCH_BUFFER                 2172
 #else    /* NB */
-#define SIZE_SCRATCH_BUFFER                 606
+#define SIZE_SCRATCH_BUFFER                 1086
 #endif
 
 #ifdef NETEQ_DELAY_LOGGING
@@ -110,13 +110,13 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
 #ifdef SCRATCH
     char pw8_ScratchBuffer[((SIZE_SCRATCH_BUFFER + 1) * 2)];
     WebRtc_Word16 *pw16_scratchPtr = (WebRtc_Word16*) pw8_ScratchBuffer;
-    WebRtc_Word16 pw16_decoded_buffer[NETEQ_MAX_FRAME_SIZE];
+    WebRtc_Word16 pw16_decoded_buffer[NETEQ_MAX_FRAME_SIZE+240*6];
     WebRtc_Word16 *pw16_NetEqAlgorithm_buffer = pw16_scratchPtr
         + SCRATCH_ALGORITHM_BUFFER;
     DSP2MCU_info_t *dspInfo = (DSP2MCU_info_t*) (pw16_scratchPtr + SCRATCH_DSP_INFO);
 #else
-    WebRtc_Word16 pw16_decoded_buffer[NETEQ_MAX_FRAME_SIZE];
-    WebRtc_Word16 pw16_NetEqAlgorithm_buffer[NETEQ_MAX_OUTPUT_SIZE];
+    WebRtc_Word16 pw16_decoded_buffer[NETEQ_MAX_FRAME_SIZE+240*6];
+    WebRtc_Word16 pw16_NetEqAlgorithm_buffer[NETEQ_MAX_OUTPUT_SIZE+240*6];
     DSP2MCU_info_t dspInfoStruct;
     DSP2MCU_info_t *dspInfo = &dspInfoStruct;
 #endif
@@ -168,23 +168,40 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
         currentMasterTimestamp = msInfo->endTimestamp - msInfo->samplesLeftWithOverlap;
         currentSlaveTimestamp = inst->endTimestamp - (inst->endPosition - inst->curPosition);
 
+        /* Partition the uint32_t space in three: [0 0.25) [0.25 0.75] (0.75 1]
+         * We consider a wrap to have occurred if the timestamps are in
+         * different edge partitions.
+         */
+        if (currentSlaveTimestamp < 0x40000000 &&
+            currentMasterTimestamp > 0xc0000000) {
+          // Slave has wrapped.
+          currentSlaveTimestamp += (0xffffffff - currentMasterTimestamp) + 1;
+          currentMasterTimestamp = 0;
+        } else if (currentMasterTimestamp < 0x40000000 &&
+            currentSlaveTimestamp > 0xc0000000) {
+          // Master has wrapped.
+          currentMasterTimestamp += (0xffffffff - currentSlaveTimestamp) + 1;
+          currentSlaveTimestamp = 0;
+        }
+
         if (currentSlaveTimestamp < currentMasterTimestamp)
         {
             /* brute-force discard a number of samples to catch up */
             inst->curPosition += currentMasterTimestamp - currentSlaveTimestamp;
 
-            /* make sure we have at least "overlap" samples left */
-            inst->curPosition = WEBRTC_SPL_MIN(inst->curPosition,
-                inst->endPosition - inst->ExpandInst.w16_overlap);
         }
         else if (currentSlaveTimestamp > currentMasterTimestamp)
         {
             /* back off current position to slow down */
             inst->curPosition -= currentSlaveTimestamp - currentMasterTimestamp;
-
-            /* make sure we do not end up outside the speech history */
-            inst->curPosition = WEBRTC_SPL_MAX(inst->curPosition, 0);
         }
+
+        /* make sure we have at least "overlap" samples left */
+        inst->curPosition = WEBRTC_SPL_MIN(inst->curPosition,
+            inst->endPosition - inst->ExpandInst.w16_overlap);
+
+        /* make sure we do not end up outside the speech history */
+        inst->curPosition = WEBRTC_SPL_MAX(inst->curPosition, 0);
     }
 #endif
 
@@ -301,8 +318,12 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
             }
 #ifdef NETEQ_DELAY_LOGGING
             temp_var = NETEQ_DELAY_LOGGING_SIGNAL_CHANGE_FS;
-            fwrite(&temp_var, sizeof(int), 1, delay_fid2);
-            fwrite(&inst->fs, sizeof(WebRtc_UWord16), 1, delay_fid2);
+            if ((fwrite(&temp_var, sizeof(int),
+                        1, delay_fid2) != 1) ||
+                (fwrite(&inst->fs, sizeof(WebRtc_UWord16),
+                        1, delay_fid2) != 1)) {
+              return -1;
+            }
 #endif
         }
 
@@ -491,9 +512,17 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
                 pw16_decoded_buffer, &speechType);
 #ifdef NETEQ_DELAY_LOGGING
             temp_var = NETEQ_DELAY_LOGGING_SIGNAL_DECODE_ONE_DESC;
-            fwrite(&temp_var, sizeof(int), 1, delay_fid2);
-            fwrite(&inst->endTimestamp, sizeof(WebRtc_UWord32), 1, delay_fid2);
-            fwrite(&dspInfo->samplesLeft, sizeof(WebRtc_UWord16), 1, delay_fid2);
+            if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+              return -1;
+            }
+            if (fwrite(&inst->endTimestamp, sizeof(WebRtc_UWord32),
+                       1, delay_fid2) != 1) {
+              return -1;
+            }
+            if (fwrite(&dspInfo->samplesLeft, sizeof(WebRtc_UWord16),
+                       1, delay_fid2) != 1) {
+              return -1;
+            }
             tot_received_packets++;
 #endif
         }
@@ -593,9 +622,9 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
 
                     /* call VAD with new decoded data */
                     inst->VADInst.VADDecision |= inst->VADInst.VADFunction(
-                        inst->VADInst.VADState, (WebRtc_Word16) inst->fs,
+                        inst->VADInst.VADState, (int) inst->fs,
                         (WebRtc_Word16 *) &pw16_decoded_buffer[VADSamplePtr],
-                        (WebRtc_Word16) (VADframeSize * fs_mult * 8));
+                        (VADframeSize * fs_mult * 8));
 
                     VADSamplePtr += VADframeSize * fs_mult * 8; /* increment sample counter */
                 }
@@ -675,7 +704,9 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
         case DSP_INSTR_MERGE:
 #ifdef NETEQ_DELAY_LOGGING
             temp_var = NETEQ_DELAY_LOGGING_SIGNAL_MERGE_INFO;
-            fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+            if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+              return -1;
+            }
             temp_var = -len;
 #endif
             /* Call Merge with history*/
@@ -693,7 +724,9 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
 
 #ifdef NETEQ_DELAY_LOGGING
             temp_var += len;
-            fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+            if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+              return -1;
+            }
 #endif
             /* If last packet was decoded as a inband CNG set mode to CNG instead */
             if (speechType == TYPE_CNG) inst->w16_mode = MODE_CODEC_INTERNAL_CNG;
@@ -739,9 +772,13 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
                 inst->w16_concealedTS += len;
 #ifdef NETEQ_DELAY_LOGGING
                 temp_var = NETEQ_DELAY_LOGGING_SIGNAL_EXPAND_INFO;
-                fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+                if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+                  return -1;
+                }
                 temp_var = len;
-                fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+                if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+                  return -1;
+                }
 #endif
                 len = 0; /* already written the data, so do not write it again further down. */
             }
@@ -795,9 +832,13 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
                     inst->curPosition += (borrowedSamples - len);
 #ifdef NETEQ_DELAY_LOGGING
                     temp_var = NETEQ_DELAY_LOGGING_SIGNAL_ACCELERATE_INFO;
-                    fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+                    if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+                      return -1;
+                    }
                     temp_var = 3 * inst->timestampsPerCall - len;
-                    fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+                    if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+                      return -1;
+                    }
 #endif
                     len = 0;
                 }
@@ -810,9 +851,13 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
                                            (len-borrowedSamples));
 #ifdef NETEQ_DELAY_LOGGING
                     temp_var = NETEQ_DELAY_LOGGING_SIGNAL_ACCELERATE_INFO;
-                    fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+                    if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+                      return -1;
+                    }
                     temp_var = 3 * inst->timestampsPerCall - len;
-                    fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+                    if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+                      return -1;
+                    }
 #endif
                     len = len - borrowedSamples;
                 }
@@ -822,7 +867,9 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
             {
 #ifdef NETEQ_DELAY_LOGGING
                 temp_var = NETEQ_DELAY_LOGGING_SIGNAL_ACCELERATE_INFO;
-                fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+                if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+                  return -1;
+                }
                 temp_var = len;
 #endif
                 return_value = WebRtcNetEQ_Accelerate(inst,
@@ -839,7 +886,9 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
 
 #ifdef NETEQ_DELAY_LOGGING
                 temp_var -= len;
-                fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+                if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+                  return -1;
+                }
 #endif
             }
             /* If last packet was decoded as a inband CNG set mode to CNG instead */
@@ -1130,9 +1179,13 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
 
 #ifdef NETEQ_DELAY_LOGGING
             temp_var = NETEQ_DELAY_LOGGING_SIGNAL_PREEMPTIVE_INFO;
-            fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+            if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+              return -1;
+            }
             temp_var = len - w16_tmp1; /* number of samples added */
-            fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+            if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+              return -1;
+            }
 #endif
             /* If last packet was decoded as inband CNG, set mode to CNG instead */
             if (speechType == TYPE_CNG) inst->w16_mode = MODE_CODEC_INTERNAL_CNG;
@@ -1239,9 +1292,13 @@ int WebRtcNetEQ_RecOutInternal(DSPInst_t *inst, WebRtc_Word16 *pw16_outData,
             inst->w16_mode = MODE_FADE_TO_BGN;
 #ifdef NETEQ_DELAY_LOGGING
             temp_var = NETEQ_DELAY_LOGGING_SIGNAL_EXPAND_INFO;
-            fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+            if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+              return -1;
+            }
             temp_var = len;
-            fwrite(&temp_var, sizeof(int), 1, delay_fid2);
+            if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+              return -1;
+            }
 #endif
 
             break;

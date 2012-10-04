@@ -25,7 +25,9 @@
   ],
   'action': ['<@(grit_cmd)',
              '-i', '<(grit_grd_file)', 'build',
+             '-fGRIT_DIR/../gritsettings/resource_ids',
              '-o', '<(grit_out_dir)',
              '<@(grit_defines)' ],
+  'msvs_cygwin_shell': 0,
   'message': 'Generating resources from <(grit_grd_file)',
 }

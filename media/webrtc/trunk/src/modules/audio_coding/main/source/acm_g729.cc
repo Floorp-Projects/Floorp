@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -34,7 +34,6 @@
     // int16_t WebRtcG729_DecodeBwe(G729_decinst_t_* decInst, int16_t* input);
     // int16_t WebRtcG729_DecodePlc(G729_decinst_t_* decInst);
     // int16_t WebRtcG729_DecoderInit(G729_decinst_t_* decInst);
-    // void WebRtcG729_Version(char *versionStr, short len);
     #include "g729_interface.h"
 #endif
 
@@ -170,16 +169,6 @@ ACMG729::InternalDestructEncoderInst(
 {
     return;
 }
-
-
-WebRtc_Word16
-ACMG729::UnregisterFromNetEqSafe(
-    ACMNetEQ*     /* netEq       */,
-    WebRtc_Word16 /* payloadType */)
-{
-    return -1;
-}
-
 
 #else     //===================== Actual Implementation =======================
 
@@ -519,26 +508,6 @@ ACMG729::InternalDestructEncoderInst(
         WebRtcG729_FreeEnc((G729_encinst_t_*)ptrInst);
     }
     return;
-}
-
-
-WebRtc_Word16
-ACMG729::UnregisterFromNetEqSafe(
-    ACMNetEQ*     netEq,
-    WebRtc_Word16 payloadType)
-{
-    // Remove codec from the NetEQ database
-    if(payloadType != _decoderParams.codecInstant.pltype)
-    {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, _uniqueID,
-            "Cannot unregister codec %s given payload-type %d does not match \
-the stored payload type",
-            _decoderParams.codecInstant.plname,
-            payloadType,
-            _decoderParams.codecInstant.pltype);
-        return -1;
-    }
-    return netEq->RemoveCodec(kDecoderG729);
 }
 
 #endif

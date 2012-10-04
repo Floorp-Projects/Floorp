@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "video_engine/vie_sender.h"
+
 #include <cassert>
 
-#include "critical_section_wrapper.h"
-#include "rtp_dump.h"
-#include "vie_sender.h"
-#include "trace.h"
+#include "modules/utility/interface/rtp_dump.h"
+#include "system_wrappers/interface/critical_section_wrapper.h"
+#include "system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
-ViESender::ViESender(int engine_id, int channel_id)
-    : engine_id_(engine_id),
-      channel_id_(channel_id),
+ViESender::ViESender(int channel_id)
+    : channel_id_(channel_id),
       critsect_(CriticalSectionWrapper::CreateCriticalSection()),
       external_encryption_(NULL),
       encryption_buffer_(NULL),
@@ -59,7 +59,7 @@ int ViESender::DeregisterExternalEncryption() {
     return -1;
   }
   if (encryption_buffer_) {
-    delete encryption_buffer_;
+    delete[] encryption_buffer_;
     encryption_buffer_ = NULL;
   }
   external_encryption_ = NULL;
@@ -92,8 +92,7 @@ int ViESender::StartRTPDump(const char file_nameUTF8[1024]) {
   } else {
     rtp_dump_ = RtpDump::CreateRtpDump();
     if (rtp_dump_ == NULL) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                   ViEId(engine_id_, channel_id_),
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
                    "StartSRTPDump: Failed to create RTP dump");
       return -1;
     }
@@ -101,8 +100,7 @@ int ViESender::StartRTPDump(const char file_nameUTF8[1024]) {
   if (rtp_dump_->Start(file_nameUTF8) != 0) {
     RtpDump::DestroyRtpDump(rtp_dump_);
     rtp_dump_ = NULL;
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                 ViEId(engine_id_, channel_id_),
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
                  "StartRTPDump: Failed to start RTP dump");
     return -1;
   }
@@ -115,15 +113,13 @@ int ViESender::StopRTPDump() {
     if (rtp_dump_->IsActive()) {
       rtp_dump_->Stop();
     } else {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                   ViEId(engine_id_, channel_id_),
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
                    "StopRTPDump: Dump not active");
     }
     RtpDump::DestroyRtpDump(rtp_dump_);
     rtp_dump_ = NULL;
   } else {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                 ViEId(engine_id_, channel_id_),
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, channel_id_,
                  "StopRTPDump: RTP dump not started");
     return -1;
   }
@@ -136,7 +132,6 @@ int ViESender::SendPacket(int vie_id, const void* data, int len) {
     // No transport
     return -1;
   }
-
   assert(ChannelId(vie_id) == channel_id_);
 
   // TODO(mflodman) Change decrypt to get rid of this cast.
@@ -154,12 +149,10 @@ int ViESender::SendPacket(int vie_id, const void* data, int len) {
                                   static_cast<int*>(&send_packet_length));
     send_packet = encryption_buffer_;
   }
-
   const int bytes_sent = transport_->SendPacket(channel_id_, send_packet,
                                                 send_packet_length);
   if (bytes_sent != send_packet_length) {
-    WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideo,
-                 ViEId(engine_id_, channel_id_),
+    WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideo, channel_id_,
                  "ViESender::SendPacket - Transport failed to send RTP packet");
   }
   return bytes_sent;
@@ -195,8 +188,7 @@ int ViESender::SendRTCPPacket(int vie_id, const void* data, int len) {
                                                     send_packet_length);
   if (bytes_sent != send_packet_length) {
     WEBRTC_TRACE(
-        webrtc::kTraceWarning, webrtc::kTraceVideo,
-        ViEId(engine_id_, channel_id_),
+        webrtc::kTraceWarning, webrtc::kTraceVideo, channel_id_,
         "ViESender::SendRTCPPacket - Transport failed to send RTCP packet");
   }
   return bytes_sent;

@@ -6,7 +6,6 @@
 
 #include <assert.h>
 #include "nsAutoPtr.h"
-#include "nsAlgorithm.h"
 #include "BasePin.h"
 
 namespace mozilla {
@@ -215,7 +214,7 @@ BasePin::QueryPinInfo(PIN_INFO * aInfo)
   if (!mName.empty()) {
     // Copy at most (max_buffer_size - sizeof(WCHAR)). The -1 is there to
     // ensure we always have a null terminator.
-    size_t len = NS_MIN<size_t>(MAX_PIN_NAME - 1, mName.length()) * sizeof(WCHAR);
+    unsigned int len = PR_MIN((MAX_PIN_NAME-1)*sizeof(WCHAR), (sizeof(WCHAR)*mName.length()));
     memcpy(aInfo->achName, mName.data(), len);
   }
 
