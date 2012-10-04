@@ -9,6 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const NEW_SCRIPT_DISPLAY_DELAY = 100; // ms
 const FRAME_STEP_CACHE_DURATION = 100; // ms
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const SCRIPTS_URL_MAX_LENGTH = 64; // chars
@@ -929,7 +930,11 @@ SourceScripts.prototype = {
       return;
     }
 
-    this._addScript({ url: aPacket.url, startLine: aPacket.startLine }, true);
+    this._addScript({
+      url: aPacket.url,
+      startLine: aPacket.startLine,
+      source: aPacket.source
+    }, true);
 
     let preferredScriptUrl = DebuggerView.Scripts.preferredScriptUrl;
 
@@ -937,15 +942,21 @@ SourceScripts.prototype = {
     if (aPacket.url === DebuggerView.Scripts.preferredScriptUrl) {
       DebuggerView.Scripts.selectScript(aPacket.url);
     }
-    // ..or the first entry if there's not one selected yet.
-    else if (!DebuggerView.Scripts.selected) {
-      DebuggerView.Scripts.selectIndex(0);
-      // Selecting a script would make it "preferred", which is a lie here,
-      // because we're only displaying a script to make sure there's always
-      // something available in the SourceEditor and the scripts menulist.
-      // Hence the need revert back to the initial preferred script, just
-      // in case it will be available soon.
-      DebuggerView.Scripts.preferredScriptUrl = preferredScriptUrl;
+    // ..or the first entry if there's none selected yet after a while
+    else {
+      window.setTimeout(function() {
+        // If after a certain delay the preferred script still wasn't received,
+        // just give up on waiting and display the first entry.
+        if (!DebuggerView.Scripts.selected) {
+          DebuggerView.Scripts.selectIndex(0);
+          // Selecting a script would make it "preferred", which is a lie here,
+          // because we're only displaying a script to make sure there's always
+          // something available in the SourceEditor and the scripts menulist.
+          // Hence the need revert back to the initial preferred script, just
+          // in case it will be available soon.
+          DebuggerView.Scripts.preferredScriptUrl = preferredScriptUrl;
+        }
+      }, NEW_SCRIPT_DISPLAY_DELAY);
     }
 
     // If there are any stored breakpoints for this script, display them again,
@@ -1206,7 +1217,11 @@ SourceScripts.prototype = {
    */
   showScript: function SS_showScript(aScript, aOptions = {}) {
     if (aScript.loaded) {
-      this._onShowScript(aScript, aOptions);
+      // Scripts may take a longer time to load than expected, therefore the
+      // required one may change at any time after a previous request was made.
+      if (aScript.url === DebuggerView.Scripts.selected) {
+        this._onShowScript(aScript, aOptions);
+      }
       return;
     }
 
@@ -1217,7 +1232,7 @@ SourceScripts.prototype = {
 
     // Notify that we need to load a script file.
     DebuggerController.dispatchEvent("Debugger:LoadSource", {
-      url: aScript.url,
+      script: aScript,
       options: aOptions
     });
   },
@@ -1256,84 +1271,22 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Handles notifications to load a source script from the cache or from a
-   * local file.
-   *
-   * XXX: It may be better to use nsITraceableChannel to get to the sources
-   * without relying on caching when we can (not for eval, etc.):
-   * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
+   * Handles notifications to load a source script.
    */
   _onLoadSource: function SS__onLoadSource(aEvent) {
-    let url = aEvent.detail.url;
+    let script = aEvent.detail.script;
     let options = aEvent.detail.options;
-    let self = this;
 
-    switch (Services.io.extractScheme(url)) {
-      case "file":
-      case "chrome":
-      case "resource":
-        try {
-          NetUtil.asyncFetch(url, function onFetch(aStream, aStatus) {
-            if (!Components.isSuccessCode(aStatus)) {
-              return self._logError(url, aStatus);
-            }
-            let source = NetUtil.readInputStreamToString(aStream, aStream.available());
-            source = self._convertToUnicode(source);
-            self._onLoadSourceFinished(url, source, null, options);
-            aStream.close();
-          });
-        } catch (ex) {
-          return self._logError(url, ex.name);
-        }
-        break;
+    let sourceClient = this.activeThread.source(script.source);
+    sourceClient.source(function (aResponse) {
+      if (aResponse.error) {
+        return this._logError(script.url, -1);
+      }
 
-      default:
-        let channel = Services.io.newChannel(url, null, null);
-        let chunks = [];
-        let streamListener = {
-          onStartRequest: function(aRequest, aContext, aStatusCode) {
-            if (!Components.isSuccessCode(aStatusCode)) {
-              return self._logError(url, aStatusCode);
-            }
-          },
-          onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
-            chunks.push(NetUtil.readInputStreamToString(aStream, aCount));
-          },
-          onStopRequest: function(aRequest, aContext, aStatusCode) {
-            if (!Components.isSuccessCode(aStatusCode)) {
-              return self._logError(url, aStatusCode);
-            }
-            let source = self._convertToUnicode(chunks.join(""), channel.contentCharset);
-            self._onLoadSourceFinished(url, source, channel.contentType, options);
-          }
-        };
-
-        channel.loadFlags = channel.LOAD_FROM_CACHE;
-        channel.asyncOpen(streamListener, null);
-        break;
-    }
-  },
-
-  /**
-   * Convert a given string, encoded in a given character set, to unicode.
-   * @param string aString
-   *        A string.
-   * @param string aCharset
-   *        A character set.
-   * @return string
-   *         A unicode string.
-   */
-  _convertToUnicode: function SS__convertToUnicode(aString, aCharset) {
-    // Decoding primitives.
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-        .createInstance(Ci.nsIScriptableUnicodeConverter);
-
-    try {
-      converter.charset = aCharset || "UTF-8";
-      return converter.ConvertToUnicode(aString);
-    } catch(e) {
-      return aString;
-    }
+      this._onLoadSourceFinished(script.url,
+                                 aResponse.source,
+                                 options);
+    }.bind(this));
   },
 
   /**
@@ -1344,14 +1297,12 @@ SourceScripts.prototype = {
    *        The URL of the source script.
    * @param string aSourceText
    *        The text of the source script.
-   * @param string aContentType
-   *        The content type of the source script.
    * @param object aOptions [optional]
    *        Additional options for showing the script. Supported options:
    *        - targetLine: place the editor at the given line number.
    */
   _onLoadSourceFinished:
-  function SS__onLoadSourceFinished(aScriptUrl, aSourceText, aContentType, aOptions) {
+  function SS__onLoadSourceFinished(aScriptUrl, aSourceText, aOptions) {
     let element = DebuggerView.Scripts.getScriptByLocation(aScriptUrl);
 
     // Tab navigated before we got a chance to finish loading and displaying
@@ -1367,7 +1318,6 @@ SourceScripts.prototype = {
 
     script.loaded = true;
     script.text = aSourceText;
-    script.contentType = aContentType;
     element.setUserData("sourceScript", script, null);
 
     if (aOptions.silent) {

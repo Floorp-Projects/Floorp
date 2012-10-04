@@ -765,7 +765,7 @@ OutputPanel.prototype.remove = function OP_remove()
     this.canHide = true;
   }
 
-  if (this._panel) {
+  if (this._panel && this._panel.hidePopup) {
     this._panel.hidePopup();
   }
 
@@ -992,7 +992,9 @@ TooltipPanel.prototype.remove = function TP_remove()
   if (isLinux) {
     this.canHide = true;
   }
-  this._panel.hidePopup();
+  if (this._panel && this._panel.hidePopup) {
+    this._panel.hidePopup();
+  }
 };
 
 /**

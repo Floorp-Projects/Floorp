@@ -8,8 +8,13 @@ function test() {
 }
 
 function testDbgCmd() {
-  let pane = DebuggerUI.toggleDebugger();
-  ok(pane, "toggleDebugger() should return a pane.");
+  DeveloperToolbarTest.exec({
+    typed: "dbg open",
+    blankOutput: true
+  });
+
+  let pane = DebuggerUI.findDebugger();
+  ok(pane, "Debugger was opened.");
   let frame = pane._frame;
 
   frame.addEventListener("Debugger:Connecting", function dbgConnected(aEvent) {
@@ -41,9 +46,14 @@ function testDbgCmd() {
                       cmd("dbg continue", function() {
                         cmd("dbg continue", function() {
                           is(output.value, "dbg continue", "debugger continued");
-                          pane.contentWindow.gClient.close(function() {
-                            finish();
+                          DeveloperToolbarTest.exec({
+                            typed: "dbg close",
+                            blankOutput: true
                           });
+
+                          let dbg = DebuggerUI.findDebugger();
+                          ok(!dbg, "Debugger was closed.");
+                          finish();
                         });
                       });
                     });
