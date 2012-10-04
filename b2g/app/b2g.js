@@ -396,7 +396,9 @@ pref("dom.mozContacts.enabled", true);
 pref("dom.mozAlarms.enabled", true);
 
 // NetworkStats
+#ifdef MOZ_B2G_RIL
 pref("dom.mozNetworkStats.enabled", true);
+#endif
 
 // WebSettings
 pref("dom.mozSettings.enabled", true);
