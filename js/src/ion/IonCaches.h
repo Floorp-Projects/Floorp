@@ -111,6 +111,7 @@ class IonCache
             Register object;
             PropertyName *name;
             TypedOrValueRegisterSpace output;
+            bool allowGetters;
         } getprop;
         struct {
             Register object;
@@ -256,20 +257,26 @@ class IonCacheGetProperty : public IonCache
                         CodeOffsetLabel cacheLabel,
                         RegisterSet liveRegs,
                         Register object, PropertyName *name,
-                        TypedOrValueRegister output)
+                        TypedOrValueRegister output,
+                        bool allowGetters)
     {
         init(GetProperty, liveRegs, initialJump, rejoinLabel, cacheLabel);
         u.getprop.object = object;
         u.getprop.name = name;
         u.getprop.output.data() = output;
+        u.getprop.allowGetters = allowGetters;
     }
 
     Register object() const { return u.getprop.object; }
     PropertyName *name() const { return u.getprop.name; }
     TypedOrValueRegister output() const { return u.getprop.output.data(); }
+    bool allowGetters() const { return u.getprop.allowGetters; }
 
-    bool attachNative(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                      const Shape *shape);
+    bool attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
+                        const Shape *shape);
+    bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
+                          const Shape *shape,
+                          const SafepointIndex *safepointIndex, void *returnAddr);
 };
 
 class IonCacheSetProperty : public IonCache

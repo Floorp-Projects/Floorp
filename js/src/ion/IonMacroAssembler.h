@@ -271,6 +271,33 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     using MacroAssemblerSpecific::Push;
 
+    void Push(jsid id, Register scratchReg) {
+        if (JSID_IS_GCTHING(id)) {
+            // If we're pushing a gcthing, then we can't just push the tagged jsid
+            // value since the GC won't have any idea that the push instruction
+            // carries a reference to a gcthing.  Need to unpack the pointer,
+            // push it using ImmGCPtr, and then rematerialize the id at runtime.
+
+            // double-checking this here to ensure we don't lose sync
+            // with implementation of JSID_IS_GCTHING.
+            if (JSID_IS_OBJECT(id)) {
+                JSObject *obj = JSID_TO_OBJECT(id);
+                movePtr(ImmGCPtr(obj), scratchReg);
+                JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
+                orPtr(Imm32(JSID_TYPE_OBJECT), scratchReg);
+                Push(scratchReg);
+            } else {
+                JSString *str = JSID_TO_STRING(id);
+                JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
+                JS_ASSERT(JSID_TYPE_STRING == 0x0);
+                Push(ImmGCPtr(str));
+            }
+        } else {
+            size_t idbits = JSID_BITS(id);
+            Push(ImmWord(idbits));
+        }
+    }
+
     void Push(TypedOrValueRegister v) {
         if (v.hasValue())
             Push(v.valueReg());
@@ -447,13 +474,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         // Push VMFunction pointer, to mark arguments.
         Push(ImmWord(f));
     }
-    void enterFakeExitFrame() {
-        linkExitFrame();
-        Push(ImmWord(uintptr_t(NULL)));
-        Push(ImmWord(uintptr_t(NULL)));
-    }
-
-    void enterFakeDOMFrame(void *codeVal) {
+    void enterFakeExitFrame(void *codeVal = NULL) {
         linkExitFrame();
         Push(ImmWord(uintptr_t(codeVal)));
         Push(ImmWord(uintptr_t(NULL)));
