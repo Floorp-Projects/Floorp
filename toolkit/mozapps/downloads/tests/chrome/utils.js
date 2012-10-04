@@ -72,12 +72,8 @@ function addDownload(aName) {
                             createURI(dmFile), null, null,
                             Math.round(Date.now() * 1000), null, persist, false);
 
-    let privacyContext = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsILoadContext);
-
     persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
-    persist.saveURI(dl.source, null, null, null, null, dl.targetFile, privacyContext);
+    persist.saveURI(dl.source, null, null, null, null, dl.targetFile);
 
     return dl;
   }

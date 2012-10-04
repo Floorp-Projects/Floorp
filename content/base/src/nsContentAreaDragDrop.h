@@ -71,7 +71,7 @@ public:
   virtual ~nsContentAreaDragDropDataProvider() {}
 
   nsresult SaveURIToFile(nsAString& inSourceURIString,
-                         nsIFile* inDestFile, bool isPrivate);
+                         nsIFile* inDestFile);
 };
 
 

@@ -105,7 +105,7 @@ var stringBundle;
         persist.progressListener = xfer;
 
         // save the canvas data to the file
-        persist.saveURI(source, null, null, null, null, file, null);
+        persist.saveURI(source, null, null, null, null, file);
       }
     };
 
