@@ -2527,12 +2527,11 @@ AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDispla
 bool
 AndroidBridge::ShouldAbortProgressiveUpdate(bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution)
 {
-    JNIEnv* env = GetJNIEnv();
-    if (!env || !mLayerClient)
+    AndroidGeckoLayerClient *client = mLayerClient;
+    if (!client)
         return false;
 
-    AutoLocalJNIFrame jniFrame(env, 0);
-    return mLayerClient->ShouldAbortProgressiveUpdate(&jniFrame, aHasPendingNewThebesContent, aDisplayPort, aDisplayResolution);
+    return client->ShouldAbortProgressiveUpdate(aHasPendingNewThebesContent, aDisplayPort, aDisplayResolution);
 }
 
 void
