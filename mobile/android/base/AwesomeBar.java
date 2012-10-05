@@ -519,7 +519,7 @@ public class AwesomeBar extends GeckoActivity {
                     break;
                 }
 
-                Tabs.getInstance().loadUrl(url, Tabs.LOADURL_NEW_TAB);
+                GeckoApp.mAppContext.loadUrl(url, AwesomeBar.Target.NEW_TAB);
                 Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
                 break;
             }

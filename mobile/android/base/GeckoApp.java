@@ -1927,7 +1927,7 @@ abstract public class GeckoApp
         }
         else if (ACTION_LOAD.equals(action)) {
             String uri = intent.getDataString();
-            Tabs.getInstance().loadUrl(uri);
+            loadUrl(uri, AwesomeBar.Target.CURRENT_TAB);
         }
         else if (Intent.ACTION_VIEW.equals(action)) {
             String uri = intent.getDataString();
@@ -2455,6 +2455,62 @@ abstract public class GeckoApp
         }
     }
 
+    // If searchEngine is provided, url will be used as the search query.
+    // Otherwise, the url is loaded.
+    protected void loadRequest(String url, AwesomeBar.Target target, String searchEngine, boolean userEntered) {
+        Log.d(LOGTAG, target.name());
+        JSONObject args = new JSONObject();
+        try {
+            args.put("url", url);
+            args.put("engine", searchEngine);
+            args.put("userEntered", userEntered);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "error building JSON arguments");
+        }
+
+        if (target == AwesomeBar.Target.NEW_TAB) {
+            Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
+        } else {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
+        }
+    }
+
+    public void loadUrl(String url) {
+        loadRequest(url, AwesomeBar.Target.CURRENT_TAB, null, false);
+    }
+
+    public void loadUrl(String url, AwesomeBar.Target target) {
+        loadRequest(url, target, null, false);
+    }
+
+    /**
+     * Open the url as a new tab, and mark the selected tab as its "parent".
+     * If the url is already open in a tab, the existing tab is selected.
+     * Use this for tabs opened by the browser chrome, so users can press the
+     * "Back" button to return to the previous tab.
+     */
+    public void loadUrlInTab(String url) {
+        Tabs tabsInstance = Tabs.getInstance();
+        Iterable<Tab> tabs = tabsInstance.getTabsInOrder();
+        for (Tab tab : tabs) {
+            if (url.equals(tab.getURL())) {
+                tabsInstance.selectTab(tab.getId());
+                return;
+            }
+        }
+
+        JSONObject args = new JSONObject();
+        try {
+            args.put("url", url);
+            args.put("parentId", tabsInstance.getSelectedTab().getId());
+        } catch (Exception e) {
+            Log.e(LOGTAG, "error building JSON arguments");
+        }
+        Log.i(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
+    }
+
     public LayerView getLayerView() {
         return mLayerView;
     }
@@ -2642,7 +2698,7 @@ abstract public class GeckoApp
             case R.id.pasteandgo: {
                 String text = GeckoAppShell.getClipboardText();
                 if (text != null && !TextUtils.isEmpty(text)) {
-                    Tabs.getInstance().loadUrl(text);
+                    loadUrl(text, AwesomeBar.Target.CURRENT_TAB);
                 }
                 return true;
             }
