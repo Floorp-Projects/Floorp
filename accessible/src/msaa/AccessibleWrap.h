@@ -15,7 +15,7 @@
 #include "Accessible2.h"
 #include "ia2AccessibleComponent.h"
 #include "ia2AccessibleHyperlink.h"
-#include "CAccessibleValue.h"
+#include "ia2AccessibleValue.h"
 
 #define DECL_IUNKNOWN                                                          \
 public:                                                                        \
@@ -119,7 +119,7 @@ __try {                                                                        \
 class AccessibleWrap : public Accessible,
                        public ia2AccessibleComponent,
                        public ia2AccessibleHyperlink,
-                       public CAccessibleValue,
+                       public ia2AccessibleValue,
                        public IAccessible2
 {
 public: // construction, destruction

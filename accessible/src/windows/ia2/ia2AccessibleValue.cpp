@@ -5,31 +5,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CAccessibleValue.h"
+#include "ia2AccessibleValue.h"
 
 #include "AccessibleValue_i.c"
 
-#include "nsIAccessibleValue.h"
-
-#include "nsCOMPtr.h"
-
-#include "nsAccessNodeWrap.h"
+#include "AccessibleWrap.h"
 
 // IUnknown
 
 STDMETHODIMP
-CAccessibleValue::QueryInterface(REFIID iid, void** ppv)
+ia2AccessibleValue::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
   if (IID_IAccessibleValue == iid) {
-    nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
-    if (!valueAcc)
-      return E_NOINTERFACE;
+    AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
+    if (valueAcc->HasNumericValue()) {
+      *ppv = static_cast<IAccessibleValue*>(this);
+      valueAcc->AddRef();
+      return S_OK;
+    }
 
-    *ppv = static_cast<IAccessibleValue*>(this);
-    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
-    return S_OK;
+    return E_NOINTERFACE;
   }
 
   return E_NOINTERFACE;
@@ -38,14 +35,14 @@ CAccessibleValue::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleValue
 
 STDMETHODIMP
-CAccessibleValue::get_currentValue(VARIANT *aCurrentValue)
+ia2AccessibleValue::get_currentValue(VARIANT* aCurrentValue)
 {
 __try {
   VariantInit(aCurrentValue);
 
-  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
-  if (!valueAcc)
-    return E_FAIL;
+  AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
+  if (valueAcc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   double currentValue = 0;
   nsresult rv = valueAcc->GetCurrentValue(&currentValue);
@@ -61,12 +58,12 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleValue::setCurrentValue(VARIANT aValue)
+ia2AccessibleValue::setCurrentValue(VARIANT aValue)
 {
 __try {
-  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
-  if (!valueAcc)
-    return E_FAIL;
+  AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
+  if (valueAcc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   if (aValue.vt != VT_R8)
     return E_INVALIDARG;
@@ -79,14 +76,14 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleValue::get_maximumValue(VARIANT *aMaximumValue)
+ia2AccessibleValue::get_maximumValue(VARIANT* aMaximumValue)
 {
 __try {
   VariantInit(aMaximumValue);
 
-  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
-  if (!valueAcc)
-    return E_FAIL;
+  AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
+  if (valueAcc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   double maximumValue = 0;
   nsresult rv = valueAcc->GetMaximumValue(&maximumValue);
@@ -102,14 +99,14 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleValue::get_minimumValue(VARIANT *aMinimumValue)
+ia2AccessibleValue::get_minimumValue(VARIANT* aMinimumValue)
 {
 __try {
   VariantInit(aMinimumValue);
 
-  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
-  if (!valueAcc)
-    return E_FAIL;
+  AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
+  if (valueAcc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   double minimumValue = 0;
   nsresult rv = valueAcc->GetMinimumValue(&minimumValue);

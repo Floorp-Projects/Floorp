@@ -32,9 +32,6 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlinkIndex(
       /* [in] */ long charIndex,
       /* [retval][out] */ long* hyperlinkIndex);
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
 };
 
 #endif

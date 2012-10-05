@@ -13,8 +13,8 @@
 #include "AccessibleTable.h"
 #include "AccessibleTable2.h"
 
-class CAccessibleTable: public IAccessibleTable,
-                        public IAccessibleTable2
+class ia2AccessibleTable : public IAccessibleTable,
+                           public IAccessibleTable2
 {
 public:
 
