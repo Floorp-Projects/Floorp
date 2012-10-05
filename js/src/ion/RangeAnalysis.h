@@ -189,7 +189,7 @@ struct RangeChangeCount {
     Range oldRange;
     unsigned char lowerCount_ : 4;
     unsigned char upperCount_ : 4;
-
+    RangeChangeCount() : oldRange(), lowerCount_(0), upperCount_(0) {};
     void updateRange(Range *newRange) {
         JS_ASSERT(newRange->lower() >= oldRange.lower());
         if (newRange->lower() != oldRange.lower())
