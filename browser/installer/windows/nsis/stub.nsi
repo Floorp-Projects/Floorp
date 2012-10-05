@@ -297,25 +297,29 @@ Function createIntro
 
 !ifdef ${AB_CD}_rtl
   ; For RTL align the text with the top of the F in the Firefox bitmap
-  ${NSD_CreateLabel} 170u 12u 258u 76u "${INTRO_BLURB}"
+  StrCpy $0 "${INTRO_BLURB_RTL_TOP_DU}"
 !else
   ; For LTR align the text with the top of the x in the Firefox bitmap
-  ${NSD_CreateLabel} 170u 20u 258u 76u "${INTRO_BLURB}"
+  StrCpy $0 "${INTRO_BLURB_LTR_TOP_DU}"
 !endif
+  ${NSD_CreateLabel} ${INTRO_BLURB_EDGE_DU} $0 ${INTRO_BLURB_WIDTH_DU} 76u "${INTRO_BLURB}"
   Pop $0
   SendMessage $0 ${WM_SETFONT} $FontBlurb 0
-  SetCtlColors $0 ${BLURB_TEXT_COLOR} transparent
+  SetCtlColors $0 ${INTRO_BLURB_TEXT_COLOR} transparent
 
   ${Unless} $Initialized == "true"
-    SetCtlColors $HWNDPARENT ${CONTROL_TEXT_COLOR} ${BOTTOM_BKGRD_COLOR}
+    SetCtlColors $HWNDPARENT ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
     GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
     ; Set as default is not supported in the installer for Win8 and above so
     ; only display it on Windows 7 and below
     ${If} $CanSetAsDefault == "true"
+      ; The uxtheme must be disabled on checkboxes in order to override the
+      ; system font color.
+      System::Call 'uxtheme::SetWindowTheme(i $0 , w " ", w " ")'
       SendMessage $0 ${WM_SETFONT} $FontNormal 0
       SendMessage $0 ${WM_SETTEXT} 0 "STR:$(MAKE_DEFAULT)"
       SendMessage $0 ${BM_SETCHECK} 1 0
-      SetCtlColors $0 ${CONTROL_TEXT_COLOR} ${BOTTOM_BKGRD_COLOR}
+      SetCtlColors $0 ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
     ${Else}
       ShowWindow $0 ${SW_HIDE}
     ${EndIf}
@@ -323,7 +327,8 @@ Function createIntro
     ShowWindow $0 ${SW_HIDE}
   ${EndUnless}
 
-  ${NSD_CreateBitmap} 19u 12u 134u 36u ""
+  ${NSD_CreateBitmap} ${APPNAME_BMP_EDGE_DU} ${APPNAME_BMP_TOP_DU} \
+                      ${APPNAME_BMP_WIDTH_DU} ${APPNAME_BMP_HEIGHT_DU} ""
   Pop $2
   ${SetStretchedTransparentImage} $2 $PLUGINSDIR\appname.bmp $0
 
@@ -394,52 +399,64 @@ Function createOptions
 
   StrCpy $ExistingTopDir ""
 
-  ; There is a bug with setting a transparent background on a checkbox so a
-  ; background image can't used on this page.
-  ; http://sourceforge.net/tracker/index.php?func=detail&aid=1420352&group_id=22049&atid=373085
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
   ; Since the text color for controls is set in this Dialog the foreground and
   ; background colors of the Dialog must also be hardcoded.
-  SetCtlColors $Dialog ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $Dialog ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
 
-  ${NSD_CreateLabel} ${OPTIONS_ITEM_LEFT_DU} 18u 100% 12u "$(CREATE_SHORTCUTS)"
+  ${NSD_CreateLabel} ${OPTIONS_ITEM_EDGE_DU} 18u ${OPTIONS_ITEM_WIDTH_DU} \
+                     12u "$(CREATE_SHORTCUTS)"
   Pop $0
-  SetCtlColors $0 ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $0 ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
   SendMessage $0 ${WM_SETFONT} $FontNormal 0
 
   ${If} ${AtLeastWin7}
-    ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_LEFT_DU} 38u 100% 12u "$(ADD_SC_TASKBAR)"
+    StrCpy $0 "$(ADD_SC_TASKBAR)"
   ${Else}
-    ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_LEFT_DU} 38u 100% 12u "$(ADD_SC_QUICKLAUNCHBAR)"
+    StrCpy $0 "$(ADD_SC_QUICKLAUNCHBAR)"
   ${EndIf}
+  ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_EDGE_DU} 38u \
+                        ${OPTIONS_SUBITEM_WIDTH_DU} 12u "$0"
   Pop $CheckboxShortcutOnBar
-  SetCtlColors $CheckboxShortcutOnBar ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  ; The uxtheme must be disabled on checkboxes in order to override the system
+  ; font color.
+  System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcutOnBar, w " ", w " ")'
+  SetCtlColors $CheckboxShortcutOnBar ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
   SendMessage $CheckboxShortcutOnBar ${WM_SETFONT} $FontNormal 0
   ${NSD_Check} $CheckboxShortcutOnBar
 
-  ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_LEFT_DU} 54u 100% 12u "$(ADD_CheckboxShortcutInStartMenu)"
+  ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_EDGE_DU} 54u ${OPTIONS_SUBITEM_WIDTH_DU} \
+                        12u "$(ADD_CheckboxShortcutInStartMenu)"
   Pop $CheckboxShortcutInStartMenu
-  SetCtlColors $CheckboxShortcutInStartMenu ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  ; The uxtheme must be disabled on checkboxes in order to override the system
+  ; font color.
+  System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcutInStartMenu, w " ", w " ")'
+  SetCtlColors $CheckboxShortcutInStartMenu ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
   SendMessage $CheckboxShortcutInStartMenu ${WM_SETFONT} $FontNormal 0
   ${NSD_Check} $CheckboxShortcutInStartMenu
 
-  ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_LEFT_DU} 70u 100% 12u "$(ADD_CheckboxShortcutOnDesktop)"
+  ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_EDGE_DU} 70u ${OPTIONS_SUBITEM_WIDTH_DU} \
+                        12u "$(ADD_CheckboxShortcutOnDesktop)"
   Pop $CheckboxShortcutOnDesktop
-  SetCtlColors $CheckboxShortcutOnDesktop ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  ; The uxtheme must be disabled on checkboxes in order to override the system
+  ; font color.
+  System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcutOnDesktop, w " ", w " ")'
+  SetCtlColors $CheckboxShortcutOnDesktop ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
   SendMessage $CheckboxShortcutOnDesktop ${WM_SETFONT} $FontNormal 0
   ${NSD_Check} $CheckboxShortcutOnDesktop
 
-  ${NSD_CreateLabel} ${OPTIONS_ITEM_LEFT_DU} 100u 100% 12u "$(DEST_FOLDER)"
+  ${NSD_CreateLabel} ${OPTIONS_ITEM_EDGE_DU} 100u ${OPTIONS_ITEM_WIDTH_DU} \
+                     12u "$(DEST_FOLDER)"
   Pop $0
-  SetCtlColors $0 ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $0 ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
   SendMessage $0 ${WM_SETFONT} $FontNormal 0
 
-  ${NSD_CreateDirRequest} ${OPTIONS_SUBITEM_LEFT_DU} 116u 159u 14u "$INSTDIR"
+  ${NSD_CreateDirRequest} ${OPTIONS_SUBITEM_EDGE_DU} 116u 159u 14u "$INSTDIR"
   Pop $DirRequest
-  SetCtlColors $DirRequest ${CONTROL_TEXT_COLOR} ${BOTTOM_BKGRD_COLOR}
+  SetCtlColors $DirRequest ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
   SendMessage $DirRequest ${WM_SETFONT} $FontNormal 0
-  System::Call shlwapi::SHAutoComplete(i $DirRequest,i ${SHACF_FILESYSTEM})
+  System::Call shlwapi::SHAutoComplete(i $DirRequest, i ${SHACF_FILESYSTEM})
   ${NSD_OnChange} $DirRequest OnChange_DirRequest
 
 !ifdef ${AB_CD}_rtl
@@ -453,6 +470,7 @@ Function createOptions
 
   ${NSD_CreateBrowseButton} 280u 116u 50u 14u "$(BROWSE_BUTTON)"
   Pop $ButtonBrowse
+  SetCtlColors $ButtonBrowse "" ${OPTIONS_BKGRD_COLOR}
   ${NSD_OnClick} $ButtonBrowse OnClick_ButtonBrowse
 
   ; Get the number of pixels from the left of the Dialog to the right side of
@@ -471,15 +489,15 @@ Function createOptions
 
   IntOp $0 $0 + 8 ; Add padding to the control's width
   ; Make both controls the same width as the widest control
-  ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_LEFT_DU} 134u $0 $HEIGHT_PX "$(SPACE_REQUIRED)"
+  ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_EDGE_DU} 134u $0 $HEIGHT_PX "$(SPACE_REQUIRED)"
   Pop $5
-  SetCtlColors $5 ${BLURB_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $5 ${OPTIONS_TEXT_COLOR_FADED} ${OPTIONS_BKGRD_COLOR}
   SendMessage $5 ${WM_SETFONT} $FontItalic 0
 
   IntOp $2 $2 + 8 ; Add padding to the control's width
-  ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_LEFT_DU} 145u $2 $HEIGHT_PX "$(SPACE_AVAILABLE)"
+  ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_EDGE_DU} 145u $2 $HEIGHT_PX "$(SPACE_AVAILABLE)"
   Pop $6
-  SetCtlColors $6 ${BLURB_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $6 ${OPTIONS_TEXT_COLOR_FADED} ${OPTIONS_BKGRD_COLOR}
   SendMessage $6 ${WM_SETFONT} $FontItalic 0
 
   ; Use the widest label for aligning the labels next to them
@@ -491,16 +509,17 @@ Function createOptions
 
   IntOp $CTL_RIGHT_PX $CTL_RIGHT_PX + 6
 
-  ${NSD_CreateLabel} $CTL_RIGHT_PX 134u 100% $HEIGHT_PX "${APPROXIMATE_REQUIRED_SPACE_MB} $(MEGA)$(BYTE)"
+  ${NSD_CreateLabel} $CTL_RIGHT_PX 134u 100% $HEIGHT_PX \
+                     "${APPROXIMATE_REQUIRED_SPACE_MB} $(MEGA)$(BYTE)"
   Pop $7
-  SetCtlColors $7 ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $7 ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
   SendMessage $7 ${WM_SETFONT} $FontNormal 0
 
   ; Create the free space label with an empty string and update it by calling
   ; UpdateFreeSpaceLabel
   ${NSD_CreateLabel} $CTL_RIGHT_PX 145u 100% $HEIGHT_PX " "
   Pop $LabelFreeSpace
-  SetCtlColors $LabelFreeSpace ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $LabelFreeSpace ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
   SendMessage $LabelFreeSpace ${WM_SETFONT} $FontNormal 0
 
   Call UpdateFreeSpaceLabel
@@ -522,9 +541,11 @@ Function createOptions
     ClearErrors
     ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\services\MozillaMaintenance" "ImagePath"
     ${If} ${Errors}
-      ${NSD_CreateCheckbox} ${OPTIONS_ITEM_LEFT_DU} 175u 100% 12u "$(INSTALL_MAINT_SERVICE)"
+      ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 175u ${OPTIONS_ITEM_WIDTH_DU} \
+                            12u "$(INSTALL_MAINT_SERVICE)"
       Pop $CheckboxInstallMaintSvc
-      SetCtlColors $CheckboxInstallMaintSvc ${CONTROL_TEXT_COLOR} ${OPTIONS_BKGRD_COLOR}
+      System::Call 'uxtheme::SetWindowTheme(i $CheckboxInstallMaintSvc, w " ", w " ")'
+      SetCtlColors $CheckboxInstallMaintSvc ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
       SendMessage $CheckboxInstallMaintSvc ${WM_SETFONT} $FontNormal 0
       ${NSD_Check} $CheckboxInstallMaintSvc
     ${EndIf}
@@ -625,7 +646,7 @@ Function createInstall
   ${NSD_CreateLabel} $R1 ${INSTALL_BLURB_TOP_DU} $5 $6 "${INSTALL_BLURB1}"
   Pop $LabelBlurb1
   SendMessage $LabelBlurb1 ${WM_SETFONT} $FontBlurb 0
-  SetCtlColors $LabelBlurb1 ${BLURB_TEXT_COLOR} transparent
+  SetCtlColors $LabelBlurb1 ${INSTALL_BLURB_TEXT_COLOR} transparent
 
   ${GetTextWidthHeight} "${INSTALL_BLURB2}" $FontBlurb $R0 $5 $6
   IntOp $R1 $1 + $3
@@ -640,7 +661,7 @@ Function createInstall
   ${NSD_CreateLabel} $R1 ${INSTALL_BLURB_TOP_DU} $5 $6 "${INSTALL_BLURB2}"
   Pop $LabelBlurb2
   SendMessage $LabelBlurb2 ${WM_SETFONT} $FontBlurb 0
-  SetCtlColors $LabelBlurb2 ${BLURB_TEXT_COLOR} transparent
+  SetCtlColors $LabelBlurb2 ${INSTALL_BLURB_TEXT_COLOR} transparent
   ShowWindow $BitmapBlurb2 ${SW_HIDE}
   ShowWindow $LabelBlurb2 ${SW_HIDE}
 
@@ -657,7 +678,7 @@ Function createInstall
   ${NSD_CreateLabel} $R1 ${INSTALL_BLURB_TOP_DU} $5 $6 "${INSTALL_BLURB3}"
   Pop $LabelBlurb3
   SendMessage $LabelBlurb3 ${WM_SETFONT} $FontBlurb 0
-  SetCtlColors $LabelBlurb3 ${BLURB_TEXT_COLOR} transparent
+  SetCtlColors $LabelBlurb3 ${INSTALL_BLURB_TEXT_COLOR} transparent
   ShowWindow $BitmapBlurb3 ${SW_HIDE}
   ShowWindow $LabelBlurb3 ${SW_HIDE}
 
@@ -667,23 +688,23 @@ Function createInstall
   ${NSD_CreateLabelCenter} 103u 180u 157u 20u "$(DOWNLOADING_IN_PROGRESS)"
   Pop $LabelDownloadingInProgress
   SendMessage $LabelDownloadingInProgress ${WM_SETFONT} $FontNormal 0
-  SetCtlColors $LabelDownloadingInProgress ${BLURB_TEXT_COLOR} transparent
+  SetCtlColors $LabelDownloadingInProgress ${INSTALL_PROGRESS_TEXT_COLOR_NORMAL} transparent
 
   ${NSD_CreateLabelCenter} 103u 180u 157u 20u "$(DOWNLOADING_DONE)"
   Pop $LabelDownloadingDown
   SendMessage $LabelDownloadingDown ${WM_SETFONT} $FontItalic 0
-  SetCtlColors $LabelDownloadingDown ${FADED_TEXT_COLOR} transparent
+  SetCtlColors $LabelDownloadingDown ${INSTALL_PROGRESS_TEXT_COLOR_FADED} transparent
   ShowWindow $LabelDownloadingDown ${SW_HIDE}
 
   ${NSD_CreateLabelCenter} 260uu 180u 84u 20u "$(INSTALLING_TO_BE_DONE)"
   Pop $LabelInstallingToBeDone
   SendMessage $LabelInstallingToBeDone ${WM_SETFONT} $FontItalic 0
-  SetCtlColors $LabelInstallingToBeDone ${FADED_TEXT_COLOR} transparent
+  SetCtlColors $LabelInstallingToBeDone ${INSTALL_PROGRESS_TEXT_COLOR_FADED} transparent
 
   ${NSD_CreateLabelCenter} 260uu 180u 84u 20u "$(INSTALLING_IN_PROGRESS)"
   Pop $LabelInstallingInProgress
   SendMessage $LabelInstallingInProgress ${WM_SETFONT} $FontNormal 0
-  SetCtlColors $LabelInstallingInProgress ${BLURB_TEXT_COLOR} transparent
+  SetCtlColors $LabelInstallingInProgress ${INSTALL_PROGRESS_TEXT_COLOR_NORMAL} transparent
   ShowWindow $LabelInstallingInProgress ${SW_HIDE}
 
   ${NSD_CreateProgressBar} 103u 166u 157u 9u ""
@@ -696,7 +717,8 @@ Function createInstall
   ${NSD_AddStyle} $ProgressbarInstall ${PBS_MARQUEE}
   SendMessage $ProgressbarInstall ${PBM_SETMARQUEE} 0 10 ; start=1|stop=0 interval(ms)=+N
 
-  ${NSD_CreateBitmap} 19u 12u 134u 36u ""
+  ${NSD_CreateBitmap} ${APPNAME_BMP_EDGE_DU} ${APPNAME_BMP_TOP_DU} \
+                      ${APPNAME_BMP_WIDTH_DU} ${APPNAME_BMP_HEIGHT_DU} ""
   Pop $2
   ${SetStretchedTransparentImage} $2 $PLUGINSDIR\appname.bmp $0
 
@@ -731,7 +753,7 @@ Function createInstall
   GetDlgItem $0 $HWNDPARENT 11
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(ONE_MOMENT)"
   SendMessage $0 ${WM_SETFONT} $FontNormal 0
-  SetCtlColors $0 ${BLURB_TEXT_COLOR} ${BOTTOM_BKGRD_COLOR}
+  SetCtlColors $0 ${FOOTER_CONTROL_TEXT_COLOR_FADED} ${FOOTER_BKGRD_COLOR}
   ShowWindow $0 ${SW_SHOW}
 
   StrCpy $DownloadReset "false"
@@ -836,7 +858,7 @@ Function OnDownload
 
       ; Open a handle to prevent modification of the full installer
       StrCpy $R9 "${INVALID_HANDLE_VALUE}"
-      System::Call 'kernel32::CreateFileW(t "$PLUGINSDIR\download.exe", \
+      System::Call 'kernel32::CreateFileW(w "$PLUGINSDIR\download.exe", \
                                           i ${GENERIC_READ}, \
                                           i ${FILE_SHARE_READ}, i 0, \
                                           i ${OPEN_EXISTING}, i 0, i 0) i .R9'
@@ -1072,7 +1094,7 @@ FunctionEnd
 
 Function OnChange_DirRequest
   Pop $0
-  System::Call `user32::GetWindowTextW(i $DirRequest, t .r0, i ${NSIS_MAX_STRLEN})`
+  System::Call 'user32::GetWindowTextW(i $DirRequest, w .r0, i ${NSIS_MAX_STRLEN})'
   StrCpy $INSTDIR $0
   Call UpdateFreeSpaceLabel
 FunctionEnd
@@ -1097,7 +1119,7 @@ Function OnClick_ButtonBrowse
 
   ${If} $0 != ""
     StrCpy $INSTDIR "$0"
-    system::Call `user32::SetWindowTextW(i $DirRequest, t "$INSTDIR")`
+    system::Call 'user32::SetWindowTextW(i $DirRequest, w "$INSTDIR")'
   ${EndIf}
 FunctionEnd
 
