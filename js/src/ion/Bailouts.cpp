@@ -595,6 +595,41 @@ ion::ThunkToInterpreter(Value *vp)
     if (JSOp(*pc) == JSOP_LOOPENTRY)
         cx->regs().pc = GetNextPc(pc);
 
+    // When JSScript::argumentsOptimizationFailed, we cannot access Ion frames
+    // in order to create an arguments object for them.  However, there is an
+    // invariant that script->needsArgsObj() implies fp->hasArgsObj() (after the
+    // prologue), so we must create one now for each inlined frame which needs
+    // one.
+    {
+        br->entryfp()->clearRunningInIon();
+        ScriptFrameIter iter(cx);
+        StackFrame *fp = NULL;
+        Rooted<JSScript*> script(cx, NULL);
+        do {
+            JS_ASSERT(!iter.isIon());
+            fp = iter.fp();
+            script = iter.script();
+            if (script->needsArgsObj()) {
+                // Currently IonMonkey does not compile if the script needs an
+                // arguments object, so the frame should not have any argument
+                // object yet.
+                JS_ASSERT(!fp->hasArgsObj());
+                ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, fp);
+                if (!argsobj)
+                    return Interpret_Error;
+                InternalBindingsHandle bindings(script, &script->bindings);
+                const unsigned var = Bindings::argumentsVarIndex(cx, bindings);
+                // The arguments is a local binding and needsArgsObj does not
+                // check if it is clobbered. Ensure that the local binding
+                // restored during bailout before storing the arguments object
+                // to the slot.
+                if (fp->unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
+                    fp->unaliasedLocal(var) = ObjectValue(*argsobj);
+            }
+            ++iter;
+        } while (fp != br->entryfp());
+    }
+
     if (activation->entryfp() == br->entryfp()) {
         // If the bailout entry fp is the same as the activation entryfp, then
         // there are no scripted frames below us. In this case, just shortcut
