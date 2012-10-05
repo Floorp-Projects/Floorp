@@ -1,0 +1,19 @@
+<?xml version = '1.0' encoding = 'utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <script>
+      function doTest() {
+        var Ci = Components.interfaces;
+        var defaultZoom = {}, allowZoom = {}, minZoom = {}, maxZoom ={}, width = {}, height = {}, autoSize = {};
+        var windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        windowUtils.getViewportInfo(1, 1, defaultZoom, allowZoom, minZoom, maxZoom, width, height, autoSize);
+        document.getElementById("minZoom").innerHTML = minZoom.value.toPrecision(10);
+        document.getElementById("maxZoom").innerHTML = maxZoom.value.toPrecision(10);
+      }
+    </script>
+  </head>
+  <body onload="doTest();">
+  MinZoom: <span id="minZoom"></span><br />
+  MaxZoom: <span id="maxZoom"></span>
+  </body>
+</html>
