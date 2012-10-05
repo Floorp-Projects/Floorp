@@ -1450,9 +1450,10 @@
           if (tabsToClose <= 1)
             return true;
 
-          var canDisablePrompt = !!aAll;
-          const pref = "browser.tabs.warnOnClose";
-          if (canDisablePrompt && !Services.prefs.getBoolPref(pref))
+          const pref = aAll ?
+                       "browser.tabs.warnOnClose" : "browser.tabs.warnOnCloseOtherTabs";
+          var shouldPrompt = Services.prefs.getBoolPref(pref);
+          if (!shouldPrompt)
             return true;
 
           var ps = Services.prompt;
@@ -1476,13 +1477,13 @@
                          + (ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1),
                          bundle.getString("tabs.closeButtonMultiple"),
                          null, null,
-                         canDisablePrompt ?
+                         aAll ?
                            bundle.getString("tabs.closeWarningPromptMe") : null,
                          warnOnClose);
           var reallyClose = (buttonPressed == 0);
 
           // don't set the pref unless they press OK and it's false
-          if (canDisablePrompt && reallyClose && !warnOnClose.value)
+          if (aAll && reallyClose && !warnOnClose.value)
             Services.prefs.setBoolPref(pref, false);
 
           return reallyClose;
