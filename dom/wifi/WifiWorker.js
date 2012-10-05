@@ -266,8 +266,10 @@ var WifiManager = (function() {
     doBooleanCommand("WPS_PBC", "OK", callback);
   }
 
-  function wpsPinCommand(pin, callback) {
-    doStringCommand("WPS_PIN any" + (pin === undefined ? "" : (" " + pin)),
+  function wpsPinCommand(detail, callback) {
+    doStringCommand("WPS_PIN " +
+                    (detail.bssid === undefined ? "any" : detail.bssid) +
+                    (detail.pin === undefined ? "" : (" " + detail.pin)),
                     callback);
   }
 
@@ -2401,7 +2403,7 @@ WifiWorker.prototype = {
           self._sendMessage(message, false, "WPS PBC failed", msg);
       });
     } else if (detail.method === "pin") {
-      WifiManager.wpsPin(detail.pin, function(pin) {
+      WifiManager.wpsPin(detail, function(pin) {
         if (pin)
           self._sendMessage(message, true, pin, msg);
         else
