@@ -5878,12 +5878,15 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
         return makeCallBarrier(getter, 0, false, types, barrier);
     }
 
-    bool accessGetter = oracle->propertyReadAccessGetter(script_, pc);
-    if (unary.ival == MIRType_Object) {
-        MIRType rvalType = MIRType_Value;
-        if (!barrier && !IsNullOrUndefined(unary.rval))
-            rvalType = unary.rval;
+    // If the input is guaranteed to be an object, then we want
+    // to specialize it via a slot load or an IC.
 
+    bool accessGetter = oracle->propertyReadAccessGetter(script_, pc);
+    MIRType rvalType = unary.rval;
+    if (barrier || IsNullOrUndefined(unary.rval) || accessGetter)
+        rvalType = MIRType_Value;
+
+    if (unary.ival == MIRType_Object) {
         Shape *objShape;
         if ((objShape = mjit::GetPICSingleShape(cx, script_, pc, info().constructing())) &&
             !objShape->inDictionary())
@@ -5926,10 +5929,21 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
 
         // If the cache is known to access getters, then enable generation of
         // getter stubs and set its result type to value.
-        if (accessGetter) {
-            load->setResultType(MIRType_Value);
+        if (accessGetter)
             load->setAllowGetters();
-        }
+
+        ins = load;
+    } else if (obj->type() == MIRType_Value && unaryTypes.inTypes->objectOrSentinel()) {
+        // Fallibly unwrap the object and IC the result.
+        MUnbox *unbox = MUnbox::New(obj, MIRType_Object, MUnbox::Fallible);
+        current->add(unbox);
+
+        spew("GETPROP is object-or-sentinel");
+
+        MGetPropertyCache *load = MGetPropertyCache::New(unbox, name);
+        load->setResultType(rvalType);
+        if (accessGetter)
+            load->setAllowGetters();
 
         ins = load;
     } else {
