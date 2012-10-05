@@ -21,7 +21,6 @@
 #include "nsISystemMessagesInternal.h"
 #include "nsVariant.h"
 
-USING_BLUETOOTH_NAMESPACE
 using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE

@@ -27,6 +27,7 @@ public:
   static BluetoothHfpManager* Get();
   void ReceiveSocketData(mozilla::ipc::UnixSocketRawData* aMessage);
   bool Connect(const nsAString& aDeviceObjectPath,
+               const bool aIsHandsfree,
                BluetoothReplyRunnable* aRunnable);
   void Disconnect();
   bool SendLine(const char* aMessage);

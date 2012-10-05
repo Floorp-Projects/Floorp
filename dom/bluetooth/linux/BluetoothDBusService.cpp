@@ -2210,45 +2210,46 @@ BluetoothDBusService::PrepareAdapterInternal(const nsAString& aPath)
 }
 
 bool
-BluetoothDBusService::ConnectHeadset(const nsAString& aDeviceAddress,
-                                     const nsAString& aAdapterPath,
-                                     BluetoothReplyRunnable* aRunnable)
+BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
+                              const nsAString& aAdapterPath,
+                              const uint16_t aProfileId,
+                              BluetoothReplyRunnable* aRunnable)
 {
-  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-  return hfp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
-                      aRunnable);
+  NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
+
+  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)) {
+    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+    return hfp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress), true,
+                        aRunnable);
+  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::Headset >> 32)) {
+    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+    return hfp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress), false,
+                        aRunnable);
+  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
+    BluetoothOppManager* opp = BluetoothOppManager::Get();
+    return opp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
+                        aRunnable);
+  }
+
+  NS_WARNING("Unknow Profile");
+  return false;
 }
 
 void
-BluetoothDBusService::DisconnectHeadset(BluetoothReplyRunnable* aRunnable)
+BluetoothDBusService::Disconnect(const uint16_t aProfileId,
+                                 BluetoothReplyRunnable* aRunnable)
 {
-  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-  hfp->Disconnect();
+  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)) {
+    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+    hfp->Disconnect();
+  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
+    BluetoothOppManager* opp = BluetoothOppManager::Get();
+    opp->Disconnect();
+  } else {
+    NS_WARNING("Unknown profile");
+    return;
+  }
 
-  // Currently, just fire success because Disconnect() doesn't fail, 
-  // but we still make aRunnable pass into this function for future
-  // once Disconnect will fail.
-  nsString replyError;
-  BluetoothValue v = true;
-  DispatchBluetoothReply(aRunnable, v, replyError);
-}
-
-bool
-BluetoothDBusService::ConnectObjectPush(const nsAString& aDeviceAddress,
-                                        const nsAString& aAdapterPath,
-                                        BluetoothReplyRunnable* aRunnable)
-{
-  BluetoothOppManager* opp = BluetoothOppManager::Get();
-  return opp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
-                      aRunnable);
-}
-
-void
-BluetoothDBusService::DisconnectObjectPush(BluetoothReplyRunnable* aRunnable)
-{
-  BluetoothOppManager* opp = BluetoothOppManager::Get();
-  opp->Disconnect();
-  
   // Currently, just fire success because Disconnect() doesn't fail, 
   // but we still make aRunnable pass into this function for future
   // once Disconnect will fail.
