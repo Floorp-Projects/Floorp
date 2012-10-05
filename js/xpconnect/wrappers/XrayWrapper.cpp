@@ -148,6 +148,14 @@ public:
         MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
     }
 
+    // Only XPCWrappedNativeXrayTraits needs this hook.
+    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+                               JSPropertyDescriptor *desc, bool *defined)
+    {
+        *defined = false;
+        return true;
+    }
+
     virtual void preserveWrapper(JSObject *target) = 0;
 
     JSObject* getExpandoObject(JSContext *cx, JSObject *target,
@@ -184,8 +192,7 @@ public:
                                     JSObject *holder, jsid id, bool set,
                                     JSPropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                               JSPropertyDescriptor *desc);
-    static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
+                               JSPropertyDescriptor *desc, bool *defined);
     static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                                JS::AutoIdVector &props);
     static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp);
@@ -224,9 +231,6 @@ public:
     virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
                                     JSObject *holder, jsid id, bool set,
                                     JSPropertyDescriptor *desc);
-    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                               JSPropertyDescriptor *desc);
-    static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                                JS::AutoIdVector &props);
 
@@ -259,9 +263,6 @@ public:
     virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
                                     JSObject *holder, jsid id, bool set,
                                     JSPropertyDescriptor *desc);
-    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                               JSPropertyDescriptor *desc);
-    static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                                JS::AutoIdVector &props);
 
@@ -1076,8 +1077,9 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
 
 bool
 XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                                      PropertyDescriptor *desc)
+                                      PropertyDescriptor *desc, bool *defined)
 {
+    *defined = false;
     JSObject *holder = singleton.ensureHolder(cx, wrapper);
     if (isResolving(cx, holder, id)) {
         if (!(desc->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
@@ -1087,34 +1089,10 @@ XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsi
                 desc->setter = holder_set;
         }
 
+        *defined = true;
         return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
                                      desc->attrs);
     }
-
-    // We're placing an expando. The expando objects live in the target
-    // compartment, so we need to enter it.
-    JSObject *target = getTargetObject(wrapper);
-    JSAutoCompartment ac(cx, target);
-
-    // Grab the relevant expando object.
-    JSObject *expandoObject = singleton.ensureExpandoObject(cx, wrapper, target);
-    if (!expandoObject)
-        return false;
-
-    // Wrap the property descriptor for the target compartment.
-    PropertyDescriptor wrappedDesc = *desc;
-    if (!JS_WrapPropertyDescriptor(cx, &wrappedDesc))
-        return false;
-
-    return JS_DefinePropertyById(cx, expandoObject, id, wrappedDesc.value,
-                                 wrappedDesc.getter, wrappedDesc.setter,
-                                 wrappedDesc.attrs);
-}
-
-bool
-XPCWrappedNativeXrayTraits::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
-{
-    // For us, *bp was already set to the appropriate value in the caller.
     return true;
 }
 
@@ -1236,32 +1214,6 @@ ProxyXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObj
 }
 
 bool
-ProxyXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                                PropertyDescriptor *desc)
-{
-    JSObject *holder = singleton.ensureHolder(cx, wrapper);
-    if (!holder)
-        return false;
-
-    return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
-                                 desc->attrs);
-}
-
-bool
-ProxyXrayTraits::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
-{
-    JSObject *obj = getTargetObject(wrapper);
-    if (!js::GetProxyHandler(obj)->delete_(cx, wrapper, id, bp))
-        return false;
-
-    JSObject *holder;
-    if (*bp && (holder = singleton.getHolder(wrapper)))
-        JS_DeletePropertyById(cx, holder, id);
-
-    return true;
-}
-
-bool
 ProxyXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                                 JS::AutoIdVector &props)
 {
@@ -1322,27 +1274,6 @@ DOMXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObjec
         NS_ASSERTION(!desc->obj || desc->obj == wrapper,
                      "What did we resolve this on?");
     }
-
-    return true;
-}
-
-bool
-DOMXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id, PropertyDescriptor *desc)
-{
-    JSObject *holder = singleton.ensureHolder(cx, wrapper);
-    if (!holder)
-        return false;
-
-    return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
-                                 desc->attrs);
-}
-
-bool
-DOMXrayTraits::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
-{
-    JSObject *holder;
-    if ((holder = singleton.getHolder(wrapper)))
-        JS_DeletePropertyById(cx, holder, id);
 
     return true;
 }
@@ -1660,7 +1591,31 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
     if (existing_desc.obj && (existing_desc.attrs & JSPROP_PERMANENT))
         return true; // silently ignore attempt to overwrite native property
 
-    return Traits::defineProperty(cx, wrapper, id, desc);
+    bool defined = false;
+    if (!Traits::defineProperty(cx, wrapper, id, desc, &defined))
+        return false;
+    if (defined)
+        return true;
+
+    // We're placing an expando. The expando objects live in the target
+    // compartment, so we need to enter it.
+    JSObject *target = Traits::singleton.getTargetObject(wrapper);
+    JSAutoCompartment ac(cx, target);
+
+    // Grab the relevant expando object.
+    JSObject *expandoObject = Traits::singleton.ensureExpandoObject(cx, wrapper,
+                                                                    target);
+    if (!expandoObject)
+        return false;
+
+    // Wrap the property descriptor for the target compartment.
+    PropertyDescriptor wrappedDesc = *desc;
+    if (!JS_WrapPropertyDescriptor(cx, &wrappedDesc))
+        return false;
+
+    return JS_DefinePropertyById(cx, expandoObject, id, wrappedDesc.value,
+                                 wrappedDesc.getter, wrappedDesc.setter,
+                                 wrappedDesc.attrs);
 }
 
 template <typename Base, typename Traits>
@@ -1703,9 +1658,7 @@ XrayWrapper<Base, Traits>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bo
         }
     }
     *bp = !!b;
-
-    // Temporarily call through for Proxies and DOM objects.
-    return Traits::delete_(cx, wrapper, id, bp);
+    return true;
 }
 
 template <typename Base, typename Traits>
