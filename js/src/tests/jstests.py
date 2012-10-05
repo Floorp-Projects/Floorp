@@ -178,7 +178,9 @@ def parse_args():
 
     # Handle output redirection, if requested and relevant.
     options.output_fp = sys.stdout
-    if options.output_file and (options.show_cmd or options.show_output):
+    if options.output_file:
+        if not options.show_cmd:
+            options.show_output = True
         try:
             options.output_fp = open(options.output_file, 'w')
         except IOError, ex:
