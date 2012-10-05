@@ -202,7 +202,6 @@ BluetoothHfpManager::Get()
   NS_ENSURE_TRUE(manager, nullptr);
 
   if (!manager->Init()) {
-    manager->Cleanup();
     return nullptr;
   }
 
@@ -334,7 +333,7 @@ BluetoothHfpManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   gInShutdown = true;
-  Cleanup();
+  CloseSocket();
   gBluetoothHfpManager = nullptr;
   return NS_OK;
 }
