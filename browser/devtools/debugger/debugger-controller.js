@@ -1733,6 +1733,7 @@ const REMOTE_HOST = "devtools.debugger.remote-host";
 const REMOTE_PORT = "devtools.debugger.remote-port";
 const REMOTE_CONNECTION_RETRIES = "devtools.debugger.remote-connection-retries";
 const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
+const NON_ENUM_VISIBLE = "devtools.debugger.ui.non-enum-visible";
 
 /**
  * Shortcuts for accessing various debugger preferences.
@@ -1820,7 +1821,7 @@ let Prefs = {
   },
 
   /**
-   * Gets a flag specifying if the the debugger should automatically connect to
+   * Gets a flag specifying if the debugger should automatically connect to
    * the default host and port number.
    * @return boolean
    */
@@ -1832,13 +1833,35 @@ let Prefs = {
   },
 
   /**
-   * Sets a flag specifying if the the debugger should automatically connect to
+   * Sets a flag specifying if the debugger should automatically connect to
    * the default host and port number.
    * @param boolean value
    */
   set remoteAutoConnect(value) {
     Services.prefs.setBoolPref(REMOTE_AUTO_CONNECT, value);
     this._autoConnect = value;
+  },
+
+  /**
+   * Gets a flag specifying if the debugger should show non-enumerable
+   * properties and variables in the scope view.
+   * @return boolean
+   */
+  get nonEnumVisible() {
+    if (this._nonEnumVisible === undefined) {
+      this._nonEnumVisible = Services.prefs.getBoolPref(NON_ENUM_VISIBLE);
+    }
+    return this._nonEnumVisible;
+  },
+
+  /**
+   * Sets a flag specifying if the debugger should show non-enumerable
+   * properties and variables in the scope view.
+   * @param boolean value
+   */
+  set nonEnumVisible(value) {
+    Services.prefs.setBoolPref(NON_ENUM_VISIBLE, value);
+    this._nonEnumVisible = value;
   }
 };
 

@@ -39,6 +39,11 @@
   -  checkbox that toggles pausing on exceptions. -->
 <!ENTITY debuggerUI.pauseExceptions     "Pause on exceptions">
 
+<!-- LOCALIZATION NOTE (debuggerUI.showNonEnums): This is the label for the
+  -  checkbox that toggles visibility of hidden (non-enumerable) variables and
+  -  properties in stack views. -->
+<!ENTITY debuggerUI.showNonEnums        "Show hidden properties">
+
 <!-- LOCALIZATION NOTE (debuggerUI.searchPanelTitle): This is the text that
   -  appears in the filter panel popup as a description. -->
 <!ENTITY debuggerUI.searchPanelTitle    "Operators">
