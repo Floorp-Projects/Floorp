@@ -331,7 +331,11 @@ public:
     }
 };
 
-class XPCWrappedNativeXrayTraits
+class XrayTraits
+{
+};
+
+class XPCWrappedNativeXrayTraits : public XrayTraits
 {
 public:
     static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
@@ -357,6 +361,8 @@ public:
 
     typedef ResolvingId ResolvingIdImpl;
 
+    static XPCWrappedNativeXrayTraits singleton;
+
 private:
     static JSObject* getHolderObject(JSObject *wrapper)
     {
@@ -364,7 +370,7 @@ private:
     }
 };
 
-class ProxyXrayTraits
+class ProxyXrayTraits : public XrayTraits
 {
 public:
     static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
@@ -393,6 +399,8 @@ public:
 
     typedef ResolvingIdDummy ResolvingIdImpl;
 
+    static ProxyXrayTraits singleton;
+
 private:
     static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper,
                                      bool createHolder)
@@ -408,7 +416,7 @@ private:
     static JSObject* createHolderObject(JSContext *cx, JSObject *wrapper);
 };
 
-class DOMXrayTraits
+class DOMXrayTraits : public XrayTraits
 {
 public:
     static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
@@ -437,6 +445,8 @@ public:
 
     typedef ResolvingIdDummy ResolvingIdImpl;
 
+    static DOMXrayTraits singleton;
+
 private:
     static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper,
                                      bool createHolder)
@@ -451,6 +461,10 @@ private:
     }
     static JSObject* createHolderObject(JSContext *cx, JSObject *wrapper);
 };
+
+XPCWrappedNativeXrayTraits XPCWrappedNativeXrayTraits::singleton;
+ProxyXrayTraits ProxyXrayTraits::singleton;
+DOMXrayTraits DOMXrayTraits::singleton;
 
 static JSObject *
 GetHolder(JSObject *obj)
