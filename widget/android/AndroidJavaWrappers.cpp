@@ -814,6 +814,30 @@ AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float a
     aScaleX = aScaleY = viewTransform.GetScale(env);
 }
 
+bool
+AndroidGeckoLayerClient::ShouldAbortProgressiveUpdate(bool aHasPendingNewThebesContent,
+                                                      const gfx::Rect& aDisplayPort,
+                                                      float aDisplayResolution)
+{
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return false;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    bool ret = env->CallBooleanMethod(wrapped_obj, jShouldAbortProgressiveUpdate,
+                                      aHasPendingNewThebesContent,
+                                      (float)aDisplayPort.x,
+                                      (float)aDisplayPort.y,
+                                      (float)aDisplayPort.width,
+                                      (float)aDisplayPort.height,
+                                      aDisplayResolution);
+    if (jniFrame.CheckForException())
+        return false;
+
+    return ret;
+}
+
 jobject ConvertToJavaViewportMetrics(JNIEnv* env, nsIAndroidViewport* metrics) {
     float x, y, width, height,
         pageLeft, pageTop, pageRight, pageBottom,
@@ -885,14 +909,6 @@ AndroidGeckoLayerClient::GetDisplayPort(AutoLocalJNIFrame *jniFrame, bool aPageS
     if (jniFrame->CheckForException()) return;
     createDisplayPort(jniFrame, jobj, displayPort);
     (*displayPort)->AddRef();
-}
-
-bool
-AndroidGeckoLayerClient::ShouldAbortProgressiveUpdate(AutoLocalJNIFrame *jniFrame, bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution)
-{
-  bool ret = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jShouldAbortProgressiveUpdate, aHasPendingNewThebesContent, (float)aDisplayPort.x, (float)aDisplayPort.y, (float)aDisplayPort.width, (float)aDisplayPort.height, aDisplayResolution);
-  if (jniFrame->CheckForException()) return false;
-  return ret;
 }
 
 jobject
