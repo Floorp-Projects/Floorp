@@ -1199,6 +1199,10 @@ toolbar[iconsize="small"] #feed-button {
   list-style-image: url(chrome://browser/skin/webapps-64.png);
 }
 
+.popup-notification-icon[popupid="webRTC-shareDevices"] {
+  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64.png);
+}
+
 /* Notification icon box */
 #notification-popup-box {
   position: relative;
@@ -1264,6 +1268,10 @@ toolbar[iconsize="small"] #feed-button {
 
 #plugins-notification-icon {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
+}
+
+#webRTC-notification-icon {
+  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }
 
 #treecolAutoCompleteImage {
