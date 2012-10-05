@@ -735,6 +735,13 @@ LIRGenerator::visitPow(MPow *ins)
 }
 
 bool
+LIRGenerator::visitRandom(MRandom *ins)
+{
+    LRandom *lir = new LRandom(tempFixed(CallTempReg0), tempFixed(CallTempReg1));
+    return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+}
+
+bool
 LIRGenerator::visitMathFunction(MMathFunction *ins)
 {
     JS_ASSERT(ins->type() == MIRType_Double);

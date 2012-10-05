@@ -1804,6 +1804,22 @@ CodeGenerator::visitPowD(LPowD *ins)
 }
 
 bool
+CodeGenerator::visitRandom(LRandom *ins)
+{
+    Register temp = ToRegister(ins->temp());
+    Register temp2 = ToRegister(ins->temp2());
+
+    masm.loadJSContext(temp);
+
+    masm.setupUnalignedABICall(1, temp2);
+    masm.passABIArg(temp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, math_random_no_outparam), MacroAssembler::DOUBLE);
+
+    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
+    return true;
+}
+
+bool
 CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
 {
     Register temp = ToRegister(ins->temp());

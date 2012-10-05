@@ -70,6 +70,7 @@
     _(SqrtD)                        \
     _(PowI)                         \
     _(PowD)                         \
+    _(Random)                       \
     _(MathFunctionD)                \
     _(NotI)                         \
     _(NotD)                         \
