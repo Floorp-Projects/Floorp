@@ -67,6 +67,7 @@ a {
   display: inline-block;
   height: 28px;
   width: 70px;
+  min-width: 70px;
 }
 
 #searchText {
