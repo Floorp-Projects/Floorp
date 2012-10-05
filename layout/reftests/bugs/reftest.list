@@ -1720,3 +1720,5 @@ fuzzy-if(true,17,5859) == 759036-2.html 759036-2-ref.html
 == 776265-2c.html 776265-2-ref.html
 == 776265-2d.html 776265-2-ref.html
 == 787947-1.html 787947-1-ref.html
+fuzzy(40,800) == 797797-1.html 797797-1-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
+fuzzy(40,800) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
