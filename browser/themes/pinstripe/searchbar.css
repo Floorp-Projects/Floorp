@@ -4,6 +4,7 @@
 
 .searchbar-textbox {
   border-radius: 10000px;
+  min-width: 6em;
 }
 
 .searchbar-engine-button {

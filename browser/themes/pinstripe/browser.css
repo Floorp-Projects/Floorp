@@ -1113,7 +1113,6 @@ toolbar[mode="icons"] #zoom-in-button {
 .searchbar-textbox {
   font: icon;
   width: 7em;
-  min-width: 7em;
   -moz-appearance: none;
   box-shadow: 0 1px rgba(255, 255, 255, 0.2), inset 0 1px hsla(0,0%,0%,.05);
   margin: 0 4px;
@@ -1284,6 +1283,7 @@ toolbar[mode="icons"] #zoom-in-button {
 .urlbar-input-box {
   -moz-margin-start: 0;
   padding: 3px 0 2px;
+  min-width: 4em;
 }
 
 .urlbar-history-dropmarker {
