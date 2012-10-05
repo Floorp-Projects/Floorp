@@ -929,6 +929,10 @@ RadioInterfaceLayer.prototype = {
       debug("We're roaming, but data roaming is disabled.");
       return;
     }
+    if (this._changingRadioPower) {
+      // We're changing the radio power currently, ignore any changes.
+      return;
+    }
 
     debug("Data call settings: connect data call.");
     this.dataNetworkInterface.connect(this.dataCallSettings);
