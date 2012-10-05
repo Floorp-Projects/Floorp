@@ -26,8 +26,16 @@ function testSimpleCall() {
       let testScope = gDebugger.DebuggerView.Properties._addScope("test");
       let testVar = testScope.addVar("something");
 
-      let properties = testVar.addProperties({ "child": { "value": { "type": "object",
-                                                                     "class": "Object" } } });
+      let properties = testVar.addProperties({
+        "child": {
+          "value": {
+            "type": "object",
+            "class": "Object"
+          },
+
+          "enumerable": true
+        }
+      });
 
       is(testVar.querySelector(".details").childNodes.length, 1,
         "A new detail node should have been added in the variable tree.");
@@ -39,8 +47,16 @@ function testSimpleCall() {
         "Adding a detail property should return that exact property.");
 
 
-      let properties2 = testVar.child.addProperties({ "grandchild": { "value": { "type": "object",
-                                                                      "class": "Object" } } });
+      let properties2 = testVar.child.addProperties({
+        "grandchild": {
+          "value": {
+            "type": "object",
+            "class": "Object"
+          },
+
+          "enumerable": true
+        }
+      });
 
       is(testVar.child.querySelector(".details").childNodes.length, 1,
         "A new detail node should have been added in the variable tree.");
