@@ -134,6 +134,9 @@ public:
         return js::UnwrapObject(wrapper, /* stopAtOuter = */ false);
     }
 
+    virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper,
+                                    JSObject *wrapper, JSObject *holder,
+                                    jsid id, bool set, JSPropertyDescriptor *desc);
 
     static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp)
     {
@@ -177,9 +180,9 @@ class XPCWrappedNativeXrayTraits : public XrayTraits
 public:
     static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
                                       bool set, JSPropertyDescriptor *desc);
-    static bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                   JSObject *holder, jsid id, bool set,
-                                   JSPropertyDescriptor *desc);
+    virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
+                                    JSObject *holder, jsid id, bool set,
+                                    JSPropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                JSPropertyDescriptor *desc);
     static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
@@ -218,9 +221,9 @@ class ProxyXrayTraits : public XrayTraits
 public:
     static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
                                       bool set, JSPropertyDescriptor *desc);
-    static bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                   JSObject *holder, jsid id, bool set,
-                                   JSPropertyDescriptor *desc);
+    virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
+                                    JSObject *holder, jsid id, bool set,
+                                    JSPropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                JSPropertyDescriptor *desc);
     static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
@@ -253,9 +256,9 @@ class DOMXrayTraits : public XrayTraits
 public:
     static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
                                       bool set, JSPropertyDescriptor *desc);
-    static bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                   JSObject *holder, jsid id, bool set,
-                                   JSPropertyDescriptor *desc);
+    virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
+                                    JSObject *holder, jsid id, bool set,
+                                    JSPropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                JSPropertyDescriptor *desc);
     static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
@@ -973,11 +976,25 @@ nodePrincipal_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMut
 }
 
 bool
+XrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper,
+                               JSObject *wrapper, JSObject *holder, jsid id,
+                               bool set, PropertyDescriptor *desc)
+{
+    desc->obj = NULL;
+    return true;
+}
+
+bool
 XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper,
                                                JSObject *wrapper, JSObject *holder, jsid id,
                                                bool set, PropertyDescriptor *desc)
 {
-    desc->obj = NULL;
+    // Call the common code.
+    bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
+                                             id, set, desc);
+    if (!ok || desc->obj)
+        return ok;
+
     JSObject *target = getTargetObject(wrapper);
     JSObject *expando = singleton.getExpandoObject(cx, target, wrapper);
 
@@ -1225,8 +1242,14 @@ bool
 ProxyXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
                                     JSObject *holder, jsid id, bool set, PropertyDescriptor *desc)
 {
+    // Call the common code.
+    bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
+                                             id, set, desc);
+    if (!ok || desc->obj)
+        return ok;
+
     JSObject *obj = getTargetObject(wrapper);
-    bool ok = js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, set, desc);
+    ok = js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, set, desc);
     if (ok) {
         // The 'not found' property descriptor has obj == NULL.
         if (desc->obj)
@@ -1308,6 +1331,12 @@ bool
 DOMXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
                                   JSObject *holder, jsid id, bool set, JSPropertyDescriptor *desc)
 {
+    // Call the common code.
+    bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
+                                             id, set, desc);
+    if (!ok || desc->obj)
+        return ok;
+
     JSObject *obj = getTargetObject(wrapper);
     const NativePropertyHooks *nativeHooks = GetDOMClass(obj)->mNativeHooks;
 
@@ -1527,7 +1556,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         return true;
     }
 
-    if (!Traits::resolveOwnProperty(cx, *this, wrapper, holder, id, set, desc))
+    if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, set, desc))
         return false;
 
     if (desc->obj)
@@ -1604,7 +1633,7 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
         return JS_WrapPropertyDescriptor(cx, desc);
     }
 
-    if (!Traits::resolveOwnProperty(cx, *this, wrapper, holder, id, set, desc))
+    if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, set, desc))
         return false;
 
     if (desc->obj)
