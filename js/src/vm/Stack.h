@@ -1770,7 +1770,8 @@ class StackIter
     bool isNonEvalFunctionFrame() const;
     bool isConstructing() const;
 
-    StackFrame *fp() const { JS_ASSERT(isScript() && !isIon()); return fp_; }
+    // :TODO: Add && !isIon() in JS_ASSERT of fp() and sp().
+    StackFrame *fp() const { JS_ASSERT(isScript()); return fp_; }
     jsbytecode *pc() const { JS_ASSERT(isScript()); return pc_; }
     JSScript   *script() const { JS_ASSERT(isScript()); return script_; }
     JSFunction *callee() const;
