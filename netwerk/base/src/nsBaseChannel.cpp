@@ -297,7 +297,7 @@ nsBaseChannel::ClassifyURI()
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED7(nsBaseChannel,
+NS_IMPL_ISUPPORTS_INHERITED8(nsBaseChannel,
                              nsHashPropertyBag,
                              nsIRequest,
                              nsIChannel,
@@ -305,7 +305,8 @@ NS_IMPL_ISUPPORTS_INHERITED7(nsBaseChannel,
                              nsITransportEventSink,
                              nsIRequestObserver,
                              nsIStreamListener,
-                             nsIAsyncVerifyRedirectCallback)
+                             nsIAsyncVerifyRedirectCallback,
+                             nsIPrivateBrowsingChannel)
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsIRequest
@@ -391,6 +392,10 @@ nsBaseChannel::GetLoadGroup(nsILoadGroup **aLoadGroup)
 NS_IMETHODIMP
 nsBaseChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
 {
+  if (!CanSetLoadGroup(aLoadGroup)) {
+    return NS_ERROR_FAILURE;
+  }
+
   mLoadGroup = aLoadGroup;
   CallbacksChanged();
   return NS_OK;
@@ -446,6 +451,10 @@ nsBaseChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
 NS_IMETHODIMP
 nsBaseChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 {
+  if (!CanSetCallbacks(aCallbacks)) {
+    return NS_ERROR_FAILURE;
+  }
+
   mCallbacks = aCallbacks;
   CallbacksChanged();
   return NS_OK;
