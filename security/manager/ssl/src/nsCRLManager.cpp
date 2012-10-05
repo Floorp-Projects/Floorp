@@ -396,9 +396,9 @@ nsCRLManager::ComputeNextAutoUpdateTime(nsICRLInfo *info,
   double tmpData;
   
   LL_L2F(tmpData,secsInDay);
-  LL_MUL(tmpData,dayCnt,tmpData);
+  tmpData = dayCnt * tmpData;
   LL_F2L(secsInDayCnt,tmpData);
-  LL_MUL(microsecInDayCnt, secsInDayCnt, PR_USEC_PER_SEC);
+  microsecInDayCnt = secsInDayCnt * PR_USEC_PER_SEC;
     
   PRTime lastUpdate;
   PRTime nextUpdate;
@@ -421,7 +421,7 @@ nsCRLManager::ComputeNextAutoUpdateTime(nsICRLInfo *info,
     if(temp != 0) {
       ++cycleCnt;            //no of complete cycles till next autoupdate instant
     }
-    LL_MUL(temp,cycleCnt,microsecInDayCnt);    //micro secs from last update
+    temp = cycleCnt * microsecInDayCnt;    //micro secs from last update
     tempTime = lastUpdate + temp;
     break;  
   case TYPE_AUTOUPDATE_TIME_BASED:

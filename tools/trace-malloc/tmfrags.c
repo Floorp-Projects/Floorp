@@ -422,7 +422,7 @@ uint32_t ticks2xsec(tmreader* aReader, uint32_t aTicks, uint32_t aResolution)
 
     LL_UI2L(bigone, aResolution);
     LL_UI2L(tmp64, aTicks);
-    LL_MUL(bigone, bigone, tmp64);
+    bigone *= tmp64;
     LL_UI2L(tmp64, aReader->ticksPerSec);
     LL_DIV(bigone, bigone, tmp64);
     LL_L2UI(retval, bigone);

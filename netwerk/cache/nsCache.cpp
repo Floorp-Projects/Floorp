@@ -63,7 +63,7 @@ PRTimeFromSeconds(uint32_t seconds)
 
   LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
   LL_UI2L(intermediateResult, seconds);
-  LL_MUL(prTime, intermediateResult, microSecondsPerSecond);
+  prTime = intermediateResult * microSecondsPerSecond;
   return prTime;
 }
 

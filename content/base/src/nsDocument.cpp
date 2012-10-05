@@ -6868,7 +6868,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         if (NS_SUCCEEDED(rv)) {
           int64_t intermediateValue;
           LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
-          LL_MUL(modDate, msecs, intermediateValue);
+          modDate = msecs * intermediateValue;
         }
       }
     } else {
