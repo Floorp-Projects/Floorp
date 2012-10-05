@@ -434,6 +434,27 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
   } else if (!strncmp(msg, "AT+CHUP", 7)) {
     NotifyDialer(NS_LITERAL_STRING("CHUP"));
     SendLine("OK");
+  } else if (!strncmp(msg, "AT+CKPD", 7)) {
+    // For Headset
+    switch (mCurrentCallState) {
+      case nsIRadioInterfaceLayer::CALL_STATE_INCOMING:
+        NotifyDialer(NS_LITERAL_STRING("ATA"));
+        break;
+      case nsIRadioInterfaceLayer::CALL_STATE_CONNECTED:
+      case nsIRadioInterfaceLayer::CALL_STATE_DIALING:
+      case nsIRadioInterfaceLayer::CALL_STATE_ALERTING:
+        NotifyDialer(NS_LITERAL_STRING("CHUP"));
+        break;
+      case nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED:
+        NotifyDialer(NS_LITERAL_STRING("BLDN"));
+        break;
+      default:
+#ifdef DEBUG
+        NS_WARNING("Not handling state changed");
+#endif
+        break;
+    }
+    SendLine("OK");
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
@@ -447,6 +468,7 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
 
 bool
 BluetoothHfpManager::Connect(const nsAString& aDeviceObjectPath,
+                             const bool aIsHandsfree,
                              BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -463,8 +485,12 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceObjectPath,
   }
   mDevicePath = aDeviceObjectPath;
 
-  nsString serviceUuidStr =
-    NS_ConvertUTF8toUTF16(mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree);
+  nsString serviceUuidStr;
+  if (aIsHandsfree) {
+    serviceUuidStr = NS_ConvertUTF8toUTF16(mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree);
+  } else {
+    serviceUuidStr = NS_ConvertUTF8toUTF16(mozilla::dom::bluetooth::BluetoothServiceUuidStr::Headset);
+  }
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
 
