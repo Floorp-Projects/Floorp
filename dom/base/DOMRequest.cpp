@@ -235,7 +235,7 @@ public:
     nsresult rv;
     nsIScriptContext* sc = mReq->GetContextForEventHandlers(&rv);
     MOZ_ASSERT(NS_SUCCEEDED(rv) && sc->GetNativeContext());
-
+    JSAutoRequest ar(sc->GetNativeContext());
     JS_AddValueRoot(sc->GetNativeContext(), &mResult);
   }
 
