@@ -63,6 +63,7 @@ Var SpaceAvailableBytes
 Var InitialInstallDir
 Var HandleDownload
 Var CanSetAsDefault
+Var TmpVal
 
 Var HEIGHT_PX
 Var CTL_RIGHT_PX
@@ -105,6 +106,7 @@ Var CTL_RIGHT_PX
 !insertmacro GetSingleInstallPath
 !insertmacro GetTextWidthHeight
 !insertmacro IsUserAdmin
+!insertmacro OnStubInstallUninstall
 !insertmacro SetBrandNameVars
 !insertmacro UnloadUAC
 
@@ -923,21 +925,7 @@ Function OnDownload
         WriteIniStr "$0" "TASKBAR" "Migrated" "true"
       ${EndIf}
 
-      ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
-        ; Move files that are check in shared.nsh for in use out of the way
-        ; so installing silently will just succeed.
-        CreateDirectory "$INSTDIR\${TO_BE_DELETED}"
-        Rename "$INSTDIR\${FileMainEXE}" "$INSTDIR\${TO_BE_DELETED}\${FileMainEXE}"
-        Rename "$INSTDIR\updater.exe" "$INSTDIR\${TO_BE_DELETED}\updater.exe"
-        Rename "$INSTDIR\crashreporter.exe" "$INSTDIR\${TO_BE_DELETED}\crashreporter.exe"
-        Rename "$INSTDIR\xpcom.dll" "$INSTDIR\${TO_BE_DELETED}\xpcom.dll"
-        Rename "$INSTDIR\mozsqlite3.dll" "$INSTDIR\${TO_BE_DELETED}\mozsqlite3.dll"
-        Rename "$INSTDIR\nssdbm3.dll" "$INSTDIR\${TO_BE_DELETED}\nssdbm3.dll"
-        Rename "$INSTDIR\nspr4.dll" "$INSTDIR\${TO_BE_DELETED}\nspr4.dll"
-        Rename "$INSTDIR\nssckbi.dll" "$INSTDIR\${TO_BE_DELETED}\nssckbi.dll"
-        Rename "$INSTDIR\freebl3.dll" "$INSTDIR\${TO_BE_DELETED}\freebl3.dll"
-        Rename "$INSTDIR\AccessibleMarshal.dll" "$INSTDIR\${TO_BE_DELETED}\AccessibleMarshal.dll"
-      ${EndIf}
+      ${OnStubInstallUninstall}
 
       Exec "$\"$PLUGINSDIR\download.exe$\" /INI=$PLUGINSDIR\${CONFIG_INI}"
       ; Close the handle that prevents modification of the full installer
@@ -972,9 +960,6 @@ Function StartInstall
       Delete "$INSTDIR\uninstall\uninstall.tmp"
       Delete "$PLUGINSDIR\download.exe"
       Delete "$PLUGINSDIR\${CONFIG_INI}"
-      ${If} ${FileExists} "$INSTDIR\${TO_BE_DELETED}"
-        RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
-      ${EndIf}
 
       ${If} "$CheckboxSetAsDefault" == "1"
         ${GetParameters} $0
