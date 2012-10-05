@@ -14,14 +14,14 @@ Subversion, and Mercurial and provides a common driver for multiple
 subcommands.
 
 Subcommands are implemented by decorating a class inheritting from
-mozbuild.base.MozbuildObject and by decorating methods that act as subcommand
-handlers.
+mozbuild.base.MozbuildObject and by decorating methods that act as
+subcommand handlers.
 
-Relevant decorators are defined in the *mach.base* module. There are the
-*Command* and *CommandArgument* decorators, which should be used on methods
-to denote that a specific method represents a handler for a mach subcommand.
-There is also the *CommandProvider* decorator, which is applied to a class
-to denote that it contains mach subcommands.
+Relevant decorators are defined in the *mach.base* module. There are
+the *Command* and *CommandArgument* decorators, which should be used
+on methods to denote that a specific method represents a handler for
+a mach subcommand. There is also the *CommandProvider* decorator,
+which is applied to a class to denote that it contains mach subcommands.
 
 Here is a complete example:
 
@@ -41,16 +41,20 @@ Here is a complete example:
             # Do stuff here.
 
 
-When the module is loaded, the decorators tell mach about all handlers. When
-mach runs, it takes the assembled metadata from these handlers and hooks it
-up to the command line driver. Under the hood, arguments passed to the
-decorators are being used as arguments to *argparse.ArgumentParser.add_parser()*
-and *argparse.ArgumentParser.add_argument()*. See the documentation for
-*argparse* for more.
+When the module is loaded, the decorators tell mach about all handlers.
+When mach runs, it takes the assembled metadata from these handlers and
+hooks it up to the command line driver. Under the hood, arguments passed
+to the decorators are being used as arguments to
+*argparse.ArgumentParser.add_parser()* and
+*argparse.ArgumentParser.add_argument()*. See the documentation in the
+*mach.base* module for more.
 
-Currently, you also need to hook up some plumbing in
-*mach.main.Mach*. In the future, we hope to have automatic detection
-of submodules.
+The Python modules defining mach commands do not need to live inside the
+main mach source tree. If a path on *sys.path* contains a *mach/commands*
+directory, modules will be loaded automatically by mach and any classes
+containing the decorators described above will be detected and loaded
+automatically by mach. So, to add a new subcommand to mach, you just need
+to ensure your Python module is present on *sys.path*.
 
 Minimizing Code in Mach
 -----------------------
