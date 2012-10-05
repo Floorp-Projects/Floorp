@@ -365,8 +365,6 @@ let dataProviders = {
     if (main.Weave.Status.checkSetup() != main.Weave.CLIENT_NOT_CONFIGURED) {
       data.isEnabled = true;
       let syncWhiteList = [
-        "services.sync.account",
-        "services.sync.username",
         "services.sync.clusterURL",
         "services.sync.jpake.serverURL",
         /^services\.sync\.engine\.[^.]+$/,
