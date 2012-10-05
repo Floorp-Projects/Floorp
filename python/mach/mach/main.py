@@ -22,11 +22,10 @@ from mach.registrar import populate_argument_parser
 # Import sub-command modules
 # TODO Bug 794509 do this via auto-discovery. Update README once this is
 # done.
-from mach.build import Build
-from mach.settings import Settings
-from mach.testing import Testing
-from mach.warnings import Warnings
-
+from mach.commands.build import Build
+from mach.commands.settings import Settings
+from mach.commands.testing import Testing
+from mach.commands.warnings import Warnings
 
 # Classes inheriting from ConfigProvider that provide settings.
 # TODO this should come from auto-discovery somehow.
