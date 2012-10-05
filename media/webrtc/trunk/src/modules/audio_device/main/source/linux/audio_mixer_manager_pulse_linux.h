@@ -77,7 +77,7 @@ private:
     static void PaSourceInfoCallback(pa_context *c, const pa_source_info *i,
                                      int eol, void *pThis);
     static void
-        PaSetVolumeCallback(pa_context * /*c*/, int success, void */*pThis*/);
+        PaSetVolumeCallback(pa_context* /*c*/, int success, void* /*pThis*/);
     void PaSinkInfoCallbackHandler(const pa_sink_info *i, int eol);
     void PaSinkInputInfoCallbackHandler(const pa_sink_input_info *i, int eol);
     void PaSourceInfoCallbackHandler(const pa_source_info *i, int eol);
@@ -111,9 +111,6 @@ private:
     mutable WebRtc_UWord8 _paChannels;
     bool _paObjectsSet;
     mutable bool _callbackValues;
-
-    WebRtc_UWord8 _micVolChannels;
-    WebRtc_UWord8 _spkVolChannels;
 };
 
 }

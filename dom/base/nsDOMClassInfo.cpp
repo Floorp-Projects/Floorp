@@ -1559,18 +1559,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(MathMLElement, Element, nsElementSH,
                                      ELEMENT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(WebGLBuffer, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLTexture, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLProgram, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLShader, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLFramebuffer, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLActiveInfo, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -4216,30 +4204,6 @@ nsDOMClassInfo::Init()
                                         nsDOMTouchEvent::PrefEnabled())
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLBuffer, nsIWebGLBuffer)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLBuffer)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLTexture, nsIWebGLTexture)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLTexture)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLProgram, nsIWebGLProgram)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLProgram)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLShader, nsIWebGLShader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLShader)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLFramebuffer, nsIWebGLFramebuffer)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLFramebuffer)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WebGLRenderbuffer, nsIWebGLRenderbuffer)
-     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(WebGLActiveInfo, nsIWebGLActiveInfo)
     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLActiveInfo)
   DOM_CLASSINFO_MAP_END
@@ -4531,8 +4495,8 @@ nsDOMClassInfo::Init()
     uint32_t i = ArrayLength(sClassInfoData);
 
     if (i != eDOMClassInfoIDCount) {
-      NS_ERROR("The number of items in sClassInfoData doesn't match the "
-               "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
+      MOZ_NOT_REACHED("The number of items in sClassInfoData doesn't match the "
+                      "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
 
       return NS_ERROR_NOT_INITIALIZED;
     }
@@ -4540,9 +4504,9 @@ nsDOMClassInfo::Init()
     for (i = 0; i < eDOMClassInfoIDCount; i++) {
       if (!sClassInfoData[i].u.mConstructorFptr ||
           sClassInfoData[i].mDebugID != i) {
-        NS_ERROR("Class info data out of sync, you forgot to update "
-                 "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
-                 "mozilla will not work without this fixed!");
+        MOZ_NOT_REACHED("Class info data out of sync, you forgot to update "
+                        "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
+                        "mozilla will not work without this fixed!");
 
         return NS_ERROR_NOT_INITIALIZED;
       }
@@ -4550,8 +4514,8 @@ nsDOMClassInfo::Init()
 
     for (i = 0; i < eDOMClassInfoIDCount; i++) {
       if (!sClassInfoData[i].mInterfaces) {
-        NS_ERROR("Class info data without an interface list! Fix this, "
-                 "mozilla will not work without this fixed!");
+        MOZ_NOT_REACHED("Class info data without an interface list! Fix this, "
+                        "mozilla will not work without this fixed!");
 
         return NS_ERROR_NOT_INITIALIZED;
       }

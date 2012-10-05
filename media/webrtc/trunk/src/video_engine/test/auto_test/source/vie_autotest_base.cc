@@ -8,13 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "vie_autotest.h"
-
-#include "base_primitives.h"
-#include "general_primitives.h"
-#include "tb_interfaces.h"
-#include "vie_autotest_defines.h"
-#include "video_capture_factory.h"
+#include "modules/video_capture/main/interface/video_capture_factory.h"
+#include "video_engine/test/auto_test/interface/vie_autotest.h"
+#include "video_engine/test/auto_test/interface/vie_autotest_defines.h"
+#include "video_engine/test/auto_test/primitives/base_primitives.h"
+#include "video_engine/test/auto_test/primitives/general_primitives.h"
+#include "video_engine/test/libvietest/include/tb_interfaces.h"
 
 class BaseObserver : public webrtc::ViEBaseObserver {
  public:
@@ -46,9 +45,9 @@ void ViEAutoTest::ViEBaseStandardTest() {
   memset(device_name, 0, kMaxDeviceNameLength);
   int capture_id;
 
-  webrtc::ViEBase *base_interface = interfaces.base;
-  webrtc::ViERender *render_interface = interfaces.render;
-  webrtc::ViECapture *capture_interface = interfaces.capture;
+  webrtc::ViEBase* base_interface = interfaces.base;
+  webrtc::ViERender* render_interface = interfaces.render;
+  webrtc::ViECapture* capture_interface = interfaces.capture;
 
   FindCaptureDeviceOnSystem(capture_interface,
                             device_name,
@@ -72,7 +71,7 @@ void ViEAutoTest::ViEBaseStandardTest() {
   // Run the actual test:
   // ***************************************************************
   ViETest::Log("You should shortly see a local preview from camera %s"
-      " in window 1 and the remote video in window 2.", device_name);
+               " in window 1 and the remote video in window 2.", device_name);
   ::TestI420CallSetup(interfaces.codec, interfaces.video_engine,
                       base_interface, interfaces.network, video_channel,
                       device_name);
@@ -102,16 +101,16 @@ void ViEAutoTest::ViEBaseExtendedTest() {
   ViEBaseAPITest();
   ViEBaseStandardTest();
 
-    // ***************************************************************
-    // Test BaseObserver
-    // ***************************************************************
-    // TODO(mflodman) Add test for base observer. Cpu load must be over 75%.
+  // ***************************************************************
+  // Test BaseObserver
+  // ***************************************************************
+  // TODO(mflodman) Add test for base observer. Cpu load must be over 75%.
 //    BaseObserver base_observer;
-//    EXPECT_EQ(ptrViEBase->RegisterObserver(base_observer), 0);
+//    EXPECT_EQ(vie_base->RegisterObserver(base_observer), 0);
 //
 //    AutoTestSleep(KAutoTestSleepTimeMs);
 //
-//    EXPECT_EQ(ptrViEBase->DeregisterObserver(), 0);
+//    EXPECT_EQ(vie_base->DeregisterObserver(), 0);
 //    EXPECT_GT(base_observer.cpu_load, 0);
 }
 
@@ -120,112 +119,117 @@ void ViEAutoTest::ViEBaseAPITest() {
   // Begin create/initialize WebRTC Video Engine for testing
   // ***************************************************************
   // Get the ViEBase API
-  webrtc::ViEBase* ptrViEBase = webrtc::ViEBase::GetInterface(NULL);
-  EXPECT_EQ(NULL, ptrViEBase) << "Should return null for a bad ViE pointer";
+  webrtc::ViEBase* vie_base = webrtc::ViEBase::GetInterface(NULL);
+  EXPECT_EQ(NULL, vie_base) << "Should return null for a bad ViE pointer";
 
-  webrtc::VideoEngine* ptrViE = webrtc::VideoEngine::Create();
-  EXPECT_TRUE(NULL != ptrViE);
+  webrtc::VideoEngine* video_engine = webrtc::VideoEngine::Create();
+  EXPECT_TRUE(NULL != video_engine);
 
   std::string trace_file_path =
-      ViETest::GetResultOutputPath() + "ViEBaseAPI_trace.txt";
-  EXPECT_EQ(0, ptrViE->SetTraceFile(trace_file_path.c_str()));
+    ViETest::GetResultOutputPath() + "ViEBaseAPI_trace.txt";
+  EXPECT_EQ(0, video_engine->SetTraceFile(trace_file_path.c_str()));
 
-  ptrViEBase = webrtc::ViEBase::GetInterface(ptrViE);
-  EXPECT_TRUE(NULL != ptrViEBase);
+  vie_base = webrtc::ViEBase::GetInterface(video_engine);
+  EXPECT_TRUE(NULL != vie_base);
 
-  webrtc::ViENetwork* ptrVieNetwork = webrtc::ViENetwork::GetInterface(ptrViE);
-  EXPECT_TRUE(ptrVieNetwork != NULL);
+  webrtc::ViENetwork* vie_network =
+      webrtc::ViENetwork::GetInterface(video_engine);
+  EXPECT_TRUE(vie_network != NULL);
 
   // ***************************************************************
   // Engine ready. Begin testing class
   // ***************************************************************
   char version[1024] = "";
-  EXPECT_EQ(0, ptrViEBase->GetVersion(version));
-  EXPECT_EQ(0, ptrViEBase->LastError());
+  EXPECT_EQ(0, vie_base->GetVersion(version));
+  EXPECT_EQ(0, vie_base->LastError());
 
   // Create without init
-  int videoChannel = -1;
-  EXPECT_NE(0, ptrViEBase->CreateChannel(videoChannel)) <<
+  int video_channel = -1;
+  EXPECT_NE(0, vie_base->CreateChannel(video_channel)) <<
       "Should fail since Init has not been called yet";
-  EXPECT_EQ(0, ptrViEBase->Init());
-  EXPECT_EQ(0, ptrViEBase->CreateChannel(videoChannel));
+  EXPECT_EQ(0, vie_base->Init());
+  EXPECT_EQ(0, vie_base->CreateChannel(video_channel));
 
-  int videoChannel2 = -1;
-  int videoChannel3 = -1;
-  EXPECT_EQ(0, ptrViEBase->CreateChannel(videoChannel2));
-  EXPECT_NE(videoChannel, videoChannel2) <<
+  int video_channel2 = -1;
+  int video_channel3 = -1;
+  EXPECT_EQ(0, vie_base->CreateChannel(video_channel2));
+  EXPECT_NE(video_channel, video_channel2) <<
       "Should allocate new number for independent channel";
 
-  EXPECT_EQ(0, ptrViEBase->DeleteChannel(videoChannel2));
+  EXPECT_EQ(0, vie_base->DeleteChannel(video_channel2));
 
-  EXPECT_EQ(-1, ptrViEBase->CreateChannel(videoChannel2, videoChannel + 1))
-    << "Should fail since neither channel exists (the second must)";
+  EXPECT_EQ(-1, vie_base->CreateChannel(video_channel2, video_channel + 1))
+      << "Should fail since neither channel exists (the second must)";
 
   // Create a receive only channel and a send channel. Verify we can't send on
   // the receive only channel.
-  EXPECT_EQ(0, ptrViEBase->CreateReceiveChannel(videoChannel2, videoChannel));
-  EXPECT_EQ(0, ptrViEBase->CreateChannel(videoChannel3, videoChannel));
+  EXPECT_EQ(0, vie_base->CreateReceiveChannel(video_channel2,
+                                                  video_channel));
+  EXPECT_EQ(0, vie_base->CreateChannel(video_channel3, video_channel));
 
-  const char* ipAddress = "127.0.0.1\0";
-  const int sendPort = 1234;
-  EXPECT_EQ(0, ptrVieNetwork->SetSendDestination(videoChannel, ipAddress,
-                                                 sendPort));
-  EXPECT_EQ(0, ptrVieNetwork->SetSendDestination(videoChannel2,ipAddress,
-                                                 sendPort + 2));
-  EXPECT_EQ(0, ptrVieNetwork->SetSendDestination(videoChannel3,ipAddress,
-                                                 sendPort + 4));
+  const char* ip_address = "127.0.0.1\0";
+  const int send_port = 1234;
+  EXPECT_EQ(0, vie_network->SetSendDestination(video_channel, ip_address,
+                                                   send_port));
+  EXPECT_EQ(0, vie_network->SetSendDestination(video_channel2, ip_address,
+                                                   send_port + 2));
+  EXPECT_EQ(0, vie_network->SetSendDestination(video_channel3, ip_address,
+                                                   send_port + 4));
 
-  EXPECT_EQ(0, ptrViEBase->StartSend(videoChannel));
-  EXPECT_EQ(-1, ptrViEBase->StartSend(videoChannel2));
-  EXPECT_EQ(0, ptrViEBase->StartSend(videoChannel3));
-  EXPECT_EQ(0, ptrViEBase->StopSend(videoChannel));
-  EXPECT_EQ(0, ptrViEBase->StopSend(videoChannel3));
+  EXPECT_EQ(0, vie_base->StartSend(video_channel));
+  EXPECT_EQ(-1, vie_base->StartSend(video_channel2));
+  EXPECT_EQ(0, vie_base->StartSend(video_channel3));
+  EXPECT_EQ(0, vie_base->StopSend(video_channel));
+  EXPECT_EQ(0, vie_base->StopSend(video_channel3));
 
   // Test Voice Engine integration with Video Engine.
-  webrtc::VoiceEngine* ptrVoE = NULL;
-  webrtc::VoEBase* ptrVoEBase = NULL;
-  int audioChannel = -1;
+  webrtc::VoiceEngine* voice_engine = NULL;
+  webrtc::VoEBase* voe_base = NULL;
+  int audio_channel = -1;
 
-  ptrVoE = webrtc::VoiceEngine::Create();
-  EXPECT_TRUE(NULL != ptrVoE);
+  voice_engine = webrtc::VoiceEngine::Create();
+  EXPECT_TRUE(NULL != voice_engine);
 
-  ptrVoEBase = webrtc::VoEBase::GetInterface(ptrVoE);
-  EXPECT_TRUE(NULL != ptrVoEBase);
-  EXPECT_EQ(0, ptrVoEBase->Init());
+  voe_base = webrtc::VoEBase::GetInterface(voice_engine);
+  EXPECT_TRUE(NULL != voe_base);
+  EXPECT_EQ(0, voe_base->Init());
 
-  audioChannel = ptrVoEBase->CreateChannel();
-  EXPECT_NE(-1, audioChannel);
+  audio_channel = voe_base->CreateChannel();
+  EXPECT_NE(-1, audio_channel);
 
   // Connect before setting VoE.
-  EXPECT_NE(0, ptrViEBase->ConnectAudioChannel(videoChannel, audioChannel)) <<
-      "Should fail since Voice Engine is not set yet.";
+  EXPECT_NE(0, vie_base->ConnectAudioChannel(video_channel, audio_channel))
+      << "Should fail since Voice Engine is not set yet.";
 
   // Then do it right.
-  EXPECT_EQ(0, ptrViEBase->SetVoiceEngine(ptrVoE));
-  EXPECT_EQ(0, ptrViEBase->ConnectAudioChannel(videoChannel, audioChannel));
+  EXPECT_EQ(0, vie_base->SetVoiceEngine(voice_engine));
+  EXPECT_EQ(0, vie_base->ConnectAudioChannel(video_channel, audio_channel));
 
   // ***************************************************************
   // Testing finished. Tear down Video Engine
   // ***************************************************************
-  EXPECT_NE(0, ptrViEBase->DisconnectAudioChannel(videoChannel + 5)) <<
+  EXPECT_NE(0, vie_base->DisconnectAudioChannel(video_channel + 5)) <<
       "Should fail: disconnecting bogus channel";
 
-  EXPECT_EQ(0, ptrViEBase->DisconnectAudioChannel(videoChannel));
+  EXPECT_EQ(0, vie_base->DisconnectAudioChannel(video_channel));
 
   // Clean up voice engine
-  EXPECT_EQ(0, ptrVieNetwork->Release());
-  EXPECT_EQ(0, ptrViEBase->SetVoiceEngine(NULL));
-  EXPECT_EQ(0, ptrVoEBase->Release());
-  EXPECT_TRUE(webrtc::VoiceEngine::Delete(ptrVoE));
+  EXPECT_EQ(0, vie_network->Release());
+  EXPECT_EQ(0, vie_base->SetVoiceEngine(NULL));
+  // VoiceEngine reference counting is per object, not per interface, so
+  // Release should return != 0.
+  EXPECT_NE(0, voe_base->Release());
+  EXPECT_TRUE(webrtc::VoiceEngine::Delete(voice_engine));
 
-  webrtc::ViEBase* ptrViEBase2 = webrtc::ViEBase::GetInterface(ptrViE);
-  EXPECT_TRUE(NULL != ptrViEBase2);
+  webrtc::ViEBase* vie_base2 = webrtc::ViEBase::GetInterface(video_engine);
+  EXPECT_TRUE(NULL != vie_base2);
 
-  EXPECT_EQ(1, ptrViEBase->Release()) << "There should be one interface left.";
+  EXPECT_EQ(1, vie_base->Release()) <<
+      "There should be one interface left.";
 
-  EXPECT_FALSE(webrtc::VideoEngine::Delete(ptrViE)) <<
+  EXPECT_FALSE(webrtc::VideoEngine::Delete(video_engine)) <<
       "Should fail since there are interfaces left.";
 
-  EXPECT_EQ(0, ptrViEBase->Release());
-  EXPECT_TRUE(webrtc::VideoEngine::Delete(ptrViE));
+  EXPECT_EQ(0, vie_base->Release());
+  EXPECT_TRUE(webrtc::VideoEngine::Delete(video_engine));
 }

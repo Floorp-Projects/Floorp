@@ -7,7 +7,6 @@
 
 #include "nsIDOMHTMLProgressElement.h"
 #include "nsIContent.h"
-#include "prtypes.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"

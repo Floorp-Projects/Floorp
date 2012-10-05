@@ -57,7 +57,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(ead94080-cfd6-4a3e-8353-bd45333061d2)]
+[scriptable, uuid(d6c58749-ceb6-4afe-ab72-ff3086433e1f)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -232,6 +232,11 @@ interface imgIContainer : nsISupports
    * requestDecode().
    */
   void requestDecode();
+
+  /*
+   * This is equivalent to requestDecode() but it also decodes some of the image.
+   */
+  [noscript] void startDecoding();
 
   /**
     * Increments the lock count on the image. An image will not be discarded

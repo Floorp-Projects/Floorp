@@ -27,6 +27,10 @@
 #include "mozilla/Preferences.h"
 #include "nsIWidget.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
+
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
@@ -1270,6 +1274,32 @@ void
 BasicShadowLayerManager::SetIsFirstPaint()
 {
   ShadowLayerForwarder::SetIsFirstPaint();
+}
+
+bool
+BasicShadowLayerManager::ShouldAbortProgressiveUpdate(bool aHasPendingNewThebesContent)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  Layer* primaryScrollable = GetPrimaryScrollableLayer();
+  if (primaryScrollable) {
+    const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
+
+    // This is derived from the code in
+    // gfx/layers/ipc/CompositorParent.cpp::TransformShadowTree.
+    const gfx3DMatrix& rootTransform = GetRoot()->GetTransform();
+    float devPixelRatioX = 1 / rootTransform.GetXScale();
+    float devPixelRatioY = 1 / rootTransform.GetYScale();
+    gfx::Rect displayPort((metrics.mDisplayPort.x + metrics.mScrollOffset.x) * devPixelRatioX,
+                          (metrics.mDisplayPort.y + metrics.mScrollOffset.y) * devPixelRatioY,
+                          metrics.mDisplayPort.width * devPixelRatioX,
+                          metrics.mDisplayPort.height * devPixelRatioY);
+
+    return AndroidBridge::Bridge()->ShouldAbortProgressiveUpdate(
+      aHasPendingNewThebesContent, displayPort, devPixelRatioX);
+  }
+#endif
+
+  return false;
 }
 
 already_AddRefed<ThebesLayer>

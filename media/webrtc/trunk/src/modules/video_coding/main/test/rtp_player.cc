@@ -140,7 +140,7 @@ RTPPlayer::RTPPlayer(const char* filename,
                      TickTimeBase* clock)
 :
 _clock(clock),
-_rtpModule(*RtpRtcp::CreateRtpRtcp(1, false)),
+_rtpModule(NULL),
 _nextRtpTime(0),
 _dataCallback(callback),
 _firstPacket(true),
@@ -165,7 +165,7 @@ _randVecPos(0)
 
 RTPPlayer::~RTPPlayer()
 {
-    RtpRtcp::DestroyRtpRtcp(&_rtpModule);
+    delete _rtpModule;
     if (_rtpFile != NULL)
     {
         fclose(_rtpFile);
@@ -179,28 +179,26 @@ RTPPlayer::~RTPPlayer()
 
 WebRtc_Word32 RTPPlayer::Initialize(const PayloadTypeList* payloadList)
 {
+    RtpRtcp::Configuration configuration;
+    configuration.id = 1;
+    configuration.audio = false;
+    configuration.incoming_data = _dataCallback;
+    _rtpModule = RtpRtcp::CreateRtpRtcp(configuration);
+
     std::srand(321);
     for (int i=0; i < RAND_VEC_LENGTH; i++)
     {
         _randVec[i] = rand();
     }
     _randVecPos = 0;
-    WebRtc_Word32 ret = _rtpModule.SetNACKStatus(kNackOff);
+    WebRtc_Word32 ret = _rtpModule->SetNACKStatus(kNackOff);
     if (ret < 0)
     {
         return -1;
     }
-    ret = _rtpModule.InitReceiver();
-    if (ret < 0)
-    {
-        return -1;
-    }
+    _rtpModule->SetRTCPStatus(kRtcpNonCompound);
+    _rtpModule->SetTMMBRStatus(true);
 
-    _rtpModule.InitSender();
-    _rtpModule.SetRTCPStatus(kRtcpNonCompound);
-    _rtpModule.SetTMMBRStatus(true);
-
-    ret = _rtpModule.RegisterIncomingDataCallback(_dataCallback);
     if (ret < 0)
     {
         return -1;
@@ -214,7 +212,7 @@ WebRtc_Word32 RTPPlayer::Initialize(const PayloadTypeList* payloadList)
             VideoCodec videoCodec;
             strncpy(videoCodec.plName, payloadType->name.c_str(), 32);
             videoCodec.plType = payloadType->payloadType;
-            if (_rtpModule.RegisterReceivePayload(videoCodec) < 0)
+            if (_rtpModule->RegisterReceivePayload(videoCodec) < 0)
             {
                 return -1;
             }
@@ -305,7 +303,7 @@ WebRtc_Word32 RTPPlayer::NextPacket(const WebRtc_Word64 timeNow)
     // Send any packets from rtp file
     if (!_endOfFile && (TimeUntilNextPacket() == 0 || _firstPacket))
     {
-        _rtpModule.Process();
+        _rtpModule->Process();
         if (_firstPacket)
         {
             _firstPacketRtpTime = static_cast<WebRtc_Word64>(_nextRtpTime);
@@ -362,7 +360,7 @@ WebRtc_Word32 RTPPlayer::SendPacket(WebRtc_UWord8* rtpData, WebRtc_UWord16 rtpLe
     }
     else if (rtpLen > 0)
     {
-        WebRtc_Word32 ret = _rtpModule.IncomingPacket(rtpData, rtpLen);
+        WebRtc_Word32 ret = _rtpModule->IncomingPacket(rtpData, rtpLen);
         if (ret < 0)
         {
             return -1;

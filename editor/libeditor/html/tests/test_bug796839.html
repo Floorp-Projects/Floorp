@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=796839
+-->
+<title>Test for Bug 796839</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=796839">Mozilla Bug 796839</a>
+<div id="test" contenteditable><br></div>
+<script>
+var div = document.getElementById("test");
+var text = document.createTextNode("");
+div.insertBefore(text, div.firstChild);
+getSelection().collapse(text, 0);
+document.execCommand("inserthtml", false, "x");
+is(div.textContent, 'x', "Empty textnodes should be editable");
+</script>

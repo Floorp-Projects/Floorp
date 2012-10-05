@@ -49,67 +49,37 @@ AudioCodingModule::Codec(
     return ACMCodecDB::Codec(listId, &codec);
 }
 
-// Get supported codec Param with name
-WebRtc_Word32
-AudioCodingModule::Codec(
-    const char* payloadName,
-    CodecInst&          codec,
-    const WebRtc_Word32 samplingFreqHz)
-{
-    // Search through codec list for a matching name
-    for(int codecCntr = 0; codecCntr < ACMCodecDB::kNumCodecs; codecCntr++)
-    {
-        // Store codec settings for codec number "codeCntr" in the output struct
-        ACMCodecDB::Codec(codecCntr, &codec);
+// Get supported codec Param with name, frequency and number of channels.
+WebRtc_Word32 AudioCodingModule::Codec(const char* payload_name,
+                                       CodecInst& codec,
+                                       int sampling_freq_hz,
+                                       int channels) {
+  int codec_id;
 
-        if(!STR_CASE_CMP(codec.plname, payloadName))
-        {
-            // If samplingFreqHz is set (!= -1), check if frequency matches
-            if((samplingFreqHz == codec.plfreq) || (samplingFreqHz == -1))
-            {
-                // We found a match, return OK
-                return 0;
-            }
-        }
-    }
-
-    // if we are here we couldn't find anything
-    // set the params to unacceptable values
+  // Get the id of the codec from the database.
+  codec_id = ACMCodecDB::CodecId(payload_name, sampling_freq_hz, channels);
+  if (codec_id < 0) {
+    // We couldn't find a matching codec, set the parameterss to unacceptable
+    // values and return.
     codec.plname[0] = '\0';
     codec.pltype    = -1;
     codec.pacsize   = 0;
     codec.rate      = 0;
     codec.plfreq    = 0;
     return -1;
+  }
+
+  // Get default codec settings.
+  ACMCodecDB::Codec(codec_id, &codec);
+
+  return 0;
 }
 
-// Get supported codec Index with name, and frequency if needed
-WebRtc_Word32
-AudioCodingModule::Codec(
-    const char* payloadName,
-    const WebRtc_Word32 samplingFreqHz)
-{
-    CodecInst codec;
-
-    // Search through codec list for a matching name
-    for(int codecCntr = 0; codecCntr < ACMCodecDB::kNumCodecs; codecCntr++)
-    {
-        // Temporally store codec settings for codec number "codeCntr" in "codec"
-        ACMCodecDB::Codec(codecCntr, &codec);
-
-        if(!STR_CASE_CMP(codec.plname, payloadName))
-        {
-            // If samplingFreqHz is set (!= -1), check if frequency matches
-            if((samplingFreqHz == codec.plfreq) || (samplingFreqHz == -1))
-            {
-                // We found a match, return codec list number (index)
-                return codecCntr;
-            }
-        }
-    }
-
-    // We did not find a matching codec in the list
-    return -1;
+// Get supported codec Index with name, frequency and number of channels.
+WebRtc_Word32 AudioCodingModule::Codec(const char* payload_name,
+                                       int sampling_freq_hz,
+                                       int channels) {
+  return ACMCodecDB::CodecId(payload_name, sampling_freq_hz, channels);
 }
 
 // Checks the validity of the parameters of the given codec

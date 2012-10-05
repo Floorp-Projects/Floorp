@@ -515,9 +515,10 @@ WebappsApplication.prototype = {
         if (msg.manifest != this.manifestURL)
           return;
 
-        if (installState in msg) {
+        if ("installState" in msg) {
           this.installState = msg.installState;
           if (this.installState == "installed") {
+            this._downloadError = null;
             this._fireEvent("downloadsuccess", this._ondownloadsuccess);
             this._fireEvent("downloadapplied", this._ondownloadapplied);
           } else {
@@ -525,6 +526,7 @@ WebappsApplication.prototype = {
           }
         } else if (msg.error) {
           this._downloadError = msg.error;
+          this.downloading = false;
           this._fireEvent("downloaderror", this._ondownloaderror);
         }
         break;

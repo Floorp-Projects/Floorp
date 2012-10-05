@@ -11,10 +11,10 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_BASE_IMPL_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_BASE_IMPL_H_
 
-#include "vie_base.h"
-#include "vie_defines.h"
-#include "vie_ref_count.h"
-#include "vie_shared_data.h"
+#include "video_engine/include/vie_base.h"
+#include "video_engine/vie_defines.h"
+#include "video_engine/vie_ref_count.h"
+#include "video_engine/vie_shared_data.h"
 
 namespace webrtc {
 
@@ -30,9 +30,11 @@ class ViEBaseImpl
   // Implements ViEBase.
   virtual int Init();
   virtual int SetVoiceEngine(VoiceEngine* voice_engine);
-  virtual int CreateChannel(int& video_channel);
-  virtual int CreateChannel(int& video_channel, int original_channel);
-  virtual int CreateReceiveChannel(int& video_channel, int original_channel);
+  virtual int CreateChannel(int& video_channel);  // NOLINT
+  virtual int CreateChannel(int& video_channel,  // NOLINT
+                            int original_channel);
+  virtual int CreateReceiveChannel(int& video_channel,  // NOLINT
+                                   int original_channel);
   virtual int DeleteChannel(const int video_channel);
   virtual int ConnectAudioChannel(const int video_channel,
                                   const int audio_channel);
@@ -41,7 +43,7 @@ class ViEBaseImpl
   virtual int StopSend(const int video_channel);
   virtual int StartReceive(const int video_channel);
   virtual int StopReceive(const int video_channel);
-  virtual int RegisterObserver(ViEBaseObserver& observer);
+  virtual int RegisterObserver(ViEBaseObserver& observer);  // NOLINT
   virtual int DeregisterObserver();
   virtual int GetVersion(char version[1024]);
   virtual int LastError();
@@ -58,7 +60,8 @@ class ViEBaseImpl
   WebRtc_Word32 AddBuildInfo(char* str) const;
   WebRtc_Word32 AddExternalTransportBuild(char* str) const;
 
-  int CreateChannel(int& video_channel, int original_channel, bool sender);
+  int CreateChannel(int& video_channel, int original_channel,  // NOLINT
+                    bool sender);
 
   // ViEBaseImpl owns ViESharedData used by all interface implementations.
   ViESharedData shared_data_;

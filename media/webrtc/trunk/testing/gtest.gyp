@@ -62,6 +62,18 @@
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
             ],
           },
+	  'conditions': [
+	    ['build_with_mozilla==1', {
+	      'defines': [
+                'GTEST_USE_OWN_TR1_TUPLE=1',
+	      ],
+              'direct_dependent_settings': {
+                'defines': [
+              	  'GTEST_USE_OWN_TR1_TUPLE=1',
+            	],
+              },
+	    }],
+	  ],
         }],
         ['OS == "win"', {
           'defines': [

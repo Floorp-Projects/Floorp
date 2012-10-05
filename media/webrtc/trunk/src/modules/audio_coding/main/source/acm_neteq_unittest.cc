@@ -74,7 +74,7 @@ void AcmNetEqTest::InsertZeroPacket(uint16_t sequence_number,
 void AcmNetEqTest::PullData(int expected_num_samples) {
   AudioFrame out_frame;
   ASSERT_EQ(0, neteq_.RecOut(out_frame));
-  ASSERT_EQ(expected_num_samples, out_frame._payloadDataLengthInSamples);
+  ASSERT_EQ(expected_num_samples, out_frame.samples_per_channel_);
 }
 
 TEST_F(AcmNetEqTest, NetworkStatistics) {

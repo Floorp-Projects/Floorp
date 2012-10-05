@@ -691,9 +691,7 @@ nsXULTemplateQueryProcessorRDF::CompareResults(nsIXULTemplateResult* aLeft,
                 l->GetValue(&ldate);
                 r->GetValue(&rdate);
 
-                int64_t delta;
-                LL_SUB(delta, ldate, rdate);
-
+                int64_t delta = ldate - rdate;
                 if (delta == 0)
                     *aResult = 0;
                 else if (delta >= 0)

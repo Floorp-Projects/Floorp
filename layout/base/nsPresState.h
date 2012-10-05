@@ -11,7 +11,6 @@
 #ifndef nsPresState_h_
 #define nsPresState_h_
 
-#include "prtypes.h"
 #include "nsPoint.h"
 #include "nsAutoPtr.h"
 #include "nsRect.h"

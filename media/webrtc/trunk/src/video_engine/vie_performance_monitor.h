@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -15,13 +15,13 @@
 #define WEBRTC_VIDEO_ENGINE_VIE_PERFORMANCE_MONITOR_H_
 
 #include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"
-#include "vie_defines.h"
+#include "typedefs.h"  // NOLINT
+#include "video_engine/vie_defines.h"
 
 namespace webrtc {
 
-class CriticalSectionWrapper;
 class CpuWrapper;
+class CriticalSectionWrapper;
 class EventWrapper;
 class ThreadWrapper;
 class ViEBaseObserver;
@@ -45,8 +45,6 @@ class ViEPerformanceMonitor {
   CriticalSectionWrapper* pointer_cs_;
   ThreadWrapper* monitor_thread_;
   EventWrapper& monitor_event_;
-  int average_application_cpu_;
-  int average_system_cpu_;
   CpuWrapper* cpu_;
   ViEBaseObserver* vie_base_observer_;
 };

@@ -17,18 +17,17 @@
 #include "trace.h"
 
 #if defined(_WIN32)
-    // VS 2005: Don't warn for default initialized arrays. See help for more info.
-    // Don't warn for strncpy being unsecure.
-    // switch statement contains 'default' but no 'case' labels
-#pragma warning(disable:4351; disable:4996; disable:4065)
+// Don't warn for strncpy being unsecure.
+// switch statement contains 'default' but no 'case' labels
+#pragma warning(disable:4996; disable:4065)
 #endif
 
 // Supported codecs
-#ifdef  VIDEOCODEC_VP8
-    #include "vp8.h"
+#ifdef VIDEOCODEC_VP8
+#include "vp8.h"
 #endif
-#ifdef  VIDEOCODEC_I420
-    #include "i420.h"
+#ifdef VIDEOCODEC_I420
+#include "i420.h"
 #endif
 
 namespace webrtc
@@ -173,7 +172,10 @@ VCMCodecDataBase::Codec(WebRtc_UWord8 listId, VideoCodec *settings)
             settings->numberOfSimulcastStreams = 0;
             settings->codecSpecific.VP8.resilience = kResilientStream;
             settings->codecSpecific.VP8.numberOfTemporalLayers = 1;
-            settings->codecSpecific.VP8.denoisingOn = false;
+            settings->codecSpecific.VP8.denoisingOn = true;
+            settings->codecSpecific.VP8.errorConcealmentOn = false;
+            settings->codecSpecific.VP8.automaticResizeOn = false;
+            settings->codecSpecific.VP8.frameDroppingOn = true;
             break;
         }
 #endif

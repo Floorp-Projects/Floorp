@@ -39,28 +39,6 @@ public:
     ~ACMNetEQ();
 
     //
-    // GetVersion()
-    // Fills the version array with the NetEQ version and updates the
-    // remainingBufferInBytes and position variables accordingly.
-    //
-    // Output:
-    //   - version               : An array to be filled with the version
-    //                             data.
-    //
-    // Input/Output:
-    //   - remainingBuffInBytes  : The number of free bytes at the end of
-    //                             the version array.
-    //   - position              : Position where the free space starts.
-    //
-    // Return value              : 0 if ok.
-    //                            -1 if NetEQ returned an error.
-    //
-    static WebRtc_Word32 GetVersion(
-        char*   version,
-        WebRtc_UWord32& remainingBuffInBytes,
-        WebRtc_UWord32& position);
-
-    //
     // Init()
     // Allocates memory for NetEQ and VAD and initializes them.
     //
@@ -305,6 +283,9 @@ public:
 
     enum JB {masterJB = 0, slaveJB = 1};
 
+    // Delete all slaves.
+    void RemoveSlaves();
+
     WebRtc_Word16 AddSlave(
         const WebRtcNetEQDecoder*    usedCodecs,
         WebRtc_Word16       noOfCodecs);
@@ -351,6 +332,11 @@ private:
         const WebRtcNetEQDecoder* usedCodecs,
         WebRtc_Word16       noOfCodecs,
         const WebRtc_Word16 idx);
+
+    // Delete the NetEQ corresponding to |index|.
+    void RemoveNetEQSafe(int index);
+
+    void RemoveSlavesSafe();
 
     void*                   _inst[MAX_NUM_SLAVE_NETEQ + 1];
     void*                   _instMem[MAX_NUM_SLAVE_NETEQ + 1];

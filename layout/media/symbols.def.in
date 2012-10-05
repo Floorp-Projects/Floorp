@@ -34,6 +34,15 @@ vpx_codec_destroy
 vpx_codec_get_frame
 vpx_codec_peek_stream_info
 vpx_codec_vp8_dx
+vpx_img_free
+vpx_codec_enc_config_set
+vpx_codec_enc_init_ver
+vpx_codec_vp8_cx
+vpx_img_set_rect
+vpx_codec_get_cx_data
+vpx_codec_enc_config_default
+vpx_img_alloc
+vpx_codec_encode
 #endif
 #endif
 #ifdef MOZ_VORBIS
@@ -142,6 +151,11 @@ opus_multistream_decode_float
 opus_multistream_decode
 opus_packet_get_nb_frames
 opus_packet_get_samples_per_frame
+opus_encoder_create
+opus_encoder_destroy
+opus_encoder_ctl
+opus_encode
+opus_encode_float
 #endif
 ShInitialize
 ShFinalize
@@ -151,7 +165,7 @@ ShGetInfoLog
 ShCompile
 ShGetInfo
 ShConstructCompiler
-#ifdef MOZ_WEBRTC
+#ifdef MOZ_WEBRTC_GKMEDIA
 #ifdef HAVE_64BIT_OS
 ?GetInterface@ViERender@webrtc@@SAPEAV12@PEAVVideoEngine@2@@Z
 ?GetInterface@ViECapture@webrtc@@SAPEAV12@PEAVVideoEngine@2@@Z
@@ -243,6 +257,11 @@ jpeg_start_decompress
 jpeg_start_output
 jpeg_std_error
 jpeg_write_scanlines
+jpeg_write_raw_data
+jpeg_stdio_dest
+jpeg_abort
+jpeg_abort_decompress
+jpeg_read_raw_data
 #endif
 qcms_enable_iccv4
 qcms_profile_create_rgb_with_gamma

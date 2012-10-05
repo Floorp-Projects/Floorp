@@ -616,14 +616,33 @@ function run_failed_script_test()
   var req = pps.asyncResolve(uri, 0, cb);
 }
 
+var directFilter;
+
 function failed_script_callback(pi)
 {
   // we should go direct
   do_check_eq(pi, null);
 
+  // test that we honor filters when configured to go direct
   prefs.setIntPref("network.proxy.type", 0);
-  do_test_finished();
+  directFilter = new TestFilter("http", "127.0.0.1", 7246, 0, 0);
+  pps.registerFilter(directFilter, 10);
+
+  var chan = ios.newChannel("http://127.0.0.1:7247", "", null);
+  chan.asyncOpen(directFilterListener, chan);
 }
+
+var directFilterListener = {
+  onStartRequest: function test_onStart(request, ctx) {  },
+  onDataAvailable: function test_OnData() { },
+
+  onStopRequest: function test_onStop(request, ctx, status) {
+    ctx.QueryInterface(Components.interfaces.nsIProxiedChannel);
+    check_proxy(ctx.proxyInfo, "http", "127.0.0.1", 7246, 0, 0, false);
+    pps.unregisterFilter(directFilter);
+    do_test_finished();
+  },
+};
 
 function run_deprecated_sync_test()
 {

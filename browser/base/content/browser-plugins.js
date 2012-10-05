@@ -37,7 +37,7 @@ function getPluginInfo(pluginElement)
   }
 
   if (tagMimetype) {
-    let navMimeType = navigator.mimeTypes[tagMimetype];
+    let navMimeType = navigator.mimeTypes.namedItem(tagMimetype);
     if (navMimeType && navMimeType.enabledPlugin) {
       pluginName = navMimeType.enabledPlugin.name;
       pluginName = gPluginHandler.makeNicePluginName(pluginName);

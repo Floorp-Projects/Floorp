@@ -779,13 +779,12 @@ nsProtocolProxyService::SecondsSinceSessionStart()
     PRTime now = PR_Now();
 
     // get time elapsed since session start
-    int64_t diff;
-    LL_SUB(diff, now, mSessionStart);
+    int64_t diff = now - mSessionStart;
 
     // convert microseconds to seconds
     PRTime ups;
     LL_I2L(ups, PR_USEC_PER_SEC);
-    LL_DIV(diff, diff, ups);
+    diff /= ups;
 
     // convert to 32 bit value
     uint32_t dsec;

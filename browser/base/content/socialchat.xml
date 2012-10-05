@@ -317,6 +317,8 @@
                 this.selectedChat = cb;
               if (cb.collapsed)
                 this.showChat(cb);
+              if (aCallback)
+                aCallback(cb.iframe.contentWindow);
               return;
             }
             this.chatboxForURL.delete(aURL);

@@ -328,13 +328,19 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
         # Close the file
         fhandle.close()
 
-        if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
-            raise devicemanager.FileError("Failed to copy profiledir to device")
+        try:
+            self._devicemanager.pushDir(profileDir, options.remoteProfile)
+        except devicemanager.DMError:
+            print "Automation Error: Failed to copy profiledir to device"
+            raise
 
     def copyExtraFilesToProfile(self, options, profileDir):
         RefTest.copyExtraFilesToProfile(self, options, profileDir)
-        if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
-            raise devicemanager.FileError("Failed to copy extra files to device")
+        try:
+            self._devicemanager.pushDir(profileDir, options.remoteProfile)
+        except devicemanager.DMError:
+            print "Automation Error: Failed to copy extra files to device"
+            raise
 
     def getManifestPath(self, path):
         return path

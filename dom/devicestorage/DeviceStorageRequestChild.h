@@ -8,10 +8,18 @@
 
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 #include "DOMRequest.h"
-#include "nsDeviceStorage.h"
+
+class DeviceStorageFile;
+
 namespace mozilla {
 namespace dom {
 namespace devicestorage {
+
+class DeviceStorageRequestChildCallback
+{
+  public:
+    virtual void RequestComplete() = 0;
+};
 
 class DeviceStorageRequestChild : public PDeviceStorageRequestChild
 {
@@ -20,11 +28,15 @@ public:
   DeviceStorageRequestChild(DOMRequest* aRequest, DeviceStorageFile* aFile);
   ~DeviceStorageRequestChild();
 
+  void SetCallback(class DeviceStorageRequestChildCallback *aCallback);
+
   virtual bool Recv__delete__(const DeviceStorageResponseValue& value);
 
 private:
   nsRefPtr<DOMRequest> mRequest;
   nsRefPtr<DeviceStorageFile> mFile;
+
+  DeviceStorageRequestChildCallback* mCallback;
 };
 
 } // namespace devicestorage

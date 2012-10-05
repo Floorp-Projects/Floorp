@@ -57,7 +57,7 @@ using namespace webrtc;
 {
     NSString* strTitle = [NSString stringWithFormat:@"%s", dialogTitleUTF8];
     NSString* strButton = @"Alright";
-    NSString* strMessage = [NSString stringWithFormat:@"Device %s is capturing:\nWidth:%d\n:Height:%d\n@%dfps", deviceUniqueIdUTF8];
+    NSString* strMessage = [NSString stringWithFormat:@"Device %s is capturing", deviceUniqueIdUTF8];
     NSAlert* alert = [NSAlert alertWithMessageText:strTitle
                       defaultButton:strButton
                       alternateButton:nil otherButton:nil
@@ -91,11 +91,15 @@ using namespace webrtc;
         return [NSNumber numberWithInt:-1];
     }
 
-    QTCaptureDevice* tempCaptureDevice =
-        (QTCaptureDevice*)[_captureDevicesInfo objectAtIndex:index];
+    if ([_captureDevicesInfo count] <= index)
+    {
+      return [NSNumber numberWithInt:-1];
+    }
+
+    QTCaptureDevice* tempCaptureDevice = (QTCaptureDevice*)[_captureDevicesInfo objectAtIndex:index];
     if(!tempCaptureDevice)
     {
-        return [NSNumber numberWithInt:-1];
+      return [NSNumber numberWithInt:-1];
     }
 
     memset(deviceName, 0, deviceNameLength);

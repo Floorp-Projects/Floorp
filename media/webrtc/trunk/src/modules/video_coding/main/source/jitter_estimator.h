@@ -115,7 +115,6 @@ private:
     const double          _phi;
     const double          _psi;
     const WebRtc_UWord32  _alphaCountMax;
-    const double          _beta;
     const double          _thetaLow;
     const WebRtc_UWord32  _nackLimit;
     const WebRtc_Word32   _numStdDevDelayOutlier;

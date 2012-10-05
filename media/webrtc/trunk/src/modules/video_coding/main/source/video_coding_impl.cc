@@ -21,7 +21,6 @@ namespace webrtc
 {
 
 //#define DEBUG_DECODER_BIT_STREAM
-//#define DEBUG_ENCODER_INPUT
 
 WebRtc_UWord32
 VCMProcessTimer::Period() const
@@ -64,7 +63,9 @@ _receiveStatsCallback(NULL),
 _packetRequestCallback(NULL),
 _decoder(NULL),
 _dualDecoder(NULL),
+#ifdef DEBUG_DECODER_BIT_STREAM
 _bitStreamBeforeDecoder(NULL),
+#endif
 _frameFromFile(),
 _keyRequestMode(kKeyOnError),
 _scheduleKeyRequest(false),
@@ -77,7 +78,6 @@ _mediaOpt(id, clock_),
 _sendCodecType(kVideoCodecUnknown),
 _sendStatsCallback(NULL),
 _encoderInputFile(NULL),
-
 _codecDataBase(id),
 _receiveStatsTimer(1000, clock_),
 _sendStatsTimer(1000, clock_),
@@ -87,9 +87,6 @@ _keyRequestTimer(500, clock_)
     assert(clock_);
 #ifdef DEBUG_DECODER_BIT_STREAM
     _bitStreamBeforeDecoder = fopen("decoderBitStream.bit", "wb");
-#endif
-#ifdef DEBUG_ENCODER_INPUT
-    _encoderInputFile = fopen("encoderInput.yuv", "wb");
 #endif
 }
 
@@ -105,9 +102,10 @@ VideoCodingModuleImpl::~VideoCodingModuleImpl()
 #ifdef DEBUG_DECODER_BIT_STREAM
     fclose(_bitStreamBeforeDecoder);
 #endif
-#ifdef DEBUG_ENCODER_INPUT
-    fclose(_encoderInputFile);
-#endif
+    if (_encoderInputFile != NULL)
+    {
+        fclose(_encoderInputFile);
+    }
 }
 
 VideoCodingModule*
@@ -682,13 +680,13 @@ VideoCodingModuleImpl::AddVideoFrame(const VideoFrame& videoFrame,
         WebRtc_Word32 ret = _encoder->Encode(videoFrame,
                                              codecSpecificInfo,
                                              _nextFrameType);
-#ifdef DEBUG_ENCODER_INPUT
         if (_encoderInputFile != NULL)
         {
-            fwrite(videoFrame.Buffer(), 1, videoFrame.Length(),
-                   _encoderInputFile);
+          if (fwrite(videoFrame.Buffer(), 1, videoFrame.Length(),
+                     _encoderInputFile) !=  videoFrame.Length()) {
+            return -1;
+          }
         }
-#endif
         if (ret < 0)
         {
             WEBRTC_TRACE(webrtc::kTraceError,
@@ -898,9 +896,11 @@ VideoCodingModuleImpl::Decode(WebRtc_UWord16 maxWaitTimeMs)
 #ifdef DEBUG_DECODER_BIT_STREAM
         if (_bitStreamBeforeDecoder != NULL)
         {
-            // Write bit stream to file for debugging purposes
-            fwrite(frame->Buffer(), 1, frame->Length(),
-                   _bitStreamBeforeDecoder);
+          // Write bit stream to file for debugging purposes
+          if (fwrite(frame->Buffer(), 1, frame->Length(),
+                     _bitStreamBeforeDecoder) !=  frame->Length()) {
+            return -1;
+          }
         }
 #endif
         if (_frameStorageCallback != NULL)
@@ -1362,6 +1362,23 @@ int VideoCodingModuleImpl::SetReceiverRobustnessMode(
       _receiver.SetNackMode(kNoNack);
       _dualReceiver.SetNackMode(kNoNack);
       break;
+  }
+  return VCM_OK;
+}
+
+int VideoCodingModuleImpl::StartDebugRecording(const char* file_name_utf8) {
+  CriticalSectionScoped cs(_sendCritSect);
+  _encoderInputFile = fopen(file_name_utf8, "wb");
+  if (_encoderInputFile == NULL)
+    return VCM_GENERAL_ERROR;
+  return VCM_OK;
+}
+
+int VideoCodingModuleImpl::StopDebugRecording(){
+  CriticalSectionScoped cs(_sendCritSect);
+  if (_encoderInputFile != NULL) {
+    fclose(_encoderInputFile);
+    _encoderInputFile = NULL;
   }
   return VCM_OK;
 }

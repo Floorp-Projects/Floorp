@@ -33,6 +33,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/WeakPtr.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -136,7 +137,7 @@ class Decoder;
 
 class RasterImage : public Image
                   , public nsIProperties
-                  , public nsSupportsWeakReference
+                  , public SupportsWeakPtr<RasterImage>
 #ifdef DEBUG
                   , public imgIContainerDebug
 #endif
@@ -162,7 +163,8 @@ public:
   NS_IMETHOD ExtractFrame(uint32_t aWhichFrame, const nsIntRect & aRect, uint32_t aFlags, imgIContainer **_retval);
   NS_IMETHOD Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, const gfxMatrix & aUserSpaceToImageSpace, const gfxRect & aFill, const nsIntRect & aSubimage, const nsIntSize & aViewportSize, uint32_t aFlags);
   NS_IMETHOD_(nsIFrame *) GetRootLayoutFrame(void);
-  NS_IMETHOD RequestDecode(void);
+  NS_IMETHOD RequestDecode();
+  NS_IMETHOD StartDecoding();
   NS_IMETHOD LockImage(void);
   NS_IMETHOD UnlockImage(void);
   NS_IMETHOD RequestDiscard(void);
@@ -687,6 +689,11 @@ private:
 
   void SetInUpdateImageContainer(bool aInUpdate) { mInUpdateImageContainer = aInUpdate; }
   bool IsInUpdateImageContainer() { return mInUpdateImageContainer; }
+  enum RequestDecodeType {
+      ASYNCHRONOUS,
+      SOMEWHAT_SYNCHRONOUS
+  };
+  NS_IMETHOD RequestDecodeCore(RequestDecodeType aDecodeType);
 
 private: // data
 
@@ -811,18 +818,17 @@ protected:
 class imgDecodeRequestor : public nsRunnable
 {
   public:
-    imgDecodeRequestor(imgIContainer *aContainer) {
-      mContainer = do_GetWeakReference(aContainer);
+    imgDecodeRequestor(RasterImage &aContainer) {
+      mContainer = aContainer.asWeakPtr();
     }
     NS_IMETHOD Run() {
-      nsCOMPtr<imgIContainer> con = do_QueryReferent(mContainer);
-      if (con)
-        con->RequestDecode();
+      if (mContainer)
+        mContainer->StartDecoding();
       return NS_OK;
     }
 
   private:
-    nsWeakPtr mContainer;
+    WeakPtr<RasterImage> mContainer;
 };
 
 } // namespace image

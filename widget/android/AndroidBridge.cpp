@@ -2524,6 +2524,17 @@ AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDispla
     return NS_OK;
 }
 
+bool
+AndroidBridge::ShouldAbortProgressiveUpdate(bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution)
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env || !mLayerClient)
+        return false;
+
+    AutoLocalJNIFrame jniFrame(env, 0);
+    return mLayerClient->ShouldAbortProgressiveUpdate(&jniFrame, aHasPendingNewThebesContent, aDisplayPort, aDisplayResolution);
+}
+
 void
 AndroidBridge::NotifyPaintedRect(float top, float left, float bottom, float right)
 {

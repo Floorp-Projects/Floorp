@@ -93,6 +93,7 @@ AudioDeviceLinuxPulse::AudioDeviceLinuxPulse(const WebRtc_Word32 id) :
     _startPlay(false),
     _stopPlay(false),
     _AGC(false),
+    update_speaker_volume_at_startup_(false),
     _playBufDelayFixed(20),
     _sndCardPlayDelay(0),
     _sndCardRecDelay(0),
@@ -539,7 +540,10 @@ WebRtc_Word32 AudioDeviceLinuxPulse::SpeakerVolumeIsAvailable(bool& available)
 
 WebRtc_Word32 AudioDeviceLinuxPulse::SetSpeakerVolume(WebRtc_UWord32 volume)
 {
-
+    if (!_playing) {
+      // Only update the volume if it's been set while we weren't playing.
+      update_speaker_volume_at_startup_ = true;
+    }
     return (_mixerManager.SetSpeakerVolume(volume));
 }
 
@@ -2818,15 +2822,23 @@ bool AudioDeviceLinuxPulse::PlayThreadProcess()
 
         // Get the currently saved speaker volume
         WebRtc_UWord32 volume = 0;
-        _mixerManager.SpeakerVolume(volume);
+        if (update_speaker_volume_at_startup_)
+          _mixerManager.SpeakerVolume(volume);
 
         PaLock();
 
-        // Set the same volume for all channels
-        pa_cvolume cVolumes;
-        const pa_sample_spec *spec =
-            LATE(pa_stream_get_sample_spec)(_playStream);
-        LATE(pa_cvolume_set)(&cVolumes, spec->channels, volume);
+        // NULL gives PA the choice of startup volume.
+        pa_cvolume* ptr_cvolume = NULL;
+        if (update_speaker_volume_at_startup_) {
+          pa_cvolume cVolumes;
+          ptr_cvolume = &cVolumes;
+
+          // Set the same volume for all channels
+          const pa_sample_spec *spec =
+              LATE(pa_stream_get_sample_spec)(_playStream);
+          LATE(pa_cvolume_set)(&cVolumes, spec->channels, volume);
+          update_speaker_volume_at_startup_ = false;
+        }
 
         // Connect the stream to a sink
         if (LATE(pa_stream_connect_playback)(
@@ -2834,7 +2846,7 @@ bool AudioDeviceLinuxPulse::PlayThreadProcess()
             _playDeviceName,
             &_playBufferAttr,
             (pa_stream_flags_t) _playStreamFlags,
-            &cVolumes, NULL) != PA_OK)
+            ptr_cvolume, NULL) != PA_OK)
         {
             WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
                          "  failed to connect play stream, err=%d",

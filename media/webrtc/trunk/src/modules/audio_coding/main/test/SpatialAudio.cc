@@ -53,62 +53,45 @@ SpatialAudio::Setup()
     // Register the receiver ACM in channel
     _channel->RegisterReceiverACM(_acmReceiver);
 
-    char audioFileName[MAX_FILE_NAME_LENGTH_BYTE];
     WebRtc_UWord16 sampFreqHz = 32000;
 
-    strncpy(audioFileName, "./test/data/audio_coding/testfile32kHz.pcm",
-            MAX_FILE_NAME_LENGTH_BYTE - 1);
+    const std::string file_name =
+        webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
+    _inFile.Open(file_name, sampFreqHz, "rb", false);
+
+    std::string output_file = webrtc::test::OutputPath() +
+        "out_spatial_autotest.pcm";
     if(_testMode == 1)
     {
-        printf("Enter the input file [%s]: ", audioFileName);
-        PCMFile::ChooseFile(audioFileName, MAX_FILE_NAME_LENGTH_BYTE, &sampFreqHz);
-    }
-    _inFile.Open(audioFileName, sampFreqHz, "rb", false);
-
-    if(_testMode == 0)
-    {
-        std::string outputFile = webrtc::test::OutputPath() +
-            "out_spatial_autotest.pcm";
-        strncpy(audioFileName, outputFile.c_str(),
-                MAX_FILE_NAME_LENGTH_BYTE - 1);
-    }
-    else if(_testMode == 1)
-    {
+        output_file = webrtc::test::OutputPath() + "testspatial_out.pcm";
         printf("\n");
-        std::string outputFile = webrtc::test::OutputPath() +
-            "testspatial_out.pcm";
-        strncpy(audioFileName, outputFile.c_str(),
-                MAX_FILE_NAME_LENGTH_BYTE - 1);
-        printf("Enter the output file [%s]: ", audioFileName);
-        PCMFile::ChooseFile(audioFileName, MAX_FILE_NAME_LENGTH_BYTE, &sampFreqHz);
+        printf("Enter the output file [%s]: ", output_file.c_str());
+        PCMFile::ChooseFile(&output_file, MAX_FILE_NAME_LENGTH_BYTE,
+                            &sampFreqHz);
     }
     else
     {
-        std::string outputFile = webrtc::test::OutputPath() +
-            "testspatial_out.pcm";
-        strncpy(audioFileName, outputFile.c_str(),
-                MAX_FILE_NAME_LENGTH_BYTE - 1);
+        output_file = webrtc::test::OutputPath() + "testspatial_out.pcm";
     }
-    _outFile.Open(audioFileName, sampFreqHz, "wb", false);
+    _outFile.Open(output_file, sampFreqHz, "wb", false);
     _outFile.SaveStereo(true);
 
-
-    // Register couple of codecs as receive codec    
+    // Register all available codes as receiving codecs.
     CodecInst codecInst;
-
-    _acmLeft->Codec((WebRtc_UWord8)0, codecInst);    
-    codecInst.channels = 2;
-    CHECK_ERROR(_acmReceiver->RegisterReceiveCodec(codecInst));
-
-    _acmLeft->Codec((WebRtc_UWord8)3, codecInst);    
-    codecInst.channels = 2;
-    CHECK_ERROR(_acmReceiver->RegisterReceiveCodec(codecInst));
- 
-    _acmLeft->Codec((WebRtc_UWord8)1, codecInst);
-    CHECK_ERROR(_acmReceiver->RegisterReceiveCodec(codecInst));
-    
-    _acmLeft->Codec((WebRtc_UWord8)4, codecInst);
-    CHECK_ERROR(_acmReceiver->RegisterReceiveCodec(codecInst));
+    int status;
+    WebRtc_UWord8 num_encoders = _acmReceiver->NumberOfCodecs();
+    // Register all available codes as receiving codecs once more.
+    for (WebRtc_UWord8 n = 0; n < num_encoders; n++) {
+      status = _acmReceiver->Codec(n, codecInst);
+      if (status < 0) {
+        printf("Error in Codec(), no matching codec found");
+      }
+      status = _acmReceiver->RegisterReceiveCodec(codecInst);
+      if (status < 0) {
+        printf("Error in RegisterReceiveCodec() for payload type %d",
+               codecInst.pltype);
+      }
+    }
 
     return 0;
 }
@@ -119,7 +102,8 @@ SpatialAudio::Perform()
     if(_testMode == 0)
     {
         printf("Running SpatialAudio Test");
-        WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceAudioCoding, -1, "---------- SpatialAudio ----------");
+        WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceAudioCoding, -1,
+                     "---------- SpatialAudio ----------");
     }
 
     Setup();
@@ -199,17 +183,17 @@ SpatialAudio::EncodeDecode(
     while(!_inFile.EndOfFile())
     {
         _inFile.Read10MsData(audioFrame);
-        for(int n = 0; n < audioFrame._payloadDataLengthInSamples; n++)
+        for(int n = 0; n < audioFrame.samples_per_channel_; n++)
         {
-            audioFrame._payloadData[n] = (WebRtc_Word16)floor(
-                audioFrame._payloadData[n] * leftPanning + 0.5);
+            audioFrame.data_[n] = (WebRtc_Word16)floor(
+                audioFrame.data_[n] * leftPanning + 0.5);
         }
         CHECK_ERROR(_acmLeft->Add10MsData(audioFrame));
 
-        for(int n = 0; n < audioFrame._payloadDataLengthInSamples; n++)
+        for(int n = 0; n < audioFrame.samples_per_channel_; n++)
         {
-            audioFrame._payloadData[n] = (WebRtc_Word16)floor(
-                audioFrame._payloadData[n] * rightToLeftRatio + 0.5);
+            audioFrame.data_[n] = (WebRtc_Word16)floor(
+                audioFrame.data_[n] * rightToLeftRatio + 0.5);
         }
         CHECK_ERROR(_acmRight->Add10MsData(audioFrame));
 

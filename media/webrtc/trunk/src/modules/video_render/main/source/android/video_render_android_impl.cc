@@ -26,13 +26,16 @@
 #endif
 
 namespace webrtc {
+
 JavaVM* VideoRenderAndroid::g_jvm = NULL;
 
-WebRtc_Word32 VideoRenderAndroid::SetAndroidEnvVariables(void* javaVM) {
+#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
+WebRtc_Word32 SetRenderAndroidVM(void* javaVM) {
   WEBRTC_TRACE(kTraceDebug, kTraceVideoRenderer, -1, "%s", __FUNCTION__);
-  g_jvm = (JavaVM*) javaVM;
+  VideoRenderAndroid::g_jvm = (JavaVM*)javaVM;
   return 0;
 }
+#endif
 
 VideoRenderAndroid::VideoRenderAndroid(
     const WebRtc_Word32 id,

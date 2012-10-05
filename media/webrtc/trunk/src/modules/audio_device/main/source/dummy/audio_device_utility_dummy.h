@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -21,15 +21,10 @@ class CriticalSectionWrapper;
 class AudioDeviceUtilityDummy: public AudioDeviceUtility
 {
 public:
-    AudioDeviceUtilityDummy(const WebRtc_Word32 id);
-    ~AudioDeviceUtilityDummy();
+    AudioDeviceUtilityDummy(const WebRtc_Word32 id) {}
+    ~AudioDeviceUtilityDummy() {}
 
-    virtual WebRtc_Word32 Init();
-
-private:
-    CriticalSectionWrapper& _critSect;
-    WebRtc_Word32 _id;
-    AudioDeviceModule::ErrorCode _lastError;
+    virtual WebRtc_Word32 Init() { return 0; }
 };
 
 } // namespace webrtc

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -43,7 +43,6 @@
 // int16_t WebRtcAmr_DecoderInit(AMR_decinst_t_* decInst);
 // int16_t WebRtcAmr_DecodeBitmode(AMR_decinst_t_* decInst,
 //                                 int format);
-// void WebRtcAmr_Version(char *versionStr, short len);
 #include "amr_interface.h"
 #endif
 
@@ -145,12 +144,6 @@ WebRtc_Word16 ACMAMR::SetAMRDecoderPackingFormat(
 ACMAMRPackingFormat ACMAMR::AMRDecoderPackingFormat() const {
   return AMRUndefined;
 }
-
-WebRtc_Word16 ACMAMR::UnregisterFromNetEqSafe(ACMNetEQ* /* netEq */,
-                                              WebRtc_Word16 /* payloadType */) {
-  return -1;
-}
-
 
 #else     //===================== Actual Implementation =======================
 
@@ -424,19 +417,6 @@ WebRtc_Word16 ACMAMR::SetAMRDecoderPackingFormat(
 
 ACMAMRPackingFormat ACMAMR::AMRDecoderPackingFormat() const {
   return _decoderPackingFormat;
-}
-
-WebRtc_Word16 ACMAMR::UnregisterFromNetEqSafe(ACMNetEQ* netEq,
-                                              WebRtc_Word16 payloadType) {
-  if (payloadType != _decoderParams.codecInstant.pltype) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, _uniqueID,
-                 "Cannot unregister codec %s given payload-type %d does not "
-                 "match the stored payload type",
-                 _decoderParams.codecInstant.plname, payloadType,
-                 _decoderParams.codecInstant.pltype);
-    return -1;
-  }
-  return netEq->RemoveCodec(kDecoderAMR);
 }
 
 #endif

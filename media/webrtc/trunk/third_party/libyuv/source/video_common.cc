@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The LibYuv project authors. All Rights Reserved.
+ *  Copyright 2011 The LibYuv Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -11,14 +11,12 @@
 
 #include "libyuv/video_common.h"
 
-#include <sstream>
-
 #ifdef __cplusplus
 namespace libyuv {
 extern "C" {
 #endif
 
-#define ARRAY_SIZE(x) (static_cast<int>((sizeof(x)/sizeof(x[0]))))
+#define ARRAY_SIZE(x) (static_cast<int>((sizeof(x) / sizeof(x[0]))))
 
 struct FourCCAliasEntry {
   uint32 alias;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -21,7 +21,7 @@ public:
     PacketLossTest();
     virtual ~PacketLossTest() {if(_lastFrame) {delete [] _lastFrame; _lastFrame = NULL;}}
     virtual void Encoded(const webrtc::EncodedImage& encodedImage);
-    virtual void Decoded(const webrtc::RawImage& decodedImage);
+    virtual void Decoded(const webrtc::VideoFrame& decodedImage);
 protected:
     PacketLossTest(std::string name, std::string description);
     PacketLossTest(std::string name,

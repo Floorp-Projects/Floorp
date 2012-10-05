@@ -8,11 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "forward_error_correction_internal.h"
-#include "fec_private_tables.h"
+#include "modules/rtp_rtcp/source/forward_error_correction_internal.h"
 
 #include <cassert>
 #include <cstring>
+
+#include "modules/rtp_rtcp/source/fec_private_tables_random.h"
+#include "modules/rtp_rtcp/source/fec_private_tables_bursty.h"
 
 namespace {
 
@@ -149,11 +151,58 @@ void ShiftFitSubMask(int numMaskBytes,
 
     }
 }
-
-} //namespace
+}  // namespace
 
 namespace webrtc {
 namespace internal {
+
+PacketMaskTable::PacketMaskTable(FecMaskType fec_mask_type,
+                                 int num_media_packets)
+    : fec_mask_type_(InitMaskType(fec_mask_type, num_media_packets)),
+      fec_packet_mask_table_(InitMaskTable(fec_mask_type_)) {
+}
+
+// Sets |fec_mask_type_| to the type of packet mask selected. The type of
+// packet mask selected is based on |fec_mask_type| and |numMediaPackets|.
+// If |numMediaPackets| is larger than the maximum allowed by |fec_mask_type|
+// for the bursty type, then the random type is selected.
+FecMaskType PacketMaskTable::InitMaskType(FecMaskType fec_mask_type,
+                                          int num_media_packets) {
+  // The mask should not be bigger than |packetMaskTbl|.
+  assert(num_media_packets <= static_cast<int>(sizeof(kPacketMaskRandomTbl) /
+                                               sizeof(*kPacketMaskRandomTbl)));
+  switch (fec_mask_type) {
+    case kFecMaskRandom: {
+      return kFecMaskRandom;
+    }
+    case kFecMaskBursty: {
+      int max_media_packets = static_cast<int>(sizeof(kPacketMaskBurstyTbl) /
+                                               sizeof(*kPacketMaskBurstyTbl));
+      if (num_media_packets > max_media_packets) {
+        return kFecMaskRandom;
+      } else {
+        return kFecMaskBursty;
+      }
+    }
+  }
+  assert(false);
+  return kFecMaskRandom;
+}
+
+// Returns the pointer to the packet mask tables corresponding to type
+// |fec_mask_type|.
+const uint8_t*** PacketMaskTable::InitMaskTable(FecMaskType fec_mask_type) {
+  switch (fec_mask_type) {
+    case kFecMaskRandom: {
+      return kPacketMaskRandomTbl;
+    }
+    case kFecMaskBursty: {
+      return kPacketMaskBurstyTbl;
+    }
+  }
+  assert(false);
+  return kPacketMaskRandomTbl;
+}
 
 // Remaining protection after important (first partition) packet protection
 void RemainingPacketProtection(int numMediaPackets,
@@ -161,7 +210,8 @@ void RemainingPacketProtection(int numMediaPackets,
                                int numFecForImpPackets,
                                int numMaskBytes,
                                ProtectionMode mode,
-                               uint8_t* packetMask)
+                               uint8_t* packetMask,
+                               const PacketMaskTable& mask_table)
 {
     if (mode == kModeNoOverlap)
     {
@@ -174,8 +224,9 @@ void RemainingPacketProtection(int numMediaPackets,
             (lBit == 1) ? kMaskSizeLBitSet : kMaskSizeLBitClear;
 
         const uint8_t* packetMaskSub21 =
-            packetMaskTbl[numMediaPackets - numFecForImpPackets - 1]
-                         [numFecRemaining - 1];
+            mask_table.fec_packet_mask_table()
+            [numMediaPackets - numFecForImpPackets - 1]
+            [numFecRemaining - 1];
 
         ShiftFitSubMask(numMaskBytes, resMaskBytes, numFecForImpPackets,
                         (numFecForImpPackets + numFecRemaining),
@@ -187,7 +238,8 @@ void RemainingPacketProtection(int numMediaPackets,
         // subMask22
 
         const uint8_t* packetMaskSub22 =
-            packetMaskTbl[numMediaPackets - 1][numFecRemaining - 1];
+            mask_table.fec_packet_mask_table()
+            [numMediaPackets - 1][numFecRemaining - 1];
 
         FitSubMask(numMaskBytes, numMaskBytes, numFecRemaining, packetMaskSub22,
                    &packetMask[numFecForImpPackets * numMaskBytes]);
@@ -212,7 +264,8 @@ void RemainingPacketProtection(int numMediaPackets,
 void ImportantPacketProtection(int numFecForImpPackets,
                                int numImpPackets,
                                int numMaskBytes,
-                               uint8_t* packetMask)
+                               uint8_t* packetMask,
+                               const PacketMaskTable& mask_table)
 {
     const int lBit = numImpPackets > 16 ? 1 : 0;
     const int numImpMaskBytes =
@@ -220,7 +273,8 @@ void ImportantPacketProtection(int numFecForImpPackets,
 
     // Get subMask1 from table
     const uint8_t* packetMaskSub1 =
-        packetMaskTbl[numImpPackets - 1][numFecForImpPackets - 1];
+        mask_table.fec_packet_mask_table()
+        [numImpPackets - 1][numFecForImpPackets - 1];
 
     FitSubMask(numMaskBytes, numImpMaskBytes,
                numFecForImpPackets, packetMaskSub1, packetMask);
@@ -302,7 +356,8 @@ void UnequalProtectionMask(int numMediaPackets,
                            int numFecPackets,
                            int numImpPackets,
                            int numMaskBytes,
-                           uint8_t* packetMask)
+                           uint8_t* packetMask,
+                           const PacketMaskTable& mask_table)
 {
 
     // Set Protection type and allocation
@@ -327,7 +382,8 @@ void UnequalProtectionMask(int numMediaPackets,
     if (numFecForImpPackets > 0)
     {
         ImportantPacketProtection(numFecForImpPackets, numImpPackets,
-                                  numMaskBytes, packetMask);
+                                  numMaskBytes, packetMask,
+                                  mask_table);
     }
 
     //
@@ -337,7 +393,7 @@ void UnequalProtectionMask(int numMediaPackets,
     {
         RemainingPacketProtection(numMediaPackets, numFecRemaining,
                                   numFecForImpPackets, numMaskBytes,
-                                  mode, packetMask);
+                                  mode, packetMask, mask_table);
     }
 
 }
@@ -346,10 +402,9 @@ void GeneratePacketMasks(int numMediaPackets,
                          int numFecPackets,
                          int numImpPackets,
                          bool useUnequalProtection,
+                         const PacketMaskTable& mask_table,
                          uint8_t* packetMask)
 {
-    assert(numMediaPackets <= static_cast<int>(sizeof(packetMaskTbl) /
-            sizeof(*packetMaskTbl)));
     assert(numMediaPackets > 0);
     assert(numFecPackets <= numMediaPackets && numFecPackets > 0);
     assert(numImpPackets <= numMediaPackets && numImpPackets >= 0);
@@ -365,16 +420,16 @@ void GeneratePacketMasks(int numMediaPackets,
         // Mask = (k,n-k), with protection factor = (n-k)/k,
         // where k = numMediaPackets, n=total#packets, (n-k)=numFecPackets.
         memcpy(packetMask,
-               packetMaskTbl[numMediaPackets - 1][numFecPackets - 1],
+               mask_table.fec_packet_mask_table()[numMediaPackets - 1]
+                                                 [numFecPackets - 1],
                numFecPackets * numMaskBytes);
     }
     else  //UEP case
     {
         UnequalProtectionMask(numMediaPackets, numFecPackets, numImpPackets,
-                              numMaskBytes, packetMask);
+                              numMaskBytes, packetMask, mask_table);
 
     } // End of UEP modification
-
 } //End of GetPacketMasks
 
 }  // namespace internal

@@ -17,8 +17,7 @@ namespace webrtc
 {
 
 AudioDeviceUtilityLinux::AudioDeviceUtilityLinux(const WebRtc_Word32 id) :
-    _critSect(*CriticalSectionWrapper::CreateCriticalSection()), _id(id),
-    _lastError(AudioDeviceModule::kAdmErrNone)
+    _critSect(*CriticalSectionWrapper::CreateCriticalSection()), _id(id)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, id,
                  "%s created", __FUNCTION__);

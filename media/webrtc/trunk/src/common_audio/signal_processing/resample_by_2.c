@@ -17,7 +17,7 @@
 
 #include "signal_processing_library.h"
 
-#ifdef WEBRTC_ARCH_ARM_V7A
+#ifdef WEBRTC_ARCH_ARM_V7
 
 // allpass filter coefficients.
 static const WebRtc_UWord32 kResampleAllpass1[3] = {3284, 24441, 49528 << 15};
@@ -62,7 +62,7 @@ static const WebRtc_UWord16 kResampleAllpass2[3] = {12199, 37471, 60255};
 #define MUL_ACCUM_1(a, b, c) WEBRTC_SPL_SCALEDIFF32(a, b, c)
 #define MUL_ACCUM_2(a, b, c) WEBRTC_SPL_SCALEDIFF32(a, b, c)
 
-#endif  // WEBRTC_ARCH_ARM_V7A
+#endif  // WEBRTC_ARCH_ARM_V7
 
 
 // decimator

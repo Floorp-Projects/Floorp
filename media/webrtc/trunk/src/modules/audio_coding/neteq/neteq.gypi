@@ -84,9 +84,8 @@
       ],
     },
   ], # targets
-  # Exclude the test target when building with chromium.
   'conditions': [
-    ['build_with_chromium==0', {
+    ['include_tests==1', {
       'targets': [
         {
           'target_name': 'neteq_unittests',
@@ -94,8 +93,8 @@
           'dependencies': [
             'NetEq',
             'NetEqTestTools',
-            '<(webrtc_root)/../testing/gtest.gyp:gtest',
-            '<(webrtc_root)/../test/test.gyp:test_support_main',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
+            '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
           'sources': [
             'webrtc_neteq_unittest.cc',
@@ -179,7 +178,7 @@
           'target_name': 'RTPjitter',
           'type': 'executable',
           'dependencies': [
-            '<(webrtc_root)/../testing/gtest.gyp:gtest',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
           ],
           'sources': [
             'test/RTPjitter.cc',
@@ -190,7 +189,7 @@
           'type': 'executable',
           'dependencies': [
             'NetEqTestTools',
-            '<(webrtc_root)/../testing/gtest.gyp:gtest',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
           ],
           'sources': [
             'test/RTPanalyze.cc',
@@ -201,7 +200,7 @@
           'type': 'executable',
           'dependencies': [
             'NetEqTestTools',
-            '<(webrtc_root)/../testing/gtest.gyp:gtest',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
           ],
           'sources': [
            'test/RTPchange.cc',
@@ -212,7 +211,7 @@
           'type': 'executable',
           'dependencies': [
            'NetEqTestTools',
-            '<(webrtc_root)/../testing/gtest.gyp:gtest',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
           ],
           'sources': [
             'test/RTPtimeshift.cc',
@@ -223,7 +222,7 @@
           'type': 'executable',
           'dependencies': [
             'NetEqTestTools',
-            '<(webrtc_root)/../testing/gtest.gyp:gtest',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
           ],
           'sources': [
             'test/RTPcat.cc',
@@ -255,7 +254,7 @@
             'iLBC',
             'iSAC',
             'CNG',
-            '<(webrtc_root)/../testing/gtest.gyp:gtest',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
           ],
           'direct_dependent_settings': {
             'include_dirs': [
@@ -295,6 +294,6 @@
           ],
         },
       ], # targets
-    }], # build_with_chromium
+    }], # include_tests
   ], # conditions
 }

@@ -14,7 +14,7 @@
 #include "modules/video_capture/main/interface/video_capture.h"
 #include "system_wrappers/interface/map_wrapper.h"
 #include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
 #include "video_engine/include/vie_capture.h"
 #include "video_engine/vie_defines.h"
 #include "video_engine/vie_frame_provider_base.h"
@@ -36,7 +36,7 @@ class ViEInputManager : private ViEManagerBase {
   explicit ViEInputManager(int engine_id);
   ~ViEInputManager();
 
-  void SetModuleProcessThread(ProcessThread& module_process_thread);
+  void SetModuleProcessThread(ProcessThread* module_process_thread);
 
   // Returns number of capture devices.
   int NumberOfCaptureDevices();
@@ -71,7 +71,7 @@ class ViEInputManager : private ViEManagerBase {
   int CreateCaptureDevice(const char* device_unique_idUTF8,
                           const WebRtc_UWord32 device_unique_idUTF8Length,
                           int& capture_id);
-  int CreateCaptureDevice(VideoCaptureModule& capture_module,
+  int CreateCaptureDevice(VideoCaptureModule* capture_module,
                           int& capture_id);
   int CreateExternalCaptureDevice(ViEExternalCapture*& external_capture,
                                   int& capture_id);
@@ -85,13 +85,13 @@ class ViEInputManager : private ViEManagerBase {
 
  private:
   // Gets and allocates a free capture device id. Assumed protected by caller.
-  bool GetFreeCaptureId(int& freecapture_id);
+  bool GetFreeCaptureId(int* freecapture_id);
 
   // Frees a capture id assigned in GetFreeCaptureId.
   void ReturnCaptureId(int capture_id);
 
   // Gets and allocates a free file id. Assumed protected by caller.
-  bool GetFreeFileId(int& free_file_id);
+  bool GetFreeFileId(int* free_file_id);
 
   // Frees a file id assigned in GetFreeFileId.
   void ReturnFileId(int file_id);
@@ -105,9 +105,6 @@ class ViEInputManager : private ViEManagerBase {
 
   // Gets the ViECapturer for the capture device id.
   ViECapturer* ViECapturePtr(int capture_id) const;
-
-  // Gets the the entire map with GetViECaptures.
-  void GetViECaptures(MapWrapper& vie_capture_map);
 
   // Gets the ViEFilePlayer for this file_id.
   ViEFilePlayer* ViEFilePlayerPtr(int file_id) const;
@@ -123,7 +120,7 @@ class ViEInputManager : private ViEManagerBase {
   // File Players.
   int free_file_id_[kViEMaxFilePlayers];
 
-  ProcessThread* module_process_thread_;
+  ProcessThread* module_process_thread_;  // Weak.
 };
 
 // Provides protected access to ViEInputManater.

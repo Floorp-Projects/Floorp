@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
+#include "WebGLContextUtils.h"
 
 #include "nsString.h"
 #include "nsDebug.h"
@@ -2136,79 +2137,37 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
 
         case LOCAL_GL_ARRAY_BUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBoundArrayBuffer.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBoundArrayBuffer.get(), rv);
         }
 
         case LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBoundElementArrayBuffer.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBoundElementArrayBuffer.get(), rv);
         }
 
         case LOCAL_GL_RENDERBUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBoundRenderbuffer.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBoundRenderbuffer.get(), rv);
         }
 
         case LOCAL_GL_FRAMEBUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBoundFramebuffer.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBoundFramebuffer.get(), rv);
         }
 
         case LOCAL_GL_CURRENT_PROGRAM:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(), mCurrentProgram.get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mCurrentProgram.get(), rv);
         }
 
         case LOCAL_GL_TEXTURE_BINDING_2D:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBound2DTextures[mActiveTexture].get(), &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBound2DTextures[mActiveTexture].get(), rv);
         }
 
         case LOCAL_GL_TEXTURE_BINDING_CUBE_MAP:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mBoundCubeMapTextures[mActiveTexture].get(),
-                                 &v)) {
-                rv = NS_ERROR_FAILURE;
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mBoundCubeMapTextures[mActiveTexture].get(), rv);
         }
 
         default:
@@ -2295,14 +2254,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
             {
-                JS::Value v;
-                if (!dom::WrapObject(cx, GetWrapper(),
-                                     const_cast<WebGLRenderbuffer*>(fba.Renderbuffer()),
-                                     &v)) {
-                    rv.Throw(NS_ERROR_FAILURE);
-                    return JS::NullValue();
-                }
-                return v;
+                return WebGLObjectAsJSValue(cx, fba.Renderbuffer(), rv);
             }
 
             default:
@@ -2316,14 +2268,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
             {
-                JS::Value v;
-                if (!dom::WrapObject(cx, GetWrapper(),
-                                     const_cast<WebGLTexture*>(fba.Texture()),
-                                     &v)) {
-                    rv = NS_ERROR_FAILURE;
-                    return JS::NullValue();
-                }
-                return v;
+                return WebGLObjectAsJSValue(cx, fba.Texture(), rv);
             }
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
@@ -2859,13 +2804,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
     switch (pname) {
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
         {
-            JS::Value v;
-            if (!dom::WrapObject(cx, GetWrapper(),
-                                 mAttribBuffers[index].buf.get(), &v)) {
-                rv.Throw(NS_ERROR_FAILURE);
-                return JS::NullValue();
-            }
-            return v;
+            return WebGLObjectAsJSValue(cx, mAttribBuffers[index].buf.get(), rv);
         }
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:

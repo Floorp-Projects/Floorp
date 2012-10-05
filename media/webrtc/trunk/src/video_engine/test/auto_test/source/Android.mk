@@ -50,7 +50,7 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../../../../modules/interface \
     $(LOCAL_PATH)/../../../../modules/video_capture/main/interface \
     $(LOCAL_PATH)/../../../../common_video/vplib/main/interface \
-    $(LOCAL_PATH)/../../../../voice_engine/main/interface
+    $(LOCAL_PATH)/../../../../voice_engine/include
 
 LOCAL_SHARED_LIBRARIES := \
     libutils \

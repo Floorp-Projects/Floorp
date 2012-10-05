@@ -1,0 +1,287 @@
+/*
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
+#include "tools/frame_analyzer/video_quality_analysis.h"
+
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+
+#define STATS_LINE_LENGTH 32
+
+namespace webrtc {
+namespace test {
+
+int GetI420FrameSize(int width, int height) {
+  int half_width = (width + 1) >> 1;
+  int half_height = (height + 1) >> 1;
+
+  int y_plane = width * height;  // I420 Y plane.
+  int u_plane = half_width * half_height;  // I420 U plane.
+  int v_plane = half_width * half_height;  // I420 V plane.
+
+  return y_plane + u_plane + v_plane;
+}
+
+int ExtractFrameSequenceNumber(std::string line) {
+  int space_position = line.find(' ');
+  if (space_position == -1) {
+    return -1;
+  }
+  std::string frame = line.substr(0, space_position);
+
+  int underscore_position = frame.find('_');
+  if (underscore_position == -1) {
+    return -1;
+  }
+  std::string frame_number = frame.substr(underscore_position + 1);
+
+  return strtol(frame_number.c_str(), NULL, 10);
+}
+
+int ExtractDecodedFrameNumber(std::string line) {
+  int space_position = line.find(' ');
+  if (space_position == -1) {
+    return -1;
+  }
+  std::string decoded_number = line.substr(space_position + 1);
+
+  return strtol(decoded_number.c_str(), NULL, 10);
+}
+
+bool IsThereBarcodeError(std::string line) {
+  int barcode_error_position = line.find("Barcode error");
+  if (barcode_error_position != -1) {
+    return true;
+  }
+  return false;
+}
+
+bool GetNextStatsLine(FILE* stats_file, char* line) {
+  int chars = 0;
+  char buf = 0;
+
+  while (buf != '\n') {
+    size_t chars_read = fread(&buf, 1, 1, stats_file);
+    if (chars_read != 1 || feof(stats_file)) {
+      return false;
+    }
+    line[chars] = buf;
+    ++chars;
+  }
+  line[chars-1] = '\0';  // Strip the trailing \n and put end of string.
+  return true;
+}
+
+bool GetNextI420Frame(FILE* input_file, int width, int height,
+                      uint8* result_frame) {
+  int frame_size = GetI420FrameSize(width, height);
+  bool errors = false;
+
+  size_t bytes_read = fread(result_frame, 1, frame_size, input_file);
+  if (bytes_read != static_cast<size_t>(frame_size)) {
+    // If end-of-file is reached, don't print an error.
+    if (feof(input_file)) {
+      return false;
+    }
+    fprintf(stdout, "Error while reading frame from file\n");
+    errors = true;
+  }
+  return !errors;
+}
+
+bool ExtractFrameFromI420(const char* i420_file_name, int width, int height,
+                          int frame_number, uint8* result_frame) {
+  int frame_size = GetI420FrameSize(width, height);
+  int offset = frame_number * frame_size;  // Calculate offset for the frame.
+  bool errors = false;
+
+  FILE* input_file = fopen(i420_file_name, "rb");
+  if (input_file == NULL) {
+    fprintf(stderr, "Couldn't open input file for reading: %s\n",
+            i420_file_name);
+    return false;
+  }
+
+  // Change stream pointer to new offset.
+  fseek(input_file, offset, SEEK_SET);
+
+  size_t bytes_read = fread(result_frame, 1, frame_size, input_file);
+  if (bytes_read != static_cast<size_t>(frame_size) &&
+      ferror(input_file)) {
+    fprintf(stdout, "Error while reading frame no %d from file %s\n",
+            frame_number, i420_file_name);
+    errors = true;
+  }
+  fclose(input_file);
+  return !errors;
+}
+
+double CalculateMetrics(VideoAnalysisMetricsType video_metrics_type,
+                        const uint8* ref_frame,  const uint8* test_frame,
+                        int width, int height) {
+  if (!ref_frame || !test_frame)
+    return -1;
+  else if (height < 0 || width < 0)
+    return -1;
+  int half_width = (width + 1) >> 1;
+  int half_height = (height + 1) >> 1;
+  const uint8* src_y_a = ref_frame;
+  const uint8* src_u_a = src_y_a + width * height;
+  const uint8* src_v_a = src_u_a + half_width * half_height;
+  const uint8* src_y_b = test_frame;
+  const uint8* src_u_b = src_y_b + width * height;
+  const uint8* src_v_b = src_u_b + half_width * half_height;
+
+  int stride_y = width;
+  int stride_uv = half_width;
+
+  double result = 0.0;
+
+  switch (video_metrics_type) {
+    case kPSNR:
+      // In the following: stride is determined by width.
+      result = libyuv::I420Psnr(src_y_a, width, src_u_a, half_width,
+                                src_v_a, half_width, src_y_b, width,
+                                src_u_b, half_width, src_v_b, half_width,
+                                width, height);
+      // LibYuv sets the max psnr value to 128, we restrict it to 48.
+      // In case of 0 mse in one frame, 128 can skew the results significantly.
+      result = (result > 48.0) ? 48.0 : result;
+      break;
+    case kSSIM:
+      result = libyuv::I420Ssim(src_y_a, stride_y, src_u_a, stride_uv,
+                                src_v_a, stride_uv, src_y_b, stride_y,
+                                src_u_b, stride_uv, src_v_b, stride_uv,
+                                width, height);
+      break;
+    default:
+      assert(false);
+  }
+
+  return result;
+}
+
+void RunAnalysis(const char* reference_file_name, const char* test_file_name,
+                 const char* stats_file_name, int width, int height,
+                 ResultsContainer* results) {
+  int size = GetI420FrameSize(width, height);
+  FILE* stats_file = fopen(stats_file_name, "r");
+
+  // String buffer for the lines in the stats file.
+  char line[STATS_LINE_LENGTH];
+
+  // Allocate buffers for test and reference frames.
+  uint8* test_frame = new uint8[size];
+  uint8* reference_frame = new uint8[size];
+  int previous_frame_number = -1;
+
+  // While there are entries in the stats file.
+  while (GetNextStatsLine(stats_file, line)) {
+    int extracted_test_frame = ExtractFrameSequenceNumber(line);
+    int decoded_frame_number = ExtractDecodedFrameNumber(line);
+
+    // If there was problem decoding the barcode in this frame or the frame has
+    // been duplicated, continue.
+    if (IsThereBarcodeError(line) ||
+        decoded_frame_number == previous_frame_number) {
+      continue;
+    }
+
+    assert(extracted_test_frame != -1);
+    assert(decoded_frame_number != -1);
+
+    ExtractFrameFromI420(test_file_name, width, height, extracted_test_frame,
+                         test_frame);
+    ExtractFrameFromI420(reference_file_name, width, height,
+                         decoded_frame_number, reference_frame);
+
+    // Calculate the PSNR and SSIM.
+    double result_psnr = CalculateMetrics(kPSNR, reference_frame, test_frame,
+                                          width, height);
+    double result_ssim = CalculateMetrics(kSSIM, reference_frame, test_frame,
+                                          width, height);
+
+    previous_frame_number = decoded_frame_number;
+
+    // Fill in the result struct.
+    AnalysisResult result;
+    result.frame_number = decoded_frame_number;
+    result.psnr_value = result_psnr;
+    result.ssim_value = result_ssim;
+
+    results->frames.push_back(result);
+  }
+
+  // Cleanup.
+  fclose(stats_file);
+  delete[] test_frame;
+  delete[] reference_frame;
+}
+
+void PrintMaxRepeatedAndSkippedFrames(const char* stats_file_name) {
+  FILE* stats_file = fopen(stats_file_name, "r");
+  char line[STATS_LINE_LENGTH];
+
+  int repeated_frames = 1;
+  int max_repeated_frames = 1;
+  int max_skipped_frames = 1;
+  int previous_frame_number = -1;
+
+  while (GetNextStatsLine(stats_file, line)) {
+    int decoded_frame_number = ExtractDecodedFrameNumber(line);
+
+    if (decoded_frame_number == -1) {
+      continue;
+    }
+
+    // Calculate how many frames a cluster of repeated frames contains.
+    if (decoded_frame_number == previous_frame_number) {
+      ++repeated_frames;
+      if (repeated_frames > max_repeated_frames) {
+        max_repeated_frames = repeated_frames;
+      }
+    } else {
+      repeated_frames = 1;
+    }
+
+    // Calculate how much frames have been skipped.
+    if (decoded_frame_number != 0 && previous_frame_number != -1) {
+      int skipped_frames = decoded_frame_number - previous_frame_number - 1;
+      if (skipped_frames > max_skipped_frames) {
+        max_skipped_frames = skipped_frames;
+      }
+    }
+    previous_frame_number = decoded_frame_number;
+  }
+  fprintf(stdout, "Max_repeated:%d Max_skipped:%d\n", max_repeated_frames,
+          max_skipped_frames);
+}
+
+void PrintAnalysisResults(ResultsContainer* results) {
+  std::vector<AnalysisResult>::iterator iter;
+  int frames_counter = 0;
+
+  fprintf(stdout, "BSTATS\n");
+  for (iter = results->frames.begin(); iter != results->frames.end(); ++iter) {
+    ++frames_counter;
+    fprintf(stdout, "%f %f;", iter->psnr_value, iter->ssim_value);
+  }
+  fprintf(stdout, "ESTATS\n");
+  if (frames_counter > 0) {
+    fprintf(stdout, "Unique_frames_count:%d\n", frames_counter);
+  } else {
+    fprintf(stdout, "Unique_frames_count:undef\n");
+  }
+}
+
+}  // namespace test
+}  // namespace webrtc

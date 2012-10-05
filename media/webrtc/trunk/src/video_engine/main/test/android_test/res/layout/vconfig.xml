@@ -62,6 +62,12 @@
 		  android:layout_height="wrap_content"
 		  android:id="@+id/cbNack"
 		  android:text="@string/nack">
-	</CheckBox>	
+	</CheckBox>
+        <CheckBox android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:id="@+id/cbVideoRTPDump"
+                  android:text="@string/rtpdump">
+        </CheckBox>
+
 	</LinearLayout>
 </LinearLayout>

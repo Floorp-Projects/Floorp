@@ -47,6 +47,10 @@ public class GeckoPreferences
     private static boolean sIsCharEncodingEnabled = false;
     private static final String NON_PREF_PREFIX = "android.not_a_preference.";
 
+    // These match keys in resources/xml/preferences.xml.in.
+    public static String PREFS_MP_ENABLED         = "privacy.masterpassword.enabled";
+    public static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,10 +140,10 @@ public class GeckoPreferences
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String prefName = preference.getKey();
-        if (prefName != null && prefName.equals("privacy.masterpassword.enabled")) {
-            showDialog((Boolean)newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
+        if (prefName != null && prefName.equals(PREFS_MP_ENABLED)) {
+            showDialog((Boolean) newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
             return false;
-        } else if (prefName != null && prefName.equals("browser.menu.showCharacterEncoding")) {
+        } else if (prefName != null && prefName.equals(PREFS_MENU_CHAR_ENCODING)) {
             setCharEncodingState(((String) newValue).equals("true"));
         }
 
@@ -214,14 +218,14 @@ public class GeckoPreferences
                             public void onClick(DialogInterface dialog, int which) {
                                 JSONObject jsonPref = new JSONObject();
                                 try {
-                                    jsonPref.put("name", "privacy.masterpassword.enabled");
+                                    jsonPref.put("name", PREFS_MP_ENABLED);
                                     jsonPref.put("type", "string");
                                     jsonPref.put("value", input1.getText().toString());
                     
                                     GeckoEvent event = GeckoEvent.createBroadcastEvent("Preferences:Set", jsonPref.toString());
                                     GeckoAppShell.sendEventToGecko(event);
                                 } catch(Exception ex) {
-                                    Log.e(LOGTAG, "Error setting masterpassword", ex);
+                                    Log.e(LOGTAG, "Error setting master password", ex);
                                 }
                                 return;
                             }
@@ -253,7 +257,7 @@ public class GeckoPreferences
                        .setView((View)linearLayout)
                        .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {  
                             public void onClick(DialogInterface dialog, int which) {
-                                PrefsHelper.setPref("privacy.masterpassword.enabled", input.getText().toString());
+                                PrefsHelper.setPref(PREFS_MP_ENABLED, input.getText().toString());
                             }
                         })
                         .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {  

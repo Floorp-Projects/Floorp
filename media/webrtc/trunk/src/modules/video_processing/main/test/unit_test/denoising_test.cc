@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -92,17 +92,23 @@ TEST_F(VideoProcessingModuleTest, Denoising)
 
             if (runIdx == 0)
             {
-                fwrite(_videoFrame.Buffer(), 1, _frameLength, noiseFile);
+              if (fwrite(_videoFrame.Buffer(), 1, _frameLength,
+                         noiseFile) !=  _frameLength) {
+                return;
+              }
             }
-            
-            t0 = TickTime::Now();            
+
+            t0 = TickTime::Now();
             ASSERT_GE(modifiedPixels = _vpm->Denoising(_videoFrame), 0);
             t1 = TickTime::Now();
             accTicks += t1 - t0;
-            
+
             if (runIdx == 0)
             {
-                fwrite(_videoFrame.Buffer(), 1, _frameLength, denoiseFile);
+              if (fwrite(_videoFrame.Buffer(), 1, _frameLength,
+                         denoiseFile) !=  _frameLength) {
+                return;
+              }
             }
         }
         ASSERT_NE(0, feof(_sourceFile)) << "Error reading source file";
@@ -118,9 +124,9 @@ TEST_F(VideoProcessingModuleTest, Denoising)
     }
     ASSERT_EQ(0, fclose(denoiseFile));
     ASSERT_EQ(0, fclose(noiseFile));
-    printf("\nAverage run time = %d us / frame\n", 
+    printf("\nAverage run time = %d us / frame\n",
         static_cast<int>(avgRuntime / frameNum / NumRuns));
-    printf("Min run time = %d us / frame\n\n", 
+    printf("Min run time = %d us / frame\n\n",
         static_cast<int>(minRuntime / frameNum));
 }
 

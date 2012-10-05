@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -15,7 +15,9 @@
 
 #include <string>
 
+#include "receiver_tests.h"  // receive side callbacks
 #include "rtp_rtcp.h"
+#include "test_callbacks.h"
 #include "test_util.h"
 #include "video_coding.h"
 #include "video_source.h"
@@ -52,6 +54,9 @@ private:
 
     webrtc::VideoCodingModule*       _vcm;
     webrtc::RtpRtcp*                 _rtp;
+    webrtc::RTPSendCompleteCallback* _outgoingTransport;
+    RtpDataCallback*                 _dataCallback;
+
     webrtc::TickTimeBase*            _clock;
     std::string                      _inname;
     std::string                      _outname;

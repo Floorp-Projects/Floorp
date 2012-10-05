@@ -51,7 +51,7 @@ extern JSBool
 js_ReportUncaughtException(JSContext *cx);
 
 extern JSErrorReport *
-js_ErrorFromException(JSContext *cx, jsval exn);
+js_ErrorFromException(jsval exn);
 
 extern const JSErrorFormatString *
 js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,

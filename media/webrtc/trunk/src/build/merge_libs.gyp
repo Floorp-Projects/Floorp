@@ -27,7 +27,7 @@
         {
           'variables': {
             'output_lib_name': 'webrtc',
-            'output_lib': '<(PRODUCT_DIR)/<(STATIC_LIB_PREFIX)<(output_lib_name)_<(OS)_<(target_arch)_<(CONFIGURATION_NAME)<(STATIC_LIB_SUFFIX)',
+            'output_lib': '<(PRODUCT_DIR)/<(STATIC_LIB_PREFIX)<(output_lib_name)<(STATIC_LIB_SUFFIX)',
           },
           'action_name': 'merge_libs',
           'inputs': ['<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)no_op<(EXECUTABLE_SUFFIX)'],

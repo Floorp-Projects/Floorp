@@ -44,6 +44,9 @@ message Test {
   optional DelayMetrics delay_metrics = 12;
 
   optional int32 rms_level = 13;
+
+  optional float ns_speech_probability_average = 14;
+
 }
 
 message OutputData {

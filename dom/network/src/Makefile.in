@@ -20,6 +20,18 @@ EXTRA_COMPONENTS = \
 	TCPSocket.manifest \
 	$(NULL)
 
+ifdef MOZ_B2G_RIL
+EXTRA_COMPONENTS = \
+  NetworkStatsManager.manifest \
+  NetworkStatsManager.js \
+  $(NULL)
+
+EXTRA_JS_MODULES =   \
+  NetworkStatsService.jsm \
+  NetworkStatsDB.jsm \
+  $(NULL)
+endif
+
 include $(topsrcdir)/dom/dom-config.mk
 
 EXPORTS_NAMESPACES = mozilla/dom/network

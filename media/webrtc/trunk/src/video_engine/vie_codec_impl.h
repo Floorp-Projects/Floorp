@@ -11,7 +11,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_CODEC_IMPL_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_CODEC_IMPL_H_
 
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
 #include "video_engine/include/vie_codec.h"
 #include "video_engine/vie_defines.h"
 #include "video_engine/vie_ref_count.h"
@@ -67,7 +67,7 @@ class ViECodecImpl
   virtual int WaitForFirstKeyFrame(const int video_channel, const bool wait);
 
  protected:
-  ViECodecImpl(ViESharedData* shared_data);
+  explicit ViECodecImpl(ViESharedData* shared_data);
   virtual ~ViECodecImpl();
 
  private:

@@ -32,11 +32,10 @@ public:
     FilePlayerImpl(WebRtc_UWord32 instanceID, FileFormats fileFormat);
     ~FilePlayerImpl();
 
-    // FilePlayer functions.
-    virtual WebRtc_Word32 Get10msAudioFromFile(
-        WebRtc_Word16* decodedDataBuffer,
-        WebRtc_UWord32& decodedDataLengthInSamples,
-        const WebRtc_UWord32 frequencyInHz);
+    virtual int Get10msAudioFromFile(
+        int16_t* outBuffer,
+        int& lengthInSamples,
+        int frequencyInHz);
     virtual WebRtc_Word32 RegisterModuleFileCallback(FileCallback* callback);
     virtual WebRtc_Word32 StartPlayingFile(
         const char* fileName,
@@ -70,7 +69,6 @@ protected:
     WebRtc_UWord32 _decodedLengthInMS;
 
 private:
-    WebRtc_Word16 _decodedAudioBuffer[MAX_AUDIO_BUFFER_IN_SAMPLES];
     AudioCoder _audioDecoder;
 
     CodecInst _codec;

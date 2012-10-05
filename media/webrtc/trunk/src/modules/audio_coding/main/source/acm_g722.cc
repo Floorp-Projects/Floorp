@@ -93,12 +93,6 @@ void ACMG722::InternalDestructEncoderInst(void* /* ptrInst */) {
   return;
 }
 
-WebRtc_Word16 ACMG722::UnregisterFromNetEqSafe(
-    ACMNetEQ* /* netEq */,
-    WebRtc_Word16 /* payloadType */) {
-  return -1;
-}
-
 void ACMG722::SplitStereoPacket(uint8_t* /*payload*/,
                                 int32_t* /*payload_length*/) {}
 
@@ -193,8 +187,8 @@ WebRtc_Word16 ACMG722::InternalEncode(WebRtc_UWord8* bitStream,
 
     // Interleave the 4 bits per sample from left and right channel
     for (int i = 0, j = 0; i < lenInBytes; i += 2, j++) {
-      bitStream[i] = (outRight[j] & 0xF0) + (outLeft[j] >> 4);
-      bitStream[i + 1] = ((outRight[j] & 0x0F) << 4) + (outLeft[j] & 0x0F);
+      bitStream[i] = (outLeft[j] & 0xF0) + (outRight[j] >> 4);
+      bitStream[i + 1] = ((outLeft[j] & 0x0F) << 4) + (outRight[j] & 0x0F);
     }
   } else {
     *bitStreamLenByte = WebRtcG722_Encode(_encoderInstPtr,
@@ -250,9 +244,14 @@ WebRtc_Word32 ACMG722::CodecDef(WebRtcNetEQ_CodecDef& codecDef,
   // "SET_CODEC_PAR" & "SET_G722_FUNCTION."
   // Then call NetEQ to add the codec to it's
   // database.
-  SET_CODEC_PAR((codecDef), kDecoderG722, codecInst.pltype, _decoderInstPtr,
-                16000);
-  SET_G722_FUNCTIONS((codecDef));
+  if (codecInst.channels == 1) {
+    SET_CODEC_PAR(codecDef, kDecoderG722, codecInst.pltype, _decoderInstPtr,
+                  16000);
+  } else {
+    SET_CODEC_PAR(codecDef, kDecoderG722_2ch, codecInst.pltype,
+                  _decoderInstPtr, 16000);
+  }
+  SET_G722_FUNCTIONS(codecDef);
   return 0;
 }
 
@@ -318,21 +317,6 @@ void ACMG722::InternalDestructEncoderInst(void* ptrInst) {
     WebRtcG722_FreeEncoder(static_cast<G722EncInst*>(ptrInst));
   }
   return;
-}
-
-WebRtc_Word16 ACMG722::UnregisterFromNetEqSafe(ACMNetEQ* netEq,
-                                               WebRtc_Word16 payloadType) {
-  if (payloadType != _decoderParams.codecInstant.pltype) {
-    WEBRTC_TRACE(webrtc::kTraceError,
-                 webrtc::kTraceAudioCoding,
-                 _uniqueID,
-                 "Cannot unregister codec %s given payload-type %d does not "
-                 "match the stored payload type",
-                 _decoderParams.codecInstant.plname, payloadType,
-                 _decoderParams.codecInstant.pltype);
-    return -1;
-  }
-  return netEq->RemoveCodec(kDecoderG722);
 }
 
 // Split the stereo packet and place left and right channel after each other

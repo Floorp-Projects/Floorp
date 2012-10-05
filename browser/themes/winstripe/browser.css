@@ -1175,7 +1175,6 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #urlbar {
   width: 7em;
-  min-width: 7em;
   -moz-padding-end: 2px;
 }
 
@@ -1265,6 +1264,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 
 .urlbar-input-box {
   -moz-margin-start: 0;
+  min-width: 4em;
 }
 
 #urlbar-icons {

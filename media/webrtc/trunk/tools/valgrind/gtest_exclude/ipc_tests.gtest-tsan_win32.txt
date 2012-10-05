@@ -1,2 +1,0 @@
-# Fails under TSan, see http://crbug.com/62511
-IPCSyncChannelTest.BadMessage

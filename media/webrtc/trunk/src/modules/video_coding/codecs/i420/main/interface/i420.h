@@ -14,43 +14,42 @@
 #include "video_codec_interface.h"
 #include "typedefs.h"
 
-namespace webrtc
-{
+namespace webrtc {
 
-class I420Encoder : public VideoEncoder
-{
+class I420Encoder : public VideoEncoder {
 public:
 
-    I420Encoder();
+  I420Encoder();
 
-    virtual ~I420Encoder();
+  virtual ~I420Encoder();
 
-// Initialize the encoder with the information from the VideoCodec
+// Initialize the encoder with the information from the VideoCodec.
 //
 // Input:
-//          - codecSettings     : Codec settings
-//          - numberOfCores     : Number of cores available for the encoder
+//          - codecSettings     : Codec settings.
+//          - numberOfCores     : Number of cores available for the encoder.
 //          - maxPayloadSize    : The maximum size each payload is allowed
 //                                to have. Usually MTU - overhead.
 //
-// Return value                 : WEBRTC_VIDEO_CODEC_OK if OK
+// Return value                 : WEBRTC_VIDEO_CODEC_OK if OK.
 //                                <0 - Error
-    virtual WebRtc_Word32 InitEncode(const VideoCodec* codecSettings, WebRtc_Word32 /*numberOfCores*/, WebRtc_UWord32 /*maxPayloadSize*/);
+  virtual int InitEncode(const VideoCodec* codecSettings,
+                         int /*numberOfCores*/,
+                         uint32_t /*maxPayloadSize*/);
 
 // "Encode" an I420 image (as a part of a video stream). The encoded image
 // will be returned to the user via the encode complete callback.
 //
 // Input:
-//          - inputImage        : Image to be encoded
-//          - codecSpecificInfo : Pointer to codec specific data
-//          - frameType         : Frame type to be sent (Key /Delta) .
+//          - inputImage        : Image to be encoded.
+//          - codecSpecificInfo : Pointer to codec specific data.
+//          - frameType         : Frame type to be sent (Key /Delta).
 //
-// Return value                 : WEBRTC_VIDEO_CODEC_OK if OK
+// Return value                 : WEBRTC_VIDEO_CODEC_OK if OK.
 //                                <0 - Error
-    virtual WebRtc_Word32
-        Encode(const RawImage& inputImage,
-               const CodecSpecificInfo* /*codecSpecificInfo*/,
-               const VideoFrameType /*frameTypes*/);
+  virtual int Encode(const VideoFrame& inputImage,
+                     const CodecSpecificInfo* /*codecSpecificInfo*/,
+                     const VideoFrameType /*frameTypes*/);
 
 // Register an encode complete callback object.
 //
@@ -58,48 +57,46 @@ public:
 //          - callback         : Callback object which handles encoded images.
 //
 // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual WebRtc_Word32 RegisterEncodeCompleteCallback(EncodedImageCallback* callback);
+  virtual int RegisterEncodeCompleteCallback(EncodedImageCallback* callback);
 
 // Free encoder memory.
 //
 // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual WebRtc_Word32 Release();
+  virtual int Release();
 
-    virtual WebRtc_Word32 SetRates(WebRtc_UWord32 /*newBitRate*/,
-                                   WebRtc_UWord32 /*frameRate*/)
+  virtual int SetRates(uint32_t /*newBitRate*/, uint32_t /*frameRate*/)
     {return WEBRTC_VIDEO_CODEC_OK;}
 
-    virtual WebRtc_Word32 SetChannelParameters(WebRtc_UWord32 /*packetLoss*/,
-                                               int /*rtt*/)
+  virtual int SetChannelParameters(uint32_t /*packetLoss*/, int /*rtt*/)
     {return WEBRTC_VIDEO_CODEC_OK;}
 
-    virtual WebRtc_Word32 CodecConfigParameters(WebRtc_UWord8* /*buffer*/,
-                                                WebRtc_Word32 /*size*/)
+  virtual int CodecConfigParameters(uint8_t* /*buffer*/, int /*size*/)
     {return WEBRTC_VIDEO_CODEC_OK;}
 
 private:
-    bool                     _inited;
-    EncodedImage             _encodedImage;
-    EncodedImageCallback*    _encodedCompleteCallback;
+  bool                     _inited;
+  EncodedImage             _encodedImage;
+  EncodedImageCallback*    _encodedCompleteCallback;
 
 }; // end of WebRtcI420DEncoder class
 
-class I420Decoder : public VideoDecoder
-{
+class I420Decoder : public VideoDecoder {
 public:
 
-    I420Decoder();
+  I420Decoder();
 
-    virtual ~I420Decoder();
+  virtual ~I420Decoder();
 
 // Initialize the decoder.
 // The user must notify the codec of width and height values.
 //
 // Return value         :  WEBRTC_VIDEO_CODEC_OK.
 //                        <0 - Errors
-    virtual WebRtc_Word32 InitDecode(const VideoCodec* codecSettings, WebRtc_Word32 /*numberOfCores*/);
+  virtual int InitDecode(const VideoCodec* codecSettings,
+                         int /*numberOfCores*/);
 
-    virtual WebRtc_Word32 SetCodecConfigParameters(const WebRtc_UWord8* /*buffer*/, WebRtc_Word32 /*size*/){return WEBRTC_VIDEO_CODEC_OK;};
+  virtual int SetCodecConfigParameters(const uint8_t* /*buffer*/, int /*size*/)
+    {return WEBRTC_VIDEO_CODEC_OK;};
 
 // Decode encoded image (as a part of a video stream). The decoded image
 // will be returned to the user through the decode complete callback.
@@ -113,12 +110,11 @@ public:
 //
 // Return value                 : WEBRTC_VIDEO_CODEC_OK if OK
 //                                 <0 - Error
-    virtual WebRtc_Word32 Decode(
-        const EncodedImage& inputImage,
-        bool missingFrames,
-        const RTPFragmentationHeader* /*fragmentation*/,
-        const CodecSpecificInfo* /*codecSpecificInfo*/,
-        WebRtc_Word64 /*renderTimeMs*/);
+  virtual int Decode(const EncodedImage& inputImage,
+                     bool missingFrames,
+                     const RTPFragmentationHeader* /*fragmentation*/,
+                     const CodecSpecificInfo* /*codecSpecificInfo*/,
+                     int64_t /*renderTimeMs*/);
 
 // Register a decode complete callback object.
 //
@@ -126,30 +122,29 @@ public:
 //          - callback         : Callback object which handles decoded images.
 //
 // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual WebRtc_Word32 RegisterDecodeCompleteCallback(DecodedImageCallback* callback);
+  virtual int RegisterDecodeCompleteCallback(DecodedImageCallback* callback);
 
 // Free decoder memory.
 //
-// Return value                : WEBRTC_VIDEO_CODEC_OK if OK
+// Return value                : WEBRTC_VIDEO_CODEC_OK if OK.
 //                                  <0 - Error
-    virtual WebRtc_Word32 Release();
+  virtual int Release();
 
 // Reset decoder state and prepare for a new call.
 //
 // Return value         :  WEBRTC_VIDEO_CODEC_OK.
 //                          <0 - Error
-    virtual WebRtc_Word32 Reset();
+  virtual int Reset();
 
 private:
 
-    RawImage                    _decodedImage;
-    WebRtc_Word32               _width;
-    WebRtc_Word32               _height;
-    bool                        _inited;
-    DecodedImageCallback*       _decodeCompleteCallback;
+  VideoFrame                  _decodedImage;
+  int                         _width;
+  int                         _height;
+  bool                        _inited;
+  DecodedImageCallback*       _decodeCompleteCallback;
 
-
-}; // end of WebRtcI420Decoder class
+}; // End of WebRtcI420Decoder class.
 
 } // namespace webrtc
 

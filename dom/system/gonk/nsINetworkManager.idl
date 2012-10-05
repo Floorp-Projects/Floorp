@@ -99,10 +99,20 @@ interface nsIWifiTetheringCallback : nsISupports
   void wifiTetheringEnabledChange(in jsval error);
 };
 
+[scriptable, function, uuid(9a887e18-b879-4bb1-8663-238bc4234ba0)]
+interface nsINetworkStatsCallback : nsISupports
+{
+  void networkStatsAvailable(in boolean success,
+                             in short connType,
+                             in unsigned long rxBytes,
+                             in unsigned long txBytes,
+                             in jsval date);
+};
+
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(a02de6b0-fb25-11e1-a21f-0800200c9a66)]
+[scriptable, uuid(4bee9633-47ed-47ae-b92b-3e0679087561)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -188,4 +198,19 @@ interface nsINetworkManager : nsISupports
   void setWifiTethering(in boolean enabled,
                         in nsINetworkInterface networkInterface,
                         in nsIWifiTetheringCallback callback);
+
+  /**
+   * Retrieve network interface stats.
+   *
+   * @param networkType
+   *        Select the Network interface to request estats.
+   *
+   * @param callback
+   *        Callback to notify result and provide stats, connectionType
+   *        and the date when stats are retrieved
+   *
+   * @return false if there is no interface registered for the networkType param.
+   */
+  boolean getNetworkInterfaceStats(in short networkType, in nsINetworkStatsCallback callback);
+
 };

@@ -691,7 +691,9 @@ let DOMApplicationRegistry = {
     });
   },
 
-  startOfflineCacheDownload: function startOfflineCacheDownload(aManifest, aApp, aProfileDir) {
+  startOfflineCacheDownload: function startOfflineCacheDownload(aManifest, aApp,
+                                                                aProfileDir,
+                                                                aOfflineCacheObserver) {
     // if the manifest has an appcache_path property, use it to populate the appcache
     if (aManifest.appcache_path) {
       let appcacheURI = Services.io.newURI(aManifest.fullAppcachePath(), null, null);
@@ -945,7 +947,7 @@ let DOMApplicationRegistry = {
     }
 #endif
 
-    this.startOfflineCacheDownload(manifest, appObject, aProfileDir);
+    this.startOfflineCacheDownload(manifest, appObject, aProfileDir, aOfflineCacheObserver);
     if (manifest.package_path) {
       // origin for install apps is meaningless here, since it's app:// and this
       // can't be used to resolve package paths.
@@ -1608,6 +1610,7 @@ AppcacheObserver.prototype = {
     let setStatus = function appObs_setStatus(aStatus) {
       mustSave = (app.installState != aStatus);
       app.installState = aStatus;
+      app.downloading = false;
       DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
                                               { manifest: app.manifestURL,
                                                 installState: app.installState });
@@ -1617,6 +1620,8 @@ AppcacheObserver.prototype = {
       DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
                                               { manifest: app.manifestURL,
                                                 error: aError });
+      app.downloading = false;
+      mustSave = true;
     }
 
     switch (aState) {

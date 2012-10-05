@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The LibYuv project authors. All Rights Reserved.
+ *  Copyright 2011 The LibYuv Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef INCLUDE_LIBYUV_ROTATE_H_
+#ifndef INCLUDE_LIBYUV_ROTATE_H_  // NOLINT
 #define INCLUDE_LIBYUV_ROTATE_H_
 
 #include "libyuv/basic_types.h"
@@ -18,14 +18,14 @@ namespace libyuv {
 extern "C" {
 #endif
 
-// Supported rotation
+// Supported rotation.
 enum RotationMode {
-  kRotate0 = 0, // No rotation
-  kRotate90 = 90,  // Rotate 90 degrees clockwise
-  kRotate180 = 180,  // Rotate 180 degrees
-  kRotate270 = 270,  // Rotate 270 degrees clockwise
+  kRotate0 = 0,  // No rotation.
+  kRotate90 = 90,  // Rotate 90 degrees clockwise.
+  kRotate180 = 180,  // Rotate 180 degrees.
+  kRotate270 = 270,  // Rotate 270 degrees clockwise.
 
-  // Deprecated
+  // Deprecated.
   kRotateNone = 0,
   kRotateClockwise = 90,
   kRotateCounterClockwise = 270,
@@ -38,8 +38,7 @@ int I420Rotate(const uint8* src_y, int src_stride_y,
                uint8* dst_y, int dst_stride_y,
                uint8* dst_u, int dst_stride_u,
                uint8* dst_v, int dst_stride_v,
-               int width, int height,
-               RotationMode mode);
+               int src_width, int src_height, RotationMode mode);
 
 // Rotate NV12 input and store in I420
 int NV12ToI420Rotate(const uint8* src_y, int src_stride_y,
@@ -47,12 +46,11 @@ int NV12ToI420Rotate(const uint8* src_y, int src_stride_y,
                      uint8* dst_y, int dst_stride_y,
                      uint8* dst_u, int dst_stride_u,
                      uint8* dst_v, int dst_stride_v,
-                     int width, int height,
-                     RotationMode mode);
+                     int src_width, int src_height, RotationMode mode);
 
 #ifdef __cplusplus
 }  // extern "C"
 }  // namespace libyuv
 #endif
 
-#endif  // INCLUDE_LIBYUV_ROTATE_H_
+#endif  // INCLUDE_LIBYUV_ROTATE_H_  NOLINT

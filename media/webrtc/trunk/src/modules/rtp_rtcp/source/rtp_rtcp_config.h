@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -31,6 +31,7 @@ enum { RTCP_NUMBER_OF_SR            = 60 };
 
 enum { MAX_NUMBER_OF_TEMPORAL_ID    = 8 };          // RFC
 enum { MAX_NUMBER_OF_DEPENDENCY_QUALITY_ID  = 128 };// RFC
+enum { MAX_NUMBER_OF_REMB_FEEDBACK_SSRCS = 255 };
 
 enum { BW_HISTORY_SIZE          = 35};
 

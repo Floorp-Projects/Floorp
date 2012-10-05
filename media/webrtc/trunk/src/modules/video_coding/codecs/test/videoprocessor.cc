@@ -38,7 +38,14 @@ VideoProcessorImpl::VideoProcessorImpl(webrtc::VideoEncoder* encoder,
       source_buffer_(NULL),
       first_key_frame_has_been_excluded_(false),
       last_frame_missing_(false),
-      initialized_(false) {
+      initialized_(false),
+      encoded_frame_size_(0),
+      prev_time_stamp_(0),
+      num_dropped_frames_(0),
+      num_spatial_resizes_(0),
+      last_encoder_frame_width_(0),
+      last_encoder_frame_height_(0),
+      scaler_() {
   assert(encoder);
   assert(decoder);
   assert(frame_reader);
@@ -58,10 +65,14 @@ bool VideoProcessorImpl::Init() {
   last_successful_frame_buffer_ = new WebRtc_UWord8[frame_length_in_bytes];
 
   // Set fixed properties common for all frames:
-  source_frame_._width = config_.codec_settings->width;
-  source_frame_._height = config_.codec_settings->height;
-  source_frame_._length = frame_length_in_bytes;
-  source_frame_._size = frame_length_in_bytes;
+  source_frame_.SetWidth(config_.codec_settings->width);
+  source_frame_.SetHeight(config_.codec_settings->height);
+  source_frame_.VerifyAndAllocate(frame_length_in_bytes);
+  source_frame_.SetLength(frame_length_in_bytes);
+
+  // To keep track of spatial resize actions by encoder.
+  last_encoder_frame_width_ = config_.codec_settings->width;
+  last_encoder_frame_height_ = config_.codec_settings->height;
 
   // Setup required callbacks for the encoder/decoder:
   encode_callback_ = new VideoProcessorEncodeCompleteCallback(this);
@@ -122,22 +133,51 @@ VideoProcessorImpl::~VideoProcessorImpl() {
   delete decode_callback_;
 }
 
+
+void VideoProcessorImpl::SetRates(int bit_rate, int frame_rate) {
+  int set_rates_result = encoder_->SetRates(bit_rate, frame_rate);
+  assert(set_rates_result >= 0);
+  if (set_rates_result < 0) {
+    fprintf(stderr, "Failed to update encoder with new rate %d, "
+            "return code: %d\n", bit_rate, set_rates_result);
+  }
+  num_dropped_frames_ = 0;
+  num_spatial_resizes_ = 0;
+}
+
+int VideoProcessorImpl::EncodedFrameSize() {
+  return encoded_frame_size_;
+}
+
+int VideoProcessorImpl::NumberDroppedFrames() {
+  return num_dropped_frames_;
+}
+
+int VideoProcessorImpl::NumberSpatialResizes() {
+  return num_spatial_resizes_;
+}
+
 bool VideoProcessorImpl::ProcessFrame(int frame_number) {
   assert(frame_number >=0);
   if (!initialized_) {
     fprintf(stderr, "Attempting to use uninitialized VideoProcessor!\n");
     return false;
   }
+  // |prev_time_stamp_| is used for getting number of dropped frames.
+  if (frame_number == 0) {
+    prev_time_stamp_ = -1;
+  }
   if (frame_reader_->ReadFrame(source_buffer_)) {
-    // point the source frame buffer to the newly read frame data:
-    source_frame_._buffer = source_buffer_;
+    // Copy the source frame to the newly read frame data.
+    // Length is common for all frames.
+    source_frame_.CopyFrame(source_frame_.Length(), source_buffer_);
 
     // Ensure we have a new statistics data object we can fill:
     FrameStatistic& stat = stats_->NewFrame(frame_number);
 
     encode_start_ = TickTime::Now();
     // Use the frame number as "timestamp" to identify frames
-    source_frame_._timeStamp = frame_number;
+    source_frame_.SetTimeStamp(frame_number);
 
     // Decide if we're going to force a keyframe:
     VideoFrameType frame_type = kDeltaFrame;
@@ -145,8 +185,13 @@ bool VideoProcessorImpl::ProcessFrame(int frame_number) {
         frame_number % config_.keyframe_interval == 0) {
       frame_type = kKeyFrame;
     }
+
+    // For dropped frames, we regard them as zero size encoded frames.
+    encoded_frame_size_ = 0;
+
     WebRtc_Word32 encode_result = encoder_->Encode(source_frame_, NULL,
                                                    frame_type);
+
     if (encode_result != WEBRTC_VIDEO_CODEC_OK) {
       fprintf(stderr, "Failed to encode frame %d, return code: %d\n",
               frame_number, encode_result);
@@ -159,6 +204,22 @@ bool VideoProcessorImpl::ProcessFrame(int frame_number) {
 }
 
 void VideoProcessorImpl::FrameEncoded(EncodedImage* encoded_image) {
+  // Timestamp is frame number, so this gives us #dropped frames.
+  int num_dropped_from_prev_encode =  encoded_image->_timeStamp -
+      prev_time_stamp_ - 1;
+  num_dropped_frames_ +=  num_dropped_from_prev_encode;
+  prev_time_stamp_ =  encoded_image->_timeStamp;
+  if (num_dropped_from_prev_encode > 0) {
+    // For dropped frames, we write out the last decoded frame to avoid getting
+    // out of sync for the computation of PSNR and SSIM.
+    for (int i = 0; i < num_dropped_from_prev_encode; i++) {
+      frame_writer_->WriteFrame(last_successful_frame_buffer_);
+    }
+  }
+  // Frame is not dropped, so update the encoded frame size
+  // (encoder callback is only called for non-zero length frames).
+  encoded_frame_size_ = encoded_image->_length;
+
   TickTime encode_stop = TickTime::Now();
   int frame_number = encoded_image->_timeStamp;
   FrameStatistic& stat = stats_->stats_[frame_number];
@@ -212,20 +273,69 @@ void VideoProcessorImpl::FrameEncoded(EncodedImage* encoded_image) {
   last_frame_missing_ = encoded_image->_length == 0;
 }
 
-void VideoProcessorImpl::FrameDecoded(const RawImage& image) {
+void VideoProcessorImpl::FrameDecoded(const VideoFrame& image) {
   TickTime decode_stop = TickTime::Now();
-  int frame_number = image._timeStamp;
+  int frame_number = image.TimeStamp();
   // Report stats
   FrameStatistic& stat = stats_->stats_[frame_number];
   stat.decode_time_in_us = GetElapsedTimeMicroseconds(decode_start_,
                                                       decode_stop);
   stat.decoding_successful = true;
-  // Update our copy of the last successful frame:
-  memcpy(last_successful_frame_buffer_, image._buffer, image._length);
 
-  bool write_success = frame_writer_->WriteFrame(image._buffer);
-  if (!write_success) {
-    fprintf(stderr, "Failed to write frame %d to disk!", frame_number);
+  // Check for resize action (either down or up):
+  if (static_cast<int>(image.Width()) != last_encoder_frame_width_ ||
+      static_cast<int>(image.Height()) != last_encoder_frame_height_ ) {
+    ++num_spatial_resizes_;
+    last_encoder_frame_width_ = image.Width();
+    last_encoder_frame_height_ = image.Height();
+  }
+  // Check if codec size is different from native/original size, and if so,
+  // upsample back to original size: needed for PSNR and SSIM computations.
+  if (image.Width() !=  config_.codec_settings->width ||
+      image.Height() != config_.codec_settings->height) {
+    int required_size = CalcBufferSize(kI420,
+                                       config_.codec_settings->width,
+                                       config_.codec_settings->height);
+    VideoFrame up_image;
+    up_image.VerifyAndAllocate(required_size);
+    up_image.SetLength(required_size);
+    up_image.SetWidth(config_.codec_settings->width);
+    up_image.SetHeight(config_.codec_settings->height);
+
+    int ret_val = scaler_.Set(image.Width(), image.Height(),
+                              config_.codec_settings->width,
+                              config_.codec_settings->height,
+                              kI420, kI420, kScaleBilinear);
+    assert(ret_val >= 0);
+    if (ret_val < 0) {
+      fprintf(stderr, "Failed to set scalar for frame: %d, return code: %d\n",
+              frame_number, ret_val);
+    }
+    ret_val = scaler_.Scale(image.Buffer(), up_image.Buffer(),
+                            required_size);
+    assert(ret_val >= 0);
+    if (ret_val < 0) {
+      fprintf(stderr, "Failed to scale frame: %d, return code: %d\n",
+              frame_number, ret_val);
+    }
+    // Update our copy of the last successful frame:
+    memcpy(last_successful_frame_buffer_, up_image.Buffer(), up_image.Length());
+
+    bool write_success = frame_writer_->WriteFrame(up_image.Buffer());
+    assert(write_success);
+    if (!write_success) {
+      fprintf(stderr, "Failed to write frame %d to disk!", frame_number);
+    }
+    up_image.Free();
+  } else {  // No resize.
+    // Update our copy of the last successful frame:
+    memcpy(last_successful_frame_buffer_, image.Buffer(), image.Length());
+
+    bool write_success = frame_writer_->WriteFrame(image.Buffer());
+    assert(write_success);
+    if (!write_success) {
+      fprintf(stderr, "Failed to write frame %d to disk!", frame_number);
+    }
   }
 }
 
@@ -273,12 +383,12 @@ VideoProcessorImpl::VideoProcessorEncodeCompleteCallback::Encoded(
     EncodedImage& encoded_image,
     const webrtc::CodecSpecificInfo* codec_specific_info,
     const webrtc::RTPFragmentationHeader* fragmentation) {
-  video_processor_->FrameEncoded(&encoded_image);  // forward to parent class
+  video_processor_->FrameEncoded(&encoded_image);  // Forward to parent class.
   return 0;
 }
 WebRtc_Word32
 VideoProcessorImpl::VideoProcessorDecodeCompleteCallback::Decoded(
-    RawImage& image) {
+    VideoFrame& image) {
   video_processor_->FrameDecoded(image);  // forward to parent class
   return 0;
 }

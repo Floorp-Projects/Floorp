@@ -16,10 +16,11 @@
         '<(webrtc_root)/modules/modules.gyp:video_render_module',
         '<(webrtc_root)/modules/modules.gyp:video_capture_module',
         '<(webrtc_root)/voice_engine/voice_engine.gyp:voice_engine_core',
-        '<(webrtc_root)/../testing/gtest.gyp:gtest',
-        '<(webrtc_root)/../third_party/google-gflags/google-gflags.gyp:google-gflags',
-        '<(webrtc_root)/../test/metrics.gyp:metrics',
-        '<(webrtc_root)/../test/test.gyp:test_support',
+        '<(DEPTH)/testing/gtest.gyp:gtest',
+        '<(DEPTH)/third_party/google-gflags/google-gflags.gyp:google-gflags',
+        '<(webrtc_root)/test/metrics.gyp:metrics',
+        '<(webrtc_root)/test/test.gyp:test_support',
+        '<(webrtc_root)/test/libtest/libtest.gyp:libtest',
         'video_engine_core',
         'libvietest',
       ],
@@ -36,7 +37,6 @@
         'interface/vie_autotest.h',
         'interface/vie_autotest_defines.h',
         'interface/vie_autotest_linux.h',
-        'interface/vie_autotest_mac_carbon.h',
         'interface/vie_autotest_mac_cocoa.h',
         'interface/vie_autotest_main.h',
         'interface/vie_autotest_window_manager_interface.h',
@@ -77,6 +77,7 @@
         'source/vie_autotest_main.cc',
         'source/vie_autotest_network.cc',
         'source/vie_autotest_render.cc',
+        'source/vie_autotest_record.cc',
         'source/vie_autotest_rtp_rtcp.cc',
         'source/vie_autotest_custom_call.cc',
         'source/vie_autotest_simulcast.cc',
@@ -91,35 +92,31 @@
         'source/vie_window_manager_factory_linux.cc',
         # Mac
         'source/vie_autotest_cocoa_mac.mm',
-        'source/vie_autotest_carbon_mac.cc',
         'source/vie_window_manager_factory_mac.mm',
         # Windows
         'source/vie_autotest_win.cc',
         'source/vie_window_manager_factory_win.cc',
       ],
       'conditions': [
-        # TODO(andrew): this likely isn't an actual dependency. It should be
-        # included in webrtc.gyp or video_engine.gyp instead.
         ['OS=="android"', {
           'libraries': [
             '-lGLESv2',
             '-llog',
           ],
         }],
-        ['OS=="win"', {
-          'dependencies': [
-            'vie_win_test',
-          ],
-        }],
         ['OS=="linux"', {
-          # TODO(andrew): these should be provided directly by the projects
-          #   # which require them instead.
+          # TODO(andrew): These should be provided directly by the projects
+          #               which require them instead.
           'libraries': [
             '-lXext',
             '-lX11',
           ],
         }],
         ['OS=="mac"', {
+          'dependencies': [
+            # Use a special main for mac so we can access the webcam.
+            '<(webrtc_root)/test/test.gyp:test_support_main_threaded_mac',
+          ],
           'xcode_settings': {
             'OTHER_LDFLAGS': [
               '-framework Foundation -framework AppKit -framework Cocoa -framework OpenGL -framework CoreVideo -framework CoreAudio -framework AudioToolbox',

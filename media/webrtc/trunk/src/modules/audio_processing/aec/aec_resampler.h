@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -25,11 +25,11 @@ int WebRtcAec_FreeResampler(void *resampInst);
 int WebRtcAec_GetSkew(void *resampInst, int rawSkew, float *skewEst);
 
 // Resamples input using linear interpolation.
-// Returns size of resampled array.
-int WebRtcAec_ResampleLinear(void *resampInst,
-                             const short *inspeech,
-                             int size,
-                             float skew,
-                             short *outspeech);
+void WebRtcAec_ResampleLinear(void *resampInst,
+                              const short *inspeech,
+                              int size,
+                              float skew,
+                              short *outspeech,
+                              int *size_out);
 
 #endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AEC_AEC_RESAMPLER_H_

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -290,8 +290,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
     }
 
     /* New codec or big change in packet number? */
-    if (((inst->new_codec) || (uw16_instr == BUFSTAT_REINIT)) && (uw16_instr
-        != BUFSTATS_DO_EXPAND))
+    if ((inst->new_codec) || (uw16_instr == BUFSTAT_REINIT))
     {
         CodecFuncInst_t cinst;
 
@@ -647,9 +646,14 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
 
 #ifdef NETEQ_DELAY_LOGGING
             temp_var = NETEQ_DELAY_LOGGING_SIGNAL_DECODE;
-            fwrite(&temp_var,sizeof(int),1,delay_fid2);
-            fwrite(&temp_pkt.timeStamp,sizeof(WebRtc_UWord32),1,delay_fid2);
-            fwrite(&dspInfo.samplesLeft, sizeof(WebRtc_UWord16), 1, delay_fid2);
+            if ((fwrite(&temp_var, sizeof(int),
+                        1, delay_fid2) != 1) ||
+                (fwrite(&temp_pkt.timeStamp, sizeof(WebRtc_UWord32),
+                        1, delay_fid2) != 1) ||
+                (fwrite(&dspInfo.samplesLeft, sizeof(WebRtc_UWord16),
+                        1, delay_fid2) != 1)) {
+              return -1;
+            }
 #endif
 
             *blockPtr = temp_pkt.payloadLen;
@@ -763,4 +767,3 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
     return 0;
 
 }
-

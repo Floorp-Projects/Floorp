@@ -165,12 +165,23 @@ void RTPFile::WriteHeader()
 {
     // Write data in a format that NetEQ and RTP Play can parse
     fprintf(_rtpFile, "#!RTPencode%s\n", "1.0");
-    WebRtc_UWord32 dummy_variable = 0; // should be converted to network endian format, but does not matter when 0
-    fwrite(&dummy_variable, 4, 1, _rtpFile);
-    fwrite(&dummy_variable, 4, 1, _rtpFile);
-    fwrite(&dummy_variable, 4, 1, _rtpFile);
-    fwrite(&dummy_variable, 2, 1, _rtpFile);
-    fwrite(&dummy_variable, 2, 1, _rtpFile);
+    WebRtc_UWord32 dummy_variable = 0;
+    // should be converted to network endian format, but does not matter when 0
+    if (fwrite(&dummy_variable, 4, 1, _rtpFile) != 1) {
+      return;
+    }
+    if (fwrite(&dummy_variable, 4, 1, _rtpFile) != 1) {
+      return;
+    }
+    if (fwrite(&dummy_variable, 4, 1, _rtpFile) != 1) {
+      return;
+    }
+    if (fwrite(&dummy_variable, 2, 1, _rtpFile) != 1) {
+      return;
+    }
+    if (fwrite(&dummy_variable, 2, 1, _rtpFile) != 1) {
+      return;
+    }
     fflush(_rtpFile);
 }
 
@@ -205,11 +216,21 @@ void RTPFile::Write(const WebRtc_UWord8 payloadType, const WebRtc_UWord32 timeSt
 
     offsetMs = (timeStamp/(frequency/1000));
     offsetMs = htonl(offsetMs);
-    fwrite(&lengthBytes, 2, 1, _rtpFile);
-    fwrite(&plen, 2, 1, _rtpFile);
-    fwrite(&offsetMs, 4, 1, _rtpFile);
-    fwrite(rtpHeader, 12, 1, _rtpFile);
-    fwrite(payloadData, 1, payloadSize, _rtpFile);
+    if (fwrite(&lengthBytes, 2, 1, _rtpFile) != 1) {
+      return;
+    }
+    if (fwrite(&plen, 2, 1, _rtpFile) != 1) {
+      return;
+    }
+    if (fwrite(&offsetMs, 4, 1, _rtpFile) != 1) {
+      return;
+    }
+    if (fwrite(rtpHeader, 12, 1, _rtpFile) != 1) {
+      return;
+    }
+    if (fwrite(payloadData, 1, payloadSize, _rtpFile) != payloadSize) {
+      return;
+    }
 }
 
 WebRtc_UWord16 RTPFile::Read(WebRtcRTPHeader* rtpInfo,

@@ -32,9 +32,10 @@ using ModuleRTPUtility::VideoPayload;
 RTPReceiver::RTPReceiver(const WebRtc_Word32 id,
                          const bool audio,
                          RtpRtcpClock* clock,
+                         RemoteBitrateEstimator* remote_bitrate,
                          ModuleRtpRtcpImpl* owner) :
     RTPReceiverAudio(id),
-    RTPReceiverVideo(id, owner),
+    RTPReceiverVideo(id, remote_bitrate, owner),
     Bitrate(clock),
     _id(id),
     _audio(audio),
@@ -123,75 +124,6 @@ RTPReceiver::~RTPReceiver() {
   WEBRTC_TRACE(kTraceMemory, kTraceRtpRtcp, _id, "%s deleted", __FUNCTION__);
 }
 
-WebRtc_Word32 RTPReceiver::Init() {
-  CriticalSectionScoped lock(_criticalSectionRTPReceiver);
-
-  _lastReceiveTime = 0;
-  _lastReceivedPayloadLength = 0;
-  _packetTimeOutMS = 0;
-  _lastReceivedPayloadType = -1;
-  _lastReceivedMediaPayloadType = -1;
-  _redPayloadType = -1;
-
-  memset(&_lastReceivedAudioSpecific, 0, sizeof(_lastReceivedAudioSpecific));
-  _lastReceivedAudioSpecific.channels = 1;
-
-  _lastReceivedVideoSpecific.videoCodecType = kRtpNoVideo;
-  _lastReceivedVideoSpecific.maxRate = 0;
-  _SSRC = 0;
-  _numCSRCs = 0;
-  _numEnergy = 0;
-  _jitterQ4 = 0;
-  _jitterMaxQ4 = 0;
-  _cumulativeLoss = 0;
-  _jitterQ4TransmissionTimeOffset = 0;
-  _useSSRCFilter = false;
-  _SSRCFilter = 0;
-
-  _localTimeLastReceivedTimestamp = 0;
-  _lastReceivedTimestamp = 0;
-  _lastReceivedSequenceNumber = 0;
-  _lastReceivedTransmissionTimeOffset = 0;
-
-  _receivedSeqFirst = 0;
-  _receivedSeqMax = 0;
-  _receivedSeqWraps = 0;
-
-  _receivedPacketOH = 12; // RTP header
-  _receivedByteCount = 0;
-  _receivedOldPacketCount = 0;
-  _receivedInorderPacketCount = 0;
-
-  _lastReportInorderPackets = 0;
-  _lastReportOldPackets = 0;
-  _lastReportSeqMax = 0;
-  _lastReportFractionLost = 0;
-  _lastReportCumulativeLost = 0;
-  _lastReportExtendedHighSeqNum = 0;
-  _lastReportJitter = 0;
-  _lastReportJitterTransmissionTimeOffset = 0;
-
-  _rtpHeaderExtensionMap.Erase();
-
-  while (!_payloadTypeMap.empty()) {
-    std::map<WebRtc_Word8, Payload*>::iterator it = _payloadTypeMap.begin();
-    delete it->second;
-    _payloadTypeMap.erase(it);
-  }
-
-  Bitrate::Init();
-  RTPReceiverAudio::Init();
-  return RTPReceiverVideo::Init();
-}
-
-void
-RTPReceiver::ChangeUniqueId(const WebRtc_Word32 id)
-{
-    _id = id;
-    RTPReceiverAudio::ChangeUniqueId(id);
-    RTPReceiverVideo::ChangeUniqueId(id);
-}
-
 RtpVideoCodecTypes
 RTPReceiver::VideoCodecType() const
 {
@@ -242,7 +174,7 @@ void RTPReceiver::PacketTimeout()
             return;
         }
 
-        WebRtc_UWord32 now = _clock.GetTimeInMS();
+        WebRtc_Word64 now = _clock.GetTimeInMS();
 
         if(now - _lastReceiveTime > _packetTimeOutMS)
         {
@@ -260,7 +192,7 @@ void RTPReceiver::PacketTimeout()
 }
 
 void
-RTPReceiver::ProcessDeadOrAlive(const bool RTCPalive, const WebRtc_UWord32 now)
+RTPReceiver::ProcessDeadOrAlive(const bool RTCPalive, const WebRtc_Word64 now)
 {
     if(_cbRtpFeedback == NULL)
     {
@@ -427,7 +359,8 @@ WebRtc_Word32 RTPReceiver::RegisterReceivePayload(
         if (payload->audio) {
           if (payload->typeSpecific.Audio.frequency == frequency &&
               (payload->typeSpecific.Audio.rate == rate ||
-                  payload->typeSpecific.Audio.rate == 0 || rate == 0)) {
+                  payload->typeSpecific.Audio.rate == 0 || rate == 0) &&
+                  payload->typeSpecific.Audio.channels == channels) {
             // remove old setting
             delete payload;
             _payloadTypeMap.erase(audio_it);
@@ -985,7 +918,7 @@ bool RTPReceiver::RetransmitOfOldPacket(
   if (_audio) {
     frequencyKHz = AudioFrequency() / 1000;
   }
-  WebRtc_UWord32 timeDiffMS = _clock.GetTimeInMS() - _lastReceiveTime;
+  WebRtc_Word64 timeDiffMS = _clock.GetTimeInMS() - _lastReceiveTime;
   // Diff in time stamp since last received in order.
   WebRtc_Word32 rtpTimeStampDiffMS = static_cast<WebRtc_Word32>(
       rtpTimeStamp - _lastReceivedTimestamp) / frequencyKHz;
@@ -1008,8 +941,7 @@ bool RTPReceiver::RetransmitOfOldPacket(
   } else {
     maxDelayMs = (minRTT / 3) + 1;
   }
-  if (static_cast<WebRtc_Word32>(timeDiffMS) >
-      rtpTimeStampDiffMS + maxDelayMs) {
+  if (timeDiffMS > rtpTimeStampDiffMS + maxDelayMs) {
     return true;
   }
   return false;
@@ -1151,7 +1083,6 @@ void RTPReceiver::CheckSSRCChanged(const WebRtcRTPHeader* rtpHeader) {
 
       // reset last report
       ResetStatistics();
-      RTPReceiverVideo::ResetOverUseDetector();
 
       _lastReceivedTimestamp      = 0;
       _lastReceivedSequenceNumber = 0;

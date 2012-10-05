@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -60,7 +60,7 @@ int WebRtcNetEQ_UpdateIatStatistics(AutomodeInst_t *inst, int maxBufLen,
         /* Wrong timestamp or sequence order; revert to backup plan */
         packetLenSamp = inst->packetSpeechLenSamp; /* use stored value */
     }
-    else if (timeStamp > inst->lastTimeStamp)
+    else
     {
         /* calculate timestamps per packet */
         packetLenSamp = (WebRtc_Word16) WebRtcSpl_DivU32U16(timeStamp - inst->lastTimeStamp,
@@ -378,7 +378,9 @@ WebRtc_Word16 WebRtcNetEQ_CalcOptimalBufLvl(AutomodeInst_t *inst, WebRtc_Word32 
 #ifdef NETEQ_DELAY_LOGGING
     /* special code for offline delay logging */
     temp_var = NETEQ_DELAY_LOGGING_SIGNAL_OPTBUF;
-    fwrite( &temp_var, sizeof(int), 1, delay_fid2 );
+    if (fwrite( &temp_var, sizeof(int), 1, delay_fid2 ) != 1) {
+      return -1;
+    }
     temp_var = (int) (Bopt * inst->packetSpeechLenSamp);
 #endif
 
@@ -518,7 +520,9 @@ WebRtc_Word16 WebRtcNetEQ_CalcOptimalBufLvl(AutomodeInst_t *inst, WebRtc_Word32 
 
 #ifdef NETEQ_DELAY_LOGGING
     /* special code for offline delay logging */
-    fwrite( &temp_var, sizeof(int), 1, delay_fid2 );
+    if (fwrite( &temp_var, sizeof(int), 1, delay_fid2 ) != 1) {
+      return -1;
+    }
 #endif
 
     /* Sanity check: Bopt must be strictly positive */

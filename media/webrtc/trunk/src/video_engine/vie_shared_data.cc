@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "cpu_info.h"
-#include "process_thread.h"
-#include "trace.h"
-#include "vie_channel_manager.h"
-#include "vie_defines.h"
-#include "vie_input_manager.h"
-#include "vie_render_manager.h"
-#include "vie_shared_data.h"
+#include "modules/utility/interface/process_thread.h"
+#include "system_wrappers/interface/cpu_info.h"
+#include "system_wrappers/interface/trace.h"
+#include "video_engine/vie_channel_manager.h"
+#include "video_engine/vie_defines.h"
+#include "video_engine/vie_input_manager.h"
+#include "video_engine/vie_render_manager.h"
+#include "video_engine/vie_shared_data.h"
 
 namespace webrtc {
 
@@ -26,16 +26,18 @@ ViESharedData::ViESharedData()
     : instance_id_(++instance_counter_),
       initialized_(false),
       number_cores_(CpuInfo::DetectNumberOfCores()),
+      over_use_detector_options_(),
       vie_performance_monitor_(ViEPerformanceMonitor(instance_id_)),
       channel_manager_(*new ViEChannelManager(instance_id_, number_cores_,
-                                              vie_performance_monitor_)),
+                                              &vie_performance_monitor_,
+                                              over_use_detector_options_)),
       input_manager_(*new ViEInputManager(instance_id_)),
       render_manager_(*new ViERenderManager(instance_id_)),
       module_process_thread_(ProcessThread::CreateProcessThread()),
       last_error_(0) {
   Trace::CreateTrace();
-  channel_manager_.SetModuleProcessThread(*module_process_thread_);
-  input_manager_.SetModuleProcessThread(*module_process_thread_);
+  channel_manager_.SetModuleProcessThread(module_process_thread_);
+  input_manager_.SetModuleProcessThread(module_process_thread_);
   module_process_thread_->Start();
 }
 
@@ -71,6 +73,11 @@ int ViESharedData::LastErrorInternal() const {
   int error = last_error_;
   last_error_ = 0;
   return error;
+}
+
+void ViESharedData::SetOverUseDetectorOptions(
+    const OverUseDetectorOptions& options) {
+  over_use_detector_options_ = options;
 }
 
 int ViESharedData::NumberOfCores() const {

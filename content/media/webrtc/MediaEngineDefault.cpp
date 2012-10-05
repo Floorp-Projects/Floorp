@@ -16,9 +16,6 @@
 #include "nsISupportsUtils.h"
 #endif
 
-#define WIDTH 320
-#define HEIGHT 240
-#define FPS 10
 #define CHANNELS 1
 #define RATE USECS_PER_S
 
@@ -28,6 +25,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineDefaultVideoSource, nsITimerCallback)
 /**
  * Default video source.
  */
+
+// Cannot be initialized in the class definition
+const MediaEngineVideoOptions MediaEngineDefaultVideoSource::mOpts = {
+  DEFAULT_WIDTH,
+  DEFAULT_HEIGHT,
+  DEFAULT_FPS,
+  kVideoCodecI420
+};
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
   : mTimer(nullptr), mState(kReleased)
@@ -71,15 +76,10 @@ MediaEngineDefaultVideoSource::Deallocate()
   return NS_OK;
 }
 
-MediaEngineVideoOptions
+const MediaEngineVideoOptions *
 MediaEngineDefaultVideoSource::GetOptions()
 {
-  MediaEngineVideoOptions aOpts;
-  aOpts.mWidth = WIDTH;
-  aOpts.mHeight = HEIGHT;
-  aOpts.mMaxFPS = FPS;
-  aOpts.codecType = kVideoCodecI420;
-  return aOpts;
+  return &mOpts;
 }
 
 nsresult
@@ -102,7 +102,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&format, 1);
 
-  int len = ((WIDTH * HEIGHT) * 3 / 2);
+  int len = ((DEFAULT_WIDTH * DEFAULT_HEIGHT) * 3 / 2);
   mImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
   uint8_t* frame = (uint8_t*) PR_Malloc(len);
   memset(frame, 0x80, len); // Gray
@@ -112,15 +112,15 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   layers::PlanarYCbCrImage::Data data;
   data.mYChannel = frame;
-  data.mYSize = gfxIntSize(WIDTH, HEIGHT);
-  data.mYStride = WIDTH * lumaBpp / 8.0;
-  data.mCbCrStride = WIDTH * chromaBpp / 8.0;
-  data.mCbChannel = frame + HEIGHT * data.mYStride;
-  data.mCrChannel = data.mCbChannel + HEIGHT * data.mCbCrStride / 2;
-  data.mCbCrSize = gfxIntSize(WIDTH / 2, HEIGHT / 2);
+  data.mYSize = gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  data.mYStride = DEFAULT_WIDTH * lumaBpp / 8.0;
+  data.mCbCrStride = DEFAULT_WIDTH * chromaBpp / 8.0;
+  data.mCbChannel = frame + DEFAULT_HEIGHT * data.mYStride;
+  data.mCrChannel = data.mCbChannel + DEFAULT_HEIGHT * data.mCbCrStride / 2;
+  data.mCbCrSize = gfxIntSize(DEFAULT_WIDTH / 2, DEFAULT_HEIGHT / 2);
   data.mPicX = 0;
   data.mPicY = 0;
-  data.mPicSize = gfxIntSize(WIDTH, HEIGHT);
+  data.mPicSize = gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
   data.mStereoMode = STEREO_MODE_MONO;
 
   // SetData copies data, so we can free the frame
@@ -129,7 +129,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   // AddTrack takes ownership of segment
   VideoSegment *segment = new VideoSegment();
-  segment->AppendFrame(image.forget(), USECS_PER_S / FPS, gfxIntSize(WIDTH, HEIGHT));
+  segment->AppendFrame(image.forget(), USECS_PER_S / DEFAULT_FPS, gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT));
   mSource->AddTrack(aID, RATE, 0, segment);
 
   // We aren't going to add any more tracks
@@ -139,7 +139,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mTrackID = aID;
 
   // Start timer for subsequent frames
-  mTimer->InitWithCallback(this, 1000 / FPS, nsITimer::TYPE_REPEATING_SLACK);
+  mTimer->InitWithCallback(this, 1000 / DEFAULT_FPS, nsITimer::TYPE_REPEATING_SLACK);
   mState = kStarted;
 
   return NS_OK;
@@ -195,7 +195,7 @@ MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
   VideoSegment segment;
 
   nsRefPtr<layers::PlanarYCbCrImage> image = mImage;
-  segment.AppendFrame(image.forget(), USECS_PER_S / FPS, gfxIntSize(WIDTH, HEIGHT));
+  segment.AppendFrame(image.forget(), USECS_PER_S / DEFAULT_FPS, gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT));
   mSource->AppendToTrack(mTrackID, &segment);
 
   return NS_OK;
@@ -266,7 +266,7 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   mTrackID = aID;
 
   // 1 Audio frame per Video frame
-  mTimer->InitWithCallback(this, 1000 / FPS, nsITimer::TYPE_REPEATING_SLACK);
+  mTimer->InitWithCallback(this, 1000 / MediaEngineDefaultVideoSource::DEFAULT_FPS, nsITimer::TYPE_REPEATING_SLACK);
   mState = kStarted;
 
   return NS_OK;

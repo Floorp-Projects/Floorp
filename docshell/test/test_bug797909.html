@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=797909
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 797909</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=797909">Mozilla Bug 797909</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+  /** Test for Bug 797909 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function runTest() {
+    iframe = document.getElementById("ifr");
+    try {
+      var iframeDoc = iframe.contentWindow.document;
+      ok(false, "Should have thrown an exception");
+    } catch (ex) {
+      ok(true, "Got an exception");
+    }
+
+    iframe = document.createElement("iframe");
+    // set sandbox attribute
+    iframe.sandbox = "allow-scripts";
+    // and then insert into the doc
+    document.body.appendChild(iframe);
+
+    try {
+      var iframeDoc = iframe.contentWindow.document;
+      ok(false, "Should have thrown an exception");
+    } catch (ex) {
+      ok(true, "Got an exception");
+    }
+
+    iframe = document.createElement("iframe");
+    // set sandbox attribute
+    iframe.sandbox = "allow-same-origin";
+    // and then insert into the doc
+    document.body.appendChild(iframe);
+
+    try {
+      var iframeDoc = iframe.contentWindow.document;
+      ok(true, "Shouldn't have thrown an exception");
+    } catch (ex) {
+      ok(false, "Got an unexpected exception");
+    }
+
+    SimpleTest.finish();
+  }
+
+</script>
+</pre>
+<iframe id="ifr" sandbox = "allow-scripts"></iframe>
+</body>
+</html>

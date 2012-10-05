@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -168,7 +168,11 @@ int main(int argc, char* argv[])
 
     /* write byte file */
 
-    fwrite(encoded_data, sizeof(WebRtc_Word16), ((len+1)/sizeof(WebRtc_Word16)), efileid);
+    if (fwrite(encoded_data, sizeof(WebRtc_Word16),
+               ((len+1)/sizeof(WebRtc_Word16)), efileid) !=
+        (size_t)(((len+1)/sizeof(WebRtc_Word16)))) {
+      return -1;
+    }
 
     /* get channel data if provided */
     if (argc==6) {
@@ -204,7 +208,10 @@ int main(int argc, char* argv[])
 
     /* write output file */
 
-    fwrite(decoded_data,sizeof(WebRtc_Word16),len,ofileid);
+    if (fwrite(decoded_data, sizeof(WebRtc_Word16), len,
+               ofileid) != (size_t)len) {
+      return -1;
+    }
   }
 
   /* close files */

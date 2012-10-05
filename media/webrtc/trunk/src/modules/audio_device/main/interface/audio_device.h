@@ -11,8 +11,8 @@
 #ifndef MODULES_AUDIO_DEVICE_MAIN_INTERFACE_AUDIO_DEVICE_H_
 #define MODULES_AUDIO_DEVICE_MAIN_INTERFACE_AUDIO_DEVICE_H_
 
-#include "module.h"
-#include "audio_device_defines.h"
+#include "modules/audio_device/main/interface/audio_device_defines.h"
+#include "modules/interface/module.h"
 
 namespace webrtc {
 

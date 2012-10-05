@@ -15,6 +15,7 @@ CPP_UNIT_TESTS = \
   TestCheckedInt.cpp \
   TestTypeTraits.cpp \
   TestSHA1.cpp \
+  TestWeakPtr.cpp \
   $(NULL)
 
 # in order to prevent rules.mk from trying to link to libraries that are

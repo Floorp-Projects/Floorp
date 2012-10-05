@@ -1,0 +1,47 @@
+#!/bin/bash
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+#
+# Saves the gdb index for a given binary and its shared library dependencies.
+
+set -e
+
+if [[ ! $# == 1 ]]; then
+  echo "Usage: $0 path-to-binary"
+  exit 1
+fi
+
+FILENAME="$1"
+if [[ ! -f "$FILENAME" ]]; then
+  echo "Path $FILENAME does not exist."
+  exit 1
+fi
+
+# We're good to go! Create temp directory for index files.
+DIRECTORY=$(mktemp -d)
+echo "Made temp directory $DIRECTORY."
+
+# Always remove directory on exit.
+trap "{ echo -n Removing temp directory $DIRECTORY...;
+  rm -rf $DIRECTORY; echo done; }" EXIT
+
+# Grab all the chromium shared library files.
+so_files=$(ldd "$FILENAME" 2>/dev/null \
+  | grep $(pwd) \
+  | sed "s/.*[ \t]\(.*\) (.*/\1/")
+
+# Add index to binary and the shared library dependencies.
+for file in "$FILENAME" $so_files; do
+  basename=$(basename "$file")
+  echo -n "Adding index to $basename..."
+  readelf_out=$(readelf -S "$file")
+  if [[ $readelf_out =~ "gdb_index" ]]; then
+    echo "already contains index. Skipped."
+  else
+    gdb -batch "$file" -ex "save gdb-index $DIRECTORY" -ex "quit"
+    objcopy --add-section .gdb_index="$DIRECTORY"/$basename.gdb-index \
+      --set-section-flags .gdb_index=readonly "$file" "$file"
+    echo "done."
+  fi
+done
