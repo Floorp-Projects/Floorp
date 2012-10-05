@@ -1,0 +1,19 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <title>Reference for gradients being positioned correctly within filters</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=797708 -->
+
+  <clipPath id="c">
+    <path d="M 130,70 h 40 v 40 h -40 z
+             M 230,70 h 40 v 40 h -40 z"/>
+  </clipPath>
+
+  <g clip-path="url(#c)">
+    <rect x="100" y="50" width="100" height="100" fill="red"/>
+    <rect x="200" y="50" width="100" height="100" fill="blue"/>
+  </g>
+</svg>
