@@ -414,6 +414,8 @@ Section "Uninstall"
   RmDir "$INSTDIR\webapprt\components"
   RmDir "$INSTDIR\webapprt"
 
+  RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
+
   ; Remove the installation directory if it is empty
   ${RemoveDir} "$INSTDIR"
 

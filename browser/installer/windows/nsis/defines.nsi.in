@@ -76,8 +76,6 @@ VIAddVersionKey "ProductVersion"  "${AppVersion}"
 # Comments is not used but left below commented out for future reference
 # VIAddVersionKey "Comments"        "Comments"
 
-!define TO_BE_DELETED "to_be_deleted"
-
 # It isn't possible to get the size of the installation prior to downloading
 # so the stub installer uses an estimate.
 !define APPROXIMATE_REQUIRED_SPACE_MB "42.2"
