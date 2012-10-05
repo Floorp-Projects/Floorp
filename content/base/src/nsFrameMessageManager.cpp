@@ -769,7 +769,7 @@ ContentScriptErrorReporter(JSContext* aCx,
 
 nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>*
   nsFrameScriptExecutor::sCachedScripts = nullptr;
-nsRefPtr<nsScriptCacheCleaner> nsFrameScriptExecutor::sScriptCacheCleaner;
+nsScriptCacheCleaner* nsFrameScriptExecutor::sScriptCacheCleaner = nullptr;
 
 void
 nsFrameScriptExecutor::DidCreateCx()
@@ -780,7 +780,9 @@ nsFrameScriptExecutor::DidCreateCx()
       new nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>;
     sCachedScripts->Init();
 
-    sScriptCacheCleaner = new nsScriptCacheCleaner();
+    nsRefPtr<nsScriptCacheCleaner> scriptCacheCleaner =
+      new nsScriptCacheCleaner();
+    scriptCacheCleaner.forget(&sScriptCacheCleaner);
   }
 }
 
@@ -835,7 +837,8 @@ nsFrameScriptExecutor::Shutdown()
     delete sCachedScripts;
     sCachedScripts = nullptr;
 
-    sScriptCacheCleaner = nullptr;
+    nsRefPtr<nsScriptCacheCleaner> scriptCacheCleaner;
+    scriptCacheCleaner.swap(sScriptCacheCleaner);
   }
 }
 
