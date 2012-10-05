@@ -3278,7 +3278,7 @@ getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
   string sel = pluginGetClipboardText(id);
 
-  uint32 len = sel.size();
+  uint32_t len = sel.size();
   char* selCopy = static_cast<char*>(NPN_MemAlloc(1 + len));
   if (!selCopy)
     return false;
