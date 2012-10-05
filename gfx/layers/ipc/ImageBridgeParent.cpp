@@ -56,7 +56,7 @@ ImageBridgeParent::Create(Transport* aTransport, ProcessId aOtherProcess)
 
 bool ImageBridgeParent::RecvStop()
 {
-  int numChildren = ManagedPImageContainerParent().Length();
+  unsigned int numChildren = ManagedPImageContainerParent().Length();
   for (unsigned int i = 0; i < numChildren; ++i) {
     static_cast<ImageContainerParent*>(
       ManagedPImageContainerParent()[i]
