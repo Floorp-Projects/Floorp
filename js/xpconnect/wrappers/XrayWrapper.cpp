@@ -13,6 +13,7 @@
 
 #include "nsINode.h"
 #include "nsIDocument.h"
+#include "nsContentUtils.h"
 
 #include "XPCWrapper.h"
 #include "xpcprivate.h"
@@ -143,6 +144,8 @@ public:
         MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
     }
 
+    virtual void preserveWrapper(JSObject *target) = 0;
+
     JSObject* getExpandoObject(JSContext *cx, JSObject *target,
                                JSObject *consumer);
     JSObject* ensureExpandoObject(JSContext *cx, JSObject *wrapper,
@@ -194,6 +197,8 @@ public:
         return GetWrappedNative(getTargetObject(wrapper));
     }
 
+    virtual void preserveWrapper(JSObject *target);
+
     typedef ResolvingId ResolvingIdImpl;
 
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
@@ -225,6 +230,8 @@ public:
     {
         return false;
     }
+
+    virtual void preserveWrapper(JSObject *target) { };
 
     typedef ResolvingIdDummy ResolvingIdImpl;
 
@@ -261,6 +268,8 @@ public:
     }
 
     typedef ResolvingIdDummy ResolvingIdImpl;
+
+    virtual void preserveWrapper(JSObject *target);
 
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
 
@@ -419,9 +428,6 @@ XrayTraits::attachExpandoObject(JSContext *cx, JSObject *target,
     MOZ_ASSERT(js::IsObjectInContextCompartment(target, cx));
     MOZ_ASSERT(!exclusiveGlobal || js::IsObjectInContextCompartment(exclusiveGlobal, cx));
 
-    // We should only be used for WNs.
-    MOZ_ASSERT(IS_WN_WRAPPER(target));
-
     // No duplicates allowed.
     MOZ_ASSERT(!getExpandoObjectInternal(cx, target, origin, exclusiveGlobal));
 
@@ -443,14 +449,8 @@ XrayTraits::attachExpandoObject(JSContext *cx, JSObject *target,
     // the wrapper. This keeps our expandos alive even if the Xray wrapper gets
     // collected.
     JSObject *chain = getExpandoChain(target);
-    if (!chain) {
-        XPCWrappedNative *wn =
-          static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(target));
-        nsRefPtr<nsXPCClassInfo> ci;
-        CallQueryInterface(wn->Native(), getter_AddRefs(ci));
-        if (ci)
-            ci->PreserveWrapper(wn->Native());
-    }
+    if (!chain)
+        preserveWrapper(target);
 
     // Insert it at the front of the chain.
     JS_SetReservedSlot(expandoObject, JSSLOT_EXPANDO_NEXT, OBJECT_TO_JSVAL(chain));
@@ -748,6 +748,17 @@ mozMatchesSelectorStub(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(ret));
     return true;
+}
+
+void
+XPCWrappedNativeXrayTraits::preserveWrapper(JSObject *target)
+{
+    XPCWrappedNative *wn =
+      static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(target));
+    nsRefPtr<nsXPCClassInfo> ci;
+    CallQueryInterface(wn->Native(), getter_AddRefs(ci));
+    if (ci)
+        ci->PreserveWrapper(wn->Native());
 }
 
 bool
@@ -1356,6 +1367,18 @@ DOMXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
     } while ((nativeHooks = nativeHooks->mProtoHooks));
 
     return true;
+}
+
+void
+DOMXrayTraits::preserveWrapper(JSObject *target)
+{
+    nsISupports *identity;
+    if (!mozilla::dom::UnwrapDOMObjectToISupports(target, identity))
+        return;
+    nsWrapperCache* cache = nullptr;
+    CallQueryInterface(identity, &cache);
+    if (cache)
+        nsContentUtils::PreserveWrapper(identity, cache);
 }
 
 JSObject*
