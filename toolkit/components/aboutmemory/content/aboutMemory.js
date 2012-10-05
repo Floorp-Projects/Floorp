@@ -191,7 +191,7 @@ function processMemoryReporters(aIgnoreSingle, aIgnoreMulti, aHandleReport)
  * Iterates over each report.
  *
  * @param aReports
- *        Array of reports, read from file.
+ *        Array of reports, read from a file or the clipboard.
  * @param aIgnoreSingle
  *        Function that indicates if we should skip a single reporter, based
  *        on its path.
@@ -389,8 +389,39 @@ function updateAboutMemory()
 var gCurrentFileFormatVersion = 1;
 
 /**
- * Like updateAboutMemory(), but gets its data from file instead of the memory
- * reporters.
+ * Populate about:memory using the data in the given JSON string.
+ *
+ * @param aJSONString
+ *        A string containing JSON data conforming to the schema used by
+ *        nsIMemoryReporterManager::dumpReports.
+ */
+function updateAboutMemoryFromJSONString(aJSONString)
+{
+  let body = clearBody();
+
+  try {
+    let json = JSON.parse(aJSONString);
+    assertInput(json.version === gCurrentFileFormatVersion,
+                "data version number missing or doesn't match");
+    assertInput(json.hasMozMallocUsableSize !== undefined,
+                "missing 'hasMozMallocUsableSize' property");
+    assertInput(json.reports && json.reports instanceof Array,
+                "missing or non-array 'reports' property");
+    let process = function(aIgnoreSingle, aIgnoreMulti, aHandleReport) {
+      processMemoryReportsFromFile(json.reports, aIgnoreSingle,
+                                   aHandleReport);
+    }
+    appendAboutMemoryMain(body, process, json.hasMozMallocUsableSize);
+  } catch (ex) {
+    handleException(ex);
+  } finally {
+    appendAboutMemoryFooter(body);
+  }
+}
+
+/**
+ * Like updateAboutMemory(), but gets its data from a file instead of the
+ * memory reporters.
  *
  * @param aFile
  *        The File being read from.  Accepted format is described in the
@@ -398,49 +429,62 @@ var gCurrentFileFormatVersion = 1;
  */
 function updateAboutMemoryFromFile(aFile)
 {
-  // Note: readerOnload is called asynchronously, once FileReader.readAsText()
+  // Note: reader.onload is called asynchronously, once FileReader.readAsText()
   // completes.  Therefore its exception handling has to be distinct from that
   // surrounding the |reader.readAsText(aFile)| call.
 
-  function readerOnload(aEvent) {
-    try {
-      let json = JSON.parse(aEvent.target.result);
-      assertInput(json.version === gCurrentFileFormatVersion,
-                  "data version number missing or doesn't match");
-      assertInput(json.hasMozMallocUsableSize !== undefined,
-                  "missing 'hasMozMallocUsableSize' property");
-      assertInput(json.reports && json.reports instanceof Array,
-                  "missing or non-array 'reports' property");
-      let process = function(aIgnoreSingle, aIgnoreMulti, aHandleReport) {
-        processMemoryReportsFromFile(json.reports, aIgnoreSingle,
-                                     aHandleReport);
-      }
-      appendAboutMemoryMain(body, process, json.hasMozMallocUsableSize);
-    } catch (ex) {
-      handleException(ex);
-    } finally {
-      appendAboutMemoryFooter(body);
-    }
-  };
-
-  let body = clearBody();
-
   try {
     let reader = new FileReader();
-    reader.onerror = function(aEvent) { throw "FileReader.onerror"; }
-    reader.onabort = function(aEvent) { throw "FileReader.onabort"; }
-    reader.onload = readerOnload;
+    reader.onerror = function(aEvent) { throw "FileReader.onerror"; };
+    reader.onabort = function(aEvent) { throw "FileReader.onabort"; };
+    reader.onload = function(aEvent) {
+      updateAboutMemoryFromJSONString(aEvent.target.result);
+    };
     reader.readAsText(aFile);
 
   } catch (ex) {
+    let body = clearBody();
     handleException(ex);
     appendAboutMemoryFooter(body);
   }
 }
 
 /**
- * Processes reports (whether from reporters or from file) and append the main
- * part of the page.
+ * Like updateAboutMemoryFromFile(), but gets its data from the clipboard
+ * instead of a file.
+ */
+function updateAboutMemoryFromClipboard()
+{
+  // Get the clipboard's contents.
+  let cb = Cc["@mozilla.org/widget/clipboard;1"]
+             .getService(Components.interfaces.nsIClipboard);
+  let transferable = Cc["@mozilla.org/widget/transferable;1"]
+                       .createInstance(Ci.nsITransferable);
+  let loadContext = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsILoadContext);
+  transferable.init(loadContext);
+  transferable.addDataFlavor('text/unicode');
+  cb.getData(transferable, Ci.nsIClipboard.kGlobalClipboard);
+
+  var cbData = {};
+  try {
+    transferable.getTransferData('text/unicode', cbData,
+                                 /* out dataLen (ignored) */ {});
+    let cbString = cbData.value.QueryInterface(Ci.nsISupportsString).data;
+
+    // Success!  Now use the string to generate about:memory.
+    updateAboutMemoryFromJSONString(cbString);
+  } catch (ex) {
+    let body = clearBody();
+    handleException(ex);
+    appendAboutMemoryFooter(body);
+  }
+}
+
+/**
+ * Processes reports (whether from reporters or from a file) and append the
+ * main part of the page.
  *
  * @param aBody
  *        The DOM body element.
@@ -494,7 +538,8 @@ function appendAboutMemoryFooter(aBody)
                  "collection followed by a cycle collection, and causes the " +
                  "process to reduce memory usage in other ways, e.g. by " +
                  "flushing various caches.";
-  const RdDesc = "Read memory report data from file.";
+  const RdDesc = "Read memory report data from a file.";
+  const CbDesc = "Read memory report data from the clipboard.";
 
   function appendButton(aP, aTitle, aOnClick, aText, aId)
   {
@@ -526,7 +571,10 @@ function appendAboutMemoryFooter(aBody)
     updateAboutMemoryFromFile(file);
   }); 
   appendButton(div1, RdDesc, function() { input.click() },
-               "Read reports from file", "readReportsButton");
+               "Read reports from a file", "readReportsFromFileButton");
+
+  appendButton(div1, CbDesc, updateAboutMemoryFromClipboard,
+               "Read reports from clipboard", "readReportsFromClipboardButton");
 
   let div2 = appendElement(aBody, "div");
   if (gVerbose) {
