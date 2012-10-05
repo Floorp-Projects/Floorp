@@ -36,6 +36,8 @@ SetMissingFormalArgsToUndefined(HeapValue *dstBase, unsigned numActuals, unsigne
 static void
 CopyStackFrameArguments(const StackFrame *fp, HeapValue *dst)
 {
+    JS_ASSERT(!fp->beginsIonActivation());
+
     HeapValue *dstBase = dst;
     unsigned numActuals = fp->numActualArgs();
     unsigned numFormals = fp->callee().nargs;
