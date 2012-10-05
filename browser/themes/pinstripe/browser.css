@@ -4050,10 +4050,6 @@ html|*#gcli-output-frame {
   padding: 0;
 }
 
-.social-notification-icon-stack > image {
-  max-height: 16px;
-}
-
 .social-notification-icon-hbox {
   padding: 0;
 }
@@ -4081,10 +4077,9 @@ html|*#gcli-output-frame {
   }
 }
 
-@media (min-resolution: 2dppx) {
-  .social-notification-icon-image {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
+.social-notification-icon-image {
+  width: 16px;
+  height: 16px;
 }
 
 /* === end of social toolbar button === */
