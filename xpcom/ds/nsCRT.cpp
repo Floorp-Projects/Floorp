@@ -179,7 +179,7 @@ int64_t nsCRT::atoll(const char *str)
     while (*str && *str >= '0' && *str <= '9') {
         LL_MUL(ll, ll, 10);
         LL_UI2L(digitll, (*str - '0'));
-        LL_ADD(ll, ll, digitll);
+        ll += digitll;
         str++;
     }
 

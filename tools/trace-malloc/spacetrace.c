@@ -675,10 +675,8 @@ recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
         aRun->mStats[inContext->mIndex].mCompositeCount++;
         aRun->mStats[inContext->mIndex].mHeapRuntimeCost += heapCost;
         aRun->mStats[inContext->mIndex].mSize += size;
-        LL_ADD(aRun->mStats[inContext->mIndex].mTimeval64,
-               aRun->mStats[inContext->mIndex].mTimeval64, timeval64);
-        LL_ADD(aRun->mStats[inContext->mIndex].mWeight64,
-               aRun->mStats[inContext->mIndex].mWeight64, weight64);
+        aRun->mStats[inContext->mIndex].mTimeval64 += timeval64;
+        aRun->mStats[inContext->mIndex].mWeight64 += weight64;
 
         /*
          ** Use the first event of the allocation to update the parent
@@ -727,12 +725,10 @@ recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
                     callsiteRun->mStats[inContext->mIndex].mHeapRuntimeCost +=
                         heapCost;
                     callsiteRun->mStats[inContext->mIndex].mSize += size;
-                    LL_ADD(callsiteRun->mStats[inContext->mIndex].mTimeval64,
-                           callsiteRun->mStats[inContext->mIndex].mTimeval64,
-                           timeval64);
-                    LL_ADD(callsiteRun->mStats[inContext->mIndex].mWeight64,
-                           callsiteRun->mStats[inContext->mIndex].mWeight64,
-                           weight64);
+                    callsiteRun->mStats[inContext->mIndex].mTimeval64 +=
+                        timeval64;
+                    callsiteRun->mStats[inContext->mIndex].mWeight64 +=
+                        weight64;
                 }
 
                 callsite = callsite->parent;
@@ -4434,8 +4430,7 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                                  aRun->mAllocations[loop]->mMinTimeval));
                         LL_MUL(weight64, size64, lifespan64);
 
-                        LL_ADD(YData64[traverse], YData64[traverse],
-                               weight64);
+                        YData64[traverse] += weight64;
                     }
                 }
             }
