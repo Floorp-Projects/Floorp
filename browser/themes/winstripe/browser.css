@@ -3295,6 +3295,11 @@ html|*#gcli-output-frame {
   display: none;
 }
 
+#social-toolbar-item > .toolbarbutton-1 {
+  padding: 5px;
+  -moz-appearance: toolbarbutton;
+}
+
 @navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1 {
   padding: 5px 0;
 }
