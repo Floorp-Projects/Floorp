@@ -108,8 +108,6 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
     if (iter.done())
         return true;
 
-    StackFrame *fp = iter.fp();
-
     if (JSID_IS_ATOM(id, cx->names().arguments)) {
         if (fun->hasRest()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_FUNCTION_ARGUMENTS_AND_REST);
@@ -121,7 +119,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
             return false;
         }
 
-        ArgumentsObject *argsobj = ArgumentsObject::createUnexpected(cx, fp);
+        ArgumentsObject *argsobj = ArgumentsObject::createUnexpected(cx, iter);
         if (!argsobj)
             return false;
 
@@ -140,6 +138,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
     }
 
 #ifdef JS_METHODJIT
+    StackFrame *fp = iter.fp();
     if (iter.isScript() && iter.isIon())
         fp = NULL;
 
