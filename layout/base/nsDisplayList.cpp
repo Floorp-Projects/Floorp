@@ -2895,6 +2895,14 @@ nsDisplayScrollLayer::TryMerge(nsDisplayListBuilder* aBuilder,
   props.Set(nsIFrame::ScrollLayerCount(),
     reinterpret_cast<void*>(GetScrollLayerCount() - 1));
 
+  // Swap frames with the other item before doing MergeFrom.
+  // XXX - This ensures that the frame associated with a scroll layer after
+  // merging is the first, rather than the last. This tends to change less,
+  // ensuring we're more likely to retain the associated gfx layer.
+  // See Bug 729534 and Bug 731641.
+  nsIFrame* tmp = mFrame;
+  mFrame = other->mFrame;
+  other->mFrame = tmp;
   MergeFromTrackingMergedFrames(other);
   return true;
 }
