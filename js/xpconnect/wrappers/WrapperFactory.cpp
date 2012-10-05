@@ -292,31 +292,6 @@ GetWrappedNative(JSContext *cx, JSObject *obj)
            : nullptr;
 }
 
-enum XrayType {
-    XrayForDOMObject,
-    XrayForDOMProxyObject,
-    XrayForWrappedNative,
-    NotXray
-};
-
-static XrayType
-GetXrayType(JSObject *obj)
-{
-    if (mozilla::dom::IsDOMObject(obj))
-        return XrayForDOMObject;
-
-    if (mozilla::dom::oldproxybindings::instanceIsProxy(obj))
-        return XrayForDOMProxyObject;
-
-    js::Class* clasp = js::GetObjectClass(obj);
-    if (IS_WRAPPER_CLASS(clasp) || clasp->ext.innerObject) {
-        NS_ASSERTION(clasp->ext.innerObject || IS_WN_WRAPPER_OBJECT(obj),
-                     "We forgot to Morph a slim wrapper!");
-        return XrayForWrappedNative;
-    }
-    return NotXray;
-}
-
 JSObject *
 WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
                        unsigned flags)
