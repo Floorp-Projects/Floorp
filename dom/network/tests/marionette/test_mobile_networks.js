@@ -131,7 +131,7 @@ function throwsException(fn) {
     fn();
     ok(false, "function did not throw an exception: " + fn);
   } catch (e) {
-    ok(true, "function succesfully caught exception: " + e);
+    ok(true, "function successfully caught exception: " + e);
   }
 }
 
