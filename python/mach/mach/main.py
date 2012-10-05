@@ -17,6 +17,8 @@ from mozbuild.base import BuildConfig
 from mozbuild.config import ConfigSettings
 from mozbuild.logger import LoggingManager
 
+from mach.registrar import populate_argument_parser
+
 # Import sub-command modules
 # TODO Bug 794509 do this via auto-discovery. Update README once this is
 # done.
@@ -25,13 +27,6 @@ from mach.settings import Settings
 from mach.testing import Testing
 from mach.warnings import Warnings
 
-# Classes inheriting from ArgumentProvider that provide commands.
-HANDLERS = [
-    Build,
-    Settings,
-    Testing,
-    Warnings,
-]
 
 # Classes inheriting from ConfigProvider that provide settings.
 # TODO this should come from auto-discovery somehow.
@@ -284,8 +279,6 @@ To see more help for a specific command, run:
                 'than relative time. Note that this is NOT execution time '
                 'if there are parallel operations.')
 
-        # Register argument action providers with us.
-        for cls in HANDLERS:
-            cls.populate_argparse(subparser)
+        populate_argument_parser(subparser)
 
         return parser
