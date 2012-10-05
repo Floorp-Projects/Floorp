@@ -112,11 +112,11 @@ def parse_args():
     output_og.add_option('-s', '--show-cmd', action='store_true',
                          help='Show exact commandline used to run each test.')
     output_og.add_option('-o', '--show-output', action='store_true',
-                         help="Print each test's output to stdout.")
+                         help="Print each test's output to the file given by --output-file.")
     output_og.add_option('-F', '--failed-only', action='store_true',
                          help="If a --show-* option is given, only print output for failed tests.")
     output_og.add_option('-O', '--output-file',
-                         help='Write all output to the given file.')
+                         help='Write all output to the given file (default: stdout).')
     output_og.add_option('--failure-file',
                          help='Write all not-passed tests to the given file.')
     output_og.add_option('--no-progress', dest='hide_progress', action='store_true',
