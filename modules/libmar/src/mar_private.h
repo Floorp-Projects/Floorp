@@ -7,14 +7,9 @@
 #ifndef MAR_PRIVATE_H__
 #define MAR_PRIVATE_H__
 
-#include "prtypes.h"
 #include "limits.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/StandardInteger.h"
-
-/* Code in this module requires a guarantee that the size
-   of uint32_t and uint64_t are 4 and 8 bytes respectively. */
-PR_STATIC_ASSERT(sizeof(uint32_t) == 4);
-PR_STATIC_ASSERT(sizeof(uint64_t) == 8);
 
 #define BLOCKSIZE 4096
 #define ROUND_UP(n, incr) (((n) / (incr) + 1) * (incr))
@@ -36,12 +31,14 @@ PR_STATIC_ASSERT(sizeof(uint64_t) == 8);
 
 /* Existing code makes assumptions that the file size is
    smaller than LONG_MAX. */
-PR_STATIC_ASSERT(MAX_SIZE_OF_MAR_FILE < ((int64_t)LONG_MAX));
+MOZ_STATIC_ASSERT(MAX_SIZE_OF_MAR_FILE < ((int64_t)LONG_MAX),
+                  "max mar file size is too big");
 
 /* We store at most the size up to the signature block + 4 
    bytes per BLOCKSIZE bytes */
-PR_STATIC_ASSERT(sizeof(BLOCKSIZE) < \
-  (SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t)));
+MOZ_STATIC_ASSERT(sizeof(BLOCKSIZE) < \
+                  (SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t)),
+                  "BLOCKSIZE is too big");
 
 /* The maximum size of any signature supported by current and future
    implementations of the signmar program. */
