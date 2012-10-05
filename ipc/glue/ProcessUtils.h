@@ -8,6 +8,8 @@
 namespace mozilla {
 namespace ipc {
 
+// You probably should call ContentChild::SetProcessName instead of calling
+// this directly.
 void SetThisProcessName(const char *aName);
 
 } // namespace ipc
