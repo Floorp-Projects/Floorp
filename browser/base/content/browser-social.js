@@ -621,6 +621,9 @@ var SocialToolbar = {
         notificationFrame.setAttribute("class", "social-panel-frame");
         notificationFrame.setAttribute("id", notificationFrameId);
         notificationFrame.setAttribute("mozbrowser", "true");
+        // work around bug 793057 - by making the panel roughly the final size
+        // we are more likely to have the anchor in the correct position.
+        notificationFrame.style.width = PANEL_MIN_WIDTH + "px";
         notificationFrames.appendChild(notificationFrame);
       }
       notificationFrame.setAttribute("origin", provider.origin);
