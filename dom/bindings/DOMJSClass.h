@@ -15,6 +15,11 @@
 // globals and non-globals.
 #define DOM_OBJECT_SLOT 0
 
+// We use slot 1 for holding the expando object. This is not safe for globals
+// until bug 760095 is fixed, so that bug blocks converting Window to new
+// bindings.
+#define DOM_XRAY_EXPANDO_SLOT 1
+
 // All DOM globals must have a slot at DOM_PROTOTYPE_SLOT. We have to
 // start at 1 past JSCLASS_GLOBAL_SLOT_COUNT because XPConnect uses
 // that one.
