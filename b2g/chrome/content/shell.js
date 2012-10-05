@@ -121,10 +121,9 @@ var shell = {
    },
 
   start: function shell_start() {
-
-    let cr = Cc["@mozilla.org/xre/app-info;1"]
-               .getService(Ci.nsICrashReporter);
     try {
+      let cr = Cc["@mozilla.org/xre/app-info;1"]
+                 .getService(Ci.nsICrashReporter);
       // Dogfood id. We might want to remove it in the future.
       // see bug 789466
       try {
