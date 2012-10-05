@@ -2637,9 +2637,10 @@ html|*#gcli-output-frame {
   padding: 0;
 }
 
-.social-notification-icon-stack > image {
+.social-notification-icon-image {
   margin: 5px 3px;
-  max-height: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 .social-notification-icon-hbox {

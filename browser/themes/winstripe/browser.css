@@ -3329,14 +3329,9 @@ html|*#gcli-output-frame {
   display: none;
 }
 
-/* notification image */
 .social-notification-icon-image {
-  padding: 2px;
-  margin: 0;
-  min-width: 20px;
-  max-width: 32px;
-  max-height: 20px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  width: 16px;
+  height: 16px;
 }
 
 /* social toolbar provider menu */
