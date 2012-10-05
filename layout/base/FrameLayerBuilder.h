@@ -753,7 +753,7 @@ protected:
   /**
    * The root prescontext for the display list builder reference frame
    */
-  nsRootPresContext*                  mRootPresContext;
+  nsRefPtr<nsRootPresContext>         mRootPresContext;
 
   /**
    * The display list builder being used.
