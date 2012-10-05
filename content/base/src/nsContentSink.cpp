@@ -1229,9 +1229,9 @@ nsContentSink::Notify(nsITimer *timer)
     int32_t delay;
 
     LL_I2L(interval, GetNotificationInterval());
-    LL_SUB(diff, now, mLastNotificationTime);
+    diff = now - mLastNotificationTime;
 
-    LL_SUB(diff, diff, interval);
+    diff -= interval;
     LL_L2I(delay, diff);
     delay /= PR_USEC_PER_MSEC;
 
@@ -1273,7 +1273,7 @@ nsContentSink::IsTimeToNotify()
   int64_t interval, diff;
 
   LL_I2L(interval, GetNotificationInterval());
-  LL_SUB(diff, now, mLastNotificationTime);
+  diff = now - mLastNotificationTime;
 
   if (diff > interval) {
     mBackoffCount--;
