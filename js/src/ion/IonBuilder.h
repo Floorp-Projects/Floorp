@@ -265,7 +265,7 @@ class IonBuilder : public MIRGenerator
     bool initScopeChain();
     bool pushConstant(const Value &v);
     bool pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual, types::StackTypeSet *observed);
-    void monitorResult(MInstruction *ins, types::TypeSet *types);
+    void monitorResult(MInstruction *ins, types::TypeSet *barrier, types::TypeSet *types);
 
     JSObject *getSingletonPrototype(JSFunction *target);
 
