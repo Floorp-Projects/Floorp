@@ -6288,8 +6288,19 @@ gov.vc
 mil.vc
 edu.vc
 
-// ve : http://registro.nic.ve/nicve/registro/index.html
-*.ve
+// ve : https://registro.nic.ve/
+// Confirmed by registry 2012-10-04
+ve
+co.ve
+com.ve
+e12.ve
+edu.ve
+gov.ve
+info.ve
+mil.ve
+net.ve
+org.ve
+web.ve
 
 // vg : http://en.wikipedia.org/wiki/.vg
 vg
