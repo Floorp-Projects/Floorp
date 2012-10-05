@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Tabs implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -40,6 +41,8 @@ public class Tabs implements GeckoEventListener {
     private static final int SCORE_INCREMENT_TAB_LOCATION_CHANGE = 5;
     private static final int SCORE_INCREMENT_TAB_SELECTED = 10;
     private static final int SCORE_THRESHOLD = 30;
+
+    private static AtomicInteger sTabId = new AtomicInteger(0);
 
     private GeckoApp mActivity;
 
@@ -68,17 +71,7 @@ public class Tabs implements GeckoEventListener {
         return mTabs.size();
     }
 
-    private Tab addTab(JSONObject params) throws JSONException {
-        int id = params.getInt("tabID");
-        if (mTabs.containsKey(id))
-           return mTabs.get(id);
-
-        // null strings return "null" (http://code.google.com/p/android/issues/detail?id=13830)
-        String url = params.isNull("uri") ? null : params.getString("uri");
-        Boolean external = params.getBoolean("external");
-        int parentId = params.getInt("parentId");
-        String title = params.getString("title");
-
+    private Tab addTab(int id, String url, boolean external, int parentId, String title) {
         final Tab tab = new Tab(id, url, external, parentId, title);
         mTabs.put(id, tab);
         mOrder.add(tab);
@@ -245,7 +238,20 @@ public class Tabs implements GeckoEventListener {
                 }
             } else if (event.equals("Tab:Added")) {
                 Log.i(LOGTAG, "Received message from Gecko: " + SystemClock.uptimeMillis() + " - Tab:Added");
-                Tab tab = addTab(message);
+
+                int id = message.getInt("tabID");
+                Tab tab = null;
+
+                if (mTabs.containsKey(id)) {
+                    tab = mTabs.get(id);
+                } else {
+                    tab = addTab(id,
+                                 message.isNull("uri") ? null : message.getString("uri"),
+                                 message.getBoolean("external"),
+                                 message.getInt("parentId"),
+                                 message.getString("title"));
+                }
+
                 if (message.getBoolean("selected"))
                     selectTab(tab.getId());
                 if (message.getBoolean("delayLoad"))
@@ -446,18 +452,30 @@ public class Tabs implements GeckoEventListener {
      */
     public void loadUrl(String url, String searchEngine, int parentId, int flags) {
         JSONObject args = new JSONObject();
+        int tabId = -1;
+
         try {
             args.put("url", url);
             args.put("engine", searchEngine);
             args.put("parentId", parentId);
             args.put("userEntered", (flags & LOADURL_USER_ENTERED) != 0);
             args.put("newTab", (flags & LOADURL_NEW_TAB) != 0);
+
+            if ((flags & LOADURL_NEW_TAB) != 0) {
+                tabId = getNextTabId();
+                args.put("tabID", tabId);
+                addTab(tabId, null, false, parentId, url);
+            }
         } catch (Exception e) {
             Log.e(LOGTAG, "error building JSON arguments");
         }
 
         Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Load");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
+
+        if (tabId != -1) {
+            selectTab(tabId);
+        }
     }
 
     /**
@@ -479,5 +497,14 @@ public class Tabs implements GeckoEventListener {
         }
 
         loadUrl(url, null, getSelectedTab().getId(), LOADURL_NEW_TAB);
+    }
+
+    /**
+     * Gets the next tab ID.
+     *
+     * This method is invoked via JNI.
+     */
+    public static int getNextTabId() {
+        return sTabId.getAndIncrement();
     }
 }
