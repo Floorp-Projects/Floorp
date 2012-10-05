@@ -500,22 +500,47 @@ function appendAboutMemoryMain(aBody, aProcess, aHasMozMallocUsableSize)
   getTreesByProcess(aProcess, treesByProcess, degeneratesByProcess,
                     heapTotalByProcess);
 
-  // Generate output for one process at a time.  Always start with the
-  // Main process.
-  if (treesByProcess[gUnnamedProcessStr]) {
-    appendProcessAboutMemoryElements(aBody, gUnnamedProcessStr,
-                                     treesByProcess[gUnnamedProcessStr],
-                                     degeneratesByProcess[gUnnamedProcessStr],
-                                     heapTotalByProcess[gUnnamedProcessStr],
-                                     aHasMozMallocUsableSize);
-  }
-  for (let process in treesByProcess) {
-    if (process !== gUnnamedProcessStr) {
-      appendProcessAboutMemoryElements(aBody, process, treesByProcess[process],
-                                       degeneratesByProcess[process],
-                                       heapTotalByProcess[process],
-                                       aHasMozMallocUsableSize);
+  // Sort our list of processes.  Always start with the main process, then sort
+  // by resident size (descending).  Processes with no resident reporter go at
+  // the end of the list.
+  let processes = Object.keys(treesByProcess);
+  processes.sort(function(a, b) {
+    assert(a != b, "Elements of Object.keys() should be unique, but " +
+                   "saw duplicate " + a + " elem.");
+
+    if (a == gUnnamedProcessStr) {
+      return -1;
     }
+
+    if (b == gUnnamedProcessStr) {
+      return 1;
+    }
+
+    let nodeA = degeneratesByProcess[a]['resident'];
+    let nodeB = degeneratesByProcess[b]['resident'];
+
+    if (nodeA && nodeB) {
+      return TreeNode.compareAmounts(nodeA, nodeB);
+    }
+
+    if (nodeA) {
+      return -1;
+    }
+
+    if (nodeB) {
+      return 1;
+    }
+
+    return 0;
+  });
+
+  // Generate output for each process.
+  for (let i = 0; i < processes.length; i++) {
+    let process = processes[i];
+    appendProcessAboutMemoryElements(aBody, process, treesByProcess[process],
+                                     degeneratesByProcess[process],
+                                     heapTotalByProcess[process],
+                                     aHasMozMallocUsableSize);
   }
 }
 
