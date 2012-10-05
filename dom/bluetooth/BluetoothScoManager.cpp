@@ -108,7 +108,6 @@ BluetoothScoManager::Get()
   NS_ENSURE_TRUE(manager, nullptr);
 
   if (!manager->Init()) {
-    manager->Cleanup();
     return nullptr;
   }
 
@@ -142,7 +141,7 @@ BluetoothScoManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   gInShutdown = true;
-  Cleanup();
+  CloseSocket();
   gBluetoothScoManager = nullptr;
   return NS_OK;
 }
