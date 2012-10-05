@@ -7,7 +7,6 @@
 #define nsPluginTags_h_
 
 #include "nscore.h"
-#include "prtypes.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
