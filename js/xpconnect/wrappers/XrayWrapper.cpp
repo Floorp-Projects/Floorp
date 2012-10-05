@@ -40,6 +40,184 @@ JSClass HolderClass = {
     JS_PropertyStub,        JS_PropertyStub, holder_get,      holder_set,
     JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub
 };
+}
+
+using namespace XrayUtils;
+
+ResolvingId::ResolvingId(JSObject *wrapper, jsid id)
+    : mId(id),
+    mHolder(getHolderObject(wrapper)),
+    mPrev(getResolvingId(mHolder)),
+    mXrayShadowing(false)
+{
+    js::SetReservedSlot(mHolder, JSSLOT_RESOLVING, js::PrivateValue(this));
+}
+
+ResolvingId::~ResolvingId()
+{
+    MOZ_ASSERT(getResolvingId(mHolder) == this, "unbalanced ResolvingIds");
+    js::SetReservedSlot(mHolder, JSSLOT_RESOLVING, js::PrivateValue(mPrev));
+}
+
+bool
+ResolvingId::isXrayShadowing(jsid id)
+{
+    if (!mXrayShadowing)
+        return false;
+
+    return mId == id;
+}
+
+bool
+ResolvingId::isResolving(jsid id)
+{
+    for (ResolvingId *cur = this; cur; cur = cur->mPrev) {
+        if (cur->mId == id)
+            return true;
+    }
+
+    return false;
+}
+
+ResolvingId *
+ResolvingId::getResolvingId(JSObject *holder)
+{
+    MOZ_ASSERT(strcmp(JS_GetClass(holder)->name, "NativePropertyHolder") == 0);
+    return (ResolvingId *)js::GetReservedSlot(holder, JSSLOT_RESOLVING).toPrivate();
+}
+
+JSObject *
+ResolvingId::getHolderObject(JSObject *wrapper)
+{
+    return &js::GetProxyExtra(wrapper, 0).toObject();
+}
+
+ResolvingId *
+ResolvingId::getResolvingIdFromWrapper(JSObject *wrapper)
+{
+    return getResolvingId(getHolderObject(wrapper));
+}
+
+class ResolvingIdDummy
+{
+public:
+    ResolvingIdDummy(JSObject *wrapper, jsid id)
+    {
+    }
+};
+
+class XrayTraits
+{
+public:
+    static JSObject* getTargetObject(JSObject *wrapper) {
+        return js::UnwrapObject(wrapper, /* stopAtOuter = */ false);
+    }
+
+
+    static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp)
+    {
+        MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
+    }
+    static bool construct(JSContext *cx, JSObject *wrapper, unsigned argc,
+                          Value *argv, Value *rval)
+    {
+        MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
+    }
+
+    JSObject* getHolder(JSObject *wrapper);
+    JSObject* ensureHolder(JSContext *cx, JSObject *wrapper);
+
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) = 0;
+};
+
+class XPCWrappedNativeXrayTraits : public XrayTraits
+{
+public:
+    static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
+                                      bool set, JSPropertyDescriptor *desc);
+    static bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
+                                   JSObject *holder, jsid id, bool set,
+                                   JSPropertyDescriptor *desc);
+    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+                               JSPropertyDescriptor *desc);
+    static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
+    static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
+                               JS::AutoIdVector &props);
+    static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp);
+    static bool construct(JSContext *cx, JSObject *wrapper, unsigned argc,
+                          Value *argv, Value *rval);
+
+    static bool isResolving(JSContext *cx, JSObject *holder, jsid id);
+
+    static bool resolveDOMCollectionProperty(JSContext *cx, JSObject *wrapper, JSObject *holder,
+                                             jsid id, bool set, PropertyDescriptor *desc);
+
+    static XPCWrappedNative* getWN(JSObject *wrapper) {
+        return GetWrappedNative(getTargetObject(wrapper));
+    }
+
+    typedef ResolvingId ResolvingIdImpl;
+
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
+
+    static XPCWrappedNativeXrayTraits singleton;
+};
+
+class ProxyXrayTraits : public XrayTraits
+{
+public:
+    static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
+                                      bool set, JSPropertyDescriptor *desc);
+    static bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
+                                   JSObject *holder, jsid id, bool set,
+                                   JSPropertyDescriptor *desc);
+    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+                               JSPropertyDescriptor *desc);
+    static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
+    static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
+                               JS::AutoIdVector &props);
+
+    static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
+    {
+        return false;
+    }
+
+    typedef ResolvingIdDummy ResolvingIdImpl;
+
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
+
+    static ProxyXrayTraits singleton;
+};
+
+class DOMXrayTraits : public XrayTraits
+{
+public:
+    static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
+                                      bool set, JSPropertyDescriptor *desc);
+    static bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
+                                   JSObject *holder, jsid id, bool set,
+                                   JSPropertyDescriptor *desc);
+    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+                               JSPropertyDescriptor *desc);
+    static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
+    static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
+                               JS::AutoIdVector &props);
+
+    static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
+    {
+        return false;
+    }
+
+    typedef ResolvingIdDummy ResolvingIdImpl;
+
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
+
+    static DOMXrayTraits singleton;
+};
+
+XPCWrappedNativeXrayTraits XPCWrappedNativeXrayTraits::singleton;
+ProxyXrayTraits ProxyXrayTraits::singleton;
+DOMXrayTraits DOMXrayTraits::singleton;
 
 /*
  * Xray expando handling.
@@ -228,6 +406,7 @@ EnsureExpandoObject(JSContext *cx, JSObject *wrapper, JSObject *target)
     return expandoObject;
 }
 
+namespace XrayUtils {
 bool
 CloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
 {
@@ -249,184 +428,7 @@ CloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
     }
     return true;
 }
-}
-
-using namespace XrayUtils;
-
-ResolvingId::ResolvingId(JSObject *wrapper, jsid id)
-    : mId(id),
-    mHolder(getHolderObject(wrapper)),
-    mPrev(getResolvingId(mHolder)),
-    mXrayShadowing(false)
-{
-    js::SetReservedSlot(mHolder, JSSLOT_RESOLVING, js::PrivateValue(this));
-}
-
-ResolvingId::~ResolvingId()
-{
-    MOZ_ASSERT(getResolvingId(mHolder) == this, "unbalanced ResolvingIds");
-    js::SetReservedSlot(mHolder, JSSLOT_RESOLVING, js::PrivateValue(mPrev));
-}
-
-bool
-ResolvingId::isXrayShadowing(jsid id)
-{
-    if (!mXrayShadowing)
-        return false;
-
-    return mId == id;
-}
-
-bool
-ResolvingId::isResolving(jsid id)
-{
-    for (ResolvingId *cur = this; cur; cur = cur->mPrev) {
-        if (cur->mId == id)
-            return true;
-    }
-
-    return false;
-}
-
-ResolvingId *
-ResolvingId::getResolvingId(JSObject *holder)
-{
-    MOZ_ASSERT(strcmp(JS_GetClass(holder)->name, "NativePropertyHolder") == 0);
-    return (ResolvingId *)js::GetReservedSlot(holder, JSSLOT_RESOLVING).toPrivate();
-}
-
-JSObject *
-ResolvingId::getHolderObject(JSObject *wrapper)
-{
-    return &js::GetProxyExtra(wrapper, 0).toObject();
-}
-
-ResolvingId *
-ResolvingId::getResolvingIdFromWrapper(JSObject *wrapper)
-{
-    return getResolvingId(getHolderObject(wrapper));
-}
-
-class ResolvingIdDummy
-{
-public:
-    ResolvingIdDummy(JSObject *wrapper, jsid id)
-    {
-    }
-};
-
-class XrayTraits
-{
-public:
-    static JSObject* getTargetObject(JSObject *wrapper) {
-        return js::UnwrapObject(wrapper, /* stopAtOuter = */ false);
-    }
-
-
-    static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp)
-    {
-        MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
-    }
-    static bool construct(JSContext *cx, JSObject *wrapper, unsigned argc,
-                          Value *argv, Value *rval)
-    {
-        MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
-    }
-
-    JSObject* getHolder(JSObject *wrapper);
-    JSObject* ensureHolder(JSContext *cx, JSObject *wrapper);
-
-    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) = 0;
-};
-
-class XPCWrappedNativeXrayTraits : public XrayTraits
-{
-public:
-    static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
-                                      bool set, JSPropertyDescriptor *desc);
-    static bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                   JSObject *holder, jsid id, bool set,
-                                   JSPropertyDescriptor *desc);
-    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                               JSPropertyDescriptor *desc);
-    static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
-                               JS::AutoIdVector &props);
-    static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp);
-    static bool construct(JSContext *cx, JSObject *wrapper, unsigned argc,
-                          Value *argv, Value *rval);
-
-    static bool isResolving(JSContext *cx, JSObject *holder, jsid id);
-
-    static bool resolveDOMCollectionProperty(JSContext *cx, JSObject *wrapper, JSObject *holder,
-                                             jsid id, bool set, PropertyDescriptor *desc);
-
-    static XPCWrappedNative* getWN(JSObject *wrapper) {
-        return GetWrappedNative(getTargetObject(wrapper));
-    }
-
-    typedef ResolvingId ResolvingIdImpl;
-
-    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
-
-    static XPCWrappedNativeXrayTraits singleton;
-};
-
-class ProxyXrayTraits : public XrayTraits
-{
-public:
-    static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
-                                      bool set, JSPropertyDescriptor *desc);
-    static bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                   JSObject *holder, jsid id, bool set,
-                                   JSPropertyDescriptor *desc);
-    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                               JSPropertyDescriptor *desc);
-    static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
-                               JS::AutoIdVector &props);
-
-    static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
-    {
-        return false;
-    }
-
-    typedef ResolvingIdDummy ResolvingIdImpl;
-
-    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
-
-    static ProxyXrayTraits singleton;
-};
-
-class DOMXrayTraits : public XrayTraits
-{
-public:
-    static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
-                                      bool set, JSPropertyDescriptor *desc);
-    static bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                   JSObject *holder, jsid id, bool set,
-                                   JSPropertyDescriptor *desc);
-    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                               JSPropertyDescriptor *desc);
-    static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
-                               JS::AutoIdVector &props);
-
-    static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
-    {
-        return false;
-    }
-
-    typedef ResolvingIdDummy ResolvingIdImpl;
-
-    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
-
-    static DOMXrayTraits singleton;
-};
-
-XPCWrappedNativeXrayTraits XPCWrappedNativeXrayTraits::singleton;
-ProxyXrayTraits ProxyXrayTraits::singleton;
-DOMXrayTraits DOMXrayTraits::singleton;
+} /* namespace XrayUtils */
 
 static JSObject *
 GetHolder(JSObject *obj)
