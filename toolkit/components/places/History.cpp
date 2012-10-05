@@ -1462,12 +1462,15 @@ History::NotifyVisited(nsIURI* aURI)
   nsAutoScriptBlocker scriptBlocker;
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    URIParams uri;
-    SerializeURI(aURI, uri);
     nsTArray<ContentParent*> cplist;
     ContentParent::GetAll(cplist);
-    for (uint32_t i = 0; i < cplist.Length(); ++i) {
-      unused << cplist[i]->SendNotifyVisited(uri);
+
+    if (!cplist.IsEmpty()) {
+      URIParams uri;
+      SerializeURI(aURI, uri);
+      for (uint32_t i = 0; i < cplist.Length(); ++i) {
+        unused << cplist[i]->SendNotifyVisited(uri);
+      }
     }
   }
 
