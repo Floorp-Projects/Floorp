@@ -143,10 +143,27 @@ public:
         MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
     }
 
+    JSObject* getExpandoObject(JSContext *cx, JSObject *target,
+                               JSObject *consumer);
+    JSObject* ensureExpandoObject(JSContext *cx, JSObject *wrapper,
+                                  JSObject *target);
+
     JSObject* getHolder(JSObject *wrapper);
     JSObject* ensureHolder(JSContext *cx, JSObject *wrapper);
+    bool cloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src);
 
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) = 0;
+
+private:
+    bool expandoObjectMatchesConsumer(JSContext *cx, JSObject *expandoObject,
+                                      nsIPrincipal *consumerOrigin,
+                                      JSObject *exclusiveGlobal);
+    JSObject* getExpandoObjectInternal(JSContext *cx, JSObject *target,
+                                       nsIPrincipal *origin,
+                                       JSObject *exclusiveGlobal);
+    JSObject* attachExpandoObject(JSContext *cx, JSObject *target,
+                                  nsIPrincipal *origin,
+                                  JSObject *exclusiveGlobal);
 };
 
 class XPCWrappedNativeXrayTraits : public XrayTraits
@@ -304,10 +321,10 @@ JSClass ExpandoObjectClass = {
 };
 
 bool
-ExpandoObjectMatchesConsumer(JSContext *cx,
-                             JSObject *expandoObject,
-                             nsIPrincipal *consumerOrigin,
-                             JSObject *exclusiveGlobal)
+XrayTraits::expandoObjectMatchesConsumer(JSContext *cx,
+                                         JSObject *expandoObject,
+                                         nsIPrincipal *consumerOrigin,
+                                         JSObject *exclusiveGlobal)
 {
     MOZ_ASSERT(js::IsObjectInContextCompartment(expandoObject, cx));
 
@@ -339,8 +356,9 @@ ExpandoObjectMatchesConsumer(JSContext *cx,
 }
 
 JSObject *
-LookupExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
-                    JSObject *exclusiveGlobal)
+XrayTraits::getExpandoObjectInternal(JSContext *cx, JSObject *target,
+                                     nsIPrincipal *origin,
+                                     JSObject *exclusiveGlobal)
 {
     // The expando object lives in the compartment of the target, so all our
     // work needs to happen there.
@@ -351,7 +369,7 @@ LookupExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
     // Iterate through the chain, looking for a same-origin object.
     JSObject *head = GetExpandoChain(target);
     while (head) {
-        if (ExpandoObjectMatchesConsumer(cx, head, origin, exclusiveGlobal))
+        if (expandoObjectMatchesConsumer(cx, head, origin, exclusiveGlobal))
             return head;
         head = JS_GetReservedSlot(head, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
     }
@@ -360,19 +378,18 @@ LookupExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
     return nullptr;
 }
 
-// Convenience method for the above.
 JSObject *
-LookupExpandoObject(JSContext *cx, JSObject *target, JSObject *consumer)
+XrayTraits::getExpandoObject(JSContext *cx, JSObject *target, JSObject *consumer)
 {
     JSObject *consumerGlobal = js::GetGlobalForObjectCrossCompartment(consumer);
     bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
-    return LookupExpandoObject(cx, target, ObjectPrincipal(consumer),
-                               isSandbox ? consumerGlobal : nullptr);
+    return getExpandoObjectInternal(cx, target, ObjectPrincipal(consumer),
+                                    isSandbox ? consumerGlobal : nullptr);
 }
 
 JSObject *
-AttachExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
-                    JSObject *exclusiveGlobal)
+XrayTraits::attachExpandoObject(JSContext *cx, JSObject *target,
+                                nsIPrincipal *origin, JSObject *exclusiveGlobal)
 {
     // Make sure the compartments are sane.
     MOZ_ASSERT(js::IsObjectInContextCompartment(target, cx));
@@ -382,7 +399,7 @@ AttachExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
     MOZ_ASSERT(IS_WN_WRAPPER(target));
 
     // No duplicates allowed.
-    MOZ_ASSERT(!LookupExpandoObject(cx, target, origin, exclusiveGlobal));
+    MOZ_ASSERT(!getExpandoObjectInternal(cx, target, origin, exclusiveGlobal));
 
     // Create the expando object. We parent it directly to the target object.
     JSObject *expandoObject = JS_NewObjectWithGivenProto(cx, &ExpandoObjectClass,
@@ -419,11 +436,12 @@ AttachExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
 }
 
 JSObject *
-EnsureExpandoObject(JSContext *cx, JSObject *wrapper, JSObject *target)
+XrayTraits::ensureExpandoObject(JSContext *cx, JSObject *wrapper,
+                                JSObject *target)
 {
     // Expando objects live in the target compartment.
     JSAutoCompartment ac(cx, target);
-    JSObject *expandoObject = LookupExpandoObject(cx, target, wrapper);
+    JSObject *expandoObject = getExpandoObject(cx, target, wrapper);
     if (!expandoObject) {
         // If the object is a sandbox, we don't want it to share expandos with
         // anyone else, so we tag it with the sandbox global.
@@ -434,15 +452,14 @@ EnsureExpandoObject(JSContext *cx, JSObject *wrapper, JSObject *target)
         bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
         if (!JS_WrapObject(cx, &consumerGlobal))
             return NULL;
-        expandoObject = AttachExpandoObject(cx, target, ObjectPrincipal(wrapper),
+        expandoObject = attachExpandoObject(cx, target, ObjectPrincipal(wrapper),
                                             isSandbox ? consumerGlobal : nullptr);
     }
     return expandoObject;
 }
 
-namespace XrayUtils {
 bool
-CloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
+XrayTraits::cloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
 {
     MOZ_ASSERT(js::IsObjectInContextCompartment(dst, cx));
     MOZ_ASSERT(GetExpandoChain(dst) == nullptr);
@@ -454,15 +471,21 @@ CloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
                                                 .toObjectOrNull();
         if (!JS_WrapObject(cx, &exclusive))
             return false;
-        JSObject *newHead =
-          AttachExpandoObject(cx, dst, GetExpandoObjectPrincipal(oldHead), exclusive);
+        JSObject *newHead = attachExpandoObject(cx, dst, GetExpandoObjectPrincipal(oldHead),
+                                                exclusive);
         if (!JS_CopyPropertiesFrom(cx, newHead, oldHead))
             return false;
         oldHead = JS_GetReservedSlot(oldHead, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
     }
     return true;
 }
-} /* namespace XrayUtils */
+
+namespace XrayUtils {
+bool CloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
+{
+    return GetXrayTraits(src)->cloneExpandoChain(cx, dst, src);
+}
+}
 
 static JSObject *
 GetHolder(JSObject *obj)
@@ -954,7 +977,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
 
     unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
     JSObject *target = getTargetObject(wrapper);
-    JSObject *expando = LookupExpandoObject(cx, target, wrapper);
+    JSObject *expando = singleton.getExpandoObject(cx, target, wrapper);
 
     // Check for expando properties first. Note that the expando object lives
     // in the target compartment.
@@ -1025,7 +1048,7 @@ XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsi
     JSAutoCompartment ac(cx, target);
 
     // Grab the relevant expando object.
-    JSObject *expandoObject = EnsureExpandoObject(cx, wrapper, target);
+    JSObject *expandoObject = singleton.ensureExpandoObject(cx, wrapper, target);
     if (!expandoObject)
         return false;
 
@@ -1043,7 +1066,7 @@ bool
 XPCWrappedNativeXrayTraits::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
     JSObject *target = getTargetObject(wrapper);
-    JSObject *expando = LookupExpandoObject(cx, target, wrapper);
+    JSObject *expando = singleton.getExpandoObject(cx, target, wrapper);
     JSBool b = true;
     if (expando) {
         JSAutoCompartment ac(cx, expando);
@@ -1066,7 +1089,7 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, uns
     // Enumerate expando properties first. Note that the expando object lives
     // in the target compartment.
     JSObject *target = getTargetObject(wrapper);
-    JSObject *expando = LookupExpandoObject(cx, target, wrapper);
+    JSObject *expando = singleton.getExpandoObject(cx, target, wrapper);
     if (expando) {
         JSAutoCompartment ac(cx, expando);
         if (!js::GetPropertyNames(cx, expando, flags, &props))
