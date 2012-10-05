@@ -249,20 +249,6 @@ CloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
     }
     return true;
 }
-
-JSObject *
-createHolder(JSContext *cx, JSObject *wrapper)
-{
-    JSObject *global = JS_GetGlobalForObject(cx, wrapper);
-    JSObject *holder = JS_NewObjectWithGivenProto(cx, &HolderClass, nullptr,
-                                                  global);
-    if (!holder)
-        return nullptr;
-
-    js::SetReservedSlot(holder, JSSLOT_RESOLVING, PrivateValue(NULL));
-    return holder;
-}
-
 }
 
 using namespace XrayUtils;
@@ -346,6 +332,11 @@ public:
     {
         MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
     }
+
+    JSObject* getHolder(JSObject *wrapper);
+    JSObject* ensureHolder(JSContext *cx, JSObject *wrapper);
+
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) = 0;
 };
 
 class XPCWrappedNativeXrayTraits : public XrayTraits
@@ -365,11 +356,6 @@ public:
     static bool construct(JSContext *cx, JSObject *wrapper, unsigned argc,
                           Value *argv, Value *rval);
 
-    static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper)
-    {
-        return getHolderObject(wrapper);
-    }
-
     static bool isResolving(JSContext *cx, JSObject *holder, jsid id);
 
     static bool resolveDOMCollectionProperty(JSContext *cx, JSObject *wrapper, JSObject *holder,
@@ -381,13 +367,9 @@ public:
 
     typedef ResolvingId ResolvingIdImpl;
 
-    static XPCWrappedNativeXrayTraits singleton;
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
 
-private:
-    static JSObject* getHolderObject(JSObject *wrapper)
-    {
-        return &js::GetProxyExtra(wrapper, 0).toObject();
-    }
+    static XPCWrappedNativeXrayTraits singleton;
 };
 
 class ProxyXrayTraits : public XrayTraits
@@ -403,10 +385,6 @@ public:
     static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                                JS::AutoIdVector &props);
-    static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper)
-    {
-        return getHolderObject(cx, wrapper, true);
-    }
 
     static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
     {
@@ -415,21 +393,9 @@ public:
 
     typedef ResolvingIdDummy ResolvingIdImpl;
 
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
+
     static ProxyXrayTraits singleton;
-
-private:
-    static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper,
-                                     bool createHolder)
-    {
-        if (!js::GetProxyExtra(wrapper, 0).isUndefined())
-            return &js::GetProxyExtra(wrapper, 0).toObject();
-
-        if (!createHolder)
-            return nullptr;
-
-        return createHolderObject(cx, wrapper);
-    }
-    static JSObject* createHolderObject(JSContext *cx, JSObject *wrapper);
 };
 
 class DOMXrayTraits : public XrayTraits
@@ -445,10 +411,6 @@ public:
     static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                                JS::AutoIdVector &props);
-    static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper)
-    {
-        return getHolderObject(cx, wrapper, true);
-    }
 
     static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
     {
@@ -457,21 +419,9 @@ public:
 
     typedef ResolvingIdDummy ResolvingIdImpl;
 
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
+
     static DOMXrayTraits singleton;
-
-private:
-    static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper,
-                                     bool createHolder)
-    {
-        if (!js::GetProxyExtra(wrapper, 0).isUndefined())
-            return &js::GetProxyExtra(wrapper, 0).toObject();
-
-        if (!createHolder)
-            return nullptr;
-
-        return createHolderObject(cx, wrapper);
-    }
-    static JSObject* createHolderObject(JSContext *cx, JSObject *wrapper);
 };
 
 XPCWrappedNativeXrayTraits XPCWrappedNativeXrayTraits::singleton;
@@ -508,6 +458,26 @@ FindWrapper(JSContext *cx, JSObject *wrapper)
     }
 
     return wrapper;
+}
+
+JSObject*
+XrayTraits::getHolder(JSObject *wrapper)
+{
+    MOZ_ASSERT(WrapperFactory::IsXrayWrapper(wrapper));
+    js::Value v = js::GetProxyExtra(wrapper, 0);
+    return v.isObject() ? &v.toObject() : nullptr;
+}
+
+JSObject*
+XrayTraits::ensureHolder(JSContext *cx, JSObject *wrapper)
+{
+    JSObject *holder = getHolder(wrapper);
+    if (holder)
+        return holder;
+    holder = createHolder(cx, wrapper); // virtual trap.
+    if (holder)
+        js::SetProxyExtra(wrapper, 0, ObjectValue(*holder));
+    return holder;
 }
 
 bool
@@ -1000,7 +970,7 @@ bool
 XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                       PropertyDescriptor *desc)
 {
-    JSObject *holder = getHolderObject(wrapper);
+    JSObject *holder = singleton.ensureHolder(cx, wrapper);
     if (isResolving(cx, holder, id)) {
         if (!(desc->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
             if (!desc->getter)
@@ -1089,6 +1059,19 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, uns
     return true;
 }
 
+JSObject *
+XPCWrappedNativeXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
+{
+    JSObject *global = JS_GetGlobalForObject(cx, wrapper);
+    JSObject *holder = JS_NewObjectWithGivenProto(cx, &HolderClass, nullptr,
+                                                  global);
+    if (!holder)
+        return nullptr;
+
+    js::SetReservedSlot(holder, JSSLOT_RESOLVING, PrivateValue(NULL));
+    return holder;
+}
+
 bool
 XPCWrappedNativeXrayTraits::call(JSContext *cx, JSObject *wrapper,
                                  unsigned argc, Value *vp)
@@ -1166,7 +1149,7 @@ bool
 ProxyXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                 PropertyDescriptor *desc)
 {
-    JSObject *holder = getHolderObject(cx, wrapper);
+    JSObject *holder = singleton.ensureHolder(cx, wrapper);
     if (!holder)
         return false;
 
@@ -1182,7 +1165,7 @@ ProxyXrayTraits::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
         return false;
 
     JSObject *holder;
-    if (*bp && (holder = getHolderObject(cx, wrapper, false)))
+    if (*bp && (holder = singleton.getHolder(wrapper)))
         JS_DeletePropertyById(cx, holder, id);
 
     return true;
@@ -1203,14 +1186,10 @@ ProxyXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags
 // XPCWrappedNativeXrayTraits. Instead, it's a funny hybrid of the 'expando' and
 // 'holder' properties. However, we store it in the same slot. Exercise caution.
 JSObject*
-ProxyXrayTraits::createHolderObject(JSContext *cx, JSObject *wrapper)
+ProxyXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
 {
-    JSObject *obj = JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
-                                               JS_GetGlobalForObject(cx, wrapper));
-    if (!obj)
-        return nullptr;
-    js::SetProxyExtra(wrapper, 0, ObjectValue(*obj));
-    return obj;
+    return JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
+                                      JS_GetGlobalForObject(cx, wrapper));
 }
 
 bool
@@ -1254,7 +1233,7 @@ DOMXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObjec
 bool
 DOMXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id, PropertyDescriptor *desc)
 {
-    JSObject *holder = getHolderObject(cx, wrapper);
+    JSObject *holder = singleton.ensureHolder(cx, wrapper);
     if (!holder)
         return false;
 
@@ -1266,7 +1245,7 @@ bool
 DOMXrayTraits::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
     JSObject *holder;
-    if ((holder = getHolderObject(cx, wrapper, false)))
+    if ((holder = singleton.getHolder(wrapper)))
         JS_DeletePropertyById(cx, holder, id);
 
     return true;
@@ -1297,14 +1276,10 @@ DOMXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
 }
 
 JSObject*
-DOMXrayTraits::createHolderObject(JSContext *cx, JSObject *wrapper)
+DOMXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
 {
-    JSObject *obj = JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
-                                               JS_GetGlobalForObject(cx, wrapper));
-    if (!obj)
-        return nullptr;
-    js::SetProxyExtra(wrapper, 0, ObjectValue(*obj));
-    return obj;
+    return JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
+                                      JS_GetGlobalForObject(cx, wrapper));
 }
 
 template <typename Base, typename Traits>
@@ -1393,7 +1368,7 @@ bool
 XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                  bool set, js::PropertyDescriptor *desc)
 {
-    JSObject *holder = Traits::getHolderObject(cx, wrapper);
+    JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
     if (Traits::isResolving(cx, holder, id)) {
         desc->obj = NULL;
         return true;
@@ -1493,7 +1468,7 @@ bool
 XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                     bool set, PropertyDescriptor *desc)
 {
-    JSObject *holder = Traits::getHolderObject(cx, wrapper);
+    JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
     if (Traits::isResolving(cx, holder, id)) {
         desc->obj = NULL;
         return true;
@@ -1550,7 +1525,7 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
     // If shadowing is forbidden, see if the id corresponds to an underlying
     // native property.
     if (WrapperFactory::IsShadowingForbidden(wrapper)) {
-        JSObject *holder = Traits::getHolderObject(cx, wrapper);
+        JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
         js::PropertyDescriptor nativeProp;
         if (!Traits::resolveNativeProperty(cx, wrapper, holder, id, false, &nativeProp))
             return false;
