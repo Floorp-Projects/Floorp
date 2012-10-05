@@ -456,7 +456,7 @@ DeviceManagerD3D9::Init()
   if (console) {
     nsString msg;
     msg +=
-      NS_LITERAL_STRING("Direct3D 9 DeviceManager Initialized Succesfully.\nDriver: ");
+      NS_LITERAL_STRING("Direct3D 9 DeviceManager Initialized Successfully.\nDriver: ");
     msg += NS_ConvertUTF8toUTF16(
       nsDependentCString((const char*)identifier.Driver));
     msg += NS_LITERAL_STRING("\nDescription: ");
