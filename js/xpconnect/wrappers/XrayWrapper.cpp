@@ -333,6 +333,10 @@ public:
 
 class XrayTraits
 {
+public:
+    static JSObject* getInnerObject(JSObject *wrapper) {
+        return js::UnwrapObject(wrapper, /* stopAtOuter = */ false);
+    }
 };
 
 class XPCWrappedNativeXrayTraits : public XrayTraits
@@ -352,7 +356,6 @@ public:
     {
         return getHolderObject(wrapper);
     }
-    static JSObject* getInnerObject(JSObject *wrapper);
 
     static bool isResolving(JSContext *cx, JSObject *holder, jsid id);
 
@@ -386,10 +389,6 @@ public:
     static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper)
     {
         return getHolderObject(cx, wrapper, true);
-    }
-    static JSObject* getInnerObject(JSObject *wrapper)
-    {
-        return &js::GetProxyPrivate(wrapper).toObject();
     }
 
     static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
@@ -432,10 +431,6 @@ public:
     static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper)
     {
         return getHolderObject(cx, wrapper, true);
-    }
-    static JSObject* getInnerObject(JSObject *wrapper)
-    {
-        return &js::GetProxyPrivate(wrapper).toObject();
     }
 
     static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
@@ -484,7 +479,7 @@ GetWrappedNativeFromHolder(JSObject *holder)
 {
     MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
     JSObject *wrapper = &js::GetReservedSlot(holder, JSSLOT_WRAPPER).toObject();
-    return GetWrappedNative(js::UnwrapObject(wrapper, /* stopAtOuter = */ false));
+    return GetWrappedNative(XrayTraits::getInnerObject(wrapper));
 }
 
 static JSObject *
@@ -510,12 +505,6 @@ FindWrapper(JSContext *cx, JSObject *wrapper)
     }
 
     return wrapper;
-}
-
-JSObject*
-XPCWrappedNativeXrayTraits::getInnerObject(JSObject *wrapper)
-{
-    return GetWrappedNativeObjectFromHolder(getHolderObject(wrapper));
 }
 
 bool
