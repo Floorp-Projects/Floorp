@@ -334,7 +334,7 @@ public:
 class XrayTraits
 {
 public:
-    static JSObject* getInnerObject(JSObject *wrapper) {
+    static JSObject* getTargetObject(JSObject *wrapper) {
         return js::UnwrapObject(wrapper, /* stopAtOuter = */ false);
     }
 };
@@ -479,7 +479,7 @@ GetWrappedNativeFromHolder(JSObject *holder)
 {
     MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
     JSObject *wrapper = &js::GetReservedSlot(holder, JSSLOT_WRAPPER).toObject();
-    return GetWrappedNative(XrayTraits::getInnerObject(wrapper));
+    return GetWrappedNative(XrayTraits::getTargetObject(wrapper));
 }
 
 static JSObject *
@@ -1102,7 +1102,7 @@ bool
 ProxyXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder,
                                        jsid id, bool set, JSPropertyDescriptor *desc)
 {
-    JSObject *obj = getInnerObject(wrapper);
+    JSObject *obj = getTargetObject(wrapper);
     return js::GetProxyHandler(obj)->getPropertyDescriptor(cx, wrapper, id, set, desc);
 }
 
@@ -1110,7 +1110,7 @@ bool
 ProxyXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
                                     JSObject *holder, jsid id, bool set, PropertyDescriptor *desc)
 {
-    JSObject *obj = getInnerObject(wrapper);
+    JSObject *obj = getTargetObject(wrapper);
     bool ok = js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, set, desc);
     if (ok) {
         // The 'not found' property descriptor has obj == NULL.
@@ -1137,7 +1137,7 @@ ProxyXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
 bool
 ProxyXrayTraits::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
-    JSObject *obj = getInnerObject(wrapper);
+    JSObject *obj = getTargetObject(wrapper);
     if (!js::GetProxyHandler(obj)->delete_(cx, wrapper, id, bp))
         return false;
 
@@ -1152,7 +1152,7 @@ bool
 ProxyXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                                 JS::AutoIdVector &props)
 {
-    JSObject *obj = getInnerObject(wrapper);
+    JSObject *obj = getTargetObject(wrapper);
     if (flags & (JSITER_OWNONLY | JSITER_HIDDEN))
         return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
 
@@ -1177,7 +1177,7 @@ bool
 DOMXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
                                      bool set, JSPropertyDescriptor *desc)
 {
-    JSObject *obj = getInnerObject(wrapper);
+    JSObject *obj = getTargetObject(wrapper);
     const NativePropertyHooks *nativeHooks = GetDOMClass(obj)->mNativeHooks;
 
     do {
@@ -1197,7 +1197,7 @@ bool
 DOMXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
                                   JSObject *holder, jsid id, bool set, JSPropertyDescriptor *desc)
 {
-    JSObject *obj = getInnerObject(wrapper);
+    JSObject *obj = getTargetObject(wrapper);
     const NativePropertyHooks *nativeHooks = GetDOMClass(obj)->mNativeHooks;
 
     if (nativeHooks->mResolveOwnProperty) {
@@ -1236,7 +1236,7 @@ bool
 DOMXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                               JS::AutoIdVector &props)
 {
-    JSObject *obj = getInnerObject(wrapper);
+    JSObject *obj = getTargetObject(wrapper);
     const NativePropertyHooks *nativeHooks = GetDOMClass(obj)->mNativeHooks;
 
     if (nativeHooks->mEnumerateOwnProperties &&
@@ -1372,7 +1372,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
 
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper)) {
-        JSObject *obj = Traits::getInnerObject(wrapper);
+        JSObject *obj = Traits::getTargetObject(wrapper);
         {
             JSAutoCompartment ac(cx, obj);
             if (!JS_GetPropertyDescriptorById(cx, obj, id,
@@ -1474,7 +1474,7 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
     // enter our policy.
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper)) {
-        JSObject *obj = Traits::getInnerObject(wrapper);
+        JSObject *obj = Traits::getTargetObject(wrapper);
         {
             JSAutoCompartment ac(cx, obj);
             if (!JS_GetPropertyDescriptorById(cx, obj, id,
@@ -1525,7 +1525,7 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
 
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper)) {
-        JSObject *obj = Traits::getInnerObject(wrapper);
+        JSObject *obj = Traits::getTargetObject(wrapper);
         JSAutoCompartment ac(cx, obj);
         if (!JS_WrapPropertyDescriptor(cx, desc))
             return false;
@@ -1558,7 +1558,7 @@ XrayWrapper<Base, Traits>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bo
 {
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper)) {
-        JSObject *obj = Traits::getInnerObject(wrapper);
+        JSObject *obj = Traits::getTargetObject(wrapper);
 
         JSAutoCompartment ac(cx, obj);
 
@@ -1580,7 +1580,7 @@ XrayWrapper<Base, Traits>::enumerate(JSContext *cx, JSObject *wrapper, unsigned 
 {
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper)) {
-        JSObject *obj = Traits::getInnerObject(wrapper);
+        JSObject *obj = Traits::getTargetObject(wrapper);
         JSAutoCompartment ac(cx, obj);
         return js::GetPropertyNames(cx, obj, flags, &props);
     }
