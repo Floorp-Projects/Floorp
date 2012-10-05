@@ -1035,6 +1035,7 @@ pref("devtools.debugger.ui.stackframes-width", 200);
 pref("devtools.debugger.ui.stackframes-pane-visible", true);
 pref("devtools.debugger.ui.variables-width", 300);
 pref("devtools.debugger.ui.variables-pane-visible", true);
+pref("devtools.debugger.ui.non-enum-visible", true);
 
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);

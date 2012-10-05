@@ -59,11 +59,11 @@ function testWithFrame()
       is(innerNodes[1].querySelector(".value").getAttribute("value"), "1",
         "Should have the right property value for |one|.");
 
-      is(globalNodes[0].querySelector(".name").getAttribute("value"), "Array",
+      is(globalNodes[0].querySelector(".name").getAttribute("value"), "InstallTrigger",
         "Should have the right property name for |Array|.");
 
-      is(globalNodes[0].querySelector(".value").getAttribute("value"), "[object Function]",
-        "Should have the right property value for |Array|.");
+      is(globalNodes[0].querySelector(".value").getAttribute("value"), "undefined",
+        "Should have the right property value for |InstallTrigger|.");
 
       let len = globalNodes.length - 1;
       is(globalNodes[len].querySelector(".name").getAttribute("value"), "window",

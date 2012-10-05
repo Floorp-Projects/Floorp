@@ -44,28 +44,32 @@ function testSimpleCall() {
         "The information for the variable wasn't set correctly.");
 
 
-      testVar.addProperties({ "helloWorld": { "value": "hello world" } });
+      testVar.addProperties({ "helloWorld": { "value": "hello world", "enumerable": true } });
 
       is(testVar.querySelector(".details").childNodes.length, 1,
         "A new detail node should have been added in the variable tree.");
 
 
-      testVar.addProperties({ "helloWorld": { "value": "hello jupiter" } });
+      testVar.addProperties({ "helloWorld": { "value": "hello jupiter", "enumerable": true } });
 
       is(testVar.querySelector(".details").childNodes.length, 1,
         "Shouldn't be able to duplicate nodes added in the variable tree.");
 
 
-      testVar.addProperties({ "someProp0": { "value": "random string" },
-                              "someProp1": { "value": "another string" } });
+      testVar.addProperties({ "someProp0": { "value": "random string", "enumerable": true },
+                              "someProp1": { "value": "another string", "enumerable": true } });
 
       is(testVar.querySelector(".details").childNodes.length, 3,
         "Two new detail nodes should have been added in the variable tree.");
 
 
-      testVar.addProperties({ "someProp2": { "value": { "type": "null" } },
-                              "someProp3": { "value": { "type": "undefined" } },
-                              "someProp4": { "value": { "type": "object", "class": "Object" } } });
+      testVar.addProperties({ "someProp2": { "value": { "type": "null" }, "enumerable": true },
+                              "someProp3": { "value": { "type": "undefined" }, "enumerable": true },
+                              "someProp4": {
+                                "value": { "type": "object", "class": "Object" },
+                                "enumerable": true
+                              }
+                            });
 
       is(testVar.querySelector(".details").childNodes.length, 6,
         "Three new detail nodes should have been added in the variable tree.");
