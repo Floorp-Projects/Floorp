@@ -261,17 +261,11 @@ namespace js {
  * when you need a parameter type for something that *may* be a pointer to a
  * direct field of a gcthing.
  */
-class InternalHandleBase
-{
-  protected:
-    static void * const zeroPointer;
-};
-
 template <typename T>
 class InternalHandle { };
 
 template <typename T>
-class InternalHandle<T*> : public InternalHandleBase
+class InternalHandle<T*>
 {
     void * const *holder;
     size_t offset;
@@ -316,7 +310,7 @@ class InternalHandle<T*> : public InternalHandleBase
      * fromMarkedLocation().
      */
     InternalHandle(T *field)
-      : holder(reinterpret_cast<void * const *>(&zeroPointer)),
+      : holder(reinterpret_cast<void * const *>(&NullPtr::constNullValue)),
         offset(uintptr_t(field))
     {
     }
