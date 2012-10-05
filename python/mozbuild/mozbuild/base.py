@@ -248,6 +248,11 @@ class MozbuildObject(object):
             'log_level': logging.INFO,
             'require_unix_environment': True,
             'ignore_errors': ignore_errors,
+
+            # Make manages its children, so mozprocess doesn't need to bother.
+            # Having mozprocess manage children can also have side-effects when
+            # building on Windows. See bug 796840.
+            'ignore_children': True,
         }
 
         if log:
@@ -284,7 +289,7 @@ class MozbuildObject(object):
     def _run_command(self, args=None, cwd=None, append_env=None,
         explicit_env=None, log_name=None, log_level=logging.INFO,
         line_handler=None, require_unix_environment=False,
-        ignore_errors=False):
+        ignore_errors=False, ignore_children=False):
         """Runs a single command to completion.
 
         Takes a list of arguments to run where the first item is the
@@ -299,6 +304,8 @@ class MozbuildObject(object):
         require_unix_environment if True will ensure the command is executed
         within a UNIX environment. Basically, if we are on Windows, it will
         execute the command via an appropriate UNIX-like shell.
+
+        ignore_children is proxied to mozprocess's ignore_children.
         """
         args = self._normalize_command(args, require_unix_environment)
 
@@ -329,7 +336,8 @@ class MozbuildObject(object):
         self.log(logging.DEBUG, 'process', {'env': use_env}, 'Environment: {env}')
 
         p = ProcessHandlerMixin(args, cwd=cwd, env=use_env,
-            processOutputLine=[handleLine], universal_newlines=True)
+            processOutputLine=[handleLine], universal_newlines=True,
+            ignore_children=ignore_children)
         p.run()
         p.processOutput()
         status = p.wait()
