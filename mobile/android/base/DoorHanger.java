@@ -150,7 +150,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
             URLSpan linkSpan = new URLSpan(linkUrl) {
                 @Override
                 public void onClick(View view) {
-                    Tabs.getInstance().loadUrlInTab(this.getURL());
+                    mActivity.loadUrlInTab(this.getURL());
                 }
             };
 

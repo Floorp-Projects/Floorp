@@ -191,6 +191,12 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
+    protected void loadRequest(String url, AwesomeBar.Target target, String searchEngine, boolean userEntered) {
+        mBrowserToolbar.setTitle(url);
+        super.loadRequest(url, target, searchEngine, userEntered);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -630,7 +636,7 @@ abstract public class BrowserApp extends GeckoApp
                     mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                         public void callback(String url) {
                             mBrowserToolbar.setProgressVisibility(true);
-                            Tabs.getInstance().loadUrl(url);
+                            loadUrl(url, AwesomeBar.Target.CURRENT_TAB);
                         }
                     });
                     mAboutHomeContent.setLoadCompleteCallback(new AboutHomeContent.VoidCallback() {
@@ -868,13 +874,13 @@ abstract public class BrowserApp extends GeckoApp
                 startActivity(intent);
                 return true;
             case R.id.addons:
-                Tabs.getInstance().loadUrlInTab("about:addons");
+                loadUrlInTab("about:addons");
                 return true;
             case R.id.downloads:
-                Tabs.getInstance().loadUrlInTab("about:downloads");
+                loadUrlInTab("about:downloads");
                 return true;
             case R.id.apps:
-                Tabs.getInstance().loadUrlInTab("about:apps");
+                loadUrlInTab("about:apps");
                 return true;
             case R.id.char_encoding:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
@@ -932,7 +938,7 @@ abstract public class BrowserApp extends GeckoApp
             @Override
             public void onPostExecute(Boolean shouldShowFeedbackPage) {
                 if (shouldShowFeedbackPage)
-                    Tabs.getInstance().loadUrlInTab("about:feedback");
+                    loadUrlInTab("about:feedback");
             }
         }).execute();
     }
