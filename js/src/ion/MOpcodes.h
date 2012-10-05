@@ -48,6 +48,7 @@ namespace ion {
     _(Sqrt)                                                                 \
     _(Pow)                                                                  \
     _(PowHalf)                                                              \
+    _(Random)                                                               \
     _(MathFunction)                                                         \
     _(Add)                                                                  \
     _(Sub)                                                                  \

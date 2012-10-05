@@ -379,6 +379,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineMathSqrt(uint32 argc, bool constructing);
     InliningStatus inlineMathMinMax(bool max, uint32 argc, bool constructing);
     InliningStatus inlineMathPow(uint32 argc, bool constructing);
+    InliningStatus inlineMathRandom(uint32 argc, bool constructing);
     InliningStatus inlineMathFunction(MMathFunction::Function function, uint32 argc,
                                       bool constructing);
 
