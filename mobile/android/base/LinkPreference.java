@@ -23,7 +23,7 @@ class LinkPreference extends Preference {
 
     @Override
     protected void onClick() {
-        GeckoApp.mAppContext.loadUrlInTab(mUrl);
+        Tabs.getInstance().loadUrlInTab(mUrl);
         callChangeListener(mUrl);
     }
 }
