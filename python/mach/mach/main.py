@@ -148,6 +148,9 @@ To see more help for a specific command, run:
                 sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 
             return self._run(argv)
+        except KeyboardInterrupt:
+            print('mach interrupted by signal or user action. Stopping.')
+            return 1
         finally:
             sys.stdin = orig_stdin
             sys.stdout = orig_stdout
