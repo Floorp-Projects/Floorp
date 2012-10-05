@@ -775,7 +775,7 @@ abstract public class GeckoApp
     }
 
     void handleFaviconRequest(final String url) {
-        (new GeckoAsyncTask<Void, Void, String>(mAppContext, GeckoAppShell.getHandler()) {
+        (new GeckoAsyncTask<Void, Void, String>() {
             @Override
             public String doInBackground(Void... params) {
                 return getFavicons().getFaviconUrlForPageUrl(url);
