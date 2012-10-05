@@ -986,6 +986,14 @@ CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
                (ourChange & nsChangeHint_NeedReflow),
                "Reflow hint bits set without actually asking for a reflow");
 
+  // nsChangeHint_UpdateEffects is inherited, but it can be set due to changes
+  // in inherited properties (fill and stroke).  Avoid propagating it into
+  // text nodes.
+  if ((ourChange & nsChangeHint_UpdateEffects) &&
+      aContent && !aContent->IsElement()) {
+    ourChange = NS_SubtractHint(ourChange, nsChangeHint_UpdateEffects);
+  }
+
   NS_UpdateHint(ourChange, aChangeToAssume);
   if (NS_UpdateHint(aMinChange, ourChange)) {
     if (!(ourChange & nsChangeHint_ReconstructFrame) || aContent) {
