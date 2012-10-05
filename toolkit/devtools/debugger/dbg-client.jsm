@@ -168,6 +168,10 @@ const ThreadStateTypes = {
  */
 const UnsolicitedNotifications = {
   "consoleAPICall": "consoleAPICall",
+  "fileActivity": "fileActivity",
+  "locationChange": "locationChange",
+  "networkEvent": "networkEvent",
+  "networkEventUpdate": "networkEventUpdate",
   "newScript": "newScript",
   "tabDetached": "tabDetached",
   "tabNavigated": "tabNavigated",
