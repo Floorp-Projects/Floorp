@@ -1167,6 +1167,11 @@ MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
 {
 }
 
+// Set the chain of expando objects for various consumers of the given object.
+// For Paris Bindings only. See the relevant infrastructure in XrayWrapper.cpp.
+JSObject* GetXrayExpandoChain(JSObject *obj);
+void SetXrayExpandoChain(JSObject *obj, JSObject *chain);
+
 } // namespace dom
 } // namespace mozilla
 

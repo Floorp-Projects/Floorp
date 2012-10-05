@@ -22,6 +22,7 @@
 #include "nsJSUtils.h"
 
 #include "mozilla/dom/BindingUtils.h"
+#include "dombindings.h"
 
 using namespace mozilla::dom;
 
@@ -238,11 +239,10 @@ public:
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
 
     virtual JSObject* getExpandoChain(JSObject *obj) {
-        MOZ_NOT_REACHED("Expando chain not yet implemented for non-WN objects");
-        return NULL;
+        return mozilla::dom::oldproxybindings::GetXrayExpandoChain(obj);
     }
     virtual void setExpandoChain(JSObject *obj, JSObject *chain) {
-        MOZ_NOT_REACHED("Expando chain not yet implemented for non-WN objects");
+        mozilla::dom::oldproxybindings::SetXrayExpandoChain(obj, chain);
     }
 
     static ProxyXrayTraits singleton;
@@ -274,11 +274,10 @@ public:
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
 
     virtual JSObject* getExpandoChain(JSObject *obj) {
-        MOZ_NOT_REACHED("Expando chain not yet implemented for non-WN objects");
-        return NULL;
+        return mozilla::dom::GetXrayExpandoChain(obj);
     }
     virtual void setExpandoChain(JSObject *obj, JSObject *chain) {
-        MOZ_NOT_REACHED("Expando chain not yet implemented for non-WN objects");
+        mozilla::dom::SetXrayExpandoChain(obj, chain);
     }
 
     static DOMXrayTraits singleton;
