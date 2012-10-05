@@ -9,7 +9,9 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-#TEST_DIRS += tests
+ifneq (Android,$(OS_TARGET))
+  TEST_DIRS += test
+endif
 
 include $(topsrcdir)/config/rules.mk
 
