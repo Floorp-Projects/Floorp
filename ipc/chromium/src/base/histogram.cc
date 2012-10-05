@@ -410,6 +410,24 @@ bool Histogram::HasValidRangeChecksum() const {
   return CalculateRangeChecksum() == range_checksum_;
 }
 
+size_t Histogram::SizeOfIncludingThis(size_t (*aMallocSizeOf)(const void*))
+{
+  size_t n = 0;
+  n += aMallocSizeOf(this);
+  // We're not allowed to do deep dives into STL data structures.  This
+  // is as close as we can get to measuring this array.
+  n += aMallocSizeOf(&ranges_[0]);
+  n += sample_.SizeOfExcludingThis(aMallocSizeOf);
+  return n;
+}
+
+size_t Histogram::SampleSet::SizeOfExcludingThis(size_t (*aMallocSizeOf)(const void*))
+{
+  // We're not allowed to do deep dives into STL data structures.  This
+  // is as close as we can get to measuring this array.
+  return aMallocSizeOf(&counts_[0]);
+}
+
 Histogram::Histogram(const std::string& name, Sample minimum,
                      Sample maximum, size_t bucket_count)
   : histogram_name_(name),
