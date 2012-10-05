@@ -2742,13 +2742,9 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
 }
 
 #ifdef JS_METHODJIT
-void JS_FASTCALL
-mjit::stubs::ArrayConcatTwoArrays(VMFrame &f)
+bool
+js::array_concat_dense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject result)
 {
-    JSObject *result = &f.regs.sp[-3].toObject();
-    JSObject *obj1 = &f.regs.sp[-2].toObject();
-    JSObject *obj2 = &f.regs.sp[-1].toObject();
-
     JS_ASSERT(result->isDenseArray() && obj1->isDenseArray() && obj2->isDenseArray());
 
     uint32_t initlen1 = obj1->getDenseArrayInitializedLength();
@@ -2757,11 +2753,11 @@ mjit::stubs::ArrayConcatTwoArrays(VMFrame &f)
     uint32_t initlen2 = obj2->getDenseArrayInitializedLength();
     JS_ASSERT(initlen2 == obj2->getArrayLength());
 
-    /* No overflow here due to nslots limit. */
+    /* No overflow here due to nelements limit. */
     uint32_t len = initlen1 + initlen2;
 
-    if (!result->ensureElements(f.cx, len))
-        THROW();
+    if (!result->ensureElements(cx, len))
+        return false;
 
     JS_ASSERT(!result->getDenseArrayInitializedLength());
     result->setDenseArrayInitializedLength(len);
@@ -2770,6 +2766,18 @@ mjit::stubs::ArrayConcatTwoArrays(VMFrame &f)
     result->initDenseArrayElements(initlen1, obj2->getDenseArrayElements(), initlen2);
 
     result->setDenseArrayLength(len);
+    return true;
+}
+
+void JS_FASTCALL
+mjit::stubs::ArrayConcatTwoArrays(VMFrame &f)
+{
+    RootedObject result(f.cx, &f.regs.sp[-3].toObject());
+    RootedObject obj1(f.cx, &f.regs.sp[-2].toObject());
+    RootedObject obj2(f.cx, &f.regs.sp[-1].toObject());
+
+    if (!array_concat_dense(f.cx, obj1, obj2, result))
+        THROW();
 }
 #endif /* JS_METHODJIT */
 

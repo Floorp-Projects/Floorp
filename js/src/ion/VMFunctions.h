@@ -429,6 +429,7 @@ JSObject *NewInitObject(JSContext *cx, HandleObject templateObject);
 bool ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 bool ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length);
 bool ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
+JSObject *ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject res);
 
 JSFlatString *StringFromCharCode(JSContext *cx, int32_t code);
 

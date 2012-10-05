@@ -1489,6 +1489,20 @@ LIRGenerator::visitArrayPush(MArrayPush *ins)
 }
 
 bool
+LIRGenerator::visitArrayConcat(MArrayConcat *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Object);
+    JS_ASSERT(ins->lhs()->type() == MIRType_Object);
+    JS_ASSERT(ins->rhs()->type() == MIRType_Object);
+
+    LArrayConcat *lir = new LArrayConcat(useFixed(ins->lhs(), CallTempReg1),
+                                         useFixed(ins->rhs(), CallTempReg2),
+                                         tempFixed(CallTempReg3),
+                                         tempFixed(CallTempReg4));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitLoadTypedArrayElement(MLoadTypedArrayElement *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
