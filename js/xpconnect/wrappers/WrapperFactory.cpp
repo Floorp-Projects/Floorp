@@ -493,7 +493,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     if (!wrapperObj || !usingXray)
         return wrapperObj;
 
-    JSObject *xrayHolder = XrayUtils::createHolder(cx, obj, parent);
+    JSObject *xrayHolder = XrayUtils::createHolder(cx, wrapperObj);
     if (!xrayHolder)
         return nullptr;
     js::SetProxyExtra(wrapperObj, 0, js::ObjectValue(*xrayHolder));
@@ -531,15 +531,15 @@ WrapperFactory::IsLocationObject(JSObject *obj)
 JSObject *
 WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
 {
-    JSObject *xrayHolder = XrayUtils::createHolder(cx, obj, js::GetObjectParent(obj));
-    if (!xrayHolder)
-        return nullptr;
     JSObject *proto;
     if (!js::GetObjectProto(cx, obj, &proto))
         return nullptr;
     JSObject *wrapperObj = Wrapper::New(cx, obj, proto, js::GetObjectParent(obj),
                                         &LW::singleton);
     if (!wrapperObj)
+        return nullptr;
+    JSObject *xrayHolder = XrayUtils::createHolder(cx, wrapperObj);
+    if (!xrayHolder)
         return nullptr;
     js::SetProxyExtra(wrapperObj, 0, js::ObjectValue(*xrayHolder));
     return wrapperObj;
@@ -634,7 +634,7 @@ WrapperFactory::WrapForSameCompartmentXray(JSContext *cx, JSObject *obj)
     // Make the holder. Note that this is currently for WNs only until we fix
     // bug 761704.
     if (type == XrayForWrappedNative) {
-        JSObject *xrayHolder = XrayUtils::createHolder(cx, obj, parent);
+        JSObject *xrayHolder = XrayUtils::createHolder(cx, wrapperObj);
         if (!xrayHolder)
             return nullptr;
         js::SetProxyExtra(wrapperObj, 0, js::ObjectValue(*xrayHolder));
