@@ -30,7 +30,7 @@ extern JSClass HolderClass;
 
 bool CloneExpandoChain(JSContext *cx, JSObject *src, JSObject *dst);
 
-JSObject *createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent);
+JSObject *createHolder(JSContext *cx, JSObject *wrapper);
 
 bool
 IsTransparent(JSContext *cx, JSObject *wrapper);
