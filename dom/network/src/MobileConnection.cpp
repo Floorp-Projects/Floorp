@@ -304,24 +304,24 @@ MobileConnection::SetCardLock(const jsval& aInfo, nsIDOMDOMRequest** aDomRequest
 }
 
 NS_IMETHODIMP
-MobileConnection::SendUSSD(const nsAString& aUSSDString,
-                           nsIDOMDOMRequest** request)
+MobileConnection::SendMMI(const nsAString& aMMIString,
+                          nsIDOMDOMRequest** request)
 {
   if (!mProvider) {
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SendUSSD(GetOwner(), aUSSDString, request);
+  return mProvider->SendMMI(GetOwner(), aMMIString, request);
 }
 
 NS_IMETHODIMP
-MobileConnection::CancelUSSD(nsIDOMDOMRequest** request)
+MobileConnection::CancelMMI(nsIDOMDOMRequest** request)
 {
   if (!mProvider) {
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->CancelUSSD(GetOwner(), request);
+  return mProvider->CancelMMI(GetOwner(), request);
 }
 
 } // namespace network
