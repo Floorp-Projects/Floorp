@@ -561,7 +561,7 @@ public class AboutHomeContent extends ScrollView
 
                     container.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
-                            mActivity.loadUrlInTab(url);
+                            Tabs.getInstance().loadUrlInTab(url);
                         }
                     });
 
@@ -578,7 +578,7 @@ public class AboutHomeContent extends ScrollView
                     mLastTabs.setOnMoreTextClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
                             for (String url : lastTabUrlsList)
-                                mActivity.loadUrlInTab(url);
+                                Tabs.getInstance().loadUrlInTab(url);
                         }
                     });
                     mLastTabs.show();
