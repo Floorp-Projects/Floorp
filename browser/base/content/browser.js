@@ -4145,7 +4145,7 @@ var XULBrowserWindow = {
       }
 
       function onContentRSChange(e) {
-        if (e.target.readyState != 'interactive' && e.target.readyState != "complete")
+        if (e.target.readyState != "interactive" && e.target.readyState != "complete")
           return;
 
         e.target.removeEventListener("readystate", onContentRSChange);
