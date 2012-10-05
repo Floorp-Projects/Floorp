@@ -337,6 +337,17 @@ public:
     static JSObject* getTargetObject(JSObject *wrapper) {
         return js::UnwrapObject(wrapper, /* stopAtOuter = */ false);
     }
+
+
+    static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp)
+    {
+        MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
+    }
+    static bool construct(JSContext *cx, JSObject *wrapper, unsigned argc,
+                          Value *argv, Value *rval)
+    {
+        MOZ_NOT_REACHED("Call trap currently implemented only for XPCWNs");
+    }
 };
 
 class XPCWrappedNativeXrayTraits : public XrayTraits
@@ -352,6 +363,10 @@ public:
     static bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                                JS::AutoIdVector &props);
+    static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp);
+    static bool construct(JSContext *cx, JSObject *wrapper, unsigned argc,
+                          Value *argv, Value *rval);
+
     static JSObject* getHolderObject(JSContext *cx, JSObject *wrapper)
     {
         return getHolderObject(wrapper);
@@ -1099,6 +1114,59 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, uns
 }
 
 bool
+XPCWrappedNativeXrayTraits::call(JSContext *cx, JSObject *wrapper,
+                                 unsigned argc, Value *vp)
+{
+    JSObject *holder = GetHolder(wrapper);
+    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
+
+    // Run the resolve hook of the wrapped native.
+    if (NATIVE_HAS_FLAG(wn, WantCall)) {
+        XPCCallContext ccx(JS_CALLER, cx, wrapper, nullptr, JSID_VOID, argc,
+                           vp + 2, vp);
+        if (!ccx.IsValid())
+            return false;
+        bool ok = true;
+        nsresult rv = wn->GetScriptableInfo()->GetCallback()->Call(wn, cx, wrapper,
+                                                                   argc, vp + 2, vp, &ok);
+        if (NS_FAILED(rv)) {
+            if (ok)
+                XPCThrower::Throw(rv, cx);
+            return false;
+        }
+    }
+
+    return true;
+
+}
+
+bool
+XPCWrappedNativeXrayTraits::construct(JSContext *cx, JSObject *wrapper,
+                                      unsigned argc, Value *argv, Value *rval)
+{
+    JSObject *holder = GetHolder(wrapper);
+    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
+
+    // Run the resolve hook of the wrapped native.
+    if (NATIVE_HAS_FLAG(wn, WantConstruct)) {
+        XPCCallContext ccx(JS_CALLER, cx, wrapper, nullptr, JSID_VOID, argc, argv, rval);
+        if (!ccx.IsValid())
+            return false;
+        bool ok = true;
+        nsresult rv = wn->GetScriptableInfo()->GetCallback()->Construct(wn, cx, wrapper,
+                                                                        argc, argv, rval, &ok);
+        if (NS_FAILED(rv)) {
+            if (ok)
+                XPCThrower::Throw(rv, cx);
+            return false;
+        }
+    }
+
+    return true;
+
+}
+
+bool
 ProxyXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder,
                                        jsid id, bool set, JSPropertyDescriptor *desc)
 {
@@ -1659,26 +1727,7 @@ template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp)
 {
-    JSObject *holder = GetHolder(wrapper);
-    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
-
-    // Run the resolve hook of the wrapped native.
-    if (NATIVE_HAS_FLAG(wn, WantCall)) {
-        XPCCallContext ccx(JS_CALLER, cx, wrapper, nullptr, JSID_VOID, argc,
-                           vp + 2, vp);
-        if (!ccx.IsValid())
-            return false;
-        bool ok = true;
-        nsresult rv = wn->GetScriptableInfo()->GetCallback()->Call(wn, cx, wrapper,
-                                                                   argc, vp + 2, vp, &ok);
-        if (NS_FAILED(rv)) {
-            if (ok)
-                XPCThrower::Throw(rv, cx);
-            return false;
-        }
-    }
-
-    return true;
+    return Traits::call(cx, wrapper, argc, vp);
 }
 
 template <typename Base, typename Traits>
@@ -1686,25 +1735,7 @@ bool
 XrayWrapper<Base, Traits>::construct(JSContext *cx, JSObject *wrapper, unsigned argc,
                                      js::Value *argv, js::Value *rval)
 {
-    JSObject *holder = GetHolder(wrapper);
-    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
-
-    // Run the resolve hook of the wrapped native.
-    if (NATIVE_HAS_FLAG(wn, WantConstruct)) {
-        XPCCallContext ccx(JS_CALLER, cx, wrapper, nullptr, JSID_VOID, argc, argv, rval);
-        if (!ccx.IsValid())
-            return false;
-        bool ok = true;
-        nsresult rv = wn->GetScriptableInfo()->GetCallback()->Construct(wn, cx, wrapper,
-                                                                        argc, argv, rval, &ok);
-        if (NS_FAILED(rv)) {
-            if (ok)
-                XPCThrower::Throw(rv, cx);
-            return false;
-        }
-    }
-
-    return true;
+    return Traits::construct(cx, wrapper, argc, argv, rval);
 }
 
 
