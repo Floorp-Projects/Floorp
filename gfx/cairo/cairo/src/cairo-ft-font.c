@@ -1368,7 +1368,11 @@ _render_glyph_outline (FT_Face                    face,
 
         if (!initialized_setLcdFilter) {
           initialized_setLcdFilter = 1;
+#ifdef HAVE_FT_LIBRARY_SETLCDFILTER
+	  setLcdFilter = &FT_Library_SetLcdFilter;
+#else
           setLcdFilter = (setLcdFilterFunc) dlsym(RTLD_DEFAULT, "FT_Library_SetLcdFilter");
+#endif
         }
 
 	if (setLcdFilter)
