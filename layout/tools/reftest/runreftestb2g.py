@@ -234,11 +234,11 @@ class B2GReftest(RefTest):
             self._devicemanager.removeDir(self.remoteTestRoot)
 
             # Restore the original user.js.
-            self._devicemanager.checkCmdAs(['shell', 'rm', '-f', self.userJS])
+            self._devicemanager._checkCmdAs(['shell', 'rm', '-f', self.userJS])
             if self._devicemanager.useDDCopy:
-                self._devicemanager.checkCmdAs(['shell', 'dd', 'if=%s.orig' % self.userJS, 'of=%s' % self.userJS])
+                self._devicemanager._checkCmdAs(['shell', 'dd', 'if=%s.orig' % self.userJS, 'of=%s' % self.userJS])
             else:
-                self._devicemanager.checkCmdAs(['shell', 'cp', '%s.orig' % self.userJS, self.userJS])
+                self._devicemanager._checkCmdAs(['shell', 'cp', '%s.orig' % self.userJS, self.userJS])
 
             # We've restored the original profile, so reboot the device so that
             # it gets picked up.
@@ -403,11 +403,11 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
 
         # In B2G, user.js is always read from /data/local, not the profile
         # directory.  Backup the original user.js first so we can restore it.
-        self._devicemanager.checkCmdAs(['shell', 'rm', '-f', '%s.orig' % self.userJS])
+        self._devicemanager._checkCmdAs(['shell', 'rm', '-f', '%s.orig' % self.userJS])
         if self._devicemanager.useDDCopy:
-            self._devicemanager.checkCmdAs(['shell', 'dd', 'if=%s' % self.userJS, 'of=%s.orig' % self.userJS])
+            self._devicemanager._checkCmdAs(['shell', 'dd', 'if=%s' % self.userJS, 'of=%s.orig' % self.userJS])
         else:
-            self._devicemanager.checkCmdAs(['shell', 'cp', self.userJS, '%s.orig' % self.userJS])
+            self._devicemanager._checkCmdAs(['shell', 'cp', self.userJS, '%s.orig' % self.userJS])
         self._devicemanager.pushFile(os.path.join(profileDir, "user.js"), self.userJS)
 
         self.updateProfilesIni(self.remoteProfile)
