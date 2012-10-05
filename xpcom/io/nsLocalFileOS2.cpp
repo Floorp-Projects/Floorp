@@ -1716,7 +1716,7 @@ nsLocalFile::GetLastModifiedTime(PRTime *aLastModifiedTime)
     // microseconds -> milliseconds
     int64_t usecPerMsec;
     LL_I2L(usecPerMsec, PR_USEC_PER_MSEC);
-    LL_DIV(*aLastModifiedTime, mFileInfo64.modifyTime, usecPerMsec);
+    *aLastModifiedTime = mFileInfo64.modifyTime / usecPerMsec;
     return NS_OK;
 }
 

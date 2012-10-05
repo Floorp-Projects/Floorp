@@ -90,7 +90,7 @@ NowInMinutes()
 {
     PRTime now = PR_Now(), minutes, factor;
     LL_I2L(factor, 60 * PR_USEC_PER_SEC);
-    LL_DIV(minutes, now, factor);
+    minutes = now / factor;
     uint32_t result;
     LL_L2UI(result, minutes);
     return result;

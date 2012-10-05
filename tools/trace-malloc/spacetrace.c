@@ -119,7 +119,7 @@ ticks2xsec(tmreader * aReader, uint32_t aTicks, uint32_t aResolution)
     LL_UI2L(tmp64, aTicks);
     bigone *= tmp64;
     LL_UI2L(tmp64, aReader->ticksPerSec);
-    LL_DIV(bigone, bigone, tmp64);
+    bigone /= tmp64;
     LL_L2UI(retval, bigone);
     return retval;
 }
@@ -2045,7 +2045,7 @@ optionGetDataOut(PRFileDesc * inFD, STOptions * inOptions)
         uint64_t mul64 = multiplier; \
         uint64_t div64; \
         \
-        LL_DIV(div64, inOptions->m##option_name##64, mul64); \
+        div64 = inOptions->m##option_name##64 / mul64; \
         PR_fprintf(inFD, "%s%s=%llu", (0 == mark++) ? "?" : "&", #option_name, div64); \
     }
 
@@ -3876,7 +3876,7 @@ graphFootprint(STRequest * inRequest, STRun * aRun)
                         LL_I2L(mem64, (maxMemory - minMemory));
 
                         in64 = ydata64 * spacey64;
-                        LL_DIV(in64, in64, mem64);
+                        in64 /= mem64;
                         LL_L2I(in32, in64);
 
                         x2 = x1;
@@ -4092,7 +4092,7 @@ graphTimeval(STRequest * inRequest, STRun * aRun)
                         LL_I2L(mem64, (maxMemory - minMemory));
 
                         in64 = ydata64 * spacey64;
-                        LL_DIV(in64, in64, mem64);
+                        in64 /= mem64;
                         LL_L2I(in32, in64);
 
                         x2 = x1;
@@ -4310,7 +4310,7 @@ graphLifespan(STRequest * inRequest, STRun * aRun)
                         LL_I2L(mem64, (maxMemory - minMemory));
 
                         in64 = ydata64 * spacey64;
-                        LL_DIV(in64, in64, mem64);
+                        in64 /= mem64;
                         LL_L2I(in32, in64);
 
                         x2 = x1;
@@ -4510,7 +4510,7 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                     LL_UI2L(percent64, percents[traverse]);
                     result64 = maxWeight64 - minWeight64;
                     result64 *= percent64;
-                    LL_DIV(result64, result64, hundred64);
+                    result64 /= hundred64;
                     PR_snprintf(bytes[traverse], 32, "%llu", result64);
                 }
 
@@ -4542,7 +4542,7 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                         weight64 = maxWeight64 - minWeight64;
 
                         in64 = YData64[traverse] * spacey64;
-                        LL_DIV(in64, in64, weight64);
+                        in64 /= weight64;
                         LL_L2I(in32, in64);
 
                         x2 = x1;
@@ -4732,7 +4732,7 @@ displayOptionInt64(STRequest * inRequest,
         uint64_t mul64 = multiplier;
         uint64_t div64;
 
-        LL_DIV(div64, value, mul64);
+        div64 = value / mul64;
         PR_fprintf(inRequest->mFD,
                    "<input type=text name=%s value=%llu>\n",
                    option_name, div64);
