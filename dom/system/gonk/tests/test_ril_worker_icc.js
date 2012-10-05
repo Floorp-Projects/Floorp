@@ -363,6 +363,39 @@ add_test(function test_stk_proactive_command_poll_interval() {
   run_next_test();
 });
 
+add_test(function test_stk_proactive_command_event_list() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  let event_1 = [
+    0xD0,
+    0x0F,
+    0x81, 0x03, 0x01, 0x05, 0x00,
+    0x82, 0x02, 0x81, 0x82,
+    0x99, 0x04, 0x00, 0x01, 0x02, 0x03];
+
+  for (let i = 0; i < event_1.length; i++) {
+    pduHelper.writeHexOctet(event_1[i]);
+  }
+
+  let berTlv = berHelper.decode(event_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, 0x05);
+  do_check_eq(tlv.value.commandQualifier, 0x00);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_EVENT_LIST, ctlvs);
+  do_check_eq(Array.isArray(tlv.value.eventList), true);
+  for (let i = 0; i < tlv.value.eventList.length; i++) {
+    do_check_eq(tlv.value.eventList[i], i);
+  }
+
+  run_next_test();
+});
+
 /**
  * Verify ComprehensionTlvHelper.getSizeOfLengthOctets
  */
@@ -417,3 +450,4 @@ add_test(function test_write_length() {
 
   run_next_test();
 });
+
