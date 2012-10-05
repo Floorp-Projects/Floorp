@@ -78,7 +78,7 @@ int main(int argc, char** argv)
   PRTime end = PR_Now();
   PRTime conversion, ustoms;
   LL_I2L(ustoms, 1000);
-  LL_SUB(conversion, end, start);
+  conversion = end - start;
   LL_DIV(conversion, conversion, ustoms);
   char buf[500];
   PR_snprintf(buf, sizeof(buf),

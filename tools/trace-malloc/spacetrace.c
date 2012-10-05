@@ -4508,7 +4508,7 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                                 ST_TIMEVAL_PRINTABLE(cached));
 
                     LL_UI2L(percent64, percents[traverse]);
-                    LL_SUB(result64, maxWeight64, minWeight64);
+                    result64 = maxWeight64 - minWeight64;
                     LL_MUL(result64, result64, percent64);
                     LL_DIV(result64, result64, hundred64);
                     PR_snprintf(bytes[traverse], 32, "%llu", result64);
@@ -4539,7 +4539,7 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                          ** Need to do this math in 64 bits.
                          */
                         LL_I2L(spacey64, STGD_SPACE_Y);
-                        LL_SUB(weight64, maxWeight64, minWeight64);
+                        weight64 = maxWeight64 - minWeight64;
 
                         LL_MUL(in64, YData64[traverse], spacey64);
                         LL_DIV(in64, in64, weight64);
