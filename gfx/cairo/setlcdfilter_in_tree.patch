@@ -1,0 +1,30 @@
+diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-font.c
+--- a/gfx/cairo/cairo/src/cairo-ft-font.c
++++ b/gfx/cairo/cairo/src/cairo-ft-font.c
+@@ -1361,21 +1361,25 @@ static cairo_status_t
+        case FT_RENDER_MODE_MONO:
+        case FT_RENDER_MODE_LIGHT:
+        case FT_RENDER_MODE_NORMAL:
+        case FT_RENDER_MODE_MAX:
+        default:
+            break;
+            }
+ 
+         if (!initialized_setLcdFilter) {
+           initialized_setLcdFilter = 1;
++#ifdef HAVE_FT_LIBRARY_SETLCDFILTER
++         setLcdFilter = &FT_Library_SetLcdFilter;
++#else
+           setLcdFilter = (setLcdFilterFunc) dlsym(RTLD_DEFAULT, "FT_Library_SetLcdFilter");
++#endif
+         }
+ 
+        if (setLcdFilter)
+           setLcdFilter (library, lcd_filter);
+ 
+        fterror = FT_Render_Glyph (face->glyph, render_mode);
+ 
+        if (setLcdFilter)
+           setLcdFilter (library, FT_LCD_FILTER_NONE);
+ 
+
