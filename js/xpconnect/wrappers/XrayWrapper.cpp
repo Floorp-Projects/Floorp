@@ -44,6 +44,25 @@ JSClass HolderClass = {
 
 using namespace XrayUtils;
 
+XrayType
+GetXrayType(JSObject *obj)
+{
+    obj = js::UnwrapObject(obj, /* stopAtOuter = */ false);
+    if (mozilla::dom::IsDOMObject(obj))
+        return XrayForDOMObject;
+
+    if (mozilla::dom::oldproxybindings::instanceIsProxy(obj))
+        return XrayForDOMProxyObject;
+
+    js::Class* clasp = js::GetObjectClass(obj);
+    if (IS_WRAPPER_CLASS(clasp) || clasp->ext.innerObject) {
+        NS_ASSERTION(clasp->ext.innerObject || IS_WN_WRAPPER_OBJECT(obj),
+                     "We forgot to Morph a slim wrapper!");
+        return XrayForWrappedNative;
+    }
+    return NotXray;
+}
+
 ResolvingId::ResolvingId(JSObject *wrapper, jsid id)
     : mId(id),
     mHolder(getHolderObject(wrapper)),
@@ -218,6 +237,21 @@ public:
 XPCWrappedNativeXrayTraits XPCWrappedNativeXrayTraits::singleton;
 ProxyXrayTraits ProxyXrayTraits::singleton;
 DOMXrayTraits DOMXrayTraits::singleton;
+
+XrayTraits*
+GetXrayTraits(JSObject *obj)
+{
+    switch (GetXrayType(obj)) {
+      case XrayForDOMObject:
+        return &DOMXrayTraits::singleton;
+      case XrayForDOMProxyObject:
+        return &ProxyXrayTraits::singleton;
+      case XrayForWrappedNative:
+        return &XPCWrappedNativeXrayTraits::singleton;
+      default:
+        return nullptr;
+    }
+}
 
 /*
  * Xray expando handling.
