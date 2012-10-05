@@ -4195,7 +4195,6 @@ RIL[REQUEST_SEND_USSD] = function REQUEST_SEND_USSD(length, options) {
   if (DEBUG) {
     debug("REQUEST_SEND_USSD " + JSON.stringify(options)); 
   }
-  options.rilMessageType = "sendussd";
   options.success = options.rilRequestError == 0 ? true : false;
   options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
@@ -4204,7 +4203,6 @@ RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
   if (DEBUG) {
     debug("REQUEST_CANCEL_USSD" + JSON.stringify(options));
   }
-  options.rilMessageType = "cancelussd";
   options.success = options.rilRequestError == 0 ? true : false;
   options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
@@ -4631,7 +4629,7 @@ RIL[UNSOLICITED_ON_USSD] = function UNSOLICITED_ON_USSD() {
   if (!message || message == "") {
     return;
   }
-  this.sendDOMMessage({rilMessageType: "ussdreceived",
+  this.sendDOMMessage({rilMessageType: "USSDReceived",
                        message: message});
 };
 RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() {
