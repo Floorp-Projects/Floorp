@@ -985,84 +985,22 @@ int DirectDrawChannel::DeliverFrame(unsigned char* buffer, int bufferSize,
         return -1;
     }
 
-    unsigned char* ptr = (unsigned char*) ddsd.lpSurface;
-    // ddsd.lPitch; distance in bytes
-
-
-    switch (_incomingVideoType)
-    {
-        case kI420:
-        {
-            switch (_blitVideoType)
-            {
-                case kYUY2:
-                case kUYVY:
-                case kIYUV:  // same as kYV12
-                case kYV12:
-                    ConvertFromI420(buffer, _width,
-                                    _blitVideoType, 0,
-                                    _width, _height,
-                                    ptr);
-                    break;
-                case kRGB24:
-                {
-                    _tempRenderBuffer.VerifyAndAllocate(_width * _height * 3);
-                    unsigned char *ptrTempBuffer = _tempRenderBuffer.Buffer();
-                    ConvertFromI420(buffer, _width, kRGB24, 0, _width, _height,
-                                    ptrTempBuffer);
-                    for (int i = 0; i < _height; i++)
-                    {
-                        memcpy(ptr, ptrTempBuffer, _width * 3);
-                        ptrTempBuffer += _width * 3;
-                        ptr += ddsd.lPitch;
-                    }
-                    break;
-                }
-                case kARGB:
-                  ConvertFromI420(buffer, ddsd.lPitch, kARGB, 0,
-                                  _width, _height, ptr);
-                    break;
-                case kARGB4444:
-                    ConvertI420ToARGB4444(buffer, ptr, _width, _height,
-                                          (ddsd.lPitch >> 1) - _width);
-                    break;
-                case kARGB1555:
-                    ConvertI420ToARGB1555(buffer, ptr, _width, _height,
-                                          (ddsd.lPitch >> 1) - _width);
-                    break;
-                case kRGB565:
-                {
-                    _tempRenderBuffer.VerifyAndAllocate(_width * _height * 2);
-                    unsigned char *ptrTempBuffer = _tempRenderBuffer.Buffer();
-                    ConvertI420ToRGB565(buffer, ptrTempBuffer, _width, _height);
-                    ptr += ddsd.lPitch * (_height - 1);
-                    for (int i = 0; i < _height; i++)
-                    {
-                        memcpy(ptr, ptrTempBuffer, _width * 2);
-                        ptrTempBuffer += _width * 2;
-                        ptr -= ddsd.lPitch;
-                    }
-                    break;
-                }
-                default:
-                  assert(false &&
-                      "DirectDrawChannel::DeliverFrame unknown blitVideoType");
-                  WEBRTC_TRACE(kTraceError, kTraceVideo, -1,
-                               "%s unknown blitVideoType %d",
-                               __FUNCTION__, _blitVideoType);
-            }
-            break;
-        }
-        default:
-            assert(false &&
-                "DirectDrawChannel::DeliverFrame wrong incomming video type");
-            WEBRTC_TRACE(kTraceError, kTraceVideo, -1,
-                         "%s wrong incomming video type:%d",
-                         __FUNCTION__, _incomingVideoType);
+    int ret = 0;
+    if (_incomingVideoType == kI420) {
+      unsigned char* ptr = static_cast<unsigned char*>(ddsd.lpSurface);
+      ret = ConvertFromI420(buffer, ddsd.lPitch, _blitVideoType, 0,
+                            _width, _height, ptr);
+    } else {
+      assert(false &&
+             "DirectDrawChannel::DeliverFrame wrong incoming video type");
+             WEBRTC_TRACE(kTraceError, kTraceVideo, -1,
+             "%s wrong incoming video type:%d",
+             __FUNCTION__, _incomingVideoType);
+      ret = -1;
     }
     _offScreenSurfaceUpdated = true;
     offScreenSurface->Unlock(NULL);
-    return 0;
+    return ret;
 }
 
 int DirectDrawChannel::BlitFromOffscreenBufferToMixingBuffer(

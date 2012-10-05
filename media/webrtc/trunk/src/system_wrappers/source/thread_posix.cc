@@ -8,6 +8,40 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+// The state of a thread is controlled by the two member variables
+// _alive and _dead.
+// _alive represents the state the thread has been ordered to achieve.
+// It is set to true by the thread at startup, and is set to false by
+// other threads, using SetNotAlive() and Stop().
+// _dead represents the state the thread has achieved.
+// It is written by the thread encapsulated by this class only
+// (except at init). It is read only by the Stop() method.
+// The Run() method fires _event when it's started; this ensures that the
+// Start() method does not continue until after _dead is false.
+// This protects against premature Stop() calls from the creator thread, but
+// not from other threads.
+
+// Their transitions and states:
+// _alive    _dead  Set by
+// false     true   Constructor
+// true      false  Run() method entry
+// false     any    Run() method runFunction failure
+// any       false  Run() method exit (happens only with _alive false)
+// false     any    SetNotAlive
+// false     any    Stop         Stop waits for _dead to become true.
+//
+// Summarized a different way:
+// Variable   Writer               Reader
+// _alive     Constructor(false)   Run.loop
+//            Run.start(true)
+//            Run.fail(false)
+//            SetNotAlive(false)
+//            Stop(false)
+//
+// _dead      Constructor(true)    Stop.loop
+//            Run.start(false)
+//            Run.exit(true)
+
 #include "thread_posix.h"
 
 #include <errno.h>
@@ -26,8 +60,9 @@
 #include <mach/mach.h>
 #endif
 
-#include "event_wrapper.h"
-#include "trace.h"
+#include "system_wrappers/interface/critical_section_wrapper.h"
+#include "system_wrappers/interface/event_wrapper.h"
+#include "system_wrappers/interface/trace.h"
 
 namespace webrtc {
 extern "C"
@@ -60,6 +95,7 @@ ThreadPosix::ThreadPosix(ThreadRunFunction func, ThreadObj obj,
                          ThreadPriority prio, const char* threadName)
     : _runFunction(func),
       _obj(obj),
+      _crit_state(CriticalSectionWrapper::CreateCriticalSection()),
       _alive(false),
       _dead(true),
       _prio(prio),
@@ -118,6 +154,7 @@ ThreadPosix::~ThreadPosix()
 {
     pthread_attr_destroy(&_attr);
     delete _event;
+    delete _crit_state;
 }
 
 #define HAS_THREAD_ID !defined(MAC_IPHONE) && !defined(MAC_IPHONE_SIM)  &&  \
@@ -241,6 +278,7 @@ bool ThreadPosix::SetAffinity(const int* , const unsigned int)
 
 void ThreadPosix::SetNotAlive()
 {
+    CriticalSectionScoped cs(_crit_state);
     _alive = false;
 }
 
@@ -260,18 +298,27 @@ bool ThreadPosix::Shutdown()
 
 bool ThreadPosix::Stop()
 {
-    _alive = false;
+    bool dead = false;
+    {
+        CriticalSectionScoped cs(_crit_state);
+        _alive = false;
+        dead = _dead;
+    }
 
     // TODO (hellner) why not use an event here?
     // Wait up to 10 seconds for the thread to terminate
-    for (int i = 0; i < 1000 && !_dead; i++)
+    for (int i = 0; i < 1000 && !dead; i++)
     {
         timespec t;
         t.tv_sec = 0;
         t.tv_nsec = 10*1000*1000;
         nanosleep(&t, NULL);
+        {
+            CriticalSectionScoped cs(_crit_state);
+            dead = _dead;
+        }
     }
-    if (_dead)
+    if (dead)
     {
         return true;
     }
@@ -283,8 +330,11 @@ bool ThreadPosix::Stop()
 
 void ThreadPosix::Run()
 {
-    _alive = true;
-    _dead  = false;
+    {
+        CriticalSectionScoped cs(_crit_state);
+        _alive = true;
+        _dead  = false;
+    }
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID))
     _pid = GetThreadId();
 #endif
@@ -303,21 +353,29 @@ void ThreadPosix::Run()
         WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1,
                      "Thread without name started");
     }
+    bool alive = true;
     do
     {
         if (_runFunction)
         {
             if (!_runFunction(_obj))
             {
-                _alive = false;
+                alive = false;
             }
         }
         else
         {
-            _alive = false;
+            alive = false;
+        }
+        {
+            CriticalSectionScoped cs(_crit_state);
+            if (!alive) {
+              _alive = false;
+            }
+            alive = _alive;
         }
     }
-    while (_alive);
+    while (alive);
 
     if (_setThreadName)
     {
@@ -335,6 +393,9 @@ void ThreadPosix::Run()
         WEBRTC_TRACE(kTraceStateInfo, kTraceUtility,-1,
                      "Thread without name stopped");
     }
-    _dead = true;
+    {
+        CriticalSectionScoped cs(_crit_state);
+        _dead = true;
+    }
 }
 } // namespace webrtc

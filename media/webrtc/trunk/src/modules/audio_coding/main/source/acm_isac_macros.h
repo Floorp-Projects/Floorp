@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -28,7 +28,6 @@ namespace webrtc
 #   define ACM_ISAC_CONTROL           WebRtcIsac_Control
 #   define ACM_ISAC_CONTROL_BWE       WebRtcIsac_ControlBwe
 #   define ACM_ISAC_GETFRAMELEN       WebRtcIsac_ReadFrameLen
-#   define ACM_ISAC_VERSION           WebRtcIsac_version
 #   define ACM_ISAC_GETERRORCODE      WebRtcIsac_GetErrorCode
 #   define ACM_ISAC_GETSENDBITRATE    WebRtcIsac_GetUplinkBw
 #   define ACM_ISAC_SETMAXPAYLOADSIZE WebRtcIsac_SetMaxPayloadSize
@@ -55,7 +54,6 @@ namespace webrtc
 #   define ACM_ISAC_CONTROL           ACMISACFixControl         // local Impl
 #   define ACM_ISAC_CONTROL_BWE       ACMISACFixControlBWE      // local Impl
 #   define ACM_ISAC_GETFRAMELEN       WebRtcIsacfix_ReadFrameLen
-#   define ACM_ISAC_VERSION           WebRtcIsacfix_version
 #   define ACM_ISAC_GETERRORCODE      WebRtcIsacfix_GetErrorCode
 #   define ACM_ISAC_GETSENDBITRATE    ACMISACFixGetSendBitrate   // local Impl
 #   define ACM_ISAC_SETMAXPAYLOADSIZE WebRtcIsacfix_SetMaxPayloadSize

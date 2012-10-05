@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -14,7 +14,8 @@
 #include "system_wrappers/interface/list_wrapper.h"
 #include "system_wrappers/interface/map_wrapper.h"
 #include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
+
 #include "video_engine/vie_manager_base.h"
 
 namespace webrtc {
@@ -31,8 +32,8 @@ class ViERenderManager : private ViEManagerBase {
   explicit ViERenderManager(WebRtc_Word32 engine_id);
   ~ViERenderManager();
 
-  WebRtc_Word32 RegisterVideoRenderModule(VideoRender& render_module);
-  WebRtc_Word32 DeRegisterVideoRenderModule(VideoRender& render_module);
+  WebRtc_Word32 RegisterVideoRenderModule(VideoRender* render_module);
+  WebRtc_Word32 DeRegisterVideoRenderModule(VideoRender* render_module);
 
   ViERenderer* AddRenderStream(const WebRtc_Word32 render_id,
                                void* window,

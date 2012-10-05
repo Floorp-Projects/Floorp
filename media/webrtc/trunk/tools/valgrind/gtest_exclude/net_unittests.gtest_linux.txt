@@ -1,3 +1,0 @@
-# These tests fail due to certificate errors; see http://crbug.com/36770
-HTTPSRequestTest.HTTPSMismatchedTest
-SSLClientSocketTest.ConnectMismatched

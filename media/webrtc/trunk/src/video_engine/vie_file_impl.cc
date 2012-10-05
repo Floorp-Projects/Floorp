@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "engine_configurations.h"
-
 #include "video_engine/vie_file_impl.h"
+
+#include "engine_configurations.h"  // NOLINT
 
 #ifdef WEBRTC_VIDEO_ENGINE_FILE_API
 #include "common_video/jpeg/include/jpeg.h"
@@ -122,7 +122,8 @@ int ViEFileImpl::StopPlayFile(const int file_id) {
   return shared_data_->input_manager()->DestroyFilePlayer(file_id);
 }
 
-int ViEFileImpl::RegisterObserver(int file_id, ViEFileObserver& observer) {
+int ViEFileImpl::RegisterObserver(int file_id,
+                                  ViEFileObserver& observer) {  // NOLINT
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, ViEId(shared_data_->instance_id()),
                "%s(file_id: %d)", __FUNCTION__, file_id);
 
@@ -142,7 +143,7 @@ int ViEFileImpl::RegisterObserver(int file_id, ViEFileObserver& observer) {
     shared_data_->SetLastError(kViEFileObserverAlreadyRegistered);
     return -1;
   }
-  if (vie_file_player->RegisterObserver(observer) != 0) {
+  if (vie_file_player->RegisterObserver(&observer) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo,
                  ViEId(shared_data_->instance_id(), file_id),
                  "%s: Failed to register observer", __FUNCTION__, file_id);
@@ -152,7 +153,8 @@ int ViEFileImpl::RegisterObserver(int file_id, ViEFileObserver& observer) {
   return 0;
 }
 
-int ViEFileImpl::DeregisterObserver(int file_id, ViEFileObserver& observer) {
+int ViEFileImpl::DeregisterObserver(int file_id,
+                                    ViEFileObserver& observer) {  // NOLINT
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, ViEId(shared_data_->instance_id()),
                "%s(file_id: %d)", __FUNCTION__, file_id);
 
@@ -564,7 +566,6 @@ int ViEFileImpl::GetRenderSnapshot(const int video_channel,
   // not return you the buffer. Thus, we are not going to be writing to the
   // disk here.
   JpegEncoder jpeg_encoder;
-  RawImage input_image;
   if (jpeg_encoder.SetFileName(file_nameUTF8) == -1) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, shared_data_->instance_id(),
                  "\tCould not open output file '%s' for writing!",
@@ -572,23 +573,12 @@ int ViEFileImpl::GetRenderSnapshot(const int video_channel,
     return -1;
   }
 
-  input_image._width = video_frame.Width();
-  input_image._height = video_frame.Height();
-  video_frame.Swap(input_image._buffer, input_image._length,
-                   input_image._size);
-
-  if (jpeg_encoder.Encode(input_image) == -1) {
+  if (jpeg_encoder.Encode(video_frame) == -1) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, shared_data_->instance_id(),
                  "\tCould not encode i420 -> jpeg file '%s' for writing!",
                  file_nameUTF8);
-    if (input_image._buffer) {
-      delete [] input_image._buffer;
-      input_image._buffer = NULL;
-    }
     return -1;
   }
-  delete [] input_image._buffer;
-  input_image._buffer = NULL;
   return 0;
 }
 
@@ -629,7 +619,7 @@ int ViEFileImpl::GetCaptureDeviceSnapshot(const int capture_id,
   }
 
   VideoFrame video_frame;
-  if (GetNextCapturedFrame(capture_id, video_frame) == -1) {
+  if (GetNextCapturedFrame(capture_id, &video_frame) == -1) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, shared_data_->instance_id(),
                  "Could not gain acces to capture device %d video frame "
                  "%s:%d", capture_id, __FUNCTION__);
@@ -640,33 +630,20 @@ int ViEFileImpl::GetCaptureDeviceSnapshot(const int capture_id,
   // not return you the buffer Thusly, we are not going to be writing to the
   // disk here.
   JpegEncoder jpeg_encoder;
-  RawImage input_image;
-  input_image._width = video_frame.Width();
-  input_image._height = video_frame.Height();
-  video_frame.Swap(input_image._buffer, input_image._length,
-                   input_image._size);
 
   if (jpeg_encoder.SetFileName(file_nameUTF8) == -1) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, shared_data_->instance_id(),
                  "\tCould not open output file '%s' for writing!",
                  file_nameUTF8);
-
-    if (input_image._buffer) {
-      delete [] input_image._buffer;
-    }
     return -1;
   }
-  if (jpeg_encoder.Encode(input_image) == -1) {
+  if (jpeg_encoder.Encode(video_frame) == -1) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, shared_data_->instance_id(),
                  "\tCould not encode i420 -> jpeg file '%s' for "
                  "writing!", file_nameUTF8);
-    if (input_image._buffer) {
-      delete [] input_image._buffer;
-    }
+
     return -1;
   }
-  delete [] input_image._buffer;
-  input_image._buffer = NULL;
   return 0;
 }
 
@@ -678,7 +655,7 @@ int ViEFileImpl::GetCaptureDeviceSnapshot(const int capture_id,
   if (!capturer) {
     return -1;
   }
-  if (GetNextCapturedFrame(capture_id, video_frame) == -1) {
+  if (GetNextCapturedFrame(capture_id, &video_frame) == -1) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, shared_data_->instance_id(),
                  "Could not gain acces to capture device %d video frame "
                  "%s:%d", capture_id, __FUNCTION__);
@@ -698,7 +675,7 @@ int ViEFileImpl::GetCaptureDeviceSnapshot(const int capture_id,
   return 0;
 }
 
-int ViEFileImpl::FreePicture(ViEPicture& picture) {
+int ViEFileImpl::FreePicture(ViEPicture& picture) {  // NOLINT
   if (picture.data) {
     free(picture.data);
   }
@@ -725,7 +702,7 @@ int ViEFileImpl::SetCaptureDeviceImage(const int capture_id,
   VideoFrame capture_image;
   if (ViEFileImage::ConvertJPEGToVideoFrame(
           ViEId(shared_data_->instance_id(), capture_id), file_nameUTF8,
-          capture_image) != 0) {
+          &capture_image) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo,
                  ViEId(shared_data_->instance_id(), capture_id),
                  "%s(capture_id: %d) Failed to open file.", __FUNCTION__,
@@ -741,7 +718,7 @@ int ViEFileImpl::SetCaptureDeviceImage(const int capture_id,
 }
 
 int ViEFileImpl::SetCaptureDeviceImage(const int capture_id,
-const ViEPicture& picture) {
+                                       const ViEPicture& picture) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, shared_data_->instance_id(),
                "%s(capture_id: %d)", __FUNCTION__, capture_id);
 
@@ -762,7 +739,8 @@ const ViEPicture& picture) {
 
   VideoFrame capture_image;
   if (ViEFileImage::ConvertPictureToVideoFrame(
-  ViEId(shared_data_->instance_id(), capture_id), picture, capture_image) != 0) {
+      ViEId(shared_data_->instance_id(), capture_id), picture,
+          &capture_image) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo,
                  ViEId(shared_data_->instance_id(), capture_id),
                  "%s(capture_id: %d) Failed to use picture.", __FUNCTION__,
@@ -778,7 +756,7 @@ const ViEPicture& picture) {
 }
 
 int ViEFileImpl::SetRenderStartImage(const int video_channel,
-const char* file_nameUTF8) {
+                                     const char* file_nameUTF8) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo,
                ViEId(shared_data_->instance_id(), video_channel),
                "%s(video_channel: %d)", __FUNCTION__, video_channel);
@@ -792,7 +770,8 @@ const char* file_nameUTF8) {
 
   VideoFrame start_image;
   if (ViEFileImage::ConvertJPEGToVideoFrame(
-  ViEId(shared_data_->instance_id(), video_channel), file_nameUTF8, start_image) != 0) {
+      ViEId(shared_data_->instance_id(), video_channel), file_nameUTF8,
+          &start_image) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo,
                  ViEId(shared_data_->instance_id(), video_channel),
                  "%s(video_channel: %d) Failed to open file.", __FUNCTION__,
@@ -830,7 +809,8 @@ int ViEFileImpl::SetRenderStartImage(const int video_channel,
 
   VideoFrame start_image;
   if (ViEFileImage::ConvertPictureToVideoFrame(
-  ViEId(shared_data_->instance_id(), video_channel), picture, start_image) != 0) {
+      ViEId(shared_data_->instance_id(), video_channel), picture,
+          &start_image) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo,
                  ViEId(shared_data_->instance_id(), video_channel),
                  "%s(video_channel: %d) Failed to use picture.",
@@ -860,7 +840,7 @@ int ViEFileImpl::SetRenderTimeoutImage(const int video_channel,
   VideoFrame timeout_image;
   if (ViEFileImage::ConvertJPEGToVideoFrame(
           ViEId(shared_data_->instance_id(), video_channel), file_nameUTF8,
-          timeout_image) != 0) {
+          &timeout_image) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo,
                  ViEId(shared_data_->instance_id(), video_channel),
                  "%s(video_channel: %d) Failed to open file.", __FUNCTION__,
@@ -915,7 +895,7 @@ const unsigned int timeout_ms) {
   VideoFrame timeout_image;
   if (ViEFileImage::ConvertPictureToVideoFrame(
           ViEId(shared_data_->instance_id(), video_channel), picture,
-          timeout_image) != 0) {
+          &timeout_image) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo,
                  ViEId(shared_data_->instance_id(), video_channel),
                  "%s(video_channel: %d) Failed to use picture.",
@@ -946,7 +926,7 @@ const unsigned int timeout_ms) {
 }
 
 WebRtc_Word32 ViEFileImpl::GetNextCapturedFrame(WebRtc_Word32 capture_id,
-VideoFrame& video_frame) {
+                                                VideoFrame* video_frame) {
   ViEInputManagerScoped is(*(shared_data_->input_manager()));
   ViECapturer* capturer = is.Capture(capture_id);
   if (!capturer) {
@@ -955,8 +935,8 @@ VideoFrame& video_frame) {
 
   ViECaptureSnapshot* snap_shot = new ViECaptureSnapshot();
   capturer->RegisterFrameCallback(-1, snap_shot);
-  bool snapshot_taken = snap_shot->GetSnapshot(
-      video_frame, kViECaptureMaxSnapshotWaitTimeMs);
+  bool snapshot_taken = snap_shot->GetSnapshot(kViECaptureMaxSnapshotWaitTimeMs,
+                                               video_frame);
 
   // Check once again if it has been destroyed.
   capturer->DeregisterFrameCallback(snap_shot);
@@ -967,6 +947,31 @@ VideoFrame& video_frame) {
     return 0;
   }
   return -1;
+}
+
+int ViEFileImpl::StartDebugRecording(int video_channel,
+                                     const char* file_name_utf8) {
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEEncoder* vie_encoder = cs.Encoder(video_channel);
+  if (!vie_encoder) {
+     WEBRTC_TRACE(kTraceError, kTraceVideo,
+                  ViEId(shared_data_->instance_id(), video_channel),
+                  "%s: No encoder %d", __FUNCTION__, video_channel);
+    return -1;
+  }
+  return vie_encoder->StartDebugRecording(file_name_utf8);
+}
+
+int ViEFileImpl::StopDebugRecording(int video_channel) {
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEEncoder* vie_encoder = cs.Encoder(video_channel);
+  if (!vie_encoder) {
+      WEBRTC_TRACE(kTraceError, kTraceVideo,
+                   ViEId(shared_data_->instance_id(), video_channel),
+                   "%s: No encoder %d", __FUNCTION__, video_channel);
+    return -1;
+  }
+  return vie_encoder->StopDebugRecording();
 }
 
 ViECaptureSnapshot::ViECaptureSnapshot()
@@ -982,13 +987,13 @@ ViECaptureSnapshot::~ViECaptureSnapshot() {
   }
 }
 
-bool ViECaptureSnapshot::GetSnapshot(VideoFrame& video_frame,
-                                     unsigned int max_wait_time) {
+bool ViECaptureSnapshot::GetSnapshot(unsigned int max_wait_time,
+                                     VideoFrame* video_frame) {
   crit_->Enter();
   video_frame_ = new VideoFrame();
   if (condition_varaible_->SleepCS(*(crit_.get()), max_wait_time)) {
     // Snapshot taken.
-    video_frame.SwapFrame(*video_frame_);
+    video_frame->SwapFrame(*video_frame_);
     delete video_frame_;
     video_frame_ = NULL;
     crit_->Leave();
@@ -998,14 +1003,15 @@ bool ViECaptureSnapshot::GetSnapshot(VideoFrame& video_frame,
   return false;
 }
 
-void ViECaptureSnapshot::DeliverFrame(int id, VideoFrame& video_frame,
+void ViECaptureSnapshot::DeliverFrame(int id,
+                                      VideoFrame* video_frame,
                                       int num_csrcs,
 const WebRtc_UWord32 CSRC[kRtpCsrcSize]) {
   CriticalSectionScoped cs(crit_.get());
   if (!video_frame_) {
     return;
   }
-  video_frame_->SwapFrame(video_frame);
+  video_frame_->SwapFrame(*video_frame);
   condition_varaible_->WakeAll();
   return;
 }

@@ -430,14 +430,14 @@ js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
 
 template<XDRMode mode>
 bool
-js::XDRAtom(XDRState<mode> *xdr, JSAtom **atomp)
+js::XDRAtom(XDRState<mode> *xdr, MutableHandleAtom atomp)
 {
     if (mode == XDR_ENCODE) {
-        uint32_t nchars = (*atomp)->length();
+        uint32_t nchars = atomp->length();
         if (!xdr->codeUint32(&nchars))
             return false;
 
-        jschar *chars = const_cast<jschar *>((*atomp)->getChars(xdr->cx()));
+        jschar *chars = const_cast<jschar *>(atomp->getChars(xdr->cx()));
         if (!chars)
             return false;
 
@@ -483,13 +483,13 @@ js::XDRAtom(XDRState<mode> *xdr, JSAtom **atomp)
 
     if (!atom)
         return false;
-    *atomp = atom;
+    atomp.set(atom);
     return true;
 }
 
 template bool
-js::XDRAtom(XDRState<XDR_ENCODE> *xdr, JSAtom **atomp);
+js::XDRAtom(XDRState<XDR_ENCODE> *xdr, MutableHandleAtom atomp);
 
 template bool
-js::XDRAtom(XDRState<XDR_DECODE> *xdr, JSAtom **atomp);
+js::XDRAtom(XDRState<XDR_DECODE> *xdr, MutableHandleAtom atomp);
 

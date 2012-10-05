@@ -1,16 +1,16 @@
-Copyright (c) 2011 The Chromium Authors. All rights reserved.
+Copyright (c) 2012 The Chromium Authors. All rights reserved.
 Use of this useless file is governed by a BSD-style license that can be
 found in the LICENSE file.
 
 This file is used for making non-code changes to trigger buildbot cycles. Make
 any modification below this line.
 
-============================================================================
+=============================================================================
 
 Let's make a story. Add one sentence for each commit:
 
-CHAPTER 1:
-It was a dark and stormy night; the rain fell in torrents--except at
+CHAPTER 1.0:
+It was a dark and stormy night; the rain fell in torrents -- except at
 occasional intervals, when it was checked by a violent gust of wind which
 swept up the streets (for it is in London that our scene lies), rattling along
 the housetops, and fiercely agitating the scanty flame of the lamps that
@@ -22,10 +22,10 @@ waffles you brought him?" "You know him, he's not one to forego a waffle,
 no matter how burnt", he snickered.
 The pause was filled with the sound of thunder.
 
-CHAPTER 2:
-The syrup was as dark as night, and just as runny.
+CHAPTER 2.0:
+The jelly was as dark as night, and just as runny.
 The Domo-Kun shuddered, remembering the way Mr. Usagi had speared his waffles
-with his fork, watching the runny syrup spread and pool across his plate,
+with his fork, watching the runny jelly spread and pool across his plate,
 like the blood of a dying fawn. "It reminds me of the time --" he started, as
 his wife cut in quickly: "-- please. I can't bear to hear it.". A flury of
 images coming from the past flowed through his mind.
@@ -36,7 +36,7 @@ when the fan was last cleaned.
 
 There was a poignant pause.
 
-CHAPTER 3:
+CHAPTER 3.0:
 Mr. Usagi felt that something wasn't right. Shortly after the Domo-Kun left he
 began feeling sick. He thought out loud to himself, "No, he wouldn't have done
 that to me." He considered that perhaps he shouldn't have pushed him so far.
@@ -47,4 +47,19 @@ Next time, there won't be any sushi. Why sushis with waffles anyway? It's like
 salmon in a cereal bowl.
 
 CHAPTER 4:
+The taste of stale sushi in his mouth the next morning was unbearable. He
+wondered where the sushi came from. He tries to recall the cook's face.  Purple?
 
+CHAPTER 5: 
+Many years later, Mr. Usagi would laugh at the memory of the earnest,
+well-intentioned Domo-Kun.
+Another day in the life...
+
+TRUISMS (1978-1983)
+JENNY HOLZER
+A LITTLE KNOWLEDGE CAN GO A LONG WAY
+A LOT OF PROFESSIONALS ARE CRACKPOTS
+A MAN CAN'T KNOW WHAT IT IS TO BE A MOTHER
+A NAME MEANS A LOT JUST BY ITSELF
+A POSITIVE ATTITUDE MEANS ALL THE DIFFERENCE IN THE WORLD
+A RELAXED MAN IS NOT NECESSARILY A BETTER MAN

@@ -37,7 +37,7 @@ class MockVideoEncoder : public VideoEncoder {
                              WebRtc_Word32 numberOfCores,
                              WebRtc_UWord32 maxPayloadSize));
   MOCK_METHOD3(Encode,
-               WebRtc_Word32(const RawImage& inputImage,
+               WebRtc_Word32(const VideoFrame& inputImage,
                              const CodecSpecificInfo* codecSpecificInfo,
                              const VideoFrameType frameType));
   MOCK_METHOD1(RegisterEncodeCompleteCallback,
@@ -57,7 +57,7 @@ class MockVideoEncoder : public VideoEncoder {
 class MockDecodedImageCallback : public DecodedImageCallback {
  public:
   MOCK_METHOD1(Decoded,
-               WebRtc_Word32(RawImage& decodedImage));
+               WebRtc_Word32(VideoFrame& decodedImage));
   MOCK_METHOD1(ReceivedDecodedReferenceFrame,
                WebRtc_Word32(const WebRtc_UWord64 pictureId));
   MOCK_METHOD1(ReceivedDecodedFrame,

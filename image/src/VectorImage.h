@@ -45,7 +45,8 @@ public:
   NS_IMETHOD ExtractFrame(uint32_t aWhichFrame, const nsIntRect & aRect, uint32_t aFlags, imgIContainer **_retval);
   NS_IMETHOD Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, const gfxMatrix & aUserSpaceToImageSpace, const gfxRect & aFill, const nsIntRect & aSubimage, const nsIntSize & aViewportSize, uint32_t aFlags);
   NS_IMETHOD_(nsIFrame *) GetRootLayoutFrame(void);
-  NS_IMETHOD RequestDecode(void);
+  NS_IMETHOD RequestDecode();
+  NS_IMETHOD StartDecoding();
   NS_IMETHOD LockImage(void);
   NS_IMETHOD UnlockImage(void);
   NS_IMETHOD RequestDiscard(void);

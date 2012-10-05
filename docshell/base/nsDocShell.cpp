@@ -6777,8 +6777,14 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
       nsContentUtils::FindInternalContentViewer("text/html");
 
   if (docFactory) {
+    nsCOMPtr<nsIPrincipal> principal;
+    if (mSandboxFlags & SANDBOXED_ORIGIN) {
+      principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
+    } else {
+      principal = aPrincipal;
+    }
     // generate (about:blank) document to load
-    docFactory->CreateBlankDocument(mLoadGroup, aPrincipal,
+    docFactory->CreateBlankDocument(mLoadGroup, principal,
                                     getter_AddRefs(blankDoc));
     if (blankDoc) {
       // Hack: set the base URI manually, since this document never

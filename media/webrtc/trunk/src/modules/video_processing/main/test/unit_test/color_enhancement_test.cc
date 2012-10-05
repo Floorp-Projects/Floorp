@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -36,7 +36,7 @@ TEST_F(VideoProcessingModuleTest, ColorEnhancement)
         "foremanColorEnhancedVPM_cif_short.yuv";
     FILE* modFile = fopen(output_file.c_str(), "w+b");
     ASSERT_TRUE(modFile != NULL) << "Could not open output file.\n";
-        
+
     WebRtc_UWord32 frameNum = 0;
     while (fread(_videoFrame.Buffer(), 1, _frameLength, _sourceFile) == _frameLength)
     {
@@ -45,11 +45,14 @@ TEST_F(VideoProcessingModuleTest, ColorEnhancement)
         ASSERT_EQ(0, VideoProcessingModule::ColorEnhancement(_videoFrame));
         t1 = TickTime::Now();
         accTicks += t1 - t0;
-        fwrite(_videoFrame.Buffer(), 1, _frameLength, modFile);
+        if (fwrite(_videoFrame.Buffer(), 1, _frameLength,
+                   modFile) !=  _frameLength) {
+          return;
+        }
     }
     ASSERT_NE(0, feof(_sourceFile)) << "Error reading source file";
 
-    printf("\nTime per frame: %d us \n", 
+    printf("\nTime per frame: %d us \n",
         static_cast<int>(accTicks.Microseconds() / frameNum));
     rewind(modFile);
 
@@ -71,7 +74,7 @@ TEST_F(VideoProcessingModuleTest, ColorEnhancement)
     ASSERT_NE(-1L, testLen);
     rewind(modFile);
     ASSERT_EQ(refLen, testLen) << "File lengths differ.";
-	
+
     VideoFrame refVideoFrame;
     refVideoFrame.VerifyAndAllocate(_frameLength);
     refVideoFrame.SetWidth(_width);

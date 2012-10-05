@@ -138,9 +138,10 @@ function addDownload(dm, aParams)
   let test = dm.getDownload(dl.id);
 
   aParams.runBeforeStart.call(undefined, dl);
-
+  
   persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
-  persist.saveURI(dl.source, null, null, null, null, dl.targetFile);
+  persist.savePrivacyAwareURI(dl.source, null, null, null, null, dl.targetFile,
+                              aParams.isPrivate);
 
   return [dl.targetFile, persist];
 }

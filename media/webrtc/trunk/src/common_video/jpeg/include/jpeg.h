@@ -12,7 +12,8 @@
 #define WEBRTC_COMMON_VIDEO_JPEG
 
 #include "typedefs.h"
-#include "video_image.h"
+#include "modules/interface/module_common_types.h"  // VideoFrame
+#include "common_video/interface/video_image.h"  // EncodedImage
 
 // jpeg forward declaration
 struct jpeg_compress_struct;
@@ -44,7 +45,7 @@ public:
 //    Output:
 //    - 0             : OK
 //    - (-1)          : Error
-    WebRtc_Word32 Encode(const RawImage& inputImage);
+    WebRtc_Word32 Encode(const VideoFrame& inputImage);
 
 private:
 
@@ -64,13 +65,13 @@ class JpegDecoder
 //
 // Input:
 //    - inputImage        : encoded image to be decoded.
-//    - outputImage       : RawImage to store decoded output
+//    - outputImage       : VideoFrame to store decoded output.
 //
 //    Output:
 //    - 0             : OK
 //    - (-1)          : Error
     WebRtc_Word32 Decode(const EncodedImage& inputImage,
-                         RawImage& outputImage);
+                         VideoFrame& outputImage);
  private:
     jpeg_decompress_struct*    _cinfo;
 };

@@ -236,11 +236,11 @@ JSObject::toFunction() const
 }
 
 extern JSString *
-fun_toStringHelper(JSContext *cx, JSObject *obj, unsigned indent);
+fun_toStringHelper(JSContext *cx, js::HandleObject obj, unsigned indent);
 
 extern JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, unsigned nargs,
-               unsigned flags, js::HandleObject parent, JSAtom *atom,
+js_NewFunction(JSContext *cx, js::HandleObject funobj, JSNative native, unsigned nargs,
+               unsigned flags, js::HandleObject parent, js::HandleAtom atom,
                js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 extern JSFunction * JS_FASTCALL

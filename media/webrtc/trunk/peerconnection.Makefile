@@ -3,4 +3,4 @@
 export builddir_name ?= trunk/out
 .PHONY: all
 all:
-	$(MAKE) peerconnection_server peerconnection_client
+	$(MAKE) peerconnection_client

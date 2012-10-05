@@ -410,7 +410,7 @@ bool
 gfxPlatformMac::UseAcceleratedCanvas()
 {
   // Lion or later is required
-  return false && OSXVersion() >= 0x1070 && Preferences::GetBool("gfx.canvas.azure.accelerated", false);
+  return OSXVersion() >= 0x1070 && Preferences::GetBool("gfx.canvas.azure.accelerated", false);
 }
 
 qcms_profile *

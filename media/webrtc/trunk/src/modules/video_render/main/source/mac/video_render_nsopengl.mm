@@ -16,7 +16,7 @@
 #include "event_wrapper.h"
 #include "trace.h"
 #include "thread_wrapper.h"
-#include "common_video/libyuv/include/libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 
 namespace webrtc {
 
@@ -34,8 +34,6 @@ _stretchedWidth( 0),
 _stretchedHeight( 0),
 _oldStretchedHeight( 0),
 _oldStretchedWidth( 0),
-_xOldWidth( 0),
-_yOldHeight( 0),
 _buffer( 0),
 _bufferSize( 0),
 _incommingBufferSize( 0),
@@ -43,9 +41,7 @@ _bufferIsUpdated( false),
 _numberOfStreams( 0),
 _pixelFormat( GL_RGBA),
 _pixelDataType( GL_UNSIGNED_INT_8_8_8_8),
-_texture( 0),
-_bVideoSizeStartedChanging(false)
-
+_texture( 0)
 {
 
 }
@@ -426,7 +422,7 @@ int VideoRenderNSOpenGL::ChangeWindow(CocoaRenderView* newWindowRef)
     return 0;
 }
 
-/* Check if the thread and event already exist. 
+/* Check if the thread and event already exist.
  * If so then they will simply be restarted
  * If not then create them and continue
  */
@@ -619,7 +615,7 @@ int VideoRenderNSOpenGL::setRenderTargetFullScreen()
     [_windowRef setFrame:screenRect];
     [_windowRef setBounds:screenRect];
 
-    
+
     _fullScreenWindow = [[CocoaFullScreenWindow alloc]init];
     [_fullScreenWindow grabFullScreen];
     [[[_fullScreenWindow window] contentView] addSubview:_windowRef];
@@ -655,18 +651,18 @@ VideoRenderNSOpenGL::~VideoRenderNSOpenGL()
     {
         if(_fullScreenWindow)
         {
-            // Detach CocoaRenderView from full screen view back to 
+            // Detach CocoaRenderView from full screen view back to
             // it's original parent.
             [_windowRef removeFromSuperview];
-            if(_windowRefSuperView) 
+            if(_windowRefSuperView)
             {
               [_windowRefSuperView addSubview:_windowRef];
               [_windowRef setFrame:_windowRefSuperViewFrame];
             }
-            
+
             WEBRTC_TRACE(kTraceDebug, kTraceVideoRenderer, 0, "%s:%d Attempting to release fullscreen window", __FUNCTION__, __LINE__);
             [_fullScreenWindow releaseFullScreen];
-     
+
         }
     }
 

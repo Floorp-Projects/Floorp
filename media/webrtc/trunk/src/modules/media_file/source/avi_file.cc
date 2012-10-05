@@ -148,7 +148,6 @@ AviFile::AviFile()
       _videoConfigParameters(),
       _videoConfigLength(0),
       _videoStreamName(),
-      _videoStreamNameLength(0),
       _audioConfigParameters(),
       _audioStreamName(),
       _videoStream(),
@@ -1652,7 +1651,9 @@ WebRtc_Word32 AviFile::ReadAVIAudioStreamHeader(WebRtc_Word32 endpos)
     _bytesRead += GetLE32(_audioFormatHeader.nAvgBytesPerSec);
     _bytesRead += GetLE16(_audioFormatHeader.nBlockAlign);
     _bytesRead += GetLE16(_audioFormatHeader.wBitsPerSample);
-    _bytesRead += GetLE16(_audioFormatHeader.cbSize);
+    if (chunksize > 0x10) {
+        _bytesRead += GetLE16(_audioFormatHeader.cbSize);
+    }
 
     const WebRtc_UWord32 diffRead = chunksize - (_bytesRead - startRead);
     if (diffRead > 0)

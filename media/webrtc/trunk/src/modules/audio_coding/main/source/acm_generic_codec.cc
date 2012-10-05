@@ -145,9 +145,10 @@ ACMGenericCodec::Add10MsDataSafe(
     if(_lastTimestamp == timestamp)
     {
         // Same timestamp as the last time, overwrite.
-        if((_inAudioIxWrite >= lengthSmpl) && (_inTimestampIxWrite > 0))
+        if((_inAudioIxWrite >= lengthSmpl * audioChannel) &&
+           (_inTimestampIxWrite > 0))
         {
-            _inAudioIxWrite -= lengthSmpl;
+            _inAudioIxWrite -= lengthSmpl * audioChannel;
             _inTimestampIxWrite--;
             WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceAudioCoding, _uniqueID,
                 "Adding 10ms with previous timestamp, \
@@ -369,6 +370,9 @@ ACMGenericCodec::EncodeSafe(
                         break;
                     }
 
+                    // TODO(andrew): This should be multiplied by the number of
+                    //               channels, right?
+                    // http://code.google.com/p/webrtc/issues/detail?id=714
                     done = _inAudioIxRead >= _frameLenSmpl;
                 }
             }
@@ -1350,7 +1354,7 @@ ACMGenericCodec::ProcessFrameVADDTX(
         }
 
         // Call VAD
-        status = WebRtcVad_Process(_ptrVADInst, (WebRtc_Word16)freqHz,
+        status = (WebRtc_Word16)WebRtcVad_Process(_ptrVADInst, (int)freqHz,
             audio, noSamplesToProcess[i]);
 
         _vadLabel[i] = status;
@@ -1412,30 +1416,6 @@ ACMGenericCodec::SamplesLeftToEncode()
     ReadLockScoped rl(_codecWrapperLock);
     return (_frameLenSmpl <= _inAudioIxWrite)?
         0:(_frameLenSmpl - _inAudioIxWrite);
-}
-
-WebRtc_Word32
-ACMGenericCodec::UnregisterFromNetEq(
-    ACMNetEQ*     netEq,
-    WebRtc_Word16 payloadType)
-{
-    WriteLockScoped wl(_codecWrapperLock);
-    if(!_registeredInNetEq)
-    {
-        return 0;
-    }
-    if(UnregisterFromNetEqSafe(netEq, payloadType) < 0)
-    {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, _uniqueID,
-            "UnregisterFromNetEq: error, cannot unregister from NetEq");
-        _registeredInNetEq = true;
-        return -1;
-    }
-    else
-    {
-        _registeredInNetEq = false;
-        return 0;
-    }
 }
 
 void

@@ -15,6 +15,8 @@
 #include <pthread.h>
 
 namespace webrtc {
+
+class CriticalSectionWrapper;
 class EventWrapper;
 
 class ThreadPosix : public ThreadWrapper
@@ -47,6 +49,7 @@ private:
     ThreadObj           _obj;
 
     // internal state
+    CriticalSectionWrapper* _crit_state;  // Protects _alive and _dead
     bool                    _alive;
     bool                    _dead;
     ThreadPriority          _prio;

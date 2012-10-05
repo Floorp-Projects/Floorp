@@ -194,7 +194,7 @@ int WebRtcNetEQ_DSPInit(DSPInst_t *inst, WebRtc_UWord16 fs)
     VADSetmodeFunction savedVADsetmode = inst->VADInst.setmodeFunction;
     VADFunction savedVADfunc = inst->VADInst.VADFunction;
     WebRtc_Word16 savedVADEnabled = inst->VADInst.VADEnabled;
-    WebRtc_Word16 savedVADMode = inst->VADInst.VADMode;
+    int savedVADMode = inst->VADInst.VADMode;
 #endif /* NETEQ_VAD */
     DSPStats_t saveStats;
     WebRtc_Word16 saveMsPerCall = inst->millisecondsPerCall;

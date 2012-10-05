@@ -190,8 +190,8 @@ typedef struct ExpandInst_t_
  */
 typedef int (*VADInitFunction)(void *VAD_inst);
 typedef int (*VADSetmodeFunction)(void *VAD_inst, int mode);
-typedef WebRtc_Word16 (*VADFunction)(void *VAD_inst, WebRtc_Word16 fs, WebRtc_Word16 *frame,
-                                     WebRtc_Word16 frameLen);
+typedef int (*VADFunction)(void *VAD_inst, int fs, WebRtc_Word16 *frame,
+                           int frameLen);
 
 /* Post-decode VAD instance (sub-instance of NETEQDSP_inst) */
 typedef struct PostDecodeVAD_t_
@@ -201,7 +201,7 @@ typedef struct PostDecodeVAD_t_
 
     WebRtc_Word16 VADEnabled; /* 1 if enabled, 0 if disabled */
     int VADMode; /* mode parameter to pass to the VAD function */
-    WebRtc_Word16 VADDecision; /* 1 for active, 0 for passive */
+    int VADDecision; /* 1 for active, 0 for passive */
     WebRtc_Word16 SIDintervalCounter; /* reset when decoding CNG/SID frame,
      increment for each recout call */
 

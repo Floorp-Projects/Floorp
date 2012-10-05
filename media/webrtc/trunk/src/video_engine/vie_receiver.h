@@ -13,12 +13,12 @@
 
 #include <list>
 
-#include "engine_configurations.h"
-#include "rtp_rtcp_defines.h"
+#include "engine_configurations.h"  // NOLINT
+#include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "modules/udp_transport/interface/udp_transport.h"
 #include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"
-#include "udp_transport.h"
-#include "vie_defines.h"
+#include "typedefs.h"  // NOLINT
+#include "video_engine/vie_defines.h"
 
 namespace webrtc {
 
@@ -30,12 +30,13 @@ class VideoCodingModule;
 
 class ViEReceiver : public UdpTransportData, public RtpData {
  public:
-  ViEReceiver(int engine_id, int channel_id, RtpRtcp& rtp_rtcp,
-              VideoCodingModule& module_vcm);
+  ViEReceiver(const int32_t channel_id, VideoCodingModule* module_vcm);
   ~ViEReceiver();
 
   int RegisterExternalDecryption(Encryption* decryption);
   int DeregisterExternalDecryption();
+
+  void SetRtpRtcpModule(RtpRtcp* module);
 
   void RegisterSimulcastRtpRtcpModules(const std::list<RtpRtcp*>& rtp_modules);
 
@@ -70,11 +71,10 @@ class ViEReceiver : public UdpTransportData, public RtpData {
   int InsertRTCPPacket(const WebRtc_Word8* rtcp_packet, int rtcp_packet_length);
 
   scoped_ptr<CriticalSectionWrapper> receive_cs_;
-  int engine_id_;
-  int channel_id_;
-  RtpRtcp& rtp_rtcp_;
+  const int32_t channel_id_;
+  RtpRtcp* rtp_rtcp_;
   std::list<RtpRtcp*> rtp_rtcp_simulcast_;
-  VideoCodingModule& vcm_;
+  VideoCodingModule* vcm_;
 
   Encryption* external_decryption_;
   WebRtc_UWord8* decryption_buffer_;

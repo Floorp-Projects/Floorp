@@ -317,14 +317,23 @@ int WebRtcNetEQ_PacketBufferInsert(PacketBuf_t *bufferInst, const RTPPacket_t *R
     if (*flushed)
     {
         temp_var = NETEQ_DELAY_LOGGING_SIGNAL_FLUSH;
-        fwrite( &temp_var, sizeof(int), 1, delay_fid2 );
+        if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
+          return -1;
+        }
     }
     temp_var = NETEQ_DELAY_LOGGING_SIGNAL_RECIN;
-    fwrite( &temp_var, sizeof(int), 1, delay_fid2 );
-    fwrite( &RTPpacket->timeStamp, sizeof(WebRtc_UWord32), 1, delay_fid2 );
-    fwrite( &RTPpacket->seqNumber, sizeof(WebRtc_UWord16), 1, delay_fid2 );
-    fwrite( &RTPpacket->payloadType, sizeof(int), 1, delay_fid2 );
-    fwrite( &RTPpacket->payloadLen, sizeof(WebRtc_Word16), 1, delay_fid2 );
+    if ((fwrite(&temp_var, sizeof(int),
+                1, delay_fid2) != 1) ||
+        (fwrite(&RTPpacket->timeStamp, sizeof(WebRtc_UWord32),
+                1, delay_fid2) != 1) ||
+        (fwrite(&RTPpacket->seqNumber, sizeof(WebRtc_UWord16),
+                1, delay_fid2) != 1) ||
+        (fwrite(&RTPpacket->payloadType, sizeof(int),
+                1, delay_fid2) != 1) ||
+        (fwrite(&RTPpacket->payloadLen, sizeof(WebRtc_Word16),
+                1, delay_fid2) != 1)) {
+      return -1;
+    }
     tot_received_packets++;
 #endif /* NETEQ_DELAY_LOGGING */
 
@@ -543,12 +552,13 @@ int WebRtcNetEQ_GetDefaultCodecSettings(const enum WebRtcNetEQDecoder *codecID,
     {
         /* Find current codec and set parameters accordingly */
 
-        if (codecID[i] == kDecoderPCMu)
+        if ((codecID[i] == kDecoderPCMu) || (codecID[i] == kDecoderPCMu_2ch))
         {
             codecBytes = 1680; /* Up to 210ms @ 64kbps */
             codecBuffers = 30; /* Down to 5ms frames */
         }
-        else if (codecID[i] == kDecoderPCMa)
+        else if ((codecID[i] == kDecoderPCMa) ||
+            (codecID[i] == kDecoderPCMa_2ch))
         {
             codecBytes = 1680; /* Up to 210ms @ 64kbps */
             codecBuffers = 30; /* Down to 5ms frames */
@@ -568,17 +578,25 @@ int WebRtcNetEQ_GetDefaultCodecSettings(const enum WebRtcNetEQDecoder *codecID,
             codecBytes = 1560; /* 240ms @ 52kbps (30ms frames) */
             codecBuffers = 8;
         }
-        else if (codecID[i] == kDecoderPCM16B)
+        else if (codecID[i] == kDecoderOpus)
+        {
+            codecBytes = 15300; /* 240ms @ 510kbps (60ms frames) */
+            codecBuffers = 30;  /* ?? Codec supports down to 2.5-60 ms frames */
+        }
+        else if ((codecID[i] == kDecoderPCM16B) ||
+            (codecID[i] == kDecoderPCM16B_2ch))
         {
             codecBytes = 3360; /* 210ms */
             codecBuffers = 15;
         }
-        else if (codecID[i] == kDecoderPCM16Bwb)
+        else if ((codecID[i] == kDecoderPCM16Bwb) ||
+            (codecID[i] == kDecoderPCM16Bwb_2ch))
         {
             codecBytes = 6720; /* 210ms */
             codecBuffers = 15;
         }
-        else if (codecID[i] == kDecoderPCM16Bswb32kHz)
+        else if ((codecID[i] == kDecoderPCM16Bswb32kHz) ||
+            (codecID[i] == kDecoderPCM16Bswb32kHz_2ch))
         {
             codecBytes = 13440; /* 210ms */
             codecBuffers = 15;
@@ -588,7 +606,8 @@ int WebRtcNetEQ_GetDefaultCodecSettings(const enum WebRtcNetEQDecoder *codecID,
             codecBytes = 20160; /* 210ms */
             codecBuffers = 15;
         }
-        else if (codecID[i] == kDecoderG722)
+        else if ((codecID[i] == kDecoderG722) ||
+            (codecID[i] == kDecoderG722_2ch))
         {
             codecBytes = 1680; /* 210ms @ 64kbps */
             codecBuffers = 15;
@@ -678,7 +697,8 @@ int WebRtcNetEQ_GetDefaultCodecSettings(const enum WebRtcNetEQDecoder *codecID,
             codecBytes = 1250; /* 210ms @ 50kbps */
             codecBuffers = 10;
         }
-        else if (codecID[i] == kDecoderCELT_32)
+        else if ((codecID[i] == kDecoderCELT_32) ||
+            (codecID[i] == kDecoderCELT_32_2ch))
         {
             codecBytes = 1250; /* 210ms @ 50kbps */
             codecBuffers = 10;

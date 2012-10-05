@@ -353,6 +353,14 @@ public:
   bool CompositingDisabled() { return mCompositingDisabled; }
   void SetCompositingDisabled(bool aCompositingDisabled) { mCompositingDisabled = aCompositingDisabled; }
 
+  /**
+   * Creates a DrawTarget which is optimized for inter-operating with this
+   * layermanager.
+   */
+  virtual TemporaryRef<mozilla::gfx::DrawTarget>
+    CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
+                     mozilla::gfx::SurfaceFormat aFormat);
+
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;

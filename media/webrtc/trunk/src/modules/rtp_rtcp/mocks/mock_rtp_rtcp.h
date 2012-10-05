@@ -8,7 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "../testing/gmock/include/gmock/gmock.h"
+#ifndef WEBRTC_MODULES_RTP_RTCP_MOCKS_MOCK_RTP_RTCP_H_
+#define WEBRTC_MODULES_RTP_RTCP_MOCKS_MOCK_RTP_RTCP_H_
+
+#include <gmock/gmock.h>
 
 #include "modules/interface/module.h"
 #include "modules/rtp_rtcp/interface/rtp_rtcp.h"
@@ -140,20 +143,21 @@ class MockRtpRtcp : public RtpRtcp {
       bool());
   MOCK_CONST_METHOD4(BitrateSent,
       void(WebRtc_UWord32* totalRate, WebRtc_UWord32* videoRate, WebRtc_UWord32* fecRate, WebRtc_UWord32* nackRate));
-  MOCK_CONST_METHOD1(EstimatedSendBandwidth,
-      int(WebRtc_UWord32* available_bandwidth));
   MOCK_CONST_METHOD1(EstimatedReceiveBandwidth,
       int(WebRtc_UWord32* available_bandwidth));
-  MOCK_METHOD7(SendOutgoingData,
+  MOCK_METHOD8(SendOutgoingData,
       WebRtc_Word32(const FrameType frameType,
                     const WebRtc_Word8 payloadType,
                     const WebRtc_UWord32 timeStamp,
+                    int64_t capture_time_ms,
                     const WebRtc_UWord8* payloadData,
                     const WebRtc_UWord32 payloadSize,
                     const RTPFragmentationHeader* fragmentation,
                     const RTPVideoHeader* rtpVideoHdr));
-  MOCK_METHOD1(RegisterIncomingRTCPCallback,
-      WebRtc_Word32(RtcpFeedback* incomingMessagesCallback));
+  MOCK_METHOD3(RegisterRtcpObservers,
+      void(RtcpIntraFrameObserver* intraFrameCallback,
+           RtcpBandwidthObserver* bandwidthCallback,
+           RtcpFeedback* callback));
   MOCK_CONST_METHOD0(RTCP,
       RTCPMethod());
   MOCK_METHOD1(SetRTCPStatus,
@@ -210,10 +214,8 @@ class MockRtpRtcp : public RtpRtcp {
       WebRtc_Word32(const bool enable));
   MOCK_METHOD3(SetREMBData,
       WebRtc_Word32(const WebRtc_UWord32 bitrate, const WebRtc_UWord8 numberOfSSRC, const WebRtc_UWord32* SSRC));
-  MOCK_METHOD1(SetMaximumBitrateEstimate,
-       WebRtc_Word32(const WebRtc_UWord32 bitrate));
   MOCK_METHOD1(SetRemoteBitrateObserver,
-      bool(RtpRemoteBitrateObserver*));
+      bool(RemoteBitrateObserver*));
   MOCK_CONST_METHOD0(IJ,
       bool());
   MOCK_METHOD1(SetIJStatus,
@@ -260,12 +262,10 @@ class MockRtpRtcp : public RtpRtcp {
       WebRtc_Word32(bool& enable, WebRtc_UWord8& ID));
   MOCK_METHOD1(SetAudioLevel,
       WebRtc_Word32(const WebRtc_UWord8 level_dBov));
-  MOCK_METHOD1(RegisterIncomingVideoCallback,
-      WebRtc_Word32(RtpVideoFeedback* incomingMessagesCallback));
   MOCK_METHOD1(SetCameraDelay,
       WebRtc_Word32(const WebRtc_Word32 delayMS));
-  MOCK_METHOD3(SetSendBitrate,
-      void(const WebRtc_UWord32 startBitrate, const WebRtc_UWord16 minBitrateKbit, const WebRtc_UWord16 maxBitrateKbit));
+  MOCK_METHOD1(SetTargetSendBitrate,
+      void(const WebRtc_UWord32 bitrate));
   MOCK_METHOD3(SetGenericFECStatus,
       WebRtc_Word32(const bool enable, const WebRtc_UWord8 payloadTypeRED, const WebRtc_UWord8 payloadTypeFEC));
   MOCK_METHOD3(GenericFECStatus,
@@ -277,7 +277,6 @@ class MockRtpRtcp : public RtpRtcp {
       WebRtc_Word32(const KeyFrameRequestMethod method));
   MOCK_METHOD0(RequestKeyFrame,
       WebRtc_Word32());
-
   MOCK_CONST_METHOD3(Version,
       int32_t(char* version, uint32_t& remaining_buffer_in_bytes, uint32_t& position));
   MOCK_METHOD0(TimeUntilNextProcess,
@@ -290,3 +289,5 @@ class MockRtpRtcp : public RtpRtcp {
 };
 
 }  // namespace webrtc
+
+#endif  // WEBRTC_MODULES_RTP_RTCP_MOCKS_MOCK_RTP_RTCP_H_

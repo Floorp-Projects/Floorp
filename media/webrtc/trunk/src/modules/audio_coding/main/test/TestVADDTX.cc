@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -59,8 +59,10 @@ void TestVADDTX::Perform()
         WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceAudioCoding, -1,
                      "---------- TestVADDTX ----------");
     }
-    char fileName[] = "./test/data/audio_coding/testfile32kHz.pcm";
-    _inFileA.Open(fileName, 32000, "rb");
+
+    const std::string file_name =
+        webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
+    _inFileA.Open(file_name, 32000, "rb");
 
     _acmA = AudioCodingModule::Create(0);
     _acmB = AudioCodingModule::Create(1);
@@ -337,14 +339,14 @@ void TestVADDTX::Run()
     while(!_inFileA.EndOfFile())
     {
         _inFileA.Read10MsData(audioFrame);
-        audioFrame._timeStamp = timestampA;
+        audioFrame.timestamp_ = timestampA;
         timestampA += SamplesIn10MsecA;
         CHECK_ERROR(_acmA->Add10MsData(audioFrame));
 
         CHECK_ERROR(_acmA->Process());
 
         CHECK_ERROR(_acmB->PlayoutData10Ms(outFreqHzB, audioFrame));
-        _outFileB.Write10MsData(audioFrame._payloadData, audioFrame._payloadDataLengthInSamples);
+        _outFileB.Write10MsData(audioFrame.data_, audioFrame.samples_per_channel_);
     }
 #ifdef PRINT_STAT
     _monitor.PrintStatistics(_testMode);
@@ -354,20 +356,18 @@ void TestVADDTX::Run()
     _monitor.ResetStatistics();
 }
 
-void TestVADDTX::OpenOutFile(WebRtc_Word16 testNumber)
-{
-    char fileName[500];
-    if(_testMode == 0)
-    {
-        sprintf(fileName, "%s/testVADDTX_autoFile_%02d.pcm",
-                webrtc::test::OutputPath().c_str(), testNumber);
-    }
-    else
-    {
-        sprintf(fileName, "%s/testVADDTX_outFile_%02d.pcm",
-                webrtc::test::OutputPath().c_str(), testNumber);
-    }
-    _outFileB.Open(fileName, 16000, "wb");
+void TestVADDTX::OpenOutFile(WebRtc_Word16 test_number) {
+  std::string file_name;
+  std::stringstream file_stream;
+  file_stream << webrtc::test::OutputPath();
+  if (_testMode == 0) {
+    file_stream << "testVADDTX_autoFile_";
+  } else {
+    file_stream << "testVADDTX_outFile_";
+  }
+  file_stream << test_number << ".pcm";
+  file_name = file_stream.str();
+  _outFileB.Open(file_name, 16000, "wb");
 }
 
 

@@ -17,7 +17,7 @@ function test() {
 
 function doTest(finishcb) {
   ok(SocialSidebar.canShow, "social sidebar should be able to be shown");
-  ok(SocialSidebar.enabled, "social sidebar should be on by default");
+  ok(SocialSidebar.opened, "social sidebar should be open by default");
 
   let command = document.getElementById("Social:ToggleSidebar");
   let sidebar = document.getElementById("social-sidebar-box");

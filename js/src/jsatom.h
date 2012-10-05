@@ -272,7 +272,7 @@ InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid *id
 
 template<XDRMode mode>
 bool
-XDRAtom(XDRState<mode> *xdr, JSAtom **atomp);
+XDRAtom(XDRState<mode> *xdr, js::MutableHandleAtom atomp);
 
 } /* namespace js */
 

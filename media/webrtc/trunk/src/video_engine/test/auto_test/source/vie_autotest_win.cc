@@ -30,8 +30,6 @@
 // Disable Visual studio warnings
 // 'this' : used in base member initializer list
 #pragma warning(disable: 4355)
-// new behavior: elements of array 'XXX' will be default initialized
-#pragma warning(disable: 4351)
 
 LRESULT CALLBACK ViEAutoTestWinProc(HWND hWnd, UINT uMsg, WPARAM wParam,
                                     LPARAM lParam) {

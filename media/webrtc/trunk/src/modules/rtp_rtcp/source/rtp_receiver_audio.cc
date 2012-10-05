@@ -40,30 +40,6 @@ RTPReceiverAudio::~RTPReceiverAudio()
     delete _criticalSectionFeedback;
 }
 
-WebRtc_Word32 RTPReceiverAudio::Init() {
-  _lastReceivedFrequency = 8000;
-  _telephoneEvent = false;
-  _telephoneEventForwardToDecoder = false;
-  _telephoneEventDetectEndOfTone = false;
-  _telephoneEventPayloadType = -1;
-
-  _telephoneEventReported.clear();
-
-  _cngNBPayloadType = -1;
-  _cngWBPayloadType = -1;
-  _cngSWBPayloadType = -1;
-  _cngPayloadType = -1;
-  _G722PayloadType = -1;
-  _lastReceivedG722 = false;
-  return 0;
-}
-
-void
-RTPReceiverAudio::ChangeUniqueId(const WebRtc_Word32 id)
-{
-    _id = id;
-}
-
 WebRtc_Word32
 RTPReceiverAudio::RegisterIncomingAudioCallback(RtpAudioFeedback* incomingMessagesCallback)
 {

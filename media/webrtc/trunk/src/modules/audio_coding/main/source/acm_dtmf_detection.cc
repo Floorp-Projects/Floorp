@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -13,8 +13,7 @@
 
 namespace webrtc {
 
-ACMDTMFDetection::ACMDTMFDetection()
-    : _init(0) {}
+ACMDTMFDetection::ACMDTMFDetection() {}
 
 ACMDTMFDetection::~ACMDTMFDetection() {}
 
@@ -32,13 +31,6 @@ WebRtc_Word16 ACMDTMFDetection::Detect(
     const WebRtc_Word32 /* inFreqHz */,
     bool& /* toneDetected */,
     WebRtc_Word16& /* tone  */) {
-  return -1;
-}
-
-WebRtc_Word16 ACMDTMFDetection::GetVersion(
-    WebRtc_Word8* /* version */,
-    WebRtc_UWord32& /* remainingBufferInBytes */,
-    WebRtc_UWord32& /* position */) {
   return -1;
 }
 

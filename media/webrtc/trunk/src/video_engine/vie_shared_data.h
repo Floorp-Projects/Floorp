@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -34,7 +34,7 @@ class ViESharedData {
   int SetUnInitialized();
   void SetLastError(const int error) const;
   int LastErrorInternal() const;
-
+  void SetOverUseDetectorOptions(const OverUseDetectorOptions& options);
   int NumberOfCores() const;
 
   int instance_id() { return instance_id_;}
@@ -50,6 +50,7 @@ class ViESharedData {
   bool initialized_;
   const int number_cores_;
 
+  OverUseDetectorOptions over_use_detector_options_;
   ViEPerformanceMonitor vie_performance_monitor_;
   ViEChannelManager& channel_manager_;
   ViEInputManager& input_manager_;

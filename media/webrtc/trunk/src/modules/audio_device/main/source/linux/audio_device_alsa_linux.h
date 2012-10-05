@@ -223,8 +223,6 @@ private:
     WebRtc_UWord32 _recordingFramesLeft;
     WebRtc_UWord32 _playoutFramesLeft;
 
-    WebRtc_UWord32 _playbackBufferSize;
-
     AudioDeviceModule::BufferType _playBufType;
 
 private:
@@ -238,7 +236,6 @@ private:
     snd_pcm_sframes_t _recordingDelay;
     snd_pcm_sframes_t _playoutDelay;
 
-    WebRtc_Word32 _writeErrors;
     WebRtc_UWord16 _playWarning;
     WebRtc_UWord16 _playError;
     WebRtc_UWord16 _recWarning;

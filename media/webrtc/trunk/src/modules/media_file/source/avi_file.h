@@ -230,7 +230,6 @@ private:
     WebRtc_Word8 _videoConfigParameters[CODEC_CONFIG_LENGTH];
     WebRtc_Word32 _videoConfigLength;
     WebRtc_Word8 _videoStreamName[STREAM_NAME_LENGTH];
-    WebRtc_Word32 _videoStreamNameLength;
     WebRtc_Word8 _audioConfigParameters[CODEC_CONFIG_LENGTH];
     WebRtc_Word8 _audioStreamName[STREAM_NAME_LENGTH];
 

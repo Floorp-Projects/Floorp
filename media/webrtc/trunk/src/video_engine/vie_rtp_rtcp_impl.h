@@ -12,7 +12,7 @@
 #define WEBRTC_VIDEO_ENGINE_VIE_RTP_RTCP_IMPL_H_
 
 #include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
 #include "video_engine/include/vie_rtp_rtcp.h"
 #include "video_engine/vie_ref_count.h"
 
@@ -30,15 +30,17 @@ class ViERTP_RTCPImpl
                            const unsigned int SSRC,
                            const StreamType usage,
                            const unsigned char simulcast_idx);
-  virtual int GetLocalSSRC(const int video_channel, unsigned int& SSRC) const;
+  virtual int GetLocalSSRC(const int video_channel,
+                           unsigned int& SSRC) const;  // NOLINT
   virtual int SetRemoteSSRCType(const int video_channel,
                                 const StreamType usage,
                                 const unsigned int SSRC) const;
-  virtual int GetRemoteSSRC(const int video_channel, unsigned int& SSRC) const;
+  virtual int GetRemoteSSRC(const int video_channel,
+                            unsigned int& SSRC) const;  // NOLINT
   virtual int GetRemoteCSRCs(const int video_channel,
                              unsigned int CSRCs[kRtpCsrcSize]) const;
   virtual int SetStartSequenceNumber(const int video_channel,
-                                     unsigned short sequence_number);
+                                     uint16_t sequence_number);
   virtual int SetRTCPStatus(const int video_channel,
                             const ViERTCPMode rtcp_mode);
   virtual int GetRTCPStatus(const int video_channel,
@@ -54,7 +56,7 @@ class ViERTP_RTCPImpl
       const unsigned char sub_type,
       unsigned int name,
       const char* data,
-      unsigned short data_length_in_bytes);
+      uint16_t data_length_in_bytes);
   virtual int SetNACKStatus(const int video_channel, const bool enable);
   virtual int SetFECStatus(const int video_channel, const bool enable,
                            const unsigned char payload_typeRED,
@@ -66,14 +68,20 @@ class ViERTP_RTCPImpl
                                        const ViEKeyFrameRequestMethod method);
   virtual int SetTMMBRStatus(const int video_channel, const bool enable);
   virtual int SetRembStatus(int video_channel, bool sender, bool receiver);
+  virtual int SetSendTimestampOffsetStatus(int video_channel,
+                                           bool enable,
+                                           int id);
+  virtual int SetReceiveTimestampOffsetStatus(int video_channel,
+                                              bool enable,
+                                              int id);
   virtual int GetReceivedRTCPStatistics(const int video_channel,
-                                        unsigned short& fraction_lost,
+                                        uint16_t& fraction_lost,
                                         unsigned int& cumulative_lost,
                                         unsigned int& extended_max,
                                         unsigned int& jitter,
                                         int& rtt_ms) const;
   virtual int GetSentRTCPStatistics(const int video_channel,
-                                    unsigned short& fraction_lost,
+                                    uint16_t& fraction_lost,
                                     unsigned int& cumulative_lost,
                                     unsigned int& extended_max,
                                     unsigned int& jitter, int& rtt_ms) const;
@@ -93,6 +101,8 @@ class ViERTP_RTCPImpl
   virtual int GetEstimatedReceiveBandwidth(
       const int video_channel,
       unsigned int* estimated_bandwidth) const;
+  virtual int SetOverUseDetectorOptions(
+      const OverUseDetectorOptions& options) const;
   virtual int StartRTPDump(const int video_channel,
                            const char file_nameUTF8[1024],
                            RTPDirections direction);
@@ -105,7 +115,7 @@ class ViERTP_RTCPImpl
   virtual int DeregisterRTCPObserver(const int video_channel);
 
  protected:
-  ViERTP_RTCPImpl(ViESharedData* shared_data);
+  explicit ViERTP_RTCPImpl(ViESharedData* shared_data);
   virtual ~ViERTP_RTCPImpl();
 
  private:

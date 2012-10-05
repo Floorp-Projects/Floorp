@@ -30,6 +30,7 @@ public:
         kNbInHz           = 8000,
         kWbInHz           = 16000,
         kSwbInHz          = 32000,
+        kFbInHz           = 48000,
         kLowestPossible   = -1,
         kDefaultFrequency = kWbInHz
     };

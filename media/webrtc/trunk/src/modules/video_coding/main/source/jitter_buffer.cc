@@ -23,11 +23,6 @@
 #include "system_wrappers/interface/critical_section_wrapper.h"
 #include "system_wrappers/interface/trace.h"
 
-#if defined(_WIN32)
-    // VS 2005: Don't warn for default initialized arrays. See help for more info.
-    #pragma warning(disable:4351)
-#endif
-
 namespace webrtc {
 
 // Predicates used when searching for frames in the frame buffer list

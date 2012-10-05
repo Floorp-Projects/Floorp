@@ -129,7 +129,7 @@ _waitForKey(false)
 void
 NormalAsyncTest::Setup()
 {
-    Test::Setup();
+    CodecTest::Setup();
     std::stringstream ss;
     std::string strTestNo;
     ss << _testNo;
@@ -178,7 +178,7 @@ NormalAsyncTest::Setup()
 void
 NormalAsyncTest::Teardown()
 {
-    Test::Teardown();
+    CodecTest::Teardown();
     fclose(_sourceFile);
     fclose(_encodedFile);
     fclose(_decodedFile);
@@ -246,7 +246,10 @@ VideoEncodeCompleteCallback::Encoded(EncodedImage& encodedImage,
     _test.CopyEncodedImage(*newBuffer, encodedImage, codecSpecificInfoCopy);
     if (_encodedFile != NULL)
     {
-        fwrite(newBuffer->GetBuffer(), 1, newBuffer->GetLength(), _encodedFile);
+      if (fwrite(newBuffer->GetBuffer(), 1, newBuffer->GetLength(),
+                 _encodedFile) !=  newBuffer->GetLength()) {
+        return -1;
+      }
     }
     _frameQueue->PushFrame(newBuffer, codecSpecificInfoCopy);
     return 0;
@@ -258,13 +261,16 @@ WebRtc_UWord32 VideoDecodeCompleteCallback::DecodedBytes()
 }
 
 WebRtc_Word32
-VideoDecodeCompleteCallback::Decoded(RawImage& image)
+VideoDecodeCompleteCallback::Decoded(VideoFrame& image)
 {
     _test.Decoded(image);
-    _decodedBytes += image._length;
+    _decodedBytes += image.Length();
     if (_decodedFile != NULL)
     {
-        fwrite(image._buffer, 1, image._length, _decodedFile);
+      if (fwrite(image.Buffer(), 1, image.Length(),
+                 _decodedFile) !=  image.Length()) {
+        return -1;
+      }
     }
     return 0;
 }
@@ -293,14 +299,14 @@ NormalAsyncTest::Encoded(const EncodedImage& encodedImage)
 }
 
 void
-NormalAsyncTest::Decoded(const RawImage& decodedImage)
+NormalAsyncTest::Decoded(const VideoFrame& decodedImage)
 {
     _decodeCompleteTime = tGetTime();
     _decFrameCnt++;
     _totalDecodePipeTime += _decodeCompleteTime -
-        _decodeTimes[decodedImage._timeStamp];
-    _decodedWidth = decodedImage._width;
-    _decodedHeight = decodedImage._height;
+        _decodeTimes[decodedImage.TimeStamp()];
+    _decodedWidth = decodedImage.Width();
+    _decodedHeight = decodedImage.Height();
 }
 
 void
@@ -408,14 +414,14 @@ NormalAsyncTest::Encode()
         (_encFrameCnt * 9e4 / _inst.maxFramerate));
     _inputVideoBuffer.SetWidth(_inst.width);
     _inputVideoBuffer.SetHeight(_inst.height);
-    RawImage rawImage;
+    VideoFrame rawImage;
     VideoBufferToRawImage(_inputVideoBuffer, rawImage);
     if (feof(_sourceFile) != 0)
     {
         return true;
     }
     _encodeCompleteTime = 0;
-    _encodeTimes[rawImage._timeStamp] = tGetTime();
+    _encodeTimes[rawImage.TimeStamp()] = tGetTime();
     VideoFrameType frameType = kDeltaFrame;
 
     // check SLI queue
@@ -468,11 +474,11 @@ NormalAsyncTest::Encode()
     if (_encodeCompleteTime > 0)
     {
         _totalEncodeTime += _encodeCompleteTime -
-            _encodeTimes[rawImage._timeStamp];
+            _encodeTimes[rawImage.TimeStamp()];
     }
     else
     {
-        _totalEncodeTime += tGetTime() - _encodeTimes[rawImage._timeStamp];
+        _totalEncodeTime += tGetTime() - _encodeTimes[rawImage.TimeStamp()];
     }
     assert(ret >= 0);
     return false;

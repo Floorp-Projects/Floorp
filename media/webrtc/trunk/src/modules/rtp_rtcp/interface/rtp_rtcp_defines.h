@@ -139,10 +139,6 @@ protected:
 class RtcpFeedback
 {
 public:
-    // if audioVideoOffset > 0 video is behind audio
-    virtual void OnLipSyncUpdate(const WebRtc_Word32 /*id*/,
-                                 const WebRtc_Word32 /*audioVideoOffset*/)  {};
-
     virtual void OnApplicationDataReceived(const WebRtc_Word32 /*id*/,
                                            const WebRtc_UWord8 /*subType*/,
                                            const WebRtc_UWord32 /*name*/,
@@ -151,23 +147,9 @@ public:
 
     virtual void OnXRVoIPMetricReceived(
         const WebRtc_Word32 /*id*/,
-        const RTCPVoIPMetric* /*metric*/,
-        const WebRtc_Word8 /*VoIPmetricBuffer*/[28])  {};
+        const RTCPVoIPMetric* /*metric*/)  {};
 
     virtual void OnRTCPPacketTimeout(const WebRtc_Word32 /*id*/)  {};
-
-    virtual void OnTMMBRReceived(const WebRtc_Word32 /*id*/,
-                                 const WebRtc_UWord16 /*bwEstimateKbit*/)  {};
-
-    virtual void OnSLIReceived(const WebRtc_Word32 /*id*/,
-                               const WebRtc_UWord8 /*pictureId*/) {};
-
-    virtual void OnRPSIReceived(const WebRtc_Word32 /*id*/,
-                                const WebRtc_UWord64 /*pictureId*/) {};
-
-    virtual void OnReceiverEstimatedMaxBitrateReceived(
-        const WebRtc_Word32 /*id*/,
-        const WebRtc_UWord32 /*bitRate*/) {};
 
     virtual void OnSendReportReceived(const WebRtc_Word32 id,
                                       const WebRtc_UWord32 senderSSRC)  {};
@@ -213,70 +195,61 @@ protected:
     virtual ~RtpFeedback() {}
 };
 
-class RtpAudioFeedback
-{
-public:
-    virtual void OnReceivedTelephoneEvent(const WebRtc_Word32 id,
-                                          const WebRtc_UWord8 event,
-                                          const bool endOfEvent) = 0;
+class RtpAudioFeedback {
+ public:
+  virtual void OnReceivedTelephoneEvent(const WebRtc_Word32 id,
+                                        const WebRtc_UWord8 event,
+                                        const bool endOfEvent) = 0;
 
-    virtual void OnPlayTelephoneEvent(const WebRtc_Word32 id,
-                                      const WebRtc_UWord8 event,
-                                      const WebRtc_UWord16 lengthMs,
-                                      const WebRtc_UWord8 volume) = 0;
-
-protected:
-    virtual ~RtpAudioFeedback() {}
+  virtual void OnPlayTelephoneEvent(const WebRtc_Word32 id,
+                                    const WebRtc_UWord8 event,
+                                    const WebRtc_UWord16 lengthMs,
+                                    const WebRtc_UWord8 volume) = 0;
+ protected:
+  virtual ~RtpAudioFeedback() {}
 };
 
+class RtcpIntraFrameObserver {
+ public:
+  virtual void OnReceivedIntraFrameRequest(const uint32_t ssrc) = 0;
 
-class RtpVideoFeedback
-{
-public:
-    // this function should call codec module to inform it about the request
-    virtual void OnReceivedIntraFrameRequest(const WebRtc_Word32 id,
-                                             const FrameType type,
-                                             const WebRtc_UWord8 streamIdx) = 0;
+  virtual void OnReceivedSLI(const uint32_t ssrc,
+                             const uint8_t picture_id) = 0;
 
-    virtual void OnNetworkChanged(const WebRtc_Word32 id,
-                                  const WebRtc_UWord32 bitrateBps,
-                                  const WebRtc_UWord8 fractionLost,
-                                  const WebRtc_UWord16 roundTripTimeMs) = 0;
+  virtual void OnReceivedRPSI(const uint32_t ssrc,
+                              const uint64_t picture_id) = 0;
 
-protected:
-    virtual ~RtpVideoFeedback() {}
+  virtual ~RtcpIntraFrameObserver() {}
+};
+
+class RtcpBandwidthObserver {
+ public:
+  // REMB or TMMBR
+  virtual void OnReceivedEstimatedBitrate(const uint32_t bitrate) = 0;
+
+  virtual void OnReceivedRtcpReceiverReport(
+      const uint32_t ssrc,
+      const uint8_t fraction_loss,
+      const uint32_t rtt,
+      const uint32_t last_received_extended_high_seqNum,
+      const uint32_t now_ms) = 0;
+
+  virtual ~RtcpBandwidthObserver() {}
 };
 
 // A clock interface that allows reading of absolute and relative
 // timestamps in an RTP/RTCP module.
 class RtpRtcpClock {
-public:
-    virtual ~RtpRtcpClock() {}
+ public:
+  virtual ~RtpRtcpClock() {}
 
-    // Return a timestamp in milliseconds relative to some arbitrary
-    // source; the source is fixed for this clock.
-    virtual WebRtc_UWord32 GetTimeInMS() = 0;
+  // Return a timestamp in milliseconds relative to some arbitrary
+  // source; the source is fixed for this clock.
+  virtual WebRtc_Word64 GetTimeInMS() = 0;
 
-    // Retrieve an NTP absolute timestamp.
-    virtual void CurrentNTP(WebRtc_UWord32& secs, WebRtc_UWord32& frac) = 0;
-};
-
-// RtpReceiveBitrateUpdate is used to signal changes in bitrate estimates for
-// the incoming stream.
-class RtpRemoteBitrateObserver
-{
-public:
-    // Called when a receive channel has a new bitrate estimate for the incoming
-    // stream.
-    virtual void OnReceiveBitrateChanged(unsigned int ssrc,
-                                         unsigned int bitrate) = 0;
-
-    // Called when a REMB packet has been received.
-    virtual void OnReceivedRemb(unsigned int bitrate) = 0;
-
-    virtual ~RtpRemoteBitrateObserver() {}
+  // Retrieve an NTP absolute timestamp.
+  virtual void CurrentNTP(WebRtc_UWord32& secs, WebRtc_UWord32& frac) = 0;
 };
 
 } // namespace webrtc
-
 #endif // WEBRTC_MODULES_RTP_RTCP_INTERFACE_RTP_RTCP_DEFINES_H_

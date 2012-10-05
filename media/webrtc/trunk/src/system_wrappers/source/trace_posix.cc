@@ -57,8 +57,9 @@ WebRtc_Word32 TracePosix::AddTime(char* traceMessage,
     {
         return -1;
     }
+    struct tm buffer;
     const struct tm* systemTime =
-        localtime(&systemTimeHighRes.tv_sec);
+        localtime_r(&systemTimeHighRes.tv_sec, &buffer);
 
     const WebRtc_UWord32 ms_time = systemTimeHighRes.tv_usec / 1000;
     WebRtc_UWord32 prevTickCount = 0;
@@ -103,7 +104,8 @@ WebRtc_Word32 TracePosix::AddDateTimeInfo(char* traceMessage) const
 {
     time_t t;
     time(&t);
-    sprintf(traceMessage, "Local Date: %s", ctime(&t));
+    char buffer[26];  // man ctime says buffer should have room for >=26 bytes.
+    sprintf(traceMessage, "Local Date: %s", ctime_r(&t, buffer));
     WebRtc_Word32 len = static_cast<WebRtc_Word32>(strlen(traceMessage));
 
     if ('\n' == traceMessage[len - 1])

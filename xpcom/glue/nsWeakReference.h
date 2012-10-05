@@ -9,6 +9,8 @@
 
 // nsWeakReference.h
 
+// See mfbt/WeakPtr.h for a more typesafe C++ implementation of weak references
+
 #include "nsIWeakReferenceUtils.h"
 
 class nsWeakReference;

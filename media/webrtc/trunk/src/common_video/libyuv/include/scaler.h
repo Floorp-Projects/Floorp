@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -15,7 +15,7 @@
 #ifndef WEBRTC_COMMON_VIDEO_LIBYUV_INCLUDE_SCALER_H_
 #define WEBRTC_COMMON_VIDEO_LIBYUV_INCLUDE_SCALER_H_
 
-#include "common_video/libyuv/include/libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "typedefs.h"
 
 namespace webrtc {

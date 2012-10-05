@@ -1,0 +1,23 @@
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+
+  <title>Test for changing fill from url() value to a solid color value not asserting</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=782888 -->
+
+  <linearGradient id="g">
+    <stop stop-color="red"/>
+  </linearGradient>
+
+  <text style="font: 16px sans-serif; fill: url(#g)" x="100" y="100">Hello</text>
+
+  <script>
+    window.addEventListener("MozReftestInvalidate", function() {
+      document.getElementsByTagName("text")[0].style.fill = "green";
+      document.documentElement.removeAttribute("class");
+    }, false);
+  </script>
+</svg>

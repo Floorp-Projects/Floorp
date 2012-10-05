@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -28,7 +28,7 @@ class VideoSource;
 class UnitTestEncodeCompleteCallback;
 class UnitTestDecodeCompleteCallback;
 
-class UnitTest : public Test
+class UnitTest : public CodecTest
 {
 public:
     UnitTest();
@@ -61,7 +61,7 @@ protected:
     unsigned char* _refFrame;
     unsigned char* _refEncFrame;
     unsigned char* _refDecFrame;
-    int _refEncFrameLength;
+    unsigned int _refEncFrameLength;
     FILE* _sourceFile;
 
     UnitTestEncodeCompleteCallback* _encodeCompleteCallback;
@@ -77,8 +77,6 @@ public:
                                    WebRtc_UWord32 decoderSpecificSize = 0,
                                    void* decoderSpecificInfo = NULL) :
       _encodedVideoBuffer(buffer),
-      _decoderSpecificInfo(decoderSpecificInfo),
-      _decoderSpecificSize(decoderSpecificSize),
       _encodeComplete(false) {}
     WebRtc_Word32 Encoded(webrtc::EncodedImage& encodedImage,
                           const webrtc::CodecSpecificInfo* codecSpecificInfo,
@@ -89,8 +87,6 @@ public:
     webrtc::VideoFrameType EncodedFrameType() const;
 private:
     TestVideoEncodedBuffer* _encodedVideoBuffer;
-    void* _decoderSpecificInfo;
-    WebRtc_UWord32 _decoderSpecificSize;
     bool _encodeComplete;
     webrtc::VideoFrameType _encodedFrameType;
 };
@@ -100,7 +96,7 @@ class UnitTestDecodeCompleteCallback : public webrtc::DecodedImageCallback
 public:
     UnitTestDecodeCompleteCallback(TestVideoBuffer* buffer) :
         _decodedVideoBuffer(buffer), _decodeComplete(false) {}
-    WebRtc_Word32 Decoded(webrtc::RawImage& image);
+    WebRtc_Word32 Decoded(webrtc::VideoFrame& image);
     bool DecodeComplete();
 private:
     TestVideoBuffer* _decodedVideoBuffer;

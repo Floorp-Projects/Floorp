@@ -149,8 +149,8 @@ int ViECaptureImpl::AllocateExternalCaptureDevice(
   return 0;
 }
 
-int ViECaptureImpl::AllocateCaptureDevice(VideoCaptureModule& capture_module,
-                                          int& capture_id) {
+int ViECaptureImpl::AllocateCaptureDevice(
+    VideoCaptureModule& capture_module, int& capture_id) {  // NOLINT
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, ViEId(shared_data_->instance_id()),
                "%s", __FUNCTION__);
 
@@ -162,7 +162,7 @@ int ViECaptureImpl::AllocateCaptureDevice(VideoCaptureModule& capture_module,
     return -1;
   }
   const WebRtc_Word32 result =
-      shared_data_->input_manager()->CreateCaptureDevice(capture_module,
+      shared_data_->input_manager()->CreateCaptureDevice(&capture_module,
                                                          capture_id);
   if (result != 0) {
     shared_data_->SetLastError(result);
@@ -237,7 +237,7 @@ int ViECaptureImpl::ConnectCaptureDevice(const int capture_id,
   }
   VideoCodec codec;
   bool use_hardware_encoder = false;
-  if (vie_encoder->GetEncoder(codec) == 0) {
+  if (vie_encoder->GetEncoder(&codec) == 0) {
     // Try to provide the encoder with pre-encoded frames if possible.
     if (vie_capture->PreEncodeToViEEncoder(codec, *vie_encoder,
                                            video_channel) == 0) {
@@ -563,7 +563,7 @@ int ViECaptureImpl::RegisterObserver(const int capture_id,
     shared_data_->SetLastError(kViECaptureObserverAlreadyRegistered);
     return -1;
   }
-  if (vie_capture->RegisterObserver(observer) != 0) {
+  if (vie_capture->RegisterObserver(&observer) != 0) {
     shared_data_->SetLastError(kViECaptureDeviceUnknownError);
     return -1;
   }

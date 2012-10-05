@@ -272,6 +272,14 @@ public:
 
   void SetRepeatTransaction() { mRepeatTransaction = true; }
 
+  /**
+   * Determines if a progressive update should be cancelled. This is only called
+   * if gfxPlatform::UseProgressiveTilePainting() returns true.
+   * aHasPendingNewThebesContent is true if there is a Thebes layer update
+   * that will cause its valid region to expand.
+   */
+  bool ShouldAbortProgressiveUpdate(bool aHasPendingNewThebesContent);
+
 private:
   /**
    * Forward transaction results to the parent context.

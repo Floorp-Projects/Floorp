@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -95,17 +95,16 @@ class ViERenderer: public ViEFrameCallback {
 
   // Implement ViEFrameCallback
   virtual void DeliverFrame(int id,
-                            VideoFrame& video_frame,
+                            VideoFrame* video_frame,
                             int num_csrcs = 0,
                             const WebRtc_UWord32 CSRC[kRtpCsrcSize] = NULL);
   virtual void DelayChanged(int id, int frame_delay);
-  virtual int GetPreferedFrameSettings(int& width,
-                                       int& height,
-                                       int& frame_rate);
+  virtual int GetPreferedFrameSettings(int* width,
+                                       int* height,
+                                       int* frame_rate);
   virtual void ProviderDestroyed(int id);
 
   WebRtc_UWord32 render_id_;
-  WebRtc_Word32 engine_id_;
   VideoRender& render_module_;
   ViERenderManager& render_manager_;
   VideoRenderCallback* render_callback_;

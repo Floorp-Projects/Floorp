@@ -54,7 +54,7 @@ struct PcScriptCache
 
     static uint32_t Hash(uint8_t *addr) {
         uint32_t key = (uint32_t)((uintptr_t)addr);
-        return ((key >> 3) * 2654435761) % Length;
+        return ((key >> 3) * 2654435761u) % Length;
     }
 };
 

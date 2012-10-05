@@ -600,25 +600,6 @@ public:
 
 
     ///////////////////////////////////////////////////////////////////////////
-    // WebRtc_Word32 UnregisterFromNetEq()
-    // To remove the codec from NetEQ. If the codec (or the decoder instance)
-    // is going to be deleted, first the codec has to be removed from NetEq
-    // by calling this function.
-    //
-    // Input:
-    //   -netEq              : pointer to a NetEq instance that the codec
-    //                         has to be unregistered from.
-    //
-    // Output:
-    //   -1 if failed to unregister the codec,
-    //    0 if the codec is successfully unregistered.
-    //
-    WebRtc_Word32 UnregisterFromNetEq(
-        ACMNetEQ*       netEq,
-        WebRtc_Word16   payloadType);
-
-
-    ///////////////////////////////////////////////////////////////////////////
     // SetUniqueID()
     // Set a unique ID for the codec to be used for tracing and debuging
     //
@@ -1007,15 +988,6 @@ protected:
         bool* internalDTXReplaced);
 
     ///////////////////////////////////////////////////////////////////////////
-    // See UnregisterFromNetEq() for the description of function,
-    // input(s)/output(s) and return value.
-    //
-    virtual WebRtc_Word16 UnregisterFromNetEqSafe(
-        ACMNetEQ*     netEq,
-        WebRtc_Word16 payloadType) = 0;
-
-
-    ///////////////////////////////////////////////////////////////////////////
     // WebRtc_Word16 CreateEncoder()
     // Creates the encoder instance.
     //
@@ -1096,8 +1068,8 @@ protected:
     // Outputs:
     //   -bitStream          : pointer to a buffer where the bit-stream is
     //                         written to.
-    //   -bitStreamLenByte   : the length of the bit-stream in byte, a negative
-    //                         value indicates error.
+    //   -bitStreamLenByte   : the length of the bit-stream in bytes,
+    //                         a negative value indicates error.
     //
     // Return value:
     //   -1 if failed,

@@ -496,6 +496,22 @@ imgRequest::RequestDecode()
   return NS_OK;
 }
 
+nsresult
+imgRequest::StartDecoding()
+{
+  // If we've initialized our image, we can request a decode.
+  if (mImage) {
+    return mImage->StartDecoding();
+  }
+
+  // Otherwise, flag to do it when we get the image
+  mDecodeRequested = true;
+
+  return NS_OK;
+}
+
+
+
 /** imgIContainerObserver methods **/
 
 /* [noscript] void frameChanged (in imgIRequest request,
@@ -1147,7 +1163,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
         // If we were waiting on the image to do something, now's our chance.
         if (mDecodeRequested) {
-          mImage->RequestDecode();
+          mImage->StartDecoding();
         }
       } else { // mImage->GetType() == imgIContainer::TYPE_VECTOR
         nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);

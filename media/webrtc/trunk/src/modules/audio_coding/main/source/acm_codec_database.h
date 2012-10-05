@@ -36,12 +36,21 @@ class ACMCodecDB {
 # endif
 #endif
 #ifdef WEBRTC_CODEC_PCM16
+    // Mono
     , kPCM16B
     , kPCM16Bwb
     , kPCM16Bswb32kHz
+    // Stereo
+    , kPCM16B_2ch
+    , kPCM16Bwb_2ch
+    , kPCM16Bswb32kHz_2ch
 #endif
+    // Mono
     , kPCMU
     , kPCMA
+    // Stereo
+    , kPCMU_2ch
+    , kPCMA_2ch
 #ifdef WEBRTC_CODEC_ILBC
     , kILBC
 #endif
@@ -52,10 +61,16 @@ class ACMCodecDB {
     , kGSMAMRWB
 #endif
 #ifdef WEBRTC_CODEC_CELT
+    // Mono
     , kCELT32
+    // Stereo
+    , kCELT32_2ch
 #endif
 #ifdef WEBRTC_CODEC_G722
+    // Mono
     , kG722
+    // Stereo
+    , kG722_2ch
 #endif
 #ifdef WEBRTC_CODEC_G722_1
     , kG722_1_32
@@ -75,6 +90,9 @@ class ACMCodecDB {
 #endif
 #ifdef WEBRTC_CODEC_GSMFR
     , kGSMFR
+#endif
+#ifdef WEBRTC_CODEC_OPUS
+    , kOpus
 #endif
 #ifdef WEBRTC_CODEC_SPEEX
     , kSPEEX8
@@ -100,9 +118,14 @@ class ACMCodecDB {
 # endif
 #endif
 #ifndef WEBRTC_CODEC_PCM16
+  // Mono
   enum {kPCM16B = -1};
   enum {kPCM16Bwb = -1};
   enum {kPCM16Bswb32kHz = -1};
+  // Stereo
+  enum {kPCM16B_2ch = -1};
+  enum {kPCM16Bwb_2ch = -1};
+  enum {kPCM16Bswb32kHz_2ch = -1};
 #endif
   // 48 kHz not supported, always set to -1.
   enum {kPCM16Bswb48kHz = -1};
@@ -116,10 +139,16 @@ class ACMCodecDB {
   enum {kGSMAMRWB = -1};
 #endif
 #ifndef WEBRTC_CODEC_CELT
+  // Mono
   enum {kCELT32 = -1};
+  // Stereo
+  enum {kCELT32_2ch = -1};
 #endif
 #ifndef WEBRTC_CODEC_G722
+  // Mono
   enum {kG722 = -1};
+  // Stereo
+  enum {kG722_2ch = -1};
 #endif
 #ifndef WEBRTC_CODEC_G722_1
   enum {kG722_1_32 = -1};
@@ -139,6 +168,9 @@ class ACMCodecDB {
 #endif
 #ifndef WEBRTC_CODEC_GSMFR
   enum {kGSMFR = -1};
+#endif
+#ifndef WEBRTC_CODEC_OPUS
+  enum {kOpus = -1};
 #endif
 #ifndef WEBRTC_CODEC_SPEEX
   enum {kSPEEX8 = -1};
@@ -212,6 +244,8 @@ class ACMCodecDB {
   static int CodecNumber(const CodecInst* codec_inst, int* mirror_id,
                          char* err_message, int max_message_len_byte);
   static int CodecNumber(const CodecInst* codec_inst, int* mirror_id);
+  static int CodecId(const CodecInst* codec_inst);
+  static int CodecId(const char* payload_name, int frequency, int channels);
   static int ReceiverCodecNumber(const CodecInst* codec_inst, int* mirror_id);
 
   // Returns the codec sampling frequency for codec with id = "codec_id" in
@@ -237,18 +271,6 @@ class ACMCodecDB {
 
   // Returns the NetEQ decoder database.
   static const WebRtcNetEQDecoder* NetEQDecoders();
-
-  // All version numbers for the codecs in the database are listed in text.
-  // Input/Output:
-  //   [version] - pointer to a char vector with minimum size 1000 bytes.
-  //               Audio coding module's and all component's versions is
-  //               written here.
-  //   [remaining_buffer_bytes] - remaining space in buffer.
-  //   [position] - current position to write at in buffer.
-  // Return:
-  //   -1 if version information doesn't fit, 0 on success.
-  static int CodecsVersion(char* version, size_t* remaining_buffer_bytes,
-                           size_t* position);
 
   // Returns mirror id, which is a number that tells where to find the codec's
   // memory (instance). It is either the same as codec id (most common), or a
@@ -282,6 +304,7 @@ class ACMCodecDB {
   static bool IsAMRwbRateValid(int rate);
   static bool IsG7291RateValid(int rate);
   static bool IsSpeexRateValid(int rate);
+  static bool IsOpusRateValid(int rate);
   static bool IsCeltRateValid(int rate);
 
   // Check if the payload type is valid, meaning that it is in the valid range

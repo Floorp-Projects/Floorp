@@ -2977,9 +2977,11 @@ dnl These are all the places some variant of statfs can be hiding.
 MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
-dnl SCTP support - needs various network include headers
 MOZ_CHECK_HEADERS(sys/quota.h sys/sysmacros.h)
-MOZ_CHECK_HEADERS([linux/quota.h linux/if_addr.h linux/rtnetlink.h],,,[#include <sys/socket.h>])
+MOZ_CHECK_HEADERS([linux/quota.h],,,[#include <sys/socket.h>])
+
+dnl SCTP support - needs various network include headers
+MOZ_CHECK_HEADERS([linux/if_addr.h linux/rtnetlink.h],,,[#include <sys/socket.h>])
 
 MOZ_CHECK_HEADERS(sys/types.h netinet/in.h byteswap.h)
 
@@ -2998,7 +3000,7 @@ AC_CACHE_CHECK(for sockaddr_in.sin_len,
 if test "$ac_cv_sockaddr_in_sin_len" = true ; then
   AC_DEFINE(HAVE_SIN_LEN)
 dnl HAVE_CONN_LEN must be the same as HAVE_SIN_LEN (and HAVE_SIN6_LEN too)
-  AC_DEFINE(HAVE_CONN_LEN)
+  AC_DEFINE(HAVE_SCONN_LEN)
 fi
 
 AC_CACHE_CHECK(for sockaddr_in6.sin6_len,
@@ -3014,6 +3016,21 @@ AC_CACHE_CHECK(for sockaddr_in6.sin6_len,
                                [ac_cv_sockaddr_in6_sin6_len=false])])
 if test "$ac_cv_sockaddr_in6_sin6_len" = true ; then
   AC_DEFINE(HAVE_SIN6_LEN)
+fi
+
+AC_CACHE_CHECK(for sockaddr.sa_len,
+               ac_cv_sockaddr_sa_len,
+               [AC_TRY_COMPILE([#ifdef HAVE_SYS_TYPES_H
+                                #include <sys/types.h>
+                                #endif
+                                #include <sys/socket.h>
+                                struct sockaddr x;
+                                void *foo = (void*) &x.sa_len;],
+                               [],
+                               [ac_cv_sockaddr_sa_len=true],
+                               [ac_cv_sockaddr_sa_len=false])])
+if test "$ac_cv_sockaddr_sa_len" = true ; then
+  AC_DEFINE(HAVE_SA_LEN)
 fi
 
 dnl Check whether the compiler supports the new-style C++ standard
@@ -4225,8 +4242,10 @@ MOZ_OPUS=1
 MOZ_WEBM=1
 MOZ_DASH=
 MOZ_WEBRTC=1
+MOZ_PEERCONNECTION=
 MOZ_SRTP=
 MOZ_WEBRTC_SIGNALING=
+MOZ_WEBRTC_IN_LIBXUL=
 MOZ_SCTP=
 MOZ_MEDIA_PLUGINS=
 MOZ_MEDIA_NAVIGATOR=
@@ -5223,6 +5242,15 @@ if test -n "$MOZ_WEBRTC"; then
     MOZ_VP8=1
     MOZ_VP8_ENCODER=1
     MOZ_VP8_ERROR_CONCEALMENT=1
+dnl enable once Signaling lands
+dnl MOZ_WEBRTC_SIGNALING=1
+dnl AC_DEFINE(MOZ_WEBRTC_SIGNALING)
+    if test "${OS_TARGET}" = "WINNT"; then
+        MOZ_WEBRTC_IN_LIBXUL=1
+    fi
+dnl enable once PeerConnection lands
+dnl MOZ_PEERCONNECTION=1
+dnl AC_DEFINE(MOZ_PEERCONNECTION)
     MOZ_SCTP=1
     MOZ_SRTP=1
     AC_DEFINE(MOZ_SCTP)
@@ -5230,6 +5258,9 @@ if test -n "$MOZ_WEBRTC"; then
 fi
 
 AC_SUBST(MOZ_WEBRTC)
+AC_SUBST(MOZ_WEBRTC_SIGNALING)
+AC_SUBST(MOZ_PEERCONNECTION)
+AC_SUBST(MOZ_WEBRTC_IN_LIBXUL)
 AC_SUBST(MOZ_SCTP)
 AC_SUBST(MOZ_SRTP)
 
@@ -8818,7 +8849,9 @@ fi
 if test -n "$MOZ_WEBRTC"; then
    AC_MSG_RESULT("generating WebRTC Makefiles...")
 
-   GYP_WEBRTC_OPTIONS="--format=mozmake -D build_with_mozilla=1 -D enable_protobuf=0 -D include_internal_video_render=0 ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
+   WEBRTC_CONFIG="-D build_with_mozilla=1 --include ${srcdir}/media/webrtc/webrtc_config.gypi"
+
+   GYP_WEBRTC_OPTIONS="--format=mozmake ${WEBRTC_CONFIG} ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
 
    $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
      $GYP_WEBRTC_OPTIONS \
@@ -8833,10 +8866,21 @@ if test -n "$MOZ_WEBRTC"; then
      AC_MSG_RESULT("generating WebRTC/Signaling Makefiles...")
      $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
        $GYP_WEBRTC_OPTIONS \
+       -D build_for_test=0 \
        --generator-output=${_objdir}/media/webrtc/signaling \
        ${srcdir}/media/webrtc/signaling/signaling.gyp
      if test "$?" != 0; then
         AC_MSG_ERROR([failed to generate WebRTC/Signaling Makefiles])
+     fi
+
+     AC_MSG_RESULT("generating WebRTC/SignalingTest Makefiles...")
+     $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium --format=mozmake \
+       $GYP_WEBRTC_OPTIONS \
+       -D build_for_test=1 \
+       --generator-output=${_objdir}/media/webrtc/signalingtest \
+       ${srcdir}/media/webrtc/signaling/signaling.gyp
+     if test "$?" != 0; then
+       AC_MSG_ERROR([failed to generate WebRTC/SignalingTest Makefiles])
      fi
    fi
 

@@ -54,12 +54,12 @@ public:
     virtual WebRtc_UWord16 MaxPayloadLength() const = 0;
     virtual WebRtc_UWord16 MaxDataPayloadLength() const = 0;
     virtual WebRtc_UWord16 PacketOverHead() const = 0;
-    virtual WebRtc_UWord16 TargetSendBitrateKbit() const = 0;
     virtual WebRtc_UWord16 ActualSendBitrateKbit() const = 0;
 
-    virtual WebRtc_Word32 SendToNetwork(const WebRtc_UWord8* dataBuffer,
+    virtual WebRtc_Word32 SendToNetwork(WebRtc_UWord8* dataBuffer,
                                         const WebRtc_UWord16 payloadLength,
                                         const WebRtc_UWord16 rtpHeaderLength,
+                                        int64_t capture_time_ms,
                                         const StorageType storage) = 0;
 };
 
@@ -69,20 +69,16 @@ public:
     RTPSender(const WebRtc_Word32 id, const bool audio, RtpRtcpClock* clock);
     virtual ~RTPSender();
 
-    WebRtc_Word32 Init(const WebRtc_UWord32 remoteSSRC);
-    void ChangeUniqueId(const WebRtc_Word32 id);
-
     void ProcessBitrate();
     void ProcessSendToNetwork();
 
-    WebRtc_UWord16 TargetSendBitrateKbit() const;
     WebRtc_UWord16 ActualSendBitrateKbit() const;
 
     WebRtc_UWord32 VideoBitrateSent() const;
     WebRtc_UWord32 FecOverheadRate() const;
     WebRtc_UWord32 NackOverheadRate() const;
 
-    WebRtc_Word32 SetTargetSendBitrate(const WebRtc_UWord32 bits);
+    void SetTargetSendBitrate(const WebRtc_UWord32 bits);
 
     WebRtc_UWord16 MaxDataPayloadLength() const; // with RTP and FEC headers
 
@@ -138,6 +134,7 @@ public:
     WebRtc_Word32 SendOutgoingData(const FrameType frameType,
                                    const WebRtc_Word8 payloadType,
                                    const WebRtc_UWord32 timeStamp,
+                                   int64_t capture_time_ms,
                                    const WebRtc_UWord8* payloadData,
                                    const WebRtc_UWord32 payloadSize,
                                    const RTPFragmentationHeader* fragmentation,
@@ -146,6 +143,7 @@ public:
 
     WebRtc_Word32 SendPadData(WebRtc_Word8 payload_type,
                               WebRtc_UWord32 capture_timestamp,
+                              int64_t capture_time_ms,
                               WebRtc_Word32 bytes);
     /*
     * RTP header extension
@@ -168,7 +166,7 @@ public:
     void UpdateTransmissionTimeOffset(WebRtc_UWord8* rtp_packet,
                                       const WebRtc_UWord16 rtp_packet_length,
                                       const WebRtcRTPHeader& rtp_header,
-                                      const WebRtc_UWord32 time_ms) const;
+                                      const WebRtc_Word64 time_diff_ms) const;
 
     void SetTransmissionSmoothingStatus(const bool enable);
 
@@ -224,9 +222,10 @@ public:
     virtual WebRtc_UWord32 Timestamp() const;
     virtual WebRtc_UWord32 SSRC() const;
 
-    virtual WebRtc_Word32 SendToNetwork(const WebRtc_UWord8* dataBuffer,
+    virtual WebRtc_Word32 SendToNetwork(WebRtc_UWord8* dataBuffer,
                                         const WebRtc_UWord16 payloadLength,
                                         const WebRtc_UWord16 rtpHeaderLength,
+                                        int64_t capture_time_ms,
                                         const StorageType storage);
 
     /*
@@ -293,11 +292,16 @@ private:
     void UpdateNACKBitRate(const WebRtc_UWord32 bytes,
                            const WebRtc_UWord32 now);
 
+    WebRtc_Word32 SendPaddingAccordingToBitrate(
+        WebRtc_Word8 payload_type,
+        WebRtc_UWord32 capture_timestamp,
+        int64_t capture_time_ms);
+
     WebRtc_Word32              _id;
     const bool                 _audioConfigured;
     RTPSenderAudio*            _audio;
     RTPSenderVideo*            _video;
- 
+
     CriticalSectionWrapper*    _sendCritsect;
 
     CriticalSectionWrapper*    _transportCritsect;
@@ -322,7 +326,7 @@ private:
 
     RTPPacketHistory*         _packetHistory;
     TransmissionBucket        _sendBucket;
-    WebRtc_UWord32            _timeLastSendToNetworkUpdate;
+    WebRtc_Word64             _timeLastSendToNetworkUpdate;
     bool                      _transmissionSmoothing;
 
     // statistics

@@ -78,7 +78,7 @@ endif
 ifeq ($(TARGET_ARCH),arm)
 LOCAL_SRC_FILES += \
     complex_bit_reverse_arm.s \
-    spl_sqrt_floor.s
+    spl_sqrt_floor_arm.s
 else
 LOCAL_SRC_FILES += \
     complex_bit_reverse.c \

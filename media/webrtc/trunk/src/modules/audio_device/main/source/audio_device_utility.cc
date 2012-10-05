@@ -27,11 +27,6 @@
 namespace webrtc
 {
 
-void AudioDeviceUtility::Sleep(WebRtc_UWord32 milliseconds)
-{
-    return ::Sleep(milliseconds);
-}
-
 void AudioDeviceUtility::WaitForKey()
 {
 	_getch();
@@ -58,7 +53,7 @@ bool AudioDeviceUtility::StringCompare(
 // ============================================================================
 
 #include <sys/time.h>   // gettimeofday
-#include <time.h>       // nanosleep, gettimeofday
+#include <time.h>       // gettimeofday
 #include <string.h>     // strncasecmp
 #include <stdio.h>      // getchar
 #include <termios.h>    // tcgetattr
@@ -104,14 +99,6 @@ WebRtc_UWord32 AudioDeviceUtility::GetTimeInMS()
     gettimeofday(&tv, &tz);
     val = (WebRtc_UWord32)(tv.tv_sec*1000 + tv.tv_usec/1000);
     return val;
-}
-
-void AudioDeviceUtility::Sleep(WebRtc_UWord32 milliseconds)
-{
-    timespec t;
-    t.tv_sec = milliseconds/1000;
-    t.tv_nsec = (milliseconds-(milliseconds/1000)*1000)*1000000;
-    nanosleep(&t,NULL);
 }
 
 bool AudioDeviceUtility::StringCompare(

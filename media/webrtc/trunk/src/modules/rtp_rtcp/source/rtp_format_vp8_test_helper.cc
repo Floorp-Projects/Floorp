@@ -20,6 +20,7 @@ namespace test {
 RtpFormatVp8TestHelper::RtpFormatVp8TestHelper(const RTPVideoHeaderVP8* hdr)
     : payload_data_(NULL),
       buffer_(NULL),
+      data_ptr_(NULL),
       fragmentation_(NULL),
       hdr_info_(hdr),
       sloppy_partitioning_(false),
@@ -67,7 +68,7 @@ void RtpFormatVp8TestHelper::GetAllPacketsAndCheck(
     int expected_num_packets) {
   ASSERT_TRUE(inited_);
   int send_bytes = 0;
-  bool last;
+  bool last = false;
   for (int i = 0; i < expected_num_packets; ++i) {
     std::ostringstream ss;
     ss << "Checking packet " << i;

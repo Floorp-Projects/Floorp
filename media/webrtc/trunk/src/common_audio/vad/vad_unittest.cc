@@ -12,10 +12,11 @@
 
 #include <stdlib.h>
 
-#include "common_audio/signal_processing/include/signal_processing_library.h"
 #include "gtest/gtest.h"
+
+#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "common_audio/vad/include/webrtc_vad.h"
 #include "typedefs.h"
-#include "webrtc_vad.h"
 
 VadTest::VadTest() {}
 
@@ -24,7 +25,7 @@ void VadTest::SetUp() {}
 void VadTest::TearDown() {}
 
 // Returns true if the rate and frame length combination is valid.
-bool VadTest::ValidRatesAndFrameLengths(int16_t rate, int16_t frame_length) {
+bool VadTest::ValidRatesAndFrameLengths(int rate, int frame_length) {
   if (rate == 8000) {
     if (frame_length == 80 || frame_length == 160 || frame_length == 240) {
       return true;
@@ -65,22 +66,9 @@ TEST_F(VadTest, ApiTest) {
   // NULL instance tests
   EXPECT_EQ(-1, WebRtcVad_Create(NULL));
   EXPECT_EQ(-1, WebRtcVad_Init(NULL));
-  EXPECT_EQ(-1, WebRtcVad_Assign(NULL, NULL));
   EXPECT_EQ(-1, WebRtcVad_Free(NULL));
   EXPECT_EQ(-1, WebRtcVad_set_mode(NULL, kModes[0]));
   EXPECT_EQ(-1, WebRtcVad_Process(NULL, kRates[0], speech, kFrameLengths[0]));
-
-  // WebRtcVad_AssignSize() test.
-  size_t handle_size_bytes = WebRtcVad_AssignSize();
-  EXPECT_EQ(576u, handle_size_bytes);
-
-  // WebRtcVad_Assign() tests.
-  void* tmp_handle = malloc(handle_size_bytes);
-  EXPECT_EQ(-1, WebRtcVad_Assign(NULL, &handle));
-  EXPECT_EQ(-1, WebRtcVad_Assign(tmp_handle, NULL));
-  EXPECT_EQ(0, WebRtcVad_Assign(tmp_handle, &handle));
-  EXPECT_EQ(handle, tmp_handle);
-  free(tmp_handle);
 
   // WebRtcVad_Create()
   ASSERT_EQ(0, WebRtcVad_Create(&handle));
@@ -130,6 +118,22 @@ TEST_F(VadTest, ApiTest) {
   }
 
   EXPECT_EQ(0, WebRtcVad_Free(handle));
+}
+
+TEST_F(VadTest, ValidRatesFrameLengths) {
+  // This test verifies valid and invalid rate/frame_length combinations. We
+  // loop through sampling rates and frame lengths from negative values to
+  // values larger than possible.
+  for (int16_t rate = -1; rate <= kRates[kRatesSize - 1] + 1; rate++) {
+    for (int16_t frame_length = -1; frame_length <= kMaxFrameLength + 1;
+        frame_length++) {
+      if (ValidRatesAndFrameLengths(rate, frame_length)) {
+        EXPECT_EQ(0, WebRtcVad_ValidRateAndFrameLength(rate, frame_length));
+      } else {
+        EXPECT_EQ(-1, WebRtcVad_ValidRateAndFrameLength(rate, frame_length));
+      }
+    }
+  }
 }
 
 // TODO(bjornv): Add a process test, run on file.

@@ -15,10 +15,21 @@
 
 namespace webrtc {
 
-// Minimum RTP header size in bytes.
-enum { kRtpHeaderSize = 12 };
 enum { kREDForFECHeaderLength = 1 };
-enum { kMaxOverhead = 60 };  // Q8.
+// This controls the maximum amount of excess overhead (actual - target)
+// allowed in order to trigger GenerateFEC(), before |params_.max_fec_frames|
+// is reached. Overhead here is defined as relative to number of media packets.
+enum { kMaxExcessOverhead = 50 };  // Q8.
+// This is the minimum number of media packets required (above some protection
+// level) in order to trigger GenerateFEC(), before |params_.max_fec_frames| is
+// reached.
+enum { kMinimumMediaPackets = 4 };
+// Threshold on the received FEC protection level, above which we enforce at
+// least |kMinimumMediaPackets| packets for the FEC code. Below this
+// threshold |kMinimumMediaPackets| is set to default value of 1.
+enum { kHighProtectionThreshold = 80 };  // Corresponds to ~30 overhead, range
+// is 0 to 255, where 255 corresponds to 100% overhead (relative to number of
+// media packets).
 
 struct RtpPacket {
   WebRtc_UWord16 rtpHeaderLength;
@@ -77,6 +88,7 @@ ProducerFec::ProducerFec(ForwardErrorCorrection* fec)
       num_frames_(0),
       incomplete_frame_(false),
       num_first_partition_(0),
+      minimum_media_packets_fec_(1),
       params_(),
       new_params_() {
   memset(&params_, 0, sizeof(params_));
@@ -100,6 +112,11 @@ void ProducerFec::SetFecParameters(const FecProtectionParams* params,
   // produced.
   new_params_ = *params;
   num_first_partition_ = num_first_partition;
+  if (params->fec_rate > kHighProtectionThreshold) {
+    minimum_media_packets_fec_ = kMinimumMediaPackets;
+  } else {
+    minimum_media_packets_fec_ = 1;
+  }
 }
 
 RedPacket* ProducerFec::BuildRedPacket(const uint8_t* data_buffer,
@@ -136,18 +153,20 @@ int ProducerFec::AddRtpPacketAndGenerateFec(const uint8_t* data_buffer,
     ++num_frames_;
     incomplete_frame_ = false;
   }
-  // Produce FEC over at most |params_.max_fec_frames| frames, or as soon as
-  // the wasted overhead (actual overhead - requested protection) is less than
-  // |kMaxOverhead|.
+  // Produce FEC over at most |params_.max_fec_frames| frames, or as soon as:
+  // (1) the excess overhead (actual overhead - requested/target overhead) is
+  // less than |kMaxExcessOverhead|, and
+  // (2) at least |minimum_media_packets_fec_| media packets is reached.
   if (!incomplete_frame_ &&
       (num_frames_ == params_.max_fec_frames ||
-          (Overhead() - params_.fec_rate) < kMaxOverhead)) {
+          (ExcessOverheadBelowMax() && MinimumMediaPacketsReached()))) {
     assert(num_first_partition_ <=
            static_cast<int>(ForwardErrorCorrection::kMaxMediaPackets));
     int ret = fec_->GenerateFEC(media_packets_fec_,
                                 params_.fec_rate,
                                 num_first_partition_,
                                 params_.use_uep_protection,
+                                params_.fec_mask_type,
                                 &fec_packets_);
     if (fec_packets_.empty()) {
       num_frames_ = 0;
@@ -158,12 +177,40 @@ int ProducerFec::AddRtpPacketAndGenerateFec(const uint8_t* data_buffer,
   return 0;
 }
 
+// Returns true if the excess overhead (actual - target) for the FEC is below
+// the amount |kMaxExcessOverhead|. This effects the lower protection level
+// cases and low number of media packets/frame. The target overhead is given by
+// |params_.fec_rate|, and is only achievable in the limit of large number of
+// media packets.
+bool ProducerFec::ExcessOverheadBelowMax() {
+  return ((Overhead() - params_.fec_rate) < kMaxExcessOverhead);
+}
+
+// Returns true if the media packet list for the FEC is at least
+// |minimum_media_packets_fec_|. This condition tries to capture the effect
+// that, for the same amount of protection/overhead, longer codes
+// (e.g. (2k,2m) vs (k,m)) are generally more effective at recovering losses.
+bool ProducerFec::MinimumMediaPacketsReached() {
+  float avg_num_packets_frame = static_cast<float>(media_packets_fec_.size()) /
+                                num_frames_;
+  if (avg_num_packets_frame < 2.0f) {
+  return (static_cast<int>(media_packets_fec_.size()) >=
+      minimum_media_packets_fec_);
+  } else {
+    // For larger rates (more packets/frame), increase the threshold.
+    return (static_cast<int>(media_packets_fec_.size()) >=
+        minimum_media_packets_fec_ + 1);
+  }
+}
+
 bool ProducerFec::FecAvailable() const {
   return (fec_packets_.size() > 0);
 }
 
-RedPacket* ProducerFec::GetFecPacket(int red_pl_type, int fec_pl_type,
-                                     uint16_t seq_num) {
+RedPacket* ProducerFec::GetFecPacket(int red_pl_type,
+                                     int fec_pl_type,
+                                     uint16_t seq_num,
+                                     int rtp_header_length) {
   if (fec_packets_.empty())
     return NULL;
   // Build FEC packet. The FEC packets in |fec_packets_| doesn't
@@ -173,9 +220,9 @@ RedPacket* ProducerFec::GetFecPacket(int red_pl_type, int fec_pl_type,
   ForwardErrorCorrection::Packet* last_media_packet = media_packets_fec_.back();
   RedPacket* return_packet = new RedPacket(packet_to_send->length +
                                            kREDForFECHeaderLength +
-                                           kRtpHeaderSize);
+                                           rtp_header_length);
   return_packet->CreateHeader(last_media_packet->data,
-                              kRtpHeaderSize,
+                              rtp_header_length,
                               red_pl_type,
                               fec_pl_type);
   return_packet->SetSeqNum(seq_num);
@@ -196,10 +243,8 @@ int ProducerFec::Overhead() const {
   // protection factor produced by video_coding module and how the FEC
   // generation is implemented.
   assert(!media_packets_fec_.empty());
-  int num_fec_packets = params_.fec_rate * media_packets_fec_.size();
-  // Ceil.
-  int rounding = (num_fec_packets % (1 << 8) > 0) ? (1 << 8) : 0;
-  num_fec_packets = (num_fec_packets + rounding) >> 8;
+  int num_fec_packets = fec_->GetNumberOfFecPackets(media_packets_fec_.size(),
+                                                    params_.fec_rate);
   // Return the overhead in Q8.
   return (num_fec_packets << 8) / media_packets_fec_.size();
 }

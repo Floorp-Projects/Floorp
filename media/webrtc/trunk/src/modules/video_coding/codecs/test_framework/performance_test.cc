@@ -265,7 +265,7 @@ PerformanceTest::PerformSingleTest()
 
 bool PerformanceTest::Encode()
 {
-    RawImage rawImage;
+    VideoFrame rawImage;
     VideoBufferToRawImage(_inputVideoBuffer, rawImage);
     VideoFrameType frameType = kDeltaFrame;
     if (_requestKeyFrame && !(_encFrameCnt%50))

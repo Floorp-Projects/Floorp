@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -210,6 +210,13 @@ class WEBRTC_DLLEXPORT ViEFile {
   virtual int SetRenderTimeoutImage(const int video_channel,
                                     const ViEPicture& picture,
                                     const unsigned int timeout_ms) = 0;
+
+  // Enables recording of debugging information.
+  virtual int StartDebugRecording(int video_channel,
+                                  const char* file_name_utf8) = 0;
+  // Disables recording of debugging information.
+  virtual int StopDebugRecording(int video_channel) = 0;
+
 
  protected:
   ViEFile() {}

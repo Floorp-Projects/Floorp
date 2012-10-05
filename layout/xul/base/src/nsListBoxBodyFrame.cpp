@@ -907,8 +907,7 @@ nsListBoxBodyFrame::DoInternalPositionChanged(bool aUp, int32_t aDelta)
 
   PRTime end = PR_Now();
 
-  PRTime difTime;
-  LL_SUB(difTime, end, start);
+  PRTime difTime = end - start;
 
   int32_t newTime;
   LL_L2I(newTime, difTime);

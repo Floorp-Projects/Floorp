@@ -56,7 +56,7 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../../../../../modules/video_capture/main/source \
     $(LOCAL_PATH)/../../../../../modules/video_coding/codecs/interface \
     $(LOCAL_PATH)/../../../../../modules/video_render/main/interface \
-    $(LOCAL_PATH)/../../../../../voice_engine/main/interface \
+    $(LOCAL_PATH)/../../../../../voice_engine/include \
     $(LOCAL_PATH)/../../../../../system_wrappers/interface 
 
 LOCAL_PRELINK_MODULE := false

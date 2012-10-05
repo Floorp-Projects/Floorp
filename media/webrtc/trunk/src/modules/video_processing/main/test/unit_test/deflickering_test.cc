@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -55,16 +55,19 @@ TEST_F(VideoProcessingModuleTest, Deflickering)
             frameNum++;
             _videoFrame.SetTimeStamp(timeStamp);
 
-            t0 = TickTime::Now();           
+            t0 = TickTime::Now();
             VideoProcessingModule::FrameStats stats;
             ASSERT_EQ(0, _vpm->GetFrameStats(stats, _videoFrame));
             ASSERT_EQ(0, _vpm->Deflickering(_videoFrame, stats));
             t1 = TickTime::Now();
             accTicks += t1 - t0;
-            
+
             if (runIdx == 0)
             {
-                fwrite(_videoFrame.Buffer(), 1, _frameLength, deflickerFile);
+              if (fwrite(_videoFrame.Buffer(), 1, _frameLength,
+                         deflickerFile) !=  _frameLength) {
+                return;
+              }
             }
             timeStamp += (90000 / frameRate);
         }
@@ -82,9 +85,9 @@ TEST_F(VideoProcessingModuleTest, Deflickering)
     ASSERT_EQ(0, fclose(deflickerFile));
     // TODO(kjellander): Add verification of deflicker output file.
 
-    printf("\nAverage run time = %d us / frame\n", 
+    printf("\nAverage run time = %d us / frame\n",
         static_cast<int>(avgRuntime / frameNum / NumRuns));
-    printf("Min run time = %d us / frame\n\n", 
+    printf("Min run time = %d us / frame\n\n",
         static_cast<int>(minRuntime / frameNum));
 }
 

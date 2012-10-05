@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The LibYuv project authors. All Rights Reserved.
+ *  Copyright 2011 The LibYuv Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,15 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cstring>
-#include "unit_test.h"
+#include "unit_test/unit_test.h"
 
-libyuvTest::libyuvTest() :
-  _rotate_max_w(128),
-  _rotate_max_h(128),
-  _benchmark_iterations(1000),
-  _benchmark_width(1280),
-  _benchmark_height(720) {
+#include <cstring>
+
+libyuvTest::libyuvTest() : rotate_max_w_(128), rotate_max_h_(128),
+    benchmark_iterations_(1000), benchmark_width_(1280),
+    benchmark_height_(720) {
 }
 
 int main(int argc, char** argv) {

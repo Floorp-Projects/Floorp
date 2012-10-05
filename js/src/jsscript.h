@@ -531,7 +531,7 @@ struct JSScript : public js::gc::Cell
     bool analyzedArgsUsage() const { return !needsArgsAnalysis_; }
     bool needsArgsObj() const { JS_ASSERT(analyzedArgsUsage()); return needsArgsObj_; }
     void setNeedsArgsObj(bool needsArgsObj);
-    static bool argumentsOptimizationFailed(JSContext *cx, JSScript *script);
+    static bool argumentsOptimizationFailed(JSContext *cx, js::HandleScript script);
 
     /*
      * Arguments access (via JSOP_*ARG* opcodes) must access the canonical
@@ -848,7 +848,7 @@ struct JSScript : public js::gc::Cell
 
     void destroyBreakpointSite(js::FreeOp *fop, jsbytecode *pc);
 
-    void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JSObject *handler);
+    void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, js::RawObject handler);
     void clearTraps(js::FreeOp *fop);
 
     void markTrapClosures(JSTracer *trc);
@@ -1159,7 +1159,7 @@ struct SourceCompressionToken
 };
 
 extern void
-CallDestroyScriptHook(FreeOp *fop, JSScript *script);
+CallDestroyScriptHook(FreeOp *fop, js::RawScript script);
 
 extern const char *
 SaveScriptFilename(JSContext *cx, const char *filename);
@@ -1210,18 +1210,18 @@ struct ScriptAndCounts
 } /* namespace js */
 
 extern jssrcnote *
-js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc);
+js_GetSrcNote(JSContext *cx, js::RawScript script, jsbytecode *pc);
 
 extern jsbytecode *
-js_LineNumberToPC(JSScript *script, unsigned lineno);
+js_LineNumberToPC(js::RawScript script, unsigned lineno);
 
 extern JS_FRIEND_API(unsigned)
-js_GetScriptLineExtent(JSScript *script);
+js_GetScriptLineExtent(js::RawScript script);
 
 namespace js {
 
 extern unsigned
-PCToLineNumber(JSScript *script, jsbytecode *pc, unsigned *columnp = NULL);
+PCToLineNumber(js::RawScript script, jsbytecode *pc, unsigned *columnp = NULL);
 
 extern unsigned
 PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc,
@@ -1258,7 +1258,7 @@ CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, Hand
 template<XDRMode mode>
 bool
 XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
-          HandleFunction fun, JSScript **scriptp);
+          HandleFunction fun, MutableHandleScript scriptp);
 
 } /* namespace js */
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -10,92 +10,13 @@
 
 // Performs echo control (suppression) with fft routines in fixed-point
 
-#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AECM_MAIN_SOURCE_AECM_CORE_H_
-#define WEBRTC_MODULES_AUDIO_PROCESSING_AECM_MAIN_SOURCE_AECM_CORE_H_
-
-#define AECM_DYNAMIC_Q // turn on/off dynamic Q-domain
-//#define AECM_WITH_ABS_APPROX
-//#define AECM_SHORT                // for 32 sample partition length (otherwise 64)
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AECM_AECM_CORE_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_AECM_AECM_CORE_H_
 
 #include "typedefs.h"
 #include "signal_processing_library.h"
 
-// Algorithm parameters
-
-#define FRAME_LEN       80              // Total frame length, 10 ms
-#ifdef AECM_SHORT
-
-#define PART_LEN        32              // Length of partition
-#define PART_LEN_SHIFT  6               // Length of (PART_LEN * 2) in base 2
-
-#else
-
-#define PART_LEN        64              // Length of partition
-#define PART_LEN_SHIFT  7               // Length of (PART_LEN * 2) in base 2
-
-#endif
-
-#define PART_LEN1       (PART_LEN + 1)  // Unique fft coefficients
-#define PART_LEN2       (PART_LEN << 1) // Length of partition * 2
-#define PART_LEN4       (PART_LEN << 2) // Length of partition * 4
-#define FAR_BUF_LEN     PART_LEN4       // Length of buffers
-#define MAX_DELAY 100
-
-// Counter parameters
-#ifdef AECM_SHORT
-
-#define CONV_LEN        1024            // Convergence length used at startup
-#else
-
-#define CONV_LEN        512             // Convergence length used at startup
-#endif
-
-#define CONV_LEN2       (CONV_LEN << 1) // Convergence length * 2 used at startup
-// Energy parameters
-#define MAX_BUF_LEN     64              // History length of energy signals
-
-#define FAR_ENERGY_MIN  1025            // Lowest Far energy level: At least 2 in energy
-#define FAR_ENERGY_DIFF 929             // Allowed difference between max and min
-
-#define ENERGY_DEV_OFFSET       0       // The energy error offset in Q8
-#define ENERGY_DEV_TOL  400             // The energy estimation tolerance in Q8
-#define FAR_ENERGY_VAD_REGION   230     // Far VAD tolerance region
-// Stepsize parameters
-#define MU_MIN          10              // Min stepsize 2^-MU_MIN (far end energy dependent)
-#define MU_MAX          1               // Max stepsize 2^-MU_MAX (far end energy dependent)
-#define MU_DIFF         9               // MU_MIN - MU_MAX
-// Channel parameters
-#define MIN_MSE_COUNT   20              // Min number of consecutive blocks with enough far end
-                                        // energy to compare channel estimates
-#define MIN_MSE_DIFF    29              // The ratio between adapted and stored channel to
-                                        // accept a new storage (0.8 in Q-MSE_RESOLUTION)
-#define MSE_RESOLUTION  5               // MSE parameter resolution
-#define RESOLUTION_CHANNEL16    12      // W16 Channel in Q-RESOLUTION_CHANNEL16
-#define RESOLUTION_CHANNEL32    28      // W32 Channel in Q-RESOLUTION_CHANNEL
-#define CHANNEL_VAD     16              // Minimum energy in frequency band to update channel
-// Suppression gain parameters: SUPGAIN_ parameters in Q-(RESOLUTION_SUPGAIN)
-#define RESOLUTION_SUPGAIN      8       // Channel in Q-(RESOLUTION_SUPGAIN)
-#define SUPGAIN_DEFAULT (1 << RESOLUTION_SUPGAIN)   // Default suppression gain
-#define SUPGAIN_ERROR_PARAM_A   3072    // Estimation error parameter (Maximum gain) (8 in Q8)
-#define SUPGAIN_ERROR_PARAM_B   1536    // Estimation error parameter (Gain before going down)
-#define SUPGAIN_ERROR_PARAM_D   SUPGAIN_DEFAULT // Estimation error parameter
-                                                // (Should be the same as Default) (1 in Q8)
-#define SUPGAIN_EPC_DT  200             // = SUPGAIN_ERROR_PARAM_C * ENERGY_DEV_TOL
-// Defines for "check delay estimation"
-#define CORR_WIDTH      31              // Number of samples to correlate over.
-#define CORR_MAX        16              // Maximum correlation offset
-#define CORR_MAX_BUF    63
-#define CORR_DEV        4
-#define CORR_MAX_LEVEL  20
-#define CORR_MAX_LOW    4
-#define CORR_BUF_LEN    (CORR_MAX << 1) + 1
-// Note that CORR_WIDTH + 2*CORR_MAX <= MAX_BUF_LEN
-
-#define ONE_Q14         (1 << 14)
-
-// NLP defines
-#define NLP_COMP_LOW    3277            // 0.2 in Q14
-#define NLP_COMP_HIGH   ONE_Q14         // 1 in Q14
+#include "aecm_defines.h"
 
 extern const WebRtc_Word16 WebRtcAecm_kSqrtHanning[];
 
@@ -368,8 +289,33 @@ typedef void (*InverseFFTAndWindow)(
     const WebRtc_Word16* nearendClean);
 extern InverseFFTAndWindow WebRtcAecm_InverseFFTAndWindow;
 
-// Initialization of the above function pointers for ARM Neon.
-void WebRtcAecm_InitNeon(void);
+// For the above function pointers, functions for generic platforms are declared
+// and defined as static in file aecm_core.c, while those for ARM Neon platforms
+// are declared below and defined in file aecm_core_neon.s.
+#if (defined WEBRTC_DETECT_ARM_NEON) || defined (WEBRTC_ARCH_ARM_NEON)
+void WebRtcAecm_WindowAndFFTNeon(WebRtc_Word16* fft,
+                                 const WebRtc_Word16* time_signal,
+                                 complex16_t* freq_signal,
+                                 int time_signal_scaling);
 
+void WebRtcAecm_InverseFFTAndWindowNeon(AecmCore_t* aecm,
+                                        WebRtc_Word16* fft,
+                                        complex16_t* efw,
+                                        WebRtc_Word16* output,
+                                        const WebRtc_Word16* nearendClean);
+
+void WebRtcAecm_CalcLinearEnergiesNeon(AecmCore_t* aecm,
+                                       const WebRtc_UWord16* far_spectrum,
+                                       WebRtc_Word32* echo_est,
+                                       WebRtc_UWord32* far_energy,
+                                       WebRtc_UWord32* echo_energy_adapt,
+                                       WebRtc_UWord32* echo_energy_stored);
+
+void WebRtcAecm_StoreAdaptiveChannelNeon(AecmCore_t* aecm,
+                                         const WebRtc_UWord16* far_spectrum,
+                                         WebRtc_Word32* echo_est);
+
+void WebRtcAecm_ResetAdaptiveChannelNeon(AecmCore_t* aecm);
+#endif
 
 #endif

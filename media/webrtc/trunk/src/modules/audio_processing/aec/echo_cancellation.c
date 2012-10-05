@@ -276,11 +276,8 @@ WebRtc_Word32 WebRtcAec_BufferFarend(void *aecInst, const WebRtc_Word16 *farend,
 
     if (aecpc->skewMode == kAecTrue && aecpc->resample == kAecTrue) {
         // Resample and get a new number of samples
-        newNrOfSamples = WebRtcAec_ResampleLinear(aecpc->resampler,
-                                                  farend,
-                                                  nrOfSamples,
-                                                  skew,
-                                                  newFarend);
+        WebRtcAec_ResampleLinear(aecpc->resampler, farend, nrOfSamples, skew,
+                                 newFarend, &newNrOfSamples);
         farend_ptr = (const int16_t*) newFarend;
     }
 
@@ -404,7 +401,7 @@ WebRtc_Word32 WebRtcAec_Process(void *aecInst, const WebRtc_Word16 *nearend,
             }
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
-            fwrite(&aecpc->skew, sizeof(aecpc->skew), 1, aecpc->skewFile);
+            (void)fwrite(&aecpc->skew, sizeof(aecpc->skew), 1, aecpc->skewFile);
 #endif
         }
     }
@@ -535,10 +532,11 @@ WebRtc_Word32 WebRtcAec_Process(void *aecInst, const WebRtc_Word16 *nearend,
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
     {
-        int16_t far_buf_size_ms = (int16_t) (aecpc->aec->system_delay /
+        int16_t far_buf_size_ms = (int16_t)(aecpc->aec->system_delay /
             (sampMsNb * aecpc->aec->mult));
-        fwrite(&far_buf_size_ms, 2, 1, aecpc->bufFile);
-        fwrite(&(aecpc->knownDelay), sizeof(aecpc->knownDelay), 1, aecpc->delayFile);
+        (void)fwrite(&far_buf_size_ms, 2, 1, aecpc->bufFile);
+        (void)fwrite(&aecpc->knownDelay, sizeof(aecpc->knownDelay), 1,
+                     aecpc->delayFile);
     }
 #endif
 
@@ -752,7 +750,7 @@ int WebRtcAec_GetDelayMetrics(void* handle, int* median, int* std) {
   const int kMsPerBlock = (PART_LEN * 1000) / self->splitSampFreq;
   float l1_norm = 0;
 
-  if (self == NULL) {
+  if (handle == NULL) {
     return -1;
   }
   if (median == NULL) {

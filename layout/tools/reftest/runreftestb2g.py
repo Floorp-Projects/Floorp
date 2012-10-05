@@ -24,6 +24,7 @@ from remotereftest import ReftestServer
 from mozprofile import Profile
 from mozrunner import Runner
 
+import devicemanager
 import devicemanagerADB
 import manifestparser
 
@@ -330,7 +331,7 @@ class B2GReftest(RefTest):
     def restoreProfilesIni(self):
         # restore profiles.ini on the device to its previous state
         if not self.originalProfilesIni or not os.access(self.originalProfilesIni, os.F_OK):
-            raise DMError('Unable to install original profiles.ini; file not found: %s',
+            raise devicemanager.DMError('Unable to install original profiles.ini; file not found: %s',
                           self.originalProfilesIni)
 
         self._devicemanager.pushFile(self.originalProfilesIni, self.remoteProfilesIniPath)
@@ -394,8 +395,11 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
 
         # Copy the profile to the device.
         self._devicemanager.removeDir(self.remoteProfile)
-        if self._devicemanager.pushDir(profileDir, self.remoteProfile) == None:
-            raise devicemanager.FileError("Unable to copy profile to device.")
+        try:
+            self._devicemanager.pushDir(profileDir, self.remoteProfile)
+        except devicemanager.DMError:
+            print "Automation Error: Unable to copy profile to device."
+            raise
 
         # In B2G, user.js is always read from /data/local, not the profile
         # directory.  Backup the original user.js first so we can restore it.
@@ -413,8 +417,11 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
 
     def copyExtraFilesToProfile(self, options, profileDir):
         RefTest.copyExtraFilesToProfile(self, options, profileDir)
-        if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
-            raise devicemanager.FileError("Failed to copy extra files to device")
+        try:
+            self._devicemanager.pushDir(profileDir, options.remoteProfile)
+        except devicemanager.DMError:
+            print "Automation Error: Failed to copy extra files to device"
+            raise
 
     def getManifestPath(self, path):
         return path

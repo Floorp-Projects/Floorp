@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -13,6 +13,9 @@
 
 #include <string>
 
+#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "common_video/libyuv/include/scaler.h"
+#include "modules/interface/module_common_types.h"
 #include "modules/video_coding/codecs/interface/video_codec_interface.h"
 #include "modules/video_coding/codecs/test/packet_manipulator.h"
 #include "modules/video_coding/codecs/test/stats.h"
@@ -140,6 +143,19 @@ class VideoProcessor {
   // available in the source clip.
   // Frame number must be an integer >=0.
   virtual bool ProcessFrame(int frame_number) = 0;
+
+  // Updates the encoder with the target bit rate and the frame rate.
+  virtual void SetRates(int bit_rate, int frame_rate) = 0;
+
+  // Return the size of the encoded frame in bytes. Dropped frames by the
+  // encoder are regarded as zero size.
+  virtual int EncodedFrameSize() = 0;
+
+  // Return the number of dropped frames.
+  virtual int NumberDroppedFrames() = 0;
+
+  // Return the number of spatial resizes.
+  virtual int NumberSpatialResizes() = 0;
 };
 
 class VideoProcessorImpl : public VideoProcessor {
@@ -157,13 +173,21 @@ class VideoProcessorImpl : public VideoProcessor {
 
  private:
   // Invoked by the callback when a frame has completed encoding.
-  void FrameEncoded(EncodedImage* encodedImage);
+  void FrameEncoded(webrtc::EncodedImage* encodedImage);
   // Invoked by the callback when a frame has completed decoding.
-  void FrameDecoded(const RawImage& image);
+  void FrameDecoded(const webrtc::VideoFrame& image);
   // Used for getting a 32-bit integer representing time
   // (checks the size is within signed 32-bit bounds before casting it)
   int GetElapsedTimeMicroseconds(const webrtc::TickTime& start,
                                  const webrtc::TickTime& stop);
+  // Updates the encoder with the target bit rate and the frame rate.
+  void SetRates(int bit_rate, int frame_rate);
+  // Return the size of the encoded frame in bytes.
+  int EncodedFrameSize();
+  // Return the number of dropped frames.
+  int NumberDroppedFrames();
+  // Return the number of spatial resizes.
+  int NumberSpatialResizes();
 
   webrtc::VideoEncoder* encoder_;
   webrtc::VideoDecoder* decoder_;
@@ -180,13 +204,20 @@ class VideoProcessorImpl : public VideoProcessor {
   // Keep track of the last successful frame, since we need to write that
   // when decoding fails:
   WebRtc_UWord8* last_successful_frame_buffer_;
-  webrtc::RawImage source_frame_;
+  webrtc::VideoFrame source_frame_;
   // To keep track of if we have excluded the first key frame from packet loss:
   bool first_key_frame_has_been_excluded_;
   // To tell the decoder previous frame have been dropped due to packet loss:
   bool last_frame_missing_;
   // If Init() has executed successfully.
   bool initialized_;
+  int encoded_frame_size_;
+  int prev_time_stamp_;
+  int num_dropped_frames_;
+  int num_spatial_resizes_;
+  int last_encoder_frame_width_;
+  int last_encoder_frame_height_;
+  Scaler scaler_;
 
   // Statistics
   double bit_rate_factor_;  // multiply frame length with this to get bit rate
@@ -216,7 +247,7 @@ class VideoProcessorImpl : public VideoProcessor {
       explicit VideoProcessorDecodeCompleteCallback(VideoProcessorImpl* vp)
       : video_processor_(vp) {
     }
-    WebRtc_Word32 Decoded(webrtc::RawImage& image);
+    WebRtc_Word32 Decoded(webrtc::VideoFrame& image);
 
    private:
     VideoProcessorImpl* video_processor_;

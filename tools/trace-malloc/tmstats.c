@@ -418,10 +418,10 @@ void addVariance(VarianceState* inVariance, unsigned inValue)
     
     LL_UI2L(bigValue, inValue);
 
-    LL_ADD(inVariance->mSum, inVariance->mSum, bigValue);
+    inVariance->mSum += bigValue;
 
-    LL_MUL(squared, bigValue, bigValue);
-    LL_ADD(inVariance->mSquaredSum, inVariance->mSquaredSum, squared);
+    squared = bigValue * bigValue;
+    inVariance->mSquaredSum, inVariance->mSquaredSum += squared;
 
     inVariance->mCount++;
 }
@@ -538,9 +538,9 @@ uint32_t ticks2xsec(tmreader* aReader, uint32_t aTicks, uint32_t aResolution)
 
     LL_UI2L(bigone, aResolution);
     LL_UI2L(tmp64, aTicks);
-    LL_MUL(bigone, bigone, tmp64);
+    bigone *= tmp64;
     LL_UI2L(tmp64, aReader->ticksPerSec);
-    LL_DIV(bigone, bigone, tmp64);
+    bigone /= tmp64;
     LL_L2UI(retval, bigone);
 
     return retval;

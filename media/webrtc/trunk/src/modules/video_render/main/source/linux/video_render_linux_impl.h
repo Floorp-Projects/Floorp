@@ -123,13 +123,9 @@ private:
     CriticalSectionWrapper& _renderLinuxCritsect;
 
     void* _ptrWindow;
-    bool _fullscreen;
 
-    // X11 Render 
+    // X11 Render
     VideoX11Render* _ptrX11Render;
-
-    VideoRenderType _renderType;
-
 };
 
 } //namespace webrtc

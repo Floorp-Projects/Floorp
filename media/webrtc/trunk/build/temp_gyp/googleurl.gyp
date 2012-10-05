@@ -1,4 +1,4 @@
-# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -23,6 +23,7 @@
         '../../googleurl/src/url_canon.h',
         '../../googleurl/src/url_canon_etc.cc',
         '../../googleurl/src/url_canon_fileurl.cc',
+        '../../googleurl/src/url_canon_filesystemurl.cc',
         '../../googleurl/src/url_canon_host.cc',
         '../../googleurl/src/url_canon_icu.cc',
         '../../googleurl/src/url_canon_icu.h',
@@ -51,6 +52,9 @@
           '../..',
         ],
       },
+      'defines': [
+        'FULL_FILESYSTEM_URL_SUPPORT=1',
+      ],
       'conditions': [
         ['component=="shared_library"', {
           'defines': [
@@ -71,7 +75,7 @@
       'dependencies': [
         'googleurl',
         '../../base/base.gyp:base_i18n',
-        '../../base/base.gyp:test_support_base',
+        '../../base/base.gyp:run_all_unittests',
         '../../testing/gtest.gyp:gtest',
         '../../third_party/icu/icu.gyp:icuuc',
       ],
@@ -81,12 +85,12 @@
         '../../googleurl/src/url_parse_unittest.cc',
         '../../googleurl/src/url_test_utils.h',
         '../../googleurl/src/url_util_unittest.cc',
-        # Make sure base and ICU are started up the 'Chromium way' since the
-        # build is using the Chromium base & ICU.
-        '../../base/test/run_all_unittests.cc',
+      ],
+      'defines': [
+        'FULL_FILESYSTEM_URL_SUPPORT=1',
       ],
       'conditions': [
-        ['os_posix==1 and OS!="mac"', {
+        ['os_posix==1 and OS!="mac" and OS!="ios"', {
           'conditions': [
             ['linux_use_tcmalloc==1', {
               'dependencies': [

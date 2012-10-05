@@ -15,7 +15,9 @@
 		  android:layout_width="wrap_content"
 		  android:layout_height="wrap_content">
 	</TextView>
-	<LinearLayout android:id="@+id/LinearLayout02"
+
+        <LinearLayout android:orientation="horizontal"
+                      android:id="@+id/LinearLayout02"
 		      android:layout_height="wrap_content"
 		      android:layout_width="fill_parent">
 	<CheckBox android:layout_width="wrap_content"
@@ -28,14 +30,23 @@
 		  android:id="@+id/cbVideoSend"
 		  android:text="@string/enableVideoSend">
 	</CheckBox>
-	</LinearLayout>
-	
 	<CheckBox android:layout_width="wrap_content"
 		  android:layout_height="wrap_content"
 		  android:id="@+id/cbVoice"
 		  android:text="@string/enableVoice">
 	</CheckBox>
-		
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbLoopback"
+		  android:text="@string/loopback">
+	</CheckBox>
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbStats"
+		  android:text="@string/stats">
+	</CheckBox>
+        </LinearLayout>
+
 	<TextView android:id="@+id/TextView02"
 		  android:layout_width="wrap_content"
 		  android:layout_height="wrap_content"
@@ -46,9 +57,31 @@
 		  android:id="@+id/etRemoteIp" >
 	</EditText>
 	
-	<CheckBox android:layout_width="wrap_content"
-		  android:layout_height="wrap_content"
-		  android:id="@+id/cbLoopback"
-		  android:text="@string/loopback">
-	</CheckBox>
+	<LinearLayout android:orientation="horizontal"
+                      android:id="@+id/LinearLayout03"
+		      android:layout_height="wrap_content"
+		      android:layout_width="fill_parent">
+        <RadioGroup
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="vertical"
+                  android:id="@+id/radio_group1">
+                  <RadioButton
+                          android:id="@+id/radio_opengl"
+                          android:onClick="onClick"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="@string/opengl"
+                          android:checked="true"
+                          android:textColor="#fff"/>
+                 <RadioButton
+                          android:id="@+id/radio_surface"
+                          android:onClick="onClick"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="@string/surfaceview"
+                          android:textColor="#fff" />
+        </RadioGroup>
+	</LinearLayout>
+
 </LinearLayout>

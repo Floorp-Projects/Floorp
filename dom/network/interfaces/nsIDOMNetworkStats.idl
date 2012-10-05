@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(3b16fe17-5583-483a-b486-b64a3243221c)]
+interface nsIDOMMozNetworkStatsData : nsISupports
+{
+  readonly attribute unsigned long   rxBytes;   // Received bytes.
+  readonly attribute unsigned long   txBytes;   // Sent bytes.
+  readonly attribute jsval           date;      // Date.
+};
+
+[scriptable, builtinclass, uuid(037435a6-f563-48f3-99b3-a0106d8ba5bd)]
+interface nsIDOMMozNetworkStats : nsISupports
+{
+  /**
+   * Can be 'mobile', 'wifi' or null.
+   * If null, stats for both mobile and wifi are returned.
+   */
+  readonly attribute DOMString    connectionType;
+
+  /**
+   * Stats for connectionType
+   */
+  readonly attribute jsval        data;      // array of NetworkStatsData.
+                                             // one element per day.
+
+  /**
+   * Dates
+   */
+  readonly attribute jsval        start; // Date.
+  readonly attribute jsval        end;   // Date.
+};
