@@ -10,6 +10,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/FloatingScrollbars.jsm");
+Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 
 var EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 
@@ -66,6 +67,13 @@ let ResponsiveUIManager = {
           this.toggle(aWindow, aTab);
       default:
     }
+  },
+
+  get events() {
+    if (!this._eventEmitter) {
+      this._eventEmitter = new EventEmitter();
+    }
+    return this._eventEmitter;
   },
 }
 
@@ -162,6 +170,7 @@ function ResponsiveUI(aWindow, aTab)
   } catch(e) {}
 
   switchToFloatingScrollbars(this.tab);
+  ResponsiveUIManager.events.emit("on", this.tab, this);
 }
 
 ResponsiveUI.prototype = {
@@ -215,6 +224,7 @@ ResponsiveUI.prototype = {
     this.stack.removeAttribute("responsivemode");
 
     delete this.tab.__responsiveUI;
+    ResponsiveUIManager.events.emit("off", this.tab, this);
   },
 
   /**
