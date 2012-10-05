@@ -13,7 +13,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/JNI.jsm");
 
 #ifdef ACCESSIBILITY
 Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
@@ -163,6 +162,7 @@ var BrowserApp = {
 
     getBridge().browserApp = this;
 
+    Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "Tab:Closed", false);
@@ -1073,7 +1073,7 @@ var BrowserApp = {
       browser.reload();
     } else if (aTopic == "Session:Stop") {
       browser.stop();
-    } else if (aTopic == "Tab:Load") {
+    } else if (aTopic == "Tab:Add" || aTopic == "Tab:Load") {
       let data = JSON.parse(aData);
 
       // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
@@ -1085,8 +1085,7 @@ var BrowserApp = {
       let params = {
         selected: true,
         parentId: ("parentId" in data) ? data.parentId : -1,
-        flags: flags,
-        tabID: data.tabID
+        flags: flags
       };
 
       let url = data.url;
@@ -1103,7 +1102,7 @@ var BrowserApp = {
       if (!shouldShowProgress(url))
         params.showProgress = false;
 
-      if (data.newTab)
+      if (aTopic == "Tab:Add")
         this.addTab(url, params);
       else
         this.loadURI(url, browser, params);
@@ -2236,6 +2235,8 @@ nsBrowserAccess.prototype = {
 };
 
 
+let gTabIDFactory = 0;
+
 // track the last known screen size so that new tabs
 // get created with the right size rather than being 1x1
 let gScreenWidth = 1;
@@ -2291,16 +2292,7 @@ Tab.prototype = {
     } catch (e) {}
 
     if (!aParams.zombifying) {
-      if ("tabID" in aParams) {
-        this.id = aParams.tabID;
-      } else {
-        let jni = new JNI();
-        let cls = jni.findClass("org.mozilla.gecko.Tabs");
-        let method = jni.getStaticMethodID(cls, "getNextTabId", "()I");
-        this.id = jni.callStaticIntMethod(cls, method);
-        jni.close();
-      }
-
+      this.id = ++gTabIDFactory;
       this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;
 
       let message = {
@@ -6643,6 +6635,7 @@ var WebappsUI = {
   get iconSize() {
     let iconSize = 64;
     try {
+      Cu.import("resource://gre/modules/JNI.jsm");
       let jni = new JNI();
       let cls = jni.findClass("org.mozilla.gecko.GeckoAppShell");
       let method = jni.getStaticMethodID(cls, "getPreferredIconSize", "()I");

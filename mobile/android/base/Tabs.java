@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Tabs implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -34,19 +33,14 @@ public class Tabs implements GeckoEventListener {
     // Keeps track of how much has happened since we last updated our persistent tab store.
     private volatile int mScore = 0;
 
-    public static final int LOADURL_NONE = 0;
-    public static final int LOADURL_NEW_TAB = 1;
-    public static final int LOADURL_USER_ENTERED = 2;
-
     private static final int SCORE_INCREMENT_TAB_LOCATION_CHANGE = 5;
     private static final int SCORE_INCREMENT_TAB_SELECTED = 10;
     private static final int SCORE_THRESHOLD = 30;
 
-    private static AtomicInteger sTabId = new AtomicInteger(0);
-
     private GeckoApp mActivity;
 
     private Tabs() {
+
         registerEventListener("SessionHistory:New");
         registerEventListener("SessionHistory:Back");
         registerEventListener("SessionHistory:Forward");
@@ -71,7 +65,17 @@ public class Tabs implements GeckoEventListener {
         return mTabs.size();
     }
 
-    private Tab addTab(int id, String url, boolean external, int parentId, String title) {
+    public Tab addTab(JSONObject params) throws JSONException {
+        int id = params.getInt("tabID");
+        if (mTabs.containsKey(id))
+           return mTabs.get(id);
+
+        // null strings return "null" (http://code.google.com/p/android/issues/detail?id=13830)
+        String url = params.isNull("uri") ? null : params.getString("uri");
+        Boolean external = params.getBoolean("external");
+        int parentId = params.getInt("parentId");
+        String title = params.getString("title");
+
         final Tab tab = new Tab(id, url, external, parentId, title);
         mTabs.put(id, tab);
         mOrder.add(tab);
@@ -238,20 +242,7 @@ public class Tabs implements GeckoEventListener {
                 }
             } else if (event.equals("Tab:Added")) {
                 Log.i(LOGTAG, "Received message from Gecko: " + SystemClock.uptimeMillis() + " - Tab:Added");
-
-                int id = message.getInt("tabID");
-                Tab tab = null;
-
-                if (mTabs.containsKey(id)) {
-                    tab = mTabs.get(id);
-                } else {
-                    tab = addTab(id,
-                                 message.isNull("uri") ? null : message.getString("uri"),
-                                 message.getBoolean("external"),
-                                 message.getInt("parentId"),
-                                 message.getString("title"));
-                }
-
+                Tab tab = addTab(message);
                 if (message.getBoolean("selected"))
                     selectTab(tab.getId());
                 if (message.getBoolean("delayLoad"))
@@ -420,91 +411,5 @@ public class Tabs implements GeckoEventListener {
 
     private void registerEventListener(String event) {
         GeckoAppShell.getEventDispatcher().registerEventListener(event, this);
-    }
-
-    /**
-     * Loads a tab with the given URL in the currently selected tab.
-     *
-     * @param url URL of page to load, or search term used if searchEngine is given
-     */
-    public void loadUrl(String url) {
-        loadUrl(url, LOADURL_NONE);
-    }
-
-    /**
-     * Loads a tab with the given URL.
-     *
-     * @param url   URL of page to load, or search term used if searchEngine is given
-     * @param flags flags used to load tab
-     */
-    public void loadUrl(String url, int flags) {
-        loadUrl(url, null, -1, flags);
-    }
-
-    /**
-     * Loads a tab with the given URL.
-     *
-     * @param url          URL of page to load, or search term used if searchEngine is given
-     * @param searchEngine if given, the search engine with this name is used
-     *                     to search for the url string; if null, the URL is loaded directly
-     * @param parentId     ID of this tab's parent, or -1 if it has no parent
-     * @param flags        flags used to load tab
-     */
-    public void loadUrl(String url, String searchEngine, int parentId, int flags) {
-        JSONObject args = new JSONObject();
-        int tabId = -1;
-
-        try {
-            args.put("url", url);
-            args.put("engine", searchEngine);
-            args.put("parentId", parentId);
-            args.put("userEntered", (flags & LOADURL_USER_ENTERED) != 0);
-            args.put("newTab", (flags & LOADURL_NEW_TAB) != 0);
-
-            if ((flags & LOADURL_NEW_TAB) != 0) {
-                tabId = getNextTabId();
-                args.put("tabID", tabId);
-                addTab(tabId, null, false, parentId, url);
-            }
-        } catch (Exception e) {
-            Log.e(LOGTAG, "error building JSON arguments");
-        }
-
-        Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Load");
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
-
-        if (tabId != -1) {
-            selectTab(tabId);
-        }
-    }
-
-    /**
-     * Open the url as a new tab, and mark the selected tab as its "parent".
-     *
-     * If the url is already open in a tab, the existing tab is selected.
-     * Use this for tabs opened by the browser chrome, so users can press the
-     * "Back" button to return to the previous tab.
-     *
-     * @param url URL of page to load
-     */
-    public void loadUrlInTab(String url) {
-        Iterable<Tab> tabs = getTabsInOrder();
-        for (Tab tab : tabs) {
-            if (url.equals(tab.getURL())) {
-                selectTab(tab.getId());
-                return;
-            }
-        }
-
-        loadUrl(url, null, getSelectedTab().getId(), LOADURL_NEW_TAB);
-    }
-
-    /**
-     * Gets the next tab ID.
-     *
-     * This method is invoked via JNI.
-     */
-    public static int getNextTabId() {
-        return sTabId.getAndIncrement();
     }
 }
