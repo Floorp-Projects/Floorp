@@ -6,7 +6,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <iostream>
 #if !defined(__Userspace_os_Windows)
 #include <arpa/inet.h>
