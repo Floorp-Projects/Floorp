@@ -3727,6 +3727,38 @@ class MArrayPush
     }
 };
 
+// Array.prototype.concat on two dense arrays.
+class MArrayConcat
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >
+{
+    CompilerRootObject templateObj_;
+
+    MArrayConcat(MDefinition *lhs, MDefinition *rhs, HandleObject templateObj)
+      : MBinaryInstruction(lhs, rhs),
+        templateObj_(templateObj)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ArrayConcat);
+
+    static MArrayConcat *New(MDefinition *lhs, MDefinition *rhs, HandleObject templateObj) {
+        return new MArrayConcat(lhs, rhs, templateObj);
+    }
+
+    JSObject *templateObj() const {
+        return templateObj_;
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
+    }
+};
+
 class MLoadTypedArrayElement
   : public MBinaryInstruction
 {
