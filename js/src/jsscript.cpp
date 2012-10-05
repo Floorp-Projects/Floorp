@@ -2573,7 +2573,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
      */
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         StackFrame *fp = i.fp();
-        if (fp->isFunctionFrame() && fp->script() == script) {
+        if (fp->isFunctionFrame() && !fp->runningInIon() && fp->script() == script) {
             ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, fp);
             if (!argsobj) {
                 /*
