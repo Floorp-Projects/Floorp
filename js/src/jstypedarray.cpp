@@ -2061,7 +2061,7 @@ class TypedArrayTemplate
     }
 
     static bool
-    copyFromArray(JSContext *cx, JSObject *thisTypedArrayObj,
+    copyFromArray(JSContext *cx, HandleObject thisTypedArrayObj,
                   HandleObject ar, uint32_t len, uint32_t offset = 0)
     {
         JS_ASSERT(thisTypedArrayObj->isTypedArray());
@@ -2070,14 +2070,20 @@ class TypedArrayTemplate
         if (ar->isTypedArray())
             return copyFromTypedArray(cx, thisTypedArrayObj, ar, offset);
 
+        const Value *src = NULL;
         NativeType *dest = static_cast<NativeType*>(viewData(thisTypedArrayObj)) + offset;
-        SkipRoot skip(cx, &dest);
+
+        // The only way the code below can GC is if nativeFromValue fails, but
+        // in that case we return false immediately, so we do not need to root
+        // |src| and |dest|. These SkipRoots are to protect from the
+        // unconditional MaybeCheckStackRoots done by ToNumber.
+        SkipRoot skipDest(cx, &dest);
+        SkipRoot skipSrc(cx, &src);
 
         if (ar->isDenseArray() && ar->getDenseArrayInitializedLength() >= len) {
             JS_ASSERT(ar->getArrayLength() == len);
 
-            const Value *src = ar->getDenseArrayElements();
-            SkipRoot skipSrc(cx, &src);
+            src = ar->getDenseArrayElements();
             for (uint32_t i = 0; i < len; ++i) {
                 NativeType n;
                 if (!nativeFromValue(cx, src[i], &n))
