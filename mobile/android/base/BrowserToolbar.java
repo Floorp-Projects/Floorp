@@ -717,7 +717,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
             // Setting a null background makes the popup to not close on touching outside.
             setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT,
+            setWindowLayoutMode(View.MeasureSpec.makeMeasureSpec(context.getResources().getDimensionPixelSize(R.dimen.menu_popup_width), View.MeasureSpec.AT_MOST),
                                 ViewGroup.LayoutParams.WRAP_CONTENT);
 
             LayoutInflater inflater = LayoutInflater.from(context);
