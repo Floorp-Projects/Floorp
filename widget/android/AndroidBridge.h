@@ -281,6 +281,10 @@ public:
 
     void UnlockBitmap(jobject bitmap);
 
+    bool UnlockProfile();
+
+    void KillAnyZombies();
+
     /* Copied from Android's native_window.h in newer (platform 9) NDK */
     enum {
         WINDOW_FORMAT_RGBA_8888          = 1,
@@ -419,6 +423,8 @@ protected:
     jmethodID jShowFilePickerForExtensions;
     jmethodID jShowFilePickerForMimeType;
     jmethodID jShowFilePickerAsync;
+    jmethodID jUnlockProfile;
+    jmethodID jKillAnyZombies;
     jmethodID jAlertsProgressListener_OnProgress;
     jmethodID jAlertsProgressListener_OnCancel;
     jmethodID jGetDpi;
