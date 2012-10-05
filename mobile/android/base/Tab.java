@@ -378,7 +378,7 @@ public final class Tab {
         if (url == null)
             return;
 
-        (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+        (new GeckoAsyncTask<Void, Void, Void>() {
             @Override
             public Void doInBackground(Void... params) {
                 if (url.equals(getURL())) {
