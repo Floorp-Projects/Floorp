@@ -41,6 +41,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Assertions.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -1302,13 +1303,17 @@ public:
                               nsWrapperCache* aCache)
   {
     if (!aCache->PreservingWrapper()) {
+      nsISupports *ccISupports;
+      aScriptObjectHolder->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                                          reinterpret_cast<void**>(&ccISupports));
+      MOZ_ASSERT(ccISupports);
       nsXPCOMCycleCollectionParticipant* participant;
-      CallQueryInterface(aScriptObjectHolder, &participant);
-      HoldJSObjects(aScriptObjectHolder, participant);
+      CallQueryInterface(ccISupports, &participant);
+      HoldJSObjects(ccISupports, participant);
       aCache->SetPreservingWrapper(true);
 #ifdef DEBUG
       // Make sure the cycle collector will be able to traverse to the wrapper.
-      CheckCCWrapperTraversal(aScriptObjectHolder, aCache);
+      CheckCCWrapperTraversal(ccISupports, aCache);
 #endif
     }
   }
