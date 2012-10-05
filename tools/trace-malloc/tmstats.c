@@ -418,10 +418,10 @@ void addVariance(VarianceState* inVariance, unsigned inValue)
     
     LL_UI2L(bigValue, inValue);
 
-    LL_ADD(inVariance->mSum, inVariance->mSum, bigValue);
+    inVariance->mSum += bigValue;
 
     LL_MUL(squared, bigValue, bigValue);
-    LL_ADD(inVariance->mSquaredSum, inVariance->mSquaredSum, squared);
+    inVariance->mSquaredSum, inVariance->mSquaredSum += squared;
 
     inVariance->mCount++;
 }

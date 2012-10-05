@@ -419,10 +419,10 @@ nsCRLManager::ComputeNextAutoUpdateTime(nsICRLInfo *info,
     LL_DIV(cycleCnt, diff, microsecInDayCnt);   //temp is the number of full cycles from lst update
     LL_MOD(temp, diff, microsecInDayCnt);
     if(temp != 0) {
-      LL_ADD(cycleCnt,cycleCnt,1);            //no of complete cycles till next autoupdate instant
+      ++cycleCnt;            //no of complete cycles till next autoupdate instant
     }
     LL_MUL(temp,cycleCnt,microsecInDayCnt);    //micro secs from last update
-    LL_ADD(tempTime, lastUpdate, temp);
+    tempTime = lastUpdate + temp;
     break;  
   case TYPE_AUTOUPDATE_TIME_BASED:
     LL_SUB(tempTime, nextUpdate, microsecInDayCnt);
