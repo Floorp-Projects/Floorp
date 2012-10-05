@@ -21,7 +21,9 @@
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "PrivateBrowsingChannel.h"
 #include "nsThreadUtils.h"
+#include "nsNetUtil.h"
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel is designed to be subclassed.  The subclass is responsible for
@@ -40,6 +42,7 @@ class nsBaseChannel : public nsHashPropertyBag
                     , public nsIInterfaceRequestor
                     , public nsITransportEventSink
                     , public nsIAsyncVerifyRedirectCallback
+                    , public mozilla::net::PrivateBrowsingChannel<nsBaseChannel>
                     , private nsIStreamListener
 {
 public:
@@ -269,6 +272,8 @@ protected:
   nsresult                            mStatus;
   uint32_t                            mContentDispositionHint;
   nsAutoPtr<nsString>                 mContentDispositionFilename;
+
+  friend class mozilla::net::PrivateBrowsingChannel<nsBaseChannel>;
 };
 
 #endif // !nsBaseChannel_h__
