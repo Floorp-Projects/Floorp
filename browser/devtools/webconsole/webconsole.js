@@ -187,6 +187,10 @@ function WebConsoleFrame(aWebConsoleOwner, aPosition)
 
   this._toggleFilter = this._toggleFilter.bind(this);
   this._onPositionConsoleCommand = this._onPositionConsoleCommand.bind(this);
+  this._flushMessageQueue = this._flushMessageQueue.bind(this);
+
+  this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  this._outputTimerInitialized = false;
 
   this._initDefaultFilterPrefs();
   this._commandController = new CommandController(this);
@@ -194,7 +198,6 @@ function WebConsoleFrame(aWebConsoleOwner, aPosition)
 
   this.jsterm = new JSTerm(this);
   this.jsterm.inputNode.focus();
-
   this._initConnection();
 }
 
@@ -263,6 +266,15 @@ WebConsoleFrame.prototype = {
    * @type function
    */
   _flushCallback: null,
+
+  /**
+   * Timer used for flushing the messages output queue.
+   *
+   * @private
+   * @type nsITimer
+   */
+  _outputTimer: null,
+  _outputTimerInitialized: null,
 
   /**
    * Store for tracking repeated CSS nodes.
@@ -1726,10 +1738,8 @@ WebConsoleFrame.prototype = {
 
     this._outputQueue.push([aCategory, aMethodOrNode, aArguments]);
 
-    if (!this._outputTimeout) {
-      this._outputTimeout =
-        this.window.setTimeout(this._flushMessageQueue.bind(this),
-                               OUTPUT_INTERVAL);
+    if (!this._outputTimerInitialized) {
+      this._initOutputTimer();
     }
   },
 
@@ -1742,19 +1752,21 @@ WebConsoleFrame.prototype = {
    */
   _flushMessageQueue: function WCF__flushMessageQueue()
   {
+    if (!this._outputTimer) {
+      return;
+    }
+
     let timeSinceFlush = Date.now() - this._lastOutputFlush;
     if (this._outputQueue.length > MESSAGES_IN_INTERVAL &&
         timeSinceFlush < THROTTLE_UPDATES) {
-      this._outputTimeout =
-        this.window.setTimeout(this._flushMessageQueue.bind(this),
-                               OUTPUT_INTERVAL);
+      this._initOutputTimer();
       return;
     }
 
     // Determine how many messages we can display now.
     let toDisplay = Math.min(this._outputQueue.length, MESSAGES_IN_INTERVAL);
     if (toDisplay < 1) {
-      this._outputTimeout = null;
+      this._outputTimerInitialized = false;
       return;
     }
 
@@ -1767,7 +1779,7 @@ WebConsoleFrame.prototype = {
 
     let batch = this._outputQueue.splice(0, toDisplay);
     if (!batch.length) {
-      this._outputTimeout = null;
+      this._outputTimerInitialized = false;
       return;
     }
 
@@ -1825,16 +1837,30 @@ WebConsoleFrame.prototype = {
 
     // If the queue is not empty, schedule another flush.
     if (this._outputQueue.length > 0) {
-      this._outputTimeout =
-        this.window.setTimeout(this._flushMessageQueue.bind(this),
-                               OUTPUT_INTERVAL);
+      this._initOutputTimer();
     }
     else {
-      this._outputTimeout = null;
+      this._outputTimerInitialized = false;
       this._flushCallback && this._flushCallback();
     }
 
     this._lastOutputFlush = Date.now();
+  },
+
+  /**
+   * Initialize the output timer.
+   * @private
+   */
+  _initOutputTimer: function WCF__initOutputTimer()
+  {
+    if (!this._outputTimer) {
+      return;
+    }
+
+    this._outputTimerInitialized = true;
+    this._outputTimer.initWithCallback(this._flushMessageQueue,
+                                       OUTPUT_INTERVAL,
+                                       Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   /**
@@ -2545,7 +2571,9 @@ WebConsoleFrame.prototype = {
    */
   _releaseObject: function WCF__releaseObject(aActor)
   {
-    this.proxy.releaseActor(aActor);
+    if (this.proxy) {
+      this.proxy.releaseActor(aActor);
+    }
   },
 
   /**
@@ -2572,13 +2600,28 @@ WebConsoleFrame.prototype = {
    */
   destroy: function WCF_destroy(aOnDestroy)
   {
+    this._cssNodes = {};
+    this._outputQueue = [];
+    this._pruneCategoriesQueue = {};
+    this._networkRequests = {};
+
+    if (this._outputTimerInitialized) {
+      this._outputTimerInitialized = false;
+      this._outputTimer.cancel();
+    }
+    this._outputTimer = null;
+
     if (this.proxy) {
       this.proxy.disconnect(aOnDestroy);
+      this.proxy = null;
     }
 
     if (this.jsterm) {
       this.jsterm.destroy();
+      this.jsterm = null;
     }
+
+    this._commandController = null;
   },
 };
 
@@ -2675,6 +2718,10 @@ JSTerm.prototype = {
   _executeResultCallback:
   function JST__executeResultCallback(aAfterNode, aCallback, aResponse)
   {
+    if (!this.hud) {
+      return;
+    }
+
     let errorMessage = aResponse.errorMessage;
     let result = aResponse.result;
     let inspectable = result && typeof result == "object" && result.inspectable;
@@ -3594,10 +3641,13 @@ JSTerm.prototype = {
     this.clearOutput();
 
     this.autocompletePopup.destroy();
+    this.autocompletePopup = null;
 
     this.inputNode.removeEventListener("keypress", this._keyPress, false);
     this.inputNode.removeEventListener("input", this._inputEventHandler, false);
     this.inputNode.removeEventListener("keyup", this._inputEventHandler, false);
+
+    this.hud = null;
   },
 };
 
@@ -3836,6 +3886,14 @@ WebConsoleConnectionProxy.prototype = {
    * @type object
    */
   client: null,
+
+  /**
+   * The WebConsoleClient object.
+   *
+   * @see WebConsoleClient
+   * @type object
+   */
+  webConsoleClient: null,
 
   /**
    * Tells if the connection is established.
@@ -4104,6 +4162,7 @@ WebConsoleConnectionProxy.prototype = {
     this.client = null;
     this.webConsoleClient = null;
     this.connected = false;
+    this.owner = null;
   },
 };
 

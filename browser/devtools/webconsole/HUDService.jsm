@@ -57,9 +57,6 @@ const MINIMUM_PAGE_HEIGHT = 50;
 // The default console height, as a ratio from the content window inner height.
 const DEFAULT_CONSOLE_HEIGHT = 0.33;
 
-// This script is inserted into the content process.
-const CONTENT_SCRIPT_URL = "chrome://browser/content/devtools/HUDService-content.js";
-
 // points to the file to load in the Web Console iframe.
 const UI_IFRAME_URL = "chrome://browser/content/devtools/webconsole.xul";
 
@@ -500,9 +497,11 @@ HUD_SERVICE.prototype =
 function WebConsole(aTab)
 {
   this.tab = aTab;
+  this.chromeDocument = this.tab.ownerDocument;
+  this.chromeWindow = this.chromeDocument.defaultView;
+  this.hudId = "hud_" + this.tab.linkedPanel;
   this._onIframeLoad = this._onIframeLoad.bind(this);
-  this._asyncRequests = {};
-  this._init();
+  this._initUI();
 }
 
 WebConsole.prototype = {
@@ -512,6 +511,9 @@ WebConsole.prototype = {
    */
   tab: null,
 
+  chromeWindow: null,
+  chromeDocument: null,
+
   /**
    * Getter for HUDService.lastFinishedRequestCallback.
    *
@@ -519,15 +521,6 @@ WebConsole.prototype = {
    * @type function
    */
   get lastFinishedRequestCallback() HUDService.lastFinishedRequestCallback,
-
-  /**
-   * Track callback functions registered for specific async requests sent to
-   * the content process.
-   *
-   * @private
-   * @type object
-   */
-  _asyncRequests: null,
 
   /**
    * The xul:panel that holds the Web Console when it is positioned as a window.
@@ -554,22 +547,6 @@ WebConsole.prototype = {
   },
 
   get gViewSourceUtils() this.chromeWindow.gViewSourceUtils,
-
-  /**
-   * Initialize the Web Console instance.
-   * @private
-   */
-  _init: function WC__init()
-  {
-    this.chromeDocument = this.tab.ownerDocument;
-    this.chromeWindow = this.chromeDocument.defaultView;
-    this.messageManager = this.tab.linkedBrowser.messageManager;
-    this.hudId = "hud_" + this.tab.linkedPanel;
-    this.notificationBox = this.chromeDocument
-                           .getElementById(this.tab.linkedPanel);
-
-    this._initUI();
-  },
 
   /**
    * Initialize the Web Console UI. This method sets up the iframe.
@@ -783,7 +760,7 @@ WebConsole.prototype = {
 
     // get the node position index
     let nodeIdx = this.positions[aPosition];
-    let nBox = this.notificationBox;
+    let nBox = this.chromeDocument.getElementById(this.tab.linkedPanel);
     let node = nBox.childNodes[nodeIdx];
 
     // check to see if console is already positioned in aPosition
@@ -885,92 +862,6 @@ WebConsole.prototype = {
   _onClearButton: function WC__onClearButton()
   {
     this.chromeWindow.DeveloperToolbar.resetErrorsCount(this.tab);
-  },
-
-  /**
-   * Setup the message manager used to communicate with the Web Console content
-   * script. This method loads the content script, adds the message listeners
-   * and initializes the connection to the content script.
-   *
-   * @private
-   */
-  _setupMessageManager: function WC__setupMessageManager()
-  {
-    this.messageManager.loadFrameScript(CONTENT_SCRIPT_URL, true);
-
-    this._messageListeners.forEach(function(aName) {
-      this.messageManager.addMessageListener(aName, this.ui);
-    }, this);
-
-    let message = {
-      features: ["NetworkMonitor", "LocationChange"],
-      NetworkMonitor: { monitorFileActivity: true },
-      preferences: {
-        "NetworkMonitor.saveRequestAndResponseBodies":
-          this.ui.saveRequestAndResponseBodies,
-      },
-    };
-
-    this.sendMessageToContent("WebConsole:Init", message);
-  },
-
-  /**
-   * Handler for messages that have an associated callback function. The
-   * this.sendMessageToContent() allows one to provide a function to be invoked
-   * when the content script replies to the message previously sent. This is the
-   * method that invokes the callback.
-   *
-   * @see this.sendMessageToContent
-   * @private
-   * @param object aResponse
-   *        Message object received from the content script.
-   */
-  _receiveMessageWithCallback:
-  function WC__receiveMessageWithCallback(aResponse)
-  {
-    if (aResponse.id in this._asyncRequests) {
-      let request = this._asyncRequests[aResponse.id];
-      request.callback(aResponse, request.message);
-      delete this._asyncRequests[aResponse.id];
-    }
-    else {
-      Cu.reportError("receiveMessageWithCallback response for stale request " +
-                     "ID " + aResponse.id);
-    }
-  },
-
-  /**
-   * Send a message to the content script.
-   *
-   * @param string aName
-   *        The name of the message you want to send.
-   *
-   * @param object aMessage
-   *        The message object you want to send. This object needs to have no
-   *        cyclic references and it needs to be JSON-stringifiable.
-   *
-   * @param function [aCallback]
-   *        Optional function you want to have called when the content script
-   *        replies to your message. Your callback receives two arguments:
-   *        (1) the response object from the content script and (2) the message
-   *        you sent to the content script (which is aMessage here).
-   */
-  sendMessageToContent:
-  function WC_sendMessageToContent(aName, aMessage, aCallback)
-  {
-    aMessage.hudId = this.hudId;
-    if (!("id" in aMessage)) {
-      aMessage.id = "HUDChrome-" + HUDService.sequenceId();
-    }
-
-    if (aCallback) {
-      this._asyncRequests[aMessage.id] = {
-        name: aName,
-        message: aMessage,
-        callback: aCallback,
-      };
-    }
-    this.messageManager.sendAsyncMessage(aName, aMessage);
   },
 
   /**
