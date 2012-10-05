@@ -977,6 +977,25 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
                                                JSObject *wrapper, JSObject *holder, jsid id,
                                                bool set, PropertyDescriptor *desc)
 {
+    desc->obj = NULL;
+    JSObject *target = getTargetObject(wrapper);
+    JSObject *expando = singleton.getExpandoObject(cx, target, wrapper);
+
+    // Check for expando properties first. Note that the expando object lives
+    // in the target compartment.
+    if (expando) {
+        JSAutoCompartment ac(cx, expando);
+        if (!JS_GetPropertyDescriptorById(cx, expando, id, 0, desc))
+            return false;
+    }
+    if (desc->obj) {
+        if (!JS_WrapPropertyDescriptor(cx, desc))
+            return false;
+        // Pretend the property lives on the wrapper.
+        desc->obj = wrapper;
+        return true;
+    }
+
     // Xray wrappers don't use the regular wrapper hierarchy, so we should be
     // in the wrapper's compartment here, not the wrappee.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
@@ -1007,27 +1026,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
         return true;
     }
 
-    desc->obj = NULL;
-
     unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
-    JSObject *target = getTargetObject(wrapper);
-    JSObject *expando = singleton.getExpandoObject(cx, target, wrapper);
-
-    // Check for expando properties first. Note that the expando object lives
-    // in the target compartment.
-    if (expando) {
-        JSAutoCompartment ac(cx, expando);
-        if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc))
-            return false;
-    }
-    if (desc->obj) {
-        if (!JS_WrapPropertyDescriptor(cx, desc))
-            return false;
-        // Pretend the property lives on the wrapper.
-        desc->obj = wrapper;
-        return true;
-    }
-
     JSBool hasProp;
     if (!JS_HasPropertyById(cx, holder, id, &hasProp)) {
         return false;
