@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 
 import argparse
 import codecs
+import imp
 import logging
 import os
 import sys
@@ -19,13 +20,6 @@ from mozbuild.logger import LoggingManager
 
 from mach.registrar import populate_argument_parser
 
-# Import sub-command modules
-# TODO Bug 794509 do this via auto-discovery. Update README once this is
-# done.
-from mach.commands.build import Build
-from mach.commands.settings import Settings
-from mach.commands.testing import Testing
-from mach.commands.warnings import Warnings
 
 # Classes inheriting from ConfigProvider that provide settings.
 # TODO this should come from auto-discovery somehow.
@@ -45,6 +39,8 @@ CONSUMED_ARGUMENTS = [
     'method',
     'func',
 ]
+
+MODULES_SCANNED = False
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -106,6 +102,8 @@ To see more help for a specific command, run:
 """
 
     def __init__(self, cwd):
+        global MODULES_SCANNED
+
         assert os.path.isdir(cwd)
 
         self.cwd = cwd
@@ -114,6 +112,11 @@ To see more help for a specific command, run:
         self.settings = ConfigSettings()
 
         self.log_manager.register_structured_logger(self.logger)
+
+        if not MODULES_SCANNED:
+            self._load_modules()
+
+        MODULES_SCANNED = True
 
     def run(self, argv):
         """Runs mach with arguments provided from the command line.
@@ -213,6 +216,35 @@ To see more help for a specific command, run:
         """Helper method to record a structured log event."""
         self.logger.log(level, format_str,
             extra={'action': action, 'params': params})
+
+    def _load_modules(self):
+        """Scan over Python modules looking for mach command providers."""
+
+        # Create parent module otherwise Python complains when the parent is
+        # missing.
+        if b'mach.commands' not in sys.modules:
+            mod = imp.new_module(b'mach.commands')
+            sys.modules[b'mach.commands'] = mod
+
+        for path in sys.path:
+            # We only support importing .py files from directories.
+            commands_path = os.path.join(path, 'mach', 'commands')
+
+            if not os.path.isdir(commands_path):
+                continue
+
+            # We only support loading modules in the immediate mach.commands
+            # module, not sub-modules. Walking the tree would be trivial to
+            # implement if it were ever desired.
+            for f in sorted(os.listdir(commands_path)):
+                if not f.endswith('.py') or f == '__init__.py':
+                    continue
+
+                full_path = os.path.join(commands_path, f)
+                module_name = 'mach.commands.%s' % f[0:-3]
+
+                imp.load_source(module_name, full_path)
+
 
     def load_settings(self, args):
         """Determine which settings files apply and load them.
