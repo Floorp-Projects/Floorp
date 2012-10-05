@@ -16,6 +16,11 @@ this.__defineGetter__("pb", function () {
 // Private resumed request sends times=1 cookie, completes
 
 function run_test() {
+  // Don't run the test where the PB service is not available
+  if (!pb) {
+    return;
+  }
+
   do_test_pending();
   let httpserv = new HttpServer();
 
