@@ -112,6 +112,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitAbsI(LAbsI *lir);
     bool visitPowI(LPowI *lir);
     bool visitPowD(LPowD *lir);
+    bool visitRandom(LRandom *lir);
     bool visitMathFunctionD(LMathFunctionD *ins);
     bool visitModD(LModD *ins);
     bool visitMinMaxI(LMinMaxI *lir);

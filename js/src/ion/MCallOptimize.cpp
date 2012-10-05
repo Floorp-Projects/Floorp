@@ -47,6 +47,8 @@ IonBuilder::inlineNativeCall(JSNative native, uint32 argc, bool constructing)
         return inlineMathMinMax(false /* max */, argc, constructing);
     if (native == js_math_pow)
         return inlineMathPow(argc, constructing);
+    if (native == js_math_random)
+        return inlineMathRandom(argc, constructing);
     if (native == js::math_sin)
         return inlineMathFunction(MMathFunction::Sin, argc, constructing);
     if (native == js::math_cos)
@@ -615,6 +617,22 @@ IonBuilder::inlineMathPow(uint32 argc, bool constructing)
     MPow *ins = MPow::New(argv[1], argv[2], arg2Type);
     current->add(ins);
     current->push(ins);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathRandom(uint32 argc, bool constructing)
+{
+    if (constructing)
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    MRandom *rand = MRandom::New();
+    current->add(rand);
+    current->push(rand);
     return InliningStatus_Inlined;
 }
 

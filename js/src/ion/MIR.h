@@ -2304,6 +2304,25 @@ class MPowHalf
     }
 };
 
+// Inline implementation of Math.random().
+class MRandom : public MNullaryInstruction
+{
+    MRandom()
+    {
+        setResultType(MIRType_Double);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Random);
+    static MRandom *New() {
+        return new MRandom;
+    }
+    
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MMathFunction
   : public MUnaryInstruction,
     public DoublePolicy<0>
