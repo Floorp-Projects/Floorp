@@ -747,18 +747,8 @@ BluetoothAdapter::Connect(const nsAString& aDeviceAddress,
 
   nsRefPtr<BluetoothVoidReplyRunnable> result = new BluetoothVoidReplyRunnable(req);
 
-  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)) {
-    if (!bs->ConnectHeadset(aDeviceAddress, mPath, result)) {
-      NS_WARNING("Creating RFCOMM socket failed.");
-      return NS_ERROR_FAILURE;
-    }
-  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
-    if (!bs->ConnectObjectPush(aDeviceAddress, mPath, result)) {
-      NS_WARNING("Creating RFCOMM socket failed");
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    NS_WARNING("Unknown profile");
+  if (!bs->Connect(aDeviceAddress, mPath, aProfileId, result)) {
+    NS_WARNING("Creating RFCOMM socket failed or unknown profile.");
     return NS_ERROR_FAILURE;
   }
 
@@ -792,14 +782,7 @@ BluetoothAdapter::Disconnect(uint16_t aProfileId,
 
   nsRefPtr<BluetoothVoidReplyRunnable> result = new BluetoothVoidReplyRunnable(req);
 
-  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)) {
-    bs->DisconnectHeadset(result);
-  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
-    bs->DisconnectObjectPush(result);
-  } else {
-    NS_WARNING("Unknown profile");
-    return NS_ERROR_FAILURE;
-  }
+  bs->Disconnect(aProfileId, result);
 
   req.forget(aRequest);
 
