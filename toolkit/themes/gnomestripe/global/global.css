@@ -290,16 +290,16 @@ notification > button {
   border: none;
   margin: -14px;
   padding: 0;
-  background-position: center top;
   background-image: url("chrome://global/skin/icons/autoscroll.png");
   background-color: transparent;
+  background-position: right top;
   -moz-appearance: none;
 }
 
 .autoscroller[scrolldir="NS"] {
-  background-position: center center;
+  background-position: right center;
 }
 
 .autoscroller[scrolldir="EW"] {
-  background-position: center bottom;
+  background-position: right bottom;
 }
