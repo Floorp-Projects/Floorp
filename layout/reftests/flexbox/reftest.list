@@ -162,7 +162,7 @@ pref(layout.css.flexbox.enabled,true) == flexbox-whitespace-handling-2.xhtml  fl
 pref(layout.css.flexbox.enabled,true) == flexbox-whitespace-handling-3.xhtml  flexbox-whitespace-handling-3-ref.xhtml
 
 # Tests with widgets as flex items
-test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
-test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
-test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html
-test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
+fuzzy-if(gtk2Widget,1,66) test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
+fuzzy-if(gtk2Widget,1,74) test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
+fuzzy-if(gtk2Widget,1,58) test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html
+fuzzy-if(gtk2Widget,1,31) test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
