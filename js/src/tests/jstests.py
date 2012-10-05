@@ -113,6 +113,8 @@ def parse_args():
                          help='Show exact commandline used to run each test.')
     output_og.add_option('-o', '--show-output', action='store_true',
                          help="Print each test's output to stdout.")
+    output_og.add_option('-F', '--failed-only', action='store_true',
+                         help="If a --show-* option is given, only print output for failed tests.")
     output_og.add_option('-O', '--output-file',
                          help='Write all output to the given file.')
     output_og.add_option('--failure-file',
@@ -182,8 +184,10 @@ def parse_args():
         except IOError, ex:
             raise SystemExit("Failed to open output file: " + str(ex))
 
+    options.show = options.show_cmd or options.show_output
+
     # Hide the progress bar if it will get in the way of other output.
-    options.hide_progress = (((options.show_cmd or options.show_output) and
+    options.hide_progress = ((options.show and
                               options.output_fp == sys.stdout) or
                              options.tinderbox or
                              ProgressBar.conservative_isatty() or
