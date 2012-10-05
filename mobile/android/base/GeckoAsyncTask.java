@@ -7,9 +7,10 @@ package org.mozilla.gecko.util;
 
 import android.os.Handler;
 
-// AsyncTask runs onPostExecute on the thread it is constructed on
-// We construct these off of the main thread, and we want that to run
-// on the main UI thread, so this is a convenience class to do that
+// GeckoAsyncTask runs onPostExecute on the thread it is constructed on.
+// To ensure that onPostExecute() runs on UI thread, do either of these:
+//   1. construct GeckoAsyncTask on the UI thread
+//   2. post to the view's UI thread, in onPostExecute()
 public abstract class GeckoAsyncTask<Params, Progress, Result> {
     public enum Priority { NORMAL, HIGH };
 
@@ -18,7 +19,6 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
 
     public GeckoAsyncTask() {
         mHandler = new Handler();
-        mHandler.getLooper();
     }
 
     private final class BackgroundTaskRunnable implements Runnable {
