@@ -375,7 +375,8 @@ function updateAboutMemory()
     let process = function(aIgnoreSingle, aIgnoreMulti, aHandleReport) {
       processMemoryReporters(aIgnoreSingle, aIgnoreMulti, aHandleReport);
     }
-    appendAboutMemoryMain(body, process, gMgr.hasMozMallocUsableSize);
+    appendAboutMemoryMain(body, process, gMgr.hasMozMallocUsableSize,
+                          /* forceShowSmaps = */ false);
 
   } catch (ex) {
     handleException(ex);
@@ -411,7 +412,8 @@ function updateAboutMemoryFromJSONString(aJSONString)
       processMemoryReportsFromFile(json.reports, aIgnoreSingle,
                                    aHandleReport);
     }
-    appendAboutMemoryMain(body, process, json.hasMozMallocUsableSize);
+    appendAboutMemoryMain(body, process, json.hasMozMallocUsableSize,
+                          /* forceShowSmaps = */ true);
   } catch (ex) {
     handleException(ex);
   } finally {
@@ -493,12 +495,16 @@ function updateAboutMemoryFromClipboard()
  *        file.
  * @param aHasMozMallocUsableSize
  *        Boolean indicating if moz_malloc_usable_size works.
+ * @param aForceShowSmaps
+ *        True if we should show the smaps memory reporters even if we're not
+ *        in verbose mode.
  */
-function appendAboutMemoryMain(aBody, aProcess, aHasMozMallocUsableSize)
+function appendAboutMemoryMain(aBody, aProcess, aHasMozMallocUsableSize,
+                               aForceShowSmaps)
 {
   let treesByProcess = {}, degeneratesByProcess = {}, heapTotalByProcess = {};
   getTreesByProcess(aProcess, treesByProcess, degeneratesByProcess,
-                    heapTotalByProcess);
+                    heapTotalByProcess, aForceShowSmaps);
 
   // Sort our list of processes.  Always start with the main process, then sort
   // by resident size (descending).  Processes with no resident reporter go at
@@ -647,27 +653,32 @@ const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
  * @param aHeapTotalByProcess
  *        Table of heap total counts, indexed by process, which this function
  *        appends to.
+ * @param aForceShowSmaps
+ *        True if we should show the smaps memory reporters even if we're not
+ *        in verbose mode.
  */
 function getTreesByProcess(aProcessMemoryReports, aTreesByProcess,
-                           aDegeneratesByProcess, aHeapTotalByProcess)
+                           aDegeneratesByProcess, aHeapTotalByProcess,
+                           aForceShowSmaps)
 {
-  // Ignore the "smaps" multi-reporter in non-verbose mode, and the
-  // "compartments" and "ghost-windows" multi-reporters all the time.  (Note
-  // that reports from these multi-reporters can reach here as single reports
-  // if they were in the child process.)
+  // Ignore the "smaps" multi-reporter in non-verbose mode unless we're reading
+  // from a file or the clipboard, and ignore the "compartments" and
+  // "ghost-windows" multi-reporters all the time.  (Note that reports from
+  // these multi-reporters can reach here as single reports if they were in the
+  // child process.)
 
   function ignoreSingle(aUnsafePath)
   {
-    return (isSmapsPath(aUnsafePath) && !gVerbose) ||
+    return (isSmapsPath(aUnsafePath) && !gVerbose && !aForceShowSmaps) ||
            aUnsafePath.startsWith("compartments/") ||
            aUnsafePath.startsWith("ghost-windows/");
   }
 
   function ignoreMulti(aMRName)
   {
-    return (aMRName === "smaps" && !gVerbose) ||
-           aMRName === "compartments" ||
-           aMRName === "ghost-windows";
+    return (aMRName === "smaps" && !gVerbose && !aForceShowSmaps) ||
+            aMRName === "compartments" ||
+            aMRName === "ghost-windows";
   }
 
   function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
@@ -1063,24 +1074,23 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
     delete aTrees[treeName];
   }
 
-  // The smaps trees, which are only shown in verbose mode.
-  if (gVerbose) {
-    kSmapsTreeNames.forEach(function(aTreeName) {
-      // |t| will be undefined if we don't have any reports for the given
-      // unsafePath.
-      let t = aTrees[aTreeName];
-      if (t) {
-        fillInTree(t);
-        sortTreeAndInsertAggregateNodes(t._amount, t);
-        t._description = kTreeDescriptions[aTreeName];
-        t._hideKids = true;   // smaps trees are always initially collapsed
-        let pre = appendSectionHeader(aP, kSectionNames[aTreeName]);
-        appendTreeElements(pre, t, aProcess, "");
-        appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
-        delete aTrees[aTreeName];
-      }
-    });
-  }
+  // The smaps trees, which are only present in aTrees in verbose mode or when
+  // we're reading from a file or the clipboard.
+  kSmapsTreeNames.forEach(function(aTreeName) {
+    // |t| will be undefined if we don't have any reports for the given
+    // unsafePath.
+    let t = aTrees[aTreeName];
+    if (t) {
+      fillInTree(t);
+      sortTreeAndInsertAggregateNodes(t._amount, t);
+      t._description = kTreeDescriptions[aTreeName];
+      t._hideKids = true;   // smaps trees are always initially collapsed
+      let pre = appendSectionHeader(aP, kSectionNames[aTreeName]);
+      appendTreeElements(pre, t, aProcess, "");
+      appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
+      delete aTrees[aTreeName];
+    }
+  });
 
   // Fill in and sort all the non-degenerate other trees.
   let otherTrees = [];
