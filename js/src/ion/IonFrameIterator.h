@@ -238,7 +238,7 @@ class SnapshotIterator : public SnapshotReader
     }
 
     template <class Op>
-    inline bool readFrameArgs(Op op, const Value *argv, Value *scopeChain, Value *thisv,
+    inline void readFrameArgs(Op op, const Value *argv, Value *scopeChain, Value *thisv,
                               unsigned start, unsigned formalEnd, unsigned iterEnd);
 
     Value maybeReadSlotByIndex(size_t index) {
@@ -289,7 +289,7 @@ class InlineFrameIterator
     unsigned numActualArgs() const;
 
     template <class Op>
-    inline bool forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const;
+    inline void forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const;
 
     JSScript *script() const {
         return script_;
