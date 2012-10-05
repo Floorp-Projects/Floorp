@@ -7,7 +7,6 @@
 #include "nsDOMCSSValueList.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
-#include "prtypes.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 

@@ -13,16 +13,22 @@
 
 #include "typedefs.h"
 
+#if defined(_MSC_VER)
+// Disable "new behavior: elements of array will be default initialized"
+// warning. Affects OverUseDetectorOptions.
+#pragma warning(disable:4351)
+#endif
+
 #ifdef WEBRTC_EXPORT
-    #define WEBRTC_DLLEXPORT _declspec(dllexport)
+#define WEBRTC_DLLEXPORT _declspec(dllexport)
 #elif WEBRTC_DLL
-    #define WEBRTC_DLLEXPORT _declspec(dllimport)
+#define WEBRTC_DLLEXPORT _declspec(dllimport)
 #else
-    #define WEBRTC_DLLEXPORT
+#define WEBRTC_DLLEXPORT
 #endif
 
 #ifndef NULL
-    #define NULL 0
+#define NULL 0
 #endif
 
 #define RTP_PAYLOAD_NAME_SIZE 32
@@ -514,6 +520,9 @@ struct VideoCodecVP8
     VP8ResilienceMode    resilience;
     unsigned char        numberOfTemporalLayers;
     bool                 denoisingOn;
+    bool                 errorConcealmentOn;
+    bool                 automaticResizeOn;
+    bool                 frameDroppingOn;
 };
 
 // Unknown specific
@@ -569,6 +578,33 @@ struct VideoCodec
     unsigned int        qpMax;
     unsigned char       numberOfSimulcastStreams;
     SimulcastStream     simulcastStream[kMaxSimulcastStreams];
+};
+
+// Bandwidth over-use detector options.  These are used to drive
+// experimentation with bandwidth estimation parameters.
+// See modules/remote_bitrate_estimator/overuse_detector.h
+struct OverUseDetectorOptions {
+  OverUseDetectorOptions()
+      : initial_slope(8.0/512.0),
+        initial_offset(0),
+        initial_e(),
+        initial_process_noise(),
+        initial_avg_noise(0.0),
+        initial_var_noise(500),
+        initial_threshold(25.0) {
+    initial_e[0][0] = 100;
+    initial_e[1][1] = 1e-1;
+    initial_e[0][1] = initial_e[1][0] = 0;
+    initial_process_noise[0] = 1e-10;
+    initial_process_noise[1] = 1e-2;
+  }
+  double initial_slope;
+  double initial_offset;
+  double initial_e[2][2];
+  double initial_process_noise[2];
+  double initial_avg_noise;
+  double initial_var_noise;
+  double initial_threshold;
 };
 }  // namespace webrtc
 #endif  // WEBRTC_COMMON_TYPES_H

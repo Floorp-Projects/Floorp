@@ -3371,7 +3371,7 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
   PRTime now = PR_Now();
   char buf[50];
   PRTime delta;
-  LL_SUB(delta, now, gLastTick);
+  delta = now - gLastTick;
   gLastTick = now;
   PR_snprintf(buf, sizeof(buf), "%lldusec", delta);
   printf("%s\n", buf);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -56,9 +56,6 @@ class ACMG722_1: public ACMGenericCodec {
   WebRtc_Word16 InternalCreateDecoder();
 
   void InternalDestructEncoderInst(void* ptrInst);
-
-  WebRtc_Word16 UnregisterFromNetEqSafe(ACMNetEQ* netEq,
-                                        WebRtc_Word16 payloadType);
 
   WebRtc_Word32 _operationalRate;
 

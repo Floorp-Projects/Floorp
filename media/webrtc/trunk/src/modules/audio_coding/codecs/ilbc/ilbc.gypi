@@ -166,8 +166,8 @@
     }, # iLBC
   ], # targets
   'conditions': [
-    ['build_with_chromium==0', {
-      'targets': [  
+    ['include_tests==1', {
+      'targets': [
         {
           'target_name': 'iLBCtest',
           'type': 'executable',
@@ -179,7 +179,7 @@
           ],
         }, # iLBCtest
       ], # targets
-    }], # build_with_chromium
+    }], # include_tests
   ], # conditions
 }
 

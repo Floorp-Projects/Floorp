@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -12,9 +12,9 @@
 #define WEBRTC_VIDEO_ENGINE_VIE_FILE_RECORDER_H_
 
 #include "modules/utility/interface/file_recorder.h"
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
 #include "video_engine/include/vie_file.h"
-#include "voice_engine/main/interface/voe_file.h"
+#include "voice_engine/include/voe_file.h"
 
 namespace webrtc {
 

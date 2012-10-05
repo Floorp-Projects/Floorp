@@ -24,7 +24,7 @@
 #include "modules/video_coding/codecs/test/packet_manipulator.h"
 #include "modules/video_coding/codecs/test/stats.h"
 #include "modules/video_coding/codecs/test/videoprocessor.h"
-#include "modules/video_coding/codecs/vp8/main/interface/vp8.h"
+#include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/main/interface/video_coding.h"
 #include "system_wrappers/interface/trace.h"
 #include "testsupport/frame_reader.h"

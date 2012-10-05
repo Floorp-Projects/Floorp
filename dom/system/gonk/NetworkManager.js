@@ -279,6 +279,33 @@ NetworkManager.prototype = {
     this.setAndConfigureActive();
   },
 
+  getNetworkInterfaceStats: function getNetworkInterfaceStats(connectionType, callback) {
+    let iface = this.getNetworkInterface(connectionType);
+
+    if (!iface) {
+      debug("There is no interface registered for network type " + connectionType);
+      return false;
+    }
+
+    debug("getNetworkInterfaceStats for " + iface.name);
+
+    let params = {
+      cmd: "getNetworkInterfaceStats",
+      ifname: iface.name,
+      connType: connectionType
+    };
+
+    params.report = true;
+    params.isAsync = true;
+
+    this.controlMessage(params, function(result) {
+      let success = result.resultCode >= NETD_COMMAND_OKAY && result.resultCode < NETD_COMMAND_ERROR;
+      callback.networkStatsAvailable(success, result.connType, result.rxBytes, result.txBytes, result.date);
+    });
+
+    return true;
+  },
+
   // Helpers
 
   controlMessage: function controlMessage(params, callback) {

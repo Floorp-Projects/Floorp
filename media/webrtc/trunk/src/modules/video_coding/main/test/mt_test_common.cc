@@ -17,12 +17,8 @@
 
 namespace webrtc {
 
-TransportCallback::TransportCallback(webrtc::RtpRtcp* rtp,
-                                     TickTimeBase* clock,
-                                     const char* filename):
-RTPSendCompleteCallback(rtp, clock, filename)
-{
-    //
+TransportCallback::TransportCallback(TickTimeBase* clock, const char* filename)
+    : RTPSendCompleteCallback(clock, filename) {
 }
 
 TransportCallback::~TransportCallback()

@@ -1653,7 +1653,8 @@ class TypedArrayTemplate
         unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
 
         Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
-        JSObject *getter = js_NewFunction(cx, NULL, Getter<ValueGetter>, 0, 0, global, NULL);
+        RawObject getter =
+            js_NewFunction(cx, NullPtr(), Getter<ValueGetter>, 0, 0, global, NullPtr());
         if (!getter)
             return false;
 
@@ -3293,11 +3294,11 @@ InitTypedArrayClass(JSContext *cx)
     if (!JS_DefineFunctions(cx, proto, ArrayType::jsfuncs))
         return NULL;
 
-    Rooted<JSFunction*> fun(cx);
+    RootedFunction fun(cx);
     fun =
-        js_NewFunction(cx, NULL,
+        js_NewFunction(cx, NullPtr(),
                        ArrayBufferObject::createTypedArrayFromBuffer<typename ArrayType::ThisType>,
-                       0, 0, global, NULL);
+                       0, 0, global, NullPtr());
     if (!fun)
         return NULL;
 
@@ -3361,7 +3362,8 @@ InitArrayBufferClass(JSContext *cx)
 
     RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
     unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
-    JSObject *getter = js_NewFunction(cx, NULL, ArrayBufferObject::byteLengthGetter, 0, 0, global, NULL);
+    RawObject getter = js_NewFunction(cx, NullPtr(), ArrayBufferObject::byteLengthGetter, 0, 0,
+                                      global, NullPtr());
     if (!getter)
         return NULL;
 
@@ -3462,7 +3464,8 @@ DataViewObject::defineGetter(JSContext *cx, PropertyName *name, HandleObject pro
     unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
 
     Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
-    JSObject *getter = js_NewFunction(cx, NULL, DataViewObject::getter<ValueGetter>, 0, 0, global, NULL);
+    JSObject *getter = js_NewFunction(cx, NullPtr(), DataViewObject::getter<ValueGetter>, 0, 0,
+                                      global, NullPtr());
     if (!getter)
         return false;
 
@@ -3505,8 +3508,8 @@ DataViewObject::initClass(JSContext *cx)
      * |new DataView(new otherWindow.ArrayBuffer())|, and install it in the
      * global for use by the DataView constructor.
      */
-    Rooted<JSFunction*> fun(cx);
-    fun = js_NewFunction(cx, NULL, ArrayBufferObject::createDataViewForThis, 0, 0, global, NULL);
+    RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), ArrayBufferObject::createDataViewForThis,
+                                          0, 0, global, NullPtr()));
     if (!fun)
         return NULL;
 

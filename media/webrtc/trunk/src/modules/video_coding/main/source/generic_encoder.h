@@ -67,7 +67,9 @@ private:
     WebRtc_UWord8             _payloadType;
     VideoCodecType            _codecType;
     bool                      _internalSource;
+#ifdef DEBUG_ENCODER_BIT_STREAM
     FILE*                     _bitStreamAfterEncoder;
+#endif
 };// end of VCMEncodeFrameCallback class
 
 

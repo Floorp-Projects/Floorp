@@ -13,35 +13,16 @@
  * This header file includes the VAD API calls. Specific function calls are given below.
  */
 
-#ifndef WEBRTC_COMMON_AUDIO_VAD_INCLUDE_WEBRTC_VAD_H_
+#ifndef WEBRTC_COMMON_AUDIO_VAD_INCLUDE_WEBRTC_VAD_H_  // NOLINT
 #define WEBRTC_COMMON_AUDIO_VAD_INCLUDE_WEBRTC_VAD_H_
 
-#include <stdlib.h>
-
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
 
 typedef struct WebRtcVadInst VadInst;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// TODO(bjornv): Investigate if we need the Assign calls below at all.
-
-// Gets the size needed for storing the instance for the VAD.
-//
-// returns  : The size in bytes needed to allocate memory for the VAD instance.
-size_t WebRtcVad_AssignSize();
-
-// Assigns memory for the instances at a given address. It is assumed that the
-// memory for the VAD instance is allocated at |memory| in accordance with
-// WebRtcVad_AssignSize().
-//
-// - memory [i] : Address to where the memory is assigned.
-// - handle [o] : Pointer to the instance that should be created.
-//
-// returns      : 0 - (OK), -1 (NULL pointer in)
-int WebRtcVad_Assign(void* memory, VadInst** handle);
 
 // Creates an instance to the VAD structure.
 //
@@ -78,29 +59,32 @@ int WebRtcVad_Init(VadInst* handle);
 //                       has not been initialized).
 int WebRtcVad_set_mode(VadInst* handle, int mode);
 
-/****************************************************************************
- * WebRtcVad_Process(...)
- * 
- * This functions does a VAD for the inserted speech frame
- *
- * Input
- *        - vad_inst     : VAD Instance. Needs to be initiated before call.
- *        - fs           : sampling frequency (Hz): 8000, 16000, or 32000
- *        - speech_frame : Pointer to speech frame buffer
- *        - frame_length : Length of speech frame buffer in number of samples
- *
- * Output:
- *        - vad_inst     : Updated VAD instance
- *
- * Return value          :  1 - Active Voice
- *                          0 - Non-active Voice
- *                         -1 - Error
- */
-int16_t WebRtcVad_Process(VadInst* vad_inst, int16_t fs, int16_t* speech_frame,
-                          int16_t frame_length);
+// Calculates a VAD decision for the |audio_frame|. For valid sampling rates
+// frame lengths, see the description of WebRtcVad_ValidRatesAndFrameLengths().
+//
+// - handle       [i/o] : VAD Instance. Needs to be initialized by
+//                        WebRtcVad_Init() before call.
+// - fs           [i]   : Sampling frequency (Hz): 8000, 16000, or 32000
+// - audio_frame  [i]   : Audio frame buffer.
+// - frame_length [i]   : Length of audio frame buffer in number of samples.
+//
+// returns              : 1 - (Active Voice),
+//                        0 - (Non-active Voice),
+//                       -1 - (Error)
+int WebRtcVad_Process(VadInst* handle, int fs, int16_t* audio_frame,
+                      int frame_length);
+
+// Checks for valid combinations of |rate| and |frame_length|. We support 10,
+// 20 and 30 ms frames and the rates 8000, 16000 and 32000 Hz.
+//
+// - rate         [i] : Sampling frequency (Hz).
+// - frame_length [i] : Speech frame buffer length in number of samples.
+//
+// returns            : 0 - (valid combination), -1 - (invalid combination)
+int WebRtcVad_ValidRateAndFrameLength(int rate, int frame_length);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // WEBRTC_COMMON_AUDIO_VAD_INCLUDE_WEBRTC_VAD_H_
+#endif  // WEBRTC_COMMON_AUDIO_VAD_INCLUDE_WEBRTC_VAD_H_  // NOLINT

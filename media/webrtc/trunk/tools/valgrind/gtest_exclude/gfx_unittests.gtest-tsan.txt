@@ -1,2 +1,0 @@
-# Hangs under TSAN, see http://crbug.com/28332
-TextEliderTest.ElideTextLongStrings

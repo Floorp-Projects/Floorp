@@ -61,8 +61,6 @@ class Sender {
   AudioCodingModule* _acm;
   PCMFile _pcmFile;
   AudioFrame _audioFrame;
-  WebRtc_UWord16 _payloadSize;
-  WebRtc_UWord32 _timeStamp;
   TestPacketization* _packetization;
 };
 
@@ -81,7 +79,6 @@ class Receiver {
 
  private:
   AudioCodingModule* _acm;
-  bool _rtpEOF;
   RTPStream* _rtpStream;
   PCMFile _pcmFile;
   WebRtc_Word16* _playoutBuffer;
@@ -110,7 +107,7 @@ class EncodeDecodeTest: public ACMTest {
  protected:
   Sender _sender;
   Receiver _receiver;
-};      
+};
 
 } // namespace webrtc
 

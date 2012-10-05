@@ -41,22 +41,22 @@
     },
   ], # targets
   'conditions': [
-    ['build_with_chromium==0', {
+    ['include_tests==1', {
       'targets': [
         {
           'target_name': 'media_file_unittests',
           'type': 'executable',
           'dependencies': [
             'media_file',
-            '<(webrtc_root)/../testing/gtest.gyp:gtest',
-            '<(webrtc_root)/../test/test.gyp:test_support_main',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
+            '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
           'sources': [
             'media_file_unittest.cc',
           ],
         }, # media_file_unittests
       ], # targets
-    }], # build_with_chromium
+    }], # include_tests
   ], # conditions
 }
 

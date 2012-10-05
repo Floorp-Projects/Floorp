@@ -110,6 +110,20 @@ NoiseSuppression::Level NoiseSuppressionImpl::level() const {
   return level_;
 }
 
+float NoiseSuppressionImpl::speech_probability() const {
+#if defined(WEBRTC_NS_FLOAT)
+  float probability_average = 0.0f;
+  for (int i = 0; i < num_handles(); i++) {
+    Handle* my_handle = static_cast<Handle*>(handle(i));
+    probability_average += WebRtcNs_prior_speech_probability(my_handle);
+  }
+  return probability_average / num_handles();
+#elif defined(WEBRTC_NS_FIXED)
+  // Currently not available for the fixed point implementation.
+  return apm_->kUnsupportedFunctionError;
+#endif
+}
+
 void* NoiseSuppressionImpl::CreateHandle() const {
   Handle* handle = NULL;
 #if defined(WEBRTC_NS_FLOAT)

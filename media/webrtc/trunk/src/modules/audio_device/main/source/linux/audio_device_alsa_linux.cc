@@ -15,6 +15,7 @@
 #include "audio_device_config.h"
 
 #include "event_wrapper.h"
+#include "system_wrappers/interface/sleep.h"
 #include "trace.h"
 #include "thread_wrapper.h"
 
@@ -93,7 +94,6 @@ AudioDeviceLinuxALSA::AudioDeviceLinuxALSA(const WebRtc_Word32 id) :
     _playoutBuffer(NULL),
     _recordingFramesLeft(0),
     _playoutFramesLeft(0),
-    _playbackBufferSize(0),
     _playBufType(AudioDeviceModule::kFixedBufferSize),
     _initialized(false),
     _recording(false),
@@ -103,7 +103,6 @@ AudioDeviceLinuxALSA::AudioDeviceLinuxALSA(const WebRtc_Word32 id) :
     _AGC(false),
     _recordingDelay(0),
     _playoutDelay(0),
-    _writeErrors(0),
     _playWarning(0),
     _playError(0),
     _recWarning(0),
@@ -1141,7 +1140,7 @@ WebRtc_Word32 AudioDeviceLinuxALSA::InitPlayout()
     {
         for (int i=0; i < 5; i++)
         {
-            sleep(1);
+            SleepMs(1000);
             errVal = LATE(snd_pcm_open)
                          (&_handlePlayout,
                           deviceName,
@@ -1298,7 +1297,7 @@ WebRtc_Word32 AudioDeviceLinuxALSA::InitRecording()
     {
         for (int i=0; i < 5; i++)
         {
-            sleep(1);
+            SleepMs(1000);
             errVal = LATE(snd_pcm_open)
                          (&_handleRecord,
                           deviceName,
@@ -1841,123 +1840,120 @@ WebRtc_Word32 AudioDeviceLinuxALSA::GetDevicesInfo(
     // inside this ALSA API with libasound.so.2.0.0.
     int card = -1;
     while (!(LATE(snd_card_next)(&card)) && (card >= 0) && keepSearching) {
-      void **hints;
-      err = LATE(snd_device_name_hint)(card,   // NOT all cards!
-                                       "pcm",  // Only PCM devices
-                                       &hints);
-      if (err != 0)
-      {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "GetDevicesInfo - device name hint error: %s",
-                     LATE(snd_strerror)(err));
-        return -1;
-      }
-
-      enumCount++; // default is 0
-      if (function == FUNC_GET_DEVICE_NAME && enumDeviceNo == 0)
-      {
-        strcpy(enumDeviceName, "default");
-        return 0;
-      }
-      if (function == FUNC_GET_DEVICE_NAME_FOR_AN_ENUM && enumDeviceNo == 0)
-      {
-        strcpy(enumDeviceName, "default");
-        return 0;
-      }
-
-      for (void **list = hints; *list != NULL; ++list)
-      {
-        char *actualType = LATE(snd_device_name_get_hint)(*list, "IOID");
-        if (actualType)
-        {   // NULL means it's both.
-          bool wrongType = (strcmp(actualType, type) != 0);
-          free(actualType);
-          if (wrongType)
-          {
-            // Wrong type of device (i.e., input vs. output).
-            continue;
-          }
-        }
-
-        char *name = LATE(snd_device_name_get_hint)(*list, "NAME");
-        if (!name)
+        void **hints;
+        err = LATE(snd_device_name_hint)(card, "pcm", &hints);
+        if (err != 0)
         {
-          WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                       "Device has no name");
-          // Skip it.
-          continue;
+            WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
+                         "GetDevicesInfo - device name hint error: %s",
+                         LATE(snd_strerror)(err));
+            return -1;
         }
 
-        // Now check if we actually want to show this device.
-        if (strcmp(name, "default") != 0 &&
-            strcmp(name, "null") != 0 &&
-            strcmp(name, "pulse") != 0 &&
-            strncmp(name, ignorePrefix, strlen(ignorePrefix)) != 0)
+        enumCount++; // default is 0
+        if ((function == FUNC_GET_DEVICE_NAME ||
+            function == FUNC_GET_DEVICE_NAME_FOR_AN_ENUM) && enumDeviceNo == 0)
         {
-          // Yes, we do.
-          char *desc = LATE(snd_device_name_get_hint)(*list, "DESC");
-          if (!desc)
-          {
-            // Virtual devices don't necessarily have descriptions.
-            // Use their names instead
-            desc = name;
-          }
+            strcpy(enumDeviceName, "default");
 
-          if (FUNC_GET_NUM_OF_DEVICE == function)
-          {
-            WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                         "    Enum device %d - %s", enumCount, name);
+            err = LATE(snd_device_name_free_hint)(hints);
+            if (err != 0)
+            {
+                WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
+                             "GetDevicesInfo - device name free hint error: %s",
+                             LATE(snd_strerror)(err));
+            }
 
-          }
-          if ((FUNC_GET_DEVICE_NAME == function) &&
-              (enumDeviceNo == enumCount))
-          {
-
-            // We have found the enum device, copy the name to buffer
-            strncpy(enumDeviceName, desc, ednLen);
-            enumDeviceName[ednLen-1] = '\0';
-            keepSearching = false;
-            // replace '\n' with '-'
-            char * pret = strchr(enumDeviceName, '\n'/*0xa*/); //LF
-            if (pret)
-              *pret = '-';
-          }
-          if ((FUNC_GET_DEVICE_NAME_FOR_AN_ENUM == function) &&
-              (enumDeviceNo == enumCount))
-          {
-            // We have found the enum device, copy the name to buffer
-            strncpy(enumDeviceName, name, ednLen);
-            enumDeviceName[ednLen-1] = '\0';
-            keepSearching = false;
-          }
-          if (keepSearching)
-          {
-            ++enumCount;
-          }
-
-          if (desc != name)
-          {
-            free(desc);
-          }
+            return 0;
         }
 
-        free(name);
-
-        if (!keepSearching)
+        for (void **list = hints; *list != NULL; ++list)
         {
-          break;
+            char *actualType = LATE(snd_device_name_get_hint)(*list, "IOID");
+            if (actualType)
+            {   // NULL means it's both.
+                bool wrongType = (strcmp(actualType, type) != 0);
+                free(actualType);
+                if (wrongType)
+                {
+                    // Wrong type of device (i.e., input vs. output).
+                    continue;
+                }
+            }
+
+            char *name = LATE(snd_device_name_get_hint)(*list, "NAME");
+            if (!name)
+            {
+                WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
+                             "Device has no name");
+                // Skip it.
+                continue;
+            }
+
+            // Now check if we actually want to show this device.
+            if (strcmp(name, "default") != 0 &&
+                strcmp(name, "null") != 0 &&
+                strcmp(name, "pulse") != 0 &&
+                strncmp(name, ignorePrefix, strlen(ignorePrefix)) != 0)
+            {
+                // Yes, we do.
+                char *desc = LATE(snd_device_name_get_hint)(*list, "DESC");
+                if (!desc)
+                {
+                    // Virtual devices don't necessarily have descriptions.
+                    // Use their names instead.
+                    desc = name;
+                }
+
+                if (FUNC_GET_NUM_OF_DEVICE == function)
+                {
+                    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
+                                 "    Enum device %d - %s", enumCount, name);
+
+                }
+                if ((FUNC_GET_DEVICE_NAME == function) &&
+                    (enumDeviceNo == enumCount))
+                {
+                    // We have found the enum device, copy the name to buffer.
+                    strncpy(enumDeviceName, desc, ednLen);
+                    enumDeviceName[ednLen-1] = '\0';
+                    keepSearching = false;
+                    // Replace '\n' with '-'.
+                    char * pret = strchr(enumDeviceName, '\n'/*0xa*/); //LF
+                    if (pret)
+                        *pret = '-';
+                }
+                if ((FUNC_GET_DEVICE_NAME_FOR_AN_ENUM == function) &&
+                    (enumDeviceNo == enumCount))
+                {
+                    // We have found the enum device, copy the name to buffer.
+                    strncpy(enumDeviceName, name, ednLen);
+                    enumDeviceName[ednLen-1] = '\0';
+                    keepSearching = false;
+                }
+
+                if (keepSearching)
+                    ++enumCount;
+
+                if (desc != name)
+                    free(desc);
+            }
+
+            free(name);
+
+            if (!keepSearching)
+                break;
+        }
+
+        err = LATE(snd_device_name_free_hint)(hints);
+        if (err != 0)
+        {
+            WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
+                         "GetDevicesInfo - device name free hint error: %s",
+                         LATE(snd_strerror)(err));
+            // Continue and return true anyway, since we did get the whole list.
         }
       }
-
-      err = LATE(snd_device_name_free_hint)(hints);
-      if (err != 0)
-      {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "GetDevicesInfo - device name free hint error: %s",
-                     LATE(snd_strerror)(err));
-        // Continue and return true anyways, since we did get the whole list.
-      }
-    }
 
     if (FUNC_GET_NUM_OF_DEVICE == function)
     {
@@ -1969,7 +1965,7 @@ WebRtc_Word32 AudioDeviceLinuxALSA::GetDevicesInfo(
     if (keepSearching)
     {
         // If we get here for function 1 and 2, we didn't find the specified
-        // enum device
+        // enum device.
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
                      "GetDevicesInfo - Could not find device name or numbers");
         return -1;
@@ -2080,7 +2076,7 @@ WebRtc_Word32 AudioDeviceLinuxALSA::ErrorRecovery(WebRtc_Word32 error,
     }
     else {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "  Terriable, it shouldn't happen");
+                     "  Unrecoverable alsa stream error: %d", res);
     }
 
     return res;
@@ -2159,7 +2155,7 @@ bool AudioDeviceLinuxALSA::PlayThreadProcess()
     if (frames < 0)
     {
         WEBRTC_TRACE(kTraceStream, kTraceAudioDevice, _id,
-                     "playout snd_pcm_avail_update error: %s",
+                     "playout snd_pcm_writei error: %s",
                      LATE(snd_strerror)(frames));
         _playoutFramesLeft = 0;
         ErrorRecovery(frames, _handlePlayout);
@@ -2207,7 +2203,7 @@ bool AudioDeviceLinuxALSA::RecThreadProcess()
             ALSA_CAPTURE_WAIT_TIMEOUT);
         if (err == 0) //timeout occured
             WEBRTC_TRACE(kTraceStream, kTraceAudioDevice, _id,
-                         "caputre snd_pcm_wait timeout");
+                         "capture snd_pcm_wait timeout");
 
         return true;
     }
@@ -2220,7 +2216,7 @@ bool AudioDeviceLinuxALSA::RecThreadProcess()
     if (frames < 0)
     {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "caputre snd_pcm_readi error: %s",
+                     "capture snd_pcm_readi error: %s",
                      LATE(snd_strerror)(frames));
         ErrorRecovery(frames, _handleRecord);
         UnLock();
@@ -2286,7 +2282,7 @@ bool AudioDeviceLinuxALSA::RecThreadProcess()
                 // TODO(xians): Shall we call ErrorRecovery() here?
                 _recordingDelay = 0;
                 WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                             "caputre snd_pcm_delay: %s",
+                             "capture snd_pcm_delay: %s",
                              LATE(snd_strerror)(err));
             }
 

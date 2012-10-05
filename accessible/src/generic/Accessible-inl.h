@@ -28,4 +28,13 @@ Accessible::ARIARole()
   return ARIATransformRole(mRoleMapEntry->role);
 }
 
+inline bool
+Accessible::HasNumericValue() const
+{
+  if (mFlags & eHasNumericValue)
+    return true;
+
+  return mRoleMapEntry && mRoleMapEntry->valueRule != eNoValue;
+}
+
 #endif

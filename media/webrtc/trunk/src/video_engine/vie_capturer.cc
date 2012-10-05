@@ -126,7 +126,7 @@ ViECapturer::~ViECapturer() {
 ViECapturer* ViECapturer::CreateViECapture(
     int capture_id,
     int engine_id,
-    VideoCaptureModule& capture_module,
+    VideoCaptureModule* capture_module,
     ProcessThread& module_process_thread) {
   ViECapturer* capture = new ViECapturer(capture_id, engine_id,
                                          module_process_thread);
@@ -137,9 +137,9 @@ ViECapturer* ViECapturer::CreateViECapture(
   return capture;
 }
 
-WebRtc_Word32 ViECapturer::Init(VideoCaptureModule& capture_module) {
+WebRtc_Word32 ViECapturer::Init(VideoCaptureModule* capture_module) {
   assert(capture_module_ == NULL);
-  capture_module_ = &capture_module;
+  capture_module_ = capture_module;
   capture_module_->RegisterCaptureDataCallback(*this);
   capture_module_->AddRef();
   if (module_process_thread_.RegisterModule(capture_module_) != 0) {
@@ -197,7 +197,7 @@ int ViECapturer::FrameCallbackChanged() {
     int best_frame_rate;
     VideoCaptureCapability capture_settings;
     capture_module_->CaptureSettings(capture_settings);
-    GetBestFormat(best_width, best_height, best_frame_rate);
+    GetBestFormat(&best_width, &best_height, &best_frame_rate);
     if (best_width != 0 && best_height != 0 && best_frame_rate != 0) {
       if (best_width != capture_settings.width ||
           best_height != capture_settings.height ||
@@ -229,7 +229,7 @@ WebRtc_Word32 ViECapturer::Start(const CaptureCapability& capture_capability) {
 
   } else if (!CaptureCapabilityFixed()) {
     // Ask the observers for best size.
-    GetBestFormat(width, height, frame_rate);
+    GetBestFormat(&width, &height, &frame_rate);
     if (width == 0) {
       width = kViECaptureDefaultWidth;
     }
@@ -299,10 +299,10 @@ WebRtc_Word32 ViECapturer::SetRotateCapturedFrames(
 
 int ViECapturer::IncomingFrame(unsigned char* video_frame,
                                unsigned int video_frame_length,
-                               unsigned short width,
-                               unsigned short height,
+                               uint16_t width,
+                               uint16_t height,
                                RawVideoType video_type,
-                               unsigned long long capture_time) {
+                               unsigned long long capture_time) {  // NOLINT
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "ExternalCapture::IncomingFrame width %d, height %d, "
                "capture_time %u", width, height, capture_time);
@@ -320,7 +320,7 @@ int ViECapturer::IncomingFrame(unsigned char* video_frame,
 }
 
 int ViECapturer::IncomingFrameI420(const ViEVideoFrameI420& video_frame,
-                                   unsigned long long capture_time) {
+                                   unsigned long long capture_time) {  // NOLINT
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "ExternalCapture::IncomingFrame width %d, height %d, "
                " capture_time %u", video_frame.width, video_frame.height,
@@ -538,7 +538,7 @@ bool ViECapturer::ViECaptureProcess() {
       deliver_frame_.SwapFrame(captured_frame_);
       captured_frame_.SetLength(0);
       capture_cs_->Leave();
-      DeliverI420Frame(deliver_frame_);
+      DeliverI420Frame(&deliver_frame_);
     }
     if (encoded_frame_.Length() > 0) {
       capture_cs_->Enter();
@@ -546,7 +546,7 @@ bool ViECapturer::ViECaptureProcess() {
       encoded_frame_.SetLength(0);
       deliver_event_.Set();
       capture_cs_->Leave();
-      DeliverCodedFrame(deliver_frame_);
+      DeliverCodedFrame(&deliver_frame_);
     }
     deliver_cs_->Leave();
     if (current_brightness_level_ != reported_brightness_level_) {
@@ -561,12 +561,12 @@ bool ViECapturer::ViECaptureProcess() {
   return true;
 }
 
-void ViECapturer::DeliverI420Frame(VideoFrame& video_frame) {
+void ViECapturer::DeliverI420Frame(VideoFrame* video_frame) {
   // Apply image enhancement and effect filter.
   if (deflicker_frame_stats_) {
     if (image_proc_module_->GetFrameStats(*deflicker_frame_stats_,
-                                          video_frame) == 0) {
-      image_proc_module_->Deflickering(video_frame, *deflicker_frame_stats_);
+                                          *video_frame) == 0) {
+      image_proc_module_->Deflickering(*video_frame, *deflicker_frame_stats_);
     } else {
       WEBRTC_TRACE(kTraceStream, kTraceVideo, ViEId(engine_id_, capture_id_),
                    "%s: could not get frame stats for captured frame",
@@ -574,13 +574,13 @@ void ViECapturer::DeliverI420Frame(VideoFrame& video_frame) {
     }
   }
   if (denoising_enabled_) {
-    image_proc_module_->Denoising(video_frame);
+    image_proc_module_->Denoising(*video_frame);
   }
   if (brightness_frame_stats_) {
     if (image_proc_module_->GetFrameStats(*brightness_frame_stats_,
-                                          video_frame) == 0) {
+                                          *video_frame) == 0) {
       WebRtc_Word32 brightness = image_proc_module_->BrightnessDetection(
-          video_frame, *brightness_frame_stats_);
+          *video_frame, *brightness_frame_stats_);
 
       switch (brightness) {
       case VideoProcessingModule::kNoWarning:
@@ -599,29 +599,32 @@ void ViECapturer::DeliverI420Frame(VideoFrame& video_frame) {
     }
   }
   if (effect_filter_) {
-    effect_filter_->Transform(video_frame.Length(), video_frame.Buffer(),
-                              video_frame.TimeStamp(), video_frame.Width(),
-                              video_frame.Height());
+    effect_filter_->Transform(video_frame->Length(), video_frame->Buffer(),
+                              video_frame->TimeStamp(), video_frame->Width(),
+                              video_frame->Height());
   }
   // Deliver the captured frame to all observers (channels, renderer or file).
   ViEFrameProviderBase::DeliverFrame(video_frame);
 }
 
-void ViECapturer::DeliverCodedFrame(VideoFrame& video_frame) {
+void ViECapturer::DeliverCodedFrame(VideoFrame* video_frame) {
   if (encode_complete_callback_) {
-    EncodedImage encoded_image(video_frame.Buffer(), video_frame.Length(),
-                               video_frame.Size());
-    encoded_image._timeStamp = 90 * (WebRtc_UWord32) video_frame.RenderTimeMs();
+    EncodedImage encoded_image(video_frame->Buffer(), video_frame->Length(),
+                               video_frame->Size());
+    encoded_image._timeStamp =
+        90 * static_cast<WebRtc_UWord32>(video_frame->RenderTimeMs());
     encode_complete_callback_->Encoded(encoded_image);
   }
 
   if (NumberOfRegisteredFrameCallbacks() > 0 && decoder_initialized_) {
-    video_frame.Swap(decode_buffer_.payloadData, decode_buffer_.bufferSize,
+    video_frame->Swap(decode_buffer_.payloadData, decode_buffer_.bufferSize,
                      decode_buffer_.payloadSize);
-    decode_buffer_.encodedHeight = video_frame.Height();
-    decode_buffer_.encodedWidth = video_frame.Width();
-    decode_buffer_.renderTimeMs = video_frame.RenderTimeMs();
-    decode_buffer_.timeStamp = 90 * (WebRtc_UWord32) video_frame.RenderTimeMs();
+    decode_buffer_.encodedHeight = video_frame->Height();
+    decode_buffer_.encodedWidth = video_frame->Width();
+    decode_buffer_.renderTimeMs = video_frame->RenderTimeMs();
+    const int kMsToRtpTimestamp = 90;
+    decode_buffer_.timeStamp = kMsToRtpTimestamp *
+        static_cast<WebRtc_UWord32>(video_frame->RenderTimeMs());
     decode_buffer_.payloadType = codec_.plType;
     vcm_->DecodeFromStorage(decode_buffer_);
   }
@@ -743,7 +746,7 @@ WebRtc_Word32 ViECapturer::InitEncode(const VideoCodec* codec_settings,
   return capture_encoder_->ConfigureEncoder(*codec_settings, max_payload_size);
 }
 
-WebRtc_Word32 ViECapturer::Encode(const RawImage& input_image,
+WebRtc_Word32 ViECapturer::Encode(const VideoFrame& input_image,
                                   const CodecSpecificInfo* codec_specific_info,
                                   const VideoFrameType frame_type) {
   CriticalSectionScoped cs(encoding_cs_.get());
@@ -830,14 +833,14 @@ WebRtc_Word32 ViECapturer::SetRates(WebRtc_UWord32 new_bit_rate,
   return capture_encoder_->SetRates(new_bit_rate, frame_rate);
 }
 
-WebRtc_Word32 ViECapturer::FrameToRender(VideoFrame& video_frame) {
+WebRtc_Word32 ViECapturer::FrameToRender(VideoFrame& video_frame) {  // NOLINT
   deliver_cs_->Enter();
-  DeliverI420Frame(video_frame);
+  DeliverI420Frame(&video_frame);
   deliver_cs_->Leave();
   return 0;
 }
 
-WebRtc_Word32 ViECapturer::RegisterObserver(ViECaptureObserver& observer) {
+WebRtc_Word32 ViECapturer::RegisterObserver(ViECaptureObserver* observer) {
   if (observer_) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(engine_id_, capture_id_),
                  "%s Observer already registered", __FUNCTION__, capture_id_);
@@ -848,7 +851,7 @@ WebRtc_Word32 ViECapturer::RegisterObserver(ViECaptureObserver& observer) {
   }
   capture_module_->EnableFrameRateCallback(true);
   capture_module_->EnableNoPictureAlarm(true);
-  observer_ = &observer;
+  observer_ = observer;
   return 0;
 }
 

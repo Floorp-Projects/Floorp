@@ -23,7 +23,6 @@ class nsHTMLVideoElement;
 class nsIImageLoadingContent;
 class nsHTMLImageElement;
 
-#include "prtypes.h"
 #include "nsChangeHint.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"

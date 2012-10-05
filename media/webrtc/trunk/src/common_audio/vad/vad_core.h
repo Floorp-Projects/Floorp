@@ -26,7 +26,7 @@ enum { kMinEnergy = 10 };  // Minimum energy required to trigger audio signal.
 typedef struct VadInstT_
 {
 
-    int16_t vad;
+    int vad;
     int32_t downsampling_filter_states[4];
     int16_t noise_means[kTableSize];
     int16_t speech_means[kTableSize];
@@ -100,11 +100,11 @@ int WebRtcVad_set_mode_core(VadInstT* self, int mode);
  *                        0 - No active speech
  *                        1-6 - Active speech
  */
-int16_t WebRtcVad_CalcVad32khz(VadInstT* inst, int16_t* speech_frame,
-                               int frame_length);
-int16_t WebRtcVad_CalcVad16khz(VadInstT* inst, int16_t* speech_frame,
-                               int frame_length);
-int16_t WebRtcVad_CalcVad8khz(VadInstT* inst, int16_t* speech_frame,
-                              int frame_length);
+int WebRtcVad_CalcVad32khz(VadInstT* inst, int16_t* speech_frame,
+                           int frame_length);
+int WebRtcVad_CalcVad16khz(VadInstT* inst, int16_t* speech_frame,
+                           int frame_length);
+int WebRtcVad_CalcVad8khz(VadInstT* inst, int16_t* speech_frame,
+                          int frame_length);
 
 #endif  // WEBRTC_COMMON_AUDIO_VAD_VAD_CORE_H_

@@ -148,7 +148,7 @@ void WebRtcSpl_ScaleAndAddVectors(G_CONST WebRtc_Word16 *in1, WebRtc_Word16 gain
     }
 }
 
-#if !(defined(WEBRTC_ANDROID) && defined(WEBRTC_ARCH_ARM_NEON))
+#ifndef WEBRTC_ARCH_ARM_NEON
 int WebRtcSpl_ScaleAndAddVectorsWithRound(const int16_t* in_vector1,
                                           int16_t in_vector1_scale,
                                           const int16_t* in_vector2,
@@ -173,4 +173,4 @@ int WebRtcSpl_ScaleAndAddVectorsWithRound(const int16_t* in_vector1,
 
   return 0;
 }
-#endif
+#endif  // WEBRTC_ARCH_ARM_NEON

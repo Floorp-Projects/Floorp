@@ -4,7 +4,7 @@
     <application android:icon="@drawable/logo"
 		 android:label="@string/app_name"
 		 android:debuggable="true">
-        <activity android:name=".ViEAndroidDemo"
+        <activity android:name=".WebRTCDemo"
                   android:label="@string/app_name" 
                   android:configChanges="keyboardHidden|orientation"                  
                   >
@@ -16,7 +16,7 @@
             </intent-filter>
         </activity>
     </application>
-    <uses-sdk android:minSdkVersion="9" />
+    <uses-sdk android:minSdkVersion="10" />
     <uses-permission android:name="android.permission.CAMERA"></uses-permission>
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />

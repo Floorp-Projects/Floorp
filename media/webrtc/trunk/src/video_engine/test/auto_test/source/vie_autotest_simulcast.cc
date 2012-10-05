@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -24,6 +24,46 @@
 
 #define VCM_RED_PAYLOAD_TYPE        96
 #define VCM_ULPFEC_PAYLOAD_TYPE     97
+
+void InitialSingleStreamSettings(webrtc::VideoCodec* video_codec) {
+  video_codec->numberOfSimulcastStreams = 0;
+  video_codec->width = 1200;
+  video_codec->height = 800;
+}
+
+void SetSimulcastSettings(webrtc::VideoCodec* video_codec) {
+  video_codec->width = 1280;
+  video_codec->height = 720;
+  // simulcast settings
+  video_codec->numberOfSimulcastStreams = 3;
+  video_codec->simulcastStream[0].width = 320;
+  video_codec->simulcastStream[0].height = 180;
+  video_codec->simulcastStream[0].numberOfTemporalLayers = 0;
+  video_codec->simulcastStream[0].maxBitrate = 100;
+  video_codec->simulcastStream[0].qpMax = video_codec->qpMax;
+
+  video_codec->simulcastStream[1].width = 640;
+  video_codec->simulcastStream[1].height = 360;
+  video_codec->simulcastStream[1].numberOfTemporalLayers = 0;
+  video_codec->simulcastStream[1].maxBitrate = 500;
+  video_codec->simulcastStream[1].qpMax = video_codec->qpMax;
+
+  video_codec->simulcastStream[2].width = 1280;
+  video_codec->simulcastStream[2].height = 720;
+  video_codec->simulcastStream[2].numberOfTemporalLayers = 0;
+  video_codec->simulcastStream[2].maxBitrate = 1200;
+  video_codec->simulcastStream[2].qpMax = video_codec->qpMax;
+}
+
+void RuntimeSingleStreamSettings(webrtc::VideoCodec* video_codec) {
+  SetSimulcastSettings(video_codec);
+  video_codec->width = 1200;
+  video_codec->height = 800;
+  video_codec->numberOfSimulcastStreams = 3;
+  video_codec->simulcastStream[0].maxBitrate = 0;
+  video_codec->simulcastStream[1].maxBitrate = 0;
+  video_codec->simulcastStream[2].maxBitrate = 0;
+}
 
 int VideoEngineSimulcastTest(void* window1, void* window2)
 {
@@ -283,29 +323,16 @@ int VideoEngineSimulcastTest(void* window1, void* window2)
         return -1;
     }
 
+    bool simulcast_mode = true;
+    int num_streams = 1;
     // Set spatial resolution option
-    videoCodec.width = 1280;
-    videoCodec.height = 720;
-
-    // simulcast settings
-    videoCodec.numberOfSimulcastStreams = 3;
-    videoCodec.simulcastStream[0].width = 320;
-    videoCodec.simulcastStream[0].height = 180;
-    videoCodec.simulcastStream[0].numberOfTemporalLayers = 0;
-    videoCodec.simulcastStream[0].maxBitrate = 100;
-    videoCodec.simulcastStream[0].qpMax = videoCodec.qpMax;
-
-    videoCodec.simulcastStream[1].width = 640;
-    videoCodec.simulcastStream[1].height = 360;
-    videoCodec.simulcastStream[1].numberOfTemporalLayers = 0;
-    videoCodec.simulcastStream[1].maxBitrate = 500;
-    videoCodec.simulcastStream[1].qpMax = videoCodec.qpMax;
-
-    videoCodec.simulcastStream[2].width = 1280;
-    videoCodec.simulcastStream[2].height = 720;
-    videoCodec.simulcastStream[2].numberOfTemporalLayers = 0;
-    videoCodec.simulcastStream[2].maxBitrate = 1200;
-    videoCodec.simulcastStream[2].qpMax = videoCodec.qpMax;
+    if (simulcast_mode) {
+      SetSimulcastSettings(&videoCodec);
+      num_streams = videoCodec.numberOfSimulcastStreams;
+    } else {
+      InitialSingleStreamSettings(&videoCodec);
+      num_streams = 1;
+    }
 
     // Set start bit rate
     std::string str;
@@ -351,20 +378,21 @@ int VideoEngineSimulcastTest(void* window1, void* window2)
     // Set network delay value
     extTransport.SetNetworkDelay(10);
 
-    extTransport.SetSSRCFilter(3);
-
-    for (int idx = 0; idx < 3; idx++)
+    for (int idx = 0; idx < num_streams; idx++)
     {
-        error = ptrViERtpRtcp->SetLocalSSRC(videoChannel,
-                                            idx+1, // SSRC
-                                            webrtc::kViEStreamTypeNormal,
-                                            idx);
+        error = ptrViERtpRtcp->SetLocalSSRC(
+            videoChannel,
+            idx+1, // SSRC
+            webrtc::kViEStreamTypeNormal,
+            idx);
         if (error == -1)
         {
-            printf("ERROR in ViERTP_RTCP::SetLocalSSRC(idx:%d)\n", idx);
+            printf("ERROR in ViERTP_RTCP::SetLocalSSRC(idx:%d)\n",
+                   idx);
             return -1;
         }
     }
+    extTransport.SetSSRCFilter(num_streams);
 
     error = ptrViEBase->StartReceive(videoChannel);
     if (error == -1)
@@ -380,6 +408,15 @@ int VideoEngineSimulcastTest(void* window1, void* window2)
         return -1;
     }
 
+    // Create a receive channel to verify that it doesn't mess up toggling
+    // between single stream and simulcast.
+    int videoChannel2 = -1;
+    error = ptrViEBase->CreateReceiveChannel(videoChannel2, videoChannel);
+    if (error == -1) {
+      printf("ERROR in ViEBase::CreateReceiveChannel\n");
+      return -1;
+    }
+
     //********************************************************
     //  Engine started
     //********************************************************
@@ -388,13 +425,46 @@ int VideoEngineSimulcastTest(void* window1, void* window2)
     do
     {
         printf("Enter new SSRC filter 1,2 or 3\n");
+        printf("... or 0 to switch between simulcast and a single stream\n");
         printf("Press enter to stop...");
         str.clear();
         std::getline(std::cin, str);
         if (!str.empty())
         {
             int ssrc = atoi(str.c_str());
-            if (ssrc > 0 && ssrc < 4)
+            if (ssrc == 0) {
+              // Toggle between simulcast and a single stream with different
+              // resolution.
+              if (simulcast_mode) {
+                RuntimeSingleStreamSettings(&videoCodec);
+                num_streams = 1;
+                printf("Disabling simulcast\n");
+              } else {
+                SetSimulcastSettings(&videoCodec);
+                num_streams = videoCodec.numberOfSimulcastStreams;
+                printf("Enabling simulcast\n");
+              }
+              simulcast_mode = !simulcast_mode;
+              if (ptrViECodec->SetSendCodec(videoChannel, videoCodec) != 0) {
+                printf("ERROR switching between simulcast and single stream\n");
+                return -1;
+              }
+              for (int idx = 0; idx < num_streams; idx++)
+              {
+                  error = ptrViERtpRtcp->SetLocalSSRC(
+                      videoChannel,
+                      idx+1, // SSRC
+                      webrtc::kViEStreamTypeNormal,
+                      idx);
+                  if (error == -1)
+                  {
+                      printf("ERROR in ViERTP_RTCP::SetLocalSSRC(idx:%d)\n",
+                             idx);
+                      return -1;
+                  }
+              }
+              extTransport.SetSSRCFilter(num_streams);
+            } else if (ssrc > 0 && ssrc < 4)
             {
                 extTransport.SetSSRCFilter(ssrc);
             } else
@@ -410,6 +480,13 @@ int VideoEngineSimulcastTest(void* window1, void* window2)
     //********************************************************
     //  Testing finished. Tear down Video Engine
     //********************************************************
+
+    error = ptrViEBase->DeleteChannel(videoChannel2);
+    if (error == -1)
+    {
+        printf("ERROR in ViEBase::DeleteChannel\n");
+        return -1;
+    }
 
     error = ptrViEBase->StopReceive(videoChannel);
     if (error == -1)

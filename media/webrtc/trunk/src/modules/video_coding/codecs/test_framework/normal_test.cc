@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -19,7 +19,7 @@
 
 NormalTest::NormalTest()
 :
-Test("Normal Test 1", "A test of normal execution of the codec"),
+CodecTest("Normal Test 1", "A test of normal execution of the codec"),
 _testNo(1),
 _lengthEncFrame(0),
 _appendNext(false)
@@ -29,7 +29,7 @@ _appendNext(false)
 NormalTest::NormalTest(std::string name, std::string description,
                        unsigned int testNo)
 :
-Test(name, description),
+CodecTest(name, description),
 _requestKeyFrame(false),
 _testNo(testNo),
 _lengthEncFrame(0),
@@ -40,7 +40,7 @@ _appendNext(false)
 NormalTest::NormalTest(std::string name, std::string description,
                        WebRtc_UWord32 bitRate, unsigned int testNo)
 :
-Test(name, description, bitRate),
+CodecTest(name, description, bitRate),
 _requestKeyFrame(false),
 _testNo(testNo),
 _lengthEncFrame(0),
@@ -51,7 +51,7 @@ _appendNext(false)
 void
 NormalTest::Setup()
 {
-    Test::Setup();
+    CodecTest::Setup();
     std::stringstream ss;
     std::string strTestNo;
     ss << _testNo;
@@ -100,7 +100,7 @@ NormalTest::Setup()
 void
 NormalTest::Teardown()
 {
-    Test::Teardown();
+    CodecTest::Teardown();
     fclose(_sourceFile);
     fclose(_decodedFile);
 }
@@ -115,7 +115,7 @@ NormalTest::Perform()
     _inputVideoBuffer.VerifyAndAllocate(_lengthSourceFrame);
     _decodedVideoBuffer.VerifyAndAllocate(_lengthSourceFrame);
     _encodedVideoBuffer.VerifyAndAllocate(_lengthSourceFrame);
-    
+
     _encoder->InitEncode(&_inst, 1, 1460);
     CodecSpecific_InitBitrate();
     _decoder->InitDecode(&_inst,1);
@@ -129,14 +129,21 @@ NormalTest::Perform()
     {
         DoPacketLoss();
         _encodedVideoBuffer.UpdateLength(_encodedVideoBuffer.GetLength());
-        fwrite(_encodedVideoBuffer.GetBuffer(), 1, _encodedVideoBuffer.GetLength(), _encodedFile);
+        if (fwrite(_encodedVideoBuffer.GetBuffer(), 1,
+                   _encodedVideoBuffer.GetLength(),
+                   _encodedFile) !=  _encodedVideoBuffer.GetLength()) {
+          return;
+        }
         decodeLength = Decode();
         if (decodeLength < 0)
         {
             fprintf(stderr,"\n\nError in decoder: %d\n\n", decodeLength);
             exit(EXIT_FAILURE);
         }
-        fwrite(_decodedVideoBuffer.GetBuffer(), 1, decodeLength, _decodedFile);
+        if (fwrite(_decodedVideoBuffer.GetBuffer(), 1, decodeLength,
+                   _decodedFile) != static_cast<unsigned int>(decodeLength)) {
+          return;
+        }
         CodecSpecific_InitBitrate();
         _framecnt++;
     }
@@ -150,7 +157,10 @@ NormalTest::Perform()
             fprintf(stderr,"\n\nError in decoder: %d\n\n", decodeLength);
             exit(EXIT_FAILURE);
         }
-        fwrite(_decodedVideoBuffer.GetBuffer(), 1, decodeLength, _decodedFile);
+        if (fwrite(_decodedVideoBuffer.GetBuffer(), 1, decodeLength,
+                   _decodedFile) != static_cast<unsigned int>(decodeLength)) {
+          return;
+        }
     }
 
     double actualBitRate = ActualBitRate(_framecnt) / 1000.0;
@@ -250,4 +260,3 @@ NormalTest::Decode(int lossValue)
     _encodedVideoBuffer.UpdateLength(0);
     return lengthDecFrame;
 }
-

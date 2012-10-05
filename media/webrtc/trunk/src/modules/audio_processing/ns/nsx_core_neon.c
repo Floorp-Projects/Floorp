@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -15,7 +15,6 @@
 
 // Update the noise estimation information.
 static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset) {
-  int i = 0;
   const int16_t kExp2Const = 11819; // Q13
   int16_t* ptr_noiseEstLogQuantile = NULL;
   int16_t* ptr_noiseEstQuantile = NULL;
@@ -92,10 +91,10 @@ static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset) {
 }
 
 // Noise Estimation
-static void NoiseEstimationNeon(NsxInst_t* inst,
-                                uint16_t* magn,
-                                uint32_t* noise,
-                                int16_t* q_noise) {
+void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
+                                   uint16_t* magn,
+                                   uint32_t* noise,
+                                   int16_t* q_noise) {
   int16_t lmagn[HALF_ANAL_BLOCKL], counter, countDiv;
   int16_t countProd, delta, zeros, frac;
   int16_t log2, tabind, logval, tmp16, tmp16no1, tmp16no2;
@@ -166,7 +165,8 @@ static void NoiseEstimationNeon(NsxInst_t* inst,
     int16x8_t tmp16x8_1;
     int16x8_t tmp16x8_2;
     int16x8_t tmp16x8_3;
-    int16x8_t tmp16x8_4;
+    // Initialize tmp16x8_4 to zero to avoid compilaton error.
+    int16x8_t tmp16x8_4 = vdupq_n_s16(0);
     int16x8_t tmp16x8_5;
     int32x4_t tmp32x4;
 
@@ -320,7 +320,7 @@ static void NoiseEstimationNeon(NsxInst_t* inst,
 }
 
 // Filter the data in the frequency domain, and create spectrum.
-static void PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
+void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
 
   // (1) Filtering.
 
@@ -455,7 +455,7 @@ static void PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
 }
 
 // Denormalize the input buffer.
-static __inline void DenormalizeNeon(NsxInst_t* inst, int16_t* in, int factor) {
+void WebRtcNsx_DenormalizeNeon(NsxInst_t* inst, int16_t* in, int factor) {
   int16_t* ptr_real = &inst->real[0];
   int16_t* ptr_in = &in[0];
 
@@ -494,12 +494,12 @@ static __inline void DenormalizeNeon(NsxInst_t* inst, int16_t* in, int factor) {
 
 // For the noise supress process, synthesis, read out fully processed segment,
 // and update synthesis buffer.
-static void SynthesisUpdateNeon(NsxInst_t* inst,
-                                int16_t* out_frame,
-                                int16_t gain_factor) {
+void WebRtcNsx_SynthesisUpdateNeon(NsxInst_t* inst,
+                                   int16_t* out_frame,
+                                   int16_t gain_factor) {
   int16_t* ptr_real = &inst->real[0];
   int16_t* ptr_syn = &inst->synthesisBuffer[0];
-  int16_t* ptr_window = &inst->window[0];
+  const int16_t* ptr_window = &inst->window[0];
 
   // synthesis
   __asm__ __volatile__("vdup.16 d24, %0" : : "r"(gain_factor) : "d24");
@@ -605,9 +605,9 @@ static void SynthesisUpdateNeon(NsxInst_t* inst,
 }
 
 // Update analysis buffer for lower band, and window data before FFT.
-static void AnalysisUpdateNeon(NsxInst_t* inst,
-                               int16_t* out,
-                               int16_t* new_speech) {
+void WebRtcNsx_AnalysisUpdateNeon(NsxInst_t* inst,
+                                  int16_t* out,
+                                  int16_t* new_speech) {
 
   int16_t* ptr_ana = &inst->analysisBuffer[inst->blockLen10ms];
   int16_t* ptr_out = &inst->analysisBuffer[0];
@@ -647,7 +647,7 @@ static void AnalysisUpdateNeon(NsxInst_t* inst,
   }
 
   // Window data before FFT
-  int16_t* ptr_window = &inst->window[0];
+  const int16_t* ptr_window = &inst->window[0];
   ptr_out = &out[0];
   ptr_ana = &inst->analysisBuffer[0];
   for (; ptr_out < &out[inst->anaLen];) {
@@ -682,9 +682,9 @@ static void AnalysisUpdateNeon(NsxInst_t* inst,
 
 // Create a complex number buffer (out[]) as the intput (in[]) interleaved with
 // zeros, and normalize it.
-static __inline void CreateComplexBufferNeon(NsxInst_t* inst,
-                                             int16_t* in,
-                                             int16_t* out) {
+void WebRtcNsx_CreateComplexBufferNeon(NsxInst_t* inst,
+                                       int16_t* in,
+                                       int16_t* out) {
   int16_t* ptr_out = &out[0];
   int16_t* ptr_in = &in[0];
 
@@ -722,13 +722,4 @@ static __inline void CreateComplexBufferNeon(NsxInst_t* inst,
       :"d22", "d23", "d24", "d25", "q10", "q11"
     );
   }
-}
-
-void WebRtcNsx_InitNeon(void) {
-  WebRtcNsx_NoiseEstimation = NoiseEstimationNeon;
-  WebRtcNsx_PrepareSpectrum = PrepareSpectrumNeon;
-  WebRtcNsx_SynthesisUpdate = SynthesisUpdateNeon;
-  WebRtcNsx_AnalysisUpdate = AnalysisUpdateNeon;
-  WebRtcNsx_Denormalize = DenormalizeNeon;
-  WebRtcNsx_CreateComplexBuffer = CreateComplexBufferNeon;
 }

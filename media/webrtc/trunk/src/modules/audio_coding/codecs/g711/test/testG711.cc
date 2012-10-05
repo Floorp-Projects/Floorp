@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -129,16 +129,22 @@ int main(int argc, char* argv[])
             /* A-law encoding */
             stream_len = WebRtcG711_EncodeA(NULL, shortdata, framelength, streamdata);
             if (argc==6){
-                /* Write bits to file */
-                fwrite(streamdata,sizeof(unsigned char),stream_len,bitp);
+              /* Write bits to file */
+              if (fwrite(streamdata, sizeof(unsigned char), stream_len,
+                         bitp) != static_cast<size_t>(stream_len)) {
+                return -1;
+              }
             }
             err = WebRtcG711_DecodeA(NULL, streamdata, stream_len, decoded, speechType);
         } else if (!strcmp(law,"u")){
             /* u-law encoding */
             stream_len = WebRtcG711_EncodeU(NULL, shortdata, framelength, streamdata);
             if (argc==6){
-                /* Write bits to file */
-                fwrite(streamdata,sizeof(unsigned char),stream_len,bitp);
+              /* Write bits to file */
+              if (fwrite(streamdata, sizeof(unsigned char), stream_len,
+                         bitp) != static_cast<size_t>(stream_len)) {
+                return -1;
+              }
             }
             err = WebRtcG711_DecodeU(NULL, streamdata, stream_len, decoded, speechType);
         } else {
@@ -149,8 +155,11 @@ int main(int argc, char* argv[])
             /* exit if returned with error */
             printf("Error in encoder/decoder\n");
         } else {
-            /* Write coded speech to file */
-            fwrite(decoded,sizeof(short),framelength,outp);
+          /* Write coded speech to file */
+          if (fwrite(decoded, sizeof(short), framelength,
+                     outp) != static_cast<size_t>(framelength)) {
+            return -1;
+          }
         }
     }
 

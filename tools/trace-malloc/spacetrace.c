@@ -117,9 +117,9 @@ ticks2xsec(tmreader * aReader, uint32_t aTicks, uint32_t aResolution)
 
     LL_UI2L(bigone, aResolution);
     LL_UI2L(tmp64, aTicks);
-    LL_MUL(bigone, bigone, tmp64);
+    bigone *= tmp64;
     LL_UI2L(tmp64, aReader->ticksPerSec);
-    LL_DIV(bigone, bigone, tmp64);
+    bigone /= tmp64;
     LL_L2UI(retval, bigone);
     return retval;
 }
@@ -147,7 +147,7 @@ initOptions(int aArgCount, char **aArgArray)
 #define ST_CMD_OPTION_STRING_ARRAY(option_name, option_genre, array_size, option_help) { int loop; for(loop = 0; loop < array_size; loop++) { globals.mCommandLineOptions.m##option_name[loop][0] = '\0'; } }
 #define ST_CMD_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help) globals.mCommandLineOptions.m##option_name = NULL; globals.mCommandLineOptions.m##option_name##Count = 0;
 #define ST_CMD_OPTION_UINT32(option_name, option_genre, default_value, multiplier, option_help) globals.mCommandLineOptions.m##option_name = default_value * multiplier;
-#define ST_CMD_OPTION_UINT64(option_name, option_genre, default_value, multiplier, option_help) { uint64_t def64 = default_value; uint64_t mul64 = multiplier; LL_MUL(globals.mCommandLineOptions.m##option_name##64, def64, mul64); }
+#define ST_CMD_OPTION_UINT64(option_name, option_genre, default_value, multiplier, option_help) { uint64_t def64 = default_value; uint64_t mul64 = multiplier; globals.mCommandLineOptions.m##option_name##64 = def64 * mul64; }
 
 #include "stoptions.h"
 
@@ -667,7 +667,7 @@ recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
 
         LL_UI2L(timeval64, timeval);
         LL_UI2L(size64, size);
-        LL_MUL(weight64, timeval64, size64);
+        weight64 = timeval64 * size64;
 
         /*
          ** First, update this run.
@@ -675,10 +675,8 @@ recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
         aRun->mStats[inContext->mIndex].mCompositeCount++;
         aRun->mStats[inContext->mIndex].mHeapRuntimeCost += heapCost;
         aRun->mStats[inContext->mIndex].mSize += size;
-        LL_ADD(aRun->mStats[inContext->mIndex].mTimeval64,
-               aRun->mStats[inContext->mIndex].mTimeval64, timeval64);
-        LL_ADD(aRun->mStats[inContext->mIndex].mWeight64,
-               aRun->mStats[inContext->mIndex].mWeight64, weight64);
+        aRun->mStats[inContext->mIndex].mTimeval64 += timeval64;
+        aRun->mStats[inContext->mIndex].mWeight64 += weight64;
 
         /*
          ** Use the first event of the allocation to update the parent
@@ -727,12 +725,10 @@ recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
                     callsiteRun->mStats[inContext->mIndex].mHeapRuntimeCost +=
                         heapCost;
                     callsiteRun->mStats[inContext->mIndex].mSize += size;
-                    LL_ADD(callsiteRun->mStats[inContext->mIndex].mTimeval64,
-                           callsiteRun->mStats[inContext->mIndex].mTimeval64,
-                           timeval64);
-                    LL_ADD(callsiteRun->mStats[inContext->mIndex].mWeight64,
-                           callsiteRun->mStats[inContext->mIndex].mWeight64,
-                           weight64);
+                    callsiteRun->mStats[inContext->mIndex].mTimeval64 +=
+                        timeval64;
+                    callsiteRun->mStats[inContext->mIndex].mWeight64 +=
+                        weight64;
                 }
 
                 callsite = callsite->parent;
@@ -965,7 +961,7 @@ harvestRun(const STRun * aInRun, STRun * aOutRun,
                  */
                 LL_UI2L(bytesize64, bytesize);
                 LL_UI2L(lifetime64, lifetime);
-                LL_MUL(weight64, bytesize64, lifetime64);
+                weight64 = bytesize64 * lifetime64;
                 if (weight64 < aOptions->mWeightMin64 ||
                     weight64 > aOptions->mWeightMax64) {
                     continue;
@@ -1103,11 +1099,11 @@ compareAllocations(const void *aAlloc1, const void *aAlloc2, void *aContext)
                     LL_UI2L(bytesize164, byteSize(inOptions, alloc1));
                     LL_UI2L(timeval164,
                             (alloc1->mMaxTimeval - alloc1->mMinTimeval));
-                    LL_MUL(weight164, bytesize164, timeval164);
+                    weight164 = bytesize164 * timeval164;
                     LL_UI2L(bytesize264, byteSize(inOptions, alloc2));
                     LL_UI2L(timeval264,
                             (alloc2->mMaxTimeval - alloc2->mMinTimeval));
-                    LL_MUL(weight264, bytesize264, timeval264);
+                    weight264 = bytesize264 * timeval264;
 
                     if (weight164 < weight264) {
                         retval = __LINE__;
@@ -2049,7 +2045,7 @@ optionGetDataOut(PRFileDesc * inFD, STOptions * inOptions)
         uint64_t mul64 = multiplier; \
         uint64_t div64; \
         \
-        LL_DIV(div64, inOptions->m##option_name##64, mul64); \
+        div64 = inOptions->m##option_name##64 / mul64; \
         PR_fprintf(inFD, "%s%s=%llu", (0 == mark++) ? "?" : "&", #option_name, div64); \
     }
 
@@ -2622,7 +2618,7 @@ getDataPRUint64(const FormData * aGetData, const char *aCheckFor, int inIndex,
     uint64_t value64 = LL_INIT(0, 0);
 
     retval = getDataPRUint32Base(aGetData, aCheckFor, inIndex, &value64, 64);
-    LL_MUL(*aStoreResult64, value64, aConversion64);
+    *aStoreResult64 = value64 * aConversion64;
 
     return retval;
 }
@@ -2728,7 +2724,7 @@ displayTopAllocations(STRequest * inRequest, STRun * aRun,
 
                     LL_UI2L(size64, size);
                     LL_UI2L(lifespan64, lifespan);
-                    LL_MUL(weight64, size64, lifespan64);
+                    weight64 = size64 * lifespan64;
 
                     PR_fprintf(inRequest->mFD, "<tr>\n");
 
@@ -2852,7 +2848,7 @@ displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
 
                     LL_UI2L(size64, size);
                     LL_UI2L(lifespan64, lifespan);
-                    LL_MUL(weight64, size64, lifespan64);
+                    weight64 = size64 * lifespan64;
 
                     /*
                      ** One more shown.
@@ -3111,7 +3107,7 @@ displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
 
         LL_UI2L(bytesize64, bytesize);
         LL_UI2L(timeval64, timeval);
-        LL_MUL(weight64, bytesize64, timeval64);
+        weight64 = bytesize64 * timeval64;
 
         PR_fprintf(inRequest->mFD, "<p>Allocation %u Details:</p>\n",
                    aAllocation->mRunIndex);
@@ -3879,8 +3875,8 @@ graphFootprint(STRequest * inRequest, STRun * aRun)
                         LL_I2L(spacey64, STGD_SPACE_Y);
                         LL_I2L(mem64, (maxMemory - minMemory));
 
-                        LL_MUL(in64, ydata64, spacey64);
-                        LL_DIV(in64, in64, mem64);
+                        in64 = ydata64 * spacey64;
+                        in64 /= mem64;
                         LL_L2I(in32, in64);
 
                         x2 = x1;
@@ -4095,8 +4091,8 @@ graphTimeval(STRequest * inRequest, STRun * aRun)
                         LL_I2L(spacey64, STGD_SPACE_Y);
                         LL_I2L(mem64, (maxMemory - minMemory));
 
-                        LL_MUL(in64, ydata64, spacey64);
-                        LL_DIV(in64, in64, mem64);
+                        in64 = ydata64 * spacey64;
+                        in64 /= mem64;
                         LL_L2I(in32, in64);
 
                         x2 = x1;
@@ -4313,8 +4309,8 @@ graphLifespan(STRequest * inRequest, STRun * aRun)
                         LL_I2L(spacey64, STGD_SPACE_Y);
                         LL_I2L(mem64, (maxMemory - minMemory));
 
-                        LL_MUL(in64, ydata64, spacey64);
-                        LL_DIV(in64, in64, mem64);
+                        in64 = ydata64 * spacey64;
+                        in64 /= mem64;
                         LL_L2I(in32, in64);
 
                         x2 = x1;
@@ -4432,10 +4428,9 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                         LL_UI2L(lifespan64,
                                 (aRun->mAllocations[loop]->mMaxTimeval -
                                  aRun->mAllocations[loop]->mMinTimeval));
-                        LL_MUL(weight64, size64, lifespan64);
+                        weight64 = size64 * lifespan64;
 
-                        LL_ADD(YData64[traverse], YData64[traverse],
-                               weight64);
+                        YData64[traverse] += weight64;
                     }
                 }
             }
@@ -4513,9 +4508,9 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                                 ST_TIMEVAL_PRINTABLE(cached));
 
                     LL_UI2L(percent64, percents[traverse]);
-                    LL_SUB(result64, maxWeight64, minWeight64);
-                    LL_MUL(result64, result64, percent64);
-                    LL_DIV(result64, result64, hundred64);
+                    result64 = maxWeight64 - minWeight64;
+                    result64 *= percent64;
+                    result64 /= hundred64;
                     PR_snprintf(bytes[traverse], 32, "%llu", result64);
                 }
 
@@ -4544,10 +4539,10 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                          ** Need to do this math in 64 bits.
                          */
                         LL_I2L(spacey64, STGD_SPACE_Y);
-                        LL_SUB(weight64, maxWeight64, minWeight64);
+                        weight64 = maxWeight64 - minWeight64;
 
-                        LL_MUL(in64, YData64[traverse], spacey64);
-                        LL_DIV(in64, in64, weight64);
+                        in64 = YData64[traverse] * spacey64;
+                        in64 /= weight64;
                         LL_L2I(in32, in64);
 
                         x2 = x1;
@@ -4737,7 +4732,7 @@ displayOptionInt64(STRequest * inRequest,
         uint64_t mul64 = multiplier;
         uint64_t div64;
 
-        LL_DIV(div64, value, mul64);
+        div64 = value / mul64;
         PR_fprintf(inRequest->mFD,
                    "<input type=text name=%s value=%llu>\n",
                    option_name, div64);

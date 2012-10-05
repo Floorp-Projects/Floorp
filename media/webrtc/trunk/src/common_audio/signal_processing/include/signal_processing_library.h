@@ -75,7 +75,7 @@
 #define WEBRTC_SPL_UDIV(a, b) \
     ((WebRtc_UWord32) ((WebRtc_UWord32)(a) / (WebRtc_UWord32)(b)))
 
-#ifndef WEBRTC_ARCH_ARM_V7A
+#ifndef WEBRTC_ARCH_ARM_V7
 // For ARMv7 platforms, these are inline functions in spl_inl_armv7.h
 #define WEBRTC_SPL_MUL_16_16(a, b) \
     ((WebRtc_Word32) (((WebRtc_Word16)(a)) * ((WebRtc_Word16)(b))))
@@ -281,8 +281,11 @@ int32_t WebRtcSpl_MinValueW32(const int32_t* vector, int length);
 //      - vector : 16-bit input vector.
 //      - length : Number of samples in vector.
 //
-// Return value  : Index to the maximum absolute value in vector;
-//                 or -1, if (vector == NULL || length <= 0).
+// Return value  : Index to the maximum absolute value in vector, or -1,
+//                 if (vector == NULL || length <= 0).
+//                 If there are multiple equal maxima, return the index of the
+//                 first. -32768 will always have precedence over 32767 (despite
+//                 -32768 presenting an int16 absolute value of 32767);
 int WebRtcSpl_MaxAbsIndexW16(const int16_t* vector, int length);
 
 // Returns the vector index to the maximum sample value of a 16-bit vector.
@@ -291,7 +294,8 @@ int WebRtcSpl_MaxAbsIndexW16(const int16_t* vector, int length);
 //      - vector : 16-bit input vector.
 //      - length : Number of samples in vector.
 //
-// Return value  : Index to the maximum value in vector;
+// Return value  : Index to the maximum value in vector (if multiple
+//                 indexes have the maximum, return the first);
 //                 or -1, if (vector == NULL || length <= 0).
 int WebRtcSpl_MaxIndexW16(const int16_t* vector, int length);
 
@@ -301,7 +305,8 @@ int WebRtcSpl_MaxIndexW16(const int16_t* vector, int length);
 //      - vector : 32-bit input vector.
 //      - length : Number of samples in vector.
 //
-// Return value  : Index to the maximum value in vector;
+// Return value  : Index to the maximum value in vector (if multiple
+//                 indexes have the maximum, return the first);
 //                 or -1, if (vector == NULL || length <= 0).
 int WebRtcSpl_MaxIndexW32(const int32_t* vector, int length);
 
@@ -311,7 +316,8 @@ int WebRtcSpl_MaxIndexW32(const int32_t* vector, int length);
 //      - vector : 16-bit input vector.
 //      - length : Number of samples in vector.
 //
-// Return value  : Index to the mimimum value in vector;
+// Return value  : Index to the mimimum value in vector  (if multiple
+//                 indexes have the minimum, return the first);
 //                 or -1, if (vector == NULL || length <= 0).
 int WebRtcSpl_MinIndexW16(const int16_t* vector, int length);
 
@@ -321,7 +327,8 @@ int WebRtcSpl_MinIndexW16(const int16_t* vector, int length);
 //      - vector : 32-bit input vector.
 //      - length : Number of samples in vector.
 //
-// Return value  : Index to the mimimum value in vector;
+// Return value  : Index to the mimimum value in vector  (if multiple
+//                 indexes have the minimum, return the first);
 //                 or -1, if (vector == NULL || length <= 0).
 int WebRtcSpl_MinIndexW32(const int32_t* vector, int length);
 
@@ -419,32 +426,146 @@ void WebRtcSpl_AffineTransformVector(WebRtc_Word16* out_vector,
                                      int vector_length);
 // End: iLBC specific functions.
 
-// Signal processing operations. Descriptions at bottom of this file.
-int WebRtcSpl_AutoCorrelation(G_CONST WebRtc_Word16* vector,
-                              int vector_length, int order,
-                              WebRtc_Word32* result_vector,
+// Signal processing operations.
+
+// A 32-bit fix-point implementation of auto-correlation computation
+//
+// Input:
+//      - in_vector        : Vector to calculate autocorrelation upon
+//      - in_vector_length : Length (in samples) of |vector|
+//      - order            : The order up to which the autocorrelation should be
+//                           calculated
+//
+// Output:
+//      - result           : auto-correlation values (values should be seen
+//                           relative to each other since the absolute values
+//                           might have been down shifted to avoid overflow)
+//
+//      - scale            : The number of left shifts required to obtain the
+//                           auto-correlation in Q0
+//
+// Return value            :
+//      - -1, if |order| > |in_vector_length|;
+//      - Number of samples in |result|, i.e. (order+1), otherwise.
+int WebRtcSpl_AutoCorrelation(const int16_t* in_vector,
+                              int in_vector_length,
+                              int order,
+                              int32_t* result,
                               int* scale);
+
+// A 32-bit fix-point implementation of the Levinson-Durbin algorithm that
+// does NOT use the 64 bit class
+//
+// Input:
+//      - auto_corr : Vector with autocorrelation values of length >=
+//                    |use_order|+1
+//      - use_order : The LPC filter order (support up to order 20)
+//
+// Output:
+//      - lpc_coef  : lpc_coef[0..use_order] LPC coefficients in Q12
+//      - refl_coef : refl_coef[0...use_order-1]| Reflection coefficients in
+//                    Q15
+//
+// Return value     : 1 for stable 0 for unstable
 WebRtc_Word16 WebRtcSpl_LevinsonDurbin(WebRtc_Word32* auto_corr,
                                        WebRtc_Word16* lpc_coef,
                                        WebRtc_Word16* refl_coef,
                                        WebRtc_Word16 order);
+
+// Converts reflection coefficients |refl_coef| to LPC coefficients |lpc_coef|.
+// This version is a 16 bit operation.
+//
+// NOTE: The 16 bit refl_coef -> lpc_coef conversion might result in a
+// "slightly unstable" filter (i.e., a pole just outside the unit circle) in
+// "rare" cases even if the reflection coefficients are stable.
+//
+// Input:
+//      - refl_coef : Reflection coefficients in Q15 that should be converted
+//                    to LPC coefficients
+//      - use_order : Number of coefficients in |refl_coef|
+//
+// Output:
+//      - lpc_coef  : LPC coefficients in Q12
 void WebRtcSpl_ReflCoefToLpc(G_CONST WebRtc_Word16* refl_coef,
                              int use_order,
                              WebRtc_Word16* lpc_coef);
+
+// Converts LPC coefficients |lpc_coef| to reflection coefficients |refl_coef|.
+// This version is a 16 bit operation.
+// The conversion is implemented by the step-down algorithm.
+//
+// Input:
+//      - lpc_coef  : LPC coefficients in Q12, that should be converted to
+//                    reflection coefficients
+//      - use_order : Number of coefficients in |lpc_coef|
+//
+// Output:
+//      - refl_coef : Reflection coefficients in Q15.
 void WebRtcSpl_LpcToReflCoef(WebRtc_Word16* lpc_coef,
                              int use_order,
                              WebRtc_Word16* refl_coef);
+
+// Calculates reflection coefficients (16 bit) from auto-correlation values
+//
+// Input:
+//      - auto_corr : Auto-correlation values
+//      - use_order : Number of coefficients wanted be calculated
+//
+// Output:
+//      - refl_coef : Reflection coefficients in Q15.
 void WebRtcSpl_AutoCorrToReflCoef(G_CONST WebRtc_Word32* auto_corr,
                                   int use_order,
                                   WebRtc_Word16* refl_coef);
-void WebRtcSpl_CrossCorrelation(WebRtc_Word32* cross_corr,
-                                WebRtc_Word16* vector1,
-                                WebRtc_Word16* vector2,
-                                WebRtc_Word16 dim_vector,
-                                WebRtc_Word16 dim_cross_corr,
-                                WebRtc_Word16 right_shifts,
-                                WebRtc_Word16 step_vector2);
+
+// Calculates the cross-correlation between two sequences |seq1| and |seq2|.
+// |seq1| is fixed and |seq2| slides as the pointer is increased with the
+// amount |step_seq2|. Note the arguments should obey the relationship:
+// |dim_seq| - 1 + |step_seq2| * (|dim_cross_correlation| - 1) <
+//      buffer size of |seq2|
+//
+// Input:
+//      - seq1           : First sequence (fixed throughout the correlation)
+//      - seq2           : Second sequence (slides |step_vector2| for each
+//                            new correlation)
+//      - dim_seq        : Number of samples to use in the cross-correlation
+//      - dim_cross_correlation : Number of cross-correlations to calculate (the
+//                            start position for |vector2| is updated for each
+//                            new one)
+//      - right_shifts   : Number of right bit shifts to use. This will
+//                            become the output Q-domain.
+//      - step_seq2      : How many (positive or negative) steps the
+//                            |vector2| pointer should be updated for each new
+//                            cross-correlation value.
+//
+// Output:
+//      - cross_correlation : The cross-correlation in Q(-right_shifts)
+void WebRtcSpl_CrossCorrelation(int32_t* cross_correlation,
+                                const int16_t* seq1,
+                                const int16_t* seq2,
+                                int16_t dim_seq,
+                                int16_t dim_cross_correlation,
+                                int16_t right_shifts,
+                                int16_t step_seq2);
+
+// Creates (the first half of) a Hanning window. Size must be at least 1 and
+// at most 512.
+//
+// Input:
+//      - size      : Length of the requested Hanning window (1 to 512)
+//
+// Output:
+//      - window    : Hanning vector in Q14.
 void WebRtcSpl_GetHanningWindow(WebRtc_Word16* window, WebRtc_Word16 size);
+
+// Calculates y[k] = sqrt(1 - x[k]^2) for each element of the input vector
+// |in_vector|. Input and output values are in Q15.
+//
+// Inputs:
+//      - in_vector     : Values to calculate sqrt(1 - x^2) of
+//      - vector_length : Length of vector |in_vector|
+//
+// Output:
+//      - out_vector    : Output values in Q15
 void WebRtcSpl_SqrtOfOneMinusXSquared(WebRtc_Word16* in_vector,
                                       int vector_length,
                                       WebRtc_Word16* out_vector);
@@ -478,10 +599,21 @@ WebRtc_Word32 WebRtcSpl_Energy(WebRtc_Word16* vector,
                                int vector_length,
                                int* scale_factor);
 
-WebRtc_Word32 WebRtcSpl_DotProductWithScale(WebRtc_Word16* vector1,
-                                            WebRtc_Word16* vector2,
-                                            int vector_length,
-                                            int scaling);
+// Calculates the dot product between two (WebRtc_Word16) vectors.
+//
+// Input:
+//      - vector1       : Vector 1
+//      - vector2       : Vector 2
+//      - vector_length : Number of samples used in the dot product
+//      - scaling       : The number of right bit shifts to apply on each term
+//                        during calculation to avoid overflow, i.e., the
+//                        output will be in Q(-|scaling|)
+//
+// Return value         : The dot product in Q(-scaling)
+int32_t WebRtcSpl_DotProductWithScale(const int16_t* vector1,
+                                      const int16_t* vector2,
+                                      int length,
+                                      int scaling);
 
 // Filter operations.
 int WebRtcSpl_FilterAR(G_CONST WebRtc_Word16* ar_coef, int ar_coef_length,
@@ -1117,147 +1249,6 @@ void WebRtcSpl_SynthesisQMF(const WebRtc_Word16* low_band,
 //
 
 //
-// WebRtcSpl_AutoCorrelation(...)
-//
-// A 32-bit fix-point implementation of auto-correlation computation
-//
-// Input:
-//      - vector        : Vector to calculate autocorrelation upon
-//      - vector_length : Length (in samples) of |vector|
-//      - order         : The order up to which the autocorrelation should be
-//                        calculated
-//
-// Output:
-//      - result_vector : auto-correlation values (values should be seen
-//                        relative to each other since the absolute values
-//                        might have been down shifted to avoid overflow)
-//
-//      - scale         : The number of left shifts required to obtain the
-//                        auto-correlation in Q0
-//
-// Return value         : Number of samples in |result_vector|, i.e., (order+1)
-//
-
-//
-// WebRtcSpl_LevinsonDurbin(...)
-//
-// A 32-bit fix-point implementation of the Levinson-Durbin algorithm that
-// does NOT use the 64 bit class
-//
-// Input:
-//      - auto_corr : Vector with autocorrelation values of length >=
-//                    |use_order|+1
-//      - use_order : The LPC filter order (support up to order 20)
-//
-// Output:
-//      - lpc_coef  : lpc_coef[0..use_order] LPC coefficients in Q12
-//      - refl_coef : refl_coef[0...use_order-1]| Reflection coefficients in
-//                    Q15
-//
-// Return value     : 1 for stable 0 for unstable
-//
-
-//
-// WebRtcSpl_ReflCoefToLpc(...)
-//
-// Converts reflection coefficients |refl_coef| to LPC coefficients |lpc_coef|.
-// This version is a 16 bit operation.
-//
-// NOTE: The 16 bit refl_coef -> lpc_coef conversion might result in a
-// "slightly unstable" filter (i.e., a pole just outside the unit circle) in
-// "rare" cases even if the reflection coefficients are stable.
-//
-// Input:
-//      - refl_coef : Reflection coefficients in Q15 that should be converted
-//                    to LPC coefficients
-//      - use_order : Number of coefficients in |refl_coef|
-//
-// Output:
-//      - lpc_coef  : LPC coefficients in Q12
-//
-
-//
-// WebRtcSpl_LpcToReflCoef(...)
-//
-// Converts LPC coefficients |lpc_coef| to reflection coefficients |refl_coef|.
-// This version is a 16 bit operation.
-// The conversion is implemented by the step-down algorithm.
-//
-// Input:
-//      - lpc_coef  : LPC coefficients in Q12, that should be converted to
-//                    reflection coefficients
-//      - use_order : Number of coefficients in |lpc_coef|
-//
-// Output:
-//      - refl_coef : Reflection coefficients in Q15.
-//
-
-//
-// WebRtcSpl_AutoCorrToReflCoef(...)
-//
-// Calculates reflection coefficients (16 bit) from auto-correlation values
-//
-// Input:
-//      - auto_corr : Auto-correlation values
-//      - use_order : Number of coefficients wanted be calculated
-//
-// Output:
-//      - refl_coef : Reflection coefficients in Q15.
-//
-
-//
-// WebRtcSpl_CrossCorrelation(...)
-//
-// Calculates the cross-correlation between two sequences |vector1| and
-// |vector2|. |vector1| is fixed and |vector2| slides as the pointer is
-// increased with the amount |step_vector2|
-//
-// Input:
-//      - vector1           : First sequence (fixed throughout the correlation)
-//      - vector2           : Second sequence (slides |step_vector2| for each
-//                            new correlation)
-//      - dim_vector        : Number of samples to use in the cross-correlation
-//      - dim_cross_corr    : Number of cross-correlations to calculate (the
-//                            start position for |vector2| is updated for each
-//                            new one)
-//      - right_shifts      : Number of right bit shifts to use. This will
-//                            become the output Q-domain.
-//      - step_vector2      : How many (positive or negative) steps the
-//                            |vector2| pointer should be updated for each new
-//                            cross-correlation value.
-//
-// Output:
-//      - cross_corr        : The cross-correlation in Q(-right_shifts)
-//
-
-//
-// WebRtcSpl_GetHanningWindow(...)
-//
-// Creates (the first half of) a Hanning window. Size must be at least 1 and
-// at most 512.
-//
-// Input:
-//      - size      : Length of the requested Hanning window (1 to 512)
-//
-// Output:
-//      - window    : Hanning vector in Q14.
-//
-
-//
-// WebRtcSpl_SqrtOfOneMinusXSquared(...)
-//
-// Calculates y[k] = sqrt(1 - x[k]^2) for each element of the input vector
-// |in_vector|. Input and output values are in Q15.
-//
-// Inputs:
-//      - in_vector     : Values to calculate sqrt(1 - x^2) of
-//      - vector_length : Length of vector |in_vector|
-//
-// Output:
-//      - out_vector    : Output values in Q15
-//
-
-//
 // WebRtcSpl_IncreaseSeed(...)
 //
 // Increases the seed (and returns the new value)
@@ -1490,23 +1481,6 @@ void WebRtcSpl_SynthesisQMF(const WebRtc_Word16* low_band,
 //
 // Output:
 //      - out_vector        : Filtered samples
-//
-
-
-//
-// WebRtcSpl_DotProductWithScale(...)
-//
-// Calculates the dot product between two (WebRtc_Word16) vectors
-//
-// Input:
-//      - vector1       : Vector 1
-//      - vector2       : Vector 2
-//      - vector_length : Number of samples used in the dot product
-//      - scaling       : The number of right bit shifts to apply on each term
-//                        during calculation to avoid overflow, i.e., the
-//                        output will be in Q(-|scaling|)
-//
-// Return value         : The dot product in Q(-scaling)
 //
 
 //

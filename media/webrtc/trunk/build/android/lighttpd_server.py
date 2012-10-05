@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+#
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -17,8 +18,12 @@ import pexpect
 import random
 import shutil
 import socket
+import subprocess
 import sys
 import tempfile
+import time
+
+from pylib import constants
 
 
 class LighttpdServer(object):
@@ -45,7 +50,7 @@ class LighttpdServer(object):
     self.temp_dir = tempfile.mkdtemp(prefix='lighttpd_for_chrome_android')
     self.document_root = os.path.abspath(document_root)
     self.fixed_port = port
-    self.port = port or 9000
+    self.port = port or constants.LIGHTTPD_DEFAULT_PORT
     self.server_tag = 'LightTPD ' + str(random.randint(111111, 999999))
     self.lighttpd_path = lighttpd_path or '/usr/sbin/lighttpd'
     self.lighttpd_module_path = lighttpd_module_path or '/usr/lib/lighttpd'
@@ -61,13 +66,15 @@ class LighttpdServer(object):
     return os.path.join(self.temp_dir, name)
 
   def _GetRandomPort(self):
-    # Ports 8001-8004 are reserved for other test servers. Ensure we don't
-    # collide with them.
-    return random.randint(8005, 8999)
+    # The ports of test server is arranged in constants.py.
+    return random.randint(constants.LIGHTTPD_RANDOM_PORT_FIRST,
+                          constants.LIGHTTPD_RANDOM_PORT_LAST)
 
   def StartupHttpServer(self):
     """Starts up a http server with specified document root and port."""
-    # Currently we use lighttpd as http sever in test.
+    # If we want a specific port, make sure no one else is listening on it.
+    if self.fixed_port:
+      self._KillProcessListeningOnPort(self.fixed_port)
     while True:
       if self.base_config_path:
         # Read the config
@@ -138,6 +145,19 @@ class LighttpdServer(object):
         client_error = client_error or 'Server exited'
         break
     return (client_error or 'Timeout', server_msg)
+
+  def _KillProcessListeningOnPort(self, port):
+    """Checks if there is a process listening on port number |port| and
+    terminates it if found.
+
+    Args:
+      port: Port number to check.
+    """
+    if subprocess.call(['fuser', '-kv', '%d/tcp' % port]) == 0:
+      # Give the process some time to terminate and check that it is gone.
+      time.sleep(2)
+      assert subprocess.call(['fuser', '-v', '%d/tcp' % port]) != 0, \
+          'Unable to kill process listening on port %d.' % port
 
   def _GetDefaultBaseConfig(self):
     return """server.tag                  = "%(server_tag)s"

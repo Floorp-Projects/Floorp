@@ -2,28 +2,39 @@
 
 TOOLSET := target
 TARGET := libyuv
-DEFS_Debug := '-D_FILE_OFFSET_BITS=64' \
+DEFS_Debug := \
+	'-D_FILE_OFFSET_BITS=64' \
 	'-DCHROMIUM_BUILD' \
 	'-DUSE_NSS=1' \
-	'-DTOOLKIT_USES_GTK=1' \
+	'-DENABLE_ONE_CLICK_SIGNIN' \
 	'-DGTK_DISABLE_SINGLE_INCLUDES=1' \
 	'-DENABLE_REMOTING=1' \
-	'-DENABLE_P2P_APIS=1' \
+	'-DENABLE_WEBRTC=1' \
 	'-DENABLE_CONFIGURATION_POLICY' \
 	'-DENABLE_INPUT_SPEECH' \
 	'-DENABLE_NOTIFICATIONS' \
 	'-DENABLE_GPU=1' \
 	'-DENABLE_EGLIMAGE=1' \
 	'-DUSE_SKIA=1' \
-	'-DENABLE_REGISTER_PROTOCOL_HANDLER=1' \
+	'-DENABLE_TASK_MANAGER=1' \
 	'-DENABLE_WEB_INTENTS=1' \
+	'-DENABLE_EXTENSIONS=1' \
 	'-DENABLE_PLUGIN_INSTALLATION=1' \
+	'-DENABLE_PROTECTOR_SERVICE=1' \
+	'-DENABLE_SESSION_SERVICE=1' \
+	'-DENABLE_THEMES=1' \
+	'-DENABLE_BACKGROUND=1' \
+	'-DENABLE_AUTOMATION=1' \
+	'-DENABLE_PRINTING=1' \
+	'-DENABLE_CAPTIVE_PORTAL_DETECTION=1' \
+	'-DHAVE_JPEG' \
 	'-DDYNAMIC_ANNOTATIONS_ENABLED=1' \
 	'-DWTF_USE_DYNAMIC_ANNOTATIONS=1' \
 	'-D_DEBUG'
 
 # Flags passed to all source files.
-CFLAGS_Debug := -pthread \
+CFLAGS_Debug := \
+	-pthread \
 	-fno-exceptions \
 	-fno-strict-aliasing \
 	-Wno-unused-parameter \
@@ -37,39 +48,53 @@ CFLAGS_Debug := -pthread \
 	-g
 
 # Flags passed to only C files.
-CFLAGS_C_Debug := 
+CFLAGS_C_Debug :=
 
 # Flags passed to only C++ files.
-CFLAGS_CC_Debug := -fno-rtti \
+CFLAGS_CC_Debug := \
+	-fno-rtti \
 	-fno-threadsafe-statics \
 	-fvisibility-inlines-hidden \
 	-Wno-deprecated
 
-INCS_Debug := -Ithird_party/libyuv/include \
-	-Ithird_party/libyuv
+INCS_Debug := \
+	-Ithird_party/libyuv/include \
+	-Ithird_party/libyuv \
+	-Ithird_party/libjpeg_turbo
 
-DEFS_Release := '-D_FILE_OFFSET_BITS=64' \
+DEFS_Release := \
+	'-D_FILE_OFFSET_BITS=64' \
 	'-DCHROMIUM_BUILD' \
 	'-DUSE_NSS=1' \
-	'-DTOOLKIT_USES_GTK=1' \
+	'-DENABLE_ONE_CLICK_SIGNIN' \
 	'-DGTK_DISABLE_SINGLE_INCLUDES=1' \
 	'-DENABLE_REMOTING=1' \
-	'-DENABLE_P2P_APIS=1' \
+	'-DENABLE_WEBRTC=1' \
 	'-DENABLE_CONFIGURATION_POLICY' \
 	'-DENABLE_INPUT_SPEECH' \
 	'-DENABLE_NOTIFICATIONS' \
 	'-DENABLE_GPU=1' \
 	'-DENABLE_EGLIMAGE=1' \
 	'-DUSE_SKIA=1' \
-	'-DENABLE_REGISTER_PROTOCOL_HANDLER=1' \
+	'-DENABLE_TASK_MANAGER=1' \
 	'-DENABLE_WEB_INTENTS=1' \
+	'-DENABLE_EXTENSIONS=1' \
 	'-DENABLE_PLUGIN_INSTALLATION=1' \
+	'-DENABLE_PROTECTOR_SERVICE=1' \
+	'-DENABLE_SESSION_SERVICE=1' \
+	'-DENABLE_THEMES=1' \
+	'-DENABLE_BACKGROUND=1' \
+	'-DENABLE_AUTOMATION=1' \
+	'-DENABLE_PRINTING=1' \
+	'-DENABLE_CAPTIVE_PORTAL_DETECTION=1' \
+	'-DHAVE_JPEG' \
 	'-DNDEBUG' \
 	'-DNVALGRIND' \
 	'-DDYNAMIC_ANNOTATIONS_ENABLED=0'
 
 # Flags passed to all source files.
-CFLAGS_Release := -pthread \
+CFLAGS_Release := \
+	-pthread \
 	-fno-exceptions \
 	-fno-strict-aliasing \
 	-Wno-unused-parameter \
@@ -85,28 +110,39 @@ CFLAGS_Release := -pthread \
 	-ffunction-sections
 
 # Flags passed to only C files.
-CFLAGS_C_Release := 
+CFLAGS_C_Release :=
 
 # Flags passed to only C++ files.
-CFLAGS_CC_Release := -fno-rtti \
+CFLAGS_CC_Release := \
+	-fno-rtti \
 	-fno-threadsafe-statics \
 	-fvisibility-inlines-hidden \
 	-Wno-deprecated
 
-INCS_Release := -Ithird_party/libyuv/include \
-	-Ithird_party/libyuv
+INCS_Release := \
+	-Ithird_party/libyuv/include \
+	-Ithird_party/libyuv \
+	-Ithird_party/libjpeg_turbo
 
-OBJS := $(obj).target/$(TARGET)/third_party/libyuv/source/compare.o \
+OBJS := \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/compare.o \
 	$(obj).target/$(TARGET)/third_party/libyuv/source/convert.o \
-	$(obj).target/$(TARGET)/third_party/libyuv/source/convertfrom.o \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/convert_argb.o \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/convert_from.o \
 	$(obj).target/$(TARGET)/third_party/libyuv/source/cpu_id.o \
 	$(obj).target/$(TARGET)/third_party/libyuv/source/format_conversion.o \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/mjpeg_decoder.o \
 	$(obj).target/$(TARGET)/third_party/libyuv/source/planar_functions.o \
 	$(obj).target/$(TARGET)/third_party/libyuv/source/rotate.o \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/rotate_argb.o \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/rotate_neon.o \
 	$(obj).target/$(TARGET)/third_party/libyuv/source/row_common.o \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/row_neon.o \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/row_posix.o \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/row_win.o \
 	$(obj).target/$(TARGET)/third_party/libyuv/source/scale.o \
-	$(obj).target/$(TARGET)/third_party/libyuv/source/video_common.o \
-	$(obj).target/$(TARGET)/third_party/libyuv/source/row_posix.o
+	$(obj).target/$(TARGET)/third_party/libyuv/source/scale_argb.o \
+	$(obj).target/$(TARGET)/third_party/libyuv/source/video_common.o
 
 # Add to the list of files we specially track dependencies for.
 all_deps += $(OBJS)
@@ -132,20 +168,29 @@ $(obj).$(TOOLSET)/$(TARGET)/%.o: $(obj)/%.cc FORCE_DO_CMD
 
 # End of this set of suffix rules
 ### Rules for final target.
-LDFLAGS_Debug := -pthread \
+LDFLAGS_Debug := \
+	-pthread \
 	-Wl,-z,noexecstack \
 	-fPIC \
-	-B$(builddir)/../../third_party/gold
-
-LDFLAGS_Release := -pthread \
-	-Wl,-z,noexecstack \
-	-fPIC \
+	-Wl,--threads \
+	-Wl,--thread-count=4 \
 	-B$(builddir)/../../third_party/gold \
+	-Wl,--icf=none
+
+LDFLAGS_Release := \
+	-pthread \
+	-Wl,-z,noexecstack \
+	-fPIC \
+	-Wl,--threads \
+	-Wl,--thread-count=4 \
+	-B$(builddir)/../../third_party/gold \
+	-Wl,--icf=none \
 	-Wl,-O1 \
 	-Wl,--as-needed \
 	-Wl,--gc-sections
 
-LIBS := 
+LIBS := \
+	
 
 $(obj).target/third_party/libyuv/libyuv.a: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
 $(obj).target/third_party/libyuv/libyuv.a: LIBS := $(LIBS)

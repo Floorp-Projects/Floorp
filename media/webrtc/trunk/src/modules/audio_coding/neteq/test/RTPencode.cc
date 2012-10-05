@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
 	WebRtc_Word16 seqNo=0xFFF;
 	WebRtc_UWord32 ssrc=1235412312;
 	WebRtc_UWord32 timestamp=0xAC1245;
-	WebRtc_UWord16 length, plen;
+        WebRtc_UWord16 length, plen;
 	WebRtc_UWord32 offset;
 	double sendtime = 0;
     int red_PT[2] = {0};
@@ -547,11 +547,21 @@ int main(int argc, char* argv[])
 	//fprintf(out_file, "#!RTPencode%s\n", "1.0");
 	fprintf(out_file, "#!rtpplay%s \n", "1.0"); // this is the string that rtpplay needs
 	WebRtc_UWord32 dummy_variable = 0; // should be converted to network endian format, but does not matter when 0
-	fwrite(&dummy_variable, 4, 1, out_file);
-	fwrite(&dummy_variable, 4, 1, out_file);
-	fwrite(&dummy_variable, 4, 1, out_file);
-	fwrite(&dummy_variable, 2, 1, out_file);
-	fwrite(&dummy_variable, 2, 1, out_file);
+        if (fwrite(&dummy_variable, 4, 1, out_file) != 1) {
+          return -1;
+        }
+        if (fwrite(&dummy_variable, 4, 1, out_file) != 1) {
+          return -1;
+        }
+        if (fwrite(&dummy_variable, 4, 1, out_file) != 1) {
+          return -1;
+        }
+        if (fwrite(&dummy_variable, 2, 1, out_file) != 1) {
+          return -1;
+        }
+        if (fwrite(&dummy_variable, 2, 1, out_file) != 1) {
+          return -1;
+        }
 
 #ifdef TIMESTAMP_WRAPAROUND
 	timestamp = 0xFFFFFFFF - fs*10; /* should give wrap-around in 10 seconds */
@@ -600,10 +610,18 @@ int main(int argc, char* argv[])
             plen = htons(12 + enc_len);
             offset = (WebRtc_UWord32) sendtime; //(timestamp/(fs/1000));
             offset = htonl(offset);
-            fwrite(&length, 2, 1, out_file);
-            fwrite(&plen, 2, 1, out_file);
-            fwrite(&offset, 4, 1, out_file);
-            fwrite(rtp_data, 12 + enc_len, 1, out_file);
+            if (fwrite(&length, 2, 1, out_file) != 1) {
+              return -1;
+            }
+            if (fwrite(&plen, 2, 1, out_file) != 1) {
+              return -1;
+            }
+            if (fwrite(&offset, 4, 1, out_file) != 1) {
+              return -1;
+            }
+            if (fwrite(rtp_data, 12 + enc_len, 1, out_file) != 1) {
+              return -1;
+            }
 
             dtmfSent = true;
         }
@@ -683,13 +701,20 @@ int main(int argc, char* argv[])
 			do {
 #endif //MULTIPLE_SAME_TIMESTAMP
 			/* write RTP packet to file */
-			length = htons(12 + enc_len + 8);
-			plen = htons(12 + enc_len);
-			offset = (WebRtc_UWord32) sendtime; //(timestamp/(fs/1000));
-			offset = htonl(offset);
-			fwrite(&length, 2, 1, out_file);
-			fwrite(&plen, 2, 1, out_file);
-			fwrite(&offset, 4, 1, out_file);
+                          length = htons(12 + enc_len + 8);
+                          plen = htons(12 + enc_len);
+                          offset = (WebRtc_UWord32) sendtime;
+                          //(timestamp/(fs/1000));
+                          offset = htonl(offset);
+                          if (fwrite(&length, 2, 1, out_file) != 1) {
+                            return -1;
+                          }
+                          if (fwrite(&plen, 2, 1, out_file) != 1) {
+                            return -1;
+                          }
+                          if (fwrite(&offset, 4, 1, out_file) != 1) {
+                            return -1;
+                          }
 #ifdef RANDOM_DATA
 			for (int k=0; k<12+enc_len; k++) {
 				rtp_data[k] = rand() + rand();
@@ -700,7 +725,9 @@ int main(int argc, char* argv[])
 				rtp_data[k] = rand() + rand();
 			}
 #endif
-			fwrite(rtp_data, 12 + enc_len, 1, out_file);
+                        if (fwrite(rtp_data, 12 + enc_len, 1, out_file) != 1) {
+                          return -1;
+                        }
 #ifdef MULTIPLE_SAME_TIMESTAMP
 			} while ( (seqNo%REPEAT_PACKET_DISTANCE == 0) && (mult_pack++ < REPEAT_PACKET_COUNT) );
 #endif //MULTIPLE_SAME_TIMESTAMP
@@ -708,11 +735,23 @@ int main(int argc, char* argv[])
 #ifdef INSERT_OLD_PACKETS
 			if (packet_age >= OLD_PACKET*fs) {
 				if (!first_old_packet) {
-					// send the old packet
-					fwrite(&old_length, 2, 1, out_file);
-					fwrite(&old_plen, 2, 1, out_file);
-					fwrite(&offset, 4, 1, out_file);
-					fwrite(old_rtp_data, 12 + old_enc_len, 1, out_file);
+                                  // send the old packet
+                                  if (fwrite(&old_length, 2, 1,
+                                             out_file) != 1) {
+                                    return -1;
+                                  }
+                                  if (fwrite(&old_plen, 2, 1,
+                                             out_file) != 1) {
+                                    return -1;
+                                  }
+                                  if (fwrite(&offset, 4, 1,
+                                             out_file) != 1) {
+                                    return -1;
+                                  }
+                                  if (fwrite(old_rtp_data, 12 + old_enc_len,
+                                             1, out_file) != 1) {
+                                    return -1;
+                                  }
 				}
 				// store current packet as old
 				old_length=length;

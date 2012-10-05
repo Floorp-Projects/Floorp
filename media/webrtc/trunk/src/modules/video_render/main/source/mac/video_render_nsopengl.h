@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -51,7 +51,7 @@ public:
 
     virtual int UpdateSize(int width, int height);
 
-    // Setup 
+    // Setup
     int SetStreamSettings(int streamId, float startWidth, float startHeight, float stopWidth, float stopHeight);
     int SetStreamCropSettings(int streamId, float startWidth, float startHeight, float stopWidth, float stopHeight);
 
@@ -87,8 +87,6 @@ private:
     int _stretchedHeight;
     int _oldStretchedHeight;
     int _oldStretchedWidth;
-    int _xOldWidth;
-    int _yOldHeight;
     unsigned char* _buffer;
     int _bufferSize;
     int _incommingBufferSize;
@@ -97,7 +95,6 @@ private:
     GLenum _pixelFormat;
     GLenum _pixelDataType;
     unsigned int _texture;
-    bool _bVideoSizeStartedChanging;
 };
 
 class VideoRenderNSOpenGL

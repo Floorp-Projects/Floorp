@@ -100,6 +100,7 @@ MOCHITEST_FILES = \
 		test_bug713825.html \
 		test_bug728939.html \
 		file_bug728939.html \
+		test_bug797909.html \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

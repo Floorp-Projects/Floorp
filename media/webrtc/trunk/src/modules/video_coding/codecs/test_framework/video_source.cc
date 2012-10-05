@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -11,8 +11,8 @@
 #include "video_source.h"
 
 #include <stdio.h>
-#include <cassert>
 
+#include "gtest/gtest.h"
 #include "testsupport/fileutils.h"
 
 VideoSource::VideoSource()
@@ -35,7 +35,9 @@ _frameRate(frameRate)
     assert(size != kUndefined && size != kNumberOfVideoSizes);
     assert(type != webrtc::kUnknown);
     assert(frameRate > 0);
-    assert(GetWidthHeight(size, _width, _height) == 0);
+    if (GetWidthHeight(size, _width, _height) != 0) {
+        assert(false);
+    }
 }
 
 VideoSource::VideoSource(std::string fileName, int width, int height,
@@ -202,9 +204,9 @@ VideoSource::Convert(const VideoSource &target, bool force /* = false */) const
 {
     // Ensure target rate is less than or equal to source
     // (i.e. we are only temporally downsampling).
-    assert(target.GetFrameRate() <= _frameRate);
+    ASSERT_TRUE(target.GetFrameRate() <= _frameRate);
     // Only supports YUV420 currently.
-    assert(_type == webrtc::kI420 && target.GetType() == webrtc::kI420);
+    ASSERT_TRUE(_type == webrtc::kI420 && target.GetType() == webrtc::kI420);
     if (!force && (FileExists(target.GetFileName().c_str()) ||
         (target.GetWidth() == _width && target.GetHeight() == _height && target.GetFrameRate() == _frameRate)))
     {
@@ -216,30 +218,34 @@ VideoSource::Convert(const VideoSource &target, bool force /* = false */) const
     FILE *outFile = NULL;
 
     inFile = fopen(_fileName.c_str(), "rb");
-    assert(inFile != NULL);
+    ASSERT_TRUE(inFile != NULL);
 
     outFile = fopen(target.GetFileName().c_str(), "wb");
-    assert(outFile != NULL);
+    ASSERT_TRUE(outFile != NULL);
 
     FrameDropper fd;
     fd.SetFrameRate(target.GetFrameRate(), _frameRate);
 
     const size_t lengthOutFrame = webrtc::CalcBufferSize(target.GetType(),
         target.GetWidth(), target.GetHeight());
-    assert(lengthOutFrame > 0);
+    ASSERT_TRUE(lengthOutFrame > 0);
     unsigned char *outFrame = new unsigned char[lengthOutFrame];
 
     const size_t lengthInFrame = webrtc::CalcBufferSize(_type, _width, _height);
-    assert(lengthInFrame > 0);
+    ASSERT_TRUE(lengthInFrame > 0);
     unsigned char *inFrame = new unsigned char[lengthInFrame];
 
     while (fread(inFrame, 1, lengthInFrame, inFile) == lengthInFrame)
     {
         if (!fd.DropFrame())
         {
-            assert(target.GetWidth() == _width &&
-                   target.GetHeight() == _height); // Add video interpolator here!
-            fwrite(outFrame, 1, lengthOutFrame, outFile);
+            ASSERT_TRUE(target.GetWidth() == _width &&
+                   target.GetHeight() == _height);
+            // Add video interpolator here!
+            if (fwrite(outFrame, 1, lengthOutFrame,
+                       outFile) !=  lengthOutFrame) {
+              return;
+            }
         }
     }
 

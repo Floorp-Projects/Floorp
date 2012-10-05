@@ -1622,10 +1622,20 @@ typedef JS::Handle<JSObject*> JSHandleObject;
 typedef JS::Handle<JSString*> JSHandleString;
 typedef JS::Handle<JS::Value> JSHandleValue;
 typedef JS::Handle<jsid> JSHandleId;
-typedef JS::MutableHandle<JSObject*> JSMutableHandleObject;
-typedef JS::MutableHandle<JS::Value> JSMutableHandleValue;
-typedef JS::MutableHandle<jsid> JSMutableHandleId;
-typedef JS::RawObject JSRawObject;
+
+typedef JS::MutableHandle<JSObject*>   JSMutableHandleObject;
+typedef JS::MutableHandle<JSFunction*> JSMutableHandleFunction;
+typedef JS::MutableHandle<JSScript*>   JSMutableHandleScript;
+typedef JS::MutableHandle<JSString*>   JSMutableHandleString;
+typedef JS::MutableHandle<JS::Value>   JSMutableHandleValue;
+typedef JS::MutableHandle<jsid>        JSMutableHandleId;
+
+typedef JS::RawObject   JSRawObject;
+typedef JS::RawFunction JSRawFunction;
+typedef JS::RawScript   JSRawScript;
+typedef JS::RawString   JSRawString;
+typedef JS::RawId       JSRawId;
+typedef JS::RawValue    JSRawValue;
 
 #else
 
@@ -1636,12 +1646,22 @@ typedef JS::RawObject JSRawObject;
 
 typedef struct { JSObject **_; } JSHandleObject;
 typedef struct { JSString **_; } JSHandleString;
-typedef struct { jsval *_; } JSHandleValue;
-typedef struct { jsid *_; } JSHandleId;
-typedef struct { JSObject **_; } JSMutableHandleObject;
-typedef struct { jsval *_; } JSMutableHandleValue;
-typedef struct { jsid *_; } JSMutableHandleId;
-typedef JSObject *JSRawObject;
+typedef struct { jsval     *_; } JSHandleValue;
+typedef struct { jsid      *_; } JSHandleId;
+
+typedef struct { JSObject   **_; } JSMutableHandleObject;
+typedef struct { JSFunction **_; } JSMutableHandleFunction;
+typedef struct { JSScript   **_; } JSMutableHandleScript;
+typedef struct { JSString   **_; } JSMutableHandleString;
+typedef struct { jsval       *_; } JSMutableHandleValue;
+typedef struct { jsid        *_; } JSMutableHandleId;
+
+typedef JSObject   *JSRawObject;
+typedef JSFunction *JSRawFunction;
+typedef JSScript   *JSRawScript;
+typedef JSString   *JSRawString;
+typedef jsid       *JSRawId;
+typedef jsval      *JSRawValue;
 
 JSBool JS_CreateHandleObject(JSContext *cx, JSObject *obj, JSHandleObject *phandle);
 void JS_DestroyHandleObject(JSContext *cx, JSHandleObject handle);
@@ -2648,6 +2668,7 @@ namespace JS {
 JS_ALWAYS_INLINE bool
 ToNumber(JSContext *cx, const Value &v, double *out)
 {
+    AssertCanGC();
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot root(cx, &v);
@@ -2742,6 +2763,7 @@ namespace JS {
 JS_ALWAYS_INLINE bool
 ToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 {
+    AssertCanGC();
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot skip(cx, &v);
@@ -2758,6 +2780,7 @@ ToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 JS_ALWAYS_INLINE bool
 ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
+    AssertCanGC();
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot root(cx, &v);
@@ -2774,6 +2797,7 @@ ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 JS_ALWAYS_INLINE bool
 ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 {
+    AssertCanGC();
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot root(cx, &v);
@@ -2790,6 +2814,7 @@ ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 JS_ALWAYS_INLINE bool
 ToInt64(JSContext *cx, const js::Value &v, int64_t *out)
 {
+    AssertCanGC();
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot skip(cx, &v);
@@ -2807,6 +2832,7 @@ ToInt64(JSContext *cx, const js::Value &v, int64_t *out)
 JS_ALWAYS_INLINE bool
 ToUint64(JSContext *cx, const js::Value &v, uint64_t *out)
 {
+    AssertCanGC();
     AssertArgumentsAreSane(cx, v);
     {
         js::SkipRoot skip(cx, &v);
@@ -5587,7 +5613,7 @@ JS_DecodeUTF8(JSContext *cx, const char *src, size_t srclen, jschar *dst,
  * returned that you are expected to call JS_free on when done.
  */
 JS_PUBLIC_API(char *)
-JS_EncodeString(JSContext *cx, JSString *str);
+JS_EncodeString(JSContext *cx, JSRawString str);
 
 /*
  * Get number of bytes in the string encoding (without accounting for a

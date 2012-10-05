@@ -37,6 +37,9 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include <android/log.h>
 #endif
+#ifdef XP_MACOSX
+#include "gfxPlatformMac.h"
+#endif
 
 namespace mozilla {
 namespace layers {
@@ -1428,6 +1431,26 @@ LayerManagerOGL::CreateShadowRefLayer()
     return nullptr;
   }
   return nsRefPtr<ShadowRefLayerOGL>(new ShadowRefLayerOGL(this)).forget();
+}
+
+TemporaryRef<DrawTarget>
+LayerManagerOGL::CreateDrawTarget(const IntSize &aSize,
+                               SurfaceFormat aFormat)
+{
+#ifdef XP_MACOSX
+  // We don't want to accelerate if the surface is too small which indicates
+  // that it's likely used for an icon/static image. We also don't want to
+  // accelerate anything that is above the maximum texture size of weakest gpu.
+  // Safari uses 5000 area as the minimum for acceleration, we decided 64^2 is more logical.
+  bool useAcceleration = aSize.width <= 4096 && aSize.height <= 4096 &&
+                         aSize.width > 64 && aSize.height > 64 &&
+                         gfxPlatformMac::GetPlatform()->UseAcceleratedCanvas();
+  if (useAcceleration) {
+    return Factory::CreateDrawTarget(BACKEND_COREGRAPHICS_ACCELERATED,
+                                     aSize, aFormat);
+  }
+#endif
+  return LayerManager::CreateDrawTarget(aSize, aFormat);
 }
 
 } /* layers */

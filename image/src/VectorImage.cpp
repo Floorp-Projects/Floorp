@@ -575,6 +575,14 @@ VectorImage::RequestDecode()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+VectorImage::StartDecoding()
+{
+  // Nothing to do for SVG images
+  return NS_OK;
+}
+
+
 //******************************************************************************
 /* void lockImage() */
 NS_IMETHODIMP

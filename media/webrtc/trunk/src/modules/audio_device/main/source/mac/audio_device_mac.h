@@ -341,9 +341,6 @@ private:
     bool _playing;
     bool _recIsInitialized;
     bool _playIsInitialized;
-    bool _startRec;
-    bool _stopRec;
-    bool _stopPlay;
     bool _AGC;
 
     // Atomically set varaibles
@@ -355,8 +352,6 @@ private:
     bool _doStopRec; // For rec if not shared device
     bool _macBookPro;
     bool _macBookProPanRight;
-    bool _stereoRender;
-    bool _stereoRenderRequested;
 
     AudioConverterRef _captureConverter;
     AudioConverterRef _renderConverter;
@@ -376,7 +371,6 @@ private:
     WebRtc_Word32 _renderDelayOffsetSamples;
 
 private:
-    WebRtc_UWord16 _playBufDelay; // playback delay
     WebRtc_UWord16 _playBufDelayFixed; // fixed playback delay
 
     WebRtc_UWord16 _playWarning;

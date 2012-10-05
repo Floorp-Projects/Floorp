@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "assert.h"
+#include <assert.h>
 
 #include "system_wrappers/interface/rw_lock_wrapper.h"
 #include "video_engine/vie_manager_base.h"
@@ -50,8 +50,8 @@ ViEManagerScopedBase::~ViEManagerScopedBase() {
   vie_manager_->ReleaseLockManager();
 }
 
-ViEManagerWriteScoped::ViEManagerWriteScoped(ViEManagerBase& vie_manager)
-    : vie_manager_(&vie_manager) {
+ViEManagerWriteScoped::ViEManagerWriteScoped(ViEManagerBase* vie_manager)
+    : vie_manager_(vie_manager) {
   vie_manager_->WriteLockManager();
 }
 
@@ -60,13 +60,13 @@ ViEManagerWriteScoped::~ViEManagerWriteScoped() {
 }
 
 ViEManagedItemScopedBase::ViEManagedItemScopedBase(
-    ViEManagerScopedBase& vie_scoped_manager)
+    ViEManagerScopedBase* vie_scoped_manager)
     : vie_scoped_manager_(vie_scoped_manager) {
-  vie_scoped_manager_.ref_count_++;
+  vie_scoped_manager_->ref_count_++;
 }
 
 ViEManagedItemScopedBase::~ViEManagedItemScopedBase() {
-  vie_scoped_manager_.ref_count_--;
+  vie_scoped_manager_->ref_count_--;
 }
 
 }  // namespace webrtc

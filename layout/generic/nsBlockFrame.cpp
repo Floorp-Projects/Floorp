@@ -1237,8 +1237,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     if (!numLines) numLines = 1;
     PRTime delta, perLineDelta, lines;
     LL_I2L(lines, numLines);
-    LL_SUB(delta, end, start);
-    LL_DIV(perLineDelta, delta, lines);
+    delta = end - start;
+    perLineDelta = delta / lines;
 
     ListTag(stdout);
     char buf[400];
@@ -6208,8 +6208,8 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!numLines) numLines = 1;
     PRTime lines, deltaPerLine, delta;
     LL_I2L(lines, numLines);
-    LL_SUB(delta, end, start);
-    LL_DIV(deltaPerLine, delta, lines);
+    delta = end - start;
+    deltaPerLine = delta / lines;
 
     ListTag(stdout);
     char buf[400];

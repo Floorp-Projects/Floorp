@@ -730,7 +730,6 @@ bool UdpSocket2Windows::SetQos(WebRtc_Word32 serviceType,
     }
 
     QOS Qos;
-    WebRtc_Word32 result ;
     DWORD BytesRet;
     QOS_DESTADDR QosDestaddr;
 
@@ -802,14 +801,14 @@ bool UdpSocket2Windows::SetQos(WebRtc_Word32 serviceType,
         Qos.ProviderSpecific.buf = (char*)&QosDestaddr;
     }
 
-    if(AquireSocket())
-    {
-        // To set QoS with SIO_SET_QOS the socket must be locally bound first
-        // or the call will fail with error code 10022.
-        result = WSAIoctl(GetFd(), SIO_SET_QOS, &Qos, sizeof(QOS), NULL, 0,
-                          &BytesRet, NULL,NULL);
-        ReleaseSocket();
+    if(!AquireSocket()) {
+        return false;
     }
+    // To set QoS with SIO_SET_QOS the socket must be locally bound first
+    // or the call will fail with error code 10022.
+    WebRtc_Word32 result = WSAIoctl(GetFd(), SIO_SET_QOS, &Qos, sizeof(QOS),
+                                    NULL, 0, &BytesRet, NULL,NULL);
+    ReleaseSocket();
     if (result == SOCKET_ERROR)
     {
         WEBRTC_TRACE(kTraceError, kTraceTransport, _id,

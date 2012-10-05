@@ -356,7 +356,7 @@ var BrowserApp = {
 
 #ifdef MOZ_SAFE_BROWSING
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
-    setTimeout(function() { SafeBrowsing.init(); }, 2000);
+    setTimeout(function() { SafeBrowsing.init(); }, 5000);
 #endif
   },
 
@@ -6511,7 +6511,7 @@ var WebappsUI = {
               persist.persistFlags |= Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
   
               let source = Services.io.newURI(fullsizeIcon, "UTF8", null);
-              persist.saveURI(source, null, null, null, null, iconFile);
+              persist.saveURI(source, null, null, null, null, iconFile, null);
             } catch(ex) {
               console.log(ex);
             }

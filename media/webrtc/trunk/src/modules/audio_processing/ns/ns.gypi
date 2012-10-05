@@ -54,6 +54,30 @@
         'nsx_core.c',
         'nsx_core.h',
       ],
+      'conditions': [
+        ['target_arch=="arm" and armv7==1', {
+          'dependencies': [ 'ns_neon', ],
+        }],
+      ],
     },
   ],
+  'conditions': [
+    ['target_arch=="arm" and armv7==1', {
+      'targets': [
+        {
+          'target_name': 'ns_neon',
+          'type': '<(library)',
+          'includes': [ '../../../build/arm_neon.gypi', ],
+          'dependencies': [
+            '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
+          ],
+          'sources': [
+            'nsx_core_neon.c',
+          ],
+        },
+      ],
+    }],
+  ],
 }
+
+

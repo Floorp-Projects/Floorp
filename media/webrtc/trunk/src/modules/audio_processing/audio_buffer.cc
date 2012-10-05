@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -188,27 +188,27 @@ int AudioBuffer::samples_per_split_channel() const {
 
 // TODO(andrew): Do deinterleaving and mixing in one step?
 void AudioBuffer::DeinterleaveFrom(AudioFrame* frame) {
-  assert(frame->_audioChannel <= max_num_channels_);
-  assert(frame->_payloadDataLengthInSamples ==  samples_per_channel_);
+  assert(frame->num_channels_ <= max_num_channels_);
+  assert(frame->samples_per_channel_ ==  samples_per_channel_);
 
-  num_channels_ = frame->_audioChannel;
+  num_channels_ = frame->num_channels_;
   data_was_mixed_ = false;
   num_mixed_channels_ = 0;
   num_mixed_low_pass_channels_ = 0;
   reference_copied_ = false;
-  activity_ = frame->_vadActivity;
+  activity_ = frame->vad_activity_;
   is_muted_ = false;
-  if (frame->_energy == 0) {
+  if (frame->energy_ == 0) {
     is_muted_ = true;
   }
 
   if (num_channels_ == 1) {
     // We can get away with a pointer assignment in this case.
-    data_ = frame->_payloadData;
+    data_ = frame->data_;
     return;
   }
 
-  int16_t* interleaved = frame->_payloadData;
+  int16_t* interleaved = frame->data_;
   for (int i = 0; i < num_channels_; i++) {
     int16_t* deinterleaved = channels_[i].data;
     int interleaved_idx = i;
@@ -220,9 +220,9 @@ void AudioBuffer::DeinterleaveFrom(AudioFrame* frame) {
 }
 
 void AudioBuffer::InterleaveTo(AudioFrame* frame, bool data_changed) const {
-  assert(frame->_audioChannel == num_channels_);
-  assert(frame->_payloadDataLengthInSamples == samples_per_channel_);
-  frame->_vadActivity = activity_;
+  assert(frame->num_channels_ == num_channels_);
+  assert(frame->samples_per_channel_ == samples_per_channel_);
+  frame->vad_activity_ = activity_;
 
   if (!data_changed) {
     return;
@@ -230,18 +230,18 @@ void AudioBuffer::InterleaveTo(AudioFrame* frame, bool data_changed) const {
 
   if (num_channels_ == 1) {
     if (data_was_mixed_) {
-      memcpy(frame->_payloadData,
+      memcpy(frame->data_,
              channels_[0].data,
              sizeof(int16_t) * samples_per_channel_);
     } else {
       // These should point to the same buffer in this case.
-      assert(data_ == frame->_payloadData);
+      assert(data_ == frame->data_);
     }
 
     return;
   }
 
-  int16_t* interleaved = frame->_payloadData;
+  int16_t* interleaved = frame->data_;
   for (int i = 0; i < num_channels_; i++) {
     int16_t* deinterleaved = channels_[i].data;
     int interleaved_idx = i;

@@ -50,17 +50,11 @@ class AndroidSurfaceViewChannel : public AndroidStream {
   JavaVM* _jvm;
   jobject _javaRenderObj;
 
-#ifdef ANDROID_NDK_8_OR_ABOVE
-  jclass _javaBitmapClass;
-  jmethodID _createBitmapCid;
-  jobject _javaBitmapObj;
-  jmethodID _drawBitmapCid;
-#else
   jobject _javaByteBufferObj;
   unsigned char* _directBuffer;
   jmethodID _createByteBufferCid;
   jmethodID _drawByteBufferCid;
-#endif
+
   jmethodID _setCoordinatesCid;
   unsigned int _bitmapWidth;
   unsigned int _bitmapHeight;

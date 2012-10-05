@@ -14,3 +14,6 @@ test $EXECUTABLE_NAME = bundle_loadable_module
 test $EXECUTABLE_PATH = \
     "bundle_loadable_module.bundle/Contents/MacOS/bundle_loadable_module"
 test $WRAPPER_NAME = bundle_loadable_module.bundle
+
+[[ ! $DYLIB_INSTALL_NAME_BASE && ${DYLIB_INSTALL_NAME_BASE-_} ]]
+[[ ! $LD_DYLIB_INSTALL_NAME && ${LD_DYLIB_INSTALL_NAME-_} ]]

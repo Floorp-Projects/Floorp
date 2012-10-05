@@ -1,4 +1,4 @@
-# Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+# Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
 #
 # Use of this source code is governed by a BSD-style license
 # that can be found in the LICENSE file in the root of the source
@@ -23,7 +23,7 @@
       },
       'sources': [
         '../interface/aligned_malloc.h',
-        '../interface/atomic32_wrapper.h',
+        '../interface/atomic32.h',
         '../interface/compile_assert.h',
         '../interface/condition_variable_wrapper.h',
         '../interface/cpu_info.h',
@@ -42,16 +42,16 @@
         '../interface/rw_lock_wrapper.h',
         '../interface/scoped_ptr.h',
         '../interface/scoped_refptr.h',
+        '../interface/sleep.h',
         '../interface/sort.h',
         '../interface/static_instance.h',
         '../interface/thread_wrapper.h',
         '../interface/tick_util.h',
         '../interface/trace.h',
         'aligned_malloc.cc',
-        'atomic32.cc',
-        'atomic32_linux.h',
-        'atomic32_mac.h',
-        'atomic32_win.h',
+        'atomic32_mac.cc',
+        'atomic32_posix.cc',
+        'atomic32_win.cc',
         'condition_variable.cc',
         'condition_variable_posix.cc',
         'condition_variable_posix.h',
@@ -89,6 +89,7 @@
         'rw_lock_posix.h',
         'rw_lock_win.cc',
         'rw_lock_win.h',
+        'sleep.cc',
         'sort.cc',
         'thread.cc',
         'thread_posix.cc',
@@ -110,6 +111,9 @@
         },{
           'sources!': [ 'data_log.cc', ],
         },],
+        ['OS=="android"', {
+          'dependencies': [ 'cpu_features_android', ],
+        }],
         ['OS=="linux"', {
           'link_settings': {
             'libraries': [ '-lrt', ],
@@ -119,6 +123,9 @@
           'link_settings': {
             'libraries': [ '$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework', ],
           },
+          'sources!': [
+            'atomic32_posix.cc',
+          ],
         }],
         ['OS=="win"', {
           'link_settings': {
@@ -148,20 +155,41 @@
     },
   ], # targets
   'conditions': [
-    ['build_with_chromium==0', {
+    ['OS=="android"', {
+      'targets': [
+        {
+          'variables': {
+            # Treat this as third-party code.
+            'chromium_code': 0,
+          },
+          'target_name': 'cpu_features_android',
+          'type': '<(library)',
+          'sources': [
+            'android/cpu-features.c',
+            'android/cpu-features.h',
+            # TODO(leozwang): Ideally we want to audomatically exclude .c files
+            # as with .cc files, gyp currently only excludes .cc files.
+            'cpu_features_android.c',
+          ],
+        },
+      ],
+    }],
+    ['include_tests==1', {
       'targets': [
         {
           'target_name': 'system_wrappers_unittests',
           'type': 'executable',
           'dependencies': [
             'system_wrappers',
-            '<(webrtc_root)/../testing/gtest.gyp:gtest',
-            '<(webrtc_root)/../test/test.gyp:test_support_main',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
+            '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
           'sources': [
+            'condition_variable_unittest.cc',
             'cpu_wrapper_unittest.cc',
             'cpu_measurement_harness.h',
             'cpu_measurement_harness.cc',
+            'critical_section_unittest.cc',
             'list_unittest.cc',
             'map_unittest.cc',
             'data_log_unittest.cc',
@@ -169,7 +197,9 @@
             'data_log_helpers_unittest.cc',
             'data_log_c_helpers_unittest.c',
             'data_log_c_helpers_unittest.h',
+            'thread_unittest.cc',
             'trace_unittest.cc',
+            'unittest_utilities_unittest.cc',
           ],
           'conditions': [
             ['enable_data_logging==1', {
@@ -180,7 +210,7 @@
           ],
         },
       ], # targets
-    }], # build_with_chromium
+    }], # include_tests
   ], # conditions
 }
 

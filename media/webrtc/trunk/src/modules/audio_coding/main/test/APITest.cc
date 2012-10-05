@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,21 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cctype>
-#include <iostream>
-#include <ostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <cctype>
+#include <iostream>
+#include <ostream>
+#include <string>
+
+#include "gtest/gtest.h"
 
 #include "APITest.h"
 #include "common_types.h"
 #include "engine_configurations.h"
 #include "event_wrapper.h"
-#include "gtest/gtest.h"
 #include "thread_wrapper.h"
-#include "tick_util.h"
 #include "testsupport/fileutils.h"
+#include "tick_util.h"
 #include "trace.h"
 #include "utility.h"
 
@@ -79,8 +81,6 @@ _processEventB(NULL),
 _apiEventB(NULL),
 _codecCntrA(0),
 _codecCntrB(0),
-_testCntrA(1),
-_testCntrB(1),
 _thereIsEncoderA(false),
 _thereIsEncoderB(false),
 _thereIsDecoderA(false),
@@ -116,7 +116,7 @@ _testNumB(1)
         _receiveVADActivityA[n] = 0;
         _receiveVADActivityB[n] = 0;
     }
-    
+
     _movingDot[40] = '\0';
 
     for(int n = 0; n <40; n++)
@@ -170,7 +170,7 @@ APITest::~APITest()
 //    return _outFile.Open(fileName, frequencyHz, "wb");
 //}
 
-WebRtc_Word16 
+WebRtc_Word16
 APITest::SetUp()
 {
     _acmA = AudioCodingModule::Create(1);
@@ -256,39 +256,37 @@ APITest::SetUp()
     CHECK_ERROR_MT(_acmB->RegisterSendCodec(dummyCodec));
     _thereIsEncoderB = true;
 
-    char fileName[500];
     WebRtc_UWord16 frequencyHz;
-    
+
     printf("\n\nAPI Test\n");
     printf("========\n");
     printf("Hit enter to accept the default values indicated in []\n\n");
 
     //--- Input A
-    strcpy(fileName, "./test/data/audio_coding/testfile32kHz.pcm");
+    std::string file_name =
+        webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
     frequencyHz = 32000;
-    printf("Enter input file at side A [%s]: ", fileName);
-    PCMFile::ChooseFile(fileName, 499, &frequencyHz);
-    _inFileA.Open(fileName, frequencyHz, "rb", true);
+    printf("Enter input file at side A [%s]: ", file_name.c_str());
+    PCMFile::ChooseFile(&file_name, 499, &frequencyHz);
+    _inFileA.Open(file_name, frequencyHz, "rb", true);
 
     //--- Output A
-    std::string outputFileA = webrtc::test::OutputPath() + "outA.pcm";
-    strcpy(fileName, outputFileA.c_str());
-    printf("Enter output file at side A [%s]: ", fileName);
-    PCMFile::ChooseFile(fileName, 499, &frequencyHz);
-    _outFileA.Open(fileName, frequencyHz, "wb");
+    std::string out_file_a = webrtc::test::OutputPath() + "outA.pcm";
+    printf("Enter output file at side A [%s]: ", out_file_a.c_str());
+    PCMFile::ChooseFile(&out_file_a, 499, &frequencyHz);
+    _outFileA.Open(out_file_a, frequencyHz, "wb");
 
     //--- Input B
-    strcpy(fileName, "./test/data/audio_coding/testfile32kHz.pcm");
-    printf("\n\nEnter input file at side B [%s]: ", fileName);
-    PCMFile::ChooseFile(fileName, 499, &frequencyHz);
-    _inFileB.Open(fileName, frequencyHz, "rb", true);
+    file_name = webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
+    printf("\n\nEnter input file at side B [%s]: ", file_name.c_str());
+    PCMFile::ChooseFile(&file_name, 499, &frequencyHz);
+    _inFileB.Open(file_name, frequencyHz, "rb", true);
 
     //--- Output B
-    std::string outputFileB = webrtc::test::OutputPath() + "outB.pcm";
-    strcpy(fileName, outputFileB.c_str());
-    printf("Enter output file at side B [%s]: ", fileName);
-    PCMFile::ChooseFile(fileName, 499, &frequencyHz);
-    _outFileB.Open(fileName, frequencyHz, "wb");
+    std::string out_file_b = webrtc::test::OutputPath() + "outB.pcm";
+    printf("Enter output file at side B [%s]: ", out_file_b.c_str());
+    PCMFile::ChooseFile(&out_file_b, 499, &frequencyHz);
+    _outFileB.Open(out_file_b, frequencyHz, "wb");
 
     //--- Set A-to-B channel
     _channel_A2B = new Channel(2);
@@ -299,7 +297,7 @@ APITest::SetUp()
     _channel_B2A = new Channel(1);
     CHECK_ERROR_MT(_acmB->RegisterTransportCallback(_channel_B2A));
     _channel_B2A->RegisterReceiverACM(_acmA);
-    
+
     //--- EVENT TIMERS
     // A
     _pullEventA    = EventWrapper::Create();
@@ -319,9 +317,14 @@ APITest::SetUp()
     _outFreqHzB = _outFileB.SamplingFrequency();
 
 
-    //Trace::SetEncryptedTraceFile("ACMAPITestEncrypted.txt");    
+    //Trace::SetEncryptedTraceFile("ACMAPITestEncrypted.txt");
 
     char print[11];
+
+    // Create a trace file.
+    Trace::CreateTrace();
+    Trace::SetTraceFile((webrtc::test::OutputPath() +
+        "acm_api_trace.txt").c_str());
 
     printf("\nRandom Test (y/n)?");
     EXPECT_TRUE(fgets(print, 10, stdin) != NULL);
@@ -331,14 +334,9 @@ APITest::SetUp()
         _randomTest = true;
         _verbose = false;
         _writeToFile = false;
-        Trace::CreateTrace();
-        Trace::SetTraceFile("ACMAPITest.txt");
-        //freopen("APITest_log.txt", "w", stdout);
     }
     else
     {
-        Trace::CreateTrace();
-        Trace::SetTraceFile("ACMAPITest.txt", true);
         _randomTest = false;
         printf("\nPrint Tests (y/n)? ");
         EXPECT_TRUE(fgets(print, 10, stdin) != NULL);
@@ -355,29 +353,29 @@ APITest::SetUp()
 #endif
     _vadCallbackA = new VADCallback;
     _vadCallbackB = new VADCallback;
-    
+
     return 0;
 }
 
-bool 
+bool
 APITest::PushAudioThreadA(void* obj)
 {
     return static_cast<APITest*>(obj)->PushAudioRunA();
 }
 
-bool 
+bool
 APITest::PushAudioThreadB(void* obj)
 {
     return static_cast<APITest*>(obj)->PushAudioRunB();
 }
 
-bool 
+bool
 APITest::PullAudioThreadA(void* obj)
 {
     return static_cast<APITest*>(obj)->PullAudioRunA();
 }
 
-bool 
+bool
 APITest::PullAudioThreadB(void* obj)
 {
     return static_cast<APITest*>(obj)->PullAudioRunB();
@@ -407,7 +405,7 @@ APITest::APIThreadB(void* obj)
     return static_cast<APITest*>(obj)->APIRunB();
 }
 
-bool 
+bool
 APITest::PullAudioRunA()
 {
     _pullEventA->Wait(100);
@@ -430,12 +428,12 @@ APITest::PullAudioRunA()
         {
             _outFileA.Write10MsData(audioFrame);
         }
-        _receiveVADActivityA[(int)audioFrame._vadActivity]++;
+        _receiveVADActivityA[(int)audioFrame.vad_activity_]++;
     }
     return true;
 }
 
-bool 
+bool
 APITest::PullAudioRunB()
 {
     _pullEventB->Wait(100);
@@ -459,12 +457,12 @@ APITest::PullAudioRunB()
         {
             _outFileB.Write10MsData(audioFrame);
         }
-        _receiveVADActivityB[(int)audioFrame._vadActivity]++;
-    }     
+        _receiveVADActivityB[(int)audioFrame.vad_activity_]++;
+    }
     return true;
 }
 
-bool 
+bool
 APITest::PushAudioRunA()
 {
     _pushEventA->Wait(100);
@@ -485,7 +483,7 @@ APITest::PushAudioRunA()
     return true;
 }
 
-bool 
+bool
 APITest::PushAudioRunB()
 {
     _pushEventB->Wait(100);
@@ -565,7 +563,7 @@ APITest::RunTest(char thread)
         {
             _testNumA = (_testNumB + 1 + (rand() % 6)) % 7;
             testNum = _testNumA;
-            
+
             _movingDot[_dotPositionA] = ' ';
             if(_dotPositionA == 0)
             {
@@ -575,7 +573,7 @@ APITest::RunTest(char thread)
             {
                 _dotMoveDirectionA = -1;
             }
-            _dotPositionA += _dotMoveDirectionA;            
+            _dotPositionA += _dotMoveDirectionA;
             _movingDot[_dotPositionA] = (_dotMoveDirectionA > 0)? '>':'<';
         }
         else
@@ -592,7 +590,7 @@ APITest::RunTest(char thread)
             {
                 _dotMoveDirectionB = -1;
             }
-            _dotPositionB += _dotMoveDirectionB;            
+            _dotPositionB += _dotMoveDirectionB;
             _movingDot[_dotPositionB] = (_dotMoveDirectionB > 0)? '>':'<';
         }
         //fprintf(stderr, "%c: %d \n", thread, testNum);
@@ -615,7 +613,7 @@ APITest::RunTest(char thread)
         TestDelay('A');
         break;
     case 3:
-        TestSendVAD('A');    
+        TestSendVAD('A');
         break;
     case 4:
         TestRegisteration('A');
@@ -639,7 +637,7 @@ APITest::RunTest(char thread)
 
 bool
 APITest::APIRunA()
-{   
+{
     _apiEventA->Wait(50);
 
     bool randomTest;
@@ -662,7 +660,7 @@ APITest::APIRunA()
             TestDelay('A');
         }
         // VAD TEST
-        TestSendVAD('A');    
+        TestSendVAD('A');
         TestRegisteration('A');
         TestReceiverVAD('A');
 #ifdef WEBRTC_DTMF_DETECTION
@@ -674,7 +672,7 @@ APITest::APIRunA()
 
 bool
 APITest::APIRunB()
-{   
+{
     _apiEventB->Wait(50);
     bool randomTest;
     {
@@ -686,7 +684,7 @@ APITest::APIRunB()
     {
         RunTest('B');
     }
- 
+
     return true;
 }
 
@@ -698,46 +696,46 @@ APITest::Perform()
     //--- THREADS
     // A
     // PUSH
-    ThreadWrapper* myPushAudioThreadA = ThreadWrapper::CreateThread(PushAudioThreadA, 
+    ThreadWrapper* myPushAudioThreadA = ThreadWrapper::CreateThread(PushAudioThreadA,
         this, kNormalPriority, "PushAudioThreadA");
     CHECK_THREAD_NULLITY(myPushAudioThreadA, "Unable to start A::PUSH thread");
     // PULL
-    ThreadWrapper* myPullAudioThreadA = ThreadWrapper::CreateThread(PullAudioThreadA, 
+    ThreadWrapper* myPullAudioThreadA = ThreadWrapper::CreateThread(PullAudioThreadA,
         this, kNormalPriority, "PullAudioThreadA");
     CHECK_THREAD_NULLITY(myPullAudioThreadA, "Unable to start A::PULL thread");
     // Process
-    ThreadWrapper* myProcessThreadA = ThreadWrapper::CreateThread(ProcessThreadA, 
+    ThreadWrapper* myProcessThreadA = ThreadWrapper::CreateThread(ProcessThreadA,
         this, kNormalPriority, "ProcessThreadA");
     CHECK_THREAD_NULLITY(myProcessThreadA, "Unable to start A::Process thread");
-    // API 
-    ThreadWrapper* myAPIThreadA = ThreadWrapper::CreateThread(APIThreadA, 
+    // API
+    ThreadWrapper* myAPIThreadA = ThreadWrapper::CreateThread(APIThreadA,
         this, kNormalPriority, "APIThreadA");
     CHECK_THREAD_NULLITY(myAPIThreadA, "Unable to start A::API thread");
     // B
     // PUSH
-    ThreadWrapper* myPushAudioThreadB = ThreadWrapper::CreateThread(PushAudioThreadB, 
+    ThreadWrapper* myPushAudioThreadB = ThreadWrapper::CreateThread(PushAudioThreadB,
         this, kNormalPriority, "PushAudioThreadB");
     CHECK_THREAD_NULLITY(myPushAudioThreadB, "Unable to start B::PUSH thread");
     // PULL
-    ThreadWrapper* myPullAudioThreadB = ThreadWrapper::CreateThread(PullAudioThreadB, 
+    ThreadWrapper* myPullAudioThreadB = ThreadWrapper::CreateThread(PullAudioThreadB,
         this, kNormalPriority, "PullAudioThreadB");
     CHECK_THREAD_NULLITY(myPullAudioThreadB, "Unable to start B::PULL thread");
     // Process
-    ThreadWrapper* myProcessThreadB = ThreadWrapper::CreateThread(ProcessThreadB, 
+    ThreadWrapper* myProcessThreadB = ThreadWrapper::CreateThread(ProcessThreadB,
         this, kNormalPriority, "ProcessThreadB");
     CHECK_THREAD_NULLITY(myProcessThreadB, "Unable to start B::Process thread");
     // API
-    ThreadWrapper* myAPIThreadB = ThreadWrapper::CreateThread(APIThreadB, 
+    ThreadWrapper* myAPIThreadB = ThreadWrapper::CreateThread(APIThreadB,
         this, kNormalPriority, "APIThreadB");
     CHECK_THREAD_NULLITY(myAPIThreadB, "Unable to start B::API thread");
- 
+
 
     //_apiEventA->StartTimer(true, 5000);
     //_apiEventB->StartTimer(true, 5000);
 
     _processEventA->StartTimer(true, 10);
     _processEventB->StartTimer(true, 10);
-    
+
     _pullEventA->StartTimer(true, 10);
     _pullEventB->StartTimer(true, 10);
 
@@ -762,7 +760,7 @@ APITest::Perform()
 
     //completeEvent->Wait(0xFFFFFFFF);//(unsigned long)((unsigned long)TEST_DURATION_SEC * (unsigned long)1000));
     delete completeEvent;
-    
+
     myPushAudioThreadA->Stop();
     myPullAudioThreadA->Stop();
     myProcessThreadA->Stop();
@@ -800,12 +798,12 @@ APITest::CheckVADStatus(char side)
         _acmA->RegisterVADCallback(NULL);
         _vadCallbackA->Reset();
         _acmA->RegisterVADCallback(_vadCallbackA);
-        
+
         if(!_randomTest)
         {
             if(_verbose)
             {
-                fprintf(stdout, "DTX %3s, VAD %3s, Mode %d", 
+                fprintf(stdout, "DTX %3s, VAD %3s, Mode %d",
                     dtxEnabled? "ON":"OFF",
                     vadEnabled? "ON":"OFF",
                     (int)vadMode);
@@ -816,7 +814,7 @@ APITest::CheckVADStatus(char side)
             else
             {
                 Wait(5000);
-                fprintf(stdout, "DTX %3s, VAD %3s, Mode %d => bit-rate %3.0f kbps\n", 
+                fprintf(stdout, "DTX %3s, VAD %3s, Mode %d => bit-rate %3.0f kbps\n",
                     dtxEnabled? "ON":"OFF",
                     vadEnabled? "ON":"OFF",
                     (int)vadMode,
@@ -845,12 +843,12 @@ APITest::CheckVADStatus(char side)
         _acmB->RegisterVADCallback(NULL);
         _vadCallbackB->Reset();
         _acmB->RegisterVADCallback(_vadCallbackB);
-        
+
         if(!_randomTest)
         {
             if(_verbose)
             {
-                fprintf(stdout, "DTX %3s, VAD %3s, Mode %d", 
+                fprintf(stdout, "DTX %3s, VAD %3s, Mode %d",
                     dtxEnabled? "ON":"OFF",
                     vadEnabled? "ON":"OFF",
                     (int)vadMode);
@@ -861,7 +859,7 @@ APITest::CheckVADStatus(char side)
             else
             {
                 Wait(5000);
-                fprintf(stdout, "DTX %3s, VAD %3s, Mode %d => bit-rate %3.0f kbps\n", 
+                fprintf(stdout, "DTX %3s, VAD %3s, Mode %d => bit-rate %3.0f kbps\n",
                     dtxEnabled? "ON":"OFF",
                     vadEnabled? "ON":"OFF",
                     (int)vadMode,
@@ -896,7 +894,7 @@ APITest::TestDelay(char side)
 
     WebRtc_UWord32 inTimestamp = 0;
     WebRtc_UWord32 outTimestamp = 0;
-    double estimDelay = 0;    
+    double estimDelay = 0;
 
     double averageEstimDelay = 0;
     double averageDelay = 0;
@@ -921,7 +919,7 @@ APITest::TestDelay(char side)
     CHECK_ERROR_MT(myACM->SetMinimumPlayoutDelay(*myMinDelay));
 
 
-    inTimestamp = myChannel->LastInTimestamp();        
+    inTimestamp = myChannel->LastInTimestamp();
     CHECK_ERROR_MT(myACM->PlayoutTimestamp(outTimestamp));
 
     if(!_randomTest)
@@ -933,11 +931,11 @@ APITest::TestDelay(char side)
         {
             myEvent->Wait(1000);
 
-            inTimestamp = myChannel->LastInTimestamp();        
+            inTimestamp = myChannel->LastInTimestamp();
             CHECK_ERROR_MT(myACM->PlayoutTimestamp(outTimestamp));
 
             //std::cout << outTimestamp << std::endl << std::flush;
-            estimDelay = (double)((WebRtc_UWord32)(inTimestamp - outTimestamp)) / 
+            estimDelay = (double)((WebRtc_UWord32)(inTimestamp - outTimestamp)) /
                 ((double)myACM->ReceiveFrequency() / 1000.0);
 
             estimDelayCB.Update(estimDelay);
@@ -968,7 +966,7 @@ APITest::TestDelay(char side)
     }
 
     *myMinDelay = (rand() % 1000) + 1;
-  
+
     ACMNetworkStatistics networkStat;
     CHECK_ERROR_MT(myACM->NetworkStatistics(networkStat));
 
@@ -976,12 +974,12 @@ APITest::TestDelay(char side)
     {
         fprintf(stdout, "\n\nJitter Statistics at Side %c\n", side);
         fprintf(stdout, "--------------------------------------\n");
-        fprintf(stdout, "buffer-size............. %d\n", networkStat.currentBufferSize);    
+        fprintf(stdout, "buffer-size............. %d\n", networkStat.currentBufferSize);
         fprintf(stdout, "Preferred buffer-size... %d\n", networkStat.preferredBufferSize);
         fprintf(stdout, "Peaky jitter mode........%d\n", networkStat.jitterPeaksFound);
         fprintf(stdout, "packet-size rate........ %d\n", networkStat.currentPacketLossRate);
-        fprintf(stdout, "discard rate............ %d\n", networkStat.currentDiscardRate);   
-        fprintf(stdout, "expand rate............. %d\n", networkStat.currentExpandRate);    
+        fprintf(stdout, "discard rate............ %d\n", networkStat.currentDiscardRate);
+        fprintf(stdout, "expand rate............. %d\n", networkStat.currentExpandRate);
         fprintf(stdout, "Preemptive rate......... %d\n", networkStat.currentPreemptiveRate);
         fprintf(stdout, "Accelerate rate......... %d\n", networkStat.currentAccelerateRate);
         fprintf(stdout, "Clock-drift............. %d\n", networkStat.clockDriftPPM);
@@ -1018,7 +1016,7 @@ APITest::TestRegisteration(char sendSide)
         fprintf(stdout, "           Unregister/register Receive Codec\n");
         fprintf(stdout, "---------------------------------------------------------\n");
     }
-    
+
     switch(sendSide)
     {
     case 'A':
@@ -1177,7 +1175,7 @@ APITest::TestPlayout(char receiveSide)
 
     CHECK_ERROR_MT(receiveFreqHz);
     CHECK_ERROR_MT(playoutFreqHz);
-    
+
     char bgnString[25];
     switch(*bgnMode)
     {
@@ -1398,7 +1396,7 @@ APITest::TestSendVAD(char side)
     // Fault Test
     CHECK_PROTECTED_MT(myACM->SetVAD(false, true, (ACMVADMode)-1));
     CHECK_PROTECTED_MT(myACM->SetVAD(false, true, (ACMVADMode)4));
-    
+
 
 
 }
@@ -1475,14 +1473,14 @@ APITest::ChangeCodec(char side)
         myChannel = _channel_B2A;
     }
 
-    myACM->ResetEncoder();  
+    myACM->ResetEncoder();
     Wait(100);
 
     // Register the next codec
     do
     {
-        *codecCntr = (*codecCntr < AudioCodingModule::NumberOfCodecs() - 1)? 
-            (*codecCntr + 1):0;     
+        *codecCntr = (*codecCntr < AudioCodingModule::NumberOfCodecs() - 1)?
+            (*codecCntr + 1):0;
 
         if(*codecCntr == 0)
         {
@@ -1492,14 +1490,14 @@ APITest::ChangeCodec(char side)
                 *thereIsEncoder = false;
             }
             CHECK_ERROR_MT(myACM->InitializeSender());
-            Wait(1000);   
+            Wait(1000);
 
             // After Initialization CN is lost, re-register them
-            if(AudioCodingModule::Codec("CN", myCodec, 8000) >= 0)
+            if(AudioCodingModule::Codec("CN", myCodec, 8000, 1) >= 0)
             {
                 CHECK_ERROR_MT(myACM->RegisterSendCodec(myCodec));
             }
-            if(AudioCodingModule::Codec("CN", myCodec, 16000) >= 0)
+            if(AudioCodingModule::Codec("CN", myCodec, 16000, 1) >= 0)
             {
                 CHECK_ERROR_MT(myACM->RegisterSendCodec(myCodec));
             }
@@ -1539,8 +1537,8 @@ APITest::ChangeCodec(char side)
     Wait(500);
 }
 
- 
-void 
+
+void
 APITest::LookForDTMF(char side)
 {
     if(!_randomTest)
@@ -1548,11 +1546,11 @@ APITest::LookForDTMF(char side)
         fprintf(stdout, "\n\nLooking for DTMF Signal in Side %c\n", side);
         fprintf(stdout, "----------------------------------------\n");
     }
- 
+
     if(side == 'A')
     {
         _acmB->RegisterIncomingMessagesCallback(NULL);
-        _acmA->RegisterIncomingMessagesCallback(_dtmfCallback);    
+        _acmA->RegisterIncomingMessagesCallback(_dtmfCallback);
         Wait(1000);
         _acmA->RegisterIncomingMessagesCallback(NULL);
     }

@@ -6868,7 +6868,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         if (NS_SUCCEEDED(rv)) {
           int64_t intermediateValue;
           LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
-          LL_MUL(modDate, msecs, intermediateValue);
+          modDate = msecs * intermediateValue;
         }
       }
     } else {
@@ -8391,7 +8391,7 @@ nsDocument::AddImage(imgIRequest* aImage)
   if (oldCount == 0 && mLockingImages) {
     rv = aImage->LockImage();
     if (NS_SUCCEEDED(rv))
-      rv = aImage->RequestDecode();
+      rv = aImage->StartDecoding();
   }
 
   // If this is the first insertion and we're animating images, request

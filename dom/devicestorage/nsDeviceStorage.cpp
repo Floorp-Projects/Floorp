@@ -751,12 +751,12 @@ jsval nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aWindow, "Null Window");
 
-  if (aFile->mEditable) {
-    // TODO - needs janv's file handle support.
+  if (!aFile) {
     return JSVAL_NULL;
   }
 
-  if (aFile == nullptr) {
+  if (aFile->mEditable) {
+    // TODO - needs janv's file handle support.
     return JSVAL_NULL;
   }
 
@@ -912,13 +912,10 @@ ContinueCursorEvent::ContinueCursorEvent(DOMRequest* aRequest)
 {
 }
 
-ContinueCursorEvent::~ContinueCursorEvent() {}
-
-NS_IMETHODIMP
-ContinueCursorEvent::Run() {
+already_AddRefed<DeviceStorageFile>
+ContinueCursorEvent::GetNextFile()
+{
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  jsval val = JSVAL_NULL;
 
   nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
   nsString cursorStorageType;
@@ -926,7 +923,7 @@ ContinueCursorEvent::Run() {
 
   DeviceStorageTypeChecker* typeChecker = DeviceStorageTypeChecker::CreateOrGet();
   if (!typeChecker) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
   while (cursor->mFiles.Length() > 0) {
@@ -935,10 +932,57 @@ ContinueCursorEvent::Run() {
     if (!typeChecker->Check(cursorStorageType, file->mFile)) {
       continue;
     }
-    val = nsIFileToJsval(cursor->GetOwner(), file);
-    cursor->mOkToCallContinue = true;
-    break;
+    return file.forget();
   }
+
+  return nullptr;
+}
+
+ContinueCursorEvent::~ContinueCursorEvent() {}
+
+void
+ContinueCursorEvent::Continue()
+{
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    NS_DispatchToMainThread(this);
+    return;
+  }
+
+  nsRefPtr<DeviceStorageFile> file = GetNextFile();
+
+  if (!file) {
+    // done with enumeration.
+    NS_DispatchToMainThread(this);
+    return;
+  }
+
+  nsString fullpath;
+  nsresult rv = file->mFile->GetPath(fullpath);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION(false, "GetPath failed to return a valid path");
+    return;
+  }
+
+  nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
+  nsString cursorStorageType;
+  cursor->GetStorageType(cursorStorageType);
+
+  DeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, file);
+  child->SetCallback(cursor);
+  DeviceStorageGetParams params(cursorStorageType, file->mPath, fullpath);
+  ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
+  mRequest = nullptr;
+}
+
+NS_IMETHODIMP
+ContinueCursorEvent::Run()
+{
+  nsRefPtr<DeviceStorageFile> file = GetNextFile();
+
+  nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
+  jsval val = nsIFileToJsval(cursor->GetOwner(), file);
+
+  cursor->mOkToCallContinue = true;
 
   mRequest->FireSuccess(val);
   mRequest = nullptr;
@@ -1130,6 +1174,13 @@ void
 nsDOMDeviceStorageCursor::IPDLRelease()
 {
   Release();
+}
+
+void
+nsDOMDeviceStorageCursor::RequestComplete()
+{
+  NS_ASSERTION(!mOkToCallContinue, "mOkToCallContinue must be false");  
+  mOkToCallContinue = true;
 }
 
 class PostStatResultEvent : public nsRunnable

@@ -165,6 +165,7 @@ WebRtc_Word32 VideoCaptureMacQuickTime::StartCapture(
 
     _captureCapability.width = capability.width;
     _captureCapability.height = capability.height;
+    _captureDelay = 120;
 
     if (VideoCaptureRun() == -1)
     {

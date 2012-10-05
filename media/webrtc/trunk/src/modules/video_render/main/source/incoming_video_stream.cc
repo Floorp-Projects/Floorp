@@ -8,20 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "incoming_video_stream.h"
-
-#include "critical_section_wrapper.h"
-#include "event_wrapper.h"
-#include "trace.h"
-#include "thread_wrapper.h"
-#include "video_render_frames.h"
-#include "tick_util.h"
-#include "map_wrapper.h"
-#include "common_video/libyuv/include/libyuv.h"
+#include "modules/video_render/main/source/incoming_video_stream.h"
 
 #include <cassert>
 
-// Platform specifics
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(WEBRTC_LINUX)
@@ -31,383 +21,342 @@
 #include <sys/time.h>
 #endif
 
+#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "modules/video_render/main/source/video_render_frames.h"
+#include "system_wrappers/interface/critical_section_wrapper.h"
+#include "system_wrappers/interface/event_wrapper.h"
+#include "system_wrappers/interface/map_wrapper.h"
+#include "system_wrappers/interface/thread_wrapper.h"
+#include "system_wrappers/interface/tick_util.h"
+#include "system_wrappers/interface/trace.h"
+
 namespace webrtc {
-IncomingVideoStream::IncomingVideoStream(const WebRtc_Word32 moduleId,
-                                         const WebRtc_UWord32 streamId) :
-    _moduleId(moduleId),
-    _streamId(streamId),
-    _streamCritsect(*CriticalSectionWrapper::CreateCriticalSection()),
-    _threadCritsect(*CriticalSectionWrapper::CreateCriticalSection()),
-    _bufferCritsect(*CriticalSectionWrapper::CreateCriticalSection()),
-    _ptrIncomingRenderThread(),
-    _deliverBufferEvent(*EventWrapper::Create()),
-    _running(false),
-    _ptrExternalCallback(NULL),
-    _ptrRenderCallback(NULL),
-    _renderBuffers(*(new VideoRenderFrames)),
-    _callbackVideoType(kVideoI420),
-    _callbackWidth(0),
-    _callbackHeight(0),
-    _incomingRate(0),
-    _lastRateCalculationTimeMs(0),
-    _numFramesSinceLastCalculation(0),
-    _lastRenderedFrame(),
-    _tempFrame(),
-    _startImage(),
-    _timeoutImage(),
-    _timeoutTime(),
-    _mirrorFramesEnabled(false),
-    _mirroring(),
-    _transformedVideoFrame()
-{
-    WEBRTC_TRACE(kTraceMemory, kTraceVideoRenderer, _moduleId,
-                 "%s created for stream %d", __FUNCTION__, streamId);
+
+IncomingVideoStream::IncomingVideoStream(const WebRtc_Word32 module_id,
+                                         const WebRtc_UWord32 stream_id)
+    : module_id_(module_id),
+      stream_id_(stream_id),
+      stream_critsect_(*CriticalSectionWrapper::CreateCriticalSection()),
+      thread_critsect_(*CriticalSectionWrapper::CreateCriticalSection()),
+      buffer_critsect_(*CriticalSectionWrapper::CreateCriticalSection()),
+      incoming_render_thread_(),
+      deliver_buffer_event_(*EventWrapper::Create()),
+      running_(false),
+      external_callback_(NULL),
+      render_callback_(NULL),
+      render_buffers_(*(new VideoRenderFrames)),
+      callbackVideoType_(kVideoI420),
+      callbackWidth_(0),
+      callbackHeight_(0),
+      incoming_rate_(0),
+      last_rate_calculation_time_ms_(0),
+      num_frames_since_last_calculation_(0),
+      last_rendered_frame_(),
+      temp_frame_(),
+      start_image_(),
+      timeout_image_(),
+      timeout_time_(),
+      mirror_frames_enabled_(false),
+      mirroring_(),
+      transformed_video_frame_() {
+  WEBRTC_TRACE(kTraceMemory, kTraceVideoRenderer, module_id_,
+               "%s created for stream %d", __FUNCTION__, stream_id);
 }
 
-IncomingVideoStream::~IncomingVideoStream()
-{
-    WEBRTC_TRACE(kTraceMemory, kTraceVideoRenderer, _moduleId,
-                 "%s deleted for stream %d", __FUNCTION__, _streamId);
+IncomingVideoStream::~IncomingVideoStream() {
+  WEBRTC_TRACE(kTraceMemory, kTraceVideoRenderer, module_id_,
+               "%s deleted for stream %d", __FUNCTION__, stream_id_);
 
-    Stop();
+  Stop();
 
-    // _ptrIncomingRenderThread - Delete in stop
-    delete &_renderBuffers;
-    delete &_streamCritsect;
-    delete &_bufferCritsect;
-    delete &_threadCritsect;
-    delete &_deliverBufferEvent;
-
+  // incoming_render_thread_ - Delete in stop
+  delete &render_buffers_;
+  delete &stream_critsect_;
+  delete &buffer_critsect_;
+  delete &thread_critsect_;
+  delete &deliver_buffer_event_;
 }
 
-WebRtc_Word32 IncomingVideoStream::ChangeModuleId(const WebRtc_Word32 id)
-{
-    CriticalSectionScoped cs(&_streamCritsect);
-
-    _moduleId = id;
-    return 0;
+WebRtc_Word32 IncomingVideoStream::ChangeModuleId(const WebRtc_Word32 id) {
+  CriticalSectionScoped cs(&stream_critsect_);
+  module_id_ = id;
+  return 0;
 }
 
-VideoRenderCallback*
-IncomingVideoStream::ModuleCallback()
-{
-    CriticalSectionScoped cs(&_streamCritsect);
-    return this;
+VideoRenderCallback* IncomingVideoStream::ModuleCallback() {
+  CriticalSectionScoped cs(&stream_critsect_);
+  return this;
 }
 
-WebRtc_Word32 IncomingVideoStream::RenderFrame(const WebRtc_UWord32 streamId,
-                                               VideoFrame& videoFrame)
-{
+WebRtc_Word32 IncomingVideoStream::RenderFrame(const WebRtc_UWord32 stream_id,
+                                               VideoFrame& video_frame) {
+  CriticalSectionScoped csS(&stream_critsect_);
+  WEBRTC_TRACE(kTraceStream, kTraceVideoRenderer, module_id_,
+               "%s for stream %d, render time: %u", __FUNCTION__, stream_id_,
+               video_frame.RenderTimeMs());
 
-    CriticalSectionScoped csS(&_streamCritsect);
-    WEBRTC_TRACE(kTraceStream, kTraceVideoRenderer, _moduleId,
-                 "%s for stream %d, render time: %u", __FUNCTION__, _streamId,
-                 videoFrame.RenderTimeMs());
+  if (!running_) {
+    WEBRTC_TRACE(kTraceStream, kTraceVideoRenderer, module_id_,
+                 "%s: Not running", __FUNCTION__);
+    return -1;
+  }
 
-    if (!_running)
-    {
-        WEBRTC_TRACE(kTraceStream, kTraceVideoRenderer, _moduleId,
-                     "%s: Not running", __FUNCTION__);
-        return -1;
+  if (true == mirror_frames_enabled_) {
+    transformed_video_frame_.VerifyAndAllocate(video_frame.Length());
+    if (mirroring_.mirror_x_axis) {
+      MirrorI420UpDown(video_frame.Buffer(),
+                       transformed_video_frame_.Buffer(),
+                       video_frame.Width(), video_frame.Height());
+      transformed_video_frame_.SetLength(video_frame.Length());
+      transformed_video_frame_.SetWidth(video_frame.Width());
+      transformed_video_frame_.SetHeight(video_frame.Height());
+      video_frame.SwapFrame(transformed_video_frame_);
     }
-
-    if (true == _mirrorFramesEnabled)
-    {
-        _transformedVideoFrame.VerifyAndAllocate(videoFrame.Length());
-        if (_mirroring.mirrorXAxis)
-        {
-            MirrorI420UpDown(videoFrame.Buffer(),
-                                     _transformedVideoFrame.Buffer(),
-                                     videoFrame.Width(), videoFrame.Height());
-            _transformedVideoFrame.SetLength(videoFrame.Length());
-            _transformedVideoFrame.SetWidth(videoFrame.Width());
-            _transformedVideoFrame.SetHeight(videoFrame.Height());
-            videoFrame.SwapFrame(_transformedVideoFrame);
-        }
-        if (_mirroring.mirrorYAxis)
-        {
-            MirrorI420LeftRight(videoFrame.Buffer(),
-                                        _transformedVideoFrame.Buffer(),
-                                        videoFrame.Width(), videoFrame.Height());
-            _transformedVideoFrame.SetLength(videoFrame.Length());
-            _transformedVideoFrame.SetWidth(videoFrame.Width());
-            _transformedVideoFrame.SetHeight(videoFrame.Height());
-            videoFrame.SwapFrame(_transformedVideoFrame);
-        }
+    if (mirroring_.mirror_y_axis) {
+      MirrorI420LeftRight(video_frame.Buffer(),
+                          transformed_video_frame_.Buffer(),
+                          video_frame.Width(), video_frame.Height());
+      transformed_video_frame_.SetLength(video_frame.Length());
+      transformed_video_frame_.SetWidth(video_frame.Width());
+      transformed_video_frame_.SetHeight(video_frame.Height());
+      video_frame.SwapFrame(transformed_video_frame_);
     }
+  }
 
-    // Rate statistics
-    _numFramesSinceLastCalculation++;
-    WebRtc_Word64 nowMs = TickTime::MillisecondTimestamp();
-    if (nowMs >= _lastRateCalculationTimeMs + KFrameRatePeriodMs)
-    {
-        _incomingRate = (WebRtc_UWord32) (1000 * _numFramesSinceLastCalculation
-                / (nowMs - _lastRateCalculationTimeMs));
-        _numFramesSinceLastCalculation = 0;
-        _lastRateCalculationTimeMs = nowMs;
-    }
+  // Rate statistics.
+  num_frames_since_last_calculation_++;
+  WebRtc_Word64 now_ms = TickTime::MillisecondTimestamp();
+  if (now_ms >= last_rate_calculation_time_ms_ + KFrameRatePeriodMs) {
+    incoming_rate_ =
+        static_cast<WebRtc_UWord32>(1000 * num_frames_since_last_calculation_ /
+                                    (now_ms - last_rate_calculation_time_ms_));
+    num_frames_since_last_calculation_ = 0;
+    last_rate_calculation_time_ms_ = now_ms;
+  }
 
-    // Insert frame
-    CriticalSectionScoped csB(&_bufferCritsect);
-    if (_renderBuffers.AddFrame(&videoFrame) == 1)
-        _deliverBufferEvent.Set();
+  // Insert frame.
+  CriticalSectionScoped csB(&buffer_critsect_);
+  if (render_buffers_.AddFrame(&video_frame) == 1)
+    deliver_buffer_event_.Set();
 
-    return 0;
+  return 0;
 }
 
-WebRtc_Word32 IncomingVideoStream::SetStartImage(const VideoFrame& videoFrame)
-{
-    CriticalSectionScoped csS(&_threadCritsect);
-    return _startImage.CopyFrame(videoFrame);
+WebRtc_Word32 IncomingVideoStream::SetStartImage(
+    const VideoFrame& video_frame) {
+  CriticalSectionScoped csS(&thread_critsect_);
+  return start_image_.CopyFrame(video_frame);
 }
 
-WebRtc_Word32 IncomingVideoStream::SetTimeoutImage(const VideoFrame& videoFrame,
-                                                   const WebRtc_UWord32 timeout)
-{
-    CriticalSectionScoped csS(&_threadCritsect);
-    _timeoutTime = timeout;
-    return _timeoutImage.CopyFrame(videoFrame);
+WebRtc_Word32 IncomingVideoStream::SetTimeoutImage(
+    const VideoFrame& video_frame, const WebRtc_UWord32 timeout) {
+  CriticalSectionScoped csS(&thread_critsect_);
+  timeout_time_ = timeout;
+  return timeout_image_.CopyFrame(video_frame);
 }
 
-WebRtc_Word32 IncomingVideoStream::SetRenderCallback(VideoRenderCallback* renderCallback)
-{
-    CriticalSectionScoped cs(&_streamCritsect);
+WebRtc_Word32 IncomingVideoStream::SetRenderCallback(
+    VideoRenderCallback* render_callback) {
+  CriticalSectionScoped cs(&stream_critsect_);
 
-    WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _moduleId,
-                 "%s(%x) for stream %d", __FUNCTION__, renderCallback,
-                 _streamId);
-    _ptrRenderCallback = renderCallback;
-    return 0;
+  WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, module_id_,
+               "%s(%x) for stream %d", __FUNCTION__, render_callback,
+               stream_id_);
+  render_callback_ = render_callback;
+  return 0;
 }
 
 WebRtc_Word32 IncomingVideoStream::EnableMirroring(const bool enable,
-                                                   const bool mirrorXAxis,
-                                                   const bool mirrorYAxis)
-{
-    CriticalSectionScoped cs(&_streamCritsect);
-    _mirrorFramesEnabled = enable;
-    _mirroring.mirrorXAxis = mirrorXAxis;
-    _mirroring.mirrorYAxis = mirrorYAxis;
+                                                   const bool mirror_x_axis,
+                                                   const bool mirror_y_axis) {
+  CriticalSectionScoped cs(&stream_critsect_);
+  mirror_frames_enabled_ = enable;
+  mirroring_.mirror_x_axis = mirror_x_axis;
+  mirroring_.mirror_y_axis = mirror_y_axis;
 
-    return 0;
+  return 0;
 }
 
-WebRtc_Word32 IncomingVideoStream::SetExternalCallback(VideoRenderCallback* externalCallback)
-{
-    CriticalSectionScoped cs(&_streamCritsect);
-
-    WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _moduleId,
-                 "%s(%x) for stream %d", __FUNCTION__, externalCallback,
-                 _streamId);
-    _ptrExternalCallback = externalCallback;
-    _callbackVideoType = kVideoI420;
-    _callbackWidth = 0;
-    _callbackHeight = 0;
-    return 0;
+WebRtc_Word32 IncomingVideoStream::SetExternalCallback(
+    VideoRenderCallback* external_callback) {
+  CriticalSectionScoped cs(&stream_critsect_);
+  WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, module_id_,
+               "%s(%x) for stream %d", __FUNCTION__, external_callback,
+               stream_id_);
+  external_callback_ = external_callback;
+  callbackVideoType_ = kVideoI420;
+  callbackWidth_ = 0;
+  callbackHeight_ = 0;
+  return 0;
 }
 
-WebRtc_Word32 IncomingVideoStream::Start()
-{
-    CriticalSectionScoped csS(&_streamCritsect);
-    WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _moduleId,
-                 "%s for stream %d", __FUNCTION__, _streamId);
-    if (_running)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer, _moduleId,
-                     "%s: Already running", __FUNCTION__);
-        return 0;
-    }
-
-    CriticalSectionScoped csT(&_threadCritsect);
-    assert(_ptrIncomingRenderThread == NULL);
-
-    _ptrIncomingRenderThread
-            = ThreadWrapper::CreateThread(IncomingVideoStreamThreadFun, this,
-                                          kRealtimePriority,
-                                          "IncomingVideoStreamThread");
-    if (!_ptrIncomingRenderThread)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _moduleId,
-                     "%s: No thread", __FUNCTION__);
-        return -1;
-    }
-
-    unsigned int tId = 0;
-    if (_ptrIncomingRenderThread->Start(tId))
-    {
-        WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _moduleId,
-                     "%s: thread started: %u", __FUNCTION__, tId);
-    }
-    else
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _moduleId,
-                     "%s: Could not start send thread", __FUNCTION__);
-        return -1;
-    }
-    _deliverBufferEvent.StartTimer(false, KEventStartupTimeMS);
-
-    _running = true;
+WebRtc_Word32 IncomingVideoStream::Start() {
+  CriticalSectionScoped csS(&stream_critsect_);
+  WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, module_id_,
+               "%s for stream %d", __FUNCTION__, stream_id_);
+  if (running_) {
+    WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer, module_id_,
+                 "%s: Already running", __FUNCTION__);
     return 0;
+  }
+
+  CriticalSectionScoped csT(&thread_critsect_);
+  assert(incoming_render_thread_ == NULL);
+
+  incoming_render_thread_ = ThreadWrapper::CreateThread(
+      IncomingVideoStreamThreadFun, this, kRealtimePriority,
+      "IncomingVideoStreamThread");
+  if (!incoming_render_thread_) {
+    WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, module_id_,
+                 "%s: No thread", __FUNCTION__);
+    return -1;
+  }
+
+  unsigned int t_id = 0;
+  if (incoming_render_thread_->Start(t_id)) {
+    WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, module_id_,
+                 "%s: thread started: %u", __FUNCTION__, t_id);
+  } else {
+    WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, module_id_,
+                 "%s: Could not start send thread", __FUNCTION__);
+    return -1;
+  }
+  deliver_buffer_event_.StartTimer(false, KEventStartupTimeMS);
+
+  running_ = true;
+  return 0;
 }
 
-WebRtc_Word32 IncomingVideoStream::Stop()
-{
-    CriticalSectionScoped csStream(&_streamCritsect);
-    WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _moduleId,
-                 "%s for stream %d", __FUNCTION__, _streamId);
+WebRtc_Word32 IncomingVideoStream::Stop() {
+  CriticalSectionScoped cs_stream(&stream_critsect_);
+  WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, module_id_,
+               "%s for stream %d", __FUNCTION__, stream_id_);
 
-    if (!_running)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer, _moduleId,
-                     "%s: Not running", __FUNCTION__);
-        return 0;
-    }
+  if (!running_) {
+    WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer, module_id_,
+                 "%s: Not running", __FUNCTION__);
+    return 0;
+  }
 
-    _threadCritsect.Enter();
-    if (_ptrIncomingRenderThread)
-    {
-        ThreadWrapper* ptrThread = _ptrIncomingRenderThread;
-        _ptrIncomingRenderThread = NULL;
-        ptrThread->SetNotAlive();
-#ifndef _WIN32
-        _deliverBufferEvent.StopTimer();
+  thread_critsect_.Enter();
+  if (incoming_render_thread_) {
+    ThreadWrapper* thread = incoming_render_thread_;
+    incoming_render_thread_ = NULL;
+    thread->SetNotAlive();
+#ifndef WIN32_
+    deliver_buffer_event_.StopTimer();
 #endif
-        _threadCritsect.Leave();
-        if (ptrThread->Stop())
-        {
-            delete ptrThread;
-        }
-        else
-        {
-            assert(false);
-            WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer, _moduleId,
-                         "%s: Not able to stop thread, leaking", __FUNCTION__);
-        }
+    thread_critsect_.Leave();
+    if (thread->Stop()) {
+      delete thread;
+    } else {
+      assert(false);
+      WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer, module_id_,
+                   "%s: Not able to stop thread, leaking", __FUNCTION__);
     }
-    else
-    {
-        _threadCritsect.Leave();
+  } else {
+    thread_critsect_.Leave();
+  }
+  running_ = false;
+  return 0;
+}
+
+WebRtc_Word32 IncomingVideoStream::Reset() {
+  CriticalSectionScoped cs_stream(&stream_critsect_);
+  CriticalSectionScoped cs_buffer(&buffer_critsect_);
+  render_buffers_.ReleaseAllFrames();
+  return 0;
+}
+
+WebRtc_UWord32 IncomingVideoStream::StreamId() const {
+  CriticalSectionScoped cs_stream(&stream_critsect_);
+  return stream_id_;
+}
+
+WebRtc_UWord32 IncomingVideoStream::IncomingRate() const {
+  CriticalSectionScoped cs(&stream_critsect_);
+  return incoming_rate_;
+}
+
+bool IncomingVideoStream::IncomingVideoStreamThreadFun(void* obj) {
+  return static_cast<IncomingVideoStream*>(obj)->IncomingVideoStreamProcess();
+}
+
+bool IncomingVideoStream::IncomingVideoStreamProcess() {
+  if (kEventError != deliver_buffer_event_.Wait(KEventMaxWaitTimeMs)) {
+    if (incoming_render_thread_ == NULL) {
+      // Terminating
+      return false;
     }
-    _running = false;
-    return 0;
-}
 
-WebRtc_Word32 IncomingVideoStream::Reset()
-{
-    CriticalSectionScoped csStream(&_streamCritsect);
-    CriticalSectionScoped csBuffer(&_bufferCritsect);
+    thread_critsect_.Enter();
+    VideoFrame* frame_to_render = NULL;
 
-    _renderBuffers.ReleaseAllFrames();
-    return 0;
-}
+    // Get a new frame to render and the time for the frame after this one.
+    buffer_critsect_.Enter();
+    frame_to_render = render_buffers_.FrameToRender();
+    WebRtc_UWord32 wait_time = render_buffers_.TimeToNextFrameRelease();
+    buffer_critsect_.Leave();
 
-WebRtc_UWord32 IncomingVideoStream::StreamId() const
-{
-    CriticalSectionScoped csStream(&_streamCritsect);
-    return _streamId;
-}
-
-WebRtc_UWord32 IncomingVideoStream::IncomingRate() const
-{
-    CriticalSectionScoped cs(&_streamCritsect);
-    return _incomingRate;
-}
-
-bool IncomingVideoStream::IncomingVideoStreamThreadFun(void* obj)
-{
-    return static_cast<IncomingVideoStream*> (obj)->IncomingVideoStreamProcess();
-}
-
-bool IncomingVideoStream::IncomingVideoStreamProcess()
-{
-    if (kEventError != _deliverBufferEvent.Wait(KEventMaxWaitTimeMs))
-    {
-        if (_ptrIncomingRenderThread == NULL)
-        {
-            // Terminating
-            return false;
-        }
-
-        _threadCritsect.Enter();
-
-        VideoFrame* ptrFrameToRender = NULL;
-
-        // Get a new frame to render and the time for the frame after this one.
-        _bufferCritsect.Enter();
-        ptrFrameToRender = _renderBuffers.FrameToRender();
-        WebRtc_UWord32 waitTime = _renderBuffers.TimeToNextFrameRelease();
-        _bufferCritsect.Leave();
-
-        // Set timer for next frame to render
-        if (waitTime > KEventMaxWaitTimeMs)
-        {
-            waitTime = KEventMaxWaitTimeMs;
-        }
-        _deliverBufferEvent.StartTimer(false, waitTime);
-
-        if (!ptrFrameToRender)
-        {
-            if (_ptrRenderCallback)
-            {
-                if (_lastRenderedFrame.RenderTimeMs() == 0
-                        && _startImage.Size()) // And we have not rendered anything and have a start image
-                {
-                    _tempFrame.CopyFrame(_startImage);// Copy the startimage if the renderer modifies the render buffer.
-                    _ptrRenderCallback->RenderFrame(_streamId, _tempFrame);
-                }
-                else if (_timeoutImage.Size()
-                        && _lastRenderedFrame.RenderTimeMs() + _timeoutTime
-                                < TickTime::MillisecondTimestamp()) // We have rendered something a long time ago and have a timeout image
-                {
-                    _tempFrame.CopyFrame(_timeoutImage); // Copy the timeoutImage if the renderer modifies the render buffer.
-                    _ptrRenderCallback->RenderFrame(_streamId, _tempFrame);
-                }
-            }
-
-            // No frame
-            _threadCritsect.Leave();
-            return true;
-        }
-
-        // Send frame for rendering
-        if (_ptrExternalCallback)
-        {
-            WEBRTC_TRACE(kTraceStream,
-                         kTraceVideoRenderer,
-                         _moduleId,
-                         "%s: executing external renderer callback to deliver frame",
-                         __FUNCTION__, ptrFrameToRender->RenderTimeMs());
-            _ptrExternalCallback->RenderFrame(_streamId, *ptrFrameToRender);
-        }
-        else
-        {
-            if (_ptrRenderCallback)
-            {
-                WEBRTC_TRACE(kTraceStream, kTraceVideoRenderer, _moduleId,
-                             "%s: Render frame, time: ", __FUNCTION__,
-                             ptrFrameToRender->RenderTimeMs());
-                _ptrRenderCallback->RenderFrame(_streamId, *ptrFrameToRender);
-            }
-        }
-
-        // Release critsect before calling the module user
-        _threadCritsect.Leave();
-
-        // We're done with this frame, delete it.
-        if (ptrFrameToRender)
-        {
-            CriticalSectionScoped cs(&_bufferCritsect);
-            _lastRenderedFrame.SwapFrame(*ptrFrameToRender);
-            _renderBuffers.ReturnFrame(ptrFrameToRender);
-        }
+    // Set timer for next frame to render.
+    if (wait_time > KEventMaxWaitTimeMs) {
+      wait_time = KEventMaxWaitTimeMs;
     }
-    return true;
-}
-WebRtc_Word32 IncomingVideoStream::GetLastRenderedFrame(VideoFrame& videoFrame) const
-{
-    CriticalSectionScoped cs(&_bufferCritsect);
-    return videoFrame.CopyFrame(_lastRenderedFrame);
+    deliver_buffer_event_.StartTimer(false, wait_time);
+
+    if (!frame_to_render) {
+      if (render_callback_) {
+        if (last_rendered_frame_.RenderTimeMs() == 0 &&
+            start_image_.Size()) {
+          // We have not rendered anything and have a start image.
+          temp_frame_.CopyFrame(start_image_);
+          render_callback_->RenderFrame(stream_id_, temp_frame_);
+        } else if (timeout_image_.Size() &&
+                   last_rendered_frame_.RenderTimeMs() + timeout_time_ <
+                       TickTime::MillisecondTimestamp()) {
+          // Render a timeout image.
+          temp_frame_.CopyFrame(timeout_image_);
+          render_callback_->RenderFrame(stream_id_, temp_frame_);
+        }
+      }
+
+      // No frame.
+      thread_critsect_.Leave();
+      return true;
+    }
+
+    // Send frame for rendering.
+    if (external_callback_) {
+      WEBRTC_TRACE(kTraceStream, kTraceVideoRenderer, module_id_,
+                   "%s: executing external renderer callback to deliver frame",
+                   __FUNCTION__, frame_to_render->RenderTimeMs());
+      external_callback_->RenderFrame(stream_id_, *frame_to_render);
+    } else {
+      if (render_callback_) {
+        WEBRTC_TRACE(kTraceStream, kTraceVideoRenderer, module_id_,
+                     "%s: Render frame, time: ", __FUNCTION__,
+                     frame_to_render->RenderTimeMs());
+        render_callback_->RenderFrame(stream_id_, *frame_to_render);
+      }
+    }
+
+    // Release critsect before calling the module user.
+    thread_critsect_.Leave();
+
+    // We're done with this frame, delete it.
+    if (frame_to_render) {
+      CriticalSectionScoped cs(&buffer_critsect_);
+      last_rendered_frame_.SwapFrame(*frame_to_render);
+      render_buffers_.ReturnFrame(frame_to_render);
+    }
+  }
+  return true;
 }
 
-} //namespace webrtc
+WebRtc_Word32 IncomingVideoStream::GetLastRenderedFrame(
+    VideoFrame& video_frame) const {
+  CriticalSectionScoped cs(&buffer_critsect_);
+  return video_frame.CopyFrame(last_rendered_frame_);
+}
 
+}  // namespace webrtc

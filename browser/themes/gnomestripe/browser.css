@@ -898,7 +898,6 @@ toolbar[iconsize="small"] #feed-button {
 /* Location bar */
 #urlbar {
   width: 7em;
-  min-width: 7em;
   -moz-appearance: textfield;
   padding: 0;
 }
@@ -910,6 +909,7 @@ toolbar[iconsize="small"] #feed-button {
 
 .urlbar-input-box {
   -moz-margin-start: 0;
+  min-width: 4em;
 }
 
 .urlbar-history-dropmarker {

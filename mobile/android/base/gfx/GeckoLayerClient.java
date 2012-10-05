@@ -14,6 +14,7 @@ import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.util.EventDispatcher;
+import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventResponder;
 
 import org.json.JSONException;
@@ -354,6 +355,69 @@ public class GeckoLayerClient
             ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(metrics);
             return DisplayPortCalculator.calculate(newMetrics, null);
         }
+    }
+
+    // This is called on the Gecko thread to determine if we're still interested
+    // in the update of this display-port to continue. We can return true here
+    // to abort the current update and continue with any subsequent ones. This
+    // is useful for slow-to-render pages when the display-port starts lagging
+    // behind enough that continuing to draw it is wasted effort.
+    public boolean shouldAbortProgressiveUpdate(boolean aHasPendingNewThebesContent,
+                                                float x, float y, float width, float height, float resolution) {
+        // XXX Grab a local copy of the last display-port sent to Gecko to
+        //     avoid races when accessing it.
+        DisplayPortMetrics displayPort = mDisplayPort;
+
+        // Always abort updates if the resolution has changed. There's no use
+        // in drawing at the incorrect resolution.
+        if (!FloatUtils.fuzzyEquals(resolution, displayPort.resolution)) {
+            Log.d(LOGTAG, "Aborting draw due to resolution change");
+            return true;
+        }
+
+        // XXX All sorts of rounding happens inside Gecko that becomes hard to
+        //     account exactly for. Given we align the display-port to tile
+        //     boundaries (and so they rarely vary by sub-pixel amounts), just
+        //     check that values are within a pixel of the display-port bounds.
+
+        // Never abort drawing if we can't be sure we've sent a more recent
+        // display-port. If we abort updating when we shouldn't, we can end up
+        // with blank regions on the screen and we open up the risk of entering
+        // an endless updating cycle.
+        if (Math.abs(displayPort.getLeft() - x) <= 1 &&
+            Math.abs(displayPort.getTop() - y) <= 1 &&
+            Math.abs(displayPort.getBottom() - (y + height)) <= 1 &&
+            Math.abs(displayPort.getRight() - (x + width)) <= 1) {
+            return false;
+        }
+
+        // Abort updates when the display-port no longer contains the visible
+        // area of the page (that is, the viewport cropped by the page
+        // boundaries).
+        // XXX This makes the assumption that we never let the visible area of
+        //     the page fall outside of the display-port.
+        // Grab a local copy of the viewport metrics to avoid races.
+        ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
+        if (Math.max(viewportMetrics.viewportRectLeft, viewportMetrics.pageRectLeft) + 1 < x ||
+            Math.max(viewportMetrics.viewportRectTop, viewportMetrics.pageRectTop) + 1 < y ||
+            Math.min(viewportMetrics.viewportRectRight, viewportMetrics.pageRectRight) - 1 > x + width ||
+            Math.min(viewportMetrics.viewportRectBottom, viewportMetrics.pageRectBottom) - 1 > y + height) {
+            Log.d(LOGTAG, "Aborting update due to viewport not in display-port");
+            return true;
+        }
+
+        // There's no new content (where new content is considered to be an
+        // update in a region that wasn't previously visible), and we've sent a
+        // more recent display-port.
+        // Aborting in this situation helps us recover more quickly when the
+        // user starts scrolling on a page that contains animated content that
+        // is slow to draw.
+        if (!aHasPendingNewThebesContent) {
+            Log.d(LOGTAG, "Aborting update due to more relevant display-port in event queue");
+            return true;
+        }
+
+        return false;
     }
 
     /** Implementation of GeckoEventResponder/GeckoEventListener. */

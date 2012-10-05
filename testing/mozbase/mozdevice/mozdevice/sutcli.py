@@ -82,7 +82,7 @@ class SUTCli(object):
                                 }
                           }
 
-        for (commandname, command) in self.commands.iteritems():
+        for (commandname, command) in sorted(self.commands.iteritems()):
             help_args = command['help_args']
             usage += "  %s - %s\n" % (" ".join([ commandname,
                                                  help_args ]).rstrip(),

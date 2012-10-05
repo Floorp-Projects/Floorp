@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2010 The Chromium Authors. All rights reserved.
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -13,17 +13,27 @@
 # directory of a Chromium OS chroot.
 
 root="$1"
-if [ -z "$root" ]
+shift
+target_arch="$1"
+shift
+
+if [ -z "$root" -o -z "$target_arch" ]
 then
-  echo "usage: $0 /path/to/sysroot [pkg-config-arguments] package" >&2
+  echo "usage: $0 /path/to/sysroot target_arch [pkg-config-arguments] package" >&2
   exit 1
+fi
+
+if [ "$target_arch" = "x64" ]
+then
+  libpath="lib64"
+else
+  libpath="lib"
 fi
 
 rewrite=`dirname $0`/rewrite_dirs.py
 package=${!#}
 
-shift
-config_path=$root/usr/lib/pkgconfig:$root/usr/share/pkgconfig
+config_path=$root/usr/$libpath/pkgconfig:$root/usr/share/pkgconfig
 set -e
 # Some sysroots, like the Chromium OS ones, may generate paths that are not
 # relative to the sysroot. For example,

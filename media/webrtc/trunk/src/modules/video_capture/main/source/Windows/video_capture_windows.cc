@@ -229,6 +229,9 @@ WebRtc_Word32 VideoCaptureDS::SetCameraOutput(
     if (capability.maxFPS > requestedCapability.maxFPS)
     {
         capability.maxFPS = requestedCapability.maxFPS;
+    } else if (capability.maxFPS <= 0)
+    {
+        capability.maxFPS = 30;
     }
     // Store the new expected capture delay
     _captureDelay = capability.expectedCaptureDelay;

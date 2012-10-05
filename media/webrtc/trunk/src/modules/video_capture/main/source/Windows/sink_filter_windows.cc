@@ -78,7 +78,9 @@ CaptureInputPin::GetMediaType (IN int iPosition, OUT MediaType * pmt)
     pvi->bmiHeader.biPlanes = 1;
     pvi->bmiHeader.biClrImportant = 0;
     pvi->bmiHeader.biClrUsed = 0;
-    pvi->AvgTimePerFrame = 10000000/_requestedCapability.maxFPS;
+    if (_requestedCapability.maxFPS != 0) {
+        pvi->AvgTimePerFrame = 10000000/_requestedCapability.maxFPS;
+    }
 
     SetRectEmpty(&(pvi->rcSource)); // we want the whole image area rendered.
     SetRectEmpty(&(pvi->rcTarget)); // no particular destination rectangle
@@ -190,7 +192,19 @@ CaptureInputPin::CheckMediaType ( IN const MediaType * pMediaType)
 
         // Store the incoming width and height
         _resultingCapability.width = pvi->bmiHeader.biWidth;
-        _resultingCapability.height = abs(pvi->bmiHeader.biHeight);
+
+        // Store the incoming height,
+        // for RGB24 we assume the frame to be upside down
+        if(*SubType == MEDIASUBTYPE_RGB24
+            && pvi->bmiHeader.biHeight > 0)
+        {
+           _resultingCapability.height = -(pvi->bmiHeader.biHeight);
+        }
+        else
+        {
+           _resultingCapability.height = abs(pvi->bmiHeader.biHeight);
+        }
+
         WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _moduleId,
                      "CheckMediaType width:%d height:%d Compression:0x%x\n",
                      pvi->bmiHeader.biWidth,pvi->bmiHeader.biHeight,
@@ -250,7 +264,18 @@ CaptureInputPin::CheckMediaType ( IN const MediaType * pMediaType)
                      pvi->bmiHeader.biCompression);
 
         _resultingCapability.width = pvi->bmiHeader.biWidth;
-        _resultingCapability.height = abs(pvi->bmiHeader.biHeight);
+
+        // Store the incoming height,
+        // for RGB24 we assume the frame to be upside down
+        if(*SubType == MEDIASUBTYPE_RGB24
+            && pvi->bmiHeader.biHeight > 0)
+        {
+           _resultingCapability.height = -(pvi->bmiHeader.biHeight);
+        }
+        else
+        {
+           _resultingCapability.height = abs(pvi->bmiHeader.biHeight);
+        }
 
         if(*SubType == MEDIASUBTYPE_MJPG
             && pvi->bmiHeader.biCompression == MAKEFOURCC('M','J','P','G'))

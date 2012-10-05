@@ -95,7 +95,7 @@ private:
     WebRtc_Word32 ReadHeader();
     webrtc::TickTimeBase* _clock;
     FILE*              _rtpFile;
-    webrtc::RtpRtcp&   _rtpModule;
+    webrtc::RtpRtcp*   _rtpModule;
     WebRtc_UWord32     _nextRtpTime;
     webrtc::RtpData*   _dataCallback;
     bool               _firstPacket;

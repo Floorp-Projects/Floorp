@@ -134,12 +134,6 @@ struct PreserveRegsGuard
     FrameRegs &regs_;
 };
 
-inline GSNCache *
-GetGSNCache(JSContext *cx)
-{
-    return &cx->runtime->gsnCache;
-}
-
 #if JS_HAS_XML_SUPPORT
 
 class AutoNamespaceArray : protected AutoGCRooter {

@@ -95,64 +95,6 @@ TwoWayCommunication::ChooseCodec(WebRtc_UWord8* codecID_A,
     return 0;
 }
 
-WebRtc_Word16
-TwoWayCommunication::ChooseFile(char* fileName, WebRtc_Word16 maxLen,
-                                WebRtc_UWord16* frequencyHz)
-{
-    char tmpName[MAX_FILE_NAME_LENGTH_BYTE];
-    //strcpy(_fileName, "in.pcm");
-    //printf("\n\nPlease enter the input file: ");
-    EXPECT_TRUE(fgets(tmpName, MAX_FILE_NAME_LENGTH_BYTE, stdin) != NULL);
-    tmpName[MAX_FILE_NAME_LENGTH_BYTE-1] = '\0';
-    WebRtc_Word16 n = 0;
-
-    // removing leading spaces
-    while((isspace(tmpName[n]) || iscntrl(tmpName[n])) && 
-        (tmpName[n] != 0) && 
-        (n < MAX_FILE_NAME_LENGTH_BYTE))
-    {
-        n++;
-    }
-    if(n > 0)
-    {
-        memmove(tmpName, &tmpName[n], MAX_FILE_NAME_LENGTH_BYTE - n);
-    }
-
-    //removing trailing spaces
-    n = (WebRtc_Word16)(strlen(tmpName) - 1);
-    if(n >= 0)
-    {
-        while((isspace(tmpName[n]) || iscntrl(tmpName[n])) && 
-            (n >= 0))
-        {
-            n--;
-        }
-    }
-    if(n >= 0)
-    {
-        tmpName[n + 1] = '\0';
-    }
-
-    WebRtc_Word16 len = (WebRtc_Word16)strlen(tmpName);
-    if(len > maxLen)
-    {
-        return -1;
-    }    
-    if(len > 0)
-    {
-        strncpy(fileName, tmpName, len+1);
-    }
-    printf("Enter the sampling frequency (in Hz) of the above file [%u]: ",
-           *frequencyHz);
-    EXPECT_TRUE(fgets(tmpName, 6, stdin) != NULL);
-    WebRtc_UWord16 tmpFreq = (WebRtc_UWord16)atoi(tmpName);
-    if(tmpFreq > 0)
-    {
-        *frequencyHz = tmpFreq;
-    }
-    return 0;
-}
-
 WebRtc_Word16 TwoWayCommunication::SetUp()
 {
     _acmA = AudioCodingModule::Create(1);
@@ -198,47 +140,41 @@ WebRtc_Word16 TwoWayCommunication::SetUp()
     CHECK_ERROR(_acmRefB->RegisterSendCodec(codecInst_B));
     CHECK_ERROR(_acmRefB->RegisterReceiveCodec(codecInst_A));
 
-    char fileName[500];
-    char refFileName[500];
     WebRtc_UWord16 frequencyHz;
     
     //--- Input A
-    strcpy(fileName, "./test/data/audio_coding/testfile32kHz.pcm");
+    std::string in_file_name =
+        webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
     frequencyHz = 32000;
-    printf("Enter input file at side A [%s]: ", fileName);
-    ChooseFile(fileName, 499, &frequencyHz);
-
-
-    _inFileA.Open(fileName, frequencyHz, "rb");
+    printf("Enter input file at side A [%s]: ", in_file_name.c_str());
+    PCMFile::ChooseFile(&in_file_name, 499, &frequencyHz);
+    _inFileA.Open(in_file_name, frequencyHz, "rb");
 
     //--- Output A
-    std::string outputFileA = webrtc::test::OutputPath() + "outA.pcm";
-    strcpy(fileName, outputFileA.c_str());
-    frequencyHz = 16000;
-    printf("Enter output file at side A [%s]: ", fileName);
-    ChooseFile(fileName, 499, &frequencyHz);
-    _outFileA.Open(fileName, frequencyHz, "wb");
-    strcpy(refFileName, "ref_");
-    strcat(refFileName, fileName);
-    _outFileRefA.Open(refFileName, frequencyHz, "wb");
+    std::string out_file_a = webrtc::test::OutputPath() + "outA.pcm";
+    printf("Output file at side A: %s\n", out_file_a.c_str());
+    printf("Sampling frequency (in Hz) of the above file: %u\n",
+           frequencyHz);
+    _outFileA.Open(out_file_a, frequencyHz, "wb");
+    std::string ref_file_name = webrtc::test::OutputPath() + "ref_outA.pcm";
+    _outFileRefA.Open(ref_file_name, frequencyHz, "wb");
 
     //--- Input B
-    strcpy(fileName, "./test/data/audio_coding/testfile32kHz.pcm");
+    in_file_name =
+        webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
     frequencyHz = 32000;
-    printf("\n\nEnter input file at side B [%s]: ", fileName);
-    ChooseFile(fileName, 499, &frequencyHz);
-    _inFileB.Open(fileName, frequencyHz, "rb");
+    printf("\n\nEnter input file at side B [%s]: ", in_file_name.c_str());
+    PCMFile::ChooseFile(&in_file_name, 499, &frequencyHz);
+    _inFileB.Open(in_file_name, frequencyHz, "rb");
 
     //--- Output B
-    std::string outputFileB = webrtc::test::OutputPath() + "outB.pcm";
-    strcpy(fileName, outputFileB.c_str());
-    frequencyHz = 16000;
-    printf("Enter output file at side B [%s]: ", fileName);
-    ChooseFile(fileName, 499, &frequencyHz);
-    _outFileB.Open(fileName, frequencyHz, "wb");
-    strcpy(refFileName, "ref_");
-    strcat(refFileName, fileName);
-    _outFileRefB.Open(refFileName, frequencyHz, "wb");
+    std::string out_file_b = webrtc::test::OutputPath() + "outB.pcm";
+    printf("Output file at side B: %s\n", out_file_b.c_str());
+    printf("Sampling frequency (in Hz) of the above file: %u\n",
+           frequencyHz);
+    _outFileB.Open(out_file_b, frequencyHz, "wb");
+    ref_file_name = webrtc::test::OutputPath() + "ref_outB.pcm";
+    _outFileRefB.Open(ref_file_name, frequencyHz, "wb");
     
     //--- Set A-to-B channel
     _channel_A2B = new Channel;
@@ -278,8 +214,8 @@ WebRtc_Word16 TwoWayCommunication::SetUpAutotest()
     CodecInst codecInst_B;
     CodecInst dummyCodec;
 
-    _acmA->Codec("ISAC", codecInst_A, 16000);
-    _acmB->Codec("L16", codecInst_B, 8000);
+    _acmA->Codec("ISAC", codecInst_A, 16000, 1);
+    _acmB->Codec("L16", codecInst_B, 8000, 1);
     _acmA->Codec(6, dummyCodec);
 
     //--- Set A codecs
@@ -308,38 +244,30 @@ WebRtc_Word16 TwoWayCommunication::SetUpAutotest()
     CHECK_ERROR(_acmRefB->RegisterSendCodec(codecInst_B));
     CHECK_ERROR(_acmRefB->RegisterReceiveCodec(codecInst_A));
 
-    char fileName[500];
-    char refFileName[500];
     WebRtc_UWord16 frequencyHz;
 
-
-    //--- Input A
-    strcpy(fileName, "./test/data/audio_coding/testfile32kHz.pcm");
+    //--- Input A and B
+    std::string in_file_name =
+        webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
     frequencyHz = 16000;
-    _inFileA.Open(fileName, frequencyHz, "rb");
+    _inFileA.Open(in_file_name, frequencyHz, "rb");
+    _inFileB.Open(in_file_name, frequencyHz, "rb");
 
     //--- Output A
-    std::string outputFileA = webrtc::test::OutputPath() + "outAutotestA.pcm";
-    strcpy(fileName, outputFileA.c_str());
+    std::string output_file_a = webrtc::test::OutputPath() + "outAutotestA.pcm";
     frequencyHz = 16000;
-    _outFileA.Open(fileName, frequencyHz, "wb");
-    std::string outputRefFileA = webrtc::test::OutputPath() + "ref_outAutotestA.pcm";
-    strcpy(refFileName, outputRefFileA.c_str());
-    _outFileRefA.Open(refFileName, frequencyHz, "wb");
-
-    //--- Input B
-    strcpy(fileName, "./test/data/audio_coding/testfile32kHz.pcm");
-    frequencyHz = 16000;
-    _inFileB.Open(fileName, frequencyHz, "rb");
+    _outFileA.Open(output_file_a, frequencyHz, "wb");
+    std::string output_ref_file_a = webrtc::test::OutputPath() +
+        "ref_outAutotestA.pcm";
+    _outFileRefA.Open(output_ref_file_a, frequencyHz, "wb");
 
     //--- Output B
-    std::string outputFileB = webrtc::test::OutputPath() + "outAutotestB.pcm";
-    strcpy(fileName, outputFileB.c_str());
+    std::string output_file_b = webrtc::test::OutputPath() + "outAutotestB.pcm";
     frequencyHz = 16000;
-    _outFileB.Open(fileName, frequencyHz, "wb");
-    std::string outputRefFileB = webrtc::test::OutputPath() + "ref_outAutotestB.pcm";
-    strcpy(refFileName, outputRefFileB.c_str());
-    _outFileRefB.Open(refFileName, frequencyHz, "wb");
+    _outFileB.Open(output_file_b, frequencyHz, "wb");
+    std::string output_ref_file_b = webrtc::test::OutputPath() +
+        "ref_outAutotestB.pcm";
+    _outFileRefB.Open(output_ref_file_b, frequencyHz, "wb");
 
     //--- Set A-to-B channel
     _channel_A2B = new Channel;
@@ -445,7 +373,7 @@ TwoWayCommunication::Perform()
             if(_testMode == 0)
             {
                 WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                             "---------- Errors epected");
+                             "---------- Errors expected");
                 printf(".");
             }
             else
@@ -460,7 +388,7 @@ TwoWayCommunication::Perform()
             if(_testMode == 0)
             {
                 WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                             "----- END: Errors epected");
+                             "----- END: Errors expected");
                 printf(".");
             }
             else
@@ -478,7 +406,7 @@ TwoWayCommunication::Perform()
             if(_testMode == 0)
             {
                 WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                             "---------- Errors epected");
+                             "---------- Errors expected");
                 printf(".");
             }
             else
@@ -494,7 +422,7 @@ TwoWayCommunication::Perform()
             if(_testMode == 0)
             {
                 WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                             "----- END: Errors epected");
+                             "----- END: Errors expected");
                 printf(".");
             }
             else

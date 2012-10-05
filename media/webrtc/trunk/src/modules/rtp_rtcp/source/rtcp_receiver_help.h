@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -11,12 +11,12 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_RECEIVER_HELP_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_RECEIVER_HELP_H_
 
-#include "typedefs.h"
+#include <vector>
 
-#include "rtp_rtcp_defines.h"   // RTCPReportBlock
-#include "rtp_rtcp_config.h"           // RTCP_MAX_REPORT_BLOCKS
-#include "rtcp_utility.h"
-#include "tmmbr_help.h"
+#include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"  // RTCPReportBlock
+#include "modules/rtp_rtcp/source/rtcp_utility.h"
+#include "modules/rtp_rtcp/source/tmmbr_help.h"
+#include "typedefs.h"
 
 namespace webrtc {
 namespace RTCPHelp
@@ -30,7 +30,8 @@ public:
 
     void AddVoIPMetric(const RTCPVoIPMetric*  metric);
 
-    void AddApplicationData(const WebRtc_UWord8* data, const WebRtc_UWord16 size);
+    void AddApplicationData(const WebRtc_UWord8* data,
+                            const WebRtc_UWord16 size);
 
     void AddNACKPacket(const WebRtc_UWord16 packetID);
     void ResetNACKPacketIdArray();
@@ -96,19 +97,19 @@ public:
 
     void InsertTMMBRItem(const WebRtc_UWord32 senderSSRC,
                          const RTCPUtility::RTCPPacketRTPFBTMMBRItem& TMMBRItem,
-                         const WebRtc_UWord32 currentTimeMS);
+                         const WebRtc_Word64 currentTimeMS);
 
     // get
     WebRtc_Word32 GetTMMBRSet(const WebRtc_UWord32 sourceIdx,
                               const WebRtc_UWord32 targetIdx,
                               TMMBRSet* candidateSet,
-                              const WebRtc_UWord32 currentTimeMS);
+                              const WebRtc_Word64 currentTimeMS);
 
-    WebRtc_UWord32    lastTimeReceived;
+    WebRtc_Word64 lastTimeReceived;
 
     // FIR
-    WebRtc_Word32     lastFIRSequenceNumber;
-    WebRtc_UWord32    lastFIRRequest;
+    WebRtc_Word32 lastFIRSequenceNumber;
+    WebRtc_Word64 lastFIRRequest;
 
     // TMMBN
     TMMBRSet        TmmbnBoundingSet;
@@ -118,7 +119,7 @@ public:
 
     bool            readyForDelete;
 private:
-    WebRtc_UWord32*   _tmmbrSetTimeouts;
+    std::vector<WebRtc_Word64> _tmmbrSetTimeouts;
 };
 
 } // end namespace RTCPHelp

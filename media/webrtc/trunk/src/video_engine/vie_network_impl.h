@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -11,7 +11,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_NETWORK_IMPL_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_NETWORK_IMPL_H_
 
-#include "typedefs.h"
+#include "typedefs.h"  // NOLINT
 #include "video_engine/include/vie_network.h"
 #include "video_engine/vie_ref_count.h"
 
@@ -26,25 +26,25 @@ class ViENetworkImpl
   // Implements ViENetwork.
   virtual int Release();
   virtual int SetLocalReceiver(const int video_channel,
-                               const unsigned short rtp_port,
-                               const unsigned short rtcp_port,
+                               const uint16_t rtp_port,
+                               const uint16_t rtcp_port,
                                const char* ip_address);
   virtual int GetLocalReceiver(const int video_channel,
-                               unsigned short& rtp_port,
-                               unsigned short& rtcp_port,
+                               uint16_t& rtp_port,
+                               uint16_t& rtcp_port,
                                char* ip_address);
   virtual int SetSendDestination(const int video_channel,
                                  const char* ip_address,
-                                 const unsigned short rtp_port,
-                                 const unsigned short rtcp_port,
-                                 const unsigned short source_rtp_port,
-                                 const unsigned short source_rtcp_port);
+                                 const uint16_t rtp_port,
+                                 const uint16_t rtcp_port,
+                                 const uint16_t source_rtp_port,
+                                 const uint16_t source_rtcp_port);
   virtual int GetSendDestination(const int video_channel,
                                  char* ip_address,
-                                 unsigned short& rtp_port,
-                                 unsigned short& rtcp_port,
-                                 unsigned short& source_rtp_port,
-                                 unsigned short& source_rtcp_port);
+                                 uint16_t& rtp_port,
+                                 uint16_t& rtcp_port,
+                                 uint16_t& source_rtp_port,
+                                 uint16_t& source_rtcp_port);
   virtual int RegisterSendTransport(const int video_channel,
                                     Transport& transport);
   virtual int DeregisterSendTransport(const int video_channel);
@@ -55,20 +55,20 @@ class ViENetworkImpl
                                  const void* data,
                                  const int length);
   virtual int GetSourceInfo(const int video_channel,
-                            unsigned short& rtp_port,
-                            unsigned short& rtcp_port,
+                            uint16_t& rtp_port,
+                            uint16_t& rtcp_port,
                             char* ip_address,
                             unsigned int ip_address_length);
   virtual int GetLocalIP(char ip_address[64], bool ipv6);
   virtual int EnableIPv6(int video_channel);
   virtual bool IsIPv6Enabled(int video_channel);
   virtual int SetSourceFilter(const int video_channel,
-                              const unsigned short rtp_port,
-                              const unsigned short rtcp_port,
+                              const uint16_t rtp_port,
+                              const uint16_t rtcp_port,
                               const char* ip_address);
   virtual int GetSourceFilter(const int video_channel,
-                              unsigned short& rtp_port,
-                              unsigned short& rtcp_port,
+                              uint16_t& rtp_port,
+                              uint16_t& rtcp_port,
                               char* ip_address);
   virtual int SetSendToS(const int video_channel,
                          const int DSCP,
@@ -102,7 +102,7 @@ class ViENetworkImpl
                             bool use_rtcp_socket);
 
  protected:
-  ViENetworkImpl(ViESharedData* shared_data);
+  explicit ViENetworkImpl(ViESharedData* shared_data);
   virtual ~ViENetworkImpl();
 
  private:

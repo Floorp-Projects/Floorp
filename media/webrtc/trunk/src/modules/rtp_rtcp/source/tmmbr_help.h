@@ -11,6 +11,7 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_TMMBR_HELP_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_TMMBR_HELP_H_
 
+#include <vector>
 #include "typedefs.h"
 
 #include "critical_section_wrapper.h"
@@ -27,12 +28,55 @@ public:
     ~TMMBRSet();
 
     void VerifyAndAllocateSet(WebRtc_UWord32 minimumSize);
+    void VerifyAndAllocateSetKeepingData(WebRtc_UWord32 minimumSize);
+    // Number of valid data items in set.
+    WebRtc_UWord32 lengthOfSet() const { return _lengthOfSet; }
+    // Presently allocated max size of set.
+    WebRtc_UWord32 sizeOfSet() const { return _sizeOfSet; }
+    void clearSet() {
+      _lengthOfSet = 0;
+    }
+    WebRtc_UWord32 Tmmbr(int i) const {
+      return _data.at(i).tmmbr;
+    }
+    WebRtc_UWord32 PacketOH(int i) const {
+      return _data.at(i).packet_oh;
+    }
+    WebRtc_UWord32 Ssrc(int i) const {
+      return _data.at(i).ssrc;
+    }
+    void SetEntry(unsigned int i,
+                  WebRtc_UWord32 tmmbrSet,
+                  WebRtc_UWord32 packetOHSet,
+                  WebRtc_UWord32 ssrcSet);
 
-    WebRtc_UWord32*   ptrTmmbrSet;
-    WebRtc_UWord32*   ptrPacketOHSet;
-    WebRtc_UWord32*   ptrSsrcSet;
-    WebRtc_UWord32    sizeOfSet;
-    WebRtc_UWord32    lengthOfSet;
+    void AddEntry(WebRtc_UWord32 tmmbrSet,
+                  WebRtc_UWord32 packetOHSet,
+                  WebRtc_UWord32 ssrcSet);
+
+    // Remove one entry from table, and move all others down.
+    void RemoveEntry(WebRtc_UWord32 sourceIdx);
+
+    void SwapEntries(WebRtc_UWord32 firstIdx,
+                     WebRtc_UWord32 secondIdx);
+
+    // Set entry data to zero, but keep it in table.
+    void ClearEntry(WebRtc_UWord32 idx);
+
+ private:
+    class SetElement {
+      public:
+        SetElement() : tmmbr(0), packet_oh(0), ssrc(0) {}
+        WebRtc_UWord32 tmmbr;
+        WebRtc_UWord32 packet_oh;
+        WebRtc_UWord32 ssrc;
+    };
+
+    std::vector<SetElement> _data;
+    // Number of places allocated.
+    WebRtc_UWord32    _sizeOfSet;
+    // NUmber of places currently in use.
+    WebRtc_UWord32    _lengthOfSet;
 };
 
 class TMMBRHelp

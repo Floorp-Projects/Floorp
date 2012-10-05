@@ -821,12 +821,14 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayList content;
   nsIFrame* child = GetFirstPrincipalChild();
   while (child) {
-    rv = child->BuildDisplayListForStackingContext(aBuilder, aDirtyRect - child->GetOffsetTo(this), &content);
+    rv = child->BuildDisplayListForStackingContext(aBuilder,
+        child->GetVisualOverflowRectRelativeToSelf(), &content);
     NS_ENSURE_SUCCESS(rv, rv);
     child = child->GetNextSibling();
   }
 
-  rv = content.AppendNewToTop(new (aBuilder) nsDisplayTransform(aBuilder, this, &content, ::ComputePageSequenceTransform));
+  rv = content.AppendNewToTop(new (aBuilder)
+      nsDisplayTransform(aBuilder, this, &content, ::ComputePageSequenceTransform));
   NS_ENSURE_SUCCESS(rv, rv);
 
   aLists.Content()->AppendToTop(&content);

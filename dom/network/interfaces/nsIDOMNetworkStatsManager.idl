@@ -1,0 +1,56 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMDOMRequest;
+
+dictionary NetworkStatsOptions
+{
+  /**
+   * Connection type used to filter which network stats will be returned:
+   * 'mobile', 'wifi' or null.
+   * If null, stats for both mobile and wifi are returned.
+   */
+  DOMString connectionType;
+  jsval start;              // date
+  jsval end;                // date
+};
+
+[scriptable,  uuid(87529a6c-aef6-11e1-a595-4f034275cfa6)]
+interface nsIDOMMozNetworkStatsManager : nsISupports
+{
+  /**
+   * Query network interface statistics.
+   *
+   * If options.connectionType is not provided, return statistics for all known
+   * network interfaces.
+   *
+   * If successful, the request result will be an nsIDOMMozNetworkStats object.
+   *
+   * If network stats are not available for some dates, then rxBytes &
+   * txBytes are undefined for those dates.
+   */
+  nsIDOMDOMRequest               getNetworkStats(in jsval options);
+
+  /**
+   * Return available connection types.
+   */
+  readonly attribute jsval       connectionTypes; // array of DOMStrings.
+
+  /**
+   * Clear all stats from DB.
+   */
+  nsIDOMDOMRequest               clearAllData();
+
+  /**
+   * Time in seconds between samples stored in database.
+   */
+  readonly attribute long        sampleRate;
+
+  /**
+   * Maximum number of samples stored in the database per connection type.
+   */
+  readonly attribute long        maxStorageSamples;
+};

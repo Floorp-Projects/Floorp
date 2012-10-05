@@ -11,7 +11,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "common_video/libyuv/include/libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "gtest/gtest.h"
 #include "system_wrappers/interface/tick_util.h"
 #include "testsupport/fileutils.h"
@@ -127,7 +127,10 @@ TEST_F(TestLibYuv, ConvertTest) {
                              0, width_, height_, width_, kRotateNone,
                              res_i420_buffer));
 
-  fwrite(res_i420_buffer, frame_length_, 1, output_file);
+  if (fwrite(res_i420_buffer, 1, frame_length_,
+             output_file) != static_cast<unsigned int>(frame_length_)) {
+    return;
+  }
   psnr = I420PSNR(orig_buffer, res_i420_buffer, width_, height_);
   // Optimization Speed- quality trade-off => 45 dB only (platform dependant).
   EXPECT_GT(ceil(psnr), 44);
@@ -142,7 +145,10 @@ TEST_F(TestLibYuv, ConvertTest) {
             0, width_, height_, width_,kRotateNone, res_i420_buffer));
   psnr = I420PSNR(orig_buffer, res_i420_buffer, width_, height_);
   EXPECT_EQ(48.0, psnr);
-  fwrite(res_i420_buffer, frame_length_, 1, output_file);
+  if (fwrite(res_i420_buffer, 1, frame_length_,
+             output_file) !=  static_cast<unsigned int>(frame_length_)) {
+    return;
+  }
 
   j++;
   delete [] out_uyvy_buffer;
@@ -154,7 +160,10 @@ TEST_F(TestLibYuv, ConvertTest) {
                              kRotateNone, out_i420_buffer));
   EXPECT_EQ(0, ConvertFromI420(out_i420_buffer, width_, kI420, 0,
                                width_, height_, res_i420_buffer));
-  fwrite(res_i420_buffer, frame_length_, 1, output_file);
+  if (fwrite(res_i420_buffer, 1, frame_length_,
+             output_file) != static_cast<unsigned int>(frame_length_)) {
+    return;
+  }
   psnr = I420PSNR(orig_buffer, res_i420_buffer, width_, height_);
   EXPECT_EQ(48.0, psnr);
   j++;
@@ -169,7 +178,10 @@ TEST_F(TestLibYuv, ConvertTest) {
                                kI420, 0,
                                width_, height_,
                                res_i420_buffer));
-  fwrite(res_i420_buffer, frame_length_, 1, output_file);
+  if (fwrite(res_i420_buffer, 1, frame_length_,
+             output_file) !=  static_cast<unsigned int>(frame_length_)) {
+    return;
+  }
 
   psnr = I420PSNR(orig_buffer, res_i420_buffer, width_, height_);
   EXPECT_EQ(48.0, psnr);
@@ -185,10 +197,52 @@ TEST_F(TestLibYuv, ConvertTest) {
                              0, width_, height_, width_,
                              kRotateNone, res_i420_buffer));
 
-  fwrite(res_i420_buffer, frame_length_, 1, output_file);
+  if (fwrite(res_i420_buffer, 1, frame_length_,
+             output_file) !=  static_cast<unsigned int>(frame_length_)) {
+    return;
+  }
   psnr = I420PSNR(orig_buffer, res_i420_buffer, width_, height_);
   EXPECT_EQ(48.0, psnr);
+
+  // printf("\nConvert #%d I420 <-> RGB565\n", j);
+  uint8_t* out_rgb565_buffer = new uint8_t[width_ * height_ * 2];
+  EXPECT_EQ(0, ConvertFromI420(orig_buffer, width_,
+                               kRGB565, 0, width_, height_, out_rgb565_buffer));
+
+  EXPECT_EQ(0, ConvertToI420(kRGB565, out_rgb565_buffer, 0, 0, width_, height_,
+                             0, width_, height_, width_,
+                             kRotateNone, res_i420_buffer));
+
+  if (fwrite(res_i420_buffer, 1, frame_length_,
+             output_file) !=  static_cast<unsigned int>(frame_length_)) {
+    return;
+  }
+  psnr = I420PSNR(orig_buffer, res_i420_buffer, width_, height_);
+  // TODO(leozwang) Investigate the right psnr should be set for I420ToRGB565,
+  // Another example is I420ToRGB24, the psnr is 44
+  EXPECT_GT(ceil(psnr), 40);
+
+  // printf("\nConvert #%d I420 <-> ARGB8888\n", j);
+  uint8_t* out_argb8888_buffer = new uint8_t[width_ * height_ * 4];
+  EXPECT_EQ(0, ConvertFromI420(orig_buffer, width_,
+                               kARGB, 0, width_, height_, out_argb8888_buffer));
+
+  EXPECT_EQ(0, ConvertToI420(kARGB, out_argb8888_buffer, 0, 0, width_, height_,
+                             0, width_, height_, width_,
+                             kRotateNone, res_i420_buffer));
+
+  if (fwrite(res_i420_buffer, 1, frame_length_,
+             output_file) !=  static_cast<unsigned int>(frame_length_)) {
+    return;
+  }
+  psnr = I420PSNR(orig_buffer, res_i420_buffer, width_, height_);
+  // TODO(leozwang) Investigate the right psnr should be set for I420ToARGB8888,
+  EXPECT_GT(ceil(psnr), 42);
+
   ASSERT_EQ(0, fclose(output_file));
+
+  delete [] out_argb8888_buffer;
+  delete [] out_rgb565_buffer;
   delete [] out_yuy2_buffer;
   delete [] res_i420_buffer;
   delete [] orig_buffer;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -11,7 +11,7 @@
 #ifndef SYSTEM_WRAPPERS_INTERFACE_REF_COUNT_H_
 #define SYSTEM_WRAPPERS_INTERFACE_REF_COUNT_H_
 
-#include "system_wrappers/interface/atomic32_wrapper.h"
+#include "system_wrappers/interface/atomic32.h"
 
 namespace webrtc {
 
@@ -74,7 +74,7 @@ class RefCountImpl : public T {
   }
 
  protected:
-  Atomic32Wrapper ref_count_;
+  Atomic32 ref_count_;
 };
 
 }  // namespace webrtc
