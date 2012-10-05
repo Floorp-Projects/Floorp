@@ -1140,7 +1140,7 @@ FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
     // convert from milliseconds to seconds
     PRTime      temp64, thousand;
     LL_I2L(thousand, PR_MSEC_PER_SEC);
-    LL_MUL(temp64, lastModDate, thousand);
+    temp64 = lastModDate * thousand;
 
     mRDFService->GetDateLiteral(temp64, aResult);
 

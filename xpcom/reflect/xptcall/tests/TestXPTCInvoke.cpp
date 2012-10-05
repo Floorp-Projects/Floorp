@@ -170,7 +170,7 @@ InvokeTestTarget::AddTwoLLs(int64_t p1, int64_t p2, int64_t* retval)
 NS_IMETHODIMP
 InvokeTestTarget::MultTwoLLs(int64_t p1, int64_t p2, int64_t* retval)
 {
-    LL_MUL(*retval, p1, p2);
+    *retval = p1 * p2;
     return NS_OK;
 }
 

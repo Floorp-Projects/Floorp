@@ -132,7 +132,7 @@ int ParseFTPList(const char *line, struct list_state *state,
                 PRTime t;
                 PRTime seconds;
                 PR_sscanf(p+1, "%llu", &seconds);
-                LL_MUL(t, seconds, PR_USEC_PER_SEC);
+                t = seconds * PR_USEC_PER_SEC;
                 PR_ExplodeTime(t, PR_LocalTimeParameters, &(result->fe_time) );
               }
             }
@@ -489,7 +489,7 @@ int ParseFTPList(const char *line, struct list_state *state,
               uint64_t fsz, factor;
               LL_UI2L(fsz, strtoul(tokens[1], (char **)0, 10));
               LL_UI2L(factor, 512);
-              LL_MUL(fsz, fsz, factor);
+              fsz *= factor;
               PR_snprintf(result->fe_size, sizeof(result->fe_size), 
                           "%lld", fsz);
             } 
