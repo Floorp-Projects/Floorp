@@ -50,7 +50,10 @@ onconnect = function(e) {
         testPort.postMessage({topic:"got-social-panel-visibility", result: event.data.result });
         break;
       case "test-chatbox-open":
-        sidebarPort.postMessage( event.data );
+        sidebarPort.postMessage(event.data);
+        break;
+      case "chatbox-opened":
+        testPort.postMessage(event.data);
         break;
       case "chatbox-message":
         testPort.postMessage({topic:"got-chatbox-message", result: event.data.result});
