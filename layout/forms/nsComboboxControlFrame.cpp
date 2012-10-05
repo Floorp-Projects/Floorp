@@ -397,7 +397,7 @@ nsComboboxControlFrame::ShowList(bool aShowList)
   if (aShowList) {
     nsIView* view = mDropdownFrame->GetView();
     NS_ASSERTION(!view->HasWidget(),
-                 "We shoudldn't have a widget before we need to display the popup");
+                 "We shouldn't have a widget before we need to display the popup");
 
     // Create the widget for the drop-down list
     view->GetViewManager()->SetViewFloating(view, true);
