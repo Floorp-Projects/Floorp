@@ -270,6 +270,7 @@ SpdySession2::ReadTimeoutTick(PRIntervalTime now)
       mPingSentEpoch = 1; // avoid the 0 sentinel value
     GeneratePing(mNextPingID);
     mNextPingID += 2;
+    ResumeRecv(); // read the ping reply
 
     if (mNextPingID == 0xffffffff) {
       LOG(("SpdySession2::ReadTimeoutTick %p "
