@@ -10,8 +10,8 @@
 
 #include "HTMLTableAccessible.h"
 
-#include "CAccessibleTable.h"
-#include "CAccessibleTableCell.h"
+#include "ia2AccessibleTable.h"
+#include "ia2AccessibleTableCell.h"
 
 namespace mozilla {
 namespace a11y {
@@ -21,7 +21,7 @@ namespace a11y {
  * and IAccessibleTable2 interfaces.
  */
 class HTMLTableAccessibleWrap : public HTMLTableAccessible,
-                                public CAccessibleTable
+                                public ia2AccessibleTable
 {
 public:
   HTMLTableAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
@@ -40,7 +40,7 @@ public:
  * IAccessibleTableCell interface.
  */
 class HTMLTableCellAccessibleWrap : public HTMLTableCellAccessible,
-                                    public CAccessibleTableCell
+                                    public ia2AccessibleTableCell
 {
 public:
   HTMLTableCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
@@ -59,7 +59,7 @@ public:
  * IAccessibleTableCell interface.
  */
 class HTMLTableHeaderCellAccessibleWrap : public HTMLTableHeaderCellAccessible,
-                                          public CAccessibleTableCell
+                                          public ia2AccessibleTableCell
 {
 public:
   HTMLTableHeaderCellAccessibleWrap(nsIContent* aContent,

@@ -8,11 +8,9 @@
 #ifndef _ACCESSIBLE_VALUE_H
 #define _ACCESSIBLE_VALUE_H
 
-#include "nsISupports.h"
-
 #include "AccessibleValue.h"
 
-class CAccessibleValue: public IAccessibleValue
+class ia2AccessibleValue: public IAccessibleValue
 {
 public:
 
@@ -31,9 +29,6 @@ public:
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_minimumValue(
       /* [retval][out] */ VARIANT *minimumValue);
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
 
 };
 

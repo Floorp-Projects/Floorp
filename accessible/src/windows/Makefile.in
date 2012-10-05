@@ -10,7 +10,9 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += uia \
+DIRS += \
+  ia2 \
+  uia \
   $(null)
 
 include $(topsrcdir)/config/rules.mk

@@ -8,8 +8,8 @@
 
 #include "XULTreeGridAccessible.h"
 
-#include "CAccessibleTable.h"
-#include "CAccessibleTableCell.h"
+#include "ia2AccessibleTable.h"
+#include "ia2AccessibleTableCell.h"
 
 namespace mozilla {
 namespace a11y {
@@ -19,7 +19,7 @@ namespace a11y {
  * IAccessibleTable and IAccessibleTable2 interfaces.
  */
 class XULTreeGridAccessibleWrap : public XULTreeGridAccessible,
-                                  public CAccessibleTable
+                                  public ia2AccessibleTable
 {
 public:
   XULTreeGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
@@ -36,7 +36,7 @@ public:
  * IAccessibleTableCell interface.
  */
 class XULTreeGridCellAccessibleWrap : public XULTreeGridCellAccessible,
-                                      public CAccessibleTableCell
+                                      public ia2AccessibleTableCell
 {
 public:
   XULTreeGridCellAccessibleWrap(nsIContent* aContent,
