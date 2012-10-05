@@ -2,18 +2,49 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* This file is used for both about:memory and about:compartments. A
- * version used for mobile is located at 
- * mobile/android/themes/core/aboutMemory.css. */
+/*
+ * This file is used for both about:memory and about:compartments.
+ *
+ * Portions of this file are based on
+ * toolkit/themes/winstripe/global/about.css.
+ *
+ * A version used for mobile is located at
+ * mobile/android/themes/core/aboutMemory.css.
+ */
 
-body.verbose {
-  /* override setting in about.css */
-  max-width: 100% !important;
+html {
+  background: -moz-Dialog;
+  font: message-box;
+}
+
+body {
+  padding: 0 2em;
+  margin: 0;
+  min-width: 45em;
+  margin: auto;
+}
+
+div.section, div.footer {
+  margin: 2em 0;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+div.section {
+  padding: 3em;
+  border: 1px solid ThreeDShadow;
+  border-radius: 10px;
+  background: -moz-Field;
 }
 
 body.non-verbose pre.entries {
   overflow-x: hidden;
   text-overflow: ellipsis;
+}
+
+h1 {
+  padding: 0;
+  margin: 0;
 }
 
 h2 {
