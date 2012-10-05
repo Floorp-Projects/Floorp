@@ -1055,7 +1055,8 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
         /* Though the prev-frame is given, need to search for prev-call. */
         StackSegment &seg = cx->stack.space().containingSegment(evalInFrame);
         StackIter iter(cx->runtime, seg);
-        while (!iter.isScript() || iter.fp() != evalInFrame)
+        JS_ASSERT(!evalInFrame->beginsIonActivation());
+        while (!iter.isScript() || iter.isIon() || iter.fp() != evalInFrame)
             ++iter;
         evalInFrameCalls = iter.calls_;
         extend = CANT_EXTEND;
