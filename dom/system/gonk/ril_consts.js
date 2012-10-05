@@ -1886,5 +1886,47 @@ const GECKO_RADIO_TECH = [
 
 const GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN = -1;
 
+// MMI procedure as defined in TS.22.030 6.5.2
+const MMI_PROCEDURE_ACTIVATION = "*";
+const MMI_PROCEDURE_DEACTIVATION = "#";
+const MMI_PROCEDURE_INTERROGATION = "*#";
+const MMI_PROCEDURE_REGISTRATION = "**";
+const MMI_PROCEDURE_ERASURE = "##";
+
+// MMI call forwarding service codes as defined in TS.22.030 Annex B
+const MMI_SC_CFU = "21";
+const MMI_SC_CF_BUSY = "67";
+const MMI_SC_CF_NO_REPLY = "61";
+const MMI_SC_CF_NOT_REACHABLE = "62";
+const MMI_SC_CF_ALL = "002";
+const MMI_SC_CF_ALL_CONDITIONAL = "004";
+
+// MMI service codes for PIN/PIN2/PUK/PUK2 management as defined in TS.22.030
+// sec 6.6
+const MMI_SC_PIN = "04";
+const MMI_SC_PIN2 = "042";
+const MMI_SC_PUK = "05";
+const MMI_SC_PUK2 = "052";
+
+// MMI service code for IMEI presentation as defined in TS.22.030 sec 6.7
+const MMI_SC_IMEI = "06";
+
+// MMI called line presentation service codes
+const MMI_SC_CLIP = "30";
+const MMI_SC_CLIR = "31";
+
+// MMI call waiting service code
+const MMI_SC_CALL_WAITING = "43";
+
+// MMI call barring service codes
+const MMI_SC_BAOC = "33";
+const MMI_SC_BAOIC = "331";
+const MMI_SC_BAOICxH = "332";
+const MMI_SC_BAIC = "35";
+const MMI_SC_BAICr = "351";
+const MMI_SC_BA_ALL = "330";
+const MMI_SC_BA_MO = "333";
+const MMI_SC_BA_MT = "353";
+
 // Allow this file to be imported via Components.utils.import().
 const EXPORTED_SYMBOLS = Object.keys(this);
