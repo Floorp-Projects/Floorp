@@ -152,7 +152,7 @@ function testNext() {
   pos++;
   if (pos < TESTS.length) {
     waitForSuccess({
-      name: "test #" + pos + " succesful finish",
+      name: "test #" + pos + " successful finish",
       validatorFn: function()
       {
         return foundCategory && foundText && pageLoaded && pageError;
