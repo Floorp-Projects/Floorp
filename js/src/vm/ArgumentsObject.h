@@ -103,7 +103,10 @@ class ArgumentsObject : public JSObject
     static const uint32_t LENGTH_OVERRIDDEN_BIT = 0x1;
     static const uint32_t PACKED_BITS_COUNT = 1;
 
-    static ArgumentsObject *create(JSContext *cx, StackFrame *fp);
+    template <typename CopyArgs>
+    static ArgumentsObject *create(JSContext *cx, HandleScript script,
+                                   HandleFunction callee, CopyArgs &copy);
+
     inline ArgumentsData *data() const;
 
   public:
@@ -119,6 +122,7 @@ class ArgumentsObject : public JSObject
      * This allows function-local analysis to determine that formals are
      * not aliased and generally simplifies arguments objects.
      */
+    static ArgumentsObject *createUnexpected(JSContext *cx, StackIter &iter);
     static ArgumentsObject *createUnexpected(JSContext *cx, StackFrame *fp);
 
     /*
@@ -197,6 +201,8 @@ class ArgumentsObject : public JSObject
     static size_t getDataSlotOffset() {
         return getFixedSlotOffset(DATA_SLOT);
     }
+
+    static void MaybeForwardToCallObject(StackFrame *fp, JSObject *obj, ArgumentsData *data);
 };
 
 class NormalArgumentsObject : public ArgumentsObject
