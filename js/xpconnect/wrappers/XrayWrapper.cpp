@@ -150,9 +150,11 @@ public:
 
     JSObject* getHolder(JSObject *wrapper);
     JSObject* ensureHolder(JSContext *cx, JSObject *wrapper);
-    bool cloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src);
-
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) = 0;
+
+    virtual JSObject* getExpandoChain(JSObject *obj) = 0;
+    virtual void setExpandoChain(JSObject *obj, JSObject *chain) = 0;
+    bool cloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src);
 
 private:
     bool expandoObjectMatchesConsumer(JSContext *cx, JSObject *expandoObject,
@@ -195,6 +197,12 @@ public:
     typedef ResolvingId ResolvingIdImpl;
 
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
+    virtual JSObject* getExpandoChain(JSObject *obj) {
+        return GetWNExpandoChain(obj);
+    }
+    virtual void setExpandoChain(JSObject *obj, JSObject *chain) {
+        SetWNExpandoChain(obj, chain);
+    }
 
     static XPCWrappedNativeXrayTraits singleton;
 };
@@ -222,6 +230,14 @@ public:
 
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
 
+    virtual JSObject* getExpandoChain(JSObject *obj) {
+        MOZ_NOT_REACHED("Expando chain not yet implemented for non-WN objects");
+        return NULL;
+    }
+    virtual void setExpandoChain(JSObject *obj, JSObject *chain) {
+        MOZ_NOT_REACHED("Expando chain not yet implemented for non-WN objects");
+    }
+
     static ProxyXrayTraits singleton;
 };
 
@@ -247,6 +263,14 @@ public:
     typedef ResolvingIdDummy ResolvingIdImpl;
 
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
+
+    virtual JSObject* getExpandoChain(JSObject *obj) {
+        MOZ_NOT_REACHED("Expando chain not yet implemented for non-WN objects");
+        return NULL;
+    }
+    virtual void setExpandoChain(JSObject *obj, JSObject *chain) {
+        MOZ_NOT_REACHED("Expando chain not yet implemented for non-WN objects");
+    }
 
     static DOMXrayTraits singleton;
 };
@@ -367,7 +391,7 @@ XrayTraits::getExpandoObjectInternal(JSContext *cx, JSObject *target,
         return NULL;
 
     // Iterate through the chain, looking for a same-origin object.
-    JSObject *head = GetExpandoChain(target);
+    JSObject *head = getExpandoChain(target);
     while (head) {
         if (expandoObjectMatchesConsumer(cx, head, origin, exclusiveGlobal))
             return head;
@@ -418,7 +442,7 @@ XrayTraits::attachExpandoObject(JSContext *cx, JSObject *target,
     // If this is our first expando object, take the opportunity to preserve
     // the wrapper. This keeps our expandos alive even if the Xray wrapper gets
     // collected.
-    JSObject *chain = GetExpandoChain(target);
+    JSObject *chain = getExpandoChain(target);
     if (!chain) {
         XPCWrappedNative *wn =
           static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(target));
@@ -430,7 +454,7 @@ XrayTraits::attachExpandoObject(JSContext *cx, JSObject *target,
 
     // Insert it at the front of the chain.
     JS_SetReservedSlot(expandoObject, JSSLOT_EXPANDO_NEXT, OBJECT_TO_JSVAL(chain));
-    SetExpandoChain(target, expandoObject);
+    setExpandoChain(target, expandoObject);
 
     return expandoObject;
 }
@@ -462,9 +486,9 @@ bool
 XrayTraits::cloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
 {
     MOZ_ASSERT(js::IsObjectInContextCompartment(dst, cx));
-    MOZ_ASSERT(GetExpandoChain(dst) == nullptr);
+    MOZ_ASSERT(getExpandoChain(dst) == nullptr);
 
-    JSObject *oldHead = GetExpandoChain(src);
+    JSObject *oldHead = getExpandoChain(src);
     while (oldHead) {
         JSObject *exclusive = JS_GetReservedSlot(oldHead,
                                                  JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL)
