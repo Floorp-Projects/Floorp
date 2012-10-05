@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jscntxt.h"
+#include "jsdate.h"
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsiter.h"
@@ -92,6 +93,14 @@ JSCompartment::~JSCompartment()
 bool
 JSCompartment::init(JSContext *cx)
 {
+    /*
+     * As a hack, we clear our timezone cache every time we create a new
+     * compartment.  This ensures that the cache is always relatively fresh, but
+     * shouldn't interfere with benchmarks which create tons of date objects
+     * (unless they also create tons of iframes, which seems unlikely).
+     */
+    js_ClearDateCaches();
+
     activeAnalysis = activeInference = false;
     types.init(cx);
 
