@@ -784,7 +784,7 @@ nsProtocolProxyService::SecondsSinceSessionStart()
     // convert microseconds to seconds
     PRTime ups;
     LL_I2L(ups, PR_USEC_PER_SEC);
-    LL_DIV(diff, diff, ups);
+    diff /= ups;
 
     // convert to 32 bit value
     uint32_t dsec;
