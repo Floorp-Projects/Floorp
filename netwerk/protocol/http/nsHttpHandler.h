@@ -255,6 +255,7 @@ private:
 
     void     NotifyObservers(nsIHttpChannel *chan, const char *event);
 
+    static void TimerCallback(nsITimer * aTimer, void * aClosure);
 private:
 
     // cached services
@@ -289,6 +290,7 @@ private:
     uint16_t mMaxRequestDelay;
     uint16_t mIdleSynTimeout;
 
+    bool     mPipeliningEnabled;
     uint16_t mMaxConnections;
     uint8_t  mMaxPersistentConnectionsPerServer;
     uint8_t  mMaxPersistentConnectionsPerProxy;
@@ -299,6 +301,7 @@ private:
     bool     mPipelineRescheduleOnTimeout;
     PRIntervalTime mPipelineRescheduleTimeout;
     PRIntervalTime mPipelineReadTimeout;
+    nsCOMPtr<nsITimer> mPipelineTestTimer;
 
     uint8_t  mRedirectionLimit;
 
