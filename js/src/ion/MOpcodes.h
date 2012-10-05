@@ -105,6 +105,7 @@ namespace ion {
     _(StoreElementHole)                                                     \
     _(ArrayPopShift)                                                        \
     _(ArrayPush)                                                            \
+    _(ArrayConcat)                                                          \
     _(LoadTypedArrayElement)                                                \
     _(LoadTypedArrayElementHole)                                            \
     _(StoreTypedArrayElement)                                               \

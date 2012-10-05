@@ -145,6 +145,7 @@ class CodeGenerator : public CodeGeneratorSpecific
                        ConstantOrRegister value, Register elementsTemp, Register length);
     bool visitArrayPushV(LArrayPushV *lir);
     bool visitArrayPushT(LArrayPushT *lir);
+    bool visitArrayConcat(LArrayConcat *lir);
     bool visitLoadTypedArrayElement(LLoadTypedArrayElement *lir);
     bool visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir);
     bool visitStoreTypedArrayElement(LStoreTypedArrayElement *lir);

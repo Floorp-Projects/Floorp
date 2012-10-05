@@ -2611,6 +2611,46 @@ CodeGenerator::visitArrayPushT(LArrayPushT *lir)
 }
 
 bool
+CodeGenerator::visitArrayConcat(LArrayConcat *lir)
+{
+    Register lhs = ToRegister(lir->lhs());
+    Register rhs = ToRegister(lir->rhs());
+    Register temp1 = ToRegister(lir->temp1());
+    Register temp2 = ToRegister(lir->temp2());
+
+    // If 'length == initializedLength' for both arrays we try to allocate an object
+    // inline and pass it to the stub. Else, we just pass NULL and the stub falls back
+    // to a slow path.
+    Label fail, call;
+    masm.loadPtr(Address(lhs, JSObject::offsetOfElements()), temp1);
+    masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
+    masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
+
+    masm.loadPtr(Address(rhs, JSObject::offsetOfElements()), temp1);
+    masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
+    masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
+
+    // Try to allocate an object.
+    JSObject *templateObj = lir->mir()->templateObj();
+    masm.newGCThing(temp1, templateObj, &fail);
+    masm.initGCThing(temp1, templateObj);
+    masm.jump(&call);
+    {
+        masm.bind(&fail);
+        masm.movePtr(ImmWord((void *)NULL), temp1);
+    }
+    masm.bind(&call);
+
+    typedef JSObject *(*pf)(JSContext *, HandleObject, HandleObject, HandleObject);
+    static const VMFunction Info = FunctionInfo<pf>(ArrayConcatDense);
+
+    pushArg(temp1);
+    pushArg(ToRegister(lir->rhs()));
+    pushArg(ToRegister(lir->lhs()));
+    return callVM(Info, lir);
+}
+
+bool
 CodeGenerator::visitCallIteratorStart(LCallIteratorStart *lir)
 {
     typedef JSObject *(*pf)(JSContext *, HandleObject, uint32_t);

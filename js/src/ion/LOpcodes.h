@@ -122,6 +122,7 @@
     _(ArrayPopShiftT)               \
     _(ArrayPushV)                   \
     _(ArrayPushT)                   \
+    _(ArrayConcat)                  \
     _(StoreElementHoleV)            \
     _(StoreElementHoleT)            \
     _(LoadTypedArrayElement)        \

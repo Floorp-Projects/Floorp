@@ -108,6 +108,9 @@ array_pop(JSContext *cx, unsigned argc, js::Value *vp);
 extern JSBool
 array_concat(JSContext *cx, unsigned argc, js::Value *vp);
 
+extern bool
+array_concat_dense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject result);
+
 extern void
 ArrayShiftMoveElements(JSObject *obj);
 
