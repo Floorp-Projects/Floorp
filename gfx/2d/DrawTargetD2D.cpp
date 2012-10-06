@@ -993,16 +993,7 @@ DrawTargetD2D::PushClip(const Path *aPath)
   mTransformDirty = true;
 
   if (mClipsArePushed) {
-    D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
-
-    if (mFormat == FORMAT_B8G8R8X8) {
-      options = D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE;
-    }
-
-    mRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), pathD2D->mGeometry,
-                                         D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
-                                         clip.mTransform, 1.0f, nullptr,
-                                         options), clip.mLayer);
+    PushD2DLayer(pathD2D->mGeometry, clip.mLayer, clip.mTransform);
   }
 }
 
@@ -1826,16 +1817,7 @@ DrawTargetD2D::PushClipsToRT(ID2D1RenderTarget *aRT)
   for (std::vector<PushedClip>::iterator iter = mPushedClips.begin();
         iter != mPushedClips.end(); iter++) {
     if (iter->mLayer) {
-      D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
-
-      if (mFormat == FORMAT_B8G8R8X8) {
-        options = D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE;
-      }
-
-      aRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), iter->mPath->mGeometry,
-                                            D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
-                                            iter->mTransform, 1.0f, nullptr,
-                                            options), iter->mLayer);
+      PushD2DLayer(iter->mPath->mGeometry, iter->mLayer, iter->mTransform);
     } else {
       aRT->PushAxisAlignedClip(iter->mBounds, iter->mIsPixelAligned ? D2D1_ANTIALIAS_MODE_ALIASED : D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     }
@@ -2716,6 +2698,33 @@ DrawTargetD2D::SetScissorToRect(IntRect *aRect)
   }
 
   mDevice->RSSetScissorRects(1, &rect);
+}
+
+void
+DrawTargetD2D::PushD2DLayer(ID2D1Geometry *aGeometry, ID2D1Layer *aLayer, const D2D1_MATRIX_3X2_F &aTransform)
+{
+  D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
+  D2D1_LAYER_OPTIONS1 options1 =  D2D1_LAYER_OPTIONS1_NONE;
+
+  if (mFormat == FORMAT_B8G8R8X8) {
+    options = D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE;
+    options1 = D2D1_LAYER_OPTIONS1_IGNORE_ALPHA | D2D1_LAYER_OPTIONS1_INITIALIZE_FROM_BACKGROUND;
+  }
+
+	RefPtr<ID2D1DeviceContext> dc;
+	HRESULT hr = mRT->QueryInterface(IID_ID2D1DeviceContext, (void**)((ID2D1DeviceContext**)byRef(dc)));
+
+	if (FAILED(hr)) {
+	    mRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), aGeometry,
+				                                   D2D1_ANTIALIAS_MODE_PER_PRIMITIVE, aTransform,
+				                                   1.0, nullptr, options),
+				             aLayer);
+	} else {
+	    dc->PushLayer(D2D1::LayerParameters1(D2D1::InfiniteRect(), aGeometry,
+				                                   D2D1_ANTIALIAS_MODE_PER_PRIMITIVE, aTransform,
+				                                   1.0, nullptr, options1),
+				            aLayer);
+	}
 }
 
 }
