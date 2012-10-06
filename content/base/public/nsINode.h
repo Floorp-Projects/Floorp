@@ -416,7 +416,7 @@ public:
    * If the return value is not -1, then calling GetChildAt() with that value
    * will return aPossibleChild.
    */
-  virtual int32_t IndexOf(nsINode* aPossibleChild) const = 0;
+  virtual int32_t IndexOf(const nsINode* aPossibleChild) const = 0;
 
   /**
    * Return the "owner document" of this node.  Note that this is not the same

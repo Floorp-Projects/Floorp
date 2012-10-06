@@ -169,10 +169,10 @@ class B2GRemoteAutomation(Automation):
     def restartB2G(self):
         # TODO hangs in subprocess.Popen without this delay
         time.sleep(5)
-        self._devicemanager.checkCmd(['shell', 'stop', 'b2g'])
+        self._devicemanager._checkCmd(['shell', 'stop', 'b2g'])
         # Wait for a bit to make sure B2G has completely shut down.
         time.sleep(10)
-        self._devicemanager.checkCmd(['shell', 'start', 'b2g'])
+        self._devicemanager._checkCmd(['shell', 'start', 'b2g'])
         if self._is_emulator:
             self.marionette.emulator.wait_for_port()
 
@@ -232,9 +232,9 @@ class B2GRemoteAutomation(Automation):
         # Set up port forwarding again for Marionette, since any that
         # existed previously got wiped out by the reboot.
         if not self._is_emulator:
-            self._devicemanager.checkCmd(['forward',
-                                          'tcp:%s' % self.marionette.port,
-                                          'tcp:%s' % self.marionette.port])
+            self._devicemanager._checkCmd(['forward',
+                                           'tcp:%s' % self.marionette.port,
+                                           'tcp:%s' % self.marionette.port])
 
         if self._is_emulator:
             self.marionette.emulator.wait_for_port()
