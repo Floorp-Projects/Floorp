@@ -12,6 +12,7 @@
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
+#include "mozilla/ErrorResult.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -35,9 +36,6 @@ class nsIDOMHTMLMenuElement;
 class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
 class nsIDOMHTMLPropertiesCollection;
-namespace mozilla {
-class ErrorResult;
-}
 
 typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 
@@ -82,6 +80,20 @@ public:
   NS_METHOD SetAttribute(const nsAString& aName,
                          const nsAString& aValue);
 
+  // WebIDL HTMLElement
+  virtual int32_t TabIndexDefault()
+  {
+    return -1;
+  }
+  int32_t TabIndex()
+  {
+    return GetIntAttr(nsGkAtoms::tabindex, TabIndexDefault());
+  }
+  void SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError)
+  {
+    aError = SetIntAttr(nsGkAtoms::tabindex, aTabIndex);
+  }
+
   // nsIDOMHTMLElement methods. Note that these are non-virtual
   // methods, implementations are expected to forward calls to these
   // methods.
@@ -95,6 +107,19 @@ public:
   NS_IMETHOD SetDir(const nsAString& aDir);
   nsresult GetClassName(nsAString& aClassName);
   nsresult SetClassName(const nsAString& aClassName);
+
+  nsresult GetTabIndex(int32_t* aTabIndex)
+  {
+    *aTabIndex = TabIndex();
+    return NS_OK;
+  }
+  nsresult SetTabIndex(int32_t aTabIndex)
+  {
+    mozilla::ErrorResult rv;
+    SetTabIndex(aTabIndex, rv);
+    return rv.ErrorCode();
+  }
+
   nsresult GetOffsetTop(int32_t* aOffsetTop);
   nsresult GetOffsetLeft(int32_t* aOffsetLeft);
   nsresult GetOffsetWidth(int32_t* aOffsetWidth);
@@ -107,14 +132,12 @@ public:
   NS_IMETHOD InsertAdjacentHTML(const nsAString& aPosition,
                                 const nsAString& aText);
   nsresult ScrollIntoView(bool aTop, uint8_t optional_argc);
-  // Declare Focus(), Blur(), GetTabIndex(), SetTabIndex(), GetHidden(),
-  // SetHidden(), GetSpellcheck(), SetSpellcheck(), and GetDraggable() such that
-  // classes that inherit interfaces with those methods properly override them.
+  // Declare Focus(), Blur(), GetHidden(), SetHidden(), GetSpellcheck(),
+  // SetSpellcheck(), and GetDraggable() such that classes that inherit
+  // interfaces with those methods properly override them.
   NS_IMETHOD Focus();
   NS_IMETHOD Blur();
   NS_IMETHOD Click();
-  NS_IMETHOD GetTabIndex(int32_t *aTabIndex);
-  NS_IMETHOD SetTabIndex(int32_t aTabIndex);
   NS_IMETHOD GetHidden(bool* aHidden);
   NS_IMETHOD SetHidden(bool aHidden);
   NS_IMETHOD GetSpellcheck(bool* aSpellcheck);
@@ -1354,8 +1377,6 @@ protected:
  * interface to another object. 
  * This macro doesn't forward
  * - Click
- * - GetTabIndex
- * - SetTabIndex
  * - Focus
  * - GetDraggable
  * - GetInnerHTML
@@ -1401,6 +1422,12 @@ protected:
   } \
   NS_IMETHOD SetHidden(bool aHidden) { \
     return _to SetHidden(aHidden); \
+  } \
+  NS_IMETHOD GetTabIndex(int32_t* aTabIndex) { \
+    return _to GetTabIndex(aTabIndex); \
+  } \
+  NS_IMETHOD SetTabIndex(int32_t aTabIndex) { \
+    return _to SetTabIndex(aTabIndex); \
   } \
   NS_IMETHOD Blur() { \
     return _to Blur(); \
