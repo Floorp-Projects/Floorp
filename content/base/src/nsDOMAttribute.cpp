@@ -586,7 +586,7 @@ nsDOMAttribute::GetChildArray(uint32_t* aChildCount) const
 }
 
 int32_t
-nsDOMAttribute::IndexOf(nsINode* aPossibleChild) const
+nsDOMAttribute::IndexOf(const nsINode* aPossibleChild) const
 {
   return -1;
 }
