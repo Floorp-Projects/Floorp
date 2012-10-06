@@ -76,7 +76,6 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLFormElement::)
-  NS_IMETHOD Click();
   NS_IMETHOD Focus();
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
     return nsGenericHTMLFormElement::GetInnerHTML(aInnerHTML);
@@ -84,6 +83,7 @@ public:
   NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
     return nsGenericHTMLFormElement::SetInnerHTML(aInnerHTML);
   }
+  virtual void Click() MOZ_OVERRIDE;
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
   // nsIDOMHTMLInputElement

@@ -3808,10 +3808,11 @@ nsGenericHTMLElement::Focus()
   return fm ? fm->SetFocus(elem, 0) : NS_OK;
 }
 
-nsresult nsGenericHTMLElement::Click()
+void
+nsGenericHTMLElement::Click()
 {
   if (HasFlag(NODE_HANDLING_CLICK))
-    return NS_OK;
+    return;
 
   // Strong in case the event kills it
   nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
@@ -3837,7 +3838,6 @@ nsresult nsGenericHTMLElement::Click()
   nsEventDispatcher::Dispatch(this, context, &event);
 
   UnsetFlags(NODE_HANDLING_CLICK);
-  return NS_OK;
 }
 
 bool
