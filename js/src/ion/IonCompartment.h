@@ -196,8 +196,16 @@ class IonActivation
         return prevIonTop_;
     }
     jsbytecode *prevpc() const {
-        JS_ASSERT(entryfp_->callingIntoIon());
+        JS_ASSERT_IF(entryfp_, entryfp_->callingIntoIon());
         return prevpc_;
+    }
+    void setEntryFp(StackFrame *fp) {
+        JS_ASSERT_IF(fp, !entryfp_);
+        entryfp_ = fp;
+    }
+    void setPrevPc(jsbytecode *pc) {
+        JS_ASSERT_IF(pc, !prevpc_);
+        prevpc_ = pc;
     }
     void setBailout(BailoutClosure *bailout) {
         JS_ASSERT(!bailout_);
@@ -218,6 +226,12 @@ class IonActivation
     }
     JSCompartment *compartment() const {
         return compartment_;
+    }
+    bool empty() const {
+        // If we have an entryfp, this activation is active. However, if
+        // FastInvoke is used, entryfp may be NULL and a non-NULL prevpc
+        // indicates this activation is not empty.
+        return !entryfp_ && !prevpc_;
     }
 
     static inline size_t offsetOfPrevPc() {

@@ -27,6 +27,7 @@
 #include "jstypedarrayinlines.h"
 
 #include "ion/Ion.h"
+#include "ion/IonCompartment.h"
 
 #include "vm/Stack-inl.h"
 
@@ -991,12 +992,22 @@ class FastInvokeGuard
 {
     InvokeArgsGuard args_;
     RootedFunction fun_;
+    RootedScript script_;
+#ifdef JS_ION
+    ion::IonContext ictx_;
+    ion::IonActivation activation_;
     bool useIon_;
+#endif
 
   public:
     FastInvokeGuard(JSContext *cx, const Value &fval)
       : fun_(cx),
+        script_(cx)
+#ifdef JS_ION
+        , ictx_(cx, cx->compartment, NULL),
+        activation_(cx, NULL),
         useIon_(ion::IsEnabled(cx))
+#endif
     {
         initFunction(fval);
     }
@@ -1004,8 +1015,10 @@ class FastInvokeGuard
     void initFunction(const Value &fval) {
         if (fval.isObject() && fval.toObject().isFunction()) {
             JSFunction *fun = fval.toObject().toFunction();
-            if (fun->isInterpreted())
+            if (fun->isInterpreted()) {
                 fun_ = fun;
+                script_ = fun->script();
+            }
         }
     }
 
@@ -1014,6 +1027,27 @@ class FastInvokeGuard
     }
 
     bool invoke(JSContext *cx) {
+#ifdef JS_ION
+        if (useIon_ && fun_) {
+            JS_ASSERT(fun_->script() == script_);
+
+            if (script_->hasIonScript() && !script_->ion->bailoutExpected()) {
+                ion::IonExecStatus result = ion::FastInvoke(cx, fun_, args_);
+                if (result == ion::IonExec_Error)
+                    return false;
+
+                JS_ASSERT(result == ion::IonExec_Ok);
+                return true;
+            }
+
+            if (script_->canIonCompile()) {
+                // This script is not yet hot. Since calling into Ion is much
+                // faster here, bump the use count a bit to account for this.
+                script_->incUseCount(5);
+            }
+        }
+#endif
+
         return Invoke(cx, args_);
     }
 
