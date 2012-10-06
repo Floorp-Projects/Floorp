@@ -82,12 +82,8 @@ MOCHITEST_FILES = \
 		test_bug780035.html \
 		test_bug787432.html \
 		test_bug796839.html \
+		test_spellcheck_pref.html \
 		$(NULL)
-
-ifneq (mobile,$(MOZ_BUILD_APP))
-MOCHITEST_FILES +=  test_spellcheck_pref.html \
-		$(NULL)
-endif
 
 _DATA_FILES = \
 		data/cfhtml-chromium.txt \

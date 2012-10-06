@@ -15,10 +15,6 @@ MODULE		= test_toolkit_general
 
 XPCSHELL_TESTS = unit
 
-DIRS = chrome widgets
-
-ifneq (mobile,$(MOZ_BUILD_APP))
-DIRS += browser
-endif
+DIRS = chrome widgets browser
 
 include $(topsrcdir)/config/rules.mk
