@@ -927,7 +927,6 @@ pref("network.http.spdy.coalesce-hostnames", true);
 pref("network.http.spdy.use-alternate-protocol", true);
 pref("network.http.spdy.ping-threshold", 44);
 pref("network.http.spdy.ping-timeout", 8);
-pref("network.http.spdy.send-buffer-size", 131072);
 
 pref("network.http.diagnostics", false);
 
