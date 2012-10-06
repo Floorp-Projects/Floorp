@@ -13,6 +13,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsISocketTransport.h"
 #include "nsISupportsPriority.h"
+#include "nsHttpHandler.h"
 
 #ifdef DEBUG
 // defined by the socket transport service while active
@@ -42,6 +43,7 @@ SpdyStream2::SpdyStream2(nsAHttpTransaction *httpTransaction,
     mRecvdFin(0),
     mFullyOpen(0),
     mSentWaitingFor(0),
+    mSetTCPSocketBuffer(0),
     mTxInlineFrameSize(SpdySession2::kDefaultBufferSize),
     mTxInlineFrameUsed(0),
     mTxStreamFrameSize(0),
@@ -468,6 +470,23 @@ void
 SpdyStream2::UpdateTransportSendEvents(uint32_t count)
 {
   mTotalSent += count;
+
+  // normally on non-windows platform we use TCP autotuning for
+  // the socket buffers, and this works well (managing enough
+  // buffers for BDP while conserving memory) for HTTP even when
+  // it creates really deep queues. However this 'buffer bloat' is
+  // a problem for spdy because it ruins the low latency properties
+  // necessary for PING and cancel to work meaningfully.
+  //
+  // If this stream represents a large upload, disable autotuning for
+  // the session and cap the send buffers by default at 128KB.
+  // (10Mbit/sec @ 100ms)
+  //
+  uint32_t bufferSize = gHttpHandler->SpdySendBufferSize();
+  if ((mTotalSent > bufferSize) && !mSetTCPSocketBuffer) {
+    mSetTCPSocketBuffer = 1;
+    mSocketTransport->SetSendBufferSize(bufferSize);
+  }
 
   if (mUpstreamState != SENDING_FIN_STREAM)
     mTransaction->OnTransportStatus(mSocketTransport,
