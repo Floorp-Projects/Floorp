@@ -8,7 +8,7 @@
                 android:layout_height="wrap_content">
 
     <RelativeLayout android:id="@+id/menu_panel"
-                    android:layout_width="wrap_content"
+                    android:layout_width="@dimen/menu_popup_width"
                     android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
                     android:background="@drawable/menu_popup_bg">

@@ -58,8 +58,6 @@ toolkit.jar:
         skin/classic/global/textbox.css
         skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
-        skin/classic/global/TopLevelImageDocument.css
-        skin/classic/global/TopLevelVideoDocument.css
         skin/classic/global/tree.css
         skin/classic/global/wizard.css
         skin/classic/global/alerts/alert.css                     (alerts/alert.css)
@@ -143,7 +141,11 @@ toolkit.jar:
         skin/classic/global/icons/warning-64.png                 (icons/warning-64.png)
         skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
         skin/classic/global/icons/wrap.png                       (icons/wrap.png)
-        skin/classic/global/inContentUI/background-texture.png  (inContentUI/background-texture.png)
+        skin/classic/global/inContentUI/background-texture.png   (inContentUI/background-texture.png)
+        skin/classic/global/media/TopLevelImageDocument.css      (media/TopLevelImageDocument.css)
+        skin/classic/global/media/TopLevelVideoDocument.css      (media/TopLevelVideoDocument.css)
+        skin/classic/global/media/imagedoc-lightnoise.png        (media/imagedoc-lightnoise.png)
+        skin/classic/global/media/imagedoc-darknoise.png         (media/imagedoc-darknoise.png)
         skin/classic/global/media/videocontrols.css              (media/videocontrols.css)
         skin/classic/global/media/pauseButton.png                (media/pauseButton.png)
         skin/classic/global/media/playButton.png                 (media/playButton.png)
@@ -234,8 +236,6 @@ toolkit.jar:
 *       skin/classic/aero/global/textbox.css                             (textbox-aero.css)
         skin/classic/aero/global/toolbar.css
 *       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
-        skin/classic/aero/global/TopLevelImageDocument.css
-        skin/classic/aero/global/TopLevelVideoDocument.css
 *       skin/classic/aero/global/tree.css                                (tree-aero.css)
         skin/classic/aero/global/wizard.css
         skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
@@ -319,7 +319,11 @@ toolkit.jar:
         skin/classic/aero/global/icons/warning-64.png                    (icons/warning-64-aero.png)
         skin/classic/aero/global/icons/windowControls.png                (icons/windowControls-aero.png)
         skin/classic/aero/global/icons/wrap.png                          (icons/wrap-aero.png)
-        skin/classic/aero/global/inContentUI/background-texture.png     (inContentUI/background-texture.png)
+        skin/classic/aero/global/inContentUI/background-texture.png      (inContentUI/background-texture.png)
+        skin/classic/aero/global/media/TopLevelImageDocument.css         (media/TopLevelImageDocument.css)
+        skin/classic/aero/global/media/TopLevelVideoDocument.css         (media/TopLevelVideoDocument.css)
+        skin/classic/aero/global/media/imagedoc-lightnoise.png           (media/imagedoc-lightnoise.png)
+        skin/classic/aero/global/media/imagedoc-darknoise.png            (media/imagedoc-darknoise.png)
         skin/classic/aero/global/media/videocontrols.css                 (media/videocontrols.css)
         skin/classic/aero/global/media/pauseButton.png                   (media/pauseButton.png)
         skin/classic/aero/global/media/playButton.png                    (media/playButton.png)

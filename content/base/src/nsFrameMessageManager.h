@@ -271,7 +271,7 @@ protected:
   bool mDelayedCxDestroy;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   static nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>* sCachedScripts;
-  static nsRefPtr<nsScriptCacheCleaner> sScriptCacheCleaner;
+  static nsScriptCacheCleaner* sScriptCacheCleaner;
 };
 
 class nsFrameScriptCx

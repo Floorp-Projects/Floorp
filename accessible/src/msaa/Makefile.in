@@ -26,19 +26,8 @@ CPPSRCS = \
   nsAccessNodeWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
   nsWinUtils.cpp \
-  CAccessibleTable.cpp \
-  CAccessibleTableCell.cpp \
-  CAccessibleValue.cpp \
   Compatibility.cpp \
   EnumVariant.cpp \
-  ia2AccessibleAction.cpp \
-  ia2AccessibleComponent.cpp \
-  ia2AccessibleEditableText.cpp \
-  ia2AccessibleImage.cpp \
-  ia2AccessibleHyperlink.cpp \
-  ia2AccessibleHypertext.cpp \
-  ia2AccessibleRelation.cpp \
-  ia2AccessibleText.cpp \
   RootAccessibleWrap.cpp \
   TextLeafAccessibleWrap.cpp \
   $(NULL)
@@ -52,13 +41,6 @@ CPPSRCS += \
 endif
 
 EXPORTS = \
-  CAccessibleValue.h \
-  ia2AccessibleAction.h \
-  ia2AccessibleComponent.h \
-  ia2AccessibleEditableText.h \
-  ia2AccessibleHyperlink.h \
-  ia2AccessibleHypertext.h \
-  ia2AccessibleText.h \
   nsAccessNodeWrap.h \
   $(NULL)
 
@@ -84,6 +66,7 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xpcom \
   -I$(srcdir)/../xul \
+  -I$(srcdir)/../windows/ia2 \
   -I$(srcdir)/../windows/uia \
   -I$(srcdir)/../../../content/base/src \
   -I$(srcdir)/../../../content/events/src \

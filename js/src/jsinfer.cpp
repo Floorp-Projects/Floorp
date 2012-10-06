@@ -4958,7 +4958,17 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, JSFunction *fun)
 
     size_t numBytes = sizeof(TypeNewScript)
                     + (initializerList.length() * sizeof(TypeNewScript::Initializer));
+#ifdef JSGC_ROOT_ANALYSIS
+    // calloc can legitimately return a pointer that appears to be poisoned.
+    void *p;
+    do {
+        p = cx->calloc_(numBytes);
+    } while (IsPoisonedPtr(p));
+    type->newScript = (TypeNewScript *) p;
+#else
     type->newScript = (TypeNewScript *) cx->calloc_(numBytes);
+#endif
+
     if (!type->newScript) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return;

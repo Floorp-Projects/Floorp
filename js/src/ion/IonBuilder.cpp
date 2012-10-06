@@ -4578,8 +4578,12 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
 // Test the type of values returned by a VM call. This is an optimized version
 // of calling TypeScript::Monitor inside such stubs.
 void
-IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *types)
+IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *barrier, types::TypeSet *types)
 {
+    // MonitorTypes is redundant if we will also add a type barrier.
+    if (barrier)
+        return;
+
     if (!types || types->unknown())
         return;
 
@@ -4765,7 +4769,7 @@ IonBuilder::jsop_getname(HandlePropertyName name)
     types::StackTypeSet *barrier = oracle->propertyReadBarrier(script_, pc);
     types::StackTypeSet *types = oracle->propertyRead(script_, pc);
 
-    monitorResult(ins, types);
+    monitorResult(ins, barrier, types);
     return pushTypeBarrier(ins, types, barrier);
 }
 
@@ -4831,7 +4835,7 @@ IonBuilder::jsop_getelem()
     types::StackTypeSet *types = oracle->propertyRead(script_, pc);
 
     if (mustMonitorResult)
-        monitorResult(ins, types);
+        monitorResult(ins, barrier, types);
     return pushTypeBarrier(ins, types, barrier);
 }
 
@@ -5957,7 +5961,7 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
         return false;
 
     if (ins->isCallGetProperty() || accessGetter)
-        monitorResult(ins, types);
+        monitorResult(ins, barrier, types);
     return pushTypeBarrier(ins, types, barrier);
 }
 

@@ -61,13 +61,15 @@ public:
     void InitXPCOM();
 
     static ContentChild* GetSingleton() {
-        NS_ASSERTION(sSingleton, "not initialized");
         return sSingleton;
     }
 
     const AppInfo& GetAppInfo() {
         return mAppInfo;
     }
+
+    void SetProcessName(const nsAString& aName);
+    const void GetProcessName(nsAString& aName);
 
     PCompositorChild*
     AllocPCompositor(mozilla::ipc::Transport* aTransport,
@@ -227,6 +229,7 @@ private:
 
     bool mIsForApp;
     bool mIsForBrowser;
+    nsString mProcessName;
 
     static ContentChild* sSingleton;
 

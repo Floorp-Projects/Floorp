@@ -1079,8 +1079,14 @@ class StackFrame
     void setRunningInIon() {
         flags_ |= RUNNING_IN_ION;
     }
+    void setCallingIntoIon() {
+        flags_ |= CALLING_INTO_ION;
+    }
     void clearRunningInIon() {
         flags_ &= ~RUNNING_IN_ION;
+    }
+    void clearCallingIntoIon() {
+        flags_ &= ~CALLING_INTO_ION;
     }
 };
 

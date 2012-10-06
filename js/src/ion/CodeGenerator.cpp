@@ -1804,6 +1804,22 @@ CodeGenerator::visitPowD(LPowD *ins)
 }
 
 bool
+CodeGenerator::visitRandom(LRandom *ins)
+{
+    Register temp = ToRegister(ins->temp());
+    Register temp2 = ToRegister(ins->temp2());
+
+    masm.loadJSContext(temp);
+
+    masm.setupUnalignedABICall(1, temp2);
+    masm.passABIArg(temp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, math_random_no_outparam), MacroAssembler::DOUBLE);
+
+    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
+    return true;
+}
+
+bool
 CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
 {
     Register temp = ToRegister(ins->temp());
@@ -2608,6 +2624,46 @@ CodeGenerator::visitArrayPushT(LArrayPushT *lir)
     else
         value = TypedOrValueRegister(lir->mir()->value()->type(), ToAnyRegister(lir->value()));
     return emitArrayPush(lir, lir->mir(), obj, value, elementsTemp, length);
+}
+
+bool
+CodeGenerator::visitArrayConcat(LArrayConcat *lir)
+{
+    Register lhs = ToRegister(lir->lhs());
+    Register rhs = ToRegister(lir->rhs());
+    Register temp1 = ToRegister(lir->temp1());
+    Register temp2 = ToRegister(lir->temp2());
+
+    // If 'length == initializedLength' for both arrays we try to allocate an object
+    // inline and pass it to the stub. Else, we just pass NULL and the stub falls back
+    // to a slow path.
+    Label fail, call;
+    masm.loadPtr(Address(lhs, JSObject::offsetOfElements()), temp1);
+    masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
+    masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
+
+    masm.loadPtr(Address(rhs, JSObject::offsetOfElements()), temp1);
+    masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
+    masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
+
+    // Try to allocate an object.
+    JSObject *templateObj = lir->mir()->templateObj();
+    masm.newGCThing(temp1, templateObj, &fail);
+    masm.initGCThing(temp1, templateObj);
+    masm.jump(&call);
+    {
+        masm.bind(&fail);
+        masm.movePtr(ImmWord((void *)NULL), temp1);
+    }
+    masm.bind(&call);
+
+    typedef JSObject *(*pf)(JSContext *, HandleObject, HandleObject, HandleObject);
+    static const VMFunction Info = FunctionInfo<pf>(ArrayConcatDense);
+
+    pushArg(temp1);
+    pushArg(ToRegister(lir->rhs()));
+    pushArg(ToRegister(lir->lhs()));
+    return callVM(Info, lir);
 }
 
 bool

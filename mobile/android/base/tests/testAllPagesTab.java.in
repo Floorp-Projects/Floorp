@@ -133,7 +133,8 @@ public class testAllPagesTab extends BaseTest {
         mSolo.waitForText(url);
 
         TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
-        return (ListView)tabHost.getCurrentView();
+        int listId = mDriver.findElement(getActivity(), "awesomebar_list").getId();
+        return (ListView)tabHost.getCurrentView().findViewById(listId);
     }
 
     public void tearDown() throws Exception {
