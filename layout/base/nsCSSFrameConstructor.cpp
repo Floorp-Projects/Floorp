@@ -8052,8 +8052,6 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   }
 
   index = count;
-  bool didInvalidate = false;
-  bool didReflow = false;
 
   while (0 <= --index) {
     nsIFrame* frame;
@@ -8110,19 +8108,16 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       }
       if (hint & nsChangeHint_NeedReflow) {
         StyleChangeReflow(frame, hint);
-        didReflow = true;
         didReflowThisFrame = true;
       }
       if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView |
                   nsChangeHint_UpdateOpacityLayer | nsChangeHint_UpdateTransformLayer |
                   nsChangeHint_ChildrenOnlyTransform)) {
         ApplyRenderingChangeToTree(presContext, frame, hint);
-        didInvalidate = true;
       }
       if ((hint & nsChangeHint_RecomputePosition) && !didReflowThisFrame) {
         // It is possible for this to fall back to a reflow
         if (!RecomputePosition(frame)) {
-          didReflow = true;
           didReflowThisFrame = true;
         }
       }
@@ -8194,16 +8189,6 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   }
 
   EndUpdate();
-
-  if (didInvalidate && !didReflow) {
-    // RepaintFrame changes can indicate changes in opacity etc which
-    // can require plugin clipping to change. If we requested a reflow,
-    // we don't need to do this since the reflow will do it for us.
-    nsRootPresContext* rootPC = presContext->GetRootPresContext();
-    if (rootPC) {
-      rootPC->RequestUpdatePluginGeometry();
-    }
-  }
 
   // cleanup references and verify the style tree.  Note that the latter needs
   // to happen once we've processed the whole list, since until then the tree

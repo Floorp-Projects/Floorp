@@ -1617,6 +1617,10 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
   nsPresContext* presContext = aFrame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
+  nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
+  if (!rootPresContext) {
+    return NS_OK;
+  }
 
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   bool usingDisplayPort = false;
@@ -1669,6 +1673,13 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
   if (aFlags & PAINT_IGNORE_SUPPRESSION) {
     builder.IgnorePaintSuppression();
+  }
+  // Windowed plugins aren't allowed in popups
+  if ((aFlags & PAINT_WIDGET_LAYERS) &&
+      !willFlushRetainedLayers &&
+      !(aFlags & PAINT_DOCUMENT_RELATIVE) &&
+      rootPresContext->NeedToComputePluginGeometryUpdates()) {
+    builder.SetWillComputePluginGeometry(true);
   }
   nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
 
@@ -1836,20 +1847,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
   list.PaintRoot(&builder, aRenderingContext, flags);
 
-  // Update the widget's opaque region information. This sets
-  // glass boundaries on Windows.
-  if ((aFlags & PAINT_WIDGET_LAYERS) &&
-      !willFlushRetainedLayers &&
-      !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
-    nsIWidget *widget = aFrame->GetNearestWidget();
-    if (widget) {
-      nsRegion excludedRegion = builder.GetExcludedGlassRegion();
-      excludedRegion.Sub(excludedRegion, visibleRegion);
-      nsIntRegion windowRegion(excludedRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
-      widget->UpdateOpaqueRegion(windowRegion);
-    }
-  }
-
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPaintList || gfxUtils::sDumpPainting) {
     if (gfxUtils::sDumpPaintingToFile) {
@@ -1875,6 +1872,24 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     gPaintCount++;
   }
 #endif
+
+  // Update the widget's opaque region information. This sets
+  // glass boundaries on Windows. Also set up plugin clip regions and bounds.
+  if ((aFlags & PAINT_WIDGET_LAYERS) &&
+      !willFlushRetainedLayers &&
+      !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
+    nsIWidget *widget = aFrame->GetNearestWidget();
+    if (widget) {
+      nsRegion excludedRegion = builder.GetExcludedGlassRegion();
+      excludedRegion.Sub(excludedRegion, visibleRegion);
+      nsIntRegion windowRegion(excludedRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
+      widget->UpdateOpaqueRegion(windowRegion);
+    }
+  }
+
+  if (builder.WillComputePluginGeometry()) {
+    rootPresContext->ComputePluginGeometryUpdates(aFrame, &builder, &list);
+  }
 
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();

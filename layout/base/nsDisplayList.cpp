@@ -440,6 +440,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIncludeAllOutOfFlows(false),
       mSelectedFramesOnly(false),
       mAccurateVisibleRegions(false),
+      mAllowMergingAndFlattening(true),
+      mWillComputePluginGeometry(false),
       mInTransform(false),
       mSyncDecodeImages(false),
       mIsPaintingToWindow(false),
@@ -916,20 +918,22 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
     nsDisplayItem* item = elements[i];
     nsDisplayItem* belowItem = i < 1 ? nullptr : elements[i - 1];
 
-    if (belowItem && item->TryMerge(aBuilder, belowItem)) {
-      belowItem->~nsDisplayItem();
-      elements.ReplaceElementsAt(i - 1, 1, item);
-      continue;
-    }
-
     nsDisplayList* list = item->GetList();
-    if (list && item->ShouldFlattenAway(aBuilder)) {
-      // The elements on the list >= i no longer serve any use.
-      elements.SetLength(i);
-      list->FlattenTo(&elements);
-      i = elements.Length();
-      item->~nsDisplayItem();
-      continue;
+    if (aBuilder->AllowMergingAndFlattening()) {
+      if (belowItem && item->TryMerge(aBuilder, belowItem)) {
+        belowItem->~nsDisplayItem();
+        elements.ReplaceElementsAt(i - 1, 1, item);
+        continue;
+      }
+
+      if (list && item->ShouldFlattenAway(aBuilder)) {
+        // The elements on the list >= i no longer serve any use.
+        elements.SetLength(i);
+        list->FlattenTo(&elements);
+        i = elements.Length();
+        item->~nsDisplayItem();
+        continue;
+      }
     }
 
     nsRect bounds = item->GetBounds(aBuilder, &snap);

@@ -1080,7 +1080,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (IsRoot()) {
       // Have to cancel our plugin geometry timer, because the
       // callback for that depends on a non-null presshell.
-      static_cast<nsRootPresContext*>(this)->CancelUpdatePluginGeometryTimer();
+      static_cast<nsRootPresContext*>(this)->CancelApplyPluginGeometryTimer();
     }
   }
 }
@@ -2439,8 +2439,7 @@ nsPresContext::IsCrossProcessRootContentDocument()
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
                                      nsPresContextType aType)
   : nsPresContext(aDocument, aType),
-    mDOMGeneration(0),
-    mNeedsToUpdatePluginGeometry(false)
+    mDOMGeneration(0)
 {
   mRegisteredPlugins.Init();
 }
@@ -2450,7 +2449,7 @@ nsRootPresContext::~nsRootPresContext()
   NS_ASSERTION(mRegisteredPlugins.Count() == 0,
                "All plugins should have been unregistered");
   CancelDidPaintTimer();
-  CancelUpdatePluginGeometryTimer();
+  CancelApplyPluginGeometryTimer();
 }
 
 void
@@ -2465,160 +2464,92 @@ nsRootPresContext::UnregisterPluginForGeometryUpdates(nsIContent* aPlugin)
   mRegisteredPlugins.RemoveEntry(aPlugin);
 }
 
-struct PluginGeometryClosure {
-  nsIFrame* mRootFrame;
-  int32_t   mRootAPD;
-  nsIFrame* mChangedSubtree;
-  nsRect    mChangedRect;
-  nsTHashtable<nsPtrHashKey<nsObjectFrame> > mAffectedPlugins;
-  nsRect    mAffectedPluginBounds;
-  nsTArray<nsIWidget::Configuration>* mOutputConfigurations;
-};
 static PLDHashOperator
-PluginBoundsEnumerator(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
+SetPluginHidden(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
 {
-  PluginGeometryClosure* closure = static_cast<PluginGeometryClosure*>(userArg);
+  nsIFrame* root = static_cast<nsIFrame*>(userArg);
   nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
   if (!f) {
-    NS_WARNING("Null frame in PluginBoundsEnumerator");
+    NS_WARNING("Null frame in SetPluginHidden");
     return PL_DHASH_NEXT;
   }
-  nsRect fBounds = f->GetContentRect() +
-      f->GetParent()->GetOffsetToCrossDoc(closure->mRootFrame);
-  int32_t APD = f->PresContext()->AppUnitsPerDevPixel();
-  fBounds = fBounds.ConvertAppUnitsRoundOut(APD, closure->mRootAPD);
-  // We're identifying the plugins that may have been affected by changes
-  // to the frame subtree rooted at aChangedRoot. Any plugin that overlaps
-  // the overflow area of aChangedRoot could have its clip region affected
-  // because it might be covered (or uncovered) by changes to the subtree.
-  // Plugins in the subtree might have changed position and/or size, and
-  // they might not be in aChangedRoot's overflow area (because they're
-  // being clipped by an ancestor in the subtree).
-  if (fBounds.Intersects(closure->mChangedRect) ||
-      nsLayoutUtils::IsAncestorFrameCrossDoc(closure->mChangedSubtree, f)) {
-    closure->mAffectedPluginBounds.UnionRect(
-        closure->mAffectedPluginBounds, fBounds);
-    closure->mAffectedPlugins.PutEntry(f);
+  if (!nsLayoutUtils::IsAncestorFrameCrossDoc(root, f)) {
+    // f is not managed by this frame so we should ignore it.
+    return PL_DHASH_NEXT;
   }
+  f->SetEmptyWidgetConfiguration();
   return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-PluginHideEnumerator(nsPtrHashKey<nsObjectFrame>* aEntry, void* userArg)
+void
+nsRootPresContext::ComputePluginGeometryUpdates(nsIFrame* aFrame,
+                                                nsDisplayListBuilder* aBuilder,
+                                                nsDisplayList* aList)
 {
-  PluginGeometryClosure* closure = static_cast<PluginGeometryClosure*>(userArg);
-  nsObjectFrame* f = aEntry->GetKey();
-  f->GetEmptyClipConfiguration(closure->mOutputConfigurations);
-  return PL_DHASH_NEXT;
+  if (mRegisteredPlugins.Count() == 0) {
+    return;
+  }
+
+  // Initially make the next state for each plugin descendant of aFrame be
+  // "hidden". Plugins that are visible will have their next state set to
+  // unhidden by nsDisplayPlugin::ComputeVisibility.
+  mRegisteredPlugins.EnumerateEntries(SetPluginHidden, aFrame);
+
+  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+  if (!rootFrame) {
+    return;
+  }
+
+  aBuilder->SetForPluginGeometry();
+  aBuilder->SetAccurateVisibleRegions();
+  // Merging and flattening has already been done and we should not do it
+  // again. nsDisplayScroll(Info)Layer doesn't support trying to flatten
+  // again.
+  aBuilder->SetAllowMergingAndFlattening(false);
+  nsRegion region = rootFrame->GetVisualOverflowRectRelativeToSelf();
+  // nsDisplayPlugin::ComputeVisibility will automatically set a non-hidden
+  // widget configuration for the plugin, if it's visible.
+  aList->ComputeVisibilityForRoot(aBuilder, &region);
+
+  InitApplyPluginGeometryTimer();
 }
 
 static void
-RecoverPluginGeometry(nsDisplayListBuilder* aBuilder,
-    nsDisplayList* aList, bool aInTransform, PluginGeometryClosure* aClosure)
+ApplyPluginGeometryUpdatesCallback(nsITimer *aTimer, void *aClosure)
 {
-  for (nsDisplayItem* i = aList->GetBottom(); i; i = i->GetAbove()) {
-    switch (i->GetType()) {
-    case nsDisplayItem::TYPE_PLUGIN: {
-      nsDisplayPlugin* displayPlugin = static_cast<nsDisplayPlugin*>(i);
-      nsObjectFrame* f = static_cast<nsObjectFrame*>(
-          displayPlugin->GetUnderlyingFrame());
-      // Ignore plugins which aren't supposed to be affected by this
-      // operation --- their bounds will not have been included in the
-      // display list computations so the visible region computed for them
-      // would be incorrect
-      nsPtrHashKey<nsObjectFrame>* entry =
-        aClosure->mAffectedPlugins.GetEntry(f);
-      // Windowed plugins in transforms are always ignored, we don't
-      // create configurations for them
-      if (entry && (!aInTransform || f->PaintedByGecko())) {
-        displayPlugin->GetWidgetConfiguration(aBuilder,
-                                              aClosure->mOutputConfigurations);
-        // we've dealt with this plugin now
-        aClosure->mAffectedPlugins.RawRemoveEntry(entry);
-      }
-      break;
-    }
-    case nsDisplayItem::TYPE_TRANSFORM: {
-      nsDisplayList* sublist =
-          static_cast<nsDisplayTransform*>(i)->GetStoredList()->GetList();
-      RecoverPluginGeometry(aBuilder, sublist, true, aClosure);
-      break;
-    }
-    default: {
-      nsDisplayList* sublist = i->GetList();
-      if (sublist) {
-        RecoverPluginGeometry(aBuilder, sublist, aInTransform, aClosure);
-      }
-      break;
-    }
-    }
+  static_cast<nsRootPresContext*>(aClosure)->ApplyPluginGeometryUpdates();
+}
+
+void
+nsRootPresContext::InitApplyPluginGeometryTimer()
+{
+  if (mApplyPluginGeometryTimer) {
+    return;
+  }
+
+  // We'll apply the plugin geometry updates during the next compositing paint in this
+  // presContext (either from nsPresShell::WillPaintWindow or from
+  // nsPresShell::DidPaintWindow, depending on the platform).  But paints might
+  // get optimized away if the old plugin geometry covers the invalid region,
+  // so set a backup timer to do this too.  We want to make sure this
+  // won't fire before our normal paint notifications, if those would
+  // update the geometry, so set it for double the refresh driver interval.
+  mApplyPluginGeometryTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (mApplyPluginGeometryTimer) {
+    mApplyPluginGeometryTimer->
+      InitWithFuncCallback(ApplyPluginGeometryUpdatesCallback, this,
+                           nsRefreshDriver::DefaultInterval() * 2,
+                           nsITimer::TYPE_ONE_SHOT);
   }
 }
 
-#ifdef DEBUG
-#include <stdio.h>
-
-static bool gDumpPluginList = false;
-#endif
-
 void
-nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
-                                            nsTArray<nsIWidget::Configuration>* aConfigurations)
+nsRootPresContext::CancelApplyPluginGeometryTimer()
 {
-  if (mRegisteredPlugins.Count() == 0)
-    return;
-
-  PluginGeometryClosure closure;
-  closure.mRootFrame = mShell->FrameManager()->GetRootFrame();
-  closure.mRootAPD = closure.mRootFrame->PresContext()->AppUnitsPerDevPixel();
-  closure.mChangedSubtree = aChangedSubtree;
-  closure.mChangedRect = aChangedSubtree->GetVisualOverflowRect() +
-      aChangedSubtree->GetOffsetToCrossDoc(closure.mRootFrame);
-  int32_t subtreeAPD = aChangedSubtree->PresContext()->AppUnitsPerDevPixel();
-  closure.mChangedRect =
-    closure.mChangedRect.ConvertAppUnitsRoundOut(subtreeAPD, closure.mRootAPD);
-  closure.mAffectedPlugins.Init();
-  closure.mOutputConfigurations = aConfigurations;
-  // Fill in closure.mAffectedPlugins and closure.mAffectedPluginBounds
-  mRegisteredPlugins.EnumerateEntries(PluginBoundsEnumerator, &closure);
-
-  nsRect bounds;
-  if (bounds.IntersectRect(closure.mAffectedPluginBounds,
-                           closure.mRootFrame->GetRect())) {
-    nsDisplayListBuilder builder(closure.mRootFrame,
-    		nsDisplayListBuilder::PLUGIN_GEOMETRY, false);
-    builder.SetAccurateVisibleRegions();
-    nsDisplayList list;
-
-    builder.EnterPresShell(closure.mRootFrame, bounds);
-    closure.mRootFrame->BuildDisplayListForStackingContext(
-        &builder, bounds, &list);
-    builder.LeavePresShell(closure.mRootFrame, bounds);
-
-#ifdef DEBUG
-    if (gDumpPluginList) {
-      fprintf(stderr, "Plugins --- before optimization (bounds %d,%d,%d,%d):\n",
-          bounds.x, bounds.y, bounds.width, bounds.height);
-      nsFrame::PrintDisplayList(&builder, list);
-    }
-#endif
-
-    nsRegion visibleRegion(bounds);
-    list.ComputeVisibilityForRoot(&builder, &visibleRegion);
-
-#ifdef DEBUG
-    if (gDumpPluginList) {
-      fprintf(stderr, "Plugins --- after optimization:\n");
-      nsFrame::PrintDisplayList(&builder, list);
-    }
-#endif
-
-    RecoverPluginGeometry(&builder, &list, false, &closure);
-    list.DeleteAll();
+  if (mApplyPluginGeometryTimer) {
+    mApplyPluginGeometryTimer->Cancel();
+    mApplyPluginGeometryTimer = nullptr;
   }
-
-  // Plugins that we didn't find in the display list are not visible
-  closure.mAffectedPlugins.EnumerateEntries(PluginHideEnumerator, &closure);
 }
 
 static bool
@@ -2689,61 +2620,6 @@ SortConfigurations(nsTArray<nsIWidget::Configuration>* aConfigurations)
   }
 }
 
-void
-nsRootPresContext::UpdatePluginGeometry()
-{
-  if (!mNeedsToUpdatePluginGeometry)
-    return;
-  mNeedsToUpdatePluginGeometry = false;
-  // Cancel out mUpdatePluginGeometryTimer so it doesn't do a random
-  // update when we don't actually want one.
-  CancelUpdatePluginGeometryTimer();
-
-  nsIFrame* f = FrameManager()->GetRootFrame();
-  nsTArray<nsIWidget::Configuration> configurations;
-  GetPluginGeometryUpdates(f, &configurations);
-  if (configurations.IsEmpty())
-    return;
-  SortConfigurations(&configurations);
-  nsIWidget* widget = f->GetNearestWidget();
-  NS_ASSERTION(widget, "Plugins must have a parent window");
-  widget->ConfigureChildren(configurations);
-  DidApplyPluginGeometryUpdates();
-}
-
-static void
-UpdatePluginGeometryCallback(nsITimer *aTimer, void *aClosure)
-{
-  static_cast<nsRootPresContext*>(aClosure)->UpdatePluginGeometry();
-}
-
-void
-nsRootPresContext::RequestUpdatePluginGeometry()
-{
-  if (mRegisteredPlugins.Count() == 0)
-    return;
-
-  if (!mNeedsToUpdatePluginGeometry) {
-    // We'll update the plugin geometry during the next paint in this
-    // presContext (either from nsPresShell::WillPaint or from
-    // nsPresShell::DidPaint, depending on the platform) or on the next
-    // layout flush, whichever comes first.  But we may not have anyone
-    // flush layout, and paints might get optimized away if the old
-    // plugin geometry covers the whole canvas, so set a backup timer to
-    // do this too.  We want to make sure this won't fire before our
-    // normal paint notifications, if those would update the geometry,
-    // so set it for double the refresh driver interval.
-    mUpdatePluginGeometryTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (mUpdatePluginGeometryTimer) {
-      mUpdatePluginGeometryTimer->
-        InitWithFuncCallback(UpdatePluginGeometryCallback, this,
-                             nsRefreshDriver::DefaultInterval() * 2,
-                             nsITimer::TYPE_ONE_SHOT);
-    }
-    mNeedsToUpdatePluginGeometry = true;
-  }
-}
-
 static PLDHashOperator
 PluginDidSetGeometryEnumerator(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
 {
@@ -2756,9 +2632,37 @@ PluginDidSetGeometryEnumerator(nsRefPtrHashKey<nsIContent>* aEntry, void* userAr
   return PL_DHASH_NEXT;
 }
 
-void
-nsRootPresContext::DidApplyPluginGeometryUpdates()
+struct PluginGetGeometryUpdateClosure {
+  nsTArray<nsIWidget::Configuration> mConfigurations;
+};
+static PLDHashOperator
+PluginGetGeometryUpdate(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
 {
+  PluginGetGeometryUpdateClosure* closure =
+    static_cast<PluginGetGeometryUpdateClosure*>(userArg);
+  nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
+  if (!f) {
+    NS_WARNING("Null frame in GetPluginGeometryUpdate");
+    return PL_DHASH_NEXT;
+  }
+  f->GetWidgetConfiguration(&closure->mConfigurations);
+  return PL_DHASH_NEXT;
+}
+
+void
+nsRootPresContext::ApplyPluginGeometryUpdates()
+{
+  CancelApplyPluginGeometryTimer();
+
+  PluginGetGeometryUpdateClosure closure;
+  mRegisteredPlugins.EnumerateEntries(PluginGetGeometryUpdate, &closure);
+  // Walk mRegisteredPlugins and ask each plugin for its configuration
+  if (!closure.mConfigurations.IsEmpty()) {
+    nsIWidget* widget = closure.mConfigurations[0].mChild->GetParent();
+    NS_ASSERTION(widget, "Plugins must have a parent window");
+    SortConfigurations(&closure.mConfigurations);
+    widget->ConfigureChildren(closure.mConfigurations);
+  }
   mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nullptr);
 }
 

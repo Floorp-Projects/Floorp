@@ -129,12 +129,26 @@ public:
   nsDisplayListBuilder(nsIFrame* aReferenceFrame, Mode aMode, bool aBuildCaret);
   ~nsDisplayListBuilder();
 
+  void SetWillComputePluginGeometry(bool aWillComputePluginGeometry)
+  {
+    mWillComputePluginGeometry = aWillComputePluginGeometry;
+  }
+  void SetForPluginGeometry()
+  {
+    NS_ASSERTION(mMode == PAINTING, "Can only switch from PAINTING to PLUGIN_GEOMETRY");
+    NS_ASSERTION(mWillComputePluginGeometry, "Should have signalled this in advance");
+    mMode = PLUGIN_GEOMETRY;
+  }
+
   /**
    * @return true if the display is being built in order to determine which
    * frame is under the mouse position.
    */
   bool IsForEventDelivery() { return mMode == EVENT_DELIVERY; }
   /**
+   * Be careful with this. The display list will be built in PAINTING mode
+   * first and then switched to PLUGIN_GEOMETRY before a second call to
+   * ComputeVisibility.
    * @return true if the display list is being built to compute geometry
    * for plugins.
    */
@@ -143,6 +157,7 @@ public:
    * @return true if the display list is being built for painting.
    */
   bool IsForPainting() { return mMode == PAINTING; }
+  bool WillComputePluginGeometry() { return mWillComputePluginGeometry; }
   /**
    * @return true if "painting is suppressed" during page load and we
    * should paint only the background of the document.
@@ -262,6 +277,13 @@ public:
    */
   void SetPaintingToWindow(bool aToWindow) { mIsPaintingToWindow = aToWindow; }
   bool IsPaintingToWindow() const { return mIsPaintingToWindow; }
+
+  /**
+   * Returns true if merging and flattening of display lists should be
+   * performed while computing visibility.
+   */
+  bool AllowMergingAndFlattening() { return mAllowMergingAndFlattening; }
+  void SetAllowMergingAndFlattening(bool aAllow) { mAllowMergingAndFlattening = aAllow; }
 
   /**
    * @return Returns if the builder is currently building an
@@ -602,6 +624,8 @@ private:
   bool                           mIncludeAllOutOfFlows;
   bool                           mSelectedFramesOnly;
   bool                           mAccurateVisibleRegions;
+  bool                           mAllowMergingAndFlattening;
+  bool                           mWillComputePluginGeometry;
   // True when we're building a display list that's directly or indirectly
   // under an nsDisplayTransform
   bool                           mInTransform;
@@ -942,6 +966,7 @@ public:
    * aAllowVisibleRegionExpansion is a rect where we are allowed to
    * expand the visible region and is only used for making sure the
    * background behind a plugin is visible.
+   * This method needs to be idempotent.
    *
    * @return true if the item is visible, false if no part of the item
    * is visible.
@@ -1253,6 +1278,7 @@ public:
    * This does not remove any items from the list, so we can recompute
    * visiblity with different regions later (see
    * FrameLayerBuilder::DrawThebesLayer).
+   * This method needs to be idempotent.
    * 
    * @param aVisibleRegion the area that is visible, relative to the
    * reference frame; on return, this contains the area visible under the list.
@@ -1262,18 +1288,19 @@ public:
    * @return true if any item in the list is visible.
    */
   bool ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
-                                     nsRegion* aVisibleRegion,
-                                     const nsRect& aListVisibleBounds,
-                                     const nsRect& aAllowVisibleRegionExpansion);
+                                   nsRegion* aVisibleRegion,
+                                   const nsRect& aListVisibleBounds,
+                                   const nsRect& aAllowVisibleRegionExpansion);
 
   /**
    * As ComputeVisibilityForSublist, but computes visibility for a root
    * list (a list that does not belong to an nsDisplayItem).
+   * This method needs to be idempotent.
    *
    * @param aVisibleRegion the area that is visible
    */
   bool ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
-                                  nsRegion* aVisibleRegion);
+                                nsRegion* aVisibleRegion);
 
   /**
    * Returns true if the visible region output from ComputeVisiblity was
