@@ -47,23 +47,15 @@ public class ReferrerReceiver
 
             if (source != null && UTM_SOURCE.equals(source) && campaign != null) {
                 try {
-                    JSONObject idPref = new JSONObject();
-                    idPref.put("name", "distribution.id");
-                    idPref.put("type", "string");
-                    idPref.put("value", "playstore");
-
-                    JSONObject versionPref = new JSONObject();
-                    versionPref.put("name", "distribution.version");
-                    versionPref.put("type", "string");
-                    versionPref.put("value", campaign);
+                    JSONObject data = new JSONObject();
+                    data.put("id", "playstore");
+                    data.put("version", campaign);
 
                     // Try to make sure the prefs are written as a group
-                    GeckoEvent idEvent = GeckoEvent.createBroadcastEvent("Preferences:Set", idPref.toString());
-                    GeckoAppShell.sendEventToGecko(idEvent);
-                    GeckoEvent versionEvent = GeckoEvent.createBroadcastEvent("Preferences:Set", versionPref.toString());
-                    GeckoAppShell.sendEventToGecko(versionEvent);
+                    GeckoEvent event = GeckoEvent.createBroadcastEvent("Distribution:Set", data.toString());
+                    GeckoAppShell.sendEventToGecko(event);
                 } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error setting distribution prefs", e);
+                    Log.e(LOGTAG, "Error setting distribution", e);
                 }
             }
         }

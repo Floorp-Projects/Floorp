@@ -629,7 +629,7 @@ nsGenericDOMDataNode::GetChildArray(uint32_t* aChildCount) const
 }
 
 int32_t
-nsGenericDOMDataNode::IndexOf(nsINode* aPossibleChild) const
+nsGenericDOMDataNode::IndexOf(const nsINode* aPossibleChild) const
 {
   return -1;
 }

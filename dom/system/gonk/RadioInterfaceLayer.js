@@ -69,8 +69,8 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetCardLock",
   "RIL:UnlockCardLock",
   "RIL:SetCardLock",
-  "RIL:SendUSSD",
-  "RIL:CancelUSSD",
+  "RIL:SendMMI",
+  "RIL:CancelMMI",
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
   "RIL:SendStkEventDownload",
@@ -371,13 +371,13 @@ RadioInterfaceLayer.prototype = {
         this.saveRequestTarget(msg);
         this.setCardLock(msg.json);
         break;
-      case "RIL:SendUSSD":
+      case "RIL:SendMMI":
         this.saveRequestTarget(msg);
-        this.sendUSSD(msg.json);
+        this.sendMMI(msg.json);
         break;
-      case "RIL:CancelUSSD":
+      case "RIL:CancelMMI":
         this.saveRequestTarget(msg);
-        this.cancelUSSD(msg.json);
+        this.cancelMMI(msg.json);
         break;
       case "RIL:SendStkResponse":
         this.sendStkResponse(msg.json);
@@ -507,15 +507,17 @@ RadioInterfaceLayer.prototype = {
       case "iccmbdn":
         ppmm.broadcastAsyncMessage("RIL:VoicemailNumberChanged", message);
         break;
-      case "ussdreceived":
-        debug("ussdreceived " + JSON.stringify(message));
+      case "USSDReceived":
+        debug("USSDReceived " + JSON.stringify(message));
         this.handleUSSDReceived(message);
         break;
-      case "sendussd":
-        this.handleSendUSSD(message);
+      case "sendMMI":
+      case "sendUSSD":
+        this.handleSendMMI(message);
         break;
-      case "cancelussd":
-        this.handleCancelUSSD(message);
+      case "cancelMMI":
+      case "cancelUSSD":
+        this.handleCancelMMI(message);
         break;
       case "stkcommand":
         this.handleStkProactiveCommand(message);
@@ -1290,20 +1292,20 @@ RadioInterfaceLayer.prototype = {
 
   handleUSSDReceived: function handleUSSDReceived(ussd) {
     debug("handleUSSDReceived " + JSON.stringify(ussd));
-    ppmm.broadcastAsyncMessage("RIL:UssdReceived", ussd);
+    ppmm.broadcastAsyncMessage("RIL:USSDReceived", ussd);
   },
 
-  handleSendUSSD: function handleSendUSSD(message) {
-    debug("handleSendUSSD " + JSON.stringify(message));
-    let messageType = message.success ? "RIL:SendUssd:Return:OK" :
-                                        "RIL:SendUssd:Return:KO";
+  handleSendMMI: function handleSendMMI(message) {
+    debug("handleSendMMI " + JSON.stringify(message));
+    let messageType = message.success ? "RIL:SendMMI:Return:OK" :
+                                        "RIL:SendMMI:Return:KO";
     this._sendRequestResults(messageType, message);
   },
 
-  handleCancelUSSD: function handleCancelUSSD(message) {
-    debug("handleCancelUSSD " + JSON.stringify(message));
-    let messageType = message.success ? "RIL:CancelUssd:Return:OK" :
-                                        "RIL:CancelUssd:Return:KO";
+  handleCancelMMI: function handleCancelMMI(message) {
+    debug("handleCancelMMI " + JSON.stringify(message));
+    let messageType = message.success ? "RIL:CancelMMI:Return:OK" :
+                                        "RIL:CancelMMI:Return:KO";
     this._sendRequestResults(messageType, message);
   },
 
@@ -1521,13 +1523,17 @@ RadioInterfaceLayer.prototype = {
                              requestId: requestId});
   },
 
-  sendUSSD: function sendUSSD(message) {
-    debug("SendUSSD " + JSON.stringify(message));
-    message.rilMessageType = "sendUSSD";
+  sendMMI: function sendMMI(message) {
+    debug("SendMMI " + JSON.stringify(message));
+    message.rilMessageType = "sendMMI";
     this.worker.postMessage(message);
   },
 
-  cancelUSSD: function cancelUSSD(message) {
+  cancelMMI: function cancelMMI(message) {
+    // Some MMI codes trigger radio operations, but unfortunately the RIL only
+    // supports cancelling USSD requests so far. Despite that, in order to keep
+    // the API uniformity, we are wrapping the cancelUSSD function within the
+    // cancelMMI funcion.
     debug("Cancel pending USSD");
     message.rilMessageType = "cancelUSSD";
     this.worker.postMessage(message);

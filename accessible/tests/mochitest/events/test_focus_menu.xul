@@ -21,19 +21,11 @@
           src="../events.js" />
 
   <script type="application/javascript">
-    //gA11yEventDumpID = "eventdump"; // debug stuff
     //gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
     function doTests()
     {
-      // bug 708927 - test times out on Linux
-      if (LINUX) {
-        todo(false, "Reenable on Linux after fixing bug 708927!");
-        SimpleTest.finish();
-        return;
-      }
-
       // Test focus events.
       gQueue = new eventQueue();
 
@@ -67,6 +59,13 @@
       gQueue.push(new synthClick("vehicle", new focusChecker("vehicle")));
       gQueue.push(new synthMouseMove("cycle", new focusChecker("cycle")));
 
+      // XXXbug708927 - test times out on Linux, see more info at
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=708927#c360. If needed
+      // then enable logging below.
+      if (LINUX) {
+        todo(false, "Reenable on Linux after fixing bug 708927!");
+      } else {
+
       // open submenu
       gQueue.push(new synthRightKey("cycle", new focusChecker("tricycle")));
 
@@ -77,6 +76,11 @@
 
       // click menuitem to close menu, focus gets back to document
       gQueue.push(new synthClick("tricycle", new focusChecker(document)));
+
+      }
+
+      //enableLogging("focus,DOMEvents,tree"); // logging for bug708927
+      //gQueue.onFinish = function() { disableLogging(); }
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

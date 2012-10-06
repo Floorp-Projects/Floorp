@@ -1,0 +1,55 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.widget.ListView;
+import android.app.Activity;
+import java.util.ArrayList;
+import android.widget.TabHost;
+import android.view.View;
+import android.widget.ListView;
+import android.util.Log;
+
+public class testHistory extends PixelTest {
+    private View mFirstChild;
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testHistory() {
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
+        String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
+        String url3 = getAbsoluteUrl("/robocop/robocop_blank_03.html");
+
+        loadAndPaint(url);
+        verifyPageTitle("Browser Blank Page 01");
+        loadAndPaint(url2);
+        verifyPageTitle("Browser Blank Page 02");
+        loadAndPaint(url3);
+        verifyPageTitle("Browser Blank Page 03");
+
+        ListView hList = openHistoryList();
+        mAsserter.ok(hList != null, "checking history exists", "history exists");
+
+        // Click on the history item and wait for the page to load
+        mFirstChild = null;
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+        mFirstChild = hList.getChildAt(1);
+        mAsserter.isnot(mFirstChild, null, "Got history item");
+        mSolo.clickOnView(mFirstChild);
+        contentEventExpecter.blockForEvent();
+        verifyUrl(url3);
+    }
+
+    protected ListView openHistoryList() {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mSolo.clickOnText("History");
+
+        TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
+        return (ListView)tabHost.getCurrentView();
+    }
+}

@@ -322,11 +322,15 @@ public class GeckoMenu extends ListView
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         GeckoApp activity = (GeckoApp) mContext;
-        activity.closeOptionsMenu();
 
         if (!item.hasSubMenu()) {
+            activity.closeOptionsMenu();
             return activity.onOptionsItemSelected(item);
         } else {
+            // Hide the menu only if we are showing the MenuPopup.
+            if (!activity.hasPermanentMenuKey())
+                activity.closeOptionsMenu();
+
             // Show the submenu.
             GeckoApp.MenuPresenter presenter = activity.getMenuPresenter();
             presenter.show((GeckoSubMenu) item.getSubMenu());

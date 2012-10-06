@@ -331,6 +331,27 @@ ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
     return true;
 }
 
+JSObject *
+ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject res)
+{
+    JS_ASSERT(obj1->isDenseArray());
+    JS_ASSERT(obj2->isDenseArray());
+    JS_ASSERT_IF(res, res->isDenseArray());
+
+    if (res) {
+        // Fast path if we managed to allocate an object inline.
+        if (!js::array_concat_dense(cx, obj1, obj2, res))
+            return NULL;
+        return res;
+    }
+
+    Value argv[] = { UndefinedValue(), ObjectValue(*obj1), ObjectValue(*obj2) };
+    AutoValueArray ava(cx, argv, 3);
+    if (!js::array_concat(cx, 1, argv))
+        return NULL;
+    return &argv[0].toObject();
+}
+
 JSFlatString *
 StringFromCharCode(JSContext *cx, int32_t code)
 {

@@ -695,9 +695,38 @@ logging::AccessibleNNode(const char* aDescr, Accessible* aAccessible)
          static_cast<void*>(aAccessible->Document()),
          static_cast<void*>(aAccessible->GetDocumentNode()));
 
-  printf("    Document");
+  printf("    Document ");
   LogDocURI(static_cast<nsIDocument*>(aAccessible->GetDocumentNode()));
   printf("\n");
+}
+
+void
+logging::AccessibleNNode(const char* aDescr, nsINode* aNode)
+{
+  DocAccessible* document =
+    GetAccService()->GetDocAccessible(aNode->OwnerDoc());
+
+  if (document) {
+    Accessible* accessible = document->GetAccessible(aNode);
+    if (accessible) {
+      AccessibleNNode(aDescr, accessible);
+      return;
+    }
+  }
+
+  nsAutoCString nodeDescr("Not accessible ");
+  nodeDescr.Append(aDescr);
+  Node(nodeDescr.get(), aNode);
+}
+
+void
+logging::DOMEvent(const char* aDescr, nsINode* aOrigTarget,
+                  const nsAString& aEventType)
+{
+  logging::MsgBegin("DOMEvents", "event '%s' %s",
+                    NS_ConvertUTF16toUTF8(aEventType).get(), aDescr);
+  logging::AccessibleNNode("Target", aOrigTarget);
+  logging::MsgEnd();
 }
 
 void

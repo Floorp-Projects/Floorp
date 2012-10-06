@@ -40,10 +40,6 @@ public:
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_valid(
       /* [retval][out] */ boolean *valid);
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
-
 };
 
 #endif

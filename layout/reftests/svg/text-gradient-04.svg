@@ -1,0 +1,39 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <title>Test for gradients being positioned correctly within filters</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=797708 -->
+
+  <style>
+    @font-face {
+      src: url(../fonts/Ahem.ttf);
+      font-family: Ahem;
+    }
+  </style>
+
+  <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="100" y1="0" x2="300" y2="0">
+    <stop offset="0" stop-color="red"/>
+    <stop offset="0.5" stop-color="red"/>
+    <stop offset="0.5" stop-color="blue"/>
+    <stop offset="1" stop-color="blue"/>
+  </linearGradient>
+
+  <filter id="f">
+    <feMerge>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+
+  <clipPath id="c">
+    <path d="M 130,70 h 40 v 40 h -40 z
+             M 230,70 h 40 v 40 h -40 z"/>
+  </clipPath>
+
+  <g style="font: 64px Ahem; fill: url(#g); text-anchor: middle; filter: url(#f); clip-path: url(#c)">
+    <text x="150" y="100">a</text>
+    <text x="250" y="100">a</text>
+  </g>
+</svg>

@@ -181,6 +181,10 @@
     is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.explicit exception");
   }
  
+  // The main process always comes first when we display about:memory.  The
+  // remaining processes are sorted by their |resident| values (starting with
+  // the largest).  Processes without a |resident| memory reporter are saved
+  // for the end.
   let fakeReporters2 = [
     f("2nd", "heap-allocated",  OTHER,  1000 * MB),
     f("2nd", "heap-unallocated",OTHER,   100 * MB),
@@ -204,18 +208,20 @@
     // Check that we can handle "heap-allocated" not being present.
     f("3rd", "explicit/a/b",    HEAP,    333 * MB),
     f("3rd", "explicit/a/c",    HEAP,    444 * MB),
-    f2("3rd", "other1",         OTHER,   BYTES, 1 * MB),
+    f("3rd", "other1",          OTHER,     1 * MB),
+    f("3rd", "resident",        OTHER,   100 * MB),
 
     // Invalid values (negative, too-big) should be identified.
     f("4th", "heap-allocated",   OTHER,   100 * MB),
+    f("4th", "resident",         OTHER,   200 * MB),
     f("4th", "explicit/js/compartment(http:\\\\too-big.com\\)/stuff",
                                  HEAP,    150 * MB),
     f("4th", "explicit/ok",      HEAP,      5 * MB),
     f("4th", "explicit/neg1",    NONHEAP,  -2 * MB),
     // -111 becomes "-0.00MB" in non-verbose mode, and getting the negative
     // sign in there correctly is non-trivial.
-    f2("4th", "other1",          OTHER,   BYTES, -111),
-    f2("4th", "other2",          OTHER,   BYTES, -222 * MB),
+    f("4th",  "other1",          OTHER,   -111),
+    f("4th",  "other2",          OTHER,   -222 * MB),
     f2("4th", "other3",          OTHER,   COUNT, -333),
     f2("4th", "other4",          OTHER,   COUNT_CUMULATIVE, -444),
     f2("4th", "other5",          OTHER,   PERCENTAGE, -555),
@@ -299,34 +305,6 @@ Other Measurements\n\
    45.67% ── perc1\n\
   100.00% ── perc2\n\
 \n\
-2nd\n\
-\n\
-Explicit Allocations\n\
-1,000.00 MB (100.0%) -- explicit\n\
-├────499.00 MB (49.90%) ── a/b/c [3]\n\
-├────200.00 MB (20.00%) ── flip/the/backslashes\n\
-├────200.00 MB (20.00%) ── compartment(compartment-url)\n\
-└────101.00 MB (10.10%) ── heap-unclassified\n\
-\n\
-Other Measurements\n\
-1,000.00 MB ── heap-allocated\n\
-  100.00 MB ── heap-unallocated\n\
-  666.00 MB ── other0\n\
-  111.00 MB ── other1\n\
-\n\
-3rd\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-\n\
-Explicit Allocations\n\
-777.00 MB (100.0%) -- explicit\n\
-└──777.00 MB (100.0%) -- a\n\
-   ├──444.00 MB (57.14%) ── c\n\
-   └──333.00 MB (42.86%) ── b\n\
-\n\
-Other Measurements\n\
-1.00 MB ── other1\n\
-\n\
 4th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
@@ -357,6 +335,36 @@ Other Measurements\n\
       -444 ── other4 [?!]\n\
     -5.55% ── other5 [?!]\n\
    666.66% ── other6\n\
+ 200.00 MB ── resident\n\
+\n\
+3rd\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+\n\
+Explicit Allocations\n\
+777.00 MB (100.0%) -- explicit\n\
+└──777.00 MB (100.0%) -- a\n\
+   ├──444.00 MB (57.14%) ── c\n\
+   └──333.00 MB (42.86%) ── b\n\
+\n\
+Other Measurements\n\
+  1.00 MB ── other1\n\
+100.00 MB ── resident\n\
+\n\
+2nd\n\
+\n\
+Explicit Allocations\n\
+1,000.00 MB (100.0%) -- explicit\n\
+├────499.00 MB (49.90%) ── a/b/c [3]\n\
+├────200.00 MB (20.00%) ── flip/the/backslashes\n\
+├────200.00 MB (20.00%) ── compartment(compartment-url)\n\
+└────101.00 MB (10.10%) ── heap-unclassified\n\
+\n\
+Other Measurements\n\
+1,000.00 MB ── heap-allocated\n\
+  100.00 MB ── heap-unallocated\n\
+  666.00 MB ── other0\n\
+  111.00 MB ── other1\n\
 \n\
 5th\n\
 \n\
@@ -458,37 +466,6 @@ Other Measurements\n\
        45.67% ── perc1\n\
       100.00% ── perc2\n\
 \n\
-2nd\n\
-\n\
-Explicit Allocations\n\
-1,048,576,000 B (100.0%) -- explicit\n\
-├────523,239,424 B (49.90%) ── a/b/c [3]\n\
-├────209,715,200 B (20.00%) ── flip/the/backslashes\n\
-├────209,715,200 B (20.00%) ── compartment(compartment-url)\n\
-└────105,906,176 B (10.10%) ── heap-unclassified\n\
-\n\
-Virtual Size Breakdown\n\
-196,608 B (100.0%) ++ size\n\
-\n\
-Other Measurements\n\
-1,048,576,000 B ── heap-allocated\n\
-  104,857,600 B ── heap-unallocated\n\
-  698,351,616 B ── other0\n\
-  116,391,936 B ── other1\n\
-\n\
-3rd\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-\n\
-Explicit Allocations\n\
-814,743,552 B (100.0%) -- explicit\n\
-└──814,743,552 B (100.0%) -- a\n\
-   ├──465,567,744 B (57.14%) ── c\n\
-   └──349,175,808 B (42.86%) ── b\n\
-\n\
-Other Measurements\n\
-1,048,576 B ── other1\n\
-\n\
 4th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
@@ -517,6 +494,39 @@ Other Measurements\n\
           -444 ── other4 [?!]\n\
         -5.55% ── other5 [?!]\n\
        666.66% ── other6\n\
+ 209,715,200 B ── resident\n\
+\n\
+3rd\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+\n\
+Explicit Allocations\n\
+814,743,552 B (100.0%) -- explicit\n\
+└──814,743,552 B (100.0%) -- a\n\
+   ├──465,567,744 B (57.14%) ── c\n\
+   └──349,175,808 B (42.86%) ── b\n\
+\n\
+Other Measurements\n\
+  1,048,576 B ── other1\n\
+104,857,600 B ── resident\n\
+\n\
+2nd\n\
+\n\
+Explicit Allocations\n\
+1,048,576,000 B (100.0%) -- explicit\n\
+├────523,239,424 B (49.90%) ── a/b/c [3]\n\
+├────209,715,200 B (20.00%) ── flip/the/backslashes\n\
+├────209,715,200 B (20.00%) ── compartment(compartment-url)\n\
+└────105,906,176 B (10.10%) ── heap-unclassified\n\
+\n\
+Virtual Size Breakdown\n\
+196,608 B (100.0%) ++ size\n\
+\n\
+Other Measurements\n\
+1,048,576,000 B ── heap-allocated\n\
+  104,857,600 B ── heap-unallocated\n\
+  698,351,616 B ── other0\n\
+  116,391,936 B ── other1\n\
 \n\
 5th\n\
 \n\

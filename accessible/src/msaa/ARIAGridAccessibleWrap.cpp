@@ -19,7 +19,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(ARIAGridAccessibleWrap,
 
 IMPL_IUNKNOWN_INHERITED1(ARIAGridAccessibleWrap,
                          AccessibleWrap,
-                         CAccessibleTable)
+                         ia2AccessibleTable)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,5 +31,5 @@ NS_IMPL_ISUPPORTS_INHERITED0(ARIAGridCellAccessibleWrap,
 
 IMPL_IUNKNOWN_INHERITED1(ARIAGridCellAccessibleWrap,
                          HyperTextAccessibleWrap,
-                         CAccessibleTableCell)
+                         ia2AccessibleTableCell)
 

@@ -57,6 +57,12 @@ js_InitMathClass(JSContext *cx, js::HandleObject obj);
 extern void
 js_InitRandom(JSContext *cx);
 
+extern double
+math_random_no_outparam(JSContext *cx);
+
+extern JSBool
+js_math_random(JSContext *cx, unsigned argc, js::Value *vp);
+
 extern JSBool
 js_math_abs(JSContext *cx, unsigned argc, js::Value *vp);
 
