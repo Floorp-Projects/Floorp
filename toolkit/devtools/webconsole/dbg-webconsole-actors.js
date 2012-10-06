@@ -47,13 +47,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIStorage",
  * @constructor
  * @param object aConnection
  *        The connection to the client, DebuggerServerConnection.
- * @param object aTabActor
- *        The parent tab actor.
+ * @param object [aTabActor]
+ *        Optional, the parent tab actor. This must be an instance of
+ *        BrowserTabActor.
  */
 function WebConsoleActor(aConnection, aTabActor)
 {
   this.conn = aConnection;
-  this._browser = aTabActor.browser;
+  if (aTabActor instanceof BrowserTabActor) {
+    this._browser = aTabActor.browser;
+  }
+  else {
+    this._window = Services.wm.getMostRecentWindow("navigator:browser");
+    this._isGlobalActor = true;
+  }
 
   this._objectActorsPool = new ActorPool(this.conn);
   this.conn.addActorPool(this._objectActorsPool);
@@ -67,11 +74,19 @@ function WebConsoleActor(aConnection, aTabActor)
 WebConsoleActor.prototype =
 {
   /**
-   * The xul:browser we work with.
+   * The xul:browser we work with. This is only available when the Web Console
+   * actor is a tab actor.
    * @private
    * @type nsIDOMElement
    */
   _browser: null,
+
+  /**
+   * Tells if this Web Console actor is a global actor or not.
+   * @private
+   * @type boolean
+   */
+  _isGlobalActor: false,
 
   /**
    * Actor pool for all of the object actors for objects we send to the client.
@@ -122,7 +137,9 @@ WebConsoleActor.prototype =
    * The content window we work with.
    * @type nsIDOMWindow
    */
-  get window() this._browser.contentWindow,
+  get window() this._browser ? this._browser.contentWindow : this._window,
+
+  _window: null,
 
   /**
    * The PageErrorListener instance.
@@ -203,7 +220,7 @@ WebConsoleActor.prototype =
     this._objectActorsPool = null;
     this._networkEventActorsPool = null;
     this._sandboxLocation = this.sandbox = null;
-    this.conn = this._browser = null;
+    this.conn = this._browser = this._window = null;
   },
 
   /**
@@ -285,6 +302,7 @@ WebConsoleActor.prototype =
   onStartListeners: function WCA_onStartListeners(aRequest)
   {
     let startedListeners = [];
+    let window = !this._isGlobalActor ? this.window : null;
 
     while (aRequest.listeners.length > 0) {
       let listener = aRequest.listeners.shift();
@@ -292,7 +310,7 @@ WebConsoleActor.prototype =
         case "PageError":
           if (!this.pageErrorListener) {
             this.pageErrorListener =
-              new PageErrorListener(this.window, this);
+              new PageErrorListener(window, this);
             this.pageErrorListener.init();
           }
           startedListeners.push(listener);
@@ -300,7 +318,7 @@ WebConsoleActor.prototype =
         case "ConsoleAPI":
           if (!this.consoleAPIListener) {
             this.consoleAPIListener =
-              new ConsoleAPIListener(this.window, this);
+              new ConsoleAPIListener(window, this);
             this.consoleAPIListener.init();
           }
           startedListeners.push(listener);
@@ -308,12 +326,17 @@ WebConsoleActor.prototype =
         case "NetworkActivity":
           if (!this.networkMonitor) {
             this.networkMonitor =
-              new NetworkMonitor(this.window, this);
+              new NetworkMonitor(window, this);
             this.networkMonitor.init();
           }
           startedListeners.push(listener);
           break;
         case "FileActivity":
+          if (this._isGlobalActor) {
+            // The ConsoleProgressListener cannot listen for global events.
+            // See bug 798764.
+            break;
+          }
           if (!this.consoleProgressListener) {
             this.consoleProgressListener =
               new ConsoleProgressListener(this._browser, this);
@@ -323,6 +346,9 @@ WebConsoleActor.prototype =
           startedListeners.push(listener);
           break;
         case "LocationChange":
+          if (this._isGlobalActor) {
+            break;
+          }
           if (!this.consoleProgressListener) {
             this.consoleProgressListener =
               new ConsoleProgressListener(this._browser, this);
@@ -520,7 +546,8 @@ WebConsoleActor.prototype =
   onClearMessagesCache: function WCA_onClearMessagesCache()
   {
     // TODO: Bug 717611 - Web Console clear button does not clear cached errors
-    let windowId = WebConsoleUtils.getInnerWindowId(this.window);
+    let windowId = !this._isGlobalActor ?
+                   WebConsoleUtils.getInnerWindowId(this.window) : null;
     ConsoleAPIStorage.clearEvents(windowId);
     return {};
   },
