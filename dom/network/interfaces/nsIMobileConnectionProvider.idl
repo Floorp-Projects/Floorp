@@ -31,8 +31,8 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest unlockCardLock(in nsIDOMWindow window, in jsval info);
   nsIDOMDOMRequest setCardLock(in nsIDOMWindow window, in jsval info);
 
-  nsIDOMDOMRequest sendUSSD(in nsIDOMWindow window, in DOMString ussd);
-  nsIDOMDOMRequest cancelUSSD(in nsIDOMWindow window);
+  nsIDOMDOMRequest sendMMI(in nsIDOMWindow window, in DOMString mmi);
+  nsIDOMDOMRequest cancelMMI(in nsIDOMWindow window);
 
   void sendStkResponse(in nsIDOMWindow window,
                        in jsval        command,

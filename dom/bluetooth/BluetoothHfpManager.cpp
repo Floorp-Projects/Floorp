@@ -33,8 +33,39 @@ using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
+class mozilla::dom::bluetooth::BluetoothHfpManagerObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  BluetoothHfpManagerObserver()
+  {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    MOZ_ASSERT(obs);
+    if (NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
+      NS_WARNING("Failed to add settings change observer!");
+    }
+
+    if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
+      NS_WARNING("Failed to add shutdown observer!");
+    }
+  }
+
+  ~BluetoothHfpManagerObserver()
+  {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs &&
+        (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
+         NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)))) {
+      NS_WARNING("Can't unregister observers!");
+    }
+  }
+};
+
 namespace {
   StaticRefPtr<BluetoothHfpManager> gBluetoothHfpManager;
+  StaticAutoPtr<BluetoothHfpManagerObserver> sHfpObserver;
   bool gInShutdown = false;
   static nsCOMPtr<nsIThread> sHfpCommandThread;
   static bool sStopSendingRingFlag = true;
@@ -42,7 +73,23 @@ namespace {
   static int kRingInterval = 3000000;  //unit: us
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS1(BluetoothHfpManager, nsIObserver)
+NS_IMPL_ISUPPORTS1(BluetoothHfpManagerObserver, nsIObserver)
+
+NS_IMETHODIMP
+BluetoothHfpManagerObserver::Observe(nsISupports* aSubject,
+                                     const char* aTopic,
+                                     const PRUnichar* aData)
+{
+  MOZ_ASSERT(gBluetoothHfpManager);
+  if (!strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
+    return gBluetoothHfpManager->HandleVolumeChanged(nsDependentString(aData));
+  } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    return gBluetoothHfpManager->HandleShutdown();
+  }
+
+  MOZ_ASSERT(false, "BluetoothHfpManager got unexpected topic!");
+  return NS_ERROR_UNEXPECTED;
+}
 
 class SendRingIndicatorTask : public nsRunnable
 {
@@ -122,17 +169,7 @@ BluetoothHfpManager::BluetoothHfpManager()
 bool
 BluetoothHfpManager::Init()
 {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE(obs, false);
-
-  if (NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
-    NS_WARNING("Failed to add settings change observer!");
-  }
-
-  if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
-    NS_WARNING("Failed to add shutdown observer!");
-    return false;
-  }
+  sHfpObserver = new BluetoothHfpManagerObserver();
 
   mListener = new BluetoothRilListener();
   if (!mListener->StartListening()) {
@@ -172,12 +209,7 @@ BluetoothHfpManager::Cleanup()
     }
   }
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs &&
-      (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
-       NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)))) {
-    NS_WARNING("Can't unregister observers!");
-  }
+  sHfpObserver = nullptr;
 }
 
 //static
@@ -202,7 +234,6 @@ BluetoothHfpManager::Get()
   NS_ENSURE_TRUE(manager, nullptr);
 
   if (!manager->Init()) {
-    manager->Cleanup();
     return nullptr;
   }
 
@@ -334,24 +365,9 @@ BluetoothHfpManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   gInShutdown = true;
-  Cleanup();
+  CloseSocket();
   gBluetoothHfpManager = nullptr;
   return NS_OK;
-}
-
-nsresult
-BluetoothHfpManager::Observe(nsISupports* aSubject,
-                             const char* aTopic,
-                             const PRUnichar* aData)
-{
-  if (!strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
-    return HandleVolumeChanged(nsDependentString(aData));
-  } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    return HandleShutdown();
-  }
-
-  MOZ_ASSERT(false, "BluetoothHfpManager got unexpected topic!");
-  return NS_ERROR_UNEXPECTED;
 }
 
 // Virtual function of class SocketConsumer
@@ -434,6 +450,27 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
   } else if (!strncmp(msg, "AT+CHUP", 7)) {
     NotifyDialer(NS_LITERAL_STRING("CHUP"));
     SendLine("OK");
+  } else if (!strncmp(msg, "AT+CKPD", 7)) {
+    // For Headset
+    switch (mCurrentCallState) {
+      case nsIRadioInterfaceLayer::CALL_STATE_INCOMING:
+        NotifyDialer(NS_LITERAL_STRING("ATA"));
+        break;
+      case nsIRadioInterfaceLayer::CALL_STATE_CONNECTED:
+      case nsIRadioInterfaceLayer::CALL_STATE_DIALING:
+      case nsIRadioInterfaceLayer::CALL_STATE_ALERTING:
+        NotifyDialer(NS_LITERAL_STRING("CHUP"));
+        break;
+      case nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED:
+        NotifyDialer(NS_LITERAL_STRING("BLDN"));
+        break;
+      default:
+#ifdef DEBUG
+        NS_WARNING("Not handling state changed");
+#endif
+        break;
+    }
+    SendLine("OK");
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
@@ -447,6 +484,7 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
 
 bool
 BluetoothHfpManager::Connect(const nsAString& aDeviceObjectPath,
+                             const bool aIsHandsfree,
                              BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -463,8 +501,12 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceObjectPath,
   }
   mDevicePath = aDeviceObjectPath;
 
-  nsString serviceUuidStr =
-    NS_ConvertUTF8toUTF16(mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree);
+  nsString serviceUuidStr;
+  if (aIsHandsfree) {
+    serviceUuidStr = NS_ConvertUTF8toUTF16(mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree);
+  } else {
+    serviceUuidStr = NS_ConvertUTF8toUTF16(mozilla::dom::bluetooth::BluetoothServiceUuidStr::Headset);
+  }
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
 

@@ -247,7 +247,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     activation->setBailout(br);
 
     StackFrame *fp;
-    if (it.isEntryJSFrame() && cx->fp()->runningInIon()) {
+    if (it.isEntryJSFrame() && cx->fp()->runningInIon() && activation->entryfp()) {
         // Avoid creating duplicate interpreter frames. This is necessary to
         // avoid blowing out the interpreter stack, and must be used in
         // conjunction with inline-OSR from within bailouts (since each Ion
@@ -257,6 +257,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         // Note: If the entry frame is a placeholder (a stub frame pushed for
         // JM -> Ion calls), then we cannot re-use it as it does not have
         // enough slots.
+        JS_ASSERT(cx->fp() == activation->entryfp());
         fp = cx->fp();
         cx->regs().sp = fp->base();
     } else {
@@ -410,12 +411,14 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         cx->regs().sp[-1] = cx->runtime->takeIonReturnOverride();
 
     if (retval != BAILOUT_RETURN_FATAL_ERROR) {
-        if (void *annotation = activation->entryfp()->annotation()) {
-            // If the entry frame has an annotation, then we invalidated and have
-            // immediately returned into this bailout. Transfer the annotation to
-            // the new topmost frame.
-            activation->entryfp()->setAnnotation(NULL);
-            cx->fp()->setAnnotation(annotation);
+        if (activation->entryfp()) {
+            if (void *annotation = activation->entryfp()->annotation()) {
+                // If the entry frame has an annotation, then we invalidated and have
+                // immediately returned into this bailout. Transfer the annotation to
+                // the new topmost frame.
+                activation->entryfp()->setAnnotation(NULL);
+                cx->fp()->setAnnotation(annotation);
+            }
         }
 
         // If invalidation was triggered inside a stub call, we may still have to

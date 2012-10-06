@@ -32,7 +32,7 @@ window.onload = function() {
         var m = [ 1, 2, 3, 4, 5, 6 ];
         ctx.mozCurrentTransform = m;
         assert(isSameTM(m, ctx.mozCurrentTransform),
-               "currentTransform sucessfully set");
+               "currentTransform successfully set");
         var badVals = [ -1,
                         "string",
                         { obj: true },

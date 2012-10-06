@@ -270,7 +270,8 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
     entryfp_(fp),
     bailout_(NULL),
     prevIonTop_(cx->runtime->ionTop),
-    prevIonJSContext_(cx->runtime->ionJSContext)
+    prevIonJSContext_(cx->runtime->ionJSContext),
+    prevpc_(NULL)
 {
     if (fp)
         fp->setRunningInIon();
@@ -1432,6 +1433,63 @@ ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 #endif
 
     return status;
+}
+
+IonExecStatus
+ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
+{
+    JS_CHECK_RECURSION(cx, return IonExec_Error);
+
+    HandleScript script = fun->script();
+    IonScript *ion = script->ionScript();
+    IonCode *code = ion->method();
+    void *jitcode = code->raw();
+
+    JS_ASSERT(ion::IsEnabled(cx));
+    JS_ASSERT(!script->ion->bailoutExpected());
+
+    bool clearCallingIntoIon = false;
+    StackFrame *fp = cx->fp();
+
+    // Two cases we have to handle:
+    //
+    // (1) fp does not begin an Ion activation. This works exactly
+    //     like invoking Ion from JM: entryfp is set to fp and fp
+    //     has the callingIntoIon flag set.
+    //
+    // (2) fp already begins another IonActivation, for instance:
+    //        JM -> Ion -> array_sort -> Ion
+    //     In this cas we use an IonActivation with entryfp == NULL
+    //     and prevpc != NULL.
+    if (!fp->beginsIonActivation()) {
+        fp->setCallingIntoIon();
+        clearCallingIntoIon = true;
+        cx->runtime->ionActivation->setEntryFp(fp);
+    } else {
+        JS_ASSERT(!cx->runtime->ionActivation->entryfp());
+    }
+
+    cx->runtime->ionActivation->setPrevPc(cx->regs().pc);
+
+    EnterIonCode enter = cx->compartment->ionCompartment()->enterJITInfallible();
+    void *calleeToken = CalleeToToken(fun);
+
+    Value result = Int32Value(fun->nargs);
+    enter(jitcode, args.length() + 1, &args[0] - 1, fp, calleeToken, &result);
+
+    if (clearCallingIntoIon)
+        fp->clearCallingIntoIon();
+
+    cx->runtime->ionActivation->setEntryFp(NULL);
+    cx->runtime->ionActivation->setPrevPc(NULL);
+
+    JS_ASSERT(fp == cx->fp());
+    JS_ASSERT(!cx->runtime->hasIonReturnOverride());
+
+    args.rval().set(result);
+
+    JS_ASSERT_IF(result.isMagic(), result.isMagic(JS_ION_ERROR));
+    return result.isMagic() ? IonExec_Error : IonExec_Ok;
 }
 
 static void

@@ -73,6 +73,7 @@ $(dir-strings-xml)/strings.xml: $(strings-xml-preqs)
 	  -DSTRINGSPATH="$(STRINGSPATH)" \
 	  -DSYNCSTRINGSPATH="$(SYNCSTRINGSPATH)" \
 	  -DBOOKMARKSPATH="$(BOOKMARKSPATH)" \
+	  -DMOZ_APP_DISPLAYNAME="@MOZ_APP_DISPLAYNAME@" \
       $< \
 	  > $@
 

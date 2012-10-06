@@ -45,13 +45,12 @@ PRTimeToSeconds(PRTime t_usec)
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED5(nsFtpChannel,
+NS_IMPL_ISUPPORTS_INHERITED4(nsFtpChannel,
                              nsBaseChannel,
                              nsIUploadChannel,
                              nsIResumableChannel,
                              nsIFTPChannel,
-                             nsIProxiedChannel,
-                             nsIPrivateBrowsingChannel)
+                             nsIProxiedChannel)
 
 //-----------------------------------------------------------------------------
 
@@ -217,24 +216,4 @@ nsFtpChannel::GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult)
         }
     }
     aResult = mFTPEventSink;
-}
-
-NS_IMETHODIMP
-nsFtpChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
-{
-  if (!CanSetCallbacks(aCallbacks)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return nsBaseChannel::SetNotificationCallbacks(aCallbacks);
-}
-
-NS_IMETHODIMP
-nsFtpChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
-{
-  if (!CanSetLoadGroup(aLoadGroup)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return nsBaseChannel::SetLoadGroup(aLoadGroup);
 }

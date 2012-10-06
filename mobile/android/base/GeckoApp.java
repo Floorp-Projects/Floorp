@@ -775,7 +775,7 @@ abstract public class GeckoApp
     }
 
     void handleFaviconRequest(final String url) {
-        (new GeckoAsyncTask<Void, Void, String>(mAppContext, GeckoAppShell.getHandler()) {
+        (new GeckoAsyncTask<Void, Void, String>() {
             @Override
             public String doInBackground(Void... params) {
                 return getFavicons().getFaviconUrlForPageUrl(url);
@@ -1940,6 +1940,10 @@ abstract public class GeckoApp
         else if (ACTION_BOOKMARK.equals(action)) {
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
+        }
+        else if (Intent.ACTION_SEARCH.equals(action)) {
+            String uri = getURIFromIntent(intent);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
         }
         else if (ACTION_ALERT_CALLBACK.equals(action)) {
             String alertName = "";

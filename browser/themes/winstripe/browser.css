@@ -2330,6 +2330,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://browser/skin/webapps-64.png);
 }
 
+.popup-notification-icon[popupid="webRTC-shareDevices"] {
+  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64.png);
+}
+
 /* Notification icon box */
 #notification-popup-box {
   position: relative;
@@ -2393,6 +2397,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #plugins-notification-icon {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
+}
+
+#webRTC-notification-icon {
+  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }
 
 #identity-popup-container {
@@ -3295,6 +3303,11 @@ html|*#gcli-output-frame {
   display: none;
 }
 
+#social-toolbar-item > .toolbarbutton-1 {
+  padding: 5px;
+  -moz-appearance: toolbarbutton;
+}
+
 @navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1 {
   padding: 5px 0;
 }
@@ -3329,14 +3342,9 @@ html|*#gcli-output-frame {
   display: none;
 }
 
-/* notification image */
 .social-notification-icon-image {
-  padding: 2px;
-  margin: 0;
-  min-width: 20px;
-  max-width: 32px;
-  max-height: 20px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  width: 16px;
+  height: 16px;
 }
 
 /* social toolbar provider menu */
