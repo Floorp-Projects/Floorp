@@ -65,6 +65,7 @@ interface nsIDOMHTMLElement : nsIDOMElement
 
 
   // DOM Parsing and Serialization
+  [binaryname(DOMInnerHTML)]
            attribute DOMString        innerHTML;
            attribute DOMString        outerHTML;
   void insertAdjacentHTML(in DOMString position,
