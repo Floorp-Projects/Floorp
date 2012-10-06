@@ -975,6 +975,9 @@ std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
 
 void mozilla_sampler_init()
 {
+  if (stack_key_initialized)
+    return;
+
   if (!tlsStack.init() || !tlsTicker.init()) {
     LOG("Failed to init.");
     return;
