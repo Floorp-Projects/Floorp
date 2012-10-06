@@ -27,7 +27,7 @@
     </div>
     <div id="button-box">
       <button id="btnTryAgain" onclick="tryAgainButton()"/>
-      <button id="btnCloseSidebar" onclick="closeSidebarButton()"/>
+      <button id="btnCloseSidebar" onclick="closeSidebar()"/>
     </div>
   </body>
 
@@ -35,7 +35,7 @@
     const Cu = Components.utils;
 
     Cu.import("resource://gre/modules/Services.jsm");
-    Cu.import("resource:///modules/Social.jsm");
+    Cu.import("resource://gre/modules/Social.jsm");
 
     let config = {
       tryAgainCallback: reloadProvider
@@ -49,20 +49,8 @@
       let mode = modeMatch && modeMatch[1] ? modeMatch[1] : "";
 
       switch (mode) {
-        case "compactInfo":
-          document.getElementById("btnTryAgain").style.display = 'none';
-          document.getElementById("btnCloseSidebar").style.display = 'none';
-          break;
-        case "tryAgainOnly":
-          document.getElementById("btnCloseSidebar").style.display = 'none';
-          //intentional fall-through
-        case "tryAgain":
-          let urlMatch = queryString.match(/url=([^&]+)/);
-          let encodedURL = urlMatch && urlMatch[1] ? urlMatch[1] : "";
-          let url = decodeURIComponent(encodedURL);
-
-          config.tryAgainCallback = loadQueryURL;
-          config.queryURL = url;
+        case "onlyRefreshSidebar":
+          config.tryAgainCallback = refreshSidebar;
           break;
         default:
           break;
@@ -90,20 +78,20 @@
       btnCloseSidebar.accessKey = browserBundle.GetStringFromName("social.error.closeSidebar.accesskey");
     }
 
-    function closeSidebarButton() {
+    function closeSidebar() {
       Social.toggleSidebar();
     }
 
-    function tryAgainButton() {
-      config.tryAgainCallback();
-    }
-
-    function loadQueryURL() {
-      window.location.href = config.queryURL;
+    function refreshSidebar() {
+      window.location.href = Social.provider.sidebarURL;
     }
 
     function reloadProvider() {
       Social.provider.reload();
+    }
+
+    function tryAgainButton() {
+      config.tryAgainCallback();
     }
 
     parseQueryString();

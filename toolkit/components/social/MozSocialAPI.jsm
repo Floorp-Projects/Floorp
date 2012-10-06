@@ -43,11 +43,6 @@ function injectController(doc, topic, data) {
     if (!window)
       return;
 
-    // Do not attempt to load the API into about: error pages
-    if (doc.documentURIObject.scheme == "about") {
-      return;
-    }
-
     var containingBrowser = window.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIWebNavigation)
                                   .QueryInterface(Ci.nsIDocShell)
