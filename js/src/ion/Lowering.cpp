@@ -454,7 +454,7 @@ LIRGenerator::visitCompare(MCompare *comp)
         // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
         // make sense and avoids confusion.
         if (comp->specialization() == MIRType_String) {
-            LCompareS *lir = new LCompareS(useRegister(left), useRegister(right));
+            LCompareS *lir = new LCompareS(useRegister(left), useRegister(right), temp());
             if (!define(lir, comp))
                 return false;
             return assignSafepoint(lir, comp);
