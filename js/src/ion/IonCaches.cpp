@@ -592,7 +592,7 @@ IonCacheGetProperty::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *o
 
     // Need to set correct framePushed on the masm so that exit frame descriptors are
     // properly constructed.
-    masm.setFramePushed(script->ionScript()->frameSize());
+    masm.setFramePushed(ion->frameSize());
 
     // Generating a call getter may need the pushed typeset.
     types::StackTypeSet *outputTypes = script->analysis()->pushedTypes(pc, 0);
