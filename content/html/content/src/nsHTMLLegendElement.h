@@ -41,9 +41,6 @@ public:
     return nsGenericHTMLElement::Click();
   }
   NS_IMETHOD Focus();
-  NS_IMETHOD GetDraggable(bool* aDraggable) {
-    return nsGenericHTMLElement::GetDraggable(aDraggable);
-  }
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
     return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);
   }
