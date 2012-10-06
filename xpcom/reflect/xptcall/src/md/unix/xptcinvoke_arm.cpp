@@ -351,7 +351,7 @@ NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
   vtable_func func = vtable[methodIndex];
   // 'register uint32_t result asm("r0")' could be used here, but it does not
   //  seem to be reliable in all cases: http://gcc.gnu.org/PR46164
-  uint32_t result;
+  nsresult result;
   asm (
     "mov    r3, sp\n"
     "mov    %[stack_space_size], %[param_count_plus_2], lsl #3\n"
