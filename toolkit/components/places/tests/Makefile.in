@@ -40,11 +40,8 @@ DIRS = \
 	chrome \
 	mochitest/bug_411966 \
 	mochitest/bug_461710 \
+	browser \
 	$(NULL)
-
-ifneq (mobile,$(MOZ_BUILD_APP))
-	DIRS += browser
-endif
 
 TOOL_DIRS = \
   cpp \

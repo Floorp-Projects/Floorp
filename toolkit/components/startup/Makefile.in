@@ -41,8 +41,6 @@ endif
 
 XPCSHELL_TESTS = tests/unit
 
-ifneq (mobile,$(MOZ_BUILD_APP))
 TEST_DIRS += tests/browser
-endif
 
 include $(topsrcdir)/config/rules.mk
