@@ -30,13 +30,17 @@ function condition(s) {
   return s.replace(/^@supports\s*/, '').replace(/ \s*{\s*}\s*$/, '');
 }
 
-var sheet = document.getElementById("style").sheet;
+if (!SpecialPowers.getBoolPref("layout.css.supports-rule.enabled")) {
+  todo(false, "skipping test because pref is disabled");
+} else {
+  var sheet = document.getElementById("style").sheet;
 
-is(condition(sheet.cssRules[0].cssText), "(color: green)");
-is(condition(sheet.cssRules[1].cssText), "(color: green)");
-is(condition(sheet.cssRules[2].cssText), "((color: green))");
-is(condition(sheet.cssRules[3].cssText), "(color: green) and (color: blue)");
-is(condition(sheet.cssRules[4].cssText), "( Font:  20px serif ! Important)");
+  is(condition(sheet.cssRules[0].cssText), "(color: green)");
+  is(condition(sheet.cssRules[1].cssText), "(color: green)");
+  is(condition(sheet.cssRules[2].cssText), "((color: green))");
+  is(condition(sheet.cssRules[3].cssText), "(color: green) and (color: blue)");
+  is(condition(sheet.cssRules[4].cssText), "( Font:  20px serif ! Important)");
+}
 </script>
 </pre>
 </body>
