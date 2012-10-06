@@ -81,6 +81,7 @@ public:
                          const nsAString& aValue);
 
   // WebIDL HTMLElement
+  virtual void Click();
   virtual int32_t TabIndexDefault()
   {
     return -1;
@@ -119,6 +120,11 @@ public:
   nsresult GetClassName(nsAString& aClassName);
   nsresult SetClassName(const nsAString& aClassName);
 
+  nsresult DOMClick()
+  {
+    Click();
+    return NS_OK;
+  }
   nsresult GetTabIndex(int32_t* aTabIndex)
   {
     *aTabIndex = TabIndex();
@@ -159,7 +165,6 @@ public:
   // methods properly override them.
   NS_IMETHOD Focus();
   NS_IMETHOD Blur();
-  NS_IMETHOD Click();
   NS_IMETHOD GetHidden(bool* aHidden);
   NS_IMETHOD SetHidden(bool aHidden);
   NS_IMETHOD GetSpellcheck(bool* aSpellcheck);
@@ -1396,7 +1401,6 @@ protected:
 /* Use this macro to declare functions that forward the behavior of this
  * interface to another object. 
  * This macro doesn't forward
- * - Click
  * - Focus
  * - GetInnerHTML
  * - SetInnerHTML
@@ -1441,6 +1445,9 @@ protected:
   } \
   NS_IMETHOD SetHidden(bool aHidden) { \
     return _to SetHidden(aHidden); \
+  } \
+  NS_IMETHOD DOMClick() { \
+    return _to DOMClick(); \
   } \
   NS_IMETHOD GetTabIndex(int32_t* aTabIndex) { \
     return _to GetTabIndex(aTabIndex); \

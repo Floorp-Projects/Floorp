@@ -37,9 +37,6 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLElement::)
-  NS_IMETHOD Click() {
-    return nsGenericHTMLElement::Click();
-  }
   NS_IMETHOD Focus();
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
     return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);

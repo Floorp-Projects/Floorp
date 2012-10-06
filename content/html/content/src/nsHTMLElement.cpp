@@ -28,9 +28,6 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLElement::)
-  NS_IMETHOD Click() {
-    return nsGenericHTMLElement::Click();
-  }
   NS_IMETHOD Focus() {
     return nsGenericHTMLElement::Focus();
   }
