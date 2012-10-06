@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Test for bug 780993</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<div id=log></div>
+<script>
+test(function() {
+  var select = document.createElement("select");
+  var option = document.createElement("option");
+  select.appendChild(option);
+  assert_equals(select.options[0], option);
+  select.options[0] = null;
+  assert_equals(option.parentNode, null);
+  assert_equals(select.options[0], undefined);
+}, "Should be able to set select.options[n] to null.");
+test(function() {
+  var select = document.createElement("select");
+  var option = document.createElement("option");
+  var option2 = document.createElement("option");
+  select.appendChild(option);
+  assert_equals(select.options[0], option);
+  select.options[0] = option2;
+  assert_equals(option.parentNode, null);
+  assert_equals(option2.parentNode, select);
+  assert_equals(select.options[0], option2);
+}, "Should be able to set select.options[n] to an option element");
+test(function() {
+  var select = document.createElement("select");
+  var option = document.createElement("option");
+  select.appendChild(option);
+  assert_equals(select.options[0], option);
+  assert_throws(null, function() {
+    select.options[0] = 42;
+  });
+  assert_equals(option.parentNode, select);
+  assert_equals(select.options[0], option);
+}, "Should not be able to set select.options[n] to a primitive.");
+</script>

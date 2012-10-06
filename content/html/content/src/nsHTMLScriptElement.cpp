@@ -49,24 +49,11 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLElement::)
-  NS_IMETHOD Click() {
-    return nsGenericHTMLElement::Click();
-  }
-  NS_IMETHOD GetTabIndex(int32_t* aTabIndex) {
-    return nsGenericHTMLElement::GetTabIndex(aTabIndex);
-  }
-  NS_IMETHOD SetTabIndex(int32_t aTabIndex) {
-    return nsGenericHTMLElement::SetTabIndex(aTabIndex);
-  }
-  NS_IMETHOD Focus() {
-    return nsGenericHTMLElement::Focus();
-  }
-  NS_IMETHOD GetDraggable(bool* aDraggable) {
-    return nsGenericHTMLElement::GetDraggable(aDraggable);
-  }
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  virtual void GetInnerHTML(nsAString& aInnerHTML,
+                            mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+  virtual void SetInnerHTML(const nsAString& aInnerHTML,
+                            mozilla::ErrorResult& aError) MOZ_OVERRIDE;
 
   // nsIDOMHTMLScriptElement
   NS_DECL_NSIDOMHTMLSCRIPTELEMENT
@@ -239,17 +226,17 @@ nsHTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                             aNotify);
 }
 
-nsresult
-nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
+void
+nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
 {
   nsContentUtils::GetNodeTextContent(this, false, aInnerHTML);
-  return NS_OK;
 }
 
-nsresult
-nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
+void
+nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML,
+                                  ErrorResult& aError)
 {
-  return nsContentUtils::SetNodeTextContent(this, aInnerHTML, true);
+  aError = nsContentUtils::SetNodeTextContent(this, aInnerHTML, true);
 }
 
 // variation of this code in nsSVGScriptElement - check if changes

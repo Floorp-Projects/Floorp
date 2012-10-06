@@ -230,7 +230,9 @@ members = [
     'nsIDOMHTMLElement.itemId',
     'nsIDOMHTMLElement.properties',
     'nsIDOMHTMLElement.hidden',
+    'nsIDOMHTMLElement.click',
     'nsIDOMHTMLElement.tabIndex',
+    'nsIDOMHTMLElement.focus',
     'nsIDOMHTMLElement.accessKey',
     'nsIDOMHTMLElement.accessKeyLabel',
     'nsIDOMHTMLElement.draggable',
@@ -811,6 +813,52 @@ customMethodCalls = {
         },
     'nsIDOMHTMLElement_': {
         'thisType': 'nsGenericHTMLElement'
+        },
+    'nsIDOMHTMLElement_DOMClick': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    self->Click();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetTabIndex': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    int32_t result = self->TabIndex();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetTabIndex': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetTabIndex(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_DOMFocus': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->Focus(error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetDraggable': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    bool result = self->Draggable();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetDraggable': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetDraggable(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetInnerHTML': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    nsString result;\n'
+                '    mozilla::ErrorResult error;\n'
+                '    self->GetInnerHTML(result, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_SetInnerHTML': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetInnerHTML(arg0, error);\n'
+                '    rv = error.ErrorCode();'
         },
     'nsIDOMElementCSSInlineStyle_GetStyle': {
         'thisType': 'nsStyledElement',

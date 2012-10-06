@@ -187,7 +187,7 @@ public:
   virtual uint32_t GetChildCount() const;
   virtual nsIContent *GetChildAt(uint32_t aIndex) const;
   virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const;
-  virtual int32_t IndexOf(nsINode* aPossibleChild) const;
+  virtual int32_t IndexOf(const nsINode* aPossibleChild) const MOZ_OVERRIDE;
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify);
   virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
