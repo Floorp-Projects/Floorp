@@ -91,11 +91,13 @@ Var CTL_RIGHT_PX
 
 ; Workaround to support different urls for Official and Beta since they share
 ; the same branding.
+!ifdef Official
 !ifdef BETA_UPDATE_CHANNEL
 !undef URLStubDownload
 !define URLStubDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
 !undef URLManualDownload
 !define URLManualDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
+!endif
 !endif
 
 !include "common.nsh"
