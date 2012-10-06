@@ -113,8 +113,6 @@ interface nsIDOMWifiManager : nsISupports
      *                 - cancel: Request to cancel WPS in progress.
      *               If method field is 'pin', 'pin' field can exist and has
      *               a PIN number.
-     *               If method field is 'pin', 'bssid' field can exist and has
-     *               a opposite BSSID.
      * onsuccess: We have successfully started/canceled wps.
      * onerror: We have failed to start/cancel wps.
      */

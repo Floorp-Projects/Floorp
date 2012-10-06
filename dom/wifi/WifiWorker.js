@@ -266,10 +266,8 @@ var WifiManager = (function() {
     doBooleanCommand("WPS_PBC", "OK", callback);
   }
 
-  function wpsPinCommand(detail, callback) {
-    doStringCommand("WPS_PIN " +
-                    (detail.bssid === undefined ? "any" : detail.bssid) +
-                    (detail.pin === undefined ? "" : (" " + detail.pin)),
+  function wpsPinCommand(pin, callback) {
+    doStringCommand("WPS_PIN any" + (pin === undefined ? "" : (" " + pin)),
                     callback);
   }
 
@@ -1239,16 +1237,6 @@ function getKeyManagement(flags) {
   return types;
 }
 
-function getCapabilities(flags) {
-  var types = [];
-  if (!flags)
-    return types;
-
-  if (/\[WPS/.test(flags))
-    types.push("WPS");
-  return types;
-}
-
 // These constants shamelessly ripped from WifiManager.java
 // strength is the value returned by scan_results. It is nominally in dB. We
 // transform it into a percentage for clients looking to simply show a
@@ -1271,14 +1259,12 @@ function calculateSignal(strength) {
   return Math.floor(((strength - MIN_RSSI) / (MAX_RSSI - MIN_RSSI)) * 100);
 }
 
-function Network(ssid, security, password, capabilities) {
+function Network(ssid, capabilities, password) {
   this.ssid = ssid;
-  this.security = security;
+  this.capabilities = capabilities;
 
   if (typeof password !== "undefined")
     this.password = password;
-  if (typeof capabilities !== "undefined")
-    this.capabilities = capabilities;
   // TODO connected here as well?
 
   this.__exposedProps__ = Network.api;
@@ -1286,7 +1272,6 @@ function Network(ssid, security, password, capabilities) {
 
 Network.api = {
   ssid: "r",
-  security: "r",
   capabilities: "r",
   known: "r",
 
@@ -1301,8 +1286,7 @@ Network.api = {
 // Note: We never use ScanResult.prototype, so the fact that it's unrelated to
 // Network.prototype is OK.
 function ScanResult(ssid, bssid, flags, signal) {
-  Network.call(this, ssid, getKeyManagement(flags), undefined,
-               getCapabilities(flags));
+  Network.call(this, ssid, getKeyManagement(flags));
   this.bssid = bssid;
   this.signalStrength = signal;
   this.relSignalStrength = calculateSignal(Number(signal));
@@ -1439,9 +1423,11 @@ function WifiWorker() {
   // self.configuredNetworks and prepares it for the DOM.
   netToDOM = function(net) {
     var ssid = dequote(net.ssid);
-    var security = (net.key_mgmt === "NONE" && net.wep_key0) ? ["WEP"]
-                   : (net.key_mgmt && net.key_mgmt !== "NONE") ? [net.key_mgmt]
-                   : [];
+    var capabilities = (net.key_mgmt === "NONE" && net.wep_key0)
+                       ? ["WEP"]
+                       : (net.key_mgmt && net.key_mgmt !== "NONE")
+                       ? [net.key_mgmt]
+                       : [];
     var password;
     if (("psk" in net && net.psk) ||
         ("password" in net && net.password) ||
@@ -1449,7 +1435,7 @@ function WifiWorker() {
       password = "*";
     }
 
-    var pub = new Network(ssid, security, password);
+    var pub = new Network(ssid, capabilities, password);
     if (net.identity)
       pub.identity = dequote(net.identity);
     if (net.netId)
@@ -1470,7 +1456,6 @@ function WifiWorker() {
     delete net.bssid;
     delete net.signalStrength;
     delete net.relSignalStrength;
-    delete net.security;
     delete net.capabilities;
 
     if (!configured)
@@ -2403,7 +2388,7 @@ WifiWorker.prototype = {
           self._sendMessage(message, false, "WPS PBC failed", msg);
       });
     } else if (detail.method === "pin") {
-      WifiManager.wpsPin(detail, function(pin) {
+      WifiManager.wpsPin(detail.pin, function(pin) {
         if (pin)
           self._sendMessage(message, true, pin, msg);
         else
