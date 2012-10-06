@@ -25,13 +25,54 @@ using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
+class mozilla::dom::bluetooth::BluetoothScoManagerObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  BluetoothScoManagerObserver()
+  {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    MOZ_ASSERT(obs);
+
+    if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
+      NS_WARNING("Failed to add shutdown observer!");
+    }
+  }
+
+  ~BluetoothScoManagerObserver()
+  {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs &&
+        (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)))) {
+      NS_WARNING("Can't unregister observers!");
+    }
+  }
+};
+
+NS_IMPL_ISUPPORTS1(BluetoothScoManagerObserver, nsIObserver)
+
 namespace {
 StaticRefPtr<BluetoothScoManager> gBluetoothScoManager;
+StaticAutoPtr<BluetoothScoManagerObserver> sScoObserver;
 bool gInShutdown = false;
 static nsCOMPtr<nsIThread> sScoCommandThread;
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS1(BluetoothScoManager, nsIObserver)
+NS_IMETHODIMP
+BluetoothScoManagerObserver::Observe(nsISupports* aSubject,
+                                     const char* aTopic,
+                                     const PRUnichar* aData)
+{
+  MOZ_ASSERT(gBluetoothScoManager);
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {    
+    return gBluetoothScoManager->HandleShutdown();
+  }
+
+  MOZ_ASSERT(false, "BluetoothScoManager got unexpected topic!");
+  return NS_ERROR_UNEXPECTED;
+}
 
 BluetoothScoManager::BluetoothScoManager()
   : mConnected(false)
@@ -41,19 +82,13 @@ BluetoothScoManager::BluetoothScoManager()
 bool
 BluetoothScoManager::Init()
 {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE(obs, false);
-
-  if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
-    NS_WARNING("Failed to add shutdown observer!");
-    return false;
-  }
 
   if (!sScoCommandThread &&
       NS_FAILED(NS_NewThread(getter_AddRefs(sScoCommandThread)))) {
     NS_ERROR("Failed to new thread for sScoCommandThread");
     return false;
   }
+  sScoObserver = new BluetoothScoManagerObserver();
   return true;
 }
 
@@ -73,12 +108,7 @@ BluetoothScoManager::Cleanup()
       NS_WARNING("Failed to shut down the bluetooth hfpmanager command thread!");
     }
   }
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs &&
-      NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
-    NS_WARNING("Can't unregister observers!");
-  }
+  sScoObserver = nullptr;
 }
 
 //static
@@ -113,19 +143,6 @@ BluetoothScoManager::Get()
 
   gBluetoothScoManager = manager;
   return gBluetoothScoManager;
-}
-
-nsresult
-BluetoothScoManager::Observe(nsISupports* aSubject,
-                             const char* aTopic,
-                             const PRUnichar* aData)
-{
-  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    return HandleShutdown();
-  }
-
-  MOZ_ASSERT(false, "BluetoothScoManager got unexpected topic!");
-  return NS_ERROR_UNEXPECTED;
 }
 
 // Virtual function of class SocketConsumer
