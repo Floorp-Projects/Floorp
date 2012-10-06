@@ -18,6 +18,9 @@
 #include "nsContentUtils.h"
 #include "nsStubMutationObserver.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
 class nsHTMLStyleElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLStyleElement,
                            public nsStyleLinkElement,
@@ -37,9 +40,11 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLElement::)
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  virtual void GetInnerHTML(nsAString& aInnerHTML,
+                            mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+  virtual void SetInnerHTML(const nsAString& aInnerHTML,
+                            mozilla::ErrorResult& aError) MOZ_OVERRIDE;
 
   // nsIDOMHTMLStyleElement
   NS_DECL_NSIDOMHTMLSTYLEELEMENT
@@ -249,24 +254,23 @@ nsHTMLStyleElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
   return rv;
 }
 
-nsresult
-nsHTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
+void
+nsHTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
 {
   nsContentUtils::GetNodeTextContent(this, false, aInnerHTML);
-  return NS_OK;
 }
 
-nsresult
-nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML)
+void
+nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML,
+                                 ErrorResult& aError)
 {
   SetEnableUpdates(false);
 
-  nsresult rv = nsContentUtils::SetNodeTextContent(this, aInnerHTML, true);
-  
+  aError = nsContentUtils::SetNodeTextContent(this, aInnerHTML, true);
+
   SetEnableUpdates(true);
-  
+
   UpdateStyleSheetInternal(nullptr);
-  return rv;
 }
 
 already_AddRefed<nsIURI>

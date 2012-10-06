@@ -107,6 +107,11 @@ public:
                                       : NS_LITERAL_STRING("false"));
   }
 
+  virtual void GetInnerHTML(nsAString& aInnerHTML,
+                            mozilla::ErrorResult& aError);
+  virtual void SetInnerHTML(const nsAString& aInnerHTML,
+                            mozilla::ErrorResult& aError);
+
   // nsIDOMHTMLElement methods. Note that these are non-virtual
   // methods, implementations are expected to forward calls to these
   // methods.
@@ -154,13 +159,24 @@ public:
     return rv.ErrorCode();
   }
 
+  nsresult GetDOMInnerHTML(nsAString& aInnerHTML)
+  {
+    mozilla::ErrorResult rv;
+    GetInnerHTML(aInnerHTML, rv);
+    return rv.ErrorCode();
+  }
+  nsresult SetDOMInnerHTML(const nsAString& aInnerHTML)
+  {
+    mozilla::ErrorResult rv;
+    SetInnerHTML(aInnerHTML, rv);
+    return rv.ErrorCode();
+  }
+
   nsresult GetOffsetTop(int32_t* aOffsetTop);
   nsresult GetOffsetLeft(int32_t* aOffsetLeft);
   nsresult GetOffsetWidth(int32_t* aOffsetWidth);
   nsresult GetOffsetHeight(int32_t* aOffsetHeight);
   nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
   NS_IMETHOD GetOuterHTML(nsAString& aOuterHTML);
   NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML);
   NS_IMETHOD InsertAdjacentHTML(const nsAString& aPosition,
@@ -1402,168 +1418,6 @@ protected:
     NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
     NS_INTERFACE_TABLE_ENTRY(_class, _i10)                                    \
   NS_OFFSET_AND_INTERFACE_TABLE_END
-
-/* Use this macro to declare functions that forward the behavior of this
- * interface to another object. 
- * This macro doesn't forward
- * - GetInnerHTML
- * - SetInnerHTML
- * because sometimes elements want to override them.
- */
-#define NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(_to) \
-  NS_IMETHOD GetId(nsAString& aId) { \
-    return _to GetId(aId); \
-  } \
-  NS_IMETHOD SetId(const nsAString& aId) { \
-    return _to SetId(aId); \
-  } \
-  NS_IMETHOD GetTitle(nsAString& aTitle) { \
-    return _to GetTitle(aTitle); \
-  } \
-  NS_IMETHOD SetTitle(const nsAString& aTitle) { \
-    return _to SetTitle(aTitle); \
-  } \
-  NS_IMETHOD GetLang(nsAString& aLang) { \
-    return _to GetLang(aLang); \
-  } \
-  NS_IMETHOD SetLang(const nsAString& aLang) { \
-    return _to SetLang(aLang); \
-  } \
-  NS_IMETHOD GetDir(nsAString& aDir) { \
-    return _to GetDir(aDir); \
-  } \
-  NS_IMETHOD SetDir(const nsAString& aDir) { \
-    return _to SetDir(aDir); \
-  } \
-  NS_IMETHOD GetClassName(nsAString& aClassName) { \
-    return _to GetClassName(aClassName); \
-  } \
-  NS_IMETHOD SetClassName(const nsAString& aClassName) { \
-    return _to SetClassName(aClassName); \
-  } \
-  NS_IMETHOD GetDataset(nsIDOMDOMStringMap** aDataset) { \
-    return _to GetDataset(aDataset); \
-  } \
-  NS_IMETHOD GetHidden(bool* aHidden) { \
-    return _to GetHidden(aHidden); \
-  } \
-  NS_IMETHOD SetHidden(bool aHidden) { \
-    return _to SetHidden(aHidden); \
-  } \
-  NS_IMETHOD DOMClick() { \
-    return _to DOMClick(); \
-  } \
-  NS_IMETHOD GetTabIndex(int32_t* aTabIndex) { \
-    return _to GetTabIndex(aTabIndex); \
-  } \
-  NS_IMETHOD SetTabIndex(int32_t aTabIndex) { \
-    return _to SetTabIndex(aTabIndex); \
-  } \
-  NS_IMETHOD DOMFocus() { \
-    return _to DOMFocus(); \
-  } \
-  NS_IMETHOD Blur() { \
-    return _to Blur(); \
-  } \
-  NS_IMETHOD GetItemScope(bool* aItemScope) { \
-    return _to GetItemScope(aItemScope); \
-  } \
-  NS_IMETHOD SetItemScope(bool aItemScope) { \
-    return _to SetItemScope(aItemScope); \
-  } \
-  NS_IMETHOD GetItemType(nsIVariant** aType) { \
-    return _to GetItemType(aType); \
-  } \
-  NS_IMETHOD SetItemType(nsIVariant* aType) { \
-    return _to SetItemType(aType); \
-  } \
-  NS_IMETHOD GetItemId(nsAString& aId) { \
-    return _to GetItemId(aId); \
-  } \
-  NS_IMETHOD SetItemId(const nsAString& aId) { \
-    return _to SetItemId(aId); \
-  } \
-  NS_IMETHOD GetProperties(nsIDOMHTMLPropertiesCollection** aReturn) { \
-    return _to GetProperties(aReturn); \
-  } \
-  NS_IMETHOD GetItemValue(nsIVariant** aValue) { \
-    return _to GetItemValue(aValue); \
-  } \
-  NS_IMETHOD SetItemValue(nsIVariant* aValue) { \
-    return _to SetItemValue(aValue); \
-  } \
-  NS_IMETHOD GetItemRef(nsIVariant** aRef) { \
-    return _to GetItemRef(aRef); \
-  } \
-  NS_IMETHOD SetItemRef(nsIVariant* aRef) { \
-    return _to SetItemRef(aRef); \
-  } \
-  NS_IMETHOD GetItemProp(nsIVariant** aProp) { \
-    return _to GetItemProp(aProp); \
-  } \
-  NS_IMETHOD SetItemProp(nsIVariant* aProp) { \
-    return _to SetItemProp(aProp); \
-  } \
-  NS_IMETHOD GetAccessKey(nsAString& aAccessKey) { \
-    return _to GetAccessKey(aAccessKey); \
-  } \
-  NS_IMETHOD SetAccessKey(const nsAString& aAccessKey) { \
-    return _to SetAccessKey(aAccessKey); \
-  } \
-  NS_IMETHOD GetAccessKeyLabel(nsAString& aAccessKeyLabel) { \
-    return _to GetAccessKeyLabel(aAccessKeyLabel); \
-  } \
-  NS_IMETHOD GetDraggable(bool* aDraggable) { \
-    return _to GetDraggable(aDraggable); \
-  } \
-  NS_IMETHOD SetDraggable(bool aDraggable) { \
-    return _to SetDraggable(aDraggable); \
-  } \
-  NS_IMETHOD GetContentEditable(nsAString& aContentEditable) { \
-    return _to GetContentEditable(aContentEditable); \
-  } \
-  NS_IMETHOD SetContentEditable(const nsAString& aContentEditable) { \
-    return _to SetContentEditable(aContentEditable); \
-  } \
-  NS_IMETHOD GetIsContentEditable(bool* aIsContentEditable) { \
-    return _to GetIsContentEditable(aIsContentEditable); \
-  } \
-  NS_IMETHOD GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu) { \
-    return _to GetContextMenu(aContextMenu); \
-  } \
-  NS_IMETHOD GetSpellcheck(bool* aSpellcheck) { \
-    return _to GetSpellcheck(aSpellcheck); \
-  } \
-  NS_IMETHOD SetSpellcheck(bool aSpellcheck) { \
-    return _to SetSpellcheck(aSpellcheck); \
-  } \
-  NS_IMETHOD GetOuterHTML(nsAString& aOuterHTML) { \
-    return _to GetOuterHTML(aOuterHTML); \
-  } \
-  NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML) { \
-    return _to SetOuterHTML(aOuterHTML); \
-  } \
-  NS_IMETHOD InsertAdjacentHTML(const nsAString& position, const nsAString& text) { \
-    return _to InsertAdjacentHTML(position, text); \
-  } \
-  NS_IMETHOD ScrollIntoView(bool top, uint8_t _argc) { \
-    return _to ScrollIntoView(top, _argc); \
-  } \
-  NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) { \
-    return _to GetOffsetParent(aOffsetParent); \
-  } \
-  NS_IMETHOD GetOffsetTop(int32_t* aOffsetTop) { \
-    return _to GetOffsetTop(aOffsetTop); \
-  } \
-  NS_IMETHOD GetOffsetLeft(int32_t* aOffsetLeft) { \
-    return _to GetOffsetLeft(aOffsetLeft); \
-  } \
-  NS_IMETHOD GetOffsetWidth(int32_t* aOffsetWidth) { \
-    return _to GetOffsetWidth(aOffsetWidth); \
-  } \
-  NS_IMETHOD GetOffsetHeight(int32_t* aOffsetHeight) { \
-    return _to GetOffsetHeight(aOffsetHeight); \
-  }
 
 /**
  * A macro to declare the NS_NewHTMLXXXElement() functions.
