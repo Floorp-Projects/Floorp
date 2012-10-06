@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=790265
+-->
+<head>
+  <title>Test for Bug 790265</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="binding">
+      <implementation>
+        <method name="foo">
+          <body><![CDATA[
+            return this;
+          ]]></body>
+        </method>
+      </implementation>
+    </binding>
+  </bindings>
+  <style>
+    #toBind { display: none; }
+    #toBind.bound { -moz-binding: url(#binding); }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=790265">Mozilla Bug 790265</a>
+<p id="display"></p>
+<div id="content">
+  <div id="toBind">Bound element</div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+  SimpleTest.waitForExplicitFinish();
+  // Flush out style on $("toBind")
+  $("toBind").offsetWidth;
+  ok(!("foo" in $("toBind")), "Should not have binding applied");
+  is(getComputedStyle($("toBind")).MozBinding, "none",
+     "Computed binding should be none");
+  $("toBind").className = "bound";
+  // Flush the style change, so we kick off the binding load before onload
+  // fires and thus block onload.
+  $("toBind").offsetWidth;
+  addLoadEvent(function() {
+    ok("foo" in $("toBind"), "Should have binding applied");
+    is($("toBind").foo(), $("toBind"), "Should have correct return value");
+    SimpleTest.finish();
+  });
+]]>
+</script>
+</pre>
+</body>
+</html>
+

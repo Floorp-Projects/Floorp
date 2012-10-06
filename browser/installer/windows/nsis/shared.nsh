@@ -94,6 +94,8 @@
 
   ${RemoveDeprecatedFiles}
 
+  RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
+
 !ifdef MOZ_MAINTENANCE_SERVICE
   Call IsUserAdmin
   Pop $R0

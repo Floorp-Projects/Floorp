@@ -24,6 +24,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -1196,10 +1197,29 @@ DumpReport(nsIGZFileWriter *aWriter, bool aIsFirst,
         return NS_OK;
     }
 
+    // Generate the process identifier, which is of the form "$PROCESS_NAME
+    // (pid $PID)", or just "(pid $PID)" if we don't have a process name.  If
+    // we're the main process, we let $PROCESS_NAME be "Main Process".
+    nsAutoCString processId;
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      // We're the main process.
+      processId.AssignLiteral("Main Process ");
+    } else if (ContentChild *cc = ContentChild::GetSingleton()) {
+      // Try to get the process name from ContentChild.
+      nsAutoString processName;
+      cc->GetProcessName(processName);
+      processId.Assign(NS_ConvertUTF16toUTF8(processName));
+      if (!processId.IsEmpty()) {
+        processId.AppendLiteral(" ");
+      }
+    }
+
+    // Add the PID to the identifier.
     unsigned pid = getpid();
-    nsPrintfCString pidStr("Process %u", pid);
+    processId.Append(nsPrintfCString("(pid %u)", pid));
+
     DUMP(aWriter, "\n    {\"process\": \"");
-    DUMP(aWriter, pidStr);
+    DUMP(aWriter, processId);
 
     DUMP(aWriter, "\", \"path\": \"");
     nsCString path(aPath);

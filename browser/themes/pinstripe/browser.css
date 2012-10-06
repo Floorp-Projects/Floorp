@@ -3027,6 +3027,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
 }
 
+#webRTC-notification-icon {
+  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
+}
+
 .popup-notification-icon {
   width: 64px;
   height: 64px;
@@ -3105,6 +3109,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .popup-notification-icon[popupid="webapps-install"] {
   list-style-image: url(chrome://browser/skin/webapps-64.png);
+}
+
+.popup-notification-icon[popupid="webRTC-shareDevices"] {
+  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64.png);
 }
 
 /* Popup Buttons */
