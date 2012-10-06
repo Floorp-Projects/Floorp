@@ -26,6 +26,7 @@ SQLITE_WRAPPER_INT(sqlite3_errmsg)
 SQLITE_WRAPPER_INT(sqlite3_prepare_v2)
 SQLITE_WRAPPER_INT(sqlite3_bind_parameter_count)
 SQLITE_WRAPPER_INT(sqlite3_bind_text)
+SQLITE_WRAPPER_INT(sqlite3_bind_null)
 SQLITE_WRAPPER_INT(sqlite3_step)
 SQLITE_WRAPPER_INT(sqlite3_column_count)
 SQLITE_WRAPPER_INT(sqlite3_finalize)
@@ -252,6 +253,11 @@ sqliteInternalCall(JNIEnv* jenv,
         if (numPars > 0) {
             for (int i = 0; i < numPars; i++) {
                 jobject jObjectParam = jenv->GetObjectArrayElement(jParams, i);
+                if (jObjectParam == NULL) {
+                  // SQLite parameters index from 1
+                  rc = f_sqlite3_bind_null(ppStmt, i + 1);
+                  continue;
+                }
                 // IsInstanceOf or isAssignableFrom? String is final, so IsInstanceOf
                 // should be OK.
                 jboolean isString = jenv->IsInstanceOf(jObjectParam, stringClass);
