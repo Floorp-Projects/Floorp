@@ -711,6 +711,7 @@ var SocialToolbar = {
 
     for (let frame of createdFrames) {
       if (frame.docShell) {
+        frame.docShell.isActive = false;
         frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIWebProgress)
                       .addProgressListener(new SocialErrorListener("notification-panel"),
