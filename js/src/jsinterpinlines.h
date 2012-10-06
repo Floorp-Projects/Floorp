@@ -26,6 +26,8 @@
 #include "jspropertycacheinlines.h"
 #include "jstypedarrayinlines.h"
 
+#include "ion/Ion.h"
+
 #include "vm/Stack-inl.h"
 
 namespace js {
@@ -978,6 +980,47 @@ ReportIfNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct = NO
     ReportIsNotFunction(cx, v, construct);
     return NULL;
 }
+
+/*
+ * FastInvokeGuard is used to optimize calls to JS functions from natives written
+ * in C++, for instance Array.map. If the callee is not Ion-compiled, this will
+ * just call Invoke. If the callee has a valid IonScript, however, it will enter
+ * Ion directly.
+ */
+class FastInvokeGuard
+{
+    InvokeArgsGuard args_;
+    RootedFunction fun_;
+    bool useIon_;
+
+  public:
+    FastInvokeGuard(JSContext *cx, const Value &fval)
+      : fun_(cx),
+        useIon_(ion::IsEnabled(cx))
+    {
+        initFunction(fval);
+    }
+
+    void initFunction(const Value &fval) {
+        if (fval.isObject() && fval.toObject().isFunction()) {
+            JSFunction *fun = fval.toObject().toFunction();
+            if (fun->isInterpreted())
+                fun_ = fun;
+        }
+    }
+
+    InvokeArgsGuard &args() {
+        return args_;
+    }
+
+    bool invoke(JSContext *cx) {
+        return Invoke(cx, args_);
+    }
+
+  private:
+    FastInvokeGuard(const FastInvokeGuard& other) MOZ_DELETE;
+    const FastInvokeGuard& operator=(const FastInvokeGuard& other) MOZ_DELETE;
+};
 
 }  /* namespace js */
 
