@@ -38,7 +38,6 @@ our_dir = os.path.dirname(os.path.abspath(__file__))
 try:
     import mach.main
 except ImportError:
-    SEARCH_PATHS.reverse()
     sys.path[0:0] = [os.path.join(our_dir, path) for path in SEARCH_PATHS]
 
     import mach.main

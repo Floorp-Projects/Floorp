@@ -31,8 +31,13 @@ NS_INTERFACE_TABLE_HEAD(nsGenericHTMLFrameElement)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsGenericHTMLFrameElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
-NS_IMPL_INT_ATTR(nsGenericHTMLFrameElement, TabIndex, tabindex)
 NS_IMPL_BOOL_ATTR(nsGenericHTMLFrameElement, Mozbrowser, mozbrowser)
+
+int32_t
+nsGenericHTMLFrameElement::TabIndexDefault()
+{
+  return 0;
+}
 
 nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
 {

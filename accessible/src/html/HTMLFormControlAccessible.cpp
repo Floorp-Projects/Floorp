@@ -484,7 +484,7 @@ HTMLTextFieldAccessible::DoAction(uint8_t aIndex)
   if (aIndex == 0) {
     nsHTMLInputElement* element = nsHTMLInputElement::FromContent(mContent);
     if (element)
-      return element->Focus();
+      return element->DOMFocus();
 
     return NS_ERROR_FAILURE;
   }

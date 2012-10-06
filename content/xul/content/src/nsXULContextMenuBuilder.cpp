@@ -201,7 +201,7 @@ nsXULContextMenuBuilder::Click(const nsAString& aGeneratedItemId)
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMHTMLElement> element = mElements.SafeObjectAt(idx);
     if (element) {
-      element->Click();
+      element->DOMClick();
     }
   }
 

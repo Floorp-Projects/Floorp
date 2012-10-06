@@ -377,7 +377,7 @@ static void qcms_transform_data_rgb_out_lut_precache(qcms_transform *transform, 
 
 		dest[OUTPUT_R_INDEX] = transform->output_table_r->data[r];
 		dest[OUTPUT_G_INDEX] = transform->output_table_g->data[g];
-		dest[OUTPUT_A_INDEX] = transform->output_table_b->data[b];
+		dest[OUTPUT_B_INDEX] = transform->output_table_b->data[b];
 		dest += RGB_OUTPUT_COMPONENTS;
 	}
 }
