@@ -45,12 +45,6 @@ public:
   NS_IMETHOD Click() {
     return nsGenericHTMLFormElement::Click();
   }
-  NS_IMETHOD GetTabIndex(int32_t* aTabIndex) {
-    return nsGenericHTMLFormElement::GetTabIndex(aTabIndex);
-  }
-  NS_IMETHOD SetTabIndex(int32_t aTabIndex) {
-    return nsGenericHTMLFormElement::SetTabIndex(aTabIndex);
-  }
   NS_IMETHOD Focus();
   NS_IMETHOD GetDraggable(bool* aDraggable) {
     return nsGenericHTMLFormElement::GetDraggable(aDraggable);

@@ -316,8 +316,7 @@ bool
 nsHTMLImageElement::IsHTMLFocusable(bool aWithMouse,
                                     bool *aIsFocusable, int32_t *aTabIndex)
 {
-  int32_t tabIndex;
-  GetTabIndex(&tabIndex);
+  int32_t tabIndex = TabIndex();
 
   if (IsInDoc()) {
     nsAutoString usemap;
