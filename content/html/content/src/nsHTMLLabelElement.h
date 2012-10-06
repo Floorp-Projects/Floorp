@@ -41,14 +41,8 @@ public:
   NS_DECL_NSIDOMHTMLLABELELEMENT
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLFormElement::)
-  NS_IMETHOD Focus();
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
-    return nsGenericHTMLFormElement::GetInnerHTML(aInnerHTML);
-  }
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
-    return nsGenericHTMLFormElement::SetInnerHTML(aInnerHTML);
-  }
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
+  virtual void Focus(mozilla::ErrorResult& aError) MOZ_OVERRIDE;
 
   // nsIFormControl
   NS_IMETHOD_(uint32_t) GetType() const { return NS_FORM_LABEL; }

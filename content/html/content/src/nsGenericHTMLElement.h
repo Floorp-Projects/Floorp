@@ -94,6 +94,7 @@ public:
   {
     aError = SetIntAttr(nsGkAtoms::tabindex, aTabIndex);
   }
+  virtual void Focus(mozilla::ErrorResult& aError);
   virtual bool Draggable() const
   {
     return AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
@@ -136,6 +137,11 @@ public:
     SetTabIndex(aTabIndex, rv);
     return rv.ErrorCode();
   }
+  nsresult DOMFocus() {
+    mozilla::ErrorResult rv;
+    Focus(rv);
+    return rv.ErrorCode();
+  }
   nsresult GetDraggable(bool* aDraggable)
   {
     *aDraggable = Draggable();
@@ -160,10 +166,9 @@ public:
   NS_IMETHOD InsertAdjacentHTML(const nsAString& aPosition,
                                 const nsAString& aText);
   nsresult ScrollIntoView(bool aTop, uint8_t optional_argc);
-  // Declare Focus(), Blur(), GetHidden(), SetHidden(), GetSpellcheck(), and
+  // Declare Blur(), GetHidden(), SetHidden(), GetSpellcheck(), and
   // SetSpellcheck() such that classes that inherit interfaces with those
   // methods properly override them.
-  NS_IMETHOD Focus();
   NS_IMETHOD Blur();
   NS_IMETHOD GetHidden(bool* aHidden);
   NS_IMETHOD SetHidden(bool aHidden);
@@ -1401,7 +1406,6 @@ protected:
 /* Use this macro to declare functions that forward the behavior of this
  * interface to another object. 
  * This macro doesn't forward
- * - Focus
  * - GetInnerHTML
  * - SetInnerHTML
  * because sometimes elements want to override them.
@@ -1454,6 +1458,9 @@ protected:
   } \
   NS_IMETHOD SetTabIndex(int32_t aTabIndex) { \
     return _to SetTabIndex(aTabIndex); \
+  } \
+  NS_IMETHOD DOMFocus() { \
+    return _to DOMFocus(); \
   } \
   NS_IMETHOD Blur() { \
     return _to Blur(); \

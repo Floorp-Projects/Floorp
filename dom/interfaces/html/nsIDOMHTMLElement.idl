@@ -52,6 +52,7 @@ interface nsIDOMHTMLElement : nsIDOMElement
   [binaryname(DOMClick)]
   void click();
            attribute long             tabIndex;
+  [binaryname(DOMFocus)]
   void focus();
   void blur();
            attribute DOMString        accessKey;

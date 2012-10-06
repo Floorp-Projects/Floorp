@@ -1872,11 +1872,12 @@ nsHTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify)
   UpdateState(aNotify);
 }
 
-NS_IMETHODIMP
-nsHTMLInputElement::Focus()
+void
+nsHTMLInputElement::Focus(ErrorResult& aError)
 {
   if (mType != NS_FORM_INPUT_FILE) {
-    return nsGenericHTMLElement::Focus();
+    nsGenericHTMLElement::Focus(aError);
+    return;
   }
 
   // For file inputs, focus the button instead.
@@ -1899,7 +1900,7 @@ nsHTMLInputElement::Focus()
     }
   }
 
-  return NS_OK;
+  return;
 }
 
 NS_IMETHODIMP
@@ -2389,7 +2390,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                 nsCOMPtr<nsIContent> radioContent =
                   do_QueryInterface(selectedRadioButton);
                 if (radioContent) {
-                  rv = selectedRadioButton->Focus();
+                  rv = selectedRadioButton->DOMFocus();
                   if (NS_SUCCEEDED(rv)) {
                     nsEventStatus status = nsEventStatus_eIgnore;
                     nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
