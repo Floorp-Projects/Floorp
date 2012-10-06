@@ -213,14 +213,10 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DenyPairingConfirmationRequest());
     case Request::TDenyAuthorizationRequest:
       return actor->DoRequest(aRequest.get_DenyAuthorizationRequest());
-    case Request::TConnectHeadsetRequest:
-      return actor->DoRequest(aRequest.get_ConnectHeadsetRequest());
-    case Request::TConnectObjectPushRequest:
-      return actor->DoRequest(aRequest.get_ConnectObjectPushRequest());
-    case Request::TDisconnectHeadsetRequest:
-      return actor->DoRequest(aRequest.get_DisconnectHeadsetRequest());
-    case Request::TDisconnectObjectPushRequest:
-      return actor->DoRequest(aRequest.get_DisconnectObjectPushRequest());
+    case Request::TConnectRequest:
+      return actor->DoRequest(aRequest.get_ConnectRequest());
+    case Request::TDisconnectRequest:
+      return actor->DoRequest(aRequest.get_DisconnectRequest());
     case Request::TSendFileRequest:
       return actor->DoRequest(aRequest.get_SendFileRequest());
     case Request::TStopSendingFileRequest:
@@ -500,45 +496,25 @@ BluetoothRequestParent::DoRequest(const DenyAuthorizationRequest& aRequest)
 }
 
 bool
-BluetoothRequestParent::DoRequest(const ConnectHeadsetRequest& aRequest)
+BluetoothRequestParent::DoRequest(const ConnectRequest& aRequest)
 {
   MOZ_ASSERT(mService);
-  MOZ_ASSERT(mRequestType == Request::TConnectHeadsetRequest);
+  MOZ_ASSERT(mRequestType == Request::TConnectRequest);
 
-  return mService->ConnectHeadset(aRequest.address(),
-                                  aRequest.adapterPath(),
-                                  mReplyRunnable.get());
+  return mService->Connect(aRequest.address(),
+                           aRequest.adapterPath(),
+                           aRequest.profileId(),
+                           mReplyRunnable.get());
 }
 
 bool
-BluetoothRequestParent::DoRequest(const ConnectObjectPushRequest& aRequest)
+BluetoothRequestParent::DoRequest(const DisconnectRequest& aRequest)
 {
   MOZ_ASSERT(mService);
-  MOZ_ASSERT(mRequestType == Request::TConnectObjectPushRequest);
+  MOZ_ASSERT(mRequestType == Request::TDisconnectRequest);
 
-  return mService->ConnectObjectPush(aRequest.address(),
-                                     aRequest.adapterPath(),
-                                     mReplyRunnable.get());
-}
-
-bool
-BluetoothRequestParent::DoRequest(const DisconnectHeadsetRequest& aRequest)
-{
-  MOZ_ASSERT(mService);
-  MOZ_ASSERT(mRequestType == Request::TDisconnectHeadsetRequest);
-
-  mService->DisconnectHeadset(mReplyRunnable.get());
-
-  return true;
-}
-
-bool
-BluetoothRequestParent::DoRequest(const DisconnectObjectPushRequest& aRequest)
-{
-  MOZ_ASSERT(mService);
-  MOZ_ASSERT(mRequestType == Request::TDenyAuthorizationRequest);
-
-  mService->DisconnectObjectPush(mReplyRunnable.get());
+  mService->Disconnect(aRequest.profileId(),
+                       mReplyRunnable.get());
 
   return true;
 }

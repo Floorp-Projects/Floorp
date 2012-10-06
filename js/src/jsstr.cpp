@@ -48,6 +48,7 @@
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 #include "jsautooplen.h"        // generated headers last
@@ -1843,7 +1844,8 @@ struct ReplaceData
 {
     ReplaceData(JSContext *cx)
       : str(cx), g(cx), lambda(cx), elembase(cx), repstr(cx),
-        dollarRoot(cx, &dollar), dollarEndRoot(cx, &dollarEnd), sb(cx)
+        dollarRoot(cx, &dollar), dollarEndRoot(cx, &dollarEnd),
+        fig(cx, NullValue()), sb(cx)
     {}
 
     RootedString       str;            /* 'this' parameter object as a string */
@@ -1858,7 +1860,7 @@ struct ReplaceData
     int                leftIndex;      /* left context index in str->chars */
     JSSubString        dollarStr;      /* for "$$" InterpretDollar result */
     bool               calledBack;     /* record whether callback has been called */
-    InvokeArgsGuard    args;           /* arguments for lambda call */
+    FastInvokeGuard    fig;            /* used for lambda calls, also holds arguments */
     StringBuffer       sb;             /* buffer built during DoMatch */
 };
 
@@ -1987,7 +1989,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         unsigned p = res->parenCount();
         unsigned argc = 1 + p + 2;
 
-        InvokeArgsGuard &args = rdata.args;
+        InvokeArgsGuard &args = rdata.fig.args();
         if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, argc, &args))
             return false;
 
@@ -2008,7 +2010,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         args[argi++].setInt32(res->matchStart());
         args[argi].setString(rdata.str);
 
-        if (!Invoke(cx, args))
+        if (!rdata.fig.invoke(cx))
             return false;
 
         /* root repstr: rdata is on the stack, so scanned by conservative gc. */
@@ -2306,10 +2308,10 @@ str_replace_flat_lambda(JSContext *cx, CallArgs outerArgs, ReplaceData &rdata, c
 
     /* lambda(matchStr, matchStart, textstr) */
     static const uint32_t lambdaArgc = 3;
-    if (!cx->stack.pushInvokeArgs(cx, lambdaArgc, &rdata.args))
+    if (!cx->stack.pushInvokeArgs(cx, lambdaArgc, &rdata.fig.args()))
         return false;
 
-    CallArgs &args = rdata.args;
+    CallArgs &args = rdata.fig.args();
     args.setCallee(ObjectValue(*rdata.lambda));
     args.setThis(UndefinedValue());
 
@@ -2318,7 +2320,7 @@ str_replace_flat_lambda(JSContext *cx, CallArgs outerArgs, ReplaceData &rdata, c
     sp[1].setInt32(fm.match());
     sp[2].setString(rdata.str);
 
-    if (!Invoke(cx, rdata.args))
+    if (!rdata.fig.invoke(cx))
         return false;
 
     RootedString repstr(cx, ToString(cx, args.rval()));
@@ -2444,6 +2446,8 @@ js::str_replace(JSContext *cx, unsigned argc, Value *vp)
         rdata.dollarEnd = stable->chars() + stable->length();
         rdata.dollar = js_strchr_limit(stable->chars(), '$', rdata.dollarEnd);
     }
+
+    rdata.fig.initFunction(ObjectOrNullValue(rdata.lambda));
 
     /*
      * Unlike its |String.prototype| brethren, |replace| doesn't convert

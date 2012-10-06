@@ -52,6 +52,7 @@ AutoSetCurrentTransaction::~AutoSetCurrentTransaction()
  ******************************************************************************/
 
 IndexedDBParent::IndexedDBParent()
+  : mDisconnected(false)
 {
   MOZ_COUNT_CTOR(IndexedDBParent);
 }
@@ -59,6 +60,19 @@ IndexedDBParent::IndexedDBParent()
 IndexedDBParent::~IndexedDBParent()
 {
   MOZ_COUNT_DTOR(IndexedDBParent);
+}
+
+void
+IndexedDBParent::Disconnect()
+{
+  mDisconnected = true;
+
+  const InfallibleTArray<PIndexedDBDatabaseParent*>& dbs =
+    ManagedPIndexedDBDatabaseParent();
+
+  for (uint32_t i = 0; i < dbs.Length(); ++i) {
+    static_cast<IndexedDBDatabaseParent*>(dbs[i])->Disconnect();
+  }
 }
 
 void
@@ -184,6 +198,11 @@ IndexedDBDatabaseParent::HandleEvent(nsIDOMEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
 
+  if (Manager() &&
+      static_cast<IndexedDBParent*>(Manager())->IsDisconnected()) {
+    return NS_OK;
+  }
+
   nsString type;
   nsresult rv = aEvent->GetType(type);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -212,6 +231,14 @@ IndexedDBDatabaseParent::HandleEvent(nsIDOMEvent* aEvent)
 
   MOZ_NOT_REACHED("Unexpected message!");
   return NS_ERROR_UNEXPECTED;
+}
+
+void
+IndexedDBDatabaseParent::Disconnect()
+{
+  if (mDatabase) {
+    mDatabase->DisconnectFromActor();
+  }
 }
 
 nsresult
@@ -1779,6 +1806,11 @@ IndexedDBDeleteDatabaseRequestParent::~IndexedDBDeleteDatabaseRequestParent()
 nsresult
 IndexedDBDeleteDatabaseRequestParent::HandleEvent(nsIDOMEvent* aEvent)
 {
+  if (Manager() &&
+      static_cast<IndexedDBParent*>(Manager())->IsDisconnected()) {
+    return NS_OK;
+  }
+
   MOZ_ASSERT(aEvent);
 
   nsString type;

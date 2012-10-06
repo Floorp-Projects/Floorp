@@ -777,6 +777,7 @@ class CallCompiler : public BaseCompiler
         t0 = regs.takeAnyReg().reg();
         masm.loadPtr(&cx->runtime->ionActivation, t0);
         masm.storePtr(ImmPtr(NULL), Address(t0, ion::IonActivation::offsetOfEntryFp()));
+        masm.storePtr(ImmPtr(NULL), Address(t0, ion::IonActivation::offsetOfPrevPc()));
 
         /* Unset CALLING_INTO_ION on the JS stack frame. */
         masm.load32(Address(JSFrameReg, StackFrame::offsetOfFlags()), t0);

@@ -11,6 +11,7 @@
 ]>
 #includesubst @BOOKMARKSPATH@
 <resources>
+  <string name="moz_app_displayname">@MOZ_APP_DISPLAYNAME@</string>
 #include ../sync/strings.xml.in
   <string name="splash_settingup">&splash_settingup;</string>
   <string name="splash_bookmarks_history">&splash_bookmarks_history;</string>
@@ -20,7 +21,6 @@
   <string name="awesomebar_all_pages_title">&awesomebar_all_pages_title;</string>
   <string name="awesomebar_bookmarks_title">&awesomebar_bookmarks_title;</string>
   <string name="awesomebar_history_title">&awesomebar_history_title;</string>
-  <string name="awesomebar_search_engine">&awesomebar_search_engine;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
   <string name="crash_message">&crash_message;</string>
@@ -95,6 +95,7 @@
   <string name="pref_font_size_set">&pref_font_size_set;</string>
   <string name="pref_font_size_adjust_char">&pref_font_size_adjust_char;</string>
   <string name="pref_font_size_preview_text">&pref_font_size_preview_text;</string>
+  <string name="pref_reflow_on_zoom">&pref_reflow_on_zoom;</string>
   <string name="pref_show_product_announcements">&pref_show_product_announcements;</string>
   <string name="pref_sync">&pref_sync;</string>
   <string name="pref_search_suggestions">&pref_search_suggestions;</string>
@@ -168,6 +169,8 @@
   <string name="button_clear_data">&button_clear_data;</string>
   <string name="button_set">&button_set;</string>
   <string name="button_clear">&button_clear;</string>
+  <string name="button_yes">&button_yes;</string>
+  <string name="button_no">&button_no;</string>
 
   <string name="abouthome_addons_title">&abouthome_addons_title;</string>
   <string name="abouthome_addons_browse">&abouthome_addons_browse;</string>
@@ -216,6 +219,8 @@
 
   <string name="webapp_generic_name">&webapp_generic_name;</string>
 
+  <string name="searchable_description">&searchable_description;</string>
+
   <!-- Updater notifications -->
   <string name="updater_start_title">&updater_start_title;</string>
   <string name="updater_start_select">&updater_start_select;</string>
@@ -227,5 +232,8 @@
   
   <string name="updater_apply_title">&updater_apply_title;</string>
   <string name="updater_apply_select">&updater_apply_select;</string>
+
+  <!-- Search suggestions opt-in -->
+  <string name="suggestions_prompt">&suggestions_prompt;</string>
 
 </resources>

@@ -45,7 +45,16 @@ smaller_is_better = frozenset(('tdhtmlr_paint', 'tp5n_main_rss_paint',
                                'tp4m_shutdown_nochrome', 'tdhtml_nochrome',
                                'ts_shutdown', 'tp5n_%cpu_paint',
                                'trace_malloc_allocs', 'ts', 'codesighs',
-                               'tsvg_nochrome', 'tp5n_content_rss_paint'))
+                               'tsvg_nochrome', 'tp5n_content_rss_paint',
+                               'tp5n_main_startup_fileio_paint',
+                               'tp5n_nonmain_normal_netio_paint',
+                               'tp5n_nonmain_startup_fileio_paint',
+                               'tp5n_main_normal_fileio_paint',
+                               'tp5n_nonmain_normal_fileio_paint',
+                               'tp5n_main_startup_netio_paint',
+                               'tp5n_main_normal_netio_paint',
+                               'tp5n_main_shutdown_netio_paint',
+                               'tp5n_main_shutdown_fileio_paint'))
 
 all_benchmarks = smaller_is_better | bigger_is_better
 assert len(smaller_is_better & bigger_is_better) == 0

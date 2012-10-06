@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CAccessibleTable.h"
+#include "ia2AccessibleTable.h"
 
 #include "Accessible2.h"
 #include "AccessibleTable_i.c"
@@ -24,12 +24,12 @@
 using namespace mozilla::a11y;
 
 #define CANT_QUERY_ASSERTION_MSG \
-"Subclass of CAccessibleTable doesn't implement nsIAccessibleTable"\
+"Subclass of ia2AccessibleTable doesn't implement nsIAccessibleTable"\
 
 // IUnknown
 
 STDMETHODIMP
-CAccessibleTable::QueryInterface(REFIID iid, void** ppv)
+ia2AccessibleTable::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
@@ -53,7 +53,7 @@ CAccessibleTable::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleTable
 
 STDMETHODIMP
-CAccessibleTable::get_accessibleAt(long aRow, long aColumn,
+ia2AccessibleTable::get_accessibleAt(long aRow, long aColumn,
                                    IUnknown **aAccessible)
 {
 __try {
@@ -86,7 +86,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_caption(IUnknown **aAccessible)
+ia2AccessibleTable::get_caption(IUnknown** aAccessible)
 {
 __try {
   *aAccessible = NULL;
@@ -121,8 +121,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_childIndex(long aRowIndex, long aColumnIndex,
-                                 long *aChildIndex)
+ia2AccessibleTable::get_childIndex(long aRowIndex, long aColumnIndex,
+                                   long* aChildIndex)
 {
 __try {
   *aChildIndex = 0;
@@ -146,7 +146,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_columnDescription(long aColumn, BSTR *aDescription)
+ia2AccessibleTable::get_columnDescription(long aColumn, BSTR* aDescription)
 {
 __try {
   *aDescription = NULL;
@@ -172,8 +172,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_columnExtentAt(long aRow, long aColumn,
-                                     long *nColumnsSpanned)
+ia2AccessibleTable::get_columnExtentAt(long aRow, long aColumn,
+                                      long* nColumnsSpanned)
 {
 __try {
   *nColumnsSpanned = 0;
@@ -196,8 +196,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_columnHeader(IAccessibleTable **aAccessibleTable,
-                                   long *aStartingRowIndex)
+ia2AccessibleTable::get_columnHeader(IAccessibleTable** aAccessibleTable,
+                                    long* aStartingRowIndex)
 {
 __try {
   *aAccessibleTable = NULL;
@@ -209,7 +209,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_columnIndex(long aChildIndex, long *aColumnIndex)
+ia2AccessibleTable::get_columnIndex(long aChildIndex, long* aColumnIndex)
 {
 __try {
   *aColumnIndex = 0;
@@ -233,7 +233,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_nColumns(long *aColumnCount)
+ia2AccessibleTable::get_nColumns(long* aColumnCount)
 {
 __try {
   *aColumnCount = 0;
@@ -257,7 +257,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_nRows(long *aRowCount)
+ia2AccessibleTable::get_nRows(long* aRowCount)
 {
 __try {
   *aRowCount = 0;
@@ -281,7 +281,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_nSelectedChildren(long *aChildCount)
+ia2AccessibleTable::get_nSelectedChildren(long* aChildCount)
 {
 __try {
   *aChildCount = 0;
@@ -304,7 +304,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_nSelectedColumns(long *aColumnCount)
+ia2AccessibleTable::get_nSelectedColumns(long* aColumnCount)
 {
 __try {
   *aColumnCount = 0;
@@ -327,7 +327,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_nSelectedRows(long *aRowCount)
+ia2AccessibleTable::get_nSelectedRows(long* aRowCount)
 {
 __try {
   *aRowCount = 0;
@@ -350,7 +350,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_rowDescription(long aRow, BSTR *aDescription)
+ia2AccessibleTable::get_rowDescription(long aRow, BSTR* aDescription)
 {
 __try {
   *aDescription = NULL;
@@ -376,7 +376,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_rowExtentAt(long aRow, long aColumn, long *aNRowsSpanned)
+ia2AccessibleTable::get_rowExtentAt(long aRow, long aColumn,
+                                    long* aNRowsSpanned)
 {
 __try {
   *aNRowsSpanned = 0;
@@ -399,8 +400,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_rowHeader(IAccessibleTable **aAccessibleTable,
-                                long *aStartingColumnIndex)
+ia2AccessibleTable::get_rowHeader(IAccessibleTable** aAccessibleTable,
+                                  long* aStartingColumnIndex)
 {
 __try {
   *aAccessibleTable = NULL;
@@ -412,7 +413,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_rowIndex(long aChildIndex, long *aRowIndex)
+ia2AccessibleTable::get_rowIndex(long aChildIndex, long* aRowIndex)
 {
 __try {
   *aRowIndex = 0;
@@ -436,8 +437,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_selectedChildren(long aMaxChildren, long **aChildren,
-                                       long *aNChildren)
+ia2AccessibleTable::get_selectedChildren(long aMaxChildren, long** aChildren,
+                                         long* aNChildren)
 {
 __try {
   return GetSelectedItems(aChildren, aNChildren, ITEMSTYPE_CELLS);
@@ -448,8 +449,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_selectedColumns(long aMaxColumns, long **aColumns,
-                                      long *aNColumns)
+ia2AccessibleTable::get_selectedColumns(long aMaxColumns, long** aColumns,
+                                        long* aNColumns)
 {
 __try {
   return GetSelectedItems(aColumns, aNColumns, ITEMSTYPE_COLUMNS);
@@ -460,7 +461,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_selectedRows(long aMaxRows, long **aRows, long *aNRows)
+ia2AccessibleTable::get_selectedRows(long aMaxRows, long** aRows, long* aNRows)
 {
 __try {
   return GetSelectedItems(aRows, aNRows, ITEMSTYPE_ROWS);
@@ -471,7 +472,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_summary(IUnknown **aAccessible)
+ia2AccessibleTable::get_summary(IUnknown** aAccessible)
 {
 __try {
   *aAccessible = NULL;
@@ -486,7 +487,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_isColumnSelected(long aColumn, boolean *aIsSelected)
+ia2AccessibleTable::get_isColumnSelected(long aColumn, boolean* aIsSelected)
 {
 __try {
   *aIsSelected = false;
@@ -509,7 +510,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_isRowSelected(long aRow, boolean *aIsSelected)
+ia2AccessibleTable::get_isRowSelected(long aRow, boolean* aIsSelected)
 {
 __try {
   *aIsSelected = false;
@@ -532,7 +533,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_isSelected(long aRow, long aColumn, boolean *aIsSelected)
+ia2AccessibleTable::get_isSelected(long aRow, long aColumn,
+                                   boolean* aIsSelected)
 {
 __try {
   *aIsSelected = false;
@@ -555,7 +557,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::selectRow(long aRow)
+ia2AccessibleTable::selectRow(long aRow)
 {
 __try {
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -571,7 +573,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::selectColumn(long aColumn)
+ia2AccessibleTable::selectColumn(long aColumn)
 {
 __try {
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -587,7 +589,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::unselectRow(long aRow)
+ia2AccessibleTable::unselectRow(long aRow)
 {
 __try {
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -603,7 +605,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::unselectColumn(long aColumn)
+ia2AccessibleTable::unselectColumn(long aColumn)
 {
 __try {
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -619,11 +621,11 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_rowColumnExtentsAtIndex(long aIndex, long *aRow,
-                                              long *aColumn,
-                                              long *aRowExtents,
-                                              long *aColumnExtents,
-                                              boolean *aIsSelected)
+ia2AccessibleTable::get_rowColumnExtentsAtIndex(long aIndex, long* aRow,
+                                                long* aColumn,
+                                                long* aRowExtents,
+                                                long* aColumnExtents,
+                                                boolean* aIsSelected)
 {
 __try {
   *aRow = 0;
@@ -669,7 +671,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_modelChange(IA2TableModelChange *aModelChange)
+ia2AccessibleTable::get_modelChange(IA2TableModelChange* aModelChange)
 {
 __try {
 
@@ -681,19 +683,19 @@ __try {
 // IAccessibleTable2
 
 STDMETHODIMP
-CAccessibleTable::get_cellAt(long row, long column, IUnknown **cell)
+ia2AccessibleTable::get_cellAt(long aRow, long aColumn, IUnknown** aCell)
 {
-  return get_accessibleAt(row, column, cell);
+  return get_accessibleAt(aRow, aColumn, aCell);
 }
 
 STDMETHODIMP
-CAccessibleTable::get_nSelectedCells(long *cellCount)
+ia2AccessibleTable::get_nSelectedCells(long* aCellCount)
 {
-  return get_nSelectedChildren(cellCount);
+  return get_nSelectedChildren(aCellCount);
 }
 
 STDMETHODIMP
-CAccessibleTable::get_selectedCells(IUnknown ***cells, long *nSelectedCells)
+ia2AccessibleTable::get_selectedCells(IUnknown*** aCells, long* aNSelectedCells)
 {
 __try {
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -706,7 +708,7 @@ __try {
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  return nsWinUtils::ConvertToIA2Array(geckoCells, cells, nSelectedCells);
+  return nsWinUtils::ConvertToIA2Array(geckoCells, aCells, aNSelectedCells);
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
                                                   GetExceptionInformation())) {}
@@ -715,7 +717,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_selectedColumns(long **aColumns, long *aNColumns)
+ia2AccessibleTable::get_selectedColumns(long** aColumns, long* aNColumns)
 {
 __try {
   return GetSelectedItems(aColumns, aNColumns, ITEMSTYPE_COLUMNS);
@@ -726,7 +728,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleTable::get_selectedRows(long **aRows, long *aNRows)
+ia2AccessibleTable::get_selectedRows(long** aRows, long* aNRows)
 {
 __try {
   return GetSelectedItems(aRows, aNRows, ITEMSTYPE_ROWS);
@@ -737,11 +739,11 @@ __try {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// CAccessibleTable public
+// ia2AccessibleTable public
 
 HRESULT
-CAccessibleTable::GetSelectedItems(long **aItems, long *aItemsCount,
-                                   eItemsType aType)
+ia2AccessibleTable::GetSelectedItems(long** aItems, long* aItemsCount,
+                                     eItemsType aType)
 {
   *aItemsCount = 0;
 

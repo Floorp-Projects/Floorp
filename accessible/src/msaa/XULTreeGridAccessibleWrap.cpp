@@ -22,7 +22,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(XULTreeGridAccessibleWrap,
 
 IMPL_IUNKNOWN_INHERITED1(XULTreeGridAccessibleWrap,
                          AccessibleWrap,
-                         CAccessibleTable)
+                         ia2AccessibleTable)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,4 +46,4 @@ NS_IMPL_ISUPPORTS_INHERITED0(XULTreeGridCellAccessibleWrap,
 
 IMPL_IUNKNOWN_INHERITED1(XULTreeGridCellAccessibleWrap,
                          AccessibleWrap,
-                         CAccessibleTableCell)
+                         ia2AccessibleTableCell)

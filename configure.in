@@ -3955,13 +3955,14 @@ MOZ_ARG_WITH_STRING(system-libevent,
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
-if test -z "$LIBEVENT_DIR" -o "$LIBEVENT_DIR" = no; then
-    MOZ_NATIVE_LIBEVENT=
-elif test "$LIBEVENT_DIR" = yes; then
+if test "$LIBEVENT_DIR" = yes; then
     PKG_CHECK_MODULES(MOZ_LIBEVENT, libevent,
         MOZ_NATIVE_LIBEVENT=1,
-        AC_MSG_ERROR([--with-system-libevent requested but libevent package not found]))
-else
+        LIBEVENT_DIR=/usr)
+fi
+if test -z "$LIBEVENT_DIR" -o "$LIBEVENT_DIR" = no; then
+    MOZ_NATIVE_LIBEVENT=
+elif test -z "$MOZ_NATIVE_LIBEVENT"; then
     CFLAGS="-I${LIBEVENT_DIR}/include $CFLAGS"
     LDFLAGS="-L${LIBEVENT_DIR}/lib $LDFLAGS"
     MOZ_CHECK_HEADER(event.h,

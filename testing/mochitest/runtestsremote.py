@@ -450,6 +450,8 @@ def main():
             fennec_ids = options.robocopIds
         dm.pushFile(fennec_ids, os.path.join(deviceRoot, "fennec_ids.txt"))
         options.extraPrefs.append('robocop.logfile="%s/robocop.log"' % deviceRoot)
+        options.extraPrefs.append('browser.search.suggest.enabled=true')
+        options.extraPrefs.append('browser.search.suggest.prompted=true')
 
         if (options.dm_trans == 'adb' and options.robocopPath):
           dm._checkCmd(["install", "-r", os.path.join(options.robocopPath, "robocop.apk")])

@@ -676,7 +676,7 @@ struct JSScript : public js::gc::Cell
     inline void *nativeCodeForPC(bool constructing, jsbytecode *pc);
 
     uint32_t getUseCount() const  { return useCount; }
-    uint32_t incUseCount() { return ++useCount; }
+    uint32_t incUseCount(uint32_t amount = 1) { return useCount += amount; }
     uint32_t *addressOfUseCount() { return &useCount; }
     void resetUseCount() { useCount = 0; }
 

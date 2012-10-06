@@ -111,9 +111,6 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_oldText(
       /* [retval][out] */ IA2TextSegment *oldText);
 
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
-
 protected:
   virtual nsresult GetModifiedText(bool aGetInsertedText, nsAString& aText,
                                    uint32_t *aStartOffset,

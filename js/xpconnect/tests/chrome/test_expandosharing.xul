@@ -54,10 +54,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
     window.gWinC = document.getElementById('frameC').contentWindow;
 
     // Test expando sharing with a JSM for different types of Xrays.
-    // Note that we don't yet support it for nodelists and new bindings.
     testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetWN), is);
-    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetNodeList), todo_is);
-    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetXHR), todo_is);
+    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetNodeList), is);
+    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetXHR), is);
 
     // Make sure sandboxes never share expandos with anyone else.
     testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetWN));

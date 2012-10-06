@@ -545,8 +545,15 @@ random_nextDouble(JSContext *cx)
            RNG_DSCALE;
 }
 
-static JSBool
-math_random(JSContext *cx, unsigned argc, Value *vp)
+double
+math_random_no_outparam(JSContext *cx)
+{
+    /* Calculate random without memory traffic, for use in the JITs. */
+    return random_nextDouble(cx);
+}
+
+JSBool
+js_math_random(JSContext *cx, unsigned argc, Value *vp)
 {
     double z = random_nextDouble(cx);
     vp->setDouble(z);
@@ -678,7 +685,7 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FN("max",            js_math_max,          2, 0),
     JS_FN("min",            js_math_min,          2, 0),
     JS_FN("pow",            js_math_pow,          2, 0),
-    JS_FN("random",         math_random,          0, 0),
+    JS_FN("random",         js_math_random,       0, 0),
     JS_FN("round",          js_math_round,        1, 0),
     JS_FN("sin",            math_sin,             1, 0),
     JS_FN("sqrt",           js_math_sqrt,         1, 0),

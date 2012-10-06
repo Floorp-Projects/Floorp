@@ -2297,7 +2297,7 @@
   },
   "READ_SAVED_PING_SUCCESS": {
     "kind": "boolean",
-    "description": "Sucessful reading a saved ping file"
+    "description": "Successfully reading a saved ping file"
   },
   "TOUCH_ENABLED_DEVICE": {
     "kind": "boolean",

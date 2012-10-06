@@ -33,7 +33,10 @@ SHARED_LIBRARY_LIBS = \
   $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-SHARED_LIBRARY_LIBS += ../src/windows/uia/$(LIB_PREFIX)accessibility_toolkit_uia_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += \
+  ../src/windows/ia2/$(LIB_PREFIX)accessibility_toolkit_ia2_s.$(LIB_SUFFIX) \
+  ../src/windows/uia/$(LIB_PREFIX)accessibility_toolkit_uia_s.$(LIB_SUFFIX) \
+  $(NULL)
 endif
 
 ifdef MOZ_XUL

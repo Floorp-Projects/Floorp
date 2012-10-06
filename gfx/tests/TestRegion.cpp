@@ -62,7 +62,7 @@ class TestLargestRegion {
 
       nsRect largest = r2.GetLargestRectangle();
       if (largest.width * largest.height != tests[i].expectedArea) {
-        fail("Did not succesfully find largest rectangle in non-rectangular region on iteration %d", i);
+        fail("Did not successfully find largest rectangle in non-rectangular region on iteration %d", i);
         success = false;
       }
     }
@@ -93,7 +93,7 @@ class TestLargestRegion {
 
       nsRect largest = r2.GetLargestRectangle();
       if (largest.width * largest.height != tests[i].expectedArea) {
-        fail("Did not succesfully find largest rectangle in two-rect-subtract region on iteration %d", i);
+        fail("Did not successfully find largest rectangle in two-rect-subtract region on iteration %d", i);
         success = false;
       }
     }
