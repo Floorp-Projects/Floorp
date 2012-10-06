@@ -384,7 +384,42 @@ var gMetadataTests = [
       // "not~valid":"this isn't a valid name either",
       // "not-utf-8":"invalid sequences: \xff\xfe\xfa\xfb\0eol"
     }
-  }
+  },
+  { name:"wave_metadata.wav", tags: {
+      name:"Track Title",
+      artist:"Artist Name",
+      comments:"Comments",
+    }
+  },
+  { name:"wave_metadata_utf8.wav", tags: {
+      name:"歌曲名稱",
+      artist:"作曲者",
+      comments:"註解",
+    }
+  },
+  { name:"wave_metadata_unknown_tag.wav", tags: {
+      name:"Track Title",
+      comments:"Comments",
+    }
+  },
+  { name:"wave_metadata_bad_len.wav", tags: {
+      name:"Track Title",
+      artist:"Artist Name",
+    }
+  },
+  { name:"wave_metadata_bad_no_null.wav", tags: {
+      name:"Track Title",
+      artist:"Artist Name",
+      comments:"Comments!!",
+    }
+  },
+  { name:"wave_metadata_bad_utf8.wav", tags: {
+      name:"歌曲名稱",
+      comments:"註解",
+    }
+  },
+  { name:"wavedata_u8.wav", tags: { }
+  },
 ];
 
 function checkMetadata(msg, e, test) {
