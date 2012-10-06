@@ -93,6 +93,17 @@ public:
   {
     aError = SetIntAttr(nsGkAtoms::tabindex, aTabIndex);
   }
+  virtual bool Draggable() const
+  {
+    return AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
+                       nsGkAtoms::_true, eIgnoreCase);
+  }
+  void SetDraggable(bool aDraggable, mozilla::ErrorResult& aError)
+  {
+    aError = SetAttrHelper(nsGkAtoms::draggable,
+                           aDraggable ? NS_LITERAL_STRING("true")
+                                      : NS_LITERAL_STRING("false"));
+  }
 
   // nsIDOMHTMLElement methods. Note that these are non-virtual
   // methods, implementations are expected to forward calls to these
@@ -119,6 +130,17 @@ public:
     SetTabIndex(aTabIndex, rv);
     return rv.ErrorCode();
   }
+  nsresult GetDraggable(bool* aDraggable)
+  {
+    *aDraggable = Draggable();
+    return NS_OK;
+  }
+  nsresult SetDraggable(bool aDraggable)
+  {
+    mozilla::ErrorResult rv;
+    SetDraggable(aDraggable, rv);
+    return rv.ErrorCode();
+  }
 
   nsresult GetOffsetTop(int32_t* aOffsetTop);
   nsresult GetOffsetLeft(int32_t* aOffsetLeft);
@@ -132,9 +154,9 @@ public:
   NS_IMETHOD InsertAdjacentHTML(const nsAString& aPosition,
                                 const nsAString& aText);
   nsresult ScrollIntoView(bool aTop, uint8_t optional_argc);
-  // Declare Focus(), Blur(), GetHidden(), SetHidden(), GetSpellcheck(),
-  // SetSpellcheck(), and GetDraggable() such that classes that inherit
-  // interfaces with those methods properly override them.
+  // Declare Focus(), Blur(), GetHidden(), SetHidden(), GetSpellcheck(), and
+  // SetSpellcheck() such that classes that inherit interfaces with those
+  // methods properly override them.
   NS_IMETHOD Focus();
   NS_IMETHOD Blur();
   NS_IMETHOD Click();
@@ -142,8 +164,6 @@ public:
   NS_IMETHOD SetHidden(bool aHidden);
   NS_IMETHOD GetSpellcheck(bool* aSpellcheck);
   NS_IMETHOD SetSpellcheck(bool aSpellcheck);
-  NS_IMETHOD GetDraggable(bool* aDraggable);
-  NS_IMETHOD SetDraggable(bool aDraggable);
   NS_IMETHOD GetItemScope(bool* aItemScope);
   NS_IMETHOD SetItemScope(bool aItemScope);
   NS_IMETHOD GetItemValue(nsIVariant** aValue);
@@ -1378,7 +1398,6 @@ protected:
  * This macro doesn't forward
  * - Click
  * - Focus
- * - GetDraggable
  * - GetInnerHTML
  * - SetInnerHTML
  * because sometimes elements want to override them.
@@ -1479,6 +1498,9 @@ protected:
   } \
   NS_IMETHOD GetAccessKeyLabel(nsAString& aAccessKeyLabel) { \
     return _to GetAccessKeyLabel(aAccessKeyLabel); \
+  } \
+  NS_IMETHOD GetDraggable(bool* aDraggable) { \
+    return _to GetDraggable(aDraggable); \
   } \
   NS_IMETHOD SetDraggable(bool aDraggable) { \
     return _to SetDraggable(aDraggable); \
