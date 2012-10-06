@@ -1241,12 +1241,16 @@ nsWindow::OnSizeChanged(const gfxIntSize& aSize)
 {
     ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, aSize.width, aSize.height);
 
+    SchedulePauseComposition();
+
     mBounds.width = aSize.width;
     mBounds.height = aSize.height;
 
     if (mWidgetListener) {
         mWidgetListener->WindowResized(this, aSize.width, aSize.height);
     }
+
+    ScheduleResumeComposition(aSize.width, aSize.height);
 }
 
 void

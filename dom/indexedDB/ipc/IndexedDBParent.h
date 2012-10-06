@@ -137,6 +137,7 @@ class IndexedDBParent : public PIndexedDBParent
 
   nsRefPtr<IDBFactory> mFactory;
   nsCString mASCIIOrigin;
+  bool mDisconnected;
 
 public:
   IndexedDBParent();
@@ -146,6 +147,15 @@ public:
   GetASCIIOrigin() const
   {
     return mASCIIOrigin;
+  }
+
+  void
+  Disconnect();
+
+  bool
+  IsDisconnected() const
+  {
+    return mDisconnected;
   }
 
 protected:
@@ -198,6 +208,9 @@ public:
 
   nsresult
   HandleEvent(nsIDOMEvent* aEvent);
+
+  void
+  Disconnect();
 
 protected:
   nsresult

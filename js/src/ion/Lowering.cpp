@@ -735,6 +735,13 @@ LIRGenerator::visitPow(MPow *ins)
 }
 
 bool
+LIRGenerator::visitRandom(MRandom *ins)
+{
+    LRandom *lir = new LRandom(tempFixed(CallTempReg0), tempFixed(CallTempReg1));
+    return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+}
+
+bool
 LIRGenerator::visitMathFunction(MMathFunction *ins)
 {
     JS_ASSERT(ins->type() == MIRType_Double);
@@ -1486,6 +1493,20 @@ LIRGenerator::visitArrayPush(MArrayPush *ins)
         return define(lir, ins) && assignSafepoint(lir, ins);
       }
     }
+}
+
+bool
+LIRGenerator::visitArrayConcat(MArrayConcat *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Object);
+    JS_ASSERT(ins->lhs()->type() == MIRType_Object);
+    JS_ASSERT(ins->rhs()->type() == MIRType_Object);
+
+    LArrayConcat *lir = new LArrayConcat(useFixed(ins->lhs(), CallTempReg1),
+                                         useFixed(ins->rhs(), CallTempReg2),
+                                         tempFixed(CallTempReg3),
+                                         tempFixed(CallTempReg4));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

@@ -14,14 +14,11 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothReplyRunnable;
+class BluetoothScoManagerObserver;
 
 class BluetoothScoManager : public mozilla::ipc::UnixSocketConsumer
-                          , public nsIObserver
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
   ~BluetoothScoManager();
 
   static BluetoothScoManager* Get();
@@ -33,6 +30,7 @@ public:
   bool GetConnected();
 
 private:
+  friend class BluetoothScoManagerObserver;
   BluetoothScoManager();
   bool Init();
   void Cleanup();

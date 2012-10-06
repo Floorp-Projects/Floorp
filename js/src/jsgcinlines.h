@@ -328,11 +328,6 @@ class CellIterUnderGC : public CellIterImpl
     }
 };
 
-/*
- * When using the iterator outside the GC the caller must ensure that no GC or
- * allocations of GC things are possible and that the background finalization
- * for the given thing kind is not enabled or is done.
- */
 class CellIter : public CellIterImpl
 {
     ArenaLists *lists;

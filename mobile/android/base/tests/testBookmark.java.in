@@ -188,7 +188,7 @@ public class testBookmark extends PixelTest  {
         // Bookmark a page for the test
         loadAndPaint(BOOKMARK_URL);
         toggleBookmark();
-        mAsserter.is(mSolo.waitForText("Bookmark added"), true, "bookmark added sucessfully");
+        mAsserter.is(mSolo.waitForText("Bookmark added"), true, "bookmark added successfully");
 
         // Navigate back to about:home for the test
         loadAndPaint(ABOUT_HOME_URL);

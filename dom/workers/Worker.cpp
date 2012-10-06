@@ -304,7 +304,7 @@ MOZ_STATIC_ASSERT(prototypes::MaxProtoChainLength == 3,
 DOMJSClass Worker::sClass = {
   {
     "Worker",
-    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2) |
     JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
@@ -429,7 +429,7 @@ MOZ_STATIC_ASSERT(prototypes::MaxProtoChainLength == 3,
 // sNativePropertyHooks then sNativePropertyHooks should be removed too.
 DOMJSClass ChromeWorker::sClass = {
   { "ChromeWorker",
-    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2) |
     JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,

@@ -1275,7 +1275,7 @@ private void CancelNotification()
             zis.close();
             System.out.println("Checksum:          "+checksum.getChecksum().getValue());
             sRet += "Checksum:          "+checksum.getChecksum().getValue();
-            sRet += lineSep + nNumExtracted + " of " + nNumEntries + " sucessfully extracted";
+            sRet += lineSep + nNumExtracted + " of " + nNumEntries + " successfully extracted";
             }
         catch(Exception e)
             {

@@ -41,22 +41,9 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLElement::)
-  NS_IMETHOD Click() {
-    return nsGenericHTMLElement::Click();
-  }
-  NS_IMETHOD GetTabIndex(int32_t* aTabIndex);
-  NS_IMETHOD SetTabIndex(int32_t aTabIndex);
-  NS_IMETHOD Focus() {
-    return nsGenericHTMLElement::Focus();
-  }
-  NS_IMETHOD GetDraggable(bool* aDraggable);
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
-    return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);
-  }
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
-    return nsGenericHTMLElement::SetInnerHTML(aInnerHTML);
-  }
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
+  virtual bool Draggable() const MOZ_OVERRIDE;
 
   // nsIDOMHTMLAnchorElement
   NS_DECL_NSIDOMHTMLANCHORELEMENT  
@@ -171,8 +158,13 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Shape, shape)
-NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
+
+int32_t
+nsHTMLAnchorElement::TabIndexDefault()
+{
+  return 0;
+}
 
 void
 nsHTMLAnchorElement::GetItemValueText(nsAString& aValue)
@@ -186,19 +178,18 @@ nsHTMLAnchorElement::SetItemValueText(const nsAString& aValue)
   SetHref(aValue);
 }
 
-NS_IMETHODIMP
-nsHTMLAnchorElement::GetDraggable(bool* aDraggable)
+bool
+nsHTMLAnchorElement::Draggable() const
 {
   // links can be dragged as long as there is an href and the
   // draggable attribute isn't false
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
-    *aDraggable = !AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
-                               nsGkAtoms::_false, eIgnoreCase);
-    return NS_OK;
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+    // no href, so just use the same behavior as other elements
+    return nsGenericHTMLElement::Draggable();
   }
 
-  // no href, so just use the same behavior as other elements
-  return nsGenericHTMLElement::GetDraggable(aDraggable);
+  return !AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
+                      nsGkAtoms::_false, eIgnoreCase);
 }
 
 void

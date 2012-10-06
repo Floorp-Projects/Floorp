@@ -28,7 +28,8 @@ namespace dom {
 namespace oldproxybindings {
 
 enum {
-    JSPROXYSLOT_EXPANDO = 0
+    JSPROXYSLOT_EXPANDO = 0,
+    JSPROXYSLOT_XRAY_EXPANDO
 };
 
 static jsid s_prototype_id = JSID_VOID;
@@ -1013,6 +1014,19 @@ NoBase::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, JSObject *rece
     return JS_GetObjectPrototype(cx, receiver);
 }
 
+JSObject*
+GetXrayExpandoChain(JSObject *obj) {
+    MOZ_ASSERT(instanceIsProxy(obj));
+    js::Value v = js::GetProxyExtra(obj, JSPROXYSLOT_XRAY_EXPANDO);
+    return v.isUndefined() ? nullptr : &v.toObject();
+}
+
+void
+SetXrayExpandoChain(JSObject *obj, JSObject *chain) {
+    MOZ_ASSERT(instanceIsProxy(obj));
+    js::Value v = chain ? JS::ObjectValue(*chain) : JSVAL_VOID;
+    js::SetProxyExtra(obj, JSPROXYSLOT_XRAY_EXPANDO, v);
+}
 
 }
 }

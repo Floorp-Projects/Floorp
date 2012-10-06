@@ -36,26 +36,8 @@ public:
   NS_DECL_NSIDOMHTMLLEGENDELEMENT
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLElement::)
-  NS_IMETHOD Click() {
-    return nsGenericHTMLElement::Click();
-  }
-  NS_IMETHOD GetTabIndex(int32_t* aTabIndex) {
-    return nsGenericHTMLElement::GetTabIndex(aTabIndex);
-  }
-  NS_IMETHOD SetTabIndex(int32_t aTabIndex) {
-    return nsGenericHTMLElement::SetTabIndex(aTabIndex);
-  }
-  NS_IMETHOD Focus();
-  NS_IMETHOD GetDraggable(bool* aDraggable) {
-    return nsGenericHTMLElement::GetDraggable(aDraggable);
-  }
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
-    return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);
-  }
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
-    return nsGenericHTMLElement::SetInnerHTML(aInnerHTML);
-  }
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  virtual void Focus(mozilla::ErrorResult& aError) MOZ_OVERRIDE;
 
   virtual void PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent);

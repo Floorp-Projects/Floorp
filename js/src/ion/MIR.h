@@ -2304,6 +2304,25 @@ class MPowHalf
     }
 };
 
+// Inline implementation of Math.random().
+class MRandom : public MNullaryInstruction
+{
+    MRandom()
+    {
+        setResultType(MIRType_Double);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Random);
+    static MRandom *New() {
+        return new MRandom;
+    }
+    
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MMathFunction
   : public MUnaryInstruction,
     public DoublePolicy<0>
@@ -3718,6 +3737,38 @@ class MArrayPush
     }
     MDefinition *value() const {
         return getOperand(1);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
+    }
+};
+
+// Array.prototype.concat on two dense arrays.
+class MArrayConcat
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >
+{
+    CompilerRootObject templateObj_;
+
+    MArrayConcat(MDefinition *lhs, MDefinition *rhs, HandleObject templateObj)
+      : MBinaryInstruction(lhs, rhs),
+        templateObj_(templateObj)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ArrayConcat);
+
+    static MArrayConcat *New(MDefinition *lhs, MDefinition *rhs, HandleObject templateObj) {
+        return new MArrayConcat(lhs, rhs, templateObj);
+    }
+
+    JSObject *templateObj() const {
+        return templateObj_;
     }
     TypePolicy *typePolicy() {
         return this;

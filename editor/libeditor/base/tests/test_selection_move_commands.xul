@@ -13,11 +13,17 @@ var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                       .getService(Components.interfaces.nsIPrefBranch);
 prefs.setBoolPref("general.smoothScroll", false);
 
+var winUtils = SpecialPowers.getDOMWindowUtils(window);
+winUtils.advanceTimeAndRefresh(100);
+
 function runTest() {
   var tests = execTests();
   function execNext() {
     try {
+      winUtils.advanceTimeAndRefresh(100);
       tests.next();
+      
+      winUtils.advanceTimeAndRefresh(100);
       setTimeout(execNext, 20);
     } catch (e) {}
   }
@@ -200,6 +206,7 @@ function execTests() {
     prefs.clearUserPref("layout.word_select.eat_space_to_next_word");
   }
 
+  winUtils.restoreNormalRefresh();
   SimpleTest.finish();
 }
 

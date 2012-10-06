@@ -130,20 +130,14 @@ public:
                            BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual bool
-  ConnectHeadset(const nsAString& aDeviceAddress,
-                 const nsAString& aAdapterPath,
-                 BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  Connect(const nsAString& aDeviceAddress,
+          const nsAString& aAdapterPath,
+          const uint16_t aProfileId,
+          BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual void
-  DisconnectHeadset(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
-
-  virtual bool
-  ConnectObjectPush(const nsAString& aDeviceAddress,
-                    const nsAString& aAdapterPath,
-                    BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
-
-  virtual void
-  DisconnectObjectPush(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  Disconnect(const uint16_t aProfileId,
+             BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual bool
   SendFile(const nsAString& aDeviceAddress,

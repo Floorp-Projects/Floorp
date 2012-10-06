@@ -11,7 +11,6 @@
  * optimizations.  Most users will not need to touch this file.
  */
 
-#include "prtypes.h"
 #include "mozilla/StandardInteger.h"
 
 /*

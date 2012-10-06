@@ -62,7 +62,7 @@ public class testHistoryTab extends PixelTest {
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
         mSolo.waitForText("Bookmark");
         mSolo.clickOnText("Bookmark");
-        mAsserter.is(mSolo.waitForText("Bookmark added"), true, "bookmark added sucessfully");
+        mAsserter.is(mSolo.waitForText("Bookmark added"), true, "bookmark added successfully");
 
         testList(url);
         testContextMenu(url);
