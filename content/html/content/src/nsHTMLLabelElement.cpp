@@ -20,9 +20,11 @@
 #include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
+#include "mozilla/ErrorResult.h"
 
 // construction, destruction
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Label)
@@ -79,8 +81,8 @@ nsHTMLLabelElement::GetControl(nsIDOMHTMLElement** aElement)
 
 NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
 
-NS_IMETHODIMP
-nsHTMLLabelElement::Focus()
+void
+nsHTMLLabelElement::Focus(ErrorResult& aError)
 {
   // retarget the focus method at the for content
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -89,8 +91,6 @@ nsHTMLLabelElement::Focus()
     if (elem)
       fm->SetFocus(elem, 0);
   }
-
-  return NS_OK;
 }
 
 nsresult
