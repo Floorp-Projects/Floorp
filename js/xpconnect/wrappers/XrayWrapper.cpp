@@ -716,6 +716,9 @@ mozMatchesSelectorStub(JSContext *cx, unsigned argc, jsval *vp)
 
     JSObject *wrapper = JS_THIS_OBJECT(cx, vp);
     JSString *selector = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
+    if (!selector) {
+        return false;
+    }
     nsDependentJSString selectorStr;
     NS_ENSURE_TRUE(selectorStr.init(cx, selector), false);
 
