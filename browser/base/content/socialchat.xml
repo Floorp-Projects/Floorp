@@ -122,7 +122,7 @@
     <content>
       <xul:hbox align="end" pack="end" anonid="innerbox" class="chatbar-innerbox" mousethrough="always" flex="1">
         <xul:toolbarbutton anonid="nub" class="chatbar-button" type="menu" collapsed="true" mousethrough="never">
-          <xul:menupopup anonid="nubMenu" oncommand="document.getBindingParent(this).swapChat(event)"/>
+          <xul:menupopup anonid="nubMenu" oncommand="document.getBindingParent(this).showChat(event.target.chat)"/>
         </xul:toolbarbutton>
         <xul:spacer flex="1" anonid="spacer" class="chatbar-overflow-spacer"/>
         <children/>
@@ -130,6 +130,12 @@
     </content>
 
     <implementation implements="nsIDOMEventListener">
+      <constructor>
+        // to avoid reflows we cache the values for various widths.
+        this.cachedWidthOpen = 0;
+        this.cachedWidthMinimized = 0;
+        this.cachedWidthNub = 0;
+      </constructor>
 
       <field name="innerbox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "innerbox");
@@ -143,22 +149,27 @@
         document.getAnonymousElementByAttribute(this, "anonid", "nub");
       </field>
 
-      <property name="emptyWidth">
-        <getter>
-          return document.getAnonymousElementByAttribute(this, "anonid", "spacer").boxObject.width;
-        </getter>
-      </property>
-
       <property name="selectedChat">
         <getter><![CDATA[
           return this._selectedChat;
         ]]></getter>
         <setter><![CDATA[
-          if (this._selectedChat)
-            this._selectedChat.removeAttribute("selected");
-          this._selectedChat = val;
+          // this is pretty horrible, but we:
+          // * want to avoid doing touching 'selected' attribute when the
+          //   specified chat is already selected.
+          // * remove 'activity' attribute on newly selected tab *even if*
+          //   newly selected is already selected.
+          // * need to handle either current or new being null.
+          if (this._selectedChat != val) {
+            if (this._selectedChat) {
+              this._selectedChat.removeAttribute("selected");
+            }
+            this._selectedChat = val;
+            if (val) {
+              this._selectedChat.setAttribute("selected", "true");
+            }
+          }
           if (val) {
-            this._selectedChat.setAttribute("selected", "true");
             this._selectedChat.removeAttribute("activity");
           }
         ]]></setter>
@@ -167,54 +178,47 @@
       <field name="menuitemMap">new WeakMap()</field>
       <field name="chatboxForURL">new Map();</field>
 
-      <property name="firstCollapsedChild">
+      <property name="hasCollapsedChildren">
         <getter><![CDATA[
+          return !!this.querySelector("[collapsed]");
+        ]]></getter>
+      </property>
+
+      <property name="collapsedChildren">
+        <getter><![CDATA[
+          // A generator yielding all collapsed chatboxes, in the order in
+          // which they should be restored.
           let child = this.lastChild;
-          while (child && !child.collapsed) {
+          while (child) {
+            if (child.collapsed)
+              yield child;
             child = child.previousSibling;
           }
-          return child;
         ]]></getter>
       </property>
 
-      <property name="firstVisibleChild">
+      <property name="visibleChildren">
         <getter><![CDATA[
+          // A generator yielding all non-collapsed chatboxes.
           let child = this.firstChild;
-          while (child && child.collapsed) {
+          while (child) {
+            if (!child.collapsed)
+              yield child;
             child = child.nextSibling;
           }
-          return child;
         ]]></getter>
       </property>
 
-      <property name="firstRemovableChild">
+      <property name="collapsibleChildren">
         <getter><![CDATA[
-          let child = this.firstChild;
-          // find the first visible non-focused chatbox, always keep one visible if we
-          // have enough width to do so.
-          while (child &&
-                (child.collapsed || child == this.selectedChat)) {
-            child = child.nextSibling;
-          }
-          if (!child && this.selectedChat) {
-            child = this.selectedChat;
-          }
-          return child;
+          // A generator yielding all children which are able to be collapsed
+          // in the order in which they should be collapsed.
+          // (currently this is all visible ones other than the selected one.)
+          for (let child of this.visibleChildren)
+            if (child != this.selectedChat)
+              yield child;
         ]]></getter>
       </property>
-
-      <method name="resize">
-        <body><![CDATA[
-          let child = this.firstCollapsedChild;
-          if (child && this.emptyWidth > child.viewWidth) {
-            this.showChat(child);
-          }
-          if (!this.firstCollapsedChild) {
-            window.removeEventListener("resize", this);
-            this.menupopup.parentNode.collapsed = true;
-          }
-        ]]></body>
-      </method>
 
       <method name="updateTitlebar">
         <parameter name="aChatbox"/>
@@ -231,32 +235,46 @@
         ]]></body>
       </method>
 
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
+      <method name="calcTotalWidthOf">
+        <parameter name="aElement"/>
         <body><![CDATA[
-          if (aEvent.type == "resize") {
-            this.resize();
-          }
+          let cs = document.defaultView.getComputedStyle(aElement);
+          let margins = parseInt(cs.marginLeft) + parseInt(cs.marginRight);
+          return aElement.getBoundingClientRect().width + margins;
         ]]></body>
       </method>
 
-      <method name="swapChat">
-        <parameter name="aEvent"/>
+      <method name="getTotalChildWidth">
+        <parameter name="aChatbox"/>
         <body><![CDATA[
-          let menuitem = aEvent.target;
-          let newChat = menuitem.chat;
-          let oldChat = this.firstVisibleChild;
-          if (oldChat)
-            this.collapseChat(oldChat);
-          if (newChat) 
-            this.showChat(newChat);
+          // gets the width of a child, using/setting the cached value for
+          // children of this type.
+          // DOES NOT take collapsed into account - ie, this is the width
+          // of a child assuming it is *not* collapsed.  (collapsed chats
+          // have a width of zero as they are not shown).
+          if (aChatbox.minimized) {
+            if (!this.cachedWidthMinimized) {
+              if (aChatbox.collapsed)
+                throw new Error("can't calculate size of collapsed chat!");
+              this.cachedWidthMinimized = this.calcTotalWidthOf(aChatbox);
+            }
+            return this.cachedWidthMinimized;
+          }
+          if (!this.cachedWidthOpen) {
+            if (aChatbox.collapsed)
+              throw new Error("can't calculate size of collapsed chat!");
+            this.cachedWidthOpen = this.calcTotalWidthOf(aChatbox);
+          }
+          return this.cachedWidthOpen;
         ]]></body>
       </method>
 
       <method name="collapseChat">
         <parameter name="aChatbox"/>
         <body><![CDATA[
-          aChatbox.viewWidth = aChatbox.getBoundingClientRect().width;
+          // we ensure that the cached width for a child of this type is
+          // up-to-date so we can use it when resizing.
+          this.getTotalChildWidth(aChatbox);
           aChatbox.collapsed = true;
           aChatbox.isActive = false;
           let menu = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
@@ -266,13 +284,31 @@
           menu.chat = aChatbox;
           this.menuitemMap.set(aChatbox, menu);
           this.menupopup.appendChild(menu);
-          this.menupopup.parentNode.collapsed = false;
+          this.nub.collapsed = false;
         ]]></body>
       </method>
 
       <method name="showChat">
         <parameter name="aChatbox"/>
         <body><![CDATA[
+          if (aChatbox.minimized)
+            aChatbox.minimized = false;
+          if (this.selectedChat != aChatbox)
+            this.selectedChat = aChatbox;
+          if (!aChatbox.collapsed)
+            return; // already showing - no more to do.
+          this._showChat(aChatbox);
+          // showing a collapsed chat might mean another needs to be collapsed
+          // to make room...
+          this.resize();
+        ]]></body>
+      </method>
+
+      <method name="_showChat">
+        <parameter name="aChatbox"/>
+        <body><![CDATA[
+          // the actual implementation - doesn't check for overflow, assumes
+          // collapsed, etc.
           let menuitem = this.menuitemMap.get(aChatbox);
           this.menuitemMap.delete(aChatbox);
           this.menupopup.removeChild(menuitem);
@@ -284,11 +320,26 @@
       <method name="remove">
         <parameter name="aChatbox"/>
         <body><![CDATA[
+          this._remove(aChatbox);
+          // The removal of a chat may mean a collapsed one can spring up,
+          // or that the popup should be hidden.
+          this.resize();
+        ]]></body>
+      </method>
+
+      <method name="_remove">
+        <parameter name="aChatbox"/>
+        <body><![CDATA[
           if (this.selectedChat == aChatbox) {
             this.selectedChat = aChatbox.previousSibling ? aChatbox.previousSibling : aChatbox.nextSibling
           }
           this.removeChild(aChatbox);
-          this.resize();
+          // child might have been collapsed.
+          let menuitem = this.menuitemMap.get(aChatbox);
+          if (menuitem) {
+            this.menuitemMap.delete(aChatbox);
+            this.menupopup.removeChild(menuitem);
+          }
           this.chatboxForURL.delete(aChatbox.getAttribute('src'));
         ]]></body>
       </method>
@@ -296,9 +347,10 @@
       <method name="removeAll">
         <body><![CDATA[
           while (this.firstChild) {
-            this.removeChild(this.firstChild);
+            this._remove(this.firstChild);
           }
-          this.chatboxForURL = new Map();
+          // and the nub/popup must also die.
+          this.nub.collapsed = true;
         ]]></body>
       </method>
 
@@ -312,11 +364,7 @@
           if (cb) {
             cb = cb.get();
             if (cb.parentNode) {
-              // ensure this chatbox is visible
-              if (this.selectedChat != cb)
-                this.selectedChat = cb;
-              if (cb.collapsed)
-                this.showChat(cb);
+              this.showChat(cb);
               if (aCallback)
                 aCallback(cb.iframe.contentWindow);
               return;
@@ -330,6 +378,75 @@
           this.insertBefore(cb, this.firstChild);
           cb.init(aProvider, aURL, aCallback);
           this.chatboxForURL.set(aURL, Cu.getWeakReference(cb));
+          this.resize();
+        ]]></body>
+      </method>
+
+      <method name="resize">
+        <body><![CDATA[
+        // Checks the current size against the collapsed state of children
+        // and collapses or expands as necessary such that as many as possible
+        // are shown.
+        // So 2 basic strategies:
+        // * Collapse/Expand one at a time until we can't collapse/expand any
+        //   more - but this is one reflow per change.
+        // * Calculate the dimensions ourself and choose how many to collapse
+        //   or expand based on this, then do them all in one go.  This is one
+        //   reflow regardless of how many we change.
+        // So we go the more complicated but more efficient second option...
+        let availWidth = this.getBoundingClientRect().width;
+        let currentWidth = 0;
+        if (!this.nub.collapsed) { // the nub is visible.
+          if (!this.cachedWidthNub)
+            this.cachedWidthNub = this.calcTotalWidthOf(this.nub);
+          currentWidth += this.cachedWidthNub;
+        }
+        for (let child of this.visibleChildren) {
+          currentWidth += this.getTotalChildWidth(child);
+        }
+
+        if (currentWidth > availWidth) {
+          // we need to collapse some.
+          let toCollapse = [];
+          for (let child of this.collapsibleChildren) {
+            if (currentWidth <= availWidth)
+              break;
+            toCollapse.push(child);
+            currentWidth -= this.getTotalChildWidth(child);
+          }
+          if (toCollapse.length) {
+            for (let child of toCollapse)
+              this.collapseChat(child);
+          }
+        } else if (currentWidth < availWidth) {
+          // we *might* be able to expand some - see how many.
+          // XXX - if this was clever, it could know when removing the nub
+          // leaves enough space to show all collapsed
+          let toShow = [];
+          for (let child of this.collapsedChildren) {
+            currentWidth += this.getTotalChildWidth(child);
+            if (currentWidth > availWidth)
+              break;
+            toShow.push(child);
+          }
+          for (let child of toShow)
+            this._showChat(child);
+
+          // If none remain collapsed remove the nub.
+          if (!this.hasCollapsedChildren) {
+            this.nub.collapsed = true;
+          }
+        }
+        // else: achievement unlocked - we are pixel-perfect!
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "resize") {
+            this.resize();
+          }
         ]]></body>
       </method>
 
@@ -338,18 +455,11 @@
       <handler event="popupshown"><![CDATA[
         this.nub.removeAttribute("activity");
       ]]></handler>
-      <handler event="overflow"><![CDATA[
-        // make sure we're not getting an overflow from content
-        if (event.originalTarget != this.innerbox)
-          return;
-
-        let hasHidden = this.firstCollapsedChild;
-        let child = this.firstRemovableChild;
-        if (child)
-          this.collapseChat(child);
-        if (!hasHidden) {
-          window.addEventListener("resize", this);
-        }
+      <handler event="load"><![CDATA[
+        window.addEventListener("resize", this);
+      ]]></handler>
+      <handler event="unload"><![CDATA[
+        window.removeEventListener("resize", this);
       ]]></handler>
     </handlers>
   </binding>
