@@ -194,7 +194,7 @@ public:
       return NS_OK;
     }
 
-    nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(window->GetExtantDocument());
+    nsCOMPtr<nsIDocument> topDoc = window->GetExtantDoc();
     if (topDoc && topDoc->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE) {
       return NS_OK;
     }
@@ -202,7 +202,9 @@ public:
     // If something is focused in the same document, ignore autofocus.
     if (!fm->GetFocusedContent() ||
         fm->GetFocusedContent()->OwnerDoc() != document) {
-      return mElement->Focus();
+      mozilla::ErrorResult rv;
+      mElement->Focus(rv);
+      return rv.ErrorCode();
     }
 
     return NS_OK;
@@ -3800,12 +3802,14 @@ nsGenericHTMLElement::Blur()
   return (win && fm) ? fm->ClearFocus(win) : NS_OK;
 }
 
-nsresult
-nsGenericHTMLElement::Focus()
+void
+nsGenericHTMLElement::Focus(ErrorResult& aError)
 {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
-  return fm ? fm->SetFocus(elem, 0) : NS_OK;
+  if (fm) {
+    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
+    aError = fm->SetFocus(elem, 0);
+  }
 }
 
 void

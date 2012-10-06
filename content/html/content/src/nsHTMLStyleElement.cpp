@@ -38,9 +38,6 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLElement::)
-  NS_IMETHOD Focus() {
-    return nsGenericHTMLElement::Focus();
-  }
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
 
