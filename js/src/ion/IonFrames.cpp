@@ -359,7 +359,7 @@ ion::HandleException(ResumeFromException *rfe)
 void
 IonActivationIterator::settle()
 {
-    while (activation_ && !activation_->entryfp()) {
+    while (activation_ && activation_->empty()) {
         top_ = activation_->prevIonTop();
         activation_ = activation_->prev();
     }
@@ -1016,7 +1016,14 @@ IonFrameIterator::isConstructing() const
 
     JS_ASSERT(parent.done());
 
-    // JM ICs do not inline Ion constructor calls.
+    // If entryfp is not set, we entered Ion via a C++ native, like Array.map,
+    // using FastInvoke. FastInvoke is never used for constructor calls.
+    if (!activation_->entryfp())
+        return false;
+
+    // If callingIntoIon, we either entered Ion from JM or entered Ion from
+    // a C++ native using FastInvoke. In both of these cases we don't handle
+    // constructor calls.
     if (activation_->entryfp()->callingIntoIon())
         return false;
     JS_ASSERT(activation_->entryfp()->runningInIon());
