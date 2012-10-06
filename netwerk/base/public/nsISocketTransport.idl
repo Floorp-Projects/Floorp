@@ -20,7 +20,7 @@ native PRNetAddr(union PRNetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(704c0859-cb64-43bd-bfdf-c8b28427f812)]
+[scriptable, uuid(91ca3523-fc52-4dea-b167-ef8f56473dde)]
 interface nsISocketTransport : nsITransport 
 {
     /**
@@ -160,4 +160,10 @@ interface nsISocketTransport : nsITransport
      */
     attribute octet QoSBits;
 
+    /**
+     * TCP send and receive buffer sizes. A value of 0 means OS level
+     * auto-tuning is in effect.
+     */
+    attribute unsigned long recvBufferSize;
+    attribute unsigned long sendBufferSize;
 };
