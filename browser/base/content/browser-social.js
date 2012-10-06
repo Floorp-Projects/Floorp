@@ -276,6 +276,30 @@ let SocialFlyout = {
     panel.appendChild(iframe);
   },
 
+  setUpProgressListener: function SF_setUpProgressListener() {
+    if (!this._progressListenerSet) {
+      this._progressListenerSet = true;
+      // Force a layout flush by calling .clientTop so
+      // that the docShell of this frame is created
+      this.panel.firstChild.clientTop;
+      this.panel.firstChild.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIWebProgress)
+                                    .addProgressListener(new SocialErrorListener("flyout"),
+                                                         Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
+                                                         Ci.nsIWebProgress.NOTIFY_LOCATION);
+    }
+  },
+
+  setFlyoutErrorMessage: function SF_setFlyoutErrorMessage() {
+    let iframe = this.panel.firstChild;
+    if (!iframe)
+      return;
+
+    iframe.removeAttribute("src");
+    iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
+    sizeSocialPanelToContent(iframe);
+  },
+
   unload: function() {
     let panel = this.panel;
     panel.hidePopup();
@@ -354,6 +378,7 @@ let SocialFlyout = {
       panel.moveTo(box.screenX, box.screenY + yAdjust);
     } else {
       panel.openPopup(anchor, "start_before", 0, yOffset, false, false);
+      this.setUpProgressListener();
     }
     this.yOffset = yOffset;
   }
@@ -607,6 +632,8 @@ var SocialToolbar = {
     let notificationFrames = document.createDocumentFragment();
     let iconContainers = document.createDocumentFragment();
 
+    let createdFrames = [];
+
     let command = document.getElementById("Social:ToggleNotifications");
     command.setAttribute("checked", Services.prefs.getBoolPref("social.toast-notifications.enabled"));
 
@@ -624,6 +651,8 @@ var SocialToolbar = {
         // work around bug 793057 - by making the panel roughly the final size
         // we are more likely to have the anchor in the correct position.
         notificationFrame.style.width = PANEL_MIN_WIDTH + "px";
+
+        createdFrames.push(notificationFrame);
         notificationFrames.appendChild(notificationFrame);
       }
       notificationFrame.setAttribute("origin", provider.origin);
@@ -679,6 +708,16 @@ var SocialToolbar = {
     }
     notifBox.appendChild(notificationFrames);
     iconBox.appendChild(iconContainers);
+
+    for (let frame of createdFrames) {
+      if (frame.docShell) {
+        frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebProgress)
+                      .addProgressListener(new SocialErrorListener("notification-panel"),
+                                           Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
+                                           Ci.nsIWebProgress.NOTIFY_LOCATION);
+      }
+    }
   },
 
   showAmbientPopup: function SocialToolbar_showAmbientPopup(aToolbarButtonBox) {
@@ -733,6 +772,17 @@ var SocialToolbar = {
     let imageId = aToolbarButtonBox.getAttribute("id") + "-image";
     let toolbarButtonImage = document.getElementById(imageId);
     panel.openPopup(toolbarButtonImage, "bottomcenter topleft", 0, 0, false, false);
+  },
+
+  setPanelErrorMessage: function SocialToolbar_setPanelErrorMessage(aNotificationFrame) {
+    if (!aNotificationFrame)
+      return;
+
+    let src = aNotificationFrame.getAttribute("src");
+    aNotificationFrame.removeAttribute("src");
+    aNotificationFrame.webNavigation.loadURI("about:socialerror?mode=tryAgainOnly&url=" +
+                                             encodeURIComponent(src), null, null, null, null);
+    sizeSocialPanelToContent(aNotificationFrame);
   }
 }
 
@@ -742,7 +792,9 @@ var SocialSidebar = {
     let sbrowser = document.getElementById("social-sidebar-browser");
     // setting isAppTab causes clicks on untargeted links to open new tabs
     sbrowser.docShell.isAppTab = true;
-  
+    sbrowser.webProgress.addProgressListener(new SocialErrorListener("sidebar"),
+                                             Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
+                                             Ci.nsIWebProgress.NOTIFY_LOCATION);
     this.updateSidebar();
   },
 
@@ -808,5 +860,76 @@ var SocialSidebar = {
         this.dispatchEvent("socialFrameShow");
       }
     }
+  },
+
+  setSidebarErrorMessage: function() {
+    let sbrowser = document.getElementById("social-sidebar-browser");
+    let url = encodeURIComponent(Social.provider.sidebarURL);
+    sbrowser.loadURI("about:socialerror?mode=tryAgain&url=" + url, null, null);
   }
 }
+
+// Error handling class used to listen for network errors in the social frames
+// and replace them with a social-specific error page
+function SocialErrorListener(aType) {
+  this.type = aType;
+}
+
+SocialErrorListener.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsISupports]),
+
+  onStateChange: function SPL_onStateChange(aWebProgress, aRequest, aState, aStatus) {
+    let failure = false;
+    if ((aState & Ci.nsIWebProgressListener.STATE_STOP)) {
+      if (aRequest instanceof Ci.nsIHttpChannel) {
+        try {
+          // Change the frame to an error page on 4xx (client errors)
+          // and 5xx (server errors)
+          failure = aRequest.responseStatus >= 400 &&
+                    aRequest.responseStatus < 600;
+        } catch (e) {}
+      }
+    }
+
+    // Calling cancel() will raise some OnStateChange notifications by itself,
+    // so avoid doing that more than once
+    if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
+      aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+      this.setErrorMessage(aWebProgress);
+    }
+  },
+
+  onLocationChange: function SPL_onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+    let failure = aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE;
+    if (failure) {
+      aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+      window.setTimeout(function(self) {
+        self.setErrorMessage(aWebProgress);
+      }, 0, this);
+    }
+  },
+
+  onProgressChange: function SPL_onProgressChange() {},
+  onStatusChange: function SPL_onStatusChange() {},
+  onSecurityChange: function SPL_onSecurityChange() {},
+
+  setErrorMessage: function(aWebProgress) {
+    switch (this.type) {
+      case "flyout":
+        SocialFlyout.setFlyoutErrorMessage();
+        break;
+
+      case "sidebar":
+        SocialSidebar.setSidebarErrorMessage();
+        break;
+
+      case "notification-panel":
+        let frame = aWebProgress.QueryInterface(Ci.nsIDocShell)
+                                .chromeEventHandler;
+        SocialToolbar.setPanelErrorMessage(frame);
+        break;
+    }
+  }
+};

@@ -27,7 +27,7 @@
     </div>
     <div id="button-box">
       <button id="btnTryAgain" onclick="tryAgainButton()"/>
-      <button id="btnCloseSidebar" onclick="closeSidebar()"/>
+      <button id="btnCloseSidebar" onclick="closeSidebarButton()"/>
     </div>
   </body>
 
@@ -49,8 +49,20 @@
       let mode = modeMatch && modeMatch[1] ? modeMatch[1] : "";
 
       switch (mode) {
-        case "onlyRefreshSidebar":
-          config.tryAgainCallback = refreshSidebar;
+        case "compactInfo":
+          document.getElementById("btnTryAgain").style.display = 'none';
+          document.getElementById("btnCloseSidebar").style.display = 'none';
+          break;
+        case "tryAgainOnly":
+          document.getElementById("btnCloseSidebar").style.display = 'none';
+          //intentional fall-through
+        case "tryAgain":
+          let urlMatch = queryString.match(/url=([^&]+)/);
+          let encodedURL = urlMatch && urlMatch[1] ? urlMatch[1] : "";
+          let url = decodeURIComponent(encodedURL);
+
+          config.tryAgainCallback = loadQueryURL;
+          config.queryURL = url;
           break;
         default:
           break;
@@ -78,20 +90,20 @@
       btnCloseSidebar.accessKey = browserBundle.GetStringFromName("social.error.closeSidebar.accesskey");
     }
 
-    function closeSidebar() {
+    function closeSidebarButton() {
       Social.toggleSidebar();
-    }
-
-    function refreshSidebar() {
-      window.location.href = Social.provider.sidebarURL;
-    }
-
-    function reloadProvider() {
-      Social.provider.reload();
     }
 
     function tryAgainButton() {
       config.tryAgainCallback();
+    }
+
+    function loadQueryURL() {
+      window.location.href = config.queryURL;
+    }
+
+    function reloadProvider() {
+      Social.provider.reload();
     }
 
     parseQueryString();
