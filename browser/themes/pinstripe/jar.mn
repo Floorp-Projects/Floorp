@@ -66,6 +66,8 @@ browser.jar:
   skin/classic/browser/urlbar-arrow@2x.png
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/urlbar-popup-blocked@2x.png
+  skin/classic/browser/webRTC-shareDevice-16.png
+  skin/classic/browser/webRTC-shareDevice-64.png
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
   skin/classic/browser/downloads/download-glow.png          (downloads/download-glow.png)
   skin/classic/browser/downloads/download-notification.png  (downloads/download-notification.png)

@@ -112,6 +112,13 @@
                 <data android:scheme="https" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data android:name="android.app.searchable"
+                       android:resource="@xml/searchable" />
+
             <!-- For debugging -->
             <intent-filter>
                 <action android:name="org.mozilla.gecko.DEBUG" />
@@ -219,7 +226,12 @@
 
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.BrowserProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER">
+
+            <path-permission android:pathPrefix="/search_suggest_query"
+                             android:readPermission="android.permission.GLOBAL_SEARCH" />
+
+        </provider>
 
         <!--
           Ensure that passwords provider runs in its own process. (Bug 718760.)

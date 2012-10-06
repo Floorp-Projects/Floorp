@@ -1,0 +1,60 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = accessibility
+LIBRARY_NAME = accessibility_toolkit_ia2_s
+EXPORT_LIBRARY = 1
+LIBXUL_LIBRARY = 1
+
+
+CPPSRCS += \
+  ia2AccessibleAction.cpp \
+  ia2AccessibleComponent.cpp \
+  ia2AccessibleEditableText.cpp \
+  ia2AccessibleHyperlink.cpp \
+  ia2AccessibleHypertext.cpp \
+  ia2AccessibleImage.cpp \
+  ia2AccessibleRelation.cpp \
+  ia2AccessibleTable.cpp \
+  ia2AccessibleTableCell.cpp \
+  ia2AccessibleText.cpp \
+  ia2AccessibleValue.cpp \
+  $(NULL)
+
+EXPORTS = \
+  ia2AccessibleValue.h \
+  ia2AccessibleAction.h \
+  ia2AccessibleComponent.h \
+  ia2AccessibleEditableText.h \
+  ia2AccessibleHyperlink.h \
+  ia2AccessibleHypertext.h \
+  ia2AccessibleText.h \
+  $(NULL)
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += \
+  -I$(srcdir) \
+  -I$(srcdir)/../../base \
+  -I$(srcdir)/../../generic \
+  -I$(srcdir)/../../html \
+  -I$(srcdir)/../../msaa \
+  -I$(srcdir)/../../xpcom \
+  -I$(srcdir)/../../xul \
+  $(NULL)
+
+ifdef A11Y_LOG
+  DEFINES += -DA11Y_LOG
+endif

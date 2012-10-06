@@ -438,7 +438,7 @@ public class GeckoSmsManager
                                            bundle.getString("number"),
                                            bundle.getString("message"),
                                            envelope.getMessageTimestamp());
-          Log.i("GeckoSmsManager", "SMS succesfully delivered!");
+          Log.i("GeckoSmsManager", "SMS successfully delivered!");
         }
       }
 

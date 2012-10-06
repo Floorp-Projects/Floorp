@@ -71,7 +71,7 @@ public final class TabsAccessor {
         if (listener == null)
             return;
 
-        (new GeckoAsyncTask<Void, Void, Boolean>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+        (new GeckoAsyncTask<Void, Void, Boolean>() {
             @Override
             protected Boolean doInBackground(Void... unused) {
                 Uri uri = BrowserContract.Tabs.CONTENT_URI;
@@ -115,7 +115,7 @@ public final class TabsAccessor {
         if (listener == null)
             return;
 
-        (new GeckoAsyncTask<Void, Void, List<RemoteTab>>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+        (new GeckoAsyncTask<Void, Void, List<RemoteTab>>() {
             @Override
             protected List<RemoteTab> doInBackground(Void... unused) {
                 Uri uri = BrowserContract.Tabs.CONTENT_URI;

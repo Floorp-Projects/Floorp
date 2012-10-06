@@ -12,7 +12,7 @@
 
 #include "AccessibleTableCell.h"
 
-class CAccessibleTableCell: public IAccessibleTableCell
+class ia2AccessibleTableCell : public IAccessibleTableCell
 {
 public:
 

@@ -3027,6 +3027,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
 }
 
+#webRTC-notification-icon {
+  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
+}
+
 .popup-notification-icon {
   width: 64px;
   height: 64px;
@@ -3105,6 +3109,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .popup-notification-icon[popupid="webapps-install"] {
   list-style-image: url(chrome://browser/skin/webapps-64.png);
+}
+
+.popup-notification-icon[popupid="webRTC-shareDevices"] {
+  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64.png);
 }
 
 /* Popup Buttons */
@@ -4050,10 +4058,6 @@ html|*#gcli-output-frame {
   padding: 0;
 }
 
-.social-notification-icon-stack > image {
-  max-height: 16px;
-}
-
 .social-notification-icon-hbox {
   padding: 0;
 }
@@ -4081,10 +4085,9 @@ html|*#gcli-output-frame {
   }
 }
 
-@media (min-resolution: 2dppx) {
-  .social-notification-icon-image {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
+.social-notification-icon-image {
+  width: 16px;
+  height: 16px;
 }
 
 /* === end of social toolbar button === */

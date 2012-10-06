@@ -35,7 +35,6 @@ class FTPChannelChild : public PFTPChannelChild
                       , public nsIResumableChannel
                       , public nsIProxiedChannel
                       , public nsIChildChannel
-                      , public mozilla::net::PrivateBrowsingChannel<FTPChannelChild>
 {
 public:
   typedef ::nsIStreamListener nsIStreamListener;
@@ -94,15 +93,11 @@ protected:
   void DoFailedAsyncOpen(const nsresult& statusCode);
   void DoDeleteSelf();
 
-  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks);
-  NS_IMETHOD SetLoadGroup(nsILoadGroup* aLoadGroup);
-
   friend class FTPStartRequestEvent;
   friend class FTPDataAvailableEvent;
   friend class FTPStopRequestEvent;
   friend class FTPFailedAsyncOpenEvent;
   friend class FTPDeleteSelfEvent;
-  friend class mozilla::net::PrivateBrowsingChannel<FTPChannelChild>;
 
 private:
   // Called asynchronously from Resume: continues any pending calls into client.

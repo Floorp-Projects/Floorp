@@ -1396,6 +1396,23 @@ class LPowD : public LCallInstructionHelper<1, 2, 1>
     }
 };
 
+// Math.random().
+class LRandom : public LCallInstructionHelper<1, 0, 2>
+{
+  public:
+    LIR_HEADER(Random);
+    LRandom(const LDefinition &temp, const LDefinition &temp2) {
+        setTemp(0, temp);
+        setTemp(1, temp2);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+};
+
 class LMathFunctionD : public LCallInstructionHelper<1, 1, 1>
 {
   public:
@@ -2256,6 +2273,35 @@ class LArrayPushT : public LInstructionHelper<1, 2, 1>
     }
     const LDefinition *temp() {
         return getTemp(0);
+    }
+};
+
+class LArrayConcat : public LCallInstructionHelper<1, 2, 2>
+{
+  public:
+    LIR_HEADER(ArrayConcat);
+
+    LArrayConcat(const LAllocation &lhs, const LAllocation &rhs,
+                 const LDefinition &temp1, const LDefinition &temp2) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+    const MArrayConcat *mir() const {
+        return mir_->toArrayConcat();
+    }
+    const LAllocation *lhs() {
+        return getOperand(0);
+    }
+    const LAllocation *rhs() {
+        return getOperand(1);
+    }
+    const LDefinition *temp1() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
     }
 };
 

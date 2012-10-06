@@ -247,7 +247,7 @@ function test()
       let check = bkp.querySelector("checkbox");
 
       is(bkp.id, id,
-        "Breakpoint element " + id + " found succesfully.");
+        "Breakpoint element " + id + " found successfully.");
       is(info.getAttribute("value"), getExpectedBreakpointInfo(this.line),
         "The expected information wasn't found in the breakpoint element.");
       is(text.getAttribute("value"), getExpectedLineText(this.line).trim(),

@@ -8,8 +8,8 @@
 
 #include "XULListboxAccessible.h"
 
-#include "CAccessibleTable.h"
-#include "CAccessibleTableCell.h"
+#include "ia2AccessibleTable.h"
+#include "ia2AccessibleTableCell.h"
 
 namespace mozilla {
 namespace a11y {
@@ -19,7 +19,7 @@ namespace a11y {
  * IAccessibleTable and IAccessibleTable2 interfaces.
  */
 class XULListboxAccessibleWrap : public XULListboxAccessible,
-                                 public CAccessibleTable
+                                 public ia2AccessibleTable
 {
 public:
   XULListboxAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
@@ -36,7 +36,7 @@ public:
  * IAccessibleTableCell interface.
  */
 class XULListCellAccessibleWrap : public XULListCellAccessible,
-                                  public CAccessibleTableCell
+                                  public ia2AccessibleTableCell
 {
 public:
   XULListCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);

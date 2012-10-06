@@ -1,14 +1,15 @@
+#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.mozilla.gecko.AnimatedHeightLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="@dimen/awesomebar_row_height"
-                android:gravity="center_vertical"
-                android:padding="6dip">
+                android:padding="7dip">
 
     <ImageView android:id="@+id/suggestion_icon"
                android:layout_width="32dip"
@@ -29,4 +30,4 @@
 
     </org.mozilla.gecko.FlowLayout>
 
-</RelativeLayout>
+</org.mozilla.gecko.AnimatedHeightLayout>
