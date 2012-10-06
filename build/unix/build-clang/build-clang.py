@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-llvm_revision = "162360"
+llvm_revision = "163716"
 moz_version = "moz0"
 
 ##############################################
@@ -134,7 +134,7 @@ if not os.path.exists(source_dir):
     patch("clang-deterministic.patch", 1, clang_source_dir)
     if not isDarwin:
         patch("old-ld-hack.patch", 1, llvm_source_dir)
-        patch("compiler-rt-gnu89-inline.patch", 0, compiler_rt_source_dir)
+        patch("compiler-rt-gnu89-inline.patch", 1, compiler_rt_source_dir)
         patch("no-sse-on-linux.patch", 1, clang_source_dir)
 
 if os.path.exists(build_dir):
