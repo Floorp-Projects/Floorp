@@ -930,13 +930,15 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
     }
 };
 
-class LCompareS : public LInstructionHelper<1, 2, 0>
+class LCompareS : public LInstructionHelper<1, 2, 1>
 {
   public:
     LIR_HEADER(CompareS);
-    LCompareS(const LAllocation &left, const LAllocation &right) {
+    LCompareS(const LAllocation &left, const LAllocation &right,
+              const LDefinition &temp) {
         setOperand(0, left);
         setOperand(1, right);
+        setTemp(0, temp);
     }
 
     const LAllocation *left() {
@@ -944,6 +946,9 @@ class LCompareS : public LInstructionHelper<1, 2, 0>
     }
     const LAllocation *right() {
         return getOperand(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
     }
     MCompare *mir() {
         return mir_->toCompare();
