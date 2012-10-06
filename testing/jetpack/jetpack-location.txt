@@ -1,1 +1,1 @@
-http://hg.mozilla.org/projects/addon-sdk/archive/b3c13ec274e1.tar.bz2
+http://hg.mozilla.org/projects/addon-sdk/archive/961298309e6b.tar.bz2
