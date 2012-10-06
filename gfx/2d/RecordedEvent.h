@@ -9,6 +9,7 @@
 #include "2D.h"
 #include <ostream>
 #include <sstream>
+#include <cstring>
 #include "RecordingTypes.h"
 #include "PathRecording.h"
 
