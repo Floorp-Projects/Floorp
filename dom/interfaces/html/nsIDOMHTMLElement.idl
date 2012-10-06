@@ -49,6 +49,7 @@ interface nsIDOMHTMLElement : nsIDOMElement
    * See <http://www.whatwg.org/html5/#the-hidden-attribute>.
    */
            attribute boolean          hidden;
+  [binaryname(DOMClick)]
   void click();
            attribute long             tabIndex;
   void focus();

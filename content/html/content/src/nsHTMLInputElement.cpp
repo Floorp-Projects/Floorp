@@ -1972,13 +1972,14 @@ nsHTMLInputElement::SelectAll(nsPresContext* aPresContext)
   }
 }
 
-NS_IMETHODIMP
+void
 nsHTMLInputElement::Click()
 {
-  if (mType == NS_FORM_INPUT_FILE)
+  if (mType == NS_FORM_INPUT_FILE) {
     FireAsyncClickHandler();
+  }
 
-  return nsGenericHTMLElement::Click();
+  nsGenericHTMLElement::Click();
 }
 
 NS_IMETHODIMP
