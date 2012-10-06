@@ -13,6 +13,9 @@
 !define URLInfoAbout          "http://www.mozilla.com/${AB_CD}/"
 !define URLUpdateInfo         "http://www.mozilla.com/${AB_CD}/firefox/"
 
+; Prevents the beta channel urls in stub.nsi from being used when not using
+; official branding
+!define Official
 !define URLStubDownload "http://download.mozilla.org/?product=firefox-latest&os=win&lang=${AB_CD}"
 !define URLManualDownload "https://www.mozilla.org/firefox/installer-help/"
 
