@@ -257,6 +257,21 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
     nsRefPtr<gfxPattern> pattern = new gfxPattern(gfxRGBA(0, 0, 0, 0));
     return pattern.forget();
   }
+  // If the gradient is a single colour,
+  // use the last gradient stop colour as the colour.
+  if (IsSingleColour(nStops)) {
+    float offset, stopOpacity;
+    nscolor stopColor;
+
+    GetStopInformation(nStops - 1, &offset, &stopColor, &stopOpacity);
+    nsRefPtr<gfxPattern> pattern = new gfxPattern(
+                           gfxRGBA(NS_GET_R(stopColor)/255.0,
+                                   NS_GET_G(stopColor)/255.0,
+                                   NS_GET_B(stopColor)/255.0,
+                                   NS_GET_A(stopColor)/255.0 *
+                                     stopOpacity * aGraphicOpacity));
+    return pattern.forget();
+  }
 
   // revert the vector effect transform so that the gradient appears unchanged
   if (aFillOrStroke == &nsStyleSVG::mStroke) {
@@ -480,6 +495,18 @@ nsSVGLinearGradientFrame::GetLinearGradientWithLength(uint32_t aIndex,
                                                                    aDefault);
 }
 
+bool
+nsSVGLinearGradientFrame::IsSingleColour(uint32_t nStops)
+{
+  NS_ABORT_IF_FALSE(nStops == GetStopCount(), "Unexpected number of stops");
+
+  return nStops == 1 ||
+         (GetLengthValue(nsSVGLinearGradientElement::X1) ==
+          GetLengthValue(nsSVGLinearGradientElement::X2) &&
+          GetLengthValue(nsSVGLinearGradientElement::Y1) ==
+          GetLengthValue(nsSVGLinearGradientElement::Y2));
+}
+
 already_AddRefed<gfxPattern>
 nsSVGLinearGradientFrame::CreateGradient()
 {
@@ -597,6 +624,15 @@ nsSVGRadialGradientFrame::GetRadialGradientWithLength(uint32_t aIndex,
 
   return nsSVGRadialGradientFrameBase::GetRadialGradientWithLength(aIndex,
                                                                    aDefault);
+}
+
+bool
+nsSVGRadialGradientFrame::IsSingleColour(uint32_t nStops)
+{
+  NS_ABORT_IF_FALSE(nStops == GetStopCount(), "Unexpected number of stops");
+
+  return nStops == 1 ||
+         GetLengthValue(nsSVGRadialGradientElement::R) == 0;
 }
 
 already_AddRefed<gfxPattern>
