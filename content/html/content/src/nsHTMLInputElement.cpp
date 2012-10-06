@@ -898,7 +898,6 @@ NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Required, required)
 NS_IMPL_URI_ATTR(nsHTMLInputElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Step, step)
-NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
 NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(nsHTMLInputElement, Size, size, DEFAULT_COLS)
@@ -906,6 +905,12 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Pattern, pattern)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Placeholder, placeholder)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type,
                                 kInputDefaultType->tag)
+
+int32_t
+nsHTMLInputElement::TabIndexDefault()
+{
+  return 0;
+}
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetHeight(uint32_t *aHeight)

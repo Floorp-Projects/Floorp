@@ -77,8 +77,6 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLFormElement::)
   NS_IMETHOD Click();
-  NS_IMETHOD GetTabIndex(int32_t* aTabIndex);
-  NS_IMETHOD SetTabIndex(int32_t aTabIndex);
   NS_IMETHOD Focus();
   NS_IMETHOD GetDraggable(bool* aDraggable) {
     return nsGenericHTMLFormElement::GetDraggable(aDraggable);
@@ -89,6 +87,7 @@ public:
   NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
     return nsGenericHTMLFormElement::SetInnerHTML(aInnerHTML);
   }
+  virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
   // nsIDOMHTMLInputElement
   NS_DECL_NSIDOMHTMLINPUTELEMENT
