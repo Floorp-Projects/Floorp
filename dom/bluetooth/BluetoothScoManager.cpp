@@ -57,7 +57,6 @@ namespace {
 StaticRefPtr<BluetoothScoManager> gBluetoothScoManager;
 StaticAutoPtr<BluetoothScoManagerObserver> sScoObserver;
 bool gInShutdown = false;
-static nsCOMPtr<nsIThread> sScoCommandThread;
 } // anonymous namespace
 
 NS_IMETHODIMP
@@ -82,12 +81,6 @@ BluetoothScoManager::BluetoothScoManager()
 bool
 BluetoothScoManager::Init()
 {
-
-  if (!sScoCommandThread &&
-      NS_FAILED(NS_NewThread(getter_AddRefs(sScoCommandThread)))) {
-    NS_ERROR("Failed to new thread for sScoCommandThread");
-    return false;
-  }
   sScoObserver = new BluetoothScoManagerObserver();
   return true;
 }
@@ -100,14 +93,6 @@ BluetoothScoManager::~BluetoothScoManager()
 void
 BluetoothScoManager::Cleanup()
 {
-  // Shut down the command thread if it still exists.
-  if (sScoCommandThread) {
-    nsCOMPtr<nsIThread> thread;
-    sScoCommandThread.swap(thread);
-    if (NS_FAILED(thread->Shutdown())) {
-      NS_WARNING("Failed to shut down the bluetooth hfpmanager command thread!");
-    }
-  }
   sScoObserver = nullptr;
 }
 
@@ -116,11 +101,6 @@ BluetoothScoManager*
 BluetoothScoManager::Get()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  // If we already exist, exit early
-  if (!gBluetoothScoManager) {
-    return gBluetoothScoManager;
-  }
 
   // If we already exist, exit early
   if (gBluetoothScoManager) {
