@@ -19,7 +19,7 @@ interface HTMLOptionsCollection : HTMLCollection {
   [Throws]
   getter object? namedItem(DOMString name);
   [Throws]
-  setter creator void (unsigned long index, HTMLOptionElement option);
+  setter creator void (unsigned long index, HTMLOptionElement? option);
   [Throws]
   void add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
   [Throws]
