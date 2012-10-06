@@ -270,7 +270,8 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
     entryfp_(fp),
     bailout_(NULL),
     prevIonTop_(cx->runtime->ionTop),
-    prevIonJSContext_(cx->runtime->ionJSContext)
+    prevIonJSContext_(cx->runtime->ionJSContext),
+    prevpc_(NULL)
 {
     if (fp)
         fp->setRunningInIon();
