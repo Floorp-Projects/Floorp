@@ -41,6 +41,7 @@ FENNEC_JAVA_FILES = \
   AndroidImport.java \
   AndroidImportPreference.java \
   AlertNotification.java \
+  AnimatedHeightLayout.java \
   AwesomeBar.java \
   AwesomebarResultHandler.java \
   AwesomeBarTabs.java \
@@ -86,6 +87,7 @@ FENNEC_JAVA_FILES = \
   GeckoThread.java \
   GlobalHistory.java \
   GeckoViewsFactory.java \
+  HeightChangeAnimation.java \
   InputMethods.java \
   LinkPreference.java \
   LinkTextView.java \
@@ -201,6 +203,7 @@ FENNEC_PP_JAVA_FILES = \
 
 FENNEC_PP_XML_FILES = \
   res/layout/abouthome_content.xml \
+  res/layout/awesomebar_suggestion_row.xml \
   res/layout/browser_toolbar.xml \
   res/layout/browser_toolbar_menu.xml \
   res/layout-land-v14/browser_toolbar.xml \
@@ -326,10 +329,11 @@ RES_LAYOUT = \
   res/layout/awesomebar_expandable_list.xml \
   res/layout/awesomebar_folder_row.xml \
   res/layout/awesomebar_header_row.xml \
+  res/layout/awesomebar_allpages_list.xml \
   res/layout/awesomebar_list.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_suggestion_item.xml \
-  res/layout/awesomebar_suggestion_row.xml \
+  res/layout/awesomebar_suggestion_prompt.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \

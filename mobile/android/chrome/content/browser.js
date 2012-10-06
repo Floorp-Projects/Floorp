@@ -231,6 +231,7 @@ var BrowserApp = {
     UserAgent.init();
     ExternalApps.init();
     MemoryObserver.init();
+    Distribution.init();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.init();
 #endif
@@ -531,6 +532,7 @@ var BrowserApp = {
     UserAgent.uninit();
     ExternalApps.uninit();
     MemoryObserver.uninit();
+    Distribution.uninit();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.uninit();
 #endif
@@ -924,6 +926,9 @@ var BrowserApp = {
       else
         MasterPassword.setPassword(json.value);
       return;
+    } else if (json.name == SearchEngines.PREF_SUGGEST_ENABLED) {
+      // Enabling or disabling suggestions will prevent future prompts
+      Services.prefs.setBoolPref(SearchEngines.PREF_SUGGEST_PROMPTED, true);
     }
 
     // when sending to java, we normalized special preferences that use
@@ -6183,6 +6188,8 @@ OverscrollController.prototype = {
 
 var SearchEngines = {
   _contextMenuId: null,
+  PREF_SUGGEST_ENABLED: "browser.search.suggest.enabled",
+  PREF_SUGGEST_PROMPTED: "browser.search.suggest.prompted",
 
   init: function init() {
     Services.obs.addObserver(this, "SearchEngines:Get", false);
@@ -6196,7 +6203,7 @@ var SearchEngines = {
   },
 
   uninit: function uninit() {
-    Services.obs.removeObserver(this, "SearchEngines:Get", false);
+    Services.obs.removeObserver(this, "SearchEngines:Get");
     if (this._contextMenuId != null)
       NativeWindow.contextmenus.remove(this._contextMenuId);
   },
@@ -6216,20 +6223,22 @@ var SearchEngines = {
 
     let suggestTemplate = null;
     let suggestEngine = null;
-    if (Services.prefs.getBoolPref("browser.search.suggest.enabled")) {
-      let engine = this.getSuggestionEngine();
-      if (engine != null) {
-        suggestEngine = engine.name;
-        suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
-      }
+    let engine = this.getSuggestionEngine();
+    if (engine != null) {
+      suggestEngine = engine.name;
+      suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
     }
 
     sendMessageToJava({
       gecko: {
         type: "SearchEngines:Data",
         searchEngines: searchEngines,
-        suggestEngine: suggestEngine,
-        suggestTemplate: suggestTemplate
+        suggest: {
+          engine: suggestEngine,
+          template: suggestTemplate,
+          enabled: Services.prefs.getBoolPref(this.PREF_SUGGEST_ENABLED),
+          prompted: Services.prefs.getBoolPref(this.PREF_SUGGEST_PROMPTED)
+        }
       }
     });
   },
@@ -7467,4 +7476,70 @@ var MemoryObserver = {
       dump(label + type + " = " + memory[type]);
     }
   },
+};
+
+var Distribution = {
+  _file: null,
+
+  init: function dc_init() {
+    Services.obs.addObserver(this, "Distribution:Set", false);
+
+    // Look for file outside the APK:
+    // /data/data/org.mozilla.fennec/distribution.json
+    this._file = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+    this._file.append("distribution.json");
+    if (this._file.exists()) {
+      let channel = NetUtil.newChannel(this._file);
+      channel.contentType = "application/json";
+      NetUtil.asyncFetch(channel, function(aStream, aResult) {
+        if (!Components.isSuccessCode(aResult)) {
+          Cu.reportError("Distribution: Could not read from distribution.json file");
+          return;
+        }
+
+        let raw = NetUtil.readInputStreamToString(aStream, aStream.available(), { charset : "UTF-8" }) || "";
+        aStream.close();
+
+        try {
+          this.update(JSON.parse(raw));
+        } catch (ex) {
+          Cu.reportError("Distribution: Could not parse JSON: " + ex);
+        }
+      }.bind(this));
+    } 
+  },
+
+  uninit: function dc_uninit() {
+    Services.obs.removeObserver(this, "Distribution:Set");
+  },
+
+  observe: function dc_observe(aSubject, aTopic, aData) {
+    if (aTopic == "Distribution:Set") {
+      // Update the prefs for this session
+      try {
+        this.update(JSON.parse(aData));
+      } catch (ex) {
+        Cu.reportError("Distribution: Could not parse JSON: " + ex);
+        return;
+      }
+
+      // Save the data for the later sessions
+      let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+      ostream.init(this._file, 0x02 | 0x08 | 0x20, parseInt("600", 8), ostream.DEFER_OPEN);
+
+      let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+      converter.charset = "UTF-8";
+
+      // Asynchronously copy the data to the file.
+      let istream = converter.convertToInputStream(aData);
+      NetUtil.asyncCopy(istream, ostream, function(rc) { });
+    }
+  },
+
+  update: function dc_update(aData) {
+    // Force the distribution preferences on the default branch
+    let defaults = Services.prefs.getDefaultBranch(null);
+    defaults.setCharPref("distribution.id", aData.id);
+    defaults.setCharPref("distribution.version", aData.version);
+  }
 };

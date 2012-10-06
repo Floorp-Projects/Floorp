@@ -39,6 +39,10 @@ public class SuggestClient {
     // used by robocop for testing; referenced via reflection
     private boolean mCheckNetwork;
 
+    // used to make suggestions appear instantly after opt-in
+    private String mPrevQuery;
+    private ArrayList<String> mPrevResults;
+
     public SuggestClient(Context context, String suggestTemplate, int timeout, int maxResults) {
         mContext = context;
         mMaxResults = maxResults;
@@ -55,6 +59,9 @@ public class SuggestClient {
      * Queries for a given search term and returns an ArrayList of suggestions.
      */
     public ArrayList<String> query(String query) {
+        if (query.equals(mPrevQuery))
+            return mPrevResults;
+
         ArrayList<String> suggestions = new ArrayList<String>();
         if (TextUtils.isEmpty(mSuggestTemplate) || TextUtils.isEmpty(query)) {
             return suggestions;
@@ -113,6 +120,9 @@ public class SuggestClient {
         } catch (Exception e) {
             Log.e(LOGTAG, "Error", e);
         }
+
+        mPrevQuery = query;
+        mPrevResults = suggestions;
         return suggestions;
     }
 

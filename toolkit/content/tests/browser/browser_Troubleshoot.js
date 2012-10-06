@@ -129,10 +129,6 @@ const SNAPSHOT_SCHEMA = {
       required: true,
       type: "object",
     },
-    syncService: {
-      required: true,
-      type: "object",
-    },
     graphics: {
       required: true,
       type: "object",
