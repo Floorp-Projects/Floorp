@@ -186,11 +186,6 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
         if (activation->compartment() != compartment)
             continue;
 
-        // Activations may be tied to the Method JIT, in which case enterJIT
-        // is not present on the activation's call stack.
-        if (!activation->entryfp() || activation->entryfp()->callingIntoIon())
-            continue;
-
         // Both OSR and normal function calls depend on the EnterJIT code
         // existing for entrance and exit.
         mustMarkEnterJIT = true;
@@ -1281,6 +1276,28 @@ ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
             ForbidCompilation(cx, script);
         return status;
     }
+
+    // This can GC, so afterward, script->ion is not guaranteed to be valid.
+    if (!cx->compartment->ionCompartment()->enterJIT(cx))
+        return Method_Error;
+
+    if (!script->ion)
+        return Method_Skipped;
+
+    return Method_Compiled;
+}
+
+MethodStatus
+ion::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script)
+{
+    JS_ASSERT(ion::IsEnabled(cx));
+
+    // Skip if the code is expected to result in a bailout.
+    if (!script->hasIonScript() || script->ion->bailoutExpected())
+        return Method_Skipped;
+
+    if (!cx->compartment->ensureIonCompartmentExists(cx))
+        return Method_Error;
 
     // This can GC, so afterward, script->ion is not guaranteed to be valid.
     if (!cx->compartment->ionCompartment()->enterJIT(cx))
