@@ -41,7 +41,6 @@ public:
   virtual void PrintDiagnostics (nsCString &log) = 0;
 
   const static uint32_t kSendingChunkSize = 4096;
-  const static uint32_t kTCPSendBufferSize = 131072;
 };
 
 // this is essentially a single instantiation as a member of nsHttpHandler.
