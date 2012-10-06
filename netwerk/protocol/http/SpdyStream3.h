@@ -169,6 +169,9 @@ private:
   // which additional HEADERS data is invalid
   uint32_t                     mReceivedData         : 1;
 
+  // Flag is set after TCP send autotuning has been disabled
+  uint32_t                     mSetTCPSocketBuffer   : 1;
+
   // The InlineFrame and associated data is used for composing control
   // frames and data frame headers.
   nsAutoArrayPtr<char>         mTxInlineFrame;
