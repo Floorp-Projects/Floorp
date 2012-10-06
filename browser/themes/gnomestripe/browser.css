@@ -2734,6 +2734,7 @@ html|*#gcli-output-frame {
 
 .chat-titlebar {
   background-color: #d9d9d9;
+  background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   height: 20px;
   min-height: 20px;
   width: 100%;
@@ -2754,7 +2755,10 @@ html|*#gcli-output-frame {
 }
 
 .chat-titlebar[activity] {
-  background-color: #ceeaff;
+  background-image: radial-gradient(ellipse closest-side at center, rgb(255,255,255), rgba(255,255,255,0));
+  background-repeat: no-repeat;
+  background-size: 100% 20px;
+  background-position: 0 -10px;
 }
 
 .chat-frame {
@@ -2764,6 +2768,7 @@ html|*#gcli-output-frame {
 }
 
 .chatbar-button {
+  -moz-appearance: none;
   background-color: #d9d9d9;
   list-style-image: url("chrome://browser/skin/social/social.png");
   border: none;
@@ -2775,8 +2780,16 @@ html|*#gcli-output-frame {
   -moz-border-end: 1px solid #ccc;
 }
 
-.chatbar-button[open="true"],
-.chatbar-button:active:hover {
+.chatbar-button > .toolbarbutton-icon {
+  opacity: .6;
+  -moz-margin-end: 0;
+}
+.chatbar-button:hover > .toolbarbutton-icon,
+.chatbar-button[open="true"] > .toolbarbutton-icon {
+  opacity: 1;
+}
+
+.chatbar-button[open="true"] {
   background-color: #f0f0f0;
   box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
 }
@@ -2787,7 +2800,7 @@ html|*#gcli-output-frame {
 }
 
 .chatbar-button[activity] {
-  background-color: #ceeaff;
+  background-image: radial-gradient(circle farthest-corner at center 3px, rgb(233,242,252) 3%, rgba(172,206,255,0.75) 40%, rgba(87,151,201,0.5) 80%, rgba(87,151,201,0));
 }
 
 .chatbar-button > menupopup > menuitem[activity] {
@@ -2811,6 +2824,8 @@ chatbox {
   background-color: white;
   border: 1px solid #ccc;
   border-bottom: none;
+  border-top-left-radius: 2.5px;
+  border-top-right-radius: 2.5px;
 }
 
 chatbox[minimized="true"] {
