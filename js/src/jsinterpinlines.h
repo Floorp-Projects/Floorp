@@ -1027,6 +1027,8 @@ class FastInvokeGuard
     }
 
     bool invoke(JSContext *cx) {
+        /* Disabled for now to fix bug 797131 fallout. */
+#if 0
 #ifdef JS_ION
         if (useIon_ && fun_) {
             JS_ASSERT(fun_->script() == script_);
@@ -1051,6 +1053,7 @@ class FastInvokeGuard
                 script_->incUseCount(5);
             }
         }
+#endif
 #endif
 
         return Invoke(cx, args_);
