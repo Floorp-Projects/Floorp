@@ -132,13 +132,12 @@ nsHTMLImageElement::SetItemValueText(const nsAString& aValue)
 // just a string attr purposes of the DOM crossOrigin property.
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, CrossOrigin, crossorigin)
 
-NS_IMETHODIMP
-nsHTMLImageElement::GetDraggable(bool* aDraggable)
+bool
+nsHTMLImageElement::Draggable() const
 {
   // images may be dragged unless the draggable attribute is false
-  *aDraggable = !AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
-                             nsGkAtoms::_false, eIgnoreCase);
-  return NS_OK;
+  return !AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
+                      nsGkAtoms::_false, eIgnoreCase);
 }
 
 NS_IMETHODIMP
