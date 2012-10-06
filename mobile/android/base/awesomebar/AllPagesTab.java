@@ -23,6 +23,10 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -31,8 +35,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.FilterQueryProvider;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -50,6 +56,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     private static final int SUGGESTION_TIMEOUT = 3000;
     private static final int SUGGESTION_MAX = 3;
+    private static final int ANIMATION_DURATION = 250;
 
     private String mSearchTerm;
     private ArrayList<SearchEngine> mSearchEngines;
@@ -59,6 +66,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private AwesomeBarCursorAdapter mCursorAdapter = null;
     private boolean mTelemetrySent = false;
     private LinearLayout mAllPagesView;
+    private boolean mAnimateSuggestions;
     private View mSuggestionsOptInPrompt;
 
     private class SearchEntryViewHolder {
@@ -143,6 +151,17 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 mSuggestionsOptInPrompt.setVisibility(visibility);
             }
         }
+    }
+
+    /**
+     * Query for suggestions, but don't show them yet.
+     */
+    private void primeSuggestions() {
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                mSuggestClient.query(mSearchTerm);
+            }
+        });
     }
 
     private void filterSuggestions(String searchTerm) {
@@ -341,7 +360,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 SearchEntryViewHolder viewHolder = null;
 
                 if (convertView == null) {
-                    convertView = getInflater().inflate(R.layout.awesomebar_suggestion_row, null);
+                    convertView = getInflater().inflate(R.layout.awesomebar_suggestion_row, getListView(), false);
 
                     viewHolder = new SearchEntryViewHolder();
                     viewHolder.suggestionView = (FlowLayout) convertView.findViewById(R.id.suggestion_layout);
@@ -422,6 +441,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             // add additional suggestions given by this engine
             int recycledSuggestionCount = suggestionView.getChildCount();
             int suggestionCount = engine.suggestions.size();
+            boolean showedSuggestions = false;
+
             for (int i = 0; i < suggestionCount; i++) {
                 String suggestion = engine.suggestions.get(i);
                 View suggestionItem = null;
@@ -439,12 +460,23 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
                 suggestionItem.setOnClickListener(clickListener);
                 suggestionItem.setOnLongClickListener(longClickListener);
+
+                if (mAnimateSuggestions) {
+                    showedSuggestions = true;
+                    AlphaAnimation anim = new AlphaAnimation(0, 1);
+                    anim.setDuration(ANIMATION_DURATION);
+                    anim.setStartOffset(i * ANIMATION_DURATION);
+                    suggestionItem.startAnimation(anim);
+                }
             }
             
             // hide extra suggestions that have been recycled
             for (int i = suggestionCount + 1; i < recycledSuggestionCount; i++) {
                 suggestionView.getChildAt(i).setVisibility(View.GONE);
             }
+
+            if (showedSuggestions)
+                mAnimateSuggestions = false;
         }
     };
 
@@ -546,21 +578,57 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     }
 
     private void setSuggestionsEnabled(final boolean enabled) {
+        // Make suggestions appear immediately after the user opts in
+        primeSuggestions();
+
         // Pref observer in gecko will also set prompted = true
         PrefsHelper.setPref("browser.search.suggest.enabled", enabled);
 
-        getAllPagesView().post(new Runnable() {
-            public void run() {
-                getAllPagesView().removeView(mSuggestionsOptInPrompt);
-                mSuggestionsOptInPrompt = null;
+        TranslateAnimation anim1 = new TranslateAnimation(0, mSuggestionsOptInPrompt.getWidth(), 0, 0);
+        anim1.setDuration(ANIMATION_DURATION);
+        anim1.setInterpolator(new AccelerateInterpolator());
+        anim1.setFillAfter(true);
+        mSuggestionsOptInPrompt.setAnimation(anim1);
 
-                if (enabled) {
-                    mSuggestionsEnabled = enabled;
-                    getCursorAdapter().notifyDataSetChanged();
-                    filterSuggestions(mSearchTerm);
-                }
+        TranslateAnimation anim2 = new TranslateAnimation(0, 0, 0, -1 * mSuggestionsOptInPrompt.getHeight());
+        anim2.setDuration(ANIMATION_DURATION);
+        anim2.setFillAfter(true);
+        anim2.setStartOffset(anim1.getDuration());
+        anim2.setAnimationListener(new Animation.AnimationListener() {
+            public void onAnimationStart(Animation a) {
+                // Increase the height of the view so a gap isn't shown during animation
+                getAllPagesView().getLayoutParams().height = getAllPagesView().getHeight() +
+                        mSuggestionsOptInPrompt.getHeight();
+                getAllPagesView().requestLayout();
+            }
+            public void onAnimationRepeat(Animation a) {}
+            public void onAnimationEnd(Animation a) {
+                // Removing the view immediately results in a NPE in
+                // dispatchDraw(), possibly because this callback executes
+                // before drawing is finished. Posting this as a Runnable fixes
+                // the issue.
+                getAllPagesView().post(new Runnable() {
+                    public void run() {
+                        getAllPagesView().removeView(mSuggestionsOptInPrompt);
+                        getListView().clearAnimation();
+                        mSuggestionsOptInPrompt = null;
+
+                        if (enabled) {
+                            // Reset the view height
+                            getAllPagesView().getLayoutParams().height = LayoutParams.FILL_PARENT;
+
+                            mSuggestionsEnabled = enabled;
+                            mAnimateSuggestions = true;
+                            getCursorAdapter().notifyDataSetChanged();
+                            filterSuggestions(mSearchTerm);
+                        }
+                    }
+                });
             }
         });
+
+        mSuggestionsOptInPrompt.startAnimation(anim1);
+        getListView().startAnimation(anim2);
     }
 
     public void handleMessage(String event, final JSONObject message) {
