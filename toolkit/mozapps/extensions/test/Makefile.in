@@ -16,13 +16,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_extensionmanager
 
-ifneq (mobile,$(MOZ_BUILD_APP))
- DIRS +=  \
+DIRS += \
     xpinstall \
     browser \
     mochitest \
     $(NULL)
-endif
 
 XPCSHELL_TESTS = \
   xpcshell \
