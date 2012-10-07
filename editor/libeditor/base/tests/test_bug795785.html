@@ -38,7 +38,7 @@ function hitEventLoop(aFunc, aTimes)
   }
 }
 
-function doEnterKeyTest(aElement, aElementDescription, aCallback)
+function doEnterKeyAndArrowKeyTest(aElement, aElementDescription, aCallback)
 {
   aElement.focus();
   aElement.scrollTop = 0;
@@ -54,7 +54,26 @@ function doEnterKeyTest(aElement, aElementDescription, aCallback)
     hitEventLoop(function () {
       isnot(aElement.scrollTop, 0,
             aElementDescription + " was not scrolled by inserting line breaks");
-      aCallback();
+      var scrollTop = aElement.scrollTop;
+      synthesizeKey("VK_UP", { });
+      synthesizeKey("VK_UP", { });
+      synthesizeKey("VK_UP", { });
+      synthesizeKey("VK_UP", { });
+      synthesizeKey("VK_UP", { });
+      hitEventLoop(function () {
+        isnot(aElement.scrollTop, scrollTop,
+              aElementDescription + " was not scrolled by up key events");
+        synthesizeKey("VK_DOWN", { });
+        synthesizeKey("VK_DOWN", { });
+        synthesizeKey("VK_DOWN", { });
+        synthesizeKey("VK_DOWN", { });
+        synthesizeKey("VK_DOWN", { });
+        hitEventLoop(function () {
+          is(aElement.scrollTop, scrollTop,
+             aElementDescription + " was not scrolled by down key events");
+          aCallback();
+        }, 20);
+      }, 20);
     }, 20);
   }, 20);
 }
@@ -105,10 +124,10 @@ function doCompositionTest(aElement, aElementDescription, aCallback)
 
 function runTests()
 {
-  doEnterKeyTest(textarea, "textarea",
+  doEnterKeyAndArrowKeyTest(textarea, "textarea",
     function () {
       textarea.value = "";
-      doEnterKeyTest(div, "div (contenteditable)",
+      doEnterKeyAndArrowKeyTest(div, "div (contenteditable)",
         function () {
           div.innerHTML = "";
           doCompositionTest(textarea, "textarea",
