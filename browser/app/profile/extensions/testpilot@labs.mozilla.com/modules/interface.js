@@ -15,14 +15,34 @@ EXPORTED_SYMBOLS = ["TestPilotUIBuilder"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 const UPDATE_CHANNEL_PREF = "app.update.channel";
+const POPUP_SHOW_ON_NEW = "extensions.testpilot.popup.showOnNewStudy";
+const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 
 var TestPilotUIBuilder = {
-  __prefs: null,
   get _prefs() {
-    this.__prefs = Cc["@mozilla.org/preferences-service;1"]
+    delete this._prefs;
+    return this._prefs = Cc["@mozilla.org/preferences-service;1"]
       .getService(Ci.nsIPrefBranch);
-    return this.__prefs;
+  },
+
+  get _prefDefaultBranch() {
+    delete this._prefDefaultBranch;
+    return this._prefDefaultBranch = Cc["@mozilla.org/preferences-service;1"]
+      .getService(Ci.nsIPrefService).getDefaultBranch("");
+  },
+
+  get _comparator() {
+    delete this._comparator;
+    return this._comparator = Cc["@mozilla.org/xpcom/version-comparator;1"]
+      .getService(Ci.nsIVersionComparator);
+  },
+
+  get _appVersion() {
+    delete this._appVersion;
+    return this._appVersion = Cc["@mozilla.org/xre/app-info;1"]
+      .getService(Ci.nsIXULAppInfo).version;
   },
 
   buildTestPilotInterface: function(window) {
@@ -34,6 +54,12 @@ var TestPilotUIBuilder = {
       feedbackButton = palette.getElementsByAttribute("id", "feedback-menu-button").item(0);
     }
     feedbackButton.parentNode.removeChild(feedbackButton);
+
+    /* Default prefs for test pilot version - default to NOT notifying user about new
+     * studies starting. Note we're setting default values, not current values -- we
+     * want these to be overridden by any user set values!!*/
+    this._prefDefaultBranch.setBoolPref(POPUP_SHOW_ON_NEW, false);
+    this._prefDefaultBranch.setIntPref(POPUP_CHECK_INTERVAL, 180000);
   },
 
   buildFeedbackInterface: function(window) {
@@ -62,23 +88,24 @@ var TestPilotUIBuilder = {
       } catch (e) {
       }
     }
+
+    /* Pref defaults for Feedback version: default to notifying user about new
+     * studies starting. Note we're setting default values, not current values -- we
+     * want these to be overridden by any user set values!!*/
+    this._prefDefaultBranch.setBoolPref(POPUP_SHOW_ON_NEW, true);
+    this._prefDefaultBranch.setIntPref(POPUP_CHECK_INTERVAL, 600000);
   },
 
-  isBetaChannel: function() {
+  channelUsesFeedback: function() {
     // Beta and aurora channels use feedback interface; nightly and release channels don't.
-    let channel = this._prefs.getCharPref(UPDATE_CHANNEL_PREF);
+    let channel = this._prefDefaultBranch.getCharPref(UPDATE_CHANNEL_PREF);
     return (channel == "beta") || (channel == "betatest") || (channel == "aurora");
   },
 
   appVersionIsFinal: function() {
     // Return true iff app version >= 4.0 AND there is no "beta" or "rc" in version string.
-    let appInfo = Cc["@mozilla.org/xre/app-info;1"]
-      .getService(Ci.nsIXULAppInfo);
-    let version = appInfo.version;
-    let versionChecker = Components.classes["@mozilla.org/xpcom/version-comparator;1"]
-      .getService(Components.interfaces.nsIVersionComparator);
-    if (versionChecker.compare(version, "4.0") >= 0) {
-      if (version.indexOf("b") == -1 && version.indexOf("rc") == -1) {
+    if (this._comparator.compare(this._appVersion, "4.0") >= 0) {
+      if (this._appVersion.indexOf("b") == -1 && this._appVersion.indexOf("rc") == -1) {
         return true;
       }
     }
@@ -93,23 +120,14 @@ var TestPilotUIBuilder = {
       return;
     }
 
-    /* Overlay Feedback XUL if we're in the beta update channel, Test Pilot XUL otherwise.
-     * Once the overlay is complete, call buildFeedbackInterface() or buildTestPilotInterface(). */
-    let self = this;
-    if (this.isBetaChannel()) {
-      window.document.loadOverlay("chrome://testpilot/content/feedback-browser.xul",
-                                  {observe: function(subject, topic, data) {
-                                     if (topic == "xul-overlay-merged") {
-                                       self.buildFeedbackInterface(window);
-                                     }
-                                   }});
+    /* Overlay Feedback XUL if we're in the beta update channel, Test Pilot XUL otherwise, and
+     * call buildFeedbackInterface() or buildTestPilotInterface(). */
+    if (this.channelUsesFeedback()) {
+      window.document.loadOverlay("chrome://testpilot/content/feedback-browser.xul", null);
+      this.buildFeedbackInterface(window);
     } else {
-      window.document.loadOverlay("chrome://testpilot/content/tp-browser.xul",
-                                  {observe: function(subject, topic, data) {
-                                     if (topic == "xul-overlay-merged") {
-                                       self.buildTestPilotInterface(window);
-                                     }
-                                  }});
+      window.document.loadOverlay("chrome://testpilot/content/tp-browser.xul", null);
+      this.buildTestPilotInterface(window);
     }
   }
 };
