@@ -53,17 +53,17 @@
 
 namespace CSF
 {
-	DECLARE_PTR(CallControlManager);
-	DECLARE_PTR_VECTOR(PhoneDetails);
-    DECLARE_PTR(CC_Service);
-    DECLARE_PTR(VideoControl);
-    DECLARE_PTR(AudioControl);
-    DECLARE_PTR_VECTOR(CC_Device);
-    DECLARE_PTR(CC_DeviceInfo);
-    DECLARE_PTR(CC_CallServerInfo);
-    DECLARE_PTR(CC_FeatureInfo);
-    DECLARE_PTR_VECTOR(CC_Line);
-    DECLARE_PTR(CC_LineInfo);
-	DECLARE_PTR_VECTOR(CC_Call);
-    DECLARE_PTR(CC_CallInfo);
+    DECLARE_PTR(CallControlManager)
+    DECLARE_PTR_VECTOR(PhoneDetails)
+    DECLARE_PTR(CC_Service)
+    DECLARE_PTR(VideoControl)
+    DECLARE_PTR(AudioControl)
+    DECLARE_PTR_VECTOR(CC_Device)
+    DECLARE_PTR(CC_DeviceInfo)
+    DECLARE_PTR(CC_CallServerInfo)
+    DECLARE_PTR(CC_FeatureInfo)
+    DECLARE_PTR_VECTOR(CC_Line)
+    DECLARE_PTR(CC_LineInfo)
+    DECLARE_PTR_VECTOR(CC_Call)
+    DECLARE_PTR(CC_CallInfo)
 }

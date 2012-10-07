@@ -41,6 +41,7 @@
 #define _CCAPI_CALL_INFO_H_
 
 #include "ccapi_types.h"
+#include "peer_connection_types.h"
 
 /**
  * get Line on which this call is
@@ -314,5 +315,26 @@ cc_boolean CCAPI_CallInfo_isAudioMuted(cc_callinfo_ref_t handle);
  * @return boolean true=muted false=not muted
  */        
 cc_boolean CCAPI_CallInfo_isVideoMuted(cc_callinfo_ref_t handle);
+
+/**
+ * get SDP string CreateOffer and CreateAnswer callback
+ * @param [in] handle - call info handle
+ * @return sdp
+ */
+cc_string_t CCAPI_CallInfo_getSDP(cc_callinfo_ref_t handle);
+
+/**
+ * get status code from internal JSEP functions
+ * @param [in] handle - call info handle
+ * @return status code
+ */
+cc_int32_t  CCAPI_CallInfo_getStatusCode(cc_callinfo_ref_t handle);
+
+/**
+ * get media stream table
+ * @param [in] handle - call info handle
+ * @return media track table
+ */
+MediaStreamTable* CCAPI_CallInfo_getMediaStreams(cc_callinfo_ref_t handle);
 
 #endif /* _CCAPIAPI_CALL_INFO_H_ */

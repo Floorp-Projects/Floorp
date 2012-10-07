@@ -112,7 +112,7 @@ cpr_socket_t sip_tcp_create_connection(sipSPIMessage_t *spi_msg);
 void sip_tcp_read_socket(cpr_socket_t this_fd);
 int sip_tcp_channel_send(cpr_socket_t s,
                          char *buf,
-                         uint16_t len);
+                         uint32_t len);
 void sip_tcp_createconnfailed_to_spi(cpr_ip_addr_t *ipaddr,
                                      uint16_t port,
                                      void *context,

@@ -69,7 +69,7 @@
 
 namespace CSF
 {
-	DECLARE_PTR(CallControlManager);
+	DECLARE_PTR(CallControlManager)
 	/**
 	 * CallControlManager
 	 *
@@ -116,11 +116,9 @@ namespace CSF
         virtual void setAuthenticationString(const std::string &authString) = 0;
         virtual void setSecureCachePath(const std::string &secureCachePath) = 0;
 
-        /**
-         * For now, recovery is not implemented.
-         * setLocalIpAddressAndGateway must be called before connect()ing in softphone mode.
-         */
-        virtual void setLocalIpAddressAndGateway(const std::string& localIpAddress, const std::string& defaultGW) = 0;
+        // Add local codecs
+        virtual void setAudioCodecs(int codecMask) = 0;
+        virtual void setVideoCodecs(int codecMask) = 0;
 
         virtual bool registerUser(const std::string& deviceName, const std::string& user, const std::string& password, const std::string& domain) = 0;
         virtual bool disconnect() = 0;
@@ -129,11 +127,11 @@ namespace CSF
         virtual ConnectionStatusEnum::ConnectionStatus getConnectionStatus() = 0;
         virtual std::string getCurrentServer() = 0;
 
-        /* P2P API */
+        /* P2P MODE */
         virtual bool startP2PMode(const std::string& user) = 0;
-
-        /* ROAP Proxy Mode */
-        virtual bool startROAPProxy( const std::string& deviceName, const std::string& user, const std::string& password, const std::string& domain ) = 0;
+        
+        /* SDP MODE */
+        virtual bool startSDPMode() = 0;        
 
         /**
          * Obtain the device object, from which call control can be done.
@@ -162,6 +160,4 @@ namespace CSF
         CallControlManager(const CallControlManager&);
         CallControlManager& operator=(const CallControlManager&);
     };
-
-
-};//end namespace CSF
+} //end namespace CSF

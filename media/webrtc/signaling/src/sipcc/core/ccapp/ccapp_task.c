@@ -40,6 +40,7 @@
 #include "ccapp_task.h"
 #include "phone.h"
 #include "CCProvider.h"
+#include "platform_api.h"
 
 extern cprMsgQueue_t ccapp_msgq;
 extern void CCAppInit();
@@ -117,7 +118,7 @@ cpr_status_e ccappTaskPostMsg(unsigned int msgId, void * data, uint16_t len, int
     static const char fname[] = "ccappPostMsg";
     cpr_status_e retval = CPR_SUCCESS;
 
-    msg = (cprBuffer_t *) cprGetBuffer(len);
+    msg = (cprBuffer_t *) cpr_malloc(len);
     if (msg == NULL) {
         CCAPP_ERROR(DEB_F_PREFIX"failed to allocate message.\n",
                DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
@@ -127,7 +128,7 @@ cpr_status_e ccappTaskPostMsg(unsigned int msgId, void * data, uint16_t len, int
     memcpy(msg, data, len);
 
     if ((retval=ccappTaskSendMsg(msgId, msg, len, appId)) == CPR_FAILURE) {
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
     }
 
     return retval;
@@ -202,7 +203,7 @@ void CCApp_task(void * arg)
                         syshdr->Usr.UsrInfo);
             }
             cprReleaseSysHeader(syshdr);
-            cprReleaseBuffer(msg);
+            cpr_free(msg);
         }
     }
 }

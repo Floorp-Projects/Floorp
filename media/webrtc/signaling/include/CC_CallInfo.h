@@ -48,6 +48,7 @@ extern "C"
 
 #include "CC_Common.h"
 #include "CC_CallTypes.h"
+#include "peer_connection_types.h"
 
 namespace CSF
 {
@@ -74,6 +75,20 @@ namespace CSF
            @return call state
          */
         virtual cc_call_state_t getCallState () = 0;
+
+        /**
+           print Call state
+           @param [in] handle - call info handle
+           @return call state as string
+         */
+        virtual std::string callStateToString (cc_call_state_t state) = 0;
+
+        /**
+           print Call event
+           @param [in] call event
+           @return call event as string
+         */
+        virtual std::string callEventToString (ccapi_call_event_e callEvent) = 0;
 
         /**
            Get ringer state.
@@ -330,5 +345,27 @@ namespace CSF
           @return int - the current call volume level, or -1 if it cannot be determined
         */
         virtual int getVolume() = 0;
+
+        /**
+           get SDP from info object returned from JSEP functions 
+           @param [in] handle - call info handle
+           @return SDP string
+         */
+        virtual std::string getSDP() = 0;
+
+        /**
+           get status code
+           @param [in] handle - call info handle
+           @return code
+         */
+        virtual cc_int32_t getStatusCode() = 0;
+
+        /**
+           get media streams
+           @return media stream table
+           Note:Ownership of the MediaStreamTable is responsibiliy of 
+           the caller.
+         */
+        virtual MediaStreamTable* getMediaStreams() const = 0;
     };
 };

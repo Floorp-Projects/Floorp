@@ -43,10 +43,10 @@
 #include "CC_Call.h"
 
 #include <map>
-#include <iomanip>
-#include <sstream>
 
 #include "common/Wrapper.h"
+#include "common/csf_common.h"
+#include "mozilla/Mutex.h"
 #include "base/lock.h"
 
 namespace CSF
@@ -63,14 +63,23 @@ namespace CSF
     class CC_SIPCCCallMediaData
 	{
 	public:
-		CC_SIPCCCallMediaData(): remoteWindow(NULL), audioMuteState(false), videoMuteState(false), volume(-1){}
+		CC_SIPCCCallMediaData(): 
+          remoteWindow(NULL), 
+          streamMapMutex("CC_SIPCCCallMediaData"),
+          audioMuteState(false), 
+          videoMuteState(false), 
+          volume(-1){}
 		CC_SIPCCCallMediaData(VideoWindowHandle remoteWindow,
-            bool audioMuteState, bool videoMuteState, int volume): remoteWindow(remoteWindow),
-            audioMuteState(audioMuteState), videoMuteState(videoMuteState), volume(volume) {}
+            bool audioMuteState, bool videoMuteState, int volume): 
+          remoteWindow(remoteWindow),
+          streamMapMutex("CC_SIPCCCallMediaData"),
+          audioMuteState(audioMuteState), 
+          videoMuteState(videoMuteState), 
+          volume(volume) {}
         VideoWindowHandle remoteWindow; 
 		ExternalRendererHandle extRenderer;
 		VideoFormat videoFormat;	
-        Lock streamMapMutex;
+        mozilla::Mutex streamMapMutex;
         StreamMapType streamMap;
         bool audioMuteState;
         bool videoMuteState; 
@@ -89,12 +98,15 @@ namespace CSF
         cc_call_handle_t callHandle;
         CC_SIPCCCall (cc_call_handle_t aCallHandle);
         CC_SIPCCCallMediaDataPtr  pMediaData;
+        std::string peerconnection;  // The peerconnection handle
 
     public:
         virtual inline std::string toString() {
-        	std::stringstream sstream;
-            sstream << "0x" << std::setw( 5 ) << std::setfill( '0' ) << std::hex << callHandle;
-            return sstream.str();
+            std::string result;
+            char tmpString[11];
+            csf_sprintf(tmpString, sizeof(tmpString), "%X", callHandle);
+            result = tmpString;
+            return result;
         };
 
         virtual void setRemoteWindow (VideoWindowHandle window);
@@ -103,7 +115,7 @@ namespace CSF
 
         virtual CC_CallInfoPtr getCallInfo ();
 
-        virtual bool originateCall (cc_sdp_direction_t video_pref, const std::string & digits, char* sdp, int audioPort, int videoPort);
+        virtual bool originateCall (cc_sdp_direction_t video_pref, const std::string & digits);
         virtual bool answerCall (cc_sdp_direction_t video_pref);
         virtual bool hold (cc_hold_reason_t reason);
         virtual bool resume (cc_sdp_direction_t video_pref);
@@ -132,18 +144,26 @@ namespace CSF
         virtual void addStream(int streamId, bool isVideo);
         virtual void removeStream(int streamId);
         virtual bool setVolume(int volume);
-        virtual bool originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip);
-
+        virtual void originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip);
+        virtual void createOffer(const std::string & hints);
+        virtual void createAnswer(const std::string & hints, const std::string & offersdp);
+        virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp);
+        virtual void setRemoteDescription(cc_jsep_action_t action, const std::string & sdp);
+        virtual void setPeerConnection(const std::string& handle);
+        virtual const std::string& getPeerConnection() const;
+        virtual void addStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
+        virtual void removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
         virtual CC_SIPCCCallMediaDataPtr getMediaData();
+        virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level);
 
     private:
         virtual bool setAudioMute(bool mute);
         virtual bool setVideoMute(bool mute);
 
-        Lock m_lock;
+        mozilla::Mutex m_lock;
     };
 
-};
+}
 
 
 #endif

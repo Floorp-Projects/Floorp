@@ -74,18 +74,9 @@
 #define MEM_PER_CALL_BLK 20 //20 block, ~20k
 #define PRIVATE_SYS_MEM_SIZE ((MEM_BASE_BLK + MEM_MISC_BLK + (MEM_PER_CALL_BLK) * MAX_CALLS) * BLK_SZ)
 
-extern boolean cpr_memory_mgmt_pre_init(size_t size);
-extern boolean cpr_memory_mgmt_post_init(void);
-extern void cpr_memory_mgmt_destroy(void);
-
-/**
- * Force a crash dump which will allow a stack trace to be generated
- *
- * @return none
- *
- * @note crash dump is created by an illegal write to memory
- */
-extern void cpr_crashdump(void);
+// used in early init code where config has not been setup
+const boolean gHardCodeSDPMode = TRUE;
+boolean gStopTickTask = FALSE;
 
 
 /*--------------------------------------------------------------------------
@@ -218,16 +209,6 @@ void send_protocol_config_msg(void);
  */
 extern 
 int ccMemInit(size_t size) {
-    /*
-     * Do not move memory pre init below.
-     * This initializes the memory sandbox
-     * and must be first thing done here to make sure
-     * allocations succeed.
-     */
-    if (cpr_memory_mgmt_pre_init(size) != TRUE) 
-    {
-        return CPR_FAILURE;
-    }
     return CPR_SUCCESS;
 }
 
@@ -283,6 +264,7 @@ ccInit ()
 static int
 thread_init ()
 {
+    gStopTickTask = FALSE;
     /*
      * This will have already been called for CPR CNU code,
      * but may be called here for Windows emulation.
@@ -295,7 +277,10 @@ thread_init ()
     /* initialize message queues */
     sip_msgq = cprCreateMessageQueue("SIPQ", SIPQSZ);
     gsm_msgq = cprCreateMessageQueue("GSMQ", GSMQSZ);
-    misc_app_msgq = cprCreateMessageQueue("MISCAPPQ", DEFQSZ);
+
+    if (FALSE == gHardCodeSDPMode) {
+        misc_app_msgq = cprCreateMessageQueue("MISCAPPQ", DEFQSZ);
+    }
     ccapp_msgq = cprCreateMessageQueue("CCAPPQ", DEFQSZ);
 #ifdef JINDO_DEBUG_SUPPORTED
     debug_msgq = cprCreateMessageQueue("DEBUGAPPQ", DEFQSZ);
@@ -309,10 +294,6 @@ thread_init ()
      * Initialize the command parser and debug infrastructure
      */
     debugInit();
-
-    /* initialize adapter level debugs */
-    //debug_bind_keyword("sip-adapter", &TNPDebug);
-//    bind_clear_keyword("mwi", &ui_clear_mwi);
 
     /* create threads */
     ccapp_thread = cprCreateThread("CCAPP Task",
@@ -333,7 +314,7 @@ thread_init ()
     }
 #endif
 #endif
-
+	
     /* SIP main thread */
     sip_thread = cprCreateThread("SIPStack task",
                                  (cprThreadStartRoutine) sip_platform_task_loop,
@@ -359,11 +340,14 @@ thread_init ()
     if (gsm_thread == NULL) {
         err_msg("failed to create gsm task \n");
     }
-    misc_app_thread = cprCreateThread("MiscApp Task",
-                                      (cprThreadStartRoutine) MiscAppTask,
-                                      STKSZ, 0 /* pri */, misc_app_msgq);
-    if (misc_app_thread == NULL) {
-        err_msg("failed to create MiscApp task \n");
+
+    if (FALSE == gHardCodeSDPMode) {
+    	misc_app_thread = cprCreateThread("MiscApp Task",
+    			(cprThreadStartRoutine) MiscAppTask,
+    			STKSZ, 0 /* pri */, misc_app_msgq);
+    	if (misc_app_thread == NULL) {
+    		err_msg("failed to create MiscApp task \n");
+    	}
     }
 
 #ifdef EXTERNAL_TICK_REQUIRED
@@ -376,9 +360,13 @@ thread_init ()
 #endif
 
     /* Associate the threads with the message queues */
-    (void) cprSetMessageQueueThread(sip_msgq, sip_thread);
+    (void) cprSetMessageQueueThread(sip_msgq, sip_thread);  
     (void) cprSetMessageQueueThread(gsm_msgq, gsm_thread);
-    (void) cprSetMessageQueueThread(misc_app_msgq, misc_app_thread);
+
+    if (FALSE == gHardCodeSDPMode) {
+    	(void) cprSetMessageQueueThread(misc_app_msgq, misc_app_thread);
+    }
+
     (void) cprSetMessageQueueThread(ccapp_msgq, ccapp_thread);
 #ifdef JINDO_DEBUG_SUPPORTED
     (void) cprSetMessageQueueThread(debug_msgq, debug_thread);
@@ -442,7 +430,7 @@ int
 TickerTask (void *a)
 {
     TNP_DEBUG(DEB_F_PREFIX"Ticker Task initialized..\n", DEB_F_PREFIX_ARGS(SIP_CC_INIT, "TickerTask"));
-    while (1) {
+    while (FALSE == gStopTickTask) {
         cprSleep(20);
         MAIN0Timer();
     }
@@ -466,7 +454,7 @@ send_protocol_config_msg (void)
     /* send a config done message to the SIP Task */
     if (SIPTaskSendMsg(TCP_PHN_CFG_TCP_DONE, msg, 0, NULL) == CPR_FAILURE) {
         err_msg("%s: notify SIP stack ready failed", fname);
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
     }
     gsm_set_initialized();
     PHNChangeState(STATE_CONNECTED);
@@ -493,6 +481,9 @@ send_task_unload_msg(cc_srcs_t dest_id)
     const char *fname = "send_task_unload_msg";
     uint16_t len = 4;
     cprBuffer_t  msg =  gsm_get_buffer(len);
+    int  sdpmode = 0;
+
+    config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
     if (msg == NULL) {
         err_msg("%s: failed to allocate  msg cprBuffer_t\n", fname);
@@ -512,7 +503,10 @@ send_task_unload_msg(cc_srcs_t dest_id)
             /* send this msg so phone can send unRegister msg */
             SIPTaskPostShutdown(SIP_EXTERNAL, CC_CAUSE_SHUTDOWN, "");
             /* allow unRegister msg to sent out and shutdown to complete */
-            cprSleep(2000);
+
+            if (!sdpmode) {
+                cprSleep(2000);
+            }
             /* send a unload message to the SIP Task to kill sip thread*/
             msg =  SIPTaskGetBuffer(len);
             if (msg == NULL) {
@@ -522,7 +516,7 @@ send_task_unload_msg(cc_srcs_t dest_id)
 
             if (SIPTaskSendMsg(THREAD_UNLOAD, (cprBuffer_t)msg, len, NULL) == CPR_FAILURE)
             {
-                cprReleaseBuffer(msg);
+                cpr_free(msg);
                 err_msg("%s: Unable to send THREAD_UNLOAD msg to sip thread", fname);
             }
         }
@@ -541,7 +535,7 @@ send_task_unload_msg(cc_srcs_t dest_id)
         break;
         case CC_SRC_MISC_APP:
         {
-            msg = cprGetBuffer(len);
+            msg = cpr_malloc(len);
             if (msg == NULL) {
                 err_msg("%s: failed to allocate  misc msg cprBuffer_t\n", fname);
                 return;
@@ -553,7 +547,7 @@ send_task_unload_msg(cc_srcs_t dest_id)
         break;
         case CC_SRC_CCAPP:
         {
-            msg = cprGetBuffer(len);
+            msg = cpr_malloc(len);
             if (msg == NULL) {
                 err_msg("%s: failed to allocate  ccapp msg cprBuffer_t\n", fname);
                 return;
@@ -601,7 +595,15 @@ ccUnload (void)
     */
     send_task_unload_msg(CC_SRC_SIP);
     send_task_unload_msg(CC_SRC_GSM);
-    send_task_unload_msg(CC_SRC_MISC_APP);
+
+    if (FALSE == gHardCodeSDPMode) {
+    	send_task_unload_msg(CC_SRC_MISC_APP);
+    }
+
     send_task_unload_msg(CC_SRC_CCAPP);
+
+    cprSleep(200);
+
+    gStopTickTask = TRUE;
 }
 

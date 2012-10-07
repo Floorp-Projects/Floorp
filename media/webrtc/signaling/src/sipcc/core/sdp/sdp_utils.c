@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <errno.h>
+#include <limits.h>
 #include "sdp_os_defs.h"
 #include "sdp.h"
 #include "sdp_private.h"
@@ -79,6 +81,71 @@ sdp_mca_t *sdp_alloc_mca () {
 }
 
 /*
+ * next_token
+ *
+ * copy token param with chars from str until null, cr, lf, or one of the delimiters is found.
+ * delimiters at the beginning will be skipped.
+ * The pointer *string_of_tokens is moved forward to the next token on sucess.
+ *
+ */
+static sdp_result_e next_token(const char **string_of_tokens, char *token, unsigned token_max_len, const char *delim)
+{
+  int flag2moveon = 0;
+  const char *str = *string_of_tokens;
+  char *token_start = token;
+  const char *next_delim;
+
+  if (!string_of_tokens || !*string_of_tokens || !token || !delim) {
+    return SDP_FAILURE;
+  }
+
+  /* Locate front of token, skipping any delimiters */
+  for ( ; ((*str != '\0') && (*str != '\n') && (*str != '\r')); str++) {
+    flag2moveon = 1;  /* Default to move on unless we find a delimiter */
+    for (next_delim=delim; *next_delim; next_delim++) {
+      if (*str == *next_delim) {
+        flag2moveon = 0;
+        break;
+      }
+    }
+    if( flag2moveon ) {
+      break;  /* We're at the beginning of the token */
+    }
+  }
+
+  /* Make sure there's really a token present. */
+  if ((*str == '\0') || (*str == '\n') || (*str == '\r')) {
+    return SDP_FAILURE;
+  }
+
+  /* Now locate end of token */
+  flag2moveon = 0;
+
+  while (((token-token_start) < token_max_len - 1) &&
+         (*str != '\0') && (*str != '\n') && (*str != '\r')) {
+      for (next_delim=delim; *next_delim; next_delim++) {
+          if (*str == *next_delim) {
+              flag2moveon = 1;
+              break;
+          }
+      }
+      if( flag2moveon ) {
+          break;
+      } else {
+          *token++ = *str++;
+      }
+  }
+
+  /* mark end of token */
+  *token = '\0';
+
+  /* set the string of tokens to the next token */
+  *string_of_tokens = str;
+
+  return SDP_SUCCESS;
+}
+
+/*
  * verify_sdescriptions_mki
  * 
  * Verifies the syntax of the MKI parameter.
@@ -108,6 +175,8 @@ verify_sdescriptions_mki (char *buf, char *mkiVal, u16 *mkiLen)
                mkiValBuf[SDP_SRTP_MAX_MKI_SIZE_BYTES],
 	       mkiLenBuf[MKI_BUF_LEN];
     int        idx = 0;
+    unsigned long strtoul_result;
+    char *strtoul_end;
     
     ptr = buf;
     /* MKI must begin with a digit */
@@ -150,16 +219,20 @@ verify_sdescriptions_mki (char *buf, char *mkiVal, u16 *mkiLen)
     }
     
     mkiLenBuf[idx] = 0;
-    *mkiLen = atoi(mkiLenBuf);
-    
+
+    errno = 0;
+    strtoul_result = strtoul(mkiLenBuf, &strtoul_end, 10);
+
     /* mki len must be between 1..128 */
-    if (*mkiLen > 0 && *mkiLen <= 128) {
-	 strncpy(mkiVal, mkiValBuf, MKI_BUF_LEN);
-         return TRUE;
-    } else {
-         return FALSE;
+    if (errno || mkiLenBuf == strtoul_end || strtoul_result < 1 || strtoul_result > 128) {
+      *mkiLen = 0;
+      return FALSE;
     }
-    
+
+    *mkiLen = (u16) strtoul_result;
+    sstrncpy(mkiVal, mkiValBuf, MKI_BUF_LEN);
+
+    return TRUE;
 }
 
 /*
@@ -273,60 +346,21 @@ char *sdp_findchar (const char *ptr, char *char_list)
  * as a param.  The token also will not go past a new line char or the 
  * end of the string.  Skip any delimiters before the token.
  */
-char *sdp_getnextstrtok (const char *str, char *tokenstr, 
-                         char *delim, sdp_result_e *result)
+const char *sdp_getnextstrtok (const char *str, char *tokenstr, unsigned tokenstr_len,
+                         const char *delim, sdp_result_e *result)
 {
-    char *b, *tmp;
-    int   flag2moveon;
+  const char *token_list = str;
 
-    if ((str == NULL) || (tokenstr == NULL)) {
-        *result = SDP_FAILURE;
-        return( (char *)str );
+  if (!str || !tokenstr || !delim || !result) {
+    if (result) {
+      *result = SDP_FAILURE;
     }
+    return str;
+  }
 
-    /* Locate front of token, skipping any delimiters */
-    for ( ; ((*str != '\0') && (*str != '\n') && (*str != '\r')); str++) {
-        flag2moveon = 1;  /* Default to move on unless we find a delimiter */
-        for (b=delim; *b; b++) {
-            if (*str == *b) {
-                flag2moveon = 0;
-            }
-        }
-        if( flag2moveon ) {
-            break;  /* We're at the beginning of the token */
-        }
-    }
-   
-    /* Make sure there's really a token present. */
-    if ((*str == '\0') || (*str == '\n') || (*str == '\r')) {
-        *result = SDP_FAILURE;
-        return( (char *)str );
-    }
+  *result = next_token(&token_list, tokenstr, tokenstr_len, delim);
 
-    /* Now locate end of token */
-    flag2moveon = 0;
-    tmp = tokenstr;
-
-    while (((tokenstr-tmp) < SDP_MAX_STRING_LEN) &&
-           (*str != '\0') && (*str != '\n') && (*str != '\r')) {
-        for (b=delim; *b; b++) {
-            if (*str == *b) {
-                flag2moveon = 1;
-                break;
-            }
-        }
-
-        if( flag2moveon ) {
-            break;
-        } else {
-            *tokenstr++ = *str++;
-        }
-    }
-
-    *tokenstr = '\0';     /* mark end of token */
-
-    *result = SDP_SUCCESS;
-    return((char *)str);
+  return token_list;
 }
 
 
@@ -337,84 +371,48 @@ char *sdp_getnextstrtok (const char *str, char *tokenstr,
  * the token.
  */
 u32 sdp_getnextnumtok_or_null (const char *str, const char **str_end, 
-                               char *delim, tinybool *null_ind,
+                               const char *delim, tinybool *null_ind,
                                sdp_result_e *result)
 {
-    char *b;
-    char  tmp[SDP_MAX_STRING_LEN+1];
-    char *tok = tmp;
-    u32   numval=0;
-    int   flag2moveon;
+  const char *token_list = str;
+  char temp_token[SDP_MAX_STRING_LEN];
+  char *strtoul_end;
+  unsigned long numval;
 
-    if ((str == NULL)  || (str_end == NULL)) {
-        *result = SDP_FAILURE;
-        return(numval);
+  *null_ind = FALSE;
+
+  if (!str || !str_end || !delim || !null_ind || !result) {
+    if (result) {
+      *result = SDP_FAILURE;
     }
+    return 0;
+  }
 
-    /* Locate front of token, skipping any delimiters */
-    for ( ; ((*str != '\0') && (*str != '\n') && (*str != '\r')); str++) {
-        flag2moveon = 1;  /* Default to move on unless we find a delimiter */
-        for (b=delim; *b; b++) {
-            if (*str == *b) {
-                flag2moveon = 0;
-            }
-        }
-        if( flag2moveon ) {
-            break;  /* We're at the beginning of the token */
-        }
-    }
+  *result = next_token(&token_list, temp_token, sizeof(temp_token), delim);
 
-    /* Make sure there's really a token present. */
-    if ((*str == '\0') || (*str == '\n') || (*str == '\r')) {
-        *result = SDP_FAILURE;
-        *str_end = (char *)str;
-        return(numval);
-    }
+  if (*result != SDP_SUCCESS) {
+    return 0;
+  }
 
-    /* Now locate end of token */
-    flag2moveon = 0;
+  /* First see if its the null char ("-") */
+  if (temp_token[0] == '-') {
+      *null_ind = TRUE;
+      *result = SDP_SUCCESS;
+      *str_end = str;
+      return 0;
+  }
 
-    while (((tok-tmp) < SDP_MAX_STRING_LEN) &&
-           (*str != '\0') && (*str != '\n') && (*str != '\r')) {
-        for (b=delim; *b; b++) {
-            if (*str == *b) {
-                flag2moveon = 1;
-                break;
-            }
-        }
-        if( flag2moveon ) {
-            break;
-        } else {
-            *tok++ = *str++;
-        }
-    }
+  errno = 0;
+  numval = strtoul(temp_token, &strtoul_end, 10);
 
-    *tok = '\0';     /* mark end of token */
+  if (errno || strtoul_end == temp_token || numval > UINT_MAX) {
+    *result = SDP_FAILURE;
+    return 0;
+  }
 
-    /* First see if its the null char ("-") */
-    if (tmp[0] == '-') {
-        *null_ind = TRUE;
-        *result = SDP_SUCCESS;
-        *str_end = (char *)str;
-        return (0);
-    } else {
-        *null_ind = FALSE;
-    }
-
-    /* Convert to numeric */
-    for (tok = tmp; *tok != '\0'; tok++) {
-        if (!(*tok >= '0' && *tok <= '9')) {
-            *result = SDP_FAILURE;
-            *str_end = (char *)str;
-            return(numval);
-        } else {
-            numval = (numval * 10) + (*tok - '0');
-        }
-    }
-
-    *result = SDP_SUCCESS;
-    *str_end = (char *)str;
-    return(numval);
+  *result = SDP_SUCCESS;
+  *str_end = token_list;
+  return (u32) numval;
 }
 
 
@@ -423,73 +421,37 @@ u32 sdp_getnextnumtok_or_null (const char *str, const char **str_end,
  * or the end of the string.  Skip any delimiters before the token.
  */
 u32 sdp_getnextnumtok (const char *str, const char **str_end, 
-                       char *delim, sdp_result_e *result)
+                       const char *delim, sdp_result_e *result)
 {
-    char *b;
-    char  tmp[SDP_MAX_STRING_LEN+1];
-    char *tok = tmp;
-    u32   numval=0;
-    int   flag2moveon;
+  const char *token_list = str;
+  char temp_token[SDP_MAX_STRING_LEN];
+  char *strtoul_end;
+  unsigned long numval;
 
-    if ((str == NULL)  || (str_end == NULL)) {
-        *result = SDP_FAILURE;
-        return(numval);
+  if (!str || !str_end || !delim || !result) {
+    if (result) {
+      *result = SDP_FAILURE;
     }
+    return 0;
+  }
 
-    /* Locate front of token, skipping any delimiters */
-    for ( ; ((*str != '\0') && (*str != '\n') && (*str != '\r')); str++) {
-        flag2moveon = 1;  /* Default to move on unless we find a delimiter */
-        for (b=delim; *b; b++) {
-            if (*str == *b) {
-                flag2moveon = 0;
-            }
-        }
-        if( flag2moveon ) {
-            break;  /* We're at the beginning of the token */
-        }
-    }
+  *result = next_token(&token_list, temp_token, sizeof(temp_token), delim);
 
-    /* Make sure there's really a token present. */
-    if ((*str == '\0') || (*str == '\n') || (*str == '\r')) {
-        *result = SDP_FAILURE;
-        *str_end = (char *)str;
-        return(numval);
-    }
+  if (*result != SDP_SUCCESS) {
+    return 0;
+  }
 
-    /* Now locate end of token */
-    flag2moveon = 0;
+  errno = 0;
+  numval = strtoul(temp_token, &strtoul_end, 10);
 
-    while (((tok-tmp) < SDP_MAX_STRING_LEN) &&
-           (*str != '\0') && (*str != '\n') && (*str != '\r')) {
-        for (b=delim; *b; b++) {
-            if (*str == *b) {
-                flag2moveon = 1;
-                break;
-            }
-        }
-        if( flag2moveon ) {
-            break;
-        } else {
-            *tok++ = *str++;
-        }
-    }
+  if (errno || strtoul_end == temp_token || numval > UINT_MAX) {
+    *result = SDP_FAILURE;
+    return 0;
+  }
 
-    *tok = '\0';     /* mark end of token */
-
-    /* Convert to numeric */
-    for (tok = tmp; *tok != '\0'; tok++) {
-        if (!(*tok >= '0' && *tok <= '9')) {
-            *result = SDP_FAILURE;
-            *str_end = (char *)str;
-            return(numval);
-        } else {
-            numval = (numval * 10) + (*tok - '0');
-        }
-    }
-
-    *result = SDP_SUCCESS;
-    *str_end = (char *)str;
-    return(numval);
+  *result = SDP_SUCCESS;
+  *str_end = token_list;
+  return (u32) numval;
 }
 
 
@@ -498,10 +460,10 @@ u32 sdp_getnextnumtok (const char *str, const char **str_end,
  * a new line char or the end of the string.  Skip any delimiters before 
  * the token.
  */
-tinybool sdp_getchoosetok (const char *str, char **str_end, 
-                           char *delim, sdp_result_e *result)
+tinybool sdp_getchoosetok (const char *str, const char **str_end,
+                           const char *delim, sdp_result_e *result)
 {
-    char *b;
+    const char *b;
     int   flag2moveon;
 
     if ((str == NULL)  || (str_end == NULL)) {
@@ -515,6 +477,7 @@ tinybool sdp_getchoosetok (const char *str, char **str_end,
         for (b=delim; *b; b++) {
             if (*str == *b) {
                 flag2moveon = 0;
+                break;
             }
         }
         if( flag2moveon ) {
@@ -553,73 +516,6 @@ tinybool sdp_getchoosetok (const char *str, char **str_end,
     *str_end = (char *)str;
     return(FALSE);
 
-}
-
-
-/* Locate the next token in a line.  The delim characters are passed in
- * as a param.  The token also will not go past a new line char or the 
- * end of the string.  An empty character is returned if contiguous delimiters
- * are found with no token.
- */
-char *sdp_getnextstrtok_noskip (const char *str, char *tokenstr, 
-                         char *delim, sdp_result_e *result)
-{
-    char *b, *tmp;
-    int   flag2moveon, delimiter_count;
-
-    if ((str == NULL) || (tokenstr == NULL)) {
-        *result = SDP_FAILURE;
-        return( (char *)str );
-    }
-
-    /* Locate front of token. If Contiguous delimiters return '\0' */
-    delimiter_count = 0;
-    for ( ; ((*str != '\0') && (*str != '\n') && (*str != '\r')); str++) {
-        flag2moveon = 1;  /* Default to move on unless we find a delimiter */
-        for (b=delim; *b; b++) {
-            if (*str == *b) {
-                flag2moveon = 0;
-		if (++delimiter_count > 1) {
-		  *tokenstr = '\0';     /* mark end of token */
-		  return( (char *)str );
-		}
-            }
-        }
-        if( flag2moveon ) {
-            break;  /* We're at the beginning of the token */
-        }
-    }
-   
-    /* Make sure there's really a token present. */
-    if ((*str == '\0') || (*str == '\n') || (*str == '\r')) {
-        *result = SDP_FAILURE;
-        return( (char *)str );
-    }
-
-    /* Now locate end of token */
-    flag2moveon = 0;
-    tmp = tokenstr;
-
-    while (((tokenstr-tmp) < SDP_MAX_STRING_LEN) &&
-           (*str != '\0') && (*str != '\n') && (*str != '\r')) {
-        for (b=delim; *b; b++) {
-            if (*str == *b) {
-                flag2moveon = 1;
-                break;
-            }
-        }
-
-        if( flag2moveon ) {
-            break;
-        } else {
-            *tokenstr++ = *str++;
-        }
-    }
-
-    *tokenstr = '\0';     /* mark end of token */
-
-    *result = SDP_SUCCESS;
-    return((char *)str);
 }
 
 /*

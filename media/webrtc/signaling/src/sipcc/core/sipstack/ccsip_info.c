@@ -49,7 +49,6 @@
 #include "vcm.h"
 #include "phone_debug.h"
 #include "singly_link_list.h"
-#include "xml_util.h"
 #include "ccapi.h"
 
 extern int httpish_strncasecmp(const char *s1, const char *s2, size_t len);
@@ -75,18 +74,8 @@ static sll_handle_t s_handler_registry = NULL;
  * "conference") for the registered handlers.
  */
 char *g_registered_info[MAX_INFO_HANDLER];
-/*
- * s_registered_type[] contains the Content Type strings (such as
- * "application/conference-info+xml", "application/media_control+xml"...etc.)
- * for the registered handlers.
- */
-static char *s_registered_type[MAX_INFO_HANDLER];
 
-#ifdef _CONF_ROSTER_
-#define INFO_PACKAGE_CISCO_CONFERENCE         "x-cisco-conference"
-#define INFO_PACKAGE_CONFERENCE         "conference"
-#define CONTENT_TYPE_CONFERENCE_INFO    "application/conference-info+xml"
-#endif
+static char *s_registered_type[MAX_INFO_HANDLER];
 
 static sll_match_e is_matching_type(void *find_by_p, void *data_p);
 static info_index_t find_info_index(const char *info_package);
@@ -817,22 +806,6 @@ media_control_info_package_handler(line_t line, callid_t call_id,
                                    const char *content_type,
                                    const char *message_body)
 {
-    static const char *fname = "media_control_info_package_handler";
-    ccsip_event_data_t * evt_data_ptr = NULL;
-
-    if (xmlDecodeEventData(CC_SUBSCRIPTIONS_MEDIA_INFO,
-                        message_body,
-                        strlen(message_body),
-                        &evt_data_ptr) == SIP_ERROR) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Could not allocate Libxml Context", fname);
-    }
-
-    if (evt_data_ptr != NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"media picture_fast_update value=%d", 
-            fname, evt_data_ptr->u.media_control_data.picture_fast_update);
-        cc_feature(CC_SRC_SIP, call_id, line, CC_FEATURE_FAST_PIC_UPD, NULL);
-        free_event_data(evt_data_ptr);
-    }
 }
 
 #ifdef _CONF_ROSTER_

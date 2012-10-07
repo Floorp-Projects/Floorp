@@ -66,11 +66,16 @@ typedef enum {
     evHoldRevert = HOLDREVERT,
     evWhisper = WHISPER,
     evWaitingForDigits = WAITINGFORDIGITS,
+    evCreateOffer = CREATEOFFER,
+    evCreateAnswer = CREATEANSWER,
+    evCreateOfferError = CREATEOFFERERROR,
+    evCreateAnswerError = CREATEANSWERERROR,	
+    evSetLocalDesc = SETLOCALDESC,
+    evSetRemoteDesc = SETREMOTEDESC,    
+    evSetLocalDescError = SETLOCALDESCERROR,
+    evSetRemoteDescError = SETREMOTEDESCERROR,
+    evOnRemoteStreamAdd = REMOTESTREAMADD,
     evMaxEvent
-/* READ: After modifying this table update
- * static const char *call_evt_names[evMaxEvent] in tnp_ui.c
- * file
- */
 } call_events;
 
 #define MWI_STATUS_YES 1
@@ -179,5 +184,16 @@ void ui_call_stop_ringer(line_t line, callid_t call_id);
 void ui_call_start_ringer(vcm_ring_mode_t ringMode, short once, line_t line, callid_t call_id);
 void ui_BLF_notification (int request_id, cc_blf_state_t blf_state, int app_id);
 void ui_update_media_interface_change(line_t line, callid_t call_id, group_call_event_t event);
+void ui_create_offer(call_events event, line_t nLine, callid_t nCallID,
+                 	 uint16_t call_instance_id, char* sdp);
+void ui_create_answer(call_events event, line_t nLine, callid_t nCallID,
+                 	 uint16_t call_instance_id, char* sdp);
+void ui_set_local_description(call_events event, line_t nLine, callid_t nCallID,
+                 	 uint16_t call_instance_id, char* sdp, cc_int32_t status);
+void ui_set_remote_description(call_events event, line_t nLine, callid_t nCallID,
+                 	 uint16_t call_instance_id, char* sdp, cc_int32_t status);
+void ui_on_remote_stream_added(call_events event, line_t nLine, callid_t nCallID,
+                     uint16_t call_instance_id, cc_media_remote_track_table_t media_tracks);
+
 
 #endif

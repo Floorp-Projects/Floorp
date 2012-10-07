@@ -40,108 +40,20 @@
 #ifndef _CPR_STDLIB_H_
 #define _CPR_STDLIB_H_
 
-#include "cpr_types.h"
+#include <stdlib.h>
+#include <string.h>
 
-__BEGIN_DECLS
-
-#if defined SIP_OS_LINUX
-#include "../linux/cpr_linux_stdlib.h"
-#elif defined SIP_OS_WINDOWS
-#include "../win32/cpr_win_stdlib.h"
-#elif defined SIP_OS_OSX
-#include "../darwin/cpr_darwin_stdlib.h"
+#ifdef SIP_OS_WINDOWS
+#include <crtdbg.h>
+#include <errno.h>
 #endif
 
-#ifdef CPR_USE_DIRECT_OS_CALL
-/*
- * The phone expects that malloced memory is zeroed out in some cases.
- * Depending on memory detection techniques and OS used, malloc may
- * be directly mapped to calloc.
- */
-#ifdef CPR_USE_CALLOC_FOR_MALLOC
-#define cpr_malloc(x)  calloc(1, x)
-#else
-#define cpr_malloc  malloc
-#endif
-#define cpr_calloc  calloc
-#define cpr_realloc realloc
-#define cpr_strdup  _strdup
-#define cpr_free    free
+#include "mozilla/mozalloc.h"
 
-#define CPR_REACH_MEMORY_HIGH_WATER_MARK FALSE
-
-#else
-/**
- * @brief Allocate memory
- *
- * The cpr_malloc function attempts to malloc a memory block of at least size
- * bytes. 
- *
- * @param[in] size  size in bytes to allocate
- *
- * @return      pointer to allocated memory or #NULL
- *
- * @note        memory is NOT initialized
- */
-void *cpr_malloc(size_t size);
-
-/**
- * @brief Allocate and initialize memory
- *
- * The cpr_calloc function attempts to calloc "num" number of memory block of at
- * least size bytes. The code zeros out the memory block before passing 
- * the pointer back to the calling thread.
- *
- * @param[in] nelem   number of objects to allocate
- * @param[in] size  size in bytes of an object
- *
- * @return      pointer to allocated memory or #NULL
- *
- * @note        allocated memory is initialized to zero(0)
- */
-void *cpr_calloc(size_t nelem, size_t size);
-
-/**
- * @brief Reallocate memory
- *
- * @param[in] object  memory to reallocate
- * @param[in] size new memory size
- *
- * @return     pointer to reallocated memory or #NULL
- *
- * @note       if either mem is NULL or size is zero
- *             the return value will be NULL
- */
-void *cpr_realloc(void *object, size_t size);
-
-/**
- * cpr_strdup
- *
- * @brief The CPR wrapper for strdup
-
- * The cpr_strdup shall return a pointer to a new string, which is a duplicate
- * of the string pointed to by "str" argument. A null pointer is returned if the
- * new string cannot be created.
- *
- * @param[in] string  - The string that needs to be duplicated
- *
- * @return The duplicated string or NULL in case of no memory
- *
- */
-char *cpr_strdup(const char *string);
-
-/**
- * @brief Free memory
- * The cpr_free function attempts to free the memory block passed in.
- *
- * @param[in] mem  memory to free
- *
- * @return     none
- */
-void  cpr_free(void *mem);
-#endif
-
-__END_DECLS
+#define cpr_malloc(a) moz_xmalloc(a)
+#define cpr_calloc(a, b) moz_xcalloc(a, b)
+#define cpr_realloc(a, b) moz_xrealloc(a, b)
+#define cpr_free(a) moz_free(a)
 
 #endif
 

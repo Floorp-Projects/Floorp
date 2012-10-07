@@ -72,8 +72,8 @@
 
 namespace CSFUnified
 {
-    DECLARE_PTR(DeviceInfo);
-};
+    DECLARE_PTR(DeviceInfo)
+}
 
 namespace CSF
 {
@@ -115,7 +115,7 @@ namespace CSF
 			eFileInvalid
 		} DeviceRetrievalFailureCode;
 		std::string ECC_API toString(DeviceRetrievalFailureCode value);
-	};
+	}
 
     namespace ConnectionStatusEnum
     {
@@ -130,7 +130,7 @@ namespace CSF
     		eFailed
     	} ConnectionStatus;
 		std::string ECC_API toString(ConnectionStatus value);
-    };
+    }
 
 	namespace ServiceStateType {
 		typedef enum
@@ -140,7 +140,7 @@ namespace CSF
 			eOutOfService
 		} ServiceState;
 		std::string ECC_API toString(ServiceState value);
-	};
+	}
 
 	namespace AvailablePhoneEventType
 	{
@@ -150,7 +150,7 @@ namespace CSF
 			eLost		// Phone device removed from the Available list.
 		} AvailablePhoneEvent;
 		std::string ECC_API toString(AvailablePhoneEvent value);
-	};
+	}
 
 	namespace ConfigPropertyKeysEnum
 	{
@@ -183,4 +183,5 @@ namespace CSF
     typedef void *VideoWindowHandle;
 	typedef void* ExternalRendererHandle;
 	typedef unsigned int VideoFormat;	
-};
+}
+

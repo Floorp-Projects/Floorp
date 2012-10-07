@@ -97,6 +97,7 @@
 #define VCM_CODEC_RESOURCE_H263     0x00000002
 #define VCM_CODEC_RESOURCE_VP8      0x00000100
 #define VCM_CODEC_RESOURCE_I420     0x00000200
+#define VCM_CODEC_RESOURCE_OPUS     0x00000400
 
 #define VCM_DSP_DECODEONLY  0
 #define VCM_DSP_ENCODEONLY  1
@@ -226,6 +227,7 @@ typedef enum
     VCM_Media_Payload_G726_32K = 82,
     VCM_Media_Payload_G726_24K = 83,
     VCM_Media_Payload_G726_16K = 84,
+    VCM_Media_Payload_OPUS = 109,
     VCM_Media_Payload_VP8 = 120,
     VCM_Media_Payload_I420 = 124,
     VCM_Media_Payload_Max           // Please leave this so we won't get compile errors.
@@ -339,6 +341,7 @@ typedef struct vcm_videoAttrs_t_ {
 /**  A structure carrying audio media specific attributes */
 typedef struct vcm_audioAttrs_t_ {
   cc_uint16_t packetization_period; /**< ptime value received in SDP */
+  cc_uint16_t max_packetization_period; /**< ptime value received in SDP */
   cc_int32_t avt_payload_type; /**< RTP payload type for AVT */
   vcm_vad_t vad; /**< Voice Activity Detection on or off */
   vcm_mixing_party_t mixing_party; /**< mixing_party */
@@ -352,6 +355,7 @@ typedef struct vcm_audioAttrs_t_ {
  */
 typedef struct vcm_attrs_t_ {
   cc_boolean         mute;
+  cc_boolean         is_video;
   vcm_audioAttrs_t audio; /**< audio line attribs */
   vcm_videoAttrs_t video; /**< Video Atrribs */
 } vcm_mediaAttrs_t;
@@ -438,6 +442,90 @@ void vcmRxAllocPort(cc_mcapid_t mcap_id,
         cc_uint16_t port_requested,
         int *port_allocated);
 
+
+void vcmRxAllocICE(cc_mcapid_t mcap_id,
+        cc_groupid_t group_id,
+        cc_streamid_t stream_id,
+        cc_call_handle_t  call_handle,
+        const char *peerconnection,
+        uint16_t level,  
+        char **default_addr, /* Out */
+        int *default_port, /* Out */
+        char ***candidates, /* Out */
+        int *candidate_ct /* Out */
+);
+
+
+/* Get ICE global parameters (ufrag and pwd)
+ *
+ *  @param[in]  peerconnection - the peerconnection in use
+ *  @param[out] ufragp - where to put the ufrag
+ *  @param[out] pwdp - where to put the pwd
+ *
+ *  @return void
+ */
+void vcmGetIceParams(const char *peerconnection, char **ufragp, char **pwdp);
+
+/* Set remote ICE global parameters.
+ * 
+ *  @param[in]  peerconnection - the peerconnection in use
+ *  @param[in]  ufrag - the ufrag
+ *  @param[in]  pwd - the pwd
+ *
+ *  @return 0 success, error failure
+ */
+short vcmSetIceSessionParams(const char *peerconnection, char *ufrag, char *pwd);
+
+/* Set ice candidate for trickle ICE.
+ *
+ *  @param[in]  peerconnection - the peerconnection in use
+ *  @param[in]  icecandidate - the icecandidate
+ *  @param[in]  level - the m line level
+ *
+ *  @return 0 success, error failure
+ */
+short vcmSetIceCandidate(const char *peerconnection, const char *icecandidate, uint16_t level);
+
+/* Set remote ICE media-level parameters.
+ * 
+ *  @param[in]  peerconnection - the peerconnection in use
+ *  @param[in]  level - the m-line
+ *  @param[in]  ufrag - the ufrag
+ *  @param[in]  pwd - the pwd
+ *  @param[in]  candidates - the candidates
+ *  @param[in]  candidate_ct - the number of candidates
+ *  @return 0 success, error failure
+ */
+short vcmSetIceMediaParams(const char *peerconnection, int level, char *ufrag, char *pwd,
+                      char **candidates, int candidate_ct);
+
+/* Start ICE checks
+ *  @param[in]  peerconnection - the peerconnection in use
+ *  @param[in]  level - the m-line
+ *  @return 0 success, error failure
+ */
+short vcmStartIceChecks(const char *peerconnection);
+
+
+
+/*
+ * Create a remote stream
+ *
+ *  @param[in] mcap_id - group identifier to which stream belongs.
+ *  @param[in]  peerconnection - the peerconnection in use
+ *  @param[out] pc_stream_id - the id of the allocated stream
+ * 
+ *  TODO(ekr@rtfm.com): Revise along with everything else for the
+ *  new stream model.
+ *
+ *  Returns: zero(0) for success; otherwise, ERROR for failure
+ */
+short vcmCreateRemoteStream(
+             cc_mcapid_t mcap_id,
+             const char *peerconnection,
+             int *pc_stream_id,
+             vcm_media_payload_type_t payload);
+
 /*!
  *  Release the allocated port
  * @param[in] mcap_id   - media capability id (0 is audio)
@@ -448,7 +536,6 @@ void vcmRxAllocPort(cc_mcapid_t mcap_id,
  *
  * @return void
  */
-
 void vcmRxReleasePort(cc_mcapid_t mcap_id,
         cc_groupid_t group_id,
         cc_streamid_t stream_id,
@@ -488,6 +575,43 @@ int vcmRxStart(cc_mcapid_t mcap_id,
         cc_uint16_t port,
         vcm_crypto_algorithmID algorithmID,
         vcm_crypto_key_t *rx_key,
+        vcm_mediaAttrs_t *attrs);
+
+
+/**
+ *  start rx stream
+ *  Same concept as vcmRxStart but for ICE/PeerConnection-based flows
+ *
+ *  @param[in]   mcap_id      - media cap id
+ *  @param[in]   group_id     - group identifier to which the stream belongs
+ *  @param[in]   stream_id    - stream id of the given media type.
+ *  @param[in]   level        - the m-line index
+ *  @param[in]   pc_stream_id - the media stream index (from PC.addStream())
+ *  @param[in]   pc_track_id  - the track within the media stream
+ *  @param[in]   call_handle  - call handle
+ *  @param[in]   peerconnection - the peerconnection in use
+ *  @param[in]   num_payloads  - number of codecs negotiated
+ *  @param[in]   payloads      - list of negotiated codec details 
+ *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
+ *  @param[in]   fingerprint  - the DTLS fingerprint
+ *  @param[in]   attrs        - media attributes
+ *
+ *  Returns: zero(0) for success; otherwise, ERROR for failure
+ *
+ */
+
+int vcmRxStartICE(cc_mcapid_t mcap_id,
+        cc_groupid_t group_id,
+        cc_streamid_t stream_id,
+        int level,
+        int pc_stream_id,
+        int pc_track_id,
+        cc_call_handle_t  call_handle,
+        const char *peerconnection,
+        int num_payloads,
+        const vcm_media_payload_type_t* payloads,        
+        const char *fingerprint_alg,
+        const char *fingerprint,
         vcm_mediaAttrs_t *attrs);
 
 /**
@@ -530,6 +654,56 @@ int vcmTxStart(cc_mcapid_t mcap_id,
         vcm_crypto_algorithmID algorithmID,
         vcm_crypto_key_t *tx_key,
         vcm_mediaAttrs_t *attrs);
+
+
+/**
+ *  start tx stream
+ *  Same concept as vcmTxStart but for ICE/PeerConnection-based flowso
+ *
+ *  @param[in]   mcap_id      - media cap id
+ *  @param[in]   group_id     - group identifier to which the stream belongs
+ *  @param[in]   stream_id    - stream id of the given media type.
+ *  @param[in]   level        - the m-line index
+ *  @param[in]   pc_stream_id - the media stream index (from PC.addStream())
+ *  @param[in]   pc_track_id  - the track within the media stream
+ *  @param[in]   call_handle  - call handle
+ *  @param[in]   peerconnection - the peerconnection in use
+ *  @param[in]   payload      - payload type
+ *  @param[in]   tos          - bit marking
+ *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
+ *  @param[in]   fingerprint  - the DTLS fingerprint
+ *  @param[in]   attrs        - media attributes
+ *
+ *  Returns: zero(0) for success; otherwise, ERROR for failure
+ *
+ */
+
+  int vcmTxStartICE(cc_mcapid_t mcap_id,
+        cc_groupid_t group_id,
+        cc_streamid_t stream_id,
+        int level,
+        int pc_stream_id,
+        int pc_track_id,
+        cc_call_handle_t  call_handle,
+        const char *peerconnection,
+        vcm_media_payload_type_t payload,
+        short tos,
+        const char *fingerprint_alg,
+        const char *fingerprint,
+        vcm_mediaAttrs_t *attrs);
+
+
+  short vcmGetDtlsIdentity(const char *peerconnection,
+        char *digest_alg,
+        size_t max_digest_alg_len,
+        char *digest,
+        size_t max_digest_len);
+
+
+  short vcmSetDataChannelParameters(const char *peerconnection,
+        cc_uint16_t streams,
+        int sctp_port,
+        const char* protocol);
 
 /*!
  *  Close the receive stream.
@@ -857,11 +1031,12 @@ int vcmDtmfBurst(int digit, int duration, int direction);
  */
 int vcmGetILBCMode(); 
 
-
 //Using C++ for gips. This is the end of extern "C" above.
 #ifdef __cplusplus
 }
 #endif
 
+
+  
 
 #endif /* _VCM_H_ */

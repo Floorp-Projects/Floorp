@@ -46,7 +46,7 @@
 #define CPR_USE_SET_MESSAGE_QUEUE_THREAD
 
 /* Maximum message size allowed by CNU */
-#define CPR_MAX_MSG_SIZE  4096
+#define CPR_MAX_MSG_SIZE  8192
 
 /* Our CNU msgtype */
 #define PHONE_IPC_MSG 0xF005

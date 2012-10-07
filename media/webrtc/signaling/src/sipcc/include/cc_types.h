@@ -45,7 +45,8 @@ typedef unsigned char   cc_uint8_t;
 typedef short           cc_int16_t;
 typedef unsigned short  cc_uint16_t;
 typedef int             cc_int32_t;
-typedef unsigned int   cc_uint32_t;
+typedef unsigned int    cc_uint32_t;
+typedef unsigned long   cc_uint64_t;
 
 typedef unsigned long cc_ulong_t;
 typedef unsigned char cc_uchar_t;

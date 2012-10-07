@@ -40,8 +40,6 @@
 #ifndef CONFIG_PARSER_H_
 #define CONFIG_PARSER_H_
 
-#include <libxml/parser.h>
-#include <libxml/tree.h>
 #include "cc_constants.h"
 #include "cc_types.h"
 #include "cc_config.h"
@@ -54,8 +52,6 @@
 #include "sip_ccm_transport.h"
 
 #define MAX_CFG_VERSION_STAMP_LEN 80
-
-extern char g_cfg_version_stamp[];
 
 /*
  * This function determine whether the passed config parameter should be used
@@ -91,14 +87,6 @@ void compare_or_set_int_value(int cfgid, int value, const unsigned char * config
  */
 void compare_or_set_string_value (int cfgid, const char* value, const unsigned char * config_name);
 
-void update_sipline_properties(xmlNode *sipline_node, xmlDocPtr doc);
-
-/*
- * config_set_sipline_properties
- *
- */
-void config_set_sipline_properties (xmlNode *sipline_node, xmlDocPtr doc, boolean button_configured[] );
-
 /*
  * config_fetch_dialplan() called to retrieve the dialplan
  *
@@ -123,18 +111,6 @@ void config_set_autoreg_properties ();
  */
 void update_security_mode_and_ports(void);
 
-//void process_ccm_config(xmlNode *ccm_node, xmlDocPtr doc, char **ccm_name, int * sip_port, int *iteration);
-void process_ccm_config(xmlNode *ccm_node, xmlDocPtr doc,
-						char ccm_name[][MAX_SIP_URL_LENGTH],
-						int * sip_port, int * secured_sip_port,
-						int *iteration);
-
-/*
- * config_set_ccm_properties
- *
- */
-void config_process_ccm_properties  (xmlNode *ccm_node, xmlDocPtr doc);
-
 /*
  * config_get_mac_addr
  *
@@ -147,14 +123,6 @@ void config_get_mac_addr (char *maddr);
  * Set the IP and MAC address in the config table
  */
 void config_set_ccm_ip_mac ();
-
-/*
- * config_parse_element
- *
- * Parse the elements in the XML document and call the
- * corressponding set functions
- */
-void config_parse_element (xmlNode *cur_node, char *  value, xmlDocPtr doc );
 
 
 /*
@@ -203,17 +171,15 @@ const char* config_get_version();
  */
 void config_setup_p2p_mode(const cc_boolean is_p2p);
 
+/*
+ * set sdp mode on or off
+ */
+void config_setup_sdp_mode(const cc_boolean is_sdp);
 
 /*
- * set ROAP proxy mode on or off
+ * set avp mode (true == RTP/SAVPF,  false = RTP/SAVP)
  */
-void config_setup_roap_proxy_mode(const cc_boolean is_roap_proxy);
-
-/*
- * set ROAP client mode on or off
- */
-void config_setup_roap_client_mode(const cc_boolean is_roap_client);
-
+void config_setup_avp_mode(const cc_boolean is_rtpsavpf);
 
 /**
 * config_minimum_check:
@@ -225,11 +191,6 @@ void config_setup_roap_client_mode(const cc_boolean is_roap_client);
 * have values that can be used by sipstack
 *
 */
-void config_minimum_check_siplines(xmlNode * a_node, xmlDocPtr doc);
-
-boolean is_config_valid(char * config, int from_memory);
-
-void config_minimum_check(xmlNode * a_node, xmlDocPtr doc);
 
 /**
  * Parse the file that is passed in,

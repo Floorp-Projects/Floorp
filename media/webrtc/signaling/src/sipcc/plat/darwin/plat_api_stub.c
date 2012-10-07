@@ -461,16 +461,6 @@ int platGetAudioDeviceStatus(plat_audio_device_t device_type)
     return 0;
 }
 
-/**
- * Provides the default gateway
- *
- * @param *addr the pointer to the string holding default gw address (dhcp.xxxx.gateway)
- * @return void
- */
-//void platGetDefaultGW (char* addr)
-//{
-//    return;
-//}
 
 /*
  * Returns the default gateway

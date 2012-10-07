@@ -43,7 +43,7 @@
 #include "CCProvider.h"
 #include "text_strings.h"
 #include "phone_debug.h"
-
+#include "peer_connection_types.h"
 
 /**
  * get Line on which this call is
@@ -507,14 +507,14 @@ cc_int32_t  CCAPI_CallInfo_getOnhookReason(cc_callinfo_ref_t handle){
  * @return boolean - is Conference
  */
 cc_boolean  CCAPI_CallInfo_getIsConference(cc_callinfo_ref_t handle){
-  static const char *fname="CCAPI_CallInfo_getIsConference";
   session_data_t *data = (session_data_t *)handle;
-  char isConf_buf[32];
-  char* isConf = &isConf_buf[0];
+  char isConf[32];
 
-  CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+  CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__));
 
-  if(platGetPhraseText(CONFERENCE_LOCALE_CODE, isConf, 32) == CC_FAILURE){
+  memset(isConf, 0, sizeof(isConf));
+
+  if(platGetPhraseText(CONFERENCE_LOCALE_CODE, isConf, sizeof(isConf)) == CC_FAILURE){
 	  return FALSE;
   }
 
@@ -745,4 +745,74 @@ cc_boolean CCAPI_CallInfo_isVideoMuted (cc_callinfo_ref_t handle){
   return FALSE;
 }
 
+/**
+ * get SDP for CreateOffer\Create answer success callback
+ * @param handle - call handle
+ * @return sdp
+ */
+cc_string_t CCAPI_CallInfo_getSDP(cc_callinfo_ref_t handle){
+  static const char *fname="CCAPI_CallInfo_getSDP";
+  session_data_t *data = (session_data_t *)handle;
+  CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
+  if (data != NULL){
+     CCAPP_DEBUG(DEB_F_PREFIX"returned %s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->sdp);
+     return data->sdp;
+  }
+
+  return strlib_empty();
+}
+
+/**
+ * get status code from internal JSEP functions
+ * @param handle - call handle
+ * @return status code
+ */
+cc_int32_t  CCAPI_CallInfo_getStatusCode(cc_callinfo_ref_t handle){
+  static const char *fname="CCAPI_CallInfo_getStatusCode";
+  session_data_t *data = (session_data_t *)handle;
+  CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+
+  if ( data != NULL){
+     CCAPP_DEBUG(DEB_F_PREFIX"returned %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->cause);
+     return data->cause;
+  }
+
+  return CC_CAUSE_NORMAL;
+}
+
+
+/**
+ * get media stream table
+ * @param handle - call handle
+ * @return status MediaStreamTable
+ */
+MediaStreamTable*  CCAPI_CallInfo_getMediaStreams(cc_callinfo_ref_t handle) {
+  static const char *fname="CCAPI_CallInfo_getMediaStreams";
+  session_data_t *data = (session_data_t *)handle;
+  MediaTrack track;
+  MediaStreamTable* table = cpr_malloc(sizeof(MediaStreamTable));
+  if (!table)
+    return NULL;
+
+  CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+
+  if (data != NULL) {
+    table->media_stream_id = data->media_stream_id;
+	table->num_tracks = 1;   /* this will change when we have multiple tracks per stream */
+	track.media_stream_track_id = data->media_stream_track_id;
+	table->track[0] = track;
+
+	/*
+	 * Partly implemented multi-track handling
+	   cc_table = data->media_tracks;
+	   table->stream_id = (unsigned int)cc_table->stream_id;
+	   table->num_tracks = (unsigned int)cc_table->num_tracks;
+	   track.track_id = cc_table->track[0].ref_id;
+	   table->track[0] = track;
+	*/
+    return table;
+  }
+
+  return table;
+}

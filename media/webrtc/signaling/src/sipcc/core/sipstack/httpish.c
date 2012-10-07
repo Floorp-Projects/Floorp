@@ -42,6 +42,11 @@
  *  code that converts from network(ie text) form to a usable structure
  *  and vice-versa.
  */
+
+#include <errno.h>
+#include <limits.h>
+
+#include "plstr.h"
 #include "cpr_types.h"
 #include "cpr_stdio.h"
 #include "cpr_stdlib.h"
@@ -292,6 +297,7 @@ httpish_msg_get_reqline (httpishMsg_t *msg)
     char *this_token;
     char *msgline;
     httpishReqLine_t *hreq = NULL;
+    char *strtok_state;
 
     if (!msg || !msg->mesg_line || !(msgline = cpr_strdup(msg->mesg_line))) {
         return NULL;
@@ -303,7 +309,7 @@ httpish_msg_get_reqline (httpishMsg_t *msg)
         return NULL;
     }
 
-    this_token = strtok(msgline, " ");
+    this_token = PL_strtok_r(msgline, " ", &strtok_state);
 
     if (!this_token) {
         cpr_free(hreq);
@@ -313,7 +319,7 @@ httpish_msg_get_reqline (httpishMsg_t *msg)
 
     hreq->method = cpr_strdup(this_token);
 
-    this_token = strtok(NULL, " ");
+    this_token = PL_strtok_r(NULL, " ", &strtok_state);
 
     if (!this_token) {
         cpr_free(hreq->method);
@@ -324,7 +330,7 @@ httpish_msg_get_reqline (httpishMsg_t *msg)
 
     hreq->url = cpr_strdup(this_token);
 
-    this_token = strtok(NULL, " ");
+    this_token = PL_strtok_r(NULL, " ", &strtok_state);
 
     if (!this_token) {
         cpr_free(hreq->method);
@@ -346,6 +352,9 @@ httpish_msg_get_respline (httpishMsg_t *msg)
     char *this_token;
     char *msgline;
     httpishRespLine_t *hrsp = NULL;
+    char *strtok_state;
+    unsigned long strtoul_result;
+    char *strtoul_end;
 
     if (!msg || !msg->mesg_line) {
         return NULL;
@@ -363,7 +372,7 @@ httpish_msg_get_respline (httpishMsg_t *msg)
         return NULL;
     }
 
-    this_token = strtok(msgline, " ");
+    this_token = PL_strtok_r(msgline, " ", &strtok_state);
 
     if (!this_token) {
         cpr_free(hrsp);
@@ -373,7 +382,7 @@ httpish_msg_get_respline (httpishMsg_t *msg)
 
     hrsp->version = cpr_strdup(this_token);
 
-    this_token = strtok(NULL, " ");
+    this_token = PL_strtok_r(NULL, " ", &strtok_state);
 
     if (!this_token) {
         cpr_free(hrsp->version);
@@ -382,9 +391,19 @@ httpish_msg_get_respline (httpishMsg_t *msg)
         return NULL;
     }
 
-    hrsp->status_code = (uint16_t) atoi(this_token);
+    errno = 0;
+    strtoul_result = strtoul(this_token, &strtoul_end, 10);
 
-    this_token = strtok(NULL, " ");
+    if (errno || this_token == strtoul_end || strtoul_result > USHRT_MAX) {
+        cpr_free(hrsp->version);
+        cpr_free(hrsp);
+        cpr_free(msgline);
+        return NULL;
+    }
+
+    hrsp->status_code = (uint16_t) strtoul_result;
+
+    this_token = PL_strtok_r(NULL, " ", &strtok_state);
 
     /* reason phrase is optional */
     if (this_token) {
@@ -815,49 +834,49 @@ httpish_msg_to_wstream (pmhWstream_t *ws,
             }
             snprintf(tmp_body_buf, TMP_BODY_BUF_SIZE, "Content-Type: %s\r\n",
                     msg->mesg_body[i].msgContentType);
-            strncat(tmp_body_buf, "Content-Disposition: ",
-                    TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+            sstrncat(tmp_body_buf, "Content-Disposition: ",
+                    sizeof(tmp_body_buf) - strlen(tmp_body_buf));
 
             switch (msg->mesg_body[i].msgContentDisp) {
             case SIP_CONTENT_DISPOSITION_RENDER_VALUE:
-                strncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_RENDER,
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+                sstrncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_RENDER,
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
                 break;
             case SIP_CONTENT_DISPOSITION_SESSION_VALUE:
             default:
-                strncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_SESSION,
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+                sstrncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_SESSION,
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
                 break;
             case SIP_CONTENT_DISPOSITION_ICON_VALUE:
-                strncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_ICON,
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+                sstrncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_ICON,
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
                 break;
             case SIP_CONTENT_DISPOSITION_ALERT_VALUE:
-                strncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_ALERT,
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+                sstrncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_ALERT,
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
                 break;
             case SIP_CONTENT_DISPOSITION_PRECONDITION_VALUE:
-                strncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_PRECONDITION,
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+                sstrncat(tmp_body_buf, SIP_CONTENT_DISPOSITION_PRECONDITION,
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
                 break;
             }
             if (msg->mesg_body[i].msgRequiredHandling) {
-                strncat(tmp_body_buf, ";handling=required\r\n",
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+                sstrncat(tmp_body_buf, ";handling=required\r\n",
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
             } else {
-                strncat(tmp_body_buf, ";handling=optional\r\n",
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+                sstrncat(tmp_body_buf, ";handling=optional\r\n",
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
             }
             if (msg->mesg_body[i].msgContentId) {
-                strncat(tmp_body_buf, "Content-Id: ",
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
-                strncat(tmp_body_buf, msg->mesg_body[i].msgContentId,
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
-                strncat(tmp_body_buf, "\r\n",
-                        TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+                sstrncat(tmp_body_buf, "Content-Id: ",
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
+                sstrncat(tmp_body_buf, msg->mesg_body[i].msgContentId,
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
+                sstrncat(tmp_body_buf, "\r\n",
+                        sizeof(tmp_body_buf) - strlen(tmp_body_buf));
             }
-            strncat(tmp_body_buf, "\r\n",
-                    TMP_BODY_BUF_SIZE - strlen(tmp_body_buf) - 1);
+            sstrncat(tmp_body_buf, "\r\n",
+                     sizeof(tmp_body_buf) - strlen(tmp_body_buf));
             buf_len = strlen(tmp_body_buf);
             if (!pmhutils_wstream_write_bytes(ws, tmp_body_buf, buf_len)) {
                 return (FALSE);
@@ -969,7 +988,7 @@ httpish_cache_header_val (httpishMsg_t *hmsg,
                         hdr_cache[i].hdr_start = newbuf;
                         hdr_cache[i].val_start = hdr_cache[i].hdr_start + offset;
                         hdr_cache[i].hdr_start[org_len] = ',';
-                        strncpy(hdr_cache[i].hdr_start + org_len + 1, this_line, 
+                        sstrncpy(hdr_cache[i].hdr_start + org_len + 1, this_line, 
                                 size - org_len - 1);
                         cpr_free(hdr_start);
                     } else {
@@ -997,6 +1016,8 @@ get_content_length (httpishMsg_t *hmsg)
 {
     int i;
     const char *hdr_val;
+    long strtol_result;
+    char *strtol_end;
 
     hdr_val = httpish_msg_get_cached_header_val(hmsg, CONTENT_LENGTH);
     if (hdr_val == NULL) {
@@ -1008,8 +1029,20 @@ get_content_length (httpishMsg_t *hmsg)
             return -1;
         }
     }
+
     /* If the string was empty then the content length is still invalid */
-    return i ? atoi(hdr_val) : -1;
+    if (!i) {
+        return -1;
+    }
+
+    errno = 0;
+    strtol_result = strtol(hdr_val, &strtol_end, 10);
+
+    if (errno || hdr_val == strtol_end || strtol_result > INT_MAX) {
+        return -1;
+    } else {
+        return (int) strtol_result;
+    }
 }
 
 uint8_t

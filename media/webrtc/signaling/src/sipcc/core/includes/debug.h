@@ -127,26 +127,6 @@ typedef struct {
 #define MAX_SHOW_NAME 50
 #define MAX_CLEAR_NAME 50
 
-
-typedef struct {
-    cc_debug_category_e category;
-    char debugName[MAX_DEBUG_NAME];
-    cc_int32_t *key; /* The variable associated with this debug category */
-} debugStruct_t;
-
-typedef struct {
-    cc_debug_show_options_e category;
-    char showName[MAX_SHOW_NAME];
-    show_callback callbackFunc;  /* The callback function for the show cmd */
-    boolean  showTech; /* TRUE indicates this show is also tied with tech cmd */
-} debugShowStruct_t;
-
-typedef struct {
-    cc_debug_clear_options_e category;
-    char clearName[MAX_CLEAR_NAME];
-    clear_callback callbackFunc;  /* The callback function for the clear cmd */
-} debugClearStruct_t;
-
 /*
  * Prototypes for public functions
  */

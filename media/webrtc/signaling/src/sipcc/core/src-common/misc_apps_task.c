@@ -51,6 +51,7 @@
 #include "misc_apps_task.h"
 #include "pres_sub_not_handler.h"
 #include "configapp.h"
+#include "platform_api.h"
 
 #define MISC_ERROR err_msg
 
@@ -144,7 +145,7 @@ void MiscAppTask (void *arg)
             }
 
             cprReleaseSysHeader(syshdr_p);
-            cprReleaseBuffer(msg_p);
+            cpr_free(msg_p);
         }
     }
 }

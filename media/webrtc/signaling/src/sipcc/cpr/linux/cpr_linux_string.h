@@ -43,8 +43,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#define cpr_strtok(a,b,c) strtok_r(a,b,c)
-
 /**
  * cpr_strdup
  *
@@ -62,47 +60,6 @@
 char * 
 cpr_strdup(const char *str);
 
-/**
- * sstrncat
- * 
- * @brief The CPR wrapper for strncat
- *
- * This is Cisco's *safe* version of strncat.  The string will always
- * be NUL terminated (which is not ANSI compliant).
- *
- * @param[in] s1  - first string
- * @param[in] s2  - second string
- * @param[in]  max - maximum length in octets to concatenate
- *
- * @return     Pointer to the @b end of the string
- *
- * @note    Modified to be explicitly safe for all inputs.
- *             Also return the end vs. the beginning of the string s1
- *             which is useful for multiple sstrncat calls.
- */
-char *
-sstrncat(char *s1, const char *s2, unsigned long max);
 
-/**
- * sstrncpy
- *
- * @brief The CPR wrapper for strncpy
- *
- * This is Cisco's *safe* version of strncpy.  The string will always
- * be NUL terminated (which is not ANSI compliant).
- *
- * @param[in] dst  - The destination string
- * @param[in] src  - The source
- * @param[in]  max - maximum length in octets to concatenate
- *
- * @return     Pointer to the @b end of the string
- *
- * @note       Modified to be explicitly safe for all inputs.
- *             Also return the number of characters copied excluding the
- *             NUL terminator vs. the original string s1.  This simplifies
- *             code where sstrncat functions follow.
- */
-unsigned long
-sstrncpy(char *dst, const char *src, unsigned long max);
 
 #endif

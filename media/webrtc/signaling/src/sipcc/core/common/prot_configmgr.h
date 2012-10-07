@@ -268,9 +268,19 @@
 #define CFGID_LINE_FWD_DIALED_NUMBER_DIPLAY          CFGID_LINE_FWD_DIALED_NUMBER_DIPLAY_BOOL
 #define CFGID_LINE_FEATURE_OPTION_MASK               CFGID_LINE_FEATURE_OPTION_MASK_INT
 #define CFGID_P2PSIP                                 CFGID_P2PSIP_BOOL
-#define CFGID_ROAPPROXY                              CFGID_ROAPPROXY_BOOL
-#define CFGID_ROAPCLIENT                              CFGID_ROAPCLIENT_BOOL
 #define CFGID_VERSION                                CFGID_VERSION_STRING
+#define CFGID_SDPMODE                                CFGID_SDPMODE_BOOL
+#define CFGID_RTCPMUX                                CFGID_RTCPMUX_BOOL
+#define CFGID_RTPSAVPF                               CFGID_RTPSAVPF_BOOL
+#define CFGID_MAXAVBITRATE                           CFGID_MAXAVBITRATE_BOOL
+#define CFGID_MAXCODEDAUDIOBW                        CFGID_MAXCODEDAUDIOBW_BOOL
+#define CFGID_USEDTX                                 CFGID_USEDTX_BOOL
+#define CFGID_STEREO                                 CFGID_STEREO_BOOL
+#define CFGID_USEINBANDFEC                           CFGID_USEINBANDFEC_BOOL
+#define CFGID_CBR                                    CFGID_CBR_BOOL
+#define CFGID_MAXPTIME                               CFGID_MAXPTIME_BOOL
+#define CFGID_SCTP_PORT                              CFGID_SCTP_PORT_INT
+#define CFGID_NUM_DATA_STREAMS                       CFGID_NUM_DATA_STREAMS_INT
 
 /*********************************************************
  *

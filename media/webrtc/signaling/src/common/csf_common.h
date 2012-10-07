@@ -50,7 +50,6 @@
 This header file defines:
 
 csf_countof
-csf_strcpy
 csf_sprintf
 csf_vsprintf
 
@@ -87,18 +86,6 @@ csf_vsprintf
 //csf_countof
 
 #define csf_countof(anArray) _countof(anArray)
-
-//csf_strcpy
-
-#ifdef _WIN32
-  #define csf_strcpy(/* char* */ pDestination, /* size_t */ sizeOfBufferInCharsInclNullTerm, /* const char * */ pSource)\
-    strcpy_s(pDestination, sizeOfBufferInCharsInclNullTerm, pSource)
-#else
-  #define csf_strcpy(/* char * */ pDestination, /* size_t */ sizeOfBufferInCharsInclNullTerm, /* const char * */ pSource)\
-    strncpy(pDestination, pSource, sizeOfBufferInCharsInclNullTerm);\
-    pDestination[sizeOfBufferInCharsInclNullTerm-1] = '\0'
-#endif
-
 
 //csf_sprintf
 

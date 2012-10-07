@@ -2075,6 +2075,7 @@ u32 sdp_attr_get_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type, u16 level,
 
     if ((attr_type != SDP_ATTR_EECID) && 
         (attr_type != SDP_ATTR_PTIME) &&
+        (attr_type != SDP_ATTR_MAXPTIME) &&
         (attr_type != SDP_ATTR_T38_VERSION) && 
         (attr_type != SDP_ATTR_T38_MAXBITRATE) &&
         (attr_type != SDP_ATTR_T38_MAXBUFFER) &&
@@ -2139,6 +2140,7 @@ sdp_result_e sdp_attr_set_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type,
 
     if ((attr_type != SDP_ATTR_EECID) && 
         (attr_type != SDP_ATTR_PTIME) &&
+        (attr_type != SDP_ATTR_MAXPTIME) &&
         (attr_type != SDP_ATTR_T38_VERSION) && 
         (attr_type != SDP_ATTR_T38_MAXBITRATE) &&
         (attr_type != SDP_ATTR_T38_MAXBUFFER) &&
@@ -3948,6 +3950,246 @@ sdp_result_e sdp_attr_set_rtpmap_encname (void *sdp_ptr, u16 level, u8 cap_num,
         }
         return (SDP_SUCCESS);
     }
+}
+
+/* Function:    sdp_attr_get_ice_attribute
+ * Description: Returns the value of an ice attribute at a given level
+ *
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ *              inst_num    The attribute instance number to check.
+ *              ice_attrib  Returns an ice attrib string
+ * Returns:
+ *              SDP_SUCCESS           Attribute param was set successfully.
+ *              SDP_INVALID_SDP_PTR   SDP pointer invalid
+ *              SDP_INVALID_PARAMETER Specified attribute is not defined.
+ */
+
+sdp_result_e sdp_attr_get_ice_attribute (void *sdp_ptr, u16 level,
+                                  u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num,
+                                  char **out)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, sdp_attr, inst_num);
+    if (attr_p != NULL) {
+        *out = attr_p->attr.ice_attr;
+        return (SDP_SUCCESS);
+    } else {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+                SDP_ERROR("%s ice attribute, level %u instance %u "
+                          "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    return (SDP_FAILURE);
+}
+
+/* Function:    sdp_attr_set_ice_attribute
+ * Description: Sets the value of an ice attribute parameter
+ *              String is copied into SDP memory.
+ * Parameters:  sdp_ptr        The SDP handle returned by sdp_init_description.
+ *              level          The level to set the attribute.
+ *              cap_num        The capability number associated with the
+ *                             attribute if any.  If none, should be zero.
+ *              inst_num       The attribute instance number to check.
+ *              ice_attrib     ice attribute string to set
+ * Returns:     SDP_SUCCESS            Attribute param was set successfully.
+ *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
+ */
+sdp_result_e sdp_attr_set_ice_attribute(void *sdp_ptr, u16 level,
+                              u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num, const char *ice_attrib)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, sdp_attr, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s ice attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    if (!ice_attrib) {
+      return (SDP_INVALID_PARAMETER);
+    }        
+
+    sstrncpy(attr_p->attr.ice_attr, ice_attrib, sizeof(attr_p->attr.ice_attr));
+    return (SDP_SUCCESS);
+}
+
+/* Function:    sdp_attr_get_rtcp_mux_attribute
+ * Description: Returns the value of an rtcp-mux attribute at a given level
+ *
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ *              inst_num    The attribute instance number to check.
+ *              rtcp_mux    Returns an rtcp-mux attrib bool
+ * Returns:
+ *              SDP_SUCCESS           Attribute param was set successfully.
+ *              SDP_INVALID_SDP_PTR   SDP pointer invalid
+ *              SDP_INVALID_PARAMETER Specified attribute is not defined.
+ */
+sdp_result_e sdp_attr_get_rtcp_mux_attribute (void *sdp_ptr, u16 level,
+                                  u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num,
+                                  tinybool *rtcp_mux)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, sdp_attr, inst_num);
+    if (attr_p != NULL) {
+    	*rtcp_mux = attr_p->attr.boolean_val;
+        return (SDP_SUCCESS);
+    } else {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+                SDP_ERROR("%s rtcp-mux attribute, level %u instance %u "
+                          "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    return (SDP_FAILURE);
+}
+
+/* Function:    sdp_attr_set_rtcp_mux_attribute
+ * Description: Sets the value of an rtcp_mux attribute parameter
+ *              String is copied into SDP memory.
+ * Parameters:  sdp_ptr        The SDP handle returned by sdp_init_description.
+ *              level          The level to set the attribute.
+ *              cap_num        The capability number associated with the
+ *                             attribute if any.  If none, should be zero.
+ *              inst_num       The attribute instance number to check.
+ *              rtcp_mux       rtcp-mux attribute bool to set
+ * Returns:     SDP_SUCCESS            Attribute param was set successfully.
+ *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
+ */
+sdp_result_e sdp_attr_set_rtcp_mux_attribute(void *sdp_ptr, u16 level,
+                              u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num, const tinybool rtcp_mux)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, sdp_attr, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s rtcp-mux attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p->attr.boolean_val = rtcp_mux;
+    return (SDP_SUCCESS);
+}
+
+/* Function:    sdp_attr_get_dtls_fingerprint_attribute
+ * Description: Returns the value of dtls fingerprint attribute at a given level
+ *
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ *              inst_num    The attribute instance number to check.
+ *              dtls_fingerprint  Returns an dtls fingerprint attrib string
+ * Returns:
+ *              SDP_SUCCESS           Attribute param was set successfully.
+ *              SDP_INVALID_SDP_PTR   SDP pointer invalid
+ *              SDP_INVALID_PARAMETER Specified attribute is not defined.
+ */
+sdp_result_e sdp_attr_get_dtls_fingerprint_attribute (void *sdp_ptr, u16 level,
+                                  u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num,
+                                  char **out)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, sdp_attr, inst_num);
+    if (attr_p != NULL) {
+        *out = attr_p->attr.string_val;
+        return (SDP_SUCCESS);
+    } else {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+                SDP_ERROR("%s dtls fingerprint attribute, level %u instance %u "
+                          "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    return (SDP_FAILURE);
+}
+
+/* Function:    sdp_attr_set_dtls_fingerprint_attribute
+ * Description: Sets the value of a dtls fingerprint attribute parameter
+ *              String is copied into SDP memory.
+ * Parameters:  sdp_ptr        The SDP handle returned by sdp_init_description.
+ *              level          The level to set the attribute.
+ *              cap_num        The capability number associated with the
+ *                             attribute if any.  If none, should be zero.
+ *              inst_num       The attribute instance number to check.
+ *              dtls_fingerprint fingerprint attribute string to set
+ * Returns:     SDP_SUCCESS            Attribute param was set successfully.
+ *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
+ */
+sdp_result_e sdp_attr_set_dtls_fingerprint_attribute(void *sdp_ptr, u16 level,
+                              u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num, const char *dtls_fingerprint)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, sdp_attr, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s dtls fingerprint attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    if (!dtls_fingerprint) {
+      return (SDP_INVALID_PARAMETER);
+    }
+
+    sstrncpy(attr_p->attr.string_val, dtls_fingerprint, sizeof(attr_p->attr.string_val));
+    return (SDP_SUCCESS);
 }
 
 /* Function:    sdp_attr_set_rtpmap_clockrate
@@ -6020,6 +6262,531 @@ sdp_result_e sdp_attr_set_fmtp_max_br (void *sdp_ptr, u16 level,
     } else {
         return (SDP_FAILURE);
     }
+}
+
+sdp_result_e sdp_attr_set_fmtp_max_average_bitrate (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
+                                       u32 maxaveragebitrate)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+    sdp_fmtp_t  *fmtp_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    fmtp_p = &(attr_p->attr.fmtp);
+    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+
+    if (maxaveragebitrate > 0) {
+        fmtp_p->maxaveragebitrate = maxaveragebitrate;
+        return (SDP_SUCCESS);
+    } else {
+        return (SDP_FAILURE);
+    }
+}
+
+/* Function:    sdp_attr_get_fmtp_max_average_bitrate
+ * Description: Gets the value of the fmtp attribute- maxaveragebitrate parameter for the OPUS codec
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ *              inst_num    The attribute instance number to check.
+ * Returns:     max-br value.
+ */
+
+sdp_result_e sdp_attr_get_fmtp_max_average_bitrate (void *sdp_ptr, u16 level,
+                             u8 cap_num, u16 inst_num, u32* val)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 1);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    } else {
+        *val = attr_p->attr.fmtp.maxaveragebitrate;
+        return (SDP_SUCCESS);
+    }
+}
+
+
+sdp_result_e sdp_attr_set_fmtp_usedtx (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
+                                       tinybool usedtx)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+    sdp_fmtp_t  *fmtp_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    fmtp_p = &(attr_p->attr.fmtp);
+    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+
+    if (usedtx == TRUE) {
+        fmtp_p->usedtx = 1;
+    } else {
+        fmtp_p->usedtx = 0;
+    }
+
+    return (SDP_SUCCESS);
+}
+
+/* Function:    sdp_attr_get_fmtp_usedtx
+ * Description: Gets the value of the fmtp attribute- usedtx parameter for the OPUS codec
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ *              inst_num    The attribute instance number to check.
+ * Returns:     usedtx value.
+ */
+
+sdp_result_e sdp_attr_get_fmtp_usedtx (void *sdp_ptr, u16 level,
+                             u8 cap_num, u16 inst_num, tinybool* val)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
+                           inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    } else {
+        *val = (tinybool)attr_p->attr.fmtp.usedtx;
+        return (SDP_SUCCESS);
+    }
+}
+
+sdp_result_e sdp_attr_set_fmtp_stereo (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
+                                       tinybool stereo)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+    sdp_fmtp_t  *fmtp_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    fmtp_p = &(attr_p->attr.fmtp);
+    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+
+    if (stereo == TRUE) {
+        fmtp_p->stereo = 1;
+    } else {
+        fmtp_p->stereo = 0;
+    }
+
+    return (SDP_SUCCESS);
+}
+
+/* Function:    sdp_attr_get_fmtp_usedtx
+ * Description: Gets the value of the fmtp attribute- usedtx parameter for the OPUS codec
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ *              inst_num    The attribute instance number to check.
+ * Returns:     stereo value.
+ */
+
+sdp_result_e sdp_attr_get_fmtp_stereo (void *sdp_ptr, u16 level,
+                             u8 cap_num, u16 inst_num, tinybool* val)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
+                           inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    } else {
+        *val = (tinybool)attr_p->attr.fmtp.stereo;
+        return (SDP_SUCCESS);
+    }
+}
+
+sdp_result_e sdp_attr_set_fmtp_useinbandfec (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
+                                       tinybool useinbandfec)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+    sdp_fmtp_t  *fmtp_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    fmtp_p = &(attr_p->attr.fmtp);
+    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+
+    if (useinbandfec == TRUE) {
+        fmtp_p->useinbandfec = 1;
+    } else {
+        fmtp_p->useinbandfec = 0;
+    }
+
+    return (SDP_SUCCESS);
+}
+
+/* Function:    sdp_attr_get_fmtp_useinbandfec
+ * Description: Gets the value of the fmtp attribute useinbandfec parameter for the OPUS codec
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ *              inst_num    The attribute instance number to check.
+ * Returns:     useinbandfec value.
+ */
+
+sdp_result_e sdp_attr_get_fmtp_useinbandfec (void *sdp_ptr, u16 level,
+                             u8 cap_num, u16 inst_num, tinybool* val)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
+                           inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    } else {
+        *val = (tinybool)attr_p->attr.fmtp.useinbandfec;
+        return (SDP_SUCCESS);
+    }
+}
+
+sdp_result_e sdp_attr_set_fmtp_maxcodedaudiobandwidth (void *sdp_ptr, u16 level,
+                                                u8 cap_num, u16 inst_num,
+                                                const char *maxcodedaudiobandwidth)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+    sdp_fmtp_t  *fmtp_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    fmtp_p = &(attr_p->attr.fmtp);
+    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+    if (maxcodedaudiobandwidth) {
+        sstrncpy(fmtp_p->maxcodedaudiobandwidth, maxcodedaudiobandwidth,
+	   SDP_MAX_STRING_LEN+1);
+    }
+
+    return (SDP_SUCCESS);
+}
+
+/* Function:    sdp_attr_get_fmtp_maxcodedaudiobandwidth
+ * Description: Gets the value of the fmtp attribute maxcodedaudiobandwidth parameter for OPUS codec
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ *              inst_num    The attribute instance number to check.
+ * Returns:     maxcodedaudiobandwidth value.
+ */
+char* sdp_attr_get_fmtp_maxcodedaudiobandwidth (void *sdp_ptr, u16 level,
+                                          u8 cap_num, u16 inst_num)
+{
+
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (0);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
+                           inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (0);
+    } else {
+        return (attr_p->attr.fmtp.maxcodedaudiobandwidth);
+    }
+}
+
+sdp_result_e sdp_attr_set_fmtp_cbr (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
+                                       tinybool cbr)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+    sdp_fmtp_t  *fmtp_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    fmtp_p = &(attr_p->attr.fmtp);
+    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+
+    if (cbr == TRUE) {
+        fmtp_p->cbr = 1;
+    } else {
+        fmtp_p->cbr = 0;
+    }
+
+    return (SDP_SUCCESS);
+}
+
+/* Function:    sdp_attr_get_fmtp_cbr
+ * Description: Gets the value of the fmtp attribute cbr parameter for the OPUS codec
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ *              inst_num    The attribute instance number to check.
+ * Returns:     cbr value.
+ */
+
+sdp_result_e sdp_attr_get_fmtp_cbr (void *sdp_ptr, u16 level,
+                             u8 cap_num, u16 inst_num, tinybool* val)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
+                           inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    } else {
+        *val = (tinybool)attr_p->attr.fmtp.cbr;
+        return (SDP_SUCCESS);
+    }
+}
+
+sdp_result_e sdp_attr_get_fmtp_streams (void *sdp_ptr, u16 level,
+                             u8 cap_num, u16 inst_num, u32* val)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
+    if (!attr_p) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    } else {
+        *val = attr_p->attr.fmtp.streams;
+        return (SDP_SUCCESS);
+    }
+}
+
+sdp_result_e sdp_attr_set_fmtp_streams (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
+                                       u32 streams)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+    sdp_fmtp_t  *fmtp_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
+    if (!attr_p) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    fmtp_p = &(attr_p->attr.fmtp);
+    fmtp_p->fmtp_format = SDP_FMTP_DATACHANNEL;
+
+    if (streams > 0) {
+        fmtp_p->streams = streams;
+        return (SDP_SUCCESS);
+    } else {
+        return (SDP_FAILURE);
+    }
+}
+
+sdp_result_e sdp_attr_set_fmtp_data_channel_protocol (void *sdp_ptr, u16 level,
+                                                u8 cap_num, u16 inst_num,
+                                                const char *protocol)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+    sdp_fmtp_t  *fmtp_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
+    if (!attr_p) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    fmtp_p = &(attr_p->attr.fmtp);
+    fmtp_p->fmtp_format = SDP_FMTP_DATACHANNEL;
+    if (protocol) {
+        sstrncpy(fmtp_p->protocol, protocol,
+	   SDP_MAX_STRING_LEN+1);
+    }
+
+    return (SDP_SUCCESS);
+}
+
+sdp_result_e sdp_attr_get_fmtp_data_channel_protocol (void *sdp_ptr, u16 level,
+                                          u8 cap_num, u16 inst_num, char* protocol)
+{
+
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+    	return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
+                           inst_num);
+    if (!attr_p) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            SDP_ERROR("%s fmtp attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    } else {
+    	sstrncpy(protocol, attr_p->attr.fmtp.protocol, SDP_MAX_STRING_LEN+1);
+    }
+    return (SDP_SUCCESS);
 }
 
 sdp_result_e sdp_attr_set_fmtp_max_cpb (void *sdp_ptr, u16 level, 

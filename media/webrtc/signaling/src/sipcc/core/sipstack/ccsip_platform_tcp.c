@@ -1118,7 +1118,7 @@ sip_tcp_resend (int connid)
  * Output : success / failure in processing
  */
 int
-sip_tcp_channel_send (cpr_socket_t s, char *buf, uint16_t len)
+sip_tcp_channel_send (cpr_socket_t s, char *buf, uint32_t len)
 {
     static const char *fname = "sip_tcp_channel_send";
     int bytesSent = 0, totalBytesSent = 0;

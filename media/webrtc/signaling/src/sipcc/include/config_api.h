@@ -74,61 +74,9 @@ void configFetchReq(int device_handle);
 void configParserError(void);
 
 /**
- *
- * CCAPI_Config_response
- *
- * Application should call this api in response to the request
- * configFetchReq(). This is an asynchronous
- * response to the configFetchReq. 
- *
- * @param device_handle handle of the device, the response is for
- * @param device_name 
- * @param cfg the config file name and path  or the complete configuration
- *         in memory.
- * @param from_memory boolean flag to indicate if the complete config
- *         is sent. This parameter is meant to indicate if the "cfg" parameter
- *          points to the file name or is a pointer to the complete config in memory.
- * @return 
- */ 
-void CCAPI_Config_response (int device_handle, const char *device_name, 
-                             const char *cfg, int from_memory);
-
-
-/**
  * When called this function should register with CUCM without prior device file download.
  */
 void CCAPI_Start_response(int device_handle, const char *device_name, const char *sipUser, const char *sipPassword, const char *sipDomain);
-
-/**
- *
- * Application should call this api to check the validity of config file. This 
- * function will check whether config file is parsable and has some minimum configuration
- * information defined for the phone to register.
- *
- * @param device_handle handle of the device, the response is for
- * @param cfg_file_name the config file name and path 
- * @param from_memory boolean flag to indicate if the complete config
- *         is sent. This parameter is meant to indicate if the "cfg" parameter
- *          points to the file name or is a pointer to the complete config in memory.
- * @return 
- */ 
-
-cc_boolean CCAPI_Config_checkValidity (int device_handle, const char *cfg_file_name, int from_memory);
-
-/**
- *
- * Application should call this api in response to the request configApplyConfigNotify().
- *
- * @param device_handle handle of the device, the response is for
- * @param cfg the config file name and path 
- * @param from_memory boolean flag to indicate if the complete config
- *         is sent. This parameter is meant to indicate if the "cfg" parameter
- *          points to the file name or is a pointer to the complete config in memory.
- * @param action specify whether to apply the config changes or compare the config files
- * @return 
- */ 
-int CCAPI_Config_compareProperties (int device_handle, const char *cfg_file_name, int from_memory);
-
 
 /**
  * Inform application that pSipcc stack has receive a NOTIFY message of event
@@ -201,8 +149,7 @@ int CCAPI_Config_get_local_voip_port();
 int CCAPI_Config_get_remote_voip_port();
 const char* CCAPI_Config_get_version();
 cc_boolean CCAPI_Config_set_p2p_mode(const cc_boolean is_p2p);
-cc_boolean CCAPI_Config_set_roap_proxy_mode(const cc_boolean is_roap_proxy);
-cc_boolean CCAPI_Config_set_roap_client_mode(const cc_boolean is_roap_client);
-
+cc_boolean CCAPI_Config_set_sdp_mode(const cc_boolean is_sdp);
+cc_boolean CCAPI_Config_set_avp_mode(const cc_boolean is_rtpsavpf);
 
 #endif  /* _CONFIG_API_H_ */

@@ -49,7 +49,10 @@ extern "C"
 }
 
 #include "CSFLogStream.h"
+
+#ifdef DEBUG
 static const char* logTag = "CC_SIPCCCallInfo";
+#endif
 
 using namespace std;
 using namespace CSF;
@@ -88,6 +91,177 @@ CC_LinePtr CC_SIPCCCallInfo::getLine ()
 cc_call_state_t CC_SIPCCCallInfo::getCallState()
 {
     return CCAPI_CallInfo_getCallState(callinfo_ref);
+}
+
+std::string CC_SIPCCCallInfo::callStateToString (cc_call_state_t state)
+{
+  std::string statestr = "";
+
+    switch(state) {
+      case OFFHOOK:
+        statestr = "OFFHOOK";
+        break;
+      case ONHOOK:
+        statestr = "ONHOOK";
+        break;
+      case RINGOUT:
+        statestr = "RINGOUT";
+        break;
+      case RINGIN:
+        statestr = "RINGIN";
+        break;
+      case PROCEED:
+        statestr = "PROCEED";
+        break;
+      case CONNECTED:
+        statestr = "CONNECTED";
+        break;
+      case HOLD:
+        statestr = "ONHOOK";
+        break;
+      case REMHOLD:
+        statestr = "REMHOLD";
+        break;
+      case RESUME:
+        statestr = "RESUME";
+        break;
+      case BUSY:
+        statestr = "BUSY";
+        break;
+      case REORDER:
+        statestr = "REORDER";
+        break;
+      case CONFERENCE:
+        statestr = "CONFERENCE";
+        break;
+      case DIALING:
+        statestr = "DIALING";
+        break;
+      case REMINUSE:
+        statestr = "REMINUSE";
+        break;
+      case HOLDREVERT:
+        statestr = "HOLDREVERT";
+        break;
+      case WHISPER:
+        statestr = "WHISPER";
+        break;
+      case PRESERVATION:
+        statestr = "PRESERVATION";
+        break;
+      case WAITINGFORDIGITS:
+        statestr = "WAITINGFORDIGITS";
+        break;
+      case CREATEOFFER:
+        statestr = "CREATEOFFER";
+        break;
+      case CREATEANSWER:
+        statestr = "CREATEANSWER";
+        break;
+      case CREATEOFFERERROR:
+        statestr = "CREATEOFFERERROR";
+        break;
+      case CREATEANSWERERROR:
+        statestr = "CREATEANSWERERROR";
+        break;
+      case SETLOCALDESC:
+        statestr = "SETLOCALDESC";
+        break;
+      case SETREMOTEDESC:
+        statestr = "SETREMOTEDESC";
+        break;
+      case SETLOCALDESCERROR:
+        statestr = "SETLOCALDESCERROR";
+        break;
+      case SETREMOTEDESCERROR:
+        statestr = "SETREMOTEDESCERROR";
+        break;
+      case REMOTESTREAMADD:
+        statestr = "REMOTESTREAMADD";
+        break;
+      default:
+        break;
+    }
+
+    return statestr;
+}
+
+std::string CC_SIPCCCallInfo::callEventToString (ccapi_call_event_e callEvent)
+{
+  std::string statestr = "";
+
+    switch(callEvent) {
+      case CCAPI_CALL_EV_CREATED:
+        statestr = "CCAPI_CALL_EV_CREATED";
+        break;
+      case CCAPI_CALL_EV_STATE:
+        statestr = "CCAPI_CALL_EV_STATE";
+        break;
+      case CCAPI_CALL_EV_CALLINFO:
+        statestr = "CCAPI_CALL_EV_CALLINFO";
+        break;
+      case CCAPI_CALL_EV_ATTR:
+        statestr = "CCAPI_CALL_EV_ATTR";
+        break;
+      case CCAPI_CALL_EV_SECURITY:
+        statestr = "CCAPI_CALL_EV_SECURITY";
+        break;
+      case CCAPI_CALL_EV_LOG_DISP:
+        statestr = "CCAPI_CALL_EV_LOG_DISP";
+        break;
+      case CCAPI_CALL_EV_PLACED_CALLINFO:
+        statestr = "CCAPI_CALL_EV_PLACED_CALLINFO";
+        break;
+      case CCAPI_CALL_EV_STATUS:
+        statestr = "CCAPI_CALL_EV_STATUS";
+        break;
+      case CCAPI_CALL_EV_SELECT:
+        statestr = "CCAPI_CALL_EV_SELECT";
+        break;
+      case CCAPI_CALL_EV_LAST_DIGIT_DELETED:
+        statestr = "CCAPI_CALL_EV_LAST_DIGIT_DELETED";
+        break;
+      case CCAPI_CALL_EV_GCID:
+        statestr = "CCAPI_CALL_EV_GCID";
+        break;
+      case CCAPI_CALL_EV_XFR_OR_CNF_CANCELLED:
+        statestr = "CCAPI_CALL_EV_XFR_OR_CNF_CANCELLED";
+        break;
+      case CCAPI_CALL_EV_PRESERVATION:
+        statestr = "CCAPI_CALL_EV_PRESERVATION";
+        break;
+      case CCAPI_CALL_EV_CAPABILITY:
+        statestr = "CCAPI_CALL_EV_CAPABILITY";
+        break;
+      case CCAPI_CALL_EV_VIDEO_AVAIL:
+        statestr = "CCAPI_CALL_EV_VIDEO_AVAIL";
+        break;
+      case CCAPI_CALL_EV_VIDEO_OFFERED:
+        statestr = "CCAPI_CALL_EV_VIDEO_OFFERED";
+        break;
+      case CCAPI_CALL_EV_RECEIVED_INFO:
+        statestr = "CCAPI_CALL_EV_RECEIVED_INFO";
+        break;
+      case CCAPI_CALL_EV_RINGER_STATE:
+        statestr = "CCAPI_CALL_EV_RINGER_STATE";
+        break;
+      case CCAPI_CALL_EV_CONF_PARTICIPANT_INFO:
+        statestr = "CCAPI_CALL_EV_CONF_PARTICIPANT_INFO";
+        break;
+      case CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_BEGIN:
+        statestr = "CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_BEGIN";
+        break;
+      case CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_SUCCESSFUL:
+        statestr = "CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_SUCCESSFUL";
+        break;
+      case CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_FAIL:
+        statestr = "CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_FAIL";
+        break;
+      default:
+        break;
+    }
+
+    return statestr;
 }
 
 bool CC_SIPCCCallInfo::getRingerState()
@@ -275,6 +449,21 @@ bool CC_SIPCCCallInfo::isAudioMuted()
 bool CC_SIPCCCallInfo::isVideoMuted()
 {
     return (CCAPI_CallInfo_isVideoMuted(callinfo_ref) != 0);
+}
+
+string CC_SIPCCCallInfo::getSDP()
+{
+	return CCAPI_CallInfo_getSDP(callinfo_ref);
+}
+
+cc_int32_t CC_SIPCCCallInfo::getStatusCode()
+{
+    return CCAPI_CallInfo_getStatusCode(callinfo_ref);
+}
+
+MediaStreamTable* CC_SIPCCCallInfo::getMediaStreams() const
+{
+	return CCAPI_CallInfo_getMediaStreams(callinfo_ref);
 }
 
 bool CC_SIPCCCallInfo::isMediaStateAvailable()

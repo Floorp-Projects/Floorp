@@ -44,6 +44,7 @@
 #include "cpr_stdio.h"
 #include "cpr_memory.h"
 #include "cpr_stdlib.h"
+#include "platform_api.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -96,12 +97,6 @@ cprThread_t tmr_thread;
 extern void *fillInSysHeader(void *buffer, uint16_t cmd, uint16_t len,
                              void *timerMsg);
 
-/*
- * Internal CPR buffer pool for timer expiration msgs
- * TODO: Should probably make cpr_internal.h to store all
- * this information.
- */
-extern cprRegion_t timerRegion;
 
 static uint32_t ticker;
 unsigned long current_time(void);
@@ -598,7 +593,7 @@ cpr_timer_event_process (void)
 
             /* Send msg to queue to indicate this timer has expired */
             timerMsg = (cprCallBackTimerMsg_t *)
-                    cprGetBuffer(sizeof (cprCallBackTimerMsg_t));
+                    cpr_malloc(sizeof (cprCallBackTimerMsg_t));
             if (timerMsg) {
                 timerMsg->expiredTimerName = timer->name;
                 timerMsg->expiredTimerId = timer->applicationTimerId;
@@ -610,19 +605,19 @@ cpr_timer_event_process (void)
                     if (cprSendMessage(timer->callBackMsgQueue,
                             timerMsg, (void **) &syshdr) == CPR_FAILURE) {
                         cprReleaseSysHeader(syshdr);
-                        cprReleaseBuffer(timerMsg);
+                        cpr_free(timerMsg);
                         CPR_ERROR("Call to cprSendMessage failed.\n");
                         CPR_ERROR("Unable to send timer %s expiration msg.\n",
                                   timer->name);
                     }
                 } else {
-                    cprReleaseBuffer(timerMsg);
+                    cpr_free(timerMsg);
                     CPR_ERROR("Call to cprGetSysHeader failed.\n");
                     CPR_ERROR("Unable to send timer %s expiration msg.\n",
                               timer->name);
                 }
             } else {
-                CPR_ERROR("Call to cprGetBuffer failed.\n");
+                CPR_ERROR("Call to cpr_malloc failed.\n");
                 CPR_ERROR("Unable to send timer %s expiration msg.\n",
                           timer->name);
             }
