@@ -13,9 +13,6 @@
 
           'include_dirs' : [
               # EXTERNAL
-              
-
-
               # INTERNAL
 	      'src/event',
 	      'src/log',
@@ -24,7 +21,10 @@
 	      'src/share',
 	      'src/stats',
 	      'src/util',
-	      'src/util/libekr'
+	      'src/util/libekr',
+
+	      # Mozilla, hopefully towards the end
+             '$(DEPTH)/dist/include',
           ],
 
           'sources' : [
@@ -137,6 +137,13 @@
           
           'defines' : [
               'SANITY_CHECKS',
+	      'R_PLATFORM_INT_TYPES=\'"mozilla/StandardInteger.h"\'',
+	      'R_DEFINED_INT2=int16_t',
+	      'R_DEFINED_UINT2=uint16_t',
+	      'R_DEFINED_INT4=int32_t',
+	      'R_DEFINED_UINT4=uint32_t',
+	      'R_DEFINED_INT8=int64_t',
+	      'R_DEFINED_UINT8=uint64_t',
           ],
           
           'conditions' : [
@@ -177,14 +184,6 @@
                      'WIN',
                      '__UNUSED__=""',
                      'HAVE_STRDUP=1',
-                     'SIZEOF_SHORT=2',
-                     'SIZEOF_UNSIGNED_SHORT=2',
-                     'SIZEOF_INT=4',
-                     'SIZEOF_UNSIGNED_INT=4',
-                     'SIZEOF_LONG=4',
-                     'SIZEOF_UNSIGNED_LONG=4',
-                     'SIZEOF_LONG_LONG=8',
-                     'SIZEOF_UNSIGNED_LONG_LONG=8',
                      'NO_REG_RPC'
                  ],
 

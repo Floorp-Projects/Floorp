@@ -84,6 +84,14 @@
 #ifndef _r_types_h
 #define _r_types_h
 
+/* Either define R_PLATFORM_INT_TYPES or be on a platform that
+   has stdint.h */
+#ifdef R_PLATFORM_INT_TYPES
+#include R_PLATFORM_INT_TYPES
+#else
+#include <stdint.h>
+#endif
+
 #ifndef R_DEFINED_INT2
 #ifndef SIZEOF_INT
 typedef short INT2;
@@ -98,6 +106,8 @@ typedef long INT2;
 # error no type for INT2
 # endif
 #endif
+#else
+typedef R_DEFINED_INT2 INT2;
 #endif
 
 #ifndef R_DEFINED_UINT2
@@ -114,6 +124,8 @@ typedef unsigned long UINT2;
 # error no type for UINT2
 # endif
 #endif
+#else
+typedef R_DEFINED_UINT2 UINT2;
 #endif
 
 #ifndef R_DEFINED_INT4
@@ -130,6 +142,8 @@ typedef long INT4;
 # error no type for INT4
 # endif
 #endif
+#else
+typedef R_DEFINED_INT4 INT4;
 #endif
 
 #ifndef R_DEFINED_UINT4
@@ -146,6 +160,8 @@ typedef unsigned long UINT4;
 # error no type for UINT4
 # endif
 #endif
+#else
+typedef R_DEFINED_UINT4 UINT4;
 #endif
 
 #ifndef R_DEFINED_INT8
@@ -164,6 +180,8 @@ typedef long long INT8;
 # error no type for INT8
 # endif
 #endif
+#else
+typedef R_DEFINED_INT8 INT8;
 #endif
 
 #ifndef R_DEFINED_UINT8
@@ -182,11 +200,14 @@ typedef unsigned long long UINT8;
 # error no type for UINT8
 # endif
 #endif
+#else
+typedef R_DEFINED_UINT8 UINT8;
 #endif
 
 #ifndef R_DEFINED_UCHAR
 typedef unsigned char UCHAR;
+#else
+typedef R_DEFINED_UCHAR UCHAR;
 #endif
-
 #endif
 
