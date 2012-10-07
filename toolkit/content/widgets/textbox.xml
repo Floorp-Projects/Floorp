@@ -47,6 +47,7 @@
       <field name="mInputField">null</field>
       <field name="mIgnoreClick">false</field>
       <field name="mIgnoreFocus">false</field>
+      <field name="mEditor">false</field>
 
       <property name="inputField" readonly="true">
         <getter><![CDATA[
@@ -92,9 +93,15 @@
                 onset="if (val) this.setAttribute('clickSelectsAll', 'true');
                        else this.removeAttribute('clickSelectsAll'); return val;" />
 
-      <field name="editor" readonly="true">
-        this.inputField.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
-      </field>
+      <property name="editor" readonly="true">
+        <getter><![CDATA[
+          if (!this.mEditor) {
+            const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+            this.mEditor = this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
+          }
+          return this.mEditor;
+        ]]></getter>
+      </property>
 
       <method name="reset">
         <body><![CDATA[
