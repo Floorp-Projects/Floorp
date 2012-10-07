@@ -1478,27 +1478,27 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     //        JM -> Ion -> array_sort -> Ion
     //     In this cas we use an IonActivation with entryfp == NULL
     //     and prevpc != NULL.
+    IonActivation activation(cx, NULL);
     if (!fp->beginsIonActivation()) {
         fp->setCallingIntoIon();
         clearCallingIntoIon = true;
-        cx->runtime->ionActivation->setEntryFp(fp);
+        activation.setEntryFp(fp);
     } else {
-        JS_ASSERT(!cx->runtime->ionActivation->entryfp());
+        JS_ASSERT(!activation.entryfp());
     }
 
-    cx->runtime->ionActivation->setPrevPc(cx->regs().pc);
+    activation.setPrevPc(cx->regs().pc);
 
     EnterIonCode enter = cx->compartment->ionCompartment()->enterJITInfallible();
     void *calleeToken = CalleeToToken(fun);
 
     Value result = Int32Value(fun->nargs);
+
+    JSAutoResolveFlags rf(cx, RESOLVE_INFER);
     enter(jitcode, args.length() + 1, &args[0] - 1, fp, calleeToken, &result);
 
     if (clearCallingIntoIon)
         fp->clearCallingIntoIon();
-
-    cx->runtime->ionActivation->setEntryFp(NULL);
-    cx->runtime->ionActivation->setPrevPc(NULL);
 
     JS_ASSERT(fp == cx->fp());
     JS_ASSERT(!cx->runtime->hasIonReturnOverride());
