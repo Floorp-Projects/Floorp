@@ -53,7 +53,8 @@ TemporaryRef<DtlsIdentity> DtlsIdentity::Generate() {
   }
 
   PK11RSAGenParams rsaparams;
-  rsaparams.keySizeInBits = 2048; // Minimum value Mozilla recommends for TLS
+  rsaparams.keySizeInBits = 1024; // TODO: make this stronger when we
+                                  // pre-generate.
   rsaparams.pe = 65537; // We are too paranoid to use 3 as the exponent.
 
   ScopedSECKEYPrivateKey private_key;
