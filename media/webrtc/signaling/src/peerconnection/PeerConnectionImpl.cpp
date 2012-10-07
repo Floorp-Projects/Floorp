@@ -66,21 +66,21 @@ typedef enum {
 class PeerConnectionObserverDispatch : public nsRunnable {
 
 public:
-  PeerConnectionObserverDispatch(CSF::CC_CallInfoPtr info,
-                                 nsRefPtr<PeerConnectionImpl> pc,
-                                 IPeerConnectionObserver* observer) :
-    mType(PC_OBSERVER_CALLBACK), mInfo(info), mChannel(nullptr), mPC(pc), mObserver(observer) {}
+  PeerConnectionObserverDispatch(CSF::CC_CallInfoPtr aInfo,
+                                 nsRefPtr<PeerConnectionImpl> aPC,
+                                 IPeerConnectionObserver* aObserver) :
+    mType(PC_OBSERVER_CALLBACK), mInfo(aInfo), mChannel(nullptr), mPC(aPC), mObserver(aObserver) {}
 
-  PeerConnectionObserverDispatch(PeerConnectionObserverType type,
-                                 nsRefPtr<nsIDOMDataChannel> channel,
-                                 nsRefPtr<PeerConnectionImpl> pc,
-                                 IPeerConnectionObserver* observer) :
-    mType(type), mInfo(nullptr), mChannel(channel), mPC(pc), mObserver(observer) {}
+  PeerConnectionObserverDispatch(PeerConnectionObserverType aType,
+                                 nsRefPtr<nsIDOMDataChannel> aChannel,
+                                 nsRefPtr<PeerConnectionImpl> aPC,
+                                 IPeerConnectionObserver* aObserver) :
+    mType(aType), mInfo(nullptr), mChannel(aChannel), mPC(aPC), mObserver(aObserver) {}
 
-  PeerConnectionObserverDispatch(PeerConnectionObserverType type,
-                                 nsRefPtr<PeerConnectionImpl> pc,
-                                 IPeerConnectionObserver* observer) :
-    mType(type), mInfo(nullptr), mPC(pc), mObserver(observer) {}
+  PeerConnectionObserverDispatch(PeerConnectionObserverType aType,
+                                 nsRefPtr<PeerConnectionImpl> aPC,
+                                 IPeerConnectionObserver* aObserver) :
+    mType(aType), mInfo(nullptr), mPC(aPC), mObserver(aObserver) {}
 
   ~PeerConnectionObserverDispatch(){}
 
@@ -173,15 +173,15 @@ public:
         }
       case PC_OBSERVER_CONNECTION:
         CSFLogDebugS(logTag, __FUNCTION__ << ": Delivering PeerConnection onconnection");
-        //mObserver->NotifyConnection();
+        mObserver->NotifyConnection();
         break;
       case PC_OBSERVER_CLOSEDCONNECTION:
         CSFLogDebugS(logTag, __FUNCTION__ << ": Delivering PeerConnection onclosedconnection");
-        //mObserver->NotifyClosedConnection();
+        mObserver->NotifyClosedConnection();
         break;
       case PC_OBSERVER_DATACHANNEL:
         CSFLogDebugS(logTag, __FUNCTION__ << ": Delivering PeerConnection ondatachannel");
-        //mObserver->NotifyDataChannel(mChannel);
+        mObserver->NotifyDataChannel(mChannel);
 #ifdef MOZILLA_INTERNAL_API
         NS_DataChannelAppReady(mChannel);
 #endif
@@ -362,11 +362,11 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(PRUint32 aHint, RemoteSourceStr
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::Initialize(IPeerConnectionObserver* observer,
+PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                nsIDOMWindow* aWindow,
-                               nsIThread* thread) {
-  MOZ_ASSERT(observer);
-  mPCObserver = observer;
+                               nsIThread* aThread) {
+  MOZ_ASSERT(aObserver);
+  mPCObserver = aObserver;
 
 #ifdef MOZILLA_INTERNAL_API
   // Currently no standalone unit tests for DataChannel,
@@ -377,7 +377,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* observer,
 #endif
 
   // The thread parameter can be passed in as NULL
-  mThread = thread;
+  mThread = aThread;
 
   PeerConnectionCtx *pcctx = PeerConnectionCtx::GetInstance();
   MOZ_ASSERT(pcctx);
@@ -509,24 +509,24 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* observer,
 }
 
 nsresult
-PeerConnectionImpl::CreateFakeMediaStream(PRUint32 hint, nsIDOMMediaStream** retval)
+PeerConnectionImpl::CreateFakeMediaStream(PRUint32 aHint, nsIDOMMediaStream** aRetval)
 {
-  MOZ_ASSERT(retval);
+  MOZ_ASSERT(aRetval);
 
   bool mute = false;
 
   // Hack to allow you to mute the stream
-  if (hint & MEDIA_STREAM_MUTE) {
+  if (aHint & MEDIA_STREAM_MUTE) {
     mute = true;
-    hint &= ~MEDIA_STREAM_MUTE;
+    aHint &= ~MEDIA_STREAM_MUTE;
   }
 
   nsresult res;
   if (!mThread || NS_IsMainThread()) {
-    res = MakeMediaStream(hint, retval);
+    res = MakeMediaStream(aHint, aRetval);
   } else {
     mThread->Dispatch(WrapRunnableRet(
-      this, &PeerConnectionImpl::MakeMediaStream, hint, retval, &res
+      this, &PeerConnectionImpl::MakeMediaStream, aHint, aRetval, &res
     ), NS_DISPATCH_SYNC);
   }
 
@@ -535,16 +535,77 @@ PeerConnectionImpl::CreateFakeMediaStream(PRUint32 hint, nsIDOMMediaStream** ret
   }
 
   if (!mute) {
-    if (hint & nsDOMMediaStream::HINT_CONTENTS_AUDIO) {
-      new Fake_AudioGenerator(static_cast<nsDOMMediaStream*>(*retval));
+    if (aHint & nsDOMMediaStream::HINT_CONTENTS_AUDIO) {
+      new Fake_AudioGenerator(static_cast<nsDOMMediaStream*>(*aRetval));
     } else {
 #ifdef MOZILLA_INTERNAL_API
-    new Fake_VideoGenerator(static_cast<nsDOMMediaStream*>(*retval));
+    new Fake_VideoGenerator(static_cast<nsDOMMediaStream*>(*aRetval));
 #endif
     }
   }
 
   return NS_OK;
+}
+
+// Data channels won't work without a window, so in order for the C++ unit
+// tests to work (it doesn't have a window available) we ifdef the following
+// two implementations.
+NS_IMETHODIMP
+PeerConnectionImpl::ConnectDataConnection(PRUint16 aLocalport,
+                                          PRUint16 aRemoteport,
+                                          PRUint16 aNumstreams)
+{
+#ifdef MOZILLA_INTERNAL_API
+  mDataConnection = new mozilla::DataChannelConnection(this);
+  NS_ENSURE_TRUE(mDataConnection,NS_ERROR_FAILURE);
+  if (!mDataConnection->Init(aLocalport, aNumstreams, true)) {
+    CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+  // XXX Fix! Get the correct flow for DataChannel. Also error handling.
+  nsRefPtr<TransportFlow> flow = GetTransportFlow(1,false).get();
+  CSFLogDebugS(logTag, "Transportflow[1] = " << flow.get());
+  if (!mDataConnection->ConnectDTLS(flow, aLocalport, aRemoteport)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+#else
+    return NS_ERROR_FAILURE;
+#endif
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
+                                      PRUint16 aType,
+                                      bool outOfOrderAllowed,
+                                      PRUint16 aMaxTime,
+                                      PRUint16 aMaxNum,
+                                      nsIDOMDataChannel** aRetval)
+{
+  MOZ_ASSERT(aRetval);
+
+#ifdef MOZILLA_INTERNAL_API
+  mozilla::DataChannel* dataChannel;
+  mozilla::DataChannelConnection::Type theType =
+    static_cast<mozilla::DataChannelConnection::Type>(aType);
+
+  if (!mDataConnection) {
+    return NS_ERROR_FAILURE;
+  }
+  dataChannel = mDataConnection->Open(
+    aLabel, theType, !outOfOrderAllowed,
+    aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_REXMIT ? aMaxNum :
+    (aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_TIMED ? aMaxTime : 0),
+    nullptr, nullptr
+  );
+  NS_ENSURE_TRUE(dataChannel,NS_ERROR_FAILURE);
+
+  CSFLogDebugS(logTag, __FUNCTION__ << ": making DOMDataChannel");
+
+  return NS_NewDOMDataChannel(dataChannel, mWindow, aRetval);
+#else
+  return NS_OK;
+#endif
 }
 
 void
@@ -619,42 +680,42 @@ PeerConnectionImpl::NotifyDataChannel(mozilla::DataChannel *aChannel)
  * CC_SDP_DIRECTION_SENDRECV will not be used when Constraints are implemented
  */
 NS_IMETHODIMP
-PeerConnectionImpl::CreateOffer(const char* hints) {
-  MOZ_ASSERT(hints);
+PeerConnectionImpl::CreateOffer(const char* aHints) {
+  MOZ_ASSERT(aHints);
 
   CheckIceState();
   mRole = kRoleOfferer;  // TODO(ekr@rtfm.com): Interrogate SIPCC here?
-  mCall->createOffer(hints);
+  mCall->createOffer(aHints);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::CreateAnswer(const char* hints, const char* offer) {
-  MOZ_ASSERT(hints);
-  MOZ_ASSERT(offer);
+PeerConnectionImpl::CreateAnswer(const char* aHints, const char* aOffer) {
+  MOZ_ASSERT(aHints);
+  MOZ_ASSERT(aOffer);
 
   CheckIceState();
   mRole = kRoleAnswerer;  // TODO(ekr@rtfm.com): Interrogate SIPCC here?
-  mCall->createAnswer(hints, offer);
+  mCall->createAnswer(aHints, aOffer);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::SetLocalDescription(PRInt32 action, const char* sdp) {
-  MOZ_ASSERT(sdp);
+PeerConnectionImpl::SetLocalDescription(PRInt32 aAction, const char* aSDP) {
+  MOZ_ASSERT(aSDP);
 
   CheckIceState();
-  mLocalRequestedSDP = sdp;
-  mCall->setLocalDescription((cc_jsep_action_t)action, mLocalRequestedSDP);
+  mLocalRequestedSDP = aSDP;
+  mCall->setLocalDescription((cc_jsep_action_t)aAction, mLocalRequestedSDP);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::SetRemoteDescription(PRInt32 action, const char* sdp) {
-  MOZ_ASSERT(sdp);
+PeerConnectionImpl::SetRemoteDescription(PRInt32 action, const char* aSDP) {
+  MOZ_ASSERT(aSDP);
 
   CheckIceState();
-  mRemoteRequestedSDP = sdp;
+  mRemoteRequestedSDP = aSDP;
   mCall->setRemoteDescription((cc_jsep_action_t)action, mRemoteRequestedSDP);
   return NS_OK;
 }
@@ -753,9 +814,9 @@ PeerConnectionImpl::RemoveStream(nsIDOMMediaStream* aMediaStream)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::AddIceCandidate(const char* candidate, const char* mid, unsigned short level) {
+PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, unsigned short aLevel) {
   CheckIceState();
-  mCall->addICECandidate(candidate, mid, level);
+  mCall->addICECandidate(aCandidate, aMid, aLevel);
   return NS_OK;
 }
 
@@ -805,56 +866,56 @@ PeerConnectionImpl::GetFingerprint(char** fingerprint)
 */
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetLocalDescription(char** sdp)
+PeerConnectionImpl::GetLocalDescription(char** aSDP)
 {
-  MOZ_ASSERT(sdp);
+  MOZ_ASSERT(aSDP);
 
   char* tmp = new char[mLocalSDP.size() + 1];
   std::copy(mLocalSDP.begin(), mLocalSDP.end(), tmp);
   tmp[mLocalSDP.size()] = '\0';
 
-  *sdp = tmp;
+  *aSDP = tmp;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetRemoteDescription(char** sdp)
+PeerConnectionImpl::GetRemoteDescription(char** aSDP)
 {
-  MOZ_ASSERT(sdp);
+  MOZ_ASSERT(aSDP);
 
   char* tmp = new char[mRemoteSDP.size() + 1];
   std::copy(mRemoteSDP.begin(), mRemoteSDP.end(), tmp);
   tmp[mRemoteSDP.size()] = '\0';
 
-  *sdp = tmp;
+  *aSDP = tmp;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetReadyState(PRUint32* state)
+PeerConnectionImpl::GetReadyState(PRUint32* aState)
 {
-  MOZ_ASSERT(state);
+  MOZ_ASSERT(aState);
 
-  *state = mReadyState;
+  *aState = mReadyState;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetSipccState(PRUint32* state)
+PeerConnectionImpl::GetSipccState(PRUint32* aState)
 {
-  MOZ_ASSERT(state);
+  MOZ_ASSERT(aState);
 
   PeerConnectionCtx* pcctx = PeerConnectionCtx::GetInstance();
-  *state = pcctx ? pcctx->sipcc_state() : kIdle;
+  *aState = pcctx ? pcctx->sipcc_state() : kIdle;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetIceState(PRUint32* state)
+PeerConnectionImpl::GetIceState(PRUint32* aState)
 {
-  MOZ_ASSERT(state);
+  MOZ_ASSERT(aState);
 
-  *state = mIceState;
+  *aState = mIceState;
   return NS_OK;
 }
 

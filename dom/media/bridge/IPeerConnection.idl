@@ -2,6 +2,7 @@
 #include "nsIDOMWindow.idl"
 
 interface nsIDOMMediaStream;
+interface nsIDOMDataChannel;
 
 /* Do not confuse with nsIDOMRTCPeerConnection. This interface is purely for
  * communication between the PeerConnection JS DOM binding and the C++
@@ -9,7 +10,7 @@ interface nsIDOMMediaStream;
  *
  * See media/webrtc/signaling/include/PeerConnectionImpl.h
  */
-[scriptable, uuid(84efc76f-41d9-496a-9444-2965d179d419)]
+[scriptable, uuid(e61821ba-7772-4973-b583-1715e4bbaeed)]
 interface IPeerConnectionObserver : nsISupports
 {
   /* Constants */
@@ -28,6 +29,11 @@ interface IPeerConnectionObserver : nsISupports
   void onSetLocalDescriptionError(in unsigned long code);
   void onSetRemoteDescriptionError(in unsigned long code);
 
+  /* Data channel callbacks */
+  void notifyDataChannel(in nsIDOMDataChannel channel);
+  void notifyConnection();
+  void notifyClosedConnection();
+
   /* Notification of one of several types of state changed */
   void onStateChange(in unsigned long state);
 
@@ -45,7 +51,7 @@ interface IPeerConnectionObserver : nsISupports
   void foundIceCandidate(in string candidate);
 };
 
-[scriptable, uuid(942366a9-80fe-4cac-ac97-4fbca45bcbff)]
+[scriptable, uuid(cb3f0048-1009-11e2-b822-87ee49eface7)]
 interface IPeerConnection : nsISupports
 {
   const unsigned long kHintAudio = 0x00000001;
@@ -94,4 +100,11 @@ interface IPeerConnection : nsISupports
   readonly attribute unsigned long iceState;
   readonly attribute unsigned long readyState;
   readonly attribute unsigned long sipccState;
+
+  /* Data channels */
+  nsIDOMDataChannel createDataChannel(in ACString label,
+    in unsigned short type, in boolean outOfOrderAllowed,
+    in unsigned short maxTime, in unsigned short maxNum);
+  void connectDataConnection(in unsigned short localport,
+    in unsigned short remoteport, in unsigned short numstreams);
 };
