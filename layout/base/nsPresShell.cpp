@@ -180,7 +180,8 @@
 #include "LayerTreeInvalidation.h"
 #include "nsAsyncDOMEvent.h"
 
-#define ANCHOR_SCROLL_FLAGS (SCROLL_OVERFLOW_HIDDEN | SCROLL_NO_PARENT_FRAMES)
+#define ANCHOR_SCROLL_FLAGS \
+  (nsIPresShell::SCROLL_OVERFLOW_HIDDEN | nsIPresShell::SCROLL_NO_PARENT_FRAMES)
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -6786,7 +6787,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
                                nsIPresShell::ScrollAxis(
                                  nsIPresShell::SCROLL_MINIMUM,
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-                               SCROLL_OVERFLOW_HIDDEN);
+                               nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
     NS_WARN_IF_FALSE(frame, "No frame for focused content?");
@@ -6851,7 +6852,7 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
   ScrollContentIntoView(focusedContent,
                         ScrollAxis(),
                         ScrollAxis(),
-                        SCROLL_OVERFLOW_HIDDEN);
+                        nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 
   nsPresContext* presContext = GetPresContext();
 

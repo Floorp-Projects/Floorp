@@ -2321,7 +2321,7 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(bool aScrollToAnchor)
       region = nsISelectionController::SELECTION_ANCHOR_REGION;
 
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                    region, 0);
+      region, nsISelectionController::SCROLL_OVERFLOW_HIDDEN);
   }
 
   return NS_OK;
