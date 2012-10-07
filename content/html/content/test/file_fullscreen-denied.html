@@ -50,7 +50,7 @@ function begin() {
   document.body.mozRequestFullScreen();
   setTimeout(
     function() {
-      ok(!document.mozFullScreen, "Should not grant request in non-truested context");
+      ok(!document.mozFullScreen, "Should not grant request in non-trusted context");
       ok(fullscreendenied, "Request in non-trusted event handler should be denied");
       // Test requesting full-screen mode in a long-running user-generated event handler.
       // The request in the key handler should not be granted.

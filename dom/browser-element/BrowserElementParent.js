@@ -192,6 +192,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
 
   addMessageListener("hello", this._recvHello);
   addMessageListener("get-name", this._recvGetName);
+  addMessageListener("get-fullscreen-allowed", this._recvGetFullscreenAllowed);
   addMessageListener("contextmenu", this._fireCtxMenuEvent);
   addMessageListener("locationchange", this._fireEventFromMsg);
   addMessageListener("loadstart", this._fireEventFromMsg);
@@ -358,6 +359,10 @@ BrowserElementParent.prototype = {
 
   _recvGetName: function(data) {
     return this._frameElement.getAttribute('name');
+  },
+  
+  _recvGetFullscreenAllowed: function(data) {
+    return this._frameElement.hasAttribute('mozallowfullscreen');
   },
 
   _fireCtxMenuEvent: function(data) {

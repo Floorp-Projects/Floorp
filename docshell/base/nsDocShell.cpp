@@ -737,6 +737,7 @@ nsDocShell::nsDocShell():
     mPreviousTransIndex(-1),
     mLoadedTransIndex(-1),
     mSandboxFlags(0),
+    mFullscreenAllowed(CHECK_ATTRIBUTES),
     mCreated(false),
     mAllowSubframes(true),
     mAllowPlugins(true),
@@ -2156,6 +2157,72 @@ NS_IMETHODIMP nsDocShell::GetAllowWindowControl(bool * aAllowWindowControl)
 NS_IMETHODIMP nsDocShell::SetAllowWindowControl(bool aAllowWindowControl)
 {
     mAllowWindowControl = aAllowWindowControl;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
+{
+    NS_ENSURE_ARG_POINTER(aFullscreenAllowed);
+
+    // Content boundaries have their mFullscreenAllowed retrieved from their
+    // corresponding iframe in their parent upon creation.
+    if (mFullscreenAllowed != CHECK_ATTRIBUTES) {
+        *aFullscreenAllowed = (mFullscreenAllowed == PARENT_ALLOWS);
+        return NS_OK;
+    }
+
+    // Assume false until we determine otherwise...
+    *aFullscreenAllowed = false;
+
+    // For non-content boundaries, check that the enclosing iframe element
+    // has the mozallowfullscreen attribute set to true. If any ancestor
+    // iframe does not have mozallowfullscreen=true, then fullscreen is
+    // prohibited.
+    nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(GetAsSupports(this));
+    if (!win) {
+        return NS_OK;
+    }
+    nsCOMPtr<nsIContent> frameElement = do_QueryInterface(win->GetFrameElementInternal());
+    if (frameElement &&
+        frameElement->IsHTML(nsGkAtoms::iframe) &&
+        !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
+        return NS_OK;
+    }
+
+    // If we have no parent then we're the root docshell; no ancestor of the
+    // original docshell doesn't have a mozallowfullscreen attribute, so
+    // report fullscreen as allowed.
+    nsCOMPtr<nsIDocShellTreeItem> dsti = do_GetInterface(GetAsSupports(this));
+    NS_ENSURE_TRUE(dsti, NS_OK);
+
+    nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+    dsti->GetParent(getter_AddRefs(parentTreeItem));
+    if (!parentTreeItem) {
+        *aFullscreenAllowed = true;
+        return NS_OK;
+    }
+    // Otherwise, we have a parent, continue the checking for
+    // mozFullscreenAllowed in the parent docshell's ancestors.
+    nsCOMPtr<nsIDocShell> parent = do_QueryInterface(parentTreeItem);
+    NS_ENSURE_TRUE(parent, NS_OK);
+    
+    return parent->GetFullscreenAllowed(aFullscreenAllowed);
+}
+
+NS_IMETHODIMP
+nsDocShell::SetFullscreenAllowed(bool aFullscreenAllowed)
+{
+    if (!nsIDocShell::GetIsContentBoundary()) {
+        // Only allow setting of fullscreenAllowed on content/process boundaries.
+        // At non-boundaries the fullscreenAllowed attribute is calculated based on
+        // whether all enclosing frames have the "mozFullscreenAllowed" attribute
+        // set to "true". fullscreenAllowed is set at the process boundaries to
+        // propagate the value of the parent's "mozFullscreenAllowed" attribute
+        // across process boundaries.
+        return NS_ERROR_UNEXPECTED;
+    }
+    mFullscreenAllowed = (aFullscreenAllowed ? PARENT_ALLOWS : PARENT_PROHIBITS);
     return NS_OK;
 }
 
