@@ -39,7 +39,7 @@ public:
   virtual void NotifyQueuedTrackChanges(mozilla::MediaStreamGraph* aGraph, mozilla::TrackID aID,
                                         mozilla::TrackRate aTrackRate,
                                         mozilla::TrackTicks aTrackOffset,
-                                        PRUint32 aTrackEvents,
+                                        uint32_t aTrackEvents,
                                         const mozilla::MediaSegment& aQueuedMedia)  = 0;
   virtual void NotifyPull(mozilla::MediaStreamGraph* aGraph, mozilla::StreamTime aDesiredTime) = 0;
 
@@ -146,7 +146,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMEDIASTREAM
     
-  static already_AddRefed<Fake_nsDOMMediaStream> CreateInputStream(PRUint32 aHintContents) {
+  static already_AddRefed<Fake_nsDOMMediaStream> CreateInputStream(uint32_t aHintContents) {
     Fake_SourceMediaStream *source = new Fake_SourceMediaStream();
     
     Fake_nsDOMMediaStream *ds = new Fake_nsDOMMediaStream(source);
@@ -164,15 +164,15 @@ public:
     HINT_CONTENTS_AUDIO = 0x00000001U,
     HINT_CONTENTS_VIDEO = 0x00000002U
   };
-  PRUint32 GetHintContents() const { return mHintContents; }
-  void SetHintContents(PRUint32 aHintContents) { mHintContents = aHintContents; }
+  uint32_t GetHintContents() const { return mHintContents; }
+  void SetHintContents(uint32_t aHintContents) { mHintContents = aHintContents; }
 
 private:
   Fake_MediaStream *mMediaStream;
 
   // tells the SDP generator about whether this
   // MediaStream probably has audio and/or video
-  PRUint32 mHintContents;
+  uint32_t mHintContents;
 };
 
 class Fake_MediaStreamGraph

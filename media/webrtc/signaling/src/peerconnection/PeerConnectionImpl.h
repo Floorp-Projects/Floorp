@@ -112,8 +112,8 @@ class Fake_VideoGenerator {
   static void Callback(nsITimer* timer, void *arg) {
     Fake_VideoGenerator* gen = static_cast<Fake_VideoGenerator*>(arg);
 
-    const PRUint32 WIDTH = 640;
-    const PRUint32 HEIGHT = 480;
+    const uint32_t WIDTH = 640;
+    const uint32_t HEIGHT = 480;
 
     // Allocate a single blank Image
     mozilla::ImageFormat format = mozilla::PLANAR_YCBCR;
@@ -125,18 +125,18 @@ class Fake_VideoGenerator {
     int len = ((WIDTH * HEIGHT) * 3 / 2);
     mozilla::layers::PlanarYCbCrImage* planar =
       static_cast<mozilla::layers::PlanarYCbCrImage*>(image.get());
-    PRUint8* frame = (PRUint8*) PR_Malloc(len);
+    uint8_t* frame = (uint8_t*) PR_Malloc(len);
     ++gen->mCount;
     memset(frame, (gen->mCount / 8) & 0xff, len); // Rotating colors
 
-    const PRUint8 lumaBpp = 8;
-    const PRUint8 chromaBpp = 4;
+    const uint8_t lumaBpp = 8;
+    const uint8_t chromaBpp = 4;
 
     mozilla::layers::PlanarYCbCrImage::Data data;
     data.mYChannel = frame;
     data.mYSize = gfxIntSize(WIDTH, HEIGHT);
-    data.mYStride = (PRInt32) (WIDTH * lumaBpp / 8.0);
-    data.mCbCrStride = (PRInt32) (WIDTH * chromaBpp / 8.0);
+    data.mYStride = (int32_t) (WIDTH * lumaBpp / 8.0);
+    data.mCbCrStride = (int32_t) (WIDTH * chromaBpp / 8.0);
     data.mCbChannel = frame + HEIGHT * data.mYStride;
     data.mCrChannel = data.mCbChannel + HEIGHT * data.mCbCrStride / 2;
     data.mCbCrSize = gfxIntSize(WIDTH / 2, HEIGHT / 2);
@@ -183,7 +183,7 @@ public:
     mozilla::TrackID aID,
     mozilla::TrackRate aTrackRate,
     mozilla::TrackTicks aTrackOffset,
-    PRUint32 aTrackEvents,
+    uint32_t aTrackEvents,
     const mozilla::MediaSegment& aQueuedMedia
   );
 
@@ -294,7 +294,7 @@ public:
   static void Shutdown();
 
   Role GetRole() const { return mRole; }
-  nsresult CreateRemoteSourceStreamInfo(PRUint32 aHint, RemoteSourceStreamInfo** aInfo);
+  nsresult CreateRemoteSourceStreamInfo(uint32_t aHint, RemoteSourceStreamInfo** aInfo);
 
   // Implementation of the only observer we need
   virtual void onCallEvent(
@@ -368,7 +368,7 @@ public:
   mozilla::RefPtr<DtlsIdentity> const GetIdentity() { return mIdentity; }
 
   // Create a fake media stream
-  nsresult CreateFakeMediaStream(PRUint32 hint, nsIDOMMediaStream** retval);
+  nsresult CreateFakeMediaStream(uint32_t hint, nsIDOMMediaStream** retval);
 
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
@@ -389,7 +389,7 @@ private:
   // Shutdown media transport. Must be called on STS thread.
   void ShutdownMediaTransport();
 
-  nsresult MakeMediaStream(PRUint32 aHint, nsIDOMMediaStream** aStream);
+  nsresult MakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aStream);
   nsresult MakeRemoteSource(nsDOMMediaStream* aStream, RemoteSourceStreamInfo** aInfo);
 
   // The role we are adopting

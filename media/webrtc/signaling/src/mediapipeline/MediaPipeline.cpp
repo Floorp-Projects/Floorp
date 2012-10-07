@@ -109,7 +109,7 @@ nsresult MediaPipeline::TransportReady(TransportFlow *flow) {
       flow->GetLayer(TransportLayerDtls::ID()));
   MOZ_ASSERT(dtls);  // DTLS is mandatory
 
-  PRUint16 cipher_suite;
+  uint16_t cipher_suite;
   res = dtls->GetSrtpCipher(&cipher_suite);
   if (NS_FAILED(res)) {
     MOZ_MTLOG(PR_LOG_ERROR, "Failed to negotiate DTLS-SRTP. This is an error");
@@ -491,7 +491,7 @@ void MediaPipelineTransmit::PipelineListener::
 NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
                          TrackRate rate,
                          TrackTicks offset,
-                         PRUint32 events,
+                         uint32_t events,
                          const MediaSegment& queued_media) {
   if (!pipeline_)
     return;  // Detached
@@ -563,13 +563,13 @@ void MediaPipelineTransmit::ProcessAudioChunk(AudioSessionConduit *conduit,
           // Code based on nsAudioStream
           const short* buf = static_cast<const short *>(chunk.mBuffer->Data());
 
-          PRInt32 volume = PRInt32((1 << 16) * chunk.mVolume);
-          for (PRUint32 i = 0; i < chunk.mDuration; ++i) {
+          int32_t volume = int32_t((1 << 16) * chunk.mVolume);
+          for (uint32_t i = 0; i < chunk.mDuration; ++i) {
             int16_t s = buf[i];
 #if defined(IS_BIG_ENDIAN)
             s = ((s & 0x00ff) << 8) | ((s & 0xff00) >> 8);
 #endif
-            samples[i] = short((PRInt32(s) * volume) >> 16);
+            samples[i] = short((int32_t(s) * volume) >> 16);
           }
         }
         break;
@@ -580,7 +580,7 @@ void MediaPipelineTransmit::ProcessAudioChunk(AudioSessionConduit *conduit,
     }
   } else {
     // This means silence.
-    for (PRUint32 i = 0; i < chunk.mDuration; ++i) {
+    for (uint32_t i = 0; i < chunk.mDuration; ++i) {
       samples[i] = 0;
     }
   }
@@ -751,9 +751,9 @@ void MediaPipelineReceiveVideo::PipelineRenderer::RenderVideoFrame(
   nsRefPtr<layers::Image> image = image_container_->CreateImage(&format, 1);
 
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
-  PRUint8* frame = const_cast<PRUint8*>(static_cast<const PRUint8*> (buffer));
-  const PRUint8 lumaBpp = 8;
-  const PRUint8 chromaBpp = 4;
+  uint8_t* frame = const_cast<uint8_t*>(static_cast<const uint8_t*> (buffer));
+  const uint8_t lumaBpp = 8;
+  const uint8_t chromaBpp = 4;
 
   layers::PlanarYCbCrImage::Data data;
   data.mYChannel = frame;

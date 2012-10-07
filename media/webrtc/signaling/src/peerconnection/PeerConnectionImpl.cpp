@@ -97,7 +97,7 @@ public:
           std::string statestr = mInfo->callStateToString(state);
 
           nsDOMMediaStream* stream;
-          PRUint32 hint;
+          uint32_t hint;
 
           switch (state) {
             case CREATEOFFER:
@@ -215,7 +215,7 @@ LocalSourceStreamInfo::NotifyQueuedTrackChanges(
   mozilla::TrackID aID,
   mozilla::TrackRate aTrackRate,
   mozilla::TrackTicks aTrackOffset,
-  PRUint32 aTrackEvents,
+  uint32_t aTrackEvents,
   const mozilla::MediaSegment& aQueuedMedia)
 {
   /* TODO: use this callback to keep track of changes to the MediaStream */
@@ -294,7 +294,7 @@ PeerConnectionImpl::~PeerConnectionImpl()
 
 // One level of indirection so we can use WrapRunnable in CreateMediaStream.
 nsresult
-PeerConnectionImpl::MakeMediaStream(PRUint32 aHint, nsIDOMMediaStream** aRetval)
+PeerConnectionImpl::MakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aRetval)
 {
   MOZ_ASSERT(aRetval);
 
@@ -321,7 +321,7 @@ PeerConnectionImpl::MakeRemoteSource(nsDOMMediaStream* aStream, RemoteSourceStre
 }
 
 nsresult
-PeerConnectionImpl::CreateRemoteSourceStreamInfo(PRUint32 aHint, RemoteSourceStreamInfo** aInfo)
+PeerConnectionImpl::CreateRemoteSourceStreamInfo(uint32_t aHint, RemoteSourceStreamInfo** aInfo)
 {
   MOZ_ASSERT(aInfo);
 
@@ -509,7 +509,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 }
 
 nsresult
-PeerConnectionImpl::CreateFakeMediaStream(PRUint32 aHint, nsIDOMMediaStream** aRetval)
+PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aRetval)
 {
   MOZ_ASSERT(aRetval);
 
@@ -551,9 +551,9 @@ PeerConnectionImpl::CreateFakeMediaStream(PRUint32 aHint, nsIDOMMediaStream** aR
 // tests to work (it doesn't have a window available) we ifdef the following
 // two implementations.
 NS_IMETHODIMP
-PeerConnectionImpl::ConnectDataConnection(PRUint16 aLocalport,
-                                          PRUint16 aRemoteport,
-                                          PRUint16 aNumstreams)
+PeerConnectionImpl::ConnectDataConnection(uint16_t aLocalport,
+                                          uint16_t aRemoteport,
+                                          uint16_t aNumstreams)
 {
 #ifdef MOZILLA_INTERNAL_API
   mDataConnection = new mozilla::DataChannelConnection(this);
@@ -576,10 +576,10 @@ PeerConnectionImpl::ConnectDataConnection(PRUint16 aLocalport,
 
 NS_IMETHODIMP
 PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
-                                      PRUint16 aType,
+                                      uint16_t aType,
                                       bool outOfOrderAllowed,
-                                      PRUint16 aMaxTime,
-                                      PRUint16 aMaxNum,
+                                      uint16_t aMaxTime,
+                                      uint16_t aMaxNum,
                                       nsIDOMDataChannel** aRetval)
 {
   MOZ_ASSERT(aRetval);
@@ -701,7 +701,7 @@ PeerConnectionImpl::CreateAnswer(const char* aHints, const char* aOffer) {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::SetLocalDescription(PRInt32 aAction, const char* aSDP) {
+PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
   MOZ_ASSERT(aSDP);
 
   CheckIceState();
@@ -711,7 +711,7 @@ PeerConnectionImpl::SetLocalDescription(PRInt32 aAction, const char* aSDP) {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::SetRemoteDescription(PRInt32 action, const char* aSDP) {
+PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
   MOZ_ASSERT(aSDP);
 
   CheckIceState();
@@ -731,7 +731,7 @@ PeerConnectionImpl::AddStream(nsIDOMMediaStream* aMediaStream)
 
   // TODO(ekr@rtfm.com): Remove these asserts?
   // Adding tracks here based on nsDOMMediaStream expectation settings
-  PRUint32 hints = stream->GetHintContents();
+  uint32_t hints = stream->GetHintContents();
 
   if (!(hints & (nsDOMMediaStream::HINT_CONTENTS_AUDIO |
         nsDOMMediaStream::HINT_CONTENTS_VIDEO))) {
@@ -796,7 +796,7 @@ PeerConnectionImpl::RemoveStream(nsIDOMMediaStream* aMediaStream)
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
     nsRefPtr<LocalSourceStreamInfo> localSourceStream = mLocalSourceStreams[u];
     if (localSourceStream->GetMediaStream() == stream) {
-      PRUint32 hints = stream->GetHintContents();
+      uint32_t hints = stream->GetHintContents();
       if (hints & nsDOMMediaStream::HINT_CONTENTS_AUDIO) {
         // <emannion>  This API will change when we implement multiple streams
         //             It will only need the ID
@@ -892,7 +892,7 @@ PeerConnectionImpl::GetRemoteDescription(char** aSDP)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetReadyState(PRUint32* aState)
+PeerConnectionImpl::GetReadyState(uint32_t* aState)
 {
   MOZ_ASSERT(aState);
 
@@ -901,7 +901,7 @@ PeerConnectionImpl::GetReadyState(PRUint32* aState)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetSipccState(PRUint32* aState)
+PeerConnectionImpl::GetSipccState(uint32_t* aState)
 {
   MOZ_ASSERT(aState);
 
@@ -911,7 +911,7 @@ PeerConnectionImpl::GetSipccState(PRUint32* aState)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetIceState(PRUint32* aState)
+PeerConnectionImpl::GetIceState(uint32_t* aState)
 {
   MOZ_ASSERT(aState);
 
@@ -956,11 +956,11 @@ void
 PeerConnectionImpl::DisconnectMediaStreams()
 {
   // TODO(ekr@rtfm.com): Lock
-  for (PRUint32 i=0; i < mLocalSourceStreams.Length(); ++i) {
+  for (uint32_t i=0; i < mLocalSourceStreams.Length(); ++i) {
     mLocalSourceStreams[i]->Detach();
   }
 
-  for (PRUint32 i=0; i < mRemoteSourceStreams.Length(); ++i) {
+  for (uint32_t i=0; i < mRemoteSourceStreams.Length(); ++i) {
     mRemoteSourceStreams[i]->Detach();
   }
 
