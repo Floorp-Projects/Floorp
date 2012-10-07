@@ -105,8 +105,8 @@ public:
 
   ResponseState state;
   char *lastString;
-  PRUint32 lastStatusCode;
-  PRUint32 lastStateType;
+  uint32_t lastStatusCode;
+  uint32_t lastStateType;
   bool onAddStreamCalled;
 
 private:
@@ -126,7 +126,7 @@ TestObserver::OnCreateOfferSuccess(const char* offer)
 }
 
 NS_IMETHODIMP
-TestObserver::OnCreateOfferError(PRUint32 code)
+TestObserver::OnCreateOfferError(uint32_t code)
 {
   state = stateError;
   cout << "onCreateOfferError" << endl;
@@ -144,7 +144,7 @@ TestObserver::OnCreateAnswerSuccess(const char* answer)
 }
 
 NS_IMETHODIMP
-TestObserver::OnCreateAnswerError(PRUint32 code)
+TestObserver::OnCreateAnswerError(uint32_t code)
 {
   state = stateError;
   lastStatusCode = code;
@@ -152,7 +152,7 @@ TestObserver::OnCreateAnswerError(PRUint32 code)
 }
 
 NS_IMETHODIMP
-TestObserver::OnSetLocalDescriptionSuccess(PRUint32 code)
+TestObserver::OnSetLocalDescriptionSuccess(uint32_t code)
 {
   state = stateSuccess;
   lastStatusCode = code;
@@ -160,7 +160,7 @@ TestObserver::OnSetLocalDescriptionSuccess(PRUint32 code)
 }
 
 NS_IMETHODIMP
-TestObserver::OnSetRemoteDescriptionSuccess(PRUint32 code)
+TestObserver::OnSetRemoteDescriptionSuccess(uint32_t code)
 {
   state = stateSuccess;
   lastStatusCode = code;
@@ -168,7 +168,7 @@ TestObserver::OnSetRemoteDescriptionSuccess(PRUint32 code)
 }
 
 NS_IMETHODIMP
-TestObserver::OnSetLocalDescriptionError(PRUint32 code)
+TestObserver::OnSetLocalDescriptionError(uint32_t code)
 {
   state = stateError;
   lastStatusCode = code;
@@ -176,7 +176,7 @@ TestObserver::OnSetLocalDescriptionError(PRUint32 code)
 }
 
 NS_IMETHODIMP
-TestObserver::OnSetRemoteDescriptionError(PRUint32 code)
+TestObserver::OnSetRemoteDescriptionError(uint32_t code)
 {
   state = stateError;
   lastStatusCode = code;
@@ -202,10 +202,10 @@ TestObserver::NotifyDataChannel(nsIDOMDataChannel *channel)
 }
 
 NS_IMETHODIMP
-TestObserver::OnStateChange(PRUint32 state_type)
+TestObserver::OnStateChange(uint32_t state_type)
 {
   nsresult rv;
-  PRUint32 gotstate;
+  uint32_t gotstate;
 
   switch (state_type)
   {
@@ -450,17 +450,17 @@ class SignalingAgent {
     cout << "Init Complete" << endl;
   }
 
-  PRUint32 sipcc_state()
+  uint32_t sipcc_state()
   {
-    PRUint32 res;
+    uint32_t res;
 
     pc->GetSipccState(&res);
     return res;
   }
 
-  PRUint32 ice_state()
+  uint32_t ice_state()
   {
-    PRUint32 res;
+    uint32_t res;
 
     pc->GetIceState(&res);
     return res;
@@ -495,7 +495,7 @@ class SignalingAgent {
     nsRefPtr<nsDOMMediaStream> domMediaStream = new nsDOMMediaStream(audio_stream);
     domMediaStream_ = domMediaStream;
 
-    PRUint32 aHintContents = 0;
+    uint32_t aHintContents = 0;
 
     if (audio) {
       aHintContents |= nsDOMMediaStream::HINT_CONTENTS_AUDIO;
@@ -542,7 +542,7 @@ class SignalingAgent {
 
   void CreateOfferRemoveStream(const char* hints, bool audio, bool video) {
 
-    PRUint32 aHintContents = 0;
+    uint32_t aHintContents = 0;
 
     if (!audio) {
       aHintContents |= nsDOMMediaStream::HINT_CONTENTS_VIDEO;
@@ -590,7 +590,7 @@ class SignalingAgent {
   
 
   bool IceCompleted() {
-    PRUint32 state;
+    uint32_t state;
     pc->GetIceState(&state);
     return state == sipcc::PeerConnectionImpl::kIceConnected;
   }

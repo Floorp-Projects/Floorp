@@ -43,7 +43,7 @@ nsDOMMediaStream::GetCurrentTime(double *aCurrentTime)
 }
 
 already_AddRefed<nsDOMMediaStream>
-nsDOMMediaStream::CreateInputStream(PRUint32 aHintContents)
+nsDOMMediaStream::CreateInputStream(uint32_t aHintContents)
 {
   nsRefPtr<nsDOMMediaStream> stream = new nsDOMMediaStream();
   stream->SetHintContents(aHintContents);

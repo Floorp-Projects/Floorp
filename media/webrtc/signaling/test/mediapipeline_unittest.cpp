@@ -70,7 +70,7 @@ class TestAgent {
 
     ASSERT_EQ((nsresult)NS_OK, audio_flow_->PushLayer(audio_prsock_));
 
-    std::vector<PRUint16> ciphers;
+    std::vector<uint16_t> ciphers;
     ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
     audio_dtls_->SetSrtpCiphers(ciphers);
     audio_dtls_->SetIdentity(DtlsIdentity::Generate());

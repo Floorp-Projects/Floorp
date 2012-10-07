@@ -869,7 +869,7 @@ short vcmCreateRemoteStream(
   const char *peerconnection,
   int *pc_stream_id,
   vcm_media_payload_type_t payload) {
-  PRUint32 hints = 0;
+  uint32_t hints = 0;
   nsresult res;
 
   CSFLogDebug( logTag, "%s", __FUNCTION__);
@@ -2476,7 +2476,7 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
       return NULL;
     }
 
-    std::vector<PRUint16> srtp_ciphers;
+    std::vector<uint16_t> srtp_ciphers;
     srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
     srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_32);
 
