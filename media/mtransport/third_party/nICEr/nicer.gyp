@@ -30,6 +30,9 @@
               "./src/net",
               "./src/stun",
               "./src/util",
+
+	      # Mozilla, hopefully towards the end
+             '$(DEPTH)/dist/include',
           ],
 
           'sources' : [
@@ -116,6 +119,13 @@
               'USE_TURN',
               'NR_SOCKET_IS_VOID_PTR',
               'restrict=',
+	      'R_PLATFORM_INT_TYPES=\'"mozilla/StandardInteger.h"\'',
+	      'R_DEFINED_INT2=int16_t',
+	      'R_DEFINED_UINT2=uint16_t',
+	      'R_DEFINED_INT4=int32_t',
+	      'R_DEFINED_UINT4=uint32_t',
+	      'R_DEFINED_INT8=int64_t',
+	      'R_DEFINED_UINT8=uint64_t',
           ],
           
           'conditions' : [
@@ -161,14 +171,6 @@
                     '_CRT_SECURE_NO_WARNINGS',
                     '__UNUSED__=',
                     'HAVE_STRDUP',
-                    'SIZEOF_SHORT=2',
-                    'SIZEOF_UNSIGNED_SHORT=2',
-                    'SIZEOF_INT=4',
-                    'SIZEOF_UNSIGNED_INT=4',
-                    'SIZEOF_LONG=4',
-                    'SIZEOF_UNSIGNED_LONG=4',
-                    'SIZEOF_LONG_LONG=8',
-                    'SIZEOF_UNSIGNED_LONG_LONG=8',
                     'NO_REG_RPC'
                 ],
 
