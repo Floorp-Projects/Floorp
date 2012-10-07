@@ -879,6 +879,18 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
   if (!sel)
     return NS_ERROR_NULL_POINTER;
 
+  int32_t scrollFlags = 0;
+  nsINode* focusNode = sel->GetFocusNode();
+  if (focusNode &&
+      (focusNode->IsEditable() ||
+       (focusNode->IsElement() &&
+        focusNode->AsElement()->State().
+          HasState(NS_EVENT_STATE_MOZ_READWRITE)))) {
+    // If caret moves in editor, it should cause scrolling even if it's in
+    // overflow: hidden;.
+    scrollFlags |= Selection::SCROLL_OVERFLOW_HIDDEN;
+  }
+
   nsresult result = sel->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(result))
     return result;
@@ -910,7 +922,9 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
                           anchorFocusRange->StartOffset());
           }
           mHint = HINTRIGHT;
-          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
+          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
+                              nsIPresShell::ScrollAxis(),
+                              nsIPresShell::ScrollAxis(), scrollFlags);
           return NS_OK;
         }
 
@@ -923,7 +937,9 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
                           anchorFocusRange->EndOffset());
           }
           mHint = HINTLEFT;
-          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
+          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
+                              nsIPresShell::ScrollAxis(),
+                              nsIPresShell::ScrollAxis(), scrollFlags);
           return NS_OK;
         }
     }
@@ -1048,7 +1064,9 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
   if (NS_SUCCEEDED(result))
   {
     result = mDomSelections[index]->
-      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
+      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
+                     nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(),
+                     scrollFlags);
   }
 
   return result;
