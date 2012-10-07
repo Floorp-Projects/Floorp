@@ -1812,13 +1812,20 @@ function run_PointerType_tests() {
           do_check_eq(c_array[k], view[k]);
         }
 
+        // Convert typed array to array of wrong size, ensure that it fails
         let array_type_too_large = item_type.array(number_of_items + 1);
         let array_type_too_small = item_type.array(number_of_items - 1);
 
         do_check_throws(function() { array_type_too_large(c_arraybuffer); }, Error);
         do_check_throws(function() { array_type_too_small(c_arraybuffer); }, Error);
         do_check_throws(function() { array_type_too_large(view); }, Error);
-        do_check_throws(function() { array_type_too_small(view); }, Error)
+        do_check_throws(function() { array_type_too_small(view); }, Error);
+
+        // Convert subarray of typed array to array of right size and check contents
+        c_array = array_type_too_small(view.subarray(1));
+        for (let k = 1; k < number_of_items; ++k) {
+          do_check_eq(c_array[k - 1], view[k]);
+        }
 
         // Convert array to void*
         ctypes.voidptr_t(c_arraybuffer);
