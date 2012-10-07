@@ -5,6 +5,8 @@
 #include "nsISupports.idl"
 #include "nsIDOMMediaStream.idl"
 
+interface nsIDOMDataChannel;
+
 [scriptable, function, uuid(eb9c563c-3b09-4565-9317-eca96ae0c538)]
 interface RTCPeerConnectionCallback : nsISupports
 {
@@ -33,7 +35,7 @@ interface nsIDOMRTCIceCandidate : nsISupports
 };
 
 /* See http://dev.w3.org/2011/webrtc/editor/webrtc.html */
-[scriptable, uuid(94628e70-e96f-4170-871c-f993a49f065a)]
+[scriptable, uuid(807b9b54-25a1-421e-9133-27ae6efcfcfd)]
 interface nsIDOMRTCPeerConnection : nsISupports
 {
   void createOffer(in RTCPeerConnectionCallback successCallback,
@@ -84,4 +86,13 @@ interface nsIDOMRTCPeerConnection : nsISupports
   attribute RTCPeerConnectionCallback onstatechange;
   attribute RTCPeerConnectionCallback ongatheringchange;
   attribute RTCPeerConnectionCallback onicechange;
+
+  /* Data channels */
+  nsIDOMDataChannel createDataChannel([optional] in ACString label,
+    [optional] in jsval options);
+  void connectDataConnection(in unsigned short localport,
+    in unsigned short remoteport, [optional] in unsigned short numstreams);
+  attribute RTCPeerConnectionCallback ondatachannel;
+  attribute RTCPeerConnectionCallbackVoid onconnection;
+  attribute RTCPeerConnectionCallbackVoid onclosedconnection;
 };
