@@ -19,6 +19,7 @@ MOCHITEST_FILES = \
 	bug449141_page.html \
 	test_bug499115.html \
 	test_nsFind.html \
+	test_private_window_from_content.html \
 	test_window_open_units.html \
 	$(NULL)
 
