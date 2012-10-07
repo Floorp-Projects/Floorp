@@ -38,6 +38,10 @@ function do_check_false(condition, stack) {
   do_check_eq(condition, false, stack);
 }
 
+function do_print(text) {
+  dump("INFO: " + text + "\n");
+}
+
 function FileFaker(path) {
   this._path = path;
 }
