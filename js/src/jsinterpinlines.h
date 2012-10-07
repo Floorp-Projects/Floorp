@@ -995,7 +995,6 @@ class FastInvokeGuard
     RootedScript script_;
 #ifdef JS_ION
     ion::IonContext ictx_;
-    ion::IonActivation activation_;
     bool useIon_;
 #endif
 
@@ -1005,7 +1004,6 @@ class FastInvokeGuard
         script_(cx)
 #ifdef JS_ION
         , ictx_(cx, cx->compartment, NULL),
-        activation_(cx, NULL),
         useIon_(ion::IsEnabled(cx))
 #endif
     {
@@ -1027,8 +1025,6 @@ class FastInvokeGuard
     }
 
     bool invoke(JSContext *cx) {
-        /* Disabled for now to fix bug 797131 fallout. */
-#if 0
 #ifdef JS_ION
         if (useIon_ && fun_) {
             JS_ASSERT(fun_->script() == script_);
@@ -1053,7 +1049,6 @@ class FastInvokeGuard
                 script_->incUseCount(5);
             }
         }
-#endif
 #endif
 
         return Invoke(cx, args_);
