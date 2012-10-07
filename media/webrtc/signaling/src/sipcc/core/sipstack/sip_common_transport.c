@@ -1920,7 +1920,7 @@ sipTransportCfgTableInit (boolean *cc_udp)
 {
 //    int cc_num;
     line_t line;
-    CC_ID dev_cc_type;
+    CC_ID dev_cc_type = CC_OTHER;
     uint32_t transport_prot = CONN_UDP;
     ti_common_t *ti_common;
     static const char *fname = "sipTransportCfgTableInit";

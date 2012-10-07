@@ -102,6 +102,13 @@ vcm_media_payload_type_t vcmRtpToMediaPayload (int32_t ptype,
     case RTP_H264_P1:
         type = CREATE_MT_MAP(dynamic_ptype_value, VCM_Media_Payload_H264);
         break;
+    case RTP_VP8:
+        type = CREATE_MT_MAP(dynamic_ptype_value, VCM_Media_Payload_VP8);
+        break;
+
+    case RTP_OPUS:
+        type = CREATE_MT_MAP(dynamic_ptype_value, VCM_Media_Payload_OPUS);
+        break;
 
     default:
         type = VCM_Media_Payload_NonStandard;

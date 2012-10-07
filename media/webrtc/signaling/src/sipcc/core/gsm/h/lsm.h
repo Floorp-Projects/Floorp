@@ -43,6 +43,7 @@
 #include "cpr_types.h"
 #include "ccapi.h"
 #include "uiapi.h"
+#include "fsm.h"
 
 
 #define LSM_NO_LINE     (0)
@@ -140,6 +141,7 @@ void lsm_ui_display_status(const char *pStatusStr, line_t line,
                            callid_t call_id);
 string_t lsm_parse_displaystr(string_t displaystr);
 void lsm_speaker_mode(short mode);
+void lsm_add_remote_stream (line_t line, callid_t call_id, fsmdef_media_t *media, int *pc_stream_id);
 
 #ifdef _WIN32
 void terminate_active_calls(void);
@@ -206,5 +208,8 @@ void
 lsm_util_tone_start_with_speaker_as_backup (vcm_tones_t tone, short alert_info,
                                     cc_call_handle_t call_handle, groupid_t group_id,
                                     streamid_t stream_id, uint16_t direction);
+
+void lsm_data_channel_negotiated (line_t line, callid_t call_id, fsmdef_media_t *media, int *pc_stream_id);
+
 #endif //_LSM_H_
 

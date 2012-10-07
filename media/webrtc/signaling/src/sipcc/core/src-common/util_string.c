@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <errno.h>
+#include <limits.h>
+
 #include "cpr_types.h"
 #include "cpr_stdio.h"
 #include "cpr_stdlib.h"
@@ -108,11 +111,13 @@ dotted2ipaddr (const char *addr_str)
     int         sections[4];
     int         section;
     int         i;
+    long        strtoul_result;
+    char       *strtoul_end;
 
     /* Check args */
     if ((!addr_str) || (addr_str[0] == '\0'))
     {
-        return (uint32_t) -1;
+        return 0xFFFFFFFF;
     }
 
     /* Init */
@@ -139,7 +144,17 @@ dotted2ipaddr (const char *addr_str)
             i++;
             p++;
         }
-        sections[section] = atoi(section_str);
+
+        errno = 0;
+        strtoul_result = strtoul(section_str, &strtoul_end, 10);
+
+        if (errno || section_str == strtoul_end ||
+            strtoul_result > 255) {
+            return 0xFFFFFFFF;
+        }
+
+        sections[section] = (int) strtoul_result;
+
         address = address | (sections[section]<<((3-section)*8));
         p++;
     }

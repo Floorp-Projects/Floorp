@@ -135,6 +135,10 @@ ifdef MOZ_WEBRTC
 tier_platform_dirs += \
   media/webrtc \
   $(NULL)
+#  media/mtransport/third_party \
+#  media/mtransport/build \
+#  media/mtransport/standalone \
+#
 endif
 
 ifdef MOZ_SPEEX_RESAMPLER
@@ -288,4 +292,9 @@ tier_platform_dirs += testing/xpcshell
 tier_platform_dirs += testing/tools/screenshot
 tier_platform_dirs += testing/peptest
 tier_platform_dirs += testing/mozbase
+ifdef MOZ_WEBRTC
+#disabled
+#tier_platform_dirs += media/webrtc/signaling/test
+#tier_platform_dirs += media/mtransport/test
+endif
 endif

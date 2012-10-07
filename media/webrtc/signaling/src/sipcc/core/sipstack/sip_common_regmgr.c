@@ -3150,6 +3150,7 @@ sip_regmgr_notify_timer_callback (void *data)
     ccsipCCB_t *ccb;
     sipServiceControl_t *scp = NULL;
     const char *versionStamp = "0";
+    int versionStampLen;
 
     ccb = sip_sm_get_ccb_by_index(REG_CCB_START);
     if (ccb->reg.registered) {
@@ -3159,22 +3160,23 @@ sip_regmgr_notify_timer_callback (void *data)
         scp = (sipServiceControl_t *)
             cpr_calloc(1, sizeof(sipServiceControl_t));
         if (scp) {
+            versionStampLen = strlen(versionStamp);
             scp->action = SERVICE_CONTROL_ACTION_CHECK_VERSION;
             scp->configVersionStamp = (char *)
-                cpr_calloc(1, strlen(versionStamp) + 1);
+                cpr_calloc(1, versionStampLen + 1);
             scp->dialplanVersionStamp = (char *)
-                cpr_calloc(1, strlen(versionStamp) + 1);
+                cpr_calloc(1, versionStampLen + 1);
             scp->softkeyVersionStamp = (char *)
-                cpr_calloc(1, strlen(versionStamp) + 1);
+                cpr_calloc(1, versionStampLen + 1);
 
             if (!scp->configVersionStamp ||
                 !scp->dialplanVersionStamp ||
                 !scp->softkeyVersionStamp) {
                 CCSIP_DEBUG_ERROR("%s: malloc failed\n", fname);
             } else {
-                strncpy(scp->configVersionStamp, versionStamp, strlen(versionStamp));
-                strncpy(scp->dialplanVersionStamp, versionStamp, strlen(versionStamp));
-                strncpy(scp->softkeyVersionStamp, versionStamp, strlen(versionStamp));
+                sstrncpy(scp->configVersionStamp, versionStamp, versionStampLen + 1);
+                sstrncpy(scp->dialplanVersionStamp, versionStamp, versionStampLen + 1);
+                sstrncpy(scp->softkeyVersionStamp, versionStamp, versionStampLen + 1);
                 sip_platform_handle_service_control_notify(scp);
                 CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Fake NOTIFY TO Platform\n", 
                                       DEB_F_PREFIX_ARGS(SIP_FALLBACK, fname));

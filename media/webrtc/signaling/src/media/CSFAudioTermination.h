@@ -116,7 +116,8 @@ typedef enum
     AudioPayloadType_RFC2833 = 38,
     AudioPayloadType_ILBC20 = 39,
     AudioPayloadType_ILBC30 = 40,
-    AudioPayloadType_ISAC = 41
+    AudioPayloadType_ISAC = 41,
+    AudioPayloadType_OPUS = 109
 
 } AudioPayloadType;
 

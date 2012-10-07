@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <errno.h>
+#include <string>
+
 #include "CC_SIPCCDevice.h"
 #include "CC_SIPCCDeviceInfo.h"
 #include "CC_SIPCCFeatureInfo.h"
@@ -59,12 +62,13 @@ static std::string logDestination = "CallControl.log";
 using namespace std;
 using namespace CSFUnified;
 
-
 namespace CSF
 {
 
+
 CallControlManagerImpl::CallControlManagerImpl()
-: multiClusterMode(false),
+: m_lock("CallControlManagerImpl"),
+  multiClusterMode(false),
   sipccLoggingMask(0),
   authenticationStatus(AuthenticationStatusEnum::eNotAuthenticated),
   connectionState(ConnectionStatusEnum::eIdle)
@@ -92,7 +96,7 @@ bool CallControlManagerImpl::destroy()
 // Observers
 void CallControlManagerImpl::addCCObserver ( CC_Observer * observer )
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     if (observer == NULL)
     {
         CSFLogErrorS(logTag, "NULL value for \"observer\" passed to addCCObserver().");
@@ -104,13 +108,13 @@ void CallControlManagerImpl::addCCObserver ( CC_Observer * observer )
 
 void CallControlManagerImpl::removeCCObserver ( CC_Observer * observer )
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     ccObservers.erase(observer);
 }
 
 void CallControlManagerImpl::addECCObserver ( ECC_Observer * observer )
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     if (observer == NULL)
     {
         CSFLogErrorS(logTag, "NULL value for \"observer\" passed to addECCObserver().");
@@ -122,7 +126,7 @@ void CallControlManagerImpl::addECCObserver ( ECC_Observer * observer )
 
 void CallControlManagerImpl::removeECCObserver ( ECC_Observer * observer )
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     eccObservers.erase(observer);
 }
 
@@ -150,17 +154,19 @@ void CallControlManagerImpl::setSecureCachePath(const std::string &secureCachePa
     this->secureCachePath = secureCachePath;
 }
 
-// Local IP Address
-void CallControlManagerImpl::setLocalIpAddressAndGateway(const std::string& localIpAddress, const std::string& defaultGW)
+// Add local codecs
+void CallControlManagerImpl::setAudioCodecs(int codecMask)
 {
-    CSFLogInfoS(logTag, "setLocalIpAddressAndGateway(" << localIpAddress << ", " << defaultGW << ")");
-    this->localIpAddress = localIpAddress;
-    this->defaultGW = defaultGW;
+  CSFLogDebug(logTag, "setAudioCodecs %X", codecMask); 
 
-    if(softPhone != NULL)
-    {
-        softPhone->setLocalAddressAndGateway(this->localIpAddress, this->defaultGW);
-    }
+  VcmSIPCCBinding::setAudioCodecs(codecMask);
+}
+
+void CallControlManagerImpl::setVideoCodecs(int codecMask)
+{
+  CSFLogDebug(logTag, "setVideoCodecs %X", codecMask); 
+
+  VcmSIPCCBinding::setVideoCodecs(codecMask);
 }
 
 AuthenticationStatusEnum::AuthenticationStatus CallControlManagerImpl::getAuthenticationStatus()
@@ -181,19 +187,10 @@ bool CallControlManagerImpl::registerUser( const std::string& deviceName, const 
         return false;
     }
 
-    // Check preconditions.
-    if(localIpAddress.empty() || localIpAddress == "127.0.0.1")
-    {
-    	setConnectionState(ConnectionStatusEnum::eFailed);
-    	CSFLogErrorS(logTag, "registerUser() failed - No local IP address set!");
-    	return false;
-    }
-
     softPhone = CC_SIPCCServicePtr(new CC_SIPCCService());
     phone = softPhone;
     phone->init(user, password, domain, deviceName);
     softPhone->setLoggingMask(sipccLoggingMask);
-    softPhone->setLocalAddressAndGateway(localIpAddress, defaultGW);
     phone->addCCObserver(this);
 
     phone->setP2PMode(false);
@@ -221,19 +218,10 @@ bool CallControlManagerImpl::startP2PMode(const std::string& user)
         return false;
     }
 
-    // Check preconditions.
-    if(localIpAddress.empty() || localIpAddress == "127.0.0.1")
-    {
-    	setConnectionState(ConnectionStatusEnum::eFailed);
-    	CSFLogErrorS(logTag, "startP2PMode() failed - No local IP address set!");
-    	return false;
-    }
-
     softPhone = CC_SIPCCServicePtr(new CC_SIPCCService());
     phone = softPhone;
     phone->init(user, "", "127.0.0.1", "sipdevice");
     softPhone->setLoggingMask(sipccLoggingMask);
-    softPhone->setLocalAddressAndGateway(localIpAddress, defaultGW);
     phone->addCCObserver(this);
 
     phone->setP2PMode(true);
@@ -248,45 +236,23 @@ bool CallControlManagerImpl::startP2PMode(const std::string& user)
     return bStarted;
 }
 
-bool CallControlManagerImpl::startROAPProxy( const std::string& deviceName, const std::string& user, const std::string& password, const std::string& domain )
+bool CallControlManagerImpl::startSDPMode()
 {
-	setConnectionState(ConnectionStatusEnum::eRegistering);
-
-    CSFLogInfoS(logTag, "startROAPProxy(" << user << ", " << domain << " )");
+    CSFLogInfoS(logTag, "startSDPMode");
     if(phone != NULL)
     {
-    	setConnectionState(ConnectionStatusEnum::eReady);
-
-        CSFLogErrorS(logTag, "startROAPProxy() failed - already connected!");
+        CSFLogError(logTag, "%s failed - already started in SDP mode!",__FUNCTION__);
         return false;
-    }
-
-    // Check preconditions.
-    if(localIpAddress.empty() || localIpAddress == "127.0.0.1")
-    {
-    	setConnectionState(ConnectionStatusEnum::eFailed);
-    	CSFLogErrorS(logTag, "startROAPProxy() failed - No local IP address set!");
-    	return false;
     }
 
     softPhone = CC_SIPCCServicePtr(new CC_SIPCCService());
     phone = softPhone;
-    phone->init(user, password, domain, deviceName);
+    phone->init("JSEP", "", "127.0.0.1", "sipdevice");
     softPhone->setLoggingMask(sipccLoggingMask);
-    softPhone->setLocalAddressAndGateway(localIpAddress, defaultGW);
     phone->addCCObserver(this);
-
-    phone->setP2PMode(false);
-    phone->setROAPProxyMode(true);
-
-    bool bStarted = phone->startService();
-    if (!bStarted) {
-        setConnectionState(ConnectionStatusEnum::eFailed);
-    } else {
-        setConnectionState(ConnectionStatusEnum::eReady);
-    }
-
-    return bStarted;
+    phone->setSDPMode(true);
+ 
+    return phone->startService();
 }
 
 bool CallControlManagerImpl::disconnect()
@@ -337,14 +303,15 @@ CC_DevicePtr CallControlManagerImpl::getActiveDevice()
 // All known devices
 PhoneDetailsVtrPtr CallControlManagerImpl::getAvailablePhoneDetails()
 {
-    PhoneDetailsVtrPtr result = PhoneDetailsVtrPtr(new PhoneDetailsVtr());
-    for(PhoneDetailsMap::iterator it = phoneDetailsMap.begin(); it != phoneDetailsMap.end(); it++)
-    {
-        PhoneDetailsPtr details = it->second;
-        result->push_back(details);
-    }
-    return result;
+  PhoneDetailsVtrPtr result = PhoneDetailsVtrPtr(new PhoneDetailsVtr());
+  for(PhoneDetailsMap::iterator it = phoneDetailsMap.begin(); it != phoneDetailsMap.end(); it++)
+  {
+    PhoneDetailsPtr details = it->second;
+    result->push_back(details);
+  }
+  return result;
 }
+
 PhoneDetailsPtr CallControlManagerImpl::getAvailablePhoneDetails(const std::string& deviceName)
 {
     PhoneDetailsMap::iterator it = phoneDetailsMap.find(deviceName);
@@ -354,7 +321,6 @@ PhoneDetailsPtr CallControlManagerImpl::getAvailablePhoneDetails(const std::stri
     }
     return PhoneDetailsPtr();
 }
-
 // Media setup
 VideoControlPtr CallControlManagerImpl::getVideoControl()
 {
@@ -374,43 +340,58 @@ AudioControlPtr CallControlManagerImpl::getAudioControl()
 
 bool CallControlManagerImpl::setProperty(ConfigPropertyKeysEnum::ConfigPropertyKeys key, std::string& value)
 {
-	CSFLogInfoS(logTag, "setProperty(" << value << " )");
+  unsigned long strtoul_result;
+  char *strtoul_end;
 
-	if (key == ConfigPropertyKeysEnum::eLocalVoipPort) {
-		CCAPI_Config_set_local_voip_port(atoi(value.c_str()));
-	} else if (key == ConfigPropertyKeysEnum::eRemoteVoipPort) {
-		CCAPI_Config_set_remote_voip_port(atoi(value.c_str()));
-	} else if (key == ConfigPropertyKeysEnum::eTransport) {
-		if (value == "tcp")
-			CCAPI_Config_set_transport_udp(false);
-		else
-			CCAPI_Config_set_transport_udp(true);
-	}
+  CSFLogInfoS(logTag, "setProperty(" << value << " )");
 
-	return true;
+  if (key == ConfigPropertyKeysEnum::eLocalVoipPort) {
+    errno = 0;
+    strtoul_result = strtoul(value.c_str(), &strtoul_end, 10);
+
+    if (errno || value.c_str() == strtoul_end || strtoul_result > USHRT_MAX) {
+      return false;
+    }
+
+    CCAPI_Config_set_local_voip_port((int) strtoul_result);
+  } else if (key == ConfigPropertyKeysEnum::eRemoteVoipPort) {
+    errno = 0;
+    strtoul_result = strtoul(value.c_str(), &strtoul_end, 10);
+
+    if (errno || value.c_str() == strtoul_end || strtoul_result > USHRT_MAX) {
+      return false;
+    }
+
+    CCAPI_Config_set_remote_voip_port((int) strtoul_result);
+  } else if (key == ConfigPropertyKeysEnum::eTransport) {
+    if (value == "tcp")
+      CCAPI_Config_set_transport_udp(false);
+    else
+      CCAPI_Config_set_transport_udp(true);
+  }
+
+  return true;
 }
 
 std::string CallControlManagerImpl::getProperty(ConfigPropertyKeysEnum::ConfigPropertyKeys key)
 {
-	CSFLogInfoS(logTag, "getProperty()");
+  std::string retValue = "NONESET";
+  char tmpString[11];
 
-	std::string retValue = "NONESET";
-	if (key == ConfigPropertyKeysEnum::eLocalVoipPort) {
-		int tmpValue = CCAPI_Config_get_local_voip_port();
-		std::stringstream out;
-		out << tmpValue;
-		retValue = out.str();
-	} else if (key == ConfigPropertyKeysEnum::eRemoteVoipPort) {
-		int tmpValue = CCAPI_Config_get_remote_voip_port();
-		std::stringstream out;
-		out << tmpValue;
-		retValue = out.str();
-	} else if (key == ConfigPropertyKeysEnum::eVersion) {
-		const char* version = CCAPI_Config_get_version();
-		retValue = version;
-	}
+  CSFLogInfoS(logTag, "getProperty()");
 
-	return retValue;
+  if (key == ConfigPropertyKeysEnum::eLocalVoipPort) {
+    csf_sprintf(tmpString, sizeof(tmpString), "%u", CCAPI_Config_get_local_voip_port());
+    retValue = tmpString;
+  } else if (key == ConfigPropertyKeysEnum::eRemoteVoipPort) {
+    csf_sprintf(tmpString, sizeof(tmpString), "%u", CCAPI_Config_get_remote_voip_port());
+    retValue = tmpString;
+  } else if (key == ConfigPropertyKeysEnum::eVersion) {
+    const char* version = CCAPI_Config_get_version();
+    retValue = version;
+  }
+
+  return retValue;
 }
 /*
   There are a number of factors that determine PhoneAvailabilityType::PhoneAvailability. The supported states for this enum are:
@@ -502,15 +483,15 @@ void CallControlManagerImpl::onLineEvent(ccapi_line_event_e lineEvent,     CC_Li
 {
     notifyLineEventObservers(lineEvent, linePtr, info);
 }
-void CallControlManagerImpl::onCallEvent(ccapi_call_event_e callEvent,     CC_CallPtr callPtr, CC_CallInfoPtr info, char* sdp)
+void CallControlManagerImpl::onCallEvent(ccapi_call_event_e callEvent,     CC_CallPtr callPtr, CC_CallInfoPtr info)
 {
-    notifyCallEventObservers(callEvent, callPtr, info, sdp);
+    notifyCallEventObservers(callEvent, callPtr, info);
 }
 
 
 void CallControlManagerImpl::notifyDeviceEventObservers (ccapi_device_event_e deviceEvent, CC_DevicePtr devicePtr, CC_DeviceInfoPtr info)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     set<CC_Observer*>::const_iterator it = ccObservers.begin();
     for ( ; it != ccObservers.end(); it++ )
     {
@@ -520,7 +501,7 @@ void CallControlManagerImpl::notifyDeviceEventObservers (ccapi_device_event_e de
 
 void CallControlManagerImpl::notifyFeatureEventObservers (ccapi_device_event_e deviceEvent, CC_DevicePtr devicePtr, CC_FeatureInfoPtr info)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     set<CC_Observer*>::const_iterator it = ccObservers.begin();
     for ( ; it != ccObservers.end(); it++ )
     {
@@ -530,7 +511,7 @@ void CallControlManagerImpl::notifyFeatureEventObservers (ccapi_device_event_e d
 
 void CallControlManagerImpl::notifyLineEventObservers (ccapi_line_event_e lineEvent, CC_LinePtr linePtr, CC_LineInfoPtr info)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     set<CC_Observer*>::const_iterator it = ccObservers.begin();
     for ( ; it != ccObservers.end(); it++ )
     {
@@ -538,20 +519,20 @@ void CallControlManagerImpl::notifyLineEventObservers (ccapi_line_event_e lineEv
     }
 }
 
-void CallControlManagerImpl::notifyCallEventObservers (ccapi_call_event_e callEvent, CC_CallPtr callPtr, CC_CallInfoPtr info, char* sdp)
+void CallControlManagerImpl::notifyCallEventObservers (ccapi_call_event_e callEvent, CC_CallPtr callPtr, CC_CallInfoPtr info)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     set<CC_Observer*>::const_iterator it = ccObservers.begin();
     for ( ; it != ccObservers.end(); it++ )
     {
-        (*it)->onCallEvent(callEvent, callPtr, info, sdp);
+        (*it)->onCallEvent(callEvent, callPtr, info);
     }
 }
 
 void CallControlManagerImpl::notifyAvailablePhoneEvent (AvailablePhoneEventType::AvailablePhoneEvent event,
         const PhoneDetailsPtr availablePhoneDetails)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     set<ECC_Observer*>::const_iterator it = eccObservers.begin();
     for ( ; it != eccObservers.end(); it++ )
     {
@@ -561,7 +542,7 @@ void CallControlManagerImpl::notifyAvailablePhoneEvent (AvailablePhoneEventType:
 
 void CallControlManagerImpl::notifyAuthenticationStatusChange (AuthenticationStatusEnum::AuthenticationStatus status)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     set<ECC_Observer*>::const_iterator it = eccObservers.begin();
     for ( ; it != eccObservers.end(); it++ )
     {
@@ -571,7 +552,7 @@ void CallControlManagerImpl::notifyAuthenticationStatusChange (AuthenticationSta
 
 void CallControlManagerImpl::notifyConnectionStatusChange(ConnectionStatusEnum::ConnectionStatus status)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     set<ECC_Observer*>::const_iterator it = eccObservers.begin();
     for ( ; it != eccObservers.end(); it++ )
     {
@@ -584,5 +565,4 @@ void CallControlManagerImpl::setConnectionState(ConnectionStatusEnum::Connection
 	connectionState = status;
 	notifyConnectionStatusChange(status);
 }
-
 }

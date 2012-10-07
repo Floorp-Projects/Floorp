@@ -65,14 +65,9 @@
 
 
 mgmt_state_t mgmtState = MGMT_STATE_IDLE;
-int parse_config_properties (int device_handle, const char *device_name, const char *cfg, int from_memory);
+//int parse_config_properties (int device_handle, const char *device_name, const char *cfg, int from_memory);
 static boolean isStartRequestPending = FALSE;
 static boolean isServiceStopped = TRUE;
-extern int g_dev_hdl;
-extern char g_dev_name[];
-extern char g_cfg_p[];
-extern int g_compl_cfg;
-
 
 extern cc_boolean is_action_to_be_deferred(cc_action_t action);
 
@@ -526,6 +521,7 @@ void registration_processEvent(int event) {
                 isServiceStopped = TRUE;
                 switch ( mgmtState) {
                     case MGMT_STATE_REGISTERED:
+                    CC_Service_destroy();
                         processInsToOos();
                     case MGMT_STATE_REGISTERING:
                     case MGMT_STATE_OOS:
@@ -537,10 +533,9 @@ void registration_processEvent(int event) {
                     case MGMT_STATE_OOS_AWAIT_SHUTDOWN_ACK:
                     case MGMT_STATE_OOS_AWAIT_UN_REG_ACK:
                         //setState(MGMT_STATE_DESTROY_AWAIT_SHUTDOWN_ACK);
-                    	//Suhas
-                    	setState(MGMT_STATE_IDLE);
-                    	CC_Service_destroy();
-                    	break;
+                        setState(MGMT_STATE_IDLE);
+                        CC_Service_destroy();
+                        break;
                     case MGMT_STATE_CREATED:
                         CC_Service_destroy();
                         break;
@@ -548,8 +543,6 @@ void registration_processEvent(int event) {
                     	CC_Service_destroy();
                     	break;
                     case MGMT_STATE_DESTROY_AWAIT_SHUTDOWN_ACK:
-
-                    	// Suhas: Adding state change
                         setState(MGMT_STATE_IDLE);
 
                     default:
@@ -578,8 +571,9 @@ void registration_processEvent(int event) {
                     case MGMT_STATE_CREATED:
                     case MGMT_STATE_IDLE:
                     case MGMT_STATE_DESTROY_AWAIT_SHUTDOWN_ACK:
-			 // Suhas: Adding state change
                         setState(MGMT_STATE_IDLE);
+						//action(CMD_SHUTDOWN);
+						CC_Service_destroy();
 
                     default:
                         ignored = 1;
@@ -590,13 +584,11 @@ void registration_processEvent(int event) {
                  switch ( mgmtState) {
                     case MGMT_STATE_OOS_AWAIT_UN_REG_ACK:
                         setState(MGMT_STATE_REGISTERING);
-                        parse_config_properties(g_dev_hdl, g_dev_name, g_cfg_p, g_compl_cfg);
                         action(CMD_RESTART);
                         break;
                     case MGMT_STATE_OOS_AWAIT_SHUTDOWN_ACK:
                         setState(MGMT_STATE_WAITING_FOR_CONFIG_FILE);
                         configFetchReq(0);
-			// Suhas: Adding state change 
 			setState(MGMT_STATE_IDLE);
                         break;
                     case MGMT_STATE_STOP_AWAIT_SHUTDOWN_ACK:
@@ -605,7 +597,6 @@ void registration_processEvent(int event) {
                             isStartRequestPending = FALSE;
                             configFetchReq(0);
                         }
-			// Suhas: Adding state change 
 			setState(MGMT_STATE_IDLE);
                     break;
                     case MGMT_STATE_DESTROY_AWAIT_SHUTDOWN_ACK:

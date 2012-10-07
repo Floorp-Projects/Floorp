@@ -216,6 +216,16 @@ static const int gDscpCallControl = 1;
 static const int gSpeakerEnabled = 1;
 static const char gExternalNumberMask[] = "";
 static const char gVersion[] = "0.1";
-
+static const boolean gRTCPMUX = FALSE;
+static boolean gRTPSAVPF = TRUE;           /* TRUE = RTP/SAVPF , FALSE = RTP/SAVP */
+static const boolean gMAXAVBITRATE = FALSE;      /* Following six are OPUS fmtp options */
+static const boolean gMAXCODEDAUDIOBW = FALSE;
+static const boolean gUSEDTX = FALSE;
+static const boolean gSTEREO = FALSE;
+static const boolean gUSEINBANDFEC = FALSE;
+static const boolean gCBR = FALSE;
+static const boolean gMAXPTIME = FALSE;
+static const int gSCTPPort = 5000;
+static const int gNumDataStreams = 16;
 
 #endif /* _CONFIG_H_ */

@@ -195,8 +195,6 @@ static debug_entry_t debug_table[MAX_DEBUG_CMDS];
  * TRansient CPR stuff
  *===============================================================*/
 
-/* required in various btxml files */
-
 /*================================================================
  * From timer_platform.c which used to be included and needs to be FIXED
  *===============================================================*/	

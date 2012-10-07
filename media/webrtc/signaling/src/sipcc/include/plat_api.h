@@ -684,14 +684,6 @@ char *platGetIPAddr();
  */
 void platGetMacAddr(char *addr);
 
-/**
- * Provides the default gateway 
- *
- * @param *addr the pointer to the string holding default gw address (dhcp.xxxx.gateway)
- * @return void
- */
-void platGetDefaultGW(char *addr);
-
 
 /**
  *  platGetFeatureAllowed
@@ -712,81 +704,6 @@ int platGetFeatureAllowed(cc_sis_feature_id_e featureId);
  * @return void
  */
 void platSetStatusMessage(char *msg);
-
-
-/**
- * Debug APIs
- * The pSIPCC implements the following Debug/logging APIs.
- * The vendor application layer can call these APIs to collect debugging
- * information.
- * The vendor layer should implement a "printf" equivalent API. That is
- * "debugif_printf" documented below.
- */
-
-/**
- * Set/Unset a pSIPCC Debug Category
- *
- * The pSIPCC implements this function. Vendors need to
- * call this function in order to set or unset a debug category
- *
- * @param[in] category - The Debug category
- * @param[in] flag - To enable or disable the debug
- * @param[in] ...     variable arg list
- *
- * @note - The variable parameter list actually consists of only one additional
- * formal argument. This is the third parameter specifying any sub category for
- * debugging.
- * Currently only CC_DEBUG_CPR_MEMORY has sub-categories. The sub-categories are
- * defined in cc_debug_cpr_mem_options_e.
- */
-void debugSet(cc_debug_category_e category, cc_debug_flag_e flag, ...);
-
-/**
- * Call a pSIPCC Show Category
- *
- * The pSIPCC implements this function. Vendors need to
- * call this function in order to use a show command
- *
- * @param[in] category - The Show category
- * @param[in] ...     variable arg list
- *
- * @note - The variable parameter list actually consists of only one additional
- * formal argument. This is the second parameter specifying any sub category for
- * showing information.
- * Currently only CC_DEBUG_SHOW_CPR_MEMORY has sub-categories. The sub-categories are
- * defined in cc_debug_show_cpr_options_e.
- * @return 0 if succesfull
- */
-int debugShow(cc_debug_show_options_e category, ...);
-
-/**
- * Call the show tech command
- *
- * The pSIPCC implements this function. Vendors need to
- * call this function in order to collect all the important configuration and
- * statistics. This command takes a subset of the show commands and prints out
- * the information
- *
- */
-void debugShowTech(void);
-
-/**
- * Call a pSIPCC Clear Category
- *
- * The pSIPCC implements this function. Vendors need to
- * call this function in order to clear certain information stored in pSIPCC.
- *
- * @param[in] category - The Clear category
- * @param[in] ...     variable arg list
- *
- * @note - The variable parameter list actually consists of only one additional
- * formal argument. This is the second parameter specifying any sub category for
- * clearing information.
- * Currently only CC_DEBUG_CLEAR_CPR_MEMORY has sub-categories. The sub-categories are
- * defined in cc_debug_clear_cpr_options_e.
- * @return 0 if succesfull
- */
-int debugClear(cc_debug_clear_options_e category, ...);
 
 /**
  * The equivalent of the printf function.

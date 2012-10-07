@@ -77,6 +77,11 @@ typedef struct {
   string_t info;
   string_t info1;
   unsigned int state;
+  cc_jsep_action_t     action;
+  cc_media_stream_id_t stream_id;
+  cc_media_track_id_t  track_id;
+  cc_media_type_t      media_type;
+  cc_level_t           level;
 } ccSession_feature_t;
 
 typedef struct {
@@ -85,6 +90,9 @@ typedef struct {
   int          inst;
   line_t       line_id;
   int          cause;
+  string_t 	   sdp;
+  unsigned int media_stream_id;
+  unsigned int media_stream_track_id;
 } cc_call_state_data_t;
 /* CALL_SESSION_CREATED shall use the call_state as data*/
 

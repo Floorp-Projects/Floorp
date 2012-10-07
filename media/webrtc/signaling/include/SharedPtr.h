@@ -42,7 +42,6 @@
 #include <vector>
 #include "base/linked_ptr.h"
 
-
 #ifndef DECLARE_PTR
 #define DECLARE_PTR(className)\
     class className;\
@@ -52,9 +51,9 @@
 
 #ifndef DECLARE_PTR_VECTOR
 #define DECLARE_PTR_VECTOR(className)\
-    DECLARE_PTR(className);\
+    DECLARE_PTR(className)\
     typedef std::vector<className##Ptr> className##Vtr;\
-    typedef linked_ptr<className##Vtr> className##Vtr##Ptr
+    typedef linked_ptr<className##Vtr> className##Vtr##Ptr;
 #endif
 
 

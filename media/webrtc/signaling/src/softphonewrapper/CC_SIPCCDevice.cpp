@@ -57,37 +57,8 @@ using namespace std;
 using namespace CSF;
 
 #include "CSFLogStream.h"
-static const char* logTag = "CC_SIPCCDevice";
 
 CSF_IMPLEMENT_WRAP(CC_SIPCCDevice, cc_device_handle_t);
-
-/* static */
-CC_DevicePtr CC_SIPCCDevice::createAndValidateXML (bool isXMLString, const string & configFileNameOrXMLString)
-{
-    cc_device_handle_t deviceHandle = CCAPI_Device_getDeviceID();
-
-    CC_SIPCCDevicePtr pSIPCCDevice = CC_SIPCCDevice::wrap(deviceHandle);
-
-    if (!pSIPCCDevice->checkXMLPhoneConfigValidity(isXMLString, configFileNameOrXMLString))
-    {
-        if (!isXMLString)
-        {
-            CSFLogError(logTag, "Phone Config file \"%s\" is not valid.", configFileNameOrXMLString.c_str());
-        }
-        else
-        {
-            CSFLogErrorS(logTag, "Phone Config XML is not valid.");
-        }
-
-        CSFLogInfoS(logTag, "pSIPCC requires that the phone config contain (at a minimum) a \"port config\", a \"proxy config\" and a \"line config\".");
-
-        wrapper.release(deviceHandle);
-
-        return NULL_PTR(CC_Device);
-    }
-
-    return pSIPCCDevice;
-}
 
 CC_DevicePtr CC_SIPCCDevice::createDevice ()
 {
@@ -103,11 +74,6 @@ CC_SIPCCDevice::CC_SIPCCDevice (cc_device_handle_t aDeviceHandle)
 {
 	enableVideo(true);
 	enableCamera(true);
-}
-
-bool CC_SIPCCDevice::checkXMLPhoneConfigValidity (bool isXMLString, const string & configFileNameOrXMLString)
-{
-    return (CCAPI_Config_checkValidity(deviceHandle, configFileNameOrXMLString.c_str(), (isXMLString) ? TRUE : 0 ) != 0);
 }
 
 CC_DeviceInfoPtr CC_SIPCCDevice::getDeviceInfo ()
@@ -131,9 +97,11 @@ CC_DeviceInfoPtr CC_SIPCCDevice::getDeviceInfo ()
 
 std::string CC_SIPCCDevice::toString()
 {
-    std::stringstream sstream;
-    sstream << "0x" << std::setw( 5 ) << std::setfill( '0' ) << std::hex << deviceHandle;
-    return sstream.str();
+    std::string result;
+    char tmpString[11];
+    csf_sprintf(tmpString, sizeof(tmpString), "%X", deviceHandle);
+    result = tmpString;
+    return result;
 }
 
 CC_CallPtr CC_SIPCCDevice::createCall ()

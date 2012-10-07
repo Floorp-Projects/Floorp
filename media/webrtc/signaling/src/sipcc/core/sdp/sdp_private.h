@@ -45,7 +45,8 @@
 
 /* SDP Defines */
 
-#define SDP_MAX_STRING_LEN      80  /* Max len for SDP string       */
+#define SDP_MAX_STRING_LEN      256  /* Max len for SDP string       */
+#define SDP_MAX_CANDIDATE_LEN      256  /* Max len for SDP string       */
 #define SDP_MAX_SHORT_STRING_LEN      12  /* Max len for a short SDP string  */
 #define SDP_MAX_PAYLOAD_TYPES   23  /* Max payload types in m= line */
 #define SDP_TOKEN_LEN           2   /* Len of <token>=              */
@@ -73,7 +74,7 @@
 #define SDP_MAGIC_NUM           0xabcdabcd
 
 #define SDP_UNSUPPORTED         "Unsupported"
-#define SDP_MAX_LINE_LEN   80 /* Max len for SDP Line */
+#define SDP_MAX_LINE_LEN   256 /* Max len for SDP Line */
 
 #define SDP_MAX_PROFILE_VALUE  10
 #define SDP_MAX_LEVEL_VALUE    100
@@ -152,6 +153,17 @@ typedef struct sdp_fmtp {
     u32                       bitrate;   
     u32                       mode;   
     
+    /* some OPUS specific fmtp params */
+    u32                       maxaveragebitrate;
+    u16                       usedtx;
+    u16                       stereo;
+    u16                       useinbandfec;
+    char                      maxcodedaudiobandwidth[SDP_MAX_STRING_LEN+1];
+    u16                       cbr;
+
+    /* some Data Channel specific fmtp params */
+    u16                       streams;   /* Num streams per Data Channel */
+    char                      protocol[SDP_MAX_STRING_LEN+1];
 
     /* BEGIN - All Video related FMTP parameters */
     u16                       qcif;
@@ -413,6 +425,7 @@ typedef struct sdp_mca {
     sdp_transport_e           transport;
     sdp_port_format_e         port_format;
     int32                     port;
+    int32                     sctpport;
     int32                     num_ports;
     int32                     vpi;
     u32                       vci;  /* VCI needs to be 32-bit */
@@ -440,6 +453,7 @@ typedef struct sdp_attr {
         tinybool              boolean_val;
         u32                   u32_val;
         char                  string_val[SDP_MAX_STRING_LEN+1];
+        char                  ice_attr[SDP_MAX_CANDIDATE_LEN];
         sdp_fmtp_t            fmtp;
         sdp_qos_t             qos;
         sdp_curr_t            curr;
@@ -720,6 +734,18 @@ extern sdp_result_e sdp_parse_attr_rtcp_unicast(
 extern sdp_result_e sdp_build_attr_rtcp_unicast(
     sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
 
+extern sdp_result_e sdp_build_attr_ice_attr (
+	sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+extern sdp_result_e sdp_parse_attr_ice_attr (
+	sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
+
+extern sdp_result_e sdp_build_attr_rtcp_mux_attr (
+	sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+extern sdp_result_e sdp_parse_attr_rtcp_mux_attr (
+	sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
+extern sdp_result_e sdp_parse_attr_fingerprint_attr (
+    sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
+
 /* sdp_attr_access.c */
 extern void sdp_free_attr(sdp_attr_t *attr_p);
 extern sdp_result_e sdp_find_attr_list(sdp_t *sdp_p, u16 level, u8 cap_num, 
@@ -837,17 +863,15 @@ sdp_build_attr_sdescriptions(sdp_t *sdp_p, sdp_attr_t *attr_p,
 extern sdp_mca_t *sdp_alloc_mca(void);
 extern tinybool sdp_validate_maxprate(const char *string_parm);
 extern char *sdp_findchar(const char *ptr, char *char_list);
-extern char *sdp_getnextstrtok(const char *str, char *tokenstr, 
-                               char *delim, sdp_result_e *result);
-extern char *sdp_getnextstrtok_noskip (const char *str, char *tokenstr, 
-                         char *delim, sdp_result_e *result);
+extern const char *sdp_getnextstrtok(const char *str, char *tokenstr, unsigned tokenstr_len, 
+                               const char *delim, sdp_result_e *result);
 extern u32 sdp_getnextnumtok(const char *str, const char **str_end, 
-                             char *delim, sdp_result_e *result);
+                             const char *delim, sdp_result_e *result);
 extern u32 sdp_getnextnumtok_or_null(const char *str, const char **str_end, 
-                                     char *delim, tinybool *null_ind,
+                                     const char *delim, tinybool *null_ind,
                                      sdp_result_e *result);
-extern tinybool sdp_getchoosetok(const char *str, char **str_end, 
-                                 char *delim, sdp_result_e *result);
+extern tinybool sdp_getchoosetok(const char *str, const char **str_end, 
+                                 const char *delim, sdp_result_e *result);
 
 extern 
 tinybool verify_sdescriptions_mki(char *buf, char *mkiVal, u16 *mkiLen);

@@ -121,21 +121,40 @@ cc_lineid_t CCAPI_Call_getLine(cc_call_handle_t call_handle){
  * @param [in] digits - digits to be dialed
  * @return SUCCESS or FAILURE
  */
-cc_return_t CCAPI_Call_originateCall(cc_call_handle_t handle, cc_sdp_direction_t video_pref, cc_string_t digits, char* ipaddress, int audioPort, int videoPort){
-	
-	int roapproxy = 0;
-	config_get_value(CFGID_ROAPPROXY, &roapproxy, sizeof(roapproxy));
-	
-	if (roapproxy == TRUE)	{
-		init_empty_str(gROAPSDP.offerAddress);
-		init_empty_str(gROAPSDP.answerSDP);
-		init_empty_str(gROAPSDP.offerSDP);
-		strcpy(gROAPSDP.offerAddress, ipaddress);
-		gROAPSDP.audioPort = audioPort;
-		gROAPSDP.videoPort = videoPort;
-	}
-	
+cc_return_t CCAPI_Call_originateCall(cc_call_handle_t handle, cc_sdp_direction_t video_pref, cc_string_t digits){
 	return CC_CallFeature_dial(handle, video_pref, digits);
+}
+
+cc_return_t CCAPI_CreateOffer(cc_call_handle_t handle) {
+	return CC_CallFeature_CreateOffer(handle);
+}
+
+cc_return_t CCAPI_CreateAnswer(cc_call_handle_t handle, cc_string_t offersdp) {
+	return CC_CallFeature_CreateAnswer(handle, offersdp);
+}
+
+cc_return_t CCAPI_SetLocalDescription(cc_call_handle_t handle, cc_jsep_action_t action, cc_string_t sdp) {
+	return CC_CallFeature_SetLocalDescription(handle, action, sdp);
+}
+
+cc_return_t CCAPI_SetRemoteDescription(cc_call_handle_t handle, cc_jsep_action_t action, cc_string_t sdp) {
+    return CC_CallFeature_SetRemoteDescription(handle, action, sdp);
+}
+
+cc_return_t CCAPI_SetPeerConnection(cc_call_handle_t handle, cc_peerconnection_t pc) {
+  return CC_CallFeature_SetPeerConnection(handle, pc);
+}
+
+cc_return_t CCAPI_AddStream(cc_call_handle_t handle, cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) {
+  return CC_CallFeature_AddStream(handle, stream_id, track_id, media_type);
+}
+
+cc_return_t CCAPI_RemoveStream(cc_call_handle_t handle, cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) {
+  return CC_CallFeature_RemoveStream(handle, stream_id, track_id, media_type);
+}
+
+cc_return_t CCAPI_AddICECandidate(cc_call_handle_t handle, cc_string_t candidate, cc_string_t mid, cc_level_t level) {
+	return CC_CallFeature_AddICECandidate(handle, candidate, mid, level);
 }
 
 /**

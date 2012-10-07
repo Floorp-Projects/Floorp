@@ -804,12 +804,12 @@ cpr_inet_pton (int af, const char *src, void *dst)
  *
  *  @pre  (name != NULL)
  */
-void cpr_set_sockun_addr (cpr_sockaddr_un_t *addr, const char *name)
+void cpr_set_sockun_addr (cpr_sockaddr_un_t *addr, const char *name, pid_t pid)
 {
     /* Bind to the local socket */
     memset(addr, 0, sizeof(cpr_sockaddr_un_t));
     addr->sun_family = AF_UNIX;
-    sstrncpy(addr->sun_path, name, sizeof(addr->sun_path));
+    snprintf((char *) addr->sun_path, sizeof(addr->sun_path), "%s_%d", name, pid);
 }
 
 /* int

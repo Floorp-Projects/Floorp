@@ -64,7 +64,6 @@
 #include "text_strings.h"
 #include "configapp.h"
 #include "kpmlmap.h"
-#include "xml_util.h"
 
 /*
  *  Global Variables
@@ -600,8 +599,8 @@ test_send_subscribe ()
      * }
      *
      * memset(eventData, 0, sizeof(ccsip_event_data_t));
-     * strcpy(eventData->u.kpml_request.pattern.regex.regexData, "012");
-     * strcpy(eventData->u.kpml_request.version, "1.0");
+     * sstrncpy(eventData->u.kpml_request.pattern.regex.regexData, "012", sizeof(eventData->u.kpml_request.pattern.regex.regexData));
+     * sstrncpy(eventData->u.kpml_request.version, "1.0", sizeof(eventData->u.kpml_request.version));
      * eventData->type = EVENT_DATA_KPML_REQUEST;
      * subscribe.msg.subscribe.eventData = eventData;
      */
@@ -720,11 +719,6 @@ sip_subsManager_shut ()
 
         free_scb(i, fname);
     }
-
-    #ifndef __ANDROID__
-    // Shut Allegro XML stuff
-    xmlDeInit();
-    #endif
 
     // Shut down the periodic timer
     (void) sip_platform_subnot_periodic_timer_stop();
@@ -940,13 +934,6 @@ sip_subsManager_init ()
         gSubHistory[i].last_from_tag[0] = '\0';
         gSubHistory[i].eventPackage = CC_SUBSCRIPTIONS_NONE;
     }
-
-    #ifndef __ANDROID__
-    // Initialize Allegro XML stuff
-    if (xmlInit() == SIP_ERROR) {
-         return SIP_ERROR;
-    }
-    #endif
 
     // reset status and stats
     internalRegistrations = 0;
@@ -1484,7 +1471,7 @@ submanager_update_ccb_addr (ccsipCCB_t *ccb)
 
 
 /*
- * Takes care of all the XML parsing requirements
+ * Takes care of all the parsing requirements
  */
 static int
 parse_body (cc_subscriptions_t event_type, char *msgBody, int msgLength,
@@ -1492,9 +1479,7 @@ parse_body (cc_subscriptions_t event_type, char *msgBody, int msgLength,
             const char *fname)
 {
     const char     *fname1 = "parse_body";
-    ccsip_event_data_t *eventDatap = NULL;
     ccsip_event_data_type_e type = EVENT_DATA_INVALID;
-    *eventDatapp = NULL;
 
     if (!msgBody) {
         return SIP_ERROR;
@@ -1504,31 +1489,14 @@ parse_body (cc_subscriptions_t event_type, char *msgBody, int msgLength,
         case CC_SUBSCRIPTIONS_KPML:
             type = EVENT_DATA_KPML_REQUEST;
         break;
-        case CC_SUBSCRIPTIONS_DIALOG:
-            type = EVENT_DATA_DIALOG;
-        break;
         case CC_SUBSCRIPTIONS_CONFIGAPP:
             type = EVENT_DATA_CONFIGAPP_REQUEST;
         break;
-        case CC_SUBSCRIPTIONS_PRESENCE:
-            if (!CPR_REACH_MEMORY_HIGH_WATER_MARK) {
-                type = EVENT_DATA_PRESENCE;
-                break;
-            } else {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%s: Reached high water mark\n", fname1, fname);
-                /* follow through to default case */
-            }
         default:
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%s: unknown event type %d\n", fname1, fname, type);
         return SIP_ERROR;
     }
 
-    if (xmlDecodeEventData(event_type, msgBody, msgLength, &eventDatap ) == SIP_ERROR) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%s: Unable to get context\n", fname1, fname);
-        free_event_data(eventDatap);
-        return SIP_ERROR;
-    }
-    *eventDatapp = eventDatap;
     return SIP_OK;
 }
 
@@ -1540,11 +1508,6 @@ add_content (ccsip_event_data_t *eventData, sipMessage_t *request, const char *f
     char           *eventBody = NULL;
 
     while (eventData) {
-        eventBody = xmlEncodeEventData(eventData);
-        if (!eventBody) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%s: Framing XML Body failed\n", fname1, fname);
-            return (FALSE);
-        }
         len = strlen(eventBody);
 
         switch (eventData->type) {
@@ -1564,18 +1527,6 @@ add_content (ccsip_event_data_t *eventData, sipMessage_t *request, const char *f
                                            SIP_CONTENT_TYPE_KPML_RESPONSE,
                                            SIP_CONTENT_DISPOSITION_SESSION_VALUE, TRUE, NULL);
             break;
-        case EVENT_DATA_DIALOG:
-            (void) sippmh_add_message_body(request, eventBody, len,
-                                           SIP_CONTENT_TYPE_DIALOG,
-                                           SIP_CONTENT_DISPOSITION_SESSION_VALUE, TRUE, NULL);
-            break;
-
-        case EVENT_DATA_PRESENCE:
-            (void) sippmh_add_message_body(request, eventBody, len,
-                                           SIP_CONTENT_TYPE_PRESENCE,
-                                           SIP_CONTENT_DISPOSITION_SESSION_VALUE, TRUE, NULL);
-            break;
-
         default:
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%s: Data type not supported\n", fname1, fname);
             cpr_free(eventBody);
@@ -1754,8 +1705,7 @@ subsmanager_handle_ev_app_subscribe (cprBuffer_t buf)
         // If this is a presence request - check if sufficient SCBs will still
         // be available for other "more important" functions
         if (sub_datap->eventPackage == CC_SUBSCRIPTIONS_PRESENCE) {
-            if ((currentScbsAllocated >= LIMIT_SCBS_USAGE) ||
-                CPR_REACH_MEMORY_HIGH_WATER_MARK) {
+            if (currentScbsAllocated >= LIMIT_SCBS_USAGE) {
                 CCSIP_DEBUG_ERROR(SIP_F_PREFIX"reached Presence SCBs threshold\n", fname);
                 subs_result_data.u.subs_result_data.status_code =
                     SUBSCRIBE_FAILED_NORESOURCE;
@@ -3190,11 +3140,11 @@ subsmanager_handle_ev_sip_subscribe (sipMessage_t *pSipMessage,
             scbp->sip_to_tag = strlib_close(sip_to_tag_temp);
             sip_to_temp = strlib_open(scbp->sip_to, MAX_SIP_URL_LENGTH);
             if (sip_to_temp) {
-                strncat(sip_to_temp, ";tag=",
-                        MAX_SIP_URL_LENGTH - strlen(sip_to_temp) - 1);
+                sstrncat(sip_to_temp, ";tag=",
+                        MAX_SIP_URL_LENGTH - strlen(sip_to_temp));
                 if (scbp->sip_to_tag) {
-                    strncat(sip_to_temp, scbp->sip_to_tag,
-                            MAX_SIP_URL_LENGTH - strlen(sip_to_temp) - 1);
+                    sstrncat(sip_to_temp, scbp->sip_to_tag,
+                            MAX_SIP_URL_LENGTH - strlen(sip_to_temp));
                 }
             }
             scbp->sip_to = strlib_close(sip_to_temp);
@@ -4020,9 +3970,9 @@ sipSPIAddRouteHeadersToSubNot (sipMessage_t *msg, sipSCB_t * scbp,
         /* Append Contact to the Route Header, if Contact is available */
         if (Contact[0] != '\0') {
             if (route[0] != '\0') {
-                strncat(route, ", ", sizeof(route) - strlen(route) - 1);
+                sstrncat(route, ", ", sizeof(route) - strlen(route));
             }
-            strncat(route, Contact, MIN((sizeof(route) - strlen(route) - 1), sizeof(Contact)));
+            sstrncat(route, Contact, MIN((sizeof(route) - strlen(route)), sizeof(Contact)));
         }
     }
 
@@ -4194,10 +4144,10 @@ sipSPISendSubscribe (sipSCB_t *scbp, boolean renew, boolean authen)
             sip_from_tag = strlib_open(scbp->sip_from_tag, MAX_SIP_URL_LENGTH);
             if (sip_from_tag) {
                 sip_util_make_tag(sip_from_tag);
-                strncat(sip_from_temp, ";tag=",
-                        MAX_SIP_URL_LENGTH - strlen(sip_from_temp) - 1);
-                strncat(sip_from_temp, sip_from_tag,
-                        MAX_SIP_URL_LENGTH - strlen(sip_from_temp) - 1);
+                sstrncat(sip_from_temp, ";tag=",
+                        MAX_SIP_URL_LENGTH - strlen(sip_from_temp));
+                sstrncat(sip_from_temp, sip_from_tag,
+                        MAX_SIP_URL_LENGTH - strlen(sip_from_temp));
             }
             scbp->sip_from_tag = strlib_close(sip_from_tag);
         }
@@ -4220,7 +4170,7 @@ sipSPISendSubscribe (sipSCB_t *scbp, boolean renew, boolean authen)
 
         /* Indialog requests should contain suburi only
          */
-        strncat(scbp->SubURI, scbp->SubURIOriginal, MAX_SIP_URL_LENGTH - 5);
+        sstrncat(scbp->SubURI, scbp->SubURIOriginal, MAX_SIP_URL_LENGTH - sizeof("sip:"));
         domainloc = strchr(scbp->SubURI, '@');
         if (domainloc == NULL) {
             domainloc = scbp->SubURI + strlen(scbp->SubURI);
@@ -4877,14 +4827,14 @@ sipSPISendSubNotify (ccsip_common_cb_t *cbp, boolean authen)
             /*
              * if (request_uri_loc->name) {
              * if (request_uri_loc->name[0]) {
-             * strncat(ReqURI, "\"", sizeof(ReqURI)-strlen(ReqURI)-1);
-             * strncat(ReqURI, request_uri_loc->name,
-             * sizeof(ReqURI)-strlen(ReqURI)-1);
-             * strncat(ReqURI, "\" ", sizeof(ReqURI)-strlen(ReqURI)-1);
+             * sstrncat(ReqURI, "\"", sizeof(ReqURI)-strlen(ReqURI));
+             * sstrncat(ReqURI, request_uri_loc->name,
+             * sizeof(ReqURI)-strlen(ReqURI));
+             * sstrncat(ReqURI, "\" ", sizeof(ReqURI)-strlen(ReqURI));
              * }
              * }
              */
-            strncat(ReqURI, "sip:", sizeof(ReqURI) - strlen(ReqURI) - 1);
+            sstrncat(ReqURI, "sip:", sizeof(ReqURI) - strlen(ReqURI));
             if (request_uri_loc->genUrl->schema == URL_TYPE_SIP) {
                 request_uri_url = request_uri_loc->genUrl->u.sipUrl;
             } else {
@@ -4895,24 +4845,24 @@ sipSPISendSubNotify (ccsip_common_cb_t *cbp, boolean authen)
             }
 
             if (request_uri_url->user) {
-                strncat(ReqURI, request_uri_url->user,
-                        sizeof(ReqURI) - strlen(ReqURI) - 1);
-                strncat(ReqURI, "@", sizeof(ReqURI) - strlen(ReqURI) - 1);
+                sstrncat(ReqURI, request_uri_url->user,
+                        sizeof(ReqURI) - strlen(ReqURI));
+                sstrncat(ReqURI, "@", sizeof(ReqURI) - strlen(ReqURI));
             }
             if (request_uri_url->is_phone) {
-                strncat(ReqURI, ";user=phone",
-                        sizeof(ReqURI) - strlen(ReqURI) - 1);
+                sstrncat(ReqURI, ";user=phone",
+                        sizeof(ReqURI) - strlen(ReqURI));
             }
-            strncat(ReqURI, request_uri_url->host,
-                    sizeof(ReqURI) - strlen(ReqURI) - 1);
-            // strncat(ReqURI, ">", sizeof(ReqURI)-strlen(ReqURI)-1);
+            sstrncat(ReqURI, request_uri_url->host,
+                    sizeof(ReqURI) - strlen(ReqURI));
+            // sstrncat(ReqURI, ">", sizeof(ReqURI)-strlen(ReqURI));
             sippmh_free_location(request_uri_loc);
         }
     } else { //Unsolicited NOTIFY
         char               line_name[MAX_LINE_NAME_SIZE];
         config_get_line_string(CFGID_LINE_NAME, line_name, cbp->dn_line, sizeof(line_name));
         snprintf(ReqURI, MAX_SIP_URL_LENGTH, "sip:%s@%s", line_name, dest_sip_addr_str);
-        strncpy(tcbp->full_ruri, ReqURI, MAX_SIP_URL_LENGTH);
+        sstrncpy(tcbp->full_ruri, ReqURI, MAX_SIP_URL_LENGTH);
     }
     (void) sippmh_add_request_line(request,
                                    sipGetMethodString(sipMethodNotify),
@@ -4945,9 +4895,9 @@ sipSPISendSubNotify (ccsip_common_cb_t *cbp, boolean authen)
     // The From field including the tag is the same as the To field in the
     // response to SUBSCRIBE
     if (cbp->cb_type != SUBNOT_CB) {
-        strncat(sip_temp_str, ";tag=", MAX_SIP_URL_LENGTH - strlen(sip_temp_str) - 1);
+        sstrncat(sip_temp_str, ";tag=", MAX_SIP_URL_LENGTH - strlen(sip_temp_str));
         sip_util_make_tag(sip_temp_tag);
-        strncat(sip_temp_str, sip_temp_tag, MAX_SIP_URL_LENGTH - strlen(sip_temp_str) - 1);
+        sstrncat(sip_temp_str, sip_temp_tag, MAX_SIP_URL_LENGTH - strlen(sip_temp_str));
     }
     if (STATUS_SUCCESS != sippmh_add_text_header(request, SIP_HEADER_FROM,
                                                  ((cbp->cb_type == SUBNOT_CB) ?  scbp->sip_to : sip_temp_str))) {

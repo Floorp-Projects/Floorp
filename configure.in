@@ -5244,8 +5244,8 @@ if test -n "$MOZ_WEBRTC"; then
     MOZ_VP8_ENCODER=1
     MOZ_VP8_ERROR_CONCEALMENT=1
 dnl enable once Signaling lands
-dnl MOZ_WEBRTC_SIGNALING=1
-dnl AC_DEFINE(MOZ_WEBRTC_SIGNALING)
+    MOZ_WEBRTC_SIGNALING=1
+    AC_DEFINE(MOZ_WEBRTC_SIGNALING)
     if test "${OS_TARGET}" = "WINNT"; then
         MOZ_WEBRTC_IN_LIBXUL=1
     fi

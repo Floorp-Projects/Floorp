@@ -66,6 +66,9 @@ typedef enum {
 #define FSMDEF_NO_DCB              (NULL)
 #define FSMDEF_ERR_ONHOOK_TMR_SECS (20)
 
+#define FSMDEF_MAX_DIGEST_ALG_LEN  10
+#define FSMDEF_MAX_DIGEST_LEN      32 * 3
+
 // Should match define for SIP stack MAX_SIP_URL_LENGTH
 #define FSMDEF_MAX_CALLER_ID_LEN (256)
 
@@ -148,6 +151,8 @@ typedef struct fsmdef_negotiated_crypto_t_ {
     vcm_crypto_key_t        tx_key;        /* tx key                  */
     vcm_crypto_key_t        rx_key;        /* rx key                  */
     uint32_t                flags;         /* misc. flags.            */
+    char                    algorithm[FSMDEF_MAX_DIGEST_ALG_LEN];
+    char                    digest[FSMDEF_MAX_DIGEST_LEN];
 } fsmdef_negotiated_crypto_t;
 
 /*
@@ -160,6 +165,7 @@ typedef struct fsmdef_previous_sdp_ {
     int32_t         payload_type;
     int32_t         local_payload_type;
     uint16_t        packetization_period;
+    uint16_t        max_packetization_period;
     sdp_direction_e direction;
     int32_t         tias_bw;
     int32_t         profile_level;
@@ -181,6 +187,7 @@ typedef struct fsmdef_media_t_ {
     int32_t         avt_payload_type;
     vcm_vad_t       vad;
     uint16_t        packetization_period;
+    uint16_t        max_packetization_period;
     uint16_t        mode;
     uint16_t        level;
     boolean         direction_set;
@@ -245,6 +252,31 @@ typedef struct fsmdef_media_t_ {
     int32_t         profile_level;
 
     void *video;
+
+    char **candidatesp;
+    int candidate_ct;
+
+    /*
+     * rtcp-mux indicates media stream is muxed for RTP and RTCP
+     */
+    boolean        rtcp_mux;
+
+    /*
+     * port number used in m= data channel line
+     */
+    uint16_t       sctp_port;
+
+    /*
+     * Data Channel properties
+     */
+    uint32         streams;
+    char          *protocol;
+
+    /*
+     * List of active lists of payloads negotiated
+     */
+    vcm_media_payload_type_t* payloads;
+    int32_t num_payloads;
 } fsmdef_media_t;
 
 struct fsm_fcb_t_;
@@ -408,6 +440,16 @@ typedef struct {
      */
     cc_media_cap_table_t *media_cap_tbl;
 
+    /*
+     * Holds the remote stream track information to be passed to UI
+     */
+    cc_media_remote_stream_table_t *remote_media_stream_tbl;
+
+    /*
+     * Holds the local stream track information passed in from the UI
+     */
+    cc_media_local_track_table_t *local_media_track_tbl;
+
 #define FSMDEF_F_HOLD_REQ_PENDING  (1 << 0)/* hold feature pending    */ 
 #define FSMDEF_F_XFER_COMPLETE     (1 << 1)/* hold feature pending    */ 
     uint32_t                flags;         /* misc. flags.            */
@@ -417,6 +459,16 @@ typedef struct {
     uint8_t cur_video_avail;
     sdp_direction_e  video_pref;
     unsigned int callref;      /* Callref (CI) from CUCM */
+
+    char peerconnection[PC_HANDLE_SIZE];  /* A handle to the peerconnection */
+    boolean peerconnection_set;
+
+    char *ice_ufrag;
+    char *ice_pwd;
+    char ice_default_candidate_addr[MAX_IPADDR_STR_LEN];
+
+    char digest_alg[FSMDEF_MAX_DIGEST_ALG_LEN];
+    char digest[FSMDEF_MAX_DIGEST_LEN];
 
 } fsmdef_dcb_t;
 
@@ -600,6 +652,7 @@ void fsmdef_init_dcb(fsmdef_dcb_t *dcb, callid_t call_id,
                      fsmdef_call_types_t call_type,
                      const char *called_number, line_t line,
                      fsm_fcb_t *fcb);
+cc_causes_t fsm_set_fcb_dcbs (fsmdef_dcb_t *dcb);
 fsmdef_dcb_t *fsmdef_get_new_dcb(callid_t call_id);
 void fsmdef_init(void);
 int fsmdef_get_active_call_cnt(callid_t callId);
@@ -684,12 +737,19 @@ void fsmdef_call_cc_state_dialing(fsmdef_dcb_t *dcb, boolean suppressStutter);
 #define FSM_GET_CACHED_ORIENTATION(dcb) (dcb->orientation)
 #define FSM_SET_CACHED_ORIENTATION(dcb, value) (dcb->orientation = value)
 #define FSM_NEGOTIATED_CRYPTO_ALGORITHM_ID(media)                  \
-       ((media->transport == SDP_TRANSPORT_RTPSAVP) ?        \
+       ((media->transport == SDP_TRANSPORT_RTPSAVP  ||       \
+         media->transport == SDP_TRANSPORT_RTPSAVPF) ?        \
         media->negotiated_crypto.algorithmID : VCM_NO_ENCRYPTION)
 #define FSM_NEGOTIATED_CRYPTO_RX_KEY(media)       \
        &media->negotiated_crypto.rx_key
 #define FSM_NEGOTIATED_CRYPTO_TX_KEY(media)       \
        &media->negotiated_crypto.tx_key
+
+#define FSM_NEGOTIATED_CRYPTO_DIGEST_ALGORITHM(media)       \
+       media->negotiated_crypto.algorithm
+
+#define FSM_NEGOTIATED_CRYPTO_DIGEST(media)       \
+       media->negotiated_crypto.digest
 
 int fsmutil_get_call_attr(fsmdef_dcb_t *dcb, line_t line, callid_t call_id);
 uint16_t fsmutil_get_ci_id(line_t line);

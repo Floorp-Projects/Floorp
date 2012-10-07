@@ -308,7 +308,7 @@ typedef struct sockaddr_un cpr_sockaddr_un_t;
 
 
 #define cpr_sun_len(a) sizeof(a)
-void cpr_set_sockun_addr(cpr_sockaddr_un_t *addr, const char *name);
+void cpr_set_sockun_addr(cpr_sockaddr_un_t *addr, const char *name, pid_t pid);
 
 /*
  * To represent desired sockaddr max alignment for platform, a

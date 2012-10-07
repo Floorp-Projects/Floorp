@@ -291,13 +291,13 @@ get_printable_cfg(unsigned int indx, char *buf, unsigned int len)
    // real password
    if (indx>=CFGID_LINE_PASSWORD && indx < CFGID_LINE_PASSWORD+MAX_CONFIG_LINES) {
      // and add an invisible one
-     strncpy(buf, "**********", MAX_CONFIG_VAL_PRINT_LEN);
+     sstrncpy(buf, "**********", MAX_CONFIG_VAL_PRINT_LEN);
    } else if ( table->print_func ) {
      table->print_func(table, buf, len);
    }
 
    if ( buf[0] == 0 ) {
-     strcpy(buf,"EMPTY");
+     sstrncpy(buf,"EMPTY", len);
    }
    return buf;
 }
@@ -330,7 +330,7 @@ show_config_cmd (cc_int32_t argc, const char *argv[])
             // real password
             if (strstr(table->name, "Password") != 0) {
                 // and add an invisible one
-                strncpy(buf, "**********", MAX_CONFIG_VAL_PRINT_LEN);
+                sstrncpy(buf, "**********", sizeof(buf));
             }
             debugif_printf("%s : %s\n", table->name, buf);
         }

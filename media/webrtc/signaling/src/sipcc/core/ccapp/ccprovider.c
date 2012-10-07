@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <limits.h>
+
 #include "CCProvider.h"
 #include "ccSession.h"
 #include "ccsip_task.h"
@@ -82,6 +84,7 @@
 #include "ccapi_device_info.h"
 #include "conf_roster.h"
 #include "reset_api.h"
+#include "prlog.h"
 
 /*---------------------------------------------------------
  *
@@ -170,15 +173,7 @@ extern boolean apply_config;
 
 extern  char g_new_signaling_ip[];
 
-extern char g_applyConfigFcpVersion[];
-extern char g_applyConfigDialPlanVersion[];
-
 extern int configFileDownloadNeeded;
-cc_boolean parse_config_properties (int device_handle, const char *device_name, const char *cfg, int from_memory); 
-extern int g_dev_hdl;
-extern char g_dev_name[];
-extern char g_cfg_p[];
-extern int g_compl_cfg;
 cc_action_t pending_action_type = NO_ACTION;
 
 
@@ -604,6 +599,9 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
     session_data_t * sess_data_p;
     char digits[CC_MAX_DIALSTRING_LEN];
     char* data = (char*)ccData.info;
+    char* data1 =(char*)ccData.info1;
+    long strtol_result;
+    char *strtol_end;
 
     CCAPP_DEBUG(DEB_L_C_F_PREFIX"event=%d data=%s",
                 DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, call_id, line_id, fname), event,
@@ -625,6 +623,47 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
          case CC_FEATURE_BKSPACE:
              dp_int_update_keypress(line_id, call_id, BKSP_KEY);
              break;
+         case CC_FEATURE_CREATEOFFER:
+             cc_createoffer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEOFFER, &featdata);                                        
+             break;
+         case CC_FEATURE_CREATEANSWER:
+             cc_createanswer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEANSWER, data, &featdata);                                        
+             break;     
+         case CC_FEATURE_SETLOCALDESC:
+             cc_setlocaldesc (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_SETLOCALDESC, ccData.action, data, &featdata);
+             break;
+         case CC_FEATURE_SETREMOTEDESC:
+             cc_setremotedesc (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_SETREMOTEDESC, ccData.action, data, &featdata);
+             break;             
+         case CC_FEATURE_SETPEERCONNECTION:
+           PR_ASSERT(strlen(data) < PC_HANDLE_SIZE);
+           if (strlen(data) >= PC_HANDLE_SIZE)
+             return;
+           
+           sstrncpy(featdata.pc.pc_handle, data, sizeof(featdata.pc.pc_handle));
+
+           cc_int_feature2(CC_MSG_SETPEERCONNECTION, CC_SRC_UI, CC_SRC_GSM, 
+             call_id, (line_t)instance,
+             CC_FEATURE_SETPEERCONNECTION, &featdata);
+           break;
+         case CC_FEATURE_ADDSTREAM:
+           featdata.track.stream_id = ccData.stream_id;
+           featdata.track.track_id = ccData.track_id;
+           featdata.track.media_type = ccData.media_type;
+           cc_int_feature2(CC_MSG_ADDSTREAM, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_ADDSTREAM, &featdata);
+           break;
+         case CC_FEATURE_REMOVESTREAM:
+           featdata.track.stream_id = ccData.stream_id;
+           featdata.track.track_id = ccData.track_id;
+           featdata.track.media_type = ccData.media_type;
+           cc_int_feature2(CC_MSG_REMOVESTREAM, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_REMOVESTREAM, &featdata);
+           break;
+         case CC_FEATURE_ADDICECANDIDATE:
+           featdata.candidate.level = ccData.level;
+           sstrncpy(featdata.candidate.candidate, data, sizeof(featdata.candidate.candidate)-1);
+           sstrncpy(featdata.candidate.mid, data1, sizeof(featdata.candidate.mid)-1);
+           cc_int_feature2(CC_MSG_ADDCANDIDATE, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_ADDICECANDIDATE, &featdata);
+           break;
          case CC_FEATURE_DIALSTR:
              if (CheckAndGetAvailableLine(&line_id, &call_id) == TRUE) {
                  getDigits(data, digits);
@@ -840,7 +879,15 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
                             //Legacy local conference.
 			    ftr_data.cnf.target_call_id = call_id;
 			}
-			cc_feature(CC_SRC_UI, GET_CALLID(atoi(digits)), line_id, event, &ftr_data);
+
+			errno = 0;
+			strtol_result = strtol(digits, &strtol_end, 10);
+
+			if (errno || digits == strtol_end || strtol_result < INT_MIN || strtol_result > INT_MAX) {
+				CCAPP_ERROR(DEB_F_PREFIX"digits parse error %s.\n",DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__), digits);
+			} else {
+				cc_feature(CC_SRC_UI, GET_CALLID((int) strtol_result), line_id, event, &ftr_data);
+			}
 			break;
 		     } else {
 			CCAPP_DEBUG(DEB_F_PREFIX"conf: no sid.\n",DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
@@ -950,9 +997,11 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
    session_data_t *newData = (session_data_t *) cpr_malloc(sizeof(session_data_t));
 
    if ( newData != NULL ) {
+       memset(newData, 0, sizeof(session_data_t));
+       
        if ( data != NULL ) {
            *newData = *data;
-	   newData->ref_count = 1;
+           newData->ref_count = 1;
            newData->clg_name =  strlib_copy(data->clg_name);
            newData->clg_number =  strlib_copy(data->clg_number);
            newData->cld_name =  strlib_copy(data->cld_name);
@@ -966,10 +1015,8 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
            newData->plcd_number =  strlib_copy(data->plcd_number);
            newData->status =  strlib_copy(data->status);
            calllogger_copy_call_log(&newData->call_log, &data->call_log);
-           conf_roster_copy_call_conferance(&newData->call_conference, &data->call_conference);
        } else {
-           memset(newData, 0, sizeof(session_data_t));
-	   newData->ref_count = 1;
+           newData->ref_count = 1;
            newData->state = ONHOOK;
            newData->security = CC_SECURITY_NONE;
            newData->policy = CC_POLICY_NONE;
@@ -986,7 +1033,6 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
            newData->plcd_number =  strlib_empty();
            newData->status = strlib_empty();
            calllogger_init_call_log(&newData->call_log);
-           conf_roster_init_call_conference(&newData->call_conference);
        }
 
    }
@@ -1031,7 +1077,6 @@ void cleanSessionData(session_data_t *data)
 	strlib_free(data->status);
         data->status = strlib_empty();
         calllogger_free_call_log(&data->call_log);
-        conf_roster_free_call_conference(&data->call_conference);
     }
 }
 
@@ -1289,9 +1334,12 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 
     if ( data == NULL ) {
         cc_call_state_t call_state = sessUpd->update.ccSessionUpd.data.state_data.state;
-        // TODO: Think how can this be handled better
+
         if ( ( sessUpd->eventID == CALL_INFORMATION ) ||
-                ( sessUpd->eventID == CALL_STATE || sessUpd->eventID == CALL_NEWCALL)) {
+                ( sessUpd->eventID == CALL_STATE || sessUpd->eventID == CALL_NEWCALL
+                || sessUpd->eventID == CREATE_OFFER || sessUpd->eventID == CREATE_ANSWER
+                || sessUpd->eventID == SET_LOCAL_DESC  || sessUpd->eventID == SET_REMOTE_DESC
+                || sessUpd->eventID == REMOTE_STREAM_ADD)) {
 
             CCAPP_DEBUG(DEB_F_PREFIX"CALL_SESSION_CREATED for session id 0x%x event is 0x%x \n",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->sessionID,
@@ -1326,7 +1374,9 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         data->sess_id = sessUpd->sessionID;
 				data->state = call_state;
         data->line = sessUpd->update.ccSessionUpd.data.state_data.line_id;
-        if (sessUpd->eventID == CALL_NEWCALL) {
+        if (sessUpd->eventID == CALL_NEWCALL || sessUpd->eventID == CREATE_OFFER ||
+            sessUpd->eventID == CREATE_ANSWER || sessUpd->eventID == SET_LOCAL_DESC || 
+            sessUpd->eventID == SET_REMOTE_DESC || sessUpd->eventID == REMOTE_STREAM_ADD ) {
             data->attr = sessUpd->update.ccSessionUpd.data.state_data.attr;
             data->inst = sessUpd->update.ccSessionUpd.data.state_data.inst;
         }
@@ -1347,7 +1397,16 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 	data->vid_dir = SDP_DIRECTION_INACTIVE;
         data->callref = 0;
         calllogger_init_call_log(&data->call_log);
-        conf_roster_init_call_conference(&data->call_conference);
+        
+        if ( sessUpd->eventID == CREATE_OFFER || sessUpd->eventID == CREATE_ANSWER 
+            || sessUpd->eventID == SET_LOCAL_DESC  || sessUpd->eventID == SET_REMOTE_DESC
+            || sessUpd->eventID == REMOTE_STREAM_ADD) {
+        	data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
+        	data->cause = sessUpd->update.ccSessionUpd.data.state_data.cause;
+            data->media_stream_track_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_track_id;
+            data->media_stream_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_id;
+        }
+        
         /*
          * If phone was idle, we not going to active state
          * send notification to resetmanager that we
@@ -1665,6 +1724,19 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         ccsnap_gen_callEvent(CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_FAIL, 
             CREATE_CALL_HANDLE_FROM_SESSION_ID(sessUpd->sessionID));
         break;
+    case CREATE_OFFER:
+    case CREATE_ANSWER:
+    case SET_LOCAL_DESC: 
+    case SET_REMOTE_DESC:
+    case REMOTE_STREAM_ADD:
+        data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
+        data->cause = sessUpd->update.ccSessionUpd.data.state_data.cause;
+        data->state = sessUpd->update.ccSessionUpd.data.state_data.state;
+        data->media_stream_track_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_track_id;
+        data->media_stream_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_id;
+        capset_get_allowed_features(gCCApp.mode, data->state, data->allowed_features);
+        ccsnap_gen_callEvent(CCAPI_CALL_EV_STATE, CREATE_CALL_HANDLE_FROM_SESSION_ID(data->sess_id));
+        break;
     default:
         DEF_DEBUG(DEB_F_PREFIX"Unknown event, id = %d\n",
                             DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->eventID);
@@ -1914,13 +1986,6 @@ void ccp_handler(void* msg, int type) {
             data->info_type = rcvdInfo->info.generic_raw.content_type;
             data->info_body = rcvdInfo->info.generic_raw.message_body;
 
-            // We are freeing the existing conference information, and
-            // re-parsing the new XML received in the INFO. A future possible
-            // optimization is to find the difference and only update the
-            // changed/removed/added participants
-            conf_roster_free_call_conference(&data->call_conference);
-            decodeInfoXML(rcvdInfo->info.generic_raw.message_body, length, &data->call_conference);
-
             ccsnap_gen_callEvent(CCAPI_CALL_EV_RECEIVED_INFO, CREATE_CALL_HANDLE_FROM_SESSION_ID(rcvdInfo->sessionID));
                    
             // most of the time isConference will be true at this point, we can notify the app of
@@ -2141,9 +2206,6 @@ void ccappSyncSessionMgmt(session_mgmt_t *sessMgmt)
     case SESSION_MGMT_APPLY_CONFIG:
         // save the proposed versions of fcp and dialplan to apply.  Will check against
         // current versions and redownload if necessary
-        
-        strcpy (g_applyConfigFcpVersion, sessMgmt->data.config.fcp_version_stamp); 
-        strcpy (g_applyConfigDialPlanVersion, sessMgmt->data.config.dialplan_version_stamp); 
                   
     if (pending_action_type == NO_ACTION) { 
             configApplyConfigNotify(sessMgmt->data.config.config_version_stamp,

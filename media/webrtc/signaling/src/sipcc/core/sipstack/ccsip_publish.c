@@ -434,8 +434,8 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
      * Populate full RURI if it is not yet. Sometimes, applications may only provide user part.
      */
     if (pcb_p->full_ruri[0] == 0) {
-        strncpy(pcb_p->full_ruri, "sip:", MAX_SIP_URL_LENGTH);
-        strncat(pcb_p->full_ruri, pcb_p->ruri, MAX_SIP_URL_LENGTH - 5);
+        sstrncpy(pcb_p->full_ruri, "sip:", MAX_SIP_URL_LENGTH);
+        sstrncat(pcb_p->full_ruri, pcb_p->ruri, MAX_SIP_URL_LENGTH - sizeof("sip:"));
         /* check if it has host part */
         domainloc = strchr(pcb_p->full_ruri, '@');
         if (domainloc == NULL) {
@@ -483,9 +483,9 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     }
 
     // Add From Header.
-    strncat(sip_temp_str, ";tag=", MAX_SIP_URL_LENGTH - strlen(sip_temp_str) - 1);
+    sstrncat(sip_temp_str, ";tag=", MAX_SIP_URL_LENGTH - strlen(sip_temp_str));
     sip_util_make_tag(sip_temp_tag);
-    strncat(sip_temp_str, sip_temp_tag, MAX_SIP_URL_LENGTH - strlen(sip_temp_str) - 1);
+    sstrncat(sip_temp_str, sip_temp_tag, MAX_SIP_URL_LENGTH - strlen(sip_temp_str));
     if (HSTATUS_SUCCESS != sippmh_add_text_header(request, SIP_HEADER_FROM, sip_temp_str)) {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding FROM header\n", fname);
         free_sip_message(request);
@@ -733,6 +733,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
     long            expiry_time;
     pub_req_t      *msg_p;
     ccsip_publish_cb_t *pcb_p;
+    int entity_tag_size;
 
     callID_p = sippmh_get_cached_header_val(pSipMessage, CALLID);
     if (!callID_p) {
@@ -855,9 +856,10 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
     sip_etag = sippmh_get_header_val(pSipMessage, SIP_HEADER_SIPETAG, NULL);
     if (sip_etag != NULL) {
         cpr_free(pcb_p->entity_tag);
-        pcb_p->entity_tag = cpr_malloc(strlen(sip_etag) + 1);
+        entity_tag_size = strlen(sip_etag) + 1;
+        pcb_p->entity_tag = cpr_malloc(entity_tag_size);
         if (pcb_p->entity_tag != NULL) {
-            strcpy(pcb_p->entity_tag, sip_etag);
+            sstrncpy(pcb_p->entity_tag, sip_etag, entity_tag_size);
         } else {
             free_pcb (pcb_p);
             send_resp_to_app(PUBLISH_FAILED_NORESOURCE, pcb_p->pub_handle, pcb_p->app_handle,

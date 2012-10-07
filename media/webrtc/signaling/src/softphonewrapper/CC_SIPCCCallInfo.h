@@ -43,14 +43,16 @@
 #include "CC_CallInfo.h"
 #include "CC_SIPCCCall.h"
 
+
 #include "common/Wrapper.h"
 
 extern "C" {
-    void CCAPI_CallListener_onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t handle, cc_callinfo_ref_t info, char* sdp);
+    void CCAPI_CallListener_onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t handle, cc_callinfo_ref_t info);
 }
 
 namespace CSF
 {
+
 	DECLARE_PTR(CC_SIPCCCallInfo);
     class CC_SIPCCCallInfo : public CC_CallInfo
     {
@@ -72,8 +74,10 @@ namespace CSF
 
         virtual cc_call_attr_t getCallAttr();
 
-        virtual CC_LinePtr getline ();
 
+        virtual CC_LinePtr getline ();
+        virtual std::string callStateToString (cc_call_state_t state);
+        virtual std::string callEventToString (ccapi_call_event_e callEvent);
         virtual cc_call_type_t getCallType();
         virtual std::string getCalledPartyName();
         virtual std::string getCalledPartyNumber();
@@ -108,6 +112,9 @@ namespace CSF
         virtual bool isMediaStateAvailable();
         virtual bool isAudioMuted();
         virtual bool isVideoMuted();
+        virtual std::string getSDP();
+        virtual cc_int32_t getStatusCode();
+        virtual MediaStreamTable* getMediaStreams() const;
 
         virtual void setMediaData(CC_SIPCCCallMediaDataPtr  pMediaData);
 

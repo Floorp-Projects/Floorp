@@ -84,7 +84,6 @@
 #define SAPP_APP SAPP_APP_GSM
 #include "sapp.h"
 #endif
-#include "xml_util.h"
 
 #if defined SIP_OS_WINDOWS
 #include "../win32/cpr_win_defines.h"
@@ -230,29 +229,29 @@ get_ua_model_and_device (char sipHdrUserAgent[])
 
     if (model) {
         if (strncmp(model, CSF_MODEL, 3) == 0) {
-            strncat(sipHdrUserAgent, CCSIP_SIP_CSF_USER_AGENT,
-                    SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent) - 1);
-            strncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_CSF,
+            sstrncat(sipHdrUserAgent, CCSIP_SIP_CSF_USER_AGENT,
+                    SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent));
+            sstrncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_CSF,
                     SIP_PHONE_MODEL_NUMBER_LEN);
         } else if (strcmp(model, PHONE_MODEL) == 0) {
             //if phone model is any of vendor defined, set as is.
-            strncat(sipHdrUserAgent, CCSIP_SIP_USER_AGENT,
-                    SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent) - 1);
-            strncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER,
+            sstrncat(sipHdrUserAgent, CCSIP_SIP_USER_AGENT,
+                    SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent));
+            sstrncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER,
                     SIP_PHONE_MODEL_NUMBER_LEN);
         } else {
             // Default to 7970
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"unknown model,defaulting to model 7970: %s\n", fname, model);
-            strncat(sipHdrUserAgent, CCSIP_SIP_7970_USER_AGENT,
-                    SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent) - 1);
-            strncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_7970,
+            sstrncat(sipHdrUserAgent, CCSIP_SIP_7970_USER_AGENT,
+                    SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent));
+            sstrncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_7970,
                     SIP_PHONE_MODEL_NUMBER_LEN);
         }
     } else {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"could not obtain model information\n", fname);
-        strncat(sipHdrUserAgent, CCSIP_SIP_7970_USER_AGENT,
-                SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent) - 1);
-        strncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_7970,
+        sstrncat(sipHdrUserAgent, CCSIP_SIP_7970_USER_AGENT,
+                SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent));
+        sstrncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_7970,
                 SIP_PHONE_MODEL_NUMBER_LEN);
     }
 }
@@ -317,19 +316,19 @@ SIPTaskInit (void)
     sipHeaderServer[0] = '\0';
 
 #if defined _COMMUNICATOR_
-    strncat(sipHeaderUserAgent, CCSIP_SIP_COMMUNICATOR_USER_AGENT,
-            SIP_HEADER_SERVER_LEN - strlen(sipHeaderUserAgent) - 1);
-    strncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_COMMUNICATOR,
+    sstrncat(sipHeaderUserAgent, CCSIP_SIP_COMMUNICATOR_USER_AGENT,
+            sizeof(sipHeaderUserAgent) - strlen(sipHeaderUserAgent));
+    sstrncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_COMMUNICATOR,
             SIP_PHONE_MODEL_NUMBER_LEN);
 #else
     get_ua_model_and_device(sipHeaderUserAgent);
 #endif
 
     // Now add the firmware version
-    strncat(sipHeaderUserAgent, "/",
-            SIP_HEADER_SERVER_LEN - strlen(sipHeaderUserAgent) - 1);
-    strncat(sipHeaderUserAgent, gVersion,
-            SIP_HEADER_SERVER_LEN - strlen(sipHeaderUserAgent) - 1);
+    sstrncat(sipHeaderUserAgent, "/",
+            sizeof(sipHeaderUserAgent) - strlen(sipHeaderUserAgent));
+    sstrncat(sipHeaderUserAgent, gVersion,
+            sizeof(sipHeaderUserAgent) - strlen(sipHeaderUserAgent));
     sstrncpy(sipHeaderServer, sipHeaderUserAgent,
             SIP_HEADER_SERVER_LEN);
 }
@@ -391,7 +390,7 @@ SIPTaskSendMsg (uint32_t cmd, void *msg, uint16_t len, void *usr)
 cprBuffer_t
 SIPTaskGetBuffer (uint16_t size)
 {
-    return cprGetBuffer(size);
+    return cpr_malloc(size);
 }
 
 /**
@@ -414,7 +413,8 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
     static const char *fname = "SIPTaskProcessListEvent";
     sipSMEvent_t    sip_sm_event;
     int             idx;
-	int				p2psip;
+	int	            p2psip = 0;
+	int             sdpmode = 0;
     cprCallBackTimerMsg_t *timerMsg;
     line_t          last_available_line;
     CCM_ID ccm_id;
@@ -435,7 +435,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
          (cmd != SIP_SHUTDOWN) &&
          (cmd != TIMER_EXPIRATION) &&
          (cmd != THREAD_UNLOAD)) ) {
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         DEF_DEBUG(DEB_F_PREFIX" !!!sip.taskInited  is false. So not executing cmd=0x%x\n",
             DEB_F_PREFIX_ARGS(SIP_EVT, fname), cmd);
         return;
@@ -457,7 +457,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
      */
     if (cmd == TIMER_EXPIRATION) {
         if (SIPTaskProcessTimerExpiration(msg, &cmd)) {
-            cprReleaseBuffer(msg);
+            cpr_free(msg);
             return;
         }
         /*
@@ -467,8 +467,8 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
          */
     }
 
-    p2psip = 0;
 	config_get_value(CFGID_P2PSIP, &p2psip, sizeof(p2psip));
+	config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
     switch (cmd) {
         /*
@@ -479,12 +479,13 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
          * Ignore any TCP_PHN_CFG_TCP_DONE message since it is only used to
          * determine when the SIP sm should be initialized
          */
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
 
         // If P2P set transport to UDP
         if (p2psip == TRUE)
         	CC_Config_setIntValue(CFGID_TRANSPORT_LAYER_PROT, 2);
 
+  
         if (sip_sm_init() < 0) {
         	CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_sm_init() failed ",  fname);
         	return;
@@ -492,8 +493,10 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
 
         sip_mode_quiet = FALSE;
 
-        // If P2P do not register with SIP Server
-        if (p2psip == FALSE)
+        /*
+         * If P2P or SDP only do not register with SIP Server
+         */
+        if (!p2psip && !sdpmode)
         	sip_platform_init();
         else
         	ui_set_sip_registration_state(CC_ALL_LINES, TRUE);
@@ -541,7 +544,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
     case SIP_TMR_INV_EXPIRE:
         idx = (long) (timerMsg->usrData);
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t)idx);
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (!sip_sm_event.ccb) {
             CCSIP_DEBUG_TASK(DEB_F_PREFIX"usrData does not point to a valid ccb "
                              "discarding SIP_TMR_INV_EXPIRE event\n", DEB_F_PREFIX_ARGS(SIP_EVT, fname));
@@ -556,7 +559,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
     case SIP_TMR_SUPERVISION_DISCONNECT:
         idx = (long) (timerMsg->usrData);
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t)idx);
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (!sip_sm_event.ccb) {
             CCSIP_DEBUG_TASK(DEB_F_PREFIX"usrData does not point to a valid ccb "
                              "discarding SIP_TMR_SUPERVISION_DISCONNECT event.\n", 
@@ -572,7 +575,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
     case SIP_TMR_INV_LOCALEXPIRE:
         idx = (long) (timerMsg->usrData);
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t)idx);
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (!sip_sm_event.ccb) {
             CCSIP_DEBUG_TASK(DEB_F_PREFIX"usrData does not point to valid ccb "
                              "discarding SIP_TMR_INV_LOCALEXPIRE "
@@ -594,7 +597,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t)idx);
         sip_sm_event.type = E_SIP_TIMER;
         sip_sm_event.u.UsrInfo = ip_addr_invalid;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (sip_sm_process_event(&sip_sm_event) < 0) {
             CCSIP_DEBUG_ERROR(get_debug_string(SM_PROCESS_EVENT_ERROR), fname, sip_sm_event.type);
         }
@@ -608,7 +611,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
             sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t)idx);
             /* IP address that bounced */
             sip_sm_event.u.UsrInfo = (*(cpr_ip_addr_t *)pUsr);
-            cprReleaseBuffer(msg);
+            cpr_free(msg);
             if (!sip_sm_event.ccb) {
                 CCSIP_DEBUG_TASK(DEB_F_PREFIX"event does not point to valid ccb "
                                  "SIP_ICMP_UNREACHABLE event.\n", DEB_F_PREFIX_ARGS(SIP_EVT, fname));
@@ -672,7 +675,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         idx = (long) (timerMsg->usrData);
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t)idx);
         sip_sm_event.type = (sipSMEventType_t) E_SIP_REG_TMR_EXPIRE;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (sip_reg_sm_process_event(&sip_sm_event) < 0) {
             CCSIP_DEBUG_ERROR(get_debug_string(REG_SM_PROCESS_EVENT_ERROR), fname, sip_sm_event.type);
         }
@@ -682,7 +685,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         idx = (long) (timerMsg->usrData);
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t)idx);
         sip_sm_event.type = (sipSMEventType_t) E_SIP_REG_TMR_ACK;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (sip_reg_sm_process_event(&sip_sm_event) < 0) {
             CCSIP_DEBUG_ERROR(get_debug_string(REG_SM_PROCESS_EVENT_ERROR), fname, sip_sm_event.type);
         }
@@ -692,7 +695,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         idx = msg ? (line_t) (*((uint32_t *)msg)) : CC_NO_LINE;
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t)idx);
         sip_sm_event.type = (sipSMEventType_t) E_SIP_REG_TMR_WAIT;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (sip_reg_sm_process_event(&sip_sm_event) < 0) {
             CCSIP_DEBUG_ERROR(get_debug_string(REG_SM_PROCESS_EVENT_ERROR), fname, sip_sm_event.type);
         }
@@ -713,7 +716,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         sip_sm_event.ccb = sip_sm_get_ccb_by_ccm_id_and_index(ccm_id, (line_t) idx);
         sip_sm_event.type = (sipSMEventType_t) E_SIP_REG_TMR_RETRY;
         sip_sm_event.u.UsrInfo = ip_addr_invalid;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (sip_sm_event.ccb == NULL || sip_reg_sm_process_event(&sip_sm_event) < 0) {
             CCSIP_DEBUG_ERROR(get_debug_string(REG_SM_PROCESS_EVENT_ERROR), fname, sip_sm_event.type);
         }
@@ -721,7 +724,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
 
     case SIP_REG_REQ:
         idx = msg ? (line_t) (*((uint32_t *)msg)) : CC_NO_LINE;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t) idx);
         if (!sip_sm_event.ccb) {
             CCSIP_DEBUG_TASK(DEB_F_PREFIX"event data does not point to a valid ccb"
@@ -740,7 +743,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         idx = msg ? (line_t) (*((uint32_t *)msg)) : CC_NO_LINE;
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t) idx);
         sip_sm_event.type = (sipSMEventType_t) E_SIP_REG_CANCEL;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (sip_reg_sm_process_event(&sip_sm_event) < 0) {
             CCSIP_DEBUG_ERROR(get_debug_string(REG_SM_PROCESS_EVENT_ERROR), fname, sip_sm_event.type);
         }
@@ -750,7 +753,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         idx = msg ? (line_t) (*((uint32_t *)msg)) : CC_NO_LINE;
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t) idx);
         sip_sm_event.type = (sipSMEventType_t) E_SIP_REG_CLEANUP;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (sip_reg_sm_process_event(&sip_sm_event) < 0) {
             CCSIP_DEBUG_ERROR(get_debug_string(REG_SM_PROCESS_EVENT_ERROR), fname, sip_sm_event.type);
         }
@@ -759,7 +762,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
     case SIP_TMR_STANDBY_KEEPALIVE:
         sip_sm_event.ccb = sip_sm_get_ccb_by_index(REG_BACKUP_CCB);
         sip_sm_event.type = (sipSMEventType_t) E_SIP_REG_TMR_WAIT;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (sip_reg_sm_process_event(&sip_sm_event) < 0) {
             CCSIP_DEBUG_ERROR(get_debug_string(REG_SM_PROCESS_EVENT_ERROR), fname, sip_sm_event.type);
         }
@@ -772,21 +775,21 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"subsmanager_handle_ev_app_subscribe_register() "
                               "returned error.\n", fname);
         }
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         break;
     case SIPSPI_EV_CC_SUBSCRIBE:
         if (subsmanager_handle_ev_app_subscribe(msg) < 0) {
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"subsmanager_handle_ev_app_subscribe() "
                               "returned error.\n", fname);
         }
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         break;
     case SIPSPI_EV_CC_SUBSCRIBE_RESPONSE:
         if (subsmanager_handle_ev_app_subscribe_response(msg) < 0) {
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"subsmanager_handle_ev_app_subscribe_response() "
                               "returned error.\n", fname);
         }
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         break;
     case SIPSPI_EV_CC_NOTIFY:
         {
@@ -801,21 +804,21 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
                                   "deferred request.\n", fname);
             }
         }
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         break;
     case SIPSPI_EV_CC_NOTIFY_RESPONSE:
         if (subsmanager_handle_ev_app_notify_response(msg) < 0) {
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"subsmanager_handle_ev_app_notify_response() "
                               "returned error.\n", fname);
         }
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         break;
     case SIPSPI_EV_CC_SUBSCRIPTION_TERMINATED:
         if (subsmanager_handle_ev_app_subscription_terminated(msg) < 0) {
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"subsmanager_handle_ev_app_subscription_terminated() "
                               "returned error.\n", fname);
         }
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         break;
 
     case SIPSPI_EV_CC_PUBLISH_REQ:
@@ -823,12 +826,12 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"publish_handle_ev_app_publish() "
                               "returned error.\n", fname);
         }
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         break;
 
     case SIP_REG_UPDATE:
         last_available_line = msg ? (line_t) (*((uint32_t *)msg)) : CC_NO_LINE;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         regmgr_handle_register_update(last_available_line);
         break;
     case REG_MGR_STATE_CHANGE:
@@ -836,14 +839,14 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         sip_regmgr_rsp(((cc_regmgr_t *)msg)->rsp_id,
                        ((cc_regmgr_t *)msg)->rsp_type,
                        ((cc_regmgr_t *)msg)->wait_flag);
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         break;
 
 
         // Retry timer expired for Sub/Not
     case SIP_TMR_MSG_RETRY_SUBNOT:
         idx = (long) (timerMsg->usrData);
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (subsmanager_handle_retry_timer_expire(idx) < 0) {
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"subsmanager_handle_retry_timer_expire() "
                               "returned error.\n", fname);
@@ -851,7 +854,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         break;
         // Sub/Not periodic timer
     case SIP_TMR_PERIODIC_SUBNOT:
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         subsmanager_handle_periodic_timer_expire();
         publish_handle_periodic_timer_expire();
         break;
@@ -863,7 +866,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
 
             restartCmd = req->cmd;
             // Handle restart event from platform
-            cprReleaseBuffer(msg);
+            cpr_free(msg);
 
             CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP_RESTART event restartCmd = (%d)\n", 
                 DEB_F_PREFIX_ARGS(SIP_EVT, fname), restartCmd);
@@ -884,7 +887,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
                 action = SIP_INTERNAL;
             }
 
-            cprReleaseBuffer(msg);
+            cpr_free(msg);
 
             CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP_TMR_SHUTDOWN_PHASE2 event action= (%d)\n",
                              DEB_F_PREFIX_ARGS(SIP_EVT, fname),  action);
@@ -900,7 +903,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
 
             action = req->action;
             reason = req->reason;
-            cprReleaseBuffer(msg);
+            cpr_free(msg);
             CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP_SHUTDOWN message\n", 
                 DEB_F_PREFIX_ARGS(SIP_EVT, fname));
             SIPTaskProcessShutdown(action, reason);
@@ -918,14 +921,14 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         idx = (long) (timerMsg->usrData);
         sip_sm_event.ccb = sip_sm_get_ccb_by_index((line_t)idx);
         sip_sm_event.type = (sipSMEventType_t) E_SIP_GLARE_AVOIDANCE_TIMER;
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         if (sip_sm_process_event(&sip_sm_event) < 0) {
             CCSIP_DEBUG_ERROR(get_debug_string(SM_PROCESS_EVENT_ERROR), fname, sip_sm_event.type);
         }
         break;
 
     default:
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unknown message\n, fname");
         break;
     }
@@ -1058,7 +1061,7 @@ SIPTaskProcessUDPMessage (cprBuffer_t msg,
                             "message too big: msg size = %d, max SIP "
                             "pkt size = %d\n", DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname), remoteIPAddrStr,
                              util_get_port(&from), bytes_used, SIP_UDP_MESSAGE_SIZE);
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         return SIP_ERROR;
     }
 
@@ -1067,7 +1070,7 @@ SIPTaskProcessUDPMessage (cprBuffer_t msg,
      */
     memcpy(buf, (char *)msg, len);
     buf[len] = '\0'; /* NULL terminate for debug printing */
-    cprReleaseBuffer(msg);
+    cpr_free(msg);
 
     /*
      * Print the received UDP packet info
@@ -2960,7 +2963,7 @@ SIPTaskPostRestart (boolean restart)
     /* send a restart message to the SIP Task */
     if (SIPTaskSendMsg(SIP_RESTART, (cprBuffer_t)msg,
                        sizeof(ccsip_restart_req), NULL) == CPR_FAILURE) {
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
     }
     return;
 }
@@ -3032,7 +3035,7 @@ SIPTaskPostShutdown (int action, int reason, const char *reasonInfo)
     /* send a restart message to the SIP Task */
     if (SIPTaskSendMsg(SIP_SHUTDOWN, (cprBuffer_t)msg,
                        sizeof(ccsip_shutdown_req_t), NULL) == CPR_FAILURE) {
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
     }
     return;
 }
@@ -3058,6 +3061,7 @@ void destroy_sip_thread()
     static const char fname[] = "destroy_sip_thread";
     DEF_DEBUG(DEB_F_PREFIX"Unloading SIP and destroying sip thread\n", 
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
+
     /* kill msgQ thread first, then itself */
     (void) cprDestroyThread(sip_thread);
 }

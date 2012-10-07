@@ -143,7 +143,6 @@
 #include "cpr_stdio.h"
 #include "cpr_timers.h"
 #include "cpr_darwin_locks.h"
-#include "cpr_darwin_memory_api.h" 
 #include "cpr_darwin_timers.h"
 #include "plat_api.h"
 #include "plat_debug.h"
@@ -198,15 +197,6 @@ cprPreInit (void)
         return CPR_SUCCESS;
     }
     pre_init_called = TRUE;
-    /*
-     * Do not move memory pre init below.
-     * This initializes the memory sandbox
-     * and must be first thing done here to make sure
-     * allocations succeed.
-     */
-    if (cpr_memory_mgmt_pre_init(PRIVATE_SYS_MEM_SIZE) != TRUE) {
-        return CPR_FAILURE;
-    }
 
     /*
      * Create message queue list mutex
@@ -253,10 +243,6 @@ cprPostInit (void)
 
     debug_bind_keyword("cpr-info", &cprInfo);
     //bind_show_keyword("cpr-msgq", cprShowMessageQueueStats);
-
-    if (cpr_memory_mgmt_post_init() != TRUE) {
-        return CPR_FAILURE;
-    }
 
     return CPR_SUCCESS;
 }

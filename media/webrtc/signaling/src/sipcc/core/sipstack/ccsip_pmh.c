@@ -46,6 +46,11 @@
  * and these are parsed using wrapper functions to those in
  * httpish.c
  */
+
+#include <errno.h>
+#include <limits.h>
+
+#include "plstr.h"
 #include "cpr_types.h"
 #include "cpr_stdio.h"
 #include "cpr_stdlib.h"
@@ -339,7 +344,7 @@ parse_other_param (char *inp_str, char **other_param_value)
         if (!cpr_strcasecmp(token_string, "lr")) {
             *other_param_value = (char *) cpr_malloc(4);
             if (*other_param_value != NULL) {
-                strcpy(*other_param_value, token_string);
+                sstrncpy(*other_param_value, token_string, 4);
             }
         }
         *inp_str = temp;
@@ -422,7 +427,7 @@ url_add_headers_to_list (char *url_strp, sipUrl_t *sip_url)
 
     sip_url->num_headers = num_head;
     num_head = 0;
-    url_strp = cpr_strtok(url_strp, "&?", &lasts);  
+    url_strp = PL_strtok_r(url_strp, "&?", &lasts);  
     while ((url_strp != NULL) && (num_head < sip_url->num_headers)) {
 
         tmp_ptr = strchr(url_strp, EQUAL_SIGN);
@@ -435,7 +440,7 @@ url_add_headers_to_list (char *url_strp, sipUrl_t *sip_url)
         sip_url->headerp[(uint16_t)num_head].value = tmp_ptr;
 
         num_head++;
-        url_strp = cpr_strtok(NULL, "&", &lasts);
+        url_strp = PL_strtok_r(NULL, "&", &lasts);
     }
 
     return 0;
@@ -449,6 +454,8 @@ parseUrlParams (char *url_param, sipUrl_t *sipUrl, genUrl_t *genUrl)
     char *url_other_param = NULL;
     uint16_t i;
     uint32_t ttl_val;
+    unsigned long strtoul_result;
+    char *strtoul_end;
 
 
     /*
@@ -546,13 +553,16 @@ parseUrlParams (char *url_param, sipUrl_t *sipUrl, genUrl_t *genUrl)
                 return PARSE_ERR_UNEXPECTED_EOS;
             }
             save_ch = *url_param;
-            *url_param = 0;  /* Terminate the string for atoi */
-            ttl_val = (uint32_t) atoi(param_val);
-            if (ttl_val > MAX_TTL_VAL) {
+            *url_param = 0;  /* Terminate the string for strtoul */
+
+            errno = 0;
+            strtoul_result = strtoul(param_val, &strtoul_end, 10);
+
+            if (errno || param_val == strtoul_end || strtoul_result > MAX_TTL_VAL) {
                 CCSIP_DEBUG_ERROR(ERROR_7, fname, sipUrl->ttl_val);
                 return PARSE_ERR_INVALID_TTL_VAL;
             }
-            sipUrl->ttl_val = (unsigned char) ttl_val;
+            sipUrl->ttl_val = (unsigned char) strtoul_result;
             *url_param = save_ch;  /* Restore string state */
         } else if (cpr_strncasecmp(url_param, "maddr=", 6) == 0) {
             url_param += 6;
@@ -654,6 +664,8 @@ parseUrlParams (char *url_param, sipUrl_t *sipUrl, genUrl_t *genUrl)
  * sip:user:password@host:port
  * sip:user:password@[ipv6host]:port
  *
+ * e.g.  "1218@[2001:db8:c18:1:211:11ff:feb1:fb65]"
+ *
  * Parse the SIP URL and zero the separators ( @ : ; etc)
  * Point fields of sipUrl to appropriate places in the duplicated string
  * This saves multiple mallocs for different fields of the sipUrl
@@ -679,8 +691,6 @@ parseSipUrl (char *url_start, genUrl_t *genUrl)
     boolean parsing_user_part;
     char *temp_url;
     boolean ipv6_addr = FALSE;
-
-    //strcpy(url_start, "1218@[2001:db8:c18:1:211:11ff:feb1:fb65]");
 
     /* initializing separator */
     separator[0] = '\0';
@@ -1544,7 +1554,7 @@ sippmh_parse_from_or_to (char *input_loc_ptr, boolean dup_flag)
         sipLoc->tag = NULL;
         if (*more_ptr == SEMI_COLON) {
             *more_ptr++ = 0;
-            more_ptr = cpr_strtok(more_ptr, ";", &lasts);
+            more_ptr = PL_strtok_r(more_ptr, ";", &lasts);
             /* if we had a ; without any addr-params */
             if (more_ptr == NULL) {
                 parse_errno = PARSE_ERR_UNEXPECTED_EOS;
@@ -1557,7 +1567,7 @@ sippmh_parse_from_or_to (char *input_loc_ptr, boolean dup_flag)
                         tag_found = TRUE;
                         parse_errno = validate_tag(sipLoc, more_ptr);
                     } else {
-                        more_ptr = cpr_strtok(NULL, ";", &lasts);
+                        more_ptr = PL_strtok_r(NULL, ";", &lasts);
                     }
                 }
             }
@@ -2521,7 +2531,7 @@ sippmh_parse_cseq (const char *cseq)
         sipCseq->method = sipMethodInvalid;
 
         if (mycseq) {
-            char *this_token = cpr_strtok(mycseq, " ", &lasts);
+            char *this_token = PL_strtok_r(mycseq, " ", &lasts);
 
             if (this_token) {
                 sipCseq->number = strtoul(this_token, NULL, 10);
@@ -2533,7 +2543,7 @@ sippmh_parse_cseq (const char *cseq)
                     return (NULL);
                 }
 
-                this_token = cpr_strtok(NULL, " ", &lasts);
+                this_token = PL_strtok_r(NULL, " ", &lasts);
                 if (this_token) {
                     sipCseq->method = sippmh_get_method_code(this_token);
                 }
@@ -2891,10 +2901,10 @@ sippmh_parse_referto_headers (char *refto_line, char **header_arr)
         return 0;
     }
 
-    tmpHead = cpr_strtok(refto_line, "?&", &lasts);
+    tmpHead = PL_strtok_r(refto_line, "?&", &lasts);
     while (tmpHead != NULL) {
         header_arr[headNum++] = tmpHead;
-        tmpHead = cpr_strtok(NULL, "?&", &lasts);
+        tmpHead = PL_strtok_r(NULL, "?&", &lasts);
     }
     return headNum;
 }
@@ -3250,7 +3260,7 @@ sippmh_parse_replaces (char *input_repl, boolean dup_flag)
     }
 
 
-    this_tok = cpr_strtok(input_repl, ";", &lasts);
+    this_tok = PL_strtok_r(input_repl, ";", &lasts);
     while (this_tok != NULL) {
         if (strncasecmp(this_tok, TO_TAG, 6) == 0) {
             if (repcs->toTag != NULL) {
@@ -3308,7 +3318,7 @@ sippmh_parse_replaces (char *input_repl, boolean dup_flag)
             sippmh_free_replaces(repcs);
             return NULL;
         }
-        this_tok = cpr_strtok(NULL, ";", &lasts);
+        this_tok = PL_strtok_r(NULL, ";", &lasts);
     }
     /* check for errors */
     if ((repcs->callid == NULL) ||
@@ -3332,20 +3342,21 @@ sippmh_parse_replaces (char *input_repl, boolean dup_flag)
 static int
 sippmh_htoi (const char inputChar)
 {
-    int value = 0;
     char inputValue[2];
+    long strtol_result;
+    char *strtol_end;
 
-    if (isdigit((int) inputChar)) {
-        inputValue[0] = inputChar;
-        inputValue[1] = '\0';
-        value = atoi(inputValue);
-    } else if (isupper((int) inputChar)) {
-        value = 9 + (inputChar - 'A' + 1);
-    } else if (islower((int) inputChar)) {
-        value = 9 + (inputChar - 'a' + 1);
+    inputValue[0] = inputChar;
+    inputValue[1] = '\0';
+
+    errno = 0;
+    strtol_result = strtol(inputValue, &strtol_end, 16);
+
+    if (errno || inputValue == strtol_end) {
+      return 0;
+    } else {
+      return (int) strtol_result;
     }
-
-    return (value);
 }
 
 /*
@@ -3865,7 +3876,7 @@ sippmh_generate_authorization (sip_author_t *sip_author)
      * This routine takes a sip_author_t struct and generates an Authorization
      * header or a Proxy-Authorization header.  Since this routine generates
      * a header for Authorization or Proxy-Authorization, the header will
-     * start with "Digest" or "Basic".  The user should use strncat to
+     * start with "Digest" or "Basic".  The user should use sstrncat to
      * add "Proxy Authorization: " or "Authorization: " depending which is
      * needed.
      */
@@ -3903,7 +3914,7 @@ sippmh_generate_authorization (sip_author_t *sip_author)
             }
             snprintf(buffer2, MAX_URI_LENGTH, ",%s=\"%s\"",
                      AUTHENTICATION_OPAQUE, sip_author->opaque);
-            strncat(buffer, buffer2, MAX_SIP_HEADER_LENGTH - strlen(buffer) - 1);
+            sstrncat(buffer, buffer2, MAX_SIP_HEADER_LENGTH - strlen(buffer));
             cpr_free(buffer2);
         }
         if (sip_author->cnonce) {
@@ -3916,7 +3927,7 @@ sippmh_generate_authorization (sip_author_t *sip_author)
             }
             snprintf(buffer3, MAX_URI_LENGTH,
                      ",cnonce=\"%s\"", sip_author->cnonce);
-            strncat(buffer, buffer3, MAX_SIP_HEADER_LENGTH - strlen(buffer) - 1);
+            sstrncat(buffer, buffer3, MAX_SIP_HEADER_LENGTH - strlen(buffer));
             cpr_free(buffer3);
         }
         if (sip_author->qop) {
@@ -3928,7 +3939,7 @@ sippmh_generate_authorization (sip_author_t *sip_author)
                 return NULL;
             }
             snprintf(buffer4, MAX_URI_LENGTH, ",qop=%s", sip_author->qop);
-            strncat(buffer, buffer4, MAX_SIP_HEADER_LENGTH - strlen(buffer) - 1);
+            sstrncat(buffer, buffer4, MAX_SIP_HEADER_LENGTH - strlen(buffer));
             cpr_free(buffer4);
         }
         if (sip_author->nc_count) {
@@ -3940,7 +3951,7 @@ sippmh_generate_authorization (sip_author_t *sip_author)
                 return NULL;
             }
             snprintf(buffer5, MAX_URI_LENGTH, ",nc=%s", sip_author->nc_count);
-            strncat(buffer, buffer5, MAX_SIP_HEADER_LENGTH - strlen(buffer) - 1);
+            sstrncat(buffer, buffer5, MAX_SIP_HEADER_LENGTH - strlen(buffer));
             cpr_free(buffer5);
         }
         if (sip_author->algorithm) {
@@ -3953,7 +3964,7 @@ sippmh_generate_authorization (sip_author_t *sip_author)
             }
             snprintf(buffer6, MAX_URI_LENGTH,
                      ",%s=%s", AUTHENTICATION_ALGORITHM, sip_author->algorithm);
-            strncat(buffer, buffer6, MAX_SIP_HEADER_LENGTH - strlen(buffer) - 1);
+            sstrncat(buffer, buffer6, MAX_SIP_HEADER_LENGTH - strlen(buffer));
             cpr_free(buffer6);
         }
     } else {
@@ -4260,6 +4271,7 @@ sippmh_process_via_header (sipMessage_t *sip_message,
     char dotted_ip[MAX_IPADDR_STR_LEN];
     char *hdr_start;
     char *new_buf;
+    int new_buf_len;
     char *offset;
     long old_header_offset;
     sipVia_t *via;
@@ -4285,9 +4297,8 @@ sippmh_process_via_header (sipMessage_t *sip_message,
              * +3 accounts for the ; and the = before and after the received
              * and the terminating NULL
              */
-            new_buf = (char *) cpr_malloc(strlen(hdr_start) +
-                                          sizeof(VIA_RECEIVED) +
-                                          strlen(dotted_ip) + 2);
+            new_buf_len = strlen(hdr_start) + sizeof(VIA_RECEIVED) + strlen(dotted_ip) + 3;
+            new_buf = (char *) cpr_malloc(new_buf_len);
             /*
              * If we cannot allocate memory, we will just leave
              * the VIA alone and hope things work out for the best
@@ -4301,17 +4312,9 @@ sippmh_process_via_header (sipMessage_t *sip_message,
                     old_header_offset;
 
                 if (offset) {
-                    strncpy(new_buf, hdr_start, offset - hdr_start);
-                    new_buf[offset - hdr_start] = '\0';
+                  snprintf(new_buf, new_buf_len, "%.*s;%s=%s%s", (int) (offset - hdr_start), hdr_start, VIA_RECEIVED, dotted_ip, offset);
                 } else {
-                    strcpy(new_buf, hdr_start);
-                }
-                strcat(new_buf, ";");
-                strcat(new_buf, VIA_RECEIVED);
-                strcat(new_buf, "=");
-                strcat(new_buf, dotted_ip);
-                if (offset) {
-                    strcat(new_buf, offset);
+                  snprintf(new_buf, new_buf_len, "%s;%s=%s", hdr_start, VIA_RECEIVED, dotted_ip);
                 }
 
                 cpr_free(hdr_start);
@@ -4378,7 +4381,7 @@ sippmh_parse_user (char *url_main)
      * An assumption has been made that any parameters will come
      * after the number. i.e.: "15726;param=paramval"
      */
-    (void) cpr_strtok(user, ";", &lasts);
+    (void) PL_strtok_r(user, ";", &lasts);
     return (user);
 }
 
@@ -4405,7 +4408,9 @@ sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mes
     char    temp[MAX_SIP_URL_LENGTH];
     boolean  token_found = FALSE;
     boolean  hp_found = FALSE;
-    
+    long strtol_result;
+    char *strtol_end;
+
     p = strstr(pSipMessage->mesg_body[0].msgBody, "Messages-Waiting");
 
     if (!p) {
@@ -4500,7 +4505,15 @@ sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mes
                 if (!isdigit(val[j])) {
                     if (val[j] == '/') {
                         temp[i] = '\0';
-                        mesgSummary->newCount = atoi(temp);
+
+                        errno = 0;
+                        strtol_result = strtol(temp, &strtol_end, 10);
+
+                        if (errno || temp == strtol_end || strtol_result > INT_MAX) {
+                            return SIP_ERROR;
+                        }
+
+                        mesgSummary->newCount = (int) strtol_result;
                         token_found = TRUE;
                         i = 0;
                     } else {
@@ -4517,7 +4530,14 @@ sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mes
             temp[i] = '\0';
 
             if (token_found) {
-                mesgSummary->oldCount = atoi(temp);              
+                errno = 0;
+                strtol_result = (temp, &strtol_end, 10);
+
+                if (errno || temp == strtol_end || strtol_result > INT_MAX) {
+                    return SIP_ERROR;
+                }
+
+                mesgSummary->oldCount = (int) strtol_result;
             }
 
             temp[i = 0] = '\0';
@@ -4535,7 +4555,15 @@ sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mes
                     if (!isdigit(val[j])) {
                         if (val[j] == '/') {
                             temp[i] = '\0';
-                            mesgSummary->hpNewCount = atoi(temp);
+
+                            errno = 0;
+                            strtol_result = strtol(temp, &strtol_end, 10);
+
+                            if (errno || temp == strtol_end || strtol_result > INT_MAX) {
+                                return SIP_ERROR;
+                            }
+
+                            mesgSummary->hpNewCount = (int) strtol_result;
                             hp_found = TRUE;
                             i = 0;
                         } else {
@@ -4551,7 +4579,14 @@ sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mes
                 }
                 temp[i] = '\0';
                 if (hp_found) {
-                    mesgSummary->hpOldCount = atoi(temp);
+                    errno = 0;
+                    strtol_result = strtol(temp, &strtol_end, 10);
+
+                    if (errno || temp == strtol_end || strtol_result > INT_MAX) {
+                        return SIP_ERROR;
+                    }
+
+                    mesgSummary->hpOldCount = (int) strtol_result;
                 }
             }
             if (!hp_found) {
@@ -4684,7 +4719,7 @@ sippmh_parse_supported_require (const char *header, char **punsupported_tokens)
     char *temp_header;
     char *token;
     const char *delim = ", \r\n\t";
-    char *unsupported_tokens;
+    int unsupported_tokens_size = 0;
     char *bad_token = NULL;
     int  size;
     char *lasts = NULL;
@@ -4696,9 +4731,8 @@ sippmh_parse_supported_require (const char *header, char **punsupported_tokens)
     if (punsupported_tokens != NULL) {
         *punsupported_tokens = NULL; //assume everything  will go right
     }
-    unsupported_tokens = NULL; //no memory allocated yet
 
-    //need to keep own buffer since cpr_strtok is destructive
+    //need to keep own buffer since PL_strtok_r is destructive
     size = strlen(header) + 1;
     temp_header = (char *) cpr_malloc(size);
     if (temp_header == NULL) {
@@ -4708,7 +4742,7 @@ sippmh_parse_supported_require (const char *header, char **punsupported_tokens)
     }
     sstrncpy(temp_header, header, size);
 
-    token = cpr_strtok(temp_header, delim, &lasts);
+    token = PL_strtok_r(temp_header, delim, &lasts);
     while (token != NULL) {
         bad_token = NULL;
 
@@ -4771,30 +4805,29 @@ sippmh_parse_supported_require (const char *header, char **punsupported_tokens)
                 DEB_F_PREFIX_ARGS(SIP_TAG, fname), bad_token);
 
             //allocate memory for unsupported options if necessary
-            if (punsupported_tokens != NULL) {
-                if (unsupported_tokens == NULL) {
-                    *punsupported_tokens = (char *)
-                        cpr_malloc(strlen(header) + 1);
-                    unsupported_tokens = *punsupported_tokens;
-                    if (unsupported_tokens) {
-                        unsupported_tokens[0] = '\0';
+            if (punsupported_tokens) {
+                if (!*punsupported_tokens) {
+                    unsupported_tokens_size = strlen(header) + 1;
+                    *punsupported_tokens = (char *) cpr_malloc(unsupported_tokens_size);
+                    if (*punsupported_tokens) {
+                        memset(*punsupported_tokens, 0, unsupported_tokens_size);
                     }
                 }
             }
 
             //caller wants to know what came in Require and we dont support
-            if (unsupported_tokens != NULL) {
+            if (punsupported_tokens && *punsupported_tokens) {
                 //include token into illegal_tokens
-                if (unsupported_tokens[0] != '\0') {
-                    strcat(unsupported_tokens, ","); //add a ","
+                if (strlen(*punsupported_tokens) > 0) {
+                    sstrncat(*punsupported_tokens, ",", unsupported_tokens_size - strlen(*punsupported_tokens)); //add a ","
                 }
-                strcat(unsupported_tokens, bad_token);
+                sstrncat(*punsupported_tokens, bad_token, unsupported_tokens_size - strlen(*punsupported_tokens));
             }
             bad_token = NULL;
         }
 
         //get next token
-        token = cpr_strtok(NULL, delim, &lasts);
+        token = PL_strtok_r(NULL, delim, &lasts);
     }
     cpr_free(temp_header);
     return (tags);
@@ -5170,7 +5203,7 @@ sippmh_parse_service_control_body (char *msgBody, int msgLength)
                                     len = strlen("reregister_needed")) == 0)) {
                         scp->cucm_result = (char *) cpr_calloc(1,len + 1);
                         if (scp->cucm_result) {
-                            strncpy(scp->cucm_result, value, len);
+                            sstrncpy(scp->cucm_result, value, len);
                             scp->cucm_result[len] = '\0';
                         }
                     }
@@ -5389,7 +5422,7 @@ sippmh_parse_join_header (const char *header)
             sippmh_free_join_info(join);
             return NULL;
         }
-        strncpy(join->call_id, header, semi-header);
+        sstrncpy(join->call_id, header, semi-header);
     } else {
         // call-id is the only parameter
         join->call_id = cpr_strdup(header);
@@ -5432,7 +5465,7 @@ sippmh_parse_join_header (const char *header)
             } else {
                 join->from_tag = (char *) cpr_calloc(1, params-param_value + 1);
                 if (join->from_tag) {
-                    strncpy(join->from_tag, param_value, params-param_value);
+                    sstrncpy(join->from_tag, param_value, params-param_value + 1);
                 }
                 SKIP_LWS(params);
                 if (*params == SEMI_COLON) {
@@ -5456,7 +5489,7 @@ sippmh_parse_join_header (const char *header)
             } else {
                 join->to_tag = (char *) cpr_calloc(1, params-param_value + 1);
                 if (join->to_tag) {
-                    strncpy(join->to_tag, param_value, params-param_value);
+                    sstrncpy(join->to_tag, param_value, params-param_value + 1);
                 }
                 if (*params == SEMI_COLON) {
                     *params++ = '\0';
@@ -5506,15 +5539,15 @@ sippmh_add_join_header (sipMessage_t *message, sipJoinInfo_t *join)
     snprintf(joinhdr, MAX_SIP_HEADER_LENGTH, "%s", join->call_id);
     left = (uint16_t) MAX_SIP_HEADER_LENGTH - strlen(join->call_id);
     if (join->from_tag && left > 0) {
-        strncat(joinhdr, ";from-tag=", left);
+        sstrncat(joinhdr, ";from-tag=", left);
         left -= sizeof(";from-tag=") - 1;
-        strncat(joinhdr, join->from_tag, left);
+        sstrncat(joinhdr, join->from_tag, left);
         left -= strlen(join->from_tag);
     }
     if (join->to_tag && left > 0) {
-        strncat(joinhdr, ";to-tag=", left);
+        sstrncat(joinhdr, ";to-tag=", left);
         left -= sizeof(";to-tag=") - 1;
-        strncat(joinhdr, join->to_tag, left);
+        sstrncat(joinhdr, join->to_tag, left);
     }
     return (sippmh_add_text_header(message, SIP_HEADER_JOIN, joinhdr));
 }

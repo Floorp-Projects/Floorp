@@ -58,5 +58,30 @@ void platform_apply_config (char * configVersionStamp, char * dialplanVersionSta
  */
 cpr_ip_mode_e platGetIpAddressMode(); 
 
+/**
+ * @brief Given a msg buffer, returns a pointer to the buffer's header
+ *
+ * The cprGetSysHeader function retrieves the system header buffer for the
+ * passed in message buffer.
+ *
+ * @param[in] buffer  pointer to the buffer whose sysHdr to return
+ *
+ * @return        Abstract pointer to the msg buffer's system header
+ *                or #NULL if failure
+ */
+void *
+cprGetSysHeader (void *buffer);
+
+/**
+ * @brief Called when the application is done with this system header
+ *
+ * The cprReleaseSysHeader function returns the system header buffer to the
+ * system.
+ * @param[in] syshdr  pointer to the sysHdr to be released
+ *
+ * @return        none
+ */
+void
+cprReleaseSysHeader (void *syshdr);
 
 #endif

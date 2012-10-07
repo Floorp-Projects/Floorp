@@ -112,10 +112,32 @@ typedef enum rtp_ptype_
     RTP_L16          = 102,
     RTP_H263         = 103,
     RTP_ILBC         = 116, /* used only to make an offer */
-	RTP_VP8			 = 120,
-	RTP_I420		 = 124,
+    RTP_OPUS         = 109,
+    RTP_VP8          = 120,
+    RTP_I420         = 124,
     RTP_ISAC         = 124
 } rtp_ptype;
+
+typedef struct {
+    const char *name;
+    int         value;
+} ccsdp_key_table_entry_t;
+
+typedef enum max_coded_audio_bandwidth_ {
+    opus_nb  = 0,    /* Narrowband */
+    opus_mb  = 1,    /* Mediumband */
+    opus_wb  = 2,    /* Wideband */
+    opus_swb = 3,    /* Super-wideband */
+    opus_fb  = 4   /* Fullband */
+} max_coded_audio_bandwidth;
+
+static const ccsdp_key_table_entry_t max_coded_audio_bandwidth_table[] = {
+    {"nb",         opus_nb},
+    {"mb",         opus_mb},
+    {"wb",         opus_wb},
+    {"swb",        opus_swb},
+    {"fb",         opus_fb}
+};
 
 typedef enum {
     SDP_SUCCESS, /**< Success */
@@ -216,6 +238,12 @@ typedef enum {
     SDP_ATTR_SDESCRIPTIONS,  /* version 9 sdescriptions */
     SDP_ATTR_LABEL,
     SDP_ATTR_FRAMERATE,
+    SDP_ATTR_ICE_CANDIDATE,
+    SDP_ATTR_ICE_UFRAG,
+    SDP_ATTR_ICE_PWD,
+    SDP_ATTR_RTCP_MUX,
+    SDP_ATTR_DTLS_FINGERPRINT,
+    SDP_ATTR_MAXPTIME,
     SDP_MAX_ATTR_TYPES,
     SDP_ATTR_INVALID
 } sdp_attr_e;

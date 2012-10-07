@@ -206,7 +206,7 @@ cfgfile_parse_str (const var_t *entry, const char *value)
     /*
      * Copy string into config block
      */
-    strncpy((char *)entry->addr, value, entry->length);
+    sstrncpy((char *)entry->addr, value, entry->length);
     return (0);
 
 

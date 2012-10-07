@@ -124,6 +124,10 @@ extern "C" {
 #define cip_mmgr_MediaDefinitions_MEDIA_TYPE_ILBC30 40L
 #undef cip_mmgr_MediaDefinitions_MEDIA_TYPE_ISAC
 #define cip_mmgr_MediaDefinitions_MEDIA_TYPE_ISAC 41L
+#undef cip_mmgr_MediaDefinitions_MEDIA_TYPE_VP8
+#define cip_mmgr_MediaDefinitions_MEDIA_TYPE_VP8 42L
+#undef cip_mmgr_MediaDefinitions_MEDIA_TYPE_OPUS
+#define cip_mmgr_MediaDefinitions_MEDIA_TYPE_OPUS 109L
 
 
 #undef cip_mmgr_MediaDefinitions_BANDWIDTH_NARROWBAND

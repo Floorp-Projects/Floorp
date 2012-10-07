@@ -44,6 +44,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <plat_api.h>
+#include "cpr_string.h"
 
 /*
  * If building with debug test interface,
@@ -268,7 +269,7 @@ cprDestroyMessageQueue (cprMsgQueue_t msgQueue)
     /* Drain message queue */
     msg = cprGetMessage(msgQueue, FALSE, NULL);
     while (msg != NULL) {
-        cprReleaseBuffer(msg);
+        cpr_free(msg);
         msg = cprGetMessage(msgQueue, FALSE, NULL);
     }
 
@@ -351,7 +352,7 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
 {
     static const char fname[] = "cprGetMessage";
 	
-    uint32_t buffer = 0;
+    void *buffer = 0;
     cpr_msg_queue_t *msgq;
     cpr_msgq_node_t *node;
 	struct timespec timeout;
@@ -418,13 +419,13 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
 		if (ppUserData) {
 			*ppUserData = node->pUserData;
 		}
-		buffer = (long) node->msg;
+		buffer = node->msg;
 		
 	}
 	
 	pthread_mutex_unlock(&msgq->mutex);
 	
-    return (void *)(long) buffer;
+    return buffer;
 }
 
 
@@ -640,8 +641,9 @@ cprGetMessageQueueStats (cprMsgQueue_t msgQueue, cprMsgQueueStats_t *stats)
     if (msgQueue && stats) {
         msgq = (cpr_msg_queue_t *) msgQueue;
 
-        strncpy(stats->name, msgq->name ? msgq->name : "undefined",
-                sizeof(stats->name) - 1);
+        sstrncpy(stats->name, msgq->name ? msgq->name : "undefined",
+                sizeof(stats->name));
+        
         stats->extendedDepth = msgq->maxExtendedQDepth;
         stats->maxCount = msgq->maxCount;
         stats->currentCount = msgq->currentCount;

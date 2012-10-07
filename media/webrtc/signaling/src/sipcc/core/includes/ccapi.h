@@ -40,6 +40,7 @@
 #ifndef _CCAPI_H_
 #define _CCAPI_H_
 
+#include "prtypes.h"
 #include "cpr_types.h"
 #include "cpr_memory.h"
 #include "phone_types.h"
@@ -57,6 +58,10 @@ typedef int cc_causes_t;
 #define  CC_CALL_FORWARDED  CC_CALL_TYPE_FORWARDED
 #define  CC_CALL_NONE       CC_CALL_TYPE_NONE
 #define  CC_CALL_INCOMING   CC_CALL_TYPE_INCOMING
+#define  SDP_SIZE           4096   /* must increase this */
+#define  PC_HANDLE_SIZE     17 /* 8 random bytes in hex plus null */
+#define  CANDIDATE_SIZE     150
+#define  MID_SIZE           150
 
 #include "sessionConstants.h"
 
@@ -65,18 +70,8 @@ typedef unsigned int softkey_events;
 typedef unsigned int cc_call_priority_e;
 extern cc_reg_state_t ccapp_get_state();
 
-
-//  global sdp structure
-typedef struct cc_global_sdp_ {
-	char			offerSDP[1020];
-	char			answerSDP[1024];
-	char			offerAddress[MAX_IPADDR_STR_LEN];
-	int				audioPort;
-	int				videoPort;
-} cc_global_sdp_t;
-
-extern cc_global_sdp_t  gROAPSDP;
-
+/* Session FEATURES */
+/* please update cc_feature_names whenever this enum list is changed */
 
 typedef enum {
     CC_FEATURE_MIN = -1L,
@@ -128,8 +123,92 @@ typedef enum {
     CC_FEATURE_CAC_RESP_FAIL,
     CC_FEATURE_FAST_PIC_UPD,
     CC_FEATURE_UNDEFINED,
+    CC_FEATURE_CREATEOFFER,
+    CC_FEATURE_CREATEANSWER,
+    CC_FEATURE_SETLOCALDESC,
+    CC_FEATURE_SETREMOTEDESC,
+    CC_FEATURE_LOCALDESC,
+    CC_FEATURE_REMOTEDESC,
+    CC_FEATURE_SETPEERCONNECTION,
+    CC_FEATURE_ADDSTREAM,
+    CC_FEATURE_REMOVESTREAM,
+    CC_FEATURE_ADDICECANDIDATE,
     CC_FEATURE_MAX
 } group_cc_feature_t;
+
+#define skNewCall CC_FEATURE_NEW_CALL
+#define skConfrn CC_FEATURE_CONF
+
+/* please update the following cc_feature_names whenever this feature list is changed */
+
+#ifdef __CC_FEATURE_STRINGS__
+static const char *cc_feature_names[] = {
+    "NONE",
+    "HOLD",
+    "RESUME",
+    "OFFHOOK",
+    "NEW_CALL",
+    "REDIAL",
+    "ONHOOK",
+    "KEYPRESS",
+    "DIAL",
+    "XFER",
+    "CFWD_ALL",  //10
+    "END_CALL",
+    "ANSWER",
+    "INFO",
+    "CONF",
+    "JOIN",
+    "DIR_XFER",
+    "SELECT",
+    "SPEEDDIAL",
+    "SWAP",
+    "SDBLF",  //45
+    "BLIND_XFER_WITH_DIALSTRING",
+    "BSPACE",
+    "CANCEL",
+    "DIALSTR",
+    "UPD_SESSION_MEDIA_CAP",
+    "NEW_MEDIA",
+    "UPDATE",
+    "CALLINFO",
+    "BLIND_XFER",
+    "NOTIFY",
+    "SUBSCRIBE",
+    "B2BCONF",
+    "B2BJOIN",
+    "HOLD_REVERSION", //jni_max + 10
+    "BLF_ALERT_TONE",
+    "REQPENDTMREXP",
+    "NUMBER",
+    "URL",
+    "REDIRECT", //jni_max + 20
+    "RINGBACKDELAYTMREXP",
+    "CALL_PRESERVATION",
+    "UPD_MEDIA_CAP",
+    "CAC PASSED",
+    "CAC FAILED",
+    "FAST_PIC_UPD",
+    "UNDEFINED",
+    "CREATEOFFER",
+    "CREATEANSWER",
+    "SETLOCALDESC",
+    "SETREMOTEDESC",
+    "LOCALDESC",
+    "REMOTEDESC",
+    "SETPEERCONNECTION",
+    "ADDSTREAM",
+    "REMOVESTREAM",
+    "ADDICECANDIDATE",
+    "MAX"
+};
+
+/* This checks at compile-time that the cc_feature_names list
+ * is the same size as the cc_group_feature_t enum
+ */
+PR_STATIC_ASSERT(PR_ARRAY_SIZE(cc_feature_names) == CC_FEATURE_MAX + 1);
+
+#endif
 
 /*
  * Constants
@@ -149,6 +228,9 @@ typedef enum {
 #define CC_CISCO_PLAR_STRING  "x-cisco-serviceuri-offhook"
 #define CISCO_BLFPICKUP_STRING  "x-cisco-serviceuri-blfpickup"
 #define JOIN_ACROSS_LINES_DISABLED 0
+#define CC_MAX_TRACKS          8   // <EM> query this figure
+#define CC_MAX_STREAMS         2   // TODO: expand signaling to handle more than one of each a/v.
+
 
 /*
  *
@@ -182,6 +264,16 @@ typedef enum cc_msgs_t_ {
     CC_MSG_DIALSTRING,
     CC_MSG_MWI,
     CC_MSG_AUDIT,
+    CC_MSG_CREATEOFFER,  
+    CC_MSG_CREATEANSWER,
+    CC_MSG_SETLOCALDESC,
+    CC_MSG_SETREMOTEDESC,  
+    CC_MSG_REMOTEDESC,
+    CC_MSG_LOCALDESC,
+    CC_MSG_SETPEERCONNECTION,
+    CC_MSG_ADDSTREAM,
+    CC_MSG_REMOVESTREAM,
+    CC_MSG_ADDCANDIDATE,
     CC_MSG_AUDIT_ACK,
     CC_MSG_OPTIONS,
     CC_MSG_OPTIONS_ACK,
@@ -213,6 +305,16 @@ static const char *cc_msg_names[] = {
     "DIALSTRING",
     "MWI",
     "AUDIT",
+    "CREATEOFFER",
+    "CREATEANSWER",
+    "SETLOCALDESC",
+    "SETREMOTEDESC",
+    "REMOTEDESC",
+    "LOCALDESC",
+    "SETPEERCONNECTION",
+    "ADDSTREAM",
+    "REMOVESTREAM",    
+    "ADDCANDIDATE",
     "AUDIT_ACK",
     "OPTIONS",
     "OPTIONS_ACK",
@@ -222,6 +324,12 @@ static const char *cc_msg_names[] = {
     "INFO",
     "INVALID",
 };
+
+/* This checks at compile-time that the cc_msg_names list
+ * is the same size as the cc_msgs_t enum
+ */
+PR_STATIC_ASSERT(PR_ARRAY_SIZE(cc_msg_names) == CC_MSG_MAX + 1);
+
 #endif //__CC_MESSAGES_STRINGS__
 
 typedef enum cc_srcs_t_ {
@@ -297,7 +405,8 @@ typedef enum {
 /* media name with media capability table */
 typedef enum {
     CC_AUDIO_1,
-    CC_VIDEO_1
+    CC_VIDEO_1,
+    CC_DATACHANNEL_1,
 } cc_media_cap_name;
 
 typedef struct cc_sdp_addr_t_ {
@@ -698,12 +807,34 @@ typedef struct cc_media_cap_t_ {
     boolean           enabled;       /* this media is enabled or disabled */
     boolean           support_security; /* security is supported          */
     sdp_direction_e   support_direction;/* supported direction            */
+    cc_media_stream_id_t pc_stream;       /* The media stream in the PC */
+    cc_media_track_id_t  pc_track;        /* The track ID in the media stream */
 } cc_media_cap_t;
 
 typedef struct cc_media_cap_table_t_ {
     uint32_t        id;
     cc_media_cap_t  cap[CC_MAX_MEDIA_CAP];/* capability table.             */
 } cc_media_cap_table_t;
+
+typedef struct cc_media_track_t_ {
+    unsigned int    media_stream_track_id;
+    boolean         video;
+} cc_media_track_t;
+
+typedef struct cc_media_remote_track_table_t_ {
+    uint32_t          num_tracks;
+    uint32_t          media_stream_id;
+    cc_media_track_t  track[CC_MAX_TRACKS];
+} cc_media_remote_track_table_t;
+
+typedef struct cc_media_remote_stream_table_t_ {
+    cc_media_remote_track_table_t  streams[CC_MAX_STREAMS];
+} cc_media_remote_stream_table_t;
+
+typedef struct cc_media_local_track_table_t_ {
+    uint32_t          media_stream_id;
+    cc_media_track_t  track[CC_MAX_TRACKS];
+} cc_media_local_track_table_t;
 
 typedef struct cc_feature_data_generic_t {
     boolean subref_flag;
@@ -721,6 +852,25 @@ typedef struct cc_feature_data_cancel_t_ {
     callid_t    call_id;
     callid_t    target_call_id;
 } cc_feature_data_cancel_t;
+
+typedef struct cc_feature_data_pc_t_ {
+  char pc_handle[PC_HANDLE_SIZE];
+} cc_feature_data_pc_t;
+
+typedef struct cc_feature_data_track_t_ {
+  cc_media_stream_id_t stream_id;
+  cc_media_track_id_t  track_id;
+  cc_media_type_t      media_type;
+} cc_feature_data_track_t;
+
+
+typedef struct cc_feature_candidate_t_ {
+  uint16_t    level;
+  char        candidate[CANDIDATE_SIZE];
+  char        mid[MID_SIZE];
+} cc_feature_candidate_t;
+
+
 
 typedef union cc_feature_data_t {
     cc_feature_data_newcall_t   newcall;
@@ -743,6 +893,9 @@ typedef union cc_feature_data_t {
     cc_feature_data_cnf_t       cnf;
     cc_feature_data_b2bcnf_t    cancel;
     cc_media_cap_t              caps;
+    cc_feature_data_pc_t        pc;
+    cc_feature_data_track_t     track;
+    cc_feature_candidate_t      candidate;
 } cc_feature_data_t;
 
 typedef struct cc_setup_t_ {
@@ -827,13 +980,15 @@ typedef struct cc_release_complete_t_ {
 } cc_release_complete_t;
 
 typedef struct cc_feature_t_ {
-    cc_msgs_t         msg_id;
-    cc_srcs_t         src_id;
-    callid_t          call_id;
-    line_t            line;
-    cc_features_t     feature_id;
-    cc_feature_data_t data;
-    boolean           data_valid;
+    cc_msgs_t            msg_id;
+    cc_srcs_t            src_id;
+    callid_t             call_id;
+    line_t               line;
+    cc_features_t        feature_id;
+    cc_feature_data_t    data;
+    boolean              data_valid;
+    cc_jsep_action_t     action;
+    char                 sdp[SDP_SIZE];
 } cc_feature_t;
 
 typedef struct cc_feature_ack_t_ {
@@ -1051,10 +1206,28 @@ void cc_int_release_complete(cc_srcs_t src_id, cc_srcs_t dst_id,
                              callid_t call_id, line_t line, cc_causes_t cause,
                              cc_kfact_t *kfactor);
 
-void cc_int_feature(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
-                    line_t line, cc_features_t feature_id,
+void cc_int_feature2(cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
+                    callid_t call_id, line_t line, cc_features_t feature_id,
                     cc_feature_data_t *data);
 
+void cc_createoffer(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
+                    line_t line, cc_features_t feature_id, cc_feature_data_t *data);
+                   
+void cc_createanswer (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
+                    line_t line, cc_features_t feature_id, string_t sdp, cc_feature_data_t *data);
+
+void cc_setlocaldesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data);
+
+void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data);
+
+void cc_localdesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+                    cc_features_t feature_id, cc_feature_data_t *data);
+
+void cc_remotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+                    cc_features_t feature_id, cc_feature_data_t *data);
+                   
 void cc_int_feature_ack(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
                         line_t line, cc_features_t feature_id,
                         cc_feature_data_t *data, cc_causes_t cause);
@@ -1121,7 +1294,8 @@ void cc_int_fail_fallback(cc_srcs_t src_id, cc_srcs_t dst_id, int rsp_type,
 #define cc_release(a, b, c, d, e, f)     cc_int_release(a, CC_SRC_GSM, b, c, d, e, f)
 #define cc_release_complete(a, b, c, d, e) \
         cc_int_release_complete(a, CC_SRC_GSM, b, c, d, e)
-#define cc_feature(a, b, c, d, e)     cc_int_feature(a, CC_SRC_GSM, b, c, d, e)
+#define cc_feature(a, b, c, d, e)     cc_int_feature2(CC_MSG_FEATURE, a, CC_SRC_GSM, b, c, d, e)
+#define cc_int_feature(a, b, c, d, e, f)     cc_int_feature2(CC_MSG_FEATURE, a, b, c, d, e, f)
 #define cc_feature_ack(a, b, c, d, e, f) \
         cc_int_feature_ack(a, CC_SRC_GSM, b, c, d, e, f)
 #define cc_offhook(a, b, c)           cc_int_offhook(a, CC_SRC_GSM, CC_NO_CALL_ID, CC_REASON_NONE, b, c, NULL, CC_MONITOR_NONE,CFWDALL_NONE)

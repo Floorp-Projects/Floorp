@@ -375,11 +375,12 @@ int vcmGetVideoCodecList(int request_type)
 /**
  * Get max supported video packetization mode for H.264 video
  */
+/*
 int vcmGetVideoMaxSupportedPacketizationMode()
 {
     return 0;
 }
-
+*/
 /**
  * Get the rx/tx stream statistics associated with the call.
  *
@@ -392,12 +393,14 @@ int vcmGetVideoMaxSupportedPacketizationMode()
  *
  */
 
+/*
 int vcmGetRtpStats(cc_mcapid_t mcap_id, cc_groupid_t group_id,
                       cc_streamid_t stream_id, cc_call_handle_t call_handle,
                       char *rx_stats, char *tx_stats)
 {
     return 0;
 }
+*/
 
 /**
  *
@@ -413,10 +416,12 @@ int vcmGetRtpStats(cc_mcapid_t mcap_id, cc_groupid_t group_id,
  * @return true if the bandwidth can be allocated else false.
  */
 
+/*
 boolean vcmAllocateBandwidth(cc_call_handle_t call_handle, int sessions)
 {
     return TRUE;
 }
+*/
 
 /**
  *
@@ -426,10 +431,12 @@ boolean vcmAllocateBandwidth(cc_call_handle_t call_handle, int sessions)
  * @note  If not using WLAN provide a stub
  */
 
+/*
 void vcmRemoveBandwidth(cc_call_handle_t call_handle)
 {
     return;
 }
+*/
 
 /**
  * @brief vcmActivateWlan
@@ -440,10 +447,12 @@ void vcmRemoveBandwidth(cc_call_handle_t call_handle)
  * @note If not using WLAN provide a stub
  */
 
+/*
 void vcmActivateWlan(boolean is_active)
 {
     return;
 }
+*/
 
 /**
  *  free the media pointer allocated in vcm_negotiate_attrs method
@@ -468,10 +477,12 @@ void vcmFreeMediaPtr(void *ptr)
  *
  */
 
+/*
 void vcmMediaControl(cc_call_handle_t call_handle, vcm_media_control_to_encoder_t to_encoder)
 {
     return;
 }
+*/
 
 /**
  *  specifies DSCP marking for RTCP streams
@@ -482,10 +493,12 @@ void vcmMediaControl(cc_call_handle_t call_handle, vcm_media_control_to_encoder_
  *  @return  void
  */
 
+/*
 void vcmSetRtcpDscp(cc_groupid_t group_id, int dscp)
 {
     return;
 }
+*/
 
 /**
  * Verify if the SDP attributes for the requested video codec are acceptable
@@ -543,13 +556,17 @@ void vcmPopulateAttribs(void *sdp_p, int level, uint32_t media_type,
  *
  * @return void
  */
+
+/*
 int vcmDtmfBurst(int digit, int duration, int direction)
 {
     return 0;
 }
+*/
 
+/*
 int vcmGetILBCMode()
 {
     return SIPSDP_ILBC_MODE20;
 }
-
+*/
