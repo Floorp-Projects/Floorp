@@ -42,7 +42,7 @@ function prefillAlertInfo() {
         document.getElementById('alertTextLabel').setAttribute('clickable', true);
       }
     case 3:
-      document.getElementById('alertTextLabel').setAttribute('value', window.arguments[2]);
+      document.getElementById('alertTextLabel').textContent = window.arguments[2];
     case 2:
       document.getElementById('alertTitleLabel').setAttribute('value', window.arguments[1]);
     case 1:
@@ -54,30 +54,16 @@ function prefillAlertInfo() {
 
 function onAlertLoad() {
   const ALERT_DURATION_IMMEDIATE = 4000;
-  // Make sure that the contents are fixed at the window edge facing the
-  // screen's center so that the window looks like "sliding in" and not
-  // like "unfolding". The default packing of "start" only works for
-  // vertical-bottom and horizontal-right positions, so we change it here.
-  if (gOrigin & NS_ALERT_HORIZONTAL) {
-    if (gOrigin & NS_ALERT_LEFT)
-      document.documentElement.pack = "end";
-
-    // Additionally, change the orientation so the packing works as intended
-    document.documentElement.orient = "horizontal";
-  } else {
-    if (gOrigin & NS_ALERT_TOP)
-      document.documentElement.pack = "end";
-  }
-
-  var alertBox = document.getElementById("alertBox");
-  alertBox.orient = (gOrigin & NS_ALERT_HORIZONTAL) ? "vertical" : "horizontal";
+  let alertTextBox = document.getElementById("alertTextBox");
+  let alertImageBox = document.getElementById("alertImageBox");
+  alertImageBox.style.minHeight = alertTextBox.scrollHeight + "px";
 
   sizeToContent();
 
   // Determine position
-  var x = gOrigin & NS_ALERT_LEFT ? screen.availLeft :
+  let x = gOrigin & NS_ALERT_LEFT ? screen.availLeft :
           screen.availLeft + screen.availWidth - window.outerWidth;
-  var y = gOrigin & NS_ALERT_TOP ? screen.availTop :
+  let y = gOrigin & NS_ALERT_TOP ? screen.availTop :
           screen.availTop + screen.availHeight - window.outerHeight;
 
   // Offset the alert by 10 pixels from the edge of the screen
@@ -91,6 +77,7 @@ function onAlertLoad() {
     return;
   }
 
+  let alertBox = document.getElementById("alertBox");
   alertBox.addEventListener("animationend", function hideAlert(event) {
     if (event.animationName == "alert-animation") {
       alertBox.removeEventListener("animationend", hideAlert, false);
