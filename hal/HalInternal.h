@@ -84,6 +84,7 @@ void EnableSystemTimeChangeNotifications();
  */
 void DisableSystemTimeChangeNotifications();
 
+bool IsHalChildLive();
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 
