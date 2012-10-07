@@ -11,33 +11,32 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .alertBox {
-  border: 1px solid ThreeDShadow;
+  border: 1px solid threedshadow;
   background-color: -moz-Dialog;
-  min-height: 50px;
 }
 
-.alertBox[orient="horizontal"] > .alertImageBox {
-  margin: 0 8px;
-  min-height: 46px;
+.alertImageBox {
+  padding: 8px 0;
+  width: 64px;
+  background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.6));
+  -moz-border-end: 1px solid rgba(0,0,0,.1);
 }
 
-.alertBox[orient="vertical"] > .alertImageBox {
-  margin-top: 6px;
-  margin-bottom: 4px;
-  min-width: 46px;
+.alertTextBox {
+  padding: 8px;
+  -moz-padding-start: 16px;
+  width: 255px;
+  background-image: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+}
+
+.alertTitle {
+  font-weight: bold;
+  font-size: 110%;
 }
 
 #alertImage {
   max-width: 48px;
   max-height: 48px;
-}
-
-.alertTitle {
-  font-weight: bold;
-}
-
-.alertText {
-  -moz-margin-end: 6px;
 }
 
 #alertNotification[clickable="true"] {
@@ -53,14 +52,6 @@ label {
   text-decoration: underline;
 }
 
-.alertBox[orient="horizontal"] > .alertTextBox {
-  -moz-padding-end: 10px;
-  padding-top: 5px;
-}
-
-.alertBox[orient="vertical"] > .alertTextBox {
-  -moz-padding-start: 5px;
-  -moz-padding-end: 5px;
-  margin-bottom: 8px;
-  -moz-box-align: center;
+.alertText[clickable="true"]:hover:active {
+  color: -moz-activehyperlinktext;
 }
