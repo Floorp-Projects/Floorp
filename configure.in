@@ -5250,8 +5250,8 @@ dnl enable once Signaling lands
         MOZ_WEBRTC_IN_LIBXUL=1
     fi
 dnl enable once PeerConnection lands
-dnl MOZ_PEERCONNECTION=1
-dnl AC_DEFINE(MOZ_PEERCONNECTION)
+    MOZ_PEERCONNECTION=1
+    AC_DEFINE(MOZ_PEERCONNECTION)
     MOZ_SCTP=1
     MOZ_SRTP=1
     AC_DEFINE(MOZ_SCTP)

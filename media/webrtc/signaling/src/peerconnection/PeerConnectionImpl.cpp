@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string>
+#include <iostream>
+
 
 #include "vcm.h"
 #include "CSFLog.h"
@@ -171,15 +173,15 @@ public:
         }
       case PC_OBSERVER_CONNECTION:
         CSFLogDebugS(logTag, __FUNCTION__ << ": Delivering PeerConnection onconnection");
-        mObserver->NotifyConnection();
+        //mObserver->NotifyConnection();
         break;
       case PC_OBSERVER_CLOSEDCONNECTION:
         CSFLogDebugS(logTag, __FUNCTION__ << ": Delivering PeerConnection onclosedconnection");
-        mObserver->NotifyClosedConnection();
+        //mObserver->NotifyClosedConnection();
         break;
       case PC_OBSERVER_DATACHANNEL:
         CSFLogDebugS(logTag, __FUNCTION__ << ": Delivering PeerConnection ondatachannel");
-        mObserver->NotifyDataChannel(mChannel);
+        //mObserver->NotifyDataChannel(mChannel);
 #ifdef MOZILLA_INTERNAL_API
         NS_DataChannelAppReady(mChannel);
 #endif
@@ -474,7 +476,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* observer,
   // DTLS identity
   unsigned char fingerprint[DTLS_FINGERPRINT_LENGTH];
   size_t fingerprint_length;
-  res = mIdentity->ComputeFingerprint("sha-256",
+  res = mIdentity->ComputeFingerprint("sha-1",
                                       fingerprint,
                                       sizeof(fingerprint),
                                       &fingerprint_length);
@@ -484,7 +486,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* observer,
     return res;
   }
 
-  mFingerprint = "sha-256 " + mIdentity->FormatFingerprint(fingerprint,
+  mFingerprint = "sha-1 " + mIdentity->FormatFingerprint(fingerprint,
                                                          fingerprint_length);
 
   // Find the STS thread
@@ -506,7 +508,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* observer,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 PeerConnectionImpl::CreateFakeMediaStream(PRUint32 hint, nsIDOMMediaStream** retval)
 {
   MOZ_ASSERT(retval);
@@ -543,153 +545,6 @@ PeerConnectionImpl::CreateFakeMediaStream(PRUint32 hint, nsIDOMMediaStream** ret
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-PeerConnectionImpl::ConnectDataConnection(PRUint16 localport, PRUint16 remoteport, PRUint16 numstreams)
-{
-#ifdef MOZILLA_INTERNAL_API
-    mDataConnection = new mozilla::DataChannelConnection(this);
-    NS_ENSURE_TRUE(mDataConnection,NS_ERROR_FAILURE);
-    if(!mDataConnection->Init(localport, numstreams, true))
-    {
-      CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
-      return NS_ERROR_FAILURE;
-    }
-    // XXX errors?
-    // XXX Fix!  get the correct flow for DataChannel
-    nsRefPtr<TransportFlow> flow = GetTransportFlow(2,false).get();
-    CSFLogDebugS(logTag, "Transportflow[2] = " << flow.get());
-    if(!mDataConnection->ConnectDTLS(flow, localport, remoteport))
-    {
-      return NS_ERROR_FAILURE;
-    }
-    // XXX errors?
-    return NS_OK;
-#else
-    return NS_ERROR_FAILURE;
-#endif
-}
-
-NS_IMETHODIMP
-PeerConnectionImpl::CreateDataChannel(const nsACString& label,
-                                      PRUint16 type,
-                                      bool outOfOrderAllowed,
-                                      PRUint16 maxTime,
-                                      PRUint16 maxNum,
-                                      nsIDOMDataChannel** aRetval)
-{
-  MOZ_ASSERT(aRetval);
-
-#ifdef MOZILLA_INTERNAL_API
-  mozilla::DataChannel *aDataChannel;
-  mozilla::DataChannelConnection::Type theType = (mozilla::DataChannelConnection::Type) type;
-
-  if (!mDataConnection) {
-    return NS_ERROR_FAILURE;
-  }
-  aDataChannel = mDataConnection->Open(label,
-      theType, !outOfOrderAllowed,
-      type == mozilla::DataChannelConnection::PARTIAL_RELIABLE_REXMIT ? maxNum :
-      (type == mozilla::DataChannelConnection::PARTIAL_RELIABLE_TIMED ? maxTime : 0),
-                                       NULL, NULL);
-  NS_ENSURE_TRUE(aDataChannel,NS_ERROR_FAILURE);
-
-  CSFLogDebugS(logTag, __FUNCTION__ << ": making DOMDataChannel");
-
-  return NS_NewDOMDataChannel(aDataChannel,
-                              mWindow,
-                              aRetval);
-#else
-  return NS_OK;
-#endif
-}
-
-// XXX Temporary - remove
-NS_IMETHODIMP
-PeerConnectionImpl::Listen(unsigned short port, PRUint16 numstreams)
-{
-  CSFLogDebugS(logTag, __FUNCTION__ << ": port: " << port << ", numstreams: " << numstreams);
-#ifdef MOZILLA_INTERNAL_API
-  if (!mDataConnection) {
-    mDataConnection = new mozilla::DataChannelConnection(this);
-    if(!mDataConnection->Init(port, numstreams, false)) {
-      CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  listenPort = port;
-  PR_CreateThread(
-    PR_SYSTEM_THREAD,
-    PeerConnectionImpl::ListenThread, this,
-    PR_PRIORITY_NORMAL,
-    PR_GLOBAL_THREAD,
-    PR_JOINABLE_THREAD, 0
-  );
-
-  CSFLogDebugS(logTag, __FUNCTION__ << ": returned");;
-#endif
-  return NS_OK;
-}
-
-// XXX Temporary - remove
-void
-PeerConnectionImpl::ListenThread(void *aData)
-{
-  MOZ_ASSERT(aData);
-
-#ifdef MOZILLA_INTERNAL_API
-  sipcc::PeerConnectionImpl *ctx = static_cast<sipcc::PeerConnectionImpl*>(aData);
-
-  ctx->mDataConnection->Listen(ctx->listenPort);
-#endif
-  CSFLogDebugS(logTag, __FUNCTION__ << ": finished");
-}
-
-// XXX Temporary - remove
-NS_IMETHODIMP
-PeerConnectionImpl::Connect(const nsAString &addr, PRUint16 localport, PRUint16 remoteport, PRUint16 numstreams)
-{
-  CSFLogDebugS(logTag, __FUNCTION__);
-#ifdef MOZILLA_INTERNAL_API
-  char *s = ToNewCString(addr);
-  if (!mDataConnection) {
-    mDataConnection = new mozilla::DataChannelConnection(this);
-    if(!mDataConnection->Init(localport, numstreams, false))
-    {
-      CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  connectStr = s;
-  connectPort = remoteport;
-  PR_CreateThread(
-    PR_SYSTEM_THREAD,
-    PeerConnectionImpl::ConnectThread, this,
-    PR_PRIORITY_NORMAL,
-    PR_GLOBAL_THREAD,
-    PR_JOINABLE_THREAD, 0
-  );
-
-  CSFLogDebugS(logTag, __FUNCTION__ << ": returned");;
-#endif
-  return NS_OK;
-}
-
-// XXX Temporary - remove
-void
-PeerConnectionImpl::ConnectThread(void *aData)
-{
-  MOZ_ASSERT(aData);
-
-#ifdef MOZILLA_INTERNAL_API
-  sipcc::PeerConnectionImpl *ctx = static_cast<sipcc::PeerConnectionImpl*>(aData);
-
-  ctx->mDataConnection->Connect(ctx->connectStr,ctx->connectPort);
-#endif
-  CSFLogDebugS(logTag, __FUNCTION__ << ": finished");
 }
 
 void
@@ -746,7 +601,7 @@ PeerConnectionImpl::NotifyDataChannel(mozilla::DataChannel *aChannel)
   nsCOMPtr<nsIDOMDataChannel> domchannel;
   nsresult rv = NS_NewDOMDataChannel(aChannel, mWindow,
                                      getter_AddRefs(domchannel));
-  NS_ENSURE_SUCCESS(rv,/**/);
+  NS_ENSURE_SUCCESS(rv,);
   if (mPCObserver) {
     PeerConnectionObserverDispatch* runnable =
       new PeerConnectionObserverDispatch(PC_OBSERVER_DATACHANNEL, domchannel.get(),
@@ -914,13 +769,14 @@ PeerConnectionImpl::CloseStreams() {
   return NS_OK;
 }
 
+/*
 NS_IMETHODIMP
 PeerConnectionImpl::SetRemoteFingerprint(const char* hash, const char* fingerprint)
 {
   MOZ_ASSERT(hash);
   MOZ_ASSERT(fingerprint);
 
-  if (fingerprint != NULL && (strcmp(hash, "sha-256") == 0)) {
+  if (fingerprint != NULL && (strcmp(hash, "sha-1") == 0)) {
     mRemoteFingerprint = std::string(fingerprint);
     CSFLogDebugS(logTag, "Setting remote fingerprint to " << mRemoteFingerprint);
     return NS_OK;
@@ -930,10 +786,6 @@ PeerConnectionImpl::SetRemoteFingerprint(const char* hash, const char* fingerpri
   }
 }
 
-/**
- * @fingerprint[out]: Ownership of this parameter
- *                    is responsibility of the caller.
- */
 NS_IMETHODIMP
 PeerConnectionImpl::GetFingerprint(char** fingerprint)
 {
@@ -950,6 +802,7 @@ PeerConnectionImpl::GetFingerprint(char** fingerprint)
   *fingerprint = tmp;
   return NS_OK;
 }
+*/
 
 NS_IMETHODIMP
 PeerConnectionImpl::GetLocalDescription(char** sdp)

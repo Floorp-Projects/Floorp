@@ -6,6 +6,7 @@
 #define _PEER_CONNECTION_IMPL_H_
 
 #include <string>
+#include <iostream>
 #include <vector>
 #include <map>
 #include <cmath>
@@ -365,6 +366,9 @@ public:
 
   // Get the DTLS identity
   mozilla::RefPtr<DtlsIdentity> const GetIdentity() { return mIdentity; }
+
+  // Create a fake media stream
+  nsresult CreateFakeMediaStream(PRUint32 hint, nsIDOMMediaStream** retval);
 
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
