@@ -3498,7 +3498,7 @@ function toOpenWindowByType(inType, uri, features)
     window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
 
-function OpenBrowserWindow()
+function OpenBrowserWindow(options)
 {
   var telemetryObj = {};
   TelemetryStopwatch.start("FX_NEW_WINDOW_MS", telemetryObj);
@@ -3519,6 +3519,15 @@ function OpenBrowserWindow()
   var defaultArgs = handler.defaultArgs;
   var wintype = document.documentElement.getAttribute('windowtype');
 
+  var extraFeatures = "";
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+  if (typeof options == "object" &&
+      "private" in options &&
+      options.private) {
+    extraFeatures = ",private";
+  }
+#endif
+
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
   // initialize the new browser window...
@@ -3529,11 +3538,11 @@ function OpenBrowserWindow()
     charsetArg = "charset="+DocCharset;
 
     //we should "inherit" the charset menu setting in a new window
-    win = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", defaultArgs, charsetArg);
+    win = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no" + extraFeatures, defaultArgs, charsetArg);
   }
   else // forget about the charset information.
   {
-    win = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", defaultArgs);
+    win = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no" + extraFeatures, defaultArgs);
   }
 
   return win;
