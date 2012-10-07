@@ -146,6 +146,11 @@ function PeerConnection() {
   this.onstatechange = null;
   this.ongatheringchange = null;
   this.onicechange = null;
+
+  // Data channel.
+  this.ondatachannel = null;
+  this.onconnection = null;
+  this.onclosedconnection = null;
 }
 PeerConnection.prototype = {
   classID: PC_CID,
@@ -397,6 +402,42 @@ PeerConnection.prototype = {
       args: [],
       wait: false
     });
+  },
+
+  createDataChannel: function(label, dict) {
+    if (dict &&
+        dict.maxRetransmitTime != undefined &&
+        dict.maxRetransmitNum != undefined) {
+      throw new Error("Both maxRetransmitTime and maxRetransmitNum cannot be provided");
+    }
+
+    // Must determine the type where we still know if entries are undefined.
+    let type;
+    if (dict.maxRetransmitTime != undefined) {
+      type = Ci.IPeerConnection.DATACHANNEL_PARTIAL_RELIABLE_TIMED;
+    } else if (dict.maxRetransmitNum != undefined) {
+      type = Ci.IPeerConnection.DATACHANNEL_PARTIAL_RELIABLE_REXMIT;
+    } else {
+      type = Ci.IPeerConnection.DATACHANNEL_RELIABLE;
+    }
+
+    // Synchronous since it doesn't block.
+    let channel = this._pc.createDataChannel(
+      label, type, dict.outOfOrderAllowed, dict.maxRetransmitTime,
+      dict.maxRetransmitNum
+    );
+    return channel;
+  },
+
+  connectDataConnection: function(localport, remoteport, numstreams) {
+    if (numstreams == undefined || numstreams <= 0) {
+      numstreams = 16;
+    }
+    this._queueOrRun({
+      func: this._pc.connectDataConnection,
+      args: [localport, remoteport, numstreams],
+      wait: false
+    });
   }
 };
 
@@ -564,6 +605,33 @@ PeerConnectionObserver.prototype = {
           candidate: cand,
           __exposedProps__: { candidate: "rw" }
         });
+      } catch(e) {}
+    }
+    this._dompc._executeNext();
+  },
+
+  notifyDataChannel: function(channel) {
+    if (this._dompc.ondatachannel) {
+      try {
+        this._dompc.ondatachannel.onCallback(channel);
+      } catch(e) {}
+    }
+    this._dompc._executeNext();
+  },
+
+  notifyConnection: function() {
+    if (this._dompc.onconnection) {
+      try {
+        this._dompc.onconnection.onCallback();
+      } catch(e) {}
+    }
+    this._dompc._executeNext();
+  },
+
+  notifyClosedConnection: function() {
+    if (this._dompc.onclosedconnection) {
+      try {
+        this._dompc.onclosedconnection.onCallback();
       } catch(e) {}
     }
     this._dompc._executeNext();
