@@ -19,8 +19,14 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
+EXTRA_COMPONENTS = \
+  PeerConnection.js \
+  PeerConnection.manifest \
+  $(NULL)
+
 XPIDLSRCS = \
   nsIDOMMediaStream.idl \
+  nsIDOMRTCPeerConnection.idl \
   nsIDOMNavigatorUserMedia.idl \
   $(NULL)
 
