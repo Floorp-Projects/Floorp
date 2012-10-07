@@ -52,15 +52,14 @@ class SrtpFlow {
 
 
  private:
-  SrtpFlow() : policy_(NULL), session_(NULL) {}
+  SrtpFlow() : session_(NULL) {}
 
   nsresult CheckInputs(bool protect, void *in, int in_len,
                        int max_len, int *out_len);
 
   static nsresult Init();
-  static bool initialized;  // Was SRTP initialized?
+  static bool initialized;  // Was libsrtp initialized? Only happens once.
 
-  srtp_policy_t *policy_;
   srtp_t session_;
 };
 

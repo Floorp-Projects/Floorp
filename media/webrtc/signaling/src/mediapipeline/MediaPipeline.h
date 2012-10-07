@@ -38,31 +38,33 @@ namespace mozilla {
 class MediaPipeline : public sigslot::has_slots<> {
  public:
   enum Direction { TRANSMIT, RECEIVE };
-
+  enum State { MP_CONNECTING, MP_OPEN, MP_CLOSED };
   MediaPipeline(Direction direction,
                 nsCOMPtr<nsIEventTarget> main_thread,
                 nsCOMPtr<nsIEventTarget> sts_thread,
                 nsDOMMediaStream* stream,
                 RefPtr<MediaSessionConduit> conduit,
-                mozilla::RefPtr<TransportFlow> rtp_transport,
-                mozilla::RefPtr<TransportFlow> rtcp_transport) :
-      direction_(direction),
-      stream_(stream),
-      conduit_(conduit),
-      rtp_transport_(rtp_transport),
-      rtcp_transport_(rtcp_transport),
-      main_thread_(main_thread),
-      sts_thread_(sts_thread),
-      transport_(new PipelineTransport(this)),
-      rtp_send_srtp_(),
-      rtcp_send_srtp_(),
-      rtp_recv_srtp_(),
-      rtcp_recv_srtp_(),
-      rtp_packets_sent_(0),
-      rtcp_packets_sent_(0),
-      rtp_packets_received_(0),
-      rtcp_packets_received_(0),
-      muxed_((rtcp_transport_ == NULL) || (rtp_transport_ == rtcp_transport_)) {
+                RefPtr<TransportFlow> rtp_transport,
+                RefPtr<TransportFlow> rtcp_transport)
+      : direction_(direction),
+        stream_(stream),
+        conduit_(conduit),
+        rtp_transport_(rtp_transport),
+        rtp_state_(MP_CONNECTING),
+        rtcp_transport_(rtcp_transport),
+        rtcp_state_(MP_CONNECTING),
+        main_thread_(main_thread),
+        sts_thread_(sts_thread),
+        transport_(new PipelineTransport(this)),
+        rtp_send_srtp_(),
+        rtcp_send_srtp_(),
+        rtp_recv_srtp_(),
+        rtcp_recv_srtp_(),
+        rtp_packets_sent_(0),
+        rtcp_packets_sent_(0),
+        rtp_packets_received_(0),
+        rtcp_packets_received_(0),
+        muxed_((rtcp_transport_ == NULL) || (rtp_transport_ == rtcp_transport_)) {
     Init();
   }
 
@@ -85,13 +87,13 @@ class MediaPipeline : public sigslot::has_slots<> {
   // Thread counting
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPipeline)
 
- protected:
+  protected:
   // Separate class to allow ref counting
   class PipelineTransport : public TransportInterface {
    public:
     // Implement the TransportInterface functions
-    PipelineTransport(MediaPipeline *pipeline) :
-        pipeline_(pipeline) {}
+    PipelineTransport(MediaPipeline *pipeline)
+        : pipeline_(pipeline) {}
     void Detach() { pipeline_ = NULL; }
     MediaPipeline *pipeline() const { return pipeline_; }
 
@@ -127,15 +129,17 @@ class MediaPipeline : public sigslot::has_slots<> {
   nsDOMMediaStream* stream_;
   RefPtr<MediaSessionConduit> conduit_;
   RefPtr<TransportFlow> rtp_transport_;
+  State rtp_state_;
   RefPtr<TransportFlow> rtcp_transport_;
+  State rtcp_state_;
   nsCOMPtr<nsIEventTarget> main_thread_;
   nsCOMPtr<nsIEventTarget> sts_thread_;
-  mozilla::RefPtr<PipelineTransport> transport_;
+  RefPtr<PipelineTransport> transport_;
   bool transport_connected_;
-  mozilla::RefPtr<SrtpFlow> rtp_send_srtp_;
-  mozilla::RefPtr<SrtpFlow> rtcp_send_srtp_;
-  mozilla::RefPtr<SrtpFlow> rtp_recv_srtp_;
-  mozilla::RefPtr<SrtpFlow> rtcp_recv_srtp_;
+  RefPtr<SrtpFlow> rtp_send_srtp_;
+  RefPtr<SrtpFlow> rtcp_send_srtp_;
+  RefPtr<SrtpFlow> rtp_recv_srtp_;
+  RefPtr<SrtpFlow> rtcp_recv_srtp_;
   int rtp_packets_sent_;
   int rtcp_packets_sent_;
   int rtp_packets_received_;
@@ -157,8 +161,8 @@ class MediaPipelineTransmit : public MediaPipeline {
                         nsCOMPtr<nsIEventTarget> sts_thread,
                         nsDOMMediaStream* stream,
                         RefPtr<MediaSessionConduit> conduit,
-                        mozilla::RefPtr<TransportFlow> rtp_transport,
-                        mozilla::RefPtr<TransportFlow> rtcp_transport) :
+                        RefPtr<TransportFlow> rtp_transport,
+                        RefPtr<TransportFlow> rtcp_transport) :
       MediaPipeline(TRANSMIT, main_thread, sts_thread,
                     stream, conduit, rtp_transport,
                     rtcp_transport),
@@ -191,7 +195,7 @@ class MediaPipelineTransmit : public MediaPipeline {
   class PipelineListener : public MediaStreamListener {
    public:
     PipelineListener(MediaPipelineTransmit *pipeline) :
-        pipeline_(pipeline) {}
+    pipeline_(pipeline) {}
     void Detach() { pipeline_ = NULL; }
 
 
@@ -210,12 +214,12 @@ class MediaPipelineTransmit : public MediaPipeline {
 
  private:
   virtual void ProcessAudioChunk(AudioSessionConduit *conduit,
-                                 TrackRate rate, mozilla::AudioChunk& chunk);
+                                 TrackRate rate, AudioChunk& chunk);
 #ifdef MOZILLA_INTERNAL_API
   virtual void ProcessVideoChunk(VideoSessionConduit *conduit,
-                                 TrackRate rate, mozilla::VideoChunk& chunk);
+                                 TrackRate rate, VideoChunk& chunk);
 #endif
-  mozilla::RefPtr<PipelineListener> listener_;
+  RefPtr<PipelineListener> listener_;
 };
 
 
@@ -227,8 +231,8 @@ class MediaPipelineReceive : public MediaPipeline {
                        nsCOMPtr<nsIEventTarget> sts_thread,
                        nsDOMMediaStream* stream,
                        RefPtr<MediaSessionConduit> conduit,
-                       mozilla::RefPtr<TransportFlow> rtp_transport,
-                       mozilla::RefPtr<TransportFlow> rtcp_transport) :
+                       RefPtr<TransportFlow> rtp_transport,
+                       RefPtr<TransportFlow> rtcp_transport) :
       MediaPipeline(RECEIVE, main_thread, sts_thread,
                     stream, conduit, rtp_transport,
                     rtcp_transport),
@@ -252,8 +256,8 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> sts_thread,
                             nsDOMMediaStream* stream,
                             RefPtr<AudioSessionConduit> conduit,
-                            mozilla::RefPtr<TransportFlow> rtp_transport,
-                            mozilla::RefPtr<TransportFlow> rtcp_transport) :
+                            RefPtr<TransportFlow> rtp_transport,
+                            RefPtr<TransportFlow> rtcp_transport) :
       MediaPipelineReceive(main_thread, sts_thread,
                            stream, conduit, rtp_transport,
                            rtcp_transport),
@@ -280,8 +284,8 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
   class PipelineListener : public MediaStreamListener {
    public:
     PipelineListener(MediaPipelineReceiveAudio *pipeline)
-      : pipeline_(pipeline)
-      , played_(0) {}
+        : pipeline_(pipeline),
+        played_(0) {}
     void Detach() { pipeline_ = NULL; }
 
     // Implement MediaStreamListener
@@ -300,7 +304,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
 
   nsresult Init();
 
-  mozilla::RefPtr<PipelineListener> listener_;
+  RefPtr<PipelineListener> listener_;
 };
 
 
@@ -312,8 +316,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> sts_thread,
                             nsDOMMediaStream* stream,
                             RefPtr<VideoSessionConduit> conduit,
-                            mozilla::RefPtr<TransportFlow> rtp_transport,
-                            mozilla::RefPtr<TransportFlow> rtcp_transport) :
+                            RefPtr<TransportFlow> rtp_transport,
+                            RefPtr<TransportFlow> rtcp_transport) :
       MediaPipelineReceive(main_thread, sts_thread,
                            stream, conduit, rtp_transport,
                            rtcp_transport),
@@ -325,7 +329,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   }
 
  private:
-  class PipelineRenderer : public mozilla::VideoRenderer {
+  class PipelineRenderer : public VideoRenderer {
    public:
     PipelineRenderer(MediaPipelineReceiveVideo *);
     void Detach() { pipeline_ = NULL; }
@@ -355,7 +359,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   friend class PipelineRenderer;
 
   nsresult Init();
-  mozilla::RefPtr<PipelineRenderer> renderer_;
+  RefPtr<PipelineRenderer> renderer_;
 };
 
 
