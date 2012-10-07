@@ -63,6 +63,9 @@ interface nsIWebBrowserChrome : nsISupports
     const unsigned long CHROME_WINDOW_MIN             = 0x00004000;
     const unsigned long CHROME_WINDOW_POPUP           = 0x00008000;
 
+    // private browsing windows
+    const unsigned long CHROME_PRIVATE_WINDOW         = 0x00010000;
+
     // Prevents new window animations on Mac OS X Lion.  Ignored on other
     // platforms.
     const unsigned long CHROME_MAC_SUPPRESS_ANIMATION = 0x01000000;
