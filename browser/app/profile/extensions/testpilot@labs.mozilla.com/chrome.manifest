@@ -1,5 +1,6 @@
 resource testpilot ./
 content testpilot content/
+locale testpilot en-US locale/en-US/
 skin testpilot skin skin/all/
 skin testpilot-os skin skin/linux/ os=Linux
 skin testpilot-os skin skin/linux/ os=SunOS
@@ -10,6 +11,7 @@ overlay chrome://browser/content/macBrowserOverlay.xul chrome://testpilot/conten
 
 overlay chrome://browser/content/browser.xul chrome://testpilot/content/browser.xul
 
+style	chrome://global/content/customizeToolbar.xul	chrome://testpilot/content/browser.css
 # For the menubar on Mac
 overlay chrome://testpilot/content/all-studies-window.xul chrome://browser/content/macBrowserOverlay.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} os=Darwin
 
