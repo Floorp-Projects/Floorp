@@ -25,6 +25,14 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_sandbox {
 
+static bool sHalChildIsLive = false;
+
+bool
+IsHalChildLive()
+{
+  return sHalChildIsLive;
+}
+
 static PHalChild* sHal;
 static PHalChild*
 Hal()
@@ -396,6 +404,7 @@ public:
       hal::UnregisterSensorObserver(SensorType(sensor), this);
     }
     hal::UnregisterWakeLockObserver(this);
+    hal::UnregisterSystemTimeChangeObserver(this);
   }
 
   virtual bool
@@ -837,6 +846,12 @@ public:
 
 class HalChild : public PHalChild {
 public:
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE
+  {
+    sHalChildIsLive = true;
+  }
+
   virtual bool
   RecvNotifyBatteryChange(const BatteryInformation& aBatteryInfo) MOZ_OVERRIDE {
     hal::NotifyBatteryChange(aBatteryInfo);
