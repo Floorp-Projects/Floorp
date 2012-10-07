@@ -193,6 +193,19 @@ public:
     mDuration += aDuration;
   }
 
+  class ChunkIterator {
+  public:
+    ChunkIterator(MediaSegmentBase<C, Chunk>& aSegment)
+      : mSegment(aSegment), mIndex(0) {}
+    bool IsEnded() { return mIndex >= mSegment.mChunks.Length(); }
+    void Next() { ++mIndex; }
+    Chunk& operator*() { return mSegment.mChunks[mIndex]; }
+    Chunk* operator->() { return &mSegment.mChunks[mIndex]; }
+  private:
+    MediaSegmentBase<C, Chunk>& mSegment;
+    uint32_t mIndex;
+  };
+
 protected:
   MediaSegmentBase(Type aType) : MediaSegment(aType) {}
 
@@ -268,19 +281,6 @@ protected:
     }
     return &mChunks[mChunks.Length() - 1];
   }
-
-  class ChunkIterator {
-  public:
-    ChunkIterator(MediaSegmentBase<C, Chunk>& aSegment)
-      : mSegment(aSegment), mIndex(0) {}
-    bool IsEnded() { return mIndex >= mSegment.mChunks.Length(); }
-    void Next() { ++mIndex; }
-    Chunk& operator*() { return mSegment.mChunks[mIndex]; }
-    Chunk* operator->() { return &mSegment.mChunks[mIndex]; }
-  private:
-    MediaSegmentBase<C, Chunk>& mSegment;
-    uint32_t mIndex;
-  };
 
   void RemoveLeading(TrackTicks aDuration, uint32_t aStartIndex)
   {
