@@ -317,6 +317,20 @@ class XPCShellTests(object):
     """
     return proc.communicate()
 
+  def poll(self, proc):
+    """
+      Simple wrapper to check if a process has terminated.
+      On a remote system, this is overloaded to handle remote process communication.
+    """
+    return proc.poll()
+
+  def kill(self, proc):
+    """
+      Simple wrapper to kill a process.
+      On a remote system, this is overloaded to handle remote process communication.
+    """
+    return proc.kill()
+
   def removeDir(self, dirname):
     """
       Simple wrapper to remove (recursively) a given directory.
@@ -860,6 +874,20 @@ class XPCShellTests(object):
         if self.logfiles and stdout:
           self.createLogFile(name, stdout, leakLogs)
       finally:
+        # We can sometimes get here before the process has terminated, which would
+        # cause removeDir() to fail - so check for the process & kill it it needed.
+        if self.poll(proc) is None:
+          message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
+          self.log.error(message)
+          print_stdout(stdout)
+          self.failCount += 1
+          xunitResult["passed"] = False
+          xunitResult["failure"] = {
+            "type": "TEST-UNEXPECTED-FAIL",
+            "message": message,
+            "text": stdout
+          }
+          self.kill(proc)
         # We don't want to delete the profile when running check-interactive
         # or check-one.
         if self.profileDir and not self.interactive and not self.singleFile:
