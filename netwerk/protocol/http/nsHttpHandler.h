@@ -93,6 +93,7 @@ public:
     bool           CoalesceSpdy() { return mCoalesceSpdy; }
     bool           UseAlternateProtocol() { return mUseAlternateProtocol; }
     uint32_t       SpdySendingChunkSize() { return mSpdySendingChunkSize; }
+    uint32_t       SpdySendBufferSize()      { return mSpdySendBufferSize; }
     PRIntervalTime SpdyPingThreshold() { return mSpdyPingThreshold; }
     PRIntervalTime SpdyPingTimeout() { return mSpdyPingTimeout; }
     uint32_t       ConnectTimeout()  { return mConnectTimeout; }
@@ -374,6 +375,7 @@ private:
     bool           mCoalesceSpdy;
     bool           mUseAlternateProtocol;
     uint32_t       mSpdySendingChunkSize;
+    uint32_t       mSpdySendBufferSize;
     PRIntervalTime mSpdyPingThreshold;
     PRIntervalTime mSpdyPingTimeout;
 
