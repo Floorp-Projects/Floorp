@@ -74,6 +74,8 @@ BrowserElementChild.prototype = {
     docShell.QueryInterface(Ci.nsIDocShellTreeItem).name =
       sendSyncMsg('get-name')[0];
 
+    docShell.setFullscreenAllowed(sendSyncMsg('get-fullscreen-allowed')[0]);
+
     BrowserElementPromptService.mapWindowToBrowserElementChild(content, this);
 
     docShell.QueryInterface(Ci.nsIWebProgress)
