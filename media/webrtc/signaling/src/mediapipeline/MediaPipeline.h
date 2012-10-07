@@ -203,7 +203,7 @@ class MediaPipelineTransmit : public MediaPipeline {
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
                                           TrackRate rate,
                                           TrackTicks offset,
-                                          PRUint32 events,
+                                          uint32_t events,
                                           const MediaSegment& queued_media);
     virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) {}
 
@@ -292,7 +292,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
                                           TrackRate rate,
                                           TrackTicks offset,
-                                          PRUint32 events,
+                                          uint32_t events,
                                           const MediaSegment& queued_media) {}
     virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
 

@@ -74,7 +74,7 @@ public:
   {
 
     int len = ((width * height) * 3 / 2);
-    PRUint8* frame = (PRUint8*) PR_MALLOC(len);
+    uint8_t* frame = (uint8_t*) PR_MALLOC(len);
     int numFrames = 121;
     memset(frame, COLOR, len);
 
