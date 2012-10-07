@@ -21,7 +21,7 @@
 
 #include "nsCategoryCache.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsTObserverArray.h"
 #include "nsWeakReference.h"
 #include "nsError.h"
