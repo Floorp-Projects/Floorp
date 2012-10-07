@@ -6,7 +6,7 @@
 
 #pilot-notification-submit {
   -moz-appearance: none;
-  background: #666 
+  background: #666
               -moz-linear-gradient(rgba(110,110,110,.9), rgba(70,70,70,.9) 49%,
                                    rgba(60,60,60,.9) 51%, rgba(50,50,50,.9));
   background-clip: padding-box;
@@ -33,6 +33,6 @@
   color: #fff;
 }
 
-.notification-link {
+#pilot-notification-link {
   color: #fff;
 }
