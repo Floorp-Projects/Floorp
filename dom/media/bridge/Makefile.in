@@ -1,0 +1,37 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH   = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE        = peerconnection
+XPIDL_MODULE  = peerconnection
+LIBRARY_NAME  = peerconnection
+MODULE_NAME   = peerconnection
+
+IS_COMPONENT   = 1
+EXPORT_LIBRARY = 1
+LIBXUL_LIBRARY = 1
+
+XPIDLSRCS = IPeerConnection.idl
+
+CPPSRCS = \
+  MediaModule.cpp \
+  $(NULL)
+
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/media/mtransport \
+  -I$(topsrcdir)/media/webrtc/signaling/include \
+  -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/include \
+  -I$(topsrcdir)/media/webrtc/signaling/src/peerconnection \
+  -I$(topsrcdir)/media/webrtc/signaling/src/mediapipeline \
+  -I$(topsrcdir)/media/webrtc/signaling/src/media-conduit \
+  -I$(topsrcdir)/ipc/chromium/src \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk
