@@ -3531,7 +3531,6 @@ chatbox[minimized="true"] {
 }
 
 .click-to-play-plugins-notification-icon-box {
-  background: hsla(0,0%,100%,.4);
   -moz-border-end: 1px solid hsla(0,0%,100%,.2);
   padding-top: 16px;
   -moz-padding-end: 16px;
