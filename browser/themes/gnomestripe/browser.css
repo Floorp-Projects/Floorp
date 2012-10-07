@@ -2835,17 +2835,11 @@ chatbox[minimized="true"] {
   height: 20px;
 }
 
-panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
-panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://global/skin/icons/panelarrow-light-vertical.svg");
-}
-
 .click-to-play-plugins-notification-content {
   margin: -10px;
 }
 
 .click-to-play-plugins-notification-icon-box {
-  background: hsla(0,0%,100%,.4);
   -moz-border-end: 1px solid hsla(0,0%,100%,.2);
   padding-top: 16px;
   -moz-padding-start: 16px;
