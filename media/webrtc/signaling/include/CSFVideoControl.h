@@ -51,6 +51,8 @@ namespace CSF
 	class ECC_API VideoControl
 	{
 	public:
+		virtual ~VideoControl() {};
+
 		virtual void setVideoMode( bool enable ) = 0;
 
 		// window type is platform-specific

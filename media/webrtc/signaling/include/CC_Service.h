@@ -112,8 +112,7 @@ namespace CSF
         virtual bool setLocalVoipPort(int port) = 0;
         virtual bool setRemoteVoipPort(int port) = 0;
         virtual bool setP2PMode(bool mode) = 0;
-        virtual bool setROAPProxyMode(bool mode) = 0;
-        virtual bool setROAPClientMode(bool mode) = 0;
+        virtual bool setSDPMode(bool mode) = 0;
 
     private:
         CC_Service(const CC_Service& rhs);

@@ -52,10 +52,6 @@ extern void win32_stdio_init(void);
 /* Boolean to check that cprPreInit been called */
 static boolean pre_init_called = FALSE;
 
-/* Timer expiration region/pool/buffer pointers */
-cprRegion_t timerRegion;
-cprPool_t timerPool;
-
 /**
  * cprInit
  *
@@ -88,21 +84,6 @@ cprPreInit (void)
     if (cprSocketInit() == CPR_FAILURE) {
         CPR_ERROR("%s: socket init failed\n", fname);
         return CPR_FAILURE;
-    }
-
-    /*
-     * Create buffer pool for timer expiration msgs
-     */
-    timerRegion = cprCreateRegion("CPR - Timers");
-    if (timerRegion) {
-        timerPool = cprCreatePool(timerRegion, "Timers - 32 bytes", 10, 32);
-        if (timerPool == NULL) {
-            CPR_ERROR("%s buffer pool creation failed.\n", fname);
-            return (CPR_FAILURE);
-        }
-    } else {
-        CPR_ERROR("%s buffer region creation failed.\n", fname);
-        return (CPR_FAILURE);
     }
 
 #ifdef WIN32_7960

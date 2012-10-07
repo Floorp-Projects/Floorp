@@ -369,7 +369,7 @@ void sub_hndlr_NotifyBLFStatus(int requestId, cc_blf_state_t status, int appId)
         if (displayBLFState == FALSE) {
             return; // ignore the notify
         }
-        if ((lineFeature == cfgLineFeatureSpeedDialBLF)) {
+        if (lineFeature == cfgLineFeatureSpeedDialBLF) {
             ccsnap_gen_blfFeatureEvent(status, appId);
         }
     }

@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <errno.h>
+#include <limits.h>
+
 #include "cpr_types.h"
 #include "cpr_rand.h"
 #include "sdp.h"
@@ -435,6 +438,8 @@ gsmsdp_is_supported_session_parm (const char *session_parms)
 {
     int         len, wsh;
     const char *parm_ptr;
+    long strtol_result;
+    char *strtol_end;
 
     if (session_parms == NULL) {
         /* No session parameters, this is acceptable */
@@ -447,11 +452,16 @@ gsmsdp_is_supported_session_parm (const char *session_parms)
     len = strlen(session_parms);
     if (strcmp(session_parms, "WSH=") && (len == 6)) {
         parm_ptr = &session_parms[sizeof("WSH=") - 1]; /* point the wsh value */
-        wsh = atoi(parm_ptr);
+
+        errno = 0;
+        strtol_result = strtol(parm_ptr, &strtol_end, 10);
+
         /* minimum value of WSH is 64 */
-        if (wsh >= 64) {
-            return (TRUE);
+        if (errno || parm_ptr == strtol_end || strtol_result < 64 || strtol_result > INT_MAX) {
+            return FALSE;
         }
+
+        return TRUE;
     }
     /* Other parameters are not supported */
     return (FALSE);
@@ -980,7 +990,9 @@ gsmsdp_negotiate_offer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
     sdp_transport_e negotiated_transport = SDP_TRANSPORT_INVALID;
     void           *sdp_p = cc_sdp_p->dest_sdp;
     uint16_t       level;
+    int            sdpmode = 0;
 
+    config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
     level = media->level;
     *crypto_inst     = 0;
     remote_transport = sdp_get_media_transport(sdp_p, level);
@@ -993,9 +1005,10 @@ gsmsdp_negotiate_offer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
         break;
 
     case SDP_TRANSPORT_RTPSAVP:
+
         /* Remote offer SRTP for media transport */
-        if ((sip_regmgr_get_sec_level(dcb_p->line) == ENCRYPTED) &&
-            FSM_CHK_FLAGS(media->flags, FSM_MEDIA_F_SUPPORT_SECURITY)) {
+        if (((sip_regmgr_get_sec_level(dcb_p->line) == ENCRYPTED) &&
+            FSM_CHK_FLAGS(media->flags, FSM_MEDIA_F_SUPPORT_SECURITY)) || sdpmode) {
             /* The signalling with this line is encrypted, try to use SRTP */
             if (gsmsdp_select_offer_crypto(dcb_p, sdp_p, level, crypto_inst)) {
                 /* Found a suitable crypto line from the remote offer */
@@ -1012,6 +1025,15 @@ gsmsdp_negotiate_offer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
                 negotiated_transport = SDP_TRANSPORT_RTPAVP;
             }
         }
+        break;
+
+    case SDP_TRANSPORT_RTPSAVPF:
+        /* Remote offers Extended SRTP for media transport */
+        negotiated_transport = SDP_TRANSPORT_RTPSAVPF;
+        break;
+
+    case SDP_TRANSPORT_SCTPDTLS:
+        negotiated_transport = SDP_TRANSPORT_SCTPDTLS;
         break;
 
     default:
@@ -1085,6 +1107,14 @@ gsmsdp_negotiate_answer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
         } else {
             /* we offered RTP but remote comes back with SRTP, fail */
         }
+        break;
+
+    case SDP_TRANSPORT_RTPSAVPF:
+        negotiated_transport = SDP_TRANSPORT_RTPSAVPF;
+        break;
+
+    case SDP_TRANSPORT_SCTPDTLS:
+        negotiated_transport = SDP_TRANSPORT_SCTPDTLS;
         break;
 
     default:
@@ -1312,20 +1342,31 @@ void
 gsmsdp_init_sdp_media_transport (fsmdef_dcb_t *dcb_p, void *sdp_p,
                                  fsmdef_media_t *media)
 {
+    int  rtpsavpf = 0;
+    int  sdpmode = 0;
+
     /* Initialize crypto context */
     gsmsdp_init_crypto_context(media);
 
-    if ((sip_regmgr_get_sec_level(dcb_p->line) != ENCRYPTED) ||
+    config_get_value(CFGID_RTPSAVPF, &rtpsavpf, sizeof(rtpsavpf));
+    config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
+
+    if (SDP_MEDIA_APPLICATION == media->type) {
+        media->transport = SDP_TRANSPORT_SCTPDTLS;
+    } else if (rtpsavpf) {
+        media->transport = SDP_TRANSPORT_RTPSAVPF;
+    } else if (sdpmode) {
+        media->transport = SDP_TRANSPORT_RTPSAVP;
+    } else	if ((sip_regmgr_get_sec_level(dcb_p->line) != ENCRYPTED) ||
         (!FSM_CHK_FLAGS(media->flags, FSM_MEDIA_F_SUPPORT_SECURITY))) {
         /*
          * The signaling is not encrypted or this media can not support
-         * security. 
+         * security.
          */
         media->transport = SDP_TRANSPORT_RTPAVP;
-        return; 
+    } else {
+        media->transport = SDP_TRANSPORT_RTPSAVP;
     }
-
-    media->transport = SDP_TRANSPORT_RTPSAVP;
 }
 
 /*
@@ -1446,7 +1487,7 @@ gsmsdp_update_local_sdp_media_transport (fsmdef_dcb_t *dcb_p, void *sdp_p,
 {
     const char *fname = "gsmsdp_update_local_sdp_media_transport";
     sdp_srtp_crypto_suite_t crypto_suite;
-    uint16_t level;            
+    uint16_t level;
 
     level = media->level;
     /* Get the current transport before delete the media line */
@@ -1794,10 +1835,7 @@ gsmsdp_is_crypto_ready (fsmdef_media_t *media, boolean rx)
      * allowing the Rx/Tx to be opened.  If we did not offer (we received
      * an offered SDP instead then we should have key negotiated).
      */
-    if (media->transport == SDP_TRANSPORT_RTPAVP) {
-        /*
-         * The local did not offer SRTP.
-         */
+    if (media->transport == SDP_TRANSPORT_RTPAVP || media->transport == SDP_TRANSPORT_RTPSAVPF) {
         return (TRUE);
     }
 
@@ -1848,7 +1886,7 @@ gsmsdp_is_media_encrypted (fsmdef_dcb_t *dcb_p)
             continue;
         }
         
-        if (media->transport == SDP_TRANSPORT_RTPSAVP) {
+        if (media->transport == SDP_TRANSPORT_RTPSAVP || media->transport == SDP_TRANSPORT_RTPSAVPF) {
             num_encrypted++;
         }
     }

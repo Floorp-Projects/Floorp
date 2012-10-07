@@ -61,6 +61,7 @@
 #include "dialplanint.h"
 #include "kpmlmap.h"
 #include "subapi.h"
+#include "platform_api.h"
 
 static void sub_process_feature_msg(uint32_t cmd, void *msg);
 static void sub_process_feature_notify(ccsip_sub_not_data_t *msg, callid_t call_id,
@@ -104,7 +105,7 @@ gsm_get_initialize_state (void)
 cprBuffer_t
 gsm_get_buffer (uint16_t size)
 {
-    return cprGetBuffer(size);
+    return cpr_malloc(size);
 }
 
 
@@ -261,7 +262,7 @@ gsm_process_timer_expiration (void *msg)
     if (timeout_msg != NULL) {
         /* Let state machine handle glare timer expiration */
         gsm_process_msg(GSM_GSM, timeout_msg);
-        cprReleaseBuffer(timeout_msg);
+        cpr_free(timeout_msg);
     }
 }
 
@@ -312,7 +313,6 @@ GSMTask (void *arg)
     if (platThreadInit("GSMTask") != 0) {
         return;
     }
-
     /*
      * Adjust relative priority of GSM thread.
      */
@@ -407,7 +407,7 @@ GSMTask (void *arg)
 
             cprReleaseSysHeader(syshdr);
             if (release_msg == TRUE) {
-                cprReleaseBuffer(msg);
+                cpr_free(msg);
             }
             
             /* Check if there are pending messages for dcsm 

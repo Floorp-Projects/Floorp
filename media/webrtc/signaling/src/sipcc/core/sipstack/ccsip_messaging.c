@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "plstr.h"
 #include "cpr_types.h"
 #include "cpr_time.h"
 #include "cpr_stdio.h"
@@ -75,7 +76,6 @@
 #include "ccsip_spi_utils.h"
 #include "ccsip_subsmanager.h"
 #include "subapi.h"
-#include "xml_util.h"
 #include "platform_api.h"
 
 #define SIPS_URL_LEN 8
@@ -572,7 +572,7 @@ sipSPISetRPID (ccsipCCB_t *ccb, boolean request)
         			           remote_party_id_buf + escaped_url_len,
                                            MAX_SIP_URL_LENGTH - escaped_url_len,
                                            TRUE) - 1;
-    strncat(remote_party_id_buf,"\" <sip:",MAX_SIP_URL_LENGTH - escaped_url_len );
+    sstrncat(remote_party_id_buf,"\" <sip:",MAX_SIP_URL_LENGTH - escaped_url_len );
     escaped_url_len = strlen(remote_party_id_buf);
 
     escaped_url_len +=
@@ -663,7 +663,7 @@ sipSPISetFrom (ccsipCCB_t *ccb)
                                            sip_from_temp + escaped_url_len,
                                            MAX_SIP_URL_LENGTH - escaped_url_len,
                                            TRUE) - 1;
-        strncat(sip_from_temp,"\" <sip:",MAX_SIP_URL_LENGTH - escaped_url_len );
+        sstrncat(sip_from_temp,"\" <sip:",MAX_SIP_URL_LENGTH - escaped_url_len );
         escaped_url_len = strlen(sip_from_temp);
         escaped_url_len +=
             sippmh_convertURLCharToEscChar(line_name, strlen(line_name),
@@ -685,21 +685,21 @@ sipSPISetFrom (ccsipCCB_t *ccb)
     }
 
     /* Now add tag to the From header */
-    strncat(sip_from_temp, ";tag=",
-            MAX_SIP_URL_LENGTH - strlen(sip_from_temp) - 1);
+    sstrncat(sip_from_temp, ";tag=",
+            MAX_SIP_URL_LENGTH - strlen(sip_from_temp));
     temp_from_tag = ccsip_find_preallocated_sip_local_tag(ccb->dn_line);
     sip_from_tag = strlib_open(ccb->sip_from_tag, MAX_SIP_URL_LENGTH);
     if (temp_from_tag == NULL) {
         if (sip_from_tag) {
             sip_util_make_tag(sip_from_tag);
-            strncat(sip_from_temp, sip_from_tag,
-                    MAX_SIP_URL_LENGTH - strlen(sip_from_temp) - 1);
+            sstrncat(sip_from_temp, sip_from_tag,
+                    MAX_SIP_URL_LENGTH - strlen(sip_from_temp));
         }
     } else {
         if (sip_from_tag) {
             sstrncpy(sip_from_tag, temp_from_tag, MAX_SIP_URL_LENGTH);
-            strncat(sip_from_temp, temp_from_tag,
-                    MAX_SIP_URL_LENGTH - strlen(sip_from_temp) - 1);
+            sstrncat(sip_from_temp, temp_from_tag,
+                    MAX_SIP_URL_LENGTH - strlen(sip_from_temp));
         }
         ccsip_free_preallocated_sip_local_tag(ccb->dn_line);
     }
@@ -1424,7 +1424,7 @@ sip_platform_icmp_unreachable_callback (void *ccb, uint32_t ipaddr)
     if (SIPTaskSendMsg(SIP_ICMP_UNREACHABLE, (cprBuffer_t)icmp_msg,
                        sizeof(uint32_t), (void *)(long)ipaddr) == CPR_FAILURE) {
         CCSIP_DEBUG_ERROR("%s: Error: send msg failed.\n", fname);
-        cprReleaseBuffer((cprBuffer_t)icmp_msg);
+        cpr_free((cprBuffer_t)icmp_msg);
     }
     return;
 }
@@ -1599,7 +1599,7 @@ sipSPISendRefer (ccsipCCB_t *ccb, char *referto, sipRefEnum_e referto_type)
             if ((strncmp(referto, "<sip:", 5) == 0) ||
                 (strncmp(referto, "sip:", 4) == 0) ||
                 (strncmp(referto, "<urn:", 5) == 0)) {
-                strncpy(tempreferto, referto, strlen(referto));
+                sstrncpy(tempreferto, referto, sizeof(tempreferto));
 
                 /* REFER to get the token should be norefersub */
                 if (strncmp(referto, TOKEN_REFER_TO, sizeof(TOKEN_REFER_TO))
@@ -2286,10 +2286,10 @@ sipSPIsendNonActiveOptionResponse (sipMessage_t *msg,
         return (FALSE);
     } else {
         sip_util_make_tag(sip_to_tag);
-        strncat(sip_to_temp, ";tag=",
-                MAX_SIP_URL_LENGTH - strlen(sip_to_temp) - 1);
-        strncat(sip_to_temp, sip_to_tag,
-                MAX_SIP_URL_LENGTH - strlen(sip_to_temp) - 1);
+        sstrncat(sip_to_temp, ";tag=",
+                sizeof(sip_to_temp) - strlen(sip_to_temp));
+        sstrncat(sip_to_temp, sip_to_tag,
+                sizeof(sip_to_temp) - strlen(sip_to_temp));
     }
     sippmh_free_location(to_loc);
 
@@ -2836,9 +2836,9 @@ sipSPISendFailureResponseAck (ccsipCCB_t *ccb, sipMessage_t *response,
         dn_line     = gCallHistory[previous_call_line].dn_line;
         sstrncpy(local_ReqURI,
                  gCallHistory[previous_call_line].last_route_request_uri,
-                 MAX_SIP_URL_LENGTH);
-        strncpy(via_branch, gCallHistory[previous_call_line].via_branch,
-                SIP_MAX_VIA_LENGTH - 1);
+                 sizeof(local_ReqURI));
+        sstrncpy(via_branch, gCallHistory[previous_call_line].via_branch,
+                sizeof(via_branch));
     } else {
         /*
          * The ACK to a 300-699 response MUST
@@ -2849,9 +2849,9 @@ sipSPISendFailureResponseAck (ccsipCCB_t *ccb, sipMessage_t *response,
         // Get the via_branch from the last request that we sent
         trx_index = get_method_request_trx_index(ccb, sipMethodInvite, TRUE);
         if (trx_index != -1) {
-            strncpy(via_branch,
+            sstrncpy(via_branch,
                     (const char *)(ccb->sent_request[trx_index].u.sip_via_branch),
-                    SIP_MAX_VIA_LENGTH - 1);
+                    sizeof(via_branch));
         }
         // via_branch = (char *) ccb->sip_via_branch;
         /*
@@ -3342,7 +3342,7 @@ sipSPIAddLocalVia (sipMessage_t *msg, ccsipCCB_t *ccb, sipMethod_t method)
                 }
                 sip_via_branch = strlib_open(ccb->sent_request[trx_index].u.sip_via_branch,
                                              VIA_BRANCH_LENGTH);
-                strncpy(sip_via_branch, (char *)(ccb->sent_request[trx_index - 1].u.sip_via_branch), VIA_BRANCH_LENGTH);
+                sstrncpy(sip_via_branch, (char *)(ccb->sent_request[trx_index - 1].u.sip_via_branch), VIA_BRANCH_LENGTH);
                 ccb->sent_request[trx_index].u.sip_via_branch = strlib_close(sip_via_branch);
 
                 snprintf(via, sizeof(via),
@@ -3503,9 +3503,9 @@ sipSPIAddRouteHeaders (sipMessage_t *msg, ccsipCCB_t *ccb,
         /* Append Contact to the Route Header, if Contact is available */
         if (Contact[0] != '\0') {
             if (route[0] != '\0') {
-                strncat(route, ", ", sizeof(route) - strlen(route) - 1);
+                sstrncat(route, ", ", sizeof(route) - strlen(route));
             }
-            strncat(route, Contact, sizeof(route) - strlen(route) - 1);
+            sstrncat(route, Contact, sizeof(route) - strlen(route));
         }
     }
 
@@ -3684,14 +3684,14 @@ sipSPICheckContentHeaders (sipMessage_t *msg)
             return (SIP_SERV_ERR_INTERNAL);
         }
 
-        ptr = cpr_strtok(accepted_enc_str_dup, ", ", &lasts);
+        ptr = PL_strtok_r(accepted_enc_str_dup, ", ", &lasts);
 
         while (ptr) {
             if (strcmp(ptr, SIP_CONTENT_ENCODING_IDENTITY) == 0) {
                 found = TRUE;
                 break;
             }
-            ptr = cpr_strtok(NULL, ", ", &lasts);
+            ptr = PL_strtok_r(NULL, ", ", &lasts);
         }
 
         cpr_free(accepted_enc_str_dup);
@@ -4805,45 +4805,45 @@ sipSPIGenerateRouteHeaderUAC (sipRecordRoute_t *rr_info,
             /*static */ char maddr[MAX_SIP_HEADER_LENGTH];
 
             snprintf(maddr, sizeof(maddr), ";maddr=%s", url_info->maddr);
-            strncat(temp_route, maddr,
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, maddr,
+                    sizeof(temp_route) - strlen(temp_route));
         }
 
         if (url_info->ttl_val) {
             /*static */ char ttl[MAX_SIP_HEADER_LENGTH];
 
             snprintf(ttl, sizeof(ttl), ";ttl=%d", url_info->ttl_val);
-            strncat(temp_route, ttl,
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ttl,
+                    sizeof(temp_route) - strlen(temp_route));
         }
 
         switch (url_info->transport) {
         case TRANSPORT_UDP:
-            strncat(temp_route, ";transport=udp",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";transport=udp",
+                    sizeof(temp_route) - strlen(temp_route));
             break;
         case TRANSPORT_TCP:
-            strncat(temp_route, ";transport=tcp",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";transport=tcp",
+                    sizeof(temp_route) - strlen(temp_route));
             break;
         case TRANSPORT_TLS:
-            strncat(temp_route, ";transport=tls",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";transport=tls",
+                    sizeof(temp_route) - strlen(temp_route));
             break;
         case TRANSPORT_SCTP:
-            strncat(temp_route, ";transport=sctp",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";transport=sctp",
+                    sizeof(temp_route) - strlen(temp_route));
             break;
         }
 
         if (url_info->is_phone) {
-            strncat(temp_route, ";user=phone",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";user=phone",
+                    sizeof(temp_route) - strlen(temp_route));
         }
 
         if (url_info->lr_flag) {
-            strncat(temp_route, ";lr",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";lr",
+                    sizeof(temp_route) - strlen(temp_route));
         }
 
         j = 0;
@@ -4851,24 +4851,24 @@ sipSPIGenerateRouteHeaderUAC (sipRecordRoute_t *rr_info,
 
         while (j < SIP_MAX_LOCATIONS) {
             if (gen->other_params[j] != NULL) {
-                strncat(temp_route, ";",
-                        sizeof(temp_route) - strlen(temp_route) - 1);
-                strncat(temp_route, gen->other_params[j],
-                        sizeof(temp_route) - strlen(temp_route) - 1);
+                sstrncat(temp_route, ";",
+                        sizeof(temp_route) - strlen(temp_route));
+                sstrncat(temp_route, gen->other_params[j],
+                        sizeof(temp_route) - strlen(temp_route));
                 break;
             }
             j++;
         }
 
         if (i > limit) {
-            strncat(temp_route, ">,",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ">,",
+                    sizeof(temp_route) - strlen(temp_route));
         } else {
-            strncat(temp_route, ">",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ">",
+                    sizeof(temp_route) - strlen(temp_route));
         }
 
-        strncat(route, temp_route, route_str_len - strlen(route) - 1);
+        sstrncat(route, temp_route, route_str_len - strlen(route));
 
     }
 
@@ -4946,45 +4946,45 @@ sipSPIGenerateRouteHeaderUAS (sipRecordRoute_t *rr_info,
             /*static */ char maddr[MAX_SIP_HEADER_LENGTH];
 
             snprintf(maddr, sizeof(maddr), ";maddr=%s", url_info->maddr);
-            strncat(temp_route, maddr,
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, maddr,
+                    sizeof(temp_route) - strlen(temp_route));
         }
 
         if (url_info->ttl_val) {
             /*static */ char ttl[MAX_SIP_HEADER_LENGTH];
 
             snprintf(ttl, sizeof(ttl), ";ttl=%d", url_info->ttl_val);
-            strncat(temp_route, ttl,
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ttl,
+                    sizeof(temp_route) - strlen(temp_route));
         }
 
         switch (url_info->transport) {
         case TRANSPORT_UDP:
-            strncat(temp_route, ";transport=udp",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";transport=udp",
+                    sizeof(temp_route) - strlen(temp_route));
             break;
         case TRANSPORT_TCP:
-            strncat(temp_route, ";transport=tcp",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";transport=tcp",
+                    sizeof(temp_route) - strlen(temp_route));
             break;
         case TRANSPORT_TLS:
-            strncat(temp_route, ";transport=tls",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";transport=tls",
+                    sizeof(temp_route) - strlen(temp_route));
             break;
         case TRANSPORT_SCTP:
-            strncat(temp_route, ";transport=sctp",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";transport=sctp",
+                    sizeof(temp_route) - strlen(temp_route));
             break;
         }
 
         if (url_info->is_phone) {
-            strncat(temp_route, ";user=phone",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";user=phone",
+                    sizeof(temp_route) - strlen(temp_route));
         }
 
         if (url_info->lr_flag) {
-            strncat(temp_route, ";lr",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ";lr",
+                    sizeof(temp_route) - strlen(temp_route));
         }
 
         j = 0;
@@ -4992,23 +4992,23 @@ sipSPIGenerateRouteHeaderUAS (sipRecordRoute_t *rr_info,
 
         while (j < SIP_MAX_LOCATIONS) {
             if (gen->other_params[j] != NULL) {
-                strncat(temp_route, ";",
-                        sizeof(temp_route) - strlen(temp_route) - 1);
-                strncat(temp_route, gen->other_params[j],
-                        sizeof(temp_route) - strlen(temp_route) - 1);
+                sstrncat(temp_route, ";",
+                        sizeof(temp_route) - strlen(temp_route));
+                sstrncat(temp_route, gen->other_params[j],
+                        sizeof(temp_route) - strlen(temp_route));
                 break;
             }
             j++;
         }
 
         if (i < limit) {
-            strncat(temp_route, ">,",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ">,",
+                    sizeof(temp_route) - strlen(temp_route));
         } else {
-            strncat(temp_route, ">",
-                    sizeof(temp_route) - strlen(temp_route) - 1);
+            sstrncat(temp_route, ">",
+                    sizeof(temp_route) - strlen(temp_route));
         }
-        strncat(route, temp_route, route_str_len - strlen(route) - 1);
+        sstrncat(route, temp_route, route_str_len - strlen(route));
     }
 
     *loose_routing = lr;
@@ -5064,36 +5064,36 @@ sipSPIGenerateContactHeader (sipContact_t *contact_info,
         /*static */ char maddr[MAX_SIP_HEADER_LENGTH];
 
         snprintf(maddr, sizeof(maddr), ";maddr=%s", sipUrl->maddr);
-        strncat(contact, maddr, MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(contact, maddr, len - strlen(contact));
     }
 
     if (sipUrl->ttl_val) {
         /*static */ char ttl[MAX_SIP_HEADER_LENGTH];
 
         snprintf(ttl, sizeof(ttl), ";ttl=%d", sipUrl->ttl_val);
-        strncat(contact, ttl, MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(contact, ttl, len - strlen(contact));
     }
 
     switch (sipUrl->transport) {
     case TRANSPORT_UDP:
-        strncat(contact, ";transport=udp", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(contact, ";transport=udp", len - strlen(contact));
         break;
     case TRANSPORT_TCP:
-        strncat(contact, ";transport=tcp", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(contact, ";transport=tcp", len - strlen(contact));
         break;
     case TRANSPORT_TLS:
-        strncat(contact, ";transport=tls", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(contact, ";transport=tls", len - strlen(contact));
         break;
     case TRANSPORT_SCTP:
-        strncat(contact, ";transport=sctp", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(contact, ";transport=sctp", len - strlen(contact));
         break;
     }
 
     if (sipUrl->is_phone) {
-        strncat(contact, ";user=phone", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(contact, ";user=phone", len - strlen(contact));
     }
 
-    strncat(contact, ">", MAX_SIP_HEADER_LENGTH - 1);
+    sstrncat(contact, ">", len - strlen(contact));
     retval = TRUE;
     return (retval);
 }
@@ -5421,13 +5421,13 @@ sipSPISendByeAuth (sipMessage_t *pResponse,
                           "Req-URI\n", DEB_F_PREFIX_ARGS(SIP_REQ_URI, fname));
         if (request_uri_loc->name) {
             if (request_uri_loc->name[0]) {
-                strncat(ReqURI, "\"", sizeof(ReqURI) - strlen(ReqURI) - 1);
-                strncat(ReqURI, request_uri_loc->name,
-                        sizeof(ReqURI) - strlen(ReqURI) - 1);
-                strncat(ReqURI, "\" ", sizeof(ReqURI) - strlen(ReqURI) - 1);
+                sstrncat(ReqURI, "\"", sizeof(ReqURI) - strlen(ReqURI));
+                sstrncat(ReqURI, request_uri_loc->name,
+                        sizeof(ReqURI) - strlen(ReqURI));
+                sstrncat(ReqURI, "\" ", sizeof(ReqURI) - strlen(ReqURI));
             }
         }
-        strncat(ReqURI, "sip:", sizeof(ReqURI) - strlen(ReqURI) - 1);
+        sstrncat(ReqURI, "sip:", sizeof(ReqURI) - strlen(ReqURI));
         if (request_uri_loc->genUrl->schema == URL_TYPE_SIP) {
             request_uri_url = request_uri_loc->genUrl->u.sipUrl;
         } else {
@@ -5438,16 +5438,16 @@ sipSPISendByeAuth (sipMessage_t *pResponse,
         }
 
         if (request_uri_url->user) {
-            strncat(ReqURI, request_uri_url->user,
-                    sizeof(ReqURI) - strlen(ReqURI) - 1);
-            strncat(ReqURI, "@", sizeof(ReqURI) - strlen(ReqURI) - 1);
+            sstrncat(ReqURI, request_uri_url->user,
+                    sizeof(ReqURI) - strlen(ReqURI));
+            sstrncat(ReqURI, "@", sizeof(ReqURI) - strlen(ReqURI));
         }
         if (request_uri_url->is_phone) {
-            strncat(ReqURI, ";user=phone",
-                    sizeof(ReqURI) - strlen(ReqURI) - 1);
+            sstrncat(ReqURI, ";user=phone",
+                    sizeof(ReqURI) - strlen(ReqURI));
         }
-        strncat(ReqURI, request_uri_url->host,
-                sizeof(ReqURI) - strlen(ReqURI) - 1);
+        sstrncat(ReqURI, request_uri_url->host,
+                sizeof(ReqURI) - strlen(ReqURI));
         sippmh_free_location(request_uri_loc);
     }
 
@@ -5611,13 +5611,13 @@ sipSPIGenerateTargetUrl (genUrl_t *genUrl, char *sipurlstr)
                 }
             }
             snprintf(temp, sizeof(temp), ";%s", genUrl->other_params[i]);
-            strncat(sipurlstr, temp, MAX_SIP_URL_LENGTH - url_length - 1);
+            sstrncat(sipurlstr, temp, MAX_SIP_URL_LENGTH - url_length );
             url_length = strlen(sipurlstr);
         }
     }
 
     if (right_bracket_removed) {
-        strncat(sipurlstr, ">", MAX_SIP_URL_LENGTH - url_length - 1);
+        sstrncat(sipurlstr, ">", MAX_SIP_URL_LENGTH - url_length);
     }
 }
 
@@ -5642,34 +5642,34 @@ sipSPIGenerateSipUrl (sipUrl_t *sipUrl, char *sipurlstr)
 
     if (sipUrl->maddr) {
         snprintf(temp, sizeof(temp), ";maddr=%s", sipUrl->maddr);
-        strncat(sipurlstr, temp, MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(sipurlstr, temp, MAX_SIP_HEADER_LENGTH );
     }
 
     if (sipUrl->ttl_val) {
         snprintf(temp, sizeof(temp), ";ttl=%d", sipUrl->ttl_val);
-        strncat(sipurlstr, temp, MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(sipurlstr, temp, MAX_SIP_HEADER_LENGTH);
     }
 
     switch (sipUrl->transport) {
     case TRANSPORT_UDP:
-        strncat(sipurlstr, ";transport=udp", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(sipurlstr, ";transport=udp", MAX_SIP_HEADER_LENGTH);
         break;
     case TRANSPORT_TCP:
-        strncat(sipurlstr, ";transport=tcp", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(sipurlstr, ";transport=tcp", MAX_SIP_HEADER_LENGTH);
         break;
     case TRANSPORT_TLS:
-        strncat(sipurlstr, ";transport=tls", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(sipurlstr, ";transport=tls", MAX_SIP_HEADER_LENGTH);
         break;
     case TRANSPORT_SCTP:
-        strncat(sipurlstr, ";transport=sctp", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(sipurlstr, ";transport=sctp", MAX_SIP_HEADER_LENGTH);
         break;
     }
 
     if (sipUrl->is_phone) {
-        strncat(sipurlstr, ";user=phone", MAX_SIP_HEADER_LENGTH - 1);
+        sstrncat(sipurlstr, ";user=phone", MAX_SIP_HEADER_LENGTH);
     }
 
-    strncat(sipurlstr, ">", MAX_SIP_HEADER_LENGTH - 1);
+    sstrncat(sipurlstr, ">", MAX_SIP_HEADER_LENGTH);
 
 }
 
@@ -6095,20 +6095,20 @@ sipSPIGenRequestURI (ccsipCCB_t *ccb, sipMethod_t sipmethod, boolean initInvite)
         if (sipUrl) {
             switch (sipUrl->transport) {
             case TRANSPORT_UDP:
-                strncat(ccb->ReqURI, ";transport=udp",
-                        sizeof(ccb->ReqURI) - strlen(ccb->ReqURI) - 1);
+                sstrncat(ccb->ReqURI, ";transport=udp",
+                        sizeof(ccb->ReqURI) - strlen(ccb->ReqURI));
                 break;
             case TRANSPORT_TCP:
-                strncat(ccb->ReqURI, ";transport=tcp",
-                        sizeof(ccb->ReqURI) - strlen(ccb->ReqURI) - 1);
+                sstrncat(ccb->ReqURI, ";transport=tcp",
+                        sizeof(ccb->ReqURI) - strlen(ccb->ReqURI));
                 break;
             case TRANSPORT_TLS:
-                strncat(ccb->ReqURI, ";transport=tls",
-                        sizeof(ccb->ReqURI) - strlen(ccb->ReqURI) - 1);
+                sstrncat(ccb->ReqURI, ";transport=tls",
+                        sizeof(ccb->ReqURI) - strlen(ccb->ReqURI));
                 break;
             case TRANSPORT_SCTP:
-                strncat(ccb->ReqURI, ";transport=sctp",
-                        sizeof(ccb->ReqURI) - strlen(ccb->ReqURI) - 1);
+                sstrncat(ccb->ReqURI, ";transport=sctp",
+                        sizeof(ccb->ReqURI) - strlen(ccb->ReqURI));
                 break;
             default:
                 break;
@@ -6122,10 +6122,10 @@ sipSPIGenRequestURI (ccsipCCB_t *ccb, sipMethod_t sipmethod, boolean initInvite)
             gen = ccb->record_route_info->locations[i]->genUrl;
             while (j < SIP_MAX_LOCATIONS) {
                 if (gen->other_params[j] != NULL) {
-                    strncat(ccb->ReqURI, ";",
-                            sizeof(ccb->ReqURI) - strlen(ccb->ReqURI) - 1);
-                    strncat(ccb->ReqURI, gen->other_params[j],
-                            sizeof(ccb->ReqURI) - strlen(ccb->ReqURI) - 1);
+                    sstrncat(ccb->ReqURI, ";",
+                            sizeof(ccb->ReqURI) - strlen(ccb->ReqURI));
+                    sstrncat(ccb->ReqURI, gen->other_params[j],
+                            sizeof(ccb->ReqURI) - strlen(ccb->ReqURI));
                     break;
                 }
                 j++;
@@ -6264,9 +6264,9 @@ sipSPIAddContactHeader (ccsipCCB_t *ccb, sipMessage_t *request)
             sipMethod_t method = sipMethodInvalid;
 
             sipGetRequestMethod(request, &method);
-            if ((method == sipMethodRegister)) {
-                strncat(pContactStr, ";expires=0;cisco-keep-alive",
-                        MAX_SIP_HEADER_LENGTH - strlen(pContactStr) - 1);
+            if (method == sipMethodRegister) {
+                sstrncat(pContactStr, ";expires=0;cisco-keep-alive",
+                        sizeof(pContactStr) - strlen(pContactStr));
             }
         }
     } else {
@@ -7187,12 +7187,10 @@ AddGeneralHeaders (ccsipCCB_t *ccb,
                          SIP_METHOD_INVITE, SIP_METHOD_NOTIFY,
                          SIP_METHOD_OPTIONS, SIP_METHOD_REFER,
                          SIP_METHOD_REGISTER, SIP_METHOD_UPDATE);
-                strncat(temp, ",", (MAX_SIP_HEADER_LENGTH - strlen(temp) - 1));
-                strncat(temp, SIP_METHOD_SUBSCRIBE,
-                        (MAX_SIP_HEADER_LENGTH - strlen(temp) - 1));
-                strncat(temp, ",", (MAX_SIP_HEADER_LENGTH - strlen(temp) - 1));
-                strncat(temp, SIP_METHOD_INFO,
-                        (MAX_SIP_HEADER_LENGTH - strlen(temp) - 1));
+                sstrncat(temp, ",", sizeof(temp) - strlen(temp));
+                sstrncat(temp, SIP_METHOD_SUBSCRIBE, sizeof(temp) - strlen(temp));
+                sstrncat(temp, ",", sizeof(temp) - strlen(temp));
+                sstrncat(temp, SIP_METHOD_INFO, sizeof(temp) - strlen(temp));
                 tflag = sippmh_add_text_header(request, SIP_HEADER_ALLOW, temp);
             }
             break;
@@ -7607,10 +7605,10 @@ sipSPIBuildRegisterHeaders(ccsipCCB_t *ccb,
             sip_from_tag = strlib_open(ccb->sip_from_tag, MAX_SIP_URL_LENGTH);
             if (sip_from_tag) {
                 sip_util_make_tag(sip_from_tag);
-                strncat(sip_from_temp, ";tag=",
-                        MAX_SIP_URL_LENGTH - strlen(sip_from_temp) - 1);
-                strncat(sip_from_temp, sip_from_tag,
-                        MAX_SIP_URL_LENGTH - strlen(sip_from_temp) - 1);
+                sstrncat(sip_from_temp, ";tag=",
+                        MAX_SIP_URL_LENGTH - strlen(sip_from_temp));
+                sstrncat(sip_from_temp, sip_from_tag,
+                        MAX_SIP_URL_LENGTH - strlen(sip_from_temp));
             }
             ccb->sip_from_tag = strlib_close(sip_from_tag);
         }

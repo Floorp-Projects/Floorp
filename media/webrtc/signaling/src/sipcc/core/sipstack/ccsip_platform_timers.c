@@ -688,7 +688,7 @@ sip_platform_post_timer (uint32_t cmd, void *data)
     /* Put it on the SIP message queue */
     if (SIPTaskSendMsg(cmd, (cprBuffer_t) timer_msg, sizeof(uint32_t), NULL)
             == CPR_FAILURE) {
-        cprReleaseBuffer(timer_msg);
+        cpr_free(timer_msg);
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX "Send msg failed.\n", fname);
     }
     return;

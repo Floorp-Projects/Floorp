@@ -47,7 +47,7 @@
 #define CPR_USE_SET_MESSAGE_QUEUE_THREAD
 
 /* Maximum message size allowed by CNU */
-#define CPR_MAX_MSG_SIZE  4096
+#define CPR_MAX_MSG_SIZE  8192
 
 /* Our CNU msgtype */
 #define CPR_IPC_MSG 1

@@ -12,7 +12,7 @@
   'variables': {
     'chromium_code': 1,
   },
-  
+
   'targets': [
   
     #
@@ -32,7 +32,10 @@
         './src/common',
         './src/common/browser_logging',
         './src/media',
+        './src/media-conduit',
+        './src/mediapipeline',
         './src/softphonewrapper',
+        './src/peerconnection',
         './include',
         './src/sipcc/include',
         './src/sipcc/cpr/include',
@@ -41,9 +44,16 @@
         '../../../ipc/chromium/src/base/third_party/nspr',
         '../../../xpcom/base',
         '$(DEPTH)/dist/include',
+        '../../../dom/base',
+        '../../../media/mtransport',
         '../trunk/src',
         '../trunk/src/video_engine/include',
-        '../trunk/src/voice_engine/main/interface',
+        '../trunk/src/voice_engine/include',
+        '../trunk/src/modules/interface',
+        '../trunk/src/peerconnection',
+        '../../../netwerk/srtp/src/include',
+        '../../../netwerk/srtp/src/crypto/include',
+        '../../../ipc/chromium/src',
       ],	
 	  
       #
@@ -60,6 +70,11 @@
       # SOURCES
       #
       'sources': [
+        # Media Conduit 
+        './src/media-conduit/AudioConduit.h',
+        './src/media-conduit/AudioConduit.cpp',
+        './src/media-conduit/VideoConduit.h',
+        './src/media-conduit/VideoConduit.cpp',
         # Common
         './src/common/CommonTypes.h',
         './src/common/csf_common.h',
@@ -91,19 +106,6 @@
         './src/media/CSFVideoCallMediaControl.h',
         './src/media/CSFVideoControlWrapper.h',
         './src/media/CSFVideoTermination.h',
-        './src/media/webrtc/WebrtcAudioCodecSelector.cpp',
-        './src/media/webrtc/WebrtcAudioProvider.cpp',
-        './src/media/webrtc/WebrtcMediaProvider.cpp',
-        './src/media/webrtc/WebrtcRingGenerator.cpp',
-        './src/media/webrtc/WebrtcToneGenerator.cpp',
-        './src/media/webrtc/WebrtcVideoProvider.cpp',
-        './src/media/webrtc/WebrtcAudioCodecSelector.h',
-        './src/media/webrtc/WebrtcAudioProvider.h',
-        './src/media/webrtc/WebrtcMediaProvider.h',
-        './src/media/webrtc/WebrtcRingGenerator.h',
-        './src/media/webrtc/WebrtcToneGenerator.h',
-        './src/media/webrtc/WebrtcVideoProvider.h',
-        './src/media/webrtc/WebrtcLogging.h',
         './src/media/VcmSIPCCBinding.h',
         # SoftPhoneWrapper
         './src/softphonewrapper/CC_SIPCCCall.cpp',
@@ -125,7 +127,16 @@
         './src/softphonewrapper/CC_SIPCCLine.h',
         './src/softphonewrapper/CC_SIPCCLineInfo.h',
         './src/softphonewrapper/CC_SIPCCService.h',
-
+        # PeerConnection
+        './src/peerconnection/PeerConnectionCtx.cpp',
+        './src/peerconnection/PeerConnectionCtx.h',
+        './src/peerconnection/PeerConnectionImpl.cpp',
+        './src/peerconnection/PeerConnectionImpl.h',
+        # Media pipeline
+        './src/mediapipeline/MediaPipeline.h',
+        './src/mediapipeline/MediaPipeline.cpp',
+        './src/mediapipeline/SrtpFlow.h',
+        './src/mediapipeline/SrtpFlow.cpp',
       ],
     
       #
@@ -136,17 +147,30 @@
         'LOG4CXX_STATIC', 
         '_NO_LOG4CXX', 
         'USE_SSLEAY', 
-        'LIBXML_STATIC', 
         '_CPR_USE_EXTERNAL_LOGGER',
-   	'WEBRTC_RELATIVE_PATH',
+        'WEBRTC_RELATIVE_PATH',
       	'HAVE_WEBRTC_VIDEO',
         'HAVE_WEBRTC_VOICE',
       ],
 
       #
-      # OS SPECIFIC
-      #      
+      # Conditionals
+      #
       'conditions': [
+        ['build_for_test==0', {
+          'defines' : [
+            'MOZILLA_INTERNAL_API'
+          ],
+        }], 
+        ['build_for_test!=0', {
+          'include_dirs': [
+            './test'
+          ],
+          'defines' : [
+            'NO_CHROMIUM_LOGGING',
+            'USE_FAKE_MEDIA_STREAMS'
+          ],
+        }], 
         ['OS=="linux"', {
           'include_dirs': [
           ],
@@ -159,9 +183,8 @@
             'SECLIB_OPENSSL',
           ],
           
-          'cflags': [
-            '-fexceptions',
-            '-fno-common',
+          'cflags_mozilla': [
+            '-Werror',
           ],
         }],
         ['OS=="win"', {
@@ -171,10 +194,12 @@
             'SIP_OS_WINDOWS',
             'WIN32', 
             'GIPS_VER=3480',
-            'SIPCC_BUILD'
+            'SIPCC_BUILD',
+            'HAVE_WINSOCK2_H',
+            'CPR_STDINT_INCLUDE=\\"mozilla/StandardInteger.h\\"'
           ],
           
-          'cflags': [
+          'cflags_mozilla': [
           ],
         }],
         ['OS=="mac"', {
@@ -186,9 +211,9 @@
             '_FORTIFY_SOURCE=2',
           ],
           
-          'cflags': [
-            '-fexceptions',
-            '-fno-common'
+          'cflags_mozilla': [
+            '-Werror',
+            '-Wno-error=conversion'
           ],
         }],
       ],
@@ -216,6 +241,13 @@
         './src/sipcc/core/gsm/h',
         './src/sipcc/plat/common',
         '../../../nsprpub/pr/include',
+        '../../../media/mtransport',
+        '../../../dom/base',
+        '../trunk/third_party/libsrtp/srtp/include',
+        '../trunk/third_party/libsrtp/srtp/crypto/include',
+        '$(DEPTH)/dist/include',
+        # Danger: this is to include config.h. This could be bad.
+        '../trunk/third_party/libsrtp/config',
       ],
       
       #
@@ -290,7 +322,6 @@
         './src/sipcc/core/common/text_strings.h',
         './src/sipcc/core/common/ui.c',
         './src/sipcc/core/common/vcm_util.c',
-        './src/sipcc/core/common/xml_util.c',
         # GSM
         './src/sipcc/core/gsm/ccapi.c',
         './src/sipcc/core/gsm/ccapi_strings.c',
@@ -372,7 +403,6 @@
         './src/sipcc/core/includes/vcm_util.h',
         './src/sipcc/core/includes/www.h',
         './src/sipcc/core/includes/xml_defs.h',
-        './src/sipcc/core/includes/xml_util.h',
         # SDP
         './src/sipcc/core/sdp/ccsdp.c',
         './src/sipcc/core/sdp/sdp_access.c',
@@ -485,6 +515,7 @@
         './src/sipcc/cpr/include/cpr_time.h',
         './src/sipcc/cpr/include/cpr_timers.h',
         './src/sipcc/cpr/include/cpr_types.h',
+        './src/sipcc/cpr/common/cpr_string.c',
         # INCLUDE
         './src/sipcc/include/cc_blf.h',
         './src/sipcc/include/cc_blf_listener.h',
@@ -521,12 +552,9 @@
         './src/sipcc/include/reset_api.h',
         './src/sipcc/include/sll_lite.h',
         './src/sipcc/include/vcm.h',
-        './src/sipcc/include/xml_parser.h',
         './src/sipcc/include/xml_parser_defines.h',
 
         # PLAT
-        # './src/sipcc/plat/common/plat_sec_api.c',
-        './src/sipcc/plat/common/libxml_parser.c',
         './src/sipcc/plat/csf2g/model.c',
         './src/sipcc/plat/csf2g/reset_api.c',
         # 
@@ -552,7 +580,6 @@
       'conditions': [
         ['OS=="linux"', {
           'include_dirs': [
-            '/usr/include/libxml2',
           ],
 
           'sources': [
@@ -561,19 +588,14 @@
 
             # PLAT
             './src/sipcc/plat/common/dns_utils.c',
-            './src/sipcc/plat/unix-common/random.c',
-            './src/sipcc/plat/linux/plat_api_stub.c',
 
             # CPR
-            './src/sipcc/cpr/linux/cpr_linux_chunk.c',
             './src/sipcc/cpr/linux/cpr_linux_errno.c',
             './src/sipcc/cpr/linux/cpr_linux_init.c',
             './src/sipcc/cpr/linux/cpr_linux_ipc.c',
             './src/sipcc/cpr/linux/cpr_linux_locks.c',
-            './src/sipcc/cpr/linux/cpr_linux_memory.c',
             './src/sipcc/cpr/linux/cpr_linux_socket.c',
             './src/sipcc/cpr/linux/cpr_linux_stdio.c',
-            './src/sipcc/cpr/linux/cpr_linux_stdlib.c',
             './src/sipcc/cpr/linux/cpr_linux_string.c',
             './src/sipcc/cpr/linux/cpr_linux_threads.c',
             './src/sipcc/cpr/linux/cpr_linux_timers_using_select.c', 
@@ -581,18 +603,14 @@
             './src/sipcc/cpr/linux/cpr_assert.h',
             './src/sipcc/cpr/linux/cpr_linux_align.h',
             './src/sipcc/cpr/linux/cpr_linux_assert.h',
-            './src/sipcc/cpr/linux/cpr_linux_chunk.h',
             './src/sipcc/cpr/linux/cpr_linux_errno.h',
             './src/sipcc/cpr/linux/cpr_linux_in.h',
             './src/sipcc/cpr/linux/cpr_linux_ipc.h',
             './src/sipcc/cpr/linux/cpr_linux_locks.h',
-            './src/sipcc/cpr/linux/cpr_linux_memory_api.h',
-            './src/sipcc/cpr/linux/cpr_linux_memory.h',
             './src/sipcc/cpr/linux/cpr_linux_private.h',
             './src/sipcc/cpr/linux/cpr_linux_rand.h',
             './src/sipcc/cpr/linux/cpr_linux_socket.h',
             './src/sipcc/cpr/linux/cpr_linux_stdio.h',
-            './src/sipcc/cpr/linux/cpr_linux_stdlib.h',
             './src/sipcc/cpr/linux/cpr_linux_string.h',
             './src/sipcc/cpr/linux/cpr_linux_strings.h',
             './src/sipcc/cpr/linux/cpr_linux_time.h',
@@ -614,13 +632,12 @@
             'LINUX',
           ],
 
-          'cflags': [
-            '-g',
+          'cflags_mozilla': [
+            '-Werror',
           ],
         }],
         ['OS=="win"', {
           'include_dirs': [
-            './third_party/libxml2/include',
           ],
           
           'sources': [
@@ -647,16 +664,12 @@
             './src/sipcc/cpr/win32/cpr_win_ipc.h',
             './src/sipcc/cpr/win32/cpr_win_locks.c',
             './src/sipcc/cpr/win32/cpr_win_locks.h',
-            './src/sipcc/cpr/win32/cpr_win_memory.c',
-            './src/sipcc/cpr/win32/cpr_win_memory.h',
             './src/sipcc/cpr/win32/cpr_win_rand.c',
             './src/sipcc/cpr/win32/cpr_win_rand.h',
             './src/sipcc/cpr/win32/cpr_win_socket.c',
             './src/sipcc/cpr/win32/cpr_win_socket.h',
             './src/sipcc/cpr/win32/cpr_win_stdio.c',
             './src/sipcc/cpr/win32/cpr_win_stdio.h',
-            './src/sipcc/cpr/win32/cpr_win_stdlib.c',
-            './src/sipcc/cpr/win32/cpr_win_stdlib.h',
             './src/sipcc/cpr/win32/cpr_win_string.c',
             './src/sipcc/cpr/win32/cpr_win_string.h',
             './src/sipcc/cpr/win32/cpr_win_strings.h',
@@ -678,14 +691,13 @@
             'GIPS_VER=3480',
           ],
           
-          'cflags': [
+          'cflags_mozilla': [
           ],
           
         }],
         ['OS=="mac"', {
 
           'include_dirs': [
-            '/usr/include/libxml2',
           ],
           
           'sources': [
@@ -700,8 +712,6 @@
             
             # CPR
             './src/sipcc/cpr/darwin/cpr_darwin_assert.h',
-            './src/sipcc/cpr/darwin/cpr_darwin_chunk.c',
-            './src/sipcc/cpr/darwin/cpr_darwin_chunk.h',
             './src/sipcc/cpr/darwin/cpr_darwin_errno.c',
             './src/sipcc/cpr/darwin/cpr_darwin_errno.h',
             './src/sipcc/cpr/darwin/cpr_darwin_in.h',
@@ -710,17 +720,12 @@
             './src/sipcc/cpr/darwin/cpr_darwin_ipc.h',
             './src/sipcc/cpr/darwin/cpr_darwin_locks.c',
             './src/sipcc/cpr/darwin/cpr_darwin_locks.h',
-            './src/sipcc/cpr/darwin/cpr_darwin_memory.c',
-            './src/sipcc/cpr/darwin/cpr_darwin_memory.h',
-            './src/sipcc/cpr/darwin/cpr_darwin_memory_api.h',
             './src/sipcc/cpr/darwin/cpr_darwin_private.h',
             './src/sipcc/cpr/darwin/cpr_darwin_rand.h',
             './src/sipcc/cpr/darwin/cpr_darwin_socket.c',
             './src/sipcc/cpr/darwin/cpr_darwin_socket.h',
             './src/sipcc/cpr/darwin/cpr_darwin_stdio.c',
             './src/sipcc/cpr/darwin/cpr_darwin_stdio.h',
-            './src/sipcc/cpr/darwin/cpr_darwin_stdlib.c',
-            './src/sipcc/cpr/darwin/cpr_darwin_stdlib.h',
             './src/sipcc/cpr/darwin/cpr_darwin_string.c',
             './src/sipcc/cpr/darwin/cpr_darwin_string.h',
             './src/sipcc/cpr/darwin/cpr_darwin_strings.h',
@@ -743,15 +748,12 @@
             'STUBBED_OUT',
             'USE_PRINTF',
             '_DARWIN_C_SOURCE',
+            'NO_NSPR_10_SUPPORT',
           ],
           
-          'cflags': [
-            '-g',
-            '-fexceptions',
-            '-fno-common',
-            '-isysroot', '/Developer/SDKs/MacOSX10.6.sdk',
-            '-mmacosx-version-min=10.5',
-            '-fast'
+          'cflags_mozilla': [
+            '-Werror',
+            '-Wno-error=conversion'
           ],
         }],
       ],

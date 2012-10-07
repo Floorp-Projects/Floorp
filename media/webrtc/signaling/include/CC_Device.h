@@ -80,4 +80,4 @@ namespace CSF
 		CC_Device& operator=(const CC_Device& rhs);
 		CC_Device(const CC_Device&);
     };
-};
+}

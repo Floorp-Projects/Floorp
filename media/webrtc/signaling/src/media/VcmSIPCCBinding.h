@@ -65,7 +65,7 @@ namespace CSF
     class VcmSIPCCBinding
     {
     public:
-        VcmSIPCCBinding (MediaProvider *mp);
+        VcmSIPCCBinding ();
         virtual ~VcmSIPCCBinding();
 
 
@@ -81,11 +81,19 @@ namespace CSF
 
         void setMediaProviderObserver(MediaProviderObserver* obs);
         static MediaProviderObserver * getMediaProviderObserver();
+
+        static void setAudioCodecs(int codecMask);
+        static void setVideoCodecs(int codecMask);
+
+        static int getAudioCodecs();
+        static int getVideoCodecs();
+
     private:
         static VcmSIPCCBinding * _pSelf;
-        MediaProvider * pMediaProvider;
         StreamObserver* streamObserver;
         MediaProviderObserver *mediaProviderObserver;
+        static int mAudioCodecMask;
+        static int mVideoCodecMask;
     };
 }
 

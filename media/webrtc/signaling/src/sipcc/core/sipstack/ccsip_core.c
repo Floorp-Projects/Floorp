@@ -108,9 +108,6 @@ const char *ring_names[] = {
 };
 
 
-cc_global_sdp_t  gROAPSDP;
-
-
 /* Forward function declarations */
 static int sip_sm_request_check_and_store(ccsipCCB_t *ccb, sipMessage_t *request,
                                                sipMethod_t request_method,
@@ -2504,7 +2501,7 @@ ccsip_handle_idle_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     /* CallID: header */
     callID = sippmh_get_cached_header_val(request, CALLID);
-    sstrncpy(ccb->sipCallID, callID, MAX_SIP_CALL_ID);
+    sstrncpy(ccb->sipCallID, callID, sizeof(ccb->sipCallID));
 
     /* Require: header */
     require = sippmh_get_cached_header_val(request, REQUIRE);
@@ -2684,11 +2681,11 @@ ccsip_handle_idle_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
         sip_to_temp = strlib_open(ccb->sip_to, MAX_SIP_URL_LENGTH);
         if (sip_to_temp) {
-            strncat(sip_to_temp, ";tag=",
-                    MAX_SIP_URL_LENGTH - strlen(sip_to_temp) - 1);
+            sstrncat(sip_to_temp, ";tag=",
+                    MAX_SIP_URL_LENGTH - strlen(sip_to_temp));
             if (ccb->sip_to_tag) {
-                strncat(sip_to_temp, ccb->sip_to_tag,
-                        MAX_SIP_URL_LENGTH - strlen(sip_to_temp) - 1);
+                sstrncat(sip_to_temp, ccb->sip_to_tag,
+                        MAX_SIP_URL_LENGTH - strlen(sip_to_temp));
             }
         }
         ccb->sip_to = strlib_close(sip_to_temp);
@@ -2819,8 +2816,8 @@ ccsip_handle_idle_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
         line_t  previous_call_index = 0;
 
         memset(tempreplace, 0, MAX_SIP_URL_LENGTH);
-        strncpy(tempreplace, "Replaces=", MAX_SIP_URL_LENGTH);
-        strncat(tempreplace, replaceshdr, (MAX_SIP_URL_LENGTH - 10));
+        sstrncpy(tempreplace, "Replaces=", sizeof(tempreplace));
+        sstrncat(tempreplace, replaceshdr, (sizeof(tempreplace) - sizeof("Replaces=")));
         replaces_t = sippmh_parse_replaces(tempreplace, FALSE);
         if (NULL != replaces_t) {
             //Check if a call exists that matches the callid, to and from tags found in the replaces header
@@ -3297,8 +3294,6 @@ ccsip_handle_idle_ev_cc_setup (ccsipCCB_t *ccb, sipSMEvent_t *event)
     cpr_ip_type     ip_type = CPR_IP_ADDR_IPV4;
     boolean         replace = FALSE;
 
-	int	roapproxy;
-
     CPR_IP_ADDR_INIT(proxy_ipaddr);
 
     ccb->gsm_id  = event->u.cc_msg->msg.setup.call_id;
@@ -3597,35 +3592,8 @@ ccsip_handle_idle_ev_cc_setup (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     /* Send INVITE */
 
-    /*
-     * Vivek: As a test - add some body part to force it to do
-     * multipart/mixed
-
-     event->u.cc_msg.msg.setup.msg_body[0].body = (char *) cpr_malloc(10);
-     event->u.cc_msg.msg.setup.msg_body[0].content_id = (char *) cpr_malloc(10);
-     event->u.cc_msg.msg.setup.msg_body[1].body = NULL;
-     event->u.cc_msg.msg.setup.msg_body[2].body = NULL;
-     event->u.cc_msg.msg.setup.msg_body[3].body = NULL;
-     strcpy(event->u.cc_msg.msg.setup.msg_body[0].body, "ABCDEFGH");
-     strcpy(event->u.cc_msg.msg.setup.msg_body[0].content_id, "WXYZ");
-     event->u.cc_msg.msg.setup.msg_body[0].content_type = cc_content_type_CMXML;
-     event->u.cc_msg.msg.setup.msg_body[0].body_length = strlen("ABCDEFGH");
-     event->u.cc_msg.msg.setup.msg_body[0].content_disposition.disposition = cc_disposition_render;
-     event->u.cc_msg.msg.setup.msg_body[0].content_disposition.required_handling = FALSE;
-     */
-
     /* Save the GSM's msg. bodies for future used */
     ccsip_save_local_msg_body(ccb, &event->u.cc_msg->msg.setup.msg_body);
-
-	// replace SDP in ccb if this is the ROAP proxy
-	// we not inject directly into sdp generation
-    roapproxy = 0;
-	config_get_value(CFGID_ROAPPROXY, &roapproxy, sizeof(roapproxy));
-	
-	if (roapproxy == TRUE) {
-		//strcpy(ccb->local_msg_body.parts[0].body, gROAPSDP.offerSDP);
-	}
-    //
     
     /*
      * CC_REDIRECT_REASON_DEFLECTION shows that this is an attended transfer
@@ -3871,7 +3839,6 @@ ccsip_handle_sentinvite_ev_sip_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
     const char     *contact = NULL;
     sipsdp_status_t sdp_status;
     string_t        recv_info_list = strlib_empty();
-	int roapproxy;
 
     /* Unpack the event */
     response = event->u.pSipMessage;
@@ -3937,15 +3904,6 @@ ccsip_handle_sentinvite_ev_sip_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     /* Extract destination SDP and related fields */
     sdp_status = sip_util_extract_sdp(ccb, response);
-
-	// extract SDP from ccb if this is the ROAP proxy
-    // you are in function ccsip_handle_sentinvite_ev_sip_2xx
-    roapproxy = 0;
-	config_get_value(CFGID_ROAPPROXY, &roapproxy, sizeof(roapproxy));
-	
-	if (roapproxy == TRUE) {
-		strcpy(gROAPSDP.answerSDP, response->mesg_body->msgBody);
-	}
 
     switch (sdp_status) {
     case SIP_SDP_SUCCESS:
@@ -6078,8 +6036,8 @@ ccsip_handle_refer_sip_message (ccsipCCB_t *ccb, sipSMEvent_t *event)
         char tempreplace[MAX_SIP_URL_LENGTH];
 
         memset(tempreplace, 0, MAX_SIP_URL_LENGTH);
-        strncpy(tempreplace, "Replaces=", MAX_SIP_URL_LENGTH);
-        strncat(tempreplace, referto->sip_replaces_hdr, (MAX_SIP_URL_LENGTH - 10));
+        sstrncpy(tempreplace, "Replaces=", sizeof(tempreplace));
+        sstrncat(tempreplace, referto->sip_replaces_hdr, (sizeof(tempreplace) - sizeof("Replaces=")));
         replaces_t = sippmh_parse_replaces(tempreplace, FALSE);
         if (NULL != replaces_t) {
             ccb->sipxfercallid = strlib_update(ccb->sipxfercallid, replaces_t->callid);
@@ -6403,7 +6361,7 @@ sip_sm_process_cc_event (cprBuffer_t buf)
             CCSIP_DEBUG_TASK(DEB_F_PREFIX"No free lines available\n", 
                 DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
             cc_free_msg_data(sip_sm_event.u.cc_msg);
-            cprReleaseBuffer(pCCMsg);
+            cpr_free(pCCMsg);
             return SIP_OK;
         }
     } else if (pCCMsg->msg.setup.msg_id == CC_MSG_OPTIONS_ACK) {
@@ -6414,28 +6372,28 @@ sip_sm_process_cc_event (cprBuffer_t buf)
         sip_sm_event.ccb = sip_sm_get_ccb_by_gsm_id(pCCMsg->msg.setup.call_id);
         ccsip_handle_ev_cc_answer_options_request(sip_sm_event.ccb, &sip_sm_event);
         cc_free_msg_data(sip_sm_event.u.cc_msg);
-        cprReleaseBuffer(pCCMsg);
+        cpr_free(pCCMsg);
         return (SIP_OK);
     } else if (ccsip_handle_cc_select_event(&sip_sm_event)) {
         /*
          * The select feature has been handled.
          */
         cc_free_msg_data(sip_sm_event.u.cc_msg);
-        cprReleaseBuffer(pCCMsg);
+        cpr_free(pCCMsg);
         return SIP_OK;
     } else if (ccsip_handle_cc_b2bjoin_event(&sip_sm_event)) {
         /*
          * The b2bjoin feature has been handled.
          */
         cc_free_msg_data(sip_sm_event.u.cc_msg);
-        cprReleaseBuffer(pCCMsg);
+        cpr_free(pCCMsg);
         return SIP_OK;
     } else if (ccsip_handle_cc_hook_event(&sip_sm_event) == TRUE) {
         /*
          * The hook event has been handled.
          */
         cc_free_msg_data(sip_sm_event.u.cc_msg);
-        cprReleaseBuffer(pCCMsg);
+        cpr_free(pCCMsg);
         return SIP_OK;
     } else {
         sip_sm_event.ccb = sip_sm_get_ccb_by_gsm_id(pCCMsg->msg.setup.call_id);
@@ -6459,7 +6417,7 @@ sip_sm_process_cc_event (cprBuffer_t buf)
                 DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname),
                              pCCMsg->msg.setup.call_id);
             cc_free_msg_data(sip_sm_event.u.cc_msg);
-            cprReleaseBuffer(pCCMsg);
+            cpr_free(pCCMsg);
             return SIP_OK;
         }
     }
@@ -6471,7 +6429,7 @@ sip_sm_process_cc_event (cprBuffer_t buf)
          */
         ccsip_handle_ev_cc_answer_audit_request(sip_sm_event.ccb, &sip_sm_event);
         cc_free_msg_data(sip_sm_event.u.cc_msg);
-        cprReleaseBuffer(pCCMsg);
+        cpr_free(pCCMsg);
         return (SIP_OK);
     }
 
@@ -6492,7 +6450,7 @@ sip_sm_process_cc_event (cprBuffer_t buf)
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_sm_get_ccb_next_available()"
                               " returned null.\n", fname);
             cc_free_msg_data(sip_sm_event.u.cc_msg);
-            cprReleaseBuffer(pCCMsg);
+            cpr_free(pCCMsg);
             return SIP_OK;
         }
         /* Set this ccb to always be on the first DN. */
@@ -6516,12 +6474,12 @@ sip_sm_process_cc_event (cprBuffer_t buf)
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"illegal state/event pair: (%d <-- %d)\n",
                           fname, sip_sm_event.ccb->state, sip_sm_event.type);
         cc_free_msg_data(sip_sm_event.u.cc_msg);
-        cprReleaseBuffer(pCCMsg);
+        cpr_free(pCCMsg);
         return SIP_ERROR;
     }
     sip_sm_event.ccb->kfactor_ptr = NULL;
     cc_free_msg_data(sip_sm_event.u.cc_msg);
-    cprReleaseBuffer(pCCMsg);
+    cpr_free(pCCMsg);
     return SIP_OK;
 }
 
@@ -7237,50 +7195,56 @@ sip_sm_init (void)
 {
     line_t          i;
     const char     *fname = "sip_sm_init";
+    int            sdpmode = 0;
 
-     //    ccsip_debug_init();
-    if (ccsip_register_init() == SIP_ERROR) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"registration initialization failed\n", fname);
-        return SIP_ERROR;
-    }
-
-    if (ccsip_info_package_handler_init() == SIP_ERROR) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"info package initialization failed\n", fname);
-        return SIP_ERROR;
-    }
-
-    /*
-     * Allocate timers for CCBs
-     */
-    if (sip_platform_timers_init() == SIP_ERROR) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"timer initialization failed\n", fname);
-        return SIP_ERROR;
-    }
-
-    if (sipTransportInit() != SIP_OK) {
-        return SIP_ERROR;
-    }
-
-    DEF_DEBUG(DEB_F_PREFIX"Disabling mass reg state", DEB_F_PREFIX_ARGS(SIP_REG, fname));
-    for (i = 0; i < MAX_CCBS; i++) {
-        if (i == 0 || i == (MAX_CCBS-1)) {
-            g_disable_mass_reg_debug_print = FALSE;
-        } else {
-            g_disable_mass_reg_debug_print = TRUE;
-        }
-        sip_sm_call_cleanup(&(gGlobInfo.ccbs[i]));
-        if (sip_sm_ccb_init(&(gGlobInfo.ccbs[i]), i, 1, SIP_STATE_IDLE) < 0) {
+	config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
+	
+	if (!sdpmode) {
+	
+        if (ccsip_register_init() == SIP_ERROR) {
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"registration initialization failed\n", fname);
             return SIP_ERROR;
         }
-    }
-    g_disable_mass_reg_debug_print = FALSE;
 
-    /* Initialize all timers */
-    sip_platform_msg_timers_init();
+        if (ccsip_info_package_handler_init() == SIP_ERROR) {
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"info package initialization failed\n", fname);
+            return SIP_ERROR;
+        }
 
-    /* Initialize Subscription Manager */
-    if (sip_subsManager_init() != SIP_OK) {
-        return SIP_ERROR;
+        /*
+         * Allocate timers for CCBs
+         */
+        if (sip_platform_timers_init() == SIP_ERROR) {
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"timer initialization failed\n", fname);
+            return SIP_ERROR;
+        }
+
+        if (sipTransportInit() != SIP_OK) {
+            return SIP_ERROR;
+        }
+
+        DEF_DEBUG(DEB_F_PREFIX"Disabling mass reg state", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+        for (i = 0; i < MAX_CCBS; i++) {
+            if (i == 0 || i == (MAX_CCBS-1)) {
+                g_disable_mass_reg_debug_print = FALSE;
+            } else {
+                g_disable_mass_reg_debug_print = TRUE;
+            }
+            sip_sm_call_cleanup(&(gGlobInfo.ccbs[i]));
+            if (sip_sm_ccb_init(&(gGlobInfo.ccbs[i]), i, 1, SIP_STATE_IDLE) < 0) {
+                return SIP_ERROR;
+            }
+        }
+        g_disable_mass_reg_debug_print = FALSE;
+
+        /* Initialize all timers */
+        sip_platform_msg_timers_init();
+
+        /* Initialize Subscription Manager */
+        if (sip_subsManager_init() != SIP_OK) {
+            return SIP_ERROR;
+        }
+    
     }
 
     /* Initialize SDP Parser */
@@ -8877,10 +8841,9 @@ sip_sm_dequote_string (char *str, int max_size)
     while (((*p == '\"') || (*p == ' ') || (*p == '\t')) && (*p != '\0')) {
         p++;
     }
-    // The following use of strcpy is using over-lapping memory regions
-    // and is undefined by ANSI-C standards.  The appropriate call is to
-    // use memmove(dst, src, size).
-    strncpy(str, p, max_size);
+
+    // The following use of sstrncpy is using over-lapping memory regions
+    sstrncpy(str, p, max_size);
 
     /* Get rid of trailing double quote and white space */
     // should be...
@@ -9631,11 +9594,11 @@ ccsip_handle_active_ev_cc_feature_xfer (ccsipCCB_t *ccb, sipSMEvent_t *event)
             len = semi - pTransferNumberString;
         } else {
             sstrncpy(referto, "sip:", MAX_SIP_URL_LENGTH);
-            len = MAX_SIP_URL_LENGTH - 5; /* 5 = sip: + NUL */
+            len = MAX_SIP_URL_LENGTH - sizeof("sip:");
         }
 
         /* if we have a ;user=, only copy up until that point */
-        strncat(referto, pTransferNumberString, len);
+        sstrncat(referto, pTransferNumberString, len);
 
         domainloc = referto + strlen(referto);
         if ((domainloc - referto) < (MAX_SIP_URL_LENGTH - 1)) {
@@ -9688,7 +9651,7 @@ ccsip_handle_active_ev_cc_feature_xfer (ccsipCCB_t *ccb, sipSMEvent_t *event)
         }
 
         if (semi) {
-            strncat(domainloc, ">", MAX_SIP_URL_LENGTH - strlen(referto) - 1);
+            sstrncat(domainloc, ">", MAX_SIP_URL_LENGTH - strlen(referto));
         }
     }
     /* If the method is direct trasnfer then
@@ -11033,7 +10996,7 @@ ccsip_handle_early_ev_cc_feature (ccsipCCB_t *ccb, sipSMEvent_t *event)
             ccsip_save_local_msg_body(ccb, msg_body);
         }
         (void) sipSPISendUpdate(ccb);
-    } else if ((feature_type == CC_FEATURE_SELECT)) {
+    } else if (feature_type == CC_FEATURE_SELECT) {
     } else {
         CCSIP_DEBUG_STATE(get_debug_string(DEBUG_SIP_FEATURE_UNSUPPORTED),
                           ccb->index, ccb->dn_line, fname);
@@ -11648,7 +11611,7 @@ create_dupCCB (ccsipCCB_t *origCCB, int dup_flags)
     dupCCB->mother_ccb = (void *)origCCB;
 
     dupCCB->flags = origCCB->flags;
-    strcpy(dupCCB->sipCallID, origCCB->sipCallID);
+    sstrncpy(dupCCB->sipCallID, origCCB->sipCallID, MAX_SIP_CALL_ID);
     dupCCB->gsm_id = origCCB->gsm_id;
     dupCCB->con_call_id = origCCB->con_call_id;
     dupCCB->blind_xfer_call_id = origCCB->blind_xfer_call_id;
@@ -11683,8 +11646,8 @@ create_dupCCB (ccsipCCB_t *origCCB, int dup_flags)
         dupCCB->record_route_info = NULL;
         dupCCB->sipCallID[0] = '\0';
         sip_util_get_new_call_id(dupCCB);
-        strncpy(dupCCB->sipCallID, outOfDialogPrefix,
-                strlen(outOfDialogPrefix));
+        sstrncpy(dupCCB->sipCallID, outOfDialogPrefix,
+                sizeof(dupCCB->sipCallID));
         CCSIP_DEBUG_STATE(DEB_F_PREFIX"Using new Call-ID for OutofDialog ccb\n", 
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
     } else {
@@ -11715,7 +11678,7 @@ create_dupCCB (ccsipCCB_t *origCCB, int dup_flags)
     /*
      * Headers
      */
-    strncpy(dupCCB->ReqURI, origCCB->ReqURI, MAX_SIP_URL_LENGTH);
+    sstrncpy(dupCCB->ReqURI, origCCB->ReqURI, sizeof(dupCCB->ReqURI));
     dupCCB->ReqURIOriginal = strlib_update(dupCCB->ReqURIOriginal,
                                            origCCB->ReqURIOriginal);
 

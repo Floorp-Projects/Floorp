@@ -59,4 +59,4 @@ namespace CSF
 		virtual void onAuthenticationStatusChange (AuthenticationStatusEnum::AuthenticationStatus) = 0;
 		virtual void onConnectionStatusChange(ConnectionStatusEnum::ConnectionStatus status) = 0;
 	};
-};
+}

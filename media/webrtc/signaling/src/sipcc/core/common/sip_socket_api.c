@@ -67,11 +67,11 @@ sipSocketSend (cpr_socket_t soc,
          int32_t flags,
          boolean secure)
 {
-   if (secure) {
-      return platSecSocSend (soc, buf, len);
-   } else {
+//   if (secure) {
+//      return platSecSocSend (soc, buf, len);
+//   } else {
       return cprSend(soc, buf, len, flags);
-   }
+//   }
 }
 
 /**
@@ -97,11 +97,11 @@ sipSocketRecv (cpr_socket_t soc,
          int32_t flags,
          boolean secure)
 {
-   if (secure) {
-      return platSecSocRecv (soc, buf, len);
-   } else {
+//   if (secure) {
+//      return platSecSocRecv (soc, buf, len);
+//   } else {
       return cprRecv(soc, buf, len, flags);
-   }
+//   }
 }
 
 /**
@@ -126,10 +126,10 @@ cpr_status_e
 sipSocketClose (cpr_socket_t soc,
                 boolean secure)
 {
-   if (secure) {
-      return platSecSocClose (soc);
-   } else {
+//   if (secure) {
+//      return platSecSocClose (soc);
+//   } else {
       return cprCloseSocket(soc);
-   }
+//   }
 }
 

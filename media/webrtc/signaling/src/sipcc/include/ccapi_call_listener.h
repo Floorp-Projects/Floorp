@@ -52,6 +52,6 @@
  * If the application wishesd to retain a copy it should invoke CCAPI_Call_retainCallInfo() API. Once retained 
  * it can be released by invoking the CCAPI_Call_releaseCallInfo API.
  */
-void CCAPI_CallListener_onCallEvent(ccapi_call_event_e event, cc_call_handle_t handle, cc_callinfo_ref_t info, char* sdp);
+void CCAPI_CallListener_onCallEvent(ccapi_call_event_e event, cc_call_handle_t handle, cc_callinfo_ref_t info);
 
 #endif /* _CCAPIAPI_CALL_LISTENER_H_ */

@@ -65,7 +65,7 @@ typedef struct {
     uint16_t threadId;
     union {
         void *handlePtr;
-        uint32_t handleInt;
+        uint64_t handleInt;
     } u;
 } cpr_thread_t;
 

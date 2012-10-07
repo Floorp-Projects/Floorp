@@ -1113,11 +1113,11 @@ cpr_inet_pton (int af, const char *src, void *dst)
 	/* NOTREACHED */
 }
 
-void cpr_set_sockun_addr(cpr_sockaddr_un_t *addr, const char *name)
+void cpr_set_sockun_addr(cpr_sockaddr_un_t *addr, const char *name, pid_t pid)
 {
-	/* COPIED FROM OTHER PLATFOMR AS A PLACE HOLDER */
-	/* Bind to the local socket */
-	memset(addr, 0, sizeof(cpr_sockaddr_un_t));
-	addr->sun_family = AF_INET;
-	sstrncpy(addr->sun_path, name, sizeof(addr->sun_path));
+  /* COPIED FROM OTHER PLATFORM AS A PLACE HOLDER */
+  /* Bind to the local socket */
+  memset(addr, 0, sizeof(cpr_sockaddr_un_t));
+  addr->sun_family = AF_INET;
+  snprintf((char *) addr->sun_path, sizeof(addr->sun_path), "%s_%d", name, pid);
 }

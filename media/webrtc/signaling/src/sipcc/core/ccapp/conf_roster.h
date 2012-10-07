@@ -77,7 +77,6 @@ cc_call_conference_ref_t             getCallConferenceRef(cc_callinfo_ref_t hand
 cc_call_conference_participant_ref_t getConferenceParticipantRef(cc_callinfo_ref_t handle, cc_participant_ref_t participantHandle);
 void conf_roster_free_call_conference (cc_call_conference_Info_t *confInfo);
 void conf_roster_copy_call_conferance (cc_call_conference_Info_t *dest, cc_call_conference_Info_t * src);
-void decodeInfoXML(const char *content, int length, cc_call_conference_Info_t *info);
 
 #endif
 

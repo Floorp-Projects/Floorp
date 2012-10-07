@@ -995,7 +995,7 @@ kpml_update_dialed_digits (line_t line, callid_t call_id, char digit)
 
                 kpml_data->last_dig_bkspace = TRUE;
 
-                strcpy(kpml_data->kpmlDialed, "bs");
+                sstrncpy(kpml_data->kpmlDialed, "bs", sizeof(kpml_data->kpmlDialed));
 
                 result = KPML_FULLPATTERN;
 
@@ -1888,30 +1888,30 @@ kpml_generate_notify (kpml_data_t *kpml_data, boolean no_body,
 
         memset(peventData, 0, sizeof(ccsip_event_data_t));
 
-        strcpy(peventData->u.kpml_response.version, KPML_VER_STR);
+        sstrncpy(peventData->u.kpml_response.version, KPML_VER_STR, sizeof(peventData->u.kpml_response.version));
 
         snprintf(resp_str, 10, "%d", resp_code);
-        strcpy(peventData->u.kpml_response.code, resp_str);
+        sstrncpy(peventData->u.kpml_response.code, resp_str, sizeof(peventData->u.kpml_response.code));
 
         if (resp_code == KPML_SUCCESS) {
 
-            strncpy(&(peventData->u.kpml_response.digits[0]),
-                    &(kpml_data->kpmlDialed[0]), sizeof(peventData->u.kpml_response.digits)); // was MAX_DIALSTRING
+            sstrncpy(&(peventData->u.kpml_response.digits[0]),
+                    &(kpml_data->kpmlDialed[0]), sizeof(peventData->u.kpml_response.digits));
         }
 
         if (kpml_data->flush == FALSE) {
-            strncpy(peventData->u.kpml_response.forced_flush, "false",
-                    sizeof("false"));
+            sstrncpy(peventData->u.kpml_response.forced_flush, "false",
+                    sizeof(peventData->u.kpml_response.forced_flush));
         } else {
-            strncpy(peventData->u.kpml_response.forced_flush, "true",
-                    sizeof("true"));
+            sstrncpy(peventData->u.kpml_response.forced_flush, "true",
+                    sizeof(peventData->u.kpml_response.forced_flush));
         }
 
-        strncpy(&(peventData->u.kpml_response.tag[0]),
-                &(kpml_data->regex->tag[0]), sizeof(peventData->u.kpml_response.tag)); // was MAX_KPML_TAG_STRING
+        sstrncpy(peventData->u.kpml_response.tag,
+                &(kpml_data->regex->tag[0]), sizeof(peventData->u.kpml_response.tag));
 
-        strncpy(&(peventData->u.kpml_response.text[0]),
-                resp_text, MAX_KPML_TEXT_STRING);
+        sstrncpy(peventData->u.kpml_response.text,
+                resp_text, sizeof(peventData->u.kpml_response.text));
 
         peventData->type = EVENT_DATA_KPML_RESPONSE;
         peventData->next = NULL;

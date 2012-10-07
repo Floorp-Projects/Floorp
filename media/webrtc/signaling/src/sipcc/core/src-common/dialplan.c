@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <errno.h>
+#include <limits.h>
+
 #include "cpr_stdio.h"
 #include "cpr_stdlib.h"
 #include "cpr_string.h"
@@ -724,17 +727,18 @@ AddDialTemplate (const char *pattern, const line_t line,
 {
     struct DialTemplate *pnewtemplate;
     int patternlen = strlen(pattern);
+    int rewritelen = strlen(rewrite);
     int counter;
 
     pnewtemplate = (struct DialTemplate *)
-        cpr_malloc(sizeof(struct DialTemplate) + patternlen + strlen(rewrite) +
+        cpr_malloc(sizeof(struct DialTemplate) + patternlen + rewritelen +
                    2);
     if (pnewtemplate != NULL) {
         pnewtemplate->next = NULL;
         pnewtemplate->pattern = (char *) (pnewtemplate + 1);
-        strcpy(pnewtemplate->pattern, (char *) pattern);
+        sstrncpy(pnewtemplate->pattern, (char *) pattern, patternlen + 1);
         pnewtemplate->rewrite = pnewtemplate->pattern + patternlen + 1;
-        strcpy(pnewtemplate->rewrite, (char *) rewrite);
+        sstrncpy(pnewtemplate->rewrite, (char *) rewrite, rewritelen + 1);
         pnewtemplate->line = line;
         pnewtemplate->timeout = timeout;
         pnewtemplate->userMode = userMode;
@@ -790,25 +794,25 @@ show_dialplan_cmd (int32_t argc, const char *argv[])
     while (pTemp != NULL) {
         switch (pTemp->routeMode) {
         case RouteEmergency:
-            strcpy(rmode, "Emergency");
+            sstrncpy(rmode, "Emergency", sizeof(rmode));
             break;
         case RouteFQDN:
-            strcpy(rmode, "FQDN");
+            sstrncpy(rmode, "FQDN", sizeof(rmode));
             break;
         default:
-            strcpy(rmode, "Default");
+            sstrncpy(rmode, "Default", sizeof(rmode));
             break;
         }
 
         switch (pTemp->userMode) {
         case UserPhone:
-            strcpy(umode, "Phone");
+            sstrncpy(umode, "Phone", sizeof(umode));
             break;
         case UserIP:
-            strcpy(umode, "IP");
+            sstrncpy(umode, "IP", sizeof(umode));
             break;
         default:
-            strcpy(umode, "Unspecified");
+            sstrncpy(umode, "Unspecified", sizeof(umode));
             break;
         }
 
@@ -866,6 +870,8 @@ ParseDialEntry (char **parseptr)
     RouteMode routeMode = RouteDefault;
     vcm_tones_t tone[MAX_TONES];
     ParseDialState state = STATE_ANY;
+    long strtol_result;
+    char *strtol_end;
 
     dialtemplate[0] = '\0';
     rewrite[0] = '\0';
@@ -943,15 +949,26 @@ ParseDialEntry (char **parseptr)
                 break;
 
             case STATE_GOT_LINE_EQ:
-                line = (unsigned char) atoi(buffer);
+                errno = 0;
+                strtol_result = strtol(buffer, &strtol_end, 10);
+
+                if (errno || buffer == strtol_end || strtol_result < 0 || strtol_result > UCHAR_MAX) {
+                    return 1;
+                }
+
+                line = (unsigned char) strtol_result;
                 break;
 
             case STATE_GOT_TIMEOUT_EQ:
-                timeout = atoi(buffer);
+                errno = 0;
+                strtol_result = strtol(buffer, &strtol_end, 10);
 
-                if (timeout < 0) {
+                if (errno || buffer == strtol_end || strtol_result < 0 || strtol_result > INT_MAX) {
                     return 1;
                 }
+
+                timeout = (int) strtol_result;
+
                 break;
 
             case STATE_GOT_USER_EQ:

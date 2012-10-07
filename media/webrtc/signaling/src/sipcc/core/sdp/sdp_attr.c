@@ -37,10 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <errno.h>
+#include <limits.h>
+
+#include "plstr.h"
 #include "sdp_os_defs.h"
 #include "sdp.h"
 #include "sdp_private.h"
 #include "sdp_base64.h"
+#include "mozilla/Assertions.h"
 
 /* Function:    sdp_parse_attribute
  * Description: Figure out the type of attribute and call the appropriate
@@ -72,7 +77,7 @@ sdp_result_e sdp_parse_attribute (sdp_t *sdp_p, u16 level, const char *ptr)
     }
 
     /* Find the attribute type. */
-    ptr = sdp_getnextstrtok(ptr, tmp, ": \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), ": \t", &result);
     if (ptr == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s No attribute type specified, parse failed.",
@@ -202,7 +207,12 @@ sdp_result_e sdp_build_attribute (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
         } else {
             result = sdp_attr[attr_p->type].build_func(sdp_p, attr_p, 
                                                        ptr, (u16)(endbuf_p - *ptr));
-            if ((result == SDP_SUCCESS) && (endbuf_p - *ptr > 0)) {
+            /* If we ran out of buffer space, though, we must error out */
+            MOZ_ASSERT(endbuf_p - *ptr > 0);
+            if (endbuf_p - *ptr <= 0)
+                return (SDP_POTENTIAL_SDP_OVERFLOW);
+
+            if (result == SDP_SUCCESS) {
                 if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
                     SDP_PRINT("%s Built a=%s attribute line", sdp_p->debug_str,
                               sdp_get_attr_name(attr_p->type));
@@ -220,7 +230,7 @@ sdp_result_e sdp_parse_attr_simple_string (sdp_t *sdp_p, sdp_attr_t *attr_p,
 {
     sdp_result_e  result;
 
-    ptr = sdp_getnextstrtok(ptr, attr_p->attr.string_val, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.string_val, sizeof(attr_p->attr.string_val), " \t", &result);
 
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
@@ -355,7 +365,7 @@ sdp_result_e sdp_parse_attr_maxprate (sdp_t *sdp_p, sdp_attr_t *attr_p,
 {
     sdp_result_e  result;
 
-    ptr = sdp_getnextstrtok(ptr, attr_p->attr.string_val, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.string_val, sizeof(attr_p->attr.string_val), " \t", &result);
 
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
@@ -383,6 +393,37 @@ sdp_result_e sdp_parse_attr_maxprate (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 }
 
+/*
+ * sdp_attr_fmtp_no_value
+ * Helper function for sending the warning when a paramet value is
+ * missing.
+ *
+ */
+static void sdp_attr_fmtp_no_value(sdp_t *sdp, char *param_name)
+{
+  if (sdp->debug_flag[SDP_DEBUG_WARNINGS]) {
+    SDP_WARN("%s Warning: No %s value specified for fmtp attribute",
+      sdp->debug_str, param_name);
+  }
+  sdp->conf_p->num_invalid_param++;
+}
+
+/*
+ * sdp_attr_fmtp_invalid_value
+ * Helper function for sending the warning when a parameter value is
+ * incorrect.
+ *
+ */
+
+static void sdp_attr_fmtp_invalid_value(sdp_t *sdp, char *param_name, char* param_value)
+{
+  if (sdp->debug_flag[SDP_DEBUG_WARNINGS]) {
+    SDP_WARN("%s Warning: Invalid %s: %s specified for fmtp attribute",
+      sdp->debug_str, param_name, param_value);
+  }
+  sdp->conf_p->num_invalid_param++;
+}
+
 /* Note:  The fmtp attribute formats currently handled are:
  *        fmtp:<payload type> <event>,<event>...
  *        fmtp:<payload_type> [annexa=yes/no] [annexb=yes/no] [bitrate=<value>]
@@ -406,8 +447,6 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     u32           bmap;
     u8            low_val;
     u8            high_val;
-    u32           bitrate;
-    u32           mode;
     const char    *ptr2;
     const char    *fmtp_ptr;
     sdp_result_e  result1 = SDP_SUCCESS;
@@ -421,51 +460,25 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     tinybool flag=FALSE;
     char         *tok=NULL;
     char         *temp=NULL;
-    u16          qcif=0;
-    u16          cif=0;
-    u16          maxbr=0;
-    u16          sqcif=0;
-    u16          cif4=0;
-    u16          cif16=0;
     u16          custom_x=0;
     u16          custom_y=0;
     u16          custom_mpi=0;
     u16          par_height=0;
     u16          par_width=0;
     u16          cpcf=0;
-    u16          bpp=0;
-    u16          hrd=0;
-    short        profile=SDP_INVALID_VALUE;
-    short        level=SDP_INVALID_VALUE;
     u16          iter=0;
     
-    int16        pack_mode=0;
-    int          level_asymmetry_allowed;
-    u16          interleaving_depth=0;
-    u32          max_don_diff=0;
-
-    u32          max_mbps=0;
-    u32          max_fs=0;
-    u32          max_cpb=0;
-    u32          max_dpb=0;
-    u32          max_br=0;
-    u16          redundant_pic_cap=0;
-
-    int16        parameter_add;
-    u16          annex_k_val=0;
-    u16          annex_n_val=0;
     ulong        l_val = 0;
+    char*        strtok_state;
+    unsigned long strtoul_result;
+    char*        strtoul_end;
 
     /* Find the payload type number. */
     attr_p->attr.fmtp.payload_num = (u16)sdp_getnextnumtok(ptr, &ptr, 
                                                       " \t", &result1);
     if (result1 != SDP_SUCCESS) {
-        if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            SDP_WARN("%s Warning: No payload type specified for "
-                     "fmtp attribute.", sdp_p->debug_str);
-        }
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
+        sdp_attr_fmtp_no_value(sdp_p, "payload type");
+        return SDP_INVALID_PARAMETER;
     }
     fmtp_p = &(attr_p->attr.fmtp);
     fmtp_p->fmtp_format = SDP_FMTP_UNKNOWN_TYPE;
@@ -505,21 +518,17 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     /* Once we move to RFC compliant video codec implementations, the above
     *  patch should be removed */
     while (!done) {
-      fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "= \t", &result1);
+      fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "= \t", &result1);
       if (result1 == SDP_SUCCESS) {
         if (cpr_strncasecmp(tmp, sdp_fmtp_codec_param[1].name,
 	                sdp_fmtp_codec_param[1].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr  = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr  = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No annexb value specified for "
-                                  "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "annexb");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
             tok = tmp;
@@ -535,31 +544,22 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 		fmtp_p->annexb_required = TRUE;
 	        fmtp_p->annexb = FALSE;
 	    } else {
-	        if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invalid annexb value specified for "
-                             "fmtp attribute. Valid values are yes/no", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
+                sdp_attr_fmtp_invalid_value(sdp_p, "annexb", tok);
 		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);
-	    
+                return SDP_INVALID_PARAMETER;
 	    } 
 	    codec_info_found = TRUE;
 	
 	} else if (cpr_strncasecmp(tmp, sdp_fmtp_codec_param[0].name,
 	                       sdp_fmtp_codec_param[0].strlen) == 0) {
 			
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No annexa value specified for "
-                                  "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "annexa");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
@@ -575,289 +575,270 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	        fmtp_p->annexa = FALSE;
 		fmtp_p->annexa_required = TRUE;
 	    } else {
-	        if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invalid annexa value specified for "
-                             "fmtp attribute.Valid values = yes/no", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
+                sdp_attr_fmtp_invalid_value(sdp_p, "annexa", tok);
 		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);
-	    
+                return SDP_INVALID_PARAMETER;
 	    } 
 	    codec_info_found = TRUE;
 	    
 	} else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[2].name,
                                sdp_fmtp_codec_param[2].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No bitrate value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "bitrate");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
             }	  
             tok = tmp;
             tok++;
-            bitrate = atoi(tok);
-            if (bitrate <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild bitrate specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "bitrate", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
             }
-            
+
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->bitrate = bitrate;   
+            fmtp_p->bitrate = (u32) strtoul_result;
             codec_info_found = TRUE;
             
          } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[41].name,
                                sdp_fmtp_codec_param[41].strlen) == 0) {
-            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
             if (result1 != SDP_SUCCESS) {
-                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
                 if (result1 != SDP_SUCCESS) {
-                    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No mode value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "mode");
                     SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
                 }
             }
             tok = tmp;
             tok++;
-            mode = atoi(tok);
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end || strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "mode", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+            }
+
             fmtp_p->fmtp_format = SDP_FMTP_MODE;
-            fmtp_p->mode = mode;
+            fmtp_p->mode = (u32) strtoul_result;
             codec_info_found = TRUE;
 
 	} else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[3].name,
                                sdp_fmtp_codec_param[3].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-               fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
-                if (result1 != SDP_SUCCESS) {  
-                    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No qcif value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
-		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
-                } 
+           fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+            if (result1 != SDP_SUCCESS) {
+                sdp_attr_fmtp_no_value(sdp_p, "qcif");
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
             }
-            tok = tmp;
-	    tok++; 
-            qcif = atoi(tok);
-            if ((qcif < SDP_MIN_CIF_VALUE) || ( qcif > SDP_MAX_CIF_VALUE)) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild qcif: %u specified for "
-                             "fmtp attribute.", sdp_p->debug_str,qcif);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+        }
+        tok = tmp;
+        tok++;
+
+        errno = 0;
+        strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+        if (errno || tok == strtoul_end ||
+            strtoul_result < SDP_MIN_CIF_VALUE || strtoul_result > SDP_MAX_CIF_VALUE) {
+            sdp_attr_fmtp_invalid_value(sdp_p, "qcif", tok);
+            SDP_FREE(temp_ptr);
+            return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-	    fmtp_p->qcif = qcif;   
+	    fmtp_p->qcif = (u16) strtoul_result;
 	    codec_info_found = TRUE;
 	} else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[4].name,
                                sdp_fmtp_codec_param[4].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
-                if (result1 != SDP_SUCCESS) {
-                    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No cif value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
-		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
-                }
-            } 
-            tok = tmp;
-            tok++;
-            cif = atoi(tok);
-            if ((cif < SDP_MIN_CIF_VALUE) || ( cif > SDP_MAX_CIF_VALUE)) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild cif: %u specified for "
-                             "fmtp attribute.", sdp_p->debug_str,cif);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
-	    }
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+            if (result1 != SDP_SUCCESS) {
+                sdp_attr_fmtp_no_value(sdp_p, "cif");
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+            }
+        }
+        tok = tmp;
+        tok++;
+
+        errno = 0;
+        strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+        if (errno || tok == strtoul_end ||
+            strtoul_result < SDP_MIN_CIF_VALUE || strtoul_result > SDP_MAX_CIF_VALUE) {
+            sdp_attr_fmtp_invalid_value(sdp_p, "cif", tok);
+            SDP_FREE(temp_ptr);
+            return SDP_INVALID_PARAMETER;
+	}
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-	    fmtp_p->cif = cif;   
+	    fmtp_p->cif = (u16) strtoul_result;
 	    codec_info_found = TRUE;
 	} else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[5].name,
                                sdp_fmtp_codec_param[5].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-                    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No maxbr value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
-		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
-                }
-            } 
-            tok = tmp;
+                    sdp_attr_fmtp_no_value(sdp_p, "maxbr");
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+            }
+        }
+        tok = tmp;
 	    tok++;
-            maxbr = atoi(tok);
-	    if (maxbr <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild maxbr specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+	    if (errno || tok == strtoul_end ||
+                strtoul_result == 0 || strtoul_result > USHRT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "maxbr", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-	    fmtp_p->maxbr = maxbr;   
+	    fmtp_p->maxbr = (u16) strtoul_result;
 	    codec_info_found = TRUE;
 	} else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[6].name,
                                sdp_fmtp_codec_param[6].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No sqcif value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
-		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
-		}
-	    } 
+                    sdp_attr_fmtp_no_value(sdp_p, "sqcif");
+                    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
+                }
+	    }
 	    tok = tmp;
 	    tok++;
-            sqcif = atoi(tok);
-            if ((sqcif < SDP_MIN_CIF_VALUE) || ( sqcif > SDP_MAX_CIF_VALUE)) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild sqcif specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-                return (SDP_INVALID_PARAMETER);    
-	    }
+
+        errno = 0;
+        strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+        if (errno || tok == strtoul_end ||
+            strtoul_result < SDP_MIN_CIF_VALUE || strtoul_result > SDP_MAX_CIF_VALUE) {
+            sdp_attr_fmtp_invalid_value(sdp_p, "sqcif", tok);
+            SDP_FREE(temp_ptr);
+            return SDP_INVALID_PARAMETER;
+        }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-	    fmtp_p->sqcif = sqcif;   
+	    fmtp_p->sqcif = (u16) strtoul_result;
 	    codec_info_found = TRUE;
 	} else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[7].name,
                                sdp_fmtp_codec_param[7].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No cif4 value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "cif4");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            cif4 = atoi(tok);
-            if ((cif4 < SDP_MIN_CIF_VALUE) || ( cif4 > SDP_MAX_CIF_VALUE)) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild cif4 specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+        errno = 0;
+        strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end ||
+                strtoul_result < SDP_MIN_CIF_VALUE || strtoul_result > SDP_MAX_CIF_VALUE) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "cif4", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-	    fmtp_p->cif4 = cif4;   
+	    fmtp_p->cif4 = (u16) strtoul_result;
 	    codec_info_found = TRUE;
 	} else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[8].name,
                                sdp_fmtp_codec_param[8].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No cif16 value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "cif16");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            cif16 = atoi(tok);
-            if ((cif16 < SDP_MIN_CIF_VALUE) || (cif16 > SDP_MAX_CIF_VALUE)) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild cif16 specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+        errno = 0;
+        strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+        if (errno || tok == strtoul_end ||
+            strtoul_result < SDP_MIN_CIF_VALUE || strtoul_result > SDP_MAX_CIF_VALUE) {
+            sdp_attr_fmtp_invalid_value(sdp_p, "cif16", tok);
+            SDP_FREE(temp_ptr);
+            return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-	    fmtp_p->cif16 = cif16;   
+	    fmtp_p->cif16 = (u16) strtoul_result;
 	    codec_info_found = TRUE;
         } else  if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[9].name,
                                sdp_fmtp_codec_param[9].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No CUSTOM value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "custom");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
-	    tok++; temp=strtok(tok,",");
-            if (temp) {
-	       iter=1;
-               while (temp != NULL) {
-		  if (iter == 1) 
-                     custom_x=atoi(temp);
-		  if (iter == 2) 
-                     custom_y=atoi(temp);
-		  if (iter == 3) 
-                     custom_mpi=atoi(temp);
-                  temp=strtok(NULL,",");
-		  iter++;
-               }
-            } 
-            /* custom x,y and mpi values from tmp */
-	    if ((custom_x <= 0) || (custom_y <=0) || (custom_mpi <=0) ) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild CUSTOM x/y/MPI values specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
+	    tok++; temp=PL_strtok_r(tok, ",", &strtok_state);
+	    iter++;
+        if (temp) {
+            iter=1;
+            while (temp != NULL) {
+                errno = 0;
+                strtoul_result = strtoul(temp, &strtoul_end, 10);
+
+                if (errno || temp == strtoul_end || strtoul_result > USHRT_MAX){
+                    custom_x = custom_y = custom_mpi = 0;
+                    break;
                 }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+                if (iter == 1)
+                    custom_x = (u16) strtoul_result;
+                if (iter == 2)
+                    custom_y = (u16) strtoul_result;
+                if (iter == 3)
+                    custom_mpi = (u16) strtoul_result;
+
+                temp=PL_strtok_r(NULL, ",", &strtok_state);
+                iter++;
+            }
+        }
+
+        /* custom x,y and mpi values from tmp */
+	    if (!custom_x || !custom_y || !custom_mpi) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "x/y/MPI", temp);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
 	    fmtp_p->custom_x = custom_x;
@@ -866,41 +847,42 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	    codec_info_found = TRUE;
         } else  if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[10].name,
                                sdp_fmtp_codec_param[10].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No PAR value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "par");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
-	    tok++; temp=strtok(tok,":");
-            if (temp) {
-	       iter=1;
-               /* get par width and par height for the aspect ratio */
-               while (temp != NULL) {
-		  if (iter == 1) 
-                     par_width=atoi(temp);
-		  else 
-                     par_height=atoi(temp);
-                  temp=strtok(NULL,",");
-		  iter++;
-               }
-	    }
-	    if ((par_width <= 0) || (par_height <=0 )) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild par (height or width) values specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
+	    tok++; temp=PL_strtok_r(tok, ":", &strtok_state);
+        if (temp) {
+            iter=1;
+            /* get par width and par height for the aspect ratio */
+            while (temp != NULL) {
+                errno = 0;
+                strtoul_result = strtoul(temp, &strtoul_end, 10);
+
+                if (errno || temp == strtoul_end || strtoul_result > USHRT_MAX) {
+                    par_width = par_height = 0;
+                    break;
                 }
-                sdp_p->conf_p->num_invalid_param++;
+
+                if (iter == 1)
+                    par_width = (u16) strtoul_result;
+                else
+                    par_height = (u16) strtoul_result;
+
+                temp=PL_strtok_r(NULL, ",", &strtok_state);
+                iter++;
+            }
+        }
+	    if (!par_width || !par_height) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "par_width or par_height", temp);
 		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+                return SDP_INVALID_PARAMETER;
 	    }
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
 	    fmtp_p->par_width = par_width;
@@ -908,157 +890,141 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	    codec_info_found = TRUE;
         } else  if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[11].name,
                                sdp_fmtp_codec_param[11].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No CPCF value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "cpcf");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
-	    tok++; temp=strtok(tok,".");
-            if ( temp != NULL  ) {
-                cpcf=atoi(temp);
+	    tok++; temp=PL_strtok_r(tok, ".", &strtok_state);
+        if ( temp != NULL  ) {
+            errno = 0;
+            strtoul_result = strtoul(temp, &strtoul_end, 10);
+
+            if (errno || temp == strtoul_end || strtoul_result > USHRT_MAX) {
+                cpcf = 0;
+            } else {
+                cpcf = (u16) strtoul_result;
             }
-	    if (cpcf <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild CPCF value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+        }
+
+	    if (!cpcf) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "cpcf", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
             fmtp_p->cpcf = cpcf;
 	    codec_info_found = TRUE;
         } else  if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[12].name,
                                sdp_fmtp_codec_param[12].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No BPP value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "bpp");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            bpp = atoi(tok);
-	    if (bpp <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild BPP value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+        errno = 0;
+        strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+        if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > USHRT_MAX) {
+            sdp_attr_fmtp_invalid_value(sdp_p, "bpp", tok); 
+            SDP_FREE(temp_ptr);
+            return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->bpp = bpp;
+        fmtp_p->bpp = (u16) strtoul_result;
 	    codec_info_found = TRUE;
         } else  if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[13].name,
                                sdp_fmtp_codec_param[13].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No HRD value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "hrd");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            hrd = atoi(tok);
-	    if (hrd <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild HRD value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > USHRT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "hrd", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->hrd = hrd;
+            fmtp_p->hrd = (u16) strtoul_result;
 	    codec_info_found = TRUE;
 	} else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[14].name,
                                sdp_fmtp_codec_param[14].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No PROFILE value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "profile");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            profile = atoi(tok);
-	    if (profile < SDP_MIN_PROFILE_LEVEL_VALUE || 
-                  profile > SDP_MAX_PROFILE_VALUE) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild PROFILE value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end ||
+                strtoul_result > SDP_MAX_PROFILE_VALUE) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "profile", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->profile = profile;
-	    codec_info_found = TRUE; 
+            fmtp_p->profile = (short) strtoul_result;
+	    codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[15].name,
                                sdp_fmtp_codec_param[15].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No LEVEL value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "level");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            level = atoi(tok);
-	    if (level < SDP_MIN_PROFILE_LEVEL_VALUE || 
-                  level > SDP_MAX_LEVEL_VALUE) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild LEVEL value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
-	    }
+
+        errno = 0;
+        strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+	if (errno || tok == strtoul_end ||
+            strtoul_result > SDP_MAX_LEVEL_VALUE) {
+            sdp_attr_fmtp_invalid_value(sdp_p, "level", tok);
+            SDP_FREE(temp_ptr);
+            return SDP_INVALID_PARAMETER;
+	}
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->level = level;
+            fmtp_p->level = (short) strtoul_result;
 	    codec_info_found = TRUE; 
         } if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[16].name,
                                sdp_fmtp_codec_param[16].strlen) == 0) {
@@ -1067,19 +1033,15 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[17].name,
                                sdp_fmtp_codec_param[17].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No profile-level-id value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "profile_level_id");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
-	    } 
+	    }
 	    tok = tmp;
 	    tok++;
   	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
@@ -1087,19 +1049,15 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	    codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[18].name,
                                sdp_fmtp_codec_param[18].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No parameter-sets value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "parameter_sets");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
-	    } 
+	    }
 	    tok = tmp;
 	    tok++;
   	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
@@ -1107,75 +1065,66 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	    codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[19].name,
                                sdp_fmtp_codec_param[19].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No packetization mode value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
-		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    sdp_attr_fmtp_no_value(sdp_p, "packetization_mode");
+                    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
 		}
-	    } 
+	    }
 	    tok = tmp;
 	    tok++;
-            pack_mode = atoi(tok);
-	    if (pack_mode < 0 || pack_mode > 2) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild Pack mode value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-	    } else {
-		fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-		fmtp_p->packetization_mode = pack_mode;
-		codec_info_found = TRUE;
-            }
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+    	    if (errno || tok == strtoul_end || strtoul_result > 2) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "packetization_mode", tok);
+                sdp_p->conf_p->num_invalid_param++;
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+    	    } 
+
+            fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+            fmtp_p->packetization_mode = (int16) strtoul_result;
+            codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[20].name,
                                sdp_fmtp_codec_param[20].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No interleaving depth value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "interleaving_depth");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            interleaving_depth = atoi(tok);
-	    if (interleaving_depth <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild interleaving depth value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+	    if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > USHRT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "interleaving_depth", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->interleaving_depth = interleaving_depth;
+            fmtp_p->interleaving_depth = (u16) strtoul_result;
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[21].name,
                                sdp_fmtp_codec_param[21].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: deint buf req value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "deint_buf");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
@@ -1186,54 +1135,45 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 fmtp_p->flag |= SDP_DEINT_BUF_REQ_FLAG;
 		codec_info_found = TRUE; 
             } else {
-	        if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-		    SDP_WARN("%s Warning: Invaild  deint_buf_req value specified for "
-			     "fmtp attribute.", sdp_p->debug_str);
-		}
+                sdp_attr_fmtp_invalid_value(sdp_p, "deint_buf_req", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
             }
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[22].name,
                                sdp_fmtp_codec_param[22].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No max_don_diff value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "max_don_diff");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            max_don_diff = atoi(tok);
-	    if (max_don_diff <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild max_don_diff value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+	    if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "max_don_diff", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_don_diff = max_don_diff;
+            fmtp_p->max_don_diff = (u32) strtoul_result;
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[23].name,
                                sdp_fmtp_codec_param[23].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No init_buf_time value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "init_buf_time");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
@@ -1244,199 +1184,169 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 fmtp_p->flag |= SDP_INIT_BUF_TIME_FLAG;
 		codec_info_found = TRUE; 
             } else {
-	        if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-		    SDP_WARN("%s Warning: Invaild  init_buf_time value specified for "
-			     "fmtp attribute.", sdp_p->debug_str);
-		}
+                sdp_attr_fmtp_invalid_value(sdp_p, "init_buf_time", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
             }
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[24].name,
                                sdp_fmtp_codec_param[24].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No mx-mbps value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "max_mbps");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            max_mbps = atoi(tok);
-	    if (max_mbps <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild max_mbps value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+	    if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "max_mbps", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
+
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_mbps = max_mbps;
+        fmtp_p->max_mbps = (u32) strtoul_result;
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[25].name,
                                sdp_fmtp_codec_param[25].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No max_fs value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "max_fs");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            max_fs = atoi(tok);
-	    if (max_fs <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild max_fs value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "max_fs", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_fs = max_fs;
+            fmtp_p->max_fs = (u32) strtoul_result;
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[26].name,
                                sdp_fmtp_codec_param[26].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No max_cpb value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "max_cbp");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            max_cpb = atoi(tok);
-	    if (max_cpb <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild max_cpb value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+	    if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "max_cpb", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_cpb = max_cpb;
+            fmtp_p->max_cpb = (u32) strtoul_result;
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[27].name,
                                sdp_fmtp_codec_param[27].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No max dpb value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "max_dpb");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            max_dpb = atoi(tok);
-	    if (max_dpb <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild max_dpb value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+	    if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "max_dpb", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_dpb = max_dpb;
+            fmtp_p->max_dpb = (u32) strtoul_result;
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[28].name,
                                sdp_fmtp_codec_param[28].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No max_br value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "max_br");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            max_br = atoi(tok);
-	    if (max_br <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild max_br value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+	    if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "max_br", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
 	    }
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_br = max_br;
+            fmtp_p->max_br = (u32) strtoul_result;
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[29].name,
                                sdp_fmtp_codec_param[29].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No red pic_cap value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "redundant_pic_cap");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            redundant_pic_cap = atoi(tok);
-	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            if (redundant_pic_cap == 1)
-                fmtp_p->redundant_pic_cap = TRUE;
-            else 
-                fmtp_p->redundant_pic_cap = FALSE;
+
+        errno = 0;
+        strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+        if (!errno && tok != strtoul_end && strtoul_result == 1) {
+            fmtp_p->redundant_pic_cap = TRUE;
+        } else {
+            fmtp_p->redundant_pic_cap = FALSE;
+        }
 
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[30].name,
                                sdp_fmtp_codec_param[30].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No deint_buf_cap value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "deint_buf_cap");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
@@ -1447,24 +1357,19 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 fmtp_p->flag |= SDP_DEINT_BUF_CAP_FLAG;
 		codec_info_found = TRUE; 
             } else {
-	        if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-		    SDP_WARN("%s Warning: Invaild deint_buf_cap value specified for "
-			     "fmtp attribute.", sdp_p->debug_str);
-		}
+                sdp_attr_fmtp_invalid_value(sdp_p, "deint_buf_cap", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
             }
         }  else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[31].name,
                                sdp_fmtp_codec_param[31].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No max_rcmd_nalu_size value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "max_rcmd_nalu_size");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
@@ -1475,43 +1380,41 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 fmtp_p->flag |= SDP_MAX_RCMD_NALU_SIZE_FLAG;
 		codec_info_found = TRUE; 
             } else {
-	        if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-		    SDP_WARN("%s Warning: Invaild  max_rcmd_nalu_size value specified for "
-			     "fmtp attribute.", sdp_p->debug_str);
-		}
+                sdp_attr_fmtp_invalid_value(sdp_p, "max_rcmd_nalu_size", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
             }
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[32].name,
                                sdp_fmtp_codec_param[32].strlen) == 0) {
-	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
 	    if (result1 != SDP_SUCCESS) {
-	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-		    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No parameter add value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "parameter_add");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
 		}
 	    } 
 	    tok = tmp;
 	    tok++;
-            parameter_add = atoi(tok);
-            if (parameter_add < 0 || parameter_add > 1) {
-		if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-		    SDP_WARN("%s Warning: Invalid parameter add value specified for "
-			     "fmtp attribute.", sdp_p->debug_str);
-		}
-            } else {
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end || strtoul_result > 1) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "parameter_add", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+            }
+
 		fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
 
-		if (parameter_add == 1) {
+		if (strtoul_result == 1) {
 		    fmtp_p->parameter_add = TRUE;
 		} else {
 		    fmtp_p->parameter_add = FALSE;
 		}
-            }
+
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[33].name,
                                sdp_fmtp_codec_param[33].strlen) == 0) {
@@ -1540,127 +1443,308 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	    codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[38].name,
                              sdp_fmtp_codec_param[38].strlen) == 0) {
-                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
                 if (result1 != SDP_SUCCESS) {
-                    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+                    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
                     if (result1 != SDP_SUCCESS) {
-                        if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                            SDP_WARN("%s Warning: No Annex K value specified for "
-                                     "fmtp attribute.", sdp_p->debug_str);
-                        }
-                        sdp_p->conf_p->num_invalid_param++;
+                        sdp_attr_fmtp_no_value(sdp_p, "annex_k");
 			SDP_FREE(temp_ptr);
-                        return (SDP_INVALID_PARAMETER);
+                        return SDP_INVALID_PARAMETER;
                     }
                 } 
                 tok = tmp;
                 tok++;
-                annex_k_val = atoi(tok);
-                if (annex_k_val <= 0) {
-                    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: Invaild annex K value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
-		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);    
+
+                errno = 0;
+                strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+                if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > USHRT_MAX) {
+                    sdp_attr_fmtp_invalid_value(sdp_p, "annex_k", tok);
+                    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
                 }
                 fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-                fmtp_p->annex_k_val = annex_k_val;
+                fmtp_p->annex_k_val = (u16) strtoul_result;
                 codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[39].name,
                                sdp_fmtp_codec_param[39].strlen) == 0) {
-            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
             if (result1 != SDP_SUCCESS) {
-                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
                 if (result1 != SDP_SUCCESS) {
-                    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No Annex N value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "annex_n");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
                 }
             } 
             tok = tmp;
             tok++;
-            annex_n_val = atoi(tok);
-            if (annex_n_val <= 0) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild annex N value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-                sdp_p->conf_p->num_invalid_param++;
-		SDP_FREE(temp_ptr);
-                return (SDP_INVALID_PARAMETER);    
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > USHRT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "annex_n", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->annex_n_val = annex_n_val;
+            fmtp_p->annex_n_val = (u16) strtoul_result;
             codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[40].name,
                                sdp_fmtp_codec_param[40].strlen) == 0) {
-            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
             if (result1 != SDP_SUCCESS) {
-                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
                 if (result1 != SDP_SUCCESS) {
-                    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                        SDP_WARN("%s Warning: No Annex P value specified for "
-                                 "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "annex_p");
 		    SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
                 }
             } 
             fmtp_p->annex_p_val_picture_resize = 0;
             fmtp_p->annex_p_val_warp = 0;
             tok = tmp;
-            tok++; temp=strtok(tok,",");
+            tok++; temp=PL_strtok_r(tok, ",", &strtok_state);
             if (temp) {
                 iter=1;
                 while (temp != NULL) {
-                    if (iter == 1) 
-                        fmtp_p->annex_p_val_picture_resize = atoi(temp);
-                    if (iter == 2) 
-                        fmtp_p->annex_p_val_warp = atoi(temp);
-                    temp=strtok(NULL,",");
+                    errno = 0;
+                    strtoul_result = strtoul(temp, &strtoul_end, 10);
+
+                    if (errno || temp == strtoul_end || strtoul_result > USHRT_MAX) {
+                        break;
+                    }
+
+                    if (iter == 1)
+                        fmtp_p->annex_p_val_picture_resize = (u16) strtoul_result;
+                    else if (iter == 2)
+                        fmtp_p->annex_p_val_warp = (u16) strtoul_result;
+
+                    temp=PL_strtok_r(NULL, ",", &strtok_state);
                     iter++;
                 }
-            }            
-            
+            }
+
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
             codec_info_found = TRUE; 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[42].name,
                                sdp_fmtp_codec_param[42].strlen) == 0) {
-            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, "; \t", &result1);
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
             if (result1 != SDP_SUCCESS) {
-                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, " \t", &result1);
+                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
                 if (result1 != SDP_SUCCESS) {
-                    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                            SDP_WARN("%s Warning: No level-asymmetry-allowed specified for "
-                                     "fmtp attribute.", sdp_p->debug_str);
-                    }
-                    sdp_p->conf_p->num_invalid_param++;
+                    sdp_attr_fmtp_no_value(sdp_p, "level_asymmetry_allowed");
                     SDP_FREE(temp_ptr);
-                    return (SDP_INVALID_PARAMETER);
+                    return SDP_INVALID_PARAMETER;
                 }
             } 
             tok = tmp;
             tok++;
-            level_asymmetry_allowed = atoi(tok);
-            if (level_asymmetry_allowed < 0 || level_asymmetry_allowed > SDP_MAX_LEVEL_ASYMMETRY_ALLOWED_VALUE) {
-                if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                    SDP_WARN("%s Warning: Invaild  level-asymmetry-allowed value specified for "
-                             "fmtp attribute.", sdp_p->debug_str);
-                }
-            } else {
-                fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-                fmtp_p->level_asymmetry_allowed = level_asymmetry_allowed;
-                codec_info_found = TRUE;
+
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end || strtoul_result > SDP_MAX_LEVEL_ASYMMETRY_ALLOWED_VALUE) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "level_asymmetry_allowed", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
             }
-        } else if (fmtp_ptr != NULL && *fmtp_ptr == '\n') { 
-            temp=strtok(tmp,";");
+            fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+            fmtp_p->level_asymmetry_allowed = (int) strtoul_result;
+            codec_info_found = TRUE;
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[43].name,
+                                   sdp_fmtp_codec_param[43].strlen) == 0) {
+    	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
+    	    if (result1 != SDP_SUCCESS) {
+                    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+    	        if (result1 != SDP_SUCCESS) {
+                    sdp_attr_fmtp_no_value(sdp_p, "maxaveragebitrate");
+    		    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
+                }
+            }
+            tok = tmp;
+    	    tok++;
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "maxaveragebitrate", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+    	    }
+    	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+    	    fmtp_p->maxaveragebitrate = (u32) strtoul_result;
+    	    codec_info_found = TRUE;
+
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[44].name,
+                                   sdp_fmtp_codec_param[44].strlen) == 0) {
+    	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
+    	    if (result1 != SDP_SUCCESS) {
+                    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+    	        if (result1 != SDP_SUCCESS) {
+                    sdp_attr_fmtp_no_value(sdp_p, "usedtx");
+    		    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
+                }
+            }
+            tok = tmp;
+    	    tok++;
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+    	    if (errno || tok == strtoul_end || strtoul_result > 1) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "usedtx", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+    	    }
+    	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+    	    fmtp_p->usedtx = (u16) strtoul_result;
+    	    codec_info_found = TRUE;
+
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[45].name,
+                                   sdp_fmtp_codec_param[45].strlen) == 0) {
+    	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
+    	    if (result1 != SDP_SUCCESS) {
+                    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+    	        if (result1 != SDP_SUCCESS) {
+                    sdp_attr_fmtp_no_value(sdp_p, "stereo");
+    		    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
+                }
+            }
+            tok = tmp;
+    	    tok++;
+            errno = 0;
+
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+    	    if (errno || tok == strtoul_end || strtoul_result > 1) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "stereo", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+    	    }
+    	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+    	    fmtp_p->stereo = (u16) strtoul_result;
+    	    codec_info_found = TRUE;
+
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[46].name,
+                                   sdp_fmtp_codec_param[46].strlen) == 0) {
+    	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
+    	    if (result1 != SDP_SUCCESS) {
+                    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+    	        if (result1 != SDP_SUCCESS) {
+                    sdp_attr_fmtp_no_value(sdp_p, "useinbandfec");
+    		    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
+                }
+            }
+            tok = tmp;
+    	    tok++;
+            errno = 0;
+
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+    	    if (errno || tok == strtoul_end || strtoul_result > 1) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "useinbandfec", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+    	    }
+    	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+    	    fmtp_p->useinbandfec = (u16) strtoul_result;
+    	    codec_info_found = TRUE;
+
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[47].name,
+                                       sdp_fmtp_codec_param[47].strlen) == 0) {
+        	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
+        	    if (result1 != SDP_SUCCESS) {
+        	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+        	        if (result1 != SDP_SUCCESS) {
+                            sdp_attr_fmtp_no_value(sdp_p, "maxcodedaudiobandwidth");
+                            sdp_p->conf_p->num_invalid_param++;
+        		    SDP_FREE(temp_ptr);
+                            return SDP_INVALID_PARAMETER;
+        		}
+        	    }
+        	    tok = tmp;
+        	    tok++;
+          	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+                    sstrncpy(fmtp_p->maxcodedaudiobandwidth , tok, sizeof(fmtp_p->maxcodedaudiobandwidth));
+        	    codec_info_found = TRUE;
+
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[48].name,
+                                   sdp_fmtp_codec_param[48].strlen) == 0) {
+    	    fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
+    	    if (result1 != SDP_SUCCESS) {
+                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+    	        if (result1 != SDP_SUCCESS) {
+                    sdp_attr_fmtp_no_value(sdp_p, "cbr");
+    		    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
+                }
+            }
+            tok = tmp;
+    	    tok++;
+            errno = 0;
+
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+    	    if (errno || tok == strtoul_end || strtoul_result > 1) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "cbr", tok);
+    		SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+    	    }
+    	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+    	    fmtp_p->cbr = (u16) strtoul_result;
+    	    codec_info_found = TRUE;
+
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[49].name,
+                        sdp_fmtp_codec_param[49].strlen) == 0) {
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
+            if (result1 != SDP_SUCCESS) {
+                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+                if (result1 != SDP_SUCCESS) {
+                    sdp_attr_fmtp_no_value(sdp_p, "streams");
+                    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
+                }
+            }
+            tok = tmp;
+            tok++;
+            errno = 0;
+
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+
+            if (errno || tok == strtoul_end || strtoul_result > INT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "streams", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+            }
+
+            fmtp_p->fmtp_format = SDP_FMTP_DATACHANNEL;
+            fmtp_p->streams = (int) strtoul_result;
+            codec_info_found = TRUE;
+
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[50].name,
+                sdp_fmtp_codec_param[50].strlen) == 0) {
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
+            if (result1 != SDP_SUCCESS) {
+                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+                if (result1 != SDP_SUCCESS) {
+                    sdp_attr_fmtp_no_value(sdp_p, "protocol");
+                    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
+                 }
+             }
+             tok = tmp;
+             tok++;
+             fmtp_p->fmtp_format = SDP_FMTP_DATACHANNEL;
+             sstrncpy(fmtp_p->protocol , tok, sizeof(fmtp_p->protocol));
+			 codec_info_found = TRUE;
+
+        } else if (fmtp_ptr != NULL && *fmtp_ptr == '\n') {
+            temp=PL_strtok_r(tmp, ";", &strtok_state);
             if (temp) {
                 if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
                     SDP_PRINT("%s Annexes are possibly there for this fmtp %s  tmp: %s line\n", 
@@ -1682,7 +1766,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                     if (strchr(temp, 'T') !=NULL) {
                         attr_p->attr.fmtp.annex_t = TRUE;
                     } 
-                    temp=strtok(NULL,";");
+                    temp=PL_strtok_r(NULL, ";", &strtok_state);
                 }
             } /* if (temp) */         
             done = TRUE;
@@ -1779,7 +1863,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     for (i=0; !done; i++) {
         fmtp_p->fmtp_format = SDP_FMTP_NTE;
         /* Look for comma separated events */
-        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, ", \t", &result1);
+        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), ", \t", &result1);
         if (result1 != SDP_SUCCESS) {
             done = TRUE;
             continue;
@@ -2331,6 +2415,93 @@ sdp_result_e sdp_build_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr,
                  semicolon = TRUE;
              }
 	 }
+
+     if (fmtp_p->maxaveragebitrate > 0) {
+	    if (semicolon) {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), ";maxaveragebitrate=%u",attr_p->attr.fmtp.maxaveragebitrate);
+                 semicolon = TRUE;
+	    } else {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "maxaveragebitrate=%u",attr_p->attr.fmtp.maxaveragebitrate);
+                 semicolon = TRUE;
+	    }
+	 }
+
+     if (fmtp_p->usedtx <= 1) {
+	    if (semicolon) {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), ";usedtx=%u",attr_p->attr.fmtp.usedtx);
+                 semicolon = TRUE;
+	    } else {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "usedtx=%u",attr_p->attr.fmtp.usedtx);
+                 semicolon = TRUE;
+	    }
+	 }
+
+     if (fmtp_p->stereo <= 1) {
+	    if (semicolon) {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), ";stereo=%u",attr_p->attr.fmtp.stereo);
+                 semicolon = TRUE;
+	    } else {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "stereo=%u",attr_p->attr.fmtp.stereo);
+                 semicolon = TRUE;
+	    }
+	 }
+
+     if (fmtp_p->useinbandfec <= 1) {
+	    if (semicolon) {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), ";useinbandfec=%u",attr_p->attr.fmtp.useinbandfec);
+                 semicolon = TRUE;
+	    } else {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "useinbandfec=%u",attr_p->attr.fmtp.useinbandfec);
+                 semicolon = TRUE;
+	    }
+	 }
+
+     if (fmtp_p->maxcodedaudiobandwidth[0] != '\0') {
+         if (semicolon) {
+             *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), ";maxcodedaudiobandwidth=%s",
+                              attr_p->attr.fmtp.maxcodedaudiobandwidth);
+             semicolon = TRUE;
+         } else {
+             *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "maxcodedaudiobandwidth=%s",
+                              attr_p->attr.fmtp.maxcodedaudiobandwidth);
+             semicolon = TRUE;
+         }
+     }
+
+     if (fmtp_p->cbr <= 1) {
+	    if (semicolon) {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), ";cbr=%u",attr_p->attr.fmtp.cbr);
+                 semicolon = TRUE;
+	    } else {
+                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "cbr=%u",attr_p->attr.fmtp.cbr);
+                 semicolon = TRUE;
+	    }
+	 }
+
+         break;
+
+      case SDP_FMTP_DATACHANNEL:
+
+          if (fmtp_p->protocol[0] != '\0') {
+              if (semicolon) {
+                  *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), ";protocol=%s",
+                                   attr_p->attr.fmtp.protocol);
+              } else {
+                  *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "protocol=%s",
+                                   attr_p->attr.fmtp.protocol);
+                  semicolon = TRUE;
+              }
+          }
+
+          if (fmtp_p->streams > 0) {
+    	      if (semicolon) {
+                  *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), ";streams=%u",attr_p->attr.fmtp.streams);
+    	      } else {
+                  *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "streams=%u",attr_p->attr.fmtp.streams);
+                  semicolon = TRUE;
+    	      }
+          }
+
          break;
 	 
      case SDP_FMTP_NTE:
@@ -2421,7 +2592,7 @@ sdp_result_e sdp_parse_attr_qos (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char tmp[SDP_MAX_STRING_LEN];
 
     /* Find the strength tag. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No qos strength tag specified.",
@@ -2447,7 +2618,7 @@ sdp_result_e sdp_parse_attr_qos (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the qos direction. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No qos direction specified.",
@@ -2474,7 +2645,7 @@ sdp_result_e sdp_parse_attr_qos (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     /* See if confirm was specified.  Defaults to FALSE. */
     attr_p->attr.qos.confirm = FALSE;
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result == SDP_SUCCESS) {
         if (cpr_strncasecmp(tmp, "confirm", sizeof("confirm")) == 0) {
             attr_p->attr.qos.confirm = TRUE;
@@ -2530,7 +2701,7 @@ sdp_result_e sdp_parse_attr_curr (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char tmp[SDP_MAX_STRING_LEN];
    
     /* Find the curr type tag. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No curr attr type specified.",
@@ -2557,7 +2728,7 @@ sdp_result_e sdp_parse_attr_curr (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
     
     /* Check qos status type */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
      if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No curr attr type specified.",
@@ -2576,7 +2747,7 @@ sdp_result_e sdp_parse_attr_curr (sdp_t *sdp_p, sdp_attr_t *attr_p,
     
 
     /* Find the qos direction. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No qos direction specified.",
@@ -2639,7 +2810,7 @@ sdp_result_e sdp_parse_attr_des (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char tmp[SDP_MAX_STRING_LEN];
    
     /* Find the curr type tag. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No des attr type specified.",
@@ -2666,7 +2837,7 @@ sdp_result_e sdp_parse_attr_des (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
     
     /* Find the strength tag. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No qos strength tag specified.",
@@ -2692,7 +2863,7 @@ sdp_result_e sdp_parse_attr_des (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
     
     /* Check qos status type */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
      if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No des attr type specified.",
@@ -2711,7 +2882,7 @@ sdp_result_e sdp_parse_attr_des (sdp_t *sdp_p, sdp_attr_t *attr_p,
     
 
     /* Find the qos direction. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No qos direction specified.",
@@ -2777,7 +2948,7 @@ sdp_result_e sdp_parse_attr_conf (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char tmp[SDP_MAX_STRING_LEN];
    
     /* Find the curr type tag. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No conf attr type specified.",
@@ -2804,7 +2975,7 @@ sdp_result_e sdp_parse_attr_conf (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
     
     /* Check qos status type */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
      if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No conf attr type specified.",
@@ -2823,7 +2994,7 @@ sdp_result_e sdp_parse_attr_conf (sdp_t *sdp_p, sdp_attr_t *attr_p,
     
 
     /* Find the qos direction. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No qos direction specified.",
@@ -2907,8 +3078,8 @@ sdp_result_e sdp_parse_attr_transport_map (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the encoding name. */
-    ptr = sdp_getnextstrtok(ptr, attr_p->attr.transport_map.encname,"/ \t",
-	                    &result);
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.transport_map.encname, 
+                            sizeof(attr_p->attr.transport_map.encname), "/ \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No encoding name specified in %s "
@@ -3000,7 +3171,7 @@ sdp_result_e sdp_parse_attr_subnet (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char          tmp[SDP_MAX_STRING_LEN];
 
     /* Find the subnet network type. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No network type specified in subnet "
@@ -3032,7 +3203,7 @@ sdp_result_e sdp_parse_attr_subnet (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the subnet address type. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No address type specified in subnet"
@@ -3064,8 +3235,8 @@ sdp_result_e sdp_parse_attr_subnet (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the subnet address.  */
-    ptr = sdp_getnextstrtok(ptr, attr_p->attr.subnet.addr, " \t", 
-                            &result);
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.subnet.addr, 
+                            sizeof(attr_p->attr.subnet.addr), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No subnet address specified in "
@@ -3136,7 +3307,7 @@ sdp_result_e sdp_parse_attr_t38_ratemgmt (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char tmp[SDP_MAX_STRING_LEN];
 
     /* Find the rate mgmt. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No t38 rate management specified.",
@@ -3182,7 +3353,7 @@ sdp_result_e sdp_parse_attr_t38_udpec (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char tmp[SDP_MAX_STRING_LEN];
 
     /* Find the udpec. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No t38 udpEC specified.",
@@ -3320,7 +3491,7 @@ sdp_result_e sdp_parse_attr_cap (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
     
     /* Find the media type. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s No media type specified for %s attribute, "
@@ -3349,7 +3520,7 @@ sdp_result_e sdp_parse_attr_cap (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the transport protocol type. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s No transport protocol type specified, "
@@ -3578,7 +3749,7 @@ sdp_result_e sdp_parse_attr_cpar (sdp_t *sdp_p, sdp_attr_t *attr_p,
     cap_p = cap_attr_p->attr.cap_p;
 
     /* a= is the only token we handle in an X-cpar/cpar attribute. */
-    ptr = sdp_getnextstrtok(ptr, tmp, "= \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), "= \t", &result);
 	     
     if ((result != SDP_SUCCESS) || (tmp[0] != 'a') || (tmp[1] != '\0')) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
@@ -3598,7 +3769,7 @@ sdp_result_e sdp_parse_attr_cpar (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the attribute type. */
-    ptr = sdp_getnextstrtok(ptr, tmp, ": \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), ": \t", &result);
     /*sa_ignore NO_NULL_CHK
      *{ptr is valid since the pointer was checked earlier and the
      * function would have exited if NULL.}
@@ -3703,7 +3874,12 @@ sdp_result_e sdp_build_attr_cpar (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
             result = sdp_attr[attr_p->type].build_func(sdp_p, attr_p, 
                                                        ptr, (u16)(endbuf_p - *ptr));
-            if ((result == SDP_SUCCESS) && (endbuf_p - *ptr > 0)) {
+            /* If we ran out of buffer space, though, we must error out */
+            MOZ_ASSERT(endbuf_p - *ptr > 0);
+            if (endbuf_p - *ptr <= 0)
+                return (SDP_POTENTIAL_SDP_OVERFLOW);
+
+            if (result == SDP_SUCCESS) {
                 if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
                     SDP_PRINT("%s Built %s a=%s attribute line",
                               sdp_p->debug_str, cpar_name,
@@ -3731,7 +3907,7 @@ sdp_result_e sdp_parse_attr_rtr (sdp_t *sdp_p, sdp_attr_t *attr_p,
     /*Default confirm to FALSE. */
     attr_p->attr.rtr.confirm = FALSE;
 
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS){ // No confirm tag specified is not an error
         return (SDP_SUCCESS);
     } else {
@@ -3784,7 +3960,7 @@ sdp_result_e sdp_parse_attr_comediadir (sdp_t *sdp_p, sdp_attr_t *attr_p,
     attr_p->attr.comediadir.src_port = 0;
 
     /* Find the media direction role. */
-    ptr = sdp_getnextstrtok(ptr, tmp, ": \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), ": \t", &result);
 
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
@@ -3823,7 +3999,7 @@ sdp_result_e sdp_parse_attr_comediadir (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     /* Find the connection information if present */
     /* parse to get the nettype */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No network type specified in comediadir "
@@ -3854,7 +4030,7 @@ sdp_result_e sdp_parse_attr_comediadir (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the comedia address type. */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No address type specified in comediadir"
@@ -3885,7 +4061,7 @@ sdp_result_e sdp_parse_attr_comediadir (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     /* Find the conninfo address.  */
     ptr = sdp_getnextstrtok(ptr, attr_p->attr.comediadir.conn_info.conn_addr, 
-                            " \t", &result);
+                            sizeof(attr_p->attr.comediadir.conn_info.conn_addr), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No conninfo address specified in "
@@ -3947,7 +4123,7 @@ sdp_result_e sdp_parse_attr_silencesupp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char tmp[SDP_MAX_STRING_LEN];
 
     /* Find silenceSuppEnable */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
 
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -3989,7 +4165,7 @@ sdp_result_e sdp_parse_attr_silencesupp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find suppPref */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No silenceSupp pref specified.",
@@ -4015,7 +4191,7 @@ sdp_result_e sdp_parse_attr_silencesupp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find sidUse */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No silenceSupp sidUse specified.",
@@ -4310,8 +4486,8 @@ sdp_result_e sdp_parse_attr_x_sidin (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the X-sidin value */
-    ptr = sdp_getnextstrtok(ptr, attr_p->attr.stream_data.x_sidin," \t",
-                            &result);
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.stream_data.x_sidin,
+                            sizeof(attr_p->attr.stream_data.x_sidin), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No Stream Id incoming specified for "
@@ -4352,8 +4528,8 @@ sdp_result_e sdp_parse_attr_x_sidout (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the X-sidout value */
-    ptr = sdp_getnextstrtok(ptr, attr_p->attr.stream_data.x_sidout," \t",
-                            &result);
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.stream_data.x_sidout,
+                            sizeof(attr_p->attr.stream_data.x_sidout), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No Stream Id outgoing specified for "
@@ -4395,8 +4571,8 @@ sdp_result_e sdp_parse_attr_x_confid (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
     
     /* Find the X-confid value */
-    ptr = sdp_getnextstrtok(ptr, attr_p->attr.stream_data.x_confid," \t",
-                            &result);
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.stream_data.x_confid,
+                            sizeof(attr_p->attr.stream_data.x_confid), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No Conf Id incoming specified for "
@@ -4445,7 +4621,7 @@ sdp_result_e sdp_parse_attr_group (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
     
     /* Find the a=group:<attrib> <id1> < id2> ... values */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No group attribute value specified for "
@@ -4540,7 +4716,7 @@ sdp_result_e sdp_parse_attr_source_filter (sdp_t *sdp_p, sdp_attr_t *attr_p,
     attr_p->attr.source_filter.num_src_addr = 0;
 
     /* Find the filter mode */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No src filter attribute value specified for "
@@ -4567,7 +4743,7 @@ sdp_result_e sdp_parse_attr_source_filter (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
     
     /* Find the network type */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
@@ -4590,7 +4766,7 @@ sdp_result_e sdp_parse_attr_source_filter (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
 
     /* Find the address type */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
@@ -4618,7 +4794,7 @@ sdp_result_e sdp_parse_attr_source_filter (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     /* Find the destination addr */
     ptr = sdp_getnextstrtok(ptr, attr_p->attr.source_filter.dest_addr, 
-                            " \t", &result);
+                            sizeof(attr_p->attr.source_filter.dest_addr), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s No filter destination address specified for "
@@ -4631,7 +4807,7 @@ sdp_result_e sdp_parse_attr_source_filter (sdp_t *sdp_p, sdp_attr_t *attr_p,
     /* Find the list of source address to apply the filter */
     for (i = 0; i < SDP_MAX_SRC_ADDR_LIST; i++) {
         ptr = sdp_getnextstrtok(ptr, attr_p->attr.source_filter.src_list[i], 
-                                " \t", &result);
+                                sizeof(attr_p->attr.source_filter.src_list[i]), " \t", &result);
         if (result != SDP_SUCCESS) {
             break;
         }
@@ -4686,7 +4862,7 @@ sdp_result_e sdp_parse_attr_rtcp_unicast (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     memset(tmp, 0, sizeof(tmp));
     
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: No rtcp unicast mode specified for "
@@ -4803,8 +4979,8 @@ sdp_parse_sdescriptions_key_param (const char *str, sdp_attr_t *attr_p,
                                    sdp_t *sdp_p) 
 {
     char            buf[SDP_MAX_STRING_LEN],
-                    base64decodeData[SDP_MAX_STRING_LEN],
-                    *ptr;
+                    base64decodeData[SDP_MAX_STRING_LEN];
+    const char      *ptr;
     sdp_result_e    result = SDP_SUCCESS;
     tinybool        keyFound = FALSE;
     int             len,
@@ -4812,7 +4988,7 @@ sdp_parse_sdescriptions_key_param (const char *str, sdp_attr_t *attr_p,
     		    saltSize;
     base64_result_t status;
   
-    ptr = (char*)str;
+    ptr = str;
     if (cpr_strncasecmp(ptr, "inline:", 7) != 0) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s Could not find keyword inline", sdp_p->debug_str);
@@ -4823,7 +4999,7 @@ sdp_parse_sdescriptions_key_param (const char *str, sdp_attr_t *attr_p,
     
     /* advance pass the inline key word */
     ptr = ptr + 7;
-    ptr = sdp_getnextstrtok(ptr, buf, "|", &result);
+    ptr = sdp_getnextstrtok(ptr, buf, sizeof(buf), "|", &result);
     while (result == SDP_SUCCESS) {
         /* the fist time this loop executes, the key is gotten */
         if (keyFound == FALSE) {
@@ -4874,7 +5050,7 @@ sdp_parse_sdescriptions_key_param (const char *str, sdp_attr_t *attr_p,
        }
        
        /* if we haven't reached the end of line, get the next token */
-       ptr = sdp_getnextstrtok(ptr, buf, "|", &result);
+       ptr = sdp_getnextstrtok(ptr, buf, sizeof(buf), "|", &result);
     }
    
     /* if we didn't find the key, error out */
@@ -5047,7 +5223,7 @@ sdp_parse_attr_srtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     }
     
     /* get the crypto suite */
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s Could not find sdescriptions crypto suite", sdp_p->debug_str);
@@ -5063,7 +5239,7 @@ sdp_parse_attr_srtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	    return (SDP_INVALID_PARAMETER);
     }
    
-    ptr = sdp_getnextstrtok(ptr, tmp, " \t", &result);
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s Could not find sdescriptions key params", sdp_p->debug_str);
@@ -5127,4 +5303,79 @@ sdp_result_e sdp_parse_attr_srtpcontext (sdp_t *sdp_p, sdp_attr_t *attr_p,
    
     return sdp_parse_attr_srtp(sdp_p, attr_p, ptr, 
                                SDP_ATTR_SRTP_CONTEXT);    
+}
+
+
+sdp_result_e sdp_build_attr_from_str (sdp_t *sdp_p, const char *str,
+                                      char **ptr, u16 len)
+{
+    *ptr += snprintf(*ptr, len, "a=%s\r\n", str);
+
+    return (SDP_SUCCESS);
+}
+
+sdp_result_e sdp_build_attr_ice_attr (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                          char **ptr, u16 len) {
+    return sdp_build_attr_from_str(sdp_p, attr_p->attr.ice_attr, ptr, len);
+}
+
+
+sdp_result_e sdp_parse_attr_ice_attr (sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr) {
+    sdp_result_e  result;
+    char tmp[SDP_MAX_STRING_LEN];
+
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), "\r\n", &result);
+    if (result != SDP_SUCCESS){
+
+      if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
+          SDP_WARN("%s Warning: problem parsing ice attribute ", sdp_p->debug_str);
+      }
+      sdp_p->conf_p->num_invalid_param++;
+      return (SDP_INVALID_PARAMETER);
+    }
+    
+    /* We need the attr= here. This is pretty gross. */
+    snprintf(attr_p->attr.ice_attr, sizeof(attr_p->attr.ice_attr),
+      "%s:%s", sdp_get_attr_name(attr_p->type), tmp);
+    
+    if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
+      SDP_PRINT("%s Parsed a=%s, %s", sdp_p->debug_str, sdp_get_attr_name(attr_p->type), tmp);
+    }
+    return (SDP_SUCCESS);
+}
+
+
+sdp_result_e sdp_parse_attr_fingerprint_attr (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                           const char *ptr)
+{
+    sdp_result_e  result;
+
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.string_val, sizeof(attr_p->attr.string_val), "\r\n", &result);
+
+    if (result != SDP_SUCCESS) {
+        if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
+            SDP_WARN("%s Warning: No string token found for %s attribute",
+                     sdp_p->debug_str, sdp_get_attr_name(attr_p->type));
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    } else {
+        if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
+            SDP_PRINT("%s Parsed a=%s, %s", sdp_p->debug_str,
+                      sdp_get_attr_name(attr_p->type),
+                      attr_p->attr.string_val);
+        }
+        return (SDP_SUCCESS);
+    }
+}
+
+sdp_result_e sdp_build_attr_rtcp_mux_attr (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                          char **ptr, u16 len) {
+    return sdp_build_attr_from_str(sdp_p, "rtcp-mux", ptr, len);
+}
+
+sdp_result_e sdp_parse_attr_rtcp_mux_attr (sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr) {
+    attr_p->attr.boolean_val = TRUE;
+
+    return (SDP_SUCCESS);
 }

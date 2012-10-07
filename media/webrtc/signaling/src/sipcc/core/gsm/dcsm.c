@@ -218,7 +218,7 @@ static void dcsm_process_event_to_gsm (void *msg_ptr)
         fim_free_event(msg_ptr);
 
         /* Release buffer too */
-        cprReleaseBuffer(msg_ptr);
+        cpr_free(msg_ptr);
     }
 }
 
@@ -748,7 +748,7 @@ dcsm_shutdown (void)
             fim_free_event(msg_ptr);
 
             /* Release buffer too */
-            cprReleaseBuffer(msg_ptr);
+            cpr_free(msg_ptr);
         }
     }
     

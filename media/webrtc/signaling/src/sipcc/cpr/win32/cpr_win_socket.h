@@ -78,7 +78,7 @@ typedef struct
 
 #define cpr_sun_len(a) sizeof(a)
 
-void cpr_set_sockun_addr(cpr_sockaddr_un_t *addr, const char *name);
+void cpr_set_sockun_addr(cpr_sockaddr_un_t *addr, const char *name, pid_t pid);
 /* End of nokelly's adds */
 
 
@@ -94,7 +94,6 @@ void cpr_set_sockun_addr(cpr_sockaddr_un_t *addr, const char *name);
 #define SOCKET_ERROR            (-1)
 
 typedef unsigned int    u_int;
-typedef u_int  SOCKET;
 #define Socket SOCKET
 typedef int cpr_socklen_t;
 typedef SOCKET cpr_socket_t;

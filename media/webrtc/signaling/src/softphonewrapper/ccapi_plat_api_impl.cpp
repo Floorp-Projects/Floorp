@@ -52,6 +52,7 @@
 #endif
 #endif
 
+#include "cpr_string.h"
 #include "CSFLog.h"
 static const char* logTag = "sipcc";
 
@@ -263,12 +264,12 @@ boolean	platIsNetworkInterfaceChanged() {
 int platGetActiveInactivePhoneLoadName(char * image_a, char * image_b, int len) {
     if (image_a != NULL)
     {
-        csf_strcpy(image_a, len, "image_a");
+        sstrncpy(image_a, "image_a", len);
     }
 
     if (image_b != NULL)
     {
-        csf_strcpy(image_b, len, "image_b");
+        sstrncpy(image_b, "image_b", len);
     }
 
     return 1;
@@ -294,7 +295,7 @@ int platGetPhraseText(int index, char* phrase, unsigned int len) {
         return CC_FAILURE;
     }
 
-    csf_strcpy(phrase, len, "?????");
+    sstrncpy(phrase, "?????", len);
 
     return (int) CC_SUCCESS;
 }
@@ -583,7 +584,7 @@ void platSetSISProtocolVer(cc_uint32_t a, cc_uint32_t b, cc_uint32_t c, char* na
    addtnlSIS = c;
 
    if (name) {
-       csf_strcpy(sis_ver_name, csf_countof(sis_ver_name), name);
+       sstrncpy(sis_ver_name, name, csf_countof(sis_ver_name));
    } else {
        *sis_ver_name = '\0';
    }
@@ -619,7 +620,7 @@ platGetSISProtocolVer (cc_uint32_t *a, cc_uint32_t *b, cc_uint32_t *c, char* nam
 
     if (name != NULL)
     {
-       csf_strcpy(name, CC_MAX_LEN_REQ_SUPP_PARAM_CISCO_SISTAG, sis_ver_name);
+       sstrncpy(name, sis_ver_name, CC_MAX_LEN_REQ_SUPP_PARAM_CISCO_SISTAG);
     }
 
     return;

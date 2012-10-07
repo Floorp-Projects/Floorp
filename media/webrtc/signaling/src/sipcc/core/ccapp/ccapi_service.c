@@ -57,8 +57,8 @@ int sendResetUpdates  = 0;         // default is not to send updates
 
 // Global Variables
 int g_dev_hdl;
-char g_dev_name[64];
-char g_cfg_p[256];
+char g_dev_name[G_DEV_NAME_SIZE];
+char g_cfg_p[G_CFG_P_SIZE];
 int g_compl_cfg;
 
 // Externs
@@ -72,7 +72,7 @@ extern cc_srv_ctrl_cmd_t reset_type;
 boolean isServiceStartRequestPending = FALSE;
 cc_boolean is_action_to_be_deferred(cc_action_t action);
 extern cc_action_t pending_action_type; 
-cc_boolean parse_config_properties (int device_handle, const char *device_name, const char *cfg, int from_memory); 
+//cc_boolean parse_config_properties (int device_handle, const char *device_name, const char *cfg, int from_memory);
 
 
 
@@ -99,9 +99,9 @@ cc_return_t CCAPI_Service_create() {
 cc_return_t CCAPI_Service_destroy() {
     CCAPP_ERROR("CCAPI_Service_destroy - calling CC_Service_destroy \n");
     
-    if (is_action_to_be_deferred(STOP_ACTION) == TRUE) {
-        return CC_SUCCESS; 
-    }
+ //   if (is_action_to_be_deferred(STOP_ACTION) == TRUE) {
+ //       return CC_SUCCESS; 
+ //   }
     // initialize the config to empty
     init_empty_str(g_cfg_p);
     isServiceStartRequestPending = FALSE;
@@ -134,9 +134,15 @@ cc_return_t CCAPI_Service_start() {
  */
 cc_return_t CCAPI_Service_stop() {
 
+	int  sdpmode = 0;
+
     CCAPP_ERROR("CCAPI_Service_stop - calling registration stop \n");
-    if (is_action_to_be_deferred(STOP_ACTION) == TRUE) {
-        return CC_SUCCESS; 
+
+    config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
+    if (!sdpmode) {
+        if (is_action_to_be_deferred(STOP_ACTION) == TRUE) {
+            return CC_SUCCESS;
+        }
     }
     sendResetUpdates  = 0;         // reset to default is not to send updates
     isServiceStartRequestPending = FALSE;
@@ -169,14 +175,12 @@ cc_return_t CCAPI_Service_reregister(int device_handle, const char *device_name,
     }
 
     g_dev_hdl = device_handle;
-    strncpy(g_dev_name, device_name, 64);
-    strncpy(g_cfg_p, cfg, 256);
+    sstrncpy(g_dev_name, device_name, sizeof(g_dev_name));
+    sstrncpy(g_cfg_p, cfg, sizeof(g_cfg_p));
     CCAPP_DEBUG("CCAPI_Service_reregister - devce name [%s], cfg [%s] \n", g_dev_name, g_cfg_p);
     g_compl_cfg  = complete_config;
 
-    if (parse_config_properties(g_dev_hdl, g_dev_name, g_cfg_p, g_compl_cfg) == TRUE) {
         registration_processEvent(EV_CC_RE_REGISTER);
-    }
     
     return (CC_SUCCESS);
 }

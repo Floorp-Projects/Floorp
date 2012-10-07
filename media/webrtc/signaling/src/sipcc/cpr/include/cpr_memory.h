@@ -42,80 +42,10 @@
 
 #include "cpr_types.h"
 
-__BEGIN_DECLS
-
-/**
- * Define handles for buffer region, pools and actual buffers
- */
+#ifdef SIP_OS_WINDOWS
+#include "../win32/cpr_win_defines.h"
+#endif
+ 
 typedef void *cprBuffer_t;
-
-#if defined SIP_OS_LINUX
-#include "../linux/cpr_linux_memory.h"
-#elif defined SIP_OS_WINDOWS
-#include "../win32/cpr_win_memory.h"
-#elif defined SIP_OS_OSX
-#include "../darwin/cpr_darwin_memory.h"
-#endif
-
-/**
- * @brief Retrieve a buffer. 
- *
- * The cprGetBuffer function retrieves a single buffer from the heap. 
- * The buffer is guaranteed to be at least the size passed in, but it may be
- * larger. CPR does not clean the buffers when they are returned so it is highly
- * recommended that the application set all values in the buffer to some default
- * values before using it.
- *
- * @param[in] size          requested size of the buffer in bytes
- *
- * @return              Handle to a buffer or NULL if the get failed
- *
- * @note                The buffer may be larger than the size requested.
- * @note                The buffer will come from the system's heap
- */
-#if defined SIP_OS_WINDOWS
-#define cprGetBuffer(y)  cpr_calloc(1,y)
-#else
-void *cprGetBuffer(uint32_t size);
-#endif
-
-/**
- * cprReleaseBuffer
- *
- * @brief Returns a buffer to the heap.
- * CPR keeps track of this information so the application only
- * needs to pass a pointer to the buffer to return.
- *
- * @param[in] bufferPtr  pointer to the buffer to return
- *
- * @return        none
- */
-void cprReleaseBuffer(void *bufferPtr);
-
-/**
- * @brief Given a msg buffer, returns a pointer to the buffer's header
- *
- * The cprGetSysHeader function retrieves the system header buffer for the
- * passed in message buffer.
- *
- * @param[in] bufferPtr  pointer to the buffer whose sysHdr to return
- *
- * @return        Abstract pointer to the msg buffer's system header
- *                or #NULL if failure
- */
-void *cprGetSysHeader(void *bufferPtr);
-
-/**
- * @brief Called when the application is done with this system header
- *
- * The cprReleaseSysHeader function returns the system header buffer to the
- * system.
- * @param[in] sysHdrPtr  pointer to the sysHdr to be released
- *
- * @return        none
- */
-void cprReleaseSysHeader(void *sysHdrPtr);
-
-__END_DECLS
 
 #endif

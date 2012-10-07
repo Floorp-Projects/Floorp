@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <errno.h>
+
 #include "cpr_types.h"
 #include "cpr_memory.h"
 #include "cpr_timers.h"
@@ -153,6 +155,8 @@ handle_range_selector (char *str, unsigned long *bitmask)
     unsigned long temp_bitmask = 0;
     char digit[2];
     kpml_status_type_t rc = KPML_STATUS_OK;
+    long strtol_result;
+    char *strtol_end;
 
     digit[1] = NUL;
     if (!str || !bitmask) {
@@ -167,14 +171,32 @@ handle_range_selector (char *str, unsigned long *bitmask)
     /* skip initial '[' */
     char_ptr++;
     digit[0] = *char_ptr;
-    first_digit = atoi(digit);
+
+    errno = 0;
+    strtol_result = strtol(digit, &strtol_end, 10);
+
+    if (errno || digit == strtol_end) {
+        KPML_ERROR(KPML_F_PREFIX"digit parse error: %s", __FUNCTION__, digit);
+        return (KPML_ERROR_INTERNAL);
+    }
+
+    first_digit = (int) strtol_result;
 
     /* now check for '-' */
     char_ptr++;
     if (*char_ptr == '-') {
         char_ptr++;
         digit[0] = *char_ptr;
-        last_digit = atoi(digit);
+
+        errno = 0;
+        strtol_result = strtol(digit, &strtol_end, 10);
+
+        if (errno || digit == strtol_end) {
+            KPML_ERROR(KPML_F_PREFIX"digit parse error: %s", __FUNCTION__, digit);
+            return (KPML_ERROR_INTERNAL);
+        }
+
+        last_digit = (int) strtol_result;
 
         /* make sure there is only 1 char after '-' */
         char_ptr++;

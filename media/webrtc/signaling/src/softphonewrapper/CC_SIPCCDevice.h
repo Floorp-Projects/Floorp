@@ -55,10 +55,7 @@ namespace CSF
 
         CC_SIPCCDevice (cc_device_handle_t aDeviceHandle);
 
-        bool checkXMLPhoneConfigValidity (bool isXMLString, const std::string & configFileNameOrXMLString);
-
     public:
-        static CC_DevicePtr createAndValidateXML (bool isXMLString, const std::string & configFileNameOrXMLString);
 
         static CC_DevicePtr createDevice ();
 

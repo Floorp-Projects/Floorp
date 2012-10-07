@@ -75,7 +75,7 @@ namespace CSF
 
            @return true or false.
          */
-        virtual bool originateCall (cc_sdp_direction_t video_pref, const std::string & digits, char* sdp, int audioPort, int videoPort) = 0;
+        virtual bool originateCall (cc_sdp_direction_t video_pref, const std::string & digits) = 0;
 
         /**
            Use this function to answer an incoming call.
@@ -299,9 +299,27 @@ namespace CSF
            @param [in] digits - digits to be dialed. can be empty then this API simply goes offhook
            @param [in] ip address - the ip address of the peer to call
 
-           @return true or false.
-         */
-        virtual bool originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip) = 0;
+           @return void
+          */
+        virtual void originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip) = 0;
 
+        virtual void createOffer (const std::string & hints) = 0;
+
+        virtual void createAnswer(const std::string & hints, const std::string & offersdp) = 0;
+
+        virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp) = 0;
+
+        virtual void setRemoteDescription(cc_jsep_action_t action, const std::string & sdp) = 0;
+
+        virtual void setPeerConnection(const std::string& handle) = 0;
+
+        virtual void addStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) = 0;
+
+        virtual void removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) = 0;
+
+        virtual const std::string& getPeerConnection() const = 0;
+
+        virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level) = 0;
     };
-};
+}
+

@@ -62,7 +62,9 @@ static const char* logTag = "CC_SIPCCCall";
 CSF_IMPLEMENT_WRAP(CC_SIPCCCall, cc_call_handle_t);
 
 CC_SIPCCCall::CC_SIPCCCall (cc_call_handle_t aCallHandle) : 
-            callHandle(aCallHandle),  pMediaData(new CC_SIPCCCallMediaData(NULL,false,false,-1))
+            callHandle(aCallHandle),  
+            pMediaData(new CC_SIPCCCallMediaData(NULL,false,false,-1)),
+            m_lock("CC_SIPCCCall")
 {
     CSFLogInfoS( logTag, "Creating  CC_SIPCCCall " << callHandle );
     
@@ -167,9 +169,9 @@ CC_CallInfoPtr CC_SIPCCCall::getCallInfo ()
 //              down to pSIPCC to originate a call, end a call etc.
 //
 
-bool CC_SIPCCCall::originateCall (cc_sdp_direction_t video_pref, const string & digits, char* ipaddress, int audioPort, int videoPort)
+bool CC_SIPCCCall::originateCall (cc_sdp_direction_t video_pref, const string & digits)
 {
-    return (CCAPI_Call_originateCall(callHandle, video_pref, digits.c_str(), ipaddress, audioPort, videoPort) == CC_SUCCESS);
+    return (CCAPI_Call_originateCall(callHandle, video_pref, digits.c_str()) == CC_SUCCESS);
 }
 
 bool CC_SIPCCCall::answerCall (cc_sdp_direction_t video_pref)
@@ -195,7 +197,7 @@ bool CC_SIPCCCall::endCall()
 bool CC_SIPCCCall::sendDigit (cc_digit_t digit)
 {
 	AudioTermination * pAudio = VcmSIPCCBinding::getAudioTermination();
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
 
     // Convert public digit (as enum or char) to RFC2833 form.
 	int digitId = -1;
@@ -376,7 +378,7 @@ bool CC_SIPCCCall::setAudioMute(bool mute)
 	pMediaData->audioMuteState = mute;
 	// we need to set the mute status of all audio streams in the map
 	{
-		AutoLock lock(m_lock);
+		mozilla::MutexAutoLock lock(m_lock);
 		for (StreamMapType::iterator entry =  pMediaData->streamMap.begin(); entry !=  pMediaData->streamMap.end(); entry++)
 	    {
 			if (entry->second.isVideo == false)
@@ -410,7 +412,7 @@ bool CC_SIPCCCall::setVideoMute(bool mute)
 	pMediaData->videoMuteState = mute;
 	// we need to set the mute status of all audio streams in the map
 	{
-		AutoLock lock(m_lock);
+		mozilla::MutexAutoLock lock(m_lock);
 		for (StreamMapType::iterator entry =  pMediaData->streamMap.begin(); entry !=  pMediaData->streamMap.end(); entry++)
 	    {
 			if (entry->second.isVideo == true)
@@ -442,7 +444,7 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
 
 	CSFLogInfoS( logTag, "addStream: " << streamId << "video=" << isVideo << "callhandle=" << callHandle);
 	{
-		AutoLock lock(m_lock);
+		mozilla::MutexAutoLock lock(m_lock);
 		pMediaData->streamMap[streamId].isVideo = isVideo;
 	}
 	// The new stream needs to be given any properties that the call has for it. 
@@ -507,7 +509,7 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
 
 void CC_SIPCCCall::removeStream(int streamId)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
 
 	if ( pMediaData->streamMap.erase(streamId) != 1)
 	{
@@ -521,7 +523,7 @@ bool CC_SIPCCCall::setVolume(int volume)
     
     AudioTermination * pAudio = VcmSIPCCBinding::getAudioTermination();
 	{
-    	AutoLock lock(m_lock);
+    	mozilla::MutexAutoLock lock(m_lock);
 		for (StreamMapType::iterator entry =  pMediaData->streamMap.begin(); entry !=  pMediaData->streamMap.end(); entry++)
 	    {
 			if (entry->second.isVideo == false)
@@ -552,10 +554,55 @@ CC_SIPCCCallMediaDataPtr CC_SIPCCCall::getMediaData()
     return  pMediaData;
 }
 
-bool CC_SIPCCCall::originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip)
+void CC_SIPCCCall::originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip)
 {
-	char sdpIP[] = "empty SDP string";
 	CCAPI_Config_set_server_address(ip.c_str());
-	return (CCAPI_Call_originateCall(callHandle, video_pref, digits.c_str(), sdpIP, 0, 0) == CC_SUCCESS);
+    CCAPI_Call_originateCall(callHandle, video_pref, digits.c_str());
+}
+ 
+/*
+ * This method works asynchronously, there will be an onCallEvent with the resulting SDP
+ * When Constraints are implemented the Audio and Video port will not be a parameter to CCAPI_CreateAnswer
+ */
+void CC_SIPCCCall::createOffer (const std::string& hints) {
+	CCAPI_CreateOffer(callHandle);
 }
 
+/*
+ * This method works asynchronously, there will be an onCallEvent with the resulting SDP
+ */
+void CC_SIPCCCall::createAnswer (const std::string & hints, const std::string & offersdp) {
+	CCAPI_CreateAnswer(callHandle, offersdp.c_str());
+}
+
+void CC_SIPCCCall::setLocalDescription(cc_jsep_action_t action, const std::string & sdp) {
+	CCAPI_SetLocalDescription(callHandle, action, sdp.c_str());
+}
+        
+void CC_SIPCCCall::setRemoteDescription(cc_jsep_action_t action, const std::string & sdp) {
+	CCAPI_SetRemoteDescription(callHandle, action, sdp.c_str());
+}
+
+void CC_SIPCCCall::setPeerConnection(const std::string& handle)
+{
+  CSFLogDebug(logTag, "setPeerConnection");
+  
+  peerconnection = handle;  // Cache this here. we need it to make the CC_SIPCCCallInfo
+  CCAPI_SetPeerConnection(callHandle, handle.c_str());
+}
+
+const std::string& CC_SIPCCCall::getPeerConnection() const {
+  return peerconnection;
+}
+
+void CC_SIPCCCall::addStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) {
+  CCAPI_AddStream(callHandle, stream_id, track_id, media_type);
+}
+
+void CC_SIPCCCall::removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) {
+  CCAPI_RemoveStream(callHandle, stream_id, track_id, media_type);
+}
+
+void CC_SIPCCCall::addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level) {
+  CCAPI_AddICECandidate(callHandle, candidate.c_str(), mid.c_str(), (cc_level_t) level);
+}

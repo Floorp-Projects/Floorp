@@ -108,8 +108,10 @@ PMH_EXTERN cc_sdp_t *sipsdp_create_from_buf(char *buf, uint32_t nbytes,
 #define SIPSDP_ATTR_ENCNAME_ILBC      "iLBC"
 #define SIPSDP_ATTR_ENCNAME_H263v2    "H263-1998"
 #define SIPSDP_ATTR_ENCNAME_H264      "H264"
+#define SIPSDP_ATTR_ENCNAME_VP8       "VP8"
 #define SIPSDP_ATTR_ENCNAME_L16_256K  "L16"
 #define SIPSDP_ATTR_ENCNAME_ISAC      "ISAC"
+#define SIPSDP_ATTR_ENCNAME_OPUS      "opus"
 
 /* Possible encoding names for DTMF tones dynamic payload types */
 #define SIPSDP_ATTR_ENCNAME_TEL_EVENT "telephone-event"
@@ -148,7 +150,11 @@ PMH_EXTERN cc_sdp_t *sipsdp_create_from_buf(char *buf, uint32_t nbytes,
 #define RTPMAP_VIDEO_CLOCKRATE  90000
 #define RTPMAP_L16_CLOCKRATE  16000
 #define RTPMAP_ISAC_CLOCKRATE  16000
-
+#define RTPMAP_OPUS_CLOCKRATE      48000
+#define FMTP_MAX_AVERAGE_BIT_RATE  40000
+#define ATTR_PTIME                 20
+#define ATTR_MAXPTIME              120
+#define WEBRTC_DATA_CHANNEL_PROT   "webrtc-datachannel"
 
 #define SIPSDP_CONTENT_TYPE         "application/sdp"
 

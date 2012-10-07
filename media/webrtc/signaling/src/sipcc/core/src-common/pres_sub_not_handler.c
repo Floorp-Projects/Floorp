@@ -761,7 +761,7 @@ notify_ind_cb (ccsip_sub_not_data_t * msg_data)
          * if blf state is ALERTING,
          * play blf alerting audible tone.
          */
-        if ((blf_state == CC_SIP_BLF_ALERTING)) {
+        if (blf_state == CC_SIP_BLF_ALERTING) {
             /*
              * Post an event to GSM to play alerting tone.
              */
@@ -888,7 +888,7 @@ boolean apply_presence_state_to_matching_feature_keys (char *presentity,
              * if blf state is ALERTING,
              * play blf alerting audible tone.
              */
-            if ((blf_state == CC_SIP_BLF_ALERTING)) {
+            if (blf_state == CC_SIP_BLF_ALERTING) {
                 /*
                  * Post an event to GSM to play alerting tone.
                  */
@@ -1395,7 +1395,7 @@ void pres_unsolicited_notify_ind (ccsip_sub_not_data_t *msg_data)
 
     rc = MiscAppTaskSendMsg(SUB_MSG_PRESENCE_UNSOLICITED_NOTIFY, pmsg, sizeof(*pmsg));
     if (rc == CPR_FAILURE) {
-        cprReleaseBuffer(pmsg);
+        cpr_free(pmsg);
     }
 
 }

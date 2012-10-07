@@ -86,19 +86,19 @@ sub_send_msg (cprBuffer_t buf, uint32_t cmd, uint16_t len, cc_srcs_t dst_id)
     case CC_SRC_GSM:
         rc = gsm_send_msg(cmd, buf, len);
         if (rc == CPR_FAILURE) {
-            cprReleaseBuffer(buf);
+            cpr_free(buf);
         }
         break;
     case CC_SRC_SIP:
         rc = SIPTaskSendMsg(cmd, buf, len, NULL);
         if (rc == CPR_FAILURE) {
-            cprReleaseBuffer(buf);
+            cpr_free(buf);
         }
         break;
     case CC_SRC_MISC_APP:
         rc = MiscAppTaskSendMsg(cmd, buf, len);
         if (rc == CPR_FAILURE) {
-            cprReleaseBuffer(buf);
+            cpr_free(buf);
         }
         break;
     default:

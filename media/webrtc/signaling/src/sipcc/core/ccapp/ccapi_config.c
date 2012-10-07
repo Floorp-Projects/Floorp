@@ -51,50 +51,14 @@
 #include "ccapi_service.h"
 #include "util_string.h"
 
-extern int g_dev_hdl;
-extern char g_dev_name[];
-extern char g_cfg_p[];
-extern int g_compl_cfg;
 extern boolean apply_config;
 extern cc_apply_config_result_t apply_config_result;
-cc_boolean parse_config_properties (int device_handle, const char *device_name, const char *cfg, int from_memory);
 cc_boolean parse_setup_properties (int device_handle, const char *device_name, const char *sipUser, const char *sipPassword, const char *sipDomain);
 
 /**
  * 
  * @return
  */
-void CCAPI_Config_response(int device_handle, const char *device_name, const char *cfg, int from_memory) {
-    static const char fname[] = "CCAPI_Config_response";
-    cc_apply_config_result_t config_compare_result;
-
-    if (is_empty_str((char*)cfg)) {
-        CCAPP_ERROR(DEB_F_PREFIX" invalid config file=%x\n", DEB_F_PREFIX_ARGS(CC_API, fname),cfg);
-        return;
-    }
-
-    g_dev_hdl = device_handle;
-    strncpy(g_dev_name, device_name, 64);
-    strncpy(g_cfg_p, cfg, 256);
-    g_compl_cfg  = from_memory;
-    
-    if (is_phone_registered() == FALSE) {
-        DEF_DEBUG(DEB_F_PREFIX" Phone not registered. do parse and register.\n", DEB_F_PREFIX_ARGS(CC_API, fname));
-        if (parse_config_properties(device_handle, device_name, cfg, from_memory) == TRUE) {
-            registration_processEvent(EV_CC_CONFIG_RECEIVED);
-        }
-        return;
-    }
-    config_compare_result = CCAPI_Config_compareProperties(device_handle, cfg, from_memory);
-    if (config_compare_result == APPLY_DYNAMICALLY) {
-        DEF_DEBUG(DEB_F_PREFIX" Phone is registered. Changes can be applied dynamically.\n", DEB_F_PREFIX_ARGS(CC_API, fname));
-        parse_config_properties(device_handle, device_name, cfg, from_memory);
-    } else {
-        DEF_DEBUG(DEB_F_PREFIX" Phone is registered. config changes need re-register.\n", DEB_F_PREFIX_ARGS(CC_API, fname));
-        CCAPI_Service_reregister(device_handle, device_name, cfg, from_memory);
-    }
-}
-
 
 void CCAPI_Start_response(int device_handle, const char *device_name, const char *sipUser, const char *sipPassword, const char *sipDomain) {
     static const char fname[] = "CCAPI_Start_response";
@@ -105,7 +69,7 @@ void CCAPI_Start_response(int device_handle, const char *device_name, const char
     }
 
     g_dev_hdl = device_handle;
-    strncpy(g_dev_name, device_name, 64);
+    sstrncpy(g_dev_name, device_name, sizeof(g_dev_name));
 
     if (is_phone_registered() == FALSE) {
 
@@ -116,20 +80,6 @@ void CCAPI_Start_response(int device_handle, const char *device_name, const char
     }
 
  }
-
-
-
-cc_boolean parse_config_properties (int device_handle, const char *device_name, const char *cfg, int from_memory) {
-    CC_Config_setStringValue(CFGID_DEVICE_NAME, device_name);
-    if (config_parser_main((char *) cfg, from_memory) != 0) {
-        configParserError();
-        return FALSE;
-    }
-    ccsnap_device_init();
-    ccsnap_line_init();
-    ccsnap_gen_deviceEvent(CCAPI_DEVICE_EV_CONFIG_CHANGED, CC_DEVICE_ID);
-    return TRUE;
-}
 
 /*  New Function
     Register without using config file downloaded from cucm
@@ -177,49 +127,17 @@ const char* CCAPI_Config_get_version() {
 	return config_get_version();
 }
 
-cc_boolean CCAPI_Config_checkValidity (int device_handle, const char *cfg_file_name, int from_memory) {
-    CCAPP_ERROR("CCAPI_Config_checkValidity - check config file validity \n");
-    return is_config_valid((char *)cfg_file_name, from_memory);
-}
-
 cc_boolean CCAPI_Config_set_p2p_mode(const cc_boolean is_p2p) {
 	config_setup_p2p_mode(is_p2p);
 	return TRUE;
 }
 
-cc_boolean CCAPI_Config_set_roap_proxy_mode(const cc_boolean is_roap_proxy) {
-	config_setup_roap_proxy_mode(is_roap_proxy);
+cc_boolean CCAPI_Config_set_sdp_mode(const cc_boolean is_sdp) {
+	config_setup_sdp_mode(is_sdp);
 	return TRUE;
 }
 
-cc_boolean CCAPI_Config_set_roap_client_mode(const cc_boolean is_roap_client) {
-	config_setup_roap_client_mode(is_roap_client);
+cc_boolean CCAPI_Config_set_avp_mode(const cc_boolean is_rtpsavpf) {
+	config_setup_avp_mode(is_rtpsavpf);
 	return TRUE;
-}
-
-/**
- * 
- * @return
- */
-int CCAPI_Config_compareProperties (int device_handle, const char *cfg_file_name, int from_memory) {
-    cc_apply_config_result_t result; 
-    int val;
-
-    DEF_DEBUG("CCAPI_Config_compareProperties - compare config files\n");
-    apply_config = TRUE;
-    apply_config_result = APPLY_DYNAMICALLY;  // initialization
-
-    val = config_parser_main((char *)cfg_file_name, from_memory);
-
-    if (val != 0) {
-        configParserError();
-        result =  APPLY_CONFIG_NONE;
-    } else {
-        result = apply_config_result;
-    }
-
-    DEF_DEBUG("apply_config_flag=%d  apply_config_result(0-dynamic, 1-restart)=%d", apply_config, apply_config_result);
-    apply_config_result = APPLY_CONFIG_NONE;
-    apply_config = FALSE;
-    return result;
 }

@@ -95,6 +95,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include "cpr_linux_timers.h"
+#include "platform_api.h"
 
 /*--------------------------------------------------------------------------
  * Local definitions
@@ -1149,6 +1150,10 @@ cprRC_t start_timer_service_loop (void)
     boolean use_timeout;
 
 
+    /* initialize server and client addresses used for sending.*/
+    cpr_set_sockun_addr((cpr_sockaddr_un_t *) &tmr_serv_addr,   SERVER_PATH, getpid());
+    cpr_set_sockun_addr((cpr_sockaddr_un_t *) &tmr_client_addr, CLIENT_PATH, getpid());
+    
     /*
      * init mutex and cond var.
      * these are used for making API synchronous etc..
@@ -1168,7 +1173,7 @@ cprRC_t start_timer_service_loop (void)
     }
 
     /* bind service name to the socket */
-    if (local_bind(client_sock,CLIENT_PATH) < 0) {
+    if (local_bind(client_sock,tmr_client_addr.sun_path) < 0) {
         CPR_ERROR("%s:could not bind local socket:error=%s\n", fname, strerror(errno));
         (void) close(client_sock);
         client_sock = INVALID_SOCKET;
@@ -1185,7 +1190,7 @@ cprRC_t start_timer_service_loop (void)
         return CPR_FAILURE;
     }
 
-    if (local_bind(serv_sock, SERVER_PATH) < 0) {
+    if (local_bind(serv_sock, tmr_serv_addr.sun_path) < 0) {
         CPR_ERROR("%s:could not bind serv socket:error=%s\n", fname, strerror(errno));
         (void) close(serv_sock);
         (void) close(client_sock);
@@ -1193,14 +1198,6 @@ cprRC_t start_timer_service_loop (void)
         return CPR_FAILURE;
     }
 
-    /* initialize server and client addresses used for sending.*/
-    bzero(&tmr_serv_addr, sizeof(tmr_serv_addr));
-    tmr_serv_addr.sun_family = AF_LOCAL;
-    sstrncpy(tmr_serv_addr.sun_path, SERVER_PATH, sizeof(tmr_serv_addr.sun_path));
-
-    bzero(&tmr_client_addr, sizeof(tmr_client_addr));
-    tmr_client_addr.sun_family = AF_LOCAL;
-    sstrncpy(tmr_client_addr.sun_path, CLIENT_PATH, sizeof(tmr_client_addr.sun_path));
 
     while (1) {
 
@@ -1286,7 +1283,7 @@ void process_expired_timers() {
              */
             if (timerListHead->duration <= 0) {
                 timerMsg = (cprCallBackTimerMsg_t *)
-                    cprGetBuffer(sizeof(cprCallBackTimerMsg_t));
+                    cpr_malloc(sizeof(cprCallBackTimerMsg_t));
                 if (timerMsg) {
                     timerMsg->expiredTimerName =
                         timerListHead->cprTimerPtr->name;
@@ -1305,19 +1302,19 @@ void process_expired_timers() {
                         if (cprSendMessage(timerListHead->cprTimerPtr->callBackMsgQueue,
                                            timerMsg, (void **) &syshdr) == CPR_FAILURE) {
                             cprReleaseSysHeader(syshdr);
-                            cprReleaseBuffer(timerMsg);
+                            cpr_free(timerMsg);
                             CPR_ERROR("%s - Call to cprSendMessage failed\n", fname);
                             CPR_ERROR("%s - Unable to send timer %s expiration msg\n",
                                       fname, timerListHead->cprTimerPtr->name);
                         }
                     } else {
-                        cprReleaseBuffer(timerMsg);
+                        cpr_free(timerMsg);
                         CPR_ERROR("%s - Call to cprGetSysHeader failed\n", fname);
                         CPR_ERROR("%s - Unable to send timer %s expiration msg\n",
                                   fname, timerListHead->cprTimerPtr->name);
                     }
                 } else {
-                    CPR_ERROR("%s - Call to cprGetBuffer failed\n", fname);
+                    CPR_ERROR("%s - Call to cpr_malloc failed\n", fname);
                     CPR_ERROR("%s - Unable to send timer %s expiration msg\n",
                               fname, timerListHead->cprTimerPtr->name);
                 }

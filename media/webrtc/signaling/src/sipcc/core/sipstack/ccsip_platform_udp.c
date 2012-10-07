@@ -335,7 +335,7 @@ sip_platform_udp_channel_read (cpr_socket_t s,
          * If no data is available to read (CPR_EWOULDBLOCK),
          * for non-blocking socket, it is not an error.
          */
-        cprReleaseBuffer(buf);
+        cpr_free(buf);
         *len = 0;
         if (cpr_errno != CPR_EWOULDBLOCK) {
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"fd[%d]\n", fname, s);
@@ -354,7 +354,7 @@ sip_platform_udp_channel_read (cpr_socket_t s,
          * sockets, there is no such thing as closing a connection.
          */
         CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"No data on fd %d\n", DEB_F_PREFIX_ARGS(SIP_SDP, fname), s);
-        cprReleaseBuffer(buf);
+        cpr_free(buf);
         *len = 0;
         break;
     default:

@@ -160,7 +160,7 @@ fsm_clear_cac_data (cac_data_t *cac_data)
     fim_free_event(cac_data->msg_ptr);
 
     /* Release buffer too */
-    cprReleaseBuffer(cac_data->msg_ptr);
+    cpr_free(cac_data->msg_ptr);
 
     cpr_free(cac_data);
 

@@ -89,26 +89,6 @@ extern "C"
 #include "ccapi_service.h"
 #include "plat_api.h"
 
-// Possibly these should be turned off for linux too
-#ifdef WIN32
-boolean cpr_memory_mgmt_pre_init(size_t size)
-{
-    return TRUE;
-}
-
-void debugCprMem(cc_debug_cpr_mem_options_e category, cc_debug_flag_e flag)
-{
-}
-
-void debugClearCprMem(cc_debug_clear_cpr_options_e category)
-{
-}
-
-void debugShowCprMem(cc_debug_show_cpr_options_e category)
-{
-}
-#endif
-
 /**
  * configCtlFetchReq
  * 
@@ -135,11 +115,8 @@ void configCtlFetchReq(int device_handle)
     }
     else
     {
-    	if (pPhone->bUseConfig == true)
-    		CCAPI_Config_response(device_handle, pPhone->deviceName.c_str(), pPhone->xmlConfig.c_str(), true);
-    	else
-    		CCAPI_Start_response(device_handle, pPhone->deviceName.c_str(), pPhone->sipUser.c_str(),
-    							 	 pPhone->sipPassword.c_str(), pPhone->sipDomain.c_str());
+    	CCAPI_Start_response(device_handle, pPhone->deviceName.c_str(), pPhone->sipUser.c_str(),
+    						 	 pPhone->sipPassword.c_str(), pPhone->sipDomain.c_str());
     }
 }
 
@@ -236,38 +213,6 @@ char * platGetIPAddr ()
 
 	return (char*) pPhone->localAddress.c_str();
 }
-
-/**
- * Called by SIPCC to get the default gateway. Determining the default gateway is platform specific.
- * In ECC we rely on the "NetworkMonitor" interface to provide this, ie the job of determining the
- * default gateway is not done in ECC iteself.
- *
- * @param *addr the pointer to the string holding default gw address (dhcp.xxxx.gateway)
- *        addr points to a buffer of size MAX_SIP_URL_LENGTH(512) bytes.
- * @return void
- */
-#ifndef _WIN32
-void platGetDefaultGW(char *addr)
-{
-    CSFLogDebugS( logTag, "In platGetDefaultGW()");
-
-    if (addr == NULL)
-    {
-        CSFLogErrorS( logTag, "In platGetDefaultGW(). Passed NULL value for addr.");
-        return;
-    }
-
-    CSF::CC_SIPCCService * pPhone = CSF::CC_SIPCCService::_self;
-
-    if (pPhone == NULL)
-    {
-        CSFLogErrorS( logTag, "In platGetDefaultGW(). CC_SIPCCService::_self is NULL.");
-        return;
-    }
-
-    csf_strcpy(addr, 512, pPhone->defaultGW.c_str());
-}
-#endif
 
 void ccmedia_flash_once_timer_callback (void)
 {
@@ -385,10 +330,10 @@ extern "C" void CCAPI_LineListener_onLineEvent(ccapi_line_event_e type, cc_linei
     CSF::CC_SIPCCService::onLineEvent(type, line, info);
 }
 
-extern "C" void CCAPI_CallListener_onCallEvent(ccapi_call_event_e type, cc_call_handle_t handle, cc_callinfo_ref_t info, char* sdp)
+extern "C" void CCAPI_CallListener_onCallEvent(ccapi_call_event_e type, cc_call_handle_t handle, cc_callinfo_ref_t info)
 {
     //CSFLogDebugS( logTag, "In CCAPI_CallListener_onCallEvent");
-	CSF::CC_SIPCCService::onCallEvent(type, handle, info, sdp);
+	CSF::CC_SIPCCService::onCallEvent(type, handle, info);
 }
 
 
@@ -401,23 +346,23 @@ CC_SIPCCService* CC_SIPCCService::_self = NULL;
 CC_SIPCCService::CC_SIPCCService()
 : loggingMask(0),
   bCreated(false),
-  bStarted(false),  
-  sippStartedEvent(false, false),
-  vcmMediaBridge(MediaProvider::create()),
+  bStarted(false), 
+  m_lock("CC_SIPCCService"), 
   bUseConfig(false)
 {
 	// Only one instance allowed!
     assert(_self == NULL);
     _self = this;
-    vcmMediaBridge.setStreamObserver(this);
-    vcmMediaBridge.setMediaProviderObserver(this);
+    // <emannion> Commented as part of media provider removal
+    //vcmMediaBridge.setStreamObserver(this);
+    //vcmMediaBridge.setMediaProviderObserver(this);
 }
 
 CC_SIPCCService::~CC_SIPCCService()
 {
-	destroy();
+  destroy();
 
-    _self = NULL;
+  _self = NULL;
 }
 
 bool CC_SIPCCService::init(const std::string& user, const std::string& password, const std::string& domain, const std::string& device)
@@ -449,7 +394,6 @@ void CC_SIPCCService::destroy()
         bCreated = false;
     }
 
-    xmlConfig = "";
 	deviceName = "";
 	loggingMask = 0;
 
@@ -470,11 +414,6 @@ void CC_SIPCCService::destroy()
 	{
 		videoControlWrapper->setVideoControl(NULL);
 	}
-}
-
-void CC_SIPCCService::setConfig(const std::string& xmlConfig)
-{
-	this->xmlConfig = xmlConfig;
 }
 
 void CC_SIPCCService::setDeviceName(const std::string& deviceName)
@@ -545,7 +484,7 @@ bool CC_SIPCCService::startService()
     CSFLogDebugS( logTag, "About to imposeLoggingMask");
     applyLoggingMask(loggingMask);
 
-    return waitUntilSIPCCFullyStarted();
+    return true;
 }
 
 
@@ -615,27 +554,6 @@ VideoControlPtr CC_SIPCCService::getVideoControl ()
 }
 
 
-// Private Helpers
-
-bool CC_SIPCCService::waitUntilSIPCCFullyStarted ()
-{
-    bool bStarted = false;
-
-    CSFLogDebugS( logTag, "Waiting for SIPCC Registration to complete...");
-
-    if (sippStartedEvent.TimedWait(base::TimeDelta::FromMilliseconds(20000)))
-    {
-    	CSFLogDebugS( logTag, "SIPCC Service has entered CC_STATE_INS State.");
-        bStarted = true;
-    }
-    else
-    {
-    	CSFLogErrorS( logTag, "Timed out waiting for SIPCC Service to start.");
-    }
-
-    return bStarted;
-}
-
 void CC_SIPCCService::applyLoggingMask (int newMask)
 {
     if (newMask >> _maxBitValueMaskedLoggingEntries > 0)
@@ -651,23 +569,6 @@ void CC_SIPCCService::applyLoggingMask (int newMask)
     for (int i=0; i<_maxBitValueMaskedLoggingEntries; i++)
     {
         *(_maskedLoggingEntriesArray[i]) = (loggingMask >> i) & 0x1;
-    }
-}
-
-void CC_SIPCCService::signalToPhoneWhenInService (ccapi_device_event_e type, cc_deviceinfo_ref_t info)
-{
-    if (type == CCAPI_DEVICE_EV_STATE)
-    {
-        cc_service_state_t serviceState = CCAPI_DeviceInfo_getServiceState(info);
-
-        if (serviceState == CC_STATE_INS)
-        {
-        	sippStartedEvent.Signal();
-        }
-        else if  (serviceState == CC_STATE_OOS)
-        {
-        	CSFLogDebugS( logTag, "CC_STATE_OOS while starting up - ignoring ");
-        }
     }
 }
 
@@ -704,8 +605,10 @@ void CC_SIPCCService::endAllActiveCalls()
 
 		if(!calls.empty())
 		{
+#ifdef MOZILLA_INTERNAL_API
 			// If we had any calls, allow a short time for the SIP messaging to go out
 			PlatformThread::Sleep(500);
+#endif
 		}
     }
 }
@@ -737,8 +640,6 @@ void CC_SIPCCService::onDeviceEvent(ccapi_device_event_e type, cc_device_handle_
     CSFLogInfoS( logTag, "onDeviceEvent(" << device_event_getname(type) << ", " << devicePtr->toString() <<
     		", [" << infoPtr->getDeviceName() << "] )");
     _self->notifyDeviceEventObservers(type, devicePtr, infoPtr);
-
-    _self->signalToPhoneWhenInService(type, info);
 }
 
 void CC_SIPCCService::onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_ref_t /* device_info */, cc_featureinfo_ref_t feature_info)
@@ -797,7 +698,7 @@ void CC_SIPCCService::onLineEvent(ccapi_line_event_e eventType, cc_lineid_t line
     _self->notifyLineEventObservers(eventType, linePtr, infoPtr);
 }
 
-void CC_SIPCCService::onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t handle, cc_callinfo_ref_t info, char* sdp)
+void CC_SIPCCService::onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t handle, cc_callinfo_ref_t info)
 {
     if (_self == NULL)
     {
@@ -824,12 +725,12 @@ void CC_SIPCCService::onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t
 	set<CSF::CC_CallCapabilityEnum::CC_CallCapability> capSet = infoPtr->getCapabilitySet();
     CSFLogInfoS( logTag, "onCallEvent(" << call_event_getname(eventType) << ", " << callPtr->toString() <<
     		", [" << call_state_getname(infoPtr->getCallState()) << "|" << CC_CallCapabilityEnum::toString(capSet) << "] )");
-    _self->notifyCallEventObservers(eventType, callPtr, infoPtr, sdp);
+    _self->notifyCallEventObservers(eventType, callPtr, infoPtr);
 }
 
 void CC_SIPCCService::addCCObserver ( CC_Observer * observer )
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     if (observer == NULL)
     {
         CSFLogErrorS( logTag, "NULL value for \"observer\" passed to addCCObserver().");
@@ -841,14 +742,14 @@ void CC_SIPCCService::addCCObserver ( CC_Observer * observer )
 
 void CC_SIPCCService::removeCCObserver ( CC_Observer * observer )
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
     ccObservers.erase(observer);
 }
 
 //Notify Observers
 void CC_SIPCCService::notifyDeviceEventObservers (ccapi_device_event_e eventType, CC_DevicePtr devicePtr, CC_DeviceInfoPtr info)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
 	set<CC_Observer*>::const_iterator it = ccObservers.begin();
 	for ( ; it != ccObservers.end(); it++ )
     {
@@ -858,7 +759,7 @@ void CC_SIPCCService::notifyDeviceEventObservers (ccapi_device_event_e eventType
 
 void CC_SIPCCService::notifyFeatureEventObservers (ccapi_device_event_e eventType, CC_DevicePtr devicePtr, CC_FeatureInfoPtr info)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
 	set<CC_Observer*>::const_iterator it = ccObservers.begin();
 	for ( ; it != ccObservers.end(); it++ )
     {
@@ -868,7 +769,7 @@ void CC_SIPCCService::notifyFeatureEventObservers (ccapi_device_event_e eventTyp
 
 void CC_SIPCCService::notifyLineEventObservers (ccapi_line_event_e eventType, CC_LinePtr linePtr, CC_LineInfoPtr info)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
 	set<CC_Observer*>::const_iterator it = ccObservers.begin();
 	for ( ; it != ccObservers.end(); it++ )
     {
@@ -876,13 +777,13 @@ void CC_SIPCCService::notifyLineEventObservers (ccapi_line_event_e eventType, CC
     }
 }
 
-void CC_SIPCCService::notifyCallEventObservers (ccapi_call_event_e eventType, CC_CallPtr callPtr, CC_CallInfoPtr info, char* sdp)
+void CC_SIPCCService::notifyCallEventObservers (ccapi_call_event_e eventType, CC_CallPtr callPtr, CC_CallInfoPtr info)
 {
-	AutoLock lock(m_lock);
+	mozilla::MutexAutoLock lock(m_lock);
 	set<CC_Observer*>::const_iterator it = ccObservers.begin();
 	for ( ; it != ccObservers.end(); it++ )
     {
-	    (*it)->onCallEvent(eventType, callPtr, info, sdp);
+	    (*it)->onCallEvent(eventType, callPtr, info);
     }
 }
 
@@ -946,7 +847,7 @@ void CC_SIPCCService::dtmfBurst(int digit, int direction, int duration)
     {
     	CC_SIPCCCallMediaDataPtr pMediaData = (*it)->getMediaData();
 
-    	AutoLock lock(pMediaData->streamMapMutex);
+    	mozilla::MutexAutoLock lock(pMediaData->streamMapMutex);
 		for (StreamMapType::iterator entry =  pMediaData->streamMap.begin(); entry !=  pMediaData->streamMap.end(); entry++)
 	    {
 			if (entry->second.isVideo == false)
@@ -1051,7 +952,7 @@ void CC_SIPCCService::onKeyFrameRequested( int stream )
     {
     	CC_SIPCCCallMediaDataPtr pMediaData = (*it)->getMediaData();
 
-    	AutoLock lock(pMediaData->streamMapMutex);
+    	mozilla::MutexAutoLock lock(pMediaData->streamMapMutex);
 		for (StreamMapType::iterator entry =  pMediaData->streamMap.begin(); entry !=  pMediaData->streamMap.end(); entry++)
 	    {
 			if ((entry->first==stream) && (entry->second.isVideo == true))
@@ -1101,12 +1002,8 @@ bool CC_SIPCCService::setP2PMode(bool mode)  {
 	return CCAPI_Config_set_p2p_mode(mode);
 }
 
-bool CC_SIPCCService::setROAPProxyMode(bool mode)  {
-	return CCAPI_Config_set_roap_proxy_mode(mode);
-}
-
-bool CC_SIPCCService::setROAPClientMode(bool mode)  {
-	return CCAPI_Config_set_roap_client_mode(mode);
+bool CC_SIPCCService::setSDPMode(bool mode)  {
+	return CCAPI_Config_set_sdp_mode(mode);
 }
 
 } // End of namespace CSF

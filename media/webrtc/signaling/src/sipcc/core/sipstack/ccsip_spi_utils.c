@@ -44,6 +44,7 @@
  * CCAPI callids, conversion from CCAPI to SIP cause codes and the
  * like.
  */
+#include "plstr.h"
 #include "cpr_types.h"
 #include "cpr_stdlib.h"
 #include "cpr_string.h"
@@ -94,6 +95,7 @@ sipSPI_validate_hostname (char *str)
 {
     char *tok;
     char ip_addr_out[MAX_IPADDR_STR_LEN];
+    char *strtok_state;
     
     if (str == NULL) {
         return FALSE;
@@ -114,7 +116,7 @@ sipSPI_validate_hostname (char *str)
         return FALSE;
     }
 
-    tok = strtok(str, ".");
+    tok = PL_strtok_r(str, ".", &strtok_state);
     if (tok == NULL) {
         return FALSE;
     } else {
@@ -123,7 +125,7 @@ sipSPI_validate_hostname (char *str)
         }
     }
 
-    while ((tok = strtok(NULL, ".")) != NULL) {
+    while ((tok = PL_strtok_r(NULL, ".", &strtok_state)) != NULL) {
         if (sipSPICheckDomainToken(tok) == FALSE) {
             return FALSE;
         }

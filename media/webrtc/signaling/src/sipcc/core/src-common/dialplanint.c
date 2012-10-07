@@ -769,7 +769,7 @@ dp_do_redial (line_t line, callid_t call_id)
         return;
     }
 
-    strncpy(g_dp_int.gDialed, g_dp_int.gReDialed, MAX_DIALSTRING);
+    sstrncpy(g_dp_int.gDialed, g_dp_int.gReDialed, MAX_DIALSTRING);
 
     g_dp_int.line = line;
 
@@ -1147,7 +1147,7 @@ dp_update (line_t line, callid_t call_id, string_t called_num)
         (strcmp(g_dp_int.gDialed, CISCO_PLAR_STRING) != 0) && 
         (strncmp(g_dp_int.gDialed, CISCO_BLFPICKUP_STRING, (sizeof(CISCO_BLFPICKUP_STRING) - 1)) != 0)) {
 
-        strncpy(g_dp_int.gReDialed, g_dp_int.gDialed, MAX_DIALSTRING);
+        sstrncpy(g_dp_int.gReDialed, g_dp_int.gDialed, MAX_DIALSTRING);
         g_dp_int.gRedialLine = line;
     }
 

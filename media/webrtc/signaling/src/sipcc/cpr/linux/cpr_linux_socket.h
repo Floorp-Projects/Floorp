@@ -302,7 +302,7 @@ typedef uint16_t        sa_family_t;
 typedef struct
 {
     sa_family_t sun_family;  /* AF_LOCAL/AF_UNIX */
-    int8_t      sun_path[108];
+    char        sun_path[108];
 } cpr_sockaddr_un_t;
 
 
@@ -312,7 +312,7 @@ typedef struct
 #define _SS_MAXSIZE     256     /* Implementation specific max size */
 
 #define cpr_sun_len(a) sizeof(a)
-void cpr_set_sockun_addr(cpr_sockaddr_un_t *addr, const char *name);
+void cpr_set_sockun_addr(cpr_sockaddr_un_t *addr, const char *name, pid_t pid);
 
 /*
  * To represent desired sockaddr max alignment for platform, a

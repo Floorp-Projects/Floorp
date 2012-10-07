@@ -77,6 +77,11 @@
 #if defined(CPR_WIN32_SDK_MINGW)
 #include <stdint.h>
 #elif defined(_MSC_VER) && defined(CPR_WIN32_SDK_MICROSOFT)
+#if _MSC_VER >= 1600
+#include <stdint.h>
+#elif defined(CPR_STDINT_INCLUDE)
+#include CPR_STDINT_INCLUDE
+#else
 typedef __int8  int8_t;
 typedef __int16 int16_t;
 typedef __int32 int32_t;
@@ -85,6 +90,7 @@ typedef unsigned char  uint8_t;
 typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
+#endif
 #endif
 
 /*
@@ -105,6 +111,11 @@ typedef uint8_t boolean;
 #define _SSIZE_T_
 typedef int ssize_t;
 #endif
+
+/*
+ * Define pid_t.
+ */
+typedef int pid_t;
 
 /*
  * Define min/max

@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <errno.h>
+
 #include "cpr_types.h"
 #include "cpr_stdio.h"
 #include "cpr_stdlib.h"
@@ -94,9 +96,6 @@ static boolean start_standby_monitor = TRUE;
 extern boolean Is794x;
 
 static void show_register_data(void);
-
-/* extern function for CCM clock handler */
-extern void SipNtpUpdateClockFromCCM(void);
 
 #define SIP_REG_TMR_EXPIRE_TICKS 55000 /* msec; re-registration timer */
 #define REGISTER_CMD "register"
@@ -810,9 +809,10 @@ ccsip_handle_ev_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
         // call ntp set time handler (TNP/cnu specific; stub for legacy)
         // do not call the handler if 2xx is from StdBy CCM
-        if (ccb->index != REG_BACKUP_CCB) {
-            SipNtpUpdateClockFromCCM();
-        }
+        // We do not need to set the time when in the browser
+        //if (ccb->index != REG_BACKUP_CCB) {
+        //    SipNtpUpdateClockFromCCM();
+        //}
     }
 
     contact = sippmh_get_cached_header_val(response, CONTACT);
@@ -1556,7 +1556,7 @@ ccsip_handle_ev_tmr_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
         value = MAX_NON_INVITE_RETRY_ATTEMPTS;
     }
     if (ccb->retx_counter >= value) {
-        if ((ccb->cc_type == CC_CCM) /* RAMC Some other state */) {
+        if (ccb->cc_type == CC_CCM /* RAMC Some other state */) {
             /*
              * regmgr - Send event to the regmgr
              */
@@ -2059,7 +2059,7 @@ ccsip_register_send_msg (uint32_t cmd, line_t ndx)
 
     if (SIPTaskSendMsg(cmd, register_msg, sizeof(ccsip_registration_msg_t), NULL)
             == CPR_FAILURE) {
-        cprReleaseBuffer(register_msg);
+        cpr_free(register_msg);
         CCSIP_DEBUG_ERROR("%s: Error: send buffer failed.\n", fname);
         return SIP_ERROR;
     }
@@ -2165,9 +2165,8 @@ ccsip_register_cmd (cc_int32_t argc, const char *argv[])
     line_t ndx = 0;
     line_t temp_line = 0;
     char str_val[MAX_LINE_NAME_SIZE];
-    //line_t available = 0;
-    //line_t present = 0;
-    //line_t configured = 0;
+    const char *line_string;
+    char *strtol_end;
 
     /*
      * check if need help
@@ -2203,11 +2202,13 @@ ccsip_register_cmd (cc_int32_t argc, const char *argv[])
             return (0);
         }
 
-        if (cpr_strcasecmp(argv[2 + OFFSET], "backup") == 0) {
+        line_string = argv[2 + OFFSET];
+        if (cpr_strcasecmp(line_string, "backup") == 0) {
             temp_line = REG_BACKUP_LINE;
         } else {
-            temp_line = (line_t) atoi(argv[2 + OFFSET]);
-            if (!sip_config_check_line(temp_line)) {
+            errno = 0;
+            temp_line = (line_t) strtol(line_string, &strtol_end, 10);
+            if (errno || line_string == strtol_end || !sip_config_check_line(temp_line)) {
                 debugif_printf("Error:Invalid Line\n");
                 return (0);
             }
@@ -2284,7 +2285,7 @@ static void
 build_reg_flags (char *buf, int buf_size, int prox_reg, ccsipCCB_t *ccb,
                  boolean provisioned)
 {
-    strncpy(buf, "...", buf_size);
+    sstrncpy(buf, "...", buf_size);
     if (!provisioned || !prox_reg) {
         return;
     }
