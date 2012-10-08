@@ -41,6 +41,10 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  // CC
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLLinkElement,
+                                           nsGenericHTMLElement)
+
   // nsIDOMNode
   NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
@@ -120,6 +124,15 @@ nsHTMLLinkElement::~nsHTMLLinkElement()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLLinkElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLLinkElement,
+                                                  nsGenericHTMLElement)
+  tmp->nsStyleLinkElement::Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLLinkElement,
+                                                nsGenericHTMLElement)
+  tmp->nsStyleLinkElement::Unlink();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLLinkElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, nsGenericElement) 
@@ -128,7 +141,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, nsGenericElement)
 DOMCI_NODE_DATA(HTMLLinkElement, nsHTMLLinkElement)
 
 // QueryInterface implementation for nsHTMLLinkElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLLinkElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLLinkElement)
   NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLLinkElement,
                                    nsIDOMHTMLLinkElement,
                                    nsIDOMLinkStyle,
