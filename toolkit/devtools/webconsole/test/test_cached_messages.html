@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for cached messages</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for cached messages</p>
+
+<script class="testbody" type="application/javascript;version=1.8">
+let expectedConsoleCalls = [];
+let expectedPageErrors = [];
+
+(function() {
+  Services.console.reset();
+
+  expectedPageErrors = [
+    {
+      _type: "PageError",
+      errorMessage: /fooColor/,
+      sourceName: /.+/,
+      category: "CSS Parser",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: true,
+      exception: false,
+      strict: false,
+    },
+    {
+      _type: "PageError",
+      errorMessage: /doTheImpossible/,
+      sourceName: /.+/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+      strict: false,
+    },
+  ];
+
+  let body = top.document.documentElement;
+  let container = top.document.createElementNS(XHTML_NS, "script");
+  body.appendChild(container);
+  container.textContent = "document.documentElement.style.color = 'fooColor';";
+  body.removeChild(container);
+
+  container = top.document.createElementNS(XHTML_NS, "script");
+  body.appendChild(container);
+  container.textContent = "document.doTheImpossible();";
+  body.removeChild(container);
+})();
+
+function doConsoleCalls()
+{
+  top.console.log("foobarBaz-log", undefined);
+  top.console.info("foobarBaz-info", null);
+  top.console.warn("foobarBaz-warn", document.body);
+
+  expectedConsoleCalls = [
+    {
+      _type: "ConsoleAPI",
+      level: "log",
+      filename: /test_cached_messages/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-log", { type: "undefined" }],
+    },
+    {
+      _type: "ConsoleAPI",
+      level: "info",
+      filename: /test_cached_messages/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-info", { type: "null" }],
+    },
+    {
+      _type: "ConsoleAPI",
+      level: "warn",
+      filename: /test_cached_messages/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-warn", { type: "object", actor: /[a-z]/ }],
+    },
+  ];
+}
+</script>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+let consoleAPIListener;
+
+let consoleAPICalls = 0;
+
+let handlers = {
+  onConsoleAPICall: function onConsoleAPICall()
+  {
+    consoleAPICalls++;
+    if (consoleAPICalls == expectedConsoleCalls.length) {
+      checkConsoleAPICache();
+    }
+  },
+};
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  consoleAPIListener = new ConsoleAPIListener(top, handlers);
+  consoleAPIListener.init();
+
+  doConsoleCalls();
+}
+
+function checkConsoleAPICache()
+{
+  consoleAPIListener.destroy();
+  consoleAPIListener = null;
+  attachConsole(["ConsoleAPI"], onAttach1);
+}
+
+function onAttach1(aState, aResponse)
+{
+  aState.client.getCachedMessages(["ConsoleAPI"],
+                                  onCachedConsoleAPI.bind(null, aState));
+}
+
+function onCachedConsoleAPI(aState, aResponse)
+{
+  let msgs = aResponse.messages;
+
+  is(msgs.length, expectedConsoleCalls.length,
+     "number of cached console messages");
+
+  expectedConsoleCalls.forEach(function(aMessage, aIndex) {
+    info("checking received cached message #" + aIndex);
+    checkConsoleAPICall(msgs[aIndex], expectedConsoleCalls[aIndex]);
+  });
+
+  closeDebugger(aState, testPageErrors);
+}
+
+function testPageErrors()
+{
+  attachConsole(["PageError"], onAttach2);
+}
+
+function onAttach2(aState, aResponse)
+{
+  aState.client.getCachedMessages(["PageError"],
+                                  onCachedPageErrors.bind(null, aState));
+}
+
+function onCachedPageErrors(aState, aResponse)
+{
+  let msgs = aResponse.messages;
+
+  is(msgs.length, expectedPageErrors.length,
+     "number of cached page errors");
+
+  expectedPageErrors.forEach(function(aMessage, aIndex) {
+    info("checking received cached message #" + aIndex);
+    checkObject(msgs[aIndex], expectedPageErrors[aIndex]);
+  });
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

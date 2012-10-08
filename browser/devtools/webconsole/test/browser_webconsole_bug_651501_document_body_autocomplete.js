@@ -23,7 +23,7 @@ function consoleOpened(aHud) {
   let completeNode = jsterm.completeNode;
 
   let tmp = {};
-  Cu.import("resource:///modules/WebConsoleUtils.jsm", tmp);
+  Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tmp);
   let WCU = tmp.WebConsoleUtils;
   tmp = null;
 
@@ -38,7 +38,8 @@ function consoleOpened(aHud) {
     // __defineGetter__  __defineSetter__ __lookupGetter__ __lookupSetter__
     // constructor hasOwnProperty isPrototypeOf propertyIsEnumerable
     // toLocaleString toSource toString unwatch valueOf watch.
-    let props = WCU.namesAndValuesOf(content.wrappedJSObject.document.body);
+    let props = WCU.inspectObject(content.wrappedJSObject.document.body,
+                                  function() { });
     is(popup.itemCount, 14 + props.length, "popup.itemCount is correct");
 
     popup._panel.addEventListener("popuphidden", autocompletePopupHidden, false);

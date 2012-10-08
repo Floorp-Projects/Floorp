@@ -18,12 +18,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-                                  "resource:///modules/WebConsoleUtils.jsm");
+                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "l10n", function() {
-  return WebConsoleUtils.l10n;
-});
-
+const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
+let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 var EXPORTED_SYMBOLS = ["HUDService"];
 
@@ -58,9 +56,6 @@ const MINIMUM_PAGE_HEIGHT = 50;
 
 // The default console height, as a ratio from the content window inner height.
 const DEFAULT_CONSOLE_HEIGHT = 0.33;
-
-// This script is inserted into the content process.
-const CONTENT_SCRIPT_URL = "chrome://browser/content/devtools/HUDService-content.js";
 
 // points to the file to load in the Web Console iframe.
 const UI_IFRAME_URL = "chrome://browser/content/devtools/webconsole.xul";
@@ -172,7 +167,10 @@ HUD_SERVICE.prototype =
     let hud = this.getHudReferenceById(hudId);
     let document = hud.chromeDocument;
 
-    hud.destroy();
+    hud.destroy(function() {
+      let id = WebConsoleUtils.supportsString(hudId);
+      Services.obs.notifyObservers(id, "web-console-destroyed", null);
+    });
 
     delete this.hudReferences[hudId];
 
@@ -199,9 +197,6 @@ HUD_SERVICE.prototype =
     contentWindow.focus();
 
     HeadsUpDisplayUICommands.refreshCommand();
-
-    let id = WebConsoleUtils.supportsString(hudId);
-    Services.obs.notifyObservers(id, "web-console-destroyed", null);
   },
 
   /**
@@ -502,9 +497,11 @@ HUD_SERVICE.prototype =
 function WebConsole(aTab)
 {
   this.tab = aTab;
+  this.chromeDocument = this.tab.ownerDocument;
+  this.chromeWindow = this.chromeDocument.defaultView;
+  this.hudId = "hud_" + this.tab.linkedPanel;
   this._onIframeLoad = this._onIframeLoad.bind(this);
-  this._asyncRequests = {};
-  this._init();
+  this._initUI();
 }
 
 WebConsole.prototype = {
@@ -513,6 +510,9 @@ WebConsole.prototype = {
    * @type nsIDOMElement
    */
   tab: null,
+
+  chromeWindow: null,
+  chromeDocument: null,
 
   /**
    * Getter for HUDService.lastFinishedRequestCallback.
@@ -523,39 +523,10 @@ WebConsole.prototype = {
   get lastFinishedRequestCallback() HUDService.lastFinishedRequestCallback,
 
   /**
-   * Track callback functions registered for specific async requests sent to
-   * the content process.
-   *
-   * @private
-   * @type object
-   */
-  _asyncRequests: null,
-
-  /**
-   * Message names that the HUD listens for. These messages come from the remote
-   * Web Console content script.
-   *
-   * @private
-   * @type array
-   */
-  _messageListeners: ["JSTerm:EvalObject", "WebConsole:ConsoleAPI",
-    "WebConsole:CachedMessages", "WebConsole:PageError", "JSTerm:EvalResult",
-    "JSTerm:AutocompleteProperties", "JSTerm:ClearOutput",
-    "JSTerm:InspectObject", "WebConsole:NetworkActivity",
-    "WebConsole:FileActivity", "WebConsole:LocationChange",
-    "JSTerm:NonNativeConsoleAPI"],
-
-  /**
    * The xul:panel that holds the Web Console when it is positioned as a window.
    * @type nsIDOMElement
    */
   consolePanel: null,
-
-  /**
-   * The current tab location.
-   * @type string
-   */
-  contentLocation: "",
 
   /**
    * Getter for the xul:popupset that holds any popups we open.
@@ -576,22 +547,6 @@ WebConsole.prototype = {
   },
 
   get gViewSourceUtils() this.chromeWindow.gViewSourceUtils,
-
-  /**
-   * Initialize the Web Console instance.
-   * @private
-   */
-  _init: function WC__init()
-  {
-    this.chromeDocument = this.tab.ownerDocument;
-    this.chromeWindow = this.chromeDocument.defaultView;
-    this.messageManager = this.tab.linkedBrowser.messageManager;
-    this.hudId = "hud_" + this.tab.linkedPanel;
-    this.notificationBox = this.chromeDocument
-                           .getElementById(this.tab.linkedPanel);
-
-    this._initUI();
-  },
 
   /**
    * Initialize the Web Console UI. This method sets up the iframe.
@@ -627,7 +582,6 @@ WebConsole.prototype = {
 
     this.iframeWindow = this.iframe.contentWindow.wrappedJSObject;
     this.ui = new this.iframeWindow.WebConsoleFrame(this, position);
-    this._setupMessageManager();
   },
 
   /**
@@ -772,8 +726,8 @@ WebConsole.prototype = {
    */
   getPanelTitle: function WC_getPanelTitle()
   {
-    return l10n.getFormatStr("webConsoleWindowTitleAndURL",
-                             [this.contentLocation]);
+    let url = this.ui ? this.ui.contentLocation : "";
+    return l10n.getFormatStr("webConsoleWindowTitleAndURL", [url]);
   },
 
   positions: {
@@ -806,7 +760,7 @@ WebConsole.prototype = {
 
     // get the node position index
     let nodeIdx = this.positions[aPosition];
-    let nBox = this.notificationBox;
+    let nBox = this.chromeDocument.getElementById(this.tab.linkedPanel);
     let node = nBox.childNodes[nodeIdx];
 
     // check to see if console is already positioned in aPosition
@@ -903,126 +857,24 @@ WebConsole.prototype = {
 
   /**
    * The clear output button handler.
+   * @private
    */
-  onClearButton: function WC_onClearButton()
+  _onClearButton: function WC__onClearButton()
   {
-    this.ui.jsterm.clearOutput(true);
     this.chromeWindow.DeveloperToolbar.resetErrorsCount(this.tab);
   },
 
   /**
-   * Setup the message manager used to communicate with the Web Console content
-   * script. This method loads the content script, adds the message listeners
-   * and initializes the connection to the content script.
-   *
-   * @private
-   */
-  _setupMessageManager: function WC__setupMessageManager()
-  {
-    this.messageManager.loadFrameScript(CONTENT_SCRIPT_URL, true);
-
-    this._messageListeners.forEach(function(aName) {
-      this.messageManager.addMessageListener(aName, this.ui);
-    }, this);
-
-    let message = {
-      features: ["ConsoleAPI", "JSTerm", "PageError", "NetworkMonitor",
-                 "LocationChange"],
-      cachedMessages: ["ConsoleAPI", "PageError"],
-      NetworkMonitor: { monitorFileActivity: true },
-      JSTerm: { notifyNonNativeConsoleAPI: true },
-      preferences: {
-        "NetworkMonitor.saveRequestAndResponseBodies":
-          this.ui.saveRequestAndResponseBodies,
-      },
-    };
-
-    this.sendMessageToContent("WebConsole:Init", message);
-  },
-
-  /**
-   * Callback method for when the Web Console initialization is complete. For
-   * now this method sends the web-console-created notification using the
-   * nsIObserverService.
-   *
-   * @private
-   */
-  _onInitComplete: function WC__onInitComplete()
-  {
-    let id = WebConsoleUtils.supportsString(this.hudId);
-    Services.obs.notifyObservers(id, "web-console-created", null);
-  },
-
-  /**
-   * Handler for messages that have an associated callback function. The
-   * this.sendMessageToContent() allows one to provide a function to be invoked
-   * when the content script replies to the message previously sent. This is the
-   * method that invokes the callback.
-   *
-   * @see this.sendMessageToContent
-   * @private
-   * @param object aResponse
-   *        Message object received from the content script.
-   */
-  _receiveMessageWithCallback:
-  function WC__receiveMessageWithCallback(aResponse)
-  {
-    if (aResponse.id in this._asyncRequests) {
-      let request = this._asyncRequests[aResponse.id];
-      request.callback(aResponse, request.message);
-      delete this._asyncRequests[aResponse.id];
-    }
-    else {
-      Cu.reportError("receiveMessageWithCallback response for stale request " +
-                     "ID " + aResponse.id);
-    }
-  },
-
-  /**
-   * Send a message to the content script.
-   *
-   * @param string aName
-   *        The name of the message you want to send.
-   *
-   * @param object aMessage
-   *        The message object you want to send. This object needs to have no
-   *        cyclic references and it needs to be JSON-stringifiable.
-   *
-   * @param function [aCallback]
-   *        Optional function you want to have called when the content script
-   *        replies to your message. Your callback receives two arguments:
-   *        (1) the response object from the content script and (2) the message
-   *        you sent to the content script (which is aMessage here).
-   */
-  sendMessageToContent:
-  function WC_sendMessageToContent(aName, aMessage, aCallback)
-  {
-    aMessage.hudId = this.hudId;
-    if (!("id" in aMessage)) {
-      aMessage.id = "HUDChrome-" + HUDService.sequenceId();
-    }
-
-    if (aCallback) {
-      this._asyncRequests[aMessage.id] = {
-        name: aName,
-        message: aMessage,
-        callback: aCallback,
-      };
-    }
-    this.messageManager.sendAsyncMessage(aName, aMessage);
-  },
-
-  /**
-   * Handler for the "WebConsole:LocationChange" message. If the Web Console is
+   * Handler for page location changes. If the Web Console is
    * opened in a panel the panel title is updated.
    *
-   * @param object aMessage
-   *        The message received from the content script. It needs to hold two
-   *        properties: location and title.
+   * @param string aURI
+   *        New page location.
+   * @param string aTitle
+   *        New page title.
    */
-  onLocationChange: function WC_onLocationChange(aMessage)
+  onLocationChange: function WC_onLocationChange(aURI, aTitle)
   {
-    this.contentLocation = aMessage.location;
     if (this.consolePanel) {
       this.consolePanel.label = this.getPanelTitle();
     }
@@ -1051,15 +903,13 @@ WebConsole.prototype = {
   /**
    * Destroy the object. Call this method to avoid memory leaks when the Web
    * Console is closed.
+   *
+   * @param function [aOnDestroy]
+   *        Optional function to invoke when the Web Console instance is
+   *        destroyed.
    */
-  destroy: function WC_destroy()
+  destroy: function WC_destroy(aOnDestroy)
   {
-    this.sendMessageToContent("WebConsole:Destroy", {});
-
-    this._messageListeners.forEach(function(aName) {
-      this.messageManager.removeMessageListener(aName, this.ui);
-    }, this);
-
     // Make sure that the console panel does not try to call
     // deactivateHUDForContext() again.
     this.consoleWindowUnregisterOnHide = false;
@@ -1072,24 +922,31 @@ WebConsole.prototype = {
       }
     }
 
+    let onDestroy = function WC_onDestroyUI() {
+      // Remove the iframe and the consolePanel if the Web Console is inside a
+      // floating panel.
+      if (this.consolePanel && this.consolePanel.parentNode) {
+        this.consolePanel.hidePopup();
+        this.consolePanel.parentNode.removeChild(this.consolePanel);
+        this.consolePanel = null;
+      }
+
+      if (this.iframe.parentNode) {
+        this.iframe.parentNode.removeChild(this.iframe);
+      }
+
+      if (this.splitter.parentNode) {
+        this.splitter.parentNode.removeChild(this.splitter);
+      }
+
+      aOnDestroy && aOnDestroy();
+    }.bind(this);
+
     if (this.ui) {
-      this.ui.destroy();
+      this.ui.destroy(onDestroy);
     }
-
-    // Remove the iframe and the consolePanel if the Web Console is inside a
-    // floating panel.
-    if (this.consolePanel && this.consolePanel.parentNode) {
-      this.consolePanel.hidePopup();
-      this.consolePanel.parentNode.removeChild(this.consolePanel);
-      this.consolePanel = null;
-    }
-
-    if (this.iframe.parentNode) {
-      this.iframe.parentNode.removeChild(this.iframe);
-    }
-
-    if (this.splitter.parentNode) {
-      this.splitter.parentNode.removeChild(this.splitter);
+    else {
+      onDestroy();
     }
   },
 };

@@ -13,12 +13,12 @@ var EXPORTED_SYMBOLS = ["InspectorUI"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/TreePanel.jsm");
 Cu.import("resource:///modules/devtools/MarkupView.jsm");
 Cu.import("resource:///modules/highlighter.jsm");
 Cu.import("resource:///modules/devtools/LayoutView.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
+Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
 
 // Inspector notifications dispatched through the nsIObserverService.
 const INSPECTOR_NOTIFICATIONS = {

@@ -58,7 +58,7 @@ function getExpectedClipboardText(aItemCount) {
   for (let i = 0; i < aItemCount; i++) {
     let item = outputNode.getItemAtIndex(i);
     expectedClipboardText.push("[" +
-      WebConsoleUtils.l10n.timestampString(item.timestamp) + "] " +
+      WCU_l10n.timestampString(item.timestamp) + "] " +
       item.clipboardText);
   }
   return expectedClipboardText.join("\n");

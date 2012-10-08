@@ -28,79 +28,82 @@ gcli.addCommand({
       description: gcli.lookup('jsbUrlDesc')
     },
     {
-      name: 'indentSize',
-      type: 'number',
-      description: gcli.lookup('jsbIndentSizeDesc'),
-      manual: gcli.lookup('jsbIndentSizeManual'),
-      defaultValue: 2
-    },
-    {
-      name: 'indentChar',
-      type: {
-        name: 'selection',
-        lookup: [
-          { name: "space", value: " " },
-          { name: "tab", value: "\t" }
-        ]
-      },
-      description: gcli.lookup('jsbIndentCharDesc'),
-      manual: gcli.lookup('jsbIndentCharManual'),
-      defaultValue: ' ',
-    },
-    {
-      name: 'preserveNewlines',
-      type: 'boolean',
-      description: gcli.lookup('jsbPreserveNewlinesDesc'),
-      manual: gcli.lookup('jsbPreserveNewlinesManual')
-    },
-    {
-      name: 'preserveMaxNewlines',
-      type: 'number',
-      description: gcli.lookup('jsbPreserveMaxNewlinesDesc'),
-      manual: gcli.lookup('jsbPreserveMaxNewlinesManual'),
-      defaultValue: -1
-    },
-    {
-      name: 'jslintHappy',
-      type: 'boolean',
-      description: gcli.lookup('jsbJslintHappyDesc'),
-      manual: gcli.lookup('jsbJslintHappyManual')
-    },
-    {
-      name: 'braceStyle',
-      type: {
-        name: 'selection',
-        data: ['collapse', 'expand', 'end-expand', 'expand-strict']
-      },
-      description: gcli.lookup('jsbBraceStyleDesc'),
-      manual: gcli.lookup('jsbBraceStyleManual'),
-      defaultValue: "collapse"
-    },
-    {
-      name: 'spaceBeforeConditional',
-      type: 'boolean',
-      description: gcli.lookup('jsbSpaceBeforeConditionalDesc'),
-      manual: gcli.lookup('jsbSpaceBeforeConditionalManual')
-    },
-    {
-      name: 'unescapeStrings',
-      type: 'boolean',
-      description: gcli.lookup('jsbUnescapeStringsDesc'),
-      manual: gcli.lookup('jsbUnescapeStringsManual')
+      group: gcli.lookup("jsbOptionsDesc"),
+      params: [
+        {
+          name: 'indentSize',
+          type: 'number',
+          description: gcli.lookup('jsbIndentSizeDesc'),
+          manual: gcli.lookup('jsbIndentSizeManual'),
+          defaultValue: 2
+        },
+        {
+          name: 'indentChar',
+          type: {
+            name: 'selection',
+            lookup: [
+              { name: "space", value: " " },
+              { name: "tab", value: "\t" }
+            ]
+          },
+          description: gcli.lookup('jsbIndentCharDesc'),
+          manual: gcli.lookup('jsbIndentCharManual'),
+          defaultValue: ' ',
+        },
+        {
+          name: 'doNotPreserveNewlines',
+          type: 'boolean',
+          description: gcli.lookup('jsbDoNotPreserveNewlinesDesc')
+        },
+        {
+          name: 'preserveMaxNewlines',
+          type: 'number',
+          description: gcli.lookup('jsbPreserveMaxNewlinesDesc'),
+          manual: gcli.lookup('jsbPreserveMaxNewlinesManual'),
+          defaultValue: -1
+        },
+        {
+          name: 'jslintHappy',
+          type: 'boolean',
+          description: gcli.lookup('jsbJslintHappyDesc'),
+          manual: gcli.lookup('jsbJslintHappyManual')
+        },
+        {
+          name: 'braceStyle',
+          type: {
+            name: 'selection',
+            data: ['collapse', 'expand', 'end-expand', 'expand-strict']
+          },
+          description: gcli.lookup('jsbBraceStyleDesc'),
+          manual: gcli.lookup('jsbBraceStyleManual'),
+          defaultValue: "collapse"
+        },
+        {
+          name: 'noSpaceBeforeConditional',
+          type: 'boolean',
+          description: gcli.lookup('jsbNoSpaceBeforeConditionalDesc')
+        },
+        {
+          name: 'unescapeStrings',
+          type: 'boolean',
+          description: gcli.lookup('jsbUnescapeStringsDesc'),
+          manual: gcli.lookup('jsbUnescapeStringsManual')
+        }
+      ]
     }
   ],
   exec: function(args, context) {
     let opts = {
       indent_size: args.indentSize,
       indent_char: args.indentChar,
-      preserve_newlines: args.preserveNewlines,
+      preserve_newlines: !args.doNotPreserveNewlines,
       max_preserve_newlines: args.preserveMaxNewlines == -1 ?
                              undefined : args.preserveMaxNewlines,
       jslint_happy: args.jslintHappy,
       brace_style: args.braceStyle,
-      space_before_conditional: args.spaceBeforeConditional,
+      space_before_conditional: !args.noSpaceBeforeConditional,
       unescape_strings: args.unescapeStrings
-    }
+    };
 
     let xhr = new XMLHttpRequest();
 
@@ -117,13 +120,13 @@ gcli.addCommand({
         if (xhr.status == 200 || xhr.status == 0) {
           let browserDoc = context.environment.chromeDocument;
           let browserWindow = browserDoc.defaultView;
-          let browser = browserWindow.gBrowser;
-  
-          browser.selectedTab = browser.addTab("data:text/plain;base64," +
-            browserWindow.btoa(js_beautify(xhr.responseText, opts)));
+          let gBrowser = browserWindow.gBrowser;
+          let result = js_beautify(xhr.responseText, opts);
+
+          browserWindow.Scratchpad.ScratchpadManager.openScratchpad({text: result});
+
           promise.resolve();
-        }
-        else {
+        } else {
           promise.resolve("Unable to load page to beautify: " + args.url + " " +
                           xhr.status + " " + xhr.statusText);
         }
