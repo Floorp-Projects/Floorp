@@ -993,7 +993,7 @@ DrawTargetD2D::PushClip(const Path *aPath)
   mTransformDirty = true;
 
   if (mClipsArePushed) {
-    PushD2DLayer(pathD2D->mGeometry, clip.mLayer, clip.mTransform);
+    PushD2DLayer(mRT, pathD2D->mGeometry, clip.mLayer, clip.mTransform);
   }
 }
 
@@ -1817,7 +1817,7 @@ DrawTargetD2D::PushClipsToRT(ID2D1RenderTarget *aRT)
   for (std::vector<PushedClip>::iterator iter = mPushedClips.begin();
         iter != mPushedClips.end(); iter++) {
     if (iter->mLayer) {
-      PushD2DLayer(iter->mPath->mGeometry, iter->mLayer, iter->mTransform);
+      PushD2DLayer(aRT, iter->mPath->mGeometry, iter->mLayer, iter->mTransform);
     } else {
       aRT->PushAxisAlignedClip(iter->mBounds, iter->mIsPixelAligned ? D2D1_ANTIALIAS_MODE_ALIASED : D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     }
@@ -2701,7 +2701,7 @@ DrawTargetD2D::SetScissorToRect(IntRect *aRect)
 }
 
 void
-DrawTargetD2D::PushD2DLayer(ID2D1Geometry *aGeometry, ID2D1Layer *aLayer, const D2D1_MATRIX_3X2_F &aTransform)
+DrawTargetD2D::PushD2DLayer(ID2D1RenderTarget *aRT, ID2D1Geometry *aGeometry, ID2D1Layer *aLayer, const D2D1_MATRIX_3X2_F &aTransform)
 {
   D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
   D2D1_LAYER_OPTIONS1 options1 =  D2D1_LAYER_OPTIONS1_NONE;
@@ -2712,10 +2712,10 @@ DrawTargetD2D::PushD2DLayer(ID2D1Geometry *aGeometry, ID2D1Layer *aLayer, const 
   }
 
 	RefPtr<ID2D1DeviceContext> dc;
-	HRESULT hr = mRT->QueryInterface(IID_ID2D1DeviceContext, (void**)((ID2D1DeviceContext**)byRef(dc)));
+	HRESULT hr = aRT->QueryInterface(IID_ID2D1DeviceContext, (void**)((ID2D1DeviceContext**)byRef(dc)));
 
 	if (FAILED(hr)) {
-	    mRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), aGeometry,
+	    aRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), aGeometry,
 				                                   D2D1_ANTIALIAS_MODE_PER_PRIMITIVE, aTransform,
 				                                   1.0, nullptr, options),
 				             aLayer);
