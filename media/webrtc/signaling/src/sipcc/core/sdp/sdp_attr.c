@@ -208,7 +208,8 @@ sdp_result_e sdp_build_attribute (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
             result = sdp_attr[attr_p->type].build_func(sdp_p, attr_p, 
                                                        ptr, (u16)(endbuf_p - *ptr));
             /* If we ran out of buffer space, though, we must error out */
-            MOZ_ASSERT(endbuf_p - *ptr > 0);
+            /* FIX - re-enable this assert after we check the results from snprintfs in the build_funcs */
+            /* MOZ_ASSERT(endbuf_p - *ptr > 0); */
             if (endbuf_p - *ptr <= 0)
                 return (SDP_POTENTIAL_SDP_OVERFLOW);
 
@@ -3875,7 +3876,8 @@ sdp_result_e sdp_build_attr_cpar (sdp_t *sdp_p, sdp_attr_t *attr_p,
             result = sdp_attr[attr_p->type].build_func(sdp_p, attr_p, 
                                                        ptr, (u16)(endbuf_p - *ptr));
             /* If we ran out of buffer space, though, we must error out */
-            MOZ_ASSERT(endbuf_p - *ptr > 0);
+            /* FIX - re-enable this assert after we check the result from snprintf above */
+            /* MOZ_ASSERT(endbuf_p - *ptr > 0); */
             if (endbuf_p - *ptr <= 0)
                 return (SDP_POTENTIAL_SDP_OVERFLOW);
 
