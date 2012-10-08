@@ -1264,7 +1264,7 @@ date_now(JSContext *cx, unsigned argc, Value *vp)
 /*
  * Set UTC time to a given time and invalidate cached local time.
  */
-static JSBool
+static void
 SetUTCTime(RawObject obj, double t, Value *vp = NULL)
 {
     JS_ASSERT(obj->isDate());
@@ -1278,7 +1278,6 @@ SetUTCTime(RawObject obj, double t, Value *vp = NULL)
     obj->setDateUTCTime(DoubleValue(t));
     if (vp)
         vp->setDouble(t);
-    return true;
 }
 
 static void
@@ -1816,7 +1815,8 @@ date_setTime_impl(JSContext *cx, CallArgs args)
     if (!ToNumber(cx, args[0], &result))
         return false;
 
-    return SetUTCTime(thisObj, TimeClip(result), args.rval().address());
+    SetUTCTime(thisObj, TimeClip(result), args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -1877,7 +1877,8 @@ date_setMilliseconds_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(MakeDate(Day(t), time), &cx->dstOffsetCache));
 
     /* Steps 4-5. */
-    return SetUTCTime(thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -1908,7 +1909,8 @@ date_setUTCMilliseconds_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(MakeDate(Day(t), time));
 
     /* Steps 4-5. */
-    return SetUTCTime(thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -1946,7 +1948,8 @@ date_setSeconds_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(date, &cx->dstOffsetCache));
 
     /* Steps 6-7. */
-    return SetUTCTime(thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.31. */
@@ -1984,7 +1987,8 @@ date_setUTCSeconds_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(date);
 
     /* Steps 6-7. */
-    return SetUTCTime(thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.32. */
@@ -2027,7 +2031,8 @@ date_setMinutes_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(date, &cx->dstOffsetCache));
 
     /* Steps 7-8. */
-    return SetUTCTime(thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.33. */
@@ -2070,7 +2075,8 @@ date_setUTCMinutes_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(date);
 
     /* Steps 7-8. */
-    return SetUTCTime(thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.34. */
@@ -2118,7 +2124,8 @@ date_setHours_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(date, &cx->dstOffsetCache));
 
     /* Steps 7-8. */
-    return SetUTCTime(thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.35. */
@@ -2166,7 +2173,8 @@ date_setUTCHours_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 8-9. */
-    return SetUTCTime(thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.36. */
@@ -2199,7 +2207,8 @@ date_setDate_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(newDate, &cx->dstOffsetCache));
 
     /* Steps 5-6. */
-    return SetUTCTime(thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.37. */
@@ -2232,7 +2241,8 @@ date_setUTCDate_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 5-6. */
-    return SetUTCTime(thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2290,7 +2300,8 @@ date_setMonth_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(newDate, &cx->dstOffsetCache));
 
     /* Steps 6-7. */
-    return SetUTCTime(thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2328,7 +2339,8 @@ date_setUTCMonth_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 6-7. */
-    return SetUTCTime(thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2387,7 +2399,8 @@ date_setFullYear_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(newDate, &cx->dstOffsetCache));
 
     /* Steps 7-8. */
-    return SetUTCTime(thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2430,7 +2443,8 @@ date_setUTCFullYear_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 7-8. */
-    return SetUTCTime(thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2474,7 +2488,8 @@ date_setYear_impl(JSContext *cx, CallArgs args)
     double u = UTC(MakeDate(day, TimeWithinDay(t)), &cx->dstOffsetCache);
 
     /* Steps 7-8. */
-    return SetUTCTime(thisObj, TimeClip(u), args.rval().address());
+    SetUTCTime(thisObj, TimeClip(u), args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -3199,8 +3214,7 @@ js_NewDateObjectMsec(JSContext *cx, double msec_time)
     RawObject obj = NewBuiltinClassInstance(cx, &DateClass);
     if (!obj)
         return NULL;
-    if (!SetUTCTime(obj, msec_time))
-        return NULL;
+    SetUTCTime(obj, msec_time);
     return obj;
 }
 
