@@ -5,20 +5,22 @@
 
 package org.mozilla.gecko.util;
 
+import android.app.Activity;
 import android.os.Handler;
 
-// GeckoAsyncTask runs onPostExecute on the thread it is constructed on.
-// To ensure that onPostExecute() runs on UI thread, do either of these:
-//   1. construct GeckoAsyncTask on the UI thread
-//   2. post to the view's UI thread, in onPostExecute()
+// AsyncTask runs onPostExecute on the thread it is constructed on
+// We construct these off of the main thread, and we want that to run
+// on the main UI thread, so this is a convenience class to do that
 public abstract class GeckoAsyncTask<Params, Progress, Result> {
     public enum Priority { NORMAL, HIGH };
 
-    private final Handler mHandler;
+    private final Activity mActivity;
+    private final Handler mBackgroundThreadHandler;
     private Priority mPriority = Priority.NORMAL;
 
-    public GeckoAsyncTask() {
-        mHandler = new Handler();
+    public GeckoAsyncTask(Activity activity, Handler backgroundThreadHandler) {
+        mActivity = activity;
+        mBackgroundThreadHandler = backgroundThreadHandler;
     }
 
     private final class BackgroundTaskRunnable implements Runnable {
@@ -30,7 +32,7 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
 
         public void run() {
             final Result result = doInBackground(mParams);
-            mHandler.post(new Runnable() {
+            mActivity.runOnUiThread(new Runnable() {
                 public void run() {
                     onPostExecute(result);
                 }
@@ -41,9 +43,9 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
     public final void execute(final Params... params) {
         BackgroundTaskRunnable runnable = new BackgroundTaskRunnable(params);
         if (mPriority == Priority.HIGH)
-            GeckoBackgroundThread.getHandler().postAtFrontOfQueue(runnable);
+            mBackgroundThreadHandler.postAtFrontOfQueue(runnable);
         else
-            GeckoBackgroundThread.getHandler().post(runnable);
+            mBackgroundThreadHandler.post(runnable);
     }
 
     public final GeckoAsyncTask<Params, Progress, Result> setPriority(Priority priority) {
