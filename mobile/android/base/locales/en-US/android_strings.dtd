@@ -239,14 +239,14 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!ENTITY searchable_description "Bookmarks and history">
 
-<!-- Updater notifications -->
-<!ENTITY updater_start_title "Update available for &brandShortName;">
-<!ENTITY updater_start_select "Touch to download">
-
-<!ENTITY updater_downloading_title "Downloading &brandShortName;">
-<!ENTITY updater_downloading_title_failed "Download failed">
-<!ENTITY updater_downloading_select "Touch to apply update once downloaded">
-<!ENTITY updater_downloading_retry "Touch to retry">
-
-<!ENTITY updater_apply_title "Update available for &brandShortName;">
-<!ENTITY updater_apply_select "Touch to update">
+ <!-- Updater notifications -->
+<!ENTITY updater_start_title2 "Update available for &brandShortName;">
+<!ENTITY updater_start_select2 "Touch to download">
+ 
+<!ENTITY updater_downloading_title2 "Downloading &brandShortName;">
+<!ENTITY updater_downloading_title_failed2 "Download failed">
+<!ENTITY updater_downloading_select2 "Touch to apply update once downloaded">
+<!ENTITY updater_downloading_retry2 "Touch to retry">
+ 
+<!ENTITY updater_apply_title2 "Update available for &brandShortName;">
+<!ENTITY updater_apply_select2 "Touch to update">
