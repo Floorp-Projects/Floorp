@@ -432,13 +432,13 @@ sipsdp_write_to_buf (cc_sdp_t *sdp_info, uint32_t *retbytes)
                          sdp_get_result_name(rc));
 
         if (rc == SDP_POTENTIAL_SDP_OVERFLOW) {
-            /* SDP may have been truncated. Issue a warning and continue. */
+            /* SDP may have been truncated. Issue an extra warning and abort */
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Build SDP buffer overflow\n", fname);
-        } else {
-            cpr_free(buf);
-            *retbytes = 0;
-            return (NULL);
         }
+
+        cpr_free(buf);
+        *retbytes = 0;
+        return (NULL);
     }
 
     /*
