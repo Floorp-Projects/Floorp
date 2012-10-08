@@ -47,13 +47,6 @@ protected:
   virtual ~Rule() {}
 
 public:
-  // for implementing nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-protected:
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
-public:
 
   // The constants in this list must maintain the following invariants:
   //   If a rule of type N must appear before a rule of type M in stylesheets

@@ -279,7 +279,7 @@ private:
   ~CharsetRule() {}
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
   DECL_STYLE_RULE_INHERIT
 
@@ -350,7 +350,7 @@ private:
   nsCSSKeyframeRule(const nsCSSKeyframeRule& aCopy);
   ~nsCSSKeyframeRule();
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
   // nsIStyleRule methods
 #ifdef DEBUG

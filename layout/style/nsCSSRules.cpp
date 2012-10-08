@@ -57,9 +57,6 @@ IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_)
 namespace mozilla {
 namespace css {
 
-NS_IMPL_ADDREF(Rule)
-NS_IMPL_RELEASE(Rule)
-
 nsCSSStyleSheet*
 Rule::GetStyleSheet() const
 {
@@ -243,8 +240,8 @@ CharsetRule::CharsetRule(const CharsetRule& aCopy)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(CharsetRule, Rule)
-NS_IMPL_RELEASE_INHERITED(CharsetRule, Rule)
+NS_IMPL_ADDREF(CharsetRule)
+NS_IMPL_RELEASE(CharsetRule)
 
 // QueryInterface implementation for CharsetRule
 NS_INTERFACE_MAP_BEGIN(CharsetRule)
@@ -377,8 +374,8 @@ ImportRule::~ImportRule()
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(ImportRule, Rule)
-NS_IMPL_RELEASE_INHERITED(ImportRule, Rule)
+NS_IMPL_ADDREF(ImportRule)
+NS_IMPL_RELEASE(ImportRule)
 
 // QueryInterface implementation for ImportRule
 NS_INTERFACE_MAP_BEGIN(ImportRule)
@@ -567,6 +564,13 @@ GroupRule::~GroupRule()
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(GroupRule)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(GroupRule)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(GroupRule)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GroupRule)
+NS_INTERFACE_MAP_END
+
 IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(GroupRule, Rule)
 
 static bool
@@ -577,11 +581,44 @@ SetStyleSheetReference(Rule* aRule, void* aSheet)
   return true;
 }
 
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(GroupRule)
+  tmp->mRules.EnumerateForwards(SetParentRuleReference, nullptr);
+  // If tmp does not have a stylesheet, neither do its descendants.  In that
+  // case, don't try to null out their stylesheet, to avoid O(N^2) behavior in
+  // depth of group rule nesting.  But if tmp _does_ have a stylesheet (which
+  // can happen if it gets unlinked earlier than its owning stylesheet), then we
+  // need to null out the stylesheet pointer on descendants now, before we clear
+  // tmp->mRules.
+  if (tmp->GetStyleSheet()) {
+    tmp->mRules.EnumerateForwards(SetStyleSheetReference, nullptr);
+  }
+  tmp->mRules.Clear();
+  if (tmp->mRuleCollection) {
+    tmp->mRuleCollection->DropReference();
+    tmp->mRuleCollection = nullptr;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(GroupRule)
+  const nsCOMArray<Rule>& rules = tmp->mRules;
+  for (int32_t i = 0, count = rules.Count(); i < count; ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRules[i]");
+    cb.NoteXPCOMChild(rules[i]->GetExistingDOMRule());
+  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRuleCollection)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 /* virtual */ void
 GroupRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
-  mRules.EnumerateForwards(SetStyleSheetReference, aSheet);
-  Rule::SetStyleSheet(aSheet);
+  // Don't set the sheet on the kids if it's already the same as the sheet we
+  // already have.  This is needed to avoid O(N^2) behavior in group nesting
+  // depth when seting the sheet to null during unlink, if we happen to unlin in
+  // order from most nested rule up to least nested rule.
+  if (aSheet != GetStyleSheet()) {
+    mRules.EnumerateForwards(SetStyleSheetReference, aSheet);
+    Rule::SetStyleSheet(aSheet);
+  }
 }
 
 #ifdef DEBUG
@@ -779,7 +816,7 @@ NS_INTERFACE_MAP_BEGIN(MediaRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMediaRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMediaRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
 /* virtual */ void
 MediaRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
@@ -959,7 +996,7 @@ NS_INTERFACE_MAP_BEGIN(DocumentRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMozDocumentRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMozDocumentRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
 #ifdef DEBUG
 /* virtual */ void
@@ -1179,8 +1216,8 @@ NameSpaceRule::~NameSpaceRule()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(NameSpaceRule, Rule)
-NS_IMPL_RELEASE_INHERITED(NameSpaceRule, Rule)
+NS_IMPL_ADDREF(NameSpaceRule)
+NS_IMPL_RELEASE(NameSpaceRule)
 
 // QueryInterface implementation for NameSpaceRule
 NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
@@ -1922,8 +1959,8 @@ nsCSSKeyframeRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSKeyframeRule, Rule)
-NS_IMPL_RELEASE_INHERITED(nsCSSKeyframeRule, Rule)
+NS_IMPL_ADDREF(nsCSSKeyframeRule)
+NS_IMPL_RELEASE(nsCSSKeyframeRule)
 
 DOMCI_DATA(MozCSSKeyframeRule, nsCSSKeyframeRule)
 
@@ -2117,7 +2154,7 @@ NS_INTERFACE_MAP_BEGIN(nsCSSKeyframesRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozCSSKeyframesRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCSSKeyframesRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
 #ifdef DEBUG
 void
@@ -2355,7 +2392,7 @@ NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSSupportsRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSSupportsRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
 // nsIDOMCSSRule methods
 NS_IMETHODIMP
