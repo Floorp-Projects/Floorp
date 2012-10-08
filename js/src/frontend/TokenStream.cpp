@@ -117,18 +117,19 @@ frontend::IsIdentifier(JSLinearString *str)
 
 /* Initialize members that aren't initialized in |init|. */
 TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
-                         StableCharPtr base, size_t length, StrictModeGetter *smg)
+                         const jschar *base, size_t length, StrictModeGetter *smg)
   : tokens(),
     tokensRoot(cx, &tokens),
     cursor(),
     lookahead(),
     lineno(options.lineno),
     flags(),
-    linebase(base.get()),
+    linebase(base),
     prevLinebase(NULL),
     linebaseRoot(cx, &linebase),
     prevLinebaseRoot(cx, &prevLinebase),
-    userbuf(base.get(), length),
+    userbuf(base, length),
+    userbufRoot(cx, &userbuf),
     filename(options.filename),
     sourceMap(NULL),
     listenerTSData(),
@@ -148,7 +149,7 @@ TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
     void *listenerData = cx->runtime->debugHooks.sourceHandlerData;
 
     if (listener)
-        listener(options.filename, options.lineno, base.get(), length, &listenerTSData, listenerData);
+        listener(options.filename, options.lineno, base, length, &listenerTSData, listenerData);
 
     /*
      * This table holds all the token kinds that satisfy these properties:

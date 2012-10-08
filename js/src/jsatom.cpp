@@ -312,7 +312,7 @@ js::AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
     if (!stable)
         return NULL;
 
-    const jschar *chars = stable->chars().get();
+    const jschar *chars = stable->chars();
     size_t length = stable->length();
     JS_ASSERT(length <= JSString::MAX_LENGTH);
     return AtomizeInline(cx, &chars, length, ib);

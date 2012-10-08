@@ -479,7 +479,7 @@ class TokenStream
     typedef Vector<jschar, 32> CharBuffer;
 
     TokenStream(JSContext *cx, const CompileOptions &options,
-                StableCharPtr base, size_t length, StrictModeGetter *smg);
+                const jschar *base, size_t length, StrictModeGetter *smg);
 
     ~TokenStream();
 
@@ -855,6 +855,7 @@ class TokenStream
     js::SkipRoot        linebaseRoot;
     js::SkipRoot        prevLinebaseRoot;
     TokenBuf            userbuf;        /* user input buffer */
+    js::SkipRoot        userbufRoot;
     const char          *filename;      /* input filename or null */
     jschar              *sourceMap;     /* source map's filename or null */
     void                *listenerTSData;/* listener data for this TokenStream */
