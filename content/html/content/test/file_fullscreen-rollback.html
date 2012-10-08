@@ -19,6 +19,8 @@ Tests:
 <head>
   <title>Test for Bug 700764</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
 </head>
 <body>
 
@@ -36,18 +38,28 @@ Tests:
 
 function ok(condition, msg) {
   opener.ok(condition, "[rollback] " + msg);
+  if (!condition) {
+    opener.finish();
+  }
 }
 
 function is(a, b, msg) {
   opener.is(a, b, "[rollback] " + msg);
+  if (a != b) {
+    opener.finish();
+  }
 }
 
-function addListener(type, f) {
-  document.addEventListener("mozfullscreen" + type, f, false);
+function enterFullscreen(element, callback) {
+  addFullscreenChangeContinuation("enter", callback);
+  element.focus();
+  element.mozRequestFullScreen();
 }
 
-function removeListener(type, f) {
-  document.removeEventListener("mozfullscreen" + type, f, false);
+function revertFullscreen(doc, callback) {
+  ok(doc.mozFullScreenElement != null, "Should only exit fullscreen on a fullscreen doc");
+  addFullscreenChangeContinuation("exit", callback, doc);
+  doc.mozCancelFullScreen();
 }
 
 function e(id) {
@@ -60,67 +72,52 @@ function requestFullscreen(element) {
 }
 
 function begin() {
-  addListener("change", change1);
-  e("fse").mozRequestFullScreen();
+  enterFullscreen(e("fse"), change1);
 }
 
 function change1() {
-  removeListener("change", change1);
-  addListener("error", error1);
   is(document.mozFullScreenElement, e("fse"), "Body should be FSE");
-  
   // Request full-screen from element not descendent from current FSE.
+  addFullscreenErrorContinuation(error1);
   requestFullscreen(e("non-fse"));
 }
 
 function error1() {
-  removeListener("error", error1);
-  addListener("change", change2);
   is(document.mozFullScreenElement, e("fse"), "FSE should not change");
   var iframe = e("subdoc");
-  requestFullscreen(iframe.contentDocument.body);
+  enterFullscreen(iframe.contentDocument.body, change2);
 }
 
 function change2() {
-  removeListener("change", change2);
   var iframe = e("subdoc");
   is(document.mozFullScreenElement, iframe, "Subdoc container should be FSE.");
   is(iframe.contentDocument.mozFullScreenElement, iframe.contentDocument.body, "Subdoc body should be FSE in subdoc");
-  addListener("change", change3);
-  iframe.contentDocument.mozCancelFullScreen();  
+  revertFullscreen(document, change3);
 }
 
 function change3() {
-  removeListener("change", change3);
   is(document.mozFullScreenElement, e("fse"), "FSE should rollback to FSE.");
-  addListener("change", change4);
-  document.mozCancelFullScreen();
+  revertFullscreen(document, change4);
 }
 
 function change4() {
-  removeListener("change", change4);
   is(document.mozFullScreenElement, null, "Should have left full-screen entirely");
-  addListener("change", change5);
-  requestFullscreen(e("fse"));
+  enterFullscreen(e("fse"), change5);
 }
 
 function change5() {
-  removeListener("change", change5);
-  addListener("change", change6);
   is(document.mozFullScreenElement, e("fse"), "FSE should be e('fse')");
-  requestFullscreen(e("fse-inner"));
+  enterFullscreen(e("fse-inner"), change6);
 }
 
 function change6() {
-  removeListener("change", change6);
-  addListener("change", change7);
+  addFullscreenChangeContinuation("exit", change7);
   var element = e('fse-inner');
   is(document.mozFullScreenElement, element, "FSE should be e('fse-inner')");
   element.parentNode.removeChild(element);
 }
 
 function change7() {
-  removeListener("change", change7);
   is(document.mozFullScreenElement, null, "Should have fully exited full-screen mode when removed FSE from doc");
   opener.nextTest();
 }

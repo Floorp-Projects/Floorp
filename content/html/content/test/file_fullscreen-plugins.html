@@ -15,6 +15,7 @@ Test plugins with DOM full-screen API:
 <head>
   <title>Test for Bug 545812</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
   <style>
   body:-moz-full-screen, div:-moz-full-screen {
     background-color: red;
@@ -80,29 +81,26 @@ function startTest() {
   if (isMacOs) {
     // Running on MacOS, all plugins are effectively windowless, request for full-screen should be granted.
     // Continue test in the (mac-specific) "mozfullscreenchange" handler.
-    document.addEventListener("mozfullscreenchange", macFullScreenChange, false);
-    return;
+    addFullscreenChangeContinuation("enter", macFullScreenChange1);
   } else {
     // Non-MacOS, request should be denied, carry on the test after receiving error event.
-    document.addEventListener("mozfullscreenerror", nonMacTest, false);
+    addFullscreenErrorContinuation(nonMacTest);
   }
 }
 
 function nonMacTest() {
-  document.removeEventListener("mozfullscreenerror", nonMacTest, false);
   ok(!document.mozFullScreen, "Request for full-screen with focused windowed plugin should be denied.");
 
   // Focus a regular html element, and re-request full-screen, request should be granted.
   e("windowless-plugin").focus();
-  document.addEventListener("mozfullscreenchange", nonMacTest2, false);
+  addFullscreenChangeContinuation("enter", nonMacTest2);
   document.body.mozRequestFullScreen();
 }
 
 function nonMacTest2() {
-  document.removeEventListener("mozfullscreenchange", nonMacTest2, false);
   ok(document.mozFullScreen, "Request for full-screen with non-plugin focused should be granted.");
   // Focus a windowed plugin, full-screen should be revoked.
-  document.addEventListener("mozfullscreenchange", nonMacTest3, false);
+  addFullscreenChangeContinuation("exit", nonMacTest3);
   e("windowed-plugin").focus();
 }
 
@@ -120,36 +118,27 @@ function createWindowedPlugin() {
   return p;
 }
 
-function macFullScreenChange(event) {
-  switch (fullScreenChangeCount) {
-    case 0: {
-      ok(document.mozFullScreen, "Requests for full-screen with focused windowed plugins should be granted on MacOS");
-      
-      // Create a new windowed plugin, and add that to the document. Should *not* exit full-screen mode on MacOS.
-      windowedPlugin = createWindowedPlugin();
-      document.body.appendChild(windowedPlugin);
-      
-      // Focus windowed plugin. Should not exit full-screen mode on MacOS.
-      windowedPlugin.focus();
-      
-      setTimeout(
-        function() {
-          ok(document.mozFullScreen, "Adding & focusing a windowed plugin to document should not cause full-screen to exit on MacOS.");
-          document.mozCancelFullScreen();
-        }, 0);
-          
-      break;
-    }
-    case 1: {
-      ok(!document.mozFullScreen, "Should have left full-screen mode after calling document.mozCancelFullScreen().");
-      opener.nextTest();
-      break;
-    }
-    default: {
-      ok(false, "Should not receive any more fullscreenchange events!");
-    }
-  }
-  fullScreenChangeCount++;
+function macFullScreenChange1(event) {
+  ok(document.mozFullScreen, "Requests for full-screen with focused windowed plugins should be granted on MacOS");
+  
+  // Create a new windowed plugin, and add that to the document. Should *not* exit full-screen mode on MacOS.
+  windowedPlugin = createWindowedPlugin();
+  document.body.appendChild(windowedPlugin);
+  
+  // Focus windowed plugin. Should not exit full-screen mode on MacOS.
+  windowedPlugin.focus();
+  
+  setTimeout(
+    function() {
+      ok(document.mozFullScreen, "Adding & focusing a windowed plugin to document should not cause full-screen to exit on MacOS.");
+      addFullscreenChangeContinuation("exit", macFullScreenChange2);
+      document.mozCancelFullScreen();
+    }, 0);
+}
+
+function macFullScreenChange2(event) {
+  ok(!document.mozFullScreen, "Should have left full-screen mode after calling document.mozCancelFullScreen().");
+  opener.nextTest();
 }
 
 </script>
