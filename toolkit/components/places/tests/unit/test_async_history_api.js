@@ -408,6 +408,7 @@ function test_non_addable_uri_errors()
     "data:,Hello%2C%20World!",
     "wyciwyg:/0/http://mozilla.org",
     "javascript:alert('hello wolrd!');",
+    "blob:foo",
   ];
   let places = [];
   URLS.forEach(function(url) {
