@@ -98,6 +98,54 @@ sstrncpy(char *dst, const char *src, unsigned long max);
 char *
 sstrncat(char *s1, const char *s2, unsigned long max);
 
+/*
+ * flex_string
+ */
+#define FLEX_STRING_CHUNK_SIZE 256
+
+typedef struct {
+  char *buffer;
+  size_t buffer_length;
+  size_t string_length;
+} flex_string;
+
+/*
+ * flex_string_init
+ *
+ * Not thread-safe
+ */
+void flex_string_init(flex_string *fs);
+
+/*
+ * flex_string_free
+ *
+ * Not thread-safe
+ */
+void flex_string_free(flex_string *fs);
+
+/*
+ * flex_string_check_alloc
+ *
+ * Allocate enough chunks to hold the new minimum size.
+ *
+ * Not thread-safe
+ */
+void flex_string_check_alloc(flex_string *fs, size_t new_min_length);
+
+/*
+ * flex_string_append
+ *
+ * Not thread-safe
+ */
+void flex_string_append(flex_string *fs, const char *more);
+
+/*
+ * flex_string_sprintf
+ *
+ * Not thread-safe
+ */
+void flex_string_sprintf(flex_string *fs, const char *format, ...);
+
 __END_DECLS
 
 #endif

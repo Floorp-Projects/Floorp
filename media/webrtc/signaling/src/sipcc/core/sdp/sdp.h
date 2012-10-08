@@ -53,8 +53,6 @@
 #define SDP_CHOOSE_PARAM           (-1)
 #define SDP_SESSION_LEVEL        0xFFFF
 
-#define SDP_MAX_LEN                4096
-
 #define UNKNOWN_CRYPTO_SUITE              "UNKNOWN_CRYPTO_SUITE"
 #define AES_CM_128_HMAC_SHA1_32           "AES_CM_128_HMAC_SHA1_32"
 #define AES_CM_128_HMAC_SHA1_80           "AES_CM_128_HMAC_SHA1_80"
@@ -575,7 +573,7 @@ extern void *sdp_init_description(void *config_p);
 extern void sdp_debug(void *sdp_ptr, sdp_debug_e debug_type, tinybool debug_flag);
 extern void sdp_set_string_debug(void *sdp_ptr, char *debug_str);
 extern sdp_result_e sdp_parse(void *sdp_ptr, char **bufp, u16 len);
-extern sdp_result_e sdp_build(void *sdp_ptr, char **bufp, u16 len);
+extern sdp_result_e sdp_build(void *sdp_ptr, flex_string *fs);
 extern void *sdp_copy(void *sdp_ptr);
 extern sdp_result_e sdp_free_description(void *sdp_ptr);
 
