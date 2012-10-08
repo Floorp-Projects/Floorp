@@ -549,7 +549,7 @@ sip_regmgr_create_fallback_ccb (CCM_ID ccm_id, line_t dn_line)
         ccb = (ccsipCCB_t *) cpr_calloc(1, sizeof(ccsipCCB_t));
         if (ccb != NULL) {
             (void) sip_sm_ccb_init(ccb, fallback_line, dn_line,
-                                   (sipSMStateType_t)SIP_REG_PRE_FALLBACK);
+                                   SIP_REG_STATE_IN_FALLBACK);
             ccb->cc_type = CC_CCM;
             ccb->cc_cfg_table_entry = CCM_Config_Table[dn_line - 1][ccm_id];
             sstrncpy(ccb->reg.proxy,
@@ -3294,7 +3294,7 @@ sip_regmgr_handle_reg_all_fail (void)
     if (sip_platform_is_phone_idle()) {
         for (ccm_index = PRIMARY_CCM; ccm_index < MAX_CCM; ccm_index++) {
             if (0 != strcmp (CCM_Config_Table[0][ccm_index]->ti_common.addr_str,
-                              "\0"))  {
+                              ""))  {
                 ui_set_ccm_conn_status(CCM_Config_Table[0][ccm_index]->
                                        ti_common.addr_str, CCM_STATUS_NONE);
             }
