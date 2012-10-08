@@ -41,7 +41,7 @@ function testConsoleDir(outputNode) {
     if (text == "querySelectorAll: function querySelectorAll()") {
       foundQSA = true;
     }
-    else if (text  == "location: Object") {
+    else if (text  == "location: Location") {
       foundLocation = true;
     }
     else if (text  == "write: function write()") {

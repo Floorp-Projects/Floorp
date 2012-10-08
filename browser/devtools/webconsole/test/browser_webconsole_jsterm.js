@@ -111,10 +111,10 @@ function testJSTerm(hud)
 
   let foundTab = null;
   waitForSuccess({
-    name: "help tab opened",
+    name: "help tabs opened",
     validatorFn: function()
     {
-      let newTabOpen = gBrowser.tabs.length == tabs + 1;
+      let newTabOpen = gBrowser.tabs.length == tabs + 3;
       if (!newTabOpen) {
         return false;
       }
@@ -124,7 +124,9 @@ function testJSTerm(hud)
     },
     successFn: function()
     {
-      gBrowser.removeTab(foundTab);
+      gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+      gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+      gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
       nextTest();
     },
     failureFn: nextTest,
@@ -176,7 +178,7 @@ function testJSTerm(hud)
   jsterm.clearOutput();
   jsterm.execute("pprint(print)");
   checkResult(function(nodes) {
-    return nodes[0].textContent.indexOf("aJSTerm.") > -1;
+    return nodes[0].textContent.indexOf("aOwner.helperResult") > -1;
   }, "pprint(function) shows source", 1);
   yield;
 

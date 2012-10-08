@@ -63,8 +63,13 @@
 .gcli-row-out h4,
 .gcli-row-out h5,
 .gcli-row-out th,
-.gcli-row-out strong {
+.gcli-row-out strong,
+.gcli-row-out pre {
   color: hsl(210,30%,95%);
+}
+
+.gcli-row-out pre {
+  font-size: 80%;
 }
 
 .gcli-out-shortcut,
