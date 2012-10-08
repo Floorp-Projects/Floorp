@@ -6,8 +6,10 @@
 let tempScope = {};
 Cu.import("resource:///modules/HUDService.jsm", tempScope);
 let HUDService = tempScope.HUDService;
-Cu.import("resource:///modules/WebConsoleUtils.jsm", tempScope);
+Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tempScope);
 let WebConsoleUtils = tempScope.WebConsoleUtils;
+const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
+let WCU_l10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
 
 function log(aMsg)
 {
@@ -252,7 +254,7 @@ function tearDown()
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
-  tab = browser = hudId = hud = filterBox = outputNode = cs = null;
+  WCU_l10n = tab = browser = hudId = hud = filterBox = outputNode = cs = null;
 }
 
 registerCleanupFunction(tearDown);

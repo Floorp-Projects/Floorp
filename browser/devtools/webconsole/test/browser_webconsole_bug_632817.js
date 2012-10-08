@@ -25,7 +25,7 @@ function test()
       hud = aHud;
 
       HUDService.lastFinishedRequestCallback = function(aRequest) {
-        lastRequest = aRequest.log.entries[0];
+        lastRequest = aRequest;
         if (requestCallback) {
           requestCallback();
         }
