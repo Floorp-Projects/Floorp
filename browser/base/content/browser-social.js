@@ -624,21 +624,57 @@ var SocialToolbar = {
   updateButton: function SocialToolbar_updateButton() {
     this.updateButtonHiddenState();
     let provider = Social.provider;
-    let iconNames = Object.keys(provider.ambientNotificationIcons);
+    let icons = provider.ambientNotificationIcons;
+    let iconNames = Object.keys(icons);
     let iconBox = document.getElementById("social-toolbar-item");
     let notifBox = document.getElementById("social-notification-box");
     let panel = document.getElementById("social-notification-panel");
     panel.hidden = false;
+
+    let command = document.getElementById("Social:ToggleNotifications");
+    command.setAttribute("checked", Services.prefs.getBoolPref("social.toast-notifications.enabled"));
+
+    const CACHE_PREF_NAME = "social.cached.notificationIcons";
+    // provider.profile == undefined means no response yet from the provider
+    // to tell us whether the user is logged in or not.
+    if (!SocialUI.haveLoggedInUser() && provider.profile !== undefined) {
+      // The provider has responded with a profile and the user isn't logged
+      // in.  The icons etc have already been removed by
+      // updateButtonHiddenState, so we want to nuke any cached icons we
+      // have and get out of here!
+      Services.prefs.clearUserPref(CACHE_PREF_NAME);
+      return;
+    }
+    if (Social.provider.profile === undefined) {
+      // provider has not told us about the login state yet - see if we have
+      // a cached version for this provider.
+      let cached;
+      try {
+        cached = JSON.parse(Services.prefs.getCharPref(CACHE_PREF_NAME));
+      } catch (ex) {}
+      if (cached && cached.provider == Social.provider.origin && cached.data) {
+        icons = cached.data;
+        iconNames = Object.keys(icons);
+        // delete the counter data as it is almost certainly stale.
+        for each(let name in iconNames) {
+          icons[name].counter = '';
+        }
+      }
+    } else {
+      // We have a logged in user - save the current set of icons back to the
+      // "cache" so we can use them next startup.
+      Services.prefs.setCharPref(CACHE_PREF_NAME,
+                                 JSON.stringify({provider: Social.provider.origin,
+                                                 data: icons}));
+    }
+
     let notificationFrames = document.createDocumentFragment();
     let iconContainers = document.createDocumentFragment();
 
     let createdFrames = [];
 
-    let command = document.getElementById("Social:ToggleNotifications");
-    command.setAttribute("checked", Services.prefs.getBoolPref("social.toast-notifications.enabled"));
-
     for each(let name in iconNames) {
-      let icon = provider.ambientNotificationIcons[name];
+      let icon = icons[name];
 
       let notificationFrameId = "social-status-" + icon.name;
       let notificationFrame = document.getElementById(notificationFrameId);
