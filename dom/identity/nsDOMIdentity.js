@@ -98,7 +98,13 @@ nsDOMIdentity.prototype = {
   },
 
   request: function nsDOMIdentity_request(aOptions) {
-    // TODO: Bug 769569 - "must be invoked from within a click handler"
+    let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+
+    // Do not allow call of request() outside of a user input handler.
+    if (!util.isHandlingUserInput) {
+      return;
+    }
 
     // Has the caller called watch() before this?
     if (!this._rpWatcher) {
