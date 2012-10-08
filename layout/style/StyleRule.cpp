@@ -1406,6 +1406,12 @@ StyleRule::GetDOMRule()
   return mDOMRule;
 }
 
+/* virtual */ nsIDOMCSSRule*
+StyleRule::GetExistingDOMRule()
+{
+  return mDOMRule;
+}
+
 /* virtual */ already_AddRefed<StyleRule>
 StyleRule::DeclarationChanged(Declaration* aDecl,
                               bool aHandleContainer)
