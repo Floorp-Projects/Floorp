@@ -68,7 +68,7 @@ typedef enum {
 
 typedef struct
 {
-	cc_line_reg_state_t state;
+    cc_reg_state_t state;
     Cucm_mode_t    cucm_mode;
     cc_boolean     inPreservation;
 	session_id_t   preservID;
