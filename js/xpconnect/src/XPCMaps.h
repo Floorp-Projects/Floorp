@@ -69,9 +69,8 @@ public:
     void ShutdownMarker(JSRuntime* rt);
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf) {
-        size_t n = 0;
-        n += mallocSizeOf(this);
-        n += mTable.sizeOfIncludingThis(mallocSizeOf);
+        size_t n = mallocSizeOf(this);
+        n += mTable.sizeOfExcludingThis(mallocSizeOf);
         return n;
     }
 
