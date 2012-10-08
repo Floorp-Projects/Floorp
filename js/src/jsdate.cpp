@@ -1280,12 +1280,6 @@ SetUTCTime(RawObject obj, double t, Value *vp = NULL)
         vp->setDouble(t);
 }
 
-static void
-SetDateToNaN(RawObject obj, Value *vp = NULL)
-{
-    SetUTCTime(obj, js_NaN, vp);
-}
-
 /*
  * Cache the local time, year, month, and so forth of the object.
  * If UTC time is not finite (e.g., NaN), the local time
@@ -1807,7 +1801,7 @@ date_setTime_impl(JSContext *cx, CallArgs args)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
     if (args.length() == 0) {
-        SetDateToNaN(thisObj, args.rval().address());
+        SetUTCTime(thisObj, js_NaN, args.rval().address());
         return true;
     }
 
@@ -2472,7 +2466,7 @@ date_setYear_impl(JSContext *cx, CallArgs args)
 
     /* Step 3. */
     if (MOZ_DOUBLE_IS_NaN(y)) {
-        SetDateToNaN(thisObj, args.rval().address());
+        SetUTCTime(thisObj, js_NaN, args.rval().address());
         return true;
     }
 
@@ -3172,7 +3166,7 @@ js_InitDateClass(JSContext *cx, HandleObject obj)
     RootedObject dateProto(cx, global->createBlankPrototype(cx, &DateClass));
     if (!dateProto)
         return NULL;
-    SetDateToNaN(dateProto);
+    SetUTCTime(dateProto, js_NaN);
 
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, js_Date, cx->names().Date, MAXARGS);
