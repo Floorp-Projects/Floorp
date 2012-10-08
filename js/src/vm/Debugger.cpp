@@ -3391,13 +3391,12 @@ DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSBool
-js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar *chars,
+js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, StableCharPtr chars,
                   unsigned length, const char *filename, unsigned lineno, Value *rval)
 {
     assertSameCompartment(cx, env, fp);
 
-    JS_ASSERT(!IsPoisonedPtr(chars));
-    SkipRoot skip(cx, &chars);
+    JS_ASSERT(!IsPoisonedPtr(chars.get()));
 
     RootedValue thisv(cx);
     if (fp) {

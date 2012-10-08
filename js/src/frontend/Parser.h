@@ -268,7 +268,7 @@ struct Parser : private AutoGCRooter
 
   public:
     Parser(JSContext *cx, const CompileOptions &options,
-           const jschar *chars, size_t length, bool foldConstants);
+           StableCharPtr chars, size_t length, bool foldConstants);
     ~Parser();
 
     friend void AutoGCRooter::trace(JSTracer *trc);
