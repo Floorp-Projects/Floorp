@@ -555,7 +555,7 @@ JS_FRIEND_DATA(Class) js::FunctionClass = {
 
 /* Find the body of a function (not including braces). */
 static bool
-FindBody(JSContext *cx, HandleFunction fun, const jschar *chars, size_t length,
+FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
          size_t *bodyStart, size_t *bodyEnd)
 {
     // We don't need principals, since those are only used for error reporting.
@@ -591,8 +591,7 @@ FindBody(JSContext *cx, HandleFunction fun, const jschar *chars, size_t length,
     *bodyStart = ts.offsetOfToken(ts.currentToken());
     if (braced)
         *bodyStart += 1;
-    RangedPtr<const jschar> end(chars, length);
-    end = chars + length;
+    StableCharPtr end(chars.get() + length, chars.get(), length);
     if (end[-1] == '}') {
         end--;
     } else {
@@ -600,7 +599,7 @@ FindBody(JSContext *cx, HandleFunction fun, const jschar *chars, size_t length,
         for (; unicode::IsSpaceOrBOM2(end[-1]); end--)
             ;
     }
-    *bodyEnd = end.get() - chars;
+    *bodyEnd = end - chars;
     JS_ASSERT(*bodyStart <= *bodyEnd);
     return true;
 }
@@ -646,7 +645,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
         if (!src)
             return NULL;
 
-        const jschar *chars = src->chars();
+        StableCharPtr chars = src->chars();
         bool exprBody = fun->flags & JSFUN_EXPR_CLOSURE;
         // The source data for functions created by calling the Function
         // constructor is only the function's body.
@@ -1291,7 +1290,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
             js_ReportOutOfMemory(cx);
             return false;
         }
-        jschar *collected_args = cp;
+        StableCharPtr collected_args(cp, args_length + 1);
 
         /*
          * Concatenate the arguments into the new string, separated by commas.
@@ -1370,8 +1369,6 @@ Function(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
     JS::Anchor<JSString *> strAnchor(NULL);
-    const jschar *chars;
-    size_t length;
 
     RootedString str(cx);
     if (!args.length())
@@ -1384,8 +1381,8 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     if (!stable)
         return false;
     strAnchor.set(str);
-    chars = stable->chars();
-    length = stable->length();
+    StableCharPtr chars = stable->chars();
+    size_t length = stable->length();
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an

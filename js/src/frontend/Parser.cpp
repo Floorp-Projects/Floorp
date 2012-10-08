@@ -323,7 +323,7 @@ ParseContext::generateFunctionBindings(JSContext *cx, InternalHandle<Bindings*> 
 }
 
 Parser::Parser(JSContext *cx, const CompileOptions &options,
-               const jschar *chars, size_t length, bool foldConstants)
+               StableCharPtr chars, size_t length, bool foldConstants)
   : AutoGCRooter(cx, PARSER),
     context(cx),
     strictModeGetter(thisForCtor()),
@@ -6941,8 +6941,8 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
         if (!pn)
             return NULL;
 
-        const jschar *chars = tokenStream.getTokenbuf().begin();
         size_t length = tokenStream.getTokenbuf().length();
+        const StableCharPtr chars(tokenStream.getTokenbuf().begin(), length);
         RegExpFlag flags = tokenStream.currentToken().regExpFlags();
         RegExpStatics *res = context->regExpStatics();
 

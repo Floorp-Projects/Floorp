@@ -164,7 +164,7 @@ EvalScriptVersion16(JSContext *cx, unsigned argc, jsval *vp)
     JS_ASSERT(JSVAL_IS_STRING(argv[0]));
     JSStableString *str = JSVAL_TO_STRING(argv[0])->ensureStable(cx);
     JS_ASSERT(str);
-    return callbackData->evalVersion(str->chars(), str->length(), JSVERSION_1_6);
+    return callbackData->evalVersion(str->chars().get(), str->length(), JSVERSION_1_6);
 }
 
 JSBool
