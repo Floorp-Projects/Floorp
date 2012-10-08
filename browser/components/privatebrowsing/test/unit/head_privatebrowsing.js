@@ -13,8 +13,6 @@ const kPrivateBrowsingTransitionCompleteNotification = "private-browsing-transit
 const kEnter = "enter";
 const kExit = "exit";
 
-const NS_APP_USER_PROFILE_50_DIR = "ProfD";
-
 function LOG(aMsg) {
   aMsg = ("*** PRIVATEBROWSING TESTS: " + aMsg);
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).
