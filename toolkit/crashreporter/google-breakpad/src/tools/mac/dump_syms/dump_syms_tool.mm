@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "common/mac/dump_syms.h"
+#include "common/mac/arch_utilities.h"
 #include "common/mac/macho_utilities.h"
 
 using google_breakpad::DumpSymbols;
@@ -73,7 +74,8 @@ static bool Start(const Options &options) {
       for (size_t i = 0; i < available_size; i++) {
         const struct fat_arch *arch = &available[i];
         const NXArchInfo *arch_info =
-          NXGetArchInfoFromCpuType(arch->cputype, arch->cpusubtype);
+          google_breakpad::BreakpadGetArchInfoFromCpuType(
+              arch->cputype, arch->cpusubtype);
         if (arch_info)
           fprintf(stderr, "%s (%s)\n", arch_info->name, arch_info->description);
         else
@@ -107,7 +109,8 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
   while ((ch = getopt(argc, (char * const *)argv, "a:ch?")) != -1) {
     switch (ch) {
       case 'a': {
-        const NXArchInfo *arch_info = NXGetArchInfoFromName(optarg);
+        const NXArchInfo *arch_info =
+            google_breakpad::BreakpadGetArchInfoFromName(optarg);
         if (!arch_info) {
           fprintf(stderr, "%s: Invalid architecture: %s\n", argv[0], optarg);
           Usage(argc, argv);

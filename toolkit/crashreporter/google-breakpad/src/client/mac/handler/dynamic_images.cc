@@ -475,8 +475,6 @@ void ReadImageInfo(DynamicImages& images,
                          mach_header_bytes) != KERN_SUCCESS)
         continue;
 
-      header = reinterpret_cast<mach_header_type*>(&mach_header_bytes[0]);
-
       // Read the file name from the task's memory space.
       string file_path;
       if (info.file_path_) {

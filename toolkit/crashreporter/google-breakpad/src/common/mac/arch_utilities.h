@@ -1,4 +1,4 @@
-// Copyright (c) 2010 Google Inc.
+// Copyright (c) 2012, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,27 +27,21 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef CLIENT_LINUX_CRASH_GENERATION_CLIENT_INFO_H_
-#define CLIENT_LINUX_CRASH_GENERATION_CLIENT_INFO_H_
+// arch_utilities.h: Utilities for architecture introspection for Mac platform.
+
+#ifndef COMMON_MAC_ARCH_UTILITIES_H__
+#define COMMON_MAC_ARCH_UTILITIES_H__
+
+#include <mach-o/arch.h>
 
 namespace google_breakpad {
 
-class CrashGenerationServer;
+// Custom implementation of |NXGetArchInfoFromName| and
+// |NXGetArchInfoFromCpuType| that handle newer CPU on older OSes.
+const NXArchInfo* BreakpadGetArchInfoFromName(const char* arch_name);
+const NXArchInfo* BreakpadGetArchInfoFromCpuType(cpu_type_t cpu_type,
+                                                 cpu_subtype_t cpu_subtype);
 
-class ClientInfo {
- public:
-  ClientInfo(pid_t pid, CrashGenerationServer* crash_server)
-    : crash_server_(crash_server),
-      pid_(pid) {}
+}  // namespace google_breakpad
 
-  CrashGenerationServer* crash_server() const { return crash_server_; }
-  pid_t pid() const { return pid_; }
-
- private:
-  CrashGenerationServer* crash_server_;
-  pid_t pid_;
-};
-
-}
-
-#endif // CLIENT_LINUX_CRASH_GENERATION_CLIENT_INFO_H_
+#endif  // COMMON_MAC_ARCH_UTILITIES_H__
