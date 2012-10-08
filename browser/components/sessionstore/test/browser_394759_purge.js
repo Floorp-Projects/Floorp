@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.import("resource://gre/modules/ClearRecentHistory.jsm");
+Components.utils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
 function test() {
   // utility functions
@@ -79,7 +79,7 @@ function test() {
   ss.setBrowserState(JSON.stringify(testState));
 
   // purge domain & check that we purged correctly for closed windows
-  ClearRecentHistory.removeDataFromDomain("mozilla.org");
+  ForgetAboutSite.removeDataFromDomain("mozilla.org");
 
   let closedWindowData = JSON.parse(ss.getClosedWindowData());
 
