@@ -1285,8 +1285,8 @@ SetUTCTime(RawObject obj, double t, Value *vp = NULL)
  * If UTC time is not finite (e.g., NaN), the local time
  * slots will be set to the UTC time without conversion.
  */
-static bool
-CacheLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj)
+static void
+FillLocalTimeSlots(DSTOffsetCache *dstOffsetCache, RawObject obj)
 {
     JS_ASSERT(obj->isDate());
 
@@ -1294,7 +1294,7 @@ CacheLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj)
     if (!obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).isUndefined() &&
         obj->getSlot(JSObject::JSSLOT_DATE_TZA).toDouble() == LocalTZA)
     {
-        return true;
+        return;
     }
 
     /* Remember timezone used to generate the local cache. */
@@ -1308,7 +1308,7 @@ CacheLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj)
              ind++) {
             obj->setSlot(ind, DoubleValue(utcTime));
         }
-        return true;
+        return;
     }
 
     double localTime = LocalTime(utcTime, dstOffsetCache);
@@ -1418,16 +1418,15 @@ CacheLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj)
 
     int hours = (yearSeconds / (60 * 60)) % 24;
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS, Int32Value(hours));
-
-    return true;
 }
 
 inline bool
 GetCachedLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj, double *time)
 {
-    if (!obj || !CacheLocalTime(dstOffsetCache, obj))
+    if (!obj)
         return false;
 
+    FillLocalTimeSlots(dstOffsetCache, obj);
     *time = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).toDouble();
     return true;
 }
@@ -1462,8 +1461,7 @@ date_getYear_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
-        return false;
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     Value yearVal = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
     if (yearVal.isInt32()) {
@@ -1490,8 +1488,7 @@ date_getFullYear_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
-        return false;
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR));
     return true;
@@ -1530,8 +1527,7 @@ date_getMonth_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
-        return false;
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MONTH));
     return true;
@@ -1567,8 +1563,7 @@ date_getDate_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
-        return false;
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DATE));
     return true;
@@ -1607,8 +1602,7 @@ date_getDay_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
-        return false;
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DAY));
     return true;
@@ -1647,8 +1641,7 @@ date_getHours_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
-        return false;
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS));
     return true;
@@ -1687,8 +1680,7 @@ date_getMinutes_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
-        return false;
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES));
     return true;
@@ -1729,8 +1721,7 @@ date_getUTCSeconds_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(&cx->dstOffsetCache, thisObj))
-        return false;
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS));
     return true;
